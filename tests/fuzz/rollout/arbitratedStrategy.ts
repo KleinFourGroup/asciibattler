@@ -35,9 +35,14 @@
  * protects the incumbent accept-all); everything else mirrors the
  * hardwired policy — see arbitrateReward's header.
  *
- * Un-landed sites (70d–70e) DELEGATE to the base strategy — the arm is
- * exactly "the scored nominator + arbitration where landed", so its
- * behavior converges on site landings, never on refactors.
+ * Grant-site semantics (70d): nominator-trimmed candidates (level:1/2
+ * redraws, per-position empowers) with the rollout's OWN grant policies
+ * forced off so null = pass — see arbitrateGrant's header.
+ *
+ * The one un-landed site (70e node choice) DELEGATES to the base
+ * strategy — the arm is exactly "the scored nominator + arbitration
+ * where landed", so its behavior converges on site landings, never on
+ * refactors.
  */
 
 import { RNG } from '../../../src/core/RNG';
@@ -45,9 +50,10 @@ import type { PortStock, Run } from '../../../src/run/Run';
 import type { RewardPortion } from '../../../src/run/rewards';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
-import type { FuzzStrategy, PacketFire, PortBuy } from '../Strategy';
+import type { FuzzStrategy, GrantAction, PacketFire, PortBuy } from '../Strategy';
 import { scoredStrategy, maxPowerIndex, minPowerIndex } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
+import { selectRedrawPositions } from '../redrawPolicy';
 import {
   RunArbitrationDriver,
   type RunArbitrationConfig,
@@ -91,6 +97,11 @@ export const PORT_BUY_EPSILON = 3.145;
 export const FIRE_OUTOFBATTLE_EPSILON = 3.265;
 export const FIRE_PRETURN_EPSILON = 1.101;
 export const REWARD_DAEMON_EPSILON = 2.873;
+/** 70d — the grant site shares the preTurn CLASS floor: its decisions
+ *  clone at the same turn-intro states with the same current-battle
+ *  horizon as preTurn fires, and the unified rule floors per CLASS
+ *  (readEpsilonAA contexts 17/18 are its derivation). */
+export const GRANT_EPSILON = FIRE_PRETURN_EPSILON;
 
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;
@@ -116,6 +127,7 @@ export interface ArbitratedConfig {
   readonly portBuyEpsilon?: number;
   readonly packetFireEpsilon?: number;
   readonly rewardDaemonEpsilon?: number;
+  readonly grantEpsilon?: number;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
@@ -159,6 +171,10 @@ export function makeArbitratedStrategy(
     // pickPortBuy above).
     pickReward: (portion, run, _rng) =>
       arbitrateReward(driver, portion, run, config.rewardDaemonEpsilon),
+    // 70d — the grant site (defining this routes the harness grant walk
+    // here; the --redraw/--empower policy path is superseded for the arm).
+    pickGrantAction: (grantIndex, run, rng) =>
+      arbitrateGrant(driver, grantIndex, run, rng, config.grantEpsilon),
   };
 }
 
@@ -331,4 +347,80 @@ function arbitrateReward(
     { epsilon: epsilonOverride ?? rewardDaemonEpsilon(run) },
   );
   return decline === null;
+}
+
+/**
+ * 70d — one ask of the grant walk, arbitrated (sites 'grant:redraw' /
+ * 'grant:empower'). Candidates are NOMINATOR-TRIMMED, not exhaustive:
+ * redraw offers the level-policy picks at k∈{1,2} (position sets
+ * deduped — a short hand can make them coincide; k=0 IS the null arm),
+ * empower offers every hand position (hands are small; the level:hi
+ * nominee is among them by construction). Grants whose effect is
+ * neither kind enumerate nothing → null → the harness passes them,
+ * exactly like the policy path.
+ *
+ * THE ROLLOUT WALKS WITH THE GRANT POLICIES OFF (the decide-time
+ * rollout override): the walker's own turn-intro grant walk would
+ * otherwise re-spend the very grants under decision — the doctrine
+ * default (level:2/hi) would redraw under the NULL arm and collapse
+ * every margin toward zero while the live loop, told "null stands",
+ * passed the grant: the port-site live-vs-rollout divergence, grant
+ * flavored. With the override, null = pass-everything and each
+ * candidate is the lone grant spend in its rollout. No future
+ * turn-intro is contaminated: the horizon ends at the CURRENT battle,
+ * so the walk never reaches another grant gate.
+ */
+function arbitrateGrant(
+  driver: RunArbitrationDriver,
+  grantIndex: number,
+  run: Run,
+  rng: RNG,
+  epsilonOverride: number | undefined,
+): GrantAction | null {
+  const grant = run.grantViews()[grantIndex];
+  if (grant === undefined || grant.remaining <= 0) return null;
+  const effect = grant.effect;
+  const challengers: RunDecisionCandidate[] = [];
+  const actions: GrantAction[] = [];
+
+  if (effect.kind === 'redraw') {
+    const hand = run.hand.map((i) => run.team[i]!);
+    const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+    const seen = new Set<string>();
+    for (const cards of [1, 2]) {
+      const positions = selectRedrawPositions(
+        hand,
+        pool,
+        { redrawsRemaining: grant.remaining, cardsRemaining: effect.maxCards },
+        { kind: 'level', cards },
+        rng,
+      );
+      if (positions.length === 0) continue;
+      const key = positions.join(',');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      challengers.push({
+        label: `redraw level:${cards} [${key}]`,
+        apply: ({ run: clone }) =>
+          clone.dispatch({ kind: 'redrawCards', handIndices: positions, grantIndex }),
+      });
+      actions.push({ kind: 'redraw', handIndices: positions });
+    }
+  } else if (effect.kind === 'empower') {
+    for (let handIndex = 0; handIndex < run.hand.length; handIndex++) {
+      challengers.push({
+        label: `empower hand:${handIndex}`,
+        apply: ({ run: clone }) =>
+          clone.dispatch({ kind: 'empowerUnit', handIndex, grantIndex }),
+      });
+      actions.push({ kind: 'empower', handIndex });
+    }
+  }
+
+  if (challengers.length === 0) return null;
+  const winner = driver.decide(`grant:${effect.kind}`, run, challengers, {
+    epsilon: epsilonOverride ?? GRANT_EPSILON,
+    rollout: { redraw: { kind: 'none' }, empower: { kind: 'none' } },
+  });
+  return winner === null ? null : actions[challengers.indexOf(winner)]!;
 }

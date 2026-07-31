@@ -33,20 +33,24 @@ import type { RunSnapshot } from '../../../src/run/Run';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import { HEALTH } from '../../../src/config/health';
+import type { RNG } from '../../../src/core/RNG';
 import type { RewardPortion } from '../../../src/run/rewards';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
-import type { FuzzStrategy, PortBuy } from '../Strategy';
+import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
 import { maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
+import { selectRedrawPositions } from '../redrawPolicy';
+import { selectEmpowerPosition } from '../empowerPolicy';
 import {
   makeArbitratedStrategy,
   PORT_BUY_EPSILON,
   FIRE_PRETURN_EPSILON,
   FIRE_OUTOFBATTLE_EPSILON,
   REWARD_DAEMON_EPSILON,
+  GRANT_EPSILON,
 } from './arbitratedStrategy';
 
 const SEED = 20260730;
@@ -398,6 +402,150 @@ describe('arbitrated daemon rewards — integration (real evaluator)', () => {
     const a = decide();
     const b = decide();
     expect(a.verdict).toBe(b.verdict);
+    expect(a.record).toEqual(b.record);
+  }, 120_000);
+});
+
+describe('the pickGrantAction chokepoint (70d) — harness contracts', () => {
+  it('a hook MIRRORING level:2/hi ≡ the --redraw/--empower policy path, byte for byte', () => {
+    const GRANTED = { runConfig: { hopCount: 3, grants: ['janus', 'mars'] } };
+    const viaPolicies = runOne(43, scoredStrategy('grant-pin', DEFAULT_SCORED_WEIGHTS), {
+      ...GRANTED,
+      redraw: { kind: 'level', cards: 2 },
+      empower: { kind: 'level', dir: 'hi' },
+    });
+    const mirror = vi.fn((grantIndex: number, run: Run, rng: RNG): GrantAction | null => {
+      const grant = run.grantViews()[grantIndex]!;
+      if (grant.remaining <= 0) return null;
+      const hand = run.hand.map((i) => run.team[i]!);
+      if (grant.effect.kind === 'redraw') {
+        const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+        const positions = selectRedrawPositions(
+          hand,
+          pool,
+          { redrawsRemaining: grant.remaining, cardsRemaining: grant.effect.maxCards },
+          { kind: 'level', cards: 2 },
+          rng,
+        );
+        return positions.length === 0 ? null : { kind: 'redraw', handIndices: positions };
+      }
+      if (grant.effect.kind === 'empower') {
+        const pos = selectEmpowerPosition(
+          hand,
+          { empowersRemaining: grant.remaining },
+          { kind: 'level', dir: 'hi' },
+          rng,
+        );
+        return pos === null ? null : { kind: 'empower', handIndex: pos };
+      }
+      return null;
+    });
+    const viaHook = runOne(
+      43,
+      { ...scoredStrategy('grant-pin', DEFAULT_SCORED_WEIGHTS), pickGrantAction: mirror },
+      GRANTED,
+    );
+    expect(mirror).toHaveBeenCalled();
+    expect(viaHook).toEqual(viaPolicies);
+  }, 120_000);
+});
+
+describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
+  function grantedTurnIntro(): Run {
+    const run = new Run(SEED, new EventBus<GameEvents>(), { grants: ['janus', 'mars'] });
+    run.pauseAtTurnGates = true;
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    if (run.phase !== 'turn-intro') {
+      throw new Error(`grantedTurnIntro: expected turn-intro, got ${run.phase}`);
+    }
+    return run;
+  }
+  const grantIndexOf = (run: Run, kind: string): number => {
+    const i = run.grantViews().findIndex((g) => g.effect.kind === kind && g.remaining > 0);
+    if (i < 0) throw new Error(`no live '${kind}' grant in the fixture`);
+    return i;
+  };
+
+  it('redraw: level:1/level:2 nominator candidates (deduped), null = pass; site + ε pinned', () => {
+    const run = grantedTurnIntro();
+    const gi = grantIndexOf(run, 'redraw');
+    const grant = run.grantViews()[gi]!;
+    const hand = run.hand.map((i) => run.team[i]!);
+    const pool = [...run.drawPile, ...run.discardPile].map((i) => run.team[i]!);
+    const expected: string[] = [];
+    const seen = new Set<string>();
+    for (const cards of [1, 2]) {
+      if (grant.effect.kind !== 'redraw') throw new Error('unreachable');
+      const positions = selectRedrawPositions(
+        hand,
+        pool,
+        { redrawsRemaining: grant.remaining, cardsRemaining: grant.effect.maxCards },
+        { kind: 'level', cards },
+        null as never,
+      );
+      if (positions.length === 0 || seen.has(positions.join(','))) continue;
+      seen.add(positions.join(','));
+      expected.push(`redraw level:${cards} [${positions.join(',')}]`);
+    }
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator(Array(expected.length + 1).fill(0)),
+    });
+    expect(arm.pickGrantAction!(gi, run, null as never)).toBeNull(); // all-tie → pass
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('grant:redraw');
+    expect(rec.labels).toEqual(['null', ...expected]);
+    expect(rec.epsilon).toBe(GRANT_EPSILON);
+  });
+
+  it('empower: one candidate per hand position; the winner maps back', () => {
+    const run = grantedTurnIntro();
+    const gi = grantIndexOf(run, 'empower');
+    const handLen = run.hand.length;
+    expect(handLen).toBeGreaterThan(1);
+    // Make hand:1 win by a floor-clearing margin (scores: null, hand:0, hand:1, …).
+    const scores = Array(handLen + 1).fill(0);
+    scores[2] = 1000;
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(scores) });
+    const action = arm.pickGrantAction!(gi, run, null as never)!;
+    expect(action).toEqual({ kind: 'empower', handIndex: 1 });
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('grant:empower');
+    expect(rec.labels).toEqual(['null', ...Array.from({ length: handLen }, (_v, i) => `empower hand:${i}`)]);
+  });
+
+  it('grant-site rollouts force the walker grant policies OFF; other sites do not', () => {
+    const specs: RunRolloutSpec[] = [];
+    const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+      specs.push(spec);
+      return { score: 0, perSeed: [] };
+    };
+    const run = grantedTurnIntro();
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture });
+    arm.pickGrantAction!(grantIndexOf(run, 'redraw'), run, null as never);
+    expect(specs.length).toBeGreaterThan(0);
+    expect(specs[0]!.redraw).toEqual({ kind: 'none' });
+    expect(specs[0]!.empower).toEqual({ kind: 'none' });
+    specs.length = 0;
+    arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
+    expect(specs[0]!.redraw).toBeUndefined();
+    expect(specs[0]!.empower).toBeUndefined();
+  });
+});
+
+describe('arbitrated grants — integration (real evaluator)', () => {
+  it('SITE DETERMINISM: same runSeed + same granted turn-intro ⇒ same action + deep-equal log', () => {
+    const decide = () => {
+      const run = new Run(SEED, new EventBus<GameEvents>(), { grants: ['janus', 'mars'] });
+      run.pauseAtTurnGates = true;
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      const arm = makeArbitratedStrategy(SEED, { k: 1 });
+      const gi = run.grantViews().findIndex((g) => g.effect.kind === 'redraw' && g.remaining > 0);
+      const action = arm.pickGrantAction!(gi, run, null as never);
+      return { action, record: arm.driver.decisions[0]! };
+    };
+    const a = decide();
+    const b = decide();
+    expect(a.action).toEqual(b.action);
     expect(a.record).toEqual(b.record);
   }, 120_000);
 });

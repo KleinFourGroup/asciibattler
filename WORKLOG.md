@@ -451,6 +451,33 @@ splice a daemon portion into a real reward snapshot (rollRewards'
 header blesses synthetic inputs; 'portunus' is port-lane-only, never
 pre-owned). Five new tests; fuzz:smoke 345→350 expected at commit.
 
+**70d landed (2026-07-31) — redraw/empower (the grant-walk
+chokepoint).** The second approved additive harness touch: an optional
+`FuzzStrategy.pickGrantAction(grantIndex, run, rng)` the grant walk
+consults ask-until-null per grant (same no-progress contract as the
+policy blocks; presence supersedes the `--redraw`/`--empower` policy
+path entirely and flips the turn gates). Routing equivalence pinned the
+strong way: a hook MIRRORING level:2/hi ≡ the policy path,
+`toEqual`-identical RunResult on a janus+mars granted run (the level
+policies are draw-free, so the stream difference between `strategyRng`
+and the dedicated policy streams is invisible — that's what makes the
+mirror exact). Arm candidates are nominator-trimmed: redraw = the
+level-policy picks at k∈{1,2} (position sets deduped; k=0 IS the null),
+empower = every hand position (hands are small; level:hi is among
+them). **The rollout walks with the grant policies forced OFF** via a
+new decide-time rollout override on the driver (merge-over-config,
+additive) — the walker's own doctrine-default grant walk would
+otherwise re-spend the grant under the NULL arm and collapse every
+margin while the live loop passed (the port-site divergence, grant
+flavored); no future turn-intro is contaminated because the preTurn
+horizon ends at the current battle. ε: the grant site shares the
+preTurn CLASS floor (`GRANT_EPSILON = FIRE_PRETURN_EPSILON = 1.101` —
+same turn-intro clone context, same horizon; the unified per-class rule
+needs no new read). Sites `grant:redraw` / `grant:empower`. One fixture
+lesson: MERCURY is the coin-flip redraw idol and JANUS the unconditional
+one — the descriptions say so and the first fixture run enforced it.
+Five new tests; fuzz:smoke 350→355 expected at commit.
+
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
 buy — candidate = "buy slot X now", null = "stop here". Inside the

@@ -548,7 +548,10 @@ export function runOne(
   // legal fire contexts); the gated path is RNG-aligned with the headless
   // one (H4b), pinned by the fire-null control in harnessEconomy.test.ts.
   const fireActive = strategy.pickPacketFire !== undefined;
-  if (redrawActive || empowerActive || fireActive) run.pauseAtTurnGates = true;
+  // 70d — same contract for a strategy-driven grant walk (`redrawCards`/
+  // `empowerUnit` are turn-intro-only commands).
+  const grantActive = strategy.pickGrantAction !== undefined;
+  if (redrawActive || empowerActive || fireActive || grantActive) run.pauseAtTurnGates = true;
 
   // 59a — the ask-until-null packet-fire loop at one legal fire site. A
   // rejected `usePacket` consumes nothing (the 49e validate-before-mutate
@@ -635,7 +638,26 @@ export function runOne(
         for (let grantIndex = 0; grantIndex < run.grantViews().length; grantIndex++) {
           const view = () => run.grantViews()[grantIndex]!;
           const kind = view().effect.kind;
-          if (kind === 'redraw' && redraw && redrawRng) {
+          if (strategy.pickGrantAction !== undefined) {
+            // 70d — the strategy-driven walk (the §70 grant site): same
+            // ask-until-null + no-progress contract as the policy blocks
+            // below; the strategy owns WHICH action, the harness owns the
+            // loop. Defining the method supersedes the --redraw/--empower
+            // policy path entirely (documented on the interface).
+            for (;;) {
+              const grant = view();
+              if (grant.remaining <= 0) break;
+              const action = strategy.pickGrantAction(grantIndex, run, strategyRng);
+              if (action === null) break;
+              const before = grant.remaining;
+              run.dispatch(
+                action.kind === 'redraw'
+                  ? { kind: 'redrawCards', handIndices: [...action.handIndices], grantIndex }
+                  : { kind: 'empowerUnit', handIndex: action.handIndex, grantIndex },
+              );
+              if (view().remaining === before) break; // rejected — never spin
+            }
+          } else if (kind === 'redraw' && redraw && redrawRng) {
             for (;;) {
               const grant = view();
               if (grant.remaining <= 0) break;

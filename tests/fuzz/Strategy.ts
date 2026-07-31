@@ -36,6 +36,15 @@ export interface PacketFire {
   readonly rosterIndex?: number;
 }
 
+/** 70d — one grant-walk proposal: spend one use of the grant at
+ *  `grantIndex` (the ask's subject) as a redraw or an empower. The kind
+ *  must match the grant's own effect kind — a mismatched dispatch is
+ *  rejected by Run (consuming nothing) and the harness's no-progress
+ *  guard stops asking. */
+export type GrantAction =
+  | { readonly kind: 'redraw'; readonly handIndices: readonly number[] }
+  | { readonly kind: 'empower'; readonly handIndex: number };
+
 export interface FuzzStrategy {
   readonly name: string;
   pickNextNode(frontier: readonly number[], run: Run, rng: RNG): number;
@@ -66,6 +75,17 @@ export interface FuzzStrategy {
    * the pre-§59 harness behavior, and the anchor arms' permanent policy.
    */
   pickPacketFire?(context: UseContext, run: Run, rng: RNG): PacketFire | null;
+  /**
+   * 70d — OPTIONAL grant-walk decision, asked ask-until-null per grant
+   * (the 49d walk order): each call proposes ONE use of the grant at
+   * `grantIndex` (read it via `run.grantViews()[grantIndex]`), `null`
+   * stops spending that grant (the harness then passes it — the 49d
+   * strict-finality rule). DEFINING this method routes the whole grant
+   * walk through it — the `--redraw`/`--empower` policy path is NOT
+   * consulted — and flips `pauseAtTurnGates` ON (the pickPacketFire
+   * contract). ABSENT = the K3c3/K4c3 policy-driven walk, byte for byte.
+   */
+  pickGrantAction?(grantIndex: number, run: Run, rng: RNG): GrantAction | null;
   /**
    * 70c — OPTIONAL reward-portion decision, asked for the HEAD portion
    * (`pendingRewards[0]`) each time the harness visits the reward phase:

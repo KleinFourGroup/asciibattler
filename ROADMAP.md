@@ -102,9 +102,10 @@ Cut shape-locked 2026-07-30, all four kickoff calls user-approved
       (null=accept, challenger=decline — hysteresis protects the
       incumbent); reward-gate ε=2.873 pooled (WORKLOG §70). No bump
       (as predicted).
-- [ ] 70d — redraw/empower: the additive grant-walk chokepoint;
-      level-policy nominators k∈{0,1,2} / per-position empower. No
-      bump.
+- [x] 70d — redraw/empower ✅ — `pickGrantAction?` landed (mirror ≡
+      policy path pinned byte-identical); grant-site rollouts walk with
+      grant policies OFF (decide-time override); ε = the preTurn class
+      floor 1.101 (WORKLOG §70). No bump (as predicted).
 - [ ] 70e — node choice w/ the DP-tail bootstrap (null = the scored
       nominator's pick; `makeBestScore` exported; the elite-detour
       case exercised). No bump.

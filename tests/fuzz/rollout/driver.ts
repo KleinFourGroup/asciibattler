@@ -102,12 +102,21 @@ export class RunArbitrationDriver {
    * Arbitrate one decision. Returns the winning candidate, or null when
    * the null arm stands (no challengers, or none beat it by ε). An empty
    * candidate set evaluates nothing and logs nothing — not a decision.
+   *
+   * `opts.rollout` (70d) merges OVER the config default per call — the
+   * grant site walks its rollouts with the redraw/empower policies OFF
+   * (null = pass-all; the site's own candidates are the only grant
+   * spends), while every other site keeps the config walk. Omitted keys
+   * fall through to the config default.
    */
   decide(
     site: string,
     live: Run,
     challengers: readonly RunDecisionCandidate[],
-    opts: { readonly epsilon?: number } = {},
+    opts: {
+      readonly epsilon?: number;
+      readonly rollout?: RunArbitrationConfig['rollout'];
+    } = {},
   ): RunDecisionCandidate | null {
     if (challengers.length === 0) return null;
     const epsilon = opts.epsilon ?? this.epsilon;
@@ -122,9 +131,10 @@ export class RunArbitrationDriver {
         policySeed: this.rng.fork().toJSON().state,
       });
     }
+    const rollout = { ...this.rollout, ...opts.rollout };
     const spec: RunRolloutSpec = {
-      horizonBattles: this.rollout?.horizonBattles ?? 1,
-      ...this.rollout,
+      horizonBattles: rollout.horizonBattles ?? 1,
+      ...rollout,
       pairs,
     };
 

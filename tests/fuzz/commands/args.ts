@@ -151,6 +151,14 @@ export interface CliArgs {
   refineK?: number;
   refinePerturbs?: number;
   refineRadius?: number;
+  // 70a — the run-layer arbitrated arm (`--arbitrate`): wraps the selected
+  // strategy in makeArbitratedStrategy PER SEED (the arm is stateful —
+  // driver RNG + decision log). RUN MODE ONLY (the --scripts discipline:
+  // other modes bail loudly rather than silently measure the wrong arm).
+  // `--arbitrate-tier=<bare|traffic|searcher>` is resolution 3's recursion
+  // dial (default traffic); requires --arbitrate.
+  arbitrate: boolean;
+  arbitrateTier?: string;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -171,6 +179,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     audition: false,
     kTelemetry: false,
     refine: false,
+    arbitrate: false,
   };
   for (const raw of argv) {
     const [k, v] = splitFlag(raw);
@@ -334,6 +343,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--k-telemetry':
         args.kTelemetry = true;
         break;
+      case '--arbitrate':
+        args.arbitrate = true;
+        break;
+      case '--arbitrate-tier':
+        if (v !== undefined) args.arbitrateTier = v;
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -392,6 +407,23 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // 57g.5 — the K dial and the prefix instrument are searcher-only too.
   if ((args.k !== undefined || args.kTelemetry) && !args.searcher) {
     throw new Error('--k / --k-telemetry require --searcher');
+  }
+  // 70a — the arbitrated arm is run-mode-only (the --scripts discipline:
+  // a search/sweep silently ignoring it would label the batch wrong).
+  if (args.arbitrate && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+    throw new Error(
+      '--arbitrate is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+    );
+  }
+  if (args.arbitrateTier !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--arbitrate-tier requires --arbitrate (it dials the rollout inner tier)');
+    }
+    if (!['bare', 'traffic', 'searcher'].includes(args.arbitrateTier)) {
+      throw new Error(
+        `--arbitrate-tier must be bare|traffic|searcher (got '${args.arbitrateTier}')`,
+      );
+    }
   }
   return args;
 }

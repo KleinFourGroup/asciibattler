@@ -88,10 +88,10 @@ every site but defaults cheap; each site's ε floor lands with it.
 Cut shape-locked 2026-07-30, all four kickoff calls user-approved
 (rationale + audit: WORKLOG §70):
 
-- [ ] 70a — port buys + the arbitrated-arm scaffold
-      (`arbitratedStrategy.ts` per-seed factory, `--arbitrate` +
-      `--arbitrate-tier`; candidates = affordable unsold slots per ask;
-      the port-context ε floor at two depths). No bump.
+- [x] 70a — port buys + the arbitrated-arm scaffold ✅ — site
+      determinism pinned; ε=3.845 (the port site read SINGLE-depth —
+      ports sit mid-act; WORKLOG §70); baselines byte-identical
+      (fuzz:smoke 340). No bump (as predicted).
 - [ ] 70b — packet fires, both contexts (nominator-trimmed candidates
       w/ heuristic targets, 68a guards mirrored; the preTurn ε context
       added to readEpsilonAA). No bump.

@@ -11,6 +11,8 @@ import { runOne } from '../harness';
 import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
+import { makeArbitratedStrategy } from '../rollout/arbitratedStrategy';
+import type { InnerTier } from '../rollout/walker';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
@@ -88,6 +90,8 @@ export type RunModeArgs = Pick<
   | 'bitsMultiplier'
   | 'drawAdd'
   | 'grant'
+  | 'arbitrate'
+  | 'arbitrateTier'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -229,15 +233,35 @@ export function runRunCli(args: RunModeArgs): void {
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const characterNote = ` character=${characterLabel(character)}`;
   const scriptsNote = args.scripts ? ' scripts=ON' : '';
+  // 70a — the arbitrated arm wraps the selected strategy PER SEED (the
+  // arm is stateful — driver RNG + decision log — so one instance per
+  // run; WORKLOG §70 finding 2). The wrapped base keeps its nominator /
+  // delegate role for the sites §70b–e haven't landed yet. The effective
+  // name is deterministic (`arbitrated:<base>`), so the per-strategy
+  // summary below keys on `nameFor`.
+  const arbitrateTier =
+    args.arbitrate && args.arbitrateTier !== undefined
+      ? (args.arbitrateTier as InnerTier)
+      : undefined;
+  const nameFor = (strategy: FuzzStrategy): string =>
+    args.arbitrate ? `arbitrated:${strategy.name}` : strategy.name;
+  const strategyFor = (seed: number, strategy: FuzzStrategy): FuzzStrategy =>
+    args.arbitrate
+      ? makeArbitratedStrategy(seed, {
+          base: strategy,
+          ...(arbitrateTier !== undefined ? { innerTier: arbitrateTier } : {}),
+        })
+      : strategy;
+
   const startedAt = Date.now();
   let done = 0;
   const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${strategy.name}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}…\n`,
     );
     for (const s of seeds) {
-      const r = runOne(s, strategy, harnessOptions);
+      const r = runOne(s, strategyFor(s, strategy), harnessOptions);
       allResults.push(r);
       // 57g QoL — one progress line per run, to STDERR (stdout stays the
       // parseable stats stream): a 60–90 min serial batch is observable
@@ -300,12 +324,13 @@ export function runRunCli(args: RunModeArgs): void {
     failuresWritten++;
   }
 
-  // Summary table per strategy.
+  // Summary table per strategy (keyed on the effective — possibly
+  // arbitrated — name; the RunResults carry it).
   process.stdout.write('\n');
   for (const strategy of strategies) {
-    const subset = allResults.filter((r) => r.strategyName === strategy.name);
+    const subset = allResults.filter((r) => r.strategyName === nameFor(strategy));
     const stats = aggregate(subset);
-    process.stdout.write(`### ${strategy.name}\n`);
+    process.stdout.write(`### ${nameFor(strategy)}\n`);
     process.stdout.write(`  runs:       ${stats.totalRuns}\n`);
     process.stdout.write(`  win rate:   ${(stats.winRate * 100).toFixed(1)}%\n`);
     process.stdout.write(`  avg hop:    ${stats.averageHopReached.toFixed(2)}\n`);

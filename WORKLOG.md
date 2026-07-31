@@ -351,6 +351,34 @@ plumbing commit, APPROVED): 70a port buys + scaffold · 70b packet
 fires · 70c daemon picks · 70d redraw/empower · 70e node choice ·
 70f exit verify. Checkbox one-liners in ROADMAP §70.
 
+**70a landed (2026-07-30) — port buys + the arbitrated-arm scaffold.**
+[arbitratedStrategy.ts](../tests/fuzz/rollout/arbitratedStrategy.ts)
+(`makeArbitratedStrategy(runSeed, config)` — per-seed factory, driver
+stream at a documented domain offset off the run seed, decision log on
+`.driver.decisions`); `--arbitrate` + `--arbitrate-tier` (run-mode-only
+per the --scripts discipline; composes with `--jobs` for free — the
+parallel parent passes arm flags through verbatim and children re-derive
+true seed values, so per-seed construction is shard-safe); the walker
+gained the `stopAtPhase: 'port'` stop-condition hook (the header's named
+extension seam — the ε-context prep needed a way to park a run at a
+dock). Six tests (enumeration derived from live dock state · winner→
+PortBuy mapping · re-enumeration after a landed buy · delegation +
+pickPacketFire presence mirroring · SITE DETERMINISM with the real
+evaluator — the per-site exit pin). CLI wiring smoke: one real
+`--arbitrate` run end to end, summary keyed `arbitrated:scored`.
+
+**The 70a ε finding — the port site is SINGLE-DEPTH in act 1.** The
+kickoff planned two-depth floors, but both derivation contexts docked
+at hop 6: the map places ports mid-act, so there is no early-hop dock
+to band against, and act-2 docks are unreachable on the cheap tier
+today (the 69c mortality wall). Read (readEpsilonAA, K=2 · traffic ·
+M=20 margins · 2026-07-30, both controls exactly 0): fresh-trajectory
+dock σ=1.923 → ε=3.845 · warmed-trajectory dock (5-battle warmup,
+same hop) σ=1.117 → ε=2.234. **Pinned: `PORT_BUY_EPSILON = 3.845`** —
+the conservative of the two same-depth trajectory samples — behind a
+`portBuyEpsilon(run)` function seam so a §71/72 depth-aware refinement
+(act-2 docks, once the ceiling moves) never touches call sites.
+
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
 buy — candidate = "buy slot X now", null = "stop here". Inside the

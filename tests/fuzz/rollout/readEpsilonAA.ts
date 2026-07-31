@@ -42,3 +42,43 @@ read('fresh hop-1 map (out-of-battle class)', new Run(SEED, new EventBus<GameEve
 const mid = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 777);
 walkToHorizon(mid, { horizonBattles: 5, policySeed: 424242, maxHops: 80 });
 read('mid-act map (out-of-battle class, 5 battles in)', mid.run, 12);
+
+// 70a — Contexts 3/4: the PORT-BUY site's REAL context (docked, phase
+// 'port') at two depths. Prep: warm the run `warmupBattles` forward on
+// the cheap tier, then walk with the stopAtPhase hook until it docks
+// (one walk per clone — the warmup and the dock-hunt each get a fresh
+// clone). Seeds are scanned deterministically until one docks: the
+// default node policy only routes through a port when the DP favors
+// one, so not every seed's walk docks inside maxHops.
+function dockAtPort(runSeed: number, warmupBattles: number): Run | null {
+  let state = cloneRunForRollout(new Run(runSeed, new EventBus<GameEvents>()), runSeed + 1);
+  if (warmupBattles > 0) {
+    const w = walkToHorizon(state, {
+      horizonBattles: warmupBattles,
+      policySeed: runSeed + 2,
+      maxHops: 80,
+    });
+    if (w.outcome !== 'horizon') return null;
+    state = cloneRunForRollout(state.run, runSeed + 3);
+  }
+  walkToHorizon(state, {
+    horizonBattles: 9999,
+    policySeed: runSeed + 4,
+    maxHops: 80,
+    stopAtPhase: 'port',
+  });
+  return state.run.phase === 'port' ? state.run : null;
+}
+
+function firstDock(warmupBattles: number): Run {
+  for (let s = SEED; s < SEED + 20; s++) {
+    const docked = dockAtPort(s, warmupBattles);
+    if (docked) return docked;
+  }
+  throw new Error(`no seed in [${SEED}, ${SEED + 20}) docked at a port (warmup ${warmupBattles})`);
+}
+
+const early = firstDock(0);
+read(`early port dock (port-buy class, hop ${early.currentHop})`, early, 13);
+const midDock = firstDock(5);
+read(`mid-act port dock (port-buy class, 5+ battles in, hop ${midDock.currentHop})`, midDock, 14);

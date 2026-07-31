@@ -97,6 +97,12 @@ export interface WalkOptions {
   /** Safety bound on node entries — a walker must never out-walk its
    *  horizon by more than the map between battles. */
   readonly maxHops?: number;
+  /** 70a — stop the walk the moment the run ENTERS this phase (checked at
+   *  the loop top, before the phase is acted on; returns outcome
+   *  'horizon'). The ε-context prep hook: readEpsilonAA parks a run at a
+   *  port dock with it (pass a large horizonBattles). This is the header's
+   *  "extend the stop condition in one named place" seam. */
+  readonly stopAtPhase?: 'port';
 }
 
 export interface WalkResult {
@@ -172,6 +178,9 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
   while (battlesEnded < options.horizonBattles) {
     if (run.phase === 'defeat') return { outcome: 'defeat', battlesEnded, totalTicks };
     if (run.phase === 'complete') return { outcome: 'complete', battlesEnded, totalTicks };
+    if (options.stopAtPhase !== undefined && run.phase === options.stopAtPhase) {
+      return { outcome: 'horizon', battlesEnded, totalTicks };
+    }
     if (hops > maxHops) return { outcome: 'stuck', battlesEnded, totalTicks };
 
     switch (run.phase) {

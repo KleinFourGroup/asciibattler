@@ -106,9 +106,12 @@ Cut shape-locked 2026-07-30, all four kickoff calls user-approved
       policy path pinned byte-identical); grant-site rollouts walk with
       grant policies OFF (decide-time override); ε = the preTurn class
       floor 1.101 (WORKLOG §70). No bump (as predicted).
-- [ ] 70e — node choice w/ the DP-tail bootstrap (null = the scored
-      nominator's pick; `makeBestScore` exported; the elite-detour
-      case exercised). No bump.
+- [x] 70e — node choice ✅ — DP tail via the evaluator's `tailScore`
+      seam (`DP_TAIL_SCALE = restHealAmount`, config-derived; the
+      DEFAULT vector's path weights are all 0 → tail inert on the
+      doctrine arm); null pick pinned to the base nominator; ε=3.265
+      (map class); elite-detour exercised (WORKLOG §70). No bump (as
+      predicted).
 - [ ] 70f — the exit verify: full arbitrated runs on both canonical
       shapes, five sites live; baseline byte-identity re-check; the
       per-site ε table → worklog.

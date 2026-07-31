@@ -81,6 +81,10 @@ export interface RunScoreBreakdown {
   readonly completed: boolean;
   readonly bitsDelta: number;
   readonly rosterDelta: number;
+  /** 70e — the DP-tail bonus folded into `score`, present ONLY when the
+   *  spec carried a `tailScore` (the node-choice site). Always visible in
+   *  the breakdown when it contributed — the resolution-4 discipline. */
+  readonly tailBonus?: number;
 }
 
 /** The pure scoring rule — exported separately so dominance/λ contracts
@@ -125,6 +129,12 @@ export interface RunRolloutSpec {
   readonly empower?: EmpowerPolicy;
   readonly maxTicksPerBattle?: number;
   readonly maxHops?: number;
+  /** 70e — the tail estimate at the truncation (kickoff resolution 1):
+   *  evaluated on each WALKED clone and ADDED to its score, recorded as
+   *  `tailBonus` in the breakdown. Passed per decide by the node-choice
+   *  site (the 70d decide-time override seam); every other site omits
+   *  it. Must be a pure function of the clone's terminal state. */
+  readonly tailScore?: (run: Run) => number;
 }
 
 /** A candidate = a closure dispatched against the clone before the walk;
@@ -169,7 +179,13 @@ export function evaluateRunCandidate(
       ...(spec.maxHops !== undefined ? { maxHops: spec.maxHops } : {}),
     };
     walkToHorizon(clone, walkOptions);
-    perSeed.push(scoreTerminal(before, readRunMetrics(clone.run), bitsLambda));
+    const base = scoreTerminal(before, readRunMetrics(clone.run), bitsLambda);
+    if (spec.tailScore !== undefined) {
+      const tailBonus = spec.tailScore(clone.run);
+      perSeed.push({ ...base, score: base.score + tailBonus, tailBonus });
+    } else {
+      perSeed.push(base);
+    }
   }
   const score = perSeed.reduce((acc, b) => acc + b.score, 0) / perSeed.length;
   return { score, perSeed };

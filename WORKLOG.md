@@ -478,6 +478,34 @@ lesson: MERCURY is the coin-flip redraw idol and JANUS the unconditional
 one — the descriptions say so and the first fixture run enforced it.
 Five new tests; fuzz:smoke 350→355 expected at commit.
 
+**70e landed (2026-07-31) — node choice with the DP-tail bootstrap.
+ALL FIVE SITES ARE LIVE.** The site: the base strategy is the NOMINATOR
+— its pick IS the null arm, and the decide-time rollout override pins
+the walker's map pick to `base.pickNextNode`, so a live "null stands"
+and a rollout null enter the SAME node (the coherence rule every site
+obeys); challengers = the other frontier nodes; a singleton frontier is
+not a decision. The tail (resolution 1): `makeBestScore` exported from
+scored.ts; the evaluator gained an optional `spec.tailScore` (score +=
+tail on each walked clone, `tailBonus` always visible in the breakdown
+— resolution 4); tail = `DP_TAIL_SCALE × max over ONWARD children of
+bestScore` from wherever the clone stopped (the entered node's own
+value is REALIZED by the rollout, never double-counted). **Two scale
+findings:** (1) `DP_TAIL_SCALE = HEALTH.restHealAmount` (5 pool HP per
+path-weight point) — config-derived per the balance-proof rule, not
+hand-tuned; (2) **the DEFAULT vector's path weights are ALL ZERO**, so
+under the doctrine arm the tail contributes exactly 0 and node
+arbitration is pure rollout-vs-ε — the tail activates only for
+searched vectors carrying real path preferences. The pre-registered
+decision point (the tail shape if the naive bootstrap misbehaves on
+elite detours) stays open pending §71 telemetry; the elite-detour case
+itself is exercised by a real-evaluator test (elite + non-elite
+frontier, hunted deterministically, decision logged + deep-equal
+across two constructions). ε: the map class floor
+(`NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON = 3.265` — same clone
+context + horizon). `pickRecruit` alone still delegates (resolution 2:
+recruit/pass OUT for v1). Five new tests + the evaluator tail pin;
+fuzz:smoke 355→361 expected at commit.
+
 **A port-site semantics note (the 70a design detail, decided at
 kickoff):** each ask of the ask-until-null loop arbitrates ONE forced
 buy — candidate = "buy slot X now", null = "stop here". Inside the

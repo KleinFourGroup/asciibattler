@@ -39,10 +39,14 @@
  * redraws, per-position empowers) with the rollout's OWN grant policies
  * forced off so null = pass — see arbitrateGrant's header.
  *
- * The one un-landed site (70e node choice) DELEGATES to the base
- * strategy — the arm is exactly "the scored nominator + arbitration
- * where landed", so its behavior converges on site landings, never on
- * refactors.
+ * Node-choice semantics (70e): the base's pick is the null arm, the
+ * other frontier nodes challenge, and the DP path score re-enters as a
+ * scaled TAIL at the truncation — see arbitrateNodeChoice's header.
+ *
+ * ALL FIVE §70 SITES ARE LIVE. `pickRecruit` alone still delegates to
+ * the base — recruit/pass is OUT for v1 by kickoff resolution 2 (the
+ * one-battle horizon censors a draw-gated permanent asset; the named
+ * forced-fielding v2 contingency is in the spec).
  */
 
 import { RNG } from '../../../src/core/RNG';
@@ -50,9 +54,10 @@ import type { PortStock, Run } from '../../../src/run/Run';
 import type { RewardPortion } from '../../../src/run/rewards';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
+import { HEALTH } from '../../../src/config/health';
 import type { FuzzStrategy, GrantAction, PacketFire, PortBuy } from '../Strategy';
-import { scoredStrategy, maxPowerIndex, minPowerIndex } from '../strategies/scored';
-import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
+import { scoredStrategy, makeBestScore, maxPowerIndex, minPowerIndex } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS, type ScoredWeights } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
 import {
   RunArbitrationDriver,
@@ -102,6 +107,24 @@ export const REWARD_DAEMON_EPSILON = 2.873;
  *  horizon as preTurn fires, and the unified rule floors per CLASS
  *  (readEpsilonAA contexts 17/18 are its derivation). */
 export const GRANT_EPSILON = FIRE_PRETURN_EPSILON;
+/** 70e — node choice shares the MAP class floor (same clone context +
+ *  next-battle horizon as outOfBattle fires; contexts 1/15/16/19). */
+export const NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
+
+/**
+ * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the
+ * truncation. CONFIG-DERIVED, not hand-tuned: one full path-weight
+ * point ≈ one rest-heal of pool value — the only place the codebase
+ * already prices "a better node ahead" in pool HP. The naive bootstrap
+ * (kickoff resolution 1); its contribution is ALWAYS visible as the
+ * breakdown's `tailBonus` column, and "the DP-tail shape if the naive
+ * bootstrap misbehaves on the elite-detour cases" is the phase's
+ * pre-registered decision point. NB the DEFAULT vector's path weights
+ * are all ZERO, so under the doctrine arm the tail is exactly 0 and
+ * node arbitration is pure rollout-vs-ε — the tail activates only for
+ * searched vectors that carry real path preferences.
+ */
+export const DP_TAIL_SCALE = HEALTH.restHealAmount;
 
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;
@@ -128,6 +151,12 @@ export interface ArbitratedConfig {
   readonly packetFireEpsilon?: number;
   readonly rewardDaemonEpsilon?: number;
   readonly grantEpsilon?: number;
+  readonly nodeChoiceEpsilon?: number;
+  /** The nominator weight vector the DP tail reads (70e). Default: the
+   *  default vector. NOT auto-threaded from a `--strategy` file today —
+   *  under the default vector the tail is exactly 0 (all path weights
+   *  are 0), so the omission is inert for the doctrine arm. */
+  readonly weights?: ScoredWeights;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
@@ -157,7 +186,10 @@ export function makeArbitratedStrategy(
   return {
     name: `arbitrated:${base.name}`,
     driver,
-    pickNextNode: (frontier, run, rng) => base.pickNextNode(frontier, run, rng),
+    // 70e — the node-choice site (the base stays the NOMINATOR: its pick
+    // is the null arm).
+    pickNextNode: (frontier, run, rng) =>
+      arbitrateNodeChoice(driver, base, frontier, run, rng, config),
     pickRecruit: (offer, run, rng) => base.pickRecruit(offer, run, rng),
     pickPortBuy: (stock, run, _rng) =>
       arbitratePortBuy(driver, stock, run, config.portBuyEpsilon),
@@ -423,4 +455,73 @@ function arbitrateGrant(
     rollout: { redraw: { kind: 'none' }, empower: { kind: 'none' } },
   });
   return winner === null ? null : actions[challengers.indexOf(winner)]!;
+}
+
+/**
+ * 70e — the node-choice site. The base strategy is the NOMINATOR: its
+ * pick IS the null arm (the rollout strategy override below pins the
+ * walker's map pick to `base.pickNextNode`, so a live "null stands"
+ * and a rollout null arm enter the SAME node — the coherence rule
+ * every site obeys). Challengers = the other frontier nodes; a
+ * singleton frontier is not a decision (no rollouts, no log — the
+ * pre-root map and forced corridors stay free).
+ *
+ * Terminal score = the rollout outcome + the DP tail at the truncation
+ * (resolution 1): `DP_TAIL_SCALE × max over onward children of
+ * bestScore(child)` from wherever the clone stopped — the entered
+ * node's own value is REALIZED by the rollout (never double-counted:
+ * the tail starts at the children), and the long path stays the DP's
+ * job. The rollout strategy override composes the DEFAULT cheap walk
+ * with the base's node picks only — the default vector carries no
+ * port/fire groups, so docks stay unshopped inside rollouts (the 70a
+ * rule) regardless of what the base defines.
+ */
+function arbitrateNodeChoice(
+  driver: RunArbitrationDriver,
+  base: FuzzStrategy,
+  frontier: readonly number[],
+  run: Run,
+  rng: RNG,
+  config: ArbitratedConfig,
+): number {
+  const nominee = base.pickNextNode(frontier, run, rng);
+  if (frontier.length <= 1) return nominee;
+
+  const weights = config.weights ?? DEFAULT_SCORED_WEIGHTS;
+  const best = makeBestScore(run.nodeMap, weights);
+  const children = new Map<number, number[]>();
+  for (const e of run.nodeMap.edges) {
+    const list = children.get(e.from);
+    if (list) list.push(e.to);
+    else children.set(e.from, [e.to]);
+  }
+  const tailScore = (clone: Run): number => {
+    const onward = children.get(clone.currentNodeId) ?? [];
+    if (onward.length === 0) return 0;
+    let mx = -Infinity;
+    for (const c of onward) mx = Math.max(mx, best(c));
+    return DP_TAIL_SCALE * mx;
+  };
+
+  const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));
+  const rolloutStrategy: FuzzStrategy = {
+    ...scoredStrategy('rollout-node', DEFAULT_SCORED_WEIGHTS),
+    pickNextNode: (f, r, g) => base.pickNextNode(f, r, g),
+  };
+
+  const challengers: RunDecisionCandidate[] = [];
+  const nodes: number[] = [];
+  for (const nodeId of [...frontier].sort((a, b) => a - b)) {
+    if (nodeId === nominee) continue;
+    challengers.push({
+      label: `enterNode:${nodeId} (${kindOf.get(nodeId) ?? '?'})`,
+      apply: ({ run: clone }) => clone.dispatch({ kind: 'enterNode', nodeId }),
+    });
+    nodes.push(nodeId);
+  }
+  const winner = driver.decide('nodeChoice', run, challengers, {
+    epsilon: config.nodeChoiceEpsilon ?? NODE_CHOICE_EPSILON,
+    rollout: { strategy: rolloutStrategy, tailScore },
+  });
+  return winner === null ? nominee : nodes[challengers.indexOf(winner)]!;
 }

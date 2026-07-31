@@ -40,8 +40,8 @@ import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
-import { maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
-import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
+import { makeBestScore, maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS, type ScoredWeights } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
 import { selectEmpowerPosition } from '../empowerPolicy';
 import {
@@ -51,6 +51,8 @@ import {
   FIRE_OUTOFBATTLE_EPSILON,
   REWARD_DAEMON_EPSILON,
   GRANT_EPSILON,
+  NODE_CHOICE_EPSILON,
+  DP_TAIL_SCALE,
 } from './arbitratedStrategy';
 
 const SEED = 20260730;
@@ -196,8 +198,12 @@ describe('arbitrated port buys — mechanism pins (injected evaluator)', () => {
     };
     const arm = makeArbitratedStrategy(SEED, { base, evaluate: sequenceEvaluator([]) });
     expect(arm.name).toBe('arbitrated:fake-base');
-    expect(arm.pickNextNode([3, 4], run, null as never)).toBe(3);
+    // 70e — node choice is arbitrated now, but the base stays the
+    // NOMINATOR; a singleton frontier short-circuits to its pick with no
+    // rollouts (not a decision).
+    expect(arm.pickNextNode([3], run, null as never)).toBe(3);
     expect(base.pickNextNode).toHaveBeenCalledOnce();
+    expect(arm.driver.decisions).toHaveLength(0);
     expect(arm.pickRecruit([], run, null as never)).toBeNull();
     expect(base.pickRecruit).toHaveBeenCalledOnce();
     // 70b — the fire site is LANDED: always defined (gates always on for
@@ -548,6 +554,149 @@ describe('arbitrated grants — integration (real evaluator)', () => {
     expect(a.action).toEqual(b.action);
     expect(a.record).toEqual(b.record);
   }, 120_000);
+});
+
+describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)', () => {
+  /** A TRUE map state with a multi-node frontier (two-stage prep; depth
+   *  hunted deterministically — some hops have a single child). */
+  function frontierOf(run: Run): number[] {
+    return run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
+  }
+  let memo: Run | null = null;
+  function mapStateWithChoice(): Run {
+    if (memo) return Run.fromJSON(memo.toJSON(), new EventBus<GameEvents>());
+    for (let battles = 1; battles <= 6; battles++) {
+      const s = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), SEED + 30 + battles);
+      walkToHorizon(s, { horizonBattles: battles, policySeed: SEED + 40 + battles, maxHops: 80 });
+      const m = cloneRunForRollout(s.run, SEED + 50 + battles);
+      walkToHorizon(m, {
+        horizonBattles: 9999,
+        policySeed: SEED + 60 + battles,
+        maxHops: 80,
+        stopAtPhase: 'map',
+      });
+      if (m.run.phase === 'map' && frontierOf(m.run).length > 1) {
+        memo = m.run;
+        return Run.fromJSON(memo.toJSON(), new EventBus<GameEvents>());
+      }
+    }
+    throw new Error('no multi-node frontier found in 6 depths');
+  }
+
+  it('challengers = the frontier minus the nominee (sorted, kinds labeled); tie → the nominee', () => {
+    const run = mapStateWithChoice();
+    const frontier = frontierOf(run);
+    const nominee = scoredStrategy('nominee', DEFAULT_SCORED_WEIGHTS).pickNextNode(
+      frontier,
+      run,
+      null as never,
+    );
+    const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));
+    const expected = [...frontier]
+      .sort((a, b) => a - b)
+      .filter((id) => id !== nominee)
+      .map((id) => `enterNode:${id} (${kindOf.get(id)})`);
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator(Array(expected.length + 1).fill(0)),
+    });
+    expect(arm.pickNextNode(frontier, run, null as never)).toBe(nominee);
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('nodeChoice');
+    expect(rec.labels).toEqual(['null', ...expected]);
+    expect(rec.epsilon).toBe(NODE_CHOICE_EPSILON);
+  });
+
+  it('a challenger that clears ε wins → its node id is returned', () => {
+    const run = mapStateWithChoice();
+    const frontier = frontierOf(run);
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator([0, 1000, ...Array(frontier.length).fill(0)]),
+    });
+    const picked = arm.pickNextNode(frontier, run, null as never);
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.chosenIndex).toBe(1);
+    expect(rec.labels[1]).toContain(`enterNode:${picked}`);
+  });
+
+  it('the rollout override carries the tail + pins the null pick to the base nominator', () => {
+    const specs: RunRolloutSpec[] = [];
+    const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+      specs.push(spec);
+      return { score: 0, perSeed: [] };
+    };
+    const run = mapStateWithChoice();
+    const frontier = frontierOf(run);
+    // Non-zero path weights so the tail has something to price.
+    const weights: ScoredWeights = {
+      ...DEFAULT_SCORED_WEIGHTS,
+      path: { ...DEFAULT_SCORED_WEIGHTS.path, rest: 1 },
+    };
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture, weights });
+    arm.pickNextNode(frontier, run, null as never);
+    const spec = specs[0]!;
+    expect(spec.strategy?.name).toBe('rollout-node');
+    expect(spec.tailScore).toBeDefined();
+    // The tail = DP_TAIL_SCALE × max over ONWARD children of bestScore —
+    // recomputed independently at the live node (self-weight excluded).
+    const best = makeBestScore(run.nodeMap, weights);
+    const onward = frontierOf(run).map((id) => best(id));
+    expect(spec.tailScore!(run)).toBe(DP_TAIL_SCALE * Math.max(...onward));
+    // Other sites carry NO tail (the override never leaks).
+    specs.length = 0;
+    arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
+    expect(specs[0]!.tailScore).toBeUndefined();
+  });
+});
+
+describe('arbitrated node choice (70e) — the elite-detour case (real evaluator)', () => {
+  it('an elite/non-elite frontier arbitrates deterministically (the 68e case, exercised)', () => {
+    // Hunt a map state whose frontier holds an elite AND a non-elite
+    // (W2 guarantees every elite a non-elite sibling somewhere; find one
+    // on the frontier). Deterministic scan over seeds × depths.
+    function eliteChoiceState(): Run {
+      for (let seed = SEED; seed < SEED + 6; seed++) {
+        for (let battles = 1; battles <= 5; battles++) {
+          const s = cloneRunForRollout(new Run(seed, new EventBus<GameEvents>()), seed + battles);
+          const w = walkToHorizon(s, {
+            horizonBattles: battles,
+            policySeed: seed + battles + 100,
+            maxHops: 80,
+          });
+          if (w.outcome !== 'horizon') break;
+          const m = cloneRunForRollout(s.run, seed + battles + 200);
+          walkToHorizon(m, {
+            horizonBattles: 9999,
+            policySeed: seed + battles + 300,
+            maxHops: 80,
+            stopAtPhase: 'map',
+          });
+          if (m.run.phase !== 'map') continue;
+          const kindOf = new Map(m.run.nodeMap.nodes.map((n) => [n.id, n.kind]));
+          const kinds = m.run.nodeMap.edges
+            .filter((e) => e.from === m.run.currentNodeId)
+            .map((e) => kindOf.get(e.to));
+          if (kinds.includes('elite') && kinds.some((k) => k !== 'elite')) return m.run;
+        }
+      }
+      throw new Error('no elite/non-elite frontier found in the scan');
+    }
+    const state = eliteChoiceState();
+    const snap = state.toJSON();
+    const decide = () => {
+      const run = Run.fromJSON(snap, new EventBus<GameEvents>());
+      const frontier = run.nodeMap.edges
+        .filter((e) => e.from === run.currentNodeId)
+        .map((e) => e.to);
+      const arm = makeArbitratedStrategy(SEED, { k: 1 });
+      const picked = arm.pickNextNode(frontier, run, null as never);
+      return { picked, record: arm.driver.decisions[0]! };
+    };
+    const a = decide();
+    const b = decide();
+    expect(a.picked).toBe(b.picked);
+    expect(a.record).toEqual(b.record);
+    expect(a.record.site).toBe('nodeChoice');
+  }, 240_000);
 });
 
 describe('arbitrated packet fires — integration (real evaluator)', () => {

@@ -94,9 +94,11 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
  * of bestScore(child)` for the given map + weights. The map is a layered DAG
  * with one node per hop on every root→terminal path, so max-total ==
  * max-average — picking the frontier child with the highest `bestScore` has no
- * long-path bias.
+ * long-path bias. Exported at 70e: the arbitrated node-choice site keeps it as
+ * the TAIL ESTIMATE at the rollout truncation (kickoff resolution 1 — the
+ * cheap tier demoted to a bootstrap heuristic).
  */
-function makeBestScore(map: NodeMap, w: ScoredWeights): (id: number) => number {
+export function makeBestScore(map: NodeMap, w: ScoredWeights): (id: number) => number {
   const adj = new Map<number, number[]>();
   for (const e of map.edges) {
     const list = adj.get(e.from);

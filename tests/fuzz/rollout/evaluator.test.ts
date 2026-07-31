@@ -145,4 +145,17 @@ describe('evaluateRunCandidate (69d — the evaluator wiring)', () => {
       evaluateRunCandidate(live, null, { horizonBattles: 1, pairs: [] }),
     ).toThrow(/pairs must be non-empty/);
   });
+
+  it('70e — a tailScore adds exactly its value per pair (tailBonus visible; absent = no column)', () => {
+    const live = liveRun(20260730);
+    const plain = evaluateRunCandidate(live, null, SPEC);
+    const tailed = evaluateRunCandidate(live, null, { ...SPEC, tailScore: () => 7 });
+    expect(tailed.score).toBe(plain.score + 7);
+    tailed.perSeed.forEach((b, i) => {
+      expect(b.tailBonus).toBe(7);
+      expect(b.score).toBe(plain.perSeed[i]!.score + 7);
+      expect(b.poolDamageTaken).toBe(plain.perSeed[i]!.poolDamageTaken);
+    });
+    expect(plain.perSeed[0]!.tailBonus).toBeUndefined();
+  });
 });

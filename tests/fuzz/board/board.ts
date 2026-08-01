@@ -204,6 +204,21 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
   };
 }
 
+/** 72a — the arbitrated twin of a doctrine instrument: same shape, same
+ *  in-sample seeds, the run-layer arbitrated arm on its settled default
+ *  (bare `--arbitrate` = the traffic tier, 71d-validated). Twins carry NO
+ *  checks until the §72f signing session gives them bands — they are
+ *  measurement rows; the ceiling-move read renders on the paired deltas. */
+function arbitratedTwin(inst: BoardInstrument): BoardInstrument {
+  return {
+    id: `arb-${inst.id}`,
+    title: `${inst.title} — arbitrated twin`,
+    args: [...inst.args, '--arbitrate'],
+    strategyRow: `arbitrated:${inst.strategyRow}`,
+    checks: [],
+  };
+}
+
 export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
   const instruments: BoardInstrument[] = [
     act1Posture('soldier', 'regen', sheet),
@@ -238,6 +253,24 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
     walkPosture('regen', sheet),
     walkPosture('pre55', sheet),
   ];
+  // 72a — the run-alongside window (spec resolution 6): every doctrine
+  // instrument gets an arbitrated twin, and the paired same-seed
+  // arb−doctrine winRate delta rides as a report row per pair — the
+  // ceiling-move measurement the walk-wall re-read consumes is board
+  // OUTPUT, not a hand ritual. Band = the ±8pt paired noise: a WARN here
+  // is the tell we render on purpose (a real ceiling move, not drift).
+  const twins = instruments.map(arbitratedTwin);
+  const ceilingDeltas: BoardDelta[] = instruments.map((inst) => ({
+    id: `ceiling-${inst.id}`,
+    title: `ceiling move (arb − doctrine win rate, ${inst.id})`,
+    metric: 'winRate',
+    a: `arb-${inst.id}`,
+    b: inst.id,
+    grade: 'reference',
+    min: -WIN_TOL,
+    max: WIN_TOL,
+    source: '72a run-alongside: paired same-seed arb−doctrine; WARN = a real ceiling move (the §72b re-read input)',
+  }));
   const deltas: BoardDelta[] = [
     {
       id: 'fire-channel',
@@ -250,8 +283,23 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       max: sheet.fireChannelDelta + 0.05,
       source: '68f re-sign (user, 2026-07-29): the channel reads ≈0 at the settled config (n=80) — was 68d +12.5 / §60e +5; repair → the rollout-arbitration interstitial',
     },
+    {
+      // 72b's fire-channel verification, pre-wired: same sheet-derived
+      // band as the doctrine row, so a WARN = the channel moved off the
+      // re-signed ≈0 on the arbitrated arm (the repair converting).
+      id: 'arb-fire-channel',
+      title: 'fire channel on the arbitrated arm (arb regen − arb ablated win rate)',
+      metric: 'winRate',
+      a: 'arb-regen',
+      b: 'arb-fire-ablated',
+      grade: 'reference',
+      min: sheet.fireChannelDelta - 0.05,
+      max: sheet.fireChannelDelta + 0.05,
+      source: '72a pre-wire for the §72b verification: WARN = the channel converts on the arbitrated arm (moved off the 68f ≈0)',
+    },
+    ...ceilingDeltas,
   ];
-  return { instruments, deltas, sheet };
+  return { instruments: [...instruments, ...twins], deltas, sheet };
 }
 
 // ---- summary.csv → metrics ------------------------------------------------

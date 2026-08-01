@@ -194,4 +194,44 @@ describe('the board definition itself', () => {
       expect(ids.has(d.b)).toBe(true);
     }
   });
+
+  // 72a — the run-alongside twins (spec resolution 6, shape-locked
+  // 2026-08-01): every doctrine instrument gets an arbitrated twin and a
+  // paired ceiling-move delta row; twins are measurement rows (no checks
+  // until the 72f signing session).
+  describe('the arbitrated twins (72a)', () => {
+    const doctrine = board.instruments.filter((i) => !i.id.startsWith('arb-'));
+    const twins = board.instruments.filter((i) => i.id.startsWith('arb-'));
+
+    it('every doctrine instrument has exactly one twin: same args + bare --arbitrate, prefixed strategyRow, NO checks', () => {
+      expect(twins.length).toBe(doctrine.length);
+      for (const inst of doctrine) {
+        const twin = board.instruments.find((i) => i.id === `arb-${inst.id}`)!;
+        expect(twin.args).toEqual([...inst.args, '--arbitrate']);
+        expect(twin.strategyRow).toBe(`arbitrated:${inst.strategyRow}`);
+        expect(twin.checks).toEqual([]);
+      }
+    });
+
+    it('a paired ceiling-move delta rides every pair: arb − doctrine winRate at the ±8pt paired-noise band, reference grade', () => {
+      for (const inst of doctrine) {
+        const delta = board.deltas.find((d) => d.id === `ceiling-${inst.id}`)!;
+        expect(delta.a).toBe(`arb-${inst.id}`);
+        expect(delta.b).toBe(inst.id);
+        expect(delta.metric).toBe('winRate');
+        expect(delta.grade).toBe('reference');
+        expect(delta.min).toBeCloseTo(-0.08);
+        expect(delta.max).toBeCloseTo(0.08);
+      }
+    });
+
+    it('the arb fire-channel verification delta derives from the sheet like the doctrine row (balance-proof)', () => {
+      const arb = board.deltas.find((d) => d.id === 'arb-fire-channel')!;
+      expect(arb.a).toBe('arb-regen');
+      expect(arb.b).toBe('arb-fire-ablated');
+      expect(arb.grade).toBe('reference');
+      expect(arb.min).toBeCloseTo(sheet.fireChannelDelta - 0.05);
+      expect(arb.max).toBeCloseTo(sheet.fireChannelDelta + 0.05);
+    });
+  });
 });

@@ -2449,3 +2449,52 @@ deltas. The pre-X H7c→O log lives at
     55–70 DESIGN band was carried from the ONE-ACT era and never
     re-derived for the walk shape** — input to §72's band re-sign
     (do not treat 55–70 as the anchor there).
+- **2026-08-01 — §72a THE RUN-ALONGSIDE CYCLE (the full 22-instrument
+  board, one box session at `57c380b`): ONE real ceiling move — the
+  act-1 shopper +15.0, and it is a POSTURE DISSOLUTION, not better
+  shopping · everything else at parity · the fire channel does NOT
+  convert on the arbitrated arm either (Δ 0.000).** Doctrine + arb
+  twins, 40 in-sample seeds each, cpx42 `--jobs=8`, ~4h wall; all 22
+  batches `fetched →` clean (driver log in the session scratchpad;
+  per-batch shas therein); box destroyed same-session. Report:
+  **0 FAIL · 5 WARN** = the four inherited two-act markers + the one
+  NEW ceiling WARN below.
+  - **The consistency receipt:** all 11 doctrine rows reproduce the
+    §68f board EXACTLY (regen 65.0 · 55pre 65.0 · priest 72.5/70.0 ·
+    gambler 62.5/70.0 · King 65.0 · Queen 57.5 · walk 17.5/27.5 ·
+    fire-channel Δ 0.000) — §69–71 landed nothing the doctrine arm
+    executes, and the whole cycle ran at ONE commit both arms.
+  - ⭐⭐ **ceiling-55pre +0.150 — the ONLY pair outside the ±8 paired
+    band (every other delta sits −2.5..+2.5):** arb-55pre 80.0 vs
+    55pre 65.0. Decomposition (summary metrics): tx 35%→2% ·
+    fires/run 0→2.17 · bank 47.1→60.4. **The arbitrated arm
+    DISSOLVES the §60e posture split**: the rollouts refuse ~every
+    port buy (portBuy Pick% ≈0 across all 24 item rows, each n≤15·)
+    and fire the patches the shopper vector never fires (preTurn
+    patch 20% pick, Δ|picked +2.71). The +15 is the patch-fire
+    channel converting on a posture that BANNED it — not superior
+    shopping. (Protocol note: the posture vectors were doctrine
+    workarounds for the §60c treadmill; arbitration replacing them
+    at the sites it owns is the design working, but it means the
+    firer/shopper POSTURE-SPLIT reference rows lose their meaning on
+    the arbitrated arm — a 72f re-sign question.)
+  - **The fire channel on the arbitrated arm reads Δ 0.000**
+    (arb-regen 67.5 − arb-fire-ablated 67.5, paired seeds): the
+    by-construction repair FIRES (patch 18% pick, Δ|picked +2.86)
+    yet the channel still converts no wins at 40 paired seeds →
+    **fire joins the 72c value-buff agenda** (the pre-registered
+    contingency: repair-by-construction was necessary, not
+    sufficient — the ITEM values are too small to move outcomes).
+  - **The walk twins are at parity** (ceiling −2.5 / 0.0; walls
+    0.647/0.450 vs doctrine 0.588/0.476, inside noise at n=17–21
+    arrivals): **the two-act ceiling did NOT move** — the deep-end
+    wall is SHARED, not arm-specific or posture-specific. The 72b
+    band re-derivation anchors on these measured values (17.5–27.5
+    win, ~0.45–0.65 wall), NOT on 55–70.
+  - **The first real PORT read (the shopper twin finally shops —
+    or rather, declines to):** 24 port item rows, every one
+    sub-floor· and Pick% ≈0 with meanΔ ≈0 — at current prices the
+    rollouts price port stock at ≈no win-conversion, joining
+    grants/fire in the marginal-channel convergence. Input to the
+    72e price re-disposition; a signed per-item read still needs
+    pooled n≥80 per item (forced-dock shapes if 72e wants it).

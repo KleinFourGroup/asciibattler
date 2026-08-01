@@ -827,3 +827,31 @@ Audit findings, cut into ROADMAP §72 same-day (user-signed):
   at that decision point). The two-act band re-derives from scratch
   at 72b — 55–70 is NOT the anchor (one-act-era provenance,
   user-flagged at §71d).
+
+**72a landed (2026-08-01) — the arbitrated board twins + the
+run-alongside cycle. Numbers in BALANCE §72a (the canonical copy);
+this is the narrative.** The build half (`57c380b`) was exactly the
+shape-lock's shape: `arbitratedTwin()` maps every doctrine instrument
+to an `arb-` twin (same args + bare `--arbitrate`; `arbitrated:`-
+prefixed strategyRow; NO checks until 72f), 11 paired ceiling-move
+delta rows at ±8pt (WARN = a real move, rendered on purpose), + the
+`arb-fire-channel` delta pre-wiring 72b's verification — zero cli.ts
+changes, three new pins, fuzz:smoke 375→378. Composition de-risked
+for pennies before the box spend: a 2-seed local probe proved
+`--arbitrate` × `--encounter=` (the one never-run pairing) and the
+strategy-column match. The cycle half: box up (cpx42; the §71d
+DEFAULT_TYPE fix paying off immediately), a scratchpad driver walked
+all 22 instruments sequentially through box-batch.sh run (~4h, every
+batch `fetched →` clean — the 68f completion signal), box destroyed
+same-session. The report headline: 0 FAIL / 5 WARN — four inherited
+two-act markers + ONE new WARN, the act-1 shopper ceiling at +15,
+which decomposes as a POSTURE DISSOLUTION (the arm stops shopping
+AND starts firing — the §60e posture split was a doctrine workaround
+arbitration simply ignores at the sites it owns). Fire still doesn't
+convert on the arbitrated arm (necessary-not-sufficient: the repair
+fires, the items are too weak) → fire joins 72c per the
+pre-registered contingency. The walk ceiling did NOT move — the 72b
+band re-derivation anchors on 17.5–27.5/walls ~0.45–0.65 as
+measured. One protocol implication flagged for 72f: the
+firer/shopper posture-split reference rows lose their meaning on an
+arm that dissolves postures — a re-sign question, noted in BALANCE.

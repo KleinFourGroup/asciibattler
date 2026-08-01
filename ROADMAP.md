@@ -159,13 +159,11 @@ flips to the arbitrated arm and the sheet re-signs.
   the flip read once grants carry real margins).
 - Cut (kickoff 2026-08-01, user-signed; audit + rationale → WORKLOG
   §72):
-- [ ] 72a — the arbitrated board twins + the run-alongside cycle:
-      `arb-` twins in board.ts (bare `--arbitrate` = the validated
-      traffic tier; NO checks — measurement rows until 72f) + paired
-      same-seed winRate delta rows (±8pt; WARN = a real ceiling
-      move); the full 22-instrument cycle on the box. Exit: the
-      measured ceiling-move table + the first per-item board
-      sections (the shopper PORT read included). No bump.
+- [x] 72a — the arbitrated board twins + the run-alongside cycle ✅
+      `57c380b` + the 22-batch box cycle 2026-08-01 — ONE ceiling
+      move (act-1 shopper +15, a posture DISSOLUTION), walk ceiling
+      unmoved, arb fire Δ 0.000 → fire joins 72c; no bump (as
+      predicted). BALANCE §72a + WORKLOG §72.
 - [ ] 72b — the reads + the band re-derivation (no code): the
       fire-channel verification (arb regen − arb ablated + per-item
       fire reads, both postures) · the walk-wall/two-act re-read at

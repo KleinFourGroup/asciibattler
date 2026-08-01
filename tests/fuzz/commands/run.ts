@@ -99,6 +99,7 @@ export type RunModeArgs = Pick<
   | 'arbitrate'
   | 'arbitrateTier'
   | 'flipTelemetry'
+  | 'grantEpsilon'
 >;
 
 export function runRunCli(args: RunModeArgs): void {
@@ -261,6 +262,8 @@ export function runRunCli(args: RunModeArgs): void {
           ...(args.flipTelemetry !== undefined
             ? { shadowTier: args.flipTelemetry as InnerTier }
             : {}),
+          // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
+          ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
         })
       : strategy;
 

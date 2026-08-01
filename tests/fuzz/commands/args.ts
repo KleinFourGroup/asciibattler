@@ -166,6 +166,11 @@ export interface CliArgs {
   // value form exists for cheap cross-tier reads and test sizing. Requires
   // --arbitrate; must differ from the primary tier.
   flipTelemetry?: string;
+  // 71d — the grant-site ε override (`--grant-epsilon=<f>`): the ablation
+  // dial for the free-action gate diagnosis (grant margins sit under the
+  // pooled noise floor; ε=0 = spend on any positive point estimate, exact
+  // ties still pass — the strict-> rule holds). Requires --arbitrate.
+  grantEpsilon?: number;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -356,6 +361,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--flip-telemetry':
         args.flipTelemetry = v ?? 'searcher';
         break;
+      case '--grant-epsilon':
+        if (v !== undefined) args.grantEpsilon = Number(v);
+        break;
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
@@ -452,6 +460,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       throw new Error(
         `--flip-telemetry=${args.flipTelemetry} equals the primary tier (${primary}) — the read would be vacuously flip-free`,
       );
+    }
+  }
+  // 71d — the grant-ε dial rides the arbitrated arm only, and a negative or
+  // non-finite ε would silently break the strict-> gate.
+  if (args.grantEpsilon !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--grant-epsilon requires --arbitrate (it dials the grant-site gate)');
+    }
+    if (!Number.isFinite(args.grantEpsilon) || args.grantEpsilon < 0) {
+      throw new Error(`--grant-epsilon must be a finite number ≥ 0 (got '${args.grantEpsilon}')`);
     }
   }
   return args;

@@ -157,6 +157,40 @@ flips to the arbitrated arm and the sheet re-signs.
   for the re-sign (user-flagged: carried unexamined from the one-act
   era) · the cheap-tier lock re-opens after the grant buffs (re-run
   the flip read once grants carry real margins).
+- Cut (kickoff 2026-08-01, user-signed; audit + rationale → WORKLOG
+  §72):
+- [ ] 72a — the arbitrated board twins + the run-alongside cycle:
+      `arb-` twins in board.ts (bare `--arbitrate` = the validated
+      traffic tier; NO checks — measurement rows until 72f) + paired
+      same-seed winRate delta rows (±8pt; WARN = a real ceiling
+      move); the full 22-instrument cycle on the box. Exit: the
+      measured ceiling-move table + the first per-item board
+      sections (the shopper PORT read included). No bump.
+- [ ] 72b — the reads + the band re-derivation (no code): the
+      fire-channel verification (arb regen − arb ablated + per-item
+      fire reads, both postures) · the walk-wall/two-act re-read at
+      the MEASURED ceiling · the two-act band re-derived from
+      scratch (55–70 is NOT the anchor). Every band call
+      user-signed.
+- [ ] 72c — the grant-channel buffs (config-only): redraw + empower
+      values swept, judged by the decision-grade instruments
+      (Pick%/Δ|picked must move off ≈0) + paired win reads;
+      magnitudes user-signed; fire value buffs join here IF 72b
+      still reads ≈0 (decision point). No bump.
+- [ ] 72d — the tier-lock re-open: the flip read re-runs post-buffs
+      (the pre-registered §71d trigger; ~12-seed shadow batch).
+- [ ] 72e — the remaining agenda reads: the +2-vs-+4 draw
+      non-monotonicity at decision grade (`--draw-add` arms +
+      sidecar) · the elite-risk node read (cheap-first off 72a's
+      natural rows; the forced-elite dial contingent) · price
+      re-dispositions where realized value contradicts §68
+      (candidates: discard-one at 8 vs Δ|picked +3.13; the shopper
+      port read → unit prices).
+- [ ] 72f — the signing session + the round close: the default-arm
+      flip (ARM gains `--arbitrate` + doctrine docs) · the sheet
+      re-signs (supersession precedent; twins gain bands, the
+      doctrine rows' disposition decided) · board green vs the new
+      sheet · the round-close ritual.
 - Exit criteria: the signed sheet updated (supersedes §68d/f where
   values moved, the supersession precedent) · `balance:board --report`
   green against the new sheet · the round-close ritual runs (scratchpad

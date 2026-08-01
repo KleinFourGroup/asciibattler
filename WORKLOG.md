@@ -759,3 +759,71 @@ its final form above. All three §71 exit criteria met: the 40-seed
 batch yielded decision-grade per-item reads (2,563 decisions) · the
 flip read signed · summary.csv columns unchanged end to end (pinned
 by test at 71a, verified by sha parity through every batch).
+
+## Phase 72 — the balance agenda
+
+**Kickoff (2026-08-01) — the code-reality audit + the shape-lock.**
+Audit findings, cut into ROADMAP §72 same-day (user-signed):
+
+1. **The board is run-alongside-ready except for the arm itself.**
+   board.ts pins the doctrine ARM + 11 instruments; the CLI already
+   feeds box-batch (`--plan`), selects (`--only`), and appends
+   per-item decision sections for any instrument dir carrying
+   decisions.csv (the 71b hook, written for exactly this moment). The
+   one missing piece is an arbitrated-arm concept — and since seeds
+   are 1..40 in-sample by construction, the paired same-seed
+   doctrine-vs-arbitrated diff can ride the existing BoardDelta
+   machinery as REPORT ROWS: the ceiling-move measurement becomes
+   board output, not a hand ritual (the 68c principle re-applied).
+2. **The arm labels compose cleanly, no CLI change needed:**
+   `--arbitrate` bare = the traffic tier (the 71d-validated cheap
+   tier — the settled default), and the arm names itself
+   `arbitrated:${base.name}`, so a twin's strategyRow is the doctrine
+   row `arbitrated:`-prefixed.
+3. **The grant-buff knobs are pure config** — empower.json (the +4
+   mods), deck.json's redraw block, packets.json's fire items,
+   prices.json. Value-level buffs stay inside the round's
+   no-new-mechanics guard, and the round snapshot prediction
+   (v34/v40 hold) survives §72: config JSON is not a serialized
+   union.
+4. **Every dial the agenda needs exists, parse-guarded:**
+   `--arbitrate`/`-tier`, `--grant-epsilon`, `--flip-telemetry`,
+   `--draw-add`. §72 is reads + config tuning + one small board
+   extension; no new instrument building.
+5. **Cost reality:** the 71d walk batch (40 arbitrated-searcher
+   seeds, `--jobs=8`, cpx42) ran ~30 min → the full 11-twin cycle ≈
+   5–7 h of box time across 2–3 batches.
+
+**Shape-lock decisions (user-signed 2026-08-01):**
+
+- **Twins in the one board** (`arb-<id>`; NO checks until the 72f
+  signing session gives them bands — pure measurement rows; paired
+  ±8pt winRate delta rows per pair, where a WARN = a real ceiling
+  move — the tell we render on purpose) over a separate `--arm`
+  board mode, which would strand the paired diff outside the board
+  or need a bespoke cross-dir diff — more machinery, not less. Spec
+  resolution 6 says the paired old-vs-new diff IS the measurement
+  the walk-wall re-read consumes; it deserves to be a persisted
+  report artifact. The doctrine rows' post-flip disposition (retire
+  vs regression control) is decided deliberately at 72f.
+- **The full 22-instrument cycle** — box time explicitly not a
+  constraint (user).
+- **The elite-risk read runs cheap-first:** the 72a cycle's natural
+  nodeChoice rows are the first look; the forced-elite dial
+  (eliteChance/eliteMinSpacing are plain nodemap.json config) gets
+  cut at 72e ONLY if the §71d directional signal (−1.40 mean / +5.0
+  picked, n=10) holds and a retune is live. Roles per the §55
+  doctrine: the forced shape is the tuning PROBE (force-isolate
+  before tuning, the standing rule; also softens the C4
+  arrival-censoring bias), the natural pooled read is the transfer
+  check.
+- **Ordering locked as chartered** (cycle → reads/band
+  re-derivation → grant buffs → the flip re-read → remaining reads
+  → the signing session): grants convert ≈0 at the settled config,
+  so the cycle cleanly measures the ceiling move of arbitration
+  ALONE; the buffs then move the value channels, needing only a
+  targeted re-verify of affected rows before signing. Fire value
+  buffs join 72c IF the 72b verification still reads ≈0 (user call
+  at that decision point). The two-act band re-derives from scratch
+  at 72b — 55–70 is NOT the anchor (one-act-era provenance,
+  user-flagged at §71d).

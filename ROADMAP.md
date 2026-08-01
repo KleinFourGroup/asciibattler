@@ -107,47 +107,30 @@ WORKLOG §70.
       runs: zero hangs, ~1.6–6.8 min/run (the 69c band); ε table +
       byte-identity trail → WORKLOG §70.
 
-## Phase 71 — telemetry reporting + instruments
+## Phase 71 — telemetry reporting + instruments ✅ CLOSED 2026-08-01, user-signed
 
-Charter: the `decisions.csv` sidecar + reporters (site, sector/hop,
-candidate set, per-candidate rollout means, chosen, margin vs null),
-board integration for per-item realized value at decision grade, and
-the flip-rate instrument (cheap vs recursive inner tier, the §57g
-kFlip-prefix pattern) run on a sampled batch.
+Decision-grade telemetry end to end in five commits: the sidecar →
+the per-item aggregate → the flip instrument → the measurement.
+Headline: the arbitrated arm sits AT DOCTRINE PARITY on the canonical
+walk (17.5 doctrine / 15.0 pinned / 20.0 grant-ε0, all inside paired
+noise — the "crater" was a baseline-anchoring error vs the DESIGN
+band); grant margins ≈0 confirmed by ablation (three instruments now
+agree the marginal channels don't convert at the settled config);
+**the cheap inner tier VALIDATED, user-signed, with the
+pre-registered re-open after the grant buffs**. v34/v40 held all
+phase; summary.csv columns unchanged (pinned). Numbers: BALANCE
+§71d; narrative: WORKLOG §71.
 
-- Depends: §70 (needs live sites to log).
-- Risk: **LOW-MEDIUM** — reporting is well-trodden (the H7c
-  accumulator precedent); the flip-rate read is the one unknown.
-- Decision points: the flip-rate verdict — validate the cheap inner
-  tier, or name where recursion gets paid (user-signed, the §57g
-  K-lock precedent).
-- Exit criteria: one 40-seed box batch yields decision-grade per-item
-  value reads · the flip-rate read is signed · `summary.csv` columns
-  unchanged (the sidecar is additive).
-
-Cut 2026-07-31 (shape-locked; audit findings + schema rationale in
-WORKLOG §71 — long-format sidecar, decisions ride `RunResult`,
-flip-rate is shadow-only, all three user-signed at the kickoff):
-
-- [x] 71a — the log rides out + the sidecar ✅ — landed as cut (18-col
-      long format; `writeDecisionsSidecar` shared serial/`--jobs`);
-      byte-identity + summary-untouched pinned; no bump (as predicted).
-      Detail: WORKLOG §71.
-- [x] 71b — the per-item decision-grade aggregate ✅ — landed as cut
-      (itemKeyOf instance-noise stripping · per-decision null joins ·
-      n = candidate instances, floor-marked; CLI print + board
-      sections); live-proofed on a probe batch. No bump (as
-      predicted). Detail: WORKLOG §71.
-- [x] 71c — the flip-rate instrument ✅ — landed as cut
-      (`--flip-telemetry[=<tier>]`, shadow-only on the driver, same
-      pairs + ε; non-perturbation pinned byte-equal; tier-flips.csv
-      shared serial/`--jobs`); live-proofed (bare-vs-traffic 4/34
-      flips @ grant:empower). No bump (as predicted). Detail: WORKLOG
-      §71.
-- [ ] 71d — the measurement: one 40-seed arbitrated doctrine-arm box
-      batch → per-item value reads to BALANCE; one sampled dual-tier
-      batch → the flip-rate read; closes at the user-signed flip-rate
-      verdict (the phase decision point).
+- [x] 71a — the log rides out + the sidecar ✅ (18-col long format;
+      serial/`--jobs` byte-parity pinned; no bump).
+- [x] 71b — the per-item aggregate ✅ (itemKeyOf · null joins · the
+      n=80 floor on the table; CLI print + board sections; no bump).
+- [x] 71c — the flip-rate instrument ✅ (`--flip-telemetry`,
+      shadow-only, non-perturbation pinned; no bump).
+- [x] 71d — the measurement + verdict ✅ — 3 box batches (value /
+      flips / the findings-driven `--grant-epsilon=0` ablation,
+      `e1d7f87`); both decision points user-signed 2026-08-01;
+      cpx42 replaces the vanished cx43 (BALANCE §71d).
 
 ## Phase 72 — the balance agenda
 
@@ -168,6 +151,12 @@ flips to the arbitrated arm and the sheet re-signs.
 - Decision points: EVERY band re-sign is user-signed · the default-arm
   flip is user-signed · the four two-act board WARNs resolve (re-sign
   or repair) one way or the other.
+- §71 insertions (2026-08-01, worklog §71): the GRANT channel joins
+  the fire channel on the re-sign/buff agenda (decision-grade margins
+  ≈0; user: "major buffs") · the two-act 55–70 band is NOT the anchor
+  for the re-sign (user-flagged: carried unexamined from the one-act
+  era) · the cheap-tier lock re-opens after the grant buffs (re-run
+  the flip read once grants carry real margins).
 - Exit criteria: the signed sheet updated (supersedes §68d/f where
   values moved, the supersession precedent) · `balance:board --report`
   green against the new sheet · the round-close ritual runs (scratchpad

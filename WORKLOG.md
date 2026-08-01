@@ -711,3 +711,51 @@ it ~60 s). Live probe (bare primary vs traffic shadow, 4 short runs):
 4/34 flips (11.8%), ALL at grant:empower — even the two cheap tiers
 disagree exactly where candidate sets are dense, a plausibility nod
 for the 71d searcher read.
+
+**71d landed (2026-07-31→08-01) — the measurement + the verdict
+(user-signed). Numbers in BALANCE §71d (the canonical copy); this is
+the narrative.** Box: cpx42 (cx43 vanished from the Hetzner catalog
+mid-round — resource_unavailable in all three fallback locations;
+type substitution is a human call by the §62 doctrine, user picked
+cpx42, the 8-core drop-in; box-launch DEFAULT_TYPE updated in the
+close). Three batches, all `fetched →` clean, box destroyed between
+sessions (on-demand doctrine).
+
+The diagnosis went through TWO corrections, both worth remembering:
+
+1. **The horizon-censoring story died on the user's stink test.**
+   First read of the 15% win rate: "grants are long-tail value the
+   one-battle horizon censors" (the recruit lesson). The user pushed
+   back — empower and redraw are ENCOUNTER-SCOPED; the horizon
+   already contains their value. Correct. Second read: ε is a NOISE
+   floor (2σ of A/A margins) mis-applied as a VALUE gate on free
+   expiring actions — small true edges sit under it forever. The
+   `--grant-epsilon` dial (`e1d7f87`) was cut to settle it.
+2. **The ablation + the right baseline killed the second story
+   too.** ε=0 moved win only 15.0→20.0 (inside paired noise) and
+   refusals persisted ungated — no hidden value. And the "crater"
+   itself was a BASELINE-ANCHORING ERROR: the measured doctrine arm
+   on this shape wins 17.5 (§68f board), not 55–70 (the DESIGN band
+   — which the user then flagged as carried unexamined from the
+   one-act era). The arbitrated arm is AT PARITY. Scratchpad note:
+   before diagnosing a gap, confirm the gap exists against the
+   MEASURED anchor, not the aspirational one.
+
+What stands after both corrections: the arm is healthy at doctrine
+parity on the canonical shape; the rollouts honestly measure grant
+margins ≈0, agreeing with the §68f fire-channel collapse (three
+instruments, one story: marginal channels don't convert at the
+settled config — the roster carries the game); the grant channel
+joins the fire channel on §72's re-sign/buff agenda per the user's
+call ("redraw and empower need major buffs"). The free-action
+ε-polarity question (the 70c flip precedent) stays a noted design
+nicety — the data says it's low-stakes at current grant values.
+
+**Both phase decision points SIGNED (user, 2026-08-01):** the cheap
+inner tier VALIDATED for v1 (economy sites 0% flips; grant flips are
+≈0-margin wobble) WITH the pre-registered re-open trigger — re-run
+the flip read after the grant buffs land; and the grant finding in
+its final form above. All three §71 exit criteria met: the 40-seed
+batch yielded decision-grade per-item reads (2,563 decisions) · the
+flip read signed · summary.csv columns unchanged end to end (pinned
+by test at 71a, verified by sha parity through every batch).

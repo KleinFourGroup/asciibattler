@@ -27,7 +27,10 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-DEFAULT_TYPE=cx43              # the 57f2 box: 8 shared x86 cores (--jobs=8 sizing)
+DEFAULT_TYPE=cpx42             # 8 shared x86 cores (--jobs=8 sizing). cx43 (the
+                               # 57f2 box) vanished from the Hetzner catalog at
+                               # §71d — cpx42 is the drop-in successor
+                               # (user-picked 2026-08-01; BALANCE §71d).
 DEFAULT_IMAGE=ubuntu-26.04     # what 57f2 provisioned on (worklog §57f2)
 FALLBACK_LOCATIONS=(fsn1 nbg1 hel1)
 # accept-new (not box-batch's bare BatchMode): a fresh box's host key is by

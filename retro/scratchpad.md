@@ -54,3 +54,24 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   state-conditioned ε is now a NAMED §71 candidate that must earn its
   way in from decisions.csv, not from a plausible axis. (Worklog §70,
   70a/70b.)
+
+## §71d (2026-08-01)
+
+- **Confirm a gap exists against the MEASURED anchor before diagnosing
+  it.** The arbitrated arm's 15% win read as a crater vs "the 55–70
+  band" — but that's the aspirational DESIGN band (itself carried
+  unexamined from the one-act era, user-flagged); the measured
+  doctrine arm on the same shape wins 17.5%. Two elaborate wrong
+  diagnoses (horizon censoring, then ε-gate suppression) got authored
+  against a phantom deficit before the baseline check. The ablation
+  probe + the anchor lookup killed both in one afternoon — run the
+  probe and pull the anchor BEFORE writing the mechanism story.
+- **The user's domain stink test beat the model's first theory
+  twice** (encounter-scoped grants vs "long-tail censoring"; "I
+  sometimes skip redraw" vs "redraw is a big lever"). Surface the
+  mechanism claim early and plainly — the correction is cheap when
+  the claim is explicit.
+- Hetzner ops: a server TYPE can vanish from the catalog entirely
+  (cx43 → resource_unavailable everywhere, gone from `server-type
+  list`); the §62 fail-loud-on-type doctrine handled it exactly as
+  designed — human call, cpx42 picked, default updated.

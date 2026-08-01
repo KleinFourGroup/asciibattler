@@ -2390,3 +2390,62 @@ deltas. The pre-X H7c→O log lives at
     walk-shape deep-end wall (58.8/45.5% terminal death-share vs
     the 30–35 target) — the 68g decision point, informed by the
     user's native completion run (in progress).
+- **2026-07-31→08-01 — §71d THE FIRST DECISION-GRADE READS (3 box
+  batches, `6152594`/`e1d7f87`): the arbitrated arm sits AT doctrine
+  parity on the canonical walk · grant margins ≈0 CONFIRMED by
+  ablation · the cheap inner tier VALIDATED (user-signed).** Arm:
+  walk shape (--count=40, seeds 1–40), Soldier, regen vector,
+  extended arm + `--arbitrate` (traffic tier, pinned ε floors);
+  box cpx42 (cx43 is GONE from the Hetzner catalog — cpx42 is the
+  drop-in 8-core successor, same --jobs=8). Batches
+  `20260731-221107-6152594` (value) · `20260731-224218-6152594`
+  (flips, 12 seeds) · `20260801-131218-e1d7f87` (grant-ε=0
+  ablation).
+  - **The value read (2,563 decisions):** preTurn patch fires at
+    21% pick / Δ|picked +2.83 (the fire repair working by
+    construction) · outOfBattle fires 0/196 (banking holds vs the
+    map-class floor) · discard-one meanΔ −1.12 but +3.13 over its
+    picked 7% (situational value run-level reads can't see) ·
+    daemon accept-all holds at every reward gate (no decline beat
+    ε; Minerva's −5 decline margin = accepting was right) · elite
+    detours −1.40 mean / +5.0 picked (n=10·, directional — the 68e
+    elite-risk watch now has an instrument). ⚠ Port items all
+    n≤2 on the firer posture — a signed per-item PORT read needs
+    the shopper vector or forced-dock shapes (protocol note).
+  - **The flip read (912 decisions, traffic vs searcher shadow,
+    SAME CRN pairs):** portBuy/rewardDaemon/outOfBattle 0% ·
+    nodeChoice 2.0% · preTurn 4.3% · grants ~13% · overall 7.3%.
+    Grant flips sit on ≈0 margins (coin-flip wobble, not superior
+    judgment — Δ|picked FELL 3.01→2.22 at ε=0, the winner's-curse
+    signature). Shadow non-perturbation verified ON THE BOX:
+    batch-2 summary rows byte-identical to batch 1's first 12
+    seeds. **VERDICT (user-signed 2026-08-01): the cheap tier is
+    VALIDATED for v1** — recursion would get paid at grant sites
+    if anywhere. ⭐ Pre-registered re-open trigger (user): re-run
+    the flip read AFTER the grant-channel buffs land — flips only
+    become meaningful once grants carry real margins.
+  - **The grant-ε=0 ablation (paired same-seed vs the value
+    batch): 15.0% → 20.0%** (+5.0, INSIDE the ±5–8 paired band;
+    4↑/2↓). Refusals persist ungated (empower picks 4%→5% of
+    instances; ~70% of empower decisions read best-margin ≤0) —
+    **the ε gate was NOT suppressing hidden grant value; the
+    rollouts honestly measure ≈0.**
+  - ⭐⭐ **THE PARITY TABLE (the corrected read):** doctrine
+    walk-regen 17.5 (§68f board) · arbitrated-pinned 15.0 ·
+    arbitrated-grant-ε0 20.0 — all within paired noise. The
+    arbitrated arm does NOT lose to doctrine; the low absolute
+    number is the SHARED deep-end wall (§68g). The earlier "grant
+    starvation explains 15%" alarm was a baseline-anchoring error
+    (compared vs the 55–70 DESIGN band, not the measured doctrine
+    arm).
+  - ⭐ **The channel picture converges:** grant margins ≈0 at
+    decision grade + no win cost from passing + the §68f
+    fire-channel collapse (+1.3) = three instruments agreeing that
+    at the settled config the marginal channels barely convert —
+    the roster carries the game. **The grant channel joins the
+    fire channel on §72's re-sign/buff agenda** (user: "redraw and
+    empower need major buffs to make a difference").
+  - ⚠ **Band provenance (user-flagged 2026-08-01): the two-act
+    55–70 DESIGN band was carried from the ONE-ACT era and never
+    re-derived for the walk shape** — input to §72's band re-sign
+    (do not treat 55–70 as the anchor there).

@@ -75,3 +75,31 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   (cx43 → resource_unavailable everywhere, gone from `server-type
   list`); the §62 fail-loud-on-type doctrine handled it exactly as
   designed — human call, cpx42 picked, default updated.
+
+## §72a–b (2026-08-02)
+
+- **When a pooled recomputation contradicts an instrument, chase the
+  discrepancy before trusting either.** The seam-funnel awk pass read
+  46 terminal arrivals / 23.9% wall where the board said 0.588 — the
+  contradiction WAS the finding (gotcha #120: bare `finalHop` counted
+  act-1 deaths as terminal arrivals; the §68g "wall crisis" was
+  instrument error, ~2× overstated). A cheap independent recompute of
+  a headline metric from raw rows is the strongest lint an instrument
+  can get; the §68 signed walls carried the contamination unnoticed
+  for a full round because nothing ever cross-derived them.
+- **Twice-bitten → audit the CLASS the same day** (user-prompted, and
+  the right call): after the second finalHop bite, a one-hour sweep
+  of every hop-reading surface found three more sector-blind spots
+  (avg-hop, layout×hop, recruit log) and closed the class for good.
+  The pattern generalizes: a second instance of any bug shape is the
+  trigger to enumerate the shape's whole surface, not to fix the
+  instance and move on.
+- **The user trimmed a design band on human-overperformance grounds**
+  (terminal reach 50–60 → 40–50): bot-anchored targets need the
+  ~75%-of-human skill ratio applied at DESIGN time, not just at
+  measurement time. Worth remembering whenever a band is proposed
+  from bot data alone.
+- **Sign the decomposition, derive the product.** Reach × (1−wall) =
+  win as sheet MACHINERY (the derived band computes from the signed
+  pair in board.ts) means a re-sign can never leave the product band
+  stale — the same one-fact-one-home discipline, applied to numbers.

@@ -13,7 +13,7 @@ A fresh-session orientation for ASCIIbattler. Read this first; then dive into th
 | **In flight** | **The rollout-arbitration interstitial — §69+§70+§71 closed; §72 in flight: 72a ✅ (the run-alongside cycle, 2026-08-01), 72b next.** Cluster 4 (61→68) CLOSED 2026-07-29, all eight user-signed. |
 | **Branch / tree** | `main`, working tree clean at the §71 close commit |
 | **Snapshots** | WorldSnapshot **v34** · RunSnapshot **v40** — held through §69–§71 exactly as the round kickoff predicted (every commit bot/harness-side) |
-| **Tests** | **2350 main (0 skipped) + 382 fuzz:smoke** green · typecheck clean · the pre-commit fuzz trigger watches `src/bot/`+`tests/fuzz/` since the 2026-07-21 sweep |
+| **Tests** | **2350 main (0 skipped) + 383 fuzz:smoke** green · typecheck clean · the pre-commit fuzz trigger watches `src/bot/`+`tests/fuzz/` since the 2026-07-21 sweep |
 | **Last closed** | **Cluster 4 — Drafting & Identity (Phases 61→68, 2026-07-21 → 2026-07-29) ✅ COMPLETE, all eight user-signed** — see Closed rounds below · before it, the micro/balance-realism round (53→60, ✅ 2026-07-21) |
 
 ## Current state

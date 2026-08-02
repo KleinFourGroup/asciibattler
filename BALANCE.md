@@ -196,6 +196,18 @@ comparable across encounters — unlike a binary win/loss. Keep three things dis
 - **wave-win rate** — per-wave; a lost wave chips the pool, it does **not** end the run.
 - **run-death contribution** — does the run END here? The *design* sanity check.
 
+**The sector-key rule (72b audit, gotcha #120):** `hop` is PER-SECTOR
+everywhere in this codebase — every positional aggregation keys
+`(sector, hop)`, never bare hop (the funnel, layout×hop, encounter
+instances, the wall arithmetic — all verified/repaired at the 72b
+sweep). The ONE deliberate exception: the per-item decision table
+pools an item's decisions across sectors/hops BY DESIGN (item
+identity). That is correct for item value — but before concluding an
+item's value from a pooled Δ on a walk batch, remember act-1 and
+act-2 decisions are mixed; when an act split matters (do act-2
+patches convert differently?), split on the decisions.csv `sector`
+column first — it is already there.
+
 Tune on pool damage; sanity-check against run-death.
 
 ## The economy metrics (§52 — defined ahead of the data)

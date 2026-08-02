@@ -33,6 +33,7 @@ import {
   perLayoutStats,
   perLayoutHopStats,
   renderLayoutAnalysis,
+  renderLayoutHopCsv,
   perEncounterStats,
   renderEncounterAnalysis,
   seamInputsOf,
@@ -582,6 +583,9 @@ describe('fuzz reporters', () => {
     expect(stats.winRate).toBeGreaterThanOrEqual(0);
     expect(stats.winRate).toBeLessThanOrEqual(1);
     expect(stats.averageHopReached).toBeGreaterThanOrEqual(0);
+    // 72b audit (F1) — the walk-position pair: sectors cleared rides beside
+    // the per-sector hop (a bare hop average reads backwards on walks).
+    expect(stats.averageSectorsCleared).toBeGreaterThanOrEqual(0);
     expect(Object.keys(stats.byOutcome).length).toBeGreaterThan(0);
     // hangsByLayout is always present; empty when no hangs occurred.
     expect(stats.hangsByLayout).toBeDefined();
@@ -840,6 +844,49 @@ describe('fuzz reporters', () => {
     expect(ja1.playerWinRate).toBeCloseTo(0); // both hop-1 ambush waves lost
 
     expect(renderLayoutAnalysis(results)).toContain('Per-layout difficulty');
+  });
+
+  it('72b audit (F2) — layout × hop rows split by SECTOR: act-1 hop N never merges with act-2 hop N (gotcha #120)', () => {
+    const b = (sector: number, hop: number, winner: 'player' | 'enemy'): BattleResult => ({
+      sector,
+      hop,
+      worldSeed: 0,
+      encounterId: 'fixture',
+      layoutId: 'river',
+      winner,
+      ticks: 1,
+      playerDeaths: 0,
+      enemyDeaths: 0,
+      playerTeamSize: 5,
+      enemyTeamSize: 8,
+      playerLevels: [1],
+      enemyLevels: [1],
+      poolAtStart: 20,
+    });
+    const run: RunResult = {
+      seed: 0,
+      strategyName: 'syn',
+      daemonId: null,
+      outcome: 'defeat',
+      finalHopReached: 3,
+      sectorsCleared: 1,
+      totalTicks: 0,
+      finalTeamSize: 5,
+      portPurchases: 0,
+      packetsFired: 0,
+      finalBits: 0,
+      poolAtSectorClears: [14],
+      finalPool: 0,
+      battles: [b(0, 3, 'player'), b(0, 3, 'player'), b(1, 3, 'enemy')],
+      recruits: [],
+    };
+    const rows = perLayoutHopStats([run]).filter((s) => s.layout === 'river');
+    // Same layout, same bare hop, different acts → TWO rows, not one merged.
+    expect(rows.map((s) => `${s.sector}:${s.hop}`)).toEqual(['0:3', '1:3']);
+    expect(rows[0]!.playerWinRate).toBeCloseTo(1); // act-1 waves won
+    expect(rows[1]!.playerWinRate).toBeCloseTo(0); // the act-2 wave lost
+    // The CSV twin carries the sector column.
+    expect(renderLayoutHopCsv(rows)).toContain('layout,sector,hop');
   });
 
   it('per-encounter stats key pool damage by encounter id (X2)', () => {

@@ -363,7 +363,11 @@ export function runRunCli(args: RunModeArgs): void {
     process.stdout.write(`### ${nameFor(strategy)}\n`);
     process.stdout.write(`  runs:       ${stats.totalRuns}\n`);
     process.stdout.write(`  win rate:   ${(stats.winRate * 100).toFixed(1)}%\n`);
-    process.stdout.write(`  avg hop:    ${stats.averageHopReached.toFixed(2)}\n`);
+    // 72b audit (F1) — the walk position is (sectorsCleared, per-sector hop);
+    // a bare "avg hop" reads BACKWARDS on walk shapes (gotcha #120).
+    process.stdout.write(
+      `  avg pos:    sc ${stats.averageSectorsCleared.toFixed(2)} · hop ${stats.averageHopReached.toFixed(2)} (per-sector)\n`,
+    );
     process.stdout.write(`  avg ticks:  ${stats.averageTicks.toFixed(0)}\n`);
     process.stdout.write(`  hangs:      ${stats.hangs}\n`);
     if (stats.hangs > 0) {

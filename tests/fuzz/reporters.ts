@@ -544,7 +544,7 @@ export function renderDaemonAnalysis(results: readonly RunResult[]): string {
     lines.push(
       `  ${daemon.padEnd(10)} runs=${String(stats.totalRuns).padEnd(5)} ` +
         `win=${(stats.winRate * 100).toFixed(1).padStart(5)}% ` +
-        `avgHop=${stats.averageHopReached.toFixed(2)} hangs=${stats.hangs}`,
+        `avgSc=${stats.averageSectorsCleared.toFixed(2)} avgHop=${stats.averageHopReached.toFixed(2)} hangs=${stats.hangs}`,
     );
   }
   return lines.join('\n') + '\n';
@@ -554,7 +554,15 @@ export interface AggregateStats {
   totalRuns: number;
   byOutcome: Record<string, number>;
   winRate: number;
+  /** Mean `finalHopReached` — PER-SECTOR (gotcha #120: finalHop resets at
+   *  every sector transition, so this is "hop within the final sector",
+   *  NOT walk depth). Read WITH `averageSectorsCleared`: an act-2 death at
+   *  hop 2 got further than any act-1 death despite the smaller hop. */
   averageHopReached: number;
+  /** 72b audit (F1) — mean sector transitions; the other half of the walk
+   *  position. Pre-audit the CLI printed bare "avg hop", which walks
+   *  read BACKWARDS (deeper runs could lower it). */
+  averageSectorsCleared: number;
   averageTicks: number;
   hangs: number;
   /**
@@ -585,6 +593,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
   const byOutcome: Record<string, number> = {};
   const hangsByLayout: Record<string, number> = {};
   let hopSum = 0;
+  let scSum = 0;
   let tickSum = 0;
   let wins = 0;
   let hangs = 0;
@@ -592,6 +601,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
   for (const r of results) {
     byOutcome[r.outcome] = (byOutcome[r.outcome] ?? 0) + 1;
     hopSum += r.finalHopReached;
+    scSum += r.sectorsCleared;
     tickSum += r.totalTicks;
     if (r.outcome === 'complete') wins++;
     if (r.outcome === 'hang') {
@@ -610,6 +620,7 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     byOutcome,
     winRate: n === 0 ? 0 : wins / n,
     averageHopReached: n === 0 ? 0 : hopSum / n,
+    averageSectorsCleared: n === 0 ? 0 : scSum / n,
     averageTicks: n === 0 ? 0 : tickSum / n,
     hangs,
     hangsByLayout,
@@ -659,10 +670,10 @@ export function renderFailureTrace(result: RunResult): string {
   if (result.recruits.length === 0) {
     lines.push('_(no recruits — defeat before first victory)_');
   } else {
-    lines.push('| After hop | Archetype | Team size after |');
-    lines.push('|----------:|:----------|----------------:|');
+    lines.push('| Sector | After hop | Archetype | Team size after |');
+    lines.push('|-------:|----------:|:----------|----------------:|');
     for (const r of result.recruits) {
-      lines.push(`| ${r.hop} | ${r.archetype} | ${r.teamSizeAfter} |`);
+      lines.push(`| ${r.sector} | ${r.hop} | ${r.archetype} | ${r.teamSizeAfter} |`);
     }
   }
   lines.push('');
@@ -874,6 +885,11 @@ export interface LayoutStats {
 }
 
 export interface LayoutHopStats extends LayoutStats {
+  /** 72b audit (F2) — the act ordinal. hop is PER-SECTOR (gotcha #120):
+   *  without the sector key, act-1 hop-N and act-2 hop-N battles merged —
+   *  exactly the roster-strength-by-depth confound this table exists to
+   *  remove. */
+  sector: number;
   hop: number;
 }
 
@@ -928,19 +944,20 @@ export function perLayoutStats(results: readonly RunResult[]): LayoutStats[] {
  * early with a weak roster." Sorted by layout, then hop.
  */
 export function perLayoutHopStats(results: readonly RunResult[]): LayoutHopStats[] {
-  const byKey = new Map<string, { layout: string; hop: number; bs: BattleResult[] }>();
+  const byKey = new Map<string, { layout: string; sector: number; hop: number; bs: BattleResult[] }>();
   for (const r of results) {
     for (const b of r.battles) {
       const layout = layoutKey(b);
-      const k = `${layout} ${b.hop}`;
+      // 72b audit (F2) — the (sector, hop) key, the 68e shape (gotcha #120).
+      const k = `${layout} ${b.sector}:${b.hop}`;
       const entry = byKey.get(k);
       if (entry) entry.bs.push(b);
-      else byKey.set(k, { layout, hop: b.hop, bs: [b] });
+      else byKey.set(k, { layout, sector: b.sector, hop: b.hop, bs: [b] });
     }
   }
   return [...byKey.values()]
-    .map(({ layout, hop, bs }) => ({ ...layoutCore(layout, bs), hop }))
-    .sort((a, b) => a.layout.localeCompare(b.layout) || a.hop - b.hop);
+    .map(({ layout, sector, hop, bs }) => ({ ...layoutCore(layout, bs), sector, hop }))
+    .sort((a, b) => a.layout.localeCompare(b.layout) || a.sector - b.sector || a.hop - b.hop);
 }
 
 // ── The seam-hazard read (72b-pre) ───────────────────────────────────────────
@@ -1077,9 +1094,10 @@ export function renderLayoutAnalysis(results: readonly RunResult[]): string {
   lines.push('');
   lines.push(
     renderTable(
-      ['Layout', 'Hop', 'Waves', 'PWin%', 'PDth/wv', 'P.size', 'E.size'],
+      ['Layout', 'Sec', 'Hop', 'Waves', 'PWin%', 'PDth/wv', 'P.size', 'E.size'],
       perLayoutHopStats(results).map((s) => [
         s.layout,
+        String(s.sector),
         String(s.hop),
         String(s.battles),
         (s.playerWinRate * 100).toFixed(0),
@@ -1114,10 +1132,11 @@ export function renderLayoutCsv(stats: readonly LayoutStats[]): string {
 /** CSV of `perLayoutHopStats` (one row per layout×hop). */
 export function renderLayoutHopCsv(stats: readonly LayoutHopStats[]): string {
   const header =
-    'layout,hop,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
+    'layout,sector,hop,waves,playerWinRate,enemyWinRate,avgPlayerDeaths,avgEnemyDeaths,playerSize,enemySize';
   const rows = stats.map((s) =>
     [
       s.layout,
+      s.sector,
       s.hop,
       s.battles,
       s.playerWinRate.toFixed(4),

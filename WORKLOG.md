@@ -902,6 +902,32 @@ entrants — the fresh-act-2 probe stays parked); winners exit with
 Next: the band-signing conversation (72b part 2) on the corrected
 picture.
 
+**The 72b sector-merge audit (2026-08-02, user-prompted) — the
+gotcha-#120 class closed codebase-wide.** After the wall correction
+the user asked the right question: where ELSE does sector data merge?
+The sweep covered every hop/sector read (harness, reporters, rollout
+layer, board, bot, strategies, run layer, config). Ten surfaces
+verified sector-aware or correct-by-design (the 68e funnel/chips ·
+traces · decisions.csv · the fixed board · per-sector minHop gates ·
+the total-by-intent hops cap · the --hops/--sectorHops dials · no
+hop logic in bot/strategies). Three sector-blind stragglers found
+and fixed same-day: **F1** the CLI's bare "avg hop" (reads BACKWARDS
+on walks — an act-2 hop-2 death out-walks every act-1 death yet
+lowers the average) → the (sc, hop) position pair, both aggregate
+and per-daemon lines; **F2** `perLayoutHopStats` merged act-1 hop-N
+with act-2 hop-N — in the table whose own charter is "disentangles
+layout difficulty from roster strength by depth" → sector-keyed
+rows + a Sec column + the CSV twin, with a merge pin; **F3**
+`RecruitChoice` carried no sector (act-ambiguous recruit logs, the
+latent third bite) → sector field + trace column. **F4** (caveat,
+not defect): the per-item decision table pools across sectors BY
+DESIGN — documented as the sector-key rule in BALANCE §"The metric"
+(split on the decisions.csv sector column when an act split
+matters). None of the four touched the §72b reads or the band
+proposal — the funnel/seam/hazard/wall numbers were computed
+sector-aware — so the band numbers stand without a re-run; existing
+batch data stays valid (battles[] always carried sector).
+
 **72a landed (2026-08-01) — the arbitrated board twins + the
 run-alongside cycle. Numbers in BALANCE §72a (the canonical copy);
 this is the narrative.** The build half (`57c380b`) was exactly the

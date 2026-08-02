@@ -99,6 +99,9 @@ export interface BattleResult {
 }
 
 export interface RecruitChoice {
+  /** 72b audit (F3) — the act ordinal at recruit time. `hop` is PER-SECTOR
+   *  (gotcha #120); without this an act-2 recruit's hop was act-ambiguous. */
+  sector: number;
   hop: number;
   archetype: Archetype;
   teamSizeAfter: number;
@@ -973,6 +976,7 @@ export function runOne(
         const pick = offer[idx]!;
         run.dispatch({ kind: 'chooseRecruit', unitTemplate: pick });
         recruits.push({
+          sector: sectorsCleared,
           hop: run.currentHop,
           archetype: pick.archetype,
           teamSizeAfter: run.team.length,

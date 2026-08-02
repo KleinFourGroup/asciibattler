@@ -1,7 +1,8 @@
 {
-  "signedAt": "2026-07-29, §68f (user-signed) — the settled-config re-baseline: act-1 drift refs re-signed post-buffs (four enemy-side echoes moved them as a body); parity ±5 verified; the two-act DESIGN band + deep-end wall stay open (→ §68g)",
+  "signedAt": "2026-08-02, §72b (user-signed) — the unified band architecture: seam-pool 13–15 signed at measured reality · deep-end wall 30–35 RE-SIGNED (the §68g crisis was gotcha #120 contamination; true walls 0.154–0.333) · terminal reach 40–50 signed (user: human overperformance argues the conservative side) · WIN IS DERIVED (terminalReach × (1−wall) ⇒ 26–35), never independently signed; the one-act-era 55–70 two-act band RETIRED. Act-1 rows still carry the §68f settled-config drift refs.",
   "characterParity": "characters are similar in DIFFICULTY, differing in PLAYSTYLE (DESIGN.md §Run structure) — cross-character gaps beyond ~±5pt are defects; parity VERIFIED ±5 at the §68f settled config",
-  "twoActTargetWinRate": { "min": 0.55, "max": 0.7 },
+  "seamPoolBand": { "min": 13, "max": 15 },
+  "terminalReachTarget": { "min": 0.4, "max": 0.5 },
   "deepEndWallTarget": { "min": 0.3, "max": 0.35 },
   "act1WinRefs": {
     "soldier": { "regen": 0.65, "pre55": 0.65 },

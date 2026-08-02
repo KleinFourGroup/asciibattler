@@ -902,6 +902,31 @@ entrants — the fresh-act-2 probe stays parked); winners exit with
 Next: the band-signing conversation (72b part 2) on the corrected
 picture.
 
+**72b CLOSED (2026-08-02) — the band signing (user-signed; numbers
+in BALANCE §72b, the canonical copy).** The user signed the unified
+architecture wholesale and made the one load-bearing call
+conservatively: terminal reach 40–50, trimming my floated 50–60 on
+the human-overperformance argument (the bot runs ~75% of human
+skill, so a bot-anchored 50–60 would land humans past comfortable —
+the §53g ceiling logic applied at design time). Encoding: the sheet
+carries `seamPoolBand`/`terminalReachTarget`/`deepEndWallTarget`
+and `twoActTargetWinRate` is GONE — the walk rows' win band now
+COMPUTES from the signed pair inside `walkPosture` (balance-proof:
+a future re-sign moves the derived band with the sheet, nobody
+authors a win number again). Board metrics `seamPool` +
+`terminalReach` land sector-aware, with graceful N/A on pre-72b-pre
+batches (the act-1 dirs from the 72a cycle predate the pool
+columns — the parse must not throw on them). The report against
+current data is the agenda stated as WARNs: reach 0.225/0.325 vs
+40–50 (the 72c gap), walls BELOW band at 0.222/0.154 (the terminal
+is too soft — expected to drift in-band as reach rises), and the
+shopper's win 0.275 already inside the derived 26–35. All grades
+stay reference until 72f. With this, every 72b cut item is done
+(fire verification → 72c · wall correction · trajectory reads ·
+the audit · bands signed) — 72b closes; 72c (the grant + fire
+value buffs, judged by the decision-grade instruments, aimed at
+mid-act-2 attrition) is next.
+
 **The 72b sector-merge audit (2026-08-02, user-prompted) — the
 gotcha-#120 class closed codebase-wide.** After the wall correction
 the user asked the right question: where ELSE does sector data merge?

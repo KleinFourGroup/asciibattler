@@ -166,14 +166,13 @@ flips to the arbitrated arm and the sheet re-signs.
       ARCHITECTURE — trajectory grain, win DERIVED; the act-seam
       disentangle; the fresh-act-2 probe CONTINGENT; WORKLOG §72).
       No bump.
-- [ ] 72b — the reads + the band re-derivation: the fire-channel
-      verification (arb regen − arb ablated + per-item fire reads,
-      both postures) · the walk-wall/two-act re-read at the MEASURED
-      ceiling · the seam-hazard + trajectory reads (a walk batch
-      carrying the 72b-pre columns) · the bands re-derived on the
-      UNIFIED architecture (seam-pool band · wall band · reach/win
-      derived; 55–70 is NOT the anchor). Every band call
-      user-signed.
+- [x] 72b — the reads + the band re-derivation ✅ CLOSED 2026-08-02,
+      user-signed — fire verification Δ 0.000 (→ 72c) · the wall
+      correction (gotcha #120; §68g dissolved) · the trajectory/seam
+      reads (mid-act-2 = the killer) · the sector-merge audit (class
+      closed) · ⭐ BANDS SIGNED: seam 13–15 · wall 30–35 re-signed ·
+      terminal reach 40–50 · win DERIVED 26–35, 55–70 RETIRED.
+      BALANCE §72b ×3 + WORKLOG §72; no bump.
 - [ ] 72c — the grant-channel buffs (config-only): redraw + empower
       values swept, judged by the decision-grade instruments
       (Pick%/Δ|picked must move off ≈0) + paired win reads;

@@ -2551,3 +2551,23 @@ deltas. The pre-X H7c→O log lives at
     attrition (the deep-end's non-terminal encounters), the seam
     band can sign at reality (~13–15/20), and the act-1-reach /
     terminal-reach split replaces the single "reach" number.
+- **2026-08-02 — §72b THE BAND SIGNING (user-signed) — the unified
+  architecture is now THE sheet.** Signed: **seam-pool 13–15**
+  (measured reality — enter act 2 at ~2/3 health) · **deep-end wall
+  30–35 RE-SIGNED** (the §68g crisis dissolved as gotcha-#120
+  contamination) · **terminal reach 40–50** — THE load-bearing
+  target (user trimmed my floated 50–60: "once we factor in human
+  overperformance, that might get to be too easy" — the ~75%-of-human
+  bot skill ratio, §53g/§57) · **WIN IS DERIVED**: reach × (1−wall)
+  ⇒ **26–35** on the two-act walk; the one-act-era 55–70 band is
+  RETIRED. Sheet fields: `seamPoolBand` / `terminalReachTarget` /
+  `deepEndWallTarget` (`twoActTargetWinRate` removed); board metrics
+  `seamPool` + `terminalReach` (sector-aware arithmetic; pre-72b-pre
+  batches degrade to N/A, never throw); the walk rows' win band
+  COMPUTES from the signed pair (balance-proof — a re-sign moves it).
+  All reference-grade until the 72f post-buff session (the 68d
+  two-grade precedent). Board vs current data: 0 FAIL / 6 WARN, each
+  one an agenda item — reach 0.225/0.325 (the 72c gap), walls
+  0.222/0.154 (terminal too SOFT; expected to drift in-band as 72c
+  raises reach), win 0.175 (regen, below derived) / 0.275 (shopper,
+  ALREADY in the derived band).

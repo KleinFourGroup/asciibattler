@@ -50,10 +50,18 @@ export interface SignedSheet {
   readonly signedAt: string;
   /** The 68d-signed design principle the per-character rows enforce. */
   readonly characterParity: string;
-  /** The DESIGN target for the two-act shape — declared at 68d, flips to
-   *  `signed` grade at the §68e/f post-tuning verify. */
-  readonly twoActTargetWinRate: SheetBand;
-  /** The migrated 30–35 wall target — now the DEEP-END terminal's. */
+  /** 72b (user-signed) — mean pool HP at the act-1→act-2 seam, signed at
+   *  measured reality: enter act 2 at ~two-thirds health. */
+  readonly seamPoolBand: SheetBand;
+  /** 72b (user-signed) — the fraction of runs that reach the terminal
+   *  (sector-aware arrivals ÷ runs). THE load-bearing target: it sets
+   *  72c's mid-act-2 ambition; signed 40–50 (human overperformance
+   *  argues the conservative side). Win rate DERIVES from this × wall —
+   *  it is never independently signed (the unified band architecture;
+   *  the one-act-era 55–70 band is RETIRED). */
+  readonly terminalReachTarget: SheetBand;
+  /** The 30–35 wall target — RE-SIGNED at 72b for the deep-end terminal
+   *  (the §68g crisis was gotcha #120 contamination). */
   readonly deepEndWallTarget: SheetBand;
   /** Act-1 continuity drift references (68d observed; ±8pt paired noise). */
   readonly act1WinRefs: Readonly<
@@ -79,6 +87,8 @@ export function loadSignedSheet(path = join(HERE, 'signed-sheet.json')): SignedS
 export type MetricKey =
   | 'winRate'
   | 'bossWall'
+  | 'terminalReach'
+  | 'seamPool'
   | 'transactionRate'
   | 'terminalBank'
   | 'firesPerRun';
@@ -176,10 +186,18 @@ function act1Posture(
   };
 }
 
-/** One two-act walk instrument — the DESIGN-target rows (target declared at
- *  68d, flips to `signed` at the §68e/f post-tuning verify). */
+/** One two-act walk instrument — the 72b unified-architecture rows
+ *  (user-signed 2026-08-02): seam-pool + wall + terminal reach signed;
+ *  the win band DERIVES from reach × (1−wall) and is never independently
+ *  signed (the one-act-era 55–70 band is RETIRED). All reference-grade
+ *  until the 72f post-buff signing session (the 68d two-grade design). */
 function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstrument {
   const vector = posture === 'regen' ? REGEN : PRE55;
+  // Balance-proof: the derived band moves with the sheet's signed pair.
+  const winDerived = {
+    min: sheet.terminalReachTarget.min * (1 - sheet.deepEndWallTarget.max),
+    max: sheet.terminalReachTarget.max * (1 - sheet.deepEndWallTarget.min),
+  };
   return {
     id: `walk-${posture.replace('pre55', '55pre')}`,
     title: `two-act ${posture === 'regen' ? 'firer' : 'shopper'} (the design-target shape)`,
@@ -187,18 +205,32 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
     strategyRow: posture === 'regen' ? 'scored:59-regen-vector' : 'scored:55pre-vector',
     checks: [
       {
-        metric: 'winRate',
+        metric: 'seamPool',
         grade: 'reference',
-        min: sheet.twoActTargetWinRate.min,
-        max: sheet.twoActTargetWinRate.max,
-        source: '68d DECLARED design target 55–70 — signs at the post-tuning verify',
+        min: sheet.seamPoolBand.min,
+        max: sheet.seamPoolBand.max,
+        source: '72b SIGNED at measured reality: enter act 2 at ~2/3 health',
+      },
+      {
+        metric: 'terminalReach',
+        grade: 'reference',
+        min: sheet.terminalReachTarget.min,
+        max: sheet.terminalReachTarget.max,
+        source: '72b SIGNED 40–50 (human overperformance argues conservative) — THE 72c target; measured ~0.29 pooled',
       },
       {
         metric: 'bossWall',
         grade: 'reference',
         min: sheet.deepEndWallTarget.min,
         max: sheet.deepEndWallTarget.max,
-        source: '68d: the 30–35 wall target migrated to the deep-end terminal',
+        source: '72b RE-SIGNED 30–35 (the §68g crisis was gotcha #120 contamination; true walls 0.154–0.333)',
+      },
+      {
+        metric: 'winRate',
+        grade: 'reference',
+        min: winDerived.min,
+        max: winDerived.max,
+        source: '72b DERIVED reach×(1−wall) — win is never independently signed; 55–70 RETIRED (one-act era)',
       },
     ],
   };
@@ -310,6 +342,12 @@ export interface InstrumentMetrics {
   /** Defeats among terminal-hop arrivals ÷ arrivals (the §60e wall
    *  arithmetic); null when no run won (the terminal hop is unknowable). */
   readonly bossWall: number | null;
+  /** 72b — sector-aware terminal arrivals ÷ runs (the signed load-bearing
+   *  target); null when no run won. */
+  readonly terminalReach: number | null;
+  /** 72b — mean poolAtSectorEnd over seam entrants; null when no run
+   *  crossed a seam OR the batch predates the 72b-pre columns. */
+  readonly seamPool: number | null;
   readonly transactionRate: number;
   readonly terminalBank: number;
   readonly firesPerRun: number;
@@ -323,6 +361,10 @@ interface SummaryRow {
   readonly portPurchases: number;
   readonly finalBits: number;
   readonly packetsFired: number;
+  /** 72b — pool at the act seam; null pre-seam AND null on batches fetched
+   *  before the 72b-pre columns existed (graceful degradation: the seam
+   *  metric reads N/A there instead of the parse throwing). */
+  readonly poolAtSectorEnd: number | null;
 }
 
 /** Parse summary.csv by HEADER NAME (never position — columns append). */
@@ -344,8 +386,11 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
     col('finalBits'),
     col('packetsFired'),
   ];
+  // 72b — optional: pre-72b-pre batches don't carry the pool columns.
+  const seam = header.indexOf('poolAtSectorEnd');
   return lines.slice(1).map((line) => {
     const cells = line.split(',');
+    const seamCell = seam < 0 ? '' : (cells[seam] ?? '');
     return {
       strategy: cells[strategy] ?? '',
       outcome: cells[outcome] ?? '',
@@ -354,6 +399,7 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
       portPurchases: Number(cells[port]),
       finalBits: Number(cells[bits]),
       packetsFired: Number(cells[fired]),
+      poolAtSectorEnd: seamCell === '' ? null : Number(seamCell),
     };
   });
 }
@@ -361,7 +407,16 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
 export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
   const n = rows.length;
   if (n === 0) {
-    return { runs: 0, winRate: 0, bossWall: null, transactionRate: 0, terminalBank: 0, firesPerRun: 0 };
+    return {
+      runs: 0,
+      winRate: 0,
+      bossWall: null,
+      terminalReach: null,
+      seamPool: null,
+      transactionRate: 0,
+      terminalBank: 0,
+      firesPerRun: 0,
+    };
   }
   const wins = rows.filter((r) => r.outcome === 'complete');
   // §60e wall arithmetic, 72b-corrected: the terminal POSITION is
@@ -372,6 +427,7 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
   // rows at-or-past the winners' (sector, hop); the wall = the fraction of
   // arrivals that died there. Single-sector shapes are unchanged (sc ≡ 0).
   let bossWall: number | null = null;
+  let terminalReach: number | null = null;
   if (wins.length > 0) {
     const termSc = Math.max(...wins.map((r) => r.sectorsCleared));
     const termHop = Math.max(
@@ -384,12 +440,23 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     );
     const deaths = arrivals.filter((r) => r.outcome === 'defeat').length;
     bossWall = arrivals.length === 0 ? null : deaths / arrivals.length;
+    // 72b — the signed load-bearing target: how many runs SEE the terminal.
+    terminalReach = arrivals.length / n;
   }
+  // 72b — mean seam pool over entrants (null: no seam crossed, or a
+  // pre-72b-pre batch without the columns).
+  const entrants = rows.filter((r) => r.poolAtSectorEnd !== null);
+  const seamPool =
+    entrants.length === 0
+      ? null
+      : entrants.reduce((a, r) => a + (r.poolAtSectorEnd ?? 0), 0) / entrants.length;
   const mean = (f: (r: SummaryRow) => number): number => rows.reduce((a, r) => a + f(r), 0) / n;
   return {
     runs: n,
     winRate: wins.length / n,
     bossWall,
+    terminalReach,
+    seamPool,
     transactionRate: rows.filter((r) => r.portPurchases > 0).length / n,
     terminalBank: mean((r) => r.finalBits),
     firesPerRun: mean((r) => r.packetsFired),

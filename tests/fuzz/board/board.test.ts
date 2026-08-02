@@ -65,6 +65,23 @@ describe('computeMetrics', () => {
     expect(m.winRate).toBe(0);
   });
 
+  it('72b — terminalReach + seamPool: sector-aware arrivals ÷ runs; mean seam pool with pre-72b-pre graceful null', () => {
+    const walkCsv = [
+      'seed,strategy,daemon,outcome,finalHop,portPurchases,finalBits,packetsFired,sectorsCleared,poolAtSectorEnd',
+      '1,s,mars,complete,10,0,0,0,1,16',
+      '2,s,mars,defeat,10,0,0,0,1,12',
+      '3,s,mars,defeat,11,0,0,0,0,', // never crossed: blank seam, act-1 death
+      '4,s,mars,defeat,3,0,0,0,1,14',
+    ].join('\n');
+    const m = computeMetrics(parseSummaryCsv(walkCsv));
+    expect(m.terminalReach).toBeCloseTo(2 / 4); // arrivals (sc-aware) ÷ ALL runs
+    expect(m.seamPool).toBeCloseTo((16 + 12 + 14) / 3); // entrants only
+    // A pre-72b-pre CSV (no pool column) degrades to null, never throws.
+    const legacy = computeMetrics(parseSummaryCsv(CSV).filter((r) => r.strategy === 'scored:59-regen-vector'));
+    expect(legacy.seamPool).toBeNull();
+    expect(legacy.terminalReach).toBeCloseTo(3 / 4); // sc≡0 single-sector arithmetic
+  });
+
   it('72b — the wall is SECTOR-AWARE: a late act-1 death is NOT a terminal arrival (gotcha #120)', () => {
     // finalHop resets per sector, so winners at (sc=1, hop=10) define the
     // terminal position; a defeat at (sc=0, hop=11) has a BIGGER bare hop but
@@ -90,6 +107,8 @@ describe('evaluateBoard', () => {
     runs: 40,
     winRate,
     bossWall: 0.32,
+    terminalReach: 0.45,
+    seamPool: 14,
     transactionRate: 0.02,
     terminalBank: 70,
     firesPerRun: 2.9,
@@ -191,15 +210,27 @@ describe('the board definition itself', () => {
     }
   });
 
-  it('the walk rows carry the declared two-act target + the migrated deep-end wall band', () => {
+  it('72b — the walk rows carry the unified architecture: seam + reach + wall signed, win DERIVED (balance-proof)', () => {
     for (const id of ['walk-regen', 'walk-55pre']) {
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
-      const win = inst.checks.find((c) => c.metric === 'winRate')!;
-      expect(win.min).toBe(sheet.twoActTargetWinRate.min);
-      expect(win.max).toBe(sheet.twoActTargetWinRate.max);
+      const seam = inst.checks.find((c) => c.metric === 'seamPool')!;
+      expect(seam.min).toBe(sheet.seamPoolBand.min);
+      expect(seam.max).toBe(sheet.seamPoolBand.max);
+      const reach = inst.checks.find((c) => c.metric === 'terminalReach')!;
+      expect(reach.min).toBe(sheet.terminalReachTarget.min);
+      expect(reach.max).toBe(sheet.terminalReachTarget.max);
       const wall = inst.checks.find((c) => c.metric === 'bossWall')!;
       expect(wall.min).toBe(sheet.deepEndWallTarget.min);
+      // The win band is DERIVED from the signed pair — a re-signed reach or
+      // wall moves it with the sheet; it is never independently authored.
+      const win = inst.checks.find((c) => c.metric === 'winRate')!;
+      expect(win.min).toBeCloseTo(
+        sheet.terminalReachTarget.min * (1 - sheet.deepEndWallTarget.max),
+      );
+      expect(win.max).toBeCloseTo(
+        sheet.terminalReachTarget.max * (1 - sheet.deepEndWallTarget.min),
+      );
     }
   });
 

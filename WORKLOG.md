@@ -873,6 +873,35 @@ binning + floor markers); fuzz:smoke 378→381; live-proofed on a
 in act 2 — the read renders end to end). v34/v40 hold (harness-side
 only).
 
+**The 72b trajectory reads + the wall correction (2026-08-02).
+Numbers in BALANCE §72b (canonical); this is the narrative.** The
+4-arm walk batch (one box session at `8332ada`, 4/4 fetched, box
+destroyed) came back with win rates byte-identical to §72a — the
+72b-pre instrument consumed no RNG, exactly as designed — and the
+new columns riding every row. The first pooled funnel pass smelled
+wrong: 46 terminal arrivals at a 23.9% wall vs the board's
+0.588/0.476 walls on the same seeds. Chasing the discrepancy found
+**gotcha #120**: the board's §60e bossWall arithmetic filtered
+arrivals on bare `finalHop`, which RESETS per sector — late act-1
+deaths (hops 10–11 of an 11-hop act) out-hop the act-2 terminal
+(hop 10), so ~half the "arrivals" were act-1 deaths and the
+deep-end wall read ~2× true. The §68g "wall crisis" (58.8 vs
+30–35) dissolves: **the true walls are 0.154–0.333 — at/below the
+band already.** Fix-first: computeMetrics goes lexicographic
+(sector-aware terminal + arrivals; single-sector shapes unchanged),
+parseSummaryCsv gains the sectorsCleared column, the contamination
+case is pinned in board.test.ts (18th board test), and the board
+report now WARNs the walls from BELOW the band — the honest input
+for the re-sign. What the corrected reads say (BALANCE §72b): the
+funnel is 100 → 69 → 29 → 22 with **mid-act-2 as THE killer (59%
+of entrants die pre-terminal)**; the seam is healthy (~2/3 pool);
+the conditional gradient is flat above half pool (act-2 intrinsic
+difficulty dominates; the carry tax bites only the bottom ~22% of
+entrants — the fresh-act-2 probe stays parked); winners exit with
+~2/3 pool (deaths are concentration events, not budget drains).
+Next: the band-signing conversation (72b part 2) on the corrected
+picture.
+
 **72a landed (2026-08-01) — the arbitrated board twins + the
 run-alongside cycle. Numbers in BALANCE §72a (the canonical copy);
 this is the narrative.** The build half (`57c380b`) was exactly the

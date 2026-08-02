@@ -319,6 +319,7 @@ interface SummaryRow {
   readonly strategy: string;
   readonly outcome: string;
   readonly finalHop: number;
+  readonly sectorsCleared: number;
   readonly portPurchases: number;
   readonly finalBits: number;
   readonly packetsFired: number;
@@ -334,10 +335,11 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
     if (i < 0) throw new Error(`summary.csv: missing column '${name}'`);
     return i;
   };
-  const [strategy, outcome, finalHop, port, bits, fired] = [
+  const [strategy, outcome, finalHop, sectors, port, bits, fired] = [
     col('strategy'),
     col('outcome'),
     col('finalHop'),
+    col('sectorsCleared'),
     col('portPurchases'),
     col('finalBits'),
     col('packetsFired'),
@@ -348,6 +350,7 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
       strategy: cells[strategy] ?? '',
       outcome: cells[outcome] ?? '',
       finalHop: Number(cells[finalHop]),
+      sectorsCleared: Number(cells[sectors]),
       portPurchases: Number(cells[port]),
       finalBits: Number(cells[bits]),
       packetsFired: Number(cells[fired]),
@@ -361,12 +364,24 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     return { runs: 0, winRate: 0, bossWall: null, transactionRate: 0, terminalBank: 0, firesPerRun: 0 };
   }
   const wins = rows.filter((r) => r.outcome === 'complete');
-  // §60e wall arithmetic: the terminal hop is where winners end; arrivals =
-  // rows that reached it; the wall = the fraction of arrivals that died there.
+  // §60e wall arithmetic, 72b-corrected: the terminal POSITION is
+  // LEXICOGRAPHIC (sectorsCleared, finalHop) — finalHop resets per sector
+  // (gotcha #120), so the pre-72b bare-hop filter counted late act-1 deaths
+  // (hops ≥ the act-2 terminal's number) as terminal arrivals and read the
+  // deep-end wall at ~2× its true value (the §68g false alarm). Arrivals =
+  // rows at-or-past the winners' (sector, hop); the wall = the fraction of
+  // arrivals that died there. Single-sector shapes are unchanged (sc ≡ 0).
   let bossWall: number | null = null;
   if (wins.length > 0) {
-    const terminalHop = Math.max(...wins.map((r) => r.finalHop));
-    const arrivals = rows.filter((r) => r.finalHop >= terminalHop);
+    const termSc = Math.max(...wins.map((r) => r.sectorsCleared));
+    const termHop = Math.max(
+      ...wins.filter((r) => r.sectorsCleared === termSc).map((r) => r.finalHop),
+    );
+    const arrivals = rows.filter(
+      (r) =>
+        r.sectorsCleared > termSc ||
+        (r.sectorsCleared === termSc && r.finalHop >= termHop),
+    );
     const deaths = arrivals.filter((r) => r.outcome === 'defeat').length;
     bossWall = arrivals.length === 0 ? null : deaths / arrivals.length;
   }

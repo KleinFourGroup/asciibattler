@@ -2498,3 +2498,44 @@ deltas. The pre-X H7c→O log lives at
     grants/fire in the marginal-channel convergence. Input to the
     72e price re-disposition; a signed per-item read still needs
     pooled n≥80 per item (forced-dock shapes if 72e wants it).
+- **2026-08-02 — §72b THE TRAJECTORY READS (the 4-arm walk batch at
+  `8332ada`, box, 4/4 fetched; win rates byte-identical to §72a —
+  the 72b-pre telemetry non-perturbation receipt) + ⭐⭐ THE WALL
+  CORRECTION (gotcha #120): the deep-end wall was ~2× OVERSTATED by
+  bare-hop contamination — the §68g "wall crisis" is RESOLVED as
+  instrument error.** Arms: the four walk instruments (doctrine +
+  arb twins, both postures), 40 in-sample seeds each.
+  - ⭐⭐ **The true walls (sector-aware arithmetic): 0.222 regen /
+    0.154 55pre / 0.333 arb-regen / 0.267 arb-55pre** vs the
+    contaminated 0.588/0.476/0.647/0.450 — a death at act-1 hop
+    10–11 out-hops the act-2 terminal (hop 10) on bare finalHop, so
+    ~half the "arrivals" were act-1 deaths. **The terminal wall is
+    AT/BELOW the 30–35 band already.** Every pre-72b two-act wall
+    number (68d/f sheet rows included) carries the contamination.
+  - ⭐⭐ **The corrected pooled funnel (160 runs): 100% → 69.4% seam
+    (act-1 reach) → 28.8% terminal arrival → 21.9% win. Deaths:
+    act-1 49 · MID-ACT-2 65 · terminal 11 — mid-act-2 is THE
+    killer: 59% of seam entrants die before seeing the terminal.**
+    (The §72b part-1 "reach 42.5–52.5" framing was the contaminated
+    arrival set — superseded by this funnel.)
+  - **The seam is HEALTHY: mean pool 13.2–15.0 of 20 (66–75%)
+    entering act 2** (per-arm means; range 1–20). Act 1 delivers
+    runs at ~two-thirds health — the seam state is not the crisis.
+  - **The conditional read (directional — every bin sub-floor·):
+    win above seam-pool 10 = 31/87 (36%) vs below = 4/24 (17%);
+    flat-to-noisy gradient above half pool** ([15,20] 32% vs
+    [10,15) 42%). VERDICT: **act-2 INTRINSIC difficulty dominates;
+    the act-1 carry tax bites only below ~half pool** (~22% of
+    entrants). The fresh-act-2 counterfactual probe stays parked —
+    the conditional read answered the disentangle question at
+    directional grade; more n accrues free from every future walk
+    batch (the columns are always-on).
+  - **Winners' terminal headroom: mean finalPool 12.0–14.3** —
+    winners exit with ~two-thirds pool. The budget is not the
+    binding resource for winners; deaths are concentration events
+    (healthy entrants die: 13/17 of arb-regen's [15,20] bin).
+  - **Queued for the band session:** the wall band 30–35 is already
+    MET at the true arithmetic → the tuning target is MID-ACT-2
+    attrition (the deep-end's non-terminal encounters), the seam
+    band can sign at reality (~13–15/20), and the act-1-reach /
+    terminal-reach split replaces the single "reach" number.

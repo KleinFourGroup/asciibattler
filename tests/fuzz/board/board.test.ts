@@ -17,12 +17,12 @@ import {
 // A summary.csv fixture in the REAL column order (parse is by header name,
 // so a column append never breaks this — that's part of what's pinned).
 const CSV = [
-  'seed,strategy,daemon,outcome,finalHop,totalTicks,finalTeamSize,battlesPlayed,totalPlayerDeaths,totalEnemyDeaths,recruitedMelee,recruitedRanged,hangLayout,portPurchases,finalBits,packetsFired',
-  '1,scored:59-regen-vector,mars,complete,11,5000,9,11,3,40,2,1,,0,70,2',
-  '2,scored:59-regen-vector,mars,defeat,11,4000,7,11,5,30,1,1,,0,80,1',
-  '3,scored:59-regen-vector,mars,defeat,6,2500,5,6,6,15,1,0,,1,20,3',
-  '4,scored:59-regen-vector,mars,complete,11,5200,10,11,2,45,2,2,,0,90,2',
-  '5,other-strategy,mars,complete,11,5000,9,11,3,40,2,1,,0,999,0',
+  'seed,strategy,daemon,outcome,finalHop,totalTicks,finalTeamSize,battlesPlayed,totalPlayerDeaths,totalEnemyDeaths,recruitedMelee,recruitedRanged,hangLayout,portPurchases,finalBits,packetsFired,sectorsCleared',
+  '1,scored:59-regen-vector,mars,complete,11,5000,9,11,3,40,2,1,,0,70,2,0',
+  '2,scored:59-regen-vector,mars,defeat,11,4000,7,11,5,30,1,1,,0,80,1,0',
+  '3,scored:59-regen-vector,mars,defeat,6,2500,5,6,6,15,1,0,,1,20,3,0',
+  '4,scored:59-regen-vector,mars,complete,11,5200,10,11,2,45,2,2,,0,90,2,0',
+  '5,other-strategy,mars,complete,11,5000,9,11,3,40,2,1,,0,999,0,0',
 ].join('\n');
 
 describe('parseSummaryCsv', () => {
@@ -63,6 +63,22 @@ describe('computeMetrics', () => {
     const m = computeMetrics(rows.filter((r) => r.outcome === 'defeat'));
     expect(m.bossWall).toBeNull();
     expect(m.winRate).toBe(0);
+  });
+
+  it('72b — the wall is SECTOR-AWARE: a late act-1 death is NOT a terminal arrival (gotcha #120)', () => {
+    // finalHop resets per sector, so winners at (sc=1, hop=10) define the
+    // terminal position; a defeat at (sc=0, hop=11) has a BIGGER bare hop but
+    // is an act-1 death — the pre-72b bare-hop filter counted it and read the
+    // deep-end wall at ~2× its true value (the §68g false alarm).
+    const walkCsv = [
+      'seed,strategy,daemon,outcome,finalHop,portPurchases,finalBits,packetsFired,sectorsCleared',
+      '1,s,mars,complete,10,0,0,0,1', // winner: terminal = (1, 10)
+      '2,s,mars,defeat,10,0,0,0,1', //   true terminal death → arrival
+      '3,s,mars,defeat,11,0,0,0,0', //   ACT-1 death at hop 11 → NOT an arrival
+      '4,s,mars,defeat,3,0,0,0,1', //    mid-act-2 death → not an arrival
+    ].join('\n');
+    const m = computeMetrics(parseSummaryCsv(walkCsv));
+    expect(m.bossWall).toBeCloseTo(1 / 2); // arrivals = seeds 1+2 only
   });
 });
 

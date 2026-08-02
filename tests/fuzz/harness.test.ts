@@ -35,6 +35,10 @@ import {
   renderLayoutAnalysis,
   perEncounterStats,
   renderEncounterAnalysis,
+  seamInputsOf,
+  seamHazardStats,
+  renderSeamHazard,
+  type SeamHazardInput,
 } from './reporters';
 import { TelemetryAccumulator } from './telemetry';
 import type { Archetype } from '../../src/sim/archetypes';
@@ -46,6 +50,70 @@ import type { RunDecisionRecord } from './rollout/driver';
 import type { RunScoreBreakdown } from './rollout/evaluator';
 
 describe('fuzz harness', () => {
+  // ── 72b-pre — the pool-trajectory instrument ────────────────────────────────
+
+  it('captures the pool trajectory: poolAtStart on every battle, seam array ≡ sectorsCleared', () => {
+    const result = runOne(1, makeStrategy('pure-random')!);
+    expect(result.battles.every((b) => Number.isFinite(b.poolAtStart))).toBe(true);
+    // The run-wide pool starts FULL — config-derived, never hardcoded
+    // (the balance-proof rule).
+    expect(result.battles[0]!.poolAtStart).toBe(HEALTH.playerHealthMax);
+    expect(Number.isFinite(result.finalPool)).toBe(true);
+    // Every seam crossing records exactly one pool sample (the push and the
+    // counter share one handler), whatever this seed's walk did.
+    expect(result.poolAtSectorClears.length).toBe(result.sectorsCleared);
+    for (const p of result.poolAtSectorClears) {
+      expect(p).toBeGreaterThan(0); // a cleared sector means the run was alive
+      expect(p).toBeLessThanOrEqual(HEALTH.playerHealthMax);
+    }
+    // seamInputsOf surfaces [0] as THE act-1→act-2 seam value (null pre-seam).
+    const input = seamInputsOf([result])[0]!;
+    expect(input.poolAtSectorEnd).toBe(result.poolAtSectorClears[0] ?? null);
+  });
+
+  it('renders the pool columns: seam blank when no sector was cleared, populated when crossed', () => {
+    const base = runOne(1, makeStrategy('pure-random')!);
+    const uncrossed: RunResult = { ...base, sectorsCleared: 0, poolAtSectorClears: [], finalPool: 5 };
+    const crossed: RunResult = { ...base, sectorsCleared: 1, poolAtSectorClears: [7], finalPool: 3 };
+    const lines = renderSummaryCsv([uncrossed, crossed]).trim().split('\n');
+    const cols = lines[0]!.split(',');
+    const iSeam = cols.indexOf('poolAtSectorEnd');
+    const iFinal = cols.indexOf('finalPool');
+    expect(iSeam).toBeGreaterThan(cols.indexOf('sectorsCleared')); // append-last
+    expect(lines[1]!.split(',')[iSeam]).toBe('');
+    expect(lines[1]!.split(',')[iFinal]).toBe('5');
+    expect(lines[2]!.split(',')[iSeam]).toBe('7');
+    expect(lines[2]!.split(',')[iFinal]).toBe('3');
+  });
+
+  it('seamHazardStats bins act-2 entrants by config-derived quarters and conditions outcomes', () => {
+    const max = HEALTH.playerHealthMax;
+    const row = (outcome: string, pool: number | null, cleared = 1): SeamHazardInput => ({
+      outcome,
+      sectorsCleared: cleared,
+      poolAtSectorEnd: pool,
+    });
+    const bins = seamHazardStats([
+      row('complete', max), // top bin (the closed upper edge)
+      row('defeat', max * 0.8), // top bin
+      row('defeat', max * 0.5), // third bin (the half-open lower edge)
+      row('defeat', max * 0.1), // bottom bin
+      row('complete', 0), // bottom bin (pool 0 is still an entrant)
+      row('defeat', null, 0), // never reached the seam — excluded
+    ]);
+    expect(bins).toHaveLength(4);
+    expect(bins.map((b) => b.n)).toEqual([2, 0, 1, 2]);
+    expect(bins[3]!.wins).toBe(1);
+    expect(bins[3]!.deaths).toBe(1);
+    expect(bins[0]!.wins).toBe(1); // the 0-pool entrant that still won
+    expect(bins[1]!.meanPool).toBeNull(); // empty bin stays in the shape
+    // The renderer dashes empty bins and marks every sub-floor n (the n=80 rule).
+    const out = renderSeamHazard([row('complete', max), row('defeat', max * 0.1)]);
+    expect(out).toContain('entered act 2');
+    expect(out).toContain('·');
+    expect(out).toContain('—');
+  });
+
   it('completes a single run without throwing', () => {
     const result = runOne(1, makeStrategy('pure-random')!);
     expect(result.seed).toBe(1);
@@ -184,8 +252,10 @@ describe('fuzz reporters', () => {
     expect(lines[0]).toContain('seed');
     expect(lines[0]).toContain('strategy');
     expect(lines[0]).toContain('outcome');
-    // 68e — the append-last walk column (the finalHop-gap fix).
-    expect(lines[0]!.endsWith('sectorsCleared')).toBe(true);
+    // 68e — the walk column (the finalHop-gap fix); 72b-pre appended the
+    // pool-trajectory columns after it (the append-last rule).
+    expect(lines[0]).toContain('sectorsCleared');
+    expect(lines[0]!.endsWith('poolAtSectorEnd,finalPool')).toBe(true);
     // Row count of comma-separated fields must match the header.
     const headerCols = lines[0]!.split(',').length;
     for (const row of lines.slice(1)) {
@@ -209,6 +279,8 @@ describe('fuzz reporters', () => {
     portPurchases: 0,
     finalBits: 0,
     packetsFired: 0,
+    poolAtSectorClears: [],
+    finalPool: 0,
     battles: [],
     recruits: [],
     ...(decisions !== undefined ? { decisions } : {}),
@@ -578,6 +650,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [1, 1, 1, 1, 1],
       enemyLevels: [1, 1, 1, 1, 1, 1, 1, 1],
+      poolAtStart: 20,
     });
     const run = (
       battles: BattleResult[],
@@ -595,6 +668,8 @@ describe('fuzz reporters', () => {
       portPurchases: 0,
       packetsFired: 0,
       finalBits: 0,
+      poolAtSectorClears: [],
+      finalPool: 0,
       battles,
       recruits: [],
     });
@@ -644,6 +719,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [1],
       enemyLevels: [1],
+      poolAtStart: 20,
     });
     const run = (
       battles: BattleResult[],
@@ -662,6 +738,8 @@ describe('fuzz reporters', () => {
       portPurchases: 0,
       packetsFired: 0,
       finalBits: 0,
+      poolAtSectorClears: [],
+      finalPool: 0,
       battles,
       recruits: [],
     });
@@ -704,6 +782,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize,
       playerLevels: [1, 1, 1, 1, 1],
       enemyLevels: Array<number>(enemyTeamSize).fill(1),
+      poolAtStart: 20,
     });
     const results: RunResult[] = [
       {
@@ -718,6 +797,8 @@ describe('fuzz reporters', () => {
         portPurchases: 0,
         packetsFired: 0,
         finalBits: 0,
+        poolAtSectorClears: [],
+        finalPool: 0,
         recruits: [],
         battles: [
           // junctionAmbush: 1 of 4 player wins (brutal), outnumbered 9-vs-5.
@@ -780,6 +861,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [],
       enemyLevels: [],
+      poolAtStart: 20,
     });
     const tel = (
       chips: ReadonlyArray<{ hop: number; encounterId: string; player: number; enemy: number }>,
@@ -801,6 +883,8 @@ describe('fuzz reporters', () => {
         portPurchases: 0,
         packetsFired: 0,
         finalBits: 0,
+        poolAtSectorClears: [],
+        finalPool: 0,
         battles: [eb(1, 'enc1', 'player'), eb(1, 'enc1', 'enemy'), eb(2, 'enc2', 'player')],
         recruits: [],
         telemetry: tel([
@@ -821,6 +905,8 @@ describe('fuzz reporters', () => {
         portPurchases: 0,
         packetsFired: 0,
         finalBits: 0,
+        poolAtSectorClears: [],
+        finalPool: 0,
         battles: [eb(1, 'enc1', 'player')],
         recruits: [],
         telemetry: tel([{ hop: 1, encounterId: 'enc1', player: 1, enemy: 7 }]),
@@ -870,6 +956,8 @@ describe('fuzz reporters', () => {
         portPurchases: 0,
         packetsFired: 0,
         finalBits: 0,
+        poolAtSectorClears: [],
+        finalPool: 0,
         battles: [],
         recruits: [],
         telemetry: acc.finish([], []),
@@ -899,6 +987,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [],
       enemyLevels: [],
+      poolAtStart: 20,
     });
     const results: RunResult[] = [
       {
@@ -913,6 +1002,8 @@ describe('fuzz reporters', () => {
         portPurchases: 0,
         packetsFired: 0,
         finalBits: 0,
+        poolAtSectorClears: [],
+        finalPool: 0,
         battles: [eb('enc1')],
         recruits: [],
       },

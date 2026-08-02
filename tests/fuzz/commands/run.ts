@@ -45,6 +45,8 @@ import {
   perEncounterStats,
   renderEncounterAnalysis,
   renderEncounterCsv,
+  seamInputsOf,
+  renderSeamHazard,
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
 import { characterLabel } from '../characterSelection';
@@ -391,6 +393,13 @@ export function runRunCli(args: RunModeArgs): void {
   // 71c — the flip-rate aggregate, printed whenever the shadow ran.
   if (tierFlipRows(allResults).length > 0) {
     process.stdout.write(renderTierFlipAnalysis(allResults) + '\n');
+  }
+  // 72b-pre — the seam-hazard read, printed whenever any run reached a sector
+  // seam (walk shapes). Serial-console-only like the reads above — the file
+  // contract is the summary.csv poolAtSectorEnd/finalPool columns, which a
+  // --jobs/box batch re-derives the same table from.
+  if (allResults.some((r) => r.poolAtSectorClears.length > 0)) {
+    process.stdout.write('\n' + renderSeamHazard(seamInputsOf(allResults)) + '\n');
   }
   process.stdout.write(
     `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir}\n`,

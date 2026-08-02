@@ -91,6 +91,11 @@ export interface BattleResult {
    *  before any deaths so it reflects the composition entering the hop. */
   playerLevels: number[];
   enemyLevels: number[];
+  /** 72b-pre — the run-wide player pool at battle (wave) START. With the
+   *  (sector, hop) key this is the pool-HP trajectory sample: the unified
+   *  balance frame's connective tissue (encounter damage → trajectory →
+   *  reach × wall). Captured where `playerLevels` is, pre-damage. */
+  poolAtStart: number;
 }
 
 export interface RecruitChoice {
@@ -131,6 +136,15 @@ export interface RunResult {
    *  proof — the `portPurchases` twin; 0 forever on the anchor arms
    *  (absent `pickPacketFire` = the pre-§59 never-fire behavior). */
   packetsFired: number;
+  /** 72b-pre — pool HP recorded at each `sector:cleared` transition, in walk
+   *  order (empty = the run never cleared a sector). `[0]` IS the
+   *  act-1→act-2 seam value on the two-act walk: health never resets
+   *  between acts, so this is the state that disentangles act-2 intrinsic
+   *  difficulty from act-1 carried damage (the seam-hazard read's key). */
+  poolAtSectorClears: readonly number[];
+  /** 72b-pre — the run-wide pool at run end: winners' headroom, the
+   *  trajectory's terminal sample (0 on pool-exhaustion defeats). */
+  finalPool: number;
   battles: BattleResult[];
   recruits: RecruitChoice[];
   /**
@@ -380,8 +394,14 @@ export function runOne(
   // successor sector's first battle:started), so `sectorsCleared` IS the
   // 0-based sector index of whatever battle starts next.
   let sectorsCleared = 0;
+  // 72b-pre — the pool at each sector seam, in walk order. [0] is THE
+  // act-1→act-2 handoff state on the two-act walk (health never resets
+  // between acts — the disentangling instrument's key value). `run` is
+  // declared below; the closure only fires from dispatches long after.
+  const poolAtSectorClears: number[] = [];
   bus.on('sector:cleared', () => {
     sectorsCleared++;
+    poolAtSectorClears.push(run.playerHealth);
   });
   // H7c — opt-in mechanism telemetry. Null (and zero overhead) by default.
   const telemetry = options.telemetry ? new TelemetryAccumulator() : null;
@@ -436,6 +456,7 @@ export function runOne(
       enemyTeamSize: encounter.enemyTeam.length,
       playerLevels: encounter.playerTeam.map((u) => u.level),
       enemyLevels: encounter.enemyTeam.map((u) => u.level),
+      poolAtStart: run.playerHealth,
       playerDeaths: 0,
       enemyDeaths: 0,
       startTick: 0,
@@ -526,6 +547,7 @@ export function runOne(
       enemyTeamSize: currentBattle.enemyTeamSize,
       playerLevels: currentBattle.playerLevels,
       enemyLevels: currentBattle.enemyLevels,
+      poolAtStart: currentBattle.poolAtStart,
     });
     currentBattle = null;
     currentWorld = null;
@@ -598,6 +620,7 @@ export function runOne(
         portPurchases,
         packetsFired,
         sectorsCleared,
+        poolAtSectorClears,
         telemetry,
       );
     }
@@ -621,6 +644,7 @@ export function runOne(
             portPurchases,
             packetsFired,
             sectorsCleared,
+            poolAtSectorClears,
             telemetry,
           );
         }
@@ -811,6 +835,7 @@ export function runOne(
               enemyTeamSize: cb.enemyTeamSize,
               playerLevels: cb.playerLevels,
               enemyLevels: cb.enemyLevels,
+              poolAtStart: cb.poolAtStart,
             });
           }
           return finalize(
@@ -825,6 +850,7 @@ export function runOne(
             portPurchases,
             packetsFired,
             sectorsCleared,
+            poolAtSectorClears,
             telemetry,
           );
         }
@@ -970,6 +996,7 @@ export function runOne(
     portPurchases,
     packetsFired,
     sectorsCleared,
+    poolAtSectorClears,
     telemetry,
   );
 }
@@ -984,6 +1011,7 @@ interface PartialBattle {
   enemyTeamSize: number;
   playerLevels: number[];
   enemyLevels: number[];
+  poolAtStart: number;
   playerDeaths: number;
   enemyDeaths: number;
   startTick: number;
@@ -1012,6 +1040,7 @@ function finalize(
   portPurchases: number,
   packetsFired: number,
   sectorsCleared: number,
+  poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   // Fold in the recruit log + final roster composition (player-side, already
@@ -1034,6 +1063,8 @@ function finalize(
     portPurchases,
     finalBits: run.bits,
     packetsFired,
+    poolAtSectorClears,
+    finalPool: run.playerHealth,
     battles,
     recruits,
     ...(finishedTelemetry !== undefined ? { telemetry: finishedTelemetry } : {}),
@@ -1051,6 +1082,7 @@ function aborted(
   portPurchases: number,
   packetsFired: number,
   sectorsCleared: number,
+  poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
 ): RunResult {
   return finalize(
@@ -1065,6 +1097,7 @@ function aborted(
     portPurchases,
     packetsFired,
     sectorsCleared,
+    poolAtSectorClears,
     telemetry,
   );
 }

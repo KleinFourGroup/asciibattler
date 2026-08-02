@@ -828,6 +828,51 @@ Audit findings, cut into ROADMAP §72 same-day (user-signed):
   at 72b — 55–70 is NOT the anchor (one-act-era provenance,
   user-flagged at §71d).
 
+**The 72b band conversation, part 1 (2026-08-01→02) — the
+decomposition insight + the unified band architecture (user-signed).**
+Presenting the 72a numbers for the band re-derivation surfaced the
+load-bearing arithmetic: **win = reach × (1 − wall), and REACH is the
+binding constraint** — at 42.5–52.5% reach, even a zero wall caps the
+walk at ~43–53%, so the 55–70 aspiration dies in mid-run attrition,
+not at the boss gate (the one-act era had ~90%+ reach; the carried
+band was derived in a world without act-2 attrition). The user then
+pushed the frame one level deeper — too many disconnected metrics
+(per-encounter pool damage, win rate, boss wall), and health never
+resets between acts, so sector-2 difficulty was confounded with
+sector-1 exit state. The unification, SIGNED: **the run is a pool-HP
+budget flow** — encounter grain (the §X damage bands) → trajectory
+grain (pool by (sector, hop): the missing connective tissue) → run
+grain (reach × wall = win, DERIVED not independently signed). The
+new signable design feeling this exposes: the SEAM-POOL band ("how
+beat up should you be entering act 2?"). Also signed: the instrument
+insertion below (items 1+2 now, the fresh-act-2 counterfactual probe
+CONTINGENT on the conditional read proving insufficient), and the
+scope flag that a sector-clear partial heal — the obvious lever if
+the seam turns out to be the whole story — is a NEW MECHANIC, out of
+this round's guard, parked as a named contingency for the signing
+session.
+
+**72b-pre landed (2026-08-02) — the pool-trajectory instrument.**
+Exactly the signed shape: `poolAtStart` on every BattleResult
+(captured where `playerLevels` is, pre-damage — with (sector, hop)
+this IS the trajectory sample), `poolAtSectorClears` (one push per
+`sector:cleared`, sharing the 68e counter's handler — `[0]` is THE
+act-1→act-2 seam value) + `finalPool` on RunResult, two append-last
+summary.csv columns (`poolAtSectorEnd` blank pre-seam, `finalPool`),
+and the seam-hazard conditional read (`seamHazardStats` — bins are
+QUARTERS OF THE CONFIG MAX, the balance-proof rule; empty bins stay
+in the shape; the n=80 · marker rides every sub-floor bin) printed by
+the CLI for any batch that reached a seam (serial-console like the
+71b read — the file contract is the columns themselves). The
+deliberate loud change: summary.csv BYTES move (the sectorsCleared
+append precedent), pinned by the updated header test
+(`endsWith('poolAtSectorEnd,finalPool')`). Six new pins total
+(trajectory capture invariants · column render blank/populated ·
+binning + floor markers); fuzz:smoke 378→381; live-proofed on a
+6-seed scored-only walk probe (1/6 crossed at seam pool 20.0, died
+in act 2 — the read renders end to end). v34/v40 hold (harness-side
+only).
+
 **72a landed (2026-08-01) — the arbitrated board twins + the
 run-alongside cycle. Numbers in BALANCE §72a (the canonical copy);
 this is the narrative.** The build half (`57c380b`) was exactly the

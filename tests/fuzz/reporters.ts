@@ -41,6 +41,11 @@ const CSV_HEADER = [
   // 68e — same append-last rule; the finalHop-gap fix. `finalHop` above stays
   // PER-SECTOR — a walk read splits acts on (sectorsCleared, finalHop).
   'sectorsCleared',
+  // 72b-pre — same append-last rule; the pool-trajectory columns. Seam =
+  // pool at the FIRST sector:cleared (empty when the run never cleared one);
+  // finalPool = the run-end pool (winners' headroom / 0-ish on pool deaths).
+  'poolAtSectorEnd',
+  'finalPool',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -76,6 +81,8 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         r.finalBits,
         r.packetsFired,
         r.sectorsCleared,
+        r.poolAtSectorClears[0] ?? '',
+        r.finalPool,
       ].join(','),
     );
   }
@@ -934,6 +941,93 @@ export function perLayoutHopStats(results: readonly RunResult[]): LayoutHopStats
   return [...byKey.values()]
     .map(({ layout, hop, bs }) => ({ ...layoutCore(layout, bs), hop }))
     .sort((a, b) => a.layout.localeCompare(b.layout) || a.hop - b.hop);
+}
+
+// ── The seam-hazard read (72b-pre) ───────────────────────────────────────────
+
+/** The minimal per-run shape the seam read consumes — RunResult (via
+ *  `seamInputsOf`) or a parsed summary.csv row both satisfy it, so the same
+ *  aggregation can later read fetched box batches (the 71b two-door rule). */
+export interface SeamHazardInput {
+  readonly outcome: string;
+  readonly sectorsCleared: number;
+  /** Pool HP at the act-1→act-2 seam; null when the run never got there. */
+  readonly poolAtSectorEnd: number | null;
+}
+
+export function seamInputsOf(results: readonly RunResult[]): SeamHazardInput[] {
+  return results.map((r) => ({
+    outcome: r.outcome,
+    sectorsCleared: r.sectorsCleared,
+    poolAtSectorEnd: r.poolAtSectorClears[0] ?? null,
+  }));
+}
+
+export interface SeamHazardBin {
+  readonly label: string;
+  readonly n: number;
+  readonly wins: number;
+  readonly deaths: number;
+  readonly meanPool: number | null;
+}
+
+/** Bin act-2 entrants by seam pool — quarters of the CONFIG max, never
+ *  hardcoded (the balance-proof rule) — and read act-2 outcomes conditioned
+ *  on entry state. The disentangling instrument: a steep Win% gradient
+ *  down-bin says act-1 carried damage is what kills act-2 runs; a flat one
+ *  says act 2 is intrinsically hard regardless of entry health. Empty bins
+ *  stay in the output (stable table shape; renderers dash them). */
+export function seamHazardStats(rows: readonly SeamHazardInput[]): SeamHazardBin[] {
+  const max = HEALTH.playerHealthMax;
+  const entrants = rows.filter((r) => r.sectorsCleared >= 1 && r.poolAtSectorEnd !== null);
+  return [0, 1, 2, 3].map((q) => {
+    const lo = (q / 4) * max;
+    const hi = ((q + 1) / 4) * max;
+    const last = q === 3;
+    const inBin = entrants.filter((r) => {
+      const p = r.poolAtSectorEnd!;
+      return p >= lo && (last ? p <= hi : p < hi);
+    });
+    const n = inBin.length;
+    return {
+      label: `[${lo},${hi}${last ? ']' : ')'}`,
+      n,
+      wins: inBin.filter((r) => r.outcome === 'complete').length,
+      deaths: inBin.filter((r) => r.outcome === 'defeat').length,
+      meanPool: n === 0 ? null : inBin.reduce((a, r) => a + r.poolAtSectorEnd!, 0) / n,
+    };
+  });
+}
+
+/** The stdout table for any batch whose runs reached a sector seam. */
+export function renderSeamHazard(rows: readonly SeamHazardInput[]): string {
+  const entrants = rows.filter((r) => r.sectorsCleared >= 1 && r.poolAtSectorEnd !== null).length;
+  const lines: string[] = [];
+  lines.push(`### The act seam (${entrants}/${rows.length} runs entered act 2)`);
+  lines.push(
+    `Act-2 outcomes conditioned on pool HP at the sector seam (health never resets between`,
+  );
+  lines.push(
+    `  acts). Bins = quarters of the ${HEALTH.playerHealthMax}-point pool (config-derived). Steep Win% gradient`,
+  );
+  lines.push(
+    `  down-bin = act-1 carried damage kills act-2 runs; flat = act 2 is hard regardless.`,
+  );
+  lines.push(`  n < 80 (marked ·) is DIRECTIONAL — the n=80 floor.`);
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Seam pool', 'n', 'Win%', 'Death%', 'Mean pool'],
+      seamHazardStats(rows).map((b) => [
+        b.label,
+        `${b.n}${b.n > 0 && b.n < 80 ? '·' : ''}`,
+        b.n === 0 ? '—' : ((b.wins / b.n) * 100).toFixed(0),
+        b.n === 0 ? '—' : ((b.deaths / b.n) * 100).toFixed(0),
+        b.meanPool === null ? '—' : b.meanPool.toFixed(1),
+      ]),
+    ),
+  );
+  return lines.join('\n');
 }
 
 /** Fixed-width table: left-align the first `leftCols` columns (labels),

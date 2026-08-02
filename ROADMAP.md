@@ -151,12 +151,9 @@ flips to the arbitrated arm and the sheet re-signs.
 - Decision points: EVERY band re-sign is user-signed · the default-arm
   flip is user-signed · the four two-act board WARNs resolve (re-sign
   or repair) one way or the other.
-- §71 insertions (2026-08-01, worklog §71): the GRANT channel joins
-  the fire channel on the re-sign/buff agenda (decision-grade margins
-  ≈0; user: "major buffs") · the two-act 55–70 band is NOT the anchor
-  for the re-sign (user-flagged: carried unexamined from the one-act
-  era) · the cheap-tier lock re-opens after the grant buffs (re-run
-  the flip read once grants carry real margins).
+- §71 insertions (2026-08-01, worklog §71): grants join fire on the
+  buff agenda · 55–70 is NOT the re-sign anchor · the tier-lock
+  re-opens post-buffs (re-run the flip read).
 - Cut (kickoff 2026-08-01, user-signed; audit + rationale → WORKLOG
   §72):
 - [x] 72a — the arbitrated board twins + the run-alongside cycle ✅
@@ -164,11 +161,18 @@ flips to the arbitrated arm and the sheet re-signs.
       move (act-1 shopper +15, a posture DISSOLUTION), walk ceiling
       unmoved, arb fire Δ 0.000 → fire joins 72c; no bump (as
       predicted). BALANCE §72a + WORKLOG §72.
-- [ ] 72b — the reads + the band re-derivation (no code): the
-      fire-channel verification (arb regen − arb ablated + per-item
-      fire reads, both postures) · the walk-wall/two-act re-read at
-      the MEASURED ceiling · the two-act band re-derived from
-      scratch (55–70 is NOT the anchor). Every band call
+- [x] 72b-pre — the pool-trajectory instrument ✅ 2026-08-02
+      (findings-driven insertion, user-signed: the UNIFIED BAND
+      ARCHITECTURE — trajectory grain, win DERIVED; the act-seam
+      disentangle; the fresh-act-2 probe CONTINGENT; WORKLOG §72).
+      No bump.
+- [ ] 72b — the reads + the band re-derivation: the fire-channel
+      verification (arb regen − arb ablated + per-item fire reads,
+      both postures) · the walk-wall/two-act re-read at the MEASURED
+      ceiling · the seam-hazard + trajectory reads (a walk batch
+      carrying the 72b-pre columns) · the bands re-derived on the
+      UNIFIED architecture (seam-pool band · wall band · reach/win
+      derived; 55–70 is NOT the anchor). Every band call
       user-signed.
 - [ ] 72c — the grant-channel buffs (config-only): redraw + empower
       values swept, judged by the decision-grade instruments

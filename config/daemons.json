@@ -3,7 +3,7 @@
     {
       "id": "mars",
       "name": "Idol of Mars",
-      "description": "Once per turn, empower a unit: +4 STR / RNG / MAG for the encounter.",
+      "description": "Once per turn, empower a unit: +8 STR / RNG / MAG for the encounter.",
       "rules": [
         {
           "kind": "hook",
@@ -14,9 +14,9 @@
             "buff": {
               "key": "empowered",
               "mods": {
-                "strength": { "add": 4 },
-                "ranged": { "add": 4 },
-                "magic": { "add": 4 }
+                "strength": { "add": 8 },
+                "ranged": { "add": 8 },
+                "magic": { "add": 8 }
               },
               "merge": "add"
             }
@@ -27,7 +27,7 @@
     {
       "id": "minerva",
       "name": "Idol of Minerva",
-      "description": "Once per turn, empower a unit: +2 DEF for the encounter.",
+      "description": "Once per turn, empower a unit: +4 DEF for the encounter.",
       "rules": [
         {
           "kind": "hook",
@@ -38,7 +38,7 @@
             "buff": {
               "key": "warded",
               "mods": {
-                "defense": { "add": 2 }
+                "defense": { "add": 4 }
               },
               "merge": "add"
             }
@@ -66,7 +66,7 @@
     {
       "id": "janus",
       "name": "Idol of Janus",
-      "description": "Every turn, redraw up to two cards.",
+      "description": "Every turn, redraw up to four cards.",
       "rules": [
         {
           "kind": "hook",
@@ -74,7 +74,7 @@
           "effect": {
             "op": "grantRedraws",
             "redrawsPerTurn": 1,
-            "maxCardsPerTurn": 2
+            "maxCardsPerTurn": 4
           }
         }
       ]

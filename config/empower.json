@@ -4,9 +4,9 @@
   "buff": {
     "key": "empowered",
     "mods": {
-      "strength": { "add": 4 },
-      "ranged": { "add": 4 },
-      "magic": { "add": 4 }
+      "strength": { "add": 8 },
+      "ranged": { "add": 8 },
+      "magic": { "add": 8 }
     },
     "merge": "add"
   }

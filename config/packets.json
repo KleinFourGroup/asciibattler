@@ -3,15 +3,15 @@
     {
       "id": "patch",
       "name": "Patch",
-      "description": "Apply in the field: restores 3 to your health pool.",
+      "description": "Apply in the field: restores 6 to your health pool.",
       "usableIn": ["preTurn", "outOfBattle"],
       "target": "none",
-      "effect": { "op": "healPool", "amount": 3 }
+      "effect": { "op": "healPool", "amount": 6 }
     },
     {
       "id": "hype",
       "name": "Hype",
-      "description": "Hype up one drawn card: +4 STR / RNG / MAG for the encounter.",
+      "description": "Hype up one drawn card: +8 STR / RNG / MAG for the encounter.",
       "usableIn": ["preTurn"],
       "target": "unit",
       "effect": {
@@ -19,9 +19,9 @@
         "buff": {
           "key": "hyped",
           "mods": {
-            "strength": { "add": 4 },
-            "ranged": { "add": 4 },
-            "magic": { "add": 4 }
+            "strength": { "add": 8 },
+            "ranged": { "add": 8 },
+            "magic": { "add": 8 }
           },
           "merge": "add"
         },
@@ -31,7 +31,7 @@
     {
       "id": "shield",
       "name": "Shield",
-      "description": "Raise a shield on one drawn card: +2 DEF for the encounter.",
+      "description": "Raise a shield on one drawn card: +4 DEF for the encounter.",
       "usableIn": ["preTurn"],
       "target": "unit",
       "effect": {
@@ -39,7 +39,7 @@
         "buff": {
           "key": "shielded",
           "mods": {
-            "defense": { "add": 2 }
+            "defense": { "add": 4 }
           },
           "merge": "add"
         },
@@ -49,10 +49,10 @@
     {
       "id": "reroute",
       "name": "Reroute",
-      "description": "Reroute the hand: redraw up to two cards, right now.",
+      "description": "Reroute the hand: redraw up to four cards, right now.",
       "usableIn": ["preTurn"],
       "target": "none",
-      "effect": { "op": "grantRedraws", "redrawsPerTurn": 1, "maxCardsPerTurn": 2 }
+      "effect": { "op": "grantRedraws", "redrawsPerTurn": 1, "maxCardsPerTurn": 4 }
     },
     {
       "id": "venom",
@@ -72,7 +72,7 @@
     {
       "id": "overclock",
       "name": "Overclock",
-      "description": "Overclock a roster unit: +4 STR / RNG / MAG for the next encounter.",
+      "description": "Overclock a roster unit: +8 STR / RNG / MAG for the next encounter.",
       "usableIn": ["outOfBattle"],
       "target": "unit",
       "effect": {
@@ -80,9 +80,9 @@
         "buff": {
           "key": "overclocked",
           "mods": {
-            "strength": { "add": 4 },
-            "ranged": { "add": 4 },
-            "magic": { "add": 4 }
+            "strength": { "add": 8 },
+            "ranged": { "add": 8 },
+            "magic": { "add": 8 }
           },
           "merge": "add"
         },

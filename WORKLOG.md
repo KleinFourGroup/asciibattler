@@ -1026,3 +1026,25 @@ it. 72d also widens to BOTH postures (findings-driven: the ceiling
 deltas flipped sign by posture, so the myopia hypothesis is tested
 by WHERE the traffic-vs-searcher disagreement concentrates — the
 §71d shape was regen-only).
+
+**The 72d flip re-read ran (2026-08-03; numbers in BALANCE §72d,
+canonical).** Ops note first: the flip batches outlived box-batch
+run's 1h poll ceiling (longer battles + more rollout work on the
+round-1 config) — the local watcher died at poll 240 while the box
+batch ran on unharmed (nohup-detached, the §57g doctrine working as
+designed); a second patient watcher (2.5h ceiling) re-attached,
+fetched flip-regen, and drove flip-55pre through. Shadow
+non-perturbation re-verified byte-identical against the §72c
+arb-walk-regen rows. The verdict: **my cheap-tier-myopia hypothesis
+is NOT SUPPORTED** — I pre-committed to the test (disagreement
+should concentrate on the regen posture and at banking sites) and it
+failed both prongs: posture-flat 8.8%/9.2%, banking unanimous (0
+flips at outOfBattle on both postures). What DID move:
+**fire-timing disagreement doubled** (preTurn 4.3%→8.0/9.5) — the
+buffed items created genuine decision tension at fire sites, the
+one place a tier upgrade would pay. Grants sit at ~13–14% flip on
+still-small per-instance margins, unchanged through the buffs. The
+−12.5 regen ceiling delta is left explained by paired noise and/or
+well-swept doctrine fire heuristics, with the direct test (one real
+searcher-tier walk batch) named for 72f if wanted. The tier-lock
+disposition is the user's call at the decision point.

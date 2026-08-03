@@ -2619,3 +2619,34 @@ deltas. The pre-X H7c→O log lives at
     regen — the healthier arrivals crush the terminal) · the 2
     ceiling deltas. All non-fresh rows are old-config; the full
     board re-runs at 72f.
+- **2026-08-03 — §72d THE FLIP RE-READ (2 shadow batches at
+  `2ed94df`, both postures, 12 seeds each, 2/2 fetched, box
+  destroyed; shadow non-perturbation RE-VERIFIED — flip-batch rows
+  byte-identical to the §72c arb-walk-regen seeds 1–12): ⭐ THE
+  CHEAP-TIER-MYOPIA HYPOTHESIS IS NOT SUPPORTED — traffic-vs-searcher
+  disagreement is POSTURE-FLAT (overall 8.8% regen / 9.2% 55pre; the
+  −12.5/+15.0 ceiling-delta sign flip does NOT reproduce in tier
+  disagreement) and the banking site is UNANIMOUS (outOfBattle 0
+  flips of 102/72 on both postures — the exact site horizon-myopia
+  would distort).** The §71d baseline for comparison: overall 7.3%,
+  grants ~13%, preTurn 4.3%, outOfBattle 0%.
+  - **Per-site (regen / 55pre):** grant:empower 14.2% / 13.0%
+    (unchanged vs §71d's ~13% — margins rose to Δ|picked ~3.4 but
+    the per-instance decision stays low-margin wobble) ·
+    **packetFire:preTurn 8.0% / 9.5% — DOUBLED vs §71d's 4.3%**:
+    the buffed items created real fire-timing tension; this is
+    where a tier upgrade would pay if anywhere · nodeChoice
+    2.7%/0.9% · rewardDaemon 0/0 · grant:redraw + portBuy sub-floor
+    n.
+  - **What explains the −12.5 regen ceiling delta, then:** not tier
+    depth. Leading candidates: paired noise just outside ±8 at
+    n=40, and/or the §60e-swept regen fire heuristics genuinely
+    out-timing myopic rollouts on the buffed values (consistent
+    with the fire-site tension doubling). The direct test if 72f
+    wants it: one real (non-shadow) searcher-tier arb-walk-regen
+    batch — does the deeper tier close the gap?
+  - Batch win receipts (12 seeds, small-n·): flip-regen 4/12
+    complete (0.333 vs the 40-seed 0.225) · flip-55pre 8/12
+    (0.667 vs 0.475) — directionally consistent with the arb
+    posture ordering; 12-seed subsets wobble, the 40-seed §72c
+    rows stay canonical.

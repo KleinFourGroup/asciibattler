@@ -1075,6 +1075,26 @@ fights make grants worth taking; the grant-channel story is now
 value-buffs × difficulty, not value-buffs alone. Probe batches
 (elite-offer ×2 postures, port-dock ×1 shopper) in flight.
 
+**The probe cycle landed — with one instrument lesson (2026-08-03;
+numbers in BALANCE §72e).** The first probe cycle came back
+act-1-scoped: `advanceSector` regenerates sector maps with an
+`undefined` config BY DESIGN (hopCount's single-sector semantics
+must not leak), which silently kept the new scatter dials out of
+the deep-end — exactly the class of quiet scoping gap the
+gotcha-#120 audit taught us to hunt. Fix: `sectorAdvanceConfig`
+(a pinned pure slice — only the scatter pair survives the advance),
+re-run, and the fix's surgical scope RECEIPTED by act-1 decision
+rows hashing byte-identical across the fix commit. The reads: the
+elite economics are now decision-grade (116 pooled: refuse at 97%,
+margins −0.8..−2.8, the three takes realized +4..+6 — overpriced
+risk, the reward tables under-compensate) and the port story is
+margins-vs-ε (582 decisions: every class positive post-buff, all
+sub-ε by ~2.5 pool-HP). Both feed the price re-disposition
+proposal (user-signed decision point). Also noted: candidate n at
+elite-chance=1 stays modest — adjacency and early deaths gate
+offers; the probe raises OFFERS, not takes, and the fresh-roster
+hop-2 elite is brutal (the local 4-seed probe died 3/4 mid-act-1).
+
 **72d2 landed + verified (2026-08-03; numbers in BALANCE §72d2,
 canonical).** The audit found no sector-level difficulty scalar
 (inventing one = a new mechanic, out of guard), so the signed shape

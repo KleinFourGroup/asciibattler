@@ -2709,3 +2709,36 @@ deltas. The pre-X H7c→O log lives at
   arms that stack persistent draws.** (Batches at
   `6ad4d16`/`7fe5296` — game-config-identical commits, the dial
   landing between them is behavior-inert absent flags, pinned.)
+- **2026-08-03 — §72e THE FORCED-SHAPE PROBES (the `--elite-chance`
+  / `--port-chance` dials at `7fe5296`, the sector-advance fix at
+  `0bd0fe9` [the dials silently scoped to act 1 — `advanceSector`
+  drops the config by design; `sectorAdvanceConfig` slices the
+  scatter pair through], 6 probe batches total, boxes destroyed;
+  the fix's surgical scope RECEIPTED: act-1 decision rows
+  byte-identical across the fix commit, both postures):**
+  - ⭐ **THE ELITE READ (116 pooled decisions across 5 current-config
+    batches, sector-split per the F4 rule — act-1 55 / deep-end 61):
+    elites read NEGATIVE-EV at typical state — 3 picked of 116
+    (2.6%), refusal margins mean −0.79..−1.70 (act-1) / −1.61..−2.75
+    (deep-end) — and the three takes REALIZED +4.00/+5.50/+6.00.**
+    The shape: overpriced risk — the detour costs more pool than the
+    reward tables (bits-large + 0.35 daemon-cache) return, EXCEPT at
+    favorable states the rollouts identify. The §68e elite-risk
+    watch and §71d directional read are CONFIRMED at decision grade.
+    Candidate n stays modest even at chance=1 (adjacency + early
+    deaths gate offers) — the pooled 116 clears the floor only
+    unsplit; per-sector halves sit at 55·/61·, marked directional.
+  - ⭐ **THE PORT READ (fixed, full two-act; 582 portBuy decisions
+    on the dock-dense shopper): every class's margins are POSITIVE
+    but 100% SUB-ε — packets +0.49/+0.57 (n=165/175 per sector),
+    daemons +0.80/+0.57 (n=40·/69·), units +0.80/+0.34 with the
+    only 3 clears realizing +6.25/+8.00.** The ε floor (pooled
+    port-class ~3.1–3.3) eats every typical margin: post-buff the
+    stock is WORTH something (pre-buff read ≈0.00) but ~2.5 pool-HP
+    short of clearing the noise gate. Sector-consistent. The price
+    question is margins-vs-ε, not margins-vs-zero — inputs to the
+    72e re-disposition: price cuts raise margins toward the bar;
+    the state-conditioned ε candidate (the open watch) would lower
+    the bar at rich states instead.
+  - Win receipts: elite-offer arms 0.175/0.500 (the elite-dense map
+    punishes the firer posture; small-n) · port-dock 0.550.

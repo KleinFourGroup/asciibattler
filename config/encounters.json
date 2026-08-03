@@ -294,7 +294,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.35 } }
+      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
       {
@@ -324,7 +324,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.35 } }
+      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
       {
@@ -356,7 +356,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.35 } }
+      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
       {
@@ -634,7 +634,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.35 } }
+      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
       {

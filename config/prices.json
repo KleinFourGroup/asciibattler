@@ -25,13 +25,13 @@
     }
   },
   "packets": {
-    "default": 15,
+    "default": 9,
     "byId": {
       "miner": 40,
-      "shield": 10,
-      "venom": 25,
-      "draw-two": 20,
-      "discard-one": 8
+      "shield": 6,
+      "venom": 15,
+      "draw-two": 12,
+      "discard-one": 5
     }
   },
   "daemons": {

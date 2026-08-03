@@ -46,7 +46,7 @@ import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
-import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
+import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConfig';
 import { getSector, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
 import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
@@ -917,6 +917,9 @@ export class Run {
    */
   private readonly singleSectorRun: boolean;
   private readonly sectorHopsOverride: number | undefined;
+  /** 72e — the scatter-dial slice re-passed at every sector advance
+   *  (`undefined` absent the dials — the config-less path unchanged). */
+  private readonly sectorScatterConfig: RunConfig | undefined;
 
   private readonly bus: EventBus<GameEvents>;
   private subscriptions: Array<() => void> = [];
@@ -961,6 +964,7 @@ export class Run {
     }
     this.singleSectorRun = config?.hopCount !== undefined;
     this.sectorHopsOverride = config?.sectorHops;
+    this.sectorScatterConfig = sectorAdvanceConfig(config);
     const sectorRng = this.rng.fork();
     const start = pickStartSector(this.sectorMap, sectorRng);
     this.currentSectorNodeId = start.sectorNodeId;
@@ -2892,7 +2896,7 @@ export class Run {
     const next = pickNextSector(this.sectorMap, this.currentSectorNodeId, sectorRng);
     this.currentSectorNodeId = next.sectorNodeId;
     this.currentSectorId = next.sectorId;
-    this.nodeMap = generateNodeMap(sectorRng, undefined, this.currentSectorLength());
+    this.nodeMap = generateNodeMap(sectorRng, this.sectorScatterConfig, this.currentSectorLength());
     // 66a — the NEW sector's boss pre-rolls on the same fork (forewarning is
     // sector-scoped: it re-rolls at every sector entry, same as at run start).
     const bossRoll = this.rollBossForSector(sectorRng);

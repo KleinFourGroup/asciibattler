@@ -219,6 +219,23 @@ export interface RunConfig {
 }
 
 /**
+ * 72e — the slice of a RunConfig that SURVIVES a sector advance. Sector
+ * regeneration deliberately drops the config (`advanceSector` passes
+ * `undefined` — `hopCount`'s single-sector semantics must not leak into
+ * sector 2), but the scatter probe dials are chartered to shape EVERY
+ * sector's map (the deep-end elite/port reads are the point). Returns
+ * `undefined` when neither dial is set, so the no-dial path stays
+ * byte-identical to the config-less call.
+ */
+export function sectorAdvanceConfig(config?: RunConfig): RunConfig | undefined {
+  if (config?.eliteChance === undefined && config?.portChance === undefined) return undefined;
+  const out: { eliteChance?: number; portChance?: number } = {};
+  if (config.eliteChance !== undefined) out.eliteChance = config.eliteChance;
+  if (config.portChance !== undefined) out.portChance = config.portChance;
+  return out;
+}
+
+/**
  * URL query / CLI flag names — the single source of truth shared by the
  * browser parser and the CLI (which mirrors these as `--<name>` flags).
  */

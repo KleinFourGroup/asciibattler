@@ -3,6 +3,7 @@ import {
   parseRunConfig,
   parseRunConfigFromURL,
   runConfigToQueryString,
+  sectorAdvanceConfig,
   FORCE_PROCEDURAL,
   type RunConfig,
 } from './RunConfig';
@@ -177,5 +178,24 @@ describe('RunConfig parsing', () => {
     const original = cfg(`hops=2&seed=9&encounter=${id}&layout=${LAYOUT}`);
     expect(original.forcedEncounterId).toBe(id);
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
+});
+
+describe('sectorAdvanceConfig (72e — the scatter slice that survives a sector advance)', () => {
+  it('returns undefined absent both dials — the config-less advance path stays byte-identical', () => {
+    expect(sectorAdvanceConfig(undefined)).toBeUndefined();
+    expect(sectorAdvanceConfig({})).toBeUndefined();
+    expect(sectorAdvanceConfig({ hopCount: 5, mapMaxWidth: 3 })).toBeUndefined();
+  });
+
+  it('carries ONLY the scatter dials — hopCount/sectorHops and the rest never leak into sector 2', () => {
+    expect(sectorAdvanceConfig({ eliteChance: 1, hopCount: 5, sectorHops: 4 })).toEqual({
+      eliteChance: 1,
+    });
+    expect(sectorAdvanceConfig({ portChance: 0.5 })).toEqual({ portChance: 0.5 });
+    expect(sectorAdvanceConfig({ eliteChance: 0, portChance: 1 })).toEqual({
+      eliteChance: 0,
+      portChance: 1,
+    });
   });
 });

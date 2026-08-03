@@ -2650,3 +2650,38 @@ deltas. The pre-X H7c→O log lives at
     (0.667 vs 0.475) — directionally consistent with the arb
     posture ordering; 12-seed subsets wobble, the 40-seed §72c
     rows stay canonical.
+- **2026-08-03 — §72d2 THE ACT-1 ENCOUNTER BUFF LANDS ON TARGET IN
+  ONE ROUND (levelBudget ×1.15 on the six act-1-exclusive
+  encounters at `0a96f04`; the same 5-batch cycle, 5/5 fetched, box
+  destroyed): ⭐⭐ SEAM BACK IN BAND (14.93/14.19 vs 13–15) with
+  TERMINAL REACH HELD (0.425/0.425 vs 40–50) and the act-1 anchor
+  back inside its drift ref (0.725 vs 65±8, from 0.800) — every
+  signed band PASSES on the fresh doctrine rows except the standing
+  wall WARN.**
+  - **The funnel per arm (act1Reach / seamPool / termReach / wall /
+    win):** walk-regen 0.725/14.93/0.425/0.235/0.325 · walk-55pre
+    0.800/14.19/0.425/0.235/0.325 · arb-walk-regen
+    0.800/17.38/0.375/0.200/0.300 · arb-walk-55pre
+    0.850/14.94/0.525/0.143/0.450. Mid-act-2 deaths 41–47%
+    doctrine.
+  - **The −12.5 regen ceiling anomaly RESOLVED as noise:** the
+    delta re-reads at −0.025 (PASS) on the new config — the §72d
+    paired-noise explanation confirmed; no tier action was needed
+    (the cheap-tier hold vindicated). arb-55pre stays +12.5 WARN —
+    arbitration genuinely outperforms on the shopper posture (the
+    known §72a posture-dissolution effect, a 72f re-sign question).
+  - **arb-regen seam 17.38 (above band, no check):** the arbitrated
+    firer's patch fires actively offset the act-1 drain — the
+    value channels doing at run grain exactly what they were bought
+    for; twins get bands at 72f.
+  - **Walls 0.235/0.235 — still BELOW 30–35** (up from 0.125 regen):
+    the standing agenda WARN; the terminal is the one remaining
+    soft gate (a 72f question: tune the terminal up or re-sign the
+    band down).
+  - Protocol notes: warband-vanguard's wave gained the roster+2
+    levelCap stamp — the buff made a never-binding cap BIND, the
+    migration pin's designed "conscious retune point"; the two
+    act-2-shared encounters (artillery, adventurer-with-guards)
+    stayed untouched (the sector-blind guard), with act-1-exclusive
+    clones as the named round-2 lever (NOT needed — the step
+    landed).

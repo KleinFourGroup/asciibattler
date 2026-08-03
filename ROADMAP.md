@@ -156,16 +156,11 @@ flips to the arbitrated arm and the sheet re-signs.
   re-opens post-buffs (re-run the flip read).
 - Cut (kickoff 2026-08-01, user-signed; audit + rationale → WORKLOG
   §72):
-- [x] 72a — the arbitrated board twins + the run-alongside cycle ✅
-      `57c380b` + the 22-batch box cycle 2026-08-01 — ONE ceiling
-      move (act-1 shopper +15, a posture DISSOLUTION), walk ceiling
-      unmoved, arb fire Δ 0.000 → fire joins 72c; no bump (as
-      predicted). BALANCE §72a + WORKLOG §72.
+- [x] 72a — the arb board twins + the run-alongside cycle ✅
+      `57c380b` 2026-08-01 — ONE ceiling move (shopper +15, a
+      posture dissolution); fire Δ 0.000 → 72c. BALANCE §72a.
 - [x] 72b-pre — the pool-trajectory instrument ✅ 2026-08-02
-      (findings-driven insertion, user-signed: the UNIFIED BAND
-      ARCHITECTURE — trajectory grain, win DERIVED; the act-seam
-      disentangle; the fresh-act-2 probe CONTINGENT; WORKLOG §72).
-      No bump.
+      (the unified band architecture, user-signed; WORKLOG §72).
 - [x] 72b — the reads + band re-derivation ✅ CLOSED 2026-08-02,
       user-signed — fire Δ 0.000 (→ 72c) · the wall correction
       (gotcha #120) · mid-act-2 = the killer · ⭐ BANDS SIGNED: seam
@@ -182,10 +177,12 @@ flips to the arbitrated arm and the sheet re-signs.
       tension doubled (the one contested site); the real
       searcher-tier walk batch test → 72f (user-committed).
       BALANCE §72d + WORKLOG §72.
-- [ ] 72d2 — the act-1 encounter buff (inserted 2026-08-03,
-      user-signed direction): raise sector-1 difficulty, seam back
-      to 13–15 with reach holding 40–50, values held; AFTER 72d so
-      the flip read lands on the round-1 config.
+- [x] 72d2 — the act-1 encounter buff ✅ LANDED 2026-08-03
+      (`0a96f04`, magnitudes user-signed): levelBudget ×1.15 on the
+      six act-1-exclusives — a ONE-ROUND HIT: seam 14.9/14.2 IN
+      band, reach HELD 0.425, act-1 anchor back in ref (0.725);
+      the −12.5 ceiling anomaly resolved as noise. BALANCE §72d2 +
+      WORKLOG §72; no bump.
 - [ ] 72e — the remaining agenda reads: the +2-vs-+4 draw
       non-monotonicity at decision grade (`--draw-add` arms +
       sidecar) · the elite-risk node read (cheap-first off 72a's

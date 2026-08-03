@@ -1054,3 +1054,24 @@ user committed the direct test — one real (non-shadow) searcher-tier
 walk batch — to 72f, where it rides alongside the full board re-run
 and the fire-ablated attribution split if wanted. Next: 72d2, the
 act-1 encounter buff.
+
+**72d2 landed + verified (2026-08-03; numbers in BALANCE §72d2,
+canonical).** The audit found no sector-level difficulty scalar
+(inventing one = a new mechanic, out of guard), so the signed shape
+was levelBudget ×1.15 on the six act-1-exclusive encounters, with
+the two act-2-shared ones deliberately held (the config edition of
+the sector-blind class — buffing artillery/adventurer-with-guards
+raw would bleed into act 2) and bosses out (wall refs signed). One
+designed tripwire fired mid-commit: the levelCap migration pin
+caught warband-vanguard's never-binding cap starting to BIND at the
+new budget — its documented "conscious retune point" — resolved by
+stamping the roster+2 cap (the signed ×1.15, no stealth uncapped
+spike). The verify cycle: a one-round hit. Seam back in band
+(14.9/14.2), reach held (0.425 both), act-1 anchor back inside its
+drift ref (0.725), and the §72c −12.5 regen ceiling anomaly
+re-read at −0.025 — noise, as the 72d flip read suggested; the
+cheap-tier hold is vindicated in the same cycle. Remaining agenda
+for 72e/72f: the wall WARN (0.235 vs 30–35), the arb-55pre +12.5
+ceiling (posture dissolution), and the arb-regen seam 17.4 (the
+patch fires offsetting drain — twins get bands at the signing
+session).

@@ -166,20 +166,24 @@ flips to the arbitrated arm and the sheet re-signs.
       ARCHITECTURE — trajectory grain, win DERIVED; the act-seam
       disentangle; the fresh-act-2 probe CONTINGENT; WORKLOG §72).
       No bump.
-- [x] 72b — the reads + the band re-derivation ✅ CLOSED 2026-08-02,
-      user-signed — fire verification Δ 0.000 (→ 72c) · the wall
-      correction (gotcha #120; §68g dissolved) · the trajectory/seam
-      reads (mid-act-2 = the killer) · the sector-merge audit (class
-      closed) · ⭐ BANDS SIGNED: seam 13–15 · wall 30–35 re-signed ·
-      terminal reach 40–50 · win DERIVED 26–35, 55–70 RETIRED.
+- [x] 72b — the reads + band re-derivation ✅ CLOSED 2026-08-02,
+      user-signed — fire Δ 0.000 (→ 72c) · the wall correction
+      (gotcha #120) · mid-act-2 = the killer · ⭐ BANDS SIGNED: seam
+      13–15 · wall 30–35 · reach 40–50 · win DERIVED 26–35.
       BALANCE §72b ×3 + WORKLOG §72; no bump.
-- [ ] 72c — the grant-channel buffs (config-only): redraw + empower
-      values swept, judged by the decision-grade instruments
-      (Pick%/Δ|picked must move off ≈0) + paired win reads;
-      magnitudes user-signed; fire value buffs join here IF 72b
-      still reads ≈0 (decision point). No bump.
+- [x] 72c — the grant + fire value buffs ✅ CLOSED 2026-08-03,
+      user-signed: the 2× step (`542596f`) ACCEPTED at round 1 —
+      the channels CONVERT (reach IN band); the act-1/seam
+      overshoot → 72d2, not magnitude trim; Surge held (the 65d
+      cap; re-sign parked). BALANCE §72c + WORKLOG §72; no bump.
 - [ ] 72d — the tier-lock re-open: the flip read re-runs post-buffs
-      (the pre-registered §71d trigger; ~12-seed shadow batch).
+      (the pre-registered §71d trigger; ~12-seed shadow batch),
+      BOTH postures (the ceiling-delta sign flip is by posture —
+      the cheap-tier-myopia hypothesis, BALANCE §72c).
+- [ ] 72d2 — the act-1 encounter buff (inserted 2026-08-03,
+      user-signed direction): raise sector-1 difficulty, seam back
+      to 13–15 with reach holding 40–50, values held; AFTER 72d so
+      the flip read lands on the round-1 config.
 - [ ] 72e — the remaining agenda reads: the +2-vs-+4 draw
       non-monotonicity at decision grade (`--draw-add` arms +
       sidecar) · the elite-risk node read (cheap-first off 72a's

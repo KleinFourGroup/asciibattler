@@ -1013,3 +1013,16 @@ regen / +15.0 55pre) feed the 72d flip read with a named
 hypothesis — cheap-tier myopia under stronger items. Next: the
 user's call at the magnitude decision point (iterate vs proceed to
 72d with round-1 values).
+
+**72c CLOSED (2026-08-03, user-signed).** The user took the
+recommendation whole: round-1 magnitudes stand as final, and the
+seam/act-1 overshoot resolves by RAISING SECTOR-1 DIFFICULTY (the
+direction signed; inserted as 72d2), not by trimming the value buffs
+— the values are doing exactly what the channels needed, and the
+overshoot is act-1 encounter tuning's problem. Ordering call (mine):
+72d2 runs AFTER 72d, so the pre-registered flip read lands on the
+round-1 config it was triggered by, not on a tree that shifts under
+it. 72d also widens to BOTH postures (findings-driven: the ceiling
+deltas flipped sign by posture, so the myopia hypothesis is tested
+by WHERE the traffic-vs-searcher disagreement concentrates — the
+§71d shape was regen-only).

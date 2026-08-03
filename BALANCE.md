@@ -2685,3 +2685,27 @@ deltas. The pre-X H7c→O log lives at
     stayed untouched (the sector-blind guard), with act-1-exclusive
     clones as the named round-2 lever (NOT needed — the step
     landed).
+- **2026-08-03 — §72e THE DRAW READ: ⭐ THE +2-VS-+4 NON-MONOTONICITY
+  DISSOLVES — the two arms are BYTE-IDENTICAL at the settled config
+  (sha256-equal summaries, 40 seeds each): `effectiveDraw =
+  min(maxHandSize 8, 6+add)` resolves BOTH to 8. The §65d question
+  is MOOT at cap 8** — any historical +2/+4 difference was noise on
+  an A/A pair (the 65d cap signing post-dates the original arms).
+  The live content is hand-8 vs the hand-6 baseline: **0.250 vs
+  0.300 (−5.0, INSIDE paired noise), seam RICHER (18.29 vs 17.38)
+  but reach LOWER (0.300 vs 0.375)** — directionally the §68f
+  "free draw-two reads sign-negative" echo, with the Option-B
+  enemy-budget basis tax as the named mechanism (a persistent
+  draw-add moves the deal AND the budget). Decision grade, vs the
+  TRUE 72d2 baseline (empower Pick% 14.3 at Δ|picked +1.03,
+  n=8076 — ⭐ itself a finding: the 72d2 act-1 buff ENGAGED the
+  empower channel, 4%→14% vs the 72c config; harder fights make
+  grants worth taking): the hand-8 arm reads Pick% 11.1 at +0.40 —
+  the bigger hand DILUTES empower into more, lower-value
+  candidates, not more value. **Feeds the parked
+  maxHandSize-10 re-sign (72f): the cap is behavior-inert for the
+  base game (base draw 6 never clamps) — raising it for feel
+  re-opens Surge-3 and nothing else; the draw-add tax only bites
+  arms that stack persistent draws.** (Batches at
+  `6ad4d16`/`7fe5296` — game-config-identical commits, the dial
+  landing between them is behavior-inert absent flags, pinned.)

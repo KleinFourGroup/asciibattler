@@ -1055,6 +1055,26 @@ walk batch — to 72f, where it rides alongside the full board re-run
 and the fire-ablated attribution split if wanted. Next: 72d2, the
 act-1 encounter buff.
 
+**72e in flight (2026-08-03; numbers in BALANCE §72e as they land).**
+The cheap-first half paid immediately: the natural elite read holds
+negative on current config (29 pooled decisions, 0 picked — the
+forced-dial condition met) and discard-one FLIPPED positive
+post-72d2 (culling reads better when act 1 is harder). The
+shape-lock's contingent dial got cut: `--elite-chance` /
+`--port-chance` ride the G1 RunConfig override precedence
+(`7fe5296`; absent-case byte-identity pinned; no bump — RunConfig
+is not persisted), de-risked with a 2-seed local composition probe
+before any box spend. The draw read came back first and DISSOLVED
+its own question: +2 vs +4 are sha256-identical batches — both
+clamp to the 65d maxHandSize 8 (`min(8, 6+add)`), so the §65d
+non-monotonicity was an A/A pair plus noise. The live findings:
+hand-8 vs hand-6 reads −5.0 (inside noise) with the Option-B
+budget tax as the mechanism, and ⭐ the 72d2 act-1 buff ENGAGED
+the empower channel (Pick% 4→14.3 at Δ|picked +1.03) — harder
+fights make grants worth taking; the grant-channel story is now
+value-buffs × difficulty, not value-buffs alone. Probe batches
+(elite-offer ×2 postures, port-dock ×1 shopper) in flight.
+
 **72d2 landed + verified (2026-08-03; numbers in BALANCE §72d2,
 canonical).** The audit found no sector-level difficulty scalar
 (inventing one = a new mechanic, out of guard), so the signed shape

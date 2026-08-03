@@ -608,3 +608,43 @@ function coReachableTo(map: NodeMap, target: number): Set<number> {
   }
   return visited;
 }
+
+describe('the 72e scatter-chance probe dials (eliteChance / portChance)', () => {
+  const SEEDS = 20;
+  const count = (map: NodeMap, kind: string): number =>
+    map.nodes.filter((n) => n.kind === kind).length;
+
+  it('absent overrides are byte-identical to an empty config (the G1 contract)', () => {
+    for (let s = 1; s <= SEEDS; s++) {
+      expect(JSON.stringify(generate(new RNG(s)))).toBe(JSON.stringify(generate(new RNG(s), {})));
+    }
+  });
+
+  it('eliteChance=0 scatters no elites; eliteChance=1 scatters strictly more than authored', () => {
+    let authored = 0;
+    let forced = 0;
+    for (let s = 1; s <= SEEDS; s++) {
+      expect(count(generate(new RNG(s), { eliteChance: 0 }), 'elite')).toBe(0);
+      const f = count(generate(new RNG(s), { eliteChance: 1 }), 'elite');
+      expect(f).toBeGreaterThanOrEqual(1); // f=2 always fires at chance 1
+      forced += f;
+      authored += count(generate(new RNG(s)), 'elite');
+    }
+    expect(forced).toBeGreaterThan(authored);
+  });
+
+  it('portChance=1 scatters strictly more ports than authored; portChance=0 keeps EXACTLY the >=1-per-map fallback port', () => {
+    let authored = 0;
+    let forced = 0;
+    for (let s = 1; s <= SEEDS; s++) {
+      // The 50c >=1-per-map guarantee owns the floor: chance 0 skips the
+      // scatter pass entirely, so the fallback places exactly one port.
+      expect(count(generate(new RNG(s), { portChance: 0 }), 'port')).toBe(1);
+      const f = count(generate(new RNG(s), { portChance: 1 }), 'port');
+      expect(f).toBeGreaterThanOrEqual(1);
+      forced += f;
+      authored += count(generate(new RNG(s)), 'port');
+    }
+    expect(forced).toBeGreaterThan(authored);
+  });
+});

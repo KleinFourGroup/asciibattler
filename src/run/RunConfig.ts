@@ -104,6 +104,18 @@ export interface RunConfig {
    */
   readonly mapMaxWidth?: number;
   /**
+   * 72e — override the node-map elite/port scatter chances (defaults
+   * `config/nodemap.json#eliteChance` / `#portChance`). The forced-shape
+   * probe dials for decision-grade per-kind reads: `eliteChance: 1` offers
+   * an elite on every spacing-eligible hop (the §55 force-isolate doctrine
+   * applied to node SCATTER — the assignment still places one elite per hop,
+   * so taking it stays the walker's choice; pair with `firstNodeKind` for a
+   * forced-TAKEN read). Same G1 precedence as `mapMaxWidth`; NOT persisted
+   * (a rehydrated run falls back to the authored JSON values).
+   */
+  readonly eliteChance?: number;
+  readonly portChance?: number;
+  /**
    * L1 — override the run's daemon: a full `DaemonConfig` (a catalog entry or
    * a bespoke test/profile daemon), or `null` for a daemon-LESS run (the fuzz
    * control arm — both pre-turn gates permanently disabled). Unset → a uniform

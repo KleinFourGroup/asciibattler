@@ -110,8 +110,9 @@ const {
 export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
   // G1: RunConfig overrides the shape per-run; absent fields fall back to the
   // config/nodemap.json defaults, so a no-config call is byte-identical to
-  // pre-G1. Only `hopCount` + `mapMaxWidth` are tunable here; the min width,
-  // total cap, and out-degree stay on the JSON defaults.
+  // pre-G1. `hopCount` + `mapMaxWidth` (G1) and `eliteChance` + `portChance`
+  // (72e probe dials) are tunable here; the min width, total cap, and
+  // out-degree stay on the JSON defaults.
   // T2: `lengthOverride` is the current SECTOR's `length` — the per-sector hop
   // count that replaces the single global default once a run is a *sequence* of
   // sectors. Precedence `config.hopCount > sector.length > JSON default` keeps
@@ -119,6 +120,10 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   // leaves the default path byte-identical.
   const hopCount = config?.hopCount ?? lengthOverride ?? HOP_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
+  // 72e — the scatter-chance probe dials ride the same override precedence;
+  // absent fields keep the authored values (the G1 byte-identity contract).
+  const eliteChance = config?.eliteChance ?? ELITE_CHANCE;
+  const portChance = config?.portChance ?? PORT_CHANCE;
 
   const hops: number[][] = [];
   const nodes: MapNode[] = [];
@@ -260,7 +265,7 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   let lastEliteHop = -Infinity;
   for (let f = 2; f <= hopCount - 2; f++) {
     const roll = rng.next();
-    if (roll < ELITE_CHANCE && f - lastEliteHop >= ELITE_MIN_SPACING) {
+    if (roll < eliteChance && f - lastEliteHop >= ELITE_MIN_SPACING) {
       const ids = hops[f]!.filter((id) => !restIds.has(id));
       if (ids.length > 0) {
         const pick = ids[rng.int(0, ids.length - 1)]!;
@@ -285,7 +290,7 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   let lastPortHop = -Infinity;
   for (let f = 2; f <= hopCount - 2; f++) {
     const roll = rng.next();
-    if (roll < PORT_CHANCE && f - lastPortHop >= PORT_MIN_SPACING) {
+    if (roll < portChance && f - lastPortHop >= PORT_MIN_SPACING) {
       const ids = hops[f]!.filter((id) => !restIds.has(id) && !eliteIds.has(id));
       if (ids.length > 0) {
         const pick = ids[rng.int(0, ids.length - 1)]!;

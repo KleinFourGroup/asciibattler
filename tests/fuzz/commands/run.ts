@@ -97,6 +97,8 @@ export type RunModeArgs = Pick<
   | 'kTelemetry'
   | 'bitsMultiplier'
   | 'drawAdd'
+  | 'eliteChance'
+  | 'portChance'
   | 'grant'
   | 'arbitrate'
   | 'arbitrateTier'
@@ -140,6 +142,8 @@ export function runRunCli(args: RunModeArgs): void {
     firstNodeKind?: 'elite';
     bitsMultiplier?: number;
     drawAmountAdd?: number;
+    eliteChance?: number;
+    portChance?: number;
     grants?: readonly string[];
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
@@ -174,6 +178,21 @@ export function runRunCli(args: RunModeArgs): void {
       bail(`--draw-add must be a nonzero integer (got ${args.drawAdd})`);
     }
     runConfig.drawAmountAdd = args.drawAdd;
+  }
+  // 72e — the node-scatter probe dials ride the RunConfig overrides (a
+  // probability; anything outside [0, 1] is a flag typo worth failing
+  // loudly on).
+  for (const [flag, key] of [
+    ['--elite-chance', 'eliteChance'],
+    ['--port-chance', 'portChance'],
+  ] as const) {
+    const v = args[key];
+    if (v !== undefined) {
+      if (!Number.isFinite(v) || v < 0 || v > 1) {
+        bail(`${flag} must be a probability in [0, 1] (got ${v})`);
+      }
+      runConfig[key] = v;
+    }
   }
   // 68b — `--grant=<id>[,<id>…]` hands the run items free at construction
   // (the paired marginal-value WITH arm; ids validated loud in grantsFromArgs).

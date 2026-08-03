@@ -144,6 +144,14 @@ export interface CliArgs {
   // mode's runConfig wiring consumes it; other modes ignore it per the
   // flags-are-global grammar note above.
   drawAdd?: number;
+  // 72e — the node-scatter probe dials (`--elite-chance=<0..1>` /
+  // `--port-chance=<0..1>`): expose the RunConfig eliteChance/portChance
+  // overrides to RUN MODE ONLY (the forced-shape decision-grade reads —
+  // elite-chance=1 offers an elite every eligible hop; port-chance=1 a
+  // dock every eligible hop). Other modes ignore them per the
+  // flags-are-global grammar note above.
+  eliteChance?: number;
+  portChance?: number;
   // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
   // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
   // ±0.15 box-scale, the kickoff lock); the three dial flags override.
@@ -284,6 +292,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--draw-add':
         if (v !== undefined) args.drawAdd = Number(v);
+        break;
+      case '--elite-chance':
+        if (v !== undefined) args.eliteChance = Number(v);
+        break;
+      case '--port-chance':
+        if (v !== undefined) args.portChance = Number(v);
         break;
       case '--jobs':
         args.jobs = Number(v);

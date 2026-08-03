@@ -176,10 +176,12 @@ flips to the arbitrated arm and the sheet re-signs.
       the channels CONVERT (reach IN band); the act-1/seam
       overshoot → 72d2, not magnitude trim; Surge held (the 65d
       cap; re-sign parked). BALANCE §72c + WORKLOG §72; no bump.
-- [ ] 72d — the tier-lock re-open: the flip read re-runs post-buffs
-      (the pre-registered §71d trigger; ~12-seed shadow batch),
-      BOTH postures (the ceiling-delta sign flip is by posture —
-      the cheap-tier-myopia hypothesis, BALANCE §72c).
+- [x] 72d — the tier-lock re-open ✅ CLOSED 2026-08-03, user-signed:
+      CHEAP TIER HOLDS — the myopia hypothesis NOT supported
+      (posture-flat 8.8/9.2%, banking unanimous); fire-timing
+      tension doubled (the one contested site); the real
+      searcher-tier walk batch test → 72f (user-committed).
+      BALANCE §72d + WORKLOG §72.
 - [ ] 72d2 — the act-1 encounter buff (inserted 2026-08-03,
       user-signed direction): raise sector-1 difficulty, seam back
       to 13–15 with reach holding 40–50, values held; AFTER 72d so

@@ -1048,3 +1048,9 @@ still-small per-instance margins, unchanged through the buffs. The
 well-swept doctrine fire heuristics, with the direct test (one real
 searcher-tier walk batch) named for 72f if wanted. The tier-lock
 disposition is the user's call at the decision point.
+
+**72d CLOSED (2026-08-03, user-signed): the cheap tier holds.** The
+user committed the direct test — one real (non-shadow) searcher-tier
+walk batch — to 72f, where it rides alongside the full board re-run
+and the fire-ablated attribution split if wanted. Next: 72d2, the
+act-1 encounter buff.

@@ -1095,6 +1095,30 @@ elite-chance=1 stays modest — adjacency and early deaths gate
 offers; the probe raises OFFERS, not takes, and the fresh-roster
 hop-2 elite is brutal (the local 4-seed probe died 3/4 mid-act-1).
 
+**72e CLOSED (2026-08-03; the re-dispositions user-signed same-day,
+verified; numbers in BALANCE §72e ×2).** The user signed the whole
+package — packet cuts ~40%, elites BUFFED cache-first (their call:
+focus the cache chance, bits in reserve), daemons/units held. The
+verify cycle delivered the round's most instructive result: both
+decision-grade needles FLAT, both flatnesses structural. Ports are
+price-inelastic at decision grade (bits abundance + the truncated
+horizon capturing ~1 fire of stocked value — prices cannot close
+the ε gap; the state-conditioned-ε watch gains its second exhibit),
+and elite cache value is horizon-invisible (untaken elites never
+roll; a daemon passive outlives any rollout). Meanwhile the
+run-level needle jumped: act-1 doctrine shopper 0.650→0.800 — the
+cuts convert THROUGH the heuristic shopper at run grade. The
+noise-vs-bias lesson extends: run-grade and decision-grade
+instruments disagree here because they measure different horizons,
+not because either is wrong. Every 72e cut item is done (draw ✓
+dissolved · elite ✓ decision-grade confirmed + buffed · prices ✓
+re-disposed + verified) — 72e closes; 72f (the signing session) is
+next, with the docket: the wall tune-or-re-sign · the default-arm
+flip · twins' bands · the searcher-tier test (user-committed) ·
+maxHandSize-10/Surge-3 · elite bits round-2 · the posture-row
+disposition · act-1 ref re-signs (two +15 drifts now banked:
+value-buffs and cheap-stock) · the full 22-instrument board cycle.
+
 **72d2 landed + verified (2026-08-03; numbers in BALANCE §72d2,
 canonical).** The audit found no sector-level difficulty scalar
 (inventing one = a new mechanic, out of guard), so the signed shape

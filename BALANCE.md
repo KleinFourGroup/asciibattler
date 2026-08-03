@@ -2742,3 +2742,34 @@ deltas. The pre-X H7c→O log lives at
     the bar at rich states instead.
   - Win receipts: elite-offer arms 0.175/0.500 (the elite-dense map
     punishes the firer posture; small-n) · port-dock 0.550.
+- **2026-08-03 — §72e THE RE-DISPOSITION VERIFY (packet cuts ~40% +
+  elite cache 0.35→0.5 at `d32e6e7`, user-signed; 4 batches, 4/4
+  fetched, box destroyed): BOTH decision-grade needles are FLAT —
+  and the flatness is STRUCTURAL, not failure. The run-level needle
+  moved instead: the act-1 doctrine shopper 0.650→0.800 (+15, out
+  of the 65±8 ref) — the cuts CONVERT at run grade through the
+  heuristic shopper while the arbitrated rollouts stay shy.**
+  - **Ports are PRICE-INELASTIC at decision grade:** packet margins
+    +0.51 post-cut vs +0.49/+0.57 pre (n=368, picks 0). Mechanism:
+    bits are abundant on the shopper (bank ~47+), so the price is
+    not the binding term — the truncated horizon captures only ~1
+    fire's worth of a stocked packet's value (~+0.5). The ε gap
+    cannot be closed by prices; the §71-flagged state-conditioned ε
+    (or a longer horizon) is the instrument-side lever, 72f docket.
+  - **Elite cache value is HORIZON-INVISIBLE:** margins −0.79..−1.75
+    post-buff vs −0.79..−1.70 pre (55pre act-1 rows land
+    value-identical — untaken elites never roll rewards, and a
+    daemon's value is a run-long passive the truncated rollout
+    cannot see). The cache buff stands as a HUMAN-value buff (a
+    real feel/reward improvement the instrument is blind to); bits
+    (immediate, spendable) stay the round-2 lever IF a measurable
+    decision-grade shift is wanted (72f call).
+  - **The run-level conversion receipt:** act-1 55pre doctrine
+    0.800 vs the 68d ref 0.650±8 — cheaper stock → stronger roster
+    → the SAME drift direction the 72d2 act-1 buff corrected for
+    the value channels. The walk-55pre seam likely rises with it —
+    the full-board 72f cycle re-reads the world before the sheet
+    re-signs (noise-vs-bias doctrine: the run-level read carries
+    the cut's value; the decision-grade read is horizon-blind to
+    stock-up value — attribute accordingly, do not average them).
+  - Elite-offer win receipts 0.150/0.450 · port-dock 0.475.

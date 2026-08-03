@@ -183,13 +183,14 @@ flips to the arbitrated arm and the sheet re-signs.
       band, reach HELD 0.425, act-1 anchor back in ref (0.725);
       the −12.5 ceiling anomaly resolved as noise. BALANCE §72d2 +
       WORKLOG §72; no bump.
-- [ ] 72e — the remaining agenda reads: the +2-vs-+4 draw
-      non-monotonicity at decision grade (`--draw-add` arms +
-      sidecar) · the elite-risk node read (cheap-first off 72a's
-      natural rows; the forced-elite dial contingent) · price
-      re-dispositions where realized value contradicts §68
-      (candidates: discard-one at 8 vs Δ|picked +3.13; the shopper
-      port read → unit prices).
+- [x] 72e — the remaining agenda reads ✅ CLOSED 2026-08-03: draw
+      DISSOLVED (sha-identical A/A under the 65d cap) · elites
+      NEGATIVE-EV confirmed (116 pooled) + cache 0.35→0.5 buffed
+      (user-signed, cache-first) · packet cuts ~40% (user-signed) —
+      verify: both decision needles flat (STRUCTURAL: price-inelastic
+      ports, horizon-invisible cache), act-1 shopper 0.80 run-grade
+      conversion. The scatter dials + sectorAdvanceConfig landed.
+      BALANCE §72e ×4 + WORKLOG §72; no bump.
 - [ ] 72f — the signing session + the round close: the default-arm
       flip (ARM gains `--arbitrate` + doctrine docs) · the sheet
       re-signs (supersession precedent; twins gain bands, the

@@ -980,3 +980,36 @@ band re-derivation anchors on 17.5–27.5/walls ~0.45–0.65 as
 measured. One protocol implication flagged for 72f: the
 firer/shopper posture-split reference rows lose their meaning on an
 arm that dissolves postures — a re-sign question, noted in BALANCE.
+
+**72c round 1 (2026-08-02→03) — the uniform 2× value buffs landed +
+measured. Numbers in BALANCE §72c (canonical); this is the
+narrative.** The magnitude proposal (the uniform 2× step across both
+channels, per-item holds listed) was user-signed same-day and landed
+as one config commit (`542596f`) — with one mid-commit catch: the
+signed Surge draw-2→3 turned out DEAD under the 65d user-signed
+`maxHandSize` 8 cap (hand 6 + 3 clamps; four Run tests caught it
+immediately). Surge reverted rather than silently bumping a signed
+cap; the user then parked the cap question deliberately —
+**tentatively 10, feel-motivated ("a fuller fan of cards"), decide
+with post-buff numbers at the signing session**; at 10, Surge-3
+delivers fully with headroom, and the densest hand case is
+render-layer (native-browser eyeball when taken). Fire joined the
+buff per the pre-registered 72b Δ 0.000 contingency, which means
+grant + fire shares are NOT separable this cycle (one commit — the
+attribution caveat in BALANCE; a fire-ablated re-run is the split if
+wanted). The cycle: box up at `542596f`, a scratchpad driver walked
+the 4 walk twins + the act-1 regen anchor (5/5 `fetched →`, box
+destroyed). The verdict: **the channels convert now** — walk-regen
++17.5 paired, arb-55pre +20.0, terminal reach lands IN the signed
+40–50 band on both doctrine walks, outOfBattle patch opens from
+zero (the banking-vs-fire flip §71d measured is priced away by
+heal-6) — **but the 2× step bled into act 1**: seam 15.3–16.9 vs
+the signed 13–15, act-1 regen ref 0.800 vs 65±8. The overshoot is
+NOT fixable by more value buffing (more worsens seam/act-1; less
+drops reach back out of band) — it is act-1-difficulty vs
+value-buff tension, a signing-session / next-round encounter-tuning
+question. Also queued: the sign-flipped ceiling deltas (−12.5
+regen / +15.0 55pre) feed the 72d flip read with a named
+hypothesis — cheap-tier myopia under stronger items. Next: the
+user's call at the magnitude decision point (iterate vs proceed to
+72d with round-1 values).

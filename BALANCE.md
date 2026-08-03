@@ -2571,3 +2571,51 @@ deltas. The pre-X H7c→O log lives at
   0.222/0.154 (terminal too SOFT; expected to drift in-band as 72c
   raises reach), win 0.175 (regen, below derived) / 0.275 (shopper,
   ALREADY in the derived band).
+- **2026-08-02→03 — §72c ROUND 1 (the uniform 2× value buffs at
+  `542596f`; 5-batch box cycle — the 4 walk twins + the act-1 regen
+  anchor, 40 in-sample seeds each, cpx42 `--jobs=8`, 5/5 `fetched →`
+  clean, box destroyed same-session): ⭐⭐ THE CHANNELS CONVERT —
+  walk-regen +17.5 (0.175→0.350, paired same-seed, outside ±8) ·
+  arb-55pre +20.0 (0.275→0.475) · terminal reach IN BAND on both
+  doctrine walks (0.400/0.425 vs the signed 40–50) — but the seam
+  OVERSHOOTS (15.3–16.9 vs 13–15) and act-1 drifts out of band
+  (regen ref 0.800 vs 65±8): the buffs bled into act 1.**
+  - Config landed: Mars/Hype/Overclock +4→+8 tri-stat ·
+    Minerva/Shield +2→+4 DEF · Janus/Reroute 2→4 cards · Patch heal
+    3→6 · Surge REVERTED to draw-2 (dead under the 65d user-signed
+    `maxHandSize` 8 cap; a cap re-sign — user floats 10, feel-motivated
+    — is PARKED for the signing session). Mercury/Cull/Venom/Miner
+    hold.
+  - **The funnel per arm (act1Reach / seamPool / termReach / wall /
+    win):** walk-regen 0.800/16.56/0.400/0.125/0.350 · walk-55pre
+    0.800/16.41/0.425/0.235/0.325 · arb-walk-regen
+    0.800/15.34/0.350/0.357/0.225 · arb-walk-55pre
+    0.800/16.88/0.575/0.174/0.475. Mid-act-2 deaths fall 59% →
+    47–50% doctrine / 28% arb-55pre — still the largest sink, but
+    the killer is blunted. Act-1 reach 69.4% → 80.0% (all four arms
+    identically — same seeds).
+  - **Decision grade (the fresh arb-walk tables, 2663/2891
+    decisions):** ⭐ **outOfBattle patch OPENS** — 0/196 at §71d
+    ("banking holds") → 9–11% pick at Δ|picked ~5.3: heal-6 now
+    beats the map-class floor · preTurn patch Δ|picked 2.8→4.2–4.4 ·
+    shield ~3.2 · draw-two 3.6–5.7 (n crosses 80 on 55pre) · venom
+    11–12% pick (n<80·) · **empower Δ|picked 2.8→3.3–3.4 and meanΔ
+    0.15–0.21→0.30–0.31 but Pick% FLAT at 4%** — the doubled buff
+    raises realized value per pick, not pick frequency · redraw
+    stays sub-floor (61–66 instances·, 8–15% pick).
+  - ⚠ **The ceiling deltas flip sign by posture: arb−doctrine −12.5
+    regen / +15.0 55pre (both outside ±8).** Hypothesis queued for
+    the pre-registered §72d flip read: cheap-tier myopia — stronger
+    items raise the cost of the horizon-≈-next-battle valuation
+    (value banked past the horizon is invisible), and the regen
+    doctrine heuristics exploit the buffed items better than the
+    traffic tier does.
+  - ⚠ **Attribution:** grant + fire landed as ONE commit — this
+    cycle cannot split their shares; the fire-ablated twins were NOT
+    re-run (their board rows are old-config data). A fire-ablated
+    re-run is the split, if 72f wants one.
+  - Board vs fresh rows: 0 FAIL / 6 WARN — regen act-1 0.800 (above
+    the ±8 drift ref) · seam ×2 above band · wall ×2 below (0.125
+    regen — the healthier arrivals crush the terminal) · the 2
+    ceiling deltas. All non-fresh rows are old-config; the full
+    board re-runs at 72f.

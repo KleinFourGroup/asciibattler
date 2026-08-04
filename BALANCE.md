@@ -2773,3 +2773,79 @@ deltas. The pre-X H7c→O log lives at
     the cut's value; the decision-grade read is horizon-blind to
     stock-up value — attribute accordingly, do not average them).
   - Elite-offer win receipts 0.150/0.450 · port-dock 0.475.
+- **2026-08-04 — §72f THE FULL BOARD CYCLE + THE SEARCHER-TIER DIRECT
+  TEST (the pre-signing measurement half; one box session each, all
+  22 + 1 batches `fetched →` clean at `8e790e5`, boxes destroyed).
+  Headline: 0 FAIL / 8 WARN, every WARN a known docket item or good
+  news — and ⭐⭐ THE SEARCHER-TIER PAIRED DELTA IS EXACTLY 0.000.**
+  - ⭐⭐ **The user-committed direct test (§72d): one real (non-shadow)
+    `--arbitrate-tier=searcher` arb-walk-regen batch, 40 seeds,
+    paired same-seed vs the traffic-tier twin — searcher 12/40 wins,
+    traffic 12/40, 7 flips EACH way, paired Δ 0.000; reach/wall
+    byte-close (0.375/0.200 both), seam 17.90 vs 17.38, bank
+    identical 99.3.** The deeper tier changes individual trajectories
+    (14 seeds flip outcome) but not the ceiling: the CHEAP TIER
+    HOLDS at the strongest evidence grade — the 72d tier-lock read
+    is now closed by direct test, not inference. (~2.5h of box time
+    for the one batch — the tier is ~10× the traffic cost at n=40.)
+  - ⭐ **The walk rows (doctrine): reach 0.425/0.450 IN the signed
+    40–50 · win 0.325/0.350 IN the derived 26–35 · seam 14.93/14.19
+    IN the signed 13–15 — the whole unified-band architecture holds
+    post-72d2/72e. The ONLY out-of-band trajectory metric is the
+    wall: 0.235/0.222 vs 30–35 (the terminal kills ~23% of arrivals,
+    band says 30–35). Consistent across all four walk arms (twins
+    0.200/0.150) — arm-independent, the tune-or-re-sign docket item.**
+  - ⭐ **The arb twins (traffic tier), the bands input: arb-walk-regen
+    win 0.300 / reach 0.375 / wall 0.200 / seam 17.38 · arb-walk-55pre
+    0.425 / 0.500 / 0.150 / 15.24 · act-1 twins arb-regen 0.800,
+    arb-55pre 0.850, both fires ~2, tx 0.000.** The posture
+    dissolution is now TOTAL on the arbitrated arm (every twin: tx
+    ≈0, fires ~2–4) — the twins converge to fire-heavy/no-shop
+    regardless of vector; the vector still moves outcomes (twin
+    win rates differ by posture) via in-battle play. Seam on the
+    arb firer runs HOT (17.4–17.9 vs signed 13–15): patch fires
+    offset drain (the 72e observation, now n=80 across both tiers).
+  - **Ceiling deltas: 8 of 11 pairs INSIDE ±8 paired noise** —
+    incl. both walk pairs (regen −0.025, 55pre +0.075) and the
+    act-1 posture pairs (+0.075/+0.050; the 72a +15.0 shopper
+    dissolution WARN is GONE — doctrine 55pre caught up to 0.800 via
+    the 72e cuts' run-grade conversion, the arm gap closed from
+    above). The 3 WARNs: ceiling-fire-ablated +0.175 (arbitration
+    SUBSTITUTES for ablated fire heuristics — see the fire pair
+    below), ceiling-wall-queen +0.100, ceiling-priest-55pre +0.125
+    (both the mild dissolution direction, small-margin).
+  - ⭐ **The fire channel CONVERTS at run grade on doctrine: Δ
+    regen−ablated = +0.100 vs the 68f-signed ≈0** — the 72c 2× value
+    buffs did repair the channel (the interstitial's founding agenda
+    item, closed). On the arbitrated arm the same Δ reads 0.000
+    BECAUSE the ablated twin substitutes (+17.5 ceiling on ablated):
+    arbitration finds equivalent value through other sites when the
+    fire heuristics are removed — both facts are real, different
+    arms. Sheet re-sign candidate: fireChannelDelta 0 → +0.10
+    (doctrine-arm definition) or redefine on the arb arm (≈0 by
+    substitution) — a signing call.
+  - **The act-1 drift refs: 55pre 0.800 vs 0.65±8 (the banked 72e
+    conversion, re-sign candidate) · regen 0.725 IN ref · priest
+    both 0.725 IN ref · gambler-regen 0.675 IN ref — and ⭐ the NEW
+    defect: gambler-55pre 0.575 vs [0.62, 0.78], REPLICATED at
+    exactly 0.575 on a local seeds-41–80 extension (pooled n=80,
+    the floor): a real drift, and a PARITY BREACH (soldier shopper
+    0.800, gambler shopper 0.575 → −22.5; the arb twins carry the
+    same gap, 0.850 vs 0.625, so it is character-intrinsic, not
+    decision quality). Deaths concentrate at the act-1 BOSS (18/34
+    pooled defeats at hop 10, 53%) — NOT early-hop (the 72d2 buff
+    is not the mechanism); the gambler shopper reaches the boss and
+    loses it. Repair = next-round scope; the ref disposition is a
+    signing call.**
+  - **The pooled elite read at cache 0.5 (natural shape, 87
+    nodeChoice elite instances across all 11 twins): pick 1.1%
+    (1/87), meanΔ −1.35, the take realized +6.00** — value-identical
+    to the 72e pre-buff margins, confirming horizon-invisibility at
+    the natural shape too (not just the forced probes). Ports at
+    the same site: 127 instances, 7.9% picked, meanΔ −0.26. Bits
+    (inside-horizon, spendable) remain the only decision-grade
+    elite lever — the round-2 signing call.
+  - Boss rows in ref: King 0.775 (ref 0.725±10) · Queen 0.575 (ref
+    0.65±10). Walk funnels (n=40): seam entrants 72/80/80/85%
+    (doctrine regen/55pre · arb regen/55pre) — the arb arms enter
+    act 2 MORE often and healthier.

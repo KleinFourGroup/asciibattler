@@ -1139,3 +1139,34 @@ for 72e/72f: the wall WARN (0.235 vs 30–35), the arb-55pre +12.5
 ceiling (posture dissolution), and the arb-regen seam 17.4 (the
 patch fires offsetting drain — twins get bands at the signing
 session).
+
+**72f measurement half (2026-08-04, overnight; numbers in BALANCE
+§72f, canonical).** The user signed off for the night with standing
+permission for re-runs/extra experiments (≤2 boxes, wrapped by
+09:00) — used for: the full 22-instrument cycle on box A and the
+committed searcher-tier direct test on box B IN PARALLEL (first
+two-box session; the searcher batch alone ran ~2.5h ≈ the whole
+22-batch walk, so the split halved wall clock), plus one local
+single-arm extension (gambler-55pre seeds 41–80, allowed under 68h)
+and the free pooled-decisions reads. Every signing decision waits
+for the morning session — this entry is measurement only. The
+board: 0 FAIL / 8 WARN, all eight accounted (docket items, the
+banked drifts, or good news: the fire channel now CONVERTS on
+doctrine +0.100 while the arb arm reads it ≈0 by substitution — the
+ablated twin's +17.5 ceiling is arbitration routing around the
+missing heuristics). The searcher-tier verdict is the round's
+cleanest number: paired Δ EXACTLY 0.000 vs the traffic twin (7
+flips each way, 12/40 both) — the cheap-tier lock closes by direct
+test. New finding: gambler-55pre 0.575 replicated at n=80, a real
+−12.5 drift and a −22.5 shopper-posture parity breach (arb twins
+carry the same gap → character-intrinsic; deaths 53% at the act-1
+boss, so NOT the 72d2 buff's early hops) — repair is next-round
+scope, disposition on the docket. The 72a shopper-dissolution WARN
+dissolved itself: doctrine 55pre caught up (0.800) to its twin
+(0.850), closing the gap from above — a channel repair converting
+at run grade reads as a ceiling-delta WARN disappearing. Docket
+data now complete: wall soft at 0.15–0.235 across all four walk
+arms vs the 30–35 band · twins' trajectory numbers banked for
+bands · elites still horizon-invisible at cache 0.5 in the natural
+shape (87 pooled, 1.1% pick, −1.35) with bits as the only
+decision-grade lever · both act-1 +15 drifts re-confirmed.

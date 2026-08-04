@@ -199,5 +199,12 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   refactor is a behavior-equivalence surgery — worktree-pinned diff
   oracle required (the 47e protocol).
 
+- [ ] **box-batch.sh `--poll-ceiling` arg (or a bumped `run` default).**
+  Filed at the 72f close (2026-08-04): `run`'s 1h poll loop is now
+  shorter than routine batches — post-buff flip batches ran ~70 min and
+  the 72f searcher-tier walk ~2.5h. The §57g re-attach (`status`/`fetch`
+  by id) recovered cleanly each time, so this is ergonomics, not a
+  correctness hole; the 72f drivers just used their own poll loops.
+
 - [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
 - [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).

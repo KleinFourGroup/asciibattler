@@ -415,6 +415,35 @@ re-time mid-sweep).
   sampling shape. And when censoring is the problem, prefer de-censoring
   the DESIGN (control the arrival state — the `--first-node=elite`
   precedent) over patching the estimator.
+- **A decision-grade comparison names its baseline BATCH (promoted
+  2026-08-04):** config-identical, by id — never "the last table in
+  BALANCE." The 72e draw read almost published "empower Pick% rises 4→11"
+  against a 72c-era table; the true config-identical baseline (the 72d2
+  batch) read 14.3, flipping the conclusion to "the bigger hand DILUTES
+  empower."
+- **The horizon-blindness rule (promoted 2026-08-04):** before buffing a
+  knob to move a DECISION-grade needle, check the knob's value lands
+  INSIDE the rollout horizon; if not, judge it at run grade. 72e's two
+  structural nulls in one cycle: port prices (bits abundant → price not
+  binding; the horizon captures ~1 fire of stocked value) and elite cache
+  chance (passives outlive rollouts; untaken elites never roll) — while
+  the run-grade needle (act-1 shopper 0.65→0.80) carried the cuts'
+  receipt. Run-grade and decision-grade instruments measure different
+  horizons; attribute accordingly, never average them.
+- **Probe-shape win rates are SHAPE artifacts, never balance signals
+  (promoted 2026-08-04):** `--elite-chance=1` punishes the firer to
+  0.15–0.175 — fresh-roster hop-2 elites are brutal. Read probe arms for
+  their decisions; read balance from the natural shapes.
+- **Bot-derived design bands apply the ~75%-of-human skill ratio at
+  DESIGN time (promoted 2026-08-04):** the 72b terminal-reach band was
+  trimmed 50–60 → 40–50 by the user on human-overperformance grounds —
+  the ratio belongs in the proposal, not just the measurement.
+- **Unmeasured elasticity → a two-point dose bracket before signing a
+  magnitude (promoted 2026-08-04):** the 72f wall tune measured walls
+  0.15–0.235 wanting 30–35; ×1.25 landed mid-band while ×1.5 cratered
+  the finale (walls 0.69–0.74, wins ~0.13). Nobody guesses that
+  steepness from the baseline — the bracket is one box-hour of
+  insurance on every magnitude sign.
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 
@@ -2849,3 +2878,45 @@ deltas. The pre-X H7c→O log lives at
     0.65±10). Walk funnels (n=40): seam entrants 72/80/80/85%
     (doctrine regen/55pre · arb regen/55pre) — the arb arms enter
     act 2 MORE often and healthier.
+- **2026-08-04 — §72f THE SIGNING SESSION + ROUND CLOSE (all items
+  user-signed; the closing 15-instrument cycle at `52c8824`, one box,
+  all `fetched →` clean, box destroyed): ⭐⭐ BOARD GREEN — 0 FAIL /
+  3 WARN, all three PRE-REGISTERED** (the 55pre twin's reach 0.575
+  overperformance + its derived win 0.375 + the matching
+  ceiling-walk-55pre +0.150 — the named next-round watch, rendered
+  on purpose).
+  - **The signed package:** the ARBITRATED DEFAULT (ARM gains
+    `--arbitrate`; the 15-row board = 10 arb primaries + 5 checkless
+    doctrine controls; arb-fire-ablated DROPPED — rollout-owned fires
+    make ablation a no-op, metric-identical receipts) · the deep-end
+    boss pool split (`bandit-king-deep`/`banditQueen-deep`,
+    PROVISIONAL stat-clones; proper sector-2 bosses = cluster-5
+    scope) at the ×1.25 dose · seam re-signed 15–18 at arb reality ·
+    reach 40–50 + wall 30–35 HELD · fireChannelDelta re-signed +0.10
+    (doctrine-pair definition) · act-1 refs re-pinned at the 72f arb
+    values · maxHandSize 8→10 + Surge draw-3 (feel-motivated,
+    user-signed; no balance win expected — empower dilutes slightly).
+  - **The dose bracket (2 arms × 3 points, paired seeds):** walls
+    ×1.0 → 0.200/0.150 · ×1.25 → 0.313/0.348 (IN band) · ×1.5 →
+    0.688/0.739 with wins cratering to 0.125/0.150. Steep, monotone,
+    and TERMINAL-SURGICAL (reach/seam byte-identical across doses).
+    The closing cycle reproduced the ×1.25 walk numbers
+    byte-for-byte (0.400/0.313/17.750 · 0.575/0.348/15.559) — the
+    determinism receipt that the board/sheet reshape touched nothing
+    sim-side.
+  - **The closing-cycle row values (the new baseline table):**
+    arb-regen 0.800 (bank 60.3 · fires 2.15 · tx 0) · arb-55pre
+    0.850 (63.5 · 1.93 · 0) · King 0.825 / Queen 0.700 (order
+    holds) · priest 0.625/0.850 · gambler 0.700/0.625 (the shopper
+    parity breach rides the sheet as a named rider) · walk twins as
+    above · fire channel +0.125 (in the re-signed +0.10±5) ·
+    ceilings +0.050 ×3 + the 55pre-walk +0.150 WARN.
+  - **The horizon-blindness solution ladder (user-signed direction):**
+    the measured terminal prior (per-passive realized value from the
+    `--grant` paired instruments, folded into the rollout terminal
+    score, re-measured per balance round) seeded by a
+    state-conditioned ε as the data pump — pre-registered for the
+    cluster-5 spec pipeline; the learning-balancer question re-opens
+    ONLY if the tabular prior stops converging. Elites stay
+    high-variance human content this round (bits buff deferred; cache
+    0.5 stands as the human-value buff).

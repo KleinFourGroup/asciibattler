@@ -98,6 +98,22 @@ kickoff — has its own section below.)
   Don't reach for `window.__world` / `window.__game` debug hooks for the
   same purpose — a failing test surfaces the same state with a stack
   trace.
+- **Confirm the deficit before authoring the mechanism story.**
+  Control-probe the OLD code path with the same flag combination before
+  blaming new code (the 69b walker "crash" was a latent shipped bug,
+  proven in one probe), and pull the MEASURED baseline anchor before
+  diagnosing a metric gap (71d: two elaborate wrong diagnoses were
+  authored against a phantom design-band deficit before anyone checked
+  what the doctrine arm scored on the same shape).
+- **Twice-bitten → audit the class the same day.** A second instance of
+  any bug shape is the trigger to enumerate the shape's whole surface,
+  not to fix the instance and move on (the 72b finalHop sweep — gotcha
+  #120 — found three more sector-blind spots in an hour and closed the
+  class; a cheap independent recompute of a headline metric from raw
+  rows is the strongest lint an instrument can get).
+- **Scratch probes go in real `.ts` files** — inline `npx tsx -e` can
+  wedge silently at spawn on Windows (~0 CPU forever, no output, no
+  crash; the §57g CPU-vs-wall check catches it — 70a).
 - **Behavior-equivalence refactors get a before/after fuzz-arm diff
   oracle — with the "before" pinned in a worktree.** Capture per-arm
   `summary.csv` baselines at HEAD *before* the surgery, re-run after,

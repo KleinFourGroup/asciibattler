@@ -103,3 +103,27 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   win as sheet MACHINERY (the derived band computes from the signed
   pair in board.ts) means a re-sign can never leave the product band
   stale — the same one-fact-one-home discipline, applied to numbers.
+
+## §72 c–e session (2026-08-02→03)
+
+- **Stale-baseline near-miss (72e draw read):** almost published "empower
+  Pick% rises 4→11" comparing the hand-8 arm against the 72c-era table —
+  the TRUE baseline (the 72d2 batch, same config) read 14.3, flipping the
+  conclusion to "the bigger hand DILUTES empower." Rule candidate: a
+  decision-grade comparison names its baseline BATCH (config-identical),
+  never "the last table in BALANCE."
+- **box-batch `run`'s 1h poll ceiling is shorter than post-buff flip
+  batches** (~70 min each — richer margins = more rollout work). The
+  §57g re-attach pattern (patient watcher + `status`/`fetch` by id)
+  recovered cleanly; nothing lost. Candidate: a `--poll-ceiling` arg or
+  a bumped default in box-batch.sh (TODO-grade).
+- **The horizon-blindness family (72e verify):** two structural nulls in
+  one cycle — port prices (bits abundant → price not binding; horizon
+  captures ~1 fire of stocked value) and elite cache chance (passives
+  outlive rollouts; untaken elites never roll). Candidate doctrine line:
+  before buffing a knob to move a DECISION-grade needle, ask whether the
+  knob's value lands inside the rollout horizon; if not, judge it at run
+  grade (the act-1 shopper 0.65→0.80 carried the cuts' receipt).
+- **Probe shapes distort postures:** elite-chance=1 punishes the firer
+  (win 0.15–0.175) — fresh-roster hop-2 elites are brutal; read probe-arm
+  win rates as SHAPE artifacts, never balance signals.

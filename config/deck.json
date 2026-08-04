@@ -1,6 +1,6 @@
 {
   "handSize": 6,
-  "maxHandSize": 8,
+  "maxHandSize": 10,
   "redraw": {
     "enabled": false,
     "redrawsPerTurn": 1,

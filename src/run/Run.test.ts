@@ -4629,7 +4629,9 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     ]);
     cues.length = 0;
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    expect(cues.map((c) => c.kind)).toEqual(['drawn', 'drawn']);
+    const surge = packetById('draw-two')!.effect;
+    const surgeCount = surge.op === 'drawCards' ? surge.count : 0;
+    expect(cues.map((c) => c.kind)).toEqual(Array.from({ length: surgeCount }, () => 'drawn'));
   });
 
   it('a redraw cues all its discards, then all its refills (the K3 two-loop order)', () => {
@@ -4642,26 +4644,40 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
   });
 
   it('the reshuffle interposes exactly where the pile runs dry, as ONE cue', () => {
-    // The packet dance to a dry pile: 4 Culls (hand 6→2, discard 4, pile 4),
-    // two Surges (hand →6, pile →0), then a third Surge forces the flip.
+    // Config-derived choreography (the 72f cap/Surge bump retired the old
+    // hardcoded count-2 dance): Cull the dealt hand down to build a discard
+    // pile, Surge while the pile still covers a full draw, then record the
+    // one Surge that must cross the dry point mid-draw.
     const { run, bus } = gatedToFirstTurnIntro(9, null);
+    const surge = packetById('draw-two')!.effect;
+    const surgeCount = surge.op === 'drawCards' ? surge.count : 0;
     for (let i = 0; i < 4; i++) run.addPacket('discard-one');
-    run.addPacket('draw-two');
-    run.addPacket('draw-two');
     for (let i = 0; i < 4; i++) run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
-    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    expect(run.drawPile).toHaveLength(0);
-    expect(run.discardPile).toHaveLength(4);
+    while (run.drawPile.length >= surgeCount) {
+      run.addPacket('draw-two');
+      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    }
+    const pile = run.drawPile.length;
+    const discard = run.discardPile.length;
+    expect(discard).toBeGreaterThan(0); // the flip has fuel
+    expect(pile).toBeLessThan(surgeCount); // the next Surge must cross dry
+    expect(DECK.maxHandSize - run.hand.length).toBeGreaterThanOrEqual(surgeCount); // no cap clamp
     run.addPacket('draw-two');
     const cues = record(bus);
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     expect(cues).toEqual([
-      { kind: 'reshuffled', drawPile: 4, discardPile: 0 },
-      { kind: 'drawn', drawPile: 3, discardPile: 0 },
-      { kind: 'drawn', drawPile: 2, discardPile: 0 },
+      ...Array.from({ length: pile }, (_, i) => ({
+        kind: 'drawn',
+        drawPile: pile - 1 - i,
+        discardPile: discard,
+      })),
+      { kind: 'reshuffled', drawPile: discard, discardPile: 0 },
+      ...Array.from({ length: surgeCount - pile }, (_, i) => ({
+        kind: 'drawn',
+        drawPile: discard - 1 - i,
+        discardPile: 0,
+      })),
     ]);
-    expect(run.hand).toHaveLength(DECK.maxHandSize);
   });
 
   it('the turn-start recycle cues per-card discards (no screen up — still honest)', () => {

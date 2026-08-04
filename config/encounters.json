@@ -674,5 +674,140 @@
         ]
       }
     ]
+  },
+  {
+    "id": "bandit-king-deep",
+    "name": "The Bandit King",
+    "description": "The warlord every road-bandit answers to. He throws his disciplined honour guard first, looses his berserkers as they fall, then makes his own last stand — the fight escalates as you wear his host down.",
+    "healthPool": 13,
+    "kind": "boss",
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+    ],
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.66 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.44 },
+                  "count": { "kind": "hand", "factor": 1.2 },
+                  "units": [
+                    { "archetype": "mercenary", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.33 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.44 },
+                  "count": { "kind": "hand", "factor": 1.2 },
+                  "units": [
+                    { "archetype": "bandit", "count": { "kind": "weight", "weight": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "rogue", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "ronin", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.56 },
+                  "count": { "kind": "hand", "factor": 1 },
+                  "levelCap": { "kind": "roster", "delta": 2 },
+                  "units": [
+                    { "archetype": "adventurer", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "catapult", "count": { "kind": "fixed", "value": 2 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "banditQueen-deep",
+    "name": "The Bandit Queen?",
+    "description": "This woman doesn't look all that much like a bandit...",
+    "healthPool": 20,
+    "kind": "boss",
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+    ],
+    "waves": [
+      {
+        "kind": "stages",
+        "stages": [
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.66 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.56 },
+                  "count": { "kind": "hand", "factor": 1.3 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "until": { "kind": "enemyPoolAtOrBelow", "fraction": 0.33 },
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.56 },
+                  "count": { "kind": "hand", "factor": 1.3 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "rogue", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "body": [
+              {
+                "kind": "wave",
+                "spec": {
+                  "levelBudget": { "kind": "mean", "factor": 1.56 },
+                  "count": { "kind": "hand", "factor": 1.3 },
+                  "units": [
+                    { "archetype": "banshee", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 2 } },
+                    { "archetype": "reaver", "count": { "kind": "fixed", "value": 3 }, "level": { "kind": "weight", "weight": 1 } },
+                    { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

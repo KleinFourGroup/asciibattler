@@ -96,7 +96,12 @@ describe('sectors config — the shipped catalog', () => {
       'plagueSpreaders',
       'darkMagicPosse',
     ]);
-    expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual(['bandit-king', 'banditQueen']);
+    // 72f — the boss pool split: The Deep End rolls the provisional -deep
+    // stat-clones (wall dose); The Start keeps the originals.
+    expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual([
+      'bandit-king-deep',
+      'banditQueen-deep',
+    ]);
     // 68e (user-signed): the uniform-from-hop-0 shape ended at the tune —
     // the two isolation-pinned defects carry gates; everything else stays
     // ungated. (67c shipped the pool fully ungated; the §68e read is why.)

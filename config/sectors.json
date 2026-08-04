@@ -73,8 +73,8 @@
         { "encounterId": "darkMagicPosse" }
       ],
       "boss": [
-        { "encounterId": "bandit-king" },
-        { "encounterId": "banditQueen" }
+        { "encounterId": "bandit-king-deep" },
+        { "encounterId": "banditQueen-deep" }
       ]
     }
   }

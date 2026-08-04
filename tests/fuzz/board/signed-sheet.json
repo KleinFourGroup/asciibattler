@@ -1,19 +1,19 @@
 {
-  "signedAt": "2026-08-02, §72b (user-signed) — the unified band architecture: seam-pool 13–15 signed at measured reality · deep-end wall 30–35 RE-SIGNED (the §68g crisis was gotcha #120 contamination; true walls 0.154–0.333) · terminal reach 40–50 signed (user: human overperformance argues the conservative side) · WIN IS DERIVED (terminalReach × (1−wall) ⇒ 26–35), never independently signed; the one-act-era 55–70 two-act band RETIRED. Act-1 rows still carry the §68f settled-config drift refs.",
-  "characterParity": "characters are similar in DIFFICULTY, differing in PLAYSTYLE (DESIGN.md §Run structure) — cross-character gaps beyond ~±5pt are defects; parity VERIFIED ±5 at the §68f settled config",
-  "seamPoolBand": { "min": 13, "max": 15 },
+  "signedAt": "2026-08-04, §72f (user-signed) — THE ARBITRATED DEFAULT: the realistic-bot arm gains --arbitrate (the 71d/72d/72f-direct-test cheap tier); the board = 10 arb primaries + 5 doctrine controls. Seam re-signed 15–18 at arb reality (patch fires offset drain; the doctrine-arm 13–15 retires with its arm) · wall 30–35 HELD, achieved by the ×1.25 deep-end boss dose (walls 0.313/0.348) · reach 40–50 HELD (the 55pre twin's 0.575 rides as the reference overperformance watch) · WIN DERIVED, never independently signed · fire channel re-signed +0.10 on the doctrine control pair (the 72c buffs repaired it; on the arb arm it reads ≈0 by substitution — structural, banked in BALANCE §72f). Act-1 refs re-pinned at the 72f-cycle arb values; the gambler shopper parity breach is an explicit next-round rider, not absorbed.",
+  "characterParity": "characters are similar in DIFFICULTY, differing in PLAYSTYLE (DESIGN.md §Run structure) — cross-character gaps beyond ~±5pt are defects; ⚠ BREACHED at 72f on the shopper posture (soldier 0.850 vs gambler 0.625 arb; character-intrinsic, deaths at the act-1 boss) — the next-round repair rider",
+  "seamPoolBand": { "min": 15, "max": 18 },
   "terminalReachTarget": { "min": 0.4, "max": 0.5 },
   "deepEndWallTarget": { "min": 0.3, "max": 0.35 },
   "act1WinRefs": {
-    "soldier": { "regen": 0.65, "pre55": 0.65 },
-    "priest": { "regen": 0.725, "pre55": 0.7 },
-    "gambler": { "regen": 0.625, "pre55": 0.7 }
+    "soldier": { "regen": 0.8, "pre55": 0.85 },
+    "priest": { "regen": 0.65, "pre55": 0.85 },
+    "gambler": { "regen": 0.7, "pre55": 0.625 }
   },
-  "gamblerNote": "parity ±5 ACHIEVED at the §68f settled config (user-signed 2026-07-29) — the 68d −6/−5 defect repaired via the ronin-start sequence",
-  "bankRefs": { "firer": 68.3, "shopper": 49.9 },
-  "firerFiresPerRun": 2.98,
-  "shopperTransactionRate": 0.4,
-  "fireChannelDelta": 0,
-  "forcedKingWinRegen": 0.725,
-  "forcedQueenWinRegen": 0.65
+  "gamblerNote": "72f: the shopper ref pins at the OBSERVED 0.625 (drift detection) while the −22.5 parity breach vs the soldier shopper stays a named next-round repair (boss-fight deaths, 53% at hop 10, n=80)",
+  "bankRefs": { "firer": 60.3, "shopper": 63.5 },
+  "firerFiresPerRun": 2.15,
+  "shopperTransactionRate": 0,
+  "fireChannelDelta": 0.1,
+  "forcedKingWinRegen": 0.8,
+  "forcedQueenWinRegen": 0.675
 }

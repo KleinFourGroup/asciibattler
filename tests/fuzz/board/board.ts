@@ -132,8 +132,12 @@ export interface Board {
   readonly sheet: SignedSheet;
 }
 
-/** The extended realistic arm (§60c doctrine) + the instrument shapes. */
-const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi'];
+/** The extended realistic arm — 72f (user-signed): `--arbitrate` joins the
+ *  doctrine flags (the run-layer arbitrated default; cheap tier locked by
+ *  the 72f direct test). CONTROL_ARM is the pre-flip heuristic arm the five
+ *  doctrine control rows still run (ceiling deltas + the fire channel). */
+const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi', '--arbitrate'];
+const CONTROL_ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi'];
 const ACT1 = ['--count=40', '--hops=11']; // the §60e continuity shape
 const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)
 const REGEN = '--strategy=tests/fuzz/fixtures/59-regen-vector.json';
@@ -147,50 +151,70 @@ function ref(metric: MetricKey, value: number, tol: number, source: string): Boa
   return { metric, grade: 'reference', min: value - tol, max: value + tol, source };
 }
 
-/** One act-1 posture instrument for a character (the drift-detector rows). */
+/** One act-1 posture PRIMARY for a character (the arb drift-detector rows —
+ *  72f: refs re-pinned at the 72f-cycle arb values). The §60e posture-split
+ *  checks are RETIRED: the arbitrated arm dissolves postures at the sites it
+ *  owns (every row fires ~2, shops ~never), so the soldier rows carry plain
+ *  economy refs instead. */
 function act1Posture(
   character: 'soldier' | 'priest' | 'gambler',
   posture: 'regen' | 'pre55',
   sheet: SignedSheet,
 ): BoardInstrument {
   const vector = posture === 'regen' ? REGEN : PRE55;
-  const strategyRow = posture === 'regen' ? 'scored:59-regen-vector' : 'scored:55pre-vector';
+  const strategyRow =
+    posture === 'regen' ? 'arbitrated:scored:59-regen-vector' : 'arbitrated:scored:55pre-vector';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `68d drift ref (act-1 observed ±8)${provisional}`;
+  const winSource = `72f drift ref (act-1 arb observed ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
   ];
-  // The posture-economy references ride the SOLDIER rows only — the
-  // character rows are parity detectors, one number each.
+  // Plain economy refs ride the SOLDIER rows only (one instrument-pair of
+  // numbers, not six): bank/fires at observed, tx ≈0 — the posture
+  // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '68d: the firer banks ~68'),
-      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '68d: 2.98 fires/run post-68a'),
-      ref('transactionRate', 0, 0.1, '§60e posture split (accepted): the firer buys ~never'),
+      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '72f: the arb firer banks ~60'),
+      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '72f: ~2.15 arbitrated fires/run'),
+      ref('transactionRate', 0, 0.1, '72f posture dissolution: the arb arm shops ≈never'),
     );
   }
   if (character === 'soldier' && posture === 'pre55') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '68d: the shopper spends down to ~50'),
-      ref('transactionRate', sheet.shopperTransactionRate, 0.15, '§60e/68d: tx ~40% shopper'),
-      ref('firesPerRun', 0, 0.5, '§60e posture split (accepted): the shopper fires ~never'),
+      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '72f: the arb shopper-vector row banks ~63'),
+      ref('transactionRate', sheet.shopperTransactionRate, 0.1, '72f posture dissolution: the arb arm shops ≈never (the vector still moves in-battle play)'),
+      ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run'),
     );
   }
-  const id = character === 'soldier' ? posture.replace('pre55', '55pre') : `${character}-${posture.replace('pre55', '55pre')}`;
+  const base = character === 'soldier' ? posture.replace('pre55', '55pre') : `${character}-${posture.replace('pre55', '55pre')}`;
   return {
-    id,
-    title: `${character} ${posture === 'regen' ? 'firer' : 'shopper'} (act-1 drift ref)`,
+    id: `arb-${base}`,
+    title: `${character} ${posture === 'regen' ? 'regen' : '55pre'} vector (arb act-1 drift ref)`,
     args: [...ACT1, `--character=${character}`, vector, ...ARM],
     strategyRow,
     checks,
   };
 }
 
-/** One two-act walk instrument — the 72b unified-architecture rows
- *  (user-signed 2026-08-02): seam-pool + wall + terminal reach signed;
- *  the win band DERIVES from reach × (1−wall) and is never independently
- *  signed (the one-act-era 55–70 band is RETIRED). All reference-grade
- *  until the 72f post-buff signing session (the 68d two-grade design). */
+/** A doctrine CONTROL row (72f): the pre-flip heuristic arm, no per-row
+ *  checks — its value is the paired ceiling deltas + the fire channel. The
+ *  full 11-row doctrine set re-enters at the cluster-5 stress test. */
+function control(
+  id: string,
+  title: string,
+  args: readonly string[],
+  strategyRow: string,
+): BoardInstrument {
+  return { id, title: `${title} (doctrine control)`, args, strategyRow, checks: [] };
+}
+
+/** One two-act walk PRIMARY — the 72b unified-architecture rows on the
+ *  arbitrated default (72f signing): seam re-signed 15–18 at arb reality;
+ *  reach + wall held; win DERIVES from reach × (1−wall), never
+ *  independently signed. Checks stay REFERENCE grade by the 68d design —
+ *  the SIGNATURE lives on the sheet; at n=40 a signed-FAIL grade would
+ *  trip on ±8pt paired noise (the 72f dose pair measured reach at exactly
+ *  the band edge). */
 function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstrument {
   const vector = posture === 'regen' ? REGEN : PRE55;
   // Balance-proof: the derived band moves with the sheet's signed pair.
@@ -198,32 +222,37 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
     min: sheet.terminalReachTarget.min * (1 - sheet.deepEndWallTarget.max),
     max: sheet.terminalReachTarget.max * (1 - sheet.deepEndWallTarget.min),
   };
+  const watch =
+    posture === 'pre55'
+      ? ' — the 55pre twin OVERPERFORMS (0.575 reach at 72f); the deliberate next-round watch'
+      : '';
   return {
-    id: `walk-${posture.replace('pre55', '55pre')}`,
-    title: `two-act ${posture === 'regen' ? 'firer' : 'shopper'} (the design-target shape)`,
+    id: `arb-walk-${posture.replace('pre55', '55pre')}`,
+    title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
     args: [...WALK, '--character=soldier', vector, ...ARM],
-    strategyRow: posture === 'regen' ? 'scored:59-regen-vector' : 'scored:55pre-vector',
+    strategyRow:
+      posture === 'regen' ? 'arbitrated:scored:59-regen-vector' : 'arbitrated:scored:55pre-vector',
     checks: [
       {
         metric: 'seamPool',
         grade: 'reference',
         min: sheet.seamPoolBand.min,
         max: sheet.seamPoolBand.max,
-        source: '72b SIGNED at measured reality: enter act 2 at ~2/3 health',
+        source: '72f RE-SIGNED 15–18 at arb reality (patch fires offset drain; the doctrine-arm 13–15 retired with its arm)',
       },
       {
         metric: 'terminalReach',
         grade: 'reference',
         min: sheet.terminalReachTarget.min,
         max: sheet.terminalReachTarget.max,
-        source: '72b SIGNED 40–50 (human overperformance argues conservative) — THE 72c target; measured ~0.29 pooled',
+        source: `72b SIGNED 40–50, HELD at 72f${watch}`,
       },
       {
         metric: 'bossWall',
         grade: 'reference',
         min: sheet.deepEndWallTarget.min,
         max: sheet.deepEndWallTarget.max,
-        source: '72b RE-SIGNED 30–35 (the §68g crisis was gotcha #120 contamination; true walls 0.154–0.333)',
+        source: '72b SIGNED 30–35, HELD at 72f — achieved by the ×1.25 deep-end boss dose (0.313/0.348)',
       },
       {
         metric: 'winRate',
@@ -236,46 +265,31 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
   };
 }
 
-/** 72a — the arbitrated twin of a doctrine instrument: same shape, same
- *  in-sample seeds, the run-layer arbitrated arm on its settled default
- *  (bare `--arbitrate` = the traffic tier, 71d-validated). Twins carry NO
- *  checks until the §72f signing session gives them bands — they are
- *  measurement rows; the ceiling-move read renders on the paired deltas. */
-function arbitratedTwin(inst: BoardInstrument): BoardInstrument {
-  return {
-    id: `arb-${inst.id}`,
-    title: `${inst.title} — arbitrated twin`,
-    args: [...inst.args, '--arbitrate'],
-    strategyRow: `arbitrated:${inst.strategyRow}`,
-    checks: [],
-  };
-}
-
 export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
-  const instruments: BoardInstrument[] = [
+  // 72f (user-signed) — THE ARBITRATED DEFAULT: 10 arb primaries carry the
+  // checks; 5 doctrine controls ride checkless for the paired ceiling
+  // deltas + the fire channel. arb-fire-ablated is DROPPED: on the arb arm
+  // fires are rollout-owned, so the ablated vector plays identically to
+  // regen (metric-identical at 72f — the +17.5 "substitution" ceiling
+  // explained structurally; BALANCE §72f). The full 11-row doctrine set
+  // re-enters at the cluster-5 stress test.
+  const primaries: BoardInstrument[] = [
     act1Posture('soldier', 'regen', sheet),
     act1Posture('soldier', 'pre55', sheet),
     {
-      id: 'fire-ablated',
-      title: 'the fire-channel control (60 ablated vector)',
-      args: [...ACT1, '--character=soldier', ABLATED, ...ARM],
-      strategyRow: 'scored:60-fire-ablated-vector',
-      checks: [],
-    },
-    {
-      id: 'wall-king',
-      title: 'forced Bandit King (regen vector)',
+      id: 'arb-wall-king',
+      title: 'forced Bandit King (regen vector, arbitrated)',
       args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...ARM],
-      strategyRow: 'scored:59-regen-vector',
-      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '68d per-boss: King 72.5 (regen)')],
+      strategyRow: 'arbitrated:scored:59-regen-vector',
+      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '72f per-boss: King 80.0 (arb regen)')],
     },
     {
-      id: 'wall-queen',
-      title: 'forced Bandit Queen (regen vector)',
+      id: 'arb-wall-queen',
+      title: 'forced Bandit Queen (regen vector, arbitrated)',
       args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...ARM],
-      strategyRow: 'scored:59-regen-vector',
+      strategyRow: 'arbitrated:scored:59-regen-vector',
       checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '68d per-boss: Queen 65.0 (regen) — the order FLIPPED vs §60e'),
+        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '72f per-boss: Queen 67.5 (arb regen) — the King>Queen order holds'),
       ],
     },
     act1Posture('priest', 'regen', sheet),
@@ -285,53 +299,48 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
     walkPosture('regen', sheet),
     walkPosture('pre55', sheet),
   ];
-  // 72a — the run-alongside window (spec resolution 6): every doctrine
-  // instrument gets an arbitrated twin, and the paired same-seed
-  // arb−doctrine winRate delta rides as a report row per pair — the
-  // ceiling-move measurement the walk-wall re-read consumes is board
-  // OUTPUT, not a hand ritual. Band = the ±8pt paired noise: a WARN here
-  // is the tell we render on purpose (a real ceiling move, not drift).
-  const twins = instruments.map(arbitratedTwin);
-  const ceilingDeltas: BoardDelta[] = instruments.map((inst) => ({
-    id: `ceiling-${inst.id}`,
-    title: `ceiling move (arb − doctrine win rate, ${inst.id})`,
+  const controls: BoardInstrument[] = [
+    control('regen', 'soldier regen vector', [...ACT1, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
+    control('55pre', 'soldier 55pre vector', [...ACT1, '--character=soldier', PRE55, ...CONTROL_ARM], 'scored:55pre-vector'),
+    control('fire-ablated', 'the fire-channel ablation', [...ACT1, '--character=soldier', ABLATED, ...CONTROL_ARM], 'scored:60-fire-ablated-vector'),
+    control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
+    control('walk-55pre', 'two-act 55pre vector', [...WALK, '--character=soldier', PRE55, ...CONTROL_ARM], 'scored:55pre-vector'),
+  ];
+  // The 4 ceiling deltas (arb − doctrine, paired seeds): the cheapest
+  // standing read on what arbitration is worth; a WARN = a real move.
+  const ceilingDeltas: BoardDelta[] = (
+    [
+      ['regen', 'arb-regen'],
+      ['55pre', 'arb-55pre'],
+      ['walk-regen', 'arb-walk-regen'],
+      ['walk-55pre', 'arb-walk-55pre'],
+    ] as const
+  ).map(([ctrl, arb]) => ({
+    id: `ceiling-${ctrl}`,
+    title: `ceiling move (arb − doctrine win rate, ${ctrl})`,
     metric: 'winRate',
-    a: `arb-${inst.id}`,
-    b: inst.id,
+    a: arb,
+    b: ctrl,
     grade: 'reference',
     min: -WIN_TOL,
     max: WIN_TOL,
-    source: '72a run-alongside: paired same-seed arb−doctrine; WARN = a real ceiling move (the §72b re-read input)',
+    source: '72f standing control: paired same-seed arb−doctrine; WARN = a real ceiling move',
   }));
   const deltas: BoardDelta[] = [
     {
       id: 'fire-channel',
-      title: 'fire channel (regen − ablated win rate)',
+      title: 'fire channel (regen − ablated win rate, doctrine controls)',
       metric: 'winRate',
       a: 'regen',
       b: 'fire-ablated',
       grade: 'reference',
       min: sheet.fireChannelDelta - 0.05,
       max: sheet.fireChannelDelta + 0.05,
-      source: '68f re-sign (user, 2026-07-29): the channel reads ≈0 at the settled config (n=80) — was 68d +12.5 / §60e +5; repair → the rollout-arbitration interstitial',
-    },
-    {
-      // 72b's fire-channel verification, pre-wired: same sheet-derived
-      // band as the doctrine row, so a WARN = the channel moved off the
-      // re-signed ≈0 on the arbitrated arm (the repair converting).
-      id: 'arb-fire-channel',
-      title: 'fire channel on the arbitrated arm (arb regen − arb ablated win rate)',
-      metric: 'winRate',
-      a: 'arb-regen',
-      b: 'arb-fire-ablated',
-      grade: 'reference',
-      min: sheet.fireChannelDelta - 0.05,
-      max: sheet.fireChannelDelta + 0.05,
-      source: '72a pre-wire for the §72b verification: WARN = the channel converts on the arbitrated arm (moved off the 68f ≈0)',
+      source: '72f re-sign (user, 2026-08-04): +0.10 — the 72c value buffs REPAIRED the channel (was ≈0 at 68f); doctrine-pair definition, the arb arm reads ≈0 by substitution (structural)',
     },
     ...ceilingDeltas,
   ];
-  return { instruments: [...instruments, ...twins], deltas, sheet };
+  return { instruments: [...primaries, ...controls], deltas, sheet };
 }
 
 // ---- summary.csv → metrics ------------------------------------------------

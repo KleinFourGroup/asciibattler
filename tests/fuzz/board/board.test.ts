@@ -114,11 +114,11 @@ describe('evaluateBoard', () => {
     firesPerRun: 2.9,
   });
 
-  it('an at-reference regen read PASSes every check', () => {
+  it('an at-reference arb-regen read PASSes every check', () => {
     // Balance-proof: the at-reference value comes FROM the sheet, so a
     // legitimate re-sign moves this test with it (the 68f re-sign lesson).
-    const report = evaluateBoard(board, new Map([['regen', metricsAt(sheet.act1WinRefs.soldier.regen)]]));
-    const regen = report.rows.filter((r) => r.instrument === 'regen');
+    const report = evaluateBoard(board, new Map([['arb-regen', metricsAt(sheet.act1WinRefs.soldier.regen)]]));
+    const regen = report.rows.filter((r) => r.instrument === 'arb-regen');
     expect(regen.length).toBeGreaterThan(0);
     expect(regen.every((r) => r.status === 'PASS')).toBe(true);
     expect(report.fails).toBe(0);
@@ -151,7 +151,7 @@ describe('evaluateBoard', () => {
     expect(report.warns).toBe(1);
   });
 
-  it('post-68d the real board carries NO signed-grade checks (all drift refs until the two-act signing)', () => {
+  it('the real board carries NO signed-grade checks (the 68d design, held at 72f: signatures live on the sheet; n=40 noise makes FAIL-grade checks trigger-happy)', () => {
     const signed = board.instruments.flatMap((i) => i.checks).filter((c) => c.grade === 'signed');
     expect(signed).toEqual([]);
   });
@@ -177,8 +177,8 @@ describe('evaluateBoard', () => {
 
   it('a null wall (no wins) is N/A, not a verdict — pinned on the walk row that carries the wall check', () => {
     const noWins = { ...metricsAt(0.6), bossWall: null };
-    const report = evaluateBoard(board, new Map([['walk-regen', noWins]]));
-    const wall = report.rows.find((r) => r.instrument === 'walk-regen' && r.metric === 'bossWall');
+    const report = evaluateBoard(board, new Map([['arb-walk-regen', noWins]]));
+    const wall = report.rows.find((r) => r.instrument === 'arb-walk-regen' && r.metric === 'bossWall');
     expect(wall?.status).toBe('N/A');
   });
 });
@@ -198,20 +198,20 @@ describe('the board definition itself', () => {
   it('the per-character drift refs derive from signed-sheet.json (balance-proof — never hardcoded)', () => {
     const winRefOf = (id: string): { min: number; max: number } | undefined =>
       board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
-    expect(winRefOf('regen')?.min).toBeCloseTo(sheet.act1WinRefs.soldier.regen - 0.08);
-    expect(winRefOf('priest-55pre')?.max).toBeCloseTo(sheet.act1WinRefs.priest.pre55 + 0.08);
-    expect(winRefOf('gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
+    expect(winRefOf('arb-regen')?.min).toBeCloseTo(sheet.act1WinRefs.soldier.regen - 0.08);
+    expect(winRefOf('arb-priest-55pre')?.max).toBeCloseTo(sheet.act1WinRefs.priest.pre55 + 0.08);
+    expect(winRefOf('arb-gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
   });
 
   it("the gambler rows carry the sheet's parity annotation (balance-proof: whatever gamblerNote says)", () => {
-    for (const id of ['gambler-regen', 'gambler-55pre']) {
+    for (const id of ['arb-gambler-regen', 'arb-gambler-55pre']) {
       const win = board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
       expect(win?.source).toContain(sheet.gamblerNote);
     }
   });
 
-  it('72b — the walk rows carry the unified architecture: seam + reach + wall signed, win DERIVED (balance-proof)', () => {
-    for (const id of ['walk-regen', 'walk-55pre']) {
+  it('72b/72f — the walk primaries carry the unified architecture: seam + reach + wall from the sheet, win DERIVED (balance-proof)', () => {
+    for (const id of ['arb-walk-regen', 'arb-walk-55pre']) {
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
       const seam = inst.checks.find((c) => c.metric === 'seamPool')!;
@@ -242,43 +242,71 @@ describe('the board definition itself', () => {
     }
   });
 
-  // 72a — the run-alongside twins (spec resolution 6, shape-locked
-  // 2026-08-01): every doctrine instrument gets an arbitrated twin and a
-  // paired ceiling-move delta row; twins are measurement rows (no checks
-  // until the 72f signing session).
-  describe('the arbitrated twins (72a)', () => {
-    const doctrine = board.instruments.filter((i) => !i.id.startsWith('arb-'));
-    const twins = board.instruments.filter((i) => i.id.startsWith('arb-'));
+  // 72f (user-signed) — THE ARBITRATED DEFAULT: 10 arb primaries carry
+  // every check; 5 checkless doctrine controls ride for the 4 paired
+  // ceiling deltas + the fire channel. arb-fire-ablated is DROPPED
+  // (rollout-owned fires make the ablated vector play identically to
+  // regen — metric-identical at 72f; BALANCE §72f).
+  describe('the primary/control structure (72f)', () => {
+    const primaries = board.instruments.filter((i) => i.id.startsWith('arb-'));
+    const controls = board.instruments.filter((i) => !i.id.startsWith('arb-'));
 
-    it('every doctrine instrument has exactly one twin: same args + bare --arbitrate, prefixed strategyRow, NO checks', () => {
-      expect(twins.length).toBe(doctrine.length);
-      for (const inst of doctrine) {
-        const twin = board.instruments.find((i) => i.id === `arb-${inst.id}`)!;
-        expect(twin.args).toEqual([...inst.args, '--arbitrate']);
-        expect(twin.strategyRow).toBe(`arbitrated:${inst.strategyRow}`);
-        expect(twin.checks).toEqual([]);
+    it('10 arb primaries (every check lives here) + 5 checkless doctrine controls', () => {
+      expect(primaries).toHaveLength(10);
+      expect(controls.map((c) => c.id).sort()).toEqual([
+        '55pre',
+        'fire-ablated',
+        'regen',
+        'walk-55pre',
+        'walk-regen',
+      ]);
+      for (const c of controls) expect(c.checks).toEqual([]);
+      expect(primaries.some((p) => p.checks.length > 0)).toBe(true);
+      expect(board.instruments.find((i) => i.id === 'arb-fire-ablated')).toBeUndefined();
+    });
+
+    it('primaries run the arbitrated arm (arbitrated: strategyRow); controls run the heuristic arm (no --arbitrate)', () => {
+      for (const p of primaries) {
+        expect(p.args).toContain('--arbitrate');
+        expect(p.strategyRow.startsWith('arbitrated:')).toBe(true);
+      }
+      for (const c of controls) {
+        expect(c.args).not.toContain('--arbitrate');
+        expect(c.strategyRow.startsWith('arbitrated:')).toBe(false);
       }
     });
 
-    it('a paired ceiling-move delta rides every pair: arb − doctrine winRate at the ±8pt paired-noise band, reference grade', () => {
-      for (const inst of doctrine) {
-        const delta = board.deltas.find((d) => d.id === `ceiling-${inst.id}`)!;
-        expect(delta.a).toBe(`arb-${inst.id}`);
-        expect(delta.b).toBe(inst.id);
+    it('the 4 ceiling deltas pair each control with its primary (paired seeds, ±8pt reference)', () => {
+      const pairs = [
+        ['ceiling-regen', 'arb-regen', 'regen'],
+        ['ceiling-55pre', 'arb-55pre', '55pre'],
+        ['ceiling-walk-regen', 'arb-walk-regen', 'walk-regen'],
+        ['ceiling-walk-55pre', 'arb-walk-55pre', 'walk-55pre'],
+      ] as const;
+      for (const [id, a, b] of pairs) {
+        const delta = board.deltas.find((d) => d.id === id)!;
+        expect(delta.a).toBe(a);
+        expect(delta.b).toBe(b);
         expect(delta.metric).toBe('winRate');
         expect(delta.grade).toBe('reference');
         expect(delta.min).toBeCloseTo(-0.08);
         expect(delta.max).toBeCloseTo(0.08);
       }
+      expect(board.deltas).toHaveLength(pairs.length + 1); // + the fire channel
+      expect(board.deltas.find((d) => d.id === 'arb-fire-channel')).toBeUndefined();
     });
 
-    it('the arb fire-channel verification delta derives from the sheet like the doctrine row (balance-proof)', () => {
-      const arb = board.deltas.find((d) => d.id === 'arb-fire-channel')!;
-      expect(arb.a).toBe('arb-regen');
-      expect(arb.b).toBe('arb-fire-ablated');
-      expect(arb.grade).toBe('reference');
-      expect(arb.min).toBeCloseTo(sheet.fireChannelDelta - 0.05);
-      expect(arb.max).toBeCloseTo(sheet.fireChannelDelta + 0.05);
+    it('a primary and its control share shape: same args minus the arm flag (the paired-seed contract)', () => {
+      for (const [ctrl, arb] of [
+        ['regen', 'arb-regen'],
+        ['55pre', 'arb-55pre'],
+        ['walk-regen', 'arb-walk-regen'],
+        ['walk-55pre', 'arb-walk-55pre'],
+      ] as const) {
+        const c = board.instruments.find((i) => i.id === ctrl)!;
+        const p = board.instruments.find((i) => i.id === arb)!;
+        expect(p.args.filter((a) => a !== '--arbitrate')).toEqual([...c.args]);
+      }
     });
   });
 });

@@ -124,8 +124,12 @@ describe('docs hygiene', () => {
   // RE-SIZED 500→320 at the rollout-arbitration interstitial authoring
   // (2026-07-29): a 4-phase round authored at ~120 lines; 320 = that plus
   // four kickoffs' worth of cut lines, with demotion reclaiming space
-  // behind the cursor. Re-size again when the Cluster-5 roadmap is authored.
-  const ROADMAP_MAX_LINES = 320;
+  // behind the cursor.
+  // RE-SIZED 320→500 at the Cluster-5 authoring (2026-08-05): a 9-phase
+  // cluster authored at ~215 lines (the C4 shape); 500 = that plus nine
+  // kickoffs' worth of cut lines, with demotion reclaiming space behind
+  // the cursor. Re-size again when the next round's roadmap is authored.
+  const ROADMAP_MAX_LINES = 500;
   // Per-phase bumped 60→70 at 59c (2026-07-19, user call): long phases (§57
   // hit ~60 legitimately). HELD at 70 for Cluster 4 — the demotion rule
   // bounds CLOSED phases; 70 is the budget for the one in-flight phase's

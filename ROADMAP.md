@@ -46,8 +46,10 @@ quick-fix debt so the whole cluster runs on fast tooling.
 - [x] 73b — fuzz-suite rebalancing: FOUR tail files split (not one —
   the timing pass reframed it) + the audit-cleared isolate flip →
   **~175s → ~114s**, 386 tests preserved exactly (worklog §73)
-- [ ] 73c — hand-density fix (pinned Fight ▸ / strip / packet row +
-  balanced wrap) + the user's native maxHandSize-10 eyeball
+- [x] 73c — hand-density fix landed (Fight ▸ viewport-pinned
+  bottom-center + config-derived 5+5 balanced wrap, eval-verified on
+  the real Surge overdraw path) — **the native eyeball is the user's
+  next-turn item** (worklog §73)
 - [ ] 73d — Stop never highlighted (an atWill sentinel matching no
   button)
 - [ ] 73e — doc fixes (AGENTS fuzz count · tools map-gen card)

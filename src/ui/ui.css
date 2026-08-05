@@ -2026,7 +2026,10 @@ body {
   justify-content: safe center;
   overflow-y: auto;
   box-sizing: border-box;
-  padding: 24px 0;
+  /* 73c — bottom clearance for the viewport-pinned Fight ▸ button: the last
+     in-flow rows (packet row / denial lines) must be able to scroll fully
+     above it. Was 24px 0, sized for a 6-card single-row hand. */
+  padding: 24px 0 96px;
 }
 
 .preturn-heading,
@@ -2119,8 +2122,12 @@ body {
 }
 
 .preturn-hand-cards {
+  /* 73c — the card metrics as vars: refreshHand computes the balanced-wrap
+     max-width from these for an over-drawn hand (> handSize cards). */
+  --hand-card-w: 184px;
+  --hand-gap: 12px;
   display: flex;
-  gap: 12px;
+  gap: var(--hand-gap);
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -2131,7 +2138,11 @@ body {
    base two-col stats; position: relative anchors the empower-badge overlay. --- */
 .unit-card--preturn {
   position: relative;
-  width: 184px;
+  width: var(--hand-card-w, 184px); /* 73c — sourced from .preturn-hand-cards */
+  /* 73c — border-box so the var IS the outer width: content-box + the 1px
+     borders made each card 186px, overflowing the computed balanced-wrap
+     max-width by 2px/card and wrapping one card early (4+4+2, not 5+5). */
+  box-sizing: border-box;
   border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
   color: #ffb000; /* TERMINAL_AMBER */
 }
@@ -2345,6 +2356,20 @@ body {
   border-color: #15f4ee;
   background: rgba(21, 244, 238, 0.08);
   color: #15f4ee;
+}
+
+/* 73c — the pre-turn Fight ▸ button is viewport-pinned (the PortScreen
+   .port-leave precedent): at maxHandSize 10 the two-row hand pushed it (and
+   the fire strip / packet row) below the fold, hiding the turn's primary
+   action behind a scroll. Bottom-CENTER because all three corners are taken
+   by the fixed CardListButtons (roster TR, draw BR, discard BL). The
+   .preturn-screen bottom padding keeps in-flow controls scrollable clear. */
+.preturn-continue {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
 }
 
 /* Post-turn heading tinted by the tactical winner of the turn. */

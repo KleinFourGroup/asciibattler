@@ -186,6 +186,33 @@ bound + startup — further gains need test rewrites, declined.
 Hook paths after 73a+73b: docs/UI ≈ 45s; sim-touching ≈ 2.7 min
 (from 5.6). The 73f `vitest related` contingency stays un-cut.
 
+### 73c — hand-density fix (landed; native eyeball pending)
+
+The shape: the Fight ▸ button is viewport-pinned BOTTOM-CENTER (all
+three corners are taken by the fixed CardListButtons — roster TR,
+draw BR, discard BL; the .port-leave precedent) with .preturn-screen
+bottom padding so the in-flow strip/packet row scroll clear; the hand
+row gets a balanced two-row cap for OVER-DRAWN hands only —
+`hand.length > DECK.handSize` (config-derived, the balance-proof
+norm) sets max-width to ceil(n/2) columns via CSS vars
+(--hand-card-w/--hand-gap), so 10 wraps 5+5, 9 wraps 5+4, and the
+standard deal keeps its single row untouched.
+
+Verified on the REAL overdraw path (not a config shortcut — the first
+attempt set handSize=10, which correctly does NOT trigger the cap;
+the cap is for overdraws past the deal): shipped handSize 6, two
+Surge packets injected into the live cache, both fired through the
+actual packet-row UI → 10 cards. One real bug caught by the
+geometry read: the cards were content-box, so 1px borders made each
+186px and the 968px cap wrapped one card early (4+4+2) —
+.unit-card--preturn is now border-box (the var IS the outer width).
+Final evals: 5+5 clusters exact · card width 184 · Fight pinned +
+visible at both scroll extremes · last in-flow control clears the
+button · default 6-card deal single-row with no cap · zero console
+errors. Screenshots unavailable (backgrounded pane doesn't
+composite) — functional geometry is eval-proven; FEEL is the user's
+native eyeball, the rider's actual exit gate.
+
 ### Housekeeping caught by the audit
 
 - Doc drift: the tools-index map-gen card describes a node-map

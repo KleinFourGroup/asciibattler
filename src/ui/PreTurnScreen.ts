@@ -72,6 +72,7 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
 import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
 import { packetById, type PacketConfig } from '../config/packets';
+import { DECK } from '../config/deck';
 import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
@@ -682,6 +683,15 @@ export class PreTurnScreen {
     const selectable = armed !== null || active !== null;
     const cards = document.createElement('div');
     cards.className = 'preturn-hand-cards';
+    // 73c — balanced two-row wrap past the standard deal: cap the row at
+    // ceil(n/2) columns so an over-drawn hand (Surge under maxHandSize 10)
+    // wraps 5+5 instead of orphaning a second row (9+1 at 1920px). Hands at
+    // or under the configured deal keep the single row. Card width/gap are
+    // the CSS vars on this class (ui.css) — no pixel constants here.
+    if (this.hand.length > DECK.handSize) {
+      const cols = Math.ceil(this.hand.length / 2);
+      cards.style.maxWidth = `calc(${cols} * var(--hand-card-w) + ${cols - 1} * var(--hand-gap))`;
+    }
     const buffSummary = this.buffSummary;
     // 65e — the one-shot enter set (the initial deal, a redraw refill, a
     // Surge draw). 65f: the entering nodes are collected in reveal order

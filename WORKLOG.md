@@ -234,6 +234,23 @@ hand-drive pattern was applied).
 the `draw-two`-id-vs-Surge-draws-3 mismatch → TODO filed (rename
 inside the §74 bump window; the id is a serialized cache key).
 
+### 73e + the phase close (2026-08-05)
+
+73e: the AGENTS pre-commit snippet's fuzz count was a stale duplicate
+of a Cursor fact ("22 passed" vs the real 386/39 — ~18× off and the
+likely origin of the draft spec's "22-seed" framing) — replaced with
+a POINTER to the Cursor per the one-fact-one-home routing rule, so it
+can't go stale again. The tools-index map-gen card now describes the
+tool that exists (the battlefield-terrain sandbox) with an in-file
+note that §77 builds the real node-map visualizer and re-describes
+it; verified rendering on the live dev server.
+
+**§73 CLOSED, all five steps + both eyeballs user-signed.** Exit
+criteria vs actual: docs-path hook target "well under 2 min" →
+~45s; sim path 5.6 → ~2.7 min; counts exact (2355 + 386) through
+every verification run; the 73f contingency never cut. The phase's
+ROADMAP section is demoted to its stub per the close rule.
+
 ### Housekeeping caught by the audit
 
 - Doc drift: the tools-index map-gen card describes a node-map

@@ -17,45 +17,25 @@ repair constants tuned before §§74–76 puree the numbers would be
 re-derived anyway; the breach rides meanwhile as the named sheet
 rider it already is.
 
-## Phase 73 — Hook speedup + quick fixes
+## Phase 73 — Hook speedup + quick fixes ✅ CLOSED 2026-08-05 (user-signed)
 
-**Charter:** cut the measured ~5.6-min pre-commit hook down (the main
-suite does ~19s of real test CPU under ~140s of per-file module
-re-import — `isolate:false`/shared-pool is the top lever; the fuzz
-half is under-parallelized at 5.5× on 32 cores) and clear the shipped
-quick-fix debt so the whole cluster runs on fast tooling.
+**Outcome:** the hook's docs/UI path **~5.6 min → ~45s** and the
+sim-touching path **→ ~2.7 min** (`isolate:false` ×2 + the four-file
+fuzz split, honesty-protocol verified, test counts exact throughout);
+the maxHandSize-10 density bug fixed + user-eyeballed; Stop never
+highlighted (three-state proof); the two doc drifts fixed. The 73f
+contingency was never needed. Detail: WORKLOG §73 + git.
 
-- **Order:** first — every later phase's commits pay the hook cost.
-- **Risk:** LOW. `isolate:false` can surface hidden test-state
-  coupling — if the suite goes flaky, fall back to a shared-registry
-  pool or revert (the hook stays correct, just slow).
-- **Exit:** docs-only commit path well under 2 min, all suites green
-  AND honest; the maxHandSize-10 density bug fixed (pinned Fight ▸ /
-  strip / packet row, balanced wrap) + the user's native eyeball
-  taken; Stop button never highlighted; AGENTS fuzz-count + tools
-  map-gen-card doc fixes landed.
-- **Scope guards:** no CI setup; no test rewrites beyond splitting
-  oversized fuzz files; no vitest projects-merge unless it falls out
-  free.
-
-**The cut (2026-08-05 kickoff):**
-
-- [x] 73a — main-suite `isolate: false` + the honesty protocol (double
-  run + shuffled file order + exact counts) → **162s → ~33s**, all
-  green (worklog §73)
-- [x] 73b — fuzz-suite rebalancing: FOUR tail files split (not one —
-  the timing pass reframed it) + the audit-cleared isolate flip →
-  **~175s → ~114s**, 386 tests preserved exactly (worklog §73)
-- [x] 73c — hand-density fix landed (Fight ▸ viewport-pinned
-  bottom-center + config-derived 5+5 balanced wrap, eval-verified on
-  the real Surge overdraw path) — **the native eyeball is the user's
-  next-turn item** (worklog §73)
-- [x] 73d — Stop never highlighted: the atWill sentinel landed,
-  three-state browser-proof (worklog §73); + the Surge id-rename
-  TODO filed for the §74 bump window
-- [ ] 73e — doc fixes (AGENTS fuzz count · tools map-gen card)
-- [ ] 73f — CONTINGENCY, not cut: `vitest related` on staged paths,
-  only if the docs-path hook still exceeds ~2 min after a+b
+- [x] 73a — main-suite `isolate: false` → **162s → ~33s** (worklog §73)
+- [x] 73b — fuzz rebalancing: FOUR tail files split + the
+  audit-cleared isolate flip → **~175s → ~114s**, 386 exact (worklog §73)
+- [x] 73c — hand-density fix (pinned Fight ▸ + 5+5 balanced wrap) —
+  native eyeball PASSED; Surge id-rename TODO filed (worklog §73)
+- [x] 73d — Stop never highlighted (atWill sentinel, three-state
+  browser-proof) (worklog §73)
+- [x] 73e — doc fixes: AGENTS count de-duplicated to the Cursor ·
+  the map-gen card describes the real tool (§77 re-describes)
+- [x] 73f — CONTINGENCY not cut, not needed (docs path ~45s)
 
 ## Phase 74 — Events (the keystone)
 

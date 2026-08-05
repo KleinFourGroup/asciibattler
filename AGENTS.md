@@ -395,7 +395,7 @@ so a green `npm test` is not sufficient for type safety.
 npm test                # 0 failures
 npm run typecheck       # tsc --noEmit clean
 # only if changes touch sim/run/core behavior:
-npm run fuzz:smoke      # 22 passed
+npm run fuzz:smoke      # all green — live counts live in the HANDOFF 🧭 Cursor
 ```
 
 Run this **before** `git commit`, not after — and first confirm your

@@ -28,4 +28,18 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-(no undistilled entries yet — the cluster-5 round starts here)
+- **A new serialized RNG stream = an automatic seed re-baseline — the cut
+  line must predict it.** The 74b cut promised "fuzz byte-identical through
+  74a–74d" by reasoning about event-node REACHABILITY; the `eventRng`
+  construction fork shifted every downstream parent fork (the documented
+  H5/L1/48b/50d append cost) and three seed-sensitive tests broke. The
+  union-bump prediction rule (48b/49c) has an exact sibling here: a cut
+  line that adds a serialized stream predicts the seed re-roll. Candidate
+  AGENTS promotion at the round sweep. (`32c1726`, worklog §74b.)
+- **Non-vacuousness canaries should SCAN, not pin.** The two-act-walk test
+  pinned seed 11 on "an overpowered roster clears act 1 essentially
+  certainly" — probing showed ~40% of seeds clear even at level 15 (boss
+  pool-bleed is roster-strength-independent). Rewritten to scan for the
+  first clearing seed (`openEventAtSeedScan` in Run.test is the same
+  shape) — the §61 stream-break lesson ("only non-vacuousness canaries
+  re-scan") upgraded to self-healing-by-construction. (`32c1726`.)

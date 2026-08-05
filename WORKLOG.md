@@ -365,3 +365,34 @@ reachable until 74e). Bespoke `eventCatalog` defs are in-memory only
 precedent, pinned by test). Dev dials: `firstNodeKind` widened to
 `'elite' | 'event'` (the stamp was always kind-generic) +
 `forcedEventId`.
+
+**The 74c landing note (handoff — the next session starts here).** The
+six deferred ops throw in `Run.executeEventOp` — the loud sites ARE
+the work list:
+
+- `addPacket`/`removePacket`: removal-BY-ID is new (every existing
+  removal is cache-index-based); decide the add-side cache-full
+  policy — overflow is legal derived state (the 49f shrink doctrine)
+  vs the reward/port swap contract.
+- `addDaemon`/`removeDaemon`: removeDaemon is new (daemons are
+  push-only today); `effectiveRunStats` re-derives so the fold side
+  is free — mind `emitCacheChanged` (ownership feeds the cacheSize
+  fold).
+- `grantUnit`/`removeUnit`: the gotcha-#118 chokepoint pair —
+  `removeRosterUnit`'s map/port guard widens to `'event'`; decide
+  which stream `grantUnit`'s `rollUnit` levels off (eventRng is the
+  natural home) and the `removeUnit` pick semantics
+  (`random | weakest | strongest`, absent = random, per the 74a
+  schema).
+- The reward-side widening: `REWARD_ENTRY_KINDS` + `RewardPortion` +
+  `handleAcceptReward` branches + the reward-editor formatter and its
+  byte-fidelity test gain `unit`/`poolHealth` kinds.
+- ⚠ Step-zero premise check: the cut's "`executeInstantOps` untagged
+  else → exhaustive switch" line predates 74b's decision to give
+  events their OWN exhaustive executor — the `InstantOp` union may
+  not widen at all, leaving that else a pure hygiene fix. Re-judge
+  before building.
+
+74d (the Surge `draw-two`→`surge` rename) rides the OPEN bump window
+any time after 74c — the touch-list is in the kickoff audit
+(3 boot-asserted config sites + ~20 test sites + TODO.md:93).

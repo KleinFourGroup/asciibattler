@@ -38,5 +38,8 @@ describe('harness daemon arm (L1c3) — per-daemon bucketing', () => {
     for (const k of keys) expect(DAEMONS.some((d) => d.id === k)).toBe(true);
     const total = buckets.reduce((acc, b) => acc + b.stats.totalRuns, 0);
     expect(total).toBe(results.length);
-  }, 90_000);
+    // 74b — 90s → 150s: the eventRng stream-append re-rolled every run's
+    // battle content (the H5-class shift) and the batch brushed the 90s
+    // ceiling. Duration is still sim-content, not a perf contract.
+  }, 150_000);
 });

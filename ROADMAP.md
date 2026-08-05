@@ -65,8 +65,11 @@ design round, and the `startingEvents` sector seam.
 
 **Cut (2026-08-05 kickoff, shape-locked user-signed — findings,
 rationale + the three shape resolutions in WORKLOG §74).** 74a–74d
-are presence-gated (nothing places events until 74e): fuzz stays
-byte-identical through them; 74e owns the scheduled re-baseline.
+are presence-gated (nothing places events until 74e) — but the
+kickoff's "byte-identical through them" claim was WRONG at 74b: the
+`eventRng` construction fork shifts every downstream parent fork (the
+H5/L1/48b/50d append cost; worklog §74b correction). 74e still owns
+the PATH_KINDS/vector re-baseline.
 
 - [x] 74a — grammar + loader + catalog stub ✅ 2026-08-05
   (`1d6b042`): the full parse-side grammar + 3 smoke events + the

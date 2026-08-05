@@ -18,6 +18,7 @@
 
 import { RECRUITMENT } from '../config/recruitment';
 import { DECK } from '../config/deck';
+import { NODE_MAP } from '../config/nodemap';
 
 /** The launch run-stat keys (content-driven — grown when content demands).
  *  A tuple so the config layer's zod enum and this type share one source. */
@@ -31,6 +32,7 @@ export const RUN_STAT_KEYS = [
   'rarityWeightRare',
   'rarityWeightLegendary',
   'portLegendaryOffers',
+  'eventCombatChance',
 ] as const;
 export type RunStatKey = (typeof RUN_STAT_KEYS)[number];
 
@@ -69,6 +71,14 @@ export const RUN_STAT_BASES: Readonly<Record<RunStatKey, number>> = {
    *  source stacks to two forced slots, naturally clamped by the slot
    *  count at the read site). Base 0: no guarantee without a source. */
   portLegendaryOffers: 0,
+  /** 74b — the global event-node combat-resolve chance (spec §Events: the
+   *  roll happens BEFORE the event is picked, StS ?-node style; the fight
+   *  draws from the sector's normal pool). Foldable BY CONSTRUCTION —
+   *  chance-bending daemons are planned content, so a raw config read is
+   *  wrong (the §74 shape-lock). Base config-derived (nodemap.json —
+   *  node-entry behavior lives with the node knobs); the read site
+   *  (`Run.effectiveEventCombatChance`) clamps to [0,1]. */
+  eventCombatChance: NODE_MAP.eventCombatChance,
 };
 
 /** One passive modifier, as authored by a `modifier` rule. */

@@ -9,5 +9,6 @@
   "eliteChance": 0.25,
   "eliteMinSpacing": 2,
   "portChance": 0.2,
-  "portMinSpacing": 3
+  "portMinSpacing": 3,
+  "eventCombatChance": 0.25
 }

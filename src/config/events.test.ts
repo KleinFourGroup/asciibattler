@@ -105,6 +105,29 @@ describe('events config', () => {
       );
     });
 
+    it('throws when a page can only exit through CONDITIONED choices (74b tightening)', () => {
+      // Conditions evaluate against mutable run state, so a conditioned exit
+      // can vanish mid-event — only an unconditioned exit is a guarantee.
+      const gatedExit = makeEvent({
+        id: 'gated-exit',
+        pages: {
+          start: {
+            text: 'a',
+            choices: [
+              {
+                label: 'Leave (rich only)',
+                condition: { kind: 'bitsAtLeast', amount: 10 },
+                outcomes: [{ next: { kind: 'return-to-map' } }],
+              },
+            ],
+          },
+        },
+      });
+      expect(() => assertEventPagesTerminate([gatedExit])).toThrow(
+        /event 'gated-exit'.*'start'.*unconditioned/,
+      );
+    });
+
     it('accepts a cycle that has an exit somewhere on it', () => {
       const escapable = makeEvent({
         id: 'escapable',

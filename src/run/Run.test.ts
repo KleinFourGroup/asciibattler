@@ -28,6 +28,7 @@ import { ECONOMY } from '../config/economy';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
+import type { EventDef } from '../config/events';
 
 /**
  * L1→47c — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
@@ -2772,7 +2773,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
+      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -2951,7 +2952,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
+      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3277,7 +3278,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(40); // 67a — the sector-transition gate
+      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5107,3 +5108,295 @@ function driveToRestFrontier(
   }
   return { run, bus, restId };
 }
+
+// ── 74b — the event phase ────────────────────────────────────────────────────
+
+/** Fold the combat-resolve chance to 0 / past 1 via bespoke modifier daemons —
+ *  the fold seam under test IS the test's control mechanism (the reason the
+ *  chance is a run stat and not a raw config read). */
+const NO_RESOLVE_DAEMON: DaemonConfig = {
+  id: 'test-no-resolve',
+  name: 'Test No Resolve',
+  description: 'eventCombatChance × 0',
+  rules: [{ kind: 'modifier', stat: 'eventCombatChance', op: 'mult', value: 0 }],
+};
+const ALWAYS_RESOLVE_DAEMON: DaemonConfig = {
+  id: 'test-always-resolve',
+  name: 'Test Always Resolve',
+  description: 'eventCombatChance + 1',
+  rules: [{ kind: 'modifier', stat: 'eventCombatChance', op: 'add', value: 1 }],
+};
+
+/** A bespoke catalog (the RunConfig.eventCatalog seam): deterministic
+ *  single-outcome choices so every branch under test is forced, not rolled.
+ *  Refs (deserters / bits-large) resolve against the SHIPPED catalogs. */
+const TEST_EVENTS: EventDef[] = [
+  {
+    id: 'test-event',
+    name: 'Test Event',
+    entry: 'start',
+    pages: {
+      start: {
+        text: 'the start page',
+        choices: [
+          {
+            label: 'advance',
+            outcomes: [{ effects: [{ op: 'gainBits', amount: 10 }], next: 'second' }],
+          },
+          {
+            label: 'gated',
+            condition: { kind: 'bitsAtLeast', amount: 999999 },
+            outcomes: [{ next: { kind: 'return-to-map' } }],
+          },
+          {
+            label: 'fight',
+            outcomes: [
+              {
+                next: {
+                  kind: 'start-encounter',
+                  encounterId: 'deserters',
+                  rewardOverride: 'bits-large',
+                },
+              },
+            ],
+          },
+          {
+            label: 'die',
+            outcomes: [{ effects: [{ op: 'damagePool', amount: 99999 }], next: { kind: 'return-to-map' } }],
+          },
+          {
+            label: 'spendheal',
+            outcomes: [
+              {
+                effects: [
+                  { op: 'spendBits', amount: 5 },
+                  { op: 'healPool', amount: 3 },
+                ],
+                next: { kind: 'return-to-map' },
+              },
+            ],
+          },
+        ],
+      },
+      second: {
+        text: 'the second page',
+        choices: [
+          {
+            label: 'flag and leave',
+            outcomes: [
+              { effects: [{ op: 'setFlag', flag: 'test:done' }], next: { kind: 'return-to-map' } },
+            ],
+          },
+        ],
+      },
+    },
+  },
+];
+
+/** For save/load tests (no bespoke daemon allowed on the wire): a
+ *  DAEMON-LESS run at the base resolve chance, scanning seeds until the
+ *  entry roll opens the event rather than combat-resolving (~75% of seeds;
+ *  robust against future stream shifts). */
+function openEventAtSeedScan(extra: RunConfig): Run {
+  for (let s = 200; s < 260; s++) {
+    const run = new Run(s, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: null,
+      ...extra,
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    if (run.phase === 'event') return run;
+  }
+  throw new Error('openEventAtSeedScan: no seed in [200,260) opened the event');
+}
+
+/** An event-phase run: root stamped 'event', the forced test event, the
+ *  resolve chance folded off. */
+function eventRun(seed: number, extra?: RunConfig): { run: Run; bus: EventBus<GameEvents> } {
+  const bus = new EventBus<GameEvents>();
+  const run = new Run(seed, bus, {
+    firstNodeKind: 'event',
+    forcedEventId: 'test-event',
+    eventCatalog: TEST_EVENTS,
+    daemon: NO_RESOLVE_DAEMON,
+    ...extra,
+  });
+  return { run, bus };
+}
+
+describe('74b — the event phase', () => {
+  it('the combat-resolve chance is fold-routed: base from config, bendable, ceiling-clamped', () => {
+    const base = new Run(1, new EventBus<GameEvents>(), { daemon: null });
+    expect(base.effectiveEventCombatChance()).toBe(RUN_STAT_BASES.eventCombatChance);
+    const off = new Run(1, new EventBus<GameEvents>(), { daemon: NO_RESOLVE_DAEMON });
+    expect(off.effectiveEventCombatChance()).toBe(0);
+    // add +1 pushes past 1 (base 0.25 + 1 = 1.25) — the read site clamps.
+    const on = new Run(1, new EventBus<GameEvents>(), { daemon: ALWAYS_RESOLVE_DAEMON });
+    expect(on.effectiveEventCombatChance()).toBe(1);
+  });
+
+  it('entering an event node (chance folded to 0) opens the event phase at the entry page', () => {
+    const { run, bus } = eventRun(101);
+    const entered: Array<{ nodeId: number; eventId: string }> = [];
+    bus.on('event:entered', (p) => entered.push(p));
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('event');
+    expect(run.activeEvent).toEqual({ eventId: 'test-event', pageId: 'start' });
+    expect(entered).toEqual([{ nodeId: run.nodeMap.rootId, eventId: 'test-event' }]);
+    expect(run.currentEventPage()?.text).toBe('the start page');
+  });
+
+  it('a clamped chance of 1 combat-resolves every entry into a normal fight', () => {
+    const { run } = eventRun(102, { daemon: ALWAYS_RESOLVE_DAEMON });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('battle');
+    expect(run.currentEncounter).not.toBeNull();
+    expect(run.activeEvent).toBeNull();
+  });
+
+  it('a page-id next moves the cursor (emitting event:pageChanged) and effects execute', () => {
+    const { run, bus } = eventRun(103);
+    const pageChanges: Array<{ eventId: string; pageId: string }> = [];
+    bus.on('event:pageChanged', (p) => pageChanges.push(p));
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    const bitsBefore = run.bits;
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 });
+    // gainBits rides the earn-site fold (bitsGain 1 here) × the difficulty axis.
+    expect(run.bits).toBe(bitsBefore + Math.round(10 * DIFFICULTY.bitsMultiplier));
+    expect(run.activeEvent).toEqual({ eventId: 'test-event', pageId: 'second' });
+    expect(pageChanges).toEqual([{ eventId: 'test-event', pageId: 'second' }]);
+    expect(run.phase).toBe('event');
+  });
+
+  it('a failing condition disables the choice and rejects its dispatch (silent no-op)', () => {
+    const { run } = eventRun(104);
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.eventChoiceEnabled(1)).toBe(false); // bitsAtLeast 999999
+    expect(run.enabledEventChoices()).toEqual([0, 2, 3, 4]);
+    const before = JSON.stringify(run.toJSON());
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 1 });
+    expect(JSON.stringify(run.toJSON())).toBe(before);
+  });
+
+  it('setFlag persists to the flag record; return-to-map releases to the map silently', () => {
+    const { run } = eventRun(105);
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 }); // → second
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 }); // setFlag + leave
+    expect(run.phase).toBe('map');
+    expect(run.activeEvent).toBeNull();
+    expect(run.eventFlag('test:done')).toBe(true);
+    expect(run.eventFlag('never:set')).toBeUndefined();
+  });
+
+  it('spendBits floors at the balance; healPool clamps at the pool max', () => {
+    const { run } = eventRun(106, { daemon: NO_RESOLVE_DAEMON, startingBits: 3 });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 4 }); // spend 5 (have 3) + heal 3
+    expect(run.bits).toBe(0);
+    expect(run.toJSON().playerHealth).toBe(HEALTH.playerHealthMax); // was full; clamped
+    expect(run.phase).toBe('map');
+  });
+
+  it('start-encounter opens the named fight with the pinned reward table, cleared at encounter end', () => {
+    const { run, bus } = eventRun(107);
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 2 });
+    expect(run.phase).toBe('battle');
+    expect(run.activeEvent).toBeNull();
+    expect(run.toJSON().selectedEncounterId).toBe('deserters');
+    expect(run.toJSON().pendingRewardOverride).toBe('bits-large');
+    // Win the fight: the override table rolls at chance 1, so the reward
+    // gate MUST interpose with a non-empty offer.
+    winEncounter(bus);
+    expect(run.phase).toBe('reward');
+    expect(run.pendingRewards).not.toBeNull();
+    acceptAllRewards(run);
+    if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+    expect(run.toJSON().pendingRewardOverride).toBeNull();
+  });
+
+  it('damagePool can kill the run: defeat fires and routing stops', () => {
+    const { run, bus } = eventRun(108);
+    let defeated = 0;
+    bus.on('run:defeated', () => defeated++);
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 3 }); // damagePool 99999
+    expect(run.phase).toBe('defeat');
+    expect(run.activeEvent).toBeNull();
+    expect(defeated).toBe(1);
+    expect(run.toJSON().playerHealth).toBe(0);
+  });
+
+  it('a mid-event save round-trips on the SHIPPED catalog (cursor + flags + stream)', () => {
+    // A bespoke fold daemon can't ride a save (serialized by id — the
+    // bespoke-daemon precedent), so run daemon-less at the BASE resolve
+    // chance and scan for a seed whose entry roll opens the event (~75%).
+    const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
+    expect(run.phase).toBe('event');
+    const wire = run.toJSON();
+    expect(wire.schemaVersion).toBe(41);
+    expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
+    const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
+    expect(restored.phase).toBe('event');
+    expect(restored.activeEvent).toEqual(wire.activeEvent);
+    expect(restored.currentEventPage()?.text).toBe(run.currentEventPage()?.text);
+    expect(JSON.stringify(restored.toJSON())).toBe(JSON.stringify(wire));
+  });
+
+  it('a mid-event save on a BESPOKE catalog hard-rejects on load (the bespoke-daemon precedent)', () => {
+    const run = openEventAtSeedScan({ forcedEventId: 'test-event', eventCatalog: TEST_EVENTS });
+    const wire = run.toJSON();
+    expect(() => Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>())).toThrow(
+      /unknown event id 'test-event'/,
+    );
+  });
+
+  it('weighted outcomes are seed-deterministic (same seed ⇒ same branch)', () => {
+    const drive = (): string => {
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(111, bus, {
+        firstNodeKind: 'event',
+        forcedEventId: 'corrupted-shrine',
+        daemon: NO_RESOLVE_DAEMON,
+      });
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 }); // the weighted scoop
+      return JSON.stringify({ phase: run.phase, bits: run.bits, cursor: run.activeEvent });
+    };
+    expect(drive()).toBe(drive());
+  });
+
+  it('the deferred 74c ops throw loud (the landing-note contract)', () => {
+    const bus = new EventBus<GameEvents>();
+    const run = new Run(112, bus, {
+      firstNodeKind: 'event',
+      forcedEventId: 'op-deferred',
+      daemon: NO_RESOLVE_DAEMON,
+      eventCatalog: [
+        {
+          id: 'op-deferred',
+          name: 'Op Deferred',
+          entry: 'start',
+          pages: {
+            start: {
+              text: 'p',
+              choices: [
+                {
+                  label: 'take',
+                  outcomes: [
+                    { effects: [{ op: 'addPacket', packetId: 'shield' }], next: { kind: 'return-to-map' } },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(() => run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 })).toThrow(
+      /event op 'addPacket' is not executable until 74c/,
+    );
+  });
+});

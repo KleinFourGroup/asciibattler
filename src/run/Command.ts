@@ -189,6 +189,17 @@ export type RunCommand =
       readonly handIndex?: number;
       readonly rosterIndex?: number;
     }
+  /**
+   * 74b — resolve one choice on the active event page (`choiceIndex` into
+   * `Run.currentEventPage().choices`). Rolls the choice's weighted outcome
+   * off the dedicated `eventRng` (exactly one draw), executes its effects,
+   * then routes `next`: a page id moves the cursor (emitting
+   * `event:pageChanged`), `return-to-map` releases to 'map' (the leavePort
+   * silent-transition pattern), `start-encounter` closes the event and opens
+   * the named fight (with an optional pinned reward table). Wrong phase /
+   * bad index / failing condition — the usual silent no-op.
+   */
+  | { readonly kind: 'chooseEventOption'; readonly choiceIndex: number }
   | { readonly kind: 'resetRun' }
   /**
    * 63e — confirm the starting character on the CharacterSelectScene. GAME-

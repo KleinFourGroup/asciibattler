@@ -61,7 +61,11 @@ import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite' | 'port';
+// 74b adds 'event' (the choose-your-own-adventure node, spec §Events). No
+// scatter pass yet — until §74e places them, an event node exists only via
+// the `firstNodeKind` stamp (the dev/isolation dial), which was always
+// kind-generic.
+export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite' | 'port' | 'event';
 
 /**
  * S2 — the "pre-root" start position. A run begins here (no node entered yet),

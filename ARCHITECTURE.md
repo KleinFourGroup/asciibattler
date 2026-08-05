@@ -535,6 +535,8 @@ run:cacheChanged        { packetIds: string[]; size: number }                   
 run:packetUsed          { packetId; context; playerHealth; grants; empowerMagnitudes }  # 49e: a usePacket fired (consume-on-fire; the paired run:cacheChanged carries the shrunk cache) — post-effect health + the re-derived queue/badge column for the 49f strip
 
 port:entered            { nodeId: number }                                          # 50c: docked at a port node — the run holds in the serialized port phase until leavePort; §50e's PortScene feed (the 50c interim stub undocks immediately)
+event:entered           { nodeId: number; eventId: string }                         # 74b: landed on an event node that didn't combat-resolve — the run holds in the serialized event phase with the {eventId,pageId} cursor; §74f's EventScene feed (dev-dial-only reachable until §74e places event nodes)
+event:pageChanged       { eventId: string; pageId: string }                         # 74b: the active event's cursor moved (a choice's page-id next); the §74f EventScreen re-renders off this — terminals emit nothing here (return-to-map = silent transition; start-encounter fires battle:started)
 recruit:offered         { units: UnitTemplate[] }
 reward:offered          { rewards: readonly RewardPortion[] }                       # 48b: a won encounter's rolled reward offer — the run entered the reward phase (battle → rewards → promotion → recruit)
 promotion:pending       { promotions: PromotionInfo[] }                             # E4: roster level-ups → PromotionScene
@@ -565,6 +567,7 @@ RunCommand (synchronous; Run.dispatch / RunDispatcher)
   chooseRecruit           { unitTemplate: UnitTemplate }
   passRecruit             { }     # H6b: decline the recruit offer
   leavePort               { }     # 50c: undock from a port node back to the map (the hop was consumed on entry); clears the rolled stock (50d)
+  chooseEventOption       { choiceIndex: number }   # 74b: resolve one choice on the active event page — one eventRng outcome roll, effects, then next-routing (page hop / return-to-map / start-encounter); wrong phase/index/condition = silent no-op
   buyPortUnit             { index: number }   # 50d: buy the stocked unit — spends the jittered price, appends via the recruit path (appendRosterUnit); sold/broke/bad-index = silent no-op
   buyPortPacket           { index: number; swapCacheIndex?: number }   # 50d: buy the stocked packet; a FULL cache takes the 49c swap contract (affordability validated BEFORE the swap discard)
   buyPortDaemon           { index: number }   # 50d: buy the stocked daemon (stock owned-excluded at roll)

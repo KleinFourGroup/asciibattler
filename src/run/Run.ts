@@ -93,7 +93,18 @@ import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/
 import { selectEncounter } from './encounters/selection';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { packetById, PACKETS, type UseContext } from '../config/packets';
-import { rewardTableById } from '../config/rewards';
+import { rewardTableById, type EncounterRewardRef } from '../config/rewards';
+import {
+  EVENTS,
+  getEvent,
+  type EventDef,
+  type EventPage,
+  type EventCondition,
+  type EventEffectOp,
+  type EventNext,
+  type EventOutcome,
+  type EventFlagValue,
+} from '../config/events';
 import { rollRewards, type RewardPortion } from './rewards';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { LAYOUT_IDS, getLayout, type Theme } from '../sim/layouts';
@@ -122,9 +133,15 @@ import type { Archetype } from '../sim/archetypes';
 // Game layer's phase-checking routes stay truthful and a mid-gate restore
 // re-shows the screen (the defeat/complete precedent — every full-screen
 // beat is phase-backed). Left via `dismissSectorCleared` back to 'map'.
+// 74b adds `event` — entered from the map when the player lands on an event
+// node that didn't combat-resolve (`handleEnterNode`; the port model — the
+// rest-style inline branch, holding the serialized {eventId,pageId} cursor).
+// Left via a terminal outcome: return-to-map (the leavePort silent
+// transition) or start-encounter (into 'battle').
 export type RunPhase =
   | 'map'
   | 'port'
+  | 'event'
   | 'turn-intro'
   | 'battle'
   | 'turn-outcome'
@@ -409,8 +426,18 @@ export interface BattleEncounter {
  *  `sectorCleared` — `advanceSector` lands there (emitting `sector:cleared`)
  *  instead of silently on 'map', and the `dismissSectorCleared` command
  *  releases back to 'map'. The serialized phase union widened → flat reject
- *  per the version discipline (a v39 save predates the gate). */
-const RUN_SCHEMA_VERSION = 40;
+ *  per the version discipline (a v39 save predates the gate).
+ *  74b: bumped 40→41. Events (the Cluster-5 keystone): `NodeKind` AND
+ *  `RunPhase` gain 'event' (the union-widening discipline, twice over), plus
+ *  four new fields — `eventRng` (appended LAST in the fork chain, after
+ *  portPriceRng; joins the `cloneRunForRollout` re-seed list, nine streams),
+ *  `activeEvent` (the {eventId,pageId} cursor, id/page def-resolved on load
+ *  — unknown hard-rejects), `eventFlags` (the run-lifetime chain-flag
+ *  record; EXEMPT from the advanceSector reset by enumeration — the reset
+ *  touches only fields it names), and `pendingRewardOverride` (a
+ *  start-encounter terminal's pinned reward table, cleared at
+ *  finishEncounter). A v40 save predates the event phase → reject. */
+const RUN_SCHEMA_VERSION = 41;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -486,11 +513,35 @@ export interface RunSnapshot {
   portStockRng: RNGSnapshot;
   /** 50d: dedicated stream for port unit-price jitter rolls. */
   portPriceRng: RNGSnapshot;
+  /** 74b: dedicated stream for event-node draws — the combat-resolve flip,
+   *  the eligibility-filtered event pick, and the per-choice outcome rolls
+   *  (filter-dependent draw counts — the rewardRng isolation rationale).
+   *  Appended LAST in the constructor fork chain; the `cloneRunForRollout`
+   *  re-seed list mirrors this field order (ninth stream). */
+  eventRng: RNGSnapshot;
   /** 50d: the docked port's rolled stock (null undocked) — a mid-dock save
    *  restores the exact stock, prices, and sold flags (the pending-offer
    *  pattern). Packet/daemon ids re-validate against the catalogs on load
    *  (hard reject on a miss — the daemonIds discipline). */
   portStock: PortStock | null;
+  /** 74b: the active event's cursor (null outside the `event` phase) — a
+   *  mid-event save restores the exact page (the portStock pending-offer
+   *  pattern). The event id AND page id re-validate against the shipped
+   *  catalog on load (hard reject — the daemonIds discipline; bespoke
+   *  `eventCatalog` defs are in-memory only). */
+  activeEvent: { eventId: string; pageId: string } | null;
+  /** 74b: the run-lifetime chain-flag record (spec §Events: "the flag store
+   *  IS the chain state"), written by `setFlag` ops, read by
+   *  flagSet/flagIs conditions + (74e) pool eligibility. Namespaced
+   *  `chainId:key` by convention. EXEMPT from the advanceSector reset by
+   *  enumeration — flags deliberately span sectors. */
+  eventFlags: Record<string, EventFlagValue>;
+  /** 74b: a start-encounter terminal's pinned reward table (the spec's
+   *  "predetermined reward"), replacing the fought encounter's own reward
+   *  refs at the won boundary. Null = no override; cleared at
+   *  finishEncounter (either outcome). Re-validates against the reward
+   *  tables on load. */
+  pendingRewardOverride: string | null;
   /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
    *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
    *  missing from the catalog on load is a hard reject (no silent drops);
@@ -642,10 +693,34 @@ export class Run {
   /** 50d: dedicated stream for port unit-price JITTER rolls (the spec's
    *  "randomly chosen price"; `config/prices.json#units.jitter`). */
   readonly portPriceRng: RNG;
+  /** 74b: dedicated stream for event-node draws — the combat-resolve flip,
+   *  the eligibility-filtered event pick, and the per-choice outcome rolls.
+   *  Isolated because eligibility filters make draw counts filter-dependent
+   *  (the rewardRng rationale). Forked LAST at construction (the
+   *  append-at-end discipline); ninth in the rollout re-seed list. */
+  readonly eventRng: RNG;
   /** 50d: the docked port's stock — see `PortStock`. Null undocked; rolled
    *  at dock (`handleEnterNode`), cleared at `leavePort`, serialized while
    *  docked (v35). */
   portStock: PortStock | null = null;
+  /** 74b: the active event's {eventId,pageId} cursor (see RunSnapshot).
+   *  Null outside the `event` phase; set at `enterEventNode`, moved by
+   *  page-id `next` routing, cleared at every terminal. */
+  activeEvent: { eventId: string; pageId: string } | null = null;
+  /** 74b: the run-lifetime chain-flag record (see RunSnapshot). Private —
+   *  read via `eventFlag()`; written only by the `setFlag` op. */
+  private eventFlags: Record<string, EventFlagValue> = {};
+  /** 74b: a start-encounter terminal's pinned reward table (see
+   *  RunSnapshot). Consumed at the won turn boundary; cleared at
+   *  `finishEncounter`. */
+  private pendingRewardOverride: string | null = null;
+  /** 74b: the event catalog this run draws from — `RunConfig.eventCatalog`
+   *  override or the shipped EVENTS (the sectorMap discipline; a rehydrated
+   *  run always uses the shipped catalog). */
+  private readonly eventCatalog: readonly EventDef[];
+  /** 74b: the forced-event dev dial (`RunConfig.forcedEventId`, validated
+   *  loud at construction — the forcedEncounterId shape). */
+  private readonly forcedEventId: string | null;
   /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
    *  run-start seed; §48 rewards / §50 ports append via `addDaemon` —
    *  uncapped, the locked design). 63c: seeded from the CHARACTER def (the
@@ -953,6 +1028,11 @@ export class Run {
     // fork alignment.
     this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
     this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
+    // 74b — the event catalog override + forced-event dial resolve here too
+    // (pure of RNG; the forced id validates against the ACTIVE catalog so a
+    // bespoke-catalog test can force its own defs).
+    this.eventCatalog = config?.eventCatalog ?? EVENTS;
+    this.forcedEventId = resolveForcedEventId(config?.forcedEventId, this.eventCatalog);
     // 67c — the run-shape dials resolve here too (pure of RNG). `hopCount`
     // says "a bounded SINGLE-sector probe"; `sectorHops` says "walk the full
     // DAG on shortened sectors" — together they contradict, so fail loud
@@ -1053,6 +1133,14 @@ export class Run {
     // two-stream rationale) — prices must not shift when ownership does.
     this.portStockRng = this.rng.fork();
     this.portPriceRng = this.rng.fork();
+    // 74b — the event stream, appended LAST (the append-at-end fork
+    // discipline). Same cost as every prior append (the H5/L1/48b/50d
+    // precedent): the extra construction fork shifts every subsequent
+    // `this.rng.fork()` (per-encounter mapRng, offers, sector advances), so
+    // 74b re-baselines seed outcomes EVEN THOUGH no event node is placeable
+    // until §74e — the kickoff's "byte-identical through 74a–74d" claim was
+    // wrong on exactly this point (worklog §74 correction).
+    this.eventRng = this.rng.fork();
     this.turnGrants = disabledTurnGrants();
     // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
     this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
@@ -1194,6 +1282,9 @@ export class Run {
       case 'leavePort':
         this.handleLeavePort();
         break;
+      case 'chooseEventOption':
+        this.handleChooseEventOption(command.choiceIndex);
+        break;
       case 'buyPortUnit':
         this.handleBuyPortUnit(command.index);
         break;
@@ -1285,6 +1376,12 @@ export class Run {
       this.bus.emit('port:entered', { nodeId });
       return;
     }
+    if (this.kindOf(nodeId) === 'event') {
+      // 74b — the third inline branch (the port model): combat-resolve or
+      // open the event; both sub-paths inside `enterEventNode`.
+      this.enterEventNode(nodeId);
+      return;
+    }
 
     this.phase = 'battle';
     this.beginEncounter();
@@ -1303,6 +1400,233 @@ export class Run {
     // cluster scope guard; the port isn't in its own frontier anyway).
     this.portStock = null;
     this.phase = 'map';
+  }
+
+  // ── 74b: the event phase ──────────────────────────────────────────────────
+
+  /**
+   * 74b — enter an event node (spec §Events). The combat-resolve chance
+   * rolls FIRST, globally, before any event is picked — keeps event defs
+   * pure, and the fold-routed chance is the daemon seam. Exactly ONE draw
+   * per entry regardless of the chance value (the gotcha-#49 always-draw
+   * discipline), riding the dedicated `eventRng`. A resolve (or an empty
+   * eligible pool — flag-gated chains can starve the catalog) degrades to a
+   * normal fight: KIND_BY_NODE maps 'event' → the sector's normal pool.
+   */
+  private enterEventNode(nodeId: number): void {
+    const roll = this.eventRng.next();
+    const eventDef = roll < this.effectiveEventCombatChance() ? null : this.rollEventForNode();
+    if (eventDef === null) {
+      this.phase = 'battle';
+      this.beginEncounter();
+      return;
+    }
+    this.activeEvent = { eventId: eventDef.id, pageId: eventDef.entry };
+    this.phase = 'event';
+    this.bus.emit('event:entered', { nodeId, eventId: eventDef.id });
+  }
+
+  /**
+   * 74b — pick this node's event: the forced dial short-circuits (validated
+   * at construction); otherwise a uniform draw over the eligibility-passing
+   * catalog. PLACEHOLDER source — §74e replaces the catalog scan with the
+   * sector-owned weighted `events` pool (the landing note; the eligibility
+   * filter and the one-draw shape survive the swap). Null = nothing
+   * eligible (the caller degrades to a fight). Draw count is 1 or 0
+   * (forced/empty) — never filter-size-dependent.
+   */
+  private rollEventForNode(): EventDef | null {
+    if (this.forcedEventId !== null) {
+      const forced = this.eventCatalog.find((e) => e.id === this.forcedEventId);
+      if (forced === undefined) {
+        throw new Error(`Run: forcedEventId '${this.forcedEventId}' left the catalog mid-run`);
+      }
+      return forced;
+    }
+    const eligible = this.eventCatalog.filter((e) =>
+      (e.eligibility ?? []).every((c) => this.evaluateEventCondition(c)),
+    );
+    if (eligible.length === 0) return null;
+    return eligible[this.eventRng.int(0, eligible.length - 1)]!;
+  }
+
+  /**
+   * 74b — resolve one choice on the active page: validate (wrong phase /
+   * bad index / failing condition = the silent no-op discipline), roll the
+   * choice's weighted outcome (exactly ONE draw, singletons included — no
+   * zero-draw singleton class, gotcha #111's lesson applied forward),
+   * execute its effects in authored order, then route `next`. An effect can
+   * end the run (`damagePool` → defeat) — routing stops there.
+   */
+  private handleChooseEventOption(choiceIndex: number): void {
+    if (this.phase !== 'event' || this.activeEvent === null) return;
+    const page = this.currentEventPage();
+    if (page === null) return;
+    if (!Number.isInteger(choiceIndex) || choiceIndex < 0 || choiceIndex >= page.choices.length) {
+      return;
+    }
+    const choice = page.choices[choiceIndex]!;
+    if (choice.condition !== undefined && !this.evaluateEventCondition(choice.condition)) return;
+    const outcome = this.rollEventOutcome(choice.outcomes);
+    for (const op of outcome.effects ?? []) {
+      this.executeEventOp(op);
+      if (this.phase !== 'event') return; // damagePool killed the run
+    }
+    this.resolveEventNext(outcome.next);
+  }
+
+  /** 74b — one cumulative-weight draw over the outcome list (weight absent
+   *  = 1, the sector-pool convention; schema-positive so no zero-divide). */
+  private rollEventOutcome(outcomes: readonly EventOutcome[]): EventOutcome {
+    const total = outcomes.reduce((sum, o) => sum + (o.weight ?? 1), 0);
+    const roll = this.eventRng.next() * total;
+    let acc = 0;
+    for (const outcome of outcomes) {
+      acc += outcome.weight ?? 1;
+      if (roll < acc) return outcome;
+    }
+    return outcomes[outcomes.length - 1]!;
+  }
+
+  /**
+   * 74b — execute one event effect op. The cheap state-local ops land here
+   * (existing chokepoints + the new flag store); the genuinely-new plumbing
+   * (packet/daemon/unit add+remove — the removal chokepoints and the
+   * gotcha-#118 guard widening) executes at 74c. Until §74e places event
+   * nodes those ops are reachable only via the dev dials, so a loud throw
+   * beats a silent no-op that would falsify authored content.
+   */
+  private executeEventOp(op: EventEffectOp): void {
+    switch (op.op) {
+      case 'gainBits':
+        // The earn-site fold applies (bitsGain × difficulty) — events are an
+        // earn site like rewards, not a mint (the §47 fold-at-earn law).
+        this.gainBits(op.amount);
+        break;
+      case 'spendBits':
+        // Floors at the balance rather than rejecting: authors gate real
+        // costs with a `bitsAtLeast` condition; an ungated spend is flavor
+        // ("they take what you have") — mirror the addBits zero-floor.
+        this.spendBits(Math.min(op.amount, this.bits));
+        break;
+      case 'healPool':
+        this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+        break;
+      case 'damagePool':
+        this.playerHealth = Math.max(0, this.playerHealth - op.amount);
+        if (this.playerHealth === 0) {
+          // An event CAN kill (the FTL lineage). The finishEncounter defeat
+          // shape, minus encounter state (there is none mid-event).
+          this.activeEvent = null;
+          this.phase = 'defeat';
+          this.bus.emit('run:defeated', {});
+        }
+        break;
+      case 'setFlag':
+        this.eventFlags[op.flag] = op.value ?? true;
+        break;
+      case 'addPacket':
+      case 'removePacket':
+      case 'addDaemon':
+      case 'removeDaemon':
+      case 'grantUnit':
+      case 'removeUnit':
+        // 74b landing note (the deferral discipline): these execute at 74c —
+        // the removal side is new plumbing (packet-removal-by-id,
+        // removeDaemon, the removeRosterUnit guard widening to 'event'),
+        // and the add side wants the cache-full / roster policy decided
+        // with it. Parse-side they're already legal (74a).
+        throw new Error(`Run: event op '${op.op}' is not executable until 74c`);
+    }
+  }
+
+  /** 74b — route a resolved outcome's `next`: a page id moves the cursor;
+   *  terminals close the event (return-to-map = the leavePort silent
+   *  transition; start-encounter opens the named fight with an optional
+   *  pinned reward table). */
+  private resolveEventNext(next: EventNext): void {
+    if (typeof next === 'string') {
+      this.activeEvent = { eventId: this.activeEvent!.eventId, pageId: next };
+      this.bus.emit('event:pageChanged', { eventId: this.activeEvent.eventId, pageId: next });
+      return;
+    }
+    this.activeEvent = null;
+    if (next.kind === 'return-to-map') {
+      this.phase = 'map';
+      return;
+    }
+    this.pendingRewardOverride = next.rewardOverride ?? null;
+    this.phase = 'battle';
+    this.beginEncounter(next.encounterId);
+  }
+
+  /** 74b — evaluate one condition against live run state (the closed v1
+   *  union). `flagSet` = present and not `false`; `flagIs` = strict
+   *  equality. */
+  private evaluateEventCondition(cond: EventCondition): boolean {
+    switch (cond.kind) {
+      case 'bitsAtLeast':
+        return this.bits >= cond.amount;
+      case 'poolHealthAtLeast':
+        return this.playerHealth >= cond.amount;
+      case 'poolHealthAtMost':
+        return this.playerHealth <= cond.amount;
+      case 'hasDaemon':
+        return this.daemons.some((d) => d.id === cond.daemonId);
+      case 'hasPacket':
+        return this.cache.includes(cond.packetId);
+      case 'cacheHasRoom':
+        return this.cacheHasRoom;
+      case 'rosterSizeAtLeast':
+        return this.team.length >= cond.count;
+      case 'rosterSizeAtMost':
+        return this.team.length <= cond.count;
+      case 'characterIs':
+        return this.character.id === cond.characterId;
+      case 'flagSet':
+        return this.eventFlags[cond.flag] !== undefined && this.eventFlags[cond.flag] !== false;
+      case 'flagIs':
+        return this.eventFlags[cond.flag] === cond.value;
+    }
+  }
+
+  /** 74b — the active event's current page (null outside the phase). The
+   *  (74f) EventScreen and the harness both read from here. */
+  currentEventPage(): EventPage | null {
+    if (this.activeEvent === null) return null;
+    const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
+    return def?.pages[this.activeEvent.pageId] ?? null;
+  }
+
+  /** 74b — is the page's choice at `index` currently satisfiable? The UI
+   *  renders failing choices SHOWN-DISABLED with the requirement visible
+   *  (the §74 shape-lock: players should be able to plan). */
+  eventChoiceEnabled(index: number): boolean {
+    const choice = this.currentEventPage()?.choices[index];
+    if (choice === undefined) return false;
+    return choice.condition === undefined || this.evaluateEventCondition(choice.condition);
+  }
+
+  /** 74b — the enabled choice indices on the active page (the harness's
+   *  legal-move list; never empty on a live page — the 74a termination
+   *  assert guarantees an unconditioned choice on every page). */
+  enabledEventChoices(): number[] {
+    const page = this.currentEventPage();
+    if (page === null) return [];
+    return page.choices.map((_, i) => i).filter((i) => this.eventChoiceEnabled(i));
+  }
+
+  /** 74b — read one chain flag (undefined = never set). */
+  eventFlag(flag: string): EventFlagValue | undefined {
+    return this.eventFlags[flag];
+  }
+
+  /** 74b — the fold-routed global combat-resolve chance (a `modifier` rule
+   *  on `eventCombatChance` bends it — the daemon seam, wrong-by-
+   *  construction to read raw). The fold floors at 0; a mult can exceed 1,
+   *  so the read site clamps the ceiling. */
+  effectiveEventCombatChance(): number {
+    return Math.min(1, this.effectiveRunStats().eventCombatChance);
   }
 
   /**
@@ -1473,7 +1797,11 @@ export class Run {
    * the first turn. The run-wide `playerHealth` is deliberately NOT reset — it
    * persists across encounters.
    */
-  private beginEncounter(): void {
+  /** 74b: `eventForcedEncounterId` — a start-encounter terminal's named
+   *  fight (beats the X2 dev dial for this one encounter; the forced id
+   *  short-circuits inside `selectEncounter`, so it need not be in the
+   *  sector's pools). */
+  private beginEncounter(eventForcedEncounterId?: string): void {
     // 66a — a boss node CONSUMES the sector-start pre-roll (the forewarning
     // pair) instead of rolling: no `mapRng` fork, no selection/build draws —
     // the fight is exactly the forewarned board. Branching on node kind is
@@ -1502,7 +1830,7 @@ export class Run {
         { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
         mapRng,
         getEncounter,
-        this.forcedEncounterId ?? undefined,
+        eventForcedEncounterId ?? this.forcedEncounterId ?? undefined,
       );
       this.selectedEncounter = selection.encounter;
       // K3.5 / V1 — build the encounter's ONE battlefield for the layout
@@ -2364,9 +2692,18 @@ export class Run {
       // `promotions.length > 0` shape). Draws ride the two dedicated reward
       // streams, so a rewards-less win perturbs nothing.
       if (result === 'won') {
+        // 74b — an event's start-encounter terminal can pin the fight's
+        // loot: the override table REPLACES the encounter's own refs at
+        // chance 1 (the spec's "predetermined reward"). Cleared at
+        // finishEncounter, so it can only ever apply to the fight the
+        // event opened.
+        const rewardRefs: readonly EncounterRewardRef[] =
+          this.pendingRewardOverride !== null
+            ? [{ table: this.pendingRewardOverride, trigger: { chance: 1 } }]
+            : (this.selectedEncounter?.rewards ?? []);
         portions.push(
           ...rollRewards(
-            this.selectedEncounter?.rewards ?? [],
+            rewardRefs,
             rewardTableById,
             this.ownedDaemonIds(),
             this.rewardRng,
@@ -2817,6 +3154,10 @@ export class Run {
     // U3 — the selected encounter + its wave cursor are encounter-scoped too.
     this.selectedEncounter = null;
     this.waveCursor = null;
+    // 74b — an event-pinned reward table dies with its encounter (the won
+    // boundary already consumed it; clearing on BOTH outcomes keeps a
+    // defeat from leaking the override into a later fight).
+    this.pendingRewardOverride = null;
     if (outcome === 'defeat') {
       this.phase = 'defeat';
       this.bus.emit('run:defeated', {});
@@ -3297,6 +3638,7 @@ export class Run {
       rewardBitsRng: this.rewardBitsRng.toJSON(),
       portStockRng: this.portStockRng.toJSON(),
       portPriceRng: this.portPriceRng.toJSON(),
+      eventRng: this.eventRng.toJSON(),
       // 50d — the docked stock's slots MUTATE in place (`sold`), so the wire
       // image copies each slot (the turnGrants discipline; templates stay by
       // reference — never mutated after the roll).
@@ -3308,6 +3650,11 @@ export class Run {
               packets: this.portStock.packets.map((s) => ({ ...s })),
               daemons: this.portStock.daemons.map((s) => ({ ...s })),
             },
+      // 74b — the event cursor (copied: plain flat object), the flag record
+      // (copied: mutated in place by setFlag), and the pinned reward table.
+      activeEvent: this.activeEvent === null ? null : { ...this.activeEvent },
+      eventFlags: { ...this.eventFlags },
+      pendingRewardOverride: this.pendingRewardOverride,
       // 47d — daemons serialize BY ID (def-resolved on load). 49d: the
       // queue's entries MUTATE in place (`used`/`passed`), so the wire image
       // copies each entry (buffs stay by reference — never mutated;
@@ -3386,6 +3733,10 @@ export class Run {
       passIsFinal: boolean;
       drawAmountAdd: number;
       sectorMap: SectorMap;
+      eventFlags: Record<string, EventFlagValue>;
+      pendingRewardOverride: string | null;
+      eventCatalog: readonly EventDef[];
+      forcedEventId: string | null;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -3522,6 +3873,37 @@ export class Run {
     // 50d — the two port streams + the docked stock. Packet/daemon slot ids
     // re-validate against the catalogs (the pendingRewards discipline); unit
     // templates pass through like `team`.
+    // 74b — the event stream + the event-phase state. The cursor's ids
+    // re-validate against the SHIPPED catalog (the daemonIds discipline —
+    // a bespoke `eventCatalog` override is in-memory only, like bespoke
+    // daemons); the pinned reward table re-validates against the tables.
+    m.eventCatalog = EVENTS;
+    m.forcedEventId = null;
+    m.eventRng = RNG.fromJSON(snap.eventRng);
+    if (snap.activeEvent !== null) {
+      const eventDef = getEvent(snap.activeEvent.eventId);
+      if (eventDef === undefined) {
+        throw new Error(
+          `Run.fromJSON: unknown event id '${snap.activeEvent.eventId}' (not in the catalog)`,
+        );
+      }
+      if (!(snap.activeEvent.pageId in eventDef.pages)) {
+        throw new Error(
+          `Run.fromJSON: event '${snap.activeEvent.eventId}' has no page '${snap.activeEvent.pageId}'`,
+        );
+      }
+    }
+    m.activeEvent = snap.activeEvent === null ? null : { ...snap.activeEvent };
+    m.eventFlags = { ...snap.eventFlags };
+    if (
+      snap.pendingRewardOverride !== null &&
+      rewardTableById(snap.pendingRewardOverride) === undefined
+    ) {
+      throw new Error(
+        `Run.fromJSON: pendingRewardOverride references unknown reward table '${snap.pendingRewardOverride}'`,
+      );
+    }
+    m.pendingRewardOverride = snap.pendingRewardOverride;
     m.portStockRng = RNG.fromJSON(snap.portStockRng);
     m.portPriceRng = RNG.fromJSON(snap.portPriceRng);
     m.portStock =
@@ -3590,6 +3972,20 @@ function resolveForcedEncounterId(id: string | undefined): string | null {
   if (id === undefined) return null;
   if (getEncounter(id) === undefined) {
     throw new Error(`Run: unknown forcedEncounterId="${id}" (not in the encounter catalog)`);
+  }
+  return id;
+}
+
+/**
+ * 74b — validate a `RunConfig.forcedEventId` against the run's ACTIVE event
+ * catalog at construction (loud throw, mirroring `resolveForcedEncounterId`).
+ * Checked against the resolved catalog — not the shipped one — so a bespoke
+ * `eventCatalog` test can force its own defs.
+ */
+function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef[]): string | null {
+  if (id === undefined) return null;
+  if (!catalog.some((e) => e.id === id)) {
+    throw new Error(`Run: unknown forcedEventId="${id}" (not in the event catalog)`);
   }
   return id;
 }

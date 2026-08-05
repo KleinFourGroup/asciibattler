@@ -170,18 +170,26 @@ describe('fuzz harness', () => {
   });
 
   it('a two-act walk labels battles + chips with the sector ordinal (68e)', () => {
-    // sectorHops: 2 → a 2+2 walk over the shipped start → deep-end chain. The
-    // overpowered fixture roster makes clearing act 1 essentially certain —
-    // the vacuousness guard below (a transition actually happened) depends on
-    // it, so if a future balance change flakes this pin, raise the levels,
-    // not the assertions.
+    // sectorHops: 2 → a 2+2 walk over the shipped start → deep-end chain.
+    // 74b — the seed pin retired: the eventRng stream-append re-rolled every
+    // seed's battles and the pinned seed stopped clearing act 1 (even a
+    // level-15 roster only clears ~40% of seeds — the act-1 boss bleeds the
+    // pool over its escalation turns regardless of unit strength). The
+    // vacuousness guard needs A crossing, not THIS seed's, so scan for the
+    // first clearing seed — immune to the next stream shift by construction.
     const roster = (['mercenary', 'mercenary', 'archer', 'archer', 'healer'] as const).map(
-      (archetype): { archetype: Archetype; level: number } => ({ archetype, level: 10 }),
+      (archetype): { archetype: Archetype; level: number } => ({ archetype, level: 15 }),
     );
-    const result = runOne(11, makeStrategy('greedy')!, {
+    let result = runOne(1, makeStrategy('greedy')!, {
       telemetry: true,
       runConfig: { sectorHops: 2, startingRoster: roster },
     });
+    for (let s = 2; s <= 24 && result.sectorsCleared < 1; s++) {
+      result = runOne(s, makeStrategy('greedy')!, {
+        telemetry: true,
+        runConfig: { sectorHops: 2, startingRoster: roster },
+      });
+    }
     // Labels are structurally consistent regardless of outcome: monotone
     // non-decreasing from 0, and the run ends in the sector of its last battle.
     expect(result.battles.length).toBeGreaterThan(0);

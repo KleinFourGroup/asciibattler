@@ -80,6 +80,11 @@ export const DEFAULT_ROLLOUT_EMPOWER: EmpowerPolicy = { kind: 'level', dir: 'hi'
 
 const DEFAULT_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 const DEFAULT_MAX_HOPS = 50;
+// 74b — the event-phase loop guard (the harness's MAX_EVENT_STEPS, per-walk:
+// a horizon walk is a few hops, so a whole-walk cap is ample). Loud failure,
+// never a normal outcome — the 74a termination assert guarantees a random
+// walk exits with probability 1.
+const MAX_EVENT_STEPS = 500;
 
 export interface WalkOptions {
   /** Stop after this many `battle:ended` events. 1 = the spec's v1
@@ -178,6 +183,7 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
   };
 
   let hops = 0;
+  let eventSteps = 0; // 74b — event choices this walk (see MAX_EVENT_STEPS)
   while (battlesEnded < options.horizonBattles) {
     if (run.phase === 'defeat') return { outcome: 'defeat', battlesEnded, totalTicks };
     if (run.phase === 'complete') return { outcome: 'complete', battlesEnded, totalTicks };
@@ -316,6 +322,25 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
           }
         }
         run.dispatch({ kind: 'leavePort' });
+        break;
+      }
+      case 'event': {
+        // 74b — mirror the harness's doctrine event policy: uniform-random
+        // among the ENABLED choices off the walker's strategyRng (CRN
+        // shares the bias across candidates; the arbitration enumerator is
+        // §74g's). Same loud guards as the harness arm.
+        const enabled = run.enabledEventChoices();
+        if (enabled.length === 0) {
+          throw new Error('walker: event page with no enabled choices');
+        }
+        eventSteps++;
+        if (eventSteps > MAX_EVENT_STEPS) {
+          throw new Error(`walker: ${MAX_EVENT_STEPS} event choices in one walk`);
+        }
+        run.dispatch({
+          kind: 'chooseEventOption',
+          choiceIndex: enabled[strategyRng.int(0, enabled.length - 1)]!,
+        });
         break;
       }
       case 'promotion': {

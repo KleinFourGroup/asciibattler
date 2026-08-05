@@ -451,6 +451,23 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'port:entered': { nodeId: number };
 
+  /**
+   * 74b — the player landed on an event node and it did NOT combat-resolve:
+   * the run entered the serialized `event` phase holding the
+   * `{eventId, pageId}` cursor. §74f's EventScene swap is the intended
+   * consumer (until then the phase is reachable only via the dev dials —
+   * `firstNodeKind: 'event'` / `forcedEventId`). `nodeId` is the entered node.
+   */
+  'event:entered': { nodeId: number; eventId: string };
+
+  /**
+   * 74b — the active event's cursor moved to another page (a resolved choice
+   * whose `next` was a page id). The (74f) EventScreen re-renders off this;
+   * terminals emit nothing here (return-to-map is the silent-transition
+   * pattern; start-encounter fires `battle:started`).
+   */
+  'event:pageChanged': { eventId: string; pageId: string };
+
   'recruit:offered': { units: UnitTemplate[] };
 
   /**

@@ -38,6 +38,12 @@ const NodeMapSchema = z
     eliteMinSpacing: z.number().int().positive(),
     portChance: z.number().min(0).max(1),
     portMinSpacing: z.number().int().positive(),
+    /** 74b — the chance an entered event node resolves straight into a
+     *  combat encounter (spec §Events; base of the `eventCombatChance` run
+     *  stat — folded, not read raw, so daemons can bend it). NOT a scatter
+     *  knob: event-node PLACEMENT knobs (`eventChance`/`eventMinSpacing`)
+     *  land with the §74e scatter pass. */
+    eventCombatChance: z.number().min(0).max(1),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {
     message: 'middleWidthMin must be <= middleWidthMax',

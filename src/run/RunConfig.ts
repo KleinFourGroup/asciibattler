@@ -23,6 +23,7 @@ import { daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, type CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import type { SectorMap } from '../config/sectorMap';
+import type { EventDef } from '../config/events';
 
 /** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
 export interface RosterEntry {
@@ -95,8 +96,27 @@ export interface RunConfig {
    * Applies to the first sector's map only (sector advances regenerate
    * without the config, by design). Ignored when the root IS the terminal
    * (`hopCount: 1` — boss wins). URL form: `firstNode=elite`. NOT persisted.
+   * 74b widens the value set with `'event'` — the event-phase dev/isolation
+   * shape (`?hops=2&firstNode=event`, optionally + `forcedEventId`): the
+   * stamp itself was always kind-generic, only this type gated it.
    */
-  readonly firstNodeKind?: 'elite';
+  readonly firstNodeKind?: 'elite' | 'event';
+  /**
+   * 74b — force every event-node entry to open THIS event (a
+   * config/events.json id), skipping the eligibility-filtered pick — the
+   * `forcedEncounterId` shape for events (validated loud at construction).
+   * The combat-resolve roll still happens first (suppress it via a
+   * `eventCombatChance` modifier rule, or the §74e isolation dial once it
+   * lands). Programmatic-only; NOT persisted.
+   */
+  readonly forcedEventId?: string;
+  /**
+   * 74b — override the event catalog for headless tests (the `sectorMap`
+   * discipline: programmatic-only, NOT persisted). Bespoke defs are
+   * in-memory only — a mid-event save carrying a non-catalog id
+   * hard-rejects on load (the bespoke-daemon precedent).
+   */
+  readonly eventCatalog?: readonly EventDef[];
   /**
    * Override the middle-hop max width (default
    * `config/nodemap.json#middleWidthMax`). Clamped up to the hop's minimum
@@ -352,9 +372,10 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const forcedEncounterId = parseEncounter(params.get(RUN_CONFIG_PARAMS.encounter));
   if (forcedEncounterId !== undefined) config.forcedEncounterId = forcedEncounterId;
-  // 68e — the only supported stamp is 'elite'; other values dropped (the
-  // `layout=` unknown-token discipline).
-  if (params.get(RUN_CONFIG_PARAMS.firstNode) === 'elite') config.firstNodeKind = 'elite';
+  // 68e→74b — the supported stamps are 'elite' and 'event'; other values
+  // dropped (the `layout=` unknown-token discipline).
+  const firstNode = params.get(RUN_CONFIG_PARAMS.firstNode);
+  if (firstNode === 'elite' || firstNode === 'event') config.firstNodeKind = firstNode;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));

@@ -84,6 +84,8 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
       return w.path.elite; // W2 — the optional harder detour's route weight
     case 'port':
       return w.path.port; // 50c — the shop dock (a real route weight once §50d sells)
+    case 'event':
+      return 0; // 74b — PATH_KINDS gains 'event' at §74e (with the vector pad); until then scored never seeks events
     case 'boss':
       return 0; // forced terminal — no weight
   }
@@ -301,6 +303,8 @@ function battleKindOf(kind: NodeKind): EncounterKind | null {
       return 'elite';
     case 'boss':
       return 'boss';
+    case 'event':
+      return null; // 74b — hosts a fight only probabilistically (combat-resolve); not a guaranteed battle
     case 'rest':
     case 'port':
       return null;

@@ -29,6 +29,7 @@ const KIND_GLYPH: Record<NodeKind, string> = {
   boss: '!',
   elite: '*',
   port: '$', // 50c — the shop dock (money lay-reading; shell-prompt tech-reading)
+  event: '?', // 74b — the event node (the StS ?-node lineage); EventScene lands 74f
 };
 
 /**

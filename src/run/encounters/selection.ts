@@ -68,6 +68,11 @@ const KIND_BY_NODE: Record<NodeKind, EncounterKind> = {
   elite: 'elite', // W2: an elite node selects from the elite pool
   rest: 'normal', // rest nodes never fight; defensive default
   port: 'normal', // 50c: port nodes never fight either; same defensive default
+  // 74b: an event's combat-resolve fight (and its empty-pool fallback) draws
+  // from the sector's NORMAL pool — the spec's global-chance rule made
+  // structural. A start-encounter terminal bypasses the pool entirely (the
+  // forced id short-circuits inside selectEncounter).
+  event: 'normal',
 };
 
 export function encounterKindFor(nodeKind: NodeKind): EncounterKind {

@@ -309,6 +309,12 @@ export interface HarnessOptions {
 // non-termination only (a World invariant violation).
 const DEFAULT_MAX_TICKS = secondsToTicks(HEALTH.maxTurnSeconds);
 const DEFAULT_MAX_HOPS = 50;
+// 74b — the event-phase loop guard: `hops` freezes while a run sits in the
+// 'event' phase (it increments only on 'map'), so neither run guard bounds a
+// spinning event page. The 74a termination assert guarantees a random walk
+// exits with probability 1; this cap converts an authoring/engine loop into
+// a loud failure instead of a silent wedge (the §74 kickoff hazard).
+const MAX_EVENT_STEPS = 500;
 
 /**
  * Drive one full run with `strategy`, return a `RunResult`. Throws only
@@ -605,6 +611,7 @@ export function runOne(
   };
 
   let hops = 0;
+  let eventSteps = 0; // 74b — consecutive event choices since the last map hop
   let totalTicks = 0;
   let portPurchases = 0; // 50g — the buy policy's transaction count
 
@@ -654,6 +661,29 @@ export function runOne(
         const nodeId = strategy.pickNextNode(frontier, run, strategyRng);
         run.dispatch({ kind: 'enterNode', nodeId });
         hops++;
+        eventSteps = 0; // 74b — the cap is per event visit, not per run
+        break;
+      }
+      case 'event': {
+        // 74b — the doctrine event policy: uniform-random among the ENABLED
+        // choices off the policy stream, one draw per resolved page (the
+        // checkless arms' event play, per the §74 shape-lock; arbitration
+        // is §74g's). The 74a termination assert guarantees an
+        // unconditioned exit on every page, so `enabled` is never empty —
+        // both throws below are loud engine/authoring failures, never
+        // normal outcomes.
+        const enabled = run.enabledEventChoices();
+        if (enabled.length === 0) {
+          throw new Error('harness: event page with no enabled choices');
+        }
+        eventSteps++;
+        if (eventSteps > MAX_EVENT_STEPS) {
+          throw new Error(
+            `harness: ${MAX_EVENT_STEPS} event choices without leaving the event phase`,
+          );
+        }
+        const pick = enabled[strategyRng.int(0, enabled.length - 1)]!;
+        run.dispatch({ kind: 'chooseEventOption', choiceIndex: pick });
         break;
       }
       case 'turn-intro': {

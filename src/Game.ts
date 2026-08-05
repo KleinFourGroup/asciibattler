@@ -380,6 +380,17 @@ export class Game implements RunDispatcher {
           this.swap(new MapScene());
         }
         break;
+      case 'chooseEventOption':
+        // 74b — resolve an event choice. A page hop re-renders the (74f)
+        // EventScreen off `event:pageChanged`; a start-encounter terminal
+        // fires `battle:started` (self-swapping); a return-to-map terminal
+        // lands on 'map' with no emit (the leavePort silent-transition
+        // pattern), so swap explicitly.
+        run.dispatch(command);
+        if (run.phase === 'map') {
+          this.swap(new MapScene());
+        }
+        break;
       case 'buyPortUnit':
       case 'buyPortPacket':
       case 'buyPortDaemon':

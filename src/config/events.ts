@@ -230,13 +230,17 @@ for (const event of EVENTS_LIST) {
 // ── boot asserts ────────────────────────────────────────────────────────────
 
 /**
- * Every page must be able to reach a terminal — "no recursion" in the
- * grammar does NOT preclude id-ref cycles (A→B→A), and a page whose every
- * continuation loops forever would trap the player AND the fuzz harness
- * (the §74 kickoff hazard: a spinning phase neither run guard bounds).
- * Reverse fixpoint: a page terminates iff some choice has some outcome
- * whose `next` is a terminal or a terminating page. Args-injected for
- * synthetic tests; self-wired below.
+ * Every page must be able to reach a terminal THROUGH UNCONDITIONED choices —
+ * "no recursion" in the grammar does NOT preclude id-ref cycles (A→B→A), and
+ * a page whose every continuation loops forever would trap the player AND
+ * the fuzz harness (the §74 kickoff hazard: a spinning phase neither run
+ * guard bounds). Restricting the walk to condition-free choices (74b) makes
+ * the guarantee airtight: conditions evaluate against MUTABLE run state
+ * (bits an earlier effect just spent, flags), so a conditioned exit can
+ * vanish mid-event — an unconditioned exit can't. Reverse fixpoint: a page
+ * terminates iff some UNCONDITIONED choice has some outcome whose `next` is
+ * a terminal or a terminating page. Args-injected for synthetic tests;
+ * self-wired below.
  */
 export function assertEventPagesTerminate(events: readonly EventDef[]): void {
   for (const event of events) {
@@ -246,10 +250,12 @@ export function assertEventPagesTerminate(events: readonly EventDef[]): void {
       grew = false;
       for (const [pageId, page] of Object.entries(event.pages)) {
         if (terminating.has(pageId)) continue;
-        const canExit = page.choices.some((choice) =>
-          choice.outcomes.some(
-            (outcome) => typeof outcome.next !== 'string' || terminating.has(outcome.next),
-          ),
+        const canExit = page.choices.some(
+          (choice) =>
+            choice.condition === undefined &&
+            choice.outcomes.some(
+              (outcome) => typeof outcome.next !== 'string' || terminating.has(outcome.next),
+            ),
         );
         if (canExit) {
           terminating.add(pageId);
@@ -260,7 +266,7 @@ export function assertEventPagesTerminate(events: readonly EventDef[]): void {
     const stuck = Object.keys(event.pages).filter((pageId) => !terminating.has(pageId));
     if (stuck.length > 0) {
       throw new Error(
-        `event '${event.id}': page(s) ${stuck.map((p) => `'${p}'`).join(', ')} cannot reach a terminal (an id-ref cycle with no exit)`,
+        `event '${event.id}': page(s) ${stuck.map((p) => `'${p}'`).join(', ')} cannot reach a terminal through unconditioned choices (an id-ref cycle with no guaranteed exit)`,
       );
     }
   }

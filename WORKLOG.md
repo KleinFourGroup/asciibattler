@@ -329,3 +329,39 @@ the Surge rename is 3 boot-asserted config sites + ~20 test sites +
 presence-gated (nothing places event nodes until 74e), so fuzz stays
 byte-identical through the first four commits and the scheduled
 re-baseline is 74e's alone — the camps discipline applied to events.
+*(CORRECTED at 74b — see below: the stream-append cost breaks the
+byte-identity half; the presence-gating half stands.)*
+
+### 74b — the Run integration (v40→v41)
+
+The bump commit landed to plan with ONE kickoff-prediction
+correction: **"fuzz byte-identical through 74a–74d" was wrong.**
+Appending the `eventRng` construction fork shifts every subsequent
+`this.rng.fork()` (per-encounter mapRng, offers, sector advances) —
+the exact documented cost of all four prior stream appends (H5, L1,
+48b, 50d), missed because the kickoff reasoned about event-node
+REACHABILITY (correct: none until 74e) rather than fork alignment.
+Surfaced immediately by the determinism suite: seed 2026's first
+encounter changed and the two-battle test driver's one-turn-chip +
+no-promotion assumptions broke — the driver is now robust to
+per-encounter pool depth and gate interposition (win-until-done).
+Presence-gating still holds for event BEHAVIOR: no event draw
+executes on the default path until §74e places nodes.
+
+As-built notes beyond the cut line: the combat-resolve roll always
+draws once on entry (the #49 always-draw discipline) and an
+empty-eligible-pool entry degrades to the fight; the outcome roll is
+always exactly one draw (no zero-draw singleton class — #111 applied
+forward); `damagePool` CAN kill (the FTL lineage — defeat fires
+mid-event and routing stops); `spendBits` floors at the balance
+(authors gate real costs with `bitsAtLeast`); the 74a termination
+fixpoint TIGHTENED to unconditioned-choices-only (a conditioned exit
+can vanish mid-event — bits spent, flags flipped — so only an
+unconditioned exit guarantees escape; the harness/walker enabled-list
+is provably never empty); the six 74c ops throw loud at execution
+(the landing-note contract — parse-legal since 74a, dev-dial-only
+reachable until 74e). Bespoke `eventCatalog` defs are in-memory only
+(a mid-event save carrying one hard-rejects — the bespoke-daemon
+precedent, pinned by test). Dev dials: `firstNodeKind` widened to
+`'elite' | 'event'` (the stamp was always kind-generic) +
+`forcedEventId`.

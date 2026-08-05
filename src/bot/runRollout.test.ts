@@ -39,6 +39,7 @@ const RNG_KEYS = [
   'rewardBitsRng',
   'portStockRng',
   'portPriceRng',
+  'eventRng', // 74b — the ninth stream (event flips/picks/outcome rolls)
 ] as const;
 
 /** A live run one hop in: mid-encounter, deck dealt, streams advanced. */
@@ -67,7 +68,7 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
     const liveWire = live.toJSON();
 
     // The control documents the hazard: an undiverged round-trip clone
-    // carries all eight live streams verbatim.
+    // carries all nine live streams verbatim.
     const plain = Run.fromJSON(
       JSON.parse(JSON.stringify(liveWire)) as RunSnapshot,
       new EventBus<GameEvents>(),
@@ -75,8 +76,8 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
     const plainWire = plain.toJSON();
     for (const k of RNG_KEYS) expect(plainWire[k]).toEqual(liveWire[k]);
 
-    // The seam diverges ALL EIGHT — from the live run AND pairwise from
-    // each other (eight independent forks of one seed stream).
+    // The seam diverges ALL NINE — from the live run AND pairwise from
+    // each other (nine independent forks of one seed stream).
     const cloneWire = cloneRunForRollout(live, 777).run.toJSON();
     for (const k of RNG_KEYS) expect(cloneWire[k]).not.toEqual(liveWire[k]);
     const distinct = new Set(RNG_KEYS.map((k) => JSON.stringify(cloneWire[k])));

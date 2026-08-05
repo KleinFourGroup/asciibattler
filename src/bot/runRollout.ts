@@ -3,8 +3,9 @@
  * the 57d pattern one layer up).
  *
  * `cloneRunForRollout(run, rolloutSeed)` returns an independent Run on a
- * fresh EventBus with ALL EIGHT serialized RNG streams re-seeded from
- * `rolloutSeed`.
+ * fresh EventBus with ALL NINE serialized RNG streams re-seeded from
+ * `rolloutSeed` (74b added `eventRng` — a rollout SAMPLES event outcomes
+ * instead of peeking, the spec's gambles-are-honest guarantee).
  *
  * Why the re-seed is load-bearing (the CLAIRVOYANCE GUARD, verbatim from
  * `cloneForRollout` in rollout.ts): RunSnapshot v40 serializes every
@@ -22,7 +23,7 @@
  * fresh off the re-seeded streams — sampled futures, the correct
  * semantics.
  *
- * The eight forks come off ONE seed stream so every clone stream is
+ * The nine forks come off ONE seed stream so every clone stream is
  * independent of the others (not just of the live run) — the rollout.ts
  * two-stream idiom, extended. Fork ORDER is part of the determinism
  * contract (same rolloutSeed ⇒ byte-identical clone).
@@ -52,7 +53,7 @@ export function cloneRunForRollout(live: Run, rolloutSeed: number): RunRolloutCl
   // deck piles, docked port stock, pending rewards, grant cursors).
   const wire = JSON.parse(JSON.stringify(live.toJSON())) as RunSnapshot;
 
-  // The divergence: all eight streams re-seeded as independent forks of
+  // The divergence: all nine streams re-seeded as independent forks of
   // one seed stream. Order matters (the determinism contract) — keep it
   // in RunSnapshot field order.
   const seedStream = new RNG(rolloutSeed);
@@ -64,6 +65,7 @@ export function cloneRunForRollout(live: Run, rolloutSeed: number): RunRolloutCl
   wire.rewardBitsRng = seedStream.fork().toJSON();
   wire.portStockRng = seedStream.fork().toJSON();
   wire.portPriceRng = seedStream.fork().toJSON();
+  wire.eventRng = seedStream.fork().toJSON();
 
   const bus = new EventBus<GameEvents>();
   return { run: Run.fromJSON(wire, bus), bus };

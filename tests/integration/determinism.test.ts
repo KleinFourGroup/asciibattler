@@ -162,17 +162,23 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
   const first = run.nodeMap.rootId;
   run.dispatch({ kind: 'enterNode', nodeId: first });
   encounters.push(run.currentEncounter!);
-  // H4: the encounter loop ends a node when the enemy pool empties, so chip it
-  // out in one turn (player survivors >= the pool max).
-  bus.emit('battle:ended', {
-    winner: 'player',
-    xpAwards: [],
-    survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
-  });
-  // 48f — the win pauses in the reward phase first (the full catalog carries
-  // refs); accept through it, then pick the first offer to get back to 'map'
-  // so the second hop is accepted.
-  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+  // H4 — win turns until the encounter ends: per-encounter pools (U3b) can
+  // exceed one turn's max chip, and WHICH encounter this seed selects moves
+  // whenever a construction fork is appended (74b's eventRng was the
+  // latest), so the driver can't assume one turn — or which gates (reward /
+  // promotion) the win path interposes.
+  // (Read the phase through a call so TS doesn't narrow it across the
+  // bus-emit mutations.)
+  const phase = (): Run['phase'] => run.phase;
+  while (phase() === 'battle') {
+    bus.emit('battle:ended', {
+      winner: 'player',
+      xpAwards: [],
+      survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+    });
+    while (phase() === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+    if (phase() === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+  }
   run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
 
   const second = run.nodeMap.edges.find((e) => e.from === first)?.to;

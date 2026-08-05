@@ -63,6 +63,41 @@ design round, and the `startingEvents` sector seam.
   sector-scoped flags; no grammar recursion; `devLoadRun` stays
   map-phase-only (Cluster 6).
 
+**Cut (2026-08-05 kickoff, shape-locked user-signed — findings,
+rationale + the three shape resolutions in WORKLOG §74).** 74a–74d
+are presence-gated (nothing places events until 74e): fuzz stays
+byte-identical through them; 74e owns the scheduled re-baseline.
+
+- [ ] 74a — grammar + loader + catalog stub: `src/config/events.ts`
+  (flat page-map; conditions; weighted outcomes; the FULL op
+  vocabulary parse-side) + smoke `events.json` + configHash entry;
+  boot asserts incl. every-page-reaches-a-terminal. No Run touch.
+- [ ] 74b — Run integration, THE **v40→v41** commit: `'event'` joins
+  `NodeKind`+`RunPhase`; entry (fold-routed resolve roll, base 0) +
+  silent exit; cursor + flags + `eventRng` (forked LAST; re-seed
+  list same commit); ALL compile-gated edits ride along (KIND_GLYPH ·
+  KIND_BY_NODE→`'normal'` · kindWeight · minimal harness/walker
+  arms). Exit: round-trip at 41; fuzz byte-identical.
+- [ ] 74c — effect-op execution end to end (the events-side union);
+  `executeInstantOps` else → exhaustive switch; #118 guard widens to
+  `'event'`; reward `unit`/`poolHealth` kinds. Test per op. No bump.
+- [ ] 74d — the Surge rename (`draw-two`→`surge`) inside the bump
+  window; closes the TODO line.
+- [ ] 74e — placement + sector seams (the SCHEDULED break): event
+  tail scatter pass + dials in `sectorAdvanceConfig` (#121); sector
+  `events` pool + `startingEvents` + formatter; the zero-draw stamp
+  seam; `PATH_KINDS` += `'event'` + the 13-file `event: 0` pad.
+  Exit: fuzz traverses events green.
+- [ ] 74f — EventScene/EventScreen on the port model; failing
+  choices SHOWN-DISABLED with requirement. Browser eyeball.
+- [ ] 74g — arbitration: `arbitrateEventChoice` + `'eventChoice'`
+  site + ε floor + walker clone contract. Exit: decisions.csv rows.
+- [ ] 74h — the event editor (encounter-editor shape;
+  `formatEventsJson` + byte-fidelity test; allowlist; index card).
+- [ ] 74i — DECISION POINT: the demo-catalog design round (+ a Start
+  starting event · a flag-chain pair · rewardOverride) + exit sweep.
+- [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.
+
 ## Phase 75 — Camps
 
 **Charter:** neutral camps per the signed spec: the World camp

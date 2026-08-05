@@ -259,3 +259,73 @@ ROADMAP section is demoted to its stub per the close rule.
 - Agent-memory drift: the "new unit glyphs need a glyphs.ts entry"
   note predated §38e (glyphs are catalog-derived) — fixed in the
   memory index this session.
+
+## Phase 74 — Events (the keystone)
+
+### Kickoff (2026-08-05, the dedicated planning session)
+
+Four-surface code-reality audit (Run/phase · effect-op/fold ·
+fuzz/bot · editor/config), then the 10-step cut; shape-lock
+user-signed same day. The cut lives in ROADMAP §74; this entry
+carries the findings + resolutions.
+
+**Audit corrections to the spec's assumptions:**
+
+1. **The "missing arms wedge at maxNodeHops" claim is wrong in both
+   directions.** `run.phase satisfies never` (harness.ts:986,
+   walker.ts:339) makes the RunPhase widening a COMPILE error until
+   arms land — so the minimal arms ride the SAME commit as 74b, not
+   merely "before the first fuzz run." The genuine hazard is an
+   INCOMPLETE arm whose dispatch is phase-guard-rejected: the loop
+   spins in `'event'` with `hops` frozen (increments only in the
+   `'map'` case) — neither the hop guard nor the phase guard bounds
+   it. Mitigation: arms must always dispatch a legal command; 74b
+   adds a safety cap.
+2. **The committed PATH_KINDS blast radius is 13 files** —
+   `config/fuzz-strategies.json` + 12 fixture vectors (three
+   board-load-bearing: regen / 55pre / fire-ablated) — NOT
+   "best-strategy outputs" (gitignored; several local ones are
+   already stale from pre-50c/pre-W2 eras). `signed-sheet.json`
+   carries no path weights — unaffected. The 50c procedure applies:
+   pad `event: 0` in one commit, regenerate local outputs at the
+   next probe, board re-sign at §81.
+3. **"No recursion" ≠ no cycles.** The grammar is flat but `next`
+   id-refs can loop (A→B→A). 74a adds a boot assert (every page
+   reaches a terminal) + the harness cap above.
+
+**Load-bearing confirmations (the audit's anchors for the cut):**
+the port model is exactly reusable (inline `handleEnterNode` branch ·
+emit-nothing exit · Game.dispatch's `phase==='map'` catcher);
+`executeInstantOps`' untagged `else` (Run.ts:2151) must become an
+exhaustive switch BEFORE the union widens — a third op would
+silently execute as healPool; `eventRng` appends LAST in the
+constructor fork chain and joins `cloneRunForRollout` (nine streams)
+in the SAME commit it serializes, or rollouts foresee event dice;
+the flags record is `advanceSector`-exempt for free (reset is
+by-enumeration); `removeDaemon` / packet-removal-by-id / `damagePool`
+genuinely don't exist (all new plumbing, as the cluster audit said);
+`KIND_BY_NODE['event'] = 'normal'` IS the combat-resolve pool rule
+for free; decisions.csv needs NO new column (a new `site` string +
+label convention — the parser resolves by header name, append-safe);
+the Surge rename is 3 boot-asserted config sites + ~20 test sites +
+1 doc comment, clean everywhere else.
+
+**Shape resolutions (user-signed at the shape-lock):**
+
+- **Non-starting event nodes draw from a sector-owned weighted
+  `events` pool** (the `SectorEncounterEntrySchema` shape — same
+  paradigm as `startingEvents`); eligibility conditions live on the
+  event def and are read at pool-roll time (the flag-gated-chains
+  mechanism).
+- **The new effect ops are an events-side parallel union** sharing
+  sub-schemas with daemons.ts (the packets.ts precedent, import
+  direction events→daemons) — the daemon authoring surface does NOT
+  widen ("it's its own thing").
+- **Condition-failing choices render SHOWN-DISABLED with the
+  requirement visible** ("this is a strategy game — players should
+  be able to plan").
+
+**Ordering property the cut is built on:** 74a–74d are
+presence-gated (nothing places event nodes until 74e), so fuzz stays
+byte-identical through the first four commits and the scheduled
+re-baseline is 74e's alone — the camps discipline applied to events.

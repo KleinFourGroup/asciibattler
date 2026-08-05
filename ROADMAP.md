@@ -43,9 +43,9 @@ quick-fix debt so the whole cluster runs on fast tooling.
 - [x] 73a — main-suite `isolate: false` + the honesty protocol (double
   run + shuffled file order + exact counts) → **162s → ~33s**, all
   green (worklog §73)
-- [ ] 73b — fuzz-suite rebalancing: split `harness.test.ts` (the long
-  pole); the fuzz-side isolate flip is AUDIT-GATED with a skip bias
-  (the suite is compute-bound)
+- [x] 73b — fuzz-suite rebalancing: FOUR tail files split (not one —
+  the timing pass reframed it) + the audit-cleared isolate flip →
+  **~175s → ~114s**, 386 tests preserved exactly (worklog §73)
 - [ ] 73c — hand-density fix (pinned Fight ▸ / strip / packet row +
   balanced wrap) + the user's native maxHandSize-10 eyeball
 - [ ] 73d — Stop never highlighted (an atWill sentinel matching no

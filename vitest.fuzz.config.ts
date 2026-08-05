@@ -28,5 +28,12 @@ export default defineConfig({
     include: ['tests/fuzz/**/*.test.ts'],
     environment: 'node',
     testTimeout: 90000,
+    // 73b — shared-worker module registry, following 73a's main-suite flip.
+    // Audit at the flip: the fuzz suite's ONLY module-state mutation is
+    // objectiveCoverage's focusTileResolution knob, set/restored in
+    // try/finally (exception-safe); arbitratedStrategy's vi.fn()s are local
+    // stubs, no module mocking anywhere. Same contract as vite.config.ts:
+    // a test that mutates module-level state MUST restore it.
+    isolate: false,
   },
 });

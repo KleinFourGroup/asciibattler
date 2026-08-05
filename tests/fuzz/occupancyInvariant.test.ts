@@ -11,6 +11,8 @@
  *
  * Two strategies for breadth: `greedy` plays to completion (long battles, real
  * pathing pressure), `pure-random` fields chaotic teams (more movement churn).
+ * The pure-random half lives in `occupancyInvariantRandom.test.ts` (split at
+ * 73b: each ~60s sweep is its own file so the worker pool saturates).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -27,11 +29,5 @@ describe('§35d — occupancy invariant (no two units share a cell)', () => {
   // spot-check owns the outcome-drift question this hints at.
   it('holds across a greedy corpus', () => {
     expect(() => runMany(seeds, makeStrategy('greedy')!, { assertOccupancy: true })).not.toThrow();
-  }, 180000);
-
-  it('holds across a pure-random corpus', () => {
-    expect(() =>
-      runMany(seeds, makeStrategy('pure-random')!, { assertOccupancy: true }),
-    ).not.toThrow();
   }, 180000);
 });

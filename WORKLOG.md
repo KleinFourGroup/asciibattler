@@ -153,6 +153,39 @@ the spec-session measurement predicted). The contract for future
 tests (mutate module state ⇒ restore it) is documented at the config
 site in vite.config.ts.
 
+### 73b — fuzz-suite rebalancing (landed)
+
+The per-file timing pass (JSON reporter → ranked) REFRAMED the plan:
+not one long pole but FOUR — harness.test.ts 136s/35t ·
+harnessDaemon.test.ts 136s/6t · parallelRun.test.ts 129s/3t ·
+occupancyInvariant.test.ts 126s/2t, against a ~884s total over 39
+files. The per-TEST pass then set the floor: the biggest single tests
+(perDaemonStats 74.2s, occupancy-greedy 66s, parallel-decisions
+64.7s) bound any split at ~74s — rewriting tests to go lower is out
+of scope by the phase's own guard.
+
+The minimal surgery: ONE heavy block moved out of each tail file,
+whole `it`s only, assertions byte-identical — new files
+`harnessDeterminism` (the four strategy-determinism cases, ~68s) ·
+`harnessDaemonStats` (the 12-run bucketing case, the 74s bound) ·
+`occupancyInvariantRandom` (~60s) · `parallelRunDecisions` (~65s).
+39 → 43 files, count 386 EXACT.
+
+The fuzz-side `isolate: false` flip passed its audit gate cleanly:
+the suite's ONLY module mutation is objectiveCoverage's
+focusTileResolution knob, set/restored in try/finally
+(exception-safe); arbitratedStrategy's `vi.fn()`s are local stubs —
+no module mocking anywhere. Flipped with the same at-the-site
+contract comment as 73a.
+
+Results: **~175s → 114.4s / 114.7s** (second run with
+`--sequence.shuffle.files`), both 43 files / 386 tests exactly;
+effective concurrency 5.5× → ~8.4× (test CPU ~965–1010s under 114s
+wall); import CPU 287→59–87s. Remaining tail = the ~74s single-test
+bound + startup — further gains need test rewrites, declined.
+Hook paths after 73a+73b: docs/UI ≈ 45s; sim-touching ≈ 2.7 min
+(from 5.6). The 73f `vitest related` contingency stays un-cut.
+
 ### Housekeeping caught by the audit
 
 - Doc drift: the tools-index map-gen card describes a node-map

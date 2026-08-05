@@ -112,6 +112,47 @@ this entry carries the findings + rationale.
   driver: with no save/load UI until Cluster 6, snapshot bumps cost
   only ledger + re-baseline discipline.
 
+## Phase 73 — Hook speedup + quick fixes
+
+### Kickoff (2026-08-05, same session as the spec)
+
+Code-reality audit was largely pre-paid by the spec session (the hook
+timings, the hand-density diagnosis). The cut is in ROADMAP §73. The
+one genuinely open question — **what does `isolate: true` actually
+buy, and what's the blast radius of flipping it** — was asked by the
+user and answered with fresh greps before the flip:
+
+- The suite uses ZERO `vi.mock` / `stubGlobal` / fake timers /
+  `resetModules` — the module-mocking rationale for isolation is moot
+  here.
+- Exactly FIVE files mutate shared module state, ALL with disciplined
+  restore: statusBehavior / statusPeriodic / interpreter (STATUS_DEFS
+  fixtures, beforeAll→afterAll), occupancy (ALL_UNIT_DEFS test
+  giants), Run.test (HEALTH.fatiguePerStack, afterEach). Vitest runs
+  ONE file at a time per worker even with `isolate: false`, so
+  mutate-then-restore is exactly the contract shared workers need —
+  the repo's test culture already follows it (and comments it).
+- **Scope**: `isolate` is a Vitest-only knob. The dev server never
+  reads the test block; the balancer CLIs (`fuzz` / `balance:board` /
+  `pathing` / `run-config`) are standalone tsx processes that have
+  ALWAYS run as one shared-registry process per batch — the §56 swap
+  engine's config mutations were built for that reality and are
+  untouched. The only vitest/balancer intersection is `fuzz:smoke`
+  (73b), where the flip is audit-gated with a skip bias — that suite
+  is compute-bound (~864s test CPU vs ~300s import), so isolation
+  costs it proportionally little and the file split is the real
+  lever.
+
+### 73a — main-suite `isolate: false` (landed)
+
+The honesty protocol, three full runs at the flip: **34.65s / 32.66s /
+32.77s** (run 3 with `--sequence.shuffle.files`), each **exactly 151
+files / 2355 tests, 0 skipped** — vs 162s isolated (import CPU
+2648s→73s, transform 852s→40s; actual test CPU ~19s throughout, as
+the spec-session measurement predicted). The contract for future
+tests (mutate module state ⇒ restore it) is documented at the config
+site in vite.config.ts.
+
 ### Housekeeping caught by the audit
 
 - Doc drift: the tools-index map-gen card describes a node-map

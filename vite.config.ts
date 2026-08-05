@@ -127,5 +127,15 @@ export default defineConfig({
     // Sim/core/run code is pure logic — no DOM needed. Render code is not
     // tested here (visual verification handles that).
     environment: 'node',
+    // 73a — shared-worker module registry. Isolation was costing ~140s/run
+    // re-importing the zod config graph per file (measured 2026-08-05: ~19s
+    // of actual test CPU under 162s wall). Files still run ONE AT A TIME per
+    // worker, so the standing discipline — mutate module state in
+    // beforeAll/restore in afterAll (STATUS_DEFS / ALL_UNIT_DEFS / HEALTH:
+    // the only five mutating files, all restoring) — is exactly the contract
+    // this setting relies on. A NEW test that mutates module-level state
+    // MUST restore it, or it leaks into workermates. Verified at the flip:
+    // double run + shuffled file order + exact-count match (WORKLOG §73).
+    isolate: false,
   },
 });

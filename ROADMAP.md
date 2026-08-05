@@ -68,10 +68,9 @@ rationale + the three shape resolutions in WORKLOG §74).** 74a–74d
 are presence-gated (nothing places events until 74e): fuzz stays
 byte-identical through them; 74e owns the scheduled re-baseline.
 
-- [ ] 74a — grammar + loader + catalog stub: `src/config/events.ts`
-  (flat page-map; conditions; weighted outcomes; the FULL op
-  vocabulary parse-side) + smoke `events.json` + configHash entry;
-  boot asserts incl. every-page-reaches-a-terminal. No Run touch.
+- [x] 74a — grammar + loader + catalog stub ✅ 2026-08-05
+  (`1d6b042`): the full parse-side grammar + 3 smoke events + the
+  termination/ref boot asserts; +15 tests. Detail: git.
 - [ ] 74b — Run integration, THE **v40→v41** commit: `'event'` joins
   `NodeKind`+`RunPhase`; entry (fold-routed resolve roll, base 0) +
   silent exit; cursor + flags + `eventRng` (forked LAST; re-seed

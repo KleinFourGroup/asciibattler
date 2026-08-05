@@ -74,12 +74,10 @@ the PATH_KINDS/vector re-baseline.
 - [x] 74a — grammar + loader + catalog stub ✅ 2026-08-05
   (`1d6b042`): the full parse-side grammar + 3 smoke events + the
   termination/ref boot asserts; +15 tests. Detail: git.
-- [ ] 74b — Run integration, THE **v40→v41** commit: `'event'` joins
-  `NodeKind`+`RunPhase`; entry (fold-routed resolve roll, base 0) +
-  silent exit; cursor + flags + `eventRng` (forked LAST; re-seed
-  list same commit); ALL compile-gated edits ride along (KIND_GLYPH ·
-  KIND_BY_NODE→`'normal'` · kindWeight · minimal harness/walker
-  arms). Exit: round-trip at 41; fuzz byte-identical.
+- [x] 74b — Run integration, THE **v40→v41** commit ✅ 2026-08-05
+  (`32c1726`): landed to plan + the stream-append correction
+  (worklog §74b); +14 tests, pins at 41. Exit met minus the
+  withdrawn byte-identity clause.
 - [ ] 74c — effect-op execution end to end (the events-side union);
   `executeInstantOps` else → exhaustive switch; #118 guard widens to
   `'event'`; reward `unit`/`poolHealth` kinds. Test per op. No bump.

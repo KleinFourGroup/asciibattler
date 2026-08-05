@@ -50,8 +50,9 @@ quick-fix debt so the whole cluster runs on fast tooling.
   bottom-center + config-derived 5+5 balanced wrap, eval-verified on
   the real Surge overdraw path) — **the native eyeball is the user's
   next-turn item** (worklog §73)
-- [ ] 73d — Stop never highlighted (an atWill sentinel matching no
-  button)
+- [x] 73d — Stop never highlighted: the atWill sentinel landed,
+  three-state browser-proof (worklog §73); + the Surge id-rename
+  TODO filed for the §74 bump window
 - [ ] 73e — doc fixes (AGENTS fuzz count · tools map-gen card)
 - [ ] 73f — CONTINGENCY, not cut: `vitest related` on staged paths,
   only if the docs-path hook still exceeds ~2 min after a+b

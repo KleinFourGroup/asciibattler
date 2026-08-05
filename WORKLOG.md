@@ -213,6 +213,27 @@ errors. Screenshots unavailable (backgrounded pane doesn't
 composite) — functional geometry is eval-proven; FEEL is the user's
 native eyeball, the rider's actual exit gate.
 
+### 73d — Stop never highlighted (landed)
+
+`activeObjectiveMode` gains an `'atWill'` sentinel that matches no
+button (init + the `objective:set`/`cleared` handlers store the mode
+verbatim; the old code folded `atWill` onto `'stop'`, so Stop sat
+green from every battle mount). `renderObjectivePane` needed zero
+change — the sentinel simply matches nothing. Doc comment reframes
+the semantics: Stop is an ACTION (clear the objective), not a state.
+Browser-proof (three states, world objective read alongside the DOM):
+initial → objective `atWill`, NO button active · Hold clicked+tick →
+`hold`, Hold active · Stop clicked+tick → `atWill`, nothing active.
+Zero console errors. Verification note for future sessions: a
+backgrounded preview tab freezes rAF, so objective COMMANDS sit
+queued until `world.tick()` is hand-driven — a pane click with no
+tick reads as a no-op (bit twice this session before the tips'
+hand-drive pattern was applied).
+
+73c's native eyeball: **PASSED (user, 2026-08-05)** — and it surfaced
+the `draw-two`-id-vs-Surge-draws-3 mismatch → TODO filed (rename
+inside the §74 bump window; the id is a serialized cache key).
+
 ### Housekeeping caught by the audit
 
 - Doc drift: the tools-index map-gen card describes a node-map

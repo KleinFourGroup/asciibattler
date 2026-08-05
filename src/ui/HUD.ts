@@ -99,9 +99,12 @@ export class HUD {
    *  the controller via `setObjectiveArmed`. */
   private armedMode: ObjectiveArmMode | null = null;
   /** The player team's current objective mode, tracked off `objective:set` /
-   *  `objective:cleared` so the active button reads "engaged". Starts at the
-   *  at-will default (`stop`). */
-  private activeObjectiveMode: ObjectiveButtonMode = 'stop';
+   *  `objective:cleared` so the active button reads "engaged". `'atWill'` is
+   *  the default-state sentinel and matches NO button — 73d (user call): the
+   *  at-will default used to fold onto `stop`, so Stop sat highlighted from
+   *  the moment every battle mounted, reading as "an objective is engaged"
+   *  when none was. Stop is an ACTION (clear the objective), not a state. */
+  private activeObjectiveMode: ObjectiveButtonMode | 'atWill' = 'atWill';
   /** Q4 — the player unit pane (bottom-center): a wrapping grid of `compact`
    *  cards for the fielded player units + the relocated run health-pool gauge
    *  beneath them. Lives outside the side-panel root (like the other panes) so
@@ -244,18 +247,19 @@ export class HUD {
     this.renderObjectivePane();
     // Track the player team's live objective mode so the active button reads
     // "engaged" however it was set (pane / hotkey / right-click). A `set` carries
-    // the mode; a `clear` reverts to the at-will default (`stop`).
+    // the mode; a `clear` (or an explicit atWill set) reverts to the `'atWill'`
+    // sentinel — which highlights NOTHING (73d: Stop is never highlighted).
     this.subscriptions.push(
       bus.on('objective:set', ({ team, objective }) => {
         if (team !== 'player') return;
-        this.activeObjectiveMode = objective.mode === 'atWill' ? 'stop' : objective.mode;
+        this.activeObjectiveMode = objective.mode;
         this.renderObjectivePane();
       }),
     );
     this.subscriptions.push(
       bus.on('objective:cleared', ({ team }) => {
         if (team !== 'player') return;
-        this.activeObjectiveMode = 'stop';
+        this.activeObjectiveMode = 'atWill';
         this.renderObjectivePane();
       }),
     );

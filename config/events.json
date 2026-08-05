@@ -1,0 +1,122 @@
+[
+  {
+    "id": "corrupted-shrine",
+    "name": "The Corrupted Shrine",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "A wayside shrine flickers in the gloom, its idol half-eaten by static. Loose bits glitter in the offering bowl.",
+        "choices": [
+          {
+            "label": "Scoop the bowl",
+            "outcomes": [
+              {
+                "weight": 3,
+                "effects": [{ "op": "gainBits", "amount": 12 }],
+                "next": { "kind": "return-to-map" }
+              },
+              { "weight": 1, "next": "guardians" }
+            ]
+          },
+          {
+            "label": "Make an offering (10 bits)",
+            "condition": { "kind": "bitsAtLeast", "amount": 10 },
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "spendBits", "amount": 10 },
+                  { "op": "healPool", "amount": 5 }
+                ],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          },
+          {
+            "label": "Pass by",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "guardians": {
+        "text": "The static coheres. Deserters in rusted mail step out of the shrine's shadow, blades already drawn.",
+        "choices": [
+          {
+            "label": "Stand and fight",
+            "outcomes": [
+              {
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "deserters",
+                  "rewardOverride": "bits-large"
+                }
+              }
+            ]
+          },
+          {
+            "label": "Scatter and run",
+            "outcomes": [
+              {
+                "effects": [{ "op": "damagePool", "amount": 3 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "whispering-terminal",
+    "name": "The Whispering Terminal",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "A dead terminal hums back to life as you pass. ONE FAVOR, it prints, FOR ONE FRIEND. The cursor blinks, patient as a grave.",
+        "choices": [
+          {
+            "label": "Type your name",
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "setFlag", "flag": "whispering-terminal:answered" },
+                  { "op": "addPacket", "packetId": "shield" }
+                ],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          },
+          {
+            "label": "Unplug it",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "whispering-terminal-collects",
+    "name": "The Terminal Collects",
+    "eligibility": [{ "kind": "flagSet", "flag": "whispering-terminal:answered" }],
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "Another dead screen lights as you approach. It knows your name. A FRIEND REPAYS, it prints, and the tray fills with bits.",
+        "choices": [
+          {
+            "label": "Accept",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 20 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          },
+          {
+            "label": "Refuse the debt",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  }
+]

@@ -25,6 +25,7 @@ import difficulty from '../../config/difficulty.json';
 import economy from '../../config/economy.json';
 import empower from '../../config/empower.json';
 import encounters from '../../config/encounters.json';
+import events from '../../config/events.json';
 import fuzzStrategies from '../../config/fuzz-strategies.json';
 import health from '../../config/health.json';
 import keybindings from '../../config/keybindings.json';
@@ -63,6 +64,7 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'economy.json': economy,
   'empower.json': empower,
   'encounters.json': encounters,
+  'events.json': events,
   'fuzz-strategies.json': fuzzStrategies,
   'health.json': health,
   'keybindings.json': keybindings,

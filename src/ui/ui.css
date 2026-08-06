@@ -449,6 +449,16 @@ body {
   text-shadow: 0 0 4px #ffb000, 0 0 9px #ffb000;
 }
 
+/* 74e follow-up — event nodes: the ?-node. TERMINAL_BLUE (a true blue, NOT
+   the cyan FLOURESCENT_BLUE — that's the frontier/clickable STATE color, and
+   a kind accent in the same hue would read as actionable) so the `?` reads
+   as "unknown detour" against green/purple/amber during route planning.
+   User call at the 74e close: without an accent they blended into battles. */
+.map-node.event {
+  color: #3d7bff; /* TERMINAL_BLUE */
+  text-shadow: 0 0 4px #3d7bff, 0 0 9px #3d7bff;
+}
+
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between
    victory and the next map screen. Cards are clickable; clicking emits
    recruit:chosen and Game swaps back to MapScreen. */

@@ -10,6 +10,13 @@ export const COLORS = {
   DARK_TERMINAL_AMBER: '#664600',
   FLOURESCENT_BLUE: '#15f4ee',
   DARK_FLOURESCENT_BLUE: '#034947',
+  // 74e follow-up — a true terminal BLUE (user call: event nodes need their
+  // own hue; "terminal blue for now"). Deliberately distinct from the cyan
+  // FLOURESCENT_BLUE, which is spoken for as the map's frontier/clickable
+  // STATE color — a kind accent in the same hue would read as actionable.
+  // Bright enough to carry a 16px glyph on #000. Revisit with the §74i/§77
+  // content rounds if the map palette gets crowded.
+  TERMINAL_BLUE: '#3D7BFF',
   NEON_RED: '#FF3131', // User flagged this one as unsatisfying in the prior game — revisit.
   DARK_NEON_RED: '#990000',
   NEON_PURPLE: '#9D00FF',

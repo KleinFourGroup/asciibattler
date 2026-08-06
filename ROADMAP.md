@@ -102,8 +102,8 @@ the PATH_KINDS/vector re-baseline.
 - [x] 74g — arbitration ✅ 2026-08-06: nominator model + shared
   MAP-class ε (provisional, §81 re-reads) + singleton rule. Exit met
   (decisions.csv `eventChoice` rows). Detail: worklog §74g.
-- [ ] 74h — the event editor (encounter-editor shape;
-  `formatEventsJson` + byte-fidelity test; allowlist; index card).
+- [x] 74h — the event editor ✅ 2026-08-06: shape landed + the live
+  no-op-save byte proof; browser-driven. Detail: worklog §74h.
 - [ ] 74i — DECISION POINT: the demo-catalog design round (+ a Start
   starting event · a flag-chain pair · rewardOverride) + exit sweep.
 - [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.

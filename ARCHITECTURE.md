@@ -396,6 +396,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   sector-editor/             # T3: sectors.json editor (layout + per-kind encounter pools, weighted-roll preview) at /tools/sector-editor/
   encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/
   reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane; 49g: packet entries = a catalog select + the packet-ref assert) at /tools/reward-editor/
+  event-editor/              # 74h: events.json editor (page-map builder + JSON fallback; live schema + termination + ref validation; 74f phrases in choice rows; byte-faithful formatEventsJson; sector-placement pane) at /tools/event-editor/
   packet-editor/             # 49g: packets.json editor (matrix-driven per-op sub-forms, derived target, constrained contexts, fire summary + dropped-by pane; byte-faithful formatPacketsJson) at /tools/packet-editor/
   price-editor/              # 50f: prices.json editor (one document, no tabs — unit/packet/daemon books + economy knobs + stock counts; resolved-price preview through the *For price cores; byte-faithful formatPricesJson) at /tools/price-editor/
   sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/

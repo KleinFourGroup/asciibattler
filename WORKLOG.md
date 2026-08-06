@@ -643,3 +643,51 @@ no log (the singleton-frontier rule; forced pages stay free).
   labels + ε 3.265 in the existing 18-col schema, zero column changes
   (the kickoff's append-safe prediction held). +7 fuzz tests (387→394
   fuzz:smoke); main 2423 unchanged; typecheck clean.
+
+### 74h — the event editor (2026-08-06)
+
+Landed to the cut on the reward/encounter-editor shape
+(`tools/event-editor/`). Notes beyond the cut line:
+
+- **formatEventsJson** — the leaf-inline / composite-expand rules
+  derived from the committed file: conditions (recursively, `not`
+  included), effect ops, and `return-to-map` stay inline;
+  single-element `effects`/`eligibility` arrays stay inline; an
+  outcome is inline iff it has no effects and an inline next;
+  `start-encounter` always expands. Explicit per-kind emitters (never
+  `Object.entries`) so zod's parse-time key ordering can't shape the
+  bytes. The verbatim pin passed on the first run.
+- **The editor**: visual builder (page cards → choice cards → outcome
+  rows) + a raw-JSON fallback for the `pages` record, both funneling
+  into one working model (the encounter editor's waves-box contract).
+  The `not` combinator is a NOT toggle one level deep — deeper nesting
+  stays JSON-authorable; the form shows its phrase and collapses it on
+  edit (documented at the row). All three boot layers validate LIVE
+  (schema superRefine + the termination fixpoint + `assertEventRefs`
+  on the live catalogs) plus the sectors-side reverse check (renaming
+  an event a committed sector pools warns); Save disables on any.
+  `describeEventCondition` phrases render per condition row — the 74f
+  reuse, so the author reads exactly the player's copy. Page rename
+  rewrites `entry` + every string `next` in the same gesture.
+  Placement = a read-only pane over committed SECTORS
+  (sector-owns-both — authoring stays in the sector editor).
+- `CONDITION_KINDS`/`OP_KINDS` are pinned complete against their
+  unions at compile time (`satisfies` + an Exclude guard) — widening a
+  union without a form arm becomes a build error, not a silent gap.
+- The playtest link is `?hops=3&firstNode=event` only —
+  `forcedEventId` is deliberately programmatic-only (its RunConfig doc
+  comment), so the card carries the honest hint instead of a new URL
+  param.
+- **Browser-driven exit** (preview MCP, DOM reads): boot clean — 3
+  tabs, the full shrine/terminal page-map render, 0 console errors ·
+  the **no-edit Save wrote a BYTE-IDENTICAL file** (git diff empty —
+  the live twin of the vitest pin) then reload + stash-restore showed
+  the confirmation · NOT toggle → "not 10+ bits" + the combinator in
+  the export, still valid · deleting the guardians page → the exact
+  superRefine dangling-ref error + Save disabled → Revert green ·
+  JSON view holds the record; rename guardians→ambush rewrote the
+  `next` ref and stayed valid. Preview server stopped after. Feel =
+  the user's native pass, as always.
+- +3 main tests (2426); the fuzz suite is untouched (tools/ paths
+  don't trip the hook). vite.config.ts allowlists `events.json`;
+  the tools index gains the card.

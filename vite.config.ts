@@ -29,6 +29,7 @@ const SAVABLE_CONFIG_FILES = new Set([
   'packets.json', // 49g — the packet editor
   'prices.json', // 50f — the price editor (the port price book)
   'characters.json', // 63f — the character editor (the starting-character catalog)
+  'events.json', // 74h — the event editor (the event catalog)
 ]);
 
 function configSavePlugin(): Plugin {

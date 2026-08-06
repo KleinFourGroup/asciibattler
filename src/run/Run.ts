@@ -1489,12 +1489,13 @@ export class Run {
   }
 
   /**
-   * 74b — execute one event effect op. The cheap state-local ops land here
-   * (existing chokepoints + the new flag store); the genuinely-new plumbing
-   * (packet/daemon/unit add+remove — the removal chokepoints and the
-   * gotcha-#118 guard widening) executes at 74c. Until §74e places event
-   * nodes those ops are reachable only via the dev dials, so a loud throw
-   * beats a silent no-op that would falsify authored content.
+   * 74b→74c — execute one event effect op, all eleven live (the shape-lock
+   * resolutions, worklog §74c). The standing philosophy across the union:
+   * an authored effect is ALWAYS honored, degrading gracefully rather than
+   * silently vanishing (spendBits floors; addPacket overflows; removals of
+   * absent things no-op — authors gate strictness with conditions). Loud
+   * throws are reserved for catalog corruption (unknown ids reachable only
+   * through a bespoke `eventCatalog` — the shipped one is boot-asserted).
    */
   private executeEventOp(op: EventEffectOp): void {
     switch (op.op) {
@@ -1526,17 +1527,73 @@ export class Run {
         this.eventFlags[op.flag] = op.value ?? true;
         break;
       case 'addPacket':
-      case 'removePacket':
-      case 'addDaemon':
+        // 74c — HONOR THE GRANT (user-signed): a full cache overflows into
+        // the 49f forced-keep state (legal derived state; the flow demands
+        // the discards) rather than silently dropping authored content.
+        // `addPacket` owns the unknown-id throw.
+        this.addPacket(op.packetId);
+        break;
+      case 'removePacket': {
+        // 74c — removal BY ID (the first new plumbing): take the FIRST
+        // matching slot through the single mutator (`handleDiscardPacket`
+        // owns the splice + emit). Absent id = silent no-op (authors gate
+        // with `hasPacket`).
+        const cacheIndex = this.cache.indexOf(op.packetId);
+        if (cacheIndex !== -1) this.handleDiscardPacket(cacheIndex);
+        break;
+      }
+      case 'addDaemon': {
+        // 74c — SKIP-IF-OWNED (user-signed): everywhere else exclusion runs
+        // upstream of the offer (reward roller, port stock), so a duplicate
+        // would be the game's first and would double-apply folds. The `not
+        // hasDaemon` gate (74c-pre) makes authoring around this possible;
+        // the skip stays as defense-in-depth.
+        if (this.daemons.some((d) => d.id === op.daemonId)) break;
+        const daemon = daemonById(op.daemonId);
+        if (daemon === undefined) {
+          // Bespoke-catalog-only reachable (shipped refs are boot-asserted).
+          throw new Error(`Run: event op addDaemon names unknown daemon id '${op.daemonId}'`);
+        }
+        this.addDaemon(daemon);
+        break;
+      }
       case 'removeDaemon':
-      case 'grantUnit':
-      case 'removeUnit':
-        // 74b landing note (the deferral discipline): these execute at 74c —
-        // the removal side is new plumbing (packet-removal-by-id,
-        // removeDaemon, the removeRosterUnit guard widening to 'event'),
-        // and the add side wants the cache-full / roster policy decided
-        // with it. Parse-side they're already legal (74a).
-        throw new Error(`Run: event op '${op.op}' is not executable until 74c`);
+        // 74c — the push-only era ends; see the chokepoint (`removeDaemon`).
+        this.removeDaemon(op.daemonId);
+        break;
+      case 'grantUnit': {
+        if (!(ALL_ARCHETYPES as readonly string[]).includes(op.archetype)) {
+          // Bespoke-catalog-only reachable (shipped refs are boot-asserted);
+          // loud beats rollUnit crashing on a missing config.
+          throw new Error(`Run: event op grantUnit names unknown archetype '${op.archetype}'`);
+        }
+        // The level roll rides eventRng (the landing note's natural home);
+        // rollUnit draws nothing at level ≤ 1 (no-choice-no-entropy).
+        this.appendRosterUnit(rollUnit(op.archetype as Archetype, this.eventRng, op.level ?? 1));
+        break;
+      }
+      case 'removeUnit': {
+        // 74c — the roster can't be emptied (removeRosterUnit's own law):
+        // a roster-of-1 removal is a silent no-op (authors gate with
+        // `rosterSizeAtLeast`). `random` draws ONE eventRng index;
+        // weakest/strongest are deterministic — level, tie → lowest roster
+        // index (user-signed) — and draw nothing.
+        if (this.team.length <= 1) break;
+        const pick = op.pick ?? 'random';
+        let index: number;
+        if (pick === 'random') {
+          index = this.eventRng.int(0, this.team.length - 1);
+        } else {
+          index = 0;
+          for (let i = 1; i < this.team.length; i++) {
+            const contender = this.team[i]!.level;
+            const incumbent = this.team[index]!.level;
+            if (pick === 'weakest' ? contender < incumbent : contender > incumbent) index = i;
+          }
+        }
+        this.removeRosterUnit(index);
+        break;
+      }
     }
   }
 
@@ -2255,8 +2312,10 @@ export class Run {
   /**
    * 49b — packets held beyond the derived capacity (0 = none). Non-zero only
    * after a SHRINK (a cacheSize-lowering daemon landing under current
-   * holdings) — acquisition surfaces gate on `cacheHasRoom`, so adds never
-   * overflow. DERIVED, never serialized: a save mid-shrink round-trips the
+   * holdings — since 74c also via event `removeDaemon`) or an event
+   * `addPacket` landing on a full cache (74c honor-the-grant, user-signed)
+   * — the INTERACTIVE acquisition surfaces still gate on `cacheHasRoom`.
+   * DERIVED, never serialized: a save mid-shrink round-trips the
    * cache + daemons and this recomputes (derive-don't-cache). While > 0 the
    * 49f forced-keep flow demands discards.
    */
@@ -2481,10 +2540,19 @@ export class Run {
    */
   private executeInstantOps(ops: readonly InstantOp[]): void {
     for (const op of ops) {
-      if (op.op === 'gainBits') {
-        this.gainBits(op.amount);
-      } else {
-        this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+      // 74c hygiene — the untagged else became an exhaustive switch so a
+      // future InstantOp widening is a compile error here, never a silent
+      // heal. (The events-side union deliberately did NOT widen this one —
+      // events have their own executor, `executeEventOp`.)
+      switch (op.op) {
+        case 'gainBits':
+          this.gainBits(op.amount);
+          break;
+        case 'healPool':
+          this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+          break;
+        default:
+          op satisfies never;
       }
     }
   }
@@ -3044,6 +3112,23 @@ export class Run {
   }
 
   /**
+   * 74c — `addDaemon`'s inverse (daemons were push-only until the event
+   * `removeDaemon` op). Removes by ID — duplicates can't exist (every
+   * acquisition surface excludes or dedupes upstream), so first-match is
+   * whole-match. Absent id = silent no-op (the caller gates with
+   * `hasDaemon` when it matters). The fold side is free — every
+   * `effectiveRunStats` read re-derives from `this.daemons` — but the same
+   * 49b emit applies: losing a size-modifier idol can shrink the DERIVED
+   * cache capacity (possibly into the 49f forced-keep state).
+   */
+  removeDaemon(daemonId: string): void {
+    const index = this.daemons.findIndex((d) => d.id === daemonId);
+    if (index === -1) return;
+    this.daemons.splice(index, 1);
+    this.emitCacheChanged();
+  }
+
+  /**
    * 48b — the ids the run currently owns, derived at call time (the only
    * pre-48b expression was `toJSON`'s inline map). The exclusion input for
    * reward-table sampling (and §50's port stock after it).
@@ -3100,6 +3185,13 @@ export class Run {
         throw new Error(`Run.handleAcceptReward: unknown daemon id '${portion.daemonId}'`);
       }
       this.addDaemon(daemon);
+    } else if (portion.kind === 'unit') {
+      // 74c — the template was rolled at offer time (the port-stock shape);
+      // the settle is the one roster-append chokepoint.
+      this.appendRosterUnit(portion.template);
+    } else if (portion.kind === 'poolHealth') {
+      // 74c — the instant-op executor owns the clamp-at-max.
+      this.executeInstantOps([{ op: 'healPool', amount: portion.amount }]);
     } else {
       // 49c — addPacket owns the unknown-id throw (same corruption logic).
       this.addPacket(portion.packetId);
@@ -3440,18 +3532,23 @@ export class Run {
    *   (every pile value < team.length) must not depend on call-site phase
    *   (worklog §50).
    *
-   * Map- or port-phase-only (50d widened it for the pay-to-remove service):
-   * outside those windows roster indices are live in places a splice can't
-   * reach (a battle's `playerRosterIds` stamp, un-banked `xpAwards`,
-   * `pendingPromotions`) — throwing beats a silent desync.
+   * Map-, port- or event-phase-only (50d widened it for the pay-to-remove
+   * service; 74c for the event `removeUnit` op — gotcha #118's guard, third
+   * window): outside those windows roster indices are live in places a
+   * splice can't reach (a battle's `playerRosterIds` stamp, un-banked
+   * `xpAwards`, `pendingPromotions`) — throwing beats a silent desync. The
+   * event window is as safe as the map's: no encounter state exists
+   * mid-event, and effects run BEFORE a start-encounter terminal routes.
    * `pendingPromotions` is structurally null here (non-null only during
    * 'promotion'). The roster can't be emptied — a zero-unit run has no deck
    * to draw. Emits nothing: the command wrapper owns eventing, and roster
    * UI re-derives from the live roster on render.
    */
   removeRosterUnit(index: number): void {
-    if (this.phase !== 'map' && this.phase !== 'port') {
-      throw new Error(`removeRosterUnit: only legal at the map or a port (phase '${this.phase}')`);
+    if (this.phase !== 'map' && this.phase !== 'port' && this.phase !== 'event') {
+      throw new Error(
+        `removeRosterUnit: only legal at the map, a port or an event (phase '${this.phase}')`,
+      );
     }
     if (!Number.isInteger(index) || index < 0 || index >= this.team.length) {
       throw new Error(
@@ -3857,7 +3954,9 @@ export class Run {
     // 48b — restore the pending offer, validating daemon portions against
     // the catalog (the daemonIds discipline: an unknown id is a hard reject,
     // never a silently unacceptable reward). 49c — packet portions get the
-    // same treatment against the packet catalog.
+    // same treatment against the packet catalog. 74c — `unit` portions'
+    // templates pass through like `team` (the port-stock rule below);
+    // `poolHealth` carries only its amount.
     m.pendingRewards = snap.pendingRewards
       ? snap.pendingRewards.map((p) => {
           if (p.kind === 'daemon' && daemonById(p.daemonId) === undefined) {

@@ -19,7 +19,11 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { REWARD_TABLES, RewardTablesSchema } from '../../src/config/rewards';
+import {
+  REWARD_TABLES,
+  RewardTablesSchema,
+  assertRewardUnitRefs,
+} from '../../src/config/rewards';
 import { formatRewardsJson } from '../../tools/reward-editor/format';
 
 /** Normalize line endings + trailing blank space so the assertion isn't
@@ -42,11 +46,14 @@ describe('formatRewardsJson', () => {
     expect(reparsed.tables).toEqual(REWARD_TABLES);
   });
 
-  it('formats all three entry kinds, round-tripping deep-equal', () => {
+  it('formats all five entry kinds, round-tripping deep-equal', () => {
     // Parse the fixture through the schema first so it can't drift from the
     // real shape, then assert the formatter round-trips it. Synthetic
     // packet/daemon ids are fine here — referential integrity is the separate
-    // boot asserts (assertRewardDaemonRefs et al.), not the schema.
+    // boot asserts (assertRewardDaemonRefs et al.), not the schema. The two
+    // unit entries pin the 74c level rule: authored level emitted, absent
+    // level OMITTED (absent = 1 — an emitted default would break hand-edit
+    // byte-fidelity).
     const fixture = RewardTablesSchema.parse({
       tables: [
         {
@@ -55,6 +62,9 @@ describe('formatRewardsJson', () => {
             { kind: 'bits', weight: 3, min: 10, max: 25 },
             { kind: 'packet', weight: 1, packet: 'overclock' },
             { kind: 'daemon', weight: 0.5, daemon: 'mercury' },
+            { kind: 'unit', weight: 2, archetype: 'archer' },
+            { kind: 'unit', weight: 2, archetype: 'healer', level: 3 },
+            { kind: 'poolHealth', weight: 1, amount: 2 },
           ],
         },
         {
@@ -65,5 +75,20 @@ describe('formatRewardsJson', () => {
     });
     const reparsed = RewardTablesSchema.parse(JSON.parse(formatRewardsJson(fixture.tables)));
     expect(reparsed).toEqual(fixture);
+    // The absent-level omission, byte-level (the round-trip alone can't see
+    // a spurious `"level": 1` — parse would keep it).
+    expect(formatRewardsJson(fixture.tables)).not.toContain('"level": 1');
+  });
+
+  it('assertRewardUnitRefs throws on an unknown archetype and passes known ones (74c)', () => {
+    const tables = RewardTablesSchema.parse({
+      tables: [
+        { id: 't', entries: [{ kind: 'unit', weight: 1, archetype: 'ghost-archetype' }] },
+      ],
+    }).tables;
+    expect(() => assertRewardUnitRefs(tables, ['archer'])).toThrow(
+      /unknown archetype 'ghost-archetype'/,
+    );
+    expect(() => assertRewardUnitRefs(tables, ['ghost-archetype'])).not.toThrow();
   });
 });

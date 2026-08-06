@@ -42,12 +42,14 @@ import {
   RewardTablesSchema,
   assertRewardDaemonRefs,
   assertRewardPacketRefs,
+  assertRewardUnitRefs,
   type RewardTable,
   type RewardEntry,
   type RewardEntryKind,
 } from '../../src/config/rewards';
 import { DAEMONS } from '../../src/config/daemons';
 import { PACKETS } from '../../src/config/packets';
+import { UNIT_DEFS } from '../../src/config/units';
 import { ENCOUNTERS } from '../../src/config/encounters';
 import { formatRewardsJson } from './format';
 
@@ -171,6 +173,12 @@ function defaultEntry(kind: RewardEntryKind, weight: number): WorkingEntry {
       return { kind: 'packet', weight, packet: PACKETS[0]?.id ?? 'packet-id' };
     case 'daemon':
       return { kind: 'daemon', weight, daemon: DAEMONS[0]?.id ?? 'daemon-id' };
+    // 74c — the events-round kinds. `level` deliberately absent on the unit
+    // skeleton (absent = 1, the byte-fidelity rule — see format.ts).
+    case 'unit':
+      return { kind: 'unit', weight, archetype: Object.keys(UNIT_DEFS)[0] ?? 'archetype' };
+    case 'poolHealth':
+      return { kind: 'poolHealth', weight, amount: 2 };
   }
 }
 
@@ -239,6 +247,38 @@ function makeEntryRow(entry: WorkingEntry, index: number): HTMLDivElement {
       row.appendChild(sel);
       break;
     }
+    case 'unit': {
+      // 74c — a select over the combatant catalog + an OPTIONAL level (0 in
+      // the input = unset → key omitted → level 1; matches the formatter's
+      // absent-default rule).
+      const sel = el('select', 'unit-sel');
+      for (const [id, def] of Object.entries(UNIT_DEFS)) {
+        sel.appendChild(option(id, `${def.name} (${id})`));
+      }
+      sel.value = entry.archetype;
+      sel.addEventListener('change', () => {
+        entry.archetype = sel.value;
+        refreshDerived();
+      });
+      row.appendChild(sel);
+      row.appendChild(
+        numField('level (0 = 1)', entry.level ?? 0, 1, (v) => {
+          const lvl = Math.trunc(v);
+          if (lvl >= 1) entry.level = lvl;
+          else delete entry.level;
+          refreshDerived();
+        }),
+      );
+      break;
+    }
+    case 'poolHealth':
+      row.appendChild(
+        numField('amount', entry.amount, 1, (v) => {
+          entry.amount = Math.trunc(v);
+          refreshDerived();
+        }),
+      );
+      break;
   }
 
   const remove = el('button', 'pool-remove', '✕');
@@ -317,6 +357,13 @@ function refreshValidation(): void {
   } catch (err) {
     issues.push(err instanceof Error ? err.message : String(err));
   }
+  // 74c — the unit sibling (selects make a bad ref hard, but a hand-pasted
+  // export can carry one; same boot assert the game runs).
+  try {
+    assertRewardUnitRefs(working, Object.keys(UNIT_DEFS));
+  } catch (err) {
+    issues.push(err instanceof Error ? err.message : String(err));
+  }
   const ids = new Set(working.map((t) => t.id));
   for (const e of ENCOUNTERS) {
     for (const ref of e.rewards ?? []) {
@@ -370,6 +417,10 @@ function describeEntry(e: WorkingEntry): string {
       return `packet ${PACKETS.find((p) => p.id === e.packet)?.name ?? e.packet}`;
     case 'daemon':
       return `daemon ${DAEMONS.find((d) => d.id === e.daemon)?.name ?? e.daemon}`;
+    case 'unit':
+      return `unit ${UNIT_DEFS[e.archetype]?.name ?? e.archetype} L${e.level ?? 1}`;
+    case 'poolHealth':
+      return `+${e.amount} pool health`;
   }
 }
 

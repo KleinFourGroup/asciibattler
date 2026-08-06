@@ -35,6 +35,8 @@
 
 import type { EncounterRewardRef, RewardTable } from '../config/rewards';
 import type { RNG } from '../core/RNG';
+import type { UnitTemplate } from '../sim/Unit';
+import { rollUnit, type Archetype } from '../sim/archetypes';
 import { pickWeighted } from './sectorWalk';
 
 /** One rolled, offerable reward portion. Bits carry the ROLLED BASE — the
@@ -53,7 +55,14 @@ import { pickWeighted } from './sectorWalk';
 export type RewardPortion =
   | { readonly kind: 'bits'; readonly base: number; readonly source?: string }
   | { readonly kind: 'daemon'; readonly daemonId: string }
-  | { readonly kind: 'packet'; readonly packetId: string };
+  | { readonly kind: 'packet'; readonly packetId: string }
+  // 74c — the events-round widening. `unit` carries the FULL template,
+  // pre-rolled at offer time on the bits stream (the port-stock precedent:
+  // templates serialize through `pendingRewards` like `team`, and the
+  // screen shows real stats); the settle is `Run.appendRosterUnit`.
+  // `poolHealth` settles through the instant-op executor (clamped at max).
+  | { readonly kind: 'unit'; readonly template: UnitTemplate }
+  | { readonly kind: 'poolHealth'; readonly amount: number };
 
 /**
  * Roll an encounter's reward refs into portions (authored ref order — the
@@ -88,6 +97,19 @@ export function rollRewards(
     } else if (entry.kind === 'daemon') {
       excluded.add(entry.daemon);
       portions.push({ kind: 'daemon', daemonId: entry.daemon });
+    } else if (entry.kind === 'unit') {
+      // 74c — the template rolls NOW, on the bits stream (deliberately not a
+      // new constructor fork — the 74b stream-append cost is not paid twice).
+      // rollUnit draws only at level>1 (the no-choice-no-entropy fast path),
+      // matching the degenerate-bits-range rule above. No exclusion —
+      // duplicate recruits are legal.
+      portions.push({
+        kind: 'unit',
+        template: rollUnit(entry.archetype as Archetype, bitsRng, entry.level ?? 1),
+      });
+    } else if (entry.kind === 'poolHealth') {
+      // 74c — a flat heal: no draw, no exclusion; clamping is the settle's.
+      portions.push({ kind: 'poolHealth', amount: entry.amount });
     } else {
       // 49c — packets sample with no exclusion (see the header) and carry
       // only their id; the settle is `Run.addPacket` at accept time.

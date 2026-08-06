@@ -24,6 +24,9 @@
  *   boot-asserted against the 49a packet catalog (`assertRewardPacketRefs`
  *   below); ENGINE-dormant until 49c (rollRewards still excludes packet
  *   entries wholesale — the guard 49c removes).
+ * - `unit` / `poolHealth` — 74c (the events-round widening): a roster grant
+ *   (template pre-rolled at offer time) and a flat pool heal. See the
+ *   interface comments below.
  *
  * Trigger vocabulary at launch: `chance` only — each ref independently tested
  * on encounter win. `trigger` is an OBJECT (not a bare number) so predicates
@@ -34,8 +37,9 @@ import { z } from 'zod';
 import rewardsJson from '../../config/rewards.json';
 import { DAEMONS, type DaemonConfig } from './daemons';
 import { PACKETS, type PacketConfig } from './packets';
+import { UNIT_DEFS } from './units';
 
-export const REWARD_ENTRY_KINDS = ['bits', 'packet', 'daemon'] as const;
+export const REWARD_ENTRY_KINDS = ['bits', 'packet', 'daemon', 'unit', 'poolHealth'] as const;
 export type RewardEntryKind = (typeof REWARD_ENTRY_KINDS)[number];
 
 /** A `{min,max}` bits roll (uniform, integer, inclusive). */
@@ -60,7 +64,32 @@ export interface DaemonRewardEntry {
   readonly daemon: string;
 }
 
-export type RewardEntry = BitsRewardEntry | PacketRewardEntry | DaemonRewardEntry;
+/** 74c — a roster grant: the archetype's template rolls at OFFER time on the
+ *  reward-bits stream (the port-stock precedent — the portion carries the
+ *  rolled `UnitTemplate`), `level` absent = 1. Duplicates legal; no
+ *  exclusion (unlike daemons). Referential integrity boot-asserted against
+ *  the unit catalog (`assertRewardUnitRefs`). */
+export interface UnitRewardEntry {
+  readonly kind: 'unit';
+  readonly weight: number;
+  readonly archetype: string;
+  readonly level?: number;
+}
+
+/** 74c — a flat player-pool heal (clamped at max by the instant-op executor
+ *  at settle time — the rest-node discipline). No RNG. */
+export interface PoolHealthRewardEntry {
+  readonly kind: 'poolHealth';
+  readonly weight: number;
+  readonly amount: number;
+}
+
+export type RewardEntry =
+  | BitsRewardEntry
+  | PacketRewardEntry
+  | DaemonRewardEntry
+  | UnitRewardEntry
+  | PoolHealthRewardEntry;
 
 export interface RewardTable {
   readonly id: string;
@@ -101,11 +130,30 @@ const DaemonEntrySchema = z.object({
   daemon: z.string().min(1),
 });
 
+const UnitEntrySchema = z.object({
+  kind: z.literal('unit'),
+  weight: WeightSchema,
+  archetype: z.string().min(1),
+  level: z.number().int().positive().optional(), // absent = 1
+});
+
+const PoolHealthEntrySchema = z.object({
+  kind: z.literal('poolHealth'),
+  weight: WeightSchema,
+  amount: z.number().int().positive(),
+});
+
 /** The min≤max check lives on the union, not the object: zod
  *  discriminatedUnion members must be plain ZodObjects (the RuleSchema
  *  precedent, daemons.ts). */
 const RewardEntrySchema = z
-  .discriminatedUnion('kind', [BitsEntrySchema, PacketEntrySchema, DaemonEntrySchema])
+  .discriminatedUnion('kind', [
+    BitsEntrySchema,
+    PacketEntrySchema,
+    DaemonEntrySchema,
+    UnitEntrySchema,
+    PoolHealthEntrySchema,
+  ])
   .superRefine((entry, ctx) => {
     if (entry.kind === 'bits' && entry.min > entry.max) {
       ctx.addIssue({
@@ -187,6 +235,31 @@ export function assertRewardPacketRefs(
 }
 
 assertRewardPacketRefs(REWARD_TABLES, PACKETS);
+
+/**
+ * 74c — the unit sibling: every unit entry must name an archetype in the
+ * combatant catalog (import direction: rewards → units, never back — and
+ * the SAME key space `Run.grantUnit`'s rollUnit resolves against, since
+ * sim/archetypes' CONFIGS === UNIT_DEFS). Args-injected for synthetic
+ * tests; self-wired below.
+ */
+export function assertRewardUnitRefs(
+  tables: readonly RewardTable[],
+  archetypes: readonly string[],
+): void {
+  const ids = new Set(archetypes);
+  for (const table of tables) {
+    for (const entry of table.entries) {
+      if (entry.kind === 'unit' && !ids.has(entry.archetype)) {
+        throw new Error(
+          `reward table '${table.id}': unit entry references unknown archetype '${entry.archetype}'`,
+        );
+      }
+    }
+  }
+}
+
+assertRewardUnitRefs(REWARD_TABLES, Object.keys(UNIT_DEFS));
 
 /** Registry lookup by id (`undefined` on a miss — callers decide throw vs
  *  skip; the boot asserts make a miss unreachable for authored refs). */

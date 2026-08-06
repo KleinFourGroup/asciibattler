@@ -31,6 +31,15 @@ function inlineEntry(entry: RewardEntry): string {
     case 'daemon':
       parts.push(`"daemon": ${JSON.stringify(entry.daemon)}`);
       break;
+    case 'unit':
+      // 74c — schema key order: archetype, then level ONLY when authored
+      // (absent = 1; an emitted default would break hand-edit byte-fidelity).
+      parts.push(`"archetype": ${JSON.stringify(entry.archetype)}`);
+      if (entry.level !== undefined) parts.push(`"level": ${JSON.stringify(entry.level)}`);
+      break;
+    case 'poolHealth':
+      parts.push(`"amount": ${JSON.stringify(entry.amount)}`);
+      break;
   }
   return `{ ${parts.join(', ')} }`;
 }

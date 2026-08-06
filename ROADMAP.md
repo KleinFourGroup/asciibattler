@@ -81,9 +81,12 @@ the PATH_KINDS/vector re-baseline.
 - [x] 74c-pre — INSERTED at the 74c shape-lock (user-signed): the
   `not` condition combinator (the negation-class gap surfaced by the
   addDaemon-dedupe fork; worklog §74c).
-- [ ] 74c — effect-op execution end to end (the events-side union);
-  `executeInstantOps` else → exhaustive switch; #118 guard widens to
-  `'event'`; reward `unit`/`poolHealth` kinds. Test per op. No bump.
+- [x] 74c — effect-op execution end to end ✅ 2026-08-05: all six ops
+  live to the shape-lock resolutions (honor-the-grant · skip-if-owned
+  · level-then-index · offer-time unit roll); reward kinds + editor +
+  screen widened; #118 guard → `'event'`; the else → exhaustive
+  switch (InstantOp did NOT widen — the step-zero re-judge). No bump.
+  Detail: worklog §74c.
 - [ ] 74d — the Surge rename (`draw-two`→`surge`) inside the bump
   window; closes the TODO line.
 - [ ] 74e — placement + sector seams (the SCHEDULED break): event

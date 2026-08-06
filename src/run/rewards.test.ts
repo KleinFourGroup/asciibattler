@@ -23,6 +23,12 @@ const bitsE = (min: number, max: number, weight = 1): RewardEntry => ({
 });
 const daemonE = (daemon: string, weight = 1): RewardEntry => ({ kind: 'daemon', weight, daemon });
 const packetE = (packet: string, weight = 1): RewardEntry => ({ kind: 'packet', weight, packet });
+// 74c — real archetype ids: rollUnit resolves against the live combatant
+// catalog (a synthetic id would crash it, unlike the pure-id daemon/packet
+// fixtures above).
+const unitE = (archetype: string, level?: number, weight = 1): RewardEntry =>
+  level === undefined ? { kind: 'unit', weight, archetype } : { kind: 'unit', weight, archetype, level };
+const poolE = (amount: number, weight = 1): RewardEntry => ({ kind: 'poolHealth', weight, amount });
 
 const NONE = new Set<string>();
 
@@ -202,5 +208,84 @@ describe('rollRewards (48b — the pure roller)', () => {
     expect(() => rollRewards([ref('ghost')], lookup(), NONE, new RNG(1), new RNG(2))).toThrow(
       /unknown reward table 'ghost'/,
     );
+  });
+
+  describe('74c — the unit / poolHealth kinds', () => {
+    it('a level-absent unit entry pre-rolls a level-1 template with ZERO draws on both streams', () => {
+      const tableRng = new RNG(1);
+      const bitsRng = new RNG(2);
+      const t0 = pos(tableRng);
+      const b0 = pos(bitsRng);
+      const portions = rollRewards(
+        [ref('t')],
+        lookup(table('t', [unitE('archer')])),
+        NONE,
+        tableRng,
+        bitsRng,
+      );
+      expect(portions).toHaveLength(1);
+      const p = portions[0]!;
+      if (p.kind !== 'unit') throw new Error('expected unit');
+      expect(p.template.archetype).toBe('archer');
+      expect(p.template.level).toBe(1);
+      expect(p.template.xp).toBe(0);
+      // Singleton entry + level ≤ 1 rollUnit fast path: no entropy consumed
+      // (the degenerate-bits-range sibling rule).
+      expect(pos(tableRng)).toBe(t0);
+      expect(pos(bitsRng)).toBe(b0);
+    });
+
+    it('a level>1 unit entry rolls its level-ups on the BITS stream only, deterministically', () => {
+      const roll = () => {
+        const tableRng = new RNG(5);
+        const bitsRng = new RNG(6);
+        const t0 = pos(tableRng);
+        const b0 = pos(bitsRng);
+        const portions = rollRewards(
+          [ref('t')],
+          lookup(table('t', [unitE('healer', 4)])),
+          NONE,
+          tableRng,
+          bitsRng,
+        );
+        return { portions, tableMoved: pos(tableRng) !== t0, bitsMoved: pos(bitsRng) !== b0 };
+      };
+      const a = roll();
+      const b = roll();
+      expect(a.portions).toEqual(b.portions); // pure + deterministic
+      const p = a.portions[0]!;
+      if (p.kind !== 'unit') throw new Error('expected unit');
+      expect(p.template.level).toBe(4);
+      expect(a.tableMoved).toBe(false); // singleton — no sampling draw
+      expect(a.bitsMoved).toBe(true); // the level-up stat rolls
+    });
+
+    it('units have NO exclusion — the same archetype drops from every ref in one roll', () => {
+      const portions = rollRewards(
+        [ref('t'), ref('t')],
+        lookup(table('t', [unitE('mercenary')])),
+        NONE,
+        new RNG(1),
+        new RNG(0),
+      );
+      expect(portions).toHaveLength(2);
+      expect(portions.every((p) => p.kind === 'unit' && p.template.archetype === 'mercenary')).toBe(
+        true,
+      );
+    });
+
+    it('a poolHealth entry passes its amount through with zero draws', () => {
+      const tableRng = new RNG(3);
+      const t0 = pos(tableRng);
+      const portions = rollRewards(
+        [ref('t')],
+        lookup(table('t', [poolE(5)])),
+        NONE,
+        tableRng,
+        new RNG(0),
+      );
+      expect(portions).toEqual([{ kind: 'poolHealth', amount: 5 }]);
+      expect(pos(tableRng)).toBe(t0);
+    });
   });
 });

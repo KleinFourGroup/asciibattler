@@ -21,6 +21,7 @@
 
 import { daemonById } from '../config/daemons';
 import { packetById } from '../config/packets';
+import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
@@ -137,6 +138,26 @@ export class RewardScreen {
           desc.textContent = daemon.description;
           body.appendChild(desc);
         }
+      } else if (portion.kind === 'unit') {
+        // 74c — a roster grant: the portion carries the ROLLED template
+        // (offer-time roll, the port-stock shape), so the row shows the
+        // real recruit — glyph, name, level.
+        const title = document.createElement('div');
+        title.className = 'reward-portion__title';
+        const glyph = glyphForArchetype(portion.template.archetype);
+        title.textContent = `${glyph} ${nameForArchetype(portion.template.archetype)} — level ${portion.template.level}`;
+        body.appendChild(title);
+        const desc = document.createElement('div');
+        desc.className = 'reward-portion__desc';
+        desc.textContent = 'Joins the roster.';
+        body.appendChild(desc);
+      } else if (portion.kind === 'poolHealth') {
+        // 74c — a flat pool heal (display the authored amount; the settle
+        // clamps at max — the rest-node discipline).
+        const title = document.createElement('div');
+        title.className = 'reward-portion__title';
+        title.textContent = `+${portion.amount} pool health`;
+        body.appendChild(title);
       } else {
         // 49c — a packet portion (def-resolved for display; the id is
         // boot-asserted, so the fallback never renders for authored tables).

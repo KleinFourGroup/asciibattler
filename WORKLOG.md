@@ -438,3 +438,36 @@ gave events their own executor; the reward `poolHealth` settle rides
 the existing `healPool` member), so the switch is pure hygiene.
 Done anyway: a future widening becomes a compile error, not a
 silent heal.
+
+**As-built (74c-pre + 74c, both landed 2026-08-05).** To plan on the
+resolutions above. Notes beyond the cut line:
+
+- The executor's standing philosophy, now written at the switch: an
+  authored effect is ALWAYS honored, degrading gracefully (spendBits
+  floors · addPacket overflows · absent-id removals no-op); loud
+  throws are reserved for catalog corruption (unknown addDaemon /
+  grantUnit ids — bespoke-catalog-only reachable, the shipped
+  catalog is boot-asserted).
+- `removeDaemon` is a public chokepoint sibling of `addDaemon`
+  (first-match ≡ whole-match — duplicates can't exist) and carries
+  the same 49b `emitCacheChanged` (losing a size-modifier idol can
+  shrink capacity into forced-keep). Rollout safety checked:
+  `cloneRunForRollout` is a full wire round-trip — no shared arrays,
+  a rollout's removeDaemon can't touch the live run.
+- `removePacket` routes through `handleDiscardPacket` (the single-
+  mutator discipline, the 49c swap's precedent).
+- Reward-side: `rollRewards` gains the two branches (unit templates
+  pre-rolled on the bits stream; poolHealth zero-draw), fromJSON
+  passes unit templates through like `team` (the port-stock rule),
+  RewardScreen gains two render arms, and the editor gains the
+  full kind support (dropdown was already REWARD_ENTRY_KINDS-derived;
+  defaults/fields/describe/EV + the assertRewardUnitRefs validation
+  arm). The formatter's level rule: authored level emitted, absent
+  OMITTED (= 1) — pinned byte-level in the editor test.
+- All fuzz `pickReward` consumers default-accept the new kinds
+  (their only guard is packet-at-full-cache) — no arm changes.
+- Discovered en route: STARTING_LEVEL is 5 and the starting roster
+  is 10 (two test fixtures initially assumed 1/small — fixture
+  levels now clear the real roster).
+- No shipped reward table authors the new kinds yet — that's §74i's
+  content round (ARCHITECTURE notes them unauthored).

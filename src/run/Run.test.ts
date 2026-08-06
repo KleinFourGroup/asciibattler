@@ -28,7 +28,9 @@ import { ECONOMY } from '../config/economy';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
-import type { EventDef } from '../config/events';
+import type { EventDef, EventEffectOp } from '../config/events';
+import { RNG } from '../core/RNG';
+import { rollUnit } from '../sim/archetypes';
 
 /**
  * L1→47c — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
@@ -5411,36 +5413,189 @@ describe('74b — the event phase', () => {
     expect(run.enabledEventChoices()).toEqual([1, 2, 3]);
   });
 
-  it('the deferred 74c ops throw loud (the landing-note contract)', () => {
-    const bus = new EventBus<GameEvents>();
-    const run = new Run(112, bus, {
-      firstNodeKind: 'event',
-      forcedEventId: 'op-deferred',
-      daemon: NO_RESOLVE_DAEMON,
-      eventCatalog: [
-        {
-          id: 'op-deferred',
-          name: 'Op Deferred',
-          entry: 'start',
-          pages: {
-            start: {
-              text: 'p',
-              choices: [
-                {
-                  label: 'take',
-                  outcomes: [
-                    { effects: [{ op: 'addPacket', packetId: 'shield' }], next: { kind: 'return-to-map' } },
-                  ],
-                },
-              ],
-            },
+});
+
+// ── 74c — event effect ops (the full union executes) ─────────────────────────
+
+/** An event-phase run around ONE choice carrying `effects`, executed in
+ *  authored order on dispatch (74b's handleChooseEventOption contract). */
+function opRun(
+  seed: number,
+  effects: EventEffectOp[],
+): { run: Run; bus: EventBus<GameEvents> } {
+  return eventRun(seed, {
+    forcedEventId: 'op-test',
+    eventCatalog: [
+      {
+        id: 'op-test',
+        name: 'Op Test',
+        entry: 'start',
+        pages: {
+          start: {
+            text: 'p',
+            choices: [{ label: 'go', outcomes: [{ effects, next: { kind: 'return-to-map' } }] }],
           },
         },
-      ],
-    });
-    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
-    expect(() => run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 })).toThrow(
-      /event op 'addPacket' is not executable until 74c/,
+      },
+    ],
+  });
+}
+
+/** Enter the (forced) event and fire its single choice. */
+function fireOps(run: Run): void {
+  run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+  run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 });
+}
+
+describe('74c — event effect ops (the full union executes)', () => {
+  it('addPacket adds slots (duplicates stack — one SLOT each, spec §Cache)', () => {
+    const { run } = opRun(120, [
+      { op: 'addPacket', packetId: 'patch' },
+      { op: 'addPacket', packetId: 'patch' },
+    ]);
+    const before = run.cache.filter((id) => id === 'patch').length;
+    fireOps(run);
+    expect(run.cache.filter((id) => id === 'patch')).toHaveLength(before + 2);
+    expect(run.phase).toBe('map');
+  });
+
+  it('addPacket on a FULL cache honors the grant into 49f overflow (user-signed)', () => {
+    const { run } = opRun(121, [{ op: 'addPacket', packetId: 'shield' }]);
+    while (run.cacheHasRoom) run.addPacket('patch');
+    expect(run.cacheOverflow).toBe(0);
+    fireOps(run);
+    expect(run.cache).toContain('shield');
+    expect(run.cacheOverflow).toBe(1); // the forced-keep state — NOT a drop
+  });
+
+  it('removePacket removes the FIRST matching slot; an absent id is a silent no-op', () => {
+    const { run } = opRun(122, [
+      { op: 'removePacket', packetId: 'patch' },
+      { op: 'removePacket', packetId: 'never-held' },
+    ]);
+    const base = run.cache.slice();
+    run.addPacket('shield');
+    run.addPacket('patch');
+    run.addPacket('patch');
+    fireOps(run);
+    // First 'patch' slot left; 'shield' and the second 'patch' stand.
+    expect(run.cache).toEqual([...base, 'shield', 'patch']);
+    expect(run.phase).toBe('map'); // the absent-id removal didn't throw
+  });
+
+  it('addDaemon joins ownership once — the second add SKIPS (owned; user-signed)', () => {
+    const { run } = opRun(123, [
+      { op: 'addDaemon', daemonId: 'portunus' },
+      { op: 'addDaemon', daemonId: 'portunus' },
+    ]);
+    expect(run.daemons.some((d) => d.id === 'portunus')).toBe(false);
+    fireOps(run);
+    expect(run.daemons.filter((d) => d.id === 'portunus')).toHaveLength(1);
+  });
+
+  it('removeDaemon removes by id (push-only era over), repaints the cache, no-ops on absent', () => {
+    const { run, bus } = opRun(124, [
+      { op: 'removeDaemon', daemonId: 'test-no-resolve' },
+      { op: 'removeDaemon', daemonId: 'never-owned' },
+    ]);
+    expect(run.daemons.some((d) => d.id === 'test-no-resolve')).toBe(true);
+    let cacheRepaints = 0;
+    bus.on('run:cacheChanged', () => cacheRepaints++);
+    fireOps(run);
+    expect(run.daemons.some((d) => d.id === 'test-no-resolve')).toBe(false);
+    // Ownership feeds the cacheSize fold (49b) — the removal repainted once
+    // (the absent-id no-op did not).
+    expect(cacheRepaints).toBe(1);
+  });
+
+  it('grantUnit appends through the chokepoint — level absent = 1, authored level rolls', () => {
+    const drive = (): Run => {
+      const { run } = opRun(125, [
+        { op: 'grantUnit', archetype: 'archer' },
+        { op: 'grantUnit', archetype: 'healer', level: 3 },
+      ]);
+      fireOps(run);
+      return run;
+    };
+    const run = drive();
+    const [archer, healer] = run.team.slice(-2);
+    expect(archer!.archetype).toBe('archer');
+    expect(archer!.level).toBe(1);
+    expect(healer!.archetype).toBe('healer');
+    expect(healer!.level).toBe(3);
+    // The level roll rides eventRng — same seed, same stats.
+    expect(JSON.stringify(drive().team)).toBe(JSON.stringify(run.team));
+  });
+
+  it('removeUnit strongest takes the highest level; the lower-level grant survives', () => {
+    const { run } = opRun(126, [
+      { op: 'grantUnit', archetype: 'archer', level: 9 },
+      { op: 'grantUnit', archetype: 'healer', level: 2 },
+      { op: 'removeUnit', pick: 'strongest' },
+    ]);
+    const before = run.team.length;
+    expect(Math.max(...run.team.map((u) => u.level))).toBeLessThan(9); // the L9 will be strongest
+    fireOps(run);
+    expect(run.team).toHaveLength(before + 1); // +2 grants −1 removal
+    expect(run.team.some((u) => u.level === 9)).toBe(false);
+    expect(run.team.some((u) => u.archetype === 'healer' && u.level === 2)).toBe(true);
+  });
+
+  it('removeUnit weakest tie-breaks to the LOWEST roster index (user-signed)', () => {
+    const { run } = opRun(127, [{ op: 'removeUnit', pick: 'weakest' }]);
+    // Precondition: the starting roster is level-uniform, so the pick is a
+    // pure tie — index 0 must leave.
+    expect(new Set(run.team.map((u) => u.level)).size).toBe(1);
+    const before = run.team.map((u) => JSON.stringify(u));
+    fireOps(run);
+    expect(run.team.map((u) => JSON.stringify(u))).toEqual(before.slice(1));
+  });
+
+  it('removeUnit random rides eventRng — same seed, same survivor set', () => {
+    const drive = (): string => {
+      const { run } = opRun(128, [{ op: 'removeUnit' }]);
+      const before = run.team.length;
+      fireOps(run);
+      expect(run.team).toHaveLength(before - 1);
+      return JSON.stringify(run.team);
+    };
+    expect(drive()).toBe(drive());
+  });
+
+  it('removeUnit floors at a roster of ONE (silent no-op — the roster cannot empty)', () => {
+    const { run } = opRun(
+      129,
+      Array.from({ length: 20 }, () => ({ op: 'removeUnit', pick: 'weakest' as const })),
     );
+    expect(run.team.length).toBeLessThan(20); // the floor genuinely engages
+    fireOps(run);
+    expect(run.team).toHaveLength(1);
+    expect(run.phase).toBe('map'); // no throw — the event completed
+  });
+
+  it('unit + poolHealth reward portions serialize, restore, and settle (the reward-side widening)', () => {
+    const run = new Run(130, new EventBus<GameEvents>(), { daemon: null });
+    const template = rollUnit('archer', new RNG(9), 2);
+    const wire = run.toJSON();
+    wire.phase = 'reward';
+    wire.playerHealth = 3;
+    // The trailing bits portion stays UNRESOLVED so the offer never drains
+    // (accepting the last portion would re-enter the gate chain, which this
+    // synthetic map-phase wire has no encounter context for).
+    wire.pendingRewards = [
+      { kind: 'unit', template },
+      { kind: 'poolHealth', amount: 2 },
+      { kind: 'bits', base: 1 },
+    ];
+    const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
+    // The template passed through like `team` (the port-stock rule).
+    expect(restored.pendingRewards![0]).toEqual({ kind: 'unit', template });
+    const before = restored.team.length;
+    restored.dispatch({ kind: 'acceptReward', index: 0 }); // the unit
+    expect(restored.team).toHaveLength(before + 1);
+    expect(restored.team[before]).toEqual(template);
+    restored.dispatch({ kind: 'acceptReward', index: 0 }); // the heal
+    expect(restored.toJSON().playerHealth).toBe(Math.min(HEALTH.playerHealthMax, 5));
+    expect(restored.pendingRewards).toHaveLength(1); // the bits row still offered
   });
 });

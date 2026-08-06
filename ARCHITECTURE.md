@@ -77,7 +77,7 @@ src/
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
     selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
-    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon entries) + the {table,trigger} encounter-ref schema + the daemon/packet-ref boot asserts (49a activated the packet sibling) — config/rewards.json
+    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon|unit|poolHealth entries — unit/poolHealth are 74c) + the {table,trigger} encounter-ref schema + the daemon/packet/unit-ref boot asserts (49a activated the packet sibling; 74c the unit one) — config/rewards.json
     packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
@@ -248,7 +248,9 @@ src/
                              # level (post-G5) + draftPoolsFor + recruitLevelBonus
     rewards.ts               # 48b: rollRewards — the pure reward roller (chance tests + weighted sampling w/ owned-daemon
                              # exclusion; bits {min,max} on the separate bits stream) + RewardPortion (49c: + the packet
-                             # member — packets sample with NO exclusion, duplicates legal; a full cache resolves at ACCEPT)
+                             # member — packets sample with NO exclusion, duplicates legal; a full cache resolves at ACCEPT;
+                             # 74c: + unit — template PRE-ROLLED at offer time on the bits stream, port-stock shape — and
+                             # poolHealth members, both exclusion-free)
 
   render/
     Renderer.ts              # WebGLRenderer + two EffectComposers (selective bloom, B1.1)
@@ -363,7 +365,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)
   selection.json             # V1: the encounter-selection policy (strategy: encounterFirst|layoutFirst)
   economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
-  rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon entries); 49g: packet entries LIVE across all four tables — every launch packet reachable
+  rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon|unit|poolHealth entries — the last two 74c, unauthored until the §74i content round); 49g: packet entries LIVE across all four tables — every launch packet reachable
   packets.json               # 49a→g: the packet catalog — the locked launch 7 (patch/hype/shield/reroute/venom/overclock/miner), one effect op each
   prices.json                # 50a→f: the port price book — unit base×levelGrowth^(lv−1)±jitter, packet/daemon byId-over-default, sellFraction, unitRemovalPrice, portStock counts; launch catalog user-authored at 50f (§52 tunes)
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)

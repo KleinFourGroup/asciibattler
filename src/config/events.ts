@@ -40,8 +40,8 @@ import eventsJson from '../../config/events.json';
 import { GainBitsOpSchema, HealPoolOpSchema, DAEMONS } from './daemons';
 import { ENCOUNTER_IDS } from './encounters';
 import { REWARD_TABLE_IDS } from './rewards';
-import { PACKET_IDS } from './packets';
-import { CHARACTER_IDS } from './characters';
+import { PACKET_IDS, packetById } from './packets';
+import { CHARACTER_IDS, characterById } from './characters';
 import { UNIT_DEFS } from './units';
 
 // ── conditions (the closed v1 union — cluster-5-spec) ───────────────────────
@@ -382,4 +382,44 @@ const EVENTS_BY_ID: Record<string, EventDef> = Object.fromEntries(
 /** Catalog lookup by id (`undefined` on a miss — callers decide throw vs skip). */
 export function getEvent(id: string): EventDef | undefined {
   return EVENTS_BY_ID[id];
+}
+
+/**
+ * 74f — one condition as a human-readable requirement PHRASE ("10+ bits",
+ * "the daemon Idol of Mars", "not the \"whispering-terminal:answered\"
+ * mark"). Deliberately a phrase, not a sentence: the EventScreen prefixes
+ * "Requires " so the `not` combinator composes without grammar surgery,
+ * and the (74h) event editor can reuse the same phrases in its choice
+ * rows. Names resolve through the sibling catalogs with an id fallback —
+ * the boot-time `assertEventRefs` means a shipped def never falls back.
+ * Flag phrases show the raw namespaced flag for now (dev-grade copy; the
+ * §74i content round owns player-facing flag wording if it wants it).
+ */
+export function describeEventCondition(cond: EventCondition): string {
+  switch (cond.kind) {
+    case 'bitsAtLeast':
+      return `${cond.amount}+ bits`;
+    case 'poolHealthAtLeast':
+      return `pool health ≥ ${cond.amount}`;
+    case 'poolHealthAtMost':
+      return `pool health ≤ ${cond.amount}`;
+    case 'hasDaemon':
+      return `the daemon ${DAEMONS.find((d) => d.id === cond.daemonId)?.name ?? cond.daemonId}`;
+    case 'hasPacket':
+      return `the packet ${packetById(cond.packetId)?.name ?? cond.packetId} in your cache`;
+    case 'cacheHasRoom':
+      return 'room in the cache';
+    case 'rosterSizeAtLeast':
+      return `a roster of ${cond.count}+`;
+    case 'rosterSizeAtMost':
+      return `a roster of at most ${cond.count}`;
+    case 'characterIs':
+      return `playing ${characterById(cond.characterId)?.name ?? cond.characterId}`;
+    case 'flagSet':
+      return `the "${cond.flag}" mark`;
+    case 'flagIs':
+      return `the "${cond.flag}" mark at ${JSON.stringify(cond.value)}`;
+    case 'not':
+      return `not ${describeEventCondition(cond.condition)}`;
+  }
 }

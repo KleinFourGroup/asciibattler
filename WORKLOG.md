@@ -555,3 +555,47 @@ it), and 3-event catalog repetition until §74i.
   OPENS (the ~75% non-resolve case) strands the run in the event
   phase with no UI. Dev-only exposure (no deploy mid-phase), and 74f
   is NEXT — don't playtest events in the browser before it lands.
+  *(CLOSED at 74f, same day.)*
+- Follow-up (`c5603f5`, user call): event nodes gained their kind
+  accent — new palette entry **TERMINAL_BLUE `#3D7BFF`** (a true blue;
+  the cyan FLOURESCENT_BLUE is spoken for as the frontier/clickable
+  STATE color) + the standard `.map-node.event` rule. Without it the
+  `?`s blended into battles.
+
+### 74f — EventScene/EventScreen (2026-08-06)
+
+Landed to the cut on the port model, low-risk to plan. Notes beyond
+the cut line:
+
+- **`describeEventCondition` (config/events.ts)** — the requirement
+  copy as a composable PHRASE ("10+ bits"; the UI prefixes
+  "Requires"), so the `not` combinator reads naturally and the §74h
+  event editor can reuse the same phrases in its choice rows. Names
+  resolve through the sibling catalogs (boot-asserted refs mean no
+  shipped fallback); flag phrases show the raw namespaced flag —
+  dev-grade copy, §74i owns player-facing wording if it wants it.
+- **`Run.activeEventName`** — the one new read (the catalog stays
+  private; the screen gets exactly what it needs).
+- Screen shape: the PortScreen live-Run + full-re-render discipline,
+  re-rendering off `event:pageChanged` (+ `run:bitsChanged`,
+  currently unreachable mid-page — effects execute only on choice
+  resolution — but the affordability disables must not be able to go
+  stale if that changes). Met conditions keep their requirement line
+  VISIBLE but dimmed (the row doesn't jump when state crosses the
+  threshold); failing = disabled + amber (a cost, not an error).
+  Chrome keyed to TERMINAL_BLUE — the scene answers the `?` glyph
+  the player clicked. The `art` seam renders nothing (scope guard).
+- Game wiring was 74b-prebuilt (the chooseEventOption silent-
+  transition catcher); 74f added only the `event:entered` →
+  EventScene subscription. **The 74e interim hazard is closed.**
+- Browser-driven exit (the step's eyeball criterion), all five flows
+  via the preview MCP at `firstNode=event`: open (shrine, heading +
+  text + 3 choices) · shown-disabled ("Make an offering" at 0 bits:
+  disabled, amber "Requires 10+ bits") · met-dim (at `bits=100`:
+  enabled, grey requirement, spend 100→90) · page hop (seed 231:
+  scoop → guardians, DOM re-rendered) · start-encounter ("Stand and
+  fight" → deserters + the bits-large override pinned → the battle
+  path). Zero console errors. Subjective feel = the user's native
+  pass, as always.
+- render/ui policy: no new tests (eyeball-only); the main suite +
+  typecheck stay green (Run.ts gained only the getter).

@@ -1686,11 +1686,20 @@ export class Run {
   }
 
   /** 74b — the active event's current page (null outside the phase). The
-   *  (74f) EventScreen and the harness both read from here. */
+   *  EventScreen (74f) and the harness both read from here. */
   currentEventPage(): EventPage | null {
     if (this.activeEvent === null) return null;
     const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
     return def?.pages[this.activeEvent.pageId] ?? null;
+  }
+
+  /** 74f — the active event's display name (null outside the phase). The
+   *  EventScreen's heading; the catalog stays private (the def is engine
+   *  state — the screen gets exactly the read it needs). */
+  get activeEventName(): string | null {
+    if (this.activeEvent === null) return null;
+    const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
+    return def?.name ?? this.activeEvent.eventId;
   }
 
   /** 74b — is the page's choice at `index` currently satisfiable? The UI

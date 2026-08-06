@@ -17,6 +17,7 @@ import { RecruitScene } from './scenes/RecruitScene';
 import { PromotionScene } from './scenes/PromotionScene';
 import { RewardScene } from './scenes/RewardScene';
 import { PortScene } from './scenes/PortScene';
+import { EventScene } from './scenes/EventScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -242,6 +243,11 @@ export class Game implements RunDispatcher {
     // 50e — docking at a port (replaces the 50c interim auto-undock stub).
     // No payload: the screen reads the live stock off ctx.run.portStock.
     this.bus.on('port:entered', () => this.swap(new PortScene()));
+    // 74f — an event node opened its page (the ~75% non-resolve entry).
+    // No payload: the screen reads the live page off ctx.run (the port
+    // pattern). This closes the 74e interim hazard — the event phase has
+    // a scene now.
+    this.bus.on('event:entered', () => this.swap(new EventScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
     // 67b — the between-sector beat (the 67a gate's screen). Titles ride the

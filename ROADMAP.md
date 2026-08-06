@@ -94,8 +94,11 @@ the PATH_KINDS/vector re-baseline.
   events are major, not rare detours) + the `eventsVisited` counter
   and its fuzz exit pin. Exit met (the pin proves opened pages).
   Detail: worklog §74e.
-- [ ] 74f — EventScene/EventScreen on the port model; failing
-  choices SHOWN-DISABLED with requirement. Browser eyeball.
+- [x] 74f — EventScene/EventScreen ✅ 2026-08-06: landed to plan
+  (+ `describeEventCondition` in events.ts, the 74h-editor-reusable
+  phrase helper). Exit met — all five flows browser-driven (open ·
+  shown-disabled+requirement · met-dim · page hop · start-encounter);
+  the 74e interim hazard CLOSED. Detail: worklog §74f.
 - [ ] 74g — arbitration: `arbitrateEventChoice` + `'eventChoice'`
   site + ε floor + walker clone contract. Exit: decisions.csv rows.
 - [ ] 74h — the event editor (encounter-editor shape;

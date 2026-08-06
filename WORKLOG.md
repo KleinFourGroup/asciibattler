@@ -471,3 +471,16 @@ resolutions above. Notes beyond the cut line:
   levels now clear the real roster).
 - No shipped reward table authors the new kinds yet — that's §74i's
   content round (ARCHITECTURE notes them unauthored).
+
+### 74d — the Surge rename (2026-08-06)
+
+`draw-two` → `surge`, landed to the kickoff touch-list exactly: the
+three boot-asserted config sites (`packets.json` id ·
+`rewards.json` packet ref · `prices.json` price key, renamed in
+place) + the Run.test/scored.test sites + the cli.ts `--grant` doc
+example. Historical BALANCE.md rows and gitignored decisions.csv
+outputs keep the old id (measurement records, not live refs — the
+TODO's "outputs, no action" clause). Rides the open v41 window: a
+dev-save carrying `draw-two` in its cache now hard-rejects on the
+catalog re-validation, which is the window's whole point. Closes
+TODO.md's rename line (user call, 73c).

@@ -15,7 +15,7 @@
         { "kind": "bits", "weight": 1, "min": 20, "max": 35 },
         { "kind": "packet", "weight": 0.5, "packet": "reroute" },
         { "kind": "packet", "weight": 0.5, "packet": "shield" },
-        { "kind": "packet", "weight": 0.5, "packet": "draw-two" }
+        { "kind": "packet", "weight": 0.5, "packet": "surge" }
       ]
     },
     {

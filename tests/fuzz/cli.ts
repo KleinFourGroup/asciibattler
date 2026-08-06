@@ -34,7 +34,7 @@
  *   # item's realized value. Inert daemon/packet grants leave the run stream
  *   # byte-identical, so a grant-dead item reads ~zero rather than noise.
  *   npm run fuzz -- --count=80 --searcher --audition --grant=portunus
- *   npm run fuzz -- --count=80 --searcher --audition --grant=draw-two,discard-one
+ *   npm run fuzz -- --count=80 --searcher --audition --grant=surge,discard-one
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

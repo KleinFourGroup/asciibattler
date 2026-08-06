@@ -4449,16 +4449,16 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
   // Catalog-derived count (the balance-proof discipline — never hardcode
   // what packets.json authors).
   const drawCount = (() => {
-    const p = packetById('draw-two');
+    const p = packetById('surge');
     if (p === undefined || p.effect.op !== 'drawCards') {
-      throw new Error("test fixture: 'draw-two' must be a drawCards packet");
+      throw new Error("test fixture: 'surge' must be a drawCards packet");
     }
     return p.effect.count;
   })();
 
-  it('draw-two grows the hand by its authored count, straight off the draw pile', () => {
+  it('surge grows the hand by its authored count, straight off the draw pile', () => {
     const { run, bus } = gatedToFirstTurnIntro(1, null);
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     const handBefore = run.hand.length;
     const pileBefore = run.drawPile.length;
     const swaps: GameEvents['turn:handRedrawn'][] = [];
@@ -4487,7 +4487,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     const { run } = gatedToFirstTurnIntro(2, null, { startingRoster: roster });
     expect(run.hand).toHaveLength(5); // everyone fielded, deck dry
     expect(run.drawPile).toHaveLength(0);
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     expect(run.hand).toHaveLength(5); // nothing to draw
     expect(run.discardPile).toHaveLength(0); // turn 1 — nothing to reshuffle
@@ -4513,11 +4513,11 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     expect(gated.run.cache).toEqual(['discard-one']);
     // preTurn-only ops reject at the map (there is no hand there).
     const { run } = freshRunWithBus(4, { daemon: null });
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     run.addPacket('discard-one');
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     run.dispatch({ kind: 'usePacket', cacheIndex: 1, rosterIndex: 0 });
-    expect(run.cache).toEqual(['draw-two', 'discard-one']);
+    expect(run.cache).toEqual(['surge', 'discard-one']);
   });
 
   it('the last-card guard: culling down to one card, the final fire rejects (no empty hand)', () => {
@@ -4552,7 +4552,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     const { run } = gatedToFirstTurnIntro(6, null, {
       forcedEncounterId: HAND_RELATIVE_REF.id,
     });
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     const basis = Math.min(run.team.length, run.effectiveDrawAmount);
     expect(run.hand.length).toBe(basis + drawCount); // non-vacuous: hand ≠ basis
@@ -4578,10 +4578,10 @@ describe('65d — the max hand size (user-signed cap, deck.json)', () => {
       drawAmountAdd: DECK.maxHandSize - DECK.handSize,
     });
     expect(run.hand).toHaveLength(DECK.maxHandSize);
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     expect(run.hand).toHaveLength(DECK.maxHandSize); // unchanged
-    expect(run.cache).toEqual(['draw-two']); // NOT consumed
+    expect(run.cache).toEqual(['surge']); // NOT consumed
   });
 
   it('a Surge that reaches the cap mid-draw partial-draws and consumes (the patch precedent)', () => {
@@ -4590,7 +4590,7 @@ describe('65d — the max hand size (user-signed cap, deck.json)', () => {
       drawAmountAdd: DECK.maxHandSize - DECK.handSize - 1,
     });
     expect(run.hand).toHaveLength(DECK.maxHandSize - 1);
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     expect(run.hand).toHaveLength(DECK.maxHandSize);
     expect(run.cache).toEqual([]); // consumed — order of consumption IS effect
@@ -4624,7 +4624,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
   it('a Cull cues exactly one discarded; a Surge cues its drawn count', () => {
     const { run, bus } = gatedToFirstTurnIntro(9, null);
     run.addPacket('discard-one');
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     const cues = record(bus);
     run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
     expect(cues).toEqual([
@@ -4632,7 +4632,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     ]);
     cues.length = 0;
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-    const surge = packetById('draw-two')!.effect;
+    const surge = packetById('surge')!.effect;
     const surgeCount = surge.op === 'drawCards' ? surge.count : 0;
     expect(cues.map((c) => c.kind)).toEqual(Array.from({ length: surgeCount }, () => 'drawn'));
   });
@@ -4652,12 +4652,12 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     // pile, Surge while the pile still covers a full draw, then record the
     // one Surge that must cross the dry point mid-draw.
     const { run, bus } = gatedToFirstTurnIntro(9, null);
-    const surge = packetById('draw-two')!.effect;
+    const surge = packetById('surge')!.effect;
     const surgeCount = surge.op === 'drawCards' ? surge.count : 0;
     for (let i = 0; i < 4; i++) run.addPacket('discard-one');
     for (let i = 0; i < 4; i++) run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
     while (run.drawPile.length >= surgeCount) {
-      run.addPacket('draw-two');
+      run.addPacket('surge');
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     }
     const pile = run.drawPile.length;
@@ -4665,7 +4665,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
     expect(discard).toBeGreaterThan(0); // the flip has fuel
     expect(pile).toBeLessThan(surgeCount); // the next Surge must cross dry
     expect(DECK.maxHandSize - run.hand.length).toBeGreaterThanOrEqual(surgeCount); // no cap clamp
-    run.addPacket('draw-two');
+    run.addPacket('surge');
     const cues = record(bus);
     run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
     expect(cues).toEqual([

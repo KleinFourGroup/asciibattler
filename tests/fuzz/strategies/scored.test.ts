@@ -572,16 +572,16 @@ describe('scored packet-fire policy (59c)', () => {
       return { team, hand: team.map((_t, i) => i) };
     };
 
-    it('a full hand SKIPS draw-two and the next usable packet gets the slot (the wedge pin)', () => {
-      const run = fireRun({ kind: 'normal', cache: ['draw-two', 'shield'], ...fullHand(cap) });
+    it('a full hand SKIPS surge and the next usable packet gets the slot (the wedge pin)', () => {
+      const run = fireRun({ kind: 'normal', cache: ['surge', 'shield'], ...fullHand(cap) });
       expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
         cacheIndex: 1,
         handIndex: cap - 1,
       });
     });
 
-    it('one below the cap fires draw-two (a partial draw still lands)', () => {
-      const run = fireRun({ kind: 'normal', cache: ['draw-two'], ...fullHand(cap - 1) });
+    it('one below the cap fires surge (a partial draw still lands)', () => {
+      const run = fireRun({ kind: 'normal', cache: ['surge'], ...fullHand(cap - 1) });
       expect(fireStrategy(eager).pickPacketFire!('preTurn', run, ANY_RNG)).toEqual({
         cacheIndex: 0,
       });

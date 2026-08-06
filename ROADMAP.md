@@ -87,8 +87,8 @@ the PATH_KINDS/vector re-baseline.
   screen widened; #118 guard → `'event'`; the else → exhaustive
   switch (InstantOp did NOT widen — the step-zero re-judge). No bump.
   Detail: worklog §74c.
-- [ ] 74d — the Surge rename (`draw-two`→`surge`) inside the bump
-  window; closes the TODO line.
+- [x] 74d — the Surge rename (`draw-two`→`surge`) ✅ 2026-08-06,
+  inside the bump window; TODO line closed. Detail: worklog §74d.
 - [ ] 74e — placement + sector seams (the SCHEDULED break): event
   tail scatter pass + dials in `sectorAdvanceConfig` (#121); sector
   `events` pool + `startingEvents` + formatter; the zero-draw stamp

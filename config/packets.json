@@ -90,7 +90,7 @@
       }
     },
     {
-      "id": "draw-two",
+      "id": "surge",
       "name": "Surge",
       "description": "Surge the deck: draw three extra cards into this turn's hand.",
       "usableIn": ["preTurn"],

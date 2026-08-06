@@ -79,6 +79,42 @@ describe('events config', () => {
     expect(() => EventsSchema.parse([bad])).toThrow();
   });
 
+  it('accepts a nested not condition (74c-pre — the recursive combinator)', () => {
+    const negated = makeEvent({
+      eligibility: [{ kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'known-daemon' } }],
+      pages: {
+        start: {
+          text: 'A test page.',
+          choices: [
+            {
+              label: 'Leave',
+              condition: {
+                kind: 'not',
+                condition: { kind: 'not', condition: { kind: 'flagSet', flag: 'chain:done' } },
+              },
+              outcomes: [{ next: { kind: 'return-to-map' } }],
+            },
+            { label: 'Stay', outcomes: [{ next: { kind: 'return-to-map' } }] },
+          ],
+        },
+      },
+    });
+    const [parsed] = EventsSchema.parse([negated]);
+    expect(parsed!.eligibility![0]).toEqual({
+      kind: 'not',
+      condition: { kind: 'hasDaemon', daemonId: 'known-daemon' },
+    });
+  });
+
+  it('rejects a not condition wrapping a malformed inner condition', () => {
+    const bad = makeEvent({
+      eligibility: [
+        { kind: 'not', condition: { kind: 'hasDaemon' } } as never, // missing daemonId
+      ],
+    });
+    expect(() => EventsSchema.parse([bad])).toThrow();
+  });
+
   it('keeps absent optional keys absent after parse (exact-optional runtime shape)', () => {
     const [parsed] = EventsSchema.parse([makeEvent()]);
     const outcome = parsed!.pages['start']!.choices[0]!.outcomes[0]!;
@@ -265,6 +301,15 @@ describe('events config', () => {
           },
         }),
         /unknown character id 'ghost-character'/,
+      ],
+      [
+        'an unknown daemon inside a not wrapper (74c-pre — the assert recurses)',
+        makeEvent({
+          eligibility: [
+            { kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'ghost-daemon' } },
+          ],
+        }),
+        /unknown daemon id 'ghost-daemon'/,
       ],
       [
         'an unknown archetype in grantUnit',

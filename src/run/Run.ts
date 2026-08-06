@@ -1587,6 +1587,9 @@ export class Run {
         return this.eventFlags[cond.flag] !== undefined && this.eventFlags[cond.flag] !== false;
       case 'flagIs':
         return this.eventFlags[cond.flag] === cond.value;
+      case 'not':
+        // 74c-pre — the one combinator (author-bounded depth; schema-recursive).
+        return !this.evaluateEventCondition(cond.condition);
     }
   }
 

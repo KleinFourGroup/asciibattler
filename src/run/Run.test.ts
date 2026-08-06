@@ -5367,6 +5367,50 @@ describe('74b — the event phase', () => {
     expect(drive()).toBe(drive());
   });
 
+  it('a not condition evaluates against live state (74c-pre — the combinator)', () => {
+    // eventRun's control daemon ('test-no-resolve') is OWNED — so a choice
+    // gated on NOT owning it must read disabled, and one gated on not-owning
+    // a stranger must read enabled. The double-not exercises recursion.
+    const { run } = eventRun(113, {
+      forcedEventId: 'not-gate',
+      eventCatalog: [
+        {
+          id: 'not-gate',
+          name: 'Not Gate',
+          entry: 'start',
+          pages: {
+            start: {
+              text: 'p',
+              choices: [
+                {
+                  label: 'needs NOT owned-daemon (disabled)',
+                  condition: { kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'test-no-resolve' } },
+                  outcomes: [{ next: { kind: 'return-to-map' } }],
+                },
+                {
+                  label: 'needs NOT stranger-daemon (enabled)',
+                  condition: { kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'never-owned' } },
+                  outcomes: [{ next: { kind: 'return-to-map' } }],
+                },
+                {
+                  label: 'double negation (enabled — owns it)',
+                  condition: {
+                    kind: 'not',
+                    condition: { kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'test-no-resolve' } },
+                  },
+                  outcomes: [{ next: { kind: 'return-to-map' } }],
+                },
+                { label: 'leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              ],
+            },
+          },
+        },
+      ],
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.enabledEventChoices()).toEqual([1, 2, 3]);
+  });
+
   it('the deferred 74c ops throw loud (the landing-note contract)', () => {
     const bus = new EventBus<GameEvents>();
     const run = new Run(112, bus, {

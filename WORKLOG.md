@@ -396,3 +396,45 @@ the work list:
 74d (the Surge `draw-two`→`surge` rename) rides the OPEN bump window
 any time after 74c — the touch-list is in the kickoff audit
 (3 boot-asserted config sites + ~20 test sites + TODO.md:93).
+
+### 74c — effect-op execution (the shape-lock + the build)
+
+**Shape-lock (user-signed, this session).** The landing note's open
+forks resolved:
+
+1. **addPacket on a full cache = HONOR THE GRANT** — push into
+   overflow; the 49f forced-keep flow (already legal derived state)
+   demands the discards. Chosen over silent-drop for the same reason
+   the 74b ops threw instead of no-op'ing: authored content must
+   never silently falsify. (`cacheOverflow`'s "only after a shrink"
+   comment gains the second cause.)
+2. **addDaemon when already owned = SILENT SKIP at the executor.**
+   Everywhere else exclusion runs upstream of the offer (reward
+   roller, port stock), so a duplicate would be the first in the
+   game and would double-apply folds. The fork also surfaced the
+   condition-vocabulary gap (no negation) → **74c-pre inserted
+   (user-signed): a generic `not` combinator** — one recursive
+   member, closes `not hasDaemon` / `not flagSet` / `not
+   characterIs` at once; deliberately the ONLY combinator (no
+   allOf/anyOf until content demands — eligibility arrays already
+   AND). Termination fixpoint untouched (unconditioned-only walk);
+   `assertEventRefs` recurses. The executor skip stays as
+   defense-in-depth — `not` makes gating possible, not mandatory.
+3. **removeUnit weakest/strongest = level, tie → lowest roster
+   index** (deterministic, zero draws); `random` = one eventRng
+   draw; roster-of-1 = silent no-op (authors gate with
+   `rosterSizeAtLeast`).
+4. **Reward `unit` portions pre-roll the full template at OFFER time
+   in `rollRewards`** (the port-stock precedent — templates
+   serialize through `pendingRewards` like `team`; the screen shows
+   real stats). The stat roll rides the EXISTING reward-bits stream
+   — deliberately NOT a tenth constructor fork (the 74b stream-
+   append cost, not paid twice). Draws only at level>1 (rollUnit's
+   no-choice-no-entropy fast path).
+
+**Step-zero verdict:** the cut's "`executeInstantOps` untagged else →
+exhaustive switch" line — the `InstantOp` union does NOT widen (74b
+gave events their own executor; the reward `poolHealth` settle rides
+the existing `healPool` member), so the switch is pure hygiene.
+Done anyway: a future widening becomes a compile error, not a
+silent heal.

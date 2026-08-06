@@ -78,6 +78,9 @@ the PATH_KINDS/vector re-baseline.
   (`32c1726`): landed to plan + the stream-append correction
   (worklog §74b); +14 tests, pins at 41. Exit met minus the
   withdrawn byte-identity clause.
+- [x] 74c-pre — INSERTED at the 74c shape-lock (user-signed): the
+  `not` condition combinator (the negation-class gap surfaced by the
+  addDaemon-dedupe fork; worklog §74c).
 - [ ] 74c — effect-op execution end to end (the events-side union);
   `executeInstantOps` else → exhaustive switch; #118 guard widens to
   `'event'`; reward `unit`/`poolHealth` kinds. Test per op. No bump.

@@ -21,6 +21,8 @@
  * `eligibility` gates the sector pool roll (74e), read against the
  * run-lifetime flag store — the flag store IS the chain state. Flags are
  * namespaced `chainId:key` by convention (documented, not regex-enforced).
+ * Conditions are the closed v1 primitive union plus exactly one combinator,
+ * `not` (74c-pre — the negation-class closer; see the union comment).
  *
  * The effect-op union here is EVENTS-SIDE — its own vocabulary sharing
  * sub-schemas with daemons.ts (the packets.ts precedent; import direction
@@ -57,11 +59,18 @@ export type EventCondition =
   | { kind: 'rosterSizeAtMost'; count: number }
   | { kind: 'characterIs'; characterId: string }
   | { kind: 'flagSet'; flag: string }
-  | { kind: 'flagIs'; flag: string; value: EventFlagValue };
+  | { kind: 'flagIs'; flag: string; value: EventFlagValue }
+  // 74c-pre (user-signed): the one combinator. Closes the negation class
+  // (`not hasDaemon` gates a grant on NOT owning; `not flagSet` gates a
+  // chain on not-yet-done) without doubling the primitive vocabulary.
+  // Deliberately the ONLY combinator — no allOf/anyOf until content
+  // demands it (eligibility arrays already AND). The termination fixpoint
+  // is untouched: it walks UNCONDITIONED choices only.
+  | { kind: 'not'; condition: EventCondition };
 
 const FlagValueSchema = z.union([z.string(), z.number(), z.boolean()]);
 
-export const EventConditionSchema = z.discriminatedUnion('kind', [
+export const EventConditionSchema: z.ZodType<EventCondition> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('bitsAtLeast'), amount: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('poolHealthAtLeast'), amount: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('poolHealthAtMost'), amount: z.number().int().nonnegative() }),
@@ -73,6 +82,9 @@ export const EventConditionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('characterIs'), characterId: z.string().min(1) }),
   z.object({ kind: z.literal('flagSet'), flag: z.string().min(1) }),
   z.object({ kind: z.literal('flagIs'), flag: z.string().min(1), value: FlagValueSchema }),
+  // The lazy self-reference is what the explicit const annotation above is
+  // for (TS self-referential-initializer rule); zod defers evaluation.
+  z.object({ kind: z.literal('not'), condition: z.lazy(() => EventConditionSchema) }),
 ]) as z.ZodType<EventCondition>;
 
 // ── effect ops (events-side union; gainBits/healPool shared from daemons) ───
@@ -299,6 +311,10 @@ export function assertEventRefs(
   };
 
   const checkCondition = (eventId: string, cond: EventCondition): void => {
+    if (cond.kind === 'not') {
+      checkCondition(eventId, cond.condition);
+      return;
+    }
     if (cond.kind === 'hasDaemon' && !has(catalogs.daemonIds, cond.daemonId)) {
       fail(eventId, `condition references unknown daemon id '${cond.daemonId}'`);
     }

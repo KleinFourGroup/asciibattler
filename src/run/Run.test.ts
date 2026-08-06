@@ -4158,7 +4158,8 @@ describe('64a — The Cornucopia (recruitOfferSize)', () => {
   });
 
   it('leaves the PORT unit count untouched (spec scope: post-encounter only)', () => {
-    const { run, bus } = freshRunWithBus(41, { daemon: cornucopia });
+    // Seed 42 (74e re-seed): 41's every port route crossed an event node.
+    const { run, bus } = freshRunWithBus(42, { daemon: cornucopia });
     dockAtPort(run, bus);
     expect(run.portStock!.units).toHaveLength(PRICES.portStock.units);
   });
@@ -4235,7 +4236,8 @@ describe('64c — Idol of Portunus (guaranteed port legendary)', () => {
   });
 
   it('stacking: a second source forces a second slot (the count-stat shape-lock)', () => {
-    const { run, bus } = freshRunWithBus(84, { daemon: portunus });
+    // Seed 87 (74e re-seed): 84's every port route crossed an event node.
+    const { run, bus } = freshRunWithBus(87, { daemon: portunus });
     run.addDaemon(portunus); // addDaemon never dedupes — two sources, +1 each
     expect(run.effectivePortLegendaryOffers).toBe(2);
     dockAtPort(run, bus);
@@ -4927,15 +4929,17 @@ function frontierIdsOf(run: Run): number[] {
     : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
 }
 
-/** Any port reachable strictly downstream of (or at) `from`? */
-function reachesPort(run: Run, from: number): boolean {
+/** Any port reachable strictly downstream of (or at) `from`, WITHOUT
+ *  stepping through an event node en route (74e — see dockAtPort)? */
+function reachesPortEventFree(run: Run, from: number): boolean {
+  if (nodeKindOf(run, from) === 'event') return false;
   const stack = [from];
   const seen = new Set([from]);
   while (stack.length > 0) {
     const id = stack.pop()!;
     if (nodeKindOf(run, id) === 'port') return true;
     for (const e of run.nodeMap.edges) {
-      if (e.from === id && !seen.has(e.to)) {
+      if (e.from === id && !seen.has(e.to) && nodeKindOf(run, e.to) !== 'event') {
         seen.add(e.to);
         stack.push(e.to);
       }
@@ -4948,7 +4952,11 @@ function reachesPort(run: Run, from: number): boolean {
  *  WIN_BOUNTY idiom; rewards declined so bits stay exactly at their starting
  *  value). Every default map has ≥1 port (the NodeMap guarantee) and every
  *  node is root-reachable, so a port-reaching frontier choice always exists
- *  from the start. Deterministic — no policy draws. */
+ *  from the start. Deterministic — no policy draws. 74e: the route AVOIDS
+ *  event nodes entirely — an opened event's effects would perturb the state
+ *  the port tests pin (bits/roster/ownership), and a combat-resolve is a
+ *  chance draw. A seed whose every port route crosses an event throws loud —
+ *  re-seed the test (the findRestRun discipline). */
 function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
   for (let guard = 0; guard < 20; guard++) {
     expect(run.phase).toBe('map');
@@ -4958,9 +4966,11 @@ function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
       run.dispatch({ kind: 'enterNode', nodeId: port });
       return;
     }
-    const next = frontier.find((id) => reachesPort(run, id));
-    expect(next).toBeDefined();
-    run.dispatch({ kind: 'enterNode', nodeId: next! });
+    const next = frontier.find((id) => reachesPortEventFree(run, id));
+    if (next === undefined) {
+      throw new Error('dockAtPort: no event-free port route from this frontier — re-seed the test');
+    }
+    run.dispatch({ kind: 'enterNode', nodeId: next });
     if (run.phase === 'battle') {
       winEncounter(bus);
       declineAllRewards(run);
@@ -5413,6 +5423,90 @@ describe('74b — the event phase', () => {
     expect(run.enabledEventChoices()).toEqual([1, 2, 3]);
   });
 
+});
+
+// ── 74e — the sector-owned event pool ────────────────────────────────────────
+
+/** A minimal terminating event for pool-roll tests: one unconditioned
+ *  return-to-map choice. Ids deliberately reuse SHIPPED ids so the shipped
+ *  sector pools resolve against a bespoke catalog (the override replaces
+ *  defs wholesale — pool entries resolve by id against the ACTIVE catalog). */
+function poolEvent(id: string, eligibility?: EventDef['eligibility']): EventDef {
+  return {
+    id,
+    name: id,
+    ...(eligibility !== undefined ? { eligibility } : {}),
+    entry: 'p',
+    pages: {
+      p: { text: 't', choices: [{ label: 'leave', outcomes: [{ next: { kind: 'return-to-map' } }] }] },
+    },
+  };
+}
+
+const NEVER = [{ kind: 'bitsAtLeast', amount: 999999 } as const];
+
+describe('74e — the sector-owned event pool', () => {
+  const START_POOL_IDS = [
+    'corrupted-shrine',
+    'whispering-terminal',
+    'whispering-terminal-collects',
+  ];
+
+  it('an opened event comes from the SECTOR pool, not a bare catalog scan (the 74b placeholder retired)', () => {
+    // Shipped catalog, no forced id: root stamped event, resolve folded off →
+    // the entry roll must land inside The Start's authored `events` pool.
+    const run = new Run(201, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: NO_RESOLVE_DAEMON,
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('event');
+    expect(START_POOL_IDS).toContain(run.activeEvent!.eventId);
+  });
+
+  it('def eligibility filters at pool-roll time — a single survivor is forced', () => {
+    // The bespoke catalog redefines the three POOLED ids: two gated closed,
+    // one open. Whatever the weighted draw rolls, only the survivor can win.
+    const run = new Run(202, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: NO_RESOLVE_DAEMON,
+      eventCatalog: [
+        poolEvent('corrupted-shrine', NEVER),
+        poolEvent('whispering-terminal', NEVER),
+        poolEvent('whispering-terminal-collects'),
+      ],
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('event');
+    expect(run.activeEvent!.eventId).toBe('whispering-terminal-collects');
+  });
+
+  it('an all-ineligible pool degrades to a normal fight (the 74b empty-pool rule)', () => {
+    const run = new Run(203, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: NO_RESOLVE_DAEMON,
+      eventCatalog: [
+        poolEvent('corrupted-shrine', NEVER),
+        poolEvent('whispering-terminal', NEVER),
+        poolEvent('whispering-terminal-collects', NEVER),
+      ],
+    });
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('battle');
+    expect(run.activeEvent).toBeNull();
+  });
+
+  it('pool entries a bespoke catalog cannot resolve are skipped, not thrown (degrades to the fight)', () => {
+    // The shipped sector pool references ids this catalog lacks entirely —
+    // the boot guard owns shipped drift; the run-time roll just skips.
+    const run = new Run(204, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: NO_RESOLVE_DAEMON,
+      eventCatalog: [poolEvent('unrelated-bespoke-event')],
+    });
+    expect(() => run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId })).not.toThrow();
+    expect(run.phase).toBe('battle');
+  });
 });
 
 // ── 74c — event effect ops (the full union executes) ─────────────────────────

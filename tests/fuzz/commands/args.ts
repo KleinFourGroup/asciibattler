@@ -149,9 +149,11 @@ export interface CliArgs {
   // overrides to RUN MODE ONLY (the forced-shape decision-grade reads —
   // elite-chance=1 offers an elite every eligible hop; port-chance=1 a
   // dock every eligible hop). Other modes ignore them per the
-  // flags-are-global grammar note above.
+  // flags-are-global grammar note above. 74e adds `--event-chance`
+  // (event-chance=0 is the event-free control arm).
   eliteChance?: number;
   portChance?: number;
+  eventChance?: number;
   // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
   // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
   // ±0.15 box-scale, the kickoff lock); the three dial flags override.
@@ -298,6 +300,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--port-chance':
         if (v !== undefined) args.portChance = Number(v);
+        break;
+      case '--event-chance':
+        if (v !== undefined) args.eventChance = Number(v);
         break;
       case '--jobs':
         args.jobs = Number(v);

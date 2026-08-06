@@ -17,6 +17,8 @@
  *     reserved seam — uniform selection ships now (T1 decision: sentinel +
  *     uniform), `weight` lets a future tuning pass bias the pool without a
  *     schema migration.
+ *   - `events` / `startingEvents` (74e) — the sector's event POOL + the
+ *     source-node seam; see `SectorEventEntrySchema`.
  *   - `encounters` — the sector's fight POOL, the *placement/pacing* half of the
  *     encounter model (the **sector-owns-both** data-model decision, pre-V).
  *     Split **by kind** (Wb4): `{ normal, elite, boss }`, each a list of
@@ -52,6 +54,7 @@ import { z } from 'zod';
 import sectorsJson from '../../config/sectors.json';
 import { LAYOUT_IDS, ThemeSchema } from './layouts';
 import { ENCOUNTER_KINDS, getEncounter, type EncounterKind } from './encounters';
+import { getEvent } from './events';
 
 /**
  * The reserved pool sentinel that means "roll a procedural battlefield" — the
@@ -94,6 +97,31 @@ const SectorEncounterEntrySchema = z.object({
 
 export type SectorEncounterEntry = z.infer<typeof SectorEncounterEntrySchema>;
 
+/**
+ * 74e — the sector's event-pool entry (the `SectorEncounterEntrySchema`
+ * paradigm, keyed by `eventId`). Used by BOTH `events` (the weighted pool
+ * non-starting event nodes draw from at entry) and `startingEvents` (the
+ * source-node seam: a non-empty list stamps the sector's ROOT node `event`
+ * and entry draws from THIS list instead — the §77 generator consumes the
+ * seam later). The hop gate applies uniformly — for `startingEvents` the
+ * root is hop 0, so a `minHop > 0` starting entry is simply never eligible
+ * (one schema, no dead special case). An event def's `eligibility`
+ * conditions are read at POOL-ROLL time against live run state (the
+ * flag-gated-chains mechanism) — they can't be validated here.
+ */
+const SectorEventEntrySchema = z.object({
+  /** A catalog event id (resolved against the shipped event catalog below). */
+  eventId: z.string().min(1),
+  /** Hop gate: eligible only at `hop >= minHop`. Omitted = 0. */
+  minHop: z.number().int().nonnegative().optional(),
+  /** Relative selection weight within the eligible pool. Omitted = 1 (the
+   *  sector-pool convention); positive so the cumulative draw never
+   *  zero-divides. */
+  weight: z.number().positive().optional(),
+});
+
+export type SectorEventEntry = z.infer<typeof SectorEventEntrySchema>;
+
 /** Fresh, all-empty per-kind fight pools — the default when a sector omits
  *  `encounters` entirely. An exhaustive literal: a new `EncounterKind` is
  *  compiler-forced to add its bucket here. */
@@ -134,6 +162,14 @@ const SectorSchema = z
     /** The sector's fight pool, split by kind (Wb4) — `{ normal, elite, boss }`,
      *  each an entry list. Defaults to all-empty so an absent key parses. */
     encounters: SectorEncounterPoolsSchema,
+    /** 74e — the weighted pool non-starting event nodes draw from at entry.
+     *  Defaults to empty (every entry then degrades to a fight — the 74b
+     *  empty-pool rule). */
+    events: z.array(SectorEventEntrySchema).default([]),
+    /** 74e — the source-node seam: non-empty stamps the sector's root
+     *  `event` (zero-draw) and entry draws from this list. Ships EMPTY —
+     *  §74i authors the first starting event (seam-only, user-signed). */
+    startingEvents: z.array(SectorEventEntrySchema).default([]),
   })
   .superRefine((sector, ctx) => {
     // Guard 1 — every pool entry references a real layout or the procedural
@@ -190,6 +226,21 @@ const SectorSchema = z
         }
       });
     }
+
+    // Guard 5 (74e) — every event-pool entry (both lists) references a real
+    // catalog event. Eligibility conditions are run-state reads and can't be
+    // checked here; ref resolution can and must be (the encounter-pool rule).
+    for (const listKey of ['events', 'startingEvents'] as const) {
+      sector[listKey].forEach((entry, idx) => {
+        if (!getEvent(entry.eventId)) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [listKey, idx, 'eventId'],
+            message: `sector "${sector.id}": unknown eventId "${entry.eventId}" (no such event in the catalog)`,
+          });
+        }
+      });
+    }
   });
 
 /** The whole-file array schema. Exported so the T3 sector editor's formatter can
@@ -241,4 +292,16 @@ export function encounterPoolAtHop(
   kind: EncounterKind,
 ): readonly SectorEncounterEntry[] {
   return sector.encounters[kind].filter((e) => (e.minHop ?? 0) <= hop);
+}
+
+/**
+ * 74e — the sector's hop-gated event pool at a given hop, mirroring
+ * `encounterPoolAtHop`. The caller (Run's entry roll) further filters by
+ * each event def's `eligibility` conditions against live run state, then
+ * draws ONE cumulative-weight pick. Unlike layouts, an empty result is
+ * legal — the entry degrades to a fight (the 74b rule), so no coverage
+ * guard exists for events.
+ */
+export function eventPoolAtHop(sector: SectorDef, hop: number): readonly SectorEventEntry[] {
+  return sector.events.filter((e) => (e.minHop ?? 0) <= hop);
 }

@@ -53,6 +53,8 @@ describe('formatSectorsJson', () => {
           { layoutId: 'river' },
         ],
         encounters: { normal: [], elite: [], boss: [] },
+        events: [],
+        startingEvents: [],
       },
     ]);
     expect(formatted).toContain('{ "layoutId": "procedural", "weight": 2 }');
@@ -80,6 +82,9 @@ describe('formatSectorsJson', () => {
           elite: [{ encounterId: 'ambush', minHop: 1, weight: 2 }],
           boss: [],
         },
+        // 74e — a populated event pool + an empty startingEvents seam.
+        events: [{ eventId: 'corrupted-shrine', minHop: 1, weight: 2 }],
+        startingEvents: [],
       },
     ]);
     expect(formatted).toContain('"normal": [');
@@ -87,5 +92,10 @@ describe('formatSectorsJson', () => {
     expect(formatted).toContain('"elite": [');
     expect(formatted).toContain('{ "encounterId": "ambush", "minHop": 1, "weight": 2 }');
     expect(formatted).toContain('"boss": []');
+    // 74e — the event lists are first-class slots: entries inline with
+    // optional fields only when present; an empty list emits `[]`.
+    expect(formatted).toContain('"events": [');
+    expect(formatted).toContain('{ "eventId": "corrupted-shrine", "minHop": 1, "weight": 2 }');
+    expect(formatted).toContain('"startingEvents": []');
   });
 });

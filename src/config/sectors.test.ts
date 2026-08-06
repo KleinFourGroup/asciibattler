@@ -7,6 +7,7 @@ import {
   getSector,
   layoutPoolAtHop,
   encounterPoolAtHop,
+  eventPoolAtHop,
   type SectorDef,
 } from './sectors';
 import { LAYOUT_IDS } from './layouts';
@@ -215,6 +216,32 @@ describe('sectors schema — validation guards', () => {
       ]),
     ).toThrow(/is kind 'normal', pooled under 'boss'/);
   });
+
+  it('defaults events + startingEvents to empty when absent (74e)', () => {
+    const parsed = SectorsSchema.parse([makeSector()])[0]!;
+    expect(parsed.events).toEqual([]);
+    expect(parsed.startingEvents).toEqual([]);
+  });
+
+  it('accepts event entries referencing real catalog events, in both lists (74e)', () => {
+    expect(() =>
+      SectorsSchema.parse([
+        makeSector({
+          events: [{ eventId: 'corrupted-shrine', minHop: 2, weight: 2 }],
+          startingEvents: [{ eventId: 'whispering-terminal' }],
+        }),
+      ]),
+    ).not.toThrow();
+  });
+
+  it('rejects an event entry referencing an unknown event, in either list (guard 5, 74e)', () => {
+    expect(() =>
+      SectorsSchema.parse([makeSector({ events: [{ eventId: 'no-such-event' }] })]),
+    ).toThrow(/unknown eventId/);
+    expect(() =>
+      SectorsSchema.parse([makeSector({ startingEvents: [{ eventId: 'no-such-event' }] })]),
+    ).toThrow(/unknown eventId/);
+  });
 });
 
 describe('layoutPoolAtHop — the hop-gated pool query', () => {
@@ -285,5 +312,33 @@ describe('encounterPoolAtHop — the hop-gated fight-pool query', () => {
   it('is empty for a sector with no fight pool', () => {
     const empty = { ...sector, encounters: { normal: [], elite: [], boss: [] } } as SectorDef;
     expect(encounterPoolAtHop(empty, 0, 'normal')).toEqual([]);
+  });
+});
+
+describe('eventPoolAtHop — the hop-gated event-pool query (74e)', () => {
+  // The encounterPoolAtHop shape: a pure gate filter pinned with literal
+  // entries (a cast, not a schema parse — ref resolution is guard 5's).
+  const sector = {
+    id: 'fixture',
+    title: 'F',
+    description: 'd',
+    length: 4,
+    theme: 'grassland',
+    layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
+    encounters: { normal: [], elite: [], boss: [] },
+    events: [{ eventId: 'a' }, { eventId: 'b', minHop: 2 }],
+    startingEvents: [],
+  } as unknown as SectorDef;
+
+  it('returns only ungated entries below the gate; gated entries join at minHop', () => {
+    expect(eventPoolAtHop(sector, 0).map((e) => e.eventId)).toEqual(['a']);
+    expect(eventPoolAtHop(sector, 1).map((e) => e.eventId)).toEqual(['a']);
+    expect(eventPoolAtHop(sector, 2).map((e) => e.eventId)).toEqual(['a', 'b']);
+    expect(eventPoolAtHop(sector, 3).map((e) => e.eventId)).toEqual(['a', 'b']);
+  });
+
+  it('is empty for a sector with no event pool — legal (the entry degrades to a fight)', () => {
+    const empty = { ...sector, events: [] } as SectorDef;
+    expect(eventPoolAtHop(empty, 0)).toEqual([]);
   });
 });

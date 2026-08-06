@@ -40,12 +40,14 @@
  * then **W2** the elite-kind scatter pass (same shape, appended AFTER rest);
  * then **50c** the port-kind scatter pass (same shape again, appended AFTER
  * elite, plus a two-draw fallback ONLY when the scatter placed no port — the
- * ≥1-per-map guarantee). The kinds passes run **after** the full structure is
- * built and append their draws at the tail, so the width+edge stream — and
- * thus the map *structure* for any seed — is byte-identical to the pre-G3
- * generator. Each kind pass comes strictly after the one before it, so rest
- * placement is byte-identical to pre-W2 and rest+elite placement to pre-50c;
- * only the newest pass's draws are new. (Gameplay still shifts, since
+ * ≥1-per-map guarantee); then **74e** the event-kind scatter pass (appended
+ * AFTER port including its fallback). The kinds passes run **after** the full
+ * structure is built and append their draws at the tail, so the width+edge
+ * stream — and thus the map *structure* for any seed — is byte-identical to
+ * the pre-G3 generator. Each kind pass comes strictly after the one before
+ * it, so rest placement is byte-identical to pre-W2, rest+elite placement to
+ * pre-50c, and rest+elite+port placement to pre-74e; only the newest pass's
+ * draws are new. (Gameplay still shifts, since
  * rests/elites/ports replace battles on some paths → expected
  * fuzz/determinism baseline reset, folded into the introducing phase.) The
  * number and order of RNG draws *is* the seed→map mapping; reordering them
@@ -61,10 +63,9 @@ import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
 import type { RunConfig } from './RunConfig';
 
-// 74b adds 'event' (the choose-your-own-adventure node, spec §Events). No
-// scatter pass yet — until §74e places them, an event node exists only via
-// the `firstNodeKind` stamp (the dev/isolation dial), which was always
-// kind-generic.
+// 74b adds 'event' (the choose-your-own-adventure node, spec §Events);
+// 74e places them (the fourth scatter pass + the sector `startingEvents`
+// root stamp via `stampRootKind`).
 export type NodeKind = 'battle' | 'rest' | 'boss' | 'elite' | 'port' | 'event';
 
 /**
@@ -109,6 +110,8 @@ const {
   eliteMinSpacing: ELITE_MIN_SPACING,
   portChance: PORT_CHANCE,
   portMinSpacing: PORT_MIN_SPACING,
+  eventChance: EVENT_CHANCE,
+  eventMinSpacing: EVENT_MIN_SPACING,
 } = NODE_MAP;
 
 export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number): NodeMap {
@@ -124,10 +127,12 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
   // leaves the default path byte-identical.
   const hopCount = config?.hopCount ?? lengthOverride ?? HOP_COUNT;
   const maxWidth = config?.mapMaxWidth ?? MIDDLE_WIDTH_MAX;
-  // 72e — the scatter-chance probe dials ride the same override precedence;
-  // absent fields keep the authored values (the G1 byte-identity contract).
+  // 72e/74e — the scatter-chance probe dials ride the same override
+  // precedence; absent fields keep the authored values (the G1 byte-identity
+  // contract).
   const eliteChance = config?.eliteChance ?? ELITE_CHANCE;
   const portChance = config?.portChance ?? PORT_CHANCE;
+  const eventChance = config?.eventChance ?? EVENT_CHANCE;
 
   const hops: number[][] = [];
   const nodes: MapNode[] = [];
@@ -314,6 +319,32 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
       portIds.add(ids[rng.int(0, ids.length - 1)]!);
     }
   }
+  // 74e event kinds — a FOURTH tail pass, AFTER the port scatter AND its
+  // fallback, so rest + elite + port placement stay byte-identical to
+  // pre-74e; only the event draws are new, appended at the tail (the
+  // W2/50c discipline). Same eligible band + per-hop roll; the candidate
+  // set excludes every prior kind, so an event never overwrites one.
+  // DELIBERATELY DENSE (chance 0.5, spacing 1 — see config/nodemap.ts):
+  // events are a major run component, not an elite-style rare detour, and
+  // back-to-back event hops are legal by design (user feel call, §74e).
+  // Known interim artifact: stacked on the other passes, a width-2 hop can
+  // fill BOTH slots with special nodes (a battle-less hop) — §77's
+  // constructive generator owns the real events-to-combat ratio.
+  const eventIds = new Set<number>();
+  let lastEventHop = -Infinity;
+  for (let f = 2; f <= hopCount - 2; f++) {
+    const roll = rng.next();
+    if (roll < eventChance && f - lastEventHop >= EVENT_MIN_SPACING) {
+      const ids = hops[f]!.filter(
+        (id) => !restIds.has(id) && !eliteIds.has(id) && !portIds.has(id),
+      );
+      if (ids.length > 0) {
+        const pick = ids[rng.int(0, ids.length - 1)]!;
+        eventIds.add(pick);
+        lastEventHop = f;
+      }
+    }
+  }
   // hopCount === 1 degenerates to root == terminal: `bossId` is the root, so
   // the single node is tagged `boss` — the player's one fight IS the boss, and
   // the map renderer shows its `!` kind glyph (S2 dropped the root `@`-override,
@@ -338,7 +369,9 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
             ? { ...n, kind: 'elite' }
             : portIds.has(n.id)
               ? { ...n, kind: 'port' }
-              : n,
+              : eventIds.has(n.id)
+                ? { ...n, kind: 'event' }
+                : n,
   );
 
   return {
@@ -347,6 +380,24 @@ export function generate(rng: RNG, config?: RunConfig, lengthOverride?: number):
     rootId: hops[0]![0]!,
     terminalId: hops[hopCount - 1]![0]!,
     hops,
+  };
+}
+
+/**
+ * 74e — re-kind a finished map's ROOT node (the sector `startingEvents`
+ * stamp; the 68e `firstNodeKind` discipline as a post-generation transform).
+ * ZERO extra RNG draws — structure, edges, and every scatter placement are
+ * untouched, so a stamped map differs from its unstamped twin in exactly the
+ * root's `kind`. Boss wins on the root === terminal degenerate (hopCount 1),
+ * matching the in-generate stamp's precedence. Callers resolve WHICH kind
+ * wins the root (the `firstNodeKind` dev dial beats the sector stamp —
+ * isolation power, the 63c precedence precedent) before calling.
+ */
+export function stampRootKind(map: NodeMap, kind: NodeKind): NodeMap {
+  if (map.rootId === map.terminalId) return map;
+  return {
+    ...map,
+    nodes: map.nodes.map((n) => (n.id === map.rootId ? { ...n, kind } : n)),
   };
 }
 
@@ -372,6 +423,7 @@ export function dump(map: NodeMap): string {
       if (node?.kind === 'rest') return `${id}(rest)`;
       if (node?.kind === 'elite') return `${id}(elite)`;
       if (node?.kind === 'port') return `${id}(port)`;
+      if (node?.kind === 'event') return `${id}(event)`;
       return String(id);
     });
     lines.push(`  Hop ${f}: ${labeled.join(', ')}`);

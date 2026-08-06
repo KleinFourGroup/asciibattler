@@ -45,9 +45,9 @@ import { glyphForArchetype, ALL_ARCHETYPES } from '../sim/archetypes';
 import { RNG, type RNGSnapshot } from '../core/RNG';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
-import { generate as generateNodeMap, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
+import { generate as generateNodeMap, stampRootKind, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
 import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConfig';
-import { getSector, type SectorDef } from '../config/sectors';
+import { getSector, eventPoolAtHop, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
 import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
 import { rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
@@ -1050,6 +1050,9 @@ export class Run {
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
     this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
+    // 74e — the startingEvents root stamp (zero-draw; the `firstNodeKind`
+    // dev dial WINS when set — isolation power, the 63c precedence rule).
+    if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
     // 66a — pre-roll the sector's boss (the forewarning pair) on the SAME
     // sector fork, after the node-map draws. The parent `this.rng` fork
     // count is untouched, so every pre-boss stream stays seed-identical —
@@ -1410,12 +1413,23 @@ export class Run {
    * pure, and the fold-routed chance is the daemon seam. Exactly ONE draw
    * per entry regardless of the chance value (the gotcha-#49 always-draw
    * discipline), riding the dedicated `eventRng`. A resolve (or an empty
-   * eligible pool — flag-gated chains can starve the catalog) degrades to a
+   * eligible pool — flag-gated chains can starve the pool) degrades to a
    * normal fight: KIND_BY_NODE maps 'event' → the sector's normal pool.
+   *
+   * 74e — the `startingEvents` seam: on the stamped ROOT of a sector with
+   * a non-empty `startingEvents` list, entry draws from THAT list, and the
+   * combat-resolve result is IGNORED (the roll still draws — the #49
+   * discipline is draw-count stability, not honoring): an authored opening
+   * beat must not vanish 25% of the time. It still degrades on an empty
+   * ELIGIBLE pool (authors gate eligibility carefully).
    */
   private enterEventNode(nodeId: number): void {
+    const sector = this.currentSector();
+    const fromStartingPool =
+      nodeId === this.nodeMap.rootId && sector.startingEvents.length > 0;
     const roll = this.eventRng.next();
-    const eventDef = roll < this.effectiveEventCombatChance() ? null : this.rollEventForNode();
+    const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool;
+    const eventDef = combatResolved ? null : this.rollEventForNode(fromStartingPool);
     if (eventDef === null) {
       this.phase = 'battle';
       this.beginEncounter();
@@ -1427,15 +1441,21 @@ export class Run {
   }
 
   /**
-   * 74b — pick this node's event: the forced dial short-circuits (validated
-   * at construction); otherwise a uniform draw over the eligibility-passing
-   * catalog. PLACEHOLDER source — §74e replaces the catalog scan with the
-   * sector-owned weighted `events` pool (the landing note; the eligibility
-   * filter and the one-draw shape survive the swap). Null = nothing
-   * eligible (the caller degrades to a fight). Draw count is 1 or 0
-   * (forced/empty) — never filter-size-dependent.
+   * 74b→74e — pick this node's event from the SECTOR-OWNED weighted pool
+   * (`events`, or `startingEvents` on the seam — the 74b catalog-scan
+   * placeholder retired to plan). The forced dial short-circuits (validated
+   * at construction). Pool entries hop-gate (`minHop`, the encounter-pool
+   * rule), resolve against the run's ACTIVE catalog — an entry a bespoke
+   * `eventCatalog` can't resolve is skipped, the boot guard owns shipped
+   * drift — then filter by the event def's `eligibility` against live run
+   * state (the flag-gated-chains mechanism). One cumulative-weight draw
+   * over the survivors (weight absent = 1; singletons still draw — #111
+   * applied forward). Null = nothing eligible (the caller degrades to a
+   * fight). Draw count is 1 or 0 (forced/empty) — never
+   * filter-size-dependent (eventRng is the filter-dependent stream by
+   * design, but a stable count keeps reasoning cheap).
    */
-  private rollEventForNode(): EventDef | null {
+  private rollEventForNode(fromStartingPool: boolean): EventDef | null {
     if (this.forcedEventId !== null) {
       const forced = this.eventCatalog.find((e) => e.id === this.forcedEventId);
       if (forced === undefined) {
@@ -1443,11 +1463,26 @@ export class Run {
       }
       return forced;
     }
-    const eligible = this.eventCatalog.filter((e) =>
-      (e.eligibility ?? []).every((c) => this.evaluateEventCondition(c)),
-    );
+    const sector = this.currentSector();
+    const pool = fromStartingPool
+      ? sector.startingEvents.filter((e) => (e.minHop ?? 0) <= this.currentHop)
+      : eventPoolAtHop(sector, this.currentHop);
+    const eligible: Array<{ def: EventDef; weight: number }> = [];
+    for (const entry of pool) {
+      const def = this.eventCatalog.find((e) => e.id === entry.eventId);
+      if (def === undefined) continue;
+      if (!(def.eligibility ?? []).every((c) => this.evaluateEventCondition(c))) continue;
+      eligible.push({ def, weight: entry.weight ?? 1 });
+    }
     if (eligible.length === 0) return null;
-    return eligible[this.eventRng.int(0, eligible.length - 1)]!;
+    const total = eligible.reduce((sum, e) => sum + e.weight, 0);
+    const draw = this.eventRng.next() * total;
+    let acc = 0;
+    for (const e of eligible) {
+      acc += e.weight;
+      if (draw < acc) return e.def;
+    }
+    return eligible[eligible.length - 1]!.def;
   }
 
   /**
@@ -1977,6 +2012,20 @@ export class Run {
       bossEncounterId: selection.encounter.id,
       bossEncounterMap: this.buildEncounterMap(selection.layoutId, sectorRng),
     };
+  }
+
+  /**
+   * 74e — stamp the active sector's ROOT node `event` when the sector
+   * authors `startingEvents` (the source-node seam, zero-draw — see
+   * `stampRootKind`). Callers gate on the `firstNodeKind` dev dial where
+   * one can exist (the constructor seam); `advanceSector` calls
+   * unconditionally (the scatter slice never carries the dial). Ships
+   * inert — every shipped `startingEvents` is empty until §74i.
+   */
+  private stampStartingEventRoot(): void {
+    if (this.currentSector().startingEvents.length > 0) {
+      this.nodeMap = stampRootKind(this.nodeMap, 'event');
+    }
   }
 
   /**
@@ -3333,6 +3382,9 @@ export class Run {
     this.currentSectorNodeId = next.sectorNodeId;
     this.currentSectorId = next.sectorId;
     this.nodeMap = generateNodeMap(sectorRng, this.sectorScatterConfig, this.currentSectorLength());
+    // 74e — the new sector's startingEvents stamp (the scatter slice never
+    // carries `firstNodeKind` — that dial is first-sector-only by design).
+    this.stampStartingEventRoot();
     // 66a — the NEW sector's boss pre-rolls on the same fork (forewarning is
     // sector-scoped: it re-rolls at every sector entry, same as at run start).
     const bossRoll = this.rollBossForSector(sectorRng);

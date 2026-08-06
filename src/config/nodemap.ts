@@ -20,6 +20,15 @@
  * unchanged); never overwrites either; and unlike elites, ≥1 port per map is
  * GUARANTEED via a fallback placement when the scatter rolls none (maps with
  * no eligible middle hop — dev hopCount overrides ≤ 3 — are exempt).
+ *
+ * 74e — event scatter: `eventChance` / `eventMinSpacing` mirror the pattern
+ * for the event node, a FOURTH pass after ports. Deliberately dense
+ * (chance 0.5, spacing 1 = back-to-back hops legal): events are a major
+ * run component, ~half as frequent as battles on a path (user feel call,
+ * §74e) — not an elite-style rare detour. LAUNCH-ROUGH: §81 re-reads the
+ * density with the rest of the event-era balance; §77's constructive
+ * generator replaces this scatter with a real events-to-combat ratio pass
+ * (the one-node-per-hop ceiling is this interim pass's known limit).
  */
 
 import { z } from 'zod';
@@ -38,11 +47,13 @@ const NodeMapSchema = z
     eliteMinSpacing: z.number().int().positive(),
     portChance: z.number().min(0).max(1),
     portMinSpacing: z.number().int().positive(),
+    /** 74e — event-node placement (see header: dense by design). */
+    eventChance: z.number().min(0).max(1),
+    eventMinSpacing: z.number().int().positive(),
     /** 74b — the chance an entered event node resolves straight into a
      *  combat encounter (spec §Events; base of the `eventCombatChance` run
      *  stat — folded, not read raw, so daemons can bend it). NOT a scatter
-     *  knob: event-node PLACEMENT knobs (`eventChance`/`eventMinSpacing`)
-     *  land with the §74e scatter pass. */
+     *  knob — placement is `eventChance`/`eventMinSpacing` above. */
     eventCombatChance: z.number().min(0).max(1),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {

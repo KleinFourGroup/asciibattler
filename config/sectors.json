@@ -36,7 +36,13 @@
         { "encounterId": "bandit-king" },
         { "encounterId": "banditQueen", "minHop": 0 }
       ]
-    }
+    },
+    "events": [
+      { "eventId": "corrupted-shrine" },
+      { "eventId": "whispering-terminal" },
+      { "eventId": "whispering-terminal-collects" }
+    ],
+    "startingEvents": []
   },
   {
     "id": "the-deep-end",
@@ -76,6 +82,12 @@
         { "encounterId": "bandit-king-deep" },
         { "encounterId": "banditQueen-deep" }
       ]
-    }
+    },
+    "events": [
+      { "eventId": "corrupted-shrine" },
+      { "eventId": "whispering-terminal" },
+      { "eventId": "whispering-terminal-collects" }
+    ],
+    "startingEvents": []
   }
 ]

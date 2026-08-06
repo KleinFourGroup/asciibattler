@@ -193,6 +193,9 @@ describe('sectorAdvanceConfig (72e — the scatter slice that survives a sector 
       eliteChance: 1,
     });
     expect(sectorAdvanceConfig({ portChance: 0.5 })).toEqual({ portChance: 0.5 });
+    // 74e — eventChance joins the slice (the #121 every-sector charter).
+    expect(sectorAdvanceConfig({ eventChance: 0.5 })).toEqual({ eventChance: 0.5 });
+    expect(sectorAdvanceConfig({ eventChance: 0, hopCount: 3 })).toEqual({ eventChance: 0 });
     expect(sectorAdvanceConfig({ eliteChance: 0, portChance: 1 })).toEqual({
       eliteChance: 0,
       portChance: 1,

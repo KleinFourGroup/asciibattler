@@ -193,6 +193,11 @@ function addSector(): void {
     layouts: [{ layoutId: PROCEDURAL_LAYOUT_ID }],
     // The fight pool starts empty in every kind bucket (Wb4 — per-kind pools).
     encounters: { normal: [], elite: [], boss: [] },
+    // 74e — the event pool + startingEvents seam start empty. The editor
+    // UI doesn't edit them yet (§74h/§74i own the authoring surface);
+    // loaded values round-trip through the formatter untouched.
+    events: [],
+    startingEvents: [],
   });
   selectSector(working.length - 1);
 }

@@ -89,11 +89,11 @@ the PATH_KINDS/vector re-baseline.
   Detail: worklog §74c.
 - [x] 74d — the Surge rename (`draw-two`→`surge`) ✅ 2026-08-06,
   inside the bump window; TODO line closed. Detail: worklog §74d.
-- [ ] 74e — placement + sector seams (the SCHEDULED break): event
-  tail scatter pass + dials in `sectorAdvanceConfig` (#121); sector
-  `events` pool + `startingEvents` + formatter; the zero-draw stamp
-  seam; `PATH_KINDS` += `'event'` + the 13-file `event: 0` pad.
-  Exit: fuzz traverses events green.
+- [x] 74e — placement + sector seams ✅ 2026-08-06: landed to plan +
+  the user-signed density flip (eventChance **0.5**/spacing **1** —
+  events are major, not rare detours) + the `eventsVisited` counter
+  and its fuzz exit pin. Exit met (the pin proves opened pages).
+  Detail: worklog §74e.
 - [ ] 74f — EventScene/EventScreen on the port model; failing
   choices SHOWN-DISABLED with requirement. Browser eyeball.
 - [ ] 74g — arbitration: `arbitrateEventChoice` + `'eventChoice'`

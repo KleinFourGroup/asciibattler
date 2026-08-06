@@ -132,9 +132,13 @@ export interface RunConfig {
    * so taking it stays the walker's choice; pair with `firstNodeKind` for a
    * forced-TAKEN read). Same G1 precedence as `mapMaxWidth`; NOT persisted
    * (a rehydrated run falls back to the authored JSON values).
+   * 74e — `eventChance` joins as the third sibling (the event-scatter dial;
+   * `eventChance: 0` is the event-free control arm, `1` the every-hop probe
+   * shape). `eventMinSpacing` stays JSON-only, matching elite/port.
    */
   readonly eliteChance?: number;
   readonly portChance?: number;
+  readonly eventChance?: number;
   /**
    * L1 — override the run's daemon: a full `DaemonConfig` (a catalog entry or
    * a bespoke test/profile daemon), or `null` for a daemon-LESS run (the fuzz
@@ -243,15 +247,24 @@ export interface RunConfig {
  * regeneration deliberately drops the config (`advanceSector` passes
  * `undefined` — `hopCount`'s single-sector semantics must not leak into
  * sector 2), but the scatter probe dials are chartered to shape EVERY
- * sector's map (the deep-end elite/port reads are the point). Returns
- * `undefined` when neither dial is set, so the no-dial path stays
- * byte-identical to the config-less call.
+ * sector's map (the deep-end elite/port reads are the point; gotcha #121).
+ * 74e adds `eventChance` (same charter — an event-density probe that only
+ * shaped act 1 would repeat the #121 silent-scope bug). Returns `undefined`
+ * when no dial is set, so the no-dial path stays byte-identical to the
+ * config-less call.
  */
 export function sectorAdvanceConfig(config?: RunConfig): RunConfig | undefined {
-  if (config?.eliteChance === undefined && config?.portChance === undefined) return undefined;
-  const out: { eliteChance?: number; portChance?: number } = {};
+  if (
+    config?.eliteChance === undefined &&
+    config?.portChance === undefined &&
+    config?.eventChance === undefined
+  ) {
+    return undefined;
+  }
+  const out: { eliteChance?: number; portChance?: number; eventChance?: number } = {};
   if (config.eliteChance !== undefined) out.eliteChance = config.eliteChance;
   if (config.portChance !== undefined) out.portChance = config.portChance;
+  if (config.eventChance !== undefined) out.eventChance = config.eventChance;
   return out;
 }
 

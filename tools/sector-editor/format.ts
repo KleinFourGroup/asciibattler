@@ -7,7 +7,9 @@
  * against the committed file (tests/tools/sector-editor.test.ts).
  *
  * Mirrors `config/sectors.json` exactly: 2-space indent, the
- * `id / title / description / length / theme / layouts / encounters` key order,
+ * `id / title / description / length / theme / layouts / encounters /
+ * events / startingEvents` key order (the last two are 74e; emitted with
+ * `"eventId"` entries, `[]` when empty — first-class slots),
  * and each pool entry inline on one line as `{ "layoutId": …[, "minHop": …][,
  * "weight": …] }` (or `"encounterId"` for the fight pool) — `minHop` / `weight`
  * emitted only when present (they're optional in the schema, so an absent one
@@ -20,6 +22,7 @@ import type {
   SectorDef,
   SectorLayoutEntry,
   SectorEncounterEntry,
+  SectorEventEntry,
 } from '../../src/config/sectors';
 import { ENCOUNTER_KINDS } from '../../src/config/encounters';
 
@@ -37,6 +40,34 @@ function formatEncounterEntry(entry: SectorEncounterEntry): string {
   if (entry.minHop !== undefined) parts.push(`"minHop": ${JSON.stringify(entry.minHop)}`);
   if (entry.weight !== undefined) parts.push(`"weight": ${JSON.stringify(entry.weight)}`);
   return `{ ${parts.join(', ')} }`;
+}
+
+/** 74e — one event-pool entry on a single line; mirrors `formatEncounterEntry`. */
+function formatEventEntry(entry: SectorEventEntry): string {
+  const parts = [`"eventId": ${JSON.stringify(entry.eventId)}`];
+  if (entry.minHop !== undefined) parts.push(`"minHop": ${JSON.stringify(entry.minHop)}`);
+  if (entry.weight !== undefined) parts.push(`"weight": ${JSON.stringify(entry.weight)}`);
+  return `{ ${parts.join(', ')} }`;
+}
+
+/** 74e — one event list (`events` / `startingEvents`), always emitted
+ *  (`[]` when empty — both are first-class slots, the fight-pool rule). */
+function pushEventList(
+  lines: string[],
+  key: string,
+  list: readonly SectorEventEntry[],
+  tail: string,
+): void {
+  if (list.length === 0) {
+    lines.push(`    "${key}": []${tail}`);
+    return;
+  }
+  lines.push(`    "${key}": [`);
+  list.forEach((entry, ei) => {
+    const etail = ei === list.length - 1 ? '' : ',';
+    lines.push(`      ${formatEventEntry(entry)}${etail}`);
+  });
+  lines.push(`    ]${tail}`);
 }
 
 /**
@@ -77,7 +108,11 @@ export function formatSectorsJson(sectors: readonly SectorDef[]): string {
         lines.push(`      ]${ktail}`);
       }
     });
-    lines.push('    }');
+    lines.push('    },');
+    // 74e — the event pool + the startingEvents seam, after `encounters`
+    // (the committed-file key order).
+    pushEventList(lines, 'events', sector.events, ',');
+    pushEventList(lines, 'startingEvents', sector.startingEvents, '');
     lines.push(`  }${tail}`);
   });
   lines.push(']');

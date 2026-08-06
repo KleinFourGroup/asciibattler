@@ -99,6 +99,7 @@ export type RunModeArgs = Pick<
   | 'drawAdd'
   | 'eliteChance'
   | 'portChance'
+  | 'eventChance'
   | 'grant'
   | 'arbitrate'
   | 'arbitrateTier'
@@ -139,11 +140,12 @@ export function runRunCli(args: RunModeArgs): void {
     startingRoster?: readonly RosterEntry[];
     forcedLayoutId?: string;
     forcedEncounterId?: string;
-    firstNodeKind?: 'elite';
+    firstNodeKind?: 'elite' | 'event';
     bitsMultiplier?: number;
     drawAmountAdd?: number;
     eliteChance?: number;
     portChance?: number;
+    eventChance?: number;
     grants?: readonly string[];
   } = {};
   if (args.hops !== undefined) runConfig.hopCount = args.hops;
@@ -153,14 +155,16 @@ export function runRunCli(args: RunModeArgs): void {
   if (roster && roster.length > 0) runConfig.startingRoster = roster;
   if (layout !== undefined) runConfig.forcedLayoutId = layout;
   if (encounter !== undefined) runConfig.forcedEncounterId = encounter;
-  // 68e — `--first-node=elite`: the full-pool elite isolation shape (pairs
-  // with --hops=2 --encounter=<elite>). Only 'elite' exists; anything else is
-  // a typo worth failing loudly on.
+  // 68e→74e — `--first-node=elite` (the full-pool elite isolation shape,
+  // pairs with --hops=2 --encounter=<elite>) or `--first-node=event` (the
+  // event-phase isolation shape, pairs with --hops=2 [+ a forced event] —
+  // the 74b RunConfig widening surfaced to the CLI). Anything else is a
+  // typo worth failing loudly on.
   if (args.firstNode !== undefined) {
-    if (args.firstNode !== 'elite') {
-      bail(`--first-node: the only supported stamp is "elite" (got "${args.firstNode}")`);
+    if (args.firstNode !== 'elite' && args.firstNode !== 'event') {
+      bail(`--first-node: supported stamps are "elite" and "event" (got "${args.firstNode}")`);
     }
-    runConfig.firstNodeKind = 'elite';
+    runConfig.firstNodeKind = args.firstNode;
   }
   // 60c — `--bits-multiplier=<f>` rides the 48f RunConfig lever (finite,
   // > 0; anything else is a flag typo worth failing loudly on).
@@ -185,6 +189,7 @@ export function runRunCli(args: RunModeArgs): void {
   for (const [flag, key] of [
     ['--elite-chance', 'eliteChance'],
     ['--port-chance', 'portChance'],
+    ['--event-chance', 'eventChance'],
   ] as const) {
     const v = args[key];
     if (v !== undefined) {

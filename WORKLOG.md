@@ -484,3 +484,65 @@ TODO's "outputs, no action" clause). Rides the open v41 window: a
 dev-save carrying `draw-two` in its cache now hard-rejects on the
 catalog re-validation, which is the window's whole point. Closes
 TODO.md's rename line (user call, 73c).
+
+### 74e — placement + sector seams (2026-08-06)
+
+**The shape-lock (user-signed, this session).** Three calls: (1) the
+three smoke events POOL into both shipped sectors' `events` at 74e —
+placement of shipped content, not §74i's design round; without it the
+exit criterion would test node traversal but never the event phase.
+(2) `startingEvents` ships seam-only (schema + zero-draw stamp +
+empty arrays; §74i authors the first entry); the `firstNodeKind` dev
+dial BEATS the sector stamp (isolation power). (3) **The density
+correction** — the spec's elite-style "optional detour" framing was
+wrong: events are a major run component, ~half as frequent as battles
+on a path, back-to-back legal (user feel call). Shipped
+`eventChance 0.5` / `eventMinSpacing 1` (vs the elite/port
+0.25/0.2 + spacing 2–3 pattern), LAUNCH-ROUGH for §81. Knock-ons
+owned eyes-open: the one-event-per-hop scatter ceiling (§77's ratio
+pass is the real control), battle-less width-2 hops (rest+event fills
+both slots), the sharpened economy tradeoff (hop-scaled enemies vs
+per-fight income — a first-order channel at 0.5 density, §81 reads
+it), and 3-event catalog repetition until §74i.
+
+**As-built to the cut + the shape-lock.** Notes beyond the cut line:
+
+- The scatter is the FOURTH tail pass (after port INCLUDING its
+  fallback); rest/elite/port placement byte-identical to pre-74e —
+  pinned per-seed by the eventChance-dial twin test (a dialed map's
+  non-event kinds equal the plain map's). The appended draws shift
+  the boss forewarning pre-roll (same `sectorRng`) — the scheduled
+  seed-stream break, on top of placement itself changing routes.
+- `stampRootKind` (NodeMap export) is the startingEvents stamp
+  mechanism: a pure post-generation transform, boss-wins on the
+  hopCount-1 degenerate. Run applies it at BOTH sector-entry seams;
+  the advanceSector seam is dial-free by construction (the scatter
+  slice never carries `firstNodeKind`). ⚠ The Run-level startingEvents
+  wiring (stamp + the ignore-combat-resolve branch) ships EXERCISED
+  ONLY by unit tests on the pure pieces — no shipped sector authors
+  `startingEvents` until §74i, whose exit sweep is the landing note
+  for end-to-end coverage.
+- A starting-event entry still DRAWS the combat-resolve roll (the #49
+  draw-count discipline) but ignores the result — an authored opening
+  beat must not vanish 25% of the time. Empty-eligible still degrades.
+- `rollEventForNode` resolves pool ids against the ACTIVE catalog and
+  silently skips unresolvable entries (bespoke-catalog runs against
+  shipped sector pools); the sectors.ts guard 5 owns shipped drift.
+  One cumulative-weight draw, singletons included (#111 forward).
+- `eventChance` joined `sectorAdvanceConfig` (#121) + the fuzz
+  `--event-chance` dial; `--first-node=event` widened in the fuzz CLI
+  (the 74b RunConfig widening surfaced — it still bailed on 'event').
+- **`RunResult.eventsVisited`** — the portPurchases/packetsFired
+  non-vacuous twin, counted at the first choice-iteration per visit
+  (TS narrows `run.phase` at the dispatch site). The §74e exit
+  criterion is a REGRESSION PIN now: harness.test's traversal test
+  proves opened pages at eventChance=1 and exact zero on the
+  eventChance=0 control arm. Not yet a summary.csv column (§81's
+  call).
+- `dockAtPort` (Run.test) routes event-free by construction now — an
+  opened event would perturb the port pins and a combat-resolve is a
+  chance draw; seeds 41→42 / 84→87 re-seeded (no event-free route).
+  The loud-throw discipline mirrors findRestRun.
+- Main suite needed NO other re-baseline: the 74b-hardened drivers
+  (win-until-done) absorbed the stream shift. 2423 main (+20) /
+  387 fuzz (+1) / typecheck clean.

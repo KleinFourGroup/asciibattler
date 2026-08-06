@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
-import { generate, dump, type NodeMap, type MapEdge } from './NodeMap';
+import { generate, dump, stampRootKind, type NodeMap, type MapEdge } from './NodeMap';
 
 // Balance-proof: derive every bound from the config the generator actually
 // reads, so a config/nodemap.json tweak is a one-file edit, not test churn.
@@ -74,11 +74,11 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('every node kind is battle | rest | boss | elite', () => {
+    it('every node kind is battle | rest | boss | elite | port | event', () => {
       for (let s = 0; s < 50; s++) {
         const map = generate(new RNG(s));
         for (const n of map.nodes) {
-          expect(['battle', 'rest', 'boss', 'elite', 'port']).toContain(n.kind);
+          expect(['battle', 'rest', 'boss', 'elite', 'port', 'event']).toContain(n.kind);
         }
       }
     });
@@ -304,6 +304,105 @@ describe('NodeMap.generate', () => {
         for (let s = 0; s < 20; s++) {
           const map = generate(new RNG(s), { hopCount: fc });
           expect(map.nodes.some((n) => n.kind === 'port')).toBe(false);
+        }
+      }
+    });
+  });
+
+  describe('node kinds (74e — event)', () => {
+    // Balance-proof: the spacing bound comes from the config the generator
+    // reads. NB eventMinSpacing ships at 1 (back-to-back hops LEGAL — events
+    // are a major run component, the §74e feel call), so the spacing assert
+    // is a config-tracking bound, not a gap guarantee.
+    const { eventMinSpacing } = NODE_MAP;
+
+    it('event nodes only sit on eligible middle hops [2, hopCount-2]', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const lastHop = map.hops.length - 1;
+        for (const n of map.nodes) {
+          if (n.kind === 'event') {
+            expect(n.hop).toBeGreaterThanOrEqual(2);
+            expect(n.hop).toBeLessThanOrEqual(lastHop - 1);
+          }
+        }
+      }
+    });
+
+    it('at most one event per hop, and event hops respect the min spacing', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        const perHop = new Map<number, number>();
+        for (const n of map.nodes) {
+          if (n.kind === 'event') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
+        }
+        for (const count of perHop.values()) expect(count).toBe(1);
+        const eventHops = [...perHop.keys()].sort((a, b) => a - b);
+        for (let i = 1; i < eventHops.length; i++) {
+          expect(eventHops[i]! - eventHops[i - 1]!).toBeGreaterThanOrEqual(eventMinSpacing);
+        }
+      }
+    });
+
+    it('events are DENSE by design: most default maps place several', () => {
+      // The feel call pinned loosely (chance 0.5 over ~8 eligible hops →
+      // expected ~4): at least half the seeds carry >= 2 events. A config
+      // retune moves this — that's the §81 re-read, not a broken pass.
+      let multiEvent = 0;
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        if (map.nodes.filter((n) => n.kind === 'event').length >= 2) multiEvent++;
+      }
+      expect(multiEvent).toBeGreaterThanOrEqual(50);
+    });
+
+    it('an event always leaves a non-event sibling on its hop (route choice holds)', () => {
+      // <= 1 event per hop + middle hops >= 2 wide. NB unlike elites the
+      // sibling can be ANOTHER special kind (rest/port) — a battle-less hop
+      // is a known artifact of the dense interim scatter (§77 owns ratio).
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        for (const n of map.nodes) {
+          if (n.kind !== 'event') continue;
+          const siblings = map.hops[n.hop]!.map((id) => nodeById(map, id));
+          expect(siblings.some((sib) => sib.kind !== 'event')).toBe(true);
+        }
+      }
+    });
+
+    it('an event never overwrites a rest, elite, or port (the tail-pass candidate filter)', () => {
+      // Indirect but complete: every kind pass places <= 1 node per hop and
+      // the event candidate set excludes all three prior kinds, so on any
+      // hop the special kinds are pairwise-distinct nodes. Proven here by
+      // per-hop kind counts never exceeding 1 each.
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        for (const ids of map.hops) {
+          const kinds = ids.map((id) => nodeById(map, id).kind).filter((k) => k !== 'battle');
+          expect(new Set(kinds).size).toBe(kinds.length);
+        }
+      }
+    });
+
+    it('event nodes stay root-reachable and co-reachable to the boss', () => {
+      for (let s = 0; s < 50; s++) {
+        const map = generate(new RNG(s));
+        const fromRoot = reachableFrom(map, map.rootId);
+        const toBoss = coReachableTo(map, map.terminalId);
+        for (const n of map.nodes) {
+          if (n.kind === 'event') {
+            expect(fromRoot.has(n.id)).toBe(true);
+            expect(toBoss.has(n.id)).toBe(true);
+          }
+        }
+      }
+    });
+
+    it('hopCount <= 3 produces no event nodes (empty eligible band)', () => {
+      for (const fc of [1, 2, 3]) {
+        for (let s = 0; s < 20; s++) {
+          const map = generate(new RNG(s), { hopCount: fc });
+          expect(map.nodes.some((n) => n.kind === 'event')).toBe(false);
         }
       }
     });
@@ -609,7 +708,7 @@ function coReachableTo(map: NodeMap, target: number): Set<number> {
   return visited;
 }
 
-describe('the 72e scatter-chance probe dials (eliteChance / portChance)', () => {
+describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eventChance)', () => {
   const SEEDS = 20;
   const count = (map: NodeMap, kind: string): number =>
     map.nodes.filter((n) => n.kind === kind).length;
@@ -646,5 +745,61 @@ describe('the 72e scatter-chance probe dials (eliteChance / portChance)', () => 
       authored += count(generate(new RNG(s)), 'port');
     }
     expect(forced).toBeGreaterThan(authored);
+  });
+
+  it('eventChance=0 scatters no events (the event-free control arm); eventChance=1 scatters at least as many as authored', () => {
+    // NB no >= guarantee and no fallback for events — chance 0 is a true
+    // zero (unlike ports). At spacing 1, chance 1 fills every eligible hop
+    // with a candidate, so the forced count dominates the authored 0.5 roll.
+    let authored = 0;
+    let forced = 0;
+    for (let s = 1; s <= SEEDS; s++) {
+      expect(count(generate(new RNG(s), { eventChance: 0 }), 'event')).toBe(0);
+      const f = count(generate(new RNG(s), { eventChance: 1 }), 'event');
+      expect(f).toBeGreaterThanOrEqual(1);
+      forced += f;
+      authored += count(generate(new RNG(s)), 'event');
+    }
+    expect(forced).toBeGreaterThan(authored);
+  });
+
+  it('an eventChance override leaves rest/elite/port placement byte-identical (the tail-append contract)', () => {
+    // The event pass draws AFTER every other kind pass, so dialing it can
+    // only change event placement — the earlier passes' draws are already
+    // consumed. This is the per-seed observable form of the pass-order rule.
+    for (let s = 1; s <= SEEDS; s++) {
+      const plain = generate(new RNG(s));
+      const dialed = generate(new RNG(s), { eventChance: 0 });
+      expect(dialed.edges).toEqual(plain.edges);
+      expect(dialed.hops).toEqual(plain.hops);
+      for (const n of plain.nodes) {
+        if (n.kind === 'event') continue; // the dialed twin holds 'battle' here
+        expect(nodeById(dialed, n.id).kind).toBe(n.kind);
+      }
+    }
+  });
+});
+
+describe('stampRootKind (74e — the sector startingEvents root stamp)', () => {
+  it('re-kinds ONLY the root, zero-draw: structure and every other kind identical', () => {
+    for (let s = 0; s < 30; s++) {
+      const plain = generate(new RNG(s));
+      const stamped = stampRootKind(plain, 'event');
+      expect(nodeById(stamped, stamped.rootId).kind).toBe('event');
+      expect(stamped.rootId).toBe(plain.rootId);
+      expect(stamped.edges).toEqual(plain.edges);
+      expect(stamped.hops).toEqual(plain.hops);
+      for (const n of plain.nodes) {
+        if (n.id === plain.rootId) continue;
+        expect(nodeById(stamped, n.id).kind).toBe(n.kind);
+      }
+    }
+  });
+
+  it('boss wins the root === terminal degenerate (hopCount 1) — the map returns unchanged', () => {
+    const map = generate(new RNG(7), { hopCount: 1 });
+    const stamped = stampRootKind(map, 'event');
+    expect(stamped).toBe(map);
+    expect(nodeById(stamped, stamped.rootId).kind).toBe('boss');
   });
 });

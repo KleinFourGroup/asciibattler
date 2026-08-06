@@ -139,6 +139,11 @@ export interface RunResult {
    *  proof — the `portPurchases` twin; 0 forever on the anchor arms
    *  (absent `pickPacketFire` = the pre-§59 never-fire behavior). */
   packetsFired: number;
+  /** 74e — event pages the run OPENED (entries that held in the event
+   *  phase; combat-resolved entries count as battles instead). The event
+   *  system's non-vacuous proof — the portPurchases/packetsFired twin —
+   *  and the §81 event-era read's consumption denominator. */
+  eventsVisited: number;
   /** 72b-pre — pool HP recorded at each `sector:cleared` transition, in walk
    *  order (empty = the run never cleared a sector). `[0]` IS the
    *  act-1→act-2 seam value on the two-act walk: health never resets
@@ -612,6 +617,7 @@ export function runOne(
 
   let hops = 0;
   let eventSteps = 0; // 74b — consecutive event choices since the last map hop
+  let eventsVisited = 0; // 74e — opened event pages (the non-vacuous counter)
   let totalTicks = 0;
   let portPurchases = 0; // 50g — the buy policy's transaction count
 
@@ -629,6 +635,7 @@ export function runOne(
         totalTicks,
         portPurchases,
         packetsFired,
+        eventsVisited,
         sectorsCleared,
         poolAtSectorClears,
         telemetry,
@@ -653,6 +660,7 @@ export function runOne(
             totalTicks,
             portPurchases,
             packetsFired,
+            eventsVisited,
             sectorsCleared,
             poolAtSectorClears,
             telemetry,
@@ -677,6 +685,10 @@ export function runOne(
           throw new Error('harness: event page with no enabled choices');
         }
         eventSteps++;
+        // 74e — the first choice-iteration after a map hop IS the visit
+        // marker (eventSteps resets per hop), counted here rather than at
+        // the dispatch site because TS narrows `run.phase` to 'map' there.
+        if (eventSteps === 1) eventsVisited++;
         if (eventSteps > MAX_EVENT_STEPS) {
           throw new Error(
             `harness: ${MAX_EVENT_STEPS} event choices without leaving the event phase`,
@@ -882,6 +894,7 @@ export function runOne(
             totalTicks,
             portPurchases,
             packetsFired,
+            eventsVisited,
             sectorsCleared,
             poolAtSectorClears,
             telemetry,
@@ -1029,6 +1042,7 @@ export function runOne(
     totalTicks,
     portPurchases,
     packetsFired,
+    eventsVisited,
     sectorsCleared,
     poolAtSectorClears,
     telemetry,
@@ -1073,6 +1087,7 @@ function finalize(
   totalTicks: number,
   portPurchases: number,
   packetsFired: number,
+  eventsVisited: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
@@ -1097,6 +1112,7 @@ function finalize(
     portPurchases,
     finalBits: run.bits,
     packetsFired,
+    eventsVisited,
     poolAtSectorClears,
     finalPool: run.playerHealth,
     battles,
@@ -1115,6 +1131,7 @@ function aborted(
   totalTicks: number,
   portPurchases: number,
   packetsFired: number,
+  eventsVisited: number,
   sectorsCleared: number,
   poolAtSectorClears: readonly number[],
   telemetry: TelemetryAccumulator | null,
@@ -1130,6 +1147,7 @@ function aborted(
     totalTicks,
     portPurchases,
     packetsFired,
+    eventsVisited,
     sectorsCleared,
     poolAtSectorClears,
     telemetry,

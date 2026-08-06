@@ -151,6 +151,27 @@ describe('fuzz harness', () => {
   // the divergence check) moved to `harnessDeterminism.test.ts` at 73b — they
   // were this file's heavy half.
 
+  it('fuzz traverses events (74e exit pin): opened pages counted; the eventChance=0 control arm counts zero', () => {
+    // The §74e exit criterion as a regression pin. eventChance=1 places an
+    // event on every spacing-eligible hop with a free candidate; over a few
+    // seeds the random walk must OPEN at least one page (75% per entry at
+    // the base resolve chance). The control arm is exact: no event nodes →
+    // zero visits, deterministically.
+    let opened = 0;
+    for (const seed of [1, 2, 3]) {
+      const result = runOne(seed, makeStrategy('pure-random')!, {
+        runConfig: { hopCount: 6, eventChance: 1 },
+      });
+      expect(result.outcome).not.toBe('aborted');
+      opened += result.eventsVisited;
+    }
+    expect(opened).toBeGreaterThanOrEqual(1);
+    const control = runOne(1, makeStrategy('pure-random')!, {
+      runConfig: { hopCount: 6, eventChance: 0 },
+    });
+    expect(control.eventsVisited).toBe(0);
+  });
+
   it('the full-pool elite isolation shape fields the forced elite at hop 0 (68e)', () => {
     // --hops=2 --first-node=elite --encounter=<elite>: the root is stamped
     // elite and the force composes with it, so the run's FIRST fight is the
@@ -244,6 +265,7 @@ describe('fuzz reporters', () => {
     portPurchases: 0,
     finalBits: 0,
     packetsFired: 0,
+    eventsVisited: 0,
     poolAtSectorClears: [],
     finalPool: 0,
     battles: [],
@@ -635,6 +657,7 @@ describe('fuzz reporters', () => {
       finalTeamSize: 5,
       portPurchases: 0,
       packetsFired: 0,
+      eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [],
       finalPool: 0,
@@ -705,6 +728,7 @@ describe('fuzz reporters', () => {
       finalTeamSize: 5,
       portPurchases: 0,
       packetsFired: 0,
+      eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [],
       finalPool: 0,
@@ -764,6 +788,7 @@ describe('fuzz reporters', () => {
         finalTeamSize: 5,
         portPurchases: 0,
         packetsFired: 0,
+        eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
         finalPool: 0,
@@ -838,6 +863,7 @@ describe('fuzz reporters', () => {
       finalTeamSize: 5,
       portPurchases: 0,
       packetsFired: 0,
+      eventsVisited: 0,
       finalBits: 0,
       poolAtSectorClears: [14],
       finalPool: 0,
@@ -893,6 +919,7 @@ describe('fuzz reporters', () => {
         finalTeamSize: 5,
         portPurchases: 0,
         packetsFired: 0,
+        eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
         finalPool: 0,
@@ -915,6 +942,7 @@ describe('fuzz reporters', () => {
         finalTeamSize: 5,
         portPurchases: 0,
         packetsFired: 0,
+        eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
         finalPool: 0,
@@ -966,6 +994,7 @@ describe('fuzz reporters', () => {
         finalTeamSize: 5,
         portPurchases: 0,
         packetsFired: 0,
+        eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
         finalPool: 0,
@@ -1012,6 +1041,7 @@ describe('fuzz reporters', () => {
         finalTeamSize: 5,
         portPurchases: 0,
         packetsFired: 0,
+        eventsVisited: 0,
         finalBits: 0,
         poolAtSectorClears: [],
         finalPool: 0,

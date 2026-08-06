@@ -85,7 +85,7 @@ function kindWeight(kind: NodeKind, w: ScoredWeights): number {
     case 'port':
       return w.path.port; // 50c — the shop dock (a real route weight once §50d sells)
     case 'event':
-      return 0; // 74b — PATH_KINDS gains 'event' at §74e (with the vector pad); until then scored never seeks events
+      return w.path.event; // 74e — pooled at 0 in every committed vector until a search re-derives
     case 'boss':
       return 0; // forced terminal — no weight
   }

@@ -546,3 +546,12 @@ it), and 3-event catalog repetition until §74i.
 - Main suite needed NO other re-baseline: the 74b-hardened drivers
   (win-until-done) absorbed the stream shift. 2423 main (+20) /
   387 fuzz (+1) / typecheck clean.
+- Browser-verified post-commit (`bec98dd`): `?` glyphs render on the
+  live map (DOM read, seed 43: 4 events + elite/port/rest siblings);
+  a 50-seed live-path sweep read mean 3.74 events/map with exactly
+  one zero-event seed (42 — the ~0.4% tail, land on it and the map
+  just has no `?`s). ⚠ **Interim browser hazard until §74f:** no
+  scene consumes `event:entered` yet, so a human clicking a `?` that
+  OPENS (the ~75% non-resolve case) strands the run in the event
+  phase with no UI. Dev-only exposure (no deploy mid-phase), and 74f
+  is NEXT — don't playtest events in the browser before it lands.

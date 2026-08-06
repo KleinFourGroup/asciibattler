@@ -43,3 +43,15 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   first clearing seed (`openEventAtSeedScan` in Run.test is the same
   shape) — the §61 stream-break lesson ("only non-vacuousness canaries
   re-scan") upgraded to self-healing-by-construction. (`32c1726`.)
+- **Bash-tool commit messages: `\$` inside double quotes emits a literal
+  `$`, silently replacing an intended `§`.** The 74e commit body says
+  "worklog $74e" for this reason (`bec98dd`) — the AGENTS multi-line-`-m`
+  note's sibling papercut. Either write `§` directly in a single-quoted
+  `-m` or accept ASCII. Cosmetic-only, caught by reading the landed
+  message back (the verify-before-claiming reflex paying off small).
+- **A ~0.4%-tail seed CAN be the first one you load — sweep before
+  diagnosing.** Post-74e browser verify: seed 42 (the literal first
+  manual check) was the ONE zero-event map in a 50-seed sweep (mean 3.74
+  events/map). The confirm-the-deficit norm held: one in-browser 50-seed
+  sweep separated "rare tail" from "broken live path" in a minute,
+  before any mechanism story got authored. (`bec98dd`.)

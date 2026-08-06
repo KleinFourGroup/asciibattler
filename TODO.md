@@ -18,6 +18,21 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [x] **Gauntlet spiral cells: spawn geometry is seed-rolled, not cell-pinned.** ✅ RETIRED 2026-07-19 at the §58 no-op verdict — the item was conditioned on a geometry-keyed trigger or a re-measure needing geometry control; §54 closed without either and §58 built no sensor; paired reads share the roll by construction (the note's own carve-out). Full original note: git history + worklog §58b pointer. Surfaced 2026-07-13.
 
+## §74i riders (the event content round) — user notes at the 74f eyeball (2026-08-06)
+
+- [ ] **Event outcome beat.** Events currently resolve by dropping the
+  player back to the map while silently applying effects — a decisive
+  end screen (what happened + what you got) is wanted. Style, not a
+  bug; the user is taking it with the event-writing pass. Candidate
+  shapes: a terminal "outcome page" convention in authored content vs
+  a small engine-side outcome toast — decide at §74i.
+- [ ] **Per-run event repeats.** No dedup/exhaustion rule exists — the
+  same event can repeat within a run (observed: whispering-terminal
+  twice; the 3-event catalog is effectively 2 until the collects flag
+  sets). Decide at §74i whether repeats suppress FTL-style (an
+  eligibility-side seen-flag would ride the existing flag store) or
+  stay legal for repeatable flavor events.
+
 ## Polish / pre-launch
 
 - [ ] **`--sector-hops` in the run-config tool + sweep GUI.** 68b plumbed

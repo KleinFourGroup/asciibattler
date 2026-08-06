@@ -33,8 +33,9 @@ import type { RunSnapshot } from '../../../src/run/Run';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import { HEALTH } from '../../../src/config/health';
-import type { RNG } from '../../../src/core/RNG';
+import { RNG } from '../../../src/core/RNG';
 import type { RewardPortion } from '../../../src/run/rewards';
+import type { EventDef } from '../../../src/config/events';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
@@ -52,6 +53,7 @@ import {
   REWARD_DAEMON_EPSILON,
   GRANT_EPSILON,
   NODE_CHOICE_EPSILON,
+  EVENT_CHOICE_EPSILON,
   DP_TAIL_SCALE,
 } from './arbitratedStrategy';
 
@@ -729,4 +731,183 @@ describe('arbitrated port buys — integration (real evaluator)', () => {
     expect(a.buy).toEqual(b.buy);
     expect(a.record).toEqual(b.record);
   }, 120_000);
+});
+
+describe('arbitrated event choices (74g) — mechanism pins (injected evaluator)', () => {
+  /** A SHIPPED-catalog event state (the shrine, forced at the root) —
+   *  integration rollouts wire-round-trip the run, and bespoke defs
+   *  hard-reject on decode (the 74b pin), so shipped content is the
+   *  fixture. Entry combat-resolves ~25% of the time; hunt the seed
+   *  deterministically. startingBits dials the offering choice's
+   *  bitsAtLeast-10 condition on/off. */
+  function shrineEventRun(startingBits: number): Run {
+    for (let seed = SEED; seed < SEED + 40; seed++) {
+      const run = new Run(seed, new EventBus<GameEvents>(), {
+        firstNodeKind: 'event',
+        forcedEventId: 'corrupted-shrine',
+        startingBits,
+      });
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      if (run.phase === 'event') return run;
+    }
+    throw new Error('no seed in 40 opened the shrine (25% resolve tail)');
+  }
+
+  it('nominee = the doctrine draw; challengers = the other enabled choices with authored labels; tie → nominee', () => {
+    const run = shrineEventRun(100); // 10+ bits: all 3 shrine choices enabled
+    const enabled = run.enabledEventChoices();
+    expect(enabled.length).toBeGreaterThan(1);
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator(Array(enabled.length).fill(0)), // null + (enabled-1)
+    });
+    const pick = arm.pickEventChoice!(run, new RNG(7));
+    expect(enabled).toContain(pick); // the nominee stands on an all-tie
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.site).toBe('eventChoice');
+    expect(rec.epsilon).toBe(EVENT_CHOICE_EPSILON);
+    const page = run.currentEventPage()!;
+    const expected = enabled
+      .filter((i) => i !== pick)
+      .map((i) => `choice:${i} "${page.choices[i]!.label}"`);
+    expect(rec.labels).toEqual(['null', ...expected]);
+    expect(rec.chosenIndex).toBe(0);
+  });
+
+  it('a disabled choice never enumerates (the shown-disabled UI row is not a candidate)', () => {
+    const run = shrineEventRun(0); // <10 bits: the offering (index 1) is disabled
+    const enabled = run.enabledEventChoices();
+    expect(enabled).not.toContain(1);
+    expect(enabled.length).toBeGreaterThan(1); // scoop + pass-by, both unconditioned
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator(Array(enabled.length).fill(0)),
+    });
+    arm.pickEventChoice!(run, new RNG(7));
+    for (const label of arm.driver.decisions[0]!.labels) {
+      expect(label).not.toContain('choice:1 ');
+    }
+  });
+
+  it('a challenger that clears ε wins → its choice index is returned', () => {
+    const run = shrineEventRun(100);
+    const enabled = run.enabledEventChoices();
+    const scores = Array(enabled.length).fill(0);
+    scores[1] = 1000; // the FIRST challenger clears any floor
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator(scores) });
+    const pick = arm.pickEventChoice!(run, new RNG(7));
+    const rec = arm.driver.decisions[0]!;
+    expect(rec.chosenIndex).toBe(1);
+    expect(rec.labels[1]!.startsWith(`choice:${pick} `)).toBe(true);
+  });
+
+  it('a single enabled choice is not a decision: no draw, no rollouts, no log', () => {
+    // Bespoke catalog is FINE here — the mechanism path never clones (the
+    // injected evaluator would throw if consulted, and rng=null throws if
+    // drawn: both zero-cost claims are load-bearing in this pin).
+    const SINGLETON: EventDef[] = [
+      {
+        id: 'test-singleton',
+        name: 'The Singleton',
+        entry: 'start',
+        pages: {
+          start: {
+            text: 'one true exit',
+            choices: [
+              { label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              {
+                label: 'Sealed door',
+                condition: { kind: 'bitsAtLeast', amount: 999999 },
+                outcomes: [{ next: { kind: 'return-to-map' } }],
+              },
+            ],
+          },
+        },
+      },
+    ];
+    let run: Run | null = null;
+    for (let seed = SEED; seed < SEED + 40 && run === null; seed++) {
+      const candidate = new Run(seed, new EventBus<GameEvents>(), {
+        firstNodeKind: 'event',
+        forcedEventId: 'test-singleton',
+        eventCatalog: SINGLETON,
+      });
+      candidate.dispatch({ kind: 'enterNode', nodeId: candidate.nodeMap.rootId });
+      if (candidate.phase === 'event') run = candidate;
+    }
+    expect(run).not.toBeNull();
+    expect(run!.enabledEventChoices()).toEqual([0]);
+    const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([]) });
+    expect(arm.pickEventChoice!(run!, null as never)).toBe(0);
+    expect(arm.driver.decisions).toHaveLength(0);
+  });
+
+  it('the rollout override pins the nominee at the decision page; other sites carry no override', () => {
+    const specs: RunRolloutSpec[] = [];
+    const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+      specs.push(spec);
+      return { score: 0, perSeed: [] };
+    };
+    const run = shrineEventRun(100);
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture });
+    const nominee = arm.pickEventChoice!(run, new RNG(7)); // all-tie → nominee
+    const spec = specs[0]!;
+    expect(spec.strategy?.name).toBe('rollout-event');
+    // The pin branch: at the decision's (eventId, pageId) the override
+    // returns the nominee WITHOUT touching the rollout's rng.
+    expect(spec.strategy!.pickEventChoice!(run, null as never)).toBe(nominee);
+    // No leak: a rewardDaemon decide carries no strategy override.
+    specs.length = 0;
+    arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
+    expect(specs[0]!.strategy).toBeUndefined();
+  });
+});
+
+describe('arbitrated event choices (74g) — integration (real evaluator)', () => {
+  it('SITE DETERMINISM: same runSeed + same event page ⇒ same pick + deep-equal log', () => {
+    const decide = () => {
+      // The hunt is deterministic, so both calls park on the same state.
+      for (let seed = SEED; seed < SEED + 40; seed++) {
+        const run = new Run(seed, new EventBus<GameEvents>(), {
+          firstNodeKind: 'event',
+          forcedEventId: 'corrupted-shrine',
+          startingBits: 100,
+        });
+        run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+        if (run.phase !== 'event') continue;
+        const arm = makeArbitratedStrategy(SEED, { k: 1 });
+        const pick = arm.pickEventChoice!(run, new RNG(7));
+        return { pick, record: arm.driver.decisions[0]! };
+      }
+      throw new Error('no seed opened the shrine');
+    };
+    const a = decide();
+    const b = decide();
+    expect(a.pick).toBe(b.pick);
+    expect(a.record).toEqual(b.record);
+    expect(a.record.site).toBe('eventChoice');
+  }, 240_000);
+});
+
+describe('the pickEventChoice chokepoint (74g) — harness contracts', () => {
+  it('ABSENT vs a doctrine-mirror pickEventChoice ⇒ byte-identical RunResult (and events are visited)', () => {
+    // The 74e traversal shape: eventChance=1 over a few seeds guarantees
+    // opened pages, so the mirror equivalence is non-vacuous.
+    const EVENTS = { runConfig: { hopCount: 6, eventChance: 1 } };
+    let visited = 0;
+    for (const seed of [1, 2, 3]) {
+      const without = runOne(seed, scoredStrategy('event-pin', DEFAULT_SCORED_WEIGHTS), EVENTS);
+      const mirror = vi.fn((run: Run, rng: RNG): number => {
+        const enabled = run.enabledEventChoices();
+        return enabled[rng.int(0, enabled.length - 1)]!;
+      });
+      const withHook = runOne(
+        seed,
+        { ...scoredStrategy('event-pin', DEFAULT_SCORED_WEIGHTS), pickEventChoice: mirror },
+        EVENTS,
+      );
+      expect(withHook).toEqual(without);
+      if (without.eventsVisited > 0) expect(mirror).toHaveBeenCalled();
+      visited += without.eventsVisited;
+    }
+    expect(visited).toBeGreaterThanOrEqual(1);
+  }, 240_000);
 });

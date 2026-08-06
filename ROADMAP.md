@@ -99,8 +99,9 @@ the PATH_KINDS/vector re-baseline.
   phrase helper). Exit met — all five flows browser-driven (open ·
   shown-disabled+requirement · met-dim · page hop · start-encounter);
   the 74e interim hazard CLOSED. Detail: worklog §74f.
-- [ ] 74g — arbitration: `arbitrateEventChoice` + `'eventChoice'`
-  site + ε floor + walker clone contract. Exit: decisions.csv rows.
+- [x] 74g — arbitration ✅ 2026-08-06: nominator model + shared
+  MAP-class ε (provisional, §81 re-reads) + singleton rule. Exit met
+  (decisions.csv `eventChoice` rows). Detail: worklog §74g.
 - [ ] 74h — the event editor (encounter-editor shape;
   `formatEventsJson` + byte-fidelity test; allowlist; index card).
 - [ ] 74i — DECISION POINT: the demo-catalog design round (+ a Start

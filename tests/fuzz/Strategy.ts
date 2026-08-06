@@ -96,4 +96,15 @@ export interface FuzzStrategy {
    * this, so their draw sequences and the fuzz baselines are untouched.
    */
   pickReward?(portion: RewardPortion, run: Run, rng: RNG): boolean;
+  /**
+   * 74g — OPTIONAL event-choice decision, asked once per choice-iteration
+   * of the event phase: return the index of the choice to dispatch. It
+   * must be one of `run.enabledEventChoices()` — a disabled index is
+   * rejected by Run (consuming nothing) and the harness would spin to its
+   * MAX_EVENT_STEPS throw. ABSENT = the doctrine policy: one uniform-
+   * random draw among the enabled choices off the policy stream (the 74b
+   * harness arm, byte for byte); the anchor arms never define this, so
+   * their draw sequences and the fuzz baselines are untouched.
+   */
+  pickEventChoice?(run: Run, rng: RNG): number;
 }

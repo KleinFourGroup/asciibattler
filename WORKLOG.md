@@ -599,3 +599,47 @@ the cut line:
   pass, as always.
 - render/ui policy: no new tests (eyeball-only); the main suite +
   typecheck stay green (Run.ts gained only the getter).
+
+### 74g — arbitration: the eventChoice site (2026-08-06)
+
+**Shape-lock (user-signed, this session).** Three calls: (1) **the
+nominator model** — the doctrine policy's uniform-random pick among the
+enabled choices is the NOMINEE/null arm (the nodeChoice precedent); the
+live-vs-rollout coherence rule holds via a rollout strategy override
+that pins `pickEventChoice` to the nominee while the clone sits at the
+decision's `(eventId, pageId)` (`run.activeEvent` is public — no new
+Run API), plays cheap uniform-random on later pages, and re-pins on an
+authored loop revisit (deterministic, MAX_EVENT_STEPS-capped). (2)
+**ε = the MAP class floor (3.265), shared by class argument** — the
+grant→preTurn / nodeChoice→map precedent (out-of-battle clone,
+next-battle horizon). PROVISIONAL: event pages are a context class
+readEpsilonAA has never read; the §81 board round re-reads it. (3)
+**A single enabled choice is not a decision** — no draw, no rollouts,
+no log (the singleton-frontier rule; forced pages stay free).
+
+**As-built to the cut.** Notes beyond the cut line:
+
+- `FuzzStrategy.pickEventChoice` is the sixth optional hook; ABSENT =
+  the doctrine draw byte-for-byte (pinned by the harness-contract
+  mirror test, the pickReward/pickGrantAction idiom). Harness + walker
+  both consult it; the walker's clone-contract phase list gains
+  `'event'`.
+- The bespoke-catalog caveat is written at the site header: rollout
+  clones are wire round-trips, so the arb arm can't arbitrate a
+  bespoke (in-memory `eventCatalog`) event — the 74b pin makes it
+  throw loud in `Run.fromJSON`. Every fuzz batch runs shipped
+  content; the dev-dial combination is documented, not repaired.
+- `eventChoiceEpsilon` joins the per-site `ArbitratedConfig`
+  overrides. NO CLI flag: `--grant-epsilon` exists for the 71d
+  ablation instrument specifically — an event ablation dial gets
+  added when an instrument wants one, not speculatively.
+- Test fixtures ride the 74b dev dials (`firstNodeKind:'event'` +
+  `forcedEventId` + a deterministic open-entry seed hunt — no bespoke
+  daemon needed); the singleton pin uses a bespoke two-choice event
+  legally (the mechanism path never clones) and passes `rng: null` +
+  an empty evaluator so both zero-cost claims are load-bearing.
+- Exit met: a 4-seed `--arbitrate --event-chance=1` batch wrote 17
+  `eventChoice` rows to decisions.csv — site string + authored choice
+  labels + ε 3.265 in the existing 18-col schema, zero column changes
+  (the kickoff's append-safe prediction held). +7 fuzz tests (387→394
+  fuzz:smoke); main 2423 unchanged; typecheck clean.

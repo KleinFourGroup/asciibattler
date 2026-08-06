@@ -43,9 +43,11 @@
  * other frontier nodes challenge, and the DP path score re-enters as a
  * scaled TAIL at the truncation — see arbitrateNodeChoice's header.
  *
- * ALL FIVE §70 SITES ARE LIVE. `pickRecruit` alone still delegates to
- * the base — recruit/pass is OUT for v1 by kickoff resolution 2 (the
- * one-battle horizon censors a draw-gated permanent asset; the named
+ * ALL FIVE §70 SITES ARE LIVE, plus the §74g eventChoice site (nominee
+ * = the doctrine uniform-random pick; see arbitrateEventChoice's
+ * header). `pickRecruit` alone still delegates to the base —
+ * recruit/pass is OUT for v1 by kickoff resolution 2 (the one-battle
+ * horizon censors a draw-gated permanent asset; the named
  * forced-fielding v2 contingency is in the spec).
  */
 
@@ -110,6 +112,13 @@ export const GRANT_EPSILON = FIRE_PRETURN_EPSILON;
 /** 70e — node choice shares the MAP class floor (same clone context +
  *  next-battle horizon as outOfBattle fires; contexts 1/15/16/19). */
 export const NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
+/** 74g — the event-choice site shares the MAP class floor: it clones at
+ *  an out-of-battle state with the same next-battle horizon as node
+ *  choice / outOfBattle fires. PROVISIONAL by class argument, not
+ *  derivation (the grant→preTurn / nodeChoice→map precedent) — event
+ *  pages are a context class readEpsilonAA has never read; the §81
+ *  board round re-reads it (user-signed at the 74g shape-lock). */
+export const EVENT_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
 
 /**
  * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the
@@ -156,6 +165,7 @@ export interface ArbitratedConfig {
   readonly rewardDaemonEpsilon?: number;
   readonly grantEpsilon?: number;
   readonly nodeChoiceEpsilon?: number;
+  readonly eventChoiceEpsilon?: number;
   /** The nominator weight vector the DP tail reads (70e). Default: the
    *  default vector. NOT auto-threaded from a `--strategy` file today —
    *  under the default vector the tail is exactly 0 (all path weights
@@ -212,6 +222,9 @@ export function makeArbitratedStrategy(
     // here; the --redraw/--empower policy path is superseded for the arm).
     pickGrantAction: (grantIndex, run, rng) =>
       arbitrateGrant(driver, grantIndex, run, rng, config.grantEpsilon),
+    // 74g — the event-choice site (the doctrine's uniform-random pick is
+    // the NOMINEE/null arm; see arbitrateEventChoice's header).
+    pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
   };
 }
 
@@ -529,4 +542,75 @@ function arbitrateNodeChoice(
     rollout: { strategy: rolloutStrategy, tailScore },
   });
   return winner === null ? nominee : nodes[challengers.indexOf(winner)]!;
+}
+
+/**
+ * 74g — the event-choice site. The doctrine policy's uniform-random pick
+ * among the ENABLED choices is the NOMINEE: one rng draw (the same draw
+ * shape as the 74b doctrine arm), and its choice IS the null arm — the
+ * rollout strategy override pins the walker's event pick to the nominee
+ * while the clone sits at the decision's (eventId, pageId), so a live
+ * "null stands" and a rollout null arm resolve the page the SAME way
+ * (the coherence rule every site obeys). Later pages inside the rollout
+ * play cheap uniform-random (the walker default); an authored A→B→A
+ * loop that revisits the decision page re-pins the nominee —
+ * deterministic, author-bounded, capped by the walker's MAX_EVENT_STEPS.
+ *
+ * Challengers = the other enabled choices (a disabled choice can't be
+ * dispatched and never enumerates); labels carry the authored choice
+ * text — the log's per-choice vocabulary for the §81 event-era read. A
+ * single enabled choice is not a decision: no draw, no rollouts, no log
+ * (the singleton-frontier rule; forced pages stay free).
+ *
+ * ⚠ Bespoke-catalog caveat: rollout clones are wire round-trips, and a
+ * mid-event snapshot referencing a BESPOKE def (the in-memory
+ * `eventCatalog` dial) hard-rejects on decode — the 74b pin. The arb
+ * arm therefore can't arbitrate a bespoke event; shipped-catalog runs
+ * (every fuzz batch) are unaffected, and the dev-dial combination
+ * throws loud in Run.fromJSON, not silently here.
+ */
+function arbitrateEventChoice(
+  driver: RunArbitrationDriver,
+  run: Run,
+  rng: RNG,
+  config: ArbitratedConfig,
+): number {
+  const enabled = run.enabledEventChoices();
+  if (enabled.length === 0) {
+    // The 74a termination assert makes this unreachable on a live page.
+    throw new Error('arbitrateEventChoice: event page with no enabled choices');
+  }
+  if (enabled.length === 1) return enabled[0]!;
+  const nominee = enabled[rng.int(0, enabled.length - 1)]!;
+
+  const page = run.currentEventPage()!;
+  const decisionRef = { ...run.activeEvent! };
+  const rolloutStrategy: FuzzStrategy = {
+    ...scoredStrategy('rollout-event', DEFAULT_SCORED_WEIGHTS),
+    pickEventChoice: (clone, cloneRng) => {
+      const at = clone.activeEvent;
+      if (at !== null && at.eventId === decisionRef.eventId && at.pageId === decisionRef.pageId) {
+        return nominee;
+      }
+      // The walker guarantees non-empty before consulting (its own loud guard).
+      const open = clone.enabledEventChoices();
+      return open[cloneRng.int(0, open.length - 1)]!;
+    },
+  };
+
+  const challengers: RunDecisionCandidate[] = [];
+  const choices: number[] = [];
+  for (const choiceIndex of enabled) {
+    if (choiceIndex === nominee) continue;
+    challengers.push({
+      label: `choice:${choiceIndex} "${page.choices[choiceIndex]!.label}"`,
+      apply: ({ run: clone }) => clone.dispatch({ kind: 'chooseEventOption', choiceIndex }),
+    });
+    choices.push(choiceIndex);
+  }
+  const winner = driver.decide('eventChoice', run, challengers, {
+    epsilon: config.eventChoiceEpsilon ?? EVENT_CHOICE_EPSILON,
+    rollout: { strategy: rolloutStrategy },
+  });
+  return winner === null ? nominee : choices[challengers.indexOf(winner)]!;
 }

@@ -694,7 +694,11 @@ export function runOne(
             `harness: ${MAX_EVENT_STEPS} event choices without leaving the event phase`,
           );
         }
-        const pick = enabled[strategyRng.int(0, enabled.length - 1)]!;
+        // 74g — an arm that defines pickEventChoice owns the pick (the
+        // arbitrated arm's eventChoice site); ABSENT = the doctrine draw.
+        const pick = strategy.pickEventChoice
+          ? strategy.pickEventChoice(run, strategyRng)
+          : enabled[strategyRng.int(0, enabled.length - 1)]!;
         run.dispatch({ kind: 'chooseEventOption', choiceIndex: pick });
         break;
       }

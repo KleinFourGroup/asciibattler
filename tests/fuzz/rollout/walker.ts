@@ -18,10 +18,11 @@
  * - ONE WALK PER CLONE — the walker attaches bus machinery and consumes
  *   the clone; score it, then discard it.
  * - The clone must be taken at a DECISION phase (map / turn-intro /
- *   turn-outcome / port / reward / recruit / promotion / sectorCleared).
- *   Every v1 decision site sits outside battle, so a mid-'battle' clone
- *   never arises in arbitration; the walker throws loud on one (a
- *   serialized 'battle' phase has no World to resume).
+ *   turn-outcome / port / reward / recruit / promotion / sectorCleared /
+ *   event — 74g: an eventChoice clone starts ON the open page). Every
+ *   decision site sits outside battle, so a mid-'battle' clone never
+ *   arises in arbitration; the walker throws loud on one (a serialized
+ *   'battle' phase has no World to resume).
  * - `policySeed` MUST be derived independently of the clone's
  *   rolloutSeed (the 69d driver draws BOTH off its own stream, one pair
  *   per CRN rollout, shared across candidates). Passing the rolloutSeed
@@ -327,8 +328,10 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
       case 'event': {
         // 74b — mirror the harness's doctrine event policy: uniform-random
         // among the ENABLED choices off the walker's strategyRng (CRN
-        // shares the bias across candidates; the arbitration enumerator is
-        // §74g's). Same loud guards as the harness arm.
+        // shares the bias across candidates). 74g — a rollout strategy that
+        // defines pickEventChoice owns the pick instead (the eventChoice
+        // site's coherence override pins the nominee at the decision page).
+        // Same loud guards as the harness arm.
         const enabled = run.enabledEventChoices();
         if (enabled.length === 0) {
           throw new Error('walker: event page with no enabled choices');
@@ -337,10 +340,10 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
         if (eventSteps > MAX_EVENT_STEPS) {
           throw new Error(`walker: ${MAX_EVENT_STEPS} event choices in one walk`);
         }
-        run.dispatch({
-          kind: 'chooseEventOption',
-          choiceIndex: enabled[strategyRng.int(0, enabled.length - 1)]!,
-        });
+        const choiceIndex = strategy.pickEventChoice
+          ? strategy.pickEventChoice(run, strategyRng)
+          : enabled[strategyRng.int(0, enabled.length - 1)]!;
+        run.dispatch({ kind: 'chooseEventOption', choiceIndex });
         break;
       }
       case 'promotion': {

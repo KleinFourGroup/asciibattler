@@ -155,8 +155,10 @@ describe('fuzz harness', () => {
     // The §74e exit criterion as a regression pin. eventChance=1 places an
     // event on every spacing-eligible hop with a free candidate; over a few
     // seeds the random walk must OPEN at least one page (75% per entry at
-    // the base resolve chance). The control arm is exact: no event nodes →
-    // zero visits, deterministically.
+    // the base resolve chance). The control arm is exact — 74i-c re-pinned:
+    // eventChance 0 kills the SCATTER, but The Start's authored STARTING
+    // event is dial-free by construction (74e) and always opens (resolve-
+    // exempt), so a single-sector control run counts exactly ONE visit.
     let opened = 0;
     for (const seed of [1, 2, 3]) {
       const result = runOne(seed, makeStrategy('pure-random')!, {
@@ -169,7 +171,7 @@ describe('fuzz harness', () => {
     const control = runOne(1, makeStrategy('pure-random')!, {
       runConfig: { hopCount: 6, eventChance: 0 },
     });
-    expect(control.eventsVisited).toBe(0);
+    expect(control.eventsVisited).toBe(1); // the starting event alone (74i-c)
   });
 
   it('the full-pool elite isolation shape fields the forced elite at hop 0 (68e)', () => {

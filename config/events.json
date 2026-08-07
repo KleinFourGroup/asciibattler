@@ -394,6 +394,7 @@
   {
     "id": "cheese-tax",
     "name": "The Cheese Tax",
+    "repeatable": true,
     "entry": "start",
     "pages": {
       "start": {
@@ -720,6 +721,43 @@
       },
       "end": {
         "text": "\"Farewell,\" the man says.  In a burst of static, he vanishes.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "hostage-trio",
+    "name": "Hostage Trio",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "You find a small cabal of mages, and they look to have hostages!  Or slaves.  You really can't tell when it comes to mages.",
+        "choices": [
+          {
+            "label": "Rescue them!",
+            "outcomes": [
+              {
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "elementalTrio",
+                  "rewardOverride": "hostage-rescue"
+                }
+              }
+            ]
+          },
+          {
+            "label": "Turn the other way",
+            "outcomes": [{ "next": "run" }]
+          }
+        ]
+      },
+      "run": {
+        "text": "It's really not any of your business.  Besides, those mages look... Intimidating.",
         "choices": [
           {
             "label": "Leave",

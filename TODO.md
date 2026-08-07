@@ -20,18 +20,22 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §74i riders (the event content round) — user notes at the 74f eyeball (2026-08-06)
 
-- [ ] **Event outcome beat.** Events currently resolve by dropping the
-  player back to the map while silently applying effects — a decisive
-  end screen (what happened + what you got) is wanted. Style, not a
-  bug; the user is taking it with the event-writing pass. Candidate
-  shapes: a terminal "outcome page" convention in authored content vs
-  a small engine-side outcome toast — decide at §74i.
-- [ ] **Per-run event repeats.** No dedup/exhaustion rule exists — the
-  same event can repeat within a run (observed: whispering-terminal
-  twice; the 3-event catalog is effectively 2 until the collects flag
-  sets). Decide at §74i whether repeats suppress FTL-style (an
-  eligibility-side seen-flag would ride the existing flag store) or
-  stay legal for repeatable flavor events.
+- [x] **Event outcome beat.** ✅ RESOLVED 2026-08-07 at the §74i design
+  round (user-signed): the AUTHORED outcome-page convention — no engine
+  toast (a §81 feel-read revisit if prose proves insufficient). Now a
+  DESIGN.md convention ("Events"); worklog §74i.
+- [x] **Per-run event repeats.** ✅ BUILT 2026-08-07 (74i-a,
+  user-signed): default no-repeat via the engine-written `visited:<id>`
+  flag + the pool-roll filter; `repeatable: true` opts out (cheese-tax
+  ships it). Worklog §74i.
+- [ ] **Human-gauntlet cells vs the starting event.** The §53 cell
+  protocol pins its forced fight at the ROOT, which The Start now
+  stamps as the starting event (74i-c) — the headless drive suppresses
+  the catalog (cells.test), but a BROWSER cell run (`cellUrl`) opens
+  the boon event before the fight, perturbing trace comparability
+  with the 53g baseline. Revisit before the next human gauntlet
+  (eventCatalog is programmatic-only, so the URL side needs its own
+  answer — a `noevents` query dial or a protocol note).
 
 ## Polish / pre-launch
 

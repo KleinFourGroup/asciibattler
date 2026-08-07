@@ -155,7 +155,9 @@ describe('determinism: RunConfig (G1)', () => {
  */
 function driveTwoBattles(seed: number): BattleEncounter[] {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus);
+  // 74i-c — battle-subject driver: suppress the catalog (the shipped root
+  // opens a starting event otherwise; empty = degrade to the fight).
+  const run = new Run(seed, bus, { eventCatalog: [] });
   const encounters: BattleEncounter[] = [];
 
   // S2 — the root is the first selectable encounter (the run starts pre-root).

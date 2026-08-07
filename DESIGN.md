@@ -72,9 +72,11 @@ The MVP **excludes** (deferred to post-MVP): shop/economy, synergies/traits, res
 
 ## Run structure
 
-**Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. The player begins before the map and **selects the root as their first encounter** (it's a normal battle node), then advances one hop at a time, and must reach the single terminal node to complete the run.
+**Node map:** A directed acyclic graph generated from the seed. Roughly 7–10 nodes per run, arranged in layered hops (node rows) with branching paths between them. The player begins before the map and **selects the root as their first encounter** (a normal battle node — unless the sector authors a starting event, which stamps the root; The Start does since §74i), then advances one hop at a time, and must reach the single terminal node to complete the run.
 
-For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-combat heal/XP), the terminal **boss** node (G3; W1 gave it an authored `kind:'boss'` encounter with the `stages` grammar), and scattered **elite** nodes (W2 — an optional, harder, routable detour, `kind:'elite'`). **Shop** and **event** nodes remain deferred.
+For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-combat heal/XP), the terminal **boss** node (G3; W1 gave it an authored `kind:'boss'` encounter with the `stages` grammar), scattered **elite** nodes (W2 — an optional, harder, routable detour, `kind:'elite'`), **port** nodes (§50 — the shop dock), and **event** nodes (§74 — below). A sector that authors a **starting event** opens ON it: its root is stamped `event` and the authored beat always plays (the combat-resolve roll is ignored there) — The Start ships one (§74i, a run-opening boon).
+
+**Events (§74):** FTL-lineage narrative beats on a flat page map — an event is pages of text + choices; a choice rolls a weighted outcome (effects + a `next`: another page, return to the map, or a `start-encounter` fight, optionally with a pinned reward table). Entering an event node combat-resolves into a normal fight at a fold-routed chance (base 25%) — "sometimes the static is just bandits." Conditions gate choices SHOWN-DISABLED with the requirement visible (a strategy game — players plan). Two authored conventions (user-signed, §74i): **the outcome page** — an event ends on a terminal page that narrates what happened, whose single acknowledging choice carries the effects (a decisive beat, not a silent map-drop; sometimes deliberately broken, but not often) — and **per-run no-repeat by default** — the engine marks `visited:<eventId>` when a page opens and the pool roll skips seen events unless the def opts in `repeatable: true` (light flavor beats). Flag-gated chains ride the run-lifetime flag store (`chainId:key`; eligibility conditions read it — the cadre arc is the shipped three-parter), and `visited:*` itself is readable as a cross-event gate.
 
 **Recruitment:** After each victory, the player is offered a choice between 3 randomly generated units (within the existing archetypes). Each offer is guaranteed to contain at least one melee and at least one ranged option, so the choice is never "stat reroll only." The player picks one to add to their team. Skipping is not an option in MVP.
 
@@ -150,7 +152,7 @@ Captured here so we can confidently say "not now" during the jam without losing 
 
 - Shop and economy (gold, buying units, rerolls)
 - Unit synergies and traits
-- ~~Rest, elite node types~~ ✅ BUILT (rest G3; elite W2). **Shop + event** node types still deferred.
+- ~~Rest, elite, shop, event node types~~ ✅ ALL BUILT (rest G3; elite W2; port §50; event §74 — see "Events" under Run structure).
 - ~~Boss encounters at hop ends~~ ✅ BUILT (the terminal boss node, G3; W1 gave it an authored `stages`-grammar encounter)
 - Larger units (2×2 or 2×1 footprints)
 - High-level player commands during battle (focus-fire, avoid area, etc.)

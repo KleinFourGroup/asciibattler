@@ -750,7 +750,46 @@ best-strategy outputs regenerate at the next probe; §81 board
 re-signs), and the §29-close draft-exclusion pin gains 'prodigy'.
 Suites: 2435 main (+9) / 394 fuzz green.
 
-**NEXT: 74i-c** — placement (startingEvents + pool entries — the
-proposal goes to the user), the repeatable flags on the flavor
-events, the two unauthored reward kinds, DESIGN.md's outcome-page
-convention, the exit sweep.
+**74i-c — placement + the reward kinds + the exit sweep (landed).**
+The signed placement: `sector-1-start` → The Start's `startingEvents`
+(the Deep End authors none yet); all nine other events pool in BOTH
+sectors at weight 1 (the cadre chain spans sectors — flags persist);
+`cheese-tax` ships `repeatable: true`. The user's tenth event
+(**hostage-trio**, option 3 of the reward-kind fork) carries the new
+**`hostage-rescue`** table (`unit` healer-L3 w2 / `unit` mercenary-L3
+w1 / `poolHealth` 5 w1) as its `rewardOverride` — both 74c kinds are
+shipped content now. DESIGN.md gains the "Events" section (the
+outcome-page convention + the no-repeat default + chains) and sheds
+the stale "shop + event deferred" lines.
+
+**The scheduled break, paid.** Populating `startingEvents` stamps
+EVERY shipped run's root as the opening event — the 74e landing
+note's debt, and the biggest test-reality shift since 74b:
+
+- **The `NO_EVENTS` control fixture** (`eventCatalog: []` — every
+  event entry degrades to the fight, the 74b rule; battle streams
+  untouched, eventRng is dedicated) adopted across the battle-subject
+  fixtures: Run.test's shared helpers + stragglers, encounter-loop,
+  snapshot-roundtrip's three mid-battle round-trips, determinism's
+  two-battle driver, the walker/arbitrated turn-intro parks. Strictly
+  stronger isolation than 74e's route avoidance — dockAtPort's
+  event-free route hunt is RETIRED (it rejected the event-kind root
+  outright and threw on every seed).
+- **The dial exemption (Run.ts):** a `firstNodeKind: 'event'` root
+  draws from the REGULAR pool — without it the dial lost its 74e
+  isolation power the day a sector authored a starting event (every
+  74b/74e/74i fixture broke through the startingEvents capture).
+  `rootStampedByDial` is construction-only, NOT persisted (the
+  forcedEventId discipline).
+- Premise updates: the S2 root-kind pin (root = the stamped event
+  now), the 74e pool pin derives from the shipped sector (12 events),
+  the 74e traversal control arm re-pinned 0 → exactly 1 (the
+  starting event is dial-free and resolve-exempt by design), and the
+  port canary re-pinned 2→3 (the 50g/56a/61d re-scan discipline;
+  scan read 3/5/6/8/10/15 buying). The gauntlet cell drive
+  suppresses at the CALL SITE (cellRunConfig stays URL-parity-pure);
+  the browser-side cell protocol is a new TODO watch item.
+- **The exit-sweep positive pin**: a shipped no-dial run opens the
+  authored starting event at the root on every seed, visited-marked —
+  the end-to-end coverage the 74e note deferred here. Both riders
+  closed in TODO.md.

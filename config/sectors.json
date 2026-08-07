@@ -40,9 +40,20 @@
     "events": [
       { "eventId": "corrupted-shrine" },
       { "eventId": "whispering-terminal" },
-      { "eventId": "whispering-terminal-collects" }
+      { "eventId": "whispering-terminal-collects" },
+      { "eventId": "silent-mage" },
+      { "eventId": "prodigy" },
+      { "eventId": "mines" },
+      { "eventId": "cheese-tax" },
+      { "eventId": "cadre-1" },
+      { "eventId": "cadre-2" },
+      { "eventId": "cadre-3" },
+      { "eventId": "orange-mob" },
+      { "eventId": "hostage-trio" }
     ],
-    "startingEvents": []
+    "startingEvents": [
+      { "eventId": "sector-1-start" }
+    ]
   },
   {
     "id": "the-deep-end",
@@ -86,7 +97,16 @@
     "events": [
       { "eventId": "corrupted-shrine" },
       { "eventId": "whispering-terminal" },
-      { "eventId": "whispering-terminal-collects" }
+      { "eventId": "whispering-terminal-collects" },
+      { "eventId": "silent-mage" },
+      { "eventId": "prodigy" },
+      { "eventId": "mines" },
+      { "eventId": "cheese-tax" },
+      { "eventId": "cadre-1" },
+      { "eventId": "cadre-2" },
+      { "eventId": "cadre-3" },
+      { "eventId": "orange-mob" },
+      { "eventId": "hostage-trio" }
     ],
     "startingEvents": []
   }

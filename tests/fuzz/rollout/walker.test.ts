@@ -32,9 +32,11 @@ function liveAtMap(seed: number): Run {
   return new Run(seed, new EventBus<GameEvents>());
 }
 
-/** A live run paused at 'turn-intro' — the preTurn decision context. */
+/** A live run paused at 'turn-intro' — the preTurn decision context.
+ *  74i-c: catalog-suppressed (the shipped root opens a starting event
+ *  otherwise; empty = the root degrades to the fight, the 74b rule). */
 function liveAtPreTurn(seed: number): Run {
-  const run = new Run(seed, new EventBus<GameEvents>());
+  const run = new Run(seed, new EventBus<GameEvents>(), { eventCatalog: [] });
   run.pauseAtTurnGates = true;
   run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
   expect(run.phase).toBe('turn-intro');

@@ -82,6 +82,11 @@ function firstFrontier(run: Run): number {
   return run.nodeMap.rootId;
 }
 
+/** 74i-c — suppress the event catalog: The Start opens on a starting
+ *  event now, and these tests' subject is the BATTLE loop (an empty
+ *  catalog degrades every event entry to the fight — the 74b rule). */
+const NO_EVENTS = { eventCatalog: [] as const };
+
 const LVL1_ROSTER = [
   { archetype: 'mercenary' as const, level: 1 },
   { archetype: 'mercenary' as const, level: 1 },
@@ -98,7 +103,7 @@ describe('H4: encounter loop over real battles', () => {
   for (const seed of [1, 2, 3, 4]) {
     it(`seed ${seed}: a real encounter terminates and ends the node`, { timeout: 20_000 }, () => {
       const bus = new EventBus<GameEvents>();
-      const run = new Run(seed, bus);
+      const run = new Run(seed, bus, NO_EVENTS);
       run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });
 
       const turns = driveEncounter(run, bus);
@@ -127,7 +132,7 @@ describe('H4: encounter loop over real battles', () => {
   // 15×15) make a single double-sim take ~5s, and parallel/CI load adds margin.
   it('a restored run reproduces the encounter turn-for-turn (resume determinism)', () => {
     const busA = new EventBus<GameEvents>();
-    const a = new Run(7, busA);
+    const a = new Run(7, busA, NO_EVENTS);
     a.dispatch({ kind: 'enterNode', nodeId: firstFrontier(a) });
 
     // Snapshot mid-encounter (turn 1 pending), restore on a fresh bus.
@@ -149,7 +154,7 @@ describe('H4: encounter loop over real battles', () => {
 
   it('a per-turn tick cap resolves as a draw that chips BOTH pools', () => {
     const bus = new EventBus<GameEvents>();
-    const run = new Run(1, bus, { startingRoster: LVL1_ROSTER });
+    const run = new Run(1, bus, { ...NO_EVENTS, startingRoster: LVL1_ROSTER });
     run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });
 
     // 1-tick cap → no turn resolves decisively; every turn is a draw where
@@ -165,7 +170,7 @@ describe('H4: encounter loop over real battles', () => {
 
   it('each turn freshly rolls its own battlefield + enemy wave', () => {
     const bus = new EventBus<GameEvents>();
-    const run = new Run(2, bus, { startingRoster: LVL1_ROSTER });
+    const run = new Run(2, bus, { ...NO_EVENTS, startingRoster: LVL1_ROSTER });
     run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });
 
     // Force a multi-turn encounter (draw every turn) so there are >=2 turns.

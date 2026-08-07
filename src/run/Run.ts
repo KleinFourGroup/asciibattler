@@ -722,6 +722,11 @@ export class Run {
   /** 74b: the forced-event dev dial (`RunConfig.forcedEventId`, validated
    *  loud at construction — the forcedEncounterId shape). */
   private readonly forcedEventId: string | null;
+  /** 74i-c: was the root's event kind DIAL-stamped (`firstNodeKind:
+   *  'event'`) rather than sector-stamped? A dial-stamped root draws from
+   *  the REGULAR pool — the dial's isolation power extends to the pool
+   *  choice (see enterEventNode). NOT persisted (dial discipline). */
+  private readonly rootStampedByDial: boolean;
   /** L1→47d: the run's owned daemons, in ACQUISITION order (index 0 = the
    *  run-start seed; §48 rewards / §50 ports append via `addDaemon` —
    *  uncapped, the locked design). 63c: seeded from the CHARACTER def (the
@@ -1053,6 +1058,11 @@ export class Run {
     this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
     // 74e — the startingEvents root stamp (zero-draw; the `firstNodeKind`
     // dev dial WINS when set — isolation power, the 63c precedence rule).
+    // 74i-c — the dial beats the POOL choice too (see enterEventNode): a
+    // dial-stamped root draws from the REGULAR pool, or the dial would have
+    // lost its isolation power the day a shipped sector authored a starting
+    // event. NOT persisted (the forcedEventId discipline).
+    this.rootStampedByDial = config?.firstNodeKind === 'event';
     if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
     // 66a — pre-roll the sector's boss (the forewarning pair) on the SAME
     // sector fork, after the node-map draws. The parent `this.rng` fork
@@ -1426,8 +1436,13 @@ export class Run {
    */
   private enterEventNode(nodeId: number): void {
     const sector = this.currentSector();
+    // 74i-c — the dial exemption: a `firstNodeKind: 'event'` root is the
+    // ISOLATION shape (test/dev a regular pool draw at hop 0) and must not
+    // be captured by the sector's authored opening beat.
     const fromStartingPool =
-      nodeId === this.nodeMap.rootId && sector.startingEvents.length > 0;
+      nodeId === this.nodeMap.rootId &&
+      sector.startingEvents.length > 0 &&
+      !this.rootStampedByDial;
     const roll = this.eventRng.next();
     const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool;
     const eventDef = combatResolved ? null : this.rollEventForNode(fromStartingPool);
@@ -3912,6 +3927,7 @@ export class Run {
       pendingRewardOverride: string | null;
       eventCatalog: readonly EventDef[];
       forcedEventId: string | null;
+      rootStampedByDial: boolean;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -4056,6 +4072,7 @@ export class Run {
     // daemons); the pinned reward table re-validates against the tables.
     m.eventCatalog = EVENTS;
     m.forcedEventId = null;
+    m.rootStampedByDial = false; // a dial, not state (74i-c)
     m.eventRng = RNG.fromJSON(snap.eventRng);
     if (snap.activeEvent !== null) {
       const eventDef = getEvent(snap.activeEvent.eventId);

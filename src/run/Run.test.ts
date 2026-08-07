@@ -41,6 +41,18 @@ import { rollUnit } from '../sim/archetypes';
  * expectation in those blocks literally true. 47c: authored as `rules`
  * (redraw hook FIRST — the fixed draw-order discipline).
  */
+/**
+ * 74i-c — the event-free control fixture. The Start authors a starting
+ * event now (`sector-1-start` — every shipped run OPENS on it), so any
+ * test whose subject is the root BATTLE suppresses the catalog: an empty
+ * catalog resolves no pool entry and every event-node entry degrades to
+ * the fight (the 74b empty-eligible rule). The root's STAMPED kind and
+ * the battle-side streams are untouched (eventRng is dedicated), so
+ * battle expectations hold byte-identically. Tests about events pass
+ * their own catalogs; tests about the map's new shape assert the stamp.
+ */
+const NO_EVENTS = { eventCatalog: [] as EventDef[] };
+
 const K_DEFAULT_DAEMON: DaemonConfig = {
   id: 'test-k-defaults',
   name: 'Test K Defaults',
@@ -70,7 +82,7 @@ const K_DEFAULT_DAEMON: DaemonConfig = {
 describe('Run', () => {
   describe('initial state', () => {
     it('starts in map phase at the pre-root position (root is the first frontier)', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.phase).toBe('map');
       // S2 — the run begins at the virtual pre-root; the root is selected as the
       // first encounter rather than being the inert starting cell.
@@ -78,7 +90,7 @@ describe('Run', () => {
     });
 
     it("63c: rolls the DEFAULT CHARACTER's starting roster (derived from characters.json)", () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       // Derived from the character def, not hardcoded — a roster edit in
       // characters.json must not silently break this.
       const expected = characterById(DEFAULT_CHARACTER_ID)!.roster;
@@ -203,10 +215,15 @@ describe('Run', () => {
       expect(run.currentEncounter).not.toBeNull();
     });
 
-    it('the root is a normal battle node at hop 0 (not a boss) on a multi-hop map', () => {
+    it('the root is the STAMPED starting event at hop 0 (74i-c — never a boss) on a multi-hop map', () => {
+      // The Start authors `startingEvents` now, so every shipped run OPENS
+      // on the sector-stamped event root (74e's stampRootKind, live since
+      // 74i-c placement). The stamp is sector-driven — catalog suppression
+      // (NO_EVENTS) changes entry BEHAVIOR (degrades to the fight), not the
+      // node's kind.
       const { run } = freshRunWithBus(1);
       const rootNode = run.nodeMap.nodes.find((n) => n.id === run.nodeMap.rootId)!;
-      expect(rootNode.kind).toBe('battle');
+      expect(rootNode.kind).toBe('event');
       expect(rootNode.hop).toBe(0);
     });
   });
@@ -225,7 +242,7 @@ describe('Run', () => {
     });
 
     it('grants a unit at the recruit starting level through the roster chokepoint', () => {
-      const bare = new Run(1, new EventBus<GameEvents>());
+      const bare = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       const run = new Run(1, new EventBus<GameEvents>(), { grants: ['rogue'] });
       expect(run.team).toHaveLength(bare.team.length + 1);
       const granted = run.team[run.team.length - 1]!;
@@ -237,7 +254,7 @@ describe('Run', () => {
     });
 
     it('an inert daemon/packet grant leaves the run stream byte-identical (the paired-arm contract)', () => {
-      const bare = new Run(7, new EventBus<GameEvents>());
+      const bare = new Run(7, new EventBus<GameEvents>(), NO_EVENTS);
       const granted = new Run(7, new EventBus<GameEvents>(), {
         grants: ['patch', 'portunus'],
       });
@@ -255,8 +272,8 @@ describe('Run', () => {
 
   describe('determinism', () => {
     it('same seed → same nodeMap and same starting team', () => {
-      const a = new Run(42, new EventBus<GameEvents>());
-      const b = new Run(42, new EventBus<GameEvents>());
+      const a = new Run(42, new EventBus<GameEvents>(), NO_EVENTS);
+      const b = new Run(42, new EventBus<GameEvents>(), NO_EVENTS);
       expect(a.nodeMap).toEqual(b.nodeMap);
       expect(a.team).toEqual(b.team);
     });
@@ -542,6 +559,7 @@ describe('Run', () => {
       // keep the roster levels fixed so the average is exactly the config.
       const bus = new EventBus<GameEvents>();
       const run = new Run(1, bus, {
+        ...NO_EVENTS,
         startingRoster: [
           { archetype: 'mercenary', level: 6 },
           { archetype: 'mercenary', level: 6 },
@@ -786,7 +804,7 @@ describe('Run', () => {
 
   describe('encounter loop (H4)', () => {
     it('starts with a full run-wide player pool and no active encounter', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
       expect(run.enemyHealth).toBe(0);
       expect(run.turnIndex).toBe(0);
@@ -1888,7 +1906,7 @@ describe('Run', () => {
     it('a forced layout (G1) pins every encounter map', () => {
       const forced = LAYOUT_IDS[0]!;
       const bus = new EventBus<GameEvents>();
-      const run = new Run(3, bus, { forcedLayoutId: forced });
+      const run = new Run(3, bus, { ...NO_EVENTS, forcedLayoutId: forced });
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(run.encounterMap!.layoutId).toBe(forced);
@@ -1901,7 +1919,7 @@ describe('Run', () => {
       // Derive a real normal-kind id from the catalog (no hardcoded id to drift).
       const normalId = ENCOUNTERS.find((e) => e.kind === 'normal')!.id;
       const bus = new EventBus<GameEvents>();
-      const run = new Run(3, bus, { forcedEncounterId: normalId });
+      const run = new Run(3, bus, { ...NO_EVENTS, forcedEncounterId: normalId });
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       expect(run.selectedEncounter!.id).toBe(normalId);
     });
@@ -2101,7 +2119,7 @@ describe('Run', () => {
       run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex);
 
     it('initializes one empty encounter-effect list per roster slot', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.encounterEffects).toHaveLength(run.team.length);
       expect(run.encounterEffects.every((l) => l.length === 0)).toBe(true);
     });
@@ -2117,7 +2135,7 @@ describe('Run', () => {
     });
 
     it('merges a re-applied encounter effect by key (replace overwrites magnitude)', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       run.addEncounterEffect(0, empower(1));
       run.addEncounterEffect(0, empower(3));
       expect(run.encounterEffects[0]).toHaveLength(1);
@@ -2125,7 +2143,7 @@ describe('Run', () => {
     });
 
     it('ignores addEncounterEffect on an out-of-range slot', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       run.addEncounterEffect(999, empower());
       run.addEncounterEffect(-1, empower());
       expect(run.encounterEffects.every((l) => l.length === 0)).toBe(true);
@@ -2797,7 +2815,16 @@ describe('Run', () => {
       expect(restored.pendingEncounterEffects[1]!.map((e) => e.key)).toEqual([
         buffOf('overclock').key,
       ]);
-      restored.dispatch({ kind: 'enterNode', nodeId: restored.nodeMap.rootId });
+      // 74i-c — a restored run re-pins the SHIPPED catalog (the bespoke-
+      // rejection rule), so entering the root would OPEN the starting event.
+      // The buff seeds at any ENCOUNTER start: hop past the root to a battle
+      // child (hop 1 is scatter-free — the 74i probe).
+      restored.currentNodeId = restored.nodeMap.rootId;
+      const battleChild = restored.nodeMap.edges
+        .filter((e) => e.from === restored.nodeMap.rootId)
+        .map((e) => e.to)
+        .find((id) => restored.nodeMap.nodes.find((n) => n.id === id)!.kind === 'battle')!;
+      restored.dispatch({ kind: 'enterNode', nodeId: battleChild });
       expect(restored.encounterEffects[1]!.map((e) => e.key)).toEqual([buffOf('overclock').key]);
     });
   });
@@ -3337,13 +3364,13 @@ describe('Run', () => {
 
     it('two Runs sharing a bus do not double-handle once the old one is disposed', () => {
       const bus = new EventBus<GameEvents>();
-      const oldRun = new Run(1, bus);
+      const oldRun = new Run(1, bus, NO_EVENTS);
       const oldFrontier = frontierOf(oldRun);
       oldRun.dispatch({ kind: 'enterNode', nodeId: oldFrontier });
       // Both runs are now in battle phase (well, oldRun is). Dispose it.
       oldRun.dispose();
 
-      const newRun = new Run(2, bus);
+      const newRun = new Run(2, bus, NO_EVENTS);
       const newFrontier = frontierOf(newRun);
       newRun.dispatch({ kind: 'enterNode', nodeId: newFrontier });
       expect(newRun.phase).toBe('battle');
@@ -3605,7 +3632,7 @@ describe('Run', () => {
 
   describe('deployment counter (H3)', () => {
     it('initializes one zero count per roster slot', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
       expect(run.deploymentCounts.every((c) => c === 0)).toBe(true);
     });
@@ -3654,7 +3681,7 @@ describe('Run', () => {
     });
 
     it('accumulates across turns within an encounter, then zeros on reset (the H4 seam)', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       const all = run.team.map((_, i) => i);
       run.recordDeployment(all);
       run.recordDeployment(all);
@@ -3666,7 +3693,7 @@ describe('Run', () => {
     });
 
     it('ignores out-of-range indices in recordDeployment', () => {
-      const run = new Run(1, new EventBus<GameEvents>());
+      const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
       run.recordDeployment([-1, run.team.length, 0]);
       expect(run.deploymentCounts[0]).toBe(1);
       expect(run.deploymentCounts).toHaveLength(run.team.length);
@@ -3692,7 +3719,7 @@ describe('Run', () => {
     /** Enter the first battle on a custom roster; return the live Run + bus. */
     function enterFirstBattle(roster: RosterSpec[], seed = 1): { run: Run; bus: EventBus<GameEvents> } {
       const bus = new EventBus<GameEvents>();
-      const run = new Run(seed, bus, { startingRoster: roster });
+      const run = new Run(seed, bus, { ...NO_EVENTS, startingRoster: roster });
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       return { run, bus };
@@ -3777,7 +3804,7 @@ describe('Run', () => {
 
     it('surfaces the drawn hand on turn:starting before the battle (H5b, gated path)', () => {
       const bus = new EventBus<GameEvents>();
-      const run = new Run(1, bus, { startingRoster: BIG_ROSTER });
+      const run = new Run(1, bus, { ...NO_EVENTS, startingRoster: BIG_ROSTER });
       run.pauseAtTurnGates = true; // the live/interactive path
       const starting: GameEvents['turn:starting'][] = [];
       bus.on('turn:starting', (p) => starting.push(p));
@@ -3883,7 +3910,7 @@ describe('Run', () => {
       // hopCount 2 → root (hop 0, a normal battle) -> terminal boss (hop 1).
       // S2: clear the root battle first, then the boss is the frontier.
       const bus = new EventBus<GameEvents>();
-      const run = new Run(1, bus, { hopCount: 2 });
+      const run = new Run(1, bus, { ...NO_EVENTS, hopCount: 2 });
       const boss = run.nodeMap.terminalId;
       expect(run.nodeMap.nodes.find((n) => n.id === boss)!.kind).toBe('boss');
       let battleStarts = 0;
@@ -4721,7 +4748,7 @@ describe('65f — the deck cue stream (deck:cardDrawn / cardDiscarded / reshuffl
  */
 describe('boss forewarning (66a) — the sector-start pre-roll', () => {
   it('pre-rolls a boss-kind encounter + a fully-built board at construction', () => {
-    const run = new Run(1, new EventBus<GameEvents>());
+    const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
     const boss = getEncounter(run.bossEncounterId);
     expect(boss).toBeDefined();
     expect(boss!.kind).toBe('boss');
@@ -4738,8 +4765,8 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
   });
 
   it('is seed-deterministic (same seed → the same pair)', () => {
-    const a = new Run(7, new EventBus<GameEvents>());
-    const b = new Run(7, new EventBus<GameEvents>());
+    const a = new Run(7, new EventBus<GameEvents>(), NO_EVENTS);
+    const b = new Run(7, new EventBus<GameEvents>(), NO_EVENTS);
     expect(b.bossEncounterId).toBe(a.bossEncounterId);
     expect(b.bossEncounterMap).toEqual(a.bossEncounterMap);
   });
@@ -4802,7 +4829,7 @@ describe('boss forewarning (66a) — the sector-start pre-roll', () => {
   });
 
   it('bossForewarning reports the display pair (66b): catalog name, layout name, null = procedural', () => {
-    const run = new Run(1, new EventBus<GameEvents>());
+    const run = new Run(1, new EventBus<GameEvents>(), NO_EVENTS);
     const fw = run.bossForewarning;
     expect(fw.name).toBe(getEncounter(run.bossEncounterId)!.name);
     if (run.bossEncounterMap.layoutId === null) {
@@ -4905,7 +4932,9 @@ interface RunHandle {
 
 function freshRunWithBus(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus, config);
+  // 74i-c — battle-subject fixtures suppress the event catalog by default
+  // (see NO_EVENTS at the top); a caller's own eventCatalog wins the spread.
+  const run = new Run(seed, bus, { ...NO_EVENTS, ...config });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
@@ -4929,17 +4958,21 @@ function frontierIdsOf(run: Run): number[] {
     : run.nodeMap.edges.filter((e) => e.from === run.currentNodeId).map((e) => e.to);
 }
 
-/** Any port reachable strictly downstream of (or at) `from`, WITHOUT
- *  stepping through an event node en route (74e — see dockAtPort)? */
-function reachesPortEventFree(run: Run, from: number): boolean {
-  if (nodeKindOf(run, from) === 'event') return false;
+/** Any port reachable strictly downstream of (or at) `from`? 74i-c: the
+ *  74e event-node avoidance is RETIRED — dockAtPort callers construct
+ *  through the NO_EVENTS-suppressing fixtures now (an empty catalog means
+ *  every event node degrades to a plain battle on entry: no effects, no
+ *  state perturbation, and the resolve draw rides the DEDICATED eventRng
+ *  stream), which is strictly stronger isolation than route avoidance —
+ *  necessary since the sector-stamped root became an event node. */
+function reachesPort(run: Run, from: number): boolean {
   const stack = [from];
   const seen = new Set([from]);
   while (stack.length > 0) {
     const id = stack.pop()!;
     if (nodeKindOf(run, id) === 'port') return true;
     for (const e of run.nodeMap.edges) {
-      if (e.from === id && !seen.has(e.to) && nodeKindOf(run, e.to) !== 'event') {
+      if (e.from === id && !seen.has(e.to)) {
         seen.add(e.to);
         stack.push(e.to);
       }
@@ -4952,11 +4985,9 @@ function reachesPortEventFree(run: Run, from: number): boolean {
  *  WIN_BOUNTY idiom; rewards declined so bits stay exactly at their starting
  *  value). Every default map has ≥1 port (the NodeMap guarantee) and every
  *  node is root-reachable, so a port-reaching frontier choice always exists
- *  from the start. Deterministic — no policy draws. 74e: the route AVOIDS
- *  event nodes entirely — an opened event's effects would perturb the state
- *  the port tests pin (bits/roster/ownership), and a combat-resolve is a
- *  chance draw. A seed whose every port route crosses an event throws loud —
- *  re-seed the test (the findRestRun discipline). */
+ *  from the start. Deterministic — no policy draws. CALLERS MUST construct
+ *  through an event-suppressed fixture (freshRunWithBus et al. — see
+ *  NO_EVENTS); en-route event nodes then fight like battles (74i-c). */
 function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
   for (let guard = 0; guard < 20; guard++) {
     expect(run.phase).toBe('map');
@@ -4966,9 +4997,9 @@ function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
       run.dispatch({ kind: 'enterNode', nodeId: port });
       return;
     }
-    const next = frontier.find((id) => reachesPortEventFree(run, id));
+    const next = frontier.find((id) => reachesPort(run, id));
     if (next === undefined) {
-      throw new Error('dockAtPort: no event-free port route from this frontier — re-seed the test');
+      throw new Error('dockAtPort: no port route from this frontier — re-seed the test');
     }
     run.dispatch({ kind: 'enterNode', nodeId: next });
     if (run.phase === 'battle') {
@@ -5011,7 +5042,7 @@ const LVL1_ROSTER = [
  *  not depend on the `startingLevel` balance dial (which ships at 5). */
 function freshLvl1RunWithBus(seed: number): RunHandle {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus, { startingRoster: LVL1_ROSTER });
+  const run = new Run(seed, bus, { startingRoster: LVL1_ROSTER, ...NO_EVENTS });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
@@ -5032,7 +5063,7 @@ const SHORT_ROSTER = [
 ];
 function freshShortRosterRun(seed: number, config?: RunConfig): RunHandle {
   const bus = new EventBus<GameEvents>();
-  const run = new Run(seed, bus, { startingRoster: SHORT_ROSTER, ...config });
+  const run = new Run(seed, bus, { startingRoster: SHORT_ROSTER, ...NO_EVENTS, ...config });
   return { run: Object.assign(run, { rootId: run.nodeMap.rootId }), bus };
 }
 
@@ -5074,7 +5105,7 @@ function findRestRun(
 ): { run: Run; bus: EventBus<GameEvents>; path: number[] } {
   for (let s = 0; s < 800; s++) {
     const bus = new EventBus<GameEvents>();
-    const run = new Run(s, bus, config);
+    const run = new Run(s, bus, { ...NO_EVENTS, ...config });
     const rest = run.nodeMap.nodes.find((n) => n.kind === 'rest' && n.hop === hop);
     if (!rest) continue;
     const path = [rest.id];
@@ -5446,11 +5477,9 @@ function poolEvent(id: string, eligibility?: EventDef['eligibility']): EventDef 
 const NEVER = [{ kind: 'bitsAtLeast', amount: 999999 } as const];
 
 describe('74e — the sector-owned event pool', () => {
-  const START_POOL_IDS = [
-    'corrupted-shrine',
-    'whispering-terminal',
-    'whispering-terminal-collects',
-  ];
+  // 74i-c — derived from the SHIPPED sector (never hardcoded): the demo
+  // catalog grew the pool from the 3 smoke events to the full slate.
+  const START_POOL_IDS = getSector('the-start')!.events.map((e) => e.eventId);
 
   it('an opened event comes from the SECTOR pool, not a bare catalog scan (the 74b placeholder retired)', () => {
     // Shipped catalog, no forced id: root stamped event, resolve folded off →
@@ -5614,6 +5643,23 @@ describe('74i — per-run event repeats', () => {
     run.dispatch({ kind: 'enterNode', nodeId: eventNode });
     expect(run.phase).toBe('event');
     expect(run.activeEvent!.eventId).toBe('whispering-terminal-collects');
+  });
+
+  it('74i-c END-TO-END: a SHIPPED run (no dials) opens the authored starting event at the root', () => {
+    // The exit-sweep positive pin (the 74e landing note's debt): The Start
+    // authors `startingEvents`, the root is sector-stamped, entry draws
+    // from the starting pool and IGNORES the combat-resolve roll — so this
+    // holds for EVERY seed, deterministically. Derived, not hardcoded: the
+    // expected id comes from the shipped sector config.
+    const startingIds = getSector('the-start')!.startingEvents.map((e) => e.eventId);
+    expect(startingIds.length).toBeGreaterThan(0);
+    for (const seed of [1, 2, 3]) {
+      const run = new Run(seed, new EventBus<GameEvents>());
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      expect(run.phase).toBe('event');
+      expect(startingIds).toContain(run.activeEvent!.eventId);
+      expect(run.eventFlag(`visited:${run.activeEvent!.eventId}`)).toBe(true);
+    }
   });
 
   it('the forced dial bypasses the filter (a force is a force)', () => {

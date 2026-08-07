@@ -726,7 +726,9 @@ describe('A2 round-trip: World', () => {
 
 describe('A2 round-trip: Run', () => {
   it('JSON wire format preserves enough state to continue the run identically', () => {
-    const a = new Run(2026, new EventBus<GameEvents>());
+    // 74i-c — battle-subject fixture: suppress the catalog (the shipped root
+    // opens a starting event otherwise; empty = degrade to the fight).
+    const a = new Run(2026, new EventBus<GameEvents>(), { eventCatalog: [] });
     const first = a.nodeMap.rootId;
     a.dispatch({ kind: 'enterNode', nodeId: first });
     // Encounter A.
@@ -824,7 +826,7 @@ describe('A2 round-trip: Run', () => {
     // `pendingEncounterXp` sidecar — a turn's XP banks onto the roster slot at
     // the turn boundary, so the save carries it in `team` like any other XP.
     const bus = new EventBus<GameEvents>();
-    const run = new Run(2026, bus);
+    const run = new Run(2026, bus, { eventCatalog: [] }); // 74i-c — see above
     const first = run.nodeMap.rootId;
     run.dispatch({ kind: 'enterNode', nodeId: first });
     // Resolve one turn with a SUB-lethal chip so the encounter is still live
@@ -863,7 +865,7 @@ describe('A2 round-trip: Run', () => {
     // An oversized roster (8 > handSize) leaves both a drawn hand AND a non-empty
     // draw pile mid-turn, so the round-trip exercises real deck state.
     const bus = new EventBus<GameEvents>();
-    const run = new Run(2026, bus, { startingRoster: bigRoster() });
+    const run = new Run(2026, bus, { eventCatalog: [], startingRoster: bigRoster() }); // 74i-c
     const first = run.nodeMap.rootId;
     run.dispatch({ kind: 'enterNode', nodeId: first });
     expect(run.hand.length).toBeGreaterThan(0);

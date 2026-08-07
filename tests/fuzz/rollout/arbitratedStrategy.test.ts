@@ -219,9 +219,11 @@ describe('arbitrated port buys — mechanism pins (injected evaluator)', () => {
 });
 
 describe('arbitrated packet fires — mechanism pins (injected evaluator)', () => {
-  /** A grants-stocked run (68b — free items at construction, zero draws). */
+  /** A grants-stocked run (68b — free items at construction, zero draws).
+   *  74i-c: catalog-suppressed — the turn-intro park enters the root, which
+   *  opens the shipped starting event otherwise (empty = degrade to fight). */
   function grantedRun(grants: readonly string[]): Run {
-    return new Run(SEED, new EventBus<GameEvents>(), { grants });
+    return new Run(SEED, new EventBus<GameEvents>(), { grants, eventCatalog: [] });
   }
 
   /** Park a grants-stocked fresh run at turn-intro (gates on → enter the
@@ -460,7 +462,8 @@ describe('the pickGrantAction chokepoint (70d) — harness contracts', () => {
 
 describe('arbitrated grants — mechanism pins (injected evaluator)', () => {
   function grantedTurnIntro(): Run {
-    const run = new Run(SEED, new EventBus<GameEvents>(), { grants: ['janus', 'mars'] });
+    // 74i-c — catalog-suppressed (see grantedRun's note).
+    const run = new Run(SEED, new EventBus<GameEvents>(), { grants: ['janus', 'mars'], eventCatalog: [] });
     run.pauseAtTurnGates = true;
     run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
     if (run.phase !== 'turn-intro') {

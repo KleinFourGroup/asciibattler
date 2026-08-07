@@ -53,6 +53,14 @@
         { "kind": "packet", "weight": 2, "packet": "miner" },
         { "kind": "bits", "weight": 2, "min": 25, "max": 40 }
       ]
+    },
+    {
+      "id": "hostage-rescue",
+      "entries": [
+        { "kind": "unit", "weight": 2, "archetype": "healer", "level": 3 },
+        { "kind": "unit", "weight": 1, "archetype": "mercenary", "level": 3 },
+        { "kind": "poolHealth", "weight": 1, "amount": 5 }
+      ]
     }
   ]
 }

@@ -56,8 +56,14 @@ describe('gauntlet cells (53e)', () => {
 
   it('a live headless drive of cell #1 fights the forced encounter, on the forced layout, with the standard roster', () => {
     const cell = GAUNTLET_CELLS[0]!;
+    // 74i-c — the cell protocol pins its fight at the ROOT, which the
+    // shipped sector now stamps as the starting event; the headless drive
+    // suppresses the catalog (root degrades to the fight — the 74b rule).
+    // Kept OUT of cellRunConfig itself: the URL parity check above must
+    // stay expressible in query params. The human-gauntlet URL side is a
+    // TODO watch item (a browser cell run opens the boon event first).
     const result = runOne(cell.seeds[0], makeStrategy('greedy')!, {
-      runConfig: cellRunConfig(cell, cell.seeds[0]),
+      runConfig: { ...cellRunConfig(cell, cell.seeds[0]), eventCatalog: [] },
     });
     const target = result.battles.filter((b) => b.encounterId === cell.encounterId);
     expect(target.length).toBeGreaterThan(0);

@@ -99,13 +99,13 @@ the PATH_KINDS/vector re-baseline.
   phrase helper). Exit met — all five flows browser-driven (open ·
   shown-disabled+requirement · met-dim · page hop · start-encounter);
   the 74e interim hazard CLOSED. Detail: worklog §74f.
-- [x] 74g — arbitration ✅ 2026-08-06: nominator model + shared
-  MAP-class ε (provisional, §81 re-reads) + singleton rule. Exit met
-  (decisions.csv `eventChoice` rows). Detail: worklog §74g.
+- [x] 74g — arbitration ✅ 2026-08-06: nominator model + MAP-class ε
+  (§81 re-reads) + singleton rule; decisions.csv rows. Worklog §74g.
 - [x] 74h — the event editor ✅ 2026-08-06: shape landed + the live
   no-op-save byte proof; browser-driven. Detail: worklog §74h.
-- [ ] 74i — DECISION POINT: the demo-catalog design round (+ a Start
-  starting event · a flag-chain pair · rewardOverride) + exit sweep.
+- [x] 74i — the design round ✅ 2026-08-07 (a/b/c): riders signed ·
+  ten events + prodigy · placement + starting event LIVE (the
+  scheduled break paid) · reward kinds. Detail: worklog §74i.
 - [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.
 
 ## Phase 75 — Camps

@@ -5509,6 +5509,129 @@ describe('74e — the sector-owned event pool', () => {
   });
 });
 
+// ── 74i — per-run event repeats (the no-repeat default, user-signed) ─────────
+
+describe('74i — per-run event repeats', () => {
+  /** Twin-catalog fixture: the pool's only OPEN def, repeatable or not (the
+   *  catalog never touches map generation, so both arms share a seed's map).
+   *  eventChance 1 makes the scatter attempt every hop; the hunt below finds
+   *  a seed whose hop-1 frontier carries the second event node. */
+  function repeatRun(seed: number, repeatable: boolean): Run {
+    const survivor = repeatable
+      ? { ...poolEvent('whispering-terminal-collects'), repeatable: true }
+      : poolEvent('whispering-terminal-collects');
+    return new Run(seed, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      eventChance: 1,
+      daemon: NO_RESOLVE_DAEMON,
+      eventCatalog: [
+        poolEvent('corrupted-shrine', NEVER),
+        poolEvent('whispering-terminal', NEVER),
+        survivor,
+      ],
+    });
+  }
+
+  /** A hop-1 parent → hop-2 event-node edge (the scatter never places
+   *  events at hop 1 — probed at 74i — so the second entry teleports to
+   *  the parent instead of fighting the intervening battle). */
+  function hop2EventEntry(run: Run): { parent: number; eventNode: number } | null {
+    const hops = run.nodeMap.hops;
+    if (hops.length < 3) return null;
+    const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));
+    const hop1 = new Set(hops[1]!);
+    const hop2Events = new Set(hops[2]!.filter((id) => kindOf.get(id) === 'event'));
+    for (const e of run.nodeMap.edges) {
+      if (hop1.has(e.from) && hop2Events.has(e.to)) {
+        return { parent: e.from, eventNode: e.to };
+      }
+    }
+    return null;
+  }
+
+  /** Deterministic hunt: a seed whose root event resolves cleanly to the map
+   *  AND whose map carries a hop-1 → hop-2-event edge. */
+  let hunted: number | null = null;
+  function huntSeed(): number {
+    if (hunted !== null) return hunted;
+    for (let seed = 300; seed < 340; seed++) {
+      const run = repeatRun(seed, false);
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      if (run.phase !== 'event') continue;
+      run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 });
+      // The runOne closure-narrowing caveat: dispatch mutates phase behind
+      // TS's flow analysis — the cast restores reality.
+      if ((run.phase as string) !== 'map') continue;
+      if (hop2EventEntry(run) !== null) {
+        hunted = seed;
+        return seed;
+      }
+    }
+    throw new Error('no seed in [300, 340) offered a hop-1 → hop-2-event edge');
+  }
+
+  /** Visit the root event, then teleport to the hop-1 parent (direct
+   *  `currentNodeId` assignment — the public field a snapshot would set;
+   *  a fromJSON round-trip would re-pin the SHIPPED catalog, the 74b
+   *  bespoke-rejection rule) so the hop-2 event node sits on the frontier. */
+  function afterRootVisit(run: Run): number {
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 0 });
+    const entry = hop2EventEntry(run)!;
+    run.currentNodeId = entry.parent;
+    return entry.eventNode;
+  }
+
+  it('an opened page marks visited:<id>; a combat-resolved entry never does', () => {
+    const run = repeatRun(300, false);
+    expect(run.eventFlag('visited:whispering-terminal-collects')).toBeUndefined();
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    expect(run.phase).toBe('event');
+    expect(run.eventFlag('visited:whispering-terminal-collects')).toBe(true);
+    // The resolve-every-entry twin: the page never opens, nothing marks.
+    const resolved = new Run(300, new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      daemon: ALWAYS_RESOLVE_DAEMON,
+      eventCatalog: [poolEvent('whispering-terminal-collects')],
+    });
+    resolved.dispatch({ kind: 'enterNode', nodeId: resolved.nodeMap.rootId });
+    expect(resolved.phase).toBe('battle');
+    expect(resolved.eventFlag('visited:whispering-terminal-collects')).toBeUndefined();
+  });
+
+  it('the no-repeat default: a visited def drops from the pool — the second event node degrades to the fight', () => {
+    const run = repeatRun(huntSeed(), false);
+    const eventNode = afterRootVisit(run);
+    run.dispatch({ kind: 'enterNode', nodeId: eventNode });
+    expect(run.phase).toBe('battle'); // the visited filter emptied the pool
+    expect(run.activeEvent).toBeNull();
+  });
+
+  it('repeatable: true opts out — the same def opens again (visited still marked)', () => {
+    const run = repeatRun(huntSeed(), true);
+    const eventNode = afterRootVisit(run);
+    expect(run.eventFlag('visited:whispering-terminal-collects')).toBe(true);
+    run.dispatch({ kind: 'enterNode', nodeId: eventNode });
+    expect(run.phase).toBe('event');
+    expect(run.activeEvent!.eventId).toBe('whispering-terminal-collects');
+  });
+
+  it('the forced dial bypasses the filter (a force is a force)', () => {
+    const run = new Run(huntSeed(), new EventBus<GameEvents>(), {
+      firstNodeKind: 'event',
+      eventChance: 1,
+      daemon: NO_RESOLVE_DAEMON,
+      forcedEventId: 'poolless-forced',
+      eventCatalog: [poolEvent('poolless-forced')],
+    });
+    const eventNode = afterRootVisit(run);
+    expect(run.eventFlag('visited:poolless-forced')).toBe(true);
+    run.dispatch({ kind: 'enterNode', nodeId: eventNode });
+    expect(run.phase).toBe('event'); // visited + non-repeatable, forced anyway
+    expect(run.activeEvent!.eventId).toBe('poolless-forced');
+  });
+});
+
 // ── 74c — event effect ops (the full union executes) ─────────────────────────
 
 /** An event-phase run around ONE choice carrying `effects`, executed in

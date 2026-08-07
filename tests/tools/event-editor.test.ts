@@ -56,6 +56,7 @@ describe('formatEventsJson', () => {
       {
         id: 'grammar-demo',
         name: 'Grammar Demo',
+        repeatable: true,
         eligibility: [
           { kind: 'flagSet', flag: 'demo:seen' },
           { kind: 'not', condition: { kind: 'hasDaemon', daemonId: 'janus' } },

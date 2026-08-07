@@ -97,6 +97,7 @@ import { rewardTableById, type EncounterRewardRef } from '../config/rewards';
 import {
   EVENTS,
   getEvent,
+  visitedFlagFor,
   type EventDef,
   type EventPage,
   type EventCondition,
@@ -1436,6 +1437,11 @@ export class Run {
       return;
     }
     this.activeEvent = { eventId: eventDef.id, pageId: eventDef.entry };
+    // 74i — mark the visit the moment the page OPENS (combat-resolved
+    // entries never reach here — the player never saw it). Marked even for
+    // `repeatable` defs: the flag records history (authored content may
+    // read it cross-event); only the pool FILTER consults `repeatable`.
+    this.eventFlags[visitedFlagFor(eventDef.id)] = true;
     this.phase = 'event';
     this.bus.emit('event:entered', { nodeId, eventId: eventDef.id });
   }
@@ -1471,6 +1477,14 @@ export class Run {
     for (const entry of pool) {
       const def = this.eventCatalog.find((e) => e.id === entry.eventId);
       if (def === undefined) continue;
+      // 74i — the per-run no-repeat default (user-signed): a def whose
+      // `visited:` flag is set drops out unless it opts in `repeatable`.
+      // Same set-semantics as the flagSet condition; the forced dial above
+      // bypasses by construction (a force is a force).
+      if (def.repeatable !== true) {
+        const seen = this.eventFlags[visitedFlagFor(def.id)];
+        if (seen !== undefined && seen !== false) continue;
+      }
       if (!(def.eligibility ?? []).every((c) => this.evaluateEventCondition(c))) continue;
       eligible.push({ def, weight: entry.weight ?? 1 });
     }

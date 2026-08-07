@@ -159,9 +159,29 @@ export interface EventPage {
 export interface EventDef {
   id: string;
   name: string;
+  /** 74i — opt OUT of the default per-run no-repeat rule (user-signed at
+   *  the §74i design round): absent/false = the pool roll skips this def
+   *  once its `visited:` flag is set; true = repeatable flavor content. */
+  repeatable?: boolean;
   eligibility?: readonly EventCondition[];
   entry: string;
   pages: Readonly<Record<string, EventPage>>;
+}
+
+/**
+ * 74i — the reserved visited-flag namespace. The ENGINE writes
+ * `visited:<eventId>` into the run's flag store when an event page opens
+ * (combat-resolved entries never mark — the player never saw the page);
+ * the pool roll reads it to suppress per-run repeats (unless the def is
+ * `repeatable`). Authored content may READ these flags freely —
+ * `{ "kind": "flagSet", "flag": "visited:corrupted-shrine" }` is a legal
+ * cross-event eligibility gate — but must never WRITE one (`setFlag` into
+ * the namespace is boot-asserted below): one writer keeps "visited" honest.
+ */
+export const VISITED_FLAG_PREFIX = 'visited:';
+
+export function visitedFlagFor(eventId: string): string {
+  return `${VISITED_FLAG_PREFIX}${eventId}`;
 }
 
 const EventTerminalSchema = z.discriminatedUnion('kind', [
@@ -200,6 +220,7 @@ const EventSchema = z
   .object({
     id: z.string().min(1),
     name: z.string().min(1),
+    repeatable: z.boolean().optional(), // absent = false (74i no-repeat default)
     eligibility: z.array(EventConditionSchema).optional(),
     entry: z.string().min(1),
     pages: z.record(z.string().min(1), EventPageSchema),
@@ -284,6 +305,63 @@ export function assertEventPagesTerminate(events: readonly EventDef[]): void {
   }
 }
 
+/**
+ * 74i — every page must be REACHABLE from the entry page (BFS over string
+ * `next` refs). The termination assert proves pages can exit; this proves
+ * they can be entered — without it, a mis-wired `next` (a choice pointing
+ * at return-to-map where a page id was meant) silently orphans whole
+ * branches, which no other validator sees. Found live at the §74i content
+ * review: two authored events shipped their reward halves unreachable.
+ * Args-injected for synthetic tests; self-wired below.
+ */
+export function assertEventPagesReachable(events: readonly EventDef[]): void {
+  for (const event of events) {
+    const reachable = new Set<string>();
+    const frontier = [event.entry];
+    while (frontier.length > 0) {
+      const pageId = frontier.pop()!;
+      if (reachable.has(pageId)) continue;
+      const page = event.pages[pageId];
+      if (page === undefined) continue; // dangling refs are the superRefine's complaint
+      reachable.add(pageId);
+      for (const choice of page.choices) {
+        for (const outcome of choice.outcomes) {
+          if (typeof outcome.next === 'string') frontier.push(outcome.next);
+        }
+      }
+    }
+    const orphans = Object.keys(event.pages).filter((pageId) => !reachable.has(pageId));
+    if (orphans.length > 0) {
+      throw new Error(
+        `event '${event.id}': page(s) ${orphans.map((p) => `'${p}'`).join(', ')} are unreachable from entry '${event.entry}' — dead content (a mis-wired next?)`,
+      );
+    }
+  }
+}
+
+/**
+ * 74i — the visited-namespace write guard: no authored `setFlag` may target
+ * `visited:*` (see VISITED_FLAG_PREFIX — the engine is the one writer;
+ * authored content reads freely). Args-injected; self-wired below.
+ */
+export function assertEventReservedFlags(events: readonly EventDef[]): void {
+  for (const event of events) {
+    for (const [pageId, page] of Object.entries(event.pages)) {
+      for (const choice of page.choices) {
+        for (const outcome of choice.outcomes) {
+          for (const op of outcome.effects ?? []) {
+            if (op.op === 'setFlag' && op.flag.startsWith(VISITED_FLAG_PREFIX)) {
+              throw new Error(
+                `event '${event.id}' page '${pageId}': setFlag targets the reserved '${VISITED_FLAG_PREFIX}' namespace (engine-written; conditions may read it, effects may not write it)`,
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 /** The id catalogs an event def can reference (args-injected — the
  *  `assertPriceRefs` bundle precedent). */
 export interface EventRefCatalogs {
@@ -363,6 +441,8 @@ export function assertEventRefs(
 }
 
 assertEventPagesTerminate(EVENTS_LIST);
+assertEventPagesReachable(EVENTS_LIST);
+assertEventReservedFlags(EVENTS_LIST);
 assertEventRefs(EVENTS_LIST, {
   encounterIds: ENCOUNTER_IDS,
   rewardTableIds: REWARD_TABLE_IDS,

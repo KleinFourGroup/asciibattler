@@ -48,6 +48,8 @@ import {
   EVENTS,
   EventsSchema,
   assertEventPagesTerminate,
+  assertEventPagesReachable,
+  assertEventReservedFlags,
   assertEventRefs,
   describeEventCondition,
   type EventCondition,
@@ -142,6 +144,7 @@ const newBtn = mustQuery<HTMLButtonElement>('#new-btn');
 const deleteBtn = mustQuery<HTMLButtonElement>('#delete-btn');
 const idEl = mustQuery<HTMLInputElement>('#id');
 const nameEl = mustQuery<HTMLInputElement>('#name');
+const repeatableEl = mustQuery<HTMLInputElement>('#repeatable');
 const eligibilityEl = mustQuery<HTMLDivElement>('#eligibility');
 const addEligibilityBtn = mustQuery<HTMLButtonElement>('#add-eligibility-btn');
 const viewVisualBtn = mustQuery<HTMLButtonElement>('#view-visual');
@@ -177,6 +180,14 @@ function attachIdentity(): void {
   });
   nameEl.addEventListener('input', () => {
     event().name = nameEl.value;
+    refreshDerived();
+  });
+  // 74i — unchecked = key omitted (absent = the no-repeat default); an
+  // explicit JSON-authored `false` collapses to absent on the next toggle,
+  // which is semantics-identical.
+  repeatableEl.addEventListener('change', () => {
+    if (repeatableEl.checked) event().repeatable = true;
+    else delete event().repeatable;
     refreshDerived();
   });
 }
@@ -961,6 +972,7 @@ function selectEvent(index: number): void {
   activeIndex = index;
   idEl.value = event().id;
   nameEl.value = event().name;
+  repeatableEl.checked = event().repeatable === true;
   if (viewMode === 'json') {
     pagesTextEl.value = JSON.stringify(event().pages, null, 2);
     pagesParseOk = true;
@@ -1012,6 +1024,18 @@ function refreshValidation(): void {
   if (result.success) {
     try {
       assertEventPagesTerminate(working);
+    } catch (err) {
+      issues.push(err instanceof Error ? err.message : String(err));
+    }
+    // 74i — the reachability + reserved-namespace guards (found live: two
+    // authored events shipped orphaned reward pages no validator saw).
+    try {
+      assertEventPagesReachable(working);
+    } catch (err) {
+      issues.push(err instanceof Error ? err.message : String(err));
+    }
+    try {
+      assertEventReservedFlags(working);
     } catch (err) {
       issues.push(err instanceof Error ? err.message : String(err));
     }

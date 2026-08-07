@@ -12,7 +12,8 @@
  *
  *  - 2-space indent throughout; no trailing newline (the save endpoint
  *    appends one, matching every other editor's emit convention).
- *  - Event key order: `id / name / eligibility? / entry / pages`; page:
+ *  - Event key order: `id / name / repeatable? / eligibility? / entry /
+ *    pages`; page:
  *    `text / art? / choices`; choice: `label / condition? / outcomes`;
  *    outcome: `weight? / effects? / next`. Optional keys appear only when
  *    present (authored-field fidelity — the 74c reward-formatter rule).
@@ -219,6 +220,9 @@ function eventBlock(pad: string, event: EventDef): string {
     `${childPad}"id": ${JSON.stringify(event.id)}`,
     `${childPad}"name": ${JSON.stringify(event.name)}`,
   ];
+  if (event.repeatable !== undefined) {
+    lines.push(`${childPad}"repeatable": ${JSON.stringify(event.repeatable)}`);
+  }
   if (event.eligibility !== undefined) {
     const conds = event.eligibility.map((c) => inlineCondition(c));
     lines.push(`${childPad}"eligibility": ${inlineElemArray(childPad, conds)}`);

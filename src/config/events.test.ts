@@ -13,7 +13,11 @@ import {
   EventsSchema,
   getEvent,
   assertEventPagesTerminate,
+  assertEventPagesReachable,
+  assertEventReservedFlags,
   assertEventRefs,
+  visitedFlagFor,
+  VISITED_FLAG_PREFIX,
   type EventDef,
   type EventRefCatalogs,
 } from './events';
@@ -335,6 +339,91 @@ describe('events config', () => {
       ],
     ])('throws on %s', (_desc, def, pattern) => {
       expect(() => assertEventRefs([def], SYNTH_CATALOGS)).toThrow(pattern);
+    });
+  });
+
+  describe('74i — assertEventPagesReachable', () => {
+    it('passes a fully-connected page map (multi-hop, cycles included)', () => {
+      const ok = makeEvent({
+        pages: {
+          start: {
+            text: 'a',
+            choices: [
+              { label: 'On', outcomes: [{ next: 'second' }] },
+              { label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+            ],
+          },
+          second: {
+            text: 'b',
+            choices: [
+              { label: 'Back', outcomes: [{ next: 'start' }] },
+              { label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+            ],
+          },
+        },
+      });
+      expect(() => assertEventPagesReachable([ok])).not.toThrow();
+    });
+
+    it('throws on an orphaned page — the §74i content-review bug class (a mis-wired next)', () => {
+      // Both start choices exit; the authored reward page can never play.
+      const orphaned = makeEvent({
+        pages: {
+          start: {
+            text: 'a',
+            choices: [{ label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] }],
+          },
+          reward: {
+            text: 'dead content',
+            choices: [{ label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] }],
+          },
+        },
+      });
+      expect(() => assertEventPagesReachable([orphaned])).toThrow(
+        /page\(s\) 'reward' are unreachable from entry 'start'/,
+      );
+    });
+  });
+
+  describe('74i — the reserved visited: namespace', () => {
+    it('visitedFlagFor composes the prefix', () => {
+      expect(visitedFlagFor('corrupted-shrine')).toBe(`${VISITED_FLAG_PREFIX}corrupted-shrine`);
+    });
+
+    it('an authored setFlag into visited:* throws; READING visited:* stays legal', () => {
+      const writer = makeEvent({
+        pages: {
+          start: {
+            text: 'a',
+            choices: [
+              {
+                label: 'Cheat',
+                outcomes: [
+                  {
+                    effects: [{ op: 'setFlag', flag: 'visited:corrupted-shrine' }],
+                    next: { kind: 'return-to-map' },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      });
+      expect(() => assertEventReservedFlags([writer])).toThrow(/reserved 'visited:' namespace/);
+      // The cross-event READ — the mechanism's sold feature — is untouched.
+      const reader = makeEvent({
+        eligibility: [{ kind: 'flagSet', flag: 'visited:corrupted-shrine' }],
+      });
+      expect(() => assertEventReservedFlags([reader])).not.toThrow();
+    });
+  });
+
+  describe('74i — the repeatable field', () => {
+    it('parses optionally and round-trips; absent stays absent (the no-repeat default)', () => {
+      const on = EventsSchema.parse([makeEvent({ repeatable: true })]);
+      expect(on[0]!.repeatable).toBe(true);
+      const off = EventsSchema.parse([makeEvent()]);
+      expect('repeatable' in off[0]!).toBe(false);
     });
   });
 });

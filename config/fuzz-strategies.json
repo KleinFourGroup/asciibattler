@@ -18,7 +18,8 @@
     "banshee": 0,
     "stormcaller": 0,
     "shaman": 0,
-    "ghoul": 0
+    "ghoul": 0,
+    "prodigy": 0
   },
   "composition": {
     "mercenary": 0,
@@ -38,7 +39,8 @@
     "banshee": 0,
     "stormcaller": 0,
     "shaman": 0,
-    "ghoul": 0
+    "ghoul": 0,
+    "prodigy": 0
   },
   "compWeight": 0,
   "level": 0,

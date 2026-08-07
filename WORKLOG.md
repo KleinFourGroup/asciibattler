@@ -691,3 +691,66 @@ Landed to the cut on the reward/encounter-editor shape
 - +3 main tests (2426); the fuzz suite is untouched (tools/ paths
   don't trip the hook). vite.config.ts allowlists `events.json`;
   the tools index gains the card.
+
+### 74i — the demo-catalog design round (2026-08-07, IN FLIGHT)
+
+**The design conversation (user-signed).** Fork 1 (the outcome-beat
+rider): the AUTHORED outcome-page convention — a terminal page narrates
+the result, its acknowledging choice carries the effects — "sometimes
+broken, but not often"; no engine toast (a §81 feel-read revisit if
+prose proves insufficient). Fork 2 (the repeat rider): DEFAULT
+NO-REPEAT per run, opt-out `repeatable: true` per def. Starting-event-
+as-buff and the two whimsical events confirmed intentional (levity
+offsetting the grim cadre chain).
+
+**The content review (the user wrote nine events + a bespoke unit
+before the round opened).** Machine-valid, byte-faithful, all refs
+resolved — but TWO events shipped silently dead content: orphaned
+pages no validator saw (cadre-3's entire back half — the Moneta idol,
+the 50-bit rescue, the infernalColumn fight; orange-mob's reward
+page). Root cause: the termination assert checks pages can EXIT, not
+that they can be ENTERED. Both rewired by the user; the class is now
+closed by `assertEventPagesReachable` (below). Balance flags owned
+eyes-open: the silent-mage grant (user cut L12→L10 and put risk on the
+meditation path), the sector-1-start second daemon (intended).
+
+**74i-a — the repeat mechanism + the reachability assert (landed).**
+
+- `repeatable?: boolean` on EventDef (schema + formatter key order
+  `id/name/repeatable?/…` + editor checkbox; absent = the no-repeat
+  default).
+- The engine writes **`visited:<eventId>`** into the EXISTING flag
+  store the moment a page opens (combat-resolved entries never mark —
+  the player never saw it; repeatable defs still mark, history is
+  free). The pool roll — both `events` and `startingEvents` — skips
+  visited non-repeatable defs; `forcedEventId` bypasses (a force is a
+  force). ZERO serialization change: flags already ride v41.
+- The namespace contract: authored content READS `visited:*` freely
+  (cross-event eligibility gates come free — the sold feature);
+  WRITING one is boot-asserted (`assertEventReservedFlags`) — one
+  writer keeps "visited" honest.
+- **`assertEventPagesReachable`** (BFS from entry) joins the boot
+  asserts + the editor validation pane — the content-review bug class
+  can no longer save, let alone ship.
+- Exhaustion degrades free: an all-visited pool = the 74b
+  empty-eligible rule (fight). Probe finding en route: the scatter
+  never places events at hop 1 (all seeds), so the repeat tests
+  teleport via `currentNodeId` to reach a second event node — a
+  fromJSON teleport would re-pin the shipped catalog (the 74b
+  bespoke-rejection rule).
+
+**74i-b — the content landing + the prodigy consumption contract.**
+The user's nine events + the `prodigy` unit def (legendary,
+`draftable: false`, event-grant-only, high growth). The new-unit
+checklist paid: `prodigy: 0` padded into BOTH archetype-keyed weight
+records (`archetype` + `composition` — scoredWeights' only two, class
+audited) across config/fuzz-strategies.json + redraw-level-fisher +
+the 12 fixture vectors (the 50c pad-zero procedure; local
+best-strategy outputs regenerate at the next probe; §81 board
+re-signs), and the §29-close draft-exclusion pin gains 'prodigy'.
+Suites: 2435 main (+9) / 394 fuzz green.
+
+**NEXT: 74i-c** — placement (startingEvents + pool entries — the
+proposal goes to the user), the repeatable flags on the flavor
+events, the two unauthored reward kinds, DESIGN.md's outcome-page
+convention, the exit sweep.

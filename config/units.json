@@ -645,5 +645,40 @@
     "footprint": 3,
     "autoTarget": true,
     "statusSusceptibility": ["burn","frozen"]
+  },
+  "prodigy": {
+    "name": "Prodigy",
+    "glyph": "P",
+    "abilities": ["sword"],
+    "targeting": "nearest",
+    "draftable": false,
+    "rarity": "legendary",
+    "damageStat": "strength",
+    "baseStats": {
+      "constitution": 20,
+      "strength": 5,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 4,
+      "defense": 2,
+      "precision": 5,
+      "evasion": 5,
+      "speed": 5,
+      "mobility": 2,
+      "power": 1
+    },
+    "growthRates": {
+      "constitution": 0.9,
+      "strength": 0.65,
+      "ranged": 0,
+      "magic": 0,
+      "luck": 0.55,
+      "defense": 0.45,
+      "precision": 0.4,
+      "evasion": 0.4,
+      "speed": 0.5,
+      "mobility": 0.2,
+      "power": 0.1
+    }
   }
 }

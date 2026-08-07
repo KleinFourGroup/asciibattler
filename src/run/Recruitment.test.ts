@@ -51,12 +51,13 @@ describe('rollOffer', () => {
 
   it('§29-close: never offers an enemy disruptor or the summon-only Ghoul', () => {
     // The §29-close recruit-pool cleanup. These archetypes EXIST (cast by
-    // enemies / raised by the Shaman) but are not the player's to draft. Pinned
-    // explicitly — a future archetype added without `draftable:false` that leaks
-    // into the offer trips this. Two complementary checks: the flag derivation
-    // excludes exactly these five, and a wide deterministic seed scan never
-    // surfaces one in an actual offer.
-    const EXCLUDED = ['ice_mage', 'warlock', 'luminant', 'banshee', 'ghoul'] as const;
+    // enemies / raised by the Shaman / granted by an event) but are not the
+    // player's to draft. Pinned explicitly — a future archetype added without
+    // `draftable:false` that leaks into the offer trips this. Two complementary
+    // checks: the flag derivation excludes exactly these, and a wide
+    // deterministic seed scan never surfaces one in an actual offer.
+    // 74i — 'prodigy' joins: the event-grant-only legendary (§74i catalog).
+    const EXCLUDED = ['ice_mage', 'warlock', 'luminant', 'banshee', 'ghoul', 'prodigy'] as const;
     for (const a of EXCLUDED) expect(DRAFTABLE_ARCHETYPES).not.toContain(a);
     expect(DRAFTABLE_ARCHETYPES.length).toBe(ALL_ARCHETYPES.length - EXCLUDED.length);
     const seen = new Set<string>();

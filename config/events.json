@@ -118,5 +118,615 @@
         ]
       }
     }
+  },
+  {
+    "id": "silent-mage",
+    "name": "The Silent Mage",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "You come upon a mage, silently meditating by a shrine.",
+        "choices": [
+          {
+            "label": "Try to recruit him",
+            "outcomes": [{ "next": "decision" }]
+          },
+          {
+            "label": "Join in meditation",
+            "outcomes": [
+              { "next": "happy" },
+              { "next": "quiet" }
+            ]
+          }
+        ]
+      },
+      "decision": {
+        "text": "The mage glares at both you and your band of men.",
+        "choices": [
+          {
+            "label": "Oh no...",
+            "outcomes": [
+              { "weight": 4, "next": "angered" },
+              { "weight": 1, "next": "unamused" }
+            ]
+          }
+        ]
+      },
+      "angered": {
+        "text": "The mage signs out a hex and vanishes in a puff of smoke!",
+        "choices": [
+          {
+            "label": "Ouch",
+            "outcomes": [
+              {
+                "effects": [{ "op": "damagePool", "amount": 2 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "unamused": {
+        "text": "The mage sighs, less angry than disappointed, and wanders off.",
+        "choices": [
+          {
+            "label": "At least he didn't attack us",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "happy": {
+        "text": "The mage walks over and sits down amongst your men, a slight smile on his face.",
+        "choices": [
+          {
+            "label": "Welcome to the crew!",
+            "outcomes": [
+              {
+                "effects": [{ "op": "grantUnit", "archetype": "mage", "level": 10 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "quiet": {
+        "text": "You don't talk to the mage, and the mage doesn't talk to you.",
+        "choices": [
+          {
+            "label": "Well, that was peaceful",
+            "outcomes": [
+              {
+                "effects": [{ "op": "healPool", "amount": 1 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "prodigy",
+    "name": "Talented Farmhand",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "Your band stay the night with an elderly farmer.  While there, the farmer's grandson talks some of your men into a sparring session.  The boy lacks any sort of training, but you can't help but notice that he seems to have an intuitive grasp of the blade.",
+        "choices": [
+          {
+            "label": "Hey, kid!",
+            "outcomes": [{ "next": "payment" }]
+          },
+          {
+            "label": "That's interesting.  Anyway...",
+            "outcomes": [{ "next": "no" }]
+          }
+        ]
+      },
+      "payment": {
+        "text": "The boy darts away to pack his bags before you can even finish your spiel.  His grandfather, though, looks far less enthused.",
+        "choices": [
+          {
+            "label": "Perhaps some bits will cheer him up",
+            "condition": { "kind": "bitsAtLeast", "amount": 25 },
+            "outcomes": [
+              {
+                "effects": [{ "op": "spendBits", "amount": 25 }],
+                "next": "join"
+              }
+            ]
+          },
+          {
+            "label": "On second thought...",
+            "outcomes": [{ "next": "cheap" }]
+          }
+        ]
+      },
+      "join": {
+        "text": "A smile breaks out across the old farmer's face, second only to the one on the boy's.",
+        "choices": [
+          {
+            "label": "Welcome to the team!",
+            "outcomes": [
+              {
+                "effects": [{ "op": "grantUnit", "archetype": "prodigy", "level": 3 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "cheap": {
+        "text": "The boy, crestfallen, begins to argue with his grandfather.  Better to leave them to it.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "no": {
+        "text": "A band of adventurers is no place for a teenager.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "mines",
+    "name": "The Mining Job",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "You and your men come across a notice board, with a listing for \"able-bodied men who know their way around a pickaxe.\"  There are no other details.",
+        "choices": [
+          {
+            "label": "We can do that!",
+            "outcomes": [{ "next": "accept" }]
+          },
+          {
+            "label": "How about no?",
+            "outcomes": [{ "next": "no" }]
+          }
+        ]
+      },
+      "no": {
+        "text": "There's no way that's worth it.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "accept": {
+        "text": "You all report to the mines.  The foreman hands out the promised pickaxes and grunts, \"Start digging.\"",
+        "choices": [
+          {
+            "label": "Dig",
+            "outcomes": [{ "next": "dig1" }]
+          }
+        ]
+      },
+      "dig1": {
+        "text": "Hours pass.  Nobody has brought you any water.",
+        "choices": [
+          {
+            "label": "Keep digging",
+            "outcomes": [
+              {
+                "effects": [{ "op": "damagePool", "amount": 1 }],
+                "next": "dig2"
+              }
+            ]
+          },
+          {
+            "label": "Quit",
+            "outcomes": [{ "next": "quit" }]
+          }
+        ]
+      },
+      "dig2": {
+        "text": "Some of your men are beginning to suffer from heat stroke.",
+        "choices": [
+          {
+            "label": "Keep digging",
+            "outcomes": [
+              {
+                "effects": [{ "op": "damagePool", "amount": 2 }],
+                "next": "dig3"
+              }
+            ]
+          },
+          {
+            "label": "Quit",
+            "outcomes": [{ "next": "quit" }]
+          }
+        ]
+      },
+      "dig3": {
+        "text": "A strange gas begins to fill the mines, killing the canaries.",
+        "choices": [
+          {
+            "label": "Keep digging",
+            "outcomes": [
+              {
+                "effects": [{ "op": "damagePool", "amount": 3 }],
+                "next": "done"
+              }
+            ]
+          },
+          {
+            "label": "Quit",
+            "outcomes": [{ "next": "quit" }]
+          }
+        ]
+      },
+      "done": {
+        "text": "At last the foreman ends the shift.  He collects your pickaxes and tosses a solitary packet your way.",
+        "choices": [
+          {
+            "label": "Well, it's something",
+            "outcomes": [
+              {
+                "effects": [{ "op": "addPacket", "packetId": "miner" }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "quit": {
+        "text": "There's no way this is worth it.  You all collectively abandon the mines.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "cheese-tax",
+    "name": "The Cheese Tax",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "A small dog scurries up to you.  \"Kindly pay the cheese tax,\" it says.",
+        "choices": [
+          {
+            "label": "Did that dog just talk!?",
+            "outcomes": [{ "next": "flee" }]
+          },
+          {
+            "label": "Will bits do instead?",
+            "condition": { "kind": "bitsAtLeast", "amount": 10 },
+            "outcomes": [
+              {
+                "effects": [{ "op": "spendBits", "amount": 10 }],
+                "next": "pay"
+              }
+            ]
+          }
+        ]
+      },
+      "flee": {
+        "text": "\"Demon!\" one of your men shouts.  All hell breaks loose as your men flee, leaving in their wake a very sad little mutt.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "pay": {
+        "text": "\"Money can be exchanged for cheese,\" it says.  The dog flops on its back and lets your men rub its belly.",
+        "choices": [
+          {
+            "label": "That was therapeutic!",
+            "outcomes": [
+              {
+                "effects": [{ "op": "healPool", "amount": 2 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "cadre-1",
+    "name": "The Cadre",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "A young woman is quite literally preaching on a soapbox in the middle of the square of the village you all are staying in.  Her tirade bounces around from landlords to kulaks to imperialism, but none of the peasants seem particularly interested.",
+        "choices": [
+          {
+            "label": "Best put a stop to this now",
+            "outcomes": [{ "next": "shoo" }]
+          },
+          {
+            "label": "Take one of her flyers",
+            "outcomes": [{ "next": "listen" }]
+          }
+        ]
+      },
+      "shoo": {
+        "text": "Your men surround the woman and begin to shuffle her out of the village square.  She makes a scene of it, calling you a class traitor, whatever that means.  The villagers look relieved, however, and one even rewards you with a few bits.",
+        "choices": [
+          {
+            "label": "All's well that ends well",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 5 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "listen": {
+        "text": "\"Thank you, comrades!\" she shouts, before turning back to her proselytizing.  The pamphlet is a dense tome about dialectics which makes your eyes glaze over.",
+        "choices": [
+          {
+            "label": "Can the villagers even read this?",
+            "outcomes": [
+              {
+                "effects": [{ "op": "setFlag", "flag": "cadre:read" }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "cadre-2",
+    "name": "The Cadre, Part Two",
+    "eligibility": [{ "kind": "flagSet", "flag": "cadre:read" }],
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "You come across a village in disarray.  A group of guerillas are locked in a standoff with the village priest.  Leading the guerillas is none other than the young woman who'd been ranting on a soapbox some hops ago.\n\n\"Comrades,\" she addresses you.  \"This temple has leached off of the poor for long enough.  Help us burn it down!\"\n\n\"But it's full of plague victims,\" pleads the priest.  ",
+        "choices": [
+          {
+            "label": "Help the guerillas",
+            "outcomes": [
+              {
+                "effects": [{ "op": "setFlag", "flag": "cadre:arson" }],
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "plagueVictims"
+                }
+              }
+            ]
+          },
+          {
+            "label": "Defend the priest",
+            "outcomes": [{ "next": "defend" }]
+          }
+        ]
+      },
+      "defend": {
+        "text": "\"Sabateur!\" hisses the woman.  Before you can engage, she and her posse flee.  The priest thanks you, and presses a few bits into your hand.\n\n\"Would that we had more to give, but we can barely pay for medicine.\"",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 10 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "cadre-3",
+    "name": "The Cadre, Part Three",
+    "eligibility": [{ "kind": "flagSet", "flag": "cadre:arson" }],
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "Your band arrives at the local county seat and finds a city in chaos.  Squads of men wearing red armbands run rampant, looting anything that looks even vaguely edible.  Or valuable, for that matter.\n\n\"Comrades,\" shouts a familiar voice, \"We're evacuating the city before imperial forces besiege us.  Help us!\"",
+        "choices": [
+          {
+            "label": "Help with requisitioning supplies",
+            "outcomes": [{ "next": "loot" }]
+          },
+          {
+            "label": "Evacuate the civilians",
+            "outcomes": [{ "next": "help" }]
+          }
+        ]
+      },
+      "loot": {
+        "text": "Your men join in with the guerillas.  There's not much to be found that hasn't already been looted, but you do come across an idol in a burned-out hut.",
+        "choices": [
+          {
+            "label": "Not our finest hour",
+            "outcomes": [
+              {
+                "effects": [{ "op": "addDaemon", "daemonId": "moneta" }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "help": {
+        "text": "The woman looks at you as if that were the dumbest idea she's ever heard.  She does not, however, stop you.",
+        "choices": [
+          {
+            "label": "Evacuate the city center",
+            "outcomes": [{ "next": "downtown" }]
+          },
+          {
+            "label": "Evacuate the outskirts",
+            "outcomes": [{ "next": "outskirts" }]
+          }
+        ]
+      },
+      "downtown": {
+        "text": "You find a group of bureaucrats in the basement of the city hall; apparently they've in hiding since the guerillas seized control.",
+        "choices": [
+          {
+            "label": "Follow us!",
+            "outcomes": [{ "next": "escape" }]
+          }
+        ]
+      },
+      "escape": {
+        "text": "You get the bureaucrats to safety with minimal difficulty.  They reward you handsomely.",
+        "choices": [
+          {
+            "label": "All in a day's work",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 50 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "outskirts": {
+        "text": "You arrive at the outskirts to find an advanced column of government forces.  They don't look particularly friendly.",
+        "choices": [
+          {
+            "label": "To arms!",
+            "outcomes": [
+              {
+                "next": {
+                  "kind": "start-encounter",
+                  "encounterId": "infernalColumn",
+                  "rewardOverride": "daemon-cache"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "orange-mob",
+    "name": "Orange Mob",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "Your band comes across a small mob.  They appear to all be short, orange, and musically inclined.  And they appear to be drowning a boy in a river full of...\n\nWait, chocolate?",
+        "choices": [
+          {
+            "label": "Best not get involved",
+            "outcomes": [{ "next": "nope" }]
+          },
+          {
+            "label": "Save the boy",
+            "outcomes": [{ "next": "help" }]
+          }
+        ]
+      },
+      "nope": {
+        "text": "You detour around the singing lynch mob and instead sample the chocolate river.",
+        "choices": [
+          {
+            "label": "Delicious!",
+            "outcomes": [
+              {
+                "effects": [{ "op": "healPool", "amount": 4 }],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      },
+      "help": {
+        "text": "The little, orange men scatter.  The boy thanks you profusely and offers you a small reward.",
+        "choices": [
+          {
+            "label": "Happy to help, lad",
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "gainBits", "amount": 7 },
+                  { "op": "addPacket", "packetId": "patch" }
+                ],
+                "next": { "kind": "return-to-map" }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "sector-1-start",
+    "name": "The Beginning",
+    "entry": "start",
+    "pages": {
+      "start": {
+        "text": "A wizened old man beckons you over.  \"This sector is rife with bandits.  Take something to help yourself.\"  He gestures at an array of goods that he's splayed on the ground.",
+        "choices": [
+          {
+            "label": "A pile of bits",
+            "outcomes": [
+              {
+                "effects": [{ "op": "gainBits", "amount": 25 }],
+                "next": "end"
+              }
+            ]
+          },
+          {
+            "label": "A few packets",
+            "outcomes": [
+              {
+                "effects": [
+                  { "op": "addPacket", "packetId": "patch" },
+                  { "op": "addPacket", "packetId": "surge" }
+                ],
+                "next": "end"
+              }
+            ]
+          },
+          {
+            "label": "A daemon",
+            "outcomes": [
+              {
+                "effects": [{ "op": "addDaemon", "daemonId": "patricians-seal" }],
+                "next": "end"
+              },
+              {
+                "effects": [{ "op": "addDaemon", "daemonId": "cornucopia" }],
+                "next": "end"
+              },
+              {
+                "effects": [{ "op": "addDaemon", "daemonId": "laverna" }],
+                "next": "end"
+              }
+            ]
+          }
+        ]
+      },
+      "end": {
+        "text": "\"Farewell,\" the man says.  In a burst of static, he vanishes.",
+        "choices": [
+          {
+            "label": "Leave",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      }
+    }
   }
 ]

@@ -24,7 +24,8 @@
       "rogue": 0,
       "healer": 0,
       "mage": 0,
-      "catapult": 0
+      "catapult": 0,
+      "prodigy": 0
     }
   },
   "threshold": 0

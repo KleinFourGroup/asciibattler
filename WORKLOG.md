@@ -1135,3 +1135,6 @@ Landed to the cut. Notes beyond the cut line:
   multi-tile camp body will exercise it live.
 - No shipped layout lists a camp → the whole path is unit-test-only
   until §75j (the 74e seam-only posture; presence gate holds).
+- +11 tests (random-intersect 5 + spawnCamps 3 + drip 3; 2463 → 2474
+  main, hook-verified); 395 fuzz:smoke green — byte-identity holds
+  with the drain in the tick loop.

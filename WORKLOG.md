@@ -1138,3 +1138,105 @@ Landed to the cut. Notes beyond the cut line:
 - +11 tests (random-intersect 5 + spawnCamps 3 + drip 3; 2463 → 2474
   main, hook-verified); 395 fuzz:smoke green — byte-identity holds
   with the drain in the tick loop.
+
+### The 75d/75e widening worksheet (distilled from the kickoff census
+### for the fresh session — line refs verified at the 2026-08-08 HEAD)
+
+Every site gates on `isActiveNeutral` (Unit.ts) — active = fights,
+inert = scenery. Line numbers predate the 75b/75c edits to World.ts
+(shifted ~+150 there); grep the quoted predicates, don't trust raw
+numbers.
+
+**75d — spatial (this step):**
+
+- [ ] movement.ts:114 — vacancy ETA: active neutrals get one (they
+  move); inert stay `undefined`.
+- [ ] movement.ts:121-126 — THE moving wall: active neutrals go to
+  `otherUnitCells` (soft cost), inert stay `pathBlockers`; the
+  `else if` must also let `excludeUnitId` exclude an active neutral
+  (today it structurally can't). Docs at :53-55 + :208 update.
+- [ ] blockedAlly.ts:143-156 — `neutralCells()` topology walls:
+  inert-only.
+- [ ] actingPosition.ts:66-69 — firing-cell BFS blockers: inert-only,
+  IN LOCKSTEP with movement.ts:121 (the doc there demands it — the
+  GP4/Qb#3 hold-vs-strike freeze class).
+- [ ] SupportMovementBehavior.ts:314-317 — the bespoke duplicate
+  blocker build; :218 `snapToNavigable` via `neutralCells`.
+- [ ] bot/sensors.ts:289-298 `chokeCells` + :397-406 `armyMinCut` —
+  active neutrals leave the static arena mask (bodies move; the doc
+  says exactly this).
+- [ ] positioning.ts:120-126 `collectHalfCoverPositions` (+
+  effects/propose.ts:97-106 inherits) — an active neutral must NOT
+  grant half-cover (it has `blocksLineOfSight: true` anyway, but
+  gate it explicitly; a future non-LOS camp def must not become
+  mobile cover).
+- [ ] positioning.ts:105-111 `collectLosBlockers` + :211-215 inline
+  twin — VERIFY-ONLY expected: camp units spawn `blocksLineOfSight:
+  true` like every combatant, so including them is correct; confirm
+  the combatant-body LOS path treats them consistently.
+- [ ] World.ts `applyTileStatuses` (`unit.team === 'neutral'`
+  continue) — active neutrals catch fire / get healed.
+- [ ] tests/pathing/metrics.ts:62/216 — NO widening: `MetricTeam`
+  stays player|enemy (camp motion deliberately unmeasured — spec).
+  tests/pathing/fixtures.ts:63 still uses the retired 'environment'
+  archetype (pre-existing cosmetic; fix in passing if touched).
+
+**75e — combat (next step; hostility gates everything):**
+
+- [ ] Targeting.ts:35-37 `findTarget` root skip — admit active
+  neutrals HOSTILE TO the seeker's team.
+- [ ] Targeting.ts:66-67 `updateTarget` neutral bail — an active
+  neutral with a non-empty hostility set runs acquisition (targets
+  only factions its camp is hostile to).
+- [ ] Targeting.ts:133-139 sticky validity · :251-260
+  `nearestReachableHostile` · :570-600 `currentTarget` gate — same
+  admit rule.
+- [ ] Targeting.ts:458-471 `findEngageableEnemy` + :484-504
+  `findInRangeEnemy` — the two EASY-TO-MISS secondary scans
+  (engage/hold/blind units).
+- [ ] Targeting.ts:198-231 rubble auto-target family — stays
+  RUBBLE-ONLY (passive camps are not auto-attacked; that's the
+  non-aggressive default).
+- [ ] Targeting.ts:306-314 `validDestructibleNeutralTarget` +
+  :338-361 focus arms + :399-442 objective arms (incl. the :433
+  hard-coded `=== 'enemy'`) — camp units become valid engage/focus
+  objective targets (the click sources wire at 75h).
+- [ ] Targeting.ts:518-533 confused re-roll — design call: confused
+  units may target active neutrals (chaos is chaos); decide at the
+  step.
+- [ ] MovementBehavior.ts:322-334 `nearestEnemy` flee anchor —
+  hostile camp members are threats.
+- [ ] positioning.ts:246-256 — the neutral-target bestEffort
+  short-circuit: active neutrals get the REAL firing-cell/kite path
+  (ranged units currently would charge them).
+- [ ] effects/targeting.ts:91-94 `isCombatTargetable` — active
+  neutrals pass (AoE splash hits them; `affectsMatch`'s 'enemies'
+  already includes neutrals).
+- [ ] World.recordDamage neutral drop (`if (target.team ===
+  'neutral') return`) — active neutrals record (XP signed at the
+  shape-lock); inert keep dropping.
+- [ ] Aggro: the `takeHit`/damage chokepoint — striking a camp
+  member calls `markCampHostile(campId, attacker.team)` (AoE splash
+  included, the signed intent).
+- [ ] Kill credit: the `kill` trigger (the only clean attribution
+  site) + the DoT fallback (status `sourceUnitId`'s team) → set
+  `killedBy` when pending EMPTY and no living members (drip-aware);
+  stamp into the serialized campKills read (75g consumes).
+- [ ] checkBattleEnd — VERIFY neutral-only boards stay silent +
+  camps never extend a battle (pin by test); the third alive-flag
+  itself is 75g's.
+- [ ] main.ts:90 dev `applyStatus` neutral guard — widen for active
+  (dev QoL, optional).
+- [ ] VERIFY-ONLY: stats.ts/archetypes.ts neutral defaults
+  (damageStatFor / minRangeForArchetype) resolve correctly for camp
+  units — they're COMBATANT archetypes, so the combatant path
+  should already fire; pin one test.
+
+**75h render/UI (parked list, same census):** spriteColor.ts:23-46
+third-faction color+tint · BattleRenderer.ts:373-403 click
+candidates + :485-501 neutral early-return (bloom/badge/fade) ·
+UnitOverlayLayer.ts:170-178 + :405-414 (badge/hp-bar) ·
+BattleScene.ts:142-149 death SFX · ObjectiveController.ts:134-165
+(camp = attack target, not demolish) · HUD.ts:516-528 no-cards
+(signed) · UnitCard.ts:134 · palette.ts:26/34 bloom comments ·
+tests/fuzz/objectiveStrategy.ts:209 mirrors ObjectiveController.

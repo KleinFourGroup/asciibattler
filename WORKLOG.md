@@ -793,3 +793,21 @@ note's debt, and the biggest test-reality shift since 74b:
   authored starting event at the root on every seed, visited-marked —
   the end-to-end coverage the 74e note deferred here. Both riders
   closed in TODO.md.
+
+### §74 CLOSE (74j, 2026-08-07) — user-signed after the native pass
+
+Exit criteria vs actual, all four met: event nodes playable end to
+end in the browser (74f's five flows + the user's full playthroughs —
+"playing great") · fuzz traverses events green (the traversal pin +
+394 fuzz:smoke) · the editor round-trips byte-faithful (the vitest
+verbatim pin + the LIVE no-op-save proof) · decisions.csv shows
+eventChoice rows (17 on the 74g exit batch). Snapshot trail: v40→v41
+at 74b, the bump window CLOSED at this phase close (74d's Surge
+rename + 74i's `repeatable` field rode it). 74j swept ARCHITECTURE
+(the events.ts/events.json entries were MISSING; Run.ts's annotation
+was stale back to v16/pre-§47 — phase union + version pointer fixed;
+NodeMap/RunConfig/sectors/sector-map/rewards annotations refreshed)
+and demoted the ROADMAP section. Carried forward: the ε floor §81
+re-read · the gambler parity repair (§81 first item) · the §77
+stress test + ratio pass · the browser-cell gauntlet watch item ·
+launch-rough event balance (§81 reads the event era).

@@ -37,39 +37,16 @@ contingency was never needed. Detail: WORKLOG §73 + git.
   the map-gen card describes the real tool (§77 re-describes)
 - [x] 73f — CONTINGENCY not cut, not needed (docs path ~45s)
 
-## Phase 74 — Events (the keystone)
+## Phase 74 — Events (the keystone) ✅ CLOSED 2026-08-07
 
-**Charter:** the event-node system end to end per the signed spec:
-the flat page-map grammar + config/loader, the `'event'` NodeKind +
-RunPhase + EventScene (the port model), the effect-op executor
-widening (incl. the removal paths + `unit`/`poolHealth` reward
-kinds), the fold-routed global combat-resolve chance, run-lifetime
-chain flags, `eventRng` (+ the cloneForRollout re-seed), the
-harness/walker `'event'` arms, the event editor, the demo-catalog
-design round, and the `startingEvents` sector seam.
-
-- **Order:** before §77 (gen consumes the seam + placement) and §81
-  (balance reads event-era runs).
-- **Risk:** HIGH — a new serialized phase + two union widenings
-  (**RunSnapshot v40→v41**) + the PATH_KINDS weight-vector
-  re-baseline + mandatory bot-arm parity. Gets a DEDICATED planning
-  session at kickoff (the proportionality rule).
-- **Decision points:** the demo-catalog design round (content, not
-  shape — the shape is signed).
-- **Exit:** an event node playable end to end in the browser; a fuzz
-  run traversing events green; the editor round-trips byte-faithful;
-  decisions.csv shows event choices arbitrated.
-- **Scope guards:** art/FX seam only (no implementation); no
-  sector-scoped flags; no grammar recursion; `devLoadRun` stays
-  map-phase-only (Cluster 6).
-
-**Cut (2026-08-05 kickoff, shape-locked user-signed — findings,
-rationale + the three shape resolutions in WORKLOG §74).** 74a–74d
-are presence-gated (nothing places events until 74e) — but the
-kickoff's "byte-identical through them" claim was WRONG at 74b: the
-`eventRng` construction fork shifts every downstream parent fork (the
-H5/L1/48b/50d append cost; worklog §74b correction). 74e still owns
-the PATH_KINDS/vector re-baseline.
+**Outcome:** the event system end to end, user-signed — grammar →
+Run phase (v40→v41) → executor → placement (dense dials + the
+starting-event root) → scenes → arbitration (the sixth site) →
+editor → the ten-event demo catalog + prodigy + both new reward
+kinds → the no-repeat default + reachability assert. Every exit
+criterion met; every shipped run opens on the authored boon.
+Narrative + the correction trail: WORKLOG §74; the signed shapes:
+cluster-5-spec §Kickoff resolutions.
 
 - [x] 74a — grammar + loader + catalog stub ✅ 2026-08-05
   (`1d6b042`): the full parse-side grammar + 3 smoke events + the

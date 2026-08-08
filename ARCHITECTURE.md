@@ -74,10 +74,11 @@ src/
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, §40d rubble, theme)
     sectors.ts               #   T1: the Sector schema — run container (id/title/desc/length/theme/hop-gated layout pool); V0: + hop-gated ENCOUNTER pool (sector-owns-both); procedural = reserved sentinel
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
+    events.ts                #   74a: the event grammar — flat page map (pages → choices → weighted outcomes → effect ops + next: page-id | return-to-map | start-encounter{rewardOverride?}); the closed condition union + the ONE combinator `not` (74c-pre); the EVENTS-SIDE op union (shares gainBits/healPool sub-schemas with daemons.ts — the daemon surface never widened); FOUR boot asserts: terminate (74a, unconditioned-exit fixpoint) / reachable (74i, BFS from entry) / reserved-flags (74i — `visited:*` is engine-written, author-readable) / cross-catalog refs; repeatable? (74i, the no-repeat opt-out) + visitedFlagFor; describeEventCondition (74f — the shared requirement phrases) — config/events.json
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
     selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
-    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon|unit|poolHealth entries — unit/poolHealth are 74c) + the {table,trigger} encounter-ref schema + the daemon/packet/unit-ref boot asserts (49a activated the packet sibling; 74c the unit one) — config/rewards.json
+    rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon|unit|poolHealth entries — unit/poolHealth 74c, first authored 74i: hostage-rescue) + the {table,trigger} encounter-ref schema + the daemon/packet/unit-ref boot asserts (49a activated the packet sibling; 74c the unit one) — config/rewards.json
     packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     spawn.ts                 #   D5.C: SpawnAction lockout duration
@@ -173,9 +174,16 @@ src/
 
   run/
     Run.ts                   # State machine: map|turn-intro|battle|turn-outcome|promotion|recruit|
-                             # defeat|complete (E4.4/H4b). H4 encounter loop (health pools + turns) +
-                             # H5 card deck (draw/hand/discard + deckRng). rest/boss resolution (G3);
-                             # XP banking; dispatch(RunCommand) + toJSON/fromJSON (A2). RUN_SCHEMA_VERSION 16
+                             # reward (48b)|port (50c)|event (74b)|sectorCleared (67)|defeat|complete.
+                             # H4 encounter loop (health pools + turns) + H5 card deck (draw/hand/discard
+                             # + deckRng). rest/boss resolution (G3); XP banking; dispatch(RunCommand) +
+                             # toJSON/fromJSON (A2). RUN_SCHEMA_VERSION: live value in the HANDOFF 🧭
+                             # 74b: the event phase — {eventId,pageId} cursor + eventRng (the NINTH
+                             #      construction fork) + the run-lifetime eventFlags store (chains);
+                             #      74e: entry combat-resolves at a fold-routed chance, else the
+                             #      sector-pool roll; 74i: `visited:<id>` marked at page open, the
+                             #      no-repeat pool filter (repeatable opt-out), the firstNodeKind
+                             #      dial exemption (a dial-stamped root draws the REGULAR pool)
                              # K1: encounterEffects store (endOfEncounter, re-seeded at deploy) + addEncounterEffect
                              # + run triggers (encounterStart/turnStart/deploy); beginTurn seeds fatigue + encounter effects
                              # K3: pre-turn redraw (handleRedrawCards at the turn-intro gate; per-turn budget, v13)
@@ -226,7 +234,7 @@ src/
                              # drawAmount (65a — per-turn draw, base = deck.json handSize; read clamped to
                              # [1, deck.json maxHandSize] — the 65d user-signed cap, one basis for deal + budget)
     fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
-    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis)
+    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     encounters/
@@ -240,7 +248,7 @@ src/
                              # layoutFirst) resolver picking an (encounter, layout) from the sector pools +
                              # assertSelectionCoverage boot guard (Brigands now authored in encounters.json)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter) + dump; T2: per-sector length override
+    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter)|port (50c, ≥1 guaranteed)|event (74e — the FOURTH tail pass, eventChance 0.5/spacing 1) + dump; T2: per-sector length override; 74e: stampRootKind (the startingEvents root stamp — pure post-gen transform, boss-wins on hopCount 1)
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer (61c: per-slot tier-roll + weighted within-tier pick, 2 draws/slot,
                              # dupes legal; 63b/c: character pools + weight overrides; 64b: folded tier
@@ -367,14 +375,15 @@ config/                      # A4: balance JSON source of truth (paired with src
   encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)
   selection.json             # V1: the encounter-selection policy (strategy: encounterFirst|layoutFirst)
   economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
-  rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon|unit|poolHealth entries — the last two 74c, unauthored until the §74i content round); 49g: packet entries LIVE across all four tables — every launch packet reachable
+  rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon|unit|poolHealth entries — the last two 74c, first authored in 74i's hostage-rescue table); 49g: packet entries LIVE — every launch packet reachable
   packets.json               # 49a→g: the packet catalog — the locked launch 7 (patch/hype/shield/reroute/venom/overclock/miner), one effect op each
   prices.json                # 50a→f: the port price book — unit base×levelGrowth^(lv−1)±jitter, packet/daemon byId-over-default, sellFraction, unitRemovalPrice, portStock counts; launch catalog user-authored at 50f (§52 tunes)
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json
   layouts.json
-  sectors.json               # T1: sector catalog — ships one ("The Start": all layouts + procedural, ungated, length 11)
-  sector-map.json            # T2: the sector-selection DAG — ships a one-node graph (source == sink == "start", holding "the-start")
+  sectors.json               # T1: sector catalog — TWO since §67 ("The Start" + "The Deep End"); 74e/74i: per-sector `events` pools (both hold the full 12-event slate) + `startingEvents` (The Start opens on sector-1-start — the run-opening boon)
+  sector-map.json            # T2: the sector-selection DAG — §67: two chained nodes (start → the-deep-end)
+  events.json                # 74a→i: the event catalog — the 3 smoke events + the user-authored ten (§74i: the cadre flag-chain three-parter, the prodigy grant, hostage-trio + its rewardOverride, the sector-1-start boon; cheese-tax ships repeatable: true)
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;

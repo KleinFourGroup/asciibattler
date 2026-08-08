@@ -811,3 +811,220 @@ and demoted the ROADMAP section. Carried forward: the ε floor §81
 re-read · the gambler parity repair (§81 first item) · the §77
 stress test + ratio pass · the browser-cell gauntlet watch item ·
 launch-rough event balance (§81 reads the event era).
+
+## Phase 75 — Camps
+
+### Kickoff (2026-08-08): the code-reality audit
+
+Four parallel surveys at HEAD (post-§74 churn), re-verifying the
+cluster-kickoff findings and sharpening them into the cut. Pre-flight
+green first: 2436 main / typecheck clean at the §74 close commit.
+
+**1. The neutral-site census — the "~40 sites" estimate held: 41
+must-widen, 21 design-calls, 13 fine-as-is** (58 `'neutral'` literals
+in non-test src/). Ranked risk:
+
+- The movement.ts moving-wall item is TWO coupled defects, not one:
+  neutrals are denied a §45a vacancy ETA (movement.ts:114) AND the
+  `else if` at :121-126 means `excludeUnitId` structurally cannot
+  exclude a neutral — nothing can ever path onto an active neutral's
+  cell, and §45b queue-in-lane never fires behind one.
+- FOUR lockstep hard-blocker siblings must move with it:
+  blockedAlly.ts:146 (`neutralCells` topology walls),
+  actingPosition.ts:68 (firing-cell BFS — its doc explicitly demands
+  lockstep with findPath or hold-vs-strike desyncs, the GP4/Qb#3
+  freeze class), SupportMovementBehavior.ts:314 (bespoke duplicate),
+  and canReach/canApproach via buildMovementContext.
+- `recordDamage` drops neutral-target damage at World.ts:804, before
+  the attacker lookup — active-neutral kills earn zero XP today.
+- positioning.ts:246: a neutral target short-circuits to a
+  single-goal bestEffort charge (no firing-cell search, no kite) —
+  ranged units would charge camps. positioning.ts:123: every neutral
+  with `blocksLineOfSight:false` grants half-cover — a wandering camp
+  unit becomes mobile cover unless gated.
+- The Targeting root inversions (:37 `findTarget` skips neutral
+  candidates; :67 `updateTarget` bails for neutral units) plus the
+  two easy-to-miss secondary scans (:463 `findEngageableEnemy`, :493
+  `findInRangeEnemy`) — engage/hold/blind units never see neutrals
+  even after the root widens.
+- The spawn path is structurally new: `spawnEnvironment` +
+  `inertDerived` hard-code ZERO_STATS / attackRange 0 /
+  moveCooldownTicks 0 and attach NO behaviors; `NeutralUnitDefSchema`
+  strict-rejects abilities/stats. ⇒ **camp units are combatant defs
+  spawned onto team 'neutral'** via a new path mirroring
+  `spawnFromQueue` (behaviors + SpawnAction lockout), not a widened
+  neutral def.
+- **Latent bug found in passing**: tests/fuzz/harness.ts:488 still
+  filters telemetry on the RETIRED `'environment'` sentinel (§38d) —
+  walls/half-cover/rubble already register as telemetry combatants
+  today. Fix as a pre-step before camps make it load-bearing.
+
+**2. World/snapshot structural facts:**
+
+- **A new World is constructed per TURN** (`beginTurn` →
+  `battle:started` → fresh World in BattleScene.mount) — so "camp
+  composition resolved on turn start" = battle-setup time. No tick
+  hook, no tick-order change. Camp selection rides a `setupRngFor`
+  sibling off `encounter.terrainSeed` (the fresh-parent-then-fork
+  pattern, battleSetup.ts:220) — off Run's fork ladder entirely,
+  zero re-baseline cost.
+- **Hazard the spec missed**: `enemyPullChance` as a Run-side
+  construction fork would re-baseline every fuzz seed EVEN AT
+  DEFAULT 0 — appending to the ladder shifts downstream streams
+  regardless of behavior (the exact 74b lesson, not to be paid
+  twice). Resolution proposed at the cut: a LAZY per-turn fork off
+  `battleRng`, taken only when the layout has camps AND the chance
+  > 0 — dedicated (spec satisfied), ephemeral like battleRng itself,
+  byte-identical at default 0.
+- The `_combatBegan` latch hazard is concrete: `checkBattleEnd`'s
+  both-alive early-return fires MID-LOOP (World.ts:1748-1750), so a
+  third alive-flag computed in the same loop would be unreliably
+  populated — hoist the camp-alive scan before the loop.
+- A World-owned `campRng` must be PRESENCE-GATED — an unconditional
+  `rng.fork()` at construction advances the parent one step and
+  shifts every downstream draw on ALL layouts (byte-identity breach
+  everywhere, not just camp layouts). Nullable field, created only
+  when camps spawn; joins `cloneForRollout`'s re-seed list
+  (rollout.ts:48-49) conditionally, after combatRng — fork order is
+  part of the contract.
+- v34→v35 touch list: the World.ts changelog + constant; ONE
+  hardcoded assert (spawn-overflow.test.ts:216 `toBe(34)`); a new
+  snapshot-roundtrip reject case in the `schemaVersion - 1` shape;
+  ~5 stale "v34" doc comments (rollout.ts, TrafficScriptDriver.ts,
+  battleRules.test.ts); HANDOFF/ROADMAP/spec doc rows. No migration
+  machinery exists — the contract is reject-outright.
+
+**3. Behavior/wander:**
+
+- `movementBehavior` widens `['standard','support']` → `+ 'camp'` in
+  the COMBATANT schema arm (already the right arm — camp units are
+  combatant defs); resolver ternary → switch; zero-arg factory
+  registry gains the kind. Two hardcoded test allowlists widen.
+  The archetype editor has NO movementBehavior UI today (formatter
+  round-trips it generically) — net-new UI only if wanted.
+- **The zero-arg factory contract (registry.ts:8-17) forbids behavior
+  state ⇒ the leash anchor lives in the World camp registry, never on
+  the behavior instance.**
+- Leash = behavior-side candidate filtering: build the free-neighbor
+  list (the `proposeWander` shape, MovementBehavior.ts:288-313), drop
+  cells beyond `chebyshev(candidate, anchor) > leashRadius`, THEN the
+  RNG pick — invariant (a) holds by construction, zero movement.ts
+  change, the purity ban preserved. SupportMovementBehavior.ts:134 is
+  the structural precedent (behavior-level radius test vs an anchor).
+- The hostile arm delegates to the standard engagement path
+  (currentTarget + engagementDirective + advance) behind one internal
+  `if` — no selector change needed. Accepted consequence: a hostile
+  camp unit pursuing may leave its leash (the objectiveEngages
+  retaliation-escape precedent); the leash invariant applies to the
+  PASSIVE state.
+- `anchorFootprint`'s `random-intersect` policy is a NO-OP at size 1
+  (all four min-corners coincide) — the spec's "overlap spawn" for
+  1×1 units is really the caller-level scatter (the runOverflowScan
+  candidate-walk shape). random-intersect earns its keep only for
+  N×N camp bodies; implement it for real (it was reserved for
+  exactly this) but the multi-unit-per-tile scatter is the working
+  mechanism.
+- `proposeWander` rolls on `world.combatRng` (gotcha #95); camp
+  wander rolls ride `campRng` instead per the spec's dedicated-fork
+  clause — camp-free layouts spawn no camp units either way, but the
+  separate stream keeps camp-present combat streams uncontaminated.
+
+**4. Economy / editors:**
+
+- **The 51a tally portion is the exact turn-end precedent**: a World
+  accumulator (serialized, `tallies` shape) → COPIED into the
+  `battle:ended` payload at emit (World.ts:1819) → destructured at
+  Run.ts:1262 → a portion branch INSIDE `result !== 'lost'`
+  (Run.ts:2816) but BEFORE the `won` gate (:2852). The camp-kill
+  portion slots between :2845 and :2852 — fires on win/draw/ongoing,
+  exactly the spec's win-or-lose clause.
+- **The `kill` trigger (World.ts:962) is the ONLY clean killer→victim
+  attribution site in the codebase** (fires inside applyDamage before
+  the reap, attacker resolved). DoT/environmental kills carry no
+  attacker (dealDamage takes `attacker: Unit | undefined`, fires no
+  triggers) — the fallback for a DoT-killed final camp unit is the
+  status's `sourceUnitId` team. Hostility trigger rides the same
+  chokepoint (takeHit where target has a campId → add attacker's team
+  to the camp's hostility set).
+- Camp reward rolls reuse `rollRewards` + the existing
+  `RewardPortion` kinds wholesale (bits/daemon/packet/unit/
+  poolHealth — §74c already widened everything needed); draws on
+  rewardRng/rewardBitsRng only when camps were killed
+  (presence-gated). **No RunSnapshot bump predicted**: no new Run
+  fields, no phase widening, no construction fork — the
+  `battle:ended` payload widening is an event-shape change, not
+  serialized state. (A prediction per the planning stack — its
+  absence at build time is a tell.)
+- camps.json = ONE vite allowlist line + TWO configHash lines
+  (import + CONFIG_SOURCES entry; the drift-guard test enforces) —
+  and the hash change invalidates the recorded-trace era
+  (TraceRecorder/replayTrace/gauntlet fixture) — a scheduled
+  re-baseline at 75a, called out eyes-open.
+- Editor models: the camp catalog editor copies the encounter editor
+  (reward-ref panel `makeRewardRow`, kind radios, sessionStorage
+  save-stash) + the event editor's LIVE boot-assert validation; the
+  layout editor's rubble list (`RubblePlacement[]`, click-once
+  placement, `buildCurrentLayout` emit-when-non-empty) is the exact
+  model for `campSpawns` + a weighted `camps` row list (the
+  spawn-region panel / makeRewardRow row shape). Byte-faithful
+  formatter per the formatEncountersJson doctrine.
+
+**The ordering property the cut is built on** (the 74b correction
+applied forward): every step through 75i is presence-gated AND
+fork-append-free — campRng is World-side and nullable, the camp
+setup stream derives from terrainSeed (not the Run ladder), the
+enemyPull fork is lazy — so fuzz stays byte-identical until 75j
+deliberately ships camps into layouts WITH the scheduled board
+re-pin. Unlike §74, there is no construction-fork append anywhere in
+the plan, so the byte-identity claim covers streams, not just
+reachability.
+
+### The shape-lock (user-signed, 2026-08-08)
+
+The four calls from the kickoff proposal, all resolved:
+
+1. **XP from camps: YES** — `recordDamage` widens for ACTIVE
+   neutrals; the user's framing: only static units (walls) shouldn't
+   grant XP. Camp combat is opposed combat.
+2. **No HUD cards for camp units in v1** — third-faction
+   sprite/overlay treatment only; no card-row space. A hostile-camp
+   row is a possible later follow-up.
+3. **`enemyPullChance` = the lazy per-turn fork** off battleRng
+   (camps present AND chance > 0), never a Run-ladder append. The
+   user probed the cost model and it sharpened to three parts: a
+   ladder append (a) fails this phase's byte-identity exit gate BY
+   CONSTRUCTION even at default 0, (b) forces a global seed remap —
+   every seed-pinned test re-seeds + the board re-pins — for zero
+   behavioral payoff, and (c) would pre-pay §77's already-scheduled
+   deliberate stream break a phase early. 75j's re-pin, by contrast,
+   is content-driven (camp layouts genuinely play differently), not
+   a stream break — camp-free layouts stay byte-identical forever.
+4. **Overlap spawn = PORTAL DRIP, not setup scatter** (the user's
+   original intent, and the argument is decisive): camps sit in
+   tight pockets (e.g. two 3×3 labyrinth corners are already
+   reserved), where a scatter ring leaks units into hallways unless
+   bounded per-map — and even bounded, insufficient room forces a
+   queue anyway, so the queue IS the general mechanism. Drip makes
+   spatial containment free (units only ever materialize overlapping
+   the spawn tile — the spec's literal sentence — and the leash
+   holds the pocket) and makes the vacate-≤N-ticks invariant
+   load-bearing (queue progress depends on it), exactly as the
+   spec's "wanders off in a timely manner" note implied.
+   Consequences folded into the cut: **per-camp pending queues live
+   in the World camp registry** (not the team-keyed `spawnQueues` —
+   a shared neutral queue would head-of-line-block camp B behind
+   camp A's wedged tile), drained in a deterministic tick slot
+   beside `runOverflowScan` (stable camp-id order);
+   **camp-killed = pending queue empty AND no living members** (no
+   early credit while trickling); `random-intersect` picks among the
+   k overlapping placements of an N×N body at drip time. This
+   supersedes the kickoff entry's "scatter is the working mechanism"
+   line.
+
+**Parked (pending user, § 77's kickoff): the RNG fork
+re-architecture** — keyed stream derivation (child seed =
+hash(rootSeed, stable name)) to kill the append-coupling class
+outright. The one-time global remap should ride §77's ALREADY
+scheduled seed-stream break so the re-baseline is paid once, not
+twice. Draw-count sensitivity within a stream (#49) remains either
+way.

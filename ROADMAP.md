@@ -111,6 +111,51 @@ round.
 - **Scope guards:** no cross-turn camp state; no fourth team value;
   bot camp-seeking stays out (the probe arm is §81's).
 
+**The cut (kickoff shape-lock 2026-08-08 — worklog §75).** World
+**v34→v35 at 75b**; NO RunSnapshot bump predicted; every step
+through 75i presence-gated + fork-append-free (fuzz byte-identical
+until 75j's scheduled content re-pin). Spawn model = PORTAL DRIP
+(per-camp pending queues in the registry; user-signed, worklog §75
+shape-lock #4).
+
+- [ ] 75-pre — fuzz-telemetry stale-guard fix (harness.ts:488 still
+  filters on the retired `'environment'` sentinel; latent, audit-found)
+- [ ] 75a — `config/camps.json` + loader/boot asserts + layout
+  `campSpawns`/weighted `camps` seams + configHash/vite allowlist
+  (trace-era invalidation scheduled)
+- [ ] 75b — the World camp registry (hostility/anchors/kills/pending
+  queues) + `Unit.campId` + presence-gated nullable `campRng` (+
+  conditional cloneForRollout re-seed) — **v34→v35**; byte-identity
+  proven at the commit
+- [ ] 75c — drip spawn: turn-start camp roll seeds the per-camp
+  queues; the deterministic tick-slot drain beside `runOverflowScan`;
+  `random-intersect` placement over the spawn tile; SpawnAction
+  lockout
+- [ ] 75d — the spatial widening: the movement.ts moving-wall fix
+  (vacancy ETA + `excludeUnitId`) + the four lockstep blocker
+  siblings + half-cover/LOS gating + tile statuses + choke masks
+- [ ] 75e — the combat widening: targeting both directions behind
+  hostility + aggro-on-hit + kill credit (kill trigger; DoT
+  `sourceUnitId` fallback; drip-aware camp-killed) + the kite path +
+  `recordDamage` XP (signed: active neutrals earn)
+- [ ] 75f — `CampWanderBehavior` ('camp' value + registry arm;
+  leash-filtered wander on campRng; hostile→engagement delegate) +
+  the two exit invariants as tests
+- [ ] 75g — run economy: `campKills` → `battle:ended` payload → the
+  win-or-lose portion branch (51a shape, before the `won` gate);
+  `blockCampTurnEnd` knob (default off, hoisted third alive-flag);
+  `enemyPullChance` lazy per-turn fork (default 0)
+- [ ] 75h — renderer/HUD third faction (color/bloom/overlays/death
+  SFX/click-to-engage; NO cards v1, signed) — native-browser eyeball
+- [ ] 75i — the camp catalog editor + the layout-editor camp-spawn
+  paint tool + weighted camps list + byte-faithful formatters +
+  the live no-op-save proof
+- [ ] 75j — the demo-catalog design round + placements + the feel
+  pass (the two signed decision points: `enemyPullChance` enable ·
+  block-turn-end) + the SCHEDULED board re-pin
+- [ ] 75k — docs close: ARCHITECTURE/DESIGN/GOTCHAS, cursor flip,
+  ROADMAP demote
+
 ## Phase 76 — Unit mechanics & stat identity
 
 **Charter:** auras (AbilityDef-authored / World-pass-executed + the

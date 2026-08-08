@@ -936,9 +936,11 @@ export class World {
    *   - Damage to the attacker's own team is ignored (currently
    *     impossible; future friendly-fire abilities still won't earn
    *     XP for it).
-   *   - Damage to neutrals (walls, half-cover) is ignored — half-cover
-   *     destruction will surface its own progression later if needed,
-   *     but XP rides on opposed combat.
+   *   - Damage to INERT neutrals (walls, half-cover) is ignored —
+   *     half-cover destruction will surface its own progression later if
+   *     needed, but XP rides on opposed combat. §75e — an ACTIVE neutral
+   *     (camp member) DOES record: camp fights earn XP (the shape-lock's
+   *     signed XP-yes call).
    *
    * Overkill damage is recorded as-is (not clamped to the victim's
    * pre-hit HP). Flat-XP dominates at the values we ship and a 1-tick
@@ -947,7 +949,7 @@ export class World {
    */
   recordDamage(attackerId: number, target: Unit, damage: number): void {
     if (damage <= 0) return;
-    if (target.team === 'neutral') return;
+    if (isInertNeutral(target)) return;
     const attacker = this.findUnit(attackerId);
     if (!attacker) return;
     if (attacker.team === target.team) return;
@@ -1042,7 +1044,34 @@ export class World {
       : Math.max(STATS.minDamage, rawDamage - target.effectiveStats.defense);
     target.currentHp -= final;
     if (attacker) this.recordDamage(attacker.id, target, final);
+    // §75e — camp AGGRO + KILL CREDIT ride this one damage chokepoint, so AoE
+    // splash and living-source DoT ticks are covered for free (the signed
+    // intent): a faction damaging a camp member marks the whole camp hostile
+    // to that faction; a lethal blow that wipes the camp stamps `killedBy`.
+    // The attacker-team guard keeps 'neutral' out of hostileTo (a confused
+    // camp-on-camp swing marks nothing).
+    if (attacker && target.campId !== null && attacker.team !== 'neutral') {
+      this.markCampHostile(target.campId, attacker.team);
+      if (target.currentHp <= 0) this.recordCampKill(target.campId, attacker.team);
+    }
     return final;
+  }
+
+  /**
+   * §75e — the drip-aware camp-kill stamp: when a lethal blow leaves the camp
+   * with NO living members and NOTHING pending, the killer's faction lands in
+   * the serialized `killedBy` (the campKills read 75g's win-or-lose reward
+   * portion consumes). Attribution is the chokepoint's resolved attacker, so
+   * combat kills and living-source DoT kills both stamp; a dead-source DoT
+   * wipe has no clean attribution and deliberately leaves `killedBy` null.
+   */
+  private recordCampKill(campId: number, team: Team): void {
+    const camp = this.camps.get(campId);
+    if (camp === undefined || camp.pending.length > 0) return;
+    for (const u of this.units) {
+      if (u.campId === campId && u.currentHp > 0) return;
+    }
+    camp.killedBy = team;
   }
 
   applyDamage(

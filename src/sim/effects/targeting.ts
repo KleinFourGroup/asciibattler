@@ -90,7 +90,10 @@ export function affectsMatch(affects: Affects, unitTeam: Team, casterTeam: Team)
  */
 export function isCombatTargetable(u: Unit): boolean {
   if (u.currentHp <= 0) return false;
-  return u.team !== 'neutral' || isDestructibleNeutral(u.archetype);
+  // §75e — an ACTIVE neutral (camp member) is a body in the blast: AoE splash
+  // and chain arcs hit it (`affectsMatch`'s 'enemies' already spans teams),
+  // and the landed splash aggros its camp at the damage chokepoint.
+  return u.team !== 'neutral' || isDestructibleNeutral(u.archetype) || u.campId !== null;
 }
 
 /**

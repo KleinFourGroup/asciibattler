@@ -1183,51 +1183,51 @@ numbers.
 
 **75e — combat (next step; hostility gates everything):**
 
-- [ ] Targeting.ts:35-37 `findTarget` root skip — admit active
+- [x] Targeting.ts:35-37 `findTarget` root skip — admit active
   neutrals HOSTILE TO the seeker's team.
-- [ ] Targeting.ts:66-67 `updateTarget` neutral bail — an active
+- [x] Targeting.ts:66-67 `updateTarget` neutral bail — an active
   neutral with a non-empty hostility set runs acquisition (targets
   only factions its camp is hostile to).
-- [ ] Targeting.ts:133-139 sticky validity · :251-260
+- [x] Targeting.ts:133-139 sticky validity · :251-260
   `nearestReachableHostile` · :570-600 `currentTarget` gate — same
   admit rule.
-- [ ] Targeting.ts:458-471 `findEngageableEnemy` + :484-504
+- [x] Targeting.ts:458-471 `findEngageableEnemy` + :484-504
   `findInRangeEnemy` — the two EASY-TO-MISS secondary scans
   (engage/hold/blind units).
-- [ ] Targeting.ts:198-231 rubble auto-target family — stays
+- [x] Targeting.ts:198-231 rubble auto-target family — stays
   RUBBLE-ONLY (passive camps are not auto-attacked; that's the
   non-aggressive default).
-- [ ] Targeting.ts:306-314 `validDestructibleNeutralTarget` +
+- [x] Targeting.ts:306-314 `validDestructibleNeutralTarget` +
   :338-361 focus arms + :399-442 objective arms (incl. the :433
   hard-coded `=== 'enemy'`) — camp units become valid engage/focus
   objective targets (the click sources wire at 75h).
-- [ ] Targeting.ts:518-533 confused re-roll — design call: confused
+- [x] Targeting.ts:518-533 confused re-roll — design call: confused
   units may target active neutrals (chaos is chaos); decide at the
   step.
-- [ ] MovementBehavior.ts:322-334 `nearestEnemy` flee anchor —
+- [x] MovementBehavior.ts:322-334 `nearestEnemy` flee anchor —
   hostile camp members are threats.
-- [ ] positioning.ts:246-256 — the neutral-target bestEffort
+- [x] positioning.ts:246-256 — the neutral-target bestEffort
   short-circuit: active neutrals get the REAL firing-cell/kite path
   (ranged units currently would charge them).
-- [ ] effects/targeting.ts:91-94 `isCombatTargetable` — active
+- [x] effects/targeting.ts:91-94 `isCombatTargetable` — active
   neutrals pass (AoE splash hits them; `affectsMatch`'s 'enemies'
   already includes neutrals).
-- [ ] World.recordDamage neutral drop (`if (target.team ===
+- [x] World.recordDamage neutral drop (`if (target.team ===
   'neutral') return`) — active neutrals record (XP signed at the
   shape-lock); inert keep dropping.
-- [ ] Aggro: the `takeHit`/damage chokepoint — striking a camp
+- [x] Aggro: the `takeHit`/damage chokepoint — striking a camp
   member calls `markCampHostile(campId, attacker.team)` (AoE splash
   included, the signed intent).
-- [ ] Kill credit: the `kill` trigger (the only clean attribution
+- [x] Kill credit: the `kill` trigger (the only clean attribution
   site) + the DoT fallback (status `sourceUnitId`'s team) → set
   `killedBy` when pending EMPTY and no living members (drip-aware);
   stamp into the serialized campKills read (75g consumes).
-- [ ] checkBattleEnd — VERIFY neutral-only boards stay silent +
+- [x] checkBattleEnd — VERIFY neutral-only boards stay silent +
   camps never extend a battle (pin by test); the third alive-flag
   itself is 75g's.
-- [ ] main.ts:90 dev `applyStatus` neutral guard — widen for active
+- [x] main.ts:90 dev `applyStatus` neutral guard — widen for active
   (dev QoL, optional).
-- [ ] VERIFY-ONLY: stats.ts/archetypes.ts neutral defaults
+- [x] VERIFY-ONLY: stats.ts/archetypes.ts neutral defaults
   (damageStatFor / minRangeForArchetype) resolve correctly for camp
   units — they're COMBATANT archetypes, so the combatant path
   should already fire; pin one test.
@@ -1286,3 +1286,58 @@ Landed to the worksheet, all ten spatial boxes. The shape:
   green — presence-gated byte-identity holds: with zero active
   neutrals every flipped predicate degenerates to the old
   `team === 'neutral'` read.
+
+### 75e — the combat widening (2026-08-08)
+
+All sixteen combat rows landed. The shape:
+
+- **`hostileCandidate` (Targeting.ts, exported)** — THE shared admit rule
+  the worksheet's scattered sites converged onto: combatant-vs-combatant
+  unchanged; combatant-vs-active-neutral admitted only once the camp is
+  hostile to the seeker's faction; an active-neutral seeker targets only
+  factions its camp is hostile to; inert scenery never, either direction;
+  camp-vs-camp structurally out. Applied at findTarget, the sticky
+  validity, the rubble-overlay committed check, nearestReachableHostile,
+  findEngageableEnemy, findInRangeEnemy (hold + blind inherit), and
+  MovementBehavior's panic-flee anchor.
+- **The updateTarget bail** widened: an active neutral with a non-empty
+  hostility set runs the default sticky path (objectiveFor('neutral') is
+  atWill, so no objective plumbing needed — the census's argument held).
+- **Aggro + kill credit ride `dealDamage`** (ONE chokepoint → AoE splash
+  and living-source DoT ticks covered for free): any faction damage to a
+  camp member marks the whole camp hostile to that faction (the
+  attacker-team guard keeps 'neutral' out of hostileTo); a lethal blow
+  that leaves pending EMPTY and no living members stamps `killedBy` (the
+  serialized read 75g's win-or-lose portion consumes). ACCEPTED EDGE: a
+  dead-source DoT wipe has no recoverable team (units leave the index at
+  reap) — `killedBy` stays null, deliberately.
+- **XP-yes**: `recordDamage`'s neutral drop is now inert-only (the signed
+  shape-lock call).
+- **`currentTarget` honors any active-neutral commitment** regardless of
+  hostility — commitments only arise from hostility-gated acquisition,
+  the confusion re-roll, or a manual engage/focus order on a passive
+  camp, and that ordered FIRST BLOW must land (it is what aggros the
+  camp). Without this the 75h click-to-engage would deadlock at blow one.
+- **`validDestructibleNeutralTarget` → `validNeutralObjectiveTarget`**:
+  admits living active neutrals alongside destructible scenery (both
+  focus + engage arms). The engage enemy-arm's hard-coded `=== 'enemy'`
+  became team-relative (mirrors the focus arm; byte-identical for the
+  player team — the latent player-only assumption the worksheet flagged).
+- **Confusion design call, RECORDED: chaos is chaos** — active neutrals
+  join the confusion pool regardless of hostility (a confused swing at a
+  passive camp lands, and the landed hit aggros the camp — emergent,
+  consistent with the chokepoint). One-line revert if the 75j feel pass
+  disagrees.
+- **The kite path**: positioning's neutral short-circuit is inert-only —
+  a ranged unit runs the REAL firing-cell/kite protocol against a hostile
+  camp member (exclusion + no bestEffort corner-charge; pinned).
+- **`isCombatTargetable`** admits active neutrals (AoE splash + chain
+  arcs hit camp bodies). Rubble auto-target family untouched (passive
+  camps are not auto-attacked — the non-aggressive default holds).
+- checkBattleEnd VERIFIED by pin, no code change: neutral-only boards
+  silent; camps never extend a battle (the third alive-flag stays 75g's).
+- main.ts dev sprayer: 'neutral' team filter reaches active neutrals.
+- +13 tests (`src/sim/camps.combat.test.ts`: gating 4 + chokepoint 3 +
+  kill stamp 2 + battle-end 2 + kite 1 + the live-fight
+  stats/archetype-verify pin 1; 2485 → 2498 main). 395 fuzz:smoke green —
+  presence-gated byte-identity holds through the whole targeting stack.

@@ -2,7 +2,7 @@ import type { Behavior, Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
-import { currentTarget } from '../Targeting';
+import { currentTarget, hostileCandidate } from '../Targeting';
 import { NEIGHBORS, engagementDirective } from '../positioning';
 import { minRangeForArchetype } from '../archetypes';
 import { GROUND, footprintOf, occupiedCells } from '../occupancy';
@@ -313,19 +313,19 @@ function proposeWander(unit: Unit, world: World): ActionProposal | null {
 }
 
 /**
- * The nearest living enemy (opposing, non-neutral) by Chebyshev — the panic-flee
- * anchor. Ties resolve to the first in `world.units` order (stable id order), so
- * the pick is deterministic. Distinct from `Targeting.findTarget` (which honors
- * the unit's strategy): a panicking unit flees the CLOSEST threat, not the one
- * its strategy would mark.
+ * The nearest living hostile by Chebyshev — the panic-flee anchor. Ties resolve
+ * to the first in `world.units` order (stable id order), so the pick is
+ * deterministic. Distinct from `Targeting.findTarget` (which honors the unit's
+ * strategy): a panicking unit flees the CLOSEST threat, not the one its
+ * strategy would mark. §75e — the shared admit rule: a HOSTILE camp member is
+ * a threat to flee from too (and a panicking camp member flees the factions
+ * its camp is fighting).
  */
 function nearestEnemy(unit: Unit, world: World): Unit | null {
   let best: Unit | null = null;
   let bestDist = Infinity;
   for (const candidate of world.units) {
-    if (candidate.team === unit.team) continue;
-    if (candidate.team === 'neutral') continue;
-    if (candidate.currentHp <= 0) continue;
+    if (!hostileCandidate(unit, candidate, world)) continue;
     const d = chebyshev(unit.position, candidate.position);
     if (d < bestDist) {
       best = candidate;

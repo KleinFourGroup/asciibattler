@@ -31,17 +31,47 @@ export function findTarget(unit: Unit, world: World): Unit | null {
   let best: Unit | null = null;
 
   for (const candidate of world.units) {
-    if (candidate.team === unit.team) continue;
-    // Neutrals (walls, environment entities) are never enemies — they sit
-    // on the grid as blockers but are not valid attack targets.
-    if (candidate.team === 'neutral') continue;
-    if (candidate.currentHp <= 0) continue;
+    if (!hostileCandidate(unit, candidate, world)) continue;
 
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
     }
   }
   return best;
+}
+
+/**
+ * §75e — THE shared admit rule every hostile scan runs (`findTarget`, the
+ * sticky validity, the engage/in-range/reachable scans, the panic-flee anchor
+ * in `MovementBehavior`): may `unit` treat `candidate` as a combat hostile?
+ *
+ *   - combatant vs combatant: opposing team (the historical rule).
+ *   - combatant vs ACTIVE neutral: only once the candidate's camp is hostile
+ *     to the seeker's faction (the non-aggressive default — a passive camp is
+ *     scenery to targeting; the aggro mark at the damage chokepoint and the
+ *     75h click-to-engage order are what flip it).
+ *   - ACTIVE neutral as seeker: only factions its camp is hostile to.
+ *   - inert neutrals: never, in either direction.
+ *
+ * Camp-vs-camp is deliberately out (hostility is per-faction, and 'neutral'
+ * never lands in a hostileTo set via the chokepoint guard).
+ */
+export function hostileCandidate(unit: Unit, candidate: Unit, world: World): boolean {
+  if (candidate.id === unit.id || candidate.currentHp <= 0) return false;
+  if (unit.team === 'neutral') {
+    // Only an active neutral seeks (inert scenery never targets), and only
+    // the factions its camp has been marked hostile to.
+    return (
+      unit.campId !== null &&
+      candidate.team !== 'neutral' &&
+      world.campHostileTo(unit.campId, candidate.team)
+    );
+  }
+  if (candidate.team === unit.team) return false;
+  if (candidate.team === 'neutral') {
+    return candidate.campId !== null && world.campHostileTo(candidate.campId, unit.team);
+  }
+  return true;
 }
 
 /**
@@ -64,7 +94,15 @@ export function findTarget(unit: Unit, world: World): Unit | null {
  * Neutrals (walls/half-cover) never target, so they short-circuit.
  */
 export function updateTarget(unit: Unit, world: World): void {
-  if (unit.team === 'neutral') return;
+  if (unit.team === 'neutral') {
+    // §75e — an ACTIVE neutral with a non-empty hostility set runs acquisition:
+    // `objectiveFor('neutral')` is always atWill, so it takes the default
+    // sticky path below, and `hostileCandidate` scopes its picks to the
+    // factions its camp is hostile to. A passive camp member and inert
+    // scenery never target.
+    const camp = unit.campId !== null ? world.campById(unit.campId) : undefined;
+    if (camp === undefined || camp.hostileTo.size === 0) return;
+  }
 
   // 28 — a BEHAVIOR status hijacks target acquisition, preempting the team
   // objective entirely (a confused / blinded unit's AI is overridden — it no
@@ -132,11 +170,9 @@ function updateTargetDefault(unit: Unit, world: World): void {
  */
 function updateStickyTarget(unit: Unit, world: World): void {
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
-  const valid =
-    committed !== undefined &&
-    committed.team !== unit.team &&
-    committed.team !== 'neutral' &&
-    committed.currentHp > 0;
+  // §75e — the validity test IS the shared admit rule (a live hostile camp
+  // member is as sticky as a live enemy; hostility never un-marks mid-battle).
+  const valid = committed !== undefined && hostileCandidate(unit, committed, world);
 
   if (!valid) {
     // (a) no valid commitment → take the strategy's best pick.
@@ -198,8 +234,10 @@ function updateStickyTarget(unit: Unit, world: World): void {
 function applyRubbleAutoTarget(unit: Unit, world: World): void {
   if (!worldHasAutoTargetRubble(world)) return;
   const committed = unit.targetId !== null ? world.findUnit(unit.targetId) : undefined;
-  // Committed to a hostile it can reach → keep the sticky pick (the common case).
-  if (committed !== undefined && committed.team !== 'neutral' && canReach(unit, world, committed)) {
+  // Committed to a hostile it can reach → keep the sticky pick (the common
+  // case). §75e — the admit rule: a hostile camp commitment holds like an
+  // enemy one; a committed RUBBLE fails it and falls through to the re-rank.
+  if (committed !== undefined && hostileCandidate(unit, committed, world) && canReach(unit, world, committed)) {
     return;
   }
   // Unreachable hostile (or none) → a reachable hostile always outranks rubble.
@@ -252,7 +290,7 @@ function nearestReachableHostile(unit: Unit, world: World): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
   for (const c of world.units) {
-    if (c.team === unit.team || c.team === 'neutral' || c.currentHp <= 0) continue;
+    if (!hostileCandidate(unit, c, world)) continue;
     if (!canReach(unit, world, c)) continue;
     if (best === null || strategy.compare(c, best, unit, world) < 0) best = c;
   }
@@ -297,18 +335,20 @@ function canApproach(unit: Unit, world: World, rubble: Unit): boolean {
 /**
  * §40e — resolve a `neutral`-kind objective target's unitId to a committable
  * `targetId`: the id when it's still a LIVING DESTRUCTIBLE neutral (rubble / a
- * destructible wall or cover), else null. Shared by the focus + engage pursue
- * branches so a manual "demolish this" order is admitted identically. Mirrors the
+ * destructible wall or cover) — or, §75e, a living ACTIVE neutral (a camp
+ * member: the manual "attack this camp" order, hostile or not — the ordered
+ * blow is what aggros it) — else null. Shared by the focus + engage pursue
+ * branches so a manual order is admitted identically. Mirrors the
  * `enemy`-target validity check, but for the neutral team + the §40b HP-presence
  * destructibility gate — an indestructible (hp-less) wall is never a valid
  * target, so a stray click on one reverts to atWill rather than pinning the team.
  */
-function validDestructibleNeutralTarget(world: World, unitId: number): number | null {
+function validNeutralObjectiveTarget(world: World, unitId: number): number | null {
   const t = world.findUnit(unitId);
   return t !== undefined &&
     t.team === 'neutral' &&
     t.currentHp > 0 &&
-    isDestructibleNeutral(t.archetype)
+    (isDestructibleNeutral(t.archetype) || t.campId !== null)
     ? t.id
     : null;
 }
@@ -355,7 +395,7 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
     // MovementBehavior's neutral branch drives the bestEffort approach around the
     // hard blocker. An indestructible or dead neutral → null (World reverts the
     // objective to atWill the same tick).
-    unit.targetId = validDestructibleNeutralTarget(world, target.unitId);
+    unit.targetId = validNeutralObjectiveTarget(world, target.unitId);
     unit.outOfLosTicks = 0;
     return;
   }
@@ -432,14 +472,20 @@ function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget
   // 3. Pursue the objective itself.
   if (target.kind === 'enemy') {
     const objEnemy = world.findUnit(target.unitId);
+    // §75e — team-relative (was hard-coded `=== 'enemy'`, a latent player-only
+    // assumption): mirrors the focus arm exactly. Byte-identical for the
+    // player team (`!== 'player' && !== 'neutral'` ⇒ `=== 'enemy'`).
     const objValid =
-      objEnemy !== undefined && objEnemy.team === 'enemy' && objEnemy.currentHp > 0;
+      objEnemy !== undefined &&
+      objEnemy.team !== unit.team &&
+      objEnemy.team !== 'neutral' &&
+      objEnemy.currentHp > 0;
     unit.targetId = objValid ? objEnemy.id : null;
   } else if (target.kind === 'neutral') {
     // §40e — pursue a DESTRUCTIBLE neutral (rubble / a destructible wall). Unlike
     // focus, engage still let an engageable hostile preempt above (steps 1–2);
     // with none engageable, the unit commits to demolishing the obstacle.
-    unit.targetId = validDestructibleNeutralTarget(world, target.unitId);
+    unit.targetId = validNeutralObjectiveTarget(world, target.unitId);
   } else {
     // Tile objective: no enemy target; MovementBehavior paths toward the cell.
     unit.targetId = null;
@@ -459,9 +505,9 @@ function findEngageableEnemy(unit: Unit, world: World): Unit | null {
   const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
   for (const candidate of world.units) {
-    if (candidate.team === unit.team) continue;
-    if (candidate.team === 'neutral') continue;
-    if (candidate.currentHp <= 0) continue;
+    // §75e — the admit rule: a HOSTILE camp member inside the leash preempts
+    // the objective exactly as an enemy does (hostile camps are threats).
+    if (!hostileCandidate(unit, candidate, world)) continue;
     if (!objectiveEngages(unit, candidate)) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
@@ -489,12 +535,11 @@ function findInRangeEnemy(
   const strategy = getTargetingStrategy(unit.targeting);
   let best: Unit | null = null;
   for (const candidate of world.units) {
-    if (candidate.team === unit.team) continue;
-    if (candidate.team === 'neutral') continue;
-    if (candidate.currentHp <= 0) continue;
-    // 44-pre-c — footprint distance (byte-identical today: neutrals are
-    // excluded above, and every combatant is 1×1; the honest measure the
-    // moment a multi-tile combatant ships).
+    // §75e — the admit rule (a held/blinded unit acts on a hostile camp
+    // member in reach exactly as on an enemy).
+    if (!hostileCandidate(unit, candidate, world)) continue;
+    // 44-pre-c — footprint distance (byte-identical today: every admissible
+    // candidate is 1×1; the honest measure the moment a multi-tile one ships).
     if (unitDistance(unit, candidate) > range) continue;
     if (best === null || strategy.compare(candidate, best, unit, world) < 0) {
       best = candidate;
@@ -520,7 +565,11 @@ function updateConfusedTarget(unit: Unit, world: World, radius: number | null): 
   const candidates: Unit[] = [];
   for (const candidate of world.units) {
     if (candidate.id === unit.id) continue;
-    if (candidate.team === 'neutral') continue;
+    // §75e design call (chaos is chaos): ACTIVE neutrals join the confusion
+    // pool regardless of hostility — a confused unit may swing at a passive
+    // camp member (and the landed hit then aggros the camp via the damage
+    // chokepoint). Inert scenery stays out.
+    if (candidate.team === 'neutral' && candidate.campId === null) continue;
     if (candidate.currentHp <= 0) continue;
     if (chebyshev(unit.position, candidate.position) > r) continue;
     candidates.push(candidate);
@@ -578,10 +627,14 @@ export function currentTarget(unit: Unit, world: World): Unit | null {
     if (t !== undefined && t.currentHp > 0) {
       // §40b — a committed DESTRUCTIBLE neutral (the rubble the auto-target hook
       // chose to chip) is honored so the strike + movement act on it; an
-      // indestructible wall/half-cover never is. Otherwise the historical rule: a
-      // living enemy (or, under confusion, any-team mark). A confused unit never
-      // chips rubble — its mark is re-rolled among non-neutral units each tick.
+      // indestructible wall/half-cover never is. §75e — an ACTIVE-neutral
+      // commitment is honored regardless of hostility: commitments only arise
+      // from the hostility-gated acquisition paths, the confusion re-roll, or
+      // a manual engage/focus order on a passive camp — and that ordered first
+      // blow must land (it's what aggros the camp). A confused unit never
+      // chips rubble — its mark re-rolls among combatants + active neutrals.
       if (t.team === 'neutral') {
+        if (t.campId !== null) return t;
         if (!confused && isDestructibleNeutral(t.archetype)) return t;
       } else if (confused || t.team !== unit.team) {
         return t;

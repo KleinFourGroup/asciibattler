@@ -133,10 +133,9 @@ shape-lock #4).
 - [x] 75d — the spatial widening ✅ 2026-08-08: all ten worksheet
   boxes via the `isInertNeutral` flip; LOS stays occluding (census
   call); byte-identity holds (worklog §75)
-- [ ] 75e — the combat widening: targeting both directions behind
-  hostility + aggro-on-hit + kill credit (kill trigger; DoT
-  `sourceUnitId` fallback; drip-aware camp-killed) + the kite path +
-  `recordDamage` XP (signed: active neutrals earn)
+- [x] 75e — the combat widening ✅ 2026-08-08: all sixteen worksheet
+  rows via the shared `hostileCandidate` admit rule; aggro+kill credit
+  on the dealDamage chokepoint; chaos-is-chaos recorded (worklog §75)
 - [ ] 75f — `CampWanderBehavior` ('camp' value + registry arm;
   leash-filtered wander on campRng; hostile→engagement delegate) +
   the two exit invariants as tests

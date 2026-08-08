@@ -252,8 +252,11 @@ export function engagementDirective(
     return { kind: 'hold' };
   }
 
-  // Protocol step 2 — the §40b bestEffort rubble approach.
-  if (target.team === 'neutral') {
+  // Protocol step 2 — the §40b bestEffort rubble approach. §75e — INERT only:
+  // an active neutral (camp member) is a mobile combat target, so it gets the
+  // REAL firing-cell/kite protocol below (a ranged unit kites a hostile camp
+  // bandit instead of charging its corner like rubble).
+  if (isInertNeutral(target)) {
     return {
       kind: 'approach',
       intent: {

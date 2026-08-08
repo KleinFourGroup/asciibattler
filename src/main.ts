@@ -87,7 +87,11 @@ function devApplyStatus(g: Game, statusId: string, target: number | Team): void 
   const targets =
     typeof target === 'number'
       ? world.units.filter((u) => u.id === target && u.currentHp > 0)
-      : world.units.filter((u) => u.team === target && u.team !== 'neutral' && u.currentHp > 0);
+      : world.units.filter(
+          // §75e — 'neutral' as a team filter reaches ACTIVE neutrals (camp
+          // members) only; inert scenery stays out of the dev status sprayer.
+          (u) => u.team === target && (u.team !== 'neutral' || u.campId !== null) && u.currentHp > 0,
+        );
   for (const u of targets) world.applyStatusEffect(u, def, null);
   console.info(`[applyStatus] applied '${statusId}' to ${targets.length} unit(s)`);
 }

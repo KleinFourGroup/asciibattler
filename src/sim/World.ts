@@ -60,6 +60,7 @@ import { nearestFreeCells } from './actingPosition';
 import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
+import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
 import { SPAWN } from '../config/spawn';
@@ -1826,12 +1827,12 @@ export class World {
    * stats via the deterministic `scaledUnit` — no RNG draw — shared behavior
    * wiring, and the SpawnAction lockout + `unit:spawned{instant:false}` fade).
    * Differences: `team: 'neutral'` + the `campId` stamp (the active-neutral
-   * signal). LANDING NOTE (75f): behavior slot 0 is `createMovementBehavior`
-   * FOR NOW — a camp bandit shares the enemy bandit's catalog def, so
-   * camp-ness can't ride `movementBehavior`; 75f replaces slot 0 here with
-   * `CampWanderBehavior` (leash-filtered wander, hostile→engagement
-   * delegate). Until 75d/75e widen targeting, these units stand idle —
-   * spawn mechanics are this step's whole surface.
+   * signal), and behavior slot 0 is `CampWanderBehavior` (§75f — the 75c
+   * landing note landed): leash-filtered wander on `campRng` while passive,
+   * the full `MovementBehavior` engagement delegate once the §75e hostility
+   * gate admits a target. Direct construction, not `createMovementBehavior`
+   * — a camp bandit shares the enemy bandit's catalog def, so camp-ness
+   * can't ride the catalog's `movementBehavior` value.
    */
   private spawnCampUnit(camp: CampInstance, spec: CampPendingUnit, position: GridCoord): Unit {
     const template = scaledUnit(spec.archetype, spec.level);
@@ -1851,7 +1852,7 @@ export class World {
       },
       false,
     );
-    unit.behaviors.push(createMovementBehavior(spec.archetype), new AbilityBehavior());
+    unit.behaviors.push(new CampWanderBehavior(), new AbilityBehavior());
     for (const id of abilityIdsForArchetype(spec.archetype)) {
       unit.abilities.push(createAbility(id));
     }

@@ -110,6 +110,14 @@
  *     the shove minimal-disruption + bounded; if nothing is free within it the
  *     shove no-ops (returns false) rather than teleporting across the board. A
  *     distance, not a timing — passed through verbatim.
+ *   campWanderChance — §75f: per eligible poll (free unit, move off
+ *     cooldown), the chance a PASSIVE camp member takes one wander step
+ *     inside its leash. Rolls on the presence-gated `campRng` — the
+ *     user-signed exception to the no-RNG-in-movement doctrine (camp idle
+ *     wander is scenery flavor, not faction pathing; the kickoff cut names
+ *     the stream). A probability in [0,1]: 0 = camps stand still (vacating
+ *     the drip anchor stays unconditional); 1 = a step every move window.
+ *     Feel-tuned at 75j.
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the
  *     destination claim releases). Locked at 0.5 — the unit logically occupies
@@ -141,6 +149,7 @@ const SimSchema = z.object({
   actingCellSearchSlack: z.number().int().nonnegative(),
   shoveSearchRadiusCells: z.number().int().positive(),
   moveFlipFraction: z.number().min(0).max(1),
+  campWanderChance: z.number().min(0).max(1),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -160,4 +169,5 @@ export const SIM = {
   actingCellSearchSlack: parsed.actingCellSearchSlack,
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
   moveFlipFraction: parsed.moveFlipFraction,
+  campWanderChance: parsed.campWanderChance,
 };

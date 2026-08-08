@@ -1341,3 +1341,47 @@ All sixteen combat rows landed. The shape:
   kill stamp 2 + battle-end 2 + kite 1 + the live-fight
   stats/archetype-verify pin 1; 2485 → 2498 main). 395 fuzz:smoke green —
   presence-gated byte-identity holds through the whole targeting stack.
+
+### 75f — CampWanderBehavior (2026-08-08)
+
+The 75c landing note landed: `spawnCampUnit` behavior slot 0 is now
+`CampWanderBehavior` ('camp' in the behavior registry — the re-judged
+scope: a registry arm for snapshot rehydrate, NO catalog enum widening).
+
+- **Two modes, one class**: `currentTarget` resolves an admissible mark
+  (the 75e hostility gate) → wholesale DELEGATE to a stateless inner
+  `MovementBehavior` — camps fight exactly like combatants, pursuit may
+  leave the leash (it bounds idling, not retaliation; pinned). Passive →
+  the leash-filtered wander: per eligible poll (free + move off cooldown
+  + not status-rooted), roll `SIM.campWanderChance` (new knob,
+  config/sim.json, 0.05 — feel-tuned at 75j) and take one uniform step
+  among free unclaimed in-leash neighbors.
+- **The vacate rule**: standing on the camp anchor skips the chance gate
+  — the member steps off ASAP, which is what keeps the drip queue
+  flowing (the exit invariant's mechanism).
+- **Self-healing leash**: a member displaced beyond the leash
+  (shove/knockback) gets a candidate set of strictly-anchor-closer
+  neighbors — it walks itself back (pinned).
+- **RNG discipline**: every draw rides `campRng`; draw shape = 1 chance
+  roll (skipped on-anchor) + 1 pick (skipped for singletons, #111); the
+  cooldown early-return keeps locked-out polls draw-free. Pinned
+  structurally: 100 passive-wander ticks leave `rng` AND `combatRng`
+  byte-untouched while `campRng` advances. The standing
+  NO-RNG-IN-MOVEMENT doctrine is faction-pathing scoped; camp idle
+  wander on its own presence-gated stream is the kickoff shape-lock's
+  signed exception (the cut line names campRng).
+- **Support-archetype camp members deliberately get the charger
+  delegate** (doc'd at the class): the healer protocol trails a faction
+  army and heals team-mates — 'neutral' team-mates include WALLS — so
+  camp content ships charger-only until a camp healer is a real design
+  want.
+- Wander steps are single-cell; a multi-tile camp body pays the
+  footprint-aware scan when one ships (the 75c N×N note).
+- **THE TWO EXIT INVARIANTS are standing tests**
+  (CampWanderBehavior.test.ts): leash-bound over 400 ticks with a
+  liveness floor (config-derived leash, never hardcoded) · spawn vacated
+  within `SPAWN.durationTicks + 2×moveCooldown + 4` (derived bound, both
+  members materialize). Plus same-seed wander identity + the hostile
+  delegate pin (damage lands, leash released).
+- +8 tests (2498 → 2506 main); 395 fuzz:smoke green (the wander is
+  presence-gated behind camp existence — camp-free byte-identity holds).

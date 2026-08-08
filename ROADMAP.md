@@ -136,9 +136,9 @@ shape-lock #4).
 - [x] 75e — the combat widening ✅ 2026-08-08: all sixteen worksheet
   rows via the shared `hostileCandidate` admit rule; aggro+kill credit
   on the dealDamage chokepoint; chaos-is-chaos recorded (worklog §75)
-- [ ] 75f — `CampWanderBehavior` ('camp' value + registry arm;
-  leash-filtered wander on campRng; hostile→engagement delegate) +
-  the two exit invariants as tests
+- [x] 75f — `CampWanderBehavior` ✅ 2026-08-08: slot-0 swap + 'camp'
+  registry arm; campRng wander + anchor-vacate rule + MovementBehavior
+  delegate; both exit invariants standing as tests (worklog §75)
 - [ ] 75g — run economy: `campKills` → `battle:ended` payload → the
   win-or-lose portion branch (51a shape, before the `won` gate);
   `blockCampTurnEnd` knob (default off, hoisted third alive-flag);

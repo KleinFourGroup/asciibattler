@@ -3,6 +3,7 @@ import { UNIT_DEFS } from '../../config/units';
 import { MovementBehavior } from './MovementBehavior';
 import { SupportMovementBehavior } from './SupportMovementBehavior';
 import { AbilityBehavior } from './AbilityBehavior';
+import { CampWanderBehavior } from './CampWanderBehavior';
 
 /**
  * Behavior factories keyed by `Behavior.kind`. `World.fromJSON` uses these
@@ -21,6 +22,8 @@ const FACTORIES: Record<string, BehaviorFactory> = {
   [MovementBehavior.kind]: () => new MovementBehavior(),
   [SupportMovementBehavior.kind]: () => new SupportMovementBehavior(),
   [AbilityBehavior.kind]: () => new AbilityBehavior(),
+  // §75f — the camp member's wander/engage locomotion (spawnCampUnit slot 0).
+  [CampWanderBehavior.kind]: () => new CampWanderBehavior(),
 };
 
 export function createBehavior(kind: string): Behavior {

@@ -126,10 +126,10 @@ shape-lock #4).
 - [x] 75b — the World camp registry, **v34→v35** ✅ 2026-08-08:
   registry + campId + presence-gated campRng + the conditional
   rollout re-seed; byte-identity hook-proven (worklog §75)
-- [ ] 75c — drip spawn: turn-start camp roll seeds the per-camp
-  queues; the deterministic tick-slot drain beside `runOverflowScan`;
-  `random-intersect` placement over the spawn tile; SpawnAction
-  lockout
+- [x] 75c — drip spawn ✅ 2026-08-08: spawnCamps rides applyTerrain
+  (all four sites free); the drip drain + random-intersect live;
+  landing note at spawnCampUnit — 75f swaps behavior slot 0
+  (worklog §75)
 - [ ] 75d — the spatial widening: the movement.ts moving-wall fix
   (vacancy ETA + `excludeUnitId`) + the four lockstep blocker
   siblings + half-cover/LOS gating + tile statuses + choke masks

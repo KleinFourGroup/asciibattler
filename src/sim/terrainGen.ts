@@ -42,6 +42,7 @@ import {
   getLayout,
   type LayoutDef,
   type SpawnRegion,
+  type CampRef,
 } from './layouts';
 import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
 
@@ -93,6 +94,14 @@ export interface GeneratedTerrain {
    *  HP). Each is spawned as a multi-tile neutral by `battleSetup.applyTerrain`.
    *  Empty for procedural — hand-authored-only, like chasm/fire/healing. */
   readonly rubble: readonly RubbleCoord[];
+  /** §75c: single-tile camp drip points (the portal-drip model). Consumed by
+   *  `battleSetup.spawnCamps` together with `camps` below. Empty for
+   *  procedural — hand-authored-only, like rubble. */
+  readonly campSpawns: readonly GridCoord[];
+  /** §75c: the layout's weighted camp list (each spawn tile rolls one entry).
+   *  Non-empty whenever `campSpawns` is (the layouts.ts schema enforces the
+   *  pairing). Empty for procedural. */
+  readonly camps: readonly CampRef[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
 
@@ -177,6 +186,8 @@ export function generateFromLayout(
     fires: layout.fires ? layout.fires.slice() : [],
     healings: layout.healings ? layout.healings.slice() : [],
     rubble: layout.rubble ? layout.rubble.slice() : [],
+    campSpawns: layout.campSpawns ? layout.campSpawns.slice() : [],
+    camps: layout.camps ? layout.camps.slice() : [],
     spawnRegions: layout.spawns,
   };
 }
@@ -216,6 +227,8 @@ function generateProcedural(
     fires: [],
     healings: [],
     rubble: [],
+    campSpawns: [],
+    camps: [],
     spawnRegions,
   };
 }

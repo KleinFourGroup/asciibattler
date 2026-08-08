@@ -1095,3 +1095,43 @@ Landed to the cut. Notes beyond the cut line:
   block 5; 2451 → 2463 main, hook-verified); typecheck clean; 395
   fuzz:smoke green at the commit — the byte-identity gate holds with
   the registry live.
+
+### 75c — the portal-drip spawn (2026-08-08)
+
+Landed to the cut. Notes beyond the cut line:
+
+- **`spawnCamps` rides `applyTerrain`**, so all four World construction
+  sites (BattleScene / harness / replayTrace / spawnEncounter) get
+  camps with ZERO per-site changes — the roll is battle-setup-time,
+  which IS "resolved on turn start" under the world-per-turn fact.
+- Stream derivation as planned: fresh parent off terrainSeed, BURN
+  fork #1 (byte-identical to setupRngFor's stream by construction),
+  take #2 as the camp stream; selection rolls consume it, then
+  installCamps hands the advanced stream to the World for battle
+  draws. `weightedCampRef` is a LOCAL pickWeighted twin (sim never
+  runtime-imports run) with the #111 zero-draw singleton.
+- `random-intersect` implemented for real: all fitting placements
+  overlapping the spawn tile in a fixed dy/dx scan, uniform pick;
+  singleton returns DRAW-FREE (#111 — pinned by an rng-state test),
+  which makes the common 1×1 drip zero-cost on the camp stream. The
+  optional `rng` param is the first randomness occupancy.ts has ever
+  taken (documented at the site); >1-candidates-without-rng throws.
+- The drain (`runCampDripScan`, the runOverflowScan sibling at the
+  same tick slot): ascending instance id × per-camp FIFO × the fixed
+  candidate scan; a blocked anchor just waits — the drip cadence IS
+  the tile vacating, which is what makes 75f's vacate-≤N-ticks
+  invariant load-bearing, exactly as the shape-lock argued.
+- **The 75f landing note (written at spawnCampUnit):** behavior slot 0
+  is `createMovementBehavior` FOR NOW — a camp bandit shares the
+  enemy bandit's catalog def, so camp-ness cannot ride the
+  `movementBehavior` catalog value; 75f replaces slot 0 in
+  `spawnCampUnit` with `CampWanderBehavior`. Until 75d/75e widen
+  targeting, dripped units stand idle (spawn mechanics are this
+  step's whole surface). The cut's "'camp' enum value" line is
+  RE-JUDGED down to this spawn-path override — the enum widening
+  would only serve camp-exclusive archetypes, which don't exist.
+- N×N drip ships exercised by occupancy unit tests only — no shipped
+  COMBATANT def carries footprint > 1 (only rubble does); the first
+  multi-tile camp body will exercise it live.
+- No shipped layout lists a camp → the whole path is unit-test-only
+  until §75j (the 74e seam-only posture; presence gate holds).

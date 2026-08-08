@@ -35,6 +35,7 @@ export {
   type SpawnRegion,
   type SpawnAvailability,
   type Theme,
+  type CampRef,
 } from '../config/layouts';
 
 /**

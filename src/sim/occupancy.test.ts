@@ -378,6 +378,65 @@ describe('§39a — the footprint geometry seams', () => {
  * Pure + World-free: a grid-dims record + an `isFreeCell` predicate built from a
  * key set. Inert until §40 spawns the first multi-tile body.
  */
+describe('§75c — anchorFootprint (the random-intersect policy)', () => {
+  const grid = { gridW: 8, gridH: 8 };
+  const allFree = () => true;
+
+  it('size 1 collapses to the spawn tile and consumes NO rng (#111)', () => {
+    const rng = new RNG(1);
+    const before = JSON.stringify(rng.toJSON());
+    const cells = anchorFootprint({ x: 4, y: 4 }, 1, grid, allFree, 'random-intersect', rng);
+    expect(cells).toEqual([{ x: 4, y: 4 }]);
+    expect(JSON.stringify(rng.toJSON())).toBe(before);
+  });
+
+  it('size 2 mid-grid: every pick is one of the 4 overlapping placements, deterministic per rng', () => {
+    const tile = { x: 4, y: 4 };
+    const cells = anchorFootprint(tile, 2, grid, allFree, 'random-intersect', new RNG(7));
+    expect(cells).not.toBeNull();
+    expect(cells!.length).toBe(4);
+    // The placement overlaps the spawn tile.
+    expect(cells!.some((c) => c.x === tile.x && c.y === tile.y)).toBe(true);
+    // Its min corner is one of the 4 legal intersecting corners.
+    const corner = cells![0]!;
+    expect(corner.x === 3 || corner.x === 4).toBe(true);
+    expect(corner.y === 3 || corner.y === 4).toBe(true);
+    // Same rng state ⇒ same pick.
+    const again = anchorFootprint(tile, 2, grid, allFree, 'random-intersect', new RNG(7));
+    expect(again).toEqual(cells);
+  });
+
+  it('blocked candidates are excluded; a lone survivor is returned draw-free', () => {
+    const tile = { x: 4, y: 4 };
+    // Free only the block whose min corner is (4,4) — every other candidate
+    // placement touches a blocked cell.
+    const freeSet = new Set(['4,4', '5,4', '4,5', '5,5']);
+    const isFreeCell = (c: { x: number; y: number }) => freeSet.has(`${c.x},${c.y}`);
+    const rng = new RNG(3);
+    const before = JSON.stringify(rng.toJSON());
+    const cells = anchorFootprint(tile, 2, grid, isFreeCell, 'random-intersect', rng);
+    expect(cells![0]).toEqual({ x: 4, y: 4 });
+    expect(JSON.stringify(rng.toJSON())).toBe(before); // singleton ⇒ zero draws
+  });
+
+  it('returns null when nothing fits; throws on >1 candidates without an rng', () => {
+    expect(
+      anchorFootprint({ x: 4, y: 4 }, 2, grid, () => false, 'random-intersect', new RNG(1)),
+    ).toBeNull();
+    expect(() =>
+      anchorFootprint({ x: 4, y: 4 }, 2, grid, allFree, 'random-intersect'),
+    ).toThrow(/requires an rng/);
+  });
+
+  it('an edge tile only offers in-bounds placements', () => {
+    // (0,0) size 3: the only intersecting corner that stays on-grid is (0,0).
+    const rng = new RNG(5);
+    const cells = anchorFootprint({ x: 0, y: 0 }, 3, grid, allFree, 'random-intersect', rng);
+    expect(cells![0]).toEqual({ x: 0, y: 0 });
+    expect(cells!.length).toBe(9);
+  });
+});
+
 describe('§39c — anchorFootprint (the corner spawn policy)', () => {
   const GRID = { gridW: 12, gridH: 12 };
   const freeExcept = (occupied: string[]): ((c: GridCoord) => boolean) => {

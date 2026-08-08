@@ -25,6 +25,7 @@
  */
 
 import type { GridCoord } from '../core/types';
+import type { RNG } from '../core/RNG';
 import { ALL_UNIT_DEFS } from '../config/units';
 import { MOVE_ACTION_ID } from './actions/MoveAction';
 import type { Unit } from './Unit';
@@ -158,10 +159,11 @@ export function footprintFits(
 }
 
 /**
- * §39c — the spawn ANCHORING policy. `corner` is the one policy that ships:
- * `random-intersect` (organic scatter) is deferred to camps (Cluster 5).
+ * §39c — the spawn ANCHORING policy. `corner` is the deterministic default;
+ * `random-intersect` (§75c — the camp drip's organic scatter) picks uniformly
+ * among EVERY fitting placement whose footprint overlaps the spawn tile.
  */
-export type AnchorPolicy = 'corner';
+export type AnchorPolicy = 'corner' | 'random-intersect';
 
 /**
  * §39c — resolve where an N×N body ANCHORS when its spawn tile is `spawnTile`, or
@@ -177,17 +179,47 @@ export type AnchorPolicy = 'corner';
  *
  * Pure + World-free (takes a grid-dims record + an `isFreeCell` predicate) so it's
  * unit-testable and the caller decides what "free" means (occupancy, passable
- * terrain, or both). Inert until §40 spawns the first multi-tile body (rubble).
+ * terrain, or both). §75c: `random-intersect` takes an optional `rng` — the ONLY
+ * randomness this module ever consumes, drawn solely when >1 placement fits
+ * (the camp drip passes `world.campRng`, so the draw never touches combat
+ * streams). First production caller: the §75c camp drip.
  */
 export function anchorFootprint(
   spawnTile: GridCoord,
   size: number,
   grid: { gridW: number; gridH: number },
   isFreeCell: (cell: GridCoord) => boolean,
-  _policy: AnchorPolicy = 'corner',
+  policy: AnchorPolicy = 'corner',
+  rng?: RNG,
 ): GridCoord[] | null {
   const { x, y } = spawnTile;
   const d = size - 1;
+
+  if (policy === 'random-intersect') {
+    // §75c — every min corner in [x-d..x] × [y-d..y] keeps the footprint
+    // overlapping the spawn tile; collect the FITTING ones in a fixed scan
+    // order (dy outer, dx inner — determinism), then pick uniformly. The
+    // singleton case draws NOTHING (#111 applied forward — and it makes the
+    // 1×1 drip zero-cost on the camp stream); `rng` is only required when a
+    // draw actually happens.
+    const fitting: GridCoord[][] = [];
+    for (let dy = 0; dy <= d; dy++) {
+      for (let dx = 0; dx <= d; dx++) {
+        const cells = footprintCells({ x: x - dx, y: y - dy }, size);
+        const fits = cells.every(
+          (c) => c.x >= 0 && c.y >= 0 && c.x < grid.gridW && c.y < grid.gridH && isFreeCell(c),
+        );
+        if (fits) fitting.push(cells);
+      }
+    }
+    if (fitting.length === 0) return null;
+    if (fitting.length === 1) return fitting[0]!;
+    if (rng === undefined) {
+      throw new Error('anchorFootprint: random-intersect with >1 candidates requires an rng');
+    }
+    return fitting[Math.floor(rng.next() * fitting.length)]!;
+  }
+
   // Min-corner candidates in deterministic preference order: extend +x/+y first
   // (spawn tile = the min corner), then flip x, then y, then both, so the block
   // stays on-grid near an edge. All four keep the spawn tile as a corner of the

@@ -45,7 +45,16 @@ import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
 import { updateTarget } from './Targeting';
-import { GROUND, cellKey, claimantOf, unitAt, type Claim, type OccupancyPlane } from './occupancy';
+import {
+  GROUND,
+  anchorFootprint,
+  cellKey,
+  claimantOf,
+  isFree,
+  unitAt,
+  type Claim,
+  type OccupancyPlane,
+} from './occupancy';
 import { nearestFreeCells } from './actingPosition';
 import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
@@ -1360,6 +1369,11 @@ export class World {
     // queue gets a chance to reinforce before victory triggers.
     this.runOverflowScan();
 
+    // §75c — the camp portal-drip sibling: each camp tries to materialize its
+    // next pending member overlapping its anchor tile. Free on camp-free
+    // worlds (the presence gate).
+    this.runCampDripScan();
+
     // 29c — fire any chain hops that came due this tick (the per-hop delay). Sits
     // beside the periodic pass — both are scheduled over-time HP changes routed
     // through `dealDamage`, and the shared `reapDead()` below reaps a hop-kill on
@@ -1736,6 +1750,84 @@ export class World {
     this.bus.emit('unit:moved', { unitId: unit.id, from, to: dest, durationTicks });
     this.bus.emit('unit:shoved', { unitId: unit.id, from, to: dest, durationTicks });
     return true;
+  }
+
+  /**
+   * §75c — the camp PORTAL-DRIP drain, `runOverflowScan`'s sibling: each camp
+   * with pending members tries to materialize its head-of-queue unit
+   * OVERLAPPING its anchor tile this tick. Determinism = ascending instance-id
+   * order × per-camp FIFO × the fixed `random-intersect` candidate scan; the
+   * placement draw rides `campRng` exclusively (and only when >1 placement
+   * fits — #111). A blocked anchor just waits (the drip cadence IS the tile
+   * vacating — the 75f wander's vacate-≤N-ticks invariant is what keeps the
+   * queue flowing). Free on camp-free worlds (the presence gate).
+   */
+  private runCampDripScan(): void {
+    if (this.camps.size === 0 || this._campRng === null) return;
+    for (const camp of this.campsList()) {
+      const next = camp.pending[0];
+      if (next === undefined) continue;
+      const size = ALL_UNIT_DEFS[next.archetype]?.footprint ?? 1;
+      const cells = anchorFootprint(
+        camp.anchor,
+        size,
+        this,
+        (c) =>
+          isFinite(this.tileGrid.costAt(c)) &&
+          isFree(this, c) &&
+          claimantOf(this, c) === undefined,
+        'random-intersect',
+        this._campRng,
+      );
+      if (cells === null) continue;
+      camp.pending.shift();
+      // footprintCells pushes the min corner first — cells[0] is the
+      // canonical `position` per the §39 convention.
+      this.spawnCampUnit(camp, next, cells[0]!);
+    }
+  }
+
+  /**
+   * §75c — spawn one camp member (mirrors `spawnFromQueue`: catalog-derived
+   * stats via the deterministic `scaledUnit` — no RNG draw — shared behavior
+   * wiring, and the SpawnAction lockout + `unit:spawned{instant:false}` fade).
+   * Differences: `team: 'neutral'` + the `campId` stamp (the active-neutral
+   * signal). LANDING NOTE (75f): behavior slot 0 is `createMovementBehavior`
+   * FOR NOW — a camp bandit shares the enemy bandit's catalog def, so
+   * camp-ness can't ride `movementBehavior`; 75f replaces slot 0 here with
+   * `CampWanderBehavior` (leash-filtered wander, hostile→engagement
+   * delegate). Until 75d/75e widen targeting, these units stand idle —
+   * spawn mechanics are this step's whole surface.
+   */
+  private spawnCampUnit(camp: CampInstance, spec: CampPendingUnit, position: GridCoord): Unit {
+    const template = scaledUnit(spec.archetype, spec.level);
+    const attackRange = rangeForArchetype(spec.archetype);
+    const derived = deriveStats(template.stats, attackRange);
+    const unit = this.addUnit(
+      {
+        team: 'neutral',
+        archetype: spec.archetype,
+        glyph: glyphForArchetype(spec.archetype),
+        stats: template.stats,
+        derived,
+        position,
+        level: spec.level,
+        xp: template.xp,
+        campId: camp.id,
+      },
+      false,
+    );
+    unit.behaviors.push(createMovementBehavior(spec.archetype), new AbilityBehavior());
+    for (const id of abilityIdsForArchetype(spec.archetype)) {
+      unit.abilities.push(createAbility(id));
+    }
+    unit.activeAction = {
+      action: new SpawnAction(),
+      startTick: this.tickCount,
+      finishTick: this.tickCount + SPAWN.durationTicks,
+      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
+    };
+    return unit;
   }
 
   private spawnFromQueue(template: UnitTemplate, team: Team, position: GridCoord): Unit {

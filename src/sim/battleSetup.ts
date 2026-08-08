@@ -23,7 +23,9 @@
  */
 
 import { RNG } from '../core/RNG';
-import type { World } from './World';
+import type { GridCoord } from '../core/types';
+import type { World, CampInstance, CampPendingUnit } from './World';
+import { getCamp } from '../config/camps';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
@@ -33,7 +35,7 @@ import type { BattleEncounter } from '../run/Run';
 import { TERRAIN } from '../config/terrain';
 import { generateTerrain, type GeneratedTerrain } from './terrainGen';
 import { spawnHalfCover, spawnRubble, spawnWall } from './environment';
-import type { SpawnRegion } from './layouts';
+import type { SpawnRegion, CampRef } from './layouts';
 
 export interface PickedSpawnRegions {
   readonly player: SpawnRegion;
@@ -150,7 +152,91 @@ export function applyTerrain(
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
   spawnLayoutNeutrals(world, terrain);
+  // §75c — roll + register the layout's camps (a free no-op on the camp-free
+  // common case; the presence gate rides inside spawnCamps + installCamps).
+  spawnCamps(world, terrain.campSpawns, terrain.camps, encounter.terrainSeed);
   return terrain.spawnRegions;
+}
+
+/**
+ * §75c — roll each camp-spawn tile's camp and register the instances + the
+ * dedicated camp stream on the World. "Resolved on turn start" IS battle-setup
+ * time (a fresh World per turn), and this rides `applyTerrain`, so all four
+ * World construction sites (BattleScene / fuzz harness / replayTrace /
+ * `spawnEncounter`) get camps with zero per-site changes.
+ *
+ * Stream derivation (the §75 kickoff worklog): a fresh parent off
+ * `terrainSeed`, BURN the first fork — that stream is byte-identical to
+ * `setupRngFor`'s (same construction) — and take the second as the camp
+ * stream. Selection rolls consume it here; `installCamps` then hands the
+ * advanced stream to the World for battle-time draws (drip placement, 75f
+ * wander). Nothing touches `battleRng` or Run's fork ladder — the
+ * fork-append-free property the §75 cut is built on.
+ *
+ * Args-explicit (the assert-function pattern) so tests drive synthetic
+ * campSpawns/camps against a naked World — no shipped layout lists a camp
+ * until the §75j design round, so until then this is exercised by unit tests
+ * only (the 74e seam-only posture).
+ */
+export function spawnCamps(
+  world: World,
+  campSpawns: readonly GridCoord[],
+  campRefs: readonly CampRef[],
+  terrainSeed: number,
+): void {
+  if (campSpawns.length === 0) return;
+  if (campRefs.length === 0) {
+    // The layouts.ts schema rejects this pairing; a synthetic caller that
+    // slips past it must fail loud, not roll from nothing.
+    throw new Error('spawnCamps: campSpawns present but the camps list is empty');
+  }
+  const parent = new RNG(terrainSeed);
+  parent.fork(); // burn — fork #1 duplicates setupRngFor's stream
+  const campRng = parent.fork();
+
+  const instances: CampInstance[] = campSpawns.map((tile, i) => {
+    const ref = weightedCampRef(campRefs, campRng);
+    const def = getCamp(ref.campId);
+    if (def === undefined) {
+      // Shipped layouts are boot-asserted (assertLayoutCampRefs); this guards
+      // synthetic/test layouts the same loud way.
+      throw new Error(`spawnCamps: unknown camp "${ref.campId}"`);
+    }
+    const pending: CampPendingUnit[] = [];
+    for (const u of def.units) {
+      const count = u.count ?? 1;
+      for (let k = 0; k < count; k++) {
+        pending.push({ archetype: u.archetype, level: u.level ?? 1 });
+      }
+    }
+    return {
+      id: i + 1,
+      defId: def.id,
+      anchor: { x: tile.x, y: tile.y },
+      hostileTo: new Set<Team>(),
+      pending,
+      killedBy: null,
+    };
+  });
+  world.installCamps(instances, campRng);
+}
+
+/**
+ * §75c — the weighted camp pick (absent weight = 1, the sector-pool
+ * convention). Local rather than imported from `run/sectorWalk` — sim never
+ * runtime-imports run — but the SEMANTICS match `pickWeighted` exactly,
+ * including the #111 zero-draw singleton (a one-camp list costs no draw).
+ */
+function weightedCampRef(refs: readonly CampRef[], rng: RNG): CampRef {
+  if (refs.length === 1) return refs[0]!;
+  let total = 0;
+  for (const r of refs) total += r.weight ?? 1;
+  let roll = rng.next() * total;
+  for (const r of refs) {
+    roll -= r.weight ?? 1;
+    if (roll < 0) return r;
+  }
+  return refs[refs.length - 1]!;
 }
 
 /**

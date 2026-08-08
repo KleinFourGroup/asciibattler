@@ -1091,6 +1091,7 @@ Landed to the cut. Notes beyond the cut line:
   the stale v34 doc claims updated (rollout header/test,
   TrafficScriptDriver "then-v34", the battleRules describe title
   de-versioned).
-- +13 tests (camps registry 6 + rollout camp arm 1 + roundtrip §75b
-  block 6 — count pending hook verification at commit); typecheck
-  clean; the six touched files green pre-commit.
+- +12 tests (camps registry 6 + rollout camp arm 1 + roundtrip §75b
+  block 5; 2451 → 2463 main, hook-verified); typecheck clean; 395
+  fuzz:smoke green at the commit — the byte-identity gate holds with
+  the registry live.

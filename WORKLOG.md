@@ -1058,5 +1058,5 @@ Landed to the cut. Notes beyond the cut line:
   same era), so `tests/gauntlet` stays green; only dev replay of
   pre-75a recorded traces refuses (the era contract working as
   designed). No re-baseline needed.
-- +21 tests (camps loader 13 + layouts §75a block 8); typecheck
-  clean.
+- +15 tests (camps loader 9 + layouts §75a block 6; 2436 → 2451
+  main, hook-verified); typecheck clean.

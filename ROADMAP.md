@@ -123,10 +123,9 @@ shape-lock #4).
 - [x] 75a — camps config + layout seams ✅ 2026-08-08: catalog +
   loader + both boot asserts + the campSpawns/camps superRefine;
   trace-era cost confirmed dev-replay-only (worklog §75)
-- [ ] 75b — the World camp registry (hostility/anchors/kills/pending
-  queues) + `Unit.campId` + presence-gated nullable `campRng` (+
-  conditional cloneForRollout re-seed) — **v34→v35**; byte-identity
-  proven at the commit
+- [x] 75b — the World camp registry, **v34→v35** ✅ 2026-08-08:
+  registry + campId + presence-gated campRng + the conditional
+  rollout re-seed; byte-identity hook-proven (worklog §75)
 - [ ] 75c — drip spawn: turn-start camp roll seeds the per-camp
   queues; the deterministic tick-slot drain beside `runOverflowScan`;
   `random-intersect` placement over the spawn tile; SpawnAction

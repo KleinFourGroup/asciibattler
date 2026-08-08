@@ -213,7 +213,7 @@ describe('D5.C spawn overflow queue', () => {
     world.units[0]!.outOfLosTicks = 3;
 
     const wire = JSON.parse(JSON.stringify(world.toJSON()));
-    expect(wire.schemaVersion).toBe(34); // 34 — 49e widened battleRules with applyTo
+    expect(wire.schemaVersion).toBe(35); // 35 — §75b added the camp registry + campRng
     expect(wire.units[0].targetId).toBe(world.units[1]!.id);
     expect(wire.units[0].outOfLosTicks).toBe(3);
     expect(wire.damageDealt).toEqual([]);

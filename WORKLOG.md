@@ -1060,3 +1060,37 @@ Landed to the cut. Notes beyond the cut line:
   designed). No re-baseline needed.
 - +15 tests (camps loader 9 + layouts §75a block 6; 2436 → 2451
   main, hook-verified); typecheck clean.
+
+### 75b — the World camp registry, v34→v35 (2026-08-08)
+
+Landed to the cut. Notes beyond the cut line:
+
+- `CampInstance` = `{ id, defId, anchor, hostileTo: Set<Team>,
+  pending: CampPendingUnit[], killedBy }` in a `Map` on World (the
+  spawnQueues shape). Leash radius + rewards are NOT copied onto the
+  instance — they derive from `getCamp(defId)` at read time (the #114
+  call-time rule), which is why `fromJSON` hard-rejects an
+  unresolvable defId (the 74b bespoke-rejection posture) AND a member
+  unit whose instance id isn't registered (a corrupt save would
+  otherwise degrade to silently-passive camps).
+- `installCamps` mirrors `installBattleRules`: at most once, empty =
+  free no-op that stores NOTHING — including the campRng, which is
+  the presence gate itself. A dedicated test pins the stream half:
+  two same-seeded Worlds, one camp-aware, keep identical rng/combatRng
+  states (no unconditional fork anywhere).
+- Serialization determinism: instances serialize in ascending id
+  order; `hostileTo` flattens in fixed QUEUE_TEAMS order (aggro
+  ORDER never shapes the wire).
+- `cloneForRollout` takes the third fork CONDITIONALLY, after
+  rng/combatRng — pinned by a test that also proves the camp-free
+  path's two-fork alignment is unchanged (the §69a fork-order
+  contract).
+- `isActiveNeutral` ships in Unit.ts with a STRUCTURAL parameter
+  (`{team, campId}`) so snapshots qualify, not just live Units.
+- The one hardcoded version assert (spawn-overflow) re-pinned 34→35;
+  the stale v34 doc claims updated (rollout header/test,
+  TrafficScriptDriver "then-v34", the battleRules describe title
+  de-versioned).
+- +13 tests (camps registry 6 + rollout camp arm 1 + roundtrip §75b
+  block 6 — count pending hook verification at commit); typecheck
+  clean; the six touched files green pre-commit.

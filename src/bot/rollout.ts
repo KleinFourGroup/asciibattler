@@ -5,7 +5,7 @@
  * fresh EventBus with BOTH RNG streams re-seeded from `rolloutSeed`.
  *
  * Why the re-seed is load-bearing (the CLAIRVOYANCE GUARD, non-negotiable
- * per the round scope guards): WorldSnapshot v34 serializes both RNG
+ * per the round scope guards): WorldSnapshot v35 serializes its RNG
  * streams verbatim — BY DESIGN, so save/load and trace replay resume the
  * exact stream (the A2 contract; snapshot-roundtrip.test.ts asserts
  * byte-identical futures BECAUSE of it). A plain toJSON→fromJSON clone
@@ -13,6 +13,12 @@
  * scored on one would foresee the real dice. The seam diverges at the
  * DATA level (the wire snapshot, before deserialization) — World itself
  * is untouched, and the live world is never mutated.
+ *
+ * §75b: the nullable `campRng` (camp wander/drip dice) joins the re-seed
+ * list CONDITIONALLY — re-seeded when present, left null when null. Fork
+ * order is part of the contract: rng, combatRng, then campRng. The
+ * camp-free path draws exactly the two forks it always did, so existing
+ * rollouts stay byte-identical.
  *
  * Common-random-numbers contract (the §57c lock): the searcher derives
  * per-k rollout seeds from its OWN forked stream and passes the SAME
@@ -47,6 +53,9 @@ export function cloneForRollout(world: World, rolloutSeed: number): World {
   const seedStream = new RNG(rolloutSeed);
   wire.rng = seedStream.fork().toJSON();
   wire.combatRng = seedStream.fork().toJSON();
+  // §75b — camp dice are sampled, not foreseen. Conditional third fork: the
+  // camp-free path keeps its historical two-fork alignment.
+  if (wire.campRng !== null) wire.campRng = seedStream.fork().toJSON();
 
   // Fresh bus: rollout events must never reach the live subscribers
   // (renderer, metrics collectors, the trace recorder).

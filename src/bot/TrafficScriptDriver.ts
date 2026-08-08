@@ -4,7 +4,7 @@
  * the existing four-mode vocabulary (`atWill`/`engage`/`hold`/`focus`) through
  * the existing command channel — the same vocabulary the 53g human baseline
  * was played with (the expressiveness proof, worklog §54). No new objective
- * kinds, no sim change, no snapshot field: WorldSnapshot v34 holds.
+ * kinds, no sim change, no snapshot field: no WorldSnapshot bump (then-v34).
  *
  * Arbitration is DUMB-DETERMINISTIC by design (the §54 lock; scoring is
  * §55's gated domain):

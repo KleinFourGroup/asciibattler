@@ -4,7 +4,8 @@
  * 1. THE CLAIRVOYANCE GUARD — a rollout clone must NOT share the live
  *    battle's future rolls. The control case documents the hazard the
  *    seam exists for: a plain toJSON→fromJSON clone DOES share them
- *    (v34 serializes both streams by design — the A2 contract).
+ *    (v35 serializes its streams by design — the A2 contract; the nullable
+ *    campRng joins conditionally, §75b).
  * 2. LIVE-WORLD PURITY — cloning and ticking a clone never perturbs the
  *    live world (byte-identical snapshot before/after).
  * 3. DETERMINISM / CRN — same rolloutSeed ⇒ byte-identical rollout
@@ -88,6 +89,38 @@ describe('cloneForRollout (57d — the clairvoyance guard)', () => {
     for (let i = 0; i < 60 && !a.ended; i++) a.tick();
     for (let i = 0; i < 60 && !b.ended; i++) b.tick();
     expect(JSON.stringify(a.toJSON())).not.toBe(JSON.stringify(b.toJSON()));
+  });
+
+  it('§75b: a present campRng is re-seeded (sampled, not foreseen); absent stays null', () => {
+    // Camp-free: the historical two-fork alignment holds and campRng is null.
+    const free = liveBattle(4242);
+    const freeClone = cloneForRollout(free, 777);
+    expect(freeClone.campRng).toBeNull();
+
+    // Camp-present: the clone's campRng exists but is NOT the live stream —
+    // camp dice are sampled per rollout seed, never replayed.
+    const live = liveBattle(4242);
+    live.installCamps(
+      [
+        {
+          id: 1,
+          defId: 'bandit-squatters',
+          anchor: { x: 4, y: 4 },
+          hostileTo: new Set(),
+          pending: [{ archetype: 'bandit', level: 1 }],
+          killedBy: null,
+        },
+      ],
+      new RNG(31),
+    );
+    const clone = cloneForRollout(live, 777);
+    expect(clone.campRng).not.toBeNull();
+    expect(clone.campRng!.toJSON()).not.toEqual(live.campRng!.toJSON());
+    // And the primary streams' re-seeds are unchanged by the third fork
+    // (fork order rng → combatRng → campRng; the first two draws are the
+    // same ones the camp-free path takes).
+    expect(clone.rng.toJSON()).toEqual(freeClone.rng.toJSON());
+    expect(clone.combatRng.toJSON()).toEqual(freeClone.combatRng.toJSON());
   });
 
   it('rollout events never reach the live bus', () => {

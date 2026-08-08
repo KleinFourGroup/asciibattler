@@ -70,6 +70,7 @@ import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
 import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/units';
+import { getCamp } from '../config/camps';
 
 /**
  * Schema history:
@@ -252,6 +253,16 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       §36b's non-instant moves (which DO leave a claim mid-flight) can never load
  *       under a stale reader. RunSnapshot is unaffected (claims are World-side +
  *       transient per battle).
+ *  35 — §75b (the camp registry) adds the neutral-camp battle state: a
+ *       `camps: CampInstanceSnapshot[]` registry (per-instance def ref, spawn
+ *       anchor, per-faction hostility, drip-pending templates, kill credit — the
+ *       spawnQueues/spawnRegions shape), a nullable dedicated `campRng` stream
+ *       (PRESENCE-GATED: `null` on every camp-free layout — it is never forked
+ *       from `rng`, so existing worlds keep byte-identical streams), and a
+ *       per-unit `campId` on `UnitSnapshot` (null = not a camp member; presence
+ *       is the active-neutral signal, `isActiveNeutral`). A v34 reader would
+ *       silently drop camp hostility + pending drips and rehydrate camp members
+ *       as inert scenery — reject outright per the no-migration contract.
  *  34 — 49e (the packet fire engine) widens the serialized `battleRules`
  *       entries: `applyStatus` gains the optional `applyTo: 'actor'|'target'`
  *       axis (venom's "your hits apply poison" — the content 47f's actor-side
@@ -277,7 +288,7 @@ import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/un
  *       objective (no way to set one), so nothing is lost. RunSnapshot is
  *       unaffected — the objective is World-side + transient per battle.
  */
-const WORLD_SCHEMA_VERSION = 34;
+const WORLD_SCHEMA_VERSION = 35;
 
 /** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
  *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
@@ -325,6 +336,9 @@ export interface UnitSnapshot {
   rosterIndex: number | null;
   /** §29d — the summoning caster's id (null = not a summon). v29. */
   summonedBy: number | null;
+  /** §75b — the camp-registry instance id (null = not a camp member; presence
+   *  is the active-neutral signal). v35. */
+  campId: number | null;
   stats: UnitStats;
   derived: UnitDerived;
   position: GridCoord;
@@ -353,6 +367,42 @@ export interface UnitSnapshot {
    * teardown, not the tick loop, so a resumed battle keeps them).
    */
   effects: StatusEffect[];
+}
+
+/** §75b — one not-yet-dripped camp member (the count-expanded roster entry;
+ *  stats re-derive from the catalog at spawn time, the #114 call-time rule). */
+export interface CampPendingUnit {
+  archetype: UnitArchetype;
+  level: number;
+}
+
+/**
+ * §75b — a rolled camp INSTANCE: one camp-spawn tile's resolved camp for this
+ * battle. `id` is the per-battle instance key (`Unit.campId` points here);
+ * `defId` references the `config/camps.json` catalog (leash radius, rewards —
+ * derived at read time, never copied). `hostileTo` is the camp-wide per-faction
+ * aggro set (75e writes it on first strike); `pending` is the drip queue the
+ * per-tick drain feeds from (75c); `killedBy` is the kill-credit stamp (75e:
+ * pending empty AND no living members — the drip-aware definition).
+ */
+export interface CampInstance {
+  readonly id: number;
+  readonly defId: string;
+  readonly anchor: GridCoord;
+  readonly hostileTo: Set<Team>;
+  readonly pending: CampPendingUnit[];
+  killedBy: Team | null;
+}
+
+/** §75b — the wire form of `CampInstance` (`hostileTo` flattens to a
+ *  fixed-order array so serialization is deterministic). */
+export interface CampInstanceSnapshot {
+  id: number;
+  defId: string;
+  anchor: GridCoord;
+  hostileTo: Team[];
+  pending: CampPendingUnit[];
+  killedBy: Team | null;
 }
 
 export interface SpawnQueueSnapshot {
@@ -423,6 +473,16 @@ export interface WorldSnapshot {
    *  `bitsGain` fold applies). Launch shape: bits only — grows when
    *  content demands. */
   tallies: { bits: number };
+  /** §75b: the rolled camp instances (empty on every camp-free layout).
+   *  Serialized in ascending instance-id order so the wire image is
+   *  deterministic regardless of Map insertion history. */
+  camps: CampInstanceSnapshot[];
+  /** §75b: the dedicated camp RNG stream (wander rolls, drip placement).
+   *  `null` on every camp-free layout — PRESENCE-GATED by `installCamps`, and
+   *  never forked from `rng`, so camp-free worlds keep byte-identical streams
+   *  (the §75 exit gate). Re-seeded by `cloneForRollout` when present (the
+   *  clairvoyance guard — camp dice must be sampled, not foreseen). */
+  campRng: RNGSnapshot | null;
 }
 
 /**
@@ -512,6 +572,23 @@ export class World {
    * the earnings. Launch shape: bits only.
    */
   private readonly tallies = { bits: 0 };
+
+  /**
+   * §75b — the camp registry: instance id → rolled camp (the
+   * spawnQueues/spawnRegions shape — battle-scoped state that survives member
+   * deaths and serializes). Camp-level facts live HERE, never on units: the
+   * zero-arg behavior-factory contract (registry.ts) forbids behavior state,
+   * and hostility must outlive the unit that was struck. Empty on every
+   * camp-free layout.
+   */
+  private readonly camps: Map<number, CampInstance> = new Map();
+  /**
+   * §75b — the dedicated camp stream (never `rng`/`combatRng` — the spec's
+   * dedicated-fork clause). `null` until `installCamps` stores one, which
+   * only happens when the layout actually rolled camps — the presence gate
+   * that keeps camp-free worlds byte-identical.
+   */
+  private _campRng: RNG | null = null;
 
   private readonly bus: EventBus<GameEvents>;
   private tickCount = 0;
@@ -684,6 +761,65 @@ export class World {
     assertBattleRuleStatusRefs(rules);
     this.battleRules = rules;
     registerBattleRules(this, rules);
+  }
+
+  /**
+   * §75b — install the battle's rolled camps + the dedicated camp stream.
+   * Called at most once per World (battleSetup's 75c roll, or `fromJSON`);
+   * a second call throws — camps re-roll per battle, never append mid-fight
+   * (the installBattleRules posture). An empty list is a free no-op that
+   * stores NOTHING (the presence gate: camp-free worlds keep `campRng: null`
+   * and a byte-identical wire image).
+   */
+  installCamps(camps: readonly CampInstance[], campRng: RNG): void {
+    if (this.camps.size > 0 || this._campRng !== null) {
+      throw new Error('World.installCamps: camps already installed');
+    }
+    if (camps.length === 0) return;
+    for (const camp of camps) {
+      if (this.camps.has(camp.id)) {
+        throw new Error(`World.installCamps: duplicate camp instance id ${camp.id}`);
+      }
+      this.camps.set(camp.id, camp);
+    }
+    this._campRng = campRng;
+  }
+
+  /** §75b — the dedicated camp stream (`null` on camp-free layouts). Behaviors
+   *  (75f wander) and the drip drain (75c) draw from it, never `combatRng`. */
+  get campRng(): RNG | null {
+    return this._campRng;
+  }
+
+  /** §75b — resolve a camp instance by id (undefined = no such camp). */
+  campById(id: number): CampInstance | undefined {
+    return this.camps.get(id);
+  }
+
+  /** §75b — every rolled camp instance in ascending id order (the stable
+   *  iteration the drip drain + serialization both walk). */
+  campsList(): readonly CampInstance[] {
+    return Array.from(this.camps.values()).sort((a, b) => a.id - b.id);
+  }
+
+  /**
+   * §75b — mark a camp hostile to a faction (camp-wide, one-way for the
+   * battle's lifetime; camps re-roll fresh next turn). 75e wires the strike
+   * sites; idempotent by Set semantics. Unknown ids throw — a hostility write
+   * without a registered camp is a wiring bug, not a degenerate case.
+   */
+  markCampHostile(campId: number, team: Team): void {
+    const camp = this.camps.get(campId);
+    if (camp === undefined) {
+      throw new Error(`World.markCampHostile: unknown camp instance id ${campId}`);
+    }
+    camp.hostileTo.add(team);
+  }
+
+  /** §75b — is this camp hostile to `team`? (False for unknown ids — read
+   *  sites degrade to the passive default rather than throwing mid-tick.) */
+  campHostileTo(campId: number, team: Team): boolean {
+    return this.camps.get(campId)?.hostileTo.has(team) ?? false;
   }
 
   /** 47f — accumulate battle-earned bits into the serialized tally (rule
@@ -2040,6 +2176,8 @@ export class World {
       xp?: number;
       rosterIndex?: number | null;
       summonedBy?: number | null;
+      /** §75b — camp membership for the 75c drip-spawn path. */
+      campId?: number | null;
       effects?: readonly StatusEffect[];
     },
     instant: boolean,
@@ -2058,6 +2196,7 @@ export class World {
       xp: init.xp ?? 0,
       rosterIndex: init.rosterIndex ?? null,
       summonedBy: init.summonedBy ?? null,
+      campId: init.campId ?? null,
       // K1 — seed transient spawn-time effects (fatigue / encounter buffs).
       ...(init.effects && init.effects.length > 0 ? { effects: init.effects } : {}),
     });
@@ -2170,6 +2309,19 @@ export class World {
       // copy it.
       battleRules: this.battleRules.slice(),
       tallies: { ...this.tallies },
+      // §75b — the camp registry in ascending instance-id order; hostileTo
+      // flattens in fixed team order (the QUEUE_TEAMS convention) so the wire
+      // image is deterministic regardless of aggro order. Deep-copy the
+      // mutable bits (anchor, pending) so post-snapshot drips don't bleed in.
+      camps: this.campsList().map((c) => ({
+        id: c.id,
+        defId: c.defId,
+        anchor: { ...c.anchor },
+        hostileTo: QUEUE_TEAMS.filter((t) => c.hostileTo.has(t)),
+        pending: c.pending.map((p) => ({ ...p })),
+        killedBy: c.killedBy,
+      })),
+      campRng: this._campRng === null ? null : this._campRng.toJSON(),
     };
   }
 
@@ -2219,6 +2371,8 @@ export class World {
         // a resumed summoner's live minions (v28 saves rejected above, so a v29
         // unit always carries the field).
         summonedBy: us.summonedBy,
+        // §75b — restore camp membership (the active-neutral signal).
+        campId: us.campId,
         // K1 — restore status effects; the constructor re-folds `effectiveStats`
         // + `refreshDerived` from them. `us.derived` (also restored) is
         // idempotent under that recompute.
@@ -2302,6 +2456,36 @@ export class World {
     world.installBattleRules(snap.battleRules);
     world.tallies.bits = snap.tallies.bits;
 
+    // §75b — restore the camp registry + the dedicated stream. Every defId
+    // must resolve in the live catalog (the 74b bespoke-rejection rule: leash
+    // radius + rewards derive from the def at read time, so an unresolvable
+    // ref would fail far from here, mid-tick). Deep-copy the mutable bits.
+    for (const c of snap.camps) {
+      if (getCamp(c.defId) === undefined) {
+        throw new Error(`World.fromJSON: unknown camp def "${c.defId}"`);
+      }
+      world.camps.set(c.id, {
+        id: c.id,
+        defId: c.defId,
+        anchor: { ...c.anchor },
+        hostileTo: new Set(c.hostileTo),
+        pending: c.pending.map((p) => ({ ...p })),
+        killedBy: c.killedBy,
+      });
+    }
+    world._campRng = snap.campRng === null ? null : RNG.fromJSON(snap.campRng);
+    // A camp member whose instance isn't in the registry is a corrupt save —
+    // hostility reads would silently degrade to passive (campHostileTo's
+    // unknown-id false), which is exactly the quiet mis-decode the
+    // no-migration contract exists to prevent.
+    for (const u of world.units) {
+      if (u.campId !== null && !world.camps.has(u.campId)) {
+        throw new Error(
+          `World.fromJSON: unit ${u.id} references unknown camp instance ${u.campId}`,
+        );
+      }
+    }
+
     return world;
   }
 }
@@ -2316,6 +2500,7 @@ function snapshotUnit(unit: Unit): UnitSnapshot {
     xp: unit.xp,
     rosterIndex: unit.rosterIndex,
     summonedBy: unit.summonedBy,
+    campId: unit.campId,
     stats: unit.stats,
     derived: unit.derived,
     position: unit.position,

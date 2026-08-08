@@ -956,6 +956,93 @@ describe('A2 round-trip: Run', () => {
   });
 });
 
+describe('§75b — the camp registry round-trip (WorldSnapshot v35)', () => {
+  /** A battle plus a stamped camp: two instances (one with every mutable
+   *  field exercised), a neutral camp-member unit, and the dedicated stream.
+   *  The member's campId is stamped on the WIRE (the 75c spawn path lands
+   *  next commit; the serialization contract is what's under test here). */
+  function campWire(): ReturnType<World['toJSON']> {
+    const { world } = freshBattle(75075);
+    const member = world.spawnUnit(rollUnit('bandit', new RNG(3)), 'neutral', { x: 6, y: 6 });
+    world.installCamps(
+      [
+        {
+          id: 1,
+          defId: 'bandit-squatters',
+          anchor: { x: 6, y: 6 },
+          hostileTo: new Set<Team>(['player']),
+          pending: [{ archetype: 'bandit', level: 2 }],
+          killedBy: null,
+        },
+        {
+          id: 2,
+          defId: 'ghoul-nest',
+          anchor: { x: 1, y: 1 },
+          hostileTo: new Set<Team>(),
+          pending: [],
+          killedBy: 'enemy',
+        },
+      ],
+      new RNG(31),
+    );
+    const wire = JSON.parse(JSON.stringify(world.toJSON())) as ReturnType<World['toJSON']>;
+    const stamped = wire.units.find((u) => u.id === member.id)!;
+    stamped.campId = 1;
+    return wire;
+  }
+
+  it('a camp-free battle serializes camps: [] + campRng: null and round-trips byte-faithful', () => {
+    const { world } = freshBattle(54321);
+    for (let i = 0; i < 20; i++) world.tick();
+    const wire = JSON.parse(JSON.stringify(world.toJSON()));
+    expect(wire.camps).toEqual([]);
+    expect(wire.campRng).toBeNull();
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(JSON.stringify(restored.toJSON())).toBe(JSON.stringify(world.toJSON()));
+  });
+
+  it('registry + member campId + campRng survive the round-trip byte-faithful', () => {
+    const wire = campWire();
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    // Registry state restored (hostility Set, pending drips, kill credit).
+    expect(restored.campHostileTo(1, 'player')).toBe(true);
+    expect(restored.campHostileTo(1, 'enemy')).toBe(false);
+    expect(restored.campById(1)?.pending).toEqual([{ archetype: 'bandit', level: 2 }]);
+    expect(restored.campById(2)?.killedBy).toBe('enemy');
+    expect(restored.campRng).not.toBeNull();
+    // The member unit carries its campId (the active-neutral signal).
+    const member = restored.units.find((u) => u.campId !== null)!;
+    expect(member.team).toBe('neutral');
+    expect(member.campId).toBe(1);
+    // Byte-faithful: re-serializing reproduces the wire exactly.
+    expect(JSON.parse(JSON.stringify(restored.toJSON()))).toEqual(wire);
+  });
+
+  it('rejects an unknown camp defId (the 74b bespoke-rejection rule)', () => {
+    const wire = campWire();
+    wire.camps[0]!.defId = 'no-such-camp';
+    expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
+      /unknown camp def/,
+    );
+  });
+
+  it('rejects a member whose camp instance is not in the registry (corrupt save)', () => {
+    const wire = campWire();
+    wire.camps = wire.camps.filter((c) => c.id !== 1);
+    expect(() => World.fromJSON(wire, new EventBus<GameEvents>())).toThrow(
+      /unknown camp instance/,
+    );
+  });
+
+  it('a pre-§75b (v34) snapshot is rejected outright', () => {
+    const wire = campWire();
+    const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
+    expect(() => World.fromJSON(stale as never, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+});
+
 /** An 8-card roster (> handSize) for the H5 deck round-trip tests. */
 function bigRoster(): { archetype: 'mercenary' | 'archer'; level: number }[] {
   return Array.from({ length: 8 }, (_, i) => ({

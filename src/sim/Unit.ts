@@ -64,6 +64,17 @@ export type Archetype = string;
 export type UnitArchetype = Archetype;
 
 /**
+ * §75b — THE active-neutral predicate (the one gate the ~40-site widening
+ * hangs off, per the §75 kickoff audit). An ACTIVE neutral — a camp member —
+ * wanders, aggros, fights, and earns its killer XP; an inert neutral (wall /
+ * half-cover / rubble) stays a hard blocker and scenery. Structural parameter
+ * so both live `Unit`s and `UnitSnapshot`s qualify.
+ */
+export function isActiveNeutral(unit: { team: Team; campId: number | null }): boolean {
+  return unit.team === 'neutral' && unit.campId !== null;
+}
+
+/**
  * E1 — per-unit base stat block. Replaces the MVP `{maxHp, attackDamage,
  * attackRange, attackCooldownTicks, moveCooldownTicks}` shape. These
  * are the values that grow via level-up (E3); battle-time numbers
@@ -247,6 +258,12 @@ export interface UnitInit {
    *  whose `summon` op spawned it, so the caster's `maxLive` cap counts its own
    *  live minions (re-summoning as they die). Serialized (WorldSnapshot v29). */
   readonly summonedBy?: number | null;
+  /** §75b: defaults to `null`. Set for a CAMP unit — the World camp-registry
+   *  instance id this unit belongs to. Presence is THE active-neutral signal
+   *  (`isActiveNeutral`): a neutral with a campId wanders, fights, and dies as
+   *  a combatant; a neutral without one stays inert scenery (wall / rubble).
+   *  Serialized (WorldSnapshot v35). */
+  readonly campId?: number | null;
 }
 
 export class Unit {
@@ -297,6 +314,15 @@ export class Unit {
    * filters by living units, and a dead caster never proposes another summon).
    */
   readonly summonedBy: number | null;
+  /**
+   * §75b — the camp-registry instance id this unit belongs to, or `null` (every
+   * non-camp unit). Presence is the ACTIVE-NEUTRAL signal: the ~40-site
+   * neutral-is-inert widening (75d/75e) gates on `isActiveNeutral`, which reads
+   * exactly this. Camp-level state (hostility, leash anchor, pending spawns)
+   * lives in the World camp registry keyed by this id — never on the unit.
+   * Snapshotted (v35).
+   */
+  readonly campId: number | null;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
@@ -381,6 +407,7 @@ export class Unit {
     this.xp = init.xp ?? 0;
     this.rosterIndex = init.rosterIndex ?? null;
     this.summonedBy = init.summonedBy ?? null;
+    this.campId = init.campId ?? null;
     // K1 — seed spawn-time effects (fatigue / encounter buffs / rehydrate).
     // `currentHp` was just set to the base maxHp above; no K1 effect modifies
     // `constitution`, so the recompute below leaves maxHp unchanged and that

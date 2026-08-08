@@ -173,7 +173,7 @@ describe('installBattleRules — the install contract', () => {
   });
 });
 
-describe('serialization (WorldSnapshot v34)', () => {
+describe('serialization (the 47f/49e battleRules snapshot fields)', () => {
   it('battle:ended carries a COPY of the tally', () => {
     const { world, bus, player, enemy } = scene([BITS_ON_HIT]);
     const payloads: GameEvents['battle:ended'][] = [];

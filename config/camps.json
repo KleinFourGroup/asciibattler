@@ -1,0 +1,21 @@
+[
+  {
+    "id": "bandit-squatters",
+    "name": "Bandit Squatters",
+    "description": "A pair of bandits holed up off the beaten path.",
+    "leashRadius": 2,
+    "units": [{ "archetype": "bandit", "count": 2 }],
+    "rewards": [{ "table": "bits-small", "trigger": { "chance": 1 } }]
+  },
+  {
+    "id": "ghoul-nest",
+    "name": "Ghoul Nest",
+    "description": "Shambling ghouls and their warlock keeper.",
+    "leashRadius": 3,
+    "units": [
+      { "archetype": "ghoul", "count": 2, "level": 2 },
+      { "archetype": "warlock" }
+    ],
+    "rewards": [{ "table": "bits-large", "trigger": { "chance": 1 } }]
+  }
+]

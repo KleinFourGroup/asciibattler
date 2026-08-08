@@ -1021,10 +1021,42 @@ The four calls from the kickoff proposal, all resolved:
    supersedes the kickoff entry's "scatter is the working mechanism"
    line.
 
-**Parked (pending user, § 77's kickoff): the RNG fork
+**The §77 rider (user-signed 2026-08-08): the RNG fork
 re-architecture** — keyed stream derivation (child seed =
 hash(rootSeed, stable name)) to kill the append-coupling class
-outright. The one-time global remap should ride §77's ALREADY
-scheduled seed-stream break so the re-baseline is paid once, not
-twice. Draw-count sensitivity within a stream (#49) remains either
-way.
+outright. Decided at §77's kickoff; the one-time global remap rides
+§77's ALREADY scheduled seed-stream break so the re-baseline is paid
+once, not twice. Draw-count sensitivity within a stream (#49)
+remains either way. Rider line added to ROADMAP §77's charter.
+
+### 75a — camps config + layout seams (2026-08-08)
+
+Landed to the cut. Notes beyond the cut line:
+
+- Catalog form: bare array (the encounters.json symmetry — the 75i
+  editor copies the encounter editor). TWO smoke defs ship
+  (`bandit-squatters`, `ghoul-nest`) as test/editor content; no
+  shipped layout lists a camp, so presence-gating holds (the
+  campSpawns/camps fields exist on zero committed layouts).
+- The combatant-only gate is FREE: `ArchetypeSchema` validates
+  against `UNIT_DEFS` (the combatant view), so a neutral def id
+  (`wall`) rejects at parse — pinned by test. Camp units are
+  combatant defs on team 'neutral', per the kickoff audit.
+- Both referential asserts live in camps.ts (import direction
+  camps → layouts → (nothing), cycle-free): `assertCampRewardRefs`
+  (the encounters sibling) + `assertLayoutCampRefs` (the layout-side
+  campId resolution). Both args-injected + self-wired.
+- Layout validation: camp spawns reuse the §37g spawn-region
+  physically-occupiable rule (the same `spawnBlocked` set) +
+  uniqueness; `campSpawns` present with an empty/absent `camps` list
+  is a LOUD reject (75c never invents a fallback); duplicate campIds
+  in the weighted list reject (weights on the same id are
+  meaningless). Typo guards: count ≤ 8/entry, leash ≤ 16 — guards,
+  not design knobs.
+- The configHash cost came in BELOW the audit's worst case: the
+  gauntlet fixture's hash assert is INTERNAL consistency (all traces
+  same era), so `tests/gauntlet` stays green; only dev replay of
+  pre-75a recorded traces refuses (the era contract working as
+  designed). No re-baseline needed.
+- +21 tests (camps loader 13 + layouts §75a block 8); typecheck
+  clean.

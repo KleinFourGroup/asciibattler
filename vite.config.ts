@@ -30,6 +30,7 @@ const SAVABLE_CONFIG_FILES = new Set([
   'prices.json', // 50f — the price editor (the port price book)
   'characters.json', // 63f — the character editor (the starting-character catalog)
   'events.json', // 74h — the event editor (the event catalog)
+  'camps.json', // 75a — the camp catalog (its editor lands at 75i)
 ]);
 
 function configSavePlugin(): Plugin {

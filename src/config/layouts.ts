@@ -72,6 +72,20 @@ export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
 
 /**
+ * §75a — a weighted camp reference on a layout: which pre-defined camps
+ * (camps.ts catalog) this layout's camp-spawn tiles may roll, with the
+ * sector-pool weight convention (omitted = 1). Each camp-spawn tile draws
+ * one camp from this list at battle setup (75c). The campId's referential
+ * check lives in camps.ts (`assertLayoutCampRefs` — import direction
+ * camps → layouts, cycle-free).
+ */
+const CampRefSchema = z.object({
+  campId: z.string().min(1),
+  weight: z.number().positive().optional(),
+});
+export type CampRef = z.infer<typeof CampRefSchema>;
+
+/**
  * Default tiles per spawn region — the procedural top/bottom edge bands
  * and the layout editor's starting region template are both this wide.
  * Hand-authored regions are NOT pinned to it: they may hold anywhere
@@ -182,6 +196,16 @@ const LayoutSchema = z
      *  not collide); the block's cells also block spawns (a unit can't stand on
      *  rubble). Spawned via `spawnRubble` in `battleSetup.applyTerrain`. */
     rubble: z.array(RubbleCoordSchema).optional(),
+    /** §75a: optional single-tile camp-spawn points. Each tile drip-spawns a
+     *  camp rolled from the layout's `camps` list at battle setup (75c); camp
+     *  units materialize overlapping the tile and wander off within the leash
+     *  (the portal-drip model, worklog §75 shape-lock #4). A spawn tile must
+     *  be a cell a unit can physically occupy (same rule as spawn regions). */
+    campSpawns: z.array(CoordSchema).optional(),
+    /** §75a: the weighted list of camps this layout's spawn tiles roll from
+     *  (omitted weight = 1, the sector-pool convention). Required non-empty
+     *  when `campSpawns` is present. */
+    camps: z.array(CampRefSchema).optional(),
     /** D7.A: optional impassable tile (Infinity pathfinding cost, LOS-
      *  transparent — LOS never inspects tiles). Hand-authored-only in
      *  D7 like half-cover (no procedural density knob). Validation
@@ -393,6 +417,57 @@ const LayoutSchema = z
         for (let dx = 0; dx < size; dx++) spawnBlocked.add(`${r.x + dx},${r.y + dy}`);
       }
     }
+
+    // §75a — camp-spawn tiles obey the SAME physically-occupiable rule as
+    // spawn-region tiles (a camp unit must be able to materialize there), plus
+    // uniqueness. A campSpawns list with no camps to roll is an authoring
+    // error, not a degenerate case — reject it loudly here rather than letting
+    // 75c invent a fallback. Duplicate campIds in the weighted list are
+    // meaningless (weights on the same id) and rejected too.
+    const seenCampSpawns = new Set<string>();
+    (layout.campSpawns ?? []).forEach((t, idx) => {
+      const k = `${t.x},${t.y}`;
+      if (t.x < 0 || t.x >= layout.gridW || t.y < 0 || t.y >= layout.gridH) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['campSpawns', idx],
+          message: `camp spawn (${t.x},${t.y}) out of bounds for ${layout.gridW}x${layout.gridH}`,
+        });
+      }
+      if (spawnBlocked.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['campSpawns', idx],
+          message: `camp spawn (${t.x},${t.y}) sits on an impassable or occupied cell (wall, half-cover, chasm, deep water, or rubble)`,
+        });
+      }
+      if (seenCampSpawns.has(k)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['campSpawns', idx],
+          message: `duplicate camp spawn (${t.x},${t.y})`,
+        });
+      }
+      seenCampSpawns.add(k);
+    });
+    if ((layout.campSpawns?.length ?? 0) > 0 && (layout.camps?.length ?? 0) === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['camps'],
+        message: 'campSpawns present but the camps list is empty — a spawn tile has nothing to roll',
+      });
+    }
+    const seenCampIds = new Set<string>();
+    (layout.camps ?? []).forEach((ref, idx) => {
+      if (seenCampIds.has(ref.campId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['camps', idx],
+          message: `duplicate camp "${ref.campId}" in the camps list`,
+        });
+      }
+      seenCampIds.add(ref.campId);
+    });
 
     layout.spawns.forEach((region, regionIdx) => {
       region.tiles.forEach((t, tileIdx) => {

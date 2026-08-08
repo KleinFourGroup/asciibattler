@@ -120,9 +120,9 @@ shape-lock #4).
 
 - [x] 75-pre — fuzz-telemetry stale-guard fix ✅ 2026-08-08: the
   team gate replaces the retired sentinel + the neutral no-tally pin
-- [ ] 75a — `config/camps.json` + loader/boot asserts + layout
-  `campSpawns`/weighted `camps` seams + configHash/vite allowlist
-  (trace-era invalidation scheduled)
+- [x] 75a — camps config + layout seams ✅ 2026-08-08: catalog +
+  loader + both boot asserts + the campSpawns/camps superRefine;
+  trace-era cost confirmed dev-replay-only (worklog §75)
 - [ ] 75b — the World camp registry (hostility/anchors/kills/pending
   queues) + `Unit.campId` + presence-gated nullable `campRng` (+
   conditional cloneForRollout re-seed) — **v34→v35**; byte-identity
@@ -190,6 +190,11 @@ rejection sampling only for the fuzzy residue; event placement + the
 source-node stamp (consuming §74's `startingEvents` seam); the
 deliberate seed-stream break + the FULL re-baseline + the cluster-5
 stress test (the 11-row doctrine control set). Second Run bump.
+**Rider (user-signed 2026-08-08, §75 kickoff):** the RNG fork
+re-architecture — keyed stream derivation replacing the positional
+ladder — is CONSIDERED at this phase's kickoff, riding the already
+scheduled stream break so the global remap is paid once (rationale:
+WORKLOG §75 shape-lock).
 
 - **Order:** after ALL content movers so the re-pin happens once, on
   final content.

@@ -18,6 +18,7 @@
  */
 
 import abilities from '../../config/abilities.json';
+import camps from '../../config/camps.json';
 import characters from '../../config/characters.json';
 import daemons from '../../config/daemons.json';
 import deck from '../../config/deck.json';
@@ -57,6 +58,7 @@ import units from '../../config/units.json';
  */
 export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'abilities.json': abilities,
+  'camps.json': camps,
   'characters.json': characters,
   'daemons.json': daemons,
   'deck.json': deck,

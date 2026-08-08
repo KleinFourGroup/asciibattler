@@ -269,6 +269,106 @@ describe('§37g — a spawn region may sit on passable terrain, not impassable/o
   }
 });
 
+describe('§75a — camp spawns + the weighted camps list', () => {
+  // A minimal valid 8×8 layout; callers drop in the camp fields under test.
+  const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({
+    id: 'camp-fixture',
+    name: 'Camp Fixture',
+    description: '§75a fixture — camp-spawn tiles + a weighted camps list.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [],
+    spawns: [
+      { availability: 'player', tiles: [{ x: 0, y: 0 }] },
+      { availability: 'enemy', tiles: [{ x: 7, y: 7 }] },
+    ],
+    ...patch,
+  });
+  const camps = [{ campId: 'bandit-squatters' }];
+
+  it('accepts campSpawns paired with a camps list; weight is optional (= 1)', () => {
+    const parsed = LayoutsSchema.parse([
+      layoutWith({
+        campSpawns: [{ x: 4, y: 4 }],
+        camps: [{ campId: 'bandit-squatters' }, { campId: 'ghoul-nest', weight: 2 }],
+      }),
+    ]);
+    expect(parsed[0]!.campSpawns).toEqual([{ x: 4, y: 4 }]);
+    expect(parsed[0]!.camps?.[0]?.weight).toBeUndefined();
+    expect(parsed[0]!.camps?.[1]?.weight).toBe(2);
+  });
+
+  it('rejects campSpawns with an empty/absent camps list (nothing to roll)', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ campSpawns: [{ x: 4, y: 4 }] })]).success,
+    ).toBe(false);
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ campSpawns: [{ x: 4, y: 4 }], camps: [] })])
+        .success,
+    ).toBe(false);
+  });
+
+  it('a camps list WITHOUT campSpawns is legal (harmless, spawns may come later)', () => {
+    expect(LayoutsSchema.safeParse([layoutWith({ camps })]).success).toBe(true);
+  });
+
+  it('rejects an out-of-bounds or duplicate camp spawn', () => {
+    expect(
+      LayoutsSchema.safeParse([layoutWith({ campSpawns: [{ x: 8, y: 4 }], camps })]).success,
+    ).toBe(false);
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({
+          campSpawns: [
+            { x: 4, y: 4 },
+            { x: 4, y: 4 },
+          ],
+          camps,
+        }),
+      ]).success,
+    ).toBe(false);
+  });
+
+  it('rejects a camp spawn on an occupied/impassable cell (same rule as spawn regions)', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ walls: [{ x: 4, y: 4 }], campSpawns: [{ x: 4, y: 4 }], camps }),
+      ]).success,
+    ).toBe(false);
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({
+          rubble: [{ x: 3, y: 3, size: 2 }],
+          campSpawns: [{ x: 4, y: 4 }],
+          camps,
+        }),
+      ]).success,
+    ).toBe(false);
+    // Passable terrain is fine — the §37g rule carries over.
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ sand: [{ x: 4, y: 4 }], campSpawns: [{ x: 4, y: 4 }], camps }),
+      ]).success,
+    ).toBe(true);
+  });
+
+  it('rejects duplicate campIds in the weighted list and a non-positive weight', () => {
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({
+          camps: [{ campId: 'bandit-squatters' }, { campId: 'bandit-squatters', weight: 2 }],
+        }),
+      ]).success,
+    ).toBe(false);
+    expect(
+      LayoutsSchema.safeParse([
+        layoutWith({ camps: [{ campId: 'bandit-squatters', weight: 0 }] }),
+      ]).success,
+    ).toBe(false);
+  });
+});
+
 describe('§40c — optional per-instance wall/cover HP (destructibility)', () => {
   // A minimal valid layout; callers drop in the wall / half-cover set under test.
   const layoutWith = (patch: Record<string, unknown>): Record<string, unknown> => ({

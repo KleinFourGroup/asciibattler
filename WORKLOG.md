@@ -1149,34 +1149,34 @@ numbers.
 
 **75d — spatial (this step):**
 
-- [ ] movement.ts:114 — vacancy ETA: active neutrals get one (they
+- [x] movement.ts:114 — vacancy ETA: active neutrals get one (they
   move); inert stay `undefined`.
-- [ ] movement.ts:121-126 — THE moving wall: active neutrals go to
+- [x] movement.ts:121-126 — THE moving wall: active neutrals go to
   `otherUnitCells` (soft cost), inert stay `pathBlockers`; the
   `else if` must also let `excludeUnitId` exclude an active neutral
   (today it structurally can't). Docs at :53-55 + :208 update.
-- [ ] blockedAlly.ts:143-156 — `neutralCells()` topology walls:
+- [x] blockedAlly.ts:143-156 — `neutralCells()` topology walls:
   inert-only.
-- [ ] actingPosition.ts:66-69 — firing-cell BFS blockers: inert-only,
+- [x] actingPosition.ts:66-69 — firing-cell BFS blockers: inert-only,
   IN LOCKSTEP with movement.ts:121 (the doc there demands it — the
   GP4/Qb#3 hold-vs-strike freeze class).
-- [ ] SupportMovementBehavior.ts:314-317 — the bespoke duplicate
+- [x] SupportMovementBehavior.ts:314-317 — the bespoke duplicate
   blocker build; :218 `snapToNavigable` via `neutralCells`.
-- [ ] bot/sensors.ts:289-298 `chokeCells` + :397-406 `armyMinCut` —
+- [x] bot/sensors.ts:289-298 `chokeCells` + :397-406 `armyMinCut` —
   active neutrals leave the static arena mask (bodies move; the doc
   says exactly this).
-- [ ] positioning.ts:120-126 `collectHalfCoverPositions` (+
+- [x] positioning.ts:120-126 `collectHalfCoverPositions` (+
   effects/propose.ts:97-106 inherits) — an active neutral must NOT
   grant half-cover (it has `blocksLineOfSight: true` anyway, but
   gate it explicitly; a future non-LOS camp def must not become
   mobile cover).
-- [ ] positioning.ts:105-111 `collectLosBlockers` + :211-215 inline
+- [x] positioning.ts:105-111 `collectLosBlockers` + :211-215 inline
   twin — VERIFY-ONLY expected: camp units spawn `blocksLineOfSight:
   true` like every combatant, so including them is correct; confirm
   the combatant-body LOS path treats them consistently.
-- [ ] World.ts `applyTileStatuses` (`unit.team === 'neutral'`
+- [x] World.ts `applyTileStatuses` (`unit.team === 'neutral'`
   continue) — active neutrals catch fire / get healed.
-- [ ] tests/pathing/metrics.ts:62/216 — NO widening: `MetricTeam`
+- [x] tests/pathing/metrics.ts:62/216 — NO widening: `MetricTeam`
   stays player|enemy (camp motion deliberately unmeasured — spec).
   tests/pathing/fixtures.ts:63 still uses the retired 'environment'
   archetype (pre-existing cosmetic; fix in passing if touched).
@@ -1240,3 +1240,49 @@ BattleScene.ts:142-149 death SFX · ObjectiveController.ts:134-165
 (camp = attack target, not demolish) · HUD.ts:516-528 no-cards
 (signed) · UnitCard.ts:134 · palette.ts:26/34 bloom comments ·
 tests/fuzz/objectiveStrategy.ts:209 mirrors ObjectiveController.
+
+### 75d — the spatial widening (2026-08-08)
+
+Landed to the worksheet, all ten spatial boxes. The shape:
+
+- **`isInertNeutral` (Unit.ts)** — the predicate the sites actually
+  needed: the widening flips "is this a wall" tests from
+  `team === 'neutral'` to inert-only, so the complement helper reads
+  better at every site than a sprinkled `&& !isActiveNeutral(u)`.
+- **The moving-wall fix (`buildMovementContext`)**: active neutrals →
+  `otherUnitCells` (soft cost) + a REAL vacancy ETA; `excludeUnitId`
+  can now exclude one (the else-if restructure the worksheet
+  predicted); still in `occupied` (exclusion softens routing, never a
+  collision check — #113 rule intact). Docs at the context interface
+  + the intent's `excludeUnitId` updated.
+- **The four lockstep blocker siblings** all flipped inert-only:
+  `blockedAlly.neutralCells` (covers `snapToNavigable` for free),
+  `nearestActingCell`'s BFS walls (lockstep comment now names
+  `buildMovementContext` explicitly — the GP4/Qb#3 class), the
+  healer's bespoke `stepToward` build, and the bot's
+  `chokeCells`/`armyMinCut` masks (camp bodies move; choke is the
+  arena's shape — their cells stay body-∞ in the min-cut, consistent
+  with combatants).
+- **Half-cover explicitly gated** (`collectHalfCoverPositions`
+  inert-only; propose.ts inherits): today redundant (every camp
+  archetype is a `blocksLineOfSight: true` combatant), pinned so a
+  future non-LOS camp def can't become mobile cover.
+- **LOS: active neutrals STAY occluders** (the census call, now
+  documented at `collectLosBlockers`): camp bodies shadow cells
+  behind them exactly as rubble; endpoints are never blockers, so a
+  hostile camp member stays shootable. Verified consistent with the
+  inline twin in `engagementDirective`.
+- **`applyTileStatuses`** — inert-only skip: camp members catch
+  fire / get healed like combatants (pinned both ways: wall on fire
+  stays clean).
+- `tests/pathing/metrics.ts` untouched per spec (camp motion
+  deliberately unmeasured); fixtures.ts's retired-'environment'
+  cosmetic left alone (file untouched).
+- One vitest-vs-tsc catch (the AGENTS §pre-commit class): the
+  half-cover pin mutated readonly `blocksLineOfSight` — esbuild
+  accepted it, `tsc` rejected; structural cast in the test.
+- +11 tests (`src/sim/camps.spatial.test.ts`: context 3 + topology
+  4 + cover/LOS 2 + tiles 2; 2474 → 2485 main). 395 fuzz:smoke
+  green — presence-gated byte-identity holds: with zero active
+  neutrals every flipped predicate degenerates to the old
+  `team === 'neutral'` read.

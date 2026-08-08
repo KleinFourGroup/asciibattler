@@ -75,6 +75,17 @@ export function isActiveNeutral(unit: { team: Team; campId: number | null }): bo
 }
 
 /**
+ * §75d — the complement: an INERT neutral (wall / half-cover / rubble) — the
+ * static scenery every spatial query treats as a hard blocker. The widening
+ * sites that used to test `team === 'neutral'` for "is this a wall" test this
+ * instead, so a camp member's body prices as a mobile unit (soft cost), not
+ * terrain.
+ */
+export function isInertNeutral(unit: { team: Team; campId: number | null }): boolean {
+  return unit.team === 'neutral' && unit.campId === null;
+}
+
+/**
  * E1 — per-unit base stat block. Replaces the MVP `{maxHp, attackDamage,
  * attackRange, attackCooldownTicks, moveCooldownTicks}` shape. These
  * are the values that grow via level-up (E3); battle-time numbers

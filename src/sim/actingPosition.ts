@@ -1,5 +1,6 @@
 import type { GridCoord } from '../core/types';
 import type { World } from './World';
+import { isInertNeutral } from './Unit';
 import { hasLineOfSight } from './LineOfSight';
 import { cellKey, cellsOccupiedBy, claimedCells, distanceBetween, occupiedCells } from './occupancy';
 
@@ -58,14 +59,18 @@ export function nearestActingCell(
   // pre-O4 firing-cell search stay byte-identical.
   minRange = 0,
 ): GridCoord | null {
-  // Hard blockers for BFS traversal: neutral-team units (walls + half-cover),
-  // exactly what `findPath` treats as impassable, so reachability matches.
+  // Hard blockers for BFS traversal: INERT neutral units (walls + half-cover),
+  // exactly what `findPath` treats as impassable, so reachability matches —
+  // §75d keeps this IN LOCKSTEP with `buildMovementContext`'s pathBlockers
+  // (the GP4/Qb#3 hold-vs-strike freeze class IS these two disagreeing): an
+  // active neutral (camp member) is soft there, so it must not wall the BFS
+  // here.
   // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39 corner:
   // a corner-only set let the BFS return a multi-tile rubble's body cell — an
   // unroutable goal (the river `no_route` spam in PATHING.md).
   const wallCells = new Set<string>();
   for (const u of world.units) {
-    if (u.team === 'neutral') for (const c of cellsOccupiedBy(u)) wallCells.add(cellKey(c));
+    if (isInertNeutral(u)) for (const c of cellsOccupiedBy(u)) wallCells.add(cellKey(c));
   }
 
   const maxDepth = range + searchSlack;

@@ -5,6 +5,7 @@ import type { GridCoord } from '../core/types';
 import { GRID_SIZE, secondsToTicks } from '../config';
 import {
   Unit,
+  isInertNeutral,
   type Archetype,
   type Team,
   type UnitArchetype,
@@ -1590,7 +1591,11 @@ export class World {
    */
   private applyTileStatuses(): void {
     for (const unit of this.units) {
-      if (unit.team === 'neutral') continue;
+      // §75d — inert scenery skips (a wall never "stands on" fire; its burn
+      // path is the §38d-3 susceptibility opt-in via applyStatus sources), but
+      // an ACTIVE neutral is a body on a tile: it catches fire / gets healed
+      // like any combatant.
+      if (isInertNeutral(unit)) continue;
       if (unit.currentHp <= 0) continue;
       const kind = this.tileGrid.kindAt(unit.position);
       if (kind === 'fire') this.sustainTileStatus(unit, FIRE_STATUS);

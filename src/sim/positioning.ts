@@ -61,7 +61,7 @@
  */
 
 import type { GridCoord } from '../core/types';
-import type { Unit } from './Unit';
+import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { MovementIntent } from './movement';
 // ⚠ NO import from './archetypes' here — this module is evaluated INSIDE the
@@ -101,6 +101,12 @@ export const NEIGHBORS: ReadonlyArray<readonly [number, number]> = [
  * movement but not sight (D6). 43-pre-b — the WHOLE footprint
  * (`cellsOccupiedBy`), not just the §39 corner: corner-only, shots passed
  * through a multi-tile rubble's body.
+ *
+ * §75d — ACTIVE neutrals stay INCLUDED, deliberately (the kickoff census
+ * call): a camp member spawns `blocksLineOfSight: true` like every combatant
+ * def, so its body occludes shots exactly as rubble does. Endpoints are never
+ * blockers (Bresenham excludes them), so a hostile camp member remains
+ * shootable — its body only shadows cells BEHIND it.
  */
 export function collectLosBlockers(world: World): GridCoord[] {
   const blockers: GridCoord[] = [];
@@ -111,16 +117,20 @@ export function collectLosBlockers(world: World): GridCoord[] {
 }
 
 /**
- * E4 — half-cover positions: neutral units whose `blocksLineOfSight` is `false`.
- * Symmetric to `collectLosBlockers` but for the OTHER half of the neutral-team
- * population. A shot that crosses one lands at `LEVELING.halfCoverDamageMult`.
+ * E4 — half-cover positions: INERT neutral units whose `blocksLineOfSight` is
+ * `false`. Symmetric to `collectLosBlockers` but for the OTHER half of the
+ * neutral-team population. A shot that crosses one lands at
+ * `LEVELING.halfCoverDamageMult`. §75d — active neutrals are gated out
+ * EXPLICITLY: every shipped camp archetype is a combatant
+ * (`blocksLineOfSight: true`) so the flag test alone excludes them today, but
+ * a future non-LOS-blocking camp def must not become mobile cover.
  * 43-pre-b — full footprints, same class as `collectLosBlockers` (pure
  * future-proofing: no shipped multi-tile def has `blocksLineOfSight: false`).
  */
 export function collectHalfCoverPositions(world: World): GridCoord[] {
   const out: GridCoord[] = [];
   for (const u of world.units) {
-    if (u.team === 'neutral' && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
+    if (isInertNeutral(u) && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
   }
   return out;
 }

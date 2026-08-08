@@ -1,5 +1,5 @@
 import type { GridCoord } from '../core/types';
-import type { Unit } from './Unit';
+import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import { currentTarget } from './Targeting';
 import { NEIGHBORS, passable } from './positioning';
@@ -137,13 +137,15 @@ export function distanceField(
   return dist;
 }
 
-/** Set of neutral-unit (wall + half-cover) cell keys — the static blockers.
+/** Set of INERT-neutral (wall + half-cover) cell keys — the static blockers.
+ *  §75d — active neutrals (camp members) are mobile bodies, not topology:
+ *  they stay OUT of this set, exactly as combatants do.
  *  43-pre — full footprints (`cellsOccupiedBy`): corner-only let the GP5.2
  *  navigable-snap accept a multi-tile rubble's body cell as a trail anchor. */
 export function neutralCells(world: World): Set<string> {
   const cells = new Set<string>();
   for (const u of world.units) {
-    if (u.team === 'neutral') for (const c of cellsOccupiedBy(u)) cells.add(key(c));
+    if (isInertNeutral(u)) for (const c of cellsOccupiedBy(u)) cells.add(key(c));
   }
   return cells;
 }

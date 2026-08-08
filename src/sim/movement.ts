@@ -1,5 +1,5 @@
 import type { GridCoord } from '../core/types';
-import type { Unit } from './Unit';
+import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { ActionProposal } from './Action';
 import { MoveAction } from './actions/MoveAction';
@@ -50,9 +50,12 @@ import { emitMoveDecision } from './moveDecision';
  * The soft-block graph a unit paths over this tick — built once and shared by
  * every goal attempt in an `advance` call.
  *
- *   - `pathBlockers` — neutral-team units (walls + half-cover): HARD blockers
- *     for `findPath`, exactly as terrain.
- *   - `otherUnitCells` — every OTHER non-neutral unit's cell (keyed), minus an
+ *   - `pathBlockers` — INERT neutral units (walls + half-cover + rubble): HARD
+ *     blockers for `findPath`, exactly as terrain. §75d — an ACTIVE neutral (a
+ *     camp member, `isActiveNeutral`) is a mobile body, NOT a wall: it goes to
+ *     `otherUnitCells` like any combatant.
+ *   - `otherUnitCells` — every OTHER mobile unit's cell (keyed; combatants +
+ *     active neutrals), minus an
  *     optional `excludeUnitId`. These are SOFT cells (high cost via the
  *     CostFn) and also the step-collision set. The pursued target is excluded
  *     (so a path onto its cell always exists, and the in-range abstain stops
@@ -108,17 +111,19 @@ export function buildMovementContext(
   for (const u of world.units) {
     if (u.id === unit.id) continue;
     // §45a — a soft-blocked body mid-move AWAY prices by its vacancy ETA
-    // (derived from its active action, never serialized). Neutrals never move
-    // (hard blockers) and the pursued target is priced free, so only the
-    // soft-cost branch consults it.
-    const eta = u.team === 'neutral' || u.id === excludeUnitId ? undefined : vacancyEtaOf(u, world);
+    // (derived from its active action, never serialized). INERT neutrals never
+    // move (hard blockers) and the pursued target is priced free, so only the
+    // soft-cost branch consults it. §75d — an active neutral moves, so it gets
+    // a real ETA like any combatant.
+    const eta =
+      isInertNeutral(u) || u.id === excludeUnitId ? undefined : vacancyEtaOf(u, world);
     // §35 — route each unit's cell touch through the occupancy footprint seam
     // (`cellsOccupiedBy`: one cell today, the N×N block once §39 fills it), so the
     // sidestep occupancy set + neutral path-blockers cover a multi-tile body for
     // free. Byte-identical at single-cell: each set gets exactly `u.position`.
     for (const c of cellsOccupiedBy(u)) {
       occupied.add(cellKey(c));
-      if (u.team === 'neutral') {
+      if (isInertNeutral(u)) {
         pathBlockers.push(c);
       } else if (u.id !== excludeUnitId) {
         otherUnitCells.add(cellKey(c));
@@ -205,7 +210,9 @@ export interface MovementIntent {
    */
   readonly approachToward: GridCoord;
   /**
-   * Non-neutral unit excluded from the soft-block set (the pursued target).
+   * Mobile unit excluded from the soft-block set (the pursued target —
+   * §75d: an ACTIVE neutral camp target qualifies too; only inert scenery
+   * can't be excluded, it's a hard blocker).
    * Undefined → exclude nothing (tile pursuit / a dash to an empty cell).
    */
   readonly excludeUnitId?: number;

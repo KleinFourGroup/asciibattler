@@ -1,4 +1,4 @@
-import type { Behavior, Unit } from '../Unit';
+import { isInertNeutral, type Behavior, type Unit } from '../Unit';
 import type { World } from '../World';
 import type { GridCoord } from '../../core/types';
 import type { ActionProposal } from '../Action';
@@ -292,7 +292,8 @@ function alliesCentroidCell(unit: Unit, world: World): GridCoord | null {
  * One A* step toward `goalPos`, or a failure kind when no path exists
  * (`'no_route'`) or the next cell is occupied (`'blocked'` — abstain →
  * queue; §42a splits the two so the decision record can tell a queueing
- * healer from a walled-off one). Neutrals hard-block; other units are
+ * healer from a walled-off one). Inert neutrals hard-block; other units
+ * (active neutrals included, §75d) are
  * soft-cost. The occupant of the goal cell is un-blocked so a path to an
  * ally's own cell is reachable — the caller never actually steps onto it
  * (it stops once in heal range / once the ally is healable).
@@ -310,8 +311,10 @@ function stepToward(
     // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
     // corner: a corner-only blocker set routed the healer THROUGH (and onto)
     // a multi-tile rubble's body cells. Combatants are footprint-1 today, so
-    // their branch is byte-identical.
-    if (u.team === 'neutral') {
+    // their branch is byte-identical. §75d — only INERT neutrals hard-block;
+    // an active neutral (camp member) falls through to the soft-cost branch
+    // like any mobile body (same split as `buildMovementContext`).
+    if (isInertNeutral(u)) {
       pathBlockers.push(...cellsOccupiedBy(u));
       continue;
     }

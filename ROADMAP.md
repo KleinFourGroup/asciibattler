@@ -130,9 +130,9 @@ shape-lock #4).
   (all four sites free); the drip drain + random-intersect live;
   landing note at spawnCampUnit — 75f swaps behavior slot 0
   (worklog §75)
-- [ ] 75d — the spatial widening: the movement.ts moving-wall fix
-  (vacancy ETA + `excludeUnitId`) + the four lockstep blocker
-  siblings + half-cover/LOS gating + tile statuses + choke masks
+- [x] 75d — the spatial widening ✅ 2026-08-08: all ten worksheet
+  boxes via the `isInertNeutral` flip; LOS stays occluding (census
+  call); byte-identity holds (worklog §75)
 - [ ] 75e — the combat widening: targeting both directions behind
   hostility + aggro-on-hit + kill credit (kill trigger; DoT
   `sourceUnitId` fallback; drip-aware camp-killed) + the kite path +

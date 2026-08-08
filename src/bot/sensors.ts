@@ -18,7 +18,7 @@
  */
 
 import type { World } from '../sim/World';
-import type { Unit } from '../sim/Unit';
+import { isInertNeutral, type Unit } from '../sim/Unit';
 import type { ObjectiveTeam } from '../sim/objective';
 import type { GridCoord } from '../core/types';
 import type { Archetype } from '../sim/archetypes';
@@ -286,9 +286,11 @@ export function chokeCells(world: World): GridCoord[] {
   const w = world.gridW;
   const h = world.gridH;
   const idx = (x: number, y: number) => y * w + x;
+  // §75d — inert neutrals only: an active neutral (camp member) is a mobile
+  // body, and bodies move; choke is the arena's shape (the doc above).
   const neutralBlocked = new Set<string>();
   for (const u of world.units) {
-    if (u.team !== 'neutral' || u.currentHp <= 0) continue;
+    if (!isInertNeutral(u) || u.currentHp <= 0) continue;
     for (const c of cellsOccupiedBy(u)) neutralBlocked.add(cellKey(c));
   }
   const passable: boolean[] = new Array<boolean>(w * h);
@@ -393,10 +395,11 @@ export function armyMinCut(
   const n = w * h;
   const idx = (x: number, y: number) => y * w + x;
 
-  // Cell classification (mirrors chokeCells' passability mask).
+  // Cell classification (mirrors chokeCells' passability mask — §75d
+  // inert-only, same rationale).
   const neutralBlocked = new Set<string>();
   for (const u of world.units) {
-    if (u.team !== 'neutral' || u.currentHp <= 0) continue;
+    if (!isInertNeutral(u) || u.currentHp <= 0) continue;
     for (const c of cellsOccupiedBy(u)) neutralBlocked.add(cellKey(c));
   }
   const passable = new Array<boolean>(n).fill(false);

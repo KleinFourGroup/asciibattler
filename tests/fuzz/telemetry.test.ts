@@ -52,6 +52,26 @@ describe('TelemetryAccumulator', () => {
     ]);
   });
 
+  it('a neutral-team unit never moves a tally (75-pre defense-in-depth)', () => {
+    // The §75 camp shape: a combatant archetype on team 'neutral'. The harness
+    // filters these at the subscription; this pins the accumulator's own team
+    // gate so a neutral that slipped past the caller still contributes nothing.
+    const acc = new TelemetryAccumulator();
+    acc.registerUnit(1, 'neutral', 'mercenary');
+    acc.recordAttack(1, 12);
+    acc.recordDamageTaken(1, 8);
+    acc.recordHeal(1, 5);
+    acc.recordDeath(1);
+    acc.recordXp(1, 30);
+    const t = acc.finish([], []);
+    expect(t.perArchetype.mercenary.deployments).toBe(0);
+    expect(t.perArchetype.mercenary.damageDealt).toBe(0);
+    expect(t.perArchetype.mercenary.damageTaken).toBe(0);
+    expect(t.perArchetype.mercenary.healingDone).toBe(0);
+    expect(t.perArchetype.mercenary.deaths).toBe(0);
+    expect(t.perArchetype.mercenary.xpEarned).toBe(0);
+  });
+
   it('skips units it never registered (non-fatal)', () => {
     const acc = new TelemetryAccumulator();
     expect(() => acc.recordAttack(999, 5)).not.toThrow();

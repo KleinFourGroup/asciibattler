@@ -485,9 +485,11 @@ export function runOne(
     const unit = currentWorld?.findUnit(unitId);
     if (!unit) return;
     unitTeams.set(unitId, unit.team);
-    // 'environment' neutrals (walls / half-cover) carry no combatant archetype
-    // and never figure in the per-archetype read, so skip them.
-    if (telemetry && unit.archetype !== 'environment') {
+    // Neutrals (walls / half-cover / rubble — and §75 camp units) never figure
+    // in the per-archetype read, so skip them. Team is the durable gate: the
+    // old `archetype !== 'environment'` check tested a sentinel retired in
+    // §38d, so inert neutrals had been slipping into the meta map (75-pre).
+    if (telemetry && unit.team !== 'neutral') {
       telemetry.registerUnit(unitId, unit.team, unit.archetype);
     }
   });

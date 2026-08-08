@@ -128,9 +128,10 @@ export class TelemetryAccumulator {
   private readonly perArchetype = emptyPerArchetype();
   private readonly poolChips: PoolChip[] = [];
 
-  /** Register a combatant at spawn. `'environment'` neutrals are filtered by
-   *  the caller (they carry no `Archetype`), so `archetype` here is always a
-   *  real combatant archetype. */
+  /** Register a combatant at spawn. Neutral-team units are filtered by the
+   *  caller (harness `unit:spawned` gates on `team !== 'neutral'` — 75-pre),
+   *  and every tally below gates on `team === 'player'` as defense-in-depth,
+   *  so a neutral that did slip in could never move a number. */
   registerUnit(unitId: number, team: Team, archetype: Archetype): void {
     this.meta.set(unitId, { team, archetype });
     // Each player spawn IS a deployment (a fielding) — the per-unit denominator.

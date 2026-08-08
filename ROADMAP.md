@@ -118,8 +118,8 @@ until 75j's scheduled content re-pin). Spawn model = PORTAL DRIP
 (per-camp pending queues in the registry; user-signed, worklog §75
 shape-lock #4).
 
-- [ ] 75-pre — fuzz-telemetry stale-guard fix (harness.ts:488 still
-  filters on the retired `'environment'` sentinel; latent, audit-found)
+- [x] 75-pre — fuzz-telemetry stale-guard fix ✅ 2026-08-08: the
+  team gate replaces the retired sentinel + the neutral no-tally pin
 - [ ] 75a — `config/camps.json` + loader/boot asserts + layout
   `campSpawns`/weighted `camps` seams + configHash/vite allowlist
   (trace-era invalidation scheduled)

@@ -1585,3 +1585,60 @@ Diagnosis, confirm-the-deficit style, before any mechanism story:
   spec §Camps bullet annotated, ROADMAP §75 decision points + 75j cut
   + §77 rider each carry the line. The playtest layout edit reverted
   (user-asked); shipped content stays camp-free until 75j.
+
+### 75j — the design round + content drop (2026-08-09)
+
+The catalog/placement proposal went through one veto cycle before
+signing; the content landed as `a299b77`. The decision trail:
+
+- **User veto: no daemon or unit drops from always-on camps** (the
+  proposal's banshee-barrow daemon-cache @0.35 + slaver-pen
+  hostage-rescue @1). The generalized rule, distilled together and
+  **user-signed — THE CONTINUOUS-VALUE RULE**: camps respawn every
+  turn of an encounter (the no-cross-turn-state call), so any camp
+  reward repeats N× per fight; bits/packets survive that (continuous
+  value, self-taxing — farming costs unit-time under the cap while
+  the pool war runs) but discrete-permanent drops (units, daemons,
+  poolHealth) are step-function value with no diminishing cost —
+  "roll quarry, walk out with 3+ healers." **Always-on camps pay
+  continuous value only; discrete-permanent drops belong to one-shot
+  contexts.** The low-odds alternative (~10%) was considered and
+  rejected: unfeelable in playtest AND still farmable in expectation.
+- **The slaver-pen concept is archived, not dead**: the first
+  event-encounter camp (event → start-encounter → an encounter whose
+  fit-filter names a dedicated camp layout; fires once via the §74
+  no-repeat default, so hostage-rescue @1 is safe there). Open wiring
+  question for whoever builds it: can an encounter fit-filter reach a
+  layout deliberately absent from every sector pool? Verify then.
+- **The level fork (per-act variants vs a level budget) is DEFERRED
+  to §81 with data**: v1 camps are act-agnostic (both sectors pool
+  the same layouts; the weighted list is per-layout), so L1–2 camps
+  will read trivial in The Deep End. Measured by §81's board + camp
+  probe before any mechanism signs — my recorded lean: a camp-side
+  level budget reusing the wave-resolver vocabulary over catalog
+  variant pairs, IF the deficit is real.
+- The shipped catalog: bandit-squatters + ghoul-nest unchanged ·
+  toll-post (bandit L2 + 2× archer — the ranged camp; ignoring the
+  pocket stops being free) · frost-coven (2× ice_mage L2 + shaman) ·
+  banshee-barrow (banshee L2 + 2× ghoul L2; bits-large @1 +
+  bits-small @1 — the richest continuous payer, no new tables).
+- Placements (ASCII-rendered before picking; all schema-validated):
+  labyrinth (13,13)+(1,1) the playtested corners, list squatters w2 /
+  nest / toll-post · fetidPond (13,1) the bottom-right floor pocket —
+  mud anchors were rejected (idle wander in mud = slow self-poison) ·
+  icebergs (2,8) ON the left iceberg (an ice cell) · rubbleQuarry
+  (9,4) the pit slot between heaps (rubble auto-break lets the camp
+  dig out). Conservative 4-of-11 so camps read as discoveries.
+- **`enemyPullChance` ships at the 0.15 trial** for the feel pass.
+  Fallout: the dormant-path pin now INJECTS 0 (was asserting the
+  shipped default), and the same-day class audit (twice-bitten rule)
+  converted every hardcoded knob restore in camps.economy.test.ts to
+  captured originals — under `isolate:false` a hardcoded restore
+  leaks the wrong knob into later tests.
+- Both files were written through the REAL formatters by a scratch
+  tsx script (schema + boot asserts pre-validated; deleted after) —
+  the verbatim pins held by construction, zero hand-edited JSON.
+- 2528 main + 395 fuzz:smoke green on the live content. **Still open
+  in 75j: the user's native feel pass (the three verdicts) → THEN the
+  board re-pin on final knob values** (ordering deliberate — verdicts
+  first so the box board bakes the signed numbers once).

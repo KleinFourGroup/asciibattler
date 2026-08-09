@@ -43,6 +43,8 @@ Right now, battles still tend to be rather one dimensional.  Aside from stalling
 * Credit for killing a camp goes to the faction who kills the last unit of the camp.
 * Each pre-defined camp has a reward table, just like an encounter.
 * The reward table is rolled if the player successfully kills the camp, and the rewards are granted upon turn completion.
+
+  * ⭐ THE CONTINUOUS-VALUE RULE (user-signed 2026-08-09, worklog §75j): because camps respawn every turn of an encounter, always-on camp rewards carry CONTINUOUS value only (bits / packets). Discrete-permanent drops — units, daemons, poolHealth — are per-turn-farmable step functions and belong to one-shot contexts (event-encounter camps, e.g. the archived slaver-pen concept).
 * Camps do not count toward health pool calculations.
 * Hostile camps do not block turn end; they must be killed before the enemy.
 

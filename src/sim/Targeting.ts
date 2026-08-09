@@ -1,4 +1,4 @@
-import type { Unit } from './Unit';
+import { isInertNeutral, type Unit } from './Unit';
 import type { World } from './World';
 import type { GridCoord } from '../core/types';
 import type { ObjectiveTarget } from './objective';
@@ -258,6 +258,38 @@ function applyRubbleAutoTarget(unit: Unit, world: World): void {
   // else: nothing reachable, nothing chippable → leave the sticky pick (idle).
 }
 
+/**
+ * §75k — the ordered-target AUTO-BREAK fallback: the §40b overlay's sibling for
+ * the ORDERED pursue paths (engage step 3 + focus, both target kinds). Those
+ * branches re-commit the ordered mark every tick and never reach the atWill-only
+ * overlay — so an ordered mark walled off behind auto-target rubble froze the
+ * unit (empty path → no proposal; caught live on rubbleQuarry's 75j enclosure,
+ * worklog §75j-close — the §75j2 pull and the 75h click-to-engage share the
+ * branch). When the committed mark is a MOBILE combat target (enemy or active
+ * neutral) the unit cannot reach, redirect onto the nearest approachable
+ * auto-target rubble — chip the gate; the per-tick re-commit resumes the order
+ * the moment the breach opens (and once the last rubble dies the cheap gate
+ * makes this a no-op again). Two deliberate omissions vs the overlay:
+ *   - NO reachable-hostile re-rank — engage's steps 1–2 already own preemption,
+ *     and focus preempts nothing by design (an order is an order);
+ *   - an INERT committed neutral (a focus on rubble / a destructible wall) is
+ *     left alone — movement bestEffort-approaches those already, and a re-rank
+ *     would yank a deliberate far-rubble focus onto a nearer one.
+ * Same cost shape as the overlay: the cheap presence gate every tick, the
+ * findPath probes only for an ordered unit that's actually walled off.
+ */
+function applyOrderedRubbleFallback(unit: Unit, world: World): void {
+  if (unit.targetId === null || !worldHasAutoTargetRubble(world)) return;
+  const committed = world.findUnit(unit.targetId);
+  if (committed === undefined || isInertNeutral(committed)) return;
+  if (canReach(unit, world, committed)) return;
+  const rubble = nearestApproachableRubble(unit, world);
+  if (rubble !== null) {
+    unit.targetId = rubble.id;
+    unit.outOfLosTicks = 0;
+  }
+}
+
 /** §40b — does the board hold a living auto-target rubble? The cheap gate every
  *  tick pays before any reachability probe; false on every shipped map + fuzz
  *  layout (→ the overlay is a no-op, byte-identical). */
@@ -385,6 +417,7 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
       objEnemy.currentHp > 0;
     unit.targetId = valid ? objEnemy.id : null;
     unit.outOfLosTicks = 0;
+    applyOrderedRubbleFallback(unit, world); // §75k — see the fallback's doc
     return;
   }
   if (target.kind === 'neutral') {
@@ -397,6 +430,9 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
     // objective to atWill the same tick).
     unit.targetId = validNeutralObjectiveTarget(world, target.unitId);
     unit.outOfLosTicks = 0;
+    // §75k — a focused CAMP member behind rubble gets the auto-break too (the
+    // inert guard inside keeps a deliberate rubble/wall focus un-re-ranked).
+    applyOrderedRubbleFallback(unit, world);
     return;
   }
   switch (focusTileDirective(unit, world, target.cell)) {
@@ -491,6 +527,9 @@ function updateObjectiveTarget(unit: Unit, world: World, target: ObjectiveTarget
     unit.targetId = null;
   }
   unit.outOfLosTicks = 0;
+  // §75k — an unreachable ordered mark falls back to chipping the gate rubble
+  // (self-no-ops for the tile branch: targetId is null).
+  applyOrderedRubbleFallback(unit, world);
 }
 
 /**

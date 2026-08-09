@@ -37,7 +37,7 @@ const ANCHOR: GridCoord = { x: 5, y: 5 };
 
 function campWorld(seed = 1): World {
   const world = new World(new EventBus<GameEvents>(), new RNG(seed));
-  spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+  spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
   return world;
 }
 

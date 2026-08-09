@@ -155,7 +155,9 @@ export function applyTerrain(
   spawnLayoutNeutrals(world, terrain);
   // §75c — roll + register the layout's camps (a free no-op on the camp-free
   // common case; the presence gate rides inside spawnCamps + installCamps).
-  spawnCamps(world, terrain.campSpawns, terrain.camps, encounter.terrainSeed);
+  // worldSeed (per-turn, battleRng-rolled) feeds ONLY the pull roll — camp
+  // IDENTITY stays on the per-encounter terrainSeed (the signed 75j verdict).
+  spawnCamps(world, terrain.campSpawns, terrain.camps, encounter.terrainSeed, encounter.worldSeed);
   return terrain.spawnRegions;
 }
 
@@ -192,6 +194,7 @@ export function spawnCamps(
   campSpawns: readonly GridCoord[],
   campRefs: readonly CampRef[],
   terrainSeed: number,
+  worldSeed: number,
 ): void {
   if (campSpawns.length === 0) return;
   if (campRefs.length === 0) {
@@ -238,34 +241,57 @@ export function spawnCamps(
   // tick's draws used to sit, one tick earlier.
   world.primeCampSpawns();
 
-  // §75g — the enemy DELIBERATE-PULL seam (spec: "the seam ships now"),
-  // DORMANT at the shipped 0; enabling it is a §75j feel verdict. When live:
-  // one roll on a LAZY third fork — taken off the terrainSeed parent only
-  // inside this branch, so the dormant path appends nothing to the stream
-  // ladder (the shape-lock's no-append clause; camp-free layouts never reach
-  // here at all). A pass picks one camp (uniform; singleton draw-free,
-  // #111), pre-marks it hostile to the enemy faction (the deliberate
-  // aggression — members engage arriving enemies as they drip), and points
-  // the enemy TEAM objective at its anchor via the command channel (drained
-  // at tick 1; serialized, so a mid-battle save resumes the detour). The
-  // whole-team detour is exactly why this needs the feel verdict.
-  // `clearResolvedObjectives` reverts the objective once that camp is
-  // cleared (the anchor-tile exception to the J1 persist rule).
+  // §75g/§75j2 — the enemy DELIBERATE PULL, re-authored to the user's design
+  // intent (2026-08-09): the FIRST CONSUMER of the enemy objective system.
+  // A pass picks one camp (uniform; singleton draw-free, #111) and points the
+  // enemy TEAM objective at that camp's PRIMED member — an ordered engage on
+  // a passive neutral, the exact rails the player's click-to-engage pinned
+  // (ordered-first-blow in `currentTarget`; dead-target auto-revert). The
+  // camp is NOT pre-marked hostile: hostility keeps its single source
+  // (damage aggro at the `dealDamage` chokepoint), so a pulled camp reads
+  // passive until the enemy actually strikes it, then aggros camp-wide and
+  // the fight cascades naturally. The command drains at tick 1; serialized,
+  // so a mid-battle save resumes the detour.
+  //
+  // Stream: the roll rides a LAZY RNG seeded from mix(terrainSeed, worldSeed)
+  // — per-TURN, restoring the shape-lock's signed "per-turn fork" (the
+  // original terrainSeed-parent fork replayed identically every turn of an
+  // encounter — the §75i-post replay class, caught live on fetidPond). Taken
+  // only inside this branch, so the dormant path appends nothing to any
+  // ladder; no other stream uses the mixed seed, so no burn is needed. Camp
+  // IDENTITY deliberately stays on the terrainSeed parent above (the signed
+  // per-encounter verdict).
+  //
+  // A pulled camp whose primed member is missing (blocked anchor at setup —
+  // the 75h2 silent-skip edge) skips the pull: there is no unit to order
+  // against, and a tile order on a passive camp would just loiter.
   if (SIM.enemyPullChance > 0) {
-    const pullRng = parent.fork();
+    const pullRng = new RNG(mixSeeds(terrainSeed, worldSeed));
     if (pullRng.next() < SIM.enemyPullChance) {
       const camp =
         instances.length === 1
           ? instances[0]!
           : instances[Math.floor(pullRng.next() * instances.length)]!;
-      world.markCampHostile(camp.id, 'enemy');
-      world.enqueueCommand({
-        kind: 'setObjective',
-        team: 'enemy',
-        objective: { mode: 'engage', target: { kind: 'tile', cell: { ...camp.anchor } } },
-      });
+      const mark = world.units.find((u) => u.campId === camp.id && u.currentHp > 0);
+      if (mark !== undefined) {
+        world.enqueueCommand({
+          kind: 'setObjective',
+          team: 'enemy',
+          objective: { mode: 'engage', target: { kind: 'neutral', unitId: mark.id } },
+        });
+      }
     }
   }
+}
+
+/**
+ * §75j2 — the pull's per-turn seed: a u32 mix of the per-encounter
+ * terrainSeed and the per-turn worldSeed. A LOCAL one-off (the §77 keyed
+ * stream re-architecture generalizes this shape); constants are the usual
+ * avalanche primes. No other stream is seeded from this value.
+ */
+function mixSeeds(a: number, b: number): number {
+  return (Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b, 0xc2b2ae35)) >>> 0;
 }
 
 /**

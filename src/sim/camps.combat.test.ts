@@ -43,7 +43,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord, archetype = 'mercenar
  *  neutral-only board is silent — combat never began), park them, and shed
  *  the spawn lockouts. Call BEFORE spawning any faction units. */
 function dripBoth(world: World, at1: GridCoord, at2: GridCoord): [Unit, Unit] {
-  spawnCamps(world, [{ x: 10, y: 10 }], [{ campId: 'bandit-squatters' }], 42);
+  spawnCamps(world, [{ x: 10, y: 10 }], [{ campId: 'bandit-squatters' }], 42, 1);
   world.tick();
   const m1 = world.units.find((u) => u.campId !== null)!;
   m1.position = at1;
@@ -142,7 +142,7 @@ describe('§75e — aggro + XP ride the damage chokepoint', () => {
 describe('§75e — the drip-aware camp-kill stamp', () => {
   it('killedBy stays null while members are pending or alive; the wiping blow stamps the faction', () => {
     const { world } = freshWorld();
-    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42);
+    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42, 1);
     world.tick(); // member #1 drips; #2 still pending
     const m1 = world.units.find((u) => u.campId !== null)!;
     const player = spawnAt(world, 'player', { x: 1, y: 1 });

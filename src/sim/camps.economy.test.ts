@@ -59,7 +59,7 @@ type Ended = GameEvents['battle:ended'];
 describe('§75g — the campKills payload', () => {
   it('a wiped camp rides battle:ended with its killer faction', () => {
     const { world, bus } = freshWorld();
-    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
     const [m1, m2] = dripBoth(world);
     const player = spawnAt(world, 'player', { x: 1, y: 1 });
     const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
@@ -93,7 +93,7 @@ describe('§75g — the campKills payload', () => {
     mutable.blockCampTurnEnd = false;
     try {
       const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
       const [m1] = dripBoth(world);
       const player = spawnAt(world, 'player', { x: 1, y: 1 });
       const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
@@ -117,7 +117,7 @@ describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', (
     mutable.blockCampTurnEnd = true;
     try {
       const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
       const [m1, m2] = dripBoth(world);
       const player = spawnAt(world, 'player', { x: 1, y: 1 });
       const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
@@ -146,7 +146,7 @@ describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', (
     mutable.blockCampTurnEnd = true;
     try {
       const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
       dripBoth(world);
       const player = spawnAt(world, 'player', { x: 1, y: 1 });
       const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
@@ -174,7 +174,7 @@ describe('§75g — the enemyPullChance seam', () => {
     mutable.enemyPullChance = 0;
     try {
       const { world } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
       world.tick();
       expect(world.campHostileTo(1, 'enemy')).toBe(false);
       expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
@@ -183,40 +183,77 @@ describe('§75g — the enemyPullChance seam', () => {
     }
   });
 
-  it('live at 1: the camp is pre-marked hostile to enemy and the enemy team is ordered to its anchor', () => {
+  // §75j2 — the pull re-authored to the user's design intent: an ordered
+  // engage on the pulled camp's PRIMED member (the first consumer of the
+  // enemy objective system), with NO pre-marked hostility — damage stays
+  // hostility's single source, so a pulled camp reads passive until struck.
+  it('live at 1: the enemy team is ordered onto the pulled camp\'s primed member — no pre-hostility', () => {
     const mutable = SIM as { enemyPullChance: number };
     const original = SIM.enemyPullChance;
     mutable.enemyPullChance = 1;
     try {
       const { world } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
-      expect(world.campHostileTo(1, 'enemy')).toBe(true);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+      const primed = world.units.find((u) => u.campId === 1 && u.currentHp > 0);
+      expect(primed).toBeDefined();
+      expect(world.campHostileTo(1, 'enemy')).toBe(false);
       expect(world.campHostileTo(1, 'player')).toBe(false);
       world.tick(); // the command drains at tick 1
       expect(world.objectiveFor('enemy')).toEqual({
         mode: 'engage',
-        target: { kind: 'tile', cell: ANCHOR },
+        target: { kind: 'neutral', unitId: primed!.id },
       });
     } finally {
       mutable.enemyPullChance = original;
     }
   });
 
-  it('the anchor-tile order auto-reverts once the camp is cleared', () => {
+  it('re-rolls per TURN: the same encounter seed disagrees across world seeds (§75j2)', () => {
+    // The fetidPond-caught replay defect's regression pin: under the old
+    // terrainSeed-parent fork every worldSeed agreed (0 disagreements in an
+    // 800-encounter probe). Scan for a disagreeing pair — self-healing (the
+    // openEventAtSeedScan shape), no pinned magic seed.
+    const mutable = SIM as { enemyPullChance: number };
+    const original = SIM.enemyPullChance;
+    mutable.enemyPullChance = 0.25;
+    try {
+      const pulled = (worldSeed: number): boolean => {
+        const { world } = freshWorld();
+        spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, worldSeed);
+        world.tick();
+        return world.objectiveFor('enemy').mode === 'engage';
+      };
+      const first = pulled(1);
+      let w = 2;
+      while (w < 200 && pulled(w) === first) w++;
+      expect(w).toBeLessThan(200);
+    } finally {
+      mutable.enemyPullChance = original;
+    }
+  });
+
+  it('the order auto-reverts once the ordered member dies (the standard dead-target rule)', () => {
     const mutable = SIM as { enemyPullChance: number };
     const original = SIM.enemyPullChance;
     mutable.enemyPullChance = 1;
     try {
       const { world } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+      // §75j2 — the order targets the PRIMED member (dripBoth's m1), so the
+      // STANDARD dead-target revert covers it: killing the ordered unit
+      // reverts even with m2 still alive (no camp-cleared wait — that was
+      // the retired anchor-tile order's rule).
       const [m1, m2] = dripBoth(world);
       const player = spawnAt(world, 'player', { x: 1, y: 1 });
       spawnAt(world, 'enemy', { x: 10, y: 10 });
       world.tick();
-      expect(world.objectiveFor('enemy').mode).toBe('engage');
+      expect(world.objectiveFor('enemy')).toEqual({
+        mode: 'engage',
+        target: { kind: 'neutral', unitId: m1.id },
+      });
       kill(world, player, m1);
-      kill(world, player, m2);
-      world.tick(); // clearResolvedObjectives sees the cleared camp
+      world.tick(); // clearResolvedObjectives sees the dead ordered target
+      expect(m2.currentHp).toBeGreaterThan(0);
       expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
     } finally {
       mutable.enemyPullChance = original;

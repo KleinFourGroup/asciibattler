@@ -89,7 +89,7 @@ describe('§75b — hostility reads/writes', () => {
 describe('§75c — spawnCamps (the setup-time roll)', () => {
   it('registers one instance per spawn tile: ids 1..n, anchors, count-expanded pending', () => {
     const world = freshWorld();
-    spawnCamps(world, [{ x: 3, y: 3 }, { x: 8, y: 8 }], [{ campId: 'ghoul-nest' }], 42);
+    spawnCamps(world, [{ x: 3, y: 3 }, { x: 8, y: 8 }], [{ campId: 'ghoul-nest' }], 42, 1);
     expect(world.campRng).not.toBeNull();
     const camps = world.campsList();
     expect(camps.map((c) => c.id)).toEqual([1, 2]);
@@ -120,20 +120,22 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
     const tiles = [{ x: 2, y: 2 }, { x: 9, y: 9 }, { x: 5, y: 9 }];
     const a = freshWorld();
     const b = freshWorld();
-    spawnCamps(a, tiles, refs, 1234);
-    spawnCamps(b, tiles, refs, 1234);
+    // Different worldSeeds on purpose: camp IDENTITY rides terrainSeed only
+    // (the signed 75j per-encounter verdict) — worldSeed feeds only the pull.
+    spawnCamps(a, tiles, refs, 1234, 7);
+    spawnCamps(b, tiles, refs, 1234, 8);
     expect(a.campsList().map((c) => c.defId)).toEqual(b.campsList().map((c) => c.defId));
   });
 
   it('empty campSpawns is a free no-op; spawns without a camps list throw loud', () => {
     const world = freshWorld();
-    spawnCamps(world, [], [], 42);
+    spawnCamps(world, [], [], 42, 1);
     expect(world.campRng).toBeNull();
-    expect(() => spawnCamps(freshWorld(), [{ x: 3, y: 3 }], [], 42)).toThrow(
+    expect(() => spawnCamps(freshWorld(), [{ x: 3, y: 3 }], [], 42, 1)).toThrow(
       /camps list is empty/,
     );
     expect(() =>
-      spawnCamps(freshWorld(), [{ x: 3, y: 3 }], [{ campId: 'no-such-camp' }], 42),
+      spawnCamps(freshWorld(), [{ x: 3, y: 3 }], [{ campId: 'no-such-camp' }], 42, 1),
     ).toThrow(/unknown camp/);
   });
 });
@@ -142,7 +144,7 @@ describe('§75c — the portal-drip drain', () => {
   const dripWorld = (): World => {
     const world = freshWorld();
     // bandit-squatters: 2×1×1 bandits — the pure single-tile drip case.
-    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42);
+    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42, 1);
     return world;
   };
 
@@ -200,7 +202,7 @@ describe('§75c — the portal-drip drain', () => {
   it('a blocked anchor (wall) spawns nothing and keeps pending intact', () => {
     const world = freshWorld();
     spawnWall(world, { x: 5, y: 5 });
-    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42);
+    spawnCamps(world, [{ x: 5, y: 5 }], [{ campId: 'bandit-squatters' }], 42, 1);
     for (let i = 0; i < 5; i++) world.tick();
     expect(world.units.filter((u) => u.campId !== null).length).toBe(0);
     expect(world.campById(1)!.pending.length).toBe(2);

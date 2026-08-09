@@ -42,7 +42,7 @@ function spawnAt(world: World, team: Team, pos: GridCoord): Unit {
  *  spawn path), then park it at `pos`. bandit-squatters drips two members;
  *  one tick materializes exactly the head-of-queue unit. */
 function campMemberAt(world: World, pos: GridCoord): Unit {
-  spawnCamps(world, [{ x: 10, y: 10 }], [{ campId: 'bandit-squatters' }], 42);
+  spawnCamps(world, [{ x: 10, y: 10 }], [{ campId: 'bandit-squatters' }], 42, 1);
   world.tick();
   const u = world.units.find((x) => x.campId !== null);
   if (!u) throw new Error('camp drip failed to materialize a member');

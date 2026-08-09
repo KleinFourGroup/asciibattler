@@ -131,14 +131,19 @@
  *     isn't fine-grained enough control to disengage a half-fought camp, so
  *     the last enemy dying mid-camp-fight felt bad, not merciful. Off =
  *     camps never extend a battle (the §75e-pinned behavior, test-injected).
- *   enemyPullChance — §75g: per turn, on a camp-bearing layout, the chance
- *     the enemy team opens with a DELIBERATE camp pull — one camp is
- *     pre-marked hostile to the enemy faction and the enemy TEAM objective
- *     is pointed at its anchor (engage{tile}), detouring the whole team.
- *     Rolls on a LAZY fork taken only when the knob is >0 AND the layout has
- *     camps — the dormant path leaves the stream ladder untouched (the
- *     shape-lock's no-append clause). A probability in [0,1]. **Shipped
- *     0.25 — the 75j verdicts: the 0.15 trial read "works, but too rare".**
+ *   enemyPullChance — §75g/§75j2: per turn, on a camp-bearing layout, the
+ *     chance the enemy team opens with a DELIBERATE camp pull — the enemy
+ *     TEAM objective is pointed at one camp's PRIMED member
+ *     (engage{neutral}; the first consumer of the enemy objective system,
+ *     the user's design intent), detouring the whole team. The camp is NOT
+ *     pre-marked hostile — damage stays hostility's single source, so a
+ *     pulled camp reads passive until the enemy actually strikes it. Rolls
+ *     per TURN on a lazy RNG seeded from mix(terrainSeed, worldSeed), taken
+ *     only when the knob is >0 AND the layout has camps — the dormant path
+ *     leaves every stream untouched (the shape-lock's no-append clause; the
+ *     original terrainSeed-only fork replayed identically every turn of an
+ *     encounter — the fetidPond-caught defect). A probability in [0,1].
+ *     **Shipped 0.25 — the 75j verdicts: 0.15 read "works, but too rare".**
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the
  *     destination claim releases). Locked at 0.5 — the unit logically occupies

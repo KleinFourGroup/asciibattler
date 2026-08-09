@@ -6,7 +6,8 @@
  * the confusion-pool design call (chaos is chaos), the drip-aware `killedBy`
  * stamp, the ordered-first-blow guarantee in `currentTarget`, the kite path,
  * AoE targetability, and the two checkBattleEnd invariants (neutral-only
- * boards stay silent; camps never extend a battle).
+ * boards stay silent; with blockCampTurnEnd OFF — injected since the 75j
+ * verdict shipped it ON — camps never extend a battle).
  */
 
 import { describe, it, expect } from 'vitest';
@@ -19,6 +20,7 @@ import { findTarget, updateTarget, currentTarget } from './Targeting';
 import { engagementDirective } from './positioning';
 import { isCombatTargetable } from './effects/targeting';
 import { statusDef } from '../config/statuses';
+import { SIM } from '../config/sim';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import type { GameEvents } from '../core/events';
@@ -190,15 +192,24 @@ describe('§75h (browser-caught) — the ordered camp objective SURVIVES the rev
 });
 
 describe('§75e — checkBattleEnd invariants', () => {
-  it('camps never extend a battle: last enemy down ends it with camp members still alive', () => {
-    const { world, bus } = freshWorld();
-    dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
-    spawnAt(world, 'player', { x: 1, y: 1 });
-    world.markCampHostile(1, 'player');
-    const ended: string[] = [];
-    bus.on('battle:ended', (e) => ended.push(e.winner));
-    world.tick(); // player alive, no enemy → the battle resolves NOW
-    expect(ended).toEqual(['player']);
+  it('with blockCampTurnEnd OFF, camps never extend a battle: last enemy down ends it with camp members alive', () => {
+    // OFF is INJECTED since the 75j verdict shipped the knob ON — this stays
+    // the §75e pin of the knob's off-path, not of the shipped default.
+    const mutable = SIM as { blockCampTurnEnd: boolean };
+    const original = SIM.blockCampTurnEnd;
+    mutable.blockCampTurnEnd = false;
+    try {
+      const { world, bus } = freshWorld();
+      dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
+      spawnAt(world, 'player', { x: 1, y: 1 });
+      world.markCampHostile(1, 'player');
+      const ended: string[] = [];
+      bus.on('battle:ended', (e) => ended.push(e.winner));
+      world.tick(); // player alive, no enemy → the battle resolves NOW
+      expect(ended).toEqual(['player']);
+    } finally {
+      mutable.blockCampTurnEnd = original;
+    }
   });
 
   it('a neutral-only board stays silent (combat never began)', () => {

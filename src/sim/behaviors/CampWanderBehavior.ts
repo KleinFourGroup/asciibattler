@@ -29,9 +29,12 @@ import { SIM } from '../../config/sim';
  *     'neutral' would include walls — so camp content ships charger-only.
  *
  *   PASSIVE — the leash-filtered wander. Per eligible poll (free, move off
- *     cooldown, not status-rooted) roll `SIM.campWanderChance` on the
- *     presence-gated `campRng` and take one uniform step among the free
- *     in-leash neighbor cells. Standing ON the camp's anchor tile skips the
+ *     cooldown, not status-rooted) roll `SIM.campWanderChancePerTick` (the
+ *     loader-derived per-tick threshold of the per-second author knob — a
+ *     failed roll sets no cooldown, so eligible polls repeat every tick;
+ *     the 75j verdicts caught the tick-rate coupling) on the presence-gated
+ *     `campRng` and take one uniform step among the free in-leash neighbor
+ *     cells. Standing ON the camp's anchor tile skips the
  *     chance gate entirely — vacating the drip portal ASAP is what keeps the
  *     pending queue flowing (the 75c "drip cadence IS the tile vacating"
  *     fact; the vacate-≤N-ticks exit invariant pins it). A member displaced
@@ -77,7 +80,7 @@ export class CampWanderBehavior implements Behavior {
     const onAnchor = cellsOccupiedBy(unit).some(
       (c) => c.x === camp.anchor.x && c.y === camp.anchor.y,
     );
-    if (!onAnchor && rng.next() >= SIM.campWanderChance) return null;
+    if (!onAnchor && rng.next() >= SIM.campWanderChancePerTick) return null;
 
     const leash = getCamp(camp.defId)?.leashRadius ?? 0;
     const candidates = wanderCandidates(unit, world, camp.anchor, leash);

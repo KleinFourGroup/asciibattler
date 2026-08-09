@@ -110,28 +110,35 @@
  *     the shove minimal-disruption + bounded; if nothing is free within it the
  *     shove no-ops (returns false) rather than teleporting across the board. A
  *     distance, not a timing — passed through verbatim.
- *   campWanderChance — §75f: per eligible poll (free unit, move off
- *     cooldown), the chance a PASSIVE camp member takes one wander step
- *     inside its leash. Rolls on the presence-gated `campRng` — the
- *     user-signed exception to the no-RNG-in-movement doctrine (camp idle
- *     wander is scenery flavor, not faction pathing; the kickoff cut names
- *     the stream). A probability in [0,1]: 0 = camps stand still (vacating
- *     the drip anchor stays unconditional); 1 = a step every move window.
- *     Feel-tuned at 75j.
- *   blockCampTurnEnd — §75g (default OFF; a §75j feel verdict): when on, a
- *     decisive win/loss does NOT land while the would-be winner still has an
- *     UNCLEARED camp hostile to it — the battle runs on until the camp fight
- *     is finished (the turn cap still resolves a stalemate as a draw, so
- *     battles stay bounded). Off = camps never extend a battle (the shipped
- *     default, pinned by test).
- *   enemyPullChance — §75g (default 0 = DORMANT; a §75j feel verdict): per
- *     turn, on a camp-bearing layout, the chance the enemy team opens with a
- *     DELIBERATE camp pull — one camp is pre-marked hostile to the enemy
- *     faction and the enemy TEAM objective is pointed at its anchor
- *     (engage{tile}), detouring the whole team (why this needs the verdict).
+ *   campWanderChancePerSecond — §75f (re-authored per-second at the 75j
+ *     verdicts): the chance PER SECOND that a PASSIVE camp member takes one
+ *     wander step inside its leash. The behavior polls once per tick while
+ *     the unit is eligible (free, move off cooldown), so the loader derives
+ *     `campWanderChancePerTick = 1 − (1 − perSecond)^(1/TICK_RATE)` — the
+ *     gotcha-#6 discipline applied to a probability: a TICK_RATE change
+ *     re-derives the threshold instead of re-tuning idle fidget rate (the
+ *     original per-tick 0.05 @ 20Hz ≡ 0.64/s, so the shipped value
+ *     preserves the 75h feel exactly). Rolls on the presence-gated
+ *     `campRng` — the user-signed exception to the no-RNG-in-movement
+ *     doctrine (camp idle wander is scenery flavor, not faction pathing).
+ *     [0,1]: 0 = camps stand still (vacating the drip anchor stays
+ *     unconditional); 1 = a step every eligible poll.
+ *   blockCampTurnEnd — §75g: when on, a decisive win/loss does NOT land
+ *     while the would-be winner still has an UNCLEARED camp hostile to it —
+ *     the battle runs on until the camp fight is finished (the turn cap
+ *     still resolves a stalemate as a draw, so battles stay bounded).
+ *     **Shipped ON — the 75j feel verdict (user-signed 2026-08-09):** there
+ *     isn't fine-grained enough control to disengage a half-fought camp, so
+ *     the last enemy dying mid-camp-fight felt bad, not merciful. Off =
+ *     camps never extend a battle (the §75e-pinned behavior, test-injected).
+ *   enemyPullChance — §75g: per turn, on a camp-bearing layout, the chance
+ *     the enemy team opens with a DELIBERATE camp pull — one camp is
+ *     pre-marked hostile to the enemy faction and the enemy TEAM objective
+ *     is pointed at its anchor (engage{tile}), detouring the whole team.
  *     Rolls on a LAZY fork taken only when the knob is >0 AND the layout has
  *     camps — the dormant path leaves the stream ladder untouched (the
- *     shape-lock's no-append clause). A probability in [0,1].
+ *     shape-lock's no-append clause). A probability in [0,1]. **Shipped
+ *     0.25 — the 75j verdicts: the 0.15 trial read "works, but too rare".**
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the
  *     destination claim releases). Locked at 0.5 — the unit logically occupies
@@ -146,7 +153,7 @@
 
 import { z } from 'zod';
 import simJson from '../../config/sim.json';
-import { secondsToTicks } from '../config';
+import { secondsToTicks, TICK_RATE } from '../config';
 
 const SimSchema = z.object({
   retargetCloserRatio: z.number().min(1),
@@ -163,7 +170,7 @@ const SimSchema = z.object({
   actingCellSearchSlack: z.number().int().nonnegative(),
   shoveSearchRadiusCells: z.number().int().positive(),
   moveFlipFraction: z.number().min(0).max(1),
-  campWanderChance: z.number().min(0).max(1),
+  campWanderChancePerSecond: z.number().min(0).max(1),
   blockCampTurnEnd: z.boolean(),
   enemyPullChance: z.number().min(0).max(1),
 });
@@ -185,7 +192,9 @@ export const SIM = {
   actingCellSearchSlack: parsed.actingCellSearchSlack,
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
   moveFlipFraction: parsed.moveFlipFraction,
-  campWanderChance: parsed.campWanderChance,
+  // §75j — the per-tick threshold DERIVED from the per-second author value
+  // (see the docstring). `1` short-circuits exactly (1 − 0^(1/rate) = 1).
+  campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
   blockCampTurnEnd: parsed.blockCampTurnEnd,
   enemyPullChance: parsed.enemyPullChance,
 };

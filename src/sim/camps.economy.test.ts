@@ -86,18 +86,27 @@ describe('§75g — the campKills payload', () => {
   });
 
   it('an un-wiped camp (members alive or pending) contributes nothing', () => {
-    const { world, bus } = freshWorld();
-    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
-    const [m1] = dripBoth(world);
-    const player = spawnAt(world, 'player', { x: 1, y: 1 });
-    const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
-    const payloads: Ended[] = [];
-    bus.on('battle:ended', (e) => payloads.push(e));
-    kill(world, player, m1); // m2 still alive → no stamp
-    kill(world, player, enemy);
-    world.tick();
-    expect(payloads).toHaveLength(1);
-    expect('campKills' in payloads[0]!).toBe(false);
+    // Killing m1 aggros the camp; with the 75j-shipped blockCampTurnEnd the
+    // win would be HELD — inject OFF so this stays the no-stamp pin.
+    const mutable = SIM as { blockCampTurnEnd: boolean };
+    const original = SIM.blockCampTurnEnd;
+    mutable.blockCampTurnEnd = false;
+    try {
+      const { world, bus } = freshWorld();
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      const [m1] = dripBoth(world);
+      const player = spawnAt(world, 'player', { x: 1, y: 1 });
+      const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
+      const payloads: Ended[] = [];
+      bus.on('battle:ended', (e) => payloads.push(e));
+      kill(world, player, m1); // m2 still alive → no stamp
+      kill(world, player, enemy);
+      world.tick();
+      expect(payloads).toHaveLength(1);
+      expect('campKills' in payloads[0]!).toBe(false);
+    } finally {
+      mutable.blockCampTurnEnd = original;
+    }
   });
 });
 

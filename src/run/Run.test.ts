@@ -5862,3 +5862,73 @@ describe('74c — event effect ops (the full union executes)', () => {
     expect(restored.pendingRewards).toHaveLength(1); // the bits row still offered
   });
 });
+
+// ---- §75g — camp-kill loot ---------------------------------------------------
+
+describe('75g — camp-kill loot rides the turn boundary as reward portions', () => {
+  const CAMP_KILL = [{ defId: 'bandit-squatters', killedBy: 'player' as const }];
+
+  it('a player-killed camp pays WIN-OR-LOSE: an ongoing (drawn) turn still offers the loot', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    // A drawn, no-chip, no-tally turn — the ONLY portions can be the camp's.
+    bus.emit('battle:ended', {
+      winner: 'draw',
+      xpAwards: [],
+      survivorPower: { player: 0, enemy: 0 },
+      campKills: CAMP_KILL,
+    });
+    // bandit-squatters carries bits-small at chance 1 → a guaranteed offer.
+    expect(run.phase).toBe('reward');
+    expect(run.pendingRewards).not.toBeNull();
+    expect(run.pendingRewards!.length).toBeGreaterThanOrEqual(1);
+    acceptAllRewards(run);
+    // bits-small rolls bits OR a packet (balance-proof: don't pin the entry
+    // the seed drew) — either way SOMETHING landed.
+    expect(run.bits > 0 || run.cache.length > 0).toBe(true);
+    expect(run.phase).toBe('battle'); // the encounter resumed
+  });
+
+  it('an enemy-killed camp pays NOTHING (credit denial is the loss)', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    bus.emit('battle:ended', {
+      winner: 'draw',
+      xpAwards: [],
+      survivorPower: { player: 0, enemy: 0 },
+      campKills: [{ defId: 'bandit-squatters', killedBy: 'enemy' }],
+    });
+    expect(run.pendingRewards).toBeNull();
+    expect(run.phase).toBe('battle');
+  });
+
+  it('a run-terminal defeat skips the camp loot (dead state, the XP-bank rule)', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    bus.emit('battle:ended', {
+      winner: 'enemy',
+      xpAwards: [],
+      survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+      campKills: CAMP_KILL,
+    });
+    expect(run.phase).toBe('defeat');
+    expect(run.pendingRewards).toBeNull();
+  });
+
+  it('on a WON turn the camp loot sits between the tally and the encounter roll', () => {
+    const { run, bus } = freshRunWithBus(1, { daemon: null, forcedEncounterId: 'brigands' });
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    bus.emit('battle:ended', {
+      winner: 'player',
+      xpAwards: [],
+      survivorPower: { player: 1_000, enemy: 0 },
+      tallies: { bits: 6 },
+      campKills: CAMP_KILL,
+    });
+    expect(run.phase).toBe('reward');
+    // tally + ≥1 camp portion + ≥1 encounter portion (brigands: bits-small
+    // at chance 1), tally leading.
+    expect(run.pendingRewards!.length).toBeGreaterThanOrEqual(3);
+    expect(run.pendingRewards![0]).toEqual({ kind: 'bits', base: 6 });
+  });
+});

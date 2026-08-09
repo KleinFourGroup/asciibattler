@@ -93,6 +93,15 @@ export interface GameEvents extends Record<string, unknown> {
      * rationale — test fakes omit it; every real emit sets it.
      */
     tallies?: { bits: number };
+    /**
+     * §75g: the camps WIPED this battle, with the faction whose blow
+     * finished them (the drip-aware serialized `killedBy` stamp — §75e).
+     * Run rolls the PLAYER-killed camps' reward refs into the turn's
+     * offer win-or-lose; an enemy-killed camp yields nothing (credit
+     * denial IS the player's loss). OMITTED when no camp was wiped, so
+     * camp-free payloads are byte-identical to pre-75g.
+     */
+    campKills?: readonly { defId: string; killedBy: 'player' | 'enemy' }[];
   };
 
   /**

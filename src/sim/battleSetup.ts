@@ -36,6 +36,7 @@ import { TERRAIN } from '../config/terrain';
 import { generateTerrain, type GeneratedTerrain } from './terrainGen';
 import { spawnHalfCover, spawnRubble, spawnWall } from './environment';
 import type { SpawnRegion, CampRef } from './layouts';
+import { SIM } from '../config/sim';
 
 export interface PickedSpawnRegions {
   readonly player: SpawnRegion;
@@ -219,6 +220,35 @@ export function spawnCamps(
     };
   });
   world.installCamps(instances, campRng);
+
+  // §75g — the enemy DELIBERATE-PULL seam (spec: "the seam ships now"),
+  // DORMANT at the shipped 0; enabling it is a §75j feel verdict. When live:
+  // one roll on a LAZY third fork — taken off the terrainSeed parent only
+  // inside this branch, so the dormant path appends nothing to the stream
+  // ladder (the shape-lock's no-append clause; camp-free layouts never reach
+  // here at all). A pass picks one camp (uniform; singleton draw-free,
+  // #111), pre-marks it hostile to the enemy faction (the deliberate
+  // aggression — members engage arriving enemies as they drip), and points
+  // the enemy TEAM objective at its anchor via the command channel (drained
+  // at tick 1; serialized, so a mid-battle save resumes the detour). The
+  // whole-team detour is exactly why this needs the feel verdict.
+  // `clearResolvedObjectives` reverts the objective once that camp is
+  // cleared (the anchor-tile exception to the J1 persist rule).
+  if (SIM.enemyPullChance > 0) {
+    const pullRng = parent.fork();
+    if (pullRng.next() < SIM.enemyPullChance) {
+      const camp =
+        instances.length === 1
+          ? instances[0]!
+          : instances[Math.floor(pullRng.next() * instances.length)]!;
+      world.markCampHostile(camp.id, 'enemy');
+      world.enqueueCommand({
+        kind: 'setObjective',
+        team: 'enemy',
+        objective: { mode: 'engage', target: { kind: 'tile', cell: { ...camp.anchor } } },
+      });
+    }
+  }
 }
 
 /**

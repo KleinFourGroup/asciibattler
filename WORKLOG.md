@@ -1385,3 +1385,49 @@ scope: a registry arm for snapshot rehydrate, NO catalog enum widening).
   delegate pin (damage lands, leash released).
 - +8 tests (2498 → 2506 main); 395 fuzz:smoke green (the wander is
   presence-gated behind camp existence — camp-free byte-identity holds).
+
+### 75g — run economy (2026-08-08)
+
+All three cut items landed. NO RunSnapshot bump, as predicted at the
+kickoff: camp portions are existing RewardPortion kinds, `campKills` is
+event-payload-only, and the enemy-pull order rides the already-serialized
+command queue + hostility set.
+
+- **`campKills` → `battle:ended`**: emitBattleEnded collects the stamped
+  `killedBy` camps (stable id order) and OMITS the field when empty —
+  camp-free payloads stay byte-identical. Pinned: wiped camp rides the
+  payload; un-wiped (member alive or pending) contributes nothing;
+  camp-free omits.
+- **The portion branch** (handleTurnEnded, inside `result !== 'lost'`,
+  after the tally, before the `won` roll — exactly the cut's slot):
+  player-killed camps roll their def's reward refs through `rollRewards`
+  on the two EXISTING reward streams (no new fork — camp-free turns draw
+  nothing). Win-or-lose per the shape-lock (a drawn/lost BATTLE still
+  pays; only the run-terminal `result === 'lost'` skips, the XP-bank
+  rule — all four pinned). Enemy-killed camps pay nothing.
+- **`blockCampTurnEnd`** (SIM knob, default false): when ON, a decisive
+  end is HELD while the would-be winner has an uncleared hostile camp;
+  the extracted `campCleared` (drip-aware — shared by the kill stamp,
+  this gate, and the objective revert) decides. Checked at the decisive
+  emit rather than accumulated in the alive-flag loop — the loop's
+  early-return would truncate a mid-loop scan (the cut's hoist concern,
+  resolved by not scanning in the loop at all); the mutual-wipe draw
+  and the turn cap stay unblocked, so battles stay bounded. Pinned both
+  ways (held-then-lands · loser's camp never holds the winner hostage).
+- **`enemyPullChance`** (SIM knob, default 0 = DORMANT): rolls on a LAZY
+  third fork off spawnCamps' terrainSeed parent, taken ONLY inside the
+  knob>0 branch — the dormant path appends nothing (the shape-lock's
+  no-append clause). A pass pre-marks one camp (uniform pick, #111
+  singleton draw-free) hostile to 'enemy' and enqueues a
+  `setObjective enemy engage{tile: anchor}` command (drains tick 1;
+  serialized → resume-safe). The camp-anchor tile is the ONE exception
+  to the J1 engage-tile persist rule: `clearResolvedObjectives` reverts
+  it once that camp is cleared (no corpse-pile guarding). Pinned:
+  dormant-at-0 · live-at-1 marks + orders · auto-revert on clear.
+  DEFERRED deliberately: the spec's optional per-encounter override —
+  adding the schema field without encounter-editor formatter support
+  would break the no-op-save proof; it lands with 75j's tuning if the
+  feel verdict wants it.
+- +12 tests (economy sim 8: payload 3 + block 2 + pull 3 · Run-side 4;
+  2506 → 2518 main); 395 fuzz:smoke green — camp-free byte-identity
+  holds through the payload, the gate, and the dormant seam.

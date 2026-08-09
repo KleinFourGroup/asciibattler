@@ -118,6 +118,20 @@
  *     the stream). A probability in [0,1]: 0 = camps stand still (vacating
  *     the drip anchor stays unconditional); 1 = a step every move window.
  *     Feel-tuned at 75j.
+ *   blockCampTurnEnd — §75g (default OFF; a §75j feel verdict): when on, a
+ *     decisive win/loss does NOT land while the would-be winner still has an
+ *     UNCLEARED camp hostile to it — the battle runs on until the camp fight
+ *     is finished (the turn cap still resolves a stalemate as a draw, so
+ *     battles stay bounded). Off = camps never extend a battle (the shipped
+ *     default, pinned by test).
+ *   enemyPullChance — §75g (default 0 = DORMANT; a §75j feel verdict): per
+ *     turn, on a camp-bearing layout, the chance the enemy team opens with a
+ *     DELIBERATE camp pull — one camp is pre-marked hostile to the enemy
+ *     faction and the enemy TEAM objective is pointed at its anchor
+ *     (engage{tile}), detouring the whole team (why this needs the verdict).
+ *     Rolls on a LAZY fork taken only when the knob is >0 AND the layout has
+ *     camps — the dormant path leaves the stream ladder untouched (the
+ *     shape-lock's no-append clause). A probability in [0,1].
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the
  *     destination claim releases). Locked at 0.5 — the unit logically occupies
@@ -150,6 +164,8 @@ const SimSchema = z.object({
   shoveSearchRadiusCells: z.number().int().positive(),
   moveFlipFraction: z.number().min(0).max(1),
   campWanderChance: z.number().min(0).max(1),
+  blockCampTurnEnd: z.boolean(),
+  enemyPullChance: z.number().min(0).max(1),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -170,4 +186,6 @@ export const SIM = {
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
   moveFlipFraction: parsed.moveFlipFraction,
   campWanderChance: parsed.campWanderChance,
+  blockCampTurnEnd: parsed.blockCampTurnEnd,
+  enemyPullChance: parsed.enemyPullChance,
 };

@@ -94,6 +94,7 @@ import { selectEncounter } from './encounters/selection';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { packetById, PACKETS, type UseContext } from '../config/packets';
 import { rewardTableById, type EncounterRewardRef } from '../config/rewards';
+import { getCamp } from '../config/camps';
 import {
   EVENTS,
   getEvent,
@@ -1259,8 +1260,8 @@ export class Run {
       // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
       // the outcome — the pools do (chipped symmetrically off `survivorPower`)
       // — but H4b surfaces it on the post-turn screen, so it's passed through.
-      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower, tallies }) =>
-        this.handleTurnEnded(winner, xpAwards, survivorPower, tallies),
+      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower, tallies, campKills }) =>
+        this.handleTurnEnded(winner, xpAwards, survivorPower, tallies, campKills),
       ),
     );
   }
@@ -2800,6 +2801,7 @@ export class Run {
     xpAwards: GameEvents['battle:ended']['xpAwards'],
     survivorPower: GameEvents['battle:ended']['survivorPower'],
     tallies: GameEvents['battle:ended']['tallies'],
+    campKills?: GameEvents['battle:ended']['campKills'],
   ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
@@ -2841,6 +2843,30 @@ export class Run {
           earners.size === 1
             ? { kind: 'bits', base: tallies.bits, source: [...earners][0]! }
             : { kind: 'bits', base: tallies.bits },
+        );
+      }
+      // §75g — camp-kill loot: every camp the PLAYER wiped this turn pays
+      // its def's reward refs at the boundary REGARDLESS of the battle's
+      // winner (the shape-lock's 51a-precedent call: withholding would
+      // double-punish the detour that caused a lost battle); only the
+      // run-terminal `result === 'lost'` skips, like the XP bank above. An
+      // enemy-killed camp pays nothing — credit denial IS the player's
+      // loss (the payload's killedBy filter). Rolls ride the two existing
+      // reward streams (no new fork — a camp-free turn draws nothing), and
+      // sit between the tally and the win roll: earned in the fight, ahead
+      // of the encounter loot.
+      for (const kill of campKills ?? []) {
+        if (kill.killedBy !== 'player') continue;
+        const refs = getCamp(kill.defId)?.rewards;
+        if (refs === undefined || refs.length === 0) continue;
+        portions.push(
+          ...rollRewards(
+            refs,
+            rewardTableById,
+            this.ownedDaemonIds(),
+            this.rewardRng,
+            this.rewardBitsRng,
+          ),
         );
       }
       // 48b — the winning boundary rolls the encounter's rewards, alongside

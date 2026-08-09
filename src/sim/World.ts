@@ -1068,11 +1068,32 @@ export class World {
    */
   private recordCampKill(campId: number, team: Team): void {
     const camp = this.camps.get(campId);
-    if (camp === undefined || camp.pending.length > 0) return;
-    for (const u of this.units) {
-      if (u.campId === campId && u.currentHp > 0) return;
-    }
+    if (camp === undefined || !this.campCleared(camp)) return;
     camp.killedBy = team;
+  }
+
+  /**
+   * §75e/§75g — a camp is CLEARED when nothing is pending AND no member is
+   * alive (the shape-lock's drip-aware definition — no early credit while
+   * the portal is still trickling). Shared by the kill stamp, the
+   * block-turn-end gate, and the enemy-pull objective revert.
+   */
+  private campCleared(camp: CampInstance): boolean {
+    if (camp.pending.length > 0) return false;
+    for (const u of this.units) {
+      if (u.campId === camp.id && u.currentHp > 0) return false;
+    }
+    return true;
+  }
+
+  /** §75g — does `team` still have an UNCLEARED camp hostile to it? The
+   *  block-turn-end gate's read; order-independent (a boolean OR over the
+   *  registry), and trivially false on every camp-free board. */
+  private hasUnclearedHostileCamp(team: Team): boolean {
+    for (const camp of this.camps.values()) {
+      if (camp.hostileTo.has(team) && !this.campCleared(camp)) return true;
+    }
+    return false;
   }
 
   applyDamage(
@@ -1978,6 +1999,23 @@ export class World {
         if (focusTileResolvedByArrival(team, obj.target.cell, this)) {
           this.setObjectiveAtWill(team);
         }
+      } else if (this.camps.size > 0) {
+        // §75g — the ONE exception to the J1 engage-tile persist rule: an
+        // engage TILE parked on a camp ANCHOR (the enemy-pull order) reverts
+        // once that camp is cleared, so the pulled team doesn't guard a
+        // corpse pile for the rest of the battle. Non-anchor tiles keep
+        // persisting, and the arm is unreachable on camp-free boards (the
+        // presence gate).
+        for (const camp of this.camps.values()) {
+          if (
+            camp.anchor.x === obj.target.cell.x &&
+            camp.anchor.y === obj.target.cell.y &&
+            this.campCleared(camp)
+          ) {
+            this.setObjectiveAtWill(team);
+            break;
+          }
+        }
       }
     }
   }
@@ -2032,6 +2070,18 @@ export class World {
       if (this._combatBegan) this.emitBattleEnded('draw');
       return;
     }
+    // §75g — the block-turn-end knob (default OFF — camps never extend a
+    // battle, the pinned §75e invariant; flipping it is a §75j feel
+    // verdict): a decisive end does NOT land while the WINNER still has an
+    // uncleared camp fight open — the battle runs on until the camp is
+    // cleared. Checked here (not accumulated in the loop above — its
+    // early-return would truncate a mid-loop scan), and only on the
+    // decisive path: a mutual wipe has nobody left to fight the camp, and
+    // the driver's turn cap still resolves a stalemate as a draw, so
+    // battles stay bounded.
+    if (SIM.blockCampTurnEnd && this.hasUnclearedHostileCamp(playerAlive ? 'player' : 'enemy')) {
+      return;
+    }
     this.emitBattleEnded(playerAlive ? 'player' : 'enemy');
   }
 
@@ -2073,6 +2123,15 @@ export class World {
       this.damageDealt,
       this.utilityDone,
     );
+    // §75g — the wiped camps ride the payload (the serialized killedBy
+    // stamps, collected in stable id order). Omitted when empty so a
+    // camp-free emit is byte-identical to pre-75g.
+    const campKills: { defId: string; killedBy: 'player' | 'enemy' }[] = [];
+    for (const camp of this.campsList()) {
+      if (camp.killedBy === 'player' || camp.killedBy === 'enemy') {
+        campKills.push({ defId: camp.defId, killedBy: camp.killedBy });
+      }
+    }
     this.bus.emit('battle:ended', {
       winner,
       xpAwards,
@@ -2080,6 +2139,7 @@ export class World {
       // 47f — the battle-earned run resources (copied: the payload must not
       // share the live accumulator). Run settles bits via `gainBits`.
       tallies: { ...this.tallies },
+      ...(campKills.length > 0 ? { campKills } : {}),
     });
   }
 

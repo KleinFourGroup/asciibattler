@@ -13,5 +13,7 @@
   "actingCellSearchSlack": 2,
   "shoveSearchRadiusCells": 3,
   "moveFlipFraction": 0.5,
-  "campWanderChance": 0.05
+  "campWanderChance": 0.05,
+  "blockCampTurnEnd": false,
+  "enemyPullChance": 0
 }

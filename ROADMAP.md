@@ -121,42 +121,31 @@ until 75j's scheduled content re-pin). Spawn model = PORTAL DRIP
 (per-camp pending queues in the registry; user-signed, worklog §75
 shape-lock #4).
 
-- [x] 75-pre — fuzz-telemetry stale-guard fix ✅ 2026-08-08: the
-  team gate replaces the retired sentinel + the neutral no-tally pin
-- [x] 75a — camps config + layout seams ✅ 2026-08-08: catalog +
-  loader + both boot asserts + the campSpawns/camps superRefine;
-  trace-era cost confirmed dev-replay-only (worklog §75)
-- [x] 75b — the World camp registry, **v34→v35** ✅ 2026-08-08:
-  registry + campId + presence-gated campRng + the conditional
-  rollout re-seed; byte-identity hook-proven (worklog §75)
-- [x] 75c — drip spawn ✅ 2026-08-08: spawnCamps rides applyTerrain
-  (all four sites free); the drip drain + random-intersect live;
-  landing note at spawnCampUnit — 75f swaps behavior slot 0
-  (worklog §75)
-- [x] 75d — the spatial widening ✅ 2026-08-08: all ten worksheet
-  boxes via the `isInertNeutral` flip; LOS stays occluding (census
-  call); byte-identity holds (worklog §75)
-- [x] 75e — the combat widening ✅ 2026-08-08: all sixteen worksheet
-  rows via the shared `hostileCandidate` admit rule; aggro+kill credit
-  on the dealDamage chokepoint; chaos-is-chaos recorded (worklog §75)
-- [x] 75f — `CampWanderBehavior` ✅ 2026-08-08: slot-0 swap + 'camp'
-  registry arm; campRng wander + anchor-vacate rule + MovementBehavior
-  delegate; both exit invariants standing as tests (worklog §75)
-- [x] 75g — run economy ✅ 2026-08-08: campKills payload + the
-  win-or-lose portion branch + both knobs dormant; NO Run bump; the
-  pull's per-encounter override deferred to 75j (worklog §75)
-- [x] 75h — renderer/HUD third faction ✅ 2026-08-08: TERMINAL_AMBER
-  combatant treatment + the browser-caught objective-revert fix;
-  NATIVE EYEBALL ✅ 2026-08-09 → one finding, fixed as 75h2: the
-  setup-time first-member prime (worklog §75)
-- [x] 75i — editors ✅ 2026-08-09: the camp editor (both boot asserts
-  live) + the layout-editor camps layer + both byte-faithful
-  formatters + both live no-op-save proofs; camps.json normalized
-  once, hash-neutral (worklog §75i)
-- [ ] 75j — the demo-catalog design round + placements + the feel
-  pass (the three decision points above) + the SCHEDULED board re-pin
-- [ ] 75k — docs close: ARCHITECTURE/DESIGN/GOTCHAS, cursor flip,
-  ROADMAP demote
+- [x] 75-pre — fuzz-telemetry stale-guard fix ✅ 2026-08-08 (worklog §75)
+- [x] 75a — camps config + layout seams ✅ 2026-08-08 (worklog §75)
+- [x] 75b — the World camp registry, **v34→v35** ✅ 2026-08-08 (worklog §75)
+- [x] 75c — portal-drip spawn ✅ 2026-08-08 (worklog §75; landing
+  note at spawnCampUnit)
+- [x] 75d — the spatial widening ✅ 2026-08-08 (worklog §75)
+- [x] 75e — the combat widening ✅ 2026-08-08 (worklog §75)
+- [x] 75f — `CampWanderBehavior` ✅ 2026-08-08 (worklog §75)
+- [x] 75g — run economy ✅ 2026-08-08, NO Run bump (worklog §75)
+- [x] 75h — renderer/HUD third faction ✅ 2026-08-08 + the 75h2
+  setup-time prime ✅ 2026-08-09 (worklog §75)
+- [x] 75i — both editors + byte-faithful formatters + live no-op-save
+  proofs ✅ 2026-08-09 (worklog §75i)
+- [x] 75j — ✅ CLOSED 2026-08-09 (`a299b77`→`4ae697d`): catalog +
+  placements + all verdicts + the 75j2 pull re-author/per-turn seed +
+  the user placement pass; the board re-pin MOVED to 75l — one pin,
+  after the 75k sim fix (worklog §§75j–75j-close)
+- [ ] 75k — the ordered-engage destructible-gate fix (INSERTED at the
+  75j close; the old 75k relabels to 75l): a melee unit whose engage
+  objective sits behind destructible rubble FREEZES instead of
+  auto-breaking through — latent (the player click-to-engage path
+  likely shares it). Headless repro FIRST (the layout-deadlock
+  pattern); suspect seams in worklog §75j-close
+- [ ] 75l — docs close (was 75k) + the SCHEDULED board re-pin (moved
+  from 75j): ARCHITECTURE/DESIGN/GOTCHAS, cursor flip, ROADMAP demote
 
 ## Phase 76 — Unit mechanics & stat identity
 

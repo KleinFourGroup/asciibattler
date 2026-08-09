@@ -75,3 +75,13 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   cheaply because the drip drain had ONE body to parameterize — the
   extract-the-shared-body habit pays off at feedback time, not just at
   build time.
+- **A new consumer of an old seam walks the seam's untested branch.**
+  The 75j2 pull re-author made the ENEMY team issue ordered engages on
+  neutrals — a path only the player had exercised — and immediately
+  surfaced a latent freeze (ordered engage behind destructible rubble
+  never reaches the auto-break fallback; the 75k fix). The player arm
+  had the same hole for two phases; nobody's play happened to walk it.
+  Candidate promotion: when a change ADDS A CONSUMER to an existing
+  capability (vs adding a capability), the test sweep should cover the
+  capability's edge branches under the NEW consumer, not just the new
+  consumer's happy path.

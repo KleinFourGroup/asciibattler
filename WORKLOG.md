@@ -1717,3 +1717,35 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   convention, so no "80b" phase names. Every live-doc forward ref
   swept (ROADMAP · HANDOFF · TODO · this file · the agent memory);
   archives untouched.
+
+### 75j-close — placements done, a latent freeze caught, the 75k insertion (2026-08-09)
+
+- **The user's placement-symmetry pass landed (`4ae697d`)**: fetidPond's
+  camp moved INTO the pond (7,7 — a water cell, passable); rubbleQuarry's
+  moved to (13,6) behind a NEW rubble block at (13,8) — a
+  destructible-gated enclosure; labyrinth + icebergs held. Editor-written,
+  formatter pin green.
+- **The enclosure exposed a latent bug — the NEW 75k**: a melee unit
+  whose `engage{neutral}` objective sits behind destructible rubble
+  FREEZES ("as if unreachable") instead of auto-breaking through.
+  Latent, not 75j2-caused: the player's click-to-engage issues the same
+  ordered objective, so it almost certainly shares the path — the 75j2
+  pull just made an AI team exercise it every pulled turn. The process
+  read: a new consumer of an old seam walked the seam's untested branch.
+- **Suspect seams for the fresh session** (recorded, NOT yet
+  investigated — repro first, the layout-deadlock.test.ts pattern):
+  the ordered-first-blow branch of `currentTarget` (Targeting.ts) holds
+  the ordered mark while `MovementBehavior`'s path to it comes back
+  empty/unreachable → no proposal → freeze; the rubble AUTO-BREAK
+  fallback (`applyRubbleAutoTarget` — the §40 "walled-off unit
+  auto-chips through" rule + `layoutConnectivity`'s rubble-is-passable
+  classification) likely lives only on the atWill acquisition path, so
+  the ordered branch never reaches it. Repro shape: enemy melee +
+  `engage{neutral, campMember}` + a rubble ring around the camp →
+  expect an auto-target-rubble (or path-through-rubble) proposal,
+  observe the freeze.
+- **The relabel (user-signed)**: 75j CLOSES here; the fix INSERTS as
+  75k; the old 75k (docs close) → 75l and inherits the board re-pin —
+  moved out of 75j deliberately: the 75k sim fix moves camp-layout
+  trajectories, so pinning before it would pay the box twice (the
+  "verdicts first, board once" logic applied again).

@@ -38,6 +38,8 @@ Right now, battles still tend to be rather one dimensional.  Aside from stalling
   * Need to make sure that, upon spawning, a camp unit wanders off the spawn in a timely manner, so it doesn't just block permanently.
 * Camps are pre-defined in their own editor.  Layouts are expanded to include a weighted list of valid camps.
 * Camp spawns are distinct from spawn regions.  Each camp spawn randomly selects a camp from the layout's list, resolved on turn start.
+
+  * ⚠ As shipped, "resolved on turn start" replays identically within one encounter (the camp stream rides the per-encounter terrainSeed — K3.5), so camp identity is de facto PER-ENCOUNTER. Found + punted 2026-08-09 (worklog §75i-post): the feel verdict rides 75j; a true per-turn stream folds into §77's keyed-stream rider if wanted.
 * Credit for killing a camp goes to the faction who kills the last unit of the camp.
 * Each pre-defined camp has a reward table, just like an encounter.
 * The reward table is rolled if the player successfully kills the camp, and the rewards are granted upon turn completion.

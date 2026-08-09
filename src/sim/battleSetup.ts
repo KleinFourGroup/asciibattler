@@ -174,6 +174,14 @@ export function applyTerrain(
  * wander). Nothing touches `battleRng` or Run's fork ladder — the
  * fork-append-free property the §75 cut is built on.
  *
+ * ⚠ KNOWN CONSEQUENCE (user-punted 2026-08-09, worklog §75i-post): K3.5
+ * made `terrainSeed` per-ENCOUNTER, so these "per-turn" selection rolls
+ * replay identically every turn of one encounter — camp identity is
+ * de facto per-encounter, NOT the spec's "re-rolls fresh at every turn".
+ * Deliberately left as-is: the feel verdict rides 75j's feel pass, and a
+ * per-turn stream (hash(root, 'campSetup', turn)) folds into §77's keyed
+ * stream re-architecture if wanted. Don't "fix" the seed here ad hoc.
+ *
  * Args-explicit (the assert-function pattern) so tests drive synthetic
  * campSpawns/camps against a naked World — no shipped layout lists a camp
  * until the §75j design round, so until then this is exercised by unit tests

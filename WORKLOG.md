@@ -1553,3 +1553,35 @@ the cut lines:
 - Fuzz byte-identity holds through 75i by construction: everything
   here is `tools/` + tests except the camps.json whitespace
   normalization (parsed-identical). +7 tests (2521 → 2528 main).
+
+### 75i-post — camp identity is per-encounter, punted (2026-08-09)
+
+The user's post-75i playtest (camps hand-added to labyrinth, two corner
+tiles at 13,13 + 1,1, both camps weight-1 — a good 75j starting
+placement) surfaced: both tiles rolled ghoul-nest three turns running.
+Diagnosis, confirm-the-deficit style, before any mechanism story:
+
+- `weightedCampRef` is CLEAN (`?? 1` defaults, correct cumulative
+  walk). The actual cause is one level up: the camp stream seeds off
+  `encounter.terrainSeed`, and K3.5 made that PER-ENCOUNTER (rolled
+  once in `buildEncounterMap`; every `beginTurn` reuses it — it's what
+  keeps walls stable across turns). So the per-turn `spawnCamps` call
+  replays byte-identical draws: the spec's "re-rolls fresh at every
+  turn start" (kickoff cut line) silently degraded to per-encounter
+  identity. The kickoff audit picked terrainSeed for its genuine
+  zero-re-baseline virtue and missed that it's a per-encounter
+  constant. Observed probability corrected: one fair 1/4 roll (turn
+  1), then deterministic replays — not 1/64.
+- **User call: PUNT (leave as-is), 2026-08-09.** Rationale: (a) the
+  feel verdict needs play time, and 75j's feel pass is its natural
+  slot (now a third decision point there); (b) if per-turn wins, §77's
+  keyed-stream rider implements it as `hash(root, 'campSetup', turn)`
+  — doing an ad-hoc seed mix now would pay the derivation twice. A
+  defensible design reading also exists for the shipped behavior: the
+  camp is battlefield furniture, and the battlefield is deliberately
+  per-encounter stable since K3.5.
+- Landing notes: the ⚠ block at `spawnCamps`' stream-derivation
+  docstring (battleSetup.ts — "don't fix the seed here ad hoc"), the
+  spec §Camps bullet annotated, ROADMAP §75 decision points + 75j cut
+  + §77 rider each carry the line. The playtest layout edit reverted
+  (user-asked); shipped content stays camp-free until 75j.

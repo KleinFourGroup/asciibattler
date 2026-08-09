@@ -82,6 +82,53 @@ describe('§37f — the five new terrain tiles + a new theme', () => {
   });
 });
 
+describe('§75i — camp spawns + the weighted camps list', () => {
+  // A hand-built layout exercising the two 75a camp seams: `campSpawns` tiles
+  // and the weighted `camps` list (one bare ref — weight omitted = 1 — and one
+  // weighted). Round-tripping through the editor formatter → the REAL game
+  // schema proves the formatter emits both keys byte-faithfully AND the schema
+  // accepts them — the editor's Save path end-to-end for camps. (The campId
+  // referential check is the camps.ts boot assert, not the layout schema, but
+  // real catalog ids are used anyway so the fixture reads true.)
+  const band = (y: number): { x: number; y: number }[] =>
+    Array.from({ length: 8 }, (_, x) => ({ x, y }));
+  const withCamps: LayoutDef = {
+    id: 'camp-roundtrip',
+    name: 'Camp Roundtrip',
+    description: 'fixture exercising the §75a campSpawns/camps layout seams.',
+    gridW: 8,
+    gridH: 8,
+    theme: 'grassland',
+    walls: [],
+    campSpawns: [
+      { x: 2, y: 3 },
+      { x: 5, y: 4 },
+    ],
+    camps: [{ campId: 'bandit-squatters' }, { campId: 'ghoul-nest', weight: 2 }],
+    spawns: [
+      { availability: 'player', tiles: band(0) },
+      { availability: 'enemy', tiles: band(7) },
+    ],
+  };
+
+  it('formats + re-parses to a deep-equal layout (both camp keys survive)', () => {
+    const reparsed = LayoutsSchema.parse(JSON.parse(formatLayoutsJson([withCamps])));
+    expect(reparsed).toEqual([withCamps]);
+  });
+
+  it('emits weight only when present; a bare ref stays campId-only', () => {
+    const json = formatLayoutsJson([withCamps]);
+    expect(json).toContain('"campSpawns": [');
+    expect(json).toContain('{ "campId": "bandit-squatters" }'); // bare — no weight field
+    expect(json).toContain('{ "campId": "ghoul-nest", "weight": 2 }');
+  });
+
+  it('rejects campSpawns with an empty camps list (the loud-authoring-error pin)', () => {
+    const { camps: _dropped, ...orphaned } = withCamps;
+    expect(LayoutsSchema.safeParse([orphaned]).success).toBe(false);
+  });
+});
+
 describe('§40g-3 — wall/half-cover destructibility hp', () => {
   // A hand-built layout mixing a destructible wall (hp set), a bare indestructible
   // wall (no hp), and a destructible half-cover. Round-tripping through the editor

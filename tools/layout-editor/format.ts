@@ -8,8 +8,9 @@
  *
  * Canonical shape (mirrors the committed file post-M5 normalization): 2-space
  * indent, the `id / name / description / gridW / gridH / theme / walls /
- * [water] / [halfCovers] / [rubble] / [chasms] / [fires] / [healings] /
- * [deepWater] / [hills] / [ice] / [sand] / [mud] / spawns` key order,
+ * [water] / [halfCovers] / [rubble] / [campSpawns] / [camps] / [chasms] /
+ * [fires] / [healings] / [deepWater] / [hills] / [ice] / [sand] / [mud] /
+ * spawns` key order,
  * `walls` always present (empty → an open+close bracket pair), the optional
  * terrain arrays emitted only when non-empty, and **every coord on its own
  * line** (the editor's long-standing emit — the 4-per-line packing some
@@ -114,6 +115,22 @@ export function formatLayoutLines(layout: LayoutDef, indent = 0): string[] {
   // §40d — rubble, grouped with the other neutral obstacles (after half-cover).
   if (layout.rubble && layout.rubble.length > 0)
     parts.push(`${pad}  "rubble": [`, ...formatRubbleCoords(layout.rubble, pad), `${pad}  ],`);
+  // §75i — the 75a camp seams, in the schema's declaration order (after rubble,
+  // before chasms). `campSpawns` is a plain coord array; each `camps` ref is a
+  // leaf on one line, `weight` emitted only when present (omitted = 1, the
+  // sector-pool convention the schema documents).
+  if (layout.campSpawns && layout.campSpawns.length > 0)
+    parts.push(...coordArrayBlock('campSpawns', layout.campSpawns, pad));
+  if (layout.camps && layout.camps.length > 0) {
+    parts.push(`${pad}  "camps": [`);
+    layout.camps.forEach((ref, i) => {
+      const sep = i === layout.camps!.length - 1 ? '' : ',';
+      let body = `"campId": ${JSON.stringify(ref.campId)}`;
+      if (ref.weight !== undefined) body += `, "weight": ${ref.weight}`;
+      parts.push(`${pad}    { ${body} }${sep}`);
+    });
+    parts.push(`${pad}  ],`);
+  }
   if (layout.chasms && layout.chasms.length > 0) parts.push(...coordArrayBlock('chasms', layout.chasms, pad));
   if (layout.fires && layout.fires.length > 0) parts.push(...coordArrayBlock('fires', layout.fires, pad));
   if (layout.healings && layout.healings.length > 0)

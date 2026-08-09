@@ -1778,7 +1778,7 @@
       { "x": 8, "y": 10 }
     ],
     "campSpawns": [
-      { "x": 13, "y": 1 }
+      { "x": 7, "y": 7 }
     ],
     "camps": [
       { "campId": "ghoul-nest", "weight": 2 },
@@ -1910,10 +1910,11 @@
       { "x": 5, "y": 2, "size": 3 },
       { "x": 11, "y": 3, "size": 3 },
       { "x": 10, "y": 5 },
-      { "x": 8, "y": 4 }
+      { "x": 8, "y": 4 },
+      { "x": 13, "y": 8 }
     ],
     "campSpawns": [
-      { "x": 9, "y": 4 }
+      { "x": 13, "y": 6 }
     ],
     "camps": [
       { "campId": "bandit-squatters" },

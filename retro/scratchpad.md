@@ -55,3 +55,23 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   events/map). The confirm-the-deficit norm held: one in-browser 50-seed
   sweep separated "rare tail" from "broken live path" in a minute,
   before any mechanism story got authored. (`bec98dd`.)
+
+## §75 build stretch (75d→75h2, 2026-08-08/09)
+
+- The render-step browser gate EARNED it again: the headless 75e tests
+  proved currentTarget directly and structurally couldn't see that
+  clearResolvedObjectives reverted a camp engage order the same tick it
+  landed — only driving the real objective path in the browser exposed
+  it. Pattern: when a feature's sim half is proven via direct function
+  calls, the WIRING path (commands → drains → scans) still deserves one
+  live drive before the phase's render step signs off.
+- The native-eyeball recipe left a temp edit in the user's tree; the
+  layout formatter's verbatim pin caught it as a red suite one session
+  later. Lesson: any "temp-edit config for verification" recipe should
+  END with the revert as an explicit numbered step, and a fresh session
+  should `git status` before diagnosing a red formatter pin (the pin
+  failing IS the tell that a scratch config edit survived).
+- Two user-feedback micro-steps (75h2 prime) rode the same-day loop
+  cheaply because the drip drain had ONE body to parameterize — the
+  extract-the-shared-body habit pays off at feedback time, not just at
+  build time.

@@ -8,6 +8,13 @@
  * tint so a breakable obstacle is legible against its indestructible, SAME-GLYPH
  * sibling (`#` / `╥`). That ambiguity is exactly why the tell exists.
  *
+ * §75h — an ACTIVE neutral (a camp member, `campId !== null`) is the THIRD
+ * FACTION: TERMINAL_AMBER, the warm "alive but not yours" lane between the
+ * player green and the enemy red. Amber is otherwise unused on battle sprites
+ * (stone/ochre are the scenery lane), and a camp bandit shares the enemy
+ * bandit's glyph — the color IS the tell, same argument as §40c. One color for
+ * passive AND hostile camps in v1; the §75j feel pass may split them.
+ *
  * Rubble is deliberately EXCLUDED: it's destructible too, but it's auto-target
  * debris carrying its OWN glyph (`▄`), already distinct from a wall, so it keeps
  * the stone color the user confirmed. The `isDestructibleNeutral && !isAutoTarget`
@@ -37,9 +44,18 @@ export function isDestructibleObstacle(archetype: string): boolean {
   return isDestructibleNeutral(archetype) && !isAutoTargetNeutral(archetype);
 }
 
-/** The base glyph color for a unit's sprite: the §40c cracked tint for a
- *  destructible wall/cover, else the team/stone color. */
-export function spriteColorForUnit(unit: { team: Team; archetype: string }): string {
+/** The base glyph color for a unit's sprite: the §75h camp amber for an
+ *  active neutral, the §40c cracked tint for a destructible wall/cover, else
+ *  the team/stone color. Structural param (the `isActiveNeutral` pattern) so
+ *  snapshots qualify, not just live Units. */
+export function spriteColorForUnit(unit: {
+  team: Team;
+  archetype: string;
+  campId: number | null;
+}): string {
+  if (unit.team === 'neutral' && unit.campId !== null) {
+    return COLORS.TERMINAL_AMBER;
+  }
   if (unit.team === 'neutral' && isDestructibleObstacle(unit.archetype)) {
     return COLORS.CRACKED_STONE;
   }

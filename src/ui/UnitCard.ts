@@ -132,7 +132,8 @@ export function unitCardFromTemplate(template: UnitTemplate): UnitCardData {
 export function unitCardFromUnit(unit: Unit): UnitCardData {
   return {
     // §38d — only real combatants are carded (neutral walls / half-cover are
-    // filtered out by team before this), so `unit.archetype` is a combatant
+    // filtered out by team before this — and §75h keeps camp members out too,
+    // the signed no-cards-v1 call), so `unit.archetype` is a combatant
     // catalog id here; it feeds the shared `Archetype` field the full variant reads.
     archetype: unit.archetype,
     glyph: unit.glyph,

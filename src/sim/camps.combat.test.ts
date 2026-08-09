@@ -167,6 +167,28 @@ describe('§75e — the drip-aware camp-kill stamp', () => {
   });
 });
 
+describe('§75h (browser-caught) — the ordered camp objective SURVIVES the revert scan', () => {
+  it('an engage{neutral} on a living camp member holds; it reverts when the member dies', () => {
+    const { world } = freshWorld();
+    const [camp, other] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
+    const player = spawnAt(world, 'player', { x: 1, y: 1 });
+    spawnAt(world, 'enemy', { x: 11, y: 11 });
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'neutral', unitId: camp.id } },
+    });
+    world.tick();
+    // Pre-fix this reverted the SAME tick (clearResolvedObjectives still
+    // demanded isDestructibleNeutral) and the click-to-engage never landed.
+    expect(world.objectiveFor('player').mode).toBe('engage');
+    kill(world, player, camp);
+    world.tick();
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+    expect(other.currentHp).toBeGreaterThan(0); // only the ordered target died
+  });
+});
+
 describe('§75e — checkBattleEnd invariants', () => {
   it('camps never extend a battle: last enemy down ends it with camp members still alive', () => {
     const { world, bus } = freshWorld();

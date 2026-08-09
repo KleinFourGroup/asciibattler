@@ -312,7 +312,7 @@ describe('World inline death handling', () => {
 
     world.tick();
     expect(world.findUnit(units[0]!.id)).toBeUndefined();
-    expect(deaths).toEqual([{ unitId: units[0]!.id, team: 'player' }]);
+    expect(deaths).toEqual([{ unitId: units[0]!.id, team: 'player', campId: null }]);
   });
 
   it('removes units with negative HP (overkill)', () => {

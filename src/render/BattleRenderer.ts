@@ -4,7 +4,7 @@ import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
-import type { Unit } from '../sim/Unit';
+import { isInertNeutral, type Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
@@ -392,6 +392,9 @@ export class BattleRenderer {
    * so the visible glyph stays clickable at any size (the cell-fallback in the
    * ObjectiveController covers footprint tiles the single glyph doesn't overlap).
    * Indestructible walls (hp-less) are excluded — they stay unclickable.
+   * §75h — ACTIVE neutrals (camp members) join the pool: the click-to-engage
+   * order rides the same neutral-kind objective (the sim admits it since 75e,
+   * and the ordered first blow is what aggros the camp).
    */
   destructibleBillboards(): PickCandidate[] {
     if (!this.world) return [];
@@ -399,7 +402,7 @@ export class BattleRenderer {
     for (const [unitId, handle] of this.handles) {
       const unit = this.world.findUnit(unitId);
       if (!unit || unit.team !== 'neutral' || unit.currentHp <= 0) continue;
-      if (!isDestructibleNeutral(unit.archetype)) continue;
+      if (!isDestructibleNeutral(unit.archetype) && unit.campId === null) continue;
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
       out.push({
@@ -482,7 +485,7 @@ export class BattleRenderer {
     // default size, so the shipped roster's render is untouched.
     if (footprint !== 1) this.sprites.updateSprite(handle, { size: footprint });
 
-    // Neutrals (walls, environment) are inert background — suppress the halo.
+    // INERT neutrals (walls, environment) are background — suppress the halo.
     // An INDESTRUCTIBLE wall still skips the overlay (an HP bar it could never
     // move would be visual noise). §40f — a DESTRUCTIBLE neutral (rubble /
     // breakable wall/cover) opts back in: it gets an overlay so you can watch it
@@ -490,7 +493,11 @@ export class BattleRenderer {
     // owned by UnitOverlayLayer.addDestructible); registering it in
     // overlayHandles means the existing unit:attacked → refreshHpBar path fills
     // it and the per-frame loop position-follows it, no new plumbing.
-    if (unit.team === 'neutral') {
+    // §75h — an ACTIVE neutral (camp member) skips this return and takes the
+    // full combatant path below: natural bloom, the level-badge + HP-bar
+    // overlay, and the mid-battle fade-in — the portal drip spawns with
+    // `instant: false`, so a member MATERIALIZES at the anchor for free.
+    if (isInertNeutral(unit)) {
       this.sprites.updateSprite(handle, { bloomIntensity: 0 });
       if (isDestructibleNeutral(unit.archetype)) {
         const overlay = this.overlays.addDestructible(footprint);

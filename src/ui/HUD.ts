@@ -514,6 +514,10 @@ export class HUD {
     const unit = this.world.findUnit(unitId);
     if (!unit) return;
     // Neutrals (walls, environment) are background, not combatants — no card.
+    // §75h — ACTIVE neutrals (camp members) stay card-less too, DELIBERATELY:
+    // the kickoff shape-lock's signed "no HUD cards for camp units in v1"
+    // (sprite/overlay treatment only; a hostile-camp row is a possible later
+    // follow-up). Don't "fix" this by widening the gate.
     if (unit.team === 'neutral') return;
     // Q4/Q5 — both teams get a compact card in their pane (player bottom-center,
     // enemy top).

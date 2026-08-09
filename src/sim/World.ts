@@ -1239,7 +1239,7 @@ export class World {
         // splice), so a handler can read its position/team.
         this.fireTrigger('death', { unit, team: unit.team });
         this.removeUnit(unit.id);
-        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
+        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
         continue;
       }
 
@@ -1692,7 +1692,7 @@ export class World {
         // K1 — fire `death` before the splice (mirrors the step-1 death check).
         this.fireTrigger('death', { unit, team: unit.team });
         this.removeUnit(unit.id);
-        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team });
+        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
       }
     }
   }
@@ -1986,12 +1986,16 @@ export class World {
         // destructible wall) reverts to atWill once that neutral is gone —
         // destroyed (0 HP, reaped) or, defensively, no longer a destructible
         // neutral. Symmetric to the enemy branch: the "order is done" trigger.
+        // §75h (browser-caught) — an ACTIVE neutral (camp member) is a valid
+        // living target too: this check must mirror Targeting's
+        // `validNeutralObjectiveTarget`, or a click-to-engage order on a camp
+        // reverts the same tick it lands and the first blow never happens.
         const target = this.findUnit(obj.target.unitId);
         const alive =
           target !== undefined &&
           target.team === 'neutral' &&
           target.currentHp > 0 &&
-          isDestructibleNeutral(target.archetype);
+          (isDestructibleNeutral(target.archetype) || target.campId !== null);
         if (!alive) this.setObjectiveAtWill(team);
       } else if (obj.mode === 'focus') {
         // O3 — a focus TILE reverts when its strategy says it's resolved. (An

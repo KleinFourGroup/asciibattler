@@ -30,21 +30,42 @@ describe('spriteColorForUnit — the §40c destructible tell', () => {
   });
 
   it('paints a destructible wall/cover CRACKED_STONE; everything else keeps its base color', () => {
-    expect(spriteColorForUnit({ team: 'neutral', archetype: 'wall_destructible' })).toBe(
-      COLORS.CRACKED_STONE,
-    );
-    expect(spriteColorForUnit({ team: 'neutral', archetype: 'half_cover_destructible' })).toBe(
-      COLORS.CRACKED_STONE,
-    );
+    expect(
+      spriteColorForUnit({ team: 'neutral', archetype: 'wall_destructible', campId: null }),
+    ).toBe(COLORS.CRACKED_STONE);
+    expect(
+      spriteColorForUnit({ team: 'neutral', archetype: 'half_cover_destructible', campId: null }),
+    ).toBe(COLORS.CRACKED_STONE);
     // Indestructible walls + rubble stay the inert stone (rubble is distinct by glyph).
-    expect(spriteColorForUnit({ team: 'neutral', archetype: 'wall' })).toBe(COLORS.TERMINAL_STONE);
-    expect(spriteColorForUnit({ team: 'neutral', archetype: 'rubble_1x1' })).toBe(
+    expect(spriteColorForUnit({ team: 'neutral', archetype: 'wall', campId: null })).toBe(
+      COLORS.TERMINAL_STONE,
+    );
+    expect(spriteColorForUnit({ team: 'neutral', archetype: 'rubble_1x1', campId: null })).toBe(
       COLORS.TERMINAL_STONE,
     );
     // Combatants are untouched by the tell.
-    expect(spriteColorForUnit({ team: 'player', archetype: 'mercenary' })).toBe(
+    expect(spriteColorForUnit({ team: 'player', archetype: 'mercenary', campId: null })).toBe(
       COLORS.TERMINAL_GREEN,
     );
-    expect(spriteColorForUnit({ team: 'enemy', archetype: 'bandit' })).toBe(COLORS.NEON_RED);
+    expect(spriteColorForUnit({ team: 'enemy', archetype: 'bandit', campId: null })).toBe(
+      COLORS.NEON_RED,
+    );
+  });
+
+  it('§75h — an ACTIVE neutral (camp member) is TERMINAL_AMBER, the third-faction tell', () => {
+    // A camp bandit shares the enemy bandit's glyph — the color IS the tell.
+    expect(spriteColorForUnit({ team: 'neutral', archetype: 'bandit', campId: 1 })).toBe(
+      COLORS.TERMINAL_AMBER,
+    );
+    // The camp tint wins over the §40c cracked tell (structurally impossible
+    // today — camp defs are combatants — but the precedence is deliberate).
+    expect(
+      spriteColorForUnit({ team: 'neutral', archetype: 'wall_destructible', campId: 2 }),
+    ).toBe(COLORS.TERMINAL_AMBER);
+    // A combatant with a campId is not a thing (campId rides team 'neutral'
+    // only), but the team check keeps the faction colors authoritative anyway.
+    expect(spriteColorForUnit({ team: 'enemy', archetype: 'bandit', campId: null })).toBe(
+      COLORS.NEON_RED,
+    );
   });
 });

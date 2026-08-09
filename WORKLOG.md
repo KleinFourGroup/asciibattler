@@ -1431,3 +1431,56 @@ command queue + hostility set.
 - +12 tests (economy sim 8: payload 3 + block 2 + pull 3 · Run-side 4;
   2506 → 2518 main); 395 fuzz:smoke green — camp-free byte-identity
   holds through the payload, the gate, and the dormant seam.
+
+### 75h — the renderer/HUD third faction (2026-08-08)
+
+All nine parked-list rows landed, plus one browser-caught sim fix.
+
+- **TERMINAL_AMBER is the third-faction color** (spriteColor.ts): an
+  active neutral paints amber — the warm "alive but not yours" lane
+  between player green and enemy red, otherwise unused on battle
+  sprites; a camp bandit shares the enemy bandit's glyph, so the color
+  IS the tell (the §40c argument). One color passive AND hostile in v1
+  (a 75j split candidate). Structural param gains `campId`; the
+  headless color test extends (+1).
+- **BattleRenderer**: the spawn-time neutral early-return is inert-only
+  — camp members take the full combatant path: natural bloom (0.15
+  idle, verified in-browser via the instanced aColor/aBloomIntensity
+  attributes: camp (255,111,0) linear ≡ #FFB000, rubble stays bloom-0),
+  the level-badge + HP-bar overlay, and the mid-battle fade-in — the
+  drip's `instant:false` makes portal materialization FREE.
+  `destructibleBillboards` admits camp members (click surface).
+- **`unit:died` payload gains `campId`** (the dead unit is already
+  spliced out — no lookup possible): BattleScene's death SFX plays for
+  camp members, stays silent for crumbling scenery. Four payload-pinning
+  tests updated.
+- **ObjectiveController** widens its cell-fallback neutral list (camp =
+  a fight to pick, not an obstacle to demolish); the HUD/UnitCard
+  no-cards gates stay by team — now COMMENTED as the signed v1 call so
+  nobody "fixes" them; palette bloom comments re-scoped inert-only;
+  objectiveStrategy documents its DELIBERATE divergence (bot
+  camp-seeking stays out — the §81 probe arm, per the scope guard).
+- **THE BROWSER-CAUGHT BUG**: `clearResolvedObjectives`' neutral arm
+  still demanded `isDestructibleNeutral`, so a click-to-engage order on
+  a camp member REVERTED THE SAME TICK it landed — the 75e first-blow
+  guarantee was unreachable through the real objective path (the
+  headless 75e tests exercised `currentTarget` directly and couldn't
+  see it). Fixed to mirror `validNeutralObjectiveTarget`; pinned
+  headlessly (+1: order holds while the member lives, reverts on its
+  death). Exactly what this step's browser gate is for.
+- **Browser-verified end to end** (dev-preview, a TEMPORARY river-layout
+  camp reverted before commit; throttled-tab manual tick driving per the
+  HANDOFF tips): character select → boon → battle → both members DRIP
+  onto the anchor and wander the leash → the engage order holds → the
+  march aggros the camp (hostile at tick 316) → ordered target dies →
+  objective auto-reverts → camp wiped by a player blow → `battle:ended`
+  carries `campKills` → the turn offer holds the camp's rolled loot (a
+  shield packet). Zero console errors. Screenshot unavailable (pane not
+  compositing — the known throttle); the color proof came from the
+  instanced attributes instead, which is STRONGER than a JPEG.
+- NATIVE EYEBALL (the user's half): temp-add to river in layouts.json —
+  `"campSpawns": [{"x": 9, "y": 9}], "camps": [{"campId":
+  "bandit-squatters"}]` — then `?layout=river`. Looking for: amber
+  bandits materializing + wandering, badge/HP overlays, bloom parity,
+  death cry on camp kills, click-to-engage feel.
+- +2 tests (2518 → 2520 main); 395 fuzz:smoke green.

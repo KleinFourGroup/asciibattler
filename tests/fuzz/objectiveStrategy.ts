@@ -206,7 +206,11 @@ export function parseObjectiveFlag(value: string): ObjectiveProclivity {
 }
 
 /** All living enemy units — the objective candidates. Mirrors the live
- *  `ObjectiveController`'s `team === 'enemy' && currentHp > 0` filter. */
+ *  `ObjectiveController`'s `team === 'enemy' && currentHp > 0` filter.
+ *  §75h — DELIBERATELY narrower than the controller's click surface: camp
+ *  members (active neutrals) are clickable live but stay OUT of the bot's
+ *  candidate pool (the §75 scope guard — bot camp-seeking is §81's probe
+ *  arm, not a default behavior). */
 function livingEnemies(world: World): readonly Unit[] {
   return world.units.filter((u) => u.team === 'enemy' && u.currentHp > 0);
 }

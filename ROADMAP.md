@@ -139,13 +139,12 @@ shape-lock #4).
 - [x] 75f — `CampWanderBehavior` ✅ 2026-08-08: slot-0 swap + 'camp'
   registry arm; campRng wander + anchor-vacate rule + MovementBehavior
   delegate; both exit invariants standing as tests (worklog §75)
-- [x] 75g — run economy ✅ 2026-08-08: campKills payload (omitted when
-  empty) + the win-or-lose portion branch in its cut slot + both knobs
-  (block via shared campCleared; pull dormant on the lazy fork, with
-  the anchor-tile objective auto-revert); NO Run bump, as predicted;
-  per-encounter pull override deferred to 75j (worklog §75)
-- [ ] 75h — renderer/HUD third faction (color/bloom/overlays/death
-  SFX/click-to-engage; NO cards v1, signed) — native-browser eyeball
+- [x] 75g — run economy ✅ 2026-08-08: campKills payload + the
+  win-or-lose portion branch + both knobs dormant; NO Run bump; the
+  pull's per-encounter override deferred to 75j (worklog §75)
+- [x] 75h — renderer/HUD third faction ✅ 2026-08-08: TERMINAL_AMBER
+  combatant treatment + the browser-caught objective-revert fix;
+  agent-verified in-browser; NATIVE EYEBALL PENDING (worklog §75)
 - [ ] 75i — the camp catalog editor + the layout-editor camp-spawn
   paint tool + weighted camps list + byte-faithful formatters +
   the live no-op-save proof

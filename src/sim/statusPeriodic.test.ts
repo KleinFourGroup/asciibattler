@@ -169,7 +169,7 @@ describe('27b — periodic DoT', () => {
     p.victim.currentHp = 2; // burn deals 3 → lethal
     p.world.applyStatusEffect(p.victim, STATUS_DEFS.t_burn!, p.foe.id);
     for (let i = 0; i < E; i++) p.world.tick();
-    expect(p.deaths).toContainEqual({ unitId: 1, team: 'player' });
+    expect(p.deaths).toContainEqual({ unitId: 1, team: 'player', campId: null });
     expect(p.world.findUnit(1)).toBeUndefined();
   });
 });

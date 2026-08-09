@@ -159,8 +159,17 @@ export class ObjectiveController implements ObjectiveControls {
     const enemies: EnemyAtCell[] = this.world.units
       .filter((u) => u.team === 'enemy' && u.currentHp > 0)
       .map((u) => ({ id: u.id, cell: u.position }));
+    // §75h — active neutrals (camp members) join the destructibles: a click
+    // on one orders an ATTACK (the same neutral-kind objective — camp = a
+    // fight to pick, not an obstacle to demolish; the sim-side admit is 75e's
+    // validNeutralObjectiveTarget, and the ordered first blow aggros the camp).
     const neutrals: NeutralAtCell[] = this.world.units
-      .filter((u) => u.team === 'neutral' && u.currentHp > 0 && isDestructibleNeutral(u.archetype))
+      .filter(
+        (u) =>
+          u.team === 'neutral' &&
+          u.currentHp > 0 &&
+          (isDestructibleNeutral(u.archetype) || u.campId !== null),
+      )
       .map((u) => ({ id: u.id, cells: cellsOccupiedBy(u) }));
     this.enqueueObjective(mode, objectiveAtCell(cell, enemies, neutrals));
     return true;

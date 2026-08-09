@@ -154,7 +154,7 @@ describe('environment / spawnWall', () => {
     w.tick();
 
     expect(w.findUnit(wall.id)).toBeUndefined();
-    expect(deaths).toEqual([{ unitId: wall.id, team: 'neutral' }]);
+    expect(deaths).toEqual([{ unitId: wall.id, team: 'neutral', campId: null }]);
   });
 });
 
@@ -326,7 +326,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
     w.tick();
 
     expect(w.findUnit(rubble.id)).toBeUndefined();
-    expect(deaths).toEqual([{ unitId: rubble.id, team: 'neutral' }]);
+    expect(deaths).toEqual([{ unitId: rubble.id, team: 'neutral', campId: null }]);
   });
 
   it('is burnable/freezable but not poisonable (statusSusceptibility, catalog-derived)', () => {

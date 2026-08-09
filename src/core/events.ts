@@ -297,9 +297,11 @@ export interface GameEvents extends Record<string, unknown> {
    * subscribers can branch on combatant vs neutral (wall / environment)
    * deaths without re-querying the world — by the time this event fires
    * the unit has already been spliced out of `world.units` and is no
-   * longer findable.
+   * longer findable. §75h adds `campId` on the same rationale: the death
+   * SFX plays for a camp member (an ACTIVE neutral) but not for crumbling
+   * scenery, and the dead unit can't be looked up to tell them apart.
    */
-  'unit:died': { unitId: number; team: Team };
+  'unit:died': { unitId: number; team: Team; campId: number | null };
 
   /**
    * Phase 27 — the status-effect lifecycle. A status (burn/bleed/poison/

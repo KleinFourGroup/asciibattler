@@ -122,7 +122,7 @@ describe('EventBus', () => {
       durationTicks: 5,
     });
     bus.emit('unit:attacked', { attackerId: 1, targetId: 2, damage: 3, crit: false });
-    bus.emit('unit:died', { unitId: 1, team: 'player' });
+    bus.emit('unit:died', { unitId: 1, team: 'player', campId: null });
     bus.emit('run:started', { seed: 42 });
     bus.emit('run:nodeEntered', { nodeId: 0 });
     bus.emit('run:victory', {});

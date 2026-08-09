@@ -23,15 +23,19 @@ export const COLORS = {
   // Desaturated warm gray for environment entities (walls, future shrines).
   // Picked to read as "inert" — sits between TERMINAL_BLACK and
   // DARK_TERMINAL_AMBER on the warm axis, doesn't fight green/red for
-  // attention. Neutrals also have bloom suppressed at the renderer side
-  // so they don't compete with combatants for halo budget.
+  // attention. INERT neutrals also have bloom suppressed at the renderer
+  // side so they don't compete with combatants for halo budget (§75h: an
+  // ACTIVE neutral — a camp member, TERMINAL_AMBER — blooms like a
+  // combatant; it's a fighter, not furniture).
   TERMINAL_STONE: '#7A7066',
   // §40c — a weathered ochre for DESTRUCTIBLE walls / half-cover. Warmer + more
   // saturated than the inert TERMINAL_STONE so a breakable obstacle reads as
   // cracked/mortared masonry, distinct at a glance from a permanent wall (which
   // shares its `#` / `╥` glyph) — the §40c "visual tell". Sits on the warm amber
   // axis (between TERMINAL_AMBER and DARK_TERMINAL_AMBER) so it doesn't fight the
-  // green/red team colors for attention; neutrals keep bloom suppressed.
+  // green/red team colors for attention; inert neutrals keep bloom suppressed.
+  // Distinct enough from the §75h camp TERMINAL_AMBER (#FFB000 — brighter,
+  // fully saturated, blooming) that scenery and the third faction don't blur.
   CRACKED_STONE: '#B5843C',
 } as const;
 

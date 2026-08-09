@@ -139,13 +139,15 @@ export class BattleScene implements Scene {
     // here is the per-event sounds with no fx key: death, fire/heal tile chips,
     // and the dash leap.
     //
-    // C1b: skip neutral-team deaths — walls have HP plumbed but the
+    // C1b: skip INERT neutral deaths — walls have HP plumbed but the
     // generic combat death cry would read as a unit dying rather than a
     // wall crumbling. When C2's AoE damage actually lands wall hits, swap
-    // this for a dedicated `wall_destroyed` sample.
+    // this for a dedicated `wall_destroyed` sample. §75h — an ACTIVE
+    // neutral (camp member, campId on the payload — the dead unit is
+    // already spliced out, so no lookup) IS a unit dying: it cries.
     this.subscriptions.push(
-      ctx.bus.on('unit:died', ({ team }) => {
-        if (team === 'neutral') return;
+      ctx.bus.on('unit:died', ({ team, campId }) => {
+        if (team === 'neutral' && campId === null) return;
         ctx.audio.play('death');
       }),
       // 27d/27e — the fire-tile burn SFX re-homed off the retired `unit:burned`

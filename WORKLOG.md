@@ -1749,3 +1749,51 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   moved out of 75j deliberately: the 75k sim fix moves camp-layout
   trajectories, so pinning before it would pay the box twice (the
   "verdicts first, board once" logic applied again).
+
+### 75k — the ordered-engage rubble auto-break (2026-08-09)
+
+- **Repro-first paid again**: the recorded suspect seams both confirmed
+  in one headless read (~1.6s vs the C1d browser-poll hour). The freeze
+  = two cooperating layers: the ordered PURSUE branches
+  (`updateObjectiveTarget` step 3 + `updateFocusTarget`'s enemy/neutral
+  commits) re-commit the unreachable mark every tick, and the §40b
+  rubble overlay (`applyRubbleAutoTarget`) rides ONLY the atWill
+  acquisition path (`updateTargetDefault`) — so `currentTarget` kept
+  honoring the mark, movement's path came back empty, and no proposal
+  ever landed.
+- **The fix (`db53957`)**: `applyOrderedRubbleFallback` — the overlay's
+  sibling for the ordered paths, called from all three pursue-commit
+  sites. An unreachable MOBILE ordered mark (enemy or active neutral)
+  redirects onto the nearest approachable auto-target rubble; the
+  per-tick re-commit resumes the order the moment the breach opens.
+  Two deliberate omissions vs the overlay: NO reachable-hostile
+  re-rank (engage steps 1–2 already own preemption; focus preempts
+  nothing by design), and an INERT committed neutral is skipped — a
+  deliberate far-rubble focus must not re-rank onto a nearer one
+  (guard pinned by test). **The class closed in one pass** (the
+  twice-bitten doctrine pre-empted): engage{enemy}, engage{neutral},
+  focus{enemy}, focus{neutral} all get the fallback; the tile branches
+  were already bestEffort (J3).
+- **Pins** ([Targeting.orderedRubble.test.ts](src/sim/Targeting.orderedRubble.test.ts)):
+  the redirect on both ordered modes, the inert-focus guard, and the
+  full chip→breach→ordered-first-blow→camp-aggro loop under real ticks
+  on BOTH arms (player click-to-engage + the §75j2 pull's enemy-team
+  rails). Control-probed: 4/5 fail at pre-fix HEAD, 5/5 green after.
+  2534 main + 395 fuzz:smoke green.
+- **Two harness learnings** (recorded for the next fixture author): a
+  bare `world.spawnUnit` template carries NO behaviors/abilities —
+  the first integration run "reproduced" the freeze with an attacker
+  that couldn't act at all (the probe caught it; battleSetup or the
+  rubbleAutoTarget.test.ts equip idiom is the fix). And a ONE-faction
+  board ends decisively at tick 1 even with `blockCampTurnEnd` ON —
+  `hasUnclearedHostileCamp` gates on HOSTILE, and a pulled camp is
+  passive until the first blow — so camp fixtures park an opposing
+  `hold` dummy to keep the battle open (real encounters always field
+  both factions).
+- **Scope note**: `canReach` counts "within attackRange" as reachable
+  regardless of LOS (inherited overlay semantics) — an ordered ARCHER
+  LOS-blocked at range still holds its mark, exactly as atWill does.
+  Not part of the freeze class (melee-shaped); left alone.
+- **Residual**: the rubbleQuarry re-eyeball (the pull now breaking
+  through the 13,8 gate in the native browser) — the user's check,
+  pending at this entry.

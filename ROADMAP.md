@@ -138,12 +138,10 @@ shape-lock #4).
   placements + all verdicts + the 75j2 pull re-author/per-turn seed +
   the user placement pass; the board re-pin MOVED to 75l — one pin,
   after the 75k sim fix (worklog §§75j–75j-close)
-- [ ] 75k — the ordered-engage destructible-gate fix (INSERTED at the
-  75j close; the old 75k relabels to 75l): a melee unit whose engage
-  objective sits behind destructible rubble FREEZES instead of
-  auto-breaking through — latent (the player click-to-engage path
-  likely shares it). Headless repro FIRST (the layout-deadlock
-  pattern); suspect seams in worklog §75j-close
+- [x] 75k — ✅ 2026-08-09 (`db53957`): the ordered-target rubble
+  auto-break — all four ordered pursue arms (engage/focus ×
+  enemy/neutral) fall back to the gate rubble; repro-first, both arms
+  pinned; rubbleQuarry re-eyeball rides with the user (worklog §75k)
 - [ ] 75l — docs close (was 75k) + the SCHEDULED board re-pin (moved
   from 75j): ARCHITECTURE/DESIGN/GOTCHAS, cursor flip, ROADMAP demote
 

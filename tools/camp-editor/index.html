@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Camp Editor</title>
+  </head>
+  <body>
+    <main id="editor-root">
+      <header class="bar">
+        <h1>Camp Editor</h1>
+        <span class="subtitle"
+          >Author <code>config/camps.json</code> · schema-validated + both boot asserts · save
+          straight to disk</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+      <section class="workspace">
+        <div class="edit-pane">
+          <div class="tabs-row">
+            <div id="tabs" class="tabs" role="tablist" aria-label="Camp"></div>
+            <button id="new-btn" type="button" class="tab new-tab" title="Add a new camp">+ New</button>
+            <button id="delete-btn" type="button" class="tab new-tab" title="Delete this camp">✕ Delete</button>
+          </div>
+
+          <section class="card">
+            <h2>Identity</h2>
+            <div class="field-row">
+              <label class="inline stack">
+                <span class="field-label">Id</span>
+                <input id="id" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">Name</span>
+                <input id="name" type="text" autocomplete="off" spellcheck="false" />
+              </label>
+              <label class="inline stack">
+                <span class="field-label">Leash radius</span>
+                <input id="leash-radius" type="number" min="1" step="1" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label class="inline grow stack">
+                <span class="field-label">Description <span class="sub">(optional)</span></span>
+                <textarea id="description" rows="2" spellcheck="false"></textarea>
+              </label>
+            </div>
+            <p id="used-by" class="hint"></p>
+            <p class="hint">
+              The leash is the Chebyshev radius around the camp's spawn tile that PASSIVE members
+              wander within — a hostile member pursuing may leave it. Camp units drip-spawn through
+              the spawn tile one per slot, so a tight pocket works.
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Units <span class="sub">(combatant archetypes, spawned onto team neutral)</span></h2>
+            <div id="units" class="pool"></div>
+            <div class="row">
+              <button id="add-unit-btn" type="button">+ Add unit</button>
+            </div>
+            <p class="hint">
+              Count and level default to 1 when blank (a bare entry saves bare). Only combatant
+              archetypes are listed — a camp unit is a regular combatant def on
+              <code>team: 'neutral'</code>; walls/rubble can't be camp members.
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Rewards <span class="sub">(rolled when the player kills the whole camp)</span></h2>
+            <div id="rewards" class="pool"></div>
+            <div class="row">
+              <button id="add-reward-btn" type="button">+ Add reward</button>
+            </div>
+            <p class="hint">
+              Each row references a table in <code>config/rewards.json</code> by name (author tables
+              in the <a href="/tools/reward-editor/">reward table editor</a>); when the camp is
+              killed by the player, every ref's <code>chance</code> is tested independently and a
+              passing table is sampled once — granted at turn completion win-or-lose (the 51a
+              portion rule). No rows = the <code>rewards</code> key is omitted (the camp pays
+              nothing).
+            </p>
+          </section>
+        </div>
+
+        <aside class="side-pane">
+          <section class="card">
+            <h2>Validation</h2>
+            <ul id="validation" class="validation"></ul>
+            <p class="hint">
+              Runs the SAME <code>CampsSchema</code> the game boots on, plus both boot asserts:
+              every reward ref must name a real table, and every committed layout's
+              <code>camps[].campId</code> must still resolve here (renaming or deleting a camp a
+              layout references blocks Save — fix the layout first).
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Save</h2>
+            <div class="row">
+              <button id="save-btn" type="button" class="primary">Save to config</button>
+              <button id="revert-btn" type="button" class="danger-outline">Revert all</button>
+            </div>
+            <p id="save-status" class="hint"></p>
+          </section>
+
+          <section class="card">
+            <h2>Placement lives on the layout</h2>
+            <p class="hint">
+              Which battlefields host this camp — the spawn tiles and the weighted roll list — is
+              authored on the LAYOUT side: the <a href="/tools/layout-editor/">layout editor</a>'s
+              Camps layer. A camp def owns only its intrinsic content (roster, leash, rewards) —
+              the sector-owns-both split.
+            </p>
+          </section>
+
+          <section class="card">
+            <h2>Export <span class="sub">(whole file)</span></h2>
+            <textarea id="export" rows="14" spellcheck="false" readonly></textarea>
+            <div class="row">
+              <button id="copy-btn" type="button">Copy JSON</button>
+              <button id="download-btn" type="button">Download .json</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="./editor.ts"></script>
+  </body>
+</html>

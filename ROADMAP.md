@@ -146,9 +146,10 @@ shape-lock #4).
   combatant treatment + the browser-caught objective-revert fix;
   NATIVE EYEBALL ✅ 2026-08-09 → one finding, fixed as 75h2: the
   setup-time first-member prime (worklog §75)
-- [ ] 75i — the camp catalog editor + the layout-editor camp-spawn
-  paint tool + weighted camps list + byte-faithful formatters +
-  the live no-op-save proof
+- [x] 75i — editors ✅ 2026-08-09: the camp editor (both boot asserts
+  live) + the layout-editor camps layer + both byte-faithful
+  formatters + both live no-op-save proofs; camps.json normalized
+  once, hash-neutral (worklog §75i)
 - [ ] 75j — the demo-catalog design round + placements + the feel
   pass (the two signed decision points: `enemyPullChance` enable ·
   block-turn-end) + the SCHEDULED board re-pin

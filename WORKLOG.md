@@ -1515,3 +1515,41 @@ pre-battle countdown — unlike the initial teams, which spawn at setup.
   was still in the tree; reverted, as the recipe instructs.
 - +1 test net (2520 → 2521 main); 395 fuzz:smoke green (the prime is
   presence-gated like everything else).
+
+### 75i — the editors (2026-08-09)
+
+Landed to the cut in three commits (`bde0cc4` the formatter, `9770531`
+the layout-editor camps layer, `2075c7a` the camp editor). Notes beyond
+the cut lines:
+
+- **camps.json normalized once** at the formatter landing: the 75a
+  file carried prettier-style fits-on-one-line array collapsing
+  (single-element `units`/`rewards` inline, multi-element expanded),
+  which a deterministic formatter can't reproduce cleanly — normalized
+  to the encounters convention (arrays always expand, leaf entries
+  inline). Whitespace-only: `configHash` stringifies the PARSED value
+  (checked before deciding), so the trace era is untouched — no 75a-
+  style re-baseline. fuzz:smoke 395 green on the commit confirms.
+- The layout editor grew a fourth LAYER (not a neutral sub-tool):
+  camp spawns are click-once list entities (the rubble model) and the
+  weighted `camps` list panel rides the layer the way the region panel
+  rides spawn-regions. The brush refuses cells a unit can't occupy;
+  the buried-spawn case (blocker painted over an existing spawn) is a
+  validation error instead. Resize clips out-of-bounds spawn tiles but
+  keeps the camps LIST (it references the catalog, not cells).
+- The camp editor runs BOTH 75a boot asserts live (the event-editor
+  posture): `assertLayoutCampRefs` fed the committed LAYOUTS means
+  renaming/deleting a camp a shipped layout references blocks Save —
+  the brick-the-next-boot case the asserts exist for.
+- The editor keeps the encounter editor's ≥1-camp floor even though
+  `CampsSchema` legalizes an empty catalog (the form assumes an active
+  tab); the delete-guard message points at hand-editing to `[]`. A
+  deliberate UI-simplicity tradeoff, noted in the README.
+- **Both live no-op-save proofs done in the browser** (the V2
+  precedent): camp editor Revert→Save → the verbatim pin re-run green
+  against the written file; layout editor load `rubbleQuarry` →
+  Save (overwrite confirmed at 9:35 AM) → `git diff --quiet
+  config/layouts.json` IDENTICAL to HEAD.
+- Fuzz byte-identity holds through 75i by construction: everything
+  here is `tools/` + tests except the camps.json whitespace
+  normalization (parsed-identical). +7 tests (2521 → 2528 main).

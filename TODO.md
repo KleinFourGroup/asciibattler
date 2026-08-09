@@ -22,7 +22,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [x] **Event outcome beat.** ✅ RESOLVED 2026-08-07 at the §74i design
   round (user-signed): the AUTHORED outcome-page convention — no engine
-  toast (a §81 feel-read revisit if prose proves insufficient). Now a
+  toast (a §82 feel-read revisit if prose proves insufficient). Now a
   DESIGN.md convention ("Events"); worklog §74i.
 - [x] **Per-run event repeats.** ✅ BUILT 2026-08-07 (74i-a,
   user-signed): default no-repeat via the engine-written `visited:<id>`

@@ -288,7 +288,7 @@ carries the findings + resolutions.
    already stale from pre-50c/pre-W2 eras). `signed-sheet.json`
    carries no path weights — unaffected. The 50c procedure applies:
    pad `event: 0` in one commit, regenerate local outputs at the
-   next probe, board re-sign at §81.
+   next probe, board re-sign at §82.
 3. **"No recursion" ≠ no cycles.** The grammar is flat but `next`
    id-refs can loop (A→B→A). 74a adds a boot assert (every page
    reaches a terminal) + the harness cap above.
@@ -498,11 +498,11 @@ correction** — the spec's elite-style "optional detour" framing was
 wrong: events are a major run component, ~half as frequent as battles
 on a path, back-to-back legal (user feel call). Shipped
 `eventChance 0.5` / `eventMinSpacing 1` (vs the elite/port
-0.25/0.2 + spacing 2–3 pattern), LAUNCH-ROUGH for §81. Knock-ons
+0.25/0.2 + spacing 2–3 pattern), LAUNCH-ROUGH for §82. Knock-ons
 owned eyes-open: the one-event-per-hop scatter ceiling (§77's ratio
 pass is the real control), battle-less width-2 hops (rest+event fills
 both slots), the sharpened economy tradeoff (hop-scaled enemies vs
-per-fight income — a first-order channel at 0.5 density, §81 reads
+per-fight income — a first-order channel at 0.5 density, §82 reads
 it), and 3-event catalog repetition until §74i.
 
 **As-built to the cut + the shape-lock.** Notes beyond the cut line:
@@ -537,7 +537,7 @@ it), and 3-event catalog repetition until §74i.
   (TS narrows `run.phase` at the dispatch site). The §74e exit
   criterion is a REGRESSION PIN now: harness.test's traversal test
   proves opened pages at eventChance=1 and exact zero on the
-  eventChance=0 control arm. Not yet a summary.csv column (§81's
+  eventChance=0 control arm. Not yet a summary.csv column (§82's
   call).
 - `dockAtPort` (Run.test) routes event-free by construction now — an
   opened event would perturb the port pins and a combat-resolve is a
@@ -613,7 +613,7 @@ authored loop revisit (deterministic, MAX_EVENT_STEPS-capped). (2)
 **ε = the MAP class floor (3.265), shared by class argument** — the
 grant→preTurn / nodeChoice→map precedent (out-of-battle clone,
 next-battle horizon). PROVISIONAL: event pages are a context class
-readEpsilonAA has never read; the §81 board round re-reads it. (3)
+readEpsilonAA has never read; the §82 board round re-reads it. (3)
 **A single enabled choice is not a decision** — no draw, no rollouts,
 no log (the singleton-frontier rule; forced pages stay free).
 
@@ -697,7 +697,7 @@ Landed to the cut on the reward/encounter-editor shape
 **The design conversation (user-signed).** Fork 1 (the outcome-beat
 rider): the AUTHORED outcome-page convention — a terminal page narrates
 the result, its acknowledging choice carries the effects — "sometimes
-broken, but not often"; no engine toast (a §81 feel-read revisit if
+broken, but not often"; no engine toast (a §82 feel-read revisit if
 prose proves insufficient). Fork 2 (the repeat rider): DEFAULT
 NO-REPEAT per run, opt-out `repeatable: true` per def. Starting-event-
 as-buff and the two whimsical events confirmed intentional (levity
@@ -746,7 +746,7 @@ checklist paid: `prodigy: 0` padded into BOTH archetype-keyed weight
 records (`archetype` + `composition` — scoredWeights' only two, class
 audited) across config/fuzz-strategies.json + redraw-level-fisher +
 the 12 fixture vectors (the 50c pad-zero procedure; local
-best-strategy outputs regenerate at the next probe; §81 board
+best-strategy outputs regenerate at the next probe; §82 board
 re-signs), and the §29-close draft-exclusion pin gains 'prodigy'.
 Suites: 2435 main (+9) / 394 fuzz green.
 
@@ -807,10 +807,10 @@ rename + 74i's `repeatable` field rode it). 74j swept ARCHITECTURE
 (the events.ts/events.json entries were MISSING; Run.ts's annotation
 was stale back to v16/pre-§47 — phase union + version pointer fixed;
 NodeMap/RunConfig/sectors/sector-map/rewards annotations refreshed)
-and demoted the ROADMAP section. Carried forward: the ε floor §81
-re-read · the gambler parity repair (§81 first item) · the §77
+and demoted the ROADMAP section. Carried forward: the ε floor §82
+re-read · the gambler parity repair (§82 first item) · the §77
 stress test + ratio pass · the browser-cell gauntlet watch item ·
-launch-rough event balance (§81 reads the event era).
+launch-rough event balance (§82 reads the event era).
 
 ## Phase 75 — Camps
 
@@ -1459,7 +1459,7 @@ All nine parked-list rows landed, plus one browser-caught sim fix.
   no-cards gates stay by team — now COMMENTED as the signed v1 call so
   nobody "fixes" them; palette bloom comments re-scoped inert-only;
   objectiveStrategy documents its DELIBERATE divergence (bot
-  camp-seeking stays out — the §81 probe arm, per the scope guard).
+  camp-seeking stays out — the §82 probe arm, per the scope guard).
 - **THE BROWSER-CAUGHT BUG**: `clearResolvedObjectives`' neutral arm
   still demanded `isDestructibleNeutral`, so a click-to-engage order on
   a camp member REVERTED THE SAME TICK it landed — the 75e first-blow
@@ -1611,9 +1611,9 @@ signing; the content landed as `a299b77`. The decision trail:
   question for whoever builds it: can an encounter fit-filter reach a
   layout deliberately absent from every sector pool? Verify then.
 - **The level fork (per-act variants vs a level budget) is DEFERRED
-  to §81 with data**: v1 camps are act-agnostic (both sectors pool
+  to §82 with data**: v1 camps are act-agnostic (both sectors pool
   the same layouts; the weighted list is per-layout), so L1–2 camps
-  will read trivial in The Deep End. Measured by §81's board + camp
+  will read trivial in The Deep End. Measured by §82's board + camp
   probe before any mechanism signs — my recorded lean: a camp-side
   level budget reusing the wave-resolver vocabulary over catalog
   variant pairs, IF the deficit is real.
@@ -1672,5 +1672,48 @@ All three decision points resolved at the user's native playtest:
   (their call: "some are too asymmetric") → THEN the box board
   re-pin (locations move trajectories, so the pass goes first).
   Procedural-map camp support ("Uncharted Ground") deliberately NOT
-  in §75 — proposed as its own pre-§81 catch-up phase (with the §37
-  terrain-type backlog); pending the user's sign-off on the insertion.
+  in §75 — proposed as its own catch-up phase (with the §37
+  terrain-type backlog); APPROVED + numbered §81 (the old §81 → §82;
+  see the §75j2 entry).
+
+### 75j2 — the pull re-authored + the per-turn seed + the §81 insertion (2026-08-09)
+
+The user's post-placement playtest ("the fetidPond camp is sometimes
+hostile to the enemy from the start — bug?") decomposed into a
+misread feature AND a real bug, then a design re-author (`0a7ae8c`):
+
+- **The probe** (800 synthetic encounters): start-hostility at 24.1%
+  ≈ the 0.25 knob — the pull working as shipped. But 0/800
+  within-encounter disagreements across worldSeeds — the pull's lazy
+  fork rode the per-ENCOUNTER terrainSeed parent, replaying
+  identically every turn: the §75i-post replay class again,
+  contradicting shape-lock #3's signed per-turn fork. At 0.25 that
+  meant 25% of encounters enemy-beelined the camp EVERY turn.
+- **The re-author (the user's original intent, disruption read LOW)**:
+  the pull is now the first consumer of the enemy objective system —
+  `engage{neutral}` on the pulled camp's PRIMED member, riding the
+  ordered-first-blow + dead-target-revert rails the player's
+  click-to-engage already pinned. NO pre-marked hostility: damage
+  keeps its place as hostility's single source, so a pulled camp
+  reads passive until actually struck, then aggros camp-wide and the
+  fight cascades. Blocked-anchor edge (no primed member) skips the
+  pull. The `clearResolvedObjectives` camp-anchor TILE exception
+  stays (the player tile-engage path can still hit it).
+- **The seed fix**: the pull rolls on a lazy RNG seeded
+  `mix(terrainSeed, worldSeed)` — per-turn, no ladder append, no
+  burn needed (no other stream uses the mixed seed). `spawnCamps`
+  gains `worldSeed` via `applyTerrain` (all four construction sites
+  free). Camp IDENTITY stays per-encounter on the terrainSeed parent
+  — the signed verdict, untouched. `mixSeeds` is a LOCAL one-off;
+  §77's keyed-stream re-architecture generalizes the shape.
+- Pins: live-at-1 reshaped (ordered engage + NO pre-hostility) · the
+  revert test moved to the standard dead-target rule · NEW
+  self-healing scan pin (worldSeeds disagree — the replay
+  regression). 2529 main + 395 fuzz:smoke green.
+- **The §81 insertion (user-approved)**: procedural parity
+  ("Uncharted Ground" — the §37 terrain tiles in gen + per-theme
+  camp pools) is the new §81, before the closing rebalance, which
+  renumbers §81→§82 — the user's call: `<phase><letter>` is the STEP
+  convention, so no "80b" phase names. Every live-doc forward ref
+  swept (ROADMAP · HANDOFF · TODO · this file · the agent memory);
+  archives untouched.

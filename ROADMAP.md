@@ -8,11 +8,13 @@ resolutions; audit findings + rationale in [WORKLOG.md](WORKLOG.md)
 each phase kickoff (AGENTS "The planning stack"), never here.
 
 **Ordering in one breath:** tooling before the long haul (§73);
-events before its two consumers (§77 gen-rework, §81 balance); ALL
+events before its two consumers (§77 gen-rework, §82 balance); ALL
 content movers (§§74–76) before the single re-baseline point (§77);
 cosmetic/docs phases where they can't perturb pins (§§78–80); balance
-last, on final content (§81). The gambler parity repair was
-DELIBERATELY moved from the opener to §81 (user call, 2026-08-05):
+last, on final content (§82, née §81 — renumbered 2026-08-09 when
+the procedural-parity phase claimed §81). The gambler parity repair
+was DELIBERATELY moved from the opener to the closing rebalance
+(user call, 2026-08-05):
 repair constants tuned before §§74–76 puree the numbers would be
 re-derived anyway; the breach rides meanwhile as the named sheet
 rider it already is.
@@ -77,7 +79,7 @@ cluster-5-spec §Kickoff resolutions.
   shown-disabled+requirement · met-dim · page hop · start-encounter);
   the 74e interim hazard CLOSED. Detail: worklog §74f.
 - [x] 74g — arbitration ✅ 2026-08-06: nominator model + MAP-class ε
-  (§81 re-reads) + singleton rule; decisions.csv rows. Worklog §74g.
+  (§82 re-reads) + singleton rule; decisions.csv rows. Worklog §74g.
 - [x] 74h — the event editor ✅ 2026-08-06: shape landed + the live
   no-op-save byte proof; browser-driven. Detail: worklog §74h.
 - [x] 74i — the design round ✅ 2026-08-07 (a/b/c): riders signed ·
@@ -110,7 +112,7 @@ round.
   ticks); full fuzz byte-identical on camp-free layouts; feel
   verdicts recorded in the worklog.
 - **Scope guards:** no cross-turn camp state; no fourth team value;
-  bot camp-seeking stays out (the probe arm is §81's).
+  bot camp-seeking stays out (the probe arm is §82's).
 
 **The cut (kickoff shape-lock 2026-08-08 — worklog §75).** World
 **v34→v35 at 75b**; NO RunSnapshot bump predicted; every step
@@ -166,7 +168,7 @@ identity pass; the stat-feel structural changes
 de-saturation) with constants locked against an in-phase board run;
 the promotion-screen derived-delta display.
 
-- **Order:** last content mover before the §77 re-baseline; feeds §81
+- **Order:** last content mover before the §77 re-baseline; feeds §82
   (the gambler is the luck character — this phase may move the parity
   breach organically, either direction).
 - **Risk:** MEDIUM — no snapshot bump predicted (aura state =
@@ -258,7 +260,31 @@ telemetry — each closing with a "what Cluster 6 must not break" note.
   confirm the Cluster-6 persistent-store dependency.
 - **Scope guards:** ZERO implementation — audits and plans only.
 
-## Phase 81 — The closing rebalance + cluster close
+## Phase 81 — Procedural parity ("Uncharted Ground" catch-up)
+
+**Charter:** bring the procedural battlefield generator to content
+parity with the authored layouts: the five §37 terrain tiles
+(deepWater / hills / ice / sand / mud) in gen, and camp support —
+procedural maps carry no authored `camps` list, so camps roll from a
+per-theme camp pool + a density knob (the sector-owns-both split
+extended to themes). Inserted at the 75j close (user-approved
+2026-08-09, numbered per the phase-number-letter-is-for-steps
+convention; the old §81 renumbered to §82 — worklog §75j2).
+
+- **Order:** after §80, before the §82 rebalance — the closing board
+  must measure final content INCLUDING the procedural arm.
+- **Risk:** MEDIUM — gen changes shift procedural trajectories (a
+  deliberate procedural-arm re-pin); hand-authored layouts untouched.
+- **Decision points:** the per-theme camp pools + density (a design
+  round); per-tile terrain density knobs.
+- **Exit:** procedural maps roll the §37 tiles + camps; same seed →
+  same map (determinism holds); the procedural fuzz arm re-pinned;
+  user eyeball on a handful of seeds.
+- **Scope guards:** this is the BATTLEFIELD generator (§77 owns the
+  node-map generator); no new tile kinds; no new camp content —
+  pools over the §75 catalog only.
+
+## Phase 82 — The closing rebalance + cluster close
 
 **Charter:** the balance agenda on final content: the gambler
 diagnosis→repair (confirm-the-deficit FIRST — mechanism vs numbers);

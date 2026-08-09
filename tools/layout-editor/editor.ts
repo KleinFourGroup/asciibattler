@@ -41,6 +41,16 @@
  * config/layouts.json by hand. Avoids the Vite-middleware complexity of
  * direct-write (decision recorded in ROADMAP C1d).
  *
+ * §75i — the camps layer. A fourth layer paints the 75a layout seams:
+ * left-click places a single-tile CAMP SPAWN (the portal-drip anchor a
+ * rolled camp materializes through at battle setup), right-click removes
+ * it. While the layer is active, the weighted `camps` list panel edits
+ * which catalog camps the spawn tiles roll from (rows over `CAMP_IDS`,
+ * weight omitted = 1 — the sector-pool convention). Validation mirrors
+ * the schema's superRefine: spawn tiles must be physically occupiable +
+ * unique, campSpawns without a camps list is a loud error, duplicate
+ * campIds reject.
+ *
  * Shares the schema, palette, and terrain-config knobs with the game
  * code via relative imports — same source of truth, no drift.
  */
@@ -55,11 +65,16 @@ import {
   SPAWN_REGION_TILE_COUNT,
   SPAWN_REGION_MIN_TILES,
   SPAWN_REGION_MAX_TILES,
+  type CampRef,
   type LayoutDef,
   type SpawnAvailability,
   type SpawnRegion,
   type Theme,
 } from '../../src/config/layouts';
+// §75i — the camp catalog ids for the weighted `camps` list rows. Import
+// direction camps → layouts is cycle-free (layouts.ts never imports camps.ts),
+// so this page loading camps.ts alongside layouts.ts is safe.
+import { CAMP_IDS } from '../../src/config/camps';
 // §40g-2 — footprint geometry (39a/39c), pure + World-free so the editor imports
 // them straight (no sim-world runtime dep). `footprintCells` drives rubble
 // placement fit + render; `anchorFootprint` drives the §39e spawn-room deploy-fit
@@ -97,7 +112,7 @@ type Cell =
   | 'ice'
   | 'sand'
   | 'mud';
-type Layer = 'terrain' | 'neutral-units' | 'spawn-regions';
+type Layer = 'terrain' | 'neutral-units' | 'spawn-regions' | 'camps';
 /** §40g — the value stored in the `neutrals` OVERLAY grid: one 1×1 neutral per
  *  cell (mutex among wall/half-cover). Rubble is NOT here — it's a multi-tile
  *  list (`rubble`), so its sub-tool lives in `NeutralTool` but not this grid. */
@@ -201,6 +216,13 @@ let rubble: RubblePlacement[] = [];
  *  the size's catalog default). Driven by the rubble sub-tool controls. */
 let activeRubbleSize = 1;
 let activeRubbleHp: number | null = null;
+/** §75i — authored camp-spawn tiles (single cells, unique — the click-once list
+ *  model rubble established). Emitted to the layout's `campSpawns` array. */
+let campSpawns: Coord[] = [];
+/** §75i — the weighted `camps` list the spawn tiles roll from (weight omitted =
+ *  1, the sector-pool convention). Edited via the camps-layer row panel;
+ *  emitted to the layout's `camps` array. */
+let campList: CampRef[] = [];
 /** D8 — currently-edited layout's visual theme. Drives both the JSON
  *  export's `theme` field and a `data-theme` attribute on the grid for
  *  the live floor-color preview. */
@@ -298,6 +320,10 @@ const availabilityRadioEls = Array.from(
 );
 const addRegionBtn = mustQuery<HTMLButtonElement>('#add-region-btn');
 const deleteRegionBtn = mustQuery<HTMLButtonElement>('#delete-region-btn');
+// §75i — the camps-layer panel (the weighted camps list rows + add button).
+const campsRowEl = mustQuery<HTMLDivElement>('#camps-row');
+const campListEl = mustQuery<HTMLDivElement>('#camp-list');
+const addCampBtn = mustQuery<HTMLButtonElement>('#add-camp-btn');
 const saveBtn = mustQuery<HTMLButtonElement>('#save-btn');
 const saveStatusEl = mustQuery<HTMLParagraphElement>('#save-status');
 // T3 — "add to sector" controls.
@@ -321,6 +347,7 @@ attachNeutralKindWatchers();
 attachRubbleControls();
 attachWallHpControls();
 attachRegionControls();
+attachCampControls();
 window.addEventListener('mouseup', endStroke);
 // Re-fit the grid when the viewport changes so cells keep filling the
 // available pane width. Throttled to a rAF so resize spam doesn't
@@ -478,6 +505,11 @@ function resizeGridData(newW: number, newH: number): number {
   );
   clipped += rubble.length - keptRubble.length;
   rubble = keptRubble;
+  // §75i — drop camp-spawn tiles outside the new bounds (same clip warning).
+  // The camps LIST survives a resize — it references the catalog, not cells.
+  const keptCampSpawns = campSpawns.filter((s) => s.x < newW && s.y < newH);
+  clipped += campSpawns.length - keptCampSpawns.length;
+  campSpawns = keptCampSpawns;
   // Spawn regions are tied to specific tiles + the arena's dimensions;
   // resizing may push them out of bounds. Reset to the procedural
   // default so the export stays valid. (Possible refinement later:
@@ -555,6 +587,9 @@ type StrokeKind =
   // §40g-2 — rubble is a footprinted list entity, placed/removed one per click.
   | 'paint-rubble'
   | 'erase-rubble'
+  // §75i — camp spawns are single-tile list entities (the rubble model).
+  | 'paint-campSpawn'
+  | 'erase-campSpawn'
   | 'paint-region'
   | 'erase-region'
   | 'noop';
@@ -632,6 +667,8 @@ function strokeFromMouseEvent(e: MouseEvent): StrokeKind {
       // is defensive.
       if (!hasActiveRegion()) return 'noop';
       return erasing ? 'erase-region' : 'paint-region';
+    case 'camps':
+      return erasing ? 'erase-campSpawn' : 'paint-campSpawn';
   }
 }
 
@@ -654,6 +691,10 @@ function applyStrokeTo(c: Coord): void {
     case 'paint-rubble':
     case 'erase-rubble':
       applyRubbleStroke(c);
+      return;
+    case 'paint-campSpawn':
+    case 'erase-campSpawn':
+      applyCampSpawnStroke(c);
       return;
     case 'paint-water':
     case 'paint-chasm':
@@ -889,6 +930,44 @@ function hasActiveRegion(): boolean {
   return activeRegionIdx >= 0 && activeRegionIdx < spawns.length;
 }
 
+// ---- §75i camp-spawn placement (the rubble click-once list model) ----
+
+/** The index of the camp spawn at `(x,y)`, or −1. Linear scan — the list is
+ *  a handful of tiles at editor scale (the rubbleIndexAt reasoning). */
+function campSpawnIndexAt(x: number, y: number): number {
+  return campSpawns.findIndex((s) => s.x === x && s.y === y);
+}
+
+/** §75i — true if a camp unit could NOT materialize at `(x,y)`: the schema's
+ *  physically-occupiable rule (a wall / half-cover / rubble footprint / chasm /
+ *  deep water). Mirrors the `spawnBlocked` set in src/config/layouts.ts. */
+function campSpawnBlockedAt(c: Coord): boolean {
+  const terrain = grid[c.y]![c.x]!;
+  return (
+    neutrals[c.y]![c.x] !== null ||
+    rubbleIndexAt(c.x, c.y) >= 0 ||
+    terrain === 'chasm' ||
+    terrain === 'deepWater'
+  );
+}
+
+/** §75i — place (or erase) one camp-spawn tile per visited cell. The brush
+ *  refuses a blocked cell (the placeRubble convention — validation still
+ *  catches a blocker painted OVER an existing spawn later); painting an
+ *  existing spawn is a no-op (uniqueness by construction). */
+function applyCampSpawnStroke(c: Coord): void {
+  if (activeStroke === 'paint-campSpawn') {
+    if (campSpawnIndexAt(c.x, c.y) >= 0 || campSpawnBlockedAt(c)) return;
+    campSpawns.push({ x: c.x, y: c.y });
+  } else {
+    const idx = campSpawnIndexAt(c.x, c.y);
+    if (idx < 0) return;
+    campSpawns.splice(idx, 1);
+  }
+  strokeDirty = true;
+  refreshCell(c);
+}
+
 function refreshCell(c: Coord): void {
   const el = cellEls[c.y]![c.x]!;
   const value = grid[c.y]![c.x]!;
@@ -905,6 +984,7 @@ function refreshCell(c: Coord): void {
     'sand',
     'mud',
     'rubble',
+    'campSpawn',
     'destructible',
     'invalid',
     'active-region-0',
@@ -951,6 +1031,13 @@ function refreshCell(c: Coord): void {
     const r = rubble[rIdx]!;
     el.classList.add('rubble');
     el.title = `rubble ${r.size}×${r.size}${r.hp != null ? `, hp ${r.hp}` : ' (default hp)'}`;
+  }
+  // §75i — a camp-spawn tile gets the amber portal badge (mutually exclusive
+  // with neutrals/rubble by the placement rule; a blocker painted over one
+  // later stacks visually AND trips the validation error).
+  if (campSpawnIndexAt(c.x, c.y) >= 0) {
+    el.classList.add('campSpawn');
+    el.title = 'camp spawn — a rolled camp drips through this tile at battle setup';
   }
 
   // Tear down any prior region tags + outline. Rebuilt below based
@@ -1044,7 +1131,8 @@ function validate(): ValidationItem[] {
     walls.length === 0 && water.length === 0 && halfCovers.length === 0 &&
     chasms.length === 0 && fires.length === 0 && healings.length === 0 &&
     deepWater.length === 0 && hills.length === 0 && ice.length === 0 &&
-    sand.length === 0 && mud.length === 0 && rubble.length === 0
+    sand.length === 0 && mud.length === 0 && rubble.length === 0 &&
+    campSpawns.length === 0
   ) {
     items.push({ level: 'ok', text: 'Empty grid — paint something.' });
   }
@@ -1104,6 +1192,43 @@ function validate(): ValidationItem[] {
     items.push({
       level: 'error',
       text: `${spawnOverlap} spawn tile(s) sit on impassable / occupied cells (wall, half-cover, chasm, deep water, or rubble) — paint to move them.`,
+    });
+  }
+
+  // §75i — the camps-layer checks, mirroring LayoutSchema's superRefine so the
+  // author sees them while painting (the brush refuses blocked cells at paint
+  // time, but a wall/rubble/chasm painted OVER an existing spawn lands here).
+  const buriedCampSpawns = campSpawns.filter((s) =>
+    campSpawnBlockedAt(s),
+  ).length;
+  if (buriedCampSpawns > 0) {
+    items.push({
+      level: 'error',
+      text: `${buriedCampSpawns} camp spawn(s) sit on impassable or occupied cells (wall, half-cover, chasm, deep water, or rubble) — erase the blocker or move the spawn.`,
+    });
+  }
+  if (campSpawns.length > 0 && campList.length === 0) {
+    items.push({
+      level: 'error',
+      text: 'Camp spawn tiles are painted but the camps list is empty — a spawn tile has nothing to roll. Add a camp on the Camps layer.',
+    });
+  }
+  const seenCampIds = new Set<string>();
+  const dupCampIds = new Set<string>();
+  for (const ref of campList) {
+    if (seenCampIds.has(ref.campId)) dupCampIds.add(ref.campId);
+    seenCampIds.add(ref.campId);
+  }
+  for (const id of dupCampIds) {
+    items.push({
+      level: 'error',
+      text: `Camp "${id}" is listed twice — duplicate weights on one camp are meaningless; merge the rows.`,
+    });
+  }
+  if (campList.length > 0 && campSpawns.length === 0) {
+    items.push({
+      level: 'warn',
+      text: 'The camps list has entries but no camp-spawn tile is painted — nothing will spawn. Paint tiles on the Camps layer (or clear the list).',
     });
   }
 
@@ -1213,6 +1338,7 @@ function validate(): ValidationItem[] {
     if (fires.length > 0) extras.push(`${fires.length} fire`);
     if (healings.length > 0) extras.push(`${healings.length} healing`);
     if (rubble.length > 0) extras.push(`${rubble.length} rubble`);
+    if (campSpawns.length > 0) extras.push(`${campSpawns.length} camp spawn(s)`);
     const extrasText = extras.length > 0 ? `, ${extras.join(', ')}` : '';
     items.push({
       level: 'ok',
@@ -1301,6 +1427,16 @@ function buildCurrentLayout(): LayoutDef {
       y: r.y,
       ...(r.size > 1 ? { size: r.size } : {}),
       ...(r.hp != null ? { hp: r.hp } : {}),
+    }));
+  }
+  // §75i — the camp seams, each emitted only when non-empty (a camp-free
+  // layout carries neither key — presence-gating stays byte-visible). A ref's
+  // `weight` is emitted only when set (omitted = 1).
+  if (campSpawns.length > 0) payload.campSpawns = campSpawns.map((s) => ({ x: s.x, y: s.y }));
+  if (campList.length > 0) {
+    payload.camps = campList.map((ref) => ({
+      campId: ref.campId,
+      ...(ref.weight !== undefined ? { weight: ref.weight } : {}),
     }));
   }
   return payload;
@@ -1536,6 +1672,7 @@ function restoreAfterSectorAdd(): void {
 
 function refreshAll(): void {
   refreshRegionUI();
+  refreshCampListUI();
   refreshGrid();
   refreshValidation();
   refreshExport();
@@ -1597,6 +1734,13 @@ function loadLayout(id: string): void {
     size: r.size ?? 1,
     ...(r.hp != null ? { hp: r.hp } : {}),
   }));
+  // §75i — the camp seams load into their own lists (deep-copied; a bare ref
+  // stays weight-less so it re-exports bare).
+  campSpawns = (found.campSpawns ?? []).map((s) => ({ x: s.x, y: s.y }));
+  campList = (found.camps ?? []).map((ref) => ({
+    campId: ref.campId,
+    ...(ref.weight !== undefined ? { weight: ref.weight } : {}),
+  }));
   // Deep-copy spawns so live editing can't mutate the canonical
   // LAYOUTS array.
   spawns = found.spawns.map((r) => ({
@@ -1622,6 +1766,8 @@ function clearGrid(): void {
   neutrals = makeEmptyNeutrals(gridW, gridH);
   neutralHp = makeEmptyNeutralHp(gridW, gridH);
   rubble = [];
+  campSpawns = [];
+  campList = [];
   spawns = defaultSpawns(gridW, gridH);
   activeRegionIdx = 0;
   lastClipCount = 0;
@@ -1685,6 +1831,8 @@ function attachLayerWatchers(): void {
       activeLayer = value;
       gridEl.dataset.activeLayer = value;
       regionRowEl.hidden = value !== 'spawn-regions';
+      // §75i — the camps panel (spawn-paint hint + the weighted list rows).
+      campsRowEl.hidden = value !== 'camps';
       // D6 — show the wall/half-cover sub-tool only while the
       // neutral-units layer is active.
       neutralRowEl.hidden = value !== 'neutral-units';
@@ -1795,6 +1943,92 @@ function attachRegionControls(): void {
       refreshExport();
     });
   }
+}
+
+// ---- §75i — the weighted camps list panel ----
+
+/** Append a fresh ref for the first catalog camp (weight omitted = 1). The
+ *  button is disabled when the catalog is empty, so the guard is defensive. */
+function attachCampControls(): void {
+  addCampBtn.disabled = CAMP_IDS.length === 0;
+  if (CAMP_IDS.length === 0) addCampBtn.title = 'No camps in config/camps.json — author one in the camp editor first.';
+  addCampBtn.addEventListener('click', () => {
+    const first = CAMP_IDS[0];
+    if (first === undefined) return;
+    campList.push({ campId: first });
+    refreshCampListUI();
+    refreshValidation();
+    refreshExport();
+  });
+}
+
+/** Rebuild the camps-list rows from `campList`. One row per ref: a camp
+ *  dropdown over the live catalog + a weight input (blank = the omitted-1
+ *  default) + remove — the makeRewardRow shape. Field edits mutate the ref in
+ *  place; structural edits re-render the panel. */
+function refreshCampListUI(): void {
+  campListEl.innerHTML = '';
+  if (campList.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'hint';
+    empty.textContent = 'No camps listed — spawn tiles have nothing to roll.';
+    campListEl.appendChild(empty);
+    return;
+  }
+  campList.forEach((ref, i) => {
+    const row = document.createElement('div');
+    row.className = 'camp-ref-row';
+
+    const sel = document.createElement('select');
+    for (const id of CAMP_IDS) {
+      const opt = document.createElement('option');
+      opt.value = id;
+      opt.textContent = id;
+      sel.appendChild(opt);
+    }
+    sel.value = ref.campId;
+    sel.addEventListener('change', () => {
+      ref.campId = sel.value;
+      refreshValidation();
+      refreshExport();
+    });
+    row.appendChild(sel);
+
+    const wLabel = document.createElement('label');
+    wLabel.className = 'inline';
+    wLabel.append('w ');
+    const weight = document.createElement('input');
+    weight.type = 'number';
+    weight.min = '0.1';
+    weight.step = '0.1';
+    weight.placeholder = '1';
+    weight.value = ref.weight !== undefined ? String(ref.weight) : '';
+    weight.addEventListener('input', () => {
+      const v = Number.parseFloat(weight.value);
+      // Blank / non-positive → the omitted default (a bare ref re-exports bare).
+      if (weight.value.trim() !== '' && Number.isFinite(v) && v > 0) ref.weight = v;
+      else delete ref.weight;
+      refreshValidation();
+      refreshExport();
+    });
+    wLabel.appendChild(weight);
+    row.appendChild(wLabel);
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'small-btn danger-outline';
+    remove.textContent = '✕';
+    remove.title = 'Remove this camp from the list';
+    remove.addEventListener('click', () => {
+      campList.splice(i, 1);
+      refreshCampListUI();
+      refreshValidation();
+      refreshExport();
+    });
+    row.appendChild(remove);
+
+    campListEl.appendChild(row);
+  });
 }
 
 /**

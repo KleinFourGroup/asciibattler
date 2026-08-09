@@ -367,6 +367,41 @@ body {
   background: var(--terminal-green);
 }
 
+/* §75i — the weighted camps list rows (the camps-layer panel). One row per
+   ref: camp dropdown + weight input + remove; the row family styling. */
+.camp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.camp-ref-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.camp-ref-row select,
+.camp-ref-row input {
+  background: var(--terminal-black);
+  color: var(--terminal-amber);
+  border: 1px solid var(--panel-border);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.camp-ref-row input[type='number'] {
+  width: 56px;
+}
+
+.camp-ref-row label.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--terminal-amber);
+}
+
 .small-btn {
   padding: 3px 8px;
   font-size: 11px;
@@ -729,8 +764,32 @@ body {
 /* Inactive layers (not spawn-regions) dim the region tags so the
    author still sees them but knows clicks land elsewhere. */
 .grid[data-active-layer='terrain'] .cell .region-tag,
-.grid[data-active-layer='neutral-units'] .cell .region-tag {
+.grid[data-active-layer='neutral-units'] .cell .region-tag,
+.grid[data-active-layer='camps'] .cell .region-tag {
   opacity: 0.3;
+}
+
+/* §75i — a camp-spawn tile: the ⌂ portal glyph on the TERMINAL_AMBER third-
+   faction family (the 75h camp treatment), badge-styled like rubble so it
+   reads as an entity on the tile, not terrain. Dimmed off the camps layer
+   (the region-tag convention) so composition stays visible but the active
+   surface is unambiguous. */
+.cell.campSpawn::before {
+  content: '\2302';
+  position: absolute;
+  inset: 12%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 20px;
+  pointer-events: none;
+  z-index: 2;
+  background: var(--dark-terminal-amber);
+  color: var(--terminal-amber);
+}
+
+.grid:not([data-active-layer='camps']) .cell.campSpawn::before {
+  opacity: 0.5;
 }
 
 /* The legend swatch for spawn regions uses the first region color. */
@@ -781,6 +840,11 @@ body {
 
 .swatch.rubble {
   background: #4a3f2c;
+}
+
+/* §75i — the camp-spawn legend swatch (the TERMINAL_AMBER camp family). */
+.swatch.campSpawn {
+  background: var(--dark-terminal-amber);
 }
 
 .swatch.chasm {

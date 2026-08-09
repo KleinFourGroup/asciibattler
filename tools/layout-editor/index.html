@@ -39,6 +39,10 @@
               <input type="radio" name="layer" value="spawn-regions" />
               Spawn regions
             </label>
+            <label class="inline">
+              <input type="radio" name="layer" value="camps" />
+              Camps
+            </label>
             <span class="hint">Only the active layer accepts edits; others render dimmed.</span>
           </div>
           <div id="terrain-row" class="neutral-row">
@@ -102,6 +106,16 @@
               <span class="hint">Left-click paints into the active region (FIFO 8-tile cap); right-click removes a tile.</span>
             </div>
           </div>
+          <div id="camps-row" class="region-row" hidden>
+            <div class="region-row-line">
+              <span class="region-label">Camps</span>
+              <div id="camp-list" class="camp-list"></div>
+              <button id="add-camp-btn" type="button" class="small-btn">+ Add camp</button>
+            </div>
+            <div class="region-row-line">
+              <span class="hint">Left-click paints a camp-spawn tile (&#x2302;) on any cell a unit can occupy; right-click removes it. At battle setup each tile rolls ONE camp from this weighted list (blank weight = 1) and drip-spawns it through the tile. Author camps in the <a href="/tools/camp-editor/">camp editor</a>.</span>
+            </div>
+          </div>
           <div id="grid" class="grid" data-active-layer="terrain"></div>
           <ul class="legend">
             <li><span class="swatch water"></span> Water (~) — pathing cost 2</li>
@@ -117,6 +131,7 @@
             <li><span class="swatch halfCover"></span> Half-cover (&#x2565;) — pathing blocker, LOS-transparent</li>
             <li><span class="swatch cracked"></span> Ochre wall/cover — destructible (has HP)</li>
             <li><span class="swatch rubble"></span> Rubble (&#x2584;) — destructible N&times;N block</li>
+            <li><span class="swatch campSpawn"></span> Camp spawn (&#x2302;) — drips a rolled neutral camp at battle setup</li>
             <li><span class="swatch erase"></span> Right-click — erases active layer at the cell</li>
             <li><span class="swatch region-0"></span> Spawn regions — color-coded by index</li>
           </ul>

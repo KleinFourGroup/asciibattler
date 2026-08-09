@@ -23,5 +23,45 @@
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } }
     ]
+  },
+  {
+    "id": "toll-post",
+    "name": "Toll Post",
+    "description": "Bandit archers who tax anyone walking the pocket road.",
+    "leashRadius": 3,
+    "units": [
+      { "archetype": "bandit", "level": 2 },
+      { "archetype": "archer", "count": 2 }
+    ],
+    "rewards": [
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ]
+  },
+  {
+    "id": "frost-coven",
+    "name": "Frost Coven",
+    "description": "Ice mages and their shaman, dug into the cold.",
+    "leashRadius": 3,
+    "units": [
+      { "archetype": "ice_mage", "count": 2, "level": 2 },
+      { "archetype": "shaman" }
+    ],
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } }
+    ]
+  },
+  {
+    "id": "banshee-barrow",
+    "name": "Banshee Barrow",
+    "description": "A wailing barrow-haunt and the ghouls it keeps.",
+    "leashRadius": 2,
+    "units": [
+      { "archetype": "banshee", "level": 2 },
+      { "archetype": "ghoul", "count": 2, "level": 2 }
+    ],
+    "rewards": [
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "bits-small", "trigger": { "chance": 1 } }
+    ]
   }
 ]

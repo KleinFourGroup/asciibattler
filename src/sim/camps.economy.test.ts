@@ -104,6 +104,7 @@ describe('§75g — the campKills payload', () => {
 describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', () => {
   it('a decisive win is HELD while an uncleared hostile camp remains, and lands once cleared', () => {
     const mutable = SIM as { blockCampTurnEnd: boolean };
+    const original = SIM.blockCampTurnEnd;
     mutable.blockCampTurnEnd = true;
     try {
       const { world, bus } = freshWorld();
@@ -126,12 +127,13 @@ describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', (
         { defId: 'bandit-squatters', killedBy: 'player' },
       ]);
     } finally {
-      mutable.blockCampTurnEnd = false;
+      mutable.blockCampTurnEnd = original;
     }
   });
 
   it('a camp hostile to the LOSER never holds the winner hostage', () => {
     const mutable = SIM as { blockCampTurnEnd: boolean };
+    const original = SIM.blockCampTurnEnd;
     mutable.blockCampTurnEnd = true;
     try {
       const { world, bus } = freshWorld();
@@ -147,23 +149,34 @@ describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', (
       expect(payloads).toHaveLength(1); // the player owes this camp nothing
       expect(payloads[0]!.winner).toBe('player');
     } finally {
-      mutable.blockCampTurnEnd = false;
+      mutable.blockCampTurnEnd = original;
     }
   });
 });
 
 describe('§75g — the enemyPullChance seam', () => {
-  it('dormant at the shipped 0: no hostility, no objective', () => {
-    const { world } = freshWorld();
-    expect(SIM.enemyPullChance).toBe(0); // the shipped default
-    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
-    world.tick();
-    expect(world.campHostileTo(1, 'enemy')).toBe(false);
-    expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
+  // 75j — the knob shipped LIVE at 0.15 (the feel-pass trial), so the dormant
+  // path is pinned by INJECTING 0 (mutate-then-restore), not by asserting the
+  // shipped default. Restores capture the original value — a hardcoded
+  // restore would leak the wrong knob under isolate:false.
+  it('dormant at 0: no hostility, no objective', () => {
+    const mutable = SIM as { enemyPullChance: number };
+    const original = SIM.enemyPullChance;
+    mutable.enemyPullChance = 0;
+    try {
+      const { world } = freshWorld();
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42);
+      world.tick();
+      expect(world.campHostileTo(1, 'enemy')).toBe(false);
+      expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
+    } finally {
+      mutable.enemyPullChance = original;
+    }
   });
 
   it('live at 1: the camp is pre-marked hostile to enemy and the enemy team is ordered to its anchor', () => {
     const mutable = SIM as { enemyPullChance: number };
+    const original = SIM.enemyPullChance;
     mutable.enemyPullChance = 1;
     try {
       const { world } = freshWorld();
@@ -176,12 +189,13 @@ describe('§75g — the enemyPullChance seam', () => {
         target: { kind: 'tile', cell: ANCHOR },
       });
     } finally {
-      mutable.enemyPullChance = 0;
+      mutable.enemyPullChance = original;
     }
   });
 
   it('the anchor-tile order auto-reverts once the camp is cleared', () => {
     const mutable = SIM as { enemyPullChance: number };
+    const original = SIM.enemyPullChance;
     mutable.enemyPullChance = 1;
     try {
       const { world } = freshWorld();
@@ -196,7 +210,7 @@ describe('§75g — the enemyPullChance seam', () => {
       world.tick(); // clearResolvedObjectives sees the cleared camp
       expect(world.objectiveFor('enemy')).toEqual({ mode: 'atWill' });
     } finally {
-      mutable.enemyPullChance = 0;
+      mutable.enemyPullChance = original;
     }
   });
 });

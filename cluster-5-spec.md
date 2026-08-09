@@ -39,7 +39,7 @@ Right now, battles still tend to be rather one dimensional.  Aside from stalling
 * Camps are pre-defined in their own editor.  Layouts are expanded to include a weighted list of valid camps.
 * Camp spawns are distinct from spawn regions.  Each camp spawn randomly selects a camp from the layout's list, resolved on turn start.
 
-  * ⚠ As shipped, "resolved on turn start" replays identically within one encounter (the camp stream rides the per-encounter terrainSeed — K3.5), so camp identity is de facto PER-ENCOUNTER. Found + punted 2026-08-09 (worklog §75i-post): the feel verdict rides 75j; a true per-turn stream folds into §77's keyed-stream rider if wanted.
+  * ⚠ As shipped, "resolved on turn start" replays identically within one encounter (the camp stream rides the per-encounter terrainSeed — K3.5), so camp identity is de facto PER-ENCOUNTER. Found + punted 2026-08-09 (worklog §75i-post); ✅ the 75j feel verdict SIGNED IT: per-encounter identity stays ("that's looking good"). The §77 keyed-stream switch stays dormant unless revisited.
 * Credit for killing a camp goes to the faction who kills the last unit of the camp.
 * Each pre-defined camp has a reward table, just like an encounter.
 * The reward table is rolled if the player successfully kills the camp, and the rewards are granted upon turn completion.
@@ -49,6 +49,7 @@ Right now, battles still tend to be rather one dimensional.  Aside from stalling
 * Hostile camps do not block turn end; they must be killed before the enemy.
 
   * This last point is the one I am least sure of, so we might want to leave a seam for them to block turn end.  That's a feel decision, not a balance one.
+  * ✅ RESOLVED THE OTHER WAY (the 75j feel verdict, user-signed 2026-08-09): `blockCampTurnEnd` ships **TRUE** — there isn't fine-grained enough disengage control, so the last enemy dying mid-camp-fight felt bad. The least-sure instinct above was right; the seam paid for itself.
 
 We'll need a design session for the initial demo catalog.
 

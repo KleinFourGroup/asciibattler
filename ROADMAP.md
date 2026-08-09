@@ -101,10 +101,10 @@ round.
 - **Risk:** HIGH-ish — sim-wide widening; byte-identity on camp-free
   layouts is an EXIT GATE, not a nicety (presence-gating everywhere;
   dedicated RNG forks).
-- **Decision points:** three feel verdicts at this phase's playtest —
-  `enemyPullChance` enable · block-turn-end · camp identity
-  (per-encounter as shipped vs per-turn, §75i-post; switch → §77);
-  the demo-catalog design round.
+- **Decision points:** ✅ ALL DECIDED at the 75j playtest (2026-08-09,
+  worklog §75j-verdicts) — pull 0.25 · block-turn-end TRUE ·
+  camp identity PER-ENCOUNTER stays (§77 switch dormant); the
+  demo-catalog design round ✅ (the continuous-value rule).
 - **Exit:** camps playable (wander/aggro/kill/loot) in the browser;
   the two headless invariants green (leash bound; spawn vacated ≤N
   ticks); full fuzz byte-identical on camp-free layouts; feel
@@ -194,9 +194,9 @@ stress test (the 11-row doctrine control set). Second Run bump.
 re-architecture — keyed stream derivation replacing the positional
 ladder — is CONSIDERED at this phase's kickoff, riding the already
 scheduled stream break so the global remap is paid once (rationale:
-WORKLOG §75 shape-lock). If 75j's feel verdict wants per-turn camp
-composition (today de facto per-encounter — worklog §75i-post), it
-lands here as a keyed per-turn stream, not an ad-hoc seed mix.
+WORKLOG §75 shape-lock). The 75j verdict SIGNED per-encounter camp
+identity (worklog §75j-verdicts) — the keyed per-turn camp stream
+stays a dormant option here, built only if the call is reopened.
 
 - **Order:** after ALL content movers so the re-pin happens once, on
   final content.

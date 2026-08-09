@@ -1642,3 +1642,35 @@ signing; the content landed as `a299b77`. The decision trail:
   in 75j: the user's native feel pass (the three verdicts) → THEN the
   board re-pin on final knob values** (ordering deliberate — verdicts
   first so the box board bakes the signed numbers once).
+
+### 75j-verdicts — the feel pass signs (2026-08-09, `c998614`)
+
+All three decision points resolved at the user's native playtest:
+
+1. **`enemyPullChance` 0.25** (from the 0.15 trial — "works, but it
+   feels too rare").
+2. **`blockCampTurnEnd` TRUE** — the spec's original lean ("hostile
+   camps do not block turn end") resolved the OTHER way, exactly via
+   the seam the spec's least-sure note asked for: with no fine-grained
+   disengage control, the last enemy dying mid-camp-fight ends the
+   battle out from under a half-fought camp — bad feel, not mercy.
+   Spec bullet annotated ✅-resolved-the-other-way.
+3. **Camp identity: PER-ENCOUNTER STAYS** ("that's looking good") —
+   the §75i-post punt resolves as signed design; the §77 keyed-stream
+   switch is dormant unless reopened. Wander cadence also approved.
+- **The verdict question that caught a real bug**: "does wander scale
+  to tick rate?" — NO, it didn't: the chance rolled per TICK while
+  off cooldown (a failed roll sets no cooldown → re-poll next tick),
+  so TICK_RATE re-tuned idle fidget rate — a gotcha-#6-class
+  violation. Re-authored `campWanderChancePerSecond` (0.64 ≡ the old
+  0.05/tick @20Hz, feel-preserving) with the per-tick threshold
+  derived at load: `1 − (1−p)^(1/TICK_RATE)`.
+- Fallout: the two OFF-behavior pins (§75e never-extends + the
+  economy no-stamp case) now inject `blockCampTurnEnd=false` with
+  captured-original restores — the same class the 75j-1 audit closed.
+- **Still open in 75j**: the user's manual placement-symmetry pass
+  (their call: "some are too asymmetric") → THEN the box board
+  re-pin (locations move trajectories, so the pass goes first).
+  Procedural-map camp support ("Uncharted Ground") deliberately NOT
+  in §75 — proposed as its own pre-§81 catch-up phase (with the §37
+  terrain-type backlog); pending the user's sign-off on the insertion.

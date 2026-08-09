@@ -144,7 +144,8 @@ shape-lock #4).
   pull's per-encounter override deferred to 75j (worklog §75)
 - [x] 75h — renderer/HUD third faction ✅ 2026-08-08: TERMINAL_AMBER
   combatant treatment + the browser-caught objective-revert fix;
-  agent-verified in-browser; NATIVE EYEBALL PENDING (worklog §75)
+  NATIVE EYEBALL ✅ 2026-08-09 → one finding, fixed as 75h2: the
+  setup-time first-member prime (worklog §75)
 - [ ] 75i — the camp catalog editor + the layout-editor camp-spawn
   paint tool + weighted camps list + byte-faithful formatters +
   the live no-op-save proof

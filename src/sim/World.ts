@@ -1821,41 +1821,78 @@ export class World {
   private runCampDripScan(): void {
     if (this.camps.size === 0 || this._campRng === null) return;
     for (const camp of this.campsList()) {
-      const next = camp.pending[0];
-      if (next === undefined) continue;
-      const size = ALL_UNIT_DEFS[next.archetype]?.footprint ?? 1;
-      const cells = anchorFootprint(
-        camp.anchor,
-        size,
-        this,
-        (c) =>
-          isFinite(this.tileGrid.costAt(c)) &&
-          isFree(this, c) &&
-          claimantOf(this, c) === undefined,
-        'random-intersect',
-        this._campRng,
-      );
-      if (cells === null) continue;
-      camp.pending.shift();
-      // footprintCells pushes the min corner first — cells[0] is the
-      // canonical `position` per the §39 convention.
-      this.spawnCampUnit(camp, next, cells[0]!);
+      this.dripCampMember(camp, false);
     }
+  }
+
+  /**
+   * §75h2 — SETUP-TIME priming (user feedback at the 75h native eyeball):
+   * each camp's head-of-queue member materializes INSTANTLY at battle setup —
+   * present, faded-in, and targetable during the pre-battle countdown, just
+   * like the initial player/enemy teams (which spawn at setup, not tick 1).
+   * The rest of the queue keeps the signed PORTAL DRIP (they couldn't fit
+   * anyway — overlap is the whole reason the queue exists). Called by
+   * `spawnCamps` right after `installCamps`, so all four World construction
+   * sites get it free; a no-op on camp-free worlds (the presence gate).
+   */
+  primeCampSpawns(): void {
+    if (this.camps.size === 0 || this._campRng === null) return;
+    for (const camp of this.campsList()) {
+      this.dripCampMember(camp, true);
+    }
+  }
+
+  /**
+   * §75c/§75h2 — materialize one camp's head-of-queue member overlapping its
+   * anchor: the shared body of the per-tick drip drain and the setup-time
+   * prime. Placement determinism is unchanged (fixed `random-intersect` scan;
+   * the draw rides `campRng` only when >1 placement fits — #111). A blocked
+   * anchor just waits (the drip cadence IS the tile vacating). `instant`
+   * spawns skip the SpawnAction lockout + fade (the setup prime); drip
+   * spawns keep both (portal materialization).
+   */
+  private dripCampMember(camp: CampInstance, instant: boolean): void {
+    const next = camp.pending[0];
+    if (next === undefined) return;
+    const size = ALL_UNIT_DEFS[next.archetype]?.footprint ?? 1;
+    const cells = anchorFootprint(
+      camp.anchor,
+      size,
+      this,
+      (c) =>
+        isFinite(this.tileGrid.costAt(c)) &&
+        isFree(this, c) &&
+        claimantOf(this, c) === undefined,
+      'random-intersect',
+      this._campRng!,
+    );
+    if (cells === null) return;
+    camp.pending.shift();
+    // footprintCells pushes the min corner first — cells[0] is the
+    // canonical `position` per the §39 convention.
+    this.spawnCampUnit(camp, next, cells[0]!, instant);
   }
 
   /**
    * §75c — spawn one camp member (mirrors `spawnFromQueue`: catalog-derived
    * stats via the deterministic `scaledUnit` — no RNG draw — shared behavior
-   * wiring, and the SpawnAction lockout + `unit:spawned{instant:false}` fade).
-   * Differences: `team: 'neutral'` + the `campId` stamp (the active-neutral
-   * signal), and behavior slot 0 is `CampWanderBehavior` (§75f — the 75c
-   * landing note landed): leash-filtered wander on `campRng` while passive,
-   * the full `MovementBehavior` engagement delegate once the §75e hostility
-   * gate admits a target. Direct construction, not `createMovementBehavior`
-   * — a camp bandit shares the enemy bandit's catalog def, so camp-ness
-   * can't ride the catalog's `movementBehavior` value.
+   * wiring). Differences: `team: 'neutral'` + the `campId` stamp (the
+   * active-neutral signal), and behavior slot 0 is `CampWanderBehavior`
+   * (§75f — the 75c landing note landed): leash-filtered wander on `campRng`
+   * while passive, the full `MovementBehavior` engagement delegate once the
+   * §75e hostility gate admits a target. Direct construction, not
+   * `createMovementBehavior` — a camp bandit shares the enemy bandit's
+   * catalog def, so camp-ness can't ride the catalog's `movementBehavior`
+   * value. §75h2 — `instant` (the setup prime) skips the SpawnAction lockout
+   * + fade; a drip spawn keeps both (`unit:spawned{instant:false}` — the
+   * portal materialization).
    */
-  private spawnCampUnit(camp: CampInstance, spec: CampPendingUnit, position: GridCoord): Unit {
+  private spawnCampUnit(
+    camp: CampInstance,
+    spec: CampPendingUnit,
+    position: GridCoord,
+    instant: boolean,
+  ): Unit {
     const template = scaledUnit(spec.archetype, spec.level);
     const attackRange = rangeForArchetype(spec.archetype);
     const derived = deriveStats(template.stats, attackRange);
@@ -1871,18 +1908,20 @@ export class World {
         xp: template.xp,
         campId: camp.id,
       },
-      false,
+      instant,
     );
     unit.behaviors.push(new CampWanderBehavior(), new AbilityBehavior());
     for (const id of abilityIdsForArchetype(spec.archetype)) {
       unit.abilities.push(createAbility(id));
     }
-    unit.activeAction = {
-      action: new SpawnAction(),
-      startTick: this.tickCount,
-      finishTick: this.tickCount + SPAWN.durationTicks,
-      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
-    };
+    if (!instant) {
+      unit.activeAction = {
+        action: new SpawnAction(),
+        startTick: this.tickCount,
+        finishTick: this.tickCount + SPAWN.durationTicks,
+        phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
+      };
+    }
     return unit;
   }
 

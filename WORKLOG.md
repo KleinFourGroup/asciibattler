@@ -1484,3 +1484,34 @@ All nine parked-list rows landed, plus one browser-caught sim fix.
   bandits materializing + wandering, badge/HP overlays, bloom parity,
   death cry on camp kills, click-to-engage feel.
 - +2 tests (2518 → 2520 main); 395 fuzz:smoke green.
+
+### 75h2 — the setup-time camp prime (2026-08-09, user feedback)
+
+The 75h native eyeball's one finding: the first camp member arrived a
+drip-tick late and faded in, so it wasn't targetable during the
+pre-battle countdown — unlike the initial teams, which spawn at setup.
+
+- Fix: `World.primeCampSpawns()` — each camp's HEAD-OF-QUEUE member
+  materializes at battle setup, INSTANT (no SpawnAction lockout, no
+  fade, `unit:spawned{instant:true}`), standing on its anchor. Called
+  by `spawnCamps` right after `installCamps`, so all four World
+  construction sites inherit it. The tail keeps the signed PORTAL DRIP
+  untouched (they couldn't fit anyway — overlap is why the queue
+  exists); the drip drain and the prime share one body
+  (`dripCampMember(camp, instant)`), so placement determinism is
+  literally the same code. Draw-order: the prime's N×N placement draws
+  sit exactly where the first drip tick's used to, one tick earlier.
+- A blocked anchor at setup skips silently (pending intact — the
+  existing blocked-anchor pin covers it); the primed member wanders
+  off the anchor from tick 1 (no lockout), so the vacate invariant
+  bound only tightens.
+- The §75c pins reshaped to the new contract: primed-at-setup
+  (instant, no lockout, on-anchor) + second-member-drips (lockout +
+  fade). Browser-verified live at TICK 0: primed alpha 1 +
+  click-targetable during the countdown window; member two arrives
+  alpha 0.05 mid-fade with the `spawn` lockout. Zero console errors.
+- Session note: the suite briefly went red on `formatLayoutsJson`
+  verbatim — the USER's own temp river-camp edit (the eyeball recipe)
+  was still in the tree; reverted, as the recipe instructs.
+- +1 test net (2520 → 2521 main); 395 fuzz:smoke green (the prime is
+  presence-gated like everything else).

@@ -96,7 +96,9 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
     expect(camps[0]!.anchor).toEqual({ x: 3, y: 3 });
     expect(camps[1]!.anchor).toEqual({ x: 8, y: 8 });
     // Pending derives from the catalog def (balance-proof: computed, not
-    // hardcoded — count expands, absent level defaults to 1).
+    // hardcoded — count expands, absent level defaults to 1). §75h2 — the
+    // HEAD of each expansion is PRIMED onto the grid at setup, so pending
+    // holds the tail; the primed member stands on the anchor.
     const def = getCamp('ghoul-nest')!;
     const expected = def.units.flatMap((u) =>
       Array.from({ length: u.count ?? 1 }, () => ({
@@ -104,7 +106,11 @@ describe('§75c — spawnCamps (the setup-time roll)', () => {
         level: u.level ?? 1,
       })),
     );
-    expect(camps[0]!.pending).toEqual(expected);
+    expect(camps[0]!.pending).toEqual(expected.slice(1));
+    const primed = world.units.filter((u) => u.campId === 1);
+    expect(primed).toHaveLength(1);
+    expect(primed[0]!.archetype).toBe(expected[0]!.archetype);
+    expect(primed[0]!.position).toEqual({ x: 3, y: 3 });
     expect(camps[0]!.hostileTo.size).toBe(0);
     expect(camps[0]!.killedBy).toBeNull();
   });
@@ -140,9 +146,10 @@ describe('§75c — the portal-drip drain', () => {
     return world;
   };
 
-  it('materializes ONE member per tick on the anchor, with campId + lockout + behaviors', () => {
+  it('§75h2 — the FIRST member is PRIMED at setup: instant, no lockout, targetable pre-countdown', () => {
     const world = dripWorld();
-    world.tick();
+    // Before any tick: the head-of-queue member already stands on the anchor
+    // (like the initial teams — the user's 75h eyeball feedback).
     const spawned = world.units.filter((u) => u.campId !== null);
     expect(spawned.length).toBe(1);
     const u = spawned[0]!;
@@ -150,13 +157,25 @@ describe('§75c — the portal-drip drain', () => {
     expect(u.campId).toBe(1);
     expect(u.position).toEqual({ x: 5, y: 5 });
     expect(isActiveNeutral(u)).toBe(true);
-    // The spawnFromQueue mirror: real stats + behaviors + the spawn lockout.
+    // The spawnFromQueue mirror: real stats + behaviors — but NO spawn
+    // lockout (instant, exactly like a setup-time team placement).
     expect(u.derived.maxHp).toBeGreaterThan(0);
     expect(u.behaviors.length).toBe(2);
     expect(u.abilities.length).toBeGreaterThan(0);
-    expect(u.activeAction?.action.id).toBe('spawn');
-    expect(u.activeAction?.finishTick).toBe(world.currentTick + SPAWN.durationTicks);
+    expect(u.activeAction).toBeNull();
     expect(world.campById(1)!.pending.length).toBe(1);
+  });
+
+  it('the SECOND member still drips through the portal: lockout + fade, one per free-anchor tick', () => {
+    const world = dripWorld();
+    const first = world.units.find((u) => u.campId !== null)!;
+    first.position = { x: 1, y: 1 }; // vacate the portal
+    world.tick();
+    const second = world.units.find((u) => u.campId !== null && u.id !== first.id)!;
+    expect(second.position).toEqual({ x: 5, y: 5 });
+    expect(second.activeAction?.action.id).toBe('spawn');
+    expect(second.activeAction?.finishTick).toBe(world.currentTick + SPAWN.durationTicks);
+    expect(world.campById(1)!.pending.length).toBe(0);
   });
 
   it('an occupied anchor waits; vacating it drips the next member', () => {

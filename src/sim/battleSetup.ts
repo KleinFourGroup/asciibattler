@@ -221,6 +221,15 @@ export function spawnCamps(
   });
   world.installCamps(instances, campRng);
 
+  // §75h2 — prime each camp's FIRST member at setup (user feedback at the
+  // native eyeball): it materializes instantly, like the initial teams, so
+  // it's visible and targetable during the pre-battle countdown instead of
+  // fading in after the first drip tick. The rest of the queue keeps the
+  // signed portal drip. Draw-order note: the prime's N×N placement draws ride
+  // campRng right after the selection rolls — exactly where the first drip
+  // tick's draws used to sit, one tick earlier.
+  world.primeCampSpawns();
+
   // §75g — the enemy DELIBERATE-PULL seam (spec: "the seam ships now"),
   // DORMANT at the shipped 0; enabling it is a §75j feel verdict. When live:
   // one roll on a LAZY third fork — taken off the terrainSeed parent only

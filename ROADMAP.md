@@ -167,8 +167,10 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   propose arm (would-it-matter gate, live-centre fire) + anchor
   honored at all 3 interpreter sites + `engagementReach` (nova =
   radius; ally-shout non-engaging); shipped-catalog invariance pinned
-- [ ] 76d — Molotov/Pistol/Halberd/Cane as config + registry lines +
-  fx reuse; config-derived tests
+- [x] 76d — Molotov/Pistol/Halberd/Cane ✅ 2026-08-10: pure config +
+  4 registry lines + fx reuse; identity pinned as RELATIONS to
+  reference defs (numbers provisional → 76h); molotov authored at
+  the 76e decoupled convention (critable:true/evadable:false)
 - [ ] 76e — the critable flip (5 ops) + `abilities.test` rewrite +
   provisional mobility constants (sign at 76h) + luck-seam check
 - [ ] 76f — DESIGN ROUND (decision point): new archetypes + Inspire

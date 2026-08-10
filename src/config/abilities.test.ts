@@ -151,3 +151,60 @@ describe('§29 — status-on-hit afflicters', () => {
     }
   });
 });
+
+// §76d — the stat-identity weapons. Structural identity pins only (never the
+// by-feel might/accuracy/cooldown VALUES — those are provisional until the 76h
+// board signing); each weapon's IDENTITY is expressed as a RELATION to its
+// reference def, derived from live config, so a design-round retune that keeps
+// the identity keeps the test green.
+describe('§76d — the stat-identity weapons', () => {
+  it('molotov is the vial clone with the burn payload (unmissable AoE lob)', () => {
+    const def = abilityDef('molotov');
+    expect(def.target).toEqual(abilityDef('vial').target); // same 3×3 targetCell blast
+    expect(def.orphanPolicy).toBe('ground-target');
+    const status = def.effects.find((e) => e.op.kind === 'applyStatus')!.op;
+    expect(status.kind === 'applyStatus' && status.statusId).toBe('burn');
+    const dmg = damageOpOf('molotov')!;
+    expect(dmg.evadable).toBe(false); // the shipped-AoE unmissable identity holds
+    expect(dmg.critable).toBe(true); // authored at the 76e decoupled convention
+  });
+
+  it("pistol owns the miss-heavy identity: faster, weaker, and wilder than the bow", () => {
+    const pistol = abilityDef('pistol');
+    const bow = abilityDef('bow');
+    expect(pistol.cooldownSeconds).toBeLessThan(bow.cooldownSeconds);
+    const p = damageOpOf('pistol')!;
+    const b = damageOpOf('bow')!;
+    expect(p.scaling).toBe('ranged');
+    expect(p.might).toBeLessThan(b.might);
+    expect(p.accuracy).toBeLessThan(b.accuracy);
+    // The wildest authored accuracy in the catalog — nothing sprays harder.
+    for (const id of Object.keys(ABILITY_DEFS)) {
+      const dmg = damageOpOf(id);
+      if (dmg?.evadable) expect(p.accuracy, `pistol ≤ ${id}`).toBeLessThanOrEqual(dmg.accuracy);
+    }
+    expect(p.evadable && p.critable).toBe(true);
+  });
+
+  it('halberd is the reach-2 heavy: slower and mightier than the sword', () => {
+    const halberd = abilityDef('halberd');
+    const sword = abilityDef('sword');
+    expect(halberd.rangeCells).toBe(2);
+    expect(halberd.cooldownSeconds).toBeGreaterThan(sword.cooldownSeconds);
+    const h = damageOpOf('halberd')!;
+    expect(h.scaling).toBe('strength');
+    expect(h.might).toBeGreaterThan(damageOpOf('sword')!.might);
+  });
+
+  it("cane is the pistol's melee twin (same spray profile, strength at reach 1)", () => {
+    const cane = abilityDef('cane');
+    const pistol = abilityDef('pistol');
+    expect(cane.rangeCells).toBe(1);
+    expect(cane.cooldownSeconds).toBe(pistol.cooldownSeconds);
+    const c = damageOpOf('cane')!;
+    const p = damageOpOf('pistol')!;
+    expect(c.scaling).toBe('strength');
+    expect(c.accuracy).toBe(p.accuracy);
+    expect(c.might).toBe(p.might);
+  });
+});

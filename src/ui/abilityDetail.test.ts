@@ -83,6 +83,15 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
       expect(partsFor(archetype, id).length, `${id} detail must not be blank`).toBeGreaterThan(0);
     }
   });
+
+  it('§76d — the four unwielded weapons render non-blank, op-appropriate details', () => {
+    expect(partsFor('mercenary', 'halberd').join(' · ')).toMatch(/\d+ dmg/);
+    expect(partsFor('mercenary', 'cane').join(' · ')).toMatch(/\d+ dmg/);
+    expect(partsFor('archer', 'pistol').join(' · ')).toMatch(/\d+ dmg/);
+    const molotov = partsFor('corrupter', 'molotov').join(' · ');
+    expect(molotov).toMatch(/\d+ dmg/);
+    expect(molotov).toContain('+burn'); // the damage-afflicter rider
+  });
 });
 
 describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped content)', () => {

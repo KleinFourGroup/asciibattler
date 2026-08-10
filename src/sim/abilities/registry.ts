@@ -54,6 +54,14 @@ const DEMO_ABILITY_IDS = [
   // 29d — the summon consumers.
   'raise_dead', // the Shaman's caster-anchored summon
   'ghoul_claw', // the summoned Ghoul's basic melee
+  // §76d — the stat-identity weapons (wielders land at the §76f design round;
+  // numbers are provisional until the 76h board signing). All four are pure
+  // config + fx reuse; molotov is the vial clone (burn, range 4) and authors
+  // critable:true / evadable:false directly — the 76e decoupled convention.
+  'molotov', // 3×3 burn lob — unmissable, luck-critable
+  'pistol', // the spray: very fast, very inaccurate, ranged
+  'halberd', // reach-2 melee: slow, heavy
+  'cane', // the melee spray (the pistol's twin)
 ] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {

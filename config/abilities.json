@@ -552,5 +552,128 @@
       }
     ],
     "fx": { "impact": "melee_swing" }
+  },
+  "molotov": {
+    "id": "molotov",
+    "name": "Molotov",
+    "cooldownSeconds": 2.5,
+    "rangeCells": 4,
+    "minRangeCells": 2,
+    "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
+    "timeline": [
+      { "phase": "release", "seconds": 0 },
+      { "phase": "travel", "seconds": 0.5 },
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "ground-target",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "none",
+          "might": 2,
+          "accuracy": 0.6,
+          "critBase": 0,
+          "critable": true,
+          "evadable": false,
+          "bypassDefense": false
+        }
+      },
+      {
+        "phase": "impact",
+        "op": { "kind": "applyStatus", "statusId": "burn" }
+      }
+    ],
+    "fx": { "release": "vial_throw", "impact": "vial_burst" }
+  },
+  "pistol": {
+    "id": "pistol",
+    "name": "Pistol",
+    "cooldownSeconds": 0.8,
+    "rangeCells": 4,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "ranged",
+          "might": 2,
+          "accuracy": 0.35,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "ranged_shot" }
+  },
+  "halberd": {
+    "id": "halberd",
+    "name": "Halberd",
+    "cooldownSeconds": 2.8,
+    "rangeCells": 2,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 8,
+          "accuracy": 0.6,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
+  },
+  "cane": {
+    "id": "cane",
+    "name": "Cane",
+    "cooldownSeconds": 0.8,
+    "rangeCells": 1,
+    "target": { "kind": "enemyInRange" },
+    "timeline": [
+      { "phase": "impact", "seconds": 0 },
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 10,
+    "effects": [
+      {
+        "phase": "impact",
+        "op": {
+          "kind": "damage",
+          "scaling": "strength",
+          "might": 2,
+          "accuracy": 0.35,
+          "critBase": 0.05,
+          "critable": true,
+          "evadable": true,
+          "bypassDefense": false
+        }
+      }
+    ],
+    "fx": { "impact": "melee_swing" }
   }
 }

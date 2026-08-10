@@ -141,7 +141,10 @@ shape-lock #4).
 - [x] 75k — ✅ 2026-08-09 (`db53957`): the ordered-target rubble
   auto-break — all four ordered pursue arms (engage/focus ×
   enemy/neutral) fall back to the gate rubble; repro-first, both arms
-  pinned; rubbleQuarry re-eyeball rides with the user (worklog §75k)
+  pinned (worklog §75k) · **+ 75k2** (`4523cc2`): the ROUTE-AWARE gate
+  pick — the labyrinth wrong-gate catch; null probe holds the mark
+  (worklog §75k2); the rubbleQuarry + labyrinth re-eyeballs ride with
+  the user
 - [ ] 75l — docs close (was 75k) + the SCHEDULED board re-pin (moved
   from 75j): ARCHITECTURE/DESIGN/GOTCHAS, cursor flip, ROADMAP demote
 

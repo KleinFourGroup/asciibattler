@@ -1797,3 +1797,49 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
 - **Residual**: the rubbleQuarry re-eyeball (the pull now breaking
   through the 13,8 gate in the native browser) — the user's check,
   pending at this entry.
+
+### 75k2 — the route-aware gate pick (2026-08-09)
+
+- **The live catch (user, labyrinth)**: spawned SE, ordered onto the
+  NE camp; the pulled lone adventurer (guarded-adventurer wave 3)
+  destroyed the SW camp's gate, then walked off toward the player
+  units. Diagnosis from the layout: BOTH labyrinth camps are
+  rubble-gated by design ((13,13) gated by (14,11); (1,1) by (0,3)),
+  and the enemy spawn corner sits nearly atop the SW gate — so a pull
+  to the NE camp met 75k's `nearestApproachableRubble`, which is
+  PATH-BLIND (nearest approachable rubble anywhere on the board, not
+  a rubble gating the route), chipped the wrong gate, then walked NE
+  at the next gate/breach and leash-preempted onto the player. atWill
+  ruled out: the §40b overlay chips only when NO hostile is reachable,
+  and the player was reachable the whole battle — a rubble-chipping
+  enemy is the signature of the ordered path.
+- **The fix (`4523cc2`)**: `routeGateRubble` — ONE A* over the
+  PERMEABLE graph (the unit's real movement context, auto-target
+  rubble lifted from the hard blockers, body cells priced at
+  `RUBBLE_ROUTE_CHIP_COST` 25); the FIRST rubble body cell along the
+  route names the gate. The premium is a tiebreak BETWEEN gated routes
+  (every candidate route crosses ≥1 rubble — a rubble-free route would
+  have made `canReach` true), sized to dominate the +4-class soft-cell
+  penalties; a code constant, not a sim.json dial. Per-tick re-probe
+  ⇒ a sequentially-gated corridor resolves gate by gate (the user's
+  double-gate question — falls out structurally, pinned). A null probe
+  now HOLDS the ordered mark and idles — two honest cases 75k chipped
+  futilely: wall-sealed (genuinely unreachable) and body-blocked
+  (transient; queueing resolves it).
+- **Scope**: the ordered fallback is the only consumer rewired; the
+  atWill overlay keeps its signed §40b nearest-pick (same latent
+  flaw, but its no-hostile-reachable trigger makes it ~unobservable
+  — noted, deliberately left).
+- **Cost**: ≤2 A* per walled-off ordered unit-tick (`canReach` + the
+  probe) — CHEAPER than 75k's per-candidate approach probes on a
+  multi-rubble board.
+- **Pins** (Targeting.orderedRubble.test.ts §75k2): the wrong-gate
+  discriminator (decoy nearer than the gate) · the double-gate
+  corridor chip-through under real ticks · the sealed-target
+  mark-hold · 2×2 body-cell resolution. Control-probed against
+  75k-only code: the two discriminators fail there; double-gate and
+  2×2 passed there by GEOMETRIC ACCIDENT (nearest happened to be
+  right) and now guard the class. 2538 main + 395 fuzz:smoke green.
+- **Residual**: the native-browser re-eyeball now covers BOTH boards —
+  rubbleQuarry (the pull breaking the 13,8 gate) and labyrinth (a
+  pulled enemy walking to the CORRECT camp's gate) — the user's check.

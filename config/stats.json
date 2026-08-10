@@ -9,8 +9,8 @@
   "dodgeChancePerEvasion": 0.02,
   "hitChanceFloor": 0.1,
   "hitChanceCap": 1.0,
-  "mobilityCdPerStat": 0.15,
+  "mobilityCdPerStat": 0.075,
   "speedCdPerStat": 0.05,
-  "mobilityMinCdScale": 0.4,
+  "mobilityMinCdScale": 0.3,
   "speedMinCdScale": 0.4
 }

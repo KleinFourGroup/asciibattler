@@ -242,7 +242,7 @@
           "might": 0,
           "accuracy": 0.6,
           "critBase": 0,
-          "critable": false,
+          "critable": true,
           "evadable": false,
           "bypassDefense": false
         }
@@ -276,7 +276,7 @@
           "might": 0,
           "accuracy": 0.6,
           "critBase": 0,
-          "critable": false,
+          "critable": true,
           "evadable": false,
           "bypassDefense": false
         }
@@ -341,7 +341,7 @@
           "might": 2,
           "accuracy": 0.6,
           "critBase": 0,
-          "critable": false,
+          "critable": true,
           "evadable": false,
           "bypassDefense": false
         }
@@ -375,7 +375,7 @@
           "might": 2,
           "accuracy": 0.6,
           "critBase": 0,
-          "critable": false,
+          "critable": true,
           "evadable": false,
           "bypassDefense": false
         }
@@ -493,7 +493,7 @@
               "might": 0,
               "accuracy": 0.6,
               "critBase": 0,
-              "critable": false,
+              "critable": true,
               "evadable": false,
               "bypassDefense": false
             }

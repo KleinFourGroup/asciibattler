@@ -130,6 +130,10 @@ describe('evalScaled', () => {
     // 1 + 0.5 × 8 = 5
     expect(evalScaled({ base: 1, stat: 'magic', perPoint: 0.5 }, source({ magic: 8 }))).toBe(5);
   });
+  it("§76e — the dormant `stat:'luck'` seam evaluates (the 76f gambler-def prerequisite)", () => {
+    // 2 + 0.5 × luck(6) = 5 — the seam the design round lights on select defs.
+    expect(evalScaled({ base: 2, stat: 'luck', perPoint: 0.5 }, source({ luck: 6 }))).toBe(5);
+  });
   it('reads the `level` stat off the unit, not effectiveStats', () => {
     // 2 + 1 × level(5) = 7 — magic is irrelevant
     expect(evalScaled({ base: 2, stat: 'level', perPoint: 1 }, source({ level: 5, magic: 99 }))).toBe(7);

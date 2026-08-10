@@ -20,7 +20,10 @@ import { ABILITY_DEFS, abilityDef, damageOpOf, healOpOf } from './abilities';
 // four melee weapons (sword/club/katana/whip, split from the old `melee_strike`),
 // the `bow` (renamed `ranged_shot`), and the rogue's `gambit_strike`.
 const BASIC_STRIKES = ['sword', 'club', 'katana', 'whip', 'bow', 'gambit_strike'];
-// Damage verbs that are unmissable + non-critable: the AoE blast + the artillery shot.
+// Damage verbs that are unmissable (dodged positionally or not at all): the AoE
+// blast + the artillery shot. §76e decoupled critable from this list — evadable
+// stays the per-identity choice (the unmissable-magic scope guard); crit is
+// universal (the flip below).
 const UNMISSABLE_ATTACKS = ['magic_bolt', 'catapult_shot'];
 // The heal verb: a heal op, no combat profile.
 const HEAL_ABILITIES = ['heal_ally'];
@@ -85,9 +88,26 @@ describe('abilities catalog — combat profile + verb shapes', () => {
     for (const id of UNMISSABLE_ATTACKS) expect(damageOpOf(id)!.evadable, id).toBe(false);
   });
 
-  it('critable gate: the strikes crit; the mage bolt & catapult do NOT', () => {
-    for (const id of BASIC_STRIKES) expect(damageOpOf(id)!.critable, id).toBe(true);
-    for (const id of UNMISSABLE_ATTACKS) expect(damageOpOf(id)!.critable, id).toBe(false);
+  it('§76e — critable is UNIVERSAL on ability damage ops (luck speaks everywhere)', () => {
+    // The flip: every damage op in the catalog — top-level AND chain-inner —
+    // can crit, waking luck for the caster archetypes whose kits were inert
+    // (mage / catapult / corrupter / ice_mage / stormcaller). Periodic status
+    // TICKS stay non-critable by design (shape-lock res. 1 — pinned in
+    // statuses.test.ts, not here).
+    for (const [id, def] of Object.entries(ABILITY_DEFS)) {
+      for (const e of def.effects) {
+        if (e.op.kind === 'damage') {
+          expect(e.op.critable, `${id} damage op`).toBe(true);
+        }
+        if (e.op.kind === 'chain') {
+          for (const inner of e.op.ops) {
+            if (inner.kind === 'damage') {
+              expect(inner.critable, `${id} chain-inner damage op`).toBe(true);
+            }
+          }
+        }
+      }
+    }
   });
 
   it('I6 split/renamed the basic-strike ids', () => {

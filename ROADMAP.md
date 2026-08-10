@@ -171,8 +171,10 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   4 registry lines + fx reuse; identity pinned as RELATIONS to
   reference defs (numbers provisional → 76h); molotov authored at
   the 76e decoupled convention (critable:true/evadable:false)
-- [ ] 76e — the critable flip (5 ops) + `abilities.test` rewrite +
-  provisional mobility constants (sign at 76h) + luck-seam check
+- [x] 76e — the structural flip ✅ 2026-08-10: critable universal
+  (5 ops flipped, law-pinned) + mobility re-anchored as EXACT level-1
+  equivalence (rate 0.075/floor 0.3, bases+growths ×2 — pathing
+  pins never moved) + luck-seam pin (worklog §76e)
 - [ ] 76f — DESIGN ROUND (decision point): new archetypes + Inspire
   numbers + `inspired` status + prc/eva identity pass + luck
   ScaledValue defs + rarity/prices + glyphs (5 free cells);

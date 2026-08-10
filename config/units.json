@@ -15,7 +15,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 6,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -28,7 +28,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.13,
+      "mobility": 0.26,
       "power": 0.1
     }
   },
@@ -49,7 +49,7 @@
       "precision": 5,
       "evasion": 11,
       "speed": 7,
-      "mobility": 3,
+      "mobility": 6,
       "power": 1
     },
     "growthRates": {
@@ -62,7 +62,7 @@
       "precision": 0.2,
       "evasion": 0.45,
       "speed": 0.35,
-      "mobility": 0.13,
+      "mobility": 0.26,
       "power": 0.1
     }
   },
@@ -83,7 +83,7 @@
       "precision": 6,
       "evasion": 5,
       "speed": 6,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -96,7 +96,7 @@
       "precision": 0.25,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.13,
+      "mobility": 0.26,
       "power": 0.1
     }
   },
@@ -116,7 +116,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 6,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -129,7 +129,7 @@
       "precision": 0.1,
       "evasion": 0.1,
       "speed": 0.15,
-      "mobility": 0.07,
+      "mobility": 0.14,
       "power": 0.05
     }
   },
@@ -150,7 +150,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 5,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -163,7 +163,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -183,7 +183,7 @@
       "precision": 5,
       "evasion": 7,
       "speed": 9,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -196,7 +196,7 @@
       "precision": 0.45,
       "evasion": 0.5,
       "speed": 0.6,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -216,7 +216,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 6,
-      "mobility": 1,
+      "mobility": 2,
       "power": 0
     },
     "growthRates": {
@@ -229,7 +229,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.4,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -250,7 +250,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -263,7 +263,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -284,7 +284,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": -7,
+      "mobility": -14,
       "power": 1
     },
     "growthRates": {
@@ -297,7 +297,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.2,
-      "mobility": 0.07,
+      "mobility": 0.14,
       "power": 0.1
     }
   },
@@ -318,7 +318,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 6,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -331,7 +331,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.13,
+      "mobility": 0.26,
       "power": 0.1
     }
   },
@@ -352,7 +352,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 5,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -365,7 +365,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -386,7 +386,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 5,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -399,7 +399,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -420,7 +420,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -433,7 +433,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -454,7 +454,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 5,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -467,7 +467,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -488,7 +488,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -501,7 +501,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -522,7 +522,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": 1,
+      "mobility": 2,
       "power": 1
     },
     "growthRates": {
@@ -535,7 +535,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.3,
-      "mobility": 0.1,
+      "mobility": 0.2,
       "power": 0.1
     }
   },
@@ -555,7 +555,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 4,
-      "mobility": -7,
+      "mobility": -14,
       "power": 1
     },
     "growthRates": {
@@ -568,7 +568,7 @@
       "precision": 0.2,
       "evasion": 0.2,
       "speed": 0.2,
-      "mobility": 0.07,
+      "mobility": 0.14,
       "power": 0.1
     }
   },
@@ -589,7 +589,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 6,
-      "mobility": 2,
+      "mobility": 4,
       "power": 0
     },
     "growthRates": {
@@ -602,7 +602,7 @@
       "precision": 0.1,
       "evasion": 0.1,
       "speed": 0.15,
-      "mobility": 0.07,
+      "mobility": 0.14,
       "power": 0.05
     }
   },
@@ -664,7 +664,7 @@
       "precision": 5,
       "evasion": 5,
       "speed": 5,
-      "mobility": 2,
+      "mobility": 4,
       "power": 1
     },
     "growthRates": {
@@ -677,7 +677,7 @@
       "precision": 0.4,
       "evasion": 0.4,
       "speed": 0.5,
-      "mobility": 0.2,
+      "mobility": 0.4,
       "power": 0.1
     }
   }

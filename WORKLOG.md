@@ -2063,3 +2063,25 @@ archetypes ship DRAFTABLE-ONLY** — the user has encounter ideas but
 authoring them now is too much at once; enemy-side exposure deferred
 (design-round discretion or §82), so the board amendment measures
 the stat changes, not new enemy content.
+
+### 76e — the structural flip (2026-08-10)
+
+The mobility re-anchor landed as an EXACT level-1 equivalence, not an
+approximation: rate halved precisely (0.15→0.075, floor 0.4→0.3) and
+every base mobility + mobility growth DOUBLED (38 values, scripted) —
+so every level-1 cadence is byte-identical, the pathing baselines and
+drift gates never moved (verified: full suite green with zero
+re-pins), and the de-saturation is purely in the growth grain (each
+grown point now worth a half-step; saturation at ~10 points, the spec
+target). What changes at runtime: LEVELED cadences diverge at
+half-step rounding, and the growth ceiling now outruns the old 8t
+floor (top melee can reach 6t deep in a run) — both absorbed by the
+76h board. The 76f identity spread starts from this clean baseline.
+Note for the design round: a +1-mobility status/empower (e.g.
+`inspired`) is now worth HALF a step — aura numbers must be authored
+on the new scale. Critable: all 5 ops flipped (the catalog is now
+universally critable, pinned as a law over top-level + chain-inner
+ops); DoT ticks stay non-critable (res. 1). The luck ScaledValue seam
+got its evaluator pin. fuzz:smoke 398 green — the smoke pins are
+determinism/structure-shaped, so the deliberate stream shift passes;
+the absolute movement shows up only at the 76h board.

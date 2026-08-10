@@ -152,7 +152,37 @@ the promotion-screen derived-delta display.
   units draftable with prices + glyphs inside the atlas budget; the
   board re-run green with re-signed refs where deliberately moved.
 - **Scope guards:** no constitution auras; no aura stacking policy;
-  no evadable-flip on the unmissable-magic identity ops.
+  no evadable-flip on the unmissable-magic identity ops; DoT ticks
+  stay non-critable (shape-lock res. 1); new archetypes
+  draftable-only — no encounters.json authoring (res. 3).
+
+Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
+
+- [ ] 76a — aura engine core: `aura` schema field +
+  `applyAuraStatuses()` World pass + propose-skip for op-less aura
+  defs + boot-assert arm + range guard + inert-neutral skip; headless
+  tests incl. no-stack pin + mobility-status snapshot round-trip
+- [ ] 76b — aura surfaces: attack-editor formatter/UI arm (round-trip
+  proof) + `abilityDetail` aura branch + STATUS_DISPLAY coverage
+  assert (+ the missing `emboldened` entry)
+- [ ] 76c — the two engine gaps: caster-anchored/ally-targeting
+  propose arm + honor `AoeSelector.anchor:'caster'`
+- [ ] 76d — Molotov/Pistol/Halberd/Cane as config + registry lines +
+  fx reuse; config-derived tests
+- [ ] 76e — the critable flip (5 ops) + `abilities.test` rewrite +
+  provisional mobility constants (sign at 76h) + luck-seam check
+- [ ] 76f — DESIGN ROUND (decision point): new archetypes + Inspire
+  numbers + `inspired` status + prc/eva identity pass + luck
+  ScaledValue defs + rarity/prices + glyphs (5 free cells);
+  re-anchor base mobility to cadence-equivalence (res. 2)
+- [ ] 76g — promotion derived-delta display: pure
+  `promotionDeltaParts` + headless test; native-browser eyeball
+  rider (aura linger verify rides here)
+- [ ] 76h — the board amendment run (box; 68h trigger) + signing
+  session: act-1/forced-boss re-pins expected; signed trio never
+  silently re-pins; fire-channel + camps-leak pre-registered
+- [ ] 76i — docs close: DESIGN/ARCHITECTURE + gotchas if earned +
+  ROADMAP demote + cursor flip
 
 ## Phase 77 — Sector-map generation rework
 

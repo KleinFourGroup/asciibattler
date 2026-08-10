@@ -1907,3 +1907,159 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   Post-amendment board: **0 FAIL / 7 WARN, all pre-registered** —
   §76 opens against a clean §74/§75-era baseline. Detail: BALANCE
   2026-08-10 (the amendment paragraph) + ROADMAP §82 riders.
+
+## Phase 76 — Unit mechanics & stat identity
+
+### Kickoff code-reality audit (2026-08-10)
+
+Three-surface audit (aura engine · stat feel · promotion/archetype/
+board), run fresh against HEAD `c9c29f1`. The 2026-08-05 spec-audit
+facts held up well; corrections below. The cut derives from these
+findings; shape-lock pending.
+
+**Aura surface (the locked shape survives; five sharp edges found):**
+
+- `applyAuraStatuses()` slots between `applyPeriodicEffects` and
+  `applyTileStatuses` (World.ts:1439→1447) — after `runCampDripScan`,
+  so a just-dripped camp member is in-aura the same tick. Camps did
+  NOT land as tick passes (wander = a slot-0 behavior; hostility =
+  the damage chokepoint) — the aura pass is only the SECOND non-tile
+  non-effect pass, not one of many.
+- `sustainTileStatus` (World.ts:1669) is reusable but its top-up
+  branch is policy-blind: it mutates `lifetime` directly, bypassing
+  merge policy AND the susceptibility gate, and hardcodes
+  `sourceUnitId: null` / `magnitude: 1`. "Non-stacking falls out of
+  merge:refresh" is true only for the FIRST application — pin
+  no-stack with a test, don't trust the merge table. No caster
+  attribution without extending it (fine for v1 stat auras).
+- ⚠ Selector hazard: an `aoe anchor:'caster'` aura def would inflate
+  `derived.attackRange` to the aura radius (`rangeForArchetype`,
+  archetypes.ts:43-56) and strand the caster out of engagement — the
+  N1 dash hazard again. Aura-only defs author `target:'self'`
+  (already excluded) + the pass reads `aura.radius` directly;
+  `proposeSelfAbility` needs a skip arm (an op-less self def
+  currently falls into `proposeSelfMove` and would break).
+- Four blast-radius items the spec missed: `assertStatusRefsResolve`
+  walks only `def.effects`+`chain.ops` — needs a third arm for
+  `aura.statusId` (else a typo fails at runtime, not boot) ·
+  `tools/attack-editor/format.ts` is a hand-written emitter that
+  would SILENTLY DROP an `aura` field on every Save (the round-trip
+  test catches it — add the arm in the same commit as the schema
+  field) · `abilityDetail.ts` would mislabel an aura def as "dash N"
+  (the §29d summon-branch bug class) · `STATUS_DISPLAY` has no
+  coverage assert and `emboldened` is ALREADY missing an entry
+  (renders magenta) — fix both, consider the assert.
+- `affects` vocabulary is team-only; a camp-caster aura with
+  `affects:'allies'` would buff every neutral on the map including
+  walls. V1: copy `applyTileStatuses`'s `isInertNeutral` skip;
+  camp-carried auras stay unauthored (no camp-awareness work).
+- Serialization: statuses already ride `UnitSnapshot.effects` (v24) —
+  the NO-BUMP prediction HOLDS. One new load-bearing fact: no shipped
+  effect has ever touched mobility, so the snapshot-restore
+  `refreshDerived` idempotence claim (World.ts:2604) gets exercised
+  for the first time — add a mobility-status round-trip test.
+- `foldEffects` already folds mobility (the sole SIGNED_STAT —
+  negative works) and `refreshDerived` → `deriveStats` picks it up on
+  the next proposal: the K1 seam goes live for the first time, no
+  engine work. `emboldened` is the exact statMods precedent for
+  `inspired`.
+
+**Stat-feel surface (numbers corrected, direction intact):**
+
+- Critable inventory: 14 damage ops, 9 true / 5 false (`magic_bolt`,
+  `catapult_shot`, `vial`, `ice_storm`, `chain_lightning` inner) —
+  critable and evadable are currently perfectly correlated; the flip
+  decouples them for the first time. The spec's "8 of 18" is really
+  **9 of 19**: 5 flip-fixable + 4 with NO damage op at all (healer,
+  warlock, banshee, shaman — their luck stays dead regardless; the
+  luck ScaledValue seam on hex/wail/raise_dead magnitudes is the only
+  lever for them).
+- ⚠ The flip adds a combatRng draw per victim per fire on those 5
+  ops — **the whole combat stream shifts**, which is the mechanical
+  reason the board moves. `abilities.test.ts:88-91` (the
+  critable-gate pin) is the one hard test break, rewritten as part of
+  the flip. `statuses.test.ts:72` pins DoT ticks non-critable —
+  decision point.
+- Dormant-seam confirmations: `ScaledValue stat:"luck"` is
+  accepted-nowhere-used (the only shipped ScaledValue is raise_dead's
+  magic-scaled level); daemon/packet `crit` filters (daemons.ts:120,
+  packets.ts:103) WAKE UP for caster comps post-flip — pre-register
+  in the board read.
+- Mobility: constants live in **config/stats.json** (not sim.json) —
+  `mobilityCdPerStat 0.15` / `mobilityMinCdScale 0.4` confirmed;
+  floor hits exactly at mobility 4 (8 ticks). All formula tests
+  derive from config (stats.test.ts safe); no hardcoded 0.15/0.4
+  anywhere. ⚠ Design tension for the round: at ~0.075/point a
+  LOW-end mobility point is worth 1-2 ticks instead of 3 —
+  de-saturation extends the top while muting the early levels, which
+  cuts against the legibility charter. 14 of 19 archetypes sit at
+  mob ≤3 and only the 0.13-growth melee reach the wall (~lv 12-15).
+  Options to weigh: pair the rate drop with mobility growth raises,
+  or drop baseMoveCooldownSeconds.
+- prc/eva: the uniform-5 premise is already three exceptions stale
+  (adventurer eva 11, ronin prc 6, rogue eva 7; eva growth 0.45/0.5
+  outliers too) — the identity pass is a widening, not a
+  from-scratch. No test asserts catalog prc/eva values; the spread is
+  free at test level. `stats.test.ts:100-108` documents the retiring
+  invariant in prose — update the comment when spreading.
+- Atlas: **43/48, 5 free cells** (verified by hand after the two
+  audit agents split 43 vs 41; NON_UNIT_GLYPHS = 21, distinct unit
+  glyphs = 22). §75 camps added zero glyphs. Five new archetypes fit
+  ONLY if ≤5 want new distinct glyphs — margin exactly zero, or
+  reuse/resize.
+- The four weapons: `vial` is Molotov's clone parent (radius 1 IS
+  3×3; `burn` + fx keys already exist — zero new-status work);
+  registry cost = one line each in `DEMO_ABILITY_IDS`
+  (registry.ts:45-57), boot-asserted set-equal; fx reuse
+  (melee_swing / ranged_shot / vial_*) keeps them pure-config, a
+  distinct cue costs one FX_REGISTRY line. Pistol's "low accuracy"
+  reads ≈ literally at uniform prc==eva (authored range today: club
+  0.40 → gambit 0.85).
+
+**Promotion/board surface:**
+
+- `PromotionInfo` already carries `oldStats`/`newStats`/`archetype` —
+  everything the delta display needs; `stats.ts` is pure and
+  UI-importable. **The archetype editor's derived preview
+  (editor.ts:544-608) is a working reference implementation**
+  (REF_ACCURACY 0.6 convention, dodge/cadence/per-ability hit-crit
+  lines). Plan: extract a pure `promotionDeltaParts(old, new,
+  archetype)` + headless test (the abilityDetail precedent); DOM
+  stays eyeball-only. Zero existing test touches the screen
+  (confirmed: Run.test.ts covers the phase upstream only). Per-unit
+  crit/hit don't exist as derived values (I6) — deltas render
+  per-ability or vs the reference attacker, same as the editor.
+- New-archetype path: pure data + TWO mandatory side edits — a
+  prices.json base entry (boot-FATAL if missing for a draftable) and
+  `Recruitment.test.ts:55`'s hardcoded EXCLUDED list (breaks only on
+  non-draftable adds). Recruit pool/tiers/roster order all derive.
+  Enemy-side exposure is authored encounters only — a new archetype
+  does NOT appear as an enemy unless encounters.json says so.
+- ⚠ Camps leak: camp units resolve stats/abilities through the SAME
+  catalog at spawn (World.ts:1897) — prc/eva or critable changes to
+  bandit/archer/ghoul/warlock/ice_mage/shaman/banshee move camp
+  fights on all 4 placed layouts + their bits payouts, and NO board
+  row watches camps (the §82 probe-arm rider gets more load-bearing
+  after this phase). Pre-register in the board read.
+- Board: everything is reference-grade WARN by design; the SIGNED
+  trio (seam 15–18 · reach 40–50 · wall 30–35) must not silently
+  re-pin — any movement is a signing session. Act-1 + forced-boss
+  refs (±8/±10) are the expected movers. The fire channel is ALREADY
+  in an open inverted state from 75l — do not attribute its
+  §76-board movement to §76. Board-structure tests pin row counts/ids
+  (board.test.ts:255-312) — only break if we add rows, which we
+  don't plan to.
+
+**Shape-lock (user-signed 2026-08-10):** the 9-step cut approved as
+presented (ROADMAP §76 carries the checkboxes). The three decision
+points resolved: **(1) DoT ticks STAY non-critable** (`bypassDefense`
+chip damage; critting ticks would double-count luck and add stream
+draws on every carrier — `statuses.test.ts:72` stands). **(2) The
+mobility low-end mute is an ACCEPTED tradeoff** — current per-point
+differences are too dramatic and NEED muting; the design round
+re-tunes starting mobility values to be roughly cadence-equivalent
+under the new curve (re-anchor bases, not the curve). **(3) New
+archetypes ship DRAFTABLE-ONLY** — the user has encounter ideas but
+authoring them now is too much at once; enemy-side exposure deferred
+(design-round discretion or §82), so the board amendment measures
+the stat changes, not new enemy content.

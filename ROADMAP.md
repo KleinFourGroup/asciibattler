@@ -87,39 +87,17 @@ cluster-5-spec §Kickoff resolutions.
   scheduled break paid) · reward kinds. Detail: worklog §74i.
 - [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.
 
-## Phase 75 — Camps
+## Phase 75 — Camps ✅ CLOSED 2026-08-09 (75l board re-pin recorded in BALANCE)
 
-**Charter:** neutral camps per the signed spec: the World camp
-registry (campId / per-faction hostility / leash anchors —
-**WorldSnapshot v34→v35**), the active-neutral predicate widening
-(~40 sites incl. the movement.ts immovable-blocker correctness fix),
-overlap spawn + leash wander, kill credit + reward portions
-(win-or-lose), renderer/HUD third-faction treatment, the camp catalog
-editor + the layout camp-spawn paint tool, the demo-catalog design
-round.
-
-- **Order:** after events (both are content movers ahead of §77;
-  events first because two later phases consume it).
-- **Risk:** HIGH-ish — sim-wide widening; byte-identity on camp-free
-  layouts is an EXIT GATE, not a nicety (presence-gating everywhere;
-  dedicated RNG forks).
-- **Decision points:** ✅ ALL DECIDED at the 75j playtest (2026-08-09,
-  worklog §75j-verdicts) — pull 0.25 · block-turn-end TRUE ·
-  camp identity PER-ENCOUNTER stays (§77 switch dormant); the
-  demo-catalog design round ✅ (the continuous-value rule).
-- **Exit:** camps playable (wander/aggro/kill/loot) in the browser;
-  the two headless invariants green (leash bound; spawn vacated ≤N
-  ticks); full fuzz byte-identical on camp-free layouts; feel
-  verdicts recorded in the worklog.
-- **Scope guards:** no cross-turn camp state; no fourth team value;
-  bot camp-seeking stays out (the probe arm is §82's).
-
-**The cut (kickoff shape-lock 2026-08-08 — worklog §75).** World
-**v34→v35 at 75b**; NO RunSnapshot bump predicted; every step
-through 75i presence-gated + fork-append-free (fuzz byte-identical
-until 75j's scheduled content re-pin). Spawn model = PORTAL DRIP
-(per-camp pending queues in the registry; user-signed, worklog §75
-shape-lock #4).
+**Outcome, one breath:** the neutral third faction shipped end to end
+— registry (**v34→v35**) + portal drip + the ~40-site active-neutral
+widening + leash wander + damage-sourced hostility/kill credit +
+continuous-value rewards + the TERMINAL_AMBER render treatment + both
+editors + the signed 5-camp catalog on 4 placements + the per-turn
+enemy PULL (the first enemy-objective consumer) + the ordered-engage
+rubble auto-break made ROUTE-AWARE; all feel verdicts user-signed;
+camp-free byte-identity held every step. Detail: WORKLOG §§75–75k2 ·
+DESIGN §Camps · gotchas #122–123 · git.
 
 - [x] 75-pre — fuzz-telemetry stale-guard fix ✅ 2026-08-08 (worklog §75)
 - [x] 75a — camps config + layout seams ✅ 2026-08-08 (worklog §75)

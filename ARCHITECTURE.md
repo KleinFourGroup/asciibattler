@@ -81,6 +81,7 @@ src/
     rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon|unit|poolHealth entries — unit/poolHealth 74c, first authored 74i: hostage-rescue) + the {table,trigger} encounter-ref schema + the daemon/packet/unit-ref boot asserts (49a activated the packet sibling; 74c the unit one) — config/rewards.json
     packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
+    camps.ts                 #   75a: the camp catalog (CampDef: id/name/description + leashRadius + units[{archetype,count,level}] + rewards[EncounterRewardRef]) + CampsSchema (exported for the 75i editor's byte-faithful formatter) + the TWO boot asserts: assertCampRewardRefs (reward-table refs resolve — the assertEncounterRewardRefs sibling) + assertLayoutCampRefs (layout camp placements name real camps) — config/camps.json. 75j: the ⭐ CONTINUOUS-VALUE reward rule (always-on camps pay bits/packets ONLY — never a run-defining reward; spec §Camps)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
     tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
@@ -103,6 +104,8 @@ src/
                              # K1: applyDamage reads effectiveStats (prc/eva/def) + fires dealHit/takeHit/dealMiss/evade/kill triggers (post-resolution)
                              # 47f: installBattleRules (once per battle; data serialized, handlers re-registered on fromJSON)
                              #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)
+                             # 75b: the CAMP REGISTRY (v34→v35) — camps Map<id, CampInstance {defId, anchor, hostileTo per-faction, pending drip queue, killedBy}> + the presence-gated campRng (null on camp-free worlds — byte-identity is the exit gate; cloneForRollout carries it conditionally); installCamps (once per battle) / campById / campsList / markCampHostile / campHostileTo
+                             # 75e: aggro + kill credit ride dealDamage (damage is hostility's SINGLE source — the whole camp marks hostile to the striking faction; the drip-aware killedBy stamp waits for pending+living empty); 75g: hasUnclearedHostileCamp gates checkBattleEnd's decisive path behind SIM.blockCampTurnEnd (shipped TRUE, the 75j verdict); runCampDripScan (75c: per-tick portal drip onto the anchor) + primeCampSpawns (75h2: the setup-time first-member prime)
     battleRules.ts           # 47f: the battle-domain daemon/packet seam — BattleRule (plain compiled data) + registerBattleRules
                              # (evaluation at the K1 triggers: player-team acting only; filter-before-chance; chance off
                              # combatRng; gainBits → tallies, applyStatus → the ACTING unit by default, def-resolved at fire
@@ -113,6 +116,7 @@ src/
                              # level (E3) + xp/rosterIndex (E4); actionCooldowns Map + activeAction (A1)
                              # blocksLineOfSight (D6)
                              # K1: effects[] (status effects) + effectiveStats (cached fold; === stats when empty) + addEffect/expireEffects/refreshDerived
+                             # 75b/d: campId (null = the pre-75 world) + the isActiveNeutral/isInertNeutral predicate PAIR — the §75d/e widening's single vocabulary (an active neutral is a mobile combatant on team 'neutral'; inert = walls/cover/rubble; ~40 call sites gate on these, never on bare team checks)
     statusEffects.ts         # K1: generic status-effect system — StatusEffect (per-stat add/mul mods + lifetime + merge policy) + foldEffects + combineMagnitude
     statusBehavior.ts        # 28: behaviorFlags — the def-resolve fold turning a unit's effects[] into merged AI overrides (frozen/blind/panic/confusion) the selector/movement/targeting consumers read
     statusReadout.ts         # §32c: readUnitStatuses — pure projection of effects[] → per-status display facts (name/kind/stacks/remaining/durationFraction/potencyPerSec); feeds the board pip-strip + card row (sim truth only; color lives render-side)
@@ -137,6 +141,8 @@ src/
     occupancy.ts             # §35: the occupancy chokepoint — cellsOccupiedBy (footprint seam) / isFree·unitAt / occupiedCells / footprintFits / distanceBetween; OccupancyPlane (plane seam, ground-only)
     Targeting.ts             # findTarget + currentTarget stickiness + updateTarget (E5) w/ objective branches (engage/hold/focus + updateTargetDefault); lowestWoundedAlly (E7.B); 28: behavior preempt — confusion random-team pick / blind capped acquisition; §44a: the LOS pools + band gate moved to positioning.ts
                              # dispatches the seeker's targeting strategy; ties by HP then id; skips neutrals
+                             # §75e: hostileCandidate — THE shared admit rule every hostile scan runs (passive camps are scenery; hostility per-faction, both directions); currentTarget honors an ordered PASSIVE camp mark (the first-blow guarantee)
+                             # §40b/§75k/k2: the rubble auto-break pair — applyRubbleAutoTarget (atWill overlay: reachable hostile > nearest approachable rubble) + applyOrderedRubbleFallback (the ordered pursue arms: routeGateRubble's permeable A* names the ROUTE-gating rubble, first-on-route; null probe HOLDS the mark)
     targetingStrategies.ts   # per-archetype target-pick registry (nearest / weakest); Unit.targeting resolved at spawn
     archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
@@ -144,6 +150,7 @@ src/
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter (+ §40d spawnLayoutNeutrals — walls/cover/rubble from a GeneratedTerrain)
+                             # 75c: spawnCamps — rolls each camp-spawn tile's camp (per-ENCOUNTER terrainSeed = the signed identity verdict) + installCamps + spawnCampUnit (behavior slot 0 = CampWanderBehavior — the 75f landing note lives at the swap); §75j2: the enemy PULL (SIM.enemyPullChance, per-TURN mix(terrainSeed, worldSeed) lazy RNG) enqueues engage{neutral} on the pulled camp's primed member — NO pre-marked hostility, the ordered first blow aggros
     actions/                 # Non-verb actions only — every combat verb is now the data-driven effects/EffectAction (Y5c retired the hand-coded AttackAction/Heal/MagicBolt/Catapult/Gambit/Dash classes)
       MoveAction.ts          # §36b NON-INSTANT: start() claims `to` + emits unit:moved; applyEffect() flips position + releases the claim at the 50% mark (SIM.moveFlipFraction)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
@@ -158,6 +165,7 @@ src/
                              # splits neutrals into pathBlockers + losBlockers (D6); LOS-optional abstain (E7.D)
       AbilityBehavior.ts     # E2: walks the unit's Ability[] (replaced AttackBehavior); 28: skips attack proposals when a status sets preventsAttack (frozen/panic)
       SupportMovementBehavior.ts  # E7.B: healer idle / panic / approach / centroid-trail
+      CampWanderBehavior.ts  # 75f: the camp member's behavior slot 0 (spawnCampUnit swap) — PASSIVE = the leash-filtered anchor wander on campRng (campWanderChancePerSecond authored per-SECOND, loader-derived per-tick — the 75j verdict's tick-rate decoupling; anchor tile skips the chance gate so the drip portal vacates); HOSTILE (currentTarget resolves a mark) = wholesale delegate to MovementBehavior's engagement protocol
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
       schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
@@ -384,6 +392,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   sectors.json               # T1: sector catalog — TWO since §67 ("The Start" + "The Deep End"); 74e/74i: per-sector `events` pools (both hold the full 12-event slate) + `startingEvents` (The Start opens on sector-1-start — the run-opening boon)
   sector-map.json            # T2: the sector-selection DAG — §67: two chained nodes (start → the-deep-end)
   events.json                # 74a→i: the event catalog — the 3 smoke events + the user-authored ten (§74i: the cadre flag-chain three-parter, the prodigy grant, hostage-trio + its rewardOverride, the sector-1-start boon; cheese-tax ships repeatable: true)
+  camps.json                 # 75a→j: the camp catalog — the signed 5 (bandit-squatters / ghoul-nest / toll-post / …; bits/packet rewards only, the ⭐ continuous-value rule); placements live in layouts.json campSpawns + camps weighted lists (75j: labyrinth ×2 · fetidPond · icebergs · rubbleQuarry)
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
   tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
@@ -398,7 +407,7 @@ public/
   audio/                     # B6: preloaded .wav files (click, melee, shoot, death, win, magicboom, ...)
 
 tools/                       # Dev-only; not bundled into dist/ (index page at /tools/)
-  layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/
+  layout-editor/             # C1d.B → D8: layout painter at /tools/layout-editor/ (75i: the camps layer — camp-spawn paint + per-layout weighted camp list)
   run-config/                # G1/G5: short-run CLI + GUI launcher at /tools/run-config/
   archetype-editor/          # I4: schema-driven units.json editor (live preview + save) at /tools/archetype-editor/
   attack-editor/             # Cluster 1: abilities.json editor (effect-op tree + live schema validation) at /tools/attack-editor/
@@ -406,6 +415,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   encounter-editor/          # V2: encounters.json editor (visual wave-grammar builder + live resolution preview; 48e adds the rewards-ref panel) at /tools/encounter-editor/
   reward-editor/             # 48e: rewards.json editor (weighted tables + draw-% preview + referenced-by pane; 49g: packet entries = a catalog select + the packet-ref assert) at /tools/reward-editor/
   event-editor/              # 74h: events.json editor (page-map builder + JSON fallback; live schema + termination + ref validation; 74f phrases in choice rows; byte-faithful formatEventsJson; sector-placement pane) at /tools/event-editor/
+  camp-editor/               # 75i: camps.json editor (member rows + reward refs + leash radius; both boot asserts run live; byte-faithful formatCampsJson) at /tools/camp-editor/
   packet-editor/             # 49g: packets.json editor (matrix-driven per-op sub-forms, derived target, constrained contexts, fire summary + dropped-by pane; byte-faithful formatPacketsJson) at /tools/packet-editor/
   price-editor/              # 50f: prices.json editor (one document, no tabs — unit/packet/daemon books + economy knobs + stock counts; resolved-price preview through the *For price cores; byte-faithful formatPricesJson) at /tools/price-editor/
   sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
@@ -522,7 +532,7 @@ Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a
 ```
 tick                    { tick: number }
 battle:started          { worldSeed: number; encounter: BattleEncounter }          # 53b: + the full self-contained fixture (the trace recorder's begin-marker; only Run emits, no sim/run reader)
-battle:ended            { winner: 'player' | 'enemy' | 'draw'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[]; survivorPower?; tallies? }   # E4: per-roster XP; H4: draw + pool chips; 47f: tallies {bits} — the battle-earned settle (Run.gainBits)
+battle:ended            { winner: 'player' | 'enemy' | 'draw'; xpAwards: { unitId; rosterIndex; damageDealt; xpGained }[]; survivorPower?; tallies?; campKills? }   # E4: per-roster XP; H4: draw + pool chips; 47f: tallies {bits} — the battle-earned settle (Run.gainBits); 75g: campKills [{defId, killedBy}] — the wiped camps (player-killed roll rewards into the turn offer win-or-lose; enemy-killed = credit denial; omitted camp-free — byte-identical payloads)
 unit:spawned            { unitId: number; instant: boolean }                       # instant=false → D5.C overflow-queue spawn (fade-in)
 unit:moved              { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }
 unit:dashed             { unitId: number; from: GridCoord; to: GridCoord; durationTicks: number }   # N1: a dash LEAP (also emits unit:moved for the slide) — audio/VFX cue, fires even on a 1-cell dash
@@ -535,7 +545,7 @@ unit:waited             { unitId: number }                                      
 unit:attacked           { attackerId: number; targetId: number; damage: number; crit: boolean }   # E1: damage post-crit; GP2: post-defense (via world.applyDamage)
 unit:missed             { attackerId: number; targetId: number }                   # I2: a single-target strike dodged (precision-vs-evasion roll); 0 dmg, no HP/ledger touch
 unit:healed             { unitId: number; amount: number; healerId: number | null }   # healerId: caster (ability heal, F5) or null (hypothetical env heal); 27d: the healing-TILE chip moved to the rejuvenate status
-unit:died               { unitId: number; team: Team }                             # team carried because the unit is already spliced out (C1b)
+unit:died               { unitId: number; team: Team; campId: number | null }      # team carried because the unit is already spliced out (C1b); 75h: campId on the same rationale — the death SFX plays for a camp member but not crumbling masonry
 status:applied          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect applied (sourceUnitId null = environmental, e.g. a fire/healing tile, 27d); the viz lifecycle, only status-def effects emit
 status:ticked           { unitId; statusId; sourceUnitId: number | null; amount }   # 27: a periodic DoT/HoT fired (the fire→burn / healing→rejuvenate chip, 27d) — amount = post-mitigation HP delta (no unit:attacked/healed double-cue)
 status:expired          { unitId; statusId; sourceUnitId: number | null }          # 27: a status-def effect dropped off (expireEffects)

@@ -1843,3 +1843,28 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
 - **Residual**: the native-browser re-eyeball now covers BOTH boards —
   rubbleQuarry (the pull breaking the 13,8 gate) and labyrinth (a
   pulled enemy walking to the CORRECT camp's gate) — the user's check.
+- **✅ BOTH re-eyeballs USER-SIGNED same-day** ("that got it") — 75k +
+  75k2 close together; the auto-break + route-aware gate pick are the
+  shipped behavior.
+
+### 75l — docs close + the box board re-pin (2026-08-09)
+
+- **Docs close landed**: ARCHITECTURE (the camp registry / spawnCamps
+  + pull / CampWanderBehavior / camps.ts+json / camp-editor + the
+  layout-editor camps layer / the Targeting §75e+§75k lines / the
+  battle:ended.campKills + unit:died.campId catalog rows) · DESIGN
+  (§Camps — the five signed pillars: passive-until-struck ·
+  tactical-wager · ⭐ continuous-value · the pull · per-encounter
+  identity; the blockCampTurnEnd win-condition nuance) · GOTCHAS
+  **#122** (the null-probe idle is designed — don't re-litigate it
+  into nearest-rubble chipping) + **#123** (camp fixtures: both
+  factions + equipped units, the twin 75k fake-repro traps) · ROADMAP
+  §75 demoted to the stub.
+- **The board re-pin**: the full 15-instrument §72f board (10 arb
+  primaries + 5 doctrine controls) re-run on the box at the §75-close
+  HEAD — the SCHEDULED content re-pin (camps + placements + the pull
+  moved trajectories; deferred from 75j past the 75k sim fixes so the
+  box is paid once). Procedure per §72a/72c precedent: push → box up →
+  sequential box-batch walk → fetch all 15 → local `--report` →
+  numbers to BALANCE → box down. Results recorded below when the walk
+  lands.

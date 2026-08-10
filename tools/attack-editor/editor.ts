@@ -133,6 +133,8 @@ const orphanEl = mustQuery<HTMLSelectElement>('#orphanPolicy');
 const speedScaledEl = mustQuery<HTMLInputElement>('#speedScaled');
 const ignoresLosEl = mustQuery<HTMLInputElement>('#ignoresLineOfSight');
 const targetHostEl = mustQuery<HTMLDivElement>('#target-host');
+const auraEnabledEl = mustQuery<HTMLInputElement>('#aura-enabled');
+const auraHostEl = mustQuery<HTMLDivElement>('#aura-host');
 const timelineHostEl = mustQuery<HTMLDivElement>('#timeline-host');
 const addPhaseBtn = mustQuery<HTMLButtonElement>('#add-phase');
 const effectsHostEl = mustQuery<HTMLDivElement>('#effects-host');
@@ -209,6 +211,40 @@ function attachIdentity(): void {
     else delete def().ignoresLineOfSight;
     refreshDerived();
   });
+  // §76a — the aura toggle (the `ignoresLineOfSight` optional-field pattern:
+  // enable seeds a sensible default, disable deletes the field outright so the
+  // formatter omits it).
+  auraEnabledEl.addEventListener('change', () => {
+    if (auraEnabledEl.checked) {
+      def().aura = { radius: 3, statusId: STATUS_IDS[0] ?? 'burn', affects: 'allies' };
+    } else {
+      delete def().aura;
+    }
+    renderAura();
+    refreshDerived();
+  });
+}
+
+/** §76a — rebuild the aura sub-fields from the active def (radius / status /
+ *  affects; empty when the def carries no aura). */
+function renderAura(): void {
+  auraHostEl.innerHTML = '';
+  const aura = def().aura;
+  auraEnabledEl.checked = aura !== undefined;
+  if (!aura) return;
+  numberField(auraHostEl, 'Radius', aura.radius, 1, (v) => (def().aura!.radius = v));
+  const statusSel = selectEl(STATUS_IDS, aura.statusId);
+  statusSel.addEventListener('change', () => {
+    def().aura!.statusId = statusSel.value;
+    refreshDerived();
+  });
+  auraHostEl.appendChild(labelWrap('Status', statusSel));
+  const affectsSel = selectEl(AFFECTS, aura.affects);
+  affectsSel.addEventListener('change', () => {
+    def().aura!.affects = affectsSel.value as (typeof AFFECTS)[number];
+    refreshDerived();
+  });
+  auraHostEl.appendChild(labelWrap('Affects', affectsSel));
 }
 
 function attachButtons(): void {
@@ -260,6 +296,7 @@ function syncForm(): void {
   speedScaledEl.checked = d.speedScaled;
   ignoresLosEl.checked = d.ignoresLineOfSight === true;
   renderTargetSelector(targetHostEl, () => def().target, (t) => (def().target = t));
+  renderAura();
   renderTimelineEditor();
   renderEffects();
 }
@@ -587,6 +624,12 @@ function refreshPreview(): void {
 
   addPreview('Target', describeTarget(d.target));
   addPreview('Range', d.minRangeCells > 0 ? `${d.minRangeCells}–${d.rangeCells} cells` : `${d.rangeCells} cells`);
+  // §76a — the passive aura, when present (the status name resolves from the
+  // live registry, mirroring `outlineApplyStatus`).
+  if (d.aura) {
+    const sd = STATUS_DEFS[d.aura.statusId as keyof typeof STATUS_DEFS];
+    addPreview('Aura', `sustains ${sd?.name ?? d.aura.statusId} · r${d.aura.radius} → ${d.aura.affects}`);
+  }
 
   // Cadence + the phase timeline resolved to TICKS at the sample speed — through
   // the same `resolveCadenceTicks` / `resolvePhases` the sim uses (never re-derived).

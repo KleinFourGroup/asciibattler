@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { rollUnit } from '../sim/archetypes';
-import { abilityDetailParts } from './abilityDetail';
-import { damageOpOf } from '../config/abilities';
+import { abilityDetailParts, abilityDetailPartsForDef } from './abilityDetail';
+import { ABILITY_DEFS, damageOpOf } from '../config/abilities';
+import { parseAbilityDef } from '../sim/effects/schema';
 import { hitChanceFor, critChanceFor } from '../sim/stats';
 import type { Archetype } from '../sim/Unit';
 
@@ -81,5 +82,42 @@ describe('abilityDetailParts (34b — every §29 op kind renders a non-blank det
     for (const [archetype, id] of cases) {
       expect(partsFor(archetype, id).length, `${id} detail must not be blank`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped content)', () => {
+  // No shipped def carries an aura until the §76 design round, so these author
+  // synthetic parsed defs via the def-taking core (the reason it was split out).
+  const stats = rollUnit('mercenary', new RNG(1)).stats;
+
+  const PURE_AURA = parseAbilityDef({
+    id: 'test_aura', name: 'Test Aura', cooldownSeconds: 1, rangeCells: 0,
+    target: { kind: 'self' },
+    timeline: [{ phase: 'recovery', seconds: 'fill' }],
+    orphanPolicy: 'commit-at-cast', priority: 0, effects: [],
+    aura: { radius: 3, statusId: 'emboldened', affects: 'allies' },
+  });
+
+  it('a pure aura reads as its radiated status + the AURA radius, never "dash"', () => {
+    const text = abilityDetailPartsForDef(PURE_AURA, 'mercenary', stats).join(' · ');
+    expect(text).toContain('aura emboldened');
+    expect(text).toContain('rng 3'); // aura.radius, NOT the def's inert rangeCells (0)
+    expect(text).not.toContain('dash'); // the §29d mislabel class, closed for auras
+  });
+
+  it('a weapon that also radiates keeps its profile and gains the aura rider', () => {
+    const radiantSword = parseAbilityDef({
+      ...ABILITY_DEFS.sword!,
+      aura: { radius: 2, statusId: 'emboldened', affects: 'allies' },
+    });
+    const text = abilityDetailPartsForDef(radiantSword, 'mercenary', stats).join(' · ');
+    expect(text).toMatch(/\d+ dmg/);
+    expect(text).toContain('+aura emboldened');
+  });
+
+  it('the def-taking core matches the id path on a shipped def (no drift)', () => {
+    expect(abilityDetailPartsForDef(ABILITY_DEFS.sword!, 'mercenary', stats)).toEqual(
+      abilityDetailParts('sword', 'mercenary', stats),
+    );
   });
 });

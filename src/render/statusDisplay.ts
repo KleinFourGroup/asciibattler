@@ -37,6 +37,11 @@ export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   panic: { color: COLORS.TERMINAL_AMBER }, // fear-amber
   blind: { color: COLORS.TERMINAL_STONE }, // blinded-grey
   confusion: { color: COLORS.NEON_PURPLE }, // chaos-purple
+  // Stat buffs — §76b (the 47f `emboldened` shipped WITHOUT an entry and fell
+  // to the magenta fallback; statusDisplay.test.ts now pins coverage). Buff-gold
+  // vs panic's fear-amber is a buff-vs-behavior split (the burn/panic
+  // precedent) — retune on eyeball if it reads ambiguously.
+  emboldened: { color: '#FFD700' }, // buff-gold
 };
 
 /** Fallback color for a status with no display entry (shouldn't happen for a

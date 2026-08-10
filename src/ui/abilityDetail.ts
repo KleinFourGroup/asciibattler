@@ -13,18 +13,37 @@
  */
 
 import type { Archetype, UnitStats } from '../sim/Unit';
-import { abilityDef, damageOpOf, healOpOf, firstOpOf } from '../config/abilities';
+import type { AbilityDef, EffectOp } from '../sim/effects/schema';
+import { abilityDef } from '../config/abilities';
 import { damageStatFor, hitChanceFor, critChanceFor } from '../sim/stats';
 
 export function abilityDetailParts(id: string, archetype: Archetype, stats: UnitStats): string[] {
-  const def = abilityDef(id);
+  return abilityDetailPartsForDef(abilityDef(id), archetype, stats);
+}
+
+/** The op of `kind` from a def's effects, or undefined (the `firstOpOf` shape,
+ *  but over a caller-supplied def — §76a split so a not-yet-shipped def, e.g. a
+ *  test's synthetic aura, is coverable headless). */
+function opOf<K extends EffectOp['kind']>(
+  def: AbilityDef,
+  kind: K,
+): Extract<EffectOp, { kind: K }> | undefined {
+  const entry = def.effects.find((e) => e.op.kind === kind);
+  return entry?.op as Extract<EffectOp, { kind: K }> | undefined;
+}
+
+export function abilityDetailPartsForDef(
+  def: AbilityDef,
+  archetype: Archetype,
+  stats: UnitStats,
+): string[] {
   const parts: string[] = [];
 
-  const healOp = healOpOf(id);
-  const damageOp = damageOpOf(id);
-  const chainOp = firstOpOf(id, 'chain');
-  const summonOp = firstOpOf(id, 'summon');
-  const statusOp = firstOpOf(id, 'applyStatus');
+  const healOp = opOf(def, 'heal');
+  const damageOp = opOf(def, 'damage');
+  const chainOp = opOf(def, 'chain');
+  const summonOp = opOf(def, 'summon');
+  const statusOp = opOf(def, 'applyStatus');
 
   if (healOp) {
     parts.push(`${healOp.might + stats.magic} heal`, `rng ${def.rangeCells}`);
@@ -59,6 +78,12 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
     // 29a-b — a PURE afflicter (Warlock `hex`, Banshee `wail`): no damage, just
     // the status it lays. (Damage afflicters fall through to the rider below.)
     parts.push(`applies ${statusOp.statusId}`, `rng ${def.rangeCells}`);
+  } else if (def.aura) {
+    // §76a — a PURE aura (no ops; targets self by schema law): the radiated
+    // status + the aura's own radius (NOT `rangeCells` — a pure aura's range
+    // field is inert). Must sit before the `self`/dash branch, which would
+    // otherwise mislabel it (the §29d summon-branch bug class).
+    parts.push(`aura ${def.aura.statusId}`, `rng ${def.aura.radius}`);
   } else if (def.target.kind === 'self') {
     // N1 — a pure-reposition leap (the dash): no damage/heal profile, just the
     // leap distance (its recharge shows in the cadence column below).
@@ -68,6 +93,12 @@ export function abilityDetailParts(id: string, archetype: Archetype, stats: Unit
   // 29a — a damage afflicter (cleaver/vial/ice_storm/light_ray) lays a status ON
   // TOP of its hit; append the rider so it isn't invisible.
   if (statusOp && (damageOp || chainOp)) parts.push(`+${statusOp.statusId}`);
+
+  // §76a — a weapon that ALSO radiates (ops + aura): append the aura as a rider
+  // (the statusOp-rider pattern) so the passive isn't invisible on the card.
+  if (def.aura && (healOp || damageOp || chainOp || summonOp || statusOp)) {
+    parts.push(`+aura ${def.aura.statusId}`);
+  }
 
   return parts;
 }

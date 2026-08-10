@@ -158,13 +158,11 @@ the promotion-screen derived-delta display.
 
 Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 
-- [ ] 76a — aura engine core: `aura` schema field +
-  `applyAuraStatuses()` World pass + propose-skip for op-less aura
-  defs + boot-assert arm + range guard + inert-neutral skip; headless
-  tests incl. no-stack pin + mobility-status snapshot round-trip
-- [ ] 76b — aura surfaces: attack-editor formatter/UI arm (round-trip
-  proof) + `abilityDetail` aura branch + STATUS_DISPLAY coverage
-  assert (+ the missing `emboldened` entry)
+- [x] 76a — aura engine core ✅ 2026-08-10 (`459f4c7`): landed to
+  plan, +12 tests, byte-identity held (fuzz pins green); no bump
+- [x] 76b — aura surfaces ✅ 2026-08-10: formatter/editor/detail arms
+  + STATUS_DISPLAY coverage pin (emboldened entry added); live
+  no-op-save byte proof held (2× save, zero diff)
 - [ ] 76c — the two engine gaps: caster-anchored/ally-targeting
   propose arm + honor `AoeSelector.anchor:'caster'`
 - [ ] 76d — Molotov/Pistol/Halberd/Cane as config + registry lines +

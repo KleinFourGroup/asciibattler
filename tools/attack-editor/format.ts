@@ -183,6 +183,14 @@ export function formatAbilitiesJson(config: Record<string, AbilityDef>): string 
     lines.push(`${F}"priority": ${n(def.priority)}`);
     lines.push(`${F}"effects": [\n${def.effects.map((e) => fmtEffectEntry(e, '      ')).join(',\n')}\n${F}]`);
     if (def.fx !== undefined) lines.push(`${F}"fx": ${fmtFx(def.fx)}`);
+    // §76a — the aura field (true-optional, emitted only when present; inline,
+    // matching the schema's field order: effects, fx, aura).
+    if (def.aura !== undefined) {
+      const a = def.aura;
+      lines.push(
+        `${F}"aura": { "radius": ${n(a.radius)}, "statusId": ${s(a.statusId)}, "affects": ${s(a.affects)} }`,
+      );
+    }
     return `  ${s(key)}: {\n${lines.join(',\n')}\n  }`;
   });
   return `{\n${blocks.join(',\n')}\n}`;

@@ -80,4 +80,29 @@ describe('formatAbilitiesJson', () => {
     expect(text).toContain('"magnitude": { "base": 1, "stat": "strength", "perPoint": 0.5, "max": 4 }');
     expect(text).toContain('"level": { "base": 0, "stat": "level", "perPoint": 1 }');
   });
+
+  it('§76a — round-trips the aura field byte-faithfully (no silent drop on Save)', () => {
+    // No shipped def carries an aura until the §76 design round, so this pins
+    // the formatter arm on synthetic defs: the audit flagged a hand-written
+    // emitter silently DROPPING a new field as the failure mode.
+    const catalog: Record<string, AbilityDef> = {
+      pure_aura: parseAbilityDef({
+        id: 'pure_aura', name: 'Pure Aura', cooldownSeconds: 1, rangeCells: 0,
+        target: { kind: 'self' },
+        timeline: [{ phase: 'recovery', seconds: 'fill' }],
+        orphanPolicy: 'commit-at-cast', priority: 0, effects: [],
+        aura: { radius: 3, statusId: 'emboldened', affects: 'allies' },
+      }),
+      radiant_sword: parseAbilityDef({
+        ...ABILITY_DEFS.sword!,
+        id: 'radiant_sword',
+        aura: { radius: 2, statusId: 'emboldened', affects: 'all' },
+      }),
+    };
+    const text = formatAbilitiesJson(catalog);
+    const FileSchema = z.record(z.string(), AbilityDefSchema);
+    expect(FileSchema.parse(JSON.parse(text))).toEqual(catalog);
+    expect(text).toContain('"aura": { "radius": 3, "statusId": "emboldened", "affects": "allies" }');
+    expect(text).toContain('"aura": { "radius": 2, "statusId": "emboldened", "affects": "all" }');
+  });
 });

@@ -9,9 +9,10 @@ import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
-import { buildMovementContext, routeToward } from './movement';
+import { buildMovementContext, costAt, routeToward } from './movement';
+import { findPath } from './Pathfinding';
 import { collectLosBlockers } from './positioning';
-import { footprintOf, unitDistance, cellUnitDistance } from './occupancy';
+import { cellKey, cellsOccupiedBy, footprintOf, unitDistance, cellUnitDistance } from './occupancy';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -266,28 +267,95 @@ function applyRubbleAutoTarget(unit: Unit, world: World): void {
  * unit (empty path → no proposal; caught live on rubbleQuarry's 75j enclosure,
  * worklog §75j-close — the §75j2 pull and the 75h click-to-engage share the
  * branch). When the committed mark is a MOBILE combat target (enemy or active
- * neutral) the unit cannot reach, redirect onto the nearest approachable
- * auto-target rubble — chip the gate; the per-tick re-commit resumes the order
- * the moment the breach opens (and once the last rubble dies the cheap gate
- * makes this a no-op again). Two deliberate omissions vs the overlay:
+ * neutral) the unit cannot reach, redirect onto the ROUTE-GATING rubble
+ * (§75k2 — `routeGateRubble`, not nearest-on-the-board: the labyrinth
+ * two-camp catch, worklog §75k2) — chip the gate; the per-tick re-commit
+ * resumes the order the moment the breach opens (a multi-gate corridor
+ * resolves one gate at a time, nearest-first, exactly this way — and once the
+ * last rubble dies the cheap gate makes this a no-op again). A null probe
+ * (sealed by indestructible walls, or a route blocked by bodies rather than
+ * rubble) HOLDS the ordered mark and idles — chipping off-route rubble helps
+ * neither case. Two deliberate omissions vs the overlay:
  *   - NO reachable-hostile re-rank — engage's steps 1–2 already own preemption,
  *     and focus preempts nothing by design (an order is an order);
  *   - an INERT committed neutral (a focus on rubble / a destructible wall) is
  *     left alone — movement bestEffort-approaches those already, and a re-rank
  *     would yank a deliberate far-rubble focus onto a nearer one.
- * Same cost shape as the overlay: the cheap presence gate every tick, the
- * findPath probes only for an ordered unit that's actually walled off.
+ * Cost shape: the cheap presence gate every tick; at most TWO A* runs
+ * (`canReach` + the permeable probe) only for an ordered unit that's actually
+ * walled off — cheaper than the per-candidate probes `nearestApproachableRubble`
+ * pays on a multi-rubble board.
  */
 function applyOrderedRubbleFallback(unit: Unit, world: World): void {
   if (unit.targetId === null || !worldHasAutoTargetRubble(world)) return;
   const committed = world.findUnit(unit.targetId);
   if (committed === undefined || isInertNeutral(committed)) return;
   if (canReach(unit, world, committed)) return;
-  const rubble = nearestApproachableRubble(unit, world);
-  if (rubble !== null) {
-    unit.targetId = rubble.id;
+  const gate = routeGateRubble(unit, world, committed);
+  if (gate !== null) {
+    unit.targetId = gate.id;
     unit.outOfLosTicks = 0;
   }
+}
+
+/**
+ * §75k2 — the chip premium the permeable probe pays per auto-target-rubble
+ * BODY CELL. Any finite value keeps the probe correct (every candidate route
+ * crosses ≥1 rubble here — a rubble-free route would have made `canReach`
+ * true); the premium's job is the tiebreak BETWEEN gated routes: prefer one
+ * far gate over several near ones, since each gate costs a whole chip fight.
+ * Sized to dominate the soft-cell penalties (`SIM.occupiedCellPenalty` +4
+ * class) so a queue of bodies never reads as pricier than breaking an extra
+ * gate, while staying finite/≥0 (the gotcha-#34 admissibility rule). A code
+ * constant, not a `sim.json` dial — it's a routing tiebreak, not balance;
+ * promote it if a real map ever needs tuning.
+ */
+const RUBBLE_ROUTE_CHIP_COST = 25;
+
+/**
+ * §75k2 — the ROUTE-AWARE gate pick: the auto-target rubble that actually
+ * gates `unit`'s way to `target`, or null when no rubble does. One A* over the
+ * PERMEABLE graph — the unit's real movement context (same soft costs, claims,
+ * terrain; `target` soft-excluded exactly as `canReach` does) with auto-target
+ * rubble lifted from the hard-blocker set and its body cells priced at the
+ * chip premium — then the FIRST rubble body cell along the returned route
+ * names the gate. First-on-route is what makes a sequentially-gated corridor
+ * (the double-gate case) resolve correctly: the near gate is chipped, the
+ * breach re-probes, the next gate becomes first.
+ *
+ * Null in two honest cases the old nearest-pick got wrong (worklog §75k2):
+ *   - no route even through rubble → the target is sealed by indestructible
+ *     terrain/walls — genuinely unreachable, nothing to chip toward;
+ *   - a route exists with NO rubble on it → the block is transient bodies,
+ *     not rubble (the soft costs route through them; queueing resolves it).
+ * Both hold the ordered mark instead of chipping an off-route rubble.
+ */
+function routeGateRubble(unit: Unit, world: World, target: Unit): Unit | null {
+  const rubbleByCell = new Map<string, Unit>();
+  for (const r of world.units) {
+    if (r.team !== 'neutral' || r.currentHp <= 0 || !isAutoTargetNeutral(r.archetype)) continue;
+    for (const c of cellsOccupiedBy(r)) rubbleByCell.set(cellKey(c), r);
+  }
+  if (rubbleByCell.size === 0) return null;
+  const ctx = buildMovementContext(unit, world, { excludeUnitId: target.id });
+  const permeableBlockers = ctx.pathBlockers.filter((c) => !rubbleByCell.has(cellKey(c)));
+  const route = findPath(
+    unit.position,
+    target.position,
+    permeableBlockers,
+    world.gridW,
+    world.gridH,
+    // Rubble cells were hard blockers (never priced); lifted, they carry only
+    // tile cost — the premium is what makes a gate expensive but crossable.
+    (c) => costAt(c, world, ctx, unit.position) + (rubbleByCell.has(cellKey(c)) ? RUBBLE_ROUTE_CHIP_COST : 0),
+    false,
+    footprintOf(unit),
+  );
+  for (const c of route) {
+    const gate = rubbleByCell.get(cellKey(c));
+    if (gate !== undefined) return gate;
+  }
+  return null;
 }
 
 /** §40b — does the board hold a living auto-target rubble? The cheap gate every

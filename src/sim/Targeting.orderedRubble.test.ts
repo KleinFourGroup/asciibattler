@@ -54,13 +54,9 @@ function spawnAt(world: World, team: Team, pos: GridCoord): Unit {
   return u;
 }
 
-/**
- * The rubbleQuarry shape, distilled: camp member m1 walled into a pocket at
- * (6,6) whose ONLY breach is an auto-target rubble gate at (6,7). Drips both
- * bandit-squatters members first (ticking a neutral-only board is silent),
- * parks m2 out of the way, then seals m1 in.
- */
-function buildEnclosure(world: World): { m1: Unit; gate: Unit } {
+/** Drip both bandit-squatters members (ticking a neutral-only board is
+ *  silent), park m1 at (6,6) — the pocket anchor — and m2 out of the way. */
+function dripMembers(world: World): [Unit, Unit] {
   spawnCamps(world, [{ x: 10, y: 10 }], [{ campId: 'bandit-squatters' }], 42, 1);
   world.tick();
   const m1 = world.units.find((u) => u.campId !== null)!;
@@ -70,10 +66,22 @@ function buildEnclosure(world: World): { m1: Unit; gate: Unit } {
   m2.position = { x: 11, y: 2 };
   m1.activeAction = null;
   m2.activeAction = null;
+  return [m1, m2];
+}
+
+/**
+ * The rubbleQuarry shape, distilled: camp member m1 walled into a pocket at
+ * (6,6) whose ONLY breach is an auto-target rubble gate at (6,7) — or, with
+ * `sealed`, an eighth WALL there instead (no breach at all, the §75k2
+ * genuinely-unreachable case; `gate` is then the wall, never chippable).
+ */
+function buildEnclosure(world: World, opts: { sealed?: boolean } = {}): { m1: Unit; gate: Unit } {
+  const [m1] = dripMembers(world);
   for (const [x, y] of [[5, 5], [6, 5], [7, 5], [5, 6], [7, 6], [5, 7], [7, 7]] as const) {
     spawnWall(world, { x, y });
   }
-  const gate = spawnRubble(world, { x: 6, y: 7 }, 1, 15);
+  const gate =
+    opts.sealed === true ? spawnWall(world, { x: 6, y: 7 }) : spawnRubble(world, { x: 6, y: 7 }, 1, 15);
   return { m1, gate };
 }
 
@@ -156,5 +164,68 @@ describe('§75k — the ordered-engage rubble auto-break (the destructible-gate 
     for (let i = 0; i < MAX_TICKS && !world.campHostileTo(1, 'enemy'); i++) world.tick();
     expect(gate.currentHp).toBeLessThanOrEqual(0);
     expect(world.campHostileTo(1, 'enemy')).toBe(true);
+  });
+});
+
+describe('§75k2 — the ROUTE-AWARE gate pick (the labyrinth two-camp catch)', () => {
+  it('chips the gate on the route to the ordered target, NOT the nearest rubble on the board', () => {
+    const world = freshWorld();
+    const { m1, gate } = buildEnclosure(world);
+    // The labyrinth shape distilled: an OFF-ROUTE rubble nearer to the
+    // attacker than the pocket's gate — 75k's nearest-pick chipped this one.
+    const decoy = spawnRubble(world, { x: 8, y: 10 }, 1, 15);
+    const attacker = spawnAt(world, 'player', { x: 6, y: 10 });
+    orderEngage(world, 'player', m1.id);
+    updateTarget(attacker, world);
+    expect(attacker.targetId).toBe(gate.id);
+    expect(decoy.currentHp).toBe(15);
+  });
+
+  it('double gate: a sequentially-gated corridor is chipped nearest-first, gate by gate, to the breach', () => {
+    const world = freshWorld();
+    const { m1, gate } = buildEnclosure(world); // gate1 at (6,7)
+    // Extend the corridor one cell south: a second rubble gate at (6,8),
+    // walled to one-wide, so the route crosses BOTH gates in sequence.
+    spawnWall(world, { x: 5, y: 8 });
+    spawnWall(world, { x: 7, y: 8 });
+    const gate2 = spawnRubble(world, { x: 6, y: 8 }, 1, 15);
+    const attacker = spawnAt(world, 'player', { x: 6, y: 10 });
+    parkOpposingDummy(world, 'enemy');
+    orderEngage(world, 'player', m1.id);
+    updateTarget(attacker, world);
+    expect(attacker.targetId).toBe(gate2.id); // first-on-route = the NEAR gate
+    for (let i = 0; i < MAX_TICKS && !world.campHostileTo(1, 'player'); i++) world.tick();
+    expect(gate2.currentHp).toBeLessThanOrEqual(0);
+    expect(gate.currentHp).toBeLessThanOrEqual(0);
+    expect(world.campHostileTo(1, 'player')).toBe(true);
+  });
+
+  it('a target sealed by WALLS holds the ordered mark — no futile chip of off-route rubble', () => {
+    const world = freshWorld();
+    const { m1 } = buildEnclosure(world, { sealed: true });
+    const decoy = spawnRubble(world, { x: 8, y: 10 }, 1, 15);
+    const attacker = spawnAt(world, 'player', { x: 6, y: 10 });
+    parkOpposingDummy(world, 'enemy');
+    orderEngage(world, 'player', m1.id);
+    updateTarget(attacker, world);
+    expect(attacker.targetId).toBe(m1.id); // held, not redirected — 75k chipped the decoy
+    for (let i = 0; i < 100; i++) world.tick();
+    expect(attacker.targetId).toBe(m1.id);
+    expect(decoy.currentHp).toBe(15); // never touched
+  });
+
+  it('a multi-tile (2x2) gate resolves through its body cells', () => {
+    const world = freshWorld();
+    const [m1] = dripMembers(world);
+    // A pocket whose whole south mouth is one 2x2 rubble body (corner 6,7 →
+    // cells (6,7)(7,7)(6,8)(7,8)); walls seal the remaining ring.
+    for (const [x, y] of [[5, 5], [6, 5], [7, 5], [5, 6], [7, 6], [5, 7]] as const) {
+      spawnWall(world, { x, y });
+    }
+    const gate = spawnRubble(world, { x: 6, y: 7 }, 2, 20);
+    const attacker = spawnAt(world, 'player', { x: 6, y: 10 });
+    orderEngage(world, 'player', m1.id);
+    updateTarget(attacker, world);
+    expect(attacker.targetId).toBe(gate.id);
   });
 });

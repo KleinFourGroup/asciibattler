@@ -1,6 +1,7 @@
 import type { ActionProposal } from '../Action';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
+import type { Aura } from '../effects/schema';
 
 /**
  * E2 — per-unit ability primitive. Each tick `AbilityBehavior` walks
@@ -36,4 +37,11 @@ export interface Ability {
    * line-of-sight-gated ability (strikes, ranged, magic).
    */
   readonly ignoresLineOfSight?: boolean;
+  /**
+   * §76a — surfaced from the def (the `ignoresLineOfSight` pattern) so
+   * `World.applyAuraStatuses` can walk `unit.abilities` for aura carriers
+   * without reaching into `EffectAbility`'s private def. Absent on every
+   * non-aura ability.
+   */
+  readonly aura?: Aura;
 }

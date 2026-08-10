@@ -53,9 +53,11 @@ import {
   claimantOf,
   isFree,
   unitAt,
+  unitDistance,
   type Claim,
   type OccupancyPlane,
 } from './occupancy';
+import { affectsMatch } from './effects/targeting';
 import { nearestFreeCells } from './actingPosition';
 import { SIM } from '../config/sim';
 import { TileGrid, type TileGridSnapshot } from './TileGrid';
@@ -1438,6 +1440,13 @@ export class World {
     // time pass; the shared `reapDead()` reaps a DoT-kill on the SAME tick.
     this.applyPeriodicEffects();
 
+    // §76a — the aura pass: every live aura carrier sustains its aura status on
+    // the units in radius. Sits with its sibling `applyTileStatuses` (both are
+    // sustain-source passes over the same `sustainStatus` chokepoint) and after
+    // the drip scan, so a just-dripped camp member standing in an aura is
+    // affected the same tick — mirroring 27d's freshly-spawned rule below.
+    this.applyAuraStatuses();
+
     // 27d — refresh the tile-sourced statuses AFTER the overflow scan so a
     // freshly-spawned unit that lands on a fire/healing tile is afflicted the
     // same tick. Replaces the D7.B per-tile chip pass: the HP change is now the
@@ -1649,24 +1658,71 @@ export class World {
       if (isInertNeutral(unit)) continue;
       if (unit.currentHp <= 0) continue;
       const kind = this.tileGrid.kindAt(unit.position);
-      if (kind === 'fire') this.sustainTileStatus(unit, FIRE_STATUS);
-      else if (kind === 'healing') this.sustainTileStatus(unit, HEALING_STATUS);
+      if (kind === 'fire') this.sustainStatus(unit, FIRE_STATUS);
+      else if (kind === 'healing') this.sustainStatus(unit, HEALING_STATUS);
     }
   }
 
   /**
-   * 27d — sustain a tile's status on a standing unit. On ENTER (the status not
-   * yet present) it routes through `applyStatusEffect`, which fires
-   * `status:applied` once (→ the renderer's apply flash). On every subsequent
-   * tick it tops up the duration DIRECTLY (no event), so a standing unit never
-   * re-flashes yet the `refresh` status never lapses — and, critically, the
-   * periodic `nextTickAt` cursor is left untouched, so the DoT cadence keeps
-   * running on its original anchor (a per-tick `applyStatusEffect` re-apply
-   * would also preserve the cursor, but would spam `status:applied`). Stepping
-   * off stops the top-up, so the status lingers its remaining `durationSeconds`
-   * then expires — the "lingers after stepping off" feel.
+   * §76a — the aura pass (the second sustain source beside the 27d tiles).
+   * Every live aura carrier (`Ability.aura`, surfaced from the def) sustains its
+   * aura's status on every live unit within `aura.radius` — footprint-aware
+   * Chebyshev (`unitDistance`), `affects`-filtered relative to the carrier's
+   * team, inert scenery skipped (the 27d rule: a wall is not a body in an
+   * aura). The carrier itself is included whenever `affects` admits its own
+   * team (`unitDistance(u, u)` is 0). "Lingers after leaving" = the sustain
+   * stops and the status runs out its own `durationSeconds`; same-key
+   * non-stacking = the top-up path (policy-blind by construction — pinned in
+   * aura.test.ts).
+   *
+   * Iteration is `this.units` insertion order for both loops — deterministic,
+   * replay-stable; overlapping same-status auras top up to the same
+   * `expiresAtTick`, so carrier order can't change state. Aura-free worlds do
+   * no work (no shipped def carries `aura` until the §76 content lands) — the
+   * presence gate that keeps every existing run byte-identical.
+   *
+   * NOTE deliberately unfiltered by camp: a camp-carried `allies` aura would
+   * reach EVERY neutral (affects is team-only — the audit's finding); no camp
+   * unit is authored with an aura in v1, and camp-aware `affects` is the
+   * documented widening if one ever is.
    */
-  private sustainTileStatus(unit: Unit, def: StatusDef): void {
+  private applyAuraStatuses(): void {
+    for (const carrier of this.units) {
+      if (carrier.currentHp <= 0) continue;
+      for (const ability of carrier.abilities) {
+        const aura = ability.aura;
+        if (!aura) continue;
+        const def = statusDef(aura.statusId);
+        for (const unit of this.units) {
+          if (unit.currentHp <= 0) continue;
+          if (isInertNeutral(unit)) continue;
+          if (!affectsMatch(aura.affects, unit.team, carrier.team)) continue;
+          if (unitDistance(carrier, unit) > aura.radius) continue;
+          this.sustainStatus(unit, def, carrier.id);
+        }
+      }
+    }
+  }
+
+  /**
+   * 27d — sustain a status on a unit from a standing source (a tile underfoot,
+   * a §76a aura in range). On ENTER (the status not yet present) it routes
+   * through `applyStatusEffect`, which fires `status:applied` once (→ the
+   * renderer's apply flash) and attributes `sourceUnitId` (an aura's carrier;
+   * `null` for the environmental tiles). On every subsequent tick it tops up
+   * the duration DIRECTLY (no event), so a sustained unit never re-flashes yet
+   * the `refresh` status never lapses — and, critically, the periodic
+   * `nextTickAt` cursor is left untouched, so a DoT cadence keeps running on
+   * its original anchor (a per-tick `applyStatusEffect` re-apply would also
+   * preserve the cursor, but would spam `status:applied`). Losing the source
+   * stops the top-up, so the status lingers its remaining `durationSeconds`
+   * then expires — the "lingers after stepping off / leaving the aura" feel.
+   * NOTE the top-up branch is merge-policy-BLIND and skips the §38d-3
+   * susceptibility gate (first-apply is gated; a gated-out unit never gets an
+   * `existing`, so it stays immune) — sustained statuses can never stack by
+   * construction, whatever their authored `merge`.
+   */
+  private sustainStatus(unit: Unit, def: StatusDef, sourceUnitId: number | null = null): void {
     const existing = unit.effects.find((e) => e.key === def.id);
     if (existing) {
       existing.lifetime = {
@@ -1674,7 +1730,7 @@ export class World {
         expiresAtTick: this.tickCount + Math.max(1, secondsToTicks(def.durationSeconds)),
       };
     } else {
-      this.applyStatusEffect(unit, def, null);
+      this.applyStatusEffect(unit, def, sourceUnitId);
     }
   }
 

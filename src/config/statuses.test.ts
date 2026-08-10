@@ -227,9 +227,11 @@ describe('assertStatusRefsResolve', () => {
   });
 
   it('throws when an applyStatus op references a status absent from the registry', () => {
+    // §76a widened the message to cover all three ref kinds (applyStatus /
+    // chain-inner / aura), so it no longer names the op.
     expect(() =>
       assertStatusRefsResolve({ flame_sword: applyStatusAbility('burn') }, {}),
-    ).toThrow(/applyStatus references unknown status id 'burn'/);
+    ).toThrow(/ability 'flame_sword': references unknown status id 'burn'/);
   });
 
   it('passes when every referenced status resolves', () => {

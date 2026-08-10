@@ -62,9 +62,7 @@ export function assertStatusRefsResolve(
 ): void {
   const check = (statusId: string, defId: string): void => {
     if (!(statusId in statusDefs)) {
-      throw new Error(
-        `ability '${defId}': applyStatus references unknown status id '${statusId}'`,
-      );
+      throw new Error(`ability '${defId}': references unknown status id '${statusId}'`);
     }
   };
   for (const def of Object.values(abilityDefs)) {
@@ -79,5 +77,9 @@ export function assertStatusRefsResolve(
         }
       }
     }
+    // §76a — an aura's statusId is resolved at tick time by `applyAuraStatuses`
+    // (via `statusDef`, a throwing lookup); validate it HERE so a typo fails at
+    // boot, not on the first tick a carrier spawns.
+    if (def.aura) check(def.aura.statusId, def.id);
   }
 }

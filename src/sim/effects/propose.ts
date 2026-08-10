@@ -49,6 +49,13 @@ export function proposeEffectAbility(
   unit: Unit,
   world: World,
 ): ActionProposal | null {
+  // §76a — a PURE aura (no effect ops) never proposes an action: it is executed
+  // by `World.applyAuraStatuses`, not the ability pipeline, so the carrier stays
+  // free to move/strike on the same tick. Without this skip an op-less
+  // `self`-target def falls into `proposeSelfMove` and burns the action slot on
+  // a no-op leap. A def carrying ops AND an aura proposes normally (the ops are
+  // the action; the aura still radiates via the pass).
+  if (def.aura && def.effects.length === 0) return null;
   switch (def.target.kind) {
     case 'enemyInRange':
       return proposeSingleTargetAttack(def, unit, world);

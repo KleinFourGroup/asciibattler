@@ -15,7 +15,7 @@ import type { Ability } from '../abilities/Ability';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
-import type { AbilityDef } from './schema';
+import type { AbilityDef, Aura } from './schema';
 import { proposeEffectAbility } from './propose';
 
 export class EffectAbility implements Ability {
@@ -26,6 +26,8 @@ export class EffectAbility implements Ability {
    * lobs over walls). Absent on every LOS-gated verb.
    */
   readonly ignoresLineOfSight?: boolean;
+  /** §76a — surfaced from the def for `World.applyAuraStatuses` (see Ability). */
+  readonly aura?: Aura;
 
   constructor(private readonly def: AbilityDef) {
     this.id = def.id;
@@ -33,6 +35,7 @@ export class EffectAbility implements Ability {
     // omit the field, and `exactOptionalPropertyTypes` forbids assigning
     // `undefined` to an optional boolean — so guard rather than assign through.
     if (def.ignoresLineOfSight) this.ignoresLineOfSight = def.ignoresLineOfSight;
+    if (def.aura) this.aura = def.aura;
   }
 
   propose(unit: Unit, world: World): ActionProposal | null {

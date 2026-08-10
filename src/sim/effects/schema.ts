@@ -402,6 +402,30 @@ const FxSchema = z
   })
   .partial();
 
+/**
+ * §76a — a passive AURA authored on the def, executed by `World.
+ * applyAuraStatuses()` (a tick pass mirroring `applyTileStatuses`), NOT by the
+ * ability pipeline: the carrier radiates every tick while it does whatever else
+ * it does — inspire AND swing on the same tick. Each tick the pass SUSTAINS
+ * `statusId` on every live unit within `radius` (footprint-aware Chebyshev,
+ * caster included when `affects` admits its team), so "lingers after leaving" =
+ * the status's own `durationSeconds`, and same-key non-stacking is the sustain
+ * top-up (pinned in aura.test.ts — the top-up path is merge-policy-blind by
+ * construction, don't rely on `merge: refresh` alone).
+ *
+ * `radius` is the aura's OWN reach — deliberately not the def's `rangeCells`
+ * (which is engagement reach; see the `rangeForArchetype` exclusion). A def may
+ * carry ops AND an aura (a weapon that radiates); a PURE aura (no ops) must
+ * target `self` (refined below) so `derived.attackRange` never inflates to the
+ * aura radius (the N1 dash-range hazard), and the propose layer skips it
+ * entirely (`proposeEffectAbility` — a pure aura never proposes an action).
+ */
+const AuraSchema = z.object({
+  radius: z.number().int().positive(),
+  statusId: z.string().min(1),
+  affects: AffectsSchema,
+});
+
 export const AbilityDefSchema = z
   .object({
     id: z.string().min(1),
@@ -443,6 +467,8 @@ export const AbilityDefSchema = z
     priority: z.number(),
     effects: z.array(EffectEntrySchema),
     fx: FxSchema.optional(),
+    /** §76a — the optional passive aura (see `AuraSchema`). */
+    aura: AuraSchema.optional(),
   })
   .refine((def) => def.timeline.filter((p) => p.seconds === 'fill').length <= 1, {
     message: "a timeline may declare at most one 'fill' phase",
@@ -457,7 +483,13 @@ export const AbilityDefSchema = z
       message: 'every effect must fire on a phase present in the timeline',
       path: ['effects'],
     },
-  );
+  )
+  .refine((def) => !def.aura || def.effects.length > 0 || def.target.kind === 'self', {
+    message:
+      "a pure aura (no effect ops) must target 'self' — any other selector would inflate " +
+      'derived.attackRange to the aura radius and strand the carrier out of engagement',
+    path: ['aura'],
+  });
 
 /* -------------------------------------------------------------------------- */
 /* Inferred types.                                                             */
@@ -481,6 +513,7 @@ export type SummonSpec = z.infer<typeof SummonSpecSchema>;
 export type TargetSelector = z.infer<typeof TargetSelectorSchema>;
 export type TimelinePhase = z.infer<typeof TimelinePhaseSchema>;
 export type EffectEntry = z.infer<typeof EffectEntrySchema>;
+export type Aura = z.infer<typeof AuraSchema>;
 export type AbilityDef = z.infer<typeof AbilityDefSchema>;
 
 /** Parse one ability definition, throwing on a malformed shape (A4 style). */

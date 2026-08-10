@@ -138,6 +138,20 @@ export function executeOp(op: EffectOp, ctx: OpFireContext): void {
   }
 }
 
+/**
+ * §76c — an aoe's blast centre: for `anchor:'caster'` it is the caster's LIVE
+ * cell at fire (the declared-but-never-read anchor, finally honoured — a nova
+ * detonates where the caster STANDS, so a mid-windup shove/reposition moves the
+ * blast with it; nothing is captured at cast); for `anchor:'targetCell'` it is
+ * the cast-time-captured cell, exactly as before.
+ */
+function aoeCenter(
+  sel: Extract<TargetSelector, { kind: 'aoe' }>,
+  ctx: OpFireContext,
+): GridCoord | undefined {
+  return sel.anchor === 'caster' ? ctx.caster.position : ctx.targetCell;
+}
+
 function executeDamage(
   op: Extract<EffectOp, { kind: 'damage' }>,
   ctx: OpFireContext,
@@ -146,9 +160,10 @@ function executeDamage(
   const baseDamage = ctx.resolution.baseDamage ?? 0;
   const critChance = ctx.resolution.critChance ?? 0;
 
-  // --- AoE ground-target (MagicBolt): resolve victims at fire, one crit roll. ---
+  // --- AoE (MagicBolt ground-target / §76c caster-anchored): victims at fire,
+  //     one crit roll. ---
   if (ctx.selector.kind === 'aoe') {
-    const center = ctx.targetCell;
+    const center = aoeCenter(ctx.selector, ctx);
     if (center === undefined) return;
     const crit = world.combatRng.next() < critChance;
     const critFactor = crit ? STATS.critMult : 1;
@@ -296,7 +311,7 @@ function executeApplyStatus(
 function resolveStatusTargets(ctx: OpFireContext): Unit[] {
   const sel = ctx.selector;
   if (sel.kind === 'aoe') {
-    const center = ctx.targetCell;
+    const center = aoeCenter(sel, ctx); // §76c — caster-anchored resolves live
     if (center === undefined) return [];
     const affects = behaviorFlags(ctx.caster.effects).affects ?? sel.affects;
     return resolveAreaVictims(ctx.world, ctx.caster, center, {
@@ -354,7 +369,7 @@ function resolveSummonAnchor(at: TargetSelector, ctx: OpFireContext): GridCoord 
     case 'self':
       return ctx.caster.position;
     case 'aoe':
-      return ctx.targetCell;
+      return aoeCenter(at, ctx); // §76c — caster-anchored resolves live
     case 'enemyInRange':
     case 'lowestHpAlly':
       return ctx.target?.position;

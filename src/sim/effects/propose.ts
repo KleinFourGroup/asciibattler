@@ -23,6 +23,7 @@ import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { ActionProposal } from '../Action';
 import { currentTarget, lowestWoundedAlly } from '../Targeting';
+import { resolveAreaVictims } from './targeting';
 import {
   collectLosBlockers,
   collectHalfCoverPositions,
@@ -263,6 +264,12 @@ function proposeSummon(
  * now rides the §Z registry off `action:phase{impact}`, not a sim event.
  */
 function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProposal | null {
+  // §76c — the caster-anchored arm (the second engine gap): no aim, no target,
+  // no LOS — the blast rides the caster.
+  if (def.target.kind === 'aoe' && def.target.anchor === 'caster') {
+    return proposeCasterAnchoredBlast(def, def.target, unit, world);
+  }
+
   const target = currentTarget(unit, world);
   if (target === null) return null;
 
@@ -291,6 +298,47 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
 
   return {
     action: new EffectAction(def, { targetId: -1, targetCell: { ...aim }, ops }),
+    score: def.priority,
+    cooldown: resolveCadenceTicks(def, speed),
+    phases: resolvePhases(def, speed),
+    cooldownKey: def.id,
+  };
+}
+
+/**
+ * §76c — the caster-anchored blast (the `aoe anchor:'caster'` selector, the
+ * ally-targeting / nova propose arm the spec priced at ~40 lines). No
+ * `currentTarget`, no band, no LOS — the blast rides the caster, so the only
+ * gate is "would it MATTER now": at least one unit the blast affects stands in
+ * the radius, judged by the SAME `resolveAreaVictims` the interpreter runs at
+ * fire (propose and fire can't disagree by construction). Note an
+ * `affects:'allies'`/`'all'` blast always finds at least the caster itself (its
+ * own footprint covers the centre) — a self-including buff shout re-fires on
+ * cooldown, which is the honest v1 semantics (an "only-when-others-nearby"
+ * refinement is content policy, not engine). NOTHING is captured as the centre:
+ * `targetCell` stays undefined and the interpreter's `aoeCenter` resolves the
+ * caster's LIVE cell at fire, so a mid-windup shove moves the blast with the
+ * body. `targetId` −1 (no locked unit; `phaseTarget` surfaces nothing —
+ * commit-at-cast orphan semantics, like the dash).
+ */
+function proposeCasterAnchoredBlast(
+  def: AbilityDef,
+  sel: Extract<AbilityDef['target'], { kind: 'aoe' }>,
+  unit: Unit,
+  world: World,
+): ActionProposal | null {
+  const victims = resolveAreaVictims(world, unit, unit.position, {
+    shape: sel.shape,
+    radius: sel.radius,
+    ringMultiplier: sel.ringMultiplier,
+    affects: sel.affects,
+  });
+  if (victims.length === 0) return null;
+
+  const speed = unit.effectiveStats.speed;
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  return {
+    action: new EffectAction(def, { targetId: -1, targetCell: undefined, ops }),
     score: def.priority,
     cooldown: resolveCadenceTicks(def, speed),
     phases: resolvePhases(def, speed),

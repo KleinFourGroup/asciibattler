@@ -1,5 +1,6 @@
 import type { RNG } from '../core/RNG';
 import type { Archetype, UnitArchetype, UnitTemplate } from './Unit';
+import type { AbilityDef } from './effects/schema';
 import { UNIT_DEFS, type CombatantUnitDef, type UnitRarity } from '../config/units';
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
@@ -40,19 +41,39 @@ export function glyphForArchetype(archetype: Archetype): string {
  * (whether a *specific* strike can reach) read the ability's own range
  * in `proposeBasicStrike`, not this max.
  */
+/**
+ * §76c — one ability's contribution to `derived.attackRange`, or `null` when it
+ * has none (a non-engaging verb). The three exclusions/overrides:
+ *  - `self` target → null (N1: a leap/summon range is not engagement reach).
+ *  - caster-anchored aoe with `affects:'allies'` → null (a buff shout is
+ *    support, not engagement — the aura-adjacent case).
+ *  - caster-anchored aoe hitting enemies (a nova) → the selector's RADIUS (its
+ *    true reach; the def's `rangeCells` is inert for an un-aimed blast, so
+ *    reading it would let a stale authoring convention strand the unit —
+ *    the same hazard class as N1).
+ * Everything else engages at its authored `rangeCells` (byte-identical for the
+ * whole shipped catalog — no shipped def authors `anchor:'caster'`).
+ */
+export function engagementReach(def: AbilityDef): number | null {
+  if (def.target.kind === 'self') return null;
+  if (def.target.kind === 'aoe' && def.target.anchor === 'caster') {
+    return def.target.affects === 'allies' ? null : def.target.radius;
+  }
+  return def.rangeCells;
+}
+
 export function rangeForArchetype(archetype: Archetype): number {
-  // N1 — a pure-reposition (`self`-target) leap's `rangeCells` is a LEAP distance,
-  // not engagement reach, so it's excluded from `derived.attackRange` (the
-  // in-range-abstain threshold MovementBehavior reads, and the gate the dash
-  // itself uses to ask "am I out of strike range?"). Without this, the rogue's
-  // 2-cell dash would inflate its firing range to 2 and strand it a cell short
-  // whenever the dash is on cooldown. Falls back to all abilities if a unit
-  // somehow carries only `self` abilities. Today only the rogue's dash targets
-  // `self`; every other archetype is unaffected (byte-identical).
+  // N1/§76c — non-engaging verbs (self leaps, ally-buff blasts) are excluded
+  // from `derived.attackRange` (the in-range-abstain threshold MovementBehavior
+  // reads); see `engagementReach`. Falls back to max `rangeCells` over ALL
+  // abilities if a unit carries only non-engaging verbs (a pure support unit
+  // needs SOME hold distance; the pre-76c fallback, unchanged).
   const ids = CONFIGS[archetype].abilities;
-  const engaging = ids.filter((id) => abilityDef(id).target.kind !== 'self');
-  const reach = engaging.length > 0 ? engaging : ids;
-  return Math.max(...reach.map((id) => abilityDef(id).rangeCells));
+  const reaches = ids
+    .map((id) => engagementReach(abilityDef(id)))
+    .filter((r): r is number => r !== null);
+  if (reaches.length > 0) return Math.max(...reaches);
+  return Math.max(...ids.map((id) => abilityDef(id).rangeCells));
 }
 
 /**
@@ -78,13 +99,20 @@ export function rangeForArchetype(archetype: Archetype): number {
 export function minRangeForArchetype(archetype: UnitArchetype): number {
   const ids = CONFIGS[archetype]?.abilities;
   if (!ids) return 0;
-  const engaging = ids.filter((id) => abilityDef(id).target.kind !== 'self');
-  const reach = engaging.length > 0 ? engaging : ids;
-  let best = reach[0]!;
-  for (const id of reach) {
-    if (abilityDef(id).rangeCells > abilityDef(best).rangeCells) best = id;
+  // §76c — the band floor belongs to the ability that DEFINES the reach, so the
+  // pick runs on the same `engagementReach` as `rangeForArchetype` (first-wins
+  // tie-break, as before; byte-identical for the shipped catalog). A unit with
+  // only non-engaging verbs has no firing band → floor 0.
+  let best: string | undefined;
+  let bestReach = -Infinity;
+  for (const id of ids) {
+    const r = engagementReach(abilityDef(id));
+    if (r !== null && r > bestReach) {
+      best = id;
+      bestReach = r;
+    }
   }
-  return abilityDef(best).minRangeCells;
+  return best === undefined ? 0 : abilityDef(best).minRangeCells;
 }
 
 /**

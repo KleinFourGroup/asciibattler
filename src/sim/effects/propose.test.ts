@@ -7,7 +7,7 @@ import { deriveStats, inertDerived } from '../stats';
 import { chebyshev } from '../movement';
 import { LEVELING } from '../../config/leveling';
 import { abilityDef } from '../../config/abilities';
-import { rangeForArchetype } from '../archetypes';
+import { rangeForArchetype, minRangeForArchetype, engagementReach } from '../archetypes';
 import { MovementBehavior } from '../behaviors/MovementBehavior';
 import { EffectAbility } from './EffectAbility';
 import { parseAbilityDef, type AbilityDef, type ScaledValue } from './schema';
@@ -510,5 +510,87 @@ describe('proposeEffectAbility — footprint firing band (44-pre-c)', () => {
       }
       expect(holds, `${v.aid} never held — the sweep is vacuous`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('§76c — the caster-anchored blast propose arm (aoe anchor:caster)', () => {
+  // No shipped def authors `anchor:'caster'` (content lands at the §76 design
+  // round), so these run on synthetic parsed defs — the aura.test.ts pattern.
+  function novaDef(over: Record<string, unknown> = {}): AbilityDef {
+    return parseAbilityDef({
+      id: 'test_nova', name: 'Test Nova', cooldownSeconds: 2, rangeCells: 0,
+      target: { kind: 'aoe', shape: 'square', radius: 1, anchor: 'caster', affects: 'enemies' },
+      timeline: [{ phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
+      orphanPolicy: 'commit-at-cast', priority: 10,
+      effects: [{
+        phase: 'impact',
+        op: { kind: 'damage', scaling: 'strength', might: 3, accuracy: 0.6, critBase: 0, critable: true, evadable: false, bypassDefense: false },
+      }],
+      ...over,
+    });
+  }
+
+  it('proposes with an enemy in the blast — no committed target, no captured centre', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const e = makeUnit('enemy', { x: 6, y: 5 });
+    const w = world([u, e]);
+    const p = new EffectAbility(novaDef()).propose(u, w);
+    expect(p).not.toBeNull();
+    const data = dataOf(p!.action);
+    expect(data.targetId).toBe(-1);
+    // The centre is deliberately NOT captured: the interpreter's `aoeCenter`
+    // resolves the caster's LIVE cell at fire (a mid-windup shove moves the blast).
+    expect(data.targetCell).toBeUndefined();
+  });
+
+  it('abstains when nothing it affects stands in radius (the would-it-matter gate)', () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const e = makeUnit('enemy', { x: 9, y: 9 }); // Chebyshev 4 > radius 1
+    const w = world([u, e]);
+    expect(new EffectAbility(novaDef()).propose(u, w)).toBeNull();
+  });
+
+  it("an allies buff shout always proposes — the caster stands in its own blast (pinned v1 semantics)", () => {
+    const u = makeUnit('player', { x: 5, y: 5 });
+    const w = world([u]); // utterly alone — still ≥1 victim (itself)
+    const def = novaDef({
+      target: { kind: 'aoe', shape: 'square', radius: 2, anchor: 'caster', affects: 'allies' },
+      effects: [{ phase: 'impact', op: { kind: 'applyStatus', statusId: 'emboldened' } }],
+    });
+    expect(new EffectAbility(def).propose(u, w)).not.toBeNull();
+  });
+});
+
+describe('§76c — engagementReach (the attackRange contribution per ability)', () => {
+  const base = {
+    id: 'test_reach', name: 'Test Reach', cooldownSeconds: 1, rangeCells: 4,
+    timeline: [{ phase: 'recovery', seconds: 'fill' }] as const,
+    orphanPolicy: 'commit-at-cast', priority: 0, effects: [] as const,
+  };
+
+  it('a nova reaches its RADIUS (the inert rangeCells never strands the unit)', () => {
+    const def = parseAbilityDef({
+      ...base,
+      target: { kind: 'aoe', shape: 'square', radius: 2, anchor: 'caster', affects: 'enemies' },
+    });
+    expect(engagementReach(def)).toBe(2); // radius, not rangeCells 4
+  });
+
+  it('an allies-anchored shout and a self leap are non-engaging (null)', () => {
+    const shout = parseAbilityDef({
+      ...base,
+      target: { kind: 'aoe', shape: 'square', radius: 2, anchor: 'caster', affects: 'allies' },
+    });
+    expect(engagementReach(shout)).toBeNull();
+    expect(engagementReach(abilityDef('dash'))).toBeNull(); // the N1 exclusion, unchanged
+  });
+
+  it('shipped catalog invariance: reach == rangeCells for every engaging verb (byte-identity)', () => {
+    // Derived from live config: every shipped non-self def is targetCell/single —
+    // the 76c rework must not move a single archetype's attackRange or band floor.
+    expect(rangeForArchetype('mercenary')).toBe(abilityDef('sword').rangeCells);
+    expect(rangeForArchetype('rogue')).toBe(abilityDef('gambit_strike').rangeCells);
+    expect(rangeForArchetype('catapult')).toBe(abilityDef('catapult_shot').rangeCells);
+    expect(minRangeForArchetype('catapult')).toBe(abilityDef('catapult_shot').minRangeCells);
   });
 });

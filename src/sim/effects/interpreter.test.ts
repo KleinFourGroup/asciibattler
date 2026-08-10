@@ -181,6 +181,55 @@ describe('executeOp — damage (aoe / magic)', () => {
   });
 });
 
+describe('executeOp — aoe anchor:caster (§76c — the declared anchor, honoured)', () => {
+  const nova: TargetSelector = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'caster', affects: 'enemies', ringMultiplier: 1 };
+
+  it('detonates around the caster with NO captured centre (targetCell undefined)', () => {
+    const { world, events } = setup();
+    const caster = makeUnit('player', { x: 5, y: 5 });
+    const adjacent = makeUnit('enemy', { x: 6, y: 5 });
+    const far = makeUnit('enemy', { x: 9, y: 9 });
+    world.units.push(caster, adjacent, far);
+    executeOp(
+      dmgOp(),
+      ctx({ caster, world, selector: nova, resolution: { baseDamage: 10, critChance: 0 } }),
+    );
+    expect(adjacent.currentHp).toBe(adjacent.derived.maxHp - 10);
+    expect(far.currentHp).toBe(far.derived.maxHp);
+    expect(events.map((e) => e.name)).toEqual(['unit:attacked']);
+  });
+
+  it('resolves the caster LIVE cell at fire — a stale captured cell is ignored', () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 5, y: 5 });
+    const atStaleCell = makeUnit('enemy', { x: 0, y: 0 });
+    const atCaster = makeUnit('enemy', { x: 4, y: 5 });
+    world.units.push(caster, atStaleCell, atCaster);
+    // A caster-anchored blast never captures a centre; even if one leaked in,
+    // the anchor wins — the blast rides the body, not the cast-time cell.
+    executeOp(
+      dmgOp(),
+      ctx({ caster, world, selector: nova, targetCell: { x: 0, y: 0 }, resolution: { baseDamage: 10, critChance: 0 } }),
+    );
+    expect(atStaleCell.currentHp).toBe(atStaleCell.derived.maxHp);
+    expect(atCaster.currentHp).toBe(atCaster.derived.maxHp - 10);
+  });
+
+  it("an allies-anchored applier lands on the caster + allies in radius, never the enemy (resolveStatusTargets)", () => {
+    const { world } = setup();
+    const caster = makeUnit('player', { x: 5, y: 5 });
+    const ally = makeUnit('player', { x: 6, y: 5 });
+    const enemy = makeUnit('enemy', { x: 4, y: 5 });
+    world.units.push(caster, ally, enemy);
+    const shout: TargetSelector = { ...nova, affects: 'allies' };
+    const has = (u: Unit): boolean => u.effects.some((e) => e.key === 'emboldened');
+    executeOp({ kind: 'applyStatus', statusId: 'emboldened' }, ctx({ caster, world, selector: shout }));
+    expect(has(caster)).toBe(true); // the shout includes the shouter
+    expect(has(ally)).toBe(true);
+    expect(has(enemy)).toBe(false);
+  });
+});
+
 describe('executeOp — heal', () => {
   it('restores HP clamped at maxHp and emits unit:healed with the effective delta', () => {
     const { world, events } = setup();

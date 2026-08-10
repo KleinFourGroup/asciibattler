@@ -163,8 +163,10 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 - [x] 76b — aura surfaces ✅ 2026-08-10: formatter/editor/detail arms
   + STATUS_DISPLAY coverage pin (emboldened entry added); live
   no-op-save byte proof held (2× save, zero diff)
-- [ ] 76c — the two engine gaps: caster-anchored/ally-targeting
-  propose arm + honor `AoeSelector.anchor:'caster'`
+- [x] 76c — the two engine gaps ✅ 2026-08-10: caster-anchored blast
+  propose arm (would-it-matter gate, live-centre fire) + anchor
+  honored at all 3 interpreter sites + `engagementReach` (nova =
+  radius; ally-shout non-engaging); shipped-catalog invariance pinned
 - [ ] 76d — Molotov/Pistol/Halberd/Cane as config + registry lines +
   fx reuse; config-derived tests
 - [ ] 76e — the critable flip (5 ops) + `abilities.test` rewrite +

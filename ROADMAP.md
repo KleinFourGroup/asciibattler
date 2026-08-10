@@ -277,3 +277,10 @@ closing board + the re-signed sheet; then the close ritual
   user-signed.
 - **Scope guards:** no new content in this phase; repairs price
   against REALIZED value; the n=80 floor for per-item signals.
+- **75l riders (user-signed 2026-08-10):** the BOSS-BOARD PULL
+  question — the walk walls read pull-softened (BALANCE 2026-08-10);
+  tentative user lean NO-pull-on-boss, decide on final data alongside
+  the dose re-bracket · the FIRE-CHANNEL re-read — inverted at 75l
+  (−0.075, statistically weak, 5–2 discordant); discriminate with
+  `--event-chance=0` on the doctrine pair, and re-derive the vector
+  pair on era content if it stays flat.

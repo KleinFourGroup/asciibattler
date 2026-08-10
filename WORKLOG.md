@@ -1897,3 +1897,13 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   user-signed feel ✓ the two headless invariants ✓ camp-free
   byte-identity held every step ✓ verdicts recorded ✓) + the docs
   close + the board re-pinned at content reality.
+- **The morning signings (2026-08-10, user)**: the boss-board pull →
+  §82 (tentative lean NO-pull-on-boss, on final data) · the
+  fire-channel read → §82, reassured by the paired flip analysis
+  (5–2 discordant, p≈0.23 — collapsed-to-≈0, not reliably negative;
+  the arb per-item Δ|picked stays positive) · ⭑ the SHEET AMENDMENT
+  signed: act-1 win refs + forced-boss refs re-pin at the 75l
+  observed values, walk bands + fire-channel HOLD (§82 owns them).
+  Post-amendment board: **0 FAIL / 7 WARN, all pre-registered** —
+  §76 opens against a clean §74/§75-era baseline. Detail: BALANCE
+  2026-08-10 (the amendment paragraph) + ROADMAP §82 riders.

@@ -2988,3 +2988,15 @@ deltas. The pre-X H7c→O log lives at
     All reads n=40 paired — DIRECTIONAL under the n=80 floor; the
     wall/pull effect (a 2× wall swing) is the one comfortably past
     noise.
+  - **The morning signings (user, 2026-08-10):** ⭑ the SHEET AMENDED —
+    act-1 win refs + the forced-boss refs re-pin at the 75l observed
+    values (this board run IS the amendment's run; §76's in-phase
+    board now diffs against §74/§75-era reality) · the walk-shape
+    signed bands deliberately HOLD (the pull decision owns them) ·
+    the boss-board pull question → §82, tentative lean NO-pull-on-boss
+    · the fire-channel read → §82 (the paired flip analysis: 5–2
+    discordant, p≈0.23 — "collapsed to ≈0," not "reliably negative";
+    arb-arm per-item Δ|picked stays positive, so packets are healthy
+    where it counts). Post-amendment board: 0 FAIL / 7 WARN, all
+    seven pre-registered (5 walk-shape + fire-channel + the 55pre
+    ceiling watch).

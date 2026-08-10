@@ -154,6 +154,12 @@ export interface CliArgs {
   eliteChance?: number;
   portChance?: number;
   eventChance?: number;
+  // 75l — the generic numeric config override for probe arms
+  // (`--set=group.key=value`, repeatable). Applied at run-mode entry through
+  // the sweep's knob registry (resolveKnob — loud on typos), so it addresses
+  // exactly the groups the registry exposes. First consumer:
+  // `--set=sim.enemyPullChance=0`, the camps pull-ablation arm.
+  set?: string[];
   // 59d — the top-K perturb-and-reselect refinement stage: `--refine`
   // enables it after the base `--search` (defaults K=3 · 8 perturbs ·
   // ±0.15 box-scale, the kickoff lock); the three dial flags override.
@@ -303,6 +309,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--event-chance':
         if (v !== undefined) args.eventChance = Number(v);
+        break;
+      case '--set':
+        if (v !== undefined) (args.set ??= []).push(v);
         break;
       case '--jobs':
         args.jobs = Number(v);

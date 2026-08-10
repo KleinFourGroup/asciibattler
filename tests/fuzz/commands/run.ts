@@ -50,6 +50,7 @@ import {
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
 import { characterLabel } from '../characterSelection';
+import { resolveKnob } from '../balanceSweep';
 import {
   bail,
   characterFromArgs,
@@ -105,9 +106,35 @@ export type RunModeArgs = Pick<
   | 'arbitrateTier'
   | 'flipTelemetry'
   | 'grantEpsilon'
+  | 'set'
 >;
 
+/**
+ * 75l — `--set=group.key=value` (repeatable): write a numeric override onto
+ * the live config object through the sweep's knob registry. Malformed specs
+ * and unknown paths bail loud (a typo'd probe arm must never silently measure
+ * the default config). Mutation-only — no restore: each CLI process owns its
+ * whole lifetime, exactly like the sweep's grid-point application.
+ */
+function applySetOverrides(specs: readonly string[] | undefined): void {
+  for (const spec of specs ?? []) {
+    const eq = spec.indexOf('=');
+    const value = eq > 0 ? Number(spec.slice(eq + 1)) : NaN;
+    if (eq <= 0 || !Number.isFinite(value)) {
+      bail(`--set needs group.key=value with a numeric value, got "${spec}"`);
+    }
+    const knob = resolveKnob(spec.slice(0, eq));
+    knob.obj[knob.key] = value;
+  }
+}
+
 export function runRunCli(args: RunModeArgs): void {
+  // 75l — apply `--set=group.key=value` overrides FIRST, before any strategy /
+  // harness construction reads config. Routed through the sweep's knob
+  // registry (resolveKnob throws loud on typos); a --jobs child re-parses the
+  // same argv (parallel.ts passthrough) and re-applies in its own process, so
+  // parent and shards agree without any extra plumbing.
+  applySetOverrides(args.set);
   const strategies = selectStrategies(args.strategy);
 
   // X2 — --seed-offset shifts the seed base past the tuned range (a held-out

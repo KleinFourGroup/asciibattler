@@ -50,20 +50,25 @@ import type { RosterEntry } from '../../src/run/RunConfig';
 import { DIFFICULTY } from '../../src/config/difficulty';
 import { HEALTH } from '../../src/config/health';
 import { LEVELING } from '../../src/config/leveling';
+import { SIM } from '../../src/config/sim';
 
 // ── knob registry — the live, mutable config objects the sweep may tune ───────
 
 /**
  * The config groups a sweep can address by `group.key`. Each value is the SAME
  * live object the production code reads, so writing `DIFFICULTY.budgetFactor`
- * here is what `enemyBudget` sees on the next encounter. Limited to the three
- * BALANCE.md names (`difficulty`/`health`/`leveling`) — the knobs that move the
- * foregone-conclusion needle; widen here if a future pass needs another.
+ * here is what `enemyBudget` sees on the next encounter. The original three
+ * BALANCE.md names (`difficulty`/`health`/`leveling`) are the knobs that move
+ * the foregone-conclusion needle; `sim` joined at 75l for the `--set` probe
+ * overrides (first consumer: `sim.enemyPullChance`, the pull-ablation arm) —
+ * widen here if a future pass needs another. Numeric keys only (resolveKnob
+ * throws on a non-numeric target, so boolean sim dials stay unaddressable).
  */
 const KNOB_GROUPS: Record<string, Record<string, number>> = {
   difficulty: DIFFICULTY as unknown as Record<string, number>,
   health: HEALTH as unknown as Record<string, number>,
   leveling: LEVELING as unknown as Record<string, number>,
+  sim: SIM as unknown as Record<string, number>,
 };
 
 export interface ResolvedKnob {

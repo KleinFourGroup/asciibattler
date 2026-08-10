@@ -1866,5 +1866,34 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   moved trajectories; deferred from 75j past the 75k sim fixes so the
   box is paid once). Procedure per §72a/72c precedent: push → box up →
   sequential box-batch walk → fetch all 15 → local `--report` →
-  numbers to BALANCE → box down. Results recorded below when the walk
-  lands.
+  numbers to BALANCE → box down.
+- **The walk landed clean (overnight 2026-08-10): 15/15 fetched,
+  0 FAIL / 9 WARN** — the first board carrying §74 events AND §75
+  camps (nothing ran between the 72f signing and this). Under the
+  user's overnight authorization, the WARN pattern earned a
+  decomposition round: a new `--set=group.key=value` fuzz override
+  (`577954e` — sim joined the sweep knob registry; local 2-seed
+  pairing probes first, the 72a discipline) + the existing
+  `--event-chance=0` control arm → 8 paired ablation arms on box #2
+  (both boxes serial, both destroyed same-night). **The full numbers +
+  the decomposition table are BALANCE 2026-08-10 (canonical).** The
+  three findings that matter: ⭐ the below-band walk WALLS are
+  PULL-SOFTENED (walk-regen wall 0.267 with the pull → 0.533 without —
+  the pull fires on boss boards and diverts the boss-side wave off the
+  pool; "should it?" is a NAMED §82 question, deliberately NOT
+  answered by re-dosing overnight) · the pull's win lift scales with
+  fight length (0 soldier act-1 / +15 priest act-1 / +10 both walks)
+  while events add ~+10 everywhere by node dilution + boons (the
+  priest +20 WARN decomposes into both) · the fire-channel INVERSION
+  (+0.125→−0.075) is the one unexplained WARN — doctrine-pair-only,
+  candidate mechanisms recorded, open for the signing session.
+  Signing-session queue distilled: act-1 ref re-pins at the observed
+  §74/§75-era values · the boss-board pull question (± re-bracketing
+  the deep-end dose) · the fire-channel read · the walk-regen reach
+  dip (0.375, its events residual is a −0.10 drag) · the widened
+  55pre ceiling watch (+0.225). No signed number was touched
+  overnight (the standing rule).
+- **§75 CLOSES with this entry** — all exit criteria met (playable ✓
+  user-signed feel ✓ the two headless invariants ✓ camp-free
+  byte-identity held every step ✓ verdicts recorded ✓) + the docs
+  close + the board re-pinned at content reality.

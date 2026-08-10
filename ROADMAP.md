@@ -87,7 +87,7 @@ cluster-5-spec §Kickoff resolutions.
   scheduled break paid) · reward kinds. Detail: worklog §74i.
 - [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.
 
-## Phase 75 — Camps ✅ CLOSED 2026-08-09 (75l board re-pin recorded in BALANCE)
+## Phase 75 — Camps ✅ CLOSED 2026-08-10 (the 75l board re-pin: BALANCE 2026-08-10)
 
 **Outcome, one breath:** the neutral third faction shipped end to end
 — registry (**v34→v35**) + portal drip + the ~40-site active-neutral
@@ -123,8 +123,11 @@ DESIGN §Camps · gotchas #122–123 · git.
   pick — the labyrinth wrong-gate catch; null probe holds the mark
   (worklog §75k2); the rubbleQuarry + labyrinth re-eyeballs ride with
   the user
-- [ ] 75l — docs close (was 75k) + the SCHEDULED board re-pin (moved
-  from 75j): ARCHITECTURE/DESIGN/GOTCHAS, cursor flip, ROADMAP demote
+- [x] 75l — ✅ 2026-08-10: docs close (`014ee9a`) + the board re-pin —
+  15/15 on the box, 0 FAIL / 9 WARN, + the overnight `--set` ablation
+  decomposition (⭐ walls pull-softened · the pull scales with fight
+  length · fire-channel inversion OPEN) — BALANCE 2026-08-10 canonical;
+  the signing-session queue lives there (worklog §75l)
 
 ## Phase 76 — Unit mechanics & stat identity
 

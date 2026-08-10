@@ -2920,3 +2920,71 @@ deltas. The pre-X H7c→O log lives at
     ONLY if the tabular prior stops converging. Elites stay
     high-variance human content this round (bits buff deferred; cache
     0.5 stands as the human-value buff).
+
+- **2026-08-10 — the 75l board re-pin: the FIRST read at §74+§75 content
+  (events + camps + the pull), 0 FAIL / 9 WARN, + the overnight ablation
+  decomposition.** The full 15-instrument §72f board re-ran on the box at
+  `014ee9a` (the §75-close HEAD; first board since the 72f signing —
+  §74 events AND §75 camps both land in this one delta). All signed
+  bands hold structurally; every WARN is reference drift, and the
+  ablation probes (below) attribute most of it. Full row values:
+  `output/board-75l/board-report.txt` numbers reproduced here.
+  - **The re-pin table (72f closing values → 75l):** arb-regen 0.800→
+    0.750 · arb-55pre 0.850→0.875 · King 0.825→0.825 / Queen 0.700→
+    0.675 (order holds) · priest 0.625→**0.825 (+20, WARN)** / 0.850→
+    0.800 · gambler 0.700→0.700 / 0.625→**0.725 (+10, WARN — the §82
+    parity-breach rider NARROWS)** · walk-regen reach 0.400→**0.375
+    (WARN, below 40–50)** wall 0.313→**0.267 (WARN, below 30–35)**
+    seam 17.75→16.83 · walk-55pre reach 0.575→**0.700 (WARN — the 72f
+    overperformance watch widens)** wall 0.348→**0.286 (WARN)** seam
+    15.56→16.60 win 0.500 (WARN vs derived) · fire channel +0.125→
+    **−0.075 (WARN — INVERTED; open read, see below)** · ceilings:
+    regen 0.000 / 55pre +0.050 / walk-regen −0.025 (all PASS) /
+    walk-55pre +0.150→**+0.225 (WARN — the standing watch widens)**.
+    Act-1 arb banks/fires/tx all in-band (posture dissolution holds:
+    tx ≈ 0 everywhere on arb).
+  - **The ablation decomposition (the `--set` instrument's first use;
+    8 paired arms, n=40 each, ±8 directional — marginal contributions
+    AT full content, sub-additive by construction):** `--set=
+    sim.enemyPullChance=0` (the pull ablated) and `--event-chance=0`
+    (scattered events ablated; the sector-authored starting boon
+    persists in every arm and cancels in the pairs).
+    | arm (win) | full | no-pull | no-events | pullΔ | eventsΔ |
+    |---|---|---|---|---|---|
+    | act-1 soldier regen | 0.750 | 0.750 | 0.650 | 0.000 | +0.100 |
+    | act-1 priest regen | 0.825 | 0.675 | 0.725 | **+0.150** | +0.100 |
+    | walk-regen | 0.275 | 0.175 | 0.225 | +0.100 | +0.050 |
+    | walk-55pre | 0.500 | 0.400 | 0.350 | +0.100 | **+0.150** |
+  - **⭐ The walls are PULL-SOFTENED:** ablating the pull restores the
+    walk walls to band-or-above — walk-regen 0.267→**0.533** ·
+    walk-55pre 0.286→0.333. The pull (0.25/turn) fires on BOSS boards
+    too: a diverted boss-side wave stops defending the pool and takes
+    camp aggro damage while the player burns the pool down. Whether
+    the pull should fire on boss boards (or the boss dose re-brackets
+    at pull reality) is a NAMED §82 question — do not re-dose the
+    deep-end boss from this read alone (the two knobs are confounded).
+  - **The pull's lift scales with fight length:** zero at act-1 for the
+    soldier, +15 for the priest (the healer kit's long fights give the
+    diversion more turns to pay), +10 on both two-act shapes. The
+    events lift (~+10 act-1 both characters) is node dilution + boon
+    value. The priest +20 WARN ≈ pull +15 ⊕ events +10 sub-additive;
+    the act-1 refs should re-pin at these observed values as the
+    §74/§75-era baselines (a signing-session line item, not applied
+    here).
+  - **The fire-channel INVERSION (+0.125 → −0.075) is the one WARN the
+    ablations don't explain** — a doctrine-pair phenomenon (the arb arm
+    reads ≈0 by substitution, structurally), and the doctrine 55pre
+    walk twin also flipped shape (fires 0.00/run, tx 0.525 — it shops
+    and dies at a 0.450 wall where the arb twin banks/fires). OPEN READ
+    for the signing session; candidate mechanisms (fire strips on the
+    75j-revised layouts; event-node dilution displacing fire-strip
+    battles) are unprobed.
+  - **Ops:** two boxes serially (the 15-instrument walk ~3.4h at
+    `014ee9a`; the 8 probe arms ~2.5h at `577954e` — a fuzz-harness-
+    only delta, so same-seed pairing across HEADs holds), every batch
+    `fetched →` clean, both boxes destroyed same-night. The `--set`
+    override (sim joined the sweep knob registry) is the reusable
+    instrument; `--event-chance=0` was already the event-free control.
+    All reads n=40 paired — DIRECTIONAL under the n=80 floor; the
+    wall/pull effect (a 2× wall swing) is the one comfortably past
+    noise.

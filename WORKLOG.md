@@ -2169,3 +2169,19 @@ config), the block held `hidden` until its beat fired (~3s in), a
 con-only promotion rendered exactly one row, console clean. Feel +
 the NATIVE-BROWSER eyeball rider (aura linger + the 4 new draftable
 units + this block in a real run) ride with the user.
+
+**76g eyeball verdicts (user, 2026-08-10):** contents ✅ ("look
+great") · new units + aura pips ✅ · two findings: **(1) the reveal
+re-centered the card row** — the block was `display:none` until its
+beat, so the card grew mid-timeline and the flex centering re-seated
+everything (layout shift). Fixed at the source: the block now holds
+its height from card-land and the reveal gates on `visibility` (+
+`.is-revealed`); preview-proven — card `top`/`height` byte-identical
+across the reveal (378.25 / y 174.875 before and after). The SAME
+class exists pre-76g on the RewardScreen (accepting a portion shifts
+the list) and likely elsewhere — the systemic sweep is a TODO
+("Layout-stability sweep"), deliberately NOT smuggled into §76.
+**(2) aura RANGE is illegible** — pips prove the buff applies, but
+nothing shows the radius. Taken as an in-charter insertion (the exit
+criterion is "aura buffs visibly apply"), design shapes offered to
+the user → 76g2.

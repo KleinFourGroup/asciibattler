@@ -828,8 +828,11 @@ body {
 
 /* §76g — the derived-delta block (pure `promotionDeltaParts`): one row per
    derived value that visibly changed (Max HP / dodge / move cadence /
-   per-ability output), revealed as the card's final beat. Hidden until the
-   beat fires; the unhide restarts the pop. */
+   per-ability output), revealed as the card's final beat. `visibility` (not
+   `display`) gates the reveal so the block occupies its height from the
+   moment the card lands — the playtest caught the `display:none` version
+   re-centering the whole card row when the final beat grew the card
+   (layout shift). */
 .unit-card--promotion .unit-card__derived {
   margin-top: 8px;
   padding-top: 6px;
@@ -840,11 +843,12 @@ body {
   text-align: left;
   font-size: 10px;
   color: #33ff00; /* TERMINAL_GREEN — these rows only ever show gains-made-real */
-  animation: unit-card-pop 220ms ease-out;
+  visibility: hidden;
 }
 
-.unit-card--promotion .unit-card__derived[hidden] {
-  display: none;
+.unit-card--promotion .unit-card__derived.is-revealed {
+  visibility: visible;
+  animation: unit-card-pop 220ms ease-out;
 }
 
 @keyframes unit-card-pop {

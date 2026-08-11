@@ -175,12 +175,13 @@ export class PromotionScreen {
     // (Max HP / dodge / move cadence / per-ability output), one final beat
     // after the raw stat reveals. The wording is the pure, headless-tested
     // `promotionDeltaParts`; an empty result (e.g. a power-only level) renders
-    // no block at all.
+    // no block at all. The block is in the DOM (and holds its height — the CSS
+    // gates on `visibility`) from card-land, so the reveal can't re-center the
+    // card row mid-timeline (the playtest-caught layout shift).
     const deltas = promotionDeltaParts(p.oldStats, p.newStats, p.archetype);
     if (deltas.length > 0) {
       const box = document.createElement('div');
       box.className = 'unit-card__derived';
-      box.hidden = true;
       for (const line of deltas) {
         const row = document.createElement('div');
         row.className = 'unit-card__derived-row';
@@ -189,7 +190,7 @@ export class PromotionScreen {
       }
       el.appendChild(box);
       reveals.push((skipped) => {
-        box.hidden = false;
+        box.classList.add('is-revealed');
         if (!skipped) this.audio.play('healtick');
       });
     }

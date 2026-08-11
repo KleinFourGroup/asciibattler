@@ -189,6 +189,9 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   the 76g eyeball found the radius illegible; pips only prove
   application). Sprite-anchored boundary motes, Option A of three
   offered shapes; a pulse variant (B) may layer later (worklog §76g2)
+- [x] 76g3 — ✅ 2026-08-11: the B pulse layered (user call after the
+  A ring read well): a 2.4s-cadence square wavefront expanding to the
+  same boundary, same lane/color system (worklog §76g3)
 - [ ] 76h — the board amendment run (box; 68h trigger) + signing
   session: act-1/forced-boss re-pins expected; signed trio never
   silently re-pins; fire-channel + camps-leak pre-registered

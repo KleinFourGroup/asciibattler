@@ -2218,3 +2218,35 @@ carrier death: shedding stops, motes drain to 0 in one lifetime, no
 leak; console clean. Density/alpha/bloom are eyeball-tunable consts
 (`AURA_RING_*`) — the FEEL read (and the A+B call) rides the user's
 native browser.
+
+**76g2 eyeball verdict (user, 2026-08-11):** "really nice and
+subtle" ✅ — and the countdown-vs-pause dt question surfaced a
+worth-knowing seam: the Q2 countdown branch feeds the renderer REAL
+unscaled dt (a living board during the read window, by design) while
+manual pause feeds speed-scaled dt = 0 (a true freeze-frame) — the
+aura FX inherit both behaviors for free by advancing on whatever dt
+`br.update` receives. Confirmed working-as-designed, no change.
+
+### 76g3 — the B pulse layered (2026-08-11, user call)
+
+The anticipated A+B composition, requested after the A ring read
+well. Every 2.4s each live carrier emits a square WAVEFRONT — 16
+evenly-spaced motes (4/side, half-step corner offset so adjacent
+sides interleave), expanding from 0.15× the boundary offset out to
+the same `radius + 0.5` edge the ring marks, ground-flat, fading as
+it arrives. The expanding square is the honest wavefront of the
+aura's Chebyshev metric (not a circle approximation), and the
+particle lane's existing ease-out lerp (fast start, settle at the
+extent) already reads as a wave losing energy — zero new animation
+code. Brighter than the idle ring (alpha 0.7 vs 0.5, bloom 1.1 vs
+0.8): the pulse states "this radiates," the ring answers "where's
+the edge." `updateAuraRings` refactored to `updateAuraFx` — one
+carrier walk, two independent clocks (`AURA_RING_*` / `AURA_PULSE_*`
+cadences tune separately).
+
+Preview-verified (hand-driven frames): at 2.35s only the ring's 16
+motes exist → crossing 2.4s exactly +16, every pulse mote `from` at
+Chebyshev 0.675 (= 0.15 × 4.5) and `to` at exactly 4.500 → 0.7s
+later fully drained back to 16 → the 4.8s boundary fires the next
+16. Console clean. The composed feel read rides the user's native
+browser.

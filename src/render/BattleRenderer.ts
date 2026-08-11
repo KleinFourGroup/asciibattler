@@ -119,6 +119,9 @@ export class BattleRenderer {
   /** §76g2 — accumulator gating the aura-ring mote shed (speed-scaled dt, so
    *  the ring slows with playback and freezes at pause). */
   private auraRingClock = 0;
+  /** §76g3 — accumulator gating the aura PULSE (the expanding wavefront),
+   *  independent of the shed clock so the two cadences tune separately. */
+  private auraPulseClock = 0;
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
   /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
@@ -247,7 +250,7 @@ export class BattleRenderer {
     this.renderClockMs += dt * 1000;
     this.animator.update(dt);
     this.updateExplosions(dt);
-    this.updateAuraRings(dt);
+    this.updateAuraFx(dt);
     this.updateOverlays(dt);
     // After overlays so an enemy mark reads the target's already-lerped position
     // this frame (no one-frame lag behind the unit it's pinned to).
@@ -278,25 +281,41 @@ export class BattleRenderer {
   }
 
   /**
-   * §76g2 — the aura-range ring (playtest insertion: the recipient pips prove
-   * the buff APPLIES, but nothing showed the radius). Every
-   * AURA_RING_INTERVAL_SECONDS, each live aura carrier sheds a few faint motes
-   * at random points along its aura's Chebyshev boundary — the square
-   * perimeter at `radius + AURA_RING_EDGE`, the outer edge of the affected
-   * cells (matching the sim's `unitDistance ≤ radius` gate for a 1×1 carrier).
-   * Anchored to the carrier's LIVE sprite (the user call: half a cell of
-   * dishonesty during a move lerp beats a ring that snaps cell to cell), so
-   * the ring glides with the Officer. Motes ride the explosion-particle lane
-   * at a whisper alpha; the color is the aura status's pip color
-   * (`statusColor`), so ring and recipient pips read as one system. Y hugs the
-   * carrier's own ground plane — no per-mote terrain sampling, so on a slope
-   * the far ring edge floats/sinks a touch (eyeball-accepted for v1).
+   * §76g2/g3 — the aura-range FX (playtest insertion: the recipient pips prove
+   * the buff APPLIES, but nothing showed the radius). Two layers, both riding
+   * the explosion-particle lane, both anchored to the carrier's LIVE sprite
+   * (the user call: half a cell of dishonesty during a move lerp beats a ring
+   * that snaps cell to cell) and colored by the aura status's pip color
+   * (`statusColor`), so ring, pulse, and recipient pips read as one system:
+   *
+   *  - the RING (76g2): every AURA_RING_INTERVAL_SECONDS each live carrier
+   *    sheds a few faint motes at random points along the aura's Chebyshev
+   *    boundary — the square perimeter at `radius + AURA_RING_EDGE`, the
+   *    affected cells' outer edge (matching the sim's `unitDistance ≤ radius`
+   *    gate for a 1×1 carrier). The idle "you can look for it" layer.
+   *  - the PULSE (76g3): every AURA_PULSE_INTERVAL_SECONDS a full square
+   *    wavefront of motes expands from the carrier out to that same boundary
+   *    and fades as it arrives — a sonar ping that reads "this RADIATES" at a
+   *    glance. The expanding square is the honest wavefront of the aura's
+   *    Chebyshev distance metric, not an approximation of a circle. The
+   *    ease-out lerp the lane already applies (fast start, settle at the
+   *    edge) is exactly a wave losing energy at its extent.
+   *
+   * Y hugs the carrier's own ground plane — no per-mote terrain sampling, so
+   * on a slope the far edge floats/sinks a touch (eyeball-accepted for v1).
+   * Both clocks advance by the speed-scaled `dt`: faster at fast-forward,
+   * frozen at pause, breathing at REAL dt during the pre-battle countdown
+   * (the Q2 countdown branch feeds unscaled dt — see BattleScene.tick).
    */
-  private updateAuraRings(dt: number): void {
+  private updateAuraFx(dt: number): void {
     if (!this.world) return;
     this.auraRingClock += dt;
-    if (this.auraRingClock < AURA_RING_INTERVAL_SECONDS) return;
-    this.auraRingClock %= AURA_RING_INTERVAL_SECONDS;
+    this.auraPulseClock += dt;
+    const shedRing = this.auraRingClock >= AURA_RING_INTERVAL_SECONDS;
+    const shedPulse = this.auraPulseClock >= AURA_PULSE_INTERVAL_SECONDS;
+    if (shedRing) this.auraRingClock %= AURA_RING_INTERVAL_SECONDS;
+    if (shedPulse) this.auraPulseClock %= AURA_PULSE_INTERVAL_SECONDS;
+    if (!shedRing && !shedPulse) return;
     for (const carrier of this.world.units) {
       if (carrier.currentHp <= 0) continue;
       for (const ability of carrier.abilities) {
@@ -308,31 +327,74 @@ export class BattleRenderer {
         if (!center) continue;
         const color = statusColor(aura.statusId);
         const reach = aura.radius + AURA_RING_EDGE;
-        for (let i = 0; i < AURA_RING_MOTES; i++) {
-          // A random point on the square perimeter: pick a side, then a spot
-          // along it. (Math.random is fine here — render-only, never sim.)
-          const side = Math.floor(Math.random() * 4);
-          const t = (Math.random() * 2 - 1) * reach;
-          const dx = side < 2 ? t : side === 2 ? reach : -reach;
-          const dz = side === 0 ? reach : side === 1 ? -reach : t;
-          const from = center.clone();
-          from.x += dx;
-          from.z += dz;
-          from.y += AURA_RING_Y_OFFSET;
-          const to = from.clone();
-          to.y += AURA_RING_RISE;
-          this.addExplosionParticle(
-            from,
-            to,
-            AURA_RING_GLYPH,
-            color,
-            AURA_RING_SIZE,
-            AURA_RING_SIZE,
-            AURA_RING_SECONDS,
-            AURA_RING_BLOOM,
-            AURA_RING_ALPHA,
-          );
-        }
+        if (shedRing) this.shedAuraRing(center, reach, color);
+        if (shedPulse) this.shedAuraPulse(center, reach, color);
+      }
+    }
+  }
+
+  /** §76g2 — the idle boundary shed: AURA_RING_MOTES faint motes at random
+   *  points on the square perimeter, rising gently and fading in place. */
+  private shedAuraRing(center: THREE.Vector3, reach: number, color: string): void {
+    for (let i = 0; i < AURA_RING_MOTES; i++) {
+      // A random point on the square perimeter: pick a side, then a spot
+      // along it. (Math.random is fine here — render-only, never sim.)
+      const side = Math.floor(Math.random() * 4);
+      const t = (Math.random() * 2 - 1) * reach;
+      const dx = side < 2 ? t : side === 2 ? reach : -reach;
+      const dz = side === 0 ? reach : side === 1 ? -reach : t;
+      const from = center.clone();
+      from.x += dx;
+      from.z += dz;
+      from.y += AURA_RING_Y_OFFSET;
+      const to = from.clone();
+      to.y += AURA_RING_RISE;
+      this.addExplosionParticle(
+        from,
+        to,
+        AURA_RING_GLYPH,
+        color,
+        AURA_RING_SIZE,
+        AURA_RING_SIZE,
+        AURA_RING_SECONDS,
+        AURA_RING_BLOOM,
+        AURA_RING_ALPHA,
+      );
+    }
+  }
+
+  /** §76g3 — the radiating pulse: a square wavefront of evenly-spaced motes
+   *  (AURA_PULSE_SAMPLES_PER_SIDE per side, no corner doubling) expanding from
+   *  just off the carrier out to the boundary, fading as it arrives. Ground-
+   *  flat: the wave travels in XZ only, no rise. */
+  private shedAuraPulse(center: THREE.Vector3, reach: number, color: string): void {
+    const n = AURA_PULSE_SAMPLES_PER_SIDE;
+    for (let side = 0; side < 4; side++) {
+      for (let k = 0; k < n; k++) {
+        // Evenly spaced along the side, offset half a step from the corners so
+        // adjacent sides interleave instead of doubling the corner motes.
+        const t = ((k + 0.5) / n - 0.5) * 2 * reach;
+        const dx = side < 2 ? t : side === 2 ? reach : -reach;
+        const dz = side === 0 ? reach : side === 1 ? -reach : t;
+        const from = center.clone();
+        from.x += dx * AURA_PULSE_START_FRAC;
+        from.z += dz * AURA_PULSE_START_FRAC;
+        from.y += AURA_RING_Y_OFFSET;
+        const to = center.clone();
+        to.x += dx;
+        to.z += dz;
+        to.y += AURA_RING_Y_OFFSET;
+        this.addExplosionParticle(
+          from,
+          to,
+          AURA_RING_GLYPH,
+          color,
+          AURA_PULSE_SIZE,
+          AURA_PULSE_SIZE,
+          AURA_PULSE_SECONDS,
+          AURA_PULSE_BLOOM,
+          AURA_PULSE_ALPHA,
+        );
       }
     }
   }
@@ -515,9 +577,10 @@ export class BattleRenderer {
     // doesn't own them, so sweep their sprites here.
     for (const p of this.explosions) this.sprites.removeSprite(p.handle);
     this.explosions.length = 0;
-    // §76g2 — the aura-ring motes live in `explosions` (swept above); just
-    // rewind the shed clock so the next battle starts on a fresh interval.
+    // §76g2/g3 — the aura ring/pulse motes live in `explosions` (swept above);
+    // just rewind the shed clocks so the next battle starts on fresh intervals.
     this.auraRingClock = 0;
+    this.auraPulseClock = 0;
     // overlays.clear() drops every <div> the overlay layer owns in a single
     // sweep — covers both live overlays (this.overlayHandles) and any that
     // were mid-fade when the battle ended (typically the killing-blow
@@ -1558,6 +1621,26 @@ const AURA_RING_Y_OFFSET = -0.35;
 const AURA_RING_SECONDS = 0.6;
 const AURA_RING_BLOOM = 0.8;
 const AURA_RING_ALPHA = 0.5;
+
+/**
+ * §76g3 — aura pulse tuning (the layered "sonar ping", user-requested after
+ * the 76g2 ring read well). A full square wavefront expands from the carrier
+ * to the boundary every interval — brighter and more coherent than the idle
+ * ring (it's the "this radiates" statement; the ring is the "where's the
+ * edge" reference), but still under combat-FX intensity. Interval is long
+ * enough that the ping punctuates rather than strobes. All eyeball-tunable —
+ * bump freely.
+ */
+/** 4 per side × 4 sides = 16 motes per pulse per carrier. */
+const AURA_PULSE_SAMPLES_PER_SIDE = 4;
+const AURA_PULSE_INTERVAL_SECONDS = 2.4;
+/** Fraction of the boundary offset the wave starts at — just off the carrier's
+ *  body, so 16 spawning motes don't bloom-flash as a single clump. */
+const AURA_PULSE_START_FRAC = 0.15;
+const AURA_PULSE_SIZE = 0.32;
+const AURA_PULSE_SECONDS = 0.55;
+const AURA_PULSE_BLOOM = 1.1;
+const AURA_PULSE_ALPHA = 0.7;
 
 /**
  * E7.D — catapult shot tuning. The lobbed boulder arcs CATAPULT_ARC_HEIGHT

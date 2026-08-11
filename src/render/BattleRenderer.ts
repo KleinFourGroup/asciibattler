@@ -95,6 +95,34 @@ interface ExplosionParticle {
   readonly alphaScale: number;
 }
 
+/**
+ * §76g4 — the aura-FX mode switch. Born as an A/B rig for the pulse "Doppler"
+ * finding (a fixed spawn center + slow travel leaves the wavefront behind a
+ * moving carrier — user-caught at the 76g3 eyeball) and KEPT by user call
+ * (2026-08-11): the verdict was "leaning track, but hold fill for a wider
+ * feel jury — it may graduate to a player-facing graphics setting" (TODO).
+ *  - 'track' (default): pulse motes re-anchor to the carrier's LIVE sprite
+ *    every frame — concentric waves glide with the Officer. The legibility
+ *    pick: the aura's range IS measured from wherever he stands now.
+ *  - 'fill':  no pulses; the idle shed samples the whole aura AREA instead of
+ *    the boundary. The aesthetic pick.
+ *  - 'fixed': the 76g3 fixed-endpoint pulses — honest wave physics (a real
+ *    wavefront IS left behind by a moving emitter), Doppler and all.
+ * Dev-only switch, read live each frame: `__auraFx = 'fill'` in the console.
+ */
+interface AuraPulseParticle {
+  readonly handle: SpriteHandle;
+  elapsed: number;
+  readonly duration: number;
+  /** The carrier this wave re-anchors to each frame. */
+  readonly unitId: number;
+  /** Full boundary offset (world units, XZ) — position lerps along it. */
+  readonly dx: number;
+  readonly dz: number;
+}
+
+type AuraFxMode = 'track' | 'fixed' | 'fill';
+
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
@@ -122,6 +150,13 @@ export class BattleRenderer {
   /** §76g3 — accumulator gating the aura PULSE (the expanding wavefront),
    *  independent of the shed clock so the two cadences tune separately. */
   private auraPulseClock = 0;
+  /** §76g4 — carrier-TRACKED pulse motes ('track' mode): position re-derived
+   *  from the live sprite each frame, so they can't live in `explosions`
+   *  (whose from/to are fixed at spawn). Swept by `detach`. */
+  private readonly auraPulses: AuraPulseParticle[] = [];
+  /** §76g4 — scratch for the tracked-pulse carrier-center read, separate from
+   *  `scratchPos` (which holds the per-mote position in the same loop). */
+  private readonly auraScratch = new THREE.Vector3();
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
   /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
@@ -251,6 +286,7 @@ export class BattleRenderer {
     this.animator.update(dt);
     this.updateExplosions(dt);
     this.updateAuraFx(dt);
+    this.updateAuraPulseParticles(dt);
     this.updateOverlays(dt);
     // After overlays so an enemy mark reads the target's already-lerped position
     // this frame (no one-frame lag behind the unit it's pinned to).
@@ -307,14 +343,26 @@ export class BattleRenderer {
    * frozen at pause, breathing at REAL dt during the pre-battle countdown
    * (the Q2 countdown branch feeds unscaled dt — see BattleScene.tick).
    */
+  /** §76g4 — the A/B switch, read live each frame so the user can flip modes
+   *  mid-battle from the console without a rebuild. */
+  private auraFxMode(): AuraFxMode {
+    const m = (window as { __auraFx?: unknown }).__auraFx;
+    return m === 'fixed' || m === 'fill' ? m : 'track';
+  }
+
   private updateAuraFx(dt: number): void {
     if (!this.world) return;
+    const mode = this.auraFxMode();
     this.auraRingClock += dt;
     this.auraPulseClock += dt;
     const shedRing = this.auraRingClock >= AURA_RING_INTERVAL_SECONDS;
-    const shedPulse = this.auraPulseClock >= AURA_PULSE_INTERVAL_SECONDS;
+    // 'fill' mode has no pulse — the area-sampled shed carries the whole read.
+    const shedPulse =
+      mode !== 'fill' && this.auraPulseClock >= AURA_PULSE_INTERVAL_SECONDS;
     if (shedRing) this.auraRingClock %= AURA_RING_INTERVAL_SECONDS;
-    if (shedPulse) this.auraPulseClock %= AURA_PULSE_INTERVAL_SECONDS;
+    if (this.auraPulseClock >= AURA_PULSE_INTERVAL_SECONDS) {
+      this.auraPulseClock %= AURA_PULSE_INTERVAL_SECONDS;
+    }
     if (!shedRing && !shedPulse) return;
     for (const carrier of this.world.units) {
       if (carrier.currentHp <= 0) continue;
@@ -327,9 +375,113 @@ export class BattleRenderer {
         if (!center) continue;
         const color = statusColor(aura.statusId);
         const reach = aura.radius + AURA_RING_EDGE;
-        if (shedRing) this.shedAuraRing(center, reach, color);
-        if (shedPulse) this.shedAuraPulse(center, reach, color);
+        if (shedRing) {
+          if (mode === 'fill') this.shedAuraFill(center, reach, color);
+          else this.shedAuraRing(center, reach, color);
+        }
+        if (shedPulse) {
+          if (mode === 'track') this.shedAuraPulseTracked(carrier.id, center, reach, color);
+          else this.shedAuraPulse(center, reach, color);
+        }
       }
+    }
+  }
+
+  /** §76g4 'fill' — the whole-area shed: like the boundary ring, but motes
+   *  sample the full aura square uniformly (the boundary is implied by where
+   *  the motes STOP appearing rather than drawn as a line). */
+  private shedAuraFill(center: THREE.Vector3, reach: number, color: string): void {
+    for (let i = 0; i < AURA_FILL_MOTES; i++) {
+      const dx = (Math.random() * 2 - 1) * reach;
+      const dz = (Math.random() * 2 - 1) * reach;
+      const from = center.clone();
+      from.x += dx;
+      from.z += dz;
+      from.y += AURA_RING_Y_OFFSET;
+      const to = from.clone();
+      to.y += AURA_RING_RISE;
+      this.addExplosionParticle(
+        from,
+        to,
+        AURA_RING_GLYPH,
+        color,
+        AURA_RING_SIZE,
+        AURA_RING_SIZE,
+        AURA_RING_SECONDS,
+        AURA_RING_BLOOM,
+        AURA_RING_ALPHA,
+      );
+    }
+  }
+
+  /** §76g4 'track' — spawn one wavefront of carrier-tracked pulse motes: same
+   *  perimeter sampling as the fixed pulse, but each mote stores its OFFSET +
+   *  the carrier id, and `updateAuraPulseParticles` re-derives its position
+   *  from the live sprite every frame — the wave glides with the Officer. */
+  private shedAuraPulseTracked(
+    unitId: number,
+    center: THREE.Vector3,
+    reach: number,
+    color: string,
+  ): void {
+    const n = AURA_PULSE_SAMPLES_PER_SIDE;
+    for (let side = 0; side < 4; side++) {
+      for (let k = 0; k < n; k++) {
+        const t = ((k + 0.5) / n - 0.5) * 2 * reach;
+        const dx = side < 2 ? t : side === 2 ? reach : -reach;
+        const dz = side === 0 ? reach : side === 1 ? -reach : t;
+        const pos = this.auraScratch.copy(center);
+        pos.x += dx * AURA_PULSE_START_FRAC;
+        pos.z += dz * AURA_PULSE_START_FRAC;
+        pos.y += AURA_RING_Y_OFFSET;
+        const handle = this.sprites.addSprite(AURA_RING_GLYPH, color, pos);
+        this.sprites.updateSprite(handle, {
+          size: AURA_PULSE_SIZE,
+          bloomIntensity: AURA_PULSE_BLOOM,
+          alpha: AURA_PULSE_ALPHA,
+        });
+        this.auraPulses.push({
+          handle,
+          elapsed: 0,
+          duration: AURA_PULSE_SECONDS,
+          unitId,
+          dx,
+          dz,
+        });
+      }
+    }
+  }
+
+  /** §76g4 'track' — advance the carrier-tracked pulse motes: position =
+   *  live carrier center + offset × eased(t) (the same ease-out the fixed lane
+   *  applies), alpha fading over the lifetime. A mote whose carrier sprite is
+   *  gone (death fade finished / detach race) is removed on the spot. */
+  private updateAuraPulseParticles(dt: number): void {
+    if (this.auraPulses.length === 0) return;
+    for (let i = this.auraPulses.length - 1; i >= 0; i--) {
+      const p = this.auraPulses[i]!;
+      p.elapsed += dt;
+      const carrierHandle = this.handles.get(p.unitId);
+      const center = carrierHandle
+        ? this.sprites.getPosition(carrierHandle, this.auraScratch)
+        : null;
+      const t = p.elapsed >= p.duration ? 1 : p.elapsed / p.duration;
+      if (t >= 1 || !center) {
+        this.sprites.removeSprite(p.handle);
+        this.auraPulses.splice(i, 1);
+        continue;
+      }
+      const eased = 1 - (1 - t) * (1 - t);
+      const scale = AURA_PULSE_START_FRAC + (1 - AURA_PULSE_START_FRAC) * eased;
+      const pos = this.scratchPos.set(
+        center.x + p.dx * scale,
+        center.y + AURA_RING_Y_OFFSET,
+        center.z + p.dz * scale,
+      );
+      this.sprites.updateSprite(p.handle, {
+        position: pos,
+        alpha: (1 - t) * AURA_PULSE_ALPHA,
+      });
     }
   }
 
@@ -581,6 +733,9 @@ export class BattleRenderer {
     // just rewind the shed clocks so the next battle starts on fresh intervals.
     this.auraRingClock = 0;
     this.auraPulseClock = 0;
+    // §76g4 — the carrier-TRACKED pulse motes have their own lane; sweep it.
+    for (const p of this.auraPulses) this.sprites.removeSprite(p.handle);
+    this.auraPulses.length = 0;
     // overlays.clear() drops every <div> the overlay layer owns in a single
     // sweep — covers both live overlays (this.overlayHandles) and any that
     // were mid-fade when the battle ended (typically the killing-blow
@@ -1633,14 +1788,19 @@ const AURA_RING_ALPHA = 0.5;
  */
 /** 4 per side × 4 sides = 16 motes per pulse per carrier. */
 const AURA_PULSE_SAMPLES_PER_SIDE = 4;
-const AURA_PULSE_INTERVAL_SECONDS = 2.4;
+const AURA_PULSE_INTERVAL_SECONDS = 0.9;
 /** Fraction of the boundary offset the wave starts at — just off the carrier's
  *  body, so 16 spawning motes don't bloom-flash as a single clump. */
 const AURA_PULSE_START_FRAC = 0.15;
 const AURA_PULSE_SIZE = 0.32;
-const AURA_PULSE_SECONDS = 0.55;
+const AURA_PULSE_SECONDS = 1.8;
 const AURA_PULSE_BLOOM = 1.1;
 const AURA_PULSE_ALPHA = 0.7;
+
+/** §76g4 'fill' — motes per shed interval when the whole aura AREA is sampled
+ *  instead of the boundary. Higher than AURA_RING_MOTES because the area
+ *  (~(2r)² cells) dilutes density that the perimeter (~8r) concentrated. */
+const AURA_FILL_MOTES = 8;
 
 /**
  * E7.D — catapult shot tuning. The lobbed boulder arcs CATAPULT_ARC_HEIGHT

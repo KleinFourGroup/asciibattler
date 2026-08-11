@@ -182,16 +182,14 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   caster prc growth vestigial) + luck durations on hex/wail/molotov;
   mobility re-anchor pre-landed at 76e (worklog §76f)
 - [x] 76g — ✅ 2026-08-10: pure `promotionDeltaParts` + 10 headless
-  tests + the final-beat card block, preview-verified via forced
-  `promotion:pending`; the native-browser eyeball rider (aura linger
-  + the 4 new units + this block) rides with the user (worklog §76g)
-- [x] 76g2 — ✅ 2026-08-11: aura-range ring FX (playtest insertion —
-  the 76g eyeball found the radius illegible; pips only prove
-  application). Sprite-anchored boundary motes, Option A of three
-  offered shapes; a pulse variant (B) may layer later (worklog §76g2)
-- [x] 76g3 — ✅ 2026-08-11: the B pulse layered (user call after the
-  A ring read well): a 2.4s-cadence square wavefront expanding to the
-  same boundary, same lane/color system (worklog §76g3)
+  tests + the final-beat card block; the eyeball-caught layout-shift
+  fix landed on top (worklog §76g)
+- [x] 76g2/g3 — ✅ 2026-08-11: aura-range FX, the eyeball insertion
+  (radius was illegible): sprite-anchored boundary-mote ring, then
+  the B pulse layered by user call (worklog §§76g2–g3)
+- [x] 76g4 — ✅ 2026-08-11: pulse Doppler → the `__auraFx`
+  track/fill/fixed switch; track default, fill HELD for a wider jury
+  (TODO "Aura-FX mode") (worklog §76g4)
 - [ ] 76h — the board amendment run (box; 68h trigger) + signing
   session: act-1/forced-boss re-pins expected; signed trio never
   silently re-pins; fire-channel + camps-leak pre-registered

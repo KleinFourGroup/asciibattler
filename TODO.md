@@ -39,6 +39,15 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **Aura-FX mode: the wider feel jury + possible graphics setting.**
+  The §76g4 A/B rig (`window.__auraFx = 'track' | 'fill' | 'fixed'`,
+  BattleRenderer) stays in the tree by user call (2026-08-11): interim
+  verdict "leaning track" (legibility) but fill (aesthetics) is held
+  for other eyes, and the switch may graduate to a player-facing
+  graphics configuration. Resolve at a UI/polish round: either scrub
+  the losers + the switch, or promote it to a real settings surface
+  (which needs a home — no options screen exists yet).
+
 - [ ] **Layout-stability sweep (the "Y-coordinate hysteresis" class).**
   User-caught at the 76g eyeball (2026-08-10): screens whose content
   grows/shrinks mid-interaction re-center vertically and everything

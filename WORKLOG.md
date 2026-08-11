@@ -2250,3 +2250,35 @@ Chebyshev 0.675 (= 0.15 × 4.5) and `to` at exactly 4.500 → 0.7s
 later fully drained back to 16 → the 4.8s boundary fires the next
 16. Console clean. The composed feel read rides the user's native
 browser.
+
+### 76g4 — the pulse Doppler + the aura-FX mode switch (2026-08-11)
+
+**The user's tuning session found the keeper regime AND its defect:**
+cadence 0.9s / travel 1.8s (two concurrent wavefronts, signed into
+the constants this commit) — but with 1.8s in flight, the fixed
+spawn-center pulses trail a moving Officer: compressed ahead,
+stretched behind ("kinda a Doppler effect", user-caught). Two
+workarounds priced on request: (1) carrier-tracked pulses ~40 lines
+(the shared explosion lane bakes `from`/`to` at spawn, so tracking
+needs its own small lane storing offset + unitId, position re-derived
+from the live sprite per frame); (2) area-fill shed ~10 lines (kill
+pulses, sample the whole square). Both built behind a live A/B
+switch — `window.__auraFx = 'track' | 'fill' | 'fixed'` — read every
+frame, flippable mid-battle without rebuild.
+
+Preview-verified: 'track' — teleporting the carrier +3 mid-wave left
+the 16-mote wavefront centroid at 0.000 offset from the new center;
+'fill' — tracked lane drains, 32-mote steady state spread through
+the area (Chebyshev 1.35–4.40, 27/32 well inside); 'fixed' —
+byte-identical shipped behavior. Console clean.
+
+**Interim verdict (user, 2026-08-11): leaning TRACK (the legibility
+argument — the aura's range is measured from wherever the carrier
+stands NOW, so tracking is the truthful display of the MECHANIC even
+if fixed is the truthful wave physics), but fill reads better
+aesthetically — HOLD it for a wider feel jury, and the switch may
+graduate to a player-facing graphics setting.** So the rig ships
+default-'track' instead of being scrubbed to a winner; the
+resolution (scrub vs promote to a settings surface) is a TODO
+("Aura-FX mode") for a UI/polish round. The §76 exit criterion
+(aura visibly applies + lingers) is satisfied by every mode.

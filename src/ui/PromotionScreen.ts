@@ -28,6 +28,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
+import { promotionDeltaParts } from './promotionDelta';
 
 /** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
  *  (FADE_MS=180) finish before the first card pops, so the entrance
@@ -166,6 +167,29 @@ export class PromotionScreen {
         chip.className = 'unit-card__stat-delta';
         chip.textContent = `+${delta}`;
         right.appendChild(chip);
+        if (!skipped) this.audio.play('healtick');
+      });
+    }
+
+    // §76g — the derived-delta block: what the grown points actually bought
+    // (Max HP / dodge / move cadence / per-ability output), one final beat
+    // after the raw stat reveals. The wording is the pure, headless-tested
+    // `promotionDeltaParts`; an empty result (e.g. a power-only level) renders
+    // no block at all.
+    const deltas = promotionDeltaParts(p.oldStats, p.newStats, p.archetype);
+    if (deltas.length > 0) {
+      const box = document.createElement('div');
+      box.className = 'unit-card__derived';
+      box.hidden = true;
+      for (const line of deltas) {
+        const row = document.createElement('div');
+        row.className = 'unit-card__derived-row';
+        row.textContent = line;
+        box.appendChild(row);
+      }
+      el.appendChild(box);
+      reveals.push((skipped) => {
+        box.hidden = false;
         if (!skipped) this.audio.play('healtick');
       });
     }

@@ -2129,3 +2129,43 @@ miss (`["cane", "inspire"]` vs the formatter's no-space join) ·
 gained the inline-`[]` empty-effects arm · statuses catalog pin +
 inspired joined. The blacklist-editor failures were pure downstream
 of the verbatim diff.
+
+### 76g — promotion derived-delta display (2026-08-10)
+
+Landed to the kickoff plan: pure `promotionDeltaParts(old, new,
+archetype)` ([src/ui/promotionDelta.ts](src/ui/promotionDelta.ts)) +
+10 headless tests (the abilityDetail precedent — every expected
+number runs through the same sim helpers, no hand-computed
+arithmetic) + a final-beat block on the promotion card (one reveal
+beat after the raw stat chips; CSS-only styling, dashed-top green
+rows).
+
+Design calls made in-step (implementation discretion under the
+signed cut):
+
+- **Only DISPLAY-grade changes emit a line** — values format first,
+  compare as strings. A mobility bump that tick-rounding swallows or
+  a crit already at cap produces NO row, so the block never claims a
+  change the player can't feel. A power-only level renders no block
+  at all (the raw `+N` chip already covers POW).
+- **Per-ability rows diff `abilityDetailParts` positionally** instead
+  of re-deriving ops: part STRUCTURE depends only on the def, so
+  old/new arrays always align; stat-independent parts (`rng`, riders,
+  aura lines) drop out for free, and any future op kind the detail
+  builder learns is covered with zero new code here. The speed-scaled
+  cadence (abilityRow's separate column) diffs alongside.
+- **Reference conventions match the card the block sits on:** hit%
+  vs the 0-evasion neutral target (the abilityDetail convention);
+  dodge% mirrors it as a base-0.6 (REF_ACCURACY) 0-precision
+  reference attacker — the editor's convention, fixed rather than
+  dialable.
+
+Preview-verified via the forced `promotion:pending` emit (the HANDOFF
+force-verify pattern, no code hook needed — `__game.bus` is already
+exposed): a con+str+prc+mob synthetic promotion rendered exactly
+`Max HP 20 → 22 · Move cadence 0.80s → 0.70s · Sword: 13 dmg →
+14 dmg · 70% hit → 72% hit` (all four hand-checkable against
+config), the block held `hidden` until its beat fired (~3s in), a
+con-only promotion rendered exactly one row, console clean. Feel +
+the NATIVE-BROWSER eyeball rider (aura linger + the 4 new draftable
+units + this block in a real run) ride with the user.

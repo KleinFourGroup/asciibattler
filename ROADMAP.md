@@ -181,9 +181,10 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   47/48 atlas) + Inspire r4/+2mob/5s + prc/eva pass (11 entries,
   caster prc growth vestigial) + luck durations on hex/wail/molotov;
   mobility re-anchor pre-landed at 76e (worklog §76f)
-- [ ] 76g — promotion derived-delta display: pure
-  `promotionDeltaParts` + headless test; native-browser eyeball
-  rider (aura linger verify rides here)
+- [x] 76g — ✅ 2026-08-10: pure `promotionDeltaParts` + 10 headless
+  tests + the final-beat card block, preview-verified via forced
+  `promotion:pending`; the native-browser eyeball rider (aura linger
+  + the 4 new units + this block) rides with the user (worklog §76g)
 - [ ] 76h — the board amendment run (box; 68h trigger) + signing
   session: act-1/forced-boss re-pins expected; signed trio never
   silently re-pins; fire-channel + camps-leak pre-registered

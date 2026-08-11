@@ -175,10 +175,12 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   (5 ops flipped, law-pinned) + mobility re-anchored as EXACT level-1
   equivalence (rate 0.075/floor 0.3, bases+growths ×2 — pathing
   pins never moved) + luck-seam pin (worklog §76e)
-- [ ] 76f — DESIGN ROUND (decision point): new archetypes + Inspire
-  numbers + `inspired` status + prc/eva identity pass + luck
-  ScaledValue defs + rarity/prices + glyphs (5 free cells);
-  re-anchor base mobility to cadence-equivalence (res. 2)
+- [x] 76f — DESIGN ROUND ✅ user-signed 2026-08-10: the Officer
+  absorbs the cane (kit `[cane, inspire]`) — 4 new archetypes
+  (Rioter `f` / Gunslinger `G` / Halberdier `H` / Officer `O`,
+  47/48 atlas) + Inspire r4/+2mob/5s + prc/eva pass (11 entries,
+  caster prc growth vestigial) + luck durations on hex/wail/molotov;
+  mobility re-anchor pre-landed at 76e (worklog §76f)
 - [ ] 76g — promotion derived-delta display: pure
   `promotionDeltaParts` + headless test; native-browser eyeball
   rider (aura linger verify rides here)
@@ -252,6 +254,15 @@ native-browser eyeball.
   resolution, user-confirmed; TODO #79 + #81 closed.
 - **Scope guards:** no depth-write/alpha-test rework; no 3D-quad
   redesign unless the round opens.
+- **§76f rider (user-signed 2026-08-10):** reopen the FONT/STYLE
+  AXIS (the archived Phase-I deferral — [archive/post-h-roadmap.md]
+  §NOT-doing) — the §76 wave strained the ASCII pool without
+  colliding; scope with the §82 boss wave in view. Facts for the
+  scoping: only `latin-400` loads (latin-1 already free; a new
+  subset import must join FontAtlas's font-ready await or the
+  serif fallback bakes into the atlas — FontAtlas.ts:87), and the
+  style axis proper = `glyphStyle` on UnitDef + a (char,style)-keyed
+  atlas + budget accounting + editor arm.
 
 ## Phase 80 — Feasibility audit docs
 

@@ -2085,3 +2085,47 @@ ops); DoT ticks stay non-critable (res. 1). The luck ScaledValue seam
 got its evaluator pin. fuzz:smoke 398 green — the smoke pins are
 determinism/structure-shaped, so the deliberate stream shift passes;
 the absolute movement shows up only at the 76h board.
+
+### 76f — the design round (2026-08-10, user-signed)
+
+**The Officer resolution** — the round's structural call: the cane's
+two competing identities (gentleman / partisan battle-cane) and the
+missing Inspire carrier collapsed into ONE unit — the Officer, a
+commanding gentleman whose swagger cane IS the melee spray and whose
+kit carries the pure-aura `inspire` def (`[cane, inspire]` — the
+first two-ability kit since the rogue, and the first composed
+weapon+aura kit ever). No rename needed; the stave/Brawler split was
+considered and passed over (4 units beat 5 — tighter, and it saves
+an atlas cell). Rioter's glyph went `p`→`f` (flame) after the pool
+strained — which triggered the FONT/STYLE AXIS reopen: the archived
+Phase-I deferral ("revisit when glyphs actually collide") is
+half-fired (pool exhaustion, not collision); signed as a §79 rider
+with the §82 boss wave in view, NOT paid mid-§76. Facts pinned in
+the rider: latin-1 is already loaded; a subset import must join the
+FontAtlas font-ready await (the serif-bake hazard).
+
+**Shipped:** 4 archetypes (Rioter f/uncommon · Gunslinger G/common ·
+Halberdier H/uncommon · Officer O/rare; prices 28/25/28/32; atlas
+47/48) · `inspire` (r4 / `inspired` +2 mobility / 5s — user's
+numbers) + march-green display · the prc/eva pass (16 edits, 11
+entries: snipers archer+luminant prc 7 · wild bandit 4/ghoul 3 ·
+armor can't dodge catapult 3/reaver 4/halberdier 3 · robes dodge
+casters eva 6 + prc growth →0.05 vestigial — the unmissable-magic
+identity keeps prc DEAD deliberately) · luck durations lit on
+hex/wail/molotov (confusion/panic/burn ride caster luck, capped) ·
+healer's luck stays dead (needs HealOp.might→ScalarOrScaled — a
+flagged deferral, not smuggled in). Existing-roster mobility bases
+DELIBERATELY untouched (protects the 76e level-1 equivalence; the
+identity range lives in the new units: Officer 6 / Rioter 5 /
+Gunslinger 4 / Halberdier 2).
+
+**Breakage triage (all expected classes):** the committed
+fuzz-strategies.json archetype records are exhaustive-by-schema →
+the 4 new ids joined at weight 0 (the §74 PATH_KINDS re-baseline
+class, scheduled-not-surprise; redraw-level-fisher parses partial —
+untouched) · the archetype-editor verbatim diff was ONE byte-class
+miss (`["cane", "inspire"]` vs the formatter's no-space join) ·
+`inspire` is the first op-less def — the attack-editor formatter
+gained the inline-`[]` empty-effects arm · statuses catalog pin +
+inspired joined. The blacklist-editor failures were pure downstream
+of the verbatim diff.

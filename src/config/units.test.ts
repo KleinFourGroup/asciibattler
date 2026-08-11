@@ -12,6 +12,8 @@ import {
   isDestructibleNeutral,
   isAutoTargetNeutral,
 } from './units';
+import { abilityDef } from './abilities';
+import { STATUS_DEFS } from './statuses';
 
 // §38d — the catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
 // archetypes (their combatant-field assertions below), `NEUTRAL_DEFS` = the
@@ -295,5 +297,35 @@ describe('§61b — rarity tier field', () => {
   it('rejects rarity on a NEUTRAL entry (strict — never drafted, never tiered)', () => {
     const wall = NeutralUnitDefSchema.parse(NEUTRAL_DEFS.wall);
     expect(NeutralUnitDefSchema.safeParse({ ...wall, rarity: 'common' }).success).toBe(false);
+  });
+});
+
+// §76f — the stat-identity roster wiring pins. STRUCTURE only (kits, draft
+// flags, the aura chain) — the stat/price VALUES are design numbers signed at
+// the 76h board, deliberately unpinned (the §38b mechanic-pin convention does
+// not apply to balance content).
+describe('§76f — the stat-identity roster', () => {
+  it('the four new archetypes exist, draftable, wielding their §76d weapons', () => {
+    expect(UNIT_DEFS.rioter?.abilities).toEqual(['molotov']);
+    expect(UNIT_DEFS.gunslinger?.abilities).toEqual(['pistol']);
+    expect(UNIT_DEFS.halberdier?.abilities).toEqual(['halberd']);
+    expect(UNIT_DEFS.officer?.abilities).toEqual(['cane', 'inspire']);
+    for (const id of ['rioter', 'gunslinger', 'halberdier', 'officer']) {
+      expect(UNIT_DEFS[id]?.draftable, `${id} draftable`).toBe(true);
+    }
+  });
+
+  it('inspire is the shipped aura demo: op-less, self-target, radiating inspired at allies', () => {
+    const def = abilityDef('inspire');
+    expect(def.effects).toHaveLength(0); // pure aura — the propose layer skips it
+    expect(def.target.kind).toBe('self'); // the schema's attackRange guard shape
+    expect(def.aura?.statusId).toBe('inspired');
+    expect(def.aura?.affects).toBe('allies');
+    // `inspired` is a pure mobility statMod (magnitude is a signed design
+    // number — pin the AXIS, not the value).
+    const inspired = STATUS_DEFS.inspired!;
+    expect(inspired.periodic).toBeUndefined();
+    expect(inspired.behavior).toBeUndefined();
+    expect(inspired.statMods?.mobility?.add).toBeGreaterThan(0);
   });
 });

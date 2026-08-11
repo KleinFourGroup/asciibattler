@@ -181,7 +181,13 @@ export function formatAbilitiesJson(config: Record<string, AbilityDef>): string 
     lines.push(`${F}"timeline": [\n${def.timeline.map((p) => `      ${fmtPhase(p)}`).join(',\n')}\n${F}]`);
     lines.push(`${F}"orphanPolicy": ${s(def.orphanPolicy)}`);
     lines.push(`${F}"priority": ${n(def.priority)}`);
-    lines.push(`${F}"effects": [\n${def.effects.map((e) => fmtEffectEntry(e, '      ')).join(',\n')}\n${F}]`);
+    // §76f — a pure aura (inspire) is the first op-less def: an empty effects
+    // array emits inline as `[]`, not a hollow multi-line block.
+    lines.push(
+      def.effects.length === 0
+        ? `${F}"effects": []`
+        : `${F}"effects": [\n${def.effects.map((e) => fmtEffectEntry(e, '      ')).join(',\n')}\n${F}]`,
+    );
     if (def.fx !== undefined) lines.push(`${F}"fx": ${fmtFx(def.fx)}`);
     // §76a — the aura field (true-optional, emitted only when present; inline,
     // matching the schema's field order: effects, fx, aura).

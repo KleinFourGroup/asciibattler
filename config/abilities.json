@@ -404,7 +404,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": { "kind": "applyStatus", "statusId": "confusion" }
+        "op": { "kind": "applyStatus", "statusId": "confusion", "durationSeconds": { "base": 4, "stat": "luck", "perPoint": 0.3, "max": 8 } }
       }
     ],
     "fx": { "impact": "hex_burst" }
@@ -459,7 +459,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": { "kind": "applyStatus", "statusId": "panic" }
+        "op": { "kind": "applyStatus", "statusId": "panic", "durationSeconds": { "base": 3, "stat": "luck", "perPoint": 0.3, "max": 6 } }
       }
     ],
     "fx": { "impact": "wail_burst" }
@@ -584,7 +584,7 @@
       },
       {
         "phase": "impact",
-        "op": { "kind": "applyStatus", "statusId": "burn" }
+        "op": { "kind": "applyStatus", "statusId": "burn", "durationSeconds": { "base": 4, "stat": "luck", "perPoint": 0.2, "max": 7 } }
       }
     ],
     "fx": { "release": "vial_throw", "impact": "vial_burst" }
@@ -675,5 +675,19 @@
       }
     ],
     "fx": { "impact": "melee_swing" }
+  },
+  "inspire": {
+    "id": "inspire",
+    "name": "Inspire",
+    "cooldownSeconds": 1,
+    "rangeCells": 0,
+    "target": { "kind": "self" },
+    "timeline": [
+      { "phase": "recovery", "seconds": "fill" }
+    ],
+    "orphanPolicy": "commit-at-cast",
+    "priority": 0,
+    "effects": [],
+    "aura": { "radius": 4, "statusId": "inspired", "affects": "allies" }
   }
 }

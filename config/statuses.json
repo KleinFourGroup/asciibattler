@@ -112,5 +112,12 @@
     "durationSeconds": 5,
     "merge": "refresh",
     "statMods": { "strength": { "add": 1 }, "ranged": { "add": 1 }, "magic": { "add": 1 } }
+  },
+  "inspired": {
+    "id": "inspired",
+    "name": "Inspired",
+    "durationSeconds": 5,
+    "merge": "refresh",
+    "statMods": { "mobility": { "add": 2 } }
   }
 }

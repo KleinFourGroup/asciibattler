@@ -61,7 +61,11 @@ const DEMO_ABILITY_IDS = [
   'molotov', // 3×3 burn lob — unmissable, luck-critable
   'pistol', // the spray: very fast, very inaccurate, ranged
   'halberd', // reach-2 melee: slow, heavy
-  'cane', // the melee spray (the pistol's twin)
+  'cane', // the melee spray (the pistol's twin — the Officer's swagger stick)
+  // §76f — the aura demo: the Officer's pure-aura def (+2 mobility, r4, 5s
+  // linger). Op-less by design — the propose layer skips it; the §76a World
+  // pass executes it.
+  'inspire',
 ] as const;
 
 const FACTORIES: Record<string, AbilityFactory> = {

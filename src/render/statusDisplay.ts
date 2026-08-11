@@ -42,6 +42,9 @@ export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   // vs panic's fear-amber is a buff-vs-behavior split (the burn/panic
   // precedent) — retune on eyeball if it reads ambiguously.
   emboldened: { color: '#FFD700' }, // buff-gold
+  // §76f — the Officer's Inspire aura (+mobility): a pale spring-green, brighter
+  // and lighter than poison's toxic olive (a buff-vs-DoT split; eyeball-tunable).
+  inspired: { color: '#B4FF6E' }, // march-green
 };
 
 /** Fallback color for a status with no display entry (shouldn't happen for a

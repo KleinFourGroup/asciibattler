@@ -13,7 +13,11 @@
       "reaver": 30,
       "corrupter": 30,
       "stormcaller": 35,
-      "shaman": 30
+      "shaman": 30,
+      "rioter": 28,
+      "gunslinger": 25,
+      "halberdier": 28,
+      "officer": 32
     },
     "levelGrowth": 1.05,
     "jitter": 0.15,

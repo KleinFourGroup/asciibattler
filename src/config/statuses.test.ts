@@ -14,7 +14,7 @@ import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
  */
 
 describe('STATUS_DEFS registry (27c periodic + 28 behavior + 47f statMods content)', () => {
-  it('ships the four periodic + four behavior statuses + 47f emboldened', () => {
+  it('ships the four periodic + four behavior statuses + the statMods buffs (47f emboldened, §76f inspired)', () => {
     expect(Object.keys(STATUS_DEFS).sort()).toEqual([
       'bleed',
       'blind',
@@ -22,6 +22,7 @@ describe('STATUS_DEFS registry (27c periodic + 28 behavior + 47f statMods conten
       'confusion',
       'emboldened',
       'frozen',
+      'inspired',
       'panic',
       'poison',
       'rejuvenate',

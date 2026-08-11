@@ -25,7 +25,11 @@
     "stormcaller": 0.7031916817650199,
     "shaman": 0.3461840976960957,
     "ghoul": 0.9279276551678777,
-    "prodigy": 0
+    "prodigy": 0,
+    "rioter": 0,
+    "gunslinger": 0,
+    "halberdier": 0,
+    "officer": 0
   },
   "composition": {
     "mercenary": -0.6397586455568671,
@@ -46,7 +50,11 @@
     "stormcaller": 0.8357716389000416,
     "shaman": -0.5863833576440811,
     "ghoul": -0.7398271737620234,
-    "prodigy": 0
+    "prodigy": 0,
+    "rioter": 0,
+    "gunslinger": 0,
+    "halberdier": 0,
+    "officer": 0
   },
   "compWeight": 0.17792339948937297,
   "level": -0.5987305897288024,

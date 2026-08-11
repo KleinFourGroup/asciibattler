@@ -2282,3 +2282,19 @@ default-'track' instead of being scrubbed to a winner; the
 resolution (scrub vs promote to a settings surface) is a TODO
 ("Aura-FX mode") for a UI/polish round. The §76 exit criterion
 (aura visibly applies + lingers) is satisfied by every mode.
+
+### 76h — the board amendment run (2026-08-11, in flight)
+
+**First launch crashed 4-for-4 on the box in seconds:** every board
+fixture vector (`tests/fuzz/fixtures/*.json`) failed `parseWeights` —
+the schema's `archetype`/`composition` records are
+exhaustive-by-schema over `ALL_ARCHETYPES`, and the §76f triage
+patched `config/fuzz-strategies.json` at weight 0 but MISSED the
+fixtures (the same §74 PATH_KINDS re-baseline class, one more
+surface). Class swept per the twice-bitten rule: all 12 fixture
+vectors patched (the 4 new ids at 0, appended after `prodigy` — the
+prior late-join precedent), every one re-validated through the real
+`loadWeightsFile`, and the exact failing arm re-run 1-seed locally
+to a clean summary.csv before relaunch. Ops note: the crashes cost
+~4 box-minutes; the driver's no-summary flag + the fetched batch.log
+made the diagnosis one read.

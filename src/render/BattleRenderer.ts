@@ -33,6 +33,7 @@ import { footprintOf } from '../sim/occupancy';
 import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
+import { statusColor } from './statusDisplay';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -89,6 +90,9 @@ interface ExplosionParticle {
   readonly to: THREE.Vector3;
   readonly sizeFrom: number;
   readonly sizeTo: number;
+  /** §76g2 — peak-alpha multiplier on the 1→0 fade (default 1). Lets the aura
+   *  ring ride the same lane at a whisper without dimming existing bursts. */
+  readonly alphaScale: number;
 }
 
 export class BattleRenderer {
@@ -112,6 +116,9 @@ export class BattleRenderer {
    *  `projectiles`, they live in the shared SpriteRenderer but not in
    *  `handles`, and are swept by `detach`. */
   private readonly explosions: ExplosionParticle[] = [];
+  /** §76g2 — accumulator gating the aura-ring mote shed (speed-scaled dt, so
+   *  the ring slows with playback and freezes at pause). */
+  private auraRingClock = 0;
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
   /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
@@ -240,6 +247,7 @@ export class BattleRenderer {
     this.renderClockMs += dt * 1000;
     this.animator.update(dt);
     this.updateExplosions(dt);
+    this.updateAuraRings(dt);
     this.updateOverlays(dt);
     // After overlays so an enemy mark reads the target's already-lerped position
     // this frame (no one-frame lag behind the unit it's pinned to).
@@ -261,10 +269,70 @@ export class BattleRenderer {
       const eased = 1 - (1 - t) * (1 - t);
       const pos = this.scratchPos.copy(p.from).lerp(p.to, eased);
       const size = p.sizeFrom + (p.sizeTo - p.sizeFrom) * t;
-      this.sprites.updateSprite(p.handle, { position: pos, size, alpha: 1 - t });
+      this.sprites.updateSprite(p.handle, { position: pos, size, alpha: (1 - t) * p.alphaScale });
       if (t >= 1) {
         this.sprites.removeSprite(p.handle);
         this.explosions.splice(i, 1);
+      }
+    }
+  }
+
+  /**
+   * §76g2 — the aura-range ring (playtest insertion: the recipient pips prove
+   * the buff APPLIES, but nothing showed the radius). Every
+   * AURA_RING_INTERVAL_SECONDS, each live aura carrier sheds a few faint motes
+   * at random points along its aura's Chebyshev boundary — the square
+   * perimeter at `radius + AURA_RING_EDGE`, the outer edge of the affected
+   * cells (matching the sim's `unitDistance ≤ radius` gate for a 1×1 carrier).
+   * Anchored to the carrier's LIVE sprite (the user call: half a cell of
+   * dishonesty during a move lerp beats a ring that snaps cell to cell), so
+   * the ring glides with the Officer. Motes ride the explosion-particle lane
+   * at a whisper alpha; the color is the aura status's pip color
+   * (`statusColor`), so ring and recipient pips read as one system. Y hugs the
+   * carrier's own ground plane — no per-mote terrain sampling, so on a slope
+   * the far ring edge floats/sinks a touch (eyeball-accepted for v1).
+   */
+  private updateAuraRings(dt: number): void {
+    if (!this.world) return;
+    this.auraRingClock += dt;
+    if (this.auraRingClock < AURA_RING_INTERVAL_SECONDS) return;
+    this.auraRingClock %= AURA_RING_INTERVAL_SECONDS;
+    for (const carrier of this.world.units) {
+      if (carrier.currentHp <= 0) continue;
+      for (const ability of carrier.abilities) {
+        const aura = ability.aura;
+        if (!aura) continue;
+        const handle = this.handles.get(carrier.id);
+        if (!handle) continue;
+        const center = this.sprites.getPosition(handle, this.scratchPos);
+        if (!center) continue;
+        const color = statusColor(aura.statusId);
+        const reach = aura.radius + AURA_RING_EDGE;
+        for (let i = 0; i < AURA_RING_MOTES; i++) {
+          // A random point on the square perimeter: pick a side, then a spot
+          // along it. (Math.random is fine here — render-only, never sim.)
+          const side = Math.floor(Math.random() * 4);
+          const t = (Math.random() * 2 - 1) * reach;
+          const dx = side < 2 ? t : side === 2 ? reach : -reach;
+          const dz = side === 0 ? reach : side === 1 ? -reach : t;
+          const from = center.clone();
+          from.x += dx;
+          from.z += dz;
+          from.y += AURA_RING_Y_OFFSET;
+          const to = from.clone();
+          to.y += AURA_RING_RISE;
+          this.addExplosionParticle(
+            from,
+            to,
+            AURA_RING_GLYPH,
+            color,
+            AURA_RING_SIZE,
+            AURA_RING_SIZE,
+            AURA_RING_SECONDS,
+            AURA_RING_BLOOM,
+            AURA_RING_ALPHA,
+          );
+        }
       }
     }
   }
@@ -447,6 +515,9 @@ export class BattleRenderer {
     // doesn't own them, so sweep their sprites here.
     for (const p of this.explosions) this.sprites.removeSprite(p.handle);
     this.explosions.length = 0;
+    // §76g2 — the aura-ring motes live in `explosions` (swept above); just
+    // rewind the shed clock so the next battle starts on a fresh interval.
+    this.auraRingClock = 0;
     // overlays.clear() drops every <div> the overlay layer owns in a single
     // sweep — covers both live overlays (this.overlayHandles) and any that
     // were mid-fade when the battle ended (typically the killing-blow
@@ -1185,12 +1256,13 @@ export class BattleRenderer {
     sizeTo: number,
     duration: number,
     bloom: number = EXPLOSION_BLOOM,
+    alphaScale = 1,
   ): void {
     const handle = this.sprites.addSprite(glyph, color, from);
     this.sprites.updateSprite(handle, {
       size: sizeFrom,
       bloomIntensity: bloom,
-      alpha: 1,
+      alpha: alphaScale,
     });
     this.explosions.push({
       handle,
@@ -1200,6 +1272,7 @@ export class BattleRenderer {
       to: to.clone(),
       sizeFrom,
       sizeTo,
+      alphaScale,
     });
   }
 
@@ -1459,6 +1532,32 @@ const SPARKLE_DIRS: ReadonlyArray<readonly [number, number]> = [
   [0, 1],
   [0, -1],
 ];
+
+/**
+ * §76g2 — aura-range ring tuning (the playtest insertion: pips only prove the
+ * buff applies; the ring makes the RADIUS legible). Faint `.` motes shed along
+ * the aura's square boundary, rising gently and fading. Deliberately a
+ * whisper — small, half-alpha, sub-unit bloom — legible when looked for, not
+ * competing with combat FX; the density knobs (interval × motes) trade
+ * legibility against clutter with multiple carriers. `.` is already an atlas
+ * cell (HUD punctuation), so the ring costs no atlas budget. All
+ * eyeball-tunable — bump freely.
+ */
+const AURA_RING_GLYPH = '.';
+const AURA_RING_INTERVAL_SECONDS = 0.15;
+/** Motes shed per carrier per interval. */
+const AURA_RING_MOTES = 4;
+/** The boundary sits at the affected cells' OUTER edge: radius + half a cell. */
+const AURA_RING_EDGE = 0.5;
+const AURA_RING_SIZE = 0.3;
+/** Gentle upward drift over the mote's life (world units). */
+const AURA_RING_RISE = 0.22;
+/** Hug the ground: sprite center rides +0.5 over the tile top, so −0.35 puts
+ *  the motes near the carrier's feet. */
+const AURA_RING_Y_OFFSET = -0.35;
+const AURA_RING_SECONDS = 0.6;
+const AURA_RING_BLOOM = 0.8;
+const AURA_RING_ALPHA = 0.5;
 
 /**
  * E7.D — catapult shot tuning. The lobbed boulder arcs CATAPULT_ARC_HEIGHT

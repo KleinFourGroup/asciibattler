@@ -2185,3 +2185,36 @@ the list) and likely elsewhere — the systemic sweep is a TODO
 nothing shows the radius. Taken as an in-charter insertion (the exit
 criterion is "aura buffs visibly apply"), design shapes offered to
 the user → 76g2.
+
+### 76g2 — the aura-range ring (2026-08-11, user-picked shape)
+
+Three shapes offered: **A** persistent boundary motes (recommended) ·
+**B** radiating pulse · **C** tile-tint decal (needs a new
+TerrainRenderer overlay layer + fights the §37 parsing-load
+discipline). **User call: A alone first, expecting to want A+B
+eventually; sprite-anchored** (half a cell of dishonesty during a
+move lerp beats a ring that snaps cell to cell).
+
+Built render-only in BattleRenderer: every 0.15s each live aura
+carrier sheds 4 faint `.` motes (already an atlas cell — zero budget)
+at random points on the aura's square boundary at `radius + 0.5` (the
+affected cells' outer edge, matching the sim's `unitDistance ≤
+radius` gate for a 1×1 carrier), colored by `statusColor(statusId)`
+so ring and recipient pips read as one system. Rides the existing
+explosion-particle lane — the lane gained an optional `alphaScale`
+(default 1, existing bursts byte-identical) so the ring can whisper
+at 0.5 peak alpha. Derives carriers per shed from `world.units[i]
+.abilities[j].aura` (derive-don't-cache; enemy/camp carriers covered
+for free). Advances on the speed-scaled `dt` → slows with playback,
+freezes at pause; motes are swept by the existing `detach` sweep.
+
+Preview-verified functionally (driven via `br.update` by hand, tab
+throttling irrelevant): baseline battle 0 particles → console-spawned
+Officer (+ `createAbility('cane'/'inspire')` attached by hand —
+worth knowing: `spawnUnit` does NOT attach abilities; battleSetup.ts
+does) → steady-state EXACTLY 16 motes (4/0.15s × 0.6s life), every
+mote at Chebyshev 4.500 from the sprite (inspire r4 + 0.5 edge) →
+carrier death: shedding stops, motes drain to 0 in one lifetime, no
+leak; console clean. Density/alpha/bloom are eyeball-tunable consts
+(`AURA_RING_*`) — the FEEL read (and the A+B call) rides the user's
+native browser.

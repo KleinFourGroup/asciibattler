@@ -20,6 +20,7 @@ import { RNG } from '../../src/core/RNG';
 import { generate, type NodeMap, type NodeKind } from '../../src/run/NodeMap';
 import { NODE_MAP } from '../../src/config/nodemap';
 import type { RunConfig } from '../../src/run/RunConfig';
+import { computeMapMetrics, SPECIAL_KINDS } from '../../src/run/mapMetrics';
 
 /** Kind glyphs + hues, mirroring MapScreen.ts KIND_GLYPH + ui.css .map-node
  *  accents (G3) — the tool should read like the in-game map. */
@@ -158,11 +159,39 @@ function renderStats(map: NodeMap): string {
     .map((k) => `<span style="color:${KIND[k].color}">${KIND[k].glyph}&hairsp;${kindCounts.get(k)}</span>`)
     .join(' &nbsp; ');
 
+  // 77b — the three-metric read for THIS map (corpus aggregates: report.ts).
+  const m = computeMapMetrics(map);
+  const pct = (x: number): string => `${Math.round(x * 100)}%`;
+  const perKind = SPECIAL_KINDS.filter((k) => m.firstHopByKind.has(k))
+    .map((k) => {
+      const c = KIND[k];
+      return (
+        `<span style="color:${c.color}">${c.glyph}</span> h${m.firstHopByKind.get(k)}` +
+        ` · ${pct(m.pathFractionByKind.get(k) ?? 0)} routes` +
+        ` · choice ${pct(m.choiceCoverageByKind.get(k) ?? 1)}`
+      );
+    })
+    .join(' &nbsp;&nbsp; ');
+  const pairs = m.rejoinPairs;
+  const instant = pairs.filter((p) => p.rejoinDistance === 2).length;
+  const divergent = pairs.filter((p) => p.kindDivergent).length;
+  let combat = 0;
+  let totalComp = 0;
+  for (const [k, v] of m.expectedRouteComposition) {
+    totalComp += v;
+    if (k === 'battle' || k === 'elite' || k === 'boss') combat += v;
+  }
+
   return (
     `<b>${map.nodes.length}</b> nodes / <b>${map.edges.length}</b> edges &nbsp;·&nbsp; widths ${widths}<br>` +
     `kinds: ${kinds}<br>` +
     `avg out-degree <b>${avgOut.toFixed(2)}</b> &nbsp;·&nbsp; branching nodes <b>${branching}</b>` +
-    `<span class="sub"> (the three §77 metrics land here at 77b)</span>`
+    ` &nbsp;·&nbsp; routes <b>${m.totalRoutes}</b><br>` +
+    `avail/coverage: &nbsp;${perKind}<br>` +
+    `divergence: <b>${pairs.length}</b> pairs · instant rejoin <b>${pairs.length > 0 ? pct(instant / pairs.length) : '—'}</b>` +
+    ` · content-divergent <b>${pairs.length > 0 ? pct(divergent / pairs.length) : '—'}</b>` +
+    ` &nbsp;·&nbsp; combat share <b>${pct(combat / totalComp)}</b>` +
+    ` · battle-less hops <b>${m.battlelessMiddleHops}</b>`
   );
 }
 

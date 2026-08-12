@@ -2487,3 +2487,55 @@ Three resolutions:
    still all-events. Same 77b corpus feeds both, so the band joins
    the 77c signing list for free. The §82 event-ratio economy read
    is the balance-side complement, unchanged.
+
+### 77a — the visualizer (2026-08-12)
+
+Landed to the cut (`380019f` + the label fix `bbd7d05`).
+Notes beyond the cut line: the 50-seed config-parity probe (explicit
+slider config ≡ authored default path — the G1 `??` contract); one
+real bug caught in DOM verification (`outerHTML` replacement
+detached the board element — redraws after the first threw; fixed
+to a stable-container `innerHTML`); the stamp select mirrors the
+RESTRICTED `firstNodeKind` union (`'elite' | 'event'`) and, after a
+user question, labels each option's true nature — battle is the
+natural root, event is the startingEvents shape, elite exists ONLY
+as the 68e isolation probe (no organic elite root; 74i-c: the dial
+beats the pool).
+
+### 77b — metrics + the baseline read (2026-08-12)
+
+`src/run/mapMetrics.ts` (pure, RNG-free) + co-located test (6
+fixtures-first tests + generator sanity bounds) + the corpus CLI
+(`npm run nodemap:metrics`, dial flags mirror the visualizer) + the
+per-map overlay in nodemap-viz. Metric shapes: early availability =
+first hop per kind; path-kind coverage = route fraction (avoid-DP,
+no double-count) + first-choice coverage (fraction of hop-1
+branches retaining access); divergence = per-child-pair rejoin
+distance + kind-multiset content differentiation; plus the ratio
+reads (expected per-kind route composition by linearity;
+battle-less middle hops). Route-uniformity caveat documented in the
+module header (uniform-over-routes is a baseline stat, not a player
+model — the fuzz walker measures the steered reality).
+
+**THE BASELINE (500 seeds, authored config, hopCount 11) — every
+spec complaint confirmed with a number:**
+
+- **Early availability:** by hop 4 only 70% of maps have a rest,
+  61% an elite, 55% a port ("no early elite, rest, or shop" ≈
+  every other map for ports). Absent ENTIRELY: rest 3.0%, elite
+  10.2% of maps (port 100% — the ≥1 guarantee works; event 99.2%).
+- **Path-kind coverage:** port rides only 35.7% of routes on
+  average (P10 8.1%); in 73.4% of maps fewer than half the routes
+  see a port; in 41.4% of maps at least one FIRST CHOICE locks the
+  player out of ports entirely (elite 31.8%, rest 22.1% — the "all
+  on the same path" complaint, measured).
+- **Branch divergence:** 59.8% of all branch pairs rejoin at
+  distance 2 — the MINIMUM possible ("almost immediately rejoining"
+  is the MAJORITY case); only 60.7% of pairs differ in content
+  (≈40% of choices offer identical kinds either side).
+- **Ratio anchors:** expected route composition battle 7.41 · event
+  1.12 · rest 0.62 · elite 0.46 · port 0.39 · boss 1.00; combat
+  share 80.6%. The 74e stacking artifact: ≥1 battle-less middle hop
+  in 46.8% of maps (mean 0.60).
+
+These are the numbers 77c signs thresholds against.

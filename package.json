@@ -17,6 +17,7 @@
     "balance:board": "tsx tests/fuzz/board/cli.ts",
     "gauntlet": "tsx tests/gauntlet/cli.ts",
     "pathing": "tsx tests/pathing/cli.ts",
+    "nodemap:metrics": "tsx tools/nodemap-viz/report.ts",
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs",
     "trace-mine": "tsx tests/gauntlet/traceMine.ts"

@@ -223,9 +223,11 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   (seed/dial sandbox + variety strip; 50-seed config-parity probe
   OK; all dials DOM-proven); card re-described; native eyeball
   rides with the user
-- [ ] 77b — `mapMetrics.ts` (the three metrics, pure) + corpus
-  report + visualizer overlay; BASELINE READ of the current
-  generator → worklog (confirm-the-deficit, numbers for 77c)
+- [x] 77b — metrics + baseline ✅ 2026-08-12: `mapMetrics.ts` + 6
+  fixture tests + `npm run nodemap:metrics` + the overlay; the
+  500-seed baseline CONFIRMS every complaint (60% instant rejoins ·
+  port on 36% of routes · 55% of maps port-less by hop 4 — worklog
+  §77b, the 77c signing sheet)
 - [ ] 77c — DECISION POINT: thresholds + guarantee list + the
   ratio band sign on 77b numbers
 - [ ] 77d1 — `RNG.child`/`deriveSeed` (mixSeeds folds in) + the

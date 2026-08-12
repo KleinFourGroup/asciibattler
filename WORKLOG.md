@@ -2573,3 +2573,27 @@ The corpus gates run at n=500 seeds (the baseline instrument's
 shape). The user's reaction to the baseline, for the record: the
 60% instant-rejoin and 41% shop-lockout rates were WORSE than the
 felt complaint ("I knew it was bad, but not that bad").
+
+### 77d1 — the derivation primitive (2026-08-12)
+
+Landed to the cut. `deriveSeed(root, streamKey, ...indices)` +
+`deriveRng` in RNG.ts — one xor-imul mix round per component (the
+battleSetup `mixSeeds` shape generalized; that local one-off folds
+in at 77d3) over an FNV-1a key hash; THE HASH IS FROZEN (header +
+6 pinned vectors — a legitimate pin change = a deliberate global
+stream break). `rngStreams.ts` registers all 22 planned keys as a
+closed union (run ladder + world side + 'test'), each with its
+index signature documented; unregistered keys fail to compile.
+KEYS ARE PERMANENT (the gotcha-number rule — renaming remaps the
+stream; tombstones over reuse). The independence suite pins the
+architecture's point: order-freedom (deriving B never moves A or
+any live RNG), the #49 kill (draw-count changes inside occurrence
+N can't remap occurrence N+1), cross-key/index uniqueness at
+birthday-bound density, crude uniformity. `fork()` survives
+untouched as the POSITIONAL door for local self-contained use —
+its 12 contract tests still pass unmodified. The registry design
+choice worth recording: keys are registered a step AHEAD of their
+wiring (d2/d3 consume the run/world blocks) — additions never move
+existing streams, so pre-registration is free and gives d2/d3 a
+signed target shape. 'campSetup' carries NO turn index by design
+(the 75j per-encounter identity verdict, preserved).

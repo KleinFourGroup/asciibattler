@@ -3000,3 +3000,64 @@ deltas. The pre-X H7c→O log lives at
     where it counts). Post-amendment board: 0 FAIL / 7 WARN, all
     seven pre-registered (5 walk-shape + fire-channel + the 55pre
     ceiling watch).
+
+### 2026-08-11 — §76h: the amendment board (the §76 stat-identity changes vs the 75l-amended sheet)
+
+- **Protocol:** the full 15-instrument board on one box (`--plan` →
+  box-batch sequential, `--jobs=8`), HEAD `3a0b48e` (76a–76g4 + the
+  fixture join), ~3.9h wall, all 15 `fetched →` clean, box destroyed
+  same-night. Report: `output/board-76h/board-report.txt` (numbers
+  reproduced here). All reads n=40/arm — DIRECTIONAL under the n=80
+  floor unless noted. Launch note: attempt 1 crashed 4-for-4 (the
+  §76f archetype join had missed the fixture vectors — 12 patched at
+  weight 0, re-validated through `loadWeightsFile`; worklog §76h);
+  ~4 box-minutes lost.
+- **Headline: 0 FAIL / 7 WARN — but the WARN composition ROTATED
+  from 75l:** the fire channel and the priest healed; the walk walls
+  flipped DIRECTION (pull-softened below band → hardened above); the
+  walk ceilings went negative. The seven: gambler-regen win ·
+  walk-regen wall + derived win · walk-55pre reach + wall · both
+  walk ceilings.
+- **The re-pin table (75l → 76h):** arb-regen 0.750→0.825 (band-top,
+  PASS) · arb-55pre 0.875→0.800 (band-floor, PASS) · King
+  0.825→0.800 / Queen 0.675→0.675 (order holds, both PASS) · priest
+  0.825→0.750 / 0.800→0.800 (both PASS — the 75l +20 WARN healed
+  under its re-pinned ref) · gambler 0.700→**0.600 (WARN, one seed
+  below floor)** / 0.725→0.675 (PASS) · walk-regen reach 0.375→0.425
+  (back in 40–50, PASS) wall 0.267→**0.412 (WARN — ABOVE 30–35)**
+  seam 16.83→17.09 win 0.250 (WARN vs derived) · walk-55pre reach
+  0.700→**0.675 (WARN — the overperformance watch persists)** wall
+  0.286→**0.481 (WARN — ABOVE band)** seam 16.60→16.91 win
+  0.350 (PASS) · fire channel **−0.075→+0.050 (PASS — the 75l
+  inversion resolved, at the signed band's floor)** · ceilings: regen
+  +0.025 / 55pre +0.025 (PASS) · walk-regen −0.025→**−0.125 (WARN)**
+  · walk-55pre +0.225→**−0.100 (WARN — a 0.325 sign-flip swing)**.
+  Act-1 banks/fires/tx all in-band; posture dissolution (tx ≈ 0 on
+  arb) holds everywhere.
+- **⭐ The walls flipped from pull-softened to HARDENED** (0.267→0.412
+  · 0.286→0.481, a +0.15–0.20 move that clears n=40 noise): the §76
+  movers are CONFOUNDED here — critable-universal is symmetric (enemy
+  ops crit too, and deep-end fights are the long ones where crit
+  variance compounds), the prc/eva pass re-aimed 11 catalog entries,
+  and the camps leak moves camp fights on all 4 placements (no board
+  row watches camps). No single-knob attribution without a `--set`
+  ablation bracket — a signing-session call whether to probe now or
+  ride to §82 with the pull question (the two wall knobs are already
+  named there; this adds a third).
+- **Both walk ceilings went NEGATIVE (paired same-seed):** the arb
+  arm now UNDERPERFORMS doctrine by 10–12.5 pts on the two-act
+  shapes (at 75l: −2.5 and +22.5). Candidate story unprobed: the
+  hardened walls change what the K=2 rollout horizon can see (the
+  horizon-blindness doctrine cuts both ways — a wall past the horizon
+  devalues the arb arm's positional spending). Flagged, not read.
+- **The gambler (the §82 parity rider):** §76 lit the luck seam
+  (critable-universal + luck durations on hex/wail/molotov — the
+  luck character's organic movers) and no gain materialized: the
+  regen-shape gap vs the soldier WIDENS (−5 → −22.5) while 55pre
+  narrows (−15 → −12.5), n=40 directional both. The §82 repair stays
+  the first item with its premise updated: the organic move did not
+  arrive.
+- **Act-1 amendment HELD:** every soldier/priest act-1 arb row PASSes
+  at the 75l re-pinned refs — the §76 changes moved the DEEP END, not
+  act 1. decisions.csv rode all 10 arb arms; packet Δ|picked stays
+  positive where n clears the floor (the packet-health read holds).

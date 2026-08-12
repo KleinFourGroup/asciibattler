@@ -2298,3 +2298,20 @@ prior late-join precedent), every one re-validated through the real
 to a clean summary.csv before relaunch. Ops note: the crashes cost
 ~4 box-minutes; the driver's no-summary flag + the fetched batch.log
 made the diagnosis one read.
+
+**The run (attempt 2, HEAD `3a0b48e`):** 15/15 fetched clean over
+~3.9h (arb walk arms ~35min each, doctrine controls ~5min — the
+arm-dependent cost shape), box destroyed same-night. **Board: 0 FAIL
+/ 7 WARN — the WARN composition ROTATED from 75l** (numbers +
+attribution notes: BALANCE 2026-08-11, the canonical entry). The
+one-breath read: act-1 held at the amended refs and the priest +
+fire-channel WARNs healed, but the walk walls flipped from
+pull-softened (below band) to HARDENED (0.412/0.481, above the
+signed 30–35), both walk ceilings went negative (arb underperforms
+doctrine on two-act shapes — a paired sign-flip on the 55pre twin),
+and the gambler's organic luck-seam gain did not arrive (the
+regen-shape parity gap widens to −22.5). Signing queue presented to
+the user: (1) wall-flip attribution — `--set` ablation bracket now
+vs ride to §82 with the pull question · (2) the negative walk
+ceilings — flag vs probe · (3) the gambler premise update for the
+§82 rider · (4) accept the board as the §76h green.

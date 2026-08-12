@@ -1,0 +1,236 @@
+/* Node-Map Visualizer (77a). Palette + chrome conventions copied from the
+   mapgen-prototype tool; the node-kind hues mirror ui.css's .map-node accents
+   (G3) so the tool reads like the in-game map screen. */
+
+:root {
+  --bg: #0a0816;
+  --panel: #14101f;
+  --panel-2: #1b1530;
+  --ink: #e8e3ff;
+  --muted: #9b93c4;
+  --line: #2a2342;
+  --accent: #33c6f4;
+  --accent-2: #ff6ac1;
+  /* the in-game kind hues (ui.css .map-node.*) */
+  --kind-battle: #c9c2ea;
+  --kind-rest: #33ff00; /* TERMINAL_GREEN */
+  --kind-boss: #ff3131; /* NEON_RED */
+  --kind-elite: #9d00ff; /* NEON_PURPLE */
+  --kind-port: #ffb000; /* TERMINAL_AMBER */
+  --kind-event: #3d7bff; /* TERMINAL_BLUE */
+  --root-ring: #ffb000; /* TERMINAL_AMBER — the origin marker */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.bar h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.bar a.home {
+  margin-left: auto;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bar a.home:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.subtitle {
+  color: var(--muted);
+}
+code {
+  color: var(--accent-2);
+}
+
+.workspace {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 18px 20px;
+}
+
+.controls {
+  flex: 0 0 264px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.group {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.group h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.sub {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 0;
+}
+.row select {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font: inherit;
+}
+
+.slider {
+  display: grid;
+  grid-template-columns: 72px 1fr 38px;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.slider input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.slider output {
+  text-align: right;
+  color: var(--accent-2);
+}
+
+.seed {
+  justify-content: flex-start;
+}
+.seed input[type='number'] {
+  width: 110px;
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font: inherit;
+}
+button {
+  background: var(--panel-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover {
+  border-color: var(--accent);
+}
+button.primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#reset {
+  width: 100%;
+}
+
+.stage {
+  flex: 1;
+  min-width: 0;
+}
+.board-wrap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  overflow-x: auto;
+}
+#board {
+  display: block;
+}
+
+.stats {
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.stats b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+  color: var(--muted);
+}
+.legend .g {
+  font-style: normal;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.legend .battle { color: var(--kind-battle); }
+.legend .rest { color: var(--kind-rest); }
+.legend .boss { color: var(--kind-boss); }
+.legend .elite { color: var(--kind-elite); }
+.legend .port { color: var(--kind-port); }
+.legend .event { color: var(--kind-event); }
+.legend .root { color: var(--root-ring); }
+
+.strip-title {
+  margin: 18px 0 8px;
+  font-size: 13px;
+  color: var(--accent);
+}
+.thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.thumb {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+}
+.thumb:hover {
+  border-color: var(--accent);
+}
+.thumb .cap {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCIIbattler Node-Map Visualizer</title>
+    <link rel="stylesheet" href="./nodemap-viz.css" />
+  </head>
+  <body>
+    <main id="root">
+      <header class="bar">
+        <h1>Node-Map Visualizer</h1>
+        <span class="subtitle"
+          >The sector DAG a seed produces — wired to the live
+          <code>NodeMap.generate</code> · §77 gen-rework workbench</span
+        >
+        <a class="home" href="/tools/">← Tools</a>
+      </header>
+
+      <section class="workspace">
+        <aside class="controls">
+          <section class="group">
+            <h2>Seed</h2>
+            <div class="row seed">
+              <input id="seed" type="number" value="1" />
+              <button id="seed-prev" type="button" title="seed − 1">◀</button>
+              <button id="seed-next" type="button" title="seed + 1">▶</button>
+              <button id="reroll" type="button" class="primary" title="random seed">⟳</button>
+            </div>
+          </section>
+
+          <section class="group">
+            <h2>Shape</h2>
+            <label class="slider">Hops <input id="hopCount" type="range" min="1" max="16" step="1" /><output id="hopCount-o"></output></label>
+            <label class="slider">Max width <input id="mapMaxWidth" type="range" min="2" max="8" step="1" /><output id="mapMaxWidth-o"></output></label>
+          </section>
+
+          <section class="group">
+            <h2>Scatter dials <span class="sub">(the 72e/74e probe knobs)</span></h2>
+            <label class="slider">Elite <input id="eliteChance" type="range" min="0" max="1" step="0.05" /><output id="eliteChance-o"></output></label>
+            <label class="slider">Port <input id="portChance" type="range" min="0" max="1" step="0.05" /><output id="portChance-o"></output></label>
+            <label class="slider">Event <input id="eventChance" type="range" min="0" max="1" step="0.05" /><output id="eventChance-o"></output></label>
+          </section>
+
+          <section class="group">
+            <h2>Root stamp <span class="sub">(firstNodeKind / startingEvents)</span></h2>
+            <label class="row"
+              >Stamp
+              <!-- the RunConfig dial is a restricted union ('elite' | 'event')
+                   by design — mirror it, don't widen it (RunConfig.ts:103) -->
+              <select id="firstNodeKind">
+                <option value="" selected>none (authored)</option>
+                <option value="event">event</option>
+                <option value="elite">elite</option>
+              </select></label
+            >
+          </section>
+
+          <section class="group">
+            <button id="reset" type="button">Reset to authored config</button>
+          </section>
+        </aside>
+
+        <div class="stage">
+          <div class="board-wrap"><div id="board"></div></div>
+
+          <div id="stats" class="stats"></div>
+
+          <div class="legend">
+            <span><i class="g battle">X</i> battle</span>
+            <span><i class="g rest">Z</i> rest</span>
+            <span><i class="g elite">*</i> elite</span>
+            <span><i class="g port">$</i> port</span>
+            <span><i class="g event">?</i> event</span>
+            <span><i class="g boss">!</i> boss</span>
+            <span><i class="g root">◯</i> root ring</span>
+          </div>
+
+          <h2 class="strip-title">Variety <span class="sub">(same knobs, next 8 seeds — click to load)</span></h2>
+          <div id="thumbs" class="thumbs"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./nodemap-viz.ts"></script>
+  </body>
+</html>

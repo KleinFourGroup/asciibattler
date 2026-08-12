@@ -219,9 +219,10 @@ worklog §77.
 
 Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
 
-- [ ] 77a — visualizer: `tools/nodemap-viz/` over the pure
-  `generate()` (seed/config sandbox, kind coloring) + the
-  tools-index card re-describe; no sim change
+- [x] 77a — visualizer ✅ 2026-08-12: `tools/nodemap-viz/` live
+  (seed/dial sandbox + variety strip; 50-seed config-parity probe
+  OK; all dials DOM-proven); card re-described; native eyeball
+  rides with the user
 - [ ] 77b — `mapMetrics.ts` (the three metrics, pure) + corpus
   report + visualizer overlay; BASELINE READ of the current
   generator → worklog (confirm-the-deficit, numbers for 77c)

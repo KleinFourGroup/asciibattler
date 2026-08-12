@@ -190,9 +190,10 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 - [x] 76g4 — ✅ 2026-08-11: pulse Doppler → the `__auraFx`
   track/fill/fixed switch; track default, fill HELD for a wider jury
   (TODO "Aura-FX mode") (worklog §76g4)
-- [ ] 76h — the board amendment run (box; 68h trigger) + signing
-  session: act-1/forced-boss re-pins expected; signed trio never
-  silently re-pins; fire-channel + camps-leak pre-registered
+- [x] 76h — ✅ user-signed 2026-08-11: 15/15 on the box at `3a0b48e`,
+  0 FAIL / 7 WARN (composition ROTATED — act-1+fire healed, walls
+  flipped hardened, walk ceilings negative, gambler flat); three
+  riders + the n=120 protocol → §82 (BALANCE 2026-08-11, worklog §76h)
 - [ ] 76i — docs close: DESIGN/ARCHITECTURE + gotchas if earned +
   ROADMAP demote + cursor flip
 
@@ -334,4 +335,17 @@ closing board + the re-signed sheet; then the close ritual
   the dose re-bracket · the FIRE-CHANNEL re-read — inverted at 75l
   (−0.075, statistically weak, 5–2 discordant); discriminate with
   `--event-chance=0` on the doctrine pair, and re-derive the vector
-  pair on era content if it stays flat.
+  pair on era content if it stays flat (76h note: it read +0.050
+  in-band — the alarm retires to a routine confirm).
+- **76h riders (user-signed 2026-08-11):** the WALL-FLIP attribution
+  — the walk walls moved pull-softened→hardened (0.412/0.481, above
+  the signed 30–35); §76's movers are confounded (critable-universal
+  / prc-eva / camps-leak) and now entangled with the pull question —
+  one `--set` bracket owns both · the NEGATIVE WALK CEILINGS (arb
+  −10/−12.5 vs doctrine, paired; plausibly the same wall phenomenon
+  via horizon blindness) · the gambler premise UPDATE: §76's organic
+  luck movers did not close the gap (regen-shape −22.5) · ⭐ the
+  n=120 PROTOCOL (user call, 2026-08-11): §82's decision-feeding
+  arms extend 40→120 seeds via `--seed-offset` 41..120 POOLED with
+  the 76h batches (determinism makes the first 40 free) — per-arm SE
+  ±7.7→±4.5, clears the n=80 per-item floor (worklog §76h).

@@ -2315,3 +2315,18 @@ the user: (1) wall-flip attribution — `--set` ablation bracket now
 vs ride to §82 with the pull question · (2) the negative walk
 ceilings — flag vs probe · (3) the gambler premise update for the
 §82 rider · (4) accept the board as the §76h green.
+
+**Signed (user, 2026-08-11):** the board accepted as the §76h green;
+all three riders ride to §82 (the wall probe deliberately deferred —
+one `--set` bracket will own the flip + the pull together). **Plus a
+protocol call raised by the user's noise question: §82's
+decision-feeding arms run n=120.** The honest arithmetic that framed
+it: at n=40 a win-rate carries SE ≈ ±7.7 pts (independent-arm
+differences ±11), so the gambler drop and the ceiling deltas are
+1–2σ — suggestive, not settled (the paired ceilings do better than
+independent since discordant pairs govern); only the wall move
+clears noise comfortably. At n=120: SE ±4.5, differences ±6.4, and
+the n=80 per-item floor clears so decisions.csv reads become
+citable. Determinism makes the upgrade cheap: `--seed-offset`
+extends 41..120 and POOLS with the 76h batches — the first 40 seeds
+are already paid for. Riders + protocol recorded in ROADMAP §82.

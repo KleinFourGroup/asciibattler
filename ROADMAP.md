@@ -229,11 +229,10 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
 - [x] 77d1 — ✅ 2026-08-12: `deriveSeed`/`deriveRng` + the 22-key
   registry + pinned vectors + independence tests; additive,
   fork() untouched (worklog §77d1)
-- [ ] 77d2 — the Run conversion: per-occurrence derivation on
-  stable keys (nodeId/sectorIndex/turnIndex; serialized counters
-  only where no natural id), the 9 serialized streams retire,
-  `streamRoot` for rollout divergence (CRN preserved) —
-  **RunSnapshot v41→v42**; exact canaries re-pinned in-commit
+- [x] 77d2 — ✅ 2026-08-12: the Run conversion landed to plan —
+  **v41→v42** (streamRoot + 3 counters replace 10 RNG states);
+  rollout re-seed = ONE field; port canary re-pinned 3→2
+  (worklog §77d2)
 - [ ] 77d3 — battleSetup/World + bot-clone derivation (burn fork +
   alignment fork deleted; camp identity stays per-encounter;
   trace-replay path converted with it); World v35 predicted HOLDS;

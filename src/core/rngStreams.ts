@@ -20,23 +20,24 @@
  */
 
 export const RNG_STREAM_KEYS = [
-  // --- the Run ladder (wired at 77d2) ---
-  'sector', //     (sectorIndex)            — sector-DAG successor pick
-  'nodemap', //    (sectorIndex)            — node-map generation for the sector
-  'boss', //       (sectorIndex)            — the boss pre-roll (66a forewarning)
-  'team', //       ()                       — the starting roster
-  'levelup', //    (unitId, level)          — per-unit level-up rolls
-  'deck', //       (shuffleIndex)           — draw-pile shuffles (serialized counter)
-  'daemon', //     (sectorIndex, nodeId)    — daemon/instant-hook draws at a node
-  'reward', //     (sectorIndex, nodeId)    — the reward-phase table rolls
-  'rewardBits', // (sectorIndex, nodeId)    — the bits-payout roll
-  'portStock', //  (sectorIndex, nodeId)    — port inventory (node-anchored: seed-fixed per node)
-  'portPrice', //  (sectorIndex, nodeId)    — port price jitter
-  'event', //      (sectorIndex, nodeId)    — event pool pick + page rolls at a node
-  'map', //        (sectorIndex, nodeId)    — encounter selection + battlefield roll
-  'battle', //     (turnIndex)              — per-turn battle stream (worldSeed, waves)
-  'offer', //      (sectorIndex, nodeId)    — the post-battle recruit draft
-  'rolloutRoot', //(rolloutSeed)            — a bot clone's REPLACEMENT streamRoot (CRN divergence)
+  // --- the Run ladder (wired at 77d2; an "occurrence" is one atomic
+  //     synchronous resolution — a snapshot can never land inside one) ---
+  'sector', //     (sectorIndex)                    — sector-DAG successor pick
+  'nodemap', //    (sectorIndex)                    — node-map generation for the sector
+  'boss', //       (sectorIndex)                    — the boss pre-roll (66a forewarning)
+  'team', //       ()                               — the starting roster + construction grants
+  'levelup', //    (sectorIndex, nodeId, turnIndex) — one XP-banking call's level rolls
+  'deck', //       (shuffleIndex)                   — one pile shuffle (serialized counter)
+  'daemon', //     (sectorIndex, nodeId, site, turnIndex) — one hook resolution (site 0=start 1=turn 2=end)
+  'reward', //     (sectorIndex, nodeId, turnIndex) — one turn boundary's table rolls
+  'rewardBits', // (sectorIndex, nodeId, turnIndex) — one turn boundary's bits rolls
+  'portStock', //  (sectorIndex, nodeId)            — port inventory (node-anchored: seed-fixed per node)
+  'portPrice', //  (sectorIndex, nodeId)            — port price jitter
+  'event', //      (eventStep)                      — one event occurrence: node entry OR one choice resolution (serialized counter)
+  'map', //        (sectorIndex, nodeId)            — encounter selection + battlefield roll
+  'battle', //     (sectorIndex, nodeId, turnIndex) — one turn's battle stream (worldSeed, waves)
+  'offer', //      (sectorIndex, nodeId)            — the post-battle recruit draft
+  'rolloutRoot', //()  root = rolloutSeed           — a bot clone's REPLACEMENT streamRoot (CRN divergence)
   // --- the battle/world side (wired at 77d3; root = terrainSeed) ---
   'terrain', //    ()                       — battlefield terrain generation
   'spawnSetup', // ()                       — spawn-region pick + per-team shuffles

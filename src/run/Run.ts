@@ -42,7 +42,8 @@
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents, PromotionInfo } from '../core/events';
 import { glyphForArchetype, ALL_ARCHETYPES } from '../sim/archetypes';
-import { RNG, type RNGSnapshot } from '../core/RNG';
+import { RNG, deriveRng } from '../core/RNG';
+import type { RngStreamKey } from '../core/rngStreams';
 import type { UnitTemplate } from '../sim/Unit';
 import { rollUnit } from '../sim/archetypes';
 import { generate as generateNodeMap, stampRootKind, PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from './NodeMap';
@@ -438,8 +439,20 @@ export interface BattleEncounter {
  *  record; EXEMPT from the advanceSector reset by enumeration — the reset
  *  touches only fields it names), and `pendingRewardOverride` (a
  *  start-encounter terminal's pinned reward table, cleared at
- *  finishEncounter). A v40 save predates the event phase → reject. */
-const RUN_SCHEMA_VERSION = 41;
+ *  finishEncounter). A v40 save predates the event phase → reject.
+ *  77d2: bumped 41→42. THE KEYED-DERIVATION CONVERSION (the §77 scheduled
+ *  seed-stream break — every seed remaps): the ten serialized RNG states
+ *  (`rng` + the nine E4→74b streams) RETIRE, replaced by `streamRoot` +
+ *  three occurrence counters (`sectorIndex` / `deckShuffleIndex` /
+ *  `eventStep`). Every stream now derives per-occurrence as
+ *  `deriveRng(streamRoot, key, ...stableIds)` (src/core/rngStreams.ts is
+ *  the key registry; keys are PERMANENT). Kills the append-coupling class
+ *  (H5/L1/48b/50d/74b each paid a global re-baseline to add a stream) and
+ *  the #49 draw-count class at the seams; outcomes become NODE-ANCHORED
+ *  (a port's stock is seed-fixed regardless of route — user-signed).
+ *  `cloneRunForRollout` now overrides ONE field. A v41 save carries
+ *  stream states the derivation model can't resume → reject. */
+const RUN_SCHEMA_VERSION = 42;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -494,33 +507,27 @@ export interface EncounterMap {
 
 export interface RunSnapshot {
   schemaVersion: typeof RUN_SCHEMA_VERSION;
-  rng: RNGSnapshot;
-  /** E4: separate stream for level-up stat rolls, forked from `rng` at
-   *  Run construction. Lives independently so adding/removing a level-up
-   *  source doesn't shift other run-RNG draws. */
-  levelupRng: RNGSnapshot;
-  /** H5: dedicated stream for deck shuffles + draws, forked from `rng` at
-   *  construction (isolated like `levelupRng`). */
-  deckRng: RNGSnapshot;
-  /** L1: dedicated stream for the daemon roll + per-turn gate chance flips,
-   *  forked from `rng` at construction (isolated like `levelupRng`). */
-  daemonRng: RNGSnapshot;
-  /** 48b: dedicated stream for reward chance tests + table sampling (the
-   *  draw count is filter-dependent — isolation is load-bearing). */
-  rewardRng: RNGSnapshot;
-  /** 48b: dedicated stream for reward bits `{min,max}` rolls. */
-  rewardBitsRng: RNGSnapshot;
-  /** 50d: dedicated stream for port stock composition (unit/packet/daemon
-   *  sampling — draw count is owned-exclusion-dependent, so isolated). */
-  portStockRng: RNGSnapshot;
-  /** 50d: dedicated stream for port unit-price jitter rolls. */
-  portPriceRng: RNGSnapshot;
-  /** 74b: dedicated stream for event-node draws — the combat-resolve flip,
-   *  the eligibility-filtered event pick, and the per-choice outcome rolls
-   *  (filter-dependent draw counts — the rewardRng isolation rationale).
-   *  Appended LAST in the constructor fork chain; the `cloneRunForRollout`
-   *  re-seed list mirrors this field order (ninth stream). */
-  eventRng: RNGSnapshot;
+  /** 77d2 (v42): THE run randomness root. Every stream is derived
+   *  per-occurrence as `deriveRng(streamRoot, key, ...stableIds)` (the
+   *  keyed-derivation architecture — src/core/rngStreams.ts is the key
+   *  registry); no stream STATE is serialized anymore, because every
+   *  occurrence is atomic between snapshots and re-derives from this root
+   *  plus the stable ids/counters below. Equals the run seed on a live
+   *  run; a rollout clone's wire overrides it (`cloneRunForRollout`) so
+   *  every future occurrence diverges — the clairvoyance guard, one
+   *  field instead of nine re-seeded streams. */
+  streamRoot: number;
+  /** 77d2 (v42): sectors entered so far (0 = the starting sector) — the
+   *  first stable id in every sector-scoped stream key. */
+  sectorIndex: number;
+  /** 77d2 (v42): pile shuffles performed so far — the `'deck'` stream's
+   *  occurrence counter (shuffles have no natural node identity: a
+   *  mid-encounter recycle and the encounter-start shuffle both count). */
+  deckShuffleIndex: number;
+  /** 77d2 (v42): atomic event occurrences resolved so far (a node entry
+   *  or one choice resolution) — the `'event'` stream's occurrence
+   *  counter (page routing can revisit a page, so no natural id). */
+  eventStep: number;
   /** 50d: the docked port's rolled stock (null undocked) — a mid-dock save
    *  restores the exact stock, prices, and sold flags (the pending-offer
    *  pattern). Packet/daemon ids re-validate against the catalogs on load
@@ -666,41 +673,20 @@ export interface RunTriggerContextMap {
 const { startingLevel: STARTING_LEVEL } = RECRUITMENT;
 
 export class Run {
-  readonly rng: RNG;
-  /** E4: dedicated stream for level-up stat rolls. Forked once at
-   *  construction so `simulateLevelUps` draws here, not against the
-   *  parent stream that drives nodeMap + battle picks. */
-  readonly levelupRng: RNG;
-  /** H5: dedicated stream for deck shuffles + draws. Forked once at
-   *  construction (isolated like `levelupRng`), so deck draws don't perturb
-   *  the per-turn `battleRng` forks off `this.rng`. */
-  readonly deckRng: RNG;
-  /** L1: dedicated stream for the daemon roll + per-turn gate chance flips
-   *  (Mercury's coin). Forked once at construction (isolated like
-   *  `levelupRng`), so a chance-gated daemon doesn't perturb any other stream. */
-  readonly daemonRng: RNG;
-  /** 48b: dedicated stream for reward-ref chance tests + table sampling.
-   *  Isolated because the draw count is FILTER-DEPENDENT (owned-daemon
-   *  exclusion can collapse a table to a zero-draw singleton — gotcha #111),
-   *  so it must never share a stream with anything else. */
-  readonly rewardRng: RNG;
-  /** 48b: dedicated stream for bits `{min,max}` rolls (the spec's "bits
-   *  rolls, table sampling ... EACH get dedicated forked RNG streams"). */
-  readonly rewardBitsRng: RNG;
-  /** 50d: dedicated stream for port stock COMPOSITION (unit archetype/level
-   *  rolls, packet sampling, daemon sampling). Isolated because the daemon
-   *  sample's draw count is owned-exclusion-dependent (the rewardRng
-   *  rationale) — ownership differences must never shift another stream. */
-  readonly portStockRng: RNG;
-  /** 50d: dedicated stream for port unit-price JITTER rolls (the spec's
-   *  "randomly chosen price"; `config/prices.json#units.jitter`). */
-  readonly portPriceRng: RNG;
-  /** 74b: dedicated stream for event-node draws — the combat-resolve flip,
-   *  the eligibility-filtered event pick, and the per-choice outcome rolls.
-   *  Isolated because eligibility filters make draw counts filter-dependent
-   *  (the rewardRng rationale). Forked LAST at construction (the
-   *  append-at-end discipline); ninth in the rollout re-seed list. */
-  readonly eventRng: RNG;
+  /** 77d2 (v42): the run randomness root — see RunSnapshot.streamRoot.
+   *  Every stream is a per-occurrence derivation off this root
+   *  (`this.streamRng(key, ...ids)`); the E4→74b positional fork ladder
+   *  and its nine long-lived stream fields are RETIRED. Stream isolation
+   *  (the old per-field rationale: filter-dependent draw counts must not
+   *  perturb siblings) is now structural — every occurrence has its own
+   *  derived stream, so nothing can perturb anything. */
+  readonly streamRoot: number;
+  /** 77d2 (v42): sectors entered (0 = the start) — see RunSnapshot. */
+  private sectorIndex: number;
+  /** 77d2 (v42): shuffles performed — the 'deck' occurrence counter. */
+  private deckShuffleIndex: number;
+  /** 77d2 (v42): event occurrences resolved — the 'event' counter. */
+  private eventStep: number;
   /** 50d: the docked port's stock — see `PortStock`. Null undocked; rolled
    *  at dock (`handleEnterNode`), cleared at `leavePort`, serialized while
    *  docked (v35). */
@@ -896,7 +882,7 @@ export class Run {
   waveCursor: WaveCursor | null = null;
   /**
    * K3.5 — the active encounter's battlefield: layout/size/terrain/theme rolled
-   * ONCE in `beginEncounter` (a dedicated `this.rng` fork); every turn's
+   * ONCE in `beginEncounter` (the 'map' occurrence stream, 77d2); every turn's
    * `beginTurn` fights on it. Null outside an encounter (cleared in
    * `finishEncounter`; rest nodes never set it). Persisted (v14) — it is NOT
    * re-derivable per turn, so a mid-encounter restore must carry it.
@@ -1008,26 +994,24 @@ export class Run {
 
   constructor(seed: number, bus: EventBus<GameEvents>, config?: RunConfig) {
     this.bus = bus;
-    this.rng = new RNG(seed);
-    // 63c — resolve the starting character FIRST (pure of RNG — no draw, so
-    // the fork alignment below is untouched). Unset → The Soldier, so every
-    // bare headless constructor keeps working; the boot assert in
+    // 77d2 — the keyed-derivation root replaces `this.rng` and the whole
+    // E4→74b positional fork ladder. There is no fork ORDER to keep
+    // aligned anymore: every stream derives per-occurrence off this root
+    // (`streamRng`), so overrides/appends can't shift siblings by
+    // construction. A DELIBERATE stream break vs v41 (every seed remaps —
+    // the §77-scheduled re-baseline; worklog §77d2).
+    this.streamRoot = seed >>> 0;
+    this.sectorIndex = 0;
+    this.deckShuffleIndex = 0;
+    this.eventStep = 0;
+    // 63c — resolve the starting character FIRST. Unset → The Soldier, so
+    // every bare headless constructor keeps working; the boot assert in
     // characters.ts guarantees the default resolves, but stay loud anyway.
     const character = config?.character ?? characterById(DEFAULT_CHARACTER_ID);
     if (character === undefined) {
       throw new Error(`Run: default character '${DEFAULT_CHARACTER_ID}' missing from the catalog`);
     }
     this.character = character;
-    // Fork order is the determinism invariant (sector+nodeMap → team → levelup).
-    // Each override only changes a forked *child* stream's content, never how
-    // many times the parent is forked — so the default path stays byte-identical
-    // and a configured run keeps the same parent alignment. (G1)
-    // T2 — the first fork now picks the run's opening sector off the
-    // sector-selection DAG, THEN generates that sector's node-map on the SAME
-    // forked stream. `pickStartSector` consumes zero draws when the source +
-    // sector lists are singletons (the shipped one-node DAG), so the node-map
-    // generation begins at the identical stream position as the pre-T2 run —
-    // and "The Start" (length 11 == HOP_COUNT) reproduces the same map.
     this.sectorMap = config?.sectorMap ?? SECTOR_MAP;
     // G1/X2→66a — the two force flags resolve BEFORE the first fork: the
     // boss pre-roll below honors both, and resolution is pure of RNG (no
@@ -1052,11 +1036,15 @@ export class Run {
     this.singleSectorRun = config?.hopCount !== undefined;
     this.sectorHopsOverride = config?.sectorHops;
     this.sectorScatterConfig = sectorAdvanceConfig(config);
-    const sectorRng = this.rng.fork();
-    const start = pickStartSector(this.sectorMap, sectorRng);
+    // 77d2 — the three sector-scoped streams, one per consumer (the T2-era
+    // shared `sectorRng` retired): the DAG pick, the node-map generation,
+    // and the 66a boss pre-roll each own a derived stream, so a draw-count
+    // change in one (e.g. the 77e generator rework) can never move the
+    // others.
+    const start = pickStartSector(this.sectorMap, this.streamRng('sector', 0));
     this.currentSectorNodeId = start.sectorNodeId;
     this.currentSectorId = start.sectorId;
-    this.nodeMap = generateNodeMap(sectorRng, config, this.currentSectorLength());
+    this.nodeMap = generateNodeMap(this.streamRng('nodemap', 0), config, this.currentSectorLength());
     // 74e — the startingEvents root stamp (zero-draw; the `firstNodeKind`
     // dev dial WINS when set — isolation power, the 63c precedence rule).
     // 74i-c — the dial beats the POOL choice too (see enterEventNode): a
@@ -1065,14 +1053,11 @@ export class Run {
     // event. NOT persisted (the forcedEventId discipline).
     this.rootStampedByDial = config?.firstNodeKind === 'event';
     if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
-    // 66a — pre-roll the sector's boss (the forewarning pair) on the SAME
-    // sector fork, after the node-map draws. The parent `this.rng` fork
-    // count is untouched, so every pre-boss stream stays seed-identical —
-    // the deliberate stream break surfaces only at the boss fight itself.
-    const bossRoll = this.rollBossForSector(sectorRng);
+    // 66a — pre-roll the sector's boss (the forewarning pair).
+    const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
     this.bossEncounterId = bossRoll.bossEncounterId;
     this.bossEncounterMap = bossRoll.bossEncounterMap;
-    const teamRng = this.rng.fork();
+    const teamRng = this.streamRng('team');
     // 63c — the starting roster comes from the character def (an explicit
     // `startingRoster` override still wins — the kickoff precedence fork).
     // The Soldier's list reproduces the retired `rollTeam` sequence exactly
@@ -1111,21 +1096,9 @@ export class Run {
     this.enemyHealth = 0;
     this.turnIndex = 0;
     this.encounterMap = null;
-    this.levelupRng = this.rng.fork();
-    // H5 — fork the deck stream LAST (after levelup), consistent with the
-    // append-at-the-end fork convention. This extra construction fork shifts
-    // every subsequent `this.rng.fork()` (per-turn waves, recruit offers), so
-    // H5 re-baselines the fuzz output — acceptable, since the seam swap + the
-    // drawn-hand subset already change battle outcomes wholesale.
-    this.deckRng = this.rng.fork();
-    // L1→63c — the daemon stream, appended after deck (same convention, same
-    // fuzz-re-baseline note as H5). The FORK stays load-bearing (per-turn
-    // grant chance flips + instant hooks ride it) but the L1 run-start ROLL
-    // is retired: characters replaced it (the kickoff lock), so the stream's
-    // first draw is now the first turn's grant resolution — every
-    // daemonRng-downstream draw shifts by one vs pre-63c (the predicted
-    // default-baseline change; offers ride recruitRng and are untouched).
-    this.daemonRng = this.rng.fork();
+    // 77d2 — the E4→74b construction-fork ladder used to live here (nine
+    // long-lived streams, each append a paid global re-baseline). All
+    // retired: streams derive per-occurrence at their consumer sites.
     // 47d→63c — the ownership list seeds from the character def; an explicit
     // `config.daemon` override (incl. null = daemon-less) still wins — the
     // kickoff precedence fork, which keeps the fuzz control/fixed arms
@@ -1136,26 +1109,6 @@ export class Run {
           ? []
           : [config.daemon]
         : [this.resolveCharacterDaemon()];
-    // 48b — the two reward streams, appended after daemon (the same
-    // convention + fuzz-re-baseline note as H5/L1). Sampling and bits rolls
-    // are SEPARATE streams because the sampling draw count is
-    // filter-dependent (owned-daemon exclusion → zero-draw singletons).
-    this.rewardRng = this.rng.fork();
-    this.rewardBitsRng = this.rng.fork();
-    // 50d — the two port streams, appended LAST (the append-at-end fork
-    // discipline). Composition and price jitter are separate because the
-    // daemon sample's draw count is owned-exclusion-dependent (the reward
-    // two-stream rationale) — prices must not shift when ownership does.
-    this.portStockRng = this.rng.fork();
-    this.portPriceRng = this.rng.fork();
-    // 74b — the event stream, appended LAST (the append-at-end fork
-    // discipline). Same cost as every prior append (the H5/L1/48b/50d
-    // precedent): the extra construction fork shifts every subsequent
-    // `this.rng.fork()` (per-encounter mapRng, offers, sector advances), so
-    // 74b re-baselines seed outcomes EVEN THOUGH no event node is placeable
-    // until §74e — the kickoff's "byte-identical through 74a–74d" claim was
-    // wrong on exactly this point (worklog §74 correction).
-    this.eventRng = this.rng.fork();
     this.turnGrants = disabledTurnGrants();
     // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
     this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
@@ -1170,11 +1123,11 @@ export class Run {
       levelBudget: config?.levelBudgetMultiplier,
       bits: config?.bitsMultiplier,
     });
-    // 68b — the grant seam, applied LAST (every store it appends to exists,
-    // and the fork ladder above is complete). Daemon/packet grants draw
-    // nothing; a unit grant levels off the abandoned `teamRng` CHILD stream
-    // — never the parent — so an inert grant leaves the run byte-identical
-    // and no grant shifts the per-turn parent forks (the G1 contract).
+    // 68b — the grant seam, applied LAST (every store it appends to
+    // exists). Daemon/packet grants draw nothing; a unit grant levels off
+    // the 'team' occurrence stream — construction-scoped, so an inert
+    // grant leaves the run byte-identical and no grant touches any other
+    // stream (structural under 77d2's keyed derivation).
     for (const id of config?.grants ?? []) this.applyGrant(id, teamRng);
     // S2 — the run begins at the virtual pre-root position (no node entered
     // yet); the root is the sole frontier, so it's selected as the first
@@ -1183,6 +1136,18 @@ export class Run {
     this.visitedNodes = new Set<number>();
     this.subscribe();
     bus.emit('run:started', { seed });
+  }
+
+  /**
+   * 77d2 — one occurrence's stream: `deriveRng(streamRoot, key, ...ids)`.
+   * The ids are the occurrence's STABLE identifiers per the registry's
+   * per-key signature (src/core/rngStreams.ts) — never a draw position.
+   * Every call returns a FRESH stream at position 0; an occurrence is
+   * atomic (one synchronous resolution), so no stream state is ever
+   * serialized — resume re-derives from `streamRoot` + the ids.
+   */
+  private streamRng(key: RngStreamKey, ...ids: readonly number[]): RNG {
+    return deriveRng(this.streamRoot, key, ...ids);
   }
 
   /**
@@ -1387,7 +1352,7 @@ export class Run {
       this.phase = 'port';
       // 50d — the stock rolls ONCE, at dock (spec §Ports: "on node entry"),
       // then serializes with the save. No rerolls, no re-visits.
-      this.portStock = this.rollPortStock();
+      this.portStock = this.rollPortStock(nodeId);
       this.bus.emit('port:entered', { nodeId });
       return;
     }
@@ -1424,7 +1389,7 @@ export class Run {
    * rolls FIRST, globally, before any event is picked — keeps event defs
    * pure, and the fold-routed chance is the daemon seam. Exactly ONE draw
    * per entry regardless of the chance value (the gotcha-#49 always-draw
-   * discipline), riding the dedicated `eventRng`. A resolve (or an empty
+   * discipline), riding the node-entry occurrence stream (77d2). A resolve (or an empty
    * eligible pool — flag-gated chains can starve the pool) degrades to a
    * normal fight: KIND_BY_NODE maps 'event' → the sector's normal pool.
    *
@@ -1444,9 +1409,13 @@ export class Run {
       nodeId === this.nodeMap.rootId &&
       sector.startingEvents.length > 0 &&
       !this.rootStampedByDial;
-    const roll = this.eventRng.next();
+    // 77d2 — the node-entry occurrence: the combat flip + the pool pick
+    // ride one derived stream; the serialized counter advances whether or
+    // not a page opens (the #49 always-draw discipline, occurrence-form).
+    const entryRng = this.streamRng('event', this.eventStep++);
+    const roll = entryRng.next();
     const combatResolved = roll < this.effectiveEventCombatChance() && !fromStartingPool;
-    const eventDef = combatResolved ? null : this.rollEventForNode(fromStartingPool);
+    const eventDef = combatResolved ? null : this.rollEventForNode(fromStartingPool, entryRng);
     if (eventDef === null) {
       this.phase = 'battle';
       this.beginEncounter();
@@ -1474,10 +1443,10 @@ export class Run {
    * over the survivors (weight absent = 1; singletons still draw — #111
    * applied forward). Null = nothing eligible (the caller degrades to a
    * fight). Draw count is 1 or 0 (forced/empty) — never
-   * filter-size-dependent (eventRng is the filter-dependent stream by
-   * design, but a stable count keeps reasoning cheap).
+   * filter-size-dependent (isolation is structural under 77d2's
+   * per-occurrence streams, but a stable count keeps reasoning cheap).
    */
-  private rollEventForNode(fromStartingPool: boolean): EventDef | null {
+  private rollEventForNode(fromStartingPool: boolean, entryRng: RNG): EventDef | null {
     if (this.forcedEventId !== null) {
       const forced = this.eventCatalog.find((e) => e.id === this.forcedEventId);
       if (forced === undefined) {
@@ -1506,7 +1475,7 @@ export class Run {
     }
     if (eligible.length === 0) return null;
     const total = eligible.reduce((sum, e) => sum + e.weight, 0);
-    const draw = this.eventRng.next() * total;
+    const draw = entryRng.next() * total;
     let acc = 0;
     for (const e of eligible) {
       acc += e.weight;
@@ -1532,9 +1501,13 @@ export class Run {
     }
     const choice = page.choices[choiceIndex]!;
     if (choice.condition !== undefined && !this.evaluateEventCondition(choice.condition)) return;
-    const outcome = this.rollEventOutcome(choice.outcomes);
+    // 77d2 — one choice resolution = one atomic occurrence: the outcome
+    // roll + every effect op ride one derived stream (a snapshot can land
+    // between choices, never inside one — the counter is serialized).
+    const choiceRng = this.streamRng('event', this.eventStep++);
+    const outcome = this.rollEventOutcome(choice.outcomes, choiceRng);
     for (const op of outcome.effects ?? []) {
-      this.executeEventOp(op);
+      this.executeEventOp(op, choiceRng);
       if (this.phase !== 'event') return; // damagePool killed the run
     }
     this.resolveEventNext(outcome.next);
@@ -1542,9 +1515,9 @@ export class Run {
 
   /** 74b — one cumulative-weight draw over the outcome list (weight absent
    *  = 1, the sector-pool convention; schema-positive so no zero-divide). */
-  private rollEventOutcome(outcomes: readonly EventOutcome[]): EventOutcome {
+  private rollEventOutcome(outcomes: readonly EventOutcome[], choiceRng: RNG): EventOutcome {
     const total = outcomes.reduce((sum, o) => sum + (o.weight ?? 1), 0);
-    const roll = this.eventRng.next() * total;
+    const roll = choiceRng.next() * total;
     let acc = 0;
     for (const outcome of outcomes) {
       acc += outcome.weight ?? 1;
@@ -1562,7 +1535,7 @@ export class Run {
    * throws are reserved for catalog corruption (unknown ids reachable only
    * through a bespoke `eventCatalog` — the shipped one is boot-asserted).
    */
-  private executeEventOp(op: EventEffectOp): void {
+  private executeEventOp(op: EventEffectOp, choiceRng: RNG): void {
     switch (op.op) {
       case 'gainBits':
         // The earn-site fold applies (bitsGain × difficulty) — events are an
@@ -1632,22 +1605,22 @@ export class Run {
           // loud beats rollUnit crashing on a missing config.
           throw new Error(`Run: event op grantUnit names unknown archetype '${op.archetype}'`);
         }
-        // The level roll rides eventRng (the landing note's natural home);
-        // rollUnit draws nothing at level ≤ 1 (no-choice-no-entropy).
-        this.appendRosterUnit(rollUnit(op.archetype as Archetype, this.eventRng, op.level ?? 1));
+        // The level roll rides the choice occurrence's stream (the landing
+        // note's home); rollUnit draws nothing at level ≤ 1.
+        this.appendRosterUnit(rollUnit(op.archetype as Archetype, choiceRng, op.level ?? 1));
         break;
       }
       case 'removeUnit': {
         // 74c — the roster can't be emptied (removeRosterUnit's own law):
         // a roster-of-1 removal is a silent no-op (authors gate with
-        // `rosterSizeAtLeast`). `random` draws ONE eventRng index;
+        // `rosterSizeAtLeast`). `random` draws ONE occurrence-stream index;
         // weakest/strongest are deterministic — level, tie → lowest roster
         // index (user-signed) — and draw nothing.
         if (this.team.length <= 1) break;
         const pick = op.pick ?? 'random';
         let index: number;
         if (pick === 'random') {
-          index = this.eventRng.int(0, this.team.length - 1);
+          index = choiceRng.int(0, this.team.length - 1);
         } else {
           index = 0;
           for (let i = 1; i < this.team.length; i++) {
@@ -1770,16 +1743,21 @@ export class Run {
    *   draftable archetypes at team-scaled levels with the geometric bonus;
    *   port recruits ARE recruits, the spec's wire-in-identically lock), each
    *   priced by the price book's base × level curve, then JITTERED
-   *   (`±units.jitter`, the spec's "randomly chosen price") off
-   *   `portPriceRng` and floored at 1.
+   *   (`±units.jitter`, the spec's "randomly chosen price") off the
+   *   'portPrice' occurrence stream and floored at 1.
    * - PACKETS: distinct catalog sample at flat price-book prices.
    * - DAEMONS: distinct sample from the OWNED-EXCLUDED catalog (the reward
    *   exclusion discipline) at flat prices; fewer unowned than the count →
    *   fewer slots (possibly zero — a maxed collector sees an empty shelf).
-   * Composition draws ride `portStockRng` in a fixed order (units →
-   * packets → daemons); only the daemon sample's count varies.
+   * Composition draws ride the 'portStock' occurrence stream in a fixed
+   * order (units → packets → daemons); only the daemon sample's count
+   * varies. 77d2 — both streams key on (sectorIndex, nodeId): a port's
+   * stock and prices are NODE-ANCHORED, seed-fixed regardless of the
+   * route taken to reach it (the signed node-anchored semantics).
    */
-  private rollPortStock(): PortStock {
+  private rollPortStock(nodeId: number): PortStock {
+    const stockRng = this.streamRng('portStock', this.sectorIndex, nodeId);
+    const priceRng = this.streamRng('portPrice', this.sectorIndex, nodeId);
     const counts = PRICES.portStock;
     const baseLevel = Math.round(avgTeamLevel(this.team));
     // 64c — Portunus: the first ⌊fold⌋ slots are tier-forced to legendary,
@@ -1792,7 +1770,7 @@ export class Run {
       () => 'legendary' as const,
     );
     const units: PortUnitSlot[] = rollOffer(
-      this.portStockRng,
+      stockRng,
       counts.units,
       (cardRng) =>
         Math.min(
@@ -1808,7 +1786,7 @@ export class Run {
       forcedTiers,
     ).map((template) => {
       const { jitter } = PRICES.units;
-      const factor = 1 - jitter + this.portPriceRng.next() * 2 * jitter;
+      const factor = 1 - jitter + priceRng.next() * 2 * jitter;
       return {
         template,
         price: Math.max(1, Math.round(unitPrice(template.archetype, template.level) * factor)),
@@ -1818,13 +1796,13 @@ export class Run {
     const packets: PortPacketSlot[] = sampleDistinct(
       PACKETS.map((p) => p.id),
       counts.packets,
-      this.portStockRng,
+      stockRng,
     ).map((packetId) => ({ packetId, price: packetPrice(packetId), sold: false }));
     const owned = new Set(this.daemons.map((d) => d.id));
     const daemons: PortDaemonSlot[] = sampleDistinct(
       DAEMONS.map((d) => d.id).filter((id) => !owned.has(id)),
       counts.daemons,
-      this.portStockRng,
+      stockRng,
     ).map((daemonId) => ({ daemonId, price: daemonPrice(daemonId), sold: false }));
     return { units, packets, daemons };
   }
@@ -1954,11 +1932,12 @@ export class Run {
       this.encounterMap = this.bossEncounterMap;
     } else {
       // V1 — select this node's encounter + its battlefield from the current
-      // sector's pools via the keyed `selectEncounter` resolver (replaces U3's
-      // hold-the-single-reproduction). ONE `mapRng` fork drives BOTH the
-      // selection draws (encounter + layout pick) and the map build — so the
-      // parent stream is forked once per non-boss encounter, as before.
-      const mapRng = this.rng.fork();
+      // sector's pools via the keyed `selectEncounter` resolver. 77d2 — the
+      // 'map' occurrence keys on (sectorIndex, nodeId): ONE derived stream
+      // drives BOTH the selection draws and the map build, and the old
+      // boss-branch hazard (zero forks vs one, diverging the parent stream
+      // by node kind) is gone — there is no parent stream to diverge.
+      const mapRng = this.streamRng('map', this.sectorIndex, this.currentNodeId);
       const selection = selectEncounter(
         this.currentSector(),
         { hop: this.currentHop, nodeKind: this.kindOf(this.currentNodeId) },
@@ -1986,7 +1965,7 @@ export class Run {
     // freshly recruited card is in the deck); hand + discard start empty. The
     // deck is per-encounter — last encounter's pile state is discarded here.
     this.drawPile = this.team.map((_, i) => i);
-    shuffleInPlace(this.drawPile, this.deckRng);
+    shuffleInPlace(this.drawPile, this.streamRng('deck', this.deckShuffleIndex++));
     this.discardPile = [];
     this.hand = [];
     // H3 — counts reset per ENCOUNTER (was per-battle pre-H4); each turn's
@@ -2018,7 +1997,15 @@ export class Run {
     // 47e — daemon `encounterStart` instant hooks fire alongside the K1
     // trigger (no launch daemon authors one — byte-identical until content
     // does; a chance-gated hook here would draw off `daemonRng`).
-    this.executeInstantOps(resolveInstantHooks(this.daemons, 'encounterStart', {}, this.daemonRng));
+    this.executeInstantOps(
+      resolveInstantHooks(
+        this.daemons,
+        'encounterStart',
+        {},
+        // 77d2 — site 0 of the 'daemon' key (start; turn slot 0).
+        this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 0, 0),
+      ),
+    );
     this.startNextTurn();
   }
 
@@ -2186,7 +2173,12 @@ export class Run {
     // `daemonRng` exactly HERE, once per turn, on both the gated + headless
     // paths (path-independent draw count). 49d: the resolution IS the fresh
     // queue — per-grant `used`/`passed` start clean, so no counter resets.
-    const resolution = resolveTurnGrants(this.daemons, this.daemonRng);
+    // 77d2 — site 1 of the 'daemon' key: one occurrence per turn's grant
+    // resolution (the per-turn chance flips ride it).
+    const resolution = resolveTurnGrants(
+      this.daemons,
+      this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 1, this.turnIndex),
+    );
     this.turnGrants = resolution.grants;
     // 47e — the walk's granted instant ops (gainBits/healPool) execute NOW,
     // at the fire site — their coins already flipped in the walk above (one
@@ -2247,10 +2239,10 @@ export class Run {
    * H5b — discard the previous turn's hand and draw the next, run once per turn
    * from `startNextTurn` (BEFORE the pre-turn gate, so `turn:starting` carries
    * the hand). Split out of `beginTurn` so the draw happens once per turn on
-   * both the gated + headless paths. Determinism is unchanged: the lone
-   * `deckRng` draw still fires once/turn in the same order, and `this.rng` (the
-   * per-turn `battleRng` fork in `beginTurn`) is an independent stream — moving
-   * the deck draw earlier in wall-clock doesn't shift it.
+   * both the gated + headless paths. Determinism is unchanged: the deck's
+   * only draw (a possible recycle shuffle) rides its own counter-keyed
+   * occurrence, independent of every other stream — moving the deck draw
+   * earlier in wall-clock can't shift anything (structural, 77d2).
    */
   private drawTurnHand(): void {
     // 65f — per-card through the discard chokepoint (the recycle cues fire
@@ -2652,14 +2644,17 @@ export class Run {
    * `currentEncounter`, and emit `battle:started` for the driver (BattleScene /
    * the headless harness) to build a World.
    *
-   * Determinism: the per-turn `battleRng` is forked from `this.rng` HERE (never
-   * looked ahead / stashed), so the snapshotted `this.rng` alone reconstructs
-   * every future turn's wave — a mid-encounter save/resume reproduces the same
-   * waves. Turn 1 is byte-identical to the pre-H4 single-battle setup
-   * (`enemyBudgetFor` draws no RNG, so the fork + draw order is unchanged).
+   * Determinism (77d2): each turn's stream derives from `streamRoot` +
+   * (sectorIndex, nodeId, turnIndex) — never looked ahead / stashed — so a
+   * mid-encounter save/resume re-derives every future turn's wave from the
+   * root and counters alone.
    */
   private beginTurn(): void {
-    const battleRng = this.rng.fork();
+    // 77d2 — one turn = one 'battle' occurrence, keyed (sectorIndex,
+    // nodeId, turnIndex): worldSeed + the wave rolls ride it, and a prior
+    // encounter's LENGTH can no longer shift a later turn's stream (the
+    // old per-turn positional fork did exactly that).
+    const battleRng = this.streamRng('battle', this.sectorIndex, this.currentNodeId, this.turnIndex);
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
     // K3.5 — the battlefield is the ENCOUNTER's (rolled once in
     // `beginEncounter`); only the world seed above and the enemy wave below
@@ -2855,18 +2850,17 @@ export class Run {
       // reward streams (no new fork — a camp-free turn draws nothing), and
       // sit between the tally and the win roll: earned in the fight, ahead
       // of the encounter loot.
+      // 77d2 — ONE turn-boundary reward occurrence: camp-kill loot + the
+      // won-branch encounter loot ride the same two derived streams, keyed
+      // (sectorIndex, nodeId, turnIndex) — the boundary is atomic.
+      const rewardRng = this.streamRng('reward', this.sectorIndex, this.currentNodeId, this.turnIndex);
+      const rewardBitsRng = this.streamRng('rewardBits', this.sectorIndex, this.currentNodeId, this.turnIndex);
       for (const kill of campKills ?? []) {
         if (kill.killedBy !== 'player') continue;
         const refs = getCamp(kill.defId)?.rewards;
         if (refs === undefined || refs.length === 0) continue;
         portions.push(
-          ...rollRewards(
-            refs,
-            rewardTableById,
-            this.ownedDaemonIds(),
-            this.rewardRng,
-            this.rewardBitsRng,
-          ),
+          ...rollRewards(refs, rewardTableById, this.ownedDaemonIds(), rewardRng, rewardBitsRng),
         );
       }
       // 48b — the winning boundary rolls the encounter's rewards, alongside
@@ -2886,13 +2880,7 @@ export class Run {
             ? [{ table: this.pendingRewardOverride, trigger: { chance: 1 } }]
             : (this.selectedEncounter?.rewards ?? []);
         portions.push(
-          ...rollRewards(
-            rewardRefs,
-            rewardTableById,
-            this.ownedDaemonIds(),
-            this.rewardRng,
-            this.rewardBitsRng,
-          ),
+          ...rollRewards(rewardRefs, rewardTableById, this.ownedDaemonIds(), rewardRng, rewardBitsRng),
         );
       }
       this.pendingRewards = portions.length > 0 ? portions : null;
@@ -3346,8 +3334,8 @@ export class Run {
    * route to game-over.
    *
    * E4 — banking BEFORE rolling the next step means the post-victory screens
-   * already reflect updated levels/stats. Level-up rolls advance `levelupRng`;
-   * the recruit offer's fork is independent.
+   * already reflect updated levels/stats. Level-up rolls ride their own
+   * occurrence stream; the recruit offer's is independent (77d2).
    */
   private finishEncounter(outcome: 'win' | 'defeat'): void {
     // 47e — daemon `encounterEnd` instant hooks fire FIRST, on both
@@ -3355,7 +3343,13 @@ export class Run {
     // matrix pins `won` to this trigger). A defeat-path heal can leave a
     // lost run with a positive pool — harmless, the run is already over.
     this.executeInstantOps(
-      resolveInstantHooks(this.daemons, 'encounterEnd', { won: outcome === 'win' }, this.daemonRng),
+      resolveInstantHooks(
+        this.daemons,
+        'encounterEnd',
+        { won: outcome === 'win' },
+        // 77d2 — site 2 of the 'daemon' key (end; turn slot 0).
+        this.streamRng('daemon', this.sectorIndex, this.currentNodeId, 2, 0),
+      ),
     );
     // K3.5 — the battlefield is encounter-scoped; drop it with the encounter.
     this.encounterMap = null;
@@ -3404,7 +3398,7 @@ export class Run {
       // `round(avgTeamLevel)` base, so a lucky offer shows one over-leveled
       // standout rather than boosting all cards together. Each card's level is
       // clamped to the level cap.
-      const offerRng = this.rng.fork();
+      const offerRng = this.streamRng('offer', this.sectorIndex, this.currentNodeId);
       const baseLevel = Math.round(avgTeamLevel(this.team));
       // 63c — offers draw from the character-governed pools + weights.
       // 64a — the slot count is the folded run stat (The Cornucopia's +1).
@@ -3441,17 +3435,27 @@ export class Run {
    */
   private advanceSector(): void {
     const clearedSectorTitle = this.currentSectorTitle;
-    const sectorRng = this.rng.fork();
-    const next = pickNextSector(this.sectorMap, this.currentSectorNodeId, sectorRng);
+    // 77d2 — the new sector claims the next index FIRST; its three
+    // sector-scoped streams key on it (the constructor's index-0 triple).
+    this.sectorIndex++;
+    const next = pickNextSector(
+      this.sectorMap,
+      this.currentSectorNodeId,
+      this.streamRng('sector', this.sectorIndex),
+    );
     this.currentSectorNodeId = next.sectorNodeId;
     this.currentSectorId = next.sectorId;
-    this.nodeMap = generateNodeMap(sectorRng, this.sectorScatterConfig, this.currentSectorLength());
+    this.nodeMap = generateNodeMap(
+      this.streamRng('nodemap', this.sectorIndex),
+      this.sectorScatterConfig,
+      this.currentSectorLength(),
+    );
     // 74e — the new sector's startingEvents stamp (the scatter slice never
     // carries `firstNodeKind` — that dial is first-sector-only by design).
     this.stampStartingEventRoot();
-    // 66a — the NEW sector's boss pre-rolls on the same fork (forewarning is
-    // sector-scoped: it re-rolls at every sector entry, same as at run start).
-    const bossRoll = this.rollBossForSector(sectorRng);
+    // 66a — the NEW sector's boss pre-rolls on its own sector-scoped stream
+    // (forewarning is sector-scoped: it re-rolls at every sector entry).
+    const bossRoll = this.rollBossForSector(this.streamRng('boss', this.sectorIndex));
     this.bossEncounterId = bossRoll.bossEncounterId;
     this.bossEncounterMap = bossRoll.bossEncounterMap;
     // Back to the pre-root start: the new sector's root is selected like any
@@ -3541,18 +3545,23 @@ export class Run {
    *   2. Add `xpGained` to the template's banked XP.
    *   3. While banked >= `xpToNext(level)` AND level < cap: spend the
    *      threshold, level up, roll new stats via `simulateLevelUps(1)`
-   *      against `levelupRng`. At cap, drain any remaining banked XP
-   *      (no infinite-grind overflow).
+   *      against the call's 'levelup' occurrence stream. At cap, drain any
+   *      remaining banked XP (no infinite-grind overflow).
    *   4. Write the new template back into the roster slot.
    *
    * Deterministic ordering: awards are iterated as received from the
    * event payload, which World produces in unit-iteration order. RNG
-   * draws come off `levelupRng` in that same order. So a snapshot at
-   * any point round-trips identically.
+   * draws come off the occurrence stream in that same order, and the
+   * whole batch is synchronous (atomic between snapshots).
    */
   private bankXpAwards(
     awards: GameEvents['battle:ended']['xpAwards'],
   ): PromotionInfo[] {
+    // 77d2 — one banking call = one 'levelup' occurrence, keyed
+    // (sectorIndex, nodeId, turnIndex): award iteration order is
+    // deterministic (World's unit-iteration order), and the whole batch is
+    // synchronous — a snapshot can't land inside it.
+    const levelupRng = this.streamRng('levelup', this.sectorIndex, this.currentNodeId, this.turnIndex);
     const promotions: PromotionInfo[] = [];
     for (const award of awards) {
       if (award.rosterIndex === null) continue;
@@ -3574,7 +3583,7 @@ export class Run {
           stats,
           growthRatesForArchetype(template.archetype as Archetype),
           1,
-          this.levelupRng,
+          levelupRng,
         );
       }
       if (level >= LEVELING.levelCap) xp = 0;
@@ -3816,7 +3825,7 @@ export class Run {
    * K3 — draw ONE card (factored out of `drawHand`, byte-identical pop +
    * reshuffle order, so the turn draw is unchanged): pop from `drawPile`,
    * reshuffling the discard back in when it's empty (the only RNG draw in the
-   * deck cycle, off the isolated `deckRng`). `undefined` only when BOTH piles
+   * deck cycle, off a fresh counter-keyed 'deck' occurrence). `undefined` only when BOTH piles
    * are exhausted. Shared by the turn draw and the redraw refill.
    */
   private drawCard(): number | undefined {
@@ -3824,7 +3833,7 @@ export class Run {
       if (this.discardPile.length === 0) return undefined;
       this.drawPile = this.discardPile;
       this.discardPile = [];
-      shuffleInPlace(this.drawPile, this.deckRng);
+      shuffleInPlace(this.drawPile, this.streamRng('deck', this.deckShuffleIndex++));
       // 65f — the reshuffle cue (one event for the whole flip; post-flip,
       // pre-pop counts). Cue-not-truth: see the events.ts contract.
       this.bus.emit('deck:reshuffled', {
@@ -3846,15 +3855,12 @@ export class Run {
   toJSON(): RunSnapshot {
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
-      rng: this.rng.toJSON(),
-      levelupRng: this.levelupRng.toJSON(),
-      deckRng: this.deckRng.toJSON(),
-      daemonRng: this.daemonRng.toJSON(),
-      rewardRng: this.rewardRng.toJSON(),
-      rewardBitsRng: this.rewardBitsRng.toJSON(),
-      portStockRng: this.portStockRng.toJSON(),
-      portPriceRng: this.portPriceRng.toJSON(),
-      eventRng: this.eventRng.toJSON(),
+      // 77d2 (v42) — the keyed-derivation root + the three occurrence
+      // counters replace the ten serialized RNG states (see RunSnapshot).
+      streamRoot: this.streamRoot,
+      sectorIndex: this.sectorIndex,
+      deckShuffleIndex: this.deckShuffleIndex,
+      eventStep: this.eventStep,
       // 50d — the docked stock's slots MUTATE in place (`sold`), so the wire
       // image copies each slot (the turnGrants discipline; templates stay by
       // reference — never mutated after the roll).
@@ -3954,6 +3960,10 @@ export class Run {
       eventCatalog: readonly EventDef[];
       forcedEventId: string | null;
       rootStampedByDial: boolean;
+      // 77d2 — the private occurrence counters (streamRoot is public).
+      sectorIndex: number;
+      deckShuffleIndex: number;
+      eventStep: number;
     };
     const m = run as unknown as Mut;
     m.bus = bus;
@@ -3972,12 +3982,12 @@ export class Run {
     // to the shipped difficulty.json defaults (an overridden run can't be saved
     // mid-flight today; a future difficulty system would persist its own source).
     m.difficultyMultipliers = resolveDifficultyMultipliers();
-    m.rng = RNG.fromJSON(snap.rng);
-    m.levelupRng = RNG.fromJSON(snap.levelupRng);
-    m.deckRng = RNG.fromJSON(snap.deckRng);
-    m.daemonRng = RNG.fromJSON(snap.daemonRng);
-    m.rewardRng = RNG.fromJSON(snap.rewardRng);
-    m.rewardBitsRng = RNG.fromJSON(snap.rewardBitsRng);
+    // 77d2 (v42) — the root + counters restore; streams re-derive at their
+    // occurrence sites (nothing else to restore — occurrences are atomic).
+    m.streamRoot = snap.streamRoot;
+    m.sectorIndex = snap.sectorIndex;
+    m.deckShuffleIndex = snap.deckShuffleIndex;
+    m.eventStep = snap.eventStep;
     // 47d — re-resolve owned daemons BY ID from the shipped catalog; an
     // unknown id (retired entry / bespoke daemon) is a hard reject, never a
     // silent drop. The CURRENT turn's resolved grants restore as-is (a save
@@ -4089,17 +4099,14 @@ export class Run {
           return { ...p };
         })
       : null;
-    // 50d — the two port streams + the docked stock. Packet/daemon slot ids
-    // re-validate against the catalogs (the pendingRewards discipline); unit
-    // templates pass through like `team`.
-    // 74b — the event stream + the event-phase state. The cursor's ids
-    // re-validate against the SHIPPED catalog (the daemonIds discipline —
-    // a bespoke `eventCatalog` override is in-memory only, like bespoke
-    // daemons); the pinned reward table re-validates against the tables.
+    // 74b — the event-phase state (the streams themselves re-derive — 77d2).
+    // The cursor's ids re-validate against the SHIPPED catalog (the
+    // daemonIds discipline — a bespoke `eventCatalog` override is in-memory
+    // only, like bespoke daemons); the pinned reward table re-validates
+    // against the tables.
     m.eventCatalog = EVENTS;
     m.forcedEventId = null;
     m.rootStampedByDial = false; // a dial, not state (74i-c)
-    m.eventRng = RNG.fromJSON(snap.eventRng);
     if (snap.activeEvent !== null) {
       const eventDef = getEvent(snap.activeEvent.eventId);
       if (eventDef === undefined) {
@@ -4124,8 +4131,9 @@ export class Run {
       );
     }
     m.pendingRewardOverride = snap.pendingRewardOverride;
-    m.portStockRng = RNG.fromJSON(snap.portStockRng);
-    m.portPriceRng = RNG.fromJSON(snap.portPriceRng);
+    // 50d — the docked stock (its streams re-derive — 77d2). Packet/daemon
+    // slot ids re-validate against the catalogs (the pendingRewards
+    // discipline); unit templates pass through like `team`.
     m.portStock =
       snap.portStock === null
         ? null

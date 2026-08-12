@@ -814,19 +814,22 @@ describe('Run', () => {
       const { run } = freshRunWithBus(1);
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
-      // V1 — the pool comes from the SELECTED encounter (each launch-catalog
-      // fight is pooled at the old global HEALTH.enemyHealthMax, so the value holds).
-      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax);
-      expect(run.enemyHealthPoolMax).toBe(HEALTH.enemyHealthMax);
       // Selection picks one of "The Start"'s pooled encounters — which one is
       // seed-dependent; assert it's a real catalog pick, derived from the live
       // pool (not a frozen name list) so new catalog content can't stale this.
       // Wb4 — the fight pool is per-kind; flatten all kinds for the name check.
       const pool = getSector('the-start')!.encounters;
-      const pooledNames = [...pool.normal, ...pool.elite, ...pool.boss].map(
-        (e) => getEncounter(e.encounterId)!.name,
+      const pooled = [...pool.normal, ...pool.elite, ...pool.boss].map(
+        (e) => getEncounter(e.encounterId)!,
       );
-      expect(pooledNames).toContain(run.currentEncounterName);
+      const selected = pooled.find((e) => e.name === run.currentEncounterName);
+      expect(selected).toBeDefined();
+      // V1 — the pool comes from the SELECTED encounter's AUTHORED healthPool
+      // (77d2 re-derived this from the catalog instead of assuming the old
+      // global HEALTH.enemyHealthMax — some catalog fights pool deeper, and a
+      // stream break re-deals which one seed 1 selects).
+      expect(run.enemyHealth).toBe(selected!.healthPool);
+      expect(run.enemyHealthPoolMax).toBe(selected!.healthPool);
       expect(run.turnIndex).toBe(0); // no turn resolved yet
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
     });
@@ -838,16 +841,19 @@ describe('Run', () => {
       const frontier = frontierOf(run);
       run.dispatch({ kind: 'enterNode', nodeId: frontier });
       expect(starts).toHaveLength(1); // turn 1 spun up
+      // 77d2 — derive the pool from the selected encounter (seed-robust).
+      const pool = run.enemyHealth;
+      expect(pool).toBeGreaterThanOrEqual(2);
 
-      // A 1-power chip can't empty the pool (max >= 2) → another turn starts.
+      // A 1-power chip can't empty the pool (pool >= 2) → another turn starts.
       chipTurn(bus, { player: 1, enemy: 0 });
       expect(run.phase).toBe('battle');
-      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax - 1);
+      expect(run.enemyHealth).toBe(pool - 1);
       expect(run.turnIndex).toBe(1);
       expect(starts).toHaveLength(2); // turn 2 spun up
 
       // A chip >= the remaining pool empties it → encounter won → recruit.
-      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 });
+      chipTurn(bus, { player: pool, enemy: 0 });
       expect(run.enemyHealth).toBe(0);
       acceptAllRewards(run); // 48f — the full catalog carries reward refs
       expect(run.phase).toBe('recruit');
@@ -870,7 +876,9 @@ describe('Run', () => {
       const second = run.nodeMap.edges.find((e) => e.from === first)!.to;
       run.dispatch({ kind: 'enterNode', nodeId: second });
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax - 5); // carried the wound
-      expect(run.enemyHealth).toBe(HEALTH.enemyHealthMax); // reset for the new encounter
+      // 77d2 — reset-to-max derived from the NEW encounter's own pool.
+      expect(run.enemyHealth).toBe(run.enemyHealthPoolMax);
+      expect(run.enemyHealth).toBeGreaterThan(0);
     });
 
     it('loses the run when the player pool empties', () => {
@@ -939,7 +947,7 @@ describe('Run', () => {
       expect(run.team[0]!.level).toBe(1);
       expect(promotions).toEqual([]);
 
-      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 }, [
+      chipTurn(bus, { player: run.enemyHealth, enemy: 0 }, [
         { unitId: 1, rosterIndex: 0, damageDealt: 0, xpGained: half2 },
       ]);
       // The second half crosses → the promotion pauses at the WINNING turn's
@@ -1124,7 +1132,8 @@ describe('Run', () => {
       expect(starting).toHaveLength(1);
       expect(starting[0]!.turn).toBe(1);
       expect(starting[0]!.playerHealth).toBe(HEALTH.playerHealthMax);
-      expect(starting[0]!.enemyHealth).toBe(HEALTH.enemyHealthMax);
+      // 77d2 — the payload's pool is the selected encounter's own.
+      expect(starting[0]!.enemyHealth).toBe(run.enemyHealthPoolMax);
       // The battle hasn't spun up yet — the screen gates it.
       expect(battleStarts).toHaveLength(0);
       expect(run.currentEncounter).toBeNull();
@@ -1150,7 +1159,8 @@ describe('Run', () => {
       expect(resolved[0]!.enemyPoolChip).toBe(1);
       expect(resolved[0]!.playerPoolChip).toBe(2);
       expect(resolved[0]!.result).toBe('ongoing');
-      expect(resolved[0]!.enemyHealth).toBe(HEALTH.enemyHealthMax - 1);
+      // 77d2 — derived from the selected encounter's own pool.
+      expect(resolved[0]!.enemyHealth).toBe(run.enemyHealthPoolMax - 1);
       expect(resolved[0]!.playerHealth).toBe(HEALTH.playerHealthMax - 2);
 
       run.dispatch({ kind: 'advanceTurn' }); // ongoing → next turn's pre-turn gate
@@ -1166,7 +1176,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       expect(run.phase).toBe('battle');
 
-      chipTurn(bus, { player: HEALTH.enemyHealthMax, enemy: 0 }); // lethal → won
+      chipTurn(bus, { player: run.enemyHealth, enemy: 0 }); // lethal → won (pool-derived, 77d2)
       expect(run.phase).toBe('turn-outcome');
       expect(resolved[0]!.result).toBe('won');
 
@@ -2793,7 +2803,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
+      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -2981,7 +2991,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
+      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3307,7 +3317,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(41); // 74b — the event phase
+      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5378,7 +5388,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(41);
+    expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');

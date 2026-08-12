@@ -2597,3 +2597,50 @@ wiring (d2/d3 consume the run/world blocks) — additions never move
 existing streams, so pre-registration is free and gives d2/d3 a
 signed target shape. 'campSetup' carries NO turn index by design
 (the 75j per-encounter identity verdict, preserved).
+
+### 77d2 — the Run conversion (2026-08-12)
+
+Landed to the cut: THE bump (**RunSnapshot v41→v42**) and the
+scheduled global stream break. The shape:
+
+- **RunSnapshot**: `streamRoot` + three occurrence counters
+  (`sectorIndex` / `deckShuffleIndex` / `eventStep`) replace the TEN
+  serialized RNG states (`rng` + the nine E4→74b streams). fromJSON
+  restores the root + counters; streams re-derive at their sites.
+- **The atomicity law** (the conversion's load-bearing design rule,
+  found at the step-zero audit): an occurrence must be ATOMIC
+  between snapshots — one synchronous resolution — or carry a
+  serialized counter. Multi-site streams got site-composite keys:
+  'daemon' = (sectorIndex, nodeId, site 0|1|2, turnIndex) for its
+  three hook sites; 'reward'/'rewardBits' key per turn boundary;
+  'levelup' per XP-banking call (its batch is synchronous); 'event'
+  rides the serialized `eventStep` because page routing can revisit
+  pages (node entry and each choice resolution are the two atomic
+  occurrence shapes; `executeEventOp`/`rollEventOutcome`/
+  `rollEventForNode` now take the occurrence rng as a param).
+- **One stream per consumer**: the old shared `sectorRng`
+  (pick+nodemap+boss on one fork) split into 'sector'/'nodemap'/
+  'boss', each keyed (sectorIndex) — the 77e generator rework can
+  now change draw counts without moving the boss pre-roll.
+- **The boss zero-fork hazard is dead** by construction ('map' keys
+  on the node; a boss node simply derives nothing).
+- **runRollout**: the hand-mirrored nine-fork re-seed list collapsed
+  to `wire.streamRoot = deriveSeed(rolloutSeed, 'rolloutRoot')` —
+  counters ride the wire, so a clone continues from the same
+  position with fresh dice (CRN contract preserved; the test's
+  control now proves root-sharing = future-sharing).
+- **Node-anchored semantics live**: port stock/prices key on
+  (sectorIndex, nodeId) — seed-fixed regardless of route (signed at
+  the shape-lock).
+
+**Fallout, exactly the precedented classes**: 11 Run.test failures
+(4 schema-version pins 41→42; 7 seed-remap pins on the seed-1
+selected encounter's pool — REPAIRED BY DERIVATION per the
+balance-proof rule: chips/asserts now read the selected encounter's
+authored `healthPool` from the catalog/`enemyHealthPoolMax`, so the
+next stream break can't stale them again) + the two port canaries
+(scan of 1..20 read seeds 2/12 buying; re-pinned 3→2, the ritual's
+fifth entry; the no-buy seed-1 arm held) + the snapshot-roundtrip
+deckRng assertions → counter assertions. The 74e `eventsVisited`
+seed-1 exit pin survived unmoved. Green: 2597 main + 398
+fuzz:smoke + typecheck.

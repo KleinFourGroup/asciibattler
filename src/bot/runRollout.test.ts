@@ -4,12 +4,13 @@
  *
  * 1. THE CLAIRVOYANCE GUARD — a rollout clone must NOT share the live
  *    run's future rolls. The control documents the hazard the seam
- *    exists for: a plain toJSON→fromJSON clone DOES share all eight
- *    streams verbatim (RunSnapshot v40 serializes them by design — the
- *    A2/H5 contract; H5 in snapshot-roundtrip.test.ts is the behavioral
- *    proof that a plain clone draws the identical future hand).
- * 2. PRE-ROLLED FACTS PRESERVED — everything BUT the eight streams rides
- *    the wire untouched (map DAG, boss forewarning, offer/stock/prices).
+ *    exists for: a plain toJSON→fromJSON clone DOES share the live
+ *    `streamRoot` verbatim (77d2 — every stream derives from it, so a
+ *    plain clone re-derives the identical future; H5 in
+ *    snapshot-roundtrip.test.ts is the behavioral proof).
+ * 2. PRE-ROLLED FACTS PRESERVED — everything BUT `streamRoot` rides
+ *    the wire untouched (map DAG, boss forewarning, offer/stock/prices,
+ *    the occurrence counters — a clone continues from the same position).
  * 3. LIVE-RUN PURITY — cloning and advancing a clone never perturbs the
  *    live run (byte-identical snapshot before/after).
  * 4. DETERMINISM / CRN — same rolloutSeed ⇒ byte-identical clone
@@ -30,19 +31,7 @@ import type { GameEvents } from '../core/events';
 import { Run, type RunSnapshot } from '../run/Run';
 import { cloneRunForRollout } from './runRollout';
 
-const RNG_KEYS = [
-  'rng',
-  'levelupRng',
-  'deckRng',
-  'daemonRng',
-  'rewardRng',
-  'rewardBitsRng',
-  'portStockRng',
-  'portPriceRng',
-  'eventRng', // 74b — the ninth stream (event flips/picks/outcome rolls)
-] as const;
-
-/** A live run one hop in: mid-encounter, deck dealt, streams advanced. */
+/** A live run one hop in: mid-encounter, deck dealt, counters advanced. */
 function liveRun(seed: number): Run {
   const run = new Run(seed, new EventBus<GameEvents>());
   run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
@@ -56,9 +45,9 @@ const DRAW_CHIP = {
   survivorPower: { player: 0, enemy: 0 },
 };
 
-function stripRngKeys(wire: RunSnapshot): Record<string, unknown> {
+function stripRoot(wire: RunSnapshot): Record<string, unknown> {
   const copy: Record<string, unknown> = { ...wire };
-  for (const k of RNG_KEYS) delete copy[k];
+  delete copy['streamRoot'];
   return copy;
 }
 
@@ -68,29 +57,27 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
     const liveWire = live.toJSON();
 
     // The control documents the hazard: an undiverged round-trip clone
-    // carries all nine live streams verbatim.
+    // carries the live streamRoot verbatim — every future occurrence
+    // re-derives identically (77d2).
     const plain = Run.fromJSON(
       JSON.parse(JSON.stringify(liveWire)) as RunSnapshot,
       new EventBus<GameEvents>(),
     );
-    const plainWire = plain.toJSON();
-    for (const k of RNG_KEYS) expect(plainWire[k]).toEqual(liveWire[k]);
+    expect(plain.toJSON().streamRoot).toBe(liveWire.streamRoot);
 
-    // The seam diverges ALL NINE — from the live run AND pairwise from
-    // each other (nine independent forks of one seed stream).
+    // The seam replaces the root, diverging every future occurrence.
     const cloneWire = cloneRunForRollout(live, 777).run.toJSON();
-    for (const k of RNG_KEYS) expect(cloneWire[k]).not.toEqual(liveWire[k]);
-    const distinct = new Set(RNG_KEYS.map((k) => JSON.stringify(cloneWire[k])));
-    expect(distinct.size).toBe(RNG_KEYS.length);
+    expect(cloneWire.streamRoot).not.toBe(liveWire.streamRoot);
   });
 
-  it('pre-rolled facts ride the wire untouched: everything but the streams is byte-equal', () => {
+  it('pre-rolled facts ride the wire untouched: everything but streamRoot is byte-equal', () => {
     // The spec's clairvoyance inventory — map DAG + node kinds, the §66
-    // boss forewarning pair, offer/stock/prices, hand + pile contents —
-    // is LEGITIMATE rollout knowledge and must survive the clone exactly.
+    // boss forewarning pair, offer/stock/prices, hand + pile contents,
+    // the occurrence counters — is LEGITIMATE rollout knowledge and must
+    // survive the clone exactly.
     const live = liveRun(20260730);
     const clone = cloneRunForRollout(live, 777);
-    expect(stripRngKeys(clone.run.toJSON())).toEqual(stripRngKeys(live.toJSON()));
+    expect(stripRoot(clone.run.toJSON())).toEqual(stripRoot(live.toJSON()));
   });
 
   it('cloning and advancing a clone never perturbs the live run', () => {

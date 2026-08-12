@@ -860,10 +860,12 @@ describe('A2 round-trip: Run', () => {
     );
   });
 
-  it('H5: a mid-encounter Run save carries the deck (draw/discard/hand) + deckRng; a pre-H5 snapshot is rejected', () => {
-    // H5 added the card deck to the Run save → RUN_SCHEMA_VERSION bumped (8→9).
-    // An oversized roster (8 > handSize) leaves both a drawn hand AND a non-empty
-    // draw pile mid-turn, so the round-trip exercises real deck state.
+  it('H5→77d2: a mid-encounter Run save carries the deck (draw/discard/hand) + the shuffle counter; a stale snapshot is rejected', () => {
+    // H5 added the card deck to the Run save; 77d2 replaced the serialized
+    // deckRng state with streamRoot + deckShuffleIndex (the shuffle
+    // occurrence counter). An oversized roster (8 > handSize) leaves both a
+    // drawn hand AND a non-empty draw pile mid-turn, so the round-trip
+    // exercises real deck state.
     const bus = new EventBus<GameEvents>();
     const run = new Run(2026, bus, { eventCatalog: [], startingRoster: bigRoster() }); // 74i-c
     const first = run.nodeMap.rootId;
@@ -875,13 +877,15 @@ describe('A2 round-trip: Run', () => {
     expect(wire).toHaveProperty('drawPile');
     expect(wire).toHaveProperty('discardPile');
     expect(wire).toHaveProperty('hand');
-    expect(wire).toHaveProperty('deckRng');
+    expect(wire).toHaveProperty('streamRoot');
+    expect(wire).toHaveProperty('deckShuffleIndex');
+    expect(wire.deckShuffleIndex).toBe(1); // the encounter-start shuffle
 
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.drawPile).toEqual(run.drawPile);
     expect(restored.discardPile).toEqual(run.discardPile);
     expect(restored.hand).toEqual(run.hand);
-    expect(restored.deckRng.toJSON()).toEqual(run.deckRng.toJSON());
+    expect(restored.streamRoot).toBe(run.streamRoot);
 
     const stale = { ...wire, schemaVersion: wire.schemaVersion - 1 };
     expect(() => Run.fromJSON(stale, new EventBus<GameEvents>())).toThrow(
@@ -890,7 +894,7 @@ describe('A2 round-trip: Run', () => {
   });
 
   it('H5: a restored Run draws the same NEXT hand as the original (deck determinism on resume)', () => {
-    // The payoff of snapshotting deckRng + the piles: a mid-encounter restore
+    // The payoff of the root + counters (77d2): a mid-encounter restore
     // must reproduce the exact future draws, not just the current hand.
     const busA = new EventBus<GameEvents>();
     const a = new Run(2026, busA, { startingRoster: bigRoster() });

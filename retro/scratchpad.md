@@ -85,3 +85,7 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
   capability (vs adding a capability), the test sweep should cover the
   capability's edge branches under the NEW consumer, not just the new
   consumer's happy path.
+
+## §77d2/d3 (2026-08-12) — stream-break fallout triage: prefer derivation/self-healing over fresh literals
+
+Three fallout classes at the keyed-derivation remap, three repair shapes, ranked by durability: (1) the seven Run.test pool pins were repaired BY DERIVATION (read the selected encounter's authored healthPool from the catalog) — the next stream break can't stale them at all; (2) the arbitration dock fixture was hardened from a scan-for-dock to a scan-for-dock-WITH-FUNDS — self-healing, its real requirement made explicit; (3) only the port canary took a new pinned literal (3→2), and it's the one artifact whose ritual comment already documents per-break re-pinning as its contract. Pattern for the sweep: when a stream break trips a test, ask "what does this test actually require?" before re-pinning — most 'seed pins' are lazy proxies for a derivable condition, and each one converted to derivation permanently shrinks the next break's bill (this break: 11 failures; the class it leaves behind: 1 ritual canary + 4 version pins).

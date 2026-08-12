@@ -228,8 +228,9 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   500-seed baseline CONFIRMS every complaint (60% instant rejoins ·
   port on 36% of routes · 55% of maps port-less by hop 4 — worklog
   §77b, the 77c signing sheet)
-- [ ] 77c — DECISION POINT: thresholds + guarantee list + the
-  ratio band sign on 77b numbers
+- [x] 77c — ✅ DECIDED 2026-08-12: the full threshold sheet signed
+  as proposed with ONE amendment — events per route target ≈3
+  (band 2.5–3.5), not 1.5–2 (worklog §77c, the signed sheet)
 - [ ] 77d1 — `RNG.child`/`deriveSeed` (mixSeeds folds in) + the
   stream-key registry + pinned hash vectors + the independence
   acceptance test; purely additive — NO stream break

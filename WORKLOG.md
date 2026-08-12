@@ -2539,3 +2539,37 @@ spec complaint confirmed with a number:**
   in 46.8% of maps (mean 0.60).
 
 These are the numbers 77c signs thresholds against.
+
+### 77c — the threshold signing (user-signed, 2026-08-12)
+
+The whole proposed sheet signed as-is except one amendment. Each row
+is (metric · today · signed threshold · mechanism), where C =
+constructive pass (guaranteed by construction at 77e) and R =
+rejection-sampled residue (a corpus-percentage gate in
+nodemap-metrics.test.ts):
+
+- Instant (d2) rejoins · 59.8% of pairs · **≤ 25% per map** · C
+  (the min-divergence edge rule)
+- Content-divergent pairs · 60.7% · **≥ 80%** · R
+- Kind presence · elite absent 10.2% / rest 3% · **every map ≥1
+  rest, elite, port, event** · C (budget floor)
+- Port by hop · 55% by h4 · **100% by h5** · C (the guarantee pass
+  generalized)
+- Rest/elite by hop · 70%/61% by h4 · **≥ 90% by h5** · R
+- First-choice port lockout · 41.4% of maps · **0%** (every first
+  choice keeps shop access) · C
+- First-choice elite/rest lockout · 31.8%/22.1% · **≤ 10%** · R
+- Port route-fraction · mean 35.7%, P10 8% · **mean ≥ 50%, P10 ≥
+  25%** · R
+- Battle-less middle hops · 46.8% of maps · **0%** (a battle floor
+  per middle hop) · C
+- **The ratio band — the user's amendment**: events per route
+  target **≈3 (band 2.5–3.5)**, not the proposed 1.5–2 ("I was
+  envisioning closer to 3"). Combat share lands ≈55–65% (from
+  80.6%). Explicitly a free dial — the §82 event-ratio economy
+  read judges the income/XP/pool consequences on final content.
+
+The corpus gates run at n=500 seeds (the baseline instrument's
+shape). The user's reaction to the baseline, for the record: the
+60% instant-rejoin and 41% shop-lockout rates were WORSE than the
+felt complaint ("I knew it was bad, but not that bad").

@@ -43,15 +43,19 @@
           </section>
 
           <section class="group">
-            <h2>Root stamp <span class="sub">(firstNodeKind / startingEvents)</span></h2>
+            <h2>Root stamp <span class="sub">(the 68e <code>firstNodeKind</code> dev dial)</span></h2>
             <label class="row"
               >Stamp
               <!-- the RunConfig dial is a restricted union ('elite' | 'event')
-                   by design — mirror it, don't widen it (RunConfig.ts:103) -->
+                   by design — mirror it, don't widen it (RunConfig.ts:103).
+                   A NATURAL root is battle, or event via the sector's
+                   startingEvents stamp; elite here is the isolation-probe
+                   shape only (?hops=2&firstNode=elite) — no organic elite
+                   root exists. -->
               <select id="firstNodeKind">
-                <option value="" selected>none (authored)</option>
-                <option value="event">event</option>
-                <option value="elite">elite</option>
+                <option value="" selected>none — battle (natural)</option>
+                <option value="event">event (the startingEvents shape)</option>
+                <option value="elite">elite (isolation probe only)</option>
               </select></label
             >
           </section>

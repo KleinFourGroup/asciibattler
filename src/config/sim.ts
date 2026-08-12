@@ -138,11 +138,12 @@
  *     the user's design intent), detouring the whole team. The camp is NOT
  *     pre-marked hostile — damage stays hostility's single source, so a
  *     pulled camp reads passive until the enemy actually strikes it. Rolls
- *     per TURN on a lazy RNG seeded from mix(terrainSeed, worldSeed), taken
- *     only when the knob is >0 AND the layout has camps — the dormant path
- *     leaves every stream untouched (the shape-lock's no-append clause; the
- *     original terrainSeed-only fork replayed identically every turn of an
- *     encounter — the fetidPond-caught defect). A probability in [0,1].
+ *     per TURN on `deriveRng(terrainSeed, 'enemyPull', worldSeed)` (77d3 —
+ *     the worldSeed index is what makes it per-turn), derived lazily only
+ *     when the knob is >0 AND the layout has camps — the dormant path
+ *     derives nothing (the shape-lock's no-append clause; a terrainSeed-only
+ *     stream replayed identically every turn of an encounter — the
+ *     fetidPond-caught defect). A probability in [0,1].
  *     **Shipped 0.25 — the 75j verdicts: 0.15 read "works, but too rare".**
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the

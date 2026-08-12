@@ -233,10 +233,9 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   **v41→v42** (streamRoot + 3 counters replace 10 RNG states);
   rollout re-seed = ONE field; port canary re-pinned 3→2
   (worklog §77d2)
-- [ ] 77d3 — battleSetup/World + bot-clone derivation (burn fork +
-  alignment fork deleted; camp identity stays per-encounter;
-  trace-replay path converted with it); World v35 predicted HOLDS;
-  docs sweep (TESTING/GOTCHAS/ARCHITECTURE/DESIGN RNG contract)
+- [x] 77d3 — ✅ 2026-08-12: battle-side keyed (terrain/spawnSetup/
+  campSetup/enemyPull; burn + alignment forks dead; mixSeeds folded
+  in); **World v35 HELD**; docs sweep + gotcha #125 (worklog §77d3)
 - [ ] 77e — the `generate()` redesign: named sub-streams per pass +
   constructive guarantee passes (port-≥1 generalized) + the
   min-divergence edge rule + the ratio pass w/ battle floor +

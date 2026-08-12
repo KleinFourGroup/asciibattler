@@ -152,7 +152,8 @@ src/
     proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter (+ §40d spawnLayoutNeutrals — walls/cover/rubble from a GeneratedTerrain)
-                             # 75c: spawnCamps — rolls each camp-spawn tile's camp (per-ENCOUNTER terrainSeed = the signed identity verdict) + installCamps + spawnCampUnit (behavior slot 0 = CampWanderBehavior — the 75f landing note lives at the swap); §75j2: the enemy PULL (SIM.enemyPullChance, per-TURN mix(terrainSeed, worldSeed) lazy RNG) enqueues engage{neutral} on the pulled camp's primed member — NO pre-marked hostility, the ordered first blow aggros
+                             # 75c: spawnCamps — rolls each camp-spawn tile's camp (per-ENCOUNTER identity = the signed 75j verdict) + installCamps + spawnCampUnit (behavior slot 0 = CampWanderBehavior — the 75f landing note lives at the swap); §75j2: the enemy PULL (SIM.enemyPullChance) enqueues engage{neutral} on the pulled camp's primed member — NO pre-marked hostility, the ordered first blow aggros
+                             # 77d3: every battle-setup stream KEYED off terrainSeed — 'terrain' / 'spawnSetup' / 'campSetup' (turn-free BY VERDICT) / 'enemyPull' (per-turn via the worldSeed index); the §75 burn fork + mixSeeds one-off retired (gotcha #125)
     actions/                 # Non-verb actions only — every combat verb is now the data-driven effects/EffectAction (Y5c retired the hand-coded AttackAction/Heal/MagicBolt/Catapult/Gambit/Dash classes)
       MoveAction.ts          # §36b NON-INSTANT: start() claims `to` + emits unit:moved; applyEffect() flips position + releases the claim at the 50% mark (SIM.moveFlipFraction)
       SpawnAction.ts         # Pure-lockout action seated on D5.C overflow-queue spawns
@@ -458,11 +459,14 @@ class RNG {
   next(): number;           // [0, 1)
   int(min: number, max: number): number;  // inclusive
   pick<T>(arr: T[]): T;
-  fork(): RNG;              // returns a new RNG seeded deterministically from this one
+  fork(): RNG;              // positional child (LOCAL use only — see below)
 }
+// 77d1 — the keyed door (the sanctioned cross-seam mechanism):
+function deriveSeed(root: number, key: RngStreamKey, ...ids: number[]): number;
+function deriveRng(root: number, key: RngStreamKey, ...ids: number[]): RNG;
 ```
 
-`fork()` is the key method. When we generate a battle, we fork an RNG for that battle from the run's RNG. That way the battle's randomness doesn't perturb later run-level randomness, and we can re-run a single battle without re-running the whole sequence.
+**`deriveRng` is the key mechanism since 77d2/77d3.** Every cross-seam stream (the Run ladder, battle setup, bot clones) derives per-occurrence from a root + a registry key ([src/core/rngStreams.ts](src/core/rngStreams.ts) — a closed union; keys and the hash are PERMANENT, gotcha #125) + the occurrence's stable ids (sectorIndex, nodeId, turnIndex, serialized counters). Order-free by construction: adding a stream, or a draw inside one occurrence, can never remap another. `Run` serializes only `streamRoot` + three counters; rollout clones diverge by replacing the root. `fork()` survives for LOCAL self-contained use (a tool/test forking off a fresh parent it owns end to end) — it advances the parent one step, so it must never be used across a seam.
 
 ### `EventBus`
 

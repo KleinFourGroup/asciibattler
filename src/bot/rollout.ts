@@ -38,7 +38,7 @@
 
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import { RNG } from '../core/RNG';
+import { deriveSeed } from '../core/RNG';
 import { World, type WorldSnapshot } from '../sim/World';
 
 export function cloneForRollout(world: World, rolloutSeed: number): World {
@@ -47,15 +47,15 @@ export function cloneForRollout(world: World, rolloutSeed: number): World {
   // (in-flight actions, claims, cooldowns, pending commands).
   const wire = JSON.parse(JSON.stringify(world.toJSON())) as WorldSnapshot;
 
-  // The divergence: both streams re-seeded from the rollout seed, as two
-  // independent forks of one stream (so run-level and combat rolls in the
-  // clone are independent of each other, not just of the live world).
-  const seedStream = new RNG(rolloutSeed);
-  wire.rng = seedStream.fork().toJSON();
-  wire.combatRng = seedStream.fork().toJSON();
-  // §75b — camp dice are sampled, not foreseen. Conditional third fork: the
-  // camp-free path keeps its historical two-fork alignment.
-  if (wire.campRng !== null) wire.campRng = seedStream.fork().toJSON();
+  // The divergence (77d3): each stream re-seeded by KEY off the rollout
+  // seed — independent of each other and of the live world by
+  // construction. The old conditional-third-fork alignment hack (the
+  // camp-free path had to keep its historical two-fork order) is dead:
+  // derivation has no order to preserve. `campRng: null` stays null —
+  // camp-free worlds carry no camp stream (v35).
+  wire.rng = { state: deriveSeed(rolloutSeed, 'rolloutRoot') };
+  wire.combatRng = { state: deriveSeed(rolloutSeed, 'combat') };
+  if (wire.campRng !== null) wire.campRng = { state: deriveSeed(rolloutSeed, 'campSetup') };
 
   // Fresh bus: rollout events must never reach the live subscribers
   // (renderer, metrics collectors, the trace recorder).

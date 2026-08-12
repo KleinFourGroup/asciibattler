@@ -59,9 +59,13 @@ import {
 
 const SEED = 20260730;
 
-/** Walk a fresh run to its first port dock (deterministic seed scan —
- *  the readEpsilonAA prep, duplicated: that file is a script that runs
- *  at import). */
+/** Walk a fresh run to its first port dock WITH FUNDS (deterministic
+ *  seed scan — the readEpsilonAA prep, duplicated: that file is a script
+ *  that runs at import). 77d3 hardened the condition from dock to
+ *  dock-with-affordable-slot: the keyed-derivation remap surfaced a walk
+ *  that docked broke, which every mechanism pin below starves on —
+ *  affordability was always the real requirement (self-healing, no
+ *  pinned literal to re-scan at the next stream break). */
 function dockSnapshot(): RunSnapshot {
   for (let s = SEED; s < SEED + 20; s++) {
     const state = cloneRunForRollout(new Run(s, new EventBus<GameEvents>()), s + 1);
@@ -71,9 +75,11 @@ function dockSnapshot(): RunSnapshot {
       maxHops: 80,
       stopAtPhase: 'port',
     });
-    if (state.run.phase === 'port') return state.run.toJSON();
+    if (state.run.phase === 'port' && expectedLabels(state.run).length > 0) {
+      return state.run.toJSON();
+    }
   }
-  throw new Error(`no seed in [${SEED}, ${SEED + 20}) docked at a port`);
+  throw new Error(`no seed in [${SEED}, ${SEED + 20}) docked at a port with an affordable slot`);
 }
 
 let snap: RunSnapshot;

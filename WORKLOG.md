@@ -2644,3 +2644,37 @@ fifth entry; the no-buy seed-1 arm held) + the snapshot-roundtrip
 deckRng assertions → counter assertions. The 74e `eventsVisited`
 seed-1 exit pin survived unmoved. Green: 2597 main + 398
 fuzz:smoke + typecheck.
+
+### 77d3 — the battle-side conversion + the docs sweep (2026-08-12)
+
+Landed to the cut. Every battle-setup stream now keys off
+`terrainSeed`: `'terrain'` (generation — raw `new RNG(terrainSeed)`
+made the terrain stream IDENTICAL to the root, the very collision
+class that forced the §75 burn fork), `'spawnSetup'` (setupRngFor —
+the D5.B fresh-parent-fork retired), `'campSetup'` (the burn fork
+deleted; the key carries NO turn index — the 75j per-encounter
+verdict, now one key index away if ever reopened), `'enemyPull'`
+(per-turn via the worldSeed index; the §75j2 local `mixSeeds`
+folded into the frozen deriveSeed door exactly as its comment
+predicted). rollout.ts's World-clone re-seed converted to three
+independent derives — the conditional-third-fork alignment hack is
+dead (derivation has no order to preserve; `campRng: null` stays
+null). World.ts untouched: **WorldSnapshot v35 HELD, as predicted**
+(the combatRng default fork is the legal local-parent class; camp
+stream state still serializes — sequential consumption within one
+battle is inherent). replayTrace converts transitively (it calls
+setupRngFor; record-then-replay tests prove consistency).
+
+Fallout: ONE fuzz fixture — arbitratedStrategy.test's dock fixture
+scan found a walk that docked BROKE under the remap (its condition
+was dock, not dock-with-funds). Hardened to
+dock-with-affordable-slot: self-healing, no pinned literal for the
+next break to stale (the harness.test.ts:195 scan-over-pin
+precedent). Both port canaries survived d3 unmoved (seed 2 still
+buys). Docs sweep: TESTING contract #2 rewritten keyed-first ·
+GOTCHAS #5 + #57 amended, **#125 added** (keys/hash permanent, the
+atomicity law, one-stream-per-consumer, the campSetup verdict, the
+fork() legality rule) · ARCHITECTURE §RNG rewritten + the
+battleSetup tree line · DESIGN camps bullet · AGENTS determinism
+invariant · sim.ts enemyPullChance comment. Green: 2597 main + 398
+fuzz:smoke + typecheck.

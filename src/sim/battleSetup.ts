@@ -13,16 +13,16 @@
  * region for the player and a distinct one for the enemy, then places
  * each team into shuffled tiles within their region.
  *
- * RNG: the spawn picker + per-region shuffle both consume the same
- * `RNG`, derived as `new RNG(encounter.terrainSeed).fork()`. Using
- * `fork()` gives a child stream independent of terrain-gen's RNG
- * advancement — so changing wall density doesn't shift spawn picks for
- * the same encounter seed. The fresh-parent-then-fork pattern keeps the
- * picks deterministic without bumping `Run.handleEnterNode`'s byte
- * stream.
+ * RNG (77d3): every battle-setup stream derives off `terrainSeed` by
+ * key — 'terrain' (generation), 'spawnSetup' (region pick + per-team
+ * shuffles), 'campSetup' (camp identity; per-encounter BY SIGNED
+ * VERDICT), 'enemyPull' (per-turn via the worldSeed index). Keyed
+ * derivation makes the streams independent by construction — changing
+ * wall density can't shift spawn picks, and no burn/alignment forks are
+ * needed (the pre-77d3 fresh-parent-then-fork pattern is retired).
  */
 
-import { RNG } from '../core/RNG';
+import { RNG, deriveRng } from '../core/RNG';
 import type { GridCoord } from '../core/types';
 import type { World, CampInstance, CampPendingUnit } from './World';
 import { getCamp } from '../config/camps';
@@ -142,8 +142,11 @@ export function applyTerrain(
   world: World,
   encounter: BattleEncounter,
 ): readonly SpawnRegion[] {
+  // 77d3 — the terrain stream derives off its own key (raw
+  // `new RNG(terrainSeed)` made the terrain stream IDENTICAL to the root,
+  // which is the collision class that forced spawnCamps' old burn fork).
   const terrain = generateTerrain(
-    new RNG(encounter.terrainSeed),
+    deriveRng(encounter.terrainSeed, 'terrain'),
     world.gridW,
     world.gridH,
     TERRAIN,
@@ -168,21 +171,21 @@ export function applyTerrain(
  * World construction sites (BattleScene / fuzz harness / replayTrace /
  * `spawnEncounter`) get camps with zero per-site changes.
  *
- * Stream derivation (the §75 kickoff worklog): a fresh parent off
- * `terrainSeed`, BURN the first fork — that stream is byte-identical to
- * `setupRngFor`'s (same construction) — and take the second as the camp
- * stream. Selection rolls consume it here; `installCamps` then hands the
- * advanced stream to the World for battle-time draws (drip placement, 75f
- * wander). Nothing touches `battleRng` or Run's fork ladder — the
- * fork-append-free property the §75 cut is built on.
+ * Stream derivation (77d3): the camp stream is
+ * `deriveRng(terrainSeed, 'campSetup')` — the §75-era burn fork (which
+ * existed only to dodge a byte-collision with `setupRngFor`'s stream on
+ * the same fresh parent) is gone; keyed derivation makes collision
+ * impossible by construction. Selection rolls consume it here;
+ * `installCamps` then hands the advanced stream to the World for
+ * battle-time draws (drip placement, 75f wander). Nothing touches any
+ * Run stream.
  *
- * ⚠ KNOWN CONSEQUENCE (user-punted 2026-08-09, worklog §75i-post): K3.5
- * made `terrainSeed` per-ENCOUNTER, so these "per-turn" selection rolls
- * replay identically every turn of one encounter — camp identity is
- * de facto per-encounter, NOT the spec's "re-rolls fresh at every turn".
- * Deliberately left as-is: the feel verdict rides 75j's feel pass, and a
- * per-turn stream (hash(root, 'campSetup', turn)) folds into §77's keyed
- * stream re-architecture if wanted. Don't "fix" the seed here ad hoc.
+ * ⚠ CAMP IDENTITY IS PER-ENCOUNTER BY SIGNED VERDICT (75j): the key
+ * deliberately carries NO turn index — `terrainSeed` is per-encounter
+ * (K3.5), so selection replays identically every turn of one encounter.
+ * The 75i-post finding was punted, then the 75j feel pass SIGNED it.
+ * A per-turn stream would be `deriveRng(terrainSeed, 'campSetup', turn)`
+ * — build it only if that call is reopened; don't "fix" the key ad hoc.
  *
  * Args-explicit (the assert-function pattern) so tests drive synthetic
  * campSpawns/camps against a naked World — no shipped layout lists a camp
@@ -202,9 +205,7 @@ export function spawnCamps(
     // slips past it must fail loud, not roll from nothing.
     throw new Error('spawnCamps: campSpawns present but the camps list is empty');
   }
-  const parent = new RNG(terrainSeed);
-  parent.fork(); // burn — fork #1 duplicates setupRngFor's stream
-  const campRng = parent.fork();
+  const campRng = deriveRng(terrainSeed, 'campSetup');
 
   const instances: CampInstance[] = campSpawns.map((tile, i) => {
     const ref = weightedCampRef(campRefs, campRng);
@@ -253,20 +254,19 @@ export function spawnCamps(
   // the fight cascades naturally. The command drains at tick 1; serialized,
   // so a mid-battle save resumes the detour.
   //
-  // Stream: the roll rides a LAZY RNG seeded from mix(terrainSeed, worldSeed)
-  // — per-TURN, restoring the shape-lock's signed "per-turn fork" (the
-  // original terrainSeed-parent fork replayed identically every turn of an
-  // encounter — the §75i-post replay class, caught live on fetidPond). Taken
-  // only inside this branch, so the dormant path appends nothing to any
-  // ladder; no other stream uses the mixed seed, so no burn is needed. Camp
-  // IDENTITY deliberately stays on the terrainSeed parent above (the signed
-  // per-encounter verdict).
+  // Stream (77d3): `deriveRng(terrainSeed, 'enemyPull', worldSeed)` — the
+  // worldSeed index makes it per-TURN, preserving the shape-lock's signed
+  // "per-turn fork" (the §75i-post replay class, caught live on fetidPond;
+  // the old local `mixSeeds` one-off folded into the frozen deriveSeed
+  // door exactly as its comment predicted). Derived lazily inside this
+  // branch — the dormant path derives nothing. Camp IDENTITY deliberately
+  // stays on the turn-free 'campSetup' key above (the signed verdict).
   //
   // A pulled camp whose primed member is missing (blocked anchor at setup —
   // the 75h2 silent-skip edge) skips the pull: there is no unit to order
   // against, and a tile order on a passive camp would just loiter.
   if (SIM.enemyPullChance > 0) {
-    const pullRng = new RNG(mixSeeds(terrainSeed, worldSeed));
+    const pullRng = deriveRng(terrainSeed, 'enemyPull', worldSeed);
     if (pullRng.next() < SIM.enemyPullChance) {
       const camp =
         instances.length === 1
@@ -284,15 +284,8 @@ export function spawnCamps(
   }
 }
 
-/**
- * §75j2 — the pull's per-turn seed: a u32 mix of the per-encounter
- * terrainSeed and the per-turn worldSeed. A LOCAL one-off (the §77 keyed
- * stream re-architecture generalizes this shape); constants are the usual
- * avalanche primes. No other stream is seeded from this value.
- */
-function mixSeeds(a: number, b: number): number {
-  return (Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b, 0xc2b2ae35)) >>> 0;
-}
+// (§75j2's local `mixSeeds` one-off folded into the frozen `deriveSeed`
+// door at 77d3, as its own comment predicted.)
 
 /**
  * §75c — the weighted camp pick (absent weight = 1, the sector-pool
@@ -375,7 +368,12 @@ export function spawnEncounter(world: World, encounter: BattleEncounter): void {
  * inside the World constructor. That makes the crit stream independent
  * of `setupRngFor`'s `encounter.terrainSeed` line — adding or removing
  * an attack doesn't shift spawn picks for the same encounter.
+ *
+ * 77d3 — keyed: `deriveRng(terrainSeed, 'spawnSetup')` (was
+ * `new RNG(terrainSeed).fork()`, whose fresh-parent-fork construction is
+ * exactly what spawnCamps once had to burn a fork to avoid colliding
+ * with).
  */
 export function setupRngFor(encounter: BattleEncounter): RNG {
-  return new RNG(encounter.terrainSeed).fork();
+  return deriveRng(encounter.terrainSeed, 'spawnSetup');
 }

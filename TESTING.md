@@ -59,7 +59,7 @@ This is the single most load-bearing invariant in the project, called out in `DE
 Concretely, the contract says:
 
 1. **Seed in → state out, deterministically.** Given the same RNG seed and the same initial `World` configuration, calling `world.tick()` N times must produce byte-identical final state and an identical event sequence.
-2. **Forked streams are independent.** `rng.fork()` produces a new stream that's deterministic in its own right and does not consume from the parent stream.
+2. **Cross-seam streams are KEYED, not positional (77d2/77d3).** Every Run/battle-setup stream derives per-occurrence as `deriveRng(root, key, ...stableIds)` — key strings come from the closed registry in `src/core/rngStreams.ts` and are PERMANENT (renaming one, or changing the frozen hash, is a deliberate global stream break; the pinned vectors in `rngStreams.test.ts` enforce it). An occurrence is atomic between snapshots, or carries a serialized counter. `fork()` survives for LOCAL self-contained use only (a test/tool forking off a fresh parent it owns end to end): it produces a child stream deterministic in its own right, advancing the parent by exactly one step.
 3. **No hidden randomness.** No `Math.random()`, no `Date.now()` as entropy, no iteration-order-as-randomness. ESLint catches direct `Math.random()` in `src/sim` and `src/run`; the replay test catches everything else.
 
 The snapshot-roundtrip test extends the contract across serialization: a `World` deserialized from `toJSON()` must produce an identical event trace from that point forward.

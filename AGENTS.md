@@ -334,8 +334,11 @@ but the headline rules:
 
 - **Determinism is structural.** Anything consuming randomness takes an
   `RNG` from [src/core/RNG.ts](src/core/RNG.ts). `Math.random()` is
-  ESLint-banned in `src/sim/` and `src/run/`. Per-battle randomness via
-  `parentRng.fork()`. See [TESTING.md](TESTING.md) for the contract.
+  ESLint-banned in `src/sim/` and `src/run/`. Cross-seam streams are
+  KEYED per-occurrence (`deriveRng(root, key, ...ids)`; the key registry
+  is [src/core/rngStreams.ts](src/core/rngStreams.ts) — keys + hash are
+  PERMANENT, gotcha #125); `fork()` is legal only on a fresh local
+  parent one scope owns. See [TESTING.md](TESTING.md) for the contract.
 - **Cooldowns/durations authored in seconds, not ticks.** Use
   `secondsToTicks` / `ticksToSeconds` from [src/config.ts](src/config.ts).
   Changing `TICK_RATE` (currently 20Hz) must not re-tune balance.

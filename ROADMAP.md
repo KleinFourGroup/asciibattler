@@ -129,32 +129,17 @@ DESIGN §Camps · gotchas #122–123 · git.
   length · fire-channel inversion OPEN) — BALANCE 2026-08-10 canonical;
   the signing-session queue lives there (worklog §75l)
 
-## Phase 76 — Unit mechanics & stat identity
+## Phase 76 — Unit mechanics & stat identity ✅ CLOSED 2026-08-12
 
-**Charter:** auras (AbilityDef-authored / World-pass-executed + the
-two engine gaps) with Inspire as the demo; Molotov / Pistol / Halberd
-/ Cane; the new-archetypes design round incl. the roster prc/eva
-identity pass; the stat-feel structural changes
-(critable-everywhere, the luck-ScaledValue seam, the mobility
-de-saturation) with constants locked against an in-phase board run;
-the promotion-screen derived-delta display.
-
-- **Order:** last content mover before the §77 re-baseline; feeds §82
-  (the gambler is the luck character — this phase may move the parity
-  breach organically, either direction).
-- **Risk:** MEDIUM — no snapshot bump predicted (aura state =
-  refresh-lifetime statuses; abilities/archetypes are config); the
-  board WILL move (the critable flip) — an amendment board run is
-  in-phase, per the standing law.
-- **Decision points:** the archetype design round; mobility/crit
-  constants sign against the board.
-- **Exit:** aura buffs visibly apply + linger in the browser; new
-  units draftable with prices + glyphs inside the atlas budget; the
-  board re-run green with re-signed refs where deliberately moved.
-- **Scope guards:** no constitution auras; no aura stacking policy;
-  no evadable-flip on the unmissable-magic identity ops; DoT ticks
-  stay non-critable (shape-lock res. 1); new archetypes
-  draftable-only — no encounters.json authoring (res. 3).
+**Outcome (one breath):** the aura engine (World pass + surfaces +
+`engagementReach`) with the Officer's Inspire live end to end incl.
+the range FX; four weapons + four draftable archetypes + the prc/eva
+identity pass; critable-universal + the mobility de-saturation
+(exact level-1 equivalence) + luck durations; the promotion
+derived-delta display; the amendment board 0 FAIL / 7 WARN
+(composition rotated — three riders + the n=120 protocol → §82,
+BALANCE 2026-08-11). No snapshot bump, as predicted. Detail:
+WORKLOG §§76–76h + DESIGN (§Auras / §Stat identity) + gotcha #124.
 
 Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 
@@ -337,6 +322,13 @@ closing board + the re-signed sheet; then the close ritual
   `--event-chance=0` on the doctrine pair, and re-derive the vector
   pair on era content if it stays flat (76h note: it read +0.050
   in-band — the alarm retires to a routine confirm).
+- **82-pre (user-called 2026-08-12): the BALANCE audit + primer.**
+  Step zero of the phase, before any §82 decision: audit BALANCE.md's
+  header layer (current-truth sections vs the append-only run-log;
+  retire fossils, consolidate buried amendments) + write the
+  plain-English balance primer — CONCEPTS ONLY, numbers/status stay
+  in the sheet/BALANCE/ROADMAP (the one-fact-one-home guard);
+  consider a docs.test.ts cap on the header (worklog §76h-close).
 - **76h riders (user-signed 2026-08-11):** the WALL-FLIP attribution
   — the walk walls moved pull-softened→hardened (0.412/0.481, above
   the signed 30–35); §76's movers are confounded (critable-universal

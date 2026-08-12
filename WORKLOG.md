@@ -2330,3 +2330,27 @@ the n=80 per-item floor clears so decisions.csv reads become
 citable. Determinism makes the upgrade cheap: `--seed-offset`
 extends 41..120 and POOLS with the 76h batches — the first 40 seeds
 are already paid for. Riders + protocol recorded in ROADMAP §82.
+
+**Plus (user-called, 2026-08-12): the 82-pre pin** — the BALANCE
+audit + plain-English primer as §82's step zero. The user's framing:
+protocol grasp has eroded under accretion (many arms, features still
+landing, the ML rung-zero still ahead, BALANCE.md massive). The
+assessment that signed it: not overcorrection — the run-log layer is
+append-only history and SUPPOSED to grow; the disease is current
+truth SMEARED across the header sections / the sheet JSON / buried
+amendments / ROADMAP riders. The primer's guard against becoming a
+second drift surface: CONCEPTS ONLY, numbers and live status stay in
+their homes (the one-fact-one-home rule); a docs.test.ts cap on the
+header layer is the candidate mechanization. Pinned in ROADMAP §82.
+
+### 76i — docs close (2026-08-12)
+
+Landed: DESIGN gains §Auras + §Stat identity plus the luck (critable
+UNIVERSAL + duration seam) and mobility (de-saturation re-anchor)
+bullet amendments · ARCHITECTURE entries for the World aura pass,
+`engagementReach`, `promotionDelta.ts`, and the aura-range FX +
+`__auraFx` switch · gotcha #124 (the exhaustive weight-vector join
+class) · ROADMAP §76 demoted to its stub · the 82-pre pin (above) ·
+the HANDOFF cursor flipped to the §77 kickoff. §76 closed — every
+step user-signed, no snapshot bump end to end (as the kickoff
+predicted).

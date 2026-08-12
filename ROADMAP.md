@@ -1,4 +1,4 @@
-# ROADMAP — Cluster 5 (Map Content), Phases 73–81
+# ROADMAP — Cluster 5 (Map Content), Phases 73–82
 
 The cluster's PLAN (authored + user-locked 2026-08-05 at the spec
 session; it stays a plan for its whole life). The signed design
@@ -85,7 +85,8 @@ cluster-5-spec §Kickoff resolutions.
 - [x] 74i — the design round ✅ 2026-08-07 (a/b/c): riders signed ·
   ten events + prodigy · placement + starting event LIVE (the
   scheduled break paid) · reward kinds. Detail: worklog §74i.
-- [ ] 74j — docs close: ARCHITECTURE catalogs, DESIGN, cursor flip.
+- [x] 74j — docs close ✅ 2026-08-07 (box flipped late — the close
+  commit landed with the §74 close; caught at the §77 kickoff).
 
 ## Phase 75 — Camps ✅ CLOSED 2026-08-10 (the 75l board re-pin: BALANCE 2026-08-10)
 
@@ -179,39 +180,75 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
   0 FAIL / 7 WARN (composition ROTATED — act-1+fire healed, walls
   flipped hardened, walk ceilings negative, gambler flat); three
   riders + the n=120 protocol → §82 (BALANCE 2026-08-11, worklog §76h)
-- [ ] 76i — docs close: DESIGN/ARCHITECTURE + gotchas if earned +
-  ROADMAP demote + cursor flip
+- [x] 76i — docs close ✅ 2026-08-12 (`e019202`; box flipped late,
+  caught at the §77 kickoff)
 
-## Phase 77 — Sector-map generation rework
+## Phase 77 — Sector-map generation rework 🚧 IN FLIGHT (cut signed 2026-08-12)
 
 **Charter:** visualizer → the three metrics (early availability ·
 path-kind coverage · branch divergence) as acceptance tests →
 constructive guarantee passes + a min-divergence edge rule → bounded
 rejection sampling only for the fuzzy residue; event placement + the
-source-node stamp (consuming §74's `startingEvents` seam); the
-deliberate seed-stream break + the FULL re-baseline + the cluster-5
-stress test (the 11-row doctrine control set). Second Run bump.
-**Rider (user-signed 2026-08-08, §75 kickoff):** the RNG fork
-re-architecture — keyed stream derivation replacing the positional
-ladder — is CONSIDERED at this phase's kickoff, riding the already
-scheduled stream break so the global remap is paid once (rationale:
-WORKLOG §75 shape-lock). The 75j verdict SIGNED per-encounter camp
-identity (worklog §75j-verdicts) — the keyed per-turn camp stream
-stays a dormant option here, built only if the call is reopened.
+events-to-combat ratio pass (its own signed band — the source-node
+stamp is already live since 74i); the deliberate seed-stream break +
+the FULL re-baseline + the cluster-5 stress test (the 11-row
+doctrine control set). Second Run bump.
+**Rider ✅ DECIDED 2026-08-12 (kickoff shape-lock):** the RNG fork
+re-architecture is a YES, at the FULL robustness bundle —
+per-occurrence keyed derivation (not just keyed streams), the
+one-stream-per-consumer split, the single sanctioned door, the
+stream-key registry, the independence test; node-anchored outcome
+semantics user-signed. Camp identity stays per-encounter (75j
+verdict preserved by keying). Rationale + the audit evidence:
+worklog §77.
 
 - **Order:** after ALL content movers so the re-pin happens once, on
   final content.
 - **Risk:** MEDIUM-HIGH — every seed remaps; the isolation dials
-  (`eventChance` etc.) must land in `sectorAdvanceConfig` or probes
-  silently include events.
-- **Decision points:** the metric thresholds sign with the user (what
-  "balanced enough" means is a design call).
+  (`eventChance` etc. + every NEW §77 knob) must land in
+  `sectorAdvanceConfig` or probes silently include events.
+- **Decision points:** 77c — the metric thresholds + guarantee list
+  + the events-to-combat ratio band sign with the user, on 77b's
+  measured baseline.
 - **Exit:** metrics green over a seed corpus; the visualizer shipped
   (and the tools-index card finally telling the truth); fuzz + board
   fully re-baselined; the stress test recorded in BALANCE.
 - **Scope guards:** no rejection loop without a hard max-attempts
   failure; generator passes replaced only where the rework demands
   it, each documented as a deliberate stream break.
+
+Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
+
+- [ ] 77a — visualizer: `tools/nodemap-viz/` over the pure
+  `generate()` (seed/config sandbox, kind coloring) + the
+  tools-index card re-describe; no sim change
+- [ ] 77b — `mapMetrics.ts` (the three metrics, pure) + corpus
+  report + visualizer overlay; BASELINE READ of the current
+  generator → worklog (confirm-the-deficit, numbers for 77c)
+- [ ] 77c — DECISION POINT: thresholds + guarantee list + the
+  ratio band sign on 77b numbers
+- [ ] 77d1 — `RNG.child`/`deriveSeed` (mixSeeds folds in) + the
+  stream-key registry + pinned hash vectors + the independence
+  acceptance test; purely additive — NO stream break
+- [ ] 77d2 — the Run conversion: per-occurrence derivation on
+  stable keys (nodeId/sectorIndex/turnIndex; serialized counters
+  only where no natural id), the 9 serialized streams retire,
+  `streamRoot` for rollout divergence (CRN preserved) —
+  **RunSnapshot v41→v42**; exact canaries re-pinned in-commit
+- [ ] 77d3 — battleSetup/World + bot-clone derivation (burn fork +
+  alignment fork deleted; camp identity stays per-encounter;
+  trace-replay path converted with it); World v35 predicted HOLDS;
+  docs sweep (TESTING/GOTCHAS/ARCHITECTURE/DESIGN RNG contract)
+- [ ] 77e — the `generate()` redesign: named sub-streams per pass +
+  constructive guarantee passes (port-≥1 generalized) + the
+  min-divergence edge rule + the ratio pass w/ battle floor +
+  bounded rejection (hard max-attempts throw); metrics become
+  permanent gates (`nodemap-metrics.test.ts`, the drift.test.ts
+  analog); new knobs join `sectorAdvanceConfig` (#121 rule)
+- [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the
+  board re-pin on the box + the 11-row doctrine stress test →
+  BALANCE (68h shape trigger — box, not local)
+- [ ] 77g — docs close + ROADMAP demote + cursor flip
 
 ## Phase 78 — UI/UX batch
 

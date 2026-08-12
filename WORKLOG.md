@@ -2354,3 +2354,136 @@ class) · ROADMAP §76 demoted to its stub · the 82-pre pin (above) ·
 the HANDOFF cursor flipped to the §77 kickoff. §76 closed — every
 step user-signed, no snapshot bump end to end (as the kickoff
 predicted).
+
+## Phase 77 — Sector-map generation rework
+
+### The kickoff audit (2026-08-12)
+
+Two surveys — the generator + its consumers (direct), and the full
+RNG fork-ladder map (the keyed-stream rider's evidence base). All
+findings verified at HEAD (`e019202`).
+
+**The generator as it exists** ([NodeMap.ts](src/run/NodeMap.ts)):
+a staircase-interval planar DAG — widths → per-pair contiguous
+child intervals (diagonal-biased ends, 50/50 mirror bit) → FOUR
+appended tail scatter passes (rest → elite → port + ≥1 fallback →
+event), each pass byte-preserving every pass before it (the
+G3/W2/50c/74e discipline). §77 retires that discipline by design.
+The in-code comment at the event pass already names the width-2
+"battle-less hop" artifact as §77's to own. `stampRootKind` (the
+startingEvents root stamp) is LIVE, not pending — The Start opens
+on `sector-1-start` since 74i — so §77's placement work is the
+events-to-combat RATIO pass, not the stamp.
+
+**Cluster-kickoff findings re-verified current:** no divergence /
+early-availability / path-coverage metric exists anywhere; no
+rejection scaffold; no node-map visualizer (tools/mapgen-prototype
+is the BATTLEFIELD terrain sandbox; the 73e honesty comment on the
+tools-index card still points here).
+
+**Consumers + re-baseline surface:** `nodeMap` is serialized
+wholesale in RunSnapshot (v41; exact-version reject, no migration),
+so the shape is free to change under the scheduled bump. The
+isolation dials (`eliteChance`/`portChance`/`eventChance`) already
+ride `sectorAdvanceConfig` (#121) — the carry rule is that every
+NEW §77 knob joins the slice in the commit that adds it.
+[NodeMap.test.ts](src/run/NodeMap.test.ts) is ~60 tests, nearly all
+seed-sweep structural invariants (survive the rework); the
+tail-append byte-identity contract tests die with the discipline
+they pin.
+
+**The fork-ladder map (the keyed-stream evidence).** The Run
+constructor takes TEN positional forks in fixed order (sector →
+team → levelup → deck → daemon → reward → rewardBits → portStock →
+portPrice → event — the last five appended by later phases, each
+append a paid global re-baseline). Transient forks: `mapRng`
+per-encounter, `battleRng` per-turn, `offerRng` per-recruit,
+`sectorRng` per-advance. The four sharpest positional hazards, all
+found live:
+
+1. **The boss branch takes ZERO forks** where the non-boss branch
+   takes one (Run.ts:1946 vs 1961) — parent fork count diverges by
+   node kind. The strongest single argument for keyed derivation.
+2. **runRollout.ts:60–68** re-seeds clones with NINE sequential
+   forks that must mirror the RunSnapshot field order BY HAND.
+3. **rollout.ts:56–58** carries a conditional third `campRng` fork
+   purely to preserve historical two-fork alignment (dead weight
+   under keyed derivation).
+4. **battleSetup.ts:206** is a burn fork existing only because
+   `setupRngFor` already took fork #1 off the same fresh parent.
+
+Three code sites already forward-reference the keyed form by name
+(battleSetup.ts:184 `hash(root,'campSetup',turn)`, battleSetup.ts:289
+`mixSeeds` self-describing as "the §77 keyed stream re-architecture
+generalizes this shape", worklog §75 shape-lock). Donor primitives:
+`mixSeeds` (battleSetup, module-private) + `fnv1a` (dev/configHash,
+string→hex). The absolute-pin re-pin list is small and precedented:
+the port canary (harnessPort.test.ts — re-pinned at every prior
+stream break, 56a and 61d), the economy seed-3 pin, the 74e
+`eventsVisited` exit pin, `signed-sheet.json` (the board re-pin,
+already scheduled), and the 12 fixture weight vectors (regenerated,
+not hand-edited). The pathing baselines are RNG-free (immune);
+trace replay is self-contained (worldSeed/terrainSeed literals) and
+safe provided `setupRngFor`'s single-fork meaning is preserved or
+its replay path is converted with it. Camp identity stays
+PER-ENCOUNTER under conversion (`hash(terrainSeed,'campSetup')`, no
+turn component) — the 75j signed verdict is preserved by keying off
+the same parent, so the dormant per-turn option stays dormant.
+
+**Doc drift found in passing:** ROADMAP's 74j + 76i boxes were
+never flipped despite both phases being closed (the close commits
+exist); the ROADMAP title still reads "Phases 73–81" from before
+the §81 insertion renumber. Fixed with this kickoff commit.
+
+### The shape-lock (user-signed, 2026-08-12)
+
+Three resolutions:
+
+1. **The RNG rider: YES, at the FULL robustness bundle.** The
+   seams-only keyed-stream proposal kills append-coupling but not
+   the #49 draw-count-sensitivity class (the 74b precedent: the
+   eventRng append re-rolled every seed's battles). The user's
+   framing — "adding extra RNG mechanics shouldn't bite us in the
+   future" — signed all five escalations: (1) **per-occurrence
+   derivation** replacing long-lived streams — every logical random
+   decision derives fresh from stable keys
+   (`child(root,'levelup',unitId,level)`,
+   `child(root,'portStock',sectorIndex,nodeId)`, …); the nine
+   serialized RunSnapshot RNG states retire in favor of counters
+   (mostly pre-existing; serialized counter only where no natural id
+   exists, e.g. deck shuffles); a new draw can only remap its own
+   occurrence, forever. **Node-anchored semantics signed
+   explicitly**: outcomes stop depending on visit order (port stock
+   at node N is seed-fixed regardless of route) — judged an
+   improvement (StS-style seed fairness, better probes), not just
+   plumbing. **The rollout trap, designed-in**: clones must diverge
+   (CRN), so Run carries a `streamRoot` and a clone overrides it
+   with `derive(rolloutSeed)` — replaces the hand-mirrored
+   nine-fork list in runRollout. (2) One-stream-per-consumer
+   (sector/nodemap/boss split; generate()'s passes on named
+   sub-streams — the tail-append discipline retires instead of
+   relocating). (3) The single sanctioned door
+   (`RNG.child`/`deriveSeed` in RNG.ts; mixSeeds folds in; ad-hoc
+   `new RNG(hash)` becomes a review offense). (4) The stream-key
+   registry module + the permanence rule: KEY STRINGS ARE LIKE
+   GOTCHA NUMBERS — renaming one is a global stream break; the hash
+   function is frozen under the same rule. (5) The independence
+   acceptance test (add a draw to stream A, assert stream B
+   untouched) as the structural pin of the new contract.
+   Cost acknowledged: the per-occurrence conversion is ~1.5–2× the
+   seams-only 77d — accepted as a one-time cost on a re-baseline
+   already being paid. The cut splits it d1 (additive primitive, no
+   break) / d2 (Run, THE bump v41→v42) / d3 (battleSetup/World +
+   bot clones) so each breaking commit's re-pins stay attributable.
+2. **Baseline-first metrics signed**: the three metrics (early
+   availability by hop-k · path-kind coverage across root→boss
+   routes · branch divergence = rejoin distance + content
+   differentiation) are measured on the CURRENT generator at 77b;
+   thresholds sign at 77c against real distributions, not a priori.
+3. **The events-to-combat ratio stays its own signed band** (user
+   double-checked it made the charter — it did, spec approach item
+   4 "its own knob"): divergence measures branch DIFFERENCE, the
+   ratio measures route COMPOSITION — a map can be divergent and
+   still all-events. Same 77b corpus feeds both, so the band joins
+   the 77c signing list for free. The §82 event-ratio economy read
+   is the balance-side complement, unchanged.

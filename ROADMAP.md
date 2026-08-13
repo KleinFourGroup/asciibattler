@@ -227,21 +227,28 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
 - [x] 77c — ✅ DECIDED 2026-08-12: the threshold sheet signed, one
   amendment — events/route ≈3, band 2.5–3.5 (worklog §77c)
 - [x] 77d1 — ✅ 2026-08-12: `deriveSeed`/`deriveRng` + the 22-key
-  registry + pinned vectors + independence tests; additive,
-  fork() untouched (worklog §77d1)
-- [x] 77d2 — ✅ 2026-08-12: the Run conversion landed to plan —
-  **v41→v42** (streamRoot + 3 counters replace 10 RNG states);
-  rollout re-seed = ONE field; port canary re-pinned 3→2
-  (worklog §77d2)
+  registry + pinned vectors + independence tests (worklog §77d1)
+- [x] 77d2 — ✅ 2026-08-12: the Run conversion — **v41→v42**
+  (streamRoot + 3 counters replace 10 RNG states); port canary
+  re-pinned 3→2 (worklog §77d2)
 - [x] 77d3 — ✅ 2026-08-12: battle-side keyed (terrain/spawnSetup/
   campSetup/enemyPull; burn + alignment forks dead; mixSeeds folded
   in); **World v35 HELD**; docs sweep + gotcha #125 (worklog §77d3)
-- [ ] 77e — the `generate()` redesign: named sub-streams per pass +
-  constructive guarantee passes (port-≥1 generalized) + the
-  min-divergence edge rule + the ratio pass w/ battle floor +
-  bounded rejection (hard max-attempts throw); metrics become
-  permanent gates (`nodemap-metrics.test.ts`, the drift.test.ts
-  analog); new knobs join `sectorAdvanceConfig` (#121 rule)
+- 77e — RE-SCOPED 2026-08-12 (user-signed design round): the full
+  **braid/lane overhaul** replaces the staircase — lanes are the
+  primitive, split/merge ops + a per-lane kind state machine w/ a
+  per-hop arbiter; the sheet reads natively in path primitives,
+  rejection shrinks to a guard (worklog §77e). Cut:
+  - [ ] 77e1 — the braid skeleton: width-seq-driven op placement
+    (churn; rare 1→3/3→1), seam-lifetime d2 budget; old scatter
+    passes ride a kinds sub-stream as a BRIDGE (dies at e2);
+    NodeMap interface unchanged; structural tests re-derived
+  - [ ] 77e2 — the kind layer: quotas + machine + arbiter (battle
+    floor) + port-cone placement + bounded rejection (max-attempts
+    throw); knobs → `sectorAdvanceConfig` (#121); the
+    `nodemap-metrics.test.ts` n=500 gate (drift.test.ts analog)
+  - [ ] 77e3 — the example session: viz gallery + state-machine
+    tuning with the user; dials signed; docs sweep
 - [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the
   board re-pin on the box + the 11-row doctrine stress test →
   BALANCE (68h shape trigger — box, not local)

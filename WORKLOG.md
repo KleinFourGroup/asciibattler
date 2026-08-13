@@ -2678,3 +2678,71 @@ fork() legality rule) · ARCHITECTURE §RNG rewritten + the
 battleSetup tree line · DESIGN camps bullet · AGENTS determinism
 invariant · sim.ts enemyPullChance comment. Green: 2597 main + 398
 fuzz:smoke + typecheck.
+
+### 77e — the design round: the braid overhaul (user-signed, 2026-08-12)
+
+Step zero re-verified the card (generator untouched by 77d; nothing
+pre-built; `'nodemap'` keyed stream live; the tail-append contracts
+die as predicted). The incremental proposal — constructive passes
+kept on the staircase skeleton + a rejection residue — was presented
+and then SUPERSEDED by the user's counter-proposal, which is signed:
+**the full braid/lane overhaul.** Lanes (path objects) are the
+first-class primitive; hop width = active lane count; split/merge
+are adjacent-lane ops; kinds generate per lane via a state machine
+with a per-hop arbiter.
+
+**Why the overhaul won (the assessment that signed it):** the 77c
+sheet is route-centric, and the braid states it in native
+primitives — planarity/connectivity/degree caps are free by
+construction; a split opens a SEAM and a d2 rejoin is exactly a
+sibling merge at the next transition (seam-lifetime budget = the
+≤25% cap, direct); splits are the ONLY out-degree≥2 sites, so a
+split-time content rule covers ALL branch pairs (the ≥80% row);
+first-choice cones are trackable lane intervals; per-lane pacing is
+what the ratio band actually measures. Rejection shrinks to a
+bounded guard (kept per the scope guard, expected never hit).
+Timing argument: the seed break is already being paid — a full swap
+costs no extra re-baseline, and there is no byte-preservation
+discipline left to protect.
+
+**The signed resolutions:**
+
+1. **Hybrid width control** — the width sequence draws first
+   (budget/feasibility control kept from the staircase), then ops
+   realize Δw per transition; CHURN pairs (split+merge on a width
+   plateau) are where branch texture comes from — a knob, not an
+   accident.
+2. **State-machine rules (initial set — no additions until the user
+   sees examples; 77e3 is the tuning session):** back-to-back
+   events LEGAL (the 74e feel call carried) · back-to-back elites
+   DISCOURAGED · rests biased to appear BEFORE elites, more
+   strongly before the boss.
+3. **1→3 splits and 3→1 merges: rare but possible** (fused from
+   pairs of 2-ops when |Δw| ≥ 2, plus a rare-chance dial).
+4. **The width nudge is signed** (ratio-band slack — the slot
+   arithmetic is model-independent: events≈3/route + the battle
+   floor + ≥1 rest/elite/port needs ~11–14 special slots vs ~14 at
+   today's widths) · **min-spacing knobs become state-machine
+   cooldowns** rather than dying.
+
+**Recorded caveats:** (a) lanes ≠ routes — players re-compose
+routes across merges, so per-lane pacing approximates composed-route
+composition; `nodemap-metrics.test.ts` (n=500) stays the independent
+oracle regardless of generator. (b) A known expressiveness change:
+the staircase's PARTIAL merges (boundary-sharing where both parents
+keep other children) don't exist in the braid — ops are exclusive.
+That pattern was the d2-rejoin engine (59.8%), so its death is the
+point; the feel gets eyeballed at e3. (c) `NodeMap`'s output
+interface is unchanged (nodes/edges/hops) — Run/renderer/
+serialization untouched, **RunSnapshot v42 HOLDS** through 77e; the
+map remap is the scheduled break, re-pins land per-commit + 77f.
+
+**The cut (ROADMAP 77e re-scoped):** e1 the braid skeleton (widths →
+op placement with seams + rare 3-ops; the OLD four scatter passes
+ported verbatim onto a kinds sub-stream as a DELIBERATE BRIDGE so
+the tree stays green — landing note: the bridge dies at e2, and its
+placement distributions are throwaway) / e2 the kind layer (quotas +
+the per-lane machine + the per-hop arbiter incl. battle floor +
+port-cone placement + the bounded rejection guard + the metrics
+gate; new knobs join `sectorAdvanceConfig`, #121) / e3 the example
+session (viz gallery + state-machine tuning with the user + docs).

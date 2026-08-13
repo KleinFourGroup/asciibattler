@@ -2881,6 +2881,42 @@ anti-drift dial question** (candidate mechanism: counter-drift
 preference among equally-clean arrangements; exhibits = the P90+
 drifters). Green: 2610 main (net +2) + typecheck.
 
+### 77e3 — the example session (2026-08-13, in progress)
+
+**Anti-drift: RESOLVED — LEAVE IT (user-signed 2026-08-13).** The
+per-map coherent drift stays as organic texture ("it flows really
+nicely on average, and a wonky one every once in a while isn't
+bad"); revisit ONLY on negative playtest feedback. No anti-drift
+mechanism built; the handedness gate + the diagonalMajorityShare
+instrument stand watch. (The corpus punchline for posterity: seed
+1 — the viz's default — is the single worst drifter in 500.)
+
+**The dial session (user-experimented in the viz, signed
+2026-08-13):** `churnChance` 0.6→**0.4** (a bit less braid churn) ·
+`split3Chance`/`merge3Chance` 0.15→**0.25** ("they look cool but
+got too chaotic above that") · `d2RejoinChance` HELD 0.1 (pumped
+high it still added little — small diamonds just aren't visible
+texture; the corpus d2 sits ~2%) · EVERY kind dial HELD as-shipped
+("I REALLY like how they turned out"). Corpus at the signed
+values: all gates green, 8.4 pairs/map (from 9.2), LONGER branch
+lives (d7–d10 mass grew), divergence 94.8%, composition unchanged
+(events 3.12 · combat 58.1%), zero test fallout (the self-healing
+pin discipline paid — no re-pins needed).
+
+**Ratifications (user, 2026-08-13):** all four e2 semantics
+changes CONFIRMED — portChance-0 kills ports · the dial contract
+narrowed to structure · the statistical band gate · floor priority
+port>elite>rest. **Corridors KEPT** (the min-width outlier maps =
+the same occasional-wonky-map philosophy as drift).
+
+**Rider (user-called, 2026-08-13): the in-game MapScreen
+full-width stretch.** MapScreen stretches every hop across the
+panel (`x = (i+0.5)/width`), so braid lanes read too separated.
+Slotted HERE as an e3 rider (a §77-caused render consequence;
+§78's map work is the overlay, not this): fixed-pitch centered
+columns — the nodemap-viz model — so lane spacing is constant and
+narrow hops cluster instead of stretching.
+
 **The corpus, before → signed → now:** d2 59.8% → ≤25% → **2.9%**
 · divergent 60.7% → ≥80% → **94.2%** · presence → 100% all four ·
 port-by-h5 → **100%** · rest/elite-by-h5 → **100%/100%** · port

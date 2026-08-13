@@ -20,8 +20,8 @@
   "kindMaxAttempts": 20,
   "preEliteRestWeight": 2,
   "preBossRestWeight": 3,
-  "churnChance": 0.6,
-  "split3Chance": 0.15,
-  "merge3Chance": 0.15,
+  "churnChance": 0.4,
+  "split3Chance": 0.25,
+  "merge3Chance": 0.25,
   "d2RejoinChance": 0.1
 }

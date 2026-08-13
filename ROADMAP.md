@@ -183,41 +183,16 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 - [x] 76i — docs close ✅ 2026-08-12 (`e019202`; box flipped late,
   caught at the §77 kickoff)
 
-## Phase 77 — Sector-map generation rework 🚧 IN FLIGHT (cut signed 2026-08-12)
+## Phase 77 — Sector-map generation rework ✅ CLOSED 2026-08-13
 
-**Charter:** visualizer → the three metrics (early availability ·
-path-kind coverage · branch divergence) as acceptance tests →
-constructive guarantee passes + a min-divergence edge rule → bounded
-rejection sampling only for the fuzzy residue; event placement + the
-events-to-combat ratio pass (its own signed band — the source-node
-stamp is already live since 74i); the deliberate seed-stream break +
-the FULL re-baseline + the cluster-5 stress test (the 11-row
-doctrine control set). Second Run bump.
-**Rider ✅ DECIDED 2026-08-12 (kickoff shape-lock):** the RNG fork
-re-architecture is a YES, at the FULL robustness bundle —
-per-occurrence keyed derivation (not just keyed streams), the
-one-stream-per-consumer split, the single sanctioned door, the
-stream-key registry, the independence test; node-anchored outcome
-semantics user-signed. Camp identity stays per-encounter (75j
-verdict preserved by keying). Rationale + the audit evidence:
-worklog §77.
-
-- **Order:** after ALL content movers so the re-pin happens once, on
-  final content.
-- **Risk:** MEDIUM-HIGH — every seed remaps; the isolation dials
-  (`eventChance` etc. + every NEW §77 knob) must land in
-  `sectorAdvanceConfig` or probes silently include events.
-- **Decision points:** 77c — the metric thresholds + guarantee list
-  + the events-to-combat ratio band sign with the user, on 77b's
-  measured baseline.
-- **Exit:** metrics green over a seed corpus; the visualizer shipped
-  (and the tools-index card finally telling the truth); fuzz + board
-  fully re-baselined; the stress test recorded in BALANCE.
-- **Scope guards:** no rejection loop without a hard max-attempts
-  failure; generator passes replaced only where the rework demands
-  it, each documented as a deliberate stream break.
-
-Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
+**Outcome:** the BRAID generator end to end — the keyed
+per-occurrence RNG re-architecture (Run **v41→v42**, World v35 held;
+gotcha #125), lanes/split-merge structure + the quota kind layer,
+every signed 77c row gated at n=500 (`tests/nodemap-metrics.test.ts`,
+0 FAIL), dials + 4 semantics changes user-signed, and the
+braid-world stress board **0 FAIL / 4 WARN** (all §82-named; refs
+re-signed 2026-08-13 — the sheet's third amendment). Detail:
+WORKLOG §§77–77g · BALANCE §77f · gotcha #125.
 
 - [x] 77a — visualizer ✅ 2026-08-12: `tools/nodemap-viz/` live +
   card re-described; parity-probed + DOM-proven (worklog §77a)
@@ -248,7 +223,8 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   15-row board on the box — **0 FAIL / 7 WARN**, the signed
   architecture HELD; stress read → BALANCE §77f; ref re-pins
   await the user's signature (worklog §77f)
-- [ ] 77g — docs close + ROADMAP demote + cursor flip
+- [x] 77g — ✅ 2026-08-13: refs re-signed (sheet amendment 3) ·
+  demote · cursor flip (worklog §77g)
 
 ## Phase 78 — UI/UX batch
 

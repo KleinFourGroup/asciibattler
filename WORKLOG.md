@@ -2955,3 +2955,19 @@ Full decomposition + the re-pin proposal: BALANCE 2026-08-13
 (§77f). Reference re-pins await the user's signature (the 75l
 amendment ritual); signed bands deliberately unmoved (§82 owns
 reality-vs-band).
+
+### 77g — the close (2026-08-13)
+
+The re-pins SIGNED (user, same day): act-1 six + the two
+forced-boss refs at the braid-world values — the sheet's third
+amendment (signedAt updated; gamblerNote rewritten to the
+shape-coupled premise; the priest regen breach recorded as the
+second named §82 parity item). The closing report: **0 FAIL / 4
+WARN, every WARN a carried §82-named watch** (wall-regen
+below-band · the 55pre reach watch + its derived win · the fire
+channel); board tests 20/20. ROADMAP §77 demoted to the stub;
+HANDOFF cursor flipped (nothing in flight; NEXT = the §78
+kickoff). §77 ran 77a→77g in three sessions, 2026-08-12→13:
+two Run-bump-scale re-architectures (keyed RNG + the braid), one
+mid-phase user-signed re-scope, five gates added, zero
+regressions shipped.

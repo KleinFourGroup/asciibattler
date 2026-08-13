@@ -1,19 +1,19 @@
 {
-  "signedAt": "2026-08-04, §72f (user-signed) — THE ARBITRATED DEFAULT: the realistic-bot arm gains --arbitrate (the 71d/72d/72f-direct-test cheap tier); the board = 10 arb primaries + 5 doctrine controls. Seam re-signed 15–18 at arb reality (patch fires offset drain; the doctrine-arm 13–15 retires with its arm) · wall 30–35 HELD, achieved by the ×1.25 deep-end boss dose (walls 0.313/0.348) · reach 40–50 HELD (the 55pre twin's 0.575 rides as the reference overperformance watch) · WIN DERIVED, never independently signed · fire channel re-signed +0.10 on the doctrine control pair (the 72c buffs repaired it; on the arb arm it reads ≈0 by substitution — structural, banked in BALANCE §72f). Act-1 refs re-pinned at the 72f-cycle arb values; the gambler shopper parity breach is an explicit next-round rider, not absorbed. ⭑ AMENDED 2026-08-10 (user-signed, the 75l board re-pin): act-1 win refs + the forced-boss refs re-pin at the 75l observed §74/§75-era values (BALANCE 2026-08-10 = the amendment's board run; bank/fires/tx refs held mid-band and stay at 72f) — the walk-shape SIGNED bands deliberately do NOT move (the below-band walls read PULL-SOFTENED; whether reality moves to the band or the band moves is the §82 boss-board-pull decision, tentative user lean NO-pull-on-boss) · the fire-channel +0.10 stays signed with the 75l inversion (−0.075, statistically weak) as an open §82 re-read.",
+  "signedAt": "2026-08-04, §72f (user-signed) — THE ARBITRATED DEFAULT: the realistic-bot arm gains --arbitrate (the 71d/72d/72f-direct-test cheap tier); the board = 10 arb primaries + 5 doctrine controls. Seam re-signed 15–18 at arb reality (patch fires offset drain; the doctrine-arm 13–15 retires with its arm) · wall 30–35 HELD, achieved by the ×1.25 deep-end boss dose (walls 0.313/0.348) · reach 40–50 HELD (the 55pre twin's 0.575 rides as the reference overperformance watch) · WIN DERIVED, never independently signed · fire channel re-signed +0.10 on the doctrine control pair (the 72c buffs repaired it; on the arb arm it reads ≈0 by substitution — structural, banked in BALANCE §72f). Act-1 refs re-pinned at the 72f-cycle arb values; the gambler shopper parity breach is an explicit next-round rider, not absorbed. ⭑ AMENDED 2026-08-10 (user-signed, the 75l board re-pin): act-1 win refs + the forced-boss refs re-pin at the 75l observed §74/§75-era values (BALANCE 2026-08-10 = the amendment's board run; bank/fires/tx refs held mid-band and stay at 72f) — the walk-shape SIGNED bands deliberately do NOT move (the below-band walls read PULL-SOFTENED; whether reality moves to the band or the band moves is the §82 boss-board-pull decision, tentative user lean NO-pull-on-boss) · the fire-channel +0.10 stays signed with the 75l inversion (−0.075, statistically weak) as an open §82 re-read. ⭑ AMENDED 2026-08-13 (user-signed, the §77f braid-world re-pin): act-1 win refs + the forced-boss refs re-pin at the braid-world observed values (BALANCE 2026-08-13 §77f = the amendment's board run, 0 FAIL / 7 WARN; bank/fires/tx held mid-band and stay); the signed bands again deliberately do NOT move (§82 re-reads walls/reach on THIS world — the 76h hardened read is historical). The priest regen breach (−10 vs soldier) joins the gambler as a NAMED §82 parity item; the gambler breach FLIPPED SHAPES at 77f (regen gap 0.0, 55pre −22.5 — shape-coupled, not kit-intrinsic).",
   "characterParity": "characters are similar in DIFFICULTY, differing in PLAYSTYLE (DESIGN.md §Run structure) — cross-character gaps beyond ~±5pt are defects; ⚠ BREACHED at 72f on the shopper posture (soldier 0.850 vs gambler 0.625 arb; character-intrinsic, deaths at the act-1 boss) — the next-round repair rider",
   "seamPoolBand": { "min": 15, "max": 18 },
   "terminalReachTarget": { "min": 0.4, "max": 0.5 },
   "deepEndWallTarget": { "min": 0.3, "max": 0.35 },
   "act1WinRefs": {
-    "soldier": { "regen": 0.75, "pre55": 0.875 },
-    "priest": { "regen": 0.825, "pre55": 0.8 },
-    "gambler": { "regen": 0.7, "pre55": 0.725 }
+    "soldier": { "regen": 0.7, "pre55": 0.775 },
+    "priest": { "regen": 0.6, "pre55": 0.725 },
+    "gambler": { "regen": 0.7, "pre55": 0.55 }
   },
-  "gamblerNote": "72f: the shopper ref pins at the OBSERVED value (drift detection) while the parity breach vs the soldier shopper stays the named §82 repair — 75l re-pin: 0.625→0.725, the breach NARROWS to −15 (soldier 0.875 vs gambler 0.725; still past the ±5 principle)",
+  "gamblerNote": "77f re-pin (braid world): the breach FLIPPED SHAPES — regen gap 0.0 (was −22.5 at 76h), 55pre −22.5 (soldier 0.775 vs gambler 0.550); shape-coupled evidence, the §82 repair premise updated. The priest regen breach (0.600 vs soldier 0.700) is the SECOND named parity item.",
   "bankRefs": { "firer": 60.3, "shopper": 63.5 },
   "firerFiresPerRun": 2.15,
   "shopperTransactionRate": 0,
   "fireChannelDelta": 0.1,
-  "forcedKingWinRegen": 0.825,
+  "forcedKingWinRegen": 0.775,
   "forcedQueenWinRegen": 0.675
 }

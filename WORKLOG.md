@@ -2791,3 +2791,68 @@ are gone) — `churnChance` is the dial; expect fewer nodeChoice
 arbitration calls per run in the 77f decisions.csv. Viz confirmed
 live on braid maps (console-clean; overlay + variety gallery;
 forced-merge3 narrowings render planar).
+
+### 77e2 — the kind layer + the corpus gates (2026-08-12)
+
+Landed to the cut, TDD'd against the new
+`tests/nodemap-metrics.test.ts` (the drift.test.ts analog: every
+signed 77c row as an n=500 gate; C rows = mechanism, R rows =
+statistical; NEVER relax). The bridge is dead. The engine:
+route-share quotas (`*RouteTarget` knobs; exact through-routes DP)
+placed in PRIORITY ORDER = signedness — (1) the port CONE pass
+(each hop-1 cone gets a port by h≤5; guarantee beats pacing), (2)
+presence floors as HARD early-window picks (port → elite → rest;
+cascading pools), (3) EVENTS to the signed band (share×spread
+weights), (4) elite/rest cone repairs, (5) feel top-ups on
+leftovers. Battle floor (specials ≤ width−1) and PATH-WINDOW
+cooldowns everywhere — spacing is now per-route, not per-hop
+(braid edges never cross lanes outside ops, so the window is an
+exact route guarantee). Kinds rejection: attempt-indexed re-roll,
+cone-failure-only retryable, `kindMaxAttempts` throw.
+
+**The gate run drove four mechanism fixes** (each red row → a fix,
+same session): (a) the d2 cap leaked on width sawteeth (2→6→2
+forces split3s merged straight back — seed 14's six pairs) →
+**width smoothing** (±2 per transition + NO shrink right after
+growth, soft under budget) + a bounded ops-pass re-roll
+(`nodemapOps` gains the attempt index); (b) rest-by-h5 87.6% → the
+floor pick is pure availability (a soft early WEIGHT provably
+insufficient; the `earlyKindWeight` knob died for a hard window);
+(c) elite lockout 23.4% → the cone-repair pass; (d) events band
+starved on narrow maps (16/300 below, all free=0) → the priority
+reorder above.
+
+**Deliberate semantics changes (flagged for user ratification at
+this pause):** ① `portChance=0` now kills ports ENTIRELY (was:
+exactly-1 fallback) — all four kinds unify on "dial 0 = kind
+absent", the control-arm precedent; ② the 74e "an event dial
+leaves other kinds byte-identical" contract NARROWED to
+structure-only + guarantees (kinds share one slot pool by design —
+displacement is real gameplay); ③ the events-band gate is
+statistical (≥99% in band · floor 2.2 · mean 2.8–3.2), not
+per-map-100%: ~0.4% of maps are min-width corridors whose early
+slots the C-row guarantees fully consume (seeds 13/430, ev 2.33) —
+tightening to 100% = a width-floor decision (killing 2-wide
+corridors), the user's call; ④ floor priority port>elite>rest
+means 4-hop dev maps host a port but never a rest (the rest
+fixtures moved to hopCount 5). The signed WIDTH NUDGE proved
+unnecessary — priority ordering resolved the slot arithmetic.
+
+**Fallout:** the port canary re-pinned 2→3 (scan read
+3/4/6/7/10/13/17/19 buying in 1..20 — the ritual's sixth entry;
+the port floor REVIVED the SHORT shape, which had gone portless
+under cones-only sourcing) + the four hopCount-4 rest fixtures →
+hopCount 5. Green: 2610 main (+13: the gates) + 398 fuzz:smoke +
+typecheck.
+
+**The corpus, before → signed → now:** d2 59.8% → ≤25% → **2.9%**
+· divergent 60.7% → ≥80% → **94.2%** · presence → 100% all four ·
+port-by-h5 → **100%** · rest/elite-by-h5 → **100%/100%** · port
+lockout 41.4% → 0% → **0.0%** · elite/rest lockout 31.8/22.1% →
+≤10% → **1.6%/3.4%** · port routes 35.7% → ≥50% → **68.0%** (P10
+54.5) · battle-less hops 46.8% → 0% → **0.0%** · events/route 1.12
+→ ≈3 → **3.13** · combat share 80.6% → ≈55–65% → **57.9%**. Viz
+live (widths smooth, overlay coherent). e3 agenda: choice density
+(`churnChance`), diamond scarcity (d2 now 3% — maybe TOO clean;
+`d2RejoinChance` dials up), wide-map special-node counts, the
+corridor question (③), new-knob sliders.

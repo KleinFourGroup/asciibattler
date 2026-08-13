@@ -41,13 +41,24 @@ const NodeMapSchema = z
     middleWidthMax: z.number().int().positive(),
     targetTotalMax: z.number().int().positive(),
     maxOutDegree: z.number().int().positive(),
-    restChance: z.number().min(0).max(1),
+    /** 77e2 — the *MinSpacing knobs are PATH-WINDOW cooldowns since the
+     *  quota placement rework (worklog §77e): two same-kind nodes may not
+     *  sit within `minSpacing` hops of each other ALONG ANY ROUTE (the old
+     *  semantics were per-hop map-global). Values carried unchanged:
+     *  rest/elite 2 (never adjacent on a route — "back-to-back elites
+     *  discouraged", signed), port 3, event 1 (back-to-back events LEGAL —
+     *  the 74e feel call, re-signed at the 77e design round). */
     restMinSpacing: z.number().int().positive(),
+    /** 77e2 — eliteChance/portChance/eventChance are the RunConfig PROBE
+     *  DIALS' anchor values (72e/74e semantics preserved through the quota
+     *  rework): an override `d` scales the kind's route target by
+     *  `d / anchor`, so 0 still kills the kind (the isolation arms) and 1
+     *  still floods it. Absent override = scale 1 (authored density).
+     *  `restChance` had no dial and is retired. */
     eliteChance: z.number().min(0).max(1),
     eliteMinSpacing: z.number().int().positive(),
     portChance: z.number().min(0).max(1),
     portMinSpacing: z.number().int().positive(),
-    /** 74e — event-node placement (see header: dense by design). */
     eventChance: z.number().min(0).max(1),
     eventMinSpacing: z.number().int().positive(),
     /** 74b — the chance an entered event node resolves straight into a
@@ -66,6 +77,26 @@ const NodeMapSchema = z
     split3Chance: z.number().min(0).max(1),
     merge3Chance: z.number().min(0).max(1),
     d2RejoinChance: z.number().min(0).max(1),
+    /** 77e2 — the kind-layer quotas (worklog §77e; thresholds = the signed
+     *  77c sheet). `*RouteTarget`: expected per-route count for the kind
+     *  (exact route-share accounting, uniform-route model — the fuzz
+     *  walker measures the steered reality). `eventsPerRoute`: the signed
+     *  ratio band center (≈3, band ±`eventsBandHalfWidth`). Placement is
+     *  quota-driven with a per-hop battle floor (≥1 battle per middle
+     *  hop), constructive port-cone coverage (every first choice keeps
+     *  shop access by h5), and bounded rejection (`kindMaxAttempts`,
+     *  hard-throw — the §77 scope guard). The weight knobs are the signed
+     *  pacing rules: `preEliteRestWeight` (rests before elites),
+     *  `preBossRestWeight` (rests before the boss, stronger); the first
+     *  rest/elite ride a HARD early window (hops ≤5), not a weight. */
+    restRouteTarget: z.number().min(0),
+    eliteRouteTarget: z.number().min(0),
+    portRouteTarget: z.number().min(0),
+    eventsPerRoute: z.number().min(0),
+    eventsBandHalfWidth: z.number().min(0),
+    kindMaxAttempts: z.number().int().positive(),
+    preEliteRestWeight: z.number().min(1),
+    preBossRestWeight: z.number().min(1),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {
     message: 'middleWidthMin must be <= middleWidthMax',

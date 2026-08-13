@@ -106,13 +106,14 @@ describe('harness economy seam (59a)', () => {
   });
 
   it('the port seam is LIVE — a buy-nothing stub zeroes purchases the baseline made', () => {
-    // Seed 2 = the pinned port canary (harnessPort.test.ts; re-pinned 10→12
-    // at 56a, 12→2 at 61d, 2→3 at 74i-c, 3→2 at 77d2) — the walk that
-    // provably docks with funds. Same re-pin contract: if an engine round
-    // re-deals the streams, re-scan there first and this follows.
-    const bought = runOne(2, strat(), SHORT);
+    // Seed 3 = the pinned port canary (harnessPort.test.ts; re-pinned 10→12
+    // at 56a, 12→2 at 61d, 2→3 at 74i-c, 3→2 at 77d2, 2→3 at 77e2) — the
+    // walk that provably docks with funds. Same re-pin contract: if an
+    // engine round re-deals the streams, re-scan there first and this
+    // follows.
+    const bought = runOne(3, strat(), SHORT);
     expect(bought.portPurchases).toBeGreaterThan(0);
-    const abstained = runOne(2, { ...strat(), pickPortBuy: () => null }, SHORT);
+    const abstained = runOne(3, { ...strat(), pickPortBuy: () => null }, SHORT);
     expect(abstained.portPurchases).toBe(0);
     expect(abstained.finalBits).toBeGreaterThanOrEqual(bought.finalBits);
   });

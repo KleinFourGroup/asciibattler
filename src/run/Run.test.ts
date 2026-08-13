@@ -3834,11 +3834,14 @@ describe('Run', () => {
 
   describe('rest nodes (G3)', () => {
     it('banks restXp into every roster slot and starts no battle', () => {
-      // hopCount 4 → a hop-2 rest is the first reachable rest. Clear the
+      // hopCount 5 → a hop-2 rest is the first reachable rest. (Was 4
+      // pre-77e2; the quota layer's floor priority port → elite → rest
+      // means a 4-hop map's 1–2 band slots never reach the rest floor —
+      // 5 hops is the smallest shape whose band fits all three.) Clear the
       // hop-1 battle with no XP so the only XP the team carries into the rest
       // is the rest grant itself (expected level/xp derive from the actual
       // starting level, so this is robust to the startingLevel dial).
-      const { run, bus, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
+      const { run, bus, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
       const before = run.team.map((t) => ({ level: t.level, xp: t.xp }));
       let battleStarts = 0;
       bus.on('battle:started', () => battleStarts++);
@@ -3857,7 +3860,7 @@ describe('Run', () => {
 
     it('triggers PromotionScene on a level-up and dismissing returns to the map (not recruit)', () => {
       const { run, bus, restId } = driveToRestFrontier(
-        { hopCount: 4, startingRoster: LVL1_ROSTER },
+        { hopCount: 5, startingRoster: LVL1_ROSTER },
         2,
       );
       // Level-1 roster + restXp (>= xpToNext(1)) guarantees promotions.
@@ -3953,7 +3956,7 @@ describe('Run', () => {
     });
 
     it('H6a — heals the run-wide player pool by restHealAmount when wounded', () => {
-      const { run, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
+      const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
       // Wound the pool deep enough that the heal can't hit the cap.
       const before = Math.max(1, HEALTH.playerHealthMax - HEALTH.restHealAmount - 1);
       run.playerHealth = before;
@@ -3967,7 +3970,7 @@ describe('Run', () => {
     });
 
     it('H6a — never heals the pool above playerHealthMax', () => {
-      const { run, restId } = driveToRestFrontier({ hopCount: 4 }, 2);
+      const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
       // Already full: the heal must clamp, never overfill (robust for any knob).
       run.playerHealth = HEALTH.playerHealthMax;
 

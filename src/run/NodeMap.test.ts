@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../core/RNG';
 import { NODE_MAP } from '../config/nodemap';
+import { computeMapMetrics } from './mapMetrics';
 import { generate, dump, stampRootKind, type NodeMap, type MapEdge } from './NodeMap';
 
 // Balance-proof: derive every bound from the config the generator actually
@@ -96,18 +97,13 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('at most one rest per hop, and rest hops respect the min spacing', () => {
+    it('no route passes two rests within restMinSpacing hops (the 77e2 path window)', () => {
+      // The spacing contract moved from per-hop map-global to PATH-WISE at
+      // 77e2 (worklog §77e): two rests on parallel lanes may share a hop,
+      // but no composed route may hit two within the window.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const perHop = new Map<number, number>();
-        for (const n of map.nodes) {
-          if (n.kind === 'rest') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
-        }
-        for (const count of perHop.values()) expect(count).toBe(1);
-        const restHops = [...perHop.keys()].sort((a, b) => a - b);
-        for (let i = 1; i < restHops.length; i++) {
-          expect(restHops[i]! - restHops[i - 1]!).toBeGreaterThanOrEqual(restMinSpacing);
-        }
+        expect(pathWindowViolations(map, 'rest', restMinSpacing), `seed ${s}`).toEqual([]);
       }
     });
 
@@ -162,18 +158,12 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('at most one elite per hop, and elite hops respect the min spacing', () => {
+    it('no route passes two elites within eliteMinSpacing hops (back-to-back discouraged, signed)', () => {
+      // The 77e design round's rule 2, as the path-window contract: spacing
+      // 2 ⇒ no route ever offers two elite fights on consecutive hops.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const perHop = new Map<number, number>();
-        for (const n of map.nodes) {
-          if (n.kind === 'elite') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
-        }
-        for (const count of perHop.values()) expect(count).toBe(1);
-        const eliteHops = [...perHop.keys()].sort((a, b) => a - b);
-        for (let i = 1; i < eliteHops.length; i++) {
-          expect(eliteHops[i]! - eliteHops[i - 1]!).toBeGreaterThanOrEqual(eliteMinSpacing);
-        }
+        expect(pathWindowViolations(map, 'elite', eliteMinSpacing), `seed ${s}`).toEqual([]);
       }
     });
 
@@ -250,19 +240,25 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('at most one port per hop; multi-port maps respect the min spacing', () => {
-      // The fallback pass only ever fires when the scatter placed ZERO ports,
-      // so any map with two or more ports is pure scatter — spacing applies.
+    it('no route passes two ports within portMinSpacing hops (path window; cone guarantee may relax)', () => {
+      // "Guarantee beats pacing": the cone pass may place an unspaced port
+      // when the shop-access guarantee finds no spaced candidate — so this
+      // sweep doubles as the canary that the relaxation stays rare. If it
+      // ever trips, inspect whether the seed's violation is cone-forced
+      // before touching the window.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const perHop = new Map<number, number>();
-        for (const n of map.nodes) {
-          if (n.kind === 'port') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
-        }
-        for (const count of perHop.values()) expect(count).toBe(1);
-        const portHops = [...perHop.keys()].sort((a, b) => a - b);
-        for (let i = 1; i < portHops.length; i++) {
-          expect(portHops[i]! - portHops[i - 1]!).toBeGreaterThanOrEqual(portMinSpacing);
+        expect(pathWindowViolations(map, 'port', portMinSpacing), `seed ${s}`).toEqual([]);
+      }
+    });
+
+    it('every first choice keeps port access by hop 5 (the 77c cone guarantee)', () => {
+      for (let s = 0; s < 100; s++) {
+        const map = generate(new RNG(s));
+        for (const first of map.hops[1]!) {
+          const cone = descendantsOf(map, first);
+          const ok = map.nodes.some((n) => n.kind === 'port' && n.hop <= 5 && cone.has(n.id));
+          expect(ok, `seed ${s}: first choice ${first} locked out of ports`).toBe(true);
         }
       }
     });
@@ -329,31 +325,35 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('at most one event per hop, and event hops respect the min spacing', () => {
+    it('event path window tracks the config (spacing 1 ships = back-to-back LEGAL, signed)', () => {
+      // Vacuously green at spacing 1 — the assert exists so raising the
+      // knob makes the window bite without test churn.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        const perHop = new Map<number, number>();
-        for (const n of map.nodes) {
-          if (n.kind === 'event') perHop.set(n.hop, (perHop.get(n.hop) ?? 0) + 1);
-        }
-        for (const count of perHop.values()) expect(count).toBe(1);
-        const eventHops = [...perHop.keys()].sort((a, b) => a - b);
-        for (let i = 1; i < eventHops.length; i++) {
-          expect(eventHops[i]! - eventHops[i - 1]!).toBeGreaterThanOrEqual(eventMinSpacing);
-        }
+        expect(pathWindowViolations(map, 'event', eventMinSpacing), `seed ${s}`).toEqual([]);
       }
     });
 
-    it('events are DENSE by design: most default maps place several', () => {
-      // The feel call pinned loosely (chance 0.5 over ~8 eligible hops →
-      // expected ~4): at least half the seeds carry >= 2 events. A config
-      // retune moves this — that's the §81 re-read, not a broken pass.
-      let multiEvent = 0;
+    it('events land in the signed ratio band (≈eventsPerRoute ± half-width; corridor outliers ≤2%, floor 2.2)', () => {
+      // Balance-proof: band from the config the generator reads; the
+      // expected-count read recomputed INDEPENDENTLY by the 77b instrument
+      // (the cheap-independent-recompute lint, gotcha-#120 doctrine).
+      // Minimum-width corridor maps can physically cap below the band —
+      // see the corpus gate for the full statistical statement.
+      const { eventsPerRoute, eventsBandHalfWidth } = NODE_MAP;
+      let outside = 0;
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        if (map.nodes.filter((n) => n.kind === 'event').length >= 2) multiEvent++;
+        const events = computeMapMetrics(map).expectedRouteComposition.get('event') ?? 0;
+        expect(events, `seed ${s}`).toBeGreaterThanOrEqual(2.2);
+        if (
+          events < eventsPerRoute - eventsBandHalfWidth ||
+          events > eventsPerRoute + eventsBandHalfWidth
+        ) {
+          outside++;
+        }
       }
-      expect(multiEvent).toBeGreaterThanOrEqual(50);
+      expect(outside).toBeLessThanOrEqual(2);
     });
 
     it('an event always leaves a non-event sibling on its hop (route choice holds)', () => {
@@ -370,16 +370,27 @@ describe('NodeMap.generate', () => {
       }
     });
 
-    it('an event never overwrites a rest, elite, or port (the tail-pass candidate filter)', () => {
-      // Indirect but complete: every kind pass places <= 1 node per hop and
-      // the event candidate set excludes all three prior kinds, so on any
-      // hop the special kinds are pairwise-distinct nodes. Proven here by
-      // per-hop kind counts never exceeding 1 each.
+    it('every middle hop keeps at least one battle node (the 77c battle floor)', () => {
+      // The C row that killed the 74e stacking artifact: specials per hop
+      // are hard-capped at width − 1, so no hop in the band ever goes
+      // battle-less.
       for (let s = 0; s < 100; s++) {
         const map = generate(new RNG(s));
-        for (const ids of map.hops) {
-          const kinds = ids.map((id) => nodeById(map, id).kind).filter((k) => k !== 'battle');
-          expect(new Set(kinds).size).toBe(kinds.length);
+        for (let f = 2; f <= map.hops.length - 2; f++) {
+          const kinds = map.hops[f]!.map((id) => nodeById(map, id).kind);
+          expect(kinds, `seed ${s} hop ${f}`).toContain('battle');
+        }
+      }
+    });
+
+    it('EVERY default-length map places at least one of each special kind (the 77c presence floor)', () => {
+      for (let s = 0; s < 200; s++) {
+        const map = generate(new RNG(s));
+        for (const kind of ['rest', 'elite', 'port', 'event'] as const) {
+          expect(
+            map.nodes.some((n) => n.kind === kind),
+            `seed ${s}: no ${kind}`,
+          ).toBe(true);
         }
       }
     });
@@ -689,6 +700,53 @@ function reachableFrom(map: NodeMap, start: number): Set<number> {
   return visited;
 }
 
+/** 77e2 — same-kind pairs within `spacing-1` hops along any route (the
+ *  path-window contract). Empty ⇒ the pacing rule holds on every route. */
+function pathWindowViolations(map: NodeMap, kind: string, spacing: number): string[] {
+  const kindOf = new Map(map.nodes.map((n) => [n.id, n.kind]));
+  const children = new Map<number, number[]>();
+  for (const e of map.edges) {
+    const list = children.get(e.from) ?? [];
+    list.push(e.to);
+    children.set(e.from, list);
+  }
+  const out: string[] = [];
+  for (const n of map.nodes) {
+    if (kindOf.get(n.id) !== kind) continue;
+    let frontier = [n.id];
+    for (let d = 1; d < spacing; d++) {
+      const next: number[] = [];
+      for (const cur of frontier) {
+        for (const c of children.get(cur) ?? []) {
+          if (kindOf.get(c) === kind) out.push(`${n.id}~${c} (path distance ${d})`);
+          next.push(c);
+        }
+      }
+      frontier = next;
+    }
+  }
+  return out;
+}
+
+/** BFS descendants of `start` (its route cone), including itself. */
+function descendantsOf(map: NodeMap, start: number): Set<number> {
+  const children = new Map<number, number[]>();
+  for (const e of map.edges) {
+    const list = children.get(e.from) ?? [];
+    list.push(e.to);
+    children.set(e.from, list);
+  }
+  const cone = new Set<number>();
+  const stack = [start];
+  while (stack.length) {
+    const cur = stack.pop()!;
+    if (cone.has(cur)) continue;
+    cone.add(cur);
+    for (const c of children.get(cur) ?? []) stack.push(c);
+  }
+  return cone;
+}
+
 /** Reverse-BFS: the set of nodes that can reach `target` (co-reachability). */
 function coReachableTo(map: NodeMap, target: number): Set<number> {
   const radj = new Map<number, number[]>();
@@ -732,13 +790,15 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
     expect(forced).toBeGreaterThan(authored);
   });
 
-  it('portChance=1 scatters strictly more ports than authored; portChance=0 keeps EXACTLY the >=1-per-map fallback port', () => {
+  it('portChance=1 scatters strictly more ports than authored; portChance=0 kills ports ENTIRELY (probe-kill unified, 77e2)', () => {
+    // 77e2 semantics change (worklog §77e2, user-flagged): dial 0 kills the
+    // kind INCLUDING its guarantees — a kill dial that still places the
+    // fallback port is a probe-isolation trap. All four kinds now share
+    // "dial 0 = kind absent" (the --event-chance=0 control-arm precedent).
     let authored = 0;
     let forced = 0;
     for (let s = 1; s <= SEEDS; s++) {
-      // The 50c >=1-per-map guarantee owns the floor: chance 0 skips the
-      // scatter pass entirely, so the fallback places exactly one port.
-      expect(count(generate(new RNG(s), { portChance: 0 }), 'port')).toBe(1);
+      expect(count(generate(new RNG(s), { portChance: 0 }), 'port')).toBe(0);
       const f = count(generate(new RNG(s), { portChance: 1 }), 'port');
       expect(f).toBeGreaterThanOrEqual(1);
       forced += f;
@@ -763,18 +823,25 @@ describe('the 72e/74e scatter-chance probe dials (eliteChance / portChance / eve
     expect(forced).toBeGreaterThan(authored);
   });
 
-  it('an eventChance override leaves rest/elite/port placement byte-identical (the tail-append contract)', () => {
-    // The event pass draws AFTER every other kind pass, so dialing it can
-    // only change event placement — the earlier passes' draws are already
-    // consumed. This is the per-seed observable form of the pass-order rule.
+  it('a kind dial never moves STRUCTURE, and the guarantees hold in the dialed twin (77e2)', () => {
+    // 77e2 NARROWS the old tail-append contract (worklog §77e2): the kinds
+    // share one slot pool by design, so killing events legitimately frees
+    // slots the feel top-ups may claim — kind placement is NOT byte-stable
+    // under a dial. What IS invariant: structure (its own sub-streams) and
+    // the signed guarantees, which must hold in any dialed twin too.
     for (let s = 1; s <= SEEDS; s++) {
       const plain = generate(new RNG(s));
       const dialed = generate(new RNG(s), { eventChance: 0 });
       expect(dialed.edges).toEqual(plain.edges);
       expect(dialed.hops).toEqual(plain.hops);
-      for (const n of plain.nodes) {
-        if (n.kind === 'event') continue; // the dialed twin holds 'battle' here
-        expect(nodeById(dialed, n.id).kind).toBe(n.kind);
+      expect(count(dialed, 'event')).toBe(0);
+      // Presence floors + battle floor survive the re-budget.
+      for (const kind of ['rest', 'elite', 'port'] as const) {
+        expect(count(dialed, kind), `seed ${s} ${kind}`).toBeGreaterThanOrEqual(1);
+      }
+      for (let f = 2; f <= dialed.hops.length - 2; f++) {
+        const kinds = dialed.hops[f]!.map((id) => nodeById(dialed, id).kind);
+        expect(kinds, `seed ${s} hop ${f}`).toContain('battle');
       }
     }
   });

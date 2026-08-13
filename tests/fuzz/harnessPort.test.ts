@@ -28,14 +28,17 @@ describe('harness port purchase policy (50g)', () => {
     // tier assignment; scan read 2/10/15 buying — worklog §61d); re-pinned
     // 2→3 at 74i-c (the starting-event stream break; scan read 3/5/6/8/10/15
     // buying — worklog §74i); re-pinned 3→2 at 77d2 (the keyed-derivation
-    // global remap; scan read 2/12 buying in 1..20 — worklog §77d2).
-    const r = runOne(2, strat(), SHORT);
+    // global remap; scan read 2/12 buying in 1..20 — worklog §77d2);
+    // re-pinned 2→3 at 77e2 (the braid + quota placement; the port floor
+    // revived the SHORT shape — scan read 3/4/6/7/10/13/17/19 buying in
+    // 1..20 — worklog §77e2).
+    const r = runOne(3, strat(), SHORT);
     expect(r.portPurchases).toBeGreaterThan(0);
   });
 
   it('is deterministic: same seed, same purchases, same closing bits', () => {
-    const a = runOne(2, strat(), SHORT);
-    const b = runOne(2, strat(), SHORT);
+    const a = runOne(3, strat(), SHORT);
+    const b = runOne(3, strat(), SHORT);
     expect(b).toEqual(a);
   });
 

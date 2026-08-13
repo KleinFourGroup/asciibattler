@@ -42,10 +42,11 @@ export const RNG_STREAM_KEYS = [
   //     drawn off the 'nodemap' stream at generate() entry, so each pass
   //     can change its draw count without remapping the others) ---
   'nodemapWidths', // ()  — the per-hop width sequence
-  'nodemapOps', //    ()  — split/merge op placement (the braid pass)
-  'nodemapKinds', //  ()  — node-kind placement (e1 BRIDGE: the old scatter
-  //                  passes verbatim; e2 replaces them with quota+machine
-  //                  and adds the rejection-attempt index here)
+  'nodemapOps', //    (attempt) — one braid roll (re-rolled while the map
+  //                  busts the signed ≤25% d2 cap; bounded, least-bad wins)
+  'nodemapKinds', //  (attempt) — one kind-placement rejection attempt
+  //                  (77e2 quota layer; attempt 0 succeeds unless the
+  //                  port-cone pass finds no candidate)
   // --- the battle/world side (wired at 77d3; root = terrainSeed) ---
   'terrain', //    ()                       — battlefield terrain generation
   'spawnSetup', // ()                       — spawn-region pick + per-team shuffles

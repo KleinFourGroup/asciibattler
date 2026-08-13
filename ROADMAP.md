@@ -242,10 +242,9 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   - [x] 77e1 — ✅ 2026-08-12: braid live, invariants held unchanged;
     d2 59.8→20.1% constructive; one fuzz scan hardened
     (worklog §77e1)
-  - [ ] 77e2 — the kind layer: quotas + machine + arbiter (battle
-    floor) + port-cone placement + bounded rejection (max-attempts
-    throw); knobs → `sectorAdvanceConfig` (#121); the
-    `nodemap-metrics.test.ts` n=500 gate (drift.test.ts analog)
+  - [x] 77e2 — ✅ 2026-08-12: quota layer + n=500 gates live, every
+    signed row holds w/ margin; 4 semantics changes flagged for
+    ratification (worklog §77e2)
   - [ ] 77e3 — the example session: viz gallery + state-machine
     tuning with the user; dials signed; docs sweep
 - [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the

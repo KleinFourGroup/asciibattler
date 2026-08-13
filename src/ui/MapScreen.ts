@@ -42,6 +42,17 @@ const KIND_GLYPH: Record<NodeKind, string> = {
 const HOP_PX = 90;
 
 /**
+ * 77e3 — horizontal pixels allotted per LANE. The board's width is capped at
+ * `maxWidth * LANE_PX` (centered by the CSS `margin: 0 auto`) instead of
+ * stretching to the viewport: the braid generator gives lanes a persistent
+ * identity, and full-width stretching read as "too separate" on wide
+ * screens (user call, worklog §77e3). Positions are computed on a FIXED
+ * per-lane pitch against the map's widest hop — narrow hops cluster
+ * centered (the nodemap-viz model) rather than spreading to fill.
+ */
+const LANE_PX = 110;
+
+/**
  * 66b — the boss forewarning pair as the map displays it: the pre-rolled
  * boss's display name + its board's layout name (`null` = procedural, which
  * THIS layer renders as "Uncharted Ground" — the flavor label is view voice,
@@ -120,16 +131,20 @@ export class MapScreen {
       }
     }
 
-    // Fractional [0, 1] positions within the panel. The CSS does the actual
+    // Fractional [0, 1] positions within the BOARD. The CSS does the actual
     // pixel sizing — keeping coordinates dimensionless means the same layout
     // logic feeds both the absolute-positioned divs and the SVG viewBox.
+    // 77e3 — x rides a fixed per-lane pitch against the widest hop (see
+    // LANE_PX): a width-2 hop on a width-6 map occupies the two center
+    // lanes, not the whole panel.
     const positions = new Map<number, { x: number; y: number }>();
     const hopCount = map.hops.length;
+    const maxLanes = Math.max(...map.hops.map((h) => h.length));
     for (let f = 0; f < hopCount; f++) {
       const ids = map.hops[f]!;
       const y = (f + 0.5) / hopCount;
       for (let i = 0; i < ids.length; i++) {
-        const x = (i + 0.5) / ids.length;
+        const x = ((maxLanes - ids.length) / 2 + i + 0.5) / maxLanes;
         positions.set(ids[i]!, { x, y });
       }
     }
@@ -181,6 +196,9 @@ export class MapScreen {
     const board = document.createElement('div');
     board.className = 'map-board';
     board.style.height = `${hopCount * HOP_PX}px`;
+    // 77e3 — the width cap (see LANE_PX): the board stops stretching to the
+    // viewport; `.map-board`'s `margin: 0 auto` centers the capped column.
+    board.style.maxWidth = `${maxLanes * LANE_PX}px`;
     container.appendChild(board);
 
     // SVG edge layer. Sits behind the node divs by virtue of DOM order; CSS

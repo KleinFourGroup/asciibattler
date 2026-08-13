@@ -301,6 +301,10 @@ body {
 .map-board {
   position: relative;
   width: 100%;
+  /* 77e3 — MapScreen caps max-width at maxLanes * LANE_PX (the braid's
+     lanes read too separate stretched full-viewport); auto margins center
+     the capped column. */
+  margin: 0 auto;
   min-height: 100%; /* short maps still fill the viewport */
 }
 

@@ -2915,7 +2915,13 @@ panel (`x = (i+0.5)/width`), so braid lanes read too separated.
 Slotted HERE as an e3 rider (a §77-caused render consequence;
 §78's map work is the overlay, not this): fixed-pitch centered
 columns — the nodemap-viz model — so lane spacing is constant and
-narrow hops cluster instead of stretching.
+narrow hops cluster instead of stretching. LANDED same day:
+`LANE_PX = 110` per-lane pitch against the widest hop + a board
+`max-width` cap (`maxLanes × LANE_PX`, auto-margin centered).
+DOM-verified in the preview (board 660px on a 1280px viewport,
+equal 302.5px margins, a width-2 hop occupying the two CENTER
+lanes of six, console clean); native-browser eyeball = the user's
+(render policy).
 
 **The corpus, before → signed → now:** d2 59.8% → ≤25% → **2.9%**
 · divergent 60.7% → ≥80% → **94.2%** · presence → 100% all four ·

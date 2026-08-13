@@ -71,6 +71,21 @@ export interface MapMetrics {
   /** Middle hops (excluding hop 0, hop 1, and the boss hop — the scatter
    *  band) with zero battle nodes: the 74e stacking artifact. */
   readonly battlelessMiddleHops: number;
+  /** 77e2b — the G2 edge-shear instrument (commit 41293a9), promoted from
+   *  its scratch-probe grave after the class was suspected a second time:
+   *  mean of (normalized child-x − parent-x) over all edges, where x =
+   *  index/(width−1) (width-1 hops read 0.5). 0 = no handedness; the
+   *  staircase's handed bug measured +0.146, the braid ≈ −0.002 pooled.
+   *  0 on edge-less maps. */
+  readonly meanEdgeShear: number;
+  /** 77e2b — per-map drift COHERENCE: the fraction of diagonal edges
+   *  (dx ≠ 0 in the centered fixed-pitch model) pointing the map's
+   *  majority direction. 0.5 = perfectly mixed, 1.0 = every diagonal one
+   *  way; 0.5 when the map has no diagonal edges. Ensemble handedness and
+   *  per-map drift are DIFFERENT facts: the braid is unbiased pooled, yet
+   *  the median map runs ~0.59 (random sign) — the e3 anti-drift dial
+   *  question (worklog §77e2b). */
+  readonly diagonalMajorityShare: number;
 }
 
 export function computeMapMetrics(map: NodeMap): MapMetrics {
@@ -184,6 +199,28 @@ export function computeMapMetrics(map: NodeMap): MapMetrics {
     if (map.hops[f]!.every((id) => kindOf.get(id) !== 'battle')) battlelessMiddleHops++;
   }
 
+  // --- 77e2b. edge shear + drift coherence (see the interface docs) ---
+  const slot = new Map<number, { i: number; w: number }>();
+  for (const ids of map.hops) {
+    for (let i = 0; i < ids.length; i++) slot.set(ids[i]!, { i, w: ids.length });
+  }
+  const xNorm = (i: number, w: number): number => (w === 1 ? 0.5 : i / (w - 1));
+  const xCentered = (i: number, w: number): number => i - (w - 1) / 2;
+  let shearSum = 0;
+  let diagPos = 0;
+  let diagNeg = 0;
+  for (const e of map.edges) {
+    const a = slot.get(e.from)!;
+    const b = slot.get(e.to)!;
+    shearSum += xNorm(b.i, b.w) - xNorm(a.i, a.w);
+    const d = xCentered(b.i, b.w) - xCentered(a.i, a.w);
+    if (d > 1e-9) diagPos++;
+    else if (d < -1e-9) diagNeg++;
+  }
+  const meanEdgeShear = map.edges.length === 0 ? 0 : shearSum / map.edges.length;
+  const diagonalMajorityShare =
+    diagPos + diagNeg === 0 ? 0.5 : Math.max(diagPos, diagNeg) / (diagPos + diagNeg);
+
   return {
     firstHopByKind,
     pathFractionByKind,
@@ -192,6 +229,8 @@ export function computeMapMetrics(map: NodeMap): MapMetrics {
     totalRoutes,
     rejoinPairs,
     battlelessMiddleHops,
+    meanEdgeShear,
+    diagonalMajorityShare,
   };
 }
 

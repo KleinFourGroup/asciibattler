@@ -2845,6 +2845,42 @@ under cones-only sourcing) + the four hopCount-4 rest fixtures →
 hopCount 5. Green: 2610 main (+13: the gates) + 398 fuzz:smoke +
 typecheck.
 
+### 77e2b — the shear investigation + instrument promotion (2026-08-13)
+
+The user's spot checks read a directional edge bias (right/up) —
+the G2 class ("de-bias map edge direction", commit `41293a9`,
+2026-06-02: the interval sweep was HANDED, +0.146 mean shear,
+fixed by the 50/50 mirror to −0.006). The original instrument was
+a scratch probe that never survived; re-derived from the commit
+message's definition (mean normalized child-x − parent-x per edge
++ endpoint thirds) and measured in all three live coordinate
+models (G2-normalized · MapScreen stretched · viz centered),
+n=500 / 23,624 edges.
+
+**Verdict — ensemble CLEAN, per-map drift REAL:** mean shear
+−0.0016 (≈1.1 SE from zero; the old bug was 90× larger), thirds
+31.6/36.9/31.5, exactly 232/500 maps lean right, every transition
+class (grow/plateau/shrink) individually unbiased — the braid has
+no handedness (token shuffles are reflection-symmetric where the
+interval sweep's free right end was not). BUT individual maps
+drift COHERENTLY with random sign: median map has 58.6% of its
+diagonal edges pointing its majority way, P90 69.2%, max 82.1% —
+per-map |shear| max 0.143 ≈ the old global bug. A spot check of a
+few seeds reliably "shows bias"; the ensemble cancels. Likely
+mechanism: the seam rule pushes consecutive merges away from
+recent split sites, sustaining directional flow within a map.
+
+**Landed (user-signed):** the instrument PROMOTED from scratch —
+`meanEdgeShear` + `diagonalMajorityShare` on MapMetrics
+(fixtures-first pencil tests), a SHEAR+DRIFT section in the
+corpus report, and a handedness gate in nodemap-metrics.test.ts
+(|corpus mean| ≤ 0.02 ≈ 10σ — the class that actually bit us
+can't ship silently again). Per-map drift is deliberately NOT
+gated: whether it's a defect or organic texture is the **e3
+anti-drift dial question** (candidate mechanism: counter-drift
+preference among equally-clean arrangements; exhibits = the P90+
+drifters). Green: 2610 main (net +2) + typecheck.
+
 **The corpus, before → signed → now:** d2 59.8% → ≤25% → **2.9%**
 · divergent 60.7% → ≥80% → **94.2%** · presence → 100% all four ·
 port-by-h5 → **100%** · rest/elite-by-h5 → **100%/100%** · port

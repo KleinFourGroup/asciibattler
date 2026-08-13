@@ -221,9 +221,8 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
 
 - [x] 77a — visualizer ✅ 2026-08-12: `tools/nodemap-viz/` live +
   card re-described; parity-probed + DOM-proven (worklog §77a)
-- [x] 77b — metrics + baseline ✅ 2026-08-12: `mapMetrics.ts` +
-  `npm run nodemap:metrics` + overlay; the 500-seed baseline
-  confirms every complaint (worklog §77b = the signing sheet)
+- [x] 77b — metrics + baseline ✅ 2026-08-12: `mapMetrics.ts` + CLI +
+  overlay; 500 seeds confirm every complaint (worklog §77b = sheet)
 - [x] 77c — ✅ DECIDED 2026-08-12: the threshold sheet signed, one
   amendment — events/route ≈3, band 2.5–3.5 (worklog §77c)
 - [x] 77d1 — ✅ 2026-08-12: `deriveSeed`/`deriveRng` + the 22-key
@@ -245,6 +244,9 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   - [x] 77e2 — ✅ 2026-08-12: quota layer + n=500 gates live, every
     signed row holds w/ margin; 4 semantics changes flagged for
     ratification (worklog §77e2)
+  - [x] 77e2b — ✅ 2026-08-13 (inserted, user-called): the G2 shear
+    instrument promoted + handedness gate; ensemble clean, per-map
+    drift → the e3 dial list (worklog §77e2b)
   - [ ] 77e3 — the example session: viz gallery + state-machine
     tuning with the user; dials signed; docs sweep
 - [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the

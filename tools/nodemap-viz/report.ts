@@ -136,3 +136,18 @@ console.log(
   `  distance-2 ("instant") rejoins: ${pct(pairs.filter((p) => p.rejoinDistance === 2).length / pairs.length)} of pairs` +
     ` · per-map mean ${pct(mean(immediatePerMap))}`,
 );
+console.log('');
+
+console.log('EDGE SHEAR + DRIFT (77e2b — the G2 de-bias instrument, promoted)');
+const shears = all.map((m) => m.meanEdgeShear);
+const absShears = shears.map(Math.abs);
+const drifts = all.map((m) => m.diagonalMajorityShare);
+console.log(
+  `  mean shear ${mean(shears).toFixed(4)} (0 = no handedness; the staircase's handed bug read +0.146)` +
+    ` · |per-map| median ${percentile(absShears, 0.5).toFixed(3)} P90 ${percentile(absShears, 0.9).toFixed(3)}`,
+);
+console.log(
+  `  drift coherence (diagonal-majority share): median ${percentile(drifts, 0.5).toFixed(3)}` +
+    ` · P90 ${percentile(drifts, 0.9).toFixed(3)} · max ${Math.max(...drifts).toFixed(3)}` +
+    ` (0.5 = mixed; per-map drift is the e3 anti-drift dial question)`,
+);

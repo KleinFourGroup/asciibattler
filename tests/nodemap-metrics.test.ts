@@ -124,6 +124,18 @@ describe(`nodemap corpus gates — the signed 77c sheet at n=${SEEDS}`, () => {
     expect(mean).toBeLessThanOrEqual(3.2);
   });
 
+  it('C: no edge-direction handedness (|corpus mean shear| ≤ 0.02 — the G2 de-bias class)', () => {
+    // The 41293a9 lineage, promoted to a permanent gate at 77e2b after the
+    // class was suspected a second time: the staircase's HANDED bug read
+    // +0.146; the mirrored fix −0.006; the braid measures ≈ −0.002 (SE
+    // ≈ 0.002 at n=500, so 0.02 = a ~10σ tripwire). NB per-map coherent
+    // DRIFT (random sign, median majority-share ~0.59) is a SEPARATE,
+    // documented fact — the e3 anti-drift dial question — deliberately NOT
+    // gated here (worklog §77e2b).
+    const mean = corpus.reduce((a, { m }) => a + m.meanEdgeShear, 0) / SEEDS;
+    expect(Math.abs(mean)).toBeLessThanOrEqual(0.02);
+  });
+
   it('canary: pooled combat share lands near the signed ≈55–65% expectation', () => {
     // Not a signed row — the 77c sheet PREDICTED this lands ≈55–65% as a
     // consequence of the band. Loose bounds so a quota drift surfaces as a

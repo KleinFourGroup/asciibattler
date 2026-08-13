@@ -146,6 +146,39 @@ describe('computeMapMetrics — hand-built fixtures', () => {
     expect(m.choiceCoverageByKind.size).toBe(0);
     expect(m.battlelessMiddleHops).toBe(0);
     expect(m.expectedRouteComposition.get('boss')).toBeCloseTo(1);
+    expect(m.meanEdgeShear).toBe(0);
+    expect(m.diagonalMajorityShare).toBe(0.5);
+  });
+});
+
+describe('edge shear + drift coherence (77e2b — the G2 de-bias instrument)', () => {
+  it('the symmetric diamond measures zero shear and perfectly mixed drift', () => {
+    // Pencil: xNorm edges −0.5, +0.5, +0.5, −0.5 → mean 0; centered
+    // diagonals split 2/2 → majority share exactly 0.5.
+    const m = computeMapMetrics(DIAMOND);
+    expect(m.meanEdgeShear).toBeCloseTo(0);
+    expect(m.diagonalMajorityShare).toBeCloseTo(0.5);
+  });
+
+  it('a left-leaning fixture measures negative shear and its majority share', () => {
+    // root → {1,2}; 1→3, 2→{3,4}; {3,4} → boss. Pencil (xNorm):
+    // −0.5 +0.5 0 −1 0 +0.5 −0.5 → sum −1 over 7 edges. Centered
+    // diagonals: neg {0→1, 2→3, 4→5}, pos {0→2, 3→5} → 3/5.
+    const handed = build(
+      [['battle'], ['battle', 'battle'], ['battle', 'battle'], ['boss']],
+      [
+        [0, 1],
+        [0, 2],
+        [1, 3],
+        [2, 3],
+        [2, 4],
+        [3, 5],
+        [4, 5],
+      ],
+    );
+    const m = computeMapMetrics(handed);
+    expect(m.meanEdgeShear).toBeCloseTo(-1 / 7);
+    expect(m.diagonalMajorityShare).toBeCloseTo(3 / 5);
   });
 });
 
@@ -177,6 +210,10 @@ describe('computeMapMetrics — generator sanity bounds', () => {
       // Default maps branch (the connectivity suite pins avg out-degree>1
       // corpus-wide; per-map, every default-length map has ≥1 wide hop).
       expect(m.rejoinPairs.length).toBeGreaterThan(0);
+      // 77e2b — shear is a bounded per-map statistic; coherence is a share.
+      expect(Math.abs(m.meanEdgeShear)).toBeLessThanOrEqual(1);
+      expect(m.diagonalMajorityShare).toBeGreaterThanOrEqual(0.5);
+      expect(m.diagonalMajorityShare).toBeLessThanOrEqual(1);
     }
   });
 });

@@ -576,22 +576,34 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
   let memo: Run | null = null;
   function mapStateWithChoice(): Run {
     if (memo) return Run.fromJSON(memo.toJSON(), new EventBus<GameEvents>());
-    for (let battles = 1; battles <= 6; battles++) {
-      const s = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), SEED + 30 + battles);
-      walkToHorizon(s, { horizonBattles: battles, policySeed: SEED + 40 + battles, maxHops: 80 });
-      const m = cloneRunForRollout(s.run, SEED + 50 + battles);
-      walkToHorizon(m, {
-        horizonBattles: 9999,
-        policySeed: SEED + 60 + battles,
-        maxHops: 80,
-        stopAtPhase: 'map',
-      });
-      if (m.run.phase === 'map' && frontierOf(m.run).length > 1) {
-        memo = m.run;
-        return Run.fromJSON(memo.toJSON(), new EventBus<GameEvents>());
+    // Scan-over-pin (the harness.test.ts:195 precedent): hunt depth × walk
+    // trials rather than pinning a known-good depth. The trial axis matters
+    // since 77e1 — braid maps only branch at split nodes (out-degree 1
+    // between splits), so a single walk line can legitimately stop on
+    // choiceless nodes at every depth; varying the policy seed re-routes
+    // the walk until a stop lands on a split.
+    for (let trial = 0; trial < 4; trial++) {
+      const t = trial * 1000;
+      for (let battles = 1; battles <= 6; battles++) {
+        const s = cloneRunForRollout(
+          new Run(SEED, new EventBus<GameEvents>()),
+          SEED + 30 + battles + t,
+        );
+        walkToHorizon(s, { horizonBattles: battles, policySeed: SEED + 40 + battles + t, maxHops: 80 });
+        const m = cloneRunForRollout(s.run, SEED + 50 + battles + t);
+        walkToHorizon(m, {
+          horizonBattles: 9999,
+          policySeed: SEED + 60 + battles + t,
+          maxHops: 80,
+          stopAtPhase: 'map',
+        });
+        if (m.run.phase === 'map' && frontierOf(m.run).length > 1) {
+          memo = m.run;
+          return Run.fromJSON(memo.toJSON(), new EventBus<GameEvents>());
+        }
       }
     }
-    throw new Error('no multi-node frontier found in 6 depths');
+    throw new Error('no multi-node frontier found in 6 depths x 4 trials');
   }
 
   it('challengers = the frontier minus the nominee (sorted, kinds labeled); tie → the nominee', () => {

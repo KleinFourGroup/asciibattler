@@ -38,6 +38,14 @@ export const RNG_STREAM_KEYS = [
   'battle', //     (sectorIndex, nodeId, turnIndex) — one turn's battle stream (worldSeed, waves)
   'offer', //      (sectorIndex, nodeId)            — the post-battle recruit draft
   'rolloutRoot', //()  root = rolloutSeed           — a bot clone's REPLACEMENT streamRoot (CRN divergence)
+  // --- the node-map braid generator's sub-passes (77e1; root = ONE u32
+  //     drawn off the 'nodemap' stream at generate() entry, so each pass
+  //     can change its draw count without remapping the others) ---
+  'nodemapWidths', // ()  — the per-hop width sequence
+  'nodemapOps', //    ()  — split/merge op placement (the braid pass)
+  'nodemapKinds', //  ()  — node-kind placement (e1 BRIDGE: the old scatter
+  //                  passes verbatim; e2 replaces them with quota+machine
+  //                  and adds the rejection-attempt index here)
   // --- the battle/world side (wired at 77d3; root = terrainSeed) ---
   'terrain', //    ()                       — battlefield terrain generation
   'spawnSetup', // ()                       — spawn-region pick + per-team shuffles

@@ -2746,3 +2746,48 @@ the per-lane machine + the per-hop arbiter incl. battle floor +
 port-cone placement + the bounded rejection guard + the metrics
 gate; new knobs join `sectorAdvanceConfig`, #121) / e3 the example
 session (viz gallery + state-machine tuning with the user + docs).
+
+### 77e1 — the braid skeleton (2026-08-12)
+
+Landed to the cut. `generate()` is now the braid: the widths pass
+survives verbatim (budget + growth cap) plus the braid's shrink
+floor (`ceil(prev/3)`) and a NO-GROWTH clamp into the last middle
+hop (a pair born there has only the boss merge-all ahead — an
+automatic d2; churn is suppressed on that transition for the same
+reason). The ops pass realizes each width delta as split2/merge2
+tokens with forced+rare 3-op fusing, churn pairs as the branch
+texture source, and a bounded 24-shuffle arrangement search under
+the seam rule (age-1 closures only via `d2RejoinChance` inside the
+≤25% budget; deterministic least-bad fallback). Three registry keys
+(`nodemapWidths`/`nodemapOps`/`nodemapKinds`) off ONE u32 drawn
+from the caller's 'nodemap' stream; four structure knobs in
+nodemap.json (`churnChance` 0.6 / `split3Chance` / `merge3Chance`
+0.15 / `d2RejoinChance` 0.1) — deliberately NOT RunConfig dials
+(they're not probe-isolation knobs; e2's kind knobs join the #121
+slice as planned). The kinds bridge rode over verbatim: all ~60
+NodeMap invariants + the dial contracts passed UNCHANGED on the
+first run, as did the full 2597 suite.
+
+**Fallout: exactly one fuzz file.** arbitratedStrategy's
+`mapStateWithChoice` scan stranded — braid maps branch ONLY at
+split nodes (out-degree 1 between splits), so all six scan depths
+legitimately stopped on choiceless nodes. Hardened scan-over-pin
+(the harness.test.ts:195 precedent) with a 4-trial policy-seed
+axis. 398 fuzz green.
+
+**The 500-seed corpus read (bridge kinds, so kind rows are
+throwaway):** d2 instant rejoins **59.8% → 20.1%** (per-map mean
+19.0% — the signed ≤25% cap already holds constructively);
+content-divergent pairs **60.7% → 77.2%** (the ≥80% row nearly met
+before e2's split-time rule exists); 11.1 branch pairs/map; route
+composition ≈ unchanged (bridge). Port cone rows moved WORSE
+(first-choice lockout 41%→61%): deeper divergence = narrower
+first-choice cones = random scatter reaches them less — exactly
+the case for e2's constructive cone placement.
+
+**Feel observation for the e3 session:** per-node choice frequency
+is DOWN vs the staircase (avg out-degree ~1.3; the interval fans
+are gone) — `churnChance` is the dial; expect fewer nodeChoice
+arbitration calls per run in the 77f decisions.csv. Viz confirmed
+live on braid maps (console-clean; overlay + variety gallery;
+forced-merge3 narrowings render planar).

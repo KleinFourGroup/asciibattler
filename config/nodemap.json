@@ -12,5 +12,9 @@
   "portMinSpacing": 3,
   "eventChance": 0.5,
   "eventMinSpacing": 1,
-  "eventCombatChance": 0.25
+  "eventCombatChance": 0.25,
+  "churnChance": 0.6,
+  "split3Chance": 0.15,
+  "merge3Chance": 0.15,
+  "d2RejoinChance": 0.1
 }

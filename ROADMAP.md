@@ -239,10 +239,9 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   primitive, split/merge ops + a per-lane kind state machine w/ a
   per-hop arbiter; the sheet reads natively in path primitives,
   rejection shrinks to a guard (worklog §77e). Cut:
-  - [ ] 77e1 — the braid skeleton: width-seq-driven op placement
-    (churn; rare 1→3/3→1), seam-lifetime d2 budget; old scatter
-    passes ride a kinds sub-stream as a BRIDGE (dies at e2);
-    NodeMap interface unchanged; structural tests re-derived
+  - [x] 77e1 — ✅ 2026-08-12: braid live, invariants held unchanged;
+    d2 59.8→20.1% constructive; one fuzz scan hardened
+    (worklog §77e1)
   - [ ] 77e2 — the kind layer: quotas + machine + arbiter (battle
     floor) + port-cone placement + bounded rejection (max-attempts
     throw); knobs → `sectorAdvanceConfig` (#121); the

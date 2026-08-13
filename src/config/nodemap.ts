@@ -55,6 +55,17 @@ const NodeMapSchema = z
      *  stat — folded, not read raw, so daemons can bend it). NOT a scatter
      *  knob — placement is `eventChance`/`eventMinSpacing` above. */
     eventCombatChance: z.number().min(0).max(1),
+    /** 77e1 — the braid structure dials (worklog §77e). `churnChance`:
+     *  per-draw chance of adding a Δ-neutral split+merge pair to a
+     *  transition (the braid's branch-texture source; geometric, capacity
+     *  bounded). `split3Chance`/`merge3Chance`: per-transition chance of
+     *  fusing two 2-ops into one rare 3-op. `d2RejoinChance`: chance a
+     *  transition may deliberately close an age-1 seam (an instant-d2
+     *  diamond), always subject to the ≤25%-of-pairs map budget. */
+    churnChance: z.number().min(0).max(1),
+    split3Chance: z.number().min(0).max(1),
+    merge3Chance: z.number().min(0).max(1),
+    d2RejoinChance: z.number().min(0).max(1),
   })
   .refine((c) => c.middleWidthMin <= c.middleWidthMax, {
     message: 'middleWidthMin must be <= middleWidthMax',

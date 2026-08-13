@@ -238,17 +238,12 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
   primitive, split/merge ops + a per-lane kind state machine w/ a
   per-hop arbiter; the sheet reads natively in path primitives,
   rejection shrinks to a guard (worklog §77e). Cut:
-  - [x] 77e1 — ✅ 2026-08-12: braid live, invariants held unchanged;
-    d2 59.8→20.1% constructive; one fuzz scan hardened
-    (worklog §77e1)
-  - [x] 77e2 — ✅ 2026-08-12: quota layer + n=500 gates live, every
-    signed row holds w/ margin; 4 semantics changes flagged for
-    ratification (worklog §77e2)
-  - [x] 77e2b — ✅ 2026-08-13 (inserted, user-called): the G2 shear
-    instrument promoted + handedness gate; ensemble clean, per-map
-    drift → the e3 dial list (worklog §77e2b)
-  - [ ] 77e3 — the example session: viz gallery + state-machine
-    tuning with the user; dials signed; docs sweep
+  - [x] 77e1–e3 — ✅ 2026-08-12/13: e1 the braid skeleton (d2 cap
+    constructive) · e2 the quota layer + n=500 gates (every signed
+    row w/ margin) · e2b the shear instrument + handedness gate
+    (per-map drift kept as texture) · e3 dials signed + corridors
+    kept + 4 ratifications + the MapScreen lane-pitch rider
+    (worklog §§77e–77e3)
 - [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the
   board re-pin on the box + the 11-row doctrine stress test →
   BALANCE (68h shape trigger — box, not local)

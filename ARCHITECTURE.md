@@ -259,7 +259,7 @@ src/
                              # layoutFirst) resolver picking an (encounter, layout) from the sector pools +
                              # assertSelectionCoverage boot guard (Brigands now authored in encounters.json)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
-    NodeMap.ts               # planar non-crossing DAG (G2) + NodeKind battle|rest|boss (G3)|elite (W2 scatter)|port (50c, ≥1 guaranteed)|event (74e — the FOURTH tail pass, eventChance 0.5/spacing 1) + dump; T2: per-sector length override; 74e: stampRootKind (the startingEvents root stamp — pure post-gen transform, boss-wins on hopCount 1)
+    NodeMap.ts               # the BRAID generator (77e — lanes as the primitive; replaced the G2 staircase): widths → split/merge ops (churn + rare 3-ops; seam rule holds instant-d2 rejoins ≤25%/map) → the quota kind layer (route-share targets; port cones = every first choice keeps shop access by h5; battle floor ≥1/hop; path-window spacing) — three keyed sub-streams + bounded attempt re-rolls; gates: tests/nodemap-metrics.test.ts (n=500, the signed 77c sheet). T2: per-sector length override; 74e: stampRootKind (pure post-gen transform, boss-wins on hopCount 1)
     sectorWalk.ts            # T2: pure RNG walk over the sector-DAG (pickStartSector/pickNextSector/isSectorSink); zero-draw singleton picks
     Recruitment.ts           # rollOffer (61c: per-slot tier-roll + weighted within-tier pick, 2 draws/slot,
                              # dupes legal; 63b/c: character pools + weight overrides; 64b: folded tier

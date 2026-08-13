@@ -2934,3 +2934,24 @@ live (widths smooth, overlay coherent). e3 agenda: choice density
 (`churnChance`), diamond scarcity (d2 now 3% — maybe TOO clean;
 `d2RejoinChance` dials up), wide-map special-node counts, the
 corridor question (③), new-knob sliders.
+
+### 77f — the full re-baseline + the stress board (2026-08-13)
+
+The fuzz half was already settled in passing: every exit pin and
+fixture self-healed through the e1/e2/e3 remaps (the scan-over-pin
+discipline; the one port-canary re-pin 2→3 landed at e2). The board
+half ran as the 68h shape: box `abox-20260813-155706` (cpx42,
+fsn1, provisioned at `f24a7f9` — parity enforced at launch), all 15
+rows driven sequentially through box-batch.sh (~2.5h box time;
+completion verified by the fetched-count artifact, 15/15), box
+destroyed on fetch. **THE STRESS READ: 0 FAIL / 7 WARN — the
+two-act signed architecture survived the map-generator
+replacement** (reach mid-band, seam in-band, walls re-softened to
+the band edge, the walk ceilings RECOVERED to parity — the 76h
+negative-ceiling flag dissolves). Act-1 refs drifted (priest regen
+−14 = a NEW parity breach; the gambler breach FLIPPED SHAPES —
+premise updated again: shape-coupled, not kit-intrinsic).
+Full decomposition + the re-pin proposal: BALANCE 2026-08-13
+(§77f). Reference re-pins await the user's signature (the 75l
+amendment ritual); signed bands deliberately unmoved (§82 owns
+reality-vs-band).

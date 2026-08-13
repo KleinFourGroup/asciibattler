@@ -244,9 +244,10 @@ Cut at the 2026-08-12 kickoff (audit + shape-lock: WORKLOG §77):
     (per-map drift kept as texture) · e3 dials signed + corridors
     kept + 4 ratifications + the MapScreen lane-pitch rider
     (worklog §§77e–77e3)
-- [ ] 77f — the full re-baseline: fuzz exit pins + fixtures + the
-  board re-pin on the box + the 11-row doctrine stress test →
-  BALANCE (68h shape trigger — box, not local)
+- [x] 77f — ✅ 2026-08-13: fuzz pins self-healed in-phase; the full
+  15-row board on the box — **0 FAIL / 7 WARN**, the signed
+  architecture HELD; stress read → BALANCE §77f; ref re-pins
+  await the user's signature (worklog §77f)
 - [ ] 77g — docs close + ROADMAP demote + cursor flip
 
 ## Phase 78 — UI/UX batch

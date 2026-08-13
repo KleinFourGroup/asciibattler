@@ -3061,3 +3061,66 @@ deltas. The pre-X H7c→O log lives at
   at the 75l re-pinned refs — the §76 changes moved the DEEP END, not
   act 1. decisions.csv rode all 10 arb arms; packet Δ|picked stays
   positive where n clears the floor (the packet-health read holds).
+
+## 2026-08-13 — §77f THE BRAID-WORLD STRESS BOARD (15 instruments,
+`f24a7f9`): 0 FAIL · 7 WARN — the two-act signed architecture
+SURVIVED a map-generator replacement
+
+Batches `20260813-1558*→1828*-f24a7f9` (the full 15-row board on the
+box; the §77 exit's stress test). **The world under measurement
+changed more than any prior board's:** the braid generator (77e)
+moved routes from ~7.3 battles to **4.68 battles + 3.12 events**
+(combat share 80.6%→58.1%), with rest/elite/port route-fractions
+roughly doubled (nodemap corpus, worklog §77e2). Every WARN below
+reads against that backdrop.
+
+- **The signed walk-shape rows HELD:** terminalReach regen **0.450**
+  (dead mid-band 40–50) · 55pre 0.550 (the carried overperformance
+  watch — and it moved TOWARD band, 0.575→0.550) · seamPool
+  **16.0 / 17.8** (in 15–18) · derived win 0.325 ✓ / 0.375 (paired
+  with the reach watch). A full map-gen rework did not break the
+  run's pool-HP budget flow.
+- **The walls RE-SOFTENED (the third composition move in three
+  boards):** 0.278 regen (just below the signed 30–35) / 0.318 55pre
+  (in-band) — vs the 76h HARDENED read (0.412/0.481). The braid
+  world pulled the walls back ~15pts. The §82 wall agenda now holds
+  three stacked movers (76h's confounded trio + the map rework);
+  the pull-vs-no-pull decision should re-read on THIS world, not
+  76h's.
+- **⭐ The walk ceilings RECOVERED to parity:** paired same-seed
+  arb−doctrine = **−0.025 / 0.000** on the two-act shapes (76h:
+  −10/−12.5). The 76h negative-ceiling flag dissolves in the braid
+  world — consistent with its horizon-blindness story (the 76h-era
+  hardened walls sat past the K=2 horizon; the re-softened walls
+  don't). The cheap tier stands re-validated end to end (all four
+  ceiling controls PASS).
+- **Act-1 arb drift (the re-pin candidates):** soldier
+  0.700 regen (mid-band) / 0.775 55pre (−2.5 below edge, WARN) ·
+  priest **0.600 regen (WARN, a real −14 move; a NEW parity breach
+  −10 vs soldier past the ±5 principle)** / 0.725 55pre (in-band) ·
+  gambler 0.700 regen / 0.550 55pre (WARN). **The gambler breach
+  FLIPPED SHAPES:** the 76h regen gap (−22.5) closed to 0.0 while
+  the 55pre gap re-widened to −22.5 — the §82 repair premise updates
+  again: the braid world moves the gap between shapes, arguing the
+  defect is shape-coupled (event/economy mix), not kit-intrinsic.
+- **Forced-boss refs:** King 0.775 / Queen 0.675 — both in-band,
+  King>Queen order holds. Banks/fires/tx: all in-band; posture
+  dissolution (tx ≈ 0 on arb) holds everywhere.
+- **The fire channel:** Δ +0.025 (WARN vs the signed +0.10
+  doctrine-pair) — the sign RECOVERED from the 75l inversion
+  (−0.075) but stays statistically weak at n=40; the §82 re-read
+  stands, now with a third era's data point.
+- **decisions.csv (the standing instrument, all 10 arb rows):** the
+  nodeChoice site now shows event picks with the highest realized
+  margin on the board (Δ|picked 6.5, n=34 directional) — the event
+  era registers in decision value; eventChoice per-choice rows are
+  LIVE for the §82 ε-floor re-read (30 choice-instances on the top
+  event alone). Fires 2.1/run, empower Δ|picked +3.25 (n=3348) —
+  the packet-health read holds.
+
+**Disposition (the 75l amendment ritual):** reference re-pins at the
+observed braid-world values PROPOSED for user signing (act-1 six +
+the two forced-boss refs; banks/fires/tx hold mid-band); the signed
+bands (reach 40–50 · wall 30–35 · seam 15–18) deliberately DO NOT
+move — reality-vs-band is the §82 call, per the 75l note. The priest
+regen breach joins the gambler as a NAMED §82 parity item.

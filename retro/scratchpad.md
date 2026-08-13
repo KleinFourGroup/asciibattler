@@ -89,3 +89,27 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ## §77d2/d3 (2026-08-12) — stream-break fallout triage: prefer derivation/self-healing over fresh literals
 
 Three fallout classes at the keyed-derivation remap, three repair shapes, ranked by durability: (1) the seven Run.test pool pins were repaired BY DERIVATION (read the selected encounter's authored healthPool from the catalog) — the next stream break can't stale them at all; (2) the arbitration dock fixture was hardened from a scan-for-dock to a scan-for-dock-WITH-FUNDS — self-healing, its real requirement made explicit; (3) only the port canary took a new pinned literal (3→2), and it's the one artifact whose ritual comment already documents per-break re-pinning as its contract. Pattern for the sweep: when a stream break trips a test, ask "what does this test actually require?" before re-pinning — most 'seed pins' are lazy proxies for a derivable condition, and each one converted to derivation permanently shrinks the next break's bill (this break: 11 failures; the class it leaves behind: 1 ritual canary + 4 version pins).
+
+## §77e–77g (2026-08-13) — three observations from the braid round
+
+- **Gate-first TDD on statistical mechanisms works.** The n=500 corpus
+  gate was written BEFORE the mechanisms it checks were finished; its
+  first three runs each caught a real design gap (width-sawtooth d2
+  forcing, a cancelled early-bias weight, cone-blind elites) that
+  invariant tests structurally couldn't see, and each red row converted
+  to a mechanism fix in the same session (`a019b81`). The pattern
+  generalizes: when a signed sheet exists, make it executable FIRST
+  and let the generator earn green.
+- **Default-seed sampling bias is real: seed 1 was the single worst
+  drifter in 500.** The viz opens on seed 1; the user's "I see a bias"
+  spot check was seeded by the most extreme map the corpus can produce.
+  When an eyeball impression contradicts an instrument, check what the
+  default view happened to show before either is trusted (77e2b — the
+  instrument settled it: ensemble clean, per-map drift real).
+- **The mid-phase counter-design was the round's best call.** The user
+  replaced my incremental 77e plan with the braid model at the design
+  round; taking the overhaul (rather than defending sunk planning) cost
+  one bigger step and bought a generator whose primitives STATE the
+  signed guarantees. Design rounds exist to be lost; the timing
+  argument (the re-baseline was already being paid) is reusable for
+  future "replace vs patch" calls.

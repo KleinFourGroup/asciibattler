@@ -541,6 +541,13 @@ export class HUD {
   private addCard(unitId: number, unit: Unit): void {
     const team = unit.team === 'enemy' ? 'enemy' : 'player';
     const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud', team });
+    // 78d fix — invalidate the per-tick status/marker cache: the Q2 countdown
+    // PARKS the clock at tick 0, so a card added after this tick's one
+    // refresh pass would show no empower markers (or seeded statuses) until
+    // the countdown ends and the tick finally advances (user catch). A reset
+    // makes the next frame's refreshStatuses repopulate every card even on a
+    // parked clock.
+    this.statusTick = -1;
     // 78b — ENEMY cards are objective click targets (left=engage / right=focus,
     // the board fast paths extended to the cards). Player cards stay inert —
     // the shape-lock dropped them: a player-card click has no coherent meaning

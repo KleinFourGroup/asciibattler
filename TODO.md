@@ -39,6 +39,28 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **"Empower" naming collision (mechanic vs Mars's buff key).**
+  User-flagged at the 78d eyeball (2026-08-14): "empower" names BOTH
+  the pre-turn mechanic (the K4 `empowerUnit` command / grant kind /
+  `empowerStacks` column — source-agnostic since 47d) and Mars's
+  specific buff KEY `"empowered"` (config/daemons.json), so "an
+  empowered card" is ambiguous between "any badge-eligible buff" and
+  "Mars's blessing specifically". Candidate fixes: rename the Mars
+  buff key (NOTE: the key serializes inside `encounterEffects` in Run
+  saves AND is the EMPOWER_DISPLAY/marker key — a rename is a
+  save-shape change, budget a Run bump prediction) or rename the
+  mechanic's surfaces (docs/UI strings only, no serialized shape).
+  Decide at a naming/polish round, not in passing.
+
+- [ ] **Hoist the display color tables into config.** User call at the
+  78d eyeball (2026-08-14): `STATUS_DISPLAY` + `EMPOWER_DISPLAY`
+  (src/render/statusDisplay.ts) are hand-authored hex tables in code;
+  they should live in `config/*.json` like every other tunable (zod
+  loader + the existing coverage pins retarget to the loaded tables;
+  the JSON gets Vite hot-reload for eyeball-tuning, which is the
+  actual payoff). Cheap, but do it deliberately — the §76b/78d pin
+  tests and the fallback-magenta discipline move with it.
+
 - [ ] **Aura-FX mode: the wider feel jury + possible graphics setting.**
   The §76g4 A/B rig (`window.__auraFx = 'track' | 'fill' | 'fixed'`,
   BattleRenderer) stays in the tree by user call (2026-08-11): interim

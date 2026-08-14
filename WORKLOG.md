@@ -3167,3 +3167,16 @@ chips read #15F4EE / #FF7AD9 with distinct titles; in battle,
 exactly ONE card shows the marker row — both chips in the same two
 colors, same per-key hovers. Typecheck + the 6 coverage pins green
 pre-hook. Native feel + color verdicts ride with the user.
+
+**78d riders (user eyeball, 2026-08-14):** ✅ the countdown-window
+bug FIXED — markers (and seeded statuses) were invisible until the
+Q2 countdown released the clock: `refreshStatuses` recomputes once
+per SIM TICK, the countdown parks the clock at 0, and the cards
+mount after that tick's one pass — so every later frame skipped as
+"same tick". Fix: `addCard` invalidates the tick cache
+(`statusTick = -1`), so the next frame repopulates on a parked
+clock; browser-proven at tick 0 (both chips visible, clock never
+advanced). Two items filed to TODO §Polish by user call: the
+"empower" mechanic-vs-Mars-key naming collision (rename touches
+serialized effect keys — a deliberate step, not a drive-by) and
+hoisting STATUS_DISPLAY/EMPOWER_DISPLAY into config JSON.

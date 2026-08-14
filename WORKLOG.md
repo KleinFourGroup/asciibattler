@@ -3426,3 +3426,49 @@ units to `'base'` + ground anchors, route visual-center consumers
 through the shared above-the-anchor helper; the pick builders
 must stamp `ANCHOR_XY.base` in the SAME commit the sprites flip
 (pick and shader may never disagree).
+
+### 79d — the coordinated flip + consumer sweep (2026-08-14)
+
+The audit table (every `tileWorldPos`/`getPosition` consumer,
+classified GROUND vs VISUAL-CENTER, all converted in this one
+commit — pick builders included, per the 79c landing note):
+
+| Site | Class | Conversion |
+|---|---|---|
+| unit body sprites (`onUnitSpawned`) | ground | `unitAnchorPos` + `'base'` anchor; the §39d `(n−1)` flush-fixup DELETED (base-anchoring makes it structural) |
+| move/settle/swap lerps | ground | `unitAnchorPos` (rename) |
+| shove direction | ground (XZ only) | `tileGroundPos` rename |
+| pick builders ×2 | ground + base box | stamp `ANCHOR_XY.base` |
+| overlay follow + spawn seeds | visual center | `unitVisualCenter` (footprint-aware) |
+| hitsplat anchor | visual TOP | `aboveAnchor(ground, 2·half·n)`; UnitOverlayLayer.spawnHitsplat collapses to ONE projection — ⭐ the I2 dual-projection workaround RETIRED |
+| enemy objective marker | above visual center | `aboveAnchor` (the J3 hand-rolled camera-up copy RETIRED) |
+| rally-tile marker | above cell center | `aboveAnchor(ground, half + TILE_LIFT)` — now edge-true too |
+| projectile/tracer/chain/bolt endpoints + homing provider | visual center | `unitVisualCenter` / `cellVisualCenter` (provider re-derives per frame) |
+| explosion/dud burst cells | cell visual center | `cellVisualCenter` |
+| sparkle | visual center + nudge | `unitVisualCenter` + SPARKLE_Y_OFFSET (now camera-up) |
+| aura ring/pulse/fill | GROUND (floor decoration — world-Y is CORRECT here) | anchor is now ground; `AURA_RING_Y_OFFSET` rebased −0.35→+0.15 (same world height) |
+| `gridToWorld` default Y | ground plane | 0.5 → 0 (only external consumer reads XZ) |
+
+Constants: `SPRITE_CENTER_OFFSET` + `HITSPLAT_Y_OFFSET` DELETED,
+replaced by `GLYPH_HALF_HEIGHT` (the anchor convention's one
+vertical vocabulary word); `cameraUpScratch` + the overlay
+`liftScratch` deleted (their jobs live in `aboveAnchor`). New:
+[anchor.ts](src/render/anchor.ts) — `aboveAnchor`, with the
+headless no-horizontal-drift pin (+ the world-Y counterexample
+proving the class it kills).
+
+**Verification.** Tests 2631→2635 + typecheck clean. Browser
+(numeric, the 79b probe re-run on REAL sprites): 70/70 idle units'
+anchors EXACTLY at `tileGroundPos` (error 0.000000) · all 70
+base-anchored, zero strays, non-unit sprites all centered ·
+glyph-center-vs-tile-ground horizontal drift **0.0000px at every
+cell** (was ±9.1px at 720p edges) · all 8 enemies pick-resolve to
+themselves at mid-glyph clicks · a below-the-base click misses
+(the risen clickbox) · console clean. One environment quirk hit
+mid-probe, NOT ours: a never-displayed preview pane boots the
+camera with aspect NaN (canvas read 0×0 at init); a forced
+`resize` event heals it — noted for future probe sessions.
+Expected visual deltas for the 79e eyeball: glyphs ride slightly
+higher (base ON the tile, no more front-face sink — the 79b
+second finding), bars/badges likewise, big-rubble bars may want a
+`FOOTPRINT_LIFT_PX` re-tune.

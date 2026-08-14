@@ -303,11 +303,9 @@ render-only throughout):
   (the ground-point flip moved to 79d — getPosition-consuming FX
   sites would ride at unit feet for a commit otherwise); shader
   attr + `SpriteAnchor` + pick lockstep, +7 tests (worklog §79c)
-- [ ] 79d — the coordinated flip + consumer sweep: audit table
-  over all `tileWorldPos`/`getPosition` sites (ground vs
-  visual-center) → units to `'base'`+ground anchors, consumers
-  onto ONE shared above-the-anchor helper, pick builders stamp
-  `ANCHOR_XY.base` — all in one commit
+- [x] 79d — ✅ 2026-08-14: the flip landed off the 13-row audit
+  table; drift 9.1px→0.0000px measured live, 8/8 picks, I2+J3
+  workarounds retired into `aboveAnchor` (worklog §79d)
 - [ ] 79e — native eyeball of the anchor rework + constant
   re-tunes (base-flush, marker/hitsplat lifts)
 - [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;

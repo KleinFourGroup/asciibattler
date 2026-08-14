@@ -63,9 +63,6 @@ export class UnitOverlayLayer {
   private readonly overlays = new Map<number, UnitOverlayHandle>();
   private nextId = 1;
   private readonly projectScratch = new THREE.Vector3();
-  /** I2 — second scratch for the hitsplat's lifted (top-of-sprite) point, so
-   *  projecting it doesn't clobber the center projection mid-call. */
-  private readonly liftScratch = new THREE.Vector3();
   /** E6.C — live floating-number anchors, swept on `clear`. */
   private readonly hitsplats = new Set<HTMLDivElement>();
   /** E6.C — per-unit count of active hitsplats, for vertical stacking. */
@@ -242,39 +239,33 @@ export class UnitOverlayLayer {
    * ~0.6s life, which is fine at that duration). The inner element runs the CSS
    * rise+fade keyframe and self-removes on animationend. Concurrent hitsplats
    * sharing a `stackKey` (the unit id) stagger upward so clustered hits don't
-   * overlap. No-op when the sprite center is off-screen.
+   * overlap. No-op when the anchor point is off-screen.
    *
-   * I2 — anchor on the billboard's SCREEN-SPACE top, not a projected world-up
-   * point. The sprite is a screen-aligned billboard, so its on-screen top edge
-   * is straight up from the projected center; but under the PerspectiveCamera a
-   * world-up offset (`center + worldYLift`) projects DIAGONALLY toward the
-   * vanishing point for off-axis sprites, dragging the splat sideways (the
-   * "hitsplats drift to the side for units off to the edge" bug). Fix: take X
-   * from the projected center (kills the drift) and only the vertical pixel
-   * delta from the lifted point (keeps the offset perspective-correct — it
-   * shrinks with distance).
+   * §79d — `worldTop` is the glyph's visual TOP, already lifted along
+   * CAMERA-UP by the caller (`aboveAnchor` off the ground anchor), so its
+   * projection is both drift-free (camera-up preserves screen X exactly) and
+   * perspective-correct (the lift shrinks with distance) in ONE projection.
+   * This retires the I2 dual-projection workaround that lived here (project
+   * the world-Y-lifted point, keep only its Y, take X from the center — the
+   * fix for "hitsplats drift sideways for units off to the edge"): the anchor
+   * convention now makes the drift impossible upstream.
    */
   spawnHitsplat(
-    worldCenter: THREE.Vector3,
-    worldYLift: number,
+    worldTop: THREE.Vector3,
     text: string,
     kind: 'normal' | 'crit' | 'heal' | 'burn' | 'miss',
     stackKey: number,
   ): void {
-    const center = this.projectToCss(worldCenter);
-    if (!center) return;
-    // Project the lifted (top-of-sprite) point for a depth-correct vertical
-    // offset; if it falls behind the camera, fall back to the center Y.
-    const lifted = this.projectToCss(this.liftScratch.copy(worldCenter).setY(worldCenter.y + worldYLift));
-    const topY = lifted ? lifted.y : center.y;
+    const top = this.projectToCss(worldTop);
+    if (!top) return;
 
     const stack = this.hitsplatCounts.get(stackKey) ?? 0;
     this.hitsplatCounts.set(stackKey, stack + 1);
 
     const anchor = document.createElement('div');
     anchor.className = 'hitsplat-anchor';
-    const y = topY - stack * HITSPLAT_STACK_PX;
-    anchor.style.transform = `translate3d(${center.x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    const y = top.y - stack * HITSPLAT_STACK_PX;
+    anchor.style.transform = `translate3d(${top.x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
 
     const el = document.createElement('div');
     el.className = `hitsplat hitsplat--${kind}`;

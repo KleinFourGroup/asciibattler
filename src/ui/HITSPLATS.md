@@ -166,8 +166,9 @@ These live in the TypeScript, not the CSS — listed so you don't go hunting:
 
 - **The words shown** (the `"Miss"` text, the damage numbers themselves) —
   `src/render/BattleRenderer.ts` (search `spawnHitsplat`).
-- **How high above the unit they start** (`HITSPLAT_Y_OFFSET`) and **the gap
-  between several splats stacking on one unit** (`HITSPLAT_STACK_PX`) —
+- **How high above the unit they start** (the glyph's visual top — the
+  `aboveAnchor` lift in `spawnHitsplat`, §79d) and **the gap between several
+  splats stacking on one unit** (`HITSPLAT_STACK_PX`) —
   `src/render/BattleRenderer.ts` / `src/render/UnitOverlayLayer.ts`.
 - **Which event shows which kind/colour** (a miss → the `miss` style, etc.) —
   also `BattleRenderer.ts`.

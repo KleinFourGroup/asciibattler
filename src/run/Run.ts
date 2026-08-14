@@ -61,7 +61,7 @@ import type { UnitRarity } from '../config/units';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
 import { redrawRejection } from './redraw';
-import { empowerRejection, empowerEffect } from './empower';
+import { empowerRejection, empowerEffect, type EmpowerStackView } from './empower';
 import {
   resolveTurnGrants,
   resolveInstantHooks,
@@ -2211,7 +2211,7 @@ export class Run {
         // 49d — the grant queue (per-source, walk order; `active` = the
         // cursor the strict mode enforces).
         grants: this.grantViews(),
-        empowerMagnitudes: this.empowerMagnitudes(),
+        empowerStacks: this.empowerStacks(),
         // 47d — the owned-daemon list (stacked banners). `redrawGate`/
         // `empowerGate` = "does this idol EVER grant it" (authored hooks,
         // not this turn's resolution) — the screen tells "denied this turn"
@@ -2592,7 +2592,7 @@ export class Run {
       context,
       playerHealth: this.playerHealth,
       grants: this.grantViews(),
-      empowerMagnitudes: this.empowerMagnitudes(),
+      empowerStacks: this.empowerStacks(),
     });
     // 65e — the hand emit goes LAST: the cache/packet repaints above
     // rebuild the pre-turn card row WITHOUT enter animations (the screen's
@@ -3100,7 +3100,7 @@ export class Run {
       drawPile: this.resolvePileForDisplay(this.drawPile),
       discardPile: this.resolvePileForDisplay(this.discardPile),
       grants: this.grantViews(),
-      empowerMagnitudes: this.empowerMagnitudes(),
+      empowerStacks: this.empowerStacks(),
     });
   }
 
@@ -3121,17 +3121,19 @@ export class Run {
   }
 
   /**
-   * K4 — the per-hand-position empower stack column (parallel to `hand`,
-   * 0 = unbuffed): each card's accumulated empower-buff magnitude on its
-   * roster slot's encounter store. Derived (never stored) so it stays correct
-   * across redraws and re-draws of an earlier turn's empowered card. L1: the
+   * K4→78c — the per-hand-position empower stack column (parallel to `hand`,
+   * empty = unbuffed): each card's badge-eligible buffs on its roster slot's
+   * encounter store, ONE ENTRY PER KEY (78c widened the K4 summed integer,
+   * which collapsed distinct buff keys into an anonymous count and merged
+   * their hover text). Derived (never stored) so it stays correct across
+   * redraws and re-draws of an earlier turn's empowered card. L1: the
    * buff key comes from the DAEMON's authored empower hook (not the
    * resolved turn gate, so a chance-denied turn still badges existing
-   * stacks); no empower daemon → no key → all zeros.
+   * stacks); no empower daemon → no key → nothing badges from idols.
    */
-  private empowerMagnitudes(): number[] {
+  private empowerStacks(): EmpowerStackView[][] {
     // 47d — one badge column across ALL owned empower idols' buff keys
-    // (magnitudes sum; keys are distinct per idol by authoring convention).
+    // (keys are distinct per idol by authoring convention).
     const buffKeys = new Set<string>();
     for (const d of this.daemons) {
       const hook = daemonEmpowerHook(d);
@@ -3139,17 +3141,21 @@ export class Run {
     }
     // 49e — packet `applyBuff` keys badge too (a hyped/overclocked card
     // shows its stacks). Catalog-wide is safe: a key with no store presence
-    // contributes zero.
+    // contributes nothing.
     for (const p of PACKETS) {
       if (p.effect.op === 'applyBuff') buffKeys.add(p.effect.buff.key);
     }
-    return this.hand.map((idx) => {
-      let total = 0;
-      for (const effect of this.encounterEffects[idx] ?? []) {
-        if (buffKeys.has(effect.key)) total += effect.magnitude;
-      }
-      return total;
-    });
+    // Entry order = store order (acquisition). Copies, not references — the
+    // store merges IN PLACE, so an aliased entry in a retained payload would
+    // silently drift (cloneEffect = the seeding path's own deep copy).
+    return this.hand.map((idx) =>
+      (this.encounterEffects[idx] ?? [])
+        .filter((effect) => buffKeys.has(effect.key))
+        .map((effect) => {
+          const { key, magnitude, mods } = cloneEffect(effect);
+          return { key, magnitude, mods };
+        }),
+    );
   }
 
   /**
@@ -3192,7 +3198,7 @@ export class Run {
     this.bus.emit('turn:unitEmpowered', {
       handIndex,
       grants: this.grantViews(),
-      empowerMagnitudes: this.empowerMagnitudes(),
+      empowerStacks: this.empowerStacks(),
     });
   }
 

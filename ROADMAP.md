@@ -260,8 +260,10 @@ Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
 - [x] 78b — ✅ 2026-08-13: `setOn` + enemy-card targeting landed to
   plan; all branches bus-event-proven incl. dead/reaped-card inert;
   native eyeball rides with the user (worklog §78b)
-- [ ] 78c — the empower data widening: per-slot PER-KEY through Run +
-  the 4 payloads + 6 test sites; per-key badges + un-merged hover
+- [x] 78c — ✅ 2026-08-13: `EmpowerStackView[][]` through Run + the 4
+  payloads + 6 test sites; per-key chips + un-merged hover
+  browser-proven (Empowered/Hyped distinct on one card); no bump,
+  as predicted (worklog §78c)
 - [ ] 78d — key→color map (statusDisplay precedent) + colored badges
   + in-battle empower markers on the HUD cards
 - [ ] 78e — sector-map overlay: MapScreen `readOnly` + the Game-owned

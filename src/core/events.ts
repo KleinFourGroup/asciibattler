@@ -21,6 +21,7 @@ import type { WorldCommand } from '../sim/Command';
 import type { BattleEncounter } from '../run/Run';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { TurnGrantView } from '../run/daemon';
+import type { EmpowerStackView } from '../run/empower';
 import type { RewardPortion } from '../run/rewards';
 import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
@@ -439,7 +440,7 @@ export interface GameEvents extends Record<string, unknown> {
    * 49e — a `usePacket` command fired a held packet (consume-on-fire; the
    * paired `run:cacheChanged` already carried the shrunk cache). `context`
    * is where it fired; `playerHealth` is post-effect (patch heals it);
-   * `grants` + `empowerMagnitudes` are the re-derived pre-turn state (a
+   * `grants` + `empowerStacks` are the re-derived pre-turn state (a
    * reroute INSERTS a grant at the cursor, a hype re-badges the hand) —
    * both derived-empty outside `turn-intro`. The 49f fire strip + cache
    * modal are the intended consumers; no sim/run subscriber exists.
@@ -449,7 +450,7 @@ export interface GameEvents extends Record<string, unknown> {
     context: UseContext;
     playerHealth: number;
     grants: TurnGrantView[];
-    empowerMagnitudes: number[];
+    empowerStacks: EmpowerStackView[][];
   };
 
   /**
@@ -523,9 +524,10 @@ export interface GameEvents extends Record<string, unknown> {
    * per granted idol effect in acquisition order — the §49 per-source
    * re-model; the old summed `redraw` + `empowers` list retired with it).
    * `active` marks the derived cursor the strict finality mode enforces.
-   * Plus `empowerMagnitudes` (parallel to `hand`: each card's accumulated
-   * empower stack on its roster slot, 0 = unbuffed), so the screen can badge
-   * a card that was empowered on an EARLIER turn and drawn back.
+   * Plus `empowerStacks` (parallel to `hand`: each card's badge-eligible
+   * buffs on its roster slot, one entry per KEY — 78c widened the K4 summed
+   * integer; empty = unbuffed), so the screen can badge a card that was
+   * empowered on an EARLIER turn and drawn back, per source.
    */
   'turn:starting': {
     turn: number; // 1-based, within the current encounter
@@ -544,9 +546,9 @@ export interface GameEvents extends Record<string, unknown> {
     /** 49d — the grant queue views (`Run.grantViews()`): a command names its
      *  grant by `grantIndex`; strict mode fires only the `active` one. */
     grants: TurnGrantView[];
-    /** K4 — per-hand-position empower stacks (0 = none; 47d: summed across
-     *  every owned empower idol's buff key), see `turn:starting`. */
-    empowerMagnitudes: number[];
+    /** K4→78c — per-hand-position empower stacks (empty = none; one entry
+     *  per badge-eligible buff key), see the doc above. */
+    empowerStacks: EmpowerStackView[][];
     /** L1→47d — the run's OWNED daemons in acquisition order (empty =
      *  daemon-less), for the stacked pre-turn banners. Inline structural
      *  shape (the `map` convention). Per-turn grant state is NOT here — it's
@@ -630,7 +632,7 @@ export interface GameEvents extends Record<string, unknown> {
    * changed", whatever moved it (`Run.emitHandChanged` is the one emit
    * site). The hand length may DIFFER from the drawn size.
    *
-   * K4 — also carries `empowerMagnitudes` (the K4 badge column, parallel to
+   * K4→78c — also carries `empowerStacks` (the badge column, parallel to
    * the NEW hand): a refill can seat an already-empowered card, and the old
    * positions no longer line up after a redraw.
    */
@@ -643,14 +645,14 @@ export interface GameEvents extends Record<string, unknown> {
     /** 49d — the full queue re-derived (the fired grant's budget moved,
      *  possibly the cursor too). */
     grants: TurnGrantView[];
-    empowerMagnitudes: number[];
+    empowerStacks: EmpowerStackView[][];
   };
 
   /**
    * K4 — an `empowerUnit` command landed at the pre-turn gate: the selected
    * card's roster slot gained the configured buff for the rest of the
    * encounter. Carries the re-derived queue + the full per-hand stack column
-   * (`empowerMagnitudes`, parallel to the unchanged hand) so the pre-turn
+   * (`empowerStacks`, parallel to the unchanged hand) so the pre-turn
    * screen updates its badge + control state in place. Only ever fires
    * during `turn-intro` (the command is phase-gated).
    */
@@ -658,7 +660,7 @@ export interface GameEvents extends Record<string, unknown> {
     handIndex: number;
     /** 49d — the full queue re-derived (same shape as `turn:starting`). */
     grants: TurnGrantView[];
-    empowerMagnitudes: number[];
+    empowerStacks: EmpowerStackView[][];
   };
 
   /**

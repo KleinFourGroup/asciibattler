@@ -18,9 +18,10 @@
  *
  * K4 — **Empower** shares the same card selection: with EXACTLY ONE card
  * selected, the Empower button buffs it for the rest of the encounter (the
- * `empowerUnit` command). Empowered cards carry a `▲` badge (one per stack —
- * the `empowerMagnitudes` column the events deliver, so a card empowered on
- * an earlier turn and drawn back still badges). Same events-only refresh:
+ * `empowerUnit` command). Buffed cards carry `▲` chips (78c: one chip PER
+ * BUFF KEY, each hover-titled with its own mods — the `empowerStacks`
+ * column the events deliver, so a card empowered on an earlier turn and
+ * drawn back still badges). Same events-only refresh:
  * `turn:unitEmpowered` → `updateEmpower`.
  *
  * L1 — the gates are DAEMON-owned now: a banner under the map line names the
@@ -67,6 +68,7 @@
 import type { GameEvents } from '../core/events';
 import type { UnitTemplate, UnitStats } from '../sim/Unit';
 import type { TurnGrantView } from '../run/daemon';
+import type { EmpowerStackView } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { StatusEffect } from '../sim/statusEffects';
@@ -108,7 +110,7 @@ export class PreTurnScreen {
   private discardPile: readonly UnitTemplate[] = [];
   // 49d — this turn's grant queue (one control per entry, queue order).
   private grants: readonly TurnGrantView[] = [];
-  private empowerMagnitudes: readonly number[] = [];
+  private empowerStacks: readonly EmpowerStackView[][] = [];
   // 49f — the pools block + its static bounds, kept so a gate-time packet
   // fire (patch heals the player pool) can re-render the gauges in place.
   private poolsEl: HTMLDivElement | null = null;
@@ -193,7 +195,7 @@ export class PreTurnScreen {
     this.pendingCues = deal;
     this.playCuesOnNextRefresh = true;
     this.grants = info.grants;
-    this.empowerMagnitudes = info.empowerMagnitudes;
+    this.empowerStacks = info.empowerStacks;
     // 49d — denial is per idol per hook kind: the idol authors the hook but
     // this turn's queue holds no matching entry from it (the coin came up
     // cold). Computed ONCE from the fresh payload — a spent grant keeps its
@@ -293,7 +295,7 @@ export class PreTurnScreen {
     this.drawPile = payload.drawPile;
     this.discardPile = payload.discardPile;
     this.grants = payload.grants;
-    this.empowerMagnitudes = payload.empowerMagnitudes;
+    this.empowerStacks = payload.empowerStacks;
     this.selected.clear();
     this.refreshHand();
     // 51e — the pile counts on the chip faces moved with the cards.
@@ -453,7 +455,7 @@ export class PreTurnScreen {
    */
   updateEmpower(payload: GameEvents['turn:unitEmpowered']): void {
     this.grants = payload.grants;
-    this.empowerMagnitudes = payload.empowerMagnitudes;
+    this.empowerStacks = payload.empowerStacks;
     this.selected.clear();
     this.refreshHand();
   }
@@ -468,7 +470,7 @@ export class PreTurnScreen {
    */
   updatePacketUsed(payload: GameEvents['run:packetUsed']): void {
     this.grants = payload.grants;
-    this.empowerMagnitudes = payload.empowerMagnitudes;
+    this.empowerStacks = payload.empowerStacks;
     this.selected.clear();
     this.armedPacketIndex = null; // the fire consumed a slot — indices shifted
     this.refreshHand();
@@ -692,7 +694,6 @@ export class PreTurnScreen {
       const cols = Math.ceil(this.hand.length / 2);
       cards.style.maxWidth = `calc(${cols} * var(--hand-card-w) + ${cols - 1} * var(--hand-gap))`;
     }
-    const buffSummary = this.buffSummary;
     // 65e — the one-shot enter set (the initial deal, a redraw refill, a
     // Surge draw). 65f: the entering nodes are collected in reveal order
     // and handed to the cue scheduler, which syncs each card's delay to
@@ -702,7 +703,7 @@ export class PreTurnScreen {
     this.enterPositions = null;
     const enteringNodes: HTMLElement[] = [];
     this.hand.forEach((unit, pos) => {
-      const card = renderHandCard(unit, this.empowerMagnitudes[pos] ?? 0, buffSummary);
+      const card = renderHandCard(unit, this.empowerStacks[pos] ?? []);
       if (entering === 'all' || (entering !== null && entering.has(pos))) {
         card.classList.add('preturn-card-enter');
         enteringNodes.push(card);
@@ -747,16 +748,6 @@ export class PreTurnScreen {
     for (const name of this.deniedEmpowerIdols) {
       wrap.appendChild(renderGateDenied(`${name} is silent — no empower this turn`));
     }
-  }
-
-  /** L1→49d — every granting idol's empower buff, spelled out for the badge
-   *  title (null when nothing grants an empower this turn). */
-  private get buffSummary(): string | null {
-    const empowers = this.grants.filter((g) => g.effect.kind === 'empower');
-    if (empowers.length === 0) return null;
-    return empowers
-      .map((g) => (g.effect.kind === 'empower' ? buffModsSummary(g.effect.buff.mods) : ''))
-      .join(' / ');
   }
 
   /**
@@ -929,28 +920,37 @@ export class PreTurnScreen {
 
 /** P3 — one drawn card: the shared `full` UnitCard (pre-turn skin), so the hand
  *  shows the same all-stats + abilities-with-derived-stats + XP-to-next bar the
- *  player drafts on. K4 — an empowered card (its roster slot carries the buff)
- *  adds a `▲` badge overlay, one chevron per stack; the title spells out the
- *  active daemon's buff. The selection (K3 redraw / K4 empower) classes + click
- *  ride on top, applied by the caller. */
-function renderHandCard(
-  unit: UnitTemplate,
-  empowerMagnitude: number,
-  buffSummary: string | null,
-): HTMLDivElement {
+ *  player drafts on. K4→78c — a buffed card (its roster slot carries buffs)
+ *  stacks ONE `▲` chip PER BUFF KEY in the badge corner, each titled with its
+ *  own key + mods (the payload's per-key `EmpowerStackView` list — the old
+ *  summed integer merged five keys' hover text into one line). The selection
+ *  (K3 redraw / K4 empower) classes + click ride on top, applied by the
+ *  caller. */
+function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[]): HTMLDivElement {
   const { el } = buildUnitCard(unitCardFromTemplate(unit), { mode: 'full', skin: 'preturn' });
 
-  if (empowerMagnitude > 0) {
+  if (stacks.length > 0) {
     const badge = document.createElement('div');
     badge.className = 'preturn-card-empower';
-    badge.textContent =
-      empowerMagnitude <= 3 ? '▲'.repeat(empowerMagnitude) : `▲×${empowerMagnitude}`;
-    badge.title =
-      `Empowered ×${empowerMagnitude}` + (buffSummary ? ` — ${buffSummary}` : '');
+    for (const stack of stacks) {
+      const chip = document.createElement('div');
+      chip.className = 'preturn-card-empower-chip';
+      chip.dataset['buffKey'] = stack.key; // 78d's color-map hook
+      chip.textContent = stack.magnitude <= 3 ? '▲'.repeat(stack.magnitude) : `▲×${stack.magnitude}`;
+      chip.title = `${buffKeyLabel(stack.key)} ×${stack.magnitude} — ${buffModsSummary(stack.mods)}`;
+      badge.appendChild(chip);
+    }
     el.appendChild(badge);
   }
 
   return el;
+}
+
+/** 78c — human label for a buff key: the keys are authored as adjectives
+ *  ("empowered" / "warded" / "hyped" / …), so the label is just the key
+ *  capitalized — no second naming table to drift. */
+function buffKeyLabel(key: string): string {
+  return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
 /** L1 — the inert line a chance-denied gate leaves where its control would be

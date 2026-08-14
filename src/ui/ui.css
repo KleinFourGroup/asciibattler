@@ -2459,18 +2459,26 @@ body {
   color: #15f4ee; /* FLOURESCENT_BLUE */
 }
 
-/* K4 — the empowered-card badge: one ▲ per stack (the slot carries the buff
-   for the rest of the encounter, so it shows on a re-drawn card too). P3 — a
-   top-right corner overlay on the full card (anchored by .unit-card--preturn's
-   position: relative). */
+/* K4→78c — the buffed-card badge: a top-right corner overlay (anchored by
+   .unit-card--preturn's position: relative) holding ONE CHIP PER BUFF KEY
+   (▲ per stack within a chip), each with its own hover title — the 78c
+   per-key split of the old single merged badge. Chips stack as a right-
+   aligned column so two sources read as two rows, not one blob. */
 .preturn-card-empower {
   position: absolute;
   top: 8px;
   right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.preturn-card-empower-chip {
   font-size: 13px;
   line-height: 1;
   letter-spacing: 0.08em;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: #15f4ee; /* FLOURESCENT_BLUE — 78d layers the per-key color map on top */
 }
 
 .preturn-pools,

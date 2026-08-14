@@ -3109,3 +3109,28 @@ row's outer cards — `.hud-enemy-cards` is a scroll container
 (`overflow-y: auto`), which clips at its box edge; 8px interior
 padding gives the 7px glow (1px outline + 6px shadow) paint room.
 Geometry-verified live (8px clearance all four sides).
+
+### 78c — the empower per-key widening (2026-08-13)
+
+The merged-hover bug is dead at the data layer. `EmpowerStackView`
+({key, magnitude, mods}) lands in empower.ts; `Run.empowerStacks()`
+replaces `empowerMagnitudes()` — same badge-eligibility key set
+(daemon hooks + packet applyBuff keys, the 47d/49e union), but the
+column is now one entry PER KEY per hand slot (store order =
+acquisition order), entries deep-copied via `cloneEffect` so a
+retained payload never aliases the merge-mutated store (pinned:
+`.not.toBe` on the mods object). All 4 payloads + the 4 emit sites
++ the 6 predicted test sites converted; expectations stay
+config-derived (`EMPOWER.buff.key` / `buff.mods` — nothing
+hardcoded). PreTurnScreen: the `buffSummary` join (the bug's home)
+RETIRED; `renderHandCard` renders one `▲` chip per key, each
+hover-titled `<Key> ×N — <its own mods>` (keys are authored
+adjectives, so the label is the capitalized key — no second naming
+table); `data-buff-key` rides each chip as 78d's color hook.
+
+Browser-proven (Soldier/Mars + a forced hype packet): one card
+carrying BOTH keys renders two chips — "Empowered ×1 — +8 STR ·
++8 RNG · +8 MAG" and "Hyped ×1 — …" — distinct titles, other
+cards clean. Typecheck + Run suite (338) green pre-hook. NO
+snapshot bump, as the kickoff predicted (the column is derived;
+payloads are events, not saves).

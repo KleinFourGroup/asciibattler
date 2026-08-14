@@ -28,6 +28,23 @@ export interface EmpowerAvailability {
   empowersRemaining: number;
 }
 
+/**
+ * 78c — ONE badge-eligible buff on one hand card, as the pre-turn payloads
+ * carry it (`empowerStacks`, parallel to `hand`: one list per card, one entry
+ * per distinct buff KEY). Replaces the K4 summed integer, which collapsed
+ * five distinct buff keys (Mars / Minerva / three packets) into an anonymous
+ * count and merged their hover text — the §78 charter's confirmed bug. `mods`
+ * rides along so the UI can spell each key's contribution without reaching
+ * into the store; entries are copies (the `empowerEffect` deep-copy
+ * discipline), so a retained payload never aliases the live, merge-mutated
+ * store.
+ */
+export interface EmpowerStackView {
+  readonly key: string;
+  readonly magnitude: number;
+  readonly mods: StatusEffect['mods'];
+}
+
 export function empowerAvailability(grant: EmpowerGrantState): EmpowerAvailability {
   return { empowersRemaining: Math.max(0, grant.budget - grant.used) };
 }

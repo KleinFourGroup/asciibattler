@@ -1506,7 +1506,9 @@ describe('Run', () => {
       // "empowered on an earlier turn, drawn back" pin).
       const pos2 = run.hand.indexOf(slot);
       expect(pos2).toBeGreaterThanOrEqual(0); // short roster: always in hand
-      expect(startings[1]!.empowerMagnitudes[pos2]).toBe(1);
+      expect(startings[1]!.empowerStacks[pos2]).toMatchObject([
+        { key: EMPOWER.buff.key, magnitude: 1 },
+      ]);
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos2 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
@@ -1525,7 +1527,7 @@ describe('Run', () => {
       expect(run.hand[0]).not.toBe(benched);
       // The store keeps the buff; the badge column re-derived for the NEW hand.
       expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
-      expect(redrawns[0]!.empowerMagnitudes[0]).toBe(0);
+      expect(redrawns[0]!.empowerStacks[0]).toEqual([]);
       run.dispatch({ kind: 'advanceTurn' }); // beginTurn fields the FINAL hand
       expect(run.currentEncounter!.playerTeam.some((t) => t.rosterIndex === benched)).toBe(false);
       expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
@@ -1546,15 +1548,24 @@ describe('Run', () => {
         remaining: EMPOWER.empowersPerTurn,
         active: false, // the redraw grant at index 0 holds the cursor
       });
-      expect(startings[0]!.empowerMagnitudes).toEqual(run.hand.map(() => 0));
+      expect(startings[0]!.empowerStacks).toEqual(run.hand.map(() => []));
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 1 });
       expect(empowereds).toHaveLength(1);
       expect(empowereds[0]!.handIndex).toBe(1);
       expect(empowereds[0]!.grants).toEqual(run.grantViews());
       expect(empowereds[0]!.grants[1]!.remaining).toBe(EMPOWER.empowersPerTurn - 1);
-      expect(empowereds[0]!.empowerMagnitudes).toEqual(
+      // 78c — per-key: the buffed position carries one entry (the idol's
+      // key, mods straight from the authored buff — config-derived, never
+      // hardcoded); every other position is empty.
+      expect(empowereds[0]!.empowerStacks.map((s) => s.length)).toEqual(
         run.hand.map((_, i) => (i === 1 ? 1 : 0)),
       );
+      const stack = empowereds[0]!.empowerStacks[1]![0]!;
+      expect(stack).toMatchObject({ key: EMPOWER.buff.key, magnitude: 1 });
+      expect(stack.mods).toEqual(EMPOWER.buff.mods);
+      // The payload is a COPY — a retained payload must not alias the live
+      // store (it merges in place).
+      expect(stack.mods).not.toBe(run.encounterEffects[run.hand[1]!]![0]!.mods);
     });
 
     it('same seed + same empower dispatches stay byte-identical', () => {
@@ -2711,7 +2722,7 @@ describe('Run', () => {
       expect(run.encounterEffects[slot]!.map((e) => e.key)).toEqual([buff.key]);
       // The payload badge column marks the hyped hand position (packet buff
       // keys badge alongside idol empower keys — 49e).
-      expect(used[0]!.empowerMagnitudes[0]).toBe(1);
+      expect(used[0]!.empowerStacks[0]).toMatchObject([{ key: buff.key, magnitude: 1 }]);
       run.dispatch({ kind: 'usePacket', cacheIndex: 0, handIndex: 0 });
       expect(run.encounterEffects[slot]).toHaveLength(1); // merged, not appended
       expect(run.encounterEffects[slot]![0]!.magnitude).toBe(2);
@@ -4514,7 +4525,7 @@ describe('65c — the hand-op packets (drawCards / discardCards)', () => {
     // never saw before 65c).
     expect(swaps).toHaveLength(1);
     expect(swaps[0]!.hand).toHaveLength(handBefore + drawCount);
-    expect(swaps[0]!.empowerMagnitudes).toHaveLength(handBefore + drawCount);
+    expect(swaps[0]!.empowerStacks).toHaveLength(handBefore + drawCount);
   });
 
   it('stops early on a fully dealt deck — consume-on-fire stands (the patch-at-full-health precedent)', () => {

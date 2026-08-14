@@ -10,10 +10,17 @@ export interface PickCandidate {
   readonly position: THREE.Vector3;
   readonly size: number;
   /** §40e-follow-up — the glyph's normalized ink rect within the quad (see
-   *  `glyphInk`). The hit-test tests only this sub-rect, so the clickbox hugs the
-   *  visible glyph rather than the empty full quad. Omitted ⇒ the full quad
-   *  (`FULL_GLYPH_INK`) — byte-identical to the pre-ink behavior. */
+   *  `FontAtlas.getGlyphInk`). The hit-test tests only this sub-rect, so the
+   *  clickbox hugs the visible glyph rather than the empty full quad. Omitted ⇒
+   *  the full quad (`FULL_GLYPH_INK`) — byte-identical to the pre-ink behavior. */
   readonly ink?: GlyphInk;
+  /** §79c — the quad-local anchor point (`ANCHOR_XY[mode]` in SpriteRenderer;
+   *  quad spans [-0.5, 0.5]²) the candidate's sprite was added with. The
+   *  hit-test mirrors the shader: the quad sits at `position`'s view-space
+   *  projection offset by `-anchor·size`, so a base-anchored glyph's clickbox
+   *  rises above its ground anchor exactly as the visible quad does. Omitted ⇒
+   *  center-anchored (the historical behavior). */
+  readonly anchor?: { readonly x: number; readonly y: number };
 }
 
 const _view = new THREE.Vector3();
@@ -50,6 +57,12 @@ export function pickInstanceAtNdc(
     const v = _view.copy(c.position).applyMatrix4(camera.matrixWorldInverse); // → view space
     if (v.z >= 0) continue; // at/behind the camera — never clickable
     const half = 0.5 * c.size;
+    // §79c — mirror the shader's anchor offset: the quad CENTER sits at the
+    // anchor's view-space projection minus `anchor·size` (so a base anchor
+    // (0, -0.5) raises the quad half its height — the glyph stands ON the
+    // point). Default (0, 0) = centered, byte-identical to the pre-anchor test.
+    const qx = v.x - (c.anchor?.x ?? 0) * c.size;
+    const qy = v.y - (c.anchor?.y ?? 0) * c.size;
     // §40e-follow-up — test the glyph's INK sub-rect, not the whole quad, so the
     // clickbox hugs the visible glyph (a half-height `▄` slab otherwise stays
     // clickable a full cell above its ink). The rect is normalized [0,1] with the
@@ -65,8 +78,8 @@ export function pickInstanceAtNdc(
     const hy = (ink.y1 - ink.y0) * half; // ink half-height
     // Project the ink center and a +hx/+hy corner (same view-Z ⇒ an axis-aligned
     // rect in NDC). applyMatrix4 does the perspective divide.
-    _centerNdc.set(v.x + cxOff, v.y + cyOff, v.z).applyMatrix4(camera.projectionMatrix);
-    _cornerNdc.set(v.x + cxOff + hx, v.y + cyOff + hy, v.z).applyMatrix4(camera.projectionMatrix);
+    _centerNdc.set(qx + cxOff, qy + cyOff, v.z).applyMatrix4(camera.projectionMatrix);
+    _cornerNdc.set(qx + cxOff + hx, qy + cyOff + hy, v.z).applyMatrix4(camera.projectionMatrix);
     const halfNdcX = Math.abs(_cornerNdc.x - _centerNdc.x);
     const halfNdcY = Math.abs(_cornerNdc.y - _centerNdc.y);
     if (Math.abs(ndcX - _centerNdc.x) <= halfNdcX && Math.abs(ndcY - _centerNdc.y) <= halfNdcY) {

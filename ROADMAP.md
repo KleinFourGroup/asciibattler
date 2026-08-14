@@ -299,14 +299,15 @@ render-only throughout):
 - [x] 79b — ✅ 2026-08-14: cause (c) CONFIRMED numerically — ±9px
   edge skew at 720p, camera-up alternative exactly 0; plus the
   base-sinks-14px finding feeding the 79e tune (worklog §79b)
-- [ ] 79c — the anchor mechanism: ground-point anchors
-  (`tileWorldPos` drops +0.5) + per-instance quad-anchor attribute
-  (units bottom-center, projectiles/markers center) + pick.ts in
-  lockstep, headless-first
-- [ ] 79d — the consumer sweep: audit table over all
-  `tileWorldPos`/FX-endpoint sites (ground vs visual-center) →
-  convert + collapse marker/hitsplat onto ONE shared
-  above-the-anchor helper
+- [x] 79c — ✅ 2026-08-14: the mechanism, RE-SCOPED behavior-neutral
+  (the ground-point flip moved to 79d — getPosition-consuming FX
+  sites would ride at unit feet for a commit otherwise); shader
+  attr + `SpriteAnchor` + pick lockstep, +7 tests (worklog §79c)
+- [ ] 79d — the coordinated flip + consumer sweep: audit table
+  over all `tileWorldPos`/`getPosition` sites (ground vs
+  visual-center) → units to `'base'`+ground anchors, consumers
+  onto ONE shared above-the-anchor helper, pick builders stamp
+  `ANCHOR_XY.base` — all in one commit
 - [ ] 79e — native eyeball of the anchor rework + constant
   re-tunes (base-flush, marker/hitsplat lifts)
 - [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;

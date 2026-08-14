@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { SpriteRenderer } from './SpriteRenderer';
+import { ANCHOR_XY, SpriteRenderer } from './SpriteRenderer';
 import type { FontAtlas } from './FontAtlas';
 
 // Qb#2 — the depth-sort is pure buffer/camera math (no canvas/WebGL), so the
@@ -134,5 +134,55 @@ describe('SpriteRenderer.sortByDepth', () => {
     const out = new THREE.Vector3();
     expect(sprites.getPosition(h, out)).not.toBeNull();
     expect(out.z).toBeCloseTo(2);
+  });
+});
+
+// §79c — the per-instance anchor attribute: written at addSprite, carried
+// through the removeSprite swap-compaction AND the depth-sort repack with its
+// instance (a scrambled anchor would silently re-center a standing glyph).
+describe('SpriteRenderer instance anchor', () => {
+  const anchorAtSlot = (sprites: SpriteRenderer, slot: number): { x: number; y: number } => {
+    const attr = sprites.mesh.geometry.getAttribute('instanceAnchor');
+    return { x: attr.getX(slot), y: attr.getY(slot) };
+  };
+  const slotOf = (sprites: SpriteRenderer, id: number): number => {
+    // getPosition round-trips handle→slot internally; recover the slot by
+    // matching the position buffer (positions are distinct in these tests).
+    const out = new THREE.Vector3();
+    sprites.getPosition({ id }, out);
+    const attr = sprites.mesh.geometry.getAttribute('instancePosition');
+    for (let s = 0; s < sprites.count; s++) {
+      if (attr.getX(s) === out.x && attr.getY(s) === out.y && attr.getZ(s) === out.z) return s;
+    }
+    throw new Error('slot not found');
+  };
+
+  it("defaults to 'center' (0, 0) and writes 'base' as (0, -0.5)", () => {
+    const sprites = new SpriteRenderer(stubAtlas);
+    sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0));
+    sprites.addSprite('M', '#33ff00', new THREE.Vector3(1, 0, 0), 'base');
+    expect(anchorAtSlot(sprites, 0)).toEqual(ANCHOR_XY.center);
+    expect(anchorAtSlot(sprites, 1)).toEqual(ANCHOR_XY.base);
+    expect(ANCHOR_XY.center).toEqual({ x: 0, y: 0 });
+    expect(ANCHOR_XY.base).toEqual({ x: 0, y: -0.5 });
+  });
+
+  it('the anchor travels with its instance through removeSprite compaction', () => {
+    const sprites = new SpriteRenderer(stubAtlas);
+    const doomed = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0));
+    sprites.addSprite('M', '#33ff00', new THREE.Vector3(1, 0, 0), 'base');
+    sprites.removeSprite(doomed); // swaps the base-anchored sprite into slot 0
+    expect(anchorAtSlot(sprites, 0)).toEqual(ANCHOR_XY.base);
+  });
+
+  it('the anchor travels with its instance through the depth-sort repack', () => {
+    const cam = makeCamera();
+    const sprites = new SpriteRenderer(stubAtlas);
+    // Near→far so the sort must reorder; only the near sprite is base-anchored.
+    const baseAnchored = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0.5, 4), 'base');
+    const centered = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0.5, -4));
+    sprites.sortByDepth(cam);
+    expect(anchorAtSlot(sprites, slotOf(sprites, baseAnchored.id))).toEqual(ANCHOR_XY.base);
+    expect(anchorAtSlot(sprites, slotOf(sprites, centered.id))).toEqual(ANCHOR_XY.center);
   });
 });

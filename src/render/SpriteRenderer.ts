@@ -9,9 +9,9 @@ export const BLOOM_LAYER = 1;
 
 /**
  * Renders all in-scene ASCII sprites with selective per-sprite bloom. One
- * `InstancedBufferGeometry` quad, five per-instance attributes (position,
- * glyph UV rect, color, alpha, bloomIntensity), and two camera-facing
- * billboard meshes sharing those buffers:
+ * `InstancedBufferGeometry` quad, seven per-instance attributes (position,
+ * glyph UV rect, color, alpha, bloomIntensity, size, anchor), and two
+ * camera-facing billboard meshes sharing those buffers:
  *
  *   - `mesh` (default layer 0): renders the visible sprite at its natural
  *     color. Ignores bloomIntensity. This is what the player sees.
@@ -33,6 +33,30 @@ export const BLOOM_LAYER = 1;
 export interface SpriteHandle {
   readonly id: number;
 }
+
+/**
+ * §79c — where a sprite's quad sits relative to its anchor (`instancePosition`):
+ *
+ *  - `'center'` — the quad CENTERS on the anchor (the historical behavior;
+ *    right for things that float AT a point: projectiles, markers, motes).
+ *  - `'base'` — the quad's BOTTOM EDGE sits on the anchor, rising screen-up
+ *    (right for things that STAND ON a point: unit glyphs on their tile).
+ *
+ * The offset is applied in VIEW space by the vertex shader, so a base-anchored
+ * glyph rises straight up the screen from its anchor's projection — never the
+ * off-axis diagonal a world-Y lift produces under the pitched camera (the
+ * I2/J3/79b class). Declared at `addSprite`; a sprite's anchor mode is part of
+ * what it IS, not per-frame state.
+ */
+export type SpriteAnchor = 'center' | 'base';
+
+/** Quad-local anchor coordinates by mode (quad spans [-0.5, 0.5]²). Exported
+ *  for the pick hit-test (`pick.ts`), which must mirror the shader exactly. */
+export const ANCHOR_XY: Readonly<Record<SpriteAnchor, { readonly x: number; readonly y: number }>> =
+  {
+    center: { x: 0, y: 0 },
+    base: { x: 0, y: -0.5 },
+  };
 
 const DEFAULT_CAPACITY = 1024;
 
@@ -72,6 +96,7 @@ export class SpriteRenderer {
   private readonly aAlpha: THREE.InstancedBufferAttribute;
   private readonly aBloomIntensity: THREE.InstancedBufferAttribute;
   private readonly aSize: THREE.InstancedBufferAttribute;
+  private readonly aAnchor: THREE.InstancedBufferAttribute;
 
   /** §79a — public so billboard-builder consumers (BattleRenderer's pick
    *  candidates) can read the SAME atlas the glyphs render from — the ink
@@ -123,6 +148,7 @@ export class SpriteRenderer {
     this.aAlpha = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 1), 1);
     this.aBloomIntensity = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 1), 1);
     this.aSize = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 1), 1);
+    this.aAnchor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 2), 2);
 
     for (const attr of [
       this.aPosition,
@@ -131,6 +157,7 @@ export class SpriteRenderer {
       this.aAlpha,
       this.aBloomIntensity,
       this.aSize,
+      this.aAnchor,
     ]) {
       attr.setUsage(THREE.DynamicDrawUsage);
     }
@@ -141,6 +168,7 @@ export class SpriteRenderer {
     this.geometry.setAttribute('instanceAlpha', this.aAlpha);
     this.geometry.setAttribute('instanceBloomIntensity', this.aBloomIntensity);
     this.geometry.setAttribute('instanceSize', this.aSize);
+    this.geometry.setAttribute('instanceAnchor', this.aAnchor);
 
     this.geometry.instanceCount = 0;
 
@@ -184,8 +212,15 @@ export class SpriteRenderer {
     this.bloomMesh.layers.set(BLOOM_LAYER);
   }
 
-  /** Add a sprite. Returns an opaque handle for later removal/update. */
-  addSprite(glyph: string, color: THREE.ColorRepresentation, position: THREE.Vector3): SpriteHandle {
+  /** Add a sprite. Returns an opaque handle for later removal/update.
+   *  `anchor` (§79c) declares how the quad sits on `position` — see
+   *  `SpriteAnchor`; the default `'center'` is the historical behavior. */
+  addSprite(
+    glyph: string,
+    color: THREE.ColorRepresentation,
+    position: THREE.Vector3,
+    anchor: SpriteAnchor = 'center',
+  ): SpriteHandle {
     if (this.activeCount >= this.capacity) {
       throw new Error(`SpriteRenderer: capacity exhausted (${this.capacity})`);
     }
@@ -199,6 +234,7 @@ export class SpriteRenderer {
     this.writeAlpha(slot, 1);
     this.writeBloomIntensity(slot, 0.15);
     this.writeSize(slot, 1);
+    this.writeAnchor(slot, anchor);
 
     this.slotByHandle.set(id, slot);
     this.handleAtSlot[slot] = id;
@@ -285,10 +321,10 @@ export class SpriteRenderer {
    * without this a farther sprite in a higher slot paints over a nearer one
    * (the reported "attacker draws in front of the closer target").
    *
-   * Reorders all six per-instance attribute buffers + the handle⇄slot maps in
+   * Reorders all seven per-instance attribute buffers + the handle⇄slot maps in
    * place, using only the preallocated scratch above (no per-frame allocation,
    * so it stays GC-neutral). Cheap: one along-view depth key per instance (a
-   * dot product), an O(n log n) index sort, and a 13-float-per-instance gather
+   * dot product), an O(n log n) index sort, and a 15-float-per-instance gather
    * — negligible at our sprite counts. Game calls it once per frame after all
    * sprite positions have settled, just before the render.
    */
@@ -336,6 +372,7 @@ export class SpriteRenderer {
     this.repackByOrder(this.aAlpha, 1, n);
     this.repackByOrder(this.aBloomIntensity, 1, n);
     this.repackByOrder(this.aSize, 1, n);
+    this.repackByOrder(this.aAnchor, 2, n);
 
     // Rebuild the handle⇄slot maps to match the new slot order. The read index
     // (old slot `order[j]`) and write index (new slot `j`) overlap, so snapshot
@@ -424,6 +461,14 @@ export class SpriteRenderer {
     this.aSize.needsUpdate = true;
   }
 
+  private writeAnchor(slot: number, anchor: SpriteAnchor): void {
+    const a = ANCHOR_XY[anchor];
+    const arr = this.aAnchor.array as Float32Array;
+    arr[slot * 2] = a.x;
+    arr[slot * 2 + 1] = a.y;
+    this.aAnchor.needsUpdate = true;
+  }
+
   /**
    * Copy every per-instance attribute from one slot to another. Used by
    * `removeSprite` to compact the live range.
@@ -442,5 +487,6 @@ export class SpriteRenderer {
     copyN(this.aAlpha, 1);
     copyN(this.aBloomIntensity, 1);
     copyN(this.aSize, 1);
+    copyN(this.aAnchor, 2);
   }
 }

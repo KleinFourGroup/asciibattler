@@ -112,4 +112,43 @@ describe('pickInstanceAtNdc — per-glyph ink rect', () => {
       expect(pickInstanceAtNdc([base], n.x, n.y, cam)).toBe(1);
     }
   });
+
+  // §79c — the anchor offset must mirror the shader: a base-anchored quad rises
+  // half its height above its (ground) anchor, and the clickbox rises with it.
+  describe('per-instance anchor', () => {
+    const BASE_ANCHORED: PickCandidate = { ...base, anchor: { x: 0, y: -0.5 } };
+
+    it('a base-anchored quad hits ABOVE its anchor, not below', () => {
+      // Size-2 base-anchored at the origin spans y ∈ [0, 2] on this camera.
+      const above = at(0, 1.5); // inside the risen quad, above the centered span [-1, 1]
+      const below = at(0, -0.5); // inside the CENTERED quad's span, below the risen one
+      expect(pickInstanceAtNdc([BASE_ANCHORED], above.x, above.y, cam)).toBe(1);
+      expect(pickInstanceAtNdc([BASE_ANCHORED], below.x, below.y, cam)).toBeNull();
+      // The same cursor points swap outcomes for the centered default.
+      expect(pickInstanceAtNdc([base], below.x, below.y, cam)).toBe(1);
+      expect(pickInstanceAtNdc([base], above.x, above.y, cam)).toBeNull();
+    });
+
+    it('anchor (0, 0) is byte-identical to no anchor', () => {
+      const explicit: PickCandidate = { ...base, anchor: { x: 0, y: 0 } };
+      for (const [wx, wy] of [
+        [0, 0], [0.9, 0.9], [-0.9, -0.9], [1.1, 0], [0, -1.1],
+      ] as const) {
+        const n = at(wx, wy);
+        expect(pickInstanceAtNdc([explicit], n.x, n.y, cam)).toBe(
+          pickInstanceAtNdc([base], n.x, n.y, cam),
+        );
+      }
+    });
+
+    it('the ink rect composes on top of the anchor offset', () => {
+      // Base-anchored size-2 quad spans y ∈ [0, 2]; its bottom-half ink spans
+      // y ∈ [0, 1]. The upper (empty) half must not hit; the ink half must.
+      const inked: PickCandidate = { ...BASE_ANCHORED, ink: { x0: 0, y0: 0, x1: 1, y1: 0.5 } };
+      const inInk = at(0, 0.5);
+      const aboveInk = at(0, 1.5);
+      expect(pickInstanceAtNdc([inked], inInk.x, inInk.y, cam)).toBe(1);
+      expect(pickInstanceAtNdc([inked], aboveInk.x, aboveInk.y, cam)).toBeNull();
+    });
+  });
 });

@@ -3387,3 +3387,42 @@ No commit (probe-only, per the cut). Before-screenshot could not
 be captured (backgrounded-pane screenshot throttle, the known
 HANDOFF limitation) — the numeric table above is the before
 evidence and the scene re-derives deterministically.
+
+### 79c — the anchor mechanism (2026-08-14)
+
+**One deliberate re-scope at step zero** (the audit's find): the
+cut line said 79c flips units to ground-point anchors; but the
+call-site map shows FX sites PERVASIVELY consume
+`sprites.getPosition` (the live anchor) as "the unit's visual
+position" — projectile from/to, hitsplat anchors, aura centers,
+duds, the overlay follow. Flipping anchors in 79c would leave all
+of them at the units' feet for a whole commit — a visually broken
+interim state. So the seam moved: **79c = the mechanism only,
+strictly behavior-neutral** (every sprite stays center-anchored by
+default; render byte-identical); **79d does the coordinated flip**
+— units→base anchors AND every consumer converts in the same
+commit, off the audit table. Landed:
+
+- `instanceAnchor` (vec2) in billboard.vert.glsl — quad offset
+  becomes `(position.xy − instanceAnchor) · size`, applied in
+  view space; (0,0) reproduces the old math exactly.
+- `SpriteAnchor` (`'center' | 'base'`) + exported `ANCHOR_XY` in
+  SpriteRenderer; `addSprite` gains the anchor param (add-time —
+  a sprite's anchor is what it IS, not per-frame state); the
+  seventh instanced attribute rides the full slot lifecycle
+  (removeSprite swap-compaction + the Qb#2 depth-sort repack —
+  both pinned by new tests, since a scrambled anchor would
+  silently re-center a standing glyph).
+- pick.ts mirrors the shader (`PickCandidate.anchor`, quad center
+  = view pos − anchor·size, ink rect composes on top) — 3 new
+  headless pins incl. the base-vs-center swap case and the
+  (0,0)≡undefined identity.
+
+Tests 2624→2631; typecheck clean. Browser sanity: full drive to a
+live battle post-HMR — 77 sprites, every anchor `(0,0)`, console
+clean (no shader compile errors). The 79d landing note: convert
+sites off the audit table (ground vs visual-center per site), flip
+units to `'base'` + ground anchors, route visual-center consumers
+through the shared above-the-anchor helper; the pick builders
+must stamp `ANCHOR_XY.base` in the SAME commit the sprites flip
+(pick and shader may never disagree).

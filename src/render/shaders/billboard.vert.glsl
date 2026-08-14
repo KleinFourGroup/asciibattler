@@ -23,9 +23,18 @@ attribute float instanceBloomIntensity;
 // Per-sprite size multiplier on top of the global uSpriteSize. 1.0 = the
 // default unit/wall glyph size; <1.0 shrinks (E6.B ranged tracers spawn
 // smaller so they read as a bolt rather than a full glyph). Scales the
-// quad symmetrically about instancePosition, so the bloom mesh — which
+// quad about the instance ANCHOR (below), so the bloom mesh — which
 // shares this shader + these buffers — shrinks its halo to match for free.
 attribute float instanceSize;
+// §79c — the quad-local point (quad spans [-0.5, 0.5]²) that coincides with
+// the projected instancePosition. (0, 0) = the quad CENTERS on its anchor
+// (the historical behavior — projectiles, markers, motes float AT a point);
+// (0, -0.5) = the quad's BASE sits on its anchor (a unit STANDS on its
+// tile). Applied in VIEW space, where X/Y are screen-right/up by
+// construction — so the vertical rise off a ground anchor is always
+// screen-up, never the off-axis diagonal a world-Y lift projects to under
+// the pitched camera (the I2/J3/79b off-axis class, killed structurally).
+attribute vec2 instanceAnchor;
 
 uniform float uSpriteSize;
 
@@ -36,7 +45,7 @@ varying float vBloomIntensity;
 
 void main() {
   vec4 mvPos = modelViewMatrix * vec4(instancePosition, 1.0);
-  mvPos.xy += position.xy * uSpriteSize * instanceSize;
+  mvPos.xy += (position.xy - instanceAnchor) * uSpriteSize * instanceSize;
   gl_Position = projectionMatrix * mvPos;
 
   vAtlasUV = mix(instanceGlyphUV.xy, instanceGlyphUV.zw, uv);

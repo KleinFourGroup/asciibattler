@@ -3241,3 +3241,83 @@ flipped to its completed state in the same pass. §78 ran
 three user-caught riders (glow clip · countdown clock · the
 clickable close → the signed accessibility principle), zero
 snapshot bumps, +3 tests.
+
+## Phase 79 — Glyph targeted fix
+
+### 79-kickoff — the code-reality audit (2026-08-14)
+
+Premise checks against the charter, all surfaces read directly:
+
+- **The exit criterion's "TODO #79 + #81"** — TODO.md items are
+  unnumbered; the two the charter means are the **auto-generated
+  glyph ink-boxes** item and the **far-edge sprite-on-tile
+  alignment** item (both cited by name from here on).
+- **The anchor problem is real and is the off-axis class.** The
+  sprite anchor lifts on WORLD-Y (`SPRITE_CENTER_OFFSET = 0.5` in
+  `tileWorldPos`, BattleRenderer) while the billboard offsets in
+  view space (billboard.vert.glsl) — the same off-axis
+  world-Y-lift family the I2 hitsplat (dual-projection fix,
+  UnitOverlayLayer.spawnHitsplat) and the J3 marker (camera-up
+  lift, `OBJECTIVE_MARKER_ENEMY_LIFT`) already hit. **Third
+  instance of the class** — the twice-bitten rule applies, which
+  reshaped the phase (below).
+- **Ink boxes:** the TODO's spec still matches code exactly —
+  `GLYPH_INK` holds ONE measured entry (`▄`), everything else
+  falls back to the full cell; `FontAtlas.create` already
+  rasterizes every glyph and owns the y-flip convention
+  (`getGlyphUV`); only two builders stamp ink
+  (`enemyBillboards`/`destructibleBillboards`). Built-in oracle:
+  the derived `▄` box should reproduce the hand-measured
+  `{0.17, 0, 0.83, 0.53}` within tolerance.
+- **Bars are already screen-space-correct**: the DOM overlay layer
+  projects the LIVE sprite position per frame and stacks in pure
+  CSS — it inherits any anchor fix for free. The world-Y holdouts
+  are the sprite quad itself + the world-point FX endpoints.
+- **§76f rider facts re-verified:** only `latin-400` loads; a new
+  subset import must join the font-ready await
+  (FontAtlas.ts:94); the atlas sits at **47/48 cells** —
+  load-bearing for the style-axis scoping (a (char,style)-keyed
+  atlas multiplies cell pressure; the §82 boss wave adds glyphs
+  on top).
+
+### 79-kickoff — the shape-lock (2026-08-14, user-signed)
+
+**The user upgraded the anchor fix from minimal to robust** ("I'm
+willing to take extra time to get things right"), asking the
+design question directly: is the per-instance lift patch what a
+from-scratch renderer would do? Answer: no. The from-scratch
+design, now the signed shape — **the anchor-convention rework**:
+
+1. **An anchor is a GROUND point** — `instancePosition` becomes
+   the thing's true scene location (tile-top center for units,
+   flight point for projectiles); `tileWorldPos` loses its +0.5;
+   no presentation baked into world coordinates.
+2. **The quad declares where its anchor sits, per instance** — a
+   new sprite attribute (quad-local anchor point, applied in view
+   space in the shader). Units = bottom-center ("stands on its
+   anchor"); projectiles/motes/markers = center ("floats at its
+   anchor"). Off-axis skew becomes impossible by construction,
+   and a future big glyph (§82 bosses, the style axis) grows UP
+   from its tile instead of sinking in.
+3. **One shared above-the-anchor helper** on the JS side — the
+   single implementation of "N units up the screen from this
+   anchor," replacing the three hand-rolled copies (marker's
+   `setFromMatrixColumn`, the hitsplat dual-projection,
+   `HITSPLAT_Y_OFFSET` consumers). The next overlay surface gets
+   it right by default — that's what kills the class.
+
+**Billboarding itself stays** (standing 3D quads would trapezoid
+the glyphs at the edges — fights the flat-terminal aesthetic);
+`pick.ts` stays the shader's pure headless-tested twin and gains
+the same anchor math in lockstep. **Cost accepted:** 2–3 sessions
+vs ~1 minimal; risk LOW → LOW-MEDIUM, still render-only (no sim,
+no snapshot). **Deliberately NOT pulled in:** the TODO
+position-reconciliation rework (position STATE management — a
+different class; stays a TODO) and any depth-write/alpha-test
+change (charter scope guard). **Diagnosis stays first** (79b):
+the TODO lists three candidate causes; if the far-edge symptom
+turns out (a)-and-acceptable the rework still proceeds as the
+class fix, but the diagnosis anchors the before/after evidence.
+The 79f scoping note lands in this worklog (user call — no
+standalone doc). One naming amendment at signing: flat 79a–79g,
+no c1/c2/c3 sub-numbering.

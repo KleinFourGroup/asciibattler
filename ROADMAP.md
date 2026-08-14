@@ -287,6 +287,34 @@ native-browser eyeball.
   style axis proper = `glyphStyle` on UnitDef + a (char,style)-keyed
   atlas + budget accounting + editor arm.
 
+Cut at the 2026-08-14 kickoff (audit + shape-lock: WORKLOG §79;
+the anchor fix UPGRADED minimal → the anchor-convention rework,
+user-signed — the off-axis world-Y-lift class's third instance
+triggered the twice-bitten rule; risk LOW → LOW-MEDIUM,
+render-only throughout):
+
+- [ ] 79a — atlas-derived ink boxes: pure ink-bbox helper
+  (THREE-free, headless tests) + `FontAtlas.getGlyphInk` computed
+  at build (α>16, `FULL_GLYPH_INK` fallback) + both builders stamp
+  it + the hand `GLYPH_INK` table deleted
+- [ ] 79b — far-edge diagnosis FIRST (no commit expected):
+  reproduce + attribute the misalignment via `__game` +
+  `getImageData`; before-screenshots; findings → worklog
+- [ ] 79c — the anchor mechanism: ground-point anchors
+  (`tileWorldPos` drops +0.5) + per-instance quad-anchor attribute
+  (units bottom-center, projectiles/markers center) + pick.ts in
+  lockstep, headless-first
+- [ ] 79d — the consumer sweep: audit table over all
+  `tileWorldPos`/FX-endpoint sites (ground vs visual-center) →
+  convert + collapse marker/hitsplat onto ONE shared
+  above-the-anchor helper
+- [ ] 79e — native eyeball of the anchor rework + constant
+  re-tunes (base-flush, marker/hitsplat lifts)
+- [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;
+  closes with a build-here-or-defer-to-§82 recommendation)
+- [ ] 79g — THE exit eyeball (edge glyphs sit their tiles at
+  native res, user-confirmed) + the two TODO closes + docs close
+
 ## Phase 80 — Feasibility audit docs
 
 **Charter:** the five planning docs — the event-keyed sound registry

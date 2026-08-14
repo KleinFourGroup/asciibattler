@@ -122,6 +122,15 @@ export const FULL_GLYPH_INK: GlyphInk = { x0: 0, y0: 0, x1: 1, y1: 1 };
 export const INK_ALPHA_THRESHOLD = 16;
 
 /**
+ * §79a rider (user call, 2026-08-14) — pixels of breathing room added on every
+ * side of the derived bbox (clamped to the cell), so the clickbox hugs the
+ * glyph without demanding pixel-perfect aim. In CELL pixels (of `CELL_PX` 64),
+ * which ≈ screen pixels at the default board zoom. The first quick test read
+ * the raw boxes as a touch too tight; tune by feel here.
+ */
+export const INK_PAD_PX = 3;
+
+/**
  * §79a — the alpha bounding box of one rasterized cell, as a normalized y-up
  * `GlyphInk`. Pure + DOM-free (takes the raw RGBA byte array an
  * `ImageData.data` yields, row-major, canvas convention: row 0 = TOP), so it's
@@ -129,12 +138,14 @@ export const INK_ALPHA_THRESHOLD = 16;
  * glyph's cell at build time. The canvas→GL y flip happens here, mirroring
  * `getGlyphUV`'s convention. An all-transparent cell returns `FULL_GLYPH_INK`
  * (no ink to hug — keep the full-quad behavior rather than a degenerate box).
+ * `padPx` widens the bbox on every side (clamped to the cell) for click feel.
  */
 export function inkRectFromRgba(
   data: ArrayLike<number>,
   width: number,
   height: number,
   threshold = INK_ALPHA_THRESHOLD,
+  padPx = INK_PAD_PX,
 ): GlyphInk {
   let minX = width;
   let minY = height;
@@ -152,9 +163,9 @@ export function inkRectFromRgba(
   }
   if (maxX < 0) return FULL_GLYPH_INK;
   return {
-    x0: minX / width,
-    y0: 1 - (maxY + 1) / height, // canvas bottom row → y-up bottom edge
-    x1: (maxX + 1) / width,
-    y1: 1 - minY / height, // canvas top row → y-up top edge
+    x0: Math.max(0, (minX - padPx) / width),
+    y0: Math.max(0, 1 - (maxY + 1 + padPx) / height), // canvas bottom row → y-up bottom edge
+    x1: Math.min(1, (maxX + 1 + padPx) / width),
+    y1: Math.min(1, 1 - (minY - padPx) / height), // canvas top row → y-up top edge
   };
 }

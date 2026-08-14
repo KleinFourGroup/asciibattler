@@ -3345,3 +3345,12 @@ x-height band, unregistered glyph → full-cell fallback; console
 clean. Click-feel verdict rides with the 79g eyeball. No padding
 added (matches the oracle exactly); if clicks ever feel too tight
 the threshold/padding knobs live in one place now.
+
+**79a rider (user call at the quick test, 2026-08-14): +3px click
+padding.** The raw derived boxes read a touch too tight in play;
+`INK_PAD_PX = 3` (cell px ≈ screen px at default zoom) now widens
+every side inside `inkRectFromRgba`, clamped to the cell; empty
+cells stay the untouched fallback. Geometry pins re-anchored on
+`padPx: 0`; a dedicated pin covers pad + clamp. Browser re-probe:
+`▄` → `{0.125, 0, 0.875, 0.578}` (bottom clamped), `!` →
+`x 0.375–0.625`. Tune by feel at the one constant.

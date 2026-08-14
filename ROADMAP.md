@@ -296,9 +296,9 @@ render-only throughout):
 - [x] 79a — ✅ 2026-08-14: landed to plan; the `▄` oracle
   reproduced to ±0.002 in-browser, `!`/`s` tight for free
   (worklog §79a)
-- [ ] 79b — far-edge diagnosis FIRST (no commit expected):
-  reproduce + attribute the misalignment via `__game` +
-  `getImageData`; before-screenshots; findings → worklog
+- [x] 79b — ✅ 2026-08-14: cause (c) CONFIRMED numerically — ±9px
+  edge skew at 720p, camera-up alternative exactly 0; plus the
+  base-sinks-14px finding feeding the 79e tune (worklog §79b)
 - [ ] 79c — the anchor mechanism: ground-point anchors
   (`tileWorldPos` drops +0.5) + per-instance quad-anchor attribute
   (units bottom-center, projectiles/markers center) + pick.ts in

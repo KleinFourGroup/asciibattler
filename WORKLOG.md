@@ -3354,3 +3354,36 @@ cells stay the untouched fallback. Geometry pins re-anchored on
 `padPx: 0`; a dedicated pin covers pad + clamp. Browser re-probe:
 `▄` → `{0.125, 0, 0.875, 0.578}` (bottom clamped), `!` →
 `x 0.375–0.625`. Tune by feel at the one constant.
+
+### 79b — the far-edge diagnosis (2026-08-14)
+
+**Verdict: cause (c) CONFIRMED — the world-Y anchor lift.** Probe:
+a live 15×15 battle (Soldier, node 1, clock frozen), projecting
+three points per cell on the live camera (45° pitch, canvas
+1280×720): the tile-top center, the CURRENT anchor (tile-top +
+0.5 world-Y), and the J3-pattern alternative (tile-top + 0.5
+along camera-up). Horizontal skew of the current anchor vs the
+tile top (`dxWorldY`), by column: **0 at the center column,
+growing linearly to ±9.1px at the near-row edges** (±5.0 mid-row,
+±3.2 far row) — sign outward, exactly the "sprite shifted
+sideways off its tile" symptom, and it scales with resolution
+(≈ ±27px at 4K). The camera-up anchor's skew is **exactly 0 at
+every probed cell** — kills the class by construction. Cause (b)
+excluded: the grid center projects to x=640 on a 1280 canvas —
+fit/scroll centering is exact. Cause (a) residual: the quad's own
+view-space extent is symmetric about the anchor, no horizontal
+contribution.
+
+**Second finding (feeds the 79e tune):** today's glyph BASE sits
+~14px BELOW the tile-top projection at near rows (anchor center
+rides only −12.5px while the half-quad spans 26.3px on screen) —
+glyphs visibly sink into the tile's front face, worst near the
+camera. Base-anchoring at the tile top (79c) will therefore RAISE
+glyphs on screen (most at near rows); expect the eyeball to want
+a small deliberate sink-back constant — budget it as the 79e
+re-tune, one constant.
+
+No commit (probe-only, per the cut). Before-screenshot could not
+be captured (backgrounded-pane screenshot throttle, the known
+HANDOFF limitation) — the numeric table above is the before
+evidence and the scene re-derives deterministically.

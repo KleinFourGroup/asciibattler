@@ -232,17 +232,40 @@ WORKLOG §§77–77g · BALANCE §77f · gotcha #125.
 HUD-card targeting via a widened `ObjectiveControls`) + larger
 buttons; the empower payload widening (per-slot per-key) + color
 coding + in-battle markers; the sector-map overlay (page-lifetime,
-readOnly MapScreen, `M`).
+readOnly MapScreen, `M` + a chrome-column map chip — the 2026-08-13
+shape-lock amendment).
 
 - **Order:** after the sim-heavy phases; nothing here moves a pin.
 - **Risk:** LOW-MEDIUM (the empower payload touches 4 event payloads
   + Run + 6 test sites — the one non-cheap item).
-- **Decision points:** arming semantics; player-card click meaning
-  (drop vs define — per-unit objectives are OUT of cluster scope).
+- **Decision points:** ✅ BOTH DECIDED 2026-08-13 (shape-lock):
+  arming SURVIVES (armed mode outranks the default left=engage;
+  right-click = the focus fast path, mirroring J3) · player-card
+  clicks DROPPED (enemy cards only; per-unit objectives stay out of
+  cluster scope). Rationale: worklog §78-kickoff.
 - **Exit:** user-confirmed in the native browser (render/ui = the
   eyeball policy).
 - **Scope guards:** no per-unit objective model; no focusTile runtime
   switcher unless it falls out free.
+- **Kickoff note (2026-08-13):** Stop-never-highlighted + hand
+  density were ALREADY SHIPPED at 73d/73c — they leave the charter.
+  Empower prediction: NO snapshot bump (the column is derived; Run
+  v42 / World v35 hold). Audit: worklog §78-kickoff.
+
+Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
+
+- [ ] 78a — click semantics (unarmed left=engage · armed left fires
+  the armed mode · right=focus fast path) + larger objective buttons
+- [ ] 78b — `setOn(mode, target)` widening + HUD enemy-card click
+  targeting (left=engage / right=focus on the card)
+- [ ] 78c — the empower data widening: per-slot PER-KEY through Run +
+  the 4 payloads + 6 test sites; per-key badges + un-merged hover
+- [ ] 78d — key→color map (statusDisplay precedent) + colored badges
+  + in-battle empower markers on the HUD cards
+- [ ] 78e — sector-map overlay: MapScreen `readOnly` + the Game-owned
+  overlay + `toggleSectorMap` on `M` + the map chip in the chrome
+  column (hidden on MapScene / pre-run / game-over)
+- [ ] 78f — docs close: demote + cursor flip, box flipped ON TIME
 
 ## Phase 79 — Glyph targeted fix
 

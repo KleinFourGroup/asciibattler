@@ -2971,3 +2971,86 @@ kickoff). §77 ran 77a→77g in three sessions, 2026-08-12→13:
 two Run-bump-scale re-architectures (keyed RNG + the braid), one
 mid-phase user-signed re-scope, five gates added, zero
 regressions shipped.
+
+## Phase 78 — UI/UX batch
+
+### 78-kickoff — the code-reality audit (2026-08-13)
+
+The five §78 surfaces surveyed at HEAD (`2d3f799`), against the
+2026-08-05 spec resolutions — four phases of churn later (§§74–77,
+incl. the Run v42 RNG rework). Verdict: the resolutions HOLD; two
+charter items are ALREADY SHIPPED; no new blockers.
+
+- **Already shipped (the step-zero premise check):**
+  Stop-never-highlighted landed at **73d** (the `'atWill'` sentinel is
+  live in HUD.ts — `activeObjectiveMode` three-state) and the hand
+  density fix at **73c**. Both were spec'd under §78's umbrella
+  section but pulled forward; they leave the §78 charter, no work
+  remains.
+- **Objective clicks (ObjectiveController.ts):** exactly as
+  resolved — right-click is the unarmed ENGAGE fast path
+  (`onContextMenu` → `setFromClient('engage')`, ignores any arm);
+  left-click is inert unless armed. The three-tier resolve
+  (enemy billboard → destructible/camp neutral billboard → terrain
+  cell, §75h camps included) is mode-agnostic — the left/right remap
+  is confined to the two DOM handlers. The TWO NAMED DECISION POINTS
+  stand (arming survival; armed-vs-default precedence).
+- **HUD cards (HUD.ts):** `ObjectiveControls` ({arm, hold, stop}) is
+  already injected into HUD; the `cards` map covers BOTH teams keyed
+  by unitId, so an enemy-card click has its `{kind:'enemy', unitId}`
+  target in hand. The widening is `setOn(mode, target)` on the
+  interface + controller, as resolved. Player-card decision point
+  stands (per-unit objectives remain out of scope).
+- **Empower (Run.ts / events.ts / PreTurnScreen.ts):** the bug is
+  confirmed live in the data, unchanged by §§74–77:
+  `Run.empowerMagnitudes()` sums ALL buff keys (daemon hooks + §49e
+  packet `applyBuff` keys) into ONE integer per hand slot; the
+  PreTurnScreen badge title then joins every granting idol's mods
+  into one string (`buffSummary` — the merged-hover bug verbatim).
+  The column rides FOUR event payloads (`turn:starting` ·
+  `turn:handRedrawn` · `turn:unitEmpowered` · `run:packetUsed`) and
+  SIX Run.test.ts sites, per the resolution. Key fact: the column is
+  DERIVED (never serialized) and the payloads are events, not
+  snapshots — **predicted: NO snapshot bump, Run v42 / World v35
+  hold**. In-battle markers stay cheap: `HUD.refreshStatuses`
+  already walks every card against the live `unit.effects` per tick,
+  and empower lands there as a keyed effect.
+- **Sector-map overlay (MapScreen.ts / CacheOverlay.ts /
+  Keybindings.ts):** MapScreen is still a pure view
+  (`show(map, currentNodeId, visited, roster, sectorTitle,
+  forewarning)` — all Run-derivable); the §77e3 lane-pitch rework
+  didn't change its contract. CacheOverlay remains the page-lifetime
+  pattern to copy (Game-owned, `#ui`-mounted, getter-deps so a Run
+  swap is invisible). `KeyM` is unbound (9 actions in
+  keybindings.json, none on M). One wrinkle the resolution already
+  called: keybind HANDLERS are battle-scoped by convention
+  (Keybindings.ts header) — the `toggleSectorMap` subscription must
+  live at the GAME layer (Game already owns the window listener),
+  the first page-lifetime subscriber. `readOnly` flag suppresses the
+  frontier `enterNode` dispatch.
+- **Fuzz/pin exposure:** 78a/b/d/e are render/ui-only (eyeball
+  policy, no pins). 78c touches `src/run/` (the derived column +
+  emit sites) → the pre-commit fuzz trigger fires; no behavior
+  change intended — fuzz pins predicted to hold byte-identical. The
+  keybind step touches `src/config/keybindings.ts` (union widening)
+  → same trigger, same prediction.
+
+Cut + shape-lock: next entry.
+
+### 78-kickoff — the shape-lock (2026-08-13)
+
+Both decision points signed as recommended: **arming survives** —
+armed mode outranks the default mapping (armed left-click fires the
+armed mode; unarmed left-click engages), and right-click becomes the
+FOCUS fast path, the clean mirror of J3's engage fast path; the E/F
+hotkey arming keeps working unchanged. **Player-card clicks
+dropped** — the team-wide objective model gives them no coherent
+meaning; enemy cards only (the camera-pan alternative noted, not
+taken). Two user amendments at the lock: (1) map access gets a
+BUTTON as well as the hotkey — resolved as a page-lifetime map chip
+joining the bits/cache chrome column (Game-owned, visible whenever
+a run is live, hidden on MapScene itself / pre-run / game-over) —
+"most screens" for free rather than per-screen buttons; (2) larger
+objective buttons confirmed in-cut (78a tail, per the charter). The
+six-step cut written to ROADMAP §78; 78f carries the box-flipped-ON-
+TIME note (74j/76i were both caught late).

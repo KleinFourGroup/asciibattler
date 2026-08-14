@@ -649,8 +649,9 @@ export class BattleRenderer {
    * (`Renderer.pickInstance`), using each sprite's LIVE rendered position (the
    * exact billboard the player sees, incl. a mid-move lerp) rather than the
    * logical cell — so clicking a moving enemy's glyph still selects it. The
-   * objective controller calls this to resolve a right-click / armed-click onto
-   * the unit you actually clicked, before falling back to the terrain cell.
+   * objective controller calls this to resolve an objective click (either
+   * button, armed or not) onto the unit you actually clicked, before falling
+   * back to the terrain cell.
    */
   enemyBillboards(): PickCandidate[] {
     if (!this.world) return [];

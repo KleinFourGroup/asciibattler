@@ -227,7 +227,8 @@ export class HUD {
 
     // Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
     // Stop on O's typed objective model. Engage + Focus ARM a target pick (the
-    // next left-click, or right-click the board → engage); Hold + Stop apply
+    // next left-click; 78a unarmed fast paths: left-click the board → engage,
+    // right-click → focus); Hold + Stop apply
     // immediately. Lives outside the side-panel root (like the speed pane) so it
     // anchors bottom-right; same screen-fade lifecycle. Each button is a
     // rebindable hotkey too; the labels show the live binding so a rebind shows
@@ -246,7 +247,7 @@ export class HUD {
     mount.appendChild(this.objectivePane);
     this.renderObjectivePane();
     // Track the player team's live objective mode so the active button reads
-    // "engaged" however it was set (pane / hotkey / right-click). A `set` carries
+    // "engaged" however it was set (pane / hotkey / board click). A `set` carries
     // the mode; a `clear` (or an explicit atWill set) reverts to the `'atWill'`
     // sentinel — which highlights NOTHING (73d: Stop is never highlighted).
     this.subscriptions.push(
@@ -499,8 +500,10 @@ export class HUD {
       btn.textContent = armed
         ? `${def.icon} Click a target…`
         : `${def.icon} ${def.label} (${key})`;
+      // 78a — the fast-path hint per mode: engage owns the bare left-click,
+      // focus owns the right-click.
       btn.title = def.arms
-        ? `${def.label}: click then left-click a target${def.mode === 'engage' ? ', or right-click the board' : ''} (${key})`
+        ? `${def.label}: click then left-click a target, or ${def.mode === 'engage' ? 'left' : 'right'}-click the board (${key})`
         : `${def.label} (${key})`;
       // Active highlight yields to the armed prompt so the two greens don't fight.
       btn.classList.toggle('is-active', active && !armed);

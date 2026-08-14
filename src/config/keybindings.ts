@@ -62,10 +62,10 @@ const KeybindingsSchema = z.object({
   /** Pause / unpause the sim — also the Q2 countdown "Fight now" (Q1). */
   togglePause: z.string().min(1),
   /** Arm "pick a target" mode for an ENGAGE objective; the next left-click sets
-   *  it (Q3 — also the right-click-the-board fast path). */
+   *  it (Q3 — also the unarmed left-click-the-board fast path, 78a). */
   engageObjective: z.string().min(1),
   /** Arm "pick a target" mode for a FOCUS objective; the next left-click sets it
-   *  (Q3). */
+   *  (Q3 — also the right-click-the-board fast path, 78a). */
   focusObjective: z.string().min(1),
   /** Set a HOLD objective — units act in place, no target needed (Q3). */
   holdObjective: z.string().min(1),

@@ -7,12 +7,14 @@
  * Q3 generalized J3's single Set/Clear into the four objective-pane commands on
  * O's typed `TeamObjective` model, always for the PLAYER team:
  *   - **Engage / Focus** need a target → `arm(mode)` enters "pick a target" mode,
- *     then the next **left-click** sets the objective in that mode (a left-click
- *     is otherwise inert in battle — the camera pans on WASD/edge-scroll). The
+ *     then the next **left-click** sets the objective in that mode. The
  *     target is resolved through the pure `objectiveAtCell` (enemy under the
  *     cursor → enemy target, else a rally tile).
- *   - **right-click** the board always sets an **Engage** directly (the J3 fast
- *     path — no arming), regardless of any pending arm.
+ *   - 78a — the UNARMED fast paths (the armed mode outranks them): a bare
+ *     **left-click** sets an **Engage** directly, a **right-click** sets a
+ *     **Focus** directly (right-click ignores any pending arm — the J3
+ *     fast-path contract, remapped left=engage/right=focus at the §78
+ *     shape-lock).
  *   - **Hold / Stop** need no target → `hold()` / `stop()` apply immediately.
  *     `stop()` reverts to at-will (the old "clear").
  *
@@ -42,7 +44,7 @@ export interface ObjectiveControls {
 
 export class ObjectiveController implements ObjectiveControls {
   /** The pending target-pick mode while armed, or null when idle. Right-click
-   *  bypasses this and always engages. */
+   *  bypasses this and always focuses (78a). */
   private armedMode: ObjectiveArmMode | null = null;
   /**
    * Set by the owner (BattleScene) to reflect the armed mode on the HUD pane
@@ -73,9 +75,9 @@ export class ObjectiveController implements ObjectiveControls {
   }
 
   /** Arm a target-pick for `engage`/`focus` — the next left-click on the board
-   *  sets the objective in that mode. Re-arming switches the pending mode;
-   *  re-arming the same mode is a no-op. Right-click bypasses this (always
-   *  engages). */
+   *  sets the objective in that mode (outranking the unarmed left=engage
+   *  default). Re-arming switches the pending mode; re-arming the same mode is
+   *  a no-op. Right-click bypasses this (always focuses, 78a). */
   arm(mode: ObjectiveArmMode): void {
     if (this.armedMode === mode) return;
     this.armedMode = mode;
@@ -112,18 +114,24 @@ export class ObjectiveController implements ObjectiveControls {
     this.onArmedChange(null);
   }
 
-  /** Right-click always sets an Engage directly (and suppresses the browser
-   *  context menu) — the J3 fast path, independent of any pending arm. */
+  /** 78a — right-click always sets a Focus directly (and suppresses the
+   *  browser context menu) — the J3 fast-path contract (independent of any
+   *  pending arm), remapped from engage at the §78 shape-lock. */
   private onContextMenu = (e: MouseEvent): void => {
     e.preventDefault();
-    this.setFromClient(e.clientX, e.clientY, 'engage');
+    this.setFromClient(e.clientX, e.clientY, 'focus');
     this.disarm();
   };
 
-  /** Left-click is only meaningful while armed; otherwise inert. It sets in the
-   *  armed mode. A click that misses the board keeps you armed so you can retry. */
+  /** Left-click sets in the ARMED mode when one is pending (a click that
+   *  misses the board keeps you armed so you can retry); 78a — otherwise it's
+   *  the unarmed ENGAGE fast path (a board miss stays inert, so a stray
+   *  click into the void orders nothing). */
   private onClick = (e: MouseEvent): void => {
-    if (this.armedMode === null) return;
+    if (this.armedMode === null) {
+      this.setFromClient(e.clientX, e.clientY, 'engage');
+      return;
+    }
     if (this.setFromClient(e.clientX, e.clientY, this.armedMode)) this.disarm();
   };
 

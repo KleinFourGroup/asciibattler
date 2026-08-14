@@ -1888,8 +1888,9 @@ body {
 }
 
 /* Q3 — objective-command pane (bottom-right): Engage / Focus / Hold / Stop on
-   O's typed objective model. Engage + Focus ARM a target pick (next left-click,
-   or right-click the board → engage); Hold + Stop apply immediately. Lives
+   O's typed objective model. Engage + Focus ARM a target pick (next left-click;
+   78a fast paths: left-click → engage, right-click → focus); Hold + Stop apply
+   immediately. Lives
    outside the left side-panel so it anchors bottom-right; same screen-fade
    lifecycle + amber terminal chrome as the speed pane. A VERTICAL stack (the
    labels are far wider than tall, so a row sprawled across the bottom) — it
@@ -1910,13 +1911,16 @@ body {
 
 .hud-objective-btn {
   font-family: var(--font-mono);
-  font-size: 13px;
+  /* 78a — enlarged from 13px/4px 10px (a long-standing user nit): the pane is
+     the primary in-battle command surface, so it reads at a glance and gives a
+     fatter click target. */
+  font-size: 16px;
   letter-spacing: 0.08em;
   text-align: left;
   color: #ffb000; /* TERMINAL_AMBER */
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid #ffb000;
-  padding: 4px 10px;
+  padding: 9px 16px;
   cursor: pointer;
   transition:
     color 0.12s ease,

@@ -99,10 +99,12 @@ export interface NeutralAtCell {
  * standing in front of rubble still wins (enemy-first); clicking empty ground, a
  * friendly, or an INDESTRUCTIBLE wall (absent from `neutrals`) all rally the team
  * to that cell (the tile attractor). The caller wraps the result in a
- * `TeamObjective` mode (right-click → `engage`, the armed pick → its mode).
+ * `TeamObjective` mode (78a: unarmed left-click → `engage`, right-click →
+ * `focus`, the armed pick → its mode).
  *
- * Pure (plain data in, no `World`) so it's node-testable and both input paths —
- * right-click and the armed left-click — route through the one resolver.
+ * Pure (plain data in, no `World`) so it's node-testable and every input path —
+ * the two unarmed fast paths and the armed left-click — routes through the one
+ * resolver.
  */
 export function objectiveAtCell(
   cell: GridCoord,

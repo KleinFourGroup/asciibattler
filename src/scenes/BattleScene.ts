@@ -59,9 +59,10 @@ export class BattleScene implements Scene {
   /** I3 — the page-lifetime fast-forward controller (from ctx). Read live in
    *  `tick` so a mid-battle speed change takes effect next frame. */
   private playback: PlaybackSpeed | null = null;
-  /** J3 — the objective input controller (canvas right-click / armed left-click
-   *  → setObjective/clearObjective commands). Battle-scoped; torn down in
-   *  dispose so its canvas listeners don't outlive the battle. */
+  /** J3 — the objective input controller (canvas clicks — 78a left=engage /
+   *  right=focus / armed pick → setObjective/clearObjective commands).
+   *  Battle-scoped; torn down in dispose so its canvas listeners don't
+   *  outlive the battle. */
   private objective: ObjectiveController | null = null;
   /** Q2 — the pre-battle countdown (replaces the M3 materialize hold): the sim
    *  clock stays parked while the player reads the board + sets orders, then the

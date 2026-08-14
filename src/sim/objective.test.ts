@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { objectiveAtCell, type EnemyAtCell, type NeutralAtCell } from './objective';
 
 // Mechanic test — explicit literal cells/units (the pure resolver has no config
-// dependency). Both J3 input paths (right-click + armed left-click) funnel
-// through objectiveAtCell, so this pins the enemy-vs-tile decision once.
+// dependency). Every input path (the 78a unarmed left=engage/right=focus fast
+// paths + the armed left-click) funnels through objectiveAtCell, so this pins
+// the enemy-vs-tile decision once.
 
 describe('objectiveAtCell', () => {
   const enemies: EnemyAtCell[] = [

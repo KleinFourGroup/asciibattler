@@ -3054,3 +3054,30 @@ a run is live, hidden on MapScene itself / pre-run / game-over) —
 objective buttons confirmed in-cut (78a tail, per the charter). The
 six-step cut written to ROADMAP §78; 78f carries the box-flipped-ON-
 TIME note (74j/76i were both caught late).
+
+### 78a — click semantics + larger buttons (2026-08-13)
+
+Landed to plan. The remap is confined to ObjectiveController's two
+DOM handlers, per the audit: `onContextMenu` → focus (was engage),
+`onClick` → armed mode when armed, else the new unarmed ENGAGE fast
+path (a board miss stays inert, so a stray void click orders
+nothing — deliberate asymmetry with the armed path's stay-armed
+retry). Buttons: 13px/4px-10px → 16px/9px-16px (~26px → 42px tall);
+tooltips re-state the per-mode fast path (engage owns bare left,
+focus owns right). Stale-semantics comment sweep: HUD ×3, ui.css,
+keybindings.ts, objective.ts, objective.test.ts, BattleScene,
+BattleRenderer, ARCHITECTURE ×2 — MovementBehavior's two
+"right-clicking a wall" mentions kept AS-IS (historical bug-report
+accounts, not semantics claims).
+
+Verified headless-style in the preview browser (the bus-event
+capture protocol, not DOM reads): bare left → `objective:set
+engage` · bare right → `focus` · armed focus + left → `focus` +
+disarm (armed outranks the default) · armed engage + right →
+`focus` + disarm (right ignores the arm) · void left-click → no
+event. Two throttled-tab potholes for the tips file: the WebGL
+canvas sat at 0×0 (no resize ever fired in the hidden tab —
+`window.dispatchEvent(new Event('resize'))` fixes picking) and the
+sim needed hand-ticking (the known rAF freeze). Computed-style
+check: 16px / 9px 16px live. Native-browser feel verdict rides
+with the user (the eyeball policy).

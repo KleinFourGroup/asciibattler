@@ -2114,6 +2114,11 @@ body {
   gap: 8px;
   max-height: 30vh;
   overflow-y: auto;
+  /* 78b fix — the row is a scroll container, so it CLIPS at its box edge:
+     the hover glow (1px outline + 6px shadow) was cut off on the outer
+     cards (user screenshot). Interior padding gives the glow room to paint
+     inside the clip boundary. */
+  padding: 8px;
 }
 
 /* 78b — enemy HUD cards are objective click targets (left=engage /

@@ -3103,3 +3103,9 @@ card click → set + disarm · player-card click → no event (6 cards,
 none targetable) · killed enemy 7 through the applyDamage
 chokepoint → card gains `.is-dead`, click → no event. Native feel
 verdict rides with the user.
+
+**78b rider (user screenshot):** the hover glow clipped on the
+row's outer cards — `.hud-enemy-cards` is a scroll container
+(`overflow-y: auto`), which clips at its box edge; 8px interior
+padding gives the 7px glow (1px outline + 6px shadow) paint room.
+Geometry-verified live (8px clearance all four sides).

@@ -33,11 +33,13 @@ import { isDestructibleNeutral } from '../config/units';
  *  immediately and are never armed. */
 export type ObjectiveArmMode = 'engage' | 'focus';
 
-/** The HUD-facing slice: arm a target-pick (engage/focus), or apply hold/stop
- *  immediately. The HUD buttons/hotkeys call these; it doesn't see the pointer
- *  plumbing. */
+/** The HUD-facing slice: arm a target-pick (engage/focus), set directly on a
+ *  known target (78b — the enemy-card click path), or apply hold/stop
+ *  immediately. The HUD buttons/hotkeys/cards call these; it doesn't see the
+ *  pointer plumbing. */
 export interface ObjectiveControls {
   arm(mode: ObjectiveArmMode): void;
+  setOn(mode: ObjectiveArmMode, target: ObjectiveTarget): void;
   hold(): void;
   stop(): void;
 }
@@ -82,6 +84,15 @@ export class ObjectiveController implements ObjectiveControls {
     if (this.armedMode === mode) return;
     this.armedMode = mode;
     this.onArmedChange(mode);
+  }
+
+  /** 78b — set an objective of `mode` directly on a KNOWN target, skipping the
+   *  board pick (the HUD enemy-card click path: the card already names its
+   *  unit). Routes through the same enqueue chokepoint as the pointer paths;
+   *  cancels any pending arm (the click consumed the intent). */
+  setOn(mode: ObjectiveArmMode, target: ObjectiveTarget): void {
+    this.enqueueObjective(mode, target);
+    this.disarm();
   }
 
   /** Set a HOLD objective (units act in place, no target). Cancels any pending

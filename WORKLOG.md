@@ -3081,3 +3081,25 @@ canvas sat at 0×0 (no resize ever fired in the hidden tab —
 sim needed hand-ticking (the known rAF freeze). Computed-style
 check: 16px / 9px 16px live. Native-browser feel verdict rides
 with the user (the eyeball policy).
+
+### 78b — setOn + HUD enemy-card targeting (2026-08-13)
+
+Landed to plan. `ObjectiveControls` gains `setOn(mode, target)` —
+the direct known-target set, routed through the same
+`enqueueObjective` chokepoint as the three pointer paths; it
+disarms (the click consumed the intent). HUD: enemy cards get
+left=engage / right=focus handlers + the `hud-card-targetable`
+affordance (pointer + amber hover glow + tooltip); liveness gated
+at CLICK time via `findUnit` + `currentHp > 0`, so a grayed death
+readout goes inert the moment the unit dies (and a reaped id
+no-ops the same way). Player cards deliberately NOT wired (the
+shape-lock drop) — commented at the addCard seam so it isn't
+"fixed" later.
+
+Bus-event verification (same protocol as 78a): card left-click →
+`objective:set engage {kind:'enemy', unitId:7}` · card right-click
+→ `focus` on unitId 8 (id mapping correct across cards) · armed +
+card click → set + disarm · player-card click → no event (6 cards,
+none targetable) · killed enemy 7 through the applyDamage
+chokepoint → card gains `.is-dead`, click → no event. Native feel
+verdict rides with the user.

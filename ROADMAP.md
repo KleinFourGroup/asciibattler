@@ -257,8 +257,9 @@ Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
 - [x] 78a — ✅ 2026-08-13: click semantics + larger buttons landed to
   plan; all four semantics bus-event-proven; native eyeball rides
   with the user (worklog §78a)
-- [ ] 78b — `setOn(mode, target)` widening + HUD enemy-card click
-  targeting (left=engage / right=focus on the card)
+- [x] 78b — ✅ 2026-08-13: `setOn` + enemy-card targeting landed to
+  plan; all branches bus-event-proven incl. dead/reaped-card inert;
+  native eyeball rides with the user (worklog §78b)
 - [ ] 78c — the empower data widening: per-slot PER-KEY through Run +
   the 4 payloads + 6 test sites; per-key badges + un-merged hover
 - [ ] 78d — key→color map (statusDisplay precedent) + colored badges

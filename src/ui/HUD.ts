@@ -534,8 +534,32 @@ export class HUD {
   private addCard(unitId: number, unit: Unit): void {
     const team = unit.team === 'enemy' ? 'enemy' : 'player';
     const handles = buildUnitCard(unitCardFromUnit(unit), { mode: 'compact', skin: 'hud', team });
+    // 78b — ENEMY cards are objective click targets (left=engage / right=focus,
+    // the board fast paths extended to the cards). Player cards stay inert —
+    // the shape-lock dropped them: a player-card click has no coherent meaning
+    // under the team-wide objective model (per-unit objectives are out of
+    // cluster scope). Liveness is gated at CLICK time, not build time, so a
+    // dead unit's grayed card goes inert the moment it dies.
+    if (team === 'enemy') {
+      handles.el.classList.add('hud-card-targetable');
+      handles.el.title = 'Left-click: Engage · right-click: Focus';
+      handles.el.addEventListener('click', () => this.setObjectiveOnCard(unitId, 'engage'));
+      handles.el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        this.setObjectiveOnCard(unitId, 'focus');
+      });
+    }
     this.cards.set(unitId, handles);
     (team === 'enemy' ? this.enemyCardRow : this.playerCardRow).appendChild(handles.el);
+  }
+
+  /** 78b — an enemy-card click: set the objective in `mode` on that unit,
+   *  through the same `ObjectiveControls` chokepoint as the pane buttons. A
+   *  dead or reaped unit no-ops (the grayed death readout is not a target). */
+  private setObjectiveOnCard(unitId: number, mode: ObjectiveArmMode): void {
+    const unit = this.world?.findUnit(unitId);
+    if (!unit || unit.currentHp <= 0) return;
+    this.objective.setOn(mode, { kind: 'enemy', unitId });
   }
 
   private refreshHp(unitId: number): void {

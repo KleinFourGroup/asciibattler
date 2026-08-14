@@ -2116,6 +2116,19 @@ body {
   overflow-y: auto;
 }
 
+/* 78b — enemy HUD cards are objective click targets (left=engage /
+   right=focus, the board fast paths extended to the cards). Pointer + a
+   hover glow so the affordance is discoverable; a dead card's gray state
+   goes inert (the HUD click handler gates on a living unit) so it drops
+   the invitation too. */
+.hud-card-targetable:not(.is-dead) {
+  cursor: pointer;
+}
+.hud-card-targetable:not(.is-dead):hover {
+  outline: 1px solid #ffd060;
+  box-shadow: 0 0 6px rgba(255, 208, 96, 0.5);
+}
+
 /* The pulse the objective pane's armed-target prompt rides (`.is-armed`). It
    was introduced for the old `.hud-status` "Battle resolving…" line (removed in
    Q6 with the rest of the monolithic panel); the keyframe lives on. */

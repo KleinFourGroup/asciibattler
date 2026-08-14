@@ -94,16 +94,22 @@ they happen:
   the WHCA\*/flow-field gate **decided NO on data**. Detail: the
   [PATHING.md](PATHING.md) run-log + BALANCE.md §46b; the riders it hands
   Cluster 3 are carried by the HANDOFF 🧭 Cursor (the single live-status home).
-- **PLANNED — Run-layer rollout arbitration (between Clusters 4 and 5;
-  user-signed at the §68 shape-lock, 2026-07-27)** — the §57 lesson applied to
-  the run layer: port buys / daemon picks / packet fires / redraws enumerate
-  candidates and let truncated rollouts arbitrate, retiring the §60c
-  consumption treadmill BY CONSTRUCTION (a new mechanic is consumed because
-  the rollout measures it — no scorer dims to author or get wrong). A
-  §57-sized build (truncation/caching design needed). Rationale + the
-  sequencing ask (land BEFORE Cluster 5's events content — choice trees are
-  the hand-scorer worst case): BALANCE.md "Protocol v2 → the sanctioned
-  direction" + worklog §68-shape-lock.
+- **2026-07-29 → 2026-08-04 — Run-layer rollout arbitration (Phases 69→72):
+  ✅ COMPLETE & user-signed** — the §57 lesson applied to the run layer; the
+  arbitrated default shipped (`--arbitrate` in the doctrine arm). Detail:
+  HANDOFF §Closed rounds + BALANCE §§69–72f + the post-68 archives.
+- **PLANNED — UI style & robustness audit (between Clusters 5 and 6;
+  user-raised 2026-08-14 at the §78e close)** — a dedicated UI round inside
+  the post-C5 interstitial: the input-accessibility audit (every surface vs
+  DESIGN §Input accessibility — pure mouse/touch always sufficient), the
+  layout-stability sweep (the "Y-coordinate hysteresis" class, TODO), style-
+  idiom unification (chrome chips / modals / buttons), and the accumulated
+  TODO riders (empower naming collision · display-color config hoist ·
+  sector-cleared/win-sting share · the settings-home question). Sequenced
+  BEFORE Cluster 6 deliberately: C6 authors the biggest remaining UI
+  (options menu, tutorial, save/load) and should build on audited idioms —
+  ordering principle #1 applied to UI. Scope + cut at the round's own
+  kickoff; re-confirm at the §82 close ritual.
 
 ---
 

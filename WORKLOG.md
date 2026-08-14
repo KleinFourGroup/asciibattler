@@ -3220,3 +3220,24 @@ hadn't been written down anywhere). Fixed with a fixed top-right
 `✕ close` (terminal-plate chrome); the principle is now DESIGN
 §Input accessibility so future modals inherit it as an audit rule.
 Pure-mouse loop browser-proven: chip click opens → ✕ click closes.
+
+### 78f — the docs close (2026-08-14)
+
+The close ritual, box flipped ON TIME for once (74j/76i were both
+caught late): ROADMAP §78 demoted to the stub · HANDOFF cursor
+flipped (NEXT = the §79 kickoff; tests 2616; the §79 scoping facts
+pre-staged in the In-flight row) · the memory snapshot advanced.
+Placement decision folded in (user question at the 78e close):
+**the UI style & robustness audit lands in the post-C5
+interstitial, NOT Cluster 6** — C6 authors the biggest remaining
+UI (options menu, tutorial, save/load) and should build on audited
+idioms (ordering principle #1 applied to UI); recorded as PLANNED
+in META-ROADMAP §Interstitials with the scope sketch (accessibility
+audit vs DESIGN §Input accessibility · layout-stability sweep ·
+style-idiom unification · the accumulated TODO riders), re-confirm
+at the §82 close. The stale rollout-arbitration PLANNED bullet
+flipped to its completed state in the same pass. §78 ran
+78-kickoff→78f in three sessions, 2026-08-13→14: five build steps,
+three user-caught riders (glow clip · countdown clock · the
+clickable close → the signed accessibility principle), zero
+snapshot bumps, +3 tests.

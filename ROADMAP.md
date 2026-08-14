@@ -226,33 +226,22 @@ WORKLOG §§77–77g · BALANCE §77f · gotcha #125.
 - [x] 77g — ✅ 2026-08-13: refs re-signed (sheet amendment 3) ·
   demote · cursor flip (worklog §77g)
 
-## Phase 78 — UI/UX batch
+## Phase 78 — UI/UX batch ✅ CLOSED 2026-08-14
 
-**Charter:** objective click semantics (left=engage / right=focus +
-HUD-card targeting via a widened `ObjectiveControls`) + larger
-buttons; the empower payload widening (per-slot per-key) + color
-coding + in-battle markers; the sector-map overlay (page-lifetime,
-readOnly MapScreen, `M` + a chrome-column map chip — the 2026-08-13
-shape-lock amendment).
-
-- **Order:** after the sim-heavy phases; nothing here moves a pin.
-- **Risk:** LOW-MEDIUM (the empower payload touches 4 event payloads
-  + Run + 6 test sites — the one non-cheap item).
-- **Decision points:** ✅ BOTH DECIDED 2026-08-13 (shape-lock):
-  arming SURVIVES (armed mode outranks the default left=engage;
-  right-click = the focus fast path, mirroring J3) · player-card
-  clicks DROPPED (enemy cards only; per-unit objectives stay out of
-  cluster scope). Rationale: worklog §78-kickoff.
-- **Exit:** user-confirmed in the native browser (render/ui = the
-  eyeball policy).
-- **Scope guards:** no per-unit objective model; no focusTile runtime
-  switcher unless it falls out free.
-- **Kickoff note (2026-08-13):** Stop-never-highlighted + hand
-  density were ALREADY SHIPPED at 73d/73c — they leave the charter.
-  Empower prediction: NO snapshot bump (the column is derived; Run
-  v42 / World v35 hold). Audit: worklog §78-kickoff.
-
-Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
+**Outcome (one breath):** the whole batch user-confirmed — click
+semantics remapped (unarmed left=engage / right=focus, arming
+survives and outranks) + enlarged pane buttons; HUD enemy-card
+targeting via `ObjectiveControls.setOn` (player cards deliberately
+inert); the empower per-key widening (`EmpowerStackView` through
+Run + 4 payloads + 6 test sites — the merged-hover bug dead, NO
+bump as predicted); `EMPOWER_DISPLAY` colors + in-battle markers
+(+ the parked-countdown-clock fix); the read-only sector-map
+overlay (chip + `M` + clickable close). Tests 2613→2616; Run v42 /
+World v35 HELD; ⭐ DESIGN §Input accessibility signed (pure
+mouse/touch always sufficient); two TODOs filed (empower naming
+collision · color-config hoist); the UI style & robustness audit
+slotted as a post-C5 interstitial phase (META-ROADMAP). Detail:
+WORKLOG §§78-kickoff–78f + git.
 
 - [x] 78a — ✅ 2026-08-13: click semantics + larger buttons landed to
   plan; all four semantics bus-event-proven; native eyeball rides
@@ -270,7 +259,8 @@ Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
 - [x] 78e — ✅ 2026-08-14: readOnly MapScreen + SectorMapOverlay +
   `M` + the chrome chip; all scene rules + toggle/Esc/no-dispatch
   browser-proven; native eyeball rides with the user (worklog §78e)
-- [ ] 78f — docs close: demote + cursor flip, box flipped ON TIME
+- [x] 78f — ✅ 2026-08-14: docs close, box flipped ON TIME (worklog
+  §78f)
 
 ## Phase 79 — Glyph targeted fix
 

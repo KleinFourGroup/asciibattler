@@ -3134,3 +3134,36 @@ carrying BOTH keys renders two chips — "Empowered ×1 — +8 STR ·
 cards clean. Typecheck + Run suite (338) green pre-hook. NO
 snapshot bump, as the kickoff predicted (the column is derived;
 payloads are events, not saves).
+
+### 78d — the color map + in-battle markers (2026-08-14)
+
+The color half: `EMPOWER_DISPLAY` + `empowerColor()` land in
+statusDisplay.ts as the STATUS_DISPLAY sibling (the keys CAN'T join
+the status table — its orphan guard correctly rejects non-StatusDef
+keys, which is what makes a second table the right shape). Five
+entries: empowered keeps FLOURESCENT_BLUE (the known K4 accent);
+warded aegis-lavender / hyped party-pink / shielded shield-steel /
+overclocked volt-yellow, hues clear of the status palette
+(eyeball-tunable, comments carry the collision notes). Coverage
+pinned with the same three guards as §76b's, derived from the LIVE
+key sources (daemon empower hooks + packet applyBuff — a new key
+fails until it picks a color; a retired one trips the orphan
+guard).
+
+The marker half: EMPOWER_DISPLAY membership doubles as the HUD's
+marker-eligibility filter (one table drives color + presence —
+`readUnitStatuses` deliberately skips these raw stat effects, §32c,
+so the status row was never going to show them and its contract
+stays untouched). Compact cards gain an `empowerRow` +
+`updateCardEmpowerMarkers` (signature-cached, the status-row
+cheapness contract), driven from `HUD.refreshStatuses` on the same
+per-tick gate; reaped units clear markers like they clear
+statuses. `buffKeyLabel`/`buffModsSummary` moved to UnitCard.ts as
+shared exports (PreTurnScreen's local copies retired); pre-turn
+chips now color inline off the same map.
+
+Browser-proven end to end (Soldier/Mars + forced hype): pre-turn
+chips read #15F4EE / #FF7AD9 with distinct titles; in battle,
+exactly ONE card shows the marker row — both chips in the same two
+colors, same per-key hovers. Typecheck + the 6 coverage pins green
+pre-hook. Native feel + color verdicts ride with the user.

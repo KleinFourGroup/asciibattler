@@ -33,8 +33,10 @@ import { abilityDef } from '../config/abilities';
 import { abilityDetailParts } from './abilityDetail';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
-import { statusColor } from '../render/statusDisplay';
+import { statusColor, empowerColor } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
+import type { StatusEffect } from '../sim/statusEffects';
+import type { EmpowerStackView } from '../run/empower';
 
 /** §61b — the accent dimension is the config rarity tier (def-resolved via
  *  `rarityForArchetype`; re-exported so existing importers keep working).
@@ -111,6 +113,11 @@ export interface UnitCardHandles {
    *  its per-status chips (the numeric readout — `Name ×N · P/s · Ns`, the §31
    *  scaled potency made literal). Undefined for the full variants. */
   readonly statusRow?: HTMLDivElement;
+  /** 78d — the `compact` empower-marker row (below the status row);
+   *  `updateCardEmpowerMarkers` reconciles its per-buff-key `▲` chips (the
+   *  pre-turn badge vocabulary carried into battle). Undefined for the full
+   *  variants. */
+  readonly empowerRow?: HTMLDivElement;
 }
 
 /** Adapter: a roster/offer template → card data (recruit + P3 pre-turn). */
@@ -269,10 +276,17 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   statusRow.className = 'unit-card__statuses';
   statusRow.hidden = true;
 
-  card.append(top, glyph, hp, statusRow);
+  // 78d — the empower-marker row (below the statuses). Same lifecycle:
+  // hidden until the unit carries a badge-eligible buff; the HUD's per-tick
+  // gate drives `updateCardEmpowerMarkers`.
+  const empowerRow = document.createElement('div');
+  empowerRow.className = 'unit-card__empowers';
+  empowerRow.hidden = true;
+
+  card.append(top, glyph, hp, statusRow, empowerRow);
   // No reveal/stat block for compact — point `levelValue` at the level span so
   // the handle is non-null, and hand back an empty `statRows`.
-  return { el: card, levelValue: level, statRows: new Map(), hpFill, statusRow };
+  return { el: card, levelValue: level, statRows: new Map(), hpFill, statusRow, empowerRow };
 }
 
 /** Clamp a UnitCardData HP reading to a 0..1 fill fraction (0 when absent). */
@@ -341,6 +355,61 @@ function applyStatusChip(chip: HTMLDivElement, r: StatusReadout): void {
     meta!.dataset.t = metaText;
     meta!.textContent = metaText;
   }
+}
+
+/**
+ * 78d — reconcile the `compact` empower-marker row: one `▲` chip per
+ * badge-eligible buff on the LIVE unit (the pre-turn badge vocabulary carried
+ * into battle — `readUnitStatuses` deliberately skips these raw stat effects,
+ * so they never reach the status row above). Colored + hover-titled per key
+ * off the shared `EMPOWER_DISPLAY` map. Same cheapness contract as the
+ * status row: the HUD gates on the sim tick, and a signature cache skips the
+ * rebuild when nothing changed. A no-op for the full variants.
+ */
+export function updateCardEmpowerMarkers(
+  handles: UnitCardHandles,
+  stacks: readonly EmpowerStackView[],
+): void {
+  const row = handles.empowerRow;
+  if (!row) return;
+  const signature = stacks.map((s) => `${s.key}:${s.magnitude}`).join('|');
+  if (row.dataset.sig === signature) return;
+  row.dataset.sig = signature;
+  row.replaceChildren();
+  row.hidden = stacks.length === 0;
+  for (const s of stacks) {
+    const chip = document.createElement('span');
+    chip.className = 'unit-card__empower-chip';
+    chip.style.color = empowerColor(s.key);
+    chip.textContent = s.magnitude <= 3 ? '▲'.repeat(s.magnitude) : `▲×${s.magnitude}`;
+    chip.title = `${buffKeyLabel(s.key)} ×${s.magnitude} — ${buffModsSummary(s.mods)}`;
+    row.appendChild(chip);
+  }
+}
+
+/** 78c→78d — human label for a buff key: the keys are authored as adjectives
+ *  ("empowered" / "warded" / "hyped" / …), so the label is just the key
+ *  capitalized — no second naming table to drift. Shared by the pre-turn
+ *  chips and the in-battle markers. */
+export function buffKeyLabel(key: string): string {
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+/** K4→78d — human-readable summary of a buff's mods ("+4 STR · +4 RNG") in
+ *  the canonical stat order, so a hover hint can never drift from the source.
+ *  Moved here from PreTurnScreen when the in-battle markers became the second
+ *  consumer. */
+export function buffModsSummary(mods: StatusEffect['mods']): string {
+  const parts: string[] = [];
+  for (const stat of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
+    const mod = mods[stat];
+    if (!mod) continue;
+    if (mod.add !== undefined) {
+      parts.push(`${mod.add >= 0 ? '+' : ''}${mod.add} ${STAT_LABELS[stat]}`);
+    }
+    if (mod.mul !== undefined) parts.push(`×${mod.mul} ${STAT_LABELS[stat]}`);
+  }
+  return parts.join(' · ');
 }
 
 /** The chip's numeric tail: `×stacks · ±potency/s · Ns`, omitting the parts that

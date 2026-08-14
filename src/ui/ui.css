@@ -2088,6 +2088,29 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* 78d — the compact card's empower-marker row (below the status row): one ▲
+   chip per badge-eligible buff key, colored inline off EMPOWER_DISPLAY (the
+   same hue the pre-turn badge uses, so the vocabulary carries into battle).
+   A horizontal row — markers are glanceable ticks, not the status row's
+   two-line readouts (hover carries the mods). Hidden when unbuffed. */
+.unit-card__empowers {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding-top: 3px;
+}
+
+.unit-card__empowers[hidden] {
+  display: none;
+}
+
+.unit-card__empower-chip {
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+}
+
 /* Q5 — enemy unit pane (top-center, below the banner): the enemy encounter pool
    gauge above an analogous wrapping grid of compact cards. The vertical mirror
    of the player pane (anchored top, pool above cards). The max-width is wide
@@ -2478,7 +2501,9 @@ body {
   font-size: 13px;
   line-height: 1;
   letter-spacing: 0.08em;
-  color: #15f4ee; /* FLOURESCENT_BLUE — 78d layers the per-key color map on top */
+  /* 78d — per-key color set INLINE off EMPOWER_DISPLAY (statusDisplay.ts);
+     FLOURESCENT_BLUE stands as the no-map fallback shade. */
+  color: #15f4ee;
 }
 
 .preturn-pools,

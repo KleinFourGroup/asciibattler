@@ -55,3 +55,36 @@ export const STATUS_DISPLAY_FALLBACK = '#FF00FF';
 export function statusColor(statusId: string): string {
   return STATUS_DISPLAY[statusId]?.color ?? STATUS_DISPLAY_FALLBACK;
 }
+
+/**
+ * 78d — the EMPOWER-buff display map, the STATUS_DISPLAY sibling for the
+ * K1-stat-buff vocabulary (daemon empower hooks + packet `applyBuff` — the
+ * keys `readUnitStatuses` deliberately SKIPS, so they never collide with the
+ * status table and its orphan guard). Doubles as the marker-eligibility set:
+ * the HUD renders an in-battle `▲` marker for exactly the effect keys in
+ * this table, and the pre-turn chips color from it, so one table drives
+ * both surfaces. Coverage is pinned like STATUS_DISPLAY's (derived from the
+ * daemon + packet catalogs — a new buff key fails the pin until it picks a
+ * color).
+ *
+ * Color choices (eyeball-tunable): `empowered` keeps FLOURESCENT_BLUE — the
+ * K4 badge accent the player already knows. The rest pick hues clear of the
+ * status table's (burn-orange / poison-olive / buff-gold / chaos-purple …):
+ * warded = a pale aegis-lavender (calm defense), hyped = party-pink,
+ * shielded = steel-blue, overclocked = volt-yellow (brighter + greener than
+ * emboldened's gold; they never share a surface — gold lives in the status
+ * row, volt in the ▲ markers).
+ */
+export const EMPOWER_DISPLAY: Record<string, StatusDisplay> = {
+  empowered: { color: COLORS.FLOURESCENT_BLUE }, // Mars — the established K4 accent
+  warded: { color: '#C9D1FF' }, // Minerva — aegis-lavender
+  hyped: { color: '#FF7AD9' }, // packet — party-pink
+  shielded: { color: '#6FA8FF' }, // packet — shield-steel
+  overclocked: { color: '#F4FF3D' }, // packet — volt-yellow
+};
+
+/** Resolve an empower-buff key to its display color, or the shared magenta
+ *  fallback (same make-it-visible discipline as `statusColor`). */
+export function empowerColor(buffKey: string): string {
+  return EMPOWER_DISPLAY[buffKey]?.color ?? STATUS_DISPLAY_FALLBACK;
+}

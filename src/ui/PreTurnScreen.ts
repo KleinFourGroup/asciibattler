@@ -66,19 +66,18 @@
  */
 
 import type { GameEvents } from '../core/events';
-import type { UnitTemplate, UnitStats } from '../sim/Unit';
+import type { UnitTemplate } from '../sim/Unit';
 import type { TurnGrantView } from '../run/daemon';
 import type { EmpowerStackView } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import type { StatusEffect } from '../sim/statusEffects';
 import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
-import { STAT_LABELS } from './statLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
-import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
+import { empowerColor } from '../render/statusDisplay';
 import { CardListButton } from './CardListModal';
 
 /**
@@ -935,7 +934,10 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
     for (const stack of stacks) {
       const chip = document.createElement('div');
       chip.className = 'preturn-card-empower-chip';
-      chip.dataset['buffKey'] = stack.key; // 78d's color-map hook
+      chip.dataset['buffKey'] = stack.key;
+      // 78d — per-key color off the shared EMPOWER_DISPLAY map (the same
+      // color the in-battle marker uses, so the vocabulary carries over).
+      chip.style.color = empowerColor(stack.key);
       chip.textContent = stack.magnitude <= 3 ? '▲'.repeat(stack.magnitude) : `▲×${stack.magnitude}`;
       chip.title = `${buffKeyLabel(stack.key)} ×${stack.magnitude} — ${buffModsSummary(stack.mods)}`;
       badge.appendChild(chip);
@@ -944,13 +946,6 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
   }
 
   return el;
-}
-
-/** 78c — human label for a buff key: the keys are authored as adjectives
- *  ("empowered" / "warded" / "hyped" / …), so the label is just the key
- *  capitalized — no second naming table to drift. */
-function buffKeyLabel(key: string): string {
-  return key.charAt(0).toUpperCase() + key.slice(1);
 }
 
 /** L1 — the inert line a chance-denied gate leaves where its control would be
@@ -962,19 +957,3 @@ function renderGateDenied(text: string): HTMLDivElement {
   return row;
 }
 
-/** K4 — human-readable summary of a buff's mods ("+4 STR · +4 RNG · +4 MAG")
- *  in the canonical stat order, so the hint can never drift from the source.
- *  L1 — parameterized: the mods come from the ACTIVE daemon via the
- *  `turn:starting` payload (the `EMPOWER` singleton is retired). */
-function buffModsSummary(mods: StatusEffect['mods']): string {
-  const parts: string[] = [];
-  for (const stat of Object.keys(STAT_LABELS) as (keyof UnitStats)[]) {
-    const mod = mods[stat];
-    if (!mod) continue;
-    if (mod.add !== undefined) {
-      parts.push(`${mod.add >= 0 ? '+' : ''}${mod.add} ${STAT_LABELS[stat]}`);
-    }
-    if (mod.mul !== undefined) parts.push(`×${mod.mul} ${STAT_LABELS[stat]}`);
-  }
-  return parts.join(' · ');
-}

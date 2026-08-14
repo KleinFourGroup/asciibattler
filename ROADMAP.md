@@ -264,8 +264,9 @@ Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
   payloads + 6 test sites; per-key chips + un-merged hover
   browser-proven (Empowered/Hyped distinct on one card); no bump,
   as predicted (worklog §78c)
-- [ ] 78d — key→color map (statusDisplay precedent) + colored badges
-  + in-battle empower markers on the HUD cards
+- [x] 78d — ✅ 2026-08-14: EMPOWER_DISPLAY (coverage-pinned ×3) +
+  colored chips + the in-battle marker row, browser-proven end to
+  end; native eyeball rides with the user (worklog §78d)
 - [ ] 78e — sector-map overlay: MapScreen `readOnly` + the Game-owned
   overlay + `toggleSectorMap` on `M` + the map chip in the chrome
   column (hidden on MapScene / pre-run / game-over)

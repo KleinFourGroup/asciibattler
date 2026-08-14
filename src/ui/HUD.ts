@@ -9,7 +9,14 @@ import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
 import { fadeIn, fadeOutAndRemove } from './fade';
-import { buildUnitCard, unitCardFromUnit, updateCardStatusRow, type UnitCardHandles } from './UnitCard';
+import {
+  buildUnitCard,
+  unitCardFromUnit,
+  updateCardStatusRow,
+  updateCardEmpowerMarkers,
+  type UnitCardHandles,
+} from './UnitCard';
+import { EMPOWER_DISPLAY } from '../render/statusDisplay';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { renderPoolGauge } from './poolGauge';
 import type { PlaybackSpeed } from './PlaybackSpeed';
@@ -616,6 +623,15 @@ export class HUD {
     for (const [unitId, card] of this.cards) {
       const unit = world.findUnit(unitId);
       updateCardStatusRow(card, unit ? readUnitStatuses(unit.effects, world.currentTick) : []);
+      // 78d — the empower markers ride the same per-tick gate: the
+      // badge-eligible stat buffs `readUnitStatuses` deliberately skips
+      // (EMPOWER_DISPLAY membership IS the eligibility filter — one table
+      // drives color + presence). A reaped unit clears its markers like it
+      // clears its status row.
+      updateCardEmpowerMarkers(
+        card,
+        unit ? unit.effects.filter((e) => e.key in EMPOWER_DISPLAY) : [],
+      );
     }
   }
 

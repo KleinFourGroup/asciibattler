@@ -1747,6 +1747,32 @@ body {
   z-index: 40;
 }
 
+/* 78e fix — the clickable close (top-right, above the opaque map screen):
+   the overlay must be escapable with a pure mouse / touch (user call — the
+   map screen buries both the backdrop and the chip, so without this the
+   keyboard was the only way out). Terminal-plate chrome, chip-scaled. */
+.sector-map-overlay__close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 42;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ffb000; /* TERMINAL_AMBER */
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.sector-map-overlay__close:hover {
+  border-color: #ffd060;
+  color: #ffd060;
+}
+
 /* The close hint — fixed bottom-center, above the opaque map screen. */
 .sector-map-overlay__hint {
   position: fixed;

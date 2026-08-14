@@ -3209,3 +3209,14 @@ closes, M toggles, works over a live battle. One probe-side
 gotcha for the tips: the chip is a `<button>` in #ui, so
 positional `#ui button` indexing in drive scripts now hits it
 first — match by text.
+
+**78e rider (user call, 2026-08-14): the clickable close + the
+input-accessibility principle.** The overlay shipped keyboard-only
+on the way out — the opaque full-viewport map buries both the
+backdrop and the chip, so a pure-mouse player had NO exit (the
+user's rationale for the chip in the first place: touch-friendly /
+mouse-sufficient, keyboard as the fast path — a rationale that
+hadn't been written down anywhere). Fixed with a fixed top-right
+`✕ close` (terminal-plate chrome); the principle is now DESIGN
+§Input accessibility so future modals inherit it as an audit rule.
+Pure-mouse loop browser-proven: chip click opens → ✕ click closes.

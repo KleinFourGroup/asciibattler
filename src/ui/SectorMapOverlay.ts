@@ -93,6 +93,17 @@ export class SectorMapOverlay {
     hint.className = 'sector-map-overlay__hint';
     hint.textContent = '[ map view — M / Esc closes ]';
     overlay.appendChild(hint);
+    // 78e fix — a CLICKABLE close (user call): the read-only map screen is
+    // opaque and full-viewport, so the backdrop is unreachable and the chip
+    // is buried beneath the overlay — without this button a pure-mouse (or
+    // touch) player has no way out. Keyboard stays the fast path; the game
+    // must remain playable without it.
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'sector-map-overlay__close';
+    close.textContent = '✕ close';
+    close.addEventListener('click', () => this.close());
+    overlay.appendChild(close);
     this.overlayEl = overlay;
     this.mount.appendChild(overlay);
     // The read-only screen renders INTO the overlay backdrop; the dispatcher

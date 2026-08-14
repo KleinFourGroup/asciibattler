@@ -148,6 +148,16 @@ Color + bloomIntensity per instance are instanced attributes so a single draw ca
 
 **Camera:** Fixed perspective, tilted ~45° down with a slight angle so the grid reads as a grid but billboards face the camera cleanly. Non-rotatable in MVP. Camera rotation is deferred along with larger maps.
 
+## Input accessibility (78e, user-signed 2026-08-14)
+
+**Keyboard is the fast path; a pure mouse (and eventually touch) must always
+be *sufficient*.** Every UI surface needs a clickable route for everything a
+hotkey does — a keyboard-only affordance is an accelerator, never the sole
+exit. (The rule was signed when the 78e sector-map overlay shipped with only
+`M`/Esc to close — an opaque full-viewport view with no clickable way out;
+the ✕ button is the corrective precedent.) Audit candidates against this rule
+whenever a new modal, overlay, or hotkey lands.
+
 ## Determinism
 
 A single seeded RNG instance is threaded through everything that involves randomness: map generation, unit stat rolls, recruitment offers, target tie-breaking. The same seed produces the same run, byte-for-byte. This is non-negotiable from day one — it makes replays, bug reports, and shareable seeds trivial to add later, and it keeps "deterministic spectacle" actually deterministic.

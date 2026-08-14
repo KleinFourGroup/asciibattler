@@ -1,5 +1,11 @@
 import * as THREE from 'three';
-import { GLYPHS, ATLAS_CELL_BUDGET } from './glyphs';
+import {
+  GLYPHS,
+  ATLAS_CELL_BUDGET,
+  FULL_GLYPH_INK,
+  inkRectFromRgba,
+  type GlyphInk,
+} from './glyphs';
 
 /**
  * Generates a monospace glyph atlas at startup. Each glyph occupies a fixed-
@@ -67,10 +73,17 @@ export class FontAtlas {
   readonly atlasHeightPx = ATLAS_H;
 
   private readonly uvByGlyph: ReadonlyMap<string, GlyphUV>;
+  /** §79a — per-glyph ink bboxes measured off the rasterized cells at build. */
+  private readonly inkByGlyph: ReadonlyMap<string, GlyphInk>;
 
-  private constructor(texture: THREE.CanvasTexture, uvByGlyph: Map<string, GlyphUV>) {
+  private constructor(
+    texture: THREE.CanvasTexture,
+    uvByGlyph: Map<string, GlyphUV>,
+    inkByGlyph: Map<string, GlyphInk>,
+  ) {
     this.texture = texture;
     this.uvByGlyph = uvByGlyph;
+    this.inkByGlyph = inkByGlyph;
   }
 
   static async create(): Promise<FontAtlas> {
@@ -110,6 +123,7 @@ export class FontAtlas {
     ctx.textBaseline = 'middle';
 
     const uvByGlyph = new Map<string, GlyphUV>();
+    const inkByGlyph = new Map<string, GlyphInk>();
     for (let i = 0; i < GLYPHS.length; i++) {
       const glyph = GLYPHS[i]!;
       const col = i % COLS;
@@ -118,6 +132,14 @@ export class FontAtlas {
       const cy = row * CELL_PX;
 
       ctx.fillText(glyph, cx + CELL_PX / 2, cy + CELL_PX / 2);
+
+      // §79a — measure the glyph's ink bbox off the cell just drawn, so the
+      // click hit-box hugs the visible glyph (pick.ts) with no hand-measured
+      // table to maintain. One 64×64 getImageData per glyph at boot — trivial.
+      inkByGlyph.set(
+        glyph,
+        inkRectFromRgba(ctx.getImageData(cx, cy, CELL_PX, CELL_PX).data, CELL_PX, CELL_PX),
+      );
 
       // Flip the canvas Y axis on the way in so the stored UVs are GL-ready.
       // Canvas top (small canvas-y) becomes GL top (large GL-v); canvas bottom
@@ -140,7 +162,17 @@ export class FontAtlas {
     texture.generateMipmaps = false;
     texture.needsUpdate = true;
 
-    return new FontAtlas(texture, uvByGlyph);
+    return new FontAtlas(texture, uvByGlyph, inkByGlyph);
+  }
+
+  /**
+   * §79a — the glyph's measured ink bbox (normalized, y-up — see `GlyphInk`),
+   * or `FULL_GLYPH_INK` for a glyph the atlas hasn't measured. Fallback rather
+   * than throw (unlike `getGlyphUV`): a missing ink rect degrades to the
+   * full-quad clickbox, not a crash.
+   */
+  getGlyphInk(glyph: string): GlyphInk {
+    return this.inkByGlyph.get(glyph) ?? FULL_GLYPH_INK;
   }
 
   getGlyphUV(glyph: string): GlyphUV {

@@ -73,7 +73,10 @@ export class SpriteRenderer {
   private readonly aBloomIntensity: THREE.InstancedBufferAttribute;
   private readonly aSize: THREE.InstancedBufferAttribute;
 
-  private readonly atlas: FontAtlas;
+  /** §79a — public so billboard-builder consumers (BattleRenderer's pick
+   *  candidates) can read the SAME atlas the glyphs render from — the ink
+   *  bboxes (`getGlyphInk`) must match the rasterization on screen. */
+  readonly atlas: FontAtlas;
 
   // Slot management. `slotByHandle` lets removal find a sprite by id; on
   // remove we swap the doomed slot with the last active one so the live

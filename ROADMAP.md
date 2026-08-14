@@ -293,10 +293,9 @@ user-signed — the off-axis world-Y-lift class's third instance
 triggered the twice-bitten rule; risk LOW → LOW-MEDIUM,
 render-only throughout):
 
-- [ ] 79a — atlas-derived ink boxes: pure ink-bbox helper
-  (THREE-free, headless tests) + `FontAtlas.getGlyphInk` computed
-  at build (α>16, `FULL_GLYPH_INK` fallback) + both builders stamp
-  it + the hand `GLYPH_INK` table deleted
+- [x] 79a — ✅ 2026-08-14: landed to plan; the `▄` oracle
+  reproduced to ±0.002 in-browser, `!`/`s` tight for free
+  (worklog §79a)
 - [ ] 79b — far-edge diagnosis FIRST (no commit expected):
   reproduce + attribute the misalignment via `__game` +
   `getImageData`; before-screenshots; findings → worklog

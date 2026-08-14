@@ -13,7 +13,6 @@ import type { Renderer } from './Renderer';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { COLORS } from './palette';
 import { colorForTeam, spriteColorForUnit } from './spriteColor';
-import { glyphInk } from './glyphs';
 import { SpriteAnimator } from './animation/SpriteAnimator';
 import {
   assertFxKeysResolve,
@@ -661,7 +660,13 @@ export class BattleRenderer {
       if (!unit || unit.team !== 'enemy' || unit.currentHp <= 0) continue;
       const pos = this.sprites.getPosition(handle, this.scratchPos);
       if (!pos) continue;
-      out.push({ id: unitId, position: pos.clone(), size: UNIT_PICK_SIZE, ink: glyphInk(unit.glyph) });
+      out.push({
+        id: unitId,
+        position: pos.clone(),
+        size: UNIT_PICK_SIZE,
+        // §79a — atlas-derived ink, measured off the same rasterization on screen.
+        ink: this.sprites.atlas.getGlyphInk(unit.glyph),
+      });
     }
     return out;
   }
@@ -692,7 +697,7 @@ export class BattleRenderer {
         id: unitId,
         position: pos.clone(),
         size: UNIT_PICK_SIZE * footprintOf(unit),
-        ink: glyphInk(unit.glyph),
+        ink: this.sprites.atlas.getGlyphInk(unit.glyph),
       });
     }
     return out;

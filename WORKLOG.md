@@ -3321,3 +3321,27 @@ class fix, but the diagnosis anchors the before/after evidence.
 The 79f scoping note lands in this worklog (user call — no
 standalone doc). One naming amendment at signing: flat 79a–79g,
 no c1/c2/c3 sub-numbering.
+
+### 79a — atlas-derived ink boxes (2026-08-14)
+
+Landed to plan. `inkRectFromRgba` (glyphs.ts) is the pure DOM-free
+half — takes raw RGBA in canvas convention, returns the normalized
+y-up `GlyphInk`, owns the y flip, `FULL_GLYPH_INK` on an empty
+cell; `INK_ALPHA_THRESHOLD = 16` pinned as the exported contract
+(strictly-greater, matching the one-off measurement). 8 headless
+tests pin the flip + corner conventions + the threshold boundary.
+`FontAtlas.create` measures every cell right after its `fillText`
+(one 64×64 `getImageData` per glyph at boot) and serves
+`getGlyphInk` with the full-cell fallback (degrade, don't throw —
+unlike `getGlyphUV`). The hand `GLYPH_INK` table + `glyphInk()`
+are DELETED; both billboard builders stamp
+`this.sprites.atlas.getGlyphInk(...)` (SpriteRenderer's `atlas`
+went public — the ink source must be the same atlas the glyphs
+render from). **Browser proof (dev-preview eval):** derived `▄` =
+`{0.172, 0, 0.828, 0.531}` vs the retired hand-measured
+`{0.17, 0, 0.83, 0.53}` — the oracle reproduces to ±0.002; `!`
+now hugs its column (`x 0.42–0.58`, was full-quad), `s` hugs its
+x-height band, unregistered glyph → full-cell fallback; console
+clean. Click-feel verdict rides with the 79g eyeball. No padding
+added (matches the oracle exactly); if clicks ever feel too tight
+the threshold/padding knobs live in one place now.

@@ -91,12 +91,13 @@ export function atlasCellsFor(unitGlyphs: Iterable<string>): number {
  *
  * The click hit-test (`pickInstanceAtNdc`) derives its box from this instead of
  * the whole quad, so the clickbox HUGS the glyph rather than the empty corners /
- * top. The default is the full cell (`FULL_GLYPH_INK`), so every normal full-cell
- * glyph is unchanged — only glyphs that declare a tighter rect below get a
- * trimmed box.
+ * top. §79a — the rects are DERIVED at atlas build (`FontAtlas.getGlyphInk`
+ * measures every rasterized cell's alpha bbox via `inkRectFromRgba` below),
+ * replacing the old hand-measured one-entry table: every glyph is tight for
+ * free, and authoring a new glyph needs no measure-and-hardcode chore.
  *
  * FORWARD NOTE: for a glyph where a rectangle over-selects (an irregular shape —
- * a future giant, say) this same per-glyph table is where a pixel-perfect alpha
+ * a future giant, say) the same per-cell atlas alpha is where a pixel-perfect
  * COVERAGE mask would live; the ink-rect then becomes that mask's cheap
  * bounding-box pre-reject — a stepping stone, not a throwaway.
  */
@@ -107,26 +108,53 @@ export interface GlyphInk {
   readonly y1: number; // top    (1 = cell top)
 }
 
-/** The whole cell — the default for any glyph without an override (→ the pick box
- *  stays the symmetric full quad, byte-identical to the pre-ink hit-test). */
+/** The whole cell — the fallback for any glyph the atlas hasn't measured (and
+ *  for an all-transparent cell) → the pick box stays the symmetric full quad,
+ *  byte-identical to the pre-ink hit-test. */
 export const FULL_GLYPH_INK: GlyphInk = { x0: 0, y0: 0, x1: 1, y1: 1 };
 
 /**
- * Per-glyph ink overrides. MEASURED, not guessed: each value is the alpha
- * bounding box from rasterizing the glyph exactly as `FontAtlas` does (JetBrains
- * Mono, `FONT_PX` 56 centered in a `CELL_PX` 64 cell, `textBaseline:'middle'`),
- * normalized to the cell + flipped to y-up. Anything absent = `FULL_GLYPH_INK`.
+ * §79a — alpha above this counts as ink when deriving a glyph's bbox. Matches
+ * the one-off browser rasterization that produced the old hand-measured `▄`
+ * entry (`> 16`), so the derived rect reproduces it; low enough to catch faint
+ * antialiased edges, high enough to ignore blend noise.
  */
-const GLYPH_INK: Readonly<Record<string, GlyphInk>> = {
-  // `▄` (U+2584 LOWER HALF BLOCK) = the rubble slab (`RUBBLE_GLYPH`): the ink
-  // fills the central ~66% width and the bottom ~53% height, so its full-quad
-  // clickbox otherwise reached ~1 cell above the visible slab (worse the larger
-  // the rubble, since the pick quad scales with the footprint).
-  '▄': { x0: 0.17, y0: 0, x1: 0.83, y1: 0.53 },
-};
+export const INK_ALPHA_THRESHOLD = 16;
 
-/** The ink rectangle for `glyph` — its measured override, or the full cell. Used
- *  by the billboard builders to stamp each pick candidate's hit-box. */
-export function glyphInk(glyph: string): GlyphInk {
-  return GLYPH_INK[glyph] ?? FULL_GLYPH_INK;
+/**
+ * §79a — the alpha bounding box of one rasterized cell, as a normalized y-up
+ * `GlyphInk`. Pure + DOM-free (takes the raw RGBA byte array an
+ * `ImageData.data` yields, row-major, canvas convention: row 0 = TOP), so it's
+ * headless-testable on synthetic buffers; `FontAtlas.create` feeds it each
+ * glyph's cell at build time. The canvas→GL y flip happens here, mirroring
+ * `getGlyphUV`'s convention. An all-transparent cell returns `FULL_GLYPH_INK`
+ * (no ink to hug — keep the full-quad behavior rather than a degenerate box).
+ */
+export function inkRectFromRgba(
+  data: ArrayLike<number>,
+  width: number,
+  height: number,
+  threshold = INK_ALPHA_THRESHOLD,
+): GlyphInk {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * 4 + 3]!;
+      if (alpha <= threshold) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return FULL_GLYPH_INK;
+  return {
+    x0: minX / width,
+    y0: 1 - (maxY + 1) / height, // canvas bottom row → y-up bottom edge
+    x1: (maxX + 1) / width,
+    y1: 1 - minY / height, // canvas top row → y-up top edge
+  };
 }

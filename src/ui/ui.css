@@ -1705,6 +1705,68 @@ body {
   display: none;
 }
 
+/* 78e — the sector-map chip: the third chrome-column chip (bits → cache →
+   map), same terminal plate as its siblings. Clicking it (or `M`) opens the
+   read-only sector-map overlay from any screen it's shown on; Game hides it
+   on MapScene (redundant), pre-run, and game-over. */
+.sector-map-chip {
+  position: fixed;
+  top: 132px; /* stacks under the cache chip (76px + its measured height) */
+  left: 20px;
+  z-index: 15;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: left;
+  color: #ffb000; /* TERMINAL_AMBER — the map/current-node accent */
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ffb000;
+  padding: 10px 18px;
+  min-width: 128px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.sector-map-chip:hover {
+  border-color: #ffd060;
+  color: #ffd060;
+}
+
+.sector-map-chip.is-hidden {
+  display: none;
+}
+
+/* 78e — the overlay the chip/keybind opens: a fixed full-viewport host the
+   read-only MapScreen renders into (.map-screen is absolute inset:0 + opaque,
+   so it fills this host and no backdrop shows). Above the scene UI + the
+   chrome chips, below #scanlines (1000). */
+.sector-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+/* The close hint — fixed bottom-center, above the opaque map screen. */
+.sector-map-overlay__hint {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 42;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  color: #ffb000;
+  opacity: 0.75;
+}
+
+/* 78e — readOnly map view: frontier nodes keep their styling (the plan-ahead
+   read) but don't click. */
+.map-screen--readonly .map-node.frontier {
+  cursor: default;
+}
+
 /* The cache modal (the R1 roster-modal shell + packet rows). One row per
    held slot: name + description on the left, Fire/Discard on the right;
    the inline roster picker (a unit-target out-of-battle fire) expands

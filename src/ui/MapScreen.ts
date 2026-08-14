@@ -8,6 +8,9 @@
  *   - **frontier** — one edge hop from current. Cyan, clickable; click
  *     dispatches an `enterNode` command on the run dispatcher.
  *   - **locked** — everything else. Dimmed, non-clickable.
+ *
+ * 78e — `{readOnly: true}` renders the same view with no dispatch and no
+ * roster button: the sector-map overlay's glance mode (SectorMapOverlay).
  */
 
 import { PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from '../run/NodeMap';
@@ -70,14 +73,25 @@ export class MapScreen {
   private readonly mount: HTMLElement;
   private readonly dispatcher: RunDispatcher;
   private readonly audio: AudioPlayer;
+  /** 78e — a read-only view never dispatches (frontier nodes render but don't
+   *  click) and skips the R1 roster button (the overlay is a pure glance
+   *  surface; nesting a second modal under it would fight the overlay's own
+   *  chrome). The sector-map overlay's mode; MapScene uses the default. */
+  private readonly readOnly: boolean;
   private container: HTMLDivElement | null = null;
   // R1 — the shared "view roster" affordance (top-right), disposed on hide.
   private rosterButton: CardListButton | null = null;
 
-  constructor(mount: HTMLElement, dispatcher: RunDispatcher, audio: AudioPlayer) {
+  constructor(
+    mount: HTMLElement,
+    dispatcher: RunDispatcher,
+    audio: AudioPlayer,
+    opts: { readOnly?: boolean } = {},
+  ) {
     this.mount = mount;
     this.dispatcher = dispatcher;
     this.audio = audio;
+    this.readOnly = opts.readOnly ?? false;
   }
 
   show(
@@ -151,21 +165,25 @@ export class MapScreen {
 
     const container = document.createElement('div');
     container.className = 'map-screen';
+    if (this.readOnly) container.classList.add('map-screen--readonly');
 
     // R1 — the roster view (top-right, position: fixed so it ignores the
     // board's vertical scroll). Inside the faded container so it cleans up with
     // the screen; dispose() also closes the overlay if it's still open.
-    this.rosterButton = new CardListButton(this.mount, this.audio, {
-      text: 'Roster',
-      title: 'Your Roster',
-      position: 'roster',
-      getUnits: () => roster,
-      // 51e — the count badge ("Roster · 10"); the screen re-renders on
-      // every show, so no refresh wiring is needed here.
-      getCount: () => roster.length,
-      emptyText: 'No units in your roster.',
-    });
-    container.appendChild(this.rosterButton.el);
+    // 78e — skipped in readOnly (see the field doc).
+    if (!this.readOnly) {
+      this.rosterButton = new CardListButton(this.mount, this.audio, {
+        text: 'Roster',
+        title: 'Your Roster',
+        position: 'roster',
+        getUnits: () => roster,
+        // 51e — the count badge ("Roster · 10"); the screen re-renders on
+        // every show, so no refresh wiring is needed here.
+        getCount: () => roster.length,
+        emptyText: 'No units in your roster.',
+      });
+      container.appendChild(this.rosterButton.el);
+    }
 
     // T2 — the sector-name banner (top-center, position: fixed so it ignores the
     // board's vertical scroll, like the roster button). Names the sector the run
@@ -246,10 +264,15 @@ export class MapScreen {
         div.classList.add('current');
       } else if (frontier.has(node.id)) {
         div.classList.add('frontier');
-        div.addEventListener('click', () => {
-          this.audio.play('click');
-          this.dispatcher.dispatch({ kind: 'enterNode', nodeId: node.id });
-        });
+        // 78e — readOnly keeps the frontier STYLING (the plan-ahead read is
+        // the overlay's whole point) but never dispatches; the CSS drops the
+        // pointer cursor via .map-screen--readonly.
+        if (!this.readOnly) {
+          div.addEventListener('click', () => {
+            this.audio.play('click');
+            this.dispatcher.dispatch({ kind: 'enterNode', nodeId: node.id });
+          });
+        }
       } else if (visited.has(node.id)) {
         div.classList.add('visited');
       } else {

@@ -20,6 +20,7 @@ import { PortScene } from './scenes/PortScene';
 import { EventScene } from './scenes/EventScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
+import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
@@ -74,6 +75,9 @@ export class Game implements RunDispatcher {
   /** 49f — the persistent cache chip + modal (the bits chip's sibling; same
    *  gotcha #116 lifecycle, incl. the resetRun `refresh()`). */
   private readonly cacheOverlay: CacheOverlay;
+  /** 78e — the sector-map chip + read-only overlay (the third chrome-column
+   *  chip). Scene-derived availability is pushed from `swap`. */
+  private readonly sectorMapOverlay: SectorMapOverlay;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -223,6 +227,31 @@ export class Game implements RunDispatcher {
       },
       this.run === null,
     );
+
+    // 78e: the sector-map chip + read-only overlay — the third chrome-column
+    // chip (bits → cache → map). One view getter closing over `this.run`
+    // (the dispatcher pattern — a reset's Run swap is invisible); the
+    // `toggleSectorMap` keybind subscribes at THIS layer, the first
+    // page-lifetime keybind consumer, so `M` works on every screen the chip
+    // shows on (scene availability is pushed from `swap`).
+    this.sectorMapOverlay = new SectorMapOverlay(
+      uiMount,
+      this,
+      this.audio,
+      () => {
+        if (this.run === null) return null;
+        return {
+          map: this.run.nodeMap,
+          currentNodeId: this.run.currentNodeId,
+          visited: this.run.visitedNodes,
+          roster: this.run.team,
+          sectorTitle: this.run.currentSectorTitle,
+          forewarning: this.run.bossForewarning,
+        };
+      },
+      this.keybindings.labelFor('toggleSectorMap'),
+    );
+    this.keybindings.on('toggleSectorMap', () => this.sectorMapOverlay.toggle());
 
     // Scene transitions driven by Run lifecycle events. All of the
     // post-battle handlers fire *after* Run has already updated phase +
@@ -621,6 +650,16 @@ export class Game implements RunDispatcher {
     this.activeScene?.dispose();
     this.activeScene = next;
     next.mount(this.buildContext());
+    // 78e — scene-derived map-chip availability: hidden on the map itself
+    // (the live view is already up), pre-run (no run → no map), and
+    // game-over. Pushed here so every swap path (event-driven, boot, reset)
+    // stays covered by the one chokepoint.
+    this.sectorMapOverlay.setAvailable(
+      this.run !== null &&
+        !(next instanceof MapScene) &&
+        !(next instanceof CharacterSelectScene) &&
+        !(next instanceof GameOverScene),
+    );
   }
 
   /** M3 — swap after `ms`, letting the current scene play out (the

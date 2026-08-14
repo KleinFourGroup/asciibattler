@@ -17,6 +17,7 @@ const DEFAULTS: Record<KeybindAction, string> = {
   focusObjective: 'KeyF',
   holdObjective: 'KeyH',
   stopObjective: 'KeyT',
+  toggleSectorMap: 'KeyM',
 };
 
 /**

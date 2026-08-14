@@ -267,9 +267,9 @@ Cut at the 2026-08-13 kickoff (audit + shape-lock: WORKLOG §78):
 - [x] 78d — ✅ 2026-08-14: EMPOWER_DISPLAY (coverage-pinned ×3) +
   colored chips + the in-battle marker row, browser-proven end to
   end; native eyeball rides with the user (worklog §78d)
-- [ ] 78e — sector-map overlay: MapScreen `readOnly` + the Game-owned
-  overlay + `toggleSectorMap` on `M` + the map chip in the chrome
-  column (hidden on MapScene / pre-run / game-over)
+- [x] 78e — ✅ 2026-08-14: readOnly MapScreen + SectorMapOverlay +
+  `M` + the chrome chip; all scene rules + toggle/Esc/no-dispatch
+  browser-proven; native eyeball rides with the user (worklog §78e)
 - [ ] 78f — docs close: demote + cursor flip, box flipped ON TIME
 
 ## Phase 79 — Glyph targeted fix

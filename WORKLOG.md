@@ -3180,3 +3180,32 @@ advanced). Two items filed to TODO §Polish by user call: the
 "empower" mechanic-vs-Mars-key naming collision (rename touches
 serialized effect keys — a deliberate step, not a drive-by) and
 hoisting STATUS_DISPLAY/EMPOWER_DISPLAY into config JSON.
+
+### 78e — the sector-map overlay (2026-08-14)
+
+Landed to the resolved shape. MapScreen gains `{readOnly}` (ctor
+opt): frontier nodes keep their styling — the plan-ahead read is
+the point — but never dispatch, and the R1 roster button is
+skipped (a nested modal would fight the overlay's own chrome; the
+real screens keep it). `SectorMapOverlay` is the THIRD
+page-lifetime chrome element (the BitsOverlay/CacheOverlay
+lineage): the `⊞ map` chip stacks below the cache chip, and chip
+click or `M` (`toggleSectorMap`, the new 10th keybind action)
+opens a full-viewport read-only MapScreen fed by ONE view getter
+closing over `this.run` (reset-invisible, always-live). The
+keybind subscribes at the GAME layer — the first page-lifetime
+keybind consumer (the Keybindings header's battle-scoped
+convention now has a documented exception). Availability is
+scene-derived and pushed from `Game.swap` (the one chokepoint):
+hidden on MapScene / pre-run / game-over, and going unavailable
+closes an open overlay. Esc / backdrop / re-toggle close.
+
+Browser-proven end to end: chip hidden pre-run + on MapScene (M
+no-ops on both) · visible on event + battle scenes · overlay
+renders the braid map (41 nodes, banner + forewarning sub-line,
+current highlighted, no roster button, readonly class) · a
+frontier-node click moves NOTHING (node + phase unchanged) · Esc
+closes, M toggles, works over a live battle. One probe-side
+gotcha for the tips: the chip is a `<button>` in #ui, so
+positional `#ui button` indexing in drive scripts now hits it
+first — match by text.

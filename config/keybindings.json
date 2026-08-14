@@ -7,5 +7,6 @@
   "engageObjective": "KeyE",
   "focusObjective": "KeyF",
   "holdObjective": "KeyH",
-  "stopObjective": "KeyT"
+  "stopObjective": "KeyT",
+  "toggleSectorMap": "KeyM"
 }

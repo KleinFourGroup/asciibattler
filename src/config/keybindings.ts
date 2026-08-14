@@ -47,6 +47,7 @@ export const KEYBIND_ACTIONS = [
   'focusObjective',
   'holdObjective',
   'stopObjective',
+  'toggleSectorMap',
 ] as const;
 export type KeybindAction = (typeof KEYBIND_ACTIONS)[number];
 
@@ -71,6 +72,10 @@ const KeybindingsSchema = z.object({
   holdObjective: z.string().min(1),
   /** Stop — revert the team to the at-will default (Q3; the old "clear"). */
   stopObjective: z.string().min(1),
+  /** 78e — toggle the read-only sector-map overlay. The FIRST page-lifetime
+   *  keybind subscriber (Game, not a scene) — the map view must open from
+   *  any screen, so the handler survives scene swaps. */
+  toggleSectorMap: z.string().min(1),
 });
 
 export type KeybindingsConfig = z.infer<typeof KeybindingsSchema>;

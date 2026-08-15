@@ -3522,3 +3522,24 @@ the ground point it HITS — correct: raw ink dips ~0.011 under
 the baseline + the 3px pad) · fresh boot clean (the ANCHOR_XY
 console errors were retained history from mid-edit HMR states).
 Native eyeball → 79e/79g.
+
+**79d2 rider (user screenshot, 2026-08-14): the N×N near-row
+anchor.** The 3×3 rubble clipped through the ground (jagged bite)
+and its footprint read as the center row only. Root cause: the
+footprint-CENTER anchor put the front 1½ rows of the body's OWN
+footprint nearer than the sprite's depth — their tile-tops
+depth-clipped the slab's lower band; 1×1 units can't exhibit this
+(no own-terrain in front). Fix (user-signed after the analysis):
+`unitAnchorPos` anchors at the **near-row center** — x centered
+across columns, z UNSHIFTED (the corner row IS the camera-near
+row; the camera never rotates) — so no part of the body's
+footprint is nearer than the sprite (clip impossible), the slab
+stands at its front row with its ink covering the rows behind,
+and n=1 degenerates to the plain tile center (no special case).
+Depth-sort keys off the front edge now too (correct painter's
+order vs neighbors). Pick/bars/FX follow the anchor
+automatically. Verified live on ?layout=rubbleQuarry: 5/5
+multi-tile bodies (3×3 + 2×2) at exactly near-row-center anchors.
+Held back deliberately: per-cell glyph tiling (walks back §39d's
+one-scaled-glyph) — only if the eyeball still reads ambiguous;
+FOOTPRINT_LIFT_PX re-tune rides the 79e pass.

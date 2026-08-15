@@ -1015,8 +1015,15 @@ export class BattleRenderer {
    * §39d/§79d — the GROUND anchor for a unit's BODY sprite, footprint-aware.
    * `corner` is the canonical `unit.position` (the min-XY cell); the N×N block
    * extends +x/+y (see `footprintCells`). We render one scaled glyph
-   * (`instanceSize = n`) BASE-ANCHORED on the footprint's center ground point:
-   * +½ per extra cell in x, −½ in z (grid +y is world −z). The pre-79d
+   * (`instanceSize = n`) BASE-ANCHORED on the **NEAR-ROW center**: +½ per
+   * extra cell in x (centered across the columns), z UNSHIFTED — the corner
+   * row is the footprint's camera-near row (grid +y is world −z, and the
+   * camera never rotates), so the body STANDS at its front row and its ink
+   * rises to cover the rows behind (§79d2 rubble fix, user-signed). Anchoring
+   * mid-footprint put the front rows NEARER than the sprite's own depth, so
+   * their tile-tops depth-clipped the slab's lower band (the jagged bite) and
+   * the ground contact read as the center row. `n = 1` degenerates to the
+   * plain tile center — no special case. The pre-79d
    * `SPRITE_CENTER_OFFSET·(n−1)` flush-fixup is gone — a base-anchored quad
    * grows UP from its anchor at any size, so a big glyph can't sink into the
    * terrain by construction. Y reads the corner tile's height (fine while
@@ -1025,9 +1032,7 @@ export class BattleRenderer {
   private unitAnchorPos(corner: GridCoord, footprint: number): THREE.Vector3 {
     const pos = this.tileGroundPos(corner);
     if (footprint === 1) return pos;
-    const shift = (footprint - 1) / 2;
-    pos.x += shift;
-    pos.z -= shift;
+    pos.x += (footprint - 1) / 2;
     return pos;
   }
 

@@ -126,9 +126,11 @@ export const INK_ALPHA_THRESHOLD = 16;
  * side of the derived bbox (clamped to the cell), so the clickbox hugs the
  * glyph without demanding pixel-perfect aim. In CELL pixels (of `CELL_PX` 64),
  * which ≈ screen pixels at the default board zoom. The first quick test read
- * the raw boxes as a touch too tight; tune by feel here.
+ * the raw boxes as a touch too tight; tune by feel here. 79e (user call): 3 → 5
+ * at the native eyeball — still tight to the letterform, but forgiving enough
+ * that a click aimed at a thin glyph's stroke lands.
  */
-export const INK_PAD_PX = 3;
+export const INK_PAD_PX = 5;
 
 /**
  * §79a — the alpha bounding box of one rasterized cell, as a normalized y-up

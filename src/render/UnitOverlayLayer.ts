@@ -124,10 +124,16 @@ export class UnitOverlayLayer {
     progressFill.className = 'action-progress-fill';
     progressEl.appendChild(progressFill);
 
+    // §79e — the HP bar is the LAST (bottom-most) child, with the toggling
+    // elements above it. The stack is BOTTOM-anchored (ui.css), so growth
+    // happens upward: revealing the action-progress bar or the status strip
+    // can no longer shift the HP bar, which is the one element the eye tracks.
+    // Pre-79e order put progressEl below the HP bar, so a unit starting a cast
+    // shoved its own health bar up mid-battle.
     stack.appendChild(levelBadge);
     stack.appendChild(statusStrip);
-    stack.appendChild(hpBar);
     stack.appendChild(progressEl);
+    stack.appendChild(hpBar);
     root.appendChild(stack);
     this.root.appendChild(root);
 
@@ -176,19 +182,22 @@ export class UnitOverlayLayer {
   }
 
   /**
-   * §40f — scale a destructible overlay to its footprint. `1×1` keeps the CSS
-   * defaults (`--fp-scale:1` / `--fp-lift:0px` ⇒ byte-identical to a combatant
-   * bar). A larger body widens the bar linearly and lifts it by half a tile
-   * (screen px) per extra cell so it sits above the taller center-anchored glyph
-   * instead of on top of it. Both are fixed-CSS-px approximations tuned for the
-   * default board zoom — the same tradeoff the base overlay already makes.
+   * §40f — scale a destructible overlay to its footprint: `1×1` keeps the CSS
+   * default (`--fp-scale:1` ⇒ byte-identical to a combatant bar), a larger body
+   * widens the bar linearly so it reads as belonging to the big glyph.
+   *
+   * §79e — the companion `--fp-lift` (a per-footprint px lift, `[0,0,22,33,39]`)
+   * is DELETED. It existed because the pre-79d world anchor did NOT scale with
+   * footprint, so a 3×3's bar needed hand-tuned CSS px to clear the taller
+   * glyph. §79d made the anchor `GLYPH_HALF_HEIGHT * footprint` — the lift is
+   * now applied twice, and at 33px it swamped the base gap entirely (measured
+   * at the 79e eyeball: a 3×3's bar sat ~40px clear of its slab against a
+   * ~7px target). One scale factor, no lift.
    */
   private applyFootprintScale(handle: UnitOverlayHandle, footprint: number): void {
     if (footprint <= 1) return;
     const stack = handle.root.firstElementChild as HTMLElement;
-    const lift = FOOTPRINT_LIFT_PX[footprint] ?? FOOTPRINT_LIFT_PX[FOOTPRINT_LIFT_PX.length - 1]!;
     stack.style.setProperty('--fp-scale', String(footprint));
-    stack.style.setProperty('--fp-lift', `${lift}px`);
   }
 
   remove(handle: UnitOverlayHandle): void {
@@ -406,13 +415,10 @@ export class UnitOverlayLayer {
   }
 }
 
-/** §40f — HP-bar vertical lift (CSS px) BY FOOTPRINT, so a multi-tile
- *  destructible's bar clears its taller scaled glyph. `▄` is short + ground-flush,
- *  so the ink top rises SUB-linearly with size — a straight `(n−1)×k` overshoots
- *  (user-tuned: 2×2 sits perfectly at 22, but a linear 44 is too high for 3×3).
- *  Hence a table, not a formula: each larger step adds a shrinking increment.
- *  Indexed by footprint (1×1 needs none); clamps to the last entry beyond 4×4. */
-const FOOTPRINT_LIFT_PX = [0, 0, 22, 33, 39];
+/* §40f's `FOOTPRINT_LIFT_PX = [0, 0, 22, 33, 39]` lived here — the per-footprint
+   HP-bar lift, retired at §79e. It compensated for a world anchor that didn't
+   scale with footprint; §79d's does (`GLYPH_HALF_HEIGHT * footprint`), which
+   made it a double-count. See `applyFootprintScale`. */
 
 /** E6.C — vertical stagger (CSS px) between concurrent hitsplats on the
  *  same unit so clustered hits read as a stack rather than overlapping. */

@@ -3558,3 +3558,87 @@ base line, so the self-clip is impossible again. Verified live on
 max. (Genuinely-in-front TALL terrain outside the footprint can
 still occlude a body's feet — that's correct occlusion, standing
 behind a ridge, and applies to 1×1 units equally.)
+
+### 79e — the tune pass (2026-08-15)
+
+**The eyeball verdict (user, native browser).** Sprite-on-tile
+seating "golden", hitsplats good, objective markers "a bit higher
+than they were but look pretty good" → NO change to the marker
+constants (`OBJECTIVE_MARKER_ENEMY_LIFT` 0.2 /
+`_TILE_LIFT` 0.1 both stand as 79d2 left them). Two findings:
+the HP/progress bars read "really high for all glyphs", and a
+LONGSTANDING layout churn — the action-progress bar shoved the HP
+bar upward when it appeared. Plus one feel call: `INK_PAD_PX`
+3 → 5 (`7c8cac1`).
+
+**One root cause under both bar findings.** The stack's transform
+was `translate(-50%, calc(-260% - var(--fp-lift)))` — and `-260%`
+is a percentage of the stack's OWN height. So every element that
+toggles (the progress bar, and the status pip-strip — the same bug
+shape, unreported) changed the height and the translate multiplied
+that delta by 2.6 before it hit the screen (~18px of jump for the
+progress bar alone). It also made "how high do bars float"
+content-dependent, which is why `FOOTPRINT_LIFT_PX`'s flat px
+values read as swamped.
+
+**Landed in two moves, the second reversing a signed rule.**
+
+*Move 1 — kill the churn (structural).* Bottom-anchor the stack at
+a fixed px gap (`-100% - var(--overlay-gap)`), and make the HP bar
+the LAST child with the toggling elements above it (the user's
+call — "flip those around"). Growth is now strictly upward and the
+HP bar is pinned: measured `hpBarMoved: 0.00px` with the progress
+bar AND a status pip revealed. Taking the status strip with it was
+the twice-bitten rule — same shape, closed as a class rather than
+fixing the reported instance. ⭐ Same commit retires
+`FOOTPRINT_LIFT_PX = [0,0,22,33,39]` entirely: it compensated for a
+world anchor that didn't scale with footprint, and §79d's DOES
+(`GLYPH_HALF_HEIGHT * footprint`), so it had become a double-count
+— measured, not assumed (a 3×3's bar sat ~40px off its slab vs a
+~7px target; deleting it dropped every multi-tile body into the
+same clearance band as the 1×1s).
+
+*Move 2 — the ink-top anchor (⚠ REVERSES the 79d2 rule).* Move 1
+alone left an awkward split the user named precisely: cramped up
+close, high far away, and "very noticeably high for short glyphs
+like `a`". Both halves are the same defect — the anchor was
+glyph-blind (79d2's deliberate uniform half-quad line) AND
+depth-blind, while the gap was screen-px, so **no single gap value
+could satisfy both ends**; the user pushed 12 → 24 chasing it and
+the split just inverted. Fix: anchor the overlay stack on the
+glyph's visible INK TOP (`inkTopLiftFor` — one definition, shared
+with the hitsplat anchor, which had been inlining the same math).
+The anchor then carries the perspective itself, so `--overlay-gap`
+is exact screen px. Measured across 26 bodies spanning a ~400px
+depth range, `a`/`M`/`r`/`▄` and footprints 1–3: **9.96–10.05px**
+(the ±0.05 is `updatePosition`'s `.toFixed(1)` rounding, not
+drift).
+
+**The reversal, explicitly.** §79d2 signed "overlays DELIBERATELY
+keep the uniform half-quad line (bars scannable across mixed
+glyphs, not bobbing per letterform)". 79e overturns it on the built
+result — the user's "might have signed that rule a bit
+prematurely". The uniform line and glyph-tight gaps are mutually
+exclusive; the user's own complaint about short glyphs IS the
+uniform line's cost, seen. Price accepted, stated up front and
+signed: bars at equal depth now sit ~5px apart for an `a` vs an
+`M`. The rationale lives in `inkTopLiftFor`'s docblock so it can't
+later read as an accident.
+
+**The quantized fallback (noted, NOT built — user request).** If
+future feedback says a mixed row reads ragged, the middle position
+is to keep the ink-top anchor but QUANTIZE the lift — snap
+`inkTopLiftFor` to two or three buckets (a baseline-cluster band, a
+tall/cap band, a floor-block band) so bars land on a few shared
+lines instead of a continuum. That recovers most of 79d2's
+scannability without returning to a glyph-blind anchor. Watch item
+in TODO.md; do NOT reach for it unless the eyeball asks.
+
+**Verification.** Tests 2640 green + typecheck clean at both
+commits (no test moved — `render`/`ui` is eyeball-only by policy,
+and nothing referenced the deleted constant). Browser, live on
+?layout=rubbleQuarry: the gap table above · churn 0.00px · console
+error-free. Native eyeball: user-signed 2026-08-15 ("looks great to
+me now"). Probe note: the §79d aspect-NaN quirk recurs — the
+preview pane boots 0×0, so `resize_window` + a `resize` event
+before projecting anything.

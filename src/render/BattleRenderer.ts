@@ -820,11 +820,11 @@ export class BattleRenderer {
       if (isDestructibleNeutral(unit.archetype)) {
         const overlay = this.overlays.addDestructible(footprint);
         this.overlays.updateHp(overlay, Math.max(0, unit.currentHp) / unit.derived.maxHp);
-        // §79d — overlays anchor on the glyph's visual CENTER (the per-frame
-        // follow recomputes the same point).
+        // §79e — overlays anchor on the glyph's visible INK TOP (the per-frame
+        // follow recomputes the same point). See `inkTopLiftFor`.
         this.overlays.updatePosition(
           overlay,
-          aboveAnchor(spritePos, GLYPH_HALF_HEIGHT * footprint, this.renderer.camera, this.scratchPos),
+          aboveAnchor(spritePos, this.inkTopLiftFor(unit), this.renderer.camera, this.scratchPos),
         );
         this.overlayHandles.set(unit.id, overlay);
       }
@@ -842,7 +842,7 @@ export class BattleRenderer {
     this.overlays.updateHp(overlay, pct);
     this.overlays.updatePosition(
       overlay,
-      aboveAnchor(spritePos, GLYPH_HALF_HEIGHT * footprint, this.renderer.camera, this.scratchPos),
+      aboveAnchor(spritePos, this.inkTopLiftFor(unit), this.renderer.camera, this.scratchPos),
     );
     this.overlayHandles.set(unit.id, overlay);
 
@@ -1012,6 +1012,28 @@ export class BattleRenderer {
   }
 
   /**
+   * §79e — the camera-up lift from a unit's GROUND anchor to the top of its
+   * visible ink, footprint-scaled. The one definition shared by everything that
+   * must sit a fixed SCREEN distance off the top of a glyph: the HP-overlay
+   * stack and the hitsplat anchor.
+   *
+   * §79d2 anchored the overlay stack on the uniform half-quad line instead —
+   * deliberately, so bars across a row of mixed glyphs stayed on one scannable
+   * line. The 79e native eyeball REVERSED that call (user, on the built
+   * result): the uniform line is glyph-BLIND, so short glyphs (`a`, `r`) wore
+   * their bar visibly high while tall ones (`M`) ran cramped — and since the
+   * CSS gap is screen-px against a depth-blind anchor, near rows read tight and
+   * far rows read high *at the same time*, with no single gap value fixing
+   * both. An ink-top anchor scales with perspective on its own, so the CSS gap
+   * means the same thing at every depth and letterform. The price, accepted:
+   * bars sit ~5px apart for an `a` vs an `M` at equal depth instead of on one
+   * line. `inkCenterLift`'s consumers (FX endpoints) are unaffected.
+   */
+  private inkTopLiftFor(unit: Unit): number {
+    return this.sprites.atlas.inkTopLift(unit.glyph) * footprintOf(unit);
+  }
+
+  /**
    * §39d/§79d — the GROUND anchor for a unit's BODY sprite, footprint-aware.
    * `corner` is the canonical `unit.position` (the min-XY cell); the N×N block
    * extends +x/+y (see `footprintCells`). We render one scaled glyph
@@ -1110,9 +1132,7 @@ export class BattleRenderer {
     // Camera-up projects to the same screen X as the anchor by construction,
     // which is what retired the I2 dual-projection workaround in
     // UnitOverlayLayer.spawnHitsplat.
-    const lift = unit
-      ? this.sprites.atlas.inkTopLift(unit.glyph) * footprintOf(unit)
-      : 2 * GLYPH_HALF_HEIGHT;
+    const lift = unit ? this.inkTopLiftFor(unit) : 2 * GLYPH_HALF_HEIGHT;
     const top = aboveAnchor(pos, lift, this.renderer.camera, pos);
     this.overlays.spawnHitsplat(top, text, kind, unitId);
   }
@@ -1696,21 +1716,20 @@ export class BattleRenderer {
       const handle = this.handles.get(unitId);
       const unit = world.findUnit(unitId);
       if (!handle || !unit) continue;
-      // §79d — follow the glyph's visual center so the CSS stack sits on the
-      // glyph at any board edge. §79d2 — deliberately the UNIFORM half-quad
-      // lift, NOT the ink-aware center: bars/badges across a row of mixed
-      // glyphs stay on one line (scannable HP row), rather than bobbing with
-      // each letterform's ink height.
+      // §79e — follow the glyph's visible INK TOP so the CSS stack sits a fixed
+      // SCREEN distance off the letterform at any board edge and any depth
+      // (`--overlay-gap`). Supersedes §79d2's deliberate uniform half-quad
+      // line — see `inkTopLiftFor` for the reversal and what it costs.
       const spritePos = this.sprites.getPosition(handle, this.scratchPos);
       if (!spritePos) continue;
-      const center = aboveAnchor(
+      const inkTop = aboveAnchor(
         spritePos,
-        GLYPH_HALF_HEIGHT * footprintOf(unit),
+        this.inkTopLiftFor(unit),
         this.renderer.camera,
         spritePos,
       );
 
-      this.overlays.updatePosition(overlay, center);
+      this.overlays.updatePosition(overlay, inkTop);
       this.updateProgressFill(unitId, unit, overlay, now);
 
       // §32c — refresh the status pip-strip only when the sim tick advanced

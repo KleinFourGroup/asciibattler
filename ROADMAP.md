@@ -311,8 +311,10 @@ render-only throughout):
   rule landed (letters on the measured baseline 0.261, blocks
   flush, glyph-swap re-derivation) + the raw/padded ink split;
   ink-true marker/hitsplat/FX lifts (worklog §79d2)
-- [ ] 79e — native eyeball of the anchor rework + constant
-  re-tunes (base-flush, marker/hitsplat lifts)
+- [x] 79e — ✅ 2026-08-15: seating/hitsplats/markers PASSED as-is
+  (no marker re-tune); the bar pass went structural — churn killed
+  + `FOOTPRINT_LIFT_PX` retired + ⚠ the ink-top anchor REVERSES
+  §79d2's uniform-line rule, gap exact 10px (worklog §79e)
 - [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;
   closes with a build-here-or-defer-to-§82 recommendation)
 - [ ] 79g — THE exit eyeball (edge glyphs sit their tiles at

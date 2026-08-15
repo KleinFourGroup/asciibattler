@@ -58,15 +58,32 @@ body {
 
 .unit-overlay-stack {
   position: absolute;
-  /* Anchor at (0,0); center horizontally on the projected point and
-     float well above it so the sprite glyph stays unobscured. The
-     vertical offset is the world-space HP_BAR_Y_OFFSET in B3 terms,
-     baked here as a fixed CSS offset. Reads correctly across both
-     fit and scroll camera modes at the default board sizes.
-     §40f: --fp-scale / --fp-lift default to 1 / 0px (byte-identical for
-     combatants); a footprint-scaled destructible overlay widens the bar and
-     lifts it to clear its taller glyph via UnitOverlayLayer.applyFootprintScale. */
-  transform: translate(-50%, calc(-260% - var(--fp-lift, 0px)));
+  /* Anchor at (0,0); center horizontally on the projected point and float
+     above it so the sprite glyph stays unobscured. §79e — the projected point
+     is the glyph's visible INK TOP (BattleRenderer.inkTopLiftFor), so
+     `--overlay-gap` below is literally "px above the letterform" and means the
+     same thing at every depth and letterform. It anchored on the uniform
+     half-quad line until the 79e eyeball; see inkTopLiftFor for the reversal.
+
+     §79e — BOTTOM-anchored at a fixed px gap (`-100% - gap`), replacing a
+     `-260%` translate. That percentage was of the stack's OWN height, so every
+     element that toggles (the action-progress bar, the status pip-strip)
+     changed the height and the translate multiplied that change by 2.6 before
+     it hit the screen — the whole stack jumped whenever a unit started casting
+     or picked up a status. Bottom-anchoring pins the stack's bottom edge to
+     the anchor regardless of content; combined with the HP bar being the
+     LAST child (see UnitOverlayLayer.add), everything grows UPWARD and the
+     HP bar never moves. The gap is EXACT screen px above the ink, not an
+     approximation — the ink-top anchor already carries the perspective, which
+     is what killed the 79e "cramped up close, high far away" split. Tune by
+     feel here; it is the one number that sets bar height.
+
+     §40f/§79e: --fp-scale widens a footprint-scaled destructible's bar. The
+     matching `--fp-lift` is GONE — §79d made the world anchor itself
+     footprint-scaled (`GLYPH_HALF_HEIGHT * footprint`), so the CSS lift was
+     double-counting and swamped the base gap. */
+  --overlay-gap: 10px;
+  transform: translate(-50%, calc(-100% - var(--overlay-gap)));
   width: calc(56px * var(--fp-scale, 1));
   display: flex;
   flex-direction: column;

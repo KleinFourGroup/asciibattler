@@ -5,7 +5,7 @@ import type { GridCoord } from '../core/types';
 import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
 import { isInertNeutral, type Unit } from '../sim/Unit';
-import { ANCHOR_XY, type SpriteHandle, type SpriteRenderer } from './SpriteRenderer';
+import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import { aboveAnchor } from './anchor';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
@@ -566,11 +566,14 @@ export class BattleRenderer {
     const glyph = objective.mode === 'focus' ? OBJECTIVE_MARKER_FOCUS_GLYPH : OBJECTIVE_MARKER_GLYPH;
     if (!this.objectiveMarker) {
       // Seed at the origin; updateObjectiveMarker (same frame, end of update())
-      // moves it to the real spot before it's ever drawn.
+      // moves it to the real spot before it's ever drawn. §79d2 — BASE-anchored:
+      // the X/! stands its ink on the marker position (the glyph swap below
+      // re-derives the stand line automatically).
       this.objectiveMarker = this.sprites.addSprite(
         glyph,
         OBJECTIVE_MARKER_COLOR,
         this.scratchPos.set(0, 0, 0),
+        'base',
       );
       this.sprites.updateSprite(this.objectiveMarker, { bloomIntensity: OBJECTIVE_MARKER_BLOOM });
     } else {
@@ -610,12 +613,13 @@ export class BattleRenderer {
     if (!marker || !obj || !this.world) return;
 
     if (obj.kind === 'tile') {
-      // §79d — the rally X hovers glyph-center height over its cell, lifted
-      // camera-up (like everything stacked above a ground anchor) so it hugs
-      // its cell at the screen edges too.
+      // §79d2 — the marker is base-anchored, so its INK stands
+      // OBJECTIVE_MARKER_TILE_LIFT above the cell's ground point (camera-up, so
+      // it hugs its cell at the screen edges too). No glyph-cell skirt math —
+      // the 79d2 eyeball find (the X floating a quarter-cell up) dies here.
       const pos = aboveAnchor(
         this.tileGroundPos(obj.cell),
-        GLYPH_HALF_HEIGHT + OBJECTIVE_MARKER_TILE_LIFT,
+        OBJECTIVE_MARKER_TILE_LIFT,
         this.renderer.camera,
         this.scratchPos,
       );
@@ -633,15 +637,18 @@ export class BattleRenderer {
       this.sprites.updateSprite(marker, { alpha: 0 });
       return;
     }
-    // §79d — the mark rides OBJECTIVE_MARKER_ENEMY_LIFT above the target
-    // glyph's visual CENTER, via the shared camera-up helper (this site's J3
-    // hand-rolled `setFromMatrixColumn` lift was copy #1 of the pattern the
-    // helper unifies). The target's ground anchor is live (tracks its lerp).
+    // §79d/79d2 — the mark's ink stands OBJECTIVE_MARKER_ENEMY_LIFT above the
+    // target glyph's visible INK TOP, via the shared camera-up helper (this
+    // site's J3 hand-rolled `setFromMatrixColumn` lift was copy #1 of the
+    // pattern the helper unifies). The target's ground anchor is live (tracks
+    // its lerp).
     const target = this.world.findUnit(obj.unitId);
-    const half = GLYPH_HALF_HEIGHT * (target ? footprintOf(target) : 1);
+    const inkTop = target
+      ? this.sprites.atlas.inkTopLift(target.glyph) * footprintOf(target)
+      : 2 * GLYPH_HALF_HEIGHT;
     const pos = aboveAnchor(
       anchor,
-      half + OBJECTIVE_MARKER_ENEMY_LIFT,
+      inkTop + OBJECTIVE_MARKER_ENEMY_LIFT,
       this.renderer.camera,
       anchor,
     );
@@ -673,10 +680,12 @@ export class BattleRenderer {
         id: unitId,
         position: pos.clone(),
         size: UNIT_PICK_SIZE,
-        // §79a — atlas-derived ink, measured off the same rasterization on screen.
-        ink: this.sprites.atlas.getGlyphInk(unit.glyph),
-        // §79d — unit sprites are base-anchored; the clickbox must rise with them.
-        anchor: ANCHOR_XY.base,
+        // §79a/79d2 — atlas-derived ink (padded for click feel), measured off
+        // the same rasterization on screen.
+        ink: this.sprites.atlas.getPaddedGlyphInk(unit.glyph),
+        // §79d/79d2 — unit sprites stand on their glyph's derived stand line;
+        // the clickbox must mirror the same anchor exactly.
+        anchor: { x: 0, y: this.sprites.atlas.baseAnchorY(unit.glyph) },
       });
     }
     return out;
@@ -708,8 +717,8 @@ export class BattleRenderer {
         id: unitId,
         position: pos.clone(),
         size: UNIT_PICK_SIZE * footprintOf(unit),
-        ink: this.sprites.atlas.getGlyphInk(unit.glyph),
-        anchor: ANCHOR_XY.base,
+        ink: this.sprites.atlas.getPaddedGlyphInk(unit.glyph),
+        anchor: { x: 0, y: this.sprites.atlas.baseAnchorY(unit.glyph) },
       });
     }
     return out;
@@ -985,18 +994,21 @@ export class BattleRenderer {
 
   /**
    * §79d — the visual CENTER of a unit's live glyph: its ground anchor (which
-   * tracks move lerps) lifted half the quad's height up the SCREEN. The one
-   * point FX endpoints / sparkles / the overlay follow mean by "at the unit".
-   * Null when the handle is gone (mid-teardown), like `getPosition`.
+   * tracks move lerps) lifted up the SCREEN to the middle of the VISIBLE INK
+   * (§79d2 — ink-aware, so a bolt aimed "at the unit" hits the letterform's
+   * body, not the taller empty quad's midpoint). The one point FX endpoints /
+   * sparkles mean by "at the unit". Null when the handle is gone
+   * (mid-teardown), like `getPosition`.
    */
   private unitVisualCenter(
     handle: SpriteHandle,
-    footprint: number,
+    unit: Unit,
     out: THREE.Vector3,
   ): THREE.Vector3 | null {
     const pos = this.sprites.getPosition(handle, out);
     if (!pos) return null;
-    return aboveAnchor(pos, GLYPH_HALF_HEIGHT * footprint, this.renderer.camera, pos);
+    const lift = this.sprites.atlas.inkCenterLift(unit.glyph) * footprintOf(unit);
+    return aboveAnchor(pos, lift, this.renderer.camera, pos);
   }
 
   /**
@@ -1076,16 +1088,15 @@ export class BattleRenderer {
     if (!pos) return;
     if (!this.world) return;
     const unit = this.world.findUnit(unitId);
-    // §79d — anchor at the glyph's visual TOP: the full quad height up the
-    // screen from the ground anchor. Camera-up projects to the same screen X
-    // as the anchor by construction, which is what retired the I2
-    // dual-projection workaround in UnitOverlayLayer.spawnHitsplat.
-    const top = aboveAnchor(
-      pos,
-      2 * GLYPH_HALF_HEIGHT * (unit ? footprintOf(unit) : 1),
-      this.renderer.camera,
-      pos,
-    );
+    // §79d/79d2 — anchor at the glyph's visible INK TOP (ink-aware: the number
+    // floats just above the letterform, not above the taller empty quad).
+    // Camera-up projects to the same screen X as the anchor by construction,
+    // which is what retired the I2 dual-projection workaround in
+    // UnitOverlayLayer.spawnHitsplat.
+    const lift = unit
+      ? this.sprites.atlas.inkTopLift(unit.glyph) * footprintOf(unit)
+      : 2 * GLYPH_HALF_HEIGHT;
+    const top = aboveAnchor(pos, lift, this.renderer.camera, pos);
     this.overlays.spawnHitsplat(top, text, kind, unitId);
   }
 
@@ -1140,13 +1151,13 @@ export class BattleRenderer {
     // quad up the screen), so the bolt emanates from / lands on what the player
     // sees; falls back to the cell's visual center if a handle is mid-teardown.
     const from = (
-      this.unitVisualCenter(attackerHandle, footprintOf(attacker), this.scratchPos) ??
+      this.unitVisualCenter(attackerHandle, attacker, this.scratchPos) ??
       this.cellVisualCenter(attacker.position)
     ).clone();
     const targetHandle = this.handles.get(targetId);
     const target = this.world.findUnit(targetId);
     const to = (
-      (targetHandle && target && this.unitVisualCenter(targetHandle, footprintOf(target), this.scratchPos)) ??
+      (targetHandle && target && this.unitVisualCenter(targetHandle, target, this.scratchPos)) ??
       (target ? this.cellVisualCenter(target.position) : from)
     ).clone();
     this.spawnProjectile(from, to, colorForTeam(attacker.team), undefined, 0, PROJECTILE_SECONDS, undefined, spec.size);
@@ -1172,7 +1183,7 @@ export class BattleRenderer {
     const targetHandle = this.handles.get(targetId);
     const target = this.world.findUnit(targetId);
     const toPos = (
-      (targetHandle && this.unitVisualCenter(targetHandle, target ? footprintOf(target) : 1, this.scratchPos)) ??
+      (targetHandle && target && this.unitVisualCenter(targetHandle, target, this.scratchPos)) ??
       this.cellVisualCenter(to)
     ).clone();
     this.spawnProjectile(fromPos, toPos, color, undefined, 0, CHAIN_ARC_SECONDS, undefined, PROJECTILE_SIZE);
@@ -1380,7 +1391,7 @@ export class BattleRenderer {
     const casterHandle = this.handles.get(casterId);
     // §79d — visual-center endpoints throughout (see triggerTracerFx).
     const from = (
-      (casterHandle && this.unitVisualCenter(casterHandle, footprintOf(caster), this.scratchPos)) ??
+      (casterHandle && this.unitVisualCenter(casterHandle, caster, this.scratchPos)) ??
       this.cellVisualCenter(caster.position)
     ).clone();
 
@@ -1392,16 +1403,15 @@ export class BattleRenderer {
 
     const targetHandle = targetId !== undefined ? this.handles.get(targetId) : undefined;
     const target = targetId !== undefined ? this.world.findUnit(targetId) : undefined;
-    const targetFootprint = target ? footprintOf(target) : 1;
     const to = (
-      (targetHandle && this.unitVisualCenter(targetHandle, targetFootprint, this.scratchPos)) ??
+      (targetHandle && target && this.unitVisualCenter(targetHandle, target, this.scratchPos)) ??
       (targetCell ? this.cellVisualCenter(targetCell) : from)
     ).clone();
     // The homing provider re-derives the visual center each frame — fresh
     // camera-up too, so the lob stays glued to the glyph even mid-scroll.
-    const provider = targetHandle
+    const provider = targetHandle && target
       ? (): THREE.Vector3 | null =>
-          this.unitVisualCenter(targetHandle, targetFootprint, this.homingScratch)
+          this.unitVisualCenter(targetHandle, target, this.homingScratch)
       : undefined;
     this.spawnProjectile(from, to, color, undefined, CATAPULT_ARC_HEIGHT, flightSeconds, provider);
   }
@@ -1434,8 +1444,8 @@ export class BattleRenderer {
     const targetHandle = targetId !== undefined ? this.handles.get(targetId) : undefined;
     const target = targetId !== undefined ? this.world.findUnit(targetId) : undefined;
     const at =
-      (targetHandle
-        ? this.unitVisualCenter(targetHandle, target ? footprintOf(target) : 1, this.scratchPos)?.clone()
+      (targetHandle && target
+        ? this.unitVisualCenter(targetHandle, target, this.scratchPos)?.clone()
         : undefined) ??
       (targetCell ? this.cellVisualCenter(targetCell) : undefined);
     if (at) this.spawnDud(at);
@@ -1524,9 +1534,10 @@ export class BattleRenderer {
     const handle = this.handles.get(unitId);
     if (!handle) return;
     const unit = this.world?.findUnit(unitId);
-    // §79d — the burst hugs the glyph as SEEN: visual center + the tuned
-    // camera-up nudge (SPARKLE_Y_OFFSET), with the mote fan in world XZ.
-    const center = this.unitVisualCenter(handle, unit ? footprintOf(unit) : 1, this.scratchPos);
+    if (!unit) return;
+    // §79d — the burst hugs the glyph as SEEN: the ink's visual center + the
+    // tuned camera-up nudge (SPARKLE_Y_OFFSET), with the mote fan in world XZ.
+    const center = this.unitVisualCenter(handle, unit, this.scratchPos);
     if (!center) return;
     aboveAnchor(center, SPARKLE_Y_OFFSET, this.renderer.camera, center);
     for (const [dx, dz] of SPARKLE_DIRS) {
@@ -1668,10 +1679,19 @@ export class BattleRenderer {
       const handle = this.handles.get(unitId);
       const unit = world.findUnit(unitId);
       if (!handle || !unit) continue;
-      // §79d — follow the glyph's visual CENTER (ground anchor + half the quad
-      // up the screen), so the CSS stack sits on the glyph at any board edge.
-      const center = this.unitVisualCenter(handle, footprintOf(unit), this.scratchPos);
-      if (!center) continue;
+      // §79d — follow the glyph's visual center so the CSS stack sits on the
+      // glyph at any board edge. §79d2 — deliberately the UNIFORM half-quad
+      // lift, NOT the ink-aware center: bars/badges across a row of mixed
+      // glyphs stay on one line (scannable HP row), rather than bobbing with
+      // each letterform's ink height.
+      const spritePos = this.sprites.getPosition(handle, this.scratchPos);
+      if (!spritePos) continue;
+      const center = aboveAnchor(
+        spritePos,
+        GLYPH_HALF_HEIGHT * footprintOf(unit),
+        this.renderer.camera,
+        spritePos,
+      );
 
       this.overlays.updatePosition(overlay, center);
       this.updateProgressFill(unitId, unit, overlay, now);
@@ -1953,10 +1973,11 @@ const OBJECTIVE_MARKER_BLOOM = 0.6;
 const OBJECTIVE_MARKER_TILE_SIZE = 1.6;
 const OBJECTIVE_MARKER_ENEMY_SIZE = 0.5;
 const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
-/** Camera-up distance the enemy mark rides above the target glyph's visual
- *  CENTER (§79d). ~0.6 clears the top half of a unit-size (1.0) billboard so
- *  the X sits just atop it. */
-const OBJECTIVE_MARKER_ENEMY_LIFT = 0.6;
+/** §79d2 — the camera-up GAP between the target glyph's visible INK TOP and
+ *  the enemy mark's own ink (both ends are ink-true now: the target's top via
+ *  `inkTopLift`, the mark via its base anchor). 0.2 reproduces the pre-79d2
+ *  look, where 0.6-above-center worked out to ≈0.19 above the ink. */
+const OBJECTIVE_MARKER_ENEMY_LIFT = 0.2;
 
 /**
  * Grid → world coordinates (XZ only). Cells are 1×1; the grid is centered

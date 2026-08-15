@@ -3,7 +3,10 @@ import {
   GLYPHS,
   ATLAS_CELL_BUDGET,
   FULL_GLYPH_INK,
+  INK_PAD_PX,
+  baseAnchorYFor,
   inkRectFromRgba,
+  padInk,
   type GlyphInk,
 } from './glyphs';
 
@@ -73,17 +76,23 @@ export class FontAtlas {
   readonly atlasHeightPx = ATLAS_H;
 
   private readonly uvByGlyph: ReadonlyMap<string, GlyphUV>;
-  /** §79a — per-glyph ink bboxes measured off the rasterized cells at build. */
+  /** §79a/§79d2 — per-glyph RAW ink bboxes measured off the rasterized cells
+   *  at build (no padding — see `getPaddedGlyphInk` for the clickbox rects). */
   private readonly inkByGlyph: ReadonlyMap<string, GlyphInk>;
+  /** §79d2 — the font's alphabetic baseline as a normalized y-up cell coord
+   *  (~0.26 for JetBrains Mono at 56/64): the stand line for `baseAnchorY`. */
+  private readonly baselineY: number;
 
   private constructor(
     texture: THREE.CanvasTexture,
     uvByGlyph: Map<string, GlyphUV>,
     inkByGlyph: Map<string, GlyphInk>,
+    baselineY: number,
   ) {
     this.texture = texture;
     this.uvByGlyph = uvByGlyph;
     this.inkByGlyph = inkByGlyph;
+    this.baselineY = baselineY;
   }
 
   static async create(): Promise<FontAtlas> {
@@ -153,6 +162,21 @@ export class FontAtlas {
       });
     }
 
+    // §79d2 — measure the font's alphabetic baseline once, in the same
+    // font/baseline configuration the cells were drawn with. TextMetrics'
+    // `alphabeticBaseline` is the signed distance from the 'middle' anchor to
+    // the alphabetic baseline (negative = below the anchor in canvas terms),
+    // so the baseline's normalized y-up cell coordinate is
+    // (CELL/2 + alphabeticBaseline) / CELL (~0.26 for JetBrains Mono 56/64).
+    // Fallback for engines without the field: the measured ink bottom of 'X'
+    // (a guaranteed NON_UNIT_GLYPHS cap whose ink stands exactly on the
+    // baseline) — same number by construction.
+    const metrics = ctx.measureText('X');
+    const alphabetic = metrics.alphabeticBaseline;
+    const baselineY = Number.isFinite(alphabetic)
+      ? (CELL_PX / 2 + alphabetic) / CELL_PX
+      : (inkByGlyph.get('X') ?? FULL_GLYPH_INK).y0;
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     // Bilinear filtering plays well with the eventual palette-quantization
@@ -162,17 +186,52 @@ export class FontAtlas {
     texture.generateMipmaps = false;
     texture.needsUpdate = true;
 
-    return new FontAtlas(texture, uvByGlyph, inkByGlyph);
+    return new FontAtlas(texture, uvByGlyph, inkByGlyph, baselineY);
   }
 
   /**
-   * §79a — the glyph's measured ink bbox (normalized, y-up — see `GlyphInk`),
-   * or `FULL_GLYPH_INK` for a glyph the atlas hasn't measured. Fallback rather
-   * than throw (unlike `getGlyphUV`): a missing ink rect degrades to the
-   * full-quad clickbox, not a crash.
+   * §79a — the glyph's measured RAW ink bbox (normalized, y-up — see
+   * `GlyphInk`), or `FULL_GLYPH_INK` for a glyph the atlas hasn't measured.
+   * Fallback rather than throw (unlike `getGlyphUV`): a missing ink rect
+   * degrades to the full quad, not a crash. Anchoring/lift math reads THIS;
+   * clickboxes read `getPaddedGlyphInk`.
    */
   getGlyphInk(glyph: string): GlyphInk {
     return this.inkByGlyph.get(glyph) ?? FULL_GLYPH_INK;
+  }
+
+  /** §79d2 — the ink bbox widened by `INK_PAD_PX` for click feel (the 79a
+   *  rider), for PICK candidates only. */
+  getPaddedGlyphInk(glyph: string): GlyphInk {
+    return padInk(this.getGlyphInk(glyph), INK_PAD_PX / CELL_PX);
+  }
+
+  /**
+   * §79d2 — the quad-local anchor y a BASE-anchored sprite of `glyph` stands
+   * on: the font baseline for letterforms, the quad bottom for floor-touching
+   * blocks (and for unmeasured glyphs, via the `FULL_GLYPH_INK` fallback).
+   * The rule itself is the pure `baseAnchorYFor` (glyphs.ts, headless-tested);
+   * this just feeds it the measured data. SpriteRenderer derives every base
+   * sprite's anchor through here — including on a glyph swap.
+   */
+  baseAnchorY(glyph: string): number {
+    return baseAnchorYFor(this.getGlyphInk(glyph), this.baselineY);
+  }
+
+  /** §79d2 — camera-up lift (world units at size 1; callers scale by
+   *  footprint) from a base-anchored sprite's ANCHOR to its ink's visual
+   *  CENTER. What "at the unit" means for FX endpoints and sparkles. */
+  inkCenterLift(glyph: string): number {
+    const ink = this.getGlyphInk(glyph);
+    return (ink.y0 + ink.y1) / 2 - 0.5 - this.baseAnchorY(glyph);
+  }
+
+  /** §79d2 — camera-up lift from a base-anchored sprite's ANCHOR to its ink's
+   *  visual TOP. Where a hitsplat floats: just above the visible glyph, not
+   *  above the (taller) empty quad. */
+  inkTopLift(glyph: string): number {
+    const ink = this.getGlyphInk(glyph);
+    return ink.y1 - 0.5 - this.baseAnchorY(glyph);
   }
 
   getGlyphUV(glyph: string): GlyphUV {

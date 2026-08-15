@@ -138,14 +138,16 @@ export const INK_PAD_PX = 3;
  * glyph's cell at build time. The canvas→GL y flip happens here, mirroring
  * `getGlyphUV`'s convention. An all-transparent cell returns `FULL_GLYPH_INK`
  * (no ink to hug — keep the full-quad behavior rather than a degenerate box).
- * `padPx` widens the bbox on every side (clamped to the cell) for click feel.
+ *
+ * §79d2 — returns the RAW bbox (no padding): the raw rect is what anchoring
+ * and baseline classification consume. The +INK_PAD_PX click feel moved to
+ * `padInk`, applied where PICK candidates are built.
  */
 export function inkRectFromRgba(
   data: ArrayLike<number>,
   width: number,
   height: number,
   threshold = INK_ALPHA_THRESHOLD,
-  padPx = INK_PAD_PX,
 ): GlyphInk {
   let minX = width;
   let minY = height;
@@ -163,9 +165,49 @@ export function inkRectFromRgba(
   }
   if (maxX < 0) return FULL_GLYPH_INK;
   return {
-    x0: Math.max(0, (minX - padPx) / width),
-    y0: Math.max(0, 1 - (maxY + 1 + padPx) / height), // canvas bottom row → y-up bottom edge
-    x1: Math.min(1, (maxX + 1 + padPx) / width),
-    y1: Math.min(1, 1 - (minY - padPx) / height), // canvas top row → y-up top edge
+    x0: minX / width,
+    y0: 1 - (maxY + 1) / height, // canvas bottom row → y-up bottom edge
+    x1: (maxX + 1) / width,
+    y1: 1 - minY / height, // canvas top row → y-up top edge
   };
+}
+
+/**
+ * §79d2 — widen an ink rect by `pad` (normalized cell fraction; the default is
+ * `INK_PAD_PX` of a `cellPx` cell) on every side, clamped to the cell. The
+ * CLICKBOX half of the 79a rider: pick candidates get the breathing room, while
+ * anchoring reads the raw rect. `FULL_GLYPH_INK` passes through untouched.
+ */
+export function padInk(ink: GlyphInk, pad: number): GlyphInk {
+  if (ink === FULL_GLYPH_INK || pad === 0) return ink;
+  return {
+    x0: Math.max(0, ink.x0 - pad),
+    y0: Math.max(0, ink.y0 - pad),
+    x1: Math.min(1, ink.x1 + pad),
+    y1: Math.min(1, ink.y1 + pad),
+  };
+}
+
+/**
+ * §79d2 — the BASE-anchor quad-local y for a glyph: where its "stand line"
+ * sits, in quad coordinates ([-0.5, 0.5], y up). The rule (user-signed at the
+ * 79d2 design talk — the terminal-faithful option):
+ *
+ *  - Ink touching the CELL FLOOR (`y0 === 0` — the block-drawing family: `▄`
+ *    rubble, `╥`) stands on its ink bottom → anchor at the quad bottom,
+ *    byte-identical to the fixed base anchor.
+ *  - EVERYTHING ELSE stands on the font's alphabetic BASELINE (measured once
+ *    at atlas build via TextMetrics) — so a row of mixed glyphs reads as one
+ *    line of terminal text: caps and x-height letters stand their ink on the
+ *    tile (their ink bottom IS the baseline), while the census's lone
+ *    descender unit glyph (`g`, plus the `@` root marker) dips its tail below
+ *    the line like text on ruled paper, instead of standing tail-tip-on-tile
+ *    with a raised bowl.
+ *
+ * A glyph the atlas hasn't measured gets `FULL_GLYPH_INK` (y0 = 0) and lands
+ * in the floor branch → the plain quad-bottom anchor, the safe fallback.
+ * Pure — headless-tested; `FontAtlas.baseAnchorY` feeds it the measured data.
+ */
+export function baseAnchorYFor(ink: GlyphInk, baselineY: number): number {
+  return (ink.y0 === 0 ? 0 : baselineY) - 0.5;
 }

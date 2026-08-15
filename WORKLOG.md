@@ -3472,3 +3472,53 @@ Expected visual deltas for the 79e eyeball: glyphs ride slightly
 higher (base ON the tile, no more front-face sink — the 79b
 second finding), bars/badges likewise, big-rubble bars may want a
 `FOOTPRINT_LIFT_PX` re-tune.
+
+### 79d2 — baseline-anchored glyphs (2026-08-14, INSERTED)
+
+**The find (user eyeball, two screenshots):** the rally X floated
+at/above its tile's top edge. Diagnosis (user's hypothesis,
+confirmed by the 79a instrument): the GLYPH-CELL INK SKIRT —
+`FontAtlas` rasterizes 56px in a 64px cell, `textBaseline:
+'middle'`, so a letterform's visible ink starts ~25% up the quad
+(census over all 47 registered glyphs: 42 stand on the baseline
+cluster y≈0.25–0.266; `g` is the LONE descender unit glyph, plus
+`@` and HUD `/`; `▄`/`╥` touch the floor). A base-anchored QUAD
+stood on the tile; the INK hovered a quarter-cell up — and
+pre-79d the ~14px front-face sink had partially MASKED it (two
+errors half-canceling).
+
+**The design fork (talked through before building, user-signed):**
+pure ink-bottom anchoring would stand `g`'s tail-tip on the tile
+and raise its bowl off the shared line — breaking the terminal
+look. Signed rule instead — **the BASELINE rule**: letters stand
+on the font's alphabetic baseline (measured ONCE at atlas build
+via TextMetrics, ≈0.261, with the ink-bottom-of-'X' fallback);
+floor-touching blocks (ink.y0 = 0, incl. the unmeasured-glyph
+fallback) stay flush on the quad bottom. Descenders dip below the
+line like text on ruled paper. Pure rule = `baseAnchorYFor`
+(glyphs.ts, headless-tested).
+
+**Landed:** the raw/padded ink split (`inkRectFromRgba` returns
+RAW; `padInk` applies the 79a +3px rider at PICK-candidate build
+only — anchoring reads raw) · `FontAtlas.baseAnchorY` /
+`inkCenterLift` / `inkTopLift` · SpriteRenderer stores the anchor
+MODE per slot and derives the vec2 at every glyph write (a
+base sprite's `updateSprite({glyph})` re-derives its stand line —
+the marker's X⇄! swap can't go stale; mode array rides
+compaction + the depth-sort repack, both pinned) · the rally X is
+now BASE-anchored at `ground + TILE_LIFT` (the screenshot bug
+dies) · the enemy mark rides `inkTopLift(target) + 0.2` (the
+constant re-anchored: old 0.6-above-center ≈ 0.19 above ink) ·
+hitsplats float at the INK top · FX endpoints/sparkles at the INK
+center · overlays DELIBERATELY keep the uniform half-quad line
+(bars scannable across mixed glyphs, not bobbing per letterform).
+
+**Verification:** tests 2635→2640 + typecheck clean. Browser:
+baseline measured 0.261 · anchors s/X/g = −0.239 (one shared
+line, descender included) vs ▄/unmeasured = −0.5 · live battle:
+14/14 sprite anchor attrs equal `baseAnchorY(glyph)` · 8/8 picks
+at ink centers · a click 0.15 below the stand line misses (at
+the ground point it HITS — correct: raw ink dips ~0.011 under
+the baseline + the 3px pad) · fresh boot clean (the ANCHOR_XY
+console errors were retained history from mid-edit HMR states).
+Native eyeball → 79e/79g.

@@ -38,25 +38,20 @@ export interface SpriteHandle {
  * §79c — where a sprite's quad sits relative to its anchor (`instancePosition`):
  *
  *  - `'center'` — the quad CENTERS on the anchor (the historical behavior;
- *    right for things that float AT a point: projectiles, markers, motes).
- *  - `'base'` — the quad's BOTTOM EDGE sits on the anchor, rising screen-up
- *    (right for things that STAND ON a point: unit glyphs on their tile).
+ *    right for things that float AT a point: projectiles, motes).
+ *  - `'base'` — the glyph STANDS on the anchor: its quad-local STAND LINE
+ *    (§79d2 — the font baseline for letterforms, the quad bottom for
+ *    floor-touching blocks; derived per glyph via `FontAtlas.baseAnchorY`)
+ *    coincides with the anchor, the glyph rising screen-up from it.
  *
  * The offset is applied in VIEW space by the vertex shader, so a base-anchored
  * glyph rises straight up the screen from its anchor's projection — never the
  * off-axis diagonal a world-Y lift produces under the pitched camera (the
- * I2/J3/79b class). Declared at `addSprite`; a sprite's anchor mode is part of
- * what it IS, not per-frame state.
+ * I2/J3/79b class). Declared at `addSprite`; the MODE is fixed for the
+ * sprite's life, but the derived offset re-derives on a glyph swap
+ * (`updateSprite({glyph})`) so a base sprite never stands on a stale line.
  */
 export type SpriteAnchor = 'center' | 'base';
-
-/** Quad-local anchor coordinates by mode (quad spans [-0.5, 0.5]²). Exported
- *  for the pick hit-test (`pick.ts`), which must mirror the shader exactly. */
-export const ANCHOR_XY: Readonly<Record<SpriteAnchor, { readonly x: number; readonly y: number }>> =
-  {
-    center: { x: 0, y: 0 },
-    base: { x: 0, y: -0.5 },
-  };
 
 const DEFAULT_CAPACITY = 1024;
 
@@ -110,6 +105,12 @@ export class SpriteRenderer {
   private nextHandleId = 1;
   private readonly slotByHandle = new Map<number, number>();
   private readonly handleAtSlot: number[] = [];
+  /** §79d2 — each live slot's anchor MODE, so a glyph swap on a base-anchored
+   *  sprite re-derives its stand line. Follows the slot lifecycle exactly like
+   *  `handleAtSlot` (compaction swap + depth-sort repack). */
+  private readonly anchorModeAtSlot: SpriteAnchor[] = [];
+  /** §79d2 — depth-sort scratch for the mode array (mirrors `_handleScratch`). */
+  private readonly _modeScratch: SpriteAnchor[] = [];
 
   // Scratch THREE.Vector3 to avoid allocating per addSprite.
   private static readonly _scratchColor = new THREE.Color();
@@ -228,13 +229,14 @@ export class SpriteRenderer {
     const slot = this.activeCount;
     const id = this.nextHandleId++;
 
+    // Mode first — writeGlyph derives the anchor offset from it (§79d2).
+    this.anchorModeAtSlot[slot] = anchor;
     this.writePosition(slot, position);
     this.writeGlyph(slot, glyph);
     this.writeColor(slot, color);
     this.writeAlpha(slot, 1);
     this.writeBloomIntensity(slot, 0.15);
     this.writeSize(slot, 1);
-    this.writeAnchor(slot, anchor);
 
     this.slotByHandle.set(id, slot);
     this.handleAtSlot[slot] = id;
@@ -286,10 +288,12 @@ export class SpriteRenderer {
       const movedId = this.handleAtSlot[lastSlot]!;
       this.slotByHandle.set(movedId, slot);
       this.handleAtSlot[slot] = movedId;
+      this.anchorModeAtSlot[slot] = this.anchorModeAtSlot[lastSlot]!;
     }
 
     this.slotByHandle.delete(handle.id);
     this.handleAtSlot.pop();
+    this.anchorModeAtSlot.pop();
     this.activeCount--;
     this.geometry.instanceCount = this.activeCount;
   }
@@ -384,6 +388,11 @@ export class SpriteRenderer {
       this.handleAtSlot[j] = h;
       this.slotByHandle.set(h, j);
     }
+    // §79d2 — the anchor-mode array rides the same permutation.
+    const modes = this._modeScratch;
+    modes.length = n;
+    for (let j = 0; j < n; j++) modes[j] = this.anchorModeAtSlot[order[j]!]!;
+    for (let j = 0; j < n; j++) this.anchorModeAtSlot[j] = modes[j]!;
   }
 
   /**
@@ -432,6 +441,14 @@ export class SpriteRenderer {
     arr[slot * 4 + 2] = uv.u1;
     arr[slot * 4 + 3] = uv.v1;
     this.aGlyphUV.needsUpdate = true;
+    // §79d2 — the anchor offset is (mode, glyph)-derived, so every glyph write
+    // (add OR swap) refreshes it: 'center' = (0, 0); 'base' = the glyph's
+    // stand line (font baseline / block floor) from the atlas.
+    const mode = this.anchorModeAtSlot[slot] ?? 'center';
+    const anchorArr = this.aAnchor.array as Float32Array;
+    anchorArr[slot * 2] = 0;
+    anchorArr[slot * 2 + 1] = mode === 'base' ? this.atlas.baseAnchorY(glyph) : 0;
+    this.aAnchor.needsUpdate = true;
   }
 
   private writeColor(slot: number, color: THREE.ColorRepresentation): void {
@@ -461,13 +478,6 @@ export class SpriteRenderer {
     this.aSize.needsUpdate = true;
   }
 
-  private writeAnchor(slot: number, anchor: SpriteAnchor): void {
-    const a = ANCHOR_XY[anchor];
-    const arr = this.aAnchor.array as Float32Array;
-    arr[slot * 2] = a.x;
-    arr[slot * 2 + 1] = a.y;
-    this.aAnchor.needsUpdate = true;
-  }
 
   /**
    * Copy every per-instance attribute from one slot to another. Used by

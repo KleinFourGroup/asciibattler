@@ -306,6 +306,11 @@ render-only throughout):
 - [x] 79d — ✅ 2026-08-14: the flip landed off the 13-row audit
   table; drift 9.1px→0.0000px measured live, 8/8 picks, I2+J3
   workarounds retired into `aboveAnchor` (worklog §79d)
+- [x] 79d2 — ✅ 2026-08-14, INSERTED at the user's eyeball find
+  (the glyph-cell ink skirt — the floating X): the BASELINE anchor
+  rule landed (letters on the measured baseline 0.261, blocks
+  flush, glyph-swap re-derivation) + the raw/padded ink split;
+  ink-true marker/hitsplat/FX lifts (worklog §79d2)
 - [ ] 79e — native eyeball of the anchor rework + constant
   re-tunes (base-flush, marker/hitsplat lifts)
 - [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;

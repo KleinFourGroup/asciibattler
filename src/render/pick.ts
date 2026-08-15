@@ -14,8 +14,8 @@ export interface PickCandidate {
    *  clickbox hugs the visible glyph rather than the empty full quad. Omitted ⇒
    *  the full quad (`FULL_GLYPH_INK`) — byte-identical to the pre-ink behavior. */
   readonly ink?: GlyphInk;
-  /** §79c — the quad-local anchor point (`ANCHOR_XY[mode]` in SpriteRenderer;
-   *  quad spans [-0.5, 0.5]²) the candidate's sprite was added with. The
+  /** §79c/§79d2 — the quad-local anchor point (`FontAtlas.baseAnchorY` for a
+   *  base sprite; quad spans [-0.5, 0.5]²) the candidate's sprite carries. The
    *  hit-test mirrors the shader: the quad sits at `position`'s view-space
    *  projection offset by `-anchor·size`, so a base-anchored glyph's clickbox
    *  rises above its ground anchor exactly as the visible quad does. Omitted ⇒

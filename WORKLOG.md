@@ -3543,3 +3543,18 @@ multi-tile bodies (3×3 + 2×2) at exactly near-row-center anchors.
 Held back deliberately: per-cell glyph tiling (walks back §39d's
 one-scaled-glyph) — only if the eyeball still reads ambiguous;
 FOOTPRINT_LIFT_PX re-tune rides the 79e pass.
+
+**79d2 rider 2 (user diagnosis, 2026-08-14): near-row MAX height.**
+Still clipping after rider 1 — because the anchor's Y read the
+CORNER cell's terrain height, and the height profile varies per
+cell: a TALLER front-row neighbor's tile-top rose above the base
+line while its front half sat nearer in depth → bite (live data:
+one 3×3's corner at −0.201 vs a row neighbor at −0.053 — a
+0.15-unit bite, matching the screenshot). The user called the fix
+exactly: Y = the MAX tile-top height across the near row's cells —
+at the row max, every nearer front-row surface projects BELOW the
+base line, so the self-clip is impossible again. Verified live on
+?layout=rubbleQuarry: 5/5 multi-tile bodies anchor at their row
+max. (Genuinely-in-front TALL terrain outside the footprint can
+still occlude a body's feet — that's correct occlusion, standing
+behind a ridge, and applies to 1×1 units equally.)

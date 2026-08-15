@@ -1033,6 +1033,18 @@ export class BattleRenderer {
     const pos = this.tileGroundPos(corner);
     if (footprint === 1) return pos;
     pos.x += (footprint - 1) / 2;
+    // §79d2 rider 2 (user diagnosis) — Y = the MAX tile-top height across the
+    // near row's cells, not the corner's. The terrain height profile varies
+    // per cell, so a TALLER front-row tile's top rises above a corner-height
+    // base line while its front half sits nearer in depth → it bites the slab
+    // bottom. At the row max, every nearer front-row surface projects BELOW
+    // the base line — the self-clip is impossible again.
+    for (let i = 1; i < footprint; i++) {
+      const cell = { x: corner.x + i, y: corner.y };
+      const kind = this.world!.tileGrid.kindAt(cell);
+      const h = this.terrain.heightAt(cell.x, cell.y, kind);
+      if (h > pos.y) pos.y = h;
+    }
     return pos;
   }
 

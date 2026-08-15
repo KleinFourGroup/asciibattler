@@ -315,8 +315,13 @@ render-only throughout):
   (no marker re-tune); the bar pass went structural — churn killed
   + `FOOTPRINT_LIFT_PX` retired + ⚠ the ink-top anchor REVERSES
   §79d2's uniform-line rule, gap exact 10px (worklog §79e)
-- [ ] 79f — font/style-axis scoping note → WORKLOG §79 (docs-only;
-  closes with a build-here-or-defer-to-§82 recommendation)
+- [x] 79f — ✅ 2026-08-15: DEFER the style axis (the Phase-I
+  "revisit when units COLLIDE" trigger has NOT fired — 26 distinct
+  glyphs, 0 combatant collisions, 29 letters free); §82's real
+  constraint is the 47/48 atlas GRID = a ~5-line 2-constant bump,
+  not a phase. Two finds: `glyph` is serialized ⇒ build the axis
+  DERIVE-ONLY for no bump · ⚠ `╥`/`▄` render from the OS fallback
+  font (no JBM subset covers them) → robustness audit (worklog §79f)
 - [ ] 79g — THE exit eyeball (edge glyphs sit their tiles at
   native res, user-confirmed) + the two TODO closes + docs close
 

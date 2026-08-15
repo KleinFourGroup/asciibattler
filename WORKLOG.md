@@ -3642,3 +3642,96 @@ error-free. Native eyeball: user-signed 2026-08-15 ("looks great to
 me now"). Probe note: the §79d aspect-NaN quirk recurs — the
 preview pane boots 0×0, so `resize_window` + a `resize` event
 before projecting anything.
+
+### 79f — font/style-axis SCOPING (2026-08-15, docs-only)
+
+The §76f rider: reopen the archived Phase-I font/style deferral
+([archive/post-h-roadmap.md](archive/post-h-roadmap.md) §"What
+we're explicitly NOT doing yet"), scoped with the §82 boss wave in
+view. **Recommendation: DEFER the style axis. Its trigger has not
+fired, and the thing §82 actually needs is a 2-constant atlas-grid
+bump, not a glyph-layer investment.** Details below; two findings
+the card didn't carry.
+
+**Premise re-verification (step zero).** All four carried facts
+CONFIRMED: only `latin-400` loads ([main.ts:3](src/main.ts:3), the
+lone import) · FontAtlas explicitly `fonts.load`s the exact face
+before `fonts.ready` and rasterizing
+([FontAtlas.ts:116](src/render/FontAtlas.ts:116) — the docblock
+explains why `ready` alone bakes the serif fallback) · atlas
+**47/48** (21 `NON_UNIT_GLYPHS` + 26 distinct catalog glyphs;
+`ATLAS_CELL_BUDGET = 48`) · the style axis proper = `glyphStyle` on
+UnitDef + a (char,style)-keyed atlas + budget accounting + editor
+arm.
+
+**The trigger test — NOT fired.** The Phase-I deferral's condition
+was explicit: *"Revisit when the next wave of unit types actually
+collides."* Measured against the catalog: 30 unit defs → **26
+distinct glyphs, zero combatant collisions**. The only shared
+glyphs are deliberate neutral variants (`#` wall/wall_destructible,
+`╥` half_cover ×2, `▄` rubble ×3) — one visual identity per
+material, not a collision. **29 of 52 letters are still unused.**
+The §76 wave strained the pool by consuming case-pairs as distinct
+units (M/m, A/a, R/r, B/b, C/c, G/g, H/h — 7 pairs), which is the
+legibility strain worth watching, but it is not the stated trigger.
+
+**The real §82 constraint is the atlas GRID, not the font axis.**
+One free cell. A boss wave needs several. That fix is two
+constants — `COLS`/`ROWS` in FontAtlas.ts + `ATLAS_CELL_BUDGET` in
+glyphs.ts (8×6 = 48 → e.g. 8×10 = 80, a 512×640 texture) — already
+fenced by three independent guards: the boot throw in
+`FontAtlas.create`, the FontAtlas.test.ts budget assert, and the
+archetype editor's `atlasCellsFor` Save block. **~5 lines, not a
+phase.** Do it when §82 needs the cells; it needs no scoping round.
+
+⭐ **The style axis is CHEAP in cells and expensive in plumbing.**
+Worth correcting a natural assumption: a (char,style)-keyed atlas
+does NOT multiply the budget by the style count. It costs one cell
+per (char,style) COMBINATION ACTUALLY USED — so 30 units each
+declaring one style still occupy ~30 cells. The axis's value is
+precisely that it lets the same LETTER serve two units (`M`
+regular = mercenary, `M` heavy = a boss variant) without spending a
+new letter. The cost is all plumbing: UnitDef schema + zod loader +
+atlas keying + editor arm + budget accounting.
+
+⚠ **Finding 1 (new): `glyph` IS serialized**
+([World.ts:343](src/sim/World.ts:343), `UnitSnapshot.glyph`), so a
+`glyphStyle` SIBLING there would bump WorldSnapshot. It needn't be
+one: style is archetype-derivable, so the renderer can read it at
+CALL time off the catalog exactly as `glyphForArchetype` already
+does (gotcha #114 / the derive-don't-cache doctrine) and the axis
+ships with **NO snapshot bump**. Whoever builds it should take the
+derive-only shape deliberately — the serialized `unit.glyph` is
+itself redundant with the catalog, pre-existing debt, and NOT to be
+widened. (Recording the bump prediction per the kickoff rule: the
+serialized-sibling shape bumps, the derive-only shape does not.)
+
+⚠⚠ **Finding 2 (new, unrelated to the rider, ROBUSTNESS): two of
+the 47 glyphs are not in the loaded font.** Empirically measured
+in-browser (render each char with `'JetBrains Mono', serif` vs
+`…, sans-serif` and diff the rasterized alpha — identical ⇒ the
+webfont supplied it, different ⇒ fallback): 45/47 come from
+JetBrains Mono; **`╥` (U+2565) and `▄` (U+2584) come from the OS
+fallback chain.** Not fixable by adding a subset — fontsource ships
+only latin/latin-ext/greek/cyrillic/cyrillic-ext/vietnamese for
+this family, and box-drawing/block-elements are in none of them
+(the upstream JetBrains Mono TTF does carry them, so shipping a
+self-subset font file is the fix, not another `@fontsource` import).
+Why it matters concretely: those two glyphs are EVERY wall,
+half-cover and rubble entity, and §79d2's stand-line rule branches
+on `ink.y0 === 0` — an exact equality on measured ink
+([glyphs.ts:213](src/render/glyphs.ts:213)). Measured here both are
+exactly 0 → floor branch → flush, correct. On a machine whose
+fallback renders either block with even one transparent pixel row
+at the cell bottom, it falls into the BASELINE branch instead and
+that entity anchors on the text baseline — a visible regression
+reproducible only on someone else's machine. **Routed to the
+post-C5 UI style & robustness audit** (META-ROADMAP §Interstitials,
+already planned); TODO watch item filed. Deliberately NOT fixed
+here — 79f is docs-only and this is not the rider's subject.
+
+**Recommendation, in one line:** defer the style axis until a
+combatant collision actually forces it (re-test the trigger at the
+§82 boss wave — the census above is the cheap re-run); bump the
+atlas grid as a ~5-line chore when §82 needs cells; fix the
+fallback-font gap in the robustness audit, where it belongs.

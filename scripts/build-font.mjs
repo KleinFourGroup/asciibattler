@@ -8,11 +8,14 @@
  * rubble entity, silently rendered from whatever the OS substituted (measured
  * at §79f: 45 of 47 atlas glyphs came from JetBrains Mono, those two did not).
  * That is a correctness bug, not a cosmetic one: §79d2's stand-line rule
- * branches on an exact `ink.y0 === 0` measured off the rasterized cell, so a
- * fallback with one transparent pixel row at the cell bottom flips those
- * entities from "flush on the tile" to "on the text baseline" — a regression
- * reproducible only on someone else's machine. Subsetting the UPSTREAM font
- * (which does carry both, verified below) makes the render deterministic.
+ * branches on the measured ink bottom of the rasterized cell, so a fallback
+ * font's different letterform geometry silently moves those entities' stand
+ * line — a regression reproducible only on someone else's machine. Subsetting
+ * the UPSTREAM font (which does carry both, verified below) pins the font's
+ * PROVENANCE. It does not pin rasterization — per-platform canvas rasterizers
+ * can still shift a measured ink edge by a pixel row at the alpha threshold
+ * (§79g measured exactly that between two builds of the same face); the
+ * `INK_FLOOR_EPSILON` tolerance in glyphs.ts (§79-post) absorbs that class.
  *
  * MULTI-FACE BY DESIGN. `FACES` is a list with one entry today. §79f decided
  * NOT to build the font/style axis (its trigger hasn't fired — see WORKLOG

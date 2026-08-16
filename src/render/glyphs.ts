@@ -191,13 +191,33 @@ export function padInk(ink: GlyphInk, pad: number): GlyphInk {
 }
 
 /**
+ * §79-post — the floor-vs-baseline classification tolerance for
+ * `baseAnchorYFor`, in normalized cell height (3 pixel rows of the `CELL_PX`
+ * 64 atlas cell). §79d2 shipped this as an exact `ink.y0 === 0`, which made
+ * the stand line one-transparent-pixel-row-sensitive: §79g measured two
+ * builds of the SAME face rasterizing an ink edge one row apart at the
+ * `INK_ALPHA_THRESHOLD` boundary, and a platform rasterizer doing that at a
+ * block glyph's bottom row would silently flip walls/rubble from "flush on
+ * the tile" to "on the text baseline". Ink measurements quantize to whole
+ * rows, so the tolerance is sized in rows off the 2026-08-16 census (the
+ * full 47-glyph set, this machine): the floor family (`▄`, `╥`) at exactly
+ * 0; the nearest letterform ink bottoms `@`/`g` at 7 rows (0.109), `/` at
+ * 11, the baseline cluster at 16–17. 3 rows absorbs the observed one-row
+ * variance class twice over while keeping a 4-row guard band below the
+ * nearest real letterform.
+ */
+export const INK_FLOOR_EPSILON = 3 / 64;
+
+/**
  * §79d2 — the BASE-anchor quad-local y for a glyph: where its "stand line"
  * sits, in quad coordinates ([-0.5, 0.5], y up). The rule (user-signed at the
  * 79d2 design talk — the terminal-faithful option):
  *
- *  - Ink touching the CELL FLOOR (`y0 === 0` — the block-drawing family: `▄`
- *    rubble, `╥`) stands on its ink bottom → anchor at the quad bottom,
- *    byte-identical to the fixed base anchor.
+ *  - Ink at the CELL FLOOR (`y0 < INK_FLOOR_EPSILON` — the block-drawing
+ *    family: `▄` rubble, `╥`) stands on its ink bottom → anchor at the quad
+ *    bottom, byte-identical to the fixed base anchor. (§79-post widened the
+ *    original exact `=== 0` by the epsilon — classification robustness only;
+ *    the anchor value itself is unchanged.)
  *  - EVERYTHING ELSE stands on the font's alphabetic BASELINE (measured once
  *    at atlas build via TextMetrics) — so a row of mixed glyphs reads as one
  *    line of terminal text: caps and x-height letters stand their ink on the
@@ -211,5 +231,5 @@ export function padInk(ink: GlyphInk, pad: number): GlyphInk {
  * Pure — headless-tested; `FontAtlas.baseAnchorY` feeds it the measured data.
  */
 export function baseAnchorYFor(ink: GlyphInk, baselineY: number): number {
-  return (ink.y0 === 0 ? 0 : baselineY) - 0.5;
+  return (ink.y0 < INK_FLOOR_EPSILON ? 0 : baselineY) - 0.5;
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   FULL_GLYPH_INK,
   INK_ALPHA_THRESHOLD,
+  INK_FLOOR_EPSILON,
   INK_PAD_PX,
   baseAnchorYFor,
   inkRectFromRgba,
@@ -125,9 +126,29 @@ describe('baseAnchorYFor (§79d2 — the baseline anchor rule)', () => {
     );
   });
 
-  it('floor-touching blocks (ink.y0 === 0) stay flush on the quad bottom', () => {
+  it('floor-touching blocks (ink.y0 = 0) stay flush on the quad bottom', () => {
     // `▄` rubble / `╥`: byte-identical to the fixed base anchor.
     expect(baseAnchorYFor({ x0: 0.17, y0: 0, x1: 0.83, y1: 0.53 }, BASELINE)).toBe(-0.5);
+  });
+
+  it('near-floor ink (a rasterizer that lost a bottom row or two) still classifies FLOOR', () => {
+    // §79-post — the robustness the epsilon buys: §79g observed two builds of
+    // the same face rasterizing an ink edge ONE row apart at the alpha
+    // threshold, so a block glyph a row or two shy of the floor must not flip
+    // onto the baseline. Rows quantize to 1/64 of the 64px atlas cell.
+    const ROW = 1 / 64;
+    expect(baseAnchorYFor({ x0: 0.17, y0: ROW, x1: 0.83, y1: 0.53 }, BASELINE)).toBe(-0.5);
+    expect(baseAnchorYFor({ x0: 0.17, y0: 2 * ROW, x1: 0.83, y1: 0.53 }, BASELINE)).toBe(-0.5);
+  });
+
+  it('the epsilon boundary is strict: ink AT the epsilon classifies BASELINE', () => {
+    // The census's nearest real letterforms (`@`/`g`, ink bottom 7/64) sit
+    // well above the boundary; this pins the < contract at the boundary
+    // itself so the guard band can't erode silently.
+    expect(baseAnchorYFor({ x0: 0.2, y0: INK_FLOOR_EPSILON, x1: 0.8, y1: 0.77 }, BASELINE)).toBeCloseTo(
+      BASELINE - 0.5,
+      12,
+    );
   });
 
   it('an unmeasured glyph (FULL_GLYPH_INK fallback) lands in the floor branch', () => {

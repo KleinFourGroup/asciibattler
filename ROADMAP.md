@@ -262,61 +262,26 @@ WORKLOG §§78-kickoff–78f + git.
 - [x] 78f — ✅ 2026-08-14: docs close, box flipped ON TIME (worklog
   §78f)
 
-## Phase 79 — Glyph targeted fix
+## Phase 79 — Glyph targeted fix ✅ CLOSED 2026-08-16
 
-**Charter:** the camera-up anchor offset (the J3/I2 pattern applied
-to the sprite anchor) + atlas-derived ink click-boxes; then the
-native-browser eyeball.
+Opened as a targeted fix (camera-up anchor + ink click-boxes),
+closed having replaced the anchor CONVENTION, added a
+font-provenance guarantee and fixed a live licence breach.
+Edge-glyph drift **9.1px → 0.0000px**; **47/47** glyphs now from
+JetBrains Mono (was 45/47). Render-only — no snapshot bump. The
+§76f font/style-axis rider resolved at 79f: DEFER, trigger not
+fired. Detail: WORKLOG §§79-kickoff–79h + git.
 
-- **Order:** any time after §76 (wants the final unit set on screen);
-  render-only.
-- **Risk:** LOW.
-- **Decision point:** the eyeball verdict — the billboarding design
-  round opens ONLY on failure.
-- **Exit:** edge-of-viewport glyphs sit their tiles at native
-  resolution, user-confirmed; TODO #79 + #81 closed.
-- **Scope guards:** no depth-write/alpha-test rework; no 3D-quad
-  redesign unless the round opens.
-- **§76f rider (user-signed 2026-08-10):** reopen the FONT/STYLE
-  AXIS (the archived Phase-I deferral). ✅ RESOLVED at 79f —
-  DEFER, the collision trigger has not fired (worklog §79f).
-
-Cut at the 2026-08-14 kickoff (audit + shape-lock: WORKLOG §79;
-the anchor fix UPGRADED minimal → the anchor-convention rework,
-user-signed — the off-axis world-Y-lift class's third instance
-triggered the twice-bitten rule; risk LOW → LOW-MEDIUM,
-render-only throughout):
-
-- [x] 79a — ✅ 2026-08-14: ink clickboxes; the `▄` oracle
-  reproduced to ±0.002 in-browser (worklog §79a)
-- [x] 79b — ✅ 2026-08-14: cause (c) confirmed — ±9px edge skew at
-  720p, camera-up alternative exactly 0 (worklog §79b)
-- [x] 79c — ✅ 2026-08-14: the mechanism, re-scoped
-  behavior-neutral; +7 tests (worklog §79c)
-- [x] 79d — ✅ 2026-08-14: the flip; drift 9.1px→0.0000px live,
-  I2+J3 workarounds retired (worklog §79d)
-- [x] 79d2 — ✅ 2026-08-14, INSERTED at a user eyeball find: the
-  BASELINE stand-line rule + the raw/padded ink split + two N×N
-  anchor riders (worklog §79d2)
-- [x] 79e — ✅ 2026-08-15: markers/hitsplats passed as-is; the bar
-  pass went structural — churn killed, `FOOTPRINT_LIFT_PX` retired,
-  ⚠ the ink-top anchor REVERSES 79d2's uniform line (worklog §79e)
-- [x] 79f — ✅ 2026-08-15: DEFER the style axis, trigger not fired;
-  §82's real constraint is the 47/48 atlas grid (a ~5-line bump).
-  Finds: `glyph` is serialized ⇒ build the axis DERIVE-ONLY for no
-  bump · ⚠ `╥`/`▄` come from the OS fallback font (worklog §79f)
-- [x] 79g — ✅ 2026-08-16, INSERTED (user-called): self-hosted JBM
-  subset from upstream v2.304 + `npm run gen:font` (FACES list,
-  build-time catalog check) + DEV boot assert; `@fontsource`
-  uninstalled. **47/47 glyphs from JBM (was 45/47), all 47
-  pixel-identical to upstream, OFL clause-2 breach CLOSED (full
-  licence now in `dist/`), one font file replaces two.** ⚠ For 79h:
-  every letterform's ink TOP moved 1/64 down (fontsource's build vs
-  upstream) ⇒ stand line unchanged, but bars/hitsplats ride ~1px
-  lower (worklog §79g)
-- [ ] 79h — THE exit eyeball (edge glyphs sit their tiles at
-  native res + the NEW block glyphs read right, user-confirmed)
-  + the two TODO closes + docs close
+- [x] 79a ink clickboxes · [x] 79b the ±9px diagnosis · [x] 79c the
+  mechanism (behavior-neutral) · [x] 79d the flip (I2+J3 retired)
+- [x] 79d2 the BASELINE stand-line rule + N×N riders (INSERTED)
+- [x] 79e the tune pass → went structural (churn killed,
+  `FOOTPRINT_LIFT_PX` retired, ink-top anchor reverses 79d2's
+  uniform line)
+- [x] 79f style-axis scoping → DEFER; §82's real constraint is the
+  47/48 atlas grid (~5-line bump)
+- [x] 79g self-hosted JBM subset + OFL compliance (INSERTED)
+- [x] 79h the exit eyeball, user-signed; TODO #79 + #81 closed
 
 ## Phase 80 — Feasibility audit docs
 

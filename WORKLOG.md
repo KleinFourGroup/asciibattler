@@ -3918,3 +3918,34 @@ the anchor, so the 10px gap is geometric, not asserted. **Standing
 rule promoted to the scratchpad: a render probe must re-derive its
 expectation from the ASSET or the SHADER, never from the helper
 that positioned the thing.**
+
+### 79h — the exit eyeball + phase close (2026-08-16)
+
+**User-signed on all three exit items**, run across several test
+battles at native resolution: (1) edge-of-viewport glyphs sit their
+tiles — THE phase exit criterion, and the thing §79 existed to fix;
+(2) the new block-glyph shapes on walls/half-cover/rubble read right
+(they genuinely changed at 79g, real JBM instead of an OS
+substitute); (3) the bar gap survives the 79g 1/64 ink shift.
+
+**TODO closes.** Both exit-criterion items closed as one line +
+pointer: the glyph ink-box auto-generation (open since 2026-07-03,
+landed §79a — and the per-cell alpha it added went on to carry the
+entire anchor convention, so the "stop hand-computing boxes"
+cleanup turned out to be the foundation the rest of §79 was built
+on) and the far-edge sprite alignment check (open since the Z3
+playtest 2026-06-24 — its own note guessed cause (c) and flagged
+the I2/J3 kinship, both confirmed; §79b measured ±9.1px, §79d took
+it to 0.0000px and retired both workarounds). Also corrected a
+stale TODO fact found in passing: a J3-era note still read "the
+FontAtlas is now 32/32 FULL" — §29 grew the grid to 48 and it's
+47/48 today.
+
+**Phase verdict.** §79 opened as a targeted glyph fix (camera-up
+anchor + ink click-boxes) and closed having replaced the anchor
+CONVENTION, added a font-provenance guarantee, and fixed a live
+licence breach. Three of the seven steps were user-inserted off
+eyeball findings (79d2, 79e's structural turn, 79g) — the
+instruments and the eyeball both working, not planning failures.
+Everything it built is render-only: **no snapshot bump, World v35 /
+Run v42 hold**, tests 2640 throughout.

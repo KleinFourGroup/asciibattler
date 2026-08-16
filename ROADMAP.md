@@ -278,14 +278,8 @@ native-browser eyeball.
 - **Scope guards:** no depth-write/alpha-test rework; no 3D-quad
   redesign unless the round opens.
 - **§76f rider (user-signed 2026-08-10):** reopen the FONT/STYLE
-  AXIS (the archived Phase-I deferral — [archive/post-h-roadmap.md]
-  §NOT-doing) — the §76 wave strained the ASCII pool without
-  colliding; scope with the §82 boss wave in view. Facts for the
-  scoping: only `latin-400` loads (latin-1 already free; a new
-  subset import must join FontAtlas's font-ready await or the
-  serif fallback bakes into the atlas — FontAtlas.ts:87), and the
-  style axis proper = `glyphStyle` on UnitDef + a (char,style)-keyed
-  atlas + budget accounting + editor arm.
+  AXIS (the archived Phase-I deferral). ✅ RESOLVED at 79f —
+  DEFER, the collision trigger has not fired (worklog §79f).
 
 Cut at the 2026-08-14 kickoff (audit + shape-lock: WORKLOG §79;
 the anchor fix UPGRADED minimal → the anchor-convention rework,
@@ -293,37 +287,40 @@ user-signed — the off-axis world-Y-lift class's third instance
 triggered the twice-bitten rule; risk LOW → LOW-MEDIUM,
 render-only throughout):
 
-- [x] 79a — ✅ 2026-08-14: landed to plan; the `▄` oracle
-  reproduced to ±0.002 in-browser, `!`/`s` tight for free
-  (worklog §79a)
-- [x] 79b — ✅ 2026-08-14: cause (c) CONFIRMED numerically — ±9px
-  edge skew at 720p, camera-up alternative exactly 0; plus the
-  base-sinks-14px finding feeding the 79e tune (worklog §79b)
-- [x] 79c — ✅ 2026-08-14: the mechanism, RE-SCOPED behavior-neutral
-  (the ground-point flip moved to 79d — getPosition-consuming FX
-  sites would ride at unit feet for a commit otherwise); shader
-  attr + `SpriteAnchor` + pick lockstep, +7 tests (worklog §79c)
-- [x] 79d — ✅ 2026-08-14: the flip landed off the 13-row audit
-  table; drift 9.1px→0.0000px measured live, 8/8 picks, I2+J3
-  workarounds retired into `aboveAnchor` (worklog §79d)
-- [x] 79d2 — ✅ 2026-08-14, INSERTED at the user's eyeball find
-  (the glyph-cell ink skirt — the floating X): the BASELINE anchor
-  rule landed (letters on the measured baseline 0.261, blocks
-  flush, glyph-swap re-derivation) + the raw/padded ink split;
-  ink-true marker/hitsplat/FX lifts (worklog §79d2)
-- [x] 79e — ✅ 2026-08-15: seating/hitsplats/markers PASSED as-is
-  (no marker re-tune); the bar pass went structural — churn killed
-  + `FOOTPRINT_LIFT_PX` retired + ⚠ the ink-top anchor REVERSES
-  §79d2's uniform-line rule, gap exact 10px (worklog §79e)
-- [x] 79f — ✅ 2026-08-15: DEFER the style axis (the Phase-I
-  "revisit when units COLLIDE" trigger has NOT fired — 26 distinct
-  glyphs, 0 combatant collisions, 29 letters free); §82's real
-  constraint is the 47/48 atlas GRID = a ~5-line 2-constant bump,
-  not a phase. Two finds: `glyph` is serialized ⇒ build the axis
-  DERIVE-ONLY for no bump · ⚠ `╥`/`▄` render from the OS fallback
-  font (no JBM subset covers them) → robustness audit (worklog §79f)
-- [ ] 79g — THE exit eyeball (edge glyphs sit their tiles at
-  native res, user-confirmed) + the two TODO closes + docs close
+- [x] 79a — ✅ 2026-08-14: ink clickboxes; the `▄` oracle
+  reproduced to ±0.002 in-browser (worklog §79a)
+- [x] 79b — ✅ 2026-08-14: cause (c) confirmed — ±9px edge skew at
+  720p, camera-up alternative exactly 0 (worklog §79b)
+- [x] 79c — ✅ 2026-08-14: the mechanism, re-scoped
+  behavior-neutral; +7 tests (worklog §79c)
+- [x] 79d — ✅ 2026-08-14: the flip; drift 9.1px→0.0000px live,
+  I2+J3 workarounds retired (worklog §79d)
+- [x] 79d2 — ✅ 2026-08-14, INSERTED at a user eyeball find: the
+  BASELINE stand-line rule + the raw/padded ink split + two N×N
+  anchor riders (worklog §79d2)
+- [x] 79e — ✅ 2026-08-15: markers/hitsplats passed as-is; the bar
+  pass went structural — churn killed, `FOOTPRINT_LIFT_PX` retired,
+  ⚠ the ink-top anchor REVERSES 79d2's uniform line (worklog §79e)
+- [x] 79f — ✅ 2026-08-15: DEFER the style axis, trigger not fired;
+  §82's real constraint is the 47/48 atlas grid (a ~5-line bump).
+  Finds: `glyph` is serialized ⇒ build the axis DERIVE-ONLY for no
+  bump · ⚠ `╥`/`▄` come from the OS fallback font (worklog §79f)
+- [ ] 79g — INSERTED 2026-08-16 (user-called): the fallback-font
+  fix, promoted out of the robustness audit because it invalidates
+  §79's OWN measured-ink rules. Self-subset upstream JetBrains Mono
+  (ASCII + box-drawing/block HEADROOM) replacing the `@fontsource`
+  import; multi-face-capable generator (one face today) + a DEV
+  boot assert. Absorbs a LIVE OFL clause-2 gap (shipped build has 2
+  JBM binaries, zero license text). Rationale + the clause-by-clause
+  obligations: worklog §79g-scoping.
+  - **Exit:** 47/47 glyphs from JBM (the serif-vs-sans probe) ·
+    notice + full OFL present in `dist/` · font vendored under its
+    own license dir · the 45 already-covered glyphs pixel-identical.
+  - **Scope guards:** fallback fix + license ONLY — no style axis,
+    no atlas-grid bump (§82's chore), no new glyphs.
+- [ ] 79h — THE exit eyeball (edge glyphs sit their tiles at
+  native res + the NEW block glyphs read right, user-confirmed)
+  + the two TODO closes + docs close
 
 ## Phase 80 — Feasibility audit docs
 

@@ -3735,3 +3735,80 @@ combatant collision actually forces it (re-test the trigger at the
 §82 boss wave — the census above is the cheap re-run); bump the
 atlas grid as a ~5-line chore when §82 needs cells; fix the
 fallback-font gap in the robustness audit, where it belongs.
+
+**⚠ SUPERSEDED same-day (2026-08-16) on the last clause** — the
+user pulled the fallback fix OUT of the robustness audit and into
+§79 as its own step (79g, exit eyeball renamed 79h). Their
+reasoning, which is better than mine: §79 just derived two
+alignment rules from MEASURED ink, and for those two glyphs we
+measured a font we don't control — so it's a defect in §79's own
+output, not a general audit item, and filing it away from the
+rules it invalidates is how it gets lost. It also can't sit after
+the exit eyeball: the fix CHANGES how walls/cover/rubble look
+(real JBM blocks vs the OS substitute), so 79h must eyeball the
+result.
+
+### 79g-scoping — the style-axis bundling question + OFL (2026-08-16)
+
+**Asked:** does doing font surgery strengthen the case for building
+the style axis now? **Answered NO (user accepted the pushback).**
+The overlap is one piece of six — loading a second face shares with
+the subset work; the (char,style) atlas re-key, the `glyphStyle`
+UnitDef schema + zod + 30 existing defs, the editor arm, the
+combination-aware budget accounting, and (the expensive one)
+re-keying every glyph-keyed derivation §79 just built
+(`baseAnchorY`/`inkTopLift`/`inkCenterLift`/`getPaddedGlyphInk` +
+SpriteRenderer's per-slot anchor mode + the 79d2 glyph-swap
+re-derivation) do NOT. Bundling would reopen the anchor rules
+signed hours earlier, on a wider key, before they'd been eyeballed
+on a second machine — and it would destroy the cheapest available
+oracle for the font swap itself (same upstream font ⇒ the 45
+already-covered glyphs should be PIXEL-IDENTICAL; that proof only
+exists if nothing else moves in the commit). Plus the mechanism
+would ship with no consumer, against the standing "no abstractions
+for hypothetical future needs" norm, and its vocabulary (bold for
+elites? italic for spectral?) is a §82 CONTENT question we'd be
+guessing at. **The option is kept cheaply instead:** the subset
+generator takes a LIST of faces (one entry today) and the boot
+assert names the expected face, so a second face is a drop-in, not
+a rework. Re-test the collision trigger at §82 with the 79f census.
+
+**OFL 1.1 compliance — read from the shipped license text, not
+memory.** Two findings.
+
+⭐ **No Reserved Font Name is declared.** The OFL defines an RFN as
+"any names specified as such AFTER the copyright statement(s)"
+(§DEFINITIONS); JetBrains Mono's copyright line carries no "with
+Reserved Font Name" clause. Clause 3 therefore has no subject —
+**our subset may keep the family name `JetBrains Mono`**, so
+`FONT_FAMILY` (FontAtlas.ts) and the CSS are untouched. Subsetting
+DOES make a Modified Version (the definition names "changing
+formats" explicitly), so this needed checking rather than assuming.
+Re-verify against upstream's `OFL.txt` when 79g vendors the TTF —
+the copy read here is fontsource's repackage.
+
+⚠⚠ **We are ALREADY non-compliant, today, on the live Pages
+build.** `dist/assets/` ships `jetbrains-mono-latin-400-normal`
+`.woff` + `.woff2` and the build contains ZERO license text
+(grepped for "Open Font License" / "SIL OFL" / the copyright line —
+no hits anywhere in `dist/`, and there is no attribution file in
+the repo root or `public/` either). Fontsource's files are
+themselves Modified Versions, and clause 2 requires **each copy**
+bundled/redistributed to contain the copyright notice and the
+license. TERMINATION makes that void-the-license territory, not a
+nitpick. Pre-existing and unrelated to the fallback bug — 79g
+absorbs it because it's the same file.
+
+**The obligations 79g must satisfy** (clause → concrete): (1) never
+sell the font alone — fine, bundled · (2) notice + full OFL in the
+SHIPPED build, i.e. `dist/`, not just the repo — a repo-root
+LICENSE never reaches a player, and this is the Steam-critical one
+· (3) no RFN ⇒ keep the name, but preserve the internal name table
+honestly and record that it's a subset · (4) don't use JetBrains'
+name to promote — attribution in credits, NOT Steam marketing copy
+· (5) the font stays OFL and must not be relicensed ⇒ vendor it in
+its OWN directory with its OWN license file so the project license
+can't appear to swallow it. Open product question for the ship
+cluster, NOT 79g: whether the player-facing surface is a
+`THIRD-PARTY-LICENSES.txt` beside the binary (79g's minimum) or a
+proper in-game credits screen (recommended at Cluster 6).

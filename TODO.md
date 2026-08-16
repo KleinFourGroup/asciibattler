@@ -218,6 +218,13 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Docs / tooling
 
+- [ ] **Dev-toolchain `npm audit` debt (5 vulns, 4 high — §79g flag, filed
+  §79-post).** As measured 2026-08-16: all five in the dev toolchain
+  (vite/esbuild/postcss/nanoid/brace-expansion), none shipped in `dist/`;
+  `subset-font@2.5.0` has zero deps and introduced none. Clear at a
+  deliberate toolchain-bump round (a Vite major is a build-pipeline change
+  with its own verify pass), not in passing. Detail: WORKLOG §79g/§79-post.
+
 - [x] **run-config GUI: a character dropdown.** ✅ Done in the §63f landing
   commit — a `CHARACTERS`-driven dropdown (blank = the select scene) +
   `setIf` + a summary line in

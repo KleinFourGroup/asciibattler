@@ -37,8 +37,11 @@ After HANDOFF, the docs you'll cross-reference most often:
 A browser-based tick-based autobattler with a Slay-the-Spire-style run
 structure. ASCII glyphs on billboarded quads, saturation-clamped with
 selective bloom (palette-quant was dropped at B1), CRT-diorama feel. MVP
-shipped — playable end-to-end at [asciibattler on GitHub Pages]. Now in
-post-MVP territory.
+shipped — playable end-to-end on GitHub Pages. Deploys are HAND-UPLOADED
+builds to a separate Pages repo at milestone (usually cluster) boundaries
+— no CI, so a fix landing on `main` reaches the live build only at the
+next upload; the URL is semi-private and deliberately not recorded in
+this public repo (ask the user). Now in post-MVP territory.
 
 Stack: TypeScript (strict), three.js, Vite, Vitest. No frameworks; UI is
 plain HTML/CSS overlaid on the canvas. See ARCHITECTURE.md for the full

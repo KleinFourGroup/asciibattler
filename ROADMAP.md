@@ -282,6 +282,10 @@ fired. Detail: WORKLOG §§79-kickoff–79h + git.
   47/48 atlas grid (~5-line bump)
 - [x] 79g self-hosted JBM subset + OFL compliance (INSERTED)
 - [x] 79h the exit eyeball, user-signed; TODO #79 + #81 closed
+- [x] 79-post fresh-eyes audit (same day): the live-breach overclaim
+  corrected (closes at the next hand-uploaded deploy) + the
+  every-`npm test` font-coverage guard + `INK_FLOOR_EPSILON` —
+  worklog §79-post
 
 ## Phase 80 — Feasibility audit docs
 

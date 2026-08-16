@@ -144,3 +144,23 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   glyphs ~10px, capitals ~3px, bars level), which is what made the
   diagnosis findable at all. Reconstructing "which past version would
   produce exactly this?" beat re-measuring the current one.
+- **A "closed" claim must trace to the DISTRIBUTION surface, not the
+  repo (§79-post).** §79g wrote "the live breach is closed" when the
+  licence file had landed in `dist/` — but deploys are hand-uploaded
+  at milestone boundaries, so the live build still predated the fix;
+  a fresh-eyes audit caught it by probing the deploy mechanism instead
+  of the tree. Same claim-verification norm, one hop further out:
+  "fixed" for anything player-facing means fixed WHERE PLAYERS GET IT,
+  or say "fixed at next deploy". (Related find: the AGENTS "playable
+  at GitHub Pages" link had NO definition — broken since the MVP —
+  which is why nothing ever forced the deploy story to be written
+  down.)
+- **Put the guard on the path where the MISTAKE happens, not where
+  people already think about the problem (§79-post).** gen:font's
+  catalog gates were real but ran only when someone ran gen:font —
+  i.e. when the font already had their attention. The failure path is
+  an editor-authored glyph landing with no font thought at all; the
+  guard that closes it is the one riding `npm test`
+  (font-coverage.test.ts). Generalizes: a check's VALUE is its
+  placement on the forgetful path; the same assertion on the mindful
+  path is mostly decoration.

@@ -3856,7 +3856,10 @@ renders **pixel-identical to the vendored upstream TTF** (loaded
 in-browser as a second family and diffed cell-by-cell) ⇒ subsetting
 was lossless. Build clean, lint clean, tests 2640 green, typecheck
 clean. `dist/` carries `THIRD-PARTY-LICENSES.txt` with the full OFL
-(clause 2 SATISFIED — the live breach is closed) and now ships ONE
+(clause 2 SATISFIED — the live breach is closed **[⚠ CORRECTED at
+§79-post: true of the BUILD OUTPUT only. Deploys are hand-uploaded at
+milestone boundaries, so the LIVE build still predates 79g; the breach
+closes at the next upload]**) and now ships ONE
 hashed font file (39.2KB) where fontsource pulled in two (`.woff` +
 `.woff2`), so shipped font bytes went DOWN despite the headroom.
 
@@ -3949,3 +3952,76 @@ eyeball findings (79d2, 79e's structural turn, 79g) — the
 instruments and the eyeball both working, not planning failures.
 Everything it built is render-only: **no snapshot bump, World v35 /
 Run v42 hold**, tests 2640 throughout.
+
+### 79-post — the fresh-eyes audit micro-round (2026-08-16)
+
+Not a planned step: the user had a fresh-context agent audit this
+phase's worklog the day it closed ("anything that stands out as a
+wrong call"), then signed the fixes as a same-day micro-round. Four
+findings; none overturned the phase's engineering — the one wrong
+call of the phase (79d2's uniform-line rule) had already been caught
+and reversed by 79e. What the audit caught was in the CLAIMS and the
+GUARD TIERS around the work:
+
+**Finding 1 — the §79g "live breach is closed" line claimed more
+than the tools proved.** The fix landed in the repo, but deploys are
+BY HAND: the user uploads a build to a separate Pages repo at what
+feels like a major milestone (usually a cluster boundary; the link
+is semi-private, ~5 trusted testers). Landing 79g on `main` changed
+nothing live — the audit probed and the live build still predates
+79g (fontsource files, no licence text). User-accepted disposition:
+the breach closes at the next milestone upload, when
+`THIRD-PARTY-LICENSES.txt` rides along in `dist/` automatically; no
+early upload needed for a five-person audience. Corrected in place
+at §79g + the HANDOFF Last-phase cell; the deploy process is now
+recorded in AGENTS — whose "playable at GitHub Pages" line turned
+out to be a reference-style link with NO definition (broken since
+the MVP), now reworded with the URL deliberately kept out of this
+public repo.
+
+**Finding 2 — the gen:font gates only ran at gen:font time**
+(`7693f36`). "The generator fails the build" overstated: gen:font is
+a manual script, so its catalog checks ran precisely when someone
+was already thinking about the font. The dangerous path — a new
+editor-authored catalog glyph outside the subset ranges, landing
+without a regen — degraded to the DEV boot warn, the same tier that
+let the §79f fallback run silently for weeks. Now
+`tests/font-coverage.test.ts` asserts on every `npm test` that
+GLYPHS ⊆ `SUBSET_RANGES` AND that the vendored TTF's cmap maps every
+registered glyph (the ranges deliberately include PARTIAL upstream
+blocks, so "in range" alone proves nothing). Enabler: gen:font now
+runs under tsx, so it imports the REAL `GLYPHS` — the §79g mirrored
+non-unit list is deleted, `SUBSET_RANGES` moved to
+`src/render/fontSubset.ts`, the cmap reader to `tools/font/ttfCmap.ts`
+(shared). Regen verified byte-identical (woff2 + fonts.css
+untouched). Accepted residual: a stale committed woff2 after a
+deliberate range/TTF change is still DEV-warn-only — reading woff2
+cmaps means a brotli dependency, not worth it for that path.
+
+**Finding 3 — "makes the render deterministic" overclaimed, and the
+stand-line branch was one-pixel-brittle** (`a58bfe8`). Self-hosting
+pins the font's PROVENANCE, not its rasterization — §79g itself
+measured two builds of the same face rasterizing an ink edge one row
+apart at the alpha threshold. §79d2's exact `ink.y0 === 0` branch
+meant a platform rasterizer doing that at a block glyph's bottom row
+would flip walls/rubble onto the baseline. Fix:
+`INK_FLOOR_EPSILON = 3/64` (classification only; the anchor value is
+unchanged). Sized off a fresh 47-glyph in-browser census — an
+independent canvas probe against the running dev server, per the
+79g-postscript probe rule (re-derive from the asset, not the helper):
+floor family exactly 0 · nearest letterform ink bottoms `@`/`g` at
+7 rows (the 0.109 the §79d2 tests recorded, reconfirmed) · `/` at
+11 · baseline cluster 16–17. So 3 rows absorbs the observed one-row
+variance class twice over with a 4-row guard band, and the census
+proves the change behavior-neutral on this machine (no glyph sits in
+(0, 3/64)). Boundary pins added headless.
+
+**Finding 4 — the §79g npm-audit flag had no home.** Flagged "per
+the side-task norm" but filed nowhere; a worklog paragraph is where
+things go to be forgotten. Now a TODO Docs/tooling item.
+
+Swept in passing: three stale comments (FontAtlas's `@fontsource`
+reference and dropped-at-B1 palette-quant rationale; build-font's
+determinism sentence). Tests 2640 → 2644 (+2 coverage guards, +2
+epsilon pins); typecheck + lint clean; render-only, no snapshot
+bump.

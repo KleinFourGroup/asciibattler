@@ -113,3 +113,34 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   signed guarantees. Design rounds exist to be lost; the timing
   argument (the re-baseline was already being paid) is reusable for
   future "replace vs patch" calls.
+- **⭐⭐ CIRCULAR VERIFICATION: I verified a value against itself, twice,
+  and only the user's eye caught it (§79e/§79g).** The probe computed
+  the expected ink top with `atlas.inkTopLift(glyph)` and compared it
+  to an overlay *placed* from `atlas.inkTopLift(glyph)`. It returned
+  "9.96–10.05px across 26 bodies" — a result it was structurally
+  incapable of NOT returning. I then re-ran the same shape when the
+  user reported the bug and got 10.00px again, which nearly became
+  "works on my machine". **The tell is cheap and general: if the probe
+  calls the same function the code under test calls to derive its
+  expectation, it measures self-consistency, not correctness.** The
+  fix that worked was proving the chain link-by-link against sources
+  the code does NOT consult — the atlas's real rasterized pixels
+  (independent of `getGlyphInk`), the shader's actual offset formula
+  and its `uSpriteSize`/`instanceSize` uniforms, and the per-instance
+  `aAnchor` attribute. Cross-check: an independently measured
+  px-per-world-unit at each unit's own depth. Rule of thumb — a
+  render probe should re-derive its expectation from the ASSET or the
+  SHADER, never from the helper that positioned the thing.
+- **The user's eyeball and my probes run in different page instances,
+  and mine can't see theirs (§79g).** The bar bug was a days-old tab
+  that had been accumulating Vite HMR patches: CSS updates applied
+  cleanly while an already-constructed `BattleRenderer` kept running
+  pre-change code, so the new `--overlay-gap` was landing against the
+  OLD uniform-half-quad anchor. My fresh `preview_start` tab was
+  correct throughout, so no probe I could run would ever reproduce it.
+  When a user-visible symptom contradicts a clean measurement, ask for
+  a hard reload BEFORE hunting the code — and note the symptom was a
+  precise fingerprint of one specific superseded code path (short
+  glyphs ~10px, capitals ~3px, bars level), which is what made the
+  diagnosis findable at all. Reconstructing "which past version would
+  produce exactly this?" beat re-measuring the current one.

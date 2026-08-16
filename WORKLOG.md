@@ -3881,3 +3881,40 @@ strictly more correct (it's the real font) — but it IS a visible
 toolchain (vite/esbuild/postcss/nanoid/brace-expansion), none
 shipped in `dist`. `subset-font@2.5.0` has ZERO dependencies and
 introduced none of them. Fix deliberately left out of 79g.
+
+### 79g-postscript — the bar-gap false alarm, and a bad method
+(2026-08-16)
+
+User eyeball after 79g: capitals looked cramped while short glyphs
+kept their 10px. **Not a code bug — a days-old browser tab.** It had
+been accumulating Vite HMR patches, so the new `--overlay-gap` (CSS,
+hot-applied cleanly) was landing against an already-constructed
+`BattleRenderer` still running the pre-79e UNIFORM half-quad anchor.
+Hard reload fixed it. The symptom was a precise fingerprint of that
+one superseded path — at the observed zoom the uniform anchor gives
+`a` ≈10.6px and a capital ≈3.2px with bars LEVEL across glyphs,
+which is exactly what the screenshot showed; reconstructing "which
+past version yields exactly this?" is what found it, not
+re-measuring current code.
+
+⚠⚠ **But the episode exposed a real methodology failure worth more
+than the false alarm.** The §79e verification ("9.96–10.05px across
+26 bodies") was CIRCULAR: the probe derived its expected ink top
+from `atlas.inkTopLift(glyph)` and compared it to an overlay
+*placed* from `atlas.inkTopLift(glyph)`. It could not have returned
+anything else. Re-running that same shape against the user's report
+produced 10.00px again and nearly became "works on my machine".
+The §79e CONCLUSION stands — but it now rests on a link-by-link
+proof against sources the render path does NOT consult, built here:
+`getGlyphInk` re-measured against the atlas canvas's real pixels
+(matches for all probed glyphs) · the shader's actual offset formula
+`(position.xy − instanceAnchor) · uSpriteSize · instanceSize` read
+from billboard.vert.glsl with `uSpriteSize` confirmed **1** · every
+live sprite's `aAnchor` attribute equal to `baseAnchorY(glyph)`,
+mode `base` · `getGlyphUV` mapping the FULL cell to the quad ·
+px-per-world-unit measured independently at each unit's own depth.
+Chained, those force the ink top to sit exactly `inkTopLift` above
+the anchor, so the 10px gap is geometric, not asserted. **Standing
+rule promoted to the scratchpad: a render probe must re-derive its
+expectation from the ASSET or the SHADER, never from the helper
+that positioned the thing.**

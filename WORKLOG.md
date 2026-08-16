@@ -3812,3 +3812,72 @@ can't appear to swallow it. Open product question for the ship
 cluster, NOT 79g: whether the player-facing surface is a
 `THIRD-PARTY-LICENSES.txt` beside the binary (79g's minimum) or a
 proper in-game credits screen (recommended at Cluster 6).
+
+### 79g — the self-hosted font subset + OFL compliance (2026-08-16)
+
+**Premise re-verified FIRST (step zero), and it mattered.** The whole
+plan assumed upstream JetBrains Mono carries the two codepoints. It
+does — but that was an assumption, not a fact, until a minimal TTF
+cmap reader said so. Official release **v2.304** (JetBrains/
+JetBrainsMono, zip sha256 `6f6376c6…7bbf`): all 47 registered
+glyphs present, `U+2565`+`U+2584` both present, box-drawing
+**128/128** and block-elements **32/32** COMPLETE. Geometric shapes
+(43/96) and arrows (35/112) are PARTIAL — recorded because §82
+must not assume an arbitrary shape exists there.
+
+**Source choice — one rejected.** `jetbrains-mono` on npm is a
+THIRD-PARTY repackage whose metadata declares **MIT** for what is
+an OFL font. A licence mismatch is not a foundation for a
+Steam-bound pipeline; we take the official JetBrains release. The
+source TTF is VENDORED (`assets/fonts/jetbrains-mono/`) so the
+build is hermetic — no network at build time.
+
+**What landed.** `scripts/build-font.mjs` (+ `npm run gen:font`,
+mirroring the `gen:sfx` precedent): subsets the TTF to ASCII +
+Latin-1 + arrows + box-drawing + blocks + geometric shapes, emits
+woff2 AND generates `src/fonts.css`. Deliberately driven by a
+`FACES` **list** with one entry — §79f said don't build the style
+axis, but a second face is now a data edit plus a re-run, never a
+re-architecture. ⭐ The generator FAILS THE BUILD if the source
+lacks any glyph the live `config/units.json` catalog declares (it
+reads the catalog directly), so a future font upgrade that drops
+one is caught at build, not shipped as a silent OS fallback. Plus
+a DEV boot assert in FontAtlas (`assertGlyphsCameFromFont`) — the
+serif-vs-sans render diff, run over the real atlas set; warns, does
+not throw (loud in dev, never bricks a player's session; the build
+gate is the hard one). `@fontsource/jetbrains-mono` **uninstalled**;
+`font-display: block` not `swap` (the atlas rasterizes ONCE at
+boot — a swap-in afterwards would leave fallback shapes baked in
+for the whole session).
+
+**Verification — the oracle held.** 47/47 glyphs now come from
+JetBrains Mono, **zero fallbacks** (was 45/47). Every one of the 47
+renders **pixel-identical to the vendored upstream TTF** (loaded
+in-browser as a second family and diffed cell-by-cell) ⇒ subsetting
+was lossless. Build clean, lint clean, tests 2640 green, typecheck
+clean. `dist/` carries `THIRD-PARTY-LICENSES.txt` with the full OFL
+(clause 2 SATISFIED — the live breach is closed) and now ships ONE
+hashed font file (39.2KB) where fontsource pulled in two (`.woff` +
+`.woff2`), so shipped font bytes went DOWN despite the headroom.
+
+⚠ **One real delta for the 79h eyeball.** Ink measurements moved:
+`▄` y1 0.5313→0.5781 and `╥` 0.5625→0.6406 (EXPECTED — they're the
+genuine font now instead of an OS substitute; shape confirmed
+structurally correct by rasterized ASCII-art dump, and both still
+reach the cell floor so the `ink.y0 === 0` floor branch holds).
+Less obviously, **every letterform's ink TOP moved down by exactly
+1/64** (one cell pixel) — fontsource's woff2 is a reprocessed build
+and rasterizes a hair differently from the upstream TTF at the
+`INK_ALPHA_THRESHOLD` boundary. Consequences: `ink.y0` and the
+measured baseline are UNCHANGED, so §79d2's stand line is
+byte-identical — nothing about where glyphs STAND moved. But
+`inkTopLift` feeds §79e's overlay anchor and the hitsplat float, so
+bars/numbers now ride ~1px lower. Well inside the 10px gap, and
+strictly more correct (it's the real font) — but it IS a visible
+1px change, so 79h should confirm the bar gap still reads right.
+
+**Pre-existing, NOT bundled (flagged per the side-task norm):**
+`npm audit` reports 5 vulns (4 high) — all in the existing dev
+toolchain (vite/esbuild/postcss/nanoid/brace-expansion), none
+shipped in `dist`. `subset-font@2.5.0` has ZERO dependencies and
+introduced none of them. Fix deliberately left out of 79g.

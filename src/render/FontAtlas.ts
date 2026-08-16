@@ -69,6 +69,67 @@ export interface GlyphUV {
   readonly v1: number; // top (GL)
 }
 
+/**
+ * §79g — DEV guard: prove every registered glyph actually came from
+ * `FONT_FAMILY` and not from an OS fallback.
+ *
+ * The bug this exists to prevent (found at §79f, fixed at §79g): we loaded a
+ * font subset that silently lacked `╥` and `▄`, so those two — every wall,
+ * half-cover and rubble entity — rasterized from whatever the OS substituted.
+ * Nothing failed; the atlas built, the glyphs had ink, the game looked fine on
+ * the developer's machine. It matters because `baseAnchorYFor` branches on an
+ * exact `ink.y0 === 0` measured off these very cells, so a fallback with one
+ * transparent pixel row at the cell bottom silently re-classifies an entity's
+ * stand line — a regression reproducible only on someone else's machine.
+ *
+ * The test: draw the char with the family backed by `serif`, then by
+ * `sans-serif`. If the family supplied the glyph, both draws are the SAME glyph
+ * and the alpha channels match exactly; if it fell through, the two fallbacks
+ * differ. Cheap (one small canvas, ~47 pairs, DEV only) and it needs no glyph
+ * table to maintain — it asks the rasterizer the question directly.
+ *
+ * Warns rather than throws: a missing glyph should be loud during development,
+ * but must not brick the game for a player whose browser did something
+ * unexpected. The build-time check in `scripts/build-font.mjs` is the hard gate.
+ */
+function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
+  const probe = document.createElement('canvas');
+  probe.width = CELL_PX;
+  probe.height = CELL_PX;
+  const ctx = probe.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return; // no context in this environment — skip rather than crash boot
+
+  const alphaOf = (glyph: string, backstop: string): Uint8ClampedArray => {
+    ctx.clearRect(0, 0, CELL_PX, CELL_PX);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `${FONT_PX}px '${FONT_FAMILY}', ${backstop}`;
+    ctx.textAlign = atlasCtx.textAlign;
+    ctx.textBaseline = atlasCtx.textBaseline;
+    ctx.fillText(glyph, CELL_PX / 2, CELL_PX / 2);
+    return ctx.getImageData(0, 0, CELL_PX, CELL_PX).data;
+  };
+
+  const fellBack = GLYPHS.filter((glyph) => {
+    const withSerif = alphaOf(glyph, 'serif');
+    const withSans = alphaOf(glyph, 'sans-serif');
+    for (let i = 3; i < withSerif.length; i += 4) {
+      if (Math.abs(withSerif[i]! - withSans[i]!) > 8) return true;
+    }
+    return false;
+  });
+
+  if (fellBack.length > 0) {
+    console.error(
+      `[FontAtlas] ${fellBack.length} of ${GLYPHS.length} glyphs did NOT come from ` +
+        `'${FONT_FAMILY}' and were rasterized from an OS fallback: ` +
+        `${fellBack.map((c) => `${c} (U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')})`).join(', ')}. ` +
+        `Their ink metrics — and so their stand line (§79d2) and every lift derived ` +
+        `from it — vary by machine. Fix: widen SUBSET_RANGES in scripts/build-font.mjs ` +
+        `and re-run \`npm run gen:font\`.`,
+    );
+  }
+}
+
 export class FontAtlas {
   readonly texture: THREE.CanvasTexture;
   readonly cellSizePx = CELL_PX;
@@ -176,6 +237,8 @@ export class FontAtlas {
     const baselineY = Number.isFinite(alphabetic)
       ? (CELL_PX / 2 + alphabetic) / CELL_PX
       : (inkByGlyph.get('X') ?? FULL_GLYPH_INK).y0;
+
+    if (import.meta.env.DEV) assertGlyphsCameFromFont(ctx);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;

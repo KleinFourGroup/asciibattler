@@ -305,19 +305,15 @@ render-only throughout):
   §82's real constraint is the 47/48 atlas grid (a ~5-line bump).
   Finds: `glyph` is serialized ⇒ build the axis DERIVE-ONLY for no
   bump · ⚠ `╥`/`▄` come from the OS fallback font (worklog §79f)
-- [ ] 79g — INSERTED 2026-08-16 (user-called): the fallback-font
-  fix, promoted out of the robustness audit because it invalidates
-  §79's OWN measured-ink rules. Self-subset upstream JetBrains Mono
-  (ASCII + box-drawing/block HEADROOM) replacing the `@fontsource`
-  import; multi-face-capable generator (one face today) + a DEV
-  boot assert. Absorbs a LIVE OFL clause-2 gap (shipped build has 2
-  JBM binaries, zero license text). Rationale + the clause-by-clause
-  obligations: worklog §79g-scoping.
-  - **Exit:** 47/47 glyphs from JBM (the serif-vs-sans probe) ·
-    notice + full OFL present in `dist/` · font vendored under its
-    own license dir · the 45 already-covered glyphs pixel-identical.
-  - **Scope guards:** fallback fix + license ONLY — no style axis,
-    no atlas-grid bump (§82's chore), no new glyphs.
+- [x] 79g — ✅ 2026-08-16, INSERTED (user-called): self-hosted JBM
+  subset from upstream v2.304 + `npm run gen:font` (FACES list,
+  build-time catalog check) + DEV boot assert; `@fontsource`
+  uninstalled. **47/47 glyphs from JBM (was 45/47), all 47
+  pixel-identical to upstream, OFL clause-2 breach CLOSED (full
+  licence now in `dist/`), one font file replaces two.** ⚠ For 79h:
+  every letterform's ink TOP moved 1/64 down (fontsource's build vs
+  upstream) ⇒ stand line unchanged, but bars/hitsplats ride ~1px
+  lower (worklog §79g)
 - [ ] 79h — THE exit eyeball (edge glyphs sit their tiles at
   native res + the NEW block glyphs read right, user-confirmed)
   + the two TODO closes + docs close

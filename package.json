@@ -20,10 +20,10 @@
     "nodemap:metrics": "tsx tools/nodemap-viz/report.ts",
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs",
-    "trace-mine": "tsx tests/gauntlet/traceMine.ts"
+    "trace-mine": "tsx tests/gauntlet/traceMine.ts",
+    "gen:font": "node scripts/build-font.mjs"
   },
   "dependencies": {
-    "@fontsource/jetbrains-mono": "^5.2.8",
     "simplex-noise": "^4.0.3",
     "three": "^0.184.0",
     "zod": "^4.4.3"
@@ -34,6 +34,7 @@
     "eslint": "^10.4.0",
     "globals": "^17.6.0",
     "prettier": "^3.8.3",
+    "subset-font": "^2.5.0",
     "tsx": "^4.22.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",

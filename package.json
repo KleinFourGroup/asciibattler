@@ -21,7 +21,7 @@
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs",
     "trace-mine": "tsx tests/gauntlet/traceMine.ts",
-    "gen:font": "node scripts/build-font.mjs"
+    "gen:font": "tsx scripts/build-font.mjs"
   },
   "dependencies": {
     "simplex-noise": "^4.0.3",

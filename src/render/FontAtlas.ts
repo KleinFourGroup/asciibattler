@@ -124,7 +124,7 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
         `'${FONT_FAMILY}' and were rasterized from an OS fallback: ` +
         `${fellBack.map((c) => `${c} (U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')})`).join(', ')}. ` +
         `Their ink metrics — and so their stand line (§79d2) and every lift derived ` +
-        `from it — vary by machine. Fix: widen SUBSET_RANGES in scripts/build-font.mjs ` +
+        `from it — vary by machine. Fix: widen SUBSET_RANGES in src/render/fontSubset.ts ` +
         `and re-run \`npm run gen:font\`.`,
     );
   }

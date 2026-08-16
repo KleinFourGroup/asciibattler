@@ -32,6 +32,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import subsetFont from 'subset-font';
+// §79-post — this script runs under tsx (see package.json gen:font), so it can
+// import the REAL registered glyph set + the shared range/cmap modules instead
+// of mirroring them: the renderer, this generator, and the guard test
+// (tests/font-coverage.test.ts) now consume one source of truth each way.
+import { GLYPHS } from '../src/render/glyphs.ts';
+import { SUBSET_RANGES } from '../src/render/fontSubset.ts';
+import { ttfCmapLookup } from '../tools/font/ttfCmap.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const FONT_DIR = join(ROOT, 'assets', 'fonts', 'jetbrains-mono');
@@ -47,108 +54,27 @@ const FACES = [
   },
 ];
 
-/**
- * What to keep. Deliberate HEADROOM (user-signed at the 79g shape-lock): the
- * atlas needs 47 glyphs today, but regenerating on every new glyph is exactly
- * the chore that gets forgotten until it breaks a boss. Upstream coverage
- * measured at 79g: ASCII 95/95, Latin-1 96/96, box-drawing 128/128, blocks
- * 32/32 — all COMPLETE; geometric shapes 43/96 and arrows 35/112 are PARTIAL,
- * so don't assume an arbitrary shape exists there. Whatever the source lacks is
- * simply not kept, and the boot assert in FontAtlas is what catches a glyph
- * that isn't really there.
- */
-const SUBSET_RANGES = [
-  [0x0020, 0x007e, 'ASCII printable'],
-  [0x00a0, 0x00ff, 'Latin-1 supplement'],
-  [0x2190, 0x21ff, 'Arrows (partial upstream)'],
-  [0x2500, 0x257f, 'Box drawing'],
-  [0x2580, 0x259f, 'Block elements'],
-  [0x25a0, 0x25ff, 'Geometric shapes (partial upstream)'],
-];
-
-// ---------------------------------------------------------------------------
-// Minimal TTF cmap reader (formats 4 and 12), so the build can PROVE the source
-// carries every glyph the live catalog asks for instead of discovering it at
-// runtime. No dependency worth taking for ~50 lines.
-// ---------------------------------------------------------------------------
-function cmapLookup(buf) {
-  const numTables = buf.readUInt16BE(4);
-  let cmap = -1;
-  for (let i = 0; i < numTables; i++) {
-    const rec = 12 + i * 16;
-    if (buf.toString('latin1', rec, rec + 4) === 'cmap') cmap = buf.readUInt32BE(rec + 8);
-  }
-  if (cmap < 0) throw new Error('build-font: source font has no cmap table');
-
-  let best = -1;
-  let bestScore = -1;
-  const n = buf.readUInt16BE(cmap + 2);
-  for (let i = 0; i < n; i++) {
-    const rec = cmap + 4 + i * 8;
-    const plat = buf.readUInt16BE(rec);
-    const enc = buf.readUInt16BE(rec + 2);
-    const score = plat === 3 && enc === 10 ? 3 : plat === 3 && enc === 1 ? 2 : plat === 0 ? 1 : 0;
-    if (score > bestScore) {
-      bestScore = score;
-      best = cmap + buf.readUInt32BE(rec + 4);
-    }
-  }
-  const format = buf.readUInt16BE(best);
-
-  return (cp) => {
-    if (format === 12) {
-      const groups = buf.readUInt32BE(best + 12);
-      for (let i = 0; i < groups; i++) {
-        const g = best + 16 + i * 12;
-        if (cp >= buf.readUInt32BE(g) && cp <= buf.readUInt32BE(g + 4)) return true;
-      }
-      return false;
-    }
-    if (cp > 0xffff) return false;
-    const segX2 = buf.readUInt16BE(best + 6);
-    const ends = best + 14;
-    const starts = ends + segX2 + 2;
-    const deltas = starts + segX2;
-    const ranges = deltas + segX2;
-    for (let s = 0; s < segX2; s += 2) {
-      if (buf.readUInt16BE(ends + s) < cp) continue;
-      if (buf.readUInt16BE(starts + s) > cp) return false;
-      const ro = buf.readUInt16BE(ranges + s);
-      if (ro === 0) return ((cp + buf.readInt16BE(deltas + s)) & 0xffff) !== 0;
-      const gi = buf.readUInt16BE(ranges + s + ro + (cp - buf.readUInt16BE(starts + s)) * 2);
-      return gi !== 0;
-    }
-    return false;
-  };
-}
-
-/**
- * The glyphs the renderer will actually ask the atlas for, read from the SAME
- * sources `src/render/glyphs.ts` derives them from — the static non-unit list
- * mirrored here, plus every glyph the unit catalog declares. Mirroring the
- * non-unit list is a small duplication, accepted because this script must run
- * outside the TS build; the boot assert is the backstop that catches drift.
- */
-function requiredGlyphs() {
-  const NON_UNIT = [...'@0123456789.:/-+%!?*X'];
-  const units = JSON.parse(readFileSync(join(ROOT, 'config', 'units.json'), 'utf8'));
-  const fromCatalog = Object.values(units).map((d) => d.glyph);
-  return [...new Set([...NON_UNIT, ...fromCatalog])];
-}
-
+// What to keep: SUBSET_RANGES (src/render/fontSubset.ts — moved there at
+// §79-post so the guard test shares it; deliberate-headroom rationale in its
+// docblock). Whatever the source lacks is simply not kept; the guard test +
+// the FontAtlas boot assert catch a glyph that isn't really there.
 const subsetText = SUBSET_RANGES.flatMap(([lo, hi]) => {
   const out = [];
   for (let cp = lo; cp <= hi; cp++) out.push(String.fromCodePoint(cp));
   return out;
 }).join('');
 
-const required = requiredGlyphs();
+// The glyphs the renderer will actually ask the atlas for — the LITERAL
+// registered set (static non-unit glyphs + the catalog-derived unit glyphs),
+// imported from the renderer's own module now that tsx runs this script. The
+// §79g mirrored-list duplication is gone.
+const required = [...GLYPHS];
 let cssBlocks = '';
 
 for (const face of FACES) {
   const srcPath = join(FONT_DIR, face.source);
   const src = readFileSync(srcPath);
-  const has = cmapLookup(src);
+  const has = ttfCmapLookup(src);
 
   // Fail the BUILD, loudly, if the source can't supply a live glyph — a font
   // upgrade that drops one must not reach a player as a silent OS fallback.
@@ -162,7 +88,7 @@ for (const face of FACES) {
   const uncovered = required.filter((ch) => !subsetText.includes(ch));
   if (uncovered.length > 0) {
     throw new Error(
-      `build-font: SUBSET_RANGES excludes ${uncovered.length} live glyph(s): ${uncovered.join(' ')} — widen the ranges.`,
+      `build-font: SUBSET_RANGES excludes ${uncovered.length} live glyph(s): ${uncovered.join(' ')} — widen the ranges (src/render/fontSubset.ts).`,
     );
   }
 

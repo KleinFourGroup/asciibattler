@@ -306,6 +306,13 @@ split when you expand the spec if it reads cleaner.
 **Charter:** the capstone — progression that unlocks/gates everything above, then
 ship.
 
+> **§80 feasibility docs (2026-08-16):** five planning docs in `plans/`
+> (sound-registry · music · achievements · tutorial · telemetry) audit this
+> cluster's surfaces — each closes with a "what Cluster 6 must not break"
+> section. READ THEM at C6 spec time; the persistent store is designed ONCE
+> with its four consumers known (save/load · achievements · settings ·
+> tutorial seen-flags).
+
 **In scope**
 
 - **Persistence / save-load** **(added — the hidden prerequisite)**. The

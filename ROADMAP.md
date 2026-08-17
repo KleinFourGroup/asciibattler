@@ -287,20 +287,18 @@ fired. Detail: WORKLOG §§79-kickoff–79h + git.
   every-`npm test` font-coverage guard + `INK_FLOOR_EPSILON` —
   worklog §79-post
 
-## Phase 80 — Feasibility audit docs
+## Phase 80 — Feasibility audit docs ✅ CLOSED 2026-08-16
 
-**Charter:** the five planning docs — the event-keyed sound registry
-proposal · music · achievements · tutorial · online balance
-telemetry — each closing with a "what Cluster 6 must not break" note.
-
-- **Order:** anywhere late; docs-only.
-- **Risk:** LOW.
-- **Exit:** five docs in the repo; achievements/tutorial explicitly
-  confirm the Cluster-6 persistent-store dependency.
-- **Scope guards:** ZERO implementation — audits and plans only.
-
-Cut at the 2026-08-16 kickoff (audit + shape-lock: WORKLOG §80;
-docs land in the NEW `plans/` directory — user-signed):
+**Outcome:** the five C6 planning docs live in the NEW `plans/`
+directory, each closing with a "what Cluster 6 must not break"
+section; achievements + tutorial explicitly confirm the C6
+persistent-store dependency (the exit criterion) — ONE store, four
+consumers, versioned from day one. Headliners: the sound census
+correction + the coverage-pin proposal · determinism ⇒ the
+scripted tutorial (a pinned RunConfig) and trace-replay telemetry
+(build-id = the structural finding) · the music volume-axis split
+lands BEFORE the C6 slider. Docs-only; user doc-review rides.
+Detail: WORKLOG §§80–80e + plans/.
 
 - [x] 80a — ✅ 2026-08-16: `plans/sound-registry.md` — full census
   (the event-keyed half is 7 closures, NOT the spec's ~30 — the gap
@@ -322,8 +320,8 @@ docs land in the NEW `plans/` directory — user-signed):
   offline instrument kit; manual export recommended as v1 (the
   always-up ingest is a new ops burden the §62 model avoids); the
   stale-live-build confound is the structural finding (worklog §80d)
-- [ ] 80e — docs close: ROADMAP demote · HANDOFF cursor flip ·
-  META-ROADMAP C6 gains one pointer line to the five docs
+- [x] 80e — ✅ 2026-08-16: docs close — ROADMAP demote · HANDOFF
+  cursor flip · META-ROADMAP C6 pointer (worklog §80e)
 
 ## Phase 81 — Procedural parity ("Uncharted Ground" catch-up)
 

@@ -4170,3 +4170,24 @@ player-initiated export only · opt-in consent row if tier 2 ever
 lands · capture stays Game-layer (fuzz produces no telemetry) ·
 DEV/PROD split as a build flag (the §79f silent-fallback shape,
 applied to player data).
+
+### §80e — docs close (2026-08-16)
+
+The close ritual, docs-phase-sized: ROADMAP §80 demoted to the
+stub + outcome breath; HANDOFF cursor flipped (§§73–80 ✅, NEXT =
+§81, §79 condensed into Before-it per demote-as-you-close);
+META-ROADMAP's Cluster 6 section gains the READ-THESE-AT-SPEC-TIME
+pointer to the five plans/ docs + the one-store-four-consumers
+rule. Every §80 exit criterion met: five docs in the repo, each
+with a "what Cluster 6 must not break" section, achievements +
+tutorial explicitly confirming the C6 store dependency. Zero
+implementation, zero code touched — the scope guard held end to
+end (five docs commits + kickoff + this close; every hook run
+green at 2644/typecheck-clean; fuzz never triggered, correctly, as
+no sim/run/core/config path was staged all phase). OPEN RIDER: the
+user's read of the five docs — §80 closed on the objective exit
+criteria; content amendments land as follow-up commits (the
+78a-style "rides with the user" pattern applied to docs). No
+scratchpad entries this phase — the census-correction lesson is
+already covered by the standing step-zero norm (re-verify the
+premise against current code), which is exactly what caught it.

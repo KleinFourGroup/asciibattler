@@ -39,6 +39,12 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
+  (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
+  hunting for camps — the one theme whose pool ships empty. One line
+  of UI (grey the Camps stat or badge the theme select "no camps")
+  saves the next person the hunt. Dev-tool-only, trivial.
+
 - [ ] **"Empower" naming collision (mechanic vs Mars's buff key).**
   User-flagged at the 78d eyeball (2026-08-14): "empower" names BOTH
   the pre-turn mechanic (the K4 `empowerUnit` command / grant kind /

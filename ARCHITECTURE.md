@@ -148,8 +148,8 @@ src/
     archetypes.ts            # ALL_ARCHETYPES (full catalog) + DRAFTABLE_ARCHETYPES (§29-close draft pool, draftable-flag filtered), rollUnit, glyphForArchetype, targetingForArchetype, range/minRangeForArchetype (O4)
                              # §76c: engagementReach (non-engaging verbs — self leaps, ally-buff blasts, pure auras — are EXCLUDED from derived.attackRange, the in-range-abstain threshold; falls back to max rangeCells for pure-support kits)
     environment.ts           # spawnWall + spawnHalfCover (D6) — neutral-team env factories
-    terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library
-    proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params)
+    terrainGen.ts            # Per-encounter terrain dispatch: procedural (proceduralMap.ts) vs layout library; §81a threads the sector THEME to the procedural path (+ pairs rolled camp sites with the theme's pool)
+    proceduralMap.ts         # M6: crossbar+divider+noise map generator + sampleProceduralParams (config→params); §81: the per-theme tile layer (deep-water pool deepening, hills/ice/sand/mud patch fields, volcanic fire scatter — deep water counts in the cap + carves to shallow) + camp-site placement (pair/midBand/rare-free, placed LAST so camp dose never perturbs terrain)
     layouts.ts               # Thin re-export of validated config (LAYOUT_IDS for Run's roll)
     battleSetup.ts           # Shared applyTerrain/spawnTeam/spawnEncounter (+ §40d spawnLayoutNeutrals — walls/cover/rubble from a GeneratedTerrain)
                              # 75c: spawnCamps — rolls each camp-spawn tile's camp (per-ENCOUNTER identity = the signed 75j verdict) + installCamps + spawnCampUnit (behavior slot 0 = CampWanderBehavior — the 75f landing note lives at the swap); §75j2: the enemy PULL (SIM.enemyPullChance) enqueues engage{neutral} on the pulled camp's primed member — NO pre-marked hostility, the ordered first blow aggros
@@ -310,7 +310,7 @@ src/
     shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
     palette.ts               # COLORS table — TERMINAL_STONE added for neutrals (C1a)
     animation/
-      SpriteAnimator.ts      # Lerps + fades (fromAlpha/toAlpha for D5.C) + E6.A shove channel
+      SpriteAnimator.ts      # Lerps + fades (fromAlpha/toAlpha for D5.C) + E6.A shove channel; §81c2 startGroundLerp (climb-early/descend-late Y for ground relocations — kills the low→high terrain clip)
                              # + onComplete/arcHeight/targetProvider on lerp (E6.B/E7.D/F3)
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
@@ -534,7 +534,7 @@ Internally manages a single `InstancedMesh` with instanced attributes for `posit
 
 ### `SpriteAnimator`
 
-Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a lerp from the old cell to the new cell over the move-cooldown duration. Per frame, it interpolates every active lerp and pushes positions to the `SpriteRenderer`. Owns visual transient state (in-flight lerps, fade-outs) that has no place in the simulation.
+Bridges simulation and rendering. Subscribes to `unit:moved` events and starts a lerp from the old cell to the new cell over the move-cooldown duration. Per frame, it interpolates every active lerp and pushes positions to the `SpriteRenderer`. Owns visual transient state (in-flight lerps, fade-outs) that has no place in the simulation. §81c2: unit GROUND relocations (moves/swaps/settle-backs) go through `startGroundLerp`, which re-times Y only — climbs complete by the 50% mark and descents start there (matching the §36 logical-position flip) — so an anchor never sits below the surface of the cell it's visually over; projectiles keep the plain linear lerp.
 
 ## Event catalog (outputs)
 

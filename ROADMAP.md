@@ -323,49 +323,24 @@ Detail: WORKLOG §§80–80e + plans/.
 - [x] 80e — ✅ 2026-08-16: docs close — ROADMAP demote · HANDOFF
   cursor flip · META-ROADMAP C6 pointer (worklog §80e)
 
-## Phase 81 — Procedural parity ("Uncharted Ground" catch-up)
+## Phase 81 — Procedural parity ("Uncharted Ground") ✅ CLOSED 2026-08-17
 
-**Charter:** bring the procedural battlefield generator to content
-parity with the authored layouts: the five §37 terrain tiles
-(deepWater / hills / ice / sand / mud) in gen, and camp support —
-procedural maps carry no authored `camps` list, so camps roll from a
-per-theme camp pool + a density knob (the sector-owns-both split
-extended to themes). Inserted at the 75j close (user-approved
-2026-08-09, numbered per the phase-number-letter-is-for-steps
-convention; the old §81 renumbered to §82 — worklog §75j2).
+**Outcome (one breath):** procedural boards reached content parity in
+ONE day, all user-signed — the per-theme tile envelope (§37 tiles in
+gen; volcanic sparse fire REVERTED IN by user call; deep water blocks
++ counts in the cap + drains to shallow in both guards) · per-theme
+camp pools + density 35/45/20 + the pair/midBand/rare-free placement
+roll (45/45/10; volcanic pool deliberately EMPTY) · the camp dose
+structurally terrain-independent (placed last) · + the 81c2 eyeball
+insertion (`startGroundLerp` climb-early/descend-late Y — the
+low→high ground clip dead, §79 anchor math untouched). NO snapshot
+bump (Run v42 / World v35 held, both predicted); the feared
+procedural-arm re-pin cost ONE scan-widening + one catapult re-seed.
+Detail: WORKLOG §§81-kickoff–81d · DESIGN §Procedural parity · git.
 
-- **Order:** after §80, before the §82 rebalance — the closing board
-  must measure final content INCLUDING the procedural arm.
-- **Risk:** MEDIUM — gen changes shift procedural trajectories (a
-  deliberate procedural-arm re-pin); hand-authored layouts untouched.
-- **Decision points:** the per-theme camp pools + density (a design
-  round); per-tile terrain density knobs.
-- **Exit:** procedural maps roll the §37 tiles + camps; same seed →
-  same map (determinism holds); the procedural fuzz arm re-pinned;
-  user eyeball on a handful of seeds.
-- **Scope guards:** this is the BATTLEFIELD generator (§77 owns the
-  node-map generator); no new tile kinds; no new camp content —
-  pools over the §75 catalog only.
-
-Cut at the 2026-08-17 kickoff (audit + shape-lock: WORKLOG
-§81-kickoff — fire-on-volcanic reverted IN, camp-placement mode
-pairs/mid-band even + rare asymmetry; both build steps predict NO
-snapshot bump):
-
-- [x] 81a — ✅ 2026-08-17: landed to plan; NO bump as predicted; the
-  arm re-pin = one scan-widening (worklog §81a).
-- [x] 81b — ✅ 2026-08-17: landed to plan; NO bump; the
-  dose-independence pin = camp density never perturbs terrain;
-  volcanic pool ships EMPTY → 81c (worklog §81b).
-- [x] 81c — ✅ 2026-08-17: ALL SIGNED — placement 45/45/10 ·
-  volcanic pool stays empty · density re-dialed 35/45/20 (user
-  call) · palettes + pools as shipped (worklog §81c).
-- [x] 81c2 — INSERTED (eyeball catch, user screenshot) ✅
-  2026-08-17: the ground-clip fix — `startGroundLerp`
-  climb-early/descend-late Y, §79 anchor math untouched; native
-  feel eyeball rides (worklog §81c2).
-- [ ] 81d — docs close: DESIGN/ARCHITECTURE touch-ups · demote ·
-  cursor flip · box ON TIME.
+- [x] 81a tile layer ✅ · [x] 81b camps ✅ · [x] 81c design round
+  ALL SIGNED ✅ · [x] 81c2 ground-clip fix (INSERTED) ✅ ·
+- [x] 81d docs close ✅ 2026-08-17
 
 ## Phase 82 — The closing rebalance + cluster close
 

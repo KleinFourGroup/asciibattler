@@ -4406,6 +4406,25 @@ a stub sprite sink, exact samples at t=.25/.5/.75/1 — rising
 y=0.3→0.5→0.5→0.5, falling y=0.5→0.5→0.3→0.1, flat constant, XZ
 linear throughout · a fresh full battle (Soldier → starting event
 → battle) ran real moves through the new path with zero new
-console errors. Render-only (no tests by policy); the FEEL
-verdict — no more ground-clip on low→high steps — rides with the
-user's native eyeball.
+console errors. Render-only (no tests by policy). **The native
+feel eyeball PASSED — user-signed 2026-08-17 ("nailed it").**
+
+### §81d — docs close (2026-08-17) — §81 CLOSED
+
+The close ritual: DESIGN gains §Procedural parity (the four signed
+design facts: per-theme palettes incl. the volcanic-fire revert ·
+per-theme pools with volcanic deliberately empty · the 45/45/10
+placement fairness doctrine · dose-independence) + the Camps intro
+widened to both placement sources; ARCHITECTURE tree annotations
+(terrainGen/proceduralMap/SpriteAnimator) + the SpriteAnimator
+section's groundLerp paragraph; ROADMAP §81 demoted to the stub +
+outcome breath; HANDOFF cursor flipped (§§73–81 ✅, NEXT = §82);
+TODO gains the mapgen empty-pool-hint line (the user's five-minute
+volcanic camp hunt); agent memory snapshot refreshed at the phase
+boundary. Phase summary: inserted at 75j2 as a catch-up, closed in
+ONE session-day with every step user-signed, zero snapshot bumps
+(both predicted), and the §82 board inheriting a procedural arm
+that now measures FINAL content — the whole point of running §81
+before the rebalance. No scratchpad entries: the phase ran clean
+on the standing norms (step-zero audit, headless-first, the
+scan-over-pin shape, pause-per-commit).

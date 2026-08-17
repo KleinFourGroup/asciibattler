@@ -394,12 +394,15 @@ beyond the user's live sign-off).
   - [ ] 82e — weapons: halberd/pistol user-tuned; catapult release
     gate (the B design, worklog 2026-08-17): hold fire at the
     release boundary if the target left the [min,max] band —
-    - [ ] 82e0 — commit the user's halberd/pistol tuning
-    - [ ] 82e1 — `releaseGate {reaimSeconds, scalesWithSpeed}`
+    - [x] 82e0 — the user's halberd/pistol tuning (`33925e2`)
+    - [x] 82e1 — `releaseGate {reaimSeconds, scalesWithSpeed}`
       schema + the §36c-pattern hold at release + `unit:actionHeld`
-      + catapult config; headless tests; NO bump
-    - [ ] 82e2 — the amber DRAIN re-aim bar (render-only,
-      browser-verified)
+      + catapult config; 8 headless tests; NO bump; the
+      attack-editor FORMATTER pulled in early by its verbatim pin
+      (`be551b2`)
+    - [x] 82e2 — the amber DRAIN re-aim bar (render-only,
+      browser-verified live: amber #FFB000, drain 87.5→6.25%,
+      reaim 16 ticks = the speed-scaled 0.8 s — worklog)
     - [ ] 82e3 — attack-editor releaseGate support + audio-tell
       TODO; impact-recheck (the A design) deferred to playtest
 

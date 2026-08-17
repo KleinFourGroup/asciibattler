@@ -159,6 +159,10 @@ export class BattleRenderer {
   private readonly auraScratch = new THREE.Vector3();
   /** unitId → in-flight action timing for the progress bar. */
   private readonly progress = new Map<number, ActiveProgress>();
+  /** 82e2 — unitId → the re-aim drain window (`unit:actionHeld`). Entries
+   *  expire by render-clock time in `updateProgressFill`, or are superseded
+   *  the moment a real action bar claims the element. */
+  private readonly reaims = new Map<number, { startedAtMs: number; durationMs: number }>();
   /** Q1 — render-time accumulator in ms, advanced by the speed-scaled `dt` each
    *  frame (the same `dt` BattleScene feeds the sim). The progress bar fills
    *  against THIS, not `performance.now()`, so it tracks game speed and freezes
@@ -217,6 +221,10 @@ export class BattleRenderer {
     this.subscriptions.push(bus.on('unit:spawned', this.onUnitSpawned));
     this.subscriptions.push(bus.on('unit:moved', this.onUnitMoved));
     this.subscriptions.push(bus.on('unit:moveAborted', this.onUnitMoveAborted));
+    // 82e2 — a release-gate hold: start the amber DRAIN bar over the re-aim
+    // window (the bar element self-hides on the action clear; this is the
+    // "unit is re-aiming, not idle" tell — see updateProgressFill).
+    this.subscriptions.push(bus.on('unit:actionHeld', this.onUnitActionHeld));
     this.subscriptions.push(bus.on('unit:swapped', this.onUnitSwapped));
     this.subscriptions.push(bus.on('unit:swapAborted', this.onUnitSwapAborted));
     this.subscriptions.push(bus.on('unit:attacked', this.onUnitAttacked));
@@ -775,6 +783,7 @@ export class BattleRenderer {
     this.overlayFadeIns.clear();
     this.statusOverlays.clear();
     this.progress.clear();
+    this.reaims.clear();
     this.renderClockMs = 0;
     // J3 — drop the objective marker + state so the next battle starts clean.
     this.dropObjectiveMarker();
@@ -881,6 +890,21 @@ export class BattleRenderer {
    */
   private onUnitMoveAborted = ({ unitId, from }: GameEvents['unit:moveAborted']): void => {
     this.settleSpriteTo(unitId, from);
+  };
+
+  /**
+   * 82e2 — a release-gate hold (the catapult's target left the firing band
+   * mid-windup): anchor the re-aim DRAIN window on the render clock (the Q1
+   * scaled-dt accumulator — freezes at pause, tracks game speed, same as the
+   * fill bar). `updateProgressFill` draws it full→empty in TERMINAL_AMBER
+   * while no real action bar claims the element. Duration derives from the
+   * event's (already speed-scaled) tick count.
+   */
+  private onUnitActionHeld = ({ unitId, reaimTicks }: GameEvents['unit:actionHeld']): void => {
+    this.reaims.set(unitId, {
+      startedAtMs: this.renderClockMs,
+      durationMs: (reaimTicks * 1000) / TICK_RATE,
+    });
   };
 
   /**
@@ -1648,6 +1672,7 @@ export class BattleRenderer {
     if (!handle) return;
     this.animator.cancel(handle);
     this.progress.delete(unitId);
+    this.reaims.delete(unitId);
     // 28 — drop any held status-overlay tints (the unit fades out in its last
     // tint; the map entry would otherwise leak until reset).
     this.statusOverlays.delete(unitId);
@@ -1769,9 +1794,24 @@ export class BattleRenderer {
       active.action.id === SPAWN_ACTION_ID
     ) {
       if (this.progress.has(unitId)) this.progress.delete(unitId);
+      // 82e2 — no action bar claiming the element: a live re-aim window
+      // draws the amber DRAIN (full → empty). Deliberately kept up through
+      // an interleaved MOVE (the catapult repositioning mid-re-aim is still
+      // re-aiming); a real action bar supersedes it below.
+      const reaim = this.reaims.get(unitId);
+      if (reaim !== undefined) {
+        const remaining = 1 - (now - reaim.startedAtMs) / reaim.durationMs;
+        if (remaining > 0) {
+          this.overlays.updateProgress(overlay, remaining, true);
+          return;
+        }
+        this.reaims.delete(unitId);
+      }
       this.overlays.updateProgress(overlay, null);
       return;
     }
+    // A real action bar takes the element back — drop any lingering re-aim.
+    this.reaims.delete(unitId);
 
     let entry = this.progress.get(unitId);
     if (!entry || entry.startTick !== active.startTick) {

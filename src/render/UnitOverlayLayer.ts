@@ -43,6 +43,8 @@ export interface UnitOverlayHandle {
   hpPct: number;
   /** Last applied progress fill % (0..1), or null when hidden. */
   progressPct: number | null;
+  /** 82e2 — whether the bar currently wears the amber `.reaim` variant. */
+  progressReaim: boolean;
   /** Last applied level. */
   level: number;
   /** §32c — the sim tick the status strip last reconciled at. The status
@@ -150,6 +152,7 @@ export class UnitOverlayLayer {
       alpha,
       hpPct: 1,
       progressPct: null,
+      progressReaim: false,
       level,
       statusTick: -1,
       destructible: false,
@@ -304,7 +307,10 @@ export class UnitOverlayLayer {
   }
 
   /** Show + fill the progress bar at `pct`, or pass `null` to hide it. */
-  updateProgress(handle: UnitOverlayHandle, pct: number | null): void {
+  /** 82e2 — `reaim` switches the bar to the amber re-aim variant (the
+   *  `.reaim` class; ui.css). The class toggles only on a variant CHANGE, so
+   *  the per-frame cost stays one width write. */
+  updateProgress(handle: UnitOverlayHandle, pct: number | null, reaim = false): void {
     if (pct === null) {
       if (handle.progressPct === null) return;
       handle.progressEl.hidden = true;
@@ -312,8 +318,12 @@ export class UnitOverlayLayer {
       return;
     }
     const clamped = Math.max(0, Math.min(1, pct));
-    if (clamped === handle.progressPct) return;
+    if (clamped === handle.progressPct && reaim === handle.progressReaim) return;
     if (handle.progressEl.hidden) handle.progressEl.hidden = false;
+    if (reaim !== handle.progressReaim) {
+      handle.progressEl.classList.toggle('reaim', reaim);
+      handle.progressReaim = reaim;
+    }
     handle.progressFill.style.width = `${(clamped * 100).toFixed(2)}%`;
     handle.progressPct = clamped;
   }

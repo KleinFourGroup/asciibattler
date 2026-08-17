@@ -137,6 +137,19 @@ body {
   background: #15f4ee; /* FLOURESCENT_BLUE */
 }
 
+/* 82e2 — the release-gate re-aim bar (unit:actionHeld): the SAME element in
+   TERMINAL_AMBER, DRAINING full→empty over the re-aim window. Two-signal
+   legibility vs the cyan action fill (color AND direction differ), so a held
+   catapult can't misread as another incoming shot; regular cooldowns stay
+   barless, which makes this the unique "held fire, re-aiming" tell. */
+.unit-overlay .action-progress.reaim {
+  border-color: rgba(255, 176, 0, 0.4);
+}
+
+.unit-overlay .action-progress.reaim .action-progress-fill {
+  background: #ffb000; /* TERMINAL_AMBER */
+}
+
 /* §32c: the per-unit status pip-strip (above the HP bar). A centered, wrapping
    row of small chips — one per active status, in stable canonical order. Each
    pip is a dark track with a colored fill whose WIDTH depletes with remaining

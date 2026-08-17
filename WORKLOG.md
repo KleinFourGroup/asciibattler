@@ -4606,3 +4606,34 @@ options rejected on the way (worklog'd at ideation): impact-recheck
 offend), windup cut (honest but forecloses the real-telegraph
 upside), ground-target (a redesign), re-home (the F2 unfairness
 note stands). 8 new tests (schema 2 + behavior 6).
+
+### 82e2 — the amber drain re-aim bar (2026-08-17)
+
+Render-only, the design as signed: `unit:actionHeld` anchors a
+re-aim window on the Q1 render clock (speed-tracking, pause-frozen);
+`updateProgressFill` draws it on the SAME bar element in
+TERMINAL_AMBER, DRAINING full→empty — two-signal legibility (color
+AND direction differ from the cyan fill-toward-impact bar), and
+since regular cooldowns are barless the amber bar is a unique "held
+fire, re-aiming" tell. Deliberate call: the drain stays up through
+an interleaved MOVE (a repositioning catapult is still re-aiming);
+any real action bar supersedes it. The variant is one `.reaim`
+class toggle on a variant CHANGE only — per-frame cost stays one
+width write. Cleanup rides the existing sweeps (unit:died, detach).
+
+Browser-verified end to end, with a wrinkle worth recording: the
+un-displayed Browser pane composites no frames, so rAF never fires
+and the battle clock sits at tick 0 — screenshots AND organic play
+are both dead in that state. The verification instead drove the
+REAL production loop synchronously (`world.tick()` +
+`battleRenderer.update(0.05)` in lockstep) with a roster-pinned
+catapult (`?roster=catapult:2,…` — the artillery encounter's first
+wave fields no catapult, surprise #1), teleported the locked
+target out of band mid-windup, and sampled the DOM each step:
+`unit:actionHeld {reaimTicks: 16}` (= 0.8 s, the speed-scaled 1 s —
+the cadence curve visibly biting), fill computed
+`rgb(255, 176, 0)` (TERMINAL_AMBER), width DRAINING
+87.5% → 43.75% → 6.25%, and the catapult re-proposing a fresh lob
+after expiry (the re-aim → re-engage loop, closed). The roster
+param + `__game.activeScene.world` made this drivable without a
+single screenshot.

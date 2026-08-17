@@ -4121,3 +4121,29 @@ must-not-break: the volume-axis split (2-or-3 sliders) decided
 BEFORE the options menu bakes in one slider; settings persistence
 rides the same C6 store as save/load; stings stay SFX with music
 ducking — two lanes, two jobs.
+
+### §80c — achievements + tutorial plans (2026-08-16)
+
+`plans/achievements.md` + `plans/tutorial.md`, one commit (the
+shared dependency). Both docs EXPLICITLY confirm the C6
+persistent-store dependency — the §80 exit criterion — and both
+route it to ONE store designed once in C6 with all four consumers
+known (save/load · achievements · settings/volume · tutorial
+seen-flags), versioned from day one per snapshot discipline.
+Achievements held to the kickoff scope guard (confirm, design
+nothing): detection is the proven never-emits-subscriber pattern
+(TelemetryAccumulator/TraceRecorder precedents) reading the
+45-event bus; the four must-not-break rules are the store version,
+bus-only detection, no mid-run feedback (unlocks resolve at run
+creation — determinism), and fuzz runs never write the store.
+Tutorial's audit found its strongest feasibility fact:
+**determinism makes a scripted teaching run nearly free** — a
+pinned seed + the existing RunConfig/run-config tooling yields a
+byte-reproducible authored first run (known board states, no
+reactive hint engine); the §74 event-page grammar noted as a
+candidate vehicle, not pre-committed. Must-not-break: DESIGN
+§Input accessibility as curriculum law (teach the mouse route,
+hotkeys are accelerators) · key labels derived from the Keybindings
+registry (C6 ships rebind — literal "press M" strings go stale) ·
+the post-C5 UI audit sequences BEFORE the tutorial (callouts author
+against audited idioms) · the scripted run stays an ORDINARY run.

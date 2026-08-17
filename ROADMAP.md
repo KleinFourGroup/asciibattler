@@ -311,10 +311,12 @@ docs land in the NEW `plans/` directory — user-signed):
   slider · any-gesture unlock (the map-click assumption is false
   for music) · assets = the long pole, two routes dispositioned
   (worklog §80b)
-- [ ] 80c — achievements + tutorial (`plans/achievements.md` +
-  `plans/tutorial.md`, ONE commit — the shared C6 persistent-store
-  dependency; tutorial additionally audited against DESIGN §Input
-  accessibility + the planned post-C5 UI-audit interstitial)
+- [x] 80c — ✅ 2026-08-16: `plans/achievements.md` +
+  `plans/tutorial.md` — the C6 store dependency EXPLICITLY confirmed
+  in both (the exit criterion); one store, four consumers, versioned
+  from day one; the tutorial's strongest fact = determinism makes a
+  scripted teaching run a pinned RunConfig, not a hint engine
+  (worklog §80c)
 - [ ] 80d — online balance telemetry (`plans/telemetry.md`):
   transport · consent · DEV/PROD split, on the proven
   never-emits-subscriber pattern

@@ -164,3 +164,21 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   (font-coverage.test.ts). Generalizes: a check's VALUE is its
   placement on the forgetful path; the same assertion on the mindful
   path is mostly decoration.
+- **EXPERIMENT (not a norm — a candidate to re-run): cross-model
+  author/auditor split at §79/§79-post.** Opus built the phase; Fable
+  audited the worklog cold ("anything stand out as a wrong call?") the
+  day it closed → the 79-post findings. Honest read: the catches were
+  FRESH-CONTEXT class, not clearly model class — every finding started
+  as a claims-trace (a sentence saying slightly more than its evidence:
+  "closed", "fails the build", "deterministic") verified against a
+  surface the author never consulted (the deploy mechanism, the guard's
+  run-path); the author had already self-caught the phase's worst error
+  (the circular probe). Terrain note: §79 was render/eyeball-heavy —
+  exactly where the automated adversaries (suite/fuzz/determinism) have
+  no reach and prose claims carry the proof burden, so audit ROI was
+  probably near its max. Re-run ideas, if ever: (a) same-model
+  fresh-session audit as the control that isolates the model variable;
+  (b) a sim-heavy phase to test the terrain hypothesis. User verdict at
+  the time: "worked well, though I don't know how much difference it
+  made." Deliberately NOT proposed for adoption — sweep should keep or
+  archive it as an experiment card, not promote it.

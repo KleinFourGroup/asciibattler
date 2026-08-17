@@ -4356,3 +4356,18 @@ stat (config mode; manual keeps camps off).
   seeds still hit, mechanic healthy) → re-seeded 7→8 with the
   precedent note extended. Final gate: 2666 main + 398 fuzz:smoke
   + typecheck, all green (`58b7883`).
+
+### §81c — the design round (2026-08-17, in progress)
+
+The user's native tool session (plus one comedy beat: five minutes
+rerolling VOLCANIC hunting for camps — the one empty pool 🙈):
+
+- **Camp placement SIGNED** — pairs/mid-band/rare-free at 45/45/10
+  reads right on real maps.
+- **Volcanic stays EMPTY, signed** — until a thematically
+  appropriate resident exists (a "nothing lives here" signature is
+  coherent for the fire theme meanwhile).
+- **Density re-dialed 50/35/15 → 35/45/20 (user call)**: procedural
+  boards are rare enough that a camp-free majority felt too flat —
+  the no-camp weight drops to ~a third, most boards now carry one
+  camp. Dose-independence means the dial moves zero terrain pins.

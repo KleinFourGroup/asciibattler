@@ -46,7 +46,7 @@
       }
     },
     "camps": {
-      "density": { "0": 0.5, "1": 0.35, "2": 0.15 },
+      "density": { "0": 0.35, "1": 0.45, "2": 0.2 },
       "placement": { "pair": 0.45, "midBand": 0.45, "free": 0.1 },
       "spawnStandoff": 3,
       "pools": {

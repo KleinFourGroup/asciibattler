@@ -4191,3 +4191,74 @@ criteria; content amendments land as follow-up commits (the
 scratchpad entries this phase — the census-correction lesson is
 already covered by the standing step-zero norm (re-verify the
 premise against current code), which is exactly what caught it.
+
+## Phase 81 — Procedural parity ("Uncharted Ground" catch-up)
+
+### §81-kickoff — code-reality audit + shape-lock (2026-08-17)
+
+**Audit verdict: no premise rot — genuinely additive.** Every seam
+the charter needs exists:
+
+- The generator ([proceduralMap.ts](src/sim/proceduralMap.ts)) knows
+  three surface features (walls · half-cover · `shallow_water`); the
+  noise field already carries the structure the §37 tiles slot into
+  (high → cover, low → pools).
+- **Theme doesn't reach the generator today** — `generateTerrain`
+  has no theme param (theme is renderer-only, threaded via
+  `EncounterMap`; procedural inherits the SECTOR's theme,
+  Run.ts `buildEncounterMap`). `applyTerrain` holds the encounter,
+  so threading `encounter.theme` down is a one-line change. Six
+  themes exist; shipped sectors use grassland + swamp.
+- **Camps are fully generic downstream of the layout**:
+  `GeneratedTerrain.campSpawns + camps` → `spawnCamps` works off any
+  source (the procedural path fills `[]` today). Generator emits
+  tiles + a `CampRef[]` pool ⇒ identity roll (`campSetup` stream),
+  portal drip, hostility, rewards, render all work with ZERO
+  downstream changes.
+- **No new #125 stream keys**: all new draws ride the existing
+  `'terrain'`-derived RNG inside the generator; camp identity stays
+  on `'campSetup'`. Added draws reorder the procedural stream — the
+  deliberate procedural-arm re-pin the roadmap predicts. Authored
+  layouts consume zero draws in this path — provably untouched.
+- **Snapshot prediction: NO bump (Run v42 / World v35 hold).** All
+  five tile kinds are already in the serialized `TileKind` union
+  (§37) and camp instances already serialize (World v35, §75b).
+  Config schema widens only.
+- **Hazard found: `deep_water` is impassable (cost ∞)** but the
+  generator's connectivity BFS treats only walls/half-cover as
+  obstacles, and the obstacle cap doesn't count tiles. The internal
+  cell model + both guards must learn impassable tiles or a swampy
+  seed can seal the crossing un-carveably.
+- **New decision surfaced (not in the charter): camp symmetry** — a
+  single camp on a mirror/point board hands one team a free detour;
+  the user's §75j placement pass cared about exactly this.
+- Rider candidate: the legacy C1a `wallDensity` /
+  `shallowWaterDensity` knobs are dead in this path ("slated for
+  removal" per terrainGen's own header) — delete while in the file.
+
+**Shape-lock resolutions (user-signed 2026-08-17):**
+
+1. **Theme→tile palettes** — starting proposal approved: grassland
+   hills/mud/shallow · swamp mud/shallow/deep · tundra
+   ice/deep/hills · desert sand/hills · barren hills/sand ·
+   **volcanic hills/sand + SPARSE FIRE** — the user REVERTED the
+   "fire stays hand-authored" call: too thematic to skip; kept low.
+   (Procedural fire is volcanic-only; `GeneratedTerrain.fires`
+   parallel readout must be filled on the procedural path — it was
+   hand-authored-only since D7.B.)
+2. **Theme→camp pools** — starting proposal approved (frost-coven →
+   tundra · banshee-barrow/ghoul-nest → swamp · bandit camps →
+   grassland/barren/desert); density a weighted 0/1/2 per board;
+   pools over the §75 5-camp catalog only (scope guard). Exact
+   assignments + weights signed at 81c on visible maps.
+3. **Camp symmetry (user call)** — placement rolls a MODE: symmetric
+   pairs and mid-band split evenly, occasional free/asymmetric
+   placement as a RARE occurrence (spice, not the norm). Weighted
+   mode knob, dialable.
+
+**The cut** (ROADMAP §81): 81a theme thread + per-theme tile layer
+(headless-first; guards learn impassable tiles; arm re-pin) → 81b
+procedural camps (per-theme pools + density + the mode roll;
+density-0 byte-identity pin) → 81c design round (palettes/pools/
+densities signed on visible maps; native eyeball on a handful of
+seeds) → 81d docs close. Both build steps predict NO snapshot bump.

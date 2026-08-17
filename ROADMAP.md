@@ -347,6 +347,28 @@ convention; the old §81 renumbered to §82 — worklog §75j2).
   node-map generator); no new tile kinds; no new camp content —
   pools over the §75 catalog only.
 
+Cut at the 2026-08-17 kickoff (audit + shape-lock: WORKLOG
+§81-kickoff — fire-on-volcanic reverted IN, camp-placement mode
+pairs/mid-band even + rare asymmetry; both build steps predict NO
+snapshot bump):
+
+- [ ] 81a — theme thread + per-theme tile layer, headless-first:
+  `generateTerrain` gains `theme`; `ProceduralSchema` gains an
+  exhaustive per-theme tile envelope (volcanic = sparse fire); cap +
+  connectivity guards learn impassable tiles; legacy
+  wallDensity/shallowWaterDensity knobs deleted. Exit: determinism +
+  per-theme presence + deep-water connectivity pins green;
+  procedural fuzz arm re-pinned.
+- [ ] 81b — procedural camps: per-theme camp pools + density knob +
+  the weighted placement-mode roll (pairs/mid-band/rare-free);
+  generator emits `campSpawns`/`camps` (occupiable floor, spawn-band
+  standoff). Exit: camps-spawn + density-0 byte-identity pins green;
+  arm re-pinned.
+- [ ] 81c — design round: palettes/pools/densities signed on visible
+  maps; user native eyeball on a handful of seeds.
+- [ ] 81d — docs close: DESIGN/ARCHITECTURE touch-ups · demote ·
+  cursor flip · box ON TIME.
+
 ## Phase 82 — The closing rebalance + cluster close
 
 **Charter:** the balance agenda on final content: the gambler

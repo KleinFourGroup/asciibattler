@@ -35,6 +35,9 @@ import {
   type OrphanPolicy,
 } from '../Action';
 import type { GridCoord } from '../../core/types';
+import { secondsToTicks } from '../../config';
+import { collectLosBlockers, firingBandCell } from '../positioning';
+import { speedScaledSeconds } from '../stats';
 import type { Unit } from '../Unit';
 import type { World } from '../World';
 import type { AbilityDef } from './schema';
@@ -82,6 +85,37 @@ export class EffectAction implements Action {
 
   start(unit: Unit, world: World): void {
     this.fireOpsAt(unit, world, 0);
+  }
+
+  /**
+   * 82e — the release gate (see `Action.holdCheck` / the schema's
+   * `releaseGate` doc). Re-runs the EXACT propose-time predicate
+   * (`firingBandCell`, the one-predicate rule — positioning.ts) against the
+   * target's live position at the `release` boundary: dead or out of the
+   * `[minRange, range]` band (or LOS-blocked, for gated verbs) → hold fire,
+   * returning the re-aim cooldown in ticks (floored at 1; speed-scaled on
+   * the cadence curve when authored, matching the timeline-phase flag).
+   */
+  holdCheck(phase: ActionPhaseName, unit: Unit, world: World): number | null {
+    const gate = this.def.releaseGate;
+    if (gate === undefined || phase !== 'release') return null;
+    const target = this.ctx.targetId >= 0 ? world.findUnit(this.ctx.targetId) : undefined;
+    const aim =
+      target !== undefined && target.currentHp > 0
+        ? firingBandCell(
+            unit.position,
+            target,
+            target.position,
+            this.def.minRangeCells,
+            this.def.rangeCells,
+            this.def.ignoresLineOfSight ? null : collectLosBlockers(world),
+          )
+        : undefined;
+    if (aim !== undefined) return null;
+    const seconds = gate.scalesWithSpeed
+      ? speedScaledSeconds(gate.reaimSeconds, unit.effectiveStats.speed)
+      : gate.reaimSeconds;
+    return Math.max(1, secondsToTicks(seconds));
   }
 
   applyEffect(unit: Unit, world: World, tickOffset: number, _phase?: ActionPhaseName): void {

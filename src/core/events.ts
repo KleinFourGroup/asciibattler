@@ -197,6 +197,20 @@ export interface GameEvents extends Record<string, unknown> {
     to: GridCoord;
   };
   /**
+   * 82e — an in-flight action HELD FIRE at a phase boundary (the release
+   * gate: a `releaseGate` def whose locked target left the firing band —
+   * or died — during the wind-up). The action cleared with nothing fired;
+   * the ability's cooldown was set to `reaimTicks` (the re-aim window,
+   * already speed-scaled). Consumer: BattleRenderer's amber DRAIN bar over
+   * the re-aim window — without it the held unit reads as idle (regular
+   * cooldowns are barless, so this bar is a unique "held fire" tell).
+   */
+  'unit:actionHeld': {
+    unitId: number;
+    actionId: string;
+    reaimTicks: number;
+  };
+  /**
    * §42a — the movement layer's per-poll DECISION record: why the unit moved,
    * or why it deliberately (or helplessly) didn't. Exactly ONE per
    * MovementBehavior / SupportMovementBehavior poll (a unit with an in-flight

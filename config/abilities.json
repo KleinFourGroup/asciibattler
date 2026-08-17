@@ -265,6 +265,7 @@
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
+    "releaseGate": { "reaimSeconds": 1, "scalesWithSpeed": true },
     "orphanPolicy": "fizzle",
     "priority": 10,
     "effects": [

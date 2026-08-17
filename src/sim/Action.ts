@@ -116,6 +116,18 @@ export interface Action {
    * `{ targetCell }`. Absent → `{}` (self / no-target actions like move).
    */
   phaseTarget?(): { targetId?: number | undefined; targetCell?: GridCoord | undefined };
+  /**
+   * 82e — the release-gate probe (the §35b/§36c abort family, at a PHASE
+   * boundary). `World.tick` calls it for each phase of an in-flight action
+   * BEFORE that phase's event emits; a non-null return HOLDS FIRE: World
+   * clears `activeAction` (no phase event, no effect, no RNG draw) and sets
+   * the ability's cooldown to the returned ticks — the re-aim window — then
+   * emits `unit:actionHeld`. Null/absent = proceed. Implemented today only
+   * by `EffectAction` for defs authoring `releaseGate` (checked at their
+   * `release` boundary). The offset-0 START path deliberately skips the
+   * probe: propose validated the band on the same tick, nothing has moved.
+   */
+  holdCheck?(phase: ActionPhaseName, unit: Unit, world: World): number | null;
   toData(): unknown;
 }
 

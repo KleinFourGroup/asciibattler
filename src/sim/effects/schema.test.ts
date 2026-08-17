@@ -195,6 +195,46 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     expect(() => parseAbilityDef(bad)).toThrow(/at most one 'fill'/);
   });
 
+  it('82e — releaseGate parses (default scalesWithSpeed=false) when a release phase exists', () => {
+    const gated = validStrikeDef() as Record<string, unknown>;
+    gated.timeline = [
+      { phase: 'windup', seconds: 1 },
+      { phase: 'release', seconds: 0 },
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill' },
+    ];
+    gated.releaseGate = { reaimSeconds: 1 };
+    const def = parseAbilityDef(gated);
+    expect(def.releaseGate).toEqual({ reaimSeconds: 1, scalesWithSpeed: false });
+  });
+
+  it('82e — rejects releaseGate without a release phase, on a non-single-target selector, and with a non-positive reaim', () => {
+    // No 'release' phase in the timeline → nothing would ever fire the gate.
+    const noRelease = validStrikeDef() as Record<string, unknown>;
+    noRelease.releaseGate = { reaimSeconds: 1 };
+    expect(() => parseAbilityDef(noRelease)).toThrow(/release/);
+    // An aoe selector has no locked single target to re-test.
+    const aoe = validStrikeDef() as Record<string, unknown>;
+    aoe.timeline = [
+      { phase: 'release', seconds: 0 },
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill' },
+    ];
+    aoe.releaseGate = { reaimSeconds: 1 };
+    aoe.target = { kind: 'aoe', shape: 'square', radius: 1, anchor: 'targetCell', affects: 'enemies' };
+    aoe.effects = [];
+    expect(() => parseAbilityDef(aoe)).toThrow(/enemyInRange/);
+    // A zero re-aim window is a free instant retry — parse-illegal.
+    const zero = validStrikeDef() as Record<string, unknown>;
+    zero.timeline = [
+      { phase: 'release', seconds: 0 },
+      { phase: 'impact', seconds: 0 },
+      { phase: 'recovery', seconds: 'fill' },
+    ];
+    zero.releaseGate = { reaimSeconds: 0 };
+    expect(() => parseAbilityDef(zero)).toThrow();
+  });
+
   it('Yb — rejects scalesWithSpeed on a fill phase (a no-op footgun)', () => {
     const bad = validStrikeDef() as {
       timeline: { phase: string; seconds: unknown; scalesWithSpeed?: boolean }[];

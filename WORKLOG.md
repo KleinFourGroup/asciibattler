@@ -4569,3 +4569,40 @@ not a page navigator — form-filling it to "navigate" mutated
 from entry 'guardians'"), which read as a UI bug for a minute.
 Revert-all cleared it; the committed file was never touched (Save
 correctly stayed disabled throughout).
+
+### 82e1 — the catapult release gate (sim + schema) (2026-08-17)
+
+The catapult problem, reframed at ideation (user-signed, the B design):
+the 2 s wind-up was FAKE counterplay — the shot homes and nothing
+rechecked position after propose, so the wind-up was pure delay and
+the "absurdly short/long shots" (rare before, common under the
+officer's mobility aura) were the renderer faithfully drawing that
+lie. The gate makes the telegraph REAL: at the `release` boundary the
+EXACT propose-time predicate re-runs (`firingBandCell` — positioning's
+one-predicate rule, which its own doc mandates for any future range
+gate) against the target's live position; dead / out-of-band /
+LOS-blocked → HOLD FIRE. The abort is the §36c family one step later
+in the lifecycle: activeAction clears with nothing fired (no phase
+event, no effect, NO RNG draw), and instead of §36c's reset-to-0 the
+cooldown is set to the RE-AIM window — `releaseGate: { reaimSeconds,
+scalesWithSpeed }` on the ability def (nested, user call), authored
+`{ 1, scalesWithSpeed: true }` on the catapult so every one of its
+time costs shrinks together under haste (the anti-synergy the flat
+version would have authored: speed shrinking the windup but not the
+penalty). Schema refinements: a gate requires a `release` timeline
+phase and the `enemyInRange` selector. `unit:actionHeld` announces
+the hold (consumer: 82e2's drain bar). The offset-0 start path skips
+the probe deliberately — propose validated the band the same tick.
+
+NO snapshot bump (nothing new serialized — the save/load test drives
+the SHIPPED catapult def through the wire mid-windup and holds in the
+clone; synthetic defs can't round-trip, `createAction` resolves defId
+via the real catalog). Fallout: the attack-editor formatter verbatim
+pin forced the emit half of 82e3 in early (releaseGate after
+timeline, scalesWithSpeed omitted at default false — the §30a
+canonical-convention rules); the editor UI half stays 82e3. Design
+options rejected on the way (worklog'd at ideation): impact-recheck
+(A — deferred, ~5 lines on top of this if travel-window escapes
+offend), windup cut (honest but forecloses the real-telegraph
+upside), ground-target (a redesign), re-home (the F2 unfairness
+note stands). 8 new tests (schema 2 + behavior 6).

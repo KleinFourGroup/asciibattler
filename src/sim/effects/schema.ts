@@ -469,6 +469,26 @@ export const AbilityDefSchema = z
     fx: FxSchema.optional(),
     /** §76a — the optional passive aura (see `AuraSchema`). */
     aura: AuraSchema.optional(),
+    /**
+     * 82e — the release gate (the catapult's hold-fire). At the `release`
+     * phase boundary, the SAME `[minRangeCells, rangeCells]` band + LOS
+     * test the propose gate ran (`firingBandCell` — the one-predicate
+     * rule, positioning.ts) re-runs against the target's LIVE position:
+     * a dead or out-of-band target ABORTS the shot before the projectile
+     * exists (nothing fires, no RNG draw), and the ability's cooldown is
+     * set to `reaimSeconds` instead of the full cadence — the crew shifts
+     * its aim rather than re-cranking. `scalesWithSpeed` rides the cadence
+     * curve (`speedScaledSeconds`), matching the timeline-phase flag —
+     * authored `true` on the catapult so every one of its time costs
+     * shrinks together under haste. Requires a `release` timeline phase
+     * and a single-target selector (refined below).
+     */
+    releaseGate: z
+      .object({
+        reaimSeconds: z.number().positive(),
+        scalesWithSpeed: z.boolean().default(false),
+      })
+      .optional(),
   })
   .refine((def) => def.timeline.filter((p) => p.seconds === 'fill').length <= 1, {
     message: "a timeline may declare at most one 'fill' phase",
@@ -489,6 +509,16 @@ export const AbilityDefSchema = z
       "a pure aura (no effect ops) must target 'self' — any other selector would inflate " +
       'derived.attackRange to the aura radius and strand the carrier out of engagement',
     path: ['aura'],
+  })
+  .refine((def) => !def.releaseGate || def.timeline.some((p) => p.phase === 'release'), {
+    message: "releaseGate requires a 'release' phase in the timeline (nothing else fires it)",
+    path: ['releaseGate'],
+  })
+  .refine((def) => !def.releaseGate || def.target.kind === 'enemyInRange', {
+    message:
+      "releaseGate requires the 'enemyInRange' selector — the gate re-tests a locked " +
+      'single target; aoe/self/ally verbs have no band to re-test',
+    path: ['releaseGate'],
   });
 
 /* -------------------------------------------------------------------------- */

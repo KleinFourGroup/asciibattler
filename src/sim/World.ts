@@ -1301,12 +1301,35 @@ export class World {
           continue;
         }
 
+        // 82e — the release-gate probe (the §36c abort family, one step
+        // later in the lifecycle): before a phase boundary emits, the
+        // action may HOLD FIRE (`holdCheck` — today: a releaseGate def
+        // whose target left the firing band mid-windup). The abort mirrors
+        // §36c minus the claim (nothing was claimed): the action clears
+        // with nothing fired (no phase event, no effect, no RNG draw) and
+        // the cooldown is set to the returned RE-AIM ticks instead of
+        // resetting to 0 — the crew shifts its aim, it doesn't re-crank.
+        // `unit:actionHeld` drives the renderer's re-aim bar.
+        let held = false;
         for (const phase of phasesBeginningAt(aa.phases, offset)) {
+          const reaimTicks = aa.action.holdCheck?.(phase, unit, this) ?? null;
+          if (reaimTicks !== null) {
+            unit.actionCooldowns.set(aa.action.id, reaimTicks);
+            unit.activeAction = null;
+            this.bus.emit('unit:actionHeld', {
+              unitId: unit.id,
+              actionId: aa.action.id,
+              reaimTicks,
+            });
+            held = true;
+            break;
+          }
           this.emitActionPhase(unit, aa.action, phase);
           if (phase === 'impact' && aa.action.applyEffect) {
             aa.action.applyEffect(unit, this, offset, 'impact');
           }
         }
+        if (held) continue;
         if (this.tickCount >= aa.finishTick) {
           unit.activeAction = null;
         } else {

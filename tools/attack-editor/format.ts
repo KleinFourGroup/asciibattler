@@ -179,6 +179,14 @@ export function formatAbilitiesJson(config: Record<string, AbilityDef>): string 
     }
     lines.push(`${F}"target": ${fmtTarget(def.target)}`);
     lines.push(`${F}"timeline": [\n${def.timeline.map((p) => `      ${fmtPhase(p)}`).join(',\n')}\n${F}]`);
+    // 82e — the release gate (true-optional; inline, after the timeline it
+    // gates). `scalesWithSpeed` omits at its default false, the
+    // defaulted-fields convention above.
+    if (def.releaseGate !== undefined) {
+      const g = def.releaseGate;
+      const scaled = g.scalesWithSpeed ? ', "scalesWithSpeed": true' : '';
+      lines.push(`${F}"releaseGate": { "reaimSeconds": ${n(g.reaimSeconds)}${scaled} }`);
+    }
     lines.push(`${F}"orphanPolicy": ${s(def.orphanPolicy)}`);
     lines.push(`${F}"priority": ${n(def.priority)}`);
     // §76f — a pure aura (inspire) is the first op-less def: an empty effects

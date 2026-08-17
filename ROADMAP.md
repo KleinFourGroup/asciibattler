@@ -344,72 +344,30 @@ Detail: WORKLOG §§81-kickoff–81d · DESIGN §Procedural parity · git.
   ALL SIGNED ✅ · [x] 81c2 ground-clip fix (INSERTED) ✅ ·
 - [x] 81d docs close ✅ 2026-08-17
 
-## Phase 82 — Reward & weapon feel round
+## Phase 82 — Reward & weapon feel round ✅ CLOSED 2026-08-17
 
-**Charter:** iterative FEEL changes with the user at the wheel —
-several reward-table adjustments (the primary target) plus a change
-or two to weapons. Inserted 2026-08-17 at the §81 close (user call;
-renumbers the closing rebalance §82→§83). **Deliberately has NO step
-cut** — this is a sit-together tuning session, not a build: changes
-land as they're signed, commit-per-logical-change, each behind the
-usual gate. The kickoff ritual applies only in miniature (a
-code-reality look at the tables/weapons touched; no shape-lock
-beyond the user's live sign-off).
+The feel-round insertion, opened and closed in one day, every change
+user-signed. Reward tables went SINGLE-TYPE (the mixed-table split:
+pure bits/packets/daemons tables, tier-pure wiring, elite/boss
+daemons@1 — the signed generosity jumps); `rewardOverride` widened
+to a ref list (**Run v42→v43** — the charter's no-bump guard
+consciously amended, the stop-and-ask fired as designed); the
+catapult gained the release gate (hold fire + speed-scaled re-aim +
+the amber drain bar — the wind-up is real counterplay now); halberd/
+pistol user-tuned; both editors follow. Detail: WORKLOG §82 + git.
 
-- **Order:** before §83, by construction — reward/weapon changes are
-  CONTENT MOVERS, and the closing board must measure final content
-  (the same rule that ordered §81 before the rebalance).
-- **Risk:** LOW-MEDIUM — config-heavy (`config/rewards.json` /
-  `config/abilities.json` / `config/units.json`); weapon changes
-  touch sim behavior → fuzz:smoke re-pins possible (the documented
-  §81 shapes: scan-widening, re-seed). Snapshot prediction: NO bump
-  (tables + ability numbers are config; no serialized union in
-  sight — a surprise bump would be a stop-and-ask).
-- **Decision points:** every change IS one (the user signs each).
-- **Exit:** the user calls the feel done; tree green; any moved
-  balance number noted for the §83 board (which re-measures
-  everything anyway).
-- **Scope guards:** feel changes only — no new mechanics, no new
-  reward KINDS, no schema widening; anything structural spills to a
-  named phase or TODO. **Amended 2026-08-17 (user-signed, the
-  stop-and-ask fired as designed):** the mixed-table split surfaced
-  the single-table `rewardOverride` seam — widening it to a ref
-  list (events schema + Run snapshot 42→43 + event-editor) is IN,
-  as the explicit exception. Cut below; rationale in the worklog.
-- **The 82b–d cut** (mini-kickoff, 2026-08-17 — the split grew a
-  serialization change, so it gets checkboxes):
-  - [x] 82a — bits⇄packets mixed-table split + wiring (`dc34814`)
-  - [x] 82b — tier-pure split: shared `daemons` + `packets-elite` +
-    `packets-boss` (miner diluted) + `bits-boss`; `daemon-cache` /
-    `boss-hoard` deleted; elites/bosses rewired (daemons@1);
-    `outskirts` override re-pointed at `daemons` (interim)
-    (`5ad54f6`; box flipped a commit late — worklog)
-  - [x] 82c — `rewardOverride` → ref list: events schema + Run
-    snapshot (42→43, hard gate per convention); `outskirts` gets
-    the full elite trio; a THIRD shipped override surfaced
-    (hostage-trio → `hostage-rescue`) — converted (worklog)
-  - [x] 82d — event-editor: override ref-list UI (formatter + its
-    verbatim pin landed in 82c); browser-verified end to end
-    (worklog)
-  - [ ] 82e — weapons: halberd/pistol user-tuned; catapult release
-    gate (the B design, worklog 2026-08-17): hold fire at the
-    release boundary if the target left the [min,max] band —
-    - [x] 82e0 — the user's halberd/pistol tuning (`33925e2`)
-    - [x] 82e1 — `releaseGate {reaimSeconds, scalesWithSpeed}`
-      schema + the §36c-pattern hold at release + `unit:actionHeld`
-      + catapult config; 8 headless tests; NO bump; the
-      attack-editor FORMATTER pulled in early by its verbatim pin
-      (`be551b2`)
-    - [x] 82e2 — the amber DRAIN re-aim bar (render-only,
-      browser-verified live: amber #FFB000, drain 87.5→6.25%,
-      reaim 16 ticks = the speed-scaled 0.8 s — worklog)
-    - [x] 82e3 — attack-editor releaseGate controls (the aura
-      optional-field pattern; browser-verified incl. the live
-      refinement complaint) + the audio-tell TODO line
-    - [x] the A design (impact recheck) — ✅ DECIDED NOT NEEDED
-      (user playtest verdict 2026-08-17: the 0.6 s travel window
-      isn't a problem in practice; the ~5-line patch stays in the
-      worklog if it ever is)
+- [x] 82a — bits⇄packets mixed-table split + wiring (`dc34814`)
+- [x] 82b — tier-pure split: shared `daemons` / `packets-elite` /
+  `packets-boss` / `bits-boss`; daemons@1 on elites+bosses
+  (`5ad54f6`)
+- [x] 82c — `rewardOverride` → ref list, **Run v42→v43**; the
+  hostage-trio third override surfaced + converted (`b6b72e2`)
+- [x] 82d — event-editor override ref-list UI (`1b09579`)
+- [x] 82e0–e3 — halberd/pistol tuning · the catapult `releaseGate`
+  (schema+sim, 8 tests, NO bump) · the amber drain re-aim bar ·
+  attack-editor controls (`33925e2`/`be551b2`/`6ec7874`/`2f53cd6`)
+- [x] the A design (impact recheck) — ✅ DECIDED NOT NEEDED (user
+  playtest verdict; the ~5-line shape stays in the worklog)
 
 ## Phase 83 — The closing rebalance + cluster close
 

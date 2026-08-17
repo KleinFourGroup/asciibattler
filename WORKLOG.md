@@ -4659,3 +4659,25 @@ travel window doesn't produce absurdity worth patching. The ~5-line
 shape (extend the interpreter's fizzle guard with the same band
 check) stays recoverable from the 82e ideation entry if the verdict
 ever flips.
+
+### The §82 close (2026-08-17)
+
+Opened and closed in one day, eight commits, every change
+user-signed live — the sit-together tuning session the charter
+described, except it grew a real mini-cut when the override seam
+surfaced (the charter's stop-and-ask fired exactly once and the
+amendment was signed; everything else stayed freeform). What the
+§83 board inherits as movers: single-type reward tables with
+elite/boss daemons@1 (~36%/~71% → 100% — THE generosity jump),
+miner at ~25% of boss kills (was ~14%), guaranteed bits where the
+mixed tables used to swallow them, the catapult release gate (a
+nerf vs mobile targets that COMPOUNDS with the officer mobility
+aura — the user's standing prediction: the balancer will want the
+aura nerfed), and the halberd/pistol retunes. Run v43; 2674 main
+tests (+8 net); WorldSnapshot v35 held.
+
+Exit criteria, checked against the charter: the user called the
+feel done (the A-not-needed verdict was the last open item), the
+tree is green, and the moved numbers are noted above for the
+board. HANDOFF cursor → §83 (83-pre first); ROADMAP §82 demoted to
+its stub in the same commit (demote-as-you-close, both docs).

@@ -182,3 +182,28 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   the time: "worked well, though I don't know how much difference it
   made." Deliberately NOT proposed for adoption — sweep should keep or
   archive it as an experiment card, not promote it.
+
+## §82 (the feel round) — 2026-08-17
+
+- **Sweep a FIELD by its key, not by known values.** The 82c strict-schema
+  flip surfaced a third shipped `rewardOverride` (hostage-trio) that the
+  earlier grep missed — the pattern was `bits-small|bits-large|daemon-cache|
+  boss-hoard` (the values we knew about), and `"hostage-rescue"` sailed
+  past it. One module-load ZodError found what the grep didn't. When
+  enumerating uses of a field, grep `rewardOverride` (the key), never the
+  values you already know.
+- **An undisplayed Browser pane composites nothing: no rAF → the battle
+  clock sits at tick 0** (sibling of the §79 aspect-NaN gotcha, worse —
+  screenshots time out AND organic play is frozen). The §82e2 answer
+  generalizes: drive the REAL production loop synchronously
+  (`world.tick()` + `battleRenderer.update(0.05)` in lockstep via
+  `__game.activeScene`), pin the fixture with URL dials
+  (`?roster=catapult:2,…`), and assert on DOM state. Verified a sim+render
+  feature end to end without one screenshot. Candidate for the HANDOFF
+  browser-verify tips at the next sweep (a short pointer already rides the
+  cursor's probe-tips line).
+- **The "fake counterplay" reframe sold the catapult fix.** The wind-up
+  looked like a telegraph but nothing rechecked position after propose —
+  so it was pure delay, and every design option got simpler once that was
+  said out loud. Naming what a mechanic PRETENDS to do vs does is a cheap
+  ideation tool.

@@ -391,7 +391,17 @@ beyond the user's live sign-off).
   - [x] 82d — event-editor: override ref-list UI (formatter + its
     verbatim pin landed in 82c); browser-verified end to end
     (worklog)
-  - [ ] 82e… — further feel changes as signed (weapons still TBD)
+  - [ ] 82e — weapons: halberd/pistol user-tuned; catapult release
+    gate (the B design, worklog 2026-08-17): hold fire at the
+    release boundary if the target left the [min,max] band —
+    - [ ] 82e0 — commit the user's halberd/pistol tuning
+    - [ ] 82e1 — `releaseGate {reaimSeconds, scalesWithSpeed}`
+      schema + the §36c-pattern hold at release + `unit:actionHeld`
+      + catapult config; headless tests; NO bump
+    - [ ] 82e2 — the amber DRAIN re-aim bar (render-only,
+      browser-verified)
+    - [ ] 82e3 — attack-editor releaseGate support + audio-tell
+      TODO; impact-recheck (the A design) deferred to playtest
 
 ## Phase 83 — The closing rebalance + cluster close
 

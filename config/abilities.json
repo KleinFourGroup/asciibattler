@@ -594,6 +594,7 @@
     "name": "Pistol",
     "cooldownSeconds": 0.8,
     "rangeCells": 4,
+    "minRangeCells": 2,
     "target": { "kind": "enemyInRange" },
     "timeline": [
       { "phase": "impact", "seconds": 0 },
@@ -621,7 +622,7 @@
   "halberd": {
     "id": "halberd",
     "name": "Halberd",
-    "cooldownSeconds": 2.8,
+    "cooldownSeconds": 2,
     "rangeCells": 2,
     "target": { "kind": "enemyInRange" },
     "timeline": [
@@ -637,7 +638,7 @@
           "kind": "damage",
           "scaling": "strength",
           "might": 8,
-          "accuracy": 0.6,
+          "accuracy": 0.55,
           "critBase": 0.05,
           "critable": true,
           "evadable": true,

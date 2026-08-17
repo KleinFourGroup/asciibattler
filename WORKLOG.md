@@ -4541,3 +4541,31 @@ run; converted to a chance-1 singleton, behavior identical. The
 `outskirts` event now pins the full elite trio (bits-large@1 +
 packets-elite@0.5 + daemons@1 — the 82b interim single-`daemons`
 pin retired); `guardians` stays bits-large-only as signed.
+
+### 82d — the event-editor override ref-list UI (2026-08-17)
+
+The 82c interim shim retired: `makeOverrideControl` renders the
+absent state as one "+ reward override" button and the present
+state as one row per ref (table select with the catalogSelect ⚠
+out-of-registry convention · a [0,1] chance input · ✕) plus
+"+ ref". Removing the last ref DELETES the key — the UI can't
+express the empty list the schema rejects, so that floor never
+surfaces as a validation complaint. The formatter needed nothing
+(82c landed the emit + verbatim pin); no new tests — editor.ts is
+render/ui-policy (eyeball-only), and the browser pass below is the
+verification of record.
+
+Browser-verified on the dev server (DOM-driven; the Browser pane
+wasn't compositing so no screenshots, and read_page's a11y tree
+turned out BLIND to the whole choices section — element queries
+via javascript_tool did the work): add-override, add-ref,
+live chance edit (0.3 propagated to the preview emit), remove-to-
+single (collapses to the inline form), remove-to-last (key
+deleted, button restored), validation pane green + Save enabled
+end-state. One self-inflicted scare with a lesson: the page
+COMBOBOX at the top of the pages pane is the ENTRY-PAGE selector,
+not a page navigator — form-filling it to "navigate" mutated
+`entry` and tripped the reachability assert ("'start' unreachable
+from entry 'guardians'"), which read as a UI bug for a minute.
+Revert-all cleared it; the committed file was never touched (Save
+correctly stayed disabled throughout).

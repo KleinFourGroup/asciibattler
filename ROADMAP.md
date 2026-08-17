@@ -388,8 +388,9 @@ beyond the user's live sign-off).
     snapshot (42→43, hard gate per convention); `outskirts` gets
     the full elite trio; a THIRD shipped override surfaced
     (hostage-trio → `hostage-rescue`) — converted (worklog)
-  - [ ] 82d — event-editor: override ref-list UI + formatter +
-    tests
+  - [x] 82d — event-editor: override ref-list UI (formatter + its
+    verbatim pin landed in 82c); browser-verified end to end
+    (worklog)
   - [ ] 82e… — further feel changes as signed (weapons still TBD)
 
 ## Phase 83 — The closing rebalance + cluster close

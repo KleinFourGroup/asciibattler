@@ -814,24 +814,97 @@ function makeNextControl(outcome: WorkingOutcome): HTMLSpanElement {
         },
       ),
     );
-    // 82c — `rewardOverride` is a ref LIST now; this select is the INTERIM
-    // single-table control (reads ref 0, writes a one-ref chance-1 list —
-    // LOSSY on a multi-ref override). 82d replaces it with the real
-    // multi-ref chance UI.
-    const overrideSel = el('select');
-    overrideSel.title =
-      'rewardOverride — replaces the encounter’s own reward refs (interim single-table control; multi-ref overrides collapse on edit)';
-    overrideSel.appendChild(option('', 'own rewards'));
-    for (const tableId of REWARD_TABLE_IDS) overrideSel.appendChild(option(tableId, `→ ${tableId}`));
-    overrideSel.value = next.rewardOverride?.[0]?.table ?? '';
-    overrideSel.addEventListener('change', () => {
-      if (overrideSel.value === '') delete next.rewardOverride;
-      else next.rewardOverride = [{ table: overrideSel.value, trigger: { chance: 1 } }];
-      refreshDerived();
-    });
-    wrap.appendChild(overrideSel);
+    // 82d — the rewardOverride ref-list control (the 82c interim
+    // single-table shim retired).
+    wrap.appendChild(makeOverrideControl(next));
   }
   return wrap;
+}
+
+/** The start-encounter terminal's mutable shape (`WorkingOutcome['next']`
+ *  minus the page-id string and the other terminal). */
+type WorkingStartEncounter = Extract<
+  Exclude<WorkingOutcome['next'], string>,
+  { kind: 'start-encounter' }
+>;
+
+/** 82d — the `rewardOverride` ref-list control: absent ⇒ a single
+ *  "+ reward override" button (own rewards); present ⇒ one row per ref
+ *  (table select · chance input · ✕) plus "+ ref". Removing the last ref
+ *  deletes the key — the schema's non-empty floor can never surface as a
+ *  validation complaint from this control. Chance 1 stays explicit in the
+ *  file (the formatter's leaf convention emits it verbatim). */
+function makeOverrideControl(next: WorkingStartEncounter): HTMLSpanElement {
+  const box = el('span', 'cond-row');
+  if (next.rewardOverride === undefined) {
+    const addOverride = el('button', undefined, '+ reward override');
+    addOverride.type = 'button';
+    addOverride.title =
+      'Pin the fight’s loot: reward refs replacing the encounter’s own rewards wholesale';
+    addOverride.addEventListener('click', () => {
+      next.rewardOverride = [
+        { table: REWARD_TABLE_IDS[0] ?? 'table-id', trigger: { chance: 1 } },
+      ];
+      buildPages();
+      refreshDerived();
+    });
+    box.appendChild(addOverride);
+    return box;
+  }
+  const refs = next.rewardOverride;
+  box.append(el('span', 'field-label', 'loot:'));
+  refs.forEach((ref, refIndex) => {
+    const tableSel = el('select');
+    for (const tableId of REWARD_TABLE_IDS) tableSel.appendChild(option(tableId));
+    // A value outside the registry (hand-pasted JSON) still shows — the
+    // catalogSelect ⚠ convention; validation flags it, the select shows it.
+    if (!REWARD_TABLE_IDS.includes(ref.table)) {
+      tableSel.appendChild(option(ref.table, `⚠ ${ref.table}`));
+    }
+    tableSel.value = ref.table;
+    tableSel.addEventListener('change', () => {
+      ref.table = tableSel.value;
+      refreshDerived();
+    });
+    box.appendChild(tableSel);
+
+    const chanceWrap = el('label', 'pool-num');
+    chanceWrap.append(el('span', undefined, '@'));
+    const chanceInput = el('input');
+    chanceInput.type = 'number';
+    chanceInput.min = '0';
+    chanceInput.max = '1';
+    chanceInput.step = '0.05';
+    chanceInput.title = 'trigger chance in [0, 1]; 1 = guaranteed';
+    chanceInput.value = String(ref.trigger.chance);
+    chanceInput.addEventListener('input', () => {
+      const v = Number.parseFloat(chanceInput.value);
+      ref.trigger.chance = Number.isFinite(v) ? v : 1;
+      refreshDerived(); // out-of-range complaints land in the validation pane
+    });
+    chanceWrap.appendChild(chanceInput);
+    box.appendChild(chanceWrap);
+
+    const delRef = el('button', 'pool-remove', '✕');
+    delRef.type = 'button';
+    delRef.title = 'Remove this ref (removing the last restores own rewards)';
+    delRef.addEventListener('click', () => {
+      refs.splice(refIndex, 1);
+      if (refs.length === 0) delete next.rewardOverride;
+      buildPages();
+      refreshDerived();
+    });
+    box.appendChild(delRef);
+  });
+  const addRef = el('button', undefined, '+ ref');
+  addRef.type = 'button';
+  addRef.addEventListener('click', () => {
+    refs.push({ table: REWARD_TABLE_IDS[0] ?? 'table-id', trigger: { chance: 1 } });
+    buildPages();
+    refreshDerived();
+  });
+  box.appendChild(addRef);
+  return box;
 }
 
 function makeOpRow(outcome: WorkingOutcome, opIndex: number): HTMLDivElement {

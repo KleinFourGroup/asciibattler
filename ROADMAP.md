@@ -317,9 +317,11 @@ docs land in the NEW `plans/` directory — user-signed):
   from day one; the tutorial's strongest fact = determinism makes a
   scripted teaching run a pinned RunConfig, not a hint engine
   (worklog §80c)
-- [ ] 80d — online balance telemetry (`plans/telemetry.md`):
-  transport · consent · DEV/PROD split, on the proven
-  never-emits-subscriber pattern
+- [x] 80d — ✅ 2026-08-16: `plans/telemetry.md` — determinism makes
+  the payload a trace (seed+commands+BUILD ID), analysis reuses the
+  offline instrument kit; manual export recommended as v1 (the
+  always-up ingest is a new ops burden the §62 model avoids); the
+  stale-live-build confound is the structural finding (worklog §80d)
 - [ ] 80e — docs close: ROADMAP demote · HANDOFF cursor flip ·
   META-ROADMAP C6 gains one pointer line to the five docs
 

@@ -4147,3 +4147,26 @@ hotkeys are accelerators) · key labels derived from the Keybindings
 registry (C6 ships rebind — literal "press M" strings go stale) ·
 the post-C5 UI audit sequences BEFORE the tutorial (callouts author
 against audited idioms) · the scripted run stays an ORDINARY run.
+
+### §80d — the telemetry plan (2026-08-16)
+
+`plans/telemetry.md`. Two audit products beyond the kickoff facts.
+(1) **Determinism collapses the design**: a payload is `seed +
+command log + build id` (a few KB), and analysis is REPLAY through
+the existing headless harness — decisions.csv-grade human-arm data
+from the §68 instrument kit, no client-side metrics at all (the
+53b trace format is the near-complete substrate). (2) **The
+structural finding — build identity**: the hand-upload deploy
+story means live players routinely run a STALE build, so an
+unversioned trace silently diverges on replay against HEAD; every
+trace carries a baked build hash, and replay checks out that
+commit (the 47e worktree-pin pattern). Transport dispositioned in
+tiers with an honest cost read: manual export = v1 (zero infra,
+sharing IS consent, right-sized for the semi-private population);
+the always-up ingest endpoint deliberately NOT recommended — it
+reverses the §62 on-demand ops model for marginal capture;
+third-party analytics rejected. C6 must-not-break: never-emits +
+player-initiated export only · opt-in consent row if tier 2 ever
+lands · capture stays Game-layer (fuzz produces no telemetry) ·
+DEV/PROD split as a build flag (the §79f silent-fallback shape,
+applied to player data).

@@ -4480,3 +4480,32 @@ Test fallout, all shape pins: the brigands skeleton-ref pin
 (now two refs), the 48b offer-length pin (config-derived now),
 declineReward (drains the whole offer). Suite + typecheck +
 fuzz:smoke green.
+
+### 82b — the tier-pure split: daemons / packets-elite / packets-boss / bits-boss (2026-08-17)
+
+The second slice, shape-locked in-session and user-signed, with the
+mini-cut written into the ROADMAP (the override widening pulled in a
+snapshot bump + editor work, so §82 gets checkboxes after all — the
+charter's stop-and-ask fired exactly as designed and the user signed
+the exception). `daemon-cache` and `boss-hoard` carried byte-identical
+10-daemon lists, so they collapse into ONE shared `daemons` table;
+the packets carve into `packets-elite` (hype/venom/overclock) and
+`packets-boss` (miner diluted with overclock + surge — the user's
+call: miner alone at 0.75 was too strong; at weight ⅓ it lands on
+~25% of boss kills, up from the old ~14%, dialable); the hoard's
+bits become `bits-boss` (25–40). Wiring is TIER-PURE, not additive
+(the stacking trap caught at shape-lock: elites/bosses already
+carried bits-large@1 + packets-large@0.5, so a literal add would
+have doubled both lines): elite = bits-large@1 + packets-elite@0.5
++ daemons@1 · boss = bits-boss@1 + packets-boss@0.75 + daemons@1 ·
+bits-large/packets-large revert to camp-only tables. The signed
+generosity jumps: elite daemon rate ~36%→100%, boss ~71%→100%
+(owned-daemon exclusion still applies — a full collection rolls
+nothing). Boss bits stay near-flat by construction (old expected
+~32, bits-boss mean 32.5). The `outskirts` override re-points at
+`daemons` INTERIM (guaranteed daemon — closest to the old cache's
+intent) until 82c widens overrides to ref lists. The cache's old
+12–20 bits entry dies uncarved — elites already pay bits-large.
+Zero test fallout (the 82a pins were already config-derived); the
+encounter-editor fixture's synthetic table ids are schema-only by
+design and stand.

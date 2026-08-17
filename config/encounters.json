@@ -231,9 +231,9 @@
     "healthPool": 13,
     "kind": "boss",
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+      { "table": "bits-boss", "trigger": { "chance": 1 } },
+      { "table": "packets-boss", "trigger": { "chance": 0.75 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -301,8 +301,8 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -332,8 +332,8 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -365,8 +365,8 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -460,9 +460,9 @@
     "healthPool": 20,
     "kind": "boss",
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+      { "table": "bits-boss", "trigger": { "chance": 1 } },
+      { "table": "packets-boss", "trigger": { "chance": 0.75 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -650,8 +650,8 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
+      { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -699,9 +699,9 @@
     "healthPool": 13,
     "kind": "boss",
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+      { "table": "bits-boss", "trigger": { "chance": 1 } },
+      { "table": "packets-boss", "trigger": { "chance": 0.75 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {
@@ -768,9 +768,9 @@
     "healthPool": 20,
     "kind": "boss",
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "packets-large", "trigger": { "chance": 0.5 } },
-      { "table": "boss-hoard", "trigger": { "chance": 1 } }
+      { "table": "bits-boss", "trigger": { "chance": 1 } },
+      { "table": "packets-boss", "trigger": { "chance": 0.75 } },
+      { "table": "daemons", "trigger": { "chance": 1 } }
     ],
     "waves": [
       {

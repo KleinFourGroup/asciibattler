@@ -13,26 +13,13 @@
       ]
     },
     {
-      "id": "daemon-cache",
+      "id": "bits-boss",
       "entries": [
-        { "kind": "daemon", "weight": 1, "daemon": "mars" },
-        { "kind": "daemon", "weight": 1, "daemon": "minerva" },
-        { "kind": "daemon", "weight": 1, "daemon": "mercury" },
-        { "kind": "daemon", "weight": 1, "daemon": "janus" },
-        { "kind": "daemon", "weight": 1, "daemon": "moneta" },
-        { "kind": "daemon", "weight": 1, "daemon": "laverna" },
-        { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
-        { "kind": "daemon", "weight": 1, "daemon": "cornucopia" },
-        { "kind": "daemon", "weight": 1, "daemon": "patricians-seal" },
-        { "kind": "daemon", "weight": 1, "daemon": "portunus" },
-        { "kind": "packet", "weight": 1, "packet": "hype" },
-        { "kind": "packet", "weight": 1, "packet": "venom" },
-        { "kind": "packet", "weight": 1, "packet": "overclock" },
-        { "kind": "bits", "weight": 1, "min": 12, "max": 20 }
+        { "kind": "bits", "weight": 1, "min": 25, "max": 40 }
       ]
     },
     {
-      "id": "boss-hoard",
+      "id": "daemons",
       "entries": [
         { "kind": "daemon", "weight": 1, "daemon": "mars" },
         { "kind": "daemon", "weight": 1, "daemon": "minerva" },
@@ -43,9 +30,7 @@
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
         { "kind": "daemon", "weight": 1, "daemon": "cornucopia" },
         { "kind": "daemon", "weight": 1, "daemon": "patricians-seal" },
-        { "kind": "daemon", "weight": 1, "daemon": "portunus" },
-        { "kind": "packet", "weight": 2, "packet": "miner" },
-        { "kind": "bits", "weight": 2, "min": 25, "max": 40 }
+        { "kind": "daemon", "weight": 1, "daemon": "portunus" }
       ]
     },
     {
@@ -69,6 +54,22 @@
       "entries": [
         { "kind": "packet", "weight": 1, "packet": "reroute" },
         { "kind": "packet", "weight": 1, "packet": "shield" },
+        { "kind": "packet", "weight": 1, "packet": "surge" }
+      ]
+    },
+    {
+      "id": "packets-elite",
+      "entries": [
+        { "kind": "packet", "weight": 1, "packet": "hype" },
+        { "kind": "packet", "weight": 1, "packet": "venom" },
+        { "kind": "packet", "weight": 1, "packet": "overclock" }
+      ]
+    },
+    {
+      "id": "packets-boss",
+      "entries": [
+        { "kind": "packet", "weight": 1, "packet": "miner" },
+        { "kind": "packet", "weight": 1, "packet": "overclock" },
         { "kind": "packet", "weight": 1, "packet": "surge" }
       ]
     }

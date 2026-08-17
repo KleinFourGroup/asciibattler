@@ -371,7 +371,24 @@ beyond the user's live sign-off).
   everything anyway).
 - **Scope guards:** feel changes only — no new mechanics, no new
   reward KINDS, no schema widening; anything structural spills to a
-  named phase or TODO.
+  named phase or TODO. **Amended 2026-08-17 (user-signed, the
+  stop-and-ask fired as designed):** the mixed-table split surfaced
+  the single-table `rewardOverride` seam — widening it to a ref
+  list (events schema + Run snapshot 42→43 + event-editor) is IN,
+  as the explicit exception. Cut below; rationale in the worklog.
+- **The 82b–d cut** (mini-kickoff, 2026-08-17 — the split grew a
+  serialization change, so it gets checkboxes):
+  - [x] 82a — bits⇄packets mixed-table split + wiring (`dc34814`)
+  - [ ] 82b — tier-pure split: shared `daemons` + `packets-elite` +
+    `packets-boss` (miner diluted) + `bits-boss`; `daemon-cache` /
+    `boss-hoard` deleted; elites/bosses rewired (daemons@1);
+    `outskirts` override re-pointed at `daemons` (interim)
+  - [ ] 82c — `rewardOverride` → ref list: events schema + Run
+    snapshot (42→43, hard gate per convention); `outskirts` gets
+    the full elite trio
+  - [ ] 82d — event-editor: override ref-list UI + formatter +
+    tests
+  - [ ] 82e… — further feel changes as signed (weapons still TBD)
 
 ## Phase 83 — The closing rebalance + cluster close
 

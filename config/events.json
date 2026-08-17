@@ -611,7 +611,7 @@
                 "next": {
                   "kind": "start-encounter",
                   "encounterId": "infernalColumn",
-                  "rewardOverride": "daemon-cache"
+                  "rewardOverride": "daemons"
                 }
               }
             ]

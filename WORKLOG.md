@@ -288,7 +288,7 @@ carries the findings + resolutions.
    already stale from pre-50c/pre-W2 eras). `signed-sheet.json`
    carries no path weights — unaffected. The 50c procedure applies:
    pad `event: 0` in one commit, regenerate local outputs at the
-   next probe, board re-sign at §82.
+   next probe, board re-sign at §83.
 3. **"No recursion" ≠ no cycles.** The grammar is flat but `next`
    id-refs can loop (A→B→A). 74a adds a boot assert (every page
    reaches a terminal) + the harness cap above.
@@ -498,11 +498,11 @@ correction** — the spec's elite-style "optional detour" framing was
 wrong: events are a major run component, ~half as frequent as battles
 on a path, back-to-back legal (user feel call). Shipped
 `eventChance 0.5` / `eventMinSpacing 1` (vs the elite/port
-0.25/0.2 + spacing 2–3 pattern), LAUNCH-ROUGH for §82. Knock-ons
+0.25/0.2 + spacing 2–3 pattern), LAUNCH-ROUGH for §83. Knock-ons
 owned eyes-open: the one-event-per-hop scatter ceiling (§77's ratio
 pass is the real control), battle-less width-2 hops (rest+event fills
 both slots), the sharpened economy tradeoff (hop-scaled enemies vs
-per-fight income — a first-order channel at 0.5 density, §82 reads
+per-fight income — a first-order channel at 0.5 density, §83 reads
 it), and 3-event catalog repetition until §74i.
 
 **As-built to the cut + the shape-lock.** Notes beyond the cut line:
@@ -537,7 +537,7 @@ it), and 3-event catalog repetition until §74i.
   (TS narrows `run.phase` at the dispatch site). The §74e exit
   criterion is a REGRESSION PIN now: harness.test's traversal test
   proves opened pages at eventChance=1 and exact zero on the
-  eventChance=0 control arm. Not yet a summary.csv column (§82's
+  eventChance=0 control arm. Not yet a summary.csv column (§83's
   call).
 - `dockAtPort` (Run.test) routes event-free by construction now — an
   opened event would perturb the port pins and a combat-resolve is a
@@ -613,7 +613,7 @@ authored loop revisit (deterministic, MAX_EVENT_STEPS-capped). (2)
 **ε = the MAP class floor (3.265), shared by class argument** — the
 grant→preTurn / nodeChoice→map precedent (out-of-battle clone,
 next-battle horizon). PROVISIONAL: event pages are a context class
-readEpsilonAA has never read; the §82 board round re-reads it. (3)
+readEpsilonAA has never read; the §83 board round re-reads it. (3)
 **A single enabled choice is not a decision** — no draw, no rollouts,
 no log (the singleton-frontier rule; forced pages stay free).
 
@@ -697,7 +697,7 @@ Landed to the cut on the reward/encounter-editor shape
 **The design conversation (user-signed).** Fork 1 (the outcome-beat
 rider): the AUTHORED outcome-page convention — a terminal page narrates
 the result, its acknowledging choice carries the effects — "sometimes
-broken, but not often"; no engine toast (a §82 feel-read revisit if
+broken, but not often"; no engine toast (a §83 feel-read revisit if
 prose proves insufficient). Fork 2 (the repeat rider): DEFAULT
 NO-REPEAT per run, opt-out `repeatable: true` per def. Starting-event-
 as-buff and the two whimsical events confirmed intentional (levity
@@ -746,7 +746,7 @@ checklist paid: `prodigy: 0` padded into BOTH archetype-keyed weight
 records (`archetype` + `composition` — scoredWeights' only two, class
 audited) across config/fuzz-strategies.json + redraw-level-fisher +
 the 12 fixture vectors (the 50c pad-zero procedure; local
-best-strategy outputs regenerate at the next probe; §82 board
+best-strategy outputs regenerate at the next probe; §83 board
 re-signs), and the §29-close draft-exclusion pin gains 'prodigy'.
 Suites: 2435 main (+9) / 394 fuzz green.
 
@@ -807,10 +807,10 @@ rename + 74i's `repeatable` field rode it). 74j swept ARCHITECTURE
 (the events.ts/events.json entries were MISSING; Run.ts's annotation
 was stale back to v16/pre-§47 — phase union + version pointer fixed;
 NodeMap/RunConfig/sectors/sector-map/rewards annotations refreshed)
-and demoted the ROADMAP section. Carried forward: the ε floor §82
-re-read · the gambler parity repair (§82 first item) · the §77
+and demoted the ROADMAP section. Carried forward: the ε floor §83
+re-read · the gambler parity repair (§83 first item) · the §77
 stress test + ratio pass · the browser-cell gauntlet watch item ·
-launch-rough event balance (§82 reads the event era).
+launch-rough event balance (§83 reads the event era).
 
 ## Phase 75 — Camps
 
@@ -1459,7 +1459,7 @@ All nine parked-list rows landed, plus one browser-caught sim fix.
   no-cards gates stay by team — now COMMENTED as the signed v1 call so
   nobody "fixes" them; palette bloom comments re-scoped inert-only;
   objectiveStrategy documents its DELIBERATE divergence (bot
-  camp-seeking stays out — the §82 probe arm, per the scope guard).
+  camp-seeking stays out — the §83 probe arm, per the scope guard).
 - **THE BROWSER-CAUGHT BUG**: `clearResolvedObjectives`' neutral arm
   still demanded `isDestructibleNeutral`, so a click-to-engage order on
   a camp member REVERTED THE SAME TICK it landed — the 75e first-blow
@@ -1611,9 +1611,9 @@ signing; the content landed as `a299b77`. The decision trail:
   question for whoever builds it: can an encounter fit-filter reach a
   layout deliberately absent from every sector pool? Verify then.
 - **The level fork (per-act variants vs a level budget) is DEFERRED
-  to §82 with data**: v1 camps are act-agnostic (both sectors pool
+  to §83 with data**: v1 camps are act-agnostic (both sectors pool
   the same layouts; the weighted list is per-layout), so L1–2 camps
-  will read trivial in The Deep End. Measured by §82's board + camp
+  will read trivial in The Deep End. Measured by §83's board + camp
   probe before any mechanism signs — my recorded lean: a camp-side
   level budget reusing the wave-resolver vocabulary over catalog
   variant pairs, IF the deficit is real.
@@ -1880,7 +1880,7 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   three findings that matter: ⭐ the below-band walk WALLS are
   PULL-SOFTENED (walk-regen wall 0.267 with the pull → 0.533 without —
   the pull fires on boss boards and diverts the boss-side wave off the
-  pool; "should it?" is a NAMED §82 question, deliberately NOT
+  pool; "should it?" is a NAMED §83 question, deliberately NOT
   answered by re-dosing overnight) · the pull's win lift scales with
   fight length (0 soldier act-1 / +15 priest act-1 / +10 both walks)
   while events add ~+10 everywhere by node dilution + boons (the
@@ -1898,15 +1898,15 @@ misread feature AND a real bug, then a design re-author (`0a7ae8c`):
   byte-identity held every step ✓ verdicts recorded ✓) + the docs
   close + the board re-pinned at content reality.
 - **The morning signings (2026-08-10, user)**: the boss-board pull →
-  §82 (tentative lean NO-pull-on-boss, on final data) · the
-  fire-channel read → §82, reassured by the paired flip analysis
+  §83 (tentative lean NO-pull-on-boss, on final data) · the
+  fire-channel read → §83, reassured by the paired flip analysis
   (5–2 discordant, p≈0.23 — collapsed-to-≈0, not reliably negative;
   the arb per-item Δ|picked stays positive) · ⭑ the SHEET AMENDMENT
   signed: act-1 win refs + forced-boss refs re-pin at the 75l
-  observed values, walk bands + fire-channel HOLD (§82 owns them).
+  observed values, walk bands + fire-channel HOLD (§83 owns them).
   Post-amendment board: **0 FAIL / 7 WARN, all pre-registered** —
   §76 opens against a clean §74/§75-era baseline. Detail: BALANCE
-  2026-08-10 (the amendment paragraph) + ROADMAP §82 riders.
+  2026-08-10 (the amendment paragraph) + ROADMAP §83 riders.
 
 ## Phase 76 — Unit mechanics & stat identity
 
@@ -2039,7 +2039,7 @@ findings; shape-lock pending.
   catalog at spawn (World.ts:1897) — prc/eva or critable changes to
   bandit/archer/ghoul/warlock/ice_mage/shaman/banshee move camp
   fights on all 4 placed layouts + their bits payouts, and NO board
-  row watches camps (the §82 probe-arm rider gets more load-bearing
+  row watches camps (the §83 probe-arm rider gets more load-bearing
   after this phase). Pre-register in the board read.
 - Board: everything is reference-grade WARN by design; the SIGNED
   trio (seam 15–18 · reach 40–50 · wall 30–35) must not silently
@@ -2061,7 +2061,7 @@ re-tunes starting mobility values to be roughly cadence-equivalent
 under the new curve (re-anchor bases, not the curve). **(3) New
 archetypes ship DRAFTABLE-ONLY** — the user has encounter ideas but
 authoring them now is too much at once; enemy-side exposure deferred
-(design-round discretion or §82), so the board amendment measures
+(design-round discretion or §83), so the board amendment measures
 the stat changes, not new enemy content.
 
 ### 76e — the structural flip (2026-08-10)
@@ -2100,7 +2100,7 @@ an atlas cell). Rioter's glyph went `p`→`f` (flame) after the pool
 strained — which triggered the FONT/STYLE AXIS reopen: the archived
 Phase-I deferral ("revisit when glyphs actually collide") is
 half-fired (pool exhaustion, not collision); signed as a §79 rider
-with the §82 boss wave in view, NOT paid mid-§76. Facts pinned in
+with the §83 boss wave in view, NOT paid mid-§76. Facts pinned in
 the rider: latin-1 is already loaded; a subset import must join the
 FontAtlas font-ready await (the serif-bake hazard).
 
@@ -2312,14 +2312,14 @@ doctrine on two-act shapes — a paired sign-flip on the 55pre twin),
 and the gambler's organic luck-seam gain did not arrive (the
 regen-shape parity gap widens to −22.5). Signing queue presented to
 the user: (1) wall-flip attribution — `--set` ablation bracket now
-vs ride to §82 with the pull question · (2) the negative walk
+vs ride to §83 with the pull question · (2) the negative walk
 ceilings — flag vs probe · (3) the gambler premise update for the
-§82 rider · (4) accept the board as the §76h green.
+§83 rider · (4) accept the board as the §76h green.
 
 **Signed (user, 2026-08-11):** the board accepted as the §76h green;
-all three riders ride to §82 (the wall probe deliberately deferred —
+all three riders ride to §83 (the wall probe deliberately deferred —
 one `--set` bracket will own the flip + the pull together). **Plus a
-protocol call raised by the user's noise question: §82's
+protocol call raised by the user's noise question: §83's
 decision-feeding arms run n=120.** The honest arithmetic that framed
 it: at n=40 a win-rate carries SE ≈ ±7.7 pts (independent-arm
 differences ±11), so the gambler drop and the ceiling deltas are
@@ -2329,10 +2329,10 @@ clears noise comfortably. At n=120: SE ±4.5, differences ±6.4, and
 the n=80 per-item floor clears so decisions.csv reads become
 citable. Determinism makes the upgrade cheap: `--seed-offset`
 extends 41..120 and POOLS with the 76h batches — the first 40 seeds
-are already paid for. Riders + protocol recorded in ROADMAP §82.
+are already paid for. Riders + protocol recorded in ROADMAP §83.
 
-**Plus (user-called, 2026-08-12): the 82-pre pin** — the BALANCE
-audit + plain-English primer as §82's step zero. The user's framing:
+**Plus (user-called, 2026-08-12): the 83-pre pin** — the BALANCE
+audit + plain-English primer as §83's step zero. The user's framing:
 protocol grasp has eroded under accretion (many arms, features still
 landing, the ML rung-zero still ahead, BALANCE.md massive). The
 assessment that signed it: not overcorrection — the run-log layer is
@@ -2341,7 +2341,7 @@ truth SMEARED across the header sections / the sheet JSON / buried
 amendments / ROADMAP riders. The primer's guard against becoming a
 second drift surface: CONCEPTS ONLY, numbers and live status stay in
 their homes (the one-fact-one-home rule); a docs.test.ts cap on the
-header layer is the candidate mechanization. Pinned in ROADMAP §82.
+header layer is the candidate mechanization. Pinned in ROADMAP §83.
 
 ### 76i — docs close (2026-08-12)
 
@@ -2350,7 +2350,7 @@ UNIVERSAL + duration seam) and mobility (de-saturation re-anchor)
 bullet amendments · ARCHITECTURE entries for the World aura pass,
 `engagementReach`, `promotionDelta.ts`, and the aura-range FX +
 `__auraFx` switch · gotcha #124 (the exhaustive weight-vector join
-class) · ROADMAP §76 demoted to its stub · the 82-pre pin (above) ·
+class) · ROADMAP §76 demoted to its stub · the 83-pre pin (above) ·
 the HANDOFF cursor flipped to the §77 kickoff. §76 closed — every
 step user-signed, no snapshot bump end to end (as the kickoff
 predicted).
@@ -2485,7 +2485,7 @@ Three resolutions:
    4 "its own knob"): divergence measures branch DIFFERENCE, the
    ratio measures route COMPOSITION — a map can be divergent and
    still all-events. Same 77b corpus feeds both, so the band joins
-   the 77c signing list for free. The §82 event-ratio economy read
+   the 77c signing list for free. The §83 event-ratio economy read
    is the balance-side complement, unchanged.
 
 ### 77a — the visualizer (2026-08-12)
@@ -2566,7 +2566,7 @@ nodemap-metrics.test.ts):
 - **The ratio band — the user's amendment**: events per route
   target **≈3 (band 2.5–3.5)**, not the proposed 1.5–2 ("I was
   envisioning closer to 3"). Combat share lands ≈55–65% (from
-  80.6%). Explicitly a free dial — the §82 event-ratio economy
+  80.6%). Explicitly a free dial — the §83 event-ratio economy
   read judges the income/XP/pool consequences on final content.
 
 The corpus gates run at n=500 seeds (the baseline instrument's
@@ -2953,7 +2953,7 @@ negative-ceiling flag dissolves). Act-1 refs drifted (priest regen
 premise updated again: shape-coupled, not kit-intrinsic).
 Full decomposition + the re-pin proposal: BALANCE 2026-08-13
 (§77f). Reference re-pins await the user's signature (the 75l
-amendment ritual); signed bands deliberately unmoved (§82 owns
+amendment ritual); signed bands deliberately unmoved (§83 owns
 reality-vs-band).
 
 ### 77g — the close (2026-08-13)
@@ -2962,8 +2962,8 @@ The re-pins SIGNED (user, same day): act-1 six + the two
 forced-boss refs at the braid-world values — the sheet's third
 amendment (signedAt updated; gamblerNote rewritten to the
 shape-coupled premise; the priest regen breach recorded as the
-second named §82 parity item). The closing report: **0 FAIL / 4
-WARN, every WARN a carried §82-named watch** (wall-regen
+second named §83 parity item). The closing report: **0 FAIL / 4
+WARN, every WARN a carried §83-named watch** (wall-regen
 below-band · the 55pre reach watch + its derived win · the fire
 channel); board tests 20/20. ROADMAP §77 demoted to the stub;
 HANDOFF cursor flipped (nothing in flight; NEXT = the §78
@@ -3235,7 +3235,7 @@ idioms (ordering principle #1 applied to UI); recorded as PLANNED
 in META-ROADMAP §Interstitials with the scope sketch (accessibility
 audit vs DESIGN §Input accessibility · layout-stability sweep ·
 style-idiom unification · the accumulated TODO riders), re-confirm
-at the §82 close. The stale rollout-arbitration PLANNED bullet
+at the §83 close. The stale rollout-arbitration PLANNED bullet
 flipped to its completed state in the same pass. §78 ran
 78-kickoff→78f in three sessions, 2026-08-13→14: five build steps,
 three user-caught riders (glow clip · countdown clock · the
@@ -3277,7 +3277,7 @@ Premise checks against the charter, all surfaces read directly:
   subset import must join the font-ready await
   (FontAtlas.ts:94); the atlas sits at **47/48 cells** —
   load-bearing for the style-axis scoping (a (char,style)-keyed
-  atlas multiplies cell pressure; the §82 boss wave adds glyphs
+  atlas multiplies cell pressure; the §83 boss wave adds glyphs
   on top).
 
 ### 79-kickoff — the shape-lock (2026-08-14, user-signed)
@@ -3297,7 +3297,7 @@ design, now the signed shape — **the anchor-convention rework**:
    space in the shader). Units = bottom-center ("stands on its
    anchor"); projectiles/motes/markers = center ("floats at its
    anchor"). Off-axis skew becomes impossible by construction,
-   and a future big glyph (§82 bosses, the style axis) grows UP
+   and a future big glyph (§83 bosses, the style axis) grows UP
    from its tile instead of sinking in.
 3. **One shared above-the-anchor helper** on the JS side — the
    single implementation of "N units up the screen from this
@@ -3647,9 +3647,9 @@ before projecting anything.
 
 The §76f rider: reopen the archived Phase-I font/style deferral
 ([archive/post-h-roadmap.md](archive/post-h-roadmap.md) §"What
-we're explicitly NOT doing yet"), scoped with the §82 boss wave in
+we're explicitly NOT doing yet"), scoped with the §83 boss wave in
 view. **Recommendation: DEFER the style axis. Its trigger has not
-fired, and the thing §82 actually needs is a 2-constant atlas-grid
+fired, and the thing §83 actually needs is a 2-constant atlas-grid
 bump, not a glyph-layer investment.** Details below; two findings
 the card didn't carry.
 
@@ -3675,14 +3675,14 @@ The §76 wave strained the pool by consuming case-pairs as distinct
 units (M/m, A/a, R/r, B/b, C/c, G/g, H/h — 7 pairs), which is the
 legibility strain worth watching, but it is not the stated trigger.
 
-**The real §82 constraint is the atlas GRID, not the font axis.**
+**The real §83 constraint is the atlas GRID, not the font axis.**
 One free cell. A boss wave needs several. That fix is two
 constants — `COLS`/`ROWS` in FontAtlas.ts + `ATLAS_CELL_BUDGET` in
 glyphs.ts (8×6 = 48 → e.g. 8×10 = 80, a 512×640 texture) — already
 fenced by three independent guards: the boot throw in
 `FontAtlas.create`, the FontAtlas.test.ts budget assert, and the
 archetype editor's `atlasCellsFor` Save block. **~5 lines, not a
-phase.** Do it when §82 needs the cells; it needs no scoping round.
+phase.** Do it when §83 needs the cells; it needs no scoping round.
 
 ⭐ **The style axis is CHEAP in cells and expensive in plumbing.**
 Worth correcting a natural assumption: a (char,style)-keyed atlas
@@ -3732,8 +3732,8 @@ here — 79f is docs-only and this is not the rider's subject.
 
 **Recommendation, in one line:** defer the style axis until a
 combatant collision actually forces it (re-test the trigger at the
-§82 boss wave — the census above is the cheap re-run); bump the
-atlas grid as a ~5-line chore when §82 needs cells; fix the
+§83 boss wave — the census above is the cheap re-run); bump the
+atlas grid as a ~5-line chore when §83 needs cells; fix the
 fallback-font gap in the robustness audit, where it belongs.
 
 **⚠ SUPERSEDED same-day (2026-08-16) on the last clause** — the
@@ -3767,11 +3767,11 @@ already-covered glyphs should be PIXEL-IDENTICAL; that proof only
 exists if nothing else moves in the commit). Plus the mechanism
 would ship with no consumer, against the standing "no abstractions
 for hypothetical future needs" norm, and its vocabulary (bold for
-elites? italic for spectral?) is a §82 CONTENT question we'd be
+elites? italic for spectral?) is a §83 CONTENT question we'd be
 guessing at. **The option is kept cheaply instead:** the subset
 generator takes a LIST of faces (one entry today) and the boot
 assert names the expected face, so a second face is a drop-in, not
-a rework. Re-test the collision trigger at §82 with the 79f census.
+a rework. Re-test the collision trigger at §83 with the 79f census.
 
 **OFL 1.1 compliance — read from the shipped license text, not
 memory.** Two findings.
@@ -3822,7 +3822,7 @@ cmap reader said so. Official release **v2.304** (JetBrains/
 JetBrainsMono, zip sha256 `6f6376c6…7bbf`): all 47 registered
 glyphs present, `U+2565`+`U+2584` both present, box-drawing
 **128/128** and block-elements **32/32** COMPLETE. Geometric shapes
-(43/96) and arrows (35/112) are PARTIAL — recorded because §82
+(43/96) and arrows (35/112) are PARTIAL — recorded because §83
 must not assume an arbitrary shape exists there.
 
 **Source choice — one rejected.** `jetbrains-mono` on npm is a
@@ -4341,7 +4341,7 @@ stat (config mode; manual keeps camps off).
 - **The dose-independence pin** (the step's headline): density 0
   vs 2 on the same seed → byte-identical tileGrid/walls/halfCovers
   — camp placement rides strictly AFTER terrain in the stream, so
-  the §82 board can dial camp density without re-pinning terrain.
+  the §83 board can dial camp density without re-pinning terrain.
 - **Proof**: typecheck clean · 469 green across the touched files
   (+15: dose-independence · hostability incl. deep/fire exclusion +
   standoff · pair-partner across all three symmetry modes ·
@@ -4418,13 +4418,34 @@ placement fairness doctrine · dose-independence) + the Camps intro
 widened to both placement sources; ARCHITECTURE tree annotations
 (terrainGen/proceduralMap/SpriteAnimator) + the SpriteAnimator
 section's groundLerp paragraph; ROADMAP §81 demoted to the stub +
-outcome breath; HANDOFF cursor flipped (§§73–81 ✅, NEXT = §82);
+outcome breath; HANDOFF cursor flipped (§§73–81 ✅, NEXT = §83);
 TODO gains the mapgen empty-pool-hint line (the user's five-minute
 volcanic camp hunt); agent memory snapshot refreshed at the phase
 boundary. Phase summary: inserted at 75j2 as a catch-up, closed in
 ONE session-day with every step user-signed, zero snapshot bumps
-(both predicted), and the §82 board inheriting a procedural arm
+(both predicted), and the §83 board inheriting a procedural arm
 that now measures FINAL content — the whole point of running §81
 before the rebalance. No scratchpad entries: the phase ran clean
 on the standing norms (step-zero audit, headless-first, the
 scan-over-pin shape, pause-per-commit).
+
+### The §82 insertion — reward & weapon feel round (2026-08-17, user call)
+
+Same session as the §81 close, before the new-session handoff: the
+user needs several FEEL changes to the reward tables plus a change
+or two to weapons — inserted as a NEW §82, renumbering the closing
+rebalance §82→§83 (the second renumber on this roadmap; the 75j2
+precedent replayed). The ordering logic writes itself: reward/weapon
+changes are CONTENT MOVERS, and the closing board must measure
+final content — the same rule that put §81 before the rebalance.
+**Deliberately NO step cut** (user call): an iterative sit-together
+tuning session, changes landing as signed, commit-per-change behind
+the usual gate; the kickoff ritual applies only in miniature.
+Sweep: every live-doc forward ref §82→§83 (ROADMAP · HANDOFF ·
+BALANCE rider pointers · TODO · DESIGN · META-ROADMAP · this file ·
+the agent memory), the two historical renumber narratives (75j2 +
+the 75j close) restored to their as-happened "§82" phrasing;
+archives untouched; zero code/src refs existed. ROADMAP title +
+ordering breath re-authored; the §82 charter written (scope guards:
+feel only — no new mechanics, no new reward kinds, no schema
+widening; snapshot prediction NO bump, a surprise = stop-and-ask).

@@ -1,4 +1,4 @@
-# ROADMAP — Cluster 5 (Map Content), Phases 73–82
+# ROADMAP — Cluster 5 (Map Content), Phases 73–83
 
 The cluster's PLAN (authored + user-locked 2026-08-05 at the spec
 session; it stays a plan for its whole life). The signed design
@@ -8,16 +8,18 @@ resolutions; audit findings + rationale in [WORKLOG.md](WORKLOG.md)
 each phase kickoff (AGENTS "The planning stack"), never here.
 
 **Ordering in one breath:** tooling before the long haul (§73);
-events before its two consumers (§77 gen-rework, §82 balance); ALL
+events before its two consumers (§77 gen-rework, §83 balance); ALL
 content movers (§§74–76) before the single re-baseline point (§77);
 cosmetic/docs phases where they can't perturb pins (§§78–80); balance
-last, on final content (§82, née §81 — renumbered 2026-08-09 when
-the procedural-parity phase claimed §81). The gambler parity repair
-was DELIBERATELY moved from the opener to the closing rebalance
-(user call, 2026-08-05):
-repair constants tuned before §§74–76 puree the numbers would be
-re-derived anyway; the breach rides meanwhile as the named sheet
-rider it already is.
+last, on final content (§83, née §82 née §81 — renumbered 2026-08-09
+when the procedural-parity phase claimed §81, and again 2026-08-17
+when the §82 feel round was inserted: reward-table/weapon feel
+changes are CONTENT MOVERS, so they land before the closing board
+measures final content). The gambler parity repair was DELIBERATELY
+moved from the opener to the closing rebalance (user call,
+2026-08-05): repair constants tuned before §§74–76 puree the numbers
+would be re-derived anyway; the breach rides meanwhile as the named
+sheet rider it already is.
 
 ## Phase 73 — Hook speedup + quick fixes ✅ CLOSED 2026-08-05 (user-signed)
 
@@ -79,7 +81,7 @@ cluster-5-spec §Kickoff resolutions.
   shown-disabled+requirement · met-dim · page hop · start-encounter);
   the 74e interim hazard CLOSED. Detail: worklog §74f.
 - [x] 74g — arbitration ✅ 2026-08-06: nominator model + MAP-class ε
-  (§82 re-reads) + singleton rule; decisions.csv rows. Worklog §74g.
+  (§83 re-reads) + singleton rule; decisions.csv rows. Worklog §74g.
 - [x] 74h — the event editor ✅ 2026-08-06: shape landed + the live
   no-op-save byte proof; browser-driven. Detail: worklog §74h.
 - [x] 74i — the design round ✅ 2026-08-07 (a/b/c): riders signed ·
@@ -138,7 +140,7 @@ the range FX; four weapons + four draftable archetypes + the prc/eva
 identity pass; critable-universal + the mobility de-saturation
 (exact level-1 equivalence) + luck durations; the promotion
 derived-delta display; the amendment board 0 FAIL / 7 WARN
-(composition rotated — three riders + the n=120 protocol → §82,
+(composition rotated — three riders + the n=120 protocol → §83,
 BALANCE 2026-08-11). No snapshot bump, as predicted. Detail:
 WORKLOG §§76–76h + DESIGN (§Auras / §Stat identity) + gotcha #124.
 
@@ -179,7 +181,7 @@ Cut at the 2026-08-10 kickoff (audit + shape-lock: WORKLOG §76):
 - [x] 76h — ✅ user-signed 2026-08-11: 15/15 on the box at `3a0b48e`,
   0 FAIL / 7 WARN (composition ROTATED — act-1+fire healed, walls
   flipped hardened, walk ceilings negative, gambler flat); three
-  riders + the n=120 protocol → §82 (BALANCE 2026-08-11, worklog §76h)
+  riders + the n=120 protocol → §83 (BALANCE 2026-08-11, worklog §76h)
 - [x] 76i — docs close ✅ 2026-08-12 (`e019202`; box flipped late,
   caught at the §77 kickoff)
 
@@ -190,7 +192,7 @@ per-occurrence RNG re-architecture (Run **v41→v42**, World v35 held;
 gotcha #125), lanes/split-merge structure + the quota kind layer,
 every signed 77c row gated at n=500 (`tests/nodemap-metrics.test.ts`,
 0 FAIL), dials + 4 semantics changes user-signed, and the
-braid-world stress board **0 FAIL / 4 WARN** (all §82-named; refs
+braid-world stress board **0 FAIL / 4 WARN** (all §83-named; refs
 re-signed 2026-08-13 — the sheet's third amendment). Detail:
 WORKLOG §§77–77g · BALANCE §77f · gotcha #125.
 
@@ -278,7 +280,7 @@ fired. Detail: WORKLOG §§79-kickoff–79h + git.
 - [x] 79e the tune pass → went structural (churn killed,
   `FOOTPRINT_LIFT_PX` retired, ink-top anchor reverses 79d2's
   uniform line)
-- [x] 79f style-axis scoping → DEFER; §82's real constraint is the
+- [x] 79f style-axis scoping → DEFER; §83's real constraint is the
   47/48 atlas grid (~5-line bump)
 - [x] 79g self-hosted JBM subset + OFL compliance (INSERTED)
 - [x] 79h the exit eyeball, user-signed; TODO #79 + #81 closed
@@ -342,7 +344,36 @@ Detail: WORKLOG §§81-kickoff–81d · DESIGN §Procedural parity · git.
   ALL SIGNED ✅ · [x] 81c2 ground-clip fix (INSERTED) ✅ ·
 - [x] 81d docs close ✅ 2026-08-17
 
-## Phase 82 — The closing rebalance + cluster close
+## Phase 82 — Reward & weapon feel round
+
+**Charter:** iterative FEEL changes with the user at the wheel —
+several reward-table adjustments (the primary target) plus a change
+or two to weapons. Inserted 2026-08-17 at the §81 close (user call;
+renumbers the closing rebalance §82→§83). **Deliberately has NO step
+cut** — this is a sit-together tuning session, not a build: changes
+land as they're signed, commit-per-logical-change, each behind the
+usual gate. The kickoff ritual applies only in miniature (a
+code-reality look at the tables/weapons touched; no shape-lock
+beyond the user's live sign-off).
+
+- **Order:** before §83, by construction — reward/weapon changes are
+  CONTENT MOVERS, and the closing board must measure final content
+  (the same rule that ordered §81 before the rebalance).
+- **Risk:** LOW-MEDIUM — config-heavy (`config/rewards.json` /
+  `config/abilities.json` / `config/units.json`); weapon changes
+  touch sim behavior → fuzz:smoke re-pins possible (the documented
+  §81 shapes: scan-widening, re-seed). Snapshot prediction: NO bump
+  (tables + ability numbers are config; no serialized union in
+  sight — a surprise bump would be a stop-and-ask).
+- **Decision points:** every change IS one (the user signs each).
+- **Exit:** the user calls the feel done; tree green; any moved
+  balance number noted for the §83 board (which re-measures
+  everything anyway).
+- **Scope guards:** feel changes only — no new mechanics, no new
+  reward KINDS, no schema widening; anything structural spills to a
+  named phase or TODO.
+
+## Phase 83 — The closing rebalance + cluster close
 
 **Charter:** the balance agenda on final content: the gambler
 diagnosis→repair (confirm-the-deficit FIRST — mechanism vs numbers);
@@ -372,8 +403,8 @@ closing board + the re-signed sheet; then the close ritual
   `--event-chance=0` on the doctrine pair, and re-derive the vector
   pair on era content if it stays flat (76h note: it read +0.050
   in-band — the alarm retires to a routine confirm).
-- **82-pre (user-called 2026-08-12): the BALANCE audit + primer.**
-  Step zero of the phase, before any §82 decision: audit BALANCE.md's
+- **83-pre (user-called 2026-08-12): the BALANCE audit + primer.**
+  Step zero of the phase, before any §83 decision: audit BALANCE.md's
   header layer (current-truth sections vs the append-only run-log;
   retire fossils, consolidate buried amendments) + write the
   plain-English balance primer — CONCEPTS ONLY, numbers/status stay
@@ -387,7 +418,7 @@ closing board + the re-signed sheet; then the close ritual
   −10/−12.5 vs doctrine, paired; plausibly the same wall phenomenon
   via horizon blindness) · the gambler premise UPDATE: §76's organic
   luck movers did not close the gap (regen-shape −22.5) · ⭐ the
-  n=120 PROTOCOL (user call, 2026-08-11): §82's decision-feeding
+  n=120 PROTOCOL (user call, 2026-08-11): §83's decision-feeding
   arms extend 40→120 seeds via `--seed-offset` 41..120 POOLED with
   the 76h batches (determinism makes the first 40 free) — per-arm SE
   ±7.7→±4.5, clears the n=80 per-item floor (worklog §76h).

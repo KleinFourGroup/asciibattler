@@ -2932,7 +2932,7 @@ deltas. The pre-X H7c→O log lives at
   - **The re-pin table (72f closing values → 75l):** arb-regen 0.800→
     0.750 · arb-55pre 0.850→0.875 · King 0.825→0.825 / Queen 0.700→
     0.675 (order holds) · priest 0.625→**0.825 (+20, WARN)** / 0.850→
-    0.800 · gambler 0.700→0.700 / 0.625→**0.725 (+10, WARN — the §82
+    0.800 · gambler 0.700→0.700 / 0.625→**0.725 (+10, WARN — the §83
     parity-breach rider NARROWS)** · walk-regen reach 0.400→**0.375
     (WARN, below 40–50)** wall 0.313→**0.267 (WARN, below 30–35)**
     seam 17.75→16.83 · walk-55pre reach 0.575→**0.700 (WARN — the 72f
@@ -2961,7 +2961,7 @@ deltas. The pre-X H7c→O log lives at
     too: a diverted boss-side wave stops defending the pool and takes
     camp aggro damage while the player burns the pool down. Whether
     the pull should fire on boss boards (or the boss dose re-brackets
-    at pull reality) is a NAMED §82 question — do not re-dose the
+    at pull reality) is a NAMED §83 question — do not re-dose the
     deep-end boss from this read alone (the two knobs are confounded).
   - **The pull's lift scales with fight length:** zero at act-1 for the
     soldier, +15 for the priest (the healer kit's long fights give the
@@ -2993,8 +2993,8 @@ deltas. The pre-X H7c→O log lives at
     values (this board run IS the amendment's run; §76's in-phase
     board now diffs against §74/§75-era reality) · the walk-shape
     signed bands deliberately HOLD (the pull decision owns them) ·
-    the boss-board pull question → §82, tentative lean NO-pull-on-boss
-    · the fire-channel read → §82 (the paired flip analysis: 5–2
+    the boss-board pull question → §83, tentative lean NO-pull-on-boss
+    · the fire-channel read → §83 (the paired flip analysis: 5–2
     discordant, p≈0.23 — "collapsed to ≈0," not "reliably negative";
     arb-arm per-item Δ|picked stays positive, so packets are healthy
     where it counts). Post-amendment board: 0 FAIL / 7 WARN, all
@@ -3042,7 +3042,7 @@ deltas. The pre-X H7c→O log lives at
   and the camps leak moves camp fights on all 4 placements (no board
   row watches camps). No single-knob attribution without a `--set`
   ablation bracket — a signing-session call whether to probe now or
-  ride to §82 with the pull question (the two wall knobs are already
+  ride to §83 with the pull question (the two wall knobs are already
   named there; this adds a third).
 - **Both walk ceilings went NEGATIVE (paired same-seed):** the arb
   arm now UNDERPERFORMS doctrine by 10–12.5 pts on the two-act
@@ -3050,11 +3050,11 @@ deltas. The pre-X H7c→O log lives at
   hardened walls change what the K=2 rollout horizon can see (the
   horizon-blindness doctrine cuts both ways — a wall past the horizon
   devalues the arb arm's positional spending). Flagged, not read.
-- **The gambler (the §82 parity rider):** §76 lit the luck seam
+- **The gambler (the §83 parity rider):** §76 lit the luck seam
   (critable-universal + luck durations on hex/wail/molotov — the
   luck character's organic movers) and no gain materialized: the
   regen-shape gap vs the soldier WIDENS (−5 → −22.5) while 55pre
-  narrows (−15 → −12.5), n=40 directional both. The §82 repair stays
+  narrows (−15 → −12.5), n=40 directional both. The §83 repair stays
   the first item with its premise updated: the organic move did not
   arrive.
 - **Act-1 amendment HELD:** every soldier/priest act-1 arb row PASSes
@@ -3083,7 +3083,7 @@ reads against that backdrop.
 - **The walls RE-SOFTENED (the third composition move in three
   boards):** 0.278 regen (just below the signed 30–35) / 0.318 55pre
   (in-band) — vs the 76h HARDENED read (0.412/0.481). The braid
-  world pulled the walls back ~15pts. The §82 wall agenda now holds
+  world pulled the walls back ~15pts. The §83 wall agenda now holds
   three stacked movers (76h's confounded trio + the map rework);
   the pull-vs-no-pull decision should re-read on THIS world, not
   76h's.
@@ -3100,7 +3100,7 @@ reads against that backdrop.
   −10 vs soldier past the ±5 principle)** / 0.725 55pre (in-band) ·
   gambler 0.700 regen / 0.550 55pre (WARN). **The gambler breach
   FLIPPED SHAPES:** the 76h regen gap (−22.5) closed to 0.0 while
-  the 55pre gap re-widened to −22.5 — the §82 repair premise updates
+  the 55pre gap re-widened to −22.5 — the §83 repair premise updates
   again: the braid world moves the gap between shapes, arguing the
   defect is shape-coupled (event/economy mix), not kit-intrinsic.
 - **Forced-boss refs:** King 0.775 / Queen 0.675 — both in-band,
@@ -3108,13 +3108,13 @@ reads against that backdrop.
   dissolution (tx ≈ 0 on arb) holds everywhere.
 - **The fire channel:** Δ +0.025 (WARN vs the signed +0.10
   doctrine-pair) — the sign RECOVERED from the 75l inversion
-  (−0.075) but stays statistically weak at n=40; the §82 re-read
+  (−0.075) but stays statistically weak at n=40; the §83 re-read
   stands, now with a third era's data point.
 - **decisions.csv (the standing instrument, all 10 arb rows):** the
   nodeChoice site now shows event picks with the highest realized
   margin on the board (Δ|picked 6.5, n=34 directional) — the event
   era registers in decision value; eventChoice per-choice rows are
-  LIVE for the §82 ε-floor re-read (30 choice-instances on the top
+  LIVE for the §83 ε-floor re-read (30 choice-instances on the top
   event alone). Fires 2.1/run, empower Δ|picked +3.25 (n=3348) —
   the packet-health read holds.
 
@@ -3122,5 +3122,5 @@ reads against that backdrop.
 observed braid-world values PROPOSED for user signing (act-1 six +
 the two forced-boss refs; banks/fires/tx hold mid-band); the signed
 bands (reach 40–50 · wall 30–35 · seam 15–18) deliberately DO NOT
-move — reality-vs-band is the §82 call, per the 75l note. The priest
-regen breach joins the gambler as a NAMED §82 parity item.
+move — reality-vs-band is the §83 call, per the 75l note. The priest
+regen breach joins the gambler as a NAMED §83 parity item.

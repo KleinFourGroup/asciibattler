@@ -109,7 +109,7 @@ they happen:
   BEFORE Cluster 6 deliberately: C6 authors the biggest remaining UI
   (options menu, tutorial, save/load) and should build on audited idioms —
   ordering principle #1 applied to UI. Scope + cut at the round's own
-  kickoff; re-confirm at the §82 close ritual.
+  kickoff; re-confirm at the §83 close ritual.
 
 ---
 

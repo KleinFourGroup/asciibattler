@@ -912,7 +912,9 @@ export class BattleRenderer {
     const footprint = this.footprintFor(unitId);
     const restPos = this.unitAnchorPos(cell, footprint);
     const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? restPos).clone();
-    this.animator.startLerp(handle, origin, restPos, SETTLE_BACK_SECONDS);
+    // §81c2 — same ground profile as animateStep (a settle-back is a ground
+    // relocation too; an abort can land the sprite on a different-height tile).
+    this.animator.startGroundLerp(handle, origin, restPos, SETTLE_BACK_SECONDS);
   }
 
   /**
@@ -955,7 +957,10 @@ export class BattleRenderer {
     // centered over its block through the slide (n=1 → tileGroundPos, identical).
     const footprint = this.footprintFor(unitId);
     const origin = (this.sprites.getPosition(handle, this.scratchPos) ?? this.unitAnchorPos(from, footprint)).clone();
-    this.animator.startLerp(
+    // §81c2 — ground lerp: climb-early/descend-late Y so a low→high step never
+    // spends its second half with the anchor under the destination tile top
+    // (the glyph-through-the-ground clip).
+    this.animator.startGroundLerp(
       handle,
       origin,
       this.unitAnchorPos(to, footprint),

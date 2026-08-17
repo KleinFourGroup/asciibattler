@@ -357,8 +357,13 @@ snapshot bump):
 - [x] 81b — ✅ 2026-08-17: landed to plan; NO bump; the
   dose-independence pin = camp density never perturbs terrain;
   volcanic pool ships EMPTY → 81c (worklog §81b).
-- [ ] 81c — design round: palettes/pools/densities signed on visible
-  maps; user native eyeball on a handful of seeds.
+- [x] 81c — ✅ 2026-08-17: ALL SIGNED — placement 45/45/10 ·
+  volcanic pool stays empty · density re-dialed 35/45/20 (user
+  call) · palettes + pools as shipped (worklog §81c).
+- [x] 81c2 — INSERTED (eyeball catch, user screenshot) ✅
+  2026-08-17: the ground-clip fix — `startGroundLerp`
+  climb-early/descend-late Y, §79 anchor math untouched; native
+  feel eyeball rides (worklog §81c2).
 - [ ] 81d — docs close: DESIGN/ARCHITECTURE touch-ups · demote ·
   cursor flip · box ON TIME.
 

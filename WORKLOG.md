@@ -4371,3 +4371,41 @@ rerolling VOLCANIC hunting for camps — the one empty pool 🙈):
   boards are rare enough that a camp-free majority felt too flat —
   the no-camp weight drops to ~a third, most boards now carry one
   camp. Dose-independence means the dial moves zero terrain pins.
+- **Tile palettes/densities + camp pools SIGNED as shipped**
+  (2026-08-17, after the dial commit): deep water stays
+  sometimes-there (the ~45% swamp read accepted — no push needed);
+  pools stand as authored.
+
+### §81c2 — the ground-clip fix (2026-08-17, eyeball insertion)
+
+The user's screenshot: glyphs lerp THROUGH the ground stepping from
+a low tile to a high one (§37's per-cell height field + §81 making
+hills/height-contrast common surfaced it). Diagnosis: at rest the
+§79 base-anchored quad can't sink by construction, but
+`animateStep`'s LINEAR Y spends the whole second half of a
+low→high step with the anchor below the destination tile top —
+the glyph's lower band depth-clips into the tile mesh. The user
+flagged the trap themselves: any naive world-Y float re-opens the
+§79 anchor work.
+
+**The fix — a ground-aware lerp that never touches anchor math:**
+`SpriteAnimator.startGroundLerp` re-times Y only (XZ stays linear):
+climb-early (rising Y completes by t=0.5) / descend-late (falling
+Y starts at t=0.5), matching the §36 50%-mark logical-position
+flip — so the anchor sits at-or-above the surface of whichever
+cell it's visually over, continuously, no pops, no per-frame
+terrain sampling, zero screen-space lift changes (§79 untouched).
+Consumers: `animateStep` (moves + swaps) and the §36c settle-backs;
+projectiles/tracers/shoves keep the plain lerp (they fly). First
+half of an ascent the glyph's feet can occlude behind the higher
+tile's near face — that's correct occlusion (approaching a step
+from behind it), distinct from the sinking artifact.
+
+**Proof:** typecheck clean · in-page throwaway-animator probe with
+a stub sprite sink, exact samples at t=.25/.5/.75/1 — rising
+y=0.3→0.5→0.5→0.5, falling y=0.5→0.5→0.3→0.1, flat constant, XZ
+linear throughout · a fresh full battle (Soldier → starting event
+→ battle) ran real moves through the new path with zero new
+console errors. Render-only (no tests by policy); the FEEL
+verdict — no more ground-clip on low→high steps — rides with the
+user's native eyeball.

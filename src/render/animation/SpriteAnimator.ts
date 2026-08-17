@@ -36,6 +36,19 @@ interface ActiveLerp {
    * death). Undefined for fixed-destination lerps (moves, mage bolt, tracer).
    */
   readonly targetProvider: (() => THREE.Vector3 | null) | undefined;
+  /**
+   * §81c2 — ground-aware Y profile for unit GROUND relocations (moves, swaps,
+   * settle-backs). The per-cell terrain height field means from.y and to.y can
+   * differ; a linear Y spends the whole second half of a low→high step with
+   * the anchor BELOW the destination tile's surface, depth-clipping the
+   * glyph's lower band into the ground (the §81 eyeball catch). The profile:
+   * climb EARLY (a rising Y completes by t=0.5) and descend LATE (a falling Y
+   * starts at t=0.5) — matching the §36 logical-position flip at the 50% mark,
+   * so the anchor is at (or above) the surface of whichever cell it's visually
+   * over, continuously, with no terrain sampling. XZ stays linear. False for
+   * projectiles/tracers (they fly).
+   */
+  readonly groundStepY: boolean;
 }
 
 interface ActiveFade {
@@ -102,6 +115,37 @@ export class SpriteAnimator {
       arcHeight,
       onComplete,
       targetProvider,
+      groundStepY: false,
+    });
+  }
+
+  /**
+   * §81c2 — a unit GROUND relocation: a plain fixed-destination lerp with the
+   * climb-early / descend-late Y profile (see `ActiveLerp.groundStepY`).
+   * Callers: move/swap steps + the §36c settle-backs — anything whose from/to
+   * are both terrain ground anchors. Same override semantics as `startLerp`.
+   */
+  startGroundLerp(
+    handle: SpriteHandle,
+    from: THREE.Vector3,
+    to: THREE.Vector3,
+    durationSeconds: number,
+  ): void {
+    this.shoves.delete(handle);
+    if (durationSeconds <= 0) {
+      this.sprites.updateSprite(handle, { position: to });
+      this.lerps.delete(handle);
+      return;
+    }
+    this.lerps.set(handle, {
+      from: from.clone(),
+      to: to.clone(),
+      duration: durationSeconds,
+      elapsed: 0,
+      arcHeight: 0,
+      onComplete: undefined,
+      targetProvider: undefined,
+      groundStepY: true,
     });
   }
 
@@ -216,6 +260,12 @@ export class SpriteAnimator {
       }
       const t = lerp.elapsed >= lerp.duration ? 1 : lerp.elapsed / lerp.duration;
       this.scratch.copy(lerp.from).lerp(lerp.to, t);
+      // §81c2 — ground steps re-time Y: rising completes by t=0.5, falling
+      // starts at t=0.5 (see ActiveLerp.groundStepY). XZ keeps the linear t.
+      if (lerp.groundStepY && lerp.from.y !== lerp.to.y) {
+        const yT = lerp.to.y > lerp.from.y ? Math.min(1, 2 * t) : Math.max(0, 2 * t - 1);
+        this.scratch.y = lerp.from.y + (lerp.to.y - lerp.from.y) * yT;
+      }
       // E7.D — parabolic arc: lift Y by arcHeight·4t(1−t) (0 at the ends,
       // peak at the midpoint). arcHeight 0 leaves the straight-line path.
       if (lerp.arcHeight !== 0) this.scratch.y += lerp.arcHeight * 4 * t * (1 - t);

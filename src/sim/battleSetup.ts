@@ -151,6 +151,9 @@ export function applyTerrain(
     world.gridH,
     TERRAIN,
     encounter.layoutId,
+    // §81a — the sector theme picks the procedural tile envelope (ignored on
+    // the layout path; a layout's theme is cosmetic and stays its own).
+    encounter.theme,
   );
   for (const cell of terrain.tileGrid.cells()) {
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);

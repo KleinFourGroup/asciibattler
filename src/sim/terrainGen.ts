@@ -43,6 +43,7 @@ import {
   type LayoutDef,
   type SpawnRegion,
   type CampRef,
+  type Theme,
 } from './layouts';
 import { sampleProceduralParams, generateProceduralMap } from './proceduralMap';
 
@@ -84,7 +85,8 @@ export interface GeneratedTerrain {
   readonly chasms: readonly GridCoord[];
   /** D7.B: fire tile coords (per-tick chip damage to standing units).
    *  Stored on `tileGrid` as `kind === 'fire'`; parallel readout same
-   *  pattern as chasm. Empty for procedural — hand-authored-only in D7. */
+   *  pattern as chasm. §81a: no longer hand-authored-only — the volcanic
+   *  theme's procedural scatter emits these too. */
   readonly fires: readonly GridCoord[];
   /** D7.B: healing tile coords (per-tick heal to standing units).
    *  Stored on `tileGrid` as `kind === 'healing'`; parallel readout
@@ -111,6 +113,11 @@ export function generateTerrain(
   gridH: number,
   config: TerrainConfig,
   layoutId: string | null = null,
+  // §81a — the sector theme drives the procedural tile envelope
+  // (`themeTiles`). Ignored on the layout path (a layout carries its own
+  // theme). Defaults to the base theme so theme-agnostic callers (tests,
+  // tools) stay valid.
+  theme: Theme = 'grassland',
 ): GeneratedTerrain {
   if (layoutId !== null) {
     const layout = getLayout(layoutId);
@@ -119,7 +126,7 @@ export function generateTerrain(
     }
     return generateFromLayout(layout, gridW, gridH);
   }
-  return generateProcedural(rng, gridW, gridH, config);
+  return generateProcedural(rng, gridW, gridH, config, theme);
 }
 
 /**
@@ -193,27 +200,28 @@ export function generateFromLayout(
 }
 
 /**
- * Procedural path (M6). Samples a concrete map-parameter set from the
- * `procedural` config envelope, then builds the crossbar + divider +
- * noise blend in `src/sim/proceduralMap.ts`. Both stages consume the
- * caller's per-encounter RNG fork in sequence, so the whole thing stays
- * deterministic per `(rng state, gridW, gridH, config)`. The legacy
- * `wallDensity` / `shallowWaterDensity` / `ensureConnectivity` knobs no
- * longer apply here (the new generator owns its own obstacle budget +
- * connectivity guard); they're slated for removal from the config.
+ * Procedural path (M6 + §81a). Samples a concrete map-parameter set from
+ * the `procedural` config envelope (the theme picks its `themeTiles`
+ * entry), then builds the crossbar + divider + noise blend in
+ * `src/sim/proceduralMap.ts`. Both stages consume the caller's
+ * per-encounter RNG fork in sequence, so the whole thing stays
+ * deterministic per `(rng state, gridW, gridH, config, theme)`. (The
+ * legacy C1a scatter knobs were removed at §81a.)
  *
- * D7: procedural is hand-authored-only for chasm / fire / healing —
- * empty arrays keep the `GeneratedTerrain` shape stable. (Half-cover is
- * now procedural too, emitted by the noise field — see D6 note above.)
+ * D7: procedural is hand-authored-only for chasm / healing — empty
+ * arrays keep the `GeneratedTerrain` shape stable. §81a: `fires` is now
+ * procedural too (the volcanic sparse scatter), alongside the §37 tiles
+ * carried on `tileGrid`. Camps land at §81b.
  */
 function generateProcedural(
   rng: RNG,
   gridW: number,
   gridH: number,
   config: TerrainConfig,
+  theme: Theme,
 ): GeneratedTerrain {
-  const params = sampleProceduralParams(rng, config.procedural);
-  const { tileGrid, walls, halfCovers, spawnRegions } = generateProceduralMap(
+  const params = sampleProceduralParams(rng, config.procedural, theme);
+  const { tileGrid, walls, halfCovers, fires, spawnRegions } = generateProceduralMap(
     rng,
     gridW,
     gridH,
@@ -224,7 +232,7 @@ function generateProcedural(
     walls,
     halfCovers,
     chasms: [],
-    fires: [],
+    fires,
     healings: [],
     rubble: [],
     campSpawns: [],

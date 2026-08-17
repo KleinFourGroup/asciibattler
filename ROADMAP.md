@@ -352,13 +352,8 @@ Cut at the 2026-08-17 kickoff (audit + shape-lock: WORKLOG
 pairs/mid-band even + rare asymmetry; both build steps predict NO
 snapshot bump):
 
-- [ ] 81a — theme thread + per-theme tile layer, headless-first:
-  `generateTerrain` gains `theme`; `ProceduralSchema` gains an
-  exhaustive per-theme tile envelope (volcanic = sparse fire); cap +
-  connectivity guards learn impassable tiles; legacy
-  wallDensity/shallowWaterDensity knobs deleted. Exit: determinism +
-  per-theme presence + deep-water connectivity pins green;
-  procedural fuzz arm re-pinned.
+- [x] 81a — ✅ 2026-08-17: landed to plan; NO bump as predicted; the
+  arm re-pin = one scan-widening (worklog §81a).
 - [ ] 81b — procedural camps: per-theme camp pools + density knob +
   the weighted placement-mode roll (pairs/mid-band/rare-free);
   generator emits `campSpawns`/`camps` (occupiable floor, spawn-band

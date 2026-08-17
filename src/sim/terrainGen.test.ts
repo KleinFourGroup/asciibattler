@@ -2,17 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { generateTerrain, generateFromLayout } from './terrainGen';
 import { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import { TERRAIN, type TerrainConfig } from '../config/terrain';
-import { getLayout, type LayoutDef, type SpawnRegion } from './layouts';
+import { TERRAIN, type TerrainConfig, type ThemeTilesConfig } from '../config/terrain';
+import { getLayout, THEMES, type LayoutDef, type SpawnRegion, type Theme } from './layouts';
+import type { TileGrid } from './TileGrid';
 
 const G = 12;
 
 const BASE: TerrainConfig = {
-  wallDensity: 0.06,
-  shallowWaterDensity: 0.04,
   proceduralMinSize: 10,
   proceduralMaxSize: 20,
-  ensureConnectivity: true,
   procedural: TERRAIN.procedural,
 };
 
@@ -166,6 +164,83 @@ describe('generateTerrain (procedural)', () => {
   });
 });
 
+describe('§81a — per-theme procedural tiles (through generateTerrain)', () => {
+  const SEEDS = 40;
+  const kindsAcrossSeeds = (theme: Theme): Set<string> => {
+    const seen = new Set<string>();
+    for (let seed = 0; seed < SEEDS; seed++) {
+      const { tileGrid } = generateTerrain(new RNG(seed), G, G, BASE, null, theme);
+      for (const c of tileGrid.cells()) seen.add(c.kind);
+    }
+    return seen;
+  };
+
+  it('each theme lands every tile kind its shipped envelope declares (over seeds)', () => {
+    // Derived from the config, not hardcoded per theme: a declared knob with a
+    // positive max must land its kind somewhere across enough seeds.
+    const KNOB_TO_KIND: ReadonlyArray<readonly [keyof ThemeTilesConfig, string]> = [
+      ['deepWaterFraction', 'deep_water'],
+      ['hills', 'hills'],
+      ['ice', 'ice'],
+      ['sand', 'sand'],
+      ['mud', 'mud'],
+      ['fire', 'fire'],
+    ];
+    for (const theme of THEMES) {
+      const declared = TERRAIN.procedural.themeTiles[theme];
+      const seen = kindsAcrossSeeds(theme);
+      for (const [knob, kind] of KNOB_TO_KIND) {
+        const spec = declared[knob];
+        if (spec !== undefined && spec.max > 0) {
+          expect(seen, `theme "${theme}" should produce ${kind}`).toContain(kind);
+        } else {
+          expect(seen, `theme "${theme}" must not produce ${kind}`).not.toContain(kind);
+        }
+      }
+    }
+  });
+
+  it('fire is volcanic-only in the shipped config (the signed §81 revert, kept sparse)', () => {
+    // Guard the DESIGN intent directly, not just the mechanism: only volcanic
+    // declares a fire knob today.
+    for (const theme of THEMES) {
+      const declaresFire = TERRAIN.procedural.themeTiles[theme].fire !== undefined;
+      expect(declaresFire, `theme "${theme}" fire declaration`).toBe(theme === 'volcanic');
+    }
+    // And the scatter stays sparse: within the envelope's max chance ceiling
+    // (board share), with real headroom — derived from config, not hardcoded.
+    const fireMax = TERRAIN.procedural.themeTiles.volcanic.fire!.max;
+    for (let seed = 0; seed < SEEDS; seed++) {
+      const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'volcanic');
+      expect(t.fires.length).toBeLessThanOrEqual(Math.ceil(G * G * fireMax * 2));
+      for (const f of t.fires) expect(t.tileGrid.kindAt(f)).toBe('fire');
+    }
+  });
+
+  it('is deterministic per (seed, theme) and theme-sensitive for the same seed', () => {
+    const a = generateTerrain(new RNG(123), G, G, BASE, null, 'swamp');
+    const b = generateTerrain(new RNG(123), G, G, BASE, null, 'swamp');
+    expect(a.tileGrid.toJSON()).toEqual(b.tileGrid.toJSON());
+    expect(a.walls).toEqual(b.walls);
+    // Different theme, same seed → different draw plan (swamp declares three
+    // knobs; grassland two) — the grids should diverge across a few seeds.
+    let diverged = false;
+    for (let seed = 0; seed < 10 && !diverged; seed++) {
+      const s = generateTerrain(new RNG(seed), G, G, BASE, null, 'swamp');
+      const g = generateTerrain(new RNG(seed), G, G, BASE, null, 'grassland');
+      diverged = JSON.stringify(s.tileGrid.toJSON()) !== JSON.stringify(g.tileGrid.toJSON());
+    }
+    expect(diverged).toBe(true);
+  });
+
+  it('spawn bands stay connected on the wettest shipped theme (deep water blocks)', () => {
+    for (let seed = 0; seed < SEEDS; seed++) {
+      const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'swamp');
+      expect(spawnRegionsConnected(t, G, G, deepWaterCells(t.tileGrid))).toBe(true);
+    }
+  });
+});
+
 function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {
   const out: GridCoord[] = [];
   for (const region of regions) {
@@ -174,14 +249,24 @@ function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {
   return out;
 }
 
+/** §81a — the impassable deep-water cells of a grid, in the blocked-set key
+ *  format `spawnRegionsConnected` consumes. */
+function deepWaterCells(tileGrid: TileGrid): Set<string> {
+  const out = new Set<string>();
+  for (const c of tileGrid.cells()) if (c.kind === 'deep_water') out.add(`${c.x},${c.y}`);
+  return out;
+}
+
 /** BFS between the first two spawn-region centroids over passable cells (floor +
- *  water), blocking walls AND half-cover — the generator's own passability. */
+ *  water), blocking walls AND half-cover — the generator's own passability.
+ *  §81a: pass `extraBlocked` (e.g. deep-water cells) to block tiles too. */
 function spawnRegionsConnected(
   terrain: { walls: readonly GridCoord[]; halfCovers: readonly GridCoord[]; spawnRegions: readonly SpawnRegion[] },
   gridW: number,
   gridH: number,
+  extraBlocked: ReadonlySet<string> = new Set(),
 ): boolean {
-  const blocked = new Set<string>();
+  const blocked = new Set<string>(extraBlocked);
   for (const c of [...terrain.walls, ...terrain.halfCovers]) blocked.add(`${c.x},${c.y}`);
   const start = centroid(terrain.spawnRegions[0]!);
   const goal = centroid(terrain.spawnRegions[1]!);

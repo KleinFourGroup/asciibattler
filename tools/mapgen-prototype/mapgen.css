@@ -224,6 +224,25 @@ button.primary {
 .sw.water {
   background: #33c6f4;
 }
+/* §81a theme tiles */
+.sw.deep {
+  background: #1557a8;
+}
+.sw.hills {
+  background: #b08d57;
+}
+.sw.ice {
+  background: #bfeaff;
+}
+.sw.sand {
+  background: #e8c66a;
+}
+.sw.mud {
+  background: #7a5230;
+}
+.sw.fire {
+  background: #ff7043;
+}
 .sw.spawn {
   background: #2fe0a0;
 }

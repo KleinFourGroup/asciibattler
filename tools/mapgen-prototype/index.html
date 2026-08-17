@@ -31,6 +31,18 @@
                 <option value="none">None</option>
               </select></label
             >
+            <label class="row"
+              >Theme
+              <select id="theme">
+                <option value="grassland" selected>Grassland</option>
+                <option value="barren">Barren</option>
+                <option value="volcanic">Volcanic</option>
+                <option value="tundra">Tundra</option>
+                <option value="desert">Desert</option>
+                <option value="swamp">Swamp</option>
+              </select>
+              <span class="sub">(§81a tile envelope; manual mode uses each knob's centre)</span></label
+            >
             <div class="row seed">
               <span>Seed <code id="seed-val">—</code></span>
               <button id="reroll" type="button" class="primary">Reroll ⟳</button>
@@ -81,6 +93,12 @@
             <span><i class="sw wall"></i> wall</span>
             <span><i class="sw half"></i> half-cover</span>
             <span><i class="sw water"></i> water</span>
+            <span><i class="sw deep"></i> deep water</span>
+            <span><i class="sw hills"></i> hills</span>
+            <span><i class="sw ice"></i> ice</span>
+            <span><i class="sw sand"></i> sand</span>
+            <span><i class="sw mud"></i> mud</span>
+            <span><i class="sw fire"></i> fire</span>
             <span><i class="sw spawn"></i> spawn</span>
             <span><i class="sw choke"></i> chokepoint / ford</span>
           </div>

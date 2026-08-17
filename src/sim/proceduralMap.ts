@@ -13,6 +13,12 @@
  *   - NOISE (one value-noise field) textures the open ground: high ground →
  *     SOLID cover clumps (LOS + movement blockers), low ground → organic water
  *     pools. (Half-cover is structural — it lives only in the walls above.)
+ *   - §81a THEME TILES: the sector theme's tile envelope layers onto the same
+ *     pass — the lowest pool slice deepens to impassable `deep_water`, the
+ *     ground patches (hills/ice/sand/mud) claim open floor off their own noise
+ *     fields, and volcanic scatters sparse `fire` cells (never on a ford).
+ *     Deep water counts against the wall cap and both guards carve it to
+ *     shallow (a drained breach), so a swampy roll can't seal the crossing.
  *   - SYMMETRY ('point' = 180° rotation, offsetting the partnered gap so
  *     chokepoints don't stack; 'mirror' = reflect across the midline; 'none' =
  *     free) keeps the clash fair.
@@ -35,12 +41,36 @@
  */
 import type { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import type { ProceduralTerrainConfig, RangeSpec } from '../config/terrain';
+import type { ProceduralTerrainConfig, ThemeTilesConfig, RangeSpec } from '../config/terrain';
+import type { Theme } from '../config/layouts';
 import { TileGrid } from './TileGrid';
 import { SPAWN_REGION_TILE_COUNT, type SpawnRegion } from './layouts';
 import { sampleRange, sampleIntRange, weightedPick } from '../core/sampling';
 
 export type Symmetry = 'none' | 'mirror' | 'point';
+
+/**
+ * §81a — the sampled per-theme tile layer (the resolved form of one
+ * `ThemeTilesConfig` entry). Undeclared knobs resolve to 0 (feature off) —
+ * except the `poolDensity` override, which folds into `params.poolDensity`
+ * at sample time and doesn't appear here. Ground patches (`hills`/`ice`/
+ * `sand`/`mud`) are board fractions, each drawn on its own value-noise
+ * field; `deepWaterFraction` deepens the lowest slice of the pool band;
+ * `fire` is a per-floor-cell scatter chance.
+ */
+export interface ResolvedThemeTiles {
+  deepWaterFraction: number;
+  hills: number;
+  ice: number;
+  sand: number;
+  mud: number;
+  fire: number;
+}
+
+/** The ground-patch kinds, in their FIXED claim order (first hit wins when
+ *  patch fields overlap). Order is part of the determinism contract. */
+const PATCH_KINDS = ['hills', 'ice', 'sand', 'mud'] as const;
+type PatchKind = (typeof PATCH_KINDS)[number];
 
 /** A concrete, fully-resolved knob set for one encounter's map (the sampled
  *  form of `ProceduralTerrainConfig`). */
@@ -67,18 +97,26 @@ export interface ResolvedMapParams {
   poolDensity: number;
   /** Value-noise lattice resolution. */
   noiseScale: number;
-  /** Hard ceiling on total obstacle cells, as a board fraction (NOT sampled). */
+  /** Hard ceiling on total BLOCKING cells (wall + half-cover + §81a deep
+   *  water), as a board fraction (NOT sampled). */
   wallCapFraction: number;
+  /** §81a — the sampled per-theme tile layer. */
+  tiles: ResolvedThemeTiles;
 }
 
 export interface GenStats {
   walls: number;
   halfCovers: number;
+  /** Shallow-water cells (fords + pools + carves). */
   water: number;
-  /** wall + half-cover, over the board. */
+  /** §81a — impassable deep-water cells. */
+  deepWater: number;
+  /** §81a — fire cells (volcanic scatter). */
+  fires: number;
+  /** Blocking cells (wall + half-cover + deep water), over the board. */
   obstacleFraction: number;
   connected: boolean;
-  /** Obstacles removed by the connectivity guard (0 = the gaps already sufficed). */
+  /** Blockers removed by the connectivity guard (0 = the gaps already sufficed). */
   carved: number;
   chokepoints: number;
 }
@@ -93,6 +131,9 @@ export interface ProceduralMapResult {
   tileGrid: TileGrid;
   walls: GridCoord[];
   halfCovers: GridCoord[];
+  /** §81a — fire-cell coords (the volcanic scatter), the `GeneratedTerrain.fires`
+   *  parallel readout (procedural was hand-authored-only for fire until §81a). */
+  fires: GridCoord[];
   spawnRegions: SpawnRegion[];
   /** Gap/ford cells, for the chokepoint highlight (dev tooling). */
   chokeCells: GridCoord[];
@@ -107,12 +148,16 @@ const intRange = (rng: RNG, s: RangeSpec): number =>
 /**
  * Draw a concrete map-parameter set from the procedural config envelope. One
  * RNG draw per sampled knob, in the order below (`wallCapFraction` is a fixed
- * guard rail, no draw). Reordering or adding a knob re-baselines the fuzz
- * stream — the usual RNG-fork caveat.
+ * guard rail, no draw); then the THEME's tile knobs (§81a) in the fixed order
+ * `poolDensity override → deepWaterFraction → hills → ice → sand → mud → fire`,
+ * one draw per DECLARED knob (absent = off, no draw — so a theme's draw count
+ * is fixed by its config entry). Reordering or adding a knob re-baselines the
+ * fuzz stream — the usual RNG-fork caveat.
  */
 export function sampleProceduralParams(
   rng: RNG,
   cfg: ProceduralTerrainConfig,
+  theme: Theme,
 ): ResolvedMapParams {
   const symmetry = weightedPick(rng, cfg.symmetry);
   const crossbars = Number(weightedPick(rng, cfg.crossbars));
@@ -125,6 +170,17 @@ export function sampleProceduralParams(
   const windowChance = range(rng, cfg.windowChance);
   const poolDensity = range(rng, cfg.poolDensity);
   const noiseScale = intRange(rng, cfg.noiseScale);
+  const themeCfg: ThemeTilesConfig = cfg.themeTiles[theme];
+  const optRange = (s: RangeSpec | undefined): number => (s === undefined ? 0 : range(rng, s));
+  const pooled = themeCfg.poolDensity === undefined ? poolDensity : range(rng, themeCfg.poolDensity);
+  const tiles: ResolvedThemeTiles = {
+    deepWaterFraction: optRange(themeCfg.deepWaterFraction),
+    hills: optRange(themeCfg.hills),
+    ice: optRange(themeCfg.ice),
+    sand: optRange(themeCfg.sand),
+    mud: optRange(themeCfg.mud),
+    fire: optRange(themeCfg.fire),
+  };
   return {
     symmetry,
     crossbars,
@@ -135,15 +191,20 @@ export function sampleProceduralParams(
     dividers,
     coverDensity,
     windowChance,
-    poolDensity,
+    poolDensity: pooled,
     noiseScale,
     wallCapFraction: cfg.wallCapFraction,
+    tiles,
   };
 }
 
-// Internal working cell: floor / wall / half-cover / water.
-type Cell = 'f' | 'w' | 'h' | 'a';
-const isObstacle = (c: Cell): boolean => c === 'w' || c === 'h';
+// Internal working cell: floor / wall / half-cover / shallow water, plus the
+// §81a theme tiles (deep water + the four ground patches + fire).
+type Cell = 'f' | 'w' | 'h' | 'a' | 'deep' | 'hills' | 'ice' | 'sand' | 'mud' | 'fire';
+// Cells a unit can never stand on. `deep` blocks like a wall for the cap +
+// connectivity guards (§81a), but trims/carves to WATER, not floor — a drained
+// deep cell reads as a ford, on-theme.
+const isBlocking = (c: Cell): boolean => c === 'w' || c === 'h' || c === 'deep';
 
 const keyOf = (x: number, y: number): string => `${x},${y}`;
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
@@ -252,7 +313,20 @@ export function generateProceduralMap(
   }
 
   // --- NOISE texture: cover clumps (some HALF-cover) + water pools ---
+  // §81a — the theme's ground-patch fields (hills/ice/sand/mud), each its own
+  // value-noise lattice so patches don't correlate with the pools/cover field.
+  // Built for every ACTIVE kind (density > 0) in the fixed PATCH_KINDS order —
+  // the draw sequence is part of the determinism contract.
+  const patchFields = new Map<PatchKind, (x: number, y: number) => number>();
+  for (const kind of PATCH_KINDS) {
+    if (params.tiles[kind] > 0) {
+      patchFields.set(kind, buildValueNoise(rng, W, H, params.noiseScale));
+    }
+  }
   const coverCut = 1 - params.coverDensity;
+  // §81a — the lowest slice of the pool band deepens to impassable deep water
+  // (deepest-noise-first, so a deep centre stays wrapped in shallow rim).
+  const deepCut = params.poolDensity * params.tiles.deepWaterFraction;
   for (let y = firstRow; y <= lastGenRow; y++) {
     for (let x = 0; x < W; x++) {
       if (isSpawn(x, y)) continue;
@@ -261,8 +335,35 @@ export function generateProceduralMap(
       const n = noise(x, y);
       // Noise cover is SOLID (rocks/rubble — full LOS + movement blockers).
       // Half-cover lives only as windows in the structural walls (wallAt above).
-      if (n > coverCut) set(x, y, 'w');
-      else if (n < params.poolDensity) set(x, y, 'a');
+      if (n > coverCut) {
+        set(x, y, 'w');
+        continue;
+      }
+      if (n < params.poolDensity) {
+        set(x, y, n < deepCut ? 'deep' : 'a');
+        continue;
+      }
+      // §81a — ground patches claim open floor in the fixed order (first hit
+      // wins where fields overlap). Fractions read as board-share claimed.
+      for (const [kind, field] of patchFields) {
+        if (field(x, y) > 1 - params.tiles[kind]) {
+          set(x, y, kind);
+          break;
+        }
+      }
+    }
+  }
+
+  // --- §81a FIRE scatter (volcanic): sparse per-cell rolls on open floor.
+  // Never on a chokepoint (the crossing stays free) or a spawn band (`set`
+  // guards spawn cells, but skipping keeps the draw stream spawn-independent).
+  if (params.tiles.fire > 0) {
+    for (let y = firstRow; y <= lastGenRow; y++) {
+      for (let x = 0; x < W; x++) {
+        if (isSpawn(x, y) || choke.has(keyOf(x, y))) continue;
+        if (grid[y]![x] !== 'f') continue;
+        if (rng.next() < params.tiles.fire) set(x, y, 'fire');
+      }
     }
   }
 
@@ -289,7 +390,9 @@ export function generateProceduralMap(
   const tileGrid = new TileGrid(W, H);
   const walls: GridCoord[] = [];
   const halfCovers: GridCoord[] = [];
+  const fires: GridCoord[] = [];
   let waterCount = 0;
+  let deepCount = 0;
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const c = grid[y]![x]!;
@@ -298,6 +401,15 @@ export function generateProceduralMap(
       else if (c === 'a') {
         tileGrid.setKind({ x, y }, 'shallow_water');
         waterCount++;
+      } else if (c === 'deep') {
+        tileGrid.setKind({ x, y }, 'deep_water');
+        deepCount++;
+      } else if (c === 'fire') {
+        tileGrid.setKind({ x, y }, 'fire');
+        fires.push({ x, y });
+      } else if (c !== 'f') {
+        // The remaining §81a ground patches map 1:1 onto their TileKind.
+        tileGrid.setKind({ x, y }, c);
       }
     }
   }
@@ -306,12 +418,14 @@ export function generateProceduralMap(
     return { x: x!, y: y! };
   });
 
-  const obstacles = walls.length + halfCovers.length;
+  const blockers = walls.length + halfCovers.length + deepCount;
   const stats: GenStats = {
     walls: walls.length,
     halfCovers: halfCovers.length,
     water: waterCount,
-    obstacleFraction: obstacles / (W * H),
+    deepWater: deepCount,
+    fires: fires.length,
+    obstacleFraction: blockers / (W * H),
     connected: true,
     carved,
     chokepoints: chokeCells.length,
@@ -322,7 +436,7 @@ export function generateProceduralMap(
     { tiles: spawnBottom, availability: 'both' },
   ];
 
-  return { tileGrid, walls, halfCovers, spawnRegions, chokeCells, stats };
+  return { tileGrid, walls, halfCovers, fires, spawnRegions, chokeCells, stats };
 }
 
 /** Gap column set for a crossbar: `count` gaps of `width`, each placed RANDOMLY
@@ -379,8 +493,10 @@ function buildValueNoise(
   };
 }
 
-/** Trim obstacles (wall + half-cover) until under the cap. When symmetric,
- *  removes each together with its partner so the cap can't break symmetry. */
+/** Trim blocking cells (wall + half-cover + §81a deep water) until under the
+ *  cap. A trimmed wall/half-cover becomes floor; trimmed deep water drains to
+ *  SHALLOW (still a pool, just fordable). When symmetric, removes each together
+ *  with its partner so the cap can't break symmetry. */
 function enforceObstacleCap(
   grid: Cell[][],
   rng: RNG,
@@ -395,7 +511,7 @@ function enforceObstacleCap(
   const cells: GridCoord[] = [];
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
-      if (isObstacle(grid[y]![x]!) && !isSpawn(x, y)) cells.push({ x, y });
+      if (isBlocking(grid[y]![x]!) && !isSpawn(x, y)) cells.push({ x, y });
     }
   }
   let count = cells.length;
@@ -406,27 +522,31 @@ function enforceObstacleCap(
     cells[i] = cells[j]!;
     cells[j] = tmp;
   }
+  const clear = (x: number, y: number): void => {
+    grid[y]![x] = grid[y]![x] === 'deep' ? 'a' : 'f';
+  };
   for (const c of cells) {
     if (count <= cap) break;
-    if (!isObstacle(grid[c.y]![c.x]!)) continue; // already cleared as a partner
-    grid[c.y]![c.x] = 'f';
+    if (!isBlocking(grid[c.y]![c.x]!)) continue; // already cleared as a partner
+    clear(c.x, c.y);
     count--;
     if (symmetric) {
       const p = partner(c.x, c.y);
-      if ((p.x !== c.x || p.y !== c.y) && isObstacle(grid[p.y]![p.x]!) && !isSpawn(p.x, p.y)) {
-        grid[p.y]![p.x] = 'f';
+      if ((p.x !== c.x || p.y !== c.y) && isBlocking(grid[p.y]![p.x]!) && !isSpawn(p.x, p.y)) {
+        clear(p.x, p.y);
         count--;
       }
     }
   }
 }
 
-/** BFS reachability over passable cells (floor + water; wall + half-cover block). */
+/** BFS reachability over passable cells (floor + shallow water + ground
+ *  patches; wall + half-cover + §81a deep water block). */
 function hasPath(grid: Cell[][], start: GridCoord, goal: GridCoord): boolean {
   const H = grid.length;
   const W = grid[0]!.length;
   const passable = (x: number, y: number): boolean =>
-    x >= 0 && y >= 0 && x < W && y < H && !isObstacle(grid[y]![x]!);
+    x >= 0 && y >= 0 && x < W && y < H && !isBlocking(grid[y]![x]!);
   if (!passable(goal.x, goal.y) || !passable(start.x, start.y)) return false;
   const seen = new Set<string>([keyOf(start.x, start.y)]);
   const queue: GridCoord[] = [start];
@@ -458,9 +578,11 @@ const centroid = (tiles: GridCoord[]): GridCoord => {
   return { x: Math.round(sx / tiles.length), y: Math.round(sy / tiles.length) };
 };
 
-/** Remove obstacles (nearest the vertical centre first, a central breach) until
- *  the spawn bands connect. When symmetric, carves the partner too (carving the
- *  extra cell only ever helps the path). Returns how many were cut. */
+/** Remove blockers (nearest the vertical centre first, a central breach) until
+ *  the spawn bands connect — walls, half-cover, and §81a deep water all carve
+ *  to shallow water (a drained/forded breach, on-theme). When symmetric, carves
+ *  the partner too (carving the extra cell only ever helps the path). Returns
+ *  how many were cut. */
 function ensureConnectivity(
   grid: Cell[][],
   spawnTop: GridCoord[],
@@ -478,14 +600,14 @@ function ensureConnectivity(
   const cells: GridCoord[] = [];
   for (let y = 1; y < H - 1; y++) {
     for (let x = 0; x < W; x++) {
-      if (isObstacle(grid[y]![x]!)) cells.push({ x, y });
+      if (isBlocking(grid[y]![x]!)) cells.push({ x, y });
     }
   }
   const cx = (W - 1) / 2;
   cells.sort((a, b) => Math.abs(a.x - cx) - Math.abs(b.x - cx) || a.y - b.y);
 
   const carve = (x: number, y: number): number => {
-    if (!isObstacle(grid[y]![x]!)) return 0;
+    if (!isBlocking(grid[y]![x]!)) return 0;
     grid[y]![x] = 'a'; // a watered breach (reads as a ford, on-theme)
     choke.add(keyOf(x, y));
     return 1;

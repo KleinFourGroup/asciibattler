@@ -16,11 +16,8 @@ import type { GridCoord } from '../core/types';
 import { TERRAIN, type TerrainConfig } from '../config/terrain';
 
 const BASE: TerrainConfig = {
-  wallDensity: 0.06,
-  shallowWaterDensity: 0.04,
   proceduralMinSize: 10,
   proceduralMaxSize: 20,
-  ensureConnectivity: true,
   procedural: TERRAIN.procedural,
 };
 

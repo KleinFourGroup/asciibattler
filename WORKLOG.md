@@ -4262,3 +4262,50 @@ procedural camps (per-theme pools + density + the mode roll;
 density-0 byte-identity pin) → 81c design round (palettes/pools/
 densities signed on visible maps; native eyeball on a handful of
 seeds) → 81d docs close. Both build steps predict NO snapshot bump.
+
+### §81a — theme thread + the per-theme tile layer (2026-08-17)
+
+Landed to plan. `generateTerrain` gains a `theme` param (default
+`grassland` keeps theme-agnostic callers valid; `applyTerrain`
+passes `encounter.theme`); `ProceduralSchema` gains `themeTiles` —
+an exhaustive `Record<Theme, …>` (the sectors.ts pattern) of
+OPTIONAL range knobs (`poolDensity` override · `deepWaterFraction`
+· `hills`/`ice`/`sand`/`mud` patch densities · `fire` scatter
+chance), where absent = off = no draw, so each theme's draw count
+is fixed by its declaration. Generator mechanics: the pool band's
+lowest noise slice deepens to `deep_water` (deep centres stay
+wrapped in shallow rim; fords/carves never deepen); ground patches
+claim open floor off per-kind value-noise fields in the fixed
+`PATCH_KINDS` order; volcanic fire is a sparse per-cell roll that
+skips chokepoints. Both guards learned blocking tiles: deep water
+counts against `wallCapFraction` and trims/carves to SHALLOW (a
+drained breach) — the kickoff's seal-the-crossing hazard closed
+and pinned. Legacy C1a knobs (`wallDensity`/`shallowWaterDensity`/
+`ensureConnectivity` flag) deleted, schema + json + fixtures. The
+mapgen-prototype tool grew the Theme select (live in both modes;
+manual mode resolves declared knobs at centre/midpoint), the six
+tile colours + legend + Deep/Fire stats — it's the 81c
+design-round vehicle.
+
+- **NO snapshot bump, as predicted** (Run v42 / World v35 hold —
+  tile kinds + camp registry were already serialized).
+- **Proof**: 2657 main green (+13: per-theme presence derived from
+  config, deep-water connectivity across all symmetry modes ×
+  seeds, cap-counts-deep, patch-floor-only, fire-sparse+choke-free,
+  symmetry-of-tiles, all-off-changes-nothing, per-theme draw-count
+  pin) · typecheck clean · fuzz:smoke 398 green after ONE
+  re-baseline: the arbitratedStrategy frontier-hunt scan widened
+  trials 4→8 (themed battles re-routed the walk trajectories; the
+  scan-over-pin shape absorbed it — no pinned-value changes
+  anywhere else, the predicted "procedural arm re-pin" turned out
+  this cheap). Browser: tool driven headlessly-in-page (volcanic
+  Fire 2 / swamp Water 38 + Deep 14 in the stats strip, zero
+  console errors); native colour eyeball rides with 81c.
+- **200-seed distribution probe** (scratchpad, avg tiles/map at
+  G=16): swamp 22.4 shallow + 2.3 deep + 3.2 mud · tundra 5.0 ice +
+  0.9 deep · volcanic 1.5 fire + 2.6 hills · desert 12.4 sand +
+  6.4 oasis water · grassland/barren light accents. ⚠ 81c dial
+  fact: interpolated value noise CLUSTERS MID-RANGE, so low
+  thresholds under-fire — deep water lands on only ~45% of swamp
+  maps (90/200); if the design round wants deep-per-map, raise
+  `deepWaterFraction` well past intuition or the pool override.

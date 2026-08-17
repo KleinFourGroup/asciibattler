@@ -1,14 +1,11 @@
 /**
- * Terrain knobs (C1a + D3 + M6). The per-encounter generator
- * (`src/sim/terrainGen.ts`) uses these for wall + shallow-water placement
+ * Terrain knobs (C1a + D3 + M6 + §81a). The per-encounter generator
+ * (`src/sim/terrainGen.ts`) uses these to drive the procedural map build
  * and to bound the procedural side-length roll. Source of truth at
- * `config/terrain.json`.
- *
- * **Legacy scatter (C1a):** `wallDensity` + `shallowWaterDensity` are
- * fractions of total cells, applied as a Bernoulli-style draw with
- * rejection for occupied cells — the actual count is approximate. These
- * drive the *current* uniform-scatter procedural path and are slated for
- * removal once the M6 `procedural` block below replaces it.
+ * `config/terrain.json`. (The C1a legacy uniform-scatter knobs
+ * `wallDensity` / `shallowWaterDensity` / `ensureConnectivity` were
+ * removed at §81a — the M6 generator owns its own obstacle budget +
+ * connectivity guard.)
  *
  * **M6 — the `procedural` block** is the sampling surface for the
  * reworked generator (crossbar + divider + noise blend). Rather than
@@ -18,22 +15,18 @@
  * encounter (`sampleProceduralParams`, `src/sim/proceduralMap.ts`), so
  * maps vary seed-to-seed within the designer-set envelope. See
  * `src/core/sampling.ts` for the `sampleRange` / `weightedPick` math.
+ * §81a adds the per-theme `themeTiles` envelope (the §37 tile parity).
  *
  * **D3 — variable map sizes.** Procedural encounters roll a side length
  * uniformly in `[proceduralMinSize, proceduralMaxSize]` (square; the
  * range is bounded by the editor / TileGrid clamps in
  * `src/config/layouts.ts`). Hand-authored layouts declare their own
  * `gridW` × `gridH` on each layout.
- *
- * `ensureConnectivity` runs a BFS from the topmost reserved row to the
- * bottommost after placement; if blocked, the generator removes walls
- * along the cut until a path opens. Cheap insurance against
- * pathological seeds.
  */
 
 import { z } from 'zod';
 import terrainJson from '../../config/terrain.json';
-import { LAYOUT_MIN_SIDE, LAYOUT_MAX_SIDE } from './layouts';
+import { LAYOUT_MIN_SIDE, LAYOUT_MAX_SIDE, THEMES, type Theme } from './layouts';
 
 /**
  * A numeric knob sampled per encounter. Bare `{min,max}` samples
@@ -90,6 +83,44 @@ const SymmetryWeightsSchema = z
  * cells, not sampled). Resolved into a concrete param set by
  * `sampleProceduralParams` (`src/sim/proceduralMap.ts`).
  */
+/**
+ * §81a — one theme's tile envelope for the procedural generator. Every knob is
+ * an OPTIONAL range: absent = the feature is off for this theme AND consumes no
+ * RNG draw (so a theme's draw count is fixed by which keys it declares — see
+ * `sampleProceduralParams`'s fixed sampling order). Knob semantics:
+ *   - `poolDensity` — per-theme OVERRIDE of the global `poolDensity` band
+ *     (deserts keep sparse oases instead of grassland-grade pools);
+ *   - `deepWaterFraction` — the fraction of the pool band that deepens to
+ *     impassable `deep_water` (deepest-noise-first, so deep centres stay
+ *     wrapped in shallow); fords/carves are never deepened;
+ *   - `hills` / `ice` / `sand` / `mud` — ground-patch densities, each drawn on
+ *     its own value-noise field (board fraction claimed, floor cells only);
+ *   - `fire` — per-floor-cell sparse scatter chance (volcanic's signed revert;
+ *     never on chokepoints, so the crossing stays free).
+ */
+const ThemeTilesSchema = z.object({
+  poolDensity: RangeSchema.optional(),
+  deepWaterFraction: RangeSchema.optional(),
+  hills: RangeSchema.optional(),
+  ice: RangeSchema.optional(),
+  sand: RangeSchema.optional(),
+  mud: RangeSchema.optional(),
+  fire: RangeSchema.optional(),
+});
+
+/**
+ * §81a — the per-theme tile table, exhaustive over the `Theme` union (the
+ * sectors.ts `Record<EncounterKind, …>` pattern): a new theme is forced to
+ * declare its tile envelope (possibly `{}` = plain boards) before the config
+ * parses.
+ */
+const ThemeTilesTableSchema = z.object(
+  Object.fromEntries(THEMES.map((t) => [t, ThemeTilesSchema])) as Record<
+    Theme,
+    typeof ThemeTilesSchema
+  >,
+);
+
 const ProceduralSchema = z.object({
   symmetry: SymmetryWeightsSchema,
   crossbars: WeightedIntsSchema,
@@ -103,15 +134,16 @@ const ProceduralSchema = z.object({
   poolDensity: RangeSchema,
   noiseScale: RangeSchema,
   wallCapFraction: z.number().min(0).max(1),
+  /** §81a — the per-theme tile envelope (procedural parity with the §37
+   *  hand-authored tiles). Not a per-knob draw like the rest of this block —
+   *  the active sector's THEME picks one entry at generation time. */
+  themeTiles: ThemeTilesTableSchema,
 });
 
 const TerrainSchema = z
   .object({
-    wallDensity: z.number().min(0).max(1),
-    shallowWaterDensity: z.number().min(0).max(1),
     proceduralMinSize: z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE),
     proceduralMaxSize: z.number().int().min(LAYOUT_MIN_SIDE).max(LAYOUT_MAX_SIDE),
-    ensureConnectivity: z.boolean(),
     procedural: ProceduralSchema,
   })
   .refine((c) => c.proceduralMinSize <= c.proceduralMaxSize, {
@@ -120,6 +152,7 @@ const TerrainSchema = z
 
 export type TerrainConfig = z.infer<typeof TerrainSchema>;
 export type ProceduralTerrainConfig = z.infer<typeof ProceduralSchema>;
+export type ThemeTilesConfig = z.infer<typeof ThemeTilesSchema>;
 export type RangeSpec = z.infer<typeof RangeSchema>;
 
 export const TERRAIN: TerrainConfig = TerrainSchema.parse(terrainJson);

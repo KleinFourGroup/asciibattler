@@ -1,9 +1,6 @@
 {
-  "wallDensity": 0.06,
-  "shallowWaterDensity": 0.04,
   "proceduralMinSize": 12,
   "proceduralMaxSize": 24,
-  "ensureConnectivity": true,
   "procedural": {
     "symmetry": { "none": 0.3, "mirror": 0.3, "point": 0.4 },
     "crossbars": { "0": 0.1, "1": 0.4, "2": 0.3, "3": 0.2 },
@@ -16,6 +13,37 @@
     "windowChance": { "min": 0.05, "max": 0.3, "center": 0.12, "intensity": 0.4 },
     "poolDensity": { "min": 0.05, "max": 0.30, "center": 0.18, "intensity": 0.5 },
     "noiseScale": { "min": 2, "max": 6, "center": 3, "intensity": 0.4 },
-    "wallCapFraction": 0.22
+    "wallCapFraction": 0.22,
+    "themeTiles": {
+      "grassland": {
+        "hills": { "min": 0.03, "max": 0.12, "center": 0.06, "intensity": 0.5 },
+        "mud": { "min": 0.02, "max": 0.08, "center": 0.04, "intensity": 0.5 }
+      },
+      "barren": {
+        "hills": { "min": 0.04, "max": 0.14, "center": 0.08, "intensity": 0.5 },
+        "sand": { "min": 0.02, "max": 0.08, "center": 0.04, "intensity": 0.5 }
+      },
+      "volcanic": {
+        "poolDensity": { "min": 0.0, "max": 0.08, "center": 0.03, "intensity": 0.5 },
+        "hills": { "min": 0.05, "max": 0.15, "center": 0.08, "intensity": 0.5 },
+        "sand": { "min": 0.03, "max": 0.1, "center": 0.05, "intensity": 0.5 },
+        "fire": { "min": 0.005, "max": 0.02, "center": 0.01, "intensity": 0.5 }
+      },
+      "tundra": {
+        "deepWaterFraction": { "min": 0.15, "max": 0.4, "center": 0.25, "intensity": 0.5 },
+        "hills": { "min": 0.03, "max": 0.1, "center": 0.06, "intensity": 0.5 },
+        "ice": { "min": 0.06, "max": 0.2, "center": 0.12, "intensity": 0.5 }
+      },
+      "desert": {
+        "poolDensity": { "min": 0.0, "max": 0.06, "center": 0.02, "intensity": 0.5 },
+        "hills": { "min": 0.02, "max": 0.08, "center": 0.04, "intensity": 0.5 },
+        "sand": { "min": 0.1, "max": 0.3, "center": 0.18, "intensity": 0.5 }
+      },
+      "swamp": {
+        "poolDensity": { "min": 0.12, "max": 0.35, "center": 0.22, "intensity": 0.5 },
+        "deepWaterFraction": { "min": 0.2, "max": 0.5, "center": 0.35, "intensity": 0.5 },
+        "mud": { "min": 0.06, "max": 0.18, "center": 0.1, "intensity": 0.5 }
+      }
+    }
   }
 }

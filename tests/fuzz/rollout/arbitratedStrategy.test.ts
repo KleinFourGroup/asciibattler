@@ -581,8 +581,10 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     // since 77e1 — braid maps only branch at split nodes (out-degree 1
     // between splits), so a single walk line can legitimately stop on
     // choiceless nodes at every depth; varying the policy seed re-routes
-    // the walk until a stop lands on a split.
-    for (let trial = 0; trial < 4; trial++) {
+    // the walk until a stop lands on a split. (Trials 4→8 at §81a: themed
+    // procedural battles re-routed every walk trajectory and the old bound
+    // happened to stop choiceless every time — same scan, wider net.)
+    for (let trial = 0; trial < 8; trial++) {
       const t = trial * 1000;
       for (let battles = 1; battles <= 6; battles++) {
         const s = cloneRunForRollout(
@@ -603,7 +605,7 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
         }
       }
     }
-    throw new Error('no multi-node frontier found in 6 depths x 4 trials');
+    throw new Error('no multi-node frontier found in 6 depths x 8 trials');
   }
 
   it('challengers = the frontier minus the nominee (sorted, kinds labeled); tie → the nominee', () => {

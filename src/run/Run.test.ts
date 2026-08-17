@@ -4015,26 +4015,27 @@ describe('48b — the reward phase', () => {
     run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
     winEncounter(bus);
     expect(run.phase).toBe('reward');
-    expect(offered).toEqual([1]);
+    expect(offered).toEqual([run.pendingRewards!.length]);
     expect(recruits).toEqual([]);
     expect(run.currentOffer).toBeNull();
-    // 49g — bits-small authors bits AND packet entries now, so the sample
-    // may legitimately yield either. Assert the drawn portion matches an
-    // AUTHORED entry (config-derived — robust to future table tuning).
-    const table = rewardTableById('bits-small')!;
-    const portion = run.pendingRewards![0]!;
-    if (portion.kind === 'bits') {
+    // §82 — the mixed-table split: brigands authors bits-small at chance 1
+    // plus packets-small at chance 0.3, so portion 0 is ALWAYS the bits roll
+    // and any portion behind it is a packets-small packet. Assert each drawn
+    // portion matches an AUTHORED entry (config-derived — robust to tuning).
+    const bitsTable = rewardTableById('bits-small')!;
+    const first = run.pendingRewards![0]!;
+    if (first.kind !== 'bits') throw new Error('expected the bits-small roll first');
+    expect(
+      bitsTable.entries.some(
+        (e) => e.kind === 'bits' && first.base >= e.min && first.base <= e.max,
+      ),
+    ).toBe(true);
+    const packetTable = rewardTableById('packets-small')!;
+    for (const portion of run.pendingRewards!.slice(1)) {
+      if (portion.kind !== 'packet') throw new Error('expected a packets-small packet behind the bits');
       expect(
-        table.entries.some(
-          (e) => e.kind === 'bits' && portion.base >= e.min && portion.base <= e.max,
-        ),
+        packetTable.entries.some((e) => e.kind === 'packet' && e.packet === portion.packetId),
       ).toBe(true);
-    } else if (portion.kind === 'packet') {
-      expect(
-        table.entries.some((e) => e.kind === 'packet' && e.packet === portion.packetId),
-      ).toBe(true);
-    } else {
-      throw new Error('bits-small authors no daemon entries');
     }
   });
 
@@ -4059,9 +4060,13 @@ describe('48b — the reward phase', () => {
 
   it('declineReward leaves bits untouched and advances', () => {
     const { run } = winWithRewards();
-    run.dispatch({ kind: 'declineReward', index: 0 });
+    // §82 — the offer can carry a packets-small portion behind the bits;
+    // decline them all (each decline compacts the list, so index 0 drains it).
+    while (run.pendingRewards !== null) {
+      run.dispatch({ kind: 'declineReward', index: 0 });
+    }
     expect(run.bits).toBe(0);
-    expect(run.pendingRewards).toBeNull();
+    expect(run.cache).toEqual([]);
     expect(run.phase).toBe('recruit');
   });
 

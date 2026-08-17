@@ -224,9 +224,10 @@ describe('encounters schema', () => {
     ).toBe(false);
   });
 
-  it('the shipped skeleton ref: brigands carries bits-small at chance 1 (48a)', () => {
+  it('the shipped skeleton ref: brigands carries bits-small at chance 1 (48a; §82 pairs it with the packets-small chance ref)', () => {
     expect(getEncounter('brigands')!.rewards).toEqual([
       { table: 'bits-small', trigger: { chance: 1 } },
+      { table: 'packets-small', trigger: { chance: 0.3 } },
     ]);
   });
 

@@ -6,7 +6,8 @@
     "healthPool": 7,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -35,7 +36,8 @@
     "healthPool": 10,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -63,7 +65,8 @@
     "healthPool": 9,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -92,7 +95,8 @@
     "healthPool": 8,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -132,7 +136,8 @@
     "healthPool": 8,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -183,7 +188,8 @@
     "healthPool": 8,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -226,6 +232,7 @@
     "kind": "boss",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "boss-hoard", "trigger": { "chance": 1 } }
     ],
     "waves": [
@@ -294,6 +301,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
@@ -324,6 +332,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
@@ -356,6 +365,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
@@ -396,7 +406,8 @@
     "healthPool": 9,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -450,6 +461,7 @@
     "kind": "boss",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "boss-hoard", "trigger": { "chance": 1 } }
     ],
     "waves": [
@@ -516,7 +528,8 @@
     "healthPool": 7,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -545,7 +558,8 @@
     "healthPool": 10,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -575,7 +589,8 @@
     "healthPool": 10,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -604,7 +619,8 @@
     "healthPool": 10,
     "kind": "normal",
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ],
     "waves": [
       {
@@ -634,6 +650,7 @@
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "daemon-cache", "trigger": { "chance": 0.5 } }
     ],
     "waves": [
@@ -683,6 +700,7 @@
     "kind": "boss",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "boss-hoard", "trigger": { "chance": 1 } }
     ],
     "waves": [
@@ -751,6 +769,7 @@
     "kind": "boss",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
       { "table": "boss-hoard", "trigger": { "chance": 1 } }
     ],
     "waves": [

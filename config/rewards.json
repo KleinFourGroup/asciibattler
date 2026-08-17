@@ -3,19 +3,13 @@
     {
       "id": "bits-small",
       "entries": [
-        { "kind": "bits", "weight": 1, "min": 8, "max": 15 },
-        { "kind": "packet", "weight": 0.25, "packet": "patch" },
-        { "kind": "packet", "weight": 0.25, "packet": "shield" },
-        { "kind": "packet", "weight": 0.25, "packet": "discard-one" }
+        { "kind": "bits", "weight": 1, "min": 8, "max": 15 }
       ]
     },
     {
       "id": "bits-large",
       "entries": [
-        { "kind": "bits", "weight": 1, "min": 20, "max": 35 },
-        { "kind": "packet", "weight": 0.5, "packet": "reroute" },
-        { "kind": "packet", "weight": 0.5, "packet": "shield" },
-        { "kind": "packet", "weight": 0.5, "packet": "surge" }
+        { "kind": "bits", "weight": 1, "min": 20, "max": 35 }
       ]
     },
     {
@@ -60,6 +54,22 @@
         { "kind": "unit", "weight": 2, "archetype": "healer", "level": 3 },
         { "kind": "unit", "weight": 1, "archetype": "mercenary", "level": 3 },
         { "kind": "poolHealth", "weight": 1, "amount": 5 }
+      ]
+    },
+    {
+      "id": "packets-small",
+      "entries": [
+        { "kind": "packet", "weight": 1, "packet": "patch" },
+        { "kind": "packet", "weight": 1, "packet": "shield" },
+        { "kind": "packet", "weight": 1, "packet": "discard-one" }
+      ]
+    },
+    {
+      "id": "packets-large",
+      "entries": [
+        { "kind": "packet", "weight": 1, "packet": "reroute" },
+        { "kind": "packet", "weight": 1, "packet": "shield" },
+        { "kind": "packet", "weight": 1, "packet": "surge" }
       ]
     }
   ]

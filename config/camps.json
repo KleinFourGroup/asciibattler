@@ -8,7 +8,8 @@
       { "archetype": "bandit", "count": 2 }
     ],
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ]
   },
   {
@@ -21,7 +22,8 @@
       { "archetype": "warlock" }
     ],
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } }
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } }
     ]
   },
   {
@@ -34,7 +36,8 @@
       { "archetype": "archer", "count": 2 }
     ],
     "rewards": [
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ]
   },
   {
@@ -47,7 +50,8 @@
       { "archetype": "shaman" }
     ],
     "rewards": [
-      { "table": "bits-large", "trigger": { "chance": 1 } }
+      { "table": "bits-large", "trigger": { "chance": 1 } },
+      { "table": "packets-large", "trigger": { "chance": 0.5 } }
     ]
   },
   {
@@ -61,7 +65,9 @@
     ],
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
-      { "table": "bits-small", "trigger": { "chance": 1 } }
+      { "table": "packets-large", "trigger": { "chance": 0.5 } },
+      { "table": "bits-small", "trigger": { "chance": 1 } },
+      { "table": "packets-small", "trigger": { "chance": 0.3 } }
     ]
   }
 ]

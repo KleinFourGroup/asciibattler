@@ -4449,3 +4449,34 @@ archives untouched; zero code/src refs existed. ROADMAP title +
 ordering breath re-authored; the §82 charter written (scope guards:
 feel only — no new mechanics, no new reward kinds, no schema
 widening; snapshot prediction NO bump, a surprise = stop-and-ask).
+
+## Phase 82 — reward & weapon feel round
+
+### The mixed-table split, first slice: bits ⇄ packets (2026-08-17)
+
+The user's opening call: fewer mixed-type reward tables — a table
+that MOSTLY pays bits but sometimes swallows the bits and pays a
+packet instead reads as noise, not texture. First slice (user had
+already pared the tables, unwired): `bits-small` / `bits-large`
+are now PURE bits; the packets moved to new `packets-small` /
+`packets-large` tables fired as SEPARATE chance refs riding the
+existing per-ref independent-chance mechanism in `rollRewards` —
+no engine change, pure config wiring. Every `bits-small` ref
+(encounters + camps) gained `packets-small` at chance 0.3 (user's
+number); every `bits-large` ref gained `packets-large` at 0.5
+(the old mixed table replaced bits with a packet ~60% of the
+time, so 0.5 keeps large-tier packets common — dialable). Net
+feel change, deliberate: bits are now GUARANTEED where they used
+to be swallowed, and the packet is a bonus on top — a mild
+generosity buff everywhere the pair fires.
+
+Noted, deferred: the `events.json` `rewardOverride: "bits-large"`
+terminal pins a SINGLE table at chance 1, so that event-pinned
+fight now pays bits only — no packet chance rides an override.
+Fine for now; revisit if overrides should carry ref lists when
+the daemon-cache / boss-hoard splits land (next slices).
+
+Test fallout, all shape pins: the brigands skeleton-ref pin
+(now two refs), the 48b offer-length pin (config-derived now),
+declineReward (drains the whole offer). Suite + typecheck +
+fuzz:smoke green.

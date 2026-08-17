@@ -299,6 +299,26 @@ telemetry — each closing with a "what Cluster 6 must not break" note.
   confirm the Cluster-6 persistent-store dependency.
 - **Scope guards:** ZERO implementation — audits and plans only.
 
+Cut at the 2026-08-16 kickoff (audit + shape-lock: WORKLOG §80;
+docs land in the NEW `plans/` directory — user-signed):
+
+- [ ] 80a — the sound-registry proposal
+  (`plans/sound-registry.md`): the full bus.on→play site inventory
+  (~20 files, grown from the spec's 17), reuse dispositions, a
+  registry shape mirroring FX_REGISTRY + its coverage blind spot
+- [ ] 80b — music (`plans/music.md`): Web Audio path · music bus ·
+  the missing volume/mute UI (a C6 settings dependency) · licensing
+  per the §79g OFL precedent
+- [ ] 80c — achievements + tutorial (`plans/achievements.md` +
+  `plans/tutorial.md`, ONE commit — the shared C6 persistent-store
+  dependency; tutorial additionally audited against DESIGN §Input
+  accessibility + the planned post-C5 UI-audit interstitial)
+- [ ] 80d — online balance telemetry (`plans/telemetry.md`):
+  transport · consent · DEV/PROD split, on the proven
+  never-emits-subscriber pattern
+- [ ] 80e — docs close: ROADMAP demote · HANDOFF cursor flip ·
+  META-ROADMAP C6 gains one pointer line to the five docs
+
 ## Phase 81 — Procedural parity ("Uncharted Ground" catch-up)
 
 **Charter:** bring the procedural battlefield generator to content

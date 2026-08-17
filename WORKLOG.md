@@ -4025,3 +4025,45 @@ reference and dropped-at-B1 palette-quant rationale; build-font's
 determinism sentence). Tests 2640 → 2644 (+2 coverage guards, +2
 epsilon pins); typecheck + lint clean; render-only, no snapshot
 bump.
+
+## Phase 80 — Feasibility audit docs
+
+### §80 kickoff (2026-08-16) — code-reality audit + shape-lock
+
+**The spec's locked feasibility facts (2026-08-05) all HELD at
+re-verification** — with four deltas accumulated over §§74–79, each
+folded into the corresponding doc's brief:
+
+- **Sound**: the structural gap GREW — 20 files now reference audio
+  playback (spec counted 17; §§74–78 added EventScreen,
+  SectorClearedScreen, SectorMapOverlay, CharacterSelectScreen and
+  friends, each with hand-written closures). `setMasterVolume`/
+  `setMuted` confirmed still zero call sites — no volume/mute UI
+  exists anywhere. The known reuse dispositions (`sector:cleared`=win
+  sting, `healtick` ×3) stand.
+- **Music**: unchanged (nothing exists; AudioPlayer's header names
+  Web Audio as the upgrade path). NEW input: the §79g self-hosted-font
+  round set the asset licensing/provenance precedent (compliance in
+  the BUILD, `THIRD-PARTY-LICENSES.txt`) — the music doc inherits it
+  as a requirement instead of reinventing it.
+- **Achievements/tutorial**: still blocked on the nonexistent
+  persistent store (the only persistence in `src/` is the DEV-only
+  trace ring, `src/dev/traceStore.ts`); META-ROADMAP already names
+  save/load as C6's hidden prerequisite. NEW inputs for tutorial:
+  ⭐ DESIGN §Input accessibility (signed §78) + the planned post-C5
+  UI style & robustness audit, which sequences BEFORE C6 — the
+  tutorial doc must be written against both.
+- **Telemetry**: still no server/network/CI code; deploys hand-
+  uploaded. The never-emits-subscriber pattern proven in-tree
+  (`TelemetryAccumulator`, `TraceRecorder`). NEW inputs: the
+  on-demand hcloud box (a candidate ingest host with established ops
+  discipline) and decisions.csv/the board protocol as the shape of
+  what offline telemetry already measures — online telemetry is the
+  human-arm complement to the §53g human-gauntlet baseline.
+
+**Shape-lock (user-signed 2026-08-16):** five docs in a NEW `plans/`
+directory (root-level would dilute the curated living-reference set;
+these are forward-looking proposals) · the 80a–80e cut as written
+into ROADMAP §80 (achievements+tutorial share one commit — same C6
+dependency) · all `docs(...)` commits, zero implementation, no
+snapshot risk.

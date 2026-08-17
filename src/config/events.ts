@@ -39,7 +39,11 @@ import { z } from 'zod';
 import eventsJson from '../../config/events.json';
 import { GainBitsOpSchema, HealPoolOpSchema, DAEMONS } from './daemons';
 import { ENCOUNTER_IDS } from './encounters';
-import { REWARD_TABLE_IDS } from './rewards';
+import {
+  EncounterRewardRefSchema,
+  REWARD_TABLE_IDS,
+  type EncounterRewardRef,
+} from './rewards';
 import { PACKET_IDS, packetById } from './packets';
 import { CHARACTER_IDS, characterById } from './characters';
 import { UNIT_DEFS } from './units';
@@ -130,10 +134,18 @@ export const EventEffectOpSchema = z.discriminatedUnion('op', [
 // ── the page map ────────────────────────────────────────────────────────────
 
 /** `rewardOverride` = the spec's "encounter with a predetermined reward":
- *  a reward-table id replacing the encounter's own `rewards` refs. */
+ *  reward refs replacing the encounter's own `rewards` list wholesale.
+ *  82c widened the single table-id string to a full `{table, trigger}`
+ *  ref list (non-empty — "no rewards" is expressed by OMITTING the key,
+ *  never an empty list), so an event-pinned fight can carry the same
+ *  multi-table chance mix a catalog encounter does. */
 export type EventTerminal =
   | { kind: 'return-to-map' }
-  | { kind: 'start-encounter'; encounterId: string; rewardOverride?: string };
+  | {
+      kind: 'start-encounter';
+      encounterId: string;
+      rewardOverride?: readonly EncounterRewardRef[];
+    };
 
 /** A page id, or a terminal. */
 export type EventNext = string | EventTerminal;
@@ -189,7 +201,7 @@ const EventTerminalSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('start-encounter'),
     encounterId: z.string().min(1),
-    rewardOverride: z.string().min(1).optional(),
+    rewardOverride: z.array(EncounterRewardRefSchema).min(1).optional(),
   }),
 ]) as z.ZodType<EventTerminal>;
 
@@ -427,11 +439,10 @@ export function assertEventRefs(
             if (!has(catalogs.encounterIds, outcome.next.encounterId)) {
               fail(event.id, `start-encounter references unknown encounter id '${outcome.next.encounterId}'`);
             }
-            if (
-              outcome.next.rewardOverride !== undefined &&
-              !has(catalogs.rewardTableIds, outcome.next.rewardOverride)
-            ) {
-              fail(event.id, `rewardOverride references unknown reward table '${outcome.next.rewardOverride}'`);
+            for (const ref of outcome.next.rewardOverride ?? []) {
+              if (!has(catalogs.rewardTableIds, ref.table)) {
+                fail(event.id, `rewardOverride references unknown reward table '${ref.table}'`);
+              }
             }
           }
         }

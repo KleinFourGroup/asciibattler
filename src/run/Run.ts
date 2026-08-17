@@ -451,8 +451,13 @@ export interface BattleEncounter {
  *  the #49 draw-count class at the seams; outcomes become NODE-ANCHORED
  *  (a port's stock is seed-fixed regardless of route — user-signed).
  *  `cloneRunForRollout` now overrides ONE field. A v41 save carries
- *  stream states the derivation model can't resume → reject. */
-const RUN_SCHEMA_VERSION = 42;
+ *  stream states the derivation model can't resume → reject.
+ *  82c: bumped 42→43. `pendingRewardOverride` widens from a single
+ *  table-id string to a `{table, trigger}` ref LIST (the §82 mixed-table
+ *  split made single-table overrides underpowered — an event-pinned fight
+ *  now carries the same multi-table chance mix a catalog encounter does).
+ *  A v42 save carries the string shape → reject. */
+const RUN_SCHEMA_VERSION = 43;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -545,12 +550,13 @@ export interface RunSnapshot {
    *  `chainId:key` by convention. EXEMPT from the advanceSector reset by
    *  enumeration — flags deliberately span sectors. */
   eventFlags: Record<string, EventFlagValue>;
-  /** 74b: a start-encounter terminal's pinned reward table (the spec's
+  /** 74b: a start-encounter terminal's pinned reward refs (the spec's
    *  "predetermined reward"), replacing the fought encounter's own reward
-   *  refs at the won boundary. Null = no override; cleared at
-   *  finishEncounter (either outcome). Re-validates against the reward
-   *  tables on load. */
-  pendingRewardOverride: string | null;
+   *  refs at the won boundary. 82c (v43): widened from a single table id
+   *  to a full ref list — each ref's table re-validates against the
+   *  reward tables on load. Null = no override; cleared at
+   *  finishEncounter (either outcome). */
+  pendingRewardOverride: readonly EncounterRewardRef[] | null;
   /** L1→47d: the run's owned daemons BY ID, in acquisition order (the
    *  def-resolved pattern — what makes uncapped multi-daemon cheap). An id
    *  missing from the catalog on load is a hard reject (no silent drops);
@@ -698,10 +704,10 @@ export class Run {
   /** 74b: the run-lifetime chain-flag record (see RunSnapshot). Private —
    *  read via `eventFlag()`; written only by the `setFlag` op. */
   private eventFlags: Record<string, EventFlagValue> = {};
-  /** 74b: a start-encounter terminal's pinned reward table (see
-   *  RunSnapshot). Consumed at the won turn boundary; cleared at
-   *  `finishEncounter`. */
-  private pendingRewardOverride: string | null = null;
+  /** 74b: a start-encounter terminal's pinned reward refs (see
+   *  RunSnapshot; 82c: a ref list). Consumed at the won turn boundary;
+   *  cleared at `finishEncounter`. */
+  private pendingRewardOverride: readonly EncounterRewardRef[] | null = null;
   /** 74b: the event catalog this run draws from — `RunConfig.eventCatalog`
    *  override or the shipped EVENTS (the sectorMap discipline; a rehydrated
    *  run always uses the shipped catalog). */
@@ -2871,14 +2877,14 @@ export class Run {
       // streams, so a rewards-less win perturbs nothing.
       if (result === 'won') {
         // 74b — an event's start-encounter terminal can pin the fight's
-        // loot: the override table REPLACES the encounter's own refs at
-        // chance 1 (the spec's "predetermined reward"). Cleared at
+        // loot: the override refs REPLACE the encounter's own refs
+        // wholesale (the spec's "predetermined reward"; 82c — the refs
+        // carry their own triggers now, so a pinned fight rolls the same
+        // multi-table chance mix a catalog encounter does). Cleared at
         // finishEncounter, so it can only ever apply to the fight the
         // event opened.
         const rewardRefs: readonly EncounterRewardRef[] =
-          this.pendingRewardOverride !== null
-            ? [{ table: this.pendingRewardOverride, trigger: { chance: 1 } }]
-            : (this.selectedEncounter?.rewards ?? []);
+          this.pendingRewardOverride ?? this.selectedEncounter?.rewards ?? [];
         portions.push(
           ...rollRewards(rewardRefs, rewardTableById, this.ownedDaemonIds(), rewardRng, rewardBitsRng),
         );
@@ -3879,10 +3885,18 @@ export class Run {
               daemons: this.portStock.daemons.map((s) => ({ ...s })),
             },
       // 74b — the event cursor (copied: plain flat object), the flag record
-      // (copied: mutated in place by setFlag), and the pinned reward table.
+      // (copied: mutated in place by setFlag), and the pinned reward refs
+      // (82c: copied per ref — the field can alias authored catalog
+      // objects, and a wire image never shares structure with them).
       activeEvent: this.activeEvent === null ? null : { ...this.activeEvent },
       eventFlags: { ...this.eventFlags },
-      pendingRewardOverride: this.pendingRewardOverride,
+      pendingRewardOverride:
+        this.pendingRewardOverride === null
+          ? null
+          : this.pendingRewardOverride.map((ref) => ({
+              table: ref.table,
+              trigger: { chance: ref.trigger.chance },
+            })),
       // 47d — daemons serialize BY ID (def-resolved on load). 49d: the
       // queue's entries MUTATE in place (`used`/`passed`), so the wire image
       // copies each entry (buffs stay by reference — never mutated;
@@ -3962,7 +3976,7 @@ export class Run {
       drawAmountAdd: number;
       sectorMap: SectorMap;
       eventFlags: Record<string, EventFlagValue>;
-      pendingRewardOverride: string | null;
+      pendingRewardOverride: readonly EncounterRewardRef[] | null;
       eventCatalog: readonly EventDef[];
       forcedEventId: string | null;
       rootStampedByDial: boolean;
@@ -4128,15 +4142,20 @@ export class Run {
     }
     m.activeEvent = snap.activeEvent === null ? null : { ...snap.activeEvent };
     m.eventFlags = { ...snap.eventFlags };
-    if (
-      snap.pendingRewardOverride !== null &&
-      rewardTableById(snap.pendingRewardOverride) === undefined
-    ) {
-      throw new Error(
-        `Run.fromJSON: pendingRewardOverride references unknown reward table '${snap.pendingRewardOverride}'`,
-      );
+    for (const ref of snap.pendingRewardOverride ?? []) {
+      if (rewardTableById(ref.table) === undefined) {
+        throw new Error(
+          `Run.fromJSON: pendingRewardOverride references unknown reward table '${ref.table}'`,
+        );
+      }
     }
-    m.pendingRewardOverride = snap.pendingRewardOverride;
+    m.pendingRewardOverride =
+      snap.pendingRewardOverride === null
+        ? null
+        : snap.pendingRewardOverride.map((ref) => ({
+            table: ref.table,
+            trigger: { chance: ref.trigger.chance },
+          }));
     // 50d — the docked stock (its streams re-derive — 77d2). Packet/daemon
     // slot ids re-validate against the catalogs (the pendingRewards
     // discipline); unit templates pass through like `team`.

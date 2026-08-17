@@ -105,7 +105,10 @@ describe('formatEventsJson', () => {
                     next: {
                       kind: 'start-encounter',
                       encounterId: 'deserters',
-                      rewardOverride: 'bits-large',
+                      rewardOverride: [
+                        { table: 'bits-large', trigger: { chance: 1 } },
+                        { table: 'packets-elite', trigger: { chance: 0.5 } },
+                      ],
                     },
                   },
                 ],

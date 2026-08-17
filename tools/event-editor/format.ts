@@ -43,6 +43,7 @@ import type {
   EventChoice,
   EventPage,
 } from '../../src/config/events';
+import type { EncounterRewardRef } from '../../src/config/rewards';
 
 const IND = '  ';
 
@@ -136,9 +137,25 @@ function nextValue(pad: string, next: EventNext): string {
     `${childPad}"encounterId": ${JSON.stringify(next.encounterId)}`,
   ];
   if (next.rewardOverride !== undefined) {
-    lines.push(`${childPad}"rewardOverride": ${JSON.stringify(next.rewardOverride)}`);
+    // 82c — the ref-list widening: each `{ table, trigger }` ref stays
+    // inline (the encounter-editor's leaf convention, shared verbatim);
+    // the list follows the effects/eligibility single-inline/multi-expand
+    // convention.
+    lines.push(
+      `${childPad}"rewardOverride": ${inlineElemArray(
+        childPad,
+        next.rewardOverride.map(inlineRewardRef),
+      )}`,
+    );
   }
   return objBlock(pad, lines);
+}
+
+/** One reward ref, inline (the encounter-editor format.ts leaf convention,
+ *  duplicated deliberately — the two editors' formatters are siblings, not
+ *  a shared module): `{ "table": …, "trigger": { "chance": … } }`. */
+function inlineRewardRef(ref: EncounterRewardRef): string {
+  return `{ "table": ${JSON.stringify(ref.table)}, "trigger": { "chance": ${JSON.stringify(ref.trigger.chance)} } }`;
 }
 
 /** An inline-element array: single element stays on one line (`[{ … }]`),

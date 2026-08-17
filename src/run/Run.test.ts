@@ -2814,7 +2814,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
+      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3002,7 +3002,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
+      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3328,7 +3328,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
+      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5227,7 +5227,7 @@ const TEST_EVENTS: EventDef[] = [
                 next: {
                   kind: 'start-encounter',
                   encounterId: 'deserters',
-                  rewardOverride: 'bits-large',
+                  rewardOverride: [{ table: 'bits-large', trigger: { chance: 1 } }],
                 },
               },
             ],
@@ -5377,7 +5377,9 @@ describe('74b — the event phase', () => {
     expect(run.phase).toBe('battle');
     expect(run.activeEvent).toBeNull();
     expect(run.toJSON().selectedEncounterId).toBe('deserters');
-    expect(run.toJSON().pendingRewardOverride).toBe('bits-large');
+    expect(run.toJSON().pendingRewardOverride).toEqual([
+      { table: 'bits-large', trigger: { chance: 1 } },
+    ]);
     // Win the fight: the override table rolls at chance 1, so the reward
     // gate MUST interpose with a non-empty offer.
     winEncounter(bus);
@@ -5407,7 +5409,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(42); // 77d2 — keyed derivation
+    expect(wire.schemaVersion).toBe(43); // 82c — override ref list
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');

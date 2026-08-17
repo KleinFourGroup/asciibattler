@@ -47,7 +47,7 @@
                 "next": {
                   "kind": "start-encounter",
                   "encounterId": "deserters",
-                  "rewardOverride": "bits-large"
+                  "rewardOverride": [{ "table": "bits-large", "trigger": { "chance": 1 } }]
                 }
               }
             ]
@@ -611,7 +611,11 @@
                 "next": {
                   "kind": "start-encounter",
                   "encounterId": "infernalColumn",
-                  "rewardOverride": "daemons"
+                  "rewardOverride": [
+                    { "table": "bits-large", "trigger": { "chance": 1 } },
+                    { "table": "packets-elite", "trigger": { "chance": 0.5 } },
+                    { "table": "daemons", "trigger": { "chance": 1 } }
+                  ]
                 }
               }
             ]
@@ -745,7 +749,7 @@
                 "next": {
                   "kind": "start-encounter",
                   "encounterId": "elementalTrio",
-                  "rewardOverride": "hostage-rescue"
+                  "rewardOverride": [{ "table": "hostage-rescue", "trigger": { "chance": 1 } }]
                 }
               }
             ]

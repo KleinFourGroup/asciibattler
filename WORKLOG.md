@@ -4509,3 +4509,35 @@ intent) until 82c widens overrides to ref lists. The cache's old
 Zero test fallout (the 82a pins were already config-derived); the
 encounter-editor fixture's synthetic table ids are schema-only by
 design and stand.
+
+### 82c — rewardOverride widens to a ref list (Run v43) (2026-08-17)
+
+The user's catch-turned-call from the 82a close: an event terminal's
+`rewardOverride` was a SINGLE table id rolled at chance 1, so the
+mixed-table split left event-pinned fights unable to carry the new
+multi-table chance mixes. Widened end to end: the events schema
+(`rewardOverride?: EncounterRewardRef[]`, non-empty — "no rewards"
+is omission, never `[]`), the boot ref-check (per-ref table ids),
+`Run.pendingRewardOverride` (ref list on the wire, copied both
+directions — the field can alias authored catalog objects), and the
+won-boundary consume site collapses to `override ?? encounter refs`
+(the refs carry their own triggers now). RUN_SCHEMA_VERSION 42→43,
+flat reject per convention — no migration ladder exists and none
+starts here. The event-editor formatter emits the ref list under the
+encounter-editor's shared leaf convention (one inline
+`{ table, trigger }` per line, single-element inline — verbatim-pin
+green); editor.ts gets an HONEST INTERIM shim (single-table select
+reads ref 0 / writes a chance-1 singleton, tooltip flags the
+multi-ref collapse) until 82d builds the real UI.
+
+Two catches worth their lines: the ROADMAP's 82b box shipped
+unflipped in 82b's own commit (flipped here — the demote-as-you-go
+rule applies to checkboxes too), and a THIRD shipped override
+surfaced only when the schema went strict — hostage-trio pins
+`hostage-rescue`, invisible to the earlier VALUE-keyed grep
+(`bits-small|bits-large|daemon-cache|boss-hoard` — the table name
+wasn't in the pattern). The module-load ZodError caught it in one
+run; converted to a chance-1 singleton, behavior identical. The
+`outskirts` event now pins the full elite trio (bits-large@1 +
+packets-elite@0.5 + daemons@1 — the 82b interim single-`daemons`
+pin retired); `guardians` stays bits-large-only as signed.

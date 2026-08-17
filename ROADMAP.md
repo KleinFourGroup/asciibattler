@@ -379,13 +379,15 @@ beyond the user's live sign-off).
 - **The 82b–d cut** (mini-kickoff, 2026-08-17 — the split grew a
   serialization change, so it gets checkboxes):
   - [x] 82a — bits⇄packets mixed-table split + wiring (`dc34814`)
-  - [ ] 82b — tier-pure split: shared `daemons` + `packets-elite` +
+  - [x] 82b — tier-pure split: shared `daemons` + `packets-elite` +
     `packets-boss` (miner diluted) + `bits-boss`; `daemon-cache` /
     `boss-hoard` deleted; elites/bosses rewired (daemons@1);
     `outskirts` override re-pointed at `daemons` (interim)
-  - [ ] 82c — `rewardOverride` → ref list: events schema + Run
+    (`5ad54f6`; box flipped a commit late — worklog)
+  - [x] 82c — `rewardOverride` → ref list: events schema + Run
     snapshot (42→43, hard gate per convention); `outskirts` gets
-    the full elite trio
+    the full elite trio; a THIRD shipped override surfaced
+    (hostage-trio → `hostage-rescue`) — converted (worklog)
   - [ ] 82d — event-editor: override ref-list UI + formatter +
     tests
   - [ ] 82e… — further feel changes as signed (weapons still TBD)

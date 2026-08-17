@@ -206,7 +206,7 @@ describe('events config', () => {
                     next: {
                       kind: 'start-encounter',
                       encounterId: 'known-encounter',
-                      rewardOverride: 'known-table',
+                      rewardOverride: [{ table: 'known-table', trigger: { chance: 1 } }],
                     },
                   },
                 ],
@@ -250,7 +250,7 @@ describe('events config', () => {
                       next: {
                         kind: 'start-encounter',
                         encounterId: 'known-encounter',
-                        rewardOverride: 'ghost-table',
+                        rewardOverride: [{ table: 'ghost-table', trigger: { chance: 0.5 } }],
                       },
                     },
                   ],

@@ -814,14 +814,19 @@ function makeNextControl(outcome: WorkingOutcome): HTMLSpanElement {
         },
       ),
     );
+    // 82c — `rewardOverride` is a ref LIST now; this select is the INTERIM
+    // single-table control (reads ref 0, writes a one-ref chance-1 list —
+    // LOSSY on a multi-ref override). 82d replaces it with the real
+    // multi-ref chance UI.
     const overrideSel = el('select');
-    overrideSel.title = 'rewardOverride — replaces the encounter’s own reward refs';
+    overrideSel.title =
+      'rewardOverride — replaces the encounter’s own reward refs (interim single-table control; multi-ref overrides collapse on edit)';
     overrideSel.appendChild(option('', 'own rewards'));
     for (const tableId of REWARD_TABLE_IDS) overrideSel.appendChild(option(tableId, `→ ${tableId}`));
-    overrideSel.value = next.rewardOverride ?? '';
+    overrideSel.value = next.rewardOverride?.[0]?.table ?? '';
     overrideSel.addEventListener('change', () => {
       if (overrideSel.value === '') delete next.rewardOverride;
-      else next.rewardOverride = overrideSel.value;
+      else next.rewardOverride = [{ table: overrideSel.value, trigger: { chance: 1 } }];
       refreshDerived();
     });
     wrap.appendChild(overrideSel);

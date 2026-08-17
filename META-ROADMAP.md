@@ -313,6 +313,20 @@ ship.
 > with its four consumers known (save/load · achievements · settings ·
 > tutorial seen-flags).
 
+**Flag — split this cluster? (user-raised 2026-08-17, decide at spec
+time):** scope has accreted well past the original charter — the store's
+four consumers, the music mechanism + its asset design round, the
+sound-registry build, the telemetry export path, and a Steam-shaped
+shipping question (the §79g licence obligations already name the target).
+The cluster contains its own keystone-then-consumers chain (the store is
+to C6 what the Rule vocabulary was to C3), so ordering principle #1
+applied internally gives the natural cleave: a **Meta-foundations round**
+(store → save/load → settings → difficulty → unlocks) and an
+**Onboarding & feel round** (tutorial · music · sound registry · final
+sweep), with Ship riding the tail or standing alone depending on how
+real Steam gets. Same standing as the C5 camps/events note: a spec-time
+call, not a pre-commitment.
+
 **In scope**
 
 - **Persistence / save-load** **(added — the hidden prerequisite)**. The

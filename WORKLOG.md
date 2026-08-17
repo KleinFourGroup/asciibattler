@@ -4350,4 +4350,9 @@ stat (config mode; manual keeps camps off).
   pairing invariant through generateTerrain · volcanic-never-camps
   · the draw-count pin extended (+2 camp draws)) · tool driven
   in-page: swamp config roll shows Camps 2 + legend entry, zero
-  console errors. Full suite + fuzz:smoke ride the commit hook.
+  console errors. The commit hook caught ONE casualty: the
+  catapult integration seed 7 fizzled (target dies mid-flight on
+  its reshaped board — the documented 43a class; 13/15 probed
+  seeds still hit, mechanic healthy) → re-seeded 7→8 with the
+  precedent note extended. Final gate: 2666 main + 398 fuzz:smoke
+  + typecheck, all green (`58b7883`).

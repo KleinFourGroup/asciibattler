@@ -4637,3 +4637,25 @@ the cadence curve visibly biting), fill computed
 after expiry (the re-aim → re-engage loop, closed). The roster
 param + `__game.activeScene.world` made this drivable without a
 single screenshot.
+
+### 82e3 — the attack-editor releaseGate controls + the close of the weapons arc (2026-08-17)
+
+The editor half the 82e1 formatter pull-in left behind: three
+Identity-card controls (enable checkbox · re-aim seconds ·
+speed-scaled checkbox) on the aura optional-field pattern — enable
+seeds `{ reaimSeconds: 1, scalesWithSpeed: false }`, disable
+deletes the field so the formatter omits it; the sub-inputs disable
+while absent. No editor-side gating logic: the 82e1 schema
+refinements do the judging, verified LIVE in the browser — enabling
+a gate on the sword surfaced "releaseGate requires a 'release'
+phase in the timeline" in the validation pane and disabling
+restored "Valid — safe to save"; the catapult loads showing its
+shipped `{1, scaled}`. Audio tell → TODO (Polish), the event
+already carries it.
+
+The A design (impact recheck) is ✅ DECIDED NOT NEEDED — the user's
+playtest verdict: with the release gate in, the residual 0.6 s
+travel window doesn't produce absurdity worth patching. The ~5-line
+shape (extend the interpreter's fizzle guard with the same band
+check) stays recoverable from the 82e ideation entry if the verdict
+ever flips.

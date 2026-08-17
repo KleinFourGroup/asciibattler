@@ -132,6 +132,9 @@ const minRangeEl = mustQuery<HTMLInputElement>('#minRangeCells');
 const orphanEl = mustQuery<HTMLSelectElement>('#orphanPolicy');
 const speedScaledEl = mustQuery<HTMLInputElement>('#speedScaled');
 const ignoresLosEl = mustQuery<HTMLInputElement>('#ignoresLineOfSight');
+const releaseGateEl = mustQuery<HTMLInputElement>('#releaseGate-enabled');
+const reaimSecondsEl = mustQuery<HTMLInputElement>('#reaimSeconds');
+const reaimScalesEl = mustQuery<HTMLInputElement>('#reaimScales');
 const targetHostEl = mustQuery<HTMLDivElement>('#target-host');
 const auraEnabledEl = mustQuery<HTMLInputElement>('#aura-enabled');
 const auraHostEl = mustQuery<HTMLDivElement>('#aura-host');
@@ -209,6 +212,29 @@ function attachIdentity(): void {
   ignoresLosEl.addEventListener('change', () => {
     if (ignoresLosEl.checked) def().ignoresLineOfSight = true;
     else delete def().ignoresLineOfSight;
+    refreshDerived();
+  });
+  // 82e3 — the release-gate toggle (the aura optional-field pattern below:
+  // enable seeds the catapult's shipped shape, disable deletes the field so
+  // the formatter omits it). The schema refinements — a gate needs a
+  // `release` timeline phase and the enemyInRange selector — complain in the
+  // validation pane, not here.
+  releaseGateEl.addEventListener('change', () => {
+    if (releaseGateEl.checked) def().releaseGate = { reaimSeconds: 1, scalesWithSpeed: false };
+    else delete def().releaseGate;
+    syncReleaseGate();
+    refreshDerived();
+  });
+  reaimSecondsEl.addEventListener('input', () => {
+    const gate = def().releaseGate;
+    if (gate === undefined) return;
+    gate.reaimSeconds = numOr(reaimSecondsEl.value, 0.05, true);
+    refreshDerived();
+  });
+  reaimScalesEl.addEventListener('change', () => {
+    const gate = def().releaseGate;
+    if (gate === undefined) return;
+    gate.scalesWithSpeed = reaimScalesEl.checked;
     refreshDerived();
   });
   // §76a — the aura toggle (the `ignoresLineOfSight` optional-field pattern:
@@ -295,10 +321,22 @@ function syncForm(): void {
   orphanEl.value = d.orphanPolicy;
   speedScaledEl.checked = d.speedScaled;
   ignoresLosEl.checked = d.ignoresLineOfSight === true;
+  syncReleaseGate();
   renderTargetSelector(targetHostEl, () => def().target, (t) => (def().target = t));
   renderAura();
   renderTimelineEditor();
   renderEffects();
+}
+
+/** 82e3 — mirror the release-gate field into its three controls; the two
+ *  sub-inputs disable while the gate is absent (the field-deleted state). */
+function syncReleaseGate(): void {
+  const gate = def().releaseGate;
+  releaseGateEl.checked = gate !== undefined;
+  reaimSecondsEl.disabled = gate === undefined;
+  reaimScalesEl.disabled = gate === undefined;
+  reaimSecondsEl.value = gate === undefined ? '' : String(gate.reaimSeconds);
+  reaimScalesEl.checked = gate?.scalesWithSpeed === true;
 }
 
 /** A timeline structural change (add / remove a phase, or rename one): rebuild the

@@ -39,6 +39,14 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Polish / pre-launch
 
+- [ ] **Audio tell for the catapult hold-fire (82e rider,
+  2026-08-17).** The release gate ships SILENT visually-speaking
+  beyond the amber drain bar (user call at the 82e shape-lock) — a
+  short "held fire" sound (creak/ratchet) on `unit:actionHeld` would
+  carry the tell for eyes-elsewhere moments. The event already
+  exists; this is an AudioPlayer subscription + an asset pick, feel
+  round material.
+
 - [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
   (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
   hunting for camps — the one theme whose pool ships empty. One line

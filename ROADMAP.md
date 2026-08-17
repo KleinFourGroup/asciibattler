@@ -403,8 +403,13 @@ beyond the user's live sign-off).
     - [x] 82e2 — the amber DRAIN re-aim bar (render-only,
       browser-verified live: amber #FFB000, drain 87.5→6.25%,
       reaim 16 ticks = the speed-scaled 0.8 s — worklog)
-    - [ ] 82e3 — attack-editor releaseGate support + audio-tell
-      TODO; impact-recheck (the A design) deferred to playtest
+    - [x] 82e3 — attack-editor releaseGate controls (the aura
+      optional-field pattern; browser-verified incl. the live
+      refinement complaint) + the audio-tell TODO line
+    - [x] the A design (impact recheck) — ✅ DECIDED NOT NEEDED
+      (user playtest verdict 2026-08-17: the 0.6 s travel window
+      isn't a problem in practice; the ~5-line patch stays in the
+      worklog if it ever is)
 
 ## Phase 83 — The closing rebalance + cluster close
 

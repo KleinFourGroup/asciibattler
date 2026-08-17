@@ -4100,3 +4100,24 @@ policy (options menu routes through setMasterVolume/setMuted);
 sim never imports the table; the music bus splits the volume axis
 BEFORE a single-slider options menu hard-codes against it; the pin
 is a gate with EMPOWER_DISPLAY standing.
+
+### §80b — the music plan (2026-08-16)
+
+`plans/music.md`. The audit sharpened four things beyond the
+kickoff facts: (1) the B6 autoplay-unlock assumption ("the first
+trigger is a map-node click") is FALSE for music — a bed should
+already be playing on character select, so the plan specifies a
+page-lifetime any-gesture unlock instead; (2) the upgrade is a
+HYBRID, not a migration — a Web-Audio MusicPlayer for the three
+things HTMLAudioElement can't do (gapless loop, GainNode
+crossfades, ducking under the win/lose stings) while the proven SFX
+pooling stays untouched; (3) the track state machine needs ZERO new
+events — encounter kind already rides `turn:starting`, scene swaps
+are centralized in Game; (4) assets are the long pole and stay an
+open design-round call (licensed Opus tracks under the §79g
+build-enforced licensing precedent vs gen-sfx-style procedural/
+tracker chiptune), exit criterion a listening session. C6
+must-not-break: the volume-axis split (2-or-3 sliders) decided
+BEFORE the options menu bakes in one slider; settings persistence
+rides the same C6 store as save/load; stings stay SFX with music
+ducking — two lanes, two jobs.

@@ -306,9 +306,11 @@ docs land in the NEW `plans/` directory — user-signed):
   (the event-keyed half is 7 closures, NOT the spec's ~30 — the gap
   is the missing coverage guarantee) + the EVENT_SOUNDS/SILENT_EVENTS
   proposal with a coverage pin (worklog §80a)
-- [ ] 80b — music (`plans/music.md`): Web Audio path · music bus ·
-  the missing volume/mute UI (a C6 settings dependency) · licensing
-  per the §79g OFL precedent
+- [x] 80b — ✅ 2026-08-16: `plans/music.md` — hybrid Web-Audio music
+  lane (SFX pooling untouched) · bus/axis split BEFORE the C6
+  slider · any-gesture unlock (the map-click assumption is false
+  for music) · assets = the long pole, two routes dispositioned
+  (worklog §80b)
 - [ ] 80c — achievements + tutorial (`plans/achievements.md` +
   `plans/tutorial.md`, ONE commit — the shared C6 persistent-store
   dependency; tutorial additionally audited against DESIGN §Input

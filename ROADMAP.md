@@ -302,10 +302,10 @@ telemetry — each closing with a "what Cluster 6 must not break" note.
 Cut at the 2026-08-16 kickoff (audit + shape-lock: WORKLOG §80;
 docs land in the NEW `plans/` directory — user-signed):
 
-- [ ] 80a — the sound-registry proposal
-  (`plans/sound-registry.md`): the full bus.on→play site inventory
-  (~20 files, grown from the spec's 17), reuse dispositions, a
-  registry shape mirroring FX_REGISTRY + its coverage blind spot
+- [x] 80a — ✅ 2026-08-16: `plans/sound-registry.md` — full census
+  (the event-keyed half is 7 closures, NOT the spec's ~30 — the gap
+  is the missing coverage guarantee) + the EVENT_SOUNDS/SILENT_EVENTS
+  proposal with a coverage pin (worklog §80a)
 - [ ] 80b — music (`plans/music.md`): Web Audio path · music bus ·
   the missing volume/mute UI (a C6 settings dependency) · licensing
   per the §79g OFL precedent

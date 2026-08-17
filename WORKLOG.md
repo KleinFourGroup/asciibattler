@@ -4067,3 +4067,36 @@ these are forward-looking proposals) · the 80a–80e cut as written
 into ROADMAP §80 (achievements+tutorial share one commit — same C6
 dependency) · all `docs(...)` commits, zero implementation, no
 snapshot risk.
+
+### §80a — the sound-registry proposal (2026-08-16)
+
+`plans/sound-registry.md`. The audit's headline is a CENSUS
+CORRECTION: the kickoff spec's "~30 hand-written bus.on closures
+across 17 files" counted every play() site — the fresh census splits
+the ~45 sites into three mechanisms, and the event-keyed half is
+exactly **7 closures** (4 page-lifetime in Game.ts, 3 scene-lifetime
+in BattleScene with the two filters — inert-neutral deaths, zero
+heals). The FX_REGISTRY half (15 sound-carrying keys) is already
+table-driven and healthy; the ~35 direct UI click sites are
+interaction sounds with no bus event to key to — both dispositioned
+OUT of the registry's scope. So the structural problem is not
+volume but the missing COVERAGE GUARANTEE: a new bus event ships
+silent by default with nothing to notice.
+
+Proposal accordingly: a small `EVENT_SOUNDS` table + an explicit
+`SILENT_EVENTS` list + a coverage pin asserting the two partition
+the event catalog (the §78d EMPOWER_DISPLAY / §79-post font-guard
+idiom) — a new event fails `npm test` until its author picks
+cued-or-silent. Filters become named `when` predicates (typed,
+unit-testable). Reuses dispositioned in the doc: `win`×2 KEEP
+(67b's comment stands), `healtick`×3 — the PromotionScreen borrow
+flagged as the one unprincipled use (stat ticks ≠ healing),
+`pickup`×2 principled. ~10 candidate uncued events listed
+(battle:started/ended, deck feel, empower, node-arrival stings) vs
+the deliberately-silent movement/bookkeeping class (incl. the 27e
+post-playtest apply-flash cut and the action:phase double-fire trap
+on unit:attacked). C6 must-not-break: AudioPlayer keeps volume
+policy (options menu routes through setMasterVolume/setMuted);
+sim never imports the table; the music bus splits the volume axis
+BEFORE a single-slider options menu hard-codes against it; the pin
+is a gate with EMPOWER_DISPLAY standing.

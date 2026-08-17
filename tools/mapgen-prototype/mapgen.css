@@ -243,6 +243,11 @@ button.primary {
 .sw.fire {
   background: #ff7043;
 }
+.sw.camp {
+  background: #1d1838;
+  outline: 2px solid #c77dff;
+  outline-offset: -2px;
+}
 .sw.spawn {
   background: #2fe0a0;
 }

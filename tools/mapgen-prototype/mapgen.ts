@@ -44,6 +44,8 @@ const PALETTE = {
   sand: '#e8c66a',
   mud: '#7a5230',
   fire: '#ff7043',
+  // §81b camp sites (outline marker — the tile underneath still shows).
+  camp: '#c77dff',
 };
 
 const el = <T extends HTMLElement>(id: string): T => {
@@ -98,6 +100,9 @@ function midpointTiles(theme: Theme): { tiles: ResolvedThemeTiles; poolOverride:
 function readParams(): ResolvedMapParams {
   const { tiles, poolOverride } = midpointTiles(selectedTheme());
   return {
+    // §81b — manual mode keeps camps OFF (no site sliders); use "roll from
+    // config" to eyeball the sampled camp plan.
+    camps: { count: 0, mode: 'midBand', standoff: TERRAIN.procedural.camps.spawnStandoff },
     symmetry: (el<HTMLSelectElement>('symmetry')).value as Symmetry,
     crossbars: numVal('crossbars'),
     gapsPerBar: numVal('gapsPerBar'),
@@ -208,6 +213,13 @@ function render(canvas: HTMLCanvasElement, map: ProceduralMapResult, cell: numbe
       }
     }
   }
+  // §81b — camp sites: a thick violet ring over whatever tile hosts the camp
+  // (drawn last so it reads over water/patch fills).
+  for (const c of map.campSpawns) {
+    ctx.strokeStyle = PALETTE.camp;
+    ctx.lineWidth = Math.max(2, cell * 0.2);
+    ctx.strokeRect(c.x * cell + gap + 1, c.y * cell + gap + 1, cell - gap - 2, cell - gap - 2);
+  }
 }
 
 function renderStats(map: ProceduralMapResult): void {
@@ -221,6 +233,7 @@ function renderStats(map: ProceduralMapResult): void {
     stat('Water', `${s.water}`) +
     stat('Deep', `${s.deepWater}`) +
     stat('Fire', `${s.fires}`) +
+    stat('Camps', `${map.campSpawns.length}`) +
     stat('Chokepoints', `${s.chokepoints}`) +
     stat('Connected', s.connected ? '✓' : '✗') +
     stat('Carved', `${s.carved}`);

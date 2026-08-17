@@ -239,6 +239,31 @@ describe('§81a — per-theme procedural tiles (through generateTerrain)', () =>
       expect(spawnRegionsConnected(t, G, G, deepWaterCells(t.tileGrid))).toBe(true);
     }
   });
+
+  it('§81b — camp sites ride with the theme pool; the spawnCamps pairing invariant holds', () => {
+    // A stocked-pool theme rolls sites on some seeds, and sites ALWAYS come
+    // with the pool attached (spawnCamps throws on sites-without-pool).
+    let rolled = 0;
+    for (let seed = 0; seed < 60; seed++) {
+      const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'swamp');
+      if (t.campSpawns.length > 0) {
+        rolled++;
+        expect(t.camps).toEqual(TERRAIN.procedural.camps.pools.swamp);
+      } else {
+        expect(t.camps).toEqual([]);
+      }
+    }
+    expect(rolled).toBeGreaterThan(0);
+  });
+
+  it('§81b — an empty-pool theme (shipped: volcanic) never rolls camp sites', () => {
+    expect(TERRAIN.procedural.camps.pools.volcanic).toEqual([]);
+    for (let seed = 0; seed < 30; seed++) {
+      const t = generateTerrain(new RNG(seed), G, G, BASE, null, 'volcanic');
+      expect(t.campSpawns).toEqual([]);
+      expect(t.camps).toEqual([]);
+    }
+  });
 });
 
 function collectSpawnTiles(regions: readonly SpawnRegion[]): GridCoord[] {

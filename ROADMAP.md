@@ -354,11 +354,9 @@ snapshot bump):
 
 - [x] 81a — ✅ 2026-08-17: landed to plan; NO bump as predicted; the
   arm re-pin = one scan-widening (worklog §81a).
-- [ ] 81b — procedural camps: per-theme camp pools + density knob +
-  the weighted placement-mode roll (pairs/mid-band/rare-free);
-  generator emits `campSpawns`/`camps` (occupiable floor, spawn-band
-  standoff). Exit: camps-spawn + density-0 byte-identity pins green;
-  arm re-pinned.
+- [x] 81b — ✅ 2026-08-17: landed to plan; NO bump; the
+  dose-independence pin = camp density never perturbs terrain;
+  volcanic pool ships EMPTY → 81c (worklog §81b).
 - [ ] 81c — design round: palettes/pools/densities signed on visible
   maps; user native eyeball on a handful of seeds.
 - [ ] 81d — docs close: DESIGN/ARCHITECTURE touch-ups · demote ·

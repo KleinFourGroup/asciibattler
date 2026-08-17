@@ -23,10 +23,12 @@ const allowedSymmetries = Object.entries(P.symmetry)
   .filter(([, weight]) => weight > 0)
   .map(([k]) => k);
 
-// §81a — draws = every base knob except the two non-draw keys (the
-// wallCapFraction guard rail + the themeTiles table), plus one draw per knob
-// the chosen theme DECLARES. Derived from the config, never hardcoded.
-const BASE_KNOB_COUNT = Object.keys(P).length - 2;
+// §81a/§81b — draws = every base knob except the three non-per-knob keys (the
+// wallCapFraction guard rail + the themeTiles table + the camps block), plus
+// one draw per knob the chosen theme DECLARES, plus the camp plan's TWO
+// unconditional draws (count + mode). Derived from the config, never hardcoded.
+const BASE_KNOB_COUNT = Object.keys(P).length - 3;
+const CAMP_DRAWS = 2;
 const themeDrawCount = (theme: Theme): number => Object.keys(P.themeTiles[theme]).length;
 
 describe('sampleProceduralParams', () => {
@@ -42,14 +44,30 @@ describe('sampleProceduralParams', () => {
     );
   });
 
-  it('consumes exactly one draw per sampled knob (base + the theme-declared set)', () => {
+  it('consumes exactly one draw per sampled knob (base + theme-declared + camp plan)', () => {
     for (const theme of THEMES) {
       const rng = new RNG(55);
       const probe = RNG.fromJSON(rng.toJSON());
       sampleProceduralParams(rng, P, theme);
-      for (let i = 0; i < BASE_KNOB_COUNT + themeDrawCount(theme); i++) probe.next();
+      for (let i = 0; i < BASE_KNOB_COUNT + themeDrawCount(theme) + CAMP_DRAWS; i++) probe.next();
       expect(rng.toJSON()).toEqual(probe.toJSON());
     }
+  });
+
+  it('§81b — an empty theme pool forces camp count 0; a stocked pool can roll sites', () => {
+    // Derived from the shipped config: volcanic ships an EMPTY pool (81c
+    // decides its residents); swamp ships a stocked one.
+    expect(P.camps.pools.volcanic).toEqual([]);
+    expect(P.camps.pools.swamp.length).toBeGreaterThan(0);
+    let stockedRolled = 0;
+    for (let seed = 0; seed < 200; seed++) {
+      expect(sampleProceduralParams(new RNG(seed), P, 'volcanic').camps.count).toBe(0);
+      const swamp = sampleProceduralParams(new RNG(seed), P, 'swamp');
+      if (swamp.camps.count > 0) stockedRolled++;
+      expect(['pair', 'midBand', 'free']).toContain(swamp.camps.mode);
+      expect(swamp.camps.standoff).toBe(P.camps.spawnStandoff);
+    }
+    expect(stockedRolled).toBeGreaterThan(0);
   });
 
   it('§81a — resolves undeclared theme knobs to 0 (feature off) and samples declared ones in-range', () => {
@@ -154,6 +172,7 @@ const makeParams = (over: Partial<ResolvedMapParams> = {}): ResolvedMapParams =>
   noiseScale: 3,
   wallCapFraction: 0.22,
   tiles: noTiles(),
+  camps: { count: 0, mode: 'midBand', standoff: 3 },
   ...over,
 });
 
@@ -439,6 +458,106 @@ describe('§81a — the theme tile layer', () => {
       expect(kindCount(r, 'sand')).toBe(0);
       expect(kindCount(r, 'mud')).toBe(0);
       expect(r.fires.length).toBe(0);
+    }
+  });
+});
+
+describe('§81b — camp-site placement', () => {
+  const camped = (
+    count: number,
+    mode: 'pair' | 'midBand' | 'free',
+    over: Partial<ResolvedMapParams> = {},
+  ): ResolvedMapParams => makeParams({ camps: { count, mode, standoff: 3 }, ...over });
+
+  it('the camp dose never perturbs terrain: density 0 vs 2 → byte-identical tiles', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const off = generateProceduralMap(new RNG(seed), W, H, camped(0, 'midBand'));
+      const on = generateProceduralMap(new RNG(seed), W, H, camped(2, 'midBand'));
+      expect(on.tileGrid.toJSON()).toEqual(off.tileGrid.toJSON());
+      expect(on.walls).toEqual(off.walls);
+      expect(on.halfCovers).toEqual(off.halfCovers);
+      expect(off.campSpawns).toEqual([]);
+    }
+  });
+
+  it('sites are hostable: never blocking/fire/choke/spawn-band, standoff respected', () => {
+    for (const mode of ['midBand', 'free'] as const) {
+      for (let seed = 0; seed < 30; seed++) {
+        const r = generateProceduralMap(
+          new RNG(seed),
+          W,
+          H,
+          camped(2, mode, { poolDensity: 0.25, tiles: noTiles({ deepWaterFraction: 0.4, fire: 0.03 }) }),
+        );
+        const obstacles = new Set([...r.walls, ...r.halfCovers].map((c) => `${c.x},${c.y}`));
+        const choke = new Set(r.chokeCells.map((c) => `${c.x},${c.y}`));
+        const spawnTiles = r.spawnRegions.flatMap((reg) => reg.tiles);
+        const spawn = new Set(spawnTiles.map((t) => `${t.x},${t.y}`));
+        for (const c of r.campSpawns) {
+          const k = `${c.x},${c.y}`;
+          expect(obstacles.has(k)).toBe(false);
+          expect(choke.has(k)).toBe(false);
+          expect(spawn.has(k)).toBe(false);
+          const kind = r.tileGrid.kindAt(c);
+          expect(kind).not.toBe('deep_water');
+          expect(kind).not.toBe('fire');
+          for (const t of spawnTiles) {
+            expect(Math.max(Math.abs(t.x - c.x), Math.abs(t.y - c.y))).toBeGreaterThanOrEqual(3);
+          }
+        }
+      }
+    }
+  });
+
+  it('pair mode: two sites at symmetry-partner cells', () => {
+    for (const symmetry of ['point', 'mirror', 'none'] as const) {
+      let paired = 0;
+      for (let seed = 0; seed < 20; seed++) {
+        const r = generateProceduralMap(new RNG(seed), W, H, camped(2, 'pair', { symmetry }));
+        if (r.campSpawns.length === 2) {
+          const [a, b] = r.campSpawns;
+          const partner =
+            symmetry === 'point'
+              ? { x: W - 1 - a!.x, y: H - 1 - a!.y }
+              : { x: a!.x, y: H - 1 - a!.y };
+          expect(b).toEqual(partner);
+          paired++;
+        }
+      }
+      expect(paired).toBeGreaterThan(0);
+    }
+  });
+
+  it('pair mode with count 1 degrades to a single mid-band site, never a pair', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const r = generateProceduralMap(new RNG(seed), W, H, camped(1, 'pair'));
+      expect(r.campSpawns.length).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('midBand mode confines sites to the neutral middle third of rows', () => {
+    const bandHalf = Math.max(1, Math.floor(H / 6));
+    const midLo = Math.floor((H - 1) / 2) - bandHalf;
+    const midHi = Math.ceil((H - 1) / 2) + bandHalf;
+    let placed = 0;
+    for (let seed = 0; seed < 30; seed++) {
+      const r = generateProceduralMap(new RNG(seed), W, H, camped(2, 'midBand'));
+      for (const c of r.campSpawns) {
+        expect(c.y).toBeGreaterThanOrEqual(midLo);
+        expect(c.y).toBeLessThanOrEqual(midHi);
+        placed++;
+      }
+    }
+    expect(placed).toBeGreaterThan(0);
+  });
+
+  it('sites are unique and deterministic per seed', () => {
+    for (let seed = 0; seed < 20; seed++) {
+      const a = generateProceduralMap(new RNG(seed), W, H, camped(2, 'free'));
+      const b = generateProceduralMap(new RNG(seed), W, H, camped(2, 'free'));
+      expect(a.campSpawns).toEqual(b.campSpawns);
+      const keys = a.campSpawns.map((c) => `${c.x},${c.y}`);
+      expect(new Set(keys).size).toBe(keys.length);
     }
   });
 });

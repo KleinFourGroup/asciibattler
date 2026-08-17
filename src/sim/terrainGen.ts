@@ -97,12 +97,15 @@ export interface GeneratedTerrain {
    *  Empty for procedural — hand-authored-only, like chasm/fire/healing. */
   readonly rubble: readonly RubbleCoord[];
   /** §75c: single-tile camp drip points (the portal-drip model). Consumed by
-   *  `battleSetup.spawnCamps` together with `camps` below. Empty for
-   *  procedural — hand-authored-only, like rubble. */
+   *  `battleSetup.spawnCamps` together with `camps` below. §81b: no longer
+   *  hand-authored-only — procedural boards roll sites from the
+   *  `procedural.camps` envelope. */
   readonly campSpawns: readonly GridCoord[];
-  /** §75c: the layout's weighted camp list (each spawn tile rolls one entry).
+  /** §75c: the weighted camp list (each spawn tile rolls one entry).
    *  Non-empty whenever `campSpawns` is (the layouts.ts schema enforces the
-   *  pairing). Empty for procedural. */
+   *  pairing on the authored side; the §81b sampler enforces it procedurally
+   *  — an empty theme pool forces zero sites). §81b: procedural boards carry
+   *  the THEME's pool. */
   readonly camps: readonly CampRef[];
   readonly spawnRegions: readonly SpawnRegion[];
 }
@@ -221,12 +224,17 @@ function generateProcedural(
   theme: Theme,
 ): GeneratedTerrain {
   const params = sampleProceduralParams(rng, config.procedural, theme);
-  const { tileGrid, walls, halfCovers, fires, spawnRegions } = generateProceduralMap(
+  const { tileGrid, walls, halfCovers, fires, campSpawns, spawnRegions } = generateProceduralMap(
     rng,
     gridW,
     gridH,
     params,
   );
+  // §81b — pair the rolled sites with the THEME's pool (the layout
+  // `campSpawns`/`camps` contract: a pool rides only when sites exist, and
+  // sites can only roll when the pool is non-empty — the sampler forces
+  // count 0 on an empty pool). Downstream (`spawnCamps`) is unchanged.
+  const campPool = campSpawns.length > 0 ? config.procedural.camps.pools[theme] : [];
   return {
     tileGrid,
     walls,
@@ -235,8 +243,8 @@ function generateProcedural(
     fires,
     healings: [],
     rubble: [],
-    campSpawns: [],
-    camps: [],
+    campSpawns,
+    camps: campPool,
     spawnRegions,
   };
 }

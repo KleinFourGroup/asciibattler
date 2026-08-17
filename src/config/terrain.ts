@@ -26,7 +26,13 @@
 
 import { z } from 'zod';
 import terrainJson from '../../config/terrain.json';
-import { LAYOUT_MIN_SIDE, LAYOUT_MAX_SIDE, THEMES, type Theme } from './layouts';
+import {
+  LAYOUT_MIN_SIDE,
+  LAYOUT_MAX_SIDE,
+  THEMES,
+  type Theme,
+  type CampRef,
+} from './layouts';
 
 /**
  * A numeric knob sampled per encounter. Bare `{min,max}` samples
@@ -121,6 +127,55 @@ const ThemeTilesTableSchema = z.object(
   >,
 );
 
+/** §81b — one pool entry: a camp the theme's procedural boards may roll, the
+ *  layouts.ts `CampRef` shape (weight omitted = 1, the sector-pool
+ *  convention). Referential validation lives in camps.ts
+ *  (`assertProceduralCampRefs` — import direction camps → terrain,
+ *  cycle-free), mirroring the layout-side check. */
+const CampPoolEntrySchema = z.object({
+  campId: z.string().min(1),
+  weight: z.number().positive().optional(),
+}) as z.ZodType<CampRef>;
+
+/** §81b — placement-mode weights for the camp-site roll (the shape-lock's
+ *  user call): `pair` = two sites at symmetry-partner cells · `midBand` =
+ *  the neutral middle third of rows · `free` = anywhere hostable (the RARE
+ *  asymmetric spice). All three keys required; at least one positive. */
+const CampPlacementWeightsSchema = z
+  .object({
+    pair: z.number().nonnegative(),
+    midBand: z.number().nonnegative(),
+    free: z.number().nonnegative(),
+  })
+  .refine((w) => w.pair + w.midBand + w.free > 0, {
+    message: 'camp placement weights need at least one positive weight',
+  });
+
+/**
+ * §81b — procedural camp support ("Uncharted Ground"): procedural boards
+ * carry no authored `campSpawns`, so the generator rolls camp SITES from
+ * this envelope and the theme's pool. `density` is the site count per board
+ * (weighted ints, the dividers convention); `placement` picks the mode;
+ * `spawnStandoff` is the minimum Chebyshev distance from every spawn-region
+ * tile (camps must be a detour, not a doorstep); `pools` maps each theme to
+ * the camps its boards may roll (exhaustive over `Theme`; an EMPTY pool
+ * disables camps for that theme — the density draw still burns, so the
+ * stream is pool-independent). Which camp each site actually becomes stays
+ * a `spawnCamps` roll on the `campSetup` stream — this block only supplies
+ * the sites + the pool, exactly like a layout's `campSpawns`/`camps` pair.
+ */
+const ProceduralCampsSchema = z.object({
+  density: WeightedIntsSchema,
+  placement: CampPlacementWeightsSchema,
+  spawnStandoff: z.number().int().nonnegative(),
+  pools: z.object(
+    Object.fromEntries(THEMES.map((t) => [t, z.array(CampPoolEntrySchema).default([])])) as Record<
+      Theme,
+      z.ZodDefault<z.ZodArray<typeof CampPoolEntrySchema>>
+    >,
+  ),
+});
+
 const ProceduralSchema = z.object({
   symmetry: SymmetryWeightsSchema,
   crossbars: WeightedIntsSchema,
@@ -138,6 +193,9 @@ const ProceduralSchema = z.object({
    *  hand-authored tiles). Not a per-knob draw like the rest of this block —
    *  the active sector's THEME picks one entry at generation time. */
   themeTiles: ThemeTilesTableSchema,
+  /** §81b — procedural camp support (per-theme pools + density + the
+   *  placement-mode roll). */
+  camps: ProceduralCampsSchema,
 });
 
 const TerrainSchema = z
@@ -153,6 +211,9 @@ const TerrainSchema = z
 export type TerrainConfig = z.infer<typeof TerrainSchema>;
 export type ProceduralTerrainConfig = z.infer<typeof ProceduralSchema>;
 export type ThemeTilesConfig = z.infer<typeof ThemeTilesSchema>;
+export type ProceduralCampsConfig = z.infer<typeof ProceduralCampsSchema>;
+/** §81b — the three camp-site placement modes (see the placement schema doc). */
+export type CampPlacementMode = 'pair' | 'midBand' | 'free';
 export type RangeSpec = z.infer<typeof RangeSchema>;
 
 export const TERRAIN: TerrainConfig = TerrainSchema.parse(terrainJson);

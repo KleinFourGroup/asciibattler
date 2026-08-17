@@ -4309,3 +4309,45 @@ design-round vehicle.
   thresholds under-fire — deep water lands on only ~45% of swamp
   maps (90/200); if the design round wants deep-per-map, raise
   `deepWaterFraction` well past intuition or the pool override.
+
+### §81b — procedural camps (2026-08-17)
+
+Landed to plan; user native eyeball of the 81a maps signed before
+this step ("look great"). The envelope: `procedural.camps` =
+`density` (site count 0/1/2, weighted ints) + `placement` (the
+user-signed mode weights: pair 0.45 / midBand 0.45 / free 0.10 —
+rare asymmetry as spice) + `spawnStandoff` (3, Chebyshev from
+every spawn tile) + `pools` (exhaustive per-theme CampRef lists
+over the §75 catalog; **volcanic ships EMPTY** — its resident is
+an 81c decision). Sampling burns TWO unconditional draws (count +
+mode) so the stream never depends on outcome or pool; an empty
+pool zeroes the count after the draws. Placement runs on the
+FINISHED grid (post-cap, post-connectivity): hostable = passable
+(shallow/patches fine — the fetidPond precedent), not fire, not a
+chokepoint, not spawn-band, standoff respected; `pair` places at
+the map's own partner geometry (mirror for `none`), degrades to
+midBand when count 1 or no pairable cell; midBand = the middle
+third of rows; thin candidate sets under-place rather than force a
+bad tile. `terrainGen` pairs sites with the theme pool
+(`spawnCamps`' pairing invariant enforced both ways); downstream
+§75 machinery (campSetup identity roll · drip · hostility ·
+rewards · render) needed ZERO changes, as the kickoff audit
+predicted. `assertProceduralCampRefs` boot-guards the pools in
+camps.ts (import direction camps → terrain, the layout-side
+sibling). The mapgen tool renders sites as violet rings + a Camps
+stat (config mode; manual keeps camps off).
+
+- **NO snapshot bump, as predicted** (Run v42 / World v35 hold).
+- **The dose-independence pin** (the step's headline): density 0
+  vs 2 on the same seed → byte-identical tileGrid/walls/halfCovers
+  — camp placement rides strictly AFTER terrain in the stream, so
+  the §82 board can dial camp density without re-pinning terrain.
+- **Proof**: typecheck clean · 469 green across the touched files
+  (+15: dose-independence · hostability incl. deep/fire exclusion +
+  standoff · pair-partner across all three symmetry modes ·
+  pair-degrade at count 1 · midBand confinement · uniqueness +
+  determinism · empty-pool-forces-0 + stocked-pool-rolls · the
+  pairing invariant through generateTerrain · volcanic-never-camps
+  · the draw-count pin extended (+2 camp draws)) · tool driven
+  in-page: swamp config roll shows Camps 2 + legend entry, zero
+  console errors. Full suite + fuzz:smoke ride the commit hook.

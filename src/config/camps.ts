@@ -26,7 +26,8 @@
 import { z } from 'zod';
 import campsJson from '../../config/camps.json';
 import { UNIT_DEFS } from './units';
-import { LAYOUTS, type LayoutDef } from './layouts';
+import { LAYOUTS, type LayoutDef, type CampRef } from './layouts';
+import { TERRAIN } from './terrain';
 import {
   EncounterRewardRefSchema,
   REWARD_TABLE_IDS,
@@ -163,3 +164,27 @@ export function getCamp(id: string): CampDef | undefined {
 }
 
 assertLayoutCampRefs(LAYOUTS, CAMP_IDS);
+
+/**
+ * §81b — boot check for the PROCEDURAL side of the seam (the
+ * `assertLayoutCampRefs` sibling): every `terrain.json#procedural.camps.pools`
+ * entry must resolve in this catalog. Import direction camps → terrain,
+ * cycle-free (terrain.ts never imports camps.ts).
+ */
+export function assertProceduralCampRefs(
+  pools: Readonly<Record<string, readonly CampRef[]>>,
+  campIds: readonly string[],
+): void {
+  const ids = new Set(campIds);
+  for (const [theme, pool] of Object.entries(pools)) {
+    for (const ref of pool) {
+      if (!ids.has(ref.campId)) {
+        throw new Error(
+          `terrain.json: procedural camp pool for theme "${theme}" references unknown camp "${ref.campId}"`,
+        );
+      }
+    }
+  }
+}
+
+assertProceduralCampRefs(TERRAIN.procedural.camps.pools, CAMP_IDS);

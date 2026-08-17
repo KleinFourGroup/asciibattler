@@ -44,6 +44,19 @@
         "deepWaterFraction": { "min": 0.2, "max": 0.5, "center": 0.35, "intensity": 0.5 },
         "mud": { "min": 0.06, "max": 0.18, "center": 0.1, "intensity": 0.5 }
       }
+    },
+    "camps": {
+      "density": { "0": 0.5, "1": 0.35, "2": 0.15 },
+      "placement": { "pair": 0.45, "midBand": 0.45, "free": 0.1 },
+      "spawnStandoff": 3,
+      "pools": {
+        "grassland": [{ "campId": "bandit-squatters" }, { "campId": "toll-post" }],
+        "barren": [{ "campId": "bandit-squatters" }, { "campId": "toll-post" }],
+        "volcanic": [],
+        "tundra": [{ "campId": "frost-coven" }],
+        "desert": [{ "campId": "bandit-squatters" }, { "campId": "toll-post" }],
+        "swamp": [{ "campId": "ghoul-nest" }, { "campId": "banshee-barrow" }]
+      }
     }
   }
 }

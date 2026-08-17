@@ -41,7 +41,12 @@
  */
 import type { RNG } from '../core/RNG';
 import type { GridCoord } from '../core/types';
-import type { ProceduralTerrainConfig, ThemeTilesConfig, RangeSpec } from '../config/terrain';
+import type {
+  ProceduralTerrainConfig,
+  ThemeTilesConfig,
+  CampPlacementMode,
+  RangeSpec,
+} from '../config/terrain';
 import type { Theme } from '../config/layouts';
 import { TileGrid } from './TileGrid';
 import { SPAWN_REGION_TILE_COUNT, type SpawnRegion } from './layouts';
@@ -102,6 +107,12 @@ export interface ResolvedMapParams {
   wallCapFraction: number;
   /** §81a — the sampled per-theme tile layer. */
   tiles: ResolvedThemeTiles;
+  /** §81b — the rolled camp-site plan: how many single-tile camp spawns this
+   *  board hosts (`count`, 0 = camp-free — forced 0 when the theme's pool is
+   *  empty), placed how (`mode`), at least `standoff` Chebyshev from every
+   *  spawn tile. WHICH camp each site becomes is not decided here — that
+   *  stays `spawnCamps`' roll on the `campSetup` stream. */
+  camps: { count: number; mode: CampPlacementMode; standoff: number };
 }
 
 export interface GenStats {
@@ -134,6 +145,10 @@ export interface ProceduralMapResult {
   /** §81a — fire-cell coords (the volcanic scatter), the `GeneratedTerrain.fires`
    *  parallel readout (procedural was hand-authored-only for fire until §81a). */
   fires: GridCoord[];
+  /** §81b — rolled single-tile camp sites (empty = camp-free board). The
+   *  caller pairs these with the theme's pool to fill
+   *  `GeneratedTerrain.campSpawns`/`camps`. */
+  campSpawns: GridCoord[];
   spawnRegions: SpawnRegion[];
   /** Gap/ford cells, for the chokepoint highlight (dev tooling). */
   chokeCells: GridCoord[];
@@ -151,8 +166,9 @@ const intRange = (rng: RNG, s: RangeSpec): number =>
  * guard rail, no draw); then the THEME's tile knobs (§81a) in the fixed order
  * `poolDensity override → deepWaterFraction → hills → ice → sand → mud → fire`,
  * one draw per DECLARED knob (absent = off, no draw — so a theme's draw count
- * is fixed by its config entry). Reordering or adding a knob re-baselines the
- * fuzz stream — the usual RNG-fork caveat.
+ * is fixed by its config entry); then the §81b camp plan (count + mode, two
+ * UNCONDITIONAL draws). Reordering or adding a knob re-baselines the fuzz
+ * stream — the usual RNG-fork caveat.
  */
 export function sampleProceduralParams(
   rng: RNG,
@@ -181,6 +197,16 @@ export function sampleProceduralParams(
     mud: optRange(themeCfg.mud),
     fire: optRange(themeCfg.fire),
   };
+  // §81b — the camp-site plan: TWO unconditional draws (count, then mode) so
+  // the stream never depends on the outcome or the pool; an empty theme pool
+  // zeroes the count AFTER the draws (pool-independent stream, camps off).
+  const campCount = Number(weightedPick(rng, cfg.camps.density));
+  const campMode = weightedPick(rng, cfg.camps.placement) as CampPlacementMode;
+  const camps = {
+    count: cfg.camps.pools[theme].length === 0 ? 0 : campCount,
+    mode: campMode,
+    standoff: cfg.camps.spawnStandoff,
+  };
   return {
     symmetry,
     crossbars,
@@ -195,6 +221,7 @@ export function sampleProceduralParams(
     noiseScale,
     wallCapFraction: cfg.wallCapFraction,
     tiles,
+    camps,
   };
 }
 
@@ -386,6 +413,19 @@ export function generateProceduralMap(
   // --- CONNECTIVITY: guarantee a spawn-to-spawn route (symmetry-aware) ---
   const carved = ensureConnectivity(grid, spawnTop, spawnBottom, choke, symmetric, partner);
 
+  // --- §81b CAMP SITES: roll single-tile camp spawns onto the finished board.
+  // Placed LAST so the camp dose can never perturb the terrain (density 0 vs 2
+  // → byte-identical tiles for the same seed — the dose-independence pin).
+  const campSpawns = placeCampSites(
+    grid,
+    rng,
+    params,
+    choke,
+    isSpawn,
+    [...spawnTop, ...spawnBottom],
+    partner,
+  );
+
   // --- assemble outputs ---
   const tileGrid = new TileGrid(W, H);
   const walls: GridCoord[] = [];
@@ -436,7 +476,7 @@ export function generateProceduralMap(
     { tiles: spawnBottom, availability: 'both' },
   ];
 
-  return { tileGrid, walls, halfCovers, fires, spawnRegions, chokeCells, stats };
+  return { tileGrid, walls, halfCovers, fires, campSpawns, spawnRegions, chokeCells, stats };
 }
 
 /** Gap column set for a crossbar: `count` gaps of `width`, each placed RANDOMLY
@@ -623,4 +663,93 @@ function ensureConnectivity(
     }
   }
   return carved;
+}
+
+/**
+ * §81b — roll the board's camp-site tiles per the sampled plan. Runs on the
+ * FINISHED grid (post-cap, post-connectivity) so the camp dose can never
+ * perturb terrain. A cell can host a camp when a unit could materialize on it
+ * and it isn't in anyone's lap: passable (not wall/half-cover/deep — shallow
+ * water and ground patches are fine, the fetidPond precedent), not FIRE (a
+ * spawn tile that chips its own camp is a trap, not a site), not a chokepoint
+ * (the crossing stays free), not a spawn-band tile, and at least `standoff`
+ * Chebyshev from every spawn tile.
+ *
+ * Modes (the shape-lock's user call — pair/midBand split evenly, free rare):
+ *   - `pair` — one site + its symmetry partner (the map's own `partner`;
+ *     for `symmetry: 'none'` that's the mirror reflection — still the fair
+ *     geometry). Needs `count >= 2` and a pairable candidate; otherwise it
+ *     degrades to `midBand`. Any count remainder places as midBand.
+ *   - `midBand` — sites confined to the neutral middle third of rows.
+ *   - `free` — anywhere hostable (the rare asymmetric spice).
+ * A thin candidate set places fewer sites than `count` rather than forcing a
+ * bad tile (small boards + standoff can legitimately run dry).
+ */
+function placeCampSites(
+  grid: Cell[][],
+  rng: RNG,
+  params: ResolvedMapParams,
+  choke: Set<string>,
+  isSpawn: (x: number, y: number) => boolean,
+  spawnTiles: readonly GridCoord[],
+  partner: (x: number, y: number) => GridCoord,
+): GridCoord[] {
+  if (params.camps.count <= 0) return [];
+  const H = grid.length;
+  const W = grid[0]!.length;
+  const standoff = params.camps.standoff;
+
+  const hostable = (x: number, y: number): boolean => {
+    const c = grid[y]![x]!;
+    if (isBlocking(c) || c === 'fire') return false;
+    if (choke.has(keyOf(x, y)) || isSpawn(x, y)) return false;
+    return spawnTiles.every((t) => Math.max(Math.abs(t.x - x), Math.abs(t.y - y)) >= standoff);
+  };
+  const candidates: GridCoord[] = [];
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (hostable(x, y)) candidates.push({ x, y });
+    }
+  }
+  if (candidates.length === 0) return [];
+
+  const sites: GridCoord[] = [];
+  const taken = new Set<string>();
+  const claim = (c: GridCoord): void => {
+    sites.push(c);
+    taken.add(keyOf(c.x, c.y));
+  };
+
+  let mode = params.camps.mode;
+  let remaining = params.camps.count;
+  if (mode === 'pair' && remaining < 2) mode = 'midBand'; // a single site can't pair
+
+  if (mode === 'pair') {
+    const pairables = candidates.filter((c) => {
+      const p = partner(c.x, c.y);
+      return (p.x !== c.x || p.y !== c.y) && hostable(p.x, p.y);
+    });
+    if (pairables.length > 0) {
+      const c = pairables[rng.int(0, pairables.length - 1)]!;
+      claim(c);
+      claim(partner(c.x, c.y));
+      remaining -= 2;
+    }
+    mode = 'midBand'; // remainder (or the no-pairable fallback) places mid-band
+  }
+
+  // The neutral middle third of rows (midBand); free uses the whole set.
+  const bandHalf = Math.max(1, Math.floor(H / 6));
+  const midLo = Math.floor((H - 1) / 2) - bandHalf;
+  const midHi = Math.ceil((H - 1) / 2) + bandHalf;
+  const banded = candidates.filter((c) => c.y >= midLo && c.y <= midHi);
+  const pool = (mode === 'free' ? candidates : banded.length > 0 ? banded : candidates).filter(
+    (c) => !taken.has(keyOf(c.x, c.y)),
+  );
+  for (let i = 0; i < remaining && pool.length > 0; i++) {
+    const idx = rng.int(0, pool.length - 1);
+    claim(pool[idx]!);
+    pool.splice(idx, 1);
+  }
+  return sites;
 }

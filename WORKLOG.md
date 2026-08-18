@@ -4681,3 +4681,81 @@ feel done (the A-not-needed verdict was the last open item), the
 tree is green, and the moved numbers are noted above for the
 board. HANDOFF cursor → §83 (83-pre first); ROADMAP §82 demoted to
 its stub in the same commit (demote-as-you-close, both docs).
+
+## Phase 83 — the closing rebalance + cluster close
+
+### The kickoff (2026-08-17): audit + the cut + the boss surprise
+
+**The code-reality audit, 83-pre half.** BALANCE.md is 2993 lines: a
+487-line header layer (protocol/doctrine/caveats) over the
+append-only run log. The user's smear diagnosis verified concretely
+— the fossil list for 83-pre1:
+
+1. "Per-kind target bands (DATA-FIRST — not yet set)" — bands were
+   set the same day it was written (X3, 2026-06-21) and re-signed
+   four times since (§60e→§68d/f→§72b/f→77g). Pure fossil.
+2. "The economy metrics (§52 — defined ahead of the data)" — says
+   "no numbers exist yet"; false since §53g.
+3. "The sanctioned direction — run-layer rollout arbitration" —
+   status line still says "the next interstitial round"; that round
+   ran and shipped (§§69–72, the arbitrated default).
+4. "The §68 accumulated brief" (7 items) — the input list for that
+   same spec session; mostly consumed (fire channel 72c/f, decision
+   telemetry §71, the draw re-read 72e).
+5. The bot-lower-bound caveat is a three-generation amendment
+   sandwich (~30% → §57h ~60% → "see Protocol v2") — the exemplar
+   buried-amendment smear.
+6. Run-log delimiters inconsistent: ~60 entries as `- **date —
+   title**` bullets, then 76h landed as `###` and 77f as `##` —
+   a heading grep finds 2 of ~60. Resolution (user-signed at the
+   shape-lock): demote the two heading entries to the bullet
+   convention; one rule, no churn.
+7. The signed sheet's PROSE fields (`signedAt`/`gamblerNote`) still
+   say "§82" for the boss-pull decision, the walls/reach re-read,
+   and the gambler repair premise — all renumbered §82→§83 on
+   2026-08-17 when the feel round was inserted. Prose-only fix, no
+   signed number moves, no board re-pin.
+8. The mechanization gap: docs.test.ts caps HANDOFF/ROADMAP/TODO
+   but has no BALANCE header cap — the run log is supposed to grow;
+   the header is not. 83-pre2 adds the cap (title→`## Run log`).
+
+Primer home (user-signed): a section at the TOP of BALANCE.md —
+it is already the READ-FIRST doc; a separate file would be a second
+drift surface. CONCEPTS ONLY; numbers/status stay in the
+sheet/BALANCE/ROADMAP per the one-fact-one-home guard.
+
+**The 83d surprise — the step-zero rule pays again.** The charter's
+"real sector-2 bosses (design round…)" premise was ALREADY PARTLY
+DONE: the user had hand-replaced the two 72f provisional `-deep`
+stat-clones in the working tree before the kickoff (the H2/H4
+pattern — when a card predicts work, check whether it already
+happened). The Generalissimo (mercenary/archer+officer →
+halberdier/catapult/officer → officer/mercenary/halberdier/
+gunslinger) and The Witch Hunt (bandit/rioter/healer →
+rogue/gunslinger/stormcaller → ronin/gunslinger/luminant/prodigy×2)
+keep the `-deep` budget skeleton EXACTLY (healthPool 13/20,
+levelBudget 1.44/1.56, count 1.2/1.3) — new compositions only, on
+the 76f-era roster. Design note for 83d: the Generalissimo fields
+BOTH §82 movers (the officer aura + the release-gated catapult),
+so the compound question the cursor carries lands directly on this
+boss. Ripple caught at the kickoff: `config/sectors.json`'s
+deep-end boss pool still referenced the old ids (a boot-assert
+break) + the two id-pin tests (encounters.test.ts / sectors.test.ts)
+— fixed, full green (2674 main + typecheck + 398 fuzz:smoke),
+landed as `15ae164`. The boss design round is therefore ✅ RESOLVED
+BY CONSTRUCTION; 83d keeps the measurement half (forced-isolation
+reads + the dose re-bracket per protocol — compositions changed, so
+the ×1.25 dose finding does NOT carry automatically even at the
+same budget skeleton). One watch item: a §66-forewarning save that
+pre-rolled a `-deep` id would now fail catalog lookup — dev-stage
+acceptable, noted not fixed.
+
+**The cut** (ROADMAP §83, shape-locked 2026-08-17): 83-pre1/83-pre2
+docs-first, then 83a baseline board on final content (§82's movers +
+the new bosses) + the n=120 extension, then the diagnosis steps
+(83b gambler+priest, 83c wall/pull bracket + fire discriminate,
+83d boss reads) → 83e smaller reads → 83f signing session → 83g
+close ritual. Rationale for 83a-first: every §83 diagnosis needs
+the final-content baseline (confirm-the-deficit); §82 moved the
+economy and 83d0 moved the bosses, so the 77f board is no longer
+the diagnostic anchor.

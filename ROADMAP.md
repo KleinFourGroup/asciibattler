@@ -399,13 +399,9 @@ closing board + the re-signed sheet; then the close ritual
   `--event-chance=0` on the doctrine pair, and re-derive the vector
   pair on era content if it stays flat (76h note: it read +0.050
   in-band — the alarm retires to a routine confirm).
-- **83-pre (user-called 2026-08-12): the BALANCE audit + primer.**
-  Step zero of the phase, before any §83 decision: audit BALANCE.md's
-  header layer (current-truth sections vs the append-only run-log;
-  retire fossils, consolidate buried amendments) + write the
-  plain-English balance primer — CONCEPTS ONLY, numbers/status stay
-  in the sheet/BALANCE/ROADMAP (the one-fact-one-home guard);
-  consider a docs.test.ts cap on the header (worklog §76h-close).
+- **83-pre (user-called 2026-08-12): the BALANCE audit + primer** —
+  step zero, before any §83 measurement decision; scope carried by
+  the 83-pre1/83-pre2 cut lines below (framing: worklog §76h-close).
 - **76h riders (user-signed 2026-08-11):** the WALL-FLIP attribution
   — the walk walls moved pull-softened→hardened (0.412/0.481, above
   the signed 30–35); §76's movers are confounded (critable-universal
@@ -418,3 +414,28 @@ closing board + the re-signed sheet; then the close ritual
   arms extend 40→120 seeds via `--seed-offset` 41..120 POOLED with
   the 76h batches (determinism makes the first 40 free) — per-arm SE
   ±7.7→±4.5, clears the n=80 per-item floor (worklog §76h).
+
+**The cut (2026-08-17 kickoff, shape-locked; audit: worklog §83):**
+
+- [x] 83d0 — the boss design round ✅ RESOLVED BY THE USER: real
+  sector-2 bosses user-authored at the kickoff (Generalissimo +
+  Witch Hunt at the `-deep` budget skeleton, `15ae164`); the
+  measurement half moves to 83d.
+- [ ] 83-pre1 — BALANCE header audit (fossils · amendment sandwich ·
+  the sheet's stale §82 refs · run-log delimiters)
+- [ ] 83-pre2 — the primer (top of BALANCE, concepts only) + the
+  docs.test.ts header-layer cap
+- [ ] 83a — baseline board on final content + the n=120 extension
+  of decision-feeding arms (box; 68h rules)
+- [ ] 83b — gambler diagnosis→repair (confirm-the-deficit; the 77f
+  shape-coupled premise) + priest regen; exit parity ±5
+- [ ] 83c — the wall-flip/boss-pull `--set` bracket + the
+  fire-channel `--event-chance=0` discriminate
+- [ ] 83d — forced-isolation reads on the real bosses + the dose
+  re-bracket (retires the ×1.25 provisional dose question)
+- [ ] 83e — camps forced-engagement probe arm · event-ratio economy
+  read · 55pre-twin re-read · the ladder judgment
+- [ ] 83f — the closing board + the signing session (sheet
+  re-signed; 0 FAIL, WARNs pre-registered only)
+- [ ] 83g — the cluster close ritual (demote · archive · scratchpad
+  sweep · cursor flip; next = the UI-audit interstitial)

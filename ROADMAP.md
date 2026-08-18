@@ -424,8 +424,8 @@ closing board + the re-signed sheet; then the close ritual
 - [x] 83-pre1 — BALANCE header audit ✅ 2026-08-17: four fossils
   retired · sandwich flattened · sheet refs renumbered (prose-only) ·
   run-log delimiters uniform (worklog §83-pre1)
-- [ ] 83-pre2 — the primer (top of BALANCE, concepts only) + the
-  docs.test.ts header-layer cap
+- [x] 83-pre2 — the primer ✅ 2026-08-18 (number-free, top of
+  BALANCE) + the header cap AND the delimiter guard (worklog §83-pre2)
 - [ ] 83a — baseline board on final content + the n=120 extension
   of decision-feeding arms (box; 68h rules)
 - [ ] 83b — gambler diagnosis→repair (confirm-the-deficit; the 77f

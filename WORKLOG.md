@@ -4807,3 +4807,29 @@ Green: 2674 main + typecheck + 398 fuzz:smoke. Next: 83-pre2 (the
 primer at the top of BALANCE + the docs.test.ts header-layer cap —
 the header's audited size is the cap's sizing input: 465 lines
 before the primer lands).
+
+### 83-pre2 — the primer + the mechanization (2026-08-18)
+
+The plain-English primer landed at the TOP of BALANCE.md (the
+READ-FIRST door): number-free by rule, with the rule stated in its
+own first paragraph so the guard is self-describing. Coverage: pool
+damage as the cost metric · the run as a budget flow (seam / reach /
+wall, win derived) · gradient over win rate · determinism → paired
+seeds + realized value · what an arm is + the realistic-bot arm in
+one breath · board/sheet, FAIL vs WARN, the signing ritual ·
+isolation vs in-situ and run-grade vs decision-grade (horizon
+blindness in plain words) · the five honest-reads habits. Zero
+numbers, zero status — the sheet/run-log/riders keep their homes.
+
+Two guards mechanized in docs.test.ts (9→11 tests):
+- **The header-layer cap** — everything above `## Run log` ≤ 650
+  lines (landed at ~547: the audited 465 + the primer). The run log
+  is exempt by construction — it's supposed to grow; the header
+  trips a test at the next fossil accretion instead of waiting for
+  a manual audit.
+- **The delimiter guard** — headings are banned below `## Run log`
+  (the 83-pre1 rule, now structural: an entry authored as `##`/`###`
+  fails `npm test` with the demote instruction in the message).
+
+Green: docs 11/11 + full suite. 83-pre (step zero) COMPLETE — the
+§83 measurement agenda is now unblocked; next = 83a.

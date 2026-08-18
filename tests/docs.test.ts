@@ -175,6 +175,47 @@ describe('docs hygiene', () => {
     ).toEqual([]);
   });
 
+  // BALANCE.md splits into a current-truth HEADER LAYER (primer, protocol,
+  // doctrine, caveats) above "## Run log", and the append-only run log below
+  // it. The run log is SUPPOSED to grow; the header is not — its rot mode is
+  // fossil sections and buried amendments (the 83-pre1 audit retired four
+  // fossils that had accreted since X3, plus a three-generation amendment
+  // sandwich). Sized at the 83-pre2 landing: ~547 lines (the audited 465 +
+  // the primer); 650 leaves headroom for legitimate doctrine growth between
+  // cleanups.
+  const BALANCE_HEADER_MAX_LINES = 650;
+
+  it(`BALANCE.md's header layer stays under ${BALANCE_HEADER_MAX_LINES} lines (current truth, not a log)`, () => {
+    const lines = read('BALANCE.md').split(/\r?\n/);
+    const runLog = lines.findIndex((l) => /^## Run log\b/.test(l));
+    expect(
+      runLog,
+      'BALANCE.md is missing its "## Run log" heading — the header cap keys on it',
+    ).toBeGreaterThanOrEqual(0);
+    expect(
+      runLog,
+      `BALANCE.md's header layer (everything above "## Run log") is ${runLog} lines. It must stay CURRENT TRUTH — retire fossil sections and consolidate buried amendments (the 83-pre1 audit pattern; history lives in the run log + archives), or bump BALANCE_HEADER_MAX_LINES deliberately.`,
+    ).toBeLessThanOrEqual(BALANCE_HEADER_MAX_LINES);
+  });
+
+  // The run-log delimiter rule (83-pre1, user-signed): every entry is a
+  // `- **date — title**` bullet — headings are banned below "## Run log"
+  // (two board entries had landed as `###`/`##`, making a heading grep find
+  // 2 of ~60 entries; one rule, no exceptions).
+  it('BALANCE.md run-log entries stay bullet-delimited (no headings below "## Run log")', () => {
+    const lines = read('BALANCE.md').split(/\r?\n/);
+    const runLog = lines.findIndex((l) => /^## Run log\b/.test(l));
+    const offenders = lines
+      .slice(runLog + 1)
+      .map((l, i) => ({ l, n: runLog + 2 + i }))
+      .filter(({ l }) => /^#{1,6} /.test(l))
+      .map(({ l, n }) => `line ${n}: "${l.slice(0, 60)}"`);
+    expect(
+      offenders,
+      `Run-log entries are bullets, never headings (the 83-pre1 delimiter rule — demote to \`- **date — title**\`): ${offenders.join('; ')}`,
+    ).toEqual([]);
+  });
+
   it('WORKLOG.md exists (the narrative home the plan points at)', () => {
     expect(
       existsSync(join(repoRoot, 'WORKLOG.md')),

@@ -9,6 +9,83 @@ is carried forward + adapted below, so you don't need to read it to work.
 
 > Read [HANDOFF.md](HANDOFF.md) first.
 
+## The primer — the concepts in plain English
+
+A deliberately NUMBER-FREE orientation for re-grounding after time away
+(added at 83-pre2). The rule for this section, per the one-fact-one-home
+guard: concepts only — every live number, band, and status lives in the
+signed sheet ([tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json)),
+the run log below, and the ROADMAP riders. If a sentence here ever needs
+a number, it's in the wrong place.
+
+**What's being balanced.** A run is a budget problem: the player's
+encounter health pool is a bank of hit points that every fight chips.
+The "difficulty" of a fight = how much pool it costs (**pool damage**),
+not whether the skirmish was technically won. The run's overall shape is
+that budget flowing through two acts: how much pool crosses the act
+boundary (**seam pool**), what fraction of runs make it to the final
+fight (**terminal reach**), and what fraction of those die there (**the
+wall**). Win rate is deliberately DERIVED from reach and wall rather
+than tuned directly — get reach and wall right and winning takes care
+of itself.
+
+**Why a gradient beats a win rate.** A win rate alone can't tell a fair
+game from a coin flip. The health metric is the **skill gradient**: the
+gap between what the best-found strategy achieves and what a dumb
+baseline achieves. A flat gradient means decisions don't matter — broken
+regardless of the win rate.
+
+**Why a bot.** The sim is deterministic: same seed, same run, byte for
+byte. That buys the whole method. Two configurations compared on the
+SAME seeds differ only because of the change (**paired same-seed A/B**),
+and any acquirable can be handed to a run free at start to measure what
+it actually converts to in outcomes (**realized value** — price against
+that, never against paper value). The bot is a LOWER BOUND on human
+play: absolute numbers are bot-anchored; relative reads — deltas,
+gradients, bands — travel.
+
+**The arms.** An **arm** is a bot configuration. The **realistic-bot
+arm** is the doctrine skill anchor: it searches for strategies,
+auditions candidates in cheap tryout battles, consumes the grant
+mechanics, and — since the arbitration round — makes its run-layer
+decisions (buys · daemon picks · packet fires · redraws · node choices ·
+events) by rolling each candidate out a short horizon and keeping the
+best. The hand-written scoring policies survive INSIDE that as the
+validated cheap tier. Every other arm is a control or a probe, never an
+anchor — the instrument registry stamps which is which.
+
+**The board and the sheet.** The signed sheet is the user-signed
+statement of what the game SHOULD measure like; the executable board is
+the instrument set that re-measures it. A **FAIL** breaches a signed
+band; a **WARN** is drift against a reference value — a watch, not a
+verdict. References re-pin at observed reality with the user's
+signature; signed bands move only by explicit signing-session decision.
+Every consequential change re-runs the full board.
+
+**Two kinds of reads.** Forced **isolation** answers "is this encounter
+well-formed?"; **in-situ** answers "how does it land in a real run?" —
+tune with the first, verify with the second. The same split exists one
+level down: **run-grade** telemetry judges a knob by end-of-run
+outcomes; **decision-grade** telemetry (the per-decision sidecar) judges
+it at the moment it's chosen, with far more samples per batch. They
+measure different horizons — a passive whose value accrues over a whole
+run can look worthless at decision grade while being genuinely valuable
+at run grade (**horizon blindness**). Attribute to the right horizon;
+never average them.
+
+**The habits that keep reads honest** (each learned the hard way — the
+Caveats section below is the enforceable list):
+
+- Confirm the deficit before authoring the mechanism story, and name
+  the exact baseline batch the comparison runs against.
+- Small samples support directions, not verdicts; per-item claims wait
+  for the sample-size floor.
+- Before signing a magnitude, bracket the dose at two points — response
+  curves here are steeper than intuition.
+- A flat metric is only evidence after something uncensored moved.
+- Probe-shaped runs produce probe-shaped win rates; read probes for
+  their decisions, read balance from natural shapes.
+
 ## What changed (why this supersedes the old protocol)
 
 The old sweep tuned **2–3 global constants** (`budgetFactor`, `swarmMaxMultiplier`,

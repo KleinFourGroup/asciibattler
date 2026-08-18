@@ -104,10 +104,10 @@ describe('encounters schema', () => {
       'plagueVictims',
       'miscreants',
       'plagueSpreaders',
-      // 72f — the deep-end boss pool split (PROVISIONAL stat-clones at the
-      // signed wall dose; proper sector-2 bosses are cluster-5 scope).
-      'bandit-king-deep',
-      'banditQueen-deep',
+      // 83d — the real sector-2 bosses (user-authored 2026-08-17), replacing
+      // the 72f provisional -deep stat-clones at the same budget skeleton.
+      'generalissimo',
+      'witch-hunt',
     ]);
     // Every `kind` value is now exercised by shipped content: the road fights are
     // `normal`, the lone `boss` is the terminal fight, the `elite` detours are
@@ -115,8 +115,8 @@ describe('encounters schema', () => {
     const expectedKind: Record<string, string> = {
       'bandit-king': 'boss',
       'banditQueen': 'boss',
-      'bandit-king-deep': 'boss',
-      'banditQueen-deep': 'boss',
+      'generalissimo': 'boss',
+      'witch-hunt': 'boss',
       'brigand-champions': 'elite',
       'warband-vanguard': 'elite',
       'darkMagicPosse': 'elite',

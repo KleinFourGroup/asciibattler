@@ -90,8 +90,8 @@
         { "encounterId": "darkMagicPosse" }
       ],
       "boss": [
-        { "encounterId": "bandit-king-deep" },
-        { "encounterId": "banditQueen-deep" }
+        { "encounterId": "generalissimo" },
+        { "encounterId": "witch-hunt" }
       ]
     },
     "events": [

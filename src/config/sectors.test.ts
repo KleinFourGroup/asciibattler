@@ -97,11 +97,11 @@ describe('sectors config — the shipped catalog', () => {
       'plagueSpreaders',
       'darkMagicPosse',
     ]);
-    // 72f — the boss pool split: The Deep End rolls the provisional -deep
-    // stat-clones (wall dose); The Start keeps the originals.
+    // 72f split the boss pool; 83d replaced the provisional -deep stat-clones
+    // with the real sector-2 bosses (user-authored, same budget skeleton).
     expect(deep!.encounters.boss.map((e) => e.encounterId)).toEqual([
-      'bandit-king-deep',
-      'banditQueen-deep',
+      'generalissimo',
+      'witch-hunt',
     ]);
     // 68e (user-signed): the uniform-from-hop-0 shape ended at the tune —
     // the two isolation-pinned defects carry gates; everything else stays

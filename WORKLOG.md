@@ -4907,3 +4907,37 @@ runs one archer light (banshees die slower); the regen posture
 extends fights (more wail cycles). Three multiplicative exposures
 the soldier doesn't have. Probe menu + repair space: the user
 decision point — recorded in the session, resolution to follow.
+
+### 83b — part 2: the sample-size audit + Probe B CONFIRMS (2026-08-18)
+
+**The user's sample-size challenge, answered honestly:** the overall
+priest-regen deficit is verdict-grade (n=120 paired, McNemar 25:11,
+p≈0.02, pre-registered at 77f) — but the Queen-localization was
+EXPLORATORY: n=56 Queen seeds, 16:5 discordant, p≈0.027 uncorrected,
+found by subgroup slicing, below the n=80 per-item floor. The 77f
+same-seed cross-era check (n≈20 cells) did NOT cleanly replicate
+Queen-specificity (priest gap spread across both bosses there; the
+Queen read harder for EVERYONE at 77f, softening by 83a — plausibly
+the §82 economy). Also noted: the vs-soldier regen gap has been
+negative three eras running (−7.5 → −10 → −11.7) — the phenomenon
+predates its 77f naming; each n=40 read sat inside tolerance. "New
+at 83a" is the resolution, not the defect.
+
+**Probe B (headless 2×2, the mechanism read):** CONFIRMED — numbers
+in BALANCE 2026-08-18 (§83b Probe B entry). The healer-for-archer
+trade is outcome-neutral against normal comps (controls identical)
+and costs ~10pts extra against the banshee, with the panic-exposure
+chain (longer fights · more wail cycles · the healer panicked ~14%
+of the fight) visible in telemetry. The probe went through two bugs
+(hp-accessor; a procedural camp wandering into the arena — static
+layout fix) and two dose iterations (ceiling censoring) before the
+readable table — all recorded in the BALANCE entry so no one
+re-cites the broken tables.
+
+**State: the diagnosis is COMPLETE pending magnitude confirmation.**
+The mechanism is wail-panic × sustain-hand; the live-magnitude +
+post-repair instrument is Probe A (forced-Queen/King pairs, FRESH
+seeds --seed-offset=120, n=120/cell — every forced seed is a target-
+boss fight, killing both the n=56 and seed-reuse objections). The
+repair menu is the design decision, user-owned: priest-side ·
+wail-side · Queen-side · accept-as-identity.

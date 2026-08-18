@@ -3242,3 +3242,28 @@ deltas. The pre-X H7c→O log lives at
   - Ref drift for the amendment ritual (win refs only; economy refs
     wait): soldier regen 0.700→0.742 pooled · soldier 55pre
     0.775→0.742 · King 0.775→0.767 · Queen 0.675→0.683.
+- **2026-08-18 — §83b Probe B: the wail-panic × sustain-hand interaction
+  CONFIRMED at fight level (headless 2×2, n=120/cell, local).** Player
+  hand (soldier-like 4merc+2archer vs priest-like 4merc+1archer+1healer,
+  L4) × enemy (Queen-stage-like escorts w/ banshee L7 vs banshee→bandit
+  swap), river layout (static — no procedural-camp confound), panic
+  uptime per-tick-sampled. **Controls IDENTICAL (0.933 = 0.933 — the
+  healer fully compensates the lost archer vs normal comps); the banshee
+  costs the soldier hand −12.5 and the priest hand −22.5 — a −10pt
+  interaction** (≈±5, directional-consistent with the live −19.7 Queen
+  gap). The exposure chain in telemetry: priest×banshee fights +34%
+  longer (653 vs 489 ticks) · total panic +48% (1083 vs 730 unit-ticks)
+  · the healer personally panicked ~94 ticks/run (~14% of the fight).
+  Caveats: probe hands are approximations (no promotions/empowers/
+  commands/multi-stage pool); the ablation is banshee-vs-bandit, not
+  wail-only (wail is her signature op, but the swap removes the whole
+  unit). Dose trail: L4-even read all-cells-ceiling; the published dose
+  is leader +3 / escorts +2. Two earlier all-0.000 tables were a probe
+  hp-accessor bug (`u.hp` → `currentHp`), not game reads — recorded so
+  the numbers aren't re-cited. Probe source: the gitignored
+  `board-83a/83b-probe-b.ts`. The repair menu is the §83b design
+  decision (user): priest-side (healer panic resistance) · wail-side
+  (duration/luck-scaling/radius) · Queen-side (comp/stages) · or
+  accept-as-identity (sustain-punisher boss = the forces-diversity
+  principle) — with the parity principle vs the ±5 sheet band the
+  arbiter.

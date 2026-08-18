@@ -426,10 +426,12 @@ closing board + the re-signed sheet; then the close ritual
   run-log delimiters uniform (worklog §83-pre1)
 - [x] 83-pre2 — the primer ✅ 2026-08-18 (number-free, top of
   BALANCE) + the header cap AND the delimiter guard (worklog §83-pre2)
-- [ ] 83a — baseline board on final content + the n=120 extension
-  of decision-feeding arms (box; 68h rules)
-- [ ] 83b — gambler diagnosis→repair (confirm-the-deficit; the 77f
-  shape-coupled premise) + priest regen; exit parity ±5
+- [x] 83a — baseline board + n=120 ✅ 2026-08-18: 0 FAIL / 9 WARN —
+  economy flood · walls 0.40 above band · fire channel at signed ·
+  ⭐ parity INVERTS at n=120 (BALANCE 2026-08-18 + worklog §83a)
+- [ ] 83b — parity diagnosis→repair, PRIEST-REGEN FIRST (83a: widest
+  gap; gambler −6/−7 both shapes, shape-coupled premise weakened);
+  exit parity ±5
 - [ ] 83c — the wall-flip/boss-pull `--set` bracket + the
   fire-channel `--event-chance=0` discriminate
 - [ ] 83d — forced-isolation reads on the real bosses + the dose

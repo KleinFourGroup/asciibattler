@@ -4833,3 +4833,43 @@ Two guards mechanized in docs.test.ts (9→11 tests):
 
 Green: docs 11/11 + full suite. 83-pre (step zero) COMPLETE — the
 §83 measurement agenda is now unblocked; next = 83a.
+
+### 83a — the baseline board + the first n=120 extension (2026-08-18)
+
+The measurement anchor for everything downstream of §83, on final
+content (braid world + §§78–82 + the 83d0 bosses). Ops: pushed
+first (12 commits — the parity gate then accepted every launch),
+box up ~7 min, a scratchpad-resident 25-batch sequential driver
+(deliberately OUTSIDE the repo so the tree stayed parity-clean for
+all 25 launches — the launch guard treats even an untracked file as
+dirty) with its own 4h-per-batch poll loop (the walk extensions
+outrun box-batch's 1h `run` ceiling — the standing `--poll-ceiling`
+TODO, routed around rather than built), each fetch filed under its
+instrument name with its batch-id recorded. 25/25 filed, box
+auto-destroyed on the clean count, ~9.6h wall.
+
+**The protocol correction, executed as flagged at launch:** the 76h
+"pooled with the 76h batches" clause is cross-HEAD and void (the
+76h batches predate the braid generator, §§78–82, AND the new
+bosses — the name-your-baseline caveat). The "free first 40" is
+THIS board's own n=40 rows; the extension pools with those,
+config-identical by construction.
+
+**Findings (numbers: BALANCE 2026-08-18, the canonical entry):**
+0 FAIL / 9 WARN. Four stories — the §82 economy flood (banks 2–3×
+refs, spending flat; the 83e economy read upgraded to headline; ref
+re-pins deliberately deferred past that decision), the walls at
+0.400/0.400 with the real bosses at the terminal (above band,
+consistent both shapes — the pull/dose questions now read against
+an ABOVE-band wall), the fire channel dead on its signed +0.10
+(third era — inversion alarm queued for retirement), and ⭐ the
+parity INVERSION at n=120: priest-regen is the widest gap on the
+board (the n=40 rows alone were sign-wrong on it), gambler reads a
+uniform −6/−7 on both shapes. 83b re-scoped priest-first; 77f's
+shape-coupled gambler premise weakened. The n=120 protocol paid for
+itself on its first outing — a parity read at n=40 would have
+CLEARED the priest.
+
+The pooled-read tooling (`pool.ts`) lives in the gitignored batch
+dir beside the data; decisions.csv from all 20 arb batches is on
+disk for the 83b/83e decision-grade reads.

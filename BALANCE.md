@@ -3178,3 +3178,67 @@ deltas. The pre-X H7c→O log lives at
     The priest regen breach joins the gambler as a NAMED §83 parity
     item. *(Signed 2026-08-13, the sheet's third amendment — worklog
     §77g.)*
+- **2026-08-18 — §83a THE BASELINE BOARD ON FINAL CONTENT + the first
+  n=120 extension (25 batches, `43b44e5`): 0 FAIL / 9 WARN — the §82
+  economy generosity is THE mover; the user-authored sector-2 bosses
+  land near-band on first contact.** Batches
+  `20260818-132118*→…-43b44e5` on one box (cpx42, ~9.6h wall), 25/25
+  `filed →` clean: the 15 board rows (n=40, report-comparable) + the
+  10 arb primaries extended `--seed-offset=40 --count=80` (seeds
+  41–120); box destroyed on completion. ⭐ Protocol correction
+  (flagged at launch): the 76h "pooled with the 76h batches" clause
+  is CROSS-HEAD and void per the name-your-baseline caveat — the
+  extension pools with THIS board's own n=40 rows (same HEAD,
+  config-identical by construction). First fruit of the n=120
+  protocol: per-arm SE ±7.7→±4.5.
+  - **The board (n=40): 0 FAIL / 9 WARN.** Signed trio at n=40: seam
+    14.63 regen (WARN, hair under) / 16.69 55pre · reach 0.400 /
+    0.525 (the 55pre overperformance watch persists) · wall 0.375 /
+    0.333. Fire channel Δ **+0.100 — DEAD ON the signed +0.10**
+    (doctrine pair, third era: 75l −0.075 → 76h +0.050 → 77f +0.025
+    → 83a +0.100; queue: retire the inversion alarm to a routine
+    confirm). All four ceiling deltas PASS (−0.025…+0.050 — the
+    cheap tier stands a fourth time). Forced act-1 bosses in-band:
+    King 0.750 / Queen 0.675, order holds.
+  - **⭐ The n=120 pooled table (the §83 decision-grade baseline;
+    per-arm, win / wall / reach / seam / bank / fires / tx):**
+    arb-regen 0.742 / — / — / — / 113.3 / 1.67 / 0.017 · arb-55pre
+    0.742 / — / — / — / 87.8 / 1.32 / 0.058 · king 0.767 · queen
+    0.683 · priest-regen 0.625 / bank 107.5 · priest-55pre 0.708 /
+    92.8 · gambler-regen 0.683 / 112.8 · gambler-55pre 0.675 / 94.4
+    · **walk-regen 0.275 win / 0.400 wall / 0.458 reach / 15.93
+    seam / 183.0 bank / 3.17 fires** · **walk-55pre 0.300 / 0.400 /
+    0.500 / 16.16 / 154.1 / 2.92**. The n=40 seam WARN dissolves at
+    n=120 (both in-band) — noise, as suspected.
+  - **⭐ THE ECONOMY FLOOD (the §82 movers' receipt, predicted at the
+    §82 close):** act-1 arb banks ~88–115 vs the ~60-era refs; the
+    walk banks **154–183** (~2.5× the old shopper ref) — while tx
+    stays ≈0–0.10 and fires did NOT rise (act-1 1.3–1.7 vs ref ~2).
+    daemons@1 + guaranteed bits + the packet tables flooded EARN with
+    no sink move. The 83e event-ratio economy read upgrades to a
+    headline agenda item; the repair menu is earn-side trims vs
+    sink-side prices — priced against realized value per doctrine.
+    Bank/fires ref re-pins WAIT for that decision (an amendment now
+    would sign the flood in).
+  - **The walls on final content (the REAL bosses at the terminal):
+    0.400 / 0.400 at n=120** — above the signed 30–35 on BOTH shapes
+    (arrivals 55/60, SE ≈0.065 — directional-consistent, the fourth
+    composition move in four boards: softened→hardened→re-softened→
+    firm-above). The Generalissimo + Witch Hunt land NEAR-BAND on
+    first contact at inherited budgets; the 83c pull bracket + 83d
+    dose re-bracket now read against a wall ABOVE band (the 75l
+    "pull-softened" framing is dead on this world).
+  - **⭐ Parity at n=120 — the protocol's first verdict, and it
+    INVERTS the n=40 read:** regen — soldier 0.742 / priest **0.625
+    (−11.7, the widest gap on the board)** / gambler 0.683 (−5.8,
+    edge). 55pre — soldier 0.742 / priest 0.708 (−3.3, in) / gambler
+    0.675 (−6.7, just past). The n=40 rows alone read priest regen
+    at +2.5 (sign-wrong — seeds 41..120 read priest 0.59 vs soldier
+    0.78). Premise updates for 83b: **priest-regen takes FIRST
+    position** (the 77f breach confirms and widens at triple
+    resolution); the gambler defect reads as a uniform −6/−7 across
+    BOTH shapes (77f's shape-coupled premise WEAKENS — the braid-era
+    shape split did not reproduce at n=120).
+  - Ref drift for the amendment ritual (win refs only; economy refs
+    wait): soldier regen 0.700→0.742 pooled · soldier 55pre
+    0.775→0.742 · King 0.775→0.767 · Queen 0.675→0.683.

@@ -4873,3 +4873,37 @@ CLEARED the priest.
 The pooled-read tooling (`pool.ts`) lives in the gitignored batch
 dir beside the data; decisions.csv from all 20 arb batches is on
 disk for the 83b/83e decision-grade reads.
+
+### 83b — the parity diagnosis, part 1: LOCALIZED (2026-08-18)
+
+All reads off the 83a n=120 data — zero new batches. The chain:
+
+1. **Paired discordance** (soldier-regen vs priest-regen, same
+   seeds): 25 soldier-only wins vs 11 priest-only; of the 25, **21
+   died at hop 10 — the act-1 boss.** Boss-arrival win rate:
+   soldier 0.840 vs priest 0.728 on regen; an identical 0.767 vs
+   0.766 on 55pre. The road is FINE (the healer keeps units alive —
+   31 vs 41 player deaths/run); the deficit is the boss fight.
+2. **Decision-grade null**: decision volumes, daemon picks (all
+   arms accept ~everything), recruit mix (~0.6/run — the roster is
+   the start kit all run) are near-uniform across the pair. The
+   rollout is not CHOOSING the priest into trouble.
+3. **The per-boss split** (the §66 pre-roll is character-free
+   across all 120 seeds — verified; 64 King / 56 Queen): King —
+   priest 0.750 vs soldier 0.797 (−4.7, inside parity). **Queen —
+   priest 0.482 vs soldier 0.679 (−19.7)**; Queen-door wall 0.438
+   vs 0.224. The Queen carries ~80% of the total gap. ⭐ The
+   gambler's −6/−7 ALSO leans Queen (0.589 regen, −9): **the Queen
+   is the shared parity pressure point.** Soldier reads BETTER vs
+   the Queen on regen than 55pre — the interaction is three-way
+   (priest × regen × Queen), not pairwise.
+
+**Candidate mechanism (grounded, NOT yet fight-level-confirmed):**
+the Queen's banshee wail = AoE panic (radius-1 @ range 4, 4s
+cycle; duration 3s + 0.3/luck, §76f); panic = no attacks + flee.
+The priest's healer is a keystone that SupportMovementBehavior
+parks inside ally clusters (wail's target of choice); his roster
+runs one archer light (banshees die slower); the regen posture
+extends fights (more wail cycles). Three multiplicative exposures
+the soldier doesn't have. Probe menu + repair space: the user
+decision point — recorded in the session, resolution to follow.

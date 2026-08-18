@@ -421,8 +421,9 @@ closing board + the re-signed sheet; then the close ritual
   sector-2 bosses user-authored at the kickoff (Generalissimo +
   Witch Hunt at the `-deep` budget skeleton, `15ae164`); the
   measurement half moves to 83d.
-- [ ] 83-pre1 — BALANCE header audit (fossils · amendment sandwich ·
-  the sheet's stale §82 refs · run-log delimiters)
+- [x] 83-pre1 — BALANCE header audit ✅ 2026-08-17: four fossils
+  retired · sandwich flattened · sheet refs renumbered (prose-only) ·
+  run-log delimiters uniform (worklog §83-pre1)
 - [ ] 83-pre2 — the primer (top of BALANCE, concepts only) + the
   docs.test.ts header-layer cap
 - [ ] 83a — baseline board on final content + the n=120 extension

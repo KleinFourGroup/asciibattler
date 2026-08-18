@@ -134,7 +134,11 @@ describe('docs hygiene', () => {
   // hit ~60 legitimately). HELD at 70 for Cluster 4 — the demotion rule
   // bounds CLOSED phases; 70 is the budget for the one in-flight phase's
   // charter + cut.
-  const ROADMAP_PHASE_MAX_LINES = 70;
+  // Bumped 70→85 at the §83 kickoff (2026-08-17): the cluster-closing
+  // phase legitimately carries three boards' signed riders (75l/76h/77f)
+  // + a 10-step cut, and each remaining checkbox flip adds a line or two.
+  // Re-size at the next round's authoring, per the demotion rule.
+  const ROADMAP_PHASE_MAX_LINES = 85;
 
   it(`ROADMAP.md stays under ${ROADMAP_MAX_LINES} lines (a plan, not a log)`, () => {
     const n = lineCount(read('ROADMAP.md'));

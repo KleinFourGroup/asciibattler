@@ -104,52 +104,28 @@ remember: [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.jso
   §60e value ± tolerance, not a verdict) · exit 1 on any FAIL.
 
 **The amendment rule executes**: "every fix re-runs the full board" (§54e)
-now means `--plan` → the box → `--report` stamped with HEAD + batch id into
-the run log. At 68c all per-instrument checks except the in-sample win band
-are reference-grade — §68d flips them to signed as the user signs
-per-character bands (the board is the form the re-anchor fills in).
+means `--plan` → the box → `--report` stamped with HEAD + batch id into
+the run log. Amendments follow the 75l ritual: REFERENCE values re-pin at
+observed reality with the user's signature; SIGNED bands move only by
+explicit signing-session decision, never by re-pin.
 
-### The sanctioned direction — run-layer rollout arbitration
+### Run-layer rollout arbitration — SHIPPED (§§69–72)
 
 The §57 lesson (stop encoding judgment; let cheap rollouts arbitrate)
-applied to the run layer: port buys, daemon picks, packet fires, and redraws
-enumerate candidates and roll out a truncated horizon (K=2-style). This
-retires the consumption contract's treadmill BY CONSTRUCTION — a new
-mechanic is consumed because the rollout measures its effect, no scorer dims
-to author or get wrong. **Status: the next interstitial round** (user-signed
-at the 68 shape-lock; a §57-sized build — truncation/caching design needed).
-Until it lands, the hand-written scored policies are the CHEAP TIER and
-their known blindness (flat daemon value, no draft-quality attribution) is
-labeled on every read they anchor.
-
-**The §68 accumulated brief (consolidated at the 68g close — the spec
-session's input list; details in the dated run-log entries):**
-
-1. **The fire channel reads ≈0 at the settled config** (n=80, 2026-07-29)
-   — fire-decision quality owns the repair; per-packet: hype/overclock
-   sign-negative (scorer mistiming), patch the one clean positive, the
-   rest marginal.
-2. **Buy quality, not supply, binds the shop**: the bits dose-response is
-   flat (×2 supply → buys +69%, wins ~flat) — the port scorer's
-   flat-value blindness proven consequential.
-3. ⭐ **Decision-level value telemetry is a FIRST-CLASS instrument goal**:
-   log per-candidate rollout deltas → per-item realized value at decision
-   granularity (hundreds of decisions per 40-seed batch vs the n=80
-   run-level floor). The measurement payoff may rival the play payoff.
-4. **The elite-risk-blind node picker** (68e) — node choice joins the
-   arbitrated-decision list (suicides into optional detours).
-5. **The walk-wall + two-act band re-read runs AFTER the ceiling moves**
-   (68g deferral, user-signed) — the board's four two-act WARNs are the
-   inherited marker; deep-end wall 58.8/45.5 vs 30–35 at handoff.
-6. **The draw-two / +2-vs-+4 non-monotonicity** (§65d + the 68f sign-flip
-   reads) — re-read at decision grade.
-7. **Noise-vs-bias doctrine** for every pre/post comparison: n fixes
-   sampling noise (n=80 floor), arbitration fixes bias — don't conflate.
-
-The spec itself still gets authored AT the kickoff in the user's voice
-(goals, appetite, v1 scope — e.g., whether node-picking ships in the
-first cut), audited against code reality first, per the spec-first
-protocol.
+applied to the run layer — built and signed 2026-08-04. The realistic-bot
+arm carries `--arbitrate`: candidate enumeration + truncated K=2-style
+rollouts at all SIX decision sites (port buys · daemon picks · packet
+fires · redraws · node choice · events, the 74g sixth site). This retired
+the consumption contract's treadmill BY CONSTRUCTION — a new mechanic is
+consumed because the rollout measures its effect. The hand-written scored
+policies remain the validated CHEAP TIER inside the rollout (the 72f
+direct test: paired Δ exactly 0.000), and decisions.csv is the standing
+decision-grade instrument. Detail: the instrument registry below +
+BALANCE §§69–72f +
+[archive/rollout-arbitration-spec.md](archive/rollout-arbitration-spec.md).
+*(The §68 accumulated brief that used to live here was that round's input
+list — consumed by §§69–72; its one still-standing doctrine, noise-vs-bias,
+is promoted to Caveats.)*
 
 ### The instrument registry (the 68h retirement sweep, 2026-07-29, USER-SIGNED)
 
@@ -210,11 +186,11 @@ column first — it is already there.
 
 Tune on pool damage; sanity-check against run-death.
 
-## The economy metrics (§52 — defined ahead of the data)
+## The economy metrics (§52)
 
-The Cluster-3 metric family, defined at the §52 close so the interstitial's
-balance pass measures against a settled vocabulary (no numbers exist yet —
-the §52 calibration finding deferred all measurement; see the run log):
+The Cluster-3 metric family, defined at the §52 close and measured since
+the micro round (current values: the signed sheet's bank/fires/tx refs +
+the dated run-log entries):
 
 - **bits-per-hop** — total bits earned ÷ hops survived; the earn-curve
   signal. Split by source (win bounty vs daemon tally) when provenance
@@ -312,14 +288,17 @@ per-wave `levelCap`, absent = uncapped). This is exactly why "uncap the spikes"
 per-encounter multipliers are the **finer, primary** instrument; fold the global
 knobs in only if the pool-ratio confound (below) demands it.
 
-## Per-kind target bands (DATA-FIRST — not yet set)
+## Per-kind target bands — SET at X3, stable since
 
-A single ~2/3 target won't fit all kinds. **Gather pool-damage baselines BEFORE
-setting these.** Tentative, speculative placeholders (2026-06-21): **elite ≈ 2×
-normal pool damage, boss ≈ 4×.** Also open, decide on the data: a **uniform** ~2/3
-best-achievable vs an authored **difficulty curve** (hop-ramped). Context: an elite
-has a non-elite sibling = **optional detour** → it may legitimately be *harder*; a
-boss is **climactic + multi-phase** (`stages`) → not a single budget.
+Set data-first at X3 (2026-06-21, with the user): **normal ≈ 3 · elite ≈ 6
+(2×) · boss ≈ 10 (~3×)** pool-damage-taken per instance — the per-encounter
+TUNING bands, unchanged since. Context that still applies: an elite has a
+non-elite sibling = optional detour → legitimately harder; a boss is
+climactic + multi-phase (`stages`) → judged across its whole fight. The
+RUN-shape bands (seam / reach / wall / derived win — the §72b architecture)
+live in the signed sheet, machine-checked; these per-encounter bands are
+prose-checked only — promoting them into the sheet is an 83f
+signing-session candidate.
 
 ## The funnel + tiers (carried forward)
 
@@ -380,17 +359,16 @@ re-time mid-sweep).
   extremes, the *pools* are the lever — fold `health.json` in.
 - **Bot lower-bound:** the search can't reach every comp (the composition blind-spot
   history). "No sampled strategy beats it" ≠ "unwinnable." Trust the BAND from any
-  tier; trust the **OP/archetype** read only at FULL length (`--hops=11`).
-  **The margin is now QUANTIFIED (§52): ~50pt** — bot optimum ~30% vs human ~80%
-  native, localized to battle-layer objective handling. Until the interstitial's
-  bot-realism round closes the gap, treat every ABSOLUTE win-rate target as
-  bot-anchored (relative reads — gradients, bands, deltas — stay valid).
-  *(§57h halved this: the audition-searcher arm reads ~60% vs human ~80 — see the
-  🧭 Cursor doctrine; the §60e re-anchor sheet carries the signed targets. 68c:
-  this caveat is single-character prose — the per-character doctrine, the
-  consumption contract, and the executable board that supersede its workflow
-  live in **Protocol v2 (§68)** above; the sheet itself is now
-  machine-checked via `balance:board`.)*
+  tier; trust the **OP/archetype** read only at FULL length. The margin is
+  QUANTIFIED: the audition-searcher arm reads **~60% vs the ~80% human
+  ceiling** (§57h, which halved the §52 ~50pt gap) — treat every ABSOLUTE
+  win-rate target as bot-anchored; relative reads (gradients, bands,
+  deltas) stay valid. The per-character workflow, consumption contract,
+  and machine-checked sheet live in Protocol v2 above.
+- **Noise vs bias (§68 doctrine, promoted at the 83-pre1 sweep):** for
+  every pre/post comparison, n fixes SAMPLING NOISE (the n=80 floor) and
+  arbitration fixes BIAS — don't conflate them when explaining a moved
+  number.
 - **Probes arbitrate, cells attribute (§55/§56 doctrine, promoted 2026-07-21):**
   the per-cell spot-check board is an ATTRIBUTION instrument — cell boards are
   volatile at 3-seed granularity under engine changes (§56e-pre: ~42% of probe
@@ -3001,126 +2979,125 @@ deltas. The pre-X H7c→O log lives at
     seven pre-registered (5 walk-shape + fire-channel + the 55pre
     ceiling watch).
 
-### 2026-08-11 — §76h: the amendment board (the §76 stat-identity changes vs the 75l-amended sheet)
+- **2026-08-11 — §76h: the amendment board (the §76 stat-identity
+  changes vs the 75l-amended sheet).**
+  - **Protocol:** the full 15-instrument board on one box (`--plan` →
+    box-batch sequential, `--jobs=8`), HEAD `3a0b48e` (76a–76g4 + the
+    fixture join), ~3.9h wall, all 15 `fetched →` clean, box destroyed
+    same-night. Report: `output/board-76h/board-report.txt` (numbers
+    reproduced here). All reads n=40/arm — DIRECTIONAL under the n=80
+    floor unless noted. Launch note: attempt 1 crashed 4-for-4 (the
+    §76f archetype join had missed the fixture vectors — 12 patched at
+    weight 0, re-validated through `loadWeightsFile`; worklog §76h);
+    ~4 box-minutes lost.
+  - **Headline: 0 FAIL / 7 WARN — but the WARN composition ROTATED
+    from 75l:** the fire channel and the priest healed; the walk walls
+    flipped DIRECTION (pull-softened below band → hardened above); the
+    walk ceilings went negative. The seven: gambler-regen win ·
+    walk-regen wall + derived win · walk-55pre reach + wall · both
+    walk ceilings.
+  - **The re-pin table (75l → 76h):** arb-regen 0.750→0.825 (band-top,
+    PASS) · arb-55pre 0.875→0.800 (band-floor, PASS) · King
+    0.825→0.800 / Queen 0.675→0.675 (order holds, both PASS) · priest
+    0.825→0.750 / 0.800→0.800 (both PASS — the 75l +20 WARN healed
+    under its re-pinned ref) · gambler 0.700→**0.600 (WARN, one seed
+    below floor)** / 0.725→0.675 (PASS) · walk-regen reach 0.375→0.425
+    (back in 40–50, PASS) wall 0.267→**0.412 (WARN — ABOVE 30–35)**
+    seam 16.83→17.09 win 0.250 (WARN vs derived) · walk-55pre reach
+    0.700→**0.675 (WARN — the overperformance watch persists)** wall
+    0.286→**0.481 (WARN — ABOVE band)** seam 16.60→16.91 win
+    0.350 (PASS) · fire channel **−0.075→+0.050 (PASS — the 75l
+    inversion resolved, at the signed band's floor)** · ceilings: regen
+    +0.025 / 55pre +0.025 (PASS) · walk-regen −0.025→**−0.125 (WARN)**
+    · walk-55pre +0.225→**−0.100 (WARN — a 0.325 sign-flip swing)**.
+    Act-1 banks/fires/tx all in-band; posture dissolution (tx ≈ 0 on
+    arb) holds everywhere.
+  - **⭐ The walls flipped from pull-softened to HARDENED** (0.267→0.412
+    · 0.286→0.481, a +0.15–0.20 move that clears n=40 noise): the §76
+    movers are CONFOUNDED here — critable-universal is symmetric (enemy
+    ops crit too, and deep-end fights are the long ones where crit
+    variance compounds), the prc/eva pass re-aimed 11 catalog entries,
+    and the camps leak moves camp fights on all 4 placements (no board
+    row watches camps). No single-knob attribution without a `--set`
+    ablation bracket — a signing-session call whether to probe now or
+    ride to §83 with the pull question (the two wall knobs are already
+    named there; this adds a third).
+  - **Both walk ceilings went NEGATIVE (paired same-seed):** the arb
+    arm now UNDERPERFORMS doctrine by 10–12.5 pts on the two-act
+    shapes (at 75l: −2.5 and +22.5). Candidate story unprobed: the
+    hardened walls change what the K=2 rollout horizon can see (the
+    horizon-blindness doctrine cuts both ways — a wall past the horizon
+    devalues the arb arm's positional spending). Flagged, not read.
+  - **The gambler (the §83 parity rider):** §76 lit the luck seam
+    (critable-universal + luck durations on hex/wail/molotov — the
+    luck character's organic movers) and no gain materialized: the
+    regen-shape gap vs the soldier WIDENS (−5 → −22.5) while 55pre
+    narrows (−15 → −12.5), n=40 directional both. The §83 repair stays
+    the first item with its premise updated: the organic move did not
+    arrive.
+  - **Act-1 amendment HELD:** every soldier/priest act-1 arb row PASSes
+    at the 75l re-pinned refs — the §76 changes moved the DEEP END, not
+    act 1. decisions.csv rode all 10 arb arms; packet Δ|picked stays
+    positive where n clears the floor (the packet-health read holds).
 
-- **Protocol:** the full 15-instrument board on one box (`--plan` →
-  box-batch sequential, `--jobs=8`), HEAD `3a0b48e` (76a–76g4 + the
-  fixture join), ~3.9h wall, all 15 `fetched →` clean, box destroyed
-  same-night. Report: `output/board-76h/board-report.txt` (numbers
-  reproduced here). All reads n=40/arm — DIRECTIONAL under the n=80
-  floor unless noted. Launch note: attempt 1 crashed 4-for-4 (the
-  §76f archetype join had missed the fixture vectors — 12 patched at
-  weight 0, re-validated through `loadWeightsFile`; worklog §76h);
-  ~4 box-minutes lost.
-- **Headline: 0 FAIL / 7 WARN — but the WARN composition ROTATED
-  from 75l:** the fire channel and the priest healed; the walk walls
-  flipped DIRECTION (pull-softened below band → hardened above); the
-  walk ceilings went negative. The seven: gambler-regen win ·
-  walk-regen wall + derived win · walk-55pre reach + wall · both
-  walk ceilings.
-- **The re-pin table (75l → 76h):** arb-regen 0.750→0.825 (band-top,
-  PASS) · arb-55pre 0.875→0.800 (band-floor, PASS) · King
-  0.825→0.800 / Queen 0.675→0.675 (order holds, both PASS) · priest
-  0.825→0.750 / 0.800→0.800 (both PASS — the 75l +20 WARN healed
-  under its re-pinned ref) · gambler 0.700→**0.600 (WARN, one seed
-  below floor)** / 0.725→0.675 (PASS) · walk-regen reach 0.375→0.425
-  (back in 40–50, PASS) wall 0.267→**0.412 (WARN — ABOVE 30–35)**
-  seam 16.83→17.09 win 0.250 (WARN vs derived) · walk-55pre reach
-  0.700→**0.675 (WARN — the overperformance watch persists)** wall
-  0.286→**0.481 (WARN — ABOVE band)** seam 16.60→16.91 win
-  0.350 (PASS) · fire channel **−0.075→+0.050 (PASS — the 75l
-  inversion resolved, at the signed band's floor)** · ceilings: regen
-  +0.025 / 55pre +0.025 (PASS) · walk-regen −0.025→**−0.125 (WARN)**
-  · walk-55pre +0.225→**−0.100 (WARN — a 0.325 sign-flip swing)**.
-  Act-1 banks/fires/tx all in-band; posture dissolution (tx ≈ 0 on
-  arb) holds everywhere.
-- **⭐ The walls flipped from pull-softened to HARDENED** (0.267→0.412
-  · 0.286→0.481, a +0.15–0.20 move that clears n=40 noise): the §76
-  movers are CONFOUNDED here — critable-universal is symmetric (enemy
-  ops crit too, and deep-end fights are the long ones where crit
-  variance compounds), the prc/eva pass re-aimed 11 catalog entries,
-  and the camps leak moves camp fights on all 4 placements (no board
-  row watches camps). No single-knob attribution without a `--set`
-  ablation bracket — a signing-session call whether to probe now or
-  ride to §83 with the pull question (the two wall knobs are already
-  named there; this adds a third).
-- **Both walk ceilings went NEGATIVE (paired same-seed):** the arb
-  arm now UNDERPERFORMS doctrine by 10–12.5 pts on the two-act
-  shapes (at 75l: −2.5 and +22.5). Candidate story unprobed: the
-  hardened walls change what the K=2 rollout horizon can see (the
-  horizon-blindness doctrine cuts both ways — a wall past the horizon
-  devalues the arb arm's positional spending). Flagged, not read.
-- **The gambler (the §83 parity rider):** §76 lit the luck seam
-  (critable-universal + luck durations on hex/wail/molotov — the
-  luck character's organic movers) and no gain materialized: the
-  regen-shape gap vs the soldier WIDENS (−5 → −22.5) while 55pre
-  narrows (−15 → −12.5), n=40 directional both. The §83 repair stays
-  the first item with its premise updated: the organic move did not
-  arrive.
-- **Act-1 amendment HELD:** every soldier/priest act-1 arb row PASSes
-  at the 75l re-pinned refs — the §76 changes moved the DEEP END, not
-  act 1. decisions.csv rode all 10 arb arms; packet Δ|picked stays
-  positive where n clears the floor (the packet-health read holds).
-
-## 2026-08-13 — §77f THE BRAID-WORLD STRESS BOARD (15 instruments,
-`f24a7f9`): 0 FAIL · 7 WARN — the two-act signed architecture
-SURVIVED a map-generator replacement
-
-Batches `20260813-1558*→1828*-f24a7f9` (the full 15-row board on the
-box; the §77 exit's stress test). **The world under measurement
-changed more than any prior board's:** the braid generator (77e)
-moved routes from ~7.3 battles to **4.68 battles + 3.12 events**
-(combat share 80.6%→58.1%), with rest/elite/port route-fractions
-roughly doubled (nodemap corpus, worklog §77e2). Every WARN below
-reads against that backdrop.
-
-- **The signed walk-shape rows HELD:** terminalReach regen **0.450**
-  (dead mid-band 40–50) · 55pre 0.550 (the carried overperformance
-  watch — and it moved TOWARD band, 0.575→0.550) · seamPool
-  **16.0 / 17.8** (in 15–18) · derived win 0.325 ✓ / 0.375 (paired
-  with the reach watch). A full map-gen rework did not break the
-  run's pool-HP budget flow.
-- **The walls RE-SOFTENED (the third composition move in three
-  boards):** 0.278 regen (just below the signed 30–35) / 0.318 55pre
-  (in-band) — vs the 76h HARDENED read (0.412/0.481). The braid
-  world pulled the walls back ~15pts. The §83 wall agenda now holds
-  three stacked movers (76h's confounded trio + the map rework);
-  the pull-vs-no-pull decision should re-read on THIS world, not
-  76h's.
-- **⭐ The walk ceilings RECOVERED to parity:** paired same-seed
-  arb−doctrine = **−0.025 / 0.000** on the two-act shapes (76h:
-  −10/−12.5). The 76h negative-ceiling flag dissolves in the braid
-  world — consistent with its horizon-blindness story (the 76h-era
-  hardened walls sat past the K=2 horizon; the re-softened walls
-  don't). The cheap tier stands re-validated end to end (all four
-  ceiling controls PASS).
-- **Act-1 arb drift (the re-pin candidates):** soldier
-  0.700 regen (mid-band) / 0.775 55pre (−2.5 below edge, WARN) ·
-  priest **0.600 regen (WARN, a real −14 move; a NEW parity breach
-  −10 vs soldier past the ±5 principle)** / 0.725 55pre (in-band) ·
-  gambler 0.700 regen / 0.550 55pre (WARN). **The gambler breach
-  FLIPPED SHAPES:** the 76h regen gap (−22.5) closed to 0.0 while
-  the 55pre gap re-widened to −22.5 — the §83 repair premise updates
-  again: the braid world moves the gap between shapes, arguing the
-  defect is shape-coupled (event/economy mix), not kit-intrinsic.
-- **Forced-boss refs:** King 0.775 / Queen 0.675 — both in-band,
-  King>Queen order holds. Banks/fires/tx: all in-band; posture
-  dissolution (tx ≈ 0 on arb) holds everywhere.
-- **The fire channel:** Δ +0.025 (WARN vs the signed +0.10
-  doctrine-pair) — the sign RECOVERED from the 75l inversion
-  (−0.075) but stays statistically weak at n=40; the §83 re-read
-  stands, now with a third era's data point.
-- **decisions.csv (the standing instrument, all 10 arb rows):** the
-  nodeChoice site now shows event picks with the highest realized
-  margin on the board (Δ|picked 6.5, n=34 directional) — the event
-  era registers in decision value; eventChoice per-choice rows are
-  LIVE for the §83 ε-floor re-read (30 choice-instances on the top
-  event alone). Fires 2.1/run, empower Δ|picked +3.25 (n=3348) —
-  the packet-health read holds.
-
-**Disposition (the 75l amendment ritual):** reference re-pins at the
-observed braid-world values PROPOSED for user signing (act-1 six +
-the two forced-boss refs; banks/fires/tx hold mid-band); the signed
-bands (reach 40–50 · wall 30–35 · seam 15–18) deliberately DO NOT
-move — reality-vs-band is the §83 call, per the 75l note. The priest
-regen breach joins the gambler as a NAMED §83 parity item.
+- **2026-08-13 — §77f THE BRAID-WORLD STRESS BOARD (15 instruments,
+  `f24a7f9`): 0 FAIL · 7 WARN — the two-act signed architecture
+  SURVIVED a map-generator replacement.** Batches
+  `20260813-1558*→1828*-f24a7f9` (the full 15-row board on the box;
+  the §77 exit's stress test). **The world under measurement changed
+  more than any prior board's:** the braid generator (77e) moved
+  routes from ~7.3 battles to **4.68 battles + 3.12 events** (combat
+  share 80.6%→58.1%), with rest/elite/port route-fractions roughly
+  doubled (nodemap corpus, worklog §77e2). Every WARN below reads
+  against that backdrop.
+  - **The signed walk-shape rows HELD:** terminalReach regen **0.450**
+    (dead mid-band 40–50) · 55pre 0.550 (the carried overperformance
+    watch — and it moved TOWARD band, 0.575→0.550) · seamPool
+    **16.0 / 17.8** (in 15–18) · derived win 0.325 ✓ / 0.375 (paired
+    with the reach watch). A full map-gen rework did not break the
+    run's pool-HP budget flow.
+  - **The walls RE-SOFTENED (the third composition move in three
+    boards):** 0.278 regen (just below the signed 30–35) / 0.318 55pre
+    (in-band) — vs the 76h HARDENED read (0.412/0.481). The braid
+    world pulled the walls back ~15pts. The §83 wall agenda now holds
+    three stacked movers (76h's confounded trio + the map rework);
+    the pull-vs-no-pull decision should re-read on THIS world, not
+    76h's.
+  - **⭐ The walk ceilings RECOVERED to parity:** paired same-seed
+    arb−doctrine = **−0.025 / 0.000** on the two-act shapes (76h:
+    −10/−12.5). The 76h negative-ceiling flag dissolves in the braid
+    world — consistent with its horizon-blindness story (the 76h-era
+    hardened walls sat past the K=2 horizon; the re-softened walls
+    don't). The cheap tier stands re-validated end to end (all four
+    ceiling controls PASS).
+  - **Act-1 arb drift (the re-pin candidates):** soldier
+    0.700 regen (mid-band) / 0.775 55pre (−2.5 below edge, WARN) ·
+    priest **0.600 regen (WARN, a real −14 move; a NEW parity breach
+    −10 vs soldier past the ±5 principle)** / 0.725 55pre (in-band) ·
+    gambler 0.700 regen / 0.550 55pre (WARN). **The gambler breach
+    FLIPPED SHAPES:** the 76h regen gap (−22.5) closed to 0.0 while
+    the 55pre gap re-widened to −22.5 — the §83 repair premise updates
+    again: the braid world moves the gap between shapes, arguing the
+    defect is shape-coupled (event/economy mix), not kit-intrinsic.
+  - **Forced-boss refs:** King 0.775 / Queen 0.675 — both in-band,
+    King>Queen order holds. Banks/fires/tx: all in-band; posture
+    dissolution (tx ≈ 0 on arb) holds everywhere.
+  - **The fire channel:** Δ +0.025 (WARN vs the signed +0.10
+    doctrine-pair) — the sign RECOVERED from the 75l inversion
+    (−0.075) but stays statistically weak at n=40; the §83 re-read
+    stands, now with a third era's data point.
+  - **decisions.csv (the standing instrument, all 10 arb rows):** the
+    nodeChoice site now shows event picks with the highest realized
+    margin on the board (Δ|picked 6.5, n=34 directional) — the event
+    era registers in decision value; eventChoice per-choice rows are
+    LIVE for the §83 ε-floor re-read (30 choice-instances on the top
+    event alone). Fires 2.1/run, empower Δ|picked +3.25 (n=3348) —
+    the packet-health read holds.
+  - **Disposition (the 75l amendment ritual):** reference re-pins at
+    the observed braid-world values PROPOSED for user signing (act-1
+    six + the two forced-boss refs; banks/fires/tx hold mid-band); the
+    signed bands (reach 40–50 · wall 30–35 · seam 15–18) deliberately
+    DO NOT move — reality-vs-band is the §83 call, per the 75l note.
+    The priest regen breach joins the gambler as a NAMED §83 parity
+    item. *(Signed 2026-08-13, the sheet's third amendment — worklog
+    §77g.)*

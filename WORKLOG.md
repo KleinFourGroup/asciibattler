@@ -4759,3 +4759,51 @@ close ritual. Rationale for 83a-first: every §83 diagnosis needs
 the final-content baseline (confirm-the-deficit); §82 moved the
 economy and 83d0 moved the bosses, so the 77f board is no longer
 the diagnostic anchor.
+
+### 83-pre1 — the BALANCE header audit (2026-08-17)
+
+The kickoff's fossil list executed; the header layer went 487→465
+lines and now reads current-truth only:
+
+- **"Per-kind target bands (DATA-FIRST — not yet set)"** → "SET at
+  X3, stable since": the normal ≈3 / elite ≈6 / boss ≈10
+  pool-damage bands stated WITH provenance, plus the honest gap —
+  they're prose-checked only, and promoting them into the
+  machine-checked sheet is now flagged as an 83f signing-session
+  candidate.
+- **"The economy metrics (§52 — defined ahead of the data)"** →
+  "(§52)": the definitions stay (they're the live vocabulary — the
+  sheet's bank/fires/tx refs use them); the "no numbers exist yet"
+  framing died.
+- **"The sanctioned direction"** → "Run-layer rollout arbitration —
+  SHIPPED (§§69–72)": the built reality (six sites incl. events,
+  the cheap-tier 0.000 direct test, decisions.csv standing), with
+  the §68 accumulated brief deleted as consumed — EXCEPT item 7
+  (noise-vs-bias), the one still-live doctrine, promoted to Caveats
+  as its own bullet.
+- **The bot-lower-bound caveat** flattened from the three-generation
+  amendment sandwich (~30% → §57h → 68c parenthetical) to one
+  paragraph stating the current quantification (~60 vs ~80) with
+  the trail as provenance, not as layers.
+- **The executable-board section** dropped the stale "68c…§68d will
+  flip" sentence for the standing 75l amendment ritual (refs re-pin
+  signed; bands move only by decision).
+- **Run-log delimiters normalized**: the 76h (`###`) and 77f (`##`)
+  entries demoted to the `- **date — title.**` bullet convention
+  every other entry uses (content untouched, indentation only; the
+  77f entry also gained its "signed 2026-08-13" disposition note,
+  which had lived only in the worklog). A heading grep now finds
+  zero entries below `## Run log` — one rule, no exceptions.
+- **The sheet's stale phase refs**: every `§82` in
+  signed-sheet.json (boss-board-pull, walls/reach re-read, the
+  parity items, the repair premise — all authored before the
+  2026-08-17 feel-round insertion renumbered the closing rebalance)
+  → `§83`, plus "the next-round repair rider" → "the §83 repair
+  rider", plus a prose-only amendment note in `signedAt` recording
+  the renumber. NO signed number moved; the board tests ratify
+  (fuzz:smoke green).
+
+Green: 2674 main + typecheck + 398 fuzz:smoke. Next: 83-pre2 (the
+primer at the top of BALANCE + the docs.test.ts header-layer cap —
+the header's audited size is the cap's sizing input: 465 lines
+before the primer lands).

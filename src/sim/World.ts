@@ -1518,6 +1518,11 @@ export class World {
    * combatant today is unchanged (byte-identical); a filtered-out status is a
    * silent no-op — nothing added, no `status:applied` emitted. Reads `ALL_UNIT_DEFS`
    * at CALL time (the config/units ⇄ sim cycle — GOTCHAS #114).
+   *
+   * §83b — the IMMUNITY gate, susceptibility's blocklist complement: ids the
+   * unit can NEVER receive (the healer's panic immunity — the wail-panic ×
+   * sustain-hand parity repair). Same chokepoint, same silent-no-op contract;
+   * symmetric across teams (an ENEMY healer is equally unpanickable).
    */
   applyStatusEffect(
     target: Unit,
@@ -1529,6 +1534,8 @@ export class World {
   ): void {
     const allow = ALL_UNIT_DEFS[target.archetype]?.statusSusceptibility;
     if (allow && !allow.includes(def.id)) return;
+    const deny = ALL_UNIT_DEFS[target.archetype]?.statusImmunities;
+    if (deny?.includes(def.id)) return;
     target.addEffect(
       buildStatusEffect(def, this.tickCount, magnitude, sourceUnitId, durationSecondsOverride),
     );

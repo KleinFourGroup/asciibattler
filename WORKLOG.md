@@ -4941,3 +4941,42 @@ seeds --seed-offset=120, n=120/cell — every forced seed is a target-
 boss fight, killing both the n=56 and seed-reuse objections). The
 repair menu is the design decision, user-owned: priest-side ·
 wail-side · Queen-side · accept-as-identity.
+
+### 83b — part 3: the repair signed and SHIPPED (2026-08-19)
+
+**The user's call (the design decision):** option 2, scoped as
+archetype identity — the healer never panics ("the healer keeps
+their head"), the Queen stays a sustain-punisher (option 1's
+principle survives: the −12.5 shared banshee penalty and the
+exposure channel are untouched). Ship SOLO and measure before any
+stacking (the wail luck-trim stays in the pocket); "immunity should
+have been a concept from the start" → the archetype-editor surface
+INSERTED as ROADMAP 83f2.
+
+**The mechanic:** `statusImmunities` — a per-UnitDef BLOCKLIST, the
+§38d-3 allowlist's complement, consulted at the same
+`applyStatusEffect` chokepoint (covers every source: ops + tile
+hooks + future appliers). Blocklist deliberately (future statuses
+default-apply; an immunity is a per-status opt-out). Healer opts
+into `["panic"]`. Symmetric across teams BY DESIGN (enemy + camp
+healers equally immune — practical effect ~nil today: no shipped
+player-side panic source). Both schema arms carry the field (union
+ergonomics). Two balance-proof gate tests beside the §38d-3 suite.
+**Predictions:** NO snapshot bump (apply-time guard only; an old
+snapshot's already-applied panic survives load — acceptable, decay
+handles it). Board impact: arb-priest-regen ↑ is the target; other
+rows ±noise.
+
+**Probe B re-run (the fight-level receipt):** soldier cells
+byte-identical (the built-in no-op control) · priest×banshee 0.708
+→ 0.758 · healer panic 94 → 0 ticks/run · the interaction −10 →
+−5. The keystone-disable channel is CLOSED; the exposure channel
+(longer sustain fights → more wail cycles on the rest of the hand)
+remains — the intended "split the difference."
+
+**The measurement (launching now):** the act-1 2×2 —
+soldier/priest × regen/55pre, single `--count=120` batches (seeds
+1..120, same seeds as 83a → paired same-seed cross-HEAD deltas,
+THE config-change instrument), box per 68h. Verdict criterion: the
+regen parity gap −11.7 → inside ±5 restores parity; the 55pre pair
+watches for over-correction.

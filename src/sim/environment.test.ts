@@ -21,7 +21,7 @@ import { isCombatTargetable } from './effects/targeting';
 import { cellsOccupiedBy } from './occupancy';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
-import { NEUTRAL_DEFS } from '../config/units';
+import { ALL_UNIT_DEFS, NEUTRAL_DEFS } from '../config/units';
 import { statusDef } from '../config/statuses';
 import type { GameEvents } from '../core/events';
 import type { GridCoord } from '../core/types';
@@ -262,6 +262,61 @@ describe('§38d-3 — statusSusceptibility gate', () => {
     const anyId = ['poison', 'bleed'].find((s) => !wallAllows.includes(s))!;
     w.applyStatusEffect(merc, statusDef(anyId), null);
     expect(merc.effects.some((e) => e.key === anyId)).toBe(true);
+  });
+});
+
+/**
+ * §83b — the statusImmunities gate (susceptibility's blocklist complement) at
+ * the same chokepoint. First consumer: the healer's panic immunity (the
+ * wail-panic × sustain-hand parity repair). Balance-proof: the blocked id is
+ * read from `ALL_UNIT_DEFS.healer`, never hardcoded; the same-status control
+ * (a listless combatant still panics) pins that the gate is per-def, not
+ * global.
+ */
+describe('§83b — statusImmunities gate', () => {
+  const spawnCombatant = (w: World, archetype: 'healer' | 'mercenary', id: number): Unit => {
+    const stats = { ...ARCHETYPE_CONFIG[archetype].baseStats };
+    const u = new Unit({
+      id,
+      team: 'player',
+      archetype,
+      glyph: archetype[0]!.toUpperCase(),
+      stats,
+      derived: deriveStats(stats, 1),
+      position: { x: id, y: 0 },
+    });
+    w.units.push(u);
+    return u;
+  };
+
+  it('an immune unit silently refuses the blocked status, still takes others', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const applied: GameEvents['status:applied'][] = [];
+    bus.on('status:applied', (p) => applied.push(p));
+
+    const immunities = ALL_UNIT_DEFS.healer!.statusImmunities!;
+    expect(immunities.length).toBeGreaterThan(0); // the healer declares at least one
+    const blocked = immunities[0]!;
+
+    const healer = spawnCombatant(w, 'healer', 90);
+    w.applyStatusEffect(healer, statusDef(blocked), null);
+    expect(healer.effects.some((e) => e.key === blocked), `${blocked} blocked`).toBe(false);
+    expect(applied).toEqual([]); // silent no-op — no status:applied
+
+    // A status NOT on the list still lands (the gate is per-status, not blanket).
+    const allowed = ['burn', 'poison'].find((s) => !immunities.includes(s))!;
+    w.applyStatusEffect(healer, statusDef(allowed), null);
+    expect(healer.effects.some((e) => e.key === allowed), `${allowed} allowed`).toBe(true);
+  });
+
+  it('a listless combatant still takes the same status (the gate is per-def)', () => {
+    const bus = new EventBus<GameEvents>();
+    const w = new World(bus, new RNG(1));
+    const blocked = ALL_UNIT_DEFS.healer!.statusImmunities![0]!;
+    const merc = spawnCombatant(w, 'mercenary', 91);
+    w.applyStatusEffect(merc, statusDef(blocked), null);
+    expect(merc.effects.some((e) => e.key === blocked)).toBe(true);
   });
 });
 

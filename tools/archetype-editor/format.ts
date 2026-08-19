@@ -98,6 +98,11 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
       parts.push(`    "movementBehavior": ${JSON.stringify(a.movementBehavior)},`);
     if (a.retargetOnLosLoss !== undefined)
       parts.push(`    "retargetOnLosLoss": ${JSON.stringify(a.retargetOnLosLoss)},`);
+    // §83b — the status blocklist (susceptibility's complement), emitted only
+    // when declared, so the file diff stays exactly the archetypes carrying an
+    // immunity (today: the healer's panic line). The editor UI lands at 83f2.
+    if (a.statusImmunities !== undefined)
+      parts.push(`    "statusImmunities": ${JSON.stringify(a.statusImmunities)},`);
     parts.push(`    "baseStats": {`);
     parts.push(...statLines(a.baseStats));
     parts.push(`    },`);

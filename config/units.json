@@ -206,6 +206,7 @@
     "abilities": ["heal_ally"],
     "targeting": "nearest",
     "movementBehavior": "support",
+    "statusImmunities": ["panic"],
     "baseStats": {
       "constitution": 16,
       "strength": 0,

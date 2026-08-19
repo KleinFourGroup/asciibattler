@@ -440,5 +440,9 @@ closing board + the re-signed sheet; then the close ritual
   read · 55pre-twin re-read · the ladder judgment
 - [ ] 83f — the closing board + the signing session (sheet
   re-signed; 0 FAIL, WARNs pre-registered only)
+- [ ] 83f2 — INSERTED 2026-08-19 (user): archetype-editor support
+  for the §83b `statusImmunities` mechanic (editor UI + formatter +
+  the live no-op-save byte proof — "immunity should have been a
+  concept from the start"; worklog §83b)
 - [ ] 83g — the cluster close ritual (demote · archive · scratchpad
   sweep · cursor flip; next = the UI-audit interstitial)

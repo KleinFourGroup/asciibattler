@@ -194,6 +194,12 @@ export const CombatantUnitDefSchema = z.object({
   // identical default for every combatant); a wall/rubble opts into the few it
   // allows (burn/frozen, not poison/bleed). Inert until 38d wires `applyStatus`.
   statusSusceptibility: z.array(z.string()).optional(),
+  // §83b — the status BLOCK-filter, susceptibility's complement: ids this unit
+  // can NEVER receive (`applyStatusEffect` consults both gates). A blocklist —
+  // not an allowlist — so future statuses default-apply to everyone and an
+  // immunity is a per-status opt-out. First consumer: the healer's panic
+  // immunity (the wail-panic × sustain-hand parity repair).
+  statusImmunities: z.array(z.string()).optional(),
   // 38a branch-killers — planted optional (absent today; the old switches still
   // run), populated + consumed in 38c. `damageStat`: the stat a basic strike /
   // the display "ATK" reads (absent ⇒ non-striker/0; → `stats.ts` damageStatFor).
@@ -241,6 +247,10 @@ export const NeutralUnitDefSchema = z
     // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
     // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
     statusSusceptibility: z.array(z.string()).optional(),
+    // §83b — the block-filter mirror (see the combatant arm). Redundant with the
+    // allowlist for neutrals in practice; present so the union's shared
+    // `statusImmunities` access typechecks without a per-arm guard.
+    statusImmunities: z.array(z.string()).optional(),
   })
   // §40b — STRICT now that `hp` is optional: without it, a combatant (with its
   // extra `abilities`/`baseStats` keys stripped) would spuriously satisfy this

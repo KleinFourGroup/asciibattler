@@ -5015,3 +5015,9 @@ second arm); pre-register priest-regen ~−7.5 + the gambler wobble
 as WARN candidates for the 83f closing board, which reads parity
 on FINAL content at the same n — the verdict-grade read. Queen-side
 tuning remains the open door if 83f confirms.
+
+**83b close (2026-08-19, user-signed):** the part-5 disposition
+signed as proposed — both levers keep, residual named +
+pre-registered for 83f, Queen-side tuning the open door. The user's
+verdict: "both of these were good changes, and we got the gap down
+nicely." §83b CLOSED; ROADMAP flipped; next = 83c.

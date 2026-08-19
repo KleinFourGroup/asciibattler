@@ -207,3 +207,29 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   so it was pure delay, and every design option got simpler once that was
   said out loud. Naming what a mechanic PRETENDS to do vs does is a cheap
   ideation tool.
+
+## 83b (2026-08-19) — probe & ops notes
+
+- **Fixed-hand fight probes over-weight fixed-hand channels.** Probe B
+  guaranteed the healer on the board every fight → the keystone-disable
+  channel read as half the interaction; live, draw dilution (healer = 1
+  of 10 roster) delivered ~15% of the gap. When a probe fixes a
+  variable the live game rolls, every channel touching that variable
+  inherits the fix as an over-weight. Corollary kept anyway: the probe
+  DID call the direction and the mechanism — probes rank stories, live
+  paired batches size them.
+- **tests/fuzz/output/ is typechecked** — pre-commit tsc sweeps the
+  gitignored analysis scripts; a stale scratch probe with a type error
+  blocks commits. Keep probe scripts clean or delete them when done
+  (the 83b debug probe got deleted for exactly this).
+- **The n=40→120 extension protocol earned its keep on outing #1**:
+  the n=40 parity read was sign-wrong on the priest (lucky first 40
+  seeds). Also: cross-HEAD pooling is void — the "free first 40" must
+  come from the same-HEAD board batches (executed + recorded at 83a).
+- **One `tsx -e` slip** (a throwaway echo) — it returned, but the §70a
+  rule stands; probes went to real .ts files everywhere else.
+- **Same-seed per-boss cells re-roll wholesale under a duration change**
+  (earlier un-panics → new microstates): per-cell attribution at
+  n=56/boss is mush even when the overall paired read is clean. The
+  King cells' byte-stability doubled as a free null control — design
+  probes so a subpopulation is structurally untouched when possible.

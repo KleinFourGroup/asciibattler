@@ -429,9 +429,13 @@ closing board + the re-signed sheet; then the close ritual
 - [x] 83a — baseline board + n=120 ✅ 2026-08-18: 0 FAIL / 9 WARN —
   economy flood · walls 0.40 above band · fire channel at signed ·
   ⭐ parity INVERTS at n=120 (BALANCE 2026-08-18 + worklog §83a)
-- [ ] 83b — parity diagnosis→repair, PRIEST-REGEN FIRST (83a: widest
-  gap; gambler −6/−7 both shapes, shape-coupled premise weakened);
-  exit parity ±5
+- [x] 83b — ✅ CLOSED 2026-08-19 (user-signed): diagnosed to the
+  wail-panic × sustain-hand mechanism (Queen fights); TWO levers
+  shipped (⭐ `statusImmunities` + healer panic immunity `fe0f17f` ·
+  wail perPoint 0.3→0.15 `514ef2b`); regen gap −11.7→−7.5, the
+  residual NAMED (exit arm 2) + pre-registered for the 83f verdict;
+  Queen-side tuning = the open door (worklog §83b parts 1–5 ·
+  BALANCE 2026-08-18/19 ×4)
 - [ ] 83c — the wall-flip/boss-pull `--set` bracket + the
   fire-channel `--event-chance=0` discriminate
 - [ ] 83d — forced-isolation reads on the real bosses + the dose

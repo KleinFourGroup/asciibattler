@@ -3286,10 +3286,11 @@ deltas. The pre-X H7c→O log lives at
   EXPOSURE channel (sustain fights → more wail cycles on everyone)
   owns the residual. Options on the table for the design decision:
   the pocketed wail luck-duration trim (durationSeconds base 3 +
-  0.3/luck cap 6 — a high-luck banshee likely sits AT the cap, so
-  the cap is the big dial; partially differential: longer sustain
-  fights eat more cycles, so a per-cycle cut compounds more for the
-  priest — but it also softens the Queen for EVERYONE, incl. the
-  gambler's lean) · Queen-side comp/stage tuning · accept the
+  0.3/luck cap 6; banshee luck ≈ 4.8 at boss levels → duration
+  ≈4.4s, UNDER the cap — the live dial is perPoint/base, not the
+  cap [corrected same-day: the entry first guessed at-cap without
+  checking]; partially differential: longer sustain fights eat more
+  cycles, so a per-cycle cut compounds more for the priest — but it
+  also softens the Queen for EVERYONE, incl. the gambler's lean) · Queen-side comp/stage tuning · accept the
   residual as a signed per-boss exception. The immunity itself
   KEEPS regardless (user-signed identity; zero collateral).

@@ -4980,3 +4980,19 @@ soldier/priest × regen/55pre, single `--count=120` batches (seeds
 THE config-change instrument), box per 68h. Verdict criterion: the
 regen parity gap −11.7 → inside ±5 restores parity; the 55pre pair
 watches for over-correction.
+
+### 83b — part 4: the measurement verdict (2026-08-19)
+
+The 2×2 landed (4/4 filed, ~2.6h, box destroyed): the repair is
+surgical (soldier arms byte-identical — zero flips) and
+directionally right (every flipped seed a Queen fight) but
+INSUFFICIENT: the regen parity gap closed −11.7 → −10.0, far from
+±5. Numbers + the transfer-failure analysis: BALANCE 2026-08-19.
+Lesson banked: a fixed-hand fight probe over-weights any channel
+tied to the fixed hand — Probe B guaranteed the healer on the
+board every fight; live draw dilutes it. The keystone channel is
+real but minor; the exposure channel owns the residual. The
+decision returns to the user with three doors: the pocketed wail
+trim (cap 6 is the big dial; compounds differentially with fight
+length but softens the Queen for all) · Queen-side tuning · accept
+as a signed exception. statusImmunities KEEPS regardless.

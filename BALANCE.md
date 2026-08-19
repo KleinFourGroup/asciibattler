@@ -3267,3 +3267,29 @@ deltas. The pre-X H7c→O log lives at
   accept-as-identity (sustain-punisher boss = the forces-diversity
   principle) — with the parity principle vs the ±5 sheet band the
   arbiter.
+- **2026-08-19 — §83b the post-repair measurement: the healer panic
+  immunity is SURGICAL BUT INSUFFICIENT (the act-1 2×2 at n=120,
+  `fe0f17f` vs the 83a baseline, paired same-seed).** 4/4 batches
+  filed, box destroyed. **soldier-regen: byte-identical across the
+  repair (0.742/0.797/0.679, ZERO seed flips — the perfect null
+  control; the mechanic touches nothing it shouldn't).**
+  priest-regen: 0.625→0.642 overall, Queen cell 0.482→0.518, all 4
+  cross-HEAD flips Queen fights (3 gained / 1 lost —
+  mechanism-consistent direction, statistically ~nothing at 4
+  discordant). **The parity gap: −11.7 → −10.0 — NOT restored** (the
+  ±5 principle stays breached). 55pre pair wobbled ±1.7 (noise).
+  The Probe-B fight-level recovery (−10→−5 interaction) did NOT
+  transfer at magnitude: live, the healer is 1 of 10 roster units
+  (not fielded every fight), and the Queen's staged fight panics
+  whole clumps — the keystone-disable channel is a smaller share of
+  the live deficit than the fixed-hand probe weighted it. The
+  EXPOSURE channel (sustain fights → more wail cycles on everyone)
+  owns the residual. Options on the table for the design decision:
+  the pocketed wail luck-duration trim (durationSeconds base 3 +
+  0.3/luck cap 6 — a high-luck banshee likely sits AT the cap, so
+  the cap is the big dial; partially differential: longer sustain
+  fights eat more cycles, so a per-cycle cut compounds more for the
+  priest — but it also softens the Queen for EVERYONE, incl. the
+  gambler's lean) · Queen-side comp/stage tuning · accept the
+  residual as a signed per-boss exception. The immunity itself
+  KEEPS regardless (user-signed identity; zero collateral).

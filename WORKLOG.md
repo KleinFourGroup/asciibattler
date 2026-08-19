@@ -5021,3 +5021,46 @@ signed as proposed — both levers keep, residual named +
 pre-registered for 83f, Queen-side tuning the open door. The user's
 verdict: "both of these were good changes, and we got the gap down
 nicely." §83b CLOSED; ROADMAP flipped; next = 83c.
+
+### 83c — part 1: the fire-channel retirement + the pull bracket (2026-08-19)
+
+**The fire-channel half RETIRES WITHOUT A BATCH (user-signed).** The
+75l rider made the `--event-chance=0` discriminate CONDITIONAL —
+"discriminate… and re-derive… if it stays flat" — and the condition
+never fired: the four-era trail is 75l −0.075 → 76h +0.050 → 77f
++0.025 → 83a **+0.100, dead on the signed value**. Running the
+discriminate now would measure a question that answered itself. The
+inversion alarm retires to the routine confirm the standing
+`fire-channel` board delta row already performs every board.
+Disposition: ROADMAP rider line + this entry; no BALANCE amendment
+(no number or band moves).
+
+**The wall-flip attribution REFRAMED (user-signed).** The 76h
+confounded-trio decomposition (critable-universal / prc-eva /
+camps-leak) is archaeology on a dead HEAD: two world reworks (77e
+braid, §§78–82 + the 83d0 bosses) and four wall-composition moves
+later, no decision hangs on which 76h knob moved a wall that has
+since moved twice more. The live question — carried by the same
+ROADMAP line that married the flip to the pull — is the pull's
+contribution to TODAY's above-band wall (0.400/0.400 at 83a n=120).
+The bracket answers that directly; the 76h attribution question
+closes by supersession.
+
+**The bracket design (shape-locked with the user this session):**
+four walk arms at n=120 on the box — walk-regen + walk-55pre ×
+{full-pull baseline, `--set=sim.enemyPullChance=0`}, arb ARM, seeds
+1..120 single-batch. The fresh full-pull baseline is REQUIRED, not
+a luxury: the 83a walk rows are cross-HEAD stale (the 83b levers —
+healer panic immunity + the wail trim — touch every walk run at the
+act-1 Queen en route), so pairing pull-0 arms against 83a rows would
+confound the pull with the repair. Bonus read for free: baseline-vs-
+83a paired cross-HEAD = the 83b-levers-on-the-walk-shape receipt.
+Recorded caveats: the dial is GLOBAL (route camps + boss boards),
+so the pull-Δ is an UPPER BOUND on a NO-pull-on-boss mechanism
+change; no mid-point arm (the decision is binary — 0-vs-0.25 IS the
+two-point bracket; a 0.125 arm is a cheap deterministic follow-up
+if the decision becomes keep-but-weaker). The polarity note the
+decision inherits: at 75l the pull SOFTENED below-band walls; the
+walls now sit ABOVE band with the pull ON — ablating it should push
+them further out, so NO-pull-on-boss implies the 83d dose comes
+DOWN to compensate. 83c gates 83d.

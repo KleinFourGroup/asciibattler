@@ -398,7 +398,9 @@ closing board + the re-signed sheet; then the close ritual
   (−0.075, statistically weak, 5–2 discordant); discriminate with
   `--event-chance=0` on the doctrine pair, and re-derive the vector
   pair on era content if it stays flat (76h note: it read +0.050
-  in-band — the alarm retires to a routine confirm).
+  in-band — the alarm retires to a routine confirm). ✅ RETIRED at
+  83c (2026-08-19, user-signed): the trigger never fired — 83a read
+  +0.100 dead-on signed, fourth era; no batch spent (worklog §83c).
 - **83-pre (user-called 2026-08-12): the BALANCE audit + primer** —
   step zero, before any §83 measurement decision; scope carried by
   the 83-pre1/83-pre2 cut lines below (framing: worklog §76h-close).

@@ -460,7 +460,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": { "kind": "applyStatus", "statusId": "panic", "durationSeconds": { "base": 3, "stat": "luck", "perPoint": 0.3, "max": 6 } }
+        "op": { "kind": "applyStatus", "statusId": "panic", "durationSeconds": { "base": 3, "stat": "luck", "perPoint": 0.15, "max": 6 } }
       }
     ],
     "fx": { "impact": "wail_burst" }

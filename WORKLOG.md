@@ -4996,3 +4996,22 @@ decision returns to the user with three doors: the pocketed wail
 trim (cap 6 is the big dial; compounds differentially with fight
 length but softens the Queen for all) · Queen-side tuning · accept
 as a signed exception. statusImmunities KEEPS regardless.
+
+### 83b — part 5: the six-arm table and the noise floor (2026-08-19)
+
+The post-trim table landed (6/6, box destroyed; numbers: BALANCE
+2026-08-19 second entry). The honest reading: the King cells held
+~byte-stable (the built-in null — no banshee in King fights), all
+movement is Queen-cell, and at n=56 per boss-cell every move is
+≤1.5 SE. The regen parity gap improved (−11.7 → −7.5) but not via
+a clean priest lift; the gambler-55pre gap "worsened" only because
+the soldier's Queen cell lifted. We are measuring re-roll noise
+around the ±5 line — the cell-Goodhart caveat's exact regime.
+
+Proposed disposition (pending the user's sign-off next session
+turn): stop single-lever iteration; keep both shipped levers on
+their design merits; name the residual (the exit criterion's
+second arm); pre-register priest-regen ~−7.5 + the gambler wobble
+as WARN candidates for the 83f closing board, which reads parity
+on FINAL content at the same n — the verdict-grade read. Queen-side
+tuning remains the open door if 83f confirms.

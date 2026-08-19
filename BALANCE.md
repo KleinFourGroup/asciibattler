@@ -3294,3 +3294,30 @@ deltas. The pre-X H7c→O log lives at
   also softens the Queen for EVERYONE, incl. the gambler's lean) · Queen-side comp/stage tuning · accept the
   residual as a signed per-boss exception. The immunity itself
   KEEPS regardless (user-signed identity; zero collateral).
+- **2026-08-19 — §83b the post-wail-trim six-arm table (n=120,
+  `514ef2b` vs the 83a baseline): the parity gaps now WOBBLE AROUND
+  the ±5 line at the resolution we can buy — single-lever iteration
+  past this point is noise-tuning.** 6/6 filed, box destroyed. The
+  table (overall / King / Queen · gap-vs-soldier): soldier-regen
+  0.708 / 0.797 / 0.607 · priest-regen 0.633 / 0.750 / 0.500
+  **(−7.5, was −11.7)** · gambler-regen 0.658 / 0.766 / 0.536
+  (−5.0, was −5.8) · soldier-55pre 0.783 / 0.859 / 0.696 ·
+  priest-55pre 0.742 / 0.828 / 0.643 (−4.2, in) · gambler-55pre
+  0.667 / 0.734 / 0.589 **(−11.7, was −6.7 — soldier-lift-driven)**.
+  Structure notes: every King cell is ~byte-stable (no banshee → the
+  trim can't touch King-seed runs — a built-in null control that
+  held); ALL movement is Queen-cell, and at n=56/boss-cell the
+  per-cell moves are ≤1.5 SE — the trim re-rolls Queen-fight
+  microstates (earlier un-panics → different trajectories), so
+  per-cell attribution at this n is mush. The regen gap closed
+  −11.7→−7.5 but NOT via a clean priest lift (priest Queen +1.8,
+  soldier Queen −7.2); the gambler-55pre "worsening" is the
+  soldier's 55pre Queen cell lifting +8.9 (~1.4 SE). **Disposition
+  (proposed):** both levers KEEP (each signed on design merit
+  independent of parity — identity + the not-fun trim); 83b's
+  residual is NAMED per the exit criterion's second arm (priest
+  regen ~−7.5 · gambler 55pre wobbling, both within ~1 SE of ±5);
+  the VERDICT-grade parity read moves to the 83f closing board on
+  final content, with these residuals pre-registered as WARN
+  candidates. Queen-side tuning stays the remaining door if 83f
+  confirms a real residual.

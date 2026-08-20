@@ -39,4 +39,13 @@ describe('--set (75l)', () => {
   it('an unknown sim key throws loud (the typo guard)', () => {
     expect(() => resolveKnob('sim.noSuchDial')).toThrow();
   });
+
+  it('§83e — the camps forced-engagement dial is registry-reachable', () => {
+    // The 83e design check's resolution: `procedural.camps` (nested weighted
+    // records) is NOT addressable, so the probe surface is this flat numeric
+    // SIM switch instead — `--set=sim.campsStartHostile=1`.
+    const knob = resolveKnob('sim.campsStartHostile');
+    expect(knob.obj).toBe(SIM as unknown as Record<string, number>);
+    expect(SIM.campsStartHostile).toBe(0); // shipped OFF — never ship > 0
+  });
 });

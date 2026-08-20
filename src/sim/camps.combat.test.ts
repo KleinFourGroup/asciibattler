@@ -222,6 +222,37 @@ describe('§75e — checkBattleEnd invariants', () => {
   });
 });
 
+describe('§83e — campsStartHostile (the forced-engagement probe dial)', () => {
+  it('at the shipped 0, installed camps stay passive (both factions unmarked)', () => {
+    const { world } = freshWorld();
+    dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
+    expect(world.campHostileTo(1, 'player')).toBe(false);
+    expect(world.campHostileTo(1, 'enemy')).toBe(false);
+  });
+
+  it('at 1 (probe-injected), camps install pre-marked hostile to the PLAYER only', () => {
+    const mutable = SIM as { campsStartHostile: number };
+    const original = SIM.campsStartHostile;
+    mutable.campsStartHostile = 1;
+    try {
+      const { world } = freshWorld();
+      const [camp] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
+      expect(world.campHostileTo(1, 'player')).toBe(true);
+      expect(world.campHostileTo(1, 'enemy')).toBe(false);
+      // The whole point: engagement emerges from ordinary targeting, both
+      // directions, with no order issued.
+      const player = spawnAt(world, 'player', { x: 3, y: 3 });
+      const enemy = spawnAt(world, 'enemy', { x: 3, y: 6 });
+      expect(findTarget(player, world)?.id).toBe(camp.id); // camp nearer than enemy
+      updateTarget(camp, world);
+      expect(camp.targetId).toBe(player.id);
+      expect(findTarget(enemy, world)?.id).toBe(player.id); // enemy still blind to it
+    } finally {
+      mutable.campsStartHostile = original;
+    }
+  });
+});
+
 describe('§75e — the engagement protocol treats a hostile camp member as mobile', () => {
   it('a ranged unit gets the real firing-cell path (not the rubble bestEffort corner-charge)', () => {
     const { world } = freshWorld();

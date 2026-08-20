@@ -794,6 +794,11 @@ export class World {
         throw new Error(`World.installCamps: duplicate camp instance id ${camp.id}`);
       }
       this.camps.set(camp.id, camp);
+      // §83e — the forced-engagement probe dial: pre-mark every camp hostile
+      // to the player at the install chokepoint (both construction paths).
+      // Idempotent on the fromJSON/rollout-clone path (hostileTo is a
+      // serialized Set); shipped 0 = untaken branch, byte-identical.
+      if (SIM.campsStartHostile > 0) camp.hostileTo.add('player');
     }
     this._campRng = campRng;
   }

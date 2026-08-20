@@ -79,6 +79,13 @@ export interface BattleResult {
   ticks: number;
   playerDeaths: number;
   enemyDeaths: number;
+  /** §83e — camp instances installed on this battle's board (0 = camp-free)
+   *  plus camps WIPED per killing faction (the `battle:ended` campKills
+   *  payload). The forced-engagement probe's conditioning + non-vacuous
+   *  counters; run totals derive in the reporter (the playerDeaths pattern). */
+  campsSpawned: number;
+  campKillsPlayer: number;
+  campKillsEnemy: number;
   /** 57g.5 — the K-sensitivity prefix instrument's per-battle counters,
    *  present ONLY when `rolloutSearch.kFlipTelemetry` is on (the schema is
    *  otherwise untouched — no parity risk for existing arms). Flattened to
@@ -516,7 +523,7 @@ export function runOne(
     });
   }
 
-  bus.on('battle:ended', ({ winner, xpAwards, survivorPower }) => {
+  bus.on('battle:ended', ({ winner, xpAwards, survivorPower, campKills }) => {
     if (!currentBattle || !currentWorld) return;
     // H7c telemetry — recorded here (not in a separate subscriber) so
     // `currentBattle.hop` is still live: each headless turn is one
@@ -559,6 +566,11 @@ export function runOne(
       ticks: currentWorld.currentTick,
       playerDeaths: currentBattle.playerDeaths,
       enemyDeaths: currentBattle.enemyDeaths,
+      // §83e — camps re-roll per battle, so campsList() at battle end IS this
+      // board's installed set (instances persist through member deaths).
+      campsSpawned: currentWorld.campsList().length,
+      campKillsPlayer: (campKills ?? []).filter((k) => k.killedBy === 'player').length,
+      campKillsEnemy: (campKills ?? []).filter((k) => k.killedBy === 'enemy').length,
       playerTeamSize: currentBattle.playerTeamSize,
       enemyTeamSize: currentBattle.enemyTeamSize,
       playerLevels: currentBattle.playerLevels,
@@ -882,6 +894,11 @@ export function runOne(
               ticks: battleTicks,
               playerDeaths: cb.playerDeaths,
               enemyDeaths: cb.enemyDeaths,
+              // §83e — no battle:ended fired on this guard path: presence is
+              // readable off the live world, kills are unknowable → 0.
+              campsSpawned: w.campsList().length,
+              campKillsPlayer: 0,
+              campKillsEnemy: 0,
               playerTeamSize: cb.playerTeamSize,
               enemyTeamSize: cb.enemyTeamSize,
               playerLevels: cb.playerLevels,

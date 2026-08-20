@@ -46,6 +46,12 @@ const CSV_HEADER = [
   // finalPool = the run-end pool (winners' headroom / 0-ish on pool deaths).
   'poolAtSectorEnd',
   'finalPool',
+  // §83e — same append-last rule; the camps forced-engagement probe's
+  // conditioning (campsSpawned > 0 = a camp-bearing run) + non-vacuous
+  // counters (player-killed camps realize rewards; enemy kills deny them).
+  'campsSpawned',
+  'campKillsPlayer',
+  'campKillsEnemy',
 ].join(',');
 
 export function renderSummaryCsv(results: readonly RunResult[]): string {
@@ -83,6 +89,9 @@ export function renderSummaryCsv(results: readonly RunResult[]): string {
         r.sectorsCleared,
         r.poolAtSectorClears[0] ?? '',
         r.finalPool,
+        r.battles.reduce((acc, b) => acc + b.campsSpawned, 0),
+        r.battles.reduce((acc, b) => acc + b.campKillsPlayer, 0),
+        r.battles.reduce((acc, b) => acc + b.campKillsEnemy, 0),
       ].join(','),
     );
   }

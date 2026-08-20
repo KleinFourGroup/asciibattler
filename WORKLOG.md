@@ -5216,3 +5216,58 @@ deferral, not acceleration: it rides with the fold. **Signed
 current arm with the fold's landing pre-registered as a standard
 amendment.** Rider bullets 75l/76h compressed to their resolutions
 in the same edit (all items consumed by 83a–83e).
+
+### 83e — the camps probe arm: design check + the dial (2026-08-20)
+
+**The design check answered NO twice, then found the door.** (1)
+`procedural.camps` is NOT `--set`-reachable: KNOB_GROUPS is still
+difficulty/health/leveling/sim, and the camps surfaces are nested
+weighted records — structurally outside resolveKnob's flat numeric
+`group.key` contract. (2) The deeper gap: the bot has no camp
+engagement at all — objectiveStrategy.ts's §75h scope guard
+deliberately kept camp members out of the candidate pool
+("§81's probe arm, not a default behavior"), and the obvious
+composition route is closed: harness.ts's frozen-anchor contract
+makes `--objective` mutually exclusive with `--searcher`, so a
+voluntary-seek arm can't ride the doctrine ARM.
+
+**The user's bigger question — "what would full search
+camp-awareness take?" — reframed the exclusion.** The frozen-anchor
+contract is NOT the obstacle: the searcher's native candidate
+channel is its script registry (what `--audition` flips), so a
+campRaid nominator (the §75e neutral-kind objective) enters cleanly
+— ~1 session. The real wall is VALUATION: the evaluator scores
+player-vs-enemy material over an 8 s horizon, so a camp raid scores
+strictly negative every audition (rewards are run-layer AND
+post-horizon — textbook horizon-blindness). The principled fix IS
+the terminal-prior fold already signed for the post-C5 interstitial;
+a hand-tuned evaluator camp term was rejected as exactly the
+myopic-arm dial-tuning the fold invalidates (the ladder-signing
+logic applied twice in one day). **Signed (user, 2026-08-20): the
+campRaid nominator is a named rider on the interstitial's fold
+phase (META-ROADMAP entry updated) — the fold's first genuinely new
+consumer and its validation case.**
+
+**The interim instrument, also signed: `sim.campsStartHostile`** —
+a flat numeric 0/1 SIM switch (registry-reachable, the
+enemyPullChance pattern), applied at the `installCamps` chokepoint:
+camps pre-marked hostile to the PLAYER only (enemy camp kills pay
+nothing — noise, not signal). Engagement emerges symmetrically from
+`hostileCandidate` with no order issued; `blockCampTurnEnd` (ON)
+then runs camp fights to completion, realizing rewards. A
+deliberate probe-only override of the §75g damage-is-hostility's-
+single-source doctrine; shipped 0 = untaken branch, byte-identical
+(fuzz pins hold). No RNG draw, no stream perturbation, no snapshot
+bump (`hostileTo` was already serialized; idempotent on the
+fromJSON/rollout-clone path). Telemetry rider: summary.csv gains
+campsSpawned/campKillsPlayer/campKillsEnemy (append-last; derived
+per-battle off the `battle:ended` campKills payload +
+`campsList()`, the playerDeaths pattern) — the conditioning key for
+the paired read (campsSpawned > 0 = a camp-bearing run).
+Pre-registered caveat: this measures FORCED engagement (combat load
++ payout), not voluntary farming opportunity-cost — that question
+waits for the fold rider. Batch shape: paired same-seed ARM
+baseline vs `--set=sim.campsStartHostile=1`, n=120, on the box
+(68h), one HEAD per cohort. +2 main tests (the dial's off/on pins
+in camps.combat) + the registry-reachability pin (setArg,
+fuzz:smoke-resident).

@@ -145,6 +145,21 @@
  *     stream replayed identically every turn of an encounter — the
  *     fetidPond-caught defect). A probability in [0,1].
  *     **Shipped 0.25 — the 75j verdicts: 0.15 read "works, but too rare".**
+ *   campsStartHostile — §83e: the forced-engagement PROBE dial. When > 0,
+ *     every installed camp is pre-marked hostile to the PLAYER faction at
+ *     install time (idempotent — `hostileTo` is a Set and serialized, so the
+ *     `fromJSON`/rollout-clone path re-applies harmlessly). A deliberate,
+ *     measurement-only override of the §75g "damage stays hostility's single
+ *     source" doctrine: the realistic bot has no camp-seeking (the §75h scope
+ *     guard), so reading camp-engagement economics needs engagement FORCED
+ *     through the ordinary targeting machinery (`hostileCandidate` admits
+ *     both directions symmetrically; `blockCampTurnEnd` then runs the camp
+ *     fight to completion, realizing rewards). Player-side only — enemy camp
+ *     kills pay nothing, so enemy hostility would add only noise. Stored
+ *     NUMERIC (0/1 switch, no RNG draw — no stream perturbation) so the
+ *     `--set` knob registry can address it (`sim.campsStartHostile=1`, the
+ *     enemyPullChance pattern). Shipped 0 — byte-identical passive camps;
+ *     never ship > 0.
  *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
  *     at which the unit's LOGICAL position flips from `from` to `to` (and the
  *     destination claim releases). Locked at 0.5 — the unit logically occupies
@@ -179,6 +194,7 @@ const SimSchema = z.object({
   campWanderChancePerSecond: z.number().min(0).max(1),
   blockCampTurnEnd: z.boolean(),
   enemyPullChance: z.number().min(0).max(1),
+  campsStartHostile: z.number().min(0).max(1),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -203,4 +219,5 @@ export const SIM = {
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
   blockCampTurnEnd: parsed.blockCampTurnEnd,
   enemyPullChance: parsed.enemyPullChance,
+  campsStartHostile: parsed.campsStartHostile,
 };

@@ -121,6 +121,18 @@ they happen:
   landing triggers the STANDARD sheet amendment ritual (pre-registered
   at 83f: the sheet signs at the current arm). The ML rung stays
   CLOSED unless a future board catches the tabular prior drifting.
+  **Rider (user-signed 2026-08-20 at 83e): the campRaid nominator** —
+  a sixth searcher script nominating the §75e neutral-kind camp
+  objective, the fold's first genuinely NEW consumer (and its
+  validation case). Sequenced HERE deliberately: under the myopic
+  evaluator (player-vs-enemy material only, 8 s horizon) a camp raid
+  scores strictly negative every audition — camp rewards are
+  run-layer and post-horizon — so the nominator is pointless before
+  the fold and near-free after it. The frozen-anchor exclusion
+  (harness.ts) is NOT the obstacle: nominators are the searcher's
+  native candidate channel, no `--objective` composition involved.
+  The §83e forced-hostility probe (`sim.campsStartHostile`) supplies
+  the interim camp-economics read.
 
 ---
 

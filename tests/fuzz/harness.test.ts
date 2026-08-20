@@ -243,7 +243,10 @@ describe('fuzz reporters', () => {
     // 68e — the walk column (the finalHop-gap fix); 72b-pre appended the
     // pool-trajectory columns after it (the append-last rule).
     expect(lines[0]).toContain('sectorsCleared');
-    expect(lines[0]!.endsWith('poolAtSectorEnd,finalPool')).toBe(true);
+    // §83e appended the camp probe columns after the 72b-pre pool pair.
+    expect(
+      lines[0]!.endsWith('poolAtSectorEnd,finalPool,campsSpawned,campKillsPlayer,campKillsEnemy'),
+    ).toBe(true);
     // Row count of comma-separated fields must match the header.
     const headerCols = lines[0]!.split(',').length;
     for (const row of lines.slice(1)) {
@@ -638,6 +641,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize: 8,
       playerLevels: [1, 1, 1, 1, 1],
@@ -708,6 +714,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths: 0,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize: 8,
       playerLevels: [1],
@@ -772,6 +781,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize,
       playerLevels: [1, 1, 1, 1, 1],
@@ -848,6 +860,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths: 0,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize: 8,
       playerLevels: [1],
@@ -896,6 +911,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths: 0,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize: 8,
       playerLevels: [],
@@ -1025,6 +1043,9 @@ describe('fuzz reporters', () => {
       ticks: 1,
       playerDeaths: 0,
       enemyDeaths: 0,
+      campsSpawned: 0,
+      campKillsPlayer: 0,
+      campKillsEnemy: 0,
       playerTeamSize: 5,
       enemyTeamSize: 8,
       playerLevels: [],

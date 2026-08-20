@@ -3394,4 +3394,7 @@ deltas. The pre-X H7c→O log lives at
   (recommended — pooled two-shape wall 0.278 sits −0.5 SE off the
   floor, noise-consistent; the verdict-grade read is the 83f closing
   board; another dose nudge now = the 83b noise-tuning regime) vs a
-  ×1.1 touch-up (+1 measurement commit + confirm).**
+  ×1.1 touch-up (+1 measurement commit + confirm).** *(ACCEPTED —
+  user-signed 2026-08-20: the ×1.075 dose + boss exemption stand;
+  "walls floor-hugging (0.265/0.292)" pre-registers as an 83f watch
+  beside the 83b parity residuals. §83d CLOSED.)*

@@ -440,10 +440,10 @@ closing board + the re-signed sheet; then the close ritual
 - [x] 83c — ✅ 2026-08-20: fire alarm retired batchless; the pull
   OUTCOME-IRRELEVANT at n=120 → a design-grounds decision; rider:
   the 83b levers hardened walls +0.10 (worklog §83c · BALANCE 2026-08-20)
-- [ ] 83d — forced-isolation reads + the dose re-bracket —
-  MEASUREMENT ✅ 2026-08-20 (bosses tie 16:16; band ~×1.05–1.10;
-  ⚠ main sits at ×1.0); OPEN: the pull call · the dose signing +
-  confirm (worklog §83d · BALANCE 2026-08-20)
+- [x] 83d — ✅ CLOSED 2026-08-20, all user-signed: bosses tie 16:16 ·
+  the pull's BOSS EXEMPTION (`49b1b00`, **Run v43→v44**) · dose
+  SIGNED ×1.075 (`ca4b042`); confirm walls ACCEPTED, "floor-hugging"
+  → an 83f watch (worklog §83d · BALANCE 2026-08-20 ×2)
 - [ ] 83e — camps forced-engagement probe arm · event-ratio economy
   read · 55pre-twin re-read · the ladder judgment
 - [ ] 83f — the closing board + the signing session (sheet

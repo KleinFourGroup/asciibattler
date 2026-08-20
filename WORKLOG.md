@@ -5150,3 +5150,10 @@ Numbers: BALANCE 2026-08-20 (second entry), canonical. Disposition
 returned to the user: ACCEPT (recommended — −0.5 SE off the floor
 pooled, noise-consistent; 83f is the verdict-grade read; a nudge now
 is the 83b noise-tuning regime) vs a ×1.1 touch-up.
+
+**83d close (2026-08-20, user-signed):** ACCEPT — the ×1.075 dose +
+the boss exemption stand; "walls floor-hugging" pre-registered as an
+83f watch beside the 83b parity residuals. §83d CLOSED same-day it
+opened its decision half; next = 83e (the economy-flood headline
+read · camps forced-engagement probe arm · event-ratio · 55pre-twin
+re-read · the ladder judgment).

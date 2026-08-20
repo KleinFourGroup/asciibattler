@@ -3398,3 +3398,42 @@ deltas. The pre-X H7c→O log lives at
   user-signed 2026-08-20: the ×1.075 dose + boss exemption stand;
   "walls floor-hugging (0.265/0.292)" pre-registers as an 83f watch
   beside the 83b parity residuals. §83d CLOSED.)*
+- **2026-08-20 — §83e THE ZERO-BATCH READS: the economy-flood
+  decomposition + the ladder convergence, all off on-disk data (the
+  83a/83c/83d batches; probe `output/box-batches/83e-econ.ts` via the
+  §71 `parseDecisionsCsv`/`perItemDecisionStats` tooling).**
+  - **⭐ The flood is ~100% earn-side, table-sourced.** Decision-
+    mediated bits on the 83a walk arms NET ≈0/run (events +4.2/+3.1 ·
+    port spend −2.4/−5.6 · packet-fire costs ~−1): the residual
+    ≈182/158 of the 183/154 bank IS battle+camp reward tables. The
+    bot spends ~3% of what it banks (posture dissolution — sinks
+    structurally unused at decision grade).
+  - **The config EV model closes the observed delta.** Per-completion
+    expected bits, pre-§82 → current: normal 6.6→11.5 (+74%) · elite
+    11.6→27.5 (+137%) · boss 15.6→32.5 (+108%) · camps 6.6–17.6 →
+    11.5–39.0 (+75–150%). Era trail on the walk-arb shape: bank 94.1/
+    92.1 (77f) → 183.0/154.1 (83a) — the model's predicted +~100/run
+    matches the observed +89 to first order. The §82 generosity
+    roughly DOUBLED per-completion bits everywhere; no other channel
+    is needed to explain the flood.
+  - **⭐ The ladder input CONVERGES.** Per-item realized value
+    (meanΔ|picked, pool-HP) is strikingly stable across THREE config
+    changes (83a walks vs the ca4b042 confirms, cross-HEAD): empower
+    3.45→3.49 (n≈1530/side) · patch 4.33→4.27 (n≈250) · every
+    big-n item ≤0.1 apart, worst small-n 0.56 (hype, n=24). Per the
+    72f pre-registration ("ML re-opens ONLY if the tabular prior
+    stops converging"): **the tabular prior converges — the
+    measured-terminal-prior ladder proceeds tabular, the ML question
+    stays closed** (judgment to the user's sign-off).
+  - **The event-boon decline (new, feeds the 83f ε-floor re-read):**
+    the arb arm picks the run-start boon choices at 0.00 (n≈800
+    instances: "A pile of bits"/"A few packets"/"A daemon" all
+    UNPICKED — the null arm wins under ε≈3.3 with margins ≈0). A
+    free run-long daemon reads as ~0 inside the K=2 horizon — the
+    horizon-blindness caveat's cleanest exhibit yet, and direct
+    evidence FOR folding a bits/passive terminal prior into the
+    rollout score (the ladder's exact job). Contrast: rewardDaemon
+    declines ~never — accept-by-default sites accept, choose-to-take
+    sites pass; the ε-floor decides, not item value.
+  - 70 of 211 per-item rows clear the n=80 floor at the 83a pool —
+    the per-item instrument is citable era-wide for the first time.

@@ -5157,3 +5157,27 @@ the boss exemption stand; "walls floor-hugging" pre-registered as an
 opened its decision half; next = 83e (the economy-flood headline
 read · camps forced-engagement probe arm · event-ratio · 55pre-twin
 re-read · the ladder judgment).
+
+## Phase 83e — the measurement reads (kicked off 2026-08-20, same session)
+
+### 83e — the zero-batch pass (2026-08-20; numbers: BALANCE 2026-08-20 §83e, canonical)
+
+Step zero paid immediately: 403 batch dirs on disk, 137 with
+decisions.csv (the whole 83a board + this week's arms) — the economy
+decomposition, the ladder convergence read, AND the event-ratio
+answer all landed without a box-minute, via the §71 read-back
+tooling (`parseDecisionsCsv`/`perItemDecisionStats`; probe
+`83e-econ.ts` beside the data). The three headlines: the flood is
+~100% earn-side and the config EV model CLOSES it (the §82 tables
+doubled per-completion bits; decision-mediated economy nets ≈0 —
+the bot spends ~3% of what it banks); the ladder's tabular prior
+CONVERGES across three config changes (big-n items ≤0.1 pool-HP
+apart — the 72f ML-reopening criterion reads CLOSED); and the
+event-boon decline surfaced (run-start boons picked 0.00 at n≈800 —
+horizon blindness on economy value, the cleanest exhibit yet, direct
+evidence for the terminal-prior fold). Event-ratio verdict folded
+in: events are economically ≈nil for the bot (+4 bits/run vs ~180
+from tables) — the braid world's event share dilutes COMBAT, not
+the economy. Remaining 83e: the economy design decision (menu to
+the user) · the camps probe arm (batch) · the 55pre-twin re-read ·
+the ladder judgment sign-off.

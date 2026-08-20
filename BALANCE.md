@@ -3445,3 +3445,16 @@ deltas. The pre-X H7c→O log lives at
     era delta).
   - 70 of 211 per-item rows clear the n=80 floor at the 83a pool —
     the per-item instrument is citable era-wide for the first time.
+  - **Dispositions (user-signed 2026-08-20):** ⭑ the ECONOMY —
+    ACCEPT + re-pin, no trims (the §82 generosity stands as the
+    signed feel decision; sinks unchanged; the dead-currency wart =
+    a C6 sink-content question, not a §83 number); the bank/fires
+    ref re-pins EXECUTE at the 83f closing board (that run = the
+    amendment's run, the 75l pattern — pinning at 83a values would
+    skip the 83b/83d movers). ⭑ the LADDER — judged TABULAR (rung
+    1); the terminal-prior FOLD + the ε-floor re-read route to the
+    post-C5 interstitial (META-ROADMAP §Interstitials), sequenced
+    AFTER the §83 close so the phase stays one-arm coherent; ⭑
+    pre-registered for 83f: the sheet signs AT THE CURRENT ARM, and
+    the fold's future landing triggers the standard amendment
+    ritual, not a re-litigation. The ML rung stays CLOSED.

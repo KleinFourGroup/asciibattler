@@ -5185,3 +5185,34 @@ from tables) — the braid world's event share dilutes COMBAT, not
 the economy. Remaining 83e: the economy design decision (menu to
 the user) · the camps probe arm (batch) · the 55pre-twin re-read ·
 the ladder judgment sign-off.
+
+### 83e — the two signings + the sequencing shape-lock (2026-08-20)
+
+**Economy: ACCEPT + re-pin, user-signed.** The recommendation's
+frame carried: the generosity was the user's own signed feel
+decision three days prior; the bot data shows no harm; sinks are
+structurally unused at decision grade so the bot's bank is a
+counter; and the binding question (does the flood trivialize HUMAN
+shops?) is only answerable by the user's playtests — carried as a
+rider. The dead-currency wart routes to C6 sink content. Ref
+re-pins execute at 83f (the closing board = the amendment's run).
+
+**Ladder: judged TABULAR, user-signed** — after two rounds of
+diligence the judgment survived: (1) the user's "daemons give no
+benefit? impossible" challenge forced the null-semantics correction
+(the exhibit sharpened from "boons declined" to "boons
+indistinguishable at K=2"; the convergence read untouched); (2) the
+user's sequencing challenge — "doesn't a later fold invalidate the
+§83 results?" — was met with the two-part answer that reshaped the
+plan: the signed sheet measures the GAME (arm upgrades historically
+re-pin refs, not re-litigate tuning — §60/§72f precedent; the
+searcher-tier 0.000 and ±5 ceilings bound the effect), and pulling
+the build INTO §83 would cause the real invalidation (cross-arm
+reads mid-phase). Where the concern DOES bite — the ε-floor
+re-read, a decision-grade tuning the fold obsoletes — the fix is
+deferral, not acceleration: it rides with the fold. **Signed
+(2026-08-20): the fold + ε-floor re-read → the post-C5 interstitial
+(named first-class in META-ROADMAP); 83f signs the sheet at the
+current arm with the fold's landing pre-registered as a standard
+amendment.** Rider bullets 75l/76h compressed to their resolutions
+in the same edit (all items consumed by 83a–83e).

@@ -391,30 +391,19 @@ closing board + the re-signed sheet; then the close ritual
   user-signed.
 - **Scope guards:** no new content in this phase; repairs price
   against REALIZED value; the n=80 floor for per-item signals.
-- **75l riders (user-signed 2026-08-10):** the BOSS-BOARD PULL
-  question — the walk walls read pull-softened (BALANCE 2026-08-10);
-  tentative user lean NO-pull-on-boss, decide on final data alongside
-  the dose re-bracket · the FIRE-CHANNEL re-read — inverted at 75l
-  (−0.075, statistically weak, 5–2 discordant); discriminate with
-  `--event-chance=0` on the doctrine pair, and re-derive the vector
-  pair on era content if it stays flat (76h note: it read +0.050
-  in-band — the alarm retires to a routine confirm). ✅ RETIRED at
-  83c: the trigger never fired; no batch spent (worklog §83c).
+- **75l riders (user-signed 2026-08-10):** ✅ BOTH RESOLVED — the
+  boss-board pull question → decided at 83d (the BOSS EXEMPTION);
+  the fire-channel re-read → RETIRED batchless at 83c (the
+  discriminate's trigger never fired; worklog §83c).
 - **83-pre (user-called 2026-08-12): the BALANCE audit + primer** —
   step zero, before any §83 measurement decision; scope carried by
   the 83-pre1/83-pre2 cut lines below (framing: worklog §76h-close).
-- **76h riders (user-signed 2026-08-11):** the WALL-FLIP attribution
-  — the walk walls moved pull-softened→hardened (0.412/0.481, above
-  the signed 30–35); §76's movers are confounded (critable-universal
-  / prc-eva / camps-leak) and now entangled with the pull question —
-  one `--set` bracket owns both · the NEGATIVE WALK CEILINGS (arb
-  −10/−12.5 vs doctrine, paired; plausibly the same wall phenomenon
-  via horizon blindness) · the gambler premise UPDATE: §76's organic
-  luck movers did not close the gap (regen-shape −22.5) · ⭐ the
-  n=120 PROTOCOL (user call, 2026-08-11): §83's decision-feeding
-  arms extend 40→120 seeds via `--seed-offset` 41..120 POOLED with
-  the 76h batches (determinism makes the first 40 free) — per-arm SE
-  ±7.7→±4.5, clears the n=80 per-item floor (worklog §76h).
+- **76h riders (user-signed 2026-08-11):** ✅ ALL RESOLVED/EXECUTED —
+  the wall-flip attribution closed by supersession (83c) · the
+  negative walk ceilings dissolved at 77f · the gambler premise
+  consumed by 83a/83b · ⭐ the n=120 protocol standing since 83a
+  (paid off on outing #1; pooling corrected to same-HEAD — worklog
+  §83a).
 
 **The cut (2026-08-17 kickoff, shape-locked; audit: worklog §83):**
 
@@ -444,8 +433,15 @@ closing board + the re-signed sheet; then the close ritual
   the pull's BOSS EXEMPTION (`49b1b00`, **Run v43→v44**) · dose
   SIGNED ×1.075 (`ca4b042`); confirm walls ACCEPTED, "floor-hugging"
   → an 83f watch (worklog §83d · BALANCE 2026-08-20 ×2)
-- [ ] 83e — camps forced-engagement probe arm · event-ratio economy
-  read · 55pre-twin re-read · the ladder judgment
+- [ ] 83e — IN FLIGHT 2026-08-20: the zero-batch pass ✅ (the flood
+  = earn-side, the §82 tables doubled per-completion EVs; the ladder
+  prior CONVERGES; the boon-indiscrimination exhibit — BALANCE §83e)
+  · economy ACCEPT signed (ref re-pins execute at 83f's board, the
+  75l this-run-is-the-amendment pattern) · the ladder judged TABULAR
+  (the fold + the ε-floor re-read → the post-C5 interstitial,
+  user-signed 2026-08-20 — tuning floors on the myopic arm would be
+  invalidated by the fold) · REMAINING: the camps probe arm · the
+  55pre-twin re-read
 - [ ] 83f — the closing board + the signing session (sheet
   re-signed; 0 FAIL, WARNs pre-registered only)
 - [ ] 83f2 — INSERTED 2026-08-19 (user): archetype-editor support

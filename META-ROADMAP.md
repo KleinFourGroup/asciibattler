@@ -110,6 +110,17 @@ they happen:
   (options menu, tutorial, save/load) and should build on audited idioms —
   ordering principle #1 applied to UI. Scope + cut at the round's own
   kickoff; re-confirm at the §83 close ritual.
+- **PLANNED — the measured-terminal-prior FOLD (post-C5 interstitial;
+  judged TABULAR, user-signed 2026-08-20 at 83e)** — rung 1 of the 72f
+  horizon-blindness ladder: fold the per-item measured values (the
+  decisions.csv aggregates — 83e read them convergent to ≤0.1 pool-HP
+  across three config changes) into the rollout terminal score. The
+  ε-floor re-read rides WITH it (deferred out of §83 by design —
+  floors tuned on the myopic arm would be invalidated by the fold);
+  the 83e boon-indiscrimination exhibit is the motivating case. Its
+  landing triggers the STANDARD sheet amendment ritual (pre-registered
+  at 83f: the sheet signs at the current arm). The ML rung stays
+  CLOSED unless a future board catches the tabular prior drifting.
 
 ---
 

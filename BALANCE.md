@@ -3321,3 +3321,54 @@ deltas. The pre-X H7c→O log lives at
   final content, with these residuals pre-registered as WARN
   candidates. Queen-side tuning stays the remaining door if 83f
   confirms a real residual.
+- **2026-08-20 — §83c THE PULL BRACKET + §83d first contact & the ×1.0
+  dose point (two overnight cohorts, `f2bff58` → `fe255e7`, all
+  n=120): the pull is OUTCOME-IRRELEVANT on this world; the two real
+  bosses are a first-contact dead heat; the dose bracket lands
+  clean around the band.** Cohort 1 (f2bff58, 6 arms ~6.2h):
+  walk-regen/55pre × pull{0.25, `--set=sim.enemyPullChance=0`} +
+  gen/wh first-contact (act-1 forced, `--hops=11 --encounter=<id>`).
+  Cohort 2 (fe255e7, the pre-signed ×1.0 measurement commit —
+  generalissimo levelBudget 1.44→1.15/final 1.56→1.25, witch-hunt
+  1.56→1.25, counts/healthPool held): walk-regen/55pre at ×1.0,
+  default pull. All 8 `fetched →` clean; both boxes destroyed.
+  - **The pull table (walls, full → pull0):** regen 0.500→0.464 ·
+    55pre 0.500→0.435 — Δ −0.036/−0.065, both <1 SE (52–66
+    arrivals) and in the SOFTENING direction; the 75l polarity
+    (pull-ablation hardened walls 0.267→0.533) is GONE two world
+    reworks later. Paired same-seed wins: 13:17 / 18:20 discordant
+    — dead heats; win Δ +0.033/+0.017, noise. **The no-pull-on-boss
+    decision carries ZERO measured balance cost either way — it goes
+    to the user on design grounds alone.** The delegated trim
+    exercised as pre-signed (outcome B): the dose crossing ran
+    default-pull only.
+  - **The 83b-levers walk receipt (cross-HEAD, same seeds vs 83a):
+    the walls HARDENED +0.10 on both shapes** (0.400→0.500; win
+    0.275→0.217 / 0.300→0.275, reach 0.458→0.433 / 0.500→0.550,
+    seam flat). Candidate story (unprobed): the softened act-1
+    Queen admits weaker rosters to act 2 — selection hardens the
+    door. The wall-to-band gap the dose must close is ~+0.16, not
+    83a's +0.06.
+  - **First contact (act-1 forced, deep-end factors): generalissimo
+    and witch-hunt are a DEAD HEAT** — win 0.492 BOTH (59/120 each),
+    wall 0.443 both, arrivals 106 both, with real churn underneath
+    (32 discordant seeds, exactly 16:16; forcing verified by
+    trajectory divergence 106/120 + distinct args). The compound
+    boss (officer aura + release-gated catapult) reads NO harder
+    than the witch-hunt at this shape — no support for the standing
+    aura-nerf prediction at first-contact resolution. Caveat:
+    player-relative budgets make the act-1 shape fair but absolute
+    rates don't transfer to the real door — differential instrument
+    only.
+  - **⭐ The dose bracket (×1.0 `fe255e7` vs ×1.25 `f2bff58`, walk
+    arms, paired seeds):** walls ×1.0 → **0.250/0.258** (below the
+    signed 30–35) vs ×1.25 → 0.500/0.500 (above); wins 0.325/0.408
+    vs 0.217/0.275. TERMINAL-SURGICAL again (reach/seam/arrivals
+    byte-identical across doses per shape — the 72f signature).
+    Linear interpolation puts the band at **~×1.05–×1.10** (regen
+    centers ~×1.075, 55pre ~×1.07); steepness caveat: two points
+    assume local linearity — the signed dose gets a confirm run
+    (83f-foldable). The ×1.25-inherited provisional dose question
+    RETIRES: on this world ×1.25 is measurably above band. ⚠ Main
+    currently carries the ×1.0 MEASUREMENT state (the 72f e230f71
+    precedent) — the signing decision sets the live factors.

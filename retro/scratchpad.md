@@ -233,3 +233,22 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   n=56/boss is mush even when the overall paired read is clean. The
   King cells' byte-stability doubled as a free null control — design
   probes so a subpopulation is structurally untouched when possible.
+- **Config-surgery edits verify per-ENCOUNTER-ID, never per-indent.**
+  The 83d ×1.0 dose edit used an indent-scoped replace_all and swept
+  ronin-vs-mages' two coincidental 1.44s (an out-of-scope elite); the
+  id-scoped factor printout (node one-liner over encounters.json)
+  caught it BEFORE the commit. The verify step is the instrument —
+  make it enumerate by id, not by textual pattern. (`fe255e7`.)
+- **Two forced arms reading identical AGGREGATES proves nothing about
+  the forcing either way** — verify via per-seed trajectory divergence
+  (totalTicks) + the batch args files. The 83d first-contact pair tied
+  exactly (win 0.492 both, 16:16 discordant) with 106/120 trajectories
+  diverged: a genuine dead heat, not a forcing failure. Aggregate
+  identity was one `git diff args` away from a false alarm.
+- **The queue-file driver pattern worked end to end** (83c/83d
+  overnight): a scratchpad-resident sequential driver re-reading its
+  arm queue each pass let a signed mid-flight scope change (the
+  first-contact chain + the crossing trim) land WITHOUT touching a
+  running process — and the two-cohort HEAD handoff (docs/config
+  commits only between driver exits) kept every launch parity-clean.
+  Candidate AGENTS promotion at the sweep.

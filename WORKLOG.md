@@ -5064,3 +5064,57 @@ decision inherits: at 75l the pull SOFTENED below-band walls; the
 walls now sit ABOVE band with the pull ON — ablating it should push
 them further out, so NO-pull-on-boss implies the 83d dose comes
 DOWN to compensate. 83c gates 83d.
+
+### 83c — part 2: the overnight verdict (2026-08-20; numbers: BALANCE 2026-08-20, canonical)
+
+Cohort 1 (f2bff58, 6 arms — the signed 83c four plus the two 83d
+first-contact arms chained per the evening session's signing): 6/6
+`fetched →` clean, ~6.2h, box destroyed. Pooled via the board's own
+parseSummaryCsv/computeMetrics (output/box-batches/83c-pool.ts —
+never reimplement the #120 wall arithmetic).
+
+**The 75l polarity did not survive the world.** The pull is
+outcome-irrelevant at n=120 — walls Δ under 1 SE and soft-direction,
+paired wins dead heats (13:17 / 18:20). The evening's outcome tree
+called this outcome B (~25% prior); the staged delegated rule fired
+and the dose crossing trimmed to default-pull. Consequences: the
+pull decision is pure design taste (standing lean NO-pull-on-boss;
+"keep and retire the question" is now equally legal — zero measured
+cost either way), and the dose interpolation transfers under either
+choice.
+
+**Rider surfaced by the fresh baseline:** the 83b levers hardened
+the walk walls +0.10 both shapes (cross-HEAD paired vs 83a) —
+plausibly act-1-Queen-softening selection admitting weaker rosters
+to act 2. Not a defect (the levers were signed on design merit);
+the dose absorbs it, but the story is unprobed — flagged for the
+83f read.
+
+**First contact: the bosses tied exactly** (win 0.492 both, 16:16
+discordant of 32 — a genuine dead heat verified at trajectory
+level, not a forcing failure). The aura-nerf prediction gets no
+first-contact support; the in-situ door read at the signed dose is
+its remaining venue.
+
+### 83d — the ×1.0 dose point + the bracket verdict (2026-08-20)
+
+The pre-signed measurement commit `fe255e7` (green 2678 + 398)
+landed at the cohort-1 exit per the handoff checklist; cohort 2 (2
+walk arms at ×1.0, default pull) filed 2/2, box destroyed. **The
+bracket is textbook**: ×1.0 walls 0.250/0.258 vs ×1.25's
+0.500/0.500, terminal-surgical both times (reach/seam byte-identical
+across doses — dose touches ONLY the door). Interpolation: the
+signed 30–35 band sits at ~×1.05–×1.10 (~×1.075 centers both
+shapes). The ×1.25-inherited provisional dose question RETIRES
+(measurably above band on this world). ⚠ Main carries the ×1.0
+measurement state until the user signs the live dose (72f e230f71
+precedent). Decision menu to the user: the pull call (design-only)
+· the dose factor (recommend ~×1.075 + a confirm run, 83f-foldable)
+· the near-miss process note (below) went to the scratchpad.
+
+Process notes banked (retro/scratchpad): config-surgery edits verify
+per-encounter-id, never per-indent (the replace_all indent
+assumption swept ronin-vs-mages' coincidental 1.44s — caught by the
+id-scoped verify BEFORE the commit); forced-arm verification reads
+per-seed trajectory divergence + args, never aggregates (identical
+aggregates here were a true dead heat, not a forcing failure).

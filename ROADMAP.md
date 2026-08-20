@@ -399,8 +399,7 @@ closing board + the re-signed sheet; then the close ritual
   `--event-chance=0` on the doctrine pair, and re-derive the vector
   pair on era content if it stays flat (76h note: it read +0.050
   in-band — the alarm retires to a routine confirm). ✅ RETIRED at
-  83c (2026-08-19, user-signed): the trigger never fired — 83a read
-  +0.100 dead-on signed, fourth era; no batch spent (worklog §83c).
+  83c: the trigger never fired; no batch spent (worklog §83c).
 - **83-pre (user-called 2026-08-12): the BALANCE audit + primer** —
   step zero, before any §83 measurement decision; scope carried by
   the 83-pre1/83-pre2 cut lines below (framing: worklog §76h-close).
@@ -438,10 +437,13 @@ closing board + the re-signed sheet; then the close ritual
   residual NAMED (exit arm 2) + pre-registered for the 83f verdict;
   Queen-side tuning = the open door (worklog §83b parts 1–5 ·
   BALANCE 2026-08-18/19 ×4)
-- [ ] 83c — the wall-flip/boss-pull `--set` bracket + the
-  fire-channel `--event-chance=0` discriminate
-- [ ] 83d — forced-isolation reads on the real bosses + the dose
-  re-bracket (retires the ×1.25 provisional dose question)
+- [x] 83c — ✅ 2026-08-20: fire alarm retired batchless; the pull
+  OUTCOME-IRRELEVANT at n=120 → a design-grounds decision; rider:
+  the 83b levers hardened walls +0.10 (worklog §83c · BALANCE 2026-08-20)
+- [ ] 83d — forced-isolation reads + the dose re-bracket —
+  MEASUREMENT ✅ 2026-08-20 (bosses tie 16:16; band ~×1.05–1.10;
+  ⚠ main sits at ×1.0); OPEN: the pull call · the dose signing +
+  confirm (worklog §83d · BALANCE 2026-08-20)
 - [ ] 83e — camps forced-engagement probe arm · event-ratio economy
   read · 55pre-twin re-read · the ladder judgment
 - [ ] 83f — the closing board + the signing session (sheet

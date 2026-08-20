@@ -5118,3 +5118,35 @@ assumption swept ronin-vs-mages' coincidental 1.44s — caught by the
 id-scoped verify BEFORE the commit); forced-arm verification reads
 per-seed trajectory divergence + args, never aggregates (identical
 aggregates here were a true dead heat, not a forcing failure).
+
+### 83d — the signed package + the confirm (2026-08-20 afternoon)
+
+The user signed both morning items: **the pull call = the
+design-appropriate change** (no-pull-on-boss — "the boss defends the
+pool") and **the dose = ×1.075, enthusiastically**. Both shipped
+same-session:
+
+- `49b1b00` — the boss exemption, **Run v43→v44**. The bump followed
+  the 47f precedent exactly (the serialized `currentEncounter` gains
+  `kind`; a v43 mid-battle boss save would re-setup pull-eligible —
+  the "silently diverge on resume" reject class). `spawnCamps` takes
+  a plain `pullEligible` param (the positioning.ts pattern; default
+  true keeps all fixtures untouched); the gated branch derives no
+  stream, so non-boss battles are byte-identical — the fuzz
+  determinism pins held, the design's own receipt. Camps still
+  spawn/aggro on boss boards. DESIGN pull bullet amended in-commit;
+  four schemaVersion pins followed.
+- `ca4b042` — the dose ×1.075. Six id-anchored edits (the morning's
+  banked process note applied: gen/king now share factor strings, so
+  pattern edits are structurally unsafe — every anchor carried its
+  stage's unique units line, and the verify enumerated per-id).
+
+**The confirm run** (box C, 2 walk arms n=120 at `ca4b042`):
+walls 0.265/0.292 — at-or-just-under the 30–35 floor,
+mechanism-consistent (dose interpolation + the exemption's
+83c-measured soft-Δ compound to exactly this range). Reach/seam
+in-band except the standing 55pre reach overperformance (0.542).
+Numbers: BALANCE 2026-08-20 (second entry), canonical. Disposition
+returned to the user: ACCEPT (recommended — −0.5 SE off the floor
+pooled, noise-consistent; 83f is the verdict-grade read; a nudge now
+is the 83b noise-tuning regime) vs a ×1.1 touch-up.

@@ -3372,3 +3372,26 @@ deltas. The pre-X H7c→O log lives at
     RETIRES: on this world ×1.25 is measurably above band. ⚠ Main
     currently carries the ×1.0 MEASUREMENT state (the 72f e230f71
     precedent) — the signing decision sets the live factors.
+- **2026-08-20 — §83d THE SIGNED PACKAGE + the confirm run (`49b1b00`
+  boss exemption Run v43→v44 · `ca4b042` dose ×1.075, both
+  user-signed same-day): walls land AT-OR-JUST-UNDER the band floor —
+  band-consistent within noise; disposition pending.** The morning
+  signings: (1) the camp pull's BOSS EXEMPTION (design-coherence call
+  made free by the §83c outcome-irrelevance read; `BattleEncounter.
+  kind` + `spawnCamps(pullEligible)`; non-boss battles byte-identical
+  — fuzz pins held) · (2) the dose ×1.075 (generalissimo
+  1.24/1.24/1.34 · witch-hunt 1.34×3; per-encounter-id verified).
+  Confirm arms (walk regen/55pre, n=120, `ca4b042`, 2/2 fetched, box
+  destroyed): **wall 0.265 / 0.292** vs the signed 30–35 (regen −3.5
+  pts under the floor ≈0.5 SE at 49 arrivals; 55pre −0.8 pts) · reach
+  0.408 / **0.542 (the 55pre overperformance watch persists, above
+  40–50)** · seam 16.24/16.02 (in) · win 0.300/0.383. The soft lean
+  is mechanism-consistent: the confirm compounds the dose with the
+  boss exemption, whose 83c-measured direction was −0.04/−0.07 wall —
+  interpolation + exemption-Δ predicts ~0.27–0.29, observed
+  0.265/0.292. Banks 177/158 — the §82 flood unchanged (the 83e
+  headline). **Disposition options (user decision): ACCEPT
+  (recommended — pooled two-shape wall 0.278 sits −0.5 SE off the
+  floor, noise-consistent; the verdict-grade read is the 83f closing
+  board; another dose nudge now = the 83b noise-tuning regime) vs a
+  ×1.1 touch-up (+1 measurement commit + confirm).**

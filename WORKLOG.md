@@ -5173,9 +5173,13 @@ doubled per-completion bits; decision-mediated economy nets ≈0 —
 the bot spends ~3% of what it banks); the ladder's tabular prior
 CONVERGES across three config changes (big-n items ≤0.1 pool-HP
 apart — the 72f ML-reopening criterion reads CLOSED); and the
-event-boon decline surfaced (run-start boons picked 0.00 at n≈800 —
-horizon blindness on economy value, the cleanest exhibit yet, direct
-evidence for the terminal-prior fold). Event-ratio verdict folded
+event-boon INDISCRIMINATION surfaced (⚠ corrected same-day from
+"boons declined" after the user's challenge — the eventChoice null
+arm is the random NOMINEE, not a pass, so a boon IS always taken;
+what's ≈0 is arbitration's ability to tell a daemon from 25 bits at
+K=2 — override rate 0.00 at n≈800, the sharper horizon-blindness
+exhibit, still direct evidence for the terminal-prior fold; BALANCE
+carries the correction in-entry, the b0f841d precedent). Event-ratio verdict folded
 in: events are economically ≈nil for the bot (+4 bits/run vs ~180
 from tables) — the braid world's event share dilutes COMBAT, not
 the economy. Remaining 83e: the economy design decision (menu to

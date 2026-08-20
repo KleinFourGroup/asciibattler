@@ -3425,15 +3425,23 @@ deltas. The pre-X H7c→O log lives at
     stops converging"): **the tabular prior converges — the
     measured-terminal-prior ladder proceeds tabular, the ML question
     stays closed** (judgment to the user's sign-off).
-  - **The event-boon decline (new, feeds the 83f ε-floor re-read):**
-    the arb arm picks the run-start boon choices at 0.00 (n≈800
-    instances: "A pile of bits"/"A few packets"/"A daemon" all
-    UNPICKED — the null arm wins under ε≈3.3 with margins ≈0). A
-    free run-long daemon reads as ~0 inside the K=2 horizon — the
-    horizon-blindness caveat's cleanest exhibit yet, and direct
-    evidence FOR folding a bits/passive terminal prior into the
-    rollout score (the ladder's exact job). Contrast: rewardDaemon
-    declines ~never — accept-by-default sites accept, choose-to-take
-    sites pass; the ε-floor decides, not item value.
+  - **The event-boon INDISCRIMINATION (CORRECTED same-day — the
+    entry first said "the boons are DECLINED"; wrong: the eventChoice
+    null arm is the NOMINEE, a uniform-random pick among enabled
+    choices [arbitrateEventChoice §74g], so null-wins = a random boon
+    IS taken, and a challenger row's pickRate counts only OVERRIDES).**
+    The corrected read: arbitration adds ZERO information at the boon
+    event — override rate ≈0.00 at n≈800 because the margins between
+    "25 bits" / "packets" / "a run-long daemon" all read ≈0 at the
+    K=2 horizon, so the coin flip stands. The horizon-blindness
+    exhibit survives in this sharper form: the rollout can't
+    DISCRIMINATE run-long assets whose run-grade values differ
+    hugely — still direct motivation for the terminal-prior fold.
+    Correction ripple into the Part-B decomposition: nominee-taken
+    event bits are logged under the null label, so the "+4.2 events"
+    figure is override-only and the residual bucket reads "battle
+    tables + camps + event-nominee boons" (the cross-era EV story is
+    unaffected — the start-event boons predate §82 and cancel in the
+    era delta).
   - 70 of 211 per-item rows clear the n=80 floor at the 83a pool —
     the per-item instrument is citable era-wide for the first time.

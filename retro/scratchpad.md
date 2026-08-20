@@ -245,6 +245,15 @@ Three fallout classes at the keyed-derivation remap, three repair shapes, ranked
   exactly (win 0.492 both, 16:16 discordant) with 106/120 trajectories
   diverged: a genuine dead heat, not a forcing failure. Aggregate
   identity was one `git diff args` away from a false alarm.
+- **decisions.csv null-arm semantics are PER-SITE — read the site's
+  arbitrate* header before interpreting picks.** At eventChoice, null =
+  the random NOMINEE (a boon is still taken; label "null" hides its
+  identity, and challenger pickRate counts only OVERRIDES); at
+  rewardDaemon the polarity is flipped (null = accept). The 83e
+  "boons declined" mis-read shipped to BALANCE and was corrected
+  same-day off the user's "that seems impossible" challenge — the
+  disbelief-check caught what the instrument tables couldn't.
+  (`1268f6a` + the correction commit.)
 - **The queue-file driver pattern worked end to end** (83c/83d
   overnight): a scratchpad-resident sequential driver re-reading its
   arm queue each pass let a signed mid-flight scope change (the

@@ -2814,7 +2814,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
+      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3002,7 +3002,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
+      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3328,7 +3328,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(43); // 82c — override ref list
+      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5409,7 +5409,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(43); // 82c — override ref list
+    expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');

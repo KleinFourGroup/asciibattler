@@ -208,6 +208,26 @@ describe('§75g — the enemyPullChance seam', () => {
     }
   });
 
+  // 83d — the BOSS EXEMPTION (user-signed 2026-08-20): `pullEligible=false`
+  // (what `applyTerrain` passes for a `kind:'boss'` encounter) suppresses the
+  // pull even at chance 1 — the boss-side wave defends the pool. Camps still
+  // spawn and prime normally; only the ordered engage is withheld.
+  it('boss boards: pullEligible=false withholds the order even at chance 1 (83d)', () => {
+    const mutable = SIM as { enemyPullChance: number };
+    const original = SIM.enemyPullChance;
+    mutable.enemyPullChance = 1;
+    try {
+      const { world } = freshWorld();
+      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1, false);
+      const primed = world.units.find((u) => u.campId === 1 && u.currentHp > 0);
+      expect(primed).toBeDefined(); // camps themselves are untouched
+      world.tick();
+      expect(world.objectiveFor('enemy').mode).not.toBe('engage');
+    } finally {
+      mutable.enemyPullChance = original;
+    }
+  });
+
   it('re-rolls per TURN: the same encounter seed disagrees across world seeds (§75j2)', () => {
     // The fetidPond-caught replay defect's regression pin: under the old
     // terrainSeed-parent fork every worldSeed agreed (0 disagreements in an

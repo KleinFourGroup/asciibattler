@@ -88,7 +88,7 @@ import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import { resolveDifficultyMultipliers, type DifficultyMultipliers } from '../config/difficulty';
-import { getEncounter, type Encounter } from '../config/encounters';
+import { getEncounter, type Encounter, type EncounterKind } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
 import { selectEncounter } from './encounters/selection';
@@ -253,6 +253,16 @@ export interface BattleEncounter {
    * always sets it.
    */
   readonly battleRules?: readonly BattleRule[];
+  /**
+   * 83d — the authored encounter's kind, for kind-gated battle-setup
+   * behavior. Sole consumer today: the camp pull's BOSS EXEMPTION
+   * (`spawnCamps` — the boss-side wave defends the pool instead of
+   * being diverted onto a camp; user-signed 2026-08-20, the §83c
+   * bracket having read the pull outcome-irrelevant either way).
+   * Optional so hand-built test fixtures stay untouched (absent =
+   * non-boss semantics, pull-eligible); `beginTurn` always sets it.
+   */
+  readonly kind?: EncounterKind;
 }
 
 /** E4: bumped 3→5 in two steps. v4 added `xp` on UnitTemplate + the
@@ -456,8 +466,14 @@ export interface BattleEncounter {
  *  table-id string to a `{table, trigger}` ref LIST (the §82 mixed-table
  *  split made single-table overrides underpowered — an event-pinned fight
  *  now carries the same multi-table chance mix a catalog encounter does).
- *  A v42 save carries the string shape → reject. */
-const RUN_SCHEMA_VERSION = 43;
+ *  A v42 save carries the string shape → reject.
+ *  83d: bumped 43→44. The serialized `currentEncounter` gains `kind` (the
+ *  camp pull's boss exemption rides it into battle setup — the 47f
+ *  battleRules pattern: the encounter IS the fixture, so replayTrace and
+ *  a mid-battle resume reproduce the gate). A v43 save's mid-battle boss
+ *  encounter lacks it → a resumed battle would re-run setup pull-eligible
+ *  and silently diverge from this engine's semantics — reject. */
+const RUN_SCHEMA_VERSION = 44;
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -2748,6 +2764,8 @@ export class Run {
       gridW,
       gridH,
       theme,
+      // 83d — the pull's boss gate rides the encounter (see the interface note).
+      kind: encounter.kind,
       playerTeam: stampedPlayerTeam,
       enemyTeam,
       // 47f — the owned daemons' battle hooks, compiled fresh each turn

@@ -163,7 +163,18 @@ export function applyTerrain(
   // common case; the presence gate rides inside spawnCamps + installCamps).
   // worldSeed (per-turn, battleRng-rolled) feeds ONLY the pull roll — camp
   // IDENTITY stays on the per-encounter terrainSeed (the signed 75j verdict).
-  spawnCamps(world, terrain.campSpawns, terrain.camps, encounter.terrainSeed, encounter.worldSeed);
+  // 83d — the pull's BOSS EXEMPTION (user-signed 2026-08-20): the boss-side
+  // wave defends the pool instead of being diverted onto a camp. `kind` rides
+  // the encounter (the 47f fixture pattern); absent (hand-built fixtures) =
+  // non-boss = pull-eligible.
+  spawnCamps(
+    world,
+    terrain.campSpawns,
+    terrain.camps,
+    encounter.terrainSeed,
+    encounter.worldSeed,
+    encounter.kind !== 'boss',
+  );
   return terrain.spawnRegions;
 }
 
@@ -201,6 +212,10 @@ export function spawnCamps(
   campRefs: readonly CampRef[],
   terrainSeed: number,
   worldSeed: number,
+  // 83d — false on boss boards (the pull's boss exemption; camps still spawn
+  // and aggro normally). A plain param, not an encounter import — the
+  // positioning.ts pattern keeps the assert-function test surface.
+  pullEligible = true,
 ): void {
   if (campSpawns.length === 0) return;
   if (campRefs.length === 0) {
@@ -268,7 +283,10 @@ export function spawnCamps(
   // A pulled camp whose primed member is missing (blocked anchor at setup —
   // the 75h2 silent-skip edge) skips the pull: there is no unit to order
   // against, and a tile order on a passive camp would just loiter.
-  if (SIM.enemyPullChance > 0) {
+  // 83d — `pullEligible` gates the whole branch: a boss board derives no
+  // pull stream (keyed derivation → no downstream shift; non-boss battles
+  // stay byte-identical).
+  if (pullEligible && SIM.enemyPullChance > 0) {
     const pullRng = deriveRng(terrainSeed, 'enemyPull', worldSeed);
     if (pullRng.next() < SIM.enemyPullChance) {
       const camp =

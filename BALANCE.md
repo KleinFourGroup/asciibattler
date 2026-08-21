@@ -499,6 +499,32 @@ re-time mid-sweep).
   the finale (walls 0.69–0.74, wins ~0.13). Nobody guesses that
   steepness from the baseline — the bracket is one box-hour of
   insurance on every magnitude sign.
+- **Fixed-hand probes over-weight fixed-hand channels (promoted
+  2026-08-21):** 83b's Probe B guaranteed the healer on the board
+  every fight, so the keystone-disable channel read as half the gap;
+  live, draw dilution delivered ~15%. When a probe FIXES a variable
+  the live game rolls, every channel touching it inherits the fix as
+  an over-weight — probes rank stories, paired live batches size them.
+- **Identical AGGREGATES on two forced arms prove nothing about the
+  forcing (promoted 2026-08-21):** 83d's first-contact pair tied
+  EXACTLY (0.492 both, 16:16) with 106/120 per-seed trajectories
+  diverged — a genuine dead heat, one `git diff args` away from a
+  false "forcing failed" alarm. Verify a forcing via per-seed
+  trajectory divergence (totalTicks) + the batch args files, never
+  via the aggregate.
+- **decisions.csv null-arm semantics are PER-SITE (promoted
+  2026-08-21):** at eventChoice null = the random NOMINEE (a boon IS
+  taken; challenger pickRate counts only OVERRIDES); at rewardDaemon
+  the polarity flips (null = accept). Read the site's `arbitrate*`
+  header before interpreting a pick table — the 83e "boons declined"
+  mis-read shipped and was corrected same-day off the user's
+  disbelief check.
+- **Cross-HEAD pooling is void (promoted 2026-08-21):** the n=120
+  protocol's "free first 40" must come from SAME-HEAD batches (83a
+  corrected its pooling; 83e/83f re-ran fresh baselines rather than
+  pair against the ca4b042 confirms — and the n=120 walk twins then
+  reproduced them exactly, which is what a sim-inert commit looks
+  like when PROVEN rather than assumed).
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 

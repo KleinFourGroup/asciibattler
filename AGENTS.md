@@ -116,7 +116,10 @@ kickoff — has its own section below.)
   rows is the strongest lint an instrument can get).
 - **Scratch probes go in real `.ts` files** — inline `npx tsx -e` can
   wedge silently at spawn on Windows (~0 CPU forever, no output, no
-  crash; the §57g CPU-vs-wall check catches it — 70a).
+  crash; the §57g CPU-vs-wall check catches it — 70a). ⚠ Repo-resident
+  probes under `tests/fuzz/output/` are TYPECHECKED by the pre-commit
+  tsc sweep — keep them clean or delete them when done (83b); the
+  scratchpad directory is the zero-friction home for throwaways.
 - **Behavior-equivalence refactors get a before/after fuzz-arm diff
   oracle — with the "before" pinned in a worktree.** Capture per-arm
   `summary.csv` baselines at HEAD *before* the surgery, re-run after,
@@ -132,6 +135,36 @@ kickoff — has its own section below.)
   next turn.** AskUserQuestion dialogs hide same-turn assistant text in
   the desktop app (bit twice at the 47 kickoff) — a proposal presented
   in the same turn as the question dialog is invisible to the user.
+- **A probe must re-derive its expectation from a surface the code
+  under test does NOT consult** (the C5 sweep's ⭐⭐ lesson — §79e/§79g
+  circular verification). A render probe that computed the expected
+  glyph position with the same helper that POSITIONED the glyph read
+  "10.00px, 26 bodies" twice and was structurally incapable of failing;
+  the user's eye caught it. Re-derive from the asset, the shader, the
+  raw CSV — never from the helper under test. The tell is cheap: if
+  the probe and the code call the same function, it measures
+  self-consistency, not correctness.
+- **"Fixed" for anything player-facing means fixed WHERE PLAYERS GET
+  IT** — or say "fixed at next deploy" (§79-post: a licence file landed
+  in `dist/` read as "the live breach is closed" while the
+  hand-uploaded live build still predated it). Trace every "closed"
+  claim to the distribution surface, not the tree.
+- **Put the guard on the path where the MISTAKE happens, not where
+  people already think about the problem** (§79-post): gen:font's
+  catalog gates ran only when someone ran gen:font — i.e. when the
+  font already had their attention; the guard that closed the
+  editor-authored-glyph hole is the one riding `npm test`. A check's
+  value is its placement on the forgetful path.
+- **Adding a CONSUMER to an old seam → sweep the seam's edge branches
+  under the new consumer**, not just the consumer's happy path (75j2:
+  the enemy team's first ordered engage on neutrals walked a freeze the
+  player arm had carried unexercised for two phases — the 75k fix).
+- **Config surgery verifies per-ID, never per-indent** (83d: an
+  indent-scoped replace_all swept an out-of-scope elite's coincidental
+  1.44; the id-keyed factor printout caught it pre-commit). Make the
+  verify step enumerate by key. Same family: sweep a FIELD by its key,
+  never by the values you already know (82c found a third
+  `rewardOverride` only when the schema went strict).
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
   the code change.
@@ -185,7 +218,14 @@ kickoff — has its own section below.)
   through a pipeline: `cmd | tail` reports *tail's* exit (a blocked
   commit looked green), and a driver's logged `EXIT=$?` can record
   box-batch's exit 0 on a parity REFUSAL — the `fetched →` line count
-  is the reliable completion signal for any driver log.
+  is the reliable completion signal for any driver log. **The
+  queue-file driver pattern (83c/83d/83e/83f) is the sanctioned
+  overnight shape:** a scratchpad-resident sequential driver
+  (launch → short-poll → fetch → next), chainable; and ⚠ **ONE HEAD
+  PER COHORT** — the box pulls to local HEAD at every launch, so a
+  push mid-queue silently reruns the remaining arms at the new HEAD,
+  and the launch parity guard refuses a DIRTY tree outright: no
+  commits, no doc edits, until the driver's last launch has fired.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes
@@ -285,7 +325,11 @@ authored. At phase start:
    implementation prose (or the old over-investment just relocates to
    phase start). When a step touches ANY serialized union, the cut
    line predicts the snapshot bump (the 48b/49c twice-taught rule — a
-   "sim untouched" risk note is a prediction too). When a risky
+   "sim untouched" risk note is a prediction too). Its exact sibling:
+   a step that adds a SERIALIZED RNG STREAM predicts the seed
+   re-baseline (74b promised byte-identity by reasoning about node
+   reachability; the `eventRng` construction fork shifted every
+   downstream stream and broke three seed-sensitive tests). When a risky
    change has a separable UI, cut it
    headless-core-first, render-second (the H4a/H4b precedent) — it
    shrinks the eyeball-only surface to what's actually visual.

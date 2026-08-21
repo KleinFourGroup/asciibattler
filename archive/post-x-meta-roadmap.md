@@ -1,0 +1,451 @@
+# META-ROADMAP — The road to feature-complete (Post-X) — ARCHIVED
+
+> **Superseded 2026-08-21** by [../META-ROADMAP.md](../META-ROADMAP.md) v2
+> (the post-Cluster-5 planning session). Clusters 1–5 below are all ✅
+> complete; "Cluster 6 — Meta & Ship" and "§Interstitials" were dissolved
+> into Rounds 6–12 of v2. Kept verbatim for the citations in older worklogs.
+
+The single source of truth for the **order in which the remaining game systems get
+built**, and why that order minimizes future rewrites. This is the index above
+`ROADMAP.md`: each **cluster** here becomes its own full roadmap spec when its turn
+comes. `DESIGN.md` says *what* we're building; `ARCHITECTURE.md` says *how the code
+is shaped*; `ROADMAP.md` is the *current* in-flight roadmap; this file is the
+*meta-order* across the roadmaps still to come.
+
+**Status:** Locked 2026-06-22, off the source brief now archived at
+[archive/Post-X-Outstanding-Features.md](archive/Post-X-Outstanding-Features.md).
+The encounter-system round (Phases S→X) is content-complete; this plans everything
+between here and feature-complete.
+
+> **Cluster 1 — Combat Depth is COMPLETE** (Phases **Y → 34**, archived at
+> [archive/post-x-roadmap.md](archive/post-x-roadmap.md)). **Cluster 2 — Spatial &
+> Movement is now EXPANDED into [ROADMAP.md](ROADMAP.md)** (Phases **35 → 41**),
+> synthesized 2026-06-28 from [archive/cluster-two-spec.md](archive/cluster-two-spec.md)
+> + the design discussion that locked flight (deferred build) and the full
+> data-driven unit overhaul. The remaining clusters (3–6) below stay as the
+> meta-order until their turn comes.
+
+---
+
+## How to read this
+
+- The six clusters are **ordered**. The order is the product, not the list — it's
+  built so that every system is authored against a data model that is already
+  final by the time content references it.
+- Each cluster will be expanded into its own `ROADMAP.md` (continuing the phase
+  cadence). When you start a cluster, lift its **"Lays these seams / decisions
+  locked"** and **"Depends on / must not precede"** notes into the spec.
+- Nothing in the source list was dropped. The **Coverage map** at the bottom shows
+  where every original bullet landed; a handful of items I added are flagged
+  **(added)**.
+
+## The ordering principles
+
+1. **Define a data model before the content that consumes it.** The expensive
+   rewrites in this list aren't engine bugs — they're *re-authoring passes* when a
+   schema shifts under content that already shipped. The most-referenced models go
+   first.
+2. **Cluster work that touches the same core.** Anything that touches
+   pathfinding / collision / `TileGrid` is designed **once**, with all its
+   requirements known — not poked four separate times.
+3. **Seam now, fill later.** When a system is genuinely uncertain because it has no
+   consumers yet (multi-tile units), introduce the *seam* it will fill — a
+   behavior-identical indirection — so that later content is authored against the
+   seam, and the eventual implementation is an *extension*, not a *rewrite*. (We do
+   this routinely: the `rewards?` field, the `unit-card--rarity-*` hook, the
+   difficulty-multiplier seam.)
+4. **Polish rides its feature.** Status-effect visualization, combat SFX, and
+   camera shake are *part of* the cluster that motivates them, not a terminal
+   cleanup round. An effect you can't see is an unverifiable effect. A final
+   global feel/settings sweep is the only polish that waits for ship.
+
+**Cross-cutting:** every cluster that touches combat **closes with a balance pass**
+(the `BALANCE.md` loop). That's a convention, not a cluster.
+
+## The sequence at a glance
+
+```
+1. Combat Depth ─┐
+2. Spatial & Movement ─┤ (the two "scary" engine rounds — done first, deliberately)
+                       │
+3. Economy ────────────┤
+4. Drafting & Identity ─┤ (content-model rounds on a now-stable engine)
+5. Map Content ─────────┤
+                        │
+6. Meta & Ship ─────────┘ (the capstone — unlocks/gates everything above)
+```
+
+Dependency edges the order satisfies:
+
+- Consumables → effects/attacks  ⇒ Combat before Economy
+- Shop / camps / events / elite payoff / meta → rewards+currency  ⇒ Economy before its consumers
+- Starting characters → draft pools + rarity  ⇒ Drafting internally ordered
+- Meta unlocks → starting characters + difficulty + persistence  ⇒ Meta last
+- Map content → economy + combat + drafting + spatial  ⇒ Map Content after all four
+- Spatial → (soft) combat only; otherwise standalone  ⇒ free to go at #2
+
+**Rationale for the two engine rounds first:** Combat Depth and Spatial &
+Movement are the deepest core surgery in the whole plan. Doing them while the
+codebase is at its current maturity — before clusters 3–6 pile content on top —
+means the later rounds are content/UI on a stable, hardened core. Getting them
+right once beats retrofitting later.
+
+**Interstitial rounds** (user-feedback rounds slotted between clusters — the
+Post-N O→R precedent) don't break the cluster order; they're recorded here as
+they happen:
+
+- **2026-07-04 → 2026-07-06 — the Pathfinding Audit (Phases 42→46): ✅ COMPLETE
+  & user-confirmed** — the movement-intelligence audit between Clusters 2 and 3;
+  the WHCA\*/flow-field gate **decided NO on data**. Detail: the
+  [PATHING.md](PATHING.md) run-log + BALANCE.md §46b; the riders it hands
+  Cluster 3 are carried by the HANDOFF 🧭 Cursor (the single live-status home).
+- **2026-07-29 → 2026-08-04 — Run-layer rollout arbitration (Phases 69→72):
+  ✅ COMPLETE & user-signed** — the §57 lesson applied to the run layer; the
+  arbitrated default shipped (`--arbitrate` in the doctrine arm). Detail:
+  HANDOFF §Closed rounds + BALANCE §§69–72f + the post-68 archives.
+- **NEXT — THE POST-C5 INTERSTITIAL (kickoff pending, spec-first):** its
+  gathered scope is the two PLANNED entries below + the user's OPEN §80
+  review of the five `plans/` docs + the carried TODO watch items
+  (HANDOFF 🧭 NEXT). The one open ordering call for the kickoff spec
+  session: the UI audit first (slated before C6 for idiom reasons) or
+  the fold first (the balance instrument). Cluster 5 handed it a
+  sheet at 0 FAIL / 6 WARN (all small-n or accepted) — no balance debt
+  rides in.
+- **PLANNED — UI style & robustness audit (between Clusters 5 and 6;
+  user-raised 2026-08-14 at the §78e close)** — a dedicated UI round inside
+  the post-C5 interstitial: the input-accessibility audit (every surface vs
+  DESIGN §Input accessibility — pure mouse/touch always sufficient), the
+  layout-stability sweep (the "Y-coordinate hysteresis" class, TODO), style-
+  idiom unification (chrome chips / modals / buttons), and the accumulated
+  TODO riders (empower naming collision · display-color config hoist ·
+  sector-cleared/win-sting share · the settings-home question). Sequenced
+  BEFORE Cluster 6 deliberately: C6 authors the biggest remaining UI
+  (options menu, tutorial, save/load) and should build on audited idioms —
+  ordering principle #1 applied to UI. Scope + cut at the round's own
+  kickoff; re-confirm at the §83 close ritual.
+- **PLANNED — the measured-terminal-prior FOLD (post-C5 interstitial;
+  judged TABULAR, user-signed 2026-08-20 at 83e)** — rung 1 of the 72f
+  horizon-blindness ladder: fold the per-item measured values (the
+  decisions.csv aggregates — 83e read them convergent to ≤0.1 pool-HP
+  across three config changes) into the rollout terminal score. The
+  ε-floor re-read rides WITH it (deferred out of §83 by design —
+  floors tuned on the myopic arm would be invalidated by the fold);
+  the 83e boon-indiscrimination exhibit is the motivating case. Its
+  landing triggers the STANDARD sheet amendment ritual (pre-registered
+  at 83f: the sheet signs at the current arm). The ML rung stays
+  CLOSED unless a future board catches the tabular prior drifting.
+  **Rider (user-signed 2026-08-20 at 83e): the campRaid nominator** —
+  a sixth searcher script nominating the §75e neutral-kind camp
+  objective, the fold's first genuinely NEW consumer (and its
+  validation case). Sequenced HERE deliberately: under the myopic
+  evaluator (player-vs-enemy material only, 8 s horizon) a camp raid
+  scores strictly negative every audition — camp rewards are
+  run-layer and post-horizon — so the nominator is pointless before
+  the fold and near-free after it. The frozen-anchor exclusion
+  (harness.ts) is NOT the obstacle: nominators are the searcher's
+  native candidate channel, no `--objective` composition involved.
+  The §83e forced-hostility probe (`sim.campsStartHostile`) supplies
+  the interim camp-economics read (verdict: forced engagement
+  decisively net-negative at current tuning — BALANCE 2026-08-21).
+  **Second rider (user-signed 2026-08-20): the 55pre-vector
+  re-derive** — the fixed anchor's persistent reach overperformance
+  is measured ceiling drift; a fresh vector derived PRE-fold would
+  be invalidated by it (the same sequencing logic), so the re-derive
+  runs here, after the fold lands, feeding the same amendment ritual.
+
+---
+
+## Cluster 1 — Combat Depth  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases Y→33)
+
+**Charter:** make attacks and effects **composed data**, not hand-coded classes,
+and build the depth (status effects, richer attack mechanics) on top of that model.
+
+**In scope**
+
+- **Non-stat status effects:** burn, bleed, poison, blind, confusion, panic,
+  frozen. These extend the existing K1 status system (today stat-mod-only) along
+  two new axes: *periodic* effects (DoT — burn/bleed/poison, kin to the existing
+  `unit:burned` tile chip) and *behavior/AI overrides* (blind = hit penalty,
+  confusion/panic = altered targeting/movement, frozen = skipped actions).
+- **Additional attack mechanics:** chain attacks, attacks that inflict status
+  effects (the literal join of the above with the attack model), summoning.
+- **The data-driven attack/effect model** — the keystone. Today each attack is a
+  code class (`MeleeStrike`, `MagicBolt`, `CatapultShot`, …). The attack editor
+  (below) requires attacks to become *composed effects over the F2 action-phase
+  timeline*. **This schema is the single most-referenced thing in the whole
+  meta-roadmap.**
+
+**Dev tools (built alongside)**
+
+- **Attack editor** — visual/JSON authoring of the new data-driven attacks
+  (modeled on the encounter editor; writes via `/__save-config`).
+- **Archetype-editor expansion** — extend the existing tool to *create* new
+  archetypes, not just edit them (you'll need new units to carry the new attacks).
+
+**Polish that rides it**
+
+- In-battle **status-effect visualization** (reclassified from "polish" — it's part
+  of the feature).
+- Combat **SFX** for the new effects/mechanics; **camera shake** on heavy hits.
+
+**Lays these seams / decisions locked**
+
+- Build on K1 (`src/sim/statusEffects.ts`) + F2 (`action:phase` timeline +
+  `OrphanPolicy`) — extend, don't replace.
+- The attack/effect schema is the foundation everything downstream authors against.
+  Spend the time here; get it wrong and every later enemy/camp/consumable
+  re-authors.
+
+**Depends on:** nothing new.
+**Must precede:** Economy (consumables grant effects), Map Content (camp units use
+attacks/effects). **Closes with a balance pass.**
+
+**Flag — enemy/encounter AI:** O1 left enemy steering inert (`atWill`). Summoning
+and richer attacks will feel dumb without *some* encounter-attached enemy steering.
+Decide at spec time whether a modest "encounter AI" sub-thread lives here or in
+Map Content.
+
+---
+
+## Cluster 2 — Spatial & Movement  ✅ EXPANDED → [ROADMAP.md](ROADMAP.md) (Phases 35→41)
+
+**Charter:** harden the movement/pathfinding/occupancy core (it bit us once with
+the kiting bug), extend it with terrain depth and flight, and **lay the footprint
+seam** so multi-tile units become a later extension instead of a rewrite.
+
+**In scope (sequenced low-risk → high-risk, hardening as it goes)**
+
+1. **Harden the core** — pay down the kiting-class debt (the corridor archer
+   kite-pin was a real `MovementBehavior` bug); build the test scaffolding:
+   occupancy invariants, a pathfinding fuzz.
+2. **Tile mechanics** — deep water, mountains/uneven, mud, ice, sand as cost +
+   passability rules (`TileGrid` already has per-cell movement cost). *Authoring*
+   placements into layouts is ongoing content; the *mechanics* land here.
+3. **Dynamic terrain** — destructible terrain (HP-bearing neutral-team entities,
+   kin to today's walls/half-cover) + tiles with dynamic effects.
+4. **Flight** — a pathing/targeting modifier (ignore ground blockers + water/chasm,
+   meleeable by adjacent ground units). Does **not** break the 1-unit-1-cell
+   invariant.
+5. **The footprint seam** — route every spatial query through an occupancy
+   abstraction (`cellsOccupiedBy(unit)`, `footprintFits(cells, at)`,
+   `distanceBetween(unitA, unitB)`) that currently always returns a single cell.
+   Behavior-identical, snapshot-stable refactor.
+
+**Deferred to a later, small spec — the multi-tile *fill*:** N-cell footprints +
+rendering + spawn-room validation. Once the seam exists, this is a bounded
+extension you slot in when a concrete consumer appears (a 2×2 boss, a siege
+engine) — **not** part of this round.
+
+**Dev tools (built alongside)**
+
+- **Layout-editor extensions** — paint the new tiles, author dynamic terrain,
+  and (when the fill lands) validate multi-tile spawn room.
+
+**Lays these seams / decisions locked**
+
+- **Open the round with a one-paragraph design-target sketch** so the footprint
+  seam isn't shaped blind — e.g. "footprints are axis-aligned rectangles up to
+  3×3; flyers ignore ground blockers + water but are meleeable; ice slides, mud
+  halves move." Constraints, not a content round.
+- Single-tile stops being a hard-coded assumption and becomes "a footprint of
+  size 1." Clusters 3–6 then author against the seam, never against single-tile.
+
+**Depends on:** (soft) Combat Depth — interesting units to test on, satisfiable
+with fixtures. **Must precede:** Map Content (camps want flyers/terrain).
+**Closes with a balance pass** (terrain/flight reshape the tactical layer).
+
+---
+
+## Cluster 3 — Economy
+
+**Charter:** define the reward / currency / item model **once**, then build the
+sinks that spend it.
+
+**In scope**
+
+- **Reward system** — fills the reserved `rewards?` seam on `Encounter`; makes
+  elite nodes (and later camps/events) reward-bearing instead of XP-only.
+- **Currency.**
+- **Shop nodes** — the deferred shop node type on the run map.
+- **Consumable items** — can now grant Cluster-1 effects (poison flask, etc.).
+
+**Dev tools (built alongside)**
+
+- **Reward / item / shop-inventory editor** **(added)** — you'll want authored loot
+  tables and shop inventories the same way encounters needed the encounter editor.
+
+**Polish that rides it:** SFX for pickups/purchases.
+
+**Lays these seams / decisions locked**
+
+- The reward/currency/item shape is the most-depended-on *meta* model — camps,
+  events, elite payoffs, and meta-progression all consume it. Lock it before they
+  reference it.
+
+**Depends on:** Combat Depth (consumables grant effects).
+**Must precede:** Drafting (shop can offer rarity-weighted units), Map Content,
+Meta.
+
+---
+
+## Cluster 4 — Drafting & Identity
+
+**Charter:** rarity → draft pools → starting characters, a self-contained chain.
+
+**In scope**
+
+- **Unit rarity system** — fills the `unit-card--rarity-*` UI seam.
+- **Drafting system + draft pools** — the much-deferred draft model.
+- **Starting characters** — bundles { starting roster, daemon, draft pool }.
+  Daemons already exist (Phase L); `recruitment.json` already holds the starting
+  team.
+
+**Dev tools (built alongside)**
+
+- **Draft-pool editor.**
+- **Starting-character editor** (or plain JSON if the schema stays simple).
+- Archetype editor already extended in Cluster 1.
+
+**Depends on:** Economy (shop offers rarity-weighted units — soft).
+**Must precede:** Meta (unlocks gate starting characters).
+
+**Flag — synergies / traits (added, decision needed):** a draft/rarity system tends
+to feel thin without a team-building payoff (tribal/class bonuses). `DESIGN.md`
+lists synergies as out-of-scope; make it a *conscious* call at spec time. If in,
+they belong here.
+
+---
+
+## Cluster 5 — Map Content ✅ COMPLETE 2026-08-21 (Phases 73→83, every phase user-signed — HANDOFF §Closed rounds)
+
+**Charter:** rich, reward-bearing non-standard nodes — now that rewards, effects,
+terrain, and drafting all exist to draw on.
+
+**In scope**
+
+- **Neutral encampments** — WC3-style creep camps: optional combat fought for
+  loot. Uses the neutral-team substrate + Cluster-1 attacks/effects +
+  Cluster-3 rewards + (optionally) Cluster-2 terrain/flyers.
+- **Event system** — the much-deferred non-combat node type, with a choice/outcome
+  grammar (kin in spirit to the wave grammar). Grants currency/items/units from
+  the systems above.
+
+**Dev tools (built alongside)**
+
+- **Event editor.**
+
+**Depends on:** Economy + Combat Depth + Drafting + Spatial.
+**Closes with a balance pass** (camps add fightable content).
+
+**Note:** these are separable — camps could fold into Economy as "the first
+reward-bearing content," and Events could stand fully alone. Kept bundled here;
+split when you expand the spec if it reads cleaner.
+
+---
+
+## Cluster 6 — Meta & Ship
+
+**Charter:** the capstone — progression that unlocks/gates everything above, then
+ship.
+
+> **§80 feasibility docs (2026-08-16):** five planning docs in `plans/`
+> (sound-registry · music · achievements · tutorial · telemetry) audit this
+> cluster's surfaces — each closes with a "what Cluster 6 must not break"
+> section. READ THEM at C6 spec time; the persistent store is designed ONCE
+> with its four consumers known (save/load · achievements · settings ·
+> tutorial seen-flags).
+
+**Flag — split this cluster? (user-raised 2026-08-17, decide at spec
+time):** scope has accreted well past the original charter — the store's
+four consumers, the music mechanism + its asset design round, the
+sound-registry build, the telemetry export path, and a Steam-shaped
+shipping question (the §79g licence obligations already name the target).
+The cluster contains its own keystone-then-consumers chain (the store is
+to C6 what the Rule vocabulary was to C3), so ordering principle #1
+applied internally gives the natural cleave: a **Meta-foundations round**
+(store → save/load → settings → difficulty → unlocks) and an
+**Onboarding & feel round** (tutorial · music · sound registry · final
+sweep), with Ship riding the tail or standing alone depending on how
+real Steam gets. Same standing as the C5 camps/events note: a spec-time
+call, not a pre-commitment.
+
+**In scope**
+
+- **Persistence / save-load** **(added — the hidden prerequisite)**. The
+  `toJSON`/`fromJSON` plumbing exists; there's no save/load UI. Cross-run unlocks
+  are impossible without it. *(Mid-run save/resume is cheap QoL the plumbing
+  already supports — it can be pulled forward standalone any time.)*
+- **Difficulty levels** — ascension-style; groundwork exists (per-speed enable,
+  the focus-tile switch, the X1 difficulty multipliers).
+- **Meta / unlock progression** — cross-run unlocks (archetypes, starting
+  characters, …). References Cluster 4.
+- **Onboarding + options/settings menu** **(added)** — tutorial, volume, the
+  deferred in-game keybinding rebind, default speed, colorblind-safe palette.
+- **Shipping** — build/deploy/packaging; the actual "a way to ship the game."
+
+**Polish that rides it:** the final global feel/SFX sweep.
+
+**Depends on:** everything. **Last by definition.**
+
+---
+
+## Cross-cutting conventions
+
+- **Balance pass per combat-touching cluster** (1, 2, 5) via the `BALANCE.md`
+  loop. Pool-damage metric, gradient over win-rate, isolation + in-situ.
+- **Dev tools ship with their feature** (every cluster names its tool above),
+  extending the `/__save-config` allowlist + `/tools/` index the same way the
+  encounter/sector/layout/archetype editors already do.
+- **Headless-first** for sim/run/core logic; **browser-verify** render-observable
+  work (new glyphs need a `glyphs.ts` GLYPHS entry).
+- **Schema discipline** — every change that touches `World`/`Run` serialized state
+  bumps the snapshot version and stays reject-stale; the roundtrip test is the
+  guard.
+
+## Coverage map — every source bullet → cluster
+
+| Source item (`Post-X-Outstanding-Features.md`)            | Cluster |
+|-----------------------------------------------------------|---------|
+| Currency and shop system                                  | 3 Economy |
+| Reward system                                             | 3 Economy |
+| Consumable items                                          | 3 Economy |
+| Unit rarity and drafting system                           | 4 Drafting & Identity |
+| Starting character system (rosters / daemons / draft pools) | 4 Drafting & Identity |
+| Event system                                              | 5 Map Content |
+| Neutral units (encampments)                               | 5 Map Content |
+| Dynamic terrain (destructible + effect tiles)             | 2 Spatial & Movement |
+| Additional terrain tile types (deep water/mountains/mud/ice/sand) | 2 Spatial & Movement |
+| Flight                                                    | 2 Spatial & Movement |
+| Multi-tile units                                          | 2 Spatial (seam) + **deferred fill** |
+| Non-stat unit effects (burn/bleed/poison/blind/confusion/panic/frozen) | 1 Combat Depth |
+| Additional attack mechanics (chain / status-on-hit / summoning) | 1 Combat Depth |
+| Difficulty and meta progression                          | 6 Meta & Ship |
+| Dev: archetype editor — create new archetypes            | 1 Combat Depth |
+| Dev: attack editor                                        | 1 Combat Depth |
+| Dev: draft pool editor                                    | 4 Drafting & Identity |
+| Dev: event editor                                         | 5 Map Content |
+| Dev: starting character editor                            | 4 Drafting & Identity |
+| Polish: additional SFX                                    | distributed + 6 final sweep |
+| Polish: represent status effects in-battle               | 1 Combat Depth (feature) |
+| Polish: camera shake                                      | 1 Combat Depth |
+| Polish: a way to ship the game                            | 6 Meta & Ship |
+| **(added)** reward / item / shop-inventory editor        | 3 Economy |
+| **(added)** persistence / save-load                      | 6 Meta & Ship |
+| **(added)** onboarding + options/settings menu           | 6 Meta & Ship |
+| **(added)** enemy / encounter AI                         | 1 or 5 (decide at spec) |
+| **(added)** synergies / traits                           | 4 (decide at spec — in/out) |
+
+## Open decisions to resolve when expanding each spec
+
+- **C1:** where enemy/encounter AI lives (here vs Map Content).
+- **C2:** the footprint design-target sketch (sizes, flight rules) — lock before
+  shaping the seam.
+- **C4:** synergies/traits in or out.
+- **C5:** keep camps + events bundled, or split.
+
+## Explicitly deferred (beyond this meta-roadmap)
+
+- **Multi-tile *fill*** — the N-cell implementation (the seam lands in C2; the fill
+  waits for a concrete consumer).
+- Anything not on the source list or added above — revisit when content authoring
+  (the coming bottleneck) surfaces a concrete need.

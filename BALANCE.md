@@ -3458,3 +3458,64 @@ deltas. The pre-X H7c→O log lives at
     pre-registered for 83f: the sheet signs AT THE CURRENT ARM, and
     the fold's future landing triggers the standard amendment
     ritual, not a re-litigation. The ML rung stays CLOSED.
+- **2026-08-21 — §83e THE CAMPS FORCED-ENGAGEMENT PROBE (the new
+  `sim.campsStartHostile` dial, `aa763f0`; 4 arms n=120 paired
+  same-seed on the box, 4/4 exit 0, 0 hangs; probe read: worklog
+  §83e — the design-check story: `procedural.camps` is NOT
+  `--set`-reachable and the bot has no camp-seeking, so engagement
+  is FORCED sim-side, hostile-to-player at install).**
+  - **Forced engagement is decisively net-negative at current
+    tuning.** Win regen 0.300→0.150 (paired movers +7/−25) · 55pre
+    0.383→0.283 (+12/−24) · finalPool −2.25/−2.18 · sectorsCleared
+    −0.12/−0.16. Presence ~96% of runs (camp-bearing 115/114 of
+    120) — no layout pinning needed.
+  - **The payout lands but is banked, not spent:** finalBits
+    +123.5/+100.4 per run at 9+ camps cleared/run (player camp
+    kills 63→1119 regen · 85→952 55pre) ≈ +13 bits/camp realized —
+    at decision grade bits are a counter (the 83e economy read), so
+    the HP/tempo cost dominates un-hedged.
+  - Mechanism: battlesPlayed DOWN (−1.9/−1.1, runs die earlier),
+    totalTicks UP (+779/+1120 — camp fights + blockCampTurnEnd
+    stretch battles); enemy camp kills DROP (164→121 / 136→110, the
+    player gets there first). Baseline camp combat is real but
+    incidental (63–85 player kills/120 runs — enemy-pull spillover).
+  - **⚠ Pre-registered caveat: an UPPER BOUND on cost, not an
+    estimate of selective farming value** — forced hostility is
+    indiscriminate (nearest-target, mid-boss-fight included). The
+    searcher's implicit never-engage policy reads near-optimal at
+    current prices; whether camps SHOULD tempt harder is the design
+    question. Disposition = the user's 83e-close call: document
+    (recommended; camp tuning waits for the campRaid-nominator era,
+    META-ROADMAP fold rider) vs tune now (re-runs the board).
+- **2026-08-21 — §83f THE CLOSING BOARD (data landed; the signing
+  session PENDS the user): 15 core instruments n=40 + the 8 n=120
+  protocol extensions, all at `aa763f0` overnight (23/23 fetched,
+  box destroyed; report: `tests/fuzz/output/board/board-report.txt`).**
+  - **n=40 board: 0 FAIL / 11 WARN — every WARN in a pre-registered
+    family:** the §82 economy flood (arb bank 108.3/84.4 vs the 72f
+    ~60/~63 refs — the signed re-pin executes at this data) · the
+    parity residuals (priest-regen 0.725 ABOVE its 77f band —
+    the 83b levers overshot the old ref; gambler-55pre 0.650 above
+    its breach-era band) · walls/reach floor-hugging (n=40 walk
+    regen reach 0.350/wall 0.214 — but see the n=120 verdict-grade
+    read below) · the 55pre reach watch (0.600 at n=40) · one
+    marginal ceiling control (ceiling-regen −0.100 vs ±0.08, act-1
+    paired; the other three ceilings in-band).
+  - **⭐ The n=120 pooled walk twins REPRODUCE the 83d confirm
+    EXACTLY** (reach 0.408/0.542 · wall 0.265/0.292 · win
+    0.300/0.383) — seeds 1..120 at aa763f0 vs ca4b042: full-scale
+    proof the probe-dial commit is sim-inert AND that the n=40 walk
+    WARNs above are small-n artifacts. Verdict-grade walls: regen
+    26.5 (−3.5 under the 30 floor), 55pre 29.2 (−0.8) — the
+    pre-registered floor-hugging watch, unchanged since 83d.
+  - **⭐ Parity at n=120 (the verdict-grade read, win-rate gaps vs
+    soldier):** priest regen **−4.2** (INSIDE ±5 — was −11.7 at 83a,
+    −7.5 after 83b: the levers repaired the regen shape) · gambler
+    regen **−4.2** (inside) · priest 55pre **−9.2** (breach) ·
+    gambler 55pre **−13.3** (breach — the 77f shape-coupled finding
+    stands: both characters now breach ONLY on the shopper vector).
+    Both 55pre breaches = the pre-registered 83b residual WARNs;
+    disposition at the signing session.
+  - The 55pre twin reach 0.542 re-pin + the bank/fires re-pins are
+    SIGNED (2026-08-20/21) and execute against this data at the
+    signing session; the sheet numbers move there, not here.

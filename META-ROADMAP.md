@@ -132,7 +132,13 @@ they happen:
   (harness.ts) is NOT the obstacle: nominators are the searcher's
   native candidate channel, no `--objective` composition involved.
   The §83e forced-hostility probe (`sim.campsStartHostile`) supplies
-  the interim camp-economics read.
+  the interim camp-economics read (verdict: forced engagement
+  decisively net-negative at current tuning — BALANCE 2026-08-21).
+  **Second rider (user-signed 2026-08-20): the 55pre-vector
+  re-derive** — the fixed anchor's persistent reach overperformance
+  is measured ceiling drift; a fresh vector derived PRE-fold would
+  be invalidated by it (the same sequencing logic), so the re-derive
+  runs here, after the fold lands, feeding the same amendment ritual.
 
 ---
 

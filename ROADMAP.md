@@ -433,17 +433,20 @@ closing board + the re-signed sheet; then the close ritual
   the pull's BOSS EXEMPTION (`49b1b00`, **Run v43→v44**) · dose
   SIGNED ×1.075 (`ca4b042`); confirm walls ACCEPTED, "floor-hugging"
   → an 83f watch (worklog §83d · BALANCE 2026-08-20 ×2)
-- [ ] 83e — IN FLIGHT 2026-08-20: the zero-batch pass ✅ (the flood
-  = earn-side, the §82 tables doubled per-completion EVs; the ladder
-  prior CONVERGES; the boon-indiscrimination exhibit — BALANCE §83e)
-  · economy ACCEPT signed (ref re-pins execute at 83f's board, the
-  75l this-run-is-the-amendment pattern) · the ladder judged TABULAR
-  (the fold + the ε-floor re-read → the post-C5 interstitial,
-  user-signed 2026-08-20 — tuning floors on the myopic arm would be
-  invalidated by the fold) · REMAINING: the camps probe arm · the
-  55pre-twin re-read
+- [ ] 83e — IN FLIGHT 2026-08-20/21: the zero-batch pass ✅ · economy
+  ACCEPT signed (re-pins execute at 83f) · the ladder judged TABULAR
+  (fold + ε-floor → the post-C5 interstitial) · the camps probe ✅
+  EXECUTED (the `sim.campsStartHostile` dial `aa763f0`; forced
+  engagement decisively net-negative, rewards bank un-spent —
+  BALANCE 2026-08-21; the campRaid nominator = a fold rider) · the
+  55pre re-read ✅ RESOLVED (re-pin at 83f, no re-derive; the vector
+  re-derive = a second fold rider — worklog §83e) · REMAINING: the
+  user's camps disposition (document vs tune-now)
 - [ ] 83f — the closing board + the signing session (sheet
-  re-signed; 0 FAIL, WARNs pre-registered only)
+  re-signed; 0 FAIL, WARNs pre-registered only) — the BOARD DATA is
+  ON DISK (overnight 2026-08-21 at `aa763f0`, 23/23 arms incl. the
+  n=120 extensions; 0 FAIL / 11 pre-registered-family WARNs —
+  BALANCE 2026-08-21); the signing session itself remains
 - [ ] 83f2 — INSERTED 2026-08-19 (user): archetype-editor support
   for the §83b `statusImmunities` mechanic (editor UI + formatter +
   the live no-op-save byte proof — "immunity should have been a

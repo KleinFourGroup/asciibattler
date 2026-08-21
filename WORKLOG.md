@@ -5271,3 +5271,36 @@ baseline vs `--set=sim.campsStartHostile=1`, n=120, on the box
 (68h), one HEAD per cohort. +2 main tests (the dial's off/on pins
 in camps.combat) + the registry-reachability pin (setArg,
 fuzz:smoke-resident).
+
+### 83e — the 55pre-twin re-read verdict + the overnight pipeline (2026-08-20/21)
+
+**The 55pre-twin re-read: RESOLVED — RE-PIN at 83f, NO vector
+re-derive in §83 (user-signed 2026-08-20).** The recommendation's
+three legs, all applications of the same sequencing logic signed
+twice already this phase: (1) the frozen vector is the ANCHOR
+WORKING — persistent reach overperformance (0.575 → 0.542 with
+wall+seam in-band) is measured ceiling drift, the §46b
+ACCEPT+RE-BASELINE shape, not instrument staleness; (2) an anchor
+swap mid-phase is the cross-arm invalidation class (the fold-
+deferral logic); (3) a pre-fold re-derive is invalidated by the
+fold anyway — so the vector re-derive joins the campRaid nominator
+as a named rider on the interstitial's fold phase (META-ROADMAP).
+At 83f the twin's reach ref re-pins at the measured level as a
+standard amendment; the regen twin's band stays 40–50. (A WARN
+that fires identically three boards running has stopped warning —
+the argument that carried.)
+
+**The overnight pipeline (2026-08-20 23:06Z → 08-21 10:00Z):** two
+chained scratchpad drivers on one box, ONE HEAD (`aa763f0`),
+zero failures — the camps cohort (4 arms n=120, ~4 h) then the full
+83f closing board (15 core + 8 n=120 extensions, 23/23 fetched,
+~6.5 h); box destroyed after the read. The camps VERDICT (forced
+engagement decisively net-negative; rewards land but bank; upper-
+bound caveat) and the closing-board data (0 FAIL / 11 pre-
+registered-family WARNs at n=40; ⭐ the n=120 walk twins reproduce
+the 83d confirm EXACTLY — the dial commit proven sim-inert at full
+scale; ⭐ parity at n=120: both regen gaps now INSIDE ±5, both
+55pre gaps breach — the shape-coupled story confirmed at verdict
+grade) are in BALANCE 2026-08-21 ×2, canonical. OPEN at this
+writing: the user's camps disposition (document vs tune) and the
+83f signing session itself.

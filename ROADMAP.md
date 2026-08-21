@@ -369,41 +369,25 @@ pistol user-tuned; both editors follow. Detail: WORKLOG §82 + git.
 - [x] the A design (impact recheck) — ✅ DECIDED NOT NEEDED (user
   playtest verdict; the ~5-line shape stays in the worklog)
 
-## Phase 83 — The closing rebalance + cluster close
+## Phase 83 — The closing rebalance + cluster close ✅ CLOSED 2026-08-21 (all steps user-signed)
 
-**Charter:** the balance agenda on final content: the gambler
-diagnosis→repair (confirm-the-deficit FIRST — mechanism vs numbers);
-real sector-2 bosses (design round + dose re-bracket per protocol,
-retiring the `-deep` provisional clones); the measured-terminal-prior
-ladder judgment on event-era data; the 55pre-twin re-read; the camps
-forced-engagement probe arm; the event-ratio economy read; the full
-closing board + the re-signed sheet; then the close ritual
-(demotions, archives, scratchpad sweep, cursor flip).
-
-- **Order:** last, by definition.
-- **Risk:** MEDIUM — measurement-heavy (box batches; the 68h shape
-  trigger applies).
-- **Decision points:** the boss design round; every re-signed band;
-  the ladder verdict (the ML question re-opens ONLY if the tabular
-  prior stops converging).
-- **Exit:** board green (0 FAIL; WARNs pre-registered only); parity
-  restored inside ±5; sheet re-signed; cluster closed, all phases
-  user-signed.
-- **Scope guards:** no new content in this phase; repairs price
-  against REALIZED value; the n=80 floor for per-item signals.
-- **75l riders (user-signed 2026-08-10):** ✅ BOTH RESOLVED — the
-  boss-board pull question → decided at 83d (the BOSS EXEMPTION);
-  the fire-channel re-read → RETIRED batchless at 83c (the
-  discriminate's trigger never fired; worklog §83c).
-- **83-pre (user-called 2026-08-12): the BALANCE audit + primer** —
-  step zero, before any §83 measurement decision; scope carried by
-  the 83-pre1/83-pre2 cut lines below (framing: worklog §76h-close).
-- **76h riders (user-signed 2026-08-11):** ✅ ALL RESOLVED/EXECUTED —
-  the wall-flip attribution closed by supersession (83c) · the
-  negative walk ceilings dissolved at 77f · the gambler premise
-  consumed by 83a/83b · ⭐ the n=120 protocol standing since 83a
-  (paid off on outing #1; pooling corrected to same-HEAD — worklog
-  §83a).
+**Outcome, one breath:** the balance close on final content — the
+gambler/priest parity diagnosed to the wail-panic × sustain-hand
+mechanism and repaired with two levers (⭐ `statusImmunities` +
+healer panic immunity · the wail luck-trim; regen gaps −11.7 → −4.2,
+INSIDE ±5; the 55pre-shape breaches shape-coupled, riding the vector
+re-derive) · the fire alarm retired batchless · the pull read
+outcome-irrelevant → the camp pull's BOSS EXEMPTION (**Run v43→v44**)
+· real sector-2 bosses user-authored + the dose SIGNED ×1.075 · the
+§82 economy flood read ~100% earn-side and ACCEPTED + re-pinned · the
+ladder judged TABULAR (the fold + ε-floor → the post-C5 interstitial)
+· ⭐ the camps forced-engagement probe (`sim.campsStartHostile`:
+decisively net-negative, DOCUMENTED; the campRaid nominator = a fold
+rider) · the 55pre twin RE-PINNED as its own reach reference (the
+three-board watch closed as ceiling drift) · the closing board 0 FAIL
+/ 6 WARN at the amended sheet · the `statusImmunities` editor surface.
+Detail: WORKLOG §83 (kickoff → 83g) · BALANCE 2026-08-17 → 08-21 ·
+the signed sheet ⭑ 2026-08-21 · git.
 
 **The cut (2026-08-17 kickoff, shape-locked; audit: worklog §83):**
 
@@ -447,5 +431,8 @@ closing board + the re-signed sheet; then the close ritual
   arms; omit-when-empty) + the NEUTRAL-arm formatter emit (a latent
   83b gap) + the both-arms round-trip test; byte pin untouched;
   browser-driven (worklog §83f2)
-- [ ] 83g — the cluster close ritual (demote · archive · scratchpad
-  sweep · cursor flip; next = the UI-audit interstitial)
+- [x] 83g — ✅ 2026-08-21: the sweep (archive/retro-scratchpad-
+  cluster-5) · §83 stubbed · HANDOFF closed-rounds entry + cursor flip
+  · META-ROADMAP C5 ✅ + the interstitial scope gathered · memory
+  refreshed; the ROADMAP/WORKLOG/spec archive moves happen at the
+  interstitial kickoff (precedent)

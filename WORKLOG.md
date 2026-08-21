@@ -5355,3 +5355,20 @@ export · untick all → key omitted · restore → `["panic"]`; zero
 console errors; the pane-not-displayed screenshot limit applied —
 the visual is the existing checkbox-row idiom, user eyeball welcome).
 No sim surface touched. §83f2 CLOSED. Next: 83g.
+
+## Phase 83g — the Cluster-5 close ritual (2026-08-21, user-signed cut)
+
+Executed to the cut, two commits: (1) the scratchpad sweep — the
+ritual's sixth run; every one of the 263 lines promoted or archived
+(AGENTS ×7 norms + the RNG-stream prediction · HANDOFF ×3 tips ·
+BALANCE ×4 caveats · TESTING ×3 patterns; the experiment card kept as
+an experiment) → archive/retro-scratchpad-cluster-5.md; (2) the close
+— ROADMAP §83 demoted to a stub, HANDOFF's cursor flipped (NEXT = the
+interstitial's spec session; the Closed-rounds entry carries the
+load-bearing C5 facts, the §83f sheet lineage first among them),
+META-ROADMAP marks C5 ✅ and gathers the interstitial's scope with its
+one open ordering call, the agent memory refreshed. Per precedent the
+ROADMAP/WORKLOG/spec archive moves land at the interstitial kickoff,
+when the fresh pair is authored. **Cluster 5 CLOSED — every phase
+user-signed; the sheet it hands forward is at 0 FAIL / 6 WARN with no
+balance debt and two named fold riders.**

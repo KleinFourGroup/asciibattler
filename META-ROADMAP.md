@@ -98,6 +98,14 @@ they happen:
   ✅ COMPLETE & user-signed** — the §57 lesson applied to the run layer; the
   arbitrated default shipped (`--arbitrate` in the doctrine arm). Detail:
   HANDOFF §Closed rounds + BALANCE §§69–72f + the post-68 archives.
+- **NEXT — THE POST-C5 INTERSTITIAL (kickoff pending, spec-first):** its
+  gathered scope is the two PLANNED entries below + the user's OPEN §80
+  review of the five `plans/` docs + the carried TODO watch items
+  (HANDOFF 🧭 NEXT). The one open ordering call for the kickoff spec
+  session: the UI audit first (slated before C6 for idiom reasons) or
+  the fold first (the balance instrument). Cluster 5 handed it a
+  sheet at 0 FAIL / 6 WARN (all small-n or accepted) — no balance debt
+  rides in.
 - **PLANNED — UI style & robustness audit (between Clusters 5 and 6;
   user-raised 2026-08-14 at the §78e close)** — a dedicated UI round inside
   the post-C5 interstitial: the input-accessibility audit (every surface vs
@@ -303,7 +311,7 @@ they belong here.
 
 ---
 
-## Cluster 5 — Map Content
+## Cluster 5 — Map Content ✅ COMPLETE 2026-08-21 (Phases 73→83, every phase user-signed — HANDOFF §Closed rounds)
 
 **Charter:** rich, reward-bearing non-standard nodes — now that rewards, effects,
 terrain, and drafting all exist to draw on.

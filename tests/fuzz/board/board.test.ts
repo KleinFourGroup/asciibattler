@@ -110,8 +110,11 @@ describe('evaluateBoard', () => {
     terminalReach: 0.45,
     seamPool: 14,
     transactionRate: 0.02,
-    terminalBank: 70,
-    firesPerRun: 2.9,
+    // 83f — bank/fires come FROM the sheet too (the 72f fixture hardcoded 70 /
+    // 2.9 inside the old bands; the §82-economy re-pin exposed it — the
+    // balance-proof rule, applied to every ref the row checks).
+    terminalBank: sheet.bankRefs.firer,
+    firesPerRun: sheet.firerFiresPerRun,
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
@@ -218,19 +221,21 @@ describe('the board definition itself', () => {
       expect(seam.min).toBe(sheet.seamPoolBand.min);
       expect(seam.max).toBe(sheet.seamPoolBand.max);
       const reach = inst.checks.find((c) => c.metric === 'terminalReach')!;
-      expect(reach.min).toBe(sheet.terminalReachTarget.min);
-      expect(reach.max).toBe(sheet.terminalReachTarget.max);
+      // 83f — the 55pre twin's reach is re-pinned at its measured level ±0.08
+      // (sheet.pre55ReachRef); the regen twin stays on the signed target.
+      const reachBand =
+        id === 'arb-walk-55pre'
+          ? { min: sheet.pre55ReachRef - 0.08, max: sheet.pre55ReachRef + 0.08 }
+          : sheet.terminalReachTarget;
+      expect(reach.min).toBeCloseTo(reachBand.min);
+      expect(reach.max).toBeCloseTo(reachBand.max);
       const wall = inst.checks.find((c) => c.metric === 'bossWall')!;
       expect(wall.min).toBe(sheet.deepEndWallTarget.min);
       // The win band is DERIVED from the signed pair — a re-signed reach or
       // wall moves it with the sheet; it is never independently authored.
       const win = inst.checks.find((c) => c.metric === 'winRate')!;
-      expect(win.min).toBeCloseTo(
-        sheet.terminalReachTarget.min * (1 - sheet.deepEndWallTarget.max),
-      );
-      expect(win.max).toBeCloseTo(
-        sheet.terminalReachTarget.max * (1 - sheet.deepEndWallTarget.min),
-      );
+      expect(win.min).toBeCloseTo(reachBand.min * (1 - sheet.deepEndWallTarget.max));
+      expect(win.max).toBeCloseTo(reachBand.max * (1 - sheet.deepEndWallTarget.min));
     }
   });
 

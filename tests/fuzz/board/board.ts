@@ -60,6 +60,13 @@ export interface SignedSheet {
    *  it is never independently signed (the unified band architecture;
    *  the one-act-era 55–70 band is RETIRED). */
   readonly terminalReachTarget: SheetBand;
+  /** 83f (user-signed 2026-08-21) — the 55pre twin's reach REFERENCE,
+   *  re-pinned at its measured n=120 level (0.542): three boards of
+   *  identical overperformance on the frozen anchor = measured ceiling
+   *  drift, closed as the §46b ACCEPT+RE-BASELINE shape. The signed target
+   *  above stays the regen twin's band; the vector re-derive is a post-fold
+   *  interstitial rider (META-ROADMAP). */
+  readonly pre55ReachRef: number;
   /** The 30–35 wall target — RE-SIGNED at 72b for the deep-end terminal
    *  (the §68g crisis was gotcha #120 contamination). */
   readonly deepEndWallTarget: SheetBand;
@@ -165,7 +172,7 @@ function act1Posture(
   const strategyRow =
     posture === 'regen' ? 'arbitrated:scored:59-regen-vector' : 'arbitrated:scored:55pre-vector';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `72f drift ref (act-1 arb observed ±8)${provisional}`;
+  const winSource = `83f drift ref (act-1 arb, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -174,14 +181,14 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '72f: the arb firer banks ~60'),
-      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '72f: ~2.15 arbitrated fires/run'),
+      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '83f re-pin: the arb firer banks ~111 (the §82 economy, the 83e ACCEPT; was ~60 at 72f)'),
+      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run at n=120 (was ~2.15 at 72f)'),
       ref('transactionRate', 0, 0.1, '72f posture dissolution: the arb arm shops ≈never'),
     );
   }
   if (character === 'soldier' && posture === 'pre55') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '72f: the arb shopper-vector row banks ~63'),
+      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '83f re-pin: the arb shopper-vector row banks ~90 (the §82 economy; was ~63 at 72f)'),
       ref('transactionRate', sheet.shopperTransactionRate, 0.1, '72f posture dissolution: the arb arm shops ≈never (the vector still moves in-battle play)'),
       ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run'),
     );
@@ -217,15 +224,23 @@ function control(
  *  the band edge). */
 function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstrument {
   const vector = posture === 'regen' ? REGEN : PRE55;
-  // Balance-proof: the derived band moves with the sheet's signed pair.
-  const winDerived = {
-    min: sheet.terminalReachTarget.min * (1 - sheet.deepEndWallTarget.max),
-    max: sheet.terminalReachTarget.max * (1 - sheet.deepEndWallTarget.min),
-  };
-  const watch =
+  // 83f (user-signed 2026-08-21) — the 55pre twin's reach is RE-PINNED at
+  // its measured level as a reference band ±WIN_TOL (see SignedSheet
+  // .pre55ReachRef); the regen twin stays on the signed 40–50 target.
+  const reachBand =
     posture === 'pre55'
-      ? ' — the 55pre twin OVERPERFORMS (0.575 reach at 72f); the deliberate next-round watch'
-      : '';
+      ? { min: sheet.pre55ReachRef - WIN_TOL, max: sheet.pre55ReachRef + WIN_TOL }
+      : { min: sheet.terminalReachTarget.min, max: sheet.terminalReachTarget.max };
+  // Balance-proof: the derived band moves with the sheet's pair (the 55pre
+  // twin derives from its re-pinned reach band).
+  const winDerived = {
+    min: reachBand.min * (1 - sheet.deepEndWallTarget.max),
+    max: reachBand.max * (1 - sheet.deepEndWallTarget.min),
+  };
+  const reachSource =
+    posture === 'pre55'
+      ? `83f RE-PINNED at the measured n=120 reach ${sheet.pre55ReachRef} ±${WIN_TOL} — the 72f/83d/83f overperformance watch CLOSED as ceiling drift on the frozen anchor; the vector re-derive = a post-fold interstitial rider`
+      : '72b SIGNED 40–50, HELD at 72f + 83f';
   return {
     id: `arb-walk-${posture.replace('pre55', '55pre')}`,
     title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
@@ -243,16 +258,16 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
       {
         metric: 'terminalReach',
         grade: 'reference',
-        min: sheet.terminalReachTarget.min,
-        max: sheet.terminalReachTarget.max,
-        source: `72b SIGNED 40–50, HELD at 72f${watch}`,
+        min: reachBand.min,
+        max: reachBand.max,
+        source: reachSource,
       },
       {
         metric: 'bossWall',
         grade: 'reference',
         min: sheet.deepEndWallTarget.min,
         max: sheet.deepEndWallTarget.max,
-        source: '72b SIGNED 30–35, HELD at 72f — achieved by the ×1.25 deep-end boss dose (0.313/0.348)',
+        source: '72b SIGNED 30–35, HELD at 72f + 83f (floor-hugging 0.265/0.292 at n=120 ACCEPTED at the held band — the 83d call, carried as the watch)',
       },
       {
         metric: 'winRate',
@@ -281,7 +296,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       title: 'forced Bandit King (regen vector, arbitrated)',
       args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...ARM],
       strategyRow: 'arbitrated:scored:59-regen-vector',
-      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '72f per-boss: King 80.0 (arb regen)')],
+      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '83f re-pin: King 75.0 (arb regen, n=40; 72f 80.0 → 77f re-pin → 83f)')],
     },
     {
       id: 'arb-wall-queen',
@@ -289,7 +304,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...ARM],
       strategyRow: 'arbitrated:scored:59-regen-vector',
       checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '72f per-boss: Queen 67.5 (arb regen) — the King>Queen order holds'),
+        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '83f re-pin: Queen 70.0 (arb regen, n=40) — the King>Queen order holds (75.0 > 70.0)'),
       ],
     },
     act1Posture('priest', 'regen', sheet),

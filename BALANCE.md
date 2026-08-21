@@ -3519,3 +3519,47 @@ deltas. The pre-X H7c→O log lives at
   - The 55pre twin reach 0.542 re-pin + the bank/fires re-pins are
     SIGNED (2026-08-20/21) and execute against this data at the
     signing session; the sheet numbers move there, not here.
+- **2026-08-21 — §83f THE SIGNING SESSION (user-signed, "all
+  clear-cut"): the standard amendment ritual executed against the
+  overnight board; the sheet is AMENDED (signed-sheet.json ⭑
+  2026-08-21), the signed BANDS unchanged.**
+  - **Re-pins (the sheet moves):** act-1 win refs at the n=120 POOLED
+    values (soldier 0.708/0.808 · priest 0.667/0.717 · gambler
+    0.667/0.675) · forced-boss refs at n=40 (King 0.75 · Queen 0.70,
+    order holds) · bank/fires at the §82-economy reality (firer 111.2
+    · shopper 90.0 · fires 1.70; tx HELD ≈0 — the n=40 0.125 read
+    0.058 at n=120) · ⭐ **the 55pre twin gets its OWN reach reference
+    (`pre55ReachRef` 0.542 ±0.08, the 55pre twin's derived win band
+    follows it)** — the 72f/83d/83f overperformance watch CLOSED as
+    measured ceiling drift on the frozen anchor; the regen twin stays
+    on the signed 40–50 target. Board.ts gained the field; the 72f
+    at-reference fixture was found hardcoding bank/fires inside the
+    old bands and now derives them from the sheet (the balance-proof
+    rule, applied to every ref a row checks).
+  - **Re-evaluated board: 0 FAIL / 6 WARN** (from 11): the six
+    survivors are the n=40 small-n walk reads (regen reach 0.350 /
+    wall 0.214 and the 55pre derived win 0.450 — all in-band or
+    ACCEPTED at n=120), the walls floor-hugging (ACCEPTED, the 83d
+    call carried as the watch), the arb-55pre tx 0.125 (n=40 blip),
+    and ceiling-regen −0.100 vs ±0.08 (act-1 paired; the other three
+    ceilings in-band — a watch, not a finding).
+  - **Dispositions (user-signed):** ⭑ CAMPS — DOCUMENT as the interim
+    read, no config change (forced engagement decisively net-negative
+    at current prices = the bot's never-engage instinct validated;
+    whether camps should TEMPT harder is a design question for the
+    campRaid-nominator era, when engagement is selective — the
+    META-ROADMAP fold rider) · ⭑ PARITY — both regen gaps INSIDE ±5
+    (the 83b levers repaired the regen shape: priest −11.7 → −7.5 →
+    −4.2); the 55pre-shape breaches (priest −9.2 · gambler −13.3) are
+    ACCEPTED as the pre-registered 83b residual, SHAPE-COUPLED, and
+    ride with the 55pre vector re-derive (the characterParity sheet
+    note rewritten) · ⭑ WALLS — floor-hugging 0.265/0.292 ACCEPTED at
+    the held 30–35 band (the 83d call; another dose nudge = the 83b
+    noise-tuning regime) · ⭑ the 55pre REACH — re-pinned (above).
+  - **The Cluster-5 closing sheet stands: seam 15–18 · wall 30–35 ·
+    reach 40–50 (regen) / 0.542 ref (55pre) · win DERIVED · act-1 refs
+    at n=120 · bank ~111/~90 · fires ~1.7 · fire channel +0.10.**
+    Pre-registered for the post-C5 interstitial: the terminal-prior
+    fold's landing triggers the standard amendment (the sheet signs
+    at the current arm — pre-registered at 83e), with the campRaid
+    nominator + the 55pre vector re-derive as its named riders.

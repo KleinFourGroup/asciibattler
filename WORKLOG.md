@@ -5301,6 +5301,31 @@ registered-family WARNs at n=40; ⭐ the n=120 walk twins reproduce
 the 83d confirm EXACTLY — the dial commit proven sim-inert at full
 scale; ⭐ parity at n=120: both regen gaps now INSIDE ±5, both
 55pre gaps breach — the shape-coupled story confirmed at verdict
-grade) are in BALANCE 2026-08-21 ×2, canonical. OPEN at this
-writing: the user's camps disposition (document vs tune) and the
-83f signing session itself.
+grade) are in BALANCE 2026-08-21 ×2, canonical.
+
+## Phase 83f — the signing session (2026-08-21, user-signed "all clear-cut")
+
+**83e CLOSED with the camps disposition: DOCUMENT.** The user read
+the four open calls as clear-cut and signed the recommended path
+on each — the rationale was carried by the data: forced engagement
+decisively net-negative (so the bot's never-engage instinct is
+validated, not a gap), the parity regen gaps repaired inside ±5
+by the 83b levers, the 55pre-shape breaches shape-coupled (riding
+with the vector re-derive), walls floor-hugging within ~0.5 SE of
+the floor (the 83d ACCEPT carried).
+
+**The standard amendment ritual, executed** (BALANCE 2026-08-21
+§83f signing, canonical numbers): act-1 win refs at n=120 pooled,
+forced-boss refs at n=40, bank/fires at the §82 reality, tx held,
+and ⭐ the 55pre twin's reach re-pinned as its OWN sheet reference
+(`pre55ReachRef`, ±WIN_TOL; the twin's derived win band follows
+it). Signed bands unchanged. Re-evaluated board 0 FAIL / 6 WARN —
+every survivor a small-n artifact, an accepted watch, or the
+marginal ceiling-regen control. Two instrument notes: (1) the 72f
+at-reference fixture hardcoded bank/fires INSIDE the old bands
+despite its "balance-proof" comment — the re-pin exposed it; it now
+derives every checked ref from the sheet (feedback rule: derive
+expectations from config, never hardcode); (2) the stale "72f: banks
+~60" source strings refreshed to the 83f values so the report
+header never contradicts its bands. §83f CLOSED. Next: 83f2 (the
+statusImmunities archetype-editor UI) → 83g (the close ritual).

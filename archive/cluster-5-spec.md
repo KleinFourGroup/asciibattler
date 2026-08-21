@@ -1,4 +1,10 @@
-# Cluster 5 Spec
+# Cluster 5 Spec — ARCHIVED
+
+> **Archived 2026-08-21 at the Round 6 kickoff** with its roadmap/worklog
+> pair ([post-72-roadmap.md](post-72-roadmap.md) /
+> [post-72-worklog.md](post-72-worklog.md)). The §Kickoff resolutions
+> below are the signed design record for Phases 73–83; the durable facts
+> are condensed in HANDOFF §Closed rounds and DESIGN.md.
 
 ## "I'm the Map"
 

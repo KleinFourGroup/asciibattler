@@ -35,4 +35,20 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 
 ---
 
-_(Empty — the post-C5 interstitial round starts here.)_
+_(The post-C5 rounds start here.)_
+
+## Planning
+
+- **Audit the feature wishlist against code BEFORE ordering it — the
+  "seam already exists" belief rate was poor.** At the 2026-08-21 planning
+  session, five parallel read-only sweeps over a 19-item list (~6 min
+  wall) found: the exhaustion seam never existed (the memory was H7's
+  inert `fatiguePerStack` placeholder), ice was never faster (cost 1 +
+  an accuracy tax), the flight seam is three inert fields with a
+  `planeOf` that ignores the unit, and `deck:*` events have zero hook
+  consumers — while the 2×2 walk turned out to be CLOSER than assumed
+  (A* + renderer already footprint-correct). Nine of nineteen were
+  mechanisms, which is what inserted Round 9 ahead of the content round.
+  Same shape as the C3 spec-vs-code audit (`b966187`), applied to the
+  macro plan: the audit changes the ORDER, not just the sizes.
+  (`daff9a0`)

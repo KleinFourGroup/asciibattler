@@ -139,6 +139,7 @@ const neutralHpEl = mustQuery<HTMLInputElement>('#neutral-hp');
 const neutralLosEl = mustQuery<HTMLInputElement>('#neutral-los');
 const restrictSusEl = mustQuery<HTMLInputElement>('#restrict-sus');
 const susceptibilityEl = mustQuery<HTMLDivElement>('#susceptibility');
+const immunitiesEl = mustQuery<HTMLDivElement>('#immunities');
 const baseStatsEl = mustQuery<HTMLDivElement>('#base-stats');
 const growthRatesEl = mustQuery<HTMLDivElement>('#growth-rates');
 const previewEl = mustQuery<HTMLDListElement>('#preview');
@@ -159,6 +160,7 @@ const growthInputs = new Map<keyof UnitStats, HTMLInputElement>();
 const abilityChecks = new Map<string, HTMLInputElement>();
 const targetingRadios = new Map<string, HTMLInputElement>();
 const susChecks = new Map<string, HTMLInputElement>();
+const immChecks = new Map<string, HTMLInputElement>();
 
 // ---- Narrowing helpers ----
 // The combatant-only handlers are wired to controls only shown in combatant mode
@@ -181,6 +183,7 @@ buildStatInputs();
 buildAbilityChecks();
 buildTargetingRadios();
 buildSusceptibilityChecks();
+buildImmunityChecks();
 attachIdentity();
 attachPreviewControls();
 attachButtons();
@@ -403,6 +406,36 @@ function currentCheckedSusceptibility(): string[] {
   return STATUS_IDS.filter((id) => susChecks.get(id)!.checked);
 }
 
+// §83f2 — the `statusImmunities` BLOCKLIST (the susceptibility allow-filter's
+// complement, §83b): one checkbox per known status, on BOTH arms (the schema
+// carries the field on each). Nothing ticked ⇒ the key is OMITTED (the file
+// convention — never an empty array), so an untouched archetype's Save stays
+// a no-op diff.
+function buildImmunityChecks(): void {
+  immunitiesEl.innerHTML = '';
+  for (const id of STATUS_IDS) {
+    const label = document.createElement('label');
+    label.className = 'inline';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = id;
+    cb.addEventListener('change', onImmunityChange);
+    label.appendChild(cb);
+    label.append(` ${id}`);
+    immunitiesEl.appendChild(label);
+    immChecks.set(id, cb);
+  }
+}
+
+function onImmunityChange(): void {
+  const a = working[activeKey];
+  // Registry order — deterministic + matches the hand-authored healer line.
+  const picked = STATUS_IDS.filter((id) => immChecks.get(id)!.checked);
+  if (picked.length > 0) a.statusImmunities = picked;
+  else delete a.statusImmunities;
+  refreshDerived();
+}
+
 // ---- Refresh ----
 function selectArchetype(key: ArchetypeKey): void {
   activeKey = key;
@@ -416,6 +449,8 @@ function selectArchetype(key: ArchetypeKey): void {
 function syncForm(): void {
   const a = working[activeKey];
   glyphEl.value = a.glyph;
+  // §83f2 — immunities are a shared field: sync before the arm split below.
+  for (const [id, cb] of immChecks) cb.checked = a.statusImmunities?.includes(id) ?? false;
   const neutral = isNeutralUnitDef(a);
   editorRoot.classList.toggle('kind-neutral', neutral);
   editorRoot.classList.toggle('kind-combatant', !neutral);
@@ -536,6 +571,7 @@ function refreshPreview(): void {
           ? a.statusSusceptibility.join(', ')
           : 'nothing (immune)',
     );
+    addPreview('Immune to', a.statusImmunities?.join(', ') ?? 'nothing');
     return;
   }
 
@@ -562,6 +598,8 @@ function refreshPreview(): void {
   // per-archetype switch, so the numbers are correct for any archetype, new ones
   // included.
   for (const id of a.abilities) addPreview(`Ability · ${id}`, abilityOutputLine(id, stats));
+  // §83f2 — the blocklist reads beside the kit (the healer's "panic" identity line).
+  addPreview('Immune to', a.statusImmunities?.join(', ') ?? 'nothing');
 }
 
 /** The per-ability preview line: the resolved output (damage/heal via the op's

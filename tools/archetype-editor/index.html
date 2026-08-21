@@ -58,6 +58,14 @@
               <label class="inline">HP <input id="neutral-hp" type="number" min="1" max="999" /></label>
               <label class="inline"><input id="neutral-los" type="checkbox" /> Blocks line of sight</label>
             </div>
+            <div class="field-row">
+              <span class="field-label">Immune to</span>
+              <div id="immunities" class="checkbox-row"></div>
+              <span class="hint"
+                >&sect;83b blocklist &mdash; a ticked status never applies to this archetype, from any
+                source. Nothing ticked = the key is omitted from the file.</span
+              >
+            </div>
             <div class="field-row neutral-only">
               <label class="inline"><input id="restrict-sus" type="checkbox" /> Restrict statuses</label>
               <span class="hint"

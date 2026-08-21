@@ -5329,3 +5329,29 @@ expectations from config, never hardcode); (2) the stale "72f: banks
 ~60" source strings refreshed to the 83f values so the report
 header never contradicts its bands. §83f CLOSED. Next: 83f2 (the
 statusImmunities archetype-editor UI) → 83g (the close ritual).
+
+### 83f2 — the statusImmunities editor surface (2026-08-21, user-approved cut)
+
+**Step zero paid twice.** (1) The card's "formatter" half had ALREADY
+landed at 83b — the combatant-arm emit was what made the healer's
+panic line survive the verbatim byte pin — so the step shrank to the
+UI. (2) The audit then found the opposite kind of gap: the schema
+carries `statusImmunities` on the NEUTRAL arm too (the shared-access
+typing convenience, units.ts) but the neutral-arm formatter never
+emitted it — a neutral immunity authored in the new shared row would
+have been silently dropped on Save. Closed in the same commit.
+
+**Shape:** one shared "Immune to" checkbox row in the identity card
+(both arms; the exact `buildSusceptibilityChecks` idiom off
+`STATUS_IDS`, registry order — matches the hand-authored healer
+line); nothing ticked ⇒ the key is DELETED, never an empty array
+(the omit-when-default file convention, so an untouched archetype's
+Save stays a no-op diff); the preview gains an "Immune to" line on
+both arms. Test: the verbatim pin untouched + a both-arms edited-save
+round-trip with the emission count derived from the working set.
+Browser-driven on dev-preview (eval-verified: 10 status boxes
+render · healer syncs panic · tick burn → `["burn","panic"]` in the
+export · untick all → key omitted · restore → `["panic"]`; zero
+console errors; the pane-not-displayed screenshot limit applied —
+the visual is the existing checkbox-row idiom, user eyeball welcome).
+No sim surface touched. §83f2 CLOSED. Next: 83g.

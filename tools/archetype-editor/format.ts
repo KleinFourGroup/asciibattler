@@ -68,6 +68,13 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
       if (a.autoTarget === true) fields.push(`    "autoTarget": true`);
       if (a.statusSusceptibility !== undefined)
         fields.push(`    "statusSusceptibility": ${JSON.stringify(a.statusSusceptibility)}`);
+      // §83f2 — the blocklist on the NEUTRAL arm (schema order: last), emitted
+      // only when declared; no shipped neutral carries one, so the file diff is
+      // untouched. (83b shipped the combatant-arm emit below; this closes the
+      // gap the editor's shared "Immune to" row would otherwise expose — a
+      // neutral's immunity silently dropped on Save.)
+      if (a.statusImmunities !== undefined)
+        fields.push(`    "statusImmunities": ${JSON.stringify(a.statusImmunities)}`);
       parts.push(fields.join(',\n'));
       parts.push(`  }${tail}`);
       return;
@@ -100,7 +107,7 @@ export function formatArchetypesJson(config: Record<string, UnitDef>): string {
       parts.push(`    "retargetOnLosLoss": ${JSON.stringify(a.retargetOnLosLoss)},`);
     // §83b — the status blocklist (susceptibility's complement), emitted only
     // when declared, so the file diff stays exactly the archetypes carrying an
-    // immunity (today: the healer's panic line). The editor UI lands at 83f2.
+    // immunity (today: the healer's panic line). The editor UI landed at 83f2.
     if (a.statusImmunities !== undefined)
       parts.push(`    "statusImmunities": ${JSON.stringify(a.statusImmunities)},`);
     parts.push(`    "baseStats": {`);

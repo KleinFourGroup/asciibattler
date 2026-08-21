@@ -88,4 +88,27 @@ describe('formatArchetypesJson', () => {
     const reparsed = UnitDefsSchema.parse(JSON.parse(text));
     expect(reparsed).toEqual(edited);
   });
+
+  // §83f2 — `statusImmunities` (the §83b blocklist) emits on BOTH arms, only
+  // when declared (the healer's shipped panic line rides the verbatim test
+  // above, so the omit-when-absent side is already pinned); an edited Save on
+  // a combatant AND a neutral round-trips through the game schema, and the
+  // emission count derives from the working set, never a literal.
+  it('emits statusImmunities on both arms and round-trips; omits when absent', () => {
+    const edited: Record<string, UnitDef> = structuredClone(ALL_UNIT_DEFS);
+    edited.mercenary = { ...structuredClone(UNIT_DEFS.mercenary), statusImmunities: ['burn'] };
+    const neutralKey = Object.keys(ALL_UNIT_DEFS).find((k) => isNeutralUnitDef(ALL_UNIT_DEFS[k]!))!;
+    edited[neutralKey] = {
+      ...structuredClone(ALL_UNIT_DEFS[neutralKey]!),
+      statusImmunities: ['poison'],
+    };
+    const text = formatArchetypesJson(edited);
+
+    expect(text).toContain('"statusImmunities": ["burn"]');
+    expect(text).toContain('"statusImmunities": ["poison"]');
+    const declared = Object.values(edited).filter((d) => d.statusImmunities !== undefined).length;
+    expect(text.match(/"statusImmunities"/g)).toHaveLength(declared);
+    const reparsed = UnitDefsSchema.parse(JSON.parse(text));
+    expect(reparsed).toEqual(edited);
+  });
 });

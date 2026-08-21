@@ -433,24 +433,19 @@ closing board + the re-signed sheet; then the close ritual
   the pull's BOSS EXEMPTION (`49b1b00`, **Run v43→v44**) · dose
   SIGNED ×1.075 (`ca4b042`); confirm walls ACCEPTED, "floor-hugging"
   → an 83f watch (worklog §83d · BALANCE 2026-08-20 ×2)
-- [x] 83e — ✅ CLOSED 2026-08-21 (all user-signed): the zero-batch
-  pass (flood = earn-side; ladder TABULAR → the fold + ε-floor ride
-  the post-C5 interstitial) · economy ACCEPT · the camps probe
-  (`sim.campsStartHostile` `aa763f0`; forced engagement decisively
-  net-negative → DOCUMENTED, no tuning; the campRaid nominator = a
-  fold rider) · the 55pre re-read (re-pin, no re-derive; the
-  re-derive = a second fold rider) — worklog §83e · BALANCE
-  2026-08-20/21
+- [x] 83e — ✅ CLOSED 2026-08-21 (user-signed): zero-batch reads ·
+  economy ACCEPT · ladder TABULAR (fold + ε-floor → the interstitial) ·
+  the camps probe (`sim.campsStartHostile`; forced engagement
+  net-negative → DOCUMENTED) · 55pre RE-PIN; the campRaid nominator +
+  the vector re-derive = fold riders (worklog §83e · BALANCE 08-20/21)
 - [x] 83f — ✅ CLOSED 2026-08-21 (user-signed): the overnight board
-  (23/23 arms at `aa763f0` incl. the n=120 extensions) + the standard
-  amendment (act-1/boss/bank/fires re-pins; ⭐ `pre55ReachRef` 0.542;
-  bands unchanged); 0 FAIL / 6 WARN after re-pin, all
-  small-n/accepted; parity regen INSIDE ±5, the 55pre breaches ride
-  with the vector re-derive; walls ACCEPTED — worklog §83f · BALANCE
-  2026-08-21 ×3
-- [ ] 83f2 — INSERTED 2026-08-19 (user): archetype-editor support
-  for the §83b `statusImmunities` mechanic (editor UI + formatter +
-  the live no-op-save byte proof — "immunity should have been a
-  concept from the start"; worklog §83b)
+  (23/23 at `aa763f0`, n=120 extensions) + the standard amendment
+  (⭐ `pre55ReachRef` 0.542; bands unchanged); 0 FAIL / 6 WARN;
+  parity regen inside ±5, 55pre breaches ride the re-derive; walls
+  ACCEPTED (worklog §83f · BALANCE 2026-08-21 ×3)
+- [x] 83f2 — ✅ 2026-08-21: the shared "Immune to" editor row (both
+  arms; omit-when-empty) + the NEUTRAL-arm formatter emit (a latent
+  83b gap) + the both-arms round-trip test; byte pin untouched;
+  browser-driven (worklog §83f2)
 - [ ] 83g — the cluster close ritual (demote · archive · scratchpad
   sweep · cursor flip; next = the UI-audit interstitial)

@@ -48,12 +48,16 @@ decisions.csv append-last; fuzz:smoke additive.
       pairs and perturb the stream); a separate record with `horizon`;
       7 new pins incl. a real run-end walk. `hopsRemaining` lands with
       84b's getter. Detail: git.
-- [ ] **84b** — `Run.hopsRemaining` (derived, pre-root-guarded,
-      sector-aware along the shipped DAG). Exit: pre-root / mid-sector /
-      post-seam pinned. No bump.
+- [x] **84b** ✅ 2026-08-22 — `Run.hopsRemaining` + the pure
+      `remainingSectorHops` (shortest DAG path); 11 pins incl. the
+      walker-driven post-seam read. No bump (held). ⚠ Finding: clones
+      drop BOTH run-shape dials (`Run.fromJSON`) — a run-end shadow is
+      unbounded whatever the batch dial → 84c refuses `--shadow-horizon`
+      with `--hops`/`--sector-hops` (WORKLOG §84b).
 - [ ] **84c** — the shadow-only `recruit` site (null = the base pick;
       challengers = other slots + pass) + `--shadow-horizon` /
-      `--shadow-sample` (require `--arbitrate`) + the csv columns
+      `--shadow-sample` (require `--arbitrate`; REFUSE `--hops` /
+      `--sector-hops` — the 84b finding) + the csv columns
       (`horizon`, `hopsRemaining`) + the per-remaining-hop aggregate
       column. Exit: the live recruit pick is the base's on every seed
       (pinned); a local run writes the columns.

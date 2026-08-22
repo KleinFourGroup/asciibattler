@@ -50,7 +50,7 @@ import { generate as generateNodeMap, stampRootKind, PRE_ROOT_NODE_ID, type Node
 import { FORCE_PROCEDURAL, sectorAdvanceConfig, type RunConfig } from './RunConfig';
 import { getSector, eventPoolAtHop, type SectorDef } from '../config/sectors';
 import { SECTOR_MAP, type SectorMap } from '../config/sectorMap';
-import { pickStartSector, pickNextSector, isSectorSink } from './sectorWalk';
+import { pickStartSector, pickNextSector, isSectorSink, remainingSectorHops } from './sectorWalk';
 import { rollOffer, recruitLevelBonus, draftPoolsFor } from './Recruitment';
 import {
   characterById,
@@ -2794,6 +2794,33 @@ export class Run {
    */
   get currentHop(): number {
     return this.hopOf(this.currentNodeId);
+  }
+
+  /**
+   * 84b — node entries still AHEAD of the run. The rest of the current
+   * sector's node-map (every node is one entry — hops 0..L−1, so a
+   * pre-root run has all L ahead and a run at hop h has L−1−h; read off
+   * the LIVE map, so a `hopCount` probe's shortened map counts as built)
+   * plus the shortest remaining path over the sector DAG, each future
+   * sector at its full length (`sectorHops` overrides every sector's;
+   * a `hopCount` probe's terminal IS the run terminal, so it adds
+   * nothing). DERIVED, never serialized (derive-don't-cache): the §84
+   * instrument's per-remaining-hop normalization and the §85 prior's
+   * state scaling read it. Pre-root-safe by construction (gotcha #110).
+   */
+  get hopsRemaining(): number {
+    const length = this.nodeMap.hops.length;
+    const inSector =
+      this.currentNodeId === PRE_ROOT_NODE_ID ? length : length - 1 - this.currentHop;
+    if (this.singleSectorRun) return inSector;
+    return (
+      inSector +
+      remainingSectorHops(this.sectorMap, this.currentSectorNodeId, (id) => {
+        const sector = getSector(id);
+        if (!sector) throw new Error(`Run.hopsRemaining: sector "${id}" not found`);
+        return this.sectorHopsOverride ?? sector.length;
+      })
+    );
   }
 
   private hopOf(nodeId: number): number {

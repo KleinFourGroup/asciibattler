@@ -367,8 +367,8 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
   });
 
   it('INTEGRATION: a run-end shadow walks every pair to complete/defeat on a 1-hop run', () => {
-    // hopCount 1 = root + one hop: the long walk reaches a terminal in two
-    // battles, so the real evaluator's run-end horizon is cheap to pin.
+    // hopCount 1 = a one-node map (the root IS the terminal): the long walk
+    // reaches a terminal in one node, so the run-end horizon is cheap to pin.
     const live = new Run(20260822, new EventBus<GameEvents>(), { hopCount: 1 });
     const mk = (shadow: boolean) => {
       const driver = new RunArbitrationDriver(new RNG(99), {

@@ -88,3 +88,44 @@ export function pickNextSector(map: SectorMap, fromNodeId: string, rng: RNG): Se
   const nextId = pickOne(successors, rng);
   return pickSectorAt(map, nextId, rng);
 }
+
+/**
+ * 84b — the SHORTEST remaining path from `fromNodeId` to any sink, measured
+ * in node entries: every successor node on the path contributes the length
+ * of its cheapest sector (`lengthOf`, min over the node's candidates), the
+ * current node contributes nothing (its own remainder is the caller's — Run
+ * reads it off the live node-map). A sink returns 0. "Shortest" is the signed
+ * rule for a branching DAG (round-6-spec §Kickoff resolutions) — moot on the
+ * shipped linear map, where the one path IS the walk. Pure; memoized over
+ * the schema-guaranteed acyclic graph; throws on an unknown node (the
+ * `nodeSectors` guard) or a non-sink dead end (rejected at load, so a
+ * throw here is drift, never a runtime branch).
+ */
+export function remainingSectorHops(
+  map: SectorMap,
+  fromNodeId: string,
+  lengthOf: (sectorId: string) => number,
+): number {
+  const memo = new Map<string, number>();
+  const visit = (nodeId: string): number => {
+    const cached = memo.get(nodeId);
+    if (cached !== undefined) return cached;
+    nodeSectors(map, nodeId); // the unknown-node guard, even at a sink
+    if (isSectorSink(map, nodeId)) {
+      memo.set(nodeId, 0);
+      return 0;
+    }
+    const successors = map.edges.filter((e) => e.from === nodeId).map((e) => e.to);
+    if (successors.length === 0) {
+      throw new Error(`sectorWalk: node "${nodeId}" is neither a sink nor has a successor`);
+    }
+    let best = Infinity;
+    for (const next of successors) {
+      const own = Math.min(...nodeSectors(map, next).map(lengthOf));
+      best = Math.min(best, own + visit(next));
+    }
+    memo.set(nodeId, best);
+    return best;
+  };
+  return visit(fromNodeId);
+}

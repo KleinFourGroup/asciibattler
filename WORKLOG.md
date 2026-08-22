@@ -292,3 +292,31 @@ rejected: a parallel field on the live record) · hops remaining =
 shortest remaining DAG path, moot on the shipped map · shadow K = the
 primary's 2, `m` from the 84d probe. The five-step cut is in ROADMAP
 §84.
+
+### 84b — `Run.hopsRemaining` (2026-08-22)
+
+Landed as a derived getter (never on the wire — pinned) over the LIVE
+node-map (`hops.length` — hop 0 is the root, L−1 the terminal, so
+pre-root has all L ahead and hop h has L−1−h) plus the pure
+`remainingSectorHops` (sectorWalk.ts: the shortest path to a sink in
+node entries, each successor at its cheapest sector's length — the
+signed branching rule; memoized over the schema-acyclic DAG). A
+`hopCount` probe adds nothing beyond its map (its terminal IS the run
+terminal); `sectorHops` overrides every sector on the path.
+
+**Finding (the post-seam pin caught it):** the walker-driven pin
+expected the new sector at the `sectorHops` override and read the
+AUTHORED 11 — `Run.fromJSON` resets BOTH run-shape dials
+(`singleSectorRun = false`, `sectorHopsOverride = undefined`; "a
+rehydrated run runs unbounded"), and a rollout clone IS a wire
+round-trip. So every arbitration rollout already walks future sectors
+at authored length, and — the part that matters for §84 — a run-end
+shadow from an act-1 `--hops=11` batch would walk into the deep end
+while the live run ends at hop 11: the record's `hopsRemaining` (live)
+and the shadow's walk would disagree on what "the rest of the run" is.
+Disposition: the instrument is defined on the FULL-WALK shape; 84c's
+CLI refuses `--shadow-horizon` with `--hops` or `--sector-hops` (loud,
+not silent). The same reset also re-resolves the X1 difficulty
+multipliers to shipped defaults inside every clone — pre-existing for
+all arbitration, noted here, not a §84 item. The pin now reads the
+clone's actual map and documents the discipline.

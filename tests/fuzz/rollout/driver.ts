@@ -72,6 +72,38 @@ export interface RunDecisionRecord {
    *  decisions.csv column — tier-flips.csv carries the per-site counts, and
    *  the full field stays reachable via `--emit-results`. */
   readonly shadowChosenIndex?: number;
+  /** 84a — present ONLY on a long-horizon shadow record (the §84
+   *  instrument): the horizon this record's results were walked to
+   *  (`'run'` = to run end). A long-horizon record is a SEPARATE log
+   *  entry appended right after the live decision it shadows — same
+   *  site/context/labels, results from the long walk, `chosenIndex` =
+   *  what THIS horizon would have chosen under the same ε rule — so the
+   *  live record stays byte-identical shadow on or off, and the per-item
+   *  aggregate keys the two horizons apart on this marker. */
+  readonly horizon?: number | 'run';
+}
+
+/**
+ * 84a — the long-horizon shadow (the §84 measured-terminal-prior
+ * instrument; round-6-spec §"The measurement design"): every candidate
+ * of a sampled decision is ALSO walked to `horizonBattles` (`'run'` =
+ * until the clone completes or dies) under the SAME CRN pairs as the
+ * primary, and the paired long-horizon margins land as a separate
+ * record (`horizon` set). Telemetry-only, like the 71c tier shadow: the
+ * live decision never reads it, and the driver's stream is untouched —
+ * the pairs are derived once before either evaluation, so K is the
+ * primary's K by construction (a different shadow K would need extra
+ * pairs and would perturb the stream; deliberately not offered).
+ *
+ * `sample` = 1-in-m: a decision is shadowed iff its FIRST pair's
+ * cloneSeed ≡ 0 (mod m) — keyed off a value already drawn, so sampling
+ * consumes nothing and is deterministic per (driver seed, decision
+ * order). Default 1 (every decision). The walk length is the cost dial
+ * the §84d probe tunes this against.
+ */
+export interface RunShadowHorizonConfig {
+  readonly horizonBattles: number | 'run';
+  readonly sample?: number;
 }
 
 export interface RunArbitrationConfig {
@@ -94,6 +126,8 @@ export interface RunArbitrationConfig {
    *  either tier evaluates), so a shadowed batch decides byte-identically
    *  to an unshadowed one. */
   readonly shadowTier?: InnerTier;
+  /** 84a — the long-horizon shadow (see RunShadowHorizonConfig). */
+  readonly shadowHorizon?: RunShadowHorizonConfig;
 }
 
 export class RunArbitrationDriver {
@@ -103,6 +137,7 @@ export class RunArbitrationDriver {
   private readonly rollout: RunArbitrationConfig['rollout'];
   private readonly evaluate: typeof evaluateRunCandidate;
   private readonly shadowTier: InnerTier | undefined;
+  private readonly shadowHorizon: RunShadowHorizonConfig | undefined;
 
   /** The in-memory decision log, append-only in decide order. */
   readonly decisions: RunDecisionRecord[] = [];
@@ -114,6 +149,16 @@ export class RunArbitrationDriver {
     this.rollout = config.rollout;
     this.evaluate = config.evaluate ?? evaluateRunCandidate;
     this.shadowTier = config.shadowTier;
+    if (config.shadowHorizon !== undefined) {
+      const { horizonBattles, sample } = config.shadowHorizon;
+      if (horizonBattles !== 'run' && !(Number.isInteger(horizonBattles) && horizonBattles >= 1)) {
+        throw new Error(`RunArbitrationDriver: shadowHorizon.horizonBattles must be 'run' or an integer ≥ 1 (got ${String(horizonBattles)})`);
+      }
+      if (sample !== undefined && !(Number.isInteger(sample) && sample >= 1)) {
+        throw new Error(`RunArbitrationDriver: shadowHorizon.sample must be an integer ≥ 1 (got ${String(sample)})`);
+      }
+    }
+    this.shadowHorizon = config.shadowHorizon;
   }
 
   /**
@@ -196,10 +241,12 @@ export class RunArbitrationDriver {
       shadowChosenIndex = sWins ? sBestIdx + 1 : 0;
     }
 
+    const sectorId = live.currentSectorId;
+    const hop = live.currentNodeId === PRE_ROOT_NODE_ID ? 0 : live.currentHop;
     this.decisions.push({
       site,
-      sectorId: live.currentSectorId,
-      hop: live.currentNodeId === PRE_ROOT_NODE_ID ? 0 : live.currentHop,
+      sectorId,
+      hop,
       labels,
       results,
       chosenIndex: wins ? bestIdx + 1 : 0,
@@ -207,6 +254,53 @@ export class RunArbitrationDriver {
       epsilon,
       ...(shadowChosenIndex !== undefined ? { shadowChosenIndex } : {}),
     });
+
+    // 84a — the long-horizon shadow: a SEPARATE record appended after the
+    // live one (never a field on it — the live record must stay
+    // byte-identical shadow on/off). Same pairs, same per-call rollout
+    // overrides (the grant site's policies-off, the event site's
+    // nominee-pinning strategy), only the horizon differs; evaluations
+    // consume no driver RNG, so the sample gate below is the only other
+    // branch and it reads a value already drawn.
+    if (this.shadowHorizon !== undefined && this.shadowSampled(pairs)) {
+      const { horizonBattles } = this.shadowHorizon;
+      const longSpec: RunRolloutSpec = {
+        ...spec,
+        horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
+      };
+      const longNull = this.evaluate(live, null, longSpec);
+      const longResults: RunCandidateResult[] = [longNull];
+      let lBestIdx = -1;
+      let lBestScore = -Infinity;
+      challengers.forEach((c, i) => {
+        const r = this.evaluate(live, c.apply, longSpec);
+        longResults.push(r);
+        if (r.score > lBestScore) {
+          lBestScore = r.score;
+          lBestIdx = i;
+        }
+      });
+      const lWins = lBestIdx >= 0 && lBestScore > longNull.score + epsilon;
+      this.decisions.push({
+        site,
+        sectorId,
+        hop,
+        labels,
+        results: longResults,
+        chosenIndex: lWins ? lBestIdx + 1 : 0,
+        marginVsNull: lBestScore - longNull.score,
+        epsilon,
+        horizon: horizonBattles,
+      });
+    }
     return wins ? challengers[bestIdx]! : null;
+  }
+
+  /** 84a — the 1-in-m sample gate, keyed off the decision's first pair
+   *  (already drawn — no RNG consumed). `sample` 1 (the default) shadows
+   *  every decision. */
+  private shadowSampled(pairs: readonly RunRolloutPair[]): boolean {
+    const m = this.shadowHorizon?.sample ?? 1;
+    return pairs[0]!.cloneSeed % m === 0;
   }
 }

@@ -212,6 +212,188 @@ describe('RunArbitrationDriver — the 71c shadow tier (flip-rate instrument)', 
   });
 });
 
+describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrument)', () => {
+  /** A horizon-aware fake: scores keyed 'base' for the primary spec and
+   *  'run' for a run-end spec (the long-horizon fixture). */
+  function horizonEvaluator(tables: Record<'base' | 'run', Record<string, number>>) {
+    const calls: string[] = [];
+    const evaluate = (
+      _live: Run,
+      apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      const label = apply === null ? 'null' : (apply as unknown as { label: string }).label;
+      const horizon = Number.isFinite(spec.horizonBattles) ? 'base' : 'run';
+      calls.push(`${label}@${horizon}`);
+      const score = tables[horizon][label];
+      if (score === undefined) throw new Error(`horizonEvaluator: no score for '${label}'@${horizon}`);
+      return { score, perSeed: [] };
+    };
+    return { evaluate, calls };
+  }
+
+  it('appends a SEPARATE run-horizon record after the live one; the live record is untouched', () => {
+    // Primary: a wins by 5. Run horizon: a is worthless → the long record's null stands.
+    const { evaluate, calls } = horizonEvaluator({
+      base: { null: 0, a: 5 },
+      run: { null: 3, a: 3 },
+    });
+    const shadowed = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run' },
+    });
+    const chosen = shadowed.decide('rewardDaemon', liveRun(7), [tagged('a')]);
+    expect(chosen?.label).toBe('a'); // the live decision never reads the shadow
+    expect(shadowed.decisions).toHaveLength(2);
+    const [live, long] = shadowed.decisions;
+    expect('horizon' in live!).toBe(false);
+    expect(long!.horizon).toBe('run');
+    expect(long!.site).toBe('rewardDaemon');
+    expect(long!.labels).toEqual(live!.labels);
+    expect(long!.results.map((r) => r.score)).toEqual([3, 3]);
+    expect(long!.chosenIndex).toBe(0); // ties→NULL under the same ε rule
+    expect(long!.marginVsNull).toBe(0);
+    // Every candidate walked once per horizon — no extra evaluations.
+    expect(calls).toEqual(['null@base', 'a@base', 'null@run', 'a@run']);
+
+    const plain = new RunArbitrationDriver(new RNG(1), { evaluate });
+    plain.decide('rewardDaemon', liveRun(7), [tagged('a')]);
+    expect(live).toEqual(plain.decisions[0]);
+  });
+
+  it('the long record picks under the same ε rule (its own null, hysteresis intact)', () => {
+    const { evaluate } = horizonEvaluator({
+      base: { null: 0, a: 0, b: 0 },
+      run: { null: 0, a: 0.2, b: 4 },
+    });
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      epsilon: 0.25,
+      shadowHorizon: { horizonBattles: 'run' },
+    });
+    driver.decide('test', liveRun(7), [tagged('a'), tagged('b')]);
+    expect(driver.decisions[0]!.chosenIndex).toBe(0); // live: nothing beats null
+    expect(driver.decisions[1]!.chosenIndex).toBe(2); // long: b clears ε, a does not
+    expect(driver.decisions[1]!.marginVsNull).toBe(4);
+  });
+
+  it('a finite shadow horizon is carried on the record as a number', () => {
+    const { evaluate } = horizonEvaluator({ base: { null: 0, a: 1 }, run: { null: 0, a: 1 } });
+    // horizonBattles 3 is finite → the fake keys it 'base'; the marker is what's under test.
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 3 },
+    });
+    driver.decide('test', liveRun(7), [tagged('a')]);
+    expect(driver.decisions[1]!.horizon).toBe(3);
+  });
+
+  it('never perturbs the primary stream: labels + live records byte-equal shadow on/off', () => {
+    const tables = {
+      base: { null: 0, a: 5, b: 2 },
+      run: { null: 9, a: 0, b: 0 },
+    };
+    const run = (shadow: boolean) => {
+      const driver = new RunArbitrationDriver(new RNG(42), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        ...(shadow ? { shadowHorizon: { horizonBattles: 'run' as const } } : {}),
+      });
+      const labels = [
+        driver.decide('s1', liveRun(7), [tagged('a')])?.label ?? null,
+        driver.decide('s2', liveRun(7), [tagged('a'), tagged('b')])?.label ?? null,
+        driver.decide('s3', liveRun(7), [tagged('b')])?.label ?? null,
+      ];
+      return { labels, live: driver.decisions.filter((d) => d.horizon === undefined) };
+    };
+    const shadowed = run(true);
+    const plain = run(false);
+    expect(shadowed.labels).toEqual(plain.labels);
+    expect(shadowed.live).toEqual(plain.live);
+  });
+
+  it('the 1-in-m sample is deterministic, consumes no RNG, and defaults to every decision', () => {
+    const tables = { base: { null: 0, a: 1 }, run: { null: 0, a: 1 } };
+    const longCount = (seed: number, sample?: number): { long: number; live: number } => {
+      const driver = new RunArbitrationDriver(new RNG(seed), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: { horizonBattles: 'run', ...(sample !== undefined ? { sample } : {}) },
+      });
+      for (let i = 0; i < 8; i++) driver.decide(`s${i}`, liveRun(7), [tagged('a')]);
+      return {
+        long: driver.decisions.filter((d) => d.horizon !== undefined).length,
+        live: driver.decisions.filter((d) => d.horizon === undefined).length,
+      };
+    };
+    expect(longCount(5)).toEqual({ long: 8, live: 8 }); // default sample 1
+    expect(longCount(5, 1)).toEqual({ long: 8, live: 8 });
+    const a = longCount(5, 3);
+    const b = longCount(5, 3);
+    expect(a).toEqual(b); // same seed ⇒ the same sampled subset
+    expect(a.live).toBe(8); // sampling never drops a live record
+    expect(a.long).toBeLessThanOrEqual(8);
+    // The sampled decisions are the same SET, not just the same count: the
+    // live records (and so the pairs) are identical, and the gate reads
+    // only the first pair — pinned via the record sequence.
+    const seq = (sample: number): string[] => {
+      const driver = new RunArbitrationDriver(new RNG(5), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: { horizonBattles: 'run', sample },
+      });
+      for (let i = 0; i < 8; i++) driver.decide(`s${i}`, liveRun(7), [tagged('a')]);
+      return driver.decisions.map((d) => `${d.site}${d.horizon === undefined ? '' : '@run'}`);
+    };
+    expect(seq(3)).toEqual(seq(3));
+  });
+
+  it('rejects a malformed shadow config loud', () => {
+    const { evaluate } = horizonEvaluator({ base: { null: 0 }, run: { null: 0 } });
+    expect(
+      () => new RunArbitrationDriver(new RNG(1), { evaluate, shadowHorizon: { horizonBattles: 0 } }),
+    ).toThrow(/horizonBattles/);
+    expect(
+      () =>
+        new RunArbitrationDriver(new RNG(1), {
+          evaluate,
+          shadowHorizon: { horizonBattles: 'run', sample: 0 },
+        }),
+    ).toThrow(/sample/);
+    expect(
+      () =>
+        new RunArbitrationDriver(new RNG(1), {
+          evaluate,
+          shadowHorizon: { horizonBattles: 'run', sample: 1.5 },
+        }),
+    ).toThrow(/sample/);
+  });
+
+  it('INTEGRATION: a run-end shadow walks every pair to complete/defeat on a 1-hop run', () => {
+    // hopCount 1 = root + one hop: the long walk reaches a terminal in two
+    // battles, so the real evaluator's run-end horizon is cheap to pin.
+    const live = new Run(20260822, new EventBus<GameEvents>(), { hopCount: 1 });
+    const mk = (shadow: boolean) => {
+      const driver = new RunArbitrationDriver(new RNG(99), {
+        rollout: { horizonBattles: 1 },
+        rolloutsPerCandidate: 1,
+        ...(shadow ? { shadowHorizon: { horizonBattles: 'run' as const } } : {}),
+      });
+      const chosen = driver.decide('nodeChoice', live, [enterRoot()]);
+      return { chosen: chosen?.label ?? null, decisions: driver.decisions };
+    };
+    const shadowed = mk(true);
+    const plain = mk(false);
+    expect(shadowed.chosen).toBe(plain.chosen);
+    expect(shadowed.decisions[0]).toEqual(plain.decisions[0]);
+    expect(shadowed.decisions).toHaveLength(2);
+    const long = shadowed.decisions[1]!;
+    expect(long.horizon).toBe('run');
+    expect(long.labels).toEqual(['null', 'enterNode:root']);
+    for (const r of long.results) {
+      expect(r.perSeed).toHaveLength(1);
+      for (const p of r.perSeed) expect(p.completed || p.died).toBe(true);
+    }
+  });
+});
+
 describe('RunArbitrationDriver — integration (real evaluator)', () => {
   const CONFIG = { rollout: { horizonBattles: 1 } };
 

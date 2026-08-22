@@ -43,11 +43,11 @@ the shipped linear map) · shadow K = the primary's 2, `m` from the 84d
 probe. Predictions: World v35 / Run v44 hold (the getter is derived);
 decisions.csv append-last; fuzz:smoke additive.
 
-- [ ] **84a** — the long-horizon shadow in `RunArbitrationDriver`
-      (`shadow: { horizonBattles, sample, k? }`; same pairs, no new
-      draws, sample keyed off the pair seed; a separate record with a
-      horizon marker + `hopsRemaining`). Exit: the 71c byte-equal-decide
-      pin extended; the record shape pinned on a crafted evaluator.
+- [x] **84a** ✅ 2026-08-22 — `shadowHorizon: { horizonBattles, sample }`
+      on the driver (no `k` — a different shadow K would draw extra
+      pairs and perturb the stream); a separate record with `horizon`;
+      7 new pins incl. a real run-end walk. `hopsRemaining` lands with
+      84b's getter. Detail: git.
 - [ ] **84b** — `Run.hopsRemaining` (derived, pre-root-guarded,
       sector-aware along the shipped DAG). Exit: pre-root / mid-sector /
       post-seam pinned. No bump.

@@ -1,78 +1,98 @@
-# ROADMAP — Round 6 (Instruments), Phases 84–87
+# ROADMAP — Round 6 (Instruments), Phases 84–88
 
 The round's PLAN (it stays a plan for its whole life). The macro order
-and this round's charter, dependencies, decision points, exit criteria,
-and scope guards are in [META-ROADMAP.md](META-ROADMAP.md) §Round 6;
-findings + rationale land in [WORKLOG.md](WORKLOG.md); live status is
-HANDOFF's 🧭 Cursor. Sub-steps are cut at each phase kickoff (AGENTS
-"The planning stack"), never here.
+and this round's charter are in [META-ROADMAP.md](META-ROADMAP.md)
+§Round 6; the signed design record is [round-6-spec.md](round-6-spec.md)
+§Kickoff resolutions; findings + rationale land in [WORKLOG.md](WORKLOG.md);
+live status is HANDOFF's 🧭 Cursor. Sub-steps are cut at each phase
+kickoff (AGENTS "The planning stack"), never here.
 
-**Status: SKELETON (the kickoff's mechanical half, 2026-08-21).** The
-phase list below is the META-ROADMAP in-scope list in its signed order;
-the spec session (next) audits each surface against code reality,
-shape-locks with the user, and may renumber or insert phases before any
-checkbox is cut. Nothing below is a commitment yet except the order.
+**Status: SPEC LOCKED 2026-08-22** (the skeleton's §84–87 re-cut to
+§84–88 — the measurement instrument became a regular phase, the
+`--grant` cohort was retired as the prior's source; WORKLOG §Kickoff).
+Sub-steps for §84 are cut at its kickoff.
 
-**Ordering in one breath:** the fold first (every board run on the
-pre-fold arm measures a soon-superseded doctrine — principle #5); the
-perf pass second so the largest cohort of the round (rarity, all 23
-archetypes) runs on the faster balancer; roster realism third (it
-re-reads the X3 bands and wants the fold's arm); the rarity protocol
-last (the biggest batch, one box cohort); ONE sheet amendment at the
-close, not one per item (pre-registered at 83f).
+**Ordering in one breath:** the instrument first (the fold consumes
+its table); the fold second (every board run on the pre-fold arm
+measures a soon-superseded doctrine — principle #5); perf third
+(profile-first, byte-identical, nothing downstream leans on it);
+roster realism fourth (re-reads the X3 bands on the fold's arm); the
+rarity read last (it consumes §84's unit rows; box time only for the
+thin rows); ONE sheet amendment at the close (pre-registered at 83f).
 
-## Phase 84 — The measured-terminal-prior FOLD
+## Phase 84 — The long-horizon shadow instrument
 
-Rung 1 of the 72f ladder (judged TABULAR at 83e): fold the decisions.csv
-per-item aggregates into the rollout terminal score. Rides WITH it: the
-ε-floor re-read (floors tuned on the myopic arm are invalidated by the
-fold); riders ⭐ the campRaid nominator (the fold's first NEW consumer +
-its validation case) and the 55pre-vector re-derive (after the fold, for
-the same reason). Decision point: the terminal-score weighting — the
-spec session's one real design fork. Exit: the fold on the default arm
-with a paired same-seed read vs the pre-fold arm; the nominator
-auditioning; `pre55ReachRef` re-derived.
-
-_(Sub-steps cut at phase kickoff.)_
-
-## Phase 85 — The balancer performance pass
-
-Profile-first (no CPU profile has ever been taken); the 57d/69c benches
-found clone negligible at 16 units and "the battle sim ~100% of rollout
-cost." Candidate levers, ranked by the profile: the per-candidate clone
-amortized (every candidate clones the IDENTICAL live state); early-exit
-of decided rollouts / successive halving over seeds; the tick itself
-(object pooling — determinism-dangerous). Byte-identity oracle mandatory
-(the 47e worktree-pinned fuzz-arm diff); any lever that flips a decision
-is a doctrine change for the user, not a speedup. Exit: a measured
-per-seed speedup with `summary.csv` + `decisions.csv` byte-identical
-across arms.
+Generalize the §71c shadow (`shadowTier`) to a run-end horizon on the
+ACQUISITION sites (`rewardDaemon` · `portBuy` · `eventChoice` · a new
+shadow-only `recruit` site), deterministically sampled 1-in-m, on its
+own instrument arm; the per-item aggregate gains a per-remaining-hop
+margin; the first instrument batch on the box; the `--grant` bridge
+(~3 items) validates the cheap walker's magnitudes; the table lands
+as a committed artifact with provenance. Live decisions byte-identical
+shadow on/off (pinned). **Risk:** medium (new site + a long walk on
+the driver's CRN contract). **Decision points:** `m` and the shadow K
+(cost-tuned); whether value reads ~linear in hops remaining; the
+bridge verdict. **Exit:** the table committed with every acquisition
+item that clears n=80 from natural play, the bridge read logged, the
+thin-row list named for §88.
 
 _(Sub-steps cut at phase kickoff.)_
 
-## Phase 86 — Roster realism for isolation reads
+## Phase 85 — The fold + the ε re-read + the two riders
 
-Isolation (`--per-encounter`) fields the character's STARTING roster at
-`startingLevel` unless `--roster` is hand-typed, and the enemy budget is
-player-relative (BALANCE: "differential only"). Build the capture
-(per-hop archetype composition on `BattleResult` beside `playerLevels`)
-+ `--roster=sampled:<hop>` drawn from the recorded distribution; then
-re-read the X3 per-kind bands under it. Exit: the sampled mode on the
-default arm; the band re-read dispositioned (hold / re-pin / defect).
+`scoreTerminal` gains `priorBonus = λ_prior × Σ table[item] ×
+hopsRemaining` over the holdings delta (daemons · cache packets ·
+roster units); λ_prior a board arm swept {0, 0.5, 1}, 0 byte-identical;
+the breakdown + decisions.csv column. The ε floors re-derive post-fold
+with an event-page context added to `readEpsilonAA`. Riders: the
+campRaid RUN-LAYER preTurn decision site (seeds the camp objective;
+the 83e forced-engagement probe is its baseline) and the 55pre vector
+re-derive (a post-fold `--search`, new fixture). **Risk:** medium-high
+(changes the doctrine arm — every arb board row moves). **Decision
+points:** λ_prior's signed default (at the amendment); the campRaid
+layer re-opens only if it literally never gets picked. **Exit:** the
+paired pre/post-fold read; the boon event's three rows separate;
+floors re-pinned; the nominator auditioning; the 55pre twin on its
+re-derived anchor (`pre55ReachRef` retired or re-pinned).
 
 _(Sub-steps cut at phase kickoff.)_
 
-## Phase 87 — The rarity verification protocol + the round close
+## Phase 86 — The balancer performance pass
 
-Tiers were a design judgment over bot-preference weights; the §76f four
-were never read; the shipping checklist's realized-value item was never
-discharged for them; no board row mentions rarity. Build: paired
-same-seed `--grant=<archetype>` deltas at the n=80 floor for all 23
-archetypes (one overnight box cohort, ONE HEAD), tiers + prices re-read
-against realized value; standing for every new archetype from Round 9
-on. Then the close ritual: the ONE sheet amendment (the standard ritual,
-signed at the post-fold arm), the scratchpad sweep, the HANDOFF demotion,
-the META-ROADMAP ✅. Exit: every archetype's tier dispositioned; the
-amended sheet signed; Round 7 (Idioms) is NEXT.
+Profile-first (none ever taken): split per-seed cost between outer
+battles and rollouts, then `World.tick` itself. Expected levers are
+tick-level (pathfinding scratch · `livingUnits` filters · Map churn ·
+the pooling TODO with airtight reset discipline); the clone is
+measured negligible and K=2 has nothing to halve. Byte-identity oracle
+mandatory (the 47e worktree-pinned diff: summary.csv + decisions.csv
+sha across arms); a lever that flips a decision is a doctrine change
+for the user, not a speedup. **Risk:** medium (the hot loop).
+**Exit:** a measured per-seed speedup with byte-identical outputs — or
+a documented no-op with the profile on record.
+
+_(Sub-steps cut at phase kickoff.)_
+
+## Phase 87 — Roster realism for isolation reads
+
+`playerArchetypes` captured beside `playerLevels` on `BattleResult`; a
+committed per-hop roster table with provenance; `--roster=sampled:<hop>`
+draws a WHOLE recorded roster row harness-side (no Run stream change);
+the X3 isolation cohort re-runs under it on the fold's arm. **Risk:**
+low-medium. **Exit:** the sampled mode on the default arm; the
+per-kind bands dispositioned hold / re-pin / defect.
+
+_(Sub-steps cut at phase kickoff.)_
+
+## Phase 88 — The rarity read + the round close
+
+Read §84's recruit-site rows per draftable archetype against the
+5/3/3/2 tiers and `unitPriceFor`; targeted `--grant` paired arms at
+n=80 for the thin rows only; tiers + prices dispositioned per
+archetype; the protocol written down as standing for every new
+archetype from Round 9 on. Then the close ritual: the ONE sheet
+amendment (signed at the post-fold arm, λ_prior's default included),
+the scratchpad sweep, the HANDOFF demotion, the META-ROADMAP ✅.
+**Exit:** every draftable archetype dispositioned; the amended sheet
+signed; Round 7 (Idioms) is NEXT.
 
 _(Sub-steps cut at phase kickoff.)_

@@ -160,6 +160,17 @@ At the kickoff: archive ROADMAP.md + WORKLOG.md + cluster-5-spec.md →
 `archive/post-72-roadmap.md` / `-worklog.md` / `archive/cluster-5-spec.md`
 (the 41→42 / 46→47 / 72→73 precedent) and author the fresh pair.
 
+**Kickoff 2026-08-22 — spec LOCKED ([round-6-spec.md](round-6-spec.md)).**
+The in-scope list above is the planning-session draft; the spec
+governs where they differ: the prior's source is NOT decisions.csv
+(within-horizon, double-counts) and NOT a `--grant` cohort (linear in
+content) but a new **long-horizon shadow instrument** (§84 — the
+§71c shadow generalized to a run-end horizon on the acquisition
+sites); the campRaid rider is a RUN-LAYER decision site (the battle
+evaluator can't see its payout); the rarity read consumes §84's unit
+rows. Phases renumbered **§84 instrument → §85 fold → §86 perf → §87
+roster → §88 rarity + close**.
+
 ---
 
 ## Round 7 — Idioms

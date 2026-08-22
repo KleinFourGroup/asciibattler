@@ -161,7 +161,92 @@ method, the decisions.csv aggregates, and the evaluator/search-driver
 code on a fresh context; the fold's terminal-score weighting is the
 design fork the spec session exists to resolve.
 
-## Kickoff (the spec session)
+## Kickoff (the spec session, 2026-08-22)
 
-_(Lands at the spec session: the code-reality audit of the four
-surfaces, the design conversation, the shape-lock, the phase cut.)_
+Output: [round-6-spec.md](round-6-spec.md) (the intent + the LOCKED
+resolutions) and the ROADMAP re-cut §84–88. The reading list the
+Cursor prescribed was read in full first: BALANCE 83e/83f, the 72f
+ladder pre-registration (BALANCE:2995 + post-68-worklog §70/§72f),
+`readEpsilonAA.ts`, the per-item aggregate (`reporters.ts`
+`perItemDecisionStats`), both evaluators, the search/arbitration
+drivers, the walker, the clone seams, the 83f board-report per-item
+tables, `arbitratedStrategy.ts`'s sites + ε floors, the harness/CLI
+surfaces for `--roster`/`--grant`, the rarity config seam.
+
+### The code-reality audit — five findings
+
+1. **The fold's source premise was wrong.** The draft said "fold the
+   decisions.csv per-item aggregates into the terminal score." Two
+   problems: (a) Δ|picked is the WITHIN-horizon margin — the rollout
+   already realized it; folding it back double-counts, and the prior
+   needs the BEYOND-horizon value (a run-grade quantity — what the 72f
+   pre-registration actually named: the `--grant` paired instruments;
+   the 83e/META wording drifted because the convergence read was done
+   on decisions.csv); (b) coverage — on the 83f arb-regen table the
+   rows clearing n=80 are empower 3483 · patch/surge/shield/discard-one
+   127–246 · nodeChoice battle 88, all inside the horizon; the
+   run-long assets read rewardDaemon n 3–8 · portBuy daemon n 1–4 ·
+   units n 1–3 · event choices ≤ 30, every one Δ 0.00 — the
+   horizon-blindness exhibit itself. decisions.csv stays the
+   convergence MONITOR (83e's ML-rung tripwire).
+2. **Two evaluators, one fold.** The draft's "sixth searcher script"
+   campRaid nominator would be arbitrated by the BATTLE evaluator
+   (`src/bot/evaluator.ts`: material differential + WIN_BONUS over
+   160 ticks; neutrals count in neither team's material) — a raid
+   costs material and its payout is invisible there, so it never
+   clears ε. The run-layer fold doesn't reach it. The objective shape
+   IS free (`battleSetup.ts:301`, the §75g pull).
+3. **Perf: two of three draft levers can't bite.** Clone measured
+   negligible (57d 0.07 ms / 69c 0.03–0.05 ms); K=2 — nothing to
+   halve. The cost is `World.tick` inside the walker's per-pair full
+   battle (`walker.ts:273`) and the searcher's (cands+1)×K×160 ticks
+   per search point. Expectation reset to tick-level micro-wins or a
+   documented no-op.
+4. **Roster realism confirmed as drafted** (`Run.ts:1088`,
+   `harness.ts:99`, `telemetry.ts` run-aggregate); the only design
+   call was marginals vs whole rows.
+5. **Rarity's cohort IS the fold's unit rows** — the same `--grant`
+   paired recipe; the draft's fold→…→rarity order had an unnamed
+   dependency, and its rarity-last rationale (the faster balancer for
+   the biggest cohort) bought an hour or two against a ~two-night
+   cohort.
+
+### The design conversation (user answers F1–F5, then the pivot)
+
+F1 hops-remaining scaling — signed. F2 daemons + packets + units —
+signed. F3 campRaid at the run layer — signed ("re-evaluate if it
+literally never gets picked"). F4 whole recorded roster rows — signed.
+F5 (one `--grant` cohort first, ~41 batches at n=80 ≈ two box nights)
+— the user pushed back: not a fan of a two-night run; it leaves data
+on the table (natural early-daemon runs) and grows linearly with
+content; floated a softmax data-gathering arm + aggregate compare.
+
+**The pivot — the long-horizon shadow instrument.** The naive softmax
+arm was rejected (loses same-seed pairing; confounds on state). The
+cousin that keeps its spirit: branch the run at the NATURAL decision
+point — the arbitration driver already clones per CRN pair and walks
+both branches under shared dice for one battle; §71c's `shadowTier`
+already re-judges every candidate telemetry-only with the driver
+stream untouched. Generalized to a run-end horizon on the acquisition
+sites (+ a new shadow-only recruit site), sampled 1-in-m, on its own
+arm: values arrive at natural hops with natural rosters (the
+hops-remaining scaling becomes measured), every candidate branch is
+evaluated regardless of the live pick (exploration for free), cost
+scales per decision not per item, any shadow-on batch refreshes the
+table. Catches owned up front: cheap-walker fidelity for absolute
+magnitudes (→ the `--grant` bridge on ~3 items, once) and thin rows
+for rare offers (→ targeted `--grant` arms, the rarity phase's box
+time). Ballpark ~6 run-equivalents overhead per run vs the cohort's
+~3,300 runs. **User: "enthusiastically approved"**; renumbered so the
+instrument is a regular §84.
+
+Rejected alternatives, for the record: the 41-arm cohort (cost,
+hop-0-only values); the naive softmax arm (pairing, confounding); a
+battle-evaluator camp-credit term (a second fold + a bits→material
+rate to invent + a harder §86 oracle).
+
+### Predictions at the lock
+
+World v35 / Run v44 hold for the round (everything harness/bot-side);
+fuzz:smoke grows additively; every arb board row moves at §85 — the
+ONE amendment absorbs it (pre-registered at 83f).

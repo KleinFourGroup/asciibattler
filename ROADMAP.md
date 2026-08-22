@@ -36,7 +36,33 @@ bridge verdict. **Exit:** the table committed with every acquisition
 item that clears n=80 from natural play, the bridge read logged, the
 thin-row list named for §88.
 
-_(Sub-steps cut at phase kickoff.)_
+**Cut (shape-locked, user-signed 2026-08-22 — WORKLOG §84 kickoff):**
+separate long-horizon log records with a horizon marker (live records
+byte-identical) · hops remaining = shortest remaining DAG path (moot on
+the shipped linear map) · shadow K = the primary's 2, `m` from the 84d
+probe. Predictions: World v35 / Run v44 hold (the getter is derived);
+decisions.csv append-last; fuzz:smoke additive.
+
+- [ ] **84a** — the long-horizon shadow in `RunArbitrationDriver`
+      (`shadow: { horizonBattles, sample, k? }`; same pairs, no new
+      draws, sample keyed off the pair seed; a separate record with a
+      horizon marker + `hopsRemaining`). Exit: the 71c byte-equal-decide
+      pin extended; the record shape pinned on a crafted evaluator.
+- [ ] **84b** — `Run.hopsRemaining` (derived, pre-root-guarded,
+      sector-aware along the shipped DAG). Exit: pre-root / mid-sector /
+      post-seam pinned. No bump.
+- [ ] **84c** — the shadow-only `recruit` site (null = the base pick;
+      challengers = other slots + pass) + `--shadow-horizon` /
+      `--shadow-sample` (require `--arbitrate`) + the csv columns
+      (`horizon`, `hopsRemaining`) + the per-remaining-hop aggregate
+      column. Exit: the live recruit pick is the base's on every seed
+      (pinned); a local run writes the columns.
+- [ ] **84d** — the local cost probe (pick `m`) → one box queue at ONE
+      HEAD: the n=80 shadow batch + the bridge (control + `--grant` ×
+      {a daemon, a packet, an archetype} at n=80).
+- [ ] **84e** — `npm run prior:table` → `tests/fuzz/board/prior-table.json`
+      (value per remaining hop · n · provenance); the bridge read + the
+      thin-row list → BALANCE + WORKLOG §84.
 
 ## Phase 85 — The fold + the ε re-read + the two riders
 

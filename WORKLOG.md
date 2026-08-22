@@ -250,3 +250,45 @@ rate to invent + a harder §86 oracle).
 World v35 / Run v44 hold for the round (everything harness/bot-side);
 fuzz:smoke grows additively; every arb board row moves at §85 — the
 ONE amendment absorbs it (pre-registered at 83f).
+
+## Phase 84 — The long-horizon shadow instrument
+
+### Kickoff (2026-08-22, same session as the spec lock)
+
+**Code-reality audit of the §84 surfaces** (`driver.ts` · `walker.ts`
+· `arbitratedStrategy.ts` · `reporters.ts` · `commands/run.ts` /
+`args.ts` · `harness.ts`'s recruit dispatch · `Run.ts`'s hop reads ·
+`sectorWalk.ts` · `driver.test.ts`):
+
+- The shadow seam is exactly the 71c shape: pairs derived once, the
+  shadow loop runs AFTER the primary under the same pairs, four tests
+  pin byte-equal decide sequences shadow on/off. A long-horizon shadow
+  reuses the pairs (no draw) and a 1-in-m sample can key off the pair
+  seed (`cloneSeed % m`) — no draw either.
+- Run-end walks exist: `walkToHorizon` returns on complete/defeat;
+  `readEpsilonAA` already passes `horizonBattles: 9999`; only
+  `maxHops` (default 50) needs to be explicit.
+- Recruit is the ONE new site (`harness.ts:1033` → `chooseRecruit` /
+  `passRecruit`; the arm delegates `pickRecruit` to the base). It must
+  stay shadow-only: a live one-battle arbitration of recruits would be
+  a doctrine change at the wrong horizon (the recruit-censoring
+  lesson).
+- No hops-remaining read exists: `currentHop` is per-sector (gotcha
+  #120), pre-root throws (#110), `currentSectorLength()` is private,
+  and the sector DAG is walked by random successor (`pickNextSector`).
+  The shipped DAG is linear (start → deep-end), so "rest of this
+  sector + the successor chain" is exact today.
+- decisions.csv extends append-last by contract; `itemKeyOf` keys on
+  site prefixes; `perItemDecisionStats` is pure over rows — nothing
+  reshapes.
+- Cost shape from the 83f table: rewardDaemon ≈ 1 decision/run,
+  eventChoice ≈ 2, portBuy ≈ 1–2 (several candidates each); the recruit
+  site will dominate (~one offer per won battle × 3–4 branches) — `m`
+  is mostly a recruit-site dial.
+
+**Shape-lock (user-signed "on all counts"):** separate long-horizon
+records with a horizon marker (the aggregate + csv stay unchanged;
+rejected: a parallel field on the live record) · hops remaining =
+shortest remaining DAG path, moot on the shipped map · shadow K = the
+primary's 2, `m` from the 84d probe. The five-step cut is in ROADMAP
+§84.

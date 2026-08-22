@@ -52,3 +52,26 @@ _(The post-C5 rounds start here.)_
   Same shape as the C3 spec-vs-code audit (`b966187`), applied to the
   macro plan: the audit changes the ORDER, not just the sizes.
   (`daff9a0`)
+
+## Instruments (Round 6)
+
+- **Count the decisions before timing them.** The 84d cost probe's
+  first act was a per-site DECISION count off the baseline's
+  decisions.csv (one PowerShell group-by) — and it caught a spec
+  deviation the 84a/84c tests had passed straight through: the shadow
+  fired on every site, and the empower site alone was ~10× every
+  acquisition site combined. A cheap shape read off existing data
+  beats a timed probe of the wrong shape; the §57g CPU-vs-wall check
+  then confirmed the mis-shaped probe was merely slow, not wedged.
+  (84d)
+- **Stopping a background task orphans its worker.** `TaskStop`
+  killed the shell; the tsx/node tree (npm-cli → tsx → worker) kept
+  running at CPU ≈ wall, still writing to the log path the relaunch
+  reused — so the "alive" log was the dead probe's. `Get-Process node`
+  (full command lines via `Get-CimInstance Win32_Process`) after ANY
+  stop, kill by PID. And the detach that works on this box is the Bash
+  tool's `run_in_background` (the one-battle smoke ran 12 min past the
+  10-min tool cap and completed); a `Start-Process pwsh -File` detach
+  returned in 0 s without launching npm (the PowerShell shim) — verify
+  a detached launch by its first log line AND a busy PID, never by the
+  wrapper's exit. (84d)

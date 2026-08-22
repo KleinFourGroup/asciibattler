@@ -116,6 +116,14 @@ export interface RunShadowHorizonConfig {
    *  Required only when a shadow-only site is wired (the arbitrated
    *  strategy seeds it off the run seed + its own offset). */
   readonly siteRng?: RNG;
+  /** 84d — the sites the shadow runs on (live decisions AND shadow-only
+   *  sites alike); absent = every site. The spec's contract is the
+   *  ACQUISITION sites only — grants, fires and node picks are inside the
+   *  decision horizon already, and at ~90 decisions/run × K × a
+   *  run-remainder each they are the whole cost (the 84d probe: 31 empower
+   *  decisions × 7 candidates on one seed). The arbitrated strategy passes
+   *  `SHADOW_SITES`; the driver stays generic. */
+  readonly sites?: readonly string[];
 }
 
 export interface RunArbitrationConfig {
@@ -270,10 +278,16 @@ export class RunArbitrationDriver {
     // nominee-pinning strategy), only the horizon differs; evaluations
     // consume no driver RNG, so the sample gate below is the only other
     // branch and it reads a value already drawn.
-    if (this.shadowHorizon !== undefined && this.shadowSampled(pairs)) {
+    if (this.shadowHorizon !== undefined && this.shadowSite(site) && this.shadowSampled(pairs)) {
       this.decisions.push(this.judgeLong(ctx, live, null, challengers, spec, epsilon));
     }
     return wins ? challengers[bestIdx]! : null;
+  }
+
+  /** 84d — the site allowlist gate (absent = every site). */
+  private shadowSite(site: string): boolean {
+    const sites = this.shadowHorizon?.sites;
+    return sites === undefined || sites.includes(site);
   }
 
   /**
@@ -300,6 +314,7 @@ export class RunArbitrationDriver {
     } = {},
   ): void {
     if (this.shadowHorizon === undefined || challengers.length === 0) return;
+    if (!this.shadowSite(site)) return;
     const siteRng = this.shadowHorizon.siteRng;
     if (siteRng === undefined) {
       throw new Error(

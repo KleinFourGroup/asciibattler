@@ -82,6 +82,13 @@ const DRIVER_SEED_OFFSET = 0x70a1;
 /** 84c — the shadow-only sites' pair stream (`shadowHorizon.siteRng`): its
  *  own universe, apart from the driver's (above) and the harness's. */
 const SHADOW_SITE_SEED_OFFSET = 0x84c1;
+/** 84d — the sites the long-horizon shadow runs on: the ACQUISITION
+ *  sites (round-6-spec §"The measurement design"). Grants, fires and node
+ *  picks are inside the decision horizon already and would be the whole
+ *  cost (the 84d probe read 31 empower decisions × 7 candidates on one
+ *  seed — more than every acquisition site combined, ×10). `recruit` is
+ *  the shadow-only site. */
+export const SHADOW_SITES: readonly string[] = ['rewardDaemon', 'portBuy', 'eventChoice', 'recruit'];
 
 /**
  * The per-site ε floors — THE v1 DERIVATION RULE (unified at 70b, the
@@ -217,6 +224,7 @@ export function makeArbitratedStrategy(
       ? {
           shadowHorizon: {
             ...config.shadowHorizon,
+            sites: SHADOW_SITES,
             siteRng: new RNG(runSeed + SHADOW_SITE_SEED_OFFSET),
           },
         }

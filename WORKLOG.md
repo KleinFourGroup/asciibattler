@@ -364,3 +364,39 @@ kickoff predicted. A run-END shadow multiplies each branch by the hops
 ahead, so 84d's probe sizes `m` (and may sample the recruit site harder
 than the others — a per-site `m` is the obvious follow-up if one rate
 can't serve both).
+
+### 84d — the cost probe (2026-08-22, in flight)
+
+**Baseline:** one plain WALK-arm run (seed 1, soldier, the regen
+vector, the five ARM flags) = **255 s** locally, a completed 22-hop
+run, 365 decision rows. Its per-site DECISION counts — the number
+that sizes the shadow — read: grant:empower **31** (7.1 candidates
+each) · packetFire:preTurn 34 · packetFire:outOfBattle 13 · nodeChoice
+7 · eventChoice 2 · rewardDaemon 2 · portBuy 1 (13 candidates). The
+acquisition sites are ~5 decisions/run; the in-horizon sites ~85.
+
+**⚠ A spec deviation caught by those counts — fixed before the probe
+re-ran:** 84a's shadow fired on EVERY `decide()`, not the acquisition
+sites the spec names (round-6-spec §"The measurement design": "grants,
+fires, and node picks … are NOT shadowed"). At a run-end horizon the
+empower site alone (31 × 7 × K=2 run-remainders) would have been
+~10× every acquisition site combined — which is also why the 84c
+one-battle smoke cost ~6 min/run. Fix: `shadowHorizon.sites` (an
+allowlist gating both the 84a shadow and `shadowDecide`; absent =
+every site, the driver stays generic) + `SHADOW_SITES =
+['rewardDaemon', 'portBuy', 'eventChoice', 'recruit']` on the
+arbitrated arm; pinned. The first run-end probe was launched on the
+unfixed shape, stopped — and its node child SURVIVED the stop as an
+orphan (the §57g class: `TaskStop` kills the shell, not the worker;
+`Get-Process node` after any stop), still writing to the log path the
+relaunch reused. Killed by PID; relaunched clean on the fixed shape:
+`--shadow-horizon=run --shadow-sample=8`, seed 1, timed by artifact.
+
+Also landed while the probe ran (84e pulled forward — pure code, no
+CPU): the prior-table builder (`tests/fuzz/prior/` — `buildPriorTable`
++ `npm run prior:table -- <dir>…`): long-horizon rows only, the
+per-site polarity (rewardDaemon −Δ of decline · portBuy/recruit +Δ of
+take · eventChoice excluded — per-choice rows aren't items), unit
+levels stripped, cross-site n-weighted merge, `signable` = n ≥ 80,
+provenance (HEAD · builtAt · the sidecars swept); refuses to build
+from a batch with no long-horizon rows. 5 pins.

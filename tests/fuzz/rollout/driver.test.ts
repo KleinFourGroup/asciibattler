@@ -497,6 +497,31 @@ describe('RunArbitrationDriver — the 84c shadow-only site (shadowDecide) + hop
     expect(with_.records).toEqual(without.records);
   });
 
+  it('84d — the site allowlist gates both the 84a shadow and shadow-only sites; absent = every site', () => {
+    const tables = { base: { null: 0, a: 1 }, run: { null: 0, a: 1, c: 1 } };
+    const mk = (sites?: readonly string[]) =>
+      new RunArbitrationDriver(new RNG(1), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: {
+          horizonBattles: 'run',
+          siteRng: new RNG(9),
+          ...(sites !== undefined ? { sites } : {}),
+        },
+      });
+    const gated = mk(['rewardDaemon', 'recruit']);
+    gated.decide('grant:empower', liveRun(7), [tagged('a')]); // live only
+    gated.decide('rewardDaemon', liveRun(7), [tagged('a')]); // live + shadow
+    gated.shadowDecide('recruit', liveRun(7), PASS, [tagged('c')]); // shadow
+    gated.shadowDecide('somethingElse', liveRun(7), PASS, [tagged('c')]); // nothing
+    expect(gated.decisions.map((d) => `${d.site}${d.horizon === undefined ? '' : '@run'}`)).toEqual(
+      ['grant:empower', 'rewardDaemon', 'rewardDaemon@run', 'recruit@run'],
+    );
+    const open = mk();
+    open.decide('grant:empower', liveRun(7), [tagged('a')]);
+    open.shadowDecide('somethingElse', liveRun(7), PASS, [tagged('c')]);
+    expect(open.decisions.map((d) => d.horizon)).toEqual([undefined, 'run', 'run']);
+  });
+
   it('the site stream is deterministic and the sample gate applies', () => {
     const tables = { base: { null: 0 }, run: { null: 0, a: 1 } };
     const mk = (sample?: number) => {

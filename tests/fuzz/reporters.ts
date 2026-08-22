@@ -134,6 +134,12 @@ const DECISIONS_CSV_HEADER = [
   // mean − null mean, and the ε it was judged against.
   'marginVsNull',
   'epsilon',
+  // 84c — append-last (the §84 instrument): the long-horizon shadow's marker
+  // ('' on a live record; 'run' or a battle count on a shadow record — the
+  // aggregate keys the horizons apart on it) + Run.hopsRemaining at decide
+  // time (the per-remaining-hop normalization; '' on a pre-84 record).
+  'horizon',
+  'hopsRemaining',
 ].join(',');
 
 /**
@@ -173,6 +179,8 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
             tailPresent ? mean(per.map((p) => p.tailBonus ?? 0)).toFixed(3) : '',
             d.marginVsNull.toFixed(3),
             d.epsilon.toFixed(3),
+            d.horizon === undefined ? '' : String(d.horizon),
+            d.hopsRemaining === undefined ? '' : String(d.hopsRemaining),
           ].join(','),
         );
       });
@@ -204,6 +212,11 @@ export interface DecisionRow {
   score: number;
   marginVsNull: number;
   epsilon: number;
+  /** 84c — '' on a live record; 'run' / a battle count on a long-horizon
+   *  shadow record. Part of the per-item grouping key. */
+  horizon: string;
+  /** 84c — `Run.hopsRemaining` at decide time; null on a pre-84 sidecar. */
+  hopsRemaining: number | null;
 }
 
 /** Flatten in-memory results into rows (the serial CLI's entry path). */
@@ -226,6 +239,8 @@ export function decisionRowsOf(results: readonly RunResult[]): DecisionRow[] {
           score: res.score,
           marginVsNull: d.marginVsNull,
           epsilon: d.epsilon,
+          horizon: d.horizon === undefined ? '' : String(d.horizon),
+          hopsRemaining: d.hopsRemaining ?? null,
         });
       });
     });
@@ -290,9 +305,14 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
     score: col('score'),
     marginVsNull: col('marginVsNull'),
     epsilon: col('epsilon'),
+    // 84c — OPTIONAL (−1 when absent): a pre-84 sidecar (every board dir up
+    // to 83f) still parses — its rows read as live-horizon, hops unknown.
+    horizon: header.indexOf('horizon'),
+    hopsRemaining: header.indexOf('hopsRemaining'),
   };
   return lines.slice(1).map((line) => {
     const f = splitCsvLine(line);
+    const hops = c.hopsRemaining < 0 ? '' : (f[c.hopsRemaining] ?? '');
     return {
       seed: Number(f[c.seed]),
       strategy: f[c.strategy]!,
@@ -306,6 +326,8 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
       score: Number(f[c.score]),
       marginVsNull: Number(f[c.marginVsNull]),
       epsilon: Number(f[c.epsilon]),
+      horizon: c.horizon < 0 ? '' : (f[c.horizon] ?? ''),
+      hopsRemaining: hops === '' ? null : Number(hops),
     };
   });
 }
@@ -326,11 +348,18 @@ export function itemKeyOf(site: string, label: string): string {
   if (site === 'grant:redraw' && (m = /^redraw (level:\d+)/.exec(label))) return m[1]!;
   if (site === 'grant:empower' && label.startsWith('empower hand:')) return 'empower';
   if (site === 'nodeChoice' && (m = /^enterNode:\d+ \((.+)\)$/.exec(label))) return m[1]!;
+  // 84c — the shadow-only recruit site keys the ARCHETYPE (level = instance
+  // noise: the prior table and the rarity read are per archetype).
+  if (site === 'recruit' && (m = /^recruit (unit:[^:]+):L\d+$/.exec(label))) return m[1]!;
   return label;
 }
 
 export interface ItemDecisionStats {
   site: string;
+  /** 84c — '' for live-horizon rows, 'run' / a count for a shadow horizon.
+   *  Rows never pool across horizons (the within-horizon margin and the
+   *  beyond-horizon one are different quantities — round-6-spec). */
+  horizon: string;
   item: string;
   /** Candidate INSTANCES pooled (the sample size — the n=80 floor applies
    *  to any signed read off this row). For single-instance sites — port
@@ -348,43 +377,67 @@ export interface ItemDecisionStats {
   meanDelta: number;
   /** The margin conditioned on winning — the realized value of the picks. */
   meanDeltaPicked: number;
+  /** 84c — mean of (Δ / hopsRemaining) over the instances that carry a
+   *  positive hopsRemaining: the per-remaining-hop value the §85 prior
+   *  table is built from (pool HP per hop ahead). null when no instance
+   *  carries hops (a pre-84 sidecar, or every instance at the terminal). */
+  meanDeltaPerHop: number | null;
 }
 
-/** Pool candidate rows by (site, item) with per-decision null-arm joins.
- *  Sorted site asc, then n desc, then item — the biggest samples first
- *  within each site. */
+/** Pool candidate rows by (site, horizon, item) with per-decision null-arm
+ *  joins. Sorted site asc, horizon asc ('' = live first), then n desc,
+ *  then item — the biggest samples first within each site × horizon. */
 export function perItemDecisionStats(rows: readonly DecisionRow[]): ItemDecisionStats[] {
   const nullScores = new Map<string, number>();
   for (const r of rows) {
     if (r.candidate === 0) nullScores.set(`${r.seed}|${r.strategy}|${r.decision}`, r.score);
   }
-  const buckets = new Map<string, { site: string; item: string; deltas: number[]; pickedDeltas: number[] }>();
+  const buckets = new Map<
+    string,
+    {
+      site: string;
+      horizon: string;
+      item: string;
+      deltas: number[];
+      pickedDeltas: number[];
+      perHop: number[];
+    }
+  >();
   for (const r of rows) {
     if (r.candidate === 0) continue;
     const nullScore = nullScores.get(`${r.seed}|${r.strategy}|${r.decision}`);
     if (nullScore === undefined) continue; // orphan row — malformed input
     const item = itemKeyOf(r.site, r.label);
-    const key = `${r.site}|${item}`;
+    const key = `${r.site}|${r.horizon}|${item}`;
     let b = buckets.get(key);
     if (!b) {
-      b = { site: r.site, item, deltas: [], pickedDeltas: [] };
+      b = { site: r.site, horizon: r.horizon, item, deltas: [], pickedDeltas: [], perHop: [] };
       buckets.set(key, b);
     }
     const delta = r.score - nullScore;
     b.deltas.push(delta);
     if (r.chosen) b.pickedDeltas.push(delta);
+    if (r.hopsRemaining !== null && r.hopsRemaining > 0) b.perHop.push(delta / r.hopsRemaining);
   }
   return [...buckets.values()]
     .map((b) => ({
       site: b.site,
+      horizon: b.horizon,
       item: b.item,
       n: b.deltas.length,
       picked: b.pickedDeltas.length,
       pickRate: b.deltas.length === 0 ? 0 : b.pickedDeltas.length / b.deltas.length,
       meanDelta: mean(b.deltas),
       meanDeltaPicked: mean(b.pickedDeltas),
+      meanDeltaPerHop: b.perHop.length === 0 ? null : mean(b.perHop),
     }))
-    .sort((a, b) => a.site.localeCompare(b.site) || b.n - a.n || a.item.localeCompare(b.item));
+    .sort(
+      (a, b) =>
+        a.site.localeCompare(b.site) ||
+        a.horizon.localeCompare(b.horizon) ||
+        b.n - a.n ||
+        a.item.localeCompare(b.item),
+    );
 }
 
 /** The n=80 floor for per-item value reads (BALANCE doctrine) — rows under
@@ -414,18 +467,25 @@ export function renderDecisionAnalysis(rows: readonly DecisionRow[]): string {
   );
   lines.push('');
   lines.push(
+    '  Horizon: live = the decision horizon (one battle); run / N = the 84 long-horizon shadow.',
+  );
+  lines.push('  Δ/hop = meanΔ per remaining hop (pool HP per hop ahead) — the §85 prior’s input.');
+  lines.push('');
+  lines.push(
     renderTable(
-      ['Site', 'Item', 'n', 'Picked', 'Pick%', 'meanΔ', 'Δ|picked'],
+      ['Site', 'Horizon', 'Item', 'n', 'Picked', 'Pick%', 'meanΔ', 'Δ|picked', 'Δ/hop'],
       stats.map((s) => [
         s.site,
+        s.horizon === '' ? 'live' : s.horizon,
         s.item,
         `${s.n}${s.n < PER_ITEM_N_FLOOR ? '·' : ''}`,
         String(s.picked),
         (s.pickRate * 100).toFixed(0),
         s.meanDelta.toFixed(2),
         s.picked === 0 ? '—' : s.meanDeltaPicked.toFixed(2),
+        s.meanDeltaPerHop === null ? '—' : s.meanDeltaPerHop.toFixed(3),
       ]),
-      2, // Site + Item both left-aligned (two label columns)
+      3, // Site + Horizon + Item left-aligned (three label columns)
     ),
   );
   return lines.join('\n') + '\n';

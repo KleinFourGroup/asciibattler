@@ -81,6 +81,11 @@ export interface RunDecisionRecord {
    *  live record stays byte-identical shadow on or off, and the per-item
    *  aggregate keys the two horizons apart on this marker. */
   readonly horizon?: number | 'run';
+  /** 84c — `Run.hopsRemaining` at decide time (the §84 per-remaining-hop
+   *  normalization reads it). Written on EVERY record by the driver — live
+   *  and shadow alike; optional on the type only so hand-built fixtures and
+   *  pre-84 sidecars still type and parse. */
+  readonly hopsRemaining?: number;
 }
 
 /**
@@ -104,6 +109,13 @@ export interface RunDecisionRecord {
 export interface RunShadowHorizonConfig {
   readonly horizonBattles: number | 'run';
   readonly sample?: number;
+  /** 84c — the pair stream for SHADOW-ONLY sites (`shadowDecide`): a site
+   *  with no primary decision has no pairs to borrow, and drawing them off
+   *  the driver's own stream would shift every live decision after it. A
+   *  separate seeded stream keeps the live sequence byte-identical.
+   *  Required only when a shadow-only site is wired (the arbitrated
+   *  strategy seeds it off the run seed + its own offset). */
+  readonly siteRng?: RNG;
 }
 
 export interface RunArbitrationConfig {
@@ -241,13 +253,9 @@ export class RunArbitrationDriver {
       shadowChosenIndex = sWins ? sBestIdx + 1 : 0;
     }
 
-    const sectorId = live.currentSectorId;
-    const hop = live.currentNodeId === PRE_ROOT_NODE_ID ? 0 : live.currentHop;
+    const ctx = this.contextOf(site, live, labels);
     this.decisions.push({
-      site,
-      sectorId,
-      hop,
-      labels,
+      ...ctx,
       results,
       chosenIndex: wins ? bestIdx + 1 : 0,
       marginVsNull: bestScore - nullResult.score,
@@ -263,37 +271,123 @@ export class RunArbitrationDriver {
     // consume no driver RNG, so the sample gate below is the only other
     // branch and it reads a value already drawn.
     if (this.shadowHorizon !== undefined && this.shadowSampled(pairs)) {
-      const { horizonBattles } = this.shadowHorizon;
-      const longSpec: RunRolloutSpec = {
-        ...spec,
-        horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
-      };
-      const longNull = this.evaluate(live, null, longSpec);
-      const longResults: RunCandidateResult[] = [longNull];
-      let lBestIdx = -1;
-      let lBestScore = -Infinity;
-      challengers.forEach((c, i) => {
-        const r = this.evaluate(live, c.apply, longSpec);
-        longResults.push(r);
-        if (r.score > lBestScore) {
-          lBestScore = r.score;
-          lBestIdx = i;
-        }
-      });
-      const lWins = lBestIdx >= 0 && lBestScore > longNull.score + epsilon;
-      this.decisions.push({
-        site,
-        sectorId,
-        hop,
-        labels,
-        results: longResults,
-        chosenIndex: lWins ? lBestIdx + 1 : 0,
-        marginVsNull: lBestScore - longNull.score,
-        epsilon,
-        horizon: horizonBattles,
-      });
+      this.decisions.push(this.judgeLong(ctx, live, null, challengers, spec, epsilon));
     }
     return wins ? challengers[bestIdx]! : null;
+  }
+
+  /**
+   * 84c — a SHADOW-ONLY site: no live arbitration (the caller's own policy
+   * decides live and dispatches), only the long-horizon record — the
+   * recruit site's shape, where a live one-battle arbitration would be a
+   * doctrine change at the wrong horizon (the recruit-censoring lesson).
+   * `nullApply` is the site's EXPLICIT baseline (e.g. passRecruit): an
+   * empty apply would leave the clone at the decision phase for the
+   * rollout walker's own policy to act on, which is not a null arm. Pairs
+   * come off `shadowHorizon.siteRng`, never the driver's stream — drawn
+   * BEFORE the sample gate so the site stream advances identically
+   * whether or not this decision is sampled. Logs nothing when the shadow
+   * is off or the candidate set is empty.
+   */
+  shadowDecide(
+    site: string,
+    live: Run,
+    nullApply: CandidateApply,
+    challengers: readonly RunDecisionCandidate[],
+    opts: {
+      readonly epsilon?: number;
+      readonly rollout?: RunArbitrationConfig['rollout'];
+    } = {},
+  ): void {
+    if (this.shadowHorizon === undefined || challengers.length === 0) return;
+    const siteRng = this.shadowHorizon.siteRng;
+    if (siteRng === undefined) {
+      throw new Error(
+        `RunArbitrationDriver.shadowDecide('${site}'): shadowHorizon.siteRng is required for a shadow-only site`,
+      );
+    }
+    const pairs: RunRolloutPair[] = [];
+    for (let k = 0; k < this.k; k++) {
+      pairs.push({
+        cloneSeed: siteRng.fork().toJSON().state,
+        policySeed: siteRng.fork().toJSON().state,
+      });
+    }
+    if (!this.shadowSampled(pairs)) return;
+    const rollout = { ...this.rollout, ...opts.rollout };
+    const spec: RunRolloutSpec = {
+      horizonBattles: rollout.horizonBattles ?? 1,
+      ...rollout,
+      pairs,
+    };
+    const labels = ['null', ...challengers.map((c) => c.label)];
+    this.decisions.push(
+      this.judgeLong(
+        this.contextOf(site, live, labels),
+        live,
+        nullApply,
+        challengers,
+        spec,
+        opts.epsilon ?? this.epsilon,
+      ),
+    );
+  }
+
+  /** The record's context columns, read off the live run once per decide
+   *  (the pre-root hop guard — gotcha #110; `hopsRemaining` is pre-root
+   *  safe by construction). */
+  private contextOf(
+    site: string,
+    live: Run,
+    labels: readonly string[],
+  ): Pick<RunDecisionRecord, 'site' | 'sectorId' | 'hop' | 'hopsRemaining' | 'labels'> {
+    return {
+      site,
+      sectorId: live.currentSectorId,
+      hop: live.currentNodeId === PRE_ROOT_NODE_ID ? 0 : live.currentHop,
+      hopsRemaining: live.hopsRemaining,
+      labels,
+    };
+  }
+
+  /** The long-horizon judgment shared by the shadow of a live decision
+   *  (84a — `nullApply` null, the primary's pairs) and a shadow-only site
+   *  (84c — an explicit baseline, the site stream's pairs): every
+   *  candidate walked to the shadow horizon, argmax + the same ε rule. */
+  private judgeLong(
+    ctx: Pick<RunDecisionRecord, 'site' | 'sectorId' | 'hop' | 'hopsRemaining' | 'labels'>,
+    live: Run,
+    nullApply: CandidateApply | null,
+    challengers: readonly RunDecisionCandidate[],
+    spec: RunRolloutSpec,
+    epsilon: number,
+  ): RunDecisionRecord {
+    const { horizonBattles } = this.shadowHorizon!;
+    const longSpec: RunRolloutSpec = {
+      ...spec,
+      horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
+    };
+    const longNull = this.evaluate(live, nullApply, longSpec);
+    const results: RunCandidateResult[] = [longNull];
+    let bestIdx = -1;
+    let bestScore = -Infinity;
+    challengers.forEach((c, i) => {
+      const r = this.evaluate(live, c.apply, longSpec);
+      results.push(r);
+      if (r.score > bestScore) {
+        bestScore = r.score;
+        bestIdx = i;
+      }
+    });
+    const wins = bestIdx >= 0 && bestScore > longNull.score + epsilon;
+    return {
+      ...ctx,
+      results,
+      chosenIndex: wins ? bestIdx + 1 : 0,
+      marginVsNull: bestScore - longNull.score,
+      epsilon,
+      horizon: horizonBattles,
+    };
   }
 
   /** 84a — the 1-in-m sample gate, keyed off the decision's first pair

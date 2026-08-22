@@ -187,6 +187,15 @@ export interface CliArgs {
   // pooled noise floor; ε=0 = spend on any positive point estimate, exact
   // ties still pass — the strict-> rule holds). Requires --arbitrate.
   grantEpsilon?: number;
+  // 84c — the §84 long-horizon shadow instrument (`--shadow-horizon[=run|N]`,
+  // bare = 'run'): every sampled arbitrated decision's candidates ALSO walked
+  // to the horizon as a separate decisions.csv record, plus the shadow-only
+  // recruit site. `--shadow-sample=<m>` = 1-in-m decisions (default every).
+  // Requires --arbitrate; REFUSED with --hops / --sector-hops (the 84b
+  // finding: a clone drops both run-shape dials, so a run-end walk is
+  // unbounded whatever the batch dial — the instrument is a full-walk shape).
+  shadowHorizon?: string;
+  shadowSample?: number;
 }
 
 export function parseArgs(argv: readonly string[]): CliArgs {
@@ -395,6 +404,12 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
+      case '--shadow-horizon':
+        args.shadowHorizon = v ?? 'run';
+        break;
+      case '--shadow-sample':
+        if (v !== undefined) args.shadowSample = Number(v);
+        break;
       default:
         if (raw.startsWith('--')) {
           throw new Error(`Unknown flag: ${raw}`);
@@ -498,6 +513,35 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!Number.isFinite(args.grantEpsilon) || args.grantEpsilon < 0) {
       throw new Error(`--grant-epsilon must be a finite number ≥ 0 (got '${args.grantEpsilon}')`);
+    }
+  }
+  // 84c — the shadow instrument's guards: arbitrate-only; 'run' or an
+  // integer battle count; never on a run-shape probe (84b: the clone walks
+  // unbounded, so the live record's hopsRemaining and the shadow's walk
+  // would disagree on what "the rest of the run" is); the sample is a
+  // positive integer and meaningless without the horizon.
+  if (args.shadowHorizon !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--shadow-horizon requires --arbitrate (it shadows the arbitrated arm)');
+    }
+    if (args.shadowHorizon !== 'run') {
+      const n = Number(args.shadowHorizon);
+      if (!Number.isInteger(n) || n < 1) {
+        throw new Error(`--shadow-horizon must be 'run' or an integer ≥ 1 (got '${args.shadowHorizon}')`);
+      }
+    }
+    if (args.hops !== undefined || args.sectorHops !== undefined) {
+      throw new Error(
+        '--shadow-horizon is refused with --hops / --sector-hops: a rollout clone drops both run-shape dials (Run.fromJSON), so the shadow walk would be unbounded while the live run is not — the instrument is a full-walk shape (WORKLOG §84b)',
+      );
+    }
+  }
+  if (args.shadowSample !== undefined) {
+    if (args.shadowHorizon === undefined) {
+      throw new Error('--shadow-sample requires --shadow-horizon (it samples the shadowed decisions)');
+    }
+    if (!Number.isInteger(args.shadowSample) || args.shadowSample < 1) {
+      throw new Error(`--shadow-sample must be an integer ≥ 1 (got '${args.shadowSample}')`);
     }
   }
   return args;

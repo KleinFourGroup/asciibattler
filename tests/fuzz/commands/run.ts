@@ -106,6 +106,8 @@ export type RunModeArgs = Pick<
   | 'arbitrateTier'
   | 'flipTelemetry'
   | 'grantEpsilon'
+  | 'shadowHorizon'
+  | 'shadowSample'
   | 'set'
 >;
 
@@ -317,15 +319,30 @@ export function runRunCli(args: RunModeArgs): void {
             : {}),
           // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
           ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
+          // 84c — the long-horizon shadow instrument (validated in args.ts:
+          // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
+          ...(args.shadowHorizon !== undefined
+            ? {
+                shadowHorizon: {
+                  horizonBattles:
+                    args.shadowHorizon === 'run' ? ('run' as const) : Number(args.shadowHorizon),
+                  ...(args.shadowSample !== undefined ? { sample: args.shadowSample } : {}),
+                },
+              }
+            : {}),
         })
       : strategy;
+  const shadowNote =
+    args.shadowHorizon !== undefined
+      ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
+      : '';
 
   const startedAt = Date.now();
   let done = 0;
   const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}…\n`,
     );
     for (const s of seeds) {
       const seedStrategy = strategyFor(s, strategy);

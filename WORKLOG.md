@@ -320,3 +320,47 @@ not silent). The same reset also re-resolves the X1 difficulty
 multipliers to shipped defaults inside every clone — pre-existing for
 all arbitration, noted here, not a §84 item. The pin now reads the
 clone's actual map and documents the discipline.
+
+### 84c — the shadow-only recruit site + the arm (2026-08-22)
+
+Two design facts settled in the build, both now pinned:
+
+- **A shadow-only site can't borrow pairs and must not draw the
+  driver's.** `shadowDecide` derives its CRN pairs off a separate
+  `shadowHorizon.siteRng` (the strategy seeds it at `runSeed + 0x84c1`),
+  drawn BEFORE the sample gate so the site stream advances identically
+  sampled or not; interleaving shadow-only calls between live decides
+  leaves the live + 84a records byte-equal (pinned).
+- **The null arm must be an explicit baseline.** An empty apply leaves
+  the clone AT the recruit phase, where the rollout walker's own policy
+  would recruit — not a null arm. Recruit's null = `passRecruit`; the
+  challengers = every offer slot (the clone's own offer — `chooseRecruit`
+  appends by value), labeled `recruit unit:<archetype>:L<n>`, keyed per
+  ARCHETYPE in the aggregate (level = instance noise; the prior and the
+  §88 rarity read are per archetype). The live pick stays the base's and
+  the base's rng consumption is identical shadow on/off (pinned); the
+  record judges under the reward-class floor (`RECRUIT_EPSILON`,
+  telemetry-only).
+
+decisions.csv gained `horizon` + `hopsRemaining` append-last; the
+reader treats both as OPTIONAL so every 83f-era board dir still parses
+(pinned by stripping the columns and re-parsing). `perItemDecisionStats`
+keys `(site, horizon, item)` — the within-horizon and beyond-horizon
+margins never pool (the spec's distinction) — and carries
+`meanDeltaPerHop` (Δ / hopsRemaining over the instances that carry
+hops; null, never NaN). The walker's `stopAtPhase` gained `'recruit'`
+for the fixture.
+
+**The one-seed smoke (the exit criterion):** `--count=1 --searcher
+--audition --redraw=level:2 --empower=level:hi --arbitrate
+--shadow-horizon=1 --shadow-sample=1` (no `--strategy`, so the default
+fuzz set — TWO runs) wrote 1732 decision rows, 914 at horizon 1, 96 on
+the recruit site; `hopsRemaining` read 20 at hop 1 (9 left in The Start
++ 11 in the Deep End) and 18 at hop 3 — the sector-aware read in the
+wild. **Cost read for 84d:** ~12 min wall for the two runs at horizon
+ONE battle, sample 1 — ~6 min/run, roughly 2–3× a plain run; the
+recruit site (8–12 offers/run × 4 branches) dominates exactly as the
+kickoff predicted. A run-END shadow multiplies each branch by the hops
+ahead, so 84d's probe sizes `m` (and may sample the recruit site harder
+than the others — a per-site `m` is the obvious follow-up if one rate
+can't serve both).

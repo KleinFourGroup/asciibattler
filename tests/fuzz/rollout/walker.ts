@@ -110,8 +110,9 @@ export interface WalkOptions {
    *  (pass a large horizonBattles; NB a fresh clone already at the stop
    *  phase returns immediately — stage battle-count walks and phase
    *  walks on separate clones). This is the header's "extend the stop
-   *  condition in one named place" seam. */
-  readonly stopAtPhase?: 'port' | 'map' | 'reward';
+   *  condition in one named place" seam. 84c adds 'recruit' (the
+   *  shadow-only recruit site's fixture context — a post-victory offer). */
+  readonly stopAtPhase?: 'port' | 'map' | 'reward' | 'recruit';
 }
 
 export interface WalkResult {

@@ -394,6 +394,131 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
   });
 });
 
+describe('RunArbitrationDriver — the 84c shadow-only site (shadowDecide) + hopsRemaining', () => {
+  function horizonEvaluator(tables: Record<'base' | 'run', Record<string, number>>) {
+    const calls: string[] = [];
+    const evaluate = (
+      _live: Run,
+      apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      const label = apply === null ? 'null' : (apply as unknown as { label: string }).label;
+      const horizon = Number.isFinite(spec.horizonBattles) ? 'base' : 'run';
+      calls.push(`${label}@${horizon}`);
+      const score = tables[horizon][label];
+      if (score === undefined) throw new Error(`horizonEvaluator: no score for '${label}'@${horizon}`);
+      return { score, perSeed: [] };
+    };
+    return { evaluate, calls };
+  }
+  const PASS = tagged('null').apply; // an explicit baseline the fake reads as the null arm
+
+  it('every record carries hopsRemaining read off the live run', () => {
+    const { evaluate } = horizonEvaluator({ base: { null: 0, a: 1 }, run: { null: 0, a: 1 } });
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run' },
+    });
+    const live = liveRun(7);
+    driver.decide('test', live, [tagged('a')]);
+    expect(driver.decisions).toHaveLength(2);
+    for (const d of driver.decisions) expect(d.hopsRemaining).toBe(live.hopsRemaining);
+    expect(live.hopsRemaining).toBeGreaterThan(0);
+  });
+
+  it('logs nothing when the shadow is off or the candidate set is empty', () => {
+    const { evaluate, calls } = horizonEvaluator({ base: { null: 0 }, run: { null: 0, a: 1 } });
+    const off = new RunArbitrationDriver(new RNG(1), { evaluate });
+    off.shadowDecide('recruit', liveRun(7), PASS, [tagged('a')]);
+    expect(off.decisions).toHaveLength(0);
+    const on = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run', siteRng: new RNG(9) },
+    });
+    on.shadowDecide('recruit', liveRun(7), PASS, []);
+    expect(on.decisions).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('requires a site stream — throws loud without one', () => {
+    const { evaluate } = horizonEvaluator({ base: { null: 0 }, run: { null: 0, a: 1 } });
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run' },
+    });
+    expect(() => driver.shadowDecide('recruit', liveRun(7), PASS, [tagged('a')])).toThrow(
+      /siteRng/,
+    );
+  });
+
+  it('appends ONE long-horizon record: explicit null arm, labels, ε rule, horizon marker', () => {
+    const { evaluate, calls } = horizonEvaluator({
+      base: { null: 0 },
+      run: { null: 1, a: 1.2, b: 6 },
+    });
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      epsilon: 0.25,
+      shadowHorizon: { horizonBattles: 'run', siteRng: new RNG(9) },
+    });
+    const live = liveRun(7);
+    driver.shadowDecide('recruit', live, PASS, [tagged('a'), tagged('b')]);
+    expect(driver.decisions).toHaveLength(1);
+    const rec = driver.decisions[0]!;
+    expect(rec.site).toBe('recruit');
+    expect(rec.horizon).toBe('run');
+    expect(rec.labels).toEqual(['null', 'a', 'b']);
+    expect(rec.results.map((r) => r.score)).toEqual([1, 1.2, 6]);
+    expect(rec.chosenIndex).toBe(2); // b clears ε; a (0.2 ≤ 0.25) would not
+    expect(rec.marginVsNull).toBe(5);
+    expect(rec.hopsRemaining).toBe(live.hopsRemaining);
+    // The explicit baseline was evaluated as the null arm, at the long horizon only.
+    expect(calls).toEqual(['null@run', 'a@run', 'b@run']);
+  });
+
+  it('never touches the driver stream: live + 84a records byte-equal with shadow-only calls interleaved', () => {
+    const tables = { base: { null: 0, a: 5, b: 2 }, run: { null: 9, a: 0, b: 0, c: 3 } };
+    const run = (interleave: boolean) => {
+      const driver = new RunArbitrationDriver(new RNG(42), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: { horizonBattles: 'run', siteRng: new RNG(9) },
+      });
+      const labels: (string | null)[] = [];
+      labels.push(driver.decide('s1', liveRun(7), [tagged('a')])?.label ?? null);
+      if (interleave) driver.shadowDecide('recruit', liveRun(7), PASS, [tagged('c')]);
+      labels.push(driver.decide('s2', liveRun(7), [tagged('a'), tagged('b')])?.label ?? null);
+      if (interleave) driver.shadowDecide('recruit', liveRun(7), PASS, [tagged('c')]);
+      labels.push(driver.decide('s3', liveRun(7), [tagged('b')])?.label ?? null);
+      return { labels, records: driver.decisions.filter((d) => d.site !== 'recruit') };
+    };
+    const with_ = run(true);
+    const without = run(false);
+    expect(with_.labels).toEqual(without.labels);
+    expect(with_.records).toEqual(without.records);
+  });
+
+  it('the site stream is deterministic and the sample gate applies', () => {
+    const tables = { base: { null: 0 }, run: { null: 0, a: 1 } };
+    const mk = (sample?: number) => {
+      const driver = new RunArbitrationDriver(new RNG(1), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: {
+          horizonBattles: 'run',
+          siteRng: new RNG(9),
+          ...(sample !== undefined ? { sample } : {}),
+        },
+      });
+      for (let i = 0; i < 8; i++) driver.shadowDecide('recruit', liveRun(7), PASS, [tagged('a')]);
+      return driver.decisions;
+    };
+    expect(mk()).toHaveLength(8);
+    expect(mk(1)).toHaveLength(8);
+    const a = mk(3);
+    expect(a.length).toBeLessThanOrEqual(8);
+    expect(a).toEqual(mk(3)); // same site seed ⇒ the same sampled subset
+  });
+});
+
 describe('RunArbitrationDriver — integration (real evaluator)', () => {
   const CONFIG = { rollout: { horizonBattles: 1 } };
 

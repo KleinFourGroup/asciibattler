@@ -58,6 +58,7 @@ import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import { HEALTH } from '../../../src/config/health';
 import type { FuzzStrategy, GrantAction, PacketFire, PortBuy } from '../Strategy';
+import type { UnitTemplate } from '../../../src/sim/Unit';
 import { scoredStrategy, makeBestScore, maxPowerIndex, minPowerIndex } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS, type ScoredWeights } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
@@ -78,6 +79,9 @@ import type { InnerTier } from './walker';
  * apart.
  */
 const DRIVER_SEED_OFFSET = 0x70a1;
+/** 84c — the shadow-only sites' pair stream (`shadowHorizon.siteRng`): its
+ *  own universe, apart from the driver's (above) and the harness's. */
+const SHADOW_SITE_SEED_OFFSET = 0x84c1;
 
 /**
  * The per-site ε floors — THE v1 DERIVATION RULE (unified at 70b, the
@@ -119,6 +123,11 @@ export const NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
  *  pages are a context class readEpsilonAA has never read; the §81
  *  board round re-reads it (user-signed at the 74g shape-lock). */
 export const EVENT_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
+/** 84c — the shadow-only recruit site judges its long-horizon record
+ *  under the REWARD class floor (the same post-victory clone context as
+ *  the daemon pick). Telemetry-only: the live recruit pick is the base's,
+ *  never arbitrated; the ε only shapes the record's `chosenIndex`. */
+export const RECRUIT_EPSILON = REWARD_DAEMON_EPSILON;
 
 /**
  * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the
@@ -175,6 +184,14 @@ export interface ArbitratedConfig {
   readonly bitsLambda?: number;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
   readonly evaluate?: RunArbitrationConfig['evaluate'];
+  /** 84a/84c — the long-horizon shadow (`--shadow-horizon` /
+   *  `--shadow-sample`): every sampled decision's candidates ALSO walked to
+   *  this horizon as a separate record, and the shadow-only recruit site
+   *  wired. The site stream is seeded here off the run seed. */
+  readonly shadowHorizon?: {
+    readonly horizonBattles: number | 'run';
+    readonly sample?: number;
+  };
 }
 
 export interface ArbitratedRunStrategy extends FuzzStrategy {
@@ -196,6 +213,14 @@ export function makeArbitratedStrategy(
     },
     ...(config.evaluate !== undefined ? { evaluate: config.evaluate } : {}),
     ...(config.shadowTier !== undefined ? { shadowTier: config.shadowTier } : {}),
+    ...(config.shadowHorizon !== undefined
+      ? {
+          shadowHorizon: {
+            ...config.shadowHorizon,
+            siteRng: new RNG(runSeed + SHADOW_SITE_SEED_OFFSET),
+          },
+        }
+      : {}),
   });
 
   return {
@@ -205,7 +230,15 @@ export function makeArbitratedStrategy(
     // is the null arm).
     pickNextNode: (frontier, run, rng) =>
       arbitrateNodeChoice(driver, base, frontier, run, rng, config),
-    pickRecruit: (offer, run, rng) => base.pickRecruit(offer, run, rng),
+    // 84c — the recruit pick stays the BASE's (never arbitrated live); under
+    // the shadow the offer is ALSO recorded at the long horizon (the
+    // shadow-only site — units are the §88 rarity read's item). The base
+    // picks first so its rng consumption is untouched by the shadow.
+    pickRecruit: (offer, run, rng) => {
+      const idx = base.pickRecruit(offer, run, rng);
+      if (config.shadowHorizon !== undefined) shadowRecruit(driver, offer, run);
+      return idx;
+    },
     pickPortBuy: (stock, run, _rng) =>
       arbitratePortBuy(driver, stock, run, config.portBuyEpsilon),
     // 70b — the fire site is LANDED: always defined, both contexts. NB
@@ -226,6 +259,35 @@ export function makeArbitratedStrategy(
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
     pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
   };
+}
+
+/**
+ * 84c — the shadow-only recruit site. Null arm = PASS (the true "don't
+ * acquire" baseline — an empty apply would let the walker's own policy
+ * recruit at the cloned phase); challengers = every offer slot, in offer
+ * order, labeled `recruit unit:<archetype>:L<n>` (the aggregate keys the
+ * archetype, level = instance noise — the prior and the rarity read are
+ * per archetype). Each candidate reads the CLONE's offer (a value-equal
+ * deep copy; `chooseRecruit` appends by value). Nothing is decided live.
+ */
+function shadowRecruit(
+  driver: RunArbitrationDriver,
+  offer: readonly UnitTemplate[],
+  run: Run,
+): void {
+  if (run.phase !== 'recruit' || offer.length === 0) return;
+  const challengers: RunDecisionCandidate[] = offer.map((t, i) => ({
+    label: `recruit unit:${t.archetype}:L${t.level}`,
+    apply: ({ run: clone }) =>
+      clone.dispatch({ kind: 'chooseRecruit', unitTemplate: clone.currentOffer![i]! }),
+  }));
+  driver.shadowDecide(
+    'recruit',
+    run,
+    ({ run: clone }) => clone.dispatch({ kind: 'passRecruit' }),
+    challengers,
+    { epsilon: RECRUIT_EPSILON },
+  );
 }
 
 /**

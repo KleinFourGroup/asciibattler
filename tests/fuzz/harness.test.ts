@@ -325,7 +325,9 @@ describe('fuzz reporters', () => {
     expect(lines[0]!.startsWith('seed,strategy,decision,site,sector,hop,candidate,label,chosen')).toBe(
       true,
     );
-    expect(lines[0]!.endsWith('marginVsNull,epsilon')).toBe(true);
+    // 84c appended horizon + hopsRemaining LAST (the append-last contract:
+    // every 71a column keeps its position; the 84c test pins the new tail).
+    expect(lines[0]!.includes(',marginVsNull,epsilon,')).toBe(true);
     // Every decision's candidate 0 is the null arm; exactly one chosen=1 row
     // per decision when a challenger won, zero when null stood.
     const rows = lines.slice(1).map((l) => l.split(','));
@@ -517,6 +519,79 @@ describe('fuzz reporters', () => {
     // n=1 is under the floor → the directional marker rides the n column.
     expect(out).toContain('1·');
     expect(out).toContain(`n=${PER_ITEM_N_FLOOR} floor`);
+  });
+
+  // ── 84c — the long-horizon shadow columns + the horizon-keyed aggregate ───
+
+  const liveRecord = (hopsRemaining?: number): RunDecisionRecord => ({
+    site: 'rewardDaemon',
+    sectorId: 'the-start',
+    hop: 3,
+    labels: ['null', 'decline daemon:mars'],
+    results: [
+      { score: 0, perSeed: [breakdown(0), breakdown(0)] },
+      { score: 2, perSeed: [breakdown(2), breakdown(2)] },
+    ],
+    chosenIndex: 0,
+    marginVsNull: 2,
+    epsilon: 2.873,
+    ...(hopsRemaining !== undefined ? { hopsRemaining } : {}),
+  });
+  const shadowRecordOf = (hopsRemaining: number): RunDecisionRecord => ({
+    ...liveRecord(hopsRemaining),
+    results: [
+      { score: 1, perSeed: [breakdown(1), breakdown(1)] },
+      { score: 6, perSeed: [breakdown(6), breakdown(6)] },
+    ],
+    chosenIndex: 1,
+    marginVsNull: 5,
+    horizon: 'run',
+  });
+
+  it('84c — decisions.csv carries horizon + hopsRemaining append-last; a pre-84 sidecar still parses', () => {
+    const csv = renderDecisionsCsv([bareResult(7, [liveRecord(10), shadowRecordOf(10)])]);
+    const lines = csv.trim().split('\n');
+    expect(lines[0]!.endsWith('marginVsNull,epsilon,horizon,hopsRemaining')).toBe(true);
+    expect(lines[1]!.endsWith(',,10')).toBe(true); // live: blank horizon
+    expect(lines[3]!.endsWith(',run,10')).toBe(true); // the shadow record's null row
+    const parsed = parseDecisionsCsv(csv);
+    expect(parsed.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
+    expect(parsed.every((r) => r.hopsRemaining === 10)).toBe(true);
+    // The same rows with the two columns stripped (an 83f-era sidecar):
+    // old readers never broke on append-last, and the new reader degrades.
+    const old = lines.map((l) => l.split(',').slice(0, -2).join(',')).join('\n');
+    const parsedOld = parseDecisionsCsv(old);
+    expect(parsedOld).toHaveLength(4);
+    expect(parsedOld.every((r) => r.horizon === '' && r.hopsRemaining === null)).toBe(true);
+    // A record without hopsRemaining (a hand fixture) renders blank, parses null.
+    const bare = parseDecisionsCsv(renderDecisionsCsv([bareResult(8, [liveRecord()])]));
+    expect(bare[0]!.hopsRemaining).toBeNull();
+  });
+
+  it('84c — perItemDecisionStats keys horizons apart and reads Δ per remaining hop', () => {
+    const stats = perItemDecisionStats(
+      decisionRowsOf([bareResult(7, [liveRecord(10), shadowRecordOf(10), liveRecord()])]),
+    );
+    const mars = stats.filter((s) => s.item === 'daemon:mars');
+    expect(mars.map((s) => s.horizon)).toEqual(['', 'run']); // live first, never pooled
+    const live = mars[0]!;
+    const run = mars[1]!;
+    expect(live.n).toBe(2);
+    expect(live.meanDelta).toBeCloseTo(2, 10);
+    // Only the instance carrying hops contributes to Δ/hop: 2 / 10.
+    expect(live.meanDeltaPerHop).toBeCloseTo(0.2, 10);
+    expect(run.n).toBe(1);
+    expect(run.meanDelta).toBeCloseTo(5, 10);
+    expect(run.meanDeltaPerHop).toBeCloseTo(0.5, 10);
+    // No hops anywhere ⇒ null, not NaN.
+    const noHops = perItemDecisionStats(decisionRowsOf([bareResult(9, [liveRecord()])]));
+    expect(noHops[0]!.meanDeltaPerHop).toBeNull();
+    // The recruit site keys the archetype (level = instance noise).
+    expect(itemKeyOf('recruit', 'recruit unit:archer:L6')).toBe('unit:archer');
+    expect(itemKeyOf('recruit', 'recruit unit:archer:L8')).toBe('unit:archer');
+    const out = renderDecisionAnalysis(decisionRowsOf([bareResult(7, [shadowRecordOf(10)])]));
+    expect(out).toContain('Δ/hop');
+    expect(out).toContain('run');
   });
 
   // ── 71c — the tier-flip instrument ─────────────────────────────────────────

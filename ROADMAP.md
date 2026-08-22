@@ -54,13 +54,12 @@ decisions.csv append-last; fuzz:smoke additive.
       drop BOTH run-shape dials (`Run.fromJSON`) — a run-end shadow is
       unbounded whatever the batch dial → 84c refuses `--shadow-horizon`
       with `--hops`/`--sector-hops` (WORKLOG §84b).
-- [ ] **84c** — the shadow-only `recruit` site (null = the base pick;
-      challengers = other slots + pass) + `--shadow-horizon` /
-      `--shadow-sample` (require `--arbitrate`; REFUSE `--hops` /
-      `--sector-hops` — the 84b finding) + the csv columns
-      (`horizon`, `hopsRemaining`) + the per-remaining-hop aggregate
-      column. Exit: the live recruit pick is the base's on every seed
-      (pinned); a local run writes the columns.
+- [x] **84c** ✅ 2026-08-22 — `shadowDecide` (shadow-only sites on their
+      own `siteRng`; null = an EXPLICIT pass) + the `recruit` site + the
+      flags with the 84b refusal + `horizon`/`hopsRemaining` append-last
+      (pre-84 sidecars still parse) + the horizon-keyed aggregate with
+      Δ/hop; 17 new pins; the one-seed smoke wrote the columns (WORKLOG
+      §84c — the cost read). Detail: git.
 - [ ] **84d** — the local cost probe (pick `m`) → one box queue at ONE
       HEAD: the n=80 shadow batch + the bridge (control + `--grant` ×
       {a daemon, a packet, an archetype} at n=80).

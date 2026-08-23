@@ -29,7 +29,12 @@ import {
   type Board,
   type InstrumentMetrics,
 } from './board';
-import { parseDecisionsCsv, renderDecisionAnalysis } from '../reporters';
+import {
+  inertClasses,
+  parseDecisionsCsv,
+  renderDecisionAnalysis,
+  renderInertClassTripwire,
+} from '../reporters';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FUZZ_CLI = join(HERE, '..', 'cli.ts');
@@ -111,12 +116,23 @@ function report(board: Board, dir: string): { text: string; fails: number } {
   // report. Today's board arms are all pre-arbitration (the default flips at
   // §72), so this renders nothing until an arbitrated instrument lands — the
   // reading machinery is what §71 ships.
+  // 84f2 — the inert-class tripwire rides every decisions.csv the report
+  // touches; a class at Live 0 is a board-level WARN (instrument health,
+  // not a balance verdict — it never gates the exit code).
+  let inertTotal = 0;
   for (const inst of board.instruments) {
     const decisionsPath = join(dir, inst.id, 'decisions.csv');
     if (!existsSync(decisionsPath)) continue;
+    const rows = parseDecisionsCsv(readFileSync(decisionsPath, 'utf8'));
     text +=
       `\n## ${inst.id} — per-item decision value\n\n` +
-      renderDecisionAnalysis(parseDecisionsCsv(readFileSync(decisionsPath, 'utf8')));
+      renderDecisionAnalysis(rows) +
+      '\n' +
+      renderInertClassTripwire(rows);
+    inertTotal += inertClasses(rows).length;
+  }
+  if (inertTotal > 0) {
+    text += `\n⚠ inert-class tripwire: ${inertTotal} WARN (a candidate class no rollout can see — 84f2; see the per-instrument sections)\n`;
   }
   return { text, fails: evaluated.fails };
 }

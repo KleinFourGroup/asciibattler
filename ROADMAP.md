@@ -73,10 +73,11 @@ decisions.csv append-last; fuzz:smoke additive.
       provenance-noted); bridge verdict ✅ DECIDED: CONSISTENT, NOT
       VALIDATING. BALANCE 2026-08-23.
 - [ ] **84f** — inserted 2026-08-23 (the 84d findings; user-signed):
-      84f1 the shadow long-walk takes the live vector's scored strategy
-      (fire + port groups), SHADOW-ONLY, live records byte-identical ·
-      84f2 the inert-class tripwire (per site × candidate class, the
-      "score ≠ null" rate; board WARN at 0) · 84f3 the arm-1 rerun on the
+      84f1 ✅ 2026-08-23 the shadow long-walk takes the live vector's
+      scored strategy (fire + port groups), SHADOW-ONLY, live records
+      byte-identical · 84f2 ✅ 2026-08-23 the inert-class tripwire
+      (site × horizon × class; the at-0 trigger RE-SIGNED at the 2/499
+      coupling read — WORKLOG §84f) · 84f3 the arm-1 rerun on the
       box → the rebuilt table + the hops re-read = the phase close. Cut:
       WORKLOG §84f.
 

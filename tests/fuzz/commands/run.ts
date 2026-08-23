@@ -28,6 +28,7 @@ import {
   renderDecisionsCsv,
   decisionRowsOf,
   renderDecisionAnalysis,
+  renderInertClassTripwire,
   renderTierFlipsCsv,
   renderTierFlipAnalysis,
   tierFlipRows,
@@ -460,7 +461,12 @@ export function runRunCli(args: RunModeArgs): void {
   // a --jobs/box batch re-derives this read from the sidecar (board --report,
   // or parseDecisionsCsv by hand).
   if (allResults.some((r) => r.decisions !== undefined)) {
-    process.stdout.write(renderDecisionAnalysis(decisionRowsOf(allResults)) + '\n');
+    const rows = decisionRowsOf(allResults);
+    process.stdout.write(renderDecisionAnalysis(rows) + '\n');
+    // 84f2 — the inert-class tripwire rides the same condition: every batch
+    // that logs decisions prints it (the 84d packet blindness would have
+    // shown on the first §69e batch had this existed).
+    process.stdout.write(renderInertClassTripwire(rows) + '\n');
   }
   // 71c — the flip-rate aggregate, printed whenever the shadow ran.
   if (tierFlipRows(allResults).length > 0) {

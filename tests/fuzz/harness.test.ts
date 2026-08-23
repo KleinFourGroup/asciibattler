@@ -24,6 +24,10 @@ import {
   itemKeyOf,
   renderDecisionAnalysis,
   PER_ITEM_N_FLOOR,
+  candidateClassOf,
+  inertClassStats,
+  inertClasses,
+  renderInertClassTripwire,
   tierFlipRows,
   renderTierFlipsCsv,
   renderTierFlipAnalysis,
@@ -592,6 +596,90 @@ describe('fuzz reporters', () => {
     const out = renderDecisionAnalysis(decisionRowsOf([bareResult(7, [shadowRecordOf(10)])]));
     expect(out).toContain('Δ/hop');
     expect(out).toContain('run');
+  });
+
+  // ── 84f2 — the inert-class tripwire ────────────────────────────────────────
+
+  it('84f2 — candidateClassOf: item-key prefixes, site-tagged fire classes, site fallback', () => {
+    // portBuy item keys carry their class prefix (the label constructors).
+    expect(candidateClassOf('portBuy', itemKeyOf('portBuy', 'buy packet:surge @2'))).toBe('packet');
+    expect(candidateClassOf('portBuy', itemKeyOf('portBuy', 'buy daemon:mars @3'))).toBe('daemon');
+    expect(candidateClassOf('portBuy', itemKeyOf('portBuy', 'buy unit:archer:L2 @2'))).toBe('unit');
+    expect(candidateClassOf('rewardDaemon', itemKeyOf('rewardDaemon', 'decline daemon:mars'))).toBe('daemon');
+    expect(candidateClassOf('recruit', itemKeyOf('recruit', 'recruit unit:archer:L6'))).toBe('unit');
+    // Fire-site item keys are BARE packet ids — the class rides the site.
+    expect(candidateClassOf('packetFire:preTurn', itemKeyOf('packetFire:preTurn', 'fire patch@hand:1'))).toBe('packet');
+    expect(candidateClassOf('packetFire:outOfBattle', itemKeyOf('packetFire:outOfBattle', 'fire surge'))).toBe('packet');
+    // Non-item sites are their own class.
+    expect(candidateClassOf('grant:redraw', 'level:2')).toBe('grant:redraw');
+    expect(candidateClassOf('nodeChoice', 'elite')).toBe('nodeChoice');
+  });
+
+  // The 84d finding-1 shape in miniature: at one port decision the packet
+  // candidate ties its null to the last bit (bought, cached, never fired by
+  // any rollout) while the daemon candidate visibly moves the score; a
+  // shadow-horizon record shows the SAME packet class live (84f1 armed the
+  // long walk) — the horizons must key apart, or the live blindness hides
+  // behind the shadow fix.
+  const inertPortRecord = (): RunDecisionRecord => ({
+    site: 'portBuy',
+    sectorId: 'the-start',
+    hop: 6,
+    labels: ['null', 'buy packet:surge @2', 'buy daemon:mars @3'],
+    results: [
+      { score: 1.5, perSeed: [breakdown(1.5), breakdown(1.5)] },
+      { score: 1.5, perSeed: [breakdown(1.5), breakdown(1.5)] }, // ties the null — inert
+      { score: 4, perSeed: [breakdown(4), breakdown(4)] },
+    ],
+    chosenIndex: 2,
+    marginVsNull: 2.5,
+    epsilon: 3.145,
+    hopsRemaining: 9,
+  });
+  const shadowPortRecord = (): RunDecisionRecord => ({
+    ...inertPortRecord(),
+    labels: ['null', 'buy packet:surge @2'],
+    results: [
+      { score: 1, perSeed: [breakdown(1), breakdown(1)] },
+      { score: 3, perSeed: [breakdown(3), breakdown(3)] }, // the walk fires it now
+    ],
+    chosenIndex: 1,
+    marginVsNull: 2,
+    horizon: 'run',
+  });
+
+  it('84f2 — inertClassStats: per site × horizon × class, live = differs from the SAME null', () => {
+    const fixture = [bareResult(11, [inertPortRecord(), shadowPortRecord()])];
+    const stats = inertClassStats(decisionRowsOf(fixture));
+    expect(
+      stats.map((s) => [s.site, s.horizon, s.candidateClass, s.n, s.live]),
+    ).toEqual([
+      ['portBuy', '', 'daemon', 1, 1],
+      ['portBuy', '', 'packet', 1, 0], // the live rollout still can't see it
+      ['portBuy', 'run', 'packet', 1, 1], // the armed shadow walk can
+    ]);
+    expect(inertClasses(decisionRowsOf(fixture)).map((s) => [s.horizon, s.candidateClass])).toEqual([
+      ['', 'packet'],
+    ]);
+    // The csv read-back path agrees (3-decimal rounding is byte-stable for
+    // identical rollouts — both entry paths flag the same class).
+    const parsed = parseDecisionsCsv(renderDecisionsCsv(fixture));
+    expect(inertClassStats(parsed).map((s) => s.live)).toEqual([1, 0, 1]);
+  });
+
+  it('84f2 — renderInertClassTripwire marks the inert row and summarizes; all-live renders clean', () => {
+    const out = renderInertClassTripwire(
+      decisionRowsOf([bareResult(12, [inertPortRecord(), shadowPortRecord()])]),
+    );
+    expect(out).toContain('⚠ INERT');
+    expect(out).toContain('⚠ tripwire WARN: 1 inert class(es) — portBuy/live/packet');
+    // A batch with every class live carries no ⚠ marker anywhere (the
+    // legend's "WARN" prose stays) — a ⚠ grep over the report is decisive.
+    const clean = renderInertClassTripwire(
+      decisionRowsOf([bareResult(13, [shadowPortRecord()])]),
+    );
+    expect(clean).toContain('tripwire: all classes live');
+    expect(clean).not.toContain('⚠');
   });
 
   // ── 71c — the tier-flip instrument ─────────────────────────────────────────

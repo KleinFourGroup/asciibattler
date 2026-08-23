@@ -470,3 +470,36 @@ Superseded by 84f's rebuild.
   table → re-read the hops bins → the phase close. Predictions: no
   snapshot bump (harness-side); fuzz:smoke additive; the commit is the
   doc flip + the table.
+
+### 84f2 — the inert-class tripwire (2026-08-23)
+
+Landed as cut: `inertClassStats` buckets candidate instances per
+site × **horizon** × class (horizon added to the signed key — the same
+never-pool rule as the per-item aggregate, and load-bearing here:
+84f1 armed only the shadow walk, so post-fix the run horizon goes
+live while the live rollouts stay packet-blind until the §85
+amendment; pooling would have hidden exactly that). Class =
+item-key prefix (`unit`/`daemon`/`packet`); the fire sites are
+class-tagged by SITE (their item keys are bare packet ids); grant /
+node / event sites are their own class, so a fully-inert grant site
+trips too. "Live" = the instance's score differs from the SAME
+decision's null-arm score. Rendered on both consumers: the fuzz
+CLI stdout (any batch logging decisions) and the board report (per
+instrument dir + a bottom-line ⚠ count; never gates the exit code —
+WARN grade). 3 pins.
+
+**The probe** (scratchpad, vs the real 84d sidecar, 56,141 rows):
+the run horizon flags `portBuy/run/packet` at exactly 0/499 — the
+tripwire reproduces finding 1's nine structural zeros automatically.
+⭐ The nuance: the LIVE horizon reads 2/499 (0.4%) — two packet-buy
+instances perturbed their one-battle rollout (RNG/wave-composition
+coupling from the clone's buy, not packet value), so the strict at-0
+trigger does not fire there, and the cut's "would have flagged on
+the first §69e batch" carries that caveat on live-only batches.
+**Decision (user, 2026-08-23): at-0 RE-SIGNED.** Exact-tie across a
+whole class is structural proof with zero false positives; a
+near-zero threshold would change the signed semantics and buy a
+false-positive surface; the value read (meanΔ ≈ 0) is the per-item
+table's job. The standing live-horizon packet blindness is the
+§85-amendment's deferred fix, and the tripwire's standing work is
+the shadow rows from 84f3 onward.

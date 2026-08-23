@@ -491,6 +491,121 @@ export function renderDecisionAnalysis(rows: readonly DecisionRow[]): string {
   return lines.join('\n') + '\n';
 }
 
+// ── The inert-class tripwire (84f2) ──────────────────────────────────────────
+
+/** The candidate CLASS a row belongs to — the acquisition taxonomy (unit /
+ *  daemon / packet) read off the item key's prefix, with the fire sites
+ *  class-tagged by SITE (their item keys are bare packet ids). Non-item
+ *  sites (grants, node/event choices) are their own class — a fully-inert
+ *  grant site is exactly as much of an instrument hole as an inert item
+ *  class. */
+export function candidateClassOf(site: string, item: string): string {
+  if (site.startsWith('packetFire:')) return 'packet';
+  const m = /^(daemon|packet|unit):/.exec(item);
+  return m ? m[1]! : site;
+}
+
+export interface InertClassRow {
+  site: string;
+  /** Same keying rule as the per-item aggregate — never pooled across
+   *  horizons: a shadow-walk fix can wake a class in the long walk while
+   *  the live rollout still can't exercise it (84f1 did exactly that;
+   *  the live-side fire fix is the deferred §85-amendment doctrine). */
+  horizon: string;
+  candidateClass: string;
+  /** Candidate instances (null arm excluded). */
+  n: number;
+  /** Instances whose score differs from the SAME decision's null-arm
+   *  score — the candidate's rollout visibly DID something. */
+  live: number;
+  liveRate: number;
+}
+
+/** 84f2 — the inert-class tripwire aggregate. The 84d finding-1 signature
+ *  (nine packets at exactly 0.000: every candidate byte-identical to its
+ *  null because no rollout ever fired the bought packet — blind since
+ *  §59c/§69e) reduces to a class whose every instance ties its null.
+ *  Exact-zero deltas are STRUCTURAL, not statistical: a candidate whose
+ *  rollout diverges at all can't tie the null to the last bit across a
+ *  whole class (the csv path's 3-decimal rounding is byte-stable for
+ *  identical rollouts, so both entry paths agree). */
+export function inertClassStats(rows: readonly DecisionRow[]): InertClassRow[] {
+  const nullScores = new Map<string, number>();
+  for (const r of rows) {
+    if (r.candidate === 0) nullScores.set(`${r.seed}|${r.strategy}|${r.decision}`, r.score);
+  }
+  const buckets = new Map<
+    string,
+    { site: string; horizon: string; candidateClass: string; n: number; live: number }
+  >();
+  for (const r of rows) {
+    if (r.candidate === 0) continue;
+    const nullScore = nullScores.get(`${r.seed}|${r.strategy}|${r.decision}`);
+    if (nullScore === undefined) continue; // orphan row — malformed input
+    const candidateClass = candidateClassOf(r.site, itemKeyOf(r.site, r.label));
+    const key = `${r.site}|${r.horizon}|${candidateClass}`;
+    let b = buckets.get(key);
+    if (!b) {
+      b = { site: r.site, horizon: r.horizon, candidateClass, n: 0, live: 0 };
+      buckets.set(key, b);
+    }
+    b.n++;
+    if (r.score !== nullScore) b.live++;
+  }
+  return [...buckets.values()]
+    .map((b) => ({ ...b, liveRate: b.n === 0 ? 0 : b.live / b.n }))
+    .sort(
+      (a, b) =>
+        a.site.localeCompare(b.site) ||
+        a.horizon.localeCompare(b.horizon) ||
+        a.candidateClass.localeCompare(b.candidateClass),
+    );
+}
+
+/** The rows the board WARNs on: a class every one of whose instances tied
+ *  its null (n > 0 is implied — empty buckets never materialize). */
+export function inertClasses(rows: readonly DecisionRow[]): InertClassRow[] {
+  return inertClassStats(rows).filter((s) => s.live === 0);
+}
+
+/** The stdout / board-report block. WARN-grade in the board's vocabulary:
+ *  an instrument-health tell, not a balance verdict. */
+export function renderInertClassTripwire(rows: readonly DecisionRow[]): string {
+  const stats = inertClassStats(rows);
+  const inert = stats.filter((s) => s.live === 0);
+  const lines: string[] = [];
+  lines.push('### Inert-class tripwire (84f2)');
+  lines.push('Live = instances whose rollout score differs from the SAME decision’s null arm.');
+  lines.push('A class at Live 0 is INERT — its candidates change nothing any rollout can see');
+  lines.push('  (the 84d packet signature: bought, cached, never fired). WARN, instrument-grade.');
+  lines.push('');
+  lines.push(
+    renderTable(
+      ['Site', 'Horizon', 'Class', 'n', 'Live', 'Live%', ''],
+      stats.map((s) => [
+        s.site,
+        s.horizon === '' ? 'live' : s.horizon,
+        s.candidateClass,
+        String(s.n),
+        String(s.live),
+        (s.liveRate * 100).toFixed(0),
+        s.live === 0 ? '⚠ INERT' : '',
+      ]),
+      3, // Site + Horizon + Class left-aligned
+    ),
+  );
+  lines.push('');
+  lines.push(
+    inert.length === 0
+      ? '  tripwire: all classes live'
+      : `  ⚠ tripwire WARN: ${inert.length} inert class(es) — ` +
+          inert
+            .map((s) => `${s.site}/${s.horizon === '' ? 'live' : s.horizon}/${s.candidateClass}`)
+            .join(', '),
+  );
+  return lines.join('\n') + '\n';
+}
+
 // ── The tier-flip instrument (71c) ───────────────────────────────────────────
 
 /** Per-(seed, strategy, site) flip counts from the shadow-judged decisions.

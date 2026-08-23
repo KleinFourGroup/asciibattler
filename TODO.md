@@ -294,3 +294,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
 - [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).
+
+- [ ] **Promote the 84d stand-down watcher into `scripts/`.** Filed at
+  the 84d close (2026-08-23): `box-batches/84d/84d-standdown.sh` (+ the
+  keep-awake companion) is git-ignored scratch; the sanctioned
+  overnight shape should ship it as `scripts/box-standdown.sh <host>
+  <box-name> <driver-pid> <driver-log> <queue>` or as a driver flag, so
+  no cohort bills past its last fetch again.

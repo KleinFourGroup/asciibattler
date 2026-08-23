@@ -400,3 +400,73 @@ take · eventChoice excluded — per-choice rows aren't items), unit
 levels stripped, cross-site n-weighted merge, `signable` = n ≥ 80,
 provenance (HEAD · builtAt · the sidecars swept); refuses to build
 from a batch with no long-horizon rows. 5 pins.
+
+**The cohort (2026-08-22 23:32Z → 2026-08-23 06:33Z; a split session —
+the launch in one, the morning in the next).** Box
+`abox-20260822-233223` (cpx42/fsn1), four arms at `98ba7d2`, ~7 h
+total (arm 1 4 h 13 m; the grant arms 50–57 min each), fetched to
+`output/box-batches/<id>/` (box-batch.sh's dest is cwd-relative from
+the repo root — the cursor's `tests/fuzz/output/…` path was a slip).
+**The stand-down watcher** (the billing gap the user named: the queue
+drains hours before anyone is awake): a detached `84d-standdown.sh`
+beside the driver polled the driver log every 60 s, verified 4/4
+`fetched →` lines on `queue drained`, and ran `box-launch.sh destroy`
+at 06:32:42Z — the box would otherwise have billed ~6 h more. It HOLDS
+the box (loudly) if arms are unaccounted for, and takes the queue over
+if the driver process dies; both paths dry-run-tested on synthetic
+logs. A keep-awake companion turned out to be belt-and-braces:
+`powercfg /requests` (user, elevated) shows Tobii Eye Assist holding a
+continuous SYSTEM request, which is why every prior overnight driver
+polled fine through the 25-min power-plan timeout. Promote the watcher
+into `scripts/` (TODO).
+
+**The three findings** — numbers in BALANCE 2026-08-23; the story
+here. (1) The table's nine packets read exactly 0.000, and nine exact
+zeros are an instrument smell, not a measurement: the raw rows showed
+every packet candidate scoring byte-identically to the null while its
+`bitsDelta` proved the buy applied — so the packet sat in the cache
+unfired. The walker's default weights (`config/fuzz-strategies.json`)
+have no `fire` group; the live arbitrated arm fires through its own
+`pickPacketFire` (arbitratedStrategy.ts:256) but no rollout ever does.
+A blind spot since §59c/§69e, found only because a count read zero —
+the same shape as the 84a every-site deviation (caught by decision
+counts) and the 84b clone dials. (2) Hops-linearity was a named
+decision point; the answer is no, and the mechanism is walker
+fidelity: the cheap walk completes 4.8% of runs from 16–20 hops out vs
+33% live, so far branches tie dead and all the measured value sits in
+the last five hops. (3) The bridge can't validate magnitudes at n=80
+because the score's ±200 outcome terms make the paired se ≈ 28.
+
+**Decisions.** 84f inserted (the shadow-walk strategy override + the
+tripwire + the rerun = the close); the all-rollouts weight fix
+deferred to the §85 amendment (doctrine, re-sign); the bigger bridge
+deferred. The user asked whether a dedicated adversarial review of the
+balancer stack is warranted — yes: every hole so far is the one class
+(the rollout clone diverging from the live run at an un-enumerated
+seam), so §85-pre is inserted as a review phase; its shape (inline vs
+a small subagent team — not a full workflow) is DEFERRED to its
+kickoff. Renumbering §85→86 was considered and rejected for the
+`-pre` convention (§85–88 are referenced from META-ROADMAP, the spec,
+and code comments).
+
+### 84e — the builder + the bridge read (2026-08-23)
+
+The builder landed 2026-08-22 (above); the read is the v0 table +
+finding 3. Committed with a provenance `--note` naming the structural
+zero and the last-five-hops caveat so §85 cannot consume it blind.
+Superseded by 84f's rebuild.
+
+### 84f — cut (2026-08-23, user-signed)
+
+- **84f1** — the long-walk `strategy` override: `judgeLong`'s spec
+  takes the live vector's scored strategy (fire + port groups) for the
+  shadow walk ONLY; the live records stay byte-identical (extend the
+  84a pin); a pin that a walked packet buy now changes a branch.
+- **84f2** — the inert-class tripwire: per site × candidate class, the
+  "score ≠ null" rate in the per-item aggregate + a board-report WARN
+  at 0 (rides every default-arm batch; would have flagged packets on
+  the first §69e batch).
+- **84f3** — the arm-1 rerun on the box (one arm, ~4 h) → rebuild the
+  table → re-read the hops bins → the phase close. Predictions: no
+  snapshot bump (harness-side); fuzz:smoke additive; the commit is the
+  doc flip + the table.

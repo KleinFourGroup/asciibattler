@@ -75,3 +75,18 @@ _(The post-C5 rounds start here.)_
   returned in 0 s without launching npm (the PowerShell shim) — verify
   a detached launch by its first log line AND a busy PID, never by the
   wrapper's exit. (84d)
+- **Nine exact zeros are an instrument smell, not a finding.** The
+  prior table's packet rows read 0.000 at n=47–67 each; the raw rows
+  showed candidates scoring byte-identically to the null while the
+  spend column proved the candidate applied. The generic tripwire —
+  per site × candidate class, the fraction of decisions where a
+  candidate's score differs from the null; a class at 0% is
+  structurally inert — is a one-column lint that catches the whole
+  "clone can't use what it was given" class. Lands as 84f2. (84d)
+- **A detached stand-down watcher beside any overnight box driver.**
+  The queue drains hours before anyone is awake; `destroy` on the
+  `fetched →` count, HOLD loudly on a shortfall, take the queue over
+  if the driver dies. Dry-run both exit paths on synthetic logs before
+  the real launch. And don't claim the PC sleeps without
+  `powercfg /requests` evidence — Tobii held a SYSTEM request all
+  along. (84d)

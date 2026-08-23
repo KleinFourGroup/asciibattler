@@ -60,12 +60,44 @@ decisions.csv append-last; fuzz:smoke additive.
       (pre-84 sidecars still parse) + the horizon-keyed aggregate with
       Δ/hop; 17 new pins; the one-seed smoke wrote the columns (WORKLOG
       §84c — the cost read). Detail: git.
-- [ ] **84d** — the local cost probe (pick `m`) → one box queue at ONE
-      HEAD: the n=80 shadow batch + the bridge (control + `--grant` ×
-      {a daemon, a packet, an archetype} at n=80).
-- [ ] **84e** — `npm run prior:table` → `tests/fuzz/board/prior-table.json`
-      (value per remaining hop · n · provenance); the bridge read + the
-      thin-row list → BALANCE + WORKLOG §84.
+- [x] **84d** ✅ 2026-08-23 — m=1 (the probe) → the cohort on the box
+      (arm 1 n=160 + the bridge ×3 at n=80; ~7 h; the stand-down watcher
+      destroyed the box on drain). ⭐ Three findings: packets INERT in
+      every rollout (no `fire` group in the walker's default weights —
+      since §59c/§69e) · hops-linearity ✅ DECIDED NO (the cheap walk
+      completes 4.8% from 16–20 hops vs 33% live; value sits in the last
+      five hops) · the bridge UNDERPOWERED (paired se ≈ 28 at n=80).
+      WORKLOG §84d · BALANCE 2026-08-23.
+- [x] **84e** ✅ 2026-08-23 — the v0 table committed (17 units signable ·
+      9 daemons directional = the §88 list · 9 packets structural-zero,
+      provenance-noted); bridge verdict ✅ DECIDED: CONSISTENT, NOT
+      VALIDATING. BALANCE 2026-08-23.
+- [ ] **84f** — inserted 2026-08-23 (the 84d findings; user-signed):
+      84f1 the shadow long-walk takes the live vector's scored strategy
+      (fire + port groups), SHADOW-ONLY, live records byte-identical ·
+      84f2 the inert-class tripwire (per site × candidate class, the
+      "score ≠ null" rate; board WARN at 0) · 84f3 the arm-1 rerun on the
+      box → the rebuilt table + the hops re-read = the phase close. Cut:
+      WORKLOG §84f.
+
+## Phase 85-pre — The rollout-stack adversarial review
+
+Inserted 2026-08-23 at the 84d close (user-asked: "what else are we
+missing?"). Charter: a code-reality audit of the arbitration/rollout
+stack with adversarial lenses — the live-vs-rollout divergence table
+(every `FuzzStrategy` method × the walker's default × each site's
+override), evaluator pathologies (the ±200 terms saturating long walks
+and swamping the bridge), the CRN/seed contracts, the ε + sample gates,
+horizon truncation + the DP tail, clone round-trip losses. Why here:
+every §84 hole (packets inert since §59c/§69e · the 84a every-site
+shadow · the 84b clone dials · the walker's long-walk death) is ONE
+class — the clone diverging from the live run at an un-enumerated seam
+— and §85 builds on the table. Runs while 84f3's box arm churns.
+**Risk:** low (read-only until fix-first). **Decision point:** the
+review's shape — inline vs a small subagent team (not a full workflow)
+— DEFERRED to its kickoff (user, 2026-08-23). **Exit:** the divergence
+table + a findings list, fix-first triaged, WORKLOG §85-pre. **Scope
+guard:** no live-arm doctrine change outside the §85 standard amendment.
 
 ## Phase 85 — The fold + the ε re-read + the two riders
 

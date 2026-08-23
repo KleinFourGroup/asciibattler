@@ -3589,3 +3589,66 @@ deltas. The pre-X H7c→O log lives at
     fold's landing triggers the standard amendment (the sheet signs
     at the current arm — pre-registered at 83e), with the campRaid
     nominator + the 55pre vector re-derive as its named riders.
+- **2026-08-23 — §84d THE FIRST INSTRUMENT COHORT (the long-horizon
+  shadow n=160 + the `--grant` bridge ×3 at n=80; box
+  `abox-20260822-233223`, HEAD `98ba7d2`, 23:32→06:33Z ≈ 7 h; batches
+  `20260822-233841` / `20260823-035220` / `-044425` / `-054141`,
+  summary sha256 5a92be6d / 6d14ec11 / 6262a128 / 46ecfc5d).**
+  - **Protocol:** arm 1 the WALK arm + `--shadow-horizon=run` (m=1;
+    sites rewardDaemon · portBuy · eventChoice · recruit), seeds
+    1..160 — 56,141 decision rows, 9,748 long-horizon, 2,621
+    long-horizon DECISIONS (recruit 1580 · eventChoice 620 ·
+    rewardDaemon 317 · portBuy 104); live complete 0.331. Arms 2–4
+    `--grant=mercury / patch / archer` at n=80, paired on arm 1's
+    seeds 1–80 (the control — live decisions byte-identical shadow
+    on/off, pinned at 84a). Fetched to `output/box-batches/<id>/`.
+  - **The v0 table** (`npm run prior:table`, committed
+    `tests/fuzz/board/prior-table.json` with a provenance note):
+    **17 units SIGNABLE** (n=253–382, carried by the shadow-only
+    recruit site; value/hop: stormcaller +5.21 · halberdier +5.89 ·
+    corrupter +4.87 · rioter +4.80 · adventurer +2.74 · mercenary
+    +2.46 · mage +2.44 · shaman +2.29 · gunslinger +0.38 · reaver
+    +0.13 · rogue −0.09 · healer −0.13 · catapult −0.53 · ronin −0.82
+    · officer −0.86 · archer −1.35 · bandit −3.51) · **9 daemons
+    DIRECTIONAL** (n=36–67 = the §88 targeted-grant list: minerva
+    +5.53 · janus +4.40 · fortuna +0.81 · patricians-seal +0.62 ·
+    moneta +0.59 · portunus / laverna / mercury ≈ 0 · cornucopia
+    −3.68) · **9 packets 0.000 — STRUCTURAL** (finding 1).
+  - ⭐ **FINDING 1 (instrument; pre-dates §84): packets are INERT in
+    every rollout.** `config/fuzz-strategies.json` — the walker's
+    `rollout-cheap` default — carries no `fire` group (scoredWeights:
+    absent = packets never fire), so a walked branch BUYS a packet
+    (the `bitsDelta` column shows the spend) and never fires it: 0/104
+    run-horizon portBuy decisions with a packet score ≠ null (units
+    40/104 · daemons 28/104); 1/104 at the one-battle horizon. Since
+    §59c/§69e the arbitrated arm's portBuy packet candidates could win
+    only by ε, and `--grant=patch` was an empty bridge test.
+  - ⭐ **FINDING 2 (the hops-linearity decision point: NO).** The cheap
+    walker dies on long walks — null-branch completeFrac by
+    hopsRemaining 0.409 (1–5) · 0.186 (6–10) · 0.078 (11–15) · 0.048
+    (16–20) vs the live arm's 0.331; far rows tie dead at −220, so the
+    recruit site's Δ/hop reads +3.80 at 1–5 hops vs +0.10 / +0.13 /
+    +0.17 beyond. `valuePerHop` is a LAST-FIVE-HOPS value; §85's
+    planned `valuePerHop × hopsRemaining` is NOT supported by this
+    table (it would overstate early holdings ~10×).
+  - **FINDING 3 (the bridge: UNDERPOWERED at n=80).** Paired Δ in the
+    evaluator's score units (pool − 200·death + 200·complete): mercury
+    +4.9 · patch −4.5 · archer −15.0, **se ≈ 28 each** (sd ≈ 250;
+    42–43/80 seeds outcome-unchanged). Archer's table prediction
+    −1.345 × ~20 hops ≈ −27 is compatible, mercury ≈ 0 compatible,
+    patch untestable (finding 1); resolving 27 at 2 se needs ≈ 350
+    seeds/arm. The finalPool-only read (the HANDOFF ritual's wording):
+    −0.06 / +0.51 / −0.04, se ≈ 1.05 — finalPool is 0 on every defeat,
+    so it carries almost no signal. **Verdict: CONSISTENT, NOT
+    VALIDATING.**
+  - **Disposition (user-signed 2026-08-23):** 84f — the shadow
+    long-walk takes the live vector's scored strategy (its `fire` +
+    `port` groups) as the long-walk spec's `strategy` override,
+    SHADOW-ONLY (live byte-identical, the 84a pin), and arm 1 re-runs
+    on the box; the bridge arms stand as live-arm measurements. The
+    inert-class TRIPWIRE (per site × candidate class, the "score ≠
+    null" rate; WARN at 0) rides the rerun. Fixing the walker's default
+    weights for ALL rollouts is deferred to the §85 fold's standard
+    amendment (it moves every arbitrated decision); a ≈350-seed bridge
+    is deferred until the walker is fixed. §85-pre = the rollout-stack
+    adversarial review, run while the box churns.

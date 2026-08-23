@@ -503,3 +503,163 @@ false-positive surface; the value read (meanΔ ≈ 0) is the per-item
 table's job. The standing live-horizon packet blindness is the
 §85-amendment's deferred fix, and the tripwire's standing work is
 the shadow rows from 84f3 onward.
+
+## Phase 85-pre — The rollout-stack adversarial review
+
+### Kickoff + shape (2026-08-23, user-signed)
+
+Shape resolved (the deferred decision point): a HYBRID — the
+live-vs-rollout divergence table built inline (context-heavy,
+mechanical), THREE adversarial subagents (Fable, one per lens:
+evaluator pathologies · CRN/ε contracts · clone/walk fidelity), each
+briefed to REFUTE named safety properties, then an inline merge with
+probe-verification of every finding before it lands (one agent per
+lens, not a team — probe verification is deterministic and stronger
+than within-lens voting). Ran while the 84f3 box arm churned.
+
+### The divergence table (85-pre.a)
+
+The 7 FuzzStrategy methods × live-arbitrated-arm vs walk, plus the
+non-method seams. Five method rows DELIBERATE with receipts (node,
+port-coherence, grant, reward, event), packet-fire KNOWN (§84 story),
+recruit deliberate-by-class. Non-method: clone streamRoot override
+(77d2) sound; turn gates aligned; inner tier deliberate. New from the
+table pass: **FLAG-1 — the arm's --redraw/--empower (and maxHops) are
+NOT threaded into rollout walks** (arbitratedStrategy.ts:230-234
+carries only horizonBattles/innerTier/bitsLambda; WalkOptions falls to
+the hardwired doctrine defaults). Inert for the doctrine arm, latent
+for any policy-varied arm.
+
+### Consolidated findings (85-pre.b + .c) — verdicts after probes
+
+All three lenses converged independently on #1-#3 (the panel working).
+Code-verified = read at the cited lines; CSV-verified = probed on the
+real 84d sidecar (85-pre-c-probes, scratchpad).
+
+**CONFIRMED (code + CSV):**
+1. **Dead-terminal quantization** — playerHealth clamps to 0
+   (Run.ts:3006), so every dying clone scores an exact decision-point
+   constant (evaluator.ts:99-108); death timing/roster/bank destroyed.
+   CSV: 73.6% of run-horizon deltas EXACTLY 0, 18.1% at the full ±200
+   quantum, 7.1% pool-channel, and the half-quantum bucket EMPTY (a
+   flip flips both CRN pairs). This is the mechanism UNDER the 84d
+   hops-nonlinearity and bridge-underpower findings: the instrument
+   measures only the completion tail; margins are quantized, not noisy.
+2. **The one-battle ε is inert at the long horizon** — judgeLong
+   applies the site floor (driver.ts:414); CSV: σ(margin) 74–116 vs
+   ε ≈ 3 at every long site. Contained: the prior table reads means,
+   not chosenIndex. REFINED vs the agents' claim: non-null pick rates
+   are far BELOW C/(C+1) (recruit 30% vs 76%) because exact ties fail
+   strict-greater argmax — chosenIndex is "which candidate flipped an
+   outcome", not uniform noise; still not a value signal.
+3. **'stuck' walks score as healthy truncations** — evaluator.ts:181
+   discards WalkResult; scoreTerminal reads phase only. Armed, not
+   firing (~22-hop map vs DEFAULT_MAX_HOPS 50 — and run-horizon specs
+   never set maxHops: the FLAG-1 seam). Act 3 fires it.
+4. **Clone dial resets are LIVE on the standing board** —
+   Run.fromJSON nulls forcedEncounterId/forcedLayoutId/drawAmountAdd/
+   difficultyMultipliers (Run.ts:4037-4049) and drops
+   sectorScatterConfig; the 84b guard refuses only --hops/--sector-hops.
+   board.ts:297/304 (arb-wall-king/queen) run --encounter + ARM: every
+   rollout on those rows judges against pool-rolled futures the live
+   run cannot have. The known 84b class, four un-enumerated members.
+5. **The 84f1 overlay is a no-op for fire-group-less bases** —
+   shadowWalkStrategyFor returns undefined when base.pickPacketFire is
+   undefined (default base = DEFAULT_SCORED_WEIGHTS, no fire group);
+   the live arm fires regardless (arbitratePacketFire enumerates the
+   CACHE). A bare --arbitrate --shadow-horizon arm's shadow walks are
+   still packet-blind. The 84f3 batch is UNAFFECTED (regen vector
+   carries fire). The 84f2 tripwire catches it post-hoc; nothing at
+   launch.
+6. **The walker's searcher tier drops the live config** —
+   walker.ts:173 passes {} where runOne passes rolloutSearch
+   (audition scripts + K, harness.ts:465): no tier setting can
+   reproduce live battle play inside a rollout.
+7. **Run.registerTrigger has ZERO callers** — the fromJSON comment
+   "re-register on rehydrate" is aspirational (every call site is
+   World's sibling). The first run-trigger daemon silently loses its
+   handler in every clone AND every save/load.
+8. **Ad-hoc additive seed offsets** — RNG(runSeed + 0x70a1 / 0x84c1)
+   (arbitratedStrategy.ts:81-84) is the construction RNG.ts:16 calls
+   a review offense; cross-seed stream identity at seed spans ≥ 5152,
+   bound unenumerated. Migration = stream break (gotcha #125) — a §85
+   amendment item.
+9. **buildPriorTable weight mismatch** — per-hop means computed over
+   the hops>0 subset but weighted by full-row n (priorTable.ts:111-133).
+   Small today; a silent unit error in §85's input.
+
+**CONFIRMED with softened magnitude:**
+10. **Pseudo-replication vs the n=80 floor** — deltas at one decision
+    share the null draw; CSV: recruit rows n ≈ 1.1× distinct
+    decisions, so inflation is MILD for the table's main rows (the
+    agents' "n=80 could be ~30" overstated); portBuy C≈9.5 rows carry
+    more. Shared-null correlation stands qualitatively.
+
+**PLAUSIBLE — probe deferred (needs new CPU or §85 context):**
+11. **ε argmax inflation on LIVE decisions** — floors calibrated on
+    single A/A margins but gating max-over-C (portBuy C≈13); the
+    false-act rate exceeds the 2σ intent at candidate-rich sites.
+    Probe = an A/A extension run (a §85 ε re-read work item).
+12. **§85 fold landmines** (pre-registered for the fold design):
+    (a) priorBonus × hopsRemaining (×~20) can breach the death-penalty
+    ordinal — no runtime guard (evaluator.ts:49-53 "doc note");
+    (b) terminal-holdings delta CHARGES a branch for firing a packet
+    (−1 holding × table value × h) — re-creates packets-inert through
+    the new mechanism with inverted sign; needs a fired-packets
+    accounting rule in the fold spec;
+    (c) walker-acquired downstream items inject table-scaled noise
+    into the prior once the fold is live (feedback, no de-fold step);
+    (d) the mean-of-ratios Δ/h estimator amplifies near-terminal
+    quantization noise, then the fold re-multiplies by h.
+13. **Run-horizon walks never shop ANY future dock** — the coherence
+    rule needs only the decision dock excluded; bits carry zero option
+    value over 16–20 hops, so decline/null branches are systematically
+    undervalued and +Δ-of-take polarity overstates spending. With #1
+    and #6, the ranked candidates for the 4.8%-vs-33% completion gap
+    (inner-tier skill + config drop > no-ports > no-fires >
+    default-vector routing/drafting > grant policy).
+14. **eventChoice nominee pin at run horizon** — the (eventId, pageId)
+    pin designed for the 1-battle A→B→A loop pins every later
+    occurrence of the same page in the walked remainder (small: ~2
+    event decisions/run).
+15. **λ not reconstructible from the sidecar** — no lambda column;
+    the independent-recompute lint impossible on λ≠0 arms exactly
+    where spend distortion is watched.
+
+**Minor/doc:** stale pre-77d2 policySeed rationale (walker.ts:29-33);
+harness.ts:10 fork-vs-direct comment drift; horizon-1 walks exit
+before the final battle's rewards are accepted (bitsDelta telemetry
+under-counts, CRN-shared so unbiased); E1 zero-σ pooling in the ε
+class floors (under-floors the variable contexts ~16%); sample-gate
+coupling (cloneSeed both gates and seeds pair 0 — benign under mix()).
+
+### Triage proposal (fix-first; scope guard: no live-arm doctrine
+change outside the §85 amendment) — PENDING USER SIGN-OFF
+
+Land in 85-pre (instrument-side, cheap, no doctrine change):
+- F1: thread WalkResult.outcome into RunScoreBreakdown (+ a stuck
+  guard: run-horizon specs set maxHops with slack) — closes #3, arms
+  #1's future probes. Additive column, append-last.
+- F2: coherence pins — defaultWalkStrategy carries no port/fire
+  method; shadowWalkStrategyFor(default base) documented + a WARN (or
+  refuse) when a shadow-horizon arm has no fire policy to overlay
+  (closes #5's silent-at-launch edge).
+- F3: the 84b guard extended to refuse --encounter/--layout/
+  --draw-add/--bits-multiplier/scatter flags with --arbitrate (closes
+  #4's silent class the 84b way) — the BOARD's two wall rows then
+  refuse; board fix = drop ARM from those rows (they're winRate
+  drift refs; arbitration not load-bearing there) or accept the
+  refusal until a clone-config seam exists. USER CALL.
+- F4: doc fixes (walker policySeed rationale, harness comment,
+  walker-header recruit-weights note, registerTrigger landmine
+  comment + a loud assert).
+- F5: the λ column + a decisions-distinct-from-instances note in the
+  per-item header (closes #15, softens #10's reading).
+Defer to the §85 amendment (measurement semantics / doctrine):
+- The all-rollouts strategy fix (packets + the #6 searcher config +
+  the #13 future-docks rule) — one coherent walk-fidelity amendment.
+- The ε re-derivation (#2 long-horizon floors, #11 argmax inflation,
+  E1 zero-σ pooling) — the amendment already owns the ε re-read.
+- The seed-offset migration (#8, stream break).
+- The fold design constraints (#12a–d) — pre-registered into §85's
+  design notes BEFORE the fold is coded.

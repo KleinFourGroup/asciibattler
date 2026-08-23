@@ -94,11 +94,17 @@ every §84 hole (packets inert since §59c/§69e · the 84a every-site
 shadow · the 84b clone dials · the walker's long-walk death) is ONE
 class — the clone diverging from the live run at an un-enumerated seam
 — and §85 builds on the table. Runs while 84f3's box arm churns.
-**Risk:** low (read-only until fix-first). **Decision point:** the
-review's shape — inline vs a small subagent team (not a full workflow)
-— DEFERRED to its kickoff (user, 2026-08-23). **Exit:** the divergence
+**Risk:** low (read-only until fix-first). **Decision point:** ✅
+DECIDED 2026-08-23 (user) — a hybrid: the divergence table inline + a
+3-agent adversarial panel (one per lens, Fable) + inline probe-verified
+merge. **Exit:** the divergence
 table + a findings list, fix-first triaged, WORKLOG §85-pre. **Scope
 guard:** no live-arm doctrine change outside the §85 standard amendment.
+- [x] 85-pre.a/b/c — table + panel + probe-verified merge ✅ 2026-08-23:
+      15 findings (9 CONFIRMED incl. dead-terminal quantization = the
+      mechanism under the 84d findings; clone dial resets LIVE on the
+      board's two --encounter wall rows; the 84f1 no-op edge), triage
+      F1–F5 + §85-amendment deferrals PENDING USER — WORKLOG §85-pre.
 
 ## Phase 85 — The fold + the ε re-read + the two riders
 

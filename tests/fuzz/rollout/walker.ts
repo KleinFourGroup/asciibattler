@@ -125,10 +125,19 @@ export interface WalkResult {
   readonly totalTicks: number;
 }
 
+/** The walker's default intermediate-decision strategy: the cheap scored
+ *  vector — NO port buys (the port site's coherence rule) and NO packet
+ *  fires (the default weights carry no fire group — the 84d finding, see
+ *  `RunShadowHorizonConfig.walkStrategy`). Exported so the driver's 84f1
+ *  compose shares ONE definition with the walk. */
+export function defaultWalkStrategy(): FuzzStrategy {
+  return scoredStrategy('rollout-cheap', DEFAULT_SCORED_WEIGHTS);
+}
+
 export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): WalkResult {
   const { run, bus } = clone;
   const tier = options.innerTier ?? DEFAULT_INNER_TIER;
-  const strategy = options.strategy ?? scoredStrategy('rollout-cheap', DEFAULT_SCORED_WEIGHTS);
+  const strategy = options.strategy ?? defaultWalkStrategy();
   const redraw = options.redraw ?? DEFAULT_ROLLOUT_REDRAW;
   const empower = options.empower ?? DEFAULT_ROLLOUT_EMPOWER;
   const maxTicksPerBattle = options.maxTicksPerBattle ?? DEFAULT_MAX_TICKS;

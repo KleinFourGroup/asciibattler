@@ -27,6 +27,8 @@ import { RNG } from '../../../src/core/RNG';
 import { Run } from '../../../src/run/Run';
 import { RunArbitrationDriver, type RunDecisionCandidate } from './driver';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
+import { scoredStrategy } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 
 function liveRun(seed: number): Run {
   return new Run(seed, new EventBus<GameEvents>());
@@ -364,6 +366,78 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
           shadowHorizon: { horizonBattles: 'run', sample: 1.5 },
         }),
     ).toThrow(/sample/);
+  });
+
+  /** 84f1 — a spec-aware fake: records which strategy (and which of its
+   *  policies) each evaluation was handed, per horizon. */
+  function strategyProbe() {
+    const seen: string[] = [];
+    const evaluate = (
+      _live: Run,
+      apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      const label = apply === null ? 'null' : (apply as unknown as { label: string }).label;
+      const horizon = Number.isFinite(spec.horizonBattles) ? 'base' : 'run';
+      const s = spec.strategy;
+      const tags = `${s?.pickPacketFire !== undefined ? '+fire' : ''}${s?.pickNextNode !== undefined ? '+node' : ''}`;
+      seen.push(`${label}@${horizon}:${s === undefined ? 'default' : s.name}${tags}`);
+      return { score: 0, perSeed: [] };
+    };
+    return { evaluate, seen };
+  }
+
+  it('84f1 — walkStrategy rides the LONG spec only, composed over the walker default', () => {
+    const { evaluate, seen } = strategyProbe();
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run', walkStrategy: { pickPacketFire: () => null } },
+    });
+    driver.decide('portBuy', liveRun(7), [tagged('a')]);
+    // Live: the walker's own default (no strategy on the spec, so no fire).
+    // Long: the default walk strategy (it keeps its node policy) + the fire overlay.
+    expect(seen).toEqual([
+      'null@base:default',
+      'a@base:default',
+      'null@run:rollout-cheap+fire+node',
+      'a@run:rollout-cheap+fire+node',
+    ]);
+  });
+
+  it('84f1 — composes with a per-call site strategy rather than replacing it', () => {
+    const { evaluate, seen } = strategyProbe();
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      shadowHorizon: { horizonBattles: 'run', walkStrategy: { pickPacketFire: () => null } },
+    });
+    const site = scoredStrategy('rollout-site', DEFAULT_SCORED_WEIGHTS);
+    expect(site.pickPacketFire).toBeUndefined(); // the default vector carries no fire group
+    driver.decide('nodeChoice', liveRun(7), [tagged('a')], { rollout: { strategy: site } });
+    expect(seen).toEqual([
+      'null@base:rollout-site+node',
+      'a@base:rollout-site+node',
+      'null@run:rollout-site+fire+node',
+      'a@run:rollout-site+fire+node',
+    ]);
+  });
+
+  it('84f1 — live records byte-equal walkStrategy on/off (the long records differ only in spec)', () => {
+    const tables = { base: { null: 0, a: 5, b: 2 }, run: { null: 9, a: 0, b: 0 } };
+    const run = (overlay: boolean) => {
+      const driver = new RunArbitrationDriver(new RNG(42), {
+        evaluate: horizonEvaluator(tables).evaluate,
+        shadowHorizon: {
+          horizonBattles: 'run',
+          ...(overlay ? { walkStrategy: { pickPacketFire: () => null } } : {}),
+        },
+      });
+      const labels = [
+        driver.decide('s1', liveRun(7), [tagged('a')])?.label ?? null,
+        driver.decide('s2', liveRun(7), [tagged('a'), tagged('b')])?.label ?? null,
+      ];
+      return { labels, live: driver.decisions.filter((d) => d.horizon === undefined) };
+    };
+    expect(run(true)).toEqual(run(false));
   });
 
   it('INTEGRATION: a run-end shadow walks every pair to complete/defeat on a 1-hop run', () => {

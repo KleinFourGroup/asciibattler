@@ -42,7 +42,8 @@ import {
   type RunRolloutPair,
   type RunRolloutSpec,
 } from './evaluator';
-import type { InnerTier } from './walker';
+import { defaultWalkStrategy, type InnerTier } from './walker';
+import type { FuzzStrategy } from '../Strategy';
 
 /** One enumerated candidate: a stable label (the log's vocabulary — e.g.
  *  'buy daemon:portunus', 'fire patch@roster:2') + the apply closure. */
@@ -124,6 +125,16 @@ export interface RunShadowHorizonConfig {
    *  decisions × 7 candidates on one seed). The arbitrated strategy passes
    *  `SHADOW_SITES`; the driver stays generic. */
   readonly sites?: readonly string[];
+  /** 84f1 — policies merged OVER the long walk's strategy (the per-call
+   *  site override when one is set, else the walker's default), for the
+   *  shadow walk ONLY — live decisions never see it. The 84d finding: the
+   *  walker's default weights carry no fire group, so a walked branch that
+   *  bought a packet never fired it and every packet read exactly 0 at
+   *  every horizon (BALANCE 2026-08-23). The arbitrated arm passes the live
+   *  vector's `pickPacketFire`; `pickPortBuy` stays OFF deliberately — a
+   *  walker that buys would make the null branch buy at the very port being
+   *  arbitrated (the port site's coherence rule). */
+  readonly walkStrategy?: Partial<FuzzStrategy>;
 }
 
 export interface RunArbitrationConfig {
@@ -377,10 +388,16 @@ export class RunArbitrationDriver {
     spec: RunRolloutSpec,
     epsilon: number,
   ): RunDecisionRecord {
-    const { horizonBattles } = this.shadowHorizon!;
+    const { horizonBattles, walkStrategy } = this.shadowHorizon!;
     const longSpec: RunRolloutSpec = {
       ...spec,
       horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
+      // 84f1 — compose, never replace: a site's own rollout strategy (the
+      // node site's nominee pin, the event site's) keeps its methods and
+      // gains the shadow walk's policies on top.
+      ...(walkStrategy !== undefined
+        ? { strategy: { ...(spec.strategy ?? defaultWalkStrategy()), ...walkStrategy } }
+        : {}),
     };
     const longNull = this.evaluate(live, nullApply, longSpec);
     const results: RunCandidateResult[] = [longNull];

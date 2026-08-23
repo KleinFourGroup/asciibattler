@@ -90,6 +90,19 @@ const SHADOW_SITE_SEED_OFFSET = 0x84c1;
  *  the shadow-only site. */
 export const SHADOW_SITES: readonly string[] = ['rewardDaemon', 'portBuy', 'eventChoice', 'recruit'];
 
+/** 84f1 — the shadow long-walk's policy overlay (`shadowHorizon.walkStrategy`):
+ *  the live vector's packet-fire policy, when the base carries one, so a
+ *  walked branch that HOLDS a packet can fire it (the 84d finding: the
+ *  walker's default never fires, so every packet read exactly 0 at every
+ *  horizon). Nothing else rides along — `pickPortBuy` stays off (the port
+ *  site's coherence rule: a walker that buys would make the null branch
+ *  buy at the very port being arbitrated). undefined = nothing to overlay. */
+export function shadowWalkStrategyFor(base: FuzzStrategy): Partial<FuzzStrategy> | undefined {
+  const fire = base.pickPacketFire;
+  if (fire === undefined) return undefined;
+  return { pickPacketFire: (context, run, rng) => fire.call(base, context, run, rng) };
+}
+
 /**
  * The per-site ε floors — THE v1 DERIVATION RULE (unified at 70b, the
  * 70a pin amended to match; WORKLOG §70): one FLAT floor per site
@@ -211,6 +224,7 @@ export function makeArbitratedStrategy(
   config: ArbitratedConfig = {},
 ): ArbitratedRunStrategy {
   const base = config.base ?? scoredStrategy('arb-base', DEFAULT_SCORED_WEIGHTS);
+  const walkStrategy = shadowWalkStrategyFor(base);
   const driver = new RunArbitrationDriver(new RNG(runSeed + DRIVER_SEED_OFFSET), {
     ...(config.k !== undefined ? { rolloutsPerCandidate: config.k } : {}),
     rollout: {
@@ -226,6 +240,8 @@ export function makeArbitratedStrategy(
             ...config.shadowHorizon,
             sites: SHADOW_SITES,
             siteRng: new RNG(runSeed + SHADOW_SITE_SEED_OFFSET),
+            // 84f1 — the live vector's fire policy rides the long walk only.
+            ...(walkStrategy !== undefined ? { walkStrategy } : {}),
           },
         }
       : {}),

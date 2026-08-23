@@ -55,6 +55,7 @@ import {
   NODE_CHOICE_EPSILON,
   EVENT_CHOICE_EPSILON,
   DP_TAIL_SCALE,
+  shadowWalkStrategyFor,
 } from './arbitratedStrategy';
 
 const SEED = 20260730;
@@ -933,4 +934,29 @@ describe('the pickEventChoice chokepoint (74g) — harness contracts', () => {
     }
     expect(visited).toBeGreaterThanOrEqual(1);
   }, 240_000);
+});
+
+describe('84f1 — shadowWalkStrategyFor (the shadow long-walk policy overlay)', () => {
+  it('overlays ONLY the base’s packet-fire policy (bound to the base); none without a fire group', () => {
+    const noFire = scoredStrategy('no-fire', DEFAULT_SCORED_WEIGHTS);
+    expect(noFire.pickPacketFire).toBeUndefined(); // the default vector carries no fire group
+    expect(shadowWalkStrategyFor(noFire)).toBeUndefined();
+
+    const seenThis: string[] = [];
+    const withFire: FuzzStrategy = {
+      ...noFire,
+      name: 'with-fire',
+      pickPacketFire(context) {
+        seenThis.push(`${this.name}:${context}`);
+        return null;
+      },
+    };
+    const overlay = shadowWalkStrategyFor(withFire);
+    expect(overlay).toBeDefined();
+    expect(Object.keys(overlay!)).toEqual(['pickPacketFire']); // never pickPortBuy (coherence)
+    // The overlay calls the base's method WITH the base as `this`.
+    const run = new Run(SEED, new EventBus<GameEvents>());
+    expect(overlay!.pickPacketFire!('preTurn', run, new RNG(1))).toBeNull();
+    expect(seenThis).toEqual(['with-fire:preTurn']);
+  });
 });

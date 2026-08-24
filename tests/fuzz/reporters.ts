@@ -140,6 +140,13 @@ const DECISIONS_CSV_HEADER = [
   // time (the per-remaining-hop normalization; '' on a pre-84 record).
   'horizon',
   'hopsRemaining',
+  // 85-pre F1/F5 — same append-last rule: the fraction of the candidate's
+  // pairs whose walk tripped a safety bound ('' when the breakdowns carry no
+  // walk outcome — a pre-85 sidecar or a fake-evaluate fixture), + the
+  // λ_bits the scores were computed under ('' on a pre-85 record) so a λ≠0
+  // arm's score column stays reconstructible from its components.
+  'stuckFrac',
+  'lambda',
 ].join(',');
 
 /**
@@ -159,6 +166,7 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
       d.results.forEach((res, candidate) => {
         const per = res.perSeed;
         const tailPresent = per.some((p) => p.tailBonus !== undefined);
+        const outcomesPresent = per.some((p) => p.walkOutcome !== undefined);
         lines.push(
           [
             r.seed,
@@ -181,6 +189,10 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
             d.epsilon.toFixed(3),
             d.horizon === undefined ? '' : String(d.horizon),
             d.hopsRemaining === undefined ? '' : String(d.hopsRemaining),
+            outcomesPresent
+              ? mean(per.map((p) => (p.walkOutcome === 'stuck' ? 1 : 0))).toFixed(2)
+              : '',
+            d.bitsLambda === undefined ? '' : String(d.bitsLambda),
           ].join(','),
         );
       });
@@ -217,6 +229,11 @@ export interface DecisionRow {
   horizon: string;
   /** 84c — `Run.hopsRemaining` at decide time; null on a pre-84 sidecar. */
   hopsRemaining: number | null;
+  /** 85-pre F1 — the fraction of this candidate's pairs whose walk tripped a
+   *  safety bound; null when unknown (pre-85 sidecar / fake-evaluate rows). */
+  stuckFrac: number | null;
+  /** 85-pre F5 — the λ_bits the scores were computed under; null pre-85. */
+  lambda: number | null;
 }
 
 /** Flatten in-memory results into rows (the serial CLI's entry path). */
@@ -226,6 +243,7 @@ export function decisionRowsOf(results: readonly RunResult[]): DecisionRow[] {
     if (!r.decisions) continue;
     r.decisions.forEach((d, decision) => {
       d.results.forEach((res, candidate) => {
+        const outcomes = res.perSeed.filter((p) => p.walkOutcome !== undefined);
         rows.push({
           seed: r.seed,
           strategy: r.strategyName,
@@ -241,6 +259,11 @@ export function decisionRowsOf(results: readonly RunResult[]): DecisionRow[] {
           epsilon: d.epsilon,
           horizon: d.horizon === undefined ? '' : String(d.horizon),
           hopsRemaining: d.hopsRemaining ?? null,
+          stuckFrac:
+            outcomes.length === 0
+              ? null
+              : mean(outcomes.map((p) => (p.walkOutcome === 'stuck' ? 1 : 0))),
+          lambda: d.bitsLambda ?? null,
         });
       });
     });
@@ -309,6 +332,14 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
     // to 83f) still parses — its rows read as live-horizon, hops unknown.
     horizon: header.indexOf('horizon'),
     hopsRemaining: header.indexOf('hopsRemaining'),
+    // 85-pre — OPTIONAL, same degradation rule (pre-85 sidecars → null).
+    stuckFrac: header.indexOf('stuckFrac'),
+    lambda: header.indexOf('lambda'),
+  };
+  const optNum = (f: string[], i: number): number | null => {
+    if (i < 0) return null;
+    const v = f[i] ?? '';
+    return v === '' ? null : Number(v);
   };
   return lines.slice(1).map((line) => {
     const f = splitCsvLine(line);
@@ -328,6 +359,8 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
       epsilon: Number(f[c.epsilon]),
       horizon: c.horizon < 0 ? '' : (f[c.horizon] ?? ''),
       hopsRemaining: hops === '' ? null : Number(hops),
+      stuckFrac: optNum(f, c.stuckFrac),
+      lambda: optNum(f, c.lambda),
     };
   });
 }
@@ -464,6 +497,12 @@ export function renderDecisionAnalysis(rows: readonly DecisionRow[]): string {
   );
   lines.push(
     `  every hand position, so its Pick% is per-instance). n < ${PER_ITEM_N_FLOOR} (marked ·) is DIRECTIONAL — the n=${PER_ITEM_N_FLOOR} floor.`,
+  );
+  lines.push(
+    'NB deltas at one decision share its null-arm draw (correlated, not independent samples) —',
+  );
+  lines.push(
+    '  n overstates effective sample size on multi-candidate sites (WORKLOG §85-pre finding 10).',
   );
   lines.push('');
   lines.push(

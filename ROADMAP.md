@@ -103,8 +103,12 @@ guard:** no live-arm doctrine change outside the §85 standard amendment.
 - [x] 85-pre.a/b/c — table + panel + probe-verified merge ✅ 2026-08-23:
       15 findings (9 CONFIRMED incl. dead-terminal quantization = the
       mechanism under the 84d findings; clone dial resets LIVE on the
-      board's two --encounter wall rows; the 84f1 no-op edge), triage
-      F1–F5 + §85-amendment deferrals PENDING USER — WORKLOG §85-pre.
+      board's two --encounter wall rows; the 84f1 no-op edge) —
+      WORKLOG §85-pre.
+- [x] 85-pre.d — fix-first F1–F5 ✅ landed 2026-08-23 (user-signed; F3 =
+      option A: wall rows de-arbitrated, refs PENDING RE-PIN at the next
+      board); the walk-fidelity/ε/seed-offset/fold items DEFERRED to the
+      §85 amendment — WORKLOG §85-pre "fix-first landing". PHASE CLOSED.
 
 ## Phase 85 — The fold + the ε re-read + the two riders
 

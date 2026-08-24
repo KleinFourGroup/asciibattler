@@ -281,9 +281,11 @@ function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstr
 }
 
 export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
-  // 72f (user-signed) — THE ARBITRATED DEFAULT: 10 arb primaries carry the
+  // 72f (user-signed) — THE ARBITRATED DEFAULT: the arb primaries carry the
   // checks; 5 doctrine controls ride checkless for the paired ceiling
-  // deltas + the fire channel. arb-fire-ablated is DROPPED: on the arb arm
+  // deltas + the fire channel. 85-pre F3A: the two wall rows moved to the
+  // doctrine (non-arb) arm — 8 arb primaries + 2 checked wall rows since.
+  // arb-fire-ablated is DROPPED: on the arb arm
   // fires are rollout-owned, so the ablated vector plays identically to
   // regen (metric-identical at 72f — the +17.5 "substitution" ceiling
   // explained structurally; BALANCE §72f). The full 11-row doctrine set
@@ -291,20 +293,28 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
   const primaries: BoardInstrument[] = [
     act1Posture('soldier', 'regen', sheet),
     act1Posture('soldier', 'pre55', sheet),
+    // 85-pre F3A (user-signed 2026-08-23) — the wall rows run the DOCTRINE
+    // (non-arbitrated) arm: --encounter + --arbitrate is refused since F3
+    // (rollout clones drop the forced-encounter dial — every arb decision
+    // on these rows was judged against pool-rolled futures; WORKLOG
+    // §85-pre finding 4). The refs below are the ARB-arm 83f pins carried
+    // over: PENDING RE-PIN at the next board run (expect a WARN pair until
+    // then — the arm change moves winRate; boss-wall drift detection never
+    // needed arbitration).
     {
-      id: 'arb-wall-king',
-      title: 'forced Bandit King (regen vector, arbitrated)',
-      args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...ARM],
-      strategyRow: 'arbitrated:scored:59-regen-vector',
-      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '83f re-pin: King 75.0 (arb regen, n=40; 72f 80.0 → 77f re-pin → 83f)')],
+      id: 'wall-king',
+      title: 'forced Bandit King (regen vector, doctrine arm)',
+      args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...CONTROL_ARM],
+      strategyRow: 'scored:59-regen-vector',
+      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '85-pre F3A: arm de-arbitrated — ref is the ARB 83f pin (King 75.0), PENDING RE-PIN at the next board run')],
     },
     {
-      id: 'arb-wall-queen',
-      title: 'forced Bandit Queen (regen vector, arbitrated)',
-      args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...ARM],
-      strategyRow: 'arbitrated:scored:59-regen-vector',
+      id: 'wall-queen',
+      title: 'forced Bandit Queen (regen vector, doctrine arm)',
+      args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...CONTROL_ARM],
+      strategyRow: 'scored:59-regen-vector',
       checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '83f re-pin: Queen 70.0 (arb regen, n=40) — the King>Queen order holds (75.0 > 70.0)'),
+        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '85-pre F3A: arm de-arbitrated — ref is the ARB 83f pin (Queen 70.0), PENDING RE-PIN; the King>Queen order is the durable check'),
       ],
     },
     act1Posture('priest', 'regen', sheet),

@@ -35,6 +35,29 @@ describe('--shadow-horizon / --shadow-sample (84c)', () => {
     expect(parseArgs(['--arbitrate', '--hops=11']).hops).toBe(11);
   });
 
+  // 85-pre F3 (user-signed) — the 84b class closed: Run.fromJSON drops
+  // EVERY RunConfig probe dial, so an arbitrated arm may not combine with
+  // one (rollouts would judge futures the dialed run cannot have).
+  it('85-pre F3 — REFUSES the RunConfig probe dials with --arbitrate', () => {
+    expect(() => parseArgs(['--arbitrate', '--encounter=bandit-king'])).toThrow(
+      /refused with --encounter/,
+    );
+    expect(() => parseArgs(['--arbitrate', '--layout=arena'])).toThrow(/refused with --layout/);
+    expect(() => parseArgs(['--arbitrate', '--draw-add=1'])).toThrow(/refused with --draw-add/);
+    expect(() => parseArgs(['--arbitrate', '--bits-multiplier=1.5'])).toThrow(
+      /refused with --bits-multiplier/,
+    );
+    // Scatter chances bite only at a sector TRANSITION (the start map rides
+    // the clone's wire): refused on the walk shape, legal on a single-sector
+    // (--hops) probe — the act-1 probe combos survive.
+    expect(() => parseArgs(['--arbitrate', '--event-chance=0'])).toThrow(
+      /refused with --event-chance/,
+    );
+    expect(parseArgs(['--arbitrate', '--hops=11', '--event-chance=0']).eventChance).toBe(0);
+    // The dials stay legal without the arm.
+    expect(parseArgs(['--encounter=bandit-king']).encounter).toBe('bandit-king');
+  });
+
   it('the sample needs the horizon and is a positive integer', () => {
     expect(() => parseArgs(['--arbitrate', '--shadow-sample=3'])).toThrow(/requires --shadow-horizon/);
     expect(() => parseArgs(['--arbitrate', '--shadow-horizon', '--shadow-sample=0'])).toThrow(/integer ≥ 1/);

@@ -3829,7 +3829,10 @@ export class Run {
   /**
    * K1 — register a run-lifecycle trigger handler (`encounterStart` /
    * `turnStart` / `deploy`). The Phase-L daemon seam; handlers fire in
-   * registration order and are not snapshotted (re-register on rehydrate).
+   * registration order and are NOT snapshotted. ⚠ 85-pre F4: no rehydrate
+   * re-registration hook exists (this method has zero callers today) —
+   * toJSON throws on a trigger-bearing run, so the first caller must build
+   * the hook rather than silently losing handlers on clone/save-load.
    */
   registerTrigger<K extends keyof RunTriggerContextMap>(
     name: K,
@@ -3910,6 +3913,17 @@ export class Run {
   }
 
   toJSON(): RunSnapshot {
+    // 85-pre F4 — the run-trigger landmine assert (WORKLOG §85-pre finding
+    // 7): handlers are NOT snapshotted and fromJSON builds a FRESH
+    // dispatcher with no re-registration hook. Zero callers register run
+    // triggers today; the first daemon that does must build the rehydrate
+    // hook, and this throw is what makes forgetting it loud instead of a
+    // silent handler loss on every clone and save/load.
+    if (this.runTriggers.size > 0) {
+      throw new Error(
+        `Run.toJSON: ${this.runTriggers.size} run-trigger handler(s) registered but triggers are not snapshotted — build a re-registration hook before serializing a trigger-bearing run (WORKLOG §85-pre finding 7)`,
+      );
+    }
     return {
       schemaVersion: RUN_SCHEMA_VERSION,
       // 77d2 (v42) — the keyed-derivation root + the three occurrence
@@ -4102,8 +4116,10 @@ export class Run {
     m.bossEncounterMap = snap.bossEncounterMap;
     m.team = snap.team.slice();
     m.deploymentCounts = snap.deploymentCounts.slice();
-    // K1 — restore the encounter-effect store (deep copy) + a fresh dispatcher
-    // (handlers aren't snapshotted; a daemon layer re-registers on rehydrate).
+    // K1 — restore the encounter-effect store (deep copy) + a fresh dispatcher.
+    // ⚠ 85-pre F4: handlers aren't snapshotted and NO re-registration hook
+    // exists (registerTrigger has zero callers) — the toJSON guard throws on a
+    // trigger-bearing run so the first run-trigger daemon must build the hook.
     m.encounterEffects = snap.encounterEffects.map((slot) => slot.map(cloneEffect));
     m.runTriggers = new TriggerDispatcher<RunTriggerContextMap, Run>();
     m.drawPile = snap.drawPile.slice();

@@ -87,6 +87,12 @@ export interface RunDecisionRecord {
    *  and shadow alike; optional on the type only so hand-built fixtures and
    *  pre-84 sidecars still type and parse. */
   readonly hopsRemaining?: number;
+  /** 85-pre F5 — the λ_bits the record's scores were computed under (the
+   *  swept exchange rate; 0 = the doctrine default). Rides decisions.csv as
+   *  the `lambda` column so a λ≠0 arm's scores stay reconstructible from
+   *  the sidecar's components (the independent-recompute lint — WORKLOG
+   *  §85-pre finding 15). Optional for fixtures/pre-85 sidecars. */
+  readonly bitsLambda?: number;
 }
 
 /**
@@ -279,6 +285,7 @@ export class RunArbitrationDriver {
       chosenIndex: wins ? bestIdx + 1 : 0,
       marginVsNull: bestScore - nullResult.score,
       epsilon,
+      bitsLambda: spec.bitsLambda ?? 0,
       ...(shadowChosenIndex !== undefined ? { shadowChosenIndex } : {}),
     });
 
@@ -392,6 +399,13 @@ export class RunArbitrationDriver {
     const longSpec: RunRolloutSpec = {
       ...spec,
       horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
+      // 85-pre F1 — a run-length walk must never trip the walker's default
+      // 50-hop bound (a 'stuck' terminal scores as a healthy truncation —
+      // finding 3): give the long walk the live run's remaining hops with
+      // generous slack for non-battle nodes. A site's explicit maxHops wins.
+      ...(spec.maxHops === undefined
+        ? { maxHops: Math.max(50, (ctx.hopsRemaining ?? 0) * 3 + 10) }
+        : {}),
       // 84f1 — compose, never replace: a site's own rollout strategy (the
       // node site's nominee pin, the event site's) keeps its methods and
       // gains the shadow walk's policies on top.
@@ -419,6 +433,7 @@ export class RunArbitrationDriver {
       marginVsNull: bestScore - longNull.score,
       epsilon,
       horizon: horizonBattles,
+      bitsLambda: longSpec.bitsLambda ?? 0,
     };
   }
 

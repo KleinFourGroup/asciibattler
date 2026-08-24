@@ -31,6 +31,8 @@ function decision(
     epsilon: 0,
     horizon,
     hopsRemaining,
+    stuckFrac: null,
+    lambda: null,
   };
   return [
     { ...base, candidate: 0, label: 'null', chosen: true, score: nullScore },

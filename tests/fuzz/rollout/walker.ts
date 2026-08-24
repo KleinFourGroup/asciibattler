@@ -25,12 +25,15 @@
  *   'battle' phase has no World to resume).
  * - `policySeed` MUST be derived independently of the clone's
  *   rolloutSeed (the 69d driver draws BOTH off its own stream, one pair
- *   per CRN rollout, shared across candidates). Passing the rolloutSeed
- *   itself would collide the first policy fork with the clone's re-seeded
- *   `rng` stream (both are fork #1 of an RNG(seed)). Under the doctrine
- *   defaults every policy is draw-free (scored argmax + level
- *   redraw/empower + RNG-free traffic scripts), so the streams sit
- *   unused — the contract guards the day a drawing policy is dialed in.
+ *   per CRN rollout, shared across candidates). Post-77d2 the clone's
+ *   world streams are KEYED off `deriveSeed(rolloutSeed, 'rolloutRoot')`,
+ *   so the old fork-#1 collision this contract was written against can no
+ *   longer occur — the independence now rests on the driver drawing the
+ *   two seeds as separate forks (85-pre F4 doc fix; the contract stays:
+ *   never derive one from the other). Under the doctrine defaults every
+ *   policy is draw-free (scored argmax + level redraw/empower + RNG-free
+ *   traffic scripts), so the streams sit unused — the contract guards the
+ *   day a drawing policy is dialed in.
  * - Turn gates are ALWAYS ON in the clone (the gated path is RNG-aligned
  *   with the headless one — H4b), which also gives clean horizon
  *   semantics: the run pauses at 'turn-outcome' after each battle
@@ -129,7 +132,11 @@ export interface WalkResult {
  *  vector — NO port buys (the port site's coherence rule) and NO packet
  *  fires (the default weights carry no fire group — the 84d finding, see
  *  `RunShadowHorizonConfig.walkStrategy`). Exported so the driver's 84f1
- *  compose shares ONE definition with the walk. */
+ *  compose shares ONE definition with the walk. NB (85-pre F4): walks
+ *  route and recruit on the DEFAULT weights even when the live base runs
+ *  a searched `--strategy` vector — deliberate-by-class (cheap policies;
+ *  bias shared across candidates cancels under CRN), named here so the
+ *  divergence is enumerated, not discovered. */
 export function defaultWalkStrategy(): FuzzStrategy {
   return scoredStrategy('rollout-cheap', DEFAULT_SCORED_WEIGHTS);
 }

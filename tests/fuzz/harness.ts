@@ -7,7 +7,8 @@
  *
  * Determinism contract:
  *   1. Same `seed` + same strategy → byte-identical RunResult.
- *   2. Strategy RNG is forked from a `strategySeed` (defaults to `seed`)
+ *   2. Strategy streams are rooted at a `strategySeed` (defaults to
+ *      `seed`; `new RNG(strategySeed)` per stream — 85-pre F4 doc fix)
  *      so changing the strategy doesn't perturb the run-level stream.
  *
  * Safety: every battle is capped at `maxTicksPerBattle`. If a battle

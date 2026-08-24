@@ -515,6 +515,38 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       throw new Error(`--grant-epsilon must be a finite number ≥ 0 (got '${args.grantEpsilon}')`);
     }
   }
+  // 85-pre F3 (user-signed 2026-08-23, the 84b refusal class CLOSED):
+  // Run.fromJSON resets every RunConfig probe dial (forcedEncounterId /
+  // forcedLayoutId / drawAmountAdd / difficultyMultipliers and the sector
+  // scatter config — Run.ts fromJSON), so an arbitrated arm's rollout
+  // clones judge candidates against futures the dialed live run cannot
+  // have (WORKLOG §85-pre finding 4 — live on the pre-F3A board's two
+  // --encounter wall rows). Refuse the combination outright, the 84b
+  // shape. The scatter chances bite only at a sector TRANSITION (the
+  // start map rides the clone's wire; only next-sector generation
+  // re-rolls), so they refuse only on multi-sector shapes — the act-1
+  // (--hops) probe combos stay legal.
+  if (args.arbitrate) {
+    const dials: Array<[string, unknown]> = [
+      ['--encounter', args.encounter],
+      ['--layout', args.layout],
+      ['--draw-add', args.drawAdd],
+      ['--bits-multiplier', args.bitsMultiplier],
+      ...(args.hops === undefined
+        ? ([
+            ['--elite-chance', args.eliteChance],
+            ['--port-chance', args.portChance],
+            ['--event-chance', args.eventChance],
+          ] as Array<[string, unknown]>)
+        : []),
+    ];
+    const set = dials.filter(([, v]) => v !== undefined).map(([f]) => f);
+    if (set.length > 0) {
+      throw new Error(
+        `--arbitrate is refused with ${set.join(', ')}: rollout clones drop every RunConfig probe dial (Run.fromJSON), so arbitration would judge candidates against futures the dialed run cannot have (WORKLOG §85-pre finding 4; the 84b refusal class)`,
+      );
+    }
+  }
   // 84c — the shadow instrument's guards: arbitrate-only; 'run' or an
   // integer battle count; never on a run-shape probe (84b: the clone walks
   // unbounded, so the live record's hopsRemaining and the shadow's walk

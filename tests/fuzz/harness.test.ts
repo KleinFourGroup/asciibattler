@@ -54,6 +54,10 @@ import { HEALTH } from '../../src/config/health';
 import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
 import type { RunDecisionRecord } from './rollout/driver';
 import type { RunScoreBreakdown } from './rollout/evaluator';
+import { defaultWalkStrategy } from './rollout/walker';
+import { shadowWalkStrategyFor } from './rollout/arbitratedStrategy';
+import { scoredStrategy } from './strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS } from './strategies/scoredWeights';
 
 describe('fuzz harness', () => {
   // ── 72b-pre — the pool-trajectory instrument ────────────────────────────────
@@ -552,24 +556,48 @@ describe('fuzz reporters', () => {
     horizon: 'run',
   });
 
-  it('84c — decisions.csv carries horizon + hopsRemaining append-last; a pre-84 sidecar still parses', () => {
+  it('84c/85-pre — decisions.csv appends horizon,hopsRemaining,stuckFrac,lambda last; older sidecars still parse', () => {
     const csv = renderDecisionsCsv([bareResult(7, [liveRecord(10), shadowRecordOf(10)])]);
     const lines = csv.trim().split('\n');
-    expect(lines[0]!.endsWith('marginVsNull,epsilon,horizon,hopsRemaining')).toBe(true);
-    expect(lines[1]!.endsWith(',,10')).toBe(true); // live: blank horizon
-    expect(lines[3]!.endsWith(',run,10')).toBe(true); // the shadow record's null row
+    expect(lines[0]!.endsWith('marginVsNull,epsilon,horizon,hopsRemaining,stuckFrac,lambda')).toBe(
+      true,
+    );
+    // Fixture breakdowns carry no walkOutcome and the records no bitsLambda,
+    // so the 85-pre tail renders blank on both.
+    expect(lines[1]!.endsWith(',,10,,')).toBe(true); // live: blank horizon
+    expect(lines[3]!.endsWith(',run,10,,')).toBe(true); // the shadow record's null row
     const parsed = parseDecisionsCsv(csv);
     expect(parsed.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
     expect(parsed.every((r) => r.hopsRemaining === 10)).toBe(true);
-    // The same rows with the two columns stripped (an 83f-era sidecar):
+    expect(parsed.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
+    // The same rows with four columns stripped (an 83f-era sidecar):
     // old readers never broke on append-last, and the new reader degrades.
-    const old = lines.map((l) => l.split(',').slice(0, -2).join(',')).join('\n');
+    const old = lines.map((l) => l.split(',').slice(0, -4).join(',')).join('\n');
     const parsedOld = parseDecisionsCsv(old);
     expect(parsedOld).toHaveLength(4);
     expect(parsedOld.every((r) => r.horizon === '' && r.hopsRemaining === null)).toBe(true);
+    expect(parsedOld.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
+    // An 84c-era sidecar (two columns stripped) keeps its horizon columns.
+    const era84 = lines.map((l) => l.split(',').slice(0, -2).join(',')).join('\n');
+    const parsed84 = parseDecisionsCsv(era84);
+    expect(parsed84.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
+    expect(parsed84.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
     // A record without hopsRemaining (a hand fixture) renders blank, parses null.
     const bare = parseDecisionsCsv(renderDecisionsCsv([bareResult(8, [liveRecord()])]));
     expect(bare[0]!.hopsRemaining).toBeNull();
+    // 85-pre F1/F5 — a record CARRYING the new fields round-trips them.
+    const carrying: RunDecisionRecord = {
+      ...liveRecord(10),
+      bitsLambda: 0.5,
+      results: [
+        { score: 0, perSeed: [{ ...breakdown(0), walkOutcome: 'horizon' }] },
+        { score: 2, perSeed: [{ ...breakdown(2), walkOutcome: 'stuck' }] },
+      ],
+    };
+    const rich = parseDecisionsCsv(renderDecisionsCsv([bareResult(9, [carrying])]));
+    expect(rich[0]!.stuckFrac).toBe(0); // the null arm's walk hit its horizon
+    expect(rich[1]!.stuckFrac).toBe(1); // the challenger's walk got stuck
+    expect(rich.every((r) => r.lambda === 0.5)).toBe(true);
   });
 
   it('84c — perItemDecisionStats keys horizons apart and reads Δ per remaining hop', () => {
@@ -680,6 +708,21 @@ describe('fuzz reporters', () => {
     );
     expect(clean).toContain('tripwire: all classes live');
     expect(clean).not.toContain('⚠');
+  });
+
+  // ── 85-pre F2 — the walk-coherence pins ────────────────────────────────────
+
+  it('85-pre F2 — the default walk strategy defines no optional site method (the coherence rule, structural)', () => {
+    const walk = defaultWalkStrategy();
+    expect(walk.pickPortBuy).toBeUndefined(); // the port coherence rule (70a)
+    expect(walk.pickPacketFire).toBeUndefined(); // §85-amendment deferral (84d)
+    expect(walk.pickGrantAction).toBeUndefined();
+    expect(walk.pickReward).toBeUndefined();
+    expect(walk.pickEventChoice).toBeUndefined();
+    // The 84f1 overlay composes the BASE's fire policy — a fire-group-less
+    // base composes NOTHING (WORKLOG §85-pre finding 5). Pinned so the
+    // no-op edge stays named; the CLI warns at launch on this shape.
+    expect(shadowWalkStrategyFor(scoredStrategy('x', DEFAULT_SCORED_WEIGHTS))).toBeUndefined();
   });
 
   // ── 71c — the tier-flip instrument ─────────────────────────────────────────

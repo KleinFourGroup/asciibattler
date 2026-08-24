@@ -337,6 +337,20 @@ export function runRunCli(args: RunModeArgs): void {
     args.shadowHorizon !== undefined
       ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
       : '';
+  // 85-pre F2 — the launch-time tell for the 84f1 no-op edge (WORKLOG
+  // §85-pre finding 5): the shadow long-walk composes the BASE's fire
+  // policy; a fire-group-less base (the default vector) composes nothing,
+  // so every walked branch banks packets forever while the live arm fires
+  // them. The 84f2 tripwire flags it post-hoc; this warns at launch.
+  if (args.arbitrate && args.shadowHorizon !== undefined) {
+    for (const s of strategies) {
+      if (s.pickPacketFire === undefined) {
+        process.stderr.write(
+          `⚠ --shadow-horizon with a fire-group-less base ('${s.name}'): the 84f1 walk overlay is a NO-OP — shadow walks will never fire packets (expect the 84f2 tripwire to WARN; use a --strategy vector with a fire group for packet rows)\n`,
+        );
+      }
+    }
+  }
 
   const startedAt = Date.now();
   let done = 0;

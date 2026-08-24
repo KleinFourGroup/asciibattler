@@ -252,12 +252,18 @@ describe('the board definition itself', () => {
   // ceiling deltas + the fire channel. arb-fire-ablated is DROPPED
   // (rollout-owned fires make the ablated vector play identically to
   // regen — metric-identical at 72f; BALANCE §72f).
-  describe('the primary/control structure (72f)', () => {
+  describe('the primary/control structure (72f; wall rows de-arbitrated at 85-pre F3A)', () => {
     const primaries = board.instruments.filter((i) => i.id.startsWith('arb-'));
-    const controls = board.instruments.filter((i) => !i.id.startsWith('arb-'));
+    // 85-pre F3A — the two wall rows are CHECKED doctrine-arm rows (a third
+    // category): --encounter + --arbitrate is refused since the F3 guard.
+    const wallRows = board.instruments.filter((i) => i.id.startsWith('wall-'));
+    const controls = board.instruments.filter(
+      (i) => !i.id.startsWith('arb-') && !i.id.startsWith('wall-'),
+    );
 
-    it('10 arb primaries (every check lives here) + 5 checkless doctrine controls', () => {
-      expect(primaries).toHaveLength(10);
+    it('8 arb primaries + 2 checked doctrine wall rows + 5 checkless doctrine controls', () => {
+      expect(primaries).toHaveLength(8);
+      expect(wallRows.map((w) => w.id).sort()).toEqual(['wall-king', 'wall-queen']);
       expect(controls.map((c) => c.id).sort()).toEqual([
         '55pre',
         'fire-ablated',
@@ -266,19 +272,26 @@ describe('the board definition itself', () => {
         'walk-regen',
       ]);
       for (const c of controls) expect(c.checks).toEqual([]);
+      for (const w of wallRows) expect(w.checks.length).toBeGreaterThan(0);
       expect(primaries.some((p) => p.checks.length > 0)).toBe(true);
       expect(board.instruments.find((i) => i.id === 'arb-fire-ablated')).toBeUndefined();
+      // The F3 guard makes the old shape unconstructible — pin the absence.
+      expect(board.instruments.find((i) => i.id === 'arb-wall-king')).toBeUndefined();
+      expect(board.instruments.find((i) => i.id === 'arb-wall-queen')).toBeUndefined();
     });
 
-    it('primaries run the arbitrated arm (arbitrated: strategyRow); controls run the heuristic arm (no --arbitrate)', () => {
+    it('primaries run the arbitrated arm (arbitrated: strategyRow); wall rows + controls run the heuristic arm (no --arbitrate)', () => {
       for (const p of primaries) {
         expect(p.args).toContain('--arbitrate');
         expect(p.strategyRow.startsWith('arbitrated:')).toBe(true);
       }
-      for (const c of controls) {
+      for (const c of [...controls, ...wallRows]) {
         expect(c.args).not.toContain('--arbitrate');
         expect(c.strategyRow.startsWith('arbitrated:')).toBe(false);
       }
+      // 85-pre F3A — the wall rows still force their elite on the doctrine arm.
+      expect(wallRows.find((w) => w.id === 'wall-king')!.args).toContain('--encounter=bandit-king');
+      expect(wallRows.find((w) => w.id === 'wall-queen')!.args).toContain('--encounter=banditQueen');
     });
 
     it('the 4 ceiling deltas pair each control with its primary (paired seeds, ±8pt reference)', () => {

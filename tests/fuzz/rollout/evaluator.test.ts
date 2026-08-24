@@ -135,8 +135,18 @@ describe('evaluateRunCandidate (69d — the evaluator wiring)', () => {
     for (const b of result.perSeed) {
       expect(Number.isFinite(b.poolDamageTaken)).toBe(true);
       expect(Number.isFinite(b.bitsDelta)).toBe(true);
+      // 85-pre F1 — every real evaluation carries its walk outcome (a
+      // 'stuck' terminal is otherwise invisible; WORKLOG §85-pre finding 3).
+      expect(['horizon', 'complete', 'defeat', 'stuck']).toContain(b.walkOutcome);
     }
     expect(JSON.stringify(live.toJSON())).toBe(before);
+  });
+
+  it('85-pre F1 — a maxHops-starved walk reads walkOutcome \'stuck\', not a healthy truncation', () => {
+    const live = liveRun(20260730);
+    // maxHops −1 trips the walker's bound at the loop top, before any battle.
+    const result = evaluateRunCandidate(live, null, { ...SPEC, maxHops: -1 });
+    for (const b of result.perSeed) expect(b.walkOutcome).toBe('stuck');
   });
 
   it('throws on an empty pair set', () => {

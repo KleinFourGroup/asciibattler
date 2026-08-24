@@ -633,8 +633,10 @@ under-counts, CRN-shared so unbiased); E1 zero-σ pooling in the ε
 class floors (under-floors the variable contexts ~16%); sample-gate
 coupling (cloneSeed both gates and seeds pair 0 — benign under mix()).
 
-### Triage proposal (fix-first; scope guard: no live-arm doctrine
-change outside the §85 amendment) — PENDING USER SIGN-OFF
+### Triage (fix-first; scope guard: no live-arm doctrine change
+outside the §85 amendment) — USER-SIGNED 2026-08-23 (F3 = option A:
+de-arbitrate the wall rows + full guard + PENDING re-pin, over the
+lineage-preserving deferral). ALL FIVE LANDED same day (below).
 
 Land in 85-pre (instrument-side, cheap, no doctrine change):
 - F1: thread WalkResult.outcome into RunScoreBreakdown (+ a stuck
@@ -663,3 +665,32 @@ Defer to the §85 amendment (measurement semantics / doctrine):
 - The seed-offset migration (#8, stream break).
 - The fold design constraints (#12a–d) — pre-registered into §85's
   design notes BEFORE the fold is coded.
+
+### The fix-first landing (2026-08-23, one commit)
+
+F1: `walkOutcome` on RunScoreBreakdown (evaluateRunCandidate attaches
+it; fixtures stay optional) + decisions.csv `stuckFrac` (append-last;
+'' when breakdowns carry no outcome) + judgeLong sets `maxHops =
+max(50, hopsRemaining×3+10)` when the spec carries none (a site's
+explicit maxHops wins) — a stuck long walk is now visible and, on
+today's shapes, unreachable. Pins: a real evaluation carries an
+outcome; maxHops −1 reads 'stuck'. F2: the coherence pin
+(defaultWalkStrategy defines NO optional site method) + the
+shadowWalkStrategyFor(default-base) → undefined pin + a stderr launch
+warning on `--shadow-horizon` with a fire-group-less base. F3: the
+--arbitrate dial guard (encounter/layout/draw-add/bits-multiplier
+always; the three scatter chances only on multi-sector shapes — the
+start map rides the clone's wire, so act-1 --hops probe combos stay
+legal); board wall rows → `wall-king`/`wall-queen` on CONTROL_ARM,
+strategyRow `scored:59-regen-vector`, refs = the ARB 83f pins marked
+PENDING RE-PIN (expect a WARN pair on the next board until
+re-measured); board.test re-pinned 8 primaries + 2 checked wall rows
++ 5 controls. F4: walker policySeed rationale rewritten post-77d2;
+harness header comment fixed; the recruit/route-on-default-weights
+divergence named at defaultWalkStrategy; TriggerDispatcher gains
+`size` and Run.toJSON THROWS on a trigger-bearing run (the landmine
+made loud — zero callers today). F5: decisions.csv `lambda` column
+(the record's bitsLambda; scores reconstructible on λ≠0 arms) + the
+shared-null pseudo-replication note in the per-item header. Sidecar
+generations: 83f-era / 84c-era / 85-era all parse (pinned).
+2692 + 440 green.

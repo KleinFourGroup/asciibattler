@@ -41,7 +41,7 @@
 import { HEALTH } from '../../../src/config/health';
 import type { Run } from '../../../src/run/Run';
 import { cloneRunForRollout, type RunRolloutClone } from '../../../src/bot/runRollout';
-import { walkToHorizon, type WalkOptions, type InnerTier } from './walker';
+import { walkToHorizon, type WalkOptions, type WalkResult, type InnerTier } from './walker';
 import type { FuzzStrategy } from '../Strategy';
 import type { RedrawPolicy } from '../redrawPolicy';
 import type { EmpowerPolicy } from '../empowerPolicy';
@@ -85,6 +85,14 @@ export interface RunScoreBreakdown {
    *  spec carried a `tailScore` (the node-choice site). Always visible in
    *  the breakdown when it contributed — the resolution-4 discipline. */
   readonly tailBonus?: number;
+  /** 85-pre F1 — the walk's own outcome, attached by evaluateRunCandidate
+   *  (absent on hand-built fixtures / fake-evaluate seams). 'stuck' means a
+   *  safety bound tripped (maxHops, empty frontier): the terminal is an
+   *  INSTRUMENT failure, not a measurement — scoreTerminal cannot see it
+   *  (phase is mid-run, so the walk scores as a healthy truncation; WORKLOG
+   *  §85-pre finding 3). Telemetry-only this phase; the decisions.csv
+   *  `stuckFrac` column makes it visible per candidate. */
+  readonly walkOutcome?: WalkResult['outcome'];
 }
 
 /** The pure scoring rule — exported separately so dominance/λ contracts
@@ -178,8 +186,10 @@ export function evaluateRunCandidate(
         : {}),
       ...(spec.maxHops !== undefined ? { maxHops: spec.maxHops } : {}),
     };
-    walkToHorizon(clone, walkOptions);
-    const base = scoreTerminal(before, readRunMetrics(clone.run), bitsLambda);
+    const walk = walkToHorizon(clone, walkOptions);
+    // 85-pre F1 — carry the walk outcome into the breakdown: a 'stuck'
+    // terminal is otherwise indistinguishable from a clean truncation.
+    const base = { ...scoreTerminal(before, readRunMetrics(clone.run), bitsLambda), walkOutcome: walk.outcome };
     if (spec.tailScore !== undefined) {
       const tailBonus = spec.tailScore(clone.run);
       perSeed.push({ ...base, score: base.score + tailBonus, tailBonus });

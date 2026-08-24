@@ -78,4 +78,14 @@ export class TriggerDispatcher<M, O> {
     if (list === undefined || list.length === 0) return;
     for (const handler of list) (handler as (ctx: M[K], owner: O) => void)(ctx, owner);
   }
+
+  /** 85-pre F4 — the registered-handler count. Run.toJSON's snapshot guard
+   *  reads it: handlers are NOT snapshotted and no re-registration hook
+   *  exists, so a serialized owner with live handlers would silently lose
+   *  them on every clone and save/load (WORKLOG §85-pre finding 7). */
+  get size(): number {
+    let n = 0;
+    for (const list of this.handlers.values()) n += list.length;
+    return n;
+  }
 }

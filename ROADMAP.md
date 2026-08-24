@@ -115,7 +115,39 @@ paired pre/post-fold read; the boon event's three rows separate;
 floors re-pinned; the nominator auditioning; the 55pre twin on its
 re-derived anchor (`pre55ReachRef` retired or re-pinned).
 
-_(Sub-steps cut at phase kickoff.)_
+Cut at the 2026-08-24 kickoff (audit + shape-lock: WORKLOG §85). The
+locked spec's linear `× hopsRemaining` is SUPERSEDED at the lock
+(user-signed): the fold reads the UNSCALED `meanDelta` (hops-linearity
+NO, twice-measured) with a ±0.5×death-penalty clamp; fired packets
+count as held; shadow records stay λ_prior=0; campRaid v1 = {null,
+raid}. Ordering is fidelity-first so the cohort measures the walk we
+keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
+
+- [ ] 85a — the table-builder per-hop weight fix (finding 9) + the
+      fold design note; table rebuilt from the 84f3 sidecar with the
+      corrected builder.
+- [ ] 85b — the walk-fidelity batch: all-rollouts fire overlay + the
+      walker's `rolloutSearch` config + the future-docks rule (only
+      the decision dock excluded) + the 0x70a1/0x84c1 → keyed-stream
+      migration. ONE re-baseline commit; seed-sensitive re-pins
+      predicted (stream break, gotcha #125 rules).
+- [ ] 85c — the fold mechanics: holdings in `readRunMetrics` +
+      walker fired-packet tally + `priorBonus` in scoreTerminal /
+      breakdown / decisions.csv (`priorBonus`+`priorLambda`,
+      append-last) + `--prior-lambda`. Pin: λ_prior=0 byte-identical.
+- [ ] 85d — the campRaid preTurn run-layer site ({null, raid};
+      player-pull rails at spawn; walker plays it out).
+- [ ] 85e — the ε re-read: event-page context + post-fold/fidelity
+      floors + campRaid's floor + the #11 argmax probe + the E1
+      zero-σ fix; floors re-pinned BEFORE the cohort.
+- [ ] 85f — the box cohort: λ_prior arms {0, 0.5, 1} + doctrine +
+      controls at the n=120 same-HEAD protocol; the paired pre/post
+      read; the boon-event separation validation; the ⚠ wall-refs
+      re-pin; the campRaid pick-rate check.
+- [ ] 85g — the 55pre re-derive: post-fold `--search` (box) → new
+      fixture; `pre55ReachRef` retires or re-pins.
+- [ ] 85h — the amendment session: λ_prior's default signs;
+      BALANCE/doctrine updates; phase close.
 
 ## Phase 86 — The balancer performance pass
 

@@ -728,3 +728,109 @@ FRESH session (this one carried 84f2 → the box ritual → §85-pre →
 84f3 end-to-end); the kickoff's first act = the code-reality audit +
 the fold-shape design against the pre-registered 85-pre constraints
 (the cursor carries the full list).
+
+## Phase 85 — The fold + the ε re-read + the two riders
+
+### Kickoff: the code-reality audit (2026-08-24)
+
+Surfaces surveyed as they exist at the 84f3 table commit (39db3e9):
+evaluator.ts / priorTable.ts + the committed v1 table / driver.ts /
+arbitratedStrategy.ts / readEpsilonAA.ts / reporters.ts / the
+battleSetup enemy-pull seam / board.ts / Strategy.ts / harness.
+
+1. **The dominance landmine (12a) is numeric, not hypothetical.**
+   `RUN_DEATH_PENALTY = 10 × playerHealthMax = 200` (health.json: 20).
+   The v1 table's top `valuePerHop` rows read ~5.8 (minerva,
+   corrupter); linear `× hopsRemaining` at h≈20 gives ~116 for ONE
+   item at λ=1 — a 2-item holdings delta breaches the death ordinal.
+   The evaluator's dominance contract is a doc note (evaluator.ts:49),
+   no runtime guard.
+2. **The linear ×h shape is dead on the data anyway** (the twice-
+   measured hops-linearity NO, re-confirmed by the 84f3 provenance
+   note: value still concentrates in the last ~5 hops; far bins
+   quantized). The table's `meanDelta` (raw long-horizon margin,
+   |max| ≈ 35, typically < 20) is bounded exactly where the fold
+   needs boundedness — and if value is near-terminal-concentrated,
+   the holding margin is ~h-independent for h beyond the
+   concentration window, so an UNSCALED meanDelta is the
+   measurement-honest rung 1, not a retreat.
+3. **The fired-packet rule (12b) needs walker-side accounting** — Run
+   tracks no cumulative fired-packet tally (grep: zero hits), so
+   "terminal cache − live cache" charges a branch −table[p] for
+   firing. The fix is harness-side: the walk counts packet ids fired
+   during the walk and holdings(packets) = terminal cache ∪
+   fired-during-walk (fired = value REALIZED, not lost; daemons/units
+   can't be consumed, so the rule is packets-only).
+4. **The feedback channel (12c) has a clean structural answer**: the
+   fold applies to LIVE decision scoring only — shadow long-horizon
+   records (the table's input) keep scoring at λ_prior = 0, so every
+   future table rebuild reads raw margins. The de-fold step exists by
+   construction; residual feedback is only behavioral (a λ>0 arm
+   walks different runs), which the provenance head pins.
+5. **The estimator (12d + finding 9)**: reporters.ts:453 is the
+   mean-of-ratios (Δ/h per instance, then mean) and
+   priorTable.ts:111-133 weights `perHopSum` by full-row n while
+   summing only the hops>0 subset. Both live in the valuePerHop
+   column; a fold that reads `meanDelta` bypasses the whole estimator
+   class, and the builder fix lands regardless (the table keeps
+   valuePerHop as a reader column).
+6. **readRunMetrics widening is trivial**: `run.daemons.map(d=>d.id)`
+   / `run.cache` (packet ids, acquisition order) / `run.team`
+   archetypes all public. Items held on both sides cancel per spec.
+7. **campRaid rides entirely harness-side — no snapshot bump.** The
+   HARNESS builds battle worlds (harness.ts `spawnEncounter`), and
+   the §75g enemy pull (battleSetup.ts:289-305) is the exact rails:
+   `setObjective` team-order engage on a camp's primed member. A
+   player-side mirror needs no Run state — the site decides at
+   preTurn (the existing FIRE_PRETURN clone context), the winning
+   order rides a harness/walker-side flag consumed at the next spawn.
+   v1 candidate set = {null, raid} (one selective per-battle choice —
+   the 83e indiscriminate probe is the baseline it must beat);
+   per-camp enumeration deferred until a layout carries >1 camp and
+   the read demands it.
+8. **No preTurn RUN-LAYER site exists today** — the arbitrated
+   strategy's preTurn presence is packetFire only; campRaid is a new
+   site string + a new ε question (the preTurn class floor 1.101 was
+   derived on a dominated current-battle horizon; a raid's payout is
+   run-layer — its ε re-derives with the post-fold floors).
+9. **ε floors are λ- and walk-sensitive**: the prior term adds
+   variance to A/A margins (holdings deltas differ across policy
+   seeds), and the walk-fidelity fix changes walk variance — the ε
+   re-read must land AFTER both, and the cohort should run on the
+   re-derived floors, which orders the phase: fidelity → fold → ε →
+   cohort.
+10. **The deferred walk-fidelity items are all-rollouts doctrine**
+    (fire overlay for every rollout, walker.ts:173's dropped
+    rolloutSearch config, the future-docks rule with only the
+    decision dock excluded) — they move every arb board row, so they
+    must land BEFORE the fold's paired pre/post read or the fold is
+    measured against a walk we intend to discard. The seed-offset
+    migration (0x70a1/0x84c1 → keyed deriveRng streams, gotcha #125
+    rules) is a pure stream break — same re-baseline commit.
+
+Shape-lock proposal presented (fold shape = unscaled meanDelta +
+clamp; ordering = fidelity-first; the design answers above as the
+12a-d record).
+
+### Shape-lock (2026-08-24, USER-SIGNED)
+
+All three calls signed as recommended:
+1. **Fold shape = UNSCALED meanDelta** — `priorBonus = λ_prior ×
+   Σ table[item].meanDelta` over the holdings delta; no
+   `× hopsRemaining` (the spec's locked linear shape is superseded by
+   the twice-measured hops-linearity NO — audit finding 2 is the
+   rationale of record). Clamp `|priorBonus| ≤ 0.5 × RUN_DEATH_PENALTY`
+   (=100), clamp visibly flagged in the breakdown (12a). Fired
+   packets count as held (12b). Shadow long-horizon records score at
+   λ_prior = 0 structurally (12c). valuePerHop stays a reader column;
+   the builder weight fix lands in 85a regardless (12d/finding 9).
+2. **Ordering = fidelity-first**: the walk-fidelity batch + the
+   seed-offset migration land BEFORE the fold's paired read, so one
+   cohort measures both on the walk we keep.
+3. **campRaid v1 = {null, raid}** — one selective per-battle choice;
+   per-camp enumeration deferred until a layout carries >1 camp and
+   the read demands it.
+
+The 85a-85h cut written into ROADMAP §85. Snapshot prediction
+re-affirmed at the lock: World v35 / Run v44 hold (all
+harness/bot-side, campRaid included — audit finding 7).

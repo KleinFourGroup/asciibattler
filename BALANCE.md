@@ -3652,3 +3652,46 @@ deltas. The pre-X H7c→O log lives at
     amendment (it moves every arbitrated decision); a ≈350-seed bridge
     is deferred until the walker is fixed. §85-pre = the rollout-stack
     adversarial review, run while the box churns.
+
+- **2026-08-24 — §84f3 THE ARM-1 RERUN at the 84f1-ARMED WALK (n=160;
+  box `abox-20260823-230252`, batch `20260823-230653-53283d8`, rows
+  at HEAD `53283d8`, 23:06→03:26Z ≈ 4 h 20 m; the watcher stood the
+  box down at 03:26:56Z — zero idle billing; summary sha256
+  5a92be6d).**
+  - ⭐ **The shadow-only contract held on real data:** summary.csv is
+    BYTE-IDENTICAL to the 84d arm-1 (same sha256) and every
+    live-horizon tripwire bucket is identical row-for-row — 160 live
+    runs replayed exactly while only the run-horizon shadow records
+    moved. The 84a/84f1 pins, confirmed end-to-end at batch scale.
+  - ⭐ **The 84f2 tripwire reads ALL CLASSES LIVE** —
+    `portBuy/run/packet` 0/499 (⚠ INERT, the 84d signature) → 79/499
+    (16%). Armed fires lift branch distinguishability everywhere:
+    recruit/run 31→38% live, rewardDaemon/run 14→23%,
+    eventChoice/run 13→21%; run-horizon exact-zero Δ mass 73.6→66.5%,
+    full-quantum 18.1→23.0%.
+  - **The v1 table** (rebuilt, committed with a provenance note; table
+    HEAD `aca67da` — the intervening 85-pre F1–F5 commit is
+    harness-side only, measurement semantics unchanged): **17 units
+    SIGNABLE** (n=253–382; the armed walk re-measures EVERY row, not
+    just packets — corrupter +5.76 · rioter +4.98 · stormcaller +3.72
+    · shaman +3.15 · halberdier +2.69 (was +5.89) · adventurer +2.51 ·
+    mage +1.89 · catapult +1.82 (sign flip) · mercenary +1.50 · healer
+    +0.06 · officer +0.05 · archer −0.75 · gunslinger −0.81 · ronin
+    −1.23 · reaver −1.80 · rogue −1.90 · bandit −4.82) · **9 daemons
+    DIRECTIONAL** (minerva +5.82 · janus +4.67 · patricians-seal
+    +2.21 · portunus +0.44 · mercury +0.11 · moneta 0 · laverna −0.56
+    · cornucopia −2.44 · fortuna −2.52, a v0 sign flip — directional
+    volatility, n=36–67) · **9 packets MEASURABLE, all DIRECTIONAL**
+    (n=47–67, the §88 targeted-grant list): patch +3.92/hop · surge
+    +1.83 · venom +1.09 · hype +0.84 · overclock +0.53 · shield +0.48
+    · discard-one +0.20 · reroute −1.86 · **miner exactly 0 —
+    STRUCTURAL at λ=0** (a bits-only packet is score-invisible; needs
+    a λ>0 or pricing read at §88).
+  - **The hops re-read: FINDING 2 STANDS.** |Δ|>0 by hopsRemaining
+    bin rose across the board (1–5: 52→57% · 6–10: 37→43% · 11–15:
+    20→27% · 16–25: 12.6→21.6%) but the profile stays sharply
+    near-terminal-concentrated and the far bins stay
+    outcome-quantized (the 85-pre dead-terminal mechanism). §85's
+    `valuePerHop × hopsRemaining` remains NOT supported as linear;
+    the fold design carries the pre-registered 85-pre constraints
+    (#12a–d).

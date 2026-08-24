@@ -504,6 +504,31 @@ table's job. The standing live-horizon packet blindness is the
 §85-amendment's deferred fix, and the tripwire's standing work is
 the shadow rows from 84f3 onward.
 
+### 84f3 — the arm-1 rerun + the v1 table (2026-08-24, overnight)
+
+Ran unattended end-to-end: launch 23:06:53Z at `53283d8` (the 84f2
+commit) → drained + fetched 03:26:55Z (~4 h 20 m) → the stand-down
+watcher destroyed the box at 03:26:56Z (zero idle billing; the 84d
+watcher shape, promoted-by-reuse — the scripts/ promotion TODO
+stands). Numbers in BALANCE 2026-08-24; the story: the tripwire
+reads ALL LIVE (portBuy/run/packet 0/499 → 79/499 — 84f2 closed the
+finding it was built for, on its first real batch), summary.csv came
+back BYTE-IDENTICAL to 84d arm-1 (the shadow-only contract confirmed
+at batch scale for free — the strongest oracle the instrument could
+get), the v1 table has 8/9 packets carrying real signed values
+(miner's exact 0 is structural at λ=0 — a bits-only packet), and
+the hops-linearity NO stands (far bins more distinguishable, still
+outcome-quantized). One provenance nuance, named in the table note:
+rows measured at `53283d8`, table built at `aca67da` — the
+intervening commit is 85-pre's harness-side F1–F5, measurement
+semantics untouched. Ops nuance for the record: the session crashed
+at 84f2's close and the box ritual ran from a fresh session; the
+PowerShell Start-Process ArgumentList quoting quirk (args with
+spaces are NOT auto-quoted — bash got `-c echo`) silently killed the
+first driver launch; pre-quote the -c payload. **84f close: PENDING
+the user's morning sign-off** (the table + the doc flips are this
+commit; the checkbox flips at the sign).
+
 ## Phase 85-pre — The rollout-stack adversarial review
 
 ### Kickoff + shape (2026-08-23, user-signed)

@@ -850,6 +850,37 @@ function arbitrateCampRaid(
  * (every fuzz batch) are unaffected, and the dev-dial combination
  * throws loud in Run.fromJSON, not silently here.
  */
+/** 85f — the 74g nominee pin, enablement-guarded. The pin means "play
+ *  the decision page as the nominee WHERE LEGAL": a repeatable event can
+ *  re-roll the decision page mid-walk with the nominee's condition now
+ *  false (cheese-tax's bitsAtLeast after the pin itself paid the bits —
+ *  the 85f crash, seed 42), and an unguarded pin then feeds
+ *  handleChooseEventOption a silent no-op forever until the walker's
+ *  500-step guard throws ("walker: 500 event choices in one walk").
+ *  Guarded: nominee-if-enabled, else the walk's uniform-random-among-
+ *  enabled. Byte-identical to the unguarded pin on every walk that
+ *  didn't crash (the guard reads, it never draws). Exported for the
+ *  regression test. */
+export function pinnedEventPick(
+  decisionRef: { readonly eventId: string; readonly pageId: string },
+  nominee: number,
+  clone: Run,
+  cloneRng: RNG,
+): number {
+  // The walker guarantees non-empty before consulting (its own loud guard).
+  const open = clone.enabledEventChoices();
+  const at = clone.activeEvent;
+  if (
+    at !== null &&
+    at.eventId === decisionRef.eventId &&
+    at.pageId === decisionRef.pageId &&
+    open.includes(nominee)
+  ) {
+    return nominee;
+  }
+  return open[cloneRng.int(0, open.length - 1)]!;
+}
+
 function arbitrateEventChoice(
   driver: RunArbitrationDriver,
   run: Run,
@@ -868,15 +899,7 @@ function arbitrateEventChoice(
   const decisionRef = { ...run.activeEvent! };
   const rolloutStrategy: FuzzStrategy = {
     ...scoredStrategy('rollout-event', DEFAULT_SCORED_WEIGHTS),
-    pickEventChoice: (clone, cloneRng) => {
-      const at = clone.activeEvent;
-      if (at !== null && at.eventId === decisionRef.eventId && at.pageId === decisionRef.pageId) {
-        return nominee;
-      }
-      // The walker guarantees non-empty before consulting (its own loud guard).
-      const open = clone.enabledEventChoices();
-      return open[cloneRng.int(0, open.length - 1)]!;
-    },
+    pickEventChoice: (clone, cloneRng) => pinnedEventPick(decisionRef, nominee, clone, cloneRng),
   };
 
   const challengers: RunDecisionCandidate[] = [];

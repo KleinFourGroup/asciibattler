@@ -58,6 +58,7 @@ import {
   CAMP_RAID_EPSILON,
   walkPolicyOverlay,
   walkPortBuy,
+  pinnedEventPick,
 } from './arbitratedStrategy';
 import { campRaidEligible } from '../campRaid';
 
@@ -1097,5 +1098,27 @@ describe('85b — walkPolicyOverlay (the all-rollouts walk-policy overlay, super
     expect(walkPortBuy(packetsOnly, runWith(10, true))).toEqual({ kind: 'packet', index: 0 });
     // Nothing affordable → null (the ask-until-null stop).
     expect(walkPortBuy(stock({ daemons: [{ price: 99, sold: false }] }), runWith(10))).toBeNull();
+  });
+});
+
+describe('85f — pinnedEventPick (the enablement-guarded 74g nominee pin)', () => {
+  const ref = { eventId: 'ev', pageId: 'p' };
+  const cloneAt = (eventId: string, pageId: string, enabled: number[]): Run =>
+    ({ activeEvent: { eventId, pageId }, enabledEventChoices: () => enabled }) as unknown as Run;
+
+  it('returns the nominee at the decision page while it is enabled', () => {
+    expect(pinnedEventPick(ref, 1, cloneAt('ev', 'p', [0, 1]), new RNG(1))).toBe(1);
+  });
+
+  it('falls back to an ENABLED choice when the nominee is disabled — the cheese-tax repeatable no-op loop (85f, seed 42)', () => {
+    for (let s = 0; s < 20; s++) {
+      const pick = pinnedEventPick(ref, 1, cloneAt('ev', 'p', [0, 2]), new RNG(s));
+      expect([0, 2]).toContain(pick);
+    }
+  });
+
+  it('plays uniform-random-among-enabled at any other page', () => {
+    const pick = pinnedEventPick(ref, 1, cloneAt('other', 'p', [0, 2]), new RNG(3));
+    expect([0, 2]).toContain(pick);
   });
 });

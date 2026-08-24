@@ -38,6 +38,7 @@ import type { RNG } from '../../../src/core/RNG';
 import type { Run } from '../../../src/run/Run';
 import {
   evaluateRunCandidate,
+  type CandidateApply,
   type RunRolloutPair,
   type RunRolloutSpec,
 } from './evaluator';
@@ -49,6 +50,13 @@ export interface EpsilonAAOptions {
   readonly k?: number;
   /** Byte-inert control comparisons (default 3; each must margin EXACTLY 0). */
   readonly controls?: number;
+  /** 85e — an ARMED floor read: every floor evaluation applies this
+   *  candidate instead of the null arm (the campRaid derivation — a raid
+   *  arm's outcome variance can exceed the null walk's, so its A/A spread
+   *  is read directly rather than assumed ≤ the class floor). The control
+   *  becomes arm-vs-arm under SHARED pairs — still exactly 0, now also
+   *  pinning the arm's determinism through the full pipeline. */
+  readonly arm?: CandidateApply;
   /** Evaluator/walker passthrough (horizon, tier, λ, policies). */
   readonly rollout?: Omit<RunRolloutSpec, 'pairs' | 'horizonBattles'> & {
     readonly horizonBattles?: number;
@@ -65,6 +73,12 @@ export interface EpsilonAAResult {
   /** Max |margin| across the byte-inert control comparisons — MUST be 0
    *  (the 69d pin, re-asserted through the full pipeline). */
   readonly controlMaxAbs: number;
+  /** 85e — the raw per-evaluation scores under the disjoint pair sets
+   *  (margins are their pairwise differences). The #11 argmax-inflation
+   *  bootstrap resamples these within-context: a live decision gates
+   *  max-over-C margins against one shared null score, so the false-act
+   *  rate is an order statistic of exactly this distribution. */
+  readonly scores: readonly number[];
 }
 
 export function deriveEpsilonAA(
@@ -93,21 +107,23 @@ export function deriveEpsilonAA(
     return pairs;
   };
 
-  // The CONTROL: byte-inert vs null under SHARED pairs — exact zero, or
-  // the pipeline itself is contaminating the floor read.
+  // The CONTROL under SHARED pairs — exact zero, or the pipeline itself
+  // is contaminating the floor read. Unarmed: byte-inert vs null (the
+  // 69d pin). Armed (85e): arm vs arm — same apply + same pairs must
+  // walk byte-identically, pinning the arm's determinism too.
   let controlMaxAbs = 0;
   for (let c = 0; c < controls; c++) {
     const pairs = freshPairs();
-    const nullScore = evaluateRunCandidate(live, null, specFor(pairs)).score;
-    const inertScore = evaluateRunCandidate(live, () => {}, specFor(pairs)).score;
-    controlMaxAbs = Math.max(controlMaxAbs, Math.abs(inertScore - nullScore));
+    const a = evaluateRunCandidate(live, options.arm ?? null, specFor(pairs)).score;
+    const b = evaluateRunCandidate(live, options.arm ?? (() => {}), specFor(pairs)).score;
+    controlMaxAbs = Math.max(controlMaxAbs, Math.abs(b - a));
   }
 
-  // The FLOOR: null-arm scores under disjoint fresh pair sets, paired
-  // off two-by-two into honest A/A margins.
+  // The FLOOR: (arm ?? null)-arm scores under disjoint fresh pair sets,
+  // paired off two-by-two into honest A/A margins.
   const scores: number[] = [];
   for (let i = 0; i < options.evaluations; i++) {
-    scores.push(evaluateRunCandidate(live, null, specFor(freshPairs())).score);
+    scores.push(evaluateRunCandidate(live, options.arm ?? null, specFor(freshPairs())).score);
   }
   const margins: number[] = [];
   for (let j = 0; j + 1 < scores.length; j += 2) {
@@ -116,5 +132,5 @@ export function deriveEpsilonAA(
   const mean = margins.reduce((a, b) => a + b, 0) / margins.length;
   const variance = margins.reduce((a, b) => a + (b - mean) ** 2, 0) / margins.length;
   const sigma = Math.sqrt(variance);
-  return { margins, sigma, epsilon: 2 * sigma, controlMaxAbs };
+  return { margins, sigma, epsilon: 2 * sigma, controlMaxAbs, scores };
 }

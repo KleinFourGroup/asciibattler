@@ -1082,3 +1082,85 @@ candidates · **10 non-zero margins · 4 raids WON** · mean margin
 re-evaluate-the-layer decision point stays closed). Value judgment
 is the §85f cohort's; the 83e indiscriminate baseline (decisively
 net-negative) is what the selective pick-rate must beat.
+
+## Phase 85e — the ε re-read (2026-08-24, user-signed same day)
+
+The re-read shape-locked and signed in-session (the three methodology
+calls below), built on three edits: the walker's `stopAtPhase` union
+gains `'event'` + `'turn-intro'` (parks fire at the loop top BEFORE the
+walker's own fires/grants — the pristine site context), `deriveEpsilonAA`
+gains an optional `arm` (armed floor reads; the control becomes
+arm-vs-arm under shared pairs, still exactly 0) and returns raw
+`scores`, and `readEpsilonAA` was rebuilt wholesale: all contexts prep
+through the walker seam, two new classes (event page; campRaid unarmed
+AND raid-armed), every context read at λ_prior ∈ {0, 1} under IDENTICAL
+pair seeds (λ only re-scores — trajectories are λ-independent — so Δσ
+is the fold's own contribution, read paired), E1 both-ways pooling, and
+the #11 within-context argmax bootstrap. 32 reads, every control
+exactly 0 (including the armed and λ=1 controls — the 85d raid
+determinism and the fold's determinism re-pinned through the full
+pipeline). Log: scratchpad 85e-epsilon-read.log.
+
+**Finding 1 — the fold's noise injection is structural and
+horizon-shaped (#12c QUANTIFIED).** At λ=1 the A/A σ explodes at
+exactly the contexts where item acquisitions sit inside the walk
+horizon (fresh hop-1 map 1.43→13.6 ×9.5; starting boon page 1.55→13.6;
+reward gates 1.9→11.6 / 1.4→7.3; port docks 2.3→5.3/5.7) and is
+BYTE-IDENTICAL to λ=0 everywhere else (mid-act maps, preTurn,
+campRaid) — the split rides the known horizon-1-exits-before-rewards
+seam, which shields mid-act map states. Margin |max| jumps ~6→~30 (the
+table's item quanta).
+
+**Finding 2 — E1 confirmed.** The preTurn depth-0 context reads
+σ=0.000 again on the NEW post-boon park (dominated current-battle
+horizon); RMS-pooling it in under-floors the live mid-act context ~2×.
+
+**Finding 3 — the campRaid provisional was under-pinned ~5.6×** (the
+85d weaker-class-argument flag was right): true camp-carrying
+turn-intro contexts read σN 2.865 pooled, and the ARMED read confirms
+the raid arm is genuinely noisier (σR 3.324; 4.122/2.261 vs 3.375/2.242
+by depth) → mixed-arm ε = 2·√((σN²+σR²)/2) = 6.206 vs the provisional
+1.101.
+
+**Finding 4 — the event class reads WIDER than the map class it
+borrowed from** (mid-act page σ 2.861 vs map max 2.738; ×1.84 spread
+vs the boon page): under the RMS class floor the mid-act page's argmax
+false-act rate hit 38% at C=13. The 74g provisional (owed the §81
+re-read that never ran) is retired by derivation.
+
+**Finding 5 — post-fidelity drift at λ=0 is real at every class**
+(port 3.145→4.646 · map 3.265→5.476 · preTurn 1.101→3.277 · reward
+2.873→3.874 by the v2 rule). Also caught: the old script's
+parkAtTurnIntro(0) recipe has been silently BROKEN since §74 stamped
+the root as the starting-event node (entering the root opens a page,
+not a turn gate) — the v1 preTurn/reward-era numbers were derived on
+pre-§74 state shapes; the rebuilt recipes park via stopAtPhase. The
+69f "post-battle turn-outcome" context was dropped (no site clones
+there).
+
+**Finding 6 — #11 argmax inflation CONFIRMED, modest with correct
+floors.** Within-context bootstrap (20k trials, one shared null score +
+C candidate margins vs the class floor): at correctly-floored λ=0
+contexts C=13 runs 2.4–8.7% vs the 2.3% single-comparison intent
+(2–4×, inherent to max-over-C); the scary 28–38% rates all traced to
+class-pooling under-floors, closed by the max-context rule.
+
+**The three signed calls (all as recommended):**
+1. **Floors are λ=0-derived and apply to ALL λ arms.** Per-λ floors
+   would neuter the λ=1 arm (map ε≈14). The λ=1 false-act exposure is
+   a pre-registered WATCH on the §85f sidecar (priorLambda+priorBonus
+   → realized flip rates); the structural fix — computing the prior on
+   the CANDIDATE's own holdings delta at short-horizon sites, which
+   makes floors λ-invariant by construction — goes on the §85h
+   amendment menu, not built mid-phase.
+2. **v2 pooling: flat per class at the MAX-σ non-degenerate context**
+   (E1 exclusion + max-context supersedes RMS). Cost: fewer marginal
+   acts at below-max contexts; still flat-per-class (the
+   state-conditioned-ε scope guard holds).
+3. **No argmax C-correction.** Re-read after 85f's realized-flip data.
+
+**The re-pin** (arbitratedStrategy.ts, derivation header rewritten):
+port 4.646 · map/outOfBattle 5.476 · preTurn 3.277 · reward 3.874 ·
+event 5.723 (own constant) · campRaid 6.206 (own constant, mixed-arm).
+GRANT/NODE_CHOICE/RECRUIT keep their class shares. Tests reference the
+constants symbolically — no pin edits needed.

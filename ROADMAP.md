@@ -146,17 +146,20 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       null predicate; the spawn-order drain race →
       `World.setInitialObjective`, setup-phase only); live probe: 21
       candidates, 4 raids won, mean margin +1.55 — WORKLOG §85d.
-- [ ] 85e — the ε re-read: event-page context + post-fold/fidelity
-      floors + campRaid's floor + the #11 argmax probe + the E1
-      zero-σ fix; floors re-pinned BEFORE the cohort.
+- [x] 85e — the ε re-read ✅ 2026-08-24 — the v2 floor rule (E1 +
+      max-context, λ=0-derived for all arms, user-signed ×3) re-pins
+      all six classes (campRaid's provisional was ~5.6× under; the
+      fold's λ=1 noise injection = #12c quantified) — WORKLOG §85e.
 - [ ] 85f — the box cohort: λ_prior arms {0, 0.5, 1} + doctrine +
       controls at the n=120 same-HEAD protocol; the paired pre/post
       read; the boon-event separation validation; the ⚠ wall-refs
-      re-pin; the campRaid pick-rate check.
+      re-pin; the campRaid pick-rate check; ⚠ the 85e λ=1 false-act
+      WATCH (realized flip rates off priorLambda+priorBonus).
 - [ ] 85g — the 55pre re-derive: post-fold `--search` (box) → new
       fixture; `pre55ReachRef` retires or re-pins.
 - [ ] 85h — the amendment session: λ_prior's default signs;
-      BALANCE/doctrine updates; phase close.
+      BALANCE/doctrine updates; the candidate-delta de-fold on the
+      menu (the 85e structural fix — λ-invariant floors); phase close.
 
 ## Phase 86 — The balancer performance pass
 

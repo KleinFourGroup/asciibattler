@@ -120,8 +120,14 @@ export interface WalkOptions {
    *  phase returns immediately — stage battle-count walks and phase
    *  walks on separate clones). This is the header's "extend the stop
    *  condition in one named place" seam. 84c adds 'recruit' (the
-   *  shadow-only recruit site's fixture context — a post-victory offer). */
-  readonly stopAtPhase?: 'port' | 'map' | 'reward' | 'recruit';
+   *  shadow-only recruit site's fixture context — a post-victory offer).
+   *  85e adds 'event' (the event-page ε context — EVENT_CHOICE_EPSILON's
+   *  first real derivation) and 'turn-intro' (the preTurn-class park;
+   *  the loop-top check fires BEFORE the turn-intro handler's fires/
+   *  grants, so the parked state is the pristine site context — this
+   *  replaces readEpsilonAA's manual enterNode recipe, which broke when
+   *  §74 stamped the root as the starting-event node). */
+  readonly stopAtPhase?: 'port' | 'map' | 'reward' | 'recruit' | 'event' | 'turn-intro';
 }
 
 export interface WalkResult {

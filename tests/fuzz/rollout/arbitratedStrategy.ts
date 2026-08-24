@@ -144,30 +144,50 @@ export function walkPolicyOverlay(base: FuzzStrategy): Partial<FuzzStrategy> {
 }
 
 /**
- * The per-site ε floors — THE v1 DERIVATION RULE (unified at 70b, the
- * 70a pin amended to match; WORKLOG §70): one FLAT floor per site
- * class, ε = 2σ of the POOLED A/A margins across that class's read
- * contexts (readEpsilonAA, K=2 · traffic · M=20 margins per context ·
- * 2026-07-30; every control exactly 0). The kickoff's depth-banding
- * died on the data twice — ports read single-depth (both docks hop 6),
- * and TRUE map states show NO depth trend (σ 1.1–2.0 at every depth;
- * the 69f "0.54 mid-act" low read was a turn-outcome GATE state, a
- * different class — relabeled in readEpsilonAA). Noise is
- * state-dependent, not depth-monotone: a state-conditioned ε is a §71
- * candidate once decisions.csv shows where it concentrates. Each floor
- * sits behind a function seam so that refinement never touches call
- * sites (any future hop read must pre-root-guard — gotcha #110).
+ * The per-site ε floors — THE v2 DERIVATION RULE (85e, user-signed
+ * 2026-08-24; supersedes the 70b v1 pins; WORKLOG §85e): one FLAT floor
+ * per site class, ε = 2σ of the WORST (max-σ) non-degenerate A/A read
+ * context in that class (readEpsilonAA, K=2 · traffic · M=20 margins
+ * per context · every control exactly 0). Two amendments over v1:
  *
- *   port docks:  σ 1.923 / 1.117            → pooled σ 1.573 → ε 3.145
- *   map class:   σ 1.717 / 1.561 / 1.139 / 1.994 → pooled σ 1.632 → ε 3.265
- *   preTurn:     σ 0.779 / 0.000 (a dominated current-battle horizon
- *                has nothing left to vary)  → pooled σ 0.551 → ε 1.101
- *   reward gate: σ 1.059 / 1.734            → pooled σ 1.437 → ε 2.873
+ *  - E1: zero-σ (dominated) contexts are EXCLUDED, never pooled — the
+ *    v1 preTurn floor RMS-pooled a σ=0.000 depth into 1.101 and
+ *    under-floored the live mid-act context ~2×.
+ *  - max-context replaces RMS pooling: where a class's contexts spread
+ *    (event ×1.84, map ×1.91), the RMS floor under-guards the wide
+ *    context and the #11 argmax bootstrap read 28–38% false-act at
+ *    C=13 there; the max-context pin closes that hole while staying
+ *    flat per class (state-conditioned ε remains a named candidate,
+ *    round-6-spec scope guard).
+ *
+ * Floors are λ=0-DERIVED AND APPLY TO ALL λ_prior ARMS (signed call):
+ * at λ=1 the fold injects table-scaled noise into A/A margins at
+ * exactly the contexts where item acquisitions sit inside the walk
+ * horizon (fresh map σ 1.43→13.6; reward 1.9→11.6; port 2.3→5.3;
+ * byte-identical elsewhere — finding #12c quantified). Per-λ floors
+ * would neuter the λ=1 arm (map ε≈14); instead the λ=1 false-act
+ * exposure is a pre-registered WATCH on the §85f sidecar
+ * (priorLambda + priorBonus columns), and the structural fix (the
+ * candidate-delta de-fold) sits on the §85h amendment menu. The #11
+ * argmax verdict: CONFIRMED but modest with correct floors (C=13 runs
+ * 2.4–8.7% vs the 2.3% single-comparison intent — no C-correction,
+ * re-read after 85f's realized-flip data). Each floor sits behind a
+ * function seam so refinement never touches call sites (any future
+ * hop read must pre-root-guard — gotcha #110).
+ *
+ *   port docks:  σ 2.323 / 2.312               → max 2.323 → ε 4.646
+ *   map class:   σ 1.431 / 2.040 / 2.436 / 2.738 → max 2.738 → ε 5.476
+ *   preTurn:     σ 0.000 (dominated, E1-excluded) / 1.639
+ *                                              → max 1.639 → ε 3.277
+ *   reward gate: σ 1.937 / 1.427               → max 1.937 → ε 3.874
+ *   event page:  σ 1.551 (boon) / 2.861 (mid-act) → max 2.861 → ε 5.723
+ *   campRaid:    σN 3.375/2.242 · σR(armed) 4.122/2.261 — mixed-arm,
+ *                see CAMP_RAID_EPSILON.
  */
-export const PORT_BUY_EPSILON = 3.145;
-export const FIRE_OUTOFBATTLE_EPSILON = 3.265;
-export const FIRE_PRETURN_EPSILON = 1.101;
-export const REWARD_DAEMON_EPSILON = 2.873;
+export const PORT_BUY_EPSILON = 4.646;
+export const FIRE_OUTOFBATTLE_EPSILON = 5.476;
+export const FIRE_PRETURN_EPSILON = 3.277;
+export const REWARD_DAEMON_EPSILON = 3.874;
 /** 70d — the grant site shares the preTurn CLASS floor: its decisions
  *  clone at the same turn-intro states with the same current-battle
  *  horizon as preTurn fires, and the unified rule floors per CLASS
@@ -176,25 +196,28 @@ export const GRANT_EPSILON = FIRE_PRETURN_EPSILON;
 /** 70e — node choice shares the MAP class floor (same clone context +
  *  next-battle horizon as outOfBattle fires; contexts 1/15/16/19). */
 export const NODE_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
-/** 74g — the event-choice site shares the MAP class floor: it clones at
- *  an out-of-battle state with the same next-battle horizon as node
- *  choice / outOfBattle fires. PROVISIONAL by class argument, not
- *  derivation (the grant→preTurn / nodeChoice→map precedent) — event
- *  pages are a context class readEpsilonAA has never read; the §81
- *  board round re-reads it (user-signed at the 74g shape-lock). */
-export const EVENT_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
+/** 85e — the event-choice site's OWN derived floor (the 74g provisional
+ *  class-share retired; the §81 re-read owed since then landed here).
+ *  Event pages read WIDER than the map class they borrowed from (mid-act
+ *  page σ 2.861 vs map max 2.738) — a page's choice grants items inside
+ *  the horizon, so its walk variance carries the acquisition spread. */
+export const EVENT_CHOICE_EPSILON = 5.723;
 /** 84c — the shadow-only recruit site judges its long-horizon record
  *  under the REWARD class floor (the same post-victory clone context as
  *  the daemon pick). Telemetry-only: the live recruit pick is the base's,
  *  never arbitrated; the ε only shapes the record's `chosenIndex`. */
 export const RECRUIT_EPSILON = REWARD_DAEMON_EPSILON;
-/** 85d — the campRaid site shares the preTurn CLASS floor PROVISIONALLY
- *  (the RECRUIT_EPSILON precedent — by class argument, not derivation):
- *  it clones at the same turn-intro state with the same current-battle
- *  horizon as preTurn fires. ⚠ The class argument is weaker here — a
- *  raid's variance profile (a whole side-battle) plausibly differs from
- *  a packet fire's; the §85e ε re-read derives the site its own floor. */
-export const CAMP_RAID_EPSILON = FIRE_PRETURN_EPSILON;
+/** 85e — the campRaid site's OWN derived floor (the 85d provisional
+ *  preTurn share retired — the weaker-class-argument flag was RIGHT:
+ *  the provisional 1.101 under-floored ~5.6×). MIXED-ARM derivation,
+ *  the class's one methodology extension: the raid arm samples a
+ *  DIFFERENT outcome distribution than the null walk (a whole
+ *  side-battle), and the armed A/A read confirms σR > σN at both
+ *  depths, so the pairing-broken raid-vs-null margin noise is
+ *  ε = 2·√((σN² + σR²)/2) over the pooled camp-carrying turn-intro
+ *  contexts (σN 2.865 · σR 3.324 — epsilonAA.ts `arm`, readEpsilonAA
+ *  campRaid contexts; armed controls exactly 0). */
+export const CAMP_RAID_EPSILON = 6.206;
 
 /**
  * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the

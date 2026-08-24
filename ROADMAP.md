@@ -140,8 +140,12 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       BYTE-IDENTICAL (summary + decisions), λ=1 reads the table's own
       rows back exactly; 12a clamp + 12b fired-as-held + 12c
       judgeLong strip all pinned — WORKLOG §85c.
-- [ ] 85d — the campRaid preTurn run-layer site ({null, raid};
-      player-pull rails at spawn; walker plays it out).
+- [x] 85d — the campRaid preTurn run-layer site ({null, raid};
+      player-pull rails at spawn; walker plays it out) ✅ 2026-08-24 —
+      the A/B probe caught two silent no-ops pre-commit (the campId
+      null predicate; the spawn-order drain race →
+      `World.setInitialObjective`, setup-phase only); live probe: 21
+      candidates, 4 raids won, mean margin +1.55 — WORKLOG §85d.
 - [ ] 85e — the ε re-read: event-page context + post-fold/fidelity
       floors + campRaid's floor + the #11 argmax probe + the E1
       zero-σ fix; floors re-pinned BEFORE the cohort.

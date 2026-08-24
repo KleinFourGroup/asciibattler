@@ -43,6 +43,12 @@ export interface RunRolloutClone {
   /** The clone's private bus — the 69b walker's battle machinery attaches
    *  here; nothing on it ever reaches the live run's subscribers. */
   readonly bus: EventBus<GameEvents>;
+  /** 85d — the campRaid candidate's flag: when true, the walker orders the
+   *  player team onto a primed camp member at the walk's FIRST battle
+   *  spawn, then clears it (one battle — the decision's own). Mutable
+   *  harness-side battle-plan state riding the clone handle; never
+   *  serialized, never read by Run. */
+  raidNextBattle?: boolean;
 }
 
 export function cloneRunForRollout(live: Run, rolloutSeed: number): RunRolloutClone {

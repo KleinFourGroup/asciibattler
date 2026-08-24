@@ -995,3 +995,90 @@ config as the 85b probe):
   port node and dock-shops in its walk picks up holdings the prior
   then credits (enterNode:24(port) bonus +15.82) — by design; the
   85f cohort reads the composed behavior.
+
+### 85d — the campRaid site (2026-08-24)
+
+The fold rider, on the signed v1 shape ({null, raid}; harness-side,
+no snapshot bump — kickoff finding 7 held):
+
+- **The shared order** (`tests/fuzz/campRaid.ts`): `orderCampRaid` =
+  an ordered engage on the first living camp member at spawn (only
+  primes are alive at spawn — §75h), the exact §75g pull command
+  shape, player-side; deterministic, draw-free, no-op campless.
+  ONE definition consumed by both the live harness and the walker —
+  a live-vs-rollout divergence here would be a coherence bug, so the
+  walker's deliberate-duplication doctrine (battle wiring only)
+  deliberately does not apply. Hostility untouched: the raid reads
+  passive until first blow (damage-aggro stays the single source).
+- **The site** (`arbitrateCampRaid`): asked once per turn-intro
+  BEFORE the fire loop; the raid apply sets the CLONE's
+  `raidNextBattle` (a new mutable field on `RunRolloutClone` —
+  battle-plan state riding the handle, never serialized); the walker
+  consumes it at the walk's FIRST battle spawn; the live harness
+  mirrors with its own flag at battle:started. Eligibility gates the
+  rollout SPEND: an authored campless layout enumerates nothing; the
+  procedural sentinel stays eligible (a campless roll makes raid ≡
+  null, ties→NULL). ⭐ The eligibility read is
+  **`run.encounterMap.layoutId`** — rolled at encounter start
+  (K3.5), alive at turn-intro; `currentEncounter` does NOT exist
+  until the battle starts (the first parking attempt read null — a
+  cheap surprise the test caught before the site shipped it).
+- **ε**: `CAMP_RAID_EPSILON = FIRE_PRETURN_EPSILON` PROVISIONAL by
+  class argument (the RECRUIT_EPSILON precedent) — flagged weaker
+  than usual (a raid's variance profile is a whole side-battle, not
+  a packet fire); 85e derives the site its own floor.
+- **"Raid first, then fight" — the traffic tier needed the guard**:
+  the searcher already had §54 foreign-order conservatism (never
+  search against or clobber a foreign order; the dead-target
+  auto-revert releases), but TrafficScriptDriver's ownership rule
+  only stopped the NULL action — a TRIGGERED script would have
+  clobbered the raid order mid-rollout. 85d imports the searcher's
+  rule (hold while a foreign order stands). Byte-identical for every
+  existing arm: no foreign player-team order existed in bot-driven
+  battles before this site. New pin: an eager script holds through
+  the foreign order and resumes after the auto-revert.
+- Pins: campRaidEligible config-derived over the whole shipped
+  catalog (both branches non-empty) · orderCampRaid's target class +
+  order-survives-the-tick + campless no-op + hostility-untouched ·
+  the site's win/tie-stands/apply-sets-flag/eligibility-governs-
+  spend suite (the parked-turn-intro fixture generalizes the
+  readEpsilonAA recipe self-healing across depths) · the traffic
+  conservatism pin. 2693 main + 460 fuzz green.
+
+**The A/B probe caught TWO silent no-ops before commit** (the
+84f1-class hunt done deliberately this time — the first live probe
+read all 22 campRaid margins EXACTLY 0.000, and per the twice-bitten
+doctrine that signature got a scratchpad A/B probe instead of a
+shrug: paired walks with/without the raid flag on scanned campy
+turn-intro states, `objective:set` bus events as the discriminator):
+1. **The predicate bug** — `orderCampRaid` filtered on
+   `campId !== undefined`, but non-camp units carry campId NULL: the
+   order targeted the first living PLAYER unit and
+   `clearResolvedObjectives` silently reverted it the same tick. The
+   probe's B walks showed the order placed yet zero divergence; the
+   camp-only unit fixture couldn't see it (now it spawns a player
+   unit first, and the pin asserts the order SURVIVES the tick —
+   the silent-revert signature).
+2. **The drain race** — with the predicate fixed, 8/12 pairs were
+   STILL byte-equal: an order ENQUEUED at spawn drains after tick
+   0's bot decides, so the traffic driver (deciding under the
+   still-atWill objective) clobbered the raid inside the very same
+   drain — and the 85d conservatism guard never fired because the
+   foreign order wasn't applied yet at decide time. The enemy pull
+   never hits this only because the enemy team has NO driver. Fix:
+   **`World.setInitialObjective`** — a sanctioned SETUP-PHASE direct
+   write (spawn-time setup mutates the world directly by design;
+   the guard throws past tick 0, so mid-battle mutation stays
+   command-channel-only and the O1 invariant is structural, not
+   habitual). No serialized shape touched — World v35 holds.
+After both fixes: **12/12 probe pairs diverge**, B walks open on the
+standing raid order with tile scripts resuming only after the
+auto-revert ("raid first, then fight" observed), tick counts move
+like a real detour (550 vs 1031 on one pair).
+
+**The live probe, rerun** (1 arb seed, regen vector): 21 raid
+candidates · **10 non-zero margins · 4 raids WON** · mean margin
++1.55 — the site is selective and does get picked (the spec's
+re-evaluate-the-layer decision point stays closed). Value judgment
+is the §85f cohort's; the 83e indiscriminate baseline (decisively
+net-negative) is what the selective pick-rate must beat.

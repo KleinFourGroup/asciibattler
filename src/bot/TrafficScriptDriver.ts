@@ -158,6 +158,15 @@ export class TrafficScriptDriver {
       this.standingScriptId = null;
     }
 
+    // 85d — foreign-order conservatism, the RolloutSearchDriver rule
+    // imported: while an order someone else issued stands, hold — a
+    // triggered script must not clobber it (pre-85d only the null action
+    // respected ownership; the campRaid standing order is the first
+    // foreign player-team order in bot-driven battles — "raid first,
+    // then fight"). The sim's dead-target auto-revert lands the mode
+    // back on atWill and releases the hold.
+    if (current.mode !== 'atWill' && this.standingScriptId === null) return [];
+
     // Fixed-priority arbitration: first triggered script wins the tick.
     let winner: TrafficScript | null = null;
     let proposal: TeamObjective | null = null;

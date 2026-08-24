@@ -741,6 +741,27 @@ export class World {
   }
 
   /**
+   * 85d — a SETUP-PHASE standing order (the campRaid battle plan): a direct
+   * write, legal only before the first tick. Spawn-time setup mutates the
+   * world directly by design (spawnUnit / installCamps / primeCampSpawns);
+   * an order ENQUEUED at setup instead drains after tick 0's bot decides,
+   * so a driver that decided under the still-atWill objective clobbered the
+   * plan inside the very same drain (the 85d A/B probe's catch — the enemy
+   * pull never hits this only because the enemy team has no driver).
+   * Mid-battle mutation stays command-channel-only (the O1 invariant above
+   * is unchanged); the guard makes the boundary structural.
+   */
+  setInitialObjective(team: ObjectiveTeam, objective: TeamObjective): void {
+    if (this.currentTick > 0) {
+      throw new Error(
+        'setInitialObjective: setup-phase only (before the first tick) — mid-battle objectives go through the command channel',
+      );
+    }
+    this.objectives[team] = objective;
+    this.bus.emit('objective:set', { team, objective });
+  }
+
+  /**
    * Behaviors and actions call this to publish sim events (unit:moved,
    * unit:attacked, etc.) without holding a reference to the bus.
    */

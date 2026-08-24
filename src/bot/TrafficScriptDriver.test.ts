@@ -201,4 +201,36 @@ describe('TrafficScriptDriver', () => {
     // redundant clear — including well past the dwell window.
     expectQuietSteps(world, driver, MIN_DWELL_TICKS + 1);
   });
+
+  it('85d — foreign-order conservatism: a TRIGGERED script holds too; the auto-revert releases', () => {
+    const world = makeWorld();
+    const s = stub('s', RALLY); // an eager script proposing ≠ current every tick
+    const driver = new TrafficScriptDriver('player', [s]);
+    // A foreign order (the campRaid shape: issued at spawn, not by the
+    // driver) — engage a killable target so the auto-revert half can run.
+    const enemy = world.units.find((u) => u.team === 'enemy')!;
+    world.enqueueCommand({
+      kind: 'setObjective',
+      team: 'player',
+      objective: { mode: 'engage', target: { kind: 'enemy', unitId: enemy.id } },
+    });
+    world.tick();
+    expect(world.objectiveFor('player').mode).toBe('engage');
+    // Pre-85d only the null action respected ownership — a triggered script
+    // emitted over a foreign order after dwell. Now: quiet, well past dwell.
+    expectQuietSteps(world, driver, MIN_DWELL_TICKS + 2);
+    expect(world.objectiveFor('player')).toEqual({
+      mode: 'engage',
+      target: { kind: 'enemy', unitId: enemy.id },
+    });
+    // Target dies → the sim auto-reverts → the hold releases and the
+    // driver resumes normal arbitration ("raid first, THEN fight").
+    enemy.currentHp = 0;
+    world.tick();
+    expect(world.ended).toBe(false);
+    expect(world.objectiveFor('player').mode).toBe('atWill');
+    expect(step(world, driver)).toEqual([
+      { kind: 'setObjective', team: 'player', objective: RALLY },
+    ]);
+  });
 });

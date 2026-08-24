@@ -107,4 +107,17 @@ export interface FuzzStrategy {
    * their draw sequences and the fuzz baselines are untouched.
    */
   pickEventChoice?(run: Run, rng: RNG): number;
+  /**
+   * 85d — OPTIONAL battle-plan decision, asked ONCE per turn-intro BEFORE
+   * the preTurn fire loop: `true` orders the player team to raid the
+   * upcoming battle (an ordered engage on a primed camp member at spawn —
+   * `orderCampRaid`, the §75g pull's rails player-side; a foreign
+   * standing order holds both bot driver tiers until the dead-target
+   * auto-revert: "raid first, then fight"). DEFINING this flips
+   * `pauseAtTurnGates` ON (the pickPacketFire contract — turn-intro must
+   * exist to be asked at). ABSENT = never raid — the pre-85d behavior and
+   * the anchor arms' permanent policy, so their draw sequences and the
+   * fuzz baselines are untouched.
+   */
+  pickCampRaid?(run: Run, rng: RNG): boolean;
 }

@@ -45,7 +45,8 @@
  *
  * ALL FIVE §70 SITES ARE LIVE, plus the §74g eventChoice site (nominee
  * = the doctrine uniform-random pick; see arbitrateEventChoice's
- * header). `pickRecruit` alone still delegates to the base —
+ * header) and the §85d campRaid preTurn site (the fold rider; see
+ * arbitrateCampRaid's header). `pickRecruit` alone still delegates to the base —
  * recruit/pass is OUT for v1 by kickoff resolution 2 (the one-battle
  * horizon censors a draw-gated permanent asset; the named
  * forced-fielding v2 contingency is in the spec).
@@ -69,6 +70,7 @@ import {
 } from './driver';
 import type { InnerTier } from './walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
+import { campRaidEligible } from '../campRaid';
 
 /**
  * 85b — the driver + shadow-site streams ride the KEYED derivation door
@@ -186,6 +188,13 @@ export const EVENT_CHOICE_EPSILON = FIRE_OUTOFBATTLE_EPSILON;
  *  the daemon pick). Telemetry-only: the live recruit pick is the base's,
  *  never arbitrated; the ε only shapes the record's `chosenIndex`. */
 export const RECRUIT_EPSILON = REWARD_DAEMON_EPSILON;
+/** 85d — the campRaid site shares the preTurn CLASS floor PROVISIONALLY
+ *  (the RECRUIT_EPSILON precedent — by class argument, not derivation):
+ *  it clones at the same turn-intro state with the same current-battle
+ *  horizon as preTurn fires. ⚠ The class argument is weaker here — a
+ *  raid's variance profile (a whole side-battle) plausibly differs from
+ *  a packet fire's; the §85e ε re-read derives the site its own floor. */
+export const CAMP_RAID_EPSILON = FIRE_PRETURN_EPSILON;
 
 /**
  * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the
@@ -233,6 +242,7 @@ export interface ArbitratedConfig {
   readonly grantEpsilon?: number;
   readonly nodeChoiceEpsilon?: number;
   readonly eventChoiceEpsilon?: number;
+  readonly campRaidEpsilon?: number;
   /** The nominator weight vector the DP tail reads (70e). Default: the
    *  default vector. NOT auto-threaded from a `--strategy` file today —
    *  under the default vector the tail is exactly 0 (all path weights
@@ -343,6 +353,9 @@ export function makeArbitratedStrategy(
     // 74g — the event-choice site (the doctrine's uniform-random pick is
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
     pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
+    // 85d — the campRaid RUN-LAYER preTurn site (the fold rider; see
+    // arbitrateCampRaid's header). v1 candidates = {null, raid}.
+    pickCampRaid: (run, _rng) => arbitrateCampRaid(driver, run, config.campRaidEpsilon),
   };
 }
 
@@ -737,6 +750,56 @@ function arbitrateNodeChoice(
     rollout: { strategy: rolloutStrategy, tailScore },
   });
   return winner === null ? nominee : nodes[challengers.indexOf(winner)]!;
+}
+
+/**
+ * 85d — the campRaid site (the fold rider, round-6-spec §"The ε re-read
+ * + the two riders"): a RUN-LAYER preTurn decision, v1 candidates =
+ * {null, raid} (the 2026-08-24 shape-lock — one selective per-battle
+ * choice; per-camp enumeration deferred until a layout carries >1 camp
+ * and the read demands it). The raid apply sets the CLONE's
+ * `raidNextBattle` flag; the walker consumes it at the walk's first
+ * battle spawn via the shared `orderCampRaid` — the identical order the
+ * live harness places when the site returns true. The null arm walks
+ * the battle unordered (the walker never raids on its own), so the
+ * margin reads "raid this battle vs fight it straight" under paired
+ * luck — and the raid's PAYOUT (camp bits/packets at turn end, the
+ * packet prior once held) is visible to the run-layer score where the
+ * battle evaluator is structurally blind to it (neutrals count in
+ * neither team's material — the spec's two-evaluators-one-fold note).
+ *
+ * Eligibility gates the rollout SPEND, not correctness: an authored
+ * campless layout enumerates nothing (no decision, no log); the
+ * procedural sentinel stays eligible and a campless roll makes the raid
+ * arm ≡ null (ties→NULL). The 83e forced-engagement probe (decisively
+ * net-negative, indiscriminate) is the baseline this selectivity must
+ * beat — the §85f cohort's read. Re-evaluate the run-layer placement
+ * only if the site literally never gets picked (the spec's named
+ * decision point).
+ */
+function arbitrateCampRaid(
+  driver: RunArbitrationDriver,
+  run: Run,
+  epsilonOverride: number | undefined,
+): boolean {
+  // The pre-battle layout read: `encounterMap` is rolled at encounter start
+  // and lives through every turn of it (K3.5); `currentEncounter` doesn't
+  // exist until the battle starts. layoutId null = procedural → eligible.
+  if (!campRaidEligible(run.encounterMap?.layoutId ?? undefined)) return false;
+  const winner = driver.decide(
+    'campRaid',
+    run,
+    [
+      {
+        label: 'raid',
+        apply: (clone) => {
+          clone.raidNextBattle = true;
+        },
+      },
+    ],
+    { epsilon: epsilonOverride ?? CAMP_RAID_EPSILON },
+  );
+  return winner !== null;
 }
 
 /**

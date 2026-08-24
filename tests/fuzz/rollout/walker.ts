@@ -67,6 +67,7 @@ import { RolloutSearchDriver, type RolloutSearchConfig } from '../../../src/bot/
 import type { RunRolloutClone } from '../../../src/bot/runRollout';
 import type { UseContext } from '../../../src/config/packets';
 import type { FuzzStrategy } from '../Strategy';
+import { orderCampRaid } from '../campRaid';
 import { scoredStrategy } from '../strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import { selectRedrawPositions, type RedrawPolicy } from '../redrawPolicy';
@@ -192,6 +193,13 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
     // spawnEncounter emits unit:spawned synchronously; currentWorld is
     // already set above (the runOne ordering note).
     spawnEncounter(world, encounter);
+    // 85d — the campRaid candidate's order (clone.raidNextBattle, set by
+    // the raid apply): identical to the live harness's via the shared
+    // orderCampRaid. First battle of the walk only — the decision's own.
+    if (clone.raidNextBattle) {
+      clone.raidNextBattle = false;
+      orderCampRaid(world);
+    }
   });
   bus.on('battle:ended', () => {
     battlesEnded++;

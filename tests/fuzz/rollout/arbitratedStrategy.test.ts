@@ -55,9 +55,11 @@ import {
   NODE_CHOICE_EPSILON,
   EVENT_CHOICE_EPSILON,
   DP_TAIL_SCALE,
+  CAMP_RAID_EPSILON,
   walkPolicyOverlay,
   walkPortBuy,
 } from './arbitratedStrategy';
+import { campRaidEligible } from '../campRaid';
 
 const SEED = 20260730;
 
@@ -935,6 +937,92 @@ describe('the pickEventChoice chokepoint (74g) — harness contracts', () => {
     }
     expect(visited).toBeGreaterThanOrEqual(1);
   }, 240_000);
+});
+
+describe('85d — the campRaid site (the fold rider; {null, raid})', () => {
+  // A fresh Run: currentEncounter is null → the null-mapped undefined path
+  // (procedural semantics) keeps the site ELIGIBLE, and decide's context
+  // reads are pre-root-safe — the cheapest real-Run fixture for the
+  // fake-evaluate mechanics (the harness only asks at turn-intro; the
+  // site itself is phase-agnostic).
+  it('raid wins past ε → true; the record carries the site vocabulary', () => {
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator([0, CAMP_RAID_EPSILON + 5]),
+    });
+    const run = new Run(SEED, new EventBus<GameEvents>());
+    expect(arm.pickCampRaid!(run, new RNG(1))).toBe(true);
+    const d = arm.driver.decisions[0]!;
+    expect(d.site).toBe('campRaid');
+    expect(d.labels).toEqual(['null', 'raid']);
+    expect(d.epsilon).toBe(CAMP_RAID_EPSILON);
+    expect(d.chosenIndex).toBe(1);
+  });
+
+  it('ties → NULL: a margin at ε stands down (the strict-> gate)', () => {
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: sequenceEvaluator([0, CAMP_RAID_EPSILON]),
+    });
+    expect(arm.pickCampRaid!(new Run(SEED, new EventBus<GameEvents>()), new RNG(1))).toBe(false);
+    expect(arm.driver.decisions[0]!.chosenIndex).toBe(0);
+  });
+
+  it('the raid apply sets the clone flag and NOTHING else (harness-side battle-plan state)', () => {
+    let capturedApply: CandidateApply | null = null;
+    const capture = (_live: Run, apply: CandidateApply | null, _spec: RunRolloutSpec): RunCandidateResult => {
+      if (apply !== null) capturedApply = apply;
+      return { score: 0, perSeed: [] };
+    };
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture });
+    arm.pickCampRaid!(new Run(SEED, new EventBus<GameEvents>()), new RNG(1));
+    expect(capturedApply).not.toBeNull();
+    const fakeClone = {} as Parameters<CandidateApply>[0];
+    capturedApply!(fakeClone);
+    expect(fakeClone.raidNextBattle).toBe(true);
+  });
+
+  it('the eligibility gate governs the spend: decide happens iff the REAL encounter layout can carry camps', () => {
+    // A genuinely parked turn-intro (the readEpsilonAA recipe): gates on,
+    // enter the root — currentEncounter is a real rolled encounter, and
+    // the site reads ITS layoutId (whatever this seed rolled; the property
+    // holds on either branch — the gate itself is unit-pinned in
+    // campRaid.test.ts).
+    const zero = (): RunCandidateResult => ({ score: 0, perSeed: [] });
+    const arm = makeArbitratedStrategy(SEED, { evaluate: zero });
+    // Park at a REAL turn-intro (currentEncounter lives only turn-intro →
+    // battle): the readEpsilonAA parkAtTurnIntro recipe generalized
+    // self-healing — map state after N battles, then scan the frontier for
+    // a node that parks at the gate (the root can open the §74 boon; a
+    // frontier pick can be an event/port node).
+    let parked: Run | null = null;
+    outer: for (let battles = 1; battles <= 4 && parked === null; battles++) {
+      const s = cloneRunForRollout(new Run(SEED, new EventBus<GameEvents>()), 700 + battles);
+      walkToHorizon(s, { horizonBattles: battles, policySeed: 424242 + battles, maxHops: 80 });
+      const m = cloneRunForRollout(s.run, 800 + battles);
+      walkToHorizon(m, {
+        horizonBattles: 9999,
+        policySeed: 900 + battles,
+        maxHops: 80,
+        stopAtPhase: 'map',
+      });
+      if (m.run.phase !== 'map') continue;
+      for (const e of m.run.nodeMap.edges) {
+        if (e.from !== m.run.currentNodeId) continue;
+        const probe = cloneRunForRollout(m.run, 1000 + e.to);
+        probe.run.pauseAtTurnGates = true;
+        probe.run.dispatch({ kind: 'enterNode', nodeId: e.to });
+        if (probe.run.phase === 'turn-intro') {
+          parked = probe.run;
+          break outer;
+        }
+      }
+    }
+    expect(parked).not.toBeNull();
+    const run = parked!;
+    expect(run.encounterMap).not.toBeNull(); // rolled at encounter start (K3.5)
+    const eligible = campRaidEligible(run.encounterMap?.layoutId ?? undefined);
+    expect(arm.pickCampRaid!(run, new RNG(1))).toBe(false); // zero margins never win
+    expect(arm.driver.decisions).toHaveLength(eligible ? 1 : 0);
+  });
 });
 
 describe('85b — walkPolicyOverlay (the all-rollouts walk-policy overlay, supersedes 84f1)', () => {

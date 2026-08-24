@@ -30,6 +30,7 @@ import { Run } from '../../src/run/Run';
 import { PRE_ROOT_NODE_ID } from '../../src/run/NodeMap';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { spawnEncounter } from '../../src/sim/battleSetup';
+import { orderCampRaid } from './campRaid';
 import type { FuzzStrategy } from './Strategy';
 import type { UseContext } from '../../src/config/packets';
 import { decideObjectiveCommand } from './objectiveStrategy';
@@ -448,6 +449,10 @@ export function runOne(
   // Fresh per battle: the standing/tracker bookkeeping and the CRN stream
   // (forked off the worldSeed) never leak across battles.
   let currentSearcher: RolloutSearchDriver | null = null;
+  // 85d — set at turn-intro when the strategy's raid plan says so; consumed
+  // (and cleared) by the next battle:started's spawn — harness-side
+  // battle-plan state, never Run state (no snapshot bump).
+  let raidNextBattle = false;
 
   bus.on('battle:started', ({ worldSeed }) => {
     const encounter = run.currentEncounter!;
@@ -487,6 +492,13 @@ export function runOne(
     // need `currentWorld` set first (the unit team lookup happens
     // synchronously inside the emit), so this ordering matters.
     spawnEncounter(currentWorld, encounter);
+    // 85d — the campRaid order, placed right after spawn (primes are
+    // alive, the drip hasn't ticked): the player-side §75g pull mirror,
+    // shared with the walker via orderCampRaid. One battle only.
+    if (raidNextBattle) {
+      raidNextBattle = false;
+      orderCampRaid(currentWorld);
+    }
   });
 
   bus.on('unit:spawned', ({ unitId }) => {
@@ -612,7 +624,12 @@ export function runOne(
   // 70d — same contract for a strategy-driven grant walk (`redrawCards`/
   // `empowerUnit` are turn-intro-only commands).
   const grantActive = strategy.pickGrantAction !== undefined;
-  if (redrawActive || empowerActive || fireActive || grantActive) run.pauseAtTurnGates = true;
+  // 85d — the campRaid plan is asked AT turn-intro, so defining it needs
+  // the gate too (same contract as fires/grants).
+  const raidActive = strategy.pickCampRaid !== undefined;
+  if (redrawActive || empowerActive || fireActive || grantActive || raidActive) {
+    run.pauseAtTurnGates = true;
+  }
 
   // 59a — the ask-until-null packet-fire loop at one legal fire site. A
   // rejected `usePacket` consumes nothing (the 49e validate-before-mutate
@@ -718,6 +735,10 @@ export function runOne(
         break;
       }
       case 'turn-intro': {
+        // 85d — the campRaid battle plan, decided BEFORE the fire loop
+        // (the plan concerns the upcoming battle; fires concern the
+        // hand/cache — independent surfaces, plan first).
+        if (strategy.pickCampRaid?.(run, strategyRng)) raidNextBattle = true;
         // 59a — the preTurn fire site, BEFORE the grant walk: a fired
         // grantRedraws packet inserts its grant at the cursor (49e), so the
         // walk below can actually spend it — firing after the walk would

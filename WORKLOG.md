@@ -719,3 +719,12 @@ made loud — zero callers today). F5: decisions.csv `lambda` column
 shared-null pseudo-replication note in the per-item header. Sidecar
 generations: 83f-era / 84c-era / 85-era all parse (pinned).
 2692 + 440 green.
+
+### The §84 close (2026-08-24, user-signed)
+
+The 84f3 read signed as-is; §84 CLOSED (a-f), the ROADMAP section
+demoted to its stub, the v1 table is §85's input. §85 kicks off in a
+FRESH session (this one carried 84f2 → the box ritual → §85-pre →
+84f3 end-to-end); the kickoff's first act = the code-reality audit +
+the fold-shape design against the pre-registered 85-pre constraints
+(the cursor carries the full list).

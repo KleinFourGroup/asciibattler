@@ -20,28 +20,18 @@ roster realism fourth (re-reads the X3 bands on the fold's arm); the
 rarity read last (it consumes §84's unit rows; box time only for the
 thin rows); ONE sheet amendment at the close (pre-registered at 83f).
 
-## Phase 84 — The long-horizon shadow instrument
+## Phase 84 — The long-horizon shadow instrument ✅ CLOSED 2026-08-24 (user-signed)
 
-Generalize the §71c shadow (`shadowTier`) to a run-end horizon on the
-ACQUISITION sites (`rewardDaemon` · `portBuy` · `eventChoice` · a new
-shadow-only `recruit` site), deterministically sampled 1-in-m, on its
-own instrument arm; the per-item aggregate gains a per-remaining-hop
-margin; the first instrument batch on the box; the `--grant` bridge
-(~3 items) validates the cheap walker's magnitudes; the table lands
-as a committed artifact with provenance. Live decisions byte-identical
-shadow on/off (pinned). **Risk:** medium (new site + a long walk on
-the driver's CRN contract). **Decision points:** `m` and the shadow K
-(cost-tuned); whether value reads ~linear in hops remaining; the
-bridge verdict. **Exit:** the table committed with every acquisition
-item that clears n=80 from natural play, the bridge read logged, the
-thin-row list named for §88.
-
-**Cut (shape-locked, user-signed 2026-08-22 — WORKLOG §84 kickoff):**
-separate long-horizon log records with a horizon marker (live records
-byte-identical) · hops remaining = shortest remaining DAG path (moot on
-the shipped linear map) · shadow K = the primary's 2, `m` from the 84d
-probe. Predictions: World v35 / Run v44 hold (the getter is derived);
-decisions.csv append-last; fuzz:smoke additive.
+**Outcome, one breath:** the run-end shadow on the acquisition sites
+landed (84a–c), the first cohort ran (84d) and caught three findings
+(packets inert in every rollout · hops-linearity NO · the bridge
+underpowered), 84f armed the shadow walk + built the inert-class
+tripwire + reran arm 1 — the tripwire reads ALL LIVE, the shadow-only
+contract held byte-identical at batch scale, and the **v1 table**
+(`tests/fuzz/board/prior-table.json`: 17 units signable · 9 daemons +
+9 packets directional = the §88 list · miner structurally 0 at λ=0)
+is §85's input. Snapshots held (World v35 / Run v44). Detail: WORKLOG
+§84* · BALANCE 2026-08-23/24 · round-6-spec.
 
 - [x] **84a** ✅ 2026-08-22 — `shadowHorizon: { horizonBattles, sample }`
       on the driver (no `k` — a different shadow K would draw extra
@@ -72,14 +62,12 @@ decisions.csv append-last; fuzz:smoke additive.
       9 daemons directional = the §88 list · 9 packets structural-zero,
       provenance-noted); bridge verdict ✅ DECIDED: CONSISTENT, NOT
       VALIDATING. BALANCE 2026-08-23.
-- [ ] **84f** — inserted 2026-08-23 (the 84d findings; user-signed):
-      84f1 ✅ 2026-08-23 the shadow long-walk takes the live vector's
-      scored strategy (fire + port groups), SHADOW-ONLY, live records
-      byte-identical · 84f2 ✅ 2026-08-23 the inert-class tripwire
-      (site × horizon × class; the at-0 trigger RE-SIGNED at the 2/499
-      coupling read — WORKLOG §84f) · 84f3 the arm-1 rerun on the
-      box → the rebuilt table + the hops re-read = the phase close. Cut:
-      WORKLOG §84f.
+- [x] **84f** ✅ 2026-08-24 — inserted 2026-08-23 (the 84d findings;
+      user-signed): 84f1 ✅ the armed shadow long-walk (SHADOW-ONLY,
+      live byte-identical) · 84f2 ✅ the inert-class tripwire (at-0
+      trigger RE-SIGNED at the 2/499 read) · 84f3 ✅ the overnight
+      arm-1 rerun → all classes LIVE, the v1 table, hops-linearity NO
+      stands. WORKLOG §84f/§84f2/§84f3 · BALANCE 2026-08-24.
 
 ## Phase 85-pre — The rollout-stack adversarial review
 

@@ -834,3 +834,29 @@ All three calls signed as recommended:
 The 85a-85h cut written into ROADMAP §85. Snapshot prediction
 re-affirmed at the lock: World v35 / Run v44 hold (all
 harness/bot-side, campRaid included — audit finding 7).
+
+### 85a — the builder weight fix + the table rebuild (2026-08-24)
+
+`ItemDecisionStats` gains `nPerHop` (the hops>0 subset size the
+per-hop mean was computed over) and `buildPriorTable` weights every
+per-hop merge by it — both the cross-bucket accumulation and the
+per-site contribution merge (`PriorSiteContribution` gains `nPerHop`
+too); full-row-n weighting skewed toward buckets with thin hop
+coverage. New discriminating pin: a two-bucket fixture where hop
+coverage differs (10/10 vs 2/10) — subset-weighted 0.533 vs the old
+0.4. Headers re-pointed: the fold input is `meanDelta` UNSCALED,
+`valuePerHop` demoted to the hops-shape reader column (priorTable.ts
+header + PriorRow docs + the render legend).
+
+Table rebuilt from the 84f3 sidecar (56,141 rows / 9,748
+long-horizon / 2,621 decisions — same counts as v1). **meanΔ
+byte-stable on every row** (the fold input untouched, by
+construction); value/hop moved where hop coverage was uneven —
+cornucopia −2.43→−2.69, minerva 5.82→5.58, patricians-seal
+2.21→2.76. Independent recompute of the cornucopia merge from the
+JSON's own site rows: (−4.5049×26 + −0.8034×25)/51 = −2.6905 exact;
+the rewardDaemon bucket reads nPerHop 25 vs n 33 — the real data
+exercised the bug path (8 hop-less instances previously counted in
+the weights). Signable/directional membership unchanged (17 + 18).
+Provenance note carries the 84f3 reads forward + names the
+measurement HEAD 53283d8 (the build-time HEAD is post-kickoff).

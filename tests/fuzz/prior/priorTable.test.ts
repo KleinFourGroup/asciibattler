@@ -80,7 +80,7 @@ describe('buildPriorTable', () => {
     expect(mars.meanDelta).toBeCloseTo(4, 10);
     expect(mars.valuePerHop).toBeCloseTo(0.4, 10);
     expect(mars.signable).toBe(false);
-    expect(mars.sites['rewardDaemon']).toEqual({ n: 1, valuePerHop: 0.4, meanDelta: 4 });
+    expect(mars.sites['rewardDaemon']).toEqual({ n: 1, nPerHop: 1, valuePerHop: 0.4, meanDelta: 4 });
     const archer = t.items['unit:archer']!;
     expect(archer.meanDelta).toBeCloseTo(2, 10);
     expect(archer.valuePerHop).toBeCloseTo(0.1, 10);
@@ -120,6 +120,30 @@ describe('buildPriorTable', () => {
     expect(mage.n).toBe(2);
     expect(mage.meanDelta).toBeCloseTo(3, 10);
     expect(mage.valuePerHop).toBeCloseTo(0.25, 10); // 2/8 over the one hop-bearing instance
+    expect(mage.sites['recruit']!.nPerHop).toBe(1);
+  });
+
+  it('85a (finding 9) — cross-bucket value/hop merges weight by the hops-bearing subset, not n', () => {
+    const rows: DecisionRow[] = [];
+    // portBuy bucket: 10 instances, ALL hop-bearing — 0.6/hop each.
+    for (let i = 0; i < 10; i++) {
+      rows.push(...decision(i, 'portBuy', 'run', 10, 0, [['buy unit:archer:L6 @3', 6]]));
+    }
+    // recruit bucket: 10 instances, only 2 hop-bearing — 0.2/hop each.
+    for (let i = 100; i < 102; i++) {
+      rows.push(...decision(i, 'recruit', 'run', 10, 0, [['recruit unit:archer:L5', 2]]));
+    }
+    for (let i = 102; i < 110; i++) {
+      rows.push(...decision(i, 'recruit', 'run', null, 0, [['recruit unit:archer:L5', 2]]));
+    }
+    const archer = buildPriorTable(rows, PROV, 80).items['unit:archer']!;
+    expect(archer.n).toBe(20);
+    // Subset-weighted: (0.6×10 + 0.2×2) / 12 — the old full-n weighting
+    // would read (0.6×10 + 0.2×10) / 20 = 0.4.
+    expect(archer.valuePerHop).toBeCloseTo((0.6 * 10 + 0.2 * 2) / 12, 10);
+    expect(archer.sites['recruit']!).toEqual(
+      expect.objectContaining({ n: 10, nPerHop: 2, valuePerHop: expect.closeTo(0.2, 10) }),
+    );
   });
 
   it('renders signable rows first and the directional tail', () => {

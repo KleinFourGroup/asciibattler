@@ -123,9 +123,10 @@ count as held; shadow records stay λ_prior=0; campRaid v1 = {null,
 raid}. Ordering is fidelity-first so the cohort measures the walk we
 keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
 
-- [ ] 85a — the table-builder per-hop weight fix (finding 9) + the
+- [x] 85a — the table-builder per-hop weight fix (finding 9) + the
       fold design note; table rebuilt from the 84f3 sidecar with the
-      corrected builder.
+      corrected builder ✅ 2026-08-24 — meanΔ byte-stable, value/hop
+      moved (cornucopia −2.43→−2.69), WORKLOG §85a.
 - [ ] 85b — the walk-fidelity batch: all-rollouts fire overlay + the
       walker's `rolloutSearch` config + the future-docks rule (only
       the decision dock excluded) + the 0x70a1/0x84c1 → keyed-stream

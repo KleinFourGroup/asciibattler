@@ -411,10 +411,16 @@ export interface ItemDecisionStats {
   /** The margin conditioned on winning — the realized value of the picks. */
   meanDeltaPicked: number;
   /** 84c — mean of (Δ / hopsRemaining) over the instances that carry a
-   *  positive hopsRemaining: the per-remaining-hop value the §85 prior
-   *  table is built from (pool HP per hop ahead). null when no instance
-   *  carries hops (a pre-84 sidecar, or every instance at the terminal). */
+   *  positive hopsRemaining: the per-remaining-hop value (pool HP per hop
+   *  ahead). null when no instance carries hops (a pre-84 sidecar, or
+   *  every instance at the terminal). */
   meanDeltaPerHop: number | null;
+  /** 85a — the SIZE of the hops>0 subset `meanDeltaPerHop` was computed
+   *  over (≤ n; 0 ⇔ meanDeltaPerHop null). Any downstream merge of
+   *  per-hop means must weight by THIS, never by n — weighting by n
+   *  skews toward buckets with thin hop coverage (WORKLOG §85-pre
+   *  finding 9, the buildPriorTable weight mismatch). */
+  nPerHop: number;
 }
 
 /** Pool candidate rows by (site, horizon, item) with per-decision null-arm
@@ -463,6 +469,7 @@ export function perItemDecisionStats(rows: readonly DecisionRow[]): ItemDecision
       meanDelta: mean(b.deltas),
       meanDeltaPicked: mean(b.pickedDeltas),
       meanDeltaPerHop: b.perHop.length === 0 ? null : mean(b.perHop),
+      nPerHop: b.perHop.length,
     }))
     .sort(
       (a, b) =>

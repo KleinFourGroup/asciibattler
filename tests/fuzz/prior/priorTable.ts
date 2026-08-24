@@ -1,11 +1,14 @@
 /**
  * 84e — the measured-terminal-prior TABLE (round-6-spec §"The measurement
  * design" / §"The fold"): per acquirable item, the paired LONG-HORIZON
- * margin of holding it, normalized per remaining hop (pool HP per hop
- * ahead), built from the §84 shadow instrument's decisions.csv rows and
- * committed with provenance. §85's `priorBonus` reads `valuePerHop` ×
- * hopsRemaining over the holdings delta; §88's rarity read consumes the
- * `unit:*` rows.
+ * margin of holding it, built from the §84 shadow instrument's
+ * decisions.csv rows and committed with provenance. §85's `priorBonus`
+ * reads `meanDelta` UNSCALED over the holdings delta (the 2026-08-24
+ * shape-lock, WORKLOG §85: the spec's linear × hopsRemaining is
+ * superseded — hops-linearity NO, twice-measured, and the linear shape
+ * breaches the death ordinal at h≈20); `valuePerHop` stays a READER
+ * column (the hops-shape diagnostic), never a fold input. §88's rarity
+ * read consumes the `unit:*` rows.
  *
  * What goes in: ONLY long-horizon rows (`horizon !== ''` — the within-
  * horizon margin is a different quantity, never pooled) from the
@@ -36,15 +39,20 @@ import {
 
 export interface PriorSiteContribution {
   readonly n: number;
+  /** 85a — the hops-bearing subset the site's valuePerHop was computed
+   *  over (≤ n); per-hop merges weight by this, never by n. */
+  readonly nPerHop: number;
   /** Signed holding value per remaining hop from this site alone. */
   readonly valuePerHop: number;
   readonly meanDelta: number;
 }
 
 export interface PriorRow {
-  /** Signed holding value, pool HP per remaining hop — the §85 input. */
+  /** Signed holding value, pool HP per remaining hop — a READER column
+   *  (the hops-shape diagnostic); the fold reads `meanDelta` (85a). */
   readonly valuePerHop: number;
-  /** The raw signed long-horizon margin (pool HP), for the reader. */
+  /** The raw signed long-horizon margin of HOLDING the item (pool HP) —
+   *  the §85 fold input (unscaled; the 2026-08-24 shape-lock). */
   readonly meanDelta: number;
   readonly n: number;
   readonly signable: boolean;
@@ -110,20 +118,26 @@ export function buildPriorTable(
     const valuePerHop = s.meanDeltaPerHop === null ? null : sign * s.meanDeltaPerHop;
     a.n += s.n;
     a.deltaSum += meanDelta * s.n;
+    // 85a (finding 9): per-hop means merge weighted by the hops-bearing
+    // subset they were computed over — weighting by the full row n skews
+    // toward buckets with thin hop coverage.
     if (valuePerHop !== null) {
-      a.perHopSum += valuePerHop * s.n;
-      a.perHopN += s.n;
+      a.perHopSum += valuePerHop * s.nPerHop;
+      a.perHopN += s.nPerHop;
     }
     // One site may carry the same key under two labels (portBuy unit levels)
     // — merge those too.
     const prev = a.sites[s.site];
     const siteN = (prev?.n ?? 0) + s.n;
+    const sitePerHopN = (prev?.nPerHop ?? 0) + (valuePerHop === null ? 0 : s.nPerHop);
     a.sites[s.site] = {
       n: siteN,
+      nPerHop: sitePerHopN,
       valuePerHop:
-        valuePerHop === null
+        valuePerHop === null || sitePerHopN === 0
           ? (prev?.valuePerHop ?? 0)
-          : ((prev?.valuePerHop ?? 0) * (prev?.n ?? 0) + valuePerHop * s.n) / siteN,
+          : ((prev?.valuePerHop ?? 0) * (prev?.nPerHop ?? 0) + valuePerHop * s.nPerHop) /
+            sitePerHopN,
       meanDelta: ((prev?.meanDelta ?? 0) * (prev?.n ?? 0) + meanDelta * s.n) / siteN,
     };
   }
@@ -151,7 +165,10 @@ export function renderPriorTable(table: PriorTable): string {
     `### Prior table — ${entries.length} items from ${table.decisions} long-horizon decisions ` +
       `(HEAD ${table.provenance.head}, floor n=${table.floor})`,
   );
-  lines.push('value/hop = signed holding value, pool HP per remaining hop (§85 reads it × hopsRemaining)');
+  lines.push(
+    'meanΔ = signed long-horizon holding margin, pool HP — the §85 fold input (unscaled); ' +
+      'value/hop = the hops-shape diagnostic (reader column)',
+  );
   lines.push('');
   const row = ([key, r]: [string, PriorRow]): string =>
     `${key.padEnd(28)} n=${String(r.n).padStart(5)}${r.signable ? ' ' : '·'}  value/hop=${r.valuePerHop.toFixed(3).padStart(8)}  meanΔ=${r.meanDelta.toFixed(2).padStart(7)}  sites=${Object.keys(r.sites).join('+')}`;

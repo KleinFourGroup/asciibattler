@@ -368,8 +368,10 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
     ).toThrow(/sample/);
   });
 
-  /** 84f1 — a spec-aware fake: records which strategy (and which of its
-   *  policies) each evaluation was handed, per horizon. */
+  /** 85b — a spec-aware fake: records which walk strategy and which
+   *  walkPolicies each evaluation was handed, per horizon (the compose
+   *  itself now lives in the EVALUATOR — the driver's job is passing the
+   *  merged spec through unchanged). */
   function strategyProbe() {
     const seen: string[] = [];
     const evaluate = (
@@ -380,62 +382,77 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
       const label = apply === null ? 'null' : (apply as unknown as { label: string }).label;
       const horizon = Number.isFinite(spec.horizonBattles) ? 'base' : 'run';
       const s = spec.strategy;
-      const tags = `${s?.pickPacketFire !== undefined ? '+fire' : ''}${s?.pickNextNode !== undefined ? '+node' : ''}`;
+      const p = spec.walkPolicies;
+      const tags = `${p?.pickPacketFire !== undefined ? '+fire' : ''}${p?.pickPortBuy !== undefined ? '+port' : ''}`;
       seen.push(`${label}@${horizon}:${s === undefined ? 'default' : s.name}${tags}`);
       return { score: 0, perSeed: [] };
     };
     return { evaluate, seen };
   }
 
-  it('84f1 — walkStrategy rides the LONG spec only, composed over the walker default', () => {
+  it('85b — config walkPolicies ride EVERY spec (live and long), untouched by the driver', () => {
     const { evaluate, seen } = strategyProbe();
     const driver = new RunArbitrationDriver(new RNG(1), {
       evaluate,
-      shadowHorizon: { horizonBattles: 'run', walkStrategy: { pickPacketFire: () => null } },
+      rollout: { horizonBattles: 1, walkPolicies: { pickPacketFire: () => null, pickPortBuy: () => null } },
+      shadowHorizon: { horizonBattles: 'run' },
     });
     driver.decide('portBuy', liveRun(7), [tagged('a')]);
-    // Live: the walker's own default (no strategy on the spec, so no fire).
-    // Long: the default walk strategy (it keeps its node policy) + the fire overlay.
+    // Both horizons carry the config overlay; the strategy slot stays the
+    // walker default (the evaluator composes them at walk time).
     expect(seen).toEqual([
-      'null@base:default',
-      'a@base:default',
-      'null@run:rollout-cheap+fire+node',
-      'a@run:rollout-cheap+fire+node',
+      'null@base:default+fire+port',
+      'a@base:default+fire+port',
+      'null@run:default+fire+port',
+      'a@run:default+fire+port',
     ]);
   });
 
-  it('84f1 — composes with a per-call site strategy rather than replacing it', () => {
+  it('85b — a per-call rollout override replaces walkPolicies (site gating) without touching the site strategy merge', () => {
     const { evaluate, seen } = strategyProbe();
     const driver = new RunArbitrationDriver(new RNG(1), {
       evaluate,
-      shadowHorizon: { horizonBattles: 'run', walkStrategy: { pickPacketFire: () => null } },
+      rollout: { horizonBattles: 1, walkPolicies: { pickPacketFire: () => null, pickPortBuy: () => null } },
+      shadowHorizon: { horizonBattles: 'run' },
     });
     const site = scoredStrategy('rollout-site', DEFAULT_SCORED_WEIGHTS);
-    expect(site.pickPacketFire).toBeUndefined(); // the default vector carries no fire group
-    driver.decide('nodeChoice', liveRun(7), [tagged('a')], { rollout: { strategy: site } });
+    // The gated-override shape the port/fire sites use: the per-call
+    // walkPolicies REPLACE the config overlay (suppression is expressed in
+    // the replacement), while a per-call site strategy rides beside it.
+    driver.decide('nodeChoice', liveRun(7), [tagged('a')], {
+      rollout: { strategy: site, walkPolicies: { pickPortBuy: () => null } },
+    });
     expect(seen).toEqual([
-      'null@base:rollout-site+node',
-      'a@base:rollout-site+node',
-      'null@run:rollout-site+fire+node',
-      'a@run:rollout-site+fire+node',
+      'null@base:rollout-site+port',
+      'a@base:rollout-site+port',
+      'null@run:rollout-site+port',
+      'a@run:rollout-site+port',
     ]);
   });
 
-  it('84f1 — live records byte-equal walkStrategy on/off (the long records differ only in spec)', () => {
+  it('85b — walkPolicies change specs only: the driver decides byte-identically on/off (stream untouched)', () => {
     const tables = { base: { null: 0, a: 5, b: 2 }, run: { null: 9, a: 0, b: 0 } };
     const run = (overlay: boolean) => {
       const driver = new RunArbitrationDriver(new RNG(42), {
         evaluate: horizonEvaluator(tables).evaluate,
-        shadowHorizon: {
-          horizonBattles: 'run',
-          ...(overlay ? { walkStrategy: { pickPacketFire: () => null } } : {}),
-        },
+        ...(overlay
+          ? { rollout: { horizonBattles: 1, walkPolicies: { pickPacketFire: () => null } } }
+          : { rollout: { horizonBattles: 1 } }),
+        shadowHorizon: { horizonBattles: 'run' },
       });
       const labels = [
         driver.decide('s1', liveRun(7), [tagged('a')])?.label ?? null,
         driver.decide('s2', liveRun(7), [tagged('a'), tagged('b')])?.label ?? null,
       ];
-      return { labels, live: driver.decisions.filter((d) => d.horizon === undefined) };
+      return {
+        labels,
+        decisions: driver.decisions.map((d) => ({
+          site: d.site,
+          chosenIndex: d.chosenIndex,
+          marginVsNull: d.marginVsNull,
+          horizon: d.horizon,
+        })),
+      };
     };
     expect(run(true)).toEqual(run(false));
   });

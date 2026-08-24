@@ -53,6 +53,14 @@ export const RNG_STREAM_KEYS = [
   'campSetup', //  ()                       — camp selection + install (NO turn index — per-encounter identity is the 75j signed verdict)
   'enemyPull', //  (worldSeed)              — the per-turn camp enemy-pull roll (75j2)
   'combat', //     ()                       — the World combat stream (crits/dodges)
+  // --- the bot/harness arbitration side (85b; root = the RUN seed; these
+  //     are harness-side streams, never serialized — migrated from the
+  //     pre-85b additive offsets runSeed+0x70a1 / runSeed+0x84c1, the
+  //     construction RNG.ts calls a review offense (WORKLOG §85-pre
+  //     finding 8). The migration is a deliberate arb-DECISION stream
+  //     break, re-pinned at 85b; game streams above are untouched. ---
+  'arbDriver', //      ()  — the run-layer arbitration driver's CRN pair stream
+  'arbShadowSites', // ()  — the shadow-only sites' pair stream (84c recruit)
   // --- dev/test ---
   'test', //       (any)                    — test-fixture streams; never shipped in src/
 ] as const;

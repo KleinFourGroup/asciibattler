@@ -63,7 +63,7 @@ import { spawnEncounter } from '../../../src/sim/battleSetup';
 import type { Run } from '../../../src/run/Run';
 import { PRE_ROOT_NODE_ID } from '../../../src/run/NodeMap';
 import { TrafficScriptDriver, TRAFFIC_SCRIPTS } from '../../../src/bot/TrafficScriptDriver';
-import { RolloutSearchDriver } from '../../../src/bot/RolloutSearchDriver';
+import { RolloutSearchDriver, type RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import type { RunRolloutClone } from '../../../src/bot/runRollout';
 import type { UseContext } from '../../../src/config/packets';
 import type { FuzzStrategy } from '../Strategy';
@@ -100,6 +100,11 @@ export interface WalkOptions {
   /** Intermediate run decisions (node picks en route, port buys, recruit,
    *  packet fires). Default: the scored strategy on the default weights. */
   readonly strategy?: FuzzStrategy;
+  /** 85b (WORKLOG §85-pre finding 6) — the searcher-tier battle config
+   *  (audition scripts, K, cadence), so a 'searcher' rollout plays
+   *  battles the way the live arm does. Absent = `{}`, the pre-85b
+   *  driver defaults. Inert on 'bare'/'traffic' tiers. */
+  readonly rolloutSearch?: RolloutSearchConfig;
   readonly redraw?: RedrawPolicy;
   readonly empower?: EmpowerPolicy;
   readonly maxTicksPerBattle?: number;
@@ -129,14 +134,17 @@ export interface WalkResult {
 }
 
 /** The walker's default intermediate-decision strategy: the cheap scored
- *  vector — NO port buys (the port site's coherence rule) and NO packet
- *  fires (the default weights carry no fire group — the 84d finding, see
- *  `RunShadowHorizonConfig.walkStrategy`). Exported so the driver's 84f1
- *  compose shares ONE definition with the walk. NB (85-pre F4): walks
- *  route and recruit on the DEFAULT weights even when the live base runs
- *  a searched `--strategy` vector — deliberate-by-class (cheap policies;
- *  bias shared across candidates cancels under CRN), named here so the
- *  divergence is enumerated, not discovered. */
+ *  vector — bare of port/fire methods BY ITSELF. Since 85b the
+ *  arbitrated arm composes its walk-policy overlay (the base's fire
+ *  policy + the 50g dock policy) over this in the EVALUATOR
+ *  (`RunRolloutSpec.walkPolicies` — coherence is enforced per site via
+ *  gated overrides, not by leaving the policies off); a direct
+ *  walkToHorizon caller without walkPolicies still gets the bare walk.
+ *  NB (85-pre F4): walks route and recruit on the DEFAULT weights even
+ *  when the live base runs a searched `--strategy` vector —
+ *  deliberate-by-class (cheap policies; bias shared across candidates
+ *  cancels under CRN), named here so the divergence is enumerated, not
+ *  discovered. */
 export function defaultWalkStrategy(): FuzzStrategy {
   return scoredStrategy('rollout-cheap', DEFAULT_SCORED_WEIGHTS);
 }
@@ -177,7 +185,9 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
       tier === 'traffic'
         ? new TrafficScriptDriver('player', TRAFFIC_SCRIPTS)
         : tier === 'searcher'
-          ? new RolloutSearchDriver('player', new RNG(worldSeed).fork(), {})
+          ? // 85b (finding 6) — the live searcher config rides in; the CRN
+            // stream forks off the worldSeed exactly as runOne wires it.
+            new RolloutSearchDriver('player', new RNG(worldSeed).fork(), options.rolloutSearch ?? {})
           : null;
     // spawnEncounter emits unit:spawned synchronously; currentWorld is
     // already set above (the runOne ordering note).

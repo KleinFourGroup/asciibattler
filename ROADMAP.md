@@ -127,11 +127,12 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       fold design note; table rebuilt from the 84f3 sidecar with the
       corrected builder ✅ 2026-08-24 — meanΔ byte-stable, value/hop
       moved (cornucopia −2.43→−2.69), WORKLOG §85a.
-- [ ] 85b — the walk-fidelity batch: all-rollouts fire overlay + the
+- [x] 85b — the walk-fidelity batch: all-rollouts fire overlay + the
       walker's `rolloutSearch` config + the future-docks rule (only
       the decision dock excluded) + the 0x70a1/0x84c1 → keyed-stream
-      migration. ONE re-baseline commit; seed-sensitive re-pins
-      predicted (stream break, gotcha #125 rules).
+      migration ✅ 2026-08-24 — re-pin count ZERO (the §77 keyed
+      architecture absorbed the break); the 84f2 tripwire probe reads
+      portBuy/live/packet 0.4%→56% live — WORKLOG §85b.
 - [ ] 85c — the fold mechanics: holdings in `readRunMetrics` +
       walker fired-packet tally + `priorBonus` in scoreTerminal /
       breakdown / decisions.csv (`priorBonus`+`priorLambda`,

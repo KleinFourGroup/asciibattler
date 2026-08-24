@@ -41,10 +41,11 @@
 import { HEALTH } from '../../../src/config/health';
 import type { Run } from '../../../src/run/Run';
 import { cloneRunForRollout, type RunRolloutClone } from '../../../src/bot/runRollout';
-import { walkToHorizon, type WalkOptions, type WalkResult, type InnerTier } from './walker';
+import { defaultWalkStrategy, walkToHorizon, type WalkOptions, type WalkResult, type InnerTier } from './walker';
 import type { FuzzStrategy } from '../Strategy';
 import type { RedrawPolicy } from '../redrawPolicy';
 import type { EmpowerPolicy } from '../empowerPolicy';
+import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 
 /** Dominant over any achievable pool swing (the pool is bounded by
  *  playerHealthMax) — derived from config, the WIN_BONUS pattern. A swept
@@ -133,6 +134,17 @@ export interface RunRolloutSpec {
   readonly bitsLambda?: number;
   readonly innerTier?: InnerTier;
   readonly strategy?: FuzzStrategy;
+  /** 85b — the all-rollouts walk-policy overlay (fires + the dock
+   *  policy), composed OVER `strategy` (or the walker default) here in
+   *  the evaluator — the ONE compose point, so a site's own rollout
+   *  strategy (the node site's nominee pin, the event site's) keeps its
+   *  methods and still gains the overlay. Sites suppress a policy for a
+   *  coherence window by passing a gated override per call (the
+   *  decision-dock / own-gate exclusions in arbitratedStrategy.ts). */
+  readonly walkPolicies?: Partial<FuzzStrategy>;
+  /** 85b (finding 6) — the live searcher config for 'searcher'-tier
+   *  walks; absent = the driver's bare `{}` default (pre-85b behavior). */
+  readonly rolloutSearch?: RolloutSearchConfig;
   readonly redraw?: RedrawPolicy;
   readonly empower?: EmpowerPolicy;
   readonly maxTicksPerBattle?: number;
@@ -167,6 +179,12 @@ export function evaluateRunCandidate(
   }
   const before = readRunMetrics(live);
   const bitsLambda = spec.bitsLambda ?? 0;
+  // 85b — the one compose point: the overlay's policies win over the walk
+  // strategy's own (a site's strategy override keeps its other methods).
+  const strategy =
+    spec.walkPolicies !== undefined
+      ? { ...(spec.strategy ?? defaultWalkStrategy()), ...spec.walkPolicies }
+      : spec.strategy;
   const perSeed: RunScoreBreakdown[] = [];
   for (const pair of spec.pairs) {
     const clone = cloneRunForRollout(live, pair.cloneSeed);
@@ -178,7 +196,8 @@ export function evaluateRunCandidate(
       horizonBattles: spec.horizonBattles,
       policySeed: pair.policySeed,
       ...(spec.innerTier !== undefined ? { innerTier: spec.innerTier } : {}),
-      ...(spec.strategy !== undefined ? { strategy: spec.strategy } : {}),
+      ...(strategy !== undefined ? { strategy } : {}),
+      ...(spec.rolloutSearch !== undefined ? { rolloutSearch: spec.rolloutSearch } : {}),
       ...(spec.redraw !== undefined ? { redraw: spec.redraw } : {}),
       ...(spec.empower !== undefined ? { empower: spec.empower } : {}),
       ...(spec.maxTicksPerBattle !== undefined

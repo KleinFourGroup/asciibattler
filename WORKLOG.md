@@ -860,3 +860,81 @@ exercised the bug path (8 hop-less instances previously counted in
 the weights). Signable/directional membership unchanged (17 + 18).
 Provenance note carries the 84f3 reads forward + names the
 measurement HEAD 53283d8 (the build-time HEAD is post-kickoff).
+
+### 85b — the walk-fidelity batch + the keyed-stream migration
+(2026-08-24)
+
+The four pre-registered items in one re-baseline commit:
+
+1. **The all-rollouts walk-policy overlay** — 84f1's shadow-only
+   `shadowHorizon.walkStrategy` RETIRED, replaced by
+   `RunRolloutSpec.walkPolicies`: `walkPolicyOverlay(base)` (the
+   base's `pickPacketFire` when it carries one + the new
+   `walkPortBuy` dock policy) rides the arm's driver config and the
+   EVALUATOR owns the one compose point (site strategies keep their
+   pick methods and gain the overlay on top). Coherence moved from
+   "leave the policies off" to per-site GATED overrides:
+   - the port site suppresses dock buys at the DECISION DOCK only
+     (keyed on sector+node; a forward-DAG walk never revisits) and
+     shops every later dock — the future-docks rule (finding 13):
+     bits now carry option value in walks, and the long-horizon
+     shadow inherits the same gating through the per-call spec;
+   - the fire site suppresses fires of the decision's OWN context at
+     the decision's node (same-gate firing would zero every margin
+     and kill the live fire channel); a later preTurn gate inside an
+     outOfBattle decision's horizon can fire what the ask banked —
+     the margin now reads fire-now vs fire-LATER, not fire-now vs
+     never (the 84d packets-inert mechanism, closed at the live
+     horizon);
+   - grant/reward/node/event/recruit rollouts take the overlay whole
+     (a node candidate entering a port node now realizes shopping
+     value; the grant site's turn-intro fires ride symmetrically in
+     both branches under CRN — named, accepted).
+   `walkPortBuy` = the 50g buy-all-affordable mirror (lane order,
+   affordability, the 49c cache-room lock — proposals always land,
+   the loop never wedges). A PROXY for the arm's own rollout-judged
+   port behavior (walks can't recurse); imperfect but symmetric —
+   what it measures is bits' option value at future docks.
+2. **The walker's searcher config (finding 6)** — `WalkOptions` +
+   `RunRolloutSpec` gain `rolloutSearch`; walker passes it where it
+   passed `{}`; run.ts threads the live arm's resolved config
+   (normalized like the harness; `kFlipTelemetry` stripped — a
+   rollout needs the play policy, not the instrument). Inert on the
+   default traffic tier.
+3. **The seed-offset → keyed-stream migration (finding 8)** —
+   `runSeed + 0x70a1`/`+ 0x84c1` replaced by
+   `deriveRng(runSeed, 'arbDriver')` / `'arbShadowSites'` (two new
+   PERMANENT registry keys, gotcha #125 rules). A deliberate
+   arb-DECISION stream break; every game stream untouched (keyed
+   additions never move existing streams).
+4. **The F2 launch warning generalized** — fires now ride every
+   rollout, so a fire-group-less base under bare `--arbitrate` warns
+   at launch (not just under `--shadow-horizon`).
+
+**Re-pin count: ZERO.** 2692 main + 442 fuzz green at the first
+post-migration sweep — the §77 keyed-stream architecture + the 77d3
+self-healing fixture hardening (dockSnapshot scans for its own
+context instead of pinning literals) absorbed the stream break
+exactly as designed. Driver tests re-authored 84f1→85b (walkPolicies
+on BOTH horizons; per-call replacement = the site-gating shape; the
+stream-untouched pin); the overlay suite pins the dock policy's 50g
+mirror + the finding-5 edge (fire-less base composes no fire).
+
+**Non-vacuous proof** (the portPurchases/packetsFired-twin norm): a
+2-seed live arb probe on the regen vector (`--arbitrate
+--strategy=59-regen-vector --redraw=level:2 --empower=level:hi`, no
+searcher), read via the standing 84f2 tripwire:
+- `portBuy/live/packet` **5/9 live (56%)** — pre-85b this class read
+  2/499 (0.4%) structurally: a bought packet now fires inside the
+  horizon-1 walk and moves rollout scores. One packet buy WON a live
+  decision (`packet:patch`, Δ +6.00) — the first rollout-judged
+  packet purchase in the project's history.
+- `packetFire:preTurn/packet` 12/33 (36%) and `outOfBattle` 2/19
+  (11%) — fire margins now read fire-now vs fire-later, non-zero.
+- `portBuy/unit` 10/10, `portBuy/daemon` 2/4, node/event/grant
+  classes live at prior rates.
+- The two ⚠ INERT warns are thin-sample noise, not the structural
+  signature: `grant:redraw` n=4 and `rewardDaemon` n=2 (janus/moneta
+  at Δ 0.00 — moneta IS ~0-value per the v1 table).
+The probe rode the stdout tripwire exactly as designed — the
+instrument catching its own fix landing.

@@ -55,7 +55,7 @@ import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
 import type { RunDecisionRecord } from './rollout/driver';
 import type { RunScoreBreakdown } from './rollout/evaluator';
 import { defaultWalkStrategy } from './rollout/walker';
-import { shadowWalkStrategyFor } from './rollout/arbitratedStrategy';
+import { walkPolicyOverlay } from './rollout/arbitratedStrategy';
 import { scoredStrategy } from './strategies/scored';
 import { DEFAULT_SCORED_WEIGHTS } from './strategies/scoredWeights';
 
@@ -712,17 +712,20 @@ describe('fuzz reporters', () => {
 
   // ── 85-pre F2 — the walk-coherence pins ────────────────────────────────────
 
-  it('85-pre F2 — the default walk strategy defines no optional site method (the coherence rule, structural)', () => {
+  it('85-pre F2 / 85b — the default walk strategy stays bare; the overlay is where policies ride', () => {
     const walk = defaultWalkStrategy();
-    expect(walk.pickPortBuy).toBeUndefined(); // the port coherence rule (70a)
-    expect(walk.pickPacketFire).toBeUndefined(); // §85-amendment deferral (84d)
+    expect(walk.pickPortBuy).toBeUndefined(); // bare by itself — the overlay composes per spec (85b)
+    expect(walk.pickPacketFire).toBeUndefined();
     expect(walk.pickGrantAction).toBeUndefined();
     expect(walk.pickReward).toBeUndefined();
     expect(walk.pickEventChoice).toBeUndefined();
-    // The 84f1 overlay composes the BASE's fire policy — a fire-group-less
-    // base composes NOTHING (WORKLOG §85-pre finding 5). Pinned so the
-    // no-op edge stays named; the CLI warns at launch on this shape.
-    expect(shadowWalkStrategyFor(scoredStrategy('x', DEFAULT_SCORED_WEIGHTS))).toBeUndefined();
+    // 85b — the overlay composes the BASE's fire policy into every rollout;
+    // a fire-group-less base composes NO fire policy (WORKLOG §85-pre
+    // finding 5 — pinned so the edge stays named; the CLI warns at launch
+    // on this shape). The dock policy is base-independent: always present.
+    const overlay = walkPolicyOverlay(scoredStrategy('x', DEFAULT_SCORED_WEIGHTS));
+    expect(overlay.pickPacketFire).toBeUndefined();
+    expect(overlay.pickPortBuy).toBeDefined();
   });
 
   // ── 71c — the tier-flip instrument ─────────────────────────────────────────

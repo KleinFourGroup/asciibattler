@@ -13,6 +13,7 @@ import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import { makeArbitratedStrategy, type ArbitratedRunStrategy } from '../rollout/arbitratedStrategy';
 import type { InnerTier } from '../rollout/walker';
+import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
@@ -259,6 +260,19 @@ export function runRunCli(args: RunModeArgs): void {
   if (rolloutSearch !== undefined) {
     harnessOptions = { ...harnessOptions, rolloutSearch };
   }
+  // 85b (WORKLOG §85-pre finding 6) — the same searcher config for the
+  // arb arm's 'searcher'-tier rollouts, normalized the way the harness
+  // normalizes it (true → {}, a script list → {scripts});
+  // `kFlipTelemetry` deliberately stripped — a rollout needs the play
+  // policy, not the instrument.
+  const arbRolloutSearch: RolloutSearchConfig | undefined =
+    rolloutSearch === undefined
+      ? undefined
+      : rolloutSearch === true
+        ? {}
+        : Array.isArray(rolloutSearch)
+          ? { scripts: rolloutSearch }
+          : (({ kFlipTelemetry: _drop, ...keep }) => keep)(rolloutSearch as RolloutSearchConfig);
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);
@@ -320,6 +334,8 @@ export function runRunCli(args: RunModeArgs): void {
             : {}),
           // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
           ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
+          // 85b (finding 6) — searcher-tier rollouts play like the live arm.
+          ...(arbRolloutSearch !== undefined ? { rolloutSearch: arbRolloutSearch } : {}),
           // 84c — the long-horizon shadow instrument (validated in args.ts:
           // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
           ...(args.shadowHorizon !== undefined
@@ -337,16 +353,18 @@ export function runRunCli(args: RunModeArgs): void {
     args.shadowHorizon !== undefined
       ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
       : '';
-  // 85-pre F2 — the launch-time tell for the 84f1 no-op edge (WORKLOG
-  // §85-pre finding 5): the shadow long-walk composes the BASE's fire
-  // policy; a fire-group-less base (the default vector) composes nothing,
-  // so every walked branch banks packets forever while the live arm fires
-  // them. The 84f2 tripwire flags it post-hoc; this warns at launch.
-  if (args.arbitrate && args.shadowHorizon !== undefined) {
+  // 85-pre F2, generalized at 85b: the walk-policy overlay composes the
+  // BASE's fire policy into EVERY rollout now (not just shadow long
+  // walks) — a fire-group-less base (the default vector) composes no
+  // fire policy, so every walked branch banks packets forever while the
+  // live arm fires them (WORKLOG §85-pre finding 5). Dock shopping is
+  // base-independent and stays armed either way. The 84f2 tripwire flags
+  // it post-hoc; this warns at launch.
+  if (args.arbitrate) {
     for (const s of strategies) {
       if (s.pickPacketFire === undefined) {
         process.stderr.write(
-          `⚠ --shadow-horizon with a fire-group-less base ('${s.name}'): the 84f1 walk overlay is a NO-OP — shadow walks will never fire packets (expect the 84f2 tripwire to WARN; use a --strategy vector with a fire group for packet rows)\n`,
+          `⚠ --arbitrate with a fire-group-less base ('${s.name}'): the 85b walk overlay carries no fire policy — rollout walks will never fire packets (expect the 84f2 tripwire to WARN on packet classes; use a --strategy vector with a fire group)\n`,
         );
       }
     }

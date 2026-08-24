@@ -29,7 +29,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { EventBus } from '../../../src/core/EventBus';
 import type { GameEvents } from '../../../src/core/events';
 import { Run } from '../../../src/run/Run';
-import type { RunSnapshot } from '../../../src/run/Run';
+import type { PortStock, RunSnapshot } from '../../../src/run/Run';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
 import { HEALTH } from '../../../src/config/health';
@@ -55,7 +55,8 @@ import {
   NODE_CHOICE_EPSILON,
   EVENT_CHOICE_EPSILON,
   DP_TAIL_SCALE,
-  shadowWalkStrategyFor,
+  walkPolicyOverlay,
+  walkPortBuy,
 } from './arbitratedStrategy';
 
 const SEED = 20260730;
@@ -936,11 +937,13 @@ describe('the pickEventChoice chokepoint (74g) — harness contracts', () => {
   }, 240_000);
 });
 
-describe('84f1 — shadowWalkStrategyFor (the shadow long-walk policy overlay)', () => {
-  it('overlays ONLY the base’s packet-fire policy (bound to the base); none without a fire group', () => {
+describe('85b — walkPolicyOverlay (the all-rollouts walk-policy overlay, supersedes 84f1)', () => {
+  it('always carries the dock policy; the fire policy only when the base has one (bound to the base)', () => {
     const noFire = scoredStrategy('no-fire', DEFAULT_SCORED_WEIGHTS);
     expect(noFire.pickPacketFire).toBeUndefined(); // the default vector carries no fire group
-    expect(shadowWalkStrategyFor(noFire)).toBeUndefined();
+    const bare = walkPolicyOverlay(noFire);
+    expect(Object.keys(bare)).toEqual(['pickPortBuy']); // dock policy is base-independent
+    expect(bare.pickPacketFire).toBeUndefined(); // the finding-5 edge stays named
 
     const seenThis: string[] = [];
     const withFire: FuzzStrategy = {
@@ -951,12 +954,60 @@ describe('84f1 — shadowWalkStrategyFor (the shadow long-walk policy overlay)',
         return null;
       },
     };
-    const overlay = shadowWalkStrategyFor(withFire);
-    expect(overlay).toBeDefined();
-    expect(Object.keys(overlay!)).toEqual(['pickPacketFire']); // never pickPortBuy (coherence)
+    const overlay = walkPolicyOverlay(withFire);
+    expect(Object.keys(overlay).sort()).toEqual(['pickPacketFire', 'pickPortBuy']);
     // The overlay calls the base's method WITH the base as `this`.
     const run = new Run(SEED, new EventBus<GameEvents>());
-    expect(overlay!.pickPacketFire!('preTurn', run, new RNG(1))).toBeNull();
+    expect(overlay.pickPacketFire!('preTurn', run, new RNG(1))).toBeNull();
     expect(seenThis).toEqual(['with-fire:preTurn']);
+  });
+
+  it('walkPortBuy mirrors the 50g fixed policy: lane order, affordability, the cache-room lock', () => {
+    const stock = (over?: {
+      daemons?: readonly { price: number; sold: boolean }[];
+      units?: readonly { price: number; sold: boolean }[];
+      packets?: readonly { price: number; sold: boolean }[];
+    }): PortStock =>
+      ({
+        daemons: over?.daemons ?? [],
+        units: over?.units ?? [],
+        packets: over?.packets ?? [],
+      }) as unknown as PortStock;
+    const runWith = (bits: number, cacheHasRoom = true): Run =>
+      ({ bits, cacheHasRoom }) as unknown as Run;
+
+    // Lane order: an affordable daemon wins over cheaper units/packets.
+    expect(
+      walkPortBuy(
+        stock({
+          daemons: [{ price: 8, sold: false }],
+          units: [{ price: 1, sold: false }],
+          packets: [{ price: 1, sold: false }],
+        }),
+        runWith(10),
+      ),
+    ).toEqual({ kind: 'daemon', index: 0 });
+    // Sold and unaffordable slots are skipped, within-lane slot order holds.
+    expect(
+      walkPortBuy(
+        stock({ daemons: [{ price: 3, sold: true }, { price: 99, sold: false }, { price: 5, sold: false }] }),
+        runWith(10),
+      ),
+    ).toEqual({ kind: 'daemon', index: 2 });
+    // Falls through daemons → units → packets.
+    expect(
+      walkPortBuy(
+        stock({ daemons: [{ price: 99, sold: false }], units: [{ price: 4, sold: false }] }),
+        runWith(10),
+      ),
+    ).toEqual({ kind: 'unit', index: 0 });
+    // The 49c cache-room lock: a full cache never proposes a packet buy
+    // (the pre-dispatch guard mirrors the handler — the walk loop must
+    // never wedge on a rejected dispatch).
+    const packetsOnly = stock({ packets: [{ price: 2, sold: false }] });
+    expect(walkPortBuy(packetsOnly, runWith(10, false))).toBeNull();
+    expect(walkPortBuy(packetsOnly, runWith(10, true))).toEqual({ kind: 'packet', index: 0 });
+    // Nothing affordable → null (the ask-until-null stop).
+    expect(walkPortBuy(stock({ daemons: [{ price: 99, sold: false }] }), runWith(10))).toBeNull();
   });
 });

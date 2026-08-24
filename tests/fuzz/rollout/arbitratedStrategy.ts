@@ -10,21 +10,21 @@
  * reporter.
  *
  * Port-site semantics (the kickoff's one-forced-buy design, WORKLOG
- * §70): each ask of the 59a ask-until-null loop arbitrates ONE forced
- * buy. Candidates = every affordable unsold slot (daemons → units →
- * packets, slot order — the log's stable vocabulary); the driver's
- * implicit null arm = "stop buying here". Inside the rollout the
- * walker's default strategy carries NO `pickPortBuy` (the default
- * vector has no port group), so every clone leaves the dock right
- * after the applied candidate — the null arm never re-shops the dock.
- * (If it did, the cheap policy could buy the candidate under the null
- * arm and zero the margin while the LIVE loop stopped buying — the
- * live-vs-rollout divergence the kickoff note names. A future
- * `spec.strategy` override that carries a port group would reintroduce
- * it; don't.) Multi-buy value emerges greedily: each landed buy
- * re-arbitrates against the mutated stock/bits. At λ=0 a useless buy
- * margins ~0 and FAILS the strict-ε gate; the always-on bitsDelta
- * telemetry keeps spend-happy drift visible (resolution 4).
+ * §70; the walk side re-authored at 85b): each ask of the 59a
+ * ask-until-null loop arbitrates ONE forced buy. Candidates = every
+ * affordable unsold slot (daemons → units → packets, slot order — the
+ * log's stable vocabulary); the driver's implicit null arm = "stop
+ * buying here". Inside the rollout the walker's dock policy is
+ * suppressed AT THE DECISION DOCK only (arbitratePortBuy's per-call
+ * walkPolicies — a null branch that bought at the very dock under
+ * decision would zero the margin while the LIVE loop stopped buying,
+ * the live-vs-rollout divergence the kickoff note names) and ACTIVE at
+ * every later dock (the 85b future-docks rule: bits carry option
+ * value; WORKLOG §85-pre finding 13). Multi-buy value emerges
+ * greedily: each landed buy re-arbitrates against the mutated
+ * stock/bits. At λ=0 a useless buy margins ~0 and FAILS the strict-ε
+ * gate; the always-on bitsDelta telemetry keeps spend-happy drift
+ * visible (resolution 4).
  *
  * Fire-site semantics (70b): per-packet candidates with nominator-picked
  * targets, both 49e contexts, legality guards mirrored, the 60c heal
@@ -51,7 +51,7 @@
  * forced-fielding v2 contingency is in the spec).
  */
 
-import { RNG } from '../../../src/core/RNG';
+import { RNG, deriveRng } from '../../../src/core/RNG';
 import type { PortStock, Run } from '../../../src/run/Run';
 import type { RewardPortion } from '../../../src/run/rewards';
 import { packetById, type UseContext } from '../../../src/config/packets';
@@ -68,20 +68,19 @@ import {
   type RunDecisionCandidate,
 } from './driver';
 import type { InnerTier } from './walker';
+import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 
 /**
- * The driver-stream domain offset: the arm's RNG must be deterministic
- * per run seed yet must not share a root with the harness's own
- * `RNG(seed)` fork chains (strategy/redraw/empower streams all fork off
- * fresh `RNG(seed)` instances — an un-offset root here would make the
- * driver's first forks numerically identical to theirs). A different
- * seed is an independent stream; the offset just keeps the universes
- * apart.
+ * 85b — the driver + shadow-site streams ride the KEYED derivation door
+ * (`deriveRng(runSeed, 'arbDriver')` / `'arbShadowSites'`): deterministic
+ * per run seed, structurally apart from the harness's own `RNG(seed)`
+ * fork chains and from each other. Migrated from the pre-85b additive
+ * offsets `runSeed + 0x70a1` / `+ 0x84c1` — the ad-hoc construction
+ * RNG.ts names a review offense (cross-seed stream identity at seed
+ * spans equal to the offset gap; WORKLOG §85-pre finding 8). A
+ * deliberate arb-DECISION stream break (85b re-pins); the run/world
+ * streams are untouched — keyed additions never move existing streams.
  */
-const DRIVER_SEED_OFFSET = 0x70a1;
-/** 84c — the shadow-only sites' pair stream (`shadowHorizon.siteRng`): its
- *  own universe, apart from the driver's (above) and the harness's. */
-const SHADOW_SITE_SEED_OFFSET = 0x84c1;
 /** 84d — the sites the long-horizon shadow runs on: the ACQUISITION
  *  sites (round-6-spec §"The measurement design"). Grants, fires and node
  *  picks are inside the decision horizon already and would be the whole
@@ -90,17 +89,56 @@ const SHADOW_SITE_SEED_OFFSET = 0x84c1;
  *  the shadow-only site. */
 export const SHADOW_SITES: readonly string[] = ['rewardDaemon', 'portBuy', 'eventChoice', 'recruit'];
 
-/** 84f1 — the shadow long-walk's policy overlay (`shadowHorizon.walkStrategy`):
- *  the live vector's packet-fire policy, when the base carries one, so a
- *  walked branch that HOLDS a packet can fire it (the 84d finding: the
- *  walker's default never fires, so every packet read exactly 0 at every
- *  horizon). Nothing else rides along — `pickPortBuy` stays off (the port
- *  site's coherence rule: a walker that buys would make the null branch
- *  buy at the very port being arbitrated). undefined = nothing to overlay. */
-export function shadowWalkStrategyFor(base: FuzzStrategy): Partial<FuzzStrategy> | undefined {
+/** 85b — the walker's dock policy for the all-rollouts overlay: the 50g
+ *  buy-all-affordable mirror (daemons → units → packets-if-room, slot
+ *  order — the harness's own ABSENT-policy behavior), expressed as a
+ *  pickPortBuy for the walker's ask-until-null loop. The pre-dispatch
+ *  guards mirror the handlers' no-op conditions (affordability; the 49c
+ *  cache-room lock on packets), so a proposal always lands — the loop
+ *  never wedges. Deterministic, zero policy draws. A PROXY for the arb
+ *  arm's own rollout-judged port behavior (which a walk cannot recurse
+ *  into): imperfect but symmetric — both branches shop the same future
+ *  docks under CRN, so what it measures is the OPTION VALUE of bits at
+ *  future docks (WORKLOG §85-pre finding 13). */
+export function walkPortBuy(stock: PortStock, run: Run): PortBuy | null {
+  for (let index = 0; index < stock.daemons.length; index++) {
+    const slot = stock.daemons[index]!;
+    if (!slot.sold && run.bits >= slot.price) return { kind: 'daemon', index };
+  }
+  for (let index = 0; index < stock.units.length; index++) {
+    const slot = stock.units[index]!;
+    if (!slot.sold && run.bits >= slot.price) return { kind: 'unit', index };
+  }
+  for (let index = 0; index < stock.packets.length; index++) {
+    const slot = stock.packets[index]!;
+    if (!slot.sold && run.bits >= slot.price && run.cacheHasRoom) return { kind: 'packet', index };
+  }
+  return null;
+}
+
+/** 85b — the ALL-ROLLOUTS walk-policy overlay (supersedes 84f1's
+ *  shadow-only `shadowWalkStrategyFor`): every rollout walk — live
+ *  one-battle AND shadow long-horizon — composes the base's packet-fire
+ *  policy (when it carries one) and the 50g dock policy over the walk
+ *  strategy, so a walked branch that holds a packet can fire it and a
+ *  walked branch that banks bits can spend them at future docks (the 84d
+ *  packets-inert finding + the 85-pre future-docks finding, fixed at the
+ *  same seam). Coherence is now enforced per SITE, not by leaving the
+ *  policies off: the port site suppresses dock buys AT THE DECISION DOCK
+ *  only, and the fire site suppresses fires of the decision's own
+ *  context at the decision's node (see arbitratePortBuy /
+ *  arbitratePacketFire) — everywhere else the overlay rides whole. */
+export function walkPolicyOverlay(base: FuzzStrategy): Partial<FuzzStrategy> {
   const fire = base.pickPacketFire;
-  if (fire === undefined) return undefined;
-  return { pickPacketFire: (context, run, rng) => fire.call(base, context, run, rng) };
+  return {
+    pickPortBuy: (stock, run, _rng) => walkPortBuy(stock, run),
+    ...(fire !== undefined
+      ? {
+          pickPacketFire: (context: UseContext, run: Run, rng: RNG) =>
+            fire.call(base, context, run, rng),
+        }
+      : {}),
+  };
 }
 
 /**
@@ -202,6 +240,13 @@ export interface ArbitratedConfig {
   readonly weights?: ScoredWeights;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
+  /** 85b (finding 6) — the LIVE arm's searcher config (audition scripts,
+   *  K, cadence), threaded into every rollout spec so an innerTier
+   *  'searcher' walk plays battles the way the live arm does (the walker
+   *  previously passed `{}`). `kFlipTelemetry` is deliberately stripped
+   *  by the caller — a rollout needs the play policy, not the
+   *  instrument. Inert under the default 'traffic' tier. */
+  readonly rolloutSearch?: RolloutSearchConfig;
   /** Test seam, threaded to the driver (the selectByScore precedent). */
   readonly evaluate?: RunArbitrationConfig['evaluate'];
   /** 84a/84c — the long-horizon shadow (`--shadow-horizon` /
@@ -224,13 +269,20 @@ export function makeArbitratedStrategy(
   config: ArbitratedConfig = {},
 ): ArbitratedRunStrategy {
   const base = config.base ?? scoredStrategy('arb-base', DEFAULT_SCORED_WEIGHTS);
-  const walkStrategy = shadowWalkStrategyFor(base);
-  const driver = new RunArbitrationDriver(new RNG(runSeed + DRIVER_SEED_OFFSET), {
+  // 85b — the all-rollouts overlay (fires + future docks), composed into
+  // EVERY spec via rollout.walkPolicies; sites override per call where a
+  // coherence window demands suppression.
+  const overlay = walkPolicyOverlay(base);
+  const driver = new RunArbitrationDriver(deriveRng(runSeed, 'arbDriver'), {
     ...(config.k !== undefined ? { rolloutsPerCandidate: config.k } : {}),
     rollout: {
       horizonBattles: 1,
+      walkPolicies: overlay,
       ...(config.innerTier !== undefined ? { innerTier: config.innerTier } : {}),
       ...(config.bitsLambda !== undefined ? { bitsLambda: config.bitsLambda } : {}),
+      // 85b (finding 6) — the live searcher config, so an innerTier
+      // 'searcher' rollout plays battles the way the live arm does.
+      ...(config.rolloutSearch !== undefined ? { rolloutSearch: config.rolloutSearch } : {}),
     },
     ...(config.evaluate !== undefined ? { evaluate: config.evaluate } : {}),
     ...(config.shadowTier !== undefined ? { shadowTier: config.shadowTier } : {}),
@@ -239,9 +291,7 @@ export function makeArbitratedStrategy(
           shadowHorizon: {
             ...config.shadowHorizon,
             sites: SHADOW_SITES,
-            siteRng: new RNG(runSeed + SHADOW_SITE_SEED_OFFSET),
-            // 84f1 — the live vector's fire policy rides the long walk only.
-            ...(walkStrategy !== undefined ? { walkStrategy } : {}),
+            siteRng: deriveRng(runSeed, 'arbShadowSites'),
           },
         }
       : {}),
@@ -264,13 +314,13 @@ export function makeArbitratedStrategy(
       return idx;
     },
     pickPortBuy: (stock, run, _rng) =>
-      arbitratePortBuy(driver, stock, run, config.portBuyEpsilon),
+      arbitratePortBuy(driver, stock, run, config.portBuyEpsilon, overlay),
     // 70b — the fire site is LANDED: always defined, both contexts. NB
     // presence flips the harness turn gates ON (59a) — the arbitrated arm
     // therefore always rides the gated path (RNG-aligned, H4b; the
     // doctrine arm ran gated anyway via --redraw/--empower).
     pickPacketFire: (context, run, _rng) =>
-      arbitratePacketFire(driver, context, run, config.packetFireEpsilon),
+      arbitratePacketFire(driver, context, run, config.packetFireEpsilon, overlay),
     // 70c — the daemon-pick site (reward lane; the port lane rides
     // pickPortBuy above).
     pickReward: (portion, run, _rng) =>
@@ -326,6 +376,7 @@ function arbitratePortBuy(
   stock: PortStock,
   run: Run,
   epsilonOverride: number | undefined,
+  overlay: Partial<FuzzStrategy>,
 ): PortBuy | null {
   const challengers: RunDecisionCandidate[] = [];
   const buys: PortBuy[] = [];
@@ -356,8 +407,24 @@ function arbitratePortBuy(
   });
 
   if (challengers.length === 0) return null;
+  // 85b — the decision-dock exclusion (the future-docks rule, WORKLOG
+  // §85-pre finding 13): the walker's dock policy is suppressed AT THIS
+  // dock only — the null branch must never buy at the very port being
+  // arbitrated (the one-forced-buy coherence rule) — and active at every
+  // later dock the walk reaches, so bits carry their option value. Keyed
+  // on (sector, node): a forward-DAG walk never revisits a node, and the
+  // long-horizon shadow walk inherits the same gating through the
+  // per-call spec.
+  const dockSector = run.currentSectorId;
+  const dockNode = run.currentNodeId;
+  const walkPolicies: Partial<FuzzStrategy> = {
+    ...overlay,
+    pickPortBuy: (s, r, _g) =>
+      r.currentSectorId === dockSector && r.currentNodeId === dockNode ? null : walkPortBuy(s, r),
+  };
   const winner = driver.decide('portBuy', run, challengers, {
     epsilon: epsilonOverride ?? portBuyEpsilon(run),
+    rollout: { walkPolicies },
   });
   return winner === null ? null : buys[challengers.indexOf(winner)]!;
 }
@@ -383,16 +450,21 @@ function arbitratePortBuy(
  *
  * Duplicate packet ids collapse to their lowest cache index (identical
  * candidates would burn rollouts to measure an exact tie; acquisition
- * order matches the cheap policy's scan). The null arm = bank
- * everything this ask; inside the rollout the walker's default strategy
- * never fires, so null banks the cache through the horizon — the same
- * live-vs-rollout coherence as the port site's one-forced-buy rule.
+ * order matches the cheap policy's scan). The null arm = bank PAST THIS
+ * GATE: since 85b the walker's fire policy is suppressed only for this
+ * decision's context at this node (the port site's dock rule, fire
+ * flavored) — a later gate inside the horizon can fire what this ask
+ * banked, so the margin reads fire-now vs fire-later, not fire-now vs
+ * never (the 84d packets-inert mechanism). The fold's fired-counts-as-
+ * held rule (§85 shape-lock) keeps the prior term neutral across the
+ * comparison either way.
  */
 function arbitratePacketFire(
   driver: RunArbitrationDriver,
   context: UseContext,
   run: Run,
   epsilonOverride: number | undefined,
+  overlay: Partial<FuzzStrategy>,
 ): PacketFire | null {
   const challengers: RunDecisionCandidate[] = [];
   const fires: PacketFire[] = [];
@@ -437,8 +509,33 @@ function arbitratePacketFire(
   }
 
   if (challengers.length === 0) return null;
+  // 85b — the own-gate exclusion (the port site's dock rule, fire
+  // flavored): the walker's fire policy is suppressed for THIS decision's
+  // context at THIS node — the null arm must mean "bank past this gate",
+  // not "fire it via the walker" (same-gate firing would zero every
+  // margin and kill the live fire channel) — and active everywhere else:
+  // a later preTurn gate inside an outOfBattle decision's horizon can
+  // fire what this ask banked (the timing-value read the 84d
+  // packets-inert finding was missing). At a preTurn decision the only
+  // in-horizon preTurn gate is its own (horizon 1 stops at battle end),
+  // so the suppression is exact there by construction.
+  const gateSector = run.currentSectorId;
+  const gateNode = run.currentNodeId;
+  const baseFire = overlay.pickPacketFire;
+  const walkPolicies: Partial<FuzzStrategy> = {
+    ...overlay,
+    ...(baseFire !== undefined
+      ? {
+          pickPacketFire: (ctx: UseContext, r: Run, g: RNG) =>
+            ctx === context && r.currentSectorId === gateSector && r.currentNodeId === gateNode
+              ? null
+              : baseFire(ctx, r, g),
+        }
+      : {}),
+  };
   const winner = driver.decide(`packetFire:${context}`, run, challengers, {
     epsilon: epsilonOverride ?? packetFireEpsilon(context, run),
+    rollout: { walkPolicies },
   });
   return winner === null ? null : fires[challengers.indexOf(winner)]!;
 }
@@ -576,9 +673,10 @@ function arbitrateGrant(
  * node's own value is REALIZED by the rollout (never double-counted:
  * the tail starts at the children), and the long path stays the DP's
  * job. The rollout strategy override composes the DEFAULT cheap walk
- * with the base's node picks only — the default vector carries no
- * port/fire groups, so docks stay unshopped inside rollouts (the 70a
- * rule) regardless of what the base defines.
+ * with the base's node picks only; the config-level 85b walkPolicies
+ * overlay (fires + the dock policy) rides on top through the evaluator
+ * compose — a candidate that enters a port node now realizes shopping
+ * value inside its rollout instead of reading the dock as inert.
  */
 function arbitrateNodeChoice(
   driver: RunArbitrationDriver,

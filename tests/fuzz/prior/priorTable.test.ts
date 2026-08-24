@@ -33,6 +33,8 @@ function decision(
     hopsRemaining,
     stuckFrac: null,
     lambda: null,
+    priorLambda: null,
+    priorBonus: null,
   };
   return [
     { ...base, candidate: 0, label: 'null', chosen: true, score: nullScore },

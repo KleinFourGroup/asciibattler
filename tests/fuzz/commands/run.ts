@@ -14,6 +14,7 @@ import type { RunResult, HarnessOptions } from '../harness';
 import { makeArbitratedStrategy, type ArbitratedRunStrategy } from '../rollout/arbitratedStrategy';
 import type { InnerTier } from '../rollout/walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
+import { loadPriorTable, priorFoldValues } from '../prior/priorTable';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
@@ -108,6 +109,7 @@ export type RunModeArgs = Pick<
   | 'arbitrateTier'
   | 'flipTelemetry'
   | 'grantEpsilon'
+  | 'priorLambda'
   | 'shadowHorizon'
   | 'shadowSample'
   | 'set'
@@ -321,6 +323,15 @@ export function runRunCli(args: RunModeArgs): void {
     args.arbitrate && args.arbitrateTier !== undefined
       ? (args.arbitrateTier as InnerTier)
       : undefined;
+  // 85c — the fold arm: λ_prior ≠ 0 loads the committed prior table ONCE
+  // at launch (a missing/unparsable table throws here, before any seed
+  // runs — never a silent 0-prior batch). λ = 0 or absent passes nothing:
+  // the evaluator's fold path never engages (the byte-identity contract;
+  // the priorLambda column still records 0 via the driver default).
+  const priorFold =
+    args.priorLambda !== undefined && args.priorLambda !== 0
+      ? { priorLambda: args.priorLambda, priorTable: priorFoldValues(loadPriorTable()) }
+      : undefined;
   const nameFor = (strategy: FuzzStrategy): string =>
     args.arbitrate ? `arbitrated:${strategy.name}` : strategy.name;
   const strategyFor = (seed: number, strategy: FuzzStrategy): FuzzStrategy =>
@@ -336,6 +347,8 @@ export function runRunCli(args: RunModeArgs): void {
           ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
           // 85b (finding 6) — searcher-tier rollouts play like the live arm.
           ...(arbRolloutSearch !== undefined ? { rolloutSearch: arbRolloutSearch } : {}),
+          // 85c — the fold arm (absent at λ=0: the byte-identical control).
+          ...(priorFold ?? {}),
           // 84c — the long-horizon shadow instrument (validated in args.ts:
           // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
           ...(args.shadowHorizon !== undefined
@@ -353,6 +366,7 @@ export function runRunCli(args: RunModeArgs): void {
     args.shadowHorizon !== undefined
       ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
       : '';
+  const priorNote = args.priorLambda !== undefined ? ` prior-lambda=${args.priorLambda}` : '';
   // 85-pre F2, generalized at 85b: the walk-policy overlay composes the
   // BASE's fire policy into EVERY rollout now (not just shadow long
   // walks) — a fire-group-less base (the default vector) composes no
@@ -375,7 +389,7 @@ export function runRunCli(args: RunModeArgs): void {
   const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}…\n`,
     );
     for (const s of seeds) {
       const seedStrategy = strategyFor(s, strategy);

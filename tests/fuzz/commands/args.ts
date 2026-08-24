@@ -187,6 +187,12 @@ export interface CliArgs {
   // pooled noise floor; ε=0 = spend on any positive point estimate, exact
   // ties still pass — the strict-> rule holds). Requires --arbitrate.
   grantEpsilon?: number;
+  // 85c — λ_prior (`--prior-lambda=<f>`): the fold's board arm ({0, 0.5,
+  // 1} at the §85 cohort; any finite ≥ 0 accepted — a dial, not a doctrine
+  // constant). 0 = the fold path never engages (byte-identical, the board
+  // control). Requires --arbitrate; the committed prior table loads at
+  // launch when ≠ 0 (missing table = loud throw).
+  priorLambda?: number;
   // 84c — the §84 long-horizon shadow instrument (`--shadow-horizon[=run|N]`,
   // bare = 'run'): every sampled arbitrated decision's candidates ALSO walked
   // to the horizon as a separate decisions.csv record, plus the shadow-only
@@ -401,6 +407,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--grant-epsilon':
         if (v !== undefined) args.grantEpsilon = Number(v);
         break;
+      case '--prior-lambda':
+        if (v !== undefined) args.priorLambda = Number(v);
+        break;
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
@@ -513,6 +522,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!Number.isFinite(args.grantEpsilon) || args.grantEpsilon < 0) {
       throw new Error(`--grant-epsilon must be a finite number ≥ 0 (got '${args.grantEpsilon}')`);
+    }
+  }
+  // 85c — the fold arm rides the arbitrated arm only; NaN/negative λ would
+  // silently corrupt every score.
+  if (args.priorLambda !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--prior-lambda requires --arbitrate (it folds the arbitrated terminal score)');
+    }
+    if (!Number.isFinite(args.priorLambda) || args.priorLambda < 0) {
+      throw new Error(`--prior-lambda must be a finite number ≥ 0 (got '${args.priorLambda}')`);
     }
   }
   // 85-pre F3 (user-signed 2026-08-23, the 84b refusal class CLOSED):

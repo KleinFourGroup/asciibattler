@@ -430,6 +430,42 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
     ]);
   });
 
+  it('85c (12c) — judgeLong STRIPS the prior: long-horizon specs score RAW whatever the live arm runs', () => {
+    const seen: { horizon: string; priorLambda: number | undefined; hasTable: boolean }[] = [];
+    const evaluate = (
+      _live: Run,
+      _apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      seen.push({
+        horizon: Number.isFinite(spec.horizonBattles) ? 'base' : 'run',
+        priorLambda: spec.priorLambda,
+        hasTable: spec.priorTable !== undefined,
+      });
+      return { score: 0, perSeed: [] };
+    };
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      rollout: { horizonBattles: 1, priorLambda: 0.5, priorTable: { 'daemon:minerva': 29.58 } },
+      shadowHorizon: { horizonBattles: 'run' },
+    });
+    driver.decide('portBuy', liveRun(7), [tagged('a')]);
+    // Live specs carry the fold; the long specs are stripped (the table
+    // can never eat its own prior — the de-fold step by construction).
+    expect(seen).toEqual([
+      { horizon: 'base', priorLambda: 0.5, hasTable: true },
+      { horizon: 'base', priorLambda: 0.5, hasTable: true },
+      { horizon: 'run', priorLambda: undefined, hasTable: false },
+      { horizon: 'run', priorLambda: undefined, hasTable: false },
+    ]);
+    // The records say so too: live 0.5, long ALWAYS 0.
+    expect(driver.decisions).toHaveLength(2);
+    expect(driver.decisions[0]!.priorLambda).toBe(0.5);
+    expect(driver.decisions[0]!.horizon).toBeUndefined();
+    expect(driver.decisions[1]!.priorLambda).toBe(0);
+    expect(driver.decisions[1]!.horizon).toBe('run');
+  });
+
   it('85b — walkPolicies change specs only: the driver decides byte-identically on/off (stream untouched)', () => {
     const tables = { base: { null: 0, a: 5, b: 2 }, run: { null: 9, a: 0, b: 0 } };
     const run = (overlay: boolean) => {

@@ -54,14 +54,28 @@ import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
  *  not a runtime guard. */
 export const RUN_DEATH_PENALTY = 10 * HEALTH.playerHealthMax;
 export const RUN_COMPLETION_BONUS = 10 * HEALTH.playerHealthMax;
+/** 85c (shape-lock 12a) — the fold's HARD dominance guard: |priorBonus|
+ *  clamps here, half the death ordinal, so no holdings delta can ever
+ *  out-vote dying (the audit quantified the breach the linear shape
+ *  allowed: one top item × h≈20 ≈ 116 at λ=1). A clamp that ENGAGES is
+ *  flagged on the breakdown (`priorClamped`) — visible, never silent. */
+export const PRIOR_BONUS_CAP = 0.5 * RUN_DEATH_PENALTY;
 
 /** The terminal reads a score is computed from — taken once on the live
- *  run (before) and once per walked clone (after). */
+ *  run (before) and once per walked clone (after). 85c widens it with
+ *  the HOLDINGS read (the fold's input): daemons/packets/units as item
+ *  keys matching the prior table's vocabulary. */
 export interface RunMetrics {
   readonly playerHealth: number;
   readonly bits: number;
   readonly rosterSize: number;
   readonly phase: string;
+  /** 85c — held daemon ids, cache packet ids (acquisition order), and
+   *  roster archetypes (level = instance noise, stripped — the table's
+   *  rule). Multisets: two mercenaries count twice. */
+  readonly daemonIds: readonly string[];
+  readonly cachePacketIds: readonly string[];
+  readonly teamArchetypes: readonly string[];
 }
 
 export function readRunMetrics(run: Run): RunMetrics {
@@ -70,7 +84,69 @@ export function readRunMetrics(run: Run): RunMetrics {
     bits: run.bits,
     rosterSize: run.team.length,
     phase: run.phase,
+    daemonIds: run.daemons.map((d) => d.id),
+    cachePacketIds: [...run.cache],
+    teamArchetypes: run.team.map((u) => u.archetype),
   };
+}
+
+/**
+ * 85c — the FOLD (round-6-spec §"The fold", as re-shaped by the
+ * 2026-08-24 shape-lock): `priorBonus = λ_prior × Σ_items
+ * table[item] × Δcount(item)` over the holdings delta (terminal clone −
+ * live run), where table[item] is the v1 prior table's **meanDelta** —
+ * the raw measured long-horizon holding margin, UNSCALED (the spec's
+ * linear × hopsRemaining is superseded: hops-linearity NO,
+ * twice-measured, and the linear shape breaches the death ordinal).
+ * Items held on both sides cancel; an item with no table row
+ * contributes 0. Directional (under-floor) rows participate by design —
+ * the n=80 floor governs signing claims, not the instrument's internal
+ * prior; λ is the safety dial and a BOARD ARM, never a trusted
+ * constant.
+ *
+ * 12b — fired counts as HELD: `firedPacketIds` (packets the BRANCH
+ * fired, candidate-apply and walk alike, tallied off the clone bus's
+ * `run:packetUsed`) are unioned into the terminal packet holdings, so
+ * firing realizes value instead of being charged −table[p] — without
+ * this, the delta re-creates packets-inert with inverted sign.
+ */
+export interface RunHoldingsPrior {
+  /** λ_prior. 0 never reaches scoreTerminal — the evaluator disengages
+   *  the whole fold path at 0 (the byte-identity contract). */
+  readonly lambda: number;
+  /** item key (`daemon:<id>` | `packet:<id>` | `unit:<archetype>`) →
+   *  meanDelta, pool HP (the committed table via `priorFoldValues`). */
+  readonly table: Readonly<Record<string, number>>;
+  /** Packets the branch fired (12b). */
+  readonly firedPacketIds?: readonly string[];
+}
+
+/** The signed, clamped prior term + whether the cap engaged. Exported
+ *  seam so the dominance/cancellation contracts pin without a walk. */
+export function priorBonusOf(
+  before: RunMetrics,
+  after: RunMetrics,
+  prior: RunHoldingsPrior,
+): { bonus: number; clamped: boolean } {
+  const delta = new Map<string, number>();
+  const add = (key: string, n: number): void => {
+    const next = (delta.get(key) ?? 0) + n;
+    if (next === 0) delta.delete(key);
+    else delta.set(key, next);
+  };
+  for (const id of after.daemonIds) add(`daemon:${id}`, 1);
+  for (const id of before.daemonIds) add(`daemon:${id}`, -1);
+  for (const id of after.cachePacketIds) add(`packet:${id}`, 1);
+  for (const id of prior.firedPacketIds ?? []) add(`packet:${id}`, 1);
+  for (const id of before.cachePacketIds) add(`packet:${id}`, -1);
+  for (const a of after.teamArchetypes) add(`unit:${a}`, 1);
+  for (const a of before.teamArchetypes) add(`unit:${a}`, -1);
+  let raw = 0;
+  for (const [key, n] of delta) raw += n * (prior.table[key] ?? 0);
+  const unclamped = prior.lambda * raw;
+  const clamped = Math.abs(unclamped) > PRIOR_BONUS_CAP;
+  const bonus = clamped ? Math.sign(unclamped) * PRIOR_BONUS_CAP : unclamped;
+  return { bonus, clamped };
 }
 
 /** One rollout's full breakdown — the score plus the always-on telemetry
@@ -94,6 +170,16 @@ export interface RunScoreBreakdown {
    *  §85-pre finding 3). Telemetry-only this phase; the decisions.csv
    *  `stuckFrac` column makes it visible per candidate. */
   readonly walkOutcome?: WalkResult['outcome'];
+  /** 85c — the fold's prior term folded into `score`, present EXACTLY when
+   *  a prior spec reached scoreTerminal (λ_prior ≠ 0 — the evaluator
+   *  disengages at 0, so a λ=0 breakdown is byte-identical to pre-fold).
+   *  Always visible when it contributed, even at 0.00 — the `tailBonus`
+   *  discipline. */
+  readonly priorBonus?: number;
+  /** 85c (12a) — present (true) ONLY when the ±PRIOR_BONUS_CAP dominance
+   *  clamp engaged: the raw λ×Σ breached half the death ordinal. A
+   *  clamped read is instrument-grade WARN territory, never silent. */
+  readonly priorClamped?: boolean;
 }
 
 /** The pure scoring rule — exported separately so dominance/λ contracts
@@ -102,6 +188,7 @@ export function scoreTerminal(
   before: RunMetrics,
   after: RunMetrics,
   bitsLambda: number,
+  prior?: RunHoldingsPrior,
 ): RunScoreBreakdown {
   // Signed on purpose: a rest-node heal inside the horizon is NEGATIVE
   // damage taken (a genuinely better future, and the score should say so).
@@ -110,12 +197,25 @@ export function scoreTerminal(
   const completed = after.phase === 'complete';
   const bitsDelta = after.bits - before.bits;
   const rosterDelta = after.rosterSize - before.rosterSize;
-  const score =
+  const base =
     -poolDamageTaken +
     (died ? -RUN_DEATH_PENALTY : 0) +
     (completed ? RUN_COMPLETION_BONUS : 0) +
     bitsLambda * bitsDelta;
-  return { score, poolDamageTaken, died, completed, bitsDelta, rosterDelta };
+  if (prior === undefined) {
+    return { score: base, poolDamageTaken, died, completed, bitsDelta, rosterDelta };
+  }
+  const { bonus, clamped } = priorBonusOf(before, after, prior);
+  return {
+    score: base + bonus,
+    poolDamageTaken,
+    died,
+    completed,
+    bitsDelta,
+    rosterDelta,
+    priorBonus: bonus,
+    ...(clamped ? { priorClamped: true } : {}),
+  };
 }
 
 /** One CRN pair: the clone re-seed + the walker policy seed, drawn as
@@ -132,6 +232,15 @@ export interface RunRolloutSpec {
   readonly pairs: readonly RunRolloutPair[];
   /** The swept exchange rate (resolution 4). Default 0. */
   readonly bitsLambda?: number;
+  /** 85c — λ_prior, the fold's board arm ({0, 0.5, 1}). 0 or absent =
+   *  the fold path is never entered: no bus subscription, no holdings
+   *  diff, no breakdown field — byte-identical to pre-fold (the
+   *  explicit-empty pattern; the λ=0 board control rides on this). */
+  readonly priorLambda?: number;
+  /** 85c — item key → meanDelta (the committed table via
+   *  `priorFoldValues`). Required when priorLambda ≠ 0 (throws loud —
+   *  a λ arm with no table is a launch mistake, never a silent 0). */
+  readonly priorTable?: Readonly<Record<string, number>>;
   readonly innerTier?: InnerTier;
   readonly strategy?: FuzzStrategy;
   /** 85b — the all-rollouts walk-policy overlay (fires + the dock
@@ -179,6 +288,13 @@ export function evaluateRunCandidate(
   }
   const before = readRunMetrics(live);
   const bitsLambda = spec.bitsLambda ?? 0;
+  // 85c — the fold engages ONLY at λ_prior ≠ 0 (the byte-identity
+  // contract: a λ=0 arm takes the exact pre-fold path — no subscription,
+  // no diff, no field).
+  const priorLambda = spec.priorLambda ?? 0;
+  if (priorLambda !== 0 && spec.priorTable === undefined) {
+    throw new Error('evaluateRunCandidate: priorLambda ≠ 0 requires priorTable (a λ arm with no table is a launch mistake)');
+  }
   // 85b — the one compose point: the overlay's policies win over the walk
   // strategy's own (a site's strategy override keeps its other methods).
   const strategy =
@@ -191,6 +307,15 @@ export function evaluateRunCandidate(
     // Gates BEFORE apply — see the header note (walkToHorizon re-sets
     // the flag; H4b keeps the gated path RNG-aligned either way).
     clone.run.pauseAtTurnGates = true;
+    // 85c (12b) — the fired-packet tally rides the CLONE's private bus for
+    // the whole branch: candidate-apply fires and walk fires both land
+    // (`run:packetUsed` is the 49e consume-on-fire event). Subscribed only
+    // on the fold path; the clone is discarded after the walk, so no
+    // unsubscribe is needed.
+    const firedPacketIds: string[] = [];
+    if (priorLambda !== 0) {
+      clone.bus.on('run:packetUsed', ({ packetId }) => firedPacketIds.push(packetId));
+    }
     if (apply) apply(clone);
     const walkOptions: WalkOptions = {
       horizonBattles: spec.horizonBattles,
@@ -208,7 +333,11 @@ export function evaluateRunCandidate(
     const walk = walkToHorizon(clone, walkOptions);
     // 85-pre F1 — carry the walk outcome into the breakdown: a 'stuck'
     // terminal is otherwise indistinguishable from a clean truncation.
-    const base = { ...scoreTerminal(before, readRunMetrics(clone.run), bitsLambda), walkOutcome: walk.outcome };
+    const prior =
+      priorLambda !== 0
+        ? { lambda: priorLambda, table: spec.priorTable!, firedPacketIds }
+        : undefined;
+    const base = { ...scoreTerminal(before, readRunMetrics(clone.run), bitsLambda, prior), walkOutcome: walk.outcome };
     if (spec.tailScore !== undefined) {
       const tailBonus = spec.tailScore(clone.run);
       perSeed.push({ ...base, score: base.score + tailBonus, tailBonus });

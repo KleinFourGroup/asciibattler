@@ -133,10 +133,13 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       migration ✅ 2026-08-24 — re-pin count ZERO (the §77 keyed
       architecture absorbed the break); the 84f2 tripwire probe reads
       portBuy/live/packet 0.4%→56% live — WORKLOG §85b.
-- [ ] 85c — the fold mechanics: holdings in `readRunMetrics` +
-      walker fired-packet tally + `priorBonus` in scoreTerminal /
+- [x] 85c — the fold mechanics: holdings in `readRunMetrics` +
+      the clone-bus fired-packet tally + `priorBonus` in scoreTerminal /
       breakdown / decisions.csv (`priorBonus`+`priorLambda`,
-      append-last) + `--prior-lambda`. Pin: λ_prior=0 byte-identical.
+      append-last) + `--prior-lambda` ✅ 2026-08-24 — λ=0 probe
+      BYTE-IDENTICAL (summary + decisions), λ=1 reads the table's own
+      rows back exactly; 12a clamp + 12b fired-as-held + 12c
+      judgeLong strip all pinned — WORKLOG §85c.
 - [ ] 85d — the campRaid preTurn run-layer site ({null, raid};
       player-pull rails at spawn; walker plays it out).
 - [ ] 85e — the ε re-read: event-page context + post-fold/fidelity

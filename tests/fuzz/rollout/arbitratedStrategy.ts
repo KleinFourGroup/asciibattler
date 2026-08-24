@@ -240,6 +240,14 @@ export interface ArbitratedConfig {
   readonly weights?: ScoredWeights;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
+  /** 85c — λ_prior, the fold's board arm ({0, 0.5, 1}; `--prior-lambda`).
+   *  0/absent = the fold path never engages (byte-identical, the λ=0
+   *  board control). Long-horizon shadow records ALWAYS score at 0
+   *  regardless (12c — the driver strips it; the table stays raw). */
+  readonly priorLambda?: number;
+  /** 85c — item key → meanDelta (`priorFoldValues(loadPriorTable())`);
+   *  required by the evaluator when priorLambda ≠ 0. */
+  readonly priorTable?: Readonly<Record<string, number>>;
   /** 85b (finding 6) — the LIVE arm's searcher config (audition scripts,
    *  K, cadence), threaded into every rollout spec so an innerTier
    *  'searcher' walk plays battles the way the live arm does (the walker
@@ -280,6 +288,9 @@ export function makeArbitratedStrategy(
       walkPolicies: overlay,
       ...(config.innerTier !== undefined ? { innerTier: config.innerTier } : {}),
       ...(config.bitsLambda !== undefined ? { bitsLambda: config.bitsLambda } : {}),
+      // 85c — the fold arm (0/absent = byte-identical pre-fold path).
+      ...(config.priorLambda !== undefined ? { priorLambda: config.priorLambda } : {}),
+      ...(config.priorTable !== undefined ? { priorTable: config.priorTable } : {}),
       // 85b (finding 6) — the live searcher config, so an innerTier
       // 'searcher' rollout plays battles the way the live arm does.
       ...(config.rolloutSearch !== undefined ? { rolloutSearch: config.rolloutSearch } : {}),

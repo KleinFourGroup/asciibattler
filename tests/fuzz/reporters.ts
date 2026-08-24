@@ -147,6 +147,13 @@ const DECISIONS_CSV_HEADER = [
   // arm's score column stays reconstructible from its components.
   'stuckFrac',
   'lambda',
+  // 85c — same append-last rule: the λ_prior the scores were computed
+  // under ('' pre-85c; ALWAYS 0 on a long-horizon record — 12c, the
+  // shadow scores raw), + the candidate's mean prior term ('' when no
+  // breakdown carries one, i.e. every λ=0 record) so a λ_prior≠0 arm's
+  // score column stays reconstructible from its components.
+  'priorLambda',
+  'priorBonus',
 ].join(',');
 
 /**
@@ -167,6 +174,7 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
         const per = res.perSeed;
         const tailPresent = per.some((p) => p.tailBonus !== undefined);
         const outcomesPresent = per.some((p) => p.walkOutcome !== undefined);
+        const priorPresent = per.some((p) => p.priorBonus !== undefined);
         lines.push(
           [
             r.seed,
@@ -193,6 +201,8 @@ export function renderDecisionsCsv(results: readonly RunResult[]): string {
               ? mean(per.map((p) => (p.walkOutcome === 'stuck' ? 1 : 0))).toFixed(2)
               : '',
             d.bitsLambda === undefined ? '' : String(d.bitsLambda),
+            d.priorLambda === undefined ? '' : String(d.priorLambda),
+            priorPresent ? mean(per.map((p) => p.priorBonus ?? 0)).toFixed(3) : '',
           ].join(','),
         );
       });
@@ -234,6 +244,12 @@ export interface DecisionRow {
   stuckFrac: number | null;
   /** 85-pre F5 — the λ_bits the scores were computed under; null pre-85. */
   lambda: number | null;
+  /** 85c — the λ_prior the scores were computed under; null pre-85c.
+   *  Always 0 on a long-horizon record (12c — the shadow scores raw). */
+  priorLambda: number | null;
+  /** 85c — the candidate's mean prior term; null when no breakdown
+   *  carried one (every λ_prior=0 record, and all pre-85c rows). */
+  priorBonus: number | null;
 }
 
 /** Flatten in-memory results into rows (the serial CLI's entry path). */
@@ -264,6 +280,11 @@ export function decisionRowsOf(results: readonly RunResult[]): DecisionRow[] {
               ? null
               : mean(outcomes.map((p) => (p.walkOutcome === 'stuck' ? 1 : 0))),
           lambda: d.bitsLambda ?? null,
+          priorLambda: d.priorLambda ?? null,
+          priorBonus: (() => {
+            const withPrior = res.perSeed.filter((p) => p.priorBonus !== undefined);
+            return withPrior.length === 0 ? null : mean(withPrior.map((p) => p.priorBonus!));
+          })(),
         });
       });
     });
@@ -335,6 +356,9 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
     // 85-pre — OPTIONAL, same degradation rule (pre-85 sidecars → null).
     stuckFrac: header.indexOf('stuckFrac'),
     lambda: header.indexOf('lambda'),
+    // 85c — OPTIONAL, same rule (pre-85c sidecars → null).
+    priorLambda: header.indexOf('priorLambda'),
+    priorBonus: header.indexOf('priorBonus'),
   };
   const optNum = (f: string[], i: number): number | null => {
     if (i < 0) return null;
@@ -361,6 +385,8 @@ export function parseDecisionsCsv(csv: string): DecisionRow[] {
       hopsRemaining: hops === '' ? null : Number(hops),
       stuckFrac: optNum(f, c.stuckFrac),
       lambda: optNum(f, c.lambda),
+      priorLambda: optNum(f, c.priorLambda),
+      priorBonus: optNum(f, c.priorBonus),
     };
   });
 }

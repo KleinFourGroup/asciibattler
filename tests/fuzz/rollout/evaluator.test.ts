@@ -25,9 +25,12 @@ import { HEALTH } from '../../../src/config/health';
 import { Run } from '../../../src/run/Run';
 import {
   evaluateRunCandidate,
+  priorBonusOf,
   scoreTerminal,
+  PRIOR_BONUS_CAP,
   RUN_DEATH_PENALTY,
   RUN_COMPLETION_BONUS,
+  type RunHoldingsPrior,
   type RunMetrics,
   type RunRolloutSpec,
 } from './evaluator';
@@ -37,6 +40,9 @@ const BASE: RunMetrics = {
   bits: 10,
   rosterSize: 5,
   phase: 'map',
+  daemonIds: [],
+  cachePacketIds: [],
+  teamArchetypes: ['soldier', 'archer'],
 };
 
 function after(over: Partial<RunMetrics>): RunMetrics {
@@ -91,6 +97,80 @@ describe('scoreTerminal (69d — the resolution-4 lock, pure)', () => {
     const spent = scoreTerminal(BASE, after({ bits: 0 }), lambda);
     const banked = scoreTerminal(BASE, after({ bits: 60 }), lambda);
     expect(banked.score - spent.score).toBeCloseTo(lambda * 60, 10);
+  });
+});
+
+describe('85c — the fold (priorBonus over the holdings delta; the 2026-08-24 shape-lock)', () => {
+  const TABLE = {
+    'daemon:minerva': 29.58,
+    'packet:patch': 20.84,
+    'packet:reroute': -7.3,
+    'unit:mercenary': -1.75,
+    'unit:shaman': 14.35,
+  } as const;
+  const prior = (over?: Partial<RunHoldingsPrior>): RunHoldingsPrior => ({
+    lambda: 1,
+    table: TABLE,
+    ...over,
+  });
+
+  it('sums meanΔ × count over the delta; held-both-sides cancels; unknown items are 0', () => {
+    const b = after({ daemonIds: ['minerva'], cachePacketIds: ['reroute'], teamArchetypes: ['soldier'] });
+    const a = after({
+      daemonIds: ['minerva'], // held both sides — cancels
+      cachePacketIds: ['reroute', 'patch'], // +patch
+      teamArchetypes: ['soldier', 'shaman', 'unknown-arch'], // +shaman, +unknown (no row → 0)
+    });
+    const { bonus, clamped } = priorBonusOf(b, a, prior());
+    expect(bonus).toBeCloseTo(TABLE['packet:patch'] + TABLE['unit:shaman'], 10);
+    expect(clamped).toBe(false);
+  });
+
+  it('multiset counts: a second copy of the same item counts again, losses charge', () => {
+    const b = after({ teamArchetypes: ['mercenary'] });
+    const a = after({ teamArchetypes: ['mercenary', 'mercenary', 'mercenary'] });
+    expect(priorBonusOf(b, a, prior()).bonus).toBeCloseTo(2 * TABLE['unit:mercenary'], 10);
+    // The reverse delta charges the loss (a sold unit, a walk casualty).
+    expect(priorBonusOf(a, b, prior()).bonus).toBeCloseTo(-2 * TABLE['unit:mercenary'], 10);
+  });
+
+  it('12b — fired counts as HELD: firing never charges, acquire-and-fire still credits', () => {
+    // The null-branch shape: live holds patch; the walked clone FIRED it.
+    const b = after({ cachePacketIds: ['patch'] });
+    const a = after({ cachePacketIds: [] });
+    expect(priorBonusOf(b, a, prior()).bonus).toBeCloseTo(-TABLE['packet:patch'], 10); // without the rule: charged
+    expect(priorBonusOf(b, a, prior({ firedPacketIds: ['patch'] })).bonus).toBe(0); // with it: neutral
+    // The buy-branch shape: bought during the walk AND fired — still a holding.
+    const bought = priorBonusOf(after({}), after({}), prior({ firedPacketIds: ['patch'] }));
+    expect(bought.bonus).toBeCloseTo(TABLE['packet:patch'], 10);
+  });
+
+  it('λ scales linearly; 12a — the ±cap clamps and FLAGS', () => {
+    const b = after({});
+    const a = after({ daemonIds: ['minerva'], teamArchetypes: ['soldier', 'archer', 'shaman'] });
+    const sum = TABLE['daemon:minerva'] + TABLE['unit:shaman'];
+    expect(priorBonusOf(b, a, prior({ lambda: 0.5 })).bonus).toBeCloseTo(0.5 * sum, 10);
+    // Force a breach: 6 minervas would read 177.5 > the 100 cap.
+    const stacked = after({ daemonIds: Array(6).fill('minerva') as string[] });
+    const breach = priorBonusOf(b, stacked, prior());
+    expect(PRIOR_BONUS_CAP).toBeCloseTo(0.5 * RUN_DEATH_PENALTY, 10);
+    expect(breach.bonus).toBe(PRIOR_BONUS_CAP);
+    expect(breach.clamped).toBe(true);
+    const negBreach = priorBonusOf(stacked, b, prior());
+    expect(negBreach.bonus).toBe(-PRIOR_BONUS_CAP);
+    expect(negBreach.clamped).toBe(true);
+  });
+
+  it('the breakdown contract: absent without a prior spec; present (even 0.00) with one; clamp flag only on engage', () => {
+    const plain = scoreTerminal(BASE, after({}), 0);
+    expect('priorBonus' in plain).toBe(false);
+    expect('priorClamped' in plain).toBe(false);
+    const folded = scoreTerminal(BASE, after({}), 0, prior());
+    expect(folded.priorBonus).toBe(0); // no delta — still visible (the tailBonus discipline)
+    expect('priorClamped' in folded).toBe(false);
+    const gained = scoreTerminal(BASE, after({ daemonIds: ['minerva'] }), 0, prior());
+    expect(gained.score).toBeCloseTo(TABLE['daemon:minerva'], 10);
+    expect(gained.priorBonus).toBeCloseTo(TABLE['daemon:minerva'], 10);
   });
 });
 
@@ -167,5 +247,50 @@ describe('evaluateRunCandidate (69d — the evaluator wiring)', () => {
       expect(b.poolDamageTaken).toBe(plain.perSeed[i]!.poolDamageTaken);
     });
     expect(plain.perSeed[0]!.tailBonus).toBeUndefined();
+  });
+
+  it('85c — λ_prior=0 is BYTE-IDENTICAL to no prior config at all (the board-control contract)', () => {
+    const live = liveRun(20260730);
+    const plain = evaluateRunCandidate(live, null, SPEC);
+    const zeroed = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 0,
+      priorTable: { 'daemon:minerva': 29.58 },
+    });
+    expect(zeroed).toEqual(plain);
+    expect(plain.perSeed[0]!.priorBonus).toBeUndefined();
+  });
+
+  it('85c — λ_prior ≠ 0 without a table throws LOUD (a launch mistake, never a silent 0-prior)', () => {
+    expect(() =>
+      evaluateRunCandidate(liveRun(7), null, { ...SPEC, priorLambda: 0.5 }),
+    ).toThrow(/priorTable/);
+  });
+
+  it('85c — λ_prior ≠ 0 folds the prior into every pair (priorBonus visible; base components untouched)', () => {
+    const live = liveRun(20260730);
+    const plain = evaluateRunCandidate(live, null, SPEC);
+    // An empty table: the fold path runs end to end (holdings diff, fired
+    // tally, breakdown field) but every value maps to 0 — so the SCORE
+    // matches the plain arm exactly while the visibility contract holds.
+    const folded = evaluateRunCandidate(live, null, { ...SPEC, priorLambda: 1, priorTable: {} });
+    expect(folded.score).toBe(plain.score);
+    folded.perSeed.forEach((b, i) => {
+      expect(b.priorBonus).toBe(0);
+      expect(b.poolDamageTaken).toBe(plain.perSeed[i]!.poolDamageTaken);
+      expect(b.bitsDelta).toBe(plain.perSeed[i]!.bitsDelta);
+    });
+    // A real table: the walk's own acquisitions (recruits, buys) can move
+    // the delta, and score ≡ plain + priorBonus per pair — the recompute
+    // lint at the breakdown level.
+    const valued = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 1,
+      priorTable: { 'unit:mercenary': -1.75, 'unit:shaman': 14.35, 'packet:patch': 20.84 },
+    });
+    valued.perSeed.forEach((b, i) => {
+      expect(b.priorBonus).not.toBeUndefined();
+      expect(b.score).toBeCloseTo(plain.perSeed[i]!.score + b.priorBonus!, 10);
+    });
   });
 });

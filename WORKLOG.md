@@ -938,3 +938,60 @@ searcher), read via the standing 84f2 tripwire:
   at Δ 0.00 — moneta IS ~0-value per the v1 table).
 The probe rode the stdout tripwire exactly as designed — the
 instrument catching its own fix landing.
+
+### 85c — the fold mechanics (2026-08-24)
+
+The signed design, landed:
+- **`readRunMetrics` widened** with the holdings read (`daemonIds` /
+  `cachePacketIds` / `teamArchetypes` — multisets, level stripped).
+- **`priorBonusOf` + `scoreTerminal(…, prior?)`** — `priorBonus =
+  λ_prior × Σ table[item] × Δcount` over the holdings delta,
+  `table[item]` = the v1 table's UNSCALED meanDelta
+  (`priorFoldValues`; every row participates, directional included —
+  the n=80 floor governs signing, not the instrument's internal
+  prior). Clamp at `PRIOR_BONUS_CAP = 0.5 × RUN_DEATH_PENALTY` (=100)
+  with a `priorClamped` breakdown flag (12a — visible, never silent).
+- **12b, fired counts as held**: the evaluator subscribes the CLONE's
+  private bus to `run:packetUsed` for the whole branch (candidate
+  apply + walk), and fired ids union into terminal packet holdings —
+  firing realizes value, never charges it.
+- **12c, the structural de-fold**: `judgeLong` STRIPS
+  priorLambda/priorTable from every long-horizon spec and stamps
+  `priorLambda: 0` on the record — the table's input is always raw;
+  a rebuild can never eat its own prior.
+- **Byte-identity at λ=0**: the fold path (subscription, diff, field)
+  only engages at λ ≠ 0; `priorLambda ≠ 0` without a table throws at
+  launch, before any seed runs.
+- **Plumbing**: `--prior-lambda=<f>` (requires --arbitrate, finite
+  ≥ 0) → ArbitratedConfig → driver rollout spec → evaluator;
+  decisions.csv gains `priorLambda` + `priorBonus` append-last (both
+  '' pre-85c; parse degrades — the three-generation pin extended);
+  RunDecisionRecord carries priorLambda; the run banner notes the
+  arm.
+
+Pins: the fold arithmetic suite (cancellation · multiset · unknown-
+item-0 · fired-neutrality/credit · λ-linearity · ±cap + flag · the
+breakdown presence contract) + the evaluator λ=0 toEqual pin + the
+no-table throw + the λ≠0 fold-runs-per-pair pin (score ≡ base +
+priorBonus, the breakdown-level recompute lint) + the 12c strip pin +
+the --prior-lambda arg pins + the csv generation pin extended to
+85c-era. 2692 main + 453 fuzz green.
+
+**Non-vacuous proof — three 1-seed probe arms** (regen vector, same
+config as the 85b probe):
+- baseline vs `--prior-lambda=0`: summary.csv AND decisions.csv
+  **BYTE-IDENTICAL** — the board-control contract holds at batch
+  scale, csv columns included (the absent flag records the same 0).
+- `--prior-lambda=1`: 462 decisions.csv rows at priorLambda=1, 74
+  non-zero priorBonus values, and the values read back as the
+  table's OWN rows exactly (portunus +5.970 / laverna −8.653 /
+  rogue −11.178 / mercenary −1.749) — an independent recompute by
+  inspection; summary.csv DIFFERS from baseline (the fold moves
+  decisions, as a λ arm must). The boon-event's daemon choice
+  carries a +24.53 prior on its acquiring arm — the §85f
+  boon-separation validation mechanism visibly armed. No clamp
+  engaged on this seed.
+- Interplay note (85b × 85c): a nodeChoice candidate that enters a
+  port node and dock-shops in its walk picks up holdings the prior
+  then credits (enterNode:24(port) bonus +15.82) — by design; the
+  85f cohort reads the composed behavior.

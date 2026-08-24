@@ -92,6 +92,12 @@ export interface RunDecisionRecord {
    *  the sidecar's components (the independent-recompute lint — WORKLOG
    *  §85-pre finding 15). Optional for fixtures/pre-85 sidecars. */
   readonly bitsLambda?: number;
+  /** 85c — the λ_prior the record's scores were computed under (the fold's
+   *  board arm; 0 = fold off). ALWAYS 0 on a long-horizon record: shadow
+   *  walks score raw so the table never eats its own prior (12c — the
+   *  de-fold step by construction). Rides decisions.csv as `priorLambda`;
+   *  optional for fixtures/pre-85c sidecars. */
+  readonly priorLambda?: number;
 }
 
 /**
@@ -279,6 +285,7 @@ export class RunArbitrationDriver {
       marginVsNull: bestScore - nullResult.score,
       epsilon,
       bitsLambda: spec.bitsLambda ?? 0,
+      priorLambda: spec.priorLambda ?? 0,
       ...(shadowChosenIndex !== undefined ? { shadowChosenIndex } : {}),
     });
 
@@ -389,8 +396,14 @@ export class RunArbitrationDriver {
     epsilon: number,
   ): RunDecisionRecord {
     const { horizonBattles } = this.shadowHorizon!;
+    // 85c (12c) — the STRUCTURAL de-fold: a long-horizon record is the
+    // prior table's input, so its scores are always RAW (λ_prior stripped
+    // whatever the live arm runs) — a table rebuild can never eat its own
+    // prior. Residual fold feedback is behavioral only (a λ>0 arm walks
+    // different runs), which the table's provenance head pins.
+    const { priorLambda: _priorLambda, priorTable: _priorTable, ...rawSpec } = spec;
     const longSpec: RunRolloutSpec = {
-      ...spec,
+      ...rawSpec,
       horizonBattles: horizonBattles === 'run' ? Number.POSITIVE_INFINITY : horizonBattles,
       // 85-pre F1 — a run-length walk must never trip the walker's default
       // 50-hop bound (a 'stuck' terminal scores as a healthy truncation —
@@ -424,6 +437,7 @@ export class RunArbitrationDriver {
       epsilon,
       horizon: horizonBattles,
       bitsLambda: longSpec.bitsLambda ?? 0,
+      priorLambda: 0, // 12c — always raw on a long record (stripped above)
     };
   }
 

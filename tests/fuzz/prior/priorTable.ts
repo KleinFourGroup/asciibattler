@@ -30,12 +30,16 @@
  * ride the table as DIRECTIONAL and name §88's targeted-grant list.
  */
 
+import { readFileSync } from 'node:fs';
 import {
   PER_ITEM_N_FLOOR,
   perItemDecisionStats,
   type DecisionRow,
   type ItemDecisionStats,
 } from '../reporters';
+
+/** The committed artifact §85 reads (the signed-sheet pattern). */
+export const PRIOR_TABLE_PATH = 'tests/fuzz/board/prior-table.json';
 
 export interface PriorSiteContribution {
   readonly n: number;
@@ -152,6 +156,24 @@ export function buildPriorTable(
     };
   }
   return { provenance, floor, decisions, items };
+}
+
+/** 85c — the fold's value view: item key → meanDelta (the UNSCALED raw
+ *  long-horizon holding margin — the 2026-08-24 shape-lock's fold input;
+ *  valuePerHop stays a reader column). EVERY row participates,
+ *  directional included — the n=80 floor governs signing claims, not the
+ *  instrument's internal prior; λ_prior is the safety dial. */
+export function priorFoldValues(table: PriorTable): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [key, row] of Object.entries(table.items)) out[key] = row.meanDelta;
+  return out;
+}
+
+/** 85c — load the committed table (CLI-side; tests inject fixtures). A
+ *  missing/unparsable file throws loud — a λ arm with no table is a
+ *  launch mistake, never a silent 0-prior run. */
+export function loadPriorTable(path: string = PRIOR_TABLE_PATH): PriorTable {
+  return JSON.parse(readFileSync(path, 'utf8')) as PriorTable;
 }
 
 /** The stdout summary: signable rows first, then the directional tail

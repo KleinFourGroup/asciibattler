@@ -556,48 +556,60 @@ describe('fuzz reporters', () => {
     horizon: 'run',
   });
 
-  it('84c/85-pre — decisions.csv appends horizon,hopsRemaining,stuckFrac,lambda last; older sidecars still parse', () => {
+  it('84c/85-pre/85c — decisions.csv appends its columns last; older sidecars still parse', () => {
     const csv = renderDecisionsCsv([bareResult(7, [liveRecord(10), shadowRecordOf(10)])]);
     const lines = csv.trim().split('\n');
-    expect(lines[0]!.endsWith('marginVsNull,epsilon,horizon,hopsRemaining,stuckFrac,lambda')).toBe(
-      true,
-    );
-    // Fixture breakdowns carry no walkOutcome and the records no bitsLambda,
-    // so the 85-pre tail renders blank on both.
-    expect(lines[1]!.endsWith(',,10,,')).toBe(true); // live: blank horizon
-    expect(lines[3]!.endsWith(',run,10,,')).toBe(true); // the shadow record's null row
+    expect(
+      lines[0]!.endsWith(
+        'marginVsNull,epsilon,horizon,hopsRemaining,stuckFrac,lambda,priorLambda,priorBonus',
+      ),
+    ).toBe(true);
+    // Fixture breakdowns carry no walkOutcome/priorBonus and the records no
+    // bitsLambda/priorLambda, so the 85-pre + 85c tails render blank.
+    expect(lines[1]!.endsWith(',,10,,,,')).toBe(true); // live: blank horizon
+    expect(lines[3]!.endsWith(',run,10,,,,')).toBe(true); // the shadow record's null row
     const parsed = parseDecisionsCsv(csv);
     expect(parsed.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
     expect(parsed.every((r) => r.hopsRemaining === 10)).toBe(true);
     expect(parsed.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
-    // The same rows with four columns stripped (an 83f-era sidecar):
+    expect(parsed.every((r) => r.priorLambda === null && r.priorBonus === null)).toBe(true);
+    // The same rows with six columns stripped (an 83f-era sidecar):
     // old readers never broke on append-last, and the new reader degrades.
-    const old = lines.map((l) => l.split(',').slice(0, -4).join(',')).join('\n');
+    const old = lines.map((l) => l.split(',').slice(0, -6).join(',')).join('\n');
     const parsedOld = parseDecisionsCsv(old);
     expect(parsedOld).toHaveLength(4);
     expect(parsedOld.every((r) => r.horizon === '' && r.hopsRemaining === null)).toBe(true);
     expect(parsedOld.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
-    // An 84c-era sidecar (two columns stripped) keeps its horizon columns.
-    const era84 = lines.map((l) => l.split(',').slice(0, -2).join(',')).join('\n');
+    // An 84c-era sidecar (four columns stripped) keeps its horizon columns.
+    const era84 = lines.map((l) => l.split(',').slice(0, -4).join(',')).join('\n');
     const parsed84 = parseDecisionsCsv(era84);
     expect(parsed84.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
     expect(parsed84.every((r) => r.stuckFrac === null && r.lambda === null)).toBe(true);
+    // An 85-era (pre-fold) sidecar (two columns stripped) keeps stuck/λ.
+    const era85 = lines.map((l) => l.split(',').slice(0, -2).join(',')).join('\n');
+    const parsed85 = parseDecisionsCsv(era85);
+    expect(parsed85.map((r) => r.horizon)).toEqual(['', '', 'run', 'run']);
+    expect(parsed85.every((r) => r.priorLambda === null && r.priorBonus === null)).toBe(true);
     // A record without hopsRemaining (a hand fixture) renders blank, parses null.
     const bare = parseDecisionsCsv(renderDecisionsCsv([bareResult(8, [liveRecord()])]));
     expect(bare[0]!.hopsRemaining).toBeNull();
-    // 85-pre F1/F5 — a record CARRYING the new fields round-trips them.
+    // 85-pre F1/F5 + 85c — a record CARRYING the new fields round-trips them.
     const carrying: RunDecisionRecord = {
       ...liveRecord(10),
       bitsLambda: 0.5,
+      priorLambda: 1,
       results: [
-        { score: 0, perSeed: [{ ...breakdown(0), walkOutcome: 'horizon' }] },
-        { score: 2, perSeed: [{ ...breakdown(2), walkOutcome: 'stuck' }] },
+        { score: 0, perSeed: [{ ...breakdown(0), walkOutcome: 'horizon', priorBonus: 0 }] },
+        { score: 2, perSeed: [{ ...breakdown(2), walkOutcome: 'stuck', priorBonus: 14.35 }] },
       ],
     };
     const rich = parseDecisionsCsv(renderDecisionsCsv([bareResult(9, [carrying])]));
     expect(rich[0]!.stuckFrac).toBe(0); // the null arm's walk hit its horizon
     expect(rich[1]!.stuckFrac).toBe(1); // the challenger's walk got stuck
     expect(rich.every((r) => r.lambda === 0.5)).toBe(true);
+    expect(rich.every((r) => r.priorLambda === 1)).toBe(true);
+    expect(rich[0]!.priorBonus).toBe(0); // visible even at 0 (the fold ran)
+    expect(rich[1]!.priorBonus).toBeCloseTo(14.35, 10);
   });
 
   it('84c — perItemDecisionStats keys horizons apart and reads Δ per remaining hop', () => {

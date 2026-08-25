@@ -59,6 +59,7 @@ import {
   walkPolicyOverlay,
   walkPortBuy,
   pinnedEventPick,
+  eventPriorItemKeys,
 } from './arbitratedStrategy';
 import { campRaidEligible } from '../campRaid';
 
@@ -383,6 +384,20 @@ describe('arbitrated daemon rewards — mechanism pins (injected evaluator)', ()
     const arm = makeArbitratedStrategy(SEED, { evaluate: sequenceEvaluator([0, 1000]) });
     expect(arm.pickReward!(run.pendingRewards![0]!, run, null as never)).toBe(false);
     expect(arm.driver.decisions[0]!.chosenIndex).toBe(1);
+  });
+
+  it('85g1 — the decision carries its candidate-delta key set: the pending daemon alone', () => {
+    const run = rewardStateWithDaemonHead();
+    const specs: RunRolloutSpec[] = [];
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+        specs.push(spec);
+        return { score: 0, perSeed: [] };
+      },
+    });
+    arm.pickReward!(run.pendingRewards![0]!, run, null as never);
+    expect(specs.length).toBeGreaterThan(0);
+    for (const spec of specs) expect(spec.priorItemKeys).toEqual(['daemon:portunus']);
   });
 
   it('non-daemon portions mirror the hardwired policy with NO arbitration', () => {
@@ -1120,5 +1135,84 @@ describe('85f — pinnedEventPick (the enablement-guarded 74g nominee pin)', () 
   it('plays uniform-random-among-enabled at any other page', () => {
     const pick = pinnedEventPick(ref, 1, cloneAt('other', 'p', [0, 2]), new RNG(3));
     expect([0, 2]).toContain(pick);
+  });
+});
+
+describe('85g1 — per-site candidate-delta keys (the de-fold restriction)', () => {
+  it('portBuy passes the union of the offered slot keys (level stripped)', () => {
+    const run = docked();
+    const specs: RunRolloutSpec[] = [];
+    const arm = makeArbitratedStrategy(SEED, {
+      evaluate: (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+        specs.push(spec);
+        return { score: 0, perSeed: [] };
+      },
+    });
+    arm.pickPortBuy!(run.portStock!, run, null as never);
+    // The independent restatement, from the STOCK (the input surface,
+    // not the site's own helper — the §79e circularity rule).
+    const stock = run.portStock!;
+    const expected: string[] = [];
+    stock.daemons.forEach((s) => {
+      if (!s.sold && run.bits >= s.price) expected.push(`daemon:${s.daemonId}`);
+    });
+    stock.units.forEach((s) => {
+      if (!s.sold && run.bits >= s.price) expected.push(`unit:${s.template.archetype}`);
+    });
+    stock.packets.forEach((s) => {
+      if (!s.sold && run.bits >= s.price && run.cacheHasRoom)
+        expected.push(`packet:${s.packetId}`);
+    });
+    expect(specs.length).toBeGreaterThan(0);
+    for (const spec of specs) expect(spec.priorItemKeys).toEqual(expected);
+  });
+});
+
+describe('85g1 — eventPriorItemKeys (the static over-approximation)', () => {
+  it('collects holdings-touching op ids across ALL pages; removeUnit excluded; sorted; undefined → []', () => {
+    const def: EventDef = {
+      id: 'fixture-event',
+      name: 'Fixture',
+      entry: 'a',
+      pages: {
+        a: {
+          text: '…',
+          choices: [
+            {
+              label: 'take',
+              outcomes: [
+                {
+                  effects: [
+                    { op: 'addPacket', packetId: 'patch' },
+                    { op: 'gainBits', amount: 5 }, // bits are not a holding — no key
+                  ],
+                  next: 'b',
+                },
+              ],
+            },
+          ],
+        },
+        b: {
+          text: '…',
+          choices: [
+            {
+              label: 'pay',
+              outcomes: [
+                {
+                  effects: [
+                    { op: 'removeDaemon', daemonId: 'mars' },
+                    { op: 'grantUnit', archetype: 'shaman' },
+                    { op: 'removeUnit', pick: 'weakest' }, // dynamic key — the documented carve-out
+                  ],
+                  next: { kind: 'return-to-map' },
+                },
+              ],
+            },
+          ],
+        },
+      },
+    };
+    expect(eventPriorItemKeys(def)).toEqual(['daemon:mars', 'packet:patch', 'unit:shaman']);
+    expect(eventPriorItemKeys(undefined)).toEqual([]);
   });
 });

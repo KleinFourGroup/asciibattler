@@ -449,7 +449,8 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
       rollout: { horizonBattles: 1, priorLambda: 0.5, priorTable: { 'daemon:minerva': 29.58 } },
       shadowHorizon: { horizonBattles: 'run' },
     });
-    driver.decide('portBuy', liveRun(7), [tagged('a')]);
+    // 85g1 — λ≠0 requires the site's key set (the fail-closed guard).
+    driver.decide('portBuy', liveRun(7), [tagged('a')], { priorItemKeys: 'all' });
     // Live specs carry the fold; the long specs are stripped (the table
     // can never eat its own prior — the de-fold step by construction).
     expect(seen).toEqual([
@@ -464,6 +465,38 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
     expect(driver.decisions[0]!.horizon).toBeUndefined();
     expect(driver.decisions[1]!.priorLambda).toBe(0);
     expect(driver.decisions[1]!.horizon).toBe('run');
+  });
+
+  it('85g1 — λ≠0 without priorItemKeys THROWS (fail-closed); the keys thread into the live spec', () => {
+    const seen: (readonly string[] | 'all' | undefined)[] = [];
+    const evaluate = (
+      _live: Run,
+      _apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      seen.push(spec.priorItemKeys);
+      return { score: 0, perSeed: [] };
+    };
+    const config = {
+      evaluate,
+      rollout: { horizonBattles: 1, priorLambda: 0.5, priorTable: { 'daemon:minerva': 29.58 } },
+    };
+    // A keyless site under a λ arm is a launch mistake, never a silent
+    // un-restriction (the 85c throw pattern; gotcha #128's cousin).
+    expect(() =>
+      new RunArbitrationDriver(new RNG(1), config).decide('portBuy', liveRun(7), [tagged('a')]),
+    ).toThrow(/priorItemKeys/);
+    // With keys: both evaluations (null + challenger) carry them.
+    new RunArbitrationDriver(new RNG(1), config).decide('portBuy', liveRun(7), [tagged('a')], {
+      priorItemKeys: ['daemon:minerva'],
+    });
+    expect(seen.slice(-2)).toEqual([['daemon:minerva'], ['daemon:minerva']]);
+    // λ=0 needs no keys — the byte-identity path is untouched.
+    const zeroDriver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      rollout: { horizonBattles: 1 },
+    });
+    expect(() => zeroDriver.decide('portBuy', liveRun(7), [tagged('a')])).not.toThrow();
   });
 
   it('85b — walkPolicies change specs only: the driver decides byte-identically on/off (stream untouched)', () => {

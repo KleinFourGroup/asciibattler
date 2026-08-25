@@ -72,6 +72,7 @@ import type { InnerTier } from './walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { campRaidEligible } from '../campRaid';
 import type { DecisionSite } from './sites';
+import { getEvent, type EventDef } from '../../../src/config/events';
 
 /**
  * 85b — the driver + shadow-site streams ride the KEYED derivation door
@@ -433,6 +434,9 @@ function arbitratePortBuy(
 ): PortBuy | null {
   const challengers: RunDecisionCandidate[] = [];
   const buys: PortBuy[] = [];
+  // 85g1 — the candidate-delta key set: the union of the offered slot
+  // keys (level = instance noise, stripped — the priorItemOf convention).
+  const priorKeys: string[] = [];
 
   stock.daemons.forEach((slot, index) => {
     if (slot.sold || run.bits < slot.price) return;
@@ -441,6 +445,7 @@ function arbitratePortBuy(
       apply: ({ run: clone }) => clone.dispatch({ kind: 'buyPortDaemon', index }),
     });
     buys.push({ kind: 'daemon', index });
+    priorKeys.push(`daemon:${slot.daemonId}`);
   });
   stock.units.forEach((slot, index) => {
     if (slot.sold || run.bits < slot.price) return;
@@ -449,6 +454,7 @@ function arbitratePortBuy(
       apply: ({ run: clone }) => clone.dispatch({ kind: 'buyPortUnit', index }),
     });
     buys.push({ kind: 'unit', index });
+    priorKeys.push(`unit:${slot.template.archetype}`);
   });
   stock.packets.forEach((slot, index) => {
     if (slot.sold || run.bits < slot.price || !run.cacheHasRoom) return;
@@ -457,6 +463,7 @@ function arbitratePortBuy(
       apply: ({ run: clone }) => clone.dispatch({ kind: 'buyPortPacket', index }),
     });
     buys.push({ kind: 'packet', index });
+    priorKeys.push(`packet:${slot.packetId}`);
   });
 
   if (challengers.length === 0) return null;
@@ -478,6 +485,7 @@ function arbitratePortBuy(
   const winner = driver.decide('portBuy', run, challengers, {
     epsilon: epsilonOverride ?? portBuyEpsilon(run),
     rollout: { walkPolicies },
+    priorItemKeys: priorKeys,
   });
   return winner === null ? null : buys[challengers.indexOf(winner)]!;
 }
@@ -589,6 +597,9 @@ function arbitratePacketFire(
   const winner = driver.decide(`packetFire:${context}`, run, challengers, {
     epsilon: epsilonOverride ?? packetFireEpsilon(context, run),
     rollout: { walkPolicies },
+    // 85g1 — the candidate packet ids (fired-as-held keeps the term
+    // neutral either way; the restriction kills off-key walk noise).
+    priorItemKeys: [...seen].map((id) => `packet:${id}`),
   });
   return winner === null ? null : fires[challengers.indexOf(winner)]!;
 }
@@ -630,7 +641,13 @@ function arbitrateReward(
         apply: ({ run: clone }) => clone.dispatch({ kind: 'declineReward', index: 0 }),
       },
     ],
-    { epsilon: epsilonOverride ?? rewardDaemonEpsilon(run) },
+    {
+      epsilon: epsilonOverride ?? rewardDaemonEpsilon(run),
+      // 85g1 — the pending daemon alone. The null arm acquires IN-WALK
+      // (the flipped polarity), which is why the restriction rides the
+      // walk-terminal diff — the kickoff's mechanism revision.
+      priorItemKeys: [`daemon:${portion.daemonId}`],
+    },
   );
   return decline === null;
 }
@@ -707,6 +724,8 @@ function arbitrateGrant(
   const winner = driver.decide(`grant:${effect.kind}`, run, challengers, {
     epsilon: epsilonOverride ?? GRANT_EPSILON,
     rollout: { redraw: { kind: 'none' }, empower: { kind: 'none' } },
+    // 85g1 — grants acquire nothing: the prior term is pure walk noise here.
+    priorItemKeys: [],
   });
   return winner === null ? null : actions[challengers.indexOf(winner)]!;
 }
@@ -777,6 +796,10 @@ function arbitrateNodeChoice(
   const winner = driver.decide('nodeChoice', run, challengers, {
     epsilon: config.nodeChoiceEpsilon ?? NODE_CHOICE_EPSILON,
     rollout: { strategy: rolloutStrategy, tailScore },
+    // 85g1 — a node has no item; walk-bought holdings' beyond-horizon
+    // value flowing into a routing margin is exactly the all-holdings
+    // channel the 85h protocol de-folds (the 85f WATCH read ≈0 here).
+    priorItemKeys: [],
   });
   return winner === null ? nominee : nodes[challengers.indexOf(winner)]!;
 }
@@ -826,7 +849,15 @@ function arbitrateCampRaid(
         },
       },
     ],
-    { epsilon: epsilonOverride ?? CAMP_RAID_EPSILON },
+    {
+      epsilon: epsilonOverride ?? CAMP_RAID_EPSILON,
+      // 85g1 — deliberately UNRESTRICTED (the explicit 'all', not an
+      // omission): the raid's payout packets are reward-rolled — not
+      // statically nameable — and their prior reaching the run-layer
+      // score is signed 85d design ("the packet prior once held", the
+      // header above). CRN pairs the branches' non-raid acquisitions.
+      priorItemKeys: 'all',
+    },
   );
   return winner !== null;
 }
@@ -887,6 +918,31 @@ export function pinnedEventPick(
   return open[cloneRng.int(0, open.length - 1)]!;
 }
 
+/** 85g1 — the eventChoice candidate-delta key set: the static union of
+ *  every holdings-touching op id in the event's def, ALL pages (grants
+ *  may land on follow-up pages, so per-choice reachability is skipped —
+ *  a safe over-approximation; over-inclusion readmits noise only when a
+ *  walk happens to acquire the same id elsewhere). `removeUnit` has no
+ *  static key and is EXCLUDED (documented carve-out, WORKLOG
+ *  §85g-kickoff). Exported for the pin test. */
+export function eventPriorItemKeys(def: EventDef | undefined): readonly string[] {
+  if (def === undefined) return [];
+  const keys = new Set<string>();
+  for (const page of Object.values(def.pages)) {
+    for (const choice of page.choices) {
+      for (const outcome of choice.outcomes) {
+        for (const op of outcome.effects ?? []) {
+          if (op.op === 'addPacket' || op.op === 'removePacket') keys.add(`packet:${op.packetId}`);
+          else if (op.op === 'addDaemon' || op.op === 'removeDaemon')
+            keys.add(`daemon:${op.daemonId}`);
+          else if (op.op === 'grantUnit') keys.add(`unit:${op.archetype}`);
+        }
+      }
+    }
+  }
+  return [...keys].sort();
+}
+
 function arbitrateEventChoice(
   driver: RunArbitrationDriver,
   run: Run,
@@ -921,6 +977,9 @@ function arbitrateEventChoice(
   const winner = driver.decide('eventChoice', run, challengers, {
     epsilon: config.eventChoiceEpsilon ?? EVENT_CHOICE_EPSILON,
     rollout: { strategy: rolloutStrategy },
+    // 85g1 — the boon-separation instrument survives by construction:
+    // the options' granted items ARE in this set; only off-key dies.
+    priorItemKeys: eventPriorItemKeys(getEvent(decisionRef.eventId)),
   });
   return winner === null ? nominee : choices[challengers.indexOf(winner)]!;
 }

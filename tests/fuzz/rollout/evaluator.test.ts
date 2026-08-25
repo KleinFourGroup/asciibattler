@@ -172,6 +172,34 @@ describe('85c — the fold (priorBonus over the holdings delta; the 2026-08-24 s
     expect(gained.score).toBeCloseTo(TABLE['daemon:minerva'], 10);
     expect(gained.priorBonus).toBeCloseTo(TABLE['daemon:minerva'], 10);
   });
+
+  it("85g1 — the candidate-delta restriction: off-key deltas fold 0; 'all'/absent = unrestricted", () => {
+    // The walked clone acquired the decision's daemon AND an off-key
+    // packet (walk stochasticity — landmine 12c's residual, the 85e
+    // σ×2.3–9.5 attribution noise the 85h protocol de-folds).
+    const b = after({});
+    const a = after({ daemonIds: ['minerva'], cachePacketIds: ['patch'] });
+    const both = TABLE['daemon:minerva'] + TABLE['packet:patch'];
+    expect(priorBonusOf(b, a, prior()).bonus).toBeCloseTo(both, 10); // absent = unrestricted (fixtures)
+    expect(priorBonusOf(b, a, prior({ itemKeys: 'all' })).bonus).toBeCloseTo(both, 10); // the explicit opt-out (campRaid)
+    // The decision's own key alone participates.
+    expect(
+      priorBonusOf(b, a, prior({ itemKeys: ['daemon:minerva'] })).bonus,
+    ).toBeCloseTo(TABLE['daemon:minerva'], 10);
+    // An empty key set folds 0 whatever the walk acquired (grant/node sites).
+    expect(priorBonusOf(b, a, prior({ itemKeys: [] })).bonus).toBe(0);
+    // Losses restrict identically (the reverse delta).
+    expect(
+      priorBonusOf(a, b, prior({ itemKeys: ['packet:patch'] })).bonus,
+    ).toBeCloseTo(-TABLE['packet:patch'], 10);
+    // 12b composes: an off-key fired packet stays excluded.
+    const fired = priorBonusOf(
+      b,
+      after({ daemonIds: ['minerva'] }),
+      prior({ itemKeys: ['daemon:minerva'], firedPacketIds: ['patch'] }),
+    );
+    expect(fired.bonus).toBeCloseTo(TABLE['daemon:minerva'], 10);
+  });
 });
 
 describe('evaluateRunCandidate (69d — the evaluator wiring)', () => {
@@ -292,5 +320,40 @@ describe('evaluateRunCandidate (69d — the evaluator wiring)', () => {
       expect(b.priorBonus).not.toBeUndefined();
       expect(b.score).toBeCloseTo(plain.perSeed[i]!.score + b.priorBonus!, 10);
     });
+  });
+
+  it('85g1 — priorItemKeys threads to the fold: [] ≡ the empty-table fold; \'all\' ≡ absent', () => {
+    const live = liveRun(20260730);
+    const TABLE = { 'unit:mercenary': -1.75, 'unit:shaman': 14.35, 'packet:patch': 20.84 };
+    const valued = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 1,
+      priorTable: TABLE,
+    });
+    // 'all' is byte-identical to leaving the field off (the explicit opt-out).
+    const all = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 1,
+      priorTable: TABLE,
+      priorItemKeys: 'all',
+    });
+    expect(all).toEqual(valued);
+    // [] restricts EVERY key away — byte-identical to folding an empty
+    // table (the fold path runs, every value maps to 0). If the field
+    // failed to thread, this would equal the unrestricted `valued` run
+    // instead whenever the walk moves the holdings delta.
+    const none = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 1,
+      priorTable: TABLE,
+      priorItemKeys: [],
+    });
+    const emptyTable = evaluateRunCandidate(live, null, {
+      ...SPEC,
+      priorLambda: 1,
+      priorTable: {},
+    });
+    expect(none).toEqual(emptyTable);
+    none.perSeed.forEach((b) => expect(b.priorBonus).toBe(0));
   });
 });

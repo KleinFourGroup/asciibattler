@@ -1422,15 +1422,19 @@ rider). Audit findings:
    / removePacket / addDaemon / removeDaemon / grantUnit across ALL
    pages — a safe over-approximation robust to page-graph
    reachability; `removeUnit`'s key is dynamic and is EXCLUDED,
-   documented) · campRaid = `[]` (carve-out: camp-reward acquisitions
-   go un-attributed — reward rolls aren't statically nameable; the
-   realized rollout still scores their within-horizon effect).
-   Fail-closed: `driver.decide` THROWS on a λ≠0 spec with no
-   `priorItemKeys` (the 85c launch-mistake pattern); the
-   evaluator-level `itemKeys` stays optional (absent = unrestricted)
-   for fixtures. The boon-separation instrument survives by
-   construction — the granted items ARE in the key set; only off-key
-   noise dies.
+   documented) · campRaid = the explicit `'all'` sentinel
+   (CORRECTED at the 85g1 build from the kickoff sketch's `[]`: the
+   85d site header NAMES the raid's packet payout reaching the
+   run-layer score — "the packet prior once held" — as signed
+   design, and reward-roll payouts aren't statically nameable, so
+   campRaid stays deliberately UNRESTRICTED; the `'all'` sentinel
+   exists precisely so "deliberate" and "forgot" are
+   distinguishable). Fail-closed: `driver.decide` THROWS on a λ≠0
+   spec with no `priorItemKeys` (the 85c launch-mistake pattern);
+   the evaluator-level `itemKeys` stays optional (absent =
+   unrestricted) for fixtures. The boon-separation instrument
+   survives by construction — the granted items ARE in the key set;
+   only off-key noise dies.
 3. **Prior v2 needs a fresh box shadow batch** before the rebuild:
    "final walker semantics" is simply current HEAD (post-85b,
    post-`0e68337`), but the rows must be RE-MEASURED — an §84-style

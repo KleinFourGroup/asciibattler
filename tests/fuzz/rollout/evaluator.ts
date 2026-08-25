@@ -119,6 +119,17 @@ export interface RunHoldingsPrior {
   readonly table: Readonly<Record<string, number>>;
   /** Packets the branch fired (12b). */
   readonly firedPacketIds?: readonly string[];
+  /** 85g1 — the CANDIDATE-DELTA restriction (the 85h-mandated de-fold;
+   *  WORKLOG §85g-kickoff): when an array, ONLY these item keys
+   *  participate in the fold — the decision's own items, supplied
+   *  per-site — so stochastic off-key mid-walk acquisitions (landmine
+   *  12c's residual, the 85e σ×2.3–9.5 attribution noise) never enter
+   *  the margin. `'all'` = deliberately unrestricted (the campRaid
+   *  design: reward-roll payouts aren't statically nameable and their
+   *  prior is signed 85d behavior); absent = unrestricted (the
+   *  fixture/test path — every live driver site passes one or the
+   *  other, enforced by the driver's λ≠0 throw). */
+  readonly itemKeys?: readonly string[] | 'all';
 }
 
 /** The signed, clamped prior term + whether the cap engaged. Exported
@@ -141,8 +152,17 @@ export function priorBonusOf(
   for (const id of before.cachePacketIds) add(`packet:${id}`, -1);
   for (const a of after.teamArchetypes) add(`unit:${a}`, 1);
   for (const a of before.teamArchetypes) add(`unit:${a}`, -1);
+  // 85g1 — the candidate-delta restriction: off-key deltas are walk
+  // stochasticity, not the decision's doing (the reward site's null arm
+  // acquires IN-WALK, which is why the restriction rides the terminal
+  // diff instead of an apply-time snapshot — WORKLOG §85g-kickoff).
+  const restrict =
+    prior.itemKeys !== undefined && prior.itemKeys !== 'all' ? new Set(prior.itemKeys) : null;
   let raw = 0;
-  for (const [key, n] of delta) raw += n * (prior.table[key] ?? 0);
+  for (const [key, n] of delta) {
+    if (restrict !== null && !restrict.has(key)) continue;
+    raw += n * (prior.table[key] ?? 0);
+  }
   const unclamped = prior.lambda * raw;
   const clamped = Math.abs(unclamped) > PRIOR_BONUS_CAP;
   const bonus = clamped ? Math.sign(unclamped) * PRIOR_BONUS_CAP : unclamped;
@@ -241,6 +261,10 @@ export interface RunRolloutSpec {
    *  `priorFoldValues`). Required when priorLambda ≠ 0 (throws loud —
    *  a λ arm with no table is a launch mistake, never a silent 0). */
   readonly priorTable?: Readonly<Record<string, number>>;
+  /** 85g1 — the per-decision candidate-delta key set (threaded into
+   *  `RunHoldingsPrior.itemKeys`; see its doc). Set by the driver from
+   *  the site's decide() opts; absent = unrestricted (fixtures). */
+  readonly priorItemKeys?: readonly string[] | 'all';
   readonly innerTier?: InnerTier;
   readonly strategy?: FuzzStrategy;
   /** 85b — the all-rollouts walk-policy overlay (fires + the dock
@@ -335,7 +359,12 @@ export function evaluateRunCandidate(
     // terminal is otherwise indistinguishable from a clean truncation.
     const prior =
       priorLambda !== 0
-        ? { lambda: priorLambda, table: spec.priorTable!, firedPacketIds }
+        ? {
+            lambda: priorLambda,
+            table: spec.priorTable!,
+            firedPacketIds,
+            ...(spec.priorItemKeys !== undefined ? { itemKeys: spec.priorItemKeys } : {}),
+          }
         : undefined;
     const base = { ...scoreTerminal(before, readRunMetrics(clone.run), bitsLambda, prior), walkOutcome: walk.outcome };
     if (spec.tailScore !== undefined) {

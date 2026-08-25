@@ -215,6 +215,10 @@ export class RunArbitrationDriver {
     opts: {
       readonly epsilon?: number;
       readonly rollout?: RunArbitrationConfig['rollout'];
+      /** 85g1 — the site's candidate-delta key set (MANDATORY when the
+       *  config carries λ_prior ≠ 0; `'all'` = the explicit opt-out —
+       *  see `RunHoldingsPrior.itemKeys`). */
+      readonly priorItemKeys?: readonly string[] | 'all';
     } = {},
   ): RunDecisionCandidate | null {
     if (challengers.length === 0) return null;
@@ -235,7 +239,18 @@ export class RunArbitrationDriver {
       horizonBattles: rollout.horizonBattles ?? 1,
       ...rollout,
       pairs,
+      ...(opts.priorItemKeys !== undefined ? { priorItemKeys: opts.priorItemKeys } : {}),
     };
+    // 85g1 — fail-closed (the 85c launch-mistake pattern): a λ arm at a
+    // site that never declared its item keys would silently un-restrict
+    // the fold — the exact forgetful path the candidate-delta mandate
+    // closes. `'all'` is the explicit opt-out (the campRaid 85d design).
+    if ((spec.priorLambda ?? 0) !== 0 && opts.priorItemKeys === undefined) {
+      throw new Error(
+        `RunArbitrationDriver.decide('${site}'): priorLambda ≠ 0 requires priorItemKeys ` +
+          `(pass the decision's own item keys, or the explicit 'all')`,
+      );
+    }
 
     const nullResult = this.evaluate(live, null, spec);
     const results: RunCandidateResult[] = [nullResult];

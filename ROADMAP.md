@@ -164,11 +164,11 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
 - [ ] 85g — the 55pre regenerate + the λ rerun (cut signed at the
       2026-08-25 kickoff, WORKLOG §85g-kickoff; predictions: World
       v35 / Run v44 hold, no new RNG streams):
-  - [ ] 85g1 — the candidate-delta de-fold REPLACES the all-holdings
-        fold: per-site `priorItemKeys` restrict the walk-terminal
-        diff (⚠ the kickoff's mechanism revision — apply-time
-        snapshots kill the reward site); λ=0 byte-identity holds;
-        driver throws on a λ≠0 keyless site; off-key pin.
+  - [x] 85g1 — the candidate-delta de-fold ✅ 2026-08-25 — per-site
+        `priorItemKeys` restrict the walk-terminal diff (campRaid =
+        the explicit `'all'`, a build-time correction: the 85d
+        signed payout design — WORKLOG §85g-kickoff); λ=0
+        byte-identical; the λ≠0 keyless-site throw + 5 pins.
   - [ ] 85g2 — prior v2: builder shrinkage (n/(n+k) toward the
         pooled mean) + machine provenance; then the TRAIN-bank
         shadow batch + the table-v2 rebuild (box; own commit).

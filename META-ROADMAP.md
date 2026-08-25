@@ -477,7 +477,10 @@ the feel pile is empty or explicitly deferred.
   matrix for the Pages build (Safari/Firefox WebGL2 + Web Audio).
 - **Human gauntlet #2** — the §53g ~80% baseline predates events, camps,
   rarity, characters, and the braid; re-anchor before ship tuning (closes the
-  starting-event-vs-cell TODO).
+  starting-event-vs-cell TODO). 85h sharpened the gate (2026-08-25,
+  tiger-team item 8): the scalar rests on ONE player × 11 cells × 3 seeds on
+  the old engine — **no macro band signs against the human anchor until the
+  re-record** (WORKLOG §85h).
 - Store-page assets · the Pages build as the demo channel · the final deploy
   story (hand-upload retires or is formalized).
 

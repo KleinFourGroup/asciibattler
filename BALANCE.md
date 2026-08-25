@@ -3695,3 +3695,28 @@ deltas. The pre-X H7c→O log lives at
     `valuePerHop × hopsRemaining` remains NOT supported as linear;
     the fold design carries the pre-registered 85-pre constraints
     (#12a–d).
+- **2026-08-25 — §85h: the amendment session (protocol; the 85f
+  numbers live in WORKLOG §85f, this entry changes how they may be
+  used).** The λ-signing protocol is now MANDATORY (user-signed):
+  candidate-delta de-fold for attribution (never all-holdings), the
+  prior table re-estimated under FINAL walker semantics (85f's rows
+  are pre-85b at `53283d8` on overlapping seeds — the train/select
+  leak; 85f stays EXPLORATORY for λ), and disjoint seed banks
+  (train / choose / one-use signing). **λ=0.5 is the PRE-REGISTERED
+  default candidate** (the overspend signature: λ=1 spends more bank
+  for less win on both vectors); the doctrine arm stays λ_prior=0
+  until the post-rerun signing. Prior v2 = site-conditioned via
+  hierarchical shrinkage toward the pooled mean (systemic sign-flips,
+  but portBuy cells n=8–32 — never a naive per-site split), with
+  `measurementHead`/`buildHead` as machine fields. **Standing
+  interpretation adopted — the FOLD-MAKES-ARB-PAY thesis:** the 85e
+  ε floors made λ=0 arbitration MORE conservative (arb at/below
+  doctrine: act-1 regen ceiling −0.092, arb-55pre fires 0.82 under
+  band) while every λ>0 arm improves on λ=0; the five 85f board
+  WARNs are ONE story. The regen-walk wall 0.438 (signed band 30–35)
+  is DISPOSITIONED re-read-after-the-λ-rerun — the fold moves the
+  wall directly (0.438→0.327→0.300 across λ), so a λ=0 disposition
+  would sign a number the pending default moves. **55pre
+  REGENERATES**: the re-derive runs on the deployed arm once
+  `--arbitrate`+`--search` compat lands (85g); `pre55ReachRef`
+  retires with it. Detail + the compat/cost audit: WORKLOG §85h.

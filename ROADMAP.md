@@ -156,18 +156,24 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       leak); separation + WATCH pass; wall refs RE-PINNED 0.775/0.675
       (user-signed); the pin-fix + ghost-driver saga → WORKLOG §85f +
       gotcha #126.
-- [ ] 85h — the amendment session (RE-ORDERED before 85g, user-signed
-      2026-08-25: the 55pre fork + λ protocol + search-arm compat all
-      shape what 85g searches): agenda =
-      scratch/85f-tiger-team-actions.md (8 items incl. the mandatory
-      candidate-delta de-fold + disjoint-seed λ banks, the board
-      split, the 55pre fork, prior v2 shrinkage) + the
-      fold-makes-arb-pay thesis + the λ=0.5>λ=1 overspend signature +
-      the campRaid causal arm + the 0.438 regen-walk wall re-read;
-      λ_prior's default signs here or at the post-rerun follow-up.
-- [ ] 85g — the 55pre re-derive, RE-SCOPED BY 85h (the fork decision
-      + λ default + possible `--arbitrate`+`--search` compat);
-      `pre55ReachRef` retires or re-pins with it.
+- [x] 85h — the amendment session ✅ 2026-08-25 — all twelve items
+      signed as proposed: 55pre = REGENERATE + the
+      `--arbitrate`+`--search` compat build (probe-first decides
+      full-arb vs hybrid search staging); the λ rerun protocol
+      MANDATORY (candidate-delta de-fold · prior v2 under final
+      walker · disjoint seed banks); λ default signs POST-RERUN
+      (λ=0.5 pre-registered); board split → §86-adjacent; perf
+      riders → §86; the fold-makes-arb-pay thesis + the 0.438
+      disposition → BALANCE 2026-08-25; gotchas #127/#128 +
+      walkDepth.ts/sites.ts landed — WORKLOG §85h.
+- [ ] 85g — the 55pre regenerate + the λ rerun (scope signed at 85h,
+      WORKLOG §85h): the de-fold build → prior v2 (final-walker
+      re-measure · shrinkage · machine provenance) → the search-arm
+      compat (per-seed wrap + byte-identity oracle) → the cost probe
+      (full-arb vs hybrid) → the re-derive → the disjoint-seed λ
+      cohort (+ the campRaid causal arm) → λ signs; `pre55ReachRef`
+      retires; the 0.438 wall re-reads here. Sub-steps cut at
+      kickoff.
 
 ## Phase 86 — The balancer performance pass
 
@@ -181,6 +187,17 @@ sha across arms); a lever that flips a decision is a doctrine change
 for the user, not a speedup. **Risk:** medium (the hot loop).
 **Exit:** a measured per-seed speedup with byte-identical outputs — or
 a documented no-op with the profile on record.
+
+85h riders (user-signed 2026-08-25, WORKLOG §85h): (1) the **board
+split** lands §86-adjacent — fail-closed verdict board (missing /
+N-A / empty-strategy / under-n / duplicate-seed / provenance all
+FAIL) vs drift dashboard vs instrument-health suite, + the
+skill-gradient anchor rows (pure-random / greedy / searched upper) +
+the per-batch machine manifest; (2) batch/search **perf riders** join
+the profile-first agenda (measure before building): transient-only
+spawn retry · dynamic per-seed queue · staged n40→80→120 with
+pre-registered extension rules · stratified shadow site quotas ·
+warm-start + successive-halving for `--search`.
 
 _(Sub-steps cut at phase kickoff.)_
 

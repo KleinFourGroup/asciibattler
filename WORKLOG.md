@@ -1260,3 +1260,127 @@ should search; (3) the **85h agenda** = the tiger-team draft's 8 items
 campRaid causal arm + the 0.438 wall re-read; (4) gotcha #126 + the
 retro notes. Ops lessons → retro/scratchpad.md (the ritual sweeps at
 the round boundary).
+
+## Phase 85h — the amendment session (2026-08-25, user-signed)
+
+All twelve agenda items (the tiger-team draft's 8 + the four 85f
+additions) **signed as proposed in one sitting**; the only item the
+user probed was the 55pre fork's compat cost, answered by a
+code-reality audit before the signature (below). The agenda doc
+(`scratch/85f-tiger-team-actions.md`, gitignored scratch) is stamped
+DISPOSITIONED and historical.
+
+### The decisions
+
+1. **The 55pre fork = REGENERATE-AND-COLLAPSE**, and the
+   `--arbitrate`+`--search` compat build is IN 85g scope. Rationale:
+   the "no search can train on the arm the fixtures deploy on"
+   mismatch (train non-arbitrated, judge arbitrated, every board row)
+   is structural debt that only grows — 85f just showed the fold
+   changes what the deployed arm *does* (fires 2.27→~4, bank −17/−45),
+   so a non-arb-trained strategy is increasingly optimizing a
+   different game. 55pre keeps no frozen alias; `pre55ReachRef`
+   retires at the re-derive.
+2. **λ_prior's default signs POST-RERUN, not at 85h.** λ=0.5 is the
+   PRE-REGISTERED candidate (the 85f overspend signature: λ=1 banks
+   −45 vs λ=0.5's −17 on 55pre for LESS win, both vectors). The
+   doctrine arm stays λ=0 until the signing.
+3. **The λ rerun protocol is MANDATORY** (the tiger team's core catch,
+   adopted verbatim): (a) the candidate-delta de-fold built and used
+   for attribution — never all-holdings; (b) the prior table
+   re-estimated under FINAL walker semantics (85f's table rows are
+   pre-85b-walker at `53283d8` on seeds overlapping the cohort — the
+   train/select leak); (c) disjoint seed banks: train / choose /
+   one-use signing.
+
+### The compat audit (the code reality behind decision 1)
+
+The `args.ts:483` refusal is the 70a LABELING guard ("a search
+silently ignoring the flag would label the batch wrong"), not a
+technical wall — `--searcher` sat behind the identical guard until
+59e. The 59e pattern is the template: flags ride the shard job file,
+the worker re-resolves through the same resolver run mode uses
+(`evalShard.ts:59`), so the sharded search drives the identical arm
+byte-for-byte. One real design choice: run mode wraps the strategy
+PER SEED (`run.ts` `strategyFor` — the arbitrated arm is stateful,
+one driver per run) while the search worker hands ONE shared instance
+to `runMany`; the clean fix is moving the wrap into `HarnessOptions`
+so `runOne` does the per-seed wrap — which makes a **byte-identity
+oracle on the run path mandatory** (same-seed summary+decisions
+sha-match across the relocation). Estimate: ~a day of code incl. the
+refusal-matrix + shard-parity tests (`searcherArgs.test.ts`
+precedent); no snapshot bump predicted (harness-side only).
+
+**The real cost is compute, not code:** one arbitrated ARM run ≈
+255 s/seed (the 84d probe), so a naïve full-arb search (vectors ×
+train seeds + test + refine) is box-DAYS. Two shapes on the table,
+**decided probe-first at 85g** (the 84d/59f discipline — one cost
+probe at real search shapes before the cohort sizes): (a) HYBRID
+staging — train/screen non-arbitrated, refine + final selection
+arbitrated (the winning strategy is judged on the deployed arm at a
+fraction of the cost; residual impurity: the coarse screen still
+ranks on the old game); (b) full-arb search, only viable if §86's
+warm-start/successive-halving riders get pulled forward. Prior
+going in: hybrid wins value-per-box-hour.
+
+### The routing (B-items)
+
+- **Board split → a §86-adjacent instrument step**: the fail-closed
+  verdict board (missing / N-A / empty-strategy / under-n /
+  duplicate-seed / provenance-mismatch all FAIL, never silent pass)
+  split from the drift dashboard and the instrument-health suite; +
+  the skill-gradient anchor rows (pure-random / greedy / searched
+  upper) and the per-batch machine manifest. Too load-bearing for a
+  post-round audit — the review's "board cannot fail" finding.
+- **Perf riders → the §86 charter** (profile-first still governs):
+  transient-only spawn retry · dynamic per-seed queue · staged
+  n40→80→120 with pre-registered extension rules · stratified shadow
+  quotas · warm-start + successive-halving for `--search`.
+- **Prior v2 shrinkage + provenance RIDE the 85g re-estimate** (one
+  rebuild): site-conditioned prior via hierarchical shrinkage toward
+  the pooled mean (the sign-flips are systemic — boon-packet ±0.04,
+  ronin −33/+2.9, stormcaller +82/+5, mercury +15/−10 — but portBuy
+  cells are n=8–32, so never a naive per-site split);
+  `measurementHead` + `buildHead` as separate MACHINE fields (the
+  free-text `head` misled across two rebuilds) + hashed/relative
+  sources.
+- **Later rounds**: the human-calibration re-record gate sharpened in
+  META-ROADMAP Round 12 (no macro band signs against the ~80% human
+  anchor until the re-record — one player × 11 cells × 3 seeds on the
+  old engine); the clean-sheet value-model idea parked in TODO with
+  the review's own caution as the reason.
+
+### Landed this session (C-items)
+
+- **Gotchas #127 + #128** + the structural guards (the second
+  commit): `tests/fuzz/walkDepth.ts` — the ONE home for lexicographic
+  (sectorsCleared, finalHop) depth compares, board.ts + reporters.ts
+  rewired through it (the 85f reader's bare-finalHop was the THIRD
+  #120-shape instance, and the first in a READER — the class re-opens
+  with every new scratch reader unless the helper is the path of
+  least resistance); `tests/fuzz/rollout/sites.ts` — the canonical
+  `DECISION_SITES` registry + `DecisionSite` union (the reader's
+  `site === 'reward'` silently dropped ~144 rows/arm; the 82c family;
+  `verifyArbitratedRuns.ts` carried its own stale local list —
+  missing eventChoice/recruit/campRaid — now `satisfies`-checked).
+- **The fold-makes-arb-pay thesis adopted as the STANDING
+  interpretation** (BALANCE run-log 2026-08-25): the 85e floors made
+  λ=0 arbitration MORE conservative — arb reads at/below doctrine
+  (act-1 regen ceiling −0.092; arb-55pre fires 0.82 under band) —
+  while every λ>0 arm improves on λ=0. The five 85f board WARNs are
+  ONE story, not five defects.
+- **The 0.438 regen-walk wall DISPOSITIONED: re-read after the λ
+  rerun.** The fold moves the wall directly (0.438→0.327→0.300
+  across λ on the regen vector) — dispositioning it at λ=0 would
+  sign a number the pending default is about to move.
+- **The campRaid causal arm** (enabled-vs-disabled paired) rides the
+  85g cohort on the same disjoint-seed banks — no separate box trip.
+
+### The re-scoped 85g (charter level; sub-steps cut at its kickoff)
+
+De-fold build → prior v2 rebuild (final-walker re-measure ·
+shrinkage · machine provenance) → the search-arm compat (per-seed
+wrap into HarnessOptions + the byte-identity oracle + job-file
+plumbing) → the cost probe (full-arb vs hybrid) → the 55pre
+regenerate re-derive → the disjoint-seed λ cohort (+ campRaid causal
+arm) → λ signs and `pre55ReachRef` retires.

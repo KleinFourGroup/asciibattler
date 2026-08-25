@@ -185,6 +185,15 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Design explorations (post-Phase-G)
 
+- [ ] **Clean-sheet corpus/value-model idea — parked (85h,
+      2026-08-25).** The tiger-team review floated learning a value
+      model from a run corpus to replace the hand-built prior table;
+      its own caution (data hunger, drift with every balance change,
+      opacity at sign-time) is the reason it stays parked — adopted as
+      the disposition at §85h. Revisit only if the prior-table lineage
+      (v1 → the 85g shrinkage v2) proves insufficient at §88 / Round 9
+      content scale. WORKLOG §85h.
+
 - [ ] **Save/load interstitial round (live persistence).** Everything
       *serializes* (Run/World snapshots, reject-stale, round-trip tests) but no
       LIVE save/load exists — `Run.fromJSON` is called only from tests, and

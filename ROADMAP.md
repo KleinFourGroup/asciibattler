@@ -165,16 +165,16 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       2026-08-25 kickoff, WORKLOG §85g-kickoff; predictions: World
       v35 / Run v44 hold, no new RNG streams):
   - [x] 85g1 — the candidate-delta de-fold ✅ 2026-08-25 — per-site
-        `priorItemKeys` restrict the walk-terminal diff (campRaid =
-        the explicit `'all'`, a build-time correction: the 85d
-        signed payout design — WORKLOG §85g-kickoff); λ=0
-        byte-identical; the λ≠0 keyless-site throw + 5 pins.
+        `priorItemKeys` on the walk-terminal diff (campRaid `'all'`
+        by 85d design); λ=0 byte-identical; the λ≠0 keyless throw —
+        WORKLOG §85g-kickoff.
   - [ ] 85g2 — prior v2: builder shrinkage (n/(n+k) toward the
         pooled mean) + machine provenance; then the TRAIN-bank
         shadow batch + the table-v2 rebuild (box; own commit).
-  - [ ] 85g3 — the search-arm compat: the `wrapStrategy` seam +
-        run.ts relocation (byte-identity oracle) + the args relax +
-        job-file threading + refusal-matrix/shard-parity tests.
+  - [x] 85g3 — the search-arm compat ✅ 2026-08-25 — the
+        `wrapStrategy` seam + run.ts relocation (ORACLE sha-IDENTICAL,
+        fold engaged) + args relax + job-file threading — WORKLOG
+        §85g3.
   - [ ] 85g4 — the cost probe → DECISION POINT: full-arb vs hybrid
         staging (hybrid pre-registered).
   - [ ] 85g5 — the re-derive at λ=0 doctrine (a nonzero λ* → the

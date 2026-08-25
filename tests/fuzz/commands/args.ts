@@ -24,6 +24,10 @@ import {
 import { parseScriptsSpec } from '../scriptSubset';
 import { AUDITION_SCRIPTS, type TrafficScript } from '../../../src/bot/TrafficScriptDriver';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
+import type { FuzzStrategy } from '../Strategy';
+import type { InnerTier } from '../rollout/walker';
+import { makeArbitratedStrategy, type ArbitratedConfig } from '../rollout/arbitratedStrategy';
+import { loadPriorTable, priorFoldValues, priorFoldValuesBySite } from '../prior/priorTable';
 import { FORCE_PROCEDURAL } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
 import { ENCOUNTER_IDS } from '../../../src/config/encounters';
@@ -478,12 +482,27 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   if ((args.k !== undefined || args.kTelemetry) && !args.searcher) {
     throw new Error('--k / --k-telemetry require --searcher');
   }
-  // 70a — the arbitrated arm is run-mode-only (the --scripts discipline:
-  // a search/sweep silently ignoring it would label the batch wrong).
-  if (args.arbitrate && (args.search || args.balanceSweep || args.arena || args.evalShard)) {
+  // 70a (relaxed at 85g3, the 59e mode-by-mode discipline) — `--search`
+  // now SUPPORTS the arbitrated arm (the wrapStrategy seam; the eval-shard
+  // children re-resolve via arbitratedWrapFromArgs, never the CLI);
+  // sweep/arena still bail — support lands mode-by-mode, deliberately.
+  if (args.arbitrate && (args.balanceSweep || args.arena || args.evalShard)) {
     throw new Error(
-      '--arbitrate is not supported in --search/--balance-sweep/--arena yet (run mode only)',
+      '--arbitrate is not supported in --balance-sweep/--arena yet (run + search modes only)',
     );
+  }
+  // 85g3 — the run-mode INSTRUMENTS never ride a search: a search silently
+  // ignoring them would label the batch wrong (the same 70a discipline),
+  // and none of them belong in a training loop (--flip-telemetry /
+  // --shadow-horizon are telemetry, --grant-epsilon is an ablation dial).
+  if (args.search && args.flipTelemetry !== undefined) {
+    throw new Error('--flip-telemetry is a run-mode instrument (not supported with --search)');
+  }
+  if (args.search && args.shadowHorizon !== undefined) {
+    throw new Error('--shadow-horizon is a run-mode instrument (not supported with --search)');
+  }
+  if (args.search && args.grantEpsilon !== undefined) {
+    throw new Error('--grant-epsilon is a run-mode ablation dial (not supported with --search)');
   }
   if (args.arbitrateTier !== undefined) {
     if (!args.arbitrate) {
@@ -741,6 +760,65 @@ export function searcherFromArgs(
     };
   }
   return scripts ?? true;
+}
+
+/** 85g3 — normalize a `searcherFromArgs` value into the arbitrated arm's
+ *  `rolloutSearch` config (the harness's own normalization, 85b finding 6;
+ *  `kFlipTelemetry` deliberately stripped — a rollout needs the play
+ *  policy, not the instrument). Extracted verbatim from run.ts so the
+ *  eval-shard children normalize identically. */
+export function normalizeArbRolloutSearch(
+  rolloutSearch: true | readonly TrafficScript[] | RolloutSearchConfig | undefined,
+): RolloutSearchConfig | undefined {
+  return rolloutSearch === undefined
+    ? undefined
+    : rolloutSearch === true
+      ? {}
+      : Array.isArray(rolloutSearch)
+        ? { scripts: rolloutSearch as readonly TrafficScript[] }
+        : (({ kFlipTelemetry: _drop, ...keep }) => keep)(rolloutSearch as RolloutSearchConfig);
+}
+
+/**
+ * 85g3 — resolve the arbitrated arm's CORE flags into the harness's
+ * per-seed `wrapStrategy` factory (the 59e `searcherFromArgs` discipline:
+ * ONE resolver shared by run mode and the `--eval-shard` children, which
+ * receive the FLAGS via the job file and re-resolve here — so a sharded
+ * search drives the identical arm byte-for-byte). Core = tier + the fold
+ * (λ + both table views, loaded ONCE at resolve time — a missing table
+ * throws before any seed runs, the 85c contract) + the searcher config
+ * for searcher-tier rollouts. The run-mode INSTRUMENTS (`--flip-telemetry`
+ * / `--shadow-horizon` / `--grant-epsilon`) are run.ts compositions passed
+ * through `extras` and are REFUSED with `--search` (validateArgs above).
+ */
+export function arbitratedWrapFromArgs(
+  args: Pick<
+    CliArgs,
+    'arbitrate' | 'arbitrateTier' | 'priorLambda' | 'searcher' | 'searcherSpec' | 'audition' | 'k' | 'kTelemetry'
+  >,
+  extras: Partial<ArbitratedConfig> = {},
+): ((seed: number, base: FuzzStrategy) => FuzzStrategy) | undefined {
+  if (!args.arbitrate) return undefined;
+  const innerTier = args.arbitrateTier as InnerTier | undefined;
+  const arbRolloutSearch = normalizeArbRolloutSearch(searcherFromArgs(args));
+  const priorTable =
+    args.priorLambda !== undefined && args.priorLambda !== 0 ? loadPriorTable() : undefined;
+  const priorFold =
+    priorTable !== undefined
+      ? {
+          priorLambda: args.priorLambda!,
+          priorTable: priorFoldValues(priorTable),
+          priorTableBySite: priorFoldValuesBySite(priorTable),
+        }
+      : {};
+  return (seed, base) =>
+    makeArbitratedStrategy(seed, {
+      base,
+      ...(innerTier !== undefined ? { innerTier } : {}),
+      ...(arbRolloutSearch !== undefined ? { rolloutSearch: arbRolloutSearch } : {}),
+      ...priorFold,
+      ...extras,
+    });
 }
 
 export function range(start: number, count: number): number[] {

@@ -310,6 +310,21 @@ export interface HarnessOptions {
    * RNG draw), so the existing baselines are untouched.
    */
   readonly assertOccupancy?: boolean;
+  /**
+   * 85g3 — the per-seed strategy wrap (the `--arbitrate` search-compat
+   * seam): applied INSIDE runOne because the arbitrated arm is STATEFUL
+   * per run (driver RNG + decision log — the 70a finding) while
+   * runMany/evalShard hand ONE base instance across seeds. Deliberately a
+   * GENERIC factory — the harness stays arbitration-ignorant; run mode
+   * and the `--eval-shard` children build it through the same resolver
+   * (`arbitratedWrapFromArgs`, the 59e discipline), so every mode drives
+   * the identical arm by construction. The wrapped instance's name flows
+   * into `RunResult.strategyName`; if it exposes `driver.decisions`,
+   * runOne harvests it onto `RunResult.decisions` post-run (the 71a
+   * contract, relocated from run.ts — the relocation is byte-identity
+   * proven by the 85g3 oracle). Absent = byte-identical to pre-85g3.
+   */
+  readonly wrapStrategy?: (seed: number, base: FuzzStrategy) => FuzzStrategy;
 }
 
 // The per-turn tick cap — the SINGLE source is `config/health.json`'s
@@ -336,6 +351,22 @@ const MAX_EVENT_STEPS = 500;
  * is encoded in `RunResult.outcome`.
  */
 export function runOne(
+  seed: number,
+  strategy: FuzzStrategy,
+  options: HarnessOptions = {},
+): RunResult {
+  // 85g3 — the per-seed wrap + the decisions harvest (see
+  // HarnessOptions.wrapStrategy). A thin shell so the inner body's many
+  // return sites stay untouched; no wrap = the exact old path.
+  if (options.wrapStrategy === undefined) return runOneInner(seed, strategy, options);
+  const effective = options.wrapStrategy(seed, strategy);
+  const result = runOneInner(seed, effective, options);
+  const driver = (effective as { driver?: { decisions?: RunResult['decisions'] } }).driver;
+  if (driver?.decisions !== undefined) result.decisions = driver.decisions;
+  return result;
+}
+
+function runOneInner(
   seed: number,
   strategy: FuzzStrategy,
   options: HarnessOptions = {},

@@ -1483,3 +1483,37 @@ forward slashes; legacy v1 `head` tolerated at load/render. Pins:
 the shrinkage algebra (hand-computed), the fallbacks, the head
 parse/mix/none cases, the driver's per-site spec swap, both render
 generations.
+
+### 85g3 — the search-arm compat (2026-08-25; built while the 85g2b
+batch ran on the box)
+
+As cut, on the 59e template. The seam:
+`HarnessOptions.wrapStrategy?: (seed, base) => FuzzStrategy` — a
+GENERIC per-seed factory (the harness stays arbitration-ignorant),
+applied by a thin `runOne` shell over the renamed inner body so none
+of its return sites change; the shell also duck-types the 71a
+decisions harvest off the wrapped instance's `driver.decisions`
+(relocated from run.ts's manual attach). run.ts's local wrap is GONE:
+the CORE arm (tier + the fold's two table views [throw-at-launch on a
+missing table, same timing] + the normalized searcher-tier rollout
+config) resolves through the ONE resolver `arbitratedWrapFromArgs` —
+shared verbatim with the `--eval-shard` children — and the run-mode
+instruments (shadow tier · grant-ε · the long-horizon shadow) compose
+on top as `extras`, REFUSED with `--search` in args.ts.
+
+**The byte-identity oracle: PASSED.** Same-seed 2-run probe (hops=5,
+the full ARM, λ=0.5 — the fold path engaged) is sha-IDENTICAL across
+the relocation on BOTH artifacts: summary.csv `e6247f7e…`,
+decisions.csv `3d0d8fd7…`, before vs after.
+
+Plumbing: the args 483 guard relaxed mode-by-mode (sweep/arena still
+refuse); ShardJob/ShardedEvalParams gain
+`{arbitrate, arbitrateTier, priorLambda}` (flags only — the 59e
+JSON-safe discipline; λ's table loads in each child from the committed
+file); search.ts threads ALL THREE eval stages — the shard train
+path, the in-process test scoring + jobs=1 serial path (both via
+harnessOptions), and refine. Cost note printed in search.ts: an
+arbitrated eval is MINUTES per seed — the 85g4 probe governs use.
+Tests: the arg matrix + resolver pins + the JSON round-trip + the
+59e-style search-vs-run parity + the relocated-harvest pin
+(`arbitrateSearchCompat.test.ts`).

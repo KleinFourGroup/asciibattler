@@ -16,7 +16,7 @@ import { resolveKnob } from '../balanceSweep';
 import type { ShardJob } from '../searchShard';
 import { aggregate } from '../reporters';
 import type { RosterEntry } from '../../../src/run/RunConfig';
-import { bail, searcherFromArgs, type CliArgs } from './args';
+import { arbitratedWrapFromArgs, bail, searcherFromArgs, type CliArgs } from './args';
 
 export type EvalShardModeArgs = Pick<CliArgs, 'job' | 'outFile'>;
 
@@ -59,14 +59,26 @@ export function runEvalShardCli(args: EvalShardModeArgs): void {
   // 59e — the searcher arm arrives as FLAGS (the registry isn't JSON-safe)
   // and re-resolves through the SAME resolver run mode uses, so a sharded
   // search drives the identical arm byte-for-byte.
-  const rolloutSearch = searcherFromArgs({
+  const searcherFlags = {
     searcher: job.searcher ?? false,
     audition: job.audition ?? false,
     kTelemetry: false,
     ...(job.searcherSpec !== undefined ? { searcherSpec: job.searcherSpec } : {}),
     ...(job.k !== undefined ? { k: job.k } : {}),
-  });
+  };
+  const rolloutSearch = searcherFromArgs(searcherFlags);
   if (rolloutSearch !== undefined) harnessOptions = { ...harnessOptions, rolloutSearch };
+  // 85g3 — the arbitrated arm, same discipline: flags → the shared
+  // resolver (core arm only — the run-mode instruments never ride a
+  // search; args.ts refuses them). λ ≠ 0 loads the committed prior table
+  // here in the child, deterministic across shards.
+  const wrapStrategy = arbitratedWrapFromArgs({
+    arbitrate: job.arbitrate ?? false,
+    ...searcherFlags,
+    ...(job.arbitrateTier !== undefined ? { arbitrateTier: job.arbitrateTier } : {}),
+    ...(job.priorLambda !== undefined ? { priorLambda: job.priorLambda } : {}),
+  });
+  if (wrapStrategy !== undefined) harnessOptions = { ...harnessOptions, wrapStrategy };
 
   const winRates = job.vectors.map(
     (w) =>

@@ -11,10 +11,7 @@ import { runOne } from '../harness';
 import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
-import { makeArbitratedStrategy, type ArbitratedRunStrategy } from '../rollout/arbitratedStrategy';
 import type { InnerTier } from '../rollout/walker';
-import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
-import { loadPriorTable, priorFoldValues, priorFoldValuesBySite } from '../prior/priorTable';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
@@ -66,6 +63,7 @@ import {
   objectiveFromArgs,
   redrawFromArgs,
   searcherFromArgs,
+  arbitratedWrapFromArgs,
   range,
   type CliArgs,
 } from './args';
@@ -262,19 +260,6 @@ export function runRunCli(args: RunModeArgs): void {
   if (rolloutSearch !== undefined) {
     harnessOptions = { ...harnessOptions, rolloutSearch };
   }
-  // 85b (WORKLOG §85-pre finding 6) — the same searcher config for the
-  // arb arm's 'searcher'-tier rollouts, normalized the way the harness
-  // normalizes it (true → {}, a script list → {scripts});
-  // `kFlipTelemetry` deliberately stripped — a rollout needs the play
-  // policy, not the instrument.
-  const arbRolloutSearch: RolloutSearchConfig | undefined =
-    rolloutSearch === undefined
-      ? undefined
-      : rolloutSearch === true
-        ? {}
-        : Array.isArray(rolloutSearch)
-          ? { scripts: rolloutSearch }
-          : (({ kFlipTelemetry: _drop, ...keep }) => keep)(rolloutSearch as RolloutSearchConfig);
   // K3c3 — drive a fixed redraw policy at every pre-turn gate (default none =
   // gates off, byte-identical).
   const redraw = redrawFromArgs(args);
@@ -313,63 +298,35 @@ export function runRunCli(args: RunModeArgs): void {
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const characterNote = ` character=${characterLabel(character)}`;
   const scriptsNote = args.scripts ? ' scripts=ON' : '';
-  // 70a — the arbitrated arm wraps the selected strategy PER SEED (the
-  // arm is stateful — driver RNG + decision log — so one instance per
-  // run; WORKLOG §70 finding 2). The wrapped base keeps its nominator /
-  // delegate role for the sites §70b–e haven't landed yet. The effective
-  // name is deterministic (`arbitrated:<base>`), so the per-strategy
-  // summary below keys on `nameFor`.
-  const arbitrateTier =
-    args.arbitrate && args.arbitrateTier !== undefined
-      ? (args.arbitrateTier as InnerTier)
-      : undefined;
-  // 85c — the fold arm: λ_prior ≠ 0 loads the committed prior table ONCE
-  // at launch (a missing/unparsable table throws here, before any seed
-  // runs — never a silent 0-prior batch). λ = 0 or absent passes nothing:
-  // the evaluator's fold path never engages (the byte-identity contract;
-  // the priorLambda column still records 0 via the driver default).
-  const priorTable =
-    args.priorLambda !== undefined && args.priorLambda !== 0 ? loadPriorTable() : undefined;
-  // 85g2 — both fold views built once at launch: the pooled fallback +
-  // the site-conditioned (shrunk) views the driver swaps in per site.
-  const priorFold =
-    priorTable !== undefined
-      ? {
-          priorLambda: args.priorLambda!,
-          priorTable: priorFoldValues(priorTable),
-          priorTableBySite: priorFoldValuesBySite(priorTable),
-        }
-      : undefined;
   const nameFor = (strategy: FuzzStrategy): string =>
     args.arbitrate ? `arbitrated:${strategy.name}` : strategy.name;
-  const strategyFor = (seed: number, strategy: FuzzStrategy): FuzzStrategy =>
-    args.arbitrate
-      ? makeArbitratedStrategy(seed, {
-          base: strategy,
-          ...(arbitrateTier !== undefined ? { innerTier: arbitrateTier } : {}),
-          // 71c — the shadow tier (validated in args.ts: a real tier ≠ primary).
-          ...(args.flipTelemetry !== undefined
-            ? { shadowTier: args.flipTelemetry as InnerTier }
-            : {}),
-          // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
-          ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
-          // 85b (finding 6) — searcher-tier rollouts play like the live arm.
-          ...(arbRolloutSearch !== undefined ? { rolloutSearch: arbRolloutSearch } : {}),
-          // 85c — the fold arm (absent at λ=0: the byte-identical control).
-          ...(priorFold ?? {}),
-          // 84c — the long-horizon shadow instrument (validated in args.ts:
-          // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
-          ...(args.shadowHorizon !== undefined
-            ? {
-                shadowHorizon: {
-                  horizonBattles:
-                    args.shadowHorizon === 'run' ? ('run' as const) : Number(args.shadowHorizon),
-                  ...(args.shadowSample !== undefined ? { sample: args.shadowSample } : {}),
-                },
-              }
-            : {}),
-        })
-      : strategy;
+  // 85g3 — the arbitrated arm rides the harness's per-seed `wrapStrategy`
+  // seam (relocated from a run.ts-local wrap; byte-identity oracle in
+  // WORKLOG §85g3): the CORE arm (tier + fold + searcher-tier rollouts)
+  // resolves through `arbitratedWrapFromArgs` — the SAME resolver the
+  // --eval-shard children use — and the run-mode INSTRUMENTS compose on
+  // top as extras (refused with --search in args.ts). The 85c fold-table
+  // load (throw-at-launch on a missing table) now happens inside the
+  // resolver, same timing. The effective name stays deterministic
+  // (`arbitrated:<base>`), so the per-strategy summary keys on `nameFor`.
+  const wrapStrategy = arbitratedWrapFromArgs(args, {
+    // 71c — the shadow tier (validated in args.ts: a real tier ≠ primary).
+    ...(args.flipTelemetry !== undefined ? { shadowTier: args.flipTelemetry as InnerTier } : {}),
+    // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
+    ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
+    // 84c — the long-horizon shadow instrument (validated in args.ts:
+    // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
+    ...(args.shadowHorizon !== undefined
+      ? {
+          shadowHorizon: {
+            horizonBattles:
+              args.shadowHorizon === 'run' ? ('run' as const) : Number(args.shadowHorizon),
+            ...(args.shadowSample !== undefined ? { sample: args.shadowSample } : {}),
+          },
+        }
+      : {}),
+  });
+  if (wrapStrategy !== undefined) harnessOptions = { ...harnessOptions, wrapStrategy };
   const shadowNote =
     args.shadowHorizon !== undefined
       ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
@@ -400,15 +357,10 @@ export function runRunCli(args: RunModeArgs): void {
       `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}…\n`,
     );
     for (const s of seeds) {
-      const seedStrategy = strategyFor(s, strategy);
-      const r = runOne(s, seedStrategy, harnessOptions);
-      // 71a — harvest the arm's decision log AFTER the run (the driver is
-      // per-seed state, discarded with the strategy instance otherwise).
-      // Attached to the RunResult so `--jobs` inherits it via the 68e
-      // results.json round-trip with no extra protocol.
-      if (args.arbitrate) {
-        r.decisions = (seedStrategy as ArbitratedRunStrategy).driver.decisions;
-      }
+      // 85g3 — the per-seed wrap + the 71a decisions harvest both live
+      // inside runOne now (the wrapStrategy seam); `--jobs` still inherits
+      // decisions via the 68e results.json round-trip with no extra protocol.
+      const r = runOne(s, strategy, harnessOptions);
       allResults.push(r);
       // 57g QoL — one progress line per run, to STDERR (stdout stays the
       // parseable stats stream): a 60–90 min serial batch is observable

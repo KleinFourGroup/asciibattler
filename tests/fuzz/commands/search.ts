@@ -46,6 +46,7 @@ import {
   objectiveFromArgs,
   redrawFromArgs,
   searcherFromArgs,
+  arbitratedWrapFromArgs,
   type CliArgs,
 } from './args';
 
@@ -77,6 +78,9 @@ export type SearchModeArgs = Pick<
   | 'audition'
   | 'k'
   | 'kTelemetry'
+  | 'arbitrate'
+  | 'arbitrateTier'
+  | 'priorLambda'
 >;
 
 export async function runSearchCli(args: SearchModeArgs): Promise<void> {
@@ -142,6 +146,15 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   // and prefer the box + --jobs (the 59f protocol).
   const rolloutSearch = searcherFromArgs(args);
   if (rolloutSearch !== undefined) harnessOptions = { ...harnessOptions, rolloutSearch };
+  // 85g3 — the arbitrated arm rides every candidate evaluation (train,
+  // test, AND refinement): serial + the shard parent's in-process test
+  // scoring take it via harnessOptions here; the shard children re-resolve
+  // the same flags via the same resolver (evalShard.ts). ⚠ cost: an
+  // arbitrated eval is MINUTES per seed (84d: ~255 s at the full ARM on a
+  // full walk) — size real searches with a cost probe first and prefer
+  // the box; the 85g4 hybrid-staging decision governs how this is used.
+  const wrapStrategy = arbitratedWrapFromArgs(args);
+  if (wrapStrategy !== undefined) harnessOptions = { ...harnessOptions, wrapStrategy };
 
   // 59d — the refinement stage: the base search must rank K finalists for
   // refineSearch to take (topK ≥ refine.topK); without --refine the base
@@ -169,6 +182,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const searcherNote = args.searcher
     ? ` searcher=${args.audition ? 'audition' : 'trigger'}${args.searcherSpec ? `:${args.searcherSpec}` : ''}${args.k !== undefined ? ` k=${args.k}` : ''}`
     : '';
+  const arbNote = args.arbitrate
+    ? ` arbitrate=ON${args.arbitrateTier !== undefined ? `:${args.arbitrateTier}` : ''}${args.priorLambda !== undefined ? ` prior-lambda=${args.priorLambda}` : ''}`
+    : '';
   const seedNote = args.seedOffset ? ` seedOffset=${args.seedOffset}` : '';
   const layoutNote = forcedLayoutId ? ` layout=${forcedLayoutId}` : '';
   const encounterNote = forcedEncounterId ? ` encounter=${forcedEncounterId}` : '';
@@ -177,7 +193,7 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const empowerNote = empower ? ` empower=${empowerPolicyLabel(empower)}` : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   process.stdout.write(
-    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote}${refineNote}${searcherNote} ` +
+    `Search: preset=${presetName} vectors=${vectors}${hopNote}${rosterNote}${layoutNote}${encounterNote}${objectiveNote}${redrawNote}${empowerNote}${daemonNote}${seedNote}${jobsNote}${refineNote}${searcherNote}${arbNote} ` +
       `train=${trainSeeds.length} test=${testSeeds.length} samplerSeed=${samplerSeed}…\n`,
   );
 
@@ -207,6 +223,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
       searcherSpec: args.searcherSpec,
       audition: args.audition,
       k: args.k,
+      arbitrate: args.arbitrate,
+      arbitrateTier: args.arbitrateTier,
+      priorLambda: args.priorLambda,
       jobs,
       tmpDir: join(args.outDir, 'shard-tmp'),
     });
@@ -272,6 +291,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
                 searcherSpec: args.searcherSpec,
                 audition: args.audition,
                 k: args.k,
+                arbitrate: args.arbitrate,
+                arbitrateTier: args.arbitrateTier,
+                priorLambda: args.priorLambda,
                 jobs,
                 tmpDir: join(args.outDir, 'shard-tmp-refine'),
               }),

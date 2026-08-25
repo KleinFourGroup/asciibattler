@@ -70,6 +70,14 @@ export interface ShardJob {
   readonly searcherSpec?: string | undefined;
   readonly audition?: boolean | undefined;
   readonly k?: number | undefined;
+  /** 85g3 — the arbitrated arm as FLAGS (the same 59e discipline as
+   *  `searcher` above): the child re-resolves via `arbitratedWrapFromArgs`
+   *  — the resolver run mode uses — so a sharded search drives the
+   *  identical arm byte-for-byte. The prior table (λ ≠ 0) loads from the
+   *  committed file in-process, deterministic across shards. */
+  readonly arbitrate?: boolean | undefined;
+  readonly arbitrateTier?: string | undefined;
+  readonly priorLambda?: number | undefined;
 }
 
 /**
@@ -218,6 +226,10 @@ export interface ShardedEvalParams {
   readonly searcherSpec?: string | undefined;
   readonly audition?: boolean | undefined;
   readonly k?: number | undefined;
+  /** 85g3 — the arbitrated arm flags (see ShardJob). */
+  readonly arbitrate?: boolean | undefined;
+  readonly arbitrateTier?: string | undefined;
+  readonly priorLambda?: number | undefined;
   readonly jobs: number;
   /** Scratch dir for the per-chunk job/result JSON; created + removed here. */
   readonly tmpDir: string;
@@ -247,6 +259,9 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
     searcherSpec,
     audition,
     k,
+    arbitrate,
+    arbitrateTier,
+    priorLambda,
     jobs,
     tmpDir,
   } = params;
@@ -270,6 +285,9 @@ export async function evaluateVectorsSharded(params: ShardedEvalParams): Promise
       searcherSpec,
       audition,
       k,
+      arbitrate,
+      arbitrateTier,
+      priorLambda,
     };
     const perChunk = await Promise.all(chunks.map((chunk, i) => runChunk(chunk, i, base, tmpDir)));
     return perChunk.flat();

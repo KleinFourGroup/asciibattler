@@ -1517,3 +1517,30 @@ arbitrated eval is MINUTES per seed — the 85g4 probe governs use.
 Tests: the arg matrix + resolver pins + the JSON round-trip + the
 59e-style search-vs-run parity + the relocated-harvest pin
 (`arbitrateSearchCompat.test.ts`).
+
+### 85g4 — the staging decision (2026-08-25, user-signed same day)
+
+**HYBRID-LIGHT signed.** The math, anchored on 84d's measured
+255 s/seed full-walk ARM cost + the search presets (heavy =
+120 vectors × 30 train seeds, full length):
+
+- (a) HYBRID-LIGHT — train + refine non-arb (the classic recipe,
+  ~2–3 h box) + the K finalists scored ARBITRATED at full length
+  (4 × 30 × 255 s ÷ 8 ≈ 1.1 h): **~3–4 h box total**. ← signed
+- (b) hybrid-heavy — arbitrated refine + selection: ~11 h, marginally
+  purer refinement.
+- (c) full-arb heavy — ~32 h+; §86's successive-halving territory.
+
+Rationale: (a) kills the worst of the train-on-the-wrong-game
+mismatch — the vector that DEPLOYS is chosen by the deployed arm at
+full length — while the coarse screen (where arb noise-per-dollar is
+worst) stays cheap. Execution shape: NO new search mode — the K
+finalists come out of the classic search's ranking
+(search-results.csv), each gets an ordinary run-mode arbitrated batch
+on the TRAIN bank (decisions.csv rides for free), and argmax picks
+the deployed vector. The queue-file driver runs it as a K-arm cohort.
+The 85g3 compat stays the enabling infrastructure (and the road to
+(c) when §86 lands). A short probe validating the 255 s scaling at
+the exact shapes rides the 85g5 launch — the estimate is anchored,
+not assumed. Residual impurity, accepted at signing: the coarse
+screen still ranks on the non-arbitrated game.

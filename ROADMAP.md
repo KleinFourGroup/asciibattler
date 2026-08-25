@@ -150,12 +150,10 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       max-context, λ=0-derived for all arms, user-signed ×3) re-pins
       all six classes (campRaid's provisional was ~5.6× under; the
       fold's λ=1 noise injection = #12c quantified) — WORKLOG §85e.
-- [x] 85f — the box cohort ✅ 2026-08-25 — 30 arms banked (two HEADs,
-      pooling PROVEN by the byte-identity oracle); 55pre λ=0.5 paired
-      Δwin +0.142 p=0.008 (EXPLORATORY — the tiger-team train/select
-      leak); separation + WATCH pass; wall refs RE-PINNED 0.775/0.675
-      (user-signed); the pin-fix + ghost-driver saga → WORKLOG §85f +
-      gotcha #126.
+- [x] 85f — the box cohort ✅ 2026-08-25 — 30 arms (pooling PROVEN by
+      the byte-identity oracle); 55pre λ=0.5 Δwin +0.142 p=0.008
+      EXPLORATORY (the train/select leak); wall refs re-pinned
+      0.775/0.675 — WORKLOG §85f + gotcha #126.
 - [x] 85h — the amendment session ✅ 2026-08-25 — all twelve items
       signed as proposed (55pre REGENERATES + search-arm compat; the
       λ rerun protocol MANDATORY; λ=0.5 pre-registered, signs
@@ -175,8 +173,9 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
         `wrapStrategy` seam + run.ts relocation (ORACLE sha-IDENTICAL,
         fold engaged) + args relax + job-file threading — WORKLOG
         §85g3.
-  - [ ] 85g4 — the cost probe → DECISION POINT: full-arb vs hybrid
-        staging (hybrid pre-registered).
+  - [x] 85g4 — DECIDED ✅ 2026-08-25, user-signed: HYBRID-LIGHT
+        (non-arb train+refine; the K finalists arbitrated at full
+        length as run-mode batches, argmax deploys) — WORKLOG §85g4.
   - [ ] 85g5 — the re-derive at λ=0 doctrine (a nonzero λ* → the
         vector re-derive rides the sheet, not the signing);
         `pre55ReachRef` retires; the six 55pre board rows re-anchor.

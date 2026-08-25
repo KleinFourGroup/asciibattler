@@ -71,6 +71,7 @@ import {
 import type { InnerTier } from './walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
 import { campRaidEligible } from '../campRaid';
+import type { DecisionSite } from './sites';
 
 /**
  * 85b — the driver + shadow-site streams ride the KEYED derivation door
@@ -89,7 +90,12 @@ import { campRaidEligible } from '../campRaid';
  *  cost (the 84d probe read 31 empower decisions × 7 candidates on one
  *  seed — more than every acquisition site combined, ×10). `recruit` is
  *  the shadow-only site. */
-export const SHADOW_SITES: readonly string[] = ['rewardDaemon', 'portBuy', 'eventChoice', 'recruit'];
+export const SHADOW_SITES = [
+  'rewardDaemon',
+  'portBuy',
+  'eventChoice',
+  'recruit',
+] as const satisfies readonly DecisionSite[];
 
 /** 85b — the walker's dock policy for the all-rollouts overlay: the 50g
  *  buy-all-affordable mirror (daemons → units → packets-if-room, slot

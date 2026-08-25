@@ -37,6 +37,7 @@
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { atOrBeyondWalkPos } from '../walkDepth';
 
 // ---- the signed sheet (the user-signed artifact, 68d re-signs) ------------
 
@@ -467,10 +468,9 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     const termHop = Math.max(
       ...wins.filter((r) => r.sectorsCleared === termSc).map((r) => r.finalHop),
     );
-    const arrivals = rows.filter(
-      (r) =>
-        r.sectorsCleared > termSc ||
-        (r.sectorsCleared === termSc && r.finalHop >= termHop),
+    const terminal = { sector: termSc, hop: termHop };
+    const arrivals = rows.filter((r) =>
+      atOrBeyondWalkPos({ sector: r.sectorsCleared, hop: r.finalHop }, terminal),
     );
     const deaths = arrivals.filter((r) => r.outcome === 'defeat').length;
     bossWall = arrivals.length === 0 ? null : deaths / arrivals.length;

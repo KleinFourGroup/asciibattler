@@ -14,7 +14,11 @@
 
 import { runOne } from '../harness';
 import { makeArbitratedStrategy } from './arbitratedStrategy';
+import type { DecisionSite } from './sites';
 
+// The §70 exit criterion's site subset (deliberately NOT every site —
+// eventChoice/recruit/campRaid post-date §70); membership is
+// compile-checked against the 85h canonical registry (gotcha #128).
 const ALL_SITES = [
   'portBuy',
   'packetFire:preTurn',
@@ -23,7 +27,7 @@ const ALL_SITES = [
   'grant:redraw',
   'grant:empower',
   'nodeChoice',
-] as const;
+] as const satisfies readonly DecisionSite[];
 
 interface ShapeSpec {
   readonly label: string;

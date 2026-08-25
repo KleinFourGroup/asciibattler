@@ -17,6 +17,7 @@
 import type { BattleResult, RunResult } from './harness';
 import { HEALTH } from '../../src/config/health';
 import { getEncounter, type EncounterKind } from '../../src/config/encounters';
+import { atOrBeyondWalkPos } from './walkDepth';
 
 const CSV_HEADER = [
   'seed',
@@ -1031,10 +1032,8 @@ export function perHopStats(results: readonly RunResult[]): HopStats[] {
     .map((bs) => ({ sector: bs[0]!.sector, hop: bs[0]!.hop, bs }))
     .sort((a, b) => a.sector - b.sector || a.hop - b.hop)
     .map(({ sector, hop, bs }) => {
-      const runsReached = results.filter(
-        (r) =>
-          r.sectorsCleared > sector ||
-          (r.sectorsCleared === sector && r.finalHopReached >= hop),
+      const runsReached = results.filter((r) =>
+        atOrBeyondWalkPos({ sector: r.sectorsCleared, hop: r.finalHopReached }, { sector, hop }),
       ).length;
       const runsDied = results.filter(
         (r) =>

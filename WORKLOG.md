@@ -1384,3 +1384,64 @@ wrap into HarnessOptions + the byte-identity oracle + job-file
 plumbing) → the cost probe (full-arb vs hybrid) → the 55pre
 regenerate re-derive → the disjoint-seed λ cohort (+ campRaid causal
 arm) → λ signs and `pre55ReachRef` retires.
+
+## Phase 85g — kickoff (2026-08-25, same session as the 85h close;
+cut user-signed)
+
+The code-reality audit (step 1) + the commit cut (step 2, in ROADMAP
+§85g) + the shape-lock (step 3, signed with two flagged calls:
+**replace the fold outright** — no dual-mode flag, nobody signed the
+all-walk semantics and two fold modes double every λ arm — and
+**re-derive at λ=0 doctrine**, breaking the 85g5⇄85g6 circle
+conservatively: a nonzero λ* makes the vector re-derive a sheet
+rider). Audit findings:
+
+1. **The all-holdings noise is LOCATED**: `priorBonusOf(before,
+   after)` at `evaluator.ts` diffs the live run against each branch's
+   FULL-WALK terminal holdings, so any stochastic mid-walk
+   acquisition injects its whole table value into the margin — the
+   85e σ×2.3–9.5, and landmine 12(c)'s pre-registered residual
+   ("feedback, no de-fold step" — 85c's judgeLong strip closed only
+   the TABLE half).
+2. **⚠ THE MECHANISM REVISION (differs from the shape-locked
+   sketch):** the signed proposal said "snapshot after
+   candidate-apply, pre-walk" — the audit killed that mechanism
+   before a line was written: the rewardDaemon site's polarity is
+   FLIPPED (null = accept, challenger = decline) and its null arm has
+   NO apply — the acceptance happens INSIDE the walk, so an
+   apply-time snapshot reads 0 for both branches and the fold goes
+   dead at the site it most serves. The revised mechanism keeps the
+   walk-terminal diff + fired-as-held EXACTLY as-is and restricts the
+   delta to the decision's own item keys (`priorItemKeys`, per-site):
+   portBuy = the union of offered slot keys · packetFire = the
+   candidate packet ids · rewardDaemon = the portion's daemon ·
+   grant/nodeChoice = `[]` (no acquisition — their walk-holdings
+   drift is pure noise, and the 85f WATCH read |priorBonus| ≈ 0 at
+   non-acquisition sites anyway) · eventChoice = the static union of
+   every holdings-touching op id in the active event's def (addPacket
+   / removePacket / addDaemon / removeDaemon / grantUnit across ALL
+   pages — a safe over-approximation robust to page-graph
+   reachability; `removeUnit`'s key is dynamic and is EXCLUDED,
+   documented) · campRaid = `[]` (carve-out: camp-reward acquisitions
+   go un-attributed — reward rolls aren't statically nameable; the
+   realized rollout still scores their within-horizon effect).
+   Fail-closed: `driver.decide` THROWS on a λ≠0 spec with no
+   `priorItemKeys` (the 85c launch-mistake pattern); the
+   evaluator-level `itemKeys` stays optional (absent = unrestricted)
+   for fixtures. The boon-separation instrument survives by
+   construction — the granted items ARE in the key set; only off-key
+   noise dies.
+3. **Prior v2 needs a fresh box shadow batch** before the rebuild:
+   "final walker semantics" is simply current HEAD (post-85b,
+   post-`0e68337`), but the rows must be RE-MEASURED — an §84-style
+   shadow arm on the new TRAIN bank. The builder already keeps
+   per-site contributions (`PriorRow.sites`), so shrinkage is a
+   builder change, not a schema rework.
+4. **The compat has no import cycle** (`arbitratedStrategy` doesn't
+   import the harness) but the cleaner shape is the generic
+   `HarnessOptions.wrapStrategy?: (seed, base) => FuzzStrategy`
+   factory — the harness stays arbitration-ignorant; run.ts and
+   evalShard build the factory through one shared resolver (the 59e
+   `searcherFromArgs` pattern). Search mode routes EVERY eval (train,
+   test, refine) through `evaluateVectorsSharded`, so there is
+   exactly one seam to thread.

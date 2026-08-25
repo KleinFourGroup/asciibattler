@@ -157,23 +157,32 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       (user-signed); the pin-fix + ghost-driver saga → WORKLOG §85f +
       gotcha #126.
 - [x] 85h — the amendment session ✅ 2026-08-25 — all twelve items
-      signed as proposed: 55pre = REGENERATE + the
-      `--arbitrate`+`--search` compat build (probe-first decides
-      full-arb vs hybrid search staging); the λ rerun protocol
-      MANDATORY (candidate-delta de-fold · prior v2 under final
-      walker · disjoint seed banks); λ default signs POST-RERUN
-      (λ=0.5 pre-registered); board split → §86-adjacent; perf
-      riders → §86; the fold-makes-arb-pay thesis + the 0.438
-      disposition → BALANCE 2026-08-25; gotchas #127/#128 +
-      walkDepth.ts/sites.ts landed — WORKLOG §85h.
-- [ ] 85g — the 55pre regenerate + the λ rerun (scope signed at 85h,
-      WORKLOG §85h): the de-fold build → prior v2 (final-walker
-      re-measure · shrinkage · machine provenance) → the search-arm
-      compat (per-seed wrap + byte-identity oracle) → the cost probe
-      (full-arb vs hybrid) → the re-derive → the disjoint-seed λ
-      cohort (+ the campRaid causal arm) → λ signs; `pre55ReachRef`
-      retires; the 0.438 wall re-reads here. Sub-steps cut at
-      kickoff.
+      signed as proposed (55pre REGENERATES + search-arm compat; the
+      λ rerun protocol MANDATORY; λ=0.5 pre-registered, signs
+      POST-RERUN; board split + perf riders → §86; gotchas #127/#128
+      + walkDepth.ts/sites.ts) — WORKLOG §85h + BALANCE 2026-08-25.
+- [ ] 85g — the 55pre regenerate + the λ rerun (cut signed at the
+      2026-08-25 kickoff, WORKLOG §85g-kickoff; predictions: World
+      v35 / Run v44 hold, no new RNG streams):
+  - [ ] 85g1 — the candidate-delta de-fold REPLACES the all-holdings
+        fold: per-site `priorItemKeys` restrict the walk-terminal
+        diff (⚠ the kickoff's mechanism revision — apply-time
+        snapshots kill the reward site); λ=0 byte-identity holds;
+        driver throws on a λ≠0 keyless site; off-key pin.
+  - [ ] 85g2 — prior v2: builder shrinkage (n/(n+k) toward the
+        pooled mean) + machine provenance; then the TRAIN-bank
+        shadow batch + the table-v2 rebuild (box; own commit).
+  - [ ] 85g3 — the search-arm compat: the `wrapStrategy` seam +
+        run.ts relocation (byte-identity oracle) + the args relax +
+        job-file threading + refusal-matrix/shard-parity tests.
+  - [ ] 85g4 — the cost probe → DECISION POINT: full-arb vs hybrid
+        staging (hybrid pre-registered).
+  - [ ] 85g5 — the re-derive at λ=0 doctrine (a nonzero λ* → the
+        vector re-derive rides the sheet, not the signing);
+        `pre55ReachRef` retires; the six 55pre board rows re-anchor.
+  - [ ] 85g6 — the λ cohort on the CHOOSE bank + the campRaid causal
+        arm → λ* → the one-use SIGN bank → λ signs, the 0.438 wall
+        re-reads, the ARM updates if λ* ≠ 0.
 
 ## Phase 86 — The balancer performance pass
 

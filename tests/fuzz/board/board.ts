@@ -306,7 +306,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       title: 'forced Bandit King (regen vector, doctrine arm)',
       args: [...ACT1, '--character=soldier', '--encounter=bandit-king', REGEN, ...CONTROL_ARM],
       strategyRow: 'scored:59-regen-vector',
-      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '85-pre F3A: arm de-arbitrated — ref is the ARB 83f pin (King 75.0), PENDING RE-PIN at the next board run')],
+      checks: [ref('winRate', sheet.forcedKingWinRegen, 0.1, '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (King 77.5) — the F3A PENDING closed')],
     },
     {
       id: 'wall-queen',
@@ -314,7 +314,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       args: [...ACT1, '--character=soldier', '--encounter=banditQueen', REGEN, ...CONTROL_ARM],
       strategyRow: 'scored:59-regen-vector',
       checks: [
-        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '85-pre F3A: arm de-arbitrated — ref is the ARB 83f pin (Queen 70.0), PENDING RE-PIN; the King>Queen order is the durable check'),
+        ref('winRate', sheet.forcedQueenWinRegen, 0.1, '85f re-pin (user-signed 2026-08-25): the DOCTRINE-arm n=120 value (Queen 67.5) — the King>Queen order is the durable check'),
       ],
     },
     act1Posture('priest', 'regen', sheet),

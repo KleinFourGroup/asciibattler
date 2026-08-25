@@ -90,3 +90,34 @@ _(The post-C5 rounds start here.)_
   the real launch. And don't claim the PC sleeps without
   `powercfg /requests` evidence — Tobii held a SYSTEM request all
   along. (84d)
+
+## §85f (2026-08-24/25) — cohort-ops + external-review lessons
+
+- **TaskStop'd a bash driver, verified nothing, the ghost ran 21 arms
+  overnight** (gotcha #126 carries the mechanics). The §57g orphan
+  check existed and wasn't applied to my own kill. Candidate AGENTS
+  promotion at the sweep: "after killing ANY background driver, verify
+  the tree died before launching a successor."
+- **box-batch `run`-mode has a ~1h poll cap** — fine for act-1 arms,
+  mislabels n=120 walks FAILED while they keep running. The v2 driver
+  shape (launch → status-poll unbounded-to-ceiling → fetch → next, one
+  batch at a time, artifact-verified stand-down + HOLD) worked
+  end-to-end and should be promoted to scripts/ or AGENTS.
+- **Fail-closed instruments caught what ops signals missed twice in one
+  night**: the per-logical-arm duplicate-seed guard (tiger-team repair)
+  caught the ghost's duplicates; the walker's 500-step guard turned an
+  infinite loop into a loud crash. The board's inability to FAIL is the
+  same lesson inverted (the 85h board-split item).
+- **The external adversarial review + parallel-session verification
+  pattern worked**: GPT 5.6 Sol found real defects (6 in a fresh
+  instrument, plus the train/select leak that re-graded the whole λ
+  read); a read-only peer session verified file:line before anything
+  was believed; ownership of the shared gitignored instrument was
+  handed back and forth explicitly (no clobbers). The one rough edge:
+  the peer's interim guard version false-positived on the deliberate
+  cross-vector pool — caught because the cohort driver re-ran the
+  instrument against fresher data than the repairer had.
+- **Three static content scans read clean before the deterministic
+  repro named the true mechanism** (repeatable-event + pin, not the
+  hypothesized page-cycle). Repro-first remains cheaper than
+  mechanism-story-first even when the story sounds airtight.

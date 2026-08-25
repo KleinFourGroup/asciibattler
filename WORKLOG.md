@@ -1164,3 +1164,99 @@ port 4.646 · map/outOfBattle 5.476 · preTurn 3.277 · reward 3.874 ·
 event 5.723 (own constant) · campRaid 6.206 (own constant, mixed-arm).
 GRANT/NODE_CHOICE/RECRUIT keep their class shares. Tests reference the
 constants symbolically — no pin edits needed.
+
+## Phase 85f — the box cohort (2026-08-24 → 08-25, user-signed close)
+
+**The cohort as landed:** 29 planned arms → 30 banked batches at TWO
+HEADs (790bd08 arms 1–5; 0e68337 — the mid-cohort pin fix — arms 6+),
+n=120 same-HEAD protocol, box created/destroyed same window (zero
+billing), every arm artifact-verified. The two-HEAD split was a
+USER-SIGNED mid-flight call (see the crash below); its pooling license
+is the **byte-identity ORACLE: the 0e68337 re-run of the 790bd08
+arb-walk-55pre base sha-matches exactly** — proof, not argument.
+The scratchpad drivers: v1 (box-batch `run`-mode — retired), v2
+(hand-rolled launch→status-poll→fetch, one batch at a time, artifact-
+verified stand-down) — v2 is the promotable shape (TODO).
+
+**The mid-cohort crash + fix (85f's unplanned half):** arm 4
+(arb-walk-55pre-ext) died on `walker: 500 event choices in one walk` —
+the 74g eventChoice nominee pin returns its pinned choice WITHOUT an
+enablement check, and `repeatable: true` events (cheese-tax, the
+catalog's ONE repeatable+conditioned member) can re-roll the decision
+page mid-walk with the nominee's `bitsAtLeast` now false (the pin
+itself paid the bits): handleChooseEventOption silently no-ops, phase
+never leaves 'event', the walker's guard throws. Finding #14 upgraded
+from mild-bias to crash engine; three static content scans all read
+CLEAN before a deterministic repro (seed 42) + a dispatch-monkeypatch
+probe named the true mechanism — the reminder that the repro beats the
+mechanism story. Fix: `pinnedEventPick` (nominee-if-enabled, else the
+walk's uniform-random-among-enabled), byte-identical on every walk
+that didn't crash (the guard reads, never draws) — proven by the
+oracle above AND by arm 26 re-running the crashing seeds clean at
+batch scale. Landed mid-cohort by user call (`0e68337`); remaining
+arms re-HEADed at launch via the parity pull, zero collisions.
+
+**The ghost driver (gotcha #126):** TaskStop on driver v1 killed the
+wrapper, not the bash tree — the orphan ran its remaining ~21 arms
+interleaved with v2 all night (2× contention; the λ05-regen wait ran
+2.3h). Every ghost batch proved BYTE-IDENTICAL to its v2 twin
+(21/21 sha-verified before deletion) — the project's largest same-HEAD
+reproducibility proof, by accident. v1's manifest also banked the
+three pre-kill 790bd08 walk arms (canonical).
+
+**The tiger team (parallel-session thread):** the user commissioned an
+external adversarial review (GPT 5.6 Sol) of the balance protocol;
+session asciibattler-98 verified it (4 read-only agents, file:line),
+repaired SIX defects in 85f-read.ts in place overnight (lexicographic
+depth keys — the THIRD #120-shape instance; 'reward'→'rewardDaemon' —
+the 82c family; arm-qualified keys; set-dedup; sign-test p + 95% CIs;
+the per-logical-arm duplicate-seed guard that then CAUGHT the ghost's
+duplicates), and staged the amendment draft at
+scratch/85f-tiger-team-actions.md. Verified here: the prior table's
+rows were measured at 53283d8 (pre-85b walker) on seeds overlapping
+the cohort's — a train/select leak, so **85f is EXPLORATORY for
+λ-signing** (user-signed disposition; the λ default waits on the §85h
+protocol). Cross-session coordination worked: repair handed off clean,
+the oracle gate + ORACLE-EXCLUDED marker mechanism co-designed.
+
+**The reads (the reader: output/box-batches/85f-read.ts + the board):**
+- **Paired λ (the exit criterion):** 55pre λ=0.5 Δwin **+0.142
+  [+0.045,+0.238], sign-test p=0.008** (27▲/10▼) — significant,
+  in-sample-caveated; 55pre λ=1 +0.108 p=0.053; regen +0.050 p=0.377 /
+  +0.067 p=0.200. All four positive. **The λ=1 overspend signature on
+  both vectors** (λ=1 banks −45 vs λ=0.5's −17 on 55pre, for LESS
+  win) — λ=0.5 pre-registers as the default candidate for the clean
+  disjoint-seed rerun. Δbank CIs exclude zero at every λ arm — the
+  fold's behavior shift (hoarded bits → acquisitions/fires, fires
+  2.27→~4) is significant even where Δwin isn't.
+- **Boon-event separation: PASSES as a WIRING proof** — λ=0 reproduces
+  83e's indiscrimination exactly (3 rows, pick 0.00, Δ≈0, n≈160/row);
+  λ=0.5 separates decisively (packets 0.95 / daemon+bits 0.00,
+  tracking table signs). Held-out predictive value = the real test
+  (tiger-team framing, adopted).
+- **The 85e WATCH confirmed live:** acquisition sites wake at λ>0
+  (portBuy act 0.07→0.78 · rewardDaemon 0.00→0.36 · eventChoice
+  0.01→0.21) with |priorBonus| carrying nearly the whole acted margin
+  there and 0.00 at every non-acquisition site.
+- **Board 0 FAIL / 5 WARN** — one coherent story: the 85e floors made
+  λ=0 arbitration MORE CONSERVATIVE (arb-55pre fires 0.82 under band;
+  act-1 regen ceiling −0.092, arb UNDER doctrine) while every λ>0 arm
+  improves on λ=0 → **the fold-makes-arb-pay thesis** (85h). The
+  regen-walk wall 0.438 (vs signed 30–35, was floor-hugging 0.265 at
+  83f) is a NAMED 85h re-read. Wall rows RE-PINNED (user-signed):
+  King 0.775 / Queen 0.675, doctrine arm, n=120, order preserved —
+  the F3A ⚠ PENDING closed (sheet amended 2026-08-25).
+- **campRaid:** alive + selective (pick ~1% at all λ, 59/6445
+  candidates at λ=0; rollout-estimate margin ~8, explicitly
+  NON-CAUSAL — the enabled-vs-disabled paired arm is an 85h item).
+  The spec's re-evaluate-the-layer decision point stays closed.
+
+**Signed calls at close (2026-08-25):** (1) the wall re-pin above;
+(2) **85g RE-ORDERED BEHIND 85h** — the 55pre fork (freeze-as-
+shopper-stress vs regenerate), the search-trains-non-arbitrated
+mismatch (args.ts refusal), and the λ default all shape what 85g
+should search; (3) the **85h agenda** = the tiger-team draft's 8 items
++ the fold-makes-arb-pay thesis + the λ=0.5>λ=1 signature + the
+campRaid causal arm + the 0.438 wall re-read; (4) gotcha #126 + the
+retro notes. Ops lessons → retro/scratchpad.md (the ritual sweeps at
+the round boundary).

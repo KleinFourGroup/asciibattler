@@ -150,16 +150,24 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
       max-context, λ=0-derived for all arms, user-signed ×3) re-pins
       all six classes (campRaid's provisional was ~5.6× under; the
       fold's λ=1 noise injection = #12c quantified) — WORKLOG §85e.
-- [ ] 85f — the box cohort: λ_prior arms {0, 0.5, 1} + doctrine +
-      controls at the n=120 same-HEAD protocol; the paired pre/post
-      read; the boon-event separation validation; the ⚠ wall-refs
-      re-pin; the campRaid pick-rate check; ⚠ the 85e λ=1 false-act
-      WATCH (realized flip rates off priorLambda+priorBonus).
-- [ ] 85g — the 55pre re-derive: post-fold `--search` (box) → new
-      fixture; `pre55ReachRef` retires or re-pins.
-- [ ] 85h — the amendment session: λ_prior's default signs;
-      BALANCE/doctrine updates; the candidate-delta de-fold on the
-      menu (the 85e structural fix — λ-invariant floors); phase close.
+- [x] 85f — the box cohort ✅ 2026-08-25 — 30 arms banked (two HEADs,
+      pooling PROVEN by the byte-identity oracle); 55pre λ=0.5 paired
+      Δwin +0.142 p=0.008 (EXPLORATORY — the tiger-team train/select
+      leak); separation + WATCH pass; wall refs RE-PINNED 0.775/0.675
+      (user-signed); the pin-fix + ghost-driver saga → WORKLOG §85f +
+      gotcha #126.
+- [ ] 85h — the amendment session (RE-ORDERED before 85g, user-signed
+      2026-08-25: the 55pre fork + λ protocol + search-arm compat all
+      shape what 85g searches): agenda =
+      scratch/85f-tiger-team-actions.md (8 items incl. the mandatory
+      candidate-delta de-fold + disjoint-seed λ banks, the board
+      split, the 55pre fork, prior v2 shrinkage) + the
+      fold-makes-arb-pay thesis + the λ=0.5>λ=1 overspend signature +
+      the campRaid causal arm + the 0.438 regen-walk wall re-read;
+      λ_prior's default signs here or at the post-rerun follow-up.
+- [ ] 85g — the 55pre re-derive, RE-SCOPED BY 85h (the fork decision
+      + λ default + possible `--arbitrate`+`--search` compat);
+      `pre55ReachRef` retires or re-pins with it.
 
 ## Phase 86 — The balancer performance pass
 

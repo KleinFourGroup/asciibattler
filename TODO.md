@@ -301,3 +301,4 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   overnight shape should ship it as `scripts/box-standdown.sh <host>
   <box-name> <driver-pid> <driver-log> <queue>` or as a driver flag, so
   no cohort bills past its last fetch again.
+- [ ] Promote the §85f driver-v2 queue shape (hand-rolled launch→status-poll→fetch, one batch at a time, artifact-verified stand-down with HOLD) into scripts/ or an AGENTS ops norm — replaces chaining box-batch `run` (the ~1h poll cap, gotcha #126's sibling); supersedes the 84d stand-down-watcher promotion item.

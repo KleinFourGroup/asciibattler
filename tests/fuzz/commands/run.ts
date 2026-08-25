@@ -14,7 +14,7 @@ import type { RunResult, HarnessOptions } from '../harness';
 import { makeArbitratedStrategy, type ArbitratedRunStrategy } from '../rollout/arbitratedStrategy';
 import type { InnerTier } from '../rollout/walker';
 import type { RolloutSearchConfig } from '../../../src/bot/RolloutSearchDriver';
-import { loadPriorTable, priorFoldValues } from '../prior/priorTable';
+import { loadPriorTable, priorFoldValues, priorFoldValuesBySite } from '../prior/priorTable';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
 import {
   makeStrategy,
@@ -328,9 +328,17 @@ export function runRunCli(args: RunModeArgs): void {
   // runs — never a silent 0-prior batch). λ = 0 or absent passes nothing:
   // the evaluator's fold path never engages (the byte-identity contract;
   // the priorLambda column still records 0 via the driver default).
+  const priorTable =
+    args.priorLambda !== undefined && args.priorLambda !== 0 ? loadPriorTable() : undefined;
+  // 85g2 — both fold views built once at launch: the pooled fallback +
+  // the site-conditioned (shrunk) views the driver swaps in per site.
   const priorFold =
-    args.priorLambda !== undefined && args.priorLambda !== 0
-      ? { priorLambda: args.priorLambda, priorTable: priorFoldValues(loadPriorTable()) }
+    priorTable !== undefined
+      ? {
+          priorLambda: args.priorLambda!,
+          priorTable: priorFoldValues(priorTable),
+          priorTableBySite: priorFoldValuesBySite(priorTable),
+        }
       : undefined;
   const nameFor = (strategy: FuzzStrategy): string =>
     args.arbitrate ? `arbitrated:${strategy.name}` : strategy.name;

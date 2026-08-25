@@ -6,8 +6,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { DecisionRow } from '../reporters';
-import { buildPriorTable, priorItemOf, renderPriorTable } from './priorTable';
+import { PER_ITEM_N_FLOOR, type DecisionRow } from '../reporters';
+import {
+  buildPriorTable,
+  measurementHeadFromPaths,
+  priorFoldValuesBySite,
+  priorItemOf,
+  renderPriorTable,
+  SHRINK_K,
+  type PriorTable,
+} from './priorTable';
 
 const PROV = { head: 'abc1234', builtAt: '2026-08-22T00:00:00Z', sources: ['x/decisions.csv'] };
 
@@ -151,10 +159,105 @@ describe('buildPriorTable', () => {
   it('renders signable rows first and the directional tail', () => {
     const rows = decision(0, 'rewardDaemon', 'run', 10, 0, [['decline daemon:mars', -4]]);
     const out = renderPriorTable(buildPriorTable(rows, PROV, 1));
-    expect(out).toContain('HEAD abc1234');
+    // 85g2 — v1 tables (legacy `head`) still render, labeled as measured-at.
+    expect(out).toContain('measured @abc1234');
     expect(out).toContain('Signable (1)');
     expect(out).toContain('daemon:mars');
     expect(out).toContain('value/hop=   0.400');
     expect(renderPriorTable(buildPriorTable(rows, PROV, 80))).toContain('Directional — under the floor (1');
+  });
+
+  it('85g2 — v2 provenance renders both heads', () => {
+    const rows = decision(0, 'rewardDaemon', 'run', 10, 0, [['decline daemon:mars', -4]]);
+    const out = renderPriorTable(
+      buildPriorTable(rows, {
+        measurementHead: 'aaa1111',
+        buildHead: 'bbb2222',
+        builtAt: '2026-08-25T00:00:00Z',
+        sources: ['output/box-batches/x/decisions.csv'],
+      }),
+    );
+    expect(out).toContain('measured @aaa1111');
+    expect(out).toContain('built @bbb2222');
+  });
+});
+
+describe('85g2 — measurementHeadFromPaths (the batch-dir head parse)', () => {
+  it('parses the box `YYYYMMDD-HHMMSS-<head>` segment, either slash style', () => {
+    expect(
+      measurementHeadFromPaths(['output/box-batches/20260824-181553-790bd08/a/decisions.csv']),
+    ).toBe('790bd08');
+    expect(
+      measurementHeadFromPaths(['output\\box-batches\\20260824-181553-abc1234\\decisions.csv']),
+    ).toBe('abc1234');
+  });
+
+  it('agreeing sources → the one head; none parseable → null', () => {
+    expect(
+      measurementHeadFromPaths([
+        'x/20260824-181553-790bd08/a/decisions.csv',
+        'x/20260825-010203-790bd08/b/decisions.csv',
+      ]),
+    ).toBe('790bd08');
+    expect(measurementHeadFromPaths(['some/local/out/decisions.csv'])).toBeNull();
+  });
+
+  it('MIXED heads THROW — a table pools ONE measurement HEAD (the 85f pooling hazard)', () => {
+    expect(() =>
+      measurementHeadFromPaths([
+        'x/20260824-181553-790bd08/decisions.csv',
+        'x/20260825-010203-0e68337/decisions.csv',
+      ]),
+    ).toThrow(/measurement HEADs/);
+  });
+});
+
+describe('85g2 — priorFoldValuesBySite (site-conditioned shrinkage)', () => {
+  const site = (n: number, meanDelta: number) => ({ n, nPerHop: n, valuePerHop: 0, meanDelta });
+  const TABLE: PriorTable = {
+    provenance: { measurementHead: 'aaa1111', buildHead: 'bbb2222', builtAt: 'x', sources: [] },
+    floor: PER_ITEM_N_FLOOR,
+    decisions: 100,
+    items: {
+      // The ronin sign-flip shape: port reads deeply negative, recruit
+      // positive, pooled mildly positive.
+      'unit:ronin': {
+        valuePerHop: 0,
+        meanDelta: 2.9,
+        n: 100,
+        signable: true,
+        sites: { portBuy: site(20, -33), recruit: site(80, 11.875) },
+      },
+      // One-site item: the other site's view must fall back to pooled.
+      'packet:patch': {
+        valuePerHop: 0,
+        meanDelta: 20,
+        n: 60,
+        signable: false,
+        sites: { recruit: site(60, 20) },
+      },
+    },
+  };
+
+  it('K defaults to the per-item signing floor (config-derived, the half-weight-at-signable rule)', () => {
+    expect(SHRINK_K).toBe(PER_ITEM_N_FLOOR);
+  });
+
+  it('shrinks each site cell toward the pooled mean by w = n/(n+k); missing cells fall back to pooled', () => {
+    const views = priorFoldValuesBySite(TABLE, 80);
+    // ronin@portBuy: w = 20/100 = 0.2 → 0.2×(−33) + 0.8×2.9 = −4.28 (hand-computed)
+    expect(views['portBuy']!['unit:ronin']).toBeCloseTo(-4.28, 10);
+    // ronin@recruit: w = 80/160 = 0.5 → 0.5×11.875 + 0.5×2.9 = 7.3875
+    expect(views['recruit']!['unit:ronin']).toBeCloseTo(7.3875, 10);
+    // patch has no portBuy cell → the pooled mean.
+    expect(views['portBuy']!['packet:patch']).toBe(20);
+    // Only sites present in the table get views.
+    expect(Object.keys(views).sort()).toEqual(['portBuy', 'recruit']);
+  });
+
+  it('k=0 degenerates to the naive per-site split (the thing shrinkage exists to avoid — pinned as the boundary)', () => {
+    const views = priorFoldValuesBySite(TABLE, 0);
+    expect(views['portBuy']!['unit:ronin']).toBeCloseTo(-33, 10);
+    expect(views['recruit']!['unit:ronin']).toBeCloseTo(11.875, 10);
   });
 });

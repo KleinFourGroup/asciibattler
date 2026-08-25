@@ -1449,3 +1449,37 @@ rider). Audit findings:
    `searcherFromArgs` pattern). Search mode routes EVERY eval (train,
    test, refine) through `evaluateVectorsSharded`, so there is
    exactly one seam to thread.
+
+### 85g2a — prior v2, the code half (2026-08-25)
+
+Shrinkage + machine provenance, landed ahead of the box batch
+(85g2b). Two design calls worth their rationale:
+
+- **Shrinkage is computed AT LOAD, not baked at build** — the v1
+  schema already commits per-site `(n, meanDelta)`
+  (`PriorRow.sites`), so `priorFoldValuesBySite(table, k)` derives
+  the site-conditioned views from the signed artifact's own stats:
+  one source of truth, no value-schema change, and the MECHANISM
+  works on the existing committed table (85g2b refreshes
+  measurements + provenance, not the machinery). The driver swaps
+  the matching view into the rollout spec per decide-site (the swap
+  lives where the site is known — the driver stays generic, plain
+  data); sites without a view (grants · nodes · fires · eventChoice
+  · campRaid) keep the pooled `priorFoldValues` fallback.
+- **K = the per-item signing floor (`SHRINK_K = PER_ITEM_N_FLOOR`,
+  80)** — a site's own cell reaches HALF weight exactly when it
+  could sign on its own; portBuy cells at n=8–32 read w≈0.09–0.29
+  (mostly pooled, tilted by their own evidence), which is the
+  "hierarchical shrinkage, not a naive per-site split" the 85h item
+  mandates. k is a parameter; k=0 (the naive split) is pinned as the
+  boundary case.
+
+Provenance v2: `measurementHead` (parsed from the batch-dir
+`YYYYMMDD-HHMMSS-<head>` naming — MIXED heads THROW, the
+one-HEAD-per-table rule; `--measurement-head=` for unlabeled dirs,
+contradictions refused) + `buildHead` (`git rev-parse`, the builder
+version) as separate machine fields; sources repo-root-relative with
+forward slashes; legacy v1 `head` tolerated at load/render. Pins:
+the shrinkage algebra (hand-computed), the fallbacks, the head
+parse/mix/none cases, the driver's per-site spec swap, both render
+generations.

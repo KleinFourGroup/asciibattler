@@ -286,8 +286,14 @@ export interface ArbitratedConfig {
    *  regardless (12c — the driver strips it; the table stays raw). */
   readonly priorLambda?: number;
   /** 85c — item key → meanDelta (`priorFoldValues(loadPriorTable())`);
-   *  required by the evaluator when priorLambda ≠ 0. */
+   *  required by the evaluator when priorLambda ≠ 0. Since 85g2 this is
+   *  the POOLED fallback view; the acquisition sites read the
+   *  site-conditioned views below. */
   readonly priorTable?: Readonly<Record<string, number>>;
+  /** 85g2 — the site-conditioned fold views
+   *  (`priorFoldValuesBySite(loadPriorTable())`); the driver swaps the
+   *  matching view in per decide-site. */
+  readonly priorTableBySite?: Readonly<Record<string, Readonly<Record<string, number>>>>;
   /** 85b (finding 6) — the LIVE arm's searcher config (audition scripts,
    *  K, cadence), threaded into every rollout spec so an innerTier
    *  'searcher' walk plays battles the way the live arm does (the walker
@@ -336,6 +342,11 @@ export function makeArbitratedStrategy(
       ...(config.rolloutSearch !== undefined ? { rolloutSearch: config.rolloutSearch } : {}),
     },
     ...(config.evaluate !== undefined ? { evaluate: config.evaluate } : {}),
+    // 85g2 — the site-conditioned fold views (driver-level: the swap
+    // happens where the site is known).
+    ...(config.priorTableBySite !== undefined
+      ? { priorTableBySite: config.priorTableBySite }
+      : {}),
     ...(config.shadowTier !== undefined ? { shadowTier: config.shadowTier } : {}),
     ...(config.shadowHorizon !== undefined
       ? {

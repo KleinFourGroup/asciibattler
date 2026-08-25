@@ -164,6 +164,13 @@ export interface RunArbitrationConfig {
   readonly shadowTier?: InnerTier;
   /** 84a — the long-horizon shadow (see RunShadowHorizonConfig). */
   readonly shadowHorizon?: RunShadowHorizonConfig;
+  /** 85g2 — the SITE-CONDITIONED fold views (`priorFoldValuesBySite`):
+   *  decide() swaps the matching view in as the spec's `priorTable` so
+   *  an acquisition-site decision prices the value measured AT that
+   *  site (shrunk toward the pooled mean); sites absent here fall back
+   *  to `rollout.priorTable` (the pooled view). Meaningless without a
+   *  λ arm; the driver stays generic (plain data, no site knowledge). */
+  readonly priorTableBySite?: Readonly<Record<string, Readonly<Record<string, number>>>>;
 }
 
 export class RunArbitrationDriver {
@@ -174,6 +181,7 @@ export class RunArbitrationDriver {
   private readonly evaluate: typeof evaluateRunCandidate;
   private readonly shadowTier: InnerTier | undefined;
   private readonly shadowHorizon: RunShadowHorizonConfig | undefined;
+  private readonly priorTableBySite: RunArbitrationConfig['priorTableBySite'];
 
   /** The in-memory decision log, append-only in decide order. */
   readonly decisions: RunDecisionRecord[] = [];
@@ -195,6 +203,7 @@ export class RunArbitrationDriver {
       }
     }
     this.shadowHorizon = config.shadowHorizon;
+    this.priorTableBySite = config.priorTableBySite;
   }
 
   /**
@@ -235,11 +244,15 @@ export class RunArbitrationDriver {
       });
     }
     const rollout = { ...this.rollout, ...opts.rollout };
+    const siteTable = this.priorTableBySite?.[site];
     const spec: RunRolloutSpec = {
       horizonBattles: rollout.horizonBattles ?? 1,
       ...rollout,
       pairs,
       ...(opts.priorItemKeys !== undefined ? { priorItemKeys: opts.priorItemKeys } : {}),
+      // 85g2 — the site-conditioned fold view; sites without one keep
+      // the pooled `rollout.priorTable` fallback.
+      ...(siteTable !== undefined ? { priorTable: siteTable } : {}),
     };
     // 85g1 — fail-closed (the 85c launch-mistake pattern): a λ arm at a
     // site that never declared its item keys would silently un-restrict

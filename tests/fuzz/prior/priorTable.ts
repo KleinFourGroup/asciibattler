@@ -64,13 +64,47 @@ export interface PriorRow {
 }
 
 export interface PriorProvenance {
-  /** `git rev-parse --short HEAD` at build time — the ONE HEAD the rows
-   *  were measured at (the instrument batch + the sidecars it read). */
-  readonly head: string;
+  /** LEGACY v1 (pre-85g2): `git rev-parse` at BUILD time, which proved
+   *  unreliable as a measurement label across two rebuilds
+   *  (`aca67da`→`51e026f` — the tiger-team catch). Absent on v2 tables. */
+  readonly head?: string;
+  /** 85g2 — the HEAD the ROWS were MEASURED at: parsed from the batch-dir
+   *  names (the `YYYYMMDD-HHMMSS-<head>` box convention), same-HEAD
+   *  enforced across sources, or supplied via `--measurement-head`.
+   *  Required on every v2 build (the CLI throws without it). */
+  readonly measurementHead?: string;
+  /** 85g2 — the HEAD the table was BUILT at (`git rev-parse`); the
+   *  builder-code version, distinct from the rows' HEAD by design. */
+  readonly buildHead?: string;
   readonly builtAt: string;
-  /** The batch dirs swept (one line each, as given). */
+  /** The sidecars swept — repo-root-RELATIVE, forward slashes (v1 wrote
+   *  absolute Windows paths; the 85g2 provenance item). */
   readonly sources: readonly string[];
   readonly note?: string;
+}
+
+/** 85g2 — parse the measurement HEAD out of batch-dir path segments
+ *  (`20260824-181553-790bd08`). Returns the ONE head every path agrees
+ *  on; throws on a mix (the ONE-HEAD-per-cohort rule — pooling rows
+ *  measured at different HEADs into one table is the 85f hazard the
+ *  byte-identity oracle existed to license, and a TABLE build gets no
+ *  oracle); returns null when no segment matches (the caller requires
+ *  the explicit flag then). Pure; exported for the pin test. */
+export function measurementHeadFromPaths(paths: readonly string[]): string | null {
+  const heads = new Set<string>();
+  for (const p of paths) {
+    for (const seg of p.split(/[\\/]/)) {
+      const m = /^\d{8}-\d{6}-([0-9a-f]{7,40})$/.exec(seg);
+      if (m) heads.add(m[1]!);
+    }
+  }
+  if (heads.size > 1) {
+    throw new Error(
+      `prior:table: sources span ${heads.size} measurement HEADs (${[...heads].sort().join(', ')}) — ` +
+        `a prior table pools ONE HEAD (build per-HEAD tables, or re-run the batch)`,
+    );
+  }
+  return heads.size === 1 ? [...heads][0]! : null;
 }
 
 export interface PriorTable {
@@ -162,10 +196,57 @@ export function buildPriorTable(
  *  long-horizon holding margin — the 2026-08-24 shape-lock's fold input;
  *  valuePerHop stays a reader column). EVERY row participates,
  *  directional included — the n=80 floor governs signing claims, not the
- *  instrument's internal prior; λ_prior is the safety dial. */
+ *  instrument's internal prior; λ_prior is the safety dial. Since 85g2
+ *  this is the POOLED view — the fallback for sites the table has no
+ *  rows from (grants, nodes, fires, eventChoice, campRaid); the
+ *  acquisition sites read `priorFoldValuesBySite`. */
 export function priorFoldValues(table: PriorTable): Record<string, number> {
   const out: Record<string, number> = {};
   for (const [key, row] of Object.entries(table.items)) out[key] = row.meanDelta;
+  return out;
+}
+
+/** 85g2 — the shrinkage constant: a site's own read reaches HALF weight
+ *  exactly when it could sign on its own (`w = n_site / (n_site + K)`,
+ *  K = the per-item signing floor). portBuy cells at n=8–32 read
+ *  w≈0.09–0.29 — mostly pooled, tilted by their own evidence; a naive
+ *  per-site split at those n's is the thing the 85h item rules out. */
+export const SHRINK_K = PER_ITEM_N_FLOOR;
+
+/**
+ * 85g2 — the SITE-CONDITIONED fold view (the 85h prior-v2 item):
+ * per acquisition site, item key → the site's meanDelta SHRUNK toward
+ * the pooled mean (`w·site + (1−w)·pooled`, w = n/(n+k)) — the
+ * sign-flips (ronin −33/+2.9 · stormcaller +82/+5 · mercury +15/−10)
+ * are systemic, so a portBuy decision should price the PORT-conditioned
+ * value, weighted by how much the site's own cell actually knows.
+ * Items with no contribution from a site fall back to the pooled mean.
+ * Computed AT LOAD from the committed per-site (n, meanDelta) stats —
+ * the v1 schema already carries them, so the mechanism needs no table
+ * rebuild (the 85g2b rebuild refreshes MEASUREMENTS + provenance).
+ * The driver swaps this view into the rollout spec per decide-site;
+ * sites absent here read the pooled `priorFoldValues`.
+ */
+export function priorFoldValuesBySite(
+  table: PriorTable,
+  k: number = SHRINK_K,
+): Record<string, Record<string, number>> {
+  const sites = new Set<string>();
+  for (const row of Object.values(table.items)) {
+    for (const s of Object.keys(row.sites)) sites.add(s);
+  }
+  const out: Record<string, Record<string, number>> = {};
+  for (const site of [...sites].sort()) {
+    const view: Record<string, number> = {};
+    for (const [key, row] of Object.entries(table.items)) {
+      const c = row.sites[site];
+      view[key] =
+        c === undefined || c.n === 0
+          ? row.meanDelta
+          : (c.n / (c.n + k)) * c.meanDelta + (k / (c.n + k)) * row.meanDelta;
+    }
+    out[site] = view;
+  }
   return out;
 }
 
@@ -183,9 +264,12 @@ export function renderPriorTable(table: PriorTable): string {
   const entries = Object.entries(table.items);
   const signable = entries.filter(([, r]) => r.signable);
   const thin = entries.filter(([, r]) => !r.signable);
+  const measuredAt = table.provenance.measurementHead ?? table.provenance.head ?? '?';
   lines.push(
     `### Prior table — ${entries.length} items from ${table.decisions} long-horizon decisions ` +
-      `(HEAD ${table.provenance.head}, floor n=${table.floor})`,
+      `(measured @${measuredAt}` +
+      (table.provenance.buildHead !== undefined ? `, built @${table.provenance.buildHead}` : '') +
+      `, floor n=${table.floor})`,
   );
   lines.push(
     'meanΔ = signed long-horizon holding margin, pool HP — the §85 fold input (unscaled); ' +

@@ -499,6 +499,31 @@ describe('RunArbitrationDriver — the 84a long-horizon shadow (the §84 instrum
     expect(() => zeroDriver.decide('portBuy', liveRun(7), [tagged('a')])).not.toThrow();
   });
 
+  it('85g2 — priorTableBySite swaps the site view into the spec; absent sites keep the pooled fallback', () => {
+    const seen: (Readonly<Record<string, number>> | undefined)[] = [];
+    const evaluate = (
+      _live: Run,
+      _apply: CandidateApply | null,
+      spec: RunRolloutSpec,
+    ): RunCandidateResult => {
+      seen.push(spec.priorTable);
+      return { score: 0, perSeed: [] };
+    };
+    const POOLED = { 'daemon:minerva': 29.58 };
+    const PORT = { 'daemon:minerva': 10.0 };
+    const driver = new RunArbitrationDriver(new RNG(1), {
+      evaluate,
+      rollout: { horizonBattles: 1, priorLambda: 0.5, priorTable: POOLED },
+      priorTableBySite: { portBuy: PORT },
+    });
+    driver.decide('portBuy', liveRun(7), [tagged('a')], { priorItemKeys: 'all' });
+    driver.decide('rewardDaemon', liveRun(7), [tagged('b')], { priorItemKeys: 'all' });
+    // portBuy (null + challenger): the site-conditioned view.
+    expect(seen.slice(0, 2)).toEqual([PORT, PORT]);
+    // rewardDaemon has no view here → the pooled fallback.
+    expect(seen.slice(2, 4)).toEqual([POOLED, POOLED]);
+  });
+
   it('85b — walkPolicies change specs only: the driver decides byte-identically on/off (stream untouched)', () => {
     const tables = { base: { null: 0, a: 5, b: 2 }, run: { null: 9, a: 0, b: 0 } };
     const run = (overlay: boolean) => {

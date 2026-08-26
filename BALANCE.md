@@ -3756,3 +3756,27 @@ deltas. The pre-X H7c→O log lives at
   +2 net of 10 discordant (thin — noted for honesty, not
   re-litigation). Arb selection rates (47–60%) sit well above the
   non-arb search's train band, consistent with the §71/85f story.
+- **2026-08-26 — §85g5 THE RE-ANCHOR BOARD RUN (the amendment's board
+  run, user-signed same evening): 0 FAIL / 9 WARN, all expected
+  families.** 25 batches (`20260826-132118…201720-8647132`, the 83a
+  shape: 15 rows n=40 + the 10 checked rows extended to n=120; one box
+  ~7.6 h, box-drive artifact-verified 25/25). ⭐ **The deploy twin's
+  reach = 0.425, INSIDE the signed 40–50 on first measurement** — the
+  pre55ReachRef retirement vindicated (the frozen anchor's 0.542
+  ceiling drift died with the anchor). ⭐ **The shape-coupled parity
+  breach REPAIRED**: deploy-shape gaps priest −1.7 · gambler +1.7
+  (was −9.2/−13.3 on the 55pre shape); priest-regen −5.0 = the named
+  watch. The n=120 pooled table (win / bank / fires / tx): arb-regen
+  0.658 / 114.7 / 1.23 / 0.033 · arb-deploy 0.625 / 86.95 / 1.03 /
+  0.008 · priest 0.608/0.608 · gambler 0.683/0.642 · king 0.775 /
+  queen 0.675 (EXACTLY the 85f pins) · walk twins: seam 16.35/16.16 ·
+  reach 0.400/0.425 · wall 0.438/0.471 (the §85h re-read rides the λ
+  rerun) · fire channel +0.075. **The λ=0 ceiling deltas went MORE
+  negative** (regen −0.092 · deploy −0.125 · **walk-deploy −0.325** —
+  arb 0.225 vs doctrine 0.550): the sharpest fold-makes-arb-pay
+  exhibit yet, the §85g6 λ cohort's exact question. ⚠ OPEN
+  (85g6c adjudicates): the same arm+vector (deploy, arb λ=0, full
+  walk) read 60% on the TRAIN bank at selection vs 22.5% in-sample
+  here — beyond bank noise; the doctrine control's 0.550 on the same
+  seeds says the vector is strong and λ=0 arbitration is what costs
+  it. Refs re-pinned per the amendment (sheet `signedAt` tail).

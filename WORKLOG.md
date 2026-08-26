@@ -1657,3 +1657,20 @@ READ-ONLY while it drains (box-drive refuses a dirty tree or HEAD
 flip at every launch). Evening: fetch → file → the re-pin amendment →
 user signs → the λ cohort fires overnight (queue
 `output/box-batches/85g6-lambda.queue`, ~7.5h).
+
+**The 85g5 re-anchor board run + the amendment (2026-08-26 evening,
+user-signed):** 25/25 artifact-verified (box-drive, one box ~7.6 h,
+per-ID filing cross-checked batch-by-batch against each args file —
+the 83d rule). Numbers: BALANCE 2026-08-26 (the amendment's board
+run). The two ⭐ findings: the deploy twin's reach lands IN the signed
+band on first read (pre55ReachRef's retirement vindicated), and the
+55pre shape-coupled parity breach is REPAIRED by the re-derive
+(deploy gaps inside ±5 both characters; priest-regen −5.0 the named
+watch). The λ=0 ceiling deltas deepened (walk-deploy −0.325) — filed
+under the fold-makes-arb-pay standing interpretation, the λ cohort's
+question. ⚠ OPEN for 85g6c: TRAIN-vs-in-sample arb λ=0 deploy walk
+60% vs 22.5% (beyond bank noise; doctrine reads 0.550 in-sample).
+**85g5 CLOSES with this amendment** — the re-derive at λ=0 doctrine
+shipped end to end: search → arbitrated selection → deploy signed →
+the six rows re-anchored → the re-pin signed. The λ cohort
+(85g6b) fires tonight on CHOOSE 2001+.

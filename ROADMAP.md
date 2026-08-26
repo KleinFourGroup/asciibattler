@@ -137,12 +137,12 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
   - [x] 85g2 — prior v2 (shrinkage · provenance · TABLE v2) ✅ 2026-08-26 — WORKLOG §85g2a/b.
   - [x] 85g3 — the search-arm compat (the `wrapStrategy` seam, ORACLE sha-IDENTICAL) ✅ 2026-08-25 — WORKLOG §85g3.
   - [x] 85g4 — HYBRID-LIGHT DECIDED ✅ 2026-08-25, user-signed — WORKLOG §85g4.
-  - [ ] 85g5 — the re-derive at λ=0 doctrine (a nonzero λ* → the
-        vector re-derive rides the sheet, not the signing);
-        `pre55ReachRef` retires; the six 55pre board rows re-anchor.
-        SEARCH+SELECTION ✅ + DEPLOY SIGNED (finalist-56) + the board
-        surgery ✅ 2026-08-26 — WORKLOG §85g5; REMAINS: the re-anchor
-        board run + the re-pin amendment (tonight's sign).
+  - [x] 85g5 — the re-derive at λ=0 doctrine ✅ CLOSED 2026-08-26
+        (search → arbitrated selection → finalist-56 DEPLOYED →
+        `pre55ReachRef` retired → the re-anchor board run 0 FAIL /
+        9 WARN → the re-pin amendment user-signed; ⭐ reach in-band
+        first read · parity breach REPAIRED) — WORKLOG §85g5 +
+        BALANCE 2026-08-26.
   - [ ] 85g6 — the λ cohort on the CHOOSE bank + the campRaid causal
         arm → λ* → the one-use SIGN bank → λ signs, the 0.438 wall
         re-reads, the ARM updates if λ* ≠ 0. Cut at the 2026-08-26

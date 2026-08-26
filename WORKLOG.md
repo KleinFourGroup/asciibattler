@@ -1582,3 +1582,37 @@ The 85g3 compat stays the enabling infrastructure (and the road to
 the exact shapes rides the 85g5 launch — the estimate is anchored,
 not assumed. Residual impurity, accepted at signing: the coarse
 screen still ranks on the non-arbitrated game.
+
+### 85g5 — the overnight + the arbitrated selection (2026-08-26; autonomous session, protocol calls PENDING USER REVIEW)
+
+The overnight fired at session open per the staged driver (launch
+01:26Z at `b92fa75`, DONE +405 m, artifact-verified, box destroyed by
+the driver). Numbers: BALANCE 2026-08-26. While it cooked, the two
+promotable TODOs landed as `scripts/box-drive.sh` (`6109b4a`) — which
+then ran the selection cohort as its maiden voyage, 4/4 clean.
+
+**Finalist materialization.** The search persists only the winner's
+vector, so the base finalists were regenerated locally from the
+deterministic proposal step (`generateVectors(DEFAULT_BOX, 85, 96)` —
+the documented re-derivation contract) and verified NON-CIRCULARLY
+(§79e): the box's post-refine winner lies inside the exact
+0.15-radius perturb envelope of finalist 56 on every coordinate
+(maxAbsDiff 0.2975 ≤ 0.30 = radius × span) and 1.8+ from 72/73 — a
+wrong regeneration cannot produce that. Fixtures committed at
+`046c83a` (`tests/fuzz/fixtures/85g5-*.json`).
+
+**Autonomous protocol calls (flagged for review, all cheap to re-run
+on TRAIN):** (1) K=4 arms — the cursor said "3 finalists" but the
+85g4 staging budgeted "4 ×"; the superset {3 base + refined winner}
+covers both readings and argmax over a superset is safe. (2) n=30 @
+offset 1000 per the staging math (the search trained on 26).
+(3) λ_prior omitted (=0) — selection scores under the DEPLOYED arm,
+which stays λ=0 until the 85g6 signing.
+
+**Result: argmax = finalist-56 (18/30).** The refined winner placed
+THIRD (15/30) — behind its own perturb parent — the
+train-on-the-wrong-game inversion hybrid-light was signed to catch,
+now observed in the wild. Open at close: the user's deploy signing
+(argmax pre-registered; the 56-vs-73 margin is thin, +2 net of 10
+discordant), then 85g6 (the λ cohort on CHOOSE 2001+ + the campRaid
+causal arm).

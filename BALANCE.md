@@ -3738,3 +3738,21 @@ deltas. The pre-X H7c→O log lives at
   a clean disjoint bank, both changes by protocol design (WORKLOG
   §85g2b). The fold consumes this table site-conditioned via
   load-time shrinkage (SHRINK_K=80) since 85g2a.
+- **2026-08-26 — §85g5: the hybrid-light search + arbitrated selection**
+  (autonomous overnight session; protocol calls pending user review).
+  The train+refine overnight (batch `20260826-012642-b92fa75`, the
+  §59f recipe: 96 vectors × 32 seeds @ offset 1000, sampler 85,
+  ~6.75 h box vs the 8.85 h anchor): winner train 46.2% / held-out
+  33.3%; base top-3 = indices 56/72/73 (three-way tie at 42.31%,
+  keep-best lowest-index). The selection cohort (`box-drive.sh`
+  maiden voyage, 4/4 clean; 4 arms × n=30 TRAIN, full ARM +
+  `--arbitrate`, λ_prior=0): **finalist-56 18/30 (60.0%) ← argmax**
+  · finalist-73 16/30 · refined-winner 15/30 · finalist-72 14/30.
+  ⭐ The 85g4 mismatch thesis OBSERVED: refinement's non-arb gain
+  (42.3%→46.2%) INVERTS under the deployed arm — the refined perturb
+  scores 15/30 vs its parent finalist-56's 18/30 (paired: parent
+  wins 4 seeds the perturb loses, loses 1). Deploy margin note:
+  argmax was the pre-registered rule; the 56-vs-73 paired read is
+  +2 net of 10 discordant (thin — noted for honesty, not
+  re-litigation). Arb selection rates (47–60%) sit well above the
+  non-arb search's train band, consistent with the §71/85f story.

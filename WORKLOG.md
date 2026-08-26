@@ -1616,3 +1616,11 @@ now observed in the wild. Open at close: the user's deploy signing
 (argmax pre-registered; the 56-vs-73 margin is thin, +2 net of 10
 discordant), then 85g6 (the λ cohort on CHOOSE 2001+ + the campRaid
 causal arm).
+
+**Deploy SIGNED 2026-08-26 (user, at the morning review):** the
+deployed vector = **finalist-56**
+(`tests/fuzz/fixtures/85g5-finalist-56.json`), per the pre-registered
+argmax; the three autonomous protocol calls (K=4 · n=30 · λ_prior=0)
+ratified with the signing. No canonical-rename copy made — the
+fixture name carries its provenance; downstream consumers (85g6, the
+55pre re-derive) reference it directly.

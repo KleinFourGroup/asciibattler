@@ -61,19 +61,17 @@ export interface SignedSheet {
    *  it is never independently signed (the unified band architecture;
    *  the one-act-era 55–70 band is RETIRED). */
   readonly terminalReachTarget: SheetBand;
-  /** 83f (user-signed 2026-08-21) — the 55pre twin's reach REFERENCE,
-   *  re-pinned at its measured n=120 level (0.542): three boards of
-   *  identical overperformance on the frozen anchor = measured ceiling
-   *  drift, closed as the §46b ACCEPT+RE-BASELINE shape. The signed target
-   *  above stays the regen twin's band; the vector re-derive is a post-fold
-   *  interstitial rider (META-ROADMAP). */
-  readonly pre55ReachRef: number;
   /** The 30–35 wall target — RE-SIGNED at 72b for the deep-end terminal
    *  (the §68g crisis was gotcha #120 contamination). */
   readonly deepEndWallTarget: SheetBand;
-  /** Act-1 continuity drift references (68d observed; ±8pt paired noise). */
+  /** Act-1 continuity drift references (68d observed; ±8pt paired noise).
+   *  85g5 (2026-08-26): the `deploy` posture replaces `pre55` — the frozen
+   *  55pre anchor retired with its `pre55ReachRef` workaround when the
+   *  re-derived vector deployed (`85g5-finalist-56.json`); the deploy
+   *  refs carry the last 55pre-anchor values PENDING RE-PIN at the
+   *  re-anchor board run. */
   readonly act1WinRefs: Readonly<
-    Record<'soldier' | 'priest' | 'gambler', { readonly regen: number; readonly pre55: number }>
+    Record<'soldier' | 'priest' | 'gambler', { readonly regen: number; readonly deploy: number }>
   >;
   readonly gamblerNote: string;
   readonly bankRefs: { readonly firer: number; readonly shopper: number };
@@ -149,7 +147,10 @@ const CONTROL_ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=
 const ACT1 = ['--count=40', '--hops=11']; // the §60e continuity shape
 const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)
 const REGEN = '--strategy=tests/fuzz/fixtures/59-regen-vector.json';
-const PRE55 = '--strategy=tests/fuzz/fixtures/55pre-vector.json';
+/** 85g5 (2026-08-26) — the DEPLOYED searched vector twin: the frozen
+ *  55pre anchor is retired; a future re-derive swaps this path only
+ *  (ids stay `deploy`). */
+const DEPLOY = '--strategy=tests/fuzz/fixtures/85g5-finalist-56.json';
 const ABLATED = '--strategy=tests/fuzz/fixtures/60-fire-ablated-vector.json';
 /** 68d — the paired-noise width the act-1 drift references carry. */
 const WIN_TOL = 0.08;
@@ -166,14 +167,19 @@ function ref(metric: MetricKey, value: number, tol: number, source: string): Boa
  *  economy refs instead. */
 function act1Posture(
   character: 'soldier' | 'priest' | 'gambler',
-  posture: 'regen' | 'pre55',
+  posture: 'regen' | 'deploy',
   sheet: SignedSheet,
 ): BoardInstrument {
-  const vector = posture === 'regen' ? REGEN : PRE55;
+  const vector = posture === 'regen' ? REGEN : DEPLOY;
   const strategyRow =
-    posture === 'regen' ? 'arbitrated:scored:59-regen-vector' : 'arbitrated:scored:55pre-vector';
+    posture === 'regen'
+      ? 'arbitrated:scored:59-regen-vector'
+      : 'arbitrated:scored:85g5-finalist-56';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource = `83f drift ref (act-1 arb, n=120 pooled, ±8)${provisional}`;
+  const winSource =
+    posture === 'deploy'
+      ? `85g5 re-anchor: the 55pre-anchor value CARRIED, PENDING RE-PIN at the re-anchor board run (±8)${provisional}`
+      : `83f drift ref (act-1 arb, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -187,17 +193,17 @@ function act1Posture(
       ref('transactionRate', 0, 0.1, '72f posture dissolution: the arb arm shops ≈never'),
     );
   }
-  if (character === 'soldier' && posture === 'pre55') {
+  if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '83f re-pin: the arb shopper-vector row banks ~90 (the §82 economy; was ~63 at 72f)'),
+      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '85g5 re-anchor: the 55pre-anchor shopper bank (~90) CARRIED, PENDING RE-PIN'),
       ref('transactionRate', sheet.shopperTransactionRate, 0.1, '72f posture dissolution: the arb arm shops ≈never (the vector still moves in-battle play)'),
       ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run'),
     );
   }
-  const base = character === 'soldier' ? posture.replace('pre55', '55pre') : `${character}-${posture.replace('pre55', '55pre')}`;
+  const base = character === 'soldier' ? posture : `${character}-${posture}`;
   return {
     id: `arb-${base}`,
-    title: `${character} ${posture === 'regen' ? 'regen' : '55pre'} vector (arb act-1 drift ref)`,
+    title: `${character} ${posture} vector (arb act-1 drift ref)`,
     args: [...ACT1, `--character=${character}`, vector, ...ARM],
     strategyRow,
     checks,
@@ -223,31 +229,30 @@ function control(
  *  the SIGNATURE lives on the sheet; at n=40 a signed-FAIL grade would
  *  trip on ±8pt paired noise (the 72f dose pair measured reach at exactly
  *  the band edge). */
-function walkPosture(posture: 'regen' | 'pre55', sheet: SignedSheet): BoardInstrument {
-  const vector = posture === 'regen' ? REGEN : PRE55;
-  // 83f (user-signed 2026-08-21) — the 55pre twin's reach is RE-PINNED at
-  // its measured level as a reference band ±WIN_TOL (see SignedSheet
-  // .pre55ReachRef); the regen twin stays on the signed 40–50 target.
-  const reachBand =
-    posture === 'pre55'
-      ? { min: sheet.pre55ReachRef - WIN_TOL, max: sheet.pre55ReachRef + WIN_TOL }
-      : { min: sheet.terminalReachTarget.min, max: sheet.terminalReachTarget.max };
-  // Balance-proof: the derived band moves with the sheet's pair (the 55pre
-  // twin derives from its re-pinned reach band).
+function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInstrument {
+  const vector = posture === 'regen' ? REGEN : DEPLOY;
+  // 85g5 (2026-08-26) — pre55ReachRef RETIRED with the frozen anchor: the
+  // deploy twin (the freshly re-derived vector) returns to the SIGNED
+  // 40–50 band; a fresh derive that can't live in the signed band is a
+  // finding, not a reference to chase.
+  const reachBand = { min: sheet.terminalReachTarget.min, max: sheet.terminalReachTarget.max };
+  // Balance-proof: the derived band moves with the sheet's pair.
   const winDerived = {
     min: reachBand.min * (1 - sheet.deepEndWallTarget.max),
     max: reachBand.max * (1 - sheet.deepEndWallTarget.min),
   };
   const reachSource =
-    posture === 'pre55'
-      ? `83f RE-PINNED at the measured n=120 reach ${sheet.pre55ReachRef} ±${WIN_TOL} — the 72f/83d/83f overperformance watch CLOSED as ceiling drift on the frozen anchor; the vector re-derive = a post-fold interstitial rider`
+    posture === 'deploy'
+      ? '72b SIGNED 40–50 — the deploy twin re-enters the signed band at the 85g5 re-anchor (pre55ReachRef retired with the frozen 55pre anchor); first measurement = the re-anchor board run'
       : '72b SIGNED 40–50, HELD at 72f + 83f';
   return {
-    id: `arb-walk-${posture.replace('pre55', '55pre')}`,
+    id: `arb-walk-${posture}`,
     title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
     args: [...WALK, '--character=soldier', vector, ...ARM],
     strategyRow:
-      posture === 'regen' ? 'arbitrated:scored:59-regen-vector' : 'arbitrated:scored:55pre-vector',
+      posture === 'regen'
+        ? 'arbitrated:scored:59-regen-vector'
+        : 'arbitrated:scored:85g5-finalist-56',
     checks: [
       {
         metric: 'seamPool',
@@ -293,7 +298,7 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
   // re-enters at the cluster-5 stress test.
   const primaries: BoardInstrument[] = [
     act1Posture('soldier', 'regen', sheet),
-    act1Posture('soldier', 'pre55', sheet),
+    act1Posture('soldier', 'deploy', sheet),
     // 85-pre F3A (user-signed 2026-08-23) — the wall rows run the DOCTRINE
     // (non-arbitrated) arm: --encounter + --arbitrate is refused since F3
     // (rollout clones drop the forced-encounter dial — every arb decision
@@ -319,27 +324,27 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
       ],
     },
     act1Posture('priest', 'regen', sheet),
-    act1Posture('priest', 'pre55', sheet),
+    act1Posture('priest', 'deploy', sheet),
     act1Posture('gambler', 'regen', sheet),
-    act1Posture('gambler', 'pre55', sheet),
+    act1Posture('gambler', 'deploy', sheet),
     walkPosture('regen', sheet),
-    walkPosture('pre55', sheet),
+    walkPosture('deploy', sheet),
   ];
   const controls: BoardInstrument[] = [
     control('regen', 'soldier regen vector', [...ACT1, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
-    control('55pre', 'soldier 55pre vector', [...ACT1, '--character=soldier', PRE55, ...CONTROL_ARM], 'scored:55pre-vector'),
+    control('deploy', 'soldier deploy vector', [...ACT1, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:85g5-finalist-56'),
     control('fire-ablated', 'the fire-channel ablation', [...ACT1, '--character=soldier', ABLATED, ...CONTROL_ARM], 'scored:60-fire-ablated-vector'),
     control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
-    control('walk-55pre', 'two-act 55pre vector', [...WALK, '--character=soldier', PRE55, ...CONTROL_ARM], 'scored:55pre-vector'),
+    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:85g5-finalist-56'),
   ];
   // The 4 ceiling deltas (arb − doctrine, paired seeds): the cheapest
   // standing read on what arbitration is worth; a WARN = a real move.
   const ceilingDeltas: BoardDelta[] = (
     [
       ['regen', 'arb-regen'],
-      ['55pre', 'arb-55pre'],
+      ['deploy', 'arb-deploy'],
       ['walk-regen', 'arb-walk-regen'],
-      ['walk-55pre', 'arb-walk-55pre'],
+      ['walk-deploy', 'arb-walk-deploy'],
     ] as const
   ).map(([ctrl, arb]) => ({
     id: `ceiling-${ctrl}`,

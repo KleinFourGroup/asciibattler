@@ -202,31 +202,28 @@ describe('the board definition itself', () => {
     const winRefOf = (id: string): { min: number; max: number } | undefined =>
       board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
     expect(winRefOf('arb-regen')?.min).toBeCloseTo(sheet.act1WinRefs.soldier.regen - 0.08);
-    expect(winRefOf('arb-priest-55pre')?.max).toBeCloseTo(sheet.act1WinRefs.priest.pre55 + 0.08);
+    expect(winRefOf('arb-priest-deploy')?.max).toBeCloseTo(sheet.act1WinRefs.priest.deploy + 0.08);
     expect(winRefOf('arb-gambler-regen')?.min).toBeCloseTo(sheet.act1WinRefs.gambler.regen - 0.08);
   });
 
   it("the gambler rows carry the sheet's parity annotation (balance-proof: whatever gamblerNote says)", () => {
-    for (const id of ['arb-gambler-regen', 'arb-gambler-55pre']) {
+    for (const id of ['arb-gambler-regen', 'arb-gambler-deploy']) {
       const win = board.instruments.find((i) => i.id === id)?.checks.find((c) => c.metric === 'winRate');
       expect(win?.source).toContain(sheet.gamblerNote);
     }
   });
 
   it('72b/72f — the walk primaries carry the unified architecture: seam + reach + wall from the sheet, win DERIVED (balance-proof)', () => {
-    for (const id of ['arb-walk-regen', 'arb-walk-55pre']) {
+    for (const id of ['arb-walk-regen', 'arb-walk-deploy']) {
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
       const seam = inst.checks.find((c) => c.metric === 'seamPool')!;
       expect(seam.min).toBe(sheet.seamPoolBand.min);
       expect(seam.max).toBe(sheet.seamPoolBand.max);
       const reach = inst.checks.find((c) => c.metric === 'terminalReach')!;
-      // 83f — the 55pre twin's reach is re-pinned at its measured level ±0.08
-      // (sheet.pre55ReachRef); the regen twin stays on the signed target.
-      const reachBand =
-        id === 'arb-walk-55pre'
-          ? { min: sheet.pre55ReachRef - 0.08, max: sheet.pre55ReachRef + 0.08 }
-          : sheet.terminalReachTarget;
+      // 85g5 — pre55ReachRef retired with the frozen anchor: BOTH twins ride
+      // the signed 40–50 target (the deploy twin is freshly re-derived).
+      const reachBand = sheet.terminalReachTarget;
       expect(reach.min).toBeCloseTo(reachBand.min);
       expect(reach.max).toBeCloseTo(reachBand.max);
       const wall = inst.checks.find((c) => c.metric === 'bossWall')!;
@@ -265,10 +262,10 @@ describe('the board definition itself', () => {
       expect(primaries).toHaveLength(8);
       expect(wallRows.map((w) => w.id).sort()).toEqual(['wall-king', 'wall-queen']);
       expect(controls.map((c) => c.id).sort()).toEqual([
-        '55pre',
+        'deploy',
         'fire-ablated',
         'regen',
-        'walk-55pre',
+        'walk-deploy',
         'walk-regen',
       ]);
       for (const c of controls) expect(c.checks).toEqual([]);
@@ -297,9 +294,9 @@ describe('the board definition itself', () => {
     it('the 4 ceiling deltas pair each control with its primary (paired seeds, ±8pt reference)', () => {
       const pairs = [
         ['ceiling-regen', 'arb-regen', 'regen'],
-        ['ceiling-55pre', 'arb-55pre', '55pre'],
+        ['ceiling-deploy', 'arb-deploy', 'deploy'],
         ['ceiling-walk-regen', 'arb-walk-regen', 'walk-regen'],
-        ['ceiling-walk-55pre', 'arb-walk-55pre', 'walk-55pre'],
+        ['ceiling-walk-deploy', 'arb-walk-deploy', 'walk-deploy'],
       ] as const;
       for (const [id, a, b] of pairs) {
         const delta = board.deltas.find((d) => d.id === id)!;
@@ -317,9 +314,9 @@ describe('the board definition itself', () => {
     it('a primary and its control share shape: same args minus the arm flag (the paired-seed contract)', () => {
       for (const [ctrl, arb] of [
         ['regen', 'arb-regen'],
-        ['55pre', 'arb-55pre'],
+        ['deploy', 'arb-deploy'],
         ['walk-regen', 'arb-walk-regen'],
-        ['walk-55pre', 'arb-walk-55pre'],
+        ['walk-deploy', 'arb-walk-deploy'],
       ] as const) {
         const c = board.instruments.find((i) => i.id === ctrl)!;
         const p = board.instruments.find((i) => i.id === arb)!;

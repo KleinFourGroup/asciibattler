@@ -218,14 +218,18 @@ kickoff — has its own section below.)
   through a pipeline: `cmd | tail` reports *tail's* exit (a blocked
   commit looked green), and a driver's logged `EXIT=$?` can record
   box-batch's exit 0 on a parity REFUSAL — the `fetched →` line count
-  is the reliable completion signal for any driver log. **The
-  queue-file driver pattern (83c/83d/83e/83f) is the sanctioned
-  overnight shape:** a scratchpad-resident sequential driver
-  (launch → short-poll → fetch → next), chainable; and ⚠ **ONE HEAD
-  PER COHORT** — the box pulls to local HEAD at every launch, so a
-  push mid-queue silently reruns the remaining arms at the new HEAD,
-  and the launch parity guard refuses a DIRTY tree outright: no
-  commits, no doc edits, until the driver's last launch has fired.
+  is the reliable completion signal for any driver log. **The sanctioned
+  overnight shape is [scripts/box-drive.sh](scripts/box-drive.sh)**
+  (promoted 2026-08-26 from the 83c–85g5 scratch-driver lineage):
+  create → per-queue-line launch → short-poll → artifact-verified
+  fetch (`fetched →` line + exit-code 0 + a non-empty `--artifact`)
+  → stand-down, with HOLD (box kept, loud exit) on any anomaly. It
+  mechanizes push-before-launch AND ⚠ **ONE HEAD PER COHORT** — the
+  box pulls to local HEAD at every launch, so the driver refuses a
+  dirty tree or a HEAD flip before every launch instead of silently
+  rerunning the remaining arms at the new HEAD: no commits, no doc
+  edits, until the driver's last launch has fired. Don't hand-roll
+  a new scratch driver; extend this one.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes

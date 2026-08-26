@@ -294,20 +294,17 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   refactor is a behavior-equivalence surgery — worktree-pinned diff
   oracle required (the 47e protocol).
 
-- [ ] **box-batch.sh `--poll-ceiling` arg (or a bumped `run` default).**
-  Filed at the 72f close (2026-08-04): `run`'s 1h poll loop is now
-  shorter than routine batches — post-buff flip batches ran ~70 min and
-  the 72f searcher-tier walk ~2.5h. The §57g re-attach (`status`/`fetch`
-  by id) recovered cleanly each time, so this is ergonomics, not a
-  correctness hole; the 72f drivers just used their own poll loops.
+- [x] **box-batch.sh `--poll-ceiling` arg.** ✅ SUPERSEDED 2026-08-26 by
+  `scripts/box-drive.sh` (unbounded poll; `run` stays for short
+  in-session batches). Original note: git history (filed at 72f).
 
 - [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
 - [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).
 
-- [ ] **Promote the 84d stand-down watcher into `scripts/`.** Filed at
-  the 84d close (2026-08-23): `box-batches/84d/84d-standdown.sh` (+ the
-  keep-awake companion) is git-ignored scratch; the sanctioned
-  overnight shape should ship it as `scripts/box-standdown.sh <host>
-  <box-name> <driver-pid> <driver-log> <queue>` or as a driver flag, so
-  no cohort bills past its last fetch again.
-- [ ] Promote the §85f driver-v2 queue shape (hand-rolled launch→status-poll→fetch, one batch at a time, artifact-verified stand-down with HOLD) into scripts/ or an AGENTS ops norm — replaces chaining box-batch `run` (the ~1h poll cap, gotcha #126's sibling); supersedes the 84d stand-down-watcher promotion item.
+- [x] **Promote the 84d stand-down watcher into `scripts/`.** ✅ SUPERSEDED
+  2026-08-26: the promoted driver IS the stand-down (artifact-verified,
+  in-line) — no separate watcher needed. See the next item.
+- [x] **Promote the §85f driver-v2 queue shape.** ✅ DONE 2026-08-26 as
+  [scripts/box-drive.sh](scripts/box-drive.sh) + the AGENTS ops norm
+  (one-head-per-cohort + artifact-verified stand-down mechanized).
+  Detail in git.

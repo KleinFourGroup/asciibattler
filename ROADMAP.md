@@ -166,9 +166,10 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
         `priorItemKeys` on the walk-terminal diff (campRaid `'all'`
         by 85d design); λ=0 byte-identical; the λ≠0 keyless throw —
         WORKLOG §85g-kickoff.
-  - [ ] 85g2 — prior v2: builder shrinkage (n/(n+k) toward the
-        pooled mean) + machine provenance; then the TRAIN-bank
-        shadow batch + the table-v2 rebuild (box; own commit).
+  - [x] 85g2 — prior v2 ✅ 2026-08-26 — shrinkage + machine
+        provenance (85g2a) + the TRAIN-bank shadow batch → table v2
+        (17 units signable; miner ALIVE; rioter sign-flip) — WORKLOG
+        §85g2a/b.
   - [x] 85g3 — the search-arm compat ✅ 2026-08-25 — the
         `wrapStrategy` seam + run.ts relocation (ORACLE sha-IDENTICAL,
         fold engaged) + args relax + job-file threading — WORKLOG

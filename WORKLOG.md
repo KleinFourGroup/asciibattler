@@ -1484,6 +1484,44 @@ the shrinkage algebra (hand-computed), the fallbacks, the head
 parse/mix/none cases, the driver's per-site spec swap, both render
 generations.
 
+### 85g2b — the TRAIN-bank shadow batch + table v2 (2026-08-25 →
+08-26, the batch overnight-adjacent)
+
+**The batch:** `20260825-211240-fbcb363` — the exact 84f3 instrument
+shape (`--shadow-horizon=run`, the full ARM, the regen vector,
+`--jobs=8`) at `--seed-offset=1000 --count=120` (the TRAIN bank
+1001–1120). Box created/launched/fetched/destroyed by the
+single-arm v2 driver in one clean pass: DONE at +206 m (the 84f3
+anchor ×120/160 predicted 195 m), 47,936 decision rows, artifact
+verified, box down at 00:40Z — zero idle billing. The mid-run 85g3/
+85g4 commits were safe by construction (single-launch queue; the box
+pulled `fbcb363` at launch and never re-pulled).
+
+**Table v2** (`prior-table.json`, 35 items from 1,952 long-horizon
+decisions): provenance v2's FIRST real build — `measured @fbcb363 ·
+built @fed4803`, the head parsed from the batch-dir name, sources
+repo-relative. 17 units SIGNABLE (n=168–309); all 9 daemons + 9
+packets DIRECTIONAL (n=20–44 — the 120-seed bank is thinner than
+v1's 160; the §88 targeted-grant list grows). The reads:
+
+- **`packet:miner` is ALIVE (−40.65 directional, n=20)** — v1's nine
+  exact zeros included miner as STRUCTURAL (bits-only = score-
+  invisible). Candidate mechanism, not overclaimed: the 85b armed
+  walk gives bits a real downstream channel (docks shop inside
+  walks), so a bits-only packet finally moves terminal state. The
+  magnitude is n=20 noise territory; §88's targeted grant is the
+  proper read.
+- **Magnitudes grew broadly** (unit meanΔ now spans ±25 vs v1's ±6)
+  and **rioter SIGN-FLIPPED** (v1 +4.98 → v2 −14.49); halberdier
+  +2.69→+24.63, stormcaller +3.72→+19.08, bandit −4.82→−19.58. Two
+  entangled causes, both intended: final-walker semantics (armed
+  fires/docks make branches genuinely diverge — the 84f2 live-
+  fraction lift) and the clean seed bank. v1-vs-v2 deltas are NOT
+  drift evidence — different instrument, different seeds, by design.
+- Directional daemons carry large values (janus +72.7, minerva
+  +62.4) — single-item folds stay under the ±100 clamp, and λ=0.5
+  is the pre-registered default; the clamp flag stays the tell.
+
 ### 85g3 — the search-arm compat (2026-08-25; built while the 85g2b
 batch ran on the box)
 

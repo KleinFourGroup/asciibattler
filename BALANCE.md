@@ -3720,3 +3720,21 @@ deltas. The pre-X H7c→O log lives at
   REGENERATES**: the re-derive runs on the deployed arm once
   `--arbitrate`+`--search` compat lands (85g); `pre55ReachRef`
   retires with it. Detail + the compat/cost audit: WORKLOG §85h.
+- **2026-08-26 — §85g2b: PRIOR TABLE v2** (batch
+  `20260825-211240-fbcb363`: the 84f3 instrument shape on the TRAIN
+  bank 1001–1120, n=120, run-horizon shadow; 1,952 long-horizon
+  decisions; provenance `measured @fbcb363 · built @fed4803`). 17
+  units SIGNABLE (n=168–309): halberdier +24.63 · stormcaller +19.08
+  · shaman +15.02 · corrupter +8.31 · mage +7.34 · healer +5.99 ·
+  ronin +0.99 · gunslinger −0.07 · adventurer −1.74 · mercenary −5.52
+  · archer −5.98 · reaver −7.89 · officer −8.23 · catapult −13.83 ·
+  rioter −14.49 (v1 SIGN FLIP) · rogue −18.19 · bandit −19.58. All 9
+  daemons + 9 packets DIRECTIONAL (n=20–44; the §88 list): janus
+  +72.7 · minerva +62.4 · patricians-seal +36.3 · portunus −24.9 ·
+  reroute +39.4 · patch +24.5 · discard-one −26.7 · **miner −40.65 —
+  ALIVE (v1's structural zero broken; candidate mechanism = the 85b
+  armed walk giving bits a downstream channel; n=20, §88 confirms)**.
+  ⚠ v1→v2 deltas are NOT drift evidence — final-walker semantics +
+  a clean disjoint bank, both changes by protocol design (WORKLOG
+  §85g2b). The fold consumes this table site-conditioned via
+  load-time shrinkage (SHRINK_K=80) since 85g2a.

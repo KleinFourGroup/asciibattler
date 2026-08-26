@@ -123,66 +123,37 @@ count as held; shadow records stay λ_prior=0; campRaid v1 = {null,
 raid}. Ordering is fidelity-first so the cohort measures the walk we
 keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
 
-- [x] 85a — the table-builder per-hop weight fix (finding 9) + the
-      fold design note; table rebuilt from the 84f3 sidecar with the
-      corrected builder ✅ 2026-08-24 — meanΔ byte-stable, value/hop
-      moved (cornucopia −2.43→−2.69), WORKLOG §85a.
-- [x] 85b — the walk-fidelity batch: all-rollouts fire overlay + the
-      walker's `rolloutSearch` config + the future-docks rule (only
-      the decision dock excluded) + the 0x70a1/0x84c1 → keyed-stream
-      migration ✅ 2026-08-24 — re-pin count ZERO (the §77 keyed
-      architecture absorbed the break); the 84f2 tripwire probe reads
-      portBuy/live/packet 0.4%→56% live — WORKLOG §85b.
-- [x] 85c — the fold mechanics: holdings in `readRunMetrics` +
-      the clone-bus fired-packet tally + `priorBonus` in scoreTerminal /
-      breakdown / decisions.csv (`priorBonus`+`priorLambda`,
-      append-last) + `--prior-lambda` ✅ 2026-08-24 — λ=0 probe
-      BYTE-IDENTICAL (summary + decisions), λ=1 reads the table's own
-      rows back exactly; 12a clamp + 12b fired-as-held + 12c
-      judgeLong strip all pinned — WORKLOG §85c.
-- [x] 85d — the campRaid preTurn run-layer site ({null, raid};
-      player-pull rails at spawn; walker plays it out) ✅ 2026-08-24 —
-      the A/B probe caught two silent no-ops pre-commit (the campId
-      null predicate; the spawn-order drain race →
-      `World.setInitialObjective`, setup-phase only); live probe: 21
-      candidates, 4 raids won, mean margin +1.55 — WORKLOG §85d.
-- [x] 85e — the ε re-read ✅ 2026-08-24 — the v2 floor rule (E1 +
-      max-context, λ=0-derived for all arms, user-signed ×3) re-pins
-      all six classes (campRaid's provisional was ~5.6× under; the
-      fold's λ=1 noise injection = #12c quantified) — WORKLOG §85e.
-- [x] 85f — the box cohort ✅ 2026-08-25 — 30 arms (pooling PROVEN by
-      the byte-identity oracle); 55pre λ=0.5 Δwin +0.142 p=0.008
-      EXPLORATORY (the train/select leak); wall refs re-pinned
-      0.775/0.675 — WORKLOG §85f + gotcha #126.
-- [x] 85h — the amendment session ✅ 2026-08-25 — all twelve items
-      signed as proposed (55pre REGENERATES + search-arm compat; the
-      λ rerun protocol MANDATORY; λ=0.5 pre-registered, signs
-      POST-RERUN; board split + perf riders → §86; gotchas #127/#128
-      + walkDepth.ts/sites.ts) — WORKLOG §85h + BALANCE 2026-08-25.
+- [x] 85a — the table-builder per-hop weight fix ✅ 2026-08-24 — WORKLOG §85a.
+- [x] 85b — the walk-fidelity batch (fire overlay · keyed streams; re-pin ZERO) ✅ 2026-08-24 — WORKLOG §85b.
+- [x] 85c — the fold mechanics (`--prior-lambda`; λ=0 BYTE-IDENTICAL) ✅ 2026-08-24 — WORKLOG §85c.
+- [x] 85d — the campRaid preTurn site ({null, raid}) ✅ 2026-08-24 — WORKLOG §85d.
+- [x] 85e — the ε re-read (v2 floors, all six classes) ✅ 2026-08-24 — WORKLOG §85e.
+- [x] 85f — the box cohort (55pre λ=0.5 +0.142 p=0.008 EXPLORATORY; wall refs 0.775/0.675) ✅ 2026-08-25 — WORKLOG §85f + gotcha #126.
+- [x] 85h — all twelve amendments signed as proposed (λ rerun MANDATORY; λ=0.5 pre-registered) ✅ 2026-08-25 — WORKLOG §85h.
 - [ ] 85g — the 55pre regenerate + the λ rerun (cut signed at the
       2026-08-25 kickoff, WORKLOG §85g-kickoff; predictions: World
       v35 / Run v44 hold, no new RNG streams):
-  - [x] 85g1 — the candidate-delta de-fold ✅ 2026-08-25 — per-site
-        `priorItemKeys` on the walk-terminal diff (campRaid `'all'`
-        by 85d design); λ=0 byte-identical; the λ≠0 keyless throw —
-        WORKLOG §85g-kickoff.
-  - [x] 85g2 — prior v2 ✅ 2026-08-26 — shrinkage + machine
-        provenance (85g2a) + the TRAIN-bank shadow batch → table v2
-        (17 units signable; miner ALIVE; rioter sign-flip) — WORKLOG
-        §85g2a/b.
-  - [x] 85g3 — the search-arm compat ✅ 2026-08-25 — the
-        `wrapStrategy` seam + run.ts relocation (ORACLE sha-IDENTICAL,
-        fold engaged) + args relax + job-file threading — WORKLOG
-        §85g3.
-  - [x] 85g4 — DECIDED ✅ 2026-08-25, user-signed: HYBRID-LIGHT
-        (non-arb train+refine; the K finalists arbitrated at full
-        length as run-mode batches, argmax deploys) — WORKLOG §85g4.
+  - [x] 85g1 — the candidate-delta de-fold (per-site `priorItemKeys`) ✅ 2026-08-25 — WORKLOG §85g-kickoff.
+  - [x] 85g2 — prior v2 (shrinkage · provenance · TABLE v2) ✅ 2026-08-26 — WORKLOG §85g2a/b.
+  - [x] 85g3 — the search-arm compat (the `wrapStrategy` seam, ORACLE sha-IDENTICAL) ✅ 2026-08-25 — WORKLOG §85g3.
+  - [x] 85g4 — HYBRID-LIGHT DECIDED ✅ 2026-08-25, user-signed — WORKLOG §85g4.
   - [ ] 85g5 — the re-derive at λ=0 doctrine (a nonzero λ* → the
         vector re-derive rides the sheet, not the signing);
         `pre55ReachRef` retires; the six 55pre board rows re-anchor.
+        SEARCH+SELECTION ✅ + DEPLOY SIGNED (finalist-56) + the board
+        surgery ✅ 2026-08-26 — WORKLOG §85g5; REMAINS: the re-anchor
+        board run + the re-pin amendment (tonight's sign).
   - [ ] 85g6 — the λ cohort on the CHOOSE bank + the campRaid causal
         arm → λ* → the one-use SIGN bank → λ signs, the 0.438 wall
-        re-reads, the ARM updates if λ* ≠ 0.
+        re-reads, the ARM updates if λ* ≠ 0. Cut at the 2026-08-26
+        kickoff (WORKLOG §85g6-kickoff):
+    - [x] 85g6a — the `--camp-raid=off|on` causal-arm dial ✅
+          2026-08-26 (site-omission semantics; WORKLOG §85g6-kickoff).
+    - [ ] 85g6b — the 7-arm λ cohort on CHOOSE 2001+ (deploy+regen ×
+          λ{0,0.5,1} + the causal arm; n=120; queue staged).
+    - [ ] 85g6c — the λ* + campRaid causal reads (paired same-seed).
+    - [ ] 85g6d — the one-use SIGN-bank pass → λ signs; ARM updates
+          if λ* ≠ 0; the 0.438 wall re-reads.
 
 ## Phase 86 — The balancer performance pass
 

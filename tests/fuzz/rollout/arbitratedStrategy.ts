@@ -273,6 +273,12 @@ export interface ArbitratedConfig {
   readonly nodeChoiceEpsilon?: number;
   readonly eventChoiceEpsilon?: number;
   readonly campRaidEpsilon?: number;
+  /** 85g6a — the campRaid causal-arm dial (`--camp-raid=off`): false OMITS
+   *  the site from the strategy (ABSENT = never raid, the pre-85d
+   *  Strategy.ts contract), so an enabled-vs-disabled pair reads the
+   *  site's causal value under paired luck. Default true (the 85d
+   *  shipping shape). */
+  readonly campRaid?: boolean;
   /** The nominator weight vector the DP tail reads (70e). Default: the
    *  default vector. NOT auto-threaded from a `--strategy` file today —
    *  under the default vector the tail is exactly 0 (all path weights
@@ -395,8 +401,12 @@ export function makeArbitratedStrategy(
     // the NOMINEE/null arm; see arbitrateEventChoice's header).
     pickEventChoice: (run, rng) => arbitrateEventChoice(driver, run, rng, config),
     // 85d — the campRaid RUN-LAYER preTurn site (the fold rider; see
-    // arbitrateCampRaid's header). v1 candidates = {null, raid}.
-    pickCampRaid: (run, _rng) => arbitrateCampRaid(driver, run, config.campRaidEpsilon),
+    // arbitrateCampRaid's header). v1 candidates = {null, raid}. 85g6a:
+    // campRaid=false OMITS the site (ABSENT = never raid — the doctrine
+    // arms' permanent policy), the causal-arm dial.
+    ...(config.campRaid !== false
+      ? { pickCampRaid: (run: Run, _rng: RNG) => arbitrateCampRaid(driver, run, config.campRaidEpsilon) }
+      : {}),
   };
 }
 

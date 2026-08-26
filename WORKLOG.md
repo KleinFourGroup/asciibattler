@@ -1624,3 +1624,36 @@ argmax; the three autonomous protocol calls (K=4 · n=30 · λ_prior=0)
 ratified with the signing. No canonical-rename copy made — the
 fixture name carries its provenance; downstream consumers (85g6, the
 55pre re-derive) reference it directly.
+
+## Phase 85g6 — kickoff (2026-08-26, same session as the deploy signing; cut user-signed at the morning shape-lock)
+
+The code-reality audit (step 1): the campRaid site had NO disable dial
+— built as 85g6a. The key finding shaping the mechanism: Strategy.ts's
+`pickCampRaid` contract is ABSENT = never raid (the pre-85d behavior,
+the doctrine arms' permanent policy), so "disabled" = OMIT the site
+from the strategy object — the causal pair is then exactly
+site-vs-no-site under paired luck, with no ε or walker consultation on
+the off arm. The cut (step 2, in ROADMAP §85g6): 85g6a the dial ·
+85g6b the 7-arm λ cohort on CHOOSE (deploy+regen × λ{0,0.5,1} + the
+causal arm; n=120) · 85g6c the λ*/causal reads · 85g6d the SIGN pass.
+Shape-locked (step 3) with two flagged calls, both user-signed: n=120
+per arm, and the 3 regen arms kept for the two-vector consistency
+read.
+
+**85g6a LANDED (this commit):** `--camp-raid=off|on` (run-mode
+ablation dial, the grant-epsilon class: requires --arbitrate, refused
+with --search, on|off only — a typo'd value throws rather than
+silently running the default arm under an ablation label). run.ts
+threads it as a wrapStrategy extra; the batch label prints
+`camp-raid=OFF` (70a labeling). Tests: the priorLambdaArg-pattern arg
+matrix + the site-omission pin (campRaid:false → pickCampRaid
+undefined; default/true → defined). --jobs children re-parse argv
+(the parallel.ts passthrough), so no job-file plumbing.
+
+**The day's ops plan (the box-drive freeze shapes it):** the board
+re-anchor cohort fires after this commit (the 83a shape, 25 batches
+~9.6h — queue `output/box-batches/85g5-board.queue`); the repo is
+READ-ONLY while it drains (box-drive refuses a dirty tree or HEAD
+flip at every launch). Evening: fetch → file → the re-pin amendment →
+user signs → the λ cohort fires overnight (queue
+`output/box-batches/85g6-lambda.queue`, ~7.5h).

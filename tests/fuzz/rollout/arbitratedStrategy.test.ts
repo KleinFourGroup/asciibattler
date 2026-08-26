@@ -982,6 +982,14 @@ describe('85d — the campRaid site (the fold rider; {null, raid})', () => {
     expect(arm.driver.decisions[0]!.chosenIndex).toBe(0);
   });
 
+  it('85g6a — campRaid: false OMITS the site entirely (ABSENT = never raid; the causal-arm dial)', () => {
+    const off = makeArbitratedStrategy(SEED, { campRaid: false });
+    expect(off.pickCampRaid).toBeUndefined();
+    // Default (absent) and explicit true both keep the site live.
+    expect(makeArbitratedStrategy(SEED, {}).pickCampRaid).toBeDefined();
+    expect(makeArbitratedStrategy(SEED, { campRaid: true }).pickCampRaid).toBeDefined();
+  });
+
   it('the raid apply sets the clone flag and NOTHING else (harness-side battle-plan state)', () => {
     let capturedApply: CandidateApply | null = null;
     const capture = (_live: Run, apply: CandidateApply | null, _spec: RunRolloutSpec): RunCandidateResult => {

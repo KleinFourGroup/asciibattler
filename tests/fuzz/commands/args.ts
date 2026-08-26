@@ -197,6 +197,12 @@ export interface CliArgs {
   // control). Requires --arbitrate; the committed prior table loads at
   // launch when ≠ 0 (missing table = loud throw).
   priorLambda?: number;
+  // 85g6a — the campRaid causal-arm dial (`--camp-raid=off|on`, default on):
+  // off OMITS the site from the arbitrated strategy (ABSENT = never raid,
+  // the pre-85d Strategy.ts contract), so an enabled-vs-disabled pair reads
+  // the site's causal value under paired luck. Requires --arbitrate; a
+  // run-mode ablation dial (refused with --search).
+  campRaid?: string;
   // 84c — the §84 long-horizon shadow instrument (`--shadow-horizon[=run|N]`,
   // bare = 'run'): every sampled arbitrated decision's candidates ALSO walked
   // to the horizon as a separate decisions.csv record, plus the shadow-only
@@ -414,6 +420,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--prior-lambda':
         if (v !== undefined) args.priorLambda = Number(v);
         break;
+      case '--camp-raid':
+        if (v !== undefined) args.campRaid = v;
+        break;
       case '--arbitrate-tier':
         if (v !== undefined) args.arbitrateTier = v;
         break;
@@ -504,6 +513,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   if (args.search && args.grantEpsilon !== undefined) {
     throw new Error('--grant-epsilon is a run-mode ablation dial (not supported with --search)');
   }
+  if (args.search && args.campRaid !== undefined) {
+    throw new Error('--camp-raid is a run-mode ablation dial (not supported with --search)');
+  }
   if (args.arbitrateTier !== undefined) {
     if (!args.arbitrate) {
       throw new Error('--arbitrate-tier requires --arbitrate (it dials the rollout inner tier)');
@@ -551,6 +563,18 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!Number.isFinite(args.priorLambda) || args.priorLambda < 0) {
       throw new Error(`--prior-lambda must be a finite number ≥ 0 (got '${args.priorLambda}')`);
+    }
+  }
+  // 85g6a — the campRaid dial rides the arbitrated arm only (the site
+  // exists nowhere else), and only the two explicit states parse — a
+  // typo'd value must never silently run the default arm under an
+  // ablation label (the 70a labeling discipline).
+  if (args.campRaid !== undefined) {
+    if (!args.arbitrate) {
+      throw new Error('--camp-raid requires --arbitrate (it dials the campRaid site)');
+    }
+    if (!['on', 'off'].includes(args.campRaid)) {
+      throw new Error(`--camp-raid must be on|off (got '${args.campRaid}')`);
     }
   }
   // 85-pre F3 (user-signed 2026-08-23, the 84b refusal class CLOSED):

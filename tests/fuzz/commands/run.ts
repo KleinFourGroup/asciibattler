@@ -108,6 +108,7 @@ export type RunModeArgs = Pick<
   | 'flipTelemetry'
   | 'grantEpsilon'
   | 'priorLambda'
+  | 'campRaid'
   | 'shadowHorizon'
   | 'shadowSample'
   | 'set'
@@ -314,6 +315,8 @@ export function runRunCli(args: RunModeArgs): void {
     ...(args.flipTelemetry !== undefined ? { shadowTier: args.flipTelemetry as InnerTier } : {}),
     // 71d — the grant-gate ablation dial (validated in args.ts: ≥ 0).
     ...(args.grantEpsilon !== undefined ? { grantEpsilon: args.grantEpsilon } : {}),
+    // 85g6a — the campRaid causal-arm dial (validated in args.ts: on|off).
+    ...(args.campRaid === 'off' ? { campRaid: false } : {}),
     // 84c — the long-horizon shadow instrument (validated in args.ts:
     // 'run' | integer ≥ 1; refused on run-shape probes; sample ≥ 1).
     ...(args.shadowHorizon !== undefined
@@ -332,6 +335,7 @@ export function runRunCli(args: RunModeArgs): void {
       ? ` shadow=${args.shadowHorizon}${args.shadowSample !== undefined ? `/1-in-${args.shadowSample}` : ''}`
       : '';
   const priorNote = args.priorLambda !== undefined ? ` prior-lambda=${args.priorLambda}` : '';
+  const campNote = args.campRaid === 'off' ? ' camp-raid=OFF' : '';
   // 85-pre F2, generalized at 85b: the walk-policy overlay composes the
   // BASE's fire policy into EVERY rollout now (not just shadow long
   // walks) — a fire-group-less base (the default vector) composes no
@@ -354,7 +358,7 @@ export function runRunCli(args: RunModeArgs): void {
   const totalRuns = strategies.length * seeds.length;
   for (const strategy of strategies) {
     process.stdout.write(
-      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}…\n`,
+      `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}${campNote}…\n`,
     );
     for (const s of seeds) {
       // 85g3 — the per-seed wrap + the 71a decisions harvest both live

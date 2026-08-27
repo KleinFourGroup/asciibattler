@@ -149,11 +149,16 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
         kickoff (WORKLOG §85g6-kickoff):
     - [x] 85g6a — the `--camp-raid=off|on` causal-arm dial ✅
           2026-08-26 (site-omission semantics; WORKLOG §85g6-kickoff).
-    - [ ] 85g6b — the 7-arm λ cohort on CHOOSE 2001+ (deploy+regen ×
-          λ{0,0.5,1} + the causal arm; n=120; queue staged).
-    - [ ] 85g6c — the λ* + campRaid causal reads (paired same-seed).
-    - [ ] 85g6d — the one-use SIGN-bank pass → λ signs; ARM updates
-          if λ* ≠ 0; the 0.438 wall re-reads.
+    - [x] 85g6b — the 7-arm λ cohort + the TRAIN bank probe ✅
+          2026-08-27 (9/9 verified) — BALANCE 2026-08-27.
+    - [x] 85g6c — the reads ✅ 2026-08-27: λ=0.5 confirms
+          directionally · campRaid causal ≈0 · the anomaly closed —
+          WORKLOG §85g6c.
+    - [ ] 85g6d — **λ=0.5 SIGNED** ✅ 2026-08-27 (SIGN +0.092 z=2.04
+          on the pre-specified Δ>0; the ARM gains
+          `--prior-lambda=0.5`) — REMAINS: the new-ARM baseline
+          board → the re-pin amendment + the wall re-read (evening
+          sign) → the phase close.
 
 ## Phase 86 — The balancer performance pass
 

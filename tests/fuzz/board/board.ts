@@ -140,9 +140,13 @@ export interface Board {
 
 /** The extended realistic arm — 72f (user-signed): `--arbitrate` joins the
  *  doctrine flags (the run-layer arbitrated default; cheap tier locked by
- *  the 72f direct test). CONTROL_ARM is the pre-flip heuristic arm the five
- *  doctrine control rows still run (ceiling deltas + the fire channel). */
-const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi', '--arbitrate'];
+ *  the 72f direct test). 85g6d (user-signed 2026-08-27): `--prior-lambda=0.5`
+ *  joins — the fold default, signed on the one-use SIGN bank (paired Δwin
+ *  +0.092, z=2.04, the pre-specified Δ>0 criterion; the three-cohort chain
+ *  in BALANCE 2026-08-27). CONTROL_ARM is the pre-flip heuristic arm the
+ *  five doctrine control rows still run (ceiling deltas + the fire
+ *  channel). */
+const ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi', '--arbitrate', '--prior-lambda=0.5'];
 const CONTROL_ARM = ['--searcher', '--audition', '--redraw=level:2', '--empower=level:hi'];
 const ACT1 = ['--count=40', '--hops=11']; // the §60e continuity shape
 const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)

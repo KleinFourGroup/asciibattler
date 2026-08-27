@@ -1707,3 +1707,18 @@ against sign error, not a fresh discovery (option (a) of the two
 presented; (b) p<0.05-on-SIGN-alone rejected as underpowered at
 Δ≈0.08). The pass: deploy × λ{0, 0.5} on SIGN 3001+, fired at this
 commit's HEAD.
+
+**85g6d — λ=0.5 SIGNED (2026-08-27, the pre-specified criterion met
+with margin):** the SIGN-bank pass (deploy λ{0,0.5} on 3001–3120,
+n=120, box-drive 2/2 verified) read paired Δwin **+0.092** (20/9
+discordant, z=2.04, p≈0.041 — nominally significant on its own,
+beyond what the criterion required). The three-bank chain: 85f
++0.142 (leaked) · CHOOSE +0.083 (p≈0.061) · SIGN +0.092 (p≈0.041).
+**The ARM updates: `--prior-lambda=0.5` joins the doctrine flags**
+(board.ts ARM + the paired-shape test strips the flag pair; the
+sheet's signedAt carries the amendment; the agent memory's doctrine
+line updated). The arb-row refs are PENDING RE-PIN at the new-ARM
+baseline board (fired this afternoon, the 83a shape); the formal
+0.438-wall re-read lands there (CHOOSE previewed deploy 0.318
+IN-BAND at λ=0.5). 85g6b/c close with this entry; 85g6d closes at
+the evening re-pin signing.

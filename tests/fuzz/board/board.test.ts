@@ -311,7 +311,11 @@ describe('the board definition itself', () => {
       expect(board.deltas.find((d) => d.id === 'arb-fire-channel')).toBeUndefined();
     });
 
-    it('a primary and its control share shape: same args minus the arm flag (the paired-seed contract)', () => {
+    it('a primary and its control share shape: same args minus the arm flags (the paired-seed contract)', () => {
+      // 85g6d — the arb arm carries BOTH arbitration flags now (--arbitrate
+      // + the signed --prior-lambda=0.5); the paired contract strips the
+      // pair, not just the gate.
+      const armOnly = new Set(['--arbitrate', '--prior-lambda=0.5']);
       for (const [ctrl, arb] of [
         ['regen', 'arb-regen'],
         ['deploy', 'arb-deploy'],
@@ -320,7 +324,7 @@ describe('the board definition itself', () => {
       ] as const) {
         const c = board.instruments.find((i) => i.id === ctrl)!;
         const p = board.instruments.find((i) => i.id === arb)!;
-        expect(p.args.filter((a) => a !== '--arbitrate')).toEqual([...c.args]);
+        expect(p.args.filter((a) => !armOnly.has(a))).toEqual([...c.args]);
       }
     });
   });

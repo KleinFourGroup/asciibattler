@@ -1695,3 +1695,15 @@ perturbation — a raids-only read needs a stream-isolated design.
 exactly — sim-inertness proven across b92fa75→7708b89) + ordinary
 bank variation; the selection argmax stands. PENDING the user's
 morning: the SIGN-pass criterion pre-specification, then 85g6d.
+
+**85g6d — the SIGN criterion PRE-SPECIFIED (2026-08-27 morning,
+user-signed BEFORE the read):** sign λ=0.5 iff the SIGN-bank paired
+Δwin (deploy λ0.5 − λ0, one-use bank 3001+, n=120) is > 0; Δ ≤ 0 →
+λ stays 0 and the fold ships dormant. Rationale: directional
+consistency across three independent cohorts (85f +0.142 leaked ·
+CHOOSE +0.083 p≈0.061 · the coherent wall/reach/bank mechanism on
+both vectors) + the 85h pre-registration — SIGN is the tripwire
+against sign error, not a fresh discovery (option (a) of the two
+presented; (b) p<0.05-on-SIGN-alone rejected as underpowered at
+Δ≈0.08). The pass: deploy × λ{0, 0.5} on SIGN 3001+, fired at this
+commit's HEAD.

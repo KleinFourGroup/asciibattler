@@ -1674,3 +1674,24 @@ question. ⚠ OPEN for 85g6c: TRAIN-vs-in-sample arb λ=0 deploy walk
 shipped end to end: search → arbitrated selection → deploy signed →
 the six rows re-anchored → the re-pin signed. The λ cohort
 (85g6b) fires tonight on CHOOSE 2001+.
+
+**85g6c — the λ + causal reads (2026-08-27 overnight, autonomous;
+numbers BALANCE 2026-08-27):** both cohorts drained clean (the 7-arm
+λ cohort ~11h — arms ran ~95 min, over the 64-min estimate but under
+the 68h hatch; the 2-arm TRAIN probe ~2.7h; zero boxes billing).
+Three findings: (1) λ=0.5 confirms DIRECTIONALLY on the clean bank
+(+0.083 deploy / +0.033 regen, pooled p≈0.061 — half the leaked 85f
+estimate, the expected shrinkage), λ=1 flat vs 0.5 with the deploy
+overspend signature — the pre-registration holds; the deploy walk
+wall at λ=0.5 reads 0.318, INSIDE the signed band (the §85h wall
+disposition paying off). (2) The campRaid causal read is
+indistinguishable from zero — and the −6.7pt point estimate is
+MECHANISTICALLY impossible as a raid effect (raid rate 1.1%,
+12/1112; the pair is dominated by consultation-order RNG divergence
+in the shared driver stream). Lesson for future site-causal reads:
+an on/off site pair measures existence INCLUDING stream
+perturbation — a raids-only read needs a stream-isolated design.
+(3) The 60-vs-22.5 anomaly CLOSED: subset luck (18/30 reproduced
+exactly — sim-inertness proven across b92fa75→7708b89) + ordinary
+bank variation; the selection argmax stands. PENDING the user's
+morning: the SIGN-pass criterion pre-specification, then 85g6d.

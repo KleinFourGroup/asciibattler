@@ -3780,3 +3780,37 @@ deltas. The pre-X H7c→O log lives at
   here — beyond bank noise; the doctrine control's 0.550 on the same
   seeds says the vector is strong and λ=0 arbitration is what costs
   it. Refs re-pinned per the amendment (sheet `signedAt` tail).
+- **2026-08-27 — §85g6c THE λ COHORT ON THE CLEAN BANK (CHOOSE
+  2001–2120, n=120/arm, 7 arms + the 2-arm TRAIN bank probe; both
+  cohorts box-drive 9/9 artifact-verified, boxes destroyed).**
+  The λ table (win · reach · wall · seam · bank · fires):
+  deploy λ0 0.292/0.475/0.386/15.8/143.8/2.03 · λ0.5
+  **0.375/0.550/0.318**/16.5/105.1/3.14 · λ1
+  0.367/0.533/0.313/16.6/93.8/3.58 · regen λ0
+  0.192/0.333/0.425/16.3/173.6/2.37 · λ0.5 0.225/0.367/0.386/16.0/
+  152.9/2.95 · λ1 0.250/0.400/0.375/16.2/146.6/2.98. **Paired
+  same-seed Δwin: λ0.5−λ0 deploy +0.083 (20/10, p≈0.068) · regen
+  +0.033 (15/11) — pooled 35/21, p≈0.061; λ1−λ0.5 deploy −0.008
+  (flat) with the OVERSPEND signature (bank 105→94 for no win) —
+  the pre-registered λ=0.5 CONFIRMS DIRECTIONALLY at ~half the
+  leaked 85f estimate** (+0.142 → +0.083; the expected clean-bank
+  shrinkage). Mechanism coherent: the wall falls monotonically with
+  λ on BOTH vectors (deploy 0.386→0.318→0.313 — **λ=0.5 puts the
+  deploy walk wall INSIDE the signed 30–35**; regen
+  0.425→0.386→0.375), reach rises, bank falls — the fold buys
+  late-game strength, the fold-makes-arb-pay thesis now CAUSAL at
+  cohort grade. **The campRaid causal read: INDISTINGUISHABLE FROM
+  ZERO** — Δ −0.067 p≈0.17 vs the site-off twin, but the raid rate
+  is 1.1% (12/1112 decisions; unchanged by the fold): 12 raids
+  cannot produce 34 discordant seeds, so the pair is dominated by
+  the site's decision-stream perturbation (the consultation advances
+  the shared driver RNG), not raids. The site stays alive-selective;
+  the 83e net-negative doctrine stands; no action. **The bank
+  triangle (deploy λ0): in-sample 0.225 · CHOOSE 0.292 · TRAIN
+  0.383** — the 60-vs-22.5 anomaly CLOSED as subset luck (the
+  selection's 30 seeds reproduce 18/30 EXACTLY inside the TRAIN
+  n=120 read — a free sim-inertness oracle for b92fa75→7708b89) on
+  top of ordinary ±8 bank variation; the argmax selection stands
+  (all 4 arms shared the subset, paired). NEXT: the one-use SIGN
+  pass (deploy λ{0, 0.5} on 3001+), criterion PRE-SPECIFIED before
+  the read.

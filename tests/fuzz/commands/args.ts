@@ -40,6 +40,17 @@ export interface CliArgs {
   seed?: number;
   strategy?: string;
   outDir: string;
+  // 86d2 — true iff `--out` was passed explicitly. The stage-merge mode
+  // refuses to run without it (writing a merged artifact set into the
+  // rolling default dir invites clobbering a live batch).
+  outDirExplicit: boolean;
+  // 86d2 — staged-n merge mode (`--merge-stages=<dirA>,<dirB>[,…]`): merge
+  // completed same-arm run-mode output dirs with adjacent seed windows (the
+  // n=120 protocol's 40+80 extension) into the byte-identical artifact set
+  // one serial run over the union window writes. Guards: identical headers,
+  // identical strategy sets, same-arm args (when stages carry `args` files),
+  // disjoint + contiguous seed windows. See commands/mergeStages.ts.
+  mergeStages?: string;
   perHop: boolean;
   // 68e — internal shard-protocol flag (`--emit-results`): run mode also dumps
   // its full RunResult[] to results.json. Injected by the --jobs parent so it
@@ -218,6 +229,7 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   const args: CliArgs = {
     count: 20,
     outDir: defaultOutDir(),
+    outDirExplicit: false,
     perHop: false,
     emitResults: false,
     perLayout: false,
@@ -248,6 +260,10 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--out':
         args.outDir = v ?? args.outDir;
+        if (v !== undefined) args.outDirExplicit = true;
+        break;
+      case '--merge-stages':
+        if (v !== undefined) args.mergeStages = v;
         break;
       case '--per-hop':
         args.perHop = true;

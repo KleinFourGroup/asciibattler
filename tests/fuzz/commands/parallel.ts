@@ -235,8 +235,12 @@ function spawnShardOnce(
  *  header + rows regrouped strategy-major (shard order preserves ascending
  *  seeds within a strategy). Bails loudly if the regroup loses a row — that
  *  would mean a shard ran a strategy set the others didn't, which the
- *  identical-child-argv construction should make impossible. */
-function mergeSummaries(shardDirs: readonly string[], file = 'summary.csv'): string {
+ *  identical-child-argv construction should make impossible.
+ *  86d2 — exported: the staged-n merge (mergeStages.ts) is the same regroup
+ *  over STAGE dirs (adjacent seed windows), and every per-run-row csv this
+ *  harness writes shares the `seed,strategy,…` leading columns, so one
+ *  regroup serves summary/timings/decisions/tier-flips/k-flips alike. */
+export function mergeSummaries(shardDirs: readonly string[], file = 'summary.csv'): string {
   const perShard = shardDirs.map((d) => {
     const lines = readFileSync(join(d, file), 'utf8').split('\n');
     return { header: lines[0], rows: lines.slice(1).filter((l) => l.length > 0) };

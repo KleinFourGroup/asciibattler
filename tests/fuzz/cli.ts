@@ -141,6 +141,13 @@
  *   npm run fuzz -- --count=120 --searcher --jobs=8
  *   npm run fuzz -- --count=40 --encounter=infernalColumn --per-encounter --jobs=8
  *
+ *   # 86d2 — the staged-n merge: fold an n=40 batch + its `--seed-offset=40
+ *   # --count=80` extension into ONE artifact set, byte-identical to a serial
+ *   # n=120 run (the board reads one summary.csv per instrument). Guards:
+ *   # same-arm args, identical headers/strategies, disjoint contiguous
+ *   # windows; aggregates are listed as not-merged (re-derive serially):
+ *   npm run fuzz -- --merge-stages=output/n40,output/n80 --out=output/n120
+ *
  *   # 68e — the FULL-POOL elite isolation shape: stamp the root node elite
  *   # (--first-node=elite, zero extra RNG draws) so the forced elite is the
  *   # run's FIRST fight — de-censors the per-instance pool metric (a sparse
@@ -176,6 +183,7 @@
 import { parseArgs } from './commands/args';
 import { runRunCli } from './commands/run';
 import { runParallelRunCli } from './commands/parallel';
+import { runMergeStagesCli } from './commands/mergeStages';
 import { runSearchCli } from './commands/search';
 import { runBalanceSweepCli } from './commands/sweep';
 import { runEvalShardCli } from './commands/evalShard';
@@ -186,6 +194,11 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (args.evalShard) {
     runEvalShardCli(args);
+    return;
+  }
+  // 86d2 — the staged-n merge (no runs; pure artifact reassembly).
+  if (args.mergeStages !== undefined) {
+    runMergeStagesCli(args);
     return;
   }
   if (args.search) {

@@ -14,15 +14,22 @@ import type { GameEvents } from '../../src/core/events';
  * player who THRASHES the shared objective (re-sets it every tick), stacked
  * with I3's 3× fast-forward, blows the per-tick pathing budget.
  *
- * J2 deliberately DEFERS the path cache (pathing is measured-cheap — I3
- * profiled ≤ 0.236 ms/tick on a big board, ~1.4% of a 3× frame), so this guard
- * asserts the structural property that makes thrash safe in the no-cache model:
- * each free unit runs at most TWO A* searches per tick (a ranged unit's
- * firing-cell goal + the target-cell fallback; melee runs one), and re-setting
- * the objective changes only WHICH goal a unit pursues, never HOW MANY searches
- * it runs. So objective-thrash is free here, and the per-tick `findPath` count
- * is bounded by `2 × (live mobile units)` no matter how hard the objective is
- * thrashed.
+ * J2 deliberately DEFERS the path cache (pathing is measured-cheap for the
+ * RENDERED game — I3 profiled ≤ 0.236 ms/tick on a big board, ~1.4% of a 3×
+ * frame; the BALANCER is another story — the §86a profile put pathfinding at
+ * ~50% of the whole fuzz harness), so this guard asserts the property that
+ * makes thrash safe in the no-cache model: re-setting the objective changes
+ * only WHICH goal a unit pursues, never HOW MANY searches it runs.
+ *
+ * ⚠ The `2 × mobile units` bound is SCENARIO-VALID, NOT STRUCTURAL (the §86
+ * kickoff audit): it predates §45c, whose stable-route runs a SECOND A* per
+ * goal whenever a transient (an in-flight claim or a vacating body) is near —
+ * this fixture (`moveCooldownTicks: 1`, movement-only, no deaths) produces no
+ * transients, so `buildStableContext` returns null and the second search never
+ * fires. Production configs can legitimately run up to 4 searches per ranged
+ * unit per tick (2 goals × live+stable), plus Targeting's rubble-gate route.
+ * The bound still guards THIS scenario (objective churn must stay
+ * search-count-free); don't read it as a global per-tick invariant.
  *
  * When the deferred cache lands, this same scenario should show the count DROP
  * well below the bound — so the guard doubles as the cache's effectiveness

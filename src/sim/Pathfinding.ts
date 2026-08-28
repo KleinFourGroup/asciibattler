@@ -83,88 +83,119 @@ export function findPath(
   pathfindingCallCount++; // J2 — recompute-budget instrument (output-neutral).
   if (!inBounds(start, gridW, gridH) || !inBounds(goal, gridW, gridH)) return [];
 
-  const startKey = key(start);
-  const goalKey = key(goal);
+  // 86c L1 — the numeric core. The search's interior state is packed-integer
+  // (`idx = y*gridW + x`) typed arrays ALLOCATED PER CALL — deliberately no
+  // shared/module scratch, so there is no reset discipline to get wrong (a
+  // pooled array reused with a stale field is the determinism bug class the
+  // pooling TODO warns about). Every behavioral contract is carried over
+  // verbatim from the string-keyed original: the 43a tie-break total order,
+  // gotcha #34 admissibility, §39b footprints, J3 best-effort. Byte-identity
+  // is structural: expansion order is decided by `popLowestFIdx`'s STRICT
+  // total order (the (y, x) tail is unique per cell), so the open list's
+  // container order can't change which node pops; no float summation is
+  // reordered. Gate: scripts/perf-oracle.sh + the pathing baseline pins.
+  const size = gridW * gridH;
+  const startIdx = start.y * gridW + start.x;
+  const goalIdx = goal.y * gridW + goal.x;
 
-  // The start cell is implicitly passable, even if it's in `blockers`.
-  const blocked = new Set<string>();
+  // The start cell is implicitly passable, even if it's in `blockers`. The
+  // per-AXIS bounds check matters: packing an off-grid coord (e.g. x = -1)
+  // would ALIAS a different on-grid cell (`y*W - 1` = the previous row's last
+  // cell) — the string keys of the pre-L1 core couldn't collide, so an
+  // off-grid blocker must stay a no-op here too.
+  const blocked = new Uint8Array(size);
   for (const b of blockers) {
-    const k = key(b);
-    if (k !== startKey) blocked.add(k);
+    if (b.x < 0 || b.y < 0 || b.x >= gridW || b.y >= gridH) continue;
+    const bIdx = b.y * gridW + b.x;
+    if (bIdx !== startIdx) blocked[bIdx] = 1;
   }
 
-  // §39b — a candidate corner is a valid A* node iff its WHOLE footprint block is
-  // on-grid, unblocked, and finite-cost (a body stands on passable terrain across
-  // every cell it covers). `footprint === 1` iterates exactly the corner cell, so
-  // this is the pre-§39b `in-bounds && !blocked && finite-cost` test verbatim. The
-  // step COST charged (below) is still the corner's entry cost, so Chebyshev-on-
-  // corner stays admissible (gotcha #34) — only the passable/impassable decision
-  // widens, never the metric.
-  const blockFits = (corner: GridCoord): boolean => {
+  // §39b — a candidate corner is a valid A* node iff its WHOLE footprint block
+  // is on-grid, unblocked, and finite-cost (a body stands on passable terrain
+  // across every cell it covers). `footprint === 1` iterates exactly the corner
+  // cell. The step COST charged (below) is still the corner's entry cost, so
+  // Chebyshev-on-corner stays admissible (gotcha #34) — only the passable/
+  // impassable decision widens, never the metric. Returns the corner's entry
+  // cost when the block fits, NaN when it doesn't — folding the old
+  // blockFits + second `costAt(corner)` pair into ONE call per candidate
+  // (CostFn is pure, so the dedup is unobservable).
+  const fitCost = (cx: number, cy: number): number => {
+    let cornerCost = NaN;
     for (let dy = 0; dy < footprint; dy++) {
       for (let dx = 0; dx < footprint; dx++) {
-        const x = corner.x + dx;
-        const y = corner.y + dy;
-        if (x < 0 || y < 0 || x >= gridW || y >= gridH) return false;
-        if (blocked.has(`${x},${y}`)) return false;
-        if (!isFinite(costAt({ x, y }))) return false;
+        const x = cx + dx;
+        const y = cy + dy;
+        if (x < 0 || y < 0 || x >= gridW || y >= gridH) return NaN;
+        if (blocked[y * gridW + x] === 1) return NaN;
+        const cost = costAt({ x, y });
+        if (!isFinite(cost)) return NaN;
+        if (dx === 0 && dy === 0) cornerCost = cost;
       }
     }
-    return true;
+    return cornerCost;
   };
 
   // A goal whose block doesn't fit is unreachable. Strict mode gives up;
   // best-effort still searches toward it and returns the closest reachable corner.
-  if (!blockFits(goal) && !bestEffort) return [];
+  if (isNaN(fitCost(goal.x, goal.y)) && !bestEffort) return [];
 
-  if (startKey === goalKey) return [start];
+  if (startIdx === goalIdx) return [start];
 
-  const gScore = new Map<string, number>([[startKey, 0]]);
-  const fScore = new Map<string, number>([[startKey, chebyshev(start, goal)]]);
-  const cameFrom = new Map<string, string>();
-  const open = new Set<string>([startKey]);
+  const gScore = new Float64Array(size).fill(Infinity);
+  const fScore = new Float64Array(size).fill(Infinity);
+  const cameFrom = new Int32Array(size).fill(-1);
+  gScore[startIdx] = 0;
+  fScore[startIdx] = chebyshev(start, goal);
+  // The open "set": an index list + a membership mask (no dedup scan needed).
+  const open: number[] = [startIdx];
+  const inOpen = new Uint8Array(size);
+  inOpen[startIdx] = 1;
 
   // best-effort: the closest-to-goal cell actually reached (min Chebyshev-to-
   // goal, ties → shortest approach). Seeded with the start, so a walled-in unit
   // "routes" to itself (a length-1 path = hold), never `[]` (a freeze).
-  let closestKey = startKey;
+  let closestIdx = startIdx;
   let closestH = chebyshev(start, goal);
   let closestG = 0;
 
-  while (open.size > 0) {
-    const currentKey = popLowestF(open, fScore, start, goal);
-    if (currentKey === goalKey) return reconstruct(cameFrom, currentKey);
+  while (open.length > 0) {
+    const currentIdx = popLowestFIdx(open, inOpen, fScore, gridW, start, goal);
+    if (currentIdx === goalIdx) return reconstruct(cameFrom, currentIdx, gridW);
 
-    const current = fromKey(currentKey);
-    const currentG = gScore.get(currentKey)!;
+    const cx = currentIdx % gridW;
+    const cy = (currentIdx / gridW) | 0;
+    const currentG = gScore[currentIdx];
 
     if (bestEffort) {
-      const h = chebyshev(current, goal);
+      const h = Math.max(Math.abs(cx - goal.x), Math.abs(cy - goal.y));
       if (h < closestH || (h === closestH && currentG < closestG)) {
         closestH = h;
         closestG = currentG;
-        closestKey = currentKey;
+        closestIdx = currentIdx;
       }
     }
 
     for (let dx = -1; dx <= 1; dx++) {
       for (let dy = -1; dy <= 1; dy++) {
         if (dx === 0 && dy === 0) continue;
-        const nx = current.x + dx;
-        const ny = current.y + dy;
-        const corner = { x: nx, y: ny };
+        const nx = cx + dx;
+        const ny = cy + dy;
         // §39b — the whole footprint block must fit (bounds + blockers + finite
         // cost across the N×N cells; the single corner when footprint === 1).
-        if (!blockFits(corner)) continue;
-        const nKey = `${nx},${ny}`;
+        const stepCost = fitCost(nx, ny);
+        if (isNaN(stepCost)) continue;
+        const nIdx = ny * gridW + nx;
 
-        const stepCost = costAt(corner); // corner entry cost (finite per blockFits).
         const tentativeG = currentG + stepCost;
-        if (tentativeG < (gScore.get(nKey) ?? Infinity)) {
-          cameFrom.set(nKey, currentKey);
-          gScore.set(nKey, tentativeG);
-          fScore.set(nKey, tentativeG + chebyshev({ x: nx, y: ny }, goal));
-          open.add(nKey);
+        if (tentativeG < gScore[nIdx]) {
+          cameFrom[nIdx] = currentIdx;
+          gScore[nIdx] = tentativeG;
+          fScore[nIdx] =
+            tentativeG + Math.max(Math.abs(nx - goal.x), Math.abs(ny - goal.y));
+          if (inOpen[nIdx] === 0) {
+            inOpen[nIdx] = 1;
+            open.push(nIdx);
+          }
         }
       }
     }
@@ -172,7 +203,7 @@ export function findPath(
   // Goal never reached. Strict → no path; best-effort → the closest cell we got
   // to (a length-1 [start] if the unit is fully walled in — caller treats that
   // as "hold", never a freeze).
-  return bestEffort ? reconstruct(cameFrom, closestKey) : [];
+  return bestEffort ? reconstruct(cameFrom, closestIdx, gridW) : [];
 }
 
 function inBounds(c: GridCoord, gridW: number, gridH: number): boolean {
@@ -183,19 +214,15 @@ function chebyshev(a: GridCoord, b: GridCoord): number {
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
-function key(c: GridCoord): string {
-  return `${c.x},${c.y}`;
-}
-
-function fromKey(k: string): GridCoord {
-  const i = k.indexOf(',');
-  return { x: Number(k.slice(0, i)), y: Number(k.slice(i + 1)) };
-}
-
 /**
- * Linear-scan pop. The largest D3-allowed grid (32×32) caps the open set
- * at ~1024 entries; a binary heap would be overkill and harder to debug
- * at this scale.
+ * Linear-scan pop over the packed-index open list. The largest D3-allowed
+ * grid (32×32) caps the open set at ~1024 entries; post-L1 the scan is pure
+ * numeric compares (no string parse, no allocation), so a binary heap stays
+ * deferred (the 86c L1b decision — build it only if a profile still shows
+ * pop dominance). The swap-remove and the list's insertion order CANNOT
+ * change which node pops: the comparator below is a STRICT total order (the
+ * (y, x) tail is unique per cell), so the argmin is container-order-
+ * independent — the structural byte-identity argument, WORKLOG §86c-signing.
  *
  * E5.B + 43a — f-ties break toward the goal, then toward the straight line:
  * among equal-f nodes, expand the one with the lower Chebyshev distance to
@@ -220,51 +247,58 @@ function fromKey(k: string): GridCoord {
  * stays rejected — it would perturb the deterministic byte stream on every
  * tie.
  */
-function popLowestF(
-  open: Set<string>,
-  fScore: Map<string, number>,
+function popLowestFIdx(
+  open: number[],
+  inOpen: Uint8Array,
+  fScore: Float64Array,
+  gridW: number,
   start: GridCoord,
   goal: GridCoord,
-): string {
+): number {
   const lineDx = goal.x - start.x;
   const lineDy = goal.y - start.y;
-  let bestKey = '';
+  let bestPos = 0;
+  let bestIdx = -1;
   let bestF = Infinity;
   let bestH = Infinity;
   let bestCross = Infinity;
   let bestX = Infinity;
   let bestY = Infinity;
-  for (const k of open) {
-    const f = fScore.get(k) ?? Infinity;
+  for (let p = 0; p < open.length; p++) {
+    const idx = open[p];
+    const f = fScore[idx];
     if (f > bestF) continue;
-    const c = fromKey(k);
-    const h = chebyshev(c, goal);
-    const cross = Math.abs((c.x - start.x) * lineDy - (c.y - start.y) * lineDx);
+    const x = idx % gridW;
+    const y = (idx / gridW) | 0;
+    const h = Math.max(Math.abs(x - goal.x), Math.abs(y - goal.y));
+    const cross = Math.abs((x - start.x) * lineDy - (y - start.y) * lineDx);
     const better =
       f < bestF ||
       h < bestH ||
       (h === bestH &&
-        (cross < bestCross ||
-          (cross === bestCross && (c.y < bestY || (c.y === bestY && c.x < bestX)))));
+        (cross < bestCross || (cross === bestCross && (y < bestY || (y === bestY && x < bestX)))));
     if (better) {
       bestF = f;
       bestH = h;
       bestCross = cross;
-      bestX = c.x;
-      bestY = c.y;
-      bestKey = k;
+      bestX = x;
+      bestY = y;
+      bestPos = p;
+      bestIdx = idx;
     }
   }
-  open.delete(bestKey);
-  return bestKey;
+  open[bestPos] = open[open.length - 1];
+  open.pop();
+  inOpen[bestIdx] = 0;
+  return bestIdx;
 }
 
-function reconstruct(cameFrom: Map<string, string>, endKey: string): GridCoord[] {
-  const path: GridCoord[] = [fromKey(endKey)];
-  let curKey = endKey;
-  while (cameFrom.has(curKey)) {
-    curKey = cameFrom.get(curKey)!;
-    path.push(fromKey(curKey));
+function reconstruct(cameFrom: Int32Array, endIdx: number, gridW: number): GridCoord[] {
+  const path: GridCoord[] = [{ x: endIdx % gridW, y: (endIdx / gridW) | 0 }];
+  let cur = endIdx;
+  while (cameFrom[cur] !== -1) {
+    cur = cameFrom[cur];
+    path.push({ x: cur % gridW, y: (cur / gridW) | 0 });
   }
   return path.reverse();
 }

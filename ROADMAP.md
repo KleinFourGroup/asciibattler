@@ -217,6 +217,10 @@ summary.csv (oracle safety).
       expands to algorithmic levers (call-count caching, the
       derive-don't-cache re-open) — WORKLOG §86c-signing.
       Rider: fix/re-annotate the stale pathing-perf A* bound.
+      **L1 ✅ 2026-08-28** (`9f01ce5`, oracle PASS, pins held,
+      rider landed): **2.44× / 2.29× / 2.09×** across the shapes —
+      the escalation floor cleared by L1 alone; post-L1 profile →
+      L2's targets confirmed — WORKLOG §86b+86c-L1. L2 NEXT.
 - [ ] 86d — the batch riders (⛔ decision point: dispositions
       re-signed): build transient-only retry + staged-n merge;
       measure-then-decide the dynamic queue; defer quotas +

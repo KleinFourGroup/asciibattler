@@ -1949,3 +1949,52 @@ speedup lands under ~1.5×, the phase EXPANDS to algorithmic levers
 flow fields, the §46 WHCA*-lite class) and a considered re-open of
 the derive-don't-cache doctrine. Order of work: 86b (oracle) →
 L1 → re-profile → L2 → L3.
+
+### 86b + 86c-L1 landed (2026-08-28)
+
+**86b** (`cb4e76f`): `scripts/perf-oracle.sh` — the 47e procedure
+mechanized (worktree-pin at the baseline ref + a `node_modules`
+junction; `//J` escapes MSYS path conversion; cleanup rmdir-unlinks
+the junction BEFORE worktree teardown so the real node_modules can
+never be recursed into). Two shapes per the 85g3 precedent: a
+scored pure-sim spread (n=4, defeats included) + the full ARM at
+hops=5 (non-empty decisions.csv). sha-compares summary+decisions;
+timings.csv deliberately excluded. HEAD-vs-HEAD self-test PASS.
+
+**86c-L1** (`9f01ce5`): the A* numeric core. `findPath`'s interior
+state moved from string-keyed Maps/Sets to per-call typed arrays on
+packed `y*W+x` indices (no shared scratch — nothing to reset);
+`blockFits` + the second `costAt(corner)` folded into ONE pure call
+per candidate (`fitCost`, NaN = doesn't fit); `popLowestFIdx` keeps
+the linear scan but on pure numeric compares, comparator verbatim.
+One real catch during the rewrite: packing an off-grid blocker
+coord would ALIAS an on-grid cell (x=−1 → the previous row's last
+cell) where string keys could never collide — the per-axis bounds
+guard is load-bearing, don't "simplify" it. Rider landed in the
+same commit: the pathing-perf bound re-annotated SCENARIO-VALID
+(predates §45c stable routes; production can run 4/unit + rubble).
+
+**Gates:** oracle PASS both shapes vs `cb4e76f` (shas identical to
+the self-test run = cross-run determinism confirmed twice); 2693 +
+491 green; ZERO pathing pins moved (byte-identity = no re-pin, as
+pre-registered at the signing).
+
+**The paired bench** (worktree-pinned baseline, sequential,
+interleaved per shape, no profiler): scored n=16 21.88→8.95 s =
+**2.44×** · searcher act-1 30.0→13.1 s = **2.29×** · full ARM
+act-1 212.3→101.4 s = **2.09×**. Every shape-C seed sped up ~2–3×
+(spread preserved). The ARM's 2.09× sits AT the Amdahl ceiling for
+a ~50% lever (max 2.08× if the A* core went to ~0) — the string
+tax WAS the core. Bonus datum: pre-commit fuzz:smoke 314→205 s.
+**The 1.5× escalation floor is already cleared by L1 alone.**
+
+**Post-L1 re-profile (shape C):** pathfinding 51.1%→29.6% ·
+movement 26.2%→28.1% (proportionally grown, as predicted). New top
+self-time: movement `costAt` 17.9% · `fitCost` 12.8% (its
+remaining cost = the `{x,y}`-allocating public CostFn boundary +
+the string-keyed probes inside `costAt`) · `findPath` 10.4% ·
+`popLowestFIdx` 5.6% (≈6× cheaper absolute — L1b heap stays
+deferred). Newly visible tail: `isReservedSwapPartner` 5.3%,
+`nearestActingCell` 2.9%, `hasLineOfSight` 2.5%. L2 exactly as
+signed: numeric keys through `PathCostContext`/`costAt`/the context
+builders + the packed-index CostFn boundary.

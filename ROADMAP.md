@@ -209,10 +209,13 @@ summary.csv (oracle safety).
 - [ ] 86b — mechanize the 47e oracle (`scripts/perf-oracle`:
       worktree-pin + sha-compare summary+decisions; HEAD-vs-HEAD
       self-test). Gates every 86c lever.
-- [ ] 86c — the levers, one commit each; list cut AFTER 86a
-      (⛔ decision point: user signs the lever list against the
-      profile). Candidate pool: pathfinding scratch · bot-layer
-      memos · armyMinCut cadence · `units.slice()` · emit spread.
+- [ ] 86c — the levers, one commit each. ✅ DECIDED 2026-08-28
+      (user-signed): **L1 the A* numeric core → L2 numeric-key
+      movement/occupancy → L3 the traffic-sensor hoist**, in order,
+      each oracle-gated, re-profile between L1 and L2;
+      pre-registered ESCALATION: compound < 1.5× → the phase
+      expands to algorithmic levers (call-count caching, the
+      derive-don't-cache re-open) — WORKLOG §86c-signing.
       Rider: fix/re-annotate the stale pathing-perf A* bound.
 - [ ] 86d — the batch riders (⛔ decision point: dispositions
       re-signed): build transient-only retry + staged-n merge;

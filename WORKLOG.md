@@ -1931,3 +1931,21 @@ compound; every box cohort, board batch, and the 40 h full-arb
 search estimate scale with it. popLowestF stays a linear scan in L1
 (numeric compares, no parse) — a heap is L1b only if the post-L1
 profile still shows pop dominance.
+
+### 86c — the lever signing (2026-08-28, USER-SIGNED)
+
+L1 → L2 → L3 signed as proposed after the in-depth walkthrough
+(pipeline refresher · per-expansion cost mechanics · the Amdahl
+math), explicitly framed and accepted as **pure speedup, zero
+algorithmic change** — same searches, same expansions, same paths,
+same bytes. Byte-safety arguments on record: popLowestF's 5-way
+comparator is a strict total order (the (y,x) tail is unique), so
+the argmin is container-order-independent; L1 changes no float
+summation order; the pathing baseline pins double as a free oracle
+(byte-identity = NO re-pin — a moved pin means revert the lever).
+**Pre-registered escalation (user's addition):** if the compound
+speedup lands under ~1.5×, the phase EXPANDS to algorithmic levers
+— call-count reduction (route caching at the `routeToward` seam,
+flow fields, the §46 WHCA*-lite class) and a considered re-open of
+the derive-don't-cache doctrine. Order of work: 86b (oracle) →
+L1 → re-profile → L2 → L3.

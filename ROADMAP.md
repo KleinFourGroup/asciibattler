@@ -130,9 +130,8 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
 - [x] 85e — the ε re-read (v2 floors, all six classes) ✅ 2026-08-24 — WORKLOG §85e.
 - [x] 85f — the box cohort (55pre λ=0.5 +0.142 p=0.008 EXPLORATORY; wall refs 0.775/0.675) ✅ 2026-08-25 — WORKLOG §85f + gotcha #126.
 - [x] 85h — all twelve amendments signed as proposed (λ rerun MANDATORY; λ=0.5 pre-registered) ✅ 2026-08-25 — WORKLOG §85h.
-- [ ] 85g — the 55pre regenerate + the λ rerun (cut signed at the
-      2026-08-25 kickoff, WORKLOG §85g-kickoff; predictions: World
-      v35 / Run v44 hold, no new RNG streams):
+- [x] 85g — the 55pre regenerate + the λ rerun ✅ CLOSED 2026-08-28
+      (predictions HELD: World v35 / Run v44, no new RNG streams):
   - [x] 85g1 — the candidate-delta de-fold (per-site `priorItemKeys`) ✅ 2026-08-25 — WORKLOG §85g-kickoff.
   - [x] 85g2 — prior v2 (shrinkage · provenance · TABLE v2) ✅ 2026-08-26 — WORKLOG §85g2a/b.
   - [x] 85g3 — the search-arm compat (the `wrapStrategy` seam, ORACLE sha-IDENTICAL) ✅ 2026-08-25 — WORKLOG §85g3.
@@ -154,11 +153,22 @@ keep. World v35 / Run v44 predicted to hold (all harness/bot-side).
     - [x] 85g6c — the reads ✅ 2026-08-27: λ=0.5 confirms
           directionally · campRaid causal ≈0 · the anomaly closed —
           WORKLOG §85g6c.
-    - [ ] 85g6d — **λ=0.5 SIGNED** ✅ 2026-08-27 (SIGN +0.092 z=2.04
-          on the pre-specified Δ>0; the ARM gains
-          `--prior-lambda=0.5`) — REMAINS: the new-ARM baseline
-          board → the re-pin amendment + the wall re-read (evening
-          sign) → the phase close.
+    - [x] 85g6d — **λ=0.5 SIGNED** ✅ 2026-08-27/28 (SIGN +0.092
+          z=2.04 on the pre-specified Δ>0; the ARM gains
+          `--prior-lambda=0.5`; the fold-baseline board 0 FAIL —
+          ⭐⭐ walls IN BAND 0.304/0.324, ⭐ the port economy
+          re-activated; the re-pin amendment user-signed
+          2026-08-28) — WORKLOG §85g6d + BALANCE 2026-08-27/28.
+
+**PHASE 85 ✅ CLOSED 2026-08-28** — the fold shipped end to end and
+SIGNED INTO THE ARM: `scoreTerminal` + the shrunk site-conditioned
+prior (λ=0.5, the three-bank chain) · the ε v2 floors · the campRaid
+site (causal ≈0, alive-selective) · the 55pre re-derive (finalist-56
+DEPLOYED, `pre55ReachRef` retired, parity repaired) · both walls in
+the signed band · the port economy re-activated. Exit criteria all
+met (the §85 charter's paired pre/post-fold read = the three-cohort
+chain; floors re-pinned at 85e; the twin on its re-derived anchor).
+Detail: WORKLOG §85* + BALANCE 2026-08-23 → 08-28.
 
 ## Phase 86 — The balancer performance pass
 

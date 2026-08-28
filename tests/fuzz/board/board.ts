@@ -76,6 +76,9 @@ export interface SignedSheet {
   readonly gamblerNote: string;
   readonly bankRefs: { readonly firer: number; readonly shopper: number };
   readonly firerFiresPerRun: number;
+  /** 85g6d — the fold re-activates the port economy (tx ≈0 → real
+   *  shopping); both tx refs re-pin at the fold baseline. */
+  readonly firerTransactionRate: number;
   readonly shopperTransactionRate: number;
   readonly fireChannelDelta: number;
   readonly forcedKingWinRegen: number;
@@ -180,10 +183,7 @@ function act1Posture(
       ? 'arbitrated:scored:59-regen-vector'
       : 'arbitrated:scored:85g5-finalist-56';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
-  const winSource =
-    posture === 'deploy'
-      ? `85g5 re-anchor: the 55pre-anchor value CARRIED, PENDING RE-PIN at the re-anchor board run (±8)${provisional}`
-      : `83f drift ref (act-1 arb, n=120 pooled, ±8)${provisional}`;
+  const winSource = `85g6d fold-baseline re-pin (act-1 arb λ=0.5, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
     ref('winRate', sheet.act1WinRefs[character][posture], WIN_TOL, winSource),
   ];
@@ -192,16 +192,16 @@ function act1Posture(
   // dissolution is the arm's structure, not a drift to chase.
   if (character === 'soldier' && posture === 'regen') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '83f re-pin: the arb firer banks ~111 (the §82 economy, the 83e ACCEPT; was ~60 at 72f)'),
-      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run at n=120 (was ~2.15 at 72f)'),
-      ref('transactionRate', 0, 0.1, '72f posture dissolution: the arb arm shops ≈never'),
+      ref('terminalBank', sheet.bankRefs.firer, BANK_TOL, '85g6d re-pin: the fold SPENDS — firer banks ~102 (was ~111 at the λ=0 era)'),
+      ref('firesPerRun', sheet.firerFiresPerRun, 1.0, '83f re-pin: ~1.7 arbitrated fires/run, HELD at 85g6d (1.48 in-band)'),
+      ref('transactionRate', sheet.firerTransactionRate, 0.1, '85g6d re-pin: the fold RE-ACTIVATES the port economy — the firer shops ~25% (the 72f shops-≈never era closed)'),
     );
   }
   if (character === 'soldier' && posture === 'deploy') {
     checks.push(
-      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '85g5 re-anchor: the 55pre-anchor shopper bank (~90) CARRIED, PENDING RE-PIN'),
-      ref('transactionRate', sheet.shopperTransactionRate, 0.1, '72f posture dissolution: the arb arm shops ≈never (the vector still moves in-battle play)'),
-      ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run'),
+      ref('terminalBank', sheet.bankRefs.shopper, BANK_TOL, '85g6d re-pin: the fold SPENDS — the deploy row banks ~70 (was ~90 at the λ=0 era)'),
+      ref('transactionRate', sheet.shopperTransactionRate, 0.1, '85g6d re-pin: the fold shops ~78% on the deploy vector (the 72f shops-≈never era closed)'),
+      ref('firesPerRun', 2.0, 1.0, '72f: ~2.0 arbitrated fires/run, HELD at 85g6d (1.77 in-band)'),
     );
   }
   const base = character === 'soldier' ? posture : `${character}-${posture}`;
@@ -247,8 +247,8 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
   };
   const reachSource =
     posture === 'deploy'
-      ? '72b SIGNED 40–50 — the deploy twin re-enters the signed band at the 85g5 re-anchor (pre55ReachRef retired with the frozen 55pre anchor); first measurement = the re-anchor board run'
-      : '72b SIGNED 40–50, HELD at 72f + 83f';
+      ? '72b SIGNED 40–50 — ⚠ the 85g6d fold baseline reads 0.567 ABOVE band: the NAMED overperformance watch (a design-target question, user-signed 2026-08-28; deliberately NOT a per-twin ref — that pattern died with pre55ReachRef)'
+      : '72b SIGNED 40–50, HELD through the 85g6d fold baseline (0.467)';
   return {
     id: `arb-walk-${posture}`,
     title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
@@ -277,7 +277,7 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
         grade: 'reference',
         min: sheet.deepEndWallTarget.min,
         max: sheet.deepEndWallTarget.max,
-        source: '72b SIGNED 30–35, HELD at 72f + 83f (floor-hugging 0.265/0.292 at n=120 ACCEPTED at the held band — the 83d call, carried as the watch)',
+        source: '72b SIGNED 30–35 — IN BAND at the 85g6d fold baseline (0.304/0.324): the 0.438 re-read AND the floor-hugging watch both CLOSED (the §85h fold disposition vindicated)',
       },
       {
         metric: 'winRate',

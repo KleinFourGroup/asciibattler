@@ -1741,3 +1741,21 @@ NOT a re-introduced per-twin ref — that pattern died with
 pre55ReachRef). Cost note for §86: fold arms ran the board ~1.5h
 long (deeper runs + port traffic). PENDING the morning: the re-pin
 amendment signature → 85g6d closes → the §85 phase close.
+
+**85g6d CLOSED + PHASE 85 CLOSED (2026-08-28 morning, the amendment
+user-signed "enthusiastically"):** the fold-baseline re-pin landed —
+six act-1 refs + the economy refs at the fold reality
+(`firerTransactionRate` joins the sheet; the 72f shops-≈never
+doctrine notes retired in board.ts; the stale 0.02 tx fixture in
+board.test.ts converted to the balance-proof sheet read — the same
+class the 83f bank fixture caught). The amended board: **0 FAIL /
+4 WARN**, the four survivors being the deliberate named watches
+(deploy reach 0.567 overperformance + its derived-win twin, the
+gambler shape-flip, the walk-deploy ceiling). §85's ledger: the fold
+built, de-folded, shrunk, ε-floored, cohorted on three disjoint
+banks, and SIGNED at λ=0.5 into the ARM; the 55pre anchor
+re-derived and deployed; both walls in the signed band; the port
+economy alive for the first time since 72f. Ops legacy: box-drive
+promoted and 8 cohorts driven with zero manual stand-downs and zero
+orphaned billing. NEXT: the §86 kickoff (perf, profile-first) — the
+fold arms' ~20% batch-cost increase is the charter's newest exhibit.

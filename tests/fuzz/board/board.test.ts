@@ -109,10 +109,12 @@ describe('evaluateBoard', () => {
     bossWall: 0.32,
     terminalReach: 0.45,
     seamPool: 14,
-    transactionRate: 0.02,
     // 83f — bank/fires come FROM the sheet too (the 72f fixture hardcoded 70 /
     // 2.9 inside the old bands; the §82-economy re-pin exposed it — the
-    // balance-proof rule, applied to every ref the row checks).
+    // balance-proof rule, applied to every ref the row checks). 85g6d: tx
+    // joined the sheet when the fold re-activated the port economy (the
+    // hardcoded 0.02 was the same class of stale fixture).
+    transactionRate: sheet.firerTransactionRate,
     terminalBank: sheet.bankRefs.firer,
     firesPerRun: sheet.firerFiresPerRun,
   });

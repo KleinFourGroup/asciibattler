@@ -206,9 +206,9 @@ summary.csv (oracle safety).
       profiles: **the balancer is a pathfinding benchmark** (A* core
       ~50% self / string-key layer ≈ a third of the run; GC 1.5%,
       clone+fold ≈0 — pooling DEAD, profile-backed) — WORKLOG §86a.
-- [ ] 86b — mechanize the 47e oracle (`scripts/perf-oracle`:
-      worktree-pin + sha-compare summary+decisions; HEAD-vs-HEAD
-      self-test). Gates every 86c lever.
+- [x] 86b ✅ 2026-08-28 — `scripts/perf-oracle.sh` (worktree-pin +
+      junction + sha-compare summary+decisions on 2 shapes; the
+      HEAD-vs-HEAD self-test PASSED both shapes). Gates every lever.
 - [ ] 86c — the levers, one commit each. ✅ DECIDED 2026-08-28
       (user-signed): **L1 the A* numeric core → L2 numeric-key
       movement/occupancy → L3 the traffic-sensor hoist**, in order,

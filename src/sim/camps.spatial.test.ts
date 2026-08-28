@@ -17,7 +17,7 @@ import type { GridCoord } from '../core/types';
 import { spawnCamps } from './battleSetup';
 import { spawnWall, spawnHalfCover } from './environment';
 import { buildMovementContext } from './movement';
-import { cellKey } from './occupancy';
+import { cellIndex } from './occupancy';
 import { neutralCells } from './blockedAlly';
 import { nearestActingCell } from './actingPosition';
 import { collectLosBlockers, collectHalfCoverPositions } from './positioning';
@@ -78,12 +78,12 @@ describe('§75d — buildMovementContext (the moving-wall fix)', () => {
     const mover = spawnAt(world, 'player', { x: 1, y: 1 });
     const wall = spawnWall(world, { x: 6, y: 6 });
     const ctx = buildMovementContext(mover, world);
-    expect(ctx.otherUnitCells.has(cellKey(camp.position))).toBe(true);
-    expect(ctx.occupied.has(cellKey(camp.position))).toBe(true);
+    expect(ctx.otherUnitCells.has(cellIndex(camp.position, world.gridW))).toBe(true);
+    expect(ctx.occupied.has(cellIndex(camp.position, world.gridW))).toBe(true);
     expect(ctx.pathBlockers).not.toContainEqual(camp.position);
     // The inert half pins its unchanged wall semantics.
     expect(ctx.pathBlockers).toContainEqual(wall.position);
-    expect(ctx.otherUnitCells.has(cellKey(wall.position))).toBe(false);
+    expect(ctx.otherUnitCells.has(cellIndex(wall.position, world.gridW))).toBe(false);
   });
 
   it('excludeUnitId can exclude an active neutral (the pursued camp target)', () => {
@@ -91,11 +91,11 @@ describe('§75d — buildMovementContext (the moving-wall fix)', () => {
     const camp = campMemberAt(world, { x: 4, y: 4 });
     const mover = spawnAt(world, 'player', { x: 1, y: 1 });
     const ctx = buildMovementContext(mover, world, { excludeUnitId: camp.id });
-    expect(ctx.otherUnitCells.has(cellKey(camp.position))).toBe(false);
+    expect(ctx.otherUnitCells.has(cellIndex(camp.position, world.gridW))).toBe(false);
     expect(ctx.pathBlockers).not.toContainEqual(camp.position);
     // Still a body for the sidestep set — exclusion softens routing, never a
     // collision check (the gotcha #113 placement rule).
-    expect(ctx.occupied.has(cellKey(camp.position))).toBe(true);
+    expect(ctx.occupied.has(cellIndex(camp.position, world.gridW))).toBe(true);
   });
 
   it('an active neutral mid-move prices by its vacancy ETA like any combatant', () => {
@@ -104,7 +104,7 @@ describe('§75d — buildMovementContext (the moving-wall fix)', () => {
     const mover = spawnAt(world, 'player', { x: 1, y: 1 });
     seatMove(world, camp, { x: 5, y: 4 }, 5);
     const ctx = buildMovementContext(mover, world);
-    expect(ctx.vacatingEta.get(cellKey({ x: 4, y: 4 }))).toBe(5);
+    expect(ctx.vacatingEta.get(cellIndex({ x: 4, y: 4 }, world.gridW))).toBe(5);
   });
 });
 

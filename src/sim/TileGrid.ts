@@ -194,8 +194,14 @@ export class TileGrid {
   /** Movement cost to enter the cell. Out-of-bounds returns Infinity so
    *  pathfinding can short-circuit without a separate bounds check. */
   costAt(c: GridCoord): number {
-    if (!this.inBounds(c)) return Infinity;
-    return TILE_DEFS[this.kinds[this.index(c.x, c.y)]!].cost;
+    return this.costAtXY(c.x, c.y);
+  }
+
+  /** 86c-L2 — `costAt` without the coord object, for the per-expansion path
+   *  (the `CostFn` boundary passes bare `(x, y)`). Same semantics exactly. */
+  costAtXY(x: number, y: number): number {
+    if (x < 0 || y < 0 || x >= this.width || y >= this.height) return Infinity;
+    return TILE_DEFS[this.kinds[this.index(x, y)]!].cost;
   }
 
   /**

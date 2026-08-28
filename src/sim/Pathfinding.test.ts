@@ -109,7 +109,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     // Better test: make one column WALL-LIKE expensive and check the path
     // crosses the cheaper cells.
     const heavyColumn = new Set(['3,3', '3,4', '3,5', '3,6', '3,7']);
-    const costAt: CostFn = (c) => (heavyColumn.has(`${c.x},${c.y}`) ? 10 : 1);
+    const costAt: CostFn = (x, y) => (heavyColumn.has(`${x},${y}`) ? 10 : 1);
 
     const path = findPath({ x: 0, y: 5 }, { x: 6, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);
@@ -123,8 +123,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
 
   it('still routes through high-cost tile when no cheaper alternative exists', () => {
     // Whole grid is high-cost except the direct line; path should still find it.
-    const onLine = (c: GridCoord): boolean => c.y === 0;
-    const costAt: CostFn = (c) => (onLine(c) ? 1 : 10);
+    const costAt: CostFn = (_x, y) => (y === 0 ? 1 : 10);
 
     const path = findPath({ x: 0, y: 0 }, { x: 5, y: 0 }, [], G, G, costAt);
     expect(path.length).toBe(6);
@@ -134,7 +133,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   it('treats Infinity cost as a data-driven block (equivalent to a blocker)', () => {
     // Wall x=5 via cost=Infinity instead of the blockers list.
     const walled = new Set(['5,3', '5,4', '5,5', '5,6', '5,7']);
-    const costAt: CostFn = (c) => (walled.has(`${c.x},${c.y}`) ? Infinity : 1);
+    const costAt: CostFn = (x, y) => (walled.has(`${x},${y}`) ? Infinity : 1);
 
     const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);
@@ -146,7 +145,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
   it('start cell cost is not charged (you start there for free)', () => {
     // Even if the start cell has huge cost, A* should still find a path
     // because it doesn't pay to be there.
-    const costAt: CostFn = (c) => (c.x === 0 && c.y === 0 ? 1000 : 1);
+    const costAt: CostFn = (x, y) => (x === 0 && y === 0 ? 1000 : 1);
     const path = findPath({ x: 0, y: 0 }, { x: 3, y: 0 }, [], G, G, costAt);
     expect(path.length).toBe(4);
   });
@@ -157,7 +156,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     // correctly for the D7.A chasm kind.
     const grid = new TileGrid(G, G);
     for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'chasm');
-    const costAt: CostFn = (c) => grid.costAt(c);
+    const costAt: CostFn = (x, y) => grid.costAtXY(x, y);
 
     const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);
@@ -173,7 +172,7 @@ describe('Pathfinding / findPath with per-cell costs', () => {
     // (cost ∞), so a straight line through it must detour.
     const grid = new TileGrid(G, G);
     for (let y = 3; y <= 7; y++) grid.setKind({ x: 5, y }, 'deep_water');
-    const costAt: CostFn = (c) => grid.costAt(c);
+    const costAt: CostFn = (x, y) => grid.costAtXY(x, y);
 
     const path = findPath({ x: 3, y: 5 }, { x: 7, y: 5 }, [], G, G, costAt);
     expect(path.length).toBeGreaterThan(0);

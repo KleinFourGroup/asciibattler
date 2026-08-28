@@ -100,6 +100,21 @@ export function cellKey(c: GridCoord): string {
 }
 
 /**
+ * 86c-L2 — the PACKED cell key (`y*gridW + x`), `cellKey`'s numeric sibling for
+ * the hot movement-context path (the §86a profile put the string-key layer at
+ * ~a third of the whole balancer). Number-keyed Maps/Sets skip string
+ * allocation + hashing entirely; grids cap at 32×32 (D3), so the index is a
+ * small integer. ⚠ Only meaningful per-grid: an index from one grid width must
+ * never probe a set built against another — take `gridW` explicitly rather
+ * than defaulting it so call sites say whose grid they mean. Callers must pass
+ * IN-BOUNDS coords (an off-grid coord would alias an on-grid index — the same
+ * hazard findPath's blocker loop guards per-axis).
+ */
+export function cellIndex(c: GridCoord, gridW: number): number {
+  return c.y * gridW + c.x;
+}
+
+/**
  * The unit (if any) occupying `cell` on `plane` — the single occupancy POINT
  * query. `World.isOccupied`, summon placement, and proactive move checks (§35b)
  * all route here. Scans `world.units` (small N); a future index attaches behind
@@ -452,14 +467,19 @@ export function claimEtas(
   world: World,
   plane: OccupancyPlane = GROUND,
   opts?: { excludeId?: number },
-): Map<string, number | undefined> {
+): Map<number, number | undefined> {
+  // 86c-L2 — keyed by `cellIndex` (packed), not `cellKey`: this map is probed
+  // per A* expansion via `costAt`, the hottest read in the balancer.
   const excludeId = opts?.excludeId;
-  const etas = new Map<string, number | undefined>();
+  const etas = new Map<number, number | undefined>();
   for (const claim of world.claims.values()) {
     if (claim.unitId === excludeId) continue;
     if (claim.plane !== plane) continue;
     const claimant = world.findUnit(claim.unitId);
-    etas.set(cellKey(claim.cell), claimant === undefined ? undefined : vacancyEtaOf(claimant, world));
+    etas.set(
+      cellIndex(claim.cell, world.gridW),
+      claimant === undefined ? undefined : vacancyEtaOf(claimant, world),
+    );
   }
   return etas;
 }

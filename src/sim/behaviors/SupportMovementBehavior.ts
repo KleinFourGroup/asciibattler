@@ -7,6 +7,7 @@ import { findPath } from '../Pathfinding';
 import { NEIGHBORS, awayStep } from '../positioning';
 import {
   GROUND,
+  cellIndex,
   cellsOccupiedBy,
   claimEtas,
   footprintOf,
@@ -303,9 +304,10 @@ function stepToward(
   goalPos: GridCoord,
   world: World,
 ): GridCoord | 'blocked' | 'no_route' {
+  // 86c-L2 — packed cell indices (`cellIndex`), matching PathCostContext.
   const pathBlockers: GridCoord[] = [];
-  const otherUnitCells = new Set<string>();
-  const vacatingEta = new Map<string, number>();
+  const otherUnitCells = new Set<number>();
+  const vacatingEta = new Map<number, number>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
     // 43-pre — the WHOLE footprint (`cellsOccupiedBy`), not just the §39
@@ -323,8 +325,9 @@ function stepToward(
     // (one costAt doctrine): a body mid-move away is a cheap cell, not a wall.
     const eta = vacancyEtaOf(u, world);
     for (const c of cellsOccupiedBy(u)) {
-      otherUnitCells.add(key(c));
-      if (eta !== undefined) vacatingEta.set(key(c), eta);
+      const idx = cellIndex(c, world.gridW);
+      otherUnitCells.add(idx);
+      if (eta !== undefined) vacatingEta.set(idx, eta);
     }
   }
   // §45a — claims reach the healer's COST context only (inbound premium), NOT
@@ -345,13 +348,13 @@ function stepToward(
     pathBlockers,
     world.gridW,
     world.gridH,
-    (c) => costAt(c, world, cost, unit.position),
+    (x, y) => costAt(x, y, world, cost, unit.position),
     false,
     footprintOf(unit), // §39b — the support mover honors its body width too.
   );
   if (path.length < 2) return 'no_route';
   const to = path[1]!;
-  if (otherUnitCells.has(key(to))) return 'blocked';
+  if (otherUnitCells.has(cellIndex(to, world.gridW))) return 'blocked';
   return to;
 }
 

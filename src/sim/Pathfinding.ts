@@ -3,8 +3,12 @@ import type { GridCoord } from '../core/types';
 /** Cost to ENTER a cell. Returning Infinity treats the cell as impassable
  *  (same effect as a `blockers` entry, but data-driven). Callers MUST keep
  *  every returned cost >= 1, otherwise the Chebyshev heuristic stops being
- *  admissible and A* loses its optimality guarantee. */
-export type CostFn = (cell: GridCoord) => number;
+ *  admissible and A* loses its optimality guarantee.
+ *  86c-L2 — takes bare `(x, y)` (not a GridCoord): the callback runs per
+ *  footprint cell per neighbour candidate per expansion, and the coord-object
+ *  allocation was measurable at that frequency (the post-L1 profile's
+ *  `fitCost` 12.8%). */
+export type CostFn = (x: number, y: number) => number;
 
 const UNIT_COST: CostFn = () => 1;
 
@@ -127,7 +131,7 @@ export function findPath(
         const y = cy + dy;
         if (x < 0 || y < 0 || x >= gridW || y >= gridH) return NaN;
         if (blocked[y * gridW + x] === 1) return NaN;
-        const cost = costAt({ x, y });
+        const cost = costAt(x, y);
         if (!isFinite(cost)) return NaN;
         if (dx === 0 && dy === 0) cornerCost = cost;
       }

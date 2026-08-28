@@ -8,6 +8,7 @@ import { waitProposal } from './actions/WaitAction';
 import { findPath } from './Pathfinding';
 import {
   GROUND,
+  cellIndex,
   cellKey,
   cellsOccupiedBy,
   claimEtas,
@@ -69,8 +70,8 @@ import { emitMoveDecision } from './moveDecision';
  */
 export interface MovementContext extends PathCostContext {
   readonly pathBlockers: GridCoord[];
-  readonly otherUnitCells: Set<string>;
-  readonly occupied: Set<string>;
+  readonly otherUnitCells: Set<number>;
+  readonly occupied: Set<number>;
 }
 
 /**
@@ -81,16 +82,19 @@ export interface MovementContext extends PathCostContext {
  * it's `routeToward`'s `from`.
  */
 export interface PathCostContext {
+  // 86c-L2 — every collection here is keyed by the PACKED cell index
+  // (`cellIndex(c, world.gridW)`), not the `"x,y"` string: these are the maps
+  // `costAt` probes once per A* expansion, the hottest reads in the balancer.
   /** Soft-blocked cells (other units' bodies + in-flight claims). */
-  readonly otherUnitCells: ReadonlySet<string>;
-  /** Cell key → ticks until the occupant's in-flight move vacates it
+  readonly otherUnitCells: ReadonlySet<number>;
+  /** Packed cell index → ticks until the occupant's in-flight move vacates it
    *  (`vacancyEtaOf`); absent = the occupant isn't going anywhere. */
-  readonly vacatingEta: ReadonlyMap<string, number>;
+  readonly vacatingEta: ReadonlyMap<number, number>;
   /** Cells CLAIMED as in-flight move destinations → the flip's ETA
    *  (`claimEtas`). A body materialises there at the flip; WHEN that lands
    *  relative to the pather's own arrival decides premium vs static. An
    *  `undefined` ETA = timing unknown — priced at the premium (conservative). */
-  readonly claimed: ReadonlyMap<string, number | undefined>;
+  readonly claimed: ReadonlyMap<number, number | undefined>;
   /** The pather's own base step duration in ticks — the unit of the §45a
    *  vacancy window (`SIM.vacancyWindowOwnSteps` is expressed in these). */
   readonly stepTicks: number;
@@ -105,9 +109,9 @@ export function buildMovementContext(
 ): MovementContext {
   const excludeUnitId = opts?.excludeUnitId;
   const pathBlockers: GridCoord[] = [];
-  const otherUnitCells = new Set<string>();
-  const occupied = new Set<string>();
-  const vacatingEta = new Map<string, number>();
+  const otherUnitCells = new Set<number>();
+  const occupied = new Set<number>();
+  const vacatingEta = new Map<number, number>();
   for (const u of world.units) {
     if (u.id === unit.id) continue;
     // §45a — a soft-blocked body mid-move AWAY prices by its vacancy ETA
@@ -122,12 +126,13 @@ export function buildMovementContext(
     // sidestep occupancy set + neutral path-blockers cover a multi-tile body for
     // free. Byte-identical at single-cell: each set gets exactly `u.position`.
     for (const c of cellsOccupiedBy(u)) {
-      occupied.add(cellKey(c));
+      const idx = cellIndex(c, world.gridW);
+      occupied.add(idx);
       if (isInertNeutral(u)) {
         pathBlockers.push(c);
       } else if (u.id !== excludeUnitId) {
-        otherUnitCells.add(cellKey(c));
-        if (eta !== undefined) vacatingEta.set(cellKey(c), eta);
+        otherUnitCells.add(idx);
+        if (eta !== undefined) vacatingEta.set(idx, eta);
       }
     }
   }
@@ -183,7 +188,7 @@ export function routeToward(
     ctx.pathBlockers,
     world.gridW,
     world.gridH,
-    (c) => costAt(c, world, ctx, from),
+    (x, y) => costAt(x, y, world, ctx, from),
     bestEffort,
     footprint,
   );
@@ -293,7 +298,7 @@ export function leapLanding(unit: Unit, world: World, intent: MovementIntent): G
   for (const goal of intent.goals) {
     const path = routeToward(from, goal, ctx, world, intent.bestEffort ?? false, footprint);
     if (path.length < 2) continue;
-    const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
+    const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells, world.gridW);
     if (landing !== null) return landing;
   }
   return null;
@@ -308,13 +313,14 @@ export function leapLanding(unit: Unit, world: World, intent: MovementIntent): G
 function walkAlongPath(
   path: readonly GridCoord[],
   maxCells: number,
-  otherUnitCells: ReadonlySet<string>,
+  otherUnitCells: ReadonlySet<number>,
+  gridW: number,
 ): GridCoord | null {
   const limit = Math.min(maxCells, path.length - 1);
   let landing: GridCoord | null = null;
   for (let i = 1; i <= limit; i++) {
     const c = path[i]!;
-    if (otherUnitCells.has(key(c))) break;
+    if (otherUnitCells.has(cellIndex(c, gridW))) break;
     landing = c;
   }
   return landing;
@@ -378,7 +384,7 @@ function chooseRoute(
     ctx.pathBlockers,
     world.gridW,
     world.gridH,
-    (c) => costAt(c, world, stable, from),
+    (x, y) => costAt(x, y, world, stable, from),
     bestEffort,
     footprint,
   );
@@ -416,11 +422,11 @@ function stableContext(ctx: MovementContext): PathCostContext | null {
 
 function buildStableContext(ctx: MovementContext): PathCostContext | null {
   const horizon = SIM.stableRouteHorizonOwnSteps * ctx.stepTicks;
-  const strippedCells: string[] = [];
+  const strippedCells: number[] = [];
   for (const [cell, eta] of ctx.vacatingEta) {
     if (eta <= horizon) strippedCells.push(cell);
   }
-  const strippedClaims: string[] = [];
+  const strippedClaims: number[] = [];
   for (const [cell, eta] of ctx.claimed) {
     if (eta !== undefined && eta <= horizon) strippedClaims.push(cell);
   }
@@ -443,7 +449,7 @@ function pathCost(
   from: GridCoord,
 ): number {
   let sum = 0;
-  for (let i = 1; i < path.length; i++) sum += costAt(path[i]!, world, ctx, from);
+  for (let i = 1; i < path.length; i++) sum += costAt(path[i]!.x, path[i]!.y, world, ctx, from);
   return sum;
 }
 
@@ -509,7 +515,7 @@ function stepAlongRoute(
 
   if (intent.maxCells <= 1) {
     const to = path[1]!;
-    if (ctx.otherUnitCells.has(key(to))) {
+    if (ctx.otherUnitCells.has(cellIndex(to, world.gridW))) {
       // §45b — the ETA-gated wait-vs-sidestep. The forward cell's occupant is
       // mid-move away and will free it within the gate: queue for it (a
       // deliberate, selector-visible hold — §44b's WaitAction) instead of
@@ -519,7 +525,7 @@ function stepAlongRoute(
       // reach here (`vacatingEta` holds body cells only; waiting for an
       // ARRIVING body means waiting for it to arrive AND leave — not
       // derivable from one in-flight action).
-      const eta = ctx.vacatingEta.get(key(to));
+      const eta = ctx.vacatingEta.get(cellIndex(to, world.gridW));
       if (eta !== undefined && eta <= SIM.waitForVacancyOwnSteps * ctx.stepTicks) {
         return { proposal: waitProposal(), kind: 'wait' };
       }
@@ -567,7 +573,7 @@ function stepAlongRoute(
   // property. N1 — the walk is shared with `leapLanding` via `walkAlongPath`
   // (DashAbility computes a landing without a full proposal, since a dash's
   // cooldown is decoupled from its motion duration).
-  const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells);
+  const landing = walkAlongPath(path, intent.maxCells, ctx.otherUnitCells, world.gridW);
   return landing === null
     ? 'blocked'
     : { proposal: moveProposal(from, landing, baseTicks), kind: 'advance' };
@@ -699,7 +705,8 @@ export function sidestep(
   from: GridCoord,
   target: GridCoord,
   world: World,
-  occupied: ReadonlySet<string>,
+  // 86c-L2 — packed cell indices (`cellIndex`), matching `MovementContext.occupied`.
+  occupied: ReadonlySet<number>,
 ): GridCoord | null {
   const sx = Math.sign(target.x - from.x);
   const sy = Math.sign(target.y - from.y);
@@ -713,7 +720,7 @@ export function sidestep(
   for (const c of candidates) {
     if (c.x < 0 || c.y < 0 || c.x >= world.gridW || c.y >= world.gridH) continue;
     if (!isFinite(world.tileGrid.costAt(c))) continue;
-    if (occupied.has(key(c))) continue;
+    if (occupied.has(cellIndex(c, world.gridW))) continue;
     const dist = chebyshev(c, target);
     // §45b — the PROGRESS guard: never sidestep to a cell strictly FARTHER
     // from the approach anchor than standing still. A diagonal approach makes
@@ -819,15 +826,19 @@ export function stepDurationTicks(world: World, dest: GridCoord, base: number): 
  * stays conservative near the pather, and the claim premium window stays wide.
  */
 export function costAt(
-  c: GridCoord,
+  // 86c-L2 — bare (x, y), matching the CostFn boundary: this runs once per
+  // footprint cell per neighbour candidate per A* expansion, so neither a
+  // coord object nor a key string is allocated on this path any more.
+  x: number,
+  y: number,
   world: World,
   cost: PathCostContext,
   from: GridCoord,
 ): number {
-  const tileCost = world.tileGrid.costAt(c);
+  const tileCost = world.tileGrid.costAtXY(x, y);
   if (!isFinite(tileCost)) return tileCost;
-  const k = key(c);
-  const arrivalSteps = chebyshev(from, c);
+  const k = y * world.gridW + x;
+  const arrivalSteps = Math.max(Math.abs(from.x - x), Math.abs(from.y - y));
   if (cost.claimed.has(k)) {
     // Premium iff the flip lands at/after (arrival − k) own-steps — the pather
     // would reach the cell around (or before) the body materialises. A flip

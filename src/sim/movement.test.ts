@@ -19,7 +19,12 @@ import {
   sidestep,
   type MovementIntent,
 } from './movement';
+import { cellIndex } from './occupancy';
 import { SIM } from '../config/sim';
+
+/** 86c-L2 — the context sets are packed-index keyed now; derive expected keys
+ *  from the world's own grid so the assertions stay grid-size-proof. */
+const idx = (world: World, x: number, y: number): number => cellIndex({ x, y }, world.gridW);
 
 /**
  * J2 — unit tests for the shared movement seam. The behaviour-level
@@ -84,12 +89,14 @@ describe('movement / buildMovementContext', () => {
     const ctx = buildMovementContext(self!, world, { excludeUnitId: target!.id });
 
     expect(ctx.pathBlockers).toEqual([{ x: 2, y: 2 }]);
-    expect([...ctx.otherUnitCells].sort()).toEqual(['1,1']); // ally only
-    expect(ctx.otherUnitCells.has('3,3')).toBe(false); // target excluded
-    expect(ctx.otherUnitCells.has('2,2')).toBe(false); // neutral is hard, not soft
+    expect([...ctx.otherUnitCells]).toEqual([idx(world, 1, 1)]); // ally only
+    expect(ctx.otherUnitCells.has(idx(world, 3, 3))).toBe(false); // target excluded
+    expect(ctx.otherUnitCells.has(idx(world, 2, 2))).toBe(false); // neutral is hard, not soft
     // occupied = every OTHER unit (all teams incl neutral), never self.
-    expect([...ctx.occupied].sort()).toEqual(['1,1', '2,2', '3,3']);
-    expect(ctx.occupied.has('0,0')).toBe(false);
+    expect([...ctx.occupied].sort((a, b) => a - b)).toEqual(
+      [idx(world, 1, 1), idx(world, 2, 2), idx(world, 3, 3)].sort((a, b) => a - b),
+    );
+    expect(ctx.occupied.has(idx(world, 0, 0))).toBe(false);
   });
 
   it('with no excludeUnitId every non-neutral unit is a soft blocker (the tile-pursuit case)', () => {
@@ -98,7 +105,7 @@ describe('movement / buildMovementContext', () => {
       { team: 'enemy', x: 3, y: 3 },
     ]);
     const ctx = buildMovementContext(units[0]!, world);
-    expect(ctx.otherUnitCells.has('3,3')).toBe(true);
+    expect(ctx.otherUnitCells.has(idx(world, 3, 3))).toBe(true);
   });
 });
 
@@ -142,14 +149,14 @@ describe('§36a — claims block pathing (occupied OR claimed)', () => {
     world.claimCell({ x: 2, y: 2 }, claimant!.id);
 
     const ctx = buildMovementContext(mover!, world);
-    expect(ctx.occupied.has('2,2')).toBe(true);
-    expect(ctx.otherUnitCells.has('2,2')).toBe(true);
+    expect(ctx.occupied.has(idx(world, 2, 2))).toBe(true);
+    expect(ctx.otherUnitCells.has(idx(world, 2, 2))).toBe(true);
 
     // The mover's OWN claim never blocks itself (it may step into what it reserved).
     world.claimCell({ x: 1, y: 1 }, mover!.id);
     const ctx2 = buildMovementContext(mover!, world);
-    expect(ctx2.occupied.has('1,1')).toBe(false);
-    expect(ctx2.otherUnitCells.has('1,1')).toBe(false);
+    expect(ctx2.occupied.has(idx(world, 1, 1))).toBe(false);
+    expect(ctx2.otherUnitCells.has(idx(world, 1, 1))).toBe(false);
   });
 
   it('a pather routes AROUND a claimed cell (the second-mover re-route)', () => {
@@ -227,7 +234,7 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
   // walkable, unoccupied — the pure tie geometry `advance` can't reach in open
   // space (A* detours around soft blockers there; see the E5.B note above).
   const empty = () => scene([{ team: 'player', x: 0, y: 11 }]); // parked out of the way
-  const none = new Set<string>();
+  const none = new Set<number>();
 
   it('a both-viable equidistant tie resolves by the FROM cell checkerboard parity', () => {
     const { world } = empty();
@@ -265,12 +272,12 @@ describe('§43b — the sidestep tie balance (cell-parity alternation)', () => {
   it('a single viable candidate is untouched: the free cell wins regardless of parity', () => {
     const { world } = empty();
     // Even cell (parity prefers the clockwise (4,5)) — occupy it: (4,3) steps.
-    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, new Set(['4,5']))).toEqual({
+    expect(sidestep({ x: 4, y: 4 }, { x: 9, y: 4 }, world, new Set([idx(world, 4, 5)]))).toEqual({
       x: 4,
       y: 3,
     });
     // Odd cell (parity prefers the counter-clockwise (4,4)) — occupy it: (4,6) steps.
-    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, new Set(['4,4']))).toEqual({
+    expect(sidestep({ x: 4, y: 5 }, { x: 9, y: 5 }, world, new Set([idx(world, 4, 4)]))).toEqual({
       x: 4,
       y: 6,
     });
@@ -485,7 +492,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
       { team: 'player', x: 2, y: 2 },
     ]);
     const ctx = buildMovementContext(units[0]!, world);
-    expect(costAt({ x: 2, y: 2 }, world, ctx, units[0]!.position)).toBe(
+    expect(costAt(2, 2, world, ctx, units[0]!.position)).toBe(
       1 + SIM.occupiedCellPenalty,
     );
   });
@@ -498,8 +505,8 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const [mover, ally] = units;
     seatMove(world, ally!, { x: 3, y: 2 }, 2); // flips 2 ticks out — long before arrival
     const ctx = buildMovementContext(mover!, world);
-    expect(ctx.vacatingEta.get('2,2')).toBe(2);
-    expect(costAt({ x: 2, y: 2 }, world, ctx, mover!.position)).toBe(
+    expect(ctx.vacatingEta.get(idx(world, 2, 2))).toBe(2);
+    expect(costAt(2, 2, world, ctx, mover!.position)).toBe(
       1 + SIM.vacatingCellPenalty,
     );
   });
@@ -514,7 +521,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const beyond = (2 + SIM.vacancyWindowOwnSteps + 1) * mover!.derived.moveCooldownTicks;
     seatMove(world, ally!, { x: 3, y: 2 }, beyond);
     const ctx = buildMovementContext(mover!, world);
-    expect(costAt({ x: 2, y: 2 }, world, ctx, mover!.position)).toBe(
+    expect(costAt(2, 2, world, ctx, mover!.position)).toBe(
       1 + SIM.occupiedCellPenalty,
     );
   });
@@ -527,7 +534,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const [mover, ally] = units;
     seatMove(world, ally!, { x: 1, y: 0 }, 2); // arriving right next to the mover
     const ctx = buildMovementContext(mover!, world);
-    expect(costAt({ x: 1, y: 0 }, world, ctx, mover!.position)).toBe(
+    expect(costAt(1, 0, world, ctx, mover!.position)).toBe(
       1 + SIM.inboundClaimPenalty,
     );
   });
@@ -540,7 +547,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const [mover, ally] = units;
     seatMove(world, ally!, { x: 6, y: 7 }, 2); // flips in 2 ticks; the mover is ~7 steps away
     const ctx = buildMovementContext(mover!, world);
-    expect(costAt({ x: 6, y: 7 }, world, ctx, mover!.position)).toBe(
+    expect(costAt(6, 7, world, ctx, mover!.position)).toBe(
       1 + SIM.occupiedCellPenalty,
     );
   });
@@ -553,9 +560,9 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
     const [mover, claimant] = units;
     world.claimCell({ x: 6, y: 7 }, claimant!.id); // hand-claimed; no in-flight move
     const ctx = buildMovementContext(mover!, world);
-    expect(ctx.claimed.has('6,7')).toBe(true);
-    expect(ctx.claimed.get('6,7')).toBeUndefined();
-    expect(costAt({ x: 6, y: 7 }, world, ctx, mover!.position)).toBe(
+    expect(ctx.claimed.has(idx(world, 6, 7))).toBe(true);
+    expect(ctx.claimed.get(idx(world, 6, 7))).toBeUndefined();
+    expect(costAt(6, 7, world, ctx, mover!.position)).toBe(
       1 + SIM.inboundClaimPenalty,
     );
   });
@@ -563,7 +570,7 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
   it('a free cell still prices at plain tile cost', () => {
     const { world, units } = scene([{ team: 'player', x: 0, y: 0 }]);
     const ctx = buildMovementContext(units[0]!, world);
-    expect(costAt({ x: 5, y: 5 }, world, ctx, units[0]!.position)).toBe(1);
+    expect(costAt(5, 5, world, ctx, units[0]!.position)).toBe(1);
   });
 
   /**
@@ -702,7 +709,7 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
     // FARTHER from the target — pre-§45b the viable one was taken anyway
     // (286 backtracks/300t on the fixture), post-§45b the unit queues.
     const { world } = scene([{ team: 'player', x: 0, y: 11 }]);
-    const none = new Set<string>();
+    const none = new Set<number>();
     expect(sidestep({ x: 5, y: 5 }, { x: 8, y: 8 }, world, none)).toBeNull(); // even from-cell
     expect(sidestep({ x: 5, y: 6 }, { x: 8, y: 9 }, world, none)).toBeNull(); // odd from-cell
     // A strictly-CLOSER rotation on a diagonal approach still fires — the

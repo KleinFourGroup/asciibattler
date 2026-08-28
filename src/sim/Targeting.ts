@@ -12,7 +12,7 @@ import { behaviorFlags } from './statusBehavior';
 import { buildMovementContext, costAt, routeToward } from './movement';
 import { findPath } from './Pathfinding';
 import { collectLosBlockers } from './positioning';
-import { cellKey, cellsOccupiedBy, footprintOf, unitDistance, cellUnitDistance } from './occupancy';
+import { cellIndex, cellsOccupiedBy, footprintOf, unitDistance, cellUnitDistance } from './occupancy';
 
 /**
  * Pick the best living enemy of `unit` according to its targeting strategy
@@ -331,14 +331,17 @@ const RUBBLE_ROUTE_CHIP_COST = 25;
  * Both hold the ordered mark instead of chipping an off-route rubble.
  */
 function routeGateRubble(unit: Unit, world: World, target: Unit): Unit | null {
-  const rubbleByCell = new Map<string, Unit>();
+  // 86c-L2 — packed cell indices (`cellIndex`), matching the CostFn boundary.
+  const rubbleByCell = new Map<number, Unit>();
   for (const r of world.units) {
     if (r.team !== 'neutral' || r.currentHp <= 0 || !isAutoTargetNeutral(r.archetype)) continue;
-    for (const c of cellsOccupiedBy(r)) rubbleByCell.set(cellKey(c), r);
+    for (const c of cellsOccupiedBy(r)) rubbleByCell.set(cellIndex(c, world.gridW), r);
   }
   if (rubbleByCell.size === 0) return null;
   const ctx = buildMovementContext(unit, world, { excludeUnitId: target.id });
-  const permeableBlockers = ctx.pathBlockers.filter((c) => !rubbleByCell.has(cellKey(c)));
+  const permeableBlockers = ctx.pathBlockers.filter(
+    (c) => !rubbleByCell.has(cellIndex(c, world.gridW)),
+  );
   const route = findPath(
     unit.position,
     target.position,
@@ -347,12 +350,14 @@ function routeGateRubble(unit: Unit, world: World, target: Unit): Unit | null {
     world.gridH,
     // Rubble cells were hard blockers (never priced); lifted, they carry only
     // tile cost — the premium is what makes a gate expensive but crossable.
-    (c) => costAt(c, world, ctx, unit.position) + (rubbleByCell.has(cellKey(c)) ? RUBBLE_ROUTE_CHIP_COST : 0),
+    (x, y) =>
+      costAt(x, y, world, ctx, unit.position) +
+      (rubbleByCell.has(y * world.gridW + x) ? RUBBLE_ROUTE_CHIP_COST : 0),
     false,
     footprintOf(unit),
   );
   for (const c of route) {
-    const gate = rubbleByCell.get(cellKey(c));
+    const gate = rubbleByCell.get(cellIndex(c, world.gridW));
     if (gate !== undefined) return gate;
   }
   return null;

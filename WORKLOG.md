@@ -2038,3 +2038,37 @@ call-count probe first, then either a scan-constant shrink or a
 type-enforced `activeAction` mutation chokepoint + an
 incrementally-maintained derived index (the `unitsById`/`claims`
 robustness class, rebuilt on fromJSON, never serialized).
+
+### 86c-L2b — design SIGNED (2026-08-28); build handed to a fresh
+### session
+
+The user chose the chokepoint+index shape directly, with the
+honest-trade framing accepted: the current scan is correct BY
+CONSTRUCTION (derive-don't-cache), and the index swaps that
+guarantee for a maintained invariant — so **the signed design
+keeps the derived scan as the index's VERIFIER** (the §79e
+principle applied to a cache): recompute-and-compare in the
+determinism/swap tests, fast index in production. Expectation
+SET: ~7% on cheap shapes (the --search mass shape), only ~1–2%
+on the full ARM — this lever is hygiene-motivated as much as
+perf; the worklog says so out loud.
+
+The build plan for the fresh session:
+1. **Chokepoint** — `activeAction` writes route through World-owned
+   seat/clear helpers. Code reality (grepped 2026-08-28): NINE
+   production writes — World.ts ×8 (tick clears 1325/1344/1360 ·
+   seat 1450 · instant/spawn seats 2030/2072/2431 · fromJSON 2740)
+   + the SwapAction abort clear (SwapAction.ts:138). Enforce by
+   type (private field + accessors), not convention.
+2. **Index** — `reservedPartnerIds` (or a count-map for multi-swap
+   overlaps — check whether one unit can be partner to two swaps;
+   the reserve gate should make it impossible, assert it)
+   maintained at seat/clear; rebuilt in fromJSON.
+3. **Verifier** — the old O(n) scan stays, retitled, as the
+   test-side recompute-and-compare invariant.
+4. **Test churn** — ~35 fixture writes across 15 files hand-seat
+   actions; route them through the seam (fixtures come out cleaner
+   than the raw `{action, startTick, finishTick, phases}` literals).
+5. Gates as ever: oracle vs HEAD both shapes · full suite +
+   fuzz:smoke · zero pathing-pin movement · the paired bench.
+Then L3 (the ARM-only traffic-sensor hoist) → 86d → 86e → 86f.

@@ -209,44 +209,25 @@ summary.csv (oracle safety).
 - [x] 86b ✅ 2026-08-28 — `scripts/perf-oracle.sh` (worktree-pin +
       junction + sha-compare summary+decisions on 2 shapes; the
       HEAD-vs-HEAD self-test PASSED both shapes). Gates every lever.
-- [x] 86c ✅ 2026-08-28 — the levers, one commit each. ✅ DECIDED 2026-08-28
-      (user-signed): **L1 the A* numeric core → L2 numeric-key
-      movement/occupancy → L3 the traffic-sensor hoist**, in order,
-      each oracle-gated, re-profile between L1 and L2;
-      pre-registered ESCALATION: compound < 1.5× → the phase
-      expands to algorithmic levers (call-count caching, the
-      derive-don't-cache re-open) — WORKLOG §86c-signing.
-      Rider: fix/re-annotate the stale pathing-perf A* bound.
-      **L1 ✅ 2026-08-28** (`9f01ce5`, oracle PASS, pins held,
-      rider landed): **2.44× / 2.29× / 2.09×** across the shapes —
-      the escalation floor cleared by L1 alone; post-L1 profile →
-      L2's targets confirmed — WORKLOG §86b+86c-L1.
-      **L2 ✅ 2026-08-28** (`21b24e6`, oracle PASS, pins held):
-      numeric keys + the `(x,y)` CostFn — **compound 3.14× /
-      3.09× / 2.61×** vs pre-phase; post-L2 profile:
-      `isReservedSwapPartner` 7.1% = **L2b** (user-named, inserted
-      2026-08-28) — WORKLOG §86c-L2.
-      **L2b ✅ 2026-08-28** (oracle PASS, pins held): the type-enforced
-      `activeAction` chokepoint + the O(1) reserved-partner index, the
-      derived scan kept as the test-side verifier — **~1.09× scored /
-      ~1.0× searcher / ~1.01–1.03× ARM** (scored CORRECTED at L3: the
-      first 1.2× read was cold-worktree bench bias; the warmed
-      re-measure sits on the ~7% expectation — WORKLOG §86c-L2b
-      correction note) — WORKLOG §86c-L2b-landed.
-      **L3 ✅ 2026-08-28** (oracle PASS, pins held): the exact-input
-      choke-read memo (`chokeRead` behind an element-wise Int32Array
-      key + the `TileGrid.mutations` epoch; `computeChokeRead` kept as
-      the §79e verifier; sensors.ts stays cache-free) — the choke
-      stack was 16.1% of the ARM post-L2b, input-repeat 76.5% —
-      **ARM median 1.10× over 4 warmed pairs** (scored/searcher 1.00,
-      by mechanism); fuzz:smoke 172→140 s — WORKLOG §86c-L3-landed.
-      86c CLOSED: compound vs pre-phase ~3.4× scored / ~3.1× searcher
-      / **~2.9× ARM**. 86d NEXT.
-- [ ] 86d — the batch riders (⛔ decision point: dispositions
-      re-signed): build transient-only retry + staged-n merge;
-      measure-then-decide the dynamic queue; defer quotas +
-      warm-start/halving (blocked at the shard boundary;
-      hybrid-light removed the customer).
+- [x] 86c ✅ 2026-08-28 — the levers (✅ DECIDED: L1→L2→L2b→L3, each
+      its own oracle-gated commit; escalation floor 1.5× cleared by
+      L1 alone). L1 A* numeric core (2.44×/2.29×/2.09×) · L2 numeric
+      keys + `(x,y)` CostFn · L2b the `activeAction` chokepoint + the
+      O(1) reserved-partner index (scan kept as verifier; scored
+      CORRECTED ~1.09× — the first 1.2× was cold-worktree bench bias)
+      · L3 the exact-input choke-read memo (ARM median 1.10×).
+      **CLOSED at compound ~3.4× scored / ~3.1× searcher / ~2.9× ARM**;
+      fuzz:smoke 314→140 s — WORKLOG §86c-signing…§86c-L3-landed.
+- [x] 86d ✅ 2026-08-28 — the batch riders; ⛔ RESOLVED (dispositions
+      re-signed with two user amendments: no cross-platform magic
+      error code — determinism-derived classification, 0xC0000142
+      win32-gated; the queue as the finer-chunk pool, NOT a worker
+      protocol). d1 transient-only retry (fail-fast on deterministic
+      failures) · d2 `--merge-stages` (staged-n → one serial-identical
+      artifact set; the real n=12 oracle pins it) · d3 the CHUNK_FACTOR=4
+      worker pool (measured: static ~1.15× ideal, dynamic ~1.05× —
+      median ~8% box wall; parity pins hold) · d4 deferrals re-signed —
+      WORKLOG §86d.
 - [ ] 86e — the board split (§86-adjacent, independent): machine
       manifest → fail-closed verdict board (missing / runs=0 /
       under-n / dup-seed / provenance FAIL) vs drift dashboard vs

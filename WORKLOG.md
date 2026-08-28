@@ -2213,3 +2213,68 @@ real, ~19%). Compound ARM vs pre-phase: **~2.9×** (2.61 × ~1.02 ×
 1.10); scored ~3.4× · searcher ~3.1× (bias-corrected compounds).
 NEXT: 86d (the batch riders — decision point: dispositions
 re-signed).
+
+### 86d — the batch riders (2026-08-28, dispositions RE-SIGNED + landed)
+
+The charter dispositions re-signed at the step with two user
+amendments from the shape-lock Q&A: (1) **no hard-coded Windows
+error code as the classification** — the robust cut derives from
+determinism itself (process-reported failures recur on retry;
+environment failures clear), with 0xC0000142 demoted to a
+win32-GATED special case; (2) the dynamic queue lands as the
+finer-chunk pool, explicitly NOT a persistent-worker protocol
+("given how much speed-up we just got, we don't need a full
+parallel runtime — at least not yet").
+
+**86d1 — transient-only retry.** `retryAsync` gains a `retryable`
+predicate; both shard drivers reject typed `ShardError`s via
+`classifyShardExit`: spawn `error` events + signal kills (code
+null — previously retried by ACCIDENT as "exited with code null")
+= transient on any OS; any other non-zero exit + broken artifacts
+behind exit 0 = deterministic, FAIL FAST (no more re-running a
+multi-minute shard twice against a crash determinism guarantees
+will recur); 0xC0000142 transient on win32 only (both signed/
+unsigned encodings). Six new pins (predicate fast path + the
+classification table).
+
+**86d2 — the staged-n merge.** `--merge-stages=<dirs> --out=<dir>`
+folds same-arm stage dirs with adjacent seed windows into the
+byte-identical artifact set of one serial run — the n=120
+protocol's 40+80 extension finally lands in ONE summary.csv per
+instrument. One regroup serves all five per-run-row csvs (they
+share the `seed,strategy` leading columns; mergeSummaries
+exported from the --jobs parent). Guards, all loud: header +
+strategy-set equality · the same-arm check over box `args` records
+(partition flags stripped; the protocol's same-arm rule made
+checkable — same-HEAD verification stays 86e's) · disjoint +
+contiguous windows · uniform sidecar presence · not-reproduced
+files LISTED, never dropped. Pins: the REAL oracle (serial n=12
+vs staged 4+8 — summary byte-identical, timings keys, failures) +
+six synthetic guard pins.
+
+**86d3 — the dynamic queue, measured then built.** The
+measurement (12 real 85g6 box batches, per-seed totalTicks as the
+wall proxy): per-seed spread 5.7–14.7× within one arm; static
+contiguous chunks run a median **~1.15× ideal makespan** (range
+1.06–1.22); per-seed dynamic assignment ~1.05× — **median ~8% of
+batch wall, range −7% to +14%**. Built as the finer-chunk worker
+pool: `CHUNK_FACTOR=4` × jobs contiguous chunks, at most `jobs`
+children live, workers pull the next chunk INDEX as they free.
+The merge is UNTOUCHED (chunks stay contiguous ascending, read in
+index order) so byte-identity holds by construction — the
+existing parity pins exercise chunks > workers for free and PASS.
+Per-seed granularity rejected on the tsx import tax (~2–4 s per
+child ×80 spawns eats half the win) and on spawn count AS the
+risk surface (0xC0000142 is spawn-under-load). Expected box-batch
+wall: ~5–8% off, net of ~8–16 s chunk overhead.
+
+**86d4 — deferrals re-signed:** shadow quotas (no consumer) +
+warm-start/successive-halving (structurally blocked at the
+eval-shard boundary; hybrid-light removed the customer).
+
+Landed as three commits (d1 · d2 · d3), each hook-green;
+predictions HELD: no snapshot bump, no new RNG streams, no
+signed-sheet movement. The sweep sharding (searchShard's
+vector-level chunks) deliberately keeps static chunking — its
+imbalance is vector-count-shaped, unmeasured, and no live
+consumer complained; re-measure if a §88-era sweep straggles.

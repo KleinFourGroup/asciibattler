@@ -1,8 +1,23 @@
 /**
  * 57f2 — run-mode parallelism (`--jobs=N` on a plain run): split the seed
- * range into N contiguous chunks, spawn one UNMODIFIED run-mode child per
+ * range into contiguous chunks, spawn one UNMODIFIED run-mode child per
  * chunk (each writing to `<out>/shards/shard-K`), and merge the shards'
  * summary.csv + failure traces into the exact bytes a serial run writes.
+ *
+ * 86d3 — the chunks are FINER than the worker count (`CHUNK_FACTOR` × jobs,
+ * still contiguous ascending) and flow through a worker POOL: at most
+ * `jobs` children run at once, each worker pulling the next chunk index as
+ * it frees up. The measured case (12 real box batches, per-seed ticks):
+ * per-seed cost spreads 5.7–14.7× within one arm, so N static chunks run a
+ * median ~1.15× the ideal makespan — the last worker straggles on a lucky
+ * seed window — while dynamic assignment sits at ~1.05×, a median ~8% of
+ * batch wall. Finer-chunks-not-per-seed because every child pays the tsx
+ * import tax (~2–4 s): 4× jobs keeps ~80% of the balancing win at a
+ * quarter of the spawn overhead — and spawn COUNT is itself the risk
+ * surface (the 0xC0000142 class is literally spawn-under-load). The merge
+ * is untouched: chunks are still contiguous ascending windows read in
+ * index order, so byte-identity holds by construction (the parity pins in
+ * parallelRun.test.ts exercise chunks > workers for free).
  *
  * Why the merge can be textual: summary.csv is PER-RUN rows (one line per
  * strategy × seed — reporters.renderSummaryCsv), and rows are independent, so
@@ -85,6 +100,11 @@ const PARTITION_FLAGS = ['--jobs', '--count', '--seed-offset', '--out', '--emit-
  *  Windows intermittently fails a fresh spawn under load (0xC0000142). */
 const SHARD_ATTEMPTS = 3;
 
+/** 86d3 — chunks per worker: the balancing-vs-spawn-tax dial (see header).
+ *  4 keeps ~80% of the measured ~8% dynamic-queue win at a quarter of the
+ *  per-seed spawn overhead. */
+const CHUNK_FACTOR = 4;
+
 const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
@@ -101,15 +121,18 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   }
 
   const seeds = range(1 + (args.seedOffset ?? 0), args.count);
-  const chunks = chunkVectors(seeds, args.jobs ?? 1);
+  const workers = Math.max(1, Math.floor(args.jobs ?? 1));
+  // 86d3 — finer contiguous chunks through a bounded worker pool (see header).
+  const chunks = chunkVectors(seeds, workers * CHUNK_FACTOR);
   const shardsDir = join(args.outDir, 'shards');
   const passthrough = process.argv
     .slice(2)
     .filter((a) => !PARTITION_FLAGS.some((f) => a === f || a.startsWith(f + '=')));
 
   process.stdout.write(
-    `Parallel run: ${seeds.length} seed(s) across ${chunks.length} job(s) ` +
-      `[${chunks.map((c) => `${c[0]}..${c[c.length - 1]}`).join(', ')}]…\n`,
+    `Parallel run: ${seeds.length} seed(s) across ${chunks.length} chunk(s) ` +
+      `on ${Math.min(workers, chunks.length)} worker(s) ` +
+      `[${chunks[0]![0]}..${chunks[chunks.length - 1]!.at(-1)}]…\n`,
   );
 
   rmSync(shardsDir, { recursive: true, force: true });
@@ -119,24 +142,33 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   // (the serial writer's own code path — byte parity by construction).
   const needResults = wantsAggregates || args.emitResults || args.arbitrate;
   const shardDirs = chunks.map((_, i) => join(shardsDir, `shard-${i}`));
-  await Promise.all(
-    chunks.map((chunk, i) =>
-      retryAsync(
-        () => spawnShardOnce(chunk, i, passthrough, shardDirs[i], needResults),
-        SHARD_ATTEMPTS,
-        async (attempt, err) => {
-          process.stderr.write(
-            `  shard ${i} spawn failed (attempt ${attempt}/${SHARD_ATTEMPTS}), retrying: ` +
-              `${String(err).split('\n')[0]}\n`,
-          );
-          await delay(1000 * attempt);
-        },
-        isTransientShardError,
-      ).then(() => {
-        process.stdout.write(`  shard ${i} done (${chunk.length} seed(s))\n`);
-      }),
-    ),
-  );
+  const runChunk = (i: number): Promise<void> =>
+    retryAsync(
+      () => spawnShardOnce(chunks[i]!, i, passthrough, shardDirs[i], needResults),
+      SHARD_ATTEMPTS,
+      async (attempt, err) => {
+        process.stderr.write(
+          `  chunk ${i} spawn failed (attempt ${attempt}/${SHARD_ATTEMPTS}), retrying: ` +
+            `${String(err).split('\n')[0]}\n`,
+        );
+        await delay(1000 * attempt);
+      },
+      isTransientShardError,
+    ).then(() => {
+      process.stdout.write(`  chunk ${i} done (${chunks[i]!.length} seed(s))\n`);
+    });
+  // The pool: each worker pulls the next chunk INDEX as it frees up.
+  // Completion order varies with wall clock; outputs are keyed by chunk
+  // index (shard-i dirs) and merged in index order, so results never do.
+  let nextChunk = 0;
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = nextChunk++;
+      if (i >= chunks.length) return;
+      await runChunk(i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(workers, chunks.length) }, worker));
 
   const merged = mergeSummaries(shardDirs);
   writeFileSync(join(args.outDir, 'summary.csv'), merged);
@@ -180,7 +212,8 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
 
   printOutcomeCounts(merged);
   process.stdout.write(
-    `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir} (jobs=${chunks.length})\n`,
+    `Wrote summary.csv and ${failuresWritten} failure trace(s) to ${args.outDir} ` +
+      `(${chunks.length} chunk(s), jobs=${workers})\n`,
   );
 }
 

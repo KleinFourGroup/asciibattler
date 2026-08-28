@@ -2072,3 +2072,61 @@ The build plan for the fresh session:
 5. Gates as ever: oracle vs HEAD both shapes · full suite +
    fuzz:smoke · zero pathing-pin movement · the paired bench.
 Then L3 (the ARM-only traffic-sensor hoist) → 86d → 86e → 86f.
+
+### 86c-L2b landed (2026-08-28)
+
+Built exactly as signed. The shape: `Action.reservedPartnerId?()`
+joins the optional-method idiom (`destinationCell?.()` family) so
+World stays swap-agnostic; `Unit.activeAction` becomes a private
+field + getter (direct assignment is now a COMPILE error — strict
+tsc enumerated all 34 test writes across 13 files in one sweep, the
+82c discipline) with an `@internal _setActiveAction` only World's
+chokepoint calls; World gains `seatAction(unit, action, phases)`
+(computes start/finish from tickCount — the shape all four live
+seat sites and most fixtures share), `seatActiveAction(unit, aa)`
+(raw: fromJSON + backdated fixtures; re-seat legal), and
+`clearActiveAction(unit)`, each maintaining
+`swapReservedPartners: Map<partnerId, actorId>` in the same breath.
+The design's enumerated NINE production writes all routed; the
+audit's tenth surface — `removeUnit` — unindexes a removed ACTOR
+(the scan stopped seeing it the moment it left `units`; a removed
+PARTNER's entry deliberately stands until the actor's flip settles
+it, scan-semantics preserved exactly). fromJSON seats through the
+chokepoint, so the index rebuilds on rehydrate for free — including
+`cloneForRollout`, which is a fromJSON round-trip. Mid-tick-loop
+mutation ordering (the no-hoist caveat) is preserved by
+construction: the index updates at seat time, inside the loop.
+
+The one-reservation-per-partner question resolved as predicted: the
+`isSwappablePartner` gate makes a double-reserve unreachable live,
+so `seatActiveAction` THROWS on it (loud, the missing-prior-table
+style), pinned by a test.
+
+**The verifier** (the signed §79e rider): the old O(n) scan
+survives as `scanReservedSwapPartners` (SwapAction.ts, documented
+never-in-production), and recompute-and-compare rides FOUR homes —
+per-tick in determinism.test.ts's replay loop, per-tick in
+layout-deadlock.test.ts (corridor layouts seat real swaps through
+the production chokepoint — the invariant exercised where it
+lives), plus a dedicated index-lifecycle suite in SwapAction.test.ts
+(seat → abort-clear · actor-removal · partner-removal ·
+double-reserve throw · fromJSON rebuild).
+
+**Gates:** typecheck clean · 2698 main green (2693 + the 5 new
+lifecycle pins) · fuzz:smoke 491 green · **oracle PASS both shapes
+vs `08a002e`** (summary + decisions sha-identical) · zero pathing
+pins moved.
+
+**The paired bench** (same protocol, run TWICE for stability;
+sidecar-ms ratios): scored **1.224× / 1.193×** · searcher 1.000× /
+1.036× · full ARM 1.007× / **1.025×**. ARM lands inside the
+predicted 1–2%; searcher sits at the noise floor (no regression
+from the getter indirection); scored comes in WELL above the ~7%
+expectation — the scan's 7.1% was SELF time only, and the retired
+cost also included the per-free-unit tick-loop scan plus every
+proposer's `isSwappablePartner` probe, so the inclusive tax on the
+scan-heavy cheap shape was roughly 3× its profile self line. Bonus
+datum: pre-commit fuzz:smoke 189 → 172 s. Compound vs pre-phase
+(from the L2 close, scored ≈ 3.14 × 1.2): **~3.8× scored / ~3.1×
+searcher / ~2.7× ARM**. NEXT: L3 (the ARM-only traffic-sensor
+hoist) → 86d.

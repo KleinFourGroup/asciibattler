@@ -108,7 +108,7 @@ describe('§75f — EXIT INVARIANT: the leash bounds passive wander', () => {
     const world = campWorld();
     world.tick();
     const member = campUnits(world)[0]!;
-    member.activeAction = null;
+    world.clearActiveAction(member);
     member.position = { x: 11, y: 11 }; // a shove-like displacement, leash 2
     const leash = getCamp('bandit-squatters')!.leashRadius;
     for (let t = 0; t < 300 && chebyshev(member.position, ANCHOR) > leash; t++) {
@@ -151,7 +151,7 @@ describe('§75f — the hostile delegate', () => {
     world.tick();
     campUnits(world)[0]!.position = { x: 4, y: 4 };
     world.tick();
-    for (const u of campUnits(world)) u.activeAction = null;
+    for (const u of campUnits(world)) world.clearActiveAction(u);
     const leash = getCamp('bandit-squatters')!.leashRadius;
     const dummy = spawnAt(world, 'player', { x: 11, y: 5 }); // outside the leash
     spawnAt(world, 'enemy', { x: 0, y: 11 }); // keeps the battle running

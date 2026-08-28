@@ -128,6 +128,15 @@ export interface Action {
    * probe: propose validated the band on the same tick, nothing has moved.
    */
   holdCheck?(phase: ActionPhaseName, unit: Unit, world: World): number | null;
+  /**
+   * 86c-L2b — the unit id this action RESERVES for its whole seated window
+   * (today: SwapAction's partner — skipped by the selector, refused by every
+   * swap proposer). World's seat/clear chokepoint reads it to maintain the
+   * derived reserved-partner index; absent = the action reserves nobody.
+   * Intrinsic to the action instance (rebuilt by `fromData`), never
+   * serialized separately.
+   */
+  reservedPartnerId?(): number;
   toData(): unknown;
 }
 

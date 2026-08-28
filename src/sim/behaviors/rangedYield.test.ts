@@ -103,12 +103,7 @@ describe('56c2 — the ranged yield (blocker-initiated)', () => {
     if (opts.walls !== false) corridor(world, 5, 0, 9);
     const [archer, ally] = units as [Unit, Unit];
     if (opts.allyBusy === true) {
-      ally.activeAction = {
-        action: new WaitAction(),
-        startTick: world.currentTick,
-        finishTick: world.currentTick + 6,
-        phases: [{ phase: 'recovery', ticks: 6 }],
-      };
+      world.seatAction(ally, new WaitAction(), [{ phase: 'recovery', ticks: 6 }]);
     }
     return { world, archer, ally, proposal: new MovementBehavior().proposeAction(archer, world) };
   }
@@ -187,16 +182,11 @@ describe('56c2/56e-pre — the swap-partner reserve (World.tick skip, full windo
     );
     const [actor, partner] = units as [Unit, Unit];
     const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 20);
-    actor.activeAction = {
-      action,
-      startTick: world.currentTick,
-      finishTick: world.currentTick + 20,
-      phases: [
-        { phase: 'travel', ticks: 10 },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: 10 },
-      ],
-    };
+    world.seatAction(actor, action, [
+      { phase: 'travel', ticks: 10 },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: 10 },
+    ]);
 
     for (let i = 0; i < 5; i++) world.tick(); // all pre-flip (travel = 10)
 

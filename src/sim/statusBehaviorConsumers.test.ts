@@ -194,16 +194,11 @@ describe('56c — the flee-swap (boxed panic bubble-back)', () => {
   it('never swaps with a mid-action partner (the 56a doctrine)', () => {
     const { world, fleer, ally } = rout();
     const durationTicks = 8;
-    ally.activeAction = {
-      action: new MoveAction(ally.position, { x: 0, y: 7 }, durationTicks),
-      startTick: world.currentTick,
-      finishTick: world.currentTick + durationTicks,
-      phases: [
-        { phase: 'travel', ticks: 4 },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: 4 },
-      ],
-    };
+    world.seatAction(ally, new MoveAction(ally.position, { x: 0, y: 7 }, durationTicks), [
+      { phase: 'travel', ticks: 4 },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: 4 },
+    ]);
     world.claimCell({ x: 0, y: 7 }, ally.id);
     expect(new MovementBehavior().proposeAction(fleer, world)).toBeNull();
   });

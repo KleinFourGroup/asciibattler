@@ -795,7 +795,7 @@ describe('World.applyDamage — I2 dodge hit/miss roll', () => {
     });
     const strike = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance }] });
     const strikePhases = resolvePhases(strikeDef, 0);
-    attacker.activeAction = { action: strike, startTick: 0, finishTick: totalTicks(strikePhases), phases: strikePhases };
+    world.seatActiveAction(attacker, { action: strike, startTick: 0, finishTick: totalTicks(strikePhases), phases: strikePhases });
     strike.start(attacker, world);
 
     // Exactly two draws consumed (crit + miss), in that order.

@@ -228,16 +228,11 @@ describe('SupportMovementBehavior — GP5 chokepoint yield (swap)', () => {
     const enemy = makeUnit(3, 'enemy', { x: 8, y: 5 });
     const w = world([healer, ally, enemy, ...corridorWalls(5, 3, 8)]);
     const durationTicks = 8;
-    ally.activeAction = {
-      action: new MoveAction(ally.position, { x: 3, y: 5 }, durationTicks),
-      startTick: w.currentTick,
-      finishTick: w.currentTick + durationTicks,
-      phases: [
-        { phase: 'travel', ticks: 4 },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: 4 },
-      ],
-    };
+    w.seatAction(ally, new MoveAction(ally.position, { x: 3, y: 5 }, durationTicks), [
+      { phase: 'travel', ticks: 4 },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: 4 },
+    ]);
     w.claimCell({ x: 3, y: 5 }, ally.id);
 
     expect(new SupportMovementBehavior().proposeAction(healer, w)).toBeNull();

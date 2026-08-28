@@ -50,8 +50,8 @@ function dripBoth(world: World, at1: GridCoord, at2: GridCoord): [Unit, Unit] {
   world.tick();
   const m2 = world.units.find((u) => u.campId !== null && u.id !== m1.id)!;
   m2.position = at2;
-  m1.activeAction = null;
-  m2.activeAction = null;
+  world.clearActiveAction(m1);
+  world.clearActiveAction(m2);
   return [m1, m2];
 }
 

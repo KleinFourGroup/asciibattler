@@ -47,7 +47,7 @@ function campMemberAt(world: World, pos: GridCoord): Unit {
   const u = world.units.find((x) => x.campId !== null);
   if (!u) throw new Error('camp drip failed to materialize a member');
   u.position = pos;
-  u.activeAction = null; // shed the spawn lockout — tests want an idle body
+  world.clearActiveAction(u); // shed the spawn lockout — tests want an idle body
   return u;
 }
 
@@ -56,16 +56,11 @@ function campMemberAt(world: World, pos: GridCoord): Unit {
 function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
   const durationTicks = travel * 2;
   const action = new MoveAction(unit.position, to, durationTicks);
-  unit.activeAction = {
-    action,
-    startTick: world.currentTick,
-    finishTick: world.currentTick + durationTicks,
-    phases: [
-      { phase: 'travel', ticks: travel },
-      { phase: 'impact', ticks: 0 },
-      { phase: 'recovery', ticks: durationTicks - travel },
-    ],
-  };
+  world.seatAction(unit, action, [
+    { phase: 'travel', ticks: travel },
+    { phase: 'impact', ticks: 0 },
+    { phase: 'recovery', ticks: durationTicks - travel },
+  ]);
   world.claimCell(to, unit.id);
 }
 

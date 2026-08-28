@@ -95,8 +95,8 @@ const afflictDef: AbilityDef = parseAbilityDef({
 });
 
 /** Seat an action as a unit's in-flight activeAction with resolved phases. */
-function activate(unit: Unit, action: EffectAction, phases: ActionPhase[]): void {
-  unit.activeAction = { action, startTick: 0, finishTick: totalTicks(phases), phases };
+function activate(w: World, unit: Unit, action: EffectAction, phases: ActionPhase[]): void {
+  w.seatActiveAction(unit, { action, startTick: 0, finishTick: totalTicks(phases), phases });
 }
 
 describe('EffectAction firing — ops land at their authored phase', () => {
@@ -106,7 +106,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const target = makeUnit('enemy', { x: 1, y: 0 });
     w.units.push(caster, target);
     const action = new EffectAction(strikeDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance: 0 }] });
-    activate(caster, action, resolvePhases(strikeDef, 0));
+    activate(w, caster, action, resolvePhases(strikeDef, 0));
     action.start(caster, w);
     expect(target.currentHp).toBe(target.derived.maxHp - 10);
     action.applyEffect(caster, w, 0, 'impact'); // World's offset-0 impact call
@@ -120,7 +120,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     w.units.push(caster, center);
     const phases = resolvePhases(magicDef, 0);
     const action = new EffectAction(magicDef, { targetId: -1, targetCell: { x: 5, y: 5 }, ops: [{ baseDamage: 10, critChance: 0 }] });
-    activate(caster, action, phases);
+    activate(w, caster, action, phases);
     action.start(caster, w);
     expect(center.currentHp).toBe(center.derived.maxHp); // impact not at offset 0
     action.applyEffect(caster, w, totalTicks(phases), 'impact');
@@ -135,7 +135,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const phases = resolvePhases(gambitDef, 0);
     const impactOffset = phases.find((p) => p.phase === 'windup')!.ticks; // impact begins after windup
     const action = new EffectAction(gambitDef, { targetId: target.id, ops: [{ baseDamage: 10, critChance: 0 }, { moveDest: { x: 4, y: 5 } }] });
-    activate(caster, action, phases);
+    activate(w, caster, action, phases);
     action.start(caster, w);
     expect(target.currentHp).toBe(target.derived.maxHp - 10); // damage landed
     expect(caster.position).toEqual({ x: 5, y: 5 }); // not yet repositioned
@@ -148,7 +148,7 @@ describe('EffectAction firing — ops land at their authored phase', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     w.units.push(caster);
     const action = new EffectAction(dashDef, { targetId: -1, ops: [{ moveDest: { x: 2, y: 0 } }] });
-    activate(caster, action, resolvePhases(dashDef, 0));
+    activate(w, caster, action, resolvePhases(dashDef, 0));
     action.start(caster, w);
     expect(caster.position).toEqual({ x: 2, y: 0 });
   });

@@ -464,16 +464,11 @@ describe('§45a — vacancy-aware costs (the tiered costAt + route choice)', () 
    */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
-    unit.activeAction = {
-      action: new MoveAction(unit.position, to, durationTicks),
-      startTick: world.currentTick,
-      finishTick: world.currentTick + durationTicks,
-      phases: [
-        { phase: 'travel', ticks: travel },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: durationTicks - travel },
-      ],
-    };
+    world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - travel },
+    ]);
     world.claimCell(to, unit.id);
   }
 
@@ -615,16 +610,11 @@ describe('§45b — the ETA-gated wait-vs-sidestep', () => {
   /** Same seat shape as the §45a block: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
-    unit.activeAction = {
-      action: new MoveAction(unit.position, to, durationTicks),
-      startTick: world.currentTick,
-      finishTick: world.currentTick + durationTicks,
-      phases: [
-        { phase: 'travel', ticks: travel },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: durationTicks - travel },
-      ],
-    };
+    world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - travel },
+    ]);
     world.claimCell(to, unit.id);
   }
 
@@ -750,16 +740,11 @@ describe('§45c — the stable-route margin (anti-flicker hysteresis)', () => {
   /** Same seat shape as the §45a/§45b blocks: active move + destination claim. */
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number) {
     const durationTicks = travel * 2;
-    unit.activeAction = {
-      action: new MoveAction(unit.position, to, durationTicks),
-      startTick: world.currentTick,
-      finishTick: world.currentTick + durationTicks,
-      phases: [
-        { phase: 'travel', ticks: travel },
-        { phase: 'impact', ticks: 0 },
-        { phase: 'recovery', ticks: durationTicks - travel },
-      ],
-    };
+    world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
+      { phase: 'travel', ticks: travel },
+      { phase: 'impact', ticks: 0 },
+      { phase: 'recovery', ticks: durationTicks - travel },
+    ]);
     world.claimCell(to, unit.id);
   }
 
@@ -907,16 +892,11 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       // Mid-move BACKWARD (the forward cell holds the mover) — pre-flip, so
       // the logical position still reads (4,5). ETA (4 ticks) is inside the
       // §45b gate, so the WAIT branch resolves this shape before the probe.
-      blocker!.activeAction = {
-        action: new MoveAction(blocker!.position, { x: 5, y: 5 }, 8),
-        startTick: world.currentTick,
-        finishTick: world.currentTick + 8,
-        phases: [
-          { phase: 'travel', ticks: 4 },
-          { phase: 'impact', ticks: 0 },
-          { phase: 'recovery', ticks: 4 },
-        ],
-      };
+      world.seatAction(blocker!, new MoveAction(blocker!.position, { x: 5, y: 5 }, 8), [
+        { phase: 'travel', ticks: 4 },
+        { phase: 'impact', ticks: 0 },
+        { phase: 'recovery', ticks: 4 },
+      ]);
       world.claimCell({ x: 5, y: 5 }, blocker!.id);
     }
     const proposal = advance(mover!, world, {
@@ -1006,12 +986,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     );
     const [mover, blocker, enemy] = units;
     // Busy but going nowhere (no claim → no §45b vacancy ETA): a seated wait.
-    blocker!.activeAction = {
-      action: new WaitAction(),
-      startTick: world.currentTick,
-      finishTick: world.currentTick + 6,
-      phases: [{ phase: 'recovery', ticks: 6 }],
-    };
+    world.seatAction(blocker!, new WaitAction(), [{ phase: 'recovery', ticks: 6 }]);
     const proposal = advance(mover!, world, {
       goals: [enemy!.position],
       approachToward: enemy!.position,
@@ -1122,13 +1097,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     // Poll M1: proposes the swap; World would seat it in flight — mirror that.
     const p1 = advance(m1!, world, intent);
     expect(p1!.action.id).toBe('swap');
-    const total = p1!.phases.reduce((s, p) => s + p.ticks, 0);
-    m1!.activeAction = {
-      action: p1!.action,
-      startTick: world.currentTick,
-      finishTick: world.currentTick + total,
-      phases: p1!.phases,
-    };
+    world.seatAction(m1!, p1!.action, p1!.phases);
     p1!.action.start(m1!, world);
     // Mid-window: nobody has moved, and M2's probe refuses the reserved archer.
     expect(m1!.position).toEqual({ x: 3, y: 5 });
@@ -1136,7 +1105,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     expect(advance(m2!, world, intent)).toBeNull();
     // The flip lands; the window closes.
     p1!.action.applyEffect!(m1!, world, 0);
-    m1!.activeAction = null;
+    world.clearActiveAction(m1!);
     expect(m1!.position).toEqual({ x: 4, y: 5 });
     expect(r!.position).toEqual({ x: 3, y: 5 });
     // Only NOW does the second hop propose: R files one more cell rearward.
@@ -1171,13 +1140,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     };
     const p1 = advance(m1!, world, intent);
     expect(p1!.action.id).toBe('swap');
-    const total = p1!.phases.reduce((s, p) => s + p.ticks, 0);
-    m1!.activeAction = {
-      action: p1!.action,
-      startTick: world.currentTick,
-      finishTick: world.currentTick + total,
-      phases: p1!.phases,
-    };
+    world.seatAction(m1!, p1!.action, p1!.phases);
     p1!.action.start(m1!, world);
     // The flip lands at the impact boundary; backdate startTick so the
     // derived scan reads elapsed == impactOffset (post-flip). The window is
@@ -1188,7 +1151,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
       if (p.phase === 'impact') break;
       impactOffset += p.ticks;
     }
-    m1!.activeAction = { ...m1!.activeAction!, startTick: world.currentTick - impactOffset };
+    world.seatActiveAction(m1!, { ...m1!.activeAction!, startTick: world.currentTick - impactOffset });
     expect(m1!.position).toEqual({ x: 4, y: 5 });
     expect(r!.position).toEqual({ x: 3, y: 5 });
     expect(m1!.activeAction).not.toBeNull(); // M1's swap window still running
@@ -1196,7 +1159,7 @@ describe('56b — swap-through (the mover-initiated pass)', () => {
     // never overlapping two swap windows on one unit.
     expect(advance(m2!, world, intent)).toBeNull();
     // The window closes: the reserve drops and the next hop proposes.
-    m1!.activeAction = null;
+    world.clearActiveAction(m1!);
     const p2 = advance(m2!, world, intent);
     expect(p2!.action.id).toBe('swap');
   });

@@ -68,8 +68,18 @@ export class SwapAction implements Action {
     private readonly durationTicks: number,
   ) {}
 
-  /** The reserved partner's id — read by the derived reserved-partner scan. */
+  /** The reserved partner's id — read by the reserved-partner verifier scan. */
   get partnerId(): number {
+    return this.otherId;
+  }
+
+  /**
+   * 86c-L2b — the `Action.reservedPartnerId` seam: while this action is
+   * seated, `otherId` is reserved (selector skip + every proposer's
+   * `isSwappablePartner` refusal). World's seat/clear chokepoint reads this
+   * to maintain the O(1) reserved-partner index.
+   */
+  reservedPartnerId(): number {
     return this.otherId;
   }
 
@@ -135,7 +145,7 @@ export class SwapAction implements Action {
     // one-body `unit:moveAborted` here left the partner's sprite resting on
     // a slide the sim never honored (the 56e labyrinth desync).
     unit.actionCooldowns.set(this.id, 0);
-    unit.activeAction = null;
+    world.clearActiveAction(unit);
     world.emit('unit:swapAborted', {
       unitA: unit.id,
       unitB: this.otherId,
@@ -174,27 +184,49 @@ export class SwapAction implements Action {
 
 /**
  * 56c2/56e-pre — is `unitId` the reserved partner of someone's IN-FLIGHT
- * SwapAction? Derived from live `activeAction`s (never serialized, so it
- * survives snapshot resume by construction). The reserve holds for the
- * WHOLE window — seat through finishTick — not just pre-flip: the swap is
- * fundamentally the partner's action too, so it neither starts anything
- * the coming flip would invalidate (pre-flip) nor acts or gets grabbed by
- * a second swap while the renderer's dual lerp is still sliding it
- * (post-flip — the flip-anchored release shipped at 56c2 allowed exactly
- * that mid-window re-grab, the 56e sighting; regression pins in
- * movement.test.ts + rangedYield.test.ts). The reserve clears when the
- * actor's action does: finishTick, or the abort branch clearing early.
+ * SwapAction? The reserve holds for the WHOLE window — seat through
+ * finishTick — not just pre-flip: the swap is fundamentally the partner's
+ * action too, so it neither starts anything the coming flip would
+ * invalidate (pre-flip) nor acts or gets grabbed by a second swap while
+ * the renderer's dual lerp is still sliding it (post-flip — the
+ * flip-anchored release shipped at 56c2 allowed exactly that mid-window
+ * re-grab, the 56e sighting; regression pins in movement.test.ts +
+ * rangedYield.test.ts). The reserve clears when the actor's action does:
+ * finishTick, or the abort branch clearing early.
+ *
+ * 86c-L2b — answered from World's incrementally-maintained index (O(1);
+ * the per-call O(units) scan was 7.1% of a full-arm run post-L2).
+ * Maintenance rides the activeAction seat/clear chokepoint, so mid-tick
+ * mutation ordering is preserved by construction (a swap seated by an
+ * earlier unit reserves its partner before the partner's own iteration
+ * the same tick — the no-loop-start-hoist caveat). The old derived scan
+ * survives as `scanReservedSwapPartners`, the test-side verifier.
  *
  * Consumed by `World.tick`'s selector skip and by `isSwappablePartner`
  * (the one-hop-per-window chain throttle — window-true since 56e-pre).
  */
 export function isReservedSwapPartner(unitId: number, world: World): boolean {
+  return world.isSwapReservedPartner(unitId);
+}
+
+/**
+ * 86c-L2b — the VERIFIER: the pre-index derived scan, kept as the
+ * test-side recompute-and-compare invariant (the §79e principle applied to
+ * a cache: the check re-derives from a surface production no longer
+ * consults). Walks live `activeAction`s and rebuilds partnerId → actorId
+ * from scratch; tests assert deep-equality against
+ * `world.swapReservedPartnerIndex` after seats, flips, aborts, removals,
+ * and snapshot round-trips. NEVER call this from production code — its
+ * O(units) cost is exactly what the index retired.
+ */
+export function scanReservedSwapPartners(world: World): Map<number, number> {
+  const out = new Map<number, number>();
   for (const u of world.units) {
     const aa = u.activeAction;
     if (aa === null || aa.action.id !== SWAP_ACTION_ID) continue;
-    if ((aa.action as SwapAction).partnerId === unitId) return true;
+    out.set((aa.action as SwapAction).partnerId, u.id);
   }
-  return false;
+  return out;
 }
 
 /**

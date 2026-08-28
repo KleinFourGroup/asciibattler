@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { SwapAction, isReservedSwapPartner, isSwappablePartner } from './SwapAction';
+import {
+  SwapAction,
+  isReservedSwapPartner,
+  isSwappablePartner,
+  scanReservedSwapPartners,
+} from './SwapAction';
 import { MoveAction } from './MoveAction';
 import { createAction } from './registry';
 import { World } from '../World';
@@ -35,32 +40,32 @@ function makeWorld(bus: EventBus<GameEvents> = new EventBus<GameEvents>()): Worl
  *  action + destination claim, pre-flip (the movement.test.ts §45a helper). */
 function seatMove(world: World, unit: Unit, to: { x: number; y: number }, travel: number) {
   const durationTicks = travel * 2;
-  unit.activeAction = {
-    action: new MoveAction(unit.position, to, durationTicks),
-    startTick: world.currentTick,
-    finishTick: world.currentTick + durationTicks,
-    phases: [
-      { phase: 'travel', ticks: travel },
-      { phase: 'impact', ticks: 0 },
-      { phase: 'recovery', ticks: durationTicks - travel },
-    ],
-  };
+  world.seatAction(unit, new MoveAction(unit.position, to, durationTicks), [
+    { phase: 'travel', ticks: travel },
+    { phase: 'impact', ticks: 0 },
+    { phase: 'recovery', ticks: durationTicks - travel },
+  ]);
   world.claimCell(to, unit.id);
 }
 
 /** Seat an in-flight PRE-FLIP swap on `actor` (the 56c2 deferred timeline). */
 function seatSwap(world: World, actor: Unit, action: SwapAction, durationTicks: number) {
   const travel = Math.floor(durationTicks / 2);
-  actor.activeAction = {
-    action,
-    startTick: world.currentTick,
-    finishTick: world.currentTick + durationTicks,
-    phases: [
-      { phase: 'travel', ticks: travel },
-      { phase: 'impact', ticks: 0 },
-      { phase: 'recovery', ticks: durationTicks - travel },
-    ],
-  };
+  world.seatAction(actor, action, [
+    { phase: 'travel', ticks: travel },
+    { phase: 'impact', ticks: 0 },
+    { phase: 'recovery', ticks: durationTicks - travel },
+  ]);
+}
+
+/**
+ * 86c-L2b — the recompute-and-compare VERIFIER: the reserved-partner index
+ * must equal what the retired derived scan re-derives from live
+ * `activeAction`s (the §79e principle — the check consults a surface
+ * production no longer reads).
+ */
+function expectIndexConsistent(world: World) {
+  expect(world.swapReservedPartnerIndex).toEqual(scanReservedSwapPartners(world));
 }
 
 describe('SwapAction (deferred, 56c2)', () => {
@@ -195,7 +200,7 @@ describe('SwapAction (deferred, 56c2)', () => {
     const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10);
     seatSwap(w, actor, action, 10);
     action.applyEffect(actor, w, 5); // the flip lands; window still open
-    actor.activeAction = { ...actor.activeAction!, startTick: w.currentTick - 5 };
+    w.seatActiveAction(actor, { ...actor.activeAction!, startTick: w.currentTick - 5 });
     const aborts: GameEvents['unit:swapAborted'][] = [];
     bus.on('unit:swapAborted', (e) => aborts.push(e));
 
@@ -231,13 +236,89 @@ describe('the swap-partner reserve (56c2; full-window since 56e-pre)', () => {
     // Post-flip, window still open (travel boundary in the past, finishTick
     // ahead): STILL reserved — the swap is the partner's action too, and the
     // renderer's dual lerp is mid-slide (the 56e mid-window re-grab).
-    actor.activeAction = { ...actor.activeAction!, startTick: w.currentTick - 5 };
+    w.seatActiveAction(actor, { ...actor.activeAction!, startTick: w.currentTick - 5 });
     expect(isReservedSwapPartner(partner.id, w)).toBe(true);
     expect(isSwappablePartner(partner, w)).toBe(false);
+    expectIndexConsistent(w);
 
     // The window closes (the actor's action clears): the reserve drops.
-    actor.activeAction = null;
+    w.clearActiveAction(actor);
     expect(isReservedSwapPartner(partner.id, w)).toBe(false);
     expect(isSwappablePartner(partner, w)).toBe(true);
+    expectIndexConsistent(w);
+  });
+
+  // 86c-L2b — the index's own lifecycle pins: recompute-and-compare across
+  // every transition the chokepoint owns, plus the two invariants the design
+  // called out (one-reservation-per-partner asserted; a removed ACTOR frees
+  // its partner while a removed PARTNER's entry stands until the flip).
+  describe('the reserved-partner index (86c-L2b)', () => {
+    it('stays scan-identical across seat → abort-clear', () => {
+      const w = makeWorld();
+      const mover = spawn(w, 5, 5);
+      spawn(w, 4, 5); // a third party on `to` forces the abort branch
+      const action = new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, 999, 10);
+      seatSwap(w, mover, action, 10);
+      expectIndexConsistent(w);
+
+      action.applyEffect(mover, w, 5); // abort: clears via the chokepoint
+      expect(mover.activeAction).toBeNull();
+      expectIndexConsistent(w);
+      expect(w.swapReservedPartnerIndex.size).toBe(0);
+    });
+
+    it('a removed ACTOR takes its reservation with it', () => {
+      const w = makeWorld();
+      const actor = spawn(w, 5, 5);
+      const partner = spawn(w, 4, 5);
+      seatSwap(w, actor, new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10), 10);
+      expect(isReservedSwapPartner(partner.id, w)).toBe(true);
+
+      w.removeUnit(actor.id);
+      expect(isReservedSwapPartner(partner.id, w)).toBe(false);
+      expectIndexConsistent(w);
+    });
+
+    it('a removed PARTNER stays reserved (the actor still names it; the flip settles it)', () => {
+      const w = makeWorld();
+      const actor = spawn(w, 5, 5);
+      const partner = spawn(w, 4, 5);
+      seatSwap(w, actor, new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10), 10);
+
+      w.removeUnit(partner.id);
+      // The scan kept answering true here (the actor's seated swap names the
+      // id); the index must mirror that until the actor's action clears.
+      expect(isReservedSwapPartner(partner.id, w)).toBe(true);
+      expectIndexConsistent(w);
+
+      w.clearActiveAction(actor);
+      expect(isReservedSwapPartner(partner.id, w)).toBe(false);
+      expectIndexConsistent(w);
+    });
+
+    it('seating a second swap on an already-reserved partner throws (the bypassed-gate guard)', () => {
+      const w = makeWorld();
+      const a1 = spawn(w, 5, 5);
+      const a2 = spawn(w, 3, 5);
+      const partner = spawn(w, 4, 5);
+      seatSwap(w, a1, new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10), 10);
+      expect(() =>
+        seatSwap(w, a2, new SwapAction({ x: 3, y: 5 }, { x: 4, y: 5 }, partner.id, 10), 10),
+      ).toThrow(/already the reserved partner/);
+    });
+
+    it('rebuilds through a snapshot round-trip (fromJSON seats through the chokepoint)', () => {
+      const w = makeWorld();
+      const actor = spawn(w, 5, 5);
+      const partner = spawn(w, 4, 5);
+      seatSwap(w, actor, new SwapAction({ x: 5, y: 5 }, { x: 4, y: 5 }, partner.id, 10), 10);
+
+      const revived = World.fromJSON(
+        JSON.parse(JSON.stringify(w.toJSON())),
+        new EventBus<GameEvents>(),
+      );
+      expect(isReservedSwapPartner(partner.id, revived)).toBe(true);
+      expectIndexConsistent(revived);
+    });
   });
 });

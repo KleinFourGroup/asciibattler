@@ -20,6 +20,7 @@ import {
   type ActionProposal,
   type ActionPhase,
   type ActionPhaseName,
+  type ActiveAction,
 } from './Action';
 import {
   abilityIdsForArchetype,
@@ -567,6 +568,24 @@ export class World {
    * Serialized in the WorldSnapshot (v31).
    */
   readonly claims: Map<string, Claim> = new Map();
+
+  /**
+   * 86c-L2b — the derived reserved-swap-partner index: partnerId → actorId
+   * for every IN-FLIGHT action that names a reserved partner (today:
+   * SwapAction, via `Action.reservedPartnerId?.()`). The O(1) replacement
+   * for the per-call `isReservedSwapPartner` scan (7.1% self time post-L2,
+   * O(units²) per tick), same `unitsById`/`claims` robustness class:
+   * maintained ONLY by the seat/clear chokepoint (`seatActiveAction` /
+   * `clearActiveAction`) + `removeUnit` (an actor leaving `units` ends its
+   * reservation, exactly as the scan stopped seeing it); rebuilt naturally
+   * on `fromJSON` (Phase 2 seats through the chokepoint); NEVER serialized.
+   * A removed PARTNER's entry deliberately stays (the scan kept answering
+   * true for it while the actor's swap was in flight — the flip degrades or
+   * aborts on its own). The old scan survives as the test-side
+   * recompute-and-compare verifier (`scanReservedSwapPartners`, the §79e
+   * principle applied to a cache).
+   */
+  private readonly swapReservedPartners: Map<number, number> = new Map();
 
   /**
    * 47f — the installed battle-domain daemon rules (plain compiled data; see
@@ -1322,7 +1341,7 @@ export class World {
         if (dest !== undefined && claimantOf(this, dest) === unit.id && this.destinationBlocked(unit, dest)) {
           this.releaseClaim(dest);
           unit.actionCooldowns.set(aa.action.id, 0);
-          unit.activeAction = null;
+          this.clearActiveAction(unit);
           this.bus.emit('unit:moveAborted', { unitId: unit.id, from: unit.position, to: dest });
           continue;
         }
@@ -1341,7 +1360,7 @@ export class World {
           const reaimTicks = aa.action.holdCheck?.(phase, unit, this) ?? null;
           if (reaimTicks !== null) {
             unit.actionCooldowns.set(aa.action.id, reaimTicks);
-            unit.activeAction = null;
+            this.clearActiveAction(unit);
             this.bus.emit('unit:actionHeld', {
               unitId: unit.id,
               actionId: aa.action.id,
@@ -1357,7 +1376,7 @@ export class World {
         }
         if (held) continue;
         if (this.tickCount >= aa.finishTick) {
-          unit.activeAction = null;
+          this.clearActiveAction(unit);
         } else {
           continue;
         }
@@ -1441,13 +1460,7 @@ export class World {
       }
 
       unit.actionCooldowns.set(cdKey, best.cooldown);
-      const activeAction = {
-        action: best.action,
-        startTick: this.tickCount,
-        finishTick: this.tickCount + totalTicks(best.phases),
-        phases: best.phases,
-      };
-      unit.activeAction = activeAction;
+      const activeAction = this.seatAction(unit, best.action, best.phases);
       best.action.start(unit, this);
       // F2 — emit the offset-0 phase boundary(ies) on the start tick, AFTER
       // start(), so the renderer hears `windup` (or `impact` for a strike)
@@ -2027,12 +2040,7 @@ export class World {
       unit.abilities.push(createAbility(id));
     }
     if (!instant) {
-      unit.activeAction = {
-        action: new SpawnAction(),
-        startTick: this.tickCount,
-        finishTick: this.tickCount + SPAWN.durationTicks,
-        phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
-      };
+      this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
     }
     return unit;
   }
@@ -2069,15 +2077,10 @@ export class World {
     for (const id of abilityIdsForArchetype(template.archetype)) {
       unit.abilities.push(createAbility(id));
     }
-    unit.activeAction = {
-      action: new SpawnAction(),
-      startTick: this.tickCount,
-      finishTick: this.tickCount + SPAWN.durationTicks,
-      // F2 — a single lockout phase spanning the spawn window; SpawnAction
-      // has no `applyEffect`, so `impact` here only times the busy window
-      // (matches the pre-F2 `effectTicks:[]` + `duration` lockout exactly).
-      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
-    };
+    // F2 — a single lockout phase spanning the spawn window; SpawnAction
+    // has no `applyEffect`, so `impact` here only times the busy window
+    // (matches the pre-F2 `effectTicks:[]` + `duration` lockout exactly).
+    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
     return unit;
   }
 
@@ -2318,6 +2321,93 @@ export class World {
     return { player, enemy };
   }
 
+  /**
+   * 86c-L2b — the activeAction SEAT chokepoint (computed-ticks form): seats
+   * `action` starting NOW (`startTick = tickCount`, `finishTick = startTick
+   * + Σ phases`) — the shape every live seat site (selector, spawn lockouts)
+   * and most test fixtures share. Maintains the reserved-partner index in
+   * the same breath. Returns the seated ActiveAction (the tick loop fires
+   * its offset-0 phases off the return).
+   */
+  seatAction(unit: Unit, action: Action, phases: readonly ActionPhase[]): ActiveAction {
+    const aa: ActiveAction = {
+      action,
+      startTick: this.tickCount,
+      finishTick: this.tickCount + totalTicks(phases),
+      phases,
+    };
+    this.seatActiveAction(unit, aa);
+    return aa;
+  }
+
+  /**
+   * 86c-L2b — the RAW seat chokepoint: seats a fully-built ActiveAction
+   * (explicit start/finish ticks — the `fromJSON` rehydrate and the
+   * backdated test fixtures). Re-seating over an existing action is legal
+   * (a fixture adjusting `startTick` re-seats a spread copy): the old
+   * reservation unindexes first, so the invariant never double-counts.
+   * Throws if the incoming action reserves a partner already reserved by a
+   * DIFFERENT actor — every proposer's `isSwappablePartner` gate makes that
+   * unreachable in live play, so reaching it means a gate was bypassed.
+   */
+  seatActiveAction(unit: Unit, aa: ActiveAction): void {
+    this.unindexReservation(unit);
+    const pid = aa.action.reservedPartnerId?.();
+    if (pid !== undefined) {
+      const holder = this.swapReservedPartners.get(pid);
+      if (holder !== undefined && holder !== unit.id) {
+        throw new Error(
+          `seatActiveAction: unit ${pid} is already the reserved partner of ${holder}; ` +
+            `unit ${unit.id} may not reserve it too (the isSwappablePartner gate was bypassed)`,
+        );
+      }
+      this.swapReservedPartners.set(pid, unit.id);
+    }
+    unit._setActiveAction(aa);
+  }
+
+  /**
+   * 86c-L2b — the activeAction CLEAR chokepoint: releases the unit's
+   * in-flight action (finishTick, the abort branches, test fixtures
+   * shedding a spawn lockout) and drops its partner reservation, if any.
+   * Safe no-op on an idle unit.
+   */
+  clearActiveAction(unit: Unit): void {
+    this.unindexReservation(unit);
+    unit._setActiveAction(null);
+  }
+
+  /** 86c-L2b — drop `unit`'s outgoing partner reservation, if it holds one. */
+  private unindexReservation(unit: Unit): void {
+    const pid = unit.activeAction?.action.reservedPartnerId?.();
+    if (pid === undefined) return;
+    const holder = this.swapReservedPartners.get(pid);
+    if (holder !== unit.id) {
+      throw new Error(
+        `swapReservedPartners desync: clearing unit ${unit.id}'s reservation of ${pid} ` +
+          `but the index holds ${holder === undefined ? 'no entry' : `actor ${holder}`}`,
+      );
+    }
+    this.swapReservedPartners.delete(pid);
+  }
+
+  /**
+   * 86c-L2b — O(1) read of the reserved-partner index. Production consumers
+   * go through `isReservedSwapPartner` (SwapAction.ts), which delegates here.
+   */
+  isSwapReservedPartner(unitId: number): boolean {
+    return this.swapReservedPartners.has(unitId);
+  }
+
+  /**
+   * 86c-L2b — test/verifier read of the whole index, for the
+   * recompute-and-compare invariant against `scanReservedSwapPartners`.
+   * Not for production reads (use `isSwapReservedPartner`).
+   */
+  get swapReservedPartnerIndex(): ReadonlyMap<number, number> {
+    return this.swapReservedPartners;
+  }
+
   removeUnit(id: number): void {
     const i = this.units.findIndex((u) => u.id === id);
     // 56e-pre2 — a removed unit can't carry an in-flight PRE-FLIP swap: the
@@ -2341,6 +2431,11 @@ export class World {
           cellB: d.to,
         });
       }
+      // 86c-L2b — an actor leaving `units` takes its in-flight reservation
+      // with it (the derived scan stopped seeing it the moment it left; the
+      // index must mirror that). A removed PARTNER's entry stays — the
+      // actor's swap is still seated and its flip degrades/aborts on its own.
+      this.unindexReservation(this.units[i]!);
       this.units.splice(i, 1);
     }
     this.unitsById.delete(id);
@@ -2428,12 +2523,7 @@ export class World {
     for (const id of abilityIdsForArchetype(archetype)) {
       unit.abilities.push(createAbility(id));
     }
-    unit.activeAction = {
-      action: new SpawnAction(),
-      startTick: this.tickCount,
-      finishTick: this.tickCount + SPAWN.durationTicks,
-      phases: [{ phase: 'impact', ticks: SPAWN.durationTicks }],
-    };
+    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
     return unit;
   }
 
@@ -2737,12 +2827,15 @@ export class World {
       const us = snap.units[i]!;
       const unit = world.units[i]!;
       if (us.activeAction) {
-        unit.activeAction = {
+        // 86c-L2b — seat through the chokepoint so the reserved-partner
+        // index rebuilds here for free (the rebuilt-on-fromJSON half of the
+        // `unitsById`/`claims` robustness class).
+        world.seatActiveAction(unit, {
           action: createAction(us.activeAction.actionId, us.activeAction.actionData, world),
           startTick: us.activeAction.startTick,
           finishTick: us.activeAction.finishTick,
           phases: us.activeAction.phases.map((p) => ({ ...p })),
-        };
+        });
       }
     }
 

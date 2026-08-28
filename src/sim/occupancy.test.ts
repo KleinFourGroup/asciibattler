@@ -509,7 +509,7 @@ describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
   function seatMove(world: World, unit: Unit, to: GridCoord, travel: number, ticksAgo = 0) {
     const durationTicks = travel * 2; // moveFlipFraction 0.5 shape: travel == recovery
     const action = new MoveAction(unit.position, to, durationTicks);
-    unit.activeAction = {
+    world.seatActiveAction(unit, {
       action,
       startTick: world.currentTick - ticksAgo,
       finishTick: world.currentTick - ticksAgo + durationTicks,
@@ -518,14 +518,14 @@ describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
         { phase: 'impact', ticks: 0 },
         { phase: 'recovery', ticks: durationTicks - travel },
       ],
-    };
+    });
     world.claimCell(to, unit.id);
   }
 
   it('is undefined for an idle unit (no active action)', () => {
     const world = setup();
     const u = spawnAt(world, 'player', { x: 2, y: 2 });
-    u.activeAction = null;
+    world.clearActiveAction(u);
     expect(vacancyEtaOf(u, world)).toBeUndefined();
   });
 
@@ -573,12 +573,7 @@ describe('vacancyEtaOf — the §45a derived vacancy ETA', () => {
     const u = spawnAt(world, 'player', { x: 2, y: 2 });
     const durationTicks = 8;
     const proposal = moveProposal(u.position, { x: 3, y: 2 }, durationTicks);
-    u.activeAction = {
-      action: proposal.action,
-      startTick: world.currentTick,
-      finishTick: world.currentTick + durationTicks,
-      phases: proposal.phases,
-    };
+    world.seatAction(u, proposal.action, proposal.phases);
     world.claimCell({ x: 3, y: 2 }, u.id);
     // Balance-proof: the flip offset derives from config, never hardcoded.
     expect(vacancyEtaOf(u, world)).toBe(Math.floor(durationTicks * SIM.moveFlipFraction));

@@ -24,6 +24,7 @@ import { EventBus } from '../../src/core/EventBus';
 import { RNG } from '../../src/core/RNG';
 import type { GameEvents } from '../../src/core/events';
 import { Run, type BattleEncounter, type RunPhase } from '../../src/run/Run';
+import { scanReservedSwapPartners } from '../../src/sim/actions/SwapAction';
 import type { RunConfig } from '../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
@@ -252,7 +253,12 @@ function runBattle(
     u.abilities.push(createAbility('sword'));
   }
 
-  for (let i = 0; i < maxTicks && !world.ended; i++) world.tick();
+  for (let i = 0; i < maxTicks && !world.ended; i++) {
+    world.tick();
+    // 86c-L2b — the reserved-swap-partner index vs the derived scan, every
+    // tick (the recompute-and-compare verifier riding the replay harness).
+    expect(world.swapReservedPartnerIndex).toEqual(scanReservedSwapPartners(world));
+  }
 
   return { world, events };
 }

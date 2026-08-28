@@ -32,6 +32,7 @@ import { spawnEncounter } from '../../src/sim/battleSetup';
 import { rollUnit } from '../../src/sim/archetypes';
 import { GRID_SIZE } from '../../src/config';
 import { LAYOUT_IDS, getLayout } from '../../src/sim/layouts';
+import { scanReservedSwapPartners } from '../../src/sim/actions/SwapAction';
 import type { GameEvents } from '../../src/core/events';
 import type { BattleEncounter } from '../../src/run/Run';
 
@@ -111,6 +112,11 @@ function runHeadlessBattle(seed: number, scenario: Scenario): { world: World; ti
   while (!world.ended && ticks < MAX_TICKS) {
     world.tick();
     ticks++;
+    // 86c-L2b — recompute-and-compare: the reserved-swap-partner index must
+    // match the derived scan after every real tick (corridor layouts seat
+    // genuine swaps through the production seat/clear chokepoint here, so
+    // this exercises the invariant where it actually lives).
+    expect(world.swapReservedPartnerIndex).toEqual(scanReservedSwapPartners(world));
   }
   return { world, ticks };
 }

@@ -370,8 +370,26 @@ export class Unit {
    * Set while an action is in flight. Locks out the selector — no new
    * proposal can fire until `currentTick >= activeAction.finishTick`. Null
    * means the unit is free to choose its next action.
+   *
+   * 86c-L2b — read-only from the outside: every mutation routes through
+   * World's seat/clear chokepoint (`seatAction`/`seatActiveAction`/
+   * `clearActiveAction`), which maintains the derived reserved-swap-partner
+   * index in lockstep. Direct assignment is a compile error by design.
    */
-  activeAction: ActiveAction | null = null;
+  private _activeAction: ActiveAction | null = null;
+  get activeAction(): ActiveAction | null {
+    return this._activeAction;
+  }
+  /**
+   * @internal 86c-L2b — the raw write under the chokepoint. ONLY World's
+   * seat/clear helpers may call this (they keep the reserved-partner index
+   * consistent); calling it anywhere else desyncs the index — the
+   * recompute-and-compare verifier (`scanReservedSwapPartners`) will catch
+   * it in tests, but don't make it.
+   */
+  _setActiveAction(aa: ActiveAction | null): void {
+    this._activeAction = aa;
+  }
   /**
    * E5 — target stickiness. The id of the enemy this unit is currently
    * committed to. `updateTarget` (Targeting.ts, run once per free unit in

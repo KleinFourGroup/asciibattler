@@ -225,7 +225,12 @@ summary.csv (oracle safety).
       numeric keys + the `(x,y)` CostFn — **compound 3.14× /
       3.09× / 2.61×** vs pre-phase; post-L2 profile:
       `isReservedSwapPartner` 7.1% = **L2b** (user-named, inserted
-      2026-08-28) — WORKLOG §86c-L2. L2b + L3 NEXT.
+      2026-08-28) — WORKLOG §86c-L2.
+      **L2b ✅ 2026-08-28** (oracle PASS, pins held): the type-enforced
+      `activeAction` chokepoint + the O(1) reserved-partner index, the
+      derived scan kept as the test-side verifier — **~1.2× scored /
+      ~1.0× searcher / ~1.01–1.03× ARM** — WORKLOG §86c-L2b-landed.
+      L3 NEXT.
 - [ ] 86d — the batch riders (⛔ decision point: dispositions
       re-signed): build transient-only retry + staged-n merge;
       measure-then-decide the dynamic queue; defer quotas +

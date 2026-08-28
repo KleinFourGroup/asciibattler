@@ -1722,3 +1722,22 @@ baseline board (fired this afternoon, the 83a shape); the formal
 0.438-wall re-read lands there (CHOOSE previewed deploy 0.318
 IN-BAND at λ=0.5). 85g6b/c close with this entry; 85g6d closes at
 the evening re-pin signing.
+
+**85g6d cont. — the new-ARM baseline board (2026-08-28 overnight,
+autonomous; numbers BALANCE 2026-08-28):** 25/25 verified, filed
+per-ID with the λ-identity check added (arb rows must carry
+--prior-lambda=0.5, doctrine rows must not — all 25 conform). The
+three findings: (1) ⭐⭐ both walk walls land IN the signed band
+(0.304/0.324) — the 0.438 re-read closes as the fold thesis
+predicted, and the floor-hugging watch clears with it; (2) ⭐ the
+fold re-activates the port economy (tx ≈0 → 0.25/0.775) — the 72f
+posture-dissolution doctrine notes retire with the amendment, and
+the sheet needs a `firerTransactionRate` field (the hardcoded-0
+check re-pins); (3) the gambler parity breach RETURNS shape-flipped
+at the fold arm (deploy −10.0 / regen +5.8) — the named next-round
+item; priest clears. The deploy walk reach 0.567 above band = the
+new overperformance watch (a design-target question, deliberately
+NOT a re-introduced per-twin ref — that pattern died with
+pre55ReachRef). Cost note for §86: fold arms ran the board ~1.5h
+long (deeper runs + port traffic). PENDING the morning: the re-pin
+amendment signature → 85g6d closes → the §85 phase close.

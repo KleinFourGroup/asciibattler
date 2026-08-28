@@ -3814,3 +3814,31 @@ deltas. The pre-X H7c→O log lives at
   (all 4 arms shared the subset, paired). NEXT: the one-use SIGN
   pass (deploy λ{0, 0.5} on 3001+), criterion PRE-SPECIFIED before
   the read.
+- **2026-08-28 — §85g6d THE NEW-ARM BASELINE BOARD (the λ-signed
+  doctrine's first board: 25 batches at `6d8b771`, the 83a shape,
+  box-drive 25/25 verified, ~9h — fold arms run LONGER, a §86 cost
+  note): 0 FAIL / 9 WARN.** ⭐⭐ **THE WALL STORY CLOSES: both walk
+  walls INSIDE the signed 30–35** — regen 0.438→**0.304**, deploy
+  0.471→**0.324** — the §85h disposition (don't sign the wall at
+  λ=0; the fold moves it) exactly vindicated; the floor-hugging
+  watch also clears (mid-band, not floor). Walk twins: regen seam
+  17.9 / reach 0.467 / win 0.325 — ALL PASS; deploy seam 15.9 /
+  wall in-band / **reach 0.567 ABOVE the signed 40–50** (the new
+  named overperformance watch — fresh-anchor edition: the deploy
+  vector under the fold reaches past the design target; a design
+  question, not instrument drift). ⭐ **THE FOLD RE-ACTIVATES THE
+  PORT ECONOMY**: the arb arm's transactionRate goes ≈0 → **0.250
+  (regen) / 0.775 (deploy)** — the 72f "posture dissolution / shops
+  ≈never" era ends; banks drop accordingly (firer 102.1 · shopper
+  69.7 — the fold SPENDS); fires 1.48/1.77 in-band. Act-1 n=120:
+  regen 0.667/0.658/0.725 (soldier/priest/gambler) · deploy
+  0.758/0.725/0.658 — the fold lift ≈ +8..13 everywhere. **Parity
+  at the fold arm**: priest INSIDE ±5 both shapes (the −5.0 watch
+  clears); ⚠ the GAMBLER flips shapes again — deploy −10.0 BREACH /
+  regen +5.8 hair-over (the 77f shape-flip pattern at the new arm;
+  the named §86+ parity item). Ceilings mixed (deploy +0.008 ·
+  walk-regen +0.025 · regen −0.083 hair-over · walk-deploy −0.167 —
+  the bare deploy vector's 0.55 walk control remains the standing
+  strong-vector question). Forced bosses EXACTLY at pins
+  (0.775/0.675) · fire channel +0.075 in-band. Re-pin amendment
+  DRAFTED, pending the user's morning signature.

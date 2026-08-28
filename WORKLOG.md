@@ -1846,3 +1846,88 @@ measure-then-decide the dynamic queue; defer shadow quotas +
 warm-start/successive-halving. Predictions: World v35 / Run v44 hold
 (harness/bot/sim-internal only); no new RNG streams; signed-sheet
 NUMBERS untouched (86e changes verdict plumbing, not bands).
+
+### 86a — the first-ever CPU profiles + the timings sidecar
+### (2026-08-28)
+
+**The sidecar** (`521d606`): per-seed wall ms captured around `runOne`
+only, written to `timings.csv` (seed,strategy,ms — summary.csv's keys
+and ordering); `--jobs` adopts shard timings via the summary regroup.
+Wall clock is nondeterministic by nature, so the file is a SIDECAR
+and never a summary column — keys/order pinned in
+parallelRun.test.ts, values deliberately outside the byte contract.
+
+**The profiles** (`node --cpu-prof` through the fuzz CLI; seed 1,
+soldier, the 59-regen vector; artifacts + analyzer in the session
+scratchpad `prof86/`). Three shapes chosen so the deltas decompose
+the stack — the cut's "walk row" refined to the doctrine CONTROL_ARM
+so each shape adds exactly one layer:
+
+| shape | flags beyond the vector | per-seed wall |
+|---|---|---|
+| C — pure sim + scored bot (the search-eval mass shape) | `--hops=4`, n=16 | 0.2–2.6 s (mean ~1.3 s; 12.6× seed spread) |
+| B — + battle searcher (CONTROL_ARM, act-1) | `--hops=11`, n=1 | 28.5 s |
+| A — the full ARM (+ arbitration walker + fold) | `--hops=11`, n=1 | 204.8 s |
+
+**THE HEADLINE: the balancer is a pathfinding benchmark.** The
+subsystem self-time rollup is near-identical across all three shapes
+— the searcher and the walker just multiply how many sim ticks run,
+and the sim ticks are A*:
+
+| subsystem (self time) | C | B | A |
+|---|---|---|---|
+| pathfinding (A* core, Pathfinding.ts) | 51.1% | 52.8% | 49.6% |
+| movement ctx/route (movement.ts) | 26.2% | 29.5% | 25.9% |
+| occupancy helpers | 4.3% | 4.4% | 5.4% |
+| traffic-script sensors (armyMinCut/chokeRead/…) | ~0% | 0.2% | ~7.9% |
+| GC | 1.5% | 1.5% | 1.5% |
+| clone + JSON + run layer + evaluator | ~0% | 0.4% | ~0.2% |
+
+Top self-time functions on the ARM shape: `findPath` 21.0% ·
+`blockFits` (the anon closure: string build + `Set.has` + a fresh
+`{x,y}` per neighbour candidate per expansion) 14.8% · movement
+`costAt` (the per-expansion cost callback: string key + up to 3
+string-keyed Map/Set probes) 14.3% · `popLowestF` (the O(open)
+linear-scan pop, re-parsing every open key via `fromKey`) 7.4% ·
+`fromKey` 5.1%. **The string-keyed A* design IS the cost** — the
+`"x,y"` key architecture accounts for roughly a third of the entire
+balancer by itself once the parses, builds, and string-hashing are
+summed.
+
+**Findings against the audit's candidate pool** (the profile
+adjudicates, per the charter):
+
+1. **CONFIRMED, dominant:** the A* core + the movement/occupancy
+   string-key layer ≈ **81% of the ARM run** (and ~82% of the
+   searcher tier, ~86% of pure sim). This is the phase.
+2. **NEW at ARM grade:** the walker's rollouts run the traffic
+   scripts, so the script sensors surface only on shape A —
+   `TrafficScriptDriver.decide` 9.4% inclusive, chokeHold 6.3%,
+   `armyMinCut` 4.3% inclusive / ~6.1% self with its closures. A
+   bot-layer per-tick memo caps at ~5–7%.
+3. **DEAD, profile-backed:** pooling (GC is 1.5% flat across shapes
+   — the TODO.md skepticism was right); clone sharing (0.1%);
+   `livingUnits` memos (0.2% inclusive); the `units.slice()` copies
+   + EventBus emit spread (World.ts self is 1.2% TOTAL); the
+   evaluator + **the fold** (`scoreTerminal` = 3.5 ms in a 205 s run
+   — the λ fold is FREE; the fold arms' ~20% board-cost increase is
+   run SHAPE — deeper runs, port traffic — not per-tick compute,
+   the 85g6d cost note now measured).
+4. The rollout-vs-outer split, now measured rather than inferred:
+   88.4% of the ARM run is inside `World.tick`, 78.7% under the
+   run-layer walker, 17.5% under the battle searcher — the
+   benchRunRollout "battle sim ≈100% of rollout cost" conclusion
+   holds at profile grade.
+
+**The proposed 86c lever list** (⛔ awaiting the user's signature):
+L1 the A* numeric core (per-call typed-array scratch, packed
+`y*W+x` indices, `blockFits` inlined numeric, the pop's 5-way total
+order preserved verbatim — no shared mutable scratch, per the
+robustness rider); L2 numeric keys through `PathCostContext` /
+`costAt` / the movement-context builders (the string tax outside
+Pathfinding.ts); L3 (optional) the per-tick traffic-sensor memo.
+L1+L2 cover ~75% of self time → a plausible **2–3× per-seed**
+compound; every box cohort, board batch, and the 40 h full-arb
+search estimate scale with it. popLowestF stays a linear scan in L1
+(numeric compares, no parse) — a heap is L1b only if the post-L1
+profile still shows pop dominance.

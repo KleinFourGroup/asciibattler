@@ -202,9 +202,10 @@ charter's outer-vs-rollout split is already answered on record
 Run v44 predicted to hold; timing rides a SIDECAR, never
 summary.csv (oracle safety).
 
-- [ ] 86a — the first-ever CPU profiles (3 shapes: ARM run-mode ·
-      walk row · search eval) + the per-seed `timings.csv` sidecar →
-      the ranked cost table in WORKLOG (the phase's steering doc).
+- [x] 86a ✅ 2026-08-28 — sidecar `521d606` + the three-shape
+      profiles: **the balancer is a pathfinding benchmark** (A* core
+      ~50% self / string-key layer ≈ a third of the run; GC 1.5%,
+      clone+fold ≈0 — pooling DEAD, profile-backed) — WORKLOG §86a.
 - [ ] 86b — mechanize the 47e oracle (`scripts/perf-oracle`:
       worktree-pin + sha-compare summary+decisions; HEAD-vs-HEAD
       self-test). Gates every 86c lever.

@@ -194,7 +194,37 @@ spawn retry · dynamic per-seed queue · staged n40→80→120 with
 pre-registered extension rules · stratified shadow site quotas ·
 warm-start + successive-halving for `--search`.
 
-_(Sub-steps cut at phase kickoff.)_
+Cut at the 2026-08-28 kickoff (audit + shape-lock: WORKLOG §86;
+user riders: robustness over cleverness · in-depth reads). The
+charter's outer-vs-rollout split is already answered on record
+(battle sim ≈100% of rollout cost) — the profile goes straight at
+`World.tick` + the per-tick bot `decide()` layer. World v35 /
+Run v44 predicted to hold; timing rides a SIDECAR, never
+summary.csv (oracle safety).
+
+- [ ] 86a — the first-ever CPU profiles (3 shapes: ARM run-mode ·
+      walk row · search eval) + the per-seed `timings.csv` sidecar →
+      the ranked cost table in WORKLOG (the phase's steering doc).
+- [ ] 86b — mechanize the 47e oracle (`scripts/perf-oracle`:
+      worktree-pin + sha-compare summary+decisions; HEAD-vs-HEAD
+      self-test). Gates every 86c lever.
+- [ ] 86c — the levers, one commit each; list cut AFTER 86a
+      (⛔ decision point: user signs the lever list against the
+      profile). Candidate pool: pathfinding scratch · bot-layer
+      memos · armyMinCut cadence · `units.slice()` · emit spread.
+      Rider: fix/re-annotate the stale pathing-perf A* bound.
+- [ ] 86d — the batch riders (⛔ decision point: dispositions
+      re-signed): build transient-only retry + staged-n merge;
+      measure-then-decide the dynamic queue; defer quotas +
+      warm-start/halving (blocked at the shard boundary;
+      hybrid-light removed the customer).
+- [ ] 86e — the board split (§86-adjacent, independent): machine
+      manifest → fail-closed verdict board (missing / runs=0 /
+      under-n / dup-seed / provenance FAIL) vs drift dashboard vs
+      instrument health · + skill-gradient anchor rows
+      (⛔ decision point: FAIL vs WARN semantics · anchor cadence).
+- [ ] 86f — the close: re-run the 86a shapes, record the measured
+      speedup or the documented no-op; WORKLOG + Cursor.
 
 ## Phase 87 — Roster realism for isolation reads
 

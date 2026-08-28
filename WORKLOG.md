@@ -1759,3 +1759,90 @@ economy alive for the first time since 72f. Ops legacy: box-drive
 promoted and 8 cohorts driven with zero manual stand-downs and zero
 orphaned billing. NEXT: the §86 kickoff (perf, profile-first) — the
 fold arms' ~20% batch-cost increase is the charter's newest exhibit.
+
+## Phase 86 — kickoff (2026-08-28, shape-lock USER-SIGNED)
+
+### The code-reality audit (two parallel read-only sweeps: sim hot
+### loop · harness/batch/board)
+
+The charter's opening question — split per-seed cost between outer
+battles and rollouts — is **already answered on record**:
+`benchRunRollout.ts` concludes the battle sim is ~100% of rollout
+cost and the clone negligible (<0.1 ms vs 15–1700 ms). The profile
+therefore goes straight at `World.tick` + the per-tick bot `decide()`
+layer. The audit then moved three of the charter's four expected
+levers:
+
+1. **Pathfinding scratch — confirmed, larger than charted.**
+   `findPath` (Pathfinding.ts) has zero scratch reuse: string-keyed
+   Maps/Sets fresh per call, a template-literal string per cell per
+   expansion, an O(open²) linear-scan pop allocating an object per
+   open-set member per pop. Amplified upstream: `buildMovementContext`
+   (3 Sets + 2 Maps) rebuilt 2–4× per unit per tick; §45c's stable
+   route can double the A* count per goal. `routeToward` is already
+   annotated "the cache boundary" (movement.ts:161).
+2. **`livingUnits` is NOT in the sim** — it's a bot-layer sensor
+   (`src/bot/sensors.ts:55`, 23 call sites) hit every tick via
+   `decide()`; on-target for a *balancer* pass but the fix is a
+   bot-layer memo, outside `World.tick`. The unlisted heavy hitter
+   behind the same gate: **`armyMinCut`** — a full Edmonds–Karp
+   rebuilt per traffic-script evaluate, per tick, uncadenced; its
+   "fine per tick" docstring has never been tested.
+3. **Map churn isn't in `World.tick`** — it lives in pathfinding /
+   movement / occupancy / sensors. What `World.tick` does churn: two
+   unconditional `units.slice()` copies per tick (lines 1263, 1802)
+   and an array spread per `EventBus.emit` with subscribers
+   (EventBus.ts:42; empty-set early-return means fresh-bus rollout
+   clones pay nothing).
+4. **The pooling TODO argues against itself for this phase**
+   (TODO.md:176): heapUsed flat across 600 fuzz runs; the payoff it
+   predicts is frame-time smoothness, not balancer throughput.
+   DEPRIORITIZED unless the profile shows real GC share.
+
+Cross-cutting: **no timing instrumentation exists on the batch path**
+(no per-seed ms anywhere; "no profile ever taken" is literally true —
+the only tick-level number on record is I3's ≤0.236 ms/tick in a test
+comment). Any timing capture must ride a **separate sidecar**, never
+summary.csv — wall clock breaks the byte-identity oracle by
+construction (the decisions.csv precedent). The 47e oracle itself is
+a **manual procedure, no script**.
+
+The 85h-rider surfaces: `retryAsync` retries ANY error — deterministic
+CLI crashes re-run 3×; the transient/deterministic cut line is exactly
+the three reject sites (spawn `error` + 0xC0000142 = transient;
+non-zero exit / missing artifact / unparseable out = deterministic).
+The parallel driver is static contiguous chunks whose merge RELIES on
+contiguity (parallel.ts:218–269) — a dynamic queue must keep
+contiguous per-shard seed sets or re-author the merge. Staged-n has no
+cross-dir merge (board reads exactly one summary.csv per instrument).
+**Successive-halving is structurally blocked** — the eval-shard
+boundary returns scalar winRates only, no per-seed data crosses it —
+and hybrid-light's 85g4 signing removed its customer. Shadow sampling
+is uniform 1-in-m keyed off the first CRN pair's cloneSeed, with a
+site allowlist but no quotas. **The board structurally cannot fail**:
+every check is `reference`-grade via `ref()` (board.ts:166 hardwires
+it), so `fails` is always 0; missing artifacts silently drop
+(cli.ts:106 `continue`); `runs` is computed and never read; seeds
+aren't parsed at all (duplicates inflate silently); no provenance
+concept exists — the box batch-dir name is the only HEAD carrier and
+local batches carry nothing.
+
+Stale guards caught in passing: `pathing-perf.test.ts`'s "≤2 A* per
+unit per tick" bound predates §45c and holds only because its fixture
+(moveCooldownTicks:1) produces no transients — scenario-dependent,
+not structural. Neither bench is in package.json scripts.
+
+### Shape-lock (2026-08-28, USER-SIGNED)
+
+The 86a–86f cut signed as proposed, with two user riders: (1)
+**robustness over cleverness** — features are still landing; no
+fragile-but-fast optimization (e.g. shared mutable scratch a future
+feature trips over) ships for a marginal win; (2) the user's formal
+background is performance engineering — this phase's reads go
+IN-DEPTH (numbers and mechanisms surfaced, not summarized away).
+Proposed 86d dispositions accepted at charter level (re-signed at the
+86d step): build transient-only retry + the staged-n merge helper;
+measure-then-decide the dynamic queue; defer shadow quotas +
+warm-start/successive-halving. Predictions: World v35 / Run v44 hold
+(harness/bot/sim-internal only); no new RNG streams; signed-sheet
+NUMBERS untouched (86e changes verdict plumbing, not bands).

@@ -1998,3 +1998,43 @@ deferred). Newly visible tail: `isReservedSwapPartner` 5.3%,
 `nearestActingCell` 2.9%, `hasLineOfSight` 2.5%. L2 exactly as
 signed: numeric keys through `PathCostContext`/`costAt`/the context
 builders + the packed-index CostFn boundary.
+
+### 86c-L2 landed (2026-08-28, `21b24e6`)
+
+`cellIndex` (packed `y*W+x`) joins `cellKey` in occupancy —
+per-grid, in-bounds-only (the aliasing caveat documented at the
+definition); `PathCostContext`/`MovementContext` collections,
+`claimEtas`, sidestep's occupied set, and Targeting's rubble map
+all re-keyed numeric; **`CostFn` becomes `(x, y) => number`** (no
+coord object per candidate — the fitCost 12.8% finding) with
+`TileGrid.costAtXY` as the allocation-free twin. The type flip
+enumerated the whole blast radius via strict tsc (the 82c
+sweep-by-key discipline); out-of-scope string-key users (wander's
+`occupiedCells`, `passable`, BFS visited sets, the serialized
+`World.claims` registry) deliberately untouched. Test churn: the
+movement/camps assertions re-derive expected keys from
+`world.gridW` (grid-size-proof), Pathfinding.test.ts closures to
+`(x, y)`.
+
+**Gates:** oracle PASS both shapes vs `6480e31` (same shas as
+every run this phase); 2693 + 491 green; zero pathing pins moved.
+
+**Paired bench vs the L1 baseline:** scored 9.82→6.96 s =
+**1.41×** · searcher 14.06→9.70 s = **1.45×** · full ARM
+105.7→81.4 s = **1.30×**. **Compound vs pre-phase: 3.14× / 3.09×
+/ 2.61×** — the signed 2–3× estimate hit inside two levers.
+fuzz:smoke: 314 s (pre-phase) → 189 s.
+
+**Post-L2 re-profile (shape C):** A*+movement absolute self
+5426→3750 ms; the new top: `fitCost` 15.1% + `findPath` 13.3% +
+`popLowestFIdx` 6.6% (real work now, not key traffic) ·
+⭐ **`isReservedSwapPartner` 7.1% — #3** (the user's named
+follow-up = L2b) · `nearestActingCell` 3.4% · `hasLineOfSight`
+2.8% · GC 1.4%. Note for L2b: the reservation set can change
+MID-tick-loop (a swap seated by an earlier unit must reserve its
+partner before the partner's own iteration the same tick), so a
+loop-start hoist is a behavior change — the honest shapes are a
+call-count probe first, then either a scan-constant shrink or a
+type-enforced `activeAction` mutation chokepoint + an
+incrementally-maintained derived index (the `unitsById`/`claims`
+robustness class, rebuilt on fromJSON, never serialized).

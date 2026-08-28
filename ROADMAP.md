@@ -220,7 +220,12 @@ summary.csv (oracle safety).
       **L1 ✅ 2026-08-28** (`9f01ce5`, oracle PASS, pins held,
       rider landed): **2.44× / 2.29× / 2.09×** across the shapes —
       the escalation floor cleared by L1 alone; post-L1 profile →
-      L2's targets confirmed — WORKLOG §86b+86c-L1. L2 NEXT.
+      L2's targets confirmed — WORKLOG §86b+86c-L1.
+      **L2 ✅ 2026-08-28** (`21b24e6`, oracle PASS, pins held):
+      numeric keys + the `(x,y)` CostFn — **compound 3.14× /
+      3.09× / 2.61×** vs pre-phase; post-L2 profile:
+      `isReservedSwapPartner` 7.1% = **L2b** (user-named, inserted
+      2026-08-28) — WORKLOG §86c-L2. L2b + L3 NEXT.
 - [ ] 86d — the batch riders (⛔ decision point: dispositions
       re-signed): build transient-only retry + staged-n merge;
       measure-then-decide the dynamic queue; defer quotas +

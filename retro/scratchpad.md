@@ -121,3 +121,25 @@ _(The post-C5 rounds start here.)_
   repro named the true mechanism** (repeatable-event + pin, not the
   hypothesized page-cycle). Repro-first remains cheaper than
   mechanism-story-first even when the story sounds airtight.
+
+## §86c (2026-08-28) — perf-lever lessons
+
+- **The paired bench's first fresh-worktree leg eats a ~10–15% cold
+  tax (file cache + AV scan), and it always landed on the BASELINE
+  side of the first shape.** It inflated L2b's scored read to ~1.2×
+  and minted a wrong mechanism story ("inclusive tax 3× the self
+  line") before L3's null shape (a lever that provably can't touch
+  scored still "read" 1.10×) exposed it; a discarded warmup leg
+  collapsed the ratio to 1.00, and the warmed re-measure put L2b's
+  true scored effect at ~1.09× — ON its pre-registered ~7%
+  expectation. Rule: warm a fresh worktree with one discarded leg
+  before the first measured one, and treat a speedup on a shape the
+  lever can't mechanically touch as an instrument alarm, never a
+  bonus. (86c-L3; the WORKLOG L2b correction note)
+- **Post-lever re-profiles keep re-ranking the levers: a fixed share
+  estimate goes stale the moment a bigger lever lands.** The 86a
+  memo estimate ("caps at ~5–7%") was written when sensors were 7.9%
+  of the ARM; by L3's build they were 16.1% (A* shrank around them),
+  and the landed memo took ~10%. The signed profile-between-levers
+  ordering is what caught it — keep it for any future perf phase.
+  (86c-L3)

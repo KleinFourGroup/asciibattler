@@ -214,11 +214,24 @@ export class TileGrid {
     return TILE_DEFS[this.kindAt(c)];
   }
 
+  /**
+   * 86c-L3 — monotonic tile-mutation epoch: bumped on every `setKind`, never
+   * serialized (a rehydrated grid restarts at 0 — consumers key it per grid
+   * INSTANCE, so cross-instance comparison never happens). Lets an
+   * exact-input memo (the chokeHold sensor memo) detect "tiles unchanged"
+   * in O(1) instead of re-reading every cell. Not part of sim behavior.
+   */
+  private _mutations = 0;
+  get mutations(): number {
+    return this._mutations;
+  }
+
   setKind(c: GridCoord, kind: TileKind): void {
     if (!this.inBounds(c)) {
       throw new Error(`TileGrid.setKind: out of bounds (${c.x}, ${c.y})`);
     }
     this.kinds[this.index(c.x, c.y)] = kind;
+    this._mutations++;
   }
 
   inBounds(c: GridCoord): boolean {

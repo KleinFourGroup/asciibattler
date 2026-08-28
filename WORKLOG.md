@@ -2130,3 +2130,86 @@ datum: pre-commit fuzz:smoke 189 → 172 s. Compound vs pre-phase
 (from the L2 close, scored ≈ 3.14 × 1.2): **~3.8× scored / ~3.1×
 searcher / ~2.7× ARM**. NEXT: L3 (the ARM-only traffic-sensor
 hoist) → 86d.
+
+**⚠ CORRECTION (2026-08-28, caught during L3):** the scored 1.2×
+reading above was INSTRUMENT BIAS, and the "inclusive tax ≈3× the
+self line" mechanism story authored to explain it is retracted.
+The bench's first measured leg ran on a FRESHLY CREATED worktree —
+cold file reads + AV scanning inflate a ~7 s leg by ~10–15%, and
+the scored shape always ran first, always on the baseline side.
+Proof (the L3 bias probe): with one warmup leg on the worktree
+first, scored reads 1.022/0.985/0.982 vs a baseline (L2b+L3 vs
+L2b) where the true ratio is exactly 1.00 by mechanism; and the
+warmed re-measure of the REAL L2b question (08a002e vs the
+L2b-carrying tree) reads **1.086/1.093/1.105 ≈ 1.09×** — right on
+the pre-registered ~7% expectation. The searcher/ARM legs ran
+second/third on the already-warmed worktree, so **the L2b searcher
+and ARM numbers stand as reported**. Corrected L2b line: **~1.09×
+scored / ~1.0× searcher / ~1.01–1.03× ARM** — the expectation was
+right; the instrument was biased. Lesson filed (retro/scratchpad):
+warm a fresh worktree with a discarded leg before the first
+measured one.
+
+### 86c-L3 landed (2026-08-28)
+
+**Profile-first re-read (the signed doctrine):** a fresh ARM-shape
+CPU profile at the L2b HEAD showed the traffic-sensor share had
+GROWN as A* shrank around it — `chokeRead`'s subtree (armyMinCut
+5.2% self + its closures 5.5% + chokeRead's own reduces 4.8%) =
+**16.1% of the whole ARM run**, up from ~7.9% at 86a. Every other
+sensor is noise (jamRead 0.7% incl; regroupCell 2.9% self — noted,
+out of scope). The cost is pure call volume: the walker's rollout
+battles run `TrafficScriptDriver.decide` every tick, and every
+tick that reaches script #3 recomputes the max-flow from scratch
+at ~6 µs × millions of rollout ticks.
+
+**The call-count probe first (per the L2 close's prescription):**
+the memo's decisive number is the exact-input repeat rate across
+consecutive ticks — measured 76.5% overall across all 12 layouts ×
+3 seeds of real trigger-driven battles (88.8% on isthmus, where
+choke actually fires; worst 58.7% labyrinth). Positions only flip
+at move-impact boundaries and walls never move, so most ticks the
+choke read's entire input vector is byte-identical to the last.
+
+**The build:** an EXACT-INPUT memo at chokeHold.ts' consumer seam
+(`chokeRead`), NOT a hash and NOT a same-tick memo: the key is an
+element-wise-compared Int32Array of every input the compute reads
+— `TileGrid.mutations` (a new monotonic, never-serialized epoch
+bumped in `setKind`; production only mutates tiles at setup, tests
+mutate freely) + per unit in `world.units` order (order IS an
+input — it fixes edge insertion order, which fixes the augmenting-
+path order the cut extraction depends on): id, team, position,
+alive flag, footprint, inert flag. A hit means the pure function
+would return the identical value — no staleness class exists. The
+proposal is re-cloned per call (callers historically got fresh
+objects; proposals flow into `world.objectives`). Memo keyed
+per-World-INSTANCE (WeakMap — rollout clones never share) and per
+team. `armyMinCut` and all of sensors.ts stay CACHE-FREE — the
+54b doctrine header now points at this one sanctioned exception.
+The pure compute survives exported as `computeChokeRead`, the §79e
+verifier surface.
+
+**Verifier + pins (chokeHold.test.ts):** recompute-and-compare
+across a real driven isthmus battle (memoized === fresh every
+tick, hits > 0) · DECISIVE invalidation pins for position, death,
+and tile mutation (each mutation chosen so stale ≠ fresh — a
+broken key fails loudly, never vacuously) · fromJSON clones never
+share entries.
+
+**Gates:** typecheck clean · 2703 main (2698 + the 5 memo pins) ·
+491 fuzz:smoke · oracle PASS both shapes vs `864f7b2` (same shas
+as every run this phase) · zero pathing pins moved.
+
+**The bench — and the instrument catch:** the ARM, 4 alternating
+warmed pairs: **1.100 / 1.089 / 1.115 / 1.104 → median 1.10×**
+(83.0 s → 75.5 s), matching the 16.1% × 76.5% ≈ 11–12% prediction
+(net of key-build overhead) — double the 86a memo estimate because
+the sensor share had doubled since. Searcher ~1.00 (nominations
+are rare — expected). Scored 1.00 EXACTLY (bias-corrected — the
+shape runs no driver at all, which is what exposed the cold-
+worktree first-leg bias and forced the L2b correction above).
+fuzz:smoke 172 → 140 s (the fuzz suites run walker rollouts —
+real, ~19%). Compound ARM vs pre-phase: **~2.9×** (2.61 × ~1.02 ×
+1.10); scored ~3.4× · searcher ~3.1× (bias-corrected compounds).
+NEXT: 86d (the batch riders — decision point: dispositions
+re-signed).

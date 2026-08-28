@@ -16,7 +16,13 @@ import type { Team } from '../../sim/Unit';
 import { TRAFFIC_SCRIPTS, TrafficScriptDriver } from '../TrafficScriptDriver';
 import { armyMinCut, chokeCells } from '../sensors';
 import { unjam } from './unjam';
-import { chokeHold, CHOKE_MAX_CUT } from './chokeHold';
+import {
+  chokeHold,
+  chokeMemoStats,
+  computeChokeRead,
+  nominateChokeHold,
+  CHOKE_MAX_CUT,
+} from './chokeHold';
 
 function makeWorld(): World {
   return new World(new EventBus<GameEvents>(), new RNG(1), 12, 12);
@@ -138,5 +144,84 @@ describe('chokeHold', () => {
     expect(commands).toHaveLength(1);
     if (commands[0]!.kind !== 'setObjective') throw new Error('unreachable');
     expect(commands[0]!.objective.mode).toBe('engage');
+  });
+});
+
+// 86c-L3 — the memo's recompute-and-compare verifier (the §79e principle:
+// the memoized production path is checked against the exported pure compute,
+// a surface production no longer consults) + the two invalidation pins the
+// key must catch: a unit moving, a tile mutating.
+describe('the choke-read memo (86c-L3)', () => {
+  it('stays compute-identical across a real driven battle, and actually hits', () => {
+    const world = isthmusWorld(6);
+    const driver = new TrafficScriptDriver('player');
+    const before = { ...chokeMemoStats };
+    for (let t = 0; t < 120 && !world.ended; t++) {
+      for (const cmd of driver.decide(world)) world.enqueueCommand(cmd);
+      // The verifier: the memoized production read (via nominate — pure
+      // chokeRead, no outnumber gate) equals a fresh recompute, every tick.
+      expect(nominateChokeHold(world, 'player')).toEqual(
+        computeChokeRead(world, 'player')?.proposal ?? null,
+      );
+      world.tick();
+    }
+    const calls = chokeMemoStats.calls - before.calls;
+    const hits = chokeMemoStats.hits - before.hits;
+    expect(calls).toBeGreaterThan(0);
+    expect(hits).toBeGreaterThan(0); // the memo engaged, not just fell through
+  });
+
+  it('invalidates on a unit position change (decisively: stale ≠ fresh)', () => {
+    const world = isthmusWorld(6);
+    const first = nominateChokeHold(world, 'player');
+    expect(first).not.toBeNull(); // memo warmed with a real proposal
+    // Move every player unit to the NORTH half — same side as the enemy, so
+    // the bridge no longer sits between the armies and the fresh read is
+    // NULL. A memo that missed the position change would still return the
+    // stale plug, so equality here proves invalidation, not luck.
+    let px = 8;
+    for (const u of world.units) {
+      if (u.team === 'player') u.position = { x: px++, y: 1 };
+    }
+    expect(computeChokeRead(world, 'player')).toBeNull(); // the mutation is decisive
+    expect(nominateChokeHold(world, 'player')).toBeNull();
+  });
+
+  it('invalidates on a death (the alive flag — decisively: stale ≠ fresh)', () => {
+    const world = isthmusWorld(6);
+    expect(nominateChokeHold(world, 'player')).not.toBeNull();
+    for (const u of world.units) {
+      if (u.team === 'enemy') u.currentHp = 0;
+    }
+    expect(computeChokeRead(world, 'player')).toBeNull(); // no living enemies
+    expect(nominateChokeHold(world, 'player')).toBeNull();
+  });
+
+  it('invalidates on a tile mutation (the TileGrid epoch)', () => {
+    const world = isthmusWorld(6);
+    const first = nominateChokeHold(world, 'player');
+    expect(first).not.toBeNull();
+    // Open a second bridge far from the first — the min cut widens to 4 >
+    // CHOKE_MAX_CUT, so the fresh read is null; a stale memo would still
+    // propose the old plug.
+    world.tileGrid.setKind({ x: 0, y: 5 }, 'floor');
+    world.tileGrid.setKind({ x: 0, y: 6 }, 'floor');
+    world.tileGrid.setKind({ x: 1, y: 5 }, 'floor');
+    world.tileGrid.setKind({ x: 1, y: 6 }, 'floor');
+    expect(computeChokeRead(world, 'player')).toBeNull(); // the mutation is decisive
+    expect(nominateChokeHold(world, 'player')).toBeNull();
+  });
+
+  it('memoizes per World instance — a snapshot clone never shares entries', () => {
+    const world = isthmusWorld(6);
+    const warm = nominateChokeHold(world, 'player');
+    const clone = World.fromJSON(
+      JSON.parse(JSON.stringify(world.toJSON())),
+      new EventBus<GameEvents>(),
+    );
+    expect(nominateChokeHold(clone, 'player')).toEqual(warm);
+    expect(nominateChokeHold(clone, 'player')).toEqual(
+      computeChokeRead(clone, 'player')?.proposal ?? null,
+    );
   });
 });

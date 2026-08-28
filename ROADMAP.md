@@ -209,7 +209,7 @@ summary.csv (oracle safety).
 - [x] 86b ✅ 2026-08-28 — `scripts/perf-oracle.sh` (worktree-pin +
       junction + sha-compare summary+decisions on 2 shapes; the
       HEAD-vs-HEAD self-test PASSED both shapes). Gates every lever.
-- [ ] 86c — the levers, one commit each. ✅ DECIDED 2026-08-28
+- [x] 86c ✅ 2026-08-28 — the levers, one commit each. ✅ DECIDED 2026-08-28
       (user-signed): **L1 the A* numeric core → L2 numeric-key
       movement/occupancy → L3 the traffic-sensor hoist**, in order,
       each oracle-gated, re-profile between L1 and L2;
@@ -228,9 +228,20 @@ summary.csv (oracle safety).
       2026-08-28) — WORKLOG §86c-L2.
       **L2b ✅ 2026-08-28** (oracle PASS, pins held): the type-enforced
       `activeAction` chokepoint + the O(1) reserved-partner index, the
-      derived scan kept as the test-side verifier — **~1.2× scored /
-      ~1.0× searcher / ~1.01–1.03× ARM** — WORKLOG §86c-L2b-landed.
-      L3 NEXT.
+      derived scan kept as the test-side verifier — **~1.09× scored /
+      ~1.0× searcher / ~1.01–1.03× ARM** (scored CORRECTED at L3: the
+      first 1.2× read was cold-worktree bench bias; the warmed
+      re-measure sits on the ~7% expectation — WORKLOG §86c-L2b
+      correction note) — WORKLOG §86c-L2b-landed.
+      **L3 ✅ 2026-08-28** (oracle PASS, pins held): the exact-input
+      choke-read memo (`chokeRead` behind an element-wise Int32Array
+      key + the `TileGrid.mutations` epoch; `computeChokeRead` kept as
+      the §79e verifier; sensors.ts stays cache-free) — the choke
+      stack was 16.1% of the ARM post-L2b, input-repeat 76.5% —
+      **ARM median 1.10× over 4 warmed pairs** (scored/searcher 1.00,
+      by mechanism); fuzz:smoke 172→140 s — WORKLOG §86c-L3-landed.
+      86c CLOSED: compound vs pre-phase ~3.4× scored / ~3.1× searcher
+      / **~2.9× ARM**. 86d NEXT.
 - [ ] 86d — the batch riders (⛔ decision point: dispositions
       re-signed): build transient-only retry + staged-n merge;
       measure-then-decide the dynamic queue; defer quotas +

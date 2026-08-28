@@ -6,6 +6,12 @@
  * (derive-don't-cache). Thresholds baked here are PROVISIONAL until 54c's
  * trace mining calibrates them against the 53g human commands.
  *
+ * 86c-L3 — the doctrine stands here: every sensor in this file is still
+ * cache-free. The one caching layer lives at chokeHold.ts' consumer seam
+ * (an exact-input-keyed memo over `armyMinCut`'s read, verified by
+ * recompute-and-compare against the pure `computeChokeRead`) — see the
+ * design note there before adding a second one.
+ *
  * The jam sensor is the phase's flagged unknown (worklog §54): the sim's
  * `queue`/`pinned`/`boxed` classifications live inside MovementBehavior's
  * poll and surface only as `unit:moveDecision` EVENTS — deliberately not

@@ -107,8 +107,73 @@ const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
  *  intermittently fails a fresh spawn under that load with `0xC0000142`
  *  (STATUS_DLL_INIT_FAILED) — a TRANSIENT, non-deterministic failure that a
  *  retry clears. Without this, one flaky spawn nukes the whole 40-min run. A
- *  REAL (deterministic) failure still surfaces after the attempts are spent. */
+ *  REAL (deterministic) failure still surfaces after the attempts are spent.
+ *  86d1: and now surfaces IMMEDIATELY — see `classifyShardExit`. */
 const SHARD_ATTEMPTS = 3;
+
+/**
+ * 86d1 — a shard-child failure carrying its transient/deterministic class.
+ * The cut falls out of determinism itself: the sim is deterministic, so any
+ * failure the CHILD PROCESS reports (a non-zero exit code — its own crash
+ * speaking; a missing or unparseable artifact behind an exit 0) reproduces
+ * on an identical retry, while only ENVIRONMENT failures (the spawn never
+ * starting, an external kill) can clear. Retrying a deterministic failure
+ * re-runs a multi-minute shard twice more before the inevitable — the 86
+ * kickoff-audit finding this class closes.
+ */
+export class ShardError extends Error {
+  constructor(
+    message: string,
+    readonly transient: boolean,
+  ) {
+    super(message);
+    this.name = 'ShardError';
+  }
+}
+
+/** Windows STATUS_DLL_INIT_FAILED — the one case where the ENVIRONMENT
+ *  speaks through an exit code (DLL init failing under spawn load). Node
+ *  reports it unsigned (3221225794); the signed twin is accepted for
+ *  robustness across runtimes. Platform-gated: on the Ubuntu box this
+ *  value would be a genuine CLI exit code, so it stays deterministic there. */
+const WIN_DLL_INIT_FAILED = 0xc0000142;
+
+/**
+ * 86d1 — classify a shard child's exit. Signal-based, cross-platform:
+ *   - exit BY SIGNAL (`code === null`) → TRANSIENT: the child was killed
+ *     from outside (OOM killer, operator) — environmental on any OS.
+ *     (Pre-86d1 this case rejected as "exited with code null" and was
+ *     retried by accident rather than by design.)
+ *   - `0xC0000142`, on win32 only → TRANSIENT (the documented spawn-load
+ *     DLL-init flake this retry machinery was built for).
+ *   - any other non-zero code → DETERMINISTIC: the CLI's own crash, which
+ *     determinism reproduces on retry. Fail fast.
+ * The spawn `error` event (child never started — EAGAIN/EMFILE class) is
+ * classified transient at the call sites; artifact failures behind an
+ * exit 0 are deterministic there too.
+ */
+export function classifyShardExit(
+  code: number | null,
+  signal: NodeJS.Signals | null,
+  platform: NodeJS.Platform = process.platform,
+): { transient: boolean; label: string } {
+  if (code === null) {
+    return { transient: true, label: `killed by signal ${signal ?? '(unknown)'}` };
+  }
+  if (platform === 'win32' && (code === WIN_DLL_INIT_FAILED || code === WIN_DLL_INIT_FAILED - 0x100000000)) {
+    return { transient: true, label: `exited 0xC0000142 (DLL init flake)` };
+  }
+  return { transient: false, label: `exited with code ${code}` };
+}
+
+/** 86d1 — the `retryable` predicate both shard drivers pass to `retryAsync`:
+ *  a `ShardError` carries its own class; anything else (the spawn `error`
+ *  event's raw Node error, unexpected throws) stays retryable — the
+ *  pre-86d1 behavior, safe because a retry of a genuine transient is the
+ *  point and a retry of the unknown costs at most the old behavior. */
+export function isTransientShardError(err: unknown): boolean {
+  return err instanceof ShardError ? err.transient : true;
+}
 
 /**
  * Run `fn` up to `attempts` times, returning the first success. `onRetry` runs
@@ -116,11 +181,17 @@ const SHARD_ATTEMPTS = 3;
  * does NOT run after the final attempt. Re-throws the last error if all attempts
  * fail. Pure (no timers of its own) so it unit-tests without fake clocks — the
  * caller owns any delay via `onRetry`.
+ *
+ * 86d1 — `retryable`: when provided and it returns false for a failure, that
+ * failure re-throws IMMEDIATELY (no further attempts, no onRetry) — the
+ * deterministic-failure fast path. Absent = every failure retries (the
+ * pre-86d1 behavior, kept for callers without a classification).
  */
 export async function retryAsync<T>(
   fn: (attempt: number) => Promise<T>,
   attempts: number,
   onRetry?: (attempt: number, err: unknown) => void | Promise<void>,
+  retryable?: (err: unknown) => boolean,
 ): Promise<T> {
   let lastErr: unknown;
   for (let attempt = 1; attempt <= attempts; attempt++) {
@@ -128,6 +199,7 @@ export async function retryAsync<T>(
       return await fn(attempt);
     } catch (err) {
       lastErr = err;
+      if (retryable !== undefined && !retryable(err)) throw err;
       if (attempt < attempts) await onRetry?.(attempt, err);
     }
   }
@@ -157,26 +229,32 @@ function spawnChunkOnce(
     child.stderr.on('data', (d: Buffer) => {
       stderr += d.toString();
     });
-    child.on('error', reject);
-    child.on('exit', (code) => {
+    // 86d1 — the spawn never started: environmental, transient on any OS.
+    child.on('error', (e) => reject(new ShardError(`eval-shard ${index} spawn failed: ${String(e)}`, true)));
+    child.on('exit', (code, signal) => {
       if (code !== 0) {
-        reject(new Error(`eval-shard ${index} exited with code ${code}:\n${stderr}`));
+        const cls = classifyShardExit(code, signal);
+        reject(new ShardError(`eval-shard ${index} ${cls.label}:\n${stderr}`, cls.transient));
         return;
       }
       try {
         const parsed = JSON.parse(readFileSync(outFile, 'utf8')) as { winRates: number[] };
         resolve(parsed.winRates);
       } catch (e) {
+        // 86d1 — exit 0 with a broken artifact: the harness contract failed,
+        // which determinism reproduces. Fail fast.
         reject(
-          new Error(`eval-shard ${index} produced no/invalid output: ${String(e)}\n${stderr}`),
+          new ShardError(`eval-shard ${index} produced no/invalid output: ${String(e)}\n${stderr}`, false),
         );
       }
     });
   });
 }
 
-/** Spawn one shard child, retrying TRANSIENT spawn failures (the Windows
- *  DLL-init flake) up to `SHARD_ATTEMPTS` times with a short backoff. */
+/** Spawn one shard child, retrying TRANSIENT failures only (spawn errors,
+ *  signal kills, the win32 DLL-init flake — `classifyShardExit`) up to
+ *  `SHARD_ATTEMPTS` times with a short backoff; a DETERMINISTIC failure
+ *  (the CLI's own crash / broken artifact) re-throws immediately (86d1). */
 function runChunk(
   chunk: readonly ScoredWeights[],
   index: number,
@@ -193,6 +271,7 @@ function runChunk(
       );
       await delay(1000 * attempt);
     },
+    isTransientShardError,
   );
 }
 

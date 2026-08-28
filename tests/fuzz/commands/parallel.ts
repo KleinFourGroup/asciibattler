@@ -48,7 +48,13 @@ import {
 } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chunkVectors, retryAsync } from '../searchShard';
+import {
+  chunkVectors,
+  retryAsync,
+  ShardError,
+  classifyShardExit,
+  isTransientShardError,
+} from '../searchShard';
 import { bail, range, type CliArgs } from './args';
 import { writeAggregateAnalyses, writeDecisionsSidecar, writeTierFlips } from './run';
 import type { RunResult } from '../harness';
@@ -125,6 +131,7 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
           );
           await delay(1000 * attempt);
         },
+        isTransientShardError,
       ).then(() => {
         process.stdout.write(`  shard ${i} done (${chunk.length} seed(s))\n`);
       }),
@@ -199,18 +206,24 @@ function spawnShardOnce(
     child.stderr.on('data', (d: Buffer) => {
       stderr += d.toString();
     });
-    child.on('error', reject);
-    child.on('exit', (code) => {
+    // 86d1 — spawn `error` = environmental (transient); a non-zero exit code
+    // = the CLI's own crash (deterministic, fail fast) except the win32
+    // DLL-init flake; a signal kill = external (transient); missing
+    // artifacts behind an exit 0 = a broken harness contract (deterministic).
+    // See `classifyShardExit`.
+    child.on('error', (e) => reject(new ShardError(`run shard ${index} spawn failed: ${String(e)}`, true)));
+    child.on('exit', (code, signal) => {
       if (code !== 0) {
-        reject(new Error(`run shard ${index} exited with code ${code}:\n${stderr}`));
+        const cls = classifyShardExit(code, signal);
+        reject(new ShardError(`run shard ${index} ${cls.label}:\n${stderr}`, cls.transient));
         return;
       }
       if (!existsSync(join(shardDir, 'summary.csv'))) {
-        reject(new Error(`run shard ${index} exited 0 but wrote no summary.csv\n${stderr}`));
+        reject(new ShardError(`run shard ${index} exited 0 but wrote no summary.csv\n${stderr}`, false));
         return;
       }
       if (emitResults && !existsSync(join(shardDir, 'results.json'))) {
-        reject(new Error(`run shard ${index} exited 0 but wrote no results.json\n${stderr}`));
+        reject(new ShardError(`run shard ${index} exited 0 but wrote no results.json\n${stderr}`, false));
         return;
       }
       resolve();

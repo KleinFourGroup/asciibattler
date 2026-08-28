@@ -10,7 +10,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { chunkVectors, retryAsync } from './searchShard';
+import {
+  chunkVectors,
+  retryAsync,
+  ShardError,
+  classifyShardExit,
+  isTransientShardError,
+} from './searchShard';
 
 describe('chunkVectors', () => {
   it('splits into min(jobs, n) contiguous, even-as-possible chunks', () => {
@@ -99,5 +105,79 @@ describe('retryAsync — transient shard-spawn resilience', () => {
       ),
     ).rejects.toThrow('boom 3');
     expect(calls).toBe(3); // tried exactly `attempts` times
+  });
+
+  // 86d1 — the transient-only fast path: a deterministic failure re-throws
+  // on the FIRST attempt (no more multi-minute shard re-runs of a crash the
+  // determinism contract guarantees will recur).
+  it('a non-retryable failure re-throws immediately, skipping onRetry', async () => {
+    let calls = 0;
+    let retries = 0;
+    await expect(
+      retryAsync(
+        async () => {
+          calls++;
+          throw new ShardError('CLI crashed: exit 1', false);
+        },
+        3,
+        () => {
+          retries++;
+        },
+        isTransientShardError,
+      ),
+    ).rejects.toThrow('CLI crashed');
+    expect(calls).toBe(1); // fail fast — no second multi-minute shard run
+    expect(retries).toBe(0);
+  });
+
+  it('a transient ShardError still retries under the predicate', async () => {
+    let calls = 0;
+    const result = await retryAsync(
+      async (attempt) => {
+        calls++;
+        if (attempt < 2) throw new ShardError('spawn failed: EAGAIN', true);
+        return 'ok';
+      },
+      3,
+      undefined,
+      isTransientShardError,
+    );
+    expect(result).toBe('ok');
+    expect(calls).toBe(2);
+  });
+
+  it('a NON-ShardError stays retryable (the unknown defaults to the old behavior)', async () => {
+    let calls = 0;
+    const result = await retryAsync(
+      async (attempt) => {
+        calls++;
+        if (attempt < 2) throw new Error('something unclassified');
+        return 'ok';
+      },
+      3,
+      undefined,
+      isTransientShardError,
+    );
+    expect(result).toBe('ok');
+    expect(calls).toBe(2);
+  });
+});
+
+describe('classifyShardExit (86d1 — the transient/deterministic cut)', () => {
+  it('a signal kill is transient on any platform (OOM killer / operator)', () => {
+    expect(classifyShardExit(null, 'SIGKILL', 'linux').transient).toBe(true);
+    expect(classifyShardExit(null, 'SIGTERM', 'win32').transient).toBe(true);
+  });
+
+  it('the DLL-init flake is transient on win32 only', () => {
+    expect(classifyShardExit(0xc0000142, null, 'win32').transient).toBe(true);
+    expect(classifyShardExit(0xc0000142 - 0x100000000, null, 'win32').transient).toBe(true);
+    // On the Ubuntu box the same number would be a genuine CLI exit code.
+    expect(classifyShardExit(0xc0000142, null, 'linux').transient).toBe(false);
+  });
+
+  it('an ordinary non-zero exit is deterministic everywhere (the CLI crash speaking)', () => {
+    expect(classifyShardExit(1, null, 'win32').transient).toBe(false);
+    expect(classifyShardExit(1, null, 'linux').transient).toBe(false);
   });
 });

@@ -356,6 +356,7 @@ export function runRunCli(args: RunModeArgs): void {
   const startedAt = Date.now();
   let done = 0;
   const totalRuns = strategies.length * seeds.length;
+  const timingRows: string[] = [];
   for (const strategy of strategies) {
     process.stdout.write(
       `Running ${seeds.length} seeds with strategy '${nameFor(strategy)}'${layoutNote}${encounterNote}${hopsNote}${rosterNote}${daemonNote}${characterNote}${scriptsNote}${shadowNote}${priorNote}${campNote}…\n`,
@@ -364,7 +365,12 @@ export function runRunCli(args: RunModeArgs): void {
       // 85g3 — the per-seed wrap + the 71a decisions harvest both live
       // inside runOne now (the wrapStrategy seam); `--jobs` still inherits
       // decisions via the 68e results.json round-trip with no extra protocol.
+      const seedStartedAt = Date.now();
       const r = runOne(s, strategy, harnessOptions);
+      // 86a — per-seed wall clock for the timings sidecar (below). Captured
+      // here, around runOne only, so setup/reporting cost stays out of the
+      // per-seed read.
+      timingRows.push(`${r.seed},${r.strategyName},${Date.now() - seedStartedAt}`);
       allResults.push(r);
       // 57g QoL — one progress line per run, to STDERR (stdout stays the
       // parseable stats stream): a 60–90 min serial batch is observable
@@ -384,6 +390,18 @@ export function runRunCli(args: RunModeArgs): void {
   writeDecisionsSidecar(args.outDir, allResults);
   // 71c — the tier-flip sidecar, same discipline (written iff shadow ran).
   writeTierFlips(args.outDir, allResults);
+
+  // 86a — the per-seed wall-clock sidecar. Wall time is NONDETERMINISTIC by
+  // nature, so it must NEVER ride summary.csv or any byte-identity surface
+  // (the 47e oracle compares summary+decisions; --jobs parity is pinned on
+  // summary.csv) — same sidecar discipline as decisions.csv / k-flips.csv.
+  // Rows share summary.csv's (seed, strategy) keys and ordering so joins
+  // line up. Feeds the §86 profile + the 86d dynamic-queue disposition
+  // (the per-seed spread is the queue's whole case).
+  writeFileSync(
+    join(args.outDir, 'timings.csv'),
+    ['seed,strategy,ms', ...timingRows].join('\n') + '\n',
+  );
 
   // 68e — the shard protocol: dump the full results so a --jobs parent can
   // recompute the aggregate analyses over the merged batch (RunResult is plain

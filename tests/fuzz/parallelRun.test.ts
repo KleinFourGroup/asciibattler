@@ -53,6 +53,26 @@ describe('run-mode --jobs parity', () => {
           readFileSync(join(serialDir, 'failures', f), 'utf8'),
         );
       }
+      // 86a — the timings sidecar rides both modes: same (seed, strategy)
+      // keys and ordering as summary.csv, ms parseable and non-negative.
+      // The ms VALUES are wall clock — deliberately outside the byte
+      // contract, which is why timings.csv is a sidecar and not a column.
+      const keyCols = (csv: string): string[] =>
+        csv
+          .trim()
+          .split('\n')
+          .slice(1)
+          .map((l) => l.split(',').slice(0, 2).join(','));
+      for (const dir of [serialDir, parallelDir]) {
+        const timings = readFileSync(join(dir, 'timings.csv'), 'utf8');
+        expect(timings.split('\n')[0]).toBe('seed,strategy,ms');
+        expect(keyCols(timings)).toEqual(keyCols(serialCsv));
+        for (const row of timings.trim().split('\n').slice(1)) {
+          const ms = Number(row.split(',')[2]);
+          expect(Number.isFinite(ms) && ms >= 0, `bad ms in ${row}`).toBe(true);
+        }
+      }
+
       // The shard scratch dir is cleaned up on success.
       expect(existsSync(join(parallelDir, 'shards'))).toBe(false);
     } finally {

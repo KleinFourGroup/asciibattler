@@ -134,6 +134,14 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
   const merged = mergeSummaries(shardDirs);
   writeFileSync(join(args.outDir, 'summary.csv'), merged);
 
+  // 86a — adopt the shards' timings.csv with the same strategy-major regroup,
+  // so (seed, strategy) rows line up with summary.csv. The ms values are wall
+  // clock and carry NO byte-parity contract (each shard timed its own runs) —
+  // only the row keys/ordering are pinned (parallelRun.test.ts).
+  if (shardDirs.every((d) => existsSync(join(d, 'timings.csv')))) {
+    writeFileSync(join(args.outDir, 'timings.csv'), mergeSummaries(shardDirs, 'timings.csv'));
+  }
+
   // 68e — the aggregate analyses over the round-tripped results (must run
   // before the shardsDir wipe below — the shard results.json files live there).
   if (needResults) {
@@ -215,9 +223,9 @@ function spawnShardOnce(
  *  seeds within a strategy). Bails loudly if the regroup loses a row — that
  *  would mean a shard ran a strategy set the others didn't, which the
  *  identical-child-argv construction should make impossible. */
-function mergeSummaries(shardDirs: readonly string[]): string {
+function mergeSummaries(shardDirs: readonly string[], file = 'summary.csv'): string {
   const perShard = shardDirs.map((d) => {
-    const lines = readFileSync(join(d, 'summary.csv'), 'utf8').split('\n');
+    const lines = readFileSync(join(d, file), 'utf8').split('\n');
     return { header: lines[0], rows: lines.slice(1).filter((l) => l.length > 0) };
   });
   const strategyOf = (row: string): string => row.split(',')[1];

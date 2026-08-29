@@ -240,7 +240,10 @@ summary.csv (oracle safety).
       the merge's same-HEAD guard). 86e2 ✅ (the three-way split:
       VERDICT fail-closed exit-1 / DRIFT / HEALTH; verified live —
       the pre-86e1 archive dirs read 15 FAIL strict, 15 WARN + the
-      known drift baseline under --allow-unmanifested).
+      known drift baseline under --allow-unmanifested). 86e3 ✅ (the
+      anchors: bare pure-random/greedy rows + the HEALTH gradient vs
+      the act-1 ARM rows; --only scopes to a loud PARTIAL board; the
+      maiden run's dirty-tree FAIL = the verdict working).
 - [ ] 86f — the close: re-run the 86a shapes, record the measured
       speedup or the documented no-op; WORKLOG + Cursor.
 

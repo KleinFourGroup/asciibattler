@@ -342,6 +342,32 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
     control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
     control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:85g5-finalist-56'),
   ];
+  // 86e3 (decision C, user-signed) — the skill-gradient anchors: the
+  // registry's two bare baselines on the act-1 shape (SAME shape as the arb
+  // soldier rows — probe-shape win rates are shape artifacts, so the
+  // gradient only reads on shape-matched legs). Checkless: their value is
+  // the HEALTH gradient (random < greedy < ARM), not a band. Cheap by
+  // construction — no searcher, no arm flags; the guileless floor. The
+  // searched-UPPER leg is the standing arb soldier rows (the deployed
+  // vector + the full ARM); at amendment/re-pin boards the protocol
+  // additionally requires a FRESH `--search` derive as the ceiling read
+  // (the 85g5 lineage — a frozen vector's ceiling drifts, pre55ReachRef).
+  const anchors: BoardInstrument[] = [
+    {
+      id: 'anchor-random',
+      title: 'pure-random floor (skill-gradient anchor)',
+      args: [...ACT1, '--character=soldier', '--strategy=pure-random'],
+      strategyRow: 'pure-random',
+      checks: [],
+    },
+    {
+      id: 'anchor-greedy',
+      title: 'greedy baseline (skill-gradient anchor)',
+      args: [...ACT1, '--character=soldier', '--strategy=greedy'],
+      strategyRow: 'greedy',
+      checks: [],
+    },
+  ];
   // The 4 ceiling deltas (arb − doctrine, paired seeds): the cheapest
   // standing read on what arbitration is worth; a WARN = a real move.
   const ceilingDeltas: BoardDelta[] = (
@@ -376,7 +402,81 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
     },
     ...ceilingDeltas,
   ];
-  return { instruments: [...primaries, ...controls], deltas, sheet };
+  return { instruments: [...primaries, ...controls, ...anchors], deltas, sheet };
+}
+
+// ---- 86e3: the skill-gradient health check --------------------------------
+
+export interface GradientRow {
+  readonly label: string;
+  readonly status: 'ok' | 'WARN' | 'N/A';
+  readonly detail: string;
+}
+
+/** The monotone skill gradient on the act-1 shape: pure-random < greedy <
+ *  the ARM (the searched vector + the full doctrine arm). An INVERSION means
+ *  the measurement instrument is broken — a bot that plays worse with more
+ *  machinery is not a balance finding. HEALTH semantics: WARN, never a gate
+ *  (the section contract), but a gradient WARN on a signing board blocks the
+ *  signing by protocol, not by exit code. */
+export function evaluateSkillGradient(
+  metricsById: ReadonlyMap<string, InstrumentMetrics>,
+): readonly GradientRow[] {
+  const win = (id: string): number | undefined => metricsById.get(id)?.winRate;
+  const floor = win('anchor-random');
+  const mid = win('anchor-greedy');
+  // The upper leg: the best standing act-1 ARM row (same shape as the
+  // anchors). max() because the gradient claims the ARM beats the bare
+  // baselines, not that every vector does.
+  const armLegs = ['arb-regen', 'arb-deploy']
+    .map((id) => ({ id, w: win(id) }))
+    .filter((l): l is { id: string; w: number } => l.w !== undefined);
+  const upper = armLegs.length === 0 ? undefined : armLegs.reduce((a, b) => (b.w > a.w ? b : a));
+  const rows: GradientRow[] = [];
+  const fmt = (v: number | undefined): string => (v === undefined ? '—' : v.toFixed(3));
+  if (floor === undefined || mid === undefined) {
+    rows.push({
+      label: 'gradient',
+      status: 'N/A',
+      detail: `anchor rows absent (random ${fmt(floor)}, greedy ${fmt(mid)}) — the anchors ride every full board (86e3)`,
+    });
+    return rows;
+  }
+  rows.push(
+    floor < mid
+      ? { label: 'random<greedy', status: 'ok', detail: `${fmt(floor)} < ${fmt(mid)}` }
+      : {
+          label: 'random<greedy',
+          status: 'WARN',
+          detail: `INVERTED: pure-random ${fmt(floor)} ≥ greedy ${fmt(mid)} — the instrument is broken, not the balance`,
+        },
+  );
+  if (upper === undefined) {
+    rows.push({
+      label: 'greedy<ARM',
+      status: 'N/A',
+      detail: 'no act-1 ARM row present (partial board?) — the searched-upper leg is required at signing boards',
+    });
+  } else {
+    rows.push(
+      mid < upper.w
+        ? { label: 'greedy<ARM', status: 'ok', detail: `${fmt(mid)} < ${fmt(upper.w)} (${upper.id})` }
+        : {
+            label: 'greedy<ARM',
+            status: 'WARN',
+            detail: `INVERTED: greedy ${fmt(mid)} ≥ the ARM ${fmt(upper.w)} (${upper.id}) — the searcher arm is buying nothing on this board`,
+          },
+    );
+  }
+  return rows;
+}
+
+export function renderSkillGradient(rows: readonly GradientRow[]): string {
+  const lines: string[] = ['### the skill gradient (86e3 — anchors vs the ARM, act-1 shape)', ''];
+  for (const r of rows) {
+    lines.push(`  ${r.label.padEnd(16)}${r.status.padEnd(6)}${r.detail}`);
+  }
+  return lines.join('\n') + '\n';
 }
 
 // ---- summary.csv → metrics ------------------------------------------------

@@ -33,9 +33,11 @@ import {
   buildBoard,
   computeMetrics,
   evaluateBoard,
+  evaluateSkillGradient,
   evaluateVerdict,
   parseSummaryCsv,
   renderReport,
+  renderSkillGradient,
   renderVerdictReport,
   type Board,
   type InstrumentAudit,
@@ -172,10 +174,25 @@ function auditInstrumentDir(
 }
 
 function report(
-  board: Board,
+  fullBoard: Board,
   dir: string,
   allowUnmanifested: boolean,
+  only?: readonly string[],
 ): { text: string; fails: number } {
+  // 86e3 — an explicit --only scopes the verdict + drift to the selection
+  // (loud PARTIAL banner below): fail-closed targets SILENT partiality; a
+  // named partial read is a legitimate smoke, never a signing board.
+  const partial = only !== undefined && only.length > 0;
+  const board: Board = partial
+    ? (() => {
+        const ids = new Set(only);
+        return {
+          ...fullBoard,
+          instruments: fullBoard.instruments.filter((i) => ids.has(i.id)),
+          deltas: fullBoard.deltas.filter((d) => ids.has(d.a) && ids.has(d.b)),
+        };
+      })()
+    : fullBoard;
   const metrics = new Map<string, InstrumentMetrics>();
   const audits = new Map<string, InstrumentAudit>();
   for (const inst of board.instruments) {
@@ -193,10 +210,15 @@ function report(
   const evaluated = evaluateBoard(board, metrics);
   let text =
     `BALANCE BOARD — vs the signed sheet (${board.sheet.signedAt})\n\n` +
+    (partial
+      ? `⚠ PARTIAL BOARD (--only=${[...(only ?? [])].join(',')}) — a scoped smoke read, NEVER a signing board\n\n`
+      : '') +
     renderVerdictReport(verdict) +
     '\n' +
     renderReport(evaluated, board) +
-    '\n## INSTRUMENT HEALTH — self-checks (never gate the exit code)\n';
+    '\n## INSTRUMENT HEALTH — self-checks (never gate the exit code)\n\n' +
+    // 86e3 — the skill gradient (random < greedy < ARM on the act-1 shape).
+    renderSkillGradient(evaluateSkillGradient(metrics));
   // 71b — the per-item decision-grade sections: any instrument dir carrying a
   // decisions.csv (an arbitrated arm ran there) gets its read appended to the
   // report.
@@ -256,7 +278,7 @@ function main(): void {
   }
 
   // run falls through to report; --report reads whatever exists.
-  const { text, fails } = report(board, args.dir, args.allowUnmanifested);
+  const { text, fails } = report(board, args.dir, args.allowUnmanifested, args.only);
   process.stdout.write('\n' + text);
   const reportPath = join(args.dir, 'board-report.txt');
   mkdirSync(args.dir, { recursive: true });

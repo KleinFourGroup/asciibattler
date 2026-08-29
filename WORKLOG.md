@@ -2374,3 +2374,37 @@ values. The old silent shapes are all dead: the MISSING footer
 still prints, but a missing dir now also FAILs; `runs` is
 finally read; a stage dir reported next to its merged superset
 now trips the window check.
+
+**86e3 landed — the skill-gradient anchors.** Two new checkless
+board rows, `anchor-random` + `anchor-greedy`: the registry's two
+bare baselines (`pure-random`, `greedy`) on the act-1 shape —
+SAME shape as the arb soldier rows, because probe-shape win rates
+are shape artifacts and a gradient only reads on shape-matched
+legs. Deliberately guileless: no searcher/redraw/empower/
+arbitrate/λ (pinned by test — the floor must not carry the arm).
+`evaluateSkillGradient` (pure, HEALTH section, never gates):
+random < greedy < the-best-act-1-ARM-row; an INVERSION is a
+broken instrument, not a balance finding. Decision C as signed:
+the two cheap anchors ride every full board (they cost ~a minute
+total at n=40 --jobs=8 — no searcher); the searched-UPPER leg is
+the standing arb rows day-to-day, and at amendment/re-pin boards
+the protocol requires a FRESH `--search` derive as the ceiling
+read (the 85g5 frozen-vector lesson; e4 writes this into
+BALANCE). Rider: an explicit `--only` now scopes verdict+drift
+to the selection under a loud PARTIAL-BOARD banner — fail-closed
+targets SILENT partiality; a named smoke read is legitimate but
+never a signing board.
+
+⭐ The maiden live run vindicated the verdict layer on its first
+read: the anchor batches ran with the 86e3 edits UNCOMMITTED, and
+the board FAILed both rows — "the batch ran on a DIRTY tree — the
+measurement HEAD is not the code that ran" (manifest head 132b648
++ dirty:true). Pre-86e2 this read would have printed clean rows
+and exit 0. First gradient values: pure-random 0.200 < greedy
+0.225 (ok; NOTE the bare-baseline gap is narrow at n=40 — an
+occasional inversion WARN there is expected noise, the
+ARM-vs-anchor legs are the load-bearing ones), ARM legs 0.667/
+0.758 — a wide healthy gradient. +4 gradient pins + the bare-
+anchor definition pin; the two board-definition tests that
+asserted every row runs the extended arm now exempt the anchor
+category (an honest structure change, not a relaxation).

@@ -10,6 +10,7 @@ import {
   buildBoard,
   computeMetrics,
   evaluateBoard,
+  evaluateSkillGradient,
   evaluateVerdict,
   loadSignedSheet,
   parseSummaryCsv,
@@ -307,15 +308,82 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
   });
 });
 
+describe('86e3 — the skill-gradient health check', () => {
+  const at = (winRate: number): InstrumentMetrics => ({
+    runs: 40,
+    winRate,
+    bossWall: 0.32,
+    terminalReach: 0.45,
+    seamPool: 16,
+    transactionRate: 0.2,
+    terminalBank: 100,
+    firesPerRun: 1.7,
+  });
+
+  it('a monotone gradient reads ok on both legs, upper = the best act-1 ARM row', () => {
+    const rows = evaluateSkillGradient(
+      new Map([
+        ['anchor-random', at(0.05)],
+        ['anchor-greedy', at(0.35)],
+        ['arb-regen', at(0.65)],
+        ['arb-deploy', at(0.75)],
+      ]),
+    );
+    expect(rows.map((r) => r.status)).toEqual(['ok', 'ok']);
+    expect(rows[1]?.detail).toContain('arb-deploy'); // max of the ARM legs
+  });
+
+  it('an inversion WARNs — the instrument is broken, not the balance', () => {
+    const inverted = evaluateSkillGradient(
+      new Map([
+        ['anchor-random', at(0.5)],
+        ['anchor-greedy', at(0.35)],
+        ['arb-deploy', at(0.3)],
+      ]),
+    );
+    expect(inverted.map((r) => r.status)).toEqual(['WARN', 'WARN']);
+    expect(inverted[0]?.detail).toContain('INVERTED');
+  });
+
+  it('absent legs read N/A, never a silent pass: missing anchors / missing ARM rows', () => {
+    expect(evaluateSkillGradient(new Map()).map((r) => r.status)).toEqual(['N/A']);
+    const noArm = evaluateSkillGradient(
+      new Map([
+        ['anchor-random', at(0.05)],
+        ['anchor-greedy', at(0.35)],
+      ]),
+    );
+    expect(noArm.map((r) => r.status)).toEqual(['ok', 'N/A']);
+    expect(noArm[1]?.detail).toContain('signing boards');
+  });
+});
+
 describe('the board definition itself', () => {
   const board = buildBoard();
   const sheet = loadSignedSheet();
 
-  it('every instrument runs the extended arm with an explicit character (the batch names its arm)', () => {
+  it('every non-anchor instrument runs the extended arm with an explicit character (the batch names its arm)', () => {
     for (const inst of board.instruments) {
+      if (inst.id.startsWith('anchor-')) continue;
       expect(inst.args).toContain('--searcher');
       expect(inst.args).toContain('--audition');
       expect(inst.args.some((a) => a.startsWith('--character='))).toBe(true);
+    }
+  });
+
+  it('86e3 — the anchors are BARE: the floor must be guileless (no searcher/redraw/empower/arbitrate)', () => {
+    const anchors = board.instruments.filter((i) => i.id.startsWith('anchor-'));
+    expect(anchors.map((a) => a.id).sort()).toEqual(['anchor-greedy', 'anchor-random']);
+    for (const a of anchors) {
+      for (const flag of ['--searcher', '--audition', '--arbitrate']) {
+        expect(a.args).not.toContain(flag);
+      }
+      expect(a.args.some((t) => t.startsWith('--redraw') || t.startsWith('--empower') || t.startsWith('--prior-lambda'))).toBe(false);
+      // Shape-matched to the act-1 arb rows (probe-shape win rates are
+      // shape artifacts — the gradient only reads on matched legs).
+      expect(a.args).toContain('--hops=11');
+      expect(a.args).toContain('--character=soldier');
+      expect(a.checks).toEqual([]); // their value is the gradient, not a band
     }
   });
 
@@ -375,8 +443,9 @@ describe('the board definition itself', () => {
     // 85-pre F3A — the two wall rows are CHECKED doctrine-arm rows (a third
     // category): --encounter + --arbitrate is refused since the F3 guard.
     const wallRows = board.instruments.filter((i) => i.id.startsWith('wall-'));
+    // 86e3 — the two bare anchors are a fourth category (gradient legs).
     const controls = board.instruments.filter(
-      (i) => !i.id.startsWith('arb-') && !i.id.startsWith('wall-'),
+      (i) => !i.id.startsWith('arb-') && !i.id.startsWith('wall-') && !i.id.startsWith('anchor-'),
     );
 
     it('8 arb primaries + 2 checked doctrine wall rows + 5 checkless doctrine controls', () => {

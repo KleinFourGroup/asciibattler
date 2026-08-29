@@ -205,9 +205,9 @@ per-kind bands dispositioned hold / re-pin / defect.
 
 Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
 
-- [ ] 87a — the capture: `playerArchetypes` beside `playerLevels` +
-      the `rosters.csv` sidecar (every batch; serial/--jobs/
-      --merge-stages; byte-identity parity pins).
+- [x] 87a ✅ 2026-08-29 — the capture: `playerArchetypes` +
+      `rosters.csv` on every batch, byte-identical through --jobs +
+      --merge-stages (WORKLOG §87a).
 - [ ] 87b — the capture cohort = the manifested full-board
       re-measure (box, one HEAD; kills the 86e unmanifested-archives
       ⚠ + first boxed anchor read + the table's source).

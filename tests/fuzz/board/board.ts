@@ -38,6 +38,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { atOrBeyondWalkPos } from '../walkDepth';
+import { armSignatureOf, type BatchManifest } from '../manifest';
 
 // ---- the signed sheet (the user-signed artifact, 68d re-signs) ------------
 
@@ -398,6 +399,8 @@ export interface InstrumentMetrics {
 }
 
 interface SummaryRow {
+  /** 86e2 — the verdict layer reads seeds (dup/window checks). */
+  readonly seed: number;
   readonly strategy: string;
   readonly outcome: string;
   readonly finalHop: number;
@@ -421,7 +424,8 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
     if (i < 0) throw new Error(`summary.csv: missing column '${name}'`);
     return i;
   };
-  const [strategy, outcome, finalHop, sectors, port, bits, fired] = [
+  const [seed, strategy, outcome, finalHop, sectors, port, bits, fired] = [
+    col('seed'),
     col('strategy'),
     col('outcome'),
     col('finalHop'),
@@ -436,6 +440,7 @@ export function parseSummaryCsv(text: string): SummaryRow[] {
     const cells = line.split(',');
     const seamCell = seam < 0 ? '' : (cells[seam] ?? '');
     return {
+      seed: Number(cells[seed]),
       strategy: cells[strategy] ?? '',
       outcome: cells[outcome] ?? '',
       finalHop: Number(cells[finalHop]),
@@ -585,11 +590,277 @@ export function evaluateBoard(
   };
 }
 
+// ---- 86e2: the fail-closed verdict layer ----------------------------------
+//
+// The board split (user-signed 2026-08-29): the report separates into three
+// surfaces with distinct semantics —
+//   VERDICT  — measurement INTEGRITY, fail-closed: missing / unparseable /
+//              empty-arm-match / under-n / dup-seed / window-mismatch /
+//              provenance (no manifest, no head, dirty tree, wrong arm,
+//              cross-dir HEAD split) / an N/A on a checked row — every one
+//              a FAIL and a non-zero exit. A board that can't prove what it
+//              measured is VOID, never a quieter shade of green.
+//   DRIFT    — the reference-band rows vs the signed sheet (WARN semantics
+//              unchanged; `signed`-grade bands still FAIL there).
+//   HEALTH   — instrument self-checks (the 84f2 inert-class tripwire; the
+//              86e3 skill-gradient anchors). Never gates the exit code.
+//
+// Decision record (WORKLOG §86e): a missing manifest FAILs by default —
+// `--allow-unmanifested` downgrades exactly that ONE check to WARN for
+// pre-86e1 archives (corrupt manifests, dirty trees, and head splits still
+// FAIL under it). Cross-dir HEAD mismatch FAILs (the n=120 SAME-HEAD
+// protocol, machine-checked); measurement-HEAD vs the EVALUATING tree's
+// HEAD only WARNs (docs commits legitimately land between a box fetch and
+// `--report`).
+
+/** The board's floor n — every decision-feeding instrument runs ≥ 40 seeds
+ *  (the §68 protocol's in-sample shape; extensions merge to 120). */
+export const BOARD_MIN_N = 40;
+
+/** The raw facts the CLI gathers per instrument dir — the verdict layer
+ *  stays pure (the 68c discipline: cli.ts is a thin shell, tests point
+ *  here). */
+export interface InstrumentAudit {
+  readonly dir: string;
+  readonly summaryFound: boolean;
+  /** summary.csv existed but did not parse (readable board > a throw). */
+  readonly parseError?: string;
+  /** Rows in summary.csv across ALL strategies. */
+  readonly totalRows: number;
+  /** Rows matching the instrument's strategyRow (what metrics read). */
+  readonly matchedRows: number;
+  /** Seeds of the matched rows, unsorted as read. */
+  readonly seeds: readonly number[];
+  readonly manifest: BatchManifest | null;
+  /** manifest.json existed but was corrupt (readBatchManifest threw). */
+  readonly manifestError?: string;
+}
+
+export type VerdictStatus = 'PASS' | 'FAIL' | 'WARN';
+
+export interface VerdictRow {
+  readonly instrument: string;
+  readonly check: string;
+  readonly status: VerdictStatus;
+  readonly detail: string;
+}
+
+export interface VerdictReport {
+  readonly rows: readonly VerdictRow[];
+  readonly fails: number;
+  readonly warns: number;
+  /** The one head every manifested dir agrees on; null when unknown or split. */
+  readonly measurementHead: string | null;
+  readonly currentHead: string | null;
+  /** How many missing-manifest FAILs were downgraded by --allow-unmanifested. */
+  readonly unmanifestedAllowed: number;
+}
+
+export interface VerdictOptions {
+  readonly allowUnmanifested: boolean;
+  /** The evaluating tree's HEAD (null = git unavailable here). */
+  readonly currentHead: string | null;
+}
+
+export function evaluateVerdict(
+  board: Board,
+  auditsById: ReadonlyMap<string, InstrumentAudit>,
+  metricsById: ReadonlyMap<string, InstrumentMetrics>,
+  opts: VerdictOptions,
+): VerdictReport {
+  const rows: VerdictRow[] = [];
+  let unmanifestedAllowed = 0;
+  const fail = (instrument: string, check: string, detail: string): void => {
+    rows.push({ instrument, check, status: 'FAIL', detail });
+  };
+
+  for (const inst of board.instruments) {
+    const before = rows.length;
+    const a = auditsById.get(inst.id);
+    // Artifacts present + parseable.
+    if (a === undefined || !a.summaryFound) {
+      fail(inst.id, 'missing', `no summary.csv${a ? ` at ${a.dir}` : ''}`);
+      continue;
+    }
+    if (a.parseError !== undefined) {
+      fail(inst.id, 'unparseable', a.parseError);
+      continue;
+    }
+    // The arm filter actually matched something.
+    if (a.totalRows === 0) {
+      fail(inst.id, 'empty', 'summary.csv has a header and no rows');
+    } else if (a.matchedRows === 0) {
+      fail(
+        inst.id,
+        'arm-match',
+        `strategyRow '${inst.strategyRow}' matched 0 of ${a.totalRows} rows — wrong arm or wrong dir`,
+      );
+    }
+    // n + seed integrity (only meaningful once rows matched).
+    if (a.matchedRows > 0) {
+      if (a.matchedRows < BOARD_MIN_N) {
+        fail(inst.id, 'under-n', `n=${a.matchedRows} < the board floor ${BOARD_MIN_N}`);
+      }
+      const sorted = [...a.seeds].sort((x, y) => x - y);
+      const dups = sorted.filter((s, i) => i > 0 && s === sorted[i - 1]);
+      if (dups.length > 0) {
+        fail(inst.id, 'dup-seed', `duplicate seeds inflate n: ${[...new Set(dups)].join(', ')}`);
+      } else if (a.manifest !== null) {
+        // Seeds must be EXACTLY the manifest's window (a stage dir reported
+        // alongside its merged superset, or a truncated fetch, both land here).
+        const w = a.manifest.seedWindow;
+        const windowOk =
+          sorted.length === w.count &&
+          sorted[0] === w.firstSeed &&
+          sorted[sorted.length - 1] === w.firstSeed + w.count - 1;
+        if (!windowOk) {
+          fail(
+            inst.id,
+            'window',
+            `rows cover seeds ${sorted[0]}..${sorted[sorted.length - 1]} (n=${sorted.length}) ` +
+              `but the manifest promises ${w.firstSeed}..${w.firstSeed + w.count - 1} (n=${w.count})`,
+          );
+        }
+      }
+    }
+    // Provenance.
+    if (a.manifestError !== undefined) {
+      fail(inst.id, 'provenance', `corrupt manifest.json: ${a.manifestError}`);
+    } else if (a.manifest === null) {
+      if (opts.allowUnmanifested) {
+        unmanifestedAllowed++;
+        rows.push({
+          instrument: inst.id,
+          check: 'provenance',
+          status: 'WARN',
+          detail: 'no manifest.json — accepted under --allow-unmanifested (pre-86e1 archive)',
+        });
+      } else {
+        fail(inst.id, 'provenance', 'no manifest.json — an unmanifested batch cannot certify (pre-86e1 archive? pass --allow-unmanifested to read it as WARN)');
+      }
+    } else {
+      if (a.manifest.head === null) {
+        fail(inst.id, 'provenance', 'the batch ran without git provenance (manifest head=null)');
+      }
+      if (a.manifest.dirty === true) {
+        fail(inst.id, 'provenance', 'the batch ran on a DIRTY tree — the measurement HEAD is not the code that ran');
+      }
+      const want = armSignatureOf(inst.args);
+      const got = armSignatureOf(a.manifest.argv);
+      if (got !== want) {
+        fail(inst.id, 'arm', `manifest argv is not this instrument's arm (want '${want}', got '${got}')`);
+      }
+    }
+    // A checked metric that reads N/A: the instrument could not measure what
+    // the board checks — fail-closed, never a silent dash in the drift table.
+    const m = metricsById.get(inst.id);
+    for (const check of inst.checks) {
+      if (m !== undefined && m[check.metric] === null) {
+        fail(inst.id, 'n/a', `checked metric '${check.metric}' is unmeasurable on this batch (N/A)`);
+      }
+    }
+    if (rows.length === before) {
+      rows.push({
+        instrument: inst.id,
+        check: 'integrity',
+        status: 'PASS',
+        detail: `n=${a.matchedRows}, seeds ${Math.min(...a.seeds)}..${Math.max(...a.seeds)}, head ${a.manifest?.head?.slice(0, 8) ?? '—'}`,
+      });
+    }
+  }
+
+  // Deltas: a null side that survived per-instrument checks (e.g. a delta on
+  // a metric no per-row check covers) still voids the delta — fail-closed.
+  for (const d of board.deltas) {
+    const av = metricsById.get(d.a)?.[d.metric];
+    const bv = metricsById.get(d.b)?.[d.metric];
+    const missingSide = (v: number | null | undefined, id: string): boolean =>
+      v === null && auditsById.get(id)?.summaryFound === true;
+    if (missingSide(av, d.a) || missingSide(bv, d.b)) {
+      fail(d.id, 'n/a', `delta metric '${d.metric}' is unmeasurable on ${av === null ? d.a : d.b}`);
+    }
+  }
+
+  // Cross-dir HEAD consistency (the SAME-HEAD protocol): every manifested
+  // dir must name the ONE head; a split board mixes two games' numbers.
+  const heads = new Map<string, string[]>();
+  for (const inst of board.instruments) {
+    const h = auditsById.get(inst.id)?.manifest?.head;
+    if (h != null) heads.set(h, [...(heads.get(h) ?? []), inst.id]);
+  }
+  let measurementHead: string | null = null;
+  if (heads.size === 1) {
+    measurementHead = [...heads.keys()][0]!;
+  } else if (heads.size > 1) {
+    fail(
+      '(cross)',
+      'head-split',
+      `instrument dirs name ${heads.size} different heads: ` +
+        [...heads.entries()].map(([h, ids]) => `${h.slice(0, 8)} (${ids.join(', ')})`).join(' vs '),
+    );
+  }
+  if (
+    measurementHead !== null &&
+    opts.currentHead !== null &&
+    measurementHead !== opts.currentHead
+  ) {
+    rows.push({
+      instrument: '(head)',
+      check: 'vs-current',
+      status: 'WARN',
+      detail:
+        `measurement HEAD ${measurementHead.slice(0, 8)} ≠ this tree's HEAD ` +
+        `${opts.currentHead.slice(0, 8)} — fine for reading a fetched batch, but any re-pin must cite the measurement HEAD`,
+    });
+  }
+
+  return {
+    rows,
+    fails: rows.filter((r) => r.status === 'FAIL').length,
+    warns: rows.filter((r) => r.status === 'WARN').length,
+    measurementHead,
+    currentHead: opts.currentHead,
+    unmanifestedAllowed,
+  };
+}
+
 // ---- rendering ------------------------------------------------------------
+
+export function renderVerdictReport(report: VerdictReport): string {
+  const lines: string[] = [];
+  lines.push('## VERDICT — fail-closed measurement integrity (86e2)');
+  lines.push('');
+  const pad = (s: string, w: number): string => s.padEnd(w);
+  lines.push(`${pad('instrument', 20)}${pad('check', 13)}${pad('status', 8)}detail`);
+  for (const r of report.rows) {
+    lines.push(`${pad(r.instrument, 20)}${pad(r.check, 13)}${pad(r.status, 8)}${r.detail}`);
+  }
+  lines.push('');
+  if (report.unmanifestedAllowed > 0) {
+    lines.push(
+      `⚠ --allow-unmanifested in effect: ${report.unmanifestedAllowed} instrument(s) read without provenance`,
+    );
+  }
+  if (report.measurementHead !== null) {
+    const match =
+      report.currentHead === null
+        ? '(current HEAD unknown)'
+        : report.measurementHead === report.currentHead
+          ? '(matches this tree)'
+          : `⚠ ≠ this tree's ${report.currentHead.slice(0, 8)}`;
+    lines.push(`measurement HEAD: ${report.measurementHead} ${match}`);
+  }
+  lines.push(
+    report.fails > 0
+      ? `${report.fails} FAIL — the board is VOID: fix the measurement before reading the drift table`
+      : `integrity PASS (${report.warns} WARN)`,
+  );
+  return lines.join('\n') + '\n';
+}
 
 export function renderReport(report: BoardReport, board: Board): string {
   const lines: string[] = [];
-  lines.push(`BALANCE BOARD — vs the signed sheet (${board.sheet.signedAt})`);
+  lines.push(`## DRIFT — reference bands vs the signed sheet (${board.sheet.signedAt})`);
   lines.push('');
   const pad = (s: string, w: number): string => s.padEnd(w);
   lines.push(

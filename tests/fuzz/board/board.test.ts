@@ -6,11 +6,15 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  BOARD_MIN_N,
   buildBoard,
   computeMetrics,
   evaluateBoard,
+  evaluateVerdict,
   loadSignedSheet,
   parseSummaryCsv,
+  type BoardInstrument,
+  type InstrumentAudit,
   type InstrumentMetrics,
 } from './board';
 
@@ -185,6 +189,121 @@ describe('evaluateBoard', () => {
     const report = evaluateBoard(board, new Map([['arb-walk-regen', noWins]]));
     const wall = report.rows.find((r) => r.instrument === 'arb-walk-regen' && r.metric === 'bossWall');
     expect(wall?.status).toBe('N/A');
+  });
+});
+
+describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class fixture pins are 86e4)', () => {
+  const board = buildBoard();
+  const sheet = loadSignedSheet();
+  const HEAD = 'a'.repeat(40);
+
+  const cleanAudit = (inst: BoardInstrument, n = BOARD_MIN_N): InstrumentAudit => ({
+    dir: `output/board/${inst.id}`,
+    summaryFound: true,
+    totalRows: n,
+    matchedRows: n,
+    seeds: Array.from({ length: n }, (_, i) => i + 1),
+    manifest: {
+      manifestVersion: 1,
+      kind: 'run',
+      head: HEAD,
+      dirty: false,
+      argv: [...inst.args, `--out=output/board/${inst.id}`, '--jobs=8'],
+      seedWindow: { firstSeed: 1, count: n },
+      writtenAt: '2026-08-29T00:00:00.000Z',
+    },
+  });
+  const fullMetrics = (): InstrumentMetrics => ({
+    runs: BOARD_MIN_N,
+    winRate: 0.6,
+    bossWall: 0.32,
+    terminalReach: 0.45,
+    seamPool: 16,
+    transactionRate: sheet.firerTransactionRate,
+    terminalBank: sheet.bankRefs.firer,
+    firesPerRun: sheet.firerFiresPerRun,
+  });
+  const cleanBoardInputs = (): {
+    audits: Map<string, InstrumentAudit>;
+    metrics: Map<string, InstrumentMetrics>;
+  } => {
+    const audits = new Map(board.instruments.map((i) => [i.id, cleanAudit(i)]));
+    const metrics = new Map(board.instruments.map((i) => [i.id, fullMetrics()]));
+    return { audits, metrics };
+  };
+  const OPTS = { allowUnmanifested: false, currentHead: HEAD };
+
+  it('a clean full board PASSes integrity: one PASS row per instrument, one agreed head, exit-clean', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    const v = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(v.fails).toBe(0);
+    expect(v.warns).toBe(0);
+    expect(v.measurementHead).toBe(HEAD);
+    expect(v.rows.filter((r) => r.status === 'PASS')).toHaveLength(board.instruments.length);
+  });
+
+  it('a missing instrument FAILs (never a footer): the fail-closed core', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    audits.delete('arb-regen');
+    metrics.delete('arb-regen');
+    const v = evaluateVerdict(board, audits, metrics, OPTS);
+    const row = v.rows.find((r) => r.instrument === 'arb-regen');
+    expect(row?.status).toBe('FAIL');
+    expect(row?.check).toBe('missing');
+    expect(v.fails).toBeGreaterThan(0);
+  });
+
+  it('decision A — a missing manifest FAILs by default, WARNs only under --allow-unmanifested', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    audits.set('deploy', { ...audits.get('deploy')!, manifest: null });
+    const strict = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(strict.rows.find((r) => r.instrument === 'deploy' && r.check === 'provenance')?.status).toBe('FAIL');
+    const lenient = evaluateVerdict(board, audits, metrics, { ...OPTS, allowUnmanifested: true });
+    expect(lenient.rows.find((r) => r.instrument === 'deploy' && r.check === 'provenance')?.status).toBe('WARN');
+    expect(lenient.fails).toBe(0);
+    expect(lenient.unmanifestedAllowed).toBe(1);
+  });
+
+  it('decision B — a cross-dir head split FAILs; measurement-vs-current only WARNs', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    const other = audits.get('regen')!;
+    audits.set('regen', { ...other, manifest: { ...other.manifest!, head: 'b'.repeat(40) } });
+    const split = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(split.rows.find((r) => r.check === 'head-split')?.status).toBe('FAIL');
+    expect(split.measurementHead).toBeNull();
+
+    const clean = cleanBoardInputs();
+    const vsCurrent = evaluateVerdict(board, clean.audits, clean.metrics, {
+      allowUnmanifested: false,
+      currentHead: 'c'.repeat(40),
+    });
+    expect(vsCurrent.fails).toBe(0);
+    expect(vsCurrent.rows.find((r) => r.check === 'vs-current')?.status).toBe('WARN');
+  });
+
+  it('an N/A on a CHECKED row is a verdict FAIL, not a silent dash (the walk wall)', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    metrics.set('arb-walk-regen', { ...fullMetrics(), bossWall: null });
+    const v = evaluateVerdict(board, audits, metrics, OPTS);
+    const row = v.rows.find((r) => r.instrument === 'arb-walk-regen' && r.check === 'n/a');
+    expect(row?.status).toBe('FAIL');
+    expect(row?.detail).toContain('bossWall');
+  });
+
+  it('the manifest arm must be the INSTRUMENT arm (partition flags aside)', () => {
+    const { audits, metrics } = cleanBoardInputs();
+    const a = audits.get('arb-deploy')!;
+    // A doctrine batch dropped into an arb primary's dir: same shape flags,
+    // no --arbitrate/--prior-lambda — the wrong-arm read the audit feared.
+    audits.set('arb-deploy', {
+      ...a,
+      manifest: {
+        ...a.manifest!,
+        argv: a.manifest!.argv.filter((t) => t !== '--arbitrate' && t !== '--prior-lambda=0.5'),
+      },
+    });
+    const v = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(v.rows.find((r) => r.instrument === 'arb-deploy' && r.check === 'arm')?.status).toBe('FAIL');
   });
 });
 

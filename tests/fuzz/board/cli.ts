@@ -8,6 +8,15 @@
  *                                    output/board/<id>/), then report
  *   --report [--dir=<root>]          evaluate existing summary.csv files vs
  *                                    the signed sheet (default output/board/)
+ *            [--allow-unmanifested]  86e2: downgrade the missing-manifest
+ *                                    FAIL to WARN (pre-86e1 archives ONLY;
+ *                                    dirty trees / head splits still FAIL)
+ *
+ * 86e2 — the report is a three-way split: VERDICT (fail-closed measurement
+ * integrity — missing/unparseable/empty-arm/under-n/dup-seed/window/
+ * provenance/N-A all FAIL and exit 1) → DRIFT (the reference bands, WARN)
+ * → INSTRUMENT HEALTH (self-checks, never gate). A board that can't prove
+ * what it measured is VOID, never a quieter shade of green.
  *
  * The runner is a thin shell (spawn + move on) — the measurement logic lives
  * in board.ts as pure functions, which is where the tests point. ⚠ A full
@@ -24,11 +33,15 @@ import {
   buildBoard,
   computeMetrics,
   evaluateBoard,
+  evaluateVerdict,
   parseSummaryCsv,
   renderReport,
+  renderVerdictReport,
   type Board,
+  type InstrumentAudit,
   type InstrumentMetrics,
 } from './board';
+import { captureGitProvenance, readBatchManifest, type BatchManifest } from '../manifest';
 import {
   inertClasses,
   parseDecisionsCsv,
@@ -45,10 +58,14 @@ interface BoardArgs {
   jobs?: number;
   only?: readonly string[];
   dir: string;
+  /** 86e2 (decision A, user-signed): downgrade exactly the missing-manifest
+   *  FAIL to WARN — for reading pre-86e1 archives only. Corrupt manifests,
+   *  dirty trees, and head splits still FAIL under it. */
+  allowUnmanifested: boolean;
 }
 
 function parseBoardArgs(argv: readonly string[]): BoardArgs {
-  const args: BoardArgs = { mode: 'report', dir: DEFAULT_DIR };
+  const args: BoardArgs = { mode: 'report', dir: DEFAULT_DIR, allowUnmanifested: false };
   let modeSeen = false;
   for (const raw of argv) {
     const eq = raw.indexOf('=');
@@ -69,6 +86,9 @@ function parseBoardArgs(argv: readonly string[]): BoardArgs {
         break;
       case '--dir':
         if (v !== undefined) args.dir = v;
+        break;
+      case '--allow-unmanifested':
+        args.allowUnmanifested = true;
         break;
       default:
         throw new Error(`balance:board: unknown flag ${raw}`);
@@ -99,42 +119,114 @@ function commandFor(
   return argv;
 }
 
-function report(board: Board, dir: string): { text: string; fails: number } {
-  const metrics = new Map<string, InstrumentMetrics>();
-  for (const inst of board.instruments) {
-    const csvPath = join(dir, inst.id, 'summary.csv');
-    if (!existsSync(csvPath)) continue;
-    const rows = parseSummaryCsv(readFileSync(csvPath, 'utf8')).filter(
-      (r) => r.strategy === inst.strategyRow,
-    );
-    metrics.set(inst.id, computeMetrics(rows));
+/** 86e2 — gather the raw per-dir facts the pure verdict layer judges (and
+ *  hand back the matched rows so metrics don't re-parse). */
+function auditInstrumentDir(
+  dir: string,
+  strategyRow: string,
+): { audit: InstrumentAudit; matched: ReturnType<typeof parseSummaryCsv> } {
+  const csvPath = join(dir, 'summary.csv');
+  if (!existsSync(csvPath)) {
+    return {
+      audit: { dir, summaryFound: false, totalRows: 0, matchedRows: 0, seeds: [], manifest: null },
+      matched: [],
+    };
   }
+  let manifest: BatchManifest | null = null;
+  let manifestError: string | undefined;
+  try {
+    manifest = readBatchManifest(dir);
+  } catch (e) {
+    manifestError = e instanceof Error ? e.message : String(e);
+  }
+  try {
+    const all = parseSummaryCsv(readFileSync(csvPath, 'utf8'));
+    const matched = all.filter((r) => r.strategy === strategyRow);
+    return {
+      audit: {
+        dir,
+        summaryFound: true,
+        totalRows: all.length,
+        matchedRows: matched.length,
+        seeds: matched.map((r) => r.seed),
+        manifest,
+        ...(manifestError !== undefined ? { manifestError } : {}),
+      },
+      matched,
+    };
+  } catch (e) {
+    return {
+      audit: {
+        dir,
+        summaryFound: true,
+        parseError: e instanceof Error ? e.message : String(e),
+        totalRows: 0,
+        matchedRows: 0,
+        seeds: [],
+        manifest,
+        ...(manifestError !== undefined ? { manifestError } : {}),
+      },
+      matched: [],
+    };
+  }
+}
+
+function report(
+  board: Board,
+  dir: string,
+  allowUnmanifested: boolean,
+): { text: string; fails: number } {
+  const metrics = new Map<string, InstrumentMetrics>();
+  const audits = new Map<string, InstrumentAudit>();
+  for (const inst of board.instruments) {
+    const { audit, matched } = auditInstrumentDir(join(dir, inst.id), inst.strategyRow);
+    audits.set(inst.id, audit);
+    if (!audit.summaryFound || audit.parseError !== undefined) continue;
+    metrics.set(inst.id, computeMetrics(matched));
+  }
+  // 86e2 — the three-way split: VERDICT (fail-closed integrity, gates the
+  // exit) → DRIFT (the reference bands) → INSTRUMENT HEALTH (never gates).
+  const verdict = evaluateVerdict(board, audits, metrics, {
+    allowUnmanifested,
+    currentHead: captureGitProvenance().head,
+  });
   const evaluated = evaluateBoard(board, metrics);
-  let text = renderReport(evaluated, board);
+  let text =
+    `BALANCE BOARD — vs the signed sheet (${board.sheet.signedAt})\n\n` +
+    renderVerdictReport(verdict) +
+    '\n' +
+    renderReport(evaluated, board) +
+    '\n## INSTRUMENT HEALTH — self-checks (never gate the exit code)\n';
   // 71b — the per-item decision-grade sections: any instrument dir carrying a
   // decisions.csv (an arbitrated arm ran there) gets its read appended to the
-  // report. Today's board arms are all pre-arbitration (the default flips at
-  // §72), so this renders nothing until an arbitrated instrument lands — the
-  // reading machinery is what §71 ships.
+  // report.
   // 84f2 — the inert-class tripwire rides every decisions.csv the report
   // touches; a class at Live 0 is a board-level WARN (instrument health,
   // not a balance verdict — it never gates the exit code).
   let inertTotal = 0;
+  let healthSections = 0;
   for (const inst of board.instruments) {
     const decisionsPath = join(dir, inst.id, 'decisions.csv');
     if (!existsSync(decisionsPath)) continue;
     const rows = parseDecisionsCsv(readFileSync(decisionsPath, 'utf8'));
     text +=
-      `\n## ${inst.id} — per-item decision value\n\n` +
+      `\n### ${inst.id} — per-item decision value\n\n` +
       renderDecisionAnalysis(rows) +
       '\n' +
       renderInertClassTripwire(rows);
     inertTotal += inertClasses(rows).length;
+    healthSections++;
   }
   if (inertTotal > 0) {
     text += `\n⚠ inert-class tripwire: ${inertTotal} WARN (a candidate class no rollout can see — 84f2; see the per-instrument sections)\n`;
   }
-  return { text, fails: evaluated.fails };
+  if (healthSections === 0) {
+    text += '\n(no decisions.csv in any instrument dir — nothing to health-check yet)\n';
+  }
+  // Fail-closed: the verdict's integrity FAILs gate the exit alongside any
+  // signed-band breach (the drift table's FAILs — none exist today by the
+  // 68d design, but the semantics stay wired).
+  return { text, fails: verdict.fails + evaluated.fails };
 }
 
 function main(): void {
@@ -164,7 +256,7 @@ function main(): void {
   }
 
   // run falls through to report; --report reads whatever exists.
-  const { text, fails } = report(board, args.dir);
+  const { text, fails } = report(board, args.dir, args.allowUnmanifested);
   process.stdout.write('\n' + text);
   const reportPath = join(args.dir, 'board-report.txt');
   mkdirSync(args.dir, { recursive: true });

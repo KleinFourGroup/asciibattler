@@ -2340,3 +2340,37 @@ merges with null provenance) · the real oracles extended (the
 merged dir's manifest carries the stages' head over the union
 window; serial + jobs-parent manifests asserted in the parity
 pin). 16/16 across the three suites; typecheck clean.
+
+**86e2 landed — the three-way verdict split.** The report is now
+VERDICT → DRIFT → INSTRUMENT HEALTH, with distinct semantics per
+section. VERDICT is the fail-closed integrity layer
+(`evaluateVerdict` in board.ts, pure — cli.ts only gathers
+per-dir facts into `InstrumentAudit`): missing / unparseable /
+empty / arm-match-0 / under-`BOARD_MIN_N`(40) / dup-seed /
+seeds-vs-manifest-window / provenance (no manifest · corrupt
+manifest · head=null · dirty tree · manifest-argv ≠ the
+instrument's arm signature) / N/A-on-a-checked-row (metrics AND
+deltas) / cross-dir head-split — every one a FAIL and exit 1.
+DRIFT is the untouched reference-band table (`signed`-grade
+still FAILs there; none exist by the 68d design). HEALTH holds
+the 84f2 inert-class tripwire (never gates), ready for e3's
+gradients. Decisions wired as signed: `--allow-unmanifested`
+downgrades exactly the missing-manifest check to WARN (loud
+banner; corrupt/dirty/head-split still FAIL under it);
+measurement-HEAD vs the evaluating tree prints on the report but
+only WARNs; cross-dir split FAILs and voids `measurementHead`.
+parseSummaryCsv now extracts `seed` (the verdict layer's
+dup/window reads); the drift/metrics layer is otherwise
+untouched — all 20 pre-existing board pins pass unmodified.
++6 mechanism-smoke pins (clean-board PASS · missing FAIL ·
+decision A both modes · decision B both halves · checked-row N/A
+FAIL · wrong-arm FAIL); the per-class CLI-level fixture pins are
+e4's charter. Live verify against the real 85g6d fold-baseline
+dirs: strict read = 15 provenance FAILs, exit 1 (all pre-86e1
+archives — exactly decision A's case); `--allow-unmanifested` =
+integrity PASS at 15 WARNs, exit 0, and the drift table
+reproduces the known 0 FAIL / 4 WARN baseline byte-for-byte in
+values. The old silent shapes are all dead: the MISSING footer
+still prints, but a missing dir now also FAILs; `runs` is
+finally read; a stage dir reported next to its merged superset
+now trips the window check.

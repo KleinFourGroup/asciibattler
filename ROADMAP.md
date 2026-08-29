@@ -237,7 +237,10 @@ summary.csv (oracle safety).
       WARNs · anchors random+greedy every board / searched-upper at
       signing boards; the e1–e4 cut + rationale in WORKLOG §86e).
       86e1 ✅ (the manifest — run/jobs-parent/merge-stages sidecars +
-      the merge's same-HEAD guard).
+      the merge's same-HEAD guard). 86e2 ✅ (the three-way split:
+      VERDICT fail-closed exit-1 / DRIFT / HEALTH; verified live —
+      the pre-86e1 archive dirs read 15 FAIL strict, 15 WARN + the
+      known drift baseline under --allow-unmanifested).
 - [ ] 86f — the close: re-run the 86a shapes, record the measured
       speedup or the documented no-op; WORKLOG + Cursor.
 

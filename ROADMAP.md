@@ -170,85 +170,29 @@ met (the §85 charter's paired pre/post-fold read = the three-cohort
 chain; floors re-pinned at 85e; the twin on its re-derived anchor).
 Detail: WORKLOG §85* + BALANCE 2026-08-23 → 08-28.
 
-## Phase 86 — The balancer performance pass
+## Phase 86 — The balancer performance pass ✅ CLOSED 2026-08-29 (user-signed)
 
-Profile-first (none ever taken): split per-seed cost between outer
-battles and rollouts, then `World.tick` itself. Expected levers are
-tick-level (pathfinding scratch · `livingUnits` filters · Map churn ·
-the pooling TODO with airtight reset discipline); the clone is
-measured negligible and K=2 has nothing to halve. Byte-identity oracle
-mandatory (the 47e worktree-pinned diff: summary.csv + decisions.csv
-sha across arms); a lever that flips a decision is a doctrine change
-for the user, not a speedup. **Risk:** medium (the hot loop).
-**Exit:** a measured per-seed speedup with byte-identical outputs — or
-a documented no-op with the profile on record.
+**Outcome, one breath:** profile-first found the balancer IS a
+pathfinding benchmark; four oracle-gated levers + the batch riders +
+the fail-closed board landed, and the 86f DIRECT end-to-end re-run of
+the 86a shapes (pre-lever `d24362e` vs the close HEAD, warmed
+worktree, 3 alternating pairs, sanity row byte-identical) measured
+**3.47× scored / 3.32× searcher / 2.95× full ARM** — confirming the
+chained estimates; fuzz:smoke 314→~146 s at +20 tests. Detail:
+WORKLOG §86a–§86f + BALANCE §"The board integrity protocol" + git.
 
-85h riders (user-signed 2026-08-25, WORKLOG §85h): (1) the **board
-split** lands §86-adjacent — fail-closed verdict board (missing /
-N-A / empty-strategy / under-n / duplicate-seed / provenance all
-FAIL) vs drift dashboard vs instrument-health suite, + the
-skill-gradient anchor rows (pure-random / greedy / searched upper) +
-the per-batch machine manifest; (2) batch/search **perf riders** join
-the profile-first agenda (measure before building): transient-only
-spawn retry · dynamic per-seed queue · staged n40→80→120 with
-pre-registered extension rules · stratified shadow site quotas ·
-warm-start + successive-halving for `--search`.
-
-Cut at the 2026-08-28 kickoff (audit + shape-lock: WORKLOG §86;
-user riders: robustness over cleverness · in-depth reads). The
-charter's outer-vs-rollout split is already answered on record
-(battle sim ≈100% of rollout cost) — the profile goes straight at
-`World.tick` + the per-tick bot `decide()` layer. World v35 /
-Run v44 predicted to hold; timing rides a SIDECAR, never
-summary.csv (oracle safety).
-
-- [x] 86a ✅ 2026-08-28 — sidecar `521d606` + the three-shape
-      profiles: **the balancer is a pathfinding benchmark** (A* core
-      ~50% self / string-key layer ≈ a third of the run; GC 1.5%,
-      clone+fold ≈0 — pooling DEAD, profile-backed) — WORKLOG §86a.
-- [x] 86b ✅ 2026-08-28 — `scripts/perf-oracle.sh` (worktree-pin +
-      junction + sha-compare summary+decisions on 2 shapes; the
-      HEAD-vs-HEAD self-test PASSED both shapes). Gates every lever.
-- [x] 86c ✅ 2026-08-28 — the levers (✅ DECIDED: L1→L2→L2b→L3, each
-      its own oracle-gated commit; escalation floor 1.5× cleared by
-      L1 alone). L1 A* numeric core (2.44×/2.29×/2.09×) · L2 numeric
-      keys + `(x,y)` CostFn · L2b the `activeAction` chokepoint + the
-      O(1) reserved-partner index (scan kept as verifier; scored
-      CORRECTED ~1.09× — the first 1.2× was cold-worktree bench bias)
-      · L3 the exact-input choke-read memo (ARM median 1.10×).
-      **CLOSED at compound ~3.4× scored / ~3.1× searcher / ~2.9× ARM**;
-      fuzz:smoke 314→140 s — WORKLOG §86c-signing…§86c-L3-landed.
-- [x] 86d ✅ 2026-08-28 — the batch riders; ⛔ RESOLVED (dispositions
-      re-signed with two user amendments: no cross-platform magic
-      error code — determinism-derived classification, 0xC0000142
-      win32-gated; the queue as the finer-chunk pool, NOT a worker
-      protocol). d1 transient-only retry (fail-fast on deterministic
-      failures) · d2 `--merge-stages` (staged-n → one serial-identical
-      artifact set; the real n=12 oracle pins it) · d3 the CHUNK_FACTOR=4
-      worker pool (measured: static ~1.15× ideal, dynamic ~1.05× —
-      median ~8% box wall; parity pins hold) · d4 deferrals re-signed —
-      WORKLOG §86d.
-- [ ] 86e — the board split (§86-adjacent, independent): machine
-      manifest → fail-closed verdict board (missing / runs=0 /
-      under-n / dup-seed / provenance FAIL) vs drift dashboard vs
-      instrument health · + skill-gradient anchor rows
-      (✅ DECIDED 2026-08-29: fail-closed with `--allow-unmanifested`
-      for pre-86e1 archives · cross-dir HEAD mismatch FAILs, vs-current
-      WARNs · anchors random+greedy every board / searched-upper at
-      signing boards; the e1–e4 cut + rationale in WORKLOG §86e).
-      86e1 ✅ (the manifest — run/jobs-parent/merge-stages sidecars +
-      the merge's same-HEAD guard). 86e2 ✅ (the three-way split:
-      VERDICT fail-closed exit-1 / DRIFT / HEALTH; verified live —
-      the pre-86e1 archive dirs read 15 FAIL strict, 15 WARN + the
-      known drift baseline under --allow-unmanifested). 86e3 ✅ (the
-      anchors: bare pure-random/greedy rows + the HEALTH gradient vs
-      the act-1 ARM rows; --only scopes to a loud PARTIAL board; the
-      maiden run's dirty-tree FAIL = the verdict working). 86e4 ✅
-      (the fail-closed contract as CLI-level pins — every FAIL class
-      → FAIL + exit 1; BALANCE §board-integrity protocol + the
-      anchor maiden read logged). **86e CLOSED 2026-08-29.**
-- [ ] 86f — the close: re-run the 86a shapes, record the measured
-      speedup or the documented no-op; WORKLOG + Cursor.
+- [x] 86a ✅ — timings sidecar + the first-ever profiles (A* ~50%
+      self; the string-key layer ≈ ⅓ of the run; pooling DEAD).
+- [x] 86b ✅ — `scripts/perf-oracle.sh` (the 47e oracle, mechanized).
+- [x] 86c ✅ — the four levers, each oracle-PASS: L1 A* numeric core ·
+      L2 numeric keys · L2b `activeAction` chokepoint + O(1) partner
+      index · L3 the exact-input choke-read memo.
+- [x] 86d ✅ — the batch riders (transient-only retry ·
+      `--merge-stages` · the CHUNK_FACTOR=4 pool · deferrals re-signed).
+- [x] 86e ✅ — the fail-closed board split (manifest → VERDICT/DRIFT/
+      HEALTH + anchors; decisions user-signed; WORKLOG §86e).
+- [x] 86f ✅ 2026-08-29 — the close: the direct re-run above
+      (WORKLOG §86f).
 
 ## Phase 87 — Roster realism for isolation reads
 

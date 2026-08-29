@@ -143,3 +143,11 @@ _(The post-C5 rounds start here.)_
   and the landed memo took ~10%. The signed profile-between-levers
   ordering is what caught it — keep it for any future perf phase.
   (86c-L3)
+
+- **Paired-bench legs must subshell their `cd`** (86f, 2026-08-29): a
+  persisted `cd` into the baseline worktree ran BOTH legs of the first
+  scored pair on the baseline tree — ratio read exactly 1.00×, which
+  WAS the tell (a ~3.4× expectation reading 1.00 means the instrument,
+  not the code). Fixed by `(cd <tree> && run)` per leg. Same family as
+  the L2b cold-worktree bias: when a bench number is implausible,
+  suspect the bench first; the absurd-ratio smell test is free.

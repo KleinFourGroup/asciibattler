@@ -2439,3 +2439,50 @@ next board cohort: the 15 standing archive dirs are pre-86e1
 manifested at one HEAD, plus the two anchor rows; until then a
 full `--report` needs `--allow-unmanifested` and is not a
 signing read.
+
+### 86f — the close: the direct end-to-end re-run (2026-08-29)
+
+The compound numbers this phase carried (~3.4×/~3.1×/~2.9×) were
+CHAINED per-lever ratios measured at different HEADs on different
+days — the close replaces the chain with ONE direct measurement:
+the three 86a shapes, pre-lever baseline `d24362e` (the last
+commit before L1; carries the timings sidecar, zero levers) in a
+worktree + node_modules junction vs the 86e-close HEAD `087bd75`,
+warmed with a discarded scored leg first (the L2b lesson),
+3 alternating same-seed pairs per shape, sidecar-ms totals:
+
+| shape | base ms (×3) | HEAD ms (×3) | ratios | median |
+|---|---|---|---|---|
+| scored (hops=4, n=16) | 21719/22040/21919 | 6692/6356/6116 | 3.25/3.47/3.58 | **3.47×** |
+| searcher (act-1, n=1) | 31062/30804/30910 | 9386/9269/7506 | 3.31/3.32/4.12 | **3.32×** |
+| full ARM (act-1, n=1) | 220807/219586/217540 | 75279/74120/73678 | 2.93/2.96/2.95 | **2.95×** |
+
+Every chained estimate CONFIRMED and slightly exceeded by the
+direct read (3.4→3.47 · 3.1→3.32 · 2.9→2.95); the ARM triplet is
+strikingly tight (base spread 1.5%, head spread 2.2%). No
+regression from the 86d/86e riders (the manifest write is
+noise, as predicted). Bonus verification: the seed-1 ARM
+summary row is BYTE-IDENTICAL between the pre-lever tree and
+the close HEAD — the phase's per-lever oracle chain confirmed
+end-to-end in one diff. fuzz:smoke at the close: ~146–152 s
+under pre-commit load at 524 tests (pre-phase: 314 s at 504).
+Worktree + junction removed cleanly (junction rmdir'd first;
+main node_modules verified intact).
+
+Instrument note for the scratchpad: the first scored pair read
+exactly 1.00× because a persisted `cd` ran BOTH legs on the
+baseline tree — the absurd ratio was the tell; paired-bench legs
+now subshell their cd. (Same family as the §57g/L2b lessons:
+the bench's failure modes are the instrument's, and an
+implausibly clean number is the first thing to distrust.)
+
+**§86 CLOSED.** Every step user-signed; predictions all HELD
+(World v35 / Run v44 untouched, no new RNG streams, signed-sheet
+numbers untouched — 86e changed verdict plumbing, not bands).
+What the phase bought, concretely: a full ARM act-1 seed
+205→74 s · a box ARM cohort at n=120 ≈ 7→2.5 h before the d3
+pool's ~8% · the hook's sim-touching path 314→~146 s · and the
+40 h full-arb search estimate now ≈ 14 h (still a box job, but
+a tractable one). NEXT = the §87 kickoff (roster realism:
+`playerArchetypes` capture + `--roster=sampled:<hop>` → the X3
+re-read).

@@ -72,6 +72,7 @@ import {
 } from '../searchShard';
 import { bail, range, type CliArgs } from './args';
 import { writeAggregateAnalyses, writeDecisionsSidecar, writeTierFlips } from './run';
+import { PARTITION_FLAG_PREFIXES, writeBatchManifest } from '../manifest';
 import type { RunResult } from '../harness';
 
 export type ParallelRunArgs = Pick<
@@ -87,14 +88,16 @@ export type ParallelRunArgs = Pick<
   | 'emitResults'
   | 'kTelemetry'
   | 'arbitrate'
+  | 'raw'
 >;
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), '..', 'cli.ts');
 
 /** Flags the parent OWNS: stripped from the pass-through argv and re-issued
  *  per chunk. Everything else (arm flags, --strategy, --hops, --roster, …)
- *  flows to the children verbatim. */
-const PARTITION_FLAGS = ['--jobs', '--count', '--seed-offset', '--out', '--emit-results'];
+ *  flows to the children verbatim. 86e1: the ONE list lives in manifest.ts
+ *  (the --merge-stages same-arm check strips the identical set). */
+const PARTITION_FLAGS = PARTITION_FLAG_PREFIXES;
 
 /** Same retry budget as searchShard: a big batch spawns many children, and
  *  Windows intermittently fails a fresh spawn under load (0xC0000142). */
@@ -209,6 +212,14 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
     }
   }
   rmSync(shardsDir, { recursive: true, force: true });
+
+  // 86e1 — the parent owns the batch dir's manifest (each shard wrote one
+  // into its scratch dir; those die with the shards wipe above).
+  writeBatchManifest(args.outDir, {
+    kind: 'jobs-parent',
+    argv: args.raw ?? [],
+    seedWindow: { firstSeed: seeds[0]!, count: seeds.length },
+  });
 
   printOutcomeCounts(merged);
   process.stdout.write(

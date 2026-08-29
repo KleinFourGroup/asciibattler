@@ -8,6 +8,7 @@
 import { writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import { runOne } from '../harness';
+import { writeBatchManifest } from '../manifest';
 import { parseScriptsSpec } from '../scriptSubset';
 import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
@@ -112,6 +113,7 @@ export type RunModeArgs = Pick<
   | 'shadowHorizon'
   | 'shadowSample'
   | 'set'
+  | 'raw'
 >;
 
 /**
@@ -402,6 +404,15 @@ export function runRunCli(args: RunModeArgs): void {
     join(args.outDir, 'timings.csv'),
     ['seed,strategy,ms', ...timingRows].join('\n') + '\n',
   );
+
+  // 86e1 — the per-batch machine manifest (provenance for the fail-closed
+  // board: what HEAD + argv produced these artifacts). Sidecar discipline —
+  // wall clock + machine HEAD never ride a byte-identity surface.
+  writeBatchManifest(args.outDir, {
+    kind: 'run',
+    argv: args.raw ?? [],
+    seedWindow: { firstSeed: seeds[0] ?? 1 + (args.seedOffset ?? 0), count: seeds.length },
+  });
 
   // 68e — the shard protocol: dump the full results so a --jobs parent can
   // recompute the aggregate analyses over the merged batch (RunResult is plain

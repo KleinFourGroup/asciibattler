@@ -232,7 +232,12 @@ summary.csv (oracle safety).
       manifest → fail-closed verdict board (missing / runs=0 /
       under-n / dup-seed / provenance FAIL) vs drift dashboard vs
       instrument health · + skill-gradient anchor rows
-      (⛔ decision point: FAIL vs WARN semantics · anchor cadence).
+      (✅ DECIDED 2026-08-29: fail-closed with `--allow-unmanifested`
+      for pre-86e1 archives · cross-dir HEAD mismatch FAILs, vs-current
+      WARNs · anchors random+greedy every board / searched-upper at
+      signing boards; the e1–e4 cut + rationale in WORKLOG §86e).
+      86e1 ✅ (the manifest — run/jobs-parent/merge-stages sidecars +
+      the merge's same-HEAD guard).
 - [ ] 86f — the close: re-run the 86a shapes, record the measured
       speedup or the documented no-op; WORKLOG + Cursor.
 

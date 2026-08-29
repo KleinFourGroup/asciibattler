@@ -18,6 +18,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
+import { readBatchManifest, writeBatchManifest } from './manifest';
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
 
@@ -72,6 +73,13 @@ describe('--merge-stages: the serial-equivalence oracle', () => {
       // The stage dirs are archives — untouched by the merge.
       expect(existsSync(join(stageA, 'summary.csv'))).toBe(true);
       expect(traces(stageA).length + traces(stageB).length).toBe(serialTraces.length);
+      // 86e1 — real CLI runs write manifests, and the merge derives its own:
+      // the stages' common head (this repo's), over the union window.
+      const merged = readBatchManifest(mergedDir);
+      expect(merged?.kind).toBe('merge-stages');
+      expect(merged?.seedWindow).toEqual({ firstSeed: 1, count: 12 });
+      expect(merged?.head).toMatch(/^[0-9a-f]{40}$/);
+      expect(merged?.head).toBe(readBatchManifest(stageA)?.head);
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }
@@ -85,7 +93,12 @@ describe('--merge-stages: the guards (synthetic dirs)', () => {
     root: string,
     name: string,
     seeds: readonly number[],
-    opts: { args?: string; decisions?: boolean; strategy?: string } = {},
+    opts: {
+      args?: string;
+      decisions?: boolean;
+      strategy?: string;
+      manifest?: { head: string | null; argv: readonly string[] };
+    } = {},
   ): string {
     const dir = join(root, name);
     mkdirSync(dir, { recursive: true });
@@ -95,6 +108,17 @@ describe('--merge-stages: the guards (synthetic dirs)', () => {
       [HEADER, ...seeds.map((s) => `${s},${strat},mars,complete`)].join('\n') + '\n',
     );
     if (opts.args !== undefined) writeFileSync(join(dir, 'args'), opts.args);
+    if (opts.manifest !== undefined) {
+      writeBatchManifest(dir, {
+        kind: 'run',
+        argv: opts.manifest.argv,
+        seedWindow: { firstSeed: seeds[0]!, count: seeds.length },
+        provenance: {
+          head: opts.manifest.head,
+          dirty: opts.manifest.head === null ? null : false,
+        },
+      });
+    }
     if (opts.decisions) {
       writeFileSync(
         join(dir, 'decisions.csv'),
@@ -173,6 +197,49 @@ describe('--merge-stages: the guards (synthetic dirs)', () => {
         args: '--count=2 --seed-offset=2 --searcher --arbitrate --jobs=8',
       });
       mergeExpectFail([a, b], join(scratch, 'out'), 'not the same arm');
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('86e1 — bails when stage manifests name DIFFERENT heads (the same-HEAD rule)', () => {
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-merge-guards-'));
+    try {
+      const a = fakeStage(scratch, 'a', [1, 2], { manifest: { head: 'a'.repeat(40), argv: ['--searcher'] } });
+      const b = fakeStage(scratch, 'b', [3, 4], { manifest: { head: 'b'.repeat(40), argv: ['--searcher'] } });
+      mergeExpectFail([a, b], join(scratch, 'out'), 'DIFFERENT heads');
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('86e1 — bails when stage manifests name different arms (partition flags stripped)', () => {
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-merge-guards-'));
+    try {
+      const head = 'c'.repeat(40);
+      const a = fakeStage(scratch, 'a', [1, 2], { manifest: { head, argv: ['--count=2', '--searcher'] } });
+      const b = fakeStage(scratch, 'b', [3, 4], {
+        manifest: { head, argv: ['--count=2', '--seed-offset=2', '--searcher', '--arbitrate'] },
+      });
+      mergeExpectFail([a, b], join(scratch, 'out'), 'different arms');
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it('86e1 — a stage WITHOUT a manifest merges (pre-86e1 archives) but the merged provenance is null', () => {
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-merge-guards-'));
+    try {
+      const a = fakeStage(scratch, 'a', [1, 2], { manifest: { head: 'd'.repeat(40), argv: ['--searcher'] } });
+      const b = fakeStage(scratch, 'b', [3, 4]); // no manifest
+      const out = join(scratch, 'out');
+      const r = runCli([`--merge-stages=${a},${b}`, `--out=${out}`]);
+      expect(r.status, r.stderr).toBe(0);
+      const merged = readBatchManifest(out);
+      expect(merged?.kind).toBe('merge-stages');
+      expect(merged?.head).toBeNull();
+      expect(merged?.dirty).toBeNull();
+      expect(merged?.seedWindow).toEqual({ firstSeed: 1, count: 4 });
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }

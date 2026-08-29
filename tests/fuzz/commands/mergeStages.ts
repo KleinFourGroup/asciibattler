@@ -30,10 +30,13 @@
  *     bookkeeping) are LISTED on stdout, never silently dropped —
  *     re-derive aggregates from a serial run over the union window.
  *
- * What this deliberately does NOT do: verify the stages ran the same HEAD.
- * No provenance concept exists in an output dir today — that is 86e's
- * charter (the fail-closed board); the `args` check above is the best
- * available proxy until then.
+ * 86e1 — the SAME-HEAD protocol is now checkable here: when every stage
+ * carries a manifest.json, two guards upgrade the `args` proxy — the arm
+ * check runs on manifest argv, and two stages whose manifests name
+ * DIFFERENT heads bail loudly (the n=120 protocol's same-HEAD rule at the
+ * merge seam). Stages without manifests (pre-86e1 archives) fall back to
+ * the `args` proxy and produce a merged manifest with null provenance —
+ * the fail-closed board (86e2) is where unmanifested reads FAIL.
  */
 
 import {
@@ -47,15 +50,20 @@ import {
 import { join, resolve } from 'node:path';
 import { bail, type CliArgs } from './args';
 import { mergeSummaries } from './parallel';
+import {
+  MANIFEST_FILE,
+  armSignatureOf,
+  readBatchManifest,
+  stripPartitionFlags,
+  writeBatchManifest,
+  type BatchManifest,
+  type GitProvenance,
+} from '../manifest';
 
-export type MergeStagesArgs = Pick<CliArgs, 'mergeStages' | 'outDir' | 'outDirExplicit'>;
+export type MergeStagesArgs = Pick<CliArgs, 'mergeStages' | 'outDir' | 'outDirExplicit' | 'raw'>;
 
 /** The per-run-row csvs the shard regroup reproduces byte-for-byte. */
 const MERGEABLE = ['summary.csv', 'timings.csv', 'decisions.csv', 'tier-flips.csv', 'k-flips.csv'];
-
-/** Flags a stage's `args` record that only partition the batch — stripped
- *  before the same-arm comparison (the same list the --jobs parent owns). */
-const PARTITION_FLAG_PREFIXES = ['--count', '--seed-offset', '--out', '--jobs', '--emit-results'];
 
 interface Stage {
   readonly dir: string;
@@ -79,15 +87,17 @@ function readStage(dir: string): Stage {
   };
 }
 
-/** A stage's arm signature: its `args` tokens minus the partition flags, or
- *  null when the stage carries no args record (local runs). */
+/** A stage's arm signature from its box `args` record: the tokens minus the
+ *  partition flags, or null when the stage carries no args record (local
+ *  runs). The pre-86e1 proxy — manifests, when present, are authoritative. */
 function armSignature(dir: string): string | null {
   const path = join(dir, 'args');
   if (!existsSync(path)) return null;
-  const tokens = readFileSync(path, 'utf8')
-    .split(/\s+/)
-    .filter((t) => t.length > 0)
-    .filter((t) => !PARTITION_FLAG_PREFIXES.some((f) => t === f || t.startsWith(f + '=')));
+  const tokens = stripPartitionFlags(
+    readFileSync(path, 'utf8')
+      .split(/\s+/)
+      .filter((t) => t.length > 0),
+  );
   return tokens.sort().join(' ');
 }
 
@@ -129,6 +139,39 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
             `  ${stages[0]!.dir}: ${signatures[0]}\n  ${stages[i]!.dir}: ${signatures[i]}`,
         );
       }
+    }
+  }
+
+  // 86e1 — the manifest guards (when every stage carries a manifest.json;
+  // readBatchManifest THROWS on a corrupt one — never quietly "no manifest").
+  // Arm: the argv signature check, authoritative over the args proxy above.
+  // Head: two stages from PROVEN-different heads never merge (the n=120
+  // SAME-HEAD rule at the merge seam); an unknowable head (null) doesn't
+  // bail here — it flows into the merged manifest for the board to judge.
+  const manifests = stages.map((s) => readBatchManifest(s.dir));
+  let provenance: GitProvenance = { head: null, dirty: null };
+  if (manifests.every((m): m is BatchManifest => m !== null)) {
+    for (let i = 1; i < manifests.length; i++) {
+      if (armSignatureOf(manifests[i]!.argv) !== armSignatureOf(manifests[0]!.argv)) {
+        bail(
+          `--merge-stages: stage manifests name different arms:\n` +
+            `  ${stages[0]!.dir}: ${armSignatureOf(manifests[0]!.argv)}\n` +
+            `  ${stages[i]!.dir}: ${armSignatureOf(manifests[i]!.argv)}`,
+        );
+      }
+    }
+    const heads = new Set(manifests.map((m) => m.head).filter((h): h is string => h !== null));
+    if (heads.size > 1) {
+      bail(
+        `--merge-stages: stages ran DIFFERENT heads (${[...heads].join(' vs ')}) — ` +
+          `the n=120 protocol is same-HEAD only; re-run the divergent stage`,
+      );
+    }
+    if (heads.size === 1 && manifests.every((m) => m.head !== null)) {
+      provenance = {
+        head: [...heads][0]!,
+        dirty: manifests.some((m) => m.dirty === true),
+      };
     }
   }
 
@@ -182,8 +225,18 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
     }
   }
 
+  // 86e1 — the merged dir gets its own manifest over the union window,
+  // carrying the STAGES' provenance (never the merging machine's HEAD —
+  // this process only reassembled bytes, it measured nothing).
+  writeBatchManifest(args.outDir, {
+    kind: 'merge-stages',
+    argv: args.raw ?? [],
+    seedWindow: { firstSeed: union[0]!, count: union.length },
+    provenance,
+  });
+
   // No silent caps: name everything present that the merge did not reproduce.
-  const handled = new Set([...toMerge, 'failures']);
+  const handled = new Set([...toMerge, 'failures', MANIFEST_FILE]);
   const skipped = new Set<string>();
   for (const dir of sortedDirs) {
     for (const f of readdirSync(dir)) {

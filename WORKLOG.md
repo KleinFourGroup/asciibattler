@@ -2278,3 +2278,65 @@ signed-sheet movement. The sweep sharding (searchShard's
 vector-level chunks) deliberately keeps static chunking — its
 imbalance is vector-count-shaped, unmeasured, and no live
 consumer complained; re-measure if a §88-era sweep straggles.
+
+### 86e — the board split kickoff: shape-lock + 86e1 (2026-08-29)
+
+**The step's premise re-verified against the tree** (the step-zero
+rule): all seven kickoff-audit findings still hold at the 86d3
+close — every board check is `reference`-grade so `statusFor` can
+never emit FAIL (board.ts:530 / the `ref()` hardwire at 166) and
+the CLI's exit-code gate is dead code; a missing summary.csv is a
+`continue` + a footer line (cli.ts:106), never a verdict; `runs`
+is computed and never read; seeds aren't parsed at board level
+(dup-seed inflation is silent); an empty `strategyRow` filter
+reads as winRate 0 instead of "wrong arm"; a checked metric's
+null renders N/A and gates nothing; and no output dir carries any
+provenance (86d2's header comment is the written IOU).
+
+**Shape-lock (USER-SIGNED 2026-08-29), the e1–e4 cut:** e1 the
+machine manifest (run / jobs-parent / merge-stages sidecars) ·
+e2 the three-way report split — VERDICT (fail-closed integrity,
+exit 1) / DRIFT (the reference bands, WARN unchanged) /
+INSTRUMENT HEALTH (inert-class tripwire + gradients) · e3 the
+skill-gradient anchor rows · e4 the fail-closed pins + docs.
+The ⛔ decision point resolved on the proposed recommendations:
+(A) missing manifest = FAIL by default, `--allow-unmanifested`
+downgrades exactly that check to WARN for pre-86e1 archives,
+loud in the report header; (B) cross-dir HEAD mismatch FAILs
+(the SAME-HEAD protocol made checkable), measurement-HEAD vs
+the evaluating tree's HEAD prints prominently but only WARNs
+(docs commits legitimately land between a box fetch and
+--report); (C) anchor cadence: random+greedy ride every full
+board, searched-upper required only at amendment/re-pin boards.
+Predictions (carried from the phase shape-lock): harness-only,
+World v35 / Run v44 hold, no new RNG streams, no signed number
+moves, summary.csv schema untouched.
+
+**86e1 landed — the per-batch machine manifest.** `manifest.json`
+in every batch out dir: `head` (a bare sha — the §85g free-text
+lesson; null = git unavailable, recorded honestly and judged by
+e2, never papered over at capture), `dirty`, the verbatim argv,
+`seedWindow {firstSeed, count}`, kind (run / jobs-parent /
+merge-stages), version, timestamp. Sidecar discipline throughout:
+never on a byte-identity surface (the 86b oracle + all parity
+pins compare named files, verified before writing a byte).
+Placement: serial run.ts beside timings.csv; the --jobs parent
+after the shards wipe (shard manifests die with the scratch
+dirs); --merge-stages derives the STAGES' provenance — common
+head, dirty-OR — never the merging machine's HEAD (it reassembled
+bytes, it measured nothing). The merge also gains the upgraded
+guards: manifest-argv same-arm check (authoritative over the box
+`args` proxy, which stays for pre-86e1 box dirs) and a loud bail
+when stages name PROVEN-different heads — the n=120 SAME-HEAD
+rule is now machine-checked at the merge seam. One list for
+partition flags now (`PARTITION_FLAG_PREFIXES` in manifest.ts;
+parallel.ts + mergeStages.ts import it). CliArgs gains optional
+`raw` (parseArgs stashes the verbatim argv). Pins: +4 manifest
+(round-trip, real-repo git capture, loud-on-corrupt read —
+a broken provenance record must never quietly read as "no
+provenance", flag-boundary strip) · +3 merge guards (different
+heads bail, different manifest arms bail, unmanifested stage
+merges with null provenance) · the real oracles extended (the
+merged dir's manifest carries the stages' head over the union
+window; serial + jobs-parent manifests asserted in the parity
+pin). 16/16 across the three suites; typecheck clean.

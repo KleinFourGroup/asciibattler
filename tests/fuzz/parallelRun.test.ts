@@ -16,6 +16,7 @@ import { readFileSync, readdirSync, existsSync, mkdtempSync, rmSync } from 'node
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
+import { readBatchManifest } from './manifest';
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
 
@@ -75,6 +76,19 @@ describe('run-mode --jobs parity', () => {
 
       // The shard scratch dir is cleaned up on success.
       expect(existsSync(join(parallelDir, 'shards'))).toBe(false);
+
+      // 86e1 — both modes leave a machine manifest: real head, the batch's
+      // argv, the full seed window (the fail-closed board's provenance).
+      for (const [dir, kind] of [
+        [serialDir, 'run'],
+        [parallelDir, 'jobs-parent'],
+      ] as const) {
+        const m = readBatchManifest(dir);
+        expect(m?.kind).toBe(kind);
+        expect(m?.head).toMatch(/^[0-9a-f]{40}$/);
+        expect(m?.seedWindow).toEqual({ firstSeed: 1, count: 4 });
+        expect(m?.argv).toContain('--count=4');
+      }
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }

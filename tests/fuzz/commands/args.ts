@@ -40,6 +40,10 @@ export interface CliArgs {
   seed?: number;
   strategy?: string;
   outDir: string;
+  // 86e1 — the verbatim argv this parse consumed, recorded into each batch
+  // dir's manifest.json (provenance for the fail-closed board). Optional so
+  // tests can build synthetic arg objects; absent = an empty argv recorded.
+  raw?: readonly string[];
   // 86d2 — true iff `--out` was passed explicitly. The stage-merge mode
   // refuses to run without it (writing a merged artifact set into the
   // rolling default dir invites clobbering a live batch).
@@ -228,6 +232,7 @@ export interface CliArgs {
 export function parseArgs(argv: readonly string[]): CliArgs {
   const args: CliArgs = {
     count: 20,
+    raw: [...argv],
     outDir: defaultOutDir(),
     outDirExplicit: false,
     perHop: false,

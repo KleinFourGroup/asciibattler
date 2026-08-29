@@ -2486,3 +2486,62 @@ pool's ~8% · the hook's sim-touching path 314→~146 s · and the
 a tractable one). NEXT = the §87 kickoff (roster realism:
 `playerArchetypes` capture + `--roster=sampled:<hop>` → the X3
 re-read).
+
+## Phase 87 — Roster realism for isolation reads
+
+### 87 kickoff: code-reality audit + shape-lock (2026-08-29, USER-SIGNED)
+
+Step-zero re-verify of the spec's "Confirmed:" line (written
+2026-08-22, three phases of churn back) — every premise HOLDS:
+`playerArchetypes` exists nowhere; the capture site is
+harness.ts:515 (`playerLevels` beside `UnitTemplate.archetype` —
+a sibling map + the PartialBattle/hang-path copies); `--roster` →
+`parseRunConfig` → `RunConfig.startingRoster`, resolved ONCE for
+all seeds in run.ts (so the sampled mode needs a per-seed
+harness-side seam); per-battle rows reach disk only via the
+opt-in results.json — the spec's "a reporter column"
+under-scopes it, and the real deliverable is a `rosters.csv`
+SIDECAR riding every batch (timings.csv discipline: MERGEABLE +
+shard adoption; unlike timings it is fully deterministic, so the
+parity pin is byte-identity). The table pipeline's precedent is
+exact: `prior:table` (sweep sidecars → committed JSON with
+machine `measurementHead` provenance, refuse-empty).
+
+The signed cut: **87a** the capture (`playerArchetypes` +
+rosters.csv through serial/--jobs/--merge-stages, parity-pinned)
+· **87b** ⭐ the capture cohort DOUBLES as the manifested
+full-board re-measure (one box-drive.sh cohort kills the 86e
+"archives are unmanifested" ⚠, gives the anchors their first
+boxed read, AND sources the table; n=40 rows, extension via the
+now-verified --merge-stages only if a re-pin question arises;
+expect WARN families vs the n=120-pinned refs — a drift read,
+not a re-pin) · **87c** the table + the mode (`roster:table` →
+`tests/fuzz/board/roster-table.json`, whole rows with
+multiplicity keyed (character, sector, hop);
+`--roster=sampled:<hop>` act-1 default / `sampled:<sector>:<hop>`
+act-2, per-seed seed-derived RNG, loud-throw contract, composes
+with the full ARM) · **87d** the X3 re-read cohort under sampled
+rosters on the fold's ARM — the per-kind bands dispositioned
+hold / re-pin / defect (⛔ the dispositions are the user's).
+Predictions: World v35 / Run v44 hold; no new serialized RNG
+streams (the sampler RNG is harness-local); default arms
+byte-untouched (the sidecar is additive).
+
+### 87a landed — the roster capture (2026-08-29)
+
+`BattleResult.playerArchetypes` beside `playerLevels` (the same
+pre-damage capture at the encounter snapshot, the hang-path copy
+included; index-paired — the whole-row contract §87c depends on,
+pinned against a real driven run with every entry validated
+against ALL_ARCHETYPES). The `rosters.csv` sidecar rides EVERY
+batch: `seed,strategy,character,sector,hop,archetypes,levels`
+(pipe-joined lists), one row per battle — fully deterministic
+(unlike timings.csv), so the --jobs shard regroup and the
+--merge-stages regroup reproduce it BYTE-IDENTICAL to serial
+(both real-spawn oracles extended and green). MERGEABLE gains it;
+the parent adopts it timings-style. Character stamped per row
+from the batch's resolved selection (uniform per batch — the
+§68 per-batch isolation makes the column trivially correct).
+Six harness fixture literals gained the field (typecheck-
+enumerated). Every future batch is now capture-usable — the
+capture cohort (87b) needs no special arm.

@@ -184,6 +184,13 @@ export async function runParallelRunCli(args: ParallelRunArgs): Promise<void> {
     writeFileSync(join(args.outDir, 'timings.csv'), mergeSummaries(shardDirs, 'timings.csv'));
   }
 
+  // 87a — the roster sidecar merges the same way; unlike timings its rows
+  // are deterministic, so the merged file is byte-identical to serial
+  // (pinned in parallelRun.test.ts).
+  if (shardDirs.every((d) => existsSync(join(d, 'rosters.csv')))) {
+    writeFileSync(join(args.outDir, 'rosters.csv'), mergeSummaries(shardDirs, 'rosters.csv'));
+  }
+
   // 68e — the aggregate analyses over the round-tripped results (must run
   // before the shardsDir wipe below — the shard results.json files live there).
   if (needResults) {

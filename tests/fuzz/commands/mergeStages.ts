@@ -62,8 +62,10 @@ import {
 
 export type MergeStagesArgs = Pick<CliArgs, 'mergeStages' | 'outDir' | 'outDirExplicit' | 'raw'>;
 
-/** The per-run-row csvs the shard regroup reproduces byte-for-byte. */
-const MERGEABLE = ['summary.csv', 'timings.csv', 'decisions.csv', 'tier-flips.csv', 'k-flips.csv'];
+/** The per-run-row csvs the shard regroup reproduces byte-for-byte.
+ *  87a: rosters.csv joins (per-battle rows, same seed,strategy leading
+ *  columns — the decisions.csv multi-row shape). */
+const MERGEABLE = ['summary.csv', 'timings.csv', 'decisions.csv', 'tier-flips.csv', 'k-flips.csv', 'rosters.csv'];
 
 interface Stage {
   readonly dir: string;

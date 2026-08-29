@@ -74,6 +74,14 @@ describe('run-mode --jobs parity', () => {
         }
       }
 
+      // 87a — the roster sidecar is DETERMINISTIC (unlike timings), so the
+      // parallel merge must reproduce serial byte-for-byte; rows are
+      // per-battle with pipe-joined archetype/level lists.
+      const serialRosters = readFileSync(join(serialDir, 'rosters.csv'), 'utf8');
+      expect(serialRosters.split('\n')[0]).toBe('seed,strategy,character,sector,hop,archetypes,levels');
+      expect(serialRosters.trim().split('\n').length).toBeGreaterThan(1);
+      expect(readFileSync(join(parallelDir, 'rosters.csv'), 'utf8')).toBe(serialRosters);
+
       // The shard scratch dir is cleaned up on success.
       expect(existsSync(join(parallelDir, 'shards'))).toBe(false);
 

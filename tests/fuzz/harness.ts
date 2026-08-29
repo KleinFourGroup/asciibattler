@@ -100,6 +100,11 @@ export interface BattleResult {
    *  before any deaths so it reflects the composition entering the hop. */
   playerLevels: number[];
   enemyLevels: number[];
+  /** 87a — the composition entering the hop, index-paired with
+   *  `playerLevels` (same capture site, same pre-damage snapshot). The
+   *  roster-realism capture: rosters.csv rows + the §87c per-hop table
+   *  are built from this. */
+  playerArchetypes: Archetype[];
   /** 72b-pre — the run-wide player pool at battle (wave) START. With the
    *  (sector, hop) key this is the pool-HP trajectory sample: the unified
    *  balance frame's connective tissue (encounter damage → trajectory →
@@ -514,6 +519,7 @@ function runOneInner(
       enemyTeamSize: encounter.enemyTeam.length,
       playerLevels: encounter.playerTeam.map((u) => u.level),
       enemyLevels: encounter.enemyTeam.map((u) => u.level),
+      playerArchetypes: encounter.playerTeam.map((u) => u.archetype),
       poolAtStart: run.playerHealth,
       playerDeaths: 0,
       enemyDeaths: 0,
@@ -619,6 +625,7 @@ function runOneInner(
       enemyTeamSize: currentBattle.enemyTeamSize,
       playerLevels: currentBattle.playerLevels,
       enemyLevels: currentBattle.enemyLevels,
+      playerArchetypes: currentBattle.playerArchetypes,
       poolAtStart: currentBattle.poolAtStart,
     });
     currentBattle = null;
@@ -956,6 +963,7 @@ function runOneInner(
               enemyTeamSize: cb.enemyTeamSize,
               playerLevels: cb.playerLevels,
               enemyLevels: cb.enemyLevels,
+              playerArchetypes: cb.playerArchetypes,
               poolAtStart: cb.poolAtStart,
             });
           }
@@ -1135,6 +1143,7 @@ interface PartialBattle {
   enemyTeamSize: number;
   playerLevels: number[];
   enemyLevels: number[];
+  playerArchetypes: Archetype[];
   poolAtStart: number;
   playerDeaths: number;
   enemyDeaths: number;

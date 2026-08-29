@@ -405,6 +405,26 @@ export function runRunCli(args: RunModeArgs): void {
     ['seed,strategy,ms', ...timingRows].join('\n') + '\n',
   );
 
+  // 87a — the per-battle roster sidecar: one row per battle (composition
+  // ENTERING the hop, pre-damage), pipe-joined lists index-paired. Fully
+  // deterministic (unlike timings.csv), so --jobs/--merge-stages reproduce
+  // it byte-for-byte via the same regroup — pinned in parallelRun.test.ts.
+  // The §87c roster:table builder sweeps these; riding EVERY batch makes
+  // every future batch capture-usable (the 87 shape-lock).
+  writeFileSync(
+    join(args.outDir, 'rosters.csv'),
+    [
+      'seed,strategy,character,sector,hop,archetypes,levels',
+      ...allResults.flatMap((r) =>
+        r.battles.map(
+          (b) =>
+            `${r.seed},${r.strategyName},${characterLabel(character)},${b.sector},${b.hop},` +
+            `${b.playerArchetypes.join('|')},${b.playerLevels.join('|')}`,
+        ),
+      ),
+    ].join('\n') + '\n',
+  );
+
   // 86e1 — the per-batch machine manifest (provenance for the fail-closed
   // board: what HEAD + argv produced these artifacts). Sidecar discipline —
   // wall clock + machine HEAD never ride a byte-identity surface.

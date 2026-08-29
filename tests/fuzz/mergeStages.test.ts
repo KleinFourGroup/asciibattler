@@ -54,6 +54,11 @@ describe('--merge-stages: the serial-equivalence oracle', () => {
       expect(readFileSync(join(mergedDir, 'summary.csv'), 'utf8')).toBe(
         readFileSync(join(serialDir, 'summary.csv'), 'utf8'),
       );
+      // 87a — rosters.csv rides the same regroup and is deterministic:
+      // byte-identical to the serial run.
+      expect(readFileSync(join(mergedDir, 'rosters.csv'), 'utf8')).toBe(
+        readFileSync(join(serialDir, 'rosters.csv'), 'utf8'),
+      );
       // timings.csv: serial keys + ordering (ms values are wall clock).
       const keyCols = (csv: string): string[] =>
         csv.trim().split('\n').slice(1).map((l) => l.split(',').slice(0, 2).join(','));

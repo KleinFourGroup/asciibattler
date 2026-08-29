@@ -203,7 +203,19 @@ the X3 isolation cohort re-runs under it on the fold's arm. **Risk:**
 low-medium. **Exit:** the sampled mode on the default arm; the
 per-kind bands dispositioned hold / re-pin / defect.
 
-_(Sub-steps cut at phase kickoff.)_
+Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
+
+- [ ] 87a — the capture: `playerArchetypes` beside `playerLevels` +
+      the `rosters.csv` sidecar (every batch; serial/--jobs/
+      --merge-stages; byte-identity parity pins).
+- [ ] 87b — the capture cohort = the manifested full-board
+      re-measure (box, one HEAD; kills the 86e unmanifested-archives
+      ⚠ + first boxed anchor read + the table's source).
+- [ ] 87c — `roster:table` → `tests/fuzz/board/roster-table.json`
+      (whole rows, provenance) + `--roster=sampled:<hop>` (per-seed
+      deterministic, ARM-composable, loud-throw).
+- [ ] 87d — the X3 re-read under sampled rosters (⛔ decision point:
+      the per-kind band dispositions).
 
 ## Phase 88 — The rarity read + the round close
 

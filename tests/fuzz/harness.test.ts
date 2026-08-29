@@ -47,6 +47,7 @@ import {
   type SeamHazardInput,
 } from './reporters';
 import { TelemetryAccumulator } from './telemetry';
+import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { Archetype } from '../../src/sim/archetypes';
 import type { RunTelemetry } from './telemetry';
 import { LAYOUT_IDS } from '../../src/sim/layouts';
@@ -815,6 +816,11 @@ describe('fuzz reporters', () => {
       expect(b.enemyLevels).toHaveLength(b.enemyTeamSize);
       expect(b.playerLevels.every((l) => l >= 1)).toBe(true);
       expect(b.enemyLevels.every((l) => l >= 1)).toBe(true);
+      // 87a — the roster capture: archetypes index-paired with the levels
+      // (the whole-row contract the §87c table + sampled mode depend on),
+      // every entry a real catalog archetype.
+      expect(b.playerArchetypes).toHaveLength(b.playerTeamSize);
+      expect(b.playerArchetypes.every((a) => (ALL_ARCHETYPES as readonly string[]).includes(a))).toBe(true);
     }
   });
 
@@ -869,6 +875,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [1, 1, 1, 1, 1],
       enemyLevels: [1, 1, 1, 1, 1, 1, 1, 1],
+      playerArchetypes: ['soldier', 'soldier', 'soldier', 'soldier', 'soldier'],
       poolAtStart: 20,
     });
     const run = (
@@ -942,6 +949,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [1],
       enemyLevels: [1],
+      playerArchetypes: ['soldier'],
       poolAtStart: 20,
     });
     const run = (
@@ -1009,6 +1017,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize,
       playerLevels: [1, 1, 1, 1, 1],
       enemyLevels: Array<number>(enemyTeamSize).fill(1),
+      playerArchetypes: ['soldier', 'soldier', 'soldier', 'soldier', 'soldier'],
       poolAtStart: 20,
     });
     const results: RunResult[] = [
@@ -1088,6 +1097,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [1],
       enemyLevels: [1],
+      playerArchetypes: ['soldier'],
       poolAtStart: 20,
     });
     const run: RunResult = {
@@ -1139,6 +1149,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [],
       enemyLevels: [],
+      playerArchetypes: [],
       poolAtStart: 20,
     });
     const tel = (
@@ -1271,6 +1282,7 @@ describe('fuzz reporters', () => {
       enemyTeamSize: 8,
       playerLevels: [],
       enemyLevels: [],
+      playerArchetypes: [],
       poolAtStart: 20,
     });
     const results: RunResult[] = [

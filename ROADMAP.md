@@ -243,7 +243,10 @@ summary.csv (oracle safety).
       known drift baseline under --allow-unmanifested). 86e3 ✅ (the
       anchors: bare pure-random/greedy rows + the HEALTH gradient vs
       the act-1 ARM rows; --only scopes to a loud PARTIAL board; the
-      maiden run's dirty-tree FAIL = the verdict working).
+      maiden run's dirty-tree FAIL = the verdict working). 86e4 ✅
+      (the fail-closed contract as CLI-level pins — every FAIL class
+      → FAIL + exit 1; BALANCE §board-integrity protocol + the
+      anchor maiden read logged). **86e CLOSED 2026-08-29.**
 - [ ] 86f — the close: re-run the 86a shapes, record the measured
       speedup or the documented no-op; WORKLOG + Cursor.
 

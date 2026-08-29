@@ -221,6 +221,51 @@ valid for its stated purpose, opt-in, NEVER a default balance anchor;
 | coverage bot (`--objective=coverage`) | **niche** | crash/churn coverage; kept separate from measurement (the O5 separation) |
 | 53g human fixtures | **niche** (replay test RETIRED at 68h) | the fixture + shape test stay ([tests/gauntlet/humanFixture.test.ts](tests/gauntlet/humanFixture.test.ts)); the ~80% human ceiling stays citable (§53g); a future human gauntlet re-records on the then-current engine and re-opens replay regression |
 
+## The board integrity protocol (86e, 2026-08-29, USER-SIGNED)
+
+The executable board's report is a **three-way split** with distinct
+semantics — VERDICT / DRIFT / INSTRUMENT HEALTH — and the board is now
+**fail-closed**: it can (and does) exit non-zero.
+
+- **VERDICT — measurement integrity, gates the exit.** Missing dir ·
+  unparseable summary · empty arm-match · n under 40 · duplicate seeds ·
+  rows ≠ the manifest's seed window · provenance (no `manifest.json`, a
+  corrupt one, `head=null`, a DIRTY tree, a manifest argv that is not the
+  instrument's arm) · an N/A on any checked row · a cross-dir HEAD split —
+  every one FAILs and exits 1. **A board that can't prove what it measured
+  is VOID**; fix the measurement before reading the drift table.
+- **DRIFT** — the reference bands vs the signed sheet, WARN semantics
+  unchanged (a `signed`-grade band would still FAIL; none exist by the 68d
+  design — signatures live on the sheet).
+- **HEALTH** — self-checks that never gate: the 84f2 inert-class tripwire
+  and the 86e3 **skill gradient** (below).
+- **Provenance** rides every batch as `manifest.json` (86e1: machine
+  `head` + `dirty` + verbatim argv + seed window; written by serial runs,
+  the `--jobs` parent, and `--merge-stages`, which also refuses to merge
+  stages from proven-different heads). `--allow-unmanifested` downgrades
+  exactly the missing-manifest check to WARN — **for reading pre-86e1
+  archives only**, loud in the report header; it never excuses a dirty
+  tree or a head split. A decision-feeding read on today's code has no
+  reason to use it.
+- **HEAD discipline**: all dirs in one board read must name ONE head
+  (FAIL otherwise — the n=120 SAME-HEAD protocol, machine-checked);
+  measurement-HEAD ≠ the evaluating tree's HEAD only WARNs (fetch-then-
+  report is legitimate), but **any re-pin cites the measurement HEAD**.
+- **The skill gradient (86e3)**: `anchor-random` + `anchor-greedy` — the
+  two bare registry baselines on the act-1 shape, no arm flags — ride
+  EVERY full board (~a minute total; checkless rows). HEALTH checks
+  random < greedy < the best act-1 ARM row; an INVERSION means the
+  instrument is broken, not the balance. The bare-baseline gap is narrow
+  (0.200 vs 0.225 at the 86e3 maiden read, n=40) — an occasional
+  random↔greedy inversion WARN is expected noise; the ARM-vs-anchor legs
+  are the load-bearing ones. **At amendment/re-pin boards the
+  searched-UPPER leg is additionally a FRESH `--search` derive** (the
+  85g5 frozen-vector lesson: a deployed vector's ceiling drifts), not
+  just the standing arb rows.
+- `--only` scopes verdict+drift to the selection under a loud
+  ⚠ PARTIAL BOARD banner — a legitimate smoke read, **never a signing
+  board**.
+
 ## The signal (gradient first — unchanged)
 
 - **best-achievable** = max over searched strategy-weight vectors of the outcome
@@ -3842,3 +3887,15 @@ deltas. The pre-X H7c→O log lives at
   strong-vector question). Forced bosses EXACTLY at pins
   (0.775/0.675) · fire channel +0.075 in-band. Re-pin amendment
   DRAFTED, pending the user's morning signature.
+
+- **2026-08-29 (86e3) — the anchor maiden read** (act-1 shape, n=40,
+  `--jobs=8`, HEAD `962a363`, manifested + verdict-PASS): pure-random
+  **0.200** · greedy **0.225** · vs the standing fold-baseline ARM legs
+  0.667/0.758 — the first executable skill-gradient read, monotone on
+  all three legs (random < greedy < arb-deploy). Determinism check: the
+  values reproduced exactly across the dirty-tree first run and the
+  clean-HEAD re-run. NOTE the bare-baseline gap (0.025) is inside n=40
+  noise — the gradient's load-bearing legs are ARM-vs-anchor (gap ≈
+  +0.53); a random↔greedy inversion WARN on a future board is noise
+  until it repeats. (The dirty-tree first run itself: the verdict
+  FAILed it — the fail-closed board's first real catch.)

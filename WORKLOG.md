@@ -2408,3 +2408,34 @@ ARM-vs-anchor legs are the load-bearing ones), ARM legs 0.667/
 anchor definition pin; the two board-definition tests that
 asserted every row runs the extended arm now exempt the anchor
 category (an honest structure change, not a relaxation).
+
+**86e4 landed — the fail-closed contract as tests + the protocol
+docs; §86e CLOSED.** `boardCli.test.ts`: the FAIL classes pinned
+through the REAL `balance:board --report` entry — the exit-code
+wiring is exactly the part that sat dead for two months, so
+pure-layer pins weren't enough. Four spawns (~6 s): a happy
+17-instrument fixture tree (integrity PASS, exit 0, the
+vs-current WARN riding — decision B's soft half); one
+mega-mutation tree (nine independent per-instrument breakages in
+ONE report, classes judged per-instrument so none masks another:
+missing · unparseable · arm-match-0 · under-n · dup-seed ·
+window-mismatch · no-manifest · dirty-tree · wrong-arm-manifest ·
+head-split · checked-row-N/A — exit 1, every class named); the
+decision-A pair (strict exit 1 / --allow-unmanifested exit 0 +
+the loud banner). One test-authoring catch worth keeping: the
+first draft's `manifest:false` re-write left the happy tree's
+manifest lying and the whole tree read clean — the fixture bug
+was itself the silent-staleness shape the verdict exists to
+catch; writeDir now deletes. Docs: BALANCE gains §"The board
+integrity protocol" (the three-way split, the FAIL classes, the
+HEAD discipline, the anchor cadence incl. the signing-board
+fresh-derive rule, the PARTIAL-board rule) + the 86e3 anchor
+maiden read in the run log (random 0.200 · greedy 0.225 · ARM
+0.667/0.758, monotone, values reproduced exactly across the
+dirty-tree first run and the clean re-run); AGENTS gets a
+one-line pointer in the box-ops bullet. Operational note for the
+next board cohort: the 15 standing archive dirs are pre-86e1
+(unmanifested) — the next FULL board run re-measures everything
+manifested at one HEAD, plus the two anchor rows; until then a
+full `--report` needs `--allow-unmanifested` and is not a
+signing read.

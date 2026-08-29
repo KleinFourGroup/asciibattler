@@ -229,7 +229,11 @@ kickoff — has its own section below.)
   dirty tree or a HEAD flip before every launch instead of silently
   rerunning the remaining arms at the new HEAD: no commits, no doc
   edits, until the driver's last launch has fired. Don't hand-roll
-  a new scratch driver; extend this one.
+  a new scratch driver; extend this one. Since 86e every batch dir
+  carries a `manifest.json` (machine HEAD + argv + seed window) and
+  the balance board is FAIL-CLOSED on integrity — the protocol is
+  BALANCE §"The board integrity protocol"; `--allow-unmanifested`
+  is for pre-86e archives only.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes

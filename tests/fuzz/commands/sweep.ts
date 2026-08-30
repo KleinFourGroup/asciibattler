@@ -31,6 +31,7 @@ import { parseRunConfig } from '../../../src/run/RunConfig';
 import {
   bail,
   characterFromArgs,
+  bailIfSampledRoster,
   daemonFromArgs,
   empowerFromArgs,
   encounterFromArgs,
@@ -86,6 +87,8 @@ export async function runBalanceSweepCli(args: SweepModeArgs): Promise<void> {
 
   // --roster=archetype[:level],... → a forced starting roster (reuses RunConfig's
   // validated parser: invalid tokens dropped, :level optional, clamped to cap).
+  // 87c — the sampled mode is run-mode only; loud, never a silent token-drop.
+  bailIfSampledRoster(args, '--balance-sweep');
   const rosterOverride = args.roster
     ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
     : undefined;

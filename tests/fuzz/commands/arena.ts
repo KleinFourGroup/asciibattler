@@ -34,7 +34,7 @@ import {
 } from '../objectiveStrategy';
 import { parseRunConfig } from '../../../src/run/RunConfig';
 import { LAYOUT_IDS } from '../../../src/sim/layouts';
-import { bail, coverageFromArgs, range, type CliArgs } from './args';
+import { bail, bailIfSampledRoster, coverageFromArgs, range, type CliArgs } from './args';
 
 export type ArenaModeArgs = Pick<
   CliArgs,
@@ -43,6 +43,9 @@ export type ArenaModeArgs = Pick<
 
 export function runArenaCli(args: ArenaModeArgs): void {
   const seeds = range(1, args.seeds ?? 24);
+  // 87c — the sampled mode is a run-mode per-seed contract; loud here, not
+  // a silent parseRunConfig token-drop onto DEFAULT_ARENA_ROSTER.
+  bailIfSampledRoster(args, '--arena');
   const roster =
     (args.roster
       ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster

@@ -729,6 +729,47 @@ export function characterFromArgs(args: Pick<CliArgs, 'character'>): CharacterSe
     : DEFAULT_CHARACTER_SELECTION;
 }
 
+/** 87c — the sampled-roster spec: `--roster=sampled:<hop>` (act-1 default,
+ *  sector 0) or `sampled:<sector>:<hop>`. Returns `undefined` for a literal
+ *  roster (or no flag); **bails loudly on a malformed spec** — never falls
+ *  through to `parseRunConfig`'s silent token-drop. Hop numbering resets
+ *  per sector (gotcha #120), so the pair is the key, never bare hop. */
+export function sampledRosterFromArgs(
+  args: Pick<CliArgs, 'roster'>,
+): { readonly sector: number; readonly hop: number } | undefined {
+  const raw = args.roster;
+  if (raw === undefined || !raw.startsWith('sampled')) return undefined;
+  const parts = raw.split(':');
+  const nums = parts.slice(1).map(Number);
+  if (
+    parts[0] !== 'sampled' ||
+    nums.length < 1 ||
+    nums.length > 2 ||
+    nums.some((n) => !Number.isInteger(n))
+  ) {
+    bail(`--roster=${raw}: expected sampled:<hop> or sampled:<sector>:<hop>`);
+  }
+  const [sector, hop] = nums.length === 2 ? [nums[0]!, nums[1]!] : [0, nums[0]!];
+  if (sector < 0 || hop < 0) {
+    // hop 0 is legal: act-2 entry battles land there (the sector root is
+    // battled on arrival). Whether the bucket EXISTS is the launch check.
+    bail(`--roster=${raw}: sector and hop must be >= 0`);
+  }
+  return { sector, hop };
+}
+
+/** 87c — the non-run modes resolve ONE roster for all seeds, so the
+ *  per-seed sampled mode can't apply there; bail before `parseRunConfig`
+ *  silently drops the tokens and sweeps the natural roster. */
+export function bailIfSampledRoster(args: Pick<CliArgs, 'roster'>, mode: string): void {
+  if (args.roster !== undefined && args.roster.startsWith('sampled')) {
+    bail(
+      `--roster=${args.roster}: the sampled mode is run-mode only (a per-seed draw); ` +
+        `${mode} resolves one roster for all seeds — give a literal roster`,
+    );
+  }
+}
+
 /** M6/N2 — resolve + VALIDATE the `--layout` flag into a `forcedLayoutId` (a
  *  known `LAYOUT_IDS` member or the `FORCE_PROCEDURAL` sentinel), or `undefined`
  *  when absent. **Bails loudly on an unknown id** — unlike `parseRunConfig`'s

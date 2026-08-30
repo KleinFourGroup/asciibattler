@@ -16,6 +16,7 @@
     "fuzz:smoke": "vitest run --config vitest.fuzz.config.ts",
     "balance:board": "tsx tests/fuzz/board/cli.ts",
     "prior:table": "tsx tests/fuzz/prior/cli.ts",
+    "roster:table": "tsx tests/fuzz/roster/cli.ts",
     "gauntlet": "tsx tests/gauntlet/cli.ts",
     "pathing": "tsx tests/pathing/cli.ts",
     "nodemap:metrics": "tsx tools/nodemap-viz/report.ts",

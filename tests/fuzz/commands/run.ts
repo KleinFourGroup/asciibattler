@@ -51,10 +51,12 @@ import {
 } from '../reporters';
 import { daemonLabel } from '../daemonSelection';
 import { characterLabel } from '../characterSelection';
+import { loadRosterTable, makeRosterSampler, rosterKeyOf } from '../roster/rosterTable';
 import { resolveKnob } from '../balanceSweep';
 import {
   bail,
   characterFromArgs,
+  sampledRosterFromArgs,
   coverageFromArgs,
   daemonFromArgs,
   empowerFromArgs,
@@ -165,9 +167,14 @@ export function runRunCli(args: RunModeArgs): void {
   let harnessOptions: HarnessOptions = {};
   const layout = layoutFromArgs(args);
   const encounter = encounterFromArgs(args);
-  const roster = args.roster
-    ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
-    : undefined;
+  // 87c — `--roster=sampled:<hop>` / `sampled:<sector>:<hop>` draws a whole
+  // recorded roster row PER SEED (the sampler below, once the character arm
+  // is resolved); the literal form still resolves once for all seeds.
+  const sampledRoster = sampledRosterFromArgs(args);
+  const roster =
+    sampledRoster === undefined && args.roster
+      ? parseRunConfig(new URLSearchParams({ roster: args.roster })).startingRoster
+      : undefined;
   const runConfig: {
     hopCount?: number;
     sectorHops?: number;
@@ -277,6 +284,20 @@ export function runRunCli(args: RunModeArgs): void {
   // 63d — the character arm (ALWAYS set: absent = the explicit Soldier).
   const character = characterFromArgs(args);
   harnessOptions = { ...harnessOptions, character };
+  // 87c — the sampled-roster seam: the committed table is loaded and the
+  // (character, sector, hop) bucket validated AT LAUNCH (loud-throw — a
+  // sampled arm with no table / an empty bucket dies at the flag, never a
+  // silent natural-roster batch), then one whole recorded row is drawn per
+  // seed off the keyed 'rosterSample' harness stream in the loop below — a
+  // pure function of the seed, so --jobs shards reproduce the serial draw.
+  const rosterSampler = sampledRoster
+    ? makeRosterSampler(
+        loadRosterTable(),
+        characterLabel(character),
+        sampledRoster.sector,
+        sampledRoster.hop,
+      )
+    : undefined;
   // X2 — `--per-encounter` needs the opt-in mechanism telemetry on (pool chips)
   // so the per-encounter pool-damage metric is populated. Pure observation —
   // doesn't perturb determinism or the summary.csv / failure-trace output.
@@ -295,9 +316,11 @@ export function runRunCli(args: RunModeArgs): void {
   const layoutNote = args.layout ? ` (layout=${args.layout})` : '';
   const encounterNote = encounter ? ` (encounter=${encounter})` : '';
   const hopsNote = args.hops !== undefined ? ` (hops=${args.hops})` : '';
-  const rosterNote = roster
-    ? ` (roster=[${roster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}])`
-    : '';
+  const rosterNote = sampledRoster
+    ? ` (roster=sampled ${rosterKeyOf(characterLabel(character), sampledRoster.sector, sampledRoster.hop)})`
+    : roster
+      ? ` (roster=[${roster.map((e) => (e.level > 1 ? `${e.archetype}:${e.level}` : e.archetype)).join(',')}])`
+      : '';
   const daemonNote = daemon ? ` daemon=${daemonLabel(daemon)}` : '';
   const characterNote = ` character=${characterLabel(character)}`;
   const scriptsNote = args.scripts ? ' scripts=ON' : '';
@@ -368,7 +391,18 @@ export function runRunCli(args: RunModeArgs): void {
       // inside runOne now (the wrapStrategy seam); `--jobs` still inherits
       // decisions via the 68e results.json round-trip with no extra protocol.
       const seedStartedAt = Date.now();
-      const r = runOne(s, strategy, harnessOptions);
+      // 87c — the per-seed sampled roster rides HarnessOptions.runConfig
+      // (additive over any --hops/--encounter dials already set there).
+      const r = runOne(
+        s,
+        strategy,
+        rosterSampler
+          ? {
+              ...harnessOptions,
+              runConfig: { ...harnessOptions.runConfig, startingRoster: rosterSampler(s) },
+            }
+          : harnessOptions,
+      );
       // 86a — per-seed wall clock for the timings sidecar (below). Captured
       // here, around runOne only, so setup/reporting cost stays out of the
       // per-seed read.

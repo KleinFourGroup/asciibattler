@@ -61,6 +61,8 @@ export const RNG_STREAM_KEYS = [
   //     break, re-pinned at 85b; game streams above are untouched. ---
   'arbDriver', //      ()  — the run-layer arbitration driver's CRN pair stream
   'arbShadowSites', // ()  — the shadow-only sites' pair stream (84c recruit)
+  'rosterSample', //   ()  root = the RUN seed — the §87c sampled-roster draw
+  //                  (one whole recorded row per run, harness-side only)
   // --- dev/test ---
   'test', //       (any)                    — test-fixture streams; never shipped in src/
 ] as const;

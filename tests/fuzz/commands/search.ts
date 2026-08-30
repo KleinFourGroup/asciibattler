@@ -40,6 +40,7 @@ import {
   bail,
   characterFromArgs,
   daemonFromArgs,
+  bailIfSampledRoster,
   empowerFromArgs,
   encounterFromArgs,
   layoutFromArgs,
@@ -115,6 +116,9 @@ export async function runSearchCli(args: SearchModeArgs): Promise<void> {
   const hopCount = sectorHops !== undefined ? undefined : (args.hops ?? preset.hopCount);
   if (hopCount !== undefined) searchParams.set('hops', String(hopCount));
   if (sectorHops !== undefined) searchParams.set('sectorHops', String(sectorHops));
+  // 87c — the sampled mode is run-mode only (the searched vector is scored
+  // over a FIXED roster arm); loud, never a silent token-drop in the shards.
+  bailIfSampledRoster(args, '--search');
   if (args.roster) searchParams.set('roster', args.roster);
   // M6/N2 — force one layout (or `procedural`) across the searched runs, so the
   // overnight verify (stage 5) can hold out on the procedural maps too. Validated

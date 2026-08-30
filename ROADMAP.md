@@ -212,9 +212,9 @@ Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
       ⭐⭐ the first verdict-clean MANIFESTED board (0 FAIL / 6
       known-family WARN; gradient monotone; 10,250 roster rows
       banked) — WORKLOG §87b + BALANCE 2026-08-30.
-- [ ] 87c — `roster:table` → `tests/fuzz/board/roster-table.json`
-      (whole rows, provenance) + `--roster=sampled:<hop>` (per-seed
-      deterministic, ARM-composable, loud-throw).
+- [x] 87c ✅ 2026-08-30 — the table (8 ARM arms, manifest provenance)
+      + the sampled mode, serial/--jobs byte-identical; act-2 entry
+      battles record hop 0 (WORKLOG §87c, `4a48fd4`).
 - [ ] 87d — the X3 re-read under sampled rosters (⛔ decision point:
       the per-kind band dispositions).
 

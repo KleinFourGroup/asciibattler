@@ -2572,3 +2572,42 @@ The 87c source is banked: 10,250 roster rows across the 17 dirs
 correct, battles are per WAVE; hop-1 teams read level 5 because
 `recruitment.startingLevel` IS 5 — premise-checked, not a bug),
 spanning both acts, all three characters, and both postures.
+
+### 87c landed — the table + the mode (2026-08-30, `4a48fd4`)
+
+`roster:table` → `tests/fuzz/board/roster-table.json` (whole rows
+deduped to multiplicity, keyed (character, sector, hop)) +
+`--roster=sampled:<hop>` / `sampled:<sector>:<hop>` in run mode:
+launch-time load + bucket validation (loud, exit 1, available
+buckets named), then one whole recorded row PER SEED off the new
+`'rosterSample'` registry key (harness-side, the 85b pattern — no
+serialized stream; the kickoff's no-new-serialized-streams
+prediction HELD, frozen-hash pins green). The non-run modes bail
+loudly on a sampled spec — `parseRunConfig`'s silent token-drop
+would otherwise have swept the natural roster.
+
+Two findings. **(1) Act-2 entry battles record hop 0** — the
+sector root is battled on arrival, so sector 1 spans hops 0–10
+while sector 0 starts at 1; caught by the builder's own loud
+parser against real 87b rows, premise-checked systematic (65+
+rows across three arms), validators accept hop ≥ 0. **(2) The
+provenance upgrade**: the 87b dirs are renamed to instrument ids,
+so `prior:table`'s dir-name HEAD parse can't apply — the builder
+reads each sidecar's nearest-ancestor 86e1 `manifest.json`
+instead (stronger: machine HEAD + dirty flag; unmanifested /
+dirty / mixed-HEAD sources refuse the build).
+
+**The v1 source list (USER-SIGNED): the 8 arb-\* ARM arms** of
+the 87b cohort — 4,899 battles → 41 buckets @8c47b73. Anchors
+(random/greedy skill), doctrine controls (non-arbitrated),
+fire-ablated, and the wall shapes are excluded: the 87d re-read
+wants rosters the DEFAULT ARM produces. Gambler/priest carry
+act-1 buckets only (their board arms run `--hops=11`
+single-sector by design), so `sampled:1:*` on them loud-throws —
+correct, not thin data.
+
+Verify: serial vs `--jobs=2` under the full ARM byte-identical
+across summary+rosters+decisions (the per-seed draw is a pure
+function of the seed); per-seed rows distinct; loud-throw exit 1
+confirmed UNPIPED (the 68f pipeline lesson); 2703 + 541 (+17)
+green.

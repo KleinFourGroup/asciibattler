@@ -2545,3 +2545,30 @@ from the batch's resolved selection (uniform per batch — the
 Six harness fixture literals gained the field (typecheck-
 enumerated). Every future batch is now capture-usable — the
 capture cohort (87b) needs no special arm.
+
+### 87b landed — the capture cohort = the first manifested board (2026-08-30)
+
+One box-drive.sh cohort at HEAD `8c47b73` (box abox-20260830-020238,
+02:02→03:24Z ≈ 82 min wall, 17/17 artifact-verified, destroyed on
+drain — zero manual intervention): the 15 board rows + the 2 new
+anchors, each batch landing with its 86e1 manifest AND its 87a
+rosters.csv. Fetched dirs mapped queue-order → instrument ids into
+`tests/fuzz/output/board-87b/` (the verdict's arm-signature check
+validates the mapping structurally — a mis-copy would FAIL).
+
+⭐⭐ **The first fully-manifested, verdict-clean board in the
+project's history**: integrity PASS at 0 WARN, measurement HEAD
+8c47b73 matching the evaluating tree, exit 0 — the 86e
+"archives are unmanifested" ⚠ is CLOSED. Numbers in BALANCE
+2026-08-30; the read is 0 FAIL / 6 WARN, every WARN a
+pre-registered family (n=40 vs the n=120-pinned refs + the three
+named watches) — a drift read as shape-locked, no re-pin. The
+skill gradient's first BOXED read: 0.200 < 0.225 < 0.775
+monotone — and the two anchor values are BYTE-IDENTICAL to the
+local 86e3 maiden run (cross-MACHINE determinism, observed).
+
+The 87c source is banked: 10,250 roster rows across the 17 dirs
+(per-turn compositions — multiple rows per (sector,hop) is
+correct, battles are per WAVE; hop-1 teams read level 5 because
+`recruitment.startingLevel` IS 5 — premise-checked, not a bug),
+spanning both acts, all three characters, and both postures.

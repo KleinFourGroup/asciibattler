@@ -3899,3 +3899,22 @@ deltas. The pre-X H7c→O log lives at
   +0.53); a random↔greedy inversion WARN on a future board is noise
   until it repeats. (The dirty-tree first run itself: the verdict
   FAILed it — the fail-closed board's first real catch.)
+
+- **2026-08-30 (87b) — the capture cohort / the first MANIFESTED board**
+  (box cohort at `8c47b73`, 17 batches n=40 ≈ 82 min wall, all
+  verdict-gated: **integrity PASS 0 WARN — the first board read that
+  PROVES what it measured**; the 86e archives-⚠ closed). DRIFT
+  **0 FAIL / 6 WARN**, all pre-registered families at n=40 vs the
+  n=120 refs: gambler-deploy 0.750 hair-over (the named shape-flip
+  item, now reading HIGH side) · walk-regen wall 0.235 UNDER band /
+  walk-deploy wall 0.364 hair-over (the fold-baseline pair read
+  0.304/0.324 at n=120 — n=40 wall noise straddles the band) ·
+  walk-deploy reach 0.550 OVER (the named overperformance watch,
+  consistent with 0.567) · ceiling-regen −0.100 / ceiling-walk-deploy
+  −0.200 (the standing strong-bare-vector question, was −0.167).
+  HEALTH: the skill gradient's first boxed read **0.200 < 0.225 <
+  0.775 monotone**; the anchor values byte-match the local 86e3
+  maiden run — cross-machine determinism observed. The 84d
+  bought-cached-never-fired packet tripwire WARNs ride as known.
+  Roster capture: 10,250 per-wave composition rows banked for the
+  §87c table (both acts, three characters, both postures).

@@ -208,9 +208,10 @@ Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
 - [x] 87a ✅ 2026-08-29 — the capture: `playerArchetypes` +
       `rosters.csv` on every batch, byte-identical through --jobs +
       --merge-stages (WORKLOG §87a).
-- [ ] 87b — the capture cohort = the manifested full-board
-      re-measure (box, one HEAD; kills the 86e unmanifested-archives
-      ⚠ + first boxed anchor read + the table's source).
+- [x] 87b ✅ 2026-08-30 — the capture cohort: 17/17 at `8c47b73`,
+      ⭐⭐ the first verdict-clean MANIFESTED board (0 FAIL / 6
+      known-family WARN; gradient monotone; 10,250 roster rows
+      banked) — WORKLOG §87b + BALANCE 2026-08-30.
 - [ ] 87c — `roster:table` → `tests/fuzz/board/roster-table.json`
       (whole rows, provenance) + `--roster=sampled:<hop>` (per-seed
       deterministic, ARM-composable, loud-throw).

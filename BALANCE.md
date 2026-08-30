@@ -3918,3 +3918,31 @@ deltas. The pre-X H7c→O log lives at
   bought-cached-never-fired packet tripwire WARNs ride as known.
   Roster capture: 10,250 per-wave composition rows banked for the
   §87c table (both acts, three characters, both postures).
+- **2026-08-30 (87d2) — the X3 re-read under sampled rosters** (box
+  cohort at `25b487b`, 41 batches n=80 ≈ 80 min wall, all manifested;
+  arm = the EXTENDED searcher arm — `--arbitrate` ⊥ `--encounter`,
+  the 84b refusal; metric independently recomputed from results.json
+  via perEncounterStats and cross-checked vs each batch.log render).
+  Pool-damage-taken/instance vs the X3 bands (normal ≈3 / elite ≈6 /
+  boss ≈10), sampled at the hop bracket:
+  **Bosses (band ≈10):** bandit-king **5.97**@10 · banditQueen
+  **8.28**@10 · generalissimo **9.50**@1:10 · witch-hunt **7.53**@1:10
+  — kind mean **7.8**, everything UNDER band, the King softest.
+  **Elites (band ≈6):** brigand-champions **3.84/3.92**@{3,8} ·
+  warband-vanguard **1.18/0.95** · plagueSpreaders **10.57/9.32**@1:{3,8}
+  · darkMagicPosse **6.03/6.70** — act-1 mean ~2.5 UNDER, act-2 mean
+  ~8.2 OVER; per-encounter spread 0.95→10.57 dwarfs the kind signal.
+  **Normals (band ≈3):** act-1 0.03–2.40 (five of six ≤1;
+  ronin-vs-mages 2.3–2.4 alone near band) · act-2 BIMODAL —
+  plagueVictims 0.03 / elementalTrio ~0.5 / artillery 0.4 /
+  adventurer 0.3–0.6 / plagueDoctors ~1.8 vs **infernalColumn
+  7.7/7.1** and **miscreants 6.9/6.7** (both above even the ELITE
+  band). **Hop-bracket sensitivity ≈ nil** across 17 of 19 pairs
+  (player-relative budgets cancel the hop, by design; act-1 normals
+  drift mildly up at hop 7: 0.2→0.9 class). **Controls (the old
+  level-5 shape):** bandit-king natural **1.86** vs sampled **5.97**
+  — the old instrument understated the boss fight **3.2×**;
+  brigand-champions 4.14 vs 3.84 and brigands 0.20 vs 0.24 (early-hop
+  sampled ≈ natural, as expected — the realism gap grows with hop).
+  ⛔ Dispositions (hold / re-pin / defect per kind) = the user's call,
+  §87d3.

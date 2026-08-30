@@ -2671,3 +2671,36 @@ s/seed serial → ~1–2 min/arm boxed at `--jobs=8`; cohort estimate
 ~2–3 h at `--poll=60`, `--est-hours=3`. First tasting note:
 brigand-champions at the hop-3 roster reads 14.7 PDmgTaken vs the
 ≈6 band — the bracket sensitivity is real.
+
+### 87d2 landed — the re-read cohort (2026-08-30)
+
+One box-drive.sh cohort at HEAD `25b487b` (box abox-20260830-170025,
+17:00→18:21Z ≈ 80 min wall, 41/41 artifact-verified, destroyed on
+drain — zero manual intervention). Numbers in BALANCE 2026-08-30
+(87d2); the read was recomputed INDEPENDENTLY from each batch's
+results.json via the canonical `perEncounterStats` with arm
+identity taken from each manifest's OWN argv (structural — a
+mis-mapped dir can't lie), then cross-checked against the
+batch.log renders (three-arm spot check byte-consistent).
+
+What the realistic rosters actually said (vs the smoke's n=3
+head-fake — brigand-champions settled at 3.84, not 14.7):
+
+- **The kind story is really a per-encounter story.** Within
+  every kind the per-encounter spread dwarfs the band question
+  (elites 0.95→10.57; act-2 normals 0.03→7.7). The X3 bands were
+  set per KIND on a 19-encounter catalog whose members now sit
+  entire bands apart.
+- **Act-2 runs hot, act-1 runs soft, systematically** — act-1
+  elites ~2.5 vs act-2 ~8.2; five of six act-1 normals ≤1 while
+  infernalColumn/miscreants beat the ELITE band.
+- **Hop-bracket sensitivity ≈ nil** (17 of 19 pairs) — the
+  player-relative budget cancels the hop by design; the bracket
+  spend bought a clean null.
+- **The old level-5 instrument understated the boss fight 3.2×**
+  (king 1.86 → 5.97 sampled) while matching early-hop reads —
+  the "measures the wrong fight" complaint, now quantified: the
+  realism gap grows with roster hop.
+
+⛔ 87d3 = the user's dispositions (hold / re-pin / defect per
+kind), presented with the full table.

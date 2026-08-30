@@ -221,9 +221,9 @@ Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
   - [x] 87d1 ✅ 2026-08-30 — shapes confirmed + timing (~1–2 min/arm
         boxed); ⚠ the cohort arm = the EXTENDED searcher arm
         (--arbitrate ⊥ --encounter, the 84b refusal — WORKLOG §87d1).
-  - [ ] 87d2 — the box cohort: 41 arms × n=80 (4 boss · 8 elite
-        bracketed {3,8} · 26 normal bracketed {2,7} · 3 old-shape
-        controls), one HEAD, box-drive.sh.
+  - [x] 87d2 ✅ 2026-08-30 — 41/41 verified at `25b487b` (~80 min,
+        destroyed on drain); numbers BALANCE 2026-08-30 (87d2) +
+        WORKLOG §87d2.
   - [ ] 87d3 — the read (per-kind + per-encounter vs 3/6/10, bracket
         sensitivity, control deltas) → ⛔ the user dispositions
         hold / re-pin / defect per kind.

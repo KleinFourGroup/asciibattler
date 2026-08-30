@@ -2611,3 +2611,63 @@ across summary+rosters+decisions (the per-seed draw is a pure
 function of the seed); per-seed rows distinct; loud-throw exit 1
 confirmed UNPIPED (the 68f pipeline lesson); 2703 + 541 (+17)
 green.
+
+### 87d shape-lock (2026-08-30, USER-SIGNED in chat; n=80 the user's call)
+
+The kickoff audit's load-bearing findings, each checked against
+code/config reality, not the spec's memory:
+
+- **Player-relativity holds catalog-wide, verified per-ID** (the
+  83d discipline): all 19 encounters author `levelBudget: mean`
+  (`factor × playerTeamLevel`) + hand-relative counts — so a
+  sampled roster fully defines the fight at ANY physical hop, and
+  short shapes are legitimate re-reads of the bands.
+- **The X3 bands (3/6/10) are prose-checked only** — never
+  promoted into the signed sheet (BALANCE §"Per-kind target
+  bands"); the promote question stays with §88's ONE amendment.
+- **Act-2 short isolation reads are a NEW capability** — the old
+  instrument had no act-2-realistic roster at all;
+  `sampled:1:<hop>` is the first. Catalog split: act-1
+  king/queen + 2 elites + 6 normals; act-2 generalissimo/
+  witch-hunt + 2 elites + 7 normals (artillery +
+  adventurer-with-guards ride both pools).
+- **`--hops=2`'s only battle is the terminal (boss kind)** — so
+  normal reads take `--hops=3` (fields at hop 1); smoke-confirmed
+  in 87d1 before the cohort.
+
+The signed grid (41 arms × n=80, ARM + soldier + `--per-encounter
+--emit-results` throughout): bosses `--hops=2 --encounter=<id>` ×
+`sampled:10` / `sampled:1:10` (4) · elites `--hops=2
+--first-node=elite --encounter=<id>` × the hop bracket
+`sampled:{3,8}` / `sampled:1:{3,8}` (8 — roster-vs-hop elasticity
+is unmeasured, the dose-bracket doctrine) · normals `--hops=3
+--encounter=<id>` × `sampled:{2,7}` / `sampled:1:{2,7}` (26) ·
+3 old-differential controls (natural level-5 roster, act-1, one
+id per kind — the attribution diagnostic). n=80 upfront (the
+user: time available regardless; kills the same-HEAD extension
+asymmetry). One box cohort, box-drive.sh, ONE HEAD.
+
+### 87d1 — the smoke + one doctrine correction (2026-08-30)
+
+⚠ **The cohort arm is the EXTENDED searcher arm, not the full
+ARM**: `--arbitrate` is REFUSED with `--encounter` (the 84b
+refusal class, §85-pre finding 4 — rollout clones drop RunConfig
+probe dials, so arbitration would judge candidates against
+futures the dialed run cannot have; the loud guard caught it at
+the first smoke). The shape-lock's "ARM throughout" is therefore
+`--searcher --audition --redraw=level:2 --empower=level:hi` on
+every arm (+ `--per-encounter --emit-results`), which is the
+standing isolation doctrine anyway ("isolations = the 68e ladder
+shape + --per-encounter"); the fold rides run-layer decisions
+that barely exist in a 1–2-battle shape. Flagged for the user
+with the 87d3 read.
+
+Shapes confirmed live (n=3 each): `--hops=3` fields the forced
+normal at hop 1 (1 instance/run; per-encounter keying isolates it
+from the terminal-boss noise) · `--hops=2 --first-node=elite`
+fields the elite at hop 1 · `sampled:1:10` (the first
+act-2-realistic isolation read) loads and runs. Timing: 3–10
+s/seed serial → ~1–2 min/arm boxed at `--jobs=8`; cohort estimate
+~2–3 h at `--poll=60`, `--est-hours=3`. First tasting note:
+brigand-champions at the hop-3 roster reads 14.7 PDmgTaken vs the
+≈6 band — the bracket sensitivity is real.

@@ -216,7 +216,17 @@ Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
       + the sampled mode, serial/--jobs byte-identical; act-2 entry
       battles record hop 0 (WORKLOG §87c, `4a48fd4`).
 - [ ] 87d — the X3 re-read under sampled rosters (⛔ decision point:
-      the per-kind band dispositions).
+      the per-kind band dispositions). Cut 2026-08-30 (shape-locked in
+      chat, n=80 the user's call — WORKLOG §87d):
+  - [x] 87d1 ✅ 2026-08-30 — shapes confirmed + timing (~1–2 min/arm
+        boxed); ⚠ the cohort arm = the EXTENDED searcher arm
+        (--arbitrate ⊥ --encounter, the 84b refusal — WORKLOG §87d1).
+  - [ ] 87d2 — the box cohort: 41 arms × n=80 (4 boss · 8 elite
+        bracketed {3,8} · 26 normal bracketed {2,7} · 3 old-shape
+        controls), one HEAD, box-drive.sh.
+  - [ ] 87d3 — the read (per-kind + per-encounter vs 3/6/10, bracket
+        sensitivity, control deltas) → ⛔ the user dispositions
+        hold / re-pin / defect per kind.
 
 ## Phase 88 — The rarity read + the round close
 

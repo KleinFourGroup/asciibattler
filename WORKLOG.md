@@ -2733,3 +2733,50 @@ second point retires.
 lineage; the bands dispositioned) — **§87 CLOSED 2026-08-30**,
 demoted in ROADMAP + HANDOFF. NEXT = the §88 kickoff (the rarity
 read + the round close).
+
+## Phase 88 — The rarity read + the round close
+
+### §88 kickoff (2026-08-31) — the code-reality audit + the shape-lock
+
+The audit's load-bearing findings, each checked against the committed
+artifacts rather than the charter's memory:
+
+- ⭐ **The unit read needs ZERO box time.** The charter budgeted
+  targeted `--grant` for thin unit rows, but the v2 prior table
+  (85g2b, TRAIN n=120) has **all 17 draftable rows SIGNABLE** at
+  recruit-site n=158–296 — every row over the n=80 floor. The rarity
+  read proper is desk work against `prior-table.json`.
+- **The actual thin rows are the 9 daemons + 9 packets** (n=20–44,
+  directional — "the §88 list"). They aren't rarity-tier items; they
+  feed the fold's prior (shrinkage-limited at SHRINK_K=80) and the
+  port price book. The one explicit 85g2b promise: `packet:miner`
+  (ALIVE at −40.65, n=20) gets its confirm here.
+- **The read will bite:** legendaries order correctly (stormcaller
+  +19.1 / shaman +15.0, top-4); the rare tier looks defective
+  (corrupter +8.3 but reaver −7.9 / officer −8.2 / catapult −13.8,
+  all at ×2 price); halberdier (uncommon) is the single best unit at
+  +24.6. Protocol caveat baked into 88a: recruit deltas are at FREE
+  acquisition — a negative row means the marginal unit hurts (hand
+  dilution), which a price cut cannot fix; those become kit watches,
+  not price dispositions.
+- **Tier map verified** (count 17 across three independent surfaces —
+  prices.json boot-assert / the prior table / units.json): common ×6
+  (mercenary bandit archer rogue healer gunslinger) · uncommon ×5
+  (adventurer ronin mage rioter halberdier) · rare ×4 (catapult
+  reaver corrupter officer) · legendary ×2 (stormcaller shaman);
+  multipliers 1/1.5/2/3, recruit weights 6/3/2/1.
+- **Close-ritual state:** the sheet is signed through 2026-08-28
+  (§85g6d fold baseline); parked on §88's ONE-amendment docket = the
+  X3 band promote question (87d3) + the §88 dispositions; if config
+  moves, the amendment's board run doubles as the **first
+  fully-MANIFESTED full cohort at one HEAD** (the §86e
+  pre-registration). `--grant` is alive, run-mode-only, composes
+  with the full ARM.
+
+Shape-lock (USER-SIGNED in chat, 2026-08-31): the five-step cut
+(ROADMAP §88); 88b scoped to **option b — the shortlist** (miner +
+janus, minerva, patricians-seal, portunus, reroute, discard-one;
+~half a box night post-§86); the **daemon/packet price read rolls
+into 88c** ("we may as well"); the band promote question drafts at
+88d. Snapshot prediction: World v35 / Run v44 hold (config JSON +
+docs only).

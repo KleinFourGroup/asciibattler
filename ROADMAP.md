@@ -239,7 +239,31 @@ the scratchpad sweep, the HANDOFF demotion, the META-ROADMAP ✅.
 **Exit:** every draftable archetype dispositioned; the amended sheet
 signed; Round 7 (Idioms) is NEXT.
 
-_(Sub-steps cut at phase kickoff.)_
+Sub-steps (cut at the 2026-08-31 kickoff; audit findings + the scope
+calls in WORKLOG §88 kickoff — ⭐ all 17 unit rows are SIGNABLE in the
+v2 table, so the unit read is desk work; the thin rows = the 9+9
+daemon/packet directional list, shortlist scoped by the user):
+
+- [ ] **88a** — the desk read: the 17-row disposition table from the
+      committed v2 prior table (value order vs tiers; `unitPriceFor`
+      × multiplier vs realized value); scratchpad probe, findings →
+      BALANCE + WORKLOG, hold/re-tier/re-price/watch proposals per
+      archetype. Docs only; World v35 / Run v44 predicted held.
+- [ ] **88b** — the targeted `--grant` shortlist cohort (user-scoped
+      option b): miner + janus, minerva, patricians-seal, portunus,
+      reroute, discard-one; paired same-seed grant-vs-control, n=80,
+      fresh seed window, box-drive, ONE HEAD.
+- [ ] **88c** — ⛔ the disposition session (user): tier/price calls
+      per archetype + the daemon/packet price read (rolled in, user
+      call at kickoff); config edits verified per-ID (83d); the
+      standing Round-9+ protocol paragraph into BALANCE.
+- [ ] **88d** — the ONE amendment + its board run: the X3 band
+      promote question (87d3 docket) + the §88 dispositions; if
+      config moved, the FULL board MANIFESTED at one HEAD (the §86e
+      pre-registration) + ref re-pins; sheet signed.
+- [ ] **88e** — the close ritual: scratchpad sweep · ROADMAP/WORKLOG/
+      spec archive (the post-83 pair) · HANDOFF demotion + Closed
+      rounds + cursor → §89 · META-ROADMAP Round 6 ✅ · memory.
 
 ## Phase 89 — The encounter feel round (interstitial, post-§88)
 

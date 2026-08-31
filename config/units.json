@@ -687,7 +687,6 @@
     "glyph": "f",
     "abilities": ["molotov"],
     "targeting": "nearest",
-    "rarity": "uncommon",
     "damageStat": "ranged",
     "baseStats": {
       "constitution": 15,
@@ -754,7 +753,7 @@
     "glyph": "H",
     "abilities": ["halberd"],
     "targeting": "nearest",
-    "rarity": "uncommon",
+    "rarity": "rare",
     "damageStat": "strength",
     "baseStats": {
       "constitution": 28,

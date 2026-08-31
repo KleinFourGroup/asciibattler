@@ -2704,3 +2704,32 @@ head-fake — brigand-champions settled at 3.84, not 14.7):
 
 ⛔ 87d3 = the user's dispositions (hold / re-pin / defect per
 kind), presented with the full table.
+
+### 87d3 — the dispositions (2026-08-30, ⛔ USER-RESOLVED in chat) — §87 CLOSED
+
+The user's calls on the re-read: **the bands HOLD as intent** —
+per-kind, single band; nothing in the data impeaches the design
+targets (a normal ~3, an elite ~6, a boss ~10). The off-band
+members are ENCOUNTER defects, not band defects → the named
+defect list rides to **§89, the encounter feel round** (charter
+stub in ROADMAP, planned at this disposition): soft =
+warband-vanguard · brigands/highwaymen/deserters/artillery/
+adventurer-with-guards (act-1) · plagueVictims/elementalTrio/
+act-2 artillery+adventurer · the King's climax gap (5.97 vs ≈10 —
+NOTE his 33% full-length wall is a separate, held signal; the
+isolation read and the wall read measure different fights); hot =
+plagueSpreaders · infernalColumn · miscreants. **The per-act
+band question is DEFERRED-REOPENED at §89** — deliberately not
+decided from this table: it pairs with possible inter-sector
+healing changes as one properly-attended A/B feel test (the
+user: "I don't want to decide without giving it proper
+attention"), spec-first, post-§88 so encounter surgery never
+lands under the round's ONE sheet amendment. Data-signed rider:
+**future isolation reads use a SINGLE hop** — the bracket bought
+a clean null (player-relative budgets cancel the hop), so the
+second point retires.
+
+§87 exit criteria met (the sampled mode on the default-arm
+lineage; the bands dispositioned) — **§87 CLOSED 2026-08-30**,
+demoted in ROADMAP + HANDOFF. NEXT = the §88 kickoff (the rarity
+read + the round close).

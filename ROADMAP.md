@@ -194,16 +194,12 @@ WORKLOG §86a–§86f + BALANCE §"The board integrity protocol" + git.
 - [x] 86f ✅ 2026-08-29 — the close: the direct re-run above
       (WORKLOG §86f).
 
-## Phase 87 — Roster realism for isolation reads
+## Phase 87 — Roster realism for isolation reads ✅ CLOSED 2026-08-30
 
-`playerArchetypes` captured beside `playerLevels` on `BattleResult`; a
-committed per-hop roster table with provenance; `--roster=sampled:<hop>`
-draws a WHOLE recorded roster row harness-side (no Run stream change);
-the X3 isolation cohort re-runs under it on the fold's arm. **Risk:**
-low-medium. **Exit:** the sampled mode on the default arm; the
-per-kind bands dispositioned hold / re-pin / defect.
-
-Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
+The capture → the first manifested board → the committed roster table +
+`--roster=sampled` → the X3 re-read at n=80 → ⛔ dispositioned: bands
+HOLD as intent, off-band members + the per-act question → §89. Detail:
+WORKLOG §87* + BALANCE 2026-08-30.
 
 - [x] 87a ✅ 2026-08-29 — the capture: `playerArchetypes` +
       `rosters.csv` on every batch, byte-identical through --jobs +
@@ -224,9 +220,12 @@ Cut at the 2026-08-29 kickoff (audit + shape-lock: WORKLOG §87):
   - [x] 87d2 ✅ 2026-08-30 — 41/41 verified at `25b487b` (~80 min,
         destroyed on drain); numbers BALANCE 2026-08-30 (87d2) +
         WORKLOG §87d2.
-  - [ ] 87d3 — the read (per-kind + per-encounter vs 3/6/10, bracket
-        sensitivity, control deltas) → ⛔ the user dispositions
-        hold / re-pin / defect per kind.
+  - [x] 87d3 ✅ 2026-08-30 — ⛔ RESOLVED (user, in chat): bands HOLD
+        as intent (per-kind, single band); off-band members → the §89
+        defect list; the per-act question DEFERRED-REOPENED at §89
+        with inter-sector healing (the A/B feel round); future
+        isolation reads use a SINGLE hop (the bracket null) —
+        WORKLOG §87d3.
 
 ## Phase 88 — The rarity read + the round close
 
@@ -241,3 +240,24 @@ the scratchpad sweep, the HANDOFF demotion, the META-ROADMAP ✅.
 signed; Round 7 (Idioms) is NEXT.
 
 _(Sub-steps cut at phase kickoff.)_
+
+## Phase 89 — The encounter feel round (interstitial, post-§88)
+
+Charter (planned 2026-08-30 at the 87d3 disposition, user-called): the
+§87d defect list tuned per encounter against the held per-kind bands
+(soft: warband-vanguard · five act-1 normals · plagueVictims /
+elementalTrio / act-2 artillery+adventurer · the King's climax gap;
+hot: plagueSpreaders · infernalColumn · miscreants), and the TWO
+REOPENED design questions as a properly-attended A/B feel test:
+per-act bands (act-2 systematically hot — design or defect?) and
+inter-sector healing. **Spec-first kickoff** (the feel A/B is the
+user's call to design, not a numbers-only pass); isolation reads use
+the §87 sampled mode at a single hop. **Why post-§88:** encounter
+surgery moves board numbers — it lands after the round's ONE sheet
+amendment signs, never under it. **Risk:** medium (feel + numbers).
+**Exit:** the defect list dispositioned per encounter; both reopened
+questions decided; the board re-run green at the tuned config.
+**NOT doing:** new encounter content; archetype changes; rarity
+(that's §88).
+
+_(Sub-steps cut at phase kickoff, after the spec conversation.)_

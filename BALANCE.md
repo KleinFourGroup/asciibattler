@@ -3944,5 +3944,9 @@ deltas. The pre-X H7c→O log lives at
   — the old instrument understated the boss fight **3.2×**;
   brigand-champions 4.14 vs 3.84 and brigands 0.20 vs 0.24 (early-hop
   sampled ≈ natural, as expected — the realism gap grows with hop).
-  ⛔ Dispositions (hold / re-pin / defect per kind) = the user's call,
-  §87d3.
+  ⛔ Dispositions (87d3, USER-RESOLVED 2026-08-30): bands **HOLD as
+  intent** (per-kind, single band); off-band members = ENCOUNTER
+  defects → the §89 feel-round list; the per-act question
+  DEFERRED-REOPENED at §89 (paired with inter-sector healing, one
+  attended A/B); isolation reads henceforth SINGLE-hop (the bracket
+  null). Detail: WORKLOG §87d3.

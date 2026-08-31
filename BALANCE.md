@@ -3950,3 +3950,40 @@ deltas. The pre-X H7c→O log lives at
   DEFERRED-REOPENED at §89 (paired with inter-sector healing, one
   attended A/B); isolation reads henceforth SINGLE-hop (the bracket
   null). Detail: WORKLOG §87d3.
+- **2026-08-31 (88a) — THE RARITY DESK READ** (the v2 prior table's
+  recruit-site unit rows vs the 5/3/3/2 tiers + `unitPriceFor`;
+  source = `tests/fuzz/board/prior-table.json` @ `measured fbcb363 ·
+  built fed4803`, TRAIN 1001–1120 n=120; all 17 rows SIGNABLE,
+  recruit n=158–296; probe = scratchpad `rarity-read.js`, price math
+  recomputed from the JSON independent of prices.ts). Judged on
+  recruit **meanDelta** (the plain paired final-pool margin);
+  valuePerHop carried as the fold's currency but NOT the disposition
+  metric — the per-hop normalization overweights late-run recruits
+  (mercenary +1.64 v/hop vs −3.61 Δ; mage −2.46 v/hop vs +9.35 Δ),
+  Spearman-vs-price ρ = **+0.400** on meanΔ vs **−0.105** on v/hop.
+  **Per-tier meanΔ: legendary +16.9 · uncommon +3.3 · common −6.2 ·
+  rare −7.4** — the tiers order correctly EXCEPT rare, which sits at
+  the bottom. The two defects: ⭐ **halberdier** (uncommon, w=3, L5
+  price 51) is the single best unit at **+24.7**, above both
+  legendaries (stormcaller +20.4 · shaman +13.3, which order
+  correctly at the top prices); ⭐ **the rare tier** is 3-of-4
+  negative at ×2 price (officer −8.4 · reaver −12.4 · catapult
+  −14.6; corrupter +5.7 the only positive) — the worst
+  trap-pricing cells in the book. Deep-negative cluster (kit-shaped,
+  price can't repair): rogue −18.9 · rioter −17.4 (the worst
+  trap-priced non-rare: uncommon, 51) · bandit −15.2. Healer +7.0 is
+  the best weight-6 common. Near-zero band (HOLD territory): ronin
+  +1.0 · gunslinger −0.9 · adventurer −1.0 · mercenary −3.6 · archer
+  −5.6. **Caveats (protocol):** recruit deltas are at FREE
+  acquisition — a negative row means the MARGINAL unit hurts (hand
+  dilution); a price cut cannot fix it, so negatives disposition as
+  kit watches, not price moves. Values are bot-realized on the cheap
+  shadow walker (the §85h bridge verdict: consistent, NOT
+  validating) — skill-demanding kits may read under human potential
+  (the §57 gap). portBuy unit cells are n=3–22, color only. Recruit
+  rows are L5 adds (`startingLevel` 5). **Daemon/packet price-vs-
+  directional preliminary (88b firms):** janus (32, +8.7/hop) and
+  reroute (9, +7.6/hop) read under-priced; miner (40, −2.6/hop,
+  n=20) is the flagship trap-price if 88b confirms; mercury 30 /
+  portunus 20 / fortuna 25 / discard-one 5 / shield 6 all negative.
+  ⛔ Dispositions = 88c (user session). Proposals: WORKLOG §88a.

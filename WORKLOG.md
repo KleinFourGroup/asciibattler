@@ -2780,3 +2780,58 @@ janus, minerva, patricians-seal, portunus, reroute, discard-one;
 into 88c** ("we may as well"); the band promote question drafts at
 88d. Snapshot prediction: World v35 / Run v44 hold (config JSON +
 docs only).
+
+### 88a — the desk read (2026-08-31; numbers BALANCE 2026-08-31)
+
+The metric call that shaped the read: the table carries both
+`valuePerHop` (the fold's currency) and `meanDelta` (the plain
+paired margin), and they DISAGREE on several units — per-hop
+normalization overweights late-run recruits (a small-hopsRemaining
+denominator inflates whatever the late pick did). meanΔ correlates
+with the price book at ρ=+0.400; v/hop at −0.105. The disposition
+read judges meanΔ; the fold keeps consuming v/hop untouched (its
+within-fold scaling is ×hopsRemaining, where the per-hop unit is
+the right shape).
+
+The headline is clean: **the tiers order correctly except two
+defects.** Per-tier meanΔ runs legendary +16.9 > uncommon +3.3 >
+common −6.2 > rare −7.4 — so the 5/3/3/2 design judgment broadly
+survives its first realized-value read, EXCEPT (1) halberdier, the
+single best unit in the game sitting at uncommon, and (2) the rare
+tier, which is the WORST tier by realized value while carrying the
+×2 price multiplier.
+
+Disposition proposals for the 88c session (hold / re-tier /
+re-price / watch per archetype; recommended default first):
+
+- **halberdier** — RE-TIER uncommon→rare (minimum; legendary is
+  defensible on the raw numbers: +24.7 vs stormcaller's +20.4).
+  The one cell where the assignment is unambiguously wrong.
+- **stormcaller, shaman** — HOLD legendary (order correctly, priced
+  top, both positive).
+- **corrupter** — HOLD rare (the tier's only positive; L5 73 vs
+  mage's 55 at +9.4 reads slightly rich but within noise).
+- **officer, reaver, catapult** — HOLD tier + the NAMED KIT WATCH
+  ("the rare-tier cluster"): negative at free acquisition, so no
+  §88-scope lever fixes them (a price cut only softens the trap; a
+  tier drop shows a bad unit MORE often). Kit work is a Round-9-
+  adjacency call. Catapult carries the §82 release-gate history +
+  the bot-skill caveat (positioning-demanding kit).
+- **rioter** — candidate RE-TIER uncommon→common purely as trap
+  mitigation (worst non-rare trap: −17.4 at price 51); tradeoff
+  stated: weight 3→6 doubles its offer frequency. Alternative:
+  HOLD + kit watch alongside rogue/bandit.
+- **rogue, bandit** — HOLD common + kit watch (deep negative, but
+  cheapest book prices — the trap is small).
+- **healer** — HOLD common (best weight-6 unit at +7.0; an
+  uncommon promotion would cut its offer frequency in half, a feel
+  lever more than a balance one — surfaced, not recommended).
+- **mage, ronin, adventurer, gunslinger, mercenary, archer** —
+  HOLD (near-zero band or tier-consistent; mercenary is the
+  starting-character anchor and stays put regardless).
+- **the 1/1.5/2/3 multiplier curve itself** — HOLD; every defect
+  found is an ASSIGNMENT defect, not a curve defect.
+
+Daemon/packet preliminaries ride to 88c with 88b's rows (janus +
+reroute under-priced; miner the flagship trap-price pending its
+n=20 confirm).

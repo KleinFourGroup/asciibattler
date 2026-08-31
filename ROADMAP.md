@@ -244,11 +244,10 @@ calls in WORKLOG §88 kickoff — ⭐ all 17 unit rows are SIGNABLE in the
 v2 table, so the unit read is desk work; the thin rows = the 9+9
 daemon/packet directional list, shortlist scoped by the user):
 
-- [ ] **88a** — the desk read: the 17-row disposition table from the
-      committed v2 prior table (value order vs tiers; `unitPriceFor`
-      × multiplier vs realized value); scratchpad probe, findings →
-      BALANCE + WORKLOG, hold/re-tier/re-price/watch proposals per
-      archetype. Docs only; World v35 / Run v44 predicted held.
+- [x] **88a** ✅ 2026-08-31 — tiers order correctly EXCEPT two
+      defects (halberdier at uncommon = value #1; the rare tier =
+      the worst tier at ×2 price); judged on meanΔ (ρ=+0.400 vs
+      price; v/hop −0.105). BALANCE 2026-08-31 + WORKLOG §88a.
 - [ ] **88b** — the targeted `--grant` shortlist cohort (user-scoped
       option b): miner + janus, minerva, patricians-seal, portunus,
       reroute, discard-one; paired same-seed grant-vs-control, n=80,

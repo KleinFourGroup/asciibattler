@@ -151,3 +151,19 @@ _(The post-C5 rounds start here.)_
   not the code). Fixed by `(cd <tree> && run)` per leg. Same family as
   the L2b cold-worktree bias: when a bench number is implausible,
   suspect the bench first; the absurd-ratio smell test is free.
+
+- **Scale box-drive poll to batch size** (87d2, 2026-08-30): the
+  driver's default `--poll=900` was sized for hour-scale batches; a
+  41-arm cohort of ~1–2 min isolation batches at that poll would have
+  added ~10 h of pure poll latency to an ~80 min cohort. `--poll=60`
+  fit the batch scale and the driver handled 41 serial
+  launch→poll→fetch cycles flawlessly (zero holds, destroy on drain).
+  If many-small-batch cohorts recur, consider a poll default derived
+  from `--est-hours` (or per-line estimates) instead of a constant.
+- **Loud guards are doing reality-discovery work, twice in one phase**
+  (87c/87d1): the roster-table parser's malformed-row throw surfaced
+  the act-2-hop-0 walk shape, and the 84b `--arbitrate ⊥ --encounter`
+  refusal corrected the 87d shape-lock's arm at first smoke contact —
+  both would have been silent data poison under a drop-and-continue
+  parser. Confirmation the loud-throw doctrine pays for itself; no new
+  norm needed, but worth counting at the sweep.

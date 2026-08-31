@@ -248,10 +248,11 @@ daemon/packet directional list, shortlist scoped by the user):
       defects (halberdier at uncommon = value #1; the rare tier =
       the worst tier at ×2 price); judged on meanΔ (ρ=+0.400 vs
       price; v/hop −0.105). BALANCE 2026-08-31 + WORKLOG §88a.
-- [ ] **88b** — the targeted `--grant` shortlist cohort (user-scoped
-      option b): miner + janus, minerva, patricians-seal, portunus,
-      reroute, discard-one; paired same-seed grant-vs-control, n=80,
-      fresh seed window, box-drive, ONE HEAD.
+- [x] **88b** ✅ 2026-08-31 — 8/8 verified at `45c3232` (bank
+      4001–4080, box destroyed): every free endowment ≥ 0 — the
+      three negative v2 rows are RELATIVE/priced effects, miner =
+      a pure trap-price; discard-one the strongest arm (+0.087).
+      BALANCE 2026-08-31 (88b) + WORKLOG §88b.
 - [ ] **88c** — ⛔ the disposition session (user): tier/price calls
       per archetype + the daemon/packet price read (rolled in, user
       call at kickoff); config edits verified per-ID (83d); the

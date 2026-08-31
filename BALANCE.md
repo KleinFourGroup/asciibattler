@@ -3987,3 +3987,34 @@ deltas. The pre-X H7c→O log lives at
   n=20) is the flagship trap-price if 88b confirms; mercury 30 /
   portunus 20 / fortuna 25 / discard-one 5 / shield 6 all negative.
   ⛔ Dispositions = 88c (user session). Proposals: WORKLOG §88a.
+- **2026-08-31 (88b) — THE TARGETED GRANT SHORTLIST COHORT** (the §68
+  paired same-seed recipe on the v2 thin rows; box-drive 8/8
+  artifact-verified at `45c3232`, seeds 4001–4080 — a fresh bank
+  disjoint from TRAIN/CHOOSE/the spent SIGN; full ARM, deploy vector,
+  soldier; one shared control [win 0.412] + 7 grant arms; probe =
+  scratchpad `grant-paired.js`, self-checked all-zero on
+  control-vs-control). Paired Δwin (disc, z) · ΔfinalPool · ΔfinalBits:
+  **discard-one +0.087 (15/8, 1.46) · +1.18 · +15.5** — the strongest
+  arm, against v2's −1.53/hop · janus +0.050 (13/9, 0.85) · +0.61 ·
+  +19.2 · patricians-seal +0.050 (11/7, 0.94) · +1.19 · −6.7 ·
+  portunus +0.050 (11/7, 0.94) · +1.18 · +3.3 · miner +0.025 (9/7,
+  0.50) · +0.86 · +6.4 · minerva +0.025 (12/10, 0.43) · +0.74 · +14.3
+  · reroute +0.013 (14/13, 0.19) · +0.65 · +7.1. ⭐ **The headline:
+  every free endowment reads ≥ 0 — none of the shortlist is
+  kit-harmful, and all three negative-directional v2 rows (miner,
+  portunus, discard-one) FAIL to replicate as harm.** The shadow's
+  site rows measure value RELATIVE to the site's alternatives with
+  price/opportunity cost riding; the grant measures ABSOLUTE
+  free-endowment value — different questions, both real (the miner
+  disposition: v2's −40.65 was the 40-bit price against a ≈null
+  causal lift, i.e. a TRAP-PRICE, not a broken kit — the 85g2b
+  promise answered). Positive-directional rows (janus, minerva, seal,
+  reroute) all direction-consistent with v2, magnitudes shrunken
+  (grant-at-construction vs in-situ; a single packet is one-shot —
+  reroute's causal null at one copy vs +7.6/hop in-situ). **Caveats:**
+  no arm clears z=2 at n=80 (the 84d bridge-underpowered caveat
+  reproduces — fit for sign/ordering price dispositions, NOT
+  per-item magnitude signing); the 7 arms share ONE control (never
+  pool their sign tests); uniform positivity is parsimoniously "free
+  daemons/packets don't dilute anything" (unlike unit recruits).
+  ⛔ Dispositions = 88c. Proposals: WORKLOG §88b.

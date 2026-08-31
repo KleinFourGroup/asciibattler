@@ -2835,3 +2835,47 @@ re-price / watch per archetype; recommended default first):
 Daemon/packet preliminaries ride to 88c with 88b's rows (janus +
 reroute under-priced; miner the flagship trap-price pending its
 n=20 confirm).
+
+### 88b — the grant shortlist cohort (2026-08-31; numbers BALANCE
+2026-08-31 88b)
+
+Ops: the queue smoke-tested locally (one seed of the miner line)
+before the box; box-drive 8/8 artifact-verified at `45c3232`;
+box created 17:49Z, destroyed 21:56Z (~4.1 h — the est-hours=3
+read slightly under; ~30 min/arm), zero manual stand-downs. The
+probe (`grant-paired.js`, scratchpad) self-checked all-zero on
+control-vs-control before any grant read.
+
+The finding that reshapes the 88c daemon/packet conversation:
+**the grant read and the shadow's site rows answer different
+questions, and the cohort separated them cleanly.** The shadow
+measures a pick RELATIVE to the site's alternatives, price and
+opportunity cost riding (a rewardDaemon pick of portunus
+displaces a better daemon; a portBuy of miner spends 40 bits);
+the grant measures ABSOLUTE free-endowment value. All three
+negative-directional v2 rows read null-to-positive as free
+endowments — so none of them is a broken kit, and miner's v2
+−40.65 decomposes into "≈null causal lift, 40-bit price" = a
+pure TRAP-PRICE, exactly the shape a price cut fixes (unlike
+the unit negatives, which price can't touch). Discard-one is
+the inverse surprise: the cohort's strongest arm (+0.087) at
+the book's cheapest price (5) — hand-thinning is real value.
+
+The 88c price-proposal slate from the combined reads (v2
+relative + 88b causal; all sign/ordering-grade, per the
+bridge-underpowered caveat):
+
+- **miner 40 → cut hard** (~10–15): the confirmed trap-price.
+- **janus 32 → raise** (~40, the mars point): best daemon on
+  BOTH reads, currently priced below the 35 default.
+- **discard-one 5 → hold or +2–4**: strongest causal arm at the
+  cheapest price; underpriced if anything.
+- **minerva 35, patricians-seal 35 → hold** (positive both
+  reads, priced at/above default).
+- **portunus 20 → hold** (relative-negative at sites but
+  free-positive; already the cheapest daemon).
+- **mercury 30 → hold + watch** (v2 relative −2.76, not in the
+  shortlist — no causal read; the only remaining directional
+  negative without one).
+- **reroute 9, patch 9, everything unlisted → hold** (in-situ
+  positive or near-null at default prices).

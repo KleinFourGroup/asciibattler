@@ -2932,3 +2932,47 @@ missing row · the fire-blindness structural note · the overclock +
 mercury watches · the X3 band promote question · the amendment
 board (fully MANIFESTED, one HEAD). The rare-trio kit overhaul →
 the Round 9 charter line at 88e.
+
+### 88d — the amendment board run (2026-09-01 overnight; numbers
+BALANCE 2026-09-01; ⛔ the signing session is NEXT)
+
+Ops: queue = the 85g6d board shape VERBATIM (25 lines, diffed
+against the template before launch); one-seed arb-λ smoke at the
+new HEAD pre-launch (the stale `packet:miner` prior row confirmed
+LOAD-INERT first — the loader validates file-presence + head-mix
+only, by design); box-drive 25/25 at `2bfe8a9`, ~5 h, destroyed
+on drain. Staging: `--merge-stages` for the ten n=120 pools +
+the two anchor legs run locally.
+
+⭐ **The verdict caught a real seam gap on its maiden pooled
+read** — the 86d2 merge writes `kind:'merge-stages'` manifests
+whose argv is the merge invocation; the 86e2 arm check compared
+argv unconditionally; no pooled board had ever run under the
+verdict (85g6d predated it by a day). All 10 merged dirs FAILed
+exactly as fail-closed demands. The fix (`10fb692`): the merged
+manifest records the stages' common argv as `armArgv` (arm-
+authoritative — the merge already validated same-arm), the
+verdict reads it for merge-kind manifests, and a merge over any
+unmanifested stage carries no armArgv and cannot certify. Five
+new pins across the merge + verdict suites.
+
+The read (post-fix): integrity PASS 17/17, drift 0 FAIL / 8
+WARN. The WARN interpretation that shapes the signing session:
+five of the eight are one NEW cluster — the regen walk degraded
+and three ceiling deltas went negative (arb UNDER doctrine, the
+signature λ=0.5 was signed to close). The lead suspect is
+instrument-shaped, not balance-shaped: **dis-pater entered the
+daemon pools with NO prior row, so the fold prices the game's
+strongest-class daemon at zero** — a degradation only the arb
+arm can feel (doctrine never consults the prior). The v3 table
+rebuild at post-88c reality is the candidate repair; the read
+re-runs after it. The 88c config reality (halberdier rarer in
+offers) plausibly explains the shared-arm regen-walk component.
+
+⛔ Signing-session docket: the ref re-pins (act-1 rows all PASS
+at current pins — minimal re-pinning needed) · the band promote
+draft (defer-to-§89-close recommended, in chat 2026-08-31) · the
+v3 prior-table rebuild call · the protocol's amendment-board
+fresh `--search` derive (the 86e requirement's first exercise —
+the deploy vector's last fresh derive was 85g5, six days old) ·
+the regen-walk/ceiling cluster disposition.

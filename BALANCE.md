@@ -4082,3 +4082,36 @@ deltas. The pre-X H7c→O log lives at
   the 88d amendment: the fire-site horizon blindness (acquisition
   sites got the §85 fold; fire sites judge within-horizon only) ·
   the overclock fire-rate watch · the mercury price watch.
+- **2026-09-01 (88d) — THE AMENDMENT BOARD RUN: ⭐⭐ the first fully-
+  MANIFESTED full board (the §86e pre-registration DELIVERED), integrity
+  PASS 17/17 at one HEAD.** 25 batches box-drive 25/25 artifact-verified
+  at `2bfe8a9` (~5 h, box destroyed on drain); anchors local; the ten
+  n=120 rows pooled via `--merge-stages`. ⭐ **The verdict's second real
+  catch — its maiden pooled read:** all 10 merged dirs FAILed the arm
+  check (a merge manifest's argv is the MERGE invocation; the 86d2 merge
+  and the 86e2 verdict had never met a pooled board). Fixed at `10fb692`
+  (merged manifests certify the stages' common arm via `armArgv`;
+  fail-closed when a stage ran unmanifested; +5 pins), re-merged,
+  re-read: **VERDICT 0 FAIL / 0 WARN · DRIFT 0 FAIL / 8 WARN.**
+  PASSing: all six act-1 win refs at the 85g6d pins (arb-regen 0.683 ·
+  arb-deploy 0.717 · priest 0.592/0.708 · gambler 0.667/0.733) · banks/
+  fires/tx all in-band (the fold economy HOLDS at the 88c prices) ·
+  forced bosses King 0.792 / Queen 0.767 (order held) · deploy-walk
+  seam/wall in-band (16.98 / 0.328). **The 8 WARNs are two stories:**
+  (1) the standing deploy-reach overperformance watch rides unchanged
+  (0.558 vs 0.567 — stable, the design-target question); its derived-win
+  twin follows. (2) ⚠ A NEW cluster — **the regen walk degraded (reach
+  0.467→0.375 UNDER · wall 0.304→0.422 OVER · win 0.217) and three of
+  four ceiling deltas went NEGATIVE (deploy −0.133 · walk-regen −0.083 ·
+  walk-deploy −0.175)** — arb below its doctrine control, the λ=0-era
+  signature the fold was signed to close. Candidate mechanisms, ordered:
+  ⚠ **dis-pater has NO prior row** (the fold prices the strongest-class
+  daemon at 0 — an ARB-ONLY degradation, doctrine never consults the
+  prior; the v3 table rebuild is the candidate repair) · the 88c reality
+  hits both arms (halberdier offer weight 3→2 = the best unit rarer;
+  rioter commoner; the daemon pools diluted 10→11) · n=120 walk noise
+  (~1.7σ on the wall alone). HEALTH: anchor tie 0.275/0.275 (the
+  pre-registered narrow-gap noise class; greedy<ARM ok at 0.717).
+  ⛔ Dispositions + re-pins + the band promote question = the signing
+  session; the v3 prior rebuild + the protocol's amendment-board fresh
+  `--search` derive are the open docket items there.

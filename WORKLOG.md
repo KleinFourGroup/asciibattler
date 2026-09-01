@@ -2976,3 +2976,31 @@ v3 prior-table rebuild call · the protocol's amendment-board
 fresh `--search` derive (the 86e requirement's first exercise —
 the deploy vector's last fresh derive was 85g5, six days old) ·
 the regen-walk/ceiling cluster disposition.
+
+### 88d2 — the signing resolutions + the overnight (2026-09-01,
+⛔ USER-SIGNED in chat: "signing everything")
+
+Signed: **the v3 prior rebuild** (queue `88d2-prior-v3.queue` —
+the 85g2b shape on TRAIN 1001–1120; ONE named deviation per the
+85h deployed-semantics rule: `--prior-lambda=0.5` joins the arm,
+since the fold is walker semantics as of 85g6d) · **the fresh
+`--search` derive** (queue `88d2-derive.queue` — the 85g5
+hybrid-light recipe verbatim, sampler 85; the ceiling READ only —
+deploying a new vector would be its own decision) · **the band
+promote DEFERRED to the §89 close** (promote-after-repair; the
+2026-08-31 draft adopted) · **minimal re-pins** (everything
+checked PASSes) · the WARN-cluster disposition PENDS the v3
+re-read. Also signed: **the derived-artifact tripwire** — a
+catalog-coverage test (every acquirable id has a prior-table row
+or an explicit pending acknowledgment; stale rows flag) riding
+`npm test`, + a BALANCE §"derived-artifact registry" section
+(artifact → invalidation triggers → rebuild recipe); lands with
+the v3 table commit. The user's exhibit-A reaction ("how did I
+not think of Dis invalidating the prior table") is the
+tripwire's charter in one line.
+
+Next session's landing sequence: read the two artifacts →
+`prior:table` build → commit v3 + the tripwire together → the
+scoped ceiling re-read at the v3 HEAD (`--only` the four
+ceiling pairs, a named PARTIAL read) → the amendment sheet edit
+(cites the 88d board + the v3 evidence) → 88e, the round close.

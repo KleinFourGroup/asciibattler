@@ -266,6 +266,28 @@ semantics — VERDICT / DRIFT / INSTRUMENT HEALTH — and the board is now
   ⚠ PARTIAL BOARD banner — a legitimate smoke read, **never a signing
   board**.
 
+## The derived-artifact registry (88d2, 2026-09-01, USER-SIGNED)
+
+Some committed files are MEASUREMENTS of the catalog and the arm, not
+hand-authored truth — and a measurement goes stale silently when the thing
+it measured moves. The exhibit that named this section: 88c daemonized the
+miner packet into Dis Pater, he entered every daemon pool, and the prior
+table had no row for him — so the fold priced the game's strongest-class
+daemon at ZERO through a whole amendment board, an arb-only degradation
+that read as a balance cluster (BALANCE 2026-09-01 §88d). One rule: **a
+catalog or arm change re-derives every artifact that measured it, in the
+same phase** — and the tripwire fires on `npm test` when it doesn't (the
+guard rides the forgetful path, not the path where the artifact already
+has someone's attention).
+
+| Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
+|---|---|---|---|---|
+| [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v3, measured @`251514d`) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank: `scripts/box-drive.sh <queue>` with the `88d2-prior-v3.queue` line (`--count=120 --seed-offset=1000 --character=soldier --strategy=tests/fuzz/fixtures/59-regen-vector.json` + the ARM + `--shadow-horizon=run --jobs=8`, ~1.5 h box) → `npm run prior:table -- output/box-batches/<id> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
+| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (87c v1, measured @`8c47b73`) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | ⚠ none yet — the builder loud-throws on an unknown archetype, and membership drift surfaces only at the next `--roster=sampled` read; a coverage twin of the prior tripwire is the natural next guard |
+| [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, `--artifact=best-strategy.json`, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
+| [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
+
+
 ## The signal (gradient first — unchanged)
 
 - **best-achievable** = max over searched strategy-weight vectors of the outcome
@@ -4115,3 +4137,46 @@ deltas. The pre-X H7c→O log lives at
   ⛔ Dispositions + re-pins + the band promote question = the signing
   session; the v3 prior rebuild + the protocol's amendment-board fresh
   `--search` derive are the open docket items there.
+- **2026-09-01 (88d2/88d3) — PRIOR TABLE v3 + THE FRESH DERIVE READ** (both
+  overnight drives artifact-verified, boxes destroyed on drain; both at
+  `251514d`). **v3** (batch `20260901-124612-251514d`: the 85g2b shape on
+  TRAIN 1001–1120, n=120, run-horizon shadow, ONE named deviation —
+  `--prior-lambda=0.5` rides the arm per the 85h deployed-semantics rule;
+  ~1.5 h box): 52,008 rows / 8,185 long-horizon / **2,085 long-horizon
+  decisions**; provenance `measured @251514d · built @3cc8a6c`. 35 items,
+  **21 SIGNABLE** (the 17 units n=166–487 + portunus n=82 · overclock 87 ·
+  shield 90 · surge 88 — the fold SHOPS, so the port rows fattened
+  22–31→43–90 and four non-units crossed the floor for the first time),
+  14 directional. Units: stormcaller +23.98 · halberdier +20.27 · healer
+  +9.39 · shaman +7.15 · archer +4.99 · gunslinger +4.54 · adventurer
+  −0.85 · corrupter −2.08 · mercenary −3.42 · mage −4.57 · reaver −5.48 ·
+  rioter −6.67 · ronin −12.73 · bandit −13.20 · officer −14.52 · catapult
+  −14.65 · rogue −18.29 (five signable SIGN FLIPS vs v2: archer −5.98→+4.99
+  · gunslinger −0.07→+4.54 · corrupter +8.31→−2.08 · mage +7.34→−4.57 ·
+  ronin +0.99→−12.73; the top-2/bottom-3 order HELD — the 88c rarity
+  read's spine survives). Daemons (directional unless noted): minerva
+  +51.3 · janus +25.5 (was +72.7) · cornucopia +16.4 · fortuna +15.5 ·
+  moneta +8.9 · laverna +0.4 · portunus +0.3 (SIGNABLE, was −24.9) ·
+  patricians-seal −6.9 (was +36.3) · ⭐ **dis-pater −11.25 (n=55) — the
+  daemonized miner's FIRST read is NEGATIVE: the trap-price shape the 88b
+  grant cohort found on the packet survives the daemonization** (holding
+  value, price NOT netted — a directional read on the §88 list) · mercury
+  −23.5. Packets: patch +20.2 · reroute +9.6 (was +39.4) · hype +5.8 ·
+  overclock +2.3 · surge −0.25 · shield −2.3 (was −14.7) · discard-one
+  −12.3 · venom −13.1 (was +6.7). `packet:miner` RETIRED with the packet.
+  ⚠ v2→v3 deltas are NOT drift evidence — two protocol changes at once
+  (λ=0.5 joins the measuring arm; the 88c catalog) — the 85g2b caveat
+  carried verbatim. **The fresh derive** (batch `20260901-141819-251514d`,
+  the 85g5 hybrid-light recipe VERBATIM, sampler 85, ~2.7 h box): base
+  best-of-96 **42.31%** (index 80; then 30/54 at 38.46%) — **the same
+  42.31% the 85g5 base top-3 tied at**: the searched-upper base ceiling is
+  UNMOVED at the 88c config; refine 42.3%→50.0% (1/3 finalists improved;
+  85g5: →46.2%); held-out 16.7% (1/6; 85g5 33.3% = 2/6 — n=6, noise). The
+  ceiling READ only — no selection cohort, no deploy (the 85g5 finalist-56
+  stays the deployed vector; the 85g4 refine-inverts-under-arb thesis is
+  unexercised here by scope). Landing: the v3 table + the derived-artifact
+  tripwire (`tests/prior-table-coverage.test.ts` — the negative probe
+  against the v2 file fails on EXACTLY `daemon:dis-pater` missing +
+  `packet:miner` stale) + the registry section (header layer) in one
+  commit; the scoped ceiling re-read (`88d3-ceiling.queue`, 12 batches)
+  launches at that HEAD. WORKLOG §88d3.

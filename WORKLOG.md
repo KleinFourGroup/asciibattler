@@ -3004,3 +3004,71 @@ Next session's landing sequence: read the two artifacts →
 scoped ceiling re-read at the v3 HEAD (`--only` the four
 ceiling pairs, a named PARTIAL read) → the amendment sheet edit
 (cites the 88d board + the v3 evidence) → 88e, the round close.
+
+### 88d3 — the v3 landing + the tripwire + the fresh-derive read
+(2026-09-01; numbers BALANCE 2026-09-01 (88d2/88d3))
+
+Both overnight drives came home clean (`fetched →` + exit 0 + a
+non-empty artifact each; boxes destroyed on drain — 11 created / 11
+destroyed this phase). The landing sequence ran as signed.
+
+**The v3 table.** `npm run prior:table` over the 88d2a raw: 2,085
+long-horizon decisions (v2: 1,952), 35 items, 21 signable — four
+non-units crossed the n=80 floor for the first time (portunus,
+overclock, shield, surge) because the fold SHOPS: the port rows
+fattened 22–31→43–90 exactly where 85g6d's tx re-activation said
+they would. **Dis Pater has a row: n=55, meanΔ −11.25** — negative
+on first read, the same trap-price shape the 88b grant cohort read
+on the miner PACKET (−40.65 at v2). The daemonization moved the
+fire decision off the horizon-blind fire site (the 88c motive), but
+the HOLDING value of a per-kill 2-bit tithe still reads below zero
+on the shadow's paired margin; directional (n<80), it names the §88
+list's newest member rather than a verdict. Five signable unit rows
+flipped sign (archer, gunslinger up; corrupter, mage, ronin down)
+while the spine held (stormcaller/halberdier top, rogue/catapult/
+officer bottom) — and the 85g2b caveat carries verbatim: λ=0.5 now
+rides the MEASURING arm and the catalog moved, so v2→v3 is a
+protocol-designed re-measurement, never drift evidence. `packet:miner`
+retired with its packet.
+
+**The tripwire** ([tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts),
+rides `npm test` — `tests/fuzz/**` is excluded from the default run,
+so the file lives at the tests root on purpose). Config-derived, never
+an id list: acquirable = every `DAEMONS` id + every `PACKET_IDS` id +
+every `DRAFTABLE_ARCHETYPES` entry (ports stock the whole daemon and
+packet catalogs minus owned; recruits + ports draw the draftable set;
+reward pools are boot-asserted subsets). Three claims: every
+acquirable id has a row or an explicit PENDING acknowledgment; no
+row names a retired id; no PENDING entry has quietly gained a row.
+The one PENDING entry is DERIVED — `daemon:<the default character's
+start idol>` (mars): every shadow batch is `--character=soldier` and
+a run never offers what it owns, so the soldier's idol is
+structurally unmeasurable on the TRAIN bank. ⭐ The negative probe:
+the test run against the v2 file (swapped in, then restored
+byte-identical — sha `20727592…`) fails on EXACTLY `daemon:dis-pater`
+missing + `packet:miner` stale, and nothing else. The failure
+messages point at BALANCE §"The derived-artifact registry" (artifact
+→ measures → invalidated-by → rebuild recipe → tripwire; four rows —
+the prior table, the roster table [⚠ no coverage guard yet — the
+named next guard], the deployed searched vector, and the signed sheet
+as the NOT-derived counterpart). The header layer sat 4 lines under
+its 650 cap; bumped to 700 in docs.test.ts with the reason inline.
+
+**The fresh-derive read.** The 85g5 recipe verbatim at `251514d`:
+base best-of-96 = 42.31% — the SAME 42.31% the 85g5 base top-3 tied
+at (same sampler, same bank; index 80 here vs 56/72/73 there). The
+searched-upper base ceiling did not move at the 88c config. Refine
+took it to 50.0% (85g5: 46.2%); held-out 1/6 vs 2/6 (n=6 — noise by
+construction). The read is banked; no selection cohort and no deploy
+(finalist-56 stays; a deploy is its own decision, per the signing).
+
+**The scoped ceiling re-read** (`output/box-batches/88d3-ceiling.queue`,
+12 batches, ~3 h): the 4 ceiling PAIRS = the 4 arb rows (base n=40 +
+ext n=80 → n=120 via `--merge-stages`) + their 4 doctrine controls
+(n=40), every line byte-identical to its 88d-board.queue twin
+(diffed per id before launch). The controls re-run although the
+prior cannot move them: the verdict's one-HEAD rule makes a
+mixed-HEAD partial board VOID, and they cost ~10 min each. The read
+is a named PARTIAL (`--only=` the 8 ids, the loud banner) — a smoke
+read of the WARN cluster's lead suspect, never a signing board; the
+amendment sheet edit cites the 88d full board + this evidence.

@@ -264,6 +264,11 @@ daemon/packet directional list, shortlist scoped by the user):
       promote question (87d3 docket) + the §88 dispositions; if
       config moved, the FULL board MANIFESTED at one HEAD (the §86e
       pre-registration) + ref re-pins; sheet signed.
+      · 88d-board ✅ 2026-09-01 (first fully-manifested board, 0 FAIL / 8
+      WARN; the armArgv catch) · 88d2 ✅ signed: v3 prior rebuild + fresh
+      derive + band promote → §89 close + the derived-artifact TRIPWIRE ·
+      88d3 ✅ v3 + tripwire landed; the scoped ceiling re-read + the sheet
+      edit OPEN. WORKLOG §88d–§88d3.
 - [ ] **88e** — the close ritual: scratchpad sweep · ROADMAP/WORKLOG/
       spec archive (the post-83 pair) · HANDOFF demotion + Closed
       rounds + cursor → §89 · META-ROADMAP Round 6 ✅ · memory.

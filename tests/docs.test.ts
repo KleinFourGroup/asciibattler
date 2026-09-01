@@ -183,7 +183,10 @@ describe('docs hygiene', () => {
   // sandwich). Sized at the 83-pre2 landing: ~547 lines (the audited 465 +
   // the primer); 650 leaves headroom for legitimate doctrine growth between
   // cleanups.
-  const BALANCE_HEADER_MAX_LINES = 650;
+  // 88d2 (2026-09-01): +50 for the derived-artifact registry section — the
+  // header sat 4 lines under the cap when the 88c Dis Pater exhibit earned
+  // the section its place (a doctrine addition, not a fossil).
+  const BALANCE_HEADER_MAX_LINES = 700;
 
   it(`BALANCE.md's header layer stays under ${BALANCE_HEADER_MAX_LINES} lines (current truth, not a log)`, () => {
     const lines = read('BALANCE.md').split(/\r?\n/);

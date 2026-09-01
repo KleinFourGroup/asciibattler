@@ -2879,3 +2879,56 @@ bridge-underpowered caveat):
   negative without one).
 - **reroute 9, patch 9, everything unlisted → hold** (in-situ
   positive or near-null at default prices).
+
+### 88c — the disposition session (2026-08-31, ⛔ USER-SIGNED in
+chat; numbers + the standing protocol in BALANCE 2026-08-31 88c)
+
+Two user challenges reshaped the slate, both data-vindicated:
+
+- **Miner.** The user's play experience ("one of the most OP items")
+  contradicted the cut proposal — and the sidecar settled it: 2,057
+  fire-miner considerations in the grant arm, **chosen 0** (3,312/0
+  across all 8 batches). The horizon-blindness doctrine's sharpest
+  exhibit yet: a run-duration fired payoff is invisible at the fire
+  site (within-horizon ≈0), the fold prices the CACHED packet rather
+  than the INSTALLED rule, and the v2 shadow row −40.65 ≈ exactly the
+  40-bit price — the instrument's own blindness written into the
+  prior (a feedback loop: the negative row then discourages holding
+  it). The proposal was withdrawn; the user's fix was better than a
+  price move: **daemonize** — the effect was already daemon-shaped
+  (`injectRule duration:run` = the daemon hook). Landed as
+  **Dis Pater** (`e176749`; the Roman god of underworld wealth —
+  kills → riches is his exact portfolio; the user: "breaks the mold
+  but a REALLY good fit"). Passive = no fire decision to be blind
+  at; the prior table will learn his true value from live cohorts.
+- **Discard-one.** "Strictly negative by design" (fewer fielded
+  units against a base-hand-size budget) — the +0.087/z=1.46 top
+  rank was my overreach, retracted as trajectory noise (shared
+  control, the 85g6c stream-perturbation lesson). The cohort's
+  honest headline SHRINKS to: nothing reads harmful free; single-
+  item causal effects at n=80 sit below the floor except possibly
+  daemon passives. Curiosity crumb: the bot DID cull 42/1,654 past
+  the ε gate — ε-exploration or a real edge; not a disposition
+  input.
+
+The class audit (twice-bitten, same-day): miner was the ONLY
+run-duration packet; fire rates are monotone in payoff distance
+(table in BALANCE). Overclock (0.3%, next-encounter payoff) = the
+soft watch. The structural boundary named: acquisition sites got
+the §85 fold; FIRE sites judge within-horizon only — any future
+beyond-encounter fired payoff needs a horizon story (the
+packets.test.ts guard enforces the run-duration case).
+
+Landed: `042c6fe` (halberdier→rare · rioter→common · janus 40; the
+archetype-editor round-trip taught that common is IMPLICIT in
+units.json) · `e176749` (Dis Pater + the guard + the mine event
+grants the idol + packets-boss→reroute; the injectedRunRules
+mechanism KEPT, serialized, empty-round-trip pinned — its content
+exerciser is gone, so future run-duration packets bring tests).
+Coverage note: the 51f tally tests re-pointed at dis-pater (the
+dedupe-by-id branch now exercises §47 doubled-idol stacking).
+88d docket: the stale `packet:miner` prior row / dis-pater's
+missing row · the fire-blindness structural note · the overclock +
+mercury watches · the X3 band promote question · the amendment
+board (fully MANIFESTED, one HEAD). The rare-trio kit overhaul →
+the Round 9 charter line at 88e.

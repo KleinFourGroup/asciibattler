@@ -253,10 +253,13 @@ daemon/packet directional list, shortlist scoped by the user):
       three negative v2 rows are RELATIVE/priced effects, miner =
       a pure trap-price; discard-one the strongest arm (+0.087).
       BALANCE 2026-08-31 (88b) + WORKLOG §88b.
-- [ ] **88c** — ⛔ the disposition session (user): tier/price calls
-      per archetype + the daemon/packet price read (rolled in, user
-      call at kickoff); config edits verified per-ID (83d); the
-      standing Round-9+ protocol paragraph into BALANCE.
+- [x] **88c** ✅ 2026-08-31 — ⛔ signed: halberdier→rare ·
+      rioter→common · janus 40 · all else HOLD (`042c6fe`); ⭐ the
+      miner reversal (2,057 considerations/0 fires — fire-site
+      horizon blindness) → **daemonized as Dis Pater** (`e176749`,
+      +the run-duration guard); discard-one's +0.087 retracted as
+      noise; the standing protocol = BALANCE §"The rarity
+      verification protocol". WORKLOG §88c.
 - [ ] **88d** — the ONE amendment + its board run: the X3 band
       promote question (87d3 docket) + the §88 dispositions; if
       config moved, the FULL board MANIFESTED at one HEAD (the §86e

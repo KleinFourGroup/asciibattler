@@ -422,6 +422,36 @@ live in the signed sheet, machine-checked; these per-encounter bands are
 prose-checked only — promoting them into the sheet is an 83f
 signing-session candidate.
 
+
+## The rarity verification protocol (standing since §88c, 2026-08-31)
+
+For every new draftable archetype (Round 9 on) and any tier/price
+re-read:
+
+1. **Desk-first.** The read consumes the committed prior table's
+   recruit-site rows. **meanDelta is the disposition metric** (the
+   paired final-pool margin); valuePerHop is the FOLD's currency only —
+   per-hop normalization overweights late-run picks (the 88a
+   divergence: ρ-vs-price +0.400 on meanΔ, −0.105 on v/hop). Rows at
+   n≥80 are signable; no box time while rows are signable.
+2. **Thin rows** get the targeted `--grant` paired same-seed arm at
+   n=80 (fresh seed window, box-drive, ONE HEAD, one shared control —
+   never pool sign tests across arms sharing a control).
+3. **Free vs relative — read both, conflate neither.** The grant
+   measures ABSOLUTE free-endowment value; the shadow's site rows
+   measure value RELATIVE to the site's alternatives with
+   price/opportunity cost riding. Negative recruit row at free
+   acquisition = a KIT question (price cannot fix it — hand dilution).
+   Negative shadow row + null grant read = a PRICE question (the
+   miner decomposition).
+4. **Fired items: check the fire rate first.** A never-fired item's
+   value rows measure price only (miner: 0.0%). Run-duration packets
+   are guard-banned (packets.test.ts); any beyond-encounter fired
+   payoff needs a horizon story before its numbers are trusted.
+5. **Dispositions per archetype** — hold / re-tier / re-price / named
+   watch — are user-signed; config edits verify per-ID; any change
+   rides the round's amendment board run (fully MANIFESTED, one HEAD).
+
 ## The funnel + tiers (carried forward)
 
 Broad-cheap → narrow-expensive, now per-encounter:
@@ -4018,3 +4048,37 @@ deltas. The pre-X H7c→O log lives at
   pool their sign tests); uniform positivity is parsimoniously "free
   daemons/packets don't dilute anything" (unlike unit recruits).
   ⛔ Dispositions = 88c. Proposals: WORKLOG §88b.
+- **2026-08-31 (88c) — THE DISPOSITION SESSION (user-signed in chat) +
+  the horizon-blindness class audit + the Dis Pater daemonization.**
+  Signed: halberdier uncommon→rare · rioter uncommon→common · janus
+  32→40 · discard-one HOLD 5 (the +0.087 read RETRACTED as
+  stream-perturbation noise — z=1.46, shared control, and the designer's
+  mechanical read says strictly-negative; the 85g6c lesson applies) ·
+  mercury HOLD 30 + named watch (the one directional negative without a
+  causal read) · all other tiers/prices HOLD · the 1/1.5/2/3 curve HOLD
+  (every defect was an assignment defect). Officer/reaver/catapult =
+  the NAMED KIT WATCH (negative at free acquisition — no §88 lever
+  fixes them; → the Round 9 charter at 88e). **The miner reversal
+  (user-challenged, data-confirmed):** the cut proposal was WITHDRAWN —
+  decisions.csv showed **2,057 fire-miner considerations across the
+  grant arm, chosen 0** (3,312/0 across all 8 batches, including
+  port-bought miners): a run-duration packet is STRUCTURALLY INVISIBLE
+  at its fire site (within-horizon payoff ≈0), so the grant read
+  measured a never-installed miner and the v2 shadow row (−40.65 ≈ the
+  40-bit price) measured pure price. In human hands (~200+ kills/run ×
+  2 bits) it is ~10× its price — the user's OP read stands. **The
+  class audit** (twice-bitten, same-day): miner was the ONLY
+  `duration:"run"` packet; fire rates are monotone in payoff distance
+  (surge 8.8% · patch 7.8% · reroute 5.2% · venom 4.4% ·
+  hype/shield/discard-one 1–3% · overclock 0.3% [next-encounter payoff
+  — the NAMED soft watch] · miner 0.0%). **The fix: miner shipped as
+  the `dis-pater` DAEMON** (Idol of Dis Pater — the Roman god of
+  underworld wealth; passive, no fire decision to be blind at; price
+  40 carries; the mine event grants the idol; packets-boss slot →
+  reroute; the daemons reward table gains him) + a GUARD in
+  packets.test.ts: no shipped packet may inject a run-duration rule.
+  ⚠ The v2 `packet:miner` prior row is stale by id and dis-pater has
+  no row (prior 0) until the next table build — 88d docket. Named for
+  the 88d amendment: the fire-site horizon blindness (acquisition
+  sites got the §85 fold; fire sites judge within-horizon only) ·
+  the overclock fire-rate watch · the mercury price watch.

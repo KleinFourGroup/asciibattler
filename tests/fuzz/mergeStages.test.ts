@@ -85,6 +85,9 @@ describe('--merge-stages: the serial-equivalence oracle', () => {
       expect(merged?.seedWindow).toEqual({ firstSeed: 1, count: 12 });
       expect(merged?.head).toMatch(/^[0-9a-f]{40}$/);
       expect(merged?.head).toBe(readBatchManifest(stageA)?.head);
+      // 88d — the merged manifest certifies the stages' common ARM (the
+      // verdict board's arm check reads armArgv on merge-stages manifests).
+      expect(merged?.armArgv).toEqual(readBatchManifest(stageA)?.argv);
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }
@@ -245,6 +248,9 @@ describe('--merge-stages: the guards (synthetic dirs)', () => {
       expect(merged?.head).toBeNull();
       expect(merged?.dirty).toBeNull();
       expect(merged?.seedWindow).toEqual({ firstSeed: 1, count: 4 });
+      // 88d — no certified arm either: an unmanifested stage means the
+      // merged dir cannot name its arm (the verdict fails it closed).
+      expect(merged?.armArgv).toBeUndefined();
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }

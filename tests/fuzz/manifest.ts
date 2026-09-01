@@ -65,8 +65,16 @@ export interface GitProvenance {
 export interface BatchManifest extends GitProvenance {
   readonly manifestVersion: number;
   readonly kind: 'run' | 'jobs-parent' | 'merge-stages';
-  /** The full CLI argv that produced the batch (raw, unstripped). */
+  /** The full CLI argv that produced the batch (raw, unstripped). For a
+   *  merge-stages manifest this is the MERGE invocation — the certified
+   *  arm lives in `armArgv`. */
   readonly argv: readonly string[];
+  /** 88d — merge-stages only: the stages' common argv (arm-authoritative;
+   *  a stage's raw argv, partition flags and all — consumers compare via
+   *  `armSignatureOf`). Absent when any stage ran unmanifested, so a
+   *  merged dir without it cannot certify an arm (the verdict fails it
+   *  closed). Never written by run/jobs-parent manifests. */
+  readonly armArgv?: readonly string[];
   readonly seedWindow: SeedWindow;
   /** Wall clock, informational only — never compared. */
   readonly writtenAt: string;
@@ -87,6 +95,8 @@ export function captureGitProvenance(cwd: string = REPO_ROOT): GitProvenance {
 export interface ManifestInputs {
   readonly kind: BatchManifest['kind'];
   readonly argv: readonly string[];
+  /** merge-stages only — see BatchManifest.armArgv. */
+  readonly armArgv?: readonly string[];
   readonly seedWindow: SeedWindow;
   /** Override for DERIVED provenance (--merge-stages records the STAGES'
    *  head, never the merging machine's). Default: captured from git here. */
@@ -101,6 +111,7 @@ export function writeBatchManifest(outDir: string, inputs: ManifestInputs): Batc
     head: provenance.head,
     dirty: provenance.dirty,
     argv: inputs.argv,
+    ...(inputs.armArgv !== undefined ? { armArgv: inputs.armArgv } : {}),
     seedWindow: inputs.seedWindow,
     writtenAt: new Date().toISOString(),
   };
@@ -130,6 +141,8 @@ export function readBatchManifest(dir: string): BatchManifest | null {
     (m.dirty === null || typeof m.dirty === 'boolean') &&
     Array.isArray(m.argv) &&
     m.argv.every((t) => typeof t === 'string') &&
+    (m.armArgv === undefined ||
+      (Array.isArray(m.armArgv) && m.armArgv.every((t) => typeof t === 'string'))) &&
     typeof m.seedWindow === 'object' &&
     m.seedWindow !== null &&
     typeof m.seedWindow.firstSeed === 'number' &&

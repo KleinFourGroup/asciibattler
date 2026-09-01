@@ -306,6 +306,41 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     const v = evaluateVerdict(board, audits, metrics, OPTS);
     expect(v.rows.find((r) => r.instrument === 'arb-deploy' && r.check === 'arm')?.status).toBe('FAIL');
   });
+
+  it('88d — a merge-stages manifest certifies its arm via armArgv, not the merge argv', () => {
+    // The 88d maiden pooled board: the merged dir's raw argv is the
+    // --merge-stages invocation; the arm check must read armArgv there.
+    const { audits, metrics } = cleanBoardInputs();
+    const a = audits.get('arb-regen')!;
+    const mergedManifest = (armArgv: readonly string[] | undefined) => ({
+      ...a.manifest!,
+      kind: 'merge-stages' as const,
+      argv: ['--merge-stages=output/a,output/b', '--out=output/board/arb-regen'],
+      ...(armArgv !== undefined ? { armArgv } : {}),
+    });
+    // armArgv = the stage argv (partition flags and all) → PASS.
+    audits.set('arb-regen', { ...a, manifest: mergedManifest(a.manifest!.argv) });
+    expect(
+      evaluateVerdict(board, audits, metrics, OPTS).rows.find(
+        (r) => r.instrument === 'arb-regen' && r.check === 'arm',
+      ),
+    ).toBeUndefined();
+    // No armArgv (a stage ran unmanifested) → FAIL, fail-closed.
+    audits.set('arb-regen', { ...a, manifest: mergedManifest(undefined) });
+    const noArm = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(
+      noArm.rows.find((r) => r.instrument === 'arb-regen' && r.check === 'arm')?.status,
+    ).toBe('FAIL');
+    // armArgv naming the WRONG arm → FAIL.
+    audits.set('arb-regen', {
+      ...a,
+      manifest: mergedManifest(a.manifest!.argv.filter((t) => t !== '--arbitrate')),
+    });
+    const wrongArm = evaluateVerdict(board, audits, metrics, OPTS);
+    expect(
+      wrongArm.rows.find((r) => r.instrument === 'arb-regen' && r.check === 'arm')?.status,
+    ).toBe('FAIL');
+  });
 });
 
 describe('86e3 — the skill-gradient health check', () => {

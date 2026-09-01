@@ -845,10 +845,24 @@ export function evaluateVerdict(
       if (a.manifest.dirty === true) {
         fail(inst.id, 'provenance', 'the batch ran on a DIRTY tree — the measurement HEAD is not the code that ran');
       }
+      // 88d — a merge-stages manifest certifies its arm via armArgv (its
+      // raw argv is the merge invocation); one without armArgv merged
+      // unmanifested stages and cannot certify — fail closed.
       const want = armSignatureOf(inst.args);
-      const got = armSignatureOf(a.manifest.argv);
-      if (got !== want) {
-        fail(inst.id, 'arm', `manifest argv is not this instrument's arm (want '${want}', got '${got}')`);
+      if (a.manifest.kind === 'merge-stages') {
+        if (a.manifest.armArgv === undefined) {
+          fail(inst.id, 'arm', 'merge-stages manifest carries no armArgv — a stage ran unmanifested; re-merge from manifested stages');
+        } else {
+          const got = armSignatureOf(a.manifest.armArgv);
+          if (got !== want) {
+            fail(inst.id, 'arm', `merged armArgv is not this instrument's arm (want '${want}', got '${got}')`);
+          }
+        }
+      } else {
+        const got = armSignatureOf(a.manifest.argv);
+        if (got !== want) {
+          fail(inst.id, 'arm', `manifest argv is not this instrument's arm (want '${want}', got '${got}')`);
+        }
       }
     }
     // A checked metric that reads N/A: the instrument could not measure what

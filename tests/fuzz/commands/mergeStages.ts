@@ -152,6 +152,11 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
   // bail here — it flows into the merged manifest for the board to judge.
   const manifests = stages.map((s) => readBatchManifest(s.dir));
   let provenance: GitProvenance = { head: null, dirty: null };
+  // 88d — the certified arm for the merged manifest: the stages' common
+  // argv (validated same-arm below). Stays undefined when any stage ran
+  // unmanifested — a merged dir that can't name its arm must fail the
+  // verdict's arm check, never inherit one by guesswork.
+  let armArgv: readonly string[] | undefined;
   if (manifests.every((m): m is BatchManifest => m !== null)) {
     for (let i = 1; i < manifests.length; i++) {
       if (armSignatureOf(manifests[i]!.argv) !== armSignatureOf(manifests[0]!.argv)) {
@@ -175,6 +180,7 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
         dirty: manifests.some((m) => m.dirty === true),
       };
     }
+    armArgv = manifests[0]!.argv;
   }
 
   // Seed windows: pairwise disjoint, union contiguous.
@@ -233,6 +239,7 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
   writeBatchManifest(args.outDir, {
     kind: 'merge-stages',
     argv: args.raw ?? [],
+    ...(armArgv !== undefined ? { armArgv } : {}),
     seedWindow: { firstSeed: union[0]!, count: union.length },
     provenance,
   });

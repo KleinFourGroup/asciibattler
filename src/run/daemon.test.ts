@@ -410,19 +410,22 @@ describe('battleRulesFor (47f — the battle-domain compile)', () => {
     expect(battleRulesFor([SURE_BOTH, COIN_REDRAW])).toEqual([]);
   });
 
-  it('the shipped catalog compiles clean: laverna + fortuna are the only battle-hook idols', () => {
+  it('the shipped catalog compiles clean: laverna + fortuna + dis-pater are the only battle-hook idols', () => {
+    // dis-pater joined at 88c (the daemonized miner — an on-kill bits tithe).
     for (const d of DAEMONS) {
       const compiled = battleRulesFor([d]);
-      if (d.id === 'laverna' || d.id === 'fortuna') expect(compiled).toHaveLength(1);
+      if (d.id === 'laverna' || d.id === 'fortuna' || d.id === 'dis-pater')
+        expect(compiled).toHaveLength(1);
       else expect(compiled).toEqual([]);
     }
   });
 });
 
 describe('the shipped catalog (config/daemons.json) — design-shape pins', () => {
-  it('ships the four L idols + the three 47e/f economy idols + the §64 drafting daemons', () => {
+  it('ships the four L idols + the three 47e/f economy idols + the §64 drafting daemons + dis-pater (88c)', () => {
     expect(DAEMONS.map((d) => d.id).sort()).toEqual([
       'cornucopia',
+      'dis-pater',
       'fortuna',
       'janus',
       'laverna',
@@ -445,9 +448,10 @@ describe('the shipped catalog (config/daemons.json) — design-shape pins', () =
   });
 
   it('battleBitsDaemonIds names the battle-bits earners, ownership order (51a — the tally label)', () => {
-    // Laverna is the catalog's one battle-bits earner; grant/passive/status
-    // idols never qualify.
+    // Laverna + dis-pater (88c) are the catalog's battle-bits earners;
+    // grant/passive/status idols never qualify.
     expect(battleBitsDaemonIds([daemonById('laverna')!])).toEqual(['laverna']);
+    expect(battleBitsDaemonIds([daemonById('dis-pater')!])).toEqual(['dis-pater']);
     expect(
       battleBitsDaemonIds([
         daemonById('mars')!,

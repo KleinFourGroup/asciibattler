@@ -14,8 +14,8 @@
  *   uniformly from [1−jitter, 1+jitter] off the port stream. The roll
  *   lives at the stock site, NOT here — this module stays RNG-free.
  * - `packets`/`daemons` — `byId` overrides over a `default`, so pricing a
- *   standout (miner, the packets-boss prize) is one line and a new catalog
- *   entry is sellable with zero edits here.
+ *   standout (venom; dis-pater, the 88c daemonized kill-tithe) is one line
+ *   and a new catalog entry is sellable with zero edits here.
  * - `sellFraction` — sell price = ⌊buy price × fraction⌋. NB the §48
  *   landmine (Run.ts `gainBits` doc): sell PROCEEDS are a refund and take
  *   the raw `addBits` path, never the `bitsGain` fold.

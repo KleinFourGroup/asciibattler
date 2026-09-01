@@ -367,13 +367,13 @@
         ]
       },
       "done": {
-        "text": "At last the foreman ends the shift.  He collects your pickaxes and tosses a solitary packet your way.",
+        "text": "At last the foreman ends the shift.  He collects your pickaxes and presses a small leaden idol into your hands.  It is heavier than it should be.",
         "choices": [
           {
             "label": "Well, it's something",
             "outcomes": [
               {
-                "effects": [{ "op": "addPacket", "packetId": "miner" }],
+                "effects": [{ "op": "addDaemon", "daemonId": "dis-pater" }],
                 "next": { "kind": "return-to-map" }
               }
             ]

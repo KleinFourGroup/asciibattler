@@ -162,6 +162,21 @@
           }
         }
       ]
+    },
+    {
+      "id": "dis-pater",
+      "name": "Idol of Dis Pater",
+      "description": "Each kill tithes 2 bits from below.",
+      "rules": [
+        {
+          "kind": "hook",
+          "on": "kill",
+          "effect": {
+            "op": "gainBits",
+            "amount": 2
+          }
+        }
+      ]
     }
   ]
 }

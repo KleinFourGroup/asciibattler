@@ -385,12 +385,13 @@ config/                      # A4: balance JSON source of truth (paired with src
   daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
                              # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter
                              # matrix parse-enforced). Mars/Minerva empower hooks; Mercury coin-flip full
-                             # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks
+                             # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks;
+                             # Dis Pater on-kill bits tithe (88c — the daemonized miner)
   encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)
   selection.json             # V1: the encounter-selection policy (strategy: encounterFirst|layoutFirst)
   economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
   rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon|unit|poolHealth entries — the last two 74c, first authored in 74i's hostage-rescue table); 49g: packet entries LIVE — every launch packet reachable
-  packets.json               # 49a→g: the packet catalog — the locked launch 7 (patch/hype/shield/reroute/venom/overclock/miner), one effect op each
+  packets.json               # 49a→g: the packet catalog (patch/hype/shield/reroute/venom/overclock/surge/discard-one), one effect op each; miner daemonized to dis-pater at 88c — no run-duration packets ship (fire-site horizon blindness; packets.test.ts guards)
   prices.json                # 50a→f: the port price book — unit base×levelGrowth^(lv−1)±jitter, packet/daemon byId-over-default, sellFraction, unitRemovalPrice, portStock counts; launch catalog user-authored at 50f (§52 tunes)
   nodemap.json               # hop count + width bands + degree cap + rest knobs (G2/G3)
   terrain.json

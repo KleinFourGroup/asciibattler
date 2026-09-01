@@ -30,7 +30,8 @@
         { "kind": "daemon", "weight": 1, "daemon": "fortuna" },
         { "kind": "daemon", "weight": 1, "daemon": "cornucopia" },
         { "kind": "daemon", "weight": 1, "daemon": "patricians-seal" },
-        { "kind": "daemon", "weight": 1, "daemon": "portunus" }
+        { "kind": "daemon", "weight": 1, "daemon": "portunus" },
+        { "kind": "daemon", "weight": 1, "daemon": "dis-pater" }
       ]
     },
     {
@@ -68,7 +69,7 @@
     {
       "id": "packets-boss",
       "entries": [
-        { "kind": "packet", "weight": 1, "packet": "miner" },
+        { "kind": "packet", "weight": 1, "packet": "reroute" },
         { "kind": "packet", "weight": 1, "packet": "overclock" },
         { "kind": "packet", "weight": 1, "packet": "surge" }
       ]

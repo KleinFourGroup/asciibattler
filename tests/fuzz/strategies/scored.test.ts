@@ -481,7 +481,7 @@ describe('scored packet-fire policy (59c)', () => {
     const fire: FireWeights = { bias: { normal: -0.5, elite: 0, boss: 0 }, cachePressure: 1 };
     const full = fireRun({
       kind: 'normal',
-      cache: ['patch', 'venom', 'miner', 'reroute'],
+      cache: ['patch', 'venom', 'surge', 'reroute'],
       capacity: 4,
     });
     const light = fireRun({ kind: 'normal', cache: ['patch'], capacity: 4 });

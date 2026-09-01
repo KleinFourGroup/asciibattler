@@ -462,7 +462,7 @@ export class PreTurnScreen {
   /**
    * 49f — a `run:packetUsed` landed while this gate is up (PreTurnScene
    * forwards it): a cache-modal fire just changed gate state — a reroute
-   * INSERTED a redraw grant, a patch healed the player pool, a venom/miner
+   * INSERTED a redraw grant, a patch healed the player pool, a venom
    * changed nothing visible here. Swap in the re-derived queue + badges and
    * re-render the pools from the post-effect health (same events-only
    * refresh as the redraw/empower paths).

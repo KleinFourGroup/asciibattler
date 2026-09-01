@@ -2757,25 +2757,30 @@ describe('Run', () => {
       expect(run.grantViews()[0]).toMatchObject({ effect: { kind: 'redraw' }, active: true });
     });
 
-    it('venom (encounter) + miner (run) inject in union order and live/expire by duration', () => {
-      const { run, bus } = gatedToFirstTurnIntro(1, null);
+    it('dis-pater (daemon) + venom (encounter) compile in union order and live/expire by duration', () => {
+      // 88c — miner daemonized to dis-pater: the shipped run-duration packet
+      // is gone (see packets.test.ts's no-run-duration guard), so the pools
+      // pinned here are daemons → run-injected (EMPTY, mechanism kept) →
+      // encounter-injected.
+      const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
       const venomRule = ruleOf('venom');
-      const minerRule = ruleOf('miner');
+      // The battle compile strips the Rule discriminator down to the bare
+      // {on, effect} BattleRule — derive the expectation from the def.
+      const disPaterHook = daemonById('dis-pater')!.rules![0]!;
+      if (disPaterHook.kind !== 'hook') throw new Error('dis-pater rule shape changed');
+      const { kind: _kind, ...disPaterRule } = disPaterHook;
       run.addPacket('venom');
-      run.addPacket('miner');
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-      // Live THIS very turn (beginTurn runs after the gate); union order =
-      // daemons (none) → run-injected → encounter-injected.
+      // Live THIS very turn (beginTurn runs after the gate).
       run.dispatch({ kind: 'advanceTurn' });
-      expect(run.currentEncounter!.battleRules).toEqual([minerRule, venomRule]);
+      expect(run.currentEncounter!.battleRules).toEqual([disPaterRule, venomRule]);
       // Persists across turns WITHIN the encounter.
       chipTurn(bus, { player: 0, enemy: 0 });
       run.dispatch({ kind: 'advanceTurn' }); // outcome → next intro
       run.dispatch({ kind: 'advanceTurn' }); // intro → battle
-      expect(run.currentEncounter!.battleRules).toEqual([minerRule, venomRule]);
+      expect(run.currentEncounter!.battleRules).toEqual([disPaterRule, venomRule]);
       // Win + walk to the NEXT encounter: venom expires at its start (the
-      // reset-at-start doctrine), miner persists (run duration). Rewards are
+      // reset-at-start doctrine), the owned daemon persists. Rewards are
       // DECLINED so an accepted daemon can't pollute the compile.
       winEncounter(bus);
       run.dispatch({ kind: 'advanceTurn' });
@@ -2785,7 +2790,7 @@ describe('Run', () => {
       expect(run.phase).toBe('map');
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       run.dispatch({ kind: 'advanceTurn' });
-      expect(run.currentEncounter!.battleRules).toEqual([minerRule]);
+      expect(run.currentEncounter!.battleRules).toEqual([disPaterRule]);
     });
 
     it('overclock pends until the next encounter START, then lands post-reset (the pending store)', () => {
@@ -2808,9 +2813,7 @@ describe('Run', () => {
     it('the three 49e stores round-trip (v33); a packet-sourced grant keeps its name; stale rejects', () => {
       const { run } = gatedToFirstTurnIntro(1, null);
       run.addPacket('venom');
-      run.addPacket('miner');
       run.addPacket('reroute');
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
@@ -2820,7 +2823,9 @@ describe('Run', () => {
       expect(restored.injectedEncounterRules).toEqual([
         { rule: ruleOf('venom'), sourceId: 'venom' },
       ]);
-      expect(restored.injectedRunRules).toEqual([{ rule: ruleOf('miner'), sourceId: 'miner' }]);
+      // 88c — no shipped packet injects a run rule since miner daemonized;
+      // the store (and its wire slot) stays, round-tripping empty.
+      expect(restored.injectedRunRules).toEqual([]);
       expect(restored.grantViews()[0]).toMatchObject({ daemonId: 'reroute', name: 'Reroute' });
       expect(() =>
         Run.fromJSON({ ...wire, schemaVersion: 32 }, new EventBus<GameEvents>()),
@@ -3288,37 +3293,35 @@ describe('Run', () => {
       expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 2 }]);
     });
 
-    it('a miner-mined tally labels its PACKET source (51f — the earner pool spans injected rules)', () => {
-      const { run, bus } = gatedToFirstTurnIntro(1, null);
-      run.addPacket('miner');
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 }); // install the run-duration rule
+    it('a dis-pater tithe labels its DAEMON source (88c — the catalog kill-earner)', () => {
+      // 88c — miner daemonized: the kill→bits earner is now the dis-pater
+      // idol; a sole earner still labels the tally by id.
+      const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
       run.dispatch({ kind: 'advanceTurn' }); // gate → battle
       chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 4 });
       run.dispatch({ kind: 'advanceTurn' }); // outcome → the gate chain
       expect(run.phase).toBe('reward');
-      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 4, source: 'miner' }]);
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 4, source: 'dis-pater' }]);
     });
 
-    it('a daemon earner + a packet earner together drop the label (cross-pool ambiguity)', () => {
+    it('two distinct daemon earners together drop the label (attribution ambiguity)', () => {
       const { run, bus } = gatedToFirstTurnIntro(1, daemonById('laverna')!);
-      run.addPacket('miner');
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+      run.addDaemon(daemonById('dis-pater')!);
       run.dispatch({ kind: 'advanceTurn' });
       chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 4 });
       run.dispatch({ kind: 'advanceTurn' });
       expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 4 }]);
     });
 
-    it('two miner installs stay ONE earner — the label holds (dedupe by source id)', () => {
-      const { run, bus } = gatedToFirstTurnIntro(1, null);
-      run.addPacket('miner');
-      run.addPacket('miner');
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
-      run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
+    it('two dis-pater copies stay ONE earner — the label holds (dedupe by source id)', () => {
+      // §47 multi-daemon by id is uncapped, so a doubled idol is reachable;
+      // the earner pool dedupes by id (Run.ts — one id, one earner).
+      const { run, bus } = gatedToFirstTurnIntro(1, daemonById('dis-pater')!);
+      run.addDaemon(daemonById('dis-pater')!);
       run.dispatch({ kind: 'advanceTurn' });
       chipTurn(bus, { player: 1, enemy: 1 }, [], { bits: 6 });
       run.dispatch({ kind: 'advanceTurn' });
-      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 6, source: 'miner' }]);
+      expect(run.pendingRewards).toEqual([{ kind: 'bits', base: 6, source: 'dis-pater' }]);
     });
 
     it('a mid-offer save round-trips the labeled tally portion (v36)', () => {

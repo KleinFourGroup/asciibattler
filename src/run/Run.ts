@@ -494,7 +494,9 @@ function cloneBattleRule(rule: BattleRule): BattleRule {
 /** 51f — one packet-injected battle rule + its PROVENANCE (the source packet
  *  id). The sim never sees the wrapper — the battle compile strips to the
  *  plain rule — but the run keeps it so a rule's earnings can be credited
- *  (the reward tally's source label: a miner-mined bit says "Miner"). */
+ *  (the reward tally's source label). No shipped packet injects a run-
+ *  duration rule since 88c daemonized miner (packets.test.ts guards);
+ *  encounter-duration injectors (venom) still ride this wrapper. */
 export interface InjectedRule {
   rule: BattleRule;
   sourceId: string;
@@ -2878,9 +2880,10 @@ export class Run {
       // the XP bank's skip-on-lost: a defeat's loot is dead state.
       if (tallies !== undefined && tallies.bits > 0) {
         // 51f — the earner pool spans BOTH rule sources: daemon battle-bits
-        // hooks and packet-injected gainBits rules (miner). Dedup by id —
-        // two miner installs are still ONE earner; a daemon + a packet are
-        // two, and the label drops (the aggregate tally can't attribute).
+        // hooks (dis-pater, laverna) and packet-injected gainBits rules
+        // (no shipped instance since 88c). Dedup by id — two copies of the
+        // same idol are still ONE earner; two distinct ids are two, and the
+        // label drops (the aggregate tally can't attribute).
         const earners = new Set(battleBitsDaemonIds(this.daemons));
         for (const entry of [...this.injectedRunRules, ...this.injectedEncounterRules]) {
           if (entry.rule.effect.op === 'gainBits') earners.add(entry.sourceId);

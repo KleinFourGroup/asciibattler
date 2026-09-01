@@ -274,3 +274,19 @@ describe('assertPacketStatusRefs (the boot check)', () => {
     );
   });
 });
+
+describe('the 88c horizon guard', () => {
+  // §88c — a run-duration packet is STRUCTURALLY INVISIBLE at its fire
+  // site: the rollout judges within-horizon, so a rest-of-run payoff reads
+  // ≈0 and the bot never fires it (miner: 3,312 considerations, 0 fires —
+  // BALANCE 2026-08-31). Miner shipped as the dis-pater daemon instead
+  // (passive — no fire decision to be blind at). A new run-duration packet
+  // must arrive with a horizon story (how the fire site sees its value)
+  // and its own tests, or ship as a daemon.
+  it('no shipped packet injects a run-duration rule', () => {
+    for (const p of PACKETS) {
+      if (p.effect.op !== 'injectRule') continue;
+      expect(p.effect.duration, `packet '${p.id}' injects a run-duration rule`).not.toBe('run');
+    }
+  });
+});

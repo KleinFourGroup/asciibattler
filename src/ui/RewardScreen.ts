@@ -113,9 +113,10 @@ export class RewardScreen {
         title.className = 'reward-portion__title';
         // 51a — a battle-tally portion names its earner ("◈ Idol of Laverna
         // — N bits", the labeled-row shape-lock). 51f — the earner can be a
-        // PACKET now (miner): resolve through both catalogs with the
-        // matching mark (◈ daemon / ▤ packet — the grantViews fallback
-        // chain); a miss on both falls back to the raw id.
+        // packet-injected rule too (no shipped instance since 88c daemonized
+        // miner): resolve through both catalogs with the matching mark
+        // (◈ daemon / ▤ packet — the grantViews fallback chain); a miss on
+        // both falls back to the raw id.
         let source = '';
         if (portion.source !== undefined) {
           const daemon = daemonById(portion.source);

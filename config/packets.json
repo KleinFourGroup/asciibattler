@@ -104,21 +104,6 @@
       "usableIn": ["preTurn"],
       "target": "unit",
       "effect": { "op": "discardCards" }
-    },
-    {
-      "id": "miner",
-      "name": "Miner",
-      "description": "Install a miner: for the rest of the run, each kill mines 2 bits.",
-      "usableIn": ["preTurn"],
-      "target": "none",
-      "effect": {
-        "op": "injectRule",
-        "rule": {
-          "on": "kill",
-          "effect": { "op": "gainBits", "amount": 2 }
-        },
-        "duration": "run"
-      }
     }
   ]
 }

@@ -31,7 +31,6 @@
   "packets": {
     "default": 9,
     "byId": {
-      "miner": 40,
       "shield": 6,
       "venom": 15,
       "surge": 12,
@@ -41,6 +40,7 @@
   "daemons": {
     "default": 35,
     "byId": {
+      "dis-pater": 40,
       "mars": 40,
       "janus": 40,
       "mercury": 30,

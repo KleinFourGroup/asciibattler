@@ -60,7 +60,7 @@ function withNullFire(s: FuzzStrategy): FuzzStrategy {
 }
 
 /** Fires the first held target-less packet legal in the asked context
- *  (patch/reroute/venom/miner — no handIndex/rosterIndex bookkeeping). */
+ *  (patch/reroute/venom/surge — no handIndex/rosterIndex bookkeeping). */
 function withGreedyFire(s: FuzzStrategy): FuzzStrategy {
   return {
     ...s,

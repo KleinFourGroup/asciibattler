@@ -3111,7 +3111,7 @@ close). (2) The deploy-walk overperformance SHARPENED: arb reach
 arms now, so the design-target question is not an arb artifact. It
 rides to §89 as the named item it already was, with a sharper edge.
 
-**The signing docket — the ONE sheet amendment (DRAFT, prose-only;
+**The signing docket — the ONE sheet amendment (⛔ USER-SIGNED 2026-09-02 in chat: "signed!"; prose-only;
 no numeric re-pin because every checked ref PASSED at the 85g6d pins
 on the 88d full board, and a partial read never re-pins):**
 
@@ -3137,4 +3137,4 @@ on the 88d full board, and a partial read never re-pins):**
 > band move) · the band promote DEFERRED to the §89 close · the gambler
 > shape-flip parity item carries. Signed bands unchanged.
 
-Lands as `sheet+docs(88d4)` on the user's signature; 88e follows.
+Landed as `sheet+docs(88d4)` on the signature; 88e follows. The user's note at signing: Dis Pater is a daemon THEY pick every time — the bot's decline is a finding to carry, not a verdict on the design (see 88e's close note).

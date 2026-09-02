@@ -44,6 +44,30 @@ close, user-signed. **Exit:** the baseline numbers in BALANCE; the
 threshold pinned; the risk line browser-verified. **NOT doing:** any
 config move; any rule change.
 
+Cut at the 2026-09-02 kickoff (USER-SIGNED; audit → WORKLOG §89). The
+on-disk branch is DEAD (no results.json survives) and the alpha share
+is a WALK statistic → the cohort = the ARM walk twins, not an
+isolation cohort. No snapshot bump; fuzz baselines hold.
+
+- [ ] **89a** — `PoolChip` gains per-turn pool snapshots (before/after,
+  both sides; captured at `battle:started`). Harness-only, additive to
+  results.json; summary.csv byte-identical. Exit: harness tests + fuzz:smoke.
+- [ ] **89b** — the alpha-strike reader (`alphaStrikeStats` +
+  `--per-encounter` render): chip/max quantiles + share ≥ 25%/50%; pool
+  deaths: killing-turn share ≥ 50% + the arrival pool, by sector.
+  Unit-tested (§93 re-reads it). Exit: tests + a local n=3 render.
+- [ ] **89c** — the cohort: six ARM walk arms (3 characters × regen/
+  deploy) n=120, `--per-encounter --emit-results`, `box-drive.sh
+  --poll=120 --est-hours=3`; independent recompute from results.json.
+  The board-87b seam preview (`poolAtSectorEnd`) lands first, no box.
+  Exit: a dated BALANCE entry + WORKLOG findings.
+- [ ] **89d** — ⛔ the alpha-strike threshold PINNED (user-signed) → the
+  spec's keep criterion 1 + WORKLOG.
+- [ ] **89e** — the pre-turn risk line: `turn:starting.poolAtRisk` via a
+  PURE wave preview off the keyed `battle` stream (no cursor write; pin
+  test preview == fielded wave) + the PreTurnScreen line. Builds while
+  89c drains; browser-verified native.
+
 ## Phase 90 — The seam floor (decided; kept under both outcomes)
 
 Charter: `health.seamHealFloor` (0–1, shipped 1.0) applied at

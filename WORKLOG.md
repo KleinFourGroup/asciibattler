@@ -141,4 +141,95 @@ are proposals until §91.
 
 ## Phase 89 — The data phase
 
-_(Opens at the phase kickoff.)_
+### §89 kickoff (2026-09-02) — the code-reality audit
+
+The surfaces the charter names, checked as they exist at `e461583`:
+
+- ⭐ **No on-disk cohort carries `poolChips`.** The charter's "re-analyze
+  if a fetched batch still carries it" branch is DEAD: per-turn chips
+  live only in `results.json` (`--emit-results`, the shard protocol's
+  round-trip file), and no `results.json` exists anywhere under
+  `tests/fuzz/output/` — the two surviving fetched boards (`board-87b`
+  @ `8c47b73`, `board` @ `962a363`) hold summary/decisions/rosters/
+  timings only. The 87d2 results.json files the X3 re-read used are
+  gone. → ONE fresh cohort (89c).
+- ⭐ **The alpha-strike share is a WALK statistic, not an isolation
+  one.** "Among pool deaths, the share whose killing turn took ≥ 50%
+  of pool max" needs deaths that happen in a run's pool trajectory
+  (act-2 deaths arrive at 15–18, the seam hazard IS the question); a
+  single-hop isolation cohort starts every fight at a full 20 and can
+  only die to that one fight. The charter's "isolation cohort, single
+  hop" (the 87d3 rider) is the §94 per-ENCOUNTER instrument, not this
+  read's. The cohort = the ARM walk twins with telemetry on:
+  `--per-encounter` (harness `telemetry: true`, pure observation)
+  composes with `--arbitrate` — the 84b refusal set is the RunConfig
+  probe dials (`--hops` under the shadow, `--layout`, `--draw-add`,
+  `--encounter`; args.ts ~629), and the 87b board's own arb walk args
+  already ran `--hops=11 --arbitrate`. `--emit-results` is a shard
+  flag stripped from the arm signature (manifest.ts), so the manifest
+  still matches the ARM. `box-batch.sh fetch` scp's the whole batch
+  dir, so results.json comes home.
+- **The telemetry records the wrong side of the boundary for a
+  trajectory read.** `PoolChip` = `{sector, hop, encounterId, player,
+  enemy}` — survivor power per side, recorded at `battle:ended` AFTER
+  Run's own subscriber ran `resolveTurn` (Run subscribes first), so
+  `run.playerHealth` there is the post-chip pool; the pre-chip pool
+  is `run.playerHealth` at `battle:started`. Under survivors the
+  applied delta = survivor × `chipMultiplier` exactly (chipMultiplier
+  1), so the alpha read is computable from `enemy` alone — but the
+  arrival pool at the killing turn (the "act 3 opens under ten" fear)
+  is not, and heals (rest +5 / Patch +6 / `healPool`) make the
+  trajectory non-reconstructible from chips. Widening `PoolChip` with
+  per-turn pool snapshots (before/after, both sides) is additive to
+  results.json only — summary.csv's columns don't change, so the
+  byte-for-byte fuzz baselines hold — and it pre-lands §91's
+  "telemetry carries the APPLIED deltas" rule-agnostically (delta =
+  after − before under either rule). The per-encounter reader keeps
+  survivor × chip for now (identical under survivors; §91 switches it).
+- **The seam-hazard read is free TODAY:** `poolAtSectorEnd` +
+  `finalPool` + `outcome` are summary.csv columns (72b-pre), so the
+  post-fold board-87b arms give a preview read at `8c47b73` without a
+  box; the cohort's own summary re-reads it at HEAD.
+- **The pre-turn risk line needs the wave BEFORE the gate.**
+  `turn:starting` fires from `startNextTurn` (Run.ts ~2223) carrying
+  hand/piles/grants/pools/encounter name — no enemy composition; the
+  wave is rolled in `beginTurn` (~2705: `waveForTurn` → `resolveWave`
+  off the keyed `battle` stream, AFTER the player's `advanceTurn`).
+  Under survivors "at risk: up to N" = the wave's Σ`power` ×
+  `chipMultiplier` (capped at the pool); under casualties = the
+  fielded hand's Σ`power` (known at the gate for free). The 66a boss
+  forewarning pre-rolled AND serialized its pair (v38→v39) — the
+  shape the spec forbids this round (NO bump). The no-bump route: a
+  PURE preview — re-derive the same keyed stream (`streamRng` =
+  `deriveRng(root, 'battle', sector, node, turn)`, hash-derived, no
+  parent consumption → byte-neutral for every other stream), draw the
+  worldSeed and discard, run `waveForTurn`/`resolveWave` WITHOUT
+  assigning `waveCursor`. Divergence vectors between gate and fight:
+  `team.length` (the count/budget basis) — `removeRosterUnit` throws
+  "only legal at the map", so no gate-time roster mutation exists;
+  `effectiveDrawAmount` — packet draws mutate `hand`, never the fold;
+  the enemy pool fraction (stage gates) — `healPool` touches the
+  PLAYER pool only. A test pins preview == fielded wave.
+- **Cost (board-87b timings):** an ARM walk arm at n=40, `--jobs=8`,
+  ran ~6–7 min wall on the box (22–74 s/seed); n=120 ≈ 20 min/arm.
+  Pool deaths per arm 9–14 of 40 → ~30–40 at n=120; the threshold's
+  denominator wants the n=80 floor, so the cohort takes the three
+  character twins (soldier/priest/gambler × regen/deploy = 6 arms,
+  ~2 h box) rather than the two soldier arms alone.
+- **Snapshot prediction: NO bump** (an event payload field + a
+  harness telemetry field + a pure preview). **Fuzz baselines: hold**
+  (results.json-only widening; the preview derives, never consumes).
+
+### Shape-lock (2026-09-02, USER-SIGNED in chat)
+
+The five-step cut (ROADMAP §89: 89a telemetry → 89b reader → 89c
+cohort → 89e risk line while the box drains → 89d ⛔ the pin) signed as
+proposed. Two calls: **six arms** (the n=80 death denominator over the
+~80 box-minutes saved) and **the pre-turn PREVIEW** over the in-battle
+HUD fallback (the number has to inform the redraw decision).
+
+### Blind spots carried forward
+
+The rest of the spec's audit register (neutrals in the survivor sum ·
+summons · the evaluator objective · XP on death) is the §91 kickoff's
+file:line pass, not this phase's.

@@ -180,9 +180,18 @@ into the ARM); rarity tiers dispositioned per archetype (halberdier→rare
 protocol standing. Beyond the charter: the FAIL-CLOSED board split (86e),
 the derived-artifact registry + tripwire (88d2), 3.47×/3.32×/2.95× perf.
 Condensed record: HANDOFF §Closed rounds; archives `archive/post-83-*`
-+ `archive/round-6-spec.md`. **The encounter feel interstitial (§89+ — a
-round; its phases are cut at its spec session; user-called 2026-08-30
-at 87d3; ROADMAP) runs BEFORE Round 7.**
++ `archive/round-6-spec.md`. **The encounter feel interstitial (§89–§94)
+runs BEFORE Round 7 — spec-locked 2026-09-02 as THE CASUALTY EXPERIMENT,
+the first experimental round** ([encounter-feel-spec.md](encounter-feel-spec.md)):
+the §87d3 questions (per-act bands, inter-sector healing) shared one root
+— the chip rule's bimodality + act coupling — so the round builds the
+seam floor (kept regardless) and the casualty chip rule under a
+pre-registered ⛔ keep-or-rollback stop (§93), then lands the original
+defect-list charter against whichever rule wins (§94). Under KEEP the
+signed sheet re-anchors as a NEW lineage from per-act clear targets
+0.6 / 0.5 / (0.4 for act 3). Four Round 9 lines were written at the
+spec session (retreat · optional deploy · the port shelf guarantee ·
+injuries — below).
 
 ---
 
@@ -310,7 +319,30 @@ item below was code-reality-audited at the planning session (WORKLOG
   (mobility/speed, not the invisible `power` meta-stat), a deck-side cost (a
   fielded card to the BOTTOM of the draw pile / skips a draw — the StS exhaust
   idea), or a deployment toll. **Free-form; exit = a playtest verdict; no
-  pre-commitment.**
+  pre-commitment.** (2026-09-02: the casualty experiment re-targets the
+  `Fatigued` seam to starting HP — −10%/stack, cap 50% — and reads it on
+  its own paired arm at §92; this round inherits whatever that decided.)
+- **Retreat** (written 2026-09-02 at the casualty-experiment spec): a
+  pre-turn withdrawal stance that ends the wave early — coherent ONLY
+  under the casualty chip rule (under survivors, withdrawing leaves more
+  survivors to chip you). ⚠ The user's anti-exploit constraint: the
+  withdrawal is physically walked to the spawn band + despawned, or gated
+  behind an unlock timer (~30 s), or both — "field a strong unit, kill
+  one, retreat" must not be a valid line, though guerrilla play should be
+  directionally legal. The objective system's `hold`/`atWill` stances are
+  the seam.
+- **Optional deploy** (2026-09-02): bench a drawn card — today Cull is the
+  player's only exposure lever, and under casualties exposure = fielded
+  power. Sibling of retreat; the pre-turn screen already owns the hand.
+- **The port shelf guarantee** (2026-09-02; the user's "rarity" itch,
+  reframed): a role tag on `PacketDef` (heal / buff / utility) + a forced
+  slot in `rollPortStock` (the Portunus forced-tier precedent; the recruit
+  offer's melee+ranged guarantee is the shape) so a workhorse packet is
+  ALWAYS stocked. Weights bias, they don't guarantee — tiers come later,
+  as weighting only, if ever. Moves the shelf's draw shape → the board.
+- **Injuries** (2026-09-02): fallen units return wounded for the next
+  fight — the fatigue seam's run-scoped cousin; a design round if the
+  casualty rule is KEPT and the pool alone feels too abstract.
 
 **In scope — run layer**
 

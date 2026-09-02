@@ -1,60 +1,150 @@
-# ROADMAP — The encounter feel interstitial (§89+), post-Round-6
+# ROADMAP — The encounter feel interstitial (§89–§94): the casualty experiment
 
 The active PLAN (it stays a plan for its whole life). The macro order is
 [META-ROADMAP.md](META-ROADMAP.md) (Round 6 ✅ CLOSED 2026-09-02; Round 7
-Idioms is NEXT after this interstitial); findings + rationale land in
+Idioms is NEXT after this interstitial); the spec is
+[encounter-feel-spec.md](encounter-feel-spec.md) (kickoff resolutions
+user-signed 2026-09-02); findings + rationale land in
 [WORKLOG.md](WORKLOG.md); live status is HANDOFF's 🧭 Cursor. Sub-steps
 are cut at each phase kickoff (AGENTS "The planning stack"), never here.
 Prior round's plan: [archive/post-83-roadmap.md](archive/post-83-roadmap.md)
 (Round 6, Instruments) with its worklog and spec beside it.
 
-**Status: AWAITING THE INTERSTITIAL'S SPEC SESSION** (spec-first — the
-feel A/B is the user's call to design, not a numbers-only pass). The
-interstitial is a ROUND (the micro-round 53→60 / rollout-arbitration
-69→72 precedent): its spec (`encounter-feel-spec.md`) is written first,
-and its PHASES — §89 is the first; the spec decides how many follow —
-are cut at that session. The §89 charter below is the planning-session
-draft the spec will audit against code reality and re-cut.
+**Status: SHAPE-LOCKED 2026-09-02 (user-signed) — NEXT = the §89
+kickoff.** The §87d3
+charter (the defect list + the two reopened questions) widened at the
+spec session into **the first experimental round**: the questions share
+one root — the chip rule's bimodality + act coupling — and the user
+chose to build the structural fix (the casualty chip rule) under a
+pre-registered keep-or-rollback decision (§93). The seam floor (§90) and
+the data reads (§89) are kept under both outcomes; the original charter
+lands last (§94) against whichever rule wins.
 
-## Phase 89 — The encounter feel round (the interstitial's first phase; the spec may split it)
+**The frame (spec §Kickoff):** a run = a sequence of independent acts,
+each a budget. Signed per-act clear targets **0.6 / 0.5 / (0.4 pre-noted
+for act 3)**. Rollback baseline = the tag `pre-casualty-experiment` at
+the §90 close; main, no branch; per-logical-change commits.
 
-Charter (planned 2026-08-30 at the 87d3 disposition, user-called): the
-§87d defect list tuned per encounter against the held per-kind bands
-(soft: warband-vanguard · five act-1 normals · plagueVictims /
-elementalTrio / act-2 artillery+adventurer · the King's climax gap;
-hot: plagueSpreaders · infernalColumn · miscreants), and the TWO
-REOPENED design questions as a properly-attended A/B feel test:
-per-act bands (act-2 systematically hot — design or defect?) and
-inter-sector healing. Isolation reads use the §87 sampled mode at a
-single hop (the 87d hop bracket was a clean null). **Why post-§88:**
-encounter surgery moves board numbers — it lands after the round's ONE
-sheet amendment signed (2026-09-02), never under it. **Risk:** medium
-(feel + numbers). **Exit:** the defect list dispositioned per
-encounter; both reopened questions decided; the full board re-run
-green (MANIFESTED, one HEAD) at the tuned config; the riders below
-dispositioned. **NOT doing:** new encounter content; archetype
-changes; rarity (closed at §88); prior-table semantics (the
-derived-artifact registry says WHEN it rebuilds — after this round's
-config lands, it does).
+## Phase 89 — The data phase (kept under both outcomes)
 
-**Riders carried in from the Round 6 close (one line each; detail =
-BALANCE 2026-09-01/02 + archive/post-83-worklog.md §88d4):**
+Charter: confirm the deficit before the mechanism. The **alpha-strike
+read** — the distribution of single-turn chip as a fraction of pool
+max, and among pool deaths the share whose killing turn took ≥ 50% —
+plus the **seam-hazard read** (pool at sector clear, `poolAtSectorClears`)
+from per-turn chip telemetry: re-analyzed from an on-disk cohort if one
+still carries `poolChips` (only two fetched batches remain locally), else
+ONE fresh isolation cohort (single hop, the 87d3 rider; the extended
+searcher arm — `--arbitrate` ⊥ `--encounter`). Plus the **pre-turn risk
+line** ("at risk this turn: up to N", display-only — the cheapest
+fairness fix on the list, correct under either rule).
+**Why first:** the keep criteria's alpha threshold is pinned from THIS
+baseline, before the rule exists. **Risk:** low. **Decision point:** ⛔
+the alpha-strike threshold (keep criterion 1) — pinned at this phase's
+close, user-signed. **Exit:** the baseline numbers in BALANCE; the
+threshold pinned; the risk line browser-verified. **NOT doing:** any
+config move; any rule change.
 
-- The **band promote question** (X3 per-kind bands → signed sheet)
-  DEFERRED to THIS round's close — promote-after-repair (user-signed
-  2026-09-01).
-- The **walls** read UNDER band on the 88d3 partial (0.271 / 0.293 —
-  the 83f floor-hugging shape; a ±0.15 swing on the same seeds from a
-  table change alone says the wall denominator is noise-wide at
-  n=120): a full-board read here, not a band move.
-- The **deploy-walk overperformance** now reads on BOTH arms (arb
-  reach 0.625 / the doctrine walk-deploy control 0.550 vs the signed
-  40–50): the design-target question, sharpened.
-- The **gambler shape-flip parity item** (deploy −10.0 / regen +5.8
-  at the fold baseline) carries.
-- ⚠ **Every config move here invalidates the prior table** (BALANCE
-  §"The derived-artifact registry"): the v3 rebuild recipe runs at
-  this round's amendment board; the tripwire only catches MEMBERSHIP
-  drift, not value drift.
+## Phase 90 — The seam floor (decided; kept under both outcomes)
 
-_(Sub-steps cut at phase kickoff, after the spec conversation.)_
+Charter: `health.seamHealFloor` (0–1, shipped 1.0) applied at
+`advanceSector` — `max(pool, floor × max)`; the SectorClearedScreen
+line; rest heal re-expressed as a fraction of max (packet heals stay
+absolute). A paired read floor 0 vs 1 on the survivors rule so the
+experiment's baseline INCLUDES the floor. BALANCE: the seam-pool band
+demoted to a diagnostic (pre-floor pool stays recorded). Close with the
+tag `pre-casualty-experiment`.
+**Why here:** decided, cheap, needed under both rules — landing it
+before the flip means §91's paired read isolates the chip rule.
+**Risk:** low. **Snapshot prediction:** no bump (`playerHealth` already
+serializes). **Exit:** the dial live at 1.0; the paired read in BALANCE;
+the tag placed. **NOT doing:** the per-act band decision (dissolves
+under independence); heal-drop inflation.
+
+## Phase 91 — The casualty rule (the experiment's build)
+
+Charter: `health.chipMode: survivors | casualties` (both alive; default
+casualties) + `health.capPenalty` (its own mode, default casualties) +
+the telemetry carrying APPLIED deltas + the per-encounter reader on
+deltas (same commit as the rule) + the power table (1 / legendary 2 /
+summon 0, `growthRates.power = 0`, the config-derived pin) + the
+fatigue re-target to constitution (−10%/stack, cap 50%; rate 0 here) +
+the kickoff audit register (neutrals excluded from the sum · summons ·
+the rollout evaluator's objective → pool deltas · XP on death) — then
+**the rule-flip paired same-seed read at UNCHANGED config** (the
+"which knob moves" read: the arithmetic predicts the PLAYER pool, not
+the enemy pools; verify, never assume). The adversarial review of the
+spec + this plan (reviewer unpinned — the strongest available second
+model + a read-only file:line peer) runs at this kickoff.
+**Depends on:** §90 (the floor in the baseline). **Risk:** medium-high
+(the sim's loss semantics; the instrument's meaning). **Decision
+points:** the cap-penalty default if the searcher finds a free kiting
+vector (config flip); evaluator objective change if it proxies survivor
+power. **Snapshot prediction:** no bump. **Exit:** both modes green
+under `npm test` + fuzz:smoke; the flip read in BALANCE naming the knob.
+**NOT doing:** retreat / optional deploy (Round 9); any balance move.
+
+## Phase 92 — The rebalance (under the casualty rule)
+
+Charter: make the new rule reasonably balanced at the signed per-act
+targets — the player pool max / heal fractions / enemy pools / encounter
+factors (the §87d defect list folds in HERE under the new rule) / fatigue
+switched ON as its own commit + paired read / the **re-search of the
+arm** (the finalist vector was searched under survivors) / the
+derived-artifact rebuilds (prior table v4 + roster table, registry
+recipes) / the **fully MANIFESTED board at ONE HEAD** → the new sheet
+lineage DRAFT. Pacing (turns per encounter) is read here, not designed.
+**Depends on:** §91's flip read. **Risk:** high (every band re-anchors;
+the largest box spend of the round — 3–4 nights). **Decision points:**
+pool-max vs per-unit-cost as the lever; the enemy pool re-pin per kind.
+**Exit:** the board green at the draft lineage; the alpha-strike and
+gradient reads recomputed on the re-searched arm; the §88 rarity/price
+re-read filed. **NOT doing:** signing anything — the decision is §93.
+
+## Phase 93 — ⛔ Keep or roll back (the decision point)
+
+Charter: the pre-registered keep test, in this order — the user's feel
+verdict from **5 playtest runs per rule** (written BEFORE the numbers) →
+criteria 1–3 (alpha share vs the §89 threshold · the gradient on the
+re-searched arm · the run shape at the targets, floor included). KEEP =
+the new sheet lineage proceeds to signing at §94; the Round 6 riders
+SUPERSEDED. ROLLBACK = revert the §91–§92 range to the tag (the floor,
+the reads, the risk line, the fatigue seam and the mode seams stay);
+§94 runs the original charter.
+**Depends on:** §92. **Risk:** the decision itself. **Decision point:** ⛔
+the whole phase — a STOP, user-signed either way. **Exit:** the verdict
++ the four criteria recorded in WORKLOG; the tree at the chosen rule.
+**NOT doing:** re-litigating the criteria after the numbers are seen.
+
+## Phase 94 — The encounter list + the close
+
+Charter: the §87d defect list dispositioned per encounter against the
+ruling lineage (under keep: the per-encounter pass on the §92 board;
+under rollback: the original §89 charter — the softs/hots vs the
+survivors bands, the boss judged by the WALL not the isolation band) →
+the round's ONE signing (keep: the new lineage; rollback: the amendment —
+band promote + riders) → the prior table rebuild at the final config →
+the scratchpad sweep → archive (spec + pair) → HANDOFF cursor → Round 7.
+**Depends on:** §93. **Risk:** medium. **Decision points:** per-encounter
+dispositions (user-signed); the band promote (rollback branch only).
+**Exit:** every §87d member dispositioned; the sheet signed; the
+prior/roster tables current; archives written. **NOT doing:** new
+encounter content; archetype changes; Round 9 mechanisms.
+
+## Riders carried in from the Round 6 close
+
+One line each; detail = BALANCE 2026-09-01/02 + archive/post-83-worklog.md
+§88d4. **Under KEEP all four are superseded by the new lineage**; under
+ROLLBACK they are read on the §94 board:
+
+- The **band promote question** (X3 per-kind bands → signed sheet),
+  deferred to this round's close.
+- The **walls** UNDER band on the 88d3 partial (0.271 / 0.293) — a
+  full-board read, not a band move.
+- The **deploy-walk overperformance** on BOTH arms (0.625 / 0.550 vs
+  40–50) — the design-target question.
+- The **gambler shape-flip parity item** (deploy −10.0 / regen +5.8).
+- ⚠ **Every config move invalidates the prior table** (BALANCE §"The
+  derived-artifact registry") — the rebuild recipe runs at §92 and again
+  at §94's final config.
+
+_(Sub-steps cut at each phase kickoff, after shape-lock.)_

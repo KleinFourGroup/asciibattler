@@ -3072,3 +3072,69 @@ mixed-HEAD partial board VOID, and they cost ~10 min each. The read
 is a named PARTIAL (`--only=` the 8 ids, the loud banner) — a smoke
 read of the WARN cluster's lead suspect, never a signing board; the
 amendment sheet edit cites the 88d full board + this evidence.
+
+### 88d4 — the scoped ceiling re-read: the stale-table thesis
+CONFIRMED (2026-09-02; numbers BALANCE 2026-09-02 (88d3))
+
+The cohort drained clean (12/12 verified, box destroyed; the driver's
+own log is the record — `88d3-ceiling-drive.log`). One ops note: the
+session's log-watch false-alarmed "driver gone" once because `pgrep`
+does not exist in this Git Bash; the re-armed watch reads the log
+only, with a 25-min staleness alarm standing in for a process check.
+
+**The read.** Integrity PASS 8/8 at `6433cbb`, verdict 0 WARN; the
+four doctrine controls reproduce their 88d values to the seed (the
+determinism check across a HEAD change, for free). The arb rows moved
+where — and only where — the table is consulted: the deploy rows shop
+~80% and lifted (+0.108 act-1, z≈3.0; +0.067 walk), the regen rows
+shop ~23% and sat inside noise (−0.008 act-1; +0.075 walk, z 1.7).
+Three of the four ceiling deltas are back inside ±0.08; the fourth
+(walk-deploy) halved to −0.108. The regen walk's reach and win are
+back in band. **The lead suspect was the mechanism:** the per-item
+rows show the arb ACCEPTING Dis Pater at every reward offer under the
+v2 table (fold-priced 0) and DECLINING him at every offer under v3
+(−11.25), with the live rollout's own paired margin reading +4.3 for
+declining — the fold was steering the arm INTO a net-negative daemon
+for a whole board because the table predated him. That is the
+tripwire's charter, measured.
+
+**What did NOT repair, and what it means.** (1) The walls swung on
+the same seeds — regen 0.422 OVER → 0.271 UNDER, deploy 0.328 →
+0.293 — a ±0.15 move from a table change alone. The wall metric's
+denominator is the deep-end runs (~40–60 of 120), so its n=120 noise
+is wider than the 5-point band; the 83f floor-hugging shape is back
+as a WATCH for the §89 full board, not a band move (the 87d3/88d2
+rule: bands HOLD as intent; the promote question sits at the §89
+close). (2) The deploy-walk overperformance SHARPENED: arb reach
+0.625, derived win 0.442, and the doctrine walk-deploy control wins
+0.550 — the deployed vector overperforms the signed 40–50 on BOTH
+arms now, so the design-target question is not an arb artifact. It
+rides to §89 as the named item it already was, with a sharper edge.
+
+**The signing docket — the ONE sheet amendment (DRAFT, prose-only;
+no numeric re-pin because every checked ref PASSED at the 85g6d pins
+on the 88d full board, and a partial read never re-pins):**
+
+> ⭑ AMENDED 2026-09-02 (user-signed, the §88 rarity amendment — the
+> Round 6 close): the 88c dispositions (halberdier→rare ·
+> rioter→common · janus 40 · the miner packet DAEMONIZED as Dis Pater)
+> read at the 88d board — the first fully-MANIFESTED full board
+> (integrity 17/17 at `2bfe8a9`; BALANCE 2026-09-01 §88d = the
+> amendment's board run, 0 FAIL / 8 WARN): every checked ref PASSED at
+> the 85g6d pins — NO numeric re-pin. The 88d WARN cluster (regen-walk
+> reach/wall + three negative ceilings) was the STALE PRIOR TABLE (Dis
+> Pater had no row; the fold priced him 0 and the arb took him at every
+> offer): the v3 rebuild (measured @`251514d`) + the 88d3 scoped
+> re-read (BALANCE 2026-09-02 — a named PARTIAL, never a signing read)
+> repaired it (three of four ceilings in band; regen-walk reach/win in
+> band; the arb now declines Dis Pater 100%, the live margin agreeing
+> +4.3). The derived-artifact registry + tripwire (BALANCE §, `npm
+> test`) now guard the table. Standing watches: the deploy-walk
+> overperformance SHARPENED (arb reach 0.625 / the doctrine
+> walk-deploy 0.550 — the design-target question reads on both arms;
+> ceiling-walk-deploy −0.108) · the walls 0.271/0.293 UNDER band on the
+> partial (the 83f floor-hugging shape; a §89 full-board read, not a
+> band move) · the band promote DEFERRED to the §89 close · the gambler
+> shape-flip parity item carries. Signed bands unchanged.
+
+Lands as `sheet+docs(88d4)` on the user's signature; 88e follows.

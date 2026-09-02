@@ -4180,3 +4180,40 @@ deltas. The pre-X H7c→O log lives at
   `packet:miner` stale) + the registry section (header layer) in one
   commit; the scoped ceiling re-read (`88d3-ceiling.queue`, 12 batches)
   launches at that HEAD. WORKLOG §88d3.
+- **2026-09-02 (88d3) — THE SCOPED CEILING RE-READ at the v3-table HEAD**
+  (`output/box-batches/88d3-ceiling.queue`, 12 batches box-drive 12/12
+  artifact-verified at `6433cbb`, ~3.4 h, box destroyed on drain; the 4
+  arb rows pooled to n=120 via `--merge-stages`, the 4 doctrine controls
+  n=40; `--only=` the 8 ids — ⚠ **a named PARTIAL read, never a signing
+  board**). Integrity PASS 8/8, verdict 0 WARN. **The doctrine controls
+  reproduce their 88d values EXACTLY** (regen 0.725 · deploy 0.850 ·
+  walk-regen 0.300 · walk-deploy 0.550 — the prior can't touch them; the
+  same-seed byte-parity across the HEAD change is the determinism check
+  passing). **Same-seed paired arb rows, 88d (v2 table) → 88d3 (v3 table),
+  n=120:** arb-regen 0.683→0.675 (Δ −0.008, 9/10 discordant, z −0.2) ·
+  **arb-deploy 0.717→0.825 (Δ +0.108, 16/3, z 2.98)** · arb-walk-regen
+  0.217→0.292 (Δ +0.075, 19/10, z 1.67) · arb-walk-deploy 0.375→0.442
+  (Δ +0.067, 18/10, z 1.51). The lift lands where the table is consulted:
+  the deploy rows SHOP (tx 0.80/0.78), the regen rows barely (0.23).
+  **Ceilings: three of four BACK IN BAND** — regen −0.050 (was −0.042) ·
+  deploy −0.025 (was −0.133 WARN) · walk-regen −0.008 (was −0.083 WARN) ·
+  walk-deploy −0.108 (was −0.175, halved, still WARN). **The mechanism,
+  read in the per-item rows:** at 88d the fold priced Dis Pater 0 and the
+  arb ACCEPTED him at every reward offer (declined 0/19 · 0/16 · 0/17 ·
+  0/15 across the arb rows); at 88d3 the v3 row (−11.25) tilts the fold
+  and the arb DECLINES him 18/18 · 16/16 · 24/24 · 26/27 — and the LIVE
+  paired margin of declining reads +4.3 pool HP (rewardDaemon Δ, the
+  rollout's own verdict): the daemonized miner is net-negative to hold on
+  both the shadow and the live read. Drift 8 WARN → 5: the regen walk
+  reach 0.375→**0.400** (band edge, PASS) and win 0.217→**0.292** (PASS);
+  the walls SWUNG — regen 0.422 OVER → **0.271 UNDER**, deploy 0.328 →
+  **0.293** hair-under (the 83f floor-hugging shape; ±0.15 on the same
+  seeds between table versions says the wall metric's deep-end
+  denominator is noise-wide at n=120 — a §89 full-board read, not a band
+  move); the deploy-walk overperformance watch SHARPENED — reach
+  0.558→**0.625**, derived win 0.442, and the DOCTRINE walk-deploy control
+  wins 0.550: the design-target question now reads on both arms. HEALTH:
+  no inert classes; anchors out of scope (partial). ⛔ The sheet
+  amendment (prose-only, no numeric re-pin — every checked ref PASSED at
+  the 85g6d pins on the 88d full board) = the signing docket, WORKLOG
+  §88d4. Board dir `output/board-runs/88d3` + `88d3-report.txt`.

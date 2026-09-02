@@ -1,4 +1,4 @@
-# ROADMAP — The encounter feel interstitial (§89), post-Round-6
+# ROADMAP — The encounter feel interstitial (§89+), post-Round-6
 
 The active PLAN (it stays a plan for its whole life). The macro order is
 [META-ROADMAP.md](META-ROADMAP.md) (Round 6 ✅ CLOSED 2026-09-02; Round 7
@@ -8,11 +8,15 @@ are cut at each phase kickoff (AGENTS "The planning stack"), never here.
 Prior round's plan: [archive/post-83-roadmap.md](archive/post-83-roadmap.md)
 (Round 6, Instruments) with its worklog and spec beside it.
 
-**Status: AWAITING THE §89 SPEC SESSION** (spec-first — the feel A/B is
-the user's call to design, not a numbers-only pass). No sub-steps exist
-until that conversation produces `encounter-feel-spec.md` and the cut.
+**Status: AWAITING THE INTERSTITIAL'S SPEC SESSION** (spec-first — the
+feel A/B is the user's call to design, not a numbers-only pass). The
+interstitial is a ROUND (the micro-round 53→60 / rollout-arbitration
+69→72 precedent): its spec (`encounter-feel-spec.md`) is written first,
+and its PHASES — §89 is the first; the spec decides how many follow —
+are cut at that session. The §89 charter below is the planning-session
+draft the spec will audit against code reality and re-cut.
 
-## Phase 89 — The encounter feel round (interstitial, post-§88)
+## Phase 89 — The encounter feel round (the interstitial's first phase; the spec may split it)
 
 Charter (planned 2026-08-30 at the 87d3 disposition, user-called): the
 §87d defect list tuned per encounter against the held per-kind bands

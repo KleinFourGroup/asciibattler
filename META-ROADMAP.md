@@ -180,8 +180,9 @@ into the ARM); rarity tiers dispositioned per archetype (halberdier→rare
 protocol standing. Beyond the charter: the FAIL-CLOSED board split (86e),
 the derived-artifact registry + tripwire (88d2), 3.47×/3.32×/2.95× perf.
 Condensed record: HANDOFF §Closed rounds; archives `archive/post-83-*`
-+ `archive/round-6-spec.md`. **The §89 encounter feel interstitial
-(user-called 2026-08-30 at 87d3; ROADMAP §89) runs BEFORE Round 7.**
++ `archive/round-6-spec.md`. **The encounter feel interstitial (§89+ — a
+round; its phases are cut at its spec session; user-called 2026-08-30
+at 87d3; ROADMAP) runs BEFORE Round 7.**
 
 ---
 
@@ -215,7 +216,7 @@ applied to UI and to text.
   + `SILENT_EVENTS` + the coverage pin; 7 closures retired. Store-independent;
   rides here as the cheap tail.
 
-**Depends on:** Round 6 closed (✅ 2026-09-02) AND the §89 encounter feel interstitial (its board work must not overlap this round; no board work in flight — this round never
+**Depends on:** Round 6 closed (✅ 2026-09-02) AND the encounter feel interstitial (§89+; its board work must not overlap this round; no board work in flight — this round never
 touches sim). **Risk:** low-medium (wide but shallow; the string pin is the
 only new gate). **Decision points:** the locale-file shape for config prose
 (sidecar `events.en.json` vs `textKey` indirection); 2-vs-3 volume axes is

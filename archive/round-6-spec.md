@@ -1,12 +1,20 @@
-# Round 6 Spec — Instruments
+# Round 6 Spec — Instruments — ARCHIVED
+
+> **Archived 2026-09-02 at the Round 6 close (88e)** with its
+> roadmap/worklog pair ([post-83-roadmap.md](post-83-roadmap.md) /
+> [post-83-worklog.md](post-83-worklog.md)). The §Kickoff resolutions
+> below are the signed design record for Phases 84–88; the durable
+> facts are condensed in HANDOFF §Closed rounds and BALANCE (the board
+> integrity protocol · the rarity verification protocol · the
+> derived-artifact registry).
 
 The balance-instrument round the Cluster-5 close handed forward: land
 every measurement change that would invalidate a later read, then
 re-sign the sheet ONCE at the end. The draft below is the intent as
-signed at the 2026-08-21 planning session ([META-ROADMAP.md](META-ROADMAP.md)
+signed at the 2026-08-21 planning session ([META-ROADMAP.md](../META-ROADMAP.md)
 §Round 6) plus the 2026-08-22 spec conversation; the **Kickoff
 resolutions** block is the signed design record. Findings + rationale:
-[WORKLOG.md](WORKLOG.md) §Kickoff. The plan: [ROADMAP.md](ROADMAP.md).
+[WORKLOG.md](post-83-worklog.md) §Kickoff. The plan: [ROADMAP.md](post-83-roadmap.md).
 
 ## Intent (the draft, in the user's voice)
 

@@ -51,7 +51,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 ## The sequence at a glance
 
 ```
- 6. Instruments ──┐  the fold + the perf pass + roster realism + the rarity protocol
+ 6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  7. Idioms ───────┤  i18n + the UI audit → the idiom reference
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
@@ -98,7 +98,7 @@ Dependency edges the order satisfies:
 
 ---
 
-## Round 6 — Instruments
+## Round 6 — Instruments ✅ CLOSED 2026-09-02 (every phase user-signed)
 
 **Charter:** land every measurement change that would invalidate a later
 read, then re-sign the sheet ONCE at the end. The balance-instrument round
@@ -160,7 +160,7 @@ At the kickoff: archive ROADMAP.md + WORKLOG.md + cluster-5-spec.md →
 `archive/post-72-roadmap.md` / `-worklog.md` / `archive/cluster-5-spec.md`
 (the 41→42 / 46→47 / 72→73 precedent) and author the fresh pair.
 
-**Kickoff 2026-08-22 — spec LOCKED ([round-6-spec.md](round-6-spec.md)).**
+**Kickoff 2026-08-22 — spec LOCKED ([archive/round-6-spec.md](archive/round-6-spec.md)).**
 The in-scope list above is the planning-session draft; the spec
 governs where they differ: the prior's source is NOT decisions.csv
 (within-horizon, double-counts) and NOT a `--grant` cohort (linear in
@@ -170,6 +170,18 @@ sites); the campRaid rider is a RUN-LAYER decision site (the battle
 evaluator can't see its payout); the rarity read consumes §84's unit
 rows. Phases renumbered **§84 instrument → §85 fold → §86 perf → §87
 roster → §88 rarity + close**.
+
+**Close 2026-09-02 (88e) — every exit criterion met:** the amended sheet
+signed (⭑ 2026-09-02, prose-only — every checked ref PASSED at the
+85g6d pins on the first fully-MANIFESTED board); `pre55ReachRef`
+RETIRED with the 85g5 re-anchor (finalist-56 DEPLOYED, λ=0.5 SIGNED
+into the ARM); rarity tiers dispositioned per archetype (halberdier→rare
+· rioter→common · janus 40 · the miner DAEMONIZED as Dis Pater) with the
+protocol standing. Beyond the charter: the FAIL-CLOSED board split (86e),
+the derived-artifact registry + tripwire (88d2), 3.47×/3.32×/2.95× perf.
+Condensed record: HANDOFF §Closed rounds; archives `archive/post-83-*`
++ `archive/round-6-spec.md`. **The §89 encounter feel interstitial
+(user-called 2026-08-30 at 87d3; ROADMAP §89) runs BEFORE Round 7.**
 
 ---
 
@@ -203,7 +215,7 @@ applied to UI and to text.
   + `SILENT_EVENTS` + the coverage pin; 7 closures retired. Store-independent;
   rides here as the cheap tail.
 
-**Depends on:** Round 6 closed (no board work in flight — this round never
+**Depends on:** Round 6 closed (✅ 2026-09-02) AND the §89 encounter feel interstitial (its board work must not overlap this round; no board work in flight — this round never
 touches sim). **Risk:** low-medium (wide but shallow; the string pin is the
 only new gate). **Decision points:** the locale-file shape for config prose
 (sidecar `events.en.json` vs `textKey` indirection); 2-vs-3 volume axes is

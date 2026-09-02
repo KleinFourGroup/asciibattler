@@ -37,6 +37,26 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   (eventCatalog is programmatic-only, so the URL side needs its own
   answer — a `noevents` query dial or a protocol note).
 
+## Round 6 (84→88) — carried follow-ups (2026-09-02)
+
+- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
+      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
+      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
+      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
+      yet the user picks him every run. The standing rarity protocol's
+      tool for a thin row is the paired same-seed `--grant` arm at the
+      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
+      read that answers "is holding him net-negative" without the
+      site-causal confound. Candidate mechanism if it holds: the tithe
+      funds MORE bot shopping, and port purchases price negative on
+      average (88b). Rides the §89 amendment cohort or its own line.
+- [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
+      registry's named next guard (BALANCE §"The derived-artifact
+      registry"): the prior-table tripwire's twin, config-derived over
+      the draftable set × the recorded (character, sector, hop) cells;
+      the builder loud-throws on unknown archetypes but membership drift
+      is silent until the next `--roster=sampled` read.
+
 ## Polish / pre-launch
 
 - [ ] **Audio tell for the catapult hold-fire (82e rider,

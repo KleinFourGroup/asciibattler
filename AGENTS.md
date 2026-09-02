@@ -108,6 +108,21 @@ kickoff — has its own section below.)
   diagnosing a metric gap (71d: two elaborate wrong diagnoses were
   authored against a phantom design-band deficit before anyone checked
   what the doctrine arm scored on the same shape).
+- **Count the shape before timing it; re-profile between levers.** A
+  per-site DECISION count off an existing decisions.csv (one group-by)
+  caught the 84d shadow firing on every site — ~10× the intended shape —
+  before any timed probe ran; and a fixed share estimate goes stale the
+  moment a bigger lever lands (86c: sensors were 7.9% of the ARM at the
+  memo's estimate and 16.1% by its build, because A* shrank around them).
+  Profile between levers, never once up front.
+- **Paired benches: warm a fresh worktree with one DISCARDED leg,
+  subshell each leg's `cd`, and treat an implausible ratio as the
+  instrument.** The cold-worktree tax (file cache + AV scan, ~10–15%)
+  always lands on the first leg and minted a wrong mechanism story at
+  86c-L2b; a persisted `cd` ran BOTH legs of a pair on the baseline tree
+  at 86f and read exactly 1.00× — a ~3.4× expectation reading 1.00 IS the
+  tell. `(cd <tree> && run)` per leg; a speedup on a shape the lever can't
+  mechanically touch is an alarm, never a bonus.
 - **Twice-bitten → audit the class the same day.** A second instance of
   any bug shape is the trigger to enumerate the shape's whole surface,
   not to fix the instance and move on (the 72b finalHop sweep — gotcha
@@ -135,6 +150,16 @@ kickoff — has its own section below.)
   next turn.** AskUserQuestion dialogs hide same-turn assistant text in
   the desktop app (bit twice at the 47 kickoff) — a proposal presented
   in the same turn as the question dialog is invisible to the user.
+- **External adversarial review + a read-only peer that verifies
+  file:line before anything is believed** (the §85f tiger-team shape):
+  a second model found six real defects in a fresh instrument plus the
+  train/select leak that re-graded a whole λ read; a separate read-only
+  session confirmed each claim at file:line first; ownership of the
+  shared gitignored instrument was handed back and forth explicitly (no
+  clobbers). The one rough edge — a peer's interim guard false-positived
+  on a deliberate cross-vector pool — was caught because the cohort
+  driver re-ran the instrument against fresher data than the repairer
+  had.
 - **A probe must re-derive its expectation from a surface the code
   under test does NOT consult** (the C5 sweep's ⭐⭐ lesson — §79e/§79g
   circular verification). A render probe that computed the expected
@@ -200,7 +225,14 @@ kickoff — has its own section below.)
   `node` processes (CPU time ≈ wall clock since launch = still running)
   BEFORE re-launching a "lost" batch; a fresh watcher loop polling for
   the output artifact re-attaches. Determinism makes the worst case a
-  pure time cost.
+  pure time cost. **After killing ANY background driver, verify its
+  process tree died before launching a successor** — `TaskStop` kills
+  the shell; the npm→tsx→worker tree keeps running at CPU ≈ wall and
+  writes to the log path the relaunch reuses (the §85f ghost ran 21 arms
+  overnight, gotcha #126; `Get-CimInstance Win32_Process` for command
+  lines, kill by PID). And `pgrep` does not exist in this Git Bash: watch
+  a driver by its LOG (a poll line at least every poll interval), never
+  by a process grep (the 88d3 false "driver gone").
 - **Batch sizing (the 68h rule, user-signed): any multi-arm ×
   ≥40-seed searcher batch goes to the measurement box, not local** —
   plus the in-flight hatch: a local batch that blows 2× its estimate
@@ -229,7 +261,10 @@ kickoff — has its own section below.)
   dirty tree or a HEAD flip before every launch instead of silently
   rerunning the remaining arms at the new HEAD: no commits, no doc
   edits, until the driver's last launch has fired. Don't hand-roll
-  a new scratch driver; extend this one. Since 86e every batch dir
+  a new scratch driver; extend this one. **Scale `--poll` to the batch
+  size** (87d2: `--poll=60` fit a 41 × ~2-min isolation cohort; the 900 s
+  default is for hour-scale batches and would have added ~10 h of pure
+  poll latency). Since 86e every batch dir
   carries a `manifest.json` (machine HEAD + argv + seed window) and
   the balance board is FAIL-CLOSED on integrity — the protocol is
   BALANCE §"The board integrity protocol"; `--allow-unmanifested`
@@ -264,7 +299,12 @@ guards — survived essentially unchanged).
   conversation** — the Cluster-3 blind-spot pass found the draft spec's
   whole daemon⇄consumable premise unbuilt, and posing each design fork
   with its real engineering cost attached is what made the user's calls
-  fast (`b966187`). Superseded specs archive with their round.
+  fast (`b966187`). **Audit the MACRO plan the same way:** the 2026-08-21
+  planning session ran five parallel read-only code sweeps over a 19-item
+  wishlist (~6 min wall) and found nine were unbuilt mechanisms dressed as
+  content — which re-ORDERED the rounds (Round 9 ahead of the content
+  round), not just their sizes (`daff9a0`). Superseded specs archive with
+  their round.
 - **ROADMAP.md** — the active round's PLAN, and it stays a plan for its
   whole life. A phase entry at authoring time carries only the durable
   parts: charter (2–3 sentences), why-this-order + hard cross-phase

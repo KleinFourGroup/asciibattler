@@ -622,6 +622,15 @@ re-time mid-sweep).
   pair against the ca4b042 confirms — and the n=120 walk twins then
   reproduced them exactly, which is what a sim-inert commit looks
   like when PROVEN rather than assumed).
+- **Exact zeros across a candidate class are an instrument smell, not a
+  finding (promoted 2026-09-02):** the v1-era prior table read 0.000 on
+  nine packet rows at n=47–67 because the rollout clone could not USE
+  what it was given (the spend column proved the candidate applied;
+  the score never moved). The 84f2 inert-class tripwire — per site ×
+  candidate class, the fraction of decisions whose candidate score
+  differs from the null; 0% = structurally inert — is the one-column
+  lint for the whole "clone can't use it" class and rides every
+  default-arm batch (a WARN in the board's HEALTH section).
 
 ## Parallelism + the dwm leak (unchanged, environmental)
 

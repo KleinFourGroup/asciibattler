@@ -79,6 +79,16 @@ export interface PoolChip {
   encounterId: string;
   player: number;
   enemy: number;
+  /** 89a — the pools as `resolveTurn` APPLIED them this turn (`pools:chipped`,
+   *  pool-HP): `before` = the pool at the turn's battle start, `after` = the
+   *  post-chip value (clamped at 0). `after − before` is the chip rule's actual
+   *  charge, whatever the rule — the trajectory source for the alpha-strike
+   *  and arrival-pool reads; the survivor fields above are the rule's INPUT
+   *  under survivors, not its output. */
+  playerPoolBefore: number;
+  playerPoolAfter: number;
+  enemyPoolBefore: number;
+  enemyPoolAfter: number;
 }
 
 export interface RunTelemetry {
@@ -166,15 +176,11 @@ export class TelemetryAccumulator {
 
   /** One turn resolved — record both sides' pool chip, tagged with the turn's
    *  sector + hop + encounter id (the per-encounter rollup key; sector first
-   *  because hop numbering resets per sector — 68e). */
-  recordTurnChip(
-    sector: number,
-    hop: number,
-    encounterId: string,
-    player: number,
-    enemy: number,
-  ): void {
-    this.poolChips.push({ sector, hop, encounterId, player, enemy });
+   *  because hop numbering resets per sector — 68e). 89a: one whole record —
+   *  the harness stitches the survivor half (`battle:ended`, pre-resolve) to
+   *  the applied-pools half (`pools:chipped`, post-resolve) before calling. */
+  recordTurnChip(chip: PoolChip): void {
+    this.poolChips.push({ ...chip });
   }
 
   /**

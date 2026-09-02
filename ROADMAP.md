@@ -49,9 +49,10 @@ on-disk branch is DEAD (no results.json survives) and the alpha share
 is a WALK statistic → the cohort = the ARM walk twins, not an
 isolation cohort. No snapshot bump; fuzz baselines hold.
 
-- [ ] **89a** — `PoolChip` gains per-turn pool snapshots (before/after,
-  both sides; captured at `battle:started`). Harness-only, additive to
-  results.json; summary.csv byte-identical. Exit: harness tests + fuzz:smoke.
+- [x] **89a** — `PoolChip` gains the APPLIED pools (before/after, both
+  sides) via a new `pools:chipped` event from `resolveTurn` (both paths;
+  the harness-side read was contaminated — WORKLOG §89 audit correction).
+  Landed 2026-09-02; results.json-only, summary.csv byte-identical.
 - [ ] **89b** — the alpha-strike reader (`alphaStrikeStats` +
   `--per-encounter` render): chip/max quantiles + share ≥ 25%/50%; pool
   deaths: killing-turn share ≥ 50% + the arrival pool, by sector.

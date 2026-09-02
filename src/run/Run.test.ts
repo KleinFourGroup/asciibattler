@@ -1167,6 +1167,32 @@ describe('Run', () => {
       expect(run.phase).toBe('turn-intro');
     });
 
+    it('89a — pools:chipped reports the APPLIED pools on the headless path (no gate)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      const chipped: GameEvents['pools:chipped'][] = [];
+      bus.on('pools:chipped', (p) => chipped.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // headless: straight into battle
+      const enemyMax = run.enemyHealthPoolMax;
+
+      chipTurn(bus, { player: 1, enemy: 2 }); // sub-lethal → ongoing, next turn chains
+      expect(chipped).toHaveLength(1);
+      expect(chipped[0]).toEqual({
+        turn: 1,
+        playerBefore: HEALTH.playerHealthMax,
+        playerAfter: HEALTH.playerHealthMax - 2,
+        enemyBefore: enemyMax,
+        enemyAfter: enemyMax - 1,
+      });
+
+      // A lethal turn clamps at 0 (the event carries the pool as stored).
+      chipTurn(bus, { player: 0, enemy: HEALTH.playerHealthMax });
+      expect(chipped).toHaveLength(2);
+      expect(chipped[1]!.turn).toBe(2);
+      expect(chipped[1]!.playerBefore).toBe(HEALTH.playerHealthMax - 2);
+      expect(chipped[1]!.playerAfter).toBe(0);
+      expect(run.phase).toBe('defeat');
+    });
+
     it('drives a full gated encounter: intro → battle → outcome → recruit on a win', () => {
       const { run, bus } = freshRunWithBus(1);
       run.pauseAtTurnGates = true;

@@ -51,7 +51,7 @@ import type { DaemonSelection } from './daemonSelection';
 import { characterConfigFor, DEFAULT_CHARACTER_SELECTION } from './characterSelection';
 import type { CharacterSelection } from './characterSelection';
 import { TelemetryAccumulator } from './telemetry';
-import type { RunTelemetry } from './telemetry';
+import type { PoolChip, RunTelemetry } from './telemetry';
 import type { RunDecisionRecord } from './rollout/driver';
 
 export type RunOutcome = 'complete' | 'defeat' | 'hang' | 'aborted';
@@ -573,6 +573,33 @@ function runOneInner(
     });
   }
 
+  // 89a — the chip record is stitched from two events. This handler runs
+  // BEFORE Run's own `battle:ended` subscriber (the harness subscribes first;
+  // the Run is constructed below), so the pools here are still PRE-chip; the
+  // applied values arrive on `pools:chipped`, emitted from inside Run's
+  // handler (`resolveTurn`) — after this one, and before the headless path
+  // chains into the next turn. Only the survivor half is known here; the
+  // record lands whole on the second event.
+  let pendingChip: Omit<
+    PoolChip,
+    'playerPoolBefore' | 'playerPoolAfter' | 'enemyPoolBefore' | 'enemyPoolAfter'
+  > | null = null;
+  if (telemetry) {
+    bus.on('pools:chipped', ({ playerBefore, playerAfter, enemyBefore, enemyAfter }) => {
+      if (!pendingChip) {
+        throw new Error('harness telemetry: pools:chipped with no pending chip — event order bug');
+      }
+      telemetry.recordTurnChip({
+        ...pendingChip,
+        playerPoolBefore: playerBefore,
+        playerPoolAfter: playerAfter,
+        enemyPoolBefore: enemyBefore,
+        enemyPoolAfter: enemyAfter,
+      });
+      pendingChip = null;
+    });
+  }
+
   bus.on('battle:ended', ({ winner, xpAwards, survivorPower, campKills }) => {
     if (!currentBattle || !currentWorld) return;
     // H7c telemetry — recorded here (not in a separate subscriber) so
@@ -581,13 +608,13 @@ function runOneInner(
     if (telemetry) {
       for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
       if (survivorPower) {
-        telemetry.recordTurnChip(
-          currentBattle.sector,
-          currentBattle.hop,
-          currentBattle.encounterId,
-          survivorPower.player,
-          survivorPower.enemy,
-        );
+        pendingChip = {
+          sector: currentBattle.sector,
+          hop: currentBattle.hop,
+          encounterId: currentBattle.encounterId,
+          player: survivorPower.player,
+          enemy: survivorPower.enemy,
+        };
       }
     }
     // 57g.5 — harvest the prefix-instrument counters while this battle's

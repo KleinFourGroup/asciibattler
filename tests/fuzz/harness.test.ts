@@ -49,7 +49,15 @@ import {
 import { TelemetryAccumulator } from './telemetry';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
 import type { Archetype } from '../../src/sim/archetypes';
-import type { RunTelemetry } from './telemetry';
+import type { PoolChip, RunTelemetry } from './telemetry';
+
+/** 89a — placeholder applied-pools for synthetic chips whose tests read only
+ *  the survivor half (the reader under test multiplies survivors by
+ *  chipMultiplier); the trajectory fields are pinned in telemetry.test.ts. */
+const SYNTHETIC_POOLS: Pick<
+  PoolChip,
+  'playerPoolBefore' | 'playerPoolAfter' | 'enemyPoolBefore' | 'enemyPoolAfter'
+> = { playerPoolBefore: 20, playerPoolAfter: 20, enemyPoolBefore: 8, enemyPoolAfter: 8 };
 import { LAYOUT_IDS } from '../../src/sim/layouts';
 import { HEALTH } from '../../src/config/health';
 import { ENCOUNTERS, getEncounter } from '../../src/config/encounters';
@@ -1156,7 +1164,7 @@ describe('fuzz reporters', () => {
       chips: ReadonlyArray<{ hop: number; encounterId: string; player: number; enemy: number }>,
     ): RunTelemetry => {
       const acc = new TelemetryAccumulator();
-      for (const c of chips) acc.recordTurnChip(0, c.hop, c.encounterId, c.player, c.enemy);
+      for (const c of chips) acc.recordTurnChip({ sector: 0, ...c, ...SYNTHETIC_POOLS });
       return acc.finish([], []);
     };
     const results: RunResult[] = [
@@ -1232,8 +1240,9 @@ describe('fuzz reporters', () => {
     // absorbed its pool damage).
     const m = HEALTH.chipMultiplier;
     const acc = new TelemetryAccumulator();
-    acc.recordTurnChip(0, 2, 'act1enc', 1, 3); // act-1 sector, hop 2
-    acc.recordTurnChip(1, 2, 'act2enc', 1, 9); // act-2 sector, SAME hop number
+    // act-1 sector, hop 2 · act-2 sector, SAME hop number
+    acc.recordTurnChip({ sector: 0, hop: 2, encounterId: 'act1enc', player: 1, enemy: 3, ...SYNTHETIC_POOLS });
+    acc.recordTurnChip({ sector: 1, hop: 2, encounterId: 'act2enc', player: 1, enemy: 9, ...SYNTHETIC_POOLS });
     const results: RunResult[] = [
       {
         seed: 0,

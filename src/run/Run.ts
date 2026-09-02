@@ -3005,8 +3005,19 @@ export class Run {
     // counter so the max-turns safety cap can terminate the encounter.
     this.turnIndex += 1;
     const chip = HEALTH.chipMultiplier;
+    const playerBefore = this.playerHealth;
+    const enemyBefore = this.enemyHealth;
     this.enemyHealth = Math.max(0, this.enemyHealth - survivorPower.player * chip);
     this.playerHealth = Math.max(0, this.playerHealth - survivorPower.enemy * chip);
+    // 89a — report the APPLIED deltas from the one site that applies them
+    // (both paths; the telemetry's trajectory source — see events.ts).
+    this.bus.emit('pools:chipped', {
+      turn: this.turnIndex,
+      playerBefore,
+      playerAfter: this.playerHealth,
+      enemyBefore,
+      enemyAfter: this.enemyHealth,
+    });
   }
 
   /**

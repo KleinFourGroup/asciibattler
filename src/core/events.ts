@@ -706,6 +706,26 @@ export interface GameEvents extends Record<string, unknown> {
     enemyHealth: number;
     enemyHealthMax: number;
   };
+
+  /**
+   * 89a — the pools as `resolveTurn` actually moved them, fired on BOTH the
+   * gated and headless paths (unlike `turn:resolved`, a gated-only screen
+   * cue). The APPLIED deltas: `after − before` per side is what the chip
+   * rule charged, whatever the rule is (survivors today; the casualty rule
+   * of §91 reports through the same event untouched). The fuzz telemetry
+   * records these instead of re-deriving the chip from survivor power —
+   * a reader that multiplies survivors by `chipMultiplier` is re-doing the
+   * rule's arithmetic and goes wrong the moment the rule changes. Pools are
+   * pool-HP; `before` is the pool at the turn's battle start (no pool moves
+   * mid-battle), `after` the post-chip value (clamped at 0).
+   */
+  'pools:chipped': {
+    turn: number;
+    playerBefore: number;
+    playerAfter: number;
+    enemyBefore: number;
+    enemyAfter: number;
+  };
 }
 
 /**

@@ -169,12 +169,19 @@ The surfaces the charter names, checked as they exist at `e461583`:
   flag stripped from the arm signature (manifest.ts), so the manifest
   still matches the ARM. `box-batch.sh fetch` scp's the whole batch
   dir, so results.json comes home.
-- **The telemetry records the wrong side of the boundary for a
-  trajectory read.** `PoolChip` = `{sector, hop, encounterId, player,
-  enemy}` — survivor power per side, recorded at `battle:ended` AFTER
-  Run's own subscriber ran `resolveTurn` (Run subscribes first), so
-  `run.playerHealth` there is the post-chip pool; the pre-chip pool
-  is `run.playerHealth` at `battle:started`. Under survivors the
+- **The telemetry records the rule's INPUT, and the applied pools are
+  unreadable from outside the Run.** `PoolChip` = `{sector, hop,
+  encounterId, player, enemy}` — survivor power per side, recorded at
+  `battle:ended`. The harness subscribes BEFORE constructing the Run,
+  so its handler runs first and sees the PRE-chip pools (correction
+  to the first draft of this note, caught at 89a build: Run's handler
+  runs SECOND, and on the headless path it chains synchronously into
+  `startNextTurn` — whose `executeInstantOps` can heal — before any
+  later subscriber runs, so a post-Run subscriber reads a contaminated
+  "after"). The only clean source of the applied values is the site
+  that applies them → 89a emits `pools:chipped` from `resolveTurn`
+  (both paths) and the harness stitches it to the survivor half.
+  Under survivors the
   applied delta = survivor × `chipMultiplier` exactly (chipMultiplier
   1), so the alpha read is computable from `enemy` alone — but the
   arrival pool at the killing turn (the "act 3 opens under ten" fear)

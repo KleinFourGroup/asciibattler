@@ -53,10 +53,11 @@ isolation cohort. No snapshot bump; fuzz baselines hold.
   sides) via a new `pools:chipped` event from `resolveTurn` (both paths;
   the harness-side read was contaminated — WORKLOG §89 audit correction).
   Landed 2026-09-02; results.json-only, summary.csv byte-identical.
-- [ ] **89b** — the alpha-strike reader (`alphaStrikeStats` +
-  `--per-encounter` render): chip/max quantiles + share ≥ 25%/50%; pool
-  deaths: killing-turn share ≥ 50% + the arrival pool, by sector.
-  Unit-tested (§93 re-reads it). Exit: tests + a local n=3 render.
+- [x] **89b** — the alpha-strike reader (`alphaStrikeStats` +
+  `--per-encounter` render + `alpha-strike.csv`): applied chip/max
+  quantiles + shares; pool deaths split APPLIED (rule-agnostic) vs BLOW
+  (survivors-only) + the arrival pool, by sector; the seam line. Landed
+  2026-09-02 (7 hand-derived pins; local n=3 render).
 - [ ] **89c** — the cohort: six ARM walk arms (3 characters × regen/
   deploy) n=120, `--per-encounter --emit-results`, `box-drive.sh
   --poll=120 --est-hours=3`; independent recompute from results.json.

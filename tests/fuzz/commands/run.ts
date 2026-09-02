@@ -46,6 +46,9 @@ import {
   perEncounterStats,
   renderEncounterAnalysis,
   renderEncounterCsv,
+  alphaStrikeStats,
+  renderAlphaStrike,
+  renderAlphaStrikeCsv,
   seamInputsOf,
   renderSeamHazard,
 } from '../reporters';
@@ -651,6 +654,11 @@ export function writeAggregateAnalyses(
       join(args.outDir, 'per-encounter.csv'),
       renderEncounterCsv(perEncounterStats(allResults)),
     );
+    // 89b — the alpha-strike + seam read rides the same telemetry flag (it
+    // needs the 89a applied pools), rendered beside the per-encounter table
+    // so a batch.log carries the §89 baseline and the §93 re-read alike.
+    process.stdout.write('\n' + renderAlphaStrike(allResults));
+    writeFileSync(join(args.outDir, 'alpha-strike.csv'), renderAlphaStrikeCsv(alphaStrikeStats(allResults)));
   }
 }
 

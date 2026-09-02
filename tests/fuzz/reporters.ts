@@ -1618,6 +1618,252 @@ export function renderEncounterAnalysis(results: readonly RunResult[]): string {
   return lines.join('\n') + '\n';
 }
 
+// ── The alpha-strike read (89b) ───────────────────────────────────────────────
+
+/** Nearest-rank quantile on a copy (0 for an empty set). */
+function quantile(xs: readonly number[], q: number): number {
+  if (xs.length === 0) return 0;
+  const s = [...xs].sort((a, b) => a - b);
+  const idx = Math.min(s.length - 1, Math.max(0, Math.ceil(q * s.length) - 1));
+  return s[idx]!;
+}
+
+/**
+ * 89b — the per-turn pool-loss shape, per sector and pooled. Every quantity
+ * below reads the APPLIED player-pool loss (`playerPoolBefore − playerPoolAfter`
+ * off `pools:chipped`, 89a) as a fraction of `poolMax`, so it means the same
+ * thing under any chip rule; the one rule-specific column (`alphaDeathsBlow`)
+ * is labeled as such. The §89 baseline for the experiment's keep criterion 1
+ * (spec: "the alpha-strike share … pinned at the §89 close") and the §93
+ * re-read use this SAME function — the instrument is fixed before the rule.
+ */
+export interface AlphaStrikeSectorStats {
+  /** 0-based walk sector, or `'all'` for the pooled row (listed first). */
+  sector: number | 'all';
+  /** Turns with pool data (the per-turn sample size). */
+  turns: number;
+  /** Applied player-pool loss / poolMax per turn: median, p90, max. */
+  chipFracP50: number;
+  chipFracP90: number;
+  chipFracMax: number;
+  /** Share of turns whose applied loss was ≥ 25% / ≥ 50% of poolMax. */
+  shareChipGe25: number;
+  shareChipGe50: number;
+  /** Runs whose LAST chip in this sector ended at player pool 0 — a pool
+   *  death here (cap-losses, `outcome === 'defeat'` with pool > 0, are NOT
+   *  pool deaths; see `AlphaStrikeStats.defeats`). */
+  poolDeaths: number;
+  /** Pool deaths whose killing turn's APPLIED loss was ≥ 50% of poolMax —
+   *  i.e. the run arrived at that turn with at least half its max pool and
+   *  lost all of it in one turn. The rule-agnostic alpha-strike death. */
+  alphaDeathsApplied: number;
+  /** Pool deaths whose killing turn's uncapped BLOW (enemy survivors ×
+   *  chipMultiplier — the SURVIVORS rule's attempted charge, which the clamp
+   *  at 0 hides from the applied delta) was ≥ 50% of poolMax. Rule-specific:
+   *  read it only under survivors (§91 reinterprets or drops it). */
+  alphaDeathsBlow: number;
+  /** The pool the run ARRIVED with at its killing turn: p25 / p50 / p75. */
+  arrivalP25: number;
+  arrivalP50: number;
+  arrivalP75: number;
+  /** Share of pool deaths that arrived at the killing turn under 25% of poolMax
+   *  (the "act 3 opens under ten" corner, measured). */
+  shareArrivalLt25: number;
+}
+
+export interface AlphaStrikeStats {
+  poolMax: number;
+  runs: number;
+  /** Runs carrying pool-chip telemetry (0 → every table is empty). */
+  runsWithTelemetry: number;
+  /** `outcome === 'defeat'` runs — pool deaths + cap-losses. */
+  defeats: number;
+  /** Pooled row first, then one row per sector seen. */
+  bySector: AlphaStrikeSectorStats[];
+  /** The seam-hazard read: the pool at the FIRST sector clear
+   *  (`poolAtSectorClears[0]`, the act-1→act-2 seam on the two-act walk). */
+  seam: {
+    crossings: number;
+    p25: number;
+    p50: number;
+    p75: number;
+    /** Share of crossings that entered act 2 under 50% of poolMax. */
+    shareLt50: number;
+  };
+}
+
+export function alphaStrikeStats(
+  results: readonly RunResult[],
+  poolMax: number = HEALTH.playerHealthMax,
+  chipMult: number = HEALTH.chipMultiplier,
+): AlphaStrikeStats {
+  interface Acc {
+    fracs: number[];
+    killApplied: number[];
+    killBlow: number[];
+    arrivals: number[];
+  }
+  const fresh = (): Acc => ({ fracs: [], killApplied: [], killBlow: [], arrivals: [] });
+  const all = fresh();
+  const bySector = new Map<number, Acc>();
+  const sectorAcc = (s: number): Acc => {
+    let a = bySector.get(s);
+    if (!a) {
+      a = fresh();
+      bySector.set(s, a);
+    }
+    return a;
+  };
+
+  let runsWithTelemetry = 0;
+  let defeats = 0;
+  for (const r of results) {
+    if (r.outcome === 'defeat') defeats++;
+    const chips = r.telemetry?.poolChips;
+    if (chips === undefined) continue;
+    runsWithTelemetry++;
+    for (const c of chips) {
+      const frac = (c.playerPoolBefore - c.playerPoolAfter) / poolMax;
+      all.fracs.push(frac);
+      sectorAcc(c.sector).fracs.push(frac);
+    }
+    const last = chips[chips.length - 1];
+    if (last !== undefined && last.playerPoolAfter === 0) {
+      const applied = (last.playerPoolBefore - last.playerPoolAfter) / poolMax;
+      const blow = (last.enemy * chipMult) / poolMax;
+      for (const a of [all, sectorAcc(last.sector)]) {
+        a.killApplied.push(applied);
+        a.killBlow.push(blow);
+        a.arrivals.push(last.playerPoolBefore);
+      }
+    }
+  }
+
+  const row = (sector: number | 'all', a: Acc): AlphaStrikeSectorStats => {
+    const share = (xs: readonly number[], pred: (x: number) => boolean): number =>
+      xs.length === 0 ? 0 : xs.filter(pred).length / xs.length;
+    return {
+      sector,
+      turns: a.fracs.length,
+      chipFracP50: quantile(a.fracs, 0.5),
+      chipFracP90: quantile(a.fracs, 0.9),
+      chipFracMax: a.fracs.length === 0 ? 0 : Math.max(...a.fracs),
+      shareChipGe25: share(a.fracs, (f) => f >= 0.25),
+      shareChipGe50: share(a.fracs, (f) => f >= 0.5),
+      poolDeaths: a.killApplied.length,
+      alphaDeathsApplied: a.killApplied.filter((f) => f >= 0.5).length,
+      alphaDeathsBlow: a.killBlow.filter((f) => f >= 0.5).length,
+      arrivalP25: quantile(a.arrivals, 0.25),
+      arrivalP50: quantile(a.arrivals, 0.5),
+      arrivalP75: quantile(a.arrivals, 0.75),
+      shareArrivalLt25: share(a.arrivals, (p) => p < 0.25 * poolMax),
+    };
+  };
+
+  const seams = results.map((r) => r.poolAtSectorClears[0]).filter((p): p is number => p !== undefined);
+  return {
+    poolMax,
+    runs: results.length,
+    runsWithTelemetry,
+    defeats,
+    bySector: [
+      row('all', all),
+      ...[...bySector.entries()].sort((x, y) => x[0] - y[0]).map(([s, a]) => row(s, a)),
+    ],
+    seam: {
+      crossings: seams.length,
+      p25: quantile(seams, 0.25),
+      p50: quantile(seams, 0.5),
+      p75: quantile(seams, 0.75),
+      shareLt50: seams.length === 0 ? 0 : seams.filter((p) => p < 0.5 * poolMax).length / seams.length,
+    },
+  };
+}
+
+/** Render the alpha-strike + seam-hazard read (the §89 baseline table). */
+export function renderAlphaStrike(results: readonly RunResult[]): string {
+  const s = alphaStrikeStats(results);
+  const lines: string[] = [];
+  lines.push(
+    `### Alpha-strike read (${s.runs} runs, ${s.runsWithTelemetry} with pool telemetry, ${s.defeats} defeats; pool max ${s.poolMax})`,
+  );
+  lines.push(
+    'Per-turn APPLIED player-pool loss as a fraction of max (rule-agnostic). PoolDeaths = runs whose last chip',
+  );
+  lines.push(
+    '  hit 0 (cap-losses excluded). AlphaApp = killing turn lost ≥ 50% of max from the pool it ARRIVED with;',
+  );
+  lines.push(
+    '  AlphaBlow = killing turn\'s uncapped survivors×chip ≥ 50% of max (SURVIVORS-rule-specific). Arrival = pool',
+  );
+  lines.push('  at the killing turn (p25/p50/p75); <25% = share that arrived under a quarter pool.');
+  if (s.runsWithTelemetry === 0) {
+    lines.push('(no pool data — telemetry was off; --per-encounter enables it.)');
+  }
+  lines.push('');
+  const header = [
+    'Sector',
+    'Turns',
+    'chip p50',
+    'p90',
+    'max',
+    '≥25%',
+    '≥50%',
+    'PoolDeaths',
+    'AlphaApp',
+    'AlphaBlow',
+    'Arrival p25/p50/p75',
+    '<25%',
+  ];
+  const pct = (x: number): string => `${(x * 100).toFixed(0)}%`;
+  const cell = (r: AlphaStrikeSectorStats): string[] => [
+    String(r.sector),
+    String(r.turns),
+    pct(r.chipFracP50),
+    pct(r.chipFracP90),
+    pct(r.chipFracMax),
+    pct(r.shareChipGe25),
+    pct(r.shareChipGe50),
+    String(r.poolDeaths),
+    r.poolDeaths === 0 ? '—' : `${r.alphaDeathsApplied} (${pct(r.alphaDeathsApplied / r.poolDeaths)})`,
+    r.poolDeaths === 0 ? '—' : `${r.alphaDeathsBlow} (${pct(r.alphaDeathsBlow / r.poolDeaths)})`,
+    r.poolDeaths === 0 ? '—' : `${r.arrivalP25}/${r.arrivalP50}/${r.arrivalP75}`,
+    r.poolDeaths === 0 ? '—' : pct(r.shareArrivalLt25),
+  ];
+  lines.push(renderTable(header, s.bySector.map(cell)));
+  lines.push('');
+  lines.push(
+    `Seam (pool at the first sector clear): ${s.seam.crossings} crossings · p25/p50/p75 ${s.seam.p25}/${s.seam.p50}/${s.seam.p75} · entered act 2 under 50%: ${pct(s.seam.shareLt50)}`,
+  );
+  return lines.join('\n') + '\n';
+}
+
+/** CSV twin of `alphaStrikeStats.bySector` (one row per sector, pooled first). */
+export function renderAlphaStrikeCsv(s: AlphaStrikeStats): string {
+  const header =
+    'sector,turns,chipFracP50,chipFracP90,chipFracMax,shareChipGe25,shareChipGe50,poolDeaths,' +
+    'alphaDeathsApplied,alphaDeathsBlow,arrivalP25,arrivalP50,arrivalP75,shareArrivalLt25';
+  const rows = s.bySector.map((r) =>
+    [
+      r.sector,
+      r.turns,
+      r.chipFracP50.toFixed(4),
+      r.chipFracP90.toFixed(4),
+      r.chipFracMax.toFixed(4),
+      r.shareChipGe25.toFixed(4),
+      r.shareChipGe50.toFixed(4),
+      r.poolDeaths,
+      r.alphaDeathsApplied,
+      r.alphaDeathsBlow,
+      r.arrivalP25,
+      r.arrivalP50,
+      r.arrivalP75,
+      r.shareArrivalLt25.toFixed(4),
+    ].join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}
+
 /** CSV of `perEncounterStats` (one row per encounter) for spreadsheet analysis. */
 export function renderEncounterCsv(stats: readonly EncounterStats[]): string {
   const header =

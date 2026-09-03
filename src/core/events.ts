@@ -424,8 +424,19 @@ export interface GameEvents extends Record<string, unknown> {
    * `nextSectorTitle` mirrors the live `currentSectorTitle` getter. Game
    * swaps to the sector-cleared screen (67b); the `dismissSectorCleared`
    * command releases the gate back to 'map'.
+   *
+   * §90 — the seam floor: `poolBefore` is the run-wide pool the act ENDED on
+   * (pre-floor — the seam-hazard instrument's value; the fuzz harness records
+   * THIS as `poolAtSectorClears`, never the live pool at emit time) and
+   * `poolAfter` the pool after `health.seamHealFloor` lifted it (what the
+   * next act opens on). Equal when the floor didn't bite.
    */
-  'sector:cleared': { clearedSectorTitle: string; nextSectorTitle: string };
+  'sector:cleared': {
+    clearedSectorTitle: string;
+    nextSectorTitle: string;
+    poolBefore: number;
+    poolAfter: number;
+  };
 
   /**
    * 47e — the run's bits balance changed. `bits` is the new balance

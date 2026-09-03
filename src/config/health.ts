@@ -14,6 +14,16 @@
  *                       (capped at `playerHealthMax`). Sits beside the G3 rest
  *                       XP award; a placeholder until the real event system.
  *
+ * The seam floor (§90 — the casualty experiment's "independent acts" frame):
+ * - `seamHealFloor`   — 0–1 fraction of `playerHealthMax` the run-wide pool
+ *                       is lifted to at every sector seam (`advanceSector`):
+ *                       `pool = max(pool, floor × max)`. 0 = the pre-§90
+ *                       carry (no heal); 1 = a full heal between acts (the
+ *                       StS below-Ascension-5 precedent). Shipped at 1.0; the
+ *                       later difficulty / meta-progression lever. Read at
+ *                       CALL time (the fuzz `--set=health.seamHealFloor=0`
+ *                       probe arm mutates this object in place).
+ *
  * Fatigue (H6c — INERT by default):
  * - `fatiguePerStack` — the per-stack debuff rate behind `fatigueFactor`. A
  *                       unit accrues one stack per prior turn it fought THIS
@@ -51,6 +61,7 @@ const HealthSchema = z.object({
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
   restHealAmount: z.number().int().nonnegative(),
+  seamHealFloor: z.number().min(0).max(1),
   fatiguePerStack: z.number().nonnegative(),
 });
 

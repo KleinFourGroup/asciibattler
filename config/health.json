@@ -5,5 +5,6 @@
   "maxTurnSeconds": 150,
   "chipMultiplier": 1,
   "restHealAmount": 5,
+  "seamHealFloor": 1.0,
   "fatiguePerStack": 0
 }

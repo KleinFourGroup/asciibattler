@@ -160,9 +160,10 @@ export interface RunResult {
   eventsVisited: number;
   /** 72b-pre — pool HP recorded at each `sector:cleared` transition, in walk
    *  order (empty = the run never cleared a sector). `[0]` IS the
-   *  act-1→act-2 seam value on the two-act walk: health never resets
-   *  between acts, so this is the state that disentangles act-2 intrinsic
-   *  difficulty from act-1 carried damage (the seam-hazard read's key). */
+   *  act-1→act-2 seam value on the two-act walk — the pool act 1 ENDED on
+   *  (the seam-hazard read's key). §90: recorded PRE-floor from the event's
+   *  `poolBefore` — the seam floor lifts the live pool before act 2 opens,
+   *  so this is a diagnostic of act-1 attrition, not act 2's entry pool. */
   poolAtSectorClears: readonly number[];
   /** 72b-pre — the run-wide pool at run end: winners' headroom, the
    *  trajectory's terminal sample (0 on pool-exhaustion defeats). */
@@ -454,13 +455,17 @@ function runOneInner(
   // 0-based sector index of whatever battle starts next.
   let sectorsCleared = 0;
   // 72b-pre — the pool at each sector seam, in walk order. [0] is THE
-  // act-1→act-2 handoff state on the two-act walk (health never resets
-  // between acts — the disentangling instrument's key value). `run` is
-  // declared below; the closure only fires from dispatches long after.
+  // act-1→act-2 handoff state on the two-act walk (the disentangling
+  // instrument's key value). §90 — read from the payload's `poolBefore`,
+  // NOT the live `run.playerHealth`: the seam floor (`health.seamHealFloor`)
+  // has already lifted the live pool by emit time, and the seam-hazard
+  // read wants the pool the act ENDED on (the spec: "pool-at-seam BEFORE
+  // the floor stays recorded"). Under floor 1.0 the live read would be a
+  // constant `playerHealthMax`.
   const poolAtSectorClears: number[] = [];
-  bus.on('sector:cleared', () => {
+  bus.on('sector:cleared', (e) => {
     sectorsCleared++;
-    poolAtSectorClears.push(run.playerHealth);
+    poolAtSectorClears.push(e.poolBefore);
   });
   // H7c — opt-in mechanism telemetry. Null (and zero overhead) by default.
   const telemetry = options.telemetry ? new TelemetryAccumulator() : null;

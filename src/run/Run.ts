@@ -3553,6 +3553,19 @@ export class Run {
    */
   private advanceSector(): void {
     const clearedSectorTitle = this.currentSectorTitle;
+    // §90 — the seam floor: the pool is lifted to `seamHealFloor × max` at
+    // the act boundary (the independent-acts frame — each act opens on a
+    // known entry pool; 1.0 = a full heal, 0 = the pre-§90 carry). Applied
+    // BEFORE the emit so the payload carries both sides of the seam:
+    // `poolBefore` (the pre-floor value the seam-hazard instrument records)
+    // and `poolAfter` (what act two opens on). `max`, never `min`: a pool
+    // above the floor carries untouched. Read from HEALTH at call time — the
+    // fuzz `--set` probe arm mutates the config object in place.
+    const poolBefore = this.playerHealth;
+    this.playerHealth = Math.max(
+      this.playerHealth,
+      HEALTH.seamHealFloor * HEALTH.playerHealthMax,
+    );
     // 77d2 — the new sector claims the next index FIRST; its three
     // sector-scoped streams key on it (the constructor's index-0 triple).
     this.sectorIndex++;
@@ -3584,6 +3597,8 @@ export class Run {
     this.bus.emit('sector:cleared', {
       clearedSectorTitle,
       nextSectorTitle: this.currentSectorTitle,
+      poolBefore,
+      poolAfter: this.playerHealth,
     });
   }
 

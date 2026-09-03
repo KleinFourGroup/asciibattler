@@ -3638,7 +3638,12 @@ describe('Run', () => {
       expect(victories).toBe(0);
       expect(run.phase).toBe('sectorCleared');
       const title = getSector('the-start')!.title;
-      expect(cleared).toEqual([{ clearedSectorTitle: title, nextSectorTitle: title }]);
+      // §90 — the payload carries both sides of the seam; the sentinel sits
+      // ABOVE the floor (33 > max), so the floor leaves it alone: before ==
+      // after == the carried pool.
+      expect(cleared).toEqual([
+        { clearedSectorTitle: title, nextSectorTitle: title, poolBefore: 33, poolAfter: 33 },
+      ]);
       expect(run.currentSectorNodeId).toBe('b');
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
       expect(run.visitedNodes.size).toBe(0);
@@ -3652,6 +3657,95 @@ describe('Run', () => {
       // The dismiss releases the gate onto the new sector's map.
       run.dispatch({ kind: 'dismissSectorCleared' });
       expect(run.phase).toBe('map');
+    });
+
+    describe('§90 — the seam floor (health.seamHealFloor)', () => {
+      // The suite flips the shipped dial; restore after each so the floor
+      // can't leak into the rest of the sector tests (the fatigue pattern).
+      const originalFloor = HEALTH.seamHealFloor;
+      afterEach(() => {
+        HEALTH.seamHealFloor = originalFloor;
+      });
+
+      /** Wound the pool to `pool`, clear the non-sink terminal, return the
+       *  emitted payload + the run. Balance-proof: every expectation below
+       *  derives from the knob + `playerHealthMax`, never a literal. */
+      const crossSeamAt = (pool: number, floor: number) => {
+        HEALTH.seamHealFloor = floor;
+        const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
+        run.playerHealth = pool;
+        run.currentNodeId = run.nodeMap.terminalId;
+        run.phase = 'battle';
+        const cleared: GameEvents['sector:cleared'][] = [];
+        bus.on('sector:cleared', (e) => cleared.push(e));
+        winEncounter(bus);
+        expect(run.phase).toBe('sectorCleared');
+        expect(cleared).toHaveLength(1);
+        return { run, payload: cleared[0]! };
+      };
+
+      it('ships at 1.0 — a full heal between acts (the spec: the independent-acts frame)', () => {
+        // The shipped value is the dial's own reading, pinned so a silent
+        // config drift can't re-couple the acts without a test noticing.
+        expect(originalFloor).toBe(1);
+      });
+
+      it('floor 0 = the pre-§90 carry: the wounded pool crosses untouched', () => {
+        const wounded = HEALTH.playerHealthMax / 4;
+        const { run, payload } = crossSeamAt(wounded, 0);
+        expect(run.playerHealth).toBe(wounded);
+        expect(payload.poolBefore).toBe(wounded);
+        expect(payload.poolAfter).toBe(wounded);
+      });
+
+      it('floor 0.5 lifts a pool BELOW half to exactly half, and leaves one above it alone', () => {
+        const max = HEALTH.playerHealthMax;
+        const below = crossSeamAt(max / 4, 0.5);
+        expect(below.payload.poolBefore).toBe(max / 4);
+        expect(below.payload.poolAfter).toBe(max * 0.5);
+        expect(below.run.playerHealth).toBe(max * 0.5);
+        // `max`, not `min`: a pool above the floor is never pulled DOWN.
+        const above = crossSeamAt(max * 0.75, 0.5);
+        expect(above.payload.poolAfter).toBe(max * 0.75);
+        expect(above.run.playerHealth).toBe(max * 0.75);
+      });
+
+      it('floor 1.0 restores a wounded pool to max; poolBefore keeps the pre-floor value', () => {
+        const max = HEALTH.playerHealthMax;
+        const wounded = max / 4;
+        const { run, payload } = crossSeamAt(wounded, 1);
+        expect(run.playerHealth).toBe(max);
+        expect(payload.poolAfter).toBe(max);
+        // The seam-hazard instrument's value survives the heal on the payload.
+        expect(payload.poolBefore).toBe(wounded);
+      });
+
+      it('the floor lands BEFORE the emit — a subscriber reading the live pool sees the healed value', () => {
+        const max = HEALTH.playerHealthMax;
+        HEALTH.seamHealFloor = 1;
+        const { run, bus } = freshRunWithBus(1, { sectorMap: TWO_SECTOR_MAP });
+        run.playerHealth = max / 4;
+        run.currentNodeId = run.nodeMap.terminalId;
+        run.phase = 'battle';
+        const liveAtEmit: number[] = [];
+        bus.on('sector:cleared', () => liveAtEmit.push(run.playerHealth));
+        winEncounter(bus);
+        // This is exactly why the harness reads `poolBefore` off the payload
+        // instead of the live pool (the §90 harness pin).
+        expect(liveAtEmit).toEqual([max]);
+      });
+
+      it('a sink terminal (the run WIN) applies no floor — the final pool is the run-end reading', () => {
+        HEALTH.seamHealFloor = 1;
+        const { run, bus } = freshRunWithBus(1, { hopCount: 2 });
+        const wounded = HEALTH.playerHealthMax / 4;
+        run.playerHealth = wounded;
+        run.currentNodeId = run.nodeMap.terminalId;
+        run.phase = 'battle';
+        winEncounter(bus);
+        expect(run.phase).toBe('complete');
+        expect(run.playerHealth).toBe(wounded);
+      });
     });
 
     it('clearing the final sector terminal (a sink) completes the run', () => {

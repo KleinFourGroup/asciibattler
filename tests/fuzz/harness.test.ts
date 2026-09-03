@@ -246,6 +246,52 @@ describe('fuzz harness', () => {
     const battleSectors = new Set(result.battles.map((b) => b.sector));
     expect(chipSectors).toEqual(battleSectors);
   });
+
+  it('§90 — poolAtSectorClears records the PRE-floor seam pool; act 2 opens on the floored pool', () => {
+    // The seam floor lifts the live pool before `sector:cleared` fires, so a
+    // live read at emit time would be a constant `playerHealthMax` under the
+    // shipped 1.0. The pin re-derives the expectation from a surface the
+    // recorder does NOT consult: the SAME seed walked at floor 0 (the pre-§90
+    // carry, where seam == live pool by construction). Act 1 is byte-
+    // identical across the two legs (the floor lands after it ends), so the
+    // floor-1 seam value must equal the floor-0 one — while act 2's first
+    // battle opens on `max` (floor 1) vs the seam value (floor 0).
+    const roster = (['mercenary', 'mercenary', 'archer', 'archer', 'healer'] as const).map(
+      (archetype): { archetype: Archetype; level: number } => ({ archetype, level: 15 }),
+    );
+    const walk = (seed: number) =>
+      runOne(seed, makeStrategy('greedy')!, { runConfig: { sectorHops: 2, startingRoster: roster } });
+    const originalFloor = HEALTH.seamHealFloor;
+    try {
+      // A crossing seed whose seam pool is WOUNDED (< max) — otherwise the
+      // floor is a no-op and the pin can't tell the two reads apart.
+      HEALTH.seamHealFloor = 0;
+      let seed = 1;
+      let carried = walk(seed);
+      while (
+        seed < 60 &&
+        (carried.sectorsCleared < 1 || carried.poolAtSectorClears[0]! >= HEALTH.playerHealthMax)
+      ) {
+        carried = walk(++seed);
+      }
+      expect(carried.sectorsCleared).toBeGreaterThanOrEqual(1); // non-vacuous
+      const seam = carried.poolAtSectorClears[0]!;
+      expect(seam).toBeLessThan(HEALTH.playerHealthMax);
+      const act2Open = (r: typeof carried) => r.battles.find((b) => b.sector === 1)!.poolAtStart;
+      // Floor 0: the pre-§90 semantics — act 2 opens on the carried seam pool.
+      expect(act2Open(carried)).toBe(seam);
+
+      HEALTH.seamHealFloor = 1;
+      const floored = walk(seed);
+      expect(floored.sectorsCleared).toBeGreaterThanOrEqual(1);
+      // The recorder read `poolBefore`: the seam value is the SAME number …
+      expect(floored.poolAtSectorClears[0]).toBe(seam);
+      // … while the run itself opened act 2 on the floored pool.
+      expect(act2Open(floored)).toBe(HEALTH.playerHealthMax);
+    } finally {
+      HEALTH.seamHealFloor = originalFloor;
+    }
+  });
 });
 
 describe('fuzz reporters', () => {

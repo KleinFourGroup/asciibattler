@@ -502,3 +502,346 @@ of it). BALANCE: the seam-pool band demoted to a diagnostic in prose
 was deliberately NOT edited — its disposition (keep as a diagnostic row
 / retire / re-sign) is a §92 lineage-draft line. Also pending the user:
 ⛔ 89d (WORKLOG §89d). Nothing in §90 is open on the build side.
+
+## Phase 91 — The casualty rule (the experiment's build)
+
+### §91 kickoff (2026-09-03) — the code-reality audit (at `088054d`)
+
+The spec's blind-spot register, walked at file:line, plus what the walk
+turned up that the register didn't name. One prediction in the spec is
+WRONG (item 1 — a World snapshot bump); everything else holds or is a
+one-line consequence.
+
+1. ⭐ **Dead units are SPLICED OUT at death, so the fallen are invisible
+   at battle end.** Both reap sites (`World.ts:1284-1289` the step-1
+   death check; `:1816-1820` `reapDead` for DoT kills) fire `death`,
+   `removeUnit`, then `unit:died`; `survivorPower()` (`World.ts:2310`)
+   walks `this.units` and can only ever see who is standing. The casualty
+   rule therefore needs a per-side FALLEN-power accumulator written at
+   the two death sites (`effectiveStats.power` at the moment of death —
+   the same stat the survivors formula reads), carried on `battle:ended`
+   beside `survivorPower` as `fallenPower: {player, enemy}`. Neutrals are
+   excluded by `team` (camp units spawn `team: 'neutral'`, `World.ts:2026`)
+   — register item 1 holds by construction; a player unit killed BY a
+   camp is still the player's fallen (charged — the spec's "own fallen").
+   ⚠ **Snapshot prediction CHANGES: World v35 → v36.** A mid-battle
+   save that loses the accumulator under-charges the turn on restore, so
+   it must serialize (the `damageDealt` / `utilityDone` precedent,
+   `World.ts:453-463`, with the v35 reject). The spec's "NO bump for the
+   whole round" was written before anyone checked the reap; this is the
+   "unexpected bump is the tell" — a real shape change, not a leak. Run
+   v44 is untouched (the modes are config, not `RunConfig`). Rejected: a
+   Run-side derivation (wave power − survivors − queue) — the spawn queue
+   isn't exposed, summons spawn mid-battle, and it would be a second copy
+   of the rule's arithmetic (the 89a lesson).
+2. **`effectiveStats.power` has exactly ONE modifier in the tree** — the
+   fatigue effect (`fatigue.ts:44`); statuses / daemons / empower /
+   packets / abilities / events / characters carry no `power` mod (swept
+   by key). After the fatigue retarget, `effectiveStats.power ===
+   stats.power` everywhere: the power TABLE is the chip weight, no
+   hidden multiplier.
+3. **The power table vs `units.json`** (23 combatant archetypes): base 1,
+   growth 0.1 (bandit / ghoul 0.05) everywhere except **healer 0** and
+   **ghoul 0** (the summon minion — the only `summon` op, `abilities.json:523`,
+   spawns `ghoul`). Legendaries: stormcaller, shaman, and **prodigy** —
+   `draftable: false` (never in a recruit / port pool; the player gets one
+   ONLY via the `prodigy` event's `grantUnit`, `events.json:252`; fielded
+   by the enemy at `encounters.json:826`) ⇒ power 2 under the symmetric
+   rule (an enemy prodigy = two kills, and so is yours). ⚠ Decision for the user: the healer's 0
+   (a healer never pushed under survivors) becomes **1** under "everything
+   is one" — a lost healer costs pool. The zod ranges admit a 2
+   (`units.ts:102` power int ≤ STAT_CAP; `:116` growth 0..1). The
+   config-derived pin: for every combatant, power ∈ {0,1,2}; rarity
+   legendary ⇒ 2; the archetype any `summon` op spawns ⇒ 0; else 1;
+   `growthRates.power` 0. `simulateLevelUps` draws `rng.next()` once per
+   stat per level REGARDLESS of the rate (`leveling.ts:65-69`) ⇒ growth 0
+   shifts NO stream; `leveling.test.ts:184-217` derives from config and
+   holds. ⚠ Fuzz baselines DO move at the table commit (L10 power 1.9 → 1,
+   legendary 1 → 2 change survivor chips under BOTH modes) — so the
+   survivors leg at HEAD ≠ 89c/90d by the table alone (hence the
+   three-way read, 91f). `power` is a serialized VALUE, not a shape ⇒ no
+   Run bump; an old save carries stale powers (the H6 retune precedent).
+4. **The cap penalty = the DRAW turn's rule.** `resolveTurn`
+   (`Run.ts:3050-3068`) charges both sides regardless of `winner`; a
+   `'draw'` comes only from the tick cap (`World.resolveAsDraw`,
+   `World.ts:2255`, `maxTurnSeconds`) or a mutual wipe. Under casualties a
+   kited draw with no deaths costs 0 — the searcher's free vector.
+   Reading of the spec's `capPenalty`: **decisive turns charge by
+   `chipMode`; draw turns charge by `capPenalty`** (`'survivors'` = a
+   stall still pays the enemy's standing power). Both default
+   casualties. The `maxTurns` pool-fraction tiebreak (`Run.ts:3080-3087`)
+   is untouched; the battles' `winner === 'draw'` share per arm is the
+   kiting instrument (already recorded — no new column).
+5. **A SECOND copy of the rule's arithmetic ships to the player:**
+   `turn:resolved` (`Run.ts:2994-3004`) re-derives `survivors × mult`
+   for the PostTurnScreen's "Your survivors → enemy pool" / "Enemy
+   survivors → your pool" lines (`PostTurnScreen.ts:62-63`). Under
+   casualties the meaning inverts (your FALLEN → your pool). The emit
+   should carry the APPLIED deltas `resolveTurn` already computed; the
+   labels read by mode. UI-only; browser-verified.
+6. **The pre-turn risk line is wave-bounded** (`previewPoolAtRisk`,
+   `Run.ts:2743-2760`: Σ wave power × mult, capped at the pool). Under
+   casualties the bound is the HAND's Σ power (the player's own fielded
+   power — the spec's "add your own numbers"), capped at the pool; the
+   89e preview==fielded pin stays for the survivors branch.
+7. **Telemetry:** `PoolChip` (`telemetry.ts:71-95`) carries survivor
+   power + the applied pools; `pools:chipped` (`events.ts:739`) the
+   applied pools only. The 89d rider (the overkill column needs the
+   PRE-clamp charge) lands as `playerCharge` / `enemyCharge` on
+   `pools:chipped` (the rule's uncapped charge per side, pool-HP) and
+   `fallenPower` on the chip record. Consumers that re-do the arithmetic
+   today: `alphaStrikeStats` (`reporters.ts:1739-1746` blow/overkill =
+   `last.enemy × chipMult`), `perEncounterStats` (`reporters.ts:1509-1512`
+   taken/dealt = survivors × mult — the UNCLAMPED blow, so a death turn
+   over-counts today), `aggregateTelemetry.meanPoolChip`
+   (`telemetry.ts:229-261`). All three switch to the charges — under
+   survivors `charge === survivors × mult` by construction, so every
+   read is BYTE-IDENTICAL at the seam commit (the diff oracle). The
+   harness already records deaths off `unit:died` (`harness.ts:559`) —
+   under the flat table `Σ died power = deaths (+1 per legendary)`, a
+   cheap independent recompute of the accumulator (the 72b lint).
+8. **The rollout evaluator is already rule-agnostic**
+   (`evaluator.ts:215`: `poolDamageTaken = before.playerHealth −
+   after.playerHealth`, the applied delta) — register item 3 ✓, no
+   change. BUT the bot's SENSORS re-derive survivor power in lockstep
+   (`sensors.ts:526-570` `attritionRead` → the attrition-stall script's
+   `powerΔ ≥ 0` signature; `:602-618` `focusTargetFeatures.power` "the
+   pool chip this unit threatens" → the cohesion-focus weights). Under
+   casualties a standing enemy threatens nothing; killing it costs THEIR
+   pool. These are the old-rule habits criterion 2's RE-SEARCH exists to
+   replace (§92) — §91 leaves the bot untouched (one change per paired
+   read; the §85f leak shape named in the spec).
+9. **`--set` coerces every value to `Number`** (`commands/run.ts:134`) —
+   `--set=health.chipMode=survivors` reads NaN and the typo guard throws.
+   Extend: a string value is admissible when the live key holds a string
+   (one branch + a setArg pin); the §90 in-place `KNOB_GROUPS.health`
+   mutation then makes a mode flip consistent live, in rollouts, and in
+   `--jobs` children.
+10. **The fatigue retarget has a deferred clamp to land.** `fatigueEffect`
+    mods `power` (`fatigue.ts:44`); the retarget is `constitution: {mul:
+    1 − rate}`, magnitude `min(stacks, 5)`. `Unit.ts:440-447` seeds
+    spawn effects AFTER `currentHp = derived.maxHp` and says "no K1
+    effect modifies constitution, so maxHp is unchanged" — `recomputeEffective`
+    DOES re-derive `maxHp` (`Unit.ts:515`) but `currentHp` keeps the
+    un-fatigued value ⇒ a fatigued unit would spawn OVER its max. The
+    retarget lands the clamp the K1 comment deferred (`currentHp =
+    min(currentHp, maxHp)` after seeding). Byte-neutral at rate 0 (no
+    effect seeded). `statusEffects.test.ts:49-57` (the curve on power)
+    re-targets; the 50% cap pins as a config-derived read of
+    `fatigueMaxStacks` (5, beside `fatiguePerStack`).
+11. **XP on death** (`xpFlatPerFallen` 20, `xp.ts:117`) — register item 4
+    ✓ unchanged: the XP is the unit's, the pool is the side's.
+12. **Summons** — ghoul base 0, growth 0.05 (round(0.05 × 9) = 0 at L10;
+    1 at L20). Under growth 0 it is 0 forever; a summon that dies is a
+    casualty at 0 — register item 2 ✓ by the table.
+13. **The Run.test chip fakes** (`chipTurn`, `Run.test.ts:5126-5139`)
+    emit `battle:ended` with `survivorPower` only. Under a casualties
+    default an absent `fallenPower` must be a LOUD 0/0 for test fakes
+    only (the `survivorPower ?? {0,0}` precedent at `Run.ts:2905`), and
+    the ~15 chip tests that assert "enemy 5 → pool −5" re-express as
+    fallen fakes at the default flip (91e) — the prediction to check.
+14. `enemyHealth` inits from `encounter.healthPool` (7–10). Under
+    casualties the enemy pool reads "their strength; every kill removes
+    some" — a decisive win chips the wave's Σ power ≈ today's survivor
+    chip (the spec's arithmetic). Untouched at §91; the flip read's
+    enemy-side check (91f).
+
+**Predictions, restated for the build:** World **v35 → v36** (item 1;
+the spec's no-bump line is corrected in the same commit); Run v44 holds;
+NO RNG stream shift (items 3, 10); summary.csv baselines BYTE-IDENTICAL
+at the seam commits (91a1/91a2, default survivors) and at the fatigue
+commit (rate 0); baselines RE-PIN twice — at the table (91b) and at the
+default flip (91e).
+
+### The adversarial review (2026-09-03 — the §85f tiger-team shape, run at this kickoff)
+
+Reviewer: a fresh Claude Fable 5.1 instance (the strongest available
+model at the time — a fresh context, not a different family), read-only,
+handed the spec + ROADMAP §91–§93 + the audit + the DRAFT cut and the
+spec's hunt list. Peer: a second read-only instance verifying every
+claim at file:line before anything was believed. Tally: 12 findings —
+5 CONFIRMED, 7 PARTIAL (citation precision or an inference overreach;
+none reversed), 0 REFUTED; the reviewer's nine "could not fault" lines
+all confirmed (exactly two death sites · `units.splice` only in
+`removeUnit` · `reapDead` before `checkBattleEnd` · `playerRosterIds`
+player-only · `spawn-overflow.test.ts:216` pins schema 35 ·
+`hpPerConstitution` 1.0 · the fold rounds · rehydrate sets `currentHp`
+after construction · `rollTurnWave` is a keyed derived stream). What
+each finding changes in the cut, most severe first:
+
+1. **Keep criterion 1 is pinned in absolute pool-HP** ("overkill ≥ 3")
+   while §92 is licensed to move the pool max — the threshold would
+   pass or fail on the lever. (`chipMultiplier` is already absorbed: the
+   overkill is computed in pool-HP.) → ⛔ a PRE-REGISTRATION AMENDMENT
+   for the user, before 91b: criterion 1 reads **≥ 0.15 × playerHealthMax**
+   (= 3 at 20), and §92 names the pool max the §93 read is taken at.
+2. **The 91f survivors leg flipped only `chipMode`** — draw turns would
+   still charge by the casualty `capPenalty`, so the leg was not the
+   survivors rule and the third leg not table-only. CONFIRMED. → the
+   queue line carries BOTH `--set`s; the 91e harness pin asserts the
+   mode PAIR; the 91a2 diff oracle is RUN (a worktree-pinned n=20 twin
+   at the tag vs HEAD, same seeds), not assumed.
+3. ⭐ **`winner === 'draw'` conflates the tick-cap draw with a MUTUAL
+   WIPE** (`checkBattleEnd`, `World.ts:2197` / `:2228`, since 34a — the
+   `reporters.ts:870` comment "checkBattleEnd never emits 'draw'" is
+   stale). Under `capPenalty: survivors` keyed on `'draw'`, a mutual wipe
+   — every fielded unit dead — would charge 0/0. CONFIRMED. → the cap
+   penalty keys on the CAP only: `battle:ended` gains `reason:
+   'decisive' | 'mutualWipe' | 'cap'` (from `resolveAsDraw`); the
+   harness records it and the draw column splits by reason
+   (`cappedDraws` becomes honest). ⛔ Replace-vs-surcharge is a stop:
+   recommended **SURCHARGE** — a capped turn always pays its own fallen,
+   and under `capPenalty: 'survivors'` ALSO the enemy's standing power
+   (a stall never gets cheaper than fighting); "replace" would make
+   stalling after heavy losses the cheap option.
+4. **The tactical searcher is POOL-BLIND** (`src/bot/evaluator.ts:9/43/84-97`:
+   material differential + `WIN_BONUS`, no pool read; the run-layer
+   `tests/fuzz/rollout/evaluator.ts:215` is the only pool-aware
+   objective) — a rule-aware kiting stall is structurally impossible
+   for the bot, so the "searcher finds a free kiting vector" decision
+   point cannot fire for the hypothesized reason; `capPenalty` ships as
+   unguarded armor (Retreat, Round 9, is what makes stalling reachable).
+   And the two 91f legs fight IDENTICAL battles until the pool trajectory
+   reaches a run-layer decision. → stated in the plan; **91f-pre: a
+   DESK pre-read** applies the casualty arithmetic to the 90d
+   `results.json` battles (deaths per side under the flat table) to
+   PREDICT the per-encounter cost and the player-pool burn before the
+   box runs — the prediction the flip read is checked against. The peer's
+   correction: `attritionStall.ts:179-182` still gates `evaluate` on
+   `ownPower − enemyPower` (the nominator dropped it, the evaluate path
+   did not) — a flat table changes its meaning on the non-audition tier;
+   filed under audit item 8 (the §92 re-search's list).
+5. **Criterion 2 is satisfiable by search EFFORT alone** (gradient =
+   best-achievable − baseline; no re-search budget is pinned). → ⛔ a
+   pre-registration amendment: the re-search runs at the finalist's
+   recipe (`--preset=heavy --vectors=96 --seeds=32`, the 85g5 sampler
+   seed) and compares against the survivors gradient RE-READ at HEAD on
+   the new table (or a same-budget survivors re-search if §92 can afford
+   the night) — never the archived number.
+6. **Rollback was not one contiguous revert** under the draft order
+   (kept seams interleaved with the table; the power table on neither
+   the kept nor the revert list). CONFIRMED. → REORDERED: the kept seams
+   first (91a1 → 91a2 → 91c → 91d), then the tag **`casualty-seams`**,
+   then the experiment proper (91b the table → 91e the flip → §92): the
+   revert range under ROLLBACK = `casualty-seams..§92-end`; ⛔ the user
+   signs that **91b (the table) REVERTS** (it is the rule's, not the
+   seams'). Measurement records (BALANCE / WORKLOG entries) commit
+   SEPARATELY from code across §91–§92 so a range revert keeps the
+   reads; ARCHITECTURE/DESIGN edits ride their code commit (they
+   describe it and should revert with it — the AGENTS same-commit rule).
+7. **The feel-verdict blinding** (criterion 4, "written BEFORE the
+   numbers") is strained by the plan's own order: 91f publishes numbers
+   before any playtest (PARTIAL — the shape-locked §91 exit requires
+   that entry; 91f's reads are not keep criteria). → the SURVIVORS
+   playtests (5 runs) happen NOW, at the tag, during the build; the
+   CASUALTIES verdict is written at §93 on the rebalanced build BEFORE
+   the user reads the §92 board (filed by the session; read after the
+   verdict) — ⛔ a stop for the user to confirm.
+8. **The charge-reading readers break on the 89c/90d batch shape** (the
+   on-disk `poolChips` records carry no charge fields; a new reader
+   would read `undefined`). CONFIRMED (the dirs live at
+   `output/box-batches/…`, gitignored). → the readers fall back
+   `charge ?? survivors × chipMultiplier`, pinned on an old-shape
+   record — the third leg stays recomputable.
+9. **Inherited `power` seams the audit did not list**: the arbitrated
+   arm's packet targeting (`arbitratedStrategy.ts:572-581` via
+   `maxPowerIndex` / `minPowerIndex`, `scored.ts:338-358`, lowest-index
+   ties — under the flat table every non-legendary hand ties → slot 0
+   always buffed / always discarded); `pass:weak` = `declineBelowPower(2)`
+   (`policies.ts:167`, `registry.ts:63` — under the table only
+   legendaries pass, coherent, left as-is and recorded); the UnitCard
+   tooltip (`UnitCard.ts:258`), `health.ts:9-10`, `events.ts:80-84`,
+   `PostTurnScreen.ts:3` docs. CONFIRMED. → 91b re-keys the two index
+   pickers to (power, level) — power stays dominant, level breaks the
+   ties (a fixed heuristic the re-search can't repair); docs at 91a2/91g.
+10. **`--set` string admissibility needs a second site** —
+    `balanceSweep.ts:104` throws "not numeric" (PARTIAL: the type at
+    `:67` is `Record<string, Record<string, number>>`). → 91a2.
+11. **The accumulator lint is off by summon deaths** (the harness counts
+    every spawned unit's death, ghoul at 0). CONFIRMED. → the lint reads
+    the per-archetype deaths and subtracts the summon archetype's.
+12. **Decisions written as build notes that need a signature** — the
+    World v36 bump vs the spec's no-bump line (a spec AMENDMENT, not a
+    doc fix), replace-vs-surcharge, whether 91b reverts, which build
+    carries the casualties verdict, the healer 0 → 1. → the shape-lock
+    docket below.
+
+Two peer-side notes for the record: the 90d cohort ran BOTH twins (the
+peer read one manifest and saw only `59-regen-vector.json`; the queue
+file carries regen AND `85g5-finalist-56` — no attribution issue); and
+the review + verification cost ≈ 18 min wall, ~370k subagent tokens.
+
+### The REVISED cut (2026-09-03 — post-review; pending shape-lock)
+
+Order = the rollback story: the KEPT seams first, a tag, then the
+experiment. Code and measurement records commit separately.
+
+- **91a1** — World: the fallen-power accumulator at both reap sites
+  (neutrals excluded; `effectiveStats.power` at death), serialized
+  (**World v36** + the v35 reject; `spawn-overflow.test.ts:216` moves),
+  `battle:ended` gains `fallenPower` + `reason: 'decisive' | 'mutualWipe'
+  | 'cap'`. Pins: accumulator == Σ died power · a camp kill charges
+  nobody · a summon at its power · the mid-battle round-trip · the
+  reason per path. Byte-identical baselines.
+- **91a2** — the modes + the telemetry: `health.chipMode` +
+  `health.capPenalty` (zod enums, defaults **survivors** here);
+  `resolveTurn(reason, survivors, fallen)` charges by `chipMode`, and a
+  `cap` turn ADDS the survivors charge under `capPenalty: 'survivors'`
+  (the surcharge); `pools:chipped` gains the uncapped charges;
+  `turn:resolved` carries the applied chips; PoolChip / alphaStrike /
+  perEncounter / meanPoolChip read charges with the `?? survivors ×
+  mult` fallback (pinned on an old-shape record); the harness records
+  `reason` and `cappedDraws` splits by it; `--set` string admissibility
+  at BOTH sites; the survivors-arithmetic docs re-worded. Pins: a mode
+  test per rule (headless, fallen fakes) · charge == survivors × mult
+  under survivors · the overkill column off charges · the surcharge on a
+  cap turn only (a mutual wipe never reads `capPenalty`). Exit: `npm test`
+  + `fuzz:smoke`; EVERY summary.csv baseline byte-identical; ⭐ the
+  worktree-pinned diff oracle RUN — one twin, n=20, tag vs HEAD, same
+  seeds, `summary.csv` + `alpha-strike.csv` byte-identical.
+- **91c** — the fatigue retarget at rate 0: constitution mul,
+  `fatigueMaxStacks` 5, the currentHp clamp at seed; the curve / cap /
+  rate-0-neutral pins. Byte-identical baselines.
+- **91d** — the player-facing lines by mode: `previewPoolAtRisk` reads
+  the hand under casualties (the 89e pin extended); the PostTurnScreen
+  labels; the UnitCard tooltip. Browser-verified. **→ tag
+  `casualty-seams`** (the ROLLBACK floor: everything above it stays).
+- **91b** — the power table (REVERTS under rollback): `units.json` all 1
+  (healer 0 → 1), stormcaller / shaman / prodigy 2, ghoul 0, growth 0 ×
+  23; the config-derived pin; the (power, level) re-key of the two index
+  pickers. Exit: baselines re-pin (count reported); no bump.
+- **91e** — the default flip to casualties (BOTH modes) in `health.json`;
+  the Run.test fakes carry fallen; baselines re-pin; a harness pin that
+  walks a short run under EACH mode PAIR via `--set`.
+- **91f-pre** — the DESK pre-read (local, minutes): the casualty
+  arithmetic applied to the 90d `results.json` battles → the predicted
+  per-encounter cost / pool burn / act clear under the table, filed in
+  WORKLOG as the prediction 91f is checked against.
+- **91f** — the flip read (box, ONE HEAD): the 90d twins × {default
+  casualties, `--set=health.chipMode=survivors --set=health.capPenalty=survivors`}
+  n=120, `--per-encounter --emit-results`, poll 120, est 3 h. THREE-way:
+  casualties vs survivors@HEAD (the rule flip, paired) + survivors@HEAD
+  vs the 90d floor-1 legs (the table alone, same seeds). Reads: win ·
+  per-act clear · the applied per-turn shape · the overkill share (a
+  PREVIEW, not a signing read) · the draw share BY REASON · the
+  enemy-pool side → BALANCE (its own commit) naming the knob; WORKLOG.
+- **91g** — docs: ROADMAP checks · WORKLOG · HANDOFF cursor ·
+  ARCHITECTURE (event rows + World v36) · DESIGN (both rules documented)
+  · the spec amendments (the bump, criteria 1 + 2, the playtest order)
+  · GOTCHAS if anything bit.
+
+### Shape-lock (2026-09-03, USER-SIGNED in chat)
+
+The docket signed as proposed, every line: the criterion-1 amendment
+(≥ 0.15 × playerHealthMax) · the criterion-2 amendment (the finalist's
+recipe; the survivors gradient re-read at HEAD as the comparator) · the
+cap penalty keyed on the tick cap only, as a SURCHARGE · the World v36
+bump as a spec amendment · 91b (the table) REVERTS under rollback ·
+healer 0 → 1 · prodigy 2 · the playtest order (survivors runs NOW at the
+tag; the casualties verdict at §93 before the §92 board is read) · the
+names (`chipMode` / `capPenalty` / `fatigueMaxStacks` / the tag
+`casualty-seams`). One correction from the user, recorded above (item
+3): prodigy is not enemy-only — it is recruitable via its event, which
+changes nothing about the weight. The amendments are written into the
+spec in this commit (pre-registration: signed BEFORE any casualties
+number exists); the cut into ROADMAP §91.

@@ -115,7 +115,8 @@ progress the fight and the enemy pool reads as "their strength; every
 kill removes some."
 
 - **Power = headcount weight**, fixed per archetype: **1 everywhere,
-  legendary 2, summons 0**; `growthRates.power = 0`. Symmetric (an enemy
+  legendary 2, summons 0** (§91 kickoff: healer 0 → 1; prodigy — the
+  event-granted legendary — 2 on both sides; ghoul the one summon); `growthRates.power = 0`. Symmetric (an enemy
   stormcaller = two kills). The existing `power` stat IS the weight (no
   new field); a config-derived test pins power ∈ {0,1,2}, legendary ⇒
   2, summon ⇒ 0. A player's max per-turn exposure = the power they
@@ -126,6 +127,12 @@ kill removes some."
   one line in `health.json` under hot reload.
 - **The cap penalty is its own mode from day one:**
   `health.capPenalty: "survivors" | "casualties"`, default casualties.
+  ⭑ SEMANTICS (2026-09-03, §91 kickoff, user-signed): keyed on the
+  TICK-CAP draw only (a mutual wipe is a casualty turn, never a stall —
+  `battle:ended.reason`), and a SURCHARGE: a capped turn always pays its
+  own fallen, and under `"survivors"` ALSO the enemy's standing power.
+  The tactical searcher is pool-blind (it cannot discover a kiting
+  stall); the mode is armor against a human stall until Retreat lands.
   Humans rarely force a draw; the SEARCHER might find a free kiting
   vector — the first paired read tells, and the flip is config.
 - **The telemetry carries the APPLIED deltas** (`poolChips` today
@@ -146,7 +153,11 @@ kill removes some."
      of pool deaths** (killing blow − arrival pool ≥ 3, the 89b2 reader,
      pooled across the six ARM walk arms on the RE-SEARCHED arm) falls
      from the **0.61 baseline** (per arm 0.57–0.67, BALANCE 2026-09-03
-     89c) to **≤ 0.30**, with **no single arm above 0.40**; a read in
+     89c) to **≤ 0.30**, with **no single arm above 0.40** — ⭑ AMENDED
+     2026-09-03 (§91 kickoff, user-signed): the ≥ 3 threshold is
+     **≥ 0.15 × `playerHealthMax`** (= 3 at 20), so a §92 pool-max move
+     cannot pass or fail it on the lever; §92 names the pool max the §93
+     read is taken at; a read in
      0.15–0.30 is "passes, investigate", ≤ 0.15 is the mechanism
      working as designed. The two alpha definitions (AlphaApp 0.127 ·
      AlphaBlow 0.609) and the per-turn tail are REPORTED beside it at
@@ -154,11 +165,20 @@ kill removes some."
   2. the **skill gradient** holds or widens, read with a **RE-SEARCHED
      arm** (the finalist vector was searched under survivors; reading
      the new rule through old-rule habits is the §85f train/select leak
-     in a new coat);
+     in a new coat) — ⭑ AMENDED 2026-09-03 (§91 kickoff, user-signed):
+     the re-search runs at the finalist's recipe (`--preset=heavy
+     --vectors=96 --seeds=32`, the 85g5 sampler seed) and the comparator
+     is the survivors gradient RE-READ at HEAD on the new power table
+     (or a same-budget survivors re-search), never the archived number —
+     a wider gradient bought by search effort is not a pass;
   3. a reachable run shape at the signed per-act targets, floor
      included;
   4. the user's **feel verdict from 5 playtest runs per rule**, written
-     BEFORE looking at the numbers.
+     BEFORE looking at the numbers — ⭑ ORDER (2026-09-03, §91 kickoff,
+     user-signed): the SURVIVORS runs happen at the tag, during the §91
+     build; the CASUALTIES verdict is written at §93 on the rebalanced
+     build BEFORE the user reads the §92 board (the session files it;
+     the user reads it after the verdict).
 - **Kept under BOTH outcomes:** the §89 data reads + the pre-turn risk
   line · the seam floor · the fatigue seam (constitution target, rate
   0) · the chip-mode / cap-mode seams (a rollback flips the default,
@@ -236,9 +256,12 @@ persistent unit HP (rewrites the run layer, the sheet, the evaluator).
 - the rollout evaluator's battle objective (survivor power as a proxy
   for chip?) — switch to actual pool deltas if so;
 - XP on death (`xpFlatPerFallen`) unchanged;
-- **snapshot prediction: NO bump for the whole round** (chip mode ·
-  power · pool max · the floor · fatigue are config / per-turn seeds) —
-  an unexpected bump is the tell;
+- ~~snapshot prediction: NO bump for the whole round~~ ⭑ CORRECTED
+  2026-09-03 (§91 kickoff, user-signed): **World v35 → v36** — dead
+  units are spliced out at death, so the casualty rule needs a
+  serialized fallen-power accumulator (WORKLOG §91 audit item 1). Run
+  v44 holds; chip mode · power · pool max · the floor · fatigue stay
+  config / per-turn seeds;
 - the fold's prior-table semantics under a new pool metric (rebuild,
   registry recipe).
 

@@ -10,8 +10,8 @@ are cut at each phase kickoff (AGENTS "The planning stack"), never here.
 Prior round's plan: [archive/post-83-roadmap.md](archive/post-83-roadmap.md)
 (Round 6, Instruments) with its worklog and spec beside it.
 
-**Status: SHAPE-LOCKED 2026-09-02 (user-signed) — NEXT = the §89
-kickoff.** The §87d3
+**Status: §89 + §90 ✅ CLOSED; §91 IN PROGRESS (kickoff user-signed
+2026-09-03 — the cut below; audit + review WORKLOG §91).** The §87d3
 charter (the defect list + the two reopened questions) widened at the
 spec session into **the first experimental round**: the questions share
 one root — the chip rule's bimodality + act coupling — and the user
@@ -100,6 +100,38 @@ vector (config flip); evaluator objective change if it proxies survivor
 power. **Snapshot prediction:** no bump. **Exit:** both modes green
 under `npm test` + fuzz:smoke; the flip read in BALANCE naming the knob.
 **NOT doing:** retreat / optional deploy (Round 9); any balance move.
+Kickoff 2026-09-03 (user-signed; WORKLOG §91 — the audit, the
+adversarial review, the docket): the snapshot prediction CORRECTED to
+**World v35 → v36** (the fallen are spliced out at death); the cap
+penalty = a SURCHARGE keyed on the tick cap only; criteria 1 + 2
+amended in the spec; order = kept seams → tag `casualty-seams` → the
+experiment (the rollback range).
+
+- [ ] **91a1** — World: the fallen-power accumulator at both reap sites
+  (neutrals excluded), serialized (v36), `battle:ended.fallenPower` +
+  `reason`. Byte-identical baselines.
+- [ ] **91a2** — `health.chipMode` + `health.capPenalty` (defaults
+  survivors HERE); `resolveTurn` by mode + the cap surcharge;
+  `pools:chipped` charges; `turn:resolved` applied chips; the readers
+  on charges (old-shape fallback); the harness `reason`; `--set`
+  strings. Exit: baselines byte-identical + the worktree diff oracle RUN.
+- [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
+  the currentHp clamp). Byte-identical.
+- [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode
+  (browser-verified) → **tag `casualty-seams`**.
+- [ ] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
+  healer 0 → 1) + the config-derived pin + the (power, level) picker
+  re-key. Baselines re-pin. REVERTS under rollback.
+- [ ] **91e** — defaults → casualties (both modes); fakes carry fallen;
+  baselines re-pin; the per-mode-pair harness pin.
+- [ ] **91f-pre** — the desk pre-read off the 90d results.json (the
+  prediction 91f is checked against).
+- [ ] **91f** — the box flip read (the 90d twins × both modes flipped
+  together, n=120, ONE HEAD; three-way vs 90d) → BALANCE (own commit).
+- [ ] **91g** — docs + the HANDOFF cursor; the §91 close.
+- ⛔ Decision point (91f): the `capPenalty` default flips only on a
+  cap-draw share that rises under casualties (the searcher is
+  pool-blind — the read is armor against a human stall).
 
 ## Phase 92 — The rebalance (under the casualty rule)
 

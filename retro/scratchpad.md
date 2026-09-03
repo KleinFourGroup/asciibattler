@@ -37,3 +37,28 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-Round-6 entries start here — the §89 interstitial.)_
+
+## §91 build session (2026-09-03) — process notes
+
+- **Review BEFORE the sign, not after.** Running the adversarial review
+  against the DRAFT cut (before shape-lock) meant the user signed a
+  reviewed cut in one turn; the review found the mutual-wipe/cap conflation
+  and the rollback-order defect that would otherwise have been built in.
+  Cost ≈ 18 min wall, ~370k subagent tokens, two Fable instances
+  (reviewer + read-only file:line verifier).
+- **The tree is CRLF on disk (git normalizes).** Any script that anchors on
+  multi-line text must normalize `
+` first — the first 91a1 edit matched
+  nothing. Shell-quoting a multi-line JS string is the other trap (apostrophes
+  in prose): scripts in files, not `node -e`, for anything with prose.
+- **The Browser pane hidden ⇒ no animation frames ⇒ the battle clock stops.**
+  A preview battle that “stalls” while tools run is that, not a sim bug;
+  drain a queued world command with one manual `world.tick()` +
+  `battleRenderer.update()` when probing (91-pre2b).
+- **A signed render rule got re-opened by a playtest report** (79d2 → 91-pre2):
+  the record said “not a bug”, the user said “I misread what I signed”. The
+  right move was to bring the record back with the options, not to re-decide
+  silently in either direction.
+- **The worktree diff oracle at n=20 took ~4 min for both legs in parallel** —
+  cheap enough to be the default exit criterion for any byte-identity claim,
+  not a special occasion.

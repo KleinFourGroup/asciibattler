@@ -107,9 +107,11 @@ penalty = a SURCHARGE keyed on the tick cap only; criteria 1 + 2
 amended in the spec; order = kept seams → tag `casualty-seams` → the
 experiment (the rollback range).
 
-- [ ] **91a1** — World: the fallen-power accumulator at both reap sites
-  (neutrals excluded), serialized (v36), `battle:ended.fallenPower` +
-  `reason`. Byte-identical baselines.
+- [x] **91a1** — World: the fallen-power ledger at both reap sites
+  (neutrals excluded), serialized (**v36**), `battle:ended.fallenPower` +
+  `reason`. Landed 2026-09-03: 10 pins (partition / mutual wipe / cap /
+  neutral / summon / the DoT reap path / the v36 round-trip + v35 reject);
+  baselines byte-identical (WORKLOG §91a1).
 - [ ] **91a2** — `health.chipMode` + `health.capPenalty` (defaults
   survivors HERE); `resolveTurn` by mode + the cap surcharge;
   `pools:chipped` charges; `turn:resolved` applied chips; the readers

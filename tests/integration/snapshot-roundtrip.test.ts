@@ -1119,3 +1119,53 @@ function recordEvents(bus: EventBus<GameEvents>): RecordedEvent[] {
 
 // Keep Unit referenced so the import isn't dead — used inside `freshBattle` indirectly.
 void Unit;
+
+
+describe('§91a1 — the fallen-power ledger round-trip (WorldSnapshot v36)', () => {
+  /** A battle with one player unit already reaped: the ledger is non-zero on
+   *  the player side, and the dead unit is GONE from `units` — the wire copy is
+   *  the only path back (the damageDealt pattern). */
+  function ledgerWire(): { world: World; fallen: number } {
+    const { world } = freshBattle(91091);
+    world.tick(); // both teams alive — the 34a latch sets
+    const victim = world.units.find((u) => u.team === 'player')!;
+    const fallen = victim.effectiveStats.power;
+    victim.currentHp = 0;
+    world.tick(); // reaped; 4v5 fights on
+    expect(world.ended).toBe(false);
+    expect(world.units.some((u) => u.id === victim.id)).toBe(false);
+    return { world, fallen };
+  }
+
+  it('serializes fallenPower and round-trips byte-faithful', () => {
+    const { world, fallen } = ledgerWire();
+    const wire = JSON.parse(JSON.stringify(world.toJSON())) as ReturnType<World['toJSON']>;
+    expect(wire.schemaVersion).toBe(36);
+    expect(wire.fallenPower).toEqual({ player: fallen, enemy: 0 });
+    const restored = World.fromJSON(wire, new EventBus<GameEvents>());
+    expect(JSON.stringify(restored.toJSON())).toBe(JSON.stringify(world.toJSON()));
+  });
+
+  it('a mid-battle restore keeps the dead on the books: the restored battle ends with the same fallenPower', () => {
+    const { world, fallen } = ledgerWire();
+    const wire = JSON.parse(JSON.stringify(world.toJSON())) as ReturnType<World['toJSON']>;
+    const busB = new EventBus<GameEvents>();
+    const restored = World.fromJSON(wire, busB);
+    const ends: GameEvents['battle:ended'][] = [];
+    busB.on('battle:ended', (p) => ends.push(p));
+    restored.resolveAsDraw();
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.reason).toBe('cap');
+    expect(ends[0]!.fallenPower).toEqual({ player: fallen, enemy: 0 });
+  });
+
+  it('a v35 save (no fallenPower) is rejected outright — the dead cannot be rebuilt from the rest of the wire', () => {
+    const { world } = ledgerWire();
+    const wire = JSON.parse(JSON.stringify(world.toJSON())) as Record<string, unknown>;
+    delete wire['fallenPower'];
+    const stale = { ...wire, schemaVersion: 35 };
+    expect(() => World.fromJSON(stale as never, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version/,
+    );
+  });
+});

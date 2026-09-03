@@ -301,8 +301,17 @@ import { getCamp } from '../config/camps';
  *       per the no-migration contract. A pre-§40e save can't hold a neutral
  *       objective (no way to set one), so nothing is lost. RunSnapshot is
  *       unaffected — the objective is World-side + transient per battle.
+ *  36 — §91a1 (the casualty experiment) added `fallenPower: {player, enemy}`
+ *       — the per-side Σ`effectiveStats.power` of every combatant REAPED
+ *       this battle (the two death sites), the casualty chip rule's input
+ *       (each side pays its OWN fallen). Dead units are spliced out of
+ *       `units` at death, so the fallen are unrecoverable from the rest of
+ *       the wire image: a v35 save restored mid-battle would under-charge
+ *       the turn (0 fallen) — reject outright per the no-migration
+ *       contract. Rides `battle:ended` beside `survivorPower`. RunSnapshot
+ *       is unaffected (the chip MODE is config, not RunConfig).
  */
-const WORLD_SCHEMA_VERSION = 35;
+const WORLD_SCHEMA_VERSION = 36;
 
 /** §40b — filler maxHp for an hp-less (indestructible) neutral so its Unit is
  *  "alive" enough to block pathing / LOS. Never a damage target — `isCombatTargetable`
@@ -487,6 +496,11 @@ export interface WorldSnapshot {
    *  `bitsGain` fold applies). Launch shape: bits only — grows when
    *  content demands. */
   tallies: { bits: number };
+  /** §91a1: the per-side Σ`power` of the combatants reaped this battle —
+   *  the casualty chip rule's charge per side. Serialized so a mid-battle
+   *  resume keeps the turn's dead on the books (the `damageDealt` pattern:
+   *  the units themselves are gone from `units`). */
+  fallenPower: { player: number; enemy: number };
   /** §75b: the rolled camp instances (empty on every camp-free layout).
    *  Serialized in ascending instance-id order so the wire image is
    *  deterministic regardless of Map insertion history. */
@@ -696,6 +710,18 @@ export class World {
    * preserves the heal-XP awarded on win.
    */
   private readonly utilityDone: Map<number, number> = new Map();
+  /**
+   * §91a1 — the per-side FALLEN power: Σ`effectiveStats.power` over every
+   * player / enemy combatant reaped this battle (`recordFallen`, called at
+   * both death sites BEFORE the splice — the same stat `survivorPower`
+   * reads, so the two are one bookkeeping: fielded = survivors + fallen for
+   * every on-grid unit). Neutrals (camp members, walls) are never charged
+   * to either side; a summon counts at its own power (0 by the §91b table).
+   * The casualty chip rule's input — each side pays its OWN fallen
+   * (`Run.resolveTurn`, `health.chipMode`). Snapshotted (v36): the dead
+   * are spliced out of `units`, so nothing else on the wire can rebuild it.
+   */
+  private readonly fallenPower = { player: 0, enemy: 0 };
   /**
    * O1: the per-team, always-present steering objective (the Phase-O refactor of
    * J1's single nullable player objective). Set/cleared only through the command
@@ -1285,6 +1311,7 @@ export class World {
         // K1 — `death` fires while the unit is still on the grid (before the
         // splice), so a handler can read its position/team.
         this.fireTrigger('death', { unit, team: unit.team });
+        this.recordFallen(unit);
         this.removeUnit(unit.id);
         this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
         continue;
@@ -1816,6 +1843,7 @@ export class World {
       if (unit.currentHp <= 0) {
         // K1 — fire `death` before the splice (mirrors the step-1 death check).
         this.fireTrigger('death', { unit, team: unit.team });
+        this.recordFallen(unit);
         this.removeUnit(unit.id);
         this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
       }
@@ -2194,7 +2222,7 @@ export class World {
     // with no walls left behind — so resolve it as a DRAW now rather than
     // leaving it to the driver's tick cap (a minute+ static wait).
     if (this.units.length === 0 && this.spawnQueues.size === 0) {
-      if (this._combatBegan) this.emitBattleEnded('draw');
+      if (this._combatBegan) this.emitBattleEnded('draw', 'mutualWipe');
       return;
     }
     let playerAlive = false;
@@ -2225,7 +2253,7 @@ export class World {
     // condition — the `_combatBegan` latch tells them apart, replacing the old
     // "leave it to the per-turn tick cap" silent return.
     if (!playerAlive && !enemyAlive) {
-      if (this._combatBegan) this.emitBattleEnded('draw');
+      if (this._combatBegan) this.emitBattleEnded('draw', 'mutualWipe');
       return;
     }
     // §75g — the block-turn-end knob (default OFF — camps never extend a
@@ -2240,7 +2268,7 @@ export class World {
     if (SIM.blockCampTurnEnd && this.hasUnclearedHostileCamp(playerAlive ? 'player' : 'enemy')) {
       return;
     }
-    this.emitBattleEnded(playerAlive ? 'player' : 'enemy');
+    this.emitBattleEnded(playerAlive ? 'player' : 'enemy', 'decisive');
   }
 
   /**
@@ -2253,7 +2281,7 @@ export class World {
    * No-op once `_ended`.
    */
   resolveAsDraw(): void {
-    this.emitBattleEnded('draw');
+    this.emitBattleEnded('draw', 'cap');
   }
 
   /**
@@ -2268,7 +2296,10 @@ export class World {
    * old `winner === 'player'` gate so every turn's damage banks into the
    * encounter's XP total.
    */
-  private emitBattleEnded(winner: 'player' | 'enemy' | 'draw'): void {
+  private emitBattleEnded(
+    winner: 'player' | 'enemy' | 'draw',
+    reason: 'decisive' | 'mutualWipe' | 'cap',
+  ): void {
     if (this._ended) return;
     this._ended = true;
     const livingPlayerIds = new Set<number>();
@@ -2292,8 +2323,17 @@ export class World {
     }
     this.bus.emit('battle:ended', {
       winner,
+      // §91a1 — WHY the battle ended, beside WHO won: a 'draw' is either a
+      // mutual wipe (checkBattleEnd, 34a) or the driver's tick cap
+      // (resolveAsDraw); the casualty rule's cap penalty keys on the CAP
+      // only (a mutual wipe is the largest casualty turn there is, never a
+      // stall).
+      reason,
       xpAwards,
       survivorPower: this.survivorPower(),
+      // §91a1 — the per-side fallen power (copied; the accumulator is live
+      // until the World is discarded).
+      fallenPower: { ...this.fallenPower },
       // 47f — the battle-earned run resources (copied: the payload must not
       // share the live accumulator). Run settles bits via `gainBits`.
       tallies: { ...this.tallies },
@@ -2319,6 +2359,21 @@ export class World {
       else if (u.team === 'enemy') enemy += u.effectiveStats.power;
     }
     return { player, enemy };
+  }
+
+  /**
+   * §91a1 — book a reaped combatant's power to its side's fallen total.
+   * Called at BOTH death sites (the step-1 death check and `reapDead`)
+   * before the splice, while the unit's effects are still folded — so the
+   * fallen read the same `effectiveStats.power` the survivors do. Neutrals
+   * charge nobody (a camp member's death is not a side's loss; a player
+   * unit killed BY a camp is still the player's fallen — team, not killer,
+   * is what's booked).
+   */
+  private recordFallen(unit: Unit): void {
+    if (unit.team === 'player' || unit.team === 'enemy') {
+      this.fallenPower[unit.team] += unit.effectiveStats.power;
+    }
   }
 
   /**
@@ -2741,6 +2796,8 @@ export class World {
       // copy it.
       battleRules: this.battleRules.slice(),
       tallies: { ...this.tallies },
+      // §91a1 — the fallen ledger (copied; live until the World is discarded).
+      fallenPower: { ...this.fallenPower },
       // §75b — the camp registry in ascending instance-id order; hostileTo
       // flattens in fixed team order (the QUEUE_TEAMS convention) so the wire
       // image is deterministic regardless of aggro order. Deep-copy the
@@ -2890,6 +2947,10 @@ export class World {
     // the in-flight tally — a mid-battle resume keeps its earnings.
     world.installBattleRules(snap.battleRules);
     world.tallies.bits = snap.tallies.bits;
+    // §91a1 — restore the fallen ledger (v35 saves rejected above — the dead
+    // are gone from `units`, so this copy is the only path back).
+    world.fallenPower.player = snap.fallenPower.player;
+    world.fallenPower.enemy = snap.fallenPower.enemy;
 
     // §75b — restore the camp registry + the dedicated stream. Every defId
     // must resolve in the live catalog (the 74b bespoke-rejection rule: leash

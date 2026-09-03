@@ -64,6 +64,16 @@ export interface GameEvents extends Record<string, unknown> {
      * health pool.
      */
     winner: 'player' | 'enemy' | 'draw';
+    /**
+     * §91a1: WHY the battle ended, beside who won. `'decisive'` = one team
+     * wiped (`checkBattleEnd`); `'mutualWipe'` = both teams' last units
+     * fell together (34a — also a `'draw'`); `'cap'` = the driver's per-turn
+     * tick budget force-resolved it (`World.resolveAsDraw`). The casualty
+     * chip rule's CAP PENALTY keys on `'cap'` only — a mutual wipe is the
+     * largest casualty turn there is, never a stall. Optional on the
+     * `survivorPower` rationale (test fakes omit it); every real emit sets it.
+     */
+    reason?: 'decisive' | 'mutualWipe' | 'cap';
     xpAwards: readonly {
       unitId: number;
       /**
@@ -86,6 +96,15 @@ export interface GameEvents extends Record<string, unknown> {
      * (`World.emitBattleEnded`) sets it.
      */
     survivorPower?: { player: number; enemy: number };
+    /**
+     * §91a1: Σ`effectiveStats.power` over each team's combatants REAPED this
+     * battle (both death sites, booked before the splice) — the casualty
+     * chip rule's input: each side pays its OWN fallen
+     * (`health.chipMode: 'casualties'`). Neutrals charge nobody; a summon
+     * counts at its own power. Fielded on-grid power = survivors + fallen by
+     * construction. Optional on the `survivorPower` rationale.
+     */
+    fallenPower?: { player: number; enemy: number };
     /**
      * 47f: battle-earned run resources (the World's serialized tally —
      * accumulated by battle-domain daemon rules, spec §"the seam

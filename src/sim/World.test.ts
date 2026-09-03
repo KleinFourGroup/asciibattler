@@ -1353,3 +1353,129 @@ function scene(specs: DeathSceneUnit[]): {
 
 // Keep imports referenced even when a specific test stops using them.
 void ZERO_STATS;
+
+describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casualty rule\'s input)', () => {
+  // Every expectation reads the unit's own `effectiveStats.power` (config-
+  // derived, never a hardcoded weight) — the pins survive the §91b power table.
+  function pair(): {
+    bus: EventBus<GameEvents>;
+    w: World;
+    player: Unit;
+    enemy: Unit;
+    ends: GameEvents['battle:ended'][];
+  } {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(1);
+    const w = new World(bus, rng);
+    const player = w.spawnUnit(rollUnit('mercenary', rng), 'player', { x: 0, y: 0 }, 0);
+    const enemy = w.spawnUnit(rollUnit('mercenary', rng), 'enemy', { x: 9, y: 9 });
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+    w.tick(); // far apart — both alive, the 34a latch sets
+    expect(w.ended).toBe(false);
+    return { bus, w, player, enemy, ends };
+  }
+
+  it('a decisive end books the loser\'s dead to ITS side; survivors and fallen partition the fielded power', () => {
+    const { w, player, enemy, ends } = pair();
+    player.currentHp = 0;
+    w.tick(); // the step-1 death check reaps the player → enemy wins
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('enemy');
+    expect(ends[0]!.reason).toBe('decisive');
+    expect(ends[0]!.fallenPower).toEqual({ player: player.effectiveStats.power, enemy: 0 });
+    expect(ends[0]!.survivorPower).toEqual({ player: 0, enemy: enemy.effectiveStats.power });
+  });
+
+  it('a mutual wipe is reason mutualWipe: both sides pay their dead, nobody survives', () => {
+    const { w, player, enemy, ends } = pair();
+    player.currentHp = 0;
+    enemy.currentHp = 0;
+    w.tick();
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('draw');
+    expect(ends[0]!.reason).toBe('mutualWipe');
+    expect(ends[0]!.fallenPower).toEqual({
+      player: player.effectiveStats.power,
+      enemy: enemy.effectiveStats.power,
+    });
+    expect(ends[0]!.survivorPower).toEqual({ player: 0, enemy: 0 });
+  });
+
+  it('the driver\'s tick cap is reason cap: nobody fell, both survive', () => {
+    const { w, player, enemy, ends } = pair();
+    w.resolveAsDraw();
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.winner).toBe('draw');
+    expect(ends[0]!.reason).toBe('cap');
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
+    expect(ends[0]!.survivorPower).toEqual({
+      player: player.effectiveStats.power,
+      enemy: enemy.effectiveStats.power,
+    });
+  });
+
+  it('a neutral\'s death charges nobody (camp members are not a side\'s loss)', () => {
+    const { w, ends } = pair();
+    const neutral = w.spawnUnit(rollUnit('mercenary', new RNG(7)), 'neutral', { x: 5, y: 5 });
+    neutral.currentHp = 0;
+    w.tick(); // reaped; both combatants still stand → no end
+    expect(w.ended).toBe(false);
+    w.resolveAsDraw();
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
+  });
+
+  it('a summoned minion is booked at ITS OWN power when it falls (0 by the table, whatever the table says)', () => {
+    const { w, enemy, ends } = pair();
+    const minion = w.spawnSummon('ghoul', 1, 'enemy', { x: 8, y: 8 }, enemy.id);
+    w.tick(); // the summon joins
+    minion.currentHp = 0;
+    w.tick(); // reaped; the summoner still stands → no end
+    expect(w.ended).toBe(false);
+    w.resolveAsDraw();
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: minion.effectiveStats.power });
+    // The ledger reads the minion's stats, not a hardcoded 0: the §91b table
+    // pins ghoul at 0 separately (units.json), this pin only says "its own".
+    expect(minion.effectiveStats.power).toBe(ARCHETYPE_CONFIG.ghoul.baseStats.power);
+  });
+
+  it('the periodic-status reap path (a burn-tile DoT kill, reapDead) books the fallen too', () => {
+    const { w, player, enemy, ends } = pair();
+    const BURN = statusDef('burn');
+    const interval = secondsToTicks(BURN.periodic!.everySeconds);
+    w.tileGrid.setKind({ x: 0, y: 0 }, 'fire');
+    player.currentHp = 1; // one DoT tick kills
+    for (let i = 0; i < interval + 2 && !w.ended; i++) w.tick();
+    expect(w.ended).toBe(true);
+    expect(ends[0]!.reason).toBe('decisive');
+    expect(ends[0]!.winner).toBe('enemy');
+    expect(ends[0]!.fallenPower).toEqual({ player: player.effectiveStats.power, enemy: 0 });
+    expect(ends[0]!.survivorPower).toEqual({ player: 0, enemy: enemy.effectiveStats.power });
+  });
+
+  it('over a fought battle, fielded power == survivors + fallen on BOTH sides (one bookkeeping)', () => {
+    const bus = new EventBus<GameEvents>();
+    const rng = new RNG(91);
+    const w = new World(bus, rng);
+    const fielded = { player: 0, enemy: 0 };
+    const field = (team: 'player' | 'enemy', x: number, y: number, idx: number): void => {
+      const u = w.spawnUnit(rollUnit('mercenary', rng), team, { x, y }, team === 'player' ? idx : undefined);
+      u.behaviors.push(new MovementBehavior(), new AbilityBehavior());
+      u.abilities.push(createAbility('sword'));
+      fielded[team] += u.effectiveStats.power;
+    };
+    for (let i = 0; i < 3; i++) field('player', 2 + 2 * i, 2, i);
+    for (let i = 0; i < 3; i++) field('enemy', 2 + 2 * i, 6, i);
+    const ends: GameEvents['battle:ended'][] = [];
+    bus.on('battle:ended', (p) => ends.push(p));
+    for (let i = 0; i < 4000 && !w.ended; i++) w.tick();
+    expect(w.ended).toBe(true);
+    const e = ends[0]!;
+    expect(e.reason).toBe('decisive');
+    const fp = e.fallenPower!;
+    const sp = e.survivorPower!;
+    expect(fp.player + fp.enemy).toBeGreaterThan(0); // somebody died
+    expect(sp.player + fp.player).toBe(fielded.player);
+    expect(sp.enemy + fp.enemy).toBe(fielded.enemy);
+  });
+});

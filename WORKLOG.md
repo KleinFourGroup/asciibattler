@@ -845,3 +845,25 @@ names (`chipMode` / `capPenalty` / `fatigueMaxStacks` / the tag
 changes nothing about the weight. The amendments are written into the
 spec in this commit (pre-registration: signed BEFORE any casualties
 number exists); the cut into ROADMAP §91.
+
+### 91a1 — the fallen ledger (2026-09-03)
+
+Landed as cut: `World.recordFallen` at BOTH reap sites (the step-1 death
+check + `reapDead`), booked before the splice off `effectiveStats.power`
+(the survivors’ stat), neutrals excluded by team; `WorldSnapshot` **v36**
+(`fallenPower`; a v35 save is rejected — the dead are gone from `units`,
+nothing else on the wire can rebuild them); `battle:ended` gains
+`fallenPower` + `reason: decisive | mutualWipe | cap` (`resolveAsDraw` is the
+only cap — the review’s finding 3 lands here, ahead of the mode that
+reads it). Ten pins, every weight read from the unit’s own stats (the §91b
+table moves nothing here): the decisive / mutual-wipe / cap partitions, a
+neutral charges nobody, a summon at its own power, the periodic-status
+reap path (a burn-tile DoT kill), fielded == survivors + fallen on both
+sides over a fought 3v3, the v36 round-trip byte-faithful, a mid-battle
+restore ending with the same ledger, the v35 reject;
+`spawn-overflow.test.ts` pin 35 → 36. Prediction check: the ONLY moved
+baseline is the schema pin — no fuzz baseline touched (the payload gained
+fields nothing reads yet). Rides ARCHITECTURE (the event row + the World
+note). One tooling note for the record: the tree is CRLF on disk (git
+normalizes) — a script that anchors on multi-line text must normalize
+line endings first; the first attempt matched nothing.

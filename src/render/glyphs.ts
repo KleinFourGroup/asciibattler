@@ -209,27 +209,58 @@ export function padInk(ink: GlyphInk, pad: number): GlyphInk {
 export const INK_FLOOR_EPSILON = 3 / 64;
 
 /**
- * §79d2 — the BASE-anchor quad-local y for a glyph: where its "stand line"
- * sits, in quad coordinates ([-0.5, 0.5], y up). The rule (user-signed at the
- * 79d2 design talk — the terminal-faithful option):
+ * §79d2 → §91-pre2 — the BASE-anchor quad-local y for a glyph: where its
+ * "stand line" sits, in quad coordinates ([-0.5, 0.5], y up). The rule
+ * (user-signed 2026-09-03 — the TERMINAL-CELL option, superseding 79d2's
+ * baseline-on-tile rule, which the user had misread at signing):
  *
  *  - Ink at the CELL FLOOR (`y0 < INK_FLOOR_EPSILON` — the block-drawing
  *    family: `▄` rubble, `╥`) stands on its ink bottom → anchor at the quad
  *    bottom, byte-identical to the fixed base anchor. (§79-post widened the
  *    original exact `=== 0` by the epsilon — classification robustness only;
  *    the anchor value itself is unchanged.)
- *  - EVERYTHING ELSE stands on the font's alphabetic BASELINE (measured once
- *    at atlas build via TextMetrics) — so a row of mixed glyphs reads as one
- *    line of terminal text: caps and x-height letters stand their ink on the
- *    tile (their ink bottom IS the baseline), while the census's lone
- *    descender unit glyph (`g`, plus the `@` root marker) dips its tail below
- *    the line like text on ruled paper, instead of standing tail-tip-on-tile
- *    with a raised bowl.
+ *  - EVERYTHING ELSE stands like a character in a terminal cell: the font's
+ *    alphabetic BASELINE (measured once at atlas build via TextMetrics) sits
+ *    `descenderRoom` ABOVE the tile — the room a descender needs
+ *    (`descenderRoomFor`: the deepest registered descender below the baseline,
+ *    plus a barrier), so a row of mixed glyphs still reads as one line of
+ *    text, and the census's descender unit glyph (`g`, the ghoul) reaches
+ *    DOWN toward the tile but never through it. 79d2 had put the baseline
+ *    ITSELF on the tile ("ruled paper"), which stood `g`'s tail in the
+ *    ground — the user's 2026-09-03 playtest report. The clickbox is
+ *    unrelated: the ink bbox + `INK_PAD_PX` (`padInk`), unchanged.
  *
  * A glyph the atlas hasn't measured gets `FULL_GLYPH_INK` (y0 = 0) and lands
  * in the floor branch → the plain quad-bottom anchor, the safe fallback.
+ * `descenderRoom` defaults to 0 = the 79d2 line exactly (the pins keep it).
  * Pure — headless-tested; `FontAtlas.baseAnchorY` feeds it the measured data.
  */
-export function baseAnchorYFor(ink: GlyphInk, baselineY: number): number {
-  return (ink.y0 < INK_FLOOR_EPSILON ? 0 : baselineY) - 0.5;
+export function baseAnchorYFor(ink: GlyphInk, baselineY: number, descenderRoom = 0): number {
+  return (ink.y0 < INK_FLOOR_EPSILON ? 0 : baselineY - descenderRoom) - 0.5;
+}
+
+/**
+ * §91-pre2 — the barrier between the deepest descender's ink and the tile,
+ * in atlas pixels: the same 3px the clickbox pads by (`INK_PAD_PX`), so
+ * "a few pixels of barrier" is one number in two places for one reason.
+ */
+export const DESCENDER_BARRIER_PX = 3;
+
+/**
+ * §91-pre2 — how far above the tile the font baseline must sit so every
+ * registered LETTERFORM's ink clears the tile: the deepest ink bottom below
+ * the baseline (the floor family — `y0 < INK_FLOOR_EPSILON`, and the
+ * unmeasured `FULL_GLYPH_INK` fallback — is excluded: blocks stand on their
+ * own rule) plus `barrier` (normalized cell units). Re-derived from the atlas
+ * at every build (the §79e principle — measured off the asset, never a
+ * hand-kept census): a future deeper descender lifts the line instead of
+ * clipping. With no descender at all the room is the barrier alone.
+ */
+export function descenderRoomFor(inks: Iterable<GlyphInk>, baselineY: number, barrier: number): number {
+  let deepest = baselineY;
+  for (const ink of inks) {
+    if (ink.y0 < INK_FLOOR_EPSILON) continue;
+    if (ink.y0 < deepest) deepest = ink.y0;
+  }
+  return baselineY - deepest + barrier;
 }

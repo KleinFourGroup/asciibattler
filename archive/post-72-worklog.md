@@ -3477,7 +3477,7 @@ higher (base ON the tile, no more front-face sink — the 79b
 second finding), bars/badges likewise, big-rubble bars may want a
 `FOOTPRINT_LIFT_PX` re-tune.
 
-### 79d2 — baseline-anchored glyphs (2026-08-14, INSERTED)
+### 79d2 — baseline-anchored glyphs (2026-08-14, INSERTED) — ⚠ the letterform half SUPERSEDED 2026-09-03 by §91-pre2 (WORKLOG.md, the casualty-experiment round): the terminal-cell rule — the baseline sits a measured descender room ABOVE the tile; the user had misread what the "ruled paper" option meant at signing
 
 **The find (user eyeball, two screenshots):** the rally X floated
 at/above its tile's top edge. Diagnosis (user's hypothesis,

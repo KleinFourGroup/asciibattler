@@ -5,6 +5,7 @@ import {
   INK_FLOOR_EPSILON,
   INK_PAD_PX,
   baseAnchorYFor,
+  descenderRoomFor,
   inkRectFromRgba,
   padInk,
 } from './glyphs';
@@ -108,10 +109,10 @@ describe('padInk (§79a rider via §79d2 — clickbox breathing room)', () => {
   });
 });
 
-describe('baseAnchorYFor (§79d2 — the baseline anchor rule)', () => {
+describe('baseAnchorYFor (§79d2 → §91-pre2 — the stand-line rule)', () => {
   const BASELINE = 0.26; // ≈ JetBrains Mono at 56/64, per the live measurement
 
-  it('a letterform (ink above the cell floor) stands on the BASELINE', () => {
+  it('at room 0 (the 79d2 line) a letterform stands on the BASELINE', () => {
     // Caps and x-height letters: ink bottom == baseline → they stand their ink
     // on the tile; the anchor is the baseline regardless of the exact ink.
     expect(baseAnchorYFor({ x0: 0.27, y0: 0.25, x1: 0.77, y1: 0.91 }, BASELINE)).toBeCloseTo(
@@ -119,11 +120,28 @@ describe('baseAnchorYFor (§79d2 — the baseline anchor rule)', () => {
       12,
     );
     // The census's descender (`g`, ink dipping to 0.109): SAME anchor — the
-    // tail hangs below the stand line like text on a ruled line.
+    // tail hangs below the stand line (the 79d2 "ruled paper" look the
+    // 91-pre2 room exists to retire).
     expect(baseAnchorYFor({ x0: 0.2, y0: 0.109, x1: 0.8, y1: 0.77 }, BASELINE)).toBeCloseTo(
       BASELINE - 0.5,
       12,
     );
+  });
+
+  it('§91-pre2 — with a descender room the baseline sits ROOM above the tile, for every letterform alike', () => {
+    const ROOM = 0.2;
+    const cap = { x0: 0.27, y0: 0.25, x1: 0.77, y1: 0.91 };
+    const g = { x0: 0.2, y0: 0.109, x1: 0.8, y1: 0.77 };
+    expect(baseAnchorYFor(cap, BASELINE, ROOM)).toBeCloseTo(BASELINE - ROOM - 0.5, 12);
+    expect(baseAnchorYFor(g, BASELINE, ROOM)).toBeCloseTo(BASELINE - ROOM - 0.5, 12);
+    // One shared line (terminal cell), lifted: the descender's ink bottom now
+    // clears the tile by (ROOM − its depth below the baseline).
+    const anchor = baseAnchorYFor(g, BASELINE, ROOM);
+    const tailAboveTile = g.y0 - 0.5 - anchor;
+    expect(tailAboveTile).toBeCloseTo(ROOM - (BASELINE - g.y0), 12);
+    expect(tailAboveTile).toBeGreaterThan(0);
+    // Blocks ignore the room entirely.
+    expect(baseAnchorYFor({ x0: 0.17, y0: 0, x1: 0.83, y1: 0.53 }, BASELINE, ROOM)).toBe(-0.5);
   });
 
   it('floor-touching blocks (ink.y0 = 0) stay flush on the quad bottom', () => {
@@ -153,5 +171,48 @@ describe('baseAnchorYFor (§79d2 — the baseline anchor rule)', () => {
 
   it('an unmeasured glyph (FULL_GLYPH_INK fallback) lands in the floor branch', () => {
     expect(baseAnchorYFor(FULL_GLYPH_INK, BASELINE)).toBe(-0.5);
+  });
+});
+
+describe('descenderRoomFor (§91-pre2 — the room measured off the atlas ink)', () => {
+  const BASELINE = 0.26;
+  const BARRIER = 3 / 64;
+  // A cap whose ink bottom sits exactly ON the baseline (X); the census also
+  // holds round letters that OVERSHOOT it by a row (o/e at 0.25 vs 0.261) —
+  // those are real one-row descenders to this rule, and count as such.
+  const cap = { x0: 0.27, y0: BASELINE, x1: 0.77, y1: 0.91 };
+  const overshoot = { x0: 0.27, y0: BASELINE - 1 / 64, x1: 0.77, y1: 0.7 };
+  const g = { x0: 0.2, y0: 0.109, x1: 0.8, y1: 0.77 };
+  const block = { x0: 0.17, y0: 0, x1: 0.83, y1: 0.53 };
+
+  it('the deepest letterform descender below the baseline, plus the barrier', () => {
+    expect(descenderRoomFor([cap, g, block], BASELINE, BARRIER)).toBeCloseTo(BASELINE - 0.109 + BARRIER, 12);
+  });
+
+  it('the floor family and the unmeasured fallback are EXCLUDED (blocks stand on their own rule)', () => {
+    // Were the block counted, the room would swallow the whole baseline.
+    expect(descenderRoomFor([cap, block, FULL_GLYPH_INK], BASELINE, BARRIER)).toBeCloseTo(BARRIER, 12);
+  });
+
+  it('with no descender at all the room is the barrier alone; a cap whose ink sits ON the baseline adds nothing', () => {
+    expect(descenderRoomFor([cap], BASELINE, BARRIER)).toBeCloseTo(BARRIER, 12);
+    expect(descenderRoomFor([], BASELINE, BARRIER)).toBeCloseTo(BARRIER, 12);
+  });
+
+  it('a one-row overshoot (a round letter) is a one-row descender: the room grows by the row', () => {
+    expect(descenderRoomFor([cap, overshoot], BASELINE, BARRIER)).toBeCloseTo(1 / 64 + BARRIER, 12);
+  });
+
+  it('a deeper descender lifts the line (the asset moves the rule, not a census)', () => {
+    const deeper = { ...g, y0: 0.05 };
+    expect(descenderRoomFor([g, deeper], BASELINE, BARRIER)).toBeCloseTo(BASELINE - 0.05 + BARRIER, 12);
+  });
+
+  it('the room makes every registered descender clear the tile by at least the barrier', () => {
+    const room = descenderRoomFor([cap, g], BASELINE, BARRIER);
+    for (const ink of [cap, g]) {
+      const anchor = baseAnchorYFor(ink, BASELINE, room);
+      expect(ink.y0 - 0.5 - anchor).toBeGreaterThanOrEqual(BARRIER - 1e-12);
+    }
   });
 });

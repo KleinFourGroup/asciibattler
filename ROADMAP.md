@@ -123,6 +123,11 @@ experiment (the rollback range).
   the camp: campId + CampWanderBehavior + the wipe count; user-signed
   2026-09-03 mid-playtest, its fuzz footprint accepted) — inserted here so
   it lands BEFORE `casualty-seams` and survives a rollback (WORKLOG §91-pre).
+- [x] **91-pre2** — the glyph stand line = the TERMINAL-CELL rule (the
+  baseline sits a measured descender room above the tile; blocks unchanged;
+  user-signed 2026-09-03, superseding the misread 79d2 baseline-on-tile
+  rule). Render-only; browser-verified 47/47 atlas glyphs + 68/68 live
+  sprite anchors against the asset (WORKLOG §91-pre2).
 - [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
   the currentHp clamp). Byte-identical.
 - [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode

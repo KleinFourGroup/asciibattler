@@ -954,3 +954,49 @@ tail-tip-on-tile with a raised bowl. Re-opened as a decision for the
 user (not re-decided here): keep the rule · lift descenders to stand on
 their ink bottom (a one-branch change to `baseAnchorYFor`, headless-
 pinned, render-only) · or swap the ghoul glyph (a font rebuild).
+
+### 91-pre2 — the terminal-cell stand line (2026-09-03, from the user's playtest report)
+
+The second half of the playtest report — "the ghoul sprite clips through
+the ground" — was NOT a bug by the tree's record: 79d2's user-signed rule
+put the font BASELINE on the tile, so `g` (the roster's lone descender)
+dipped its tail below the line "like ruled paper". Put back to the user
+with the record, the answer was that the 79d2 option had been misread at
+signing; what they want is the TERMINAL CELL: the quad is the cell, its
+bottom stands on the tile, and the baseline sits a fixed distance above
+it that is "enough to fit descenders" — the clickbox stays the ink bbox
+plus a few px (which is already `padInk`, 79a). Signed 2026-09-03:
+
+- **The rule** (`baseAnchorYFor(ink, baselineY, descenderRoom)`,
+  glyphs.ts): letterforms anchor at `baselineY − descenderRoom`; the
+  floor family (`▄` `╥`, and the unmeasured fallback) stays on the quad
+  bottom, untouched. `descenderRoom = 0` is the 79d2 line exactly (the
+  old pins keep it as a named case).
+- **The room is MEASURED, not hand-set** (`descenderRoomFor`): the deepest
+  registered letterform ink bottom below the baseline, plus
+  `DESCENDER_BARRIER_PX` 3 (the same 3px the clickbox pads by) — computed
+  at atlas build off the ink just rasterized (the 79e principle: from the
+  asset, never a census). A future deeper glyph lifts the whole line
+  instead of clipping; a one-row overshoot (round letters) counts as a
+  one-row descender, which is correct and pinned.
+- **The tension, named at signing:** 79d2 existed because the pre-79d2
+  cell-bottom anchor floated the ink a quarter cell up (the rally X). This
+  rule floats it by exactly the room — 0.199 cell here (13 rows of 64:
+  baseline 0.2615, deepest ink 0.109 at `g`/`@`, +3px) instead of 17 —
+  by design. Rider: the objective marker X rises with the line; retune
+  `OBJECTIVE_MARKER_TILE_LIFT` down if it reads as floating (eyeball).
+  ⚠ Walls (`#`) are letterform-classified (ink bottom 0.266) and rise
+  with the line too — consistent with "a character in a cell", but a
+  visible change the user should eyeball natively.
+
+**Verification, re-derived from the asset (the 79e/79g lesson):** a
+browser probe recomputed the room independently off `inkByGlyph` (the
+raw measured cells) and the baseline — 47/47 glyphs, expected anchor ==
+`baseAnchorY`, 0 mismatches: every letterform at −0.4375 (one shared
+line, 4px above the quad bottom), `g` and `@` clearing the tile by
+exactly 3.0px, `▄`/`╥` at −0.5. Then a live battle (68 sprites — walls,
+M/a/B/z): every `aAnchor` attribute the SpriteRenderer wrote equals the
+atlas rule, 0 mismatches. Headless: 22 inkRect pins (the rule at room 0
+and at a room; the room's exclusion of the floor family; the overshoot
+row; the barrier clearance invariant). Render-only — no baseline risk;
+lands before `casualty-seams` beside the ghoul fix.

@@ -5,6 +5,8 @@ import {
   FULL_GLYPH_INK,
   INK_PAD_PX,
   baseAnchorYFor,
+  descenderRoomFor,
+  DESCENDER_BARRIER_PX,
   inkRectFromRgba,
   padInk,
   type GlyphInk,
@@ -142,19 +144,27 @@ export class FontAtlas {
    *  at build (no padding — see `getPaddedGlyphInk` for the clickbox rects). */
   private readonly inkByGlyph: ReadonlyMap<string, GlyphInk>;
   /** §79d2 — the font's alphabetic baseline as a normalized y-up cell coord
-   *  (~0.26 for JetBrains Mono at 56/64): the stand line for `baseAnchorY`. */
-  private readonly baselineY: number;
+   *  (~0.26 for JetBrains Mono at 56/64): the letterform stand line's reference
+   *  for `baseAnchorY`. */
+  readonly baselineY: number;
+  /** §91-pre2 — how far above the tile the baseline sits (normalized cell
+   *  units): the deepest registered descender + `DESCENDER_BARRIER_PX`,
+   *  measured off this build's ink (`descenderRoomFor`). Exposed for the
+   *  browser probe (re-derive it from `getGlyphInk`, never from here). */
+  readonly descenderRoom: number;
 
   private constructor(
     texture: THREE.CanvasTexture,
     uvByGlyph: Map<string, GlyphUV>,
     inkByGlyph: Map<string, GlyphInk>,
     baselineY: number,
+    descenderRoom: number,
   ) {
     this.texture = texture;
     this.uvByGlyph = uvByGlyph;
     this.inkByGlyph = inkByGlyph;
     this.baselineY = baselineY;
+    this.descenderRoom = descenderRoom;
   }
 
   static async create(): Promise<FontAtlas> {
@@ -240,6 +250,11 @@ export class FontAtlas {
       ? (CELL_PX / 2 + alphabetic) / CELL_PX
       : (inkByGlyph.get('X') ?? FULL_GLYPH_INK).y0;
 
+    // §91-pre2 — the descender room, off the ink just measured (the deepest
+    // letterform bottom below the baseline + the barrier): the line every
+    // letterform stands on now sits this far above the tile.
+    const descenderRoom = descenderRoomFor(inkByGlyph.values(), baselineY, DESCENDER_BARRIER_PX / CELL_PX);
+
     if (import.meta.env.DEV) assertGlyphsCameFromFont(ctx);
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -253,7 +268,7 @@ export class FontAtlas {
     texture.generateMipmaps = false;
     texture.needsUpdate = true;
 
-    return new FontAtlas(texture, uvByGlyph, inkByGlyph, baselineY);
+    return new FontAtlas(texture, uvByGlyph, inkByGlyph, baselineY, descenderRoom);
   }
 
   /**
@@ -274,15 +289,18 @@ export class FontAtlas {
   }
 
   /**
-   * §79d2 — the quad-local anchor y a BASE-anchored sprite of `glyph` stands
-   * on: the font baseline for letterforms, the quad bottom for floor-touching
-   * blocks (and for unmeasured glyphs, via the `FULL_GLYPH_INK` fallback).
-   * The rule itself is the pure `baseAnchorYFor` (glyphs.ts, headless-tested);
-   * this just feeds it the measured data. SpriteRenderer derives every base
-   * sprite's anchor through here — including on a glyph swap.
+   * §79d2 → §91-pre2 — the quad-local anchor y a BASE-anchored sprite of
+   * `glyph` stands on: for letterforms the point `descenderRoom` below the
+   * font baseline (the terminal-cell rule — the baseline floats above the
+   * tile by exactly the room a descender needs), the quad bottom for
+   * floor-touching blocks (and for unmeasured glyphs, via the
+   * `FULL_GLYPH_INK` fallback). The rule itself is the pure `baseAnchorYFor`
+   * (glyphs.ts, headless-tested); this just feeds it the measured data.
+   * SpriteRenderer derives every base sprite's anchor through here —
+   * including on a glyph swap.
    */
   baseAnchorY(glyph: string): number {
-    return baseAnchorYFor(this.getGlyphInk(glyph), this.baselineY);
+    return baseAnchorYFor(this.getGlyphInk(glyph), this.baselineY, this.descenderRoom);
   }
 
   /** §79d2 — camera-up lift (world units at size 1; callers scale by

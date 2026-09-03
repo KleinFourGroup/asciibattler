@@ -909,3 +909,48 @@ the ledger, the rule module, the modes, the readers, the harness — is
 byte-neutral at the shipped defaults. What it does NOT prove: the
 casualties branch's numbers (that is 91f); the mutual-wipe branch never
 fired on this twin (the World pins cover it).
+
+### 91-pre — the frost-coven ghoul fix (2026-09-03, found in the user’s survivors playtests)
+
+The user’s report (two screenshots): a neutral camp shaman (`frost-coven`)
+summoned ghouls that appeared in the passive tint with no level bar,
+never finished materializing, and never moved; player shamans were fine.
+Root cause at file:line: the summon op spawns onto the CASTER’s team
+(`effects/interpreter.ts:356`), and `World.spawnSummon` never stamped the
+summoner’s `campId` — so a camp shaman’s ghoul was a neutral with no camp:
+`isInertNeutral` true → the renderer’s WALL path (passive tint, no
+overlay, the fade never resolving), no camp hostility to act on, and —
+since only destructibles and camp members are legal neutral targets
+(`World.ts:2178-2180`) — untouchable. One symptom, three faces. The fix
+(user-signed, including the design call): the minion inherits the
+summoner’s `campId` and takes the camp member’s wiring
+(`CampWanderBehavior`, the 75f shape) instead of the catalog movement;
+as a member it counts toward the camp’s wipe (`campCleared`), so a camp
+is not cleared while its ghouls stand — the drip-aware definition
+extended one step. A faction summoner’s minion is unchanged. Repro
+headless-first in camps.combat.test.ts (the interpreter’s exact call on a
+dripped member: stamp · behavior · passive-scenery / hostile-target · the
+wipe stamp waits for the ghoul), and the CONTROL PROBE run: on the old
+`spawnSummon` the pin fails on `campId` null vs 1 — the test measures the
+bug, not itself.
+
+**Placement (the user’s question, answered):** it lands NOW, between
+91a2 and 91c — i.e. BEFORE the `casualty-seams` tag — so a §93 rollback
+keeps it by construction (anything after the tag survives only by
+cherry-pick, the fragile shape finding 6 removed). Cost, named and
+accepted by the user: the sim half moves fuzz baselines wherever a
+shaman camp rolls, so the 91f “table alone” comparison against the 90d
+legs carries a second, small, legible change (neutral-shaman battles
+only) — bounded at 91f-pre on the desk read. The pre-commit smoke will
+say whether any pinned baseline moved.
+
+**The second report — the ghoul sprite “clipping into the ground” — is
+NOT a bug by the tree’s own record:** the ghoul glyph is `g`, the census’s
+lone descender unit glyph, and the 79d2 stand-line rule (USER-SIGNED at
+the 79d2 design talk, `glyphs.ts:212-227`) chose “terminal-faithful”:
+letterforms stand on the font baseline, so `g` dips its tail below the
+line like text on ruled paper, explicitly instead of standing
+tail-tip-on-tile with a raised bowl. Re-opened as a decision for the
+user (not re-decided here): keep the rule · lift descenders to stand on
+their ink bottom (a one-branch change to `baseAnchorYFor`, headless-
+pinned, render-only) · or swap the ghoul glyph (a font rebuild).

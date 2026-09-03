@@ -2548,6 +2548,17 @@ export class World {
    * `createMovementBehavior` + `AbilityBehavior` + archetype abilities, and the
    * `SpawnAction` lockout + `unit:spawned{instant:false}` fade (the minion appears
    * mid-battle and joins next tick, like a D5.C overflow spawn).
+   *
+   * §91-pre (the frost-coven ghoul bug, 2026-09-03 playtest): a CAMP member's
+   * summon JOINS THE CAMP — it inherits the summoner's `campId` and takes the
+   * camp member's behavior wiring (`CampWanderBehavior`, §75f) instead of the
+   * catalog movement. Without the stamp the minion was a neutral with no camp:
+   * `isInertNeutral` → the renderer's wall path (passive tint, no bar, no
+   * fade-out of the materialize), no hostility to act on, and — since only
+   * destructibles and camp members are legal neutral targets — untouchable.
+   * As a member it counts toward the camp's wipe (`campCleared`) like any
+   * dripped unit (user-signed 2026-09-03). A faction summoner's minion is
+   * unchanged (campId null, catalog movement).
    */
   spawnSummon(
     archetype: Archetype,
@@ -2559,6 +2570,7 @@ export class World {
     const template = scaledUnit(archetype, level);
     const attackRange = rangeForArchetype(archetype);
     const derived = deriveStats(template.stats, attackRange);
+    const campId = this.findUnit(summonerId)?.campId ?? null;
     const unit = this.addUnit(
       {
         team,
@@ -2571,10 +2583,14 @@ export class World {
         xp: 0,
         rosterIndex: null,
         summonedBy: summonerId,
+        campId,
       },
       false,
     );
-    unit.behaviors.push(createMovementBehavior(archetype), new AbilityBehavior());
+    unit.behaviors.push(
+      campId !== null ? new CampWanderBehavior() : createMovementBehavior(archetype),
+      new AbilityBehavior(),
+    );
     for (const id of abilityIdsForArchetype(archetype)) {
       unit.abilities.push(createAbility(id));
     }

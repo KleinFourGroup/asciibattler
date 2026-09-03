@@ -119,6 +119,10 @@ experiment (the rollback range).
   `reason` + the draw split; `--set` strings. Landed 2026-09-03: ⭐ the
   worktree diff oracle RUN — tag vs HEAD, regen twin n=20: every CSV
   BYTE-IDENTICAL, results.json identical modulo the new fields (WORKLOG).
+- [x] **91-pre** — the frost-coven ghoul fix (a camp member’s summon JOINS
+  the camp: campId + CampWanderBehavior + the wipe count; user-signed
+  2026-09-03 mid-playtest, its fuzz footprint accepted) — inserted here so
+  it lands BEFORE `casualty-seams` and survives a rollback (WORKLOG §91-pre).
 - [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
   the currentHp clamp). Byte-identical.
 - [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode

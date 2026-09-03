@@ -19,6 +19,8 @@ import { spawnWall } from './environment';
 import { findTarget, updateTarget, currentTarget } from './Targeting';
 import { engagementDirective } from './positioning';
 import { isCombatTargetable } from './effects/targeting';
+import { isInertNeutral } from './Unit';
+import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
 import { statusDef } from '../config/statuses';
 import { SIM } from '../config/sim';
 import { EventBus } from '../core/EventBus';
@@ -282,5 +284,48 @@ describe('§75e — a hostile camp member fights (the stats/archetype verify pin
     expect(world.campById(1)!.killedBy).toBeNull();
     expect(m1.currentHp).toBeGreaterThan(0);
     expect(m2.currentHp).toBeGreaterThan(0);
+  });
+});
+
+describe('§91-pre — a camp member\'s summon JOINS the camp (the frost-coven ghoul bug, 2026-09-03 playtest)', () => {
+  // The repro: a neutral (camp) shaman's ghouls arrived as campId-null
+  // neutrals — the renderer's wall path (passive tint, no bar, the
+  // materialize never resolving), untargetable, and never acting. The fix
+  // stamps the summoner's camp on the minion; `spawnSummon` here is the
+  // interpreter's exact call (effects/interpreter.ts §29d: the caster's team,
+  // attributed to the caster).
+  it('stamps the summoner campId, wires the camp wander behavior, is targetable once hostile, and counts toward the wipe', () => {
+    const { world } = freshWorld();
+    const [m1, m2] = dripBoth(world, { x: 4, y: 4 }, { x: 9, y: 9 });
+    const ghoul = world.spawnSummon('ghoul', 1, m1.team, { x: 5, y: 5 }, m1.id);
+    expect(ghoul.team).toBe('neutral');
+    expect(ghoul.campId).toBe(m1.campId);
+    expect(ghoul.summonedBy).toBe(m1.id);
+    expect(isInertNeutral(ghoul)).toBe(false); // the renderer's ACTIVE-neutral path (halo, bar, fade)
+    expect(ghoul.behaviors[0]).toBeInstanceOf(CampWanderBehavior);
+    world.tick(); // the summon lockout elapses like a drip spawn's
+    world.clearActiveAction(ghoul);
+    // Targetable exactly like a dripped member: passive = scenery, hostile =
+    // the nearest legal target (the player stands next to the ghoul).
+    const player = spawnAt(world, 'player', { x: 6, y: 5 });
+    expect(findTarget(player, world) ?? null).toBeNull();
+    world.markCampHostile(m1.campId!, 'player');
+    expect(findTarget(player, world)?.id).toBe(ghoul.id);
+    // The wipe is drip-aware AND summon-aware: both dripped members dead, the
+    // ghoul standing → no kill stamp; the ghoul falls → the camp is cleared.
+    kill(world, player, m1);
+    kill(world, player, m2);
+    expect(world.campsList()[0]!.killedBy).toBeNull();
+    kill(world, player, ghoul);
+    expect(world.campsList()[0]!.killedBy).toBe('player');
+  });
+
+  it('a FACTION summoner\'s minion is unchanged: campId null, the catalog movement behavior', () => {
+    const { world } = freshWorld();
+    const caster = spawnAt(world, 'enemy', { x: 2, y: 2 }, 'shaman');
+    const ghoul = world.spawnSummon('ghoul', 1, caster.team, { x: 3, y: 3 }, caster.id);
+    expect(ghoul.team).toBe('enemy');
+    expect(ghoul.campId).toBeNull();
+    expect(ghoul.behaviors[0]).not.toBeInstanceOf(CampWanderBehavior);
   });
 });

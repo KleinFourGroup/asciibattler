@@ -15,11 +15,14 @@ export class SectorClearedScene implements Scene {
   constructor(
     private readonly clearedSectorTitle: string,
     private readonly nextSectorTitle: string,
+    // §90 — the seam pool pair (pre-floor → post-floor) from the same payload.
+    private readonly poolBefore: number,
+    private readonly poolAfter: number,
   ) {}
 
   mount(ctx: SceneContext): void {
     this.screen = new SectorClearedScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
-    this.screen.show(this.clearedSectorTitle, this.nextSectorTitle);
+    this.screen.show(this.clearedSectorTitle, this.nextSectorTitle, this.poolBefore, this.poolAfter);
   }
 
   tick(_dt: number): void {}

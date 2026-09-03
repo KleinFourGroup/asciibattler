@@ -10,7 +10,26 @@
 
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import { HEALTH } from '../config/health';
 import { fadeIn, fadeOutAndRemove } from './fade';
+
+/** The pool carries fractional chips (power × 1.1/level); print integers bare
+ *  and anything else to one decimal — the between-acts beat isn't a ledger. */
+function fmtPool(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/**
+ * §90 — the seam-floor line. A heal reads as "Pool restored 14 → 20"; a pool
+ * the floor didn't touch (already full, or a floor of 0) reads as the plain
+ * carried value so the screen never implies a heal that didn't happen.
+ */
+export function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
+  if (poolAfter > poolBefore) {
+    return `Pool restored ${fmtPool(poolBefore)} → ${fmtPool(poolAfter)}`;
+  }
+  return `Pool ${fmtPool(poolAfter)} / ${fmtPool(HEALTH.playerHealthMax)} carries on`;
+}
 
 export class SectorClearedScreen {
   private container: HTMLDivElement | null = null;
@@ -21,9 +40,14 @@ export class SectorClearedScreen {
     private readonly audio: AudioPlayer,
   ) {}
 
-  show(clearedSectorTitle: string, nextSectorTitle: string): void {
+  show(
+    clearedSectorTitle: string,
+    nextSectorTitle: string,
+    poolBefore: number,
+    poolAfter: number,
+  ): void {
     this.hide();
-    this.container = this.render(clearedSectorTitle, nextSectorTitle);
+    this.container = this.render(clearedSectorTitle, nextSectorTitle, poolBefore, poolAfter);
     this.container.classList.add('screen-fade');
     this.mount.appendChild(this.container);
     fadeIn(this.container);
@@ -36,7 +60,12 @@ export class SectorClearedScreen {
     }
   }
 
-  private render(clearedSectorTitle: string, nextSectorTitle: string): HTMLDivElement {
+  private render(
+    clearedSectorTitle: string,
+    nextSectorTitle: string,
+    poolBefore: number,
+    poolAfter: number,
+  ): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'sectorcleared-screen';
 
@@ -49,6 +78,13 @@ export class SectorClearedScreen {
     subtext.className = 'sectorcleared-subtext';
     subtext.textContent = `${clearedSectorTitle} is behind you.`;
     panel.appendChild(subtext);
+
+    // §90 — the seam floor's heal, named (a hidden heal is the one thing the
+    // independent-acts frame must not be: the player adds their own numbers).
+    const pool = document.createElement('div');
+    pool.className = 'sectorcleared-pool';
+    pool.textContent = sectorClearedPoolLine(poolBefore, poolAfter);
+    panel.appendChild(pool);
 
     const next = document.createElement('div');
     next.className = 'sectorcleared-next';

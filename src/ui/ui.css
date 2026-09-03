@@ -1406,6 +1406,15 @@ body {
   filter: brightness(1.6);
 }
 
+.sectorcleared-pool {
+  /* §90 — the seam floor's heal line. Amber like the heading's family (it's
+     the run's own pool, not the road ahead), one step brighter than the
+     subtext so the number reads. */
+  font-size: 14px;
+  color: #ffb000; /* TERMINAL_AMBER */
+  letter-spacing: 0.05em;
+}
+
 .sectorcleared-next {
   font-size: 14px;
   color: #33ff00; /* TERMINAL_GREEN — the road ahead */

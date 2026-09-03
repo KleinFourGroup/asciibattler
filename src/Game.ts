@@ -282,8 +282,11 @@ export class Game implements RunDispatcher {
     // 67b — the between-sector beat (the 67a gate's screen). Titles ride the
     // payload: the cleared sector is gone from Run by emit time, so no getter
     // can name it (the GameOverScene fixed-at-construction shape).
+    // §90 — the seam pool pair rides along: the screen names the floor's heal.
     this.bus.on('sector:cleared', (e) =>
-      this.swap(new SectorClearedScene(e.clearedSectorTitle, e.nextSectorTitle)),
+      this.swap(
+        new SectorClearedScene(e.clearedSectorTitle, e.nextSectorTitle, e.poolBefore, e.poolAfter),
+      ),
     );
 
     // H4b — the turn-gate screens. These only fire when `run.pauseAtTurnGates`

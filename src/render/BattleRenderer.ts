@@ -189,6 +189,10 @@ export class BattleRenderer {
    */
   private objective: ObjectiveTarget | null = null;
   private objectiveMarker: SpriteHandle | null = null;
+  /** §91-pre2b — the marker's CURRENT glyph ('X' engage / '!' focus), so the
+   *  placement can subtract that glyph's own ink-bottom lift (the terminal-
+   *  cell room) and stand the INK, not the anchor, at the designed gap. */
+  private objectiveMarkerGlyph: string = OBJECTIVE_MARKER_GLYPH;
   /**
    * The currently-attached battle World. Null when no battle is running (map
    * screen, defeat state). Set by `attach`, cleared by `detach`.
@@ -572,6 +576,7 @@ export class BattleRenderer {
     // marker sprite is reused across re-sets, so swap the glyph in place when the
     // mode flips (engage ⇄ focus) rather than recreating it.
     const glyph = objective.mode === 'focus' ? OBJECTIVE_MARKER_FOCUS_GLYPH : OBJECTIVE_MARKER_GLYPH;
+    this.objectiveMarkerGlyph = glyph;
     if (!this.objectiveMarker) {
       // Seed at the origin; updateObjectiveMarker (same frame, end of update())
       // moves it to the real spot before it's ever drawn. §79d2 — BASE-anchored:
@@ -621,13 +626,17 @@ export class BattleRenderer {
     if (!marker || !obj || !this.world) return;
 
     if (obj.kind === 'tile') {
-      // §79d2 — the marker is base-anchored, so its INK stands
+      // §79d2 → §91-pre2b — the marker is base-anchored, and its INK must stand
       // OBJECTIVE_MARKER_TILE_LIFT above the cell's ground point (camera-up, so
-      // it hugs its cell at the screen edges too). No glyph-cell skirt math —
-      // the 79d2 eyeball find (the X floating a quarter-cell up) dies here.
+      // it hugs its cell at the screen edges too). Under the terminal-cell
+      // stand line the glyph's ink floats `inkBottomLift` above its anchor
+      // (the descender room), so the anchor drops by that much × the marker's
+      // size: the X hugs its cell under ANY stand-line rule — the 79d2 eyeball
+      // find (the X floating a quarter-cell up) stays dead.
       const pos = aboveAnchor(
         this.tileGroundPos(obj.cell),
-        OBJECTIVE_MARKER_TILE_LIFT,
+        OBJECTIVE_MARKER_TILE_LIFT -
+          this.sprites.atlas.inkBottomLift(this.objectiveMarkerGlyph) * OBJECTIVE_MARKER_TILE_SIZE,
         this.renderer.camera,
         this.scratchPos,
       );
@@ -649,14 +658,19 @@ export class BattleRenderer {
     // target glyph's visible INK TOP, via the shared camera-up helper (this
     // site's J3 hand-rolled `setFromMatrixColumn` lift was copy #1 of the
     // pattern the helper unifies). The target's ground anchor is live (tracks
-    // its lerp).
+    // its lerp). §91-pre2b — both ends stay ink-true under the terminal-cell
+    // rule: the target's top already includes its room (inkTopLift reads the
+    // anchor), and the mark's own room is subtracted so ITS ink, not its
+    // anchor, sits the gap above.
     const target = this.world.findUnit(obj.unitId);
     const inkTop = target
       ? this.sprites.atlas.inkTopLift(target.glyph) * footprintOf(target)
       : 2 * GLYPH_HALF_HEIGHT;
     const pos = aboveAnchor(
       anchor,
-      inkTop + OBJECTIVE_MARKER_ENEMY_LIFT,
+      inkTop +
+        OBJECTIVE_MARKER_ENEMY_LIFT -
+        this.sprites.atlas.inkBottomLift(this.objectiveMarkerGlyph) * OBJECTIVE_MARKER_ENEMY_SIZE,
       this.renderer.camera,
       anchor,
     );
@@ -2027,9 +2041,10 @@ const GLYPH_HALF_HEIGHT = 0.5;
  *              enemy-red, and `_BLOOM` gives it a faint glow so it pops.
  *  - tile vs enemy SIZE: a rally tile draws LARGER (the user's call — a big X on
  *    the ground); an enemy mark rides smaller, just atop the target glyph.
- *  - `_TILE_LIFT` — the extra camera-up gap the rally X floats above
- *    glyph-center height over its cell (§79d: composed as
- *    `GLYPH_HALF_HEIGHT + _TILE_LIFT` through `aboveAnchor`).
+ *  - `_TILE_LIFT` — the camera-up gap the rally X's INK stands above its
+ *    cell's ground point (§79d2: base-anchored; §91-pre2b: minus the glyph's
+ *    own `inkBottomLift` × size, so the gap is ink-true under the
+ *    terminal-cell stand line).
  *    `_ENEMY_LIFT` — the camera-up gap the enemy mark rides above the target
  *    glyph's visual CENTER — see `updateObjectiveMarker`.
  *

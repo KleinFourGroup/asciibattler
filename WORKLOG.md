@@ -1000,3 +1000,24 @@ atlas rule, 0 mismatches. Headless: 22 inkRect pins (the rule at room 0
 and at a room; the room's exclusion of the floor family; the overshoot
 row; the barrier clearance invariant). Render-only — no baseline risk;
 lands before `casualty-seams` beside the ghoul fix.
+
+### 91-pre2b — the objective markers under the terminal-cell line (2026-09-03, the user’s eyeball find)
+
+The rider named at 91-pre2 was real: the rally X and the focus ! are
+base-anchored sprites, so the room lifted their INK by `room × size`
+(0.199 × 1.6 ≈ 0.32 world units for the tile X) above the designed gap.
+Fix: `FontAtlas.inkBottomLift(glyph)` (the anchor→ink-bottom twin of
+`inkTopLift`), and both marker placements subtract it × their size, so
+the gap is stated on the INK under any stand-line rule: the tile X’s ink
+stands `OBJECTIVE_MARKER_TILE_LIFT` (0.1) above the cell’s ground point,
+the ! mark’s ink `OBJECTIVE_MARKER_ENEMY_LIFT` (0.2) above the target’s
+ink top (the renderer now remembers the marker’s current glyph, since X
+and ! have different ink bottoms). Browser-verified by re-derivation
+(raw `getGlyphInk` + each sprite’s own `aAnchor`/`aSize` attribute, the
+camera-up projection off `matrixWorld` — never `inkBottomLift` itself):
+tile X ink bottom above ground **0.1000** (anchor lift −0.225 absorbing
+the room); focus ! ink bottom above the target a’s ink top **0.2000**.
+A tooling note: the battle clock only advances on animation frames, and
+the Browser pane goes hidden while tools run, so the probe drained the
+objective command with one manual `world.tick()` + `battleRenderer.update()`
+— the same reason a “stalled” preview battle is not a sim bug.

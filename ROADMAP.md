@@ -127,7 +127,9 @@ experiment (the rollback range).
   baseline sits a measured descender room above the tile; blocks unchanged;
   user-signed 2026-09-03, superseding the misread 79d2 baseline-on-tile
   rule). Render-only; browser-verified 47/47 atlas glyphs + 68/68 live
-  sprite anchors against the asset (WORKLOG §91-pre2).
+  sprite anchors against the asset (WORKLOG §91-pre2). **91-pre2b** — the
+  X / ! objective markers compensated (`inkBottomLift`): ink-true gaps
+  0.100 / 0.200 re-derived live (the user’s eyeball find).
 - [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
   the currentHp clamp). Byte-identical.
 - [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode

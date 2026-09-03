@@ -319,6 +319,16 @@ export class FontAtlas {
     return ink.y1 - 0.5 - this.baseAnchorY(glyph);
   }
 
+  /** §91-pre2b — camera-up lift from a base-anchored sprite's ANCHOR to its
+   *  ink's visual BOTTOM: under the terminal-cell rule a letterform's ink
+   *  floats `descenderRoom` (+ any overshoot) above its stand line, so a
+   *  sprite that must stand its INK a fixed gap above a point (the objective
+   *  markers) subtracts this from the gap. 0 for the floor family. */
+  inkBottomLift(glyph: string): number {
+    const ink = this.getGlyphInk(glyph);
+    return ink.y0 - 0.5 - this.baseAnchorY(glyph);
+  }
+
   getGlyphUV(glyph: string): GlyphUV {
     const uv = this.uvByGlyph.get(glyph);
     if (!uv) {

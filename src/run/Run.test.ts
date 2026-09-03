@@ -4156,18 +4156,34 @@ describe('Run', () => {
       expect(run.phase).toBe('complete');
     });
 
-    it('H6a — heals the run-wide player pool by restHealAmount when wounded', () => {
+    it('H6a — heals the run-wide player pool by restHealFraction × max when wounded (§90)', () => {
       const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
+      const heal = HEALTH.restHealFraction * HEALTH.playerHealthMax;
       // Wound the pool deep enough that the heal can't hit the cap.
-      const before = Math.max(1, HEALTH.playerHealthMax - HEALTH.restHealAmount - 1);
+      const before = Math.max(1, HEALTH.playerHealthMax - heal - 1);
       run.playerHealth = before;
 
       run.dispatch({ kind: 'enterNode', nodeId: restId });
 
       // Balance-proof: expected derives from the knob + the cap, never hardcoded.
-      expect(run.playerHealth).toBe(
-        Math.min(HEALTH.playerHealthMax, before + HEALTH.restHealAmount),
-      );
+      expect(run.playerHealth).toBe(Math.min(HEALTH.playerHealthMax, before + heal));
+    });
+
+    it('§90 — the rest heal is a FRACTION of max: it scales with playerHealthMax', () => {
+      // The re-expression's whole point: a pool-max move (the §92 lever)
+      // moves the heal with it. Flip max in place, derive, restore.
+      const originalMax = HEALTH.playerHealthMax;
+      try {
+        HEALTH.playerHealthMax = originalMax * 2;
+        const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
+        run.playerHealth = 1;
+        run.dispatch({ kind: 'enterNode', nodeId: restId });
+        expect(run.playerHealth).toBe(
+          Math.min(HEALTH.playerHealthMax, 1 + HEALTH.restHealFraction * originalMax * 2),
+        );
+      } finally {
+        HEALTH.playerHealthMax = originalMax;
+      }
     });
 
     it('H6a — never heals the pool above playerHealthMax', () => {

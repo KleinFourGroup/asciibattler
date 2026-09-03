@@ -691,6 +691,17 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
     expect(specs[0]!.tailScore).toBeUndefined();
   });
+
+  it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate held at 5', () => {
+    // The definition (config-derived) …
+    expect(DP_TAIL_SCALE).toBe(HEALTH.restHealFraction * HEALTH.playerHealthMax);
+    // … AND the exact pin: the §85g6d-signed ARM priced one path-weight
+    // point at 5 pool HP under the absolute `restHealAmount`; the §90
+    // fraction re-expression must be byte-identical for the arm. A pool-max
+    // or fraction move that changes this is a DELIBERATE arm change — re-pin
+    // it with the re-search (§92), never silently.
+    expect(DP_TAIL_SCALE).toBe(5);
+  });
 });
 
 describe('arbitrated node choice (70e) — the elite-detour case (real evaluator)', () => {

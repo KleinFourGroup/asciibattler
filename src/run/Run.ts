@@ -3625,11 +3625,12 @@ export class Run {
   private resolveRest(): void {
     // H6a — a rest also heals the run-wide player pool (capped at max).
     // Unconditional + ahead of the XP/promotion branch so a rest that ALSO
-    // levels a unit still heals. Placeholder beside the +XP award until the
-    // real event system reworks both.
+    // levels a unit still heals. §90 — a FRACTION of max (0.25 × 20 = the
+    // old absolute 5), so the heal tracks a pool-max move; packet heals stay
+    // absolute (`healPool` ops).
     this.playerHealth = Math.min(
       HEALTH.playerHealthMax,
-      this.playerHealth + HEALTH.restHealAmount,
+      this.playerHealth + HEALTH.restHealFraction * HEALTH.playerHealthMax,
     );
     const awards = this.team.map((_, i) => ({
       unitId: i,

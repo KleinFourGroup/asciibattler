@@ -238,8 +238,14 @@ export const CAMP_RAID_EPSILON = 6.206;
  * are all ZERO, so under the doctrine arm the tail is exactly 0 and
  * node arbitration is pure rollout-vs-ε — the tail activates only for
  * searched vectors that carry real path preferences.
+ *
+ * §90 — the rest heal became a FRACTION of max (`restHealFraction`); the
+ * exchange rate is the same pool-HP number (0.25 × 20 = the old 5), so the
+ * ARM's tail is byte-identical across the rename (pinned in the test).
+ * Import-time evaluation is deliberate: the tail prices at the SHIPPED
+ * config, not a `--set` probe's (which never dials rest heals anyway).
  */
-export const DP_TAIL_SCALE = HEALTH.restHealAmount;
+export const DP_TAIL_SCALE = HEALTH.restHealFraction * HEALTH.playerHealthMax;
 
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;

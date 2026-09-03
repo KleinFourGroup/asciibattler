@@ -9,10 +9,16 @@
  * Each turn, a side's surviving units chip the OPPOSING pool by their Σ`power`
  * (× `chipMultiplier`). Balance-tuned in H6 — these are starting points.
  *
- * Rest nodes (H6a):
- * - `restHealAmount`  — how much a rest node heals the run-wide player pool
- *                       (capped at `playerHealthMax`). Sits beside the G3 rest
- *                       XP award; a placeholder until the real event system.
+ * Rest nodes (H6a; §90 re-expressed as a FRACTION):
+ * - `restHealFraction` — the share of `playerHealthMax` a rest node heals the
+ *                       run-wide player pool by (capped at max). Was the
+ *                       absolute `restHealAmount` 5 until §90; 0.25 × 20 is
+ *                       the same 5 today, and it tracks a pool-max move (the
+ *                       §92 rebalance lever) instead of silently shrinking.
+ *                       Heals from packets stay ABSOLUTE by design (the spec's
+ *                       hardening pass: fractions for rest + the seam floor,
+ *                       absolutes for packets). Sits beside the G3 rest XP
+ *                       award.
  *
  * The seam floor (§90 — the casualty experiment's "independent acts" frame):
  * - `seamHealFloor`   — 0–1 fraction of `playerHealthMax` the run-wide pool
@@ -60,7 +66,7 @@ const HealthSchema = z.object({
   maxTurns: z.number().int().positive(),
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
-  restHealAmount: z.number().int().nonnegative(),
+  restHealFraction: z.number().min(0).max(1),
   seamHealFloor: z.number().min(0).max(1),
   fatiguePerStack: z.number().nonnegative(),
 });

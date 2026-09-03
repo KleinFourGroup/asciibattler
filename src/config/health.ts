@@ -6,8 +6,27 @@
  *                        (persists across the whole run; at 0 the run is lost).
  * - `enemyHealthMax`   — the per-encounter enemy pool's starting value (reset
  *                        every encounter; at 0 the player wins the encounter).
- * Each turn, a side's surviving units chip the OPPOSING pool by their Σ`power`
- * (× `chipMultiplier`). Balance-tuned in H6 — these are starting points.
+ * Each turn the CHIP RULE charges both pools (`src/run/chipRule.ts`, the
+ * §91 casualty experiment — encounter-feel-spec §The casualty chip rule):
+ * - `chipMode`        — `"survivors"`: a side's surviving units chip the
+ *                       OPPOSING pool by their Σ`power` (the pre-§91 rule);
+ *                       `"casualties"`: each pool loses the power of ITS OWN
+ *                       fallen. Both alive all round — the paired same-seed
+ *                       A/B of the flip (`--set=health.chipMode=…`) is the
+ *                       experiment's instrument; the human A/B is this line.
+ *                       Ships `survivors` until 91e flips the default.
+ * - `capPenalty`      — the rule a TICK-CAPPED turn (`battle:ended.reason ===
+ *                       'cap'`) ALSO pays, on top of `chipMode`: under
+ *                       (casualties, survivors) a stall pays its own fallen
+ *                       PLUS the enemy's standing power — a surcharge, so
+ *                       kiting to the cap is never cheaper than fighting. A
+ *                       mutual wipe never reads it. Ships `survivors` beside
+ *                       `chipMode: survivors` (one rule — byte-identical to
+ *                       pre-§91); the signed default is casualties (91e); the
+ *                       first flip read decides whether it stays there
+ *                       (ROADMAP §91's decision point).
+ * - `chipMultiplier`  — scales every charge (× power → pool-HP).
+ * Balance-tuned in H6 — these are starting points.
  *
  * Rest nodes (H6a; §90 re-expressed as a FRACTION):
  * - `restHealFraction` — the share of `playerHealthMax` a rest node heals the
@@ -66,6 +85,8 @@ const HealthSchema = z.object({
   maxTurns: z.number().int().positive(),
   maxTurnSeconds: z.number().positive(),
   chipMultiplier: z.number().nonnegative(),
+  chipMode: z.enum(['survivors', 'casualties']),
+  capPenalty: z.enum(['survivors', 'casualties']),
   restHealFraction: z.number().min(0).max(1),
   seamHealFloor: z.number().min(0).max(1),
   fatiguePerStack: z.number().nonnegative(),

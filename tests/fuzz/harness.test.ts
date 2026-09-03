@@ -162,6 +162,12 @@ describe('fuzz harness', () => {
     const stats = aggregate([result]);
     expect(stats.hangs).toBe(0);
     expect(stats.cappedDraws).toBe(result.battles.length);
+    // 91a2 — every one of those draws is labeled as the CAP (never a mutual
+    // wipe), and the split surfaces beside the legacy total.
+    expect(result.battles.every((b) => b.reason === 'cap')).toBe(true);
+    expect(stats.capDraws).toBe(result.battles.length);
+    expect(stats.wipeDraws).toBe(0);
+    expect(stats.unlabeledDraws).toBe(0);
   });
 
   // The four strategy-determinism cases (pure-random / greedy / the G5 menu /

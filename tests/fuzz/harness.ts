@@ -78,6 +78,12 @@ export interface BattleResult {
    *  genuine non-termination guard (a World invariant violation; see the battle
    *  loop), so it's effectively never produced. */
   winner: Team | 'draw' | 'hang';
+  /** 91a2 — WHY the battle ended (`battle:ended.reason`): a `'draw'` is
+   *  either the driver's tick cap (`'cap'` — the stall signal, the
+   *  `capPenalty` trigger) or a mutual wipe (`'mutualWipe'`, 34a). Absent on
+   *  pre-91a2 batches (there, every draw was READ as a cap — the stale
+   *  `cappedDraws` comment the kickoff review caught). */
+  reason?: 'decisive' | 'mutualWipe' | 'cap';
   ticks: number;
   playerDeaths: number;
   enemyDeaths: number;
@@ -587,29 +593,41 @@ function runOneInner(
   // record lands whole on the second event.
   let pendingChip: Omit<
     PoolChip,
-    'playerPoolBefore' | 'playerPoolAfter' | 'enemyPoolBefore' | 'enemyPoolAfter'
+    | 'playerPoolBefore'
+    | 'playerPoolAfter'
+    | 'enemyPoolBefore'
+    | 'enemyPoolAfter'
+    | 'playerCharge'
+    | 'enemyCharge'
   > | null = null;
   if (telemetry) {
-    bus.on('pools:chipped', ({ playerBefore, playerAfter, enemyBefore, enemyAfter }) => {
-      if (!pendingChip) {
-        throw new Error('harness telemetry: pools:chipped with no pending chip — event order bug');
-      }
-      telemetry.recordTurnChip({
-        ...pendingChip,
-        playerPoolBefore: playerBefore,
-        playerPoolAfter: playerAfter,
-        enemyPoolBefore: enemyBefore,
-        enemyPoolAfter: enemyAfter,
-      });
-      pendingChip = null;
-    });
+    bus.on(
+      'pools:chipped',
+      ({ playerBefore, playerAfter, enemyBefore, enemyAfter, playerCharge, enemyCharge }) => {
+        if (!pendingChip) {
+          throw new Error('harness telemetry: pools:chipped with no pending chip — event order bug');
+        }
+        telemetry.recordTurnChip({
+          ...pendingChip,
+          playerPoolBefore: playerBefore,
+          playerPoolAfter: playerAfter,
+          enemyPoolBefore: enemyBefore,
+          enemyPoolAfter: enemyAfter,
+          // 91a2 — the rule's uncapped charges, beside the applied pools.
+          playerCharge,
+          enemyCharge,
+        });
+        pendingChip = null;
+      },
+    );
   }
 
-  bus.on('battle:ended', ({ winner, xpAwards, survivorPower, campKills }) => {
+  bus.on('battle:ended', ({ winner, reason, xpAwards, survivorPower, fallenPower, campKills }) => {
     if (!currentBattle || !currentWorld) return;
     // H7c telemetry — recorded here (not in a separate subscriber) so
     // `currentBattle.hop` is still live: each headless turn is one
-    // battle:started/ended cycle, so `survivorPower` IS this turn's pool chip.
+    // battle:started/ended cycle, so `survivorPower` / `fallenPower` are this
+    // turn's chip-rule inputs (the charge itself lands on pools:chipped).
     if (telemetry) {
       for (const a of xpAwards) telemetry.recordXp(a.unitId, a.xpGained);
       if (survivorPower) {
@@ -619,6 +637,11 @@ function runOneInner(
           encounterId: currentBattle.encounterId,
           player: survivorPower.player,
           enemy: survivorPower.enemy,
+          // 91a2 — the fallen half + the reason (every real World sets them).
+          ...(fallenPower !== undefined
+            ? { fallenPlayer: fallenPower.player, fallenEnemy: fallenPower.enemy }
+            : {}),
+          ...(reason !== undefined ? { reason } : {}),
         };
       }
     }
@@ -645,6 +668,8 @@ function runOneInner(
       encounterId: currentBattle.encounterId,
       layoutId: currentBattle.layoutId,
       winner,
+      // 91a2 — why it ended (present on every real World emit).
+      ...(reason !== undefined ? { reason } : {}),
       ticks: currentWorld.currentTick,
       playerDeaths: currentBattle.playerDeaths,
       enemyDeaths: currentBattle.enemyDeaths,

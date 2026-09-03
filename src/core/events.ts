@@ -88,7 +88,9 @@ export interface GameEvents extends Record<string, unknown> {
     }[];
     /**
      * H4: Σ`power` over each team's living **on-grid** units at battle end —
-     * the amount each side chips the OPPOSING health pool by. Deliberately
+     * the amount each side chips the OPPOSING health pool by under the
+     * SURVIVORS rule (`health.chipMode`; §91a2 — the casualties rule reads
+     * `fallenPower` instead, and a cap turn may read both). Deliberately
      * EXCLUDES the spawn queue (a queued/overflow unit never reached the grid
      * and contributed no power, even though `checkBattleEnd` counts a
      * non-empty queue as "alive"). Optional only so test fakes can drive
@@ -734,6 +736,10 @@ export interface GameEvents extends Record<string, unknown> {
   'turn:resolved': {
     turn: number;
     winner: 'player' | 'enemy' | 'draw';
+    /** §91a2 — the APPLIED loss of each pool this turn (clamped at the pool:
+     *  "what you lost"), whatever the chip rule; pre-91a2 these re-derived
+     *  survivors × chipMultiplier (a second copy of the rule's arithmetic).
+     *  The uncapped charge rides `pools:chipped`. */
     enemyPoolChip: number;
     playerPoolChip: number;
     result: 'won' | 'lost' | 'ongoing';
@@ -761,6 +767,13 @@ export interface GameEvents extends Record<string, unknown> {
     playerAfter: number;
     enemyBefore: number;
     enemyAfter: number;
+    /** §91a2 — the rule's UNCAPPED charge to each side's pool this turn
+     *  (pool-HP, `turnCharges`): `before − after` is the APPLIED loss, this
+     *  is what the rule TRIED to take — the overkill read (89b2) needs the
+     *  pre-clamp number under any rule (the 89d rider). Under `survivors`
+     *  it equals the opposing survivors × chipMultiplier. */
+    playerCharge: number;
+    enemyCharge: number;
   };
 }
 

@@ -1182,6 +1182,10 @@ describe('Run', () => {
         playerAfter: HEALTH.playerHealthMax - 2,
         enemyBefore: enemyMax,
         enemyAfter: enemyMax - 1,
+        // 91a2 — the uncapped charges beside the applied pools (survivors:
+        // the opposing survivors × chipMultiplier).
+        playerCharge: 2 * HEALTH.chipMultiplier,
+        enemyCharge: 1 * HEALTH.chipMultiplier,
       });
 
       // A lethal turn clamps at 0 (the event carries the pool as stored).
@@ -5129,12 +5133,21 @@ function chipTurn(
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
   // 47f — optional battle tally (the settle-seam tests).
   tallies?: GameEvents['battle:ended']['tallies'],
+  // 91a2 — the casualty rule's inputs: the fallen half + why the turn ended
+  // (absent = a pre-91a1 fake: no fallen, a 'draw' read as the cap).
+  extra?: {
+    fallenPower?: GameEvents['battle:ended']['fallenPower'];
+    reason?: GameEvents['battle:ended']['reason'];
+    winner?: GameEvents['battle:ended']['winner'];
+  },
 ): void {
   bus.emit('battle:ended', {
-    winner: 'draw',
+    winner: extra?.winner ?? 'draw',
     xpAwards,
     survivorPower,
     ...(tallies !== undefined ? { tallies } : {}),
+    ...(extra?.fallenPower !== undefined ? { fallenPower: extra.fallenPower } : {}),
+    ...(extra?.reason !== undefined ? { reason: extra.reason } : {}),
   });
 }
 
@@ -6167,5 +6180,121 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
     // at chance 1), tally leading.
     expect(run.pendingRewards!.length).toBeGreaterThanOrEqual(3);
     expect(run.pendingRewards![0]).toEqual({ kind: 'bits', base: 6 });
+  });
+});
+
+describe('§91a2 — the chip modes through the Run (health.chipMode / health.capPenalty)', () => {
+  // The suite flips the shipped modes; restore after each (the §90 pattern).
+  const originalMode = HEALTH.chipMode;
+  const originalCap = HEALTH.capPenalty;
+  afterEach(() => {
+    HEALTH.chipMode = originalMode;
+    HEALTH.capPenalty = originalCap;
+  });
+
+  /** A run straight into its first battle (headless), with the pools:chipped
+   *  stream captured. */
+  function inBattle(): { run: Run; bus: EventBus<GameEvents>; chipped: GameEvents['pools:chipped'][] } {
+    const { run, bus } = freshRunWithBus(1);
+    const chipped: GameEvents['pools:chipped'][] = [];
+    bus.on('pools:chipped', (p) => chipped.push(p));
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    return { run, bus, chipped };
+  }
+  const m = HEALTH.chipMultiplier;
+
+  it('survivors (the shipped pair): the fallen are ignored — each pool pays the OPPOSING standing power', () => {
+    HEALTH.chipMode = 'survivors';
+    HEALTH.capPenalty = 'survivors';
+    const { run, chipped, bus } = inBattle();
+    const pool = HEALTH.playerHealthMax;
+    const enemyPool = run.enemyHealthPoolMax;
+    chipTurn(bus, { player: 1, enemy: 2 }, [], undefined, {
+      fallenPower: { player: 9, enemy: 9 },
+      reason: 'decisive',
+    });
+    expect(run.playerHealth).toBe(pool - 2 * m);
+    expect(run.enemyHealth).toBe(enemyPool - 1 * m);
+    expect(chipped[0]!.playerCharge).toBe(2 * m);
+    expect(chipped[0]!.enemyCharge).toBe(1 * m);
+  });
+
+  it('casualties: each pool pays its OWN fallen; the survivors are ignored', () => {
+    HEALTH.chipMode = 'casualties';
+    HEALTH.capPenalty = 'casualties';
+    const { run, chipped, bus } = inBattle();
+    const pool = HEALTH.playerHealthMax;
+    const enemyPool = run.enemyHealthPoolMax;
+    chipTurn(bus, { player: 5, enemy: 5 }, [], undefined, {
+      fallenPower: { player: 2, enemy: 3 },
+      reason: 'decisive',
+    });
+    expect(run.playerHealth).toBe(pool - 2 * m);
+    expect(run.enemyHealth).toBe(enemyPool - 3 * m);
+    expect(chipped[0]!.playerCharge).toBe(2 * m);
+    expect(chipped[0]!.enemyCharge).toBe(3 * m);
+  });
+
+  it('(casualties, survivors): a CAP turn pays own fallen PLUS the opposing standing power; a mutual wipe never reads capPenalty', () => {
+    HEALTH.chipMode = 'casualties';
+    HEALTH.capPenalty = 'survivors';
+    const { run, chipped, bus } = inBattle();
+    const pool = HEALTH.playerHealthMax;
+    const enemyPool = run.enemyHealthPoolMax;
+    // The stall: survivors 1/2 standing, fallen 2/1 (small enemy charges keep
+    // the encounter ONGOING — a won encounter would leave the battle phase
+    // and swallow the next fake).
+    chipTurn(bus, { player: 1, enemy: 2 }, [], undefined, {
+      fallenPower: { player: 2, enemy: 1 },
+      reason: 'cap',
+    });
+    expect(run.playerHealth).toBe(pool - (2 + 2) * m);
+    expect(run.enemyHealth).toBe(enemyPool - (1 + 1) * m);
+    expect(chipped[0]!.playerCharge).toBe((2 + 2) * m);
+    // A mutual wipe (both wiped: 0 survivors) charges the fallen only.
+    const p1 = run.playerHealth;
+    chipTurn(bus, { player: 0, enemy: 0 }, [], undefined, {
+      fallenPower: { player: 1, enemy: 1 },
+      reason: 'mutualWipe',
+    });
+    expect(run.playerHealth).toBe(p1 - 1 * m);
+    expect(chipped[1]!.playerCharge).toBe(1 * m);
+  });
+
+  it('a pre-91a1 fake (no reason) maps a draw to the CAP and anything else to decisive', () => {
+    HEALTH.chipMode = 'casualties';
+    HEALTH.capPenalty = 'survivors';
+    const { run, bus } = inBattle();
+    const pool = HEALTH.playerHealthMax;
+    // winner 'draw', no reason → the cap → the surcharge applies (2 standing).
+    chipTurn(bus, { player: 0, enemy: 2 }, [], undefined, { fallenPower: { player: 1, enemy: 0 } });
+    expect(run.playerHealth).toBe(pool - (1 + 2) * m);
+    const p1 = run.playerHealth;
+    // winner 'enemy', no reason → decisive → casualties only.
+    chipTurn(bus, { player: 0, enemy: 2 }, [], undefined, {
+      fallenPower: { player: 1, enemy: 0 },
+      winner: 'enemy',
+    });
+    expect(run.playerHealth).toBe(p1 - 1 * m);
+  });
+
+  it('turn:resolved carries the APPLIED losses while pools:chipped carries the uncapped charge (a lethal turn)', () => {
+    HEALTH.chipMode = 'survivors';
+    HEALTH.capPenalty = 'survivors';
+    const { run, bus } = freshRunWithBus(1);
+    run.pauseAtTurnGates = true;
+    const resolved: GameEvents['turn:resolved'][] = [];
+    const chipped: GameEvents['pools:chipped'][] = [];
+    bus.on('turn:resolved', (p) => resolved.push(p));
+    bus.on('pools:chipped', (p) => chipped.push(p));
+    run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+    run.dispatch({ kind: 'advanceTurn' });
+    const pool = HEALTH.playerHealthMax;
+    const overkill = pool + 7; // a charge past the whole pool
+    chipTurn(bus, { player: 0, enemy: overkill / m });
+    expect(chipped[0]!.playerCharge).toBe(overkill); // what the rule TRIED to take
+    expect(chipped[0]!.playerAfter).toBe(0);
+    expect(resolved[0]!.playerPoolChip).toBe(pool); // what the pool actually LOST
+    expect(resolved[0]!.result).toBe('lost');
   });
 });

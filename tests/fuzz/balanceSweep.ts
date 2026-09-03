@@ -61,20 +61,23 @@ import { SIM } from '../../src/config/sim';
  * BALANCE.md names (`difficulty`/`health`/`leveling`) are the knobs that move
  * the foregone-conclusion needle; `sim` joined at 75l for the `--set` probe
  * overrides (first consumer: `sim.enemyPullChance`, the pull-ablation arm) —
- * widen here if a future pass needs another. Numeric keys only (resolveKnob
- * throws on a non-numeric target, so boolean sim dials stay unaddressable).
+ * widen here if a future pass needs another. Numeric keys, plus (91a2) the
+ * STRING-valued mode knobs (`health.chipMode` / `health.capPenalty`) for the
+ * `--set` probe arms — resolveKnob throws on any other target type, so
+ * boolean sim dials stay unaddressable; the sweep GRID itself stays numeric
+ * by its own schema.
  */
-const KNOB_GROUPS: Record<string, Record<string, number>> = {
-  difficulty: DIFFICULTY as unknown as Record<string, number>,
-  health: HEALTH as unknown as Record<string, number>,
-  leveling: LEVELING as unknown as Record<string, number>,
-  sim: SIM as unknown as Record<string, number>,
+const KNOB_GROUPS: Record<string, Record<string, number | string>> = {
+  difficulty: DIFFICULTY as unknown as Record<string, number | string>,
+  health: HEALTH as unknown as Record<string, number | string>,
+  leveling: LEVELING as unknown as Record<string, number | string>,
+  sim: SIM as unknown as Record<string, number | string>,
 };
 
 export interface ResolvedKnob {
   readonly group: string;
   readonly key: string;
-  readonly obj: Record<string, number>;
+  readonly obj: Record<string, number | string>;
 }
 
 /**
@@ -100,8 +103,8 @@ export function resolveKnob(path: string): ResolvedKnob {
       `balance-sweep: unknown knob "${group}.${key}" (keys: ${Object.keys(obj).join(', ')})`,
     );
   }
-  if (typeof obj[key] !== 'number') {
-    throw new Error(`balance-sweep: knob "${group}.${key}" is not numeric`);
+  if (typeof obj[key] !== 'number' && typeof obj[key] !== 'string') {
+    throw new Error(`balance-sweep: knob "${group}.${key}" is not numeric (or a string mode)`);
   }
   return { group, key, obj };
 }

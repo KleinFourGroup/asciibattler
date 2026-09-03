@@ -867,3 +867,45 @@ fields nothing reads yet). Rides ARCHITECTURE (the event row + the World
 note). One tooling note for the record: the tree is CRLF on disk (git
 normalizes) — a script that anchors on multi-line text must normalize
 line endings first; the first attempt matched nothing.
+
+### 91a2 — the modes + the telemetry (2026-09-03)
+
+Landed as cut, defaults **survivors / survivors** (the byte-identity leg).
+The rule lives in `src/run/chipRule.ts` (`turnCharges`, pure, config
+injectable): a turn charges by every rule named in {`chipMode`,
+`capPenalty` on a `'cap'` turn} — so (survivors, survivors) is ONE rule
+(never doubled), (casualties, survivors) is the surcharge, and a mutual
+wipe never reads `capPenalty` (the review's finding 3). `Run.resolveTurn`
+takes (reason, survivors, fallen), returns the APPLIED losses for
+`turn:resolved` (the second-copy site is gone), and `pools:chipped`
+carries the UNCAPPED charges (the 89d rider). Telemetry: `PoolChip` gains
+the fallen half + `reason` + the charges (all optional — absent on the
+89c/90d batches); the ONE legacy re-derivation is `chargeToPlayer` /
+`chargeToEnemy` (`?? survivors × chipMultiplier`, the rule those batches
+ran under); `perEncounterStats` / `alphaStrikeStats` / `meanPoolChip`
+read charges; `BattleResult.reason` + the draw split (`capDraws` /
+`wipeDraws` / `unlabeledDraws` beside the legacy every-draw
+`cappedDraws`, rendered in the alpha-strike stdout — NOT a CSV column:
+the exit criterion is byte-identity). `--set` takes a string when the
+live key holds one, checked against the enum's literals (both sites:
+`commands/run.ts` + `resolveKnob`). Pins: the chipRule matrix (8) · the
+modes through the Run with fallen fakes (5, incl. the applied-vs-charge
+split on a lethal turn and the pre-91a1 fake mapping) · the harness
+structural pin re-expressed on charges · the readers on a
+charge-disagrees-with-survivors record + the legacy shape · the `--set`
+string knob · every cap-run draw labeled 'cap'.
+
+⭐ **The diff oracle, RUN** (the cut's exit): the regen twin
+(`59-regen-vector`, the full ARM) at n=20 `--per-encounter
+--emit-results --jobs=8`, the tag `pre-casualty-experiment` pinned in a
+detached worktree (node_modules junction) vs the 91a2 working tree, same
+seeds, both legs in parallel (~4 min): **summary.csv · alpha-strike.csv
+· per-encounter.csv · rosters.csv · decisions.csv (1.1 MB) all
+BYTE-IDENTICAL**; results.json IDENTICAL once the five new fields are
+stripped (20 runs, 5 wins each); on the HEAD leg every one of the 469
+chips reads `charge == survivors × mult` (the survivors identity), and
+the reasons split 465 decisive / 4 cap / 0 mutual wipe. The whole seam —
+the ledger, the rule module, the modes, the readers, the harness — is
+byte-neutral at the shipped defaults. What it does NOT prove: the
+casualties branch's numbers (that is 91f); the mutual-wipe branch never
+fired on this twin (the World pins cover it).

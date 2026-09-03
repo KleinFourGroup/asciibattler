@@ -60,6 +60,7 @@ import {
 import type { UnitRarity } from '../config/units';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
+import { turnCharges, type SidePower, type TurnEndReason } from './chipRule';
 import { redrawRejection } from './redraw';
 import { empowerRejection, empowerEffect, type EmpowerStackView } from './empower';
 import {
@@ -1247,10 +1248,13 @@ export class Run {
   private subscribe(): void {
     this.subscriptions.push(
       // H4: a `battle:ended` ends a TURN, not the node. `winner` doesn't route
-      // the outcome — the pools do (chipped symmetrically off `survivorPower`)
-      // — but H4b surfaces it on the post-turn screen, so it's passed through.
-      this.bus.on('battle:ended', ({ winner, xpAwards, survivorPower, tallies, campKills }) =>
-        this.handleTurnEnded(winner, xpAwards, survivorPower, tallies, campKills),
+      // the outcome — the pools do (charged by the chip rule off
+      // `survivorPower` / `fallenPower` + `reason`, §91a2) — but H4b surfaces
+      // it on the post-turn screen, so it's passed through.
+      this.bus.on(
+        'battle:ended',
+        ({ winner, reason, xpAwards, survivorPower, fallenPower, tallies, campKills }) =>
+          this.handleTurnEnded(winner, xpAwards, survivorPower, tallies, campKills, reason, fallenPower),
       ),
     );
   }
@@ -2897,13 +2901,20 @@ export class Run {
     survivorPower: GameEvents['battle:ended']['survivorPower'],
     tallies: GameEvents['battle:ended']['tallies'],
     campKills?: GameEvents['battle:ended']['campKills'],
+    reason?: GameEvents['battle:ended']['reason'],
+    fallenPower?: GameEvents['battle:ended']['fallenPower'],
   ): void {
     if (this.phase !== 'battle') return;
     this.currentEncounter = null;
-    // `survivorPower` is absent only from test fakes that drive the phase
-    // machine without a real World; treat as a 0/0 (no-chip) turn.
+    // `survivorPower` / `fallenPower` / `reason` are absent only from test
+    // fakes that drive the phase machine without a real World (every real
+    // emit sets all three, §91a1): absent power is 0/0 (no charge on that
+    // half); an absent reason maps the way pre-§91a1 emitters meant it — a
+    // fake 'draw' was the driver's cap, anything else decisive.
     const sp = survivorPower ?? { player: 0, enemy: 0 };
-    this.resolveTurn(sp);
+    const fp = fallenPower ?? { player: 0, enemy: 0 };
+    const why: TurnEndReason = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
+    const applied = this.resolveTurn(why, sp, fp);
     const result = this.turnResult();
     // M1 — bank THIS turn's XP at the boundary (pre-M1: accrued across the
     // encounter, banked once at the end), so a mid-encounter level-up fields
@@ -2994,8 +3005,11 @@ export class Run {
       this.bus.emit('turn:resolved', {
         turn: this.turnIndex,
         winner,
-        enemyPoolChip: sp.player * HEALTH.chipMultiplier,
-        playerPoolChip: sp.enemy * HEALTH.chipMultiplier,
+        // §91a2 — the APPLIED losses (what each pool actually lost), not a
+        // re-derivation of the rule's arithmetic (the kickoff audit's
+        // second-copy finding); the uncapped charges ride pools:chipped.
+        enemyPoolChip: applied.enemy,
+        playerPoolChip: applied.player,
         result,
         playerHealth: this.playerHealth,
         playerHealthMax: HEALTH.playerHealthMax,
@@ -3039,32 +3053,45 @@ export class Run {
   }
 
   /**
-   * H4 — fold one turn's outcome into the pools. Each side's survivors chip the
-   * OPPOSING pool by their Σ`power` (× `chipMultiplier`); the per-turn winner is
-   * irrelevant to the chip (a draw chips both; a decisive win chips one because
-   * the loser's survivor power is 0). XP banking is the caller's job (M1 — at
-   * the turn boundary, right after this resolves).
+   * H4 → §91a2 — fold one turn's outcome into the pools by the CHIP RULE
+   * (`turnCharges`, src/run/chipRule.ts): under `health.chipMode:
+   * 'survivors'` each side's survivors chip the OPPOSING pool by their
+   * Σ`power` (× `chipMultiplier`); under `'casualties'` each pool pays its
+   * OWN fallen; a tick-capped turn (`reason === 'cap'`) also pays the
+   * `capPenalty` rule. The per-turn winner is irrelevant to the charge. XP
+   * banking is the caller's job (M1 — at the turn boundary, right after this
+   * resolves). Returns the APPLIED loss per pool (clamped — what each pool
+   * actually lost) for the post-turn screen; the uncapped charges ride
+   * `pools:chipped` for the telemetry (the 89d rider).
    * Decision + continuation are split out (`turnResult`/`continueAfterTurn`) so
    * H4b's post-turn screen can show the result before the loop acts on it.
    */
-  private resolveTurn(survivorPower: { player: number; enemy: number }): void {
+  private resolveTurn(
+    reason: TurnEndReason,
+    survivorPower: SidePower,
+    fallenPower: SidePower,
+  ): { player: number; enemy: number } {
     // Unconditional, at the top: even a 0/0 mutual-wipe turn must advance the
     // counter so the max-turns safety cap can terminate the encounter.
     this.turnIndex += 1;
-    const chip = HEALTH.chipMultiplier;
+    const charges = turnCharges(reason, survivorPower, fallenPower);
     const playerBefore = this.playerHealth;
     const enemyBefore = this.enemyHealth;
-    this.enemyHealth = Math.max(0, this.enemyHealth - survivorPower.player * chip);
-    this.playerHealth = Math.max(0, this.playerHealth - survivorPower.enemy * chip);
+    this.enemyHealth = Math.max(0, this.enemyHealth - charges.enemy);
+    this.playerHealth = Math.max(0, this.playerHealth - charges.player);
     // 89a — report the APPLIED deltas from the one site that applies them
-    // (both paths; the telemetry's trajectory source — see events.ts).
+    // (both paths; the telemetry's trajectory source — see events.ts), and
+    // §91a2 the uncapped charges beside them.
     this.bus.emit('pools:chipped', {
       turn: this.turnIndex,
       playerBefore,
       playerAfter: this.playerHealth,
       enemyBefore,
       enemyAfter: this.enemyHealth,
+      playerCharge: charges.player,
+      enemyCharge: charges.enemy,
     });
+    return { player: playerBefore - this.playerHealth, enemy: enemyBefore - this.enemyHealth };
   }
 
   /**

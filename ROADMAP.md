@@ -112,11 +112,13 @@ experiment (the rollback range).
   `reason`. Landed 2026-09-03: 10 pins (partition / mutual wipe / cap /
   neutral / summon / the DoT reap path / the v36 round-trip + v35 reject);
   baselines byte-identical (WORKLOG §91a1).
-- [ ] **91a2** — `health.chipMode` + `health.capPenalty` (defaults
-  survivors HERE); `resolveTurn` by mode + the cap surcharge;
-  `pools:chipped` charges; `turn:resolved` applied chips; the readers
-  on charges (old-shape fallback); the harness `reason`; `--set`
-  strings. Exit: baselines byte-identical + the worktree diff oracle RUN.
+- [x] **91a2** — `health.chipMode` + `health.capPenalty` (defaults
+  survivors HERE; `src/run/chipRule.ts` — a cap turn charges by every rule
+  in {chipMode, capPenalty}); `pools:chipped` charges; `turn:resolved`
+  applied chips; the readers on charges (old-shape fallback); the harness
+  `reason` + the draw split; `--set` strings. Landed 2026-09-03: ⭐ the
+  worktree diff oracle RUN — tag vs HEAD, regen twin n=20: every CSV
+  BYTE-IDENTICAL, results.json identical modulo the new fields (WORKLOG).
 - [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
   the currentHp clamp). Byte-identical.
 - [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode

@@ -16,6 +16,7 @@
 
 import type { BattleResult, RunResult } from './harness';
 import { HEALTH } from '../../src/config/health';
+import { chargeToPlayer, chargeToEnemy } from './telemetry';
 import { getEncounter, type EncounterKind } from '../../src/config/encounters';
 import { atOrBeyondWalkPos } from './walkDepth';
 
@@ -838,6 +839,14 @@ export interface AggregateStats {
    * value flags battles the optimal play couldn't decide within `maxTurnSeconds`.
    */
   cappedDraws: number;
+  /** 91a2 — the draws split by `BattleResult.reason`: the driver's tick cap
+   *  (`capDraws` — the stall signal the cap penalty keys on) vs a mutual
+   *  wipe (`wipeDraws`). `cappedDraws` above keeps its legacy definition
+   *  (EVERY draw) so old batches and the stdout summary read as before;
+   *  `unlabeledDraws` = draws on pre-91a2 records (no reason). */
+  capDraws: number;
+  wipeDraws: number;
+  unlabeledDraws: number;
 }
 
 /**
@@ -855,6 +864,9 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
   let wins = 0;
   let hangs = 0;
   let cappedDraws = 0;
+  let capDraws = 0;
+  let wipeDraws = 0;
+  let unlabeledDraws = 0;
   for (const r of results) {
     byOutcome[r.outcome] = (byOutcome[r.outcome] ?? 0) + 1;
     hopSum += r.finalHopReached;
@@ -867,9 +879,17 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
       const key = hangBattle ? (hangBattle.layoutId ?? 'procedural') : 'unknown';
       hangsByLayout[key] = (hangsByLayout[key] ?? 0) + 1;
     }
-    // N2 — every harness draw comes from the per-turn cap (checkBattleEnd never
-    // emits 'draw'), so winner === 'draw' counts the capped/indecisive battles.
-    for (const b of r.battles) if (b.winner === 'draw') cappedDraws++;
+    // N2 → 91a2 — `winner === 'draw'` is the per-turn cap OR a mutual wipe
+    // (checkBattleEnd has emitted 'draw' for a double-KO since 34a — the old
+    // comment here was stale); `cappedDraws` keeps counting EVERY draw (its
+    // legacy meaning), the split rides `reason` where a record carries it.
+    for (const b of r.battles) {
+      if (b.winner !== 'draw') continue;
+      cappedDraws++;
+      if (b.reason === 'cap') capDraws++;
+      else if (b.reason === 'mutualWipe') wipeDraws++;
+      else unlabeledDraws++;
+    }
   }
   const n = results.length;
   return {
@@ -882,6 +902,9 @@ export function aggregate(results: readonly RunResult[]): AggregateStats {
     hangs,
     hangsByLayout,
     cappedDraws,
+    capDraws,
+    wipeDraws,
+    unlabeledDraws,
   };
 }
 
@@ -1409,11 +1432,12 @@ export function renderLayoutHopCsv(stats: readonly LayoutHopStats[]): string {
 
 /**
  * The X balance metric, keyed by `Encounter.id`. The TUNING signal is
- * **player pool damage TAKEN** — the HP chipped off the player's encounter
- * health pool. A turn's pool chip (`battle:ended.survivorPower`, captured in the
- * opt-in telemetry's `poolChips`) carries it as the `enemy` field: enemy
- * survivors chip the PLAYER pool (`resolveTurn` in Run.ts), scaled by
- * `HEALTH.chipMultiplier` to land in pool-HP units (comparable to `healthPool`).
+ * **player pool damage TAKEN** — the HP the chip rule charged the player's
+ * encounter health pool. 91a2: read as the rule's UNCAPPED charge per turn
+ * (`chargeToPlayer` / `chargeToEnemy` off the opt-in telemetry's `poolChips`,
+ * pool-HP), whatever the rule (`health.chipMode`); a pre-91a2 record falls
+ * back to the survivors arithmetic (enemy survivors × `HEALTH.chipMultiplier`)
+ * it was recorded under — byte-identical for every old batch.
  *
  * Two units, deliberately distinct (BALANCE.md): **per instance** (a whole node
  * visit — the encounter's cost, the unit the per-kind bands compare: a multi-wave
@@ -1509,8 +1533,8 @@ export function perEncounterStats(results: readonly RunResult[]): EncounterStats
     const chips = r.telemetry?.poolChips ?? [];
     const byHop = new Map<string, { encounterId: string; taken: number; dealt: number }>();
     for (const c of chips) {
-      const taken = c.enemy * chipMult; // enemy survivors chip the PLAYER pool
-      const dealt = c.player * chipMult; // player survivors chip the ENEMY pool
+      const taken = chargeToPlayer(c, chipMult); // the rule's charge to the PLAYER pool
+      const dealt = chargeToEnemy(c, chipMult); // the rule's charge to the ENEMY pool
       const key = `${c.sector}:${c.hop}`;
       const g = byHop.get(key);
       if (g) {
@@ -1657,10 +1681,11 @@ export interface AlphaStrikeSectorStats {
    *  i.e. the run arrived at that turn with at least half its max pool and
    *  lost all of it in one turn. The rule-agnostic alpha-strike death. */
   alphaDeathsApplied: number;
-  /** Pool deaths whose killing turn's uncapped BLOW (enemy survivors ×
-   *  chipMultiplier — the SURVIVORS rule's attempted charge, which the clamp
-   *  at 0 hides from the applied delta) was ≥ 50% of poolMax. Rule-specific:
-   *  read it only under survivors (§91 reinterprets or drops it). */
+  /** Pool deaths whose killing turn's uncapped BLOW — the rule's attempted
+   *  charge to the player pool (`chargeToPlayer`: the recorded 91a2 charge,
+   *  or enemy survivors × chipMultiplier on a pre-91a2 record), which the
+   *  clamp at 0 hides from the applied delta — was ≥ 50% of poolMax. Under
+   *  casualties the blow is the player's OWN fallen power that turn. */
   alphaDeathsBlow: number;
   /** The pool the run ARRIVED with at its killing turn: p25 / p50 / p75. */
   arrivalP25: number;
@@ -1742,12 +1767,12 @@ export function alphaStrikeStats(
     const last = chips[chips.length - 1];
     if (last !== undefined && last.playerPoolAfter === 0) {
       const applied = (last.playerPoolBefore - last.playerPoolAfter) / poolMax;
-      const blow = (last.enemy * chipMult) / poolMax;
+      const blow = chargeToPlayer(last, chipMult) / poolMax;
       for (const a of [all, sectorAcc(last.sector)]) {
         a.killApplied.push(applied);
         a.killBlow.push(blow);
         a.arrivals.push(last.playerPoolBefore);
-        a.overkill.push(last.enemy * chipMult - last.playerPoolBefore);
+        a.overkill.push(chargeToPlayer(last, chipMult) - last.playerPoolBefore);
       }
     }
   }
@@ -1810,7 +1835,7 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     '  hit 0 (cap-losses excluded). AlphaApp = killing turn lost ≥ 50% of max from the pool it ARRIVED with;',
   );
   lines.push(
-    '  AlphaBlow = killing turn\'s uncapped survivors×chip ≥ 50% of max (SURVIVORS-rule-specific). Arrival = pool',
+    '  AlphaBlow = killing turn\'s uncapped charge (survivors×chip; own fallen under casualties) ≥ 50% of max. Arrival = pool',
   );
   lines.push('  at the killing turn (p25/p50/p75); <25% = share that arrived under a quarter pool.');
   lines.push(
@@ -1859,6 +1884,12 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
   lines.push('');
   lines.push(
     `Seam (pool at the first sector clear): ${s.seam.crossings} crossings · p25/p50/p75 ${s.seam.p25}/${s.seam.p50}/${s.seam.p75} · entered act 2 under 50%: ${pct(s.seam.shareLt50)}`,
+  );
+  // 91a2 — the draw split (the kiting instrument: a cap draw is a stall, a
+  // mutual wipe is the largest casualty turn). Battles-level, not telemetry.
+  const d = aggregate(results);
+  lines.push(
+    `Draws by reason: ${d.cappedDraws} total · cap ${d.capDraws} · mutual wipe ${d.wipeDraws} · unlabeled (pre-91a2) ${d.unlabeledDraws}`,
   );
   return lines.join('\n') + '\n';
 }

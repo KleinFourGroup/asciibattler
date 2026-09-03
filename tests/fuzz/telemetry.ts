@@ -26,6 +26,7 @@
 
 import type { Team } from '../../src/sim/Unit';
 import { ALL_ARCHETYPES } from '../../src/sim/archetypes';
+import { HEALTH } from '../../src/config/health';
 import type { Archetype } from '../../src/sim/archetypes';
 
 /** Player-side per-archetype tallies for one run (or summed across runs). */
@@ -89,6 +90,35 @@ export interface PoolChip {
   playerPoolAfter: number;
   enemyPoolBefore: number;
   enemyPoolAfter: number;
+  /** 91a2 — the survivor half's twin: Σ`power` of each side's FALLEN this
+   *  turn (`battle:ended.fallenPower`, the casualties rule's INPUT) and WHY
+   *  the turn ended (`battle:ended.reason` — the cap penalty keys on 'cap').
+   *  ABSENT on pre-91a2 batches (89c / 90d on disk). */
+  fallenPlayer?: number;
+  fallenEnemy?: number;
+  reason?: 'decisive' | 'mutualWipe' | 'cap';
+  /** 91a2 — the rule's UNCAPPED charge to each side's pool this turn (pool-HP,
+   *  `pools:chipped`): what the rule TRIED to take, before the clamp at 0 —
+   *  the overkill read's number under any rule (the 89d rider). ABSENT on
+   *  pre-91a2 batches: readers go through `chargeToPlayer` / `chargeToEnemy`,
+   *  whose fallback (survivors × chipMultiplier) IS the survivors rule's
+   *  charge, so an old batch reads exactly as it did. */
+  playerCharge?: number;
+  enemyCharge?: number;
+}
+
+/** 91a2 — the rule's uncapped charge TO THE PLAYER pool (pool-HP): the
+ *  recorded charge, or — on a pre-91a2 record — the survivors rule's
+ *  arithmetic (enemy survivors × chipMultiplier), which is what those batches
+ *  ran under. The ONE place a reader re-derives the rule, and only for the
+ *  legacy shape. */
+export function chargeToPlayer(c: PoolChip, chipMult: number = HEALTH.chipMultiplier): number {
+  return c.playerCharge ?? c.enemy * chipMult;
+}
+
+/** 91a2 — the rule's uncapped charge TO THE ENEMY pool (see `chargeToPlayer`). */
+export function chargeToEnemy(c: PoolChip, chipMult: number = HEALTH.chipMultiplier): number {
+  return c.enemyCharge ?? c.player * chipMult;
 }
 
 export interface RunTelemetry {
@@ -209,8 +239,13 @@ export interface AggregatedTelemetry {
   runs: number;
   /** Per-archetype run TOTALS summed over the set, plus a per-run death mean. */
   perArchetype: Record<Archetype, AggregatedArchetype>;
-  /** Mean pool chip per turn across every turn in the set (diagnoses the
-   *  pool-ratio confound — player vs enemy chip rate). */
+  /** Mean pool charge per turn across every turn in the set (diagnoses the
+   *  pool-ratio confound — player vs enemy chip rate). 91a2: `player` = the
+   *  mean charge the player side DEALT the enemy pool, `enemy` = the mean
+   *  charge the enemy side dealt the PLAYER pool — the rule's uncapped
+   *  charges (pool-HP) via `chargeToEnemy` / `chargeToPlayer`; on a pre-91a2
+   *  batch (or under survivors at chipMultiplier 1) identical to the old
+   *  survivor-power means. */
   meanPoolChip: { player: number; enemy: number; turns: number };
 }
 
@@ -243,8 +278,8 @@ export function aggregateTelemetry(telemetries: readonly RunTelemetry[]): Aggreg
       dst.xpEarned += src.xpEarned;
     }
     for (const c of t.poolChips) {
-      chipPlayer += c.player;
-      chipEnemy += c.enemy;
+      chipPlayer += chargeToEnemy(c);
+      chipEnemy += chargeToPlayer(c);
       turns += 1;
     }
   }

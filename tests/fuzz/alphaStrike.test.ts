@@ -4,7 +4,7 @@
  * number is derived by hand from the fixture — never from the reader.
  */
 import { describe, expect, it } from 'vitest';
-import { alphaStrikeStats, renderAlphaStrike, renderAlphaStrikeCsv } from './reporters';
+import { alphaStrikeStats, renderAlphaStrike, renderAlphaStrikeCsv, perEncounterStats } from './reporters';
 import { TelemetryAccumulator, type PoolChip, type RunTelemetry } from './telemetry';
 import type { RunResult } from './harness';
 
@@ -183,5 +183,39 @@ describe('alphaStrikeStats (89b)', () => {
     expect(lines[0]).toContain('sector,turns,chipFracP50');
     expect(lines).toHaveLength(4); // header + all + 2 sectors
     expect(lines[1]!.startsWith('all,11,')).toBe(true);
+  });
+});
+
+describe('91a2 — the readers take the recorded CHARGE over the survivors arithmetic', () => {
+  // Every fixture above is pre-91a2-shaped (no charge fields) — those tests
+  // passing unchanged IS the fallback pin (`charge ?? survivors × mult`).
+  // Here a record carries a charge that DISAGREES with its survivors half
+  // (the casualties rule: 0 enemy survivors, the player's own fallen = 12).
+  const casualtiesKill: PoolChip = {
+    ...chip(1, 10, 0, 0),
+    fallenPlayer: 12,
+    fallenEnemy: 0,
+    reason: 'decisive',
+    playerCharge: 12,
+    enemyCharge: 0,
+  };
+
+  it('alphaStrikeStats: the blow + the overkill read the charge, not enemy × mult', () => {
+    const s = alphaStrikeStats([run(1, 'defeat', [casualtiesKill], [20])], POOL_MAX, 1);
+    const all = s.bySector[0]!;
+    expect(all.poolDeaths).toBe(1);
+    expect(all.alphaDeathsBlow).toBe(1); // 12/20 ≥ 50% — from the charge (survivors would read 0)
+    expect(all.overkillP50).toBe(2); // 12 − 10
+    expect(all.shareOverkillGe3).toBe(0);
+  });
+
+  it('perEncounterStats: pool damage taken/dealt read the charges', () => {
+    const rows = perEncounterStats([run(1, 'defeat', [casualtiesKill], [20])]);
+    const enc = rows.find((r) => r.encounter === 'enc')!;
+    expect(enc.poolDmgTaken).toBe(12);
+    expect(enc.poolDmgDealt).toBe(0);
+    // The legacy shape still reads as survivors × mult (chip(): enemy 7 → 7).
+    const legacy = perEncounterStats([run(2, 'complete', [chip(0, 20, 13, 7)], [20])]);
+    expect(legacy.find((r) => r.encounter === 'enc')!.poolDmgTaken).toBe(7);
   });
 });

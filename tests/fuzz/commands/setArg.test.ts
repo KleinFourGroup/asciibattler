@@ -11,6 +11,7 @@ import { describe, it, expect } from 'vitest';
 import { parseArgs } from './args';
 import { resolveKnob } from '../balanceSweep';
 import { SIM } from '../../../src/config/sim';
+import { HEALTH } from '../../../src/config/health';
 
 describe('--set (75l)', () => {
   it('parses one or many specs and stays unset when absent', () => {
@@ -47,5 +48,26 @@ describe('--set (75l)', () => {
     const knob = resolveKnob('sim.campsStartHostile');
     expect(knob.obj).toBe(SIM as unknown as Record<string, number>);
     expect(SIM.campsStartHostile).toBe(0); // shipped OFF — never ship > 0
+  });
+});
+
+describe('--set string modes (91a2)', () => {
+  it('the chip modes resolve to the LIVE health object as string-valued knobs', () => {
+    for (const key of ['chipMode', 'capPenalty'] as const) {
+      const knob = resolveKnob(`health.${key}`);
+      expect(knob.obj).toBe(HEALTH as unknown as Record<string, number | string>);
+      expect(typeof knob.obj[knob.key]).toBe('string');
+      const original = HEALTH[key];
+      try {
+        knob.obj[knob.key] = original === 'survivors' ? 'casualties' : 'survivors';
+        expect(HEALTH[key]).not.toBe(original); // the write is what turnCharges reads
+      } finally {
+        knob.obj[knob.key] = original;
+      }
+    }
+  });
+
+  it('a non-scalar target still throws loud', () => {
+    expect(() => resolveKnob('health.noSuchMode')).toThrow();
   });
 });

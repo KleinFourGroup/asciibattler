@@ -235,6 +235,134 @@ proposed. Two calls: **six arms** (the n=80 death denominator over the
 ~80 box-minutes saved) and **the pre-turn PREVIEW** over the in-battle
 HUD fallback (the number has to inform the redraw decision).
 
+### 89a/89b/89b2 — the instrument (2026-09-02; `ee9bdd2` · `9b4423a` · `b21de71`)
+
+- **89a corrected its own cut line.** "Capture at `battle:started`" was
+  the plan; the build found the harness-side read structurally
+  contaminated (the audit correction above) and moved the truth to the
+  site that applies it: `pools:chipped` from `resolveTurn`, both paths.
+  The harness stitches survivor half + applied half into ONE record; the
+  identity `after == max(0, before − survivors × chip)` is pinned in
+  telemetry.test.ts as the survivors-rule identity — §91 REWRITES that
+  pin with its rule, never loosens it.
+- **89b is rule-agnostic by construction** — every column reads applied
+  deltas; the survivors-specific columns (AlphaBlow, and 89b2's overkill —
+  both need the uncapped charge, which the clamp at 0 hides) are labeled
+  so. ⚠ Landing note for §91: `pools:chipped` must carry the PRE-CLAMP
+  charge per side, or the blow/overkill columns go blind under the
+  casualty rule.
+- **89b2 — the OVERKILL margin** (the user's metric, read off batch 1 in
+  chat): the killing turn's blow minus the pool the run arrived with =
+  the pool the run would have needed on top to survive that turn. "Even
+  with better play (+1–3 pool) it still would have ended the run", as a
+  number. Cross-checked against an import-free scratch recompute on the
+  first two fetched arms — identical.
+- **The seam preview (free, board-87b @ `8c47b73`, post-fold arb walks,
+  n=40):** deploy 31/40 crossings · p25/p50/p75 12/18/20 · under 10: 6
+  (19%); regen 26/40 · 18/20/20 · under 10: 2 (8%). Consistent with the
+  signed seam 15–18; the tail is the seam-hazard number, at n=31.
+- **The cohort shape correction:** the board's `--hops=11` arms are
+  single-sector act-1 refs (ZERO crossings in their summary.csv) — the
+  walk shape (no `--hops`, the board's `arb-walk-*` lines) is the only
+  one where the seam and act-2 deaths exist. Priest/gambler WALK arms
+  are new shapes (the board reads them at `--hops=11` only).
+
+### 89c — the cohort (launched 2026-09-02 23:46Z at `9b4423a`)
+
+`scripts/box-drive.sh tests/fuzz/output/queue-89c.txt --poll=120
+--est-hours=3 --artifact=results.json` — six ARM two-act walk arms ×
+n=120 (soldier/priest/gambler × regen/deploy), `--per-encounter
+--emit-results`. Walk time 26–36 min/arm at `--jobs=8` (the board-87b
+timings said ~22; walks with telemetry run longer). Every fetch was
+recomputed independently from results.json (scratchpad
+`alpha-recompute.js` + `margin.js`, no reporter import) and matched the
+batch.log render exactly; every manifest at `9b4423a`, dirty false.
+Numbers: BALANCE 2026-09-03 (89c). The driver ran past the Bash tool's
+10-minute ceiling untouched (a background task is not killed at the
+foreground timeout — verified by PID at +13 min).
+
+### 89e — the risk line (built in a detached worktree while the cohort drained; `1efb6f9`)
+
+- Built in a worktree (`git worktree add --detach` + a node_modules
+  junction) because the driver refuses a dirty tree before EVERY launch
+  — the ONE-HEAD-PER-COHORT guard turns "no doc edits until the last
+  launch" into "no tree edits at all"; the worktree is how to keep
+  building. `.claude/launch.json` is TRACKED, so a worktree preview
+  config would have dirtied the cohort tree — browser verification
+  waited for the patch to land on main after the sixth launch fired.
+- The wave roll was extracted from `beginTurn` into a PURE
+  `rollTurnWave()` (worldSeed + cursor + team off the keyed stream, no
+  state writes); `beginTurn` commits its result, `previewPoolAtRisk()`
+  discards all but Σ power. Two pins: preview == the fielded wave's
+  bound on turns 1 AND 2 (cursor advanced, pools moved), and the gated
+  run (previews every turn) fields byte-identical worldSeeds + waves to
+  the headless run (never previews) at the same seed — the H4b
+  RNG-alignment contract re-pinned against the extra derive. fuzz:smoke
+  549 byte-identical. Browser: "up to 9 pool" on Brigands turn 1 == the
+  fielded 6 bandits (power 1) + 2 archers (2 + 1).
+- The bound reads the wave's BASE power (template stats — the number the
+  player could add from the cards); in-battle enemy buffs and a
+  spawn-queue overflow that never lands both sit outside it, documented
+  at the method. Under §91's casualty rule the line becomes the HAND's
+  Σ power (known at the gate for free) — the survivors branch is the
+  one that needed the preview.
+
+### 89c — the findings (2026-09-03; numbers BALANCE 2026-09-03 89c)
+
+- ⭐ **The feared shape ("healthy, then one-shot") is the minority
+  case: 12.7% of pool deaths.** The majority case is "worn down over
+  several small turns, then one lost turn against 6–8 survivors ends
+  it": arrival p50 5, killing blow p50 10, 61% of killing blows ≥ 10.
+  The user's ear was right about the blow (2026-09-02 chat: "died to a
+  big blow is what I was picking up on") and the instrument says the
+  blow lands on an already-bled pool.
+- ⭐⭐ **The unfun part, as a number: 61% of deaths were OVERKILLED by
+  ≥ 3** — better play at the margin (+1–3 pool) would not have changed
+  the outcome; 39% by ≥ 5. Uniform across all six arms (57–67%) and
+  both acts (57% / 63%). This is the metric the user proposed on
+  reading batch 1; it became 89b2.
+- **The per-turn tail is real but thin:** p90 = 6 pool, the worst turn
+  16 of 20, 3–4.5% of turns ≥ 10. The design's variance problem is not
+  a fat per-turn tail; it is that a 10-blow is the NORMAL cost of a
+  lost turn against a pool that arrives at 5.
+- **The seam is healthier than feared:** 6.5% under 10 at n=525 (the
+  87b preview's 19% on the deploy arm at n=31 was a small-n reading);
+  p50 20. The seam floor (§90) is cheap insurance for a 1-in-15 tail,
+  not a rescue.
+- **The per-act frame reads off this cohort for free:** act-1 clear
+  0.73 pooled vs the signed 0.6, act-2 0.44 vs 0.5 — act 1 is easier
+  than target on every arm and act 2 harder on four of six. A §92 fact,
+  recorded here so it isn't rediscovered.
+- **Priest/regen on the walk is a parity item** (win 0.175, act-2 clear
+  0.27 — the weakest arm by far; the board's priest reads are act-1
+  refs at `--hops=11`). Named, not this phase's question; it rides to
+  §92 with the re-search.
+
+### 89d — ⛔ the threshold docket (AWAITING the user's sign)
+
+**Recommendation:** keep criterion 1 = **the OVERKILL ≥ 3 share of pool
+deaths** (blow − arrival ≥ 3), read with the 89b2 reader on the
+re-searched arm at §93, pooled across the same six walk arms.
+**Baseline 0.61** (per arm 0.57–0.67). **Proposed KEEP bar: ≤ 0.30**
+(halved), with a "no single arm above 0.40" guard. Why this metric over
+the two alpha definitions: AlphaApp (0.127) measures the rare case and
+would move on noise; AlphaBlow (0.61) is the same number as overkill
+≥ 0 and says nothing about whether the run could have survived;
+overkill ≥ 3 is exactly "the death was already decided at that pool" —
+the sentence the user wrote. Why 0.30 and not lower: under the casualty
+rule the blow is bounded by the player's OWN fielded power (~6 at a
+full hand, legendaries 2), so an arm that dies mostly at arrival ≤ 3
+with everything falling would still register; a mechanism-working
+outcome likely reads ≤ 0.15, so a §93 read between 0.15 and 0.30 is
+"passes, investigate", not "passes, sign". Alternatives on the table:
+≤ 0.25 (a stricter "big blows are rare" bar) · ≤ 0.40 (a looser bar
+that only rejects a rule that changed nothing). **Two riders written
+with the pin:** (1) §91's `pools:chipped` must carry the PRE-CLAMP
+charge per side, or the overkill column goes blind under the new rule
+(the 89b landing note); (2) the alpha shares (12.7% / 60.9%) and the
+per-turn tail (p90 30%, ≥ 50% at 3–4.5%) are reported beside the
+criterion at §93, not signed.
+
 ### Blind spots carried forward
 
 The rest of the spec's audit register (neutrals in the survivor sum ·

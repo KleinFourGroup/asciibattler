@@ -4226,3 +4226,42 @@ deltas. The pre-X H7c→O log lives at
   amendment (prose-only, no numeric re-pin — every checked ref PASSED at
   the 85g6d pins on the 88d full board) = the signing docket, WORKLOG
   §88d4. Board dir `output/board-runs/88d3` + `88d3-report.txt`.
+- **2026-09-03 (89c) — THE ALPHA-STRIKE BASELINE** (the casualty
+  experiment's pre-rule read, encounter-feel-spec §Kickoff; box-drive
+  cohort `tests/fuzz/output/queue-89c.txt` at `9b4423a`, 6/6
+  artifact-verified, 23:46→02:52Z ≈ 3.1 h, box destroyed on drain;
+  every manifest at HEAD, dirty false; every batch recomputed
+  independently from results.json and matched its render exactly).
+  **Shape: six ARM two-act WALK arms** (soldier/priest/gambler ×
+  regen/deploy), n=120 each, `--per-encounter --emit-results` — the
+  first walk reads of the priest/gambler twins (the board reads them at
+  `--hops=11` only). Instrument: the 89a `pools:chipped` applied pools +
+  the 89b/89b2 reader (`alpha-strike.csv` in each batch). Pool max 20.
+  **Per arm** (defeats = pool deaths in every arm, no cap-losses; win ·
+  act-1 clear · act-2 clear): soldier/regen 85 (0.29 · 0.675 · 0.43) ·
+  soldier/deploy 67 (0.44 · 0.825 · 0.54) · priest/regen 99 (0.175 ·
+  0.65 · 0.27) · priest/deploy 72 (0.40 · 0.758 · 0.53) · gambler/regen
+  91 (0.24 · 0.725 · 0.33) · gambler/deploy 74 (0.38 · 0.742 · 0.52).
+  **POOLED, 720 runs / 488 pool deaths:** ⭐ **the deaths are
+  ATTRITION-shaped, finished by a big blow** — arrival pool at the
+  killing turn p25/p50/p75 **3 / 5 / 8**, 44.9% arrived under 5; the
+  killing blow p50 **10** (a lost turn vs 6–8 survivors); **AlphaApp
+  12.7%** (arrived with ≥ 10 and lost it all in one turn; per arm
+  9–18%) vs **AlphaBlow 60.9%** (the blow was ≥ 10; per arm 55–67%).
+  ⭐⭐ **OVERKILL** (blow − arrival = the pool the run would have needed
+  on top): p25/p50/p75 **2 / 4 / 6**; **≥ 1: 84.4% · ≥ 3: 60.7% · ≥ 5:
+  38.9% · ≥ 10: 8.4%** (per arm ≥ 3: 57 / 67 / 57 / 64 / 63 / 58%;
+  act 1 56.9% · act 2 63.1%); histogram (2-wide bins) 0:113 · 2:113 ·
+  4:95 · 6:81 · 8:45 · 10:25 · 12:11 · 14:5. **Per-turn** applied loss:
+  p50 0 · p90 **30%** (6 pool) · max **80%** (16) · ≥ 25%: 12–13% of
+  turns · ≥ 50%: 3.0–4.5%. **Seam** (n=525 crossings): p25/p50/p75
+  **17 / 20 / 20**, under 10: **6.5%** (per arm 4.0–11.5%, the gambler
+  regen walk widest) — inside the signed 15–18 band's spirit; the tail
+  is the seam hazard, measured. **Act split:** act-1 deaths 195 / act-2
+  293; act-1 clear pooled 0.73, act-2 0.44 (the signed per-act targets
+  are 0.6 / 0.5 — act 1 reads EASIER than target on every arm, act 2
+  harder on four of six). ⛔ **89d = the threshold pin (user-signed):**
+  the docket is WORKLOG §89d — the recommendation is criterion 1 on the
+  OVERKILL ≥ 3 share (0.61 pooled baseline), not on either alpha
+  definition. Batch dirs `output/box-batches/2026090{2-234741,3-002114,
+  3-005836,3-012601,3-015515,3-022441}-9b4423a`.

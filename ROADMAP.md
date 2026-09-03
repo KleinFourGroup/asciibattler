@@ -58,13 +58,13 @@ isolation cohort. No snapshot bump; fuzz baselines hold.
   quantiles + shares; pool deaths split APPLIED (rule-agnostic) vs BLOW
   (survivors-only) + the arrival pool, by sector; the seam line. Landed
   2026-09-02 (7 hand-derived pins; local n=3 render).
-- [ ] **89c** — the cohort: six ARM walk arms (3 characters × regen/
-  deploy) n=120, `--per-encounter --emit-results`, `box-drive.sh
-  --poll=120 --est-hours=3`; independent recompute from results.json.
-  The board-87b seam preview (`poolAtSectorEnd`) lands first, no box.
-  Exit: a dated BALANCE entry + WORKLOG findings.
-- [ ] **89d** — ⛔ the alpha-strike threshold PINNED (user-signed) → the
-  spec's keep criterion 1 + WORKLOG.
+- [x] **89c** — the cohort: six ARM two-act WALK arms n=120 at `9b4423a`,
+  6/6 verified, every batch recomputed independently. Landed 2026-09-03
+  (BALANCE 2026-09-03 89c; findings WORKLOG §89c): deaths are
+  ATTRITION-shaped, finished by a ≥ 10 blow; 61% overkilled by ≥ 3.
+- [ ] **89d** — ⛔ the threshold PINNED (user-signed) → the spec's keep
+  criterion 1 + WORKLOG. Docket WORKLOG §89d: overkill ≥ 3 share,
+  baseline 0.61, proposed KEEP bar ≤ 0.30.
 - [x] **89e** — the pre-turn risk line: `turn:starting.poolAtRisk` via
   the PURE `rollTurnWave` preview (no cursor write; pins: preview ==
   fielded on turns 1+2, gated == headless waves) + the PreTurnScreen

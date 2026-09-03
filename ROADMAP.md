@@ -25,29 +25,12 @@ each a budget. Signed per-act clear targets **0.6 / 0.5 / (0.4 pre-noted
 for act 3)**. Rollback baseline = the tag `pre-casualty-experiment` at
 the §90 close; main, no branch; per-logical-change commits.
 
-## Phase 89 — The data phase (kept under both outcomes)
+## Phase 89 — The data phase ✅ CLOSED 2026-09-03 (user-signed)
 
-Charter: confirm the deficit before the mechanism. The **alpha-strike
-read** — the distribution of single-turn chip as a fraction of pool
-max, and among pool deaths the share whose killing turn took ≥ 50% —
-plus the **seam-hazard read** (pool at sector clear, `poolAtSectorClears`)
-from per-turn chip telemetry: re-analyzed from an on-disk cohort if one
-still carries `poolChips` (only two fetched batches remain locally), else
-ONE fresh isolation cohort (single hop, the 87d3 rider; the extended
-searcher arm — `--arbitrate` ⊥ `--encounter`). Plus the **pre-turn risk
-line** ("at risk this turn: up to N", display-only — the cheapest
-fairness fix on the list, correct under either rule).
-**Why first:** the keep criteria's alpha threshold is pinned from THIS
-baseline, before the rule exists. **Risk:** low. **Decision point:** ⛔
-the alpha-strike threshold (keep criterion 1) — pinned at this phase's
-close, user-signed. **Exit:** the baseline numbers in BALANCE; the
-threshold pinned; the risk line browser-verified. **NOT doing:** any
-config move; any rule change.
-
-Cut at the 2026-09-02 kickoff (USER-SIGNED; audit → WORKLOG §89). The
-on-disk branch is DEAD (no results.json survives) and the alpha share
-is a WALK statistic → the cohort = the ARM walk twins, not an
-isolation cohort. No snapshot bump; fuzz baselines hold.
+The deficit confirmed before the mechanism: deaths are ATTRITION-shaped,
+finished by a ≥ 10 blow, **61% overkilled by ≥ 3** (BALANCE 2026-09-03
+89c; WORKLOG §89) · the pre-turn risk line shipped · ⛔ keep criterion 1
+PINNED (spec §The experiment protocol). Cut + audit: WORKLOG §89.
 
 - [x] **89a** — `PoolChip` gains the APPLIED pools (before/after, both
   sides) via a new `pools:chipped` event from `resolveTurn` (both paths;
@@ -62,33 +45,22 @@ isolation cohort. No snapshot bump; fuzz baselines hold.
   6/6 verified, every batch recomputed independently. Landed 2026-09-03
   (BALANCE 2026-09-03 89c; findings WORKLOG §89c): deaths are
   ATTRITION-shaped, finished by a ≥ 10 blow; 61% overkilled by ≥ 3.
-- [ ] **89d** — ⛔ the threshold PINNED (user-signed) → the spec's keep
-  criterion 1 + WORKLOG. Docket WORKLOG §89d: overkill ≥ 3 share,
-  baseline 0.61, proposed KEEP bar ≤ 0.30.
+- [x] **89d** — ✅ DECIDED 2026-09-03 (user-signed): keep criterion 1 =
+  the OVERKILL ≥ 3 share ≤ 0.30 (baseline 0.61), no arm above 0.40 →
+  the spec's keep criterion 1; rationale WORKLOG §89d.
 - [x] **89e** — the pre-turn risk line: `turn:starting.poolAtRisk` via
   the PURE `rollTurnWave` preview (no cursor write; pins: preview ==
   fielded on turns 1+2, gated == headless waves) + the PreTurnScreen
   line. Landed 2026-09-03 (built in a worktree while 89c drained;
   browser-verified: "up to 9" == the fielded 6 bandits + 2 archers).
 
-## Phase 90 — The seam floor (decided; kept under both outcomes)
+## Phase 90 — The seam floor ✅ CLOSED 2026-09-03 (user-signed; tag `pre-casualty-experiment` on the close commit)
 
-Charter: `health.seamHealFloor` (0–1, shipped 1.0) applied at
-`advanceSector` — `max(pool, floor × max)`; the SectorClearedScreen
-line; rest heal re-expressed as a fraction of max (packet heals stay
-absolute). A paired read floor 0 vs 1 on the survivors rule so the
-experiment's baseline INCLUDES the floor. BALANCE: the seam-pool band
-demoted to a diagnostic (pre-floor pool stays recorded). Close with the
-tag `pre-casualty-experiment`.
-**Why here:** decided, cheap, needed under both rules — landing it
-before the flip means §91's paired read isolates the chip rule.
-**Risk:** low. **Snapshot prediction:** no bump (`playerHealth` already
-serializes). **Exit:** the dial live at 1.0; the paired read in BALANCE;
-the tag placed. **NOT doing:** the per-act band decision (dissolves
-under independence); heal-drop inflation.
-
-Cut at the 2026-09-03 kickoff (USER-SIGNED in chat 2026-09-02; audit →
-WORKLOG §90 — the cut held; the predicted two-act re-pin did not exist).
+`health.seamHealFloor` 1.0 live (every act opens on a full pool); the
+paired read floor 1 − 0 = +0.017 / +0.033 win, inside noise (BALANCE
+2026-09-03 §90); the seam pool a DIAGNOSTIC; rest heal a fraction;
+no snapshot bump; both floor-0 legs byte-identical to 89c. The
+rollback baseline for §93 = the tag. Cut + audit + docket: WORKLOG §90.
 
 - [x] **90a** — `health.seamHealFloor` (shipped 1.0) clamps at
   `advanceSector` BEFORE the emit; `sector:cleared` gains `poolBefore`/
@@ -103,9 +75,8 @@ WORKLOG §90 — the cut held; the predicted two-act re-pin did not exist).
   BYTE-IDENTICAL to 89c @`9b4423a`. BALANCE 2026-09-03 §90 · WORKLOG.
 - [x] **90e** — BALANCE (the dated read + the seam pool → a DIAGNOSTIC
   in the header; the user-signed sheet field untouched → §92) + WORKLOG
-  (the close docket) + the HANDOFF cursor. ⛔ **The tag
-  `pre-casualty-experiment` + the close sign are the USER's** (docket
-  WORKLOG §90).
+  (the close docket) + the HANDOFF cursor. ✅ The close SIGNED + the
+  tag `pre-casualty-experiment` placed 2026-09-03 (WORKLOG §90).
 
 ## Phase 91 — The casualty rule (the experiment's build)
 

@@ -142,9 +142,15 @@ kill removes some."
   Main, no branch (user call: a week of doc divergence is where the
   merge pain lives).
 - **Keep criteria — written BEFORE the rule lands:**
-  1. the **alpha-strike share** (pool deaths whose killing turn took
-     ≥ 50% of pool max) falls to a threshold **pinned at the §89 close**
-     from the baseline read;
+  1. ⭑ PINNED 2026-09-03 (89d, user-signed): the **OVERKILL ≥ 3 share
+     of pool deaths** (killing blow − arrival pool ≥ 3, the 89b2 reader,
+     pooled across the six ARM walk arms on the RE-SEARCHED arm) falls
+     from the **0.61 baseline** (per arm 0.57–0.67, BALANCE 2026-09-03
+     89c) to **≤ 0.30**, with **no single arm above 0.40**; a read in
+     0.15–0.30 is "passes, investigate", ≤ 0.15 is the mechanism
+     working as designed. The two alpha definitions (AlphaApp 0.127 ·
+     AlphaBlow 0.609) and the per-turn tail are REPORTED beside it at
+     §93, not signed (why: WORKLOG §89d);
   2. the **skill gradient** holds or widens, read with a **RE-SEARCHED
      arm** (the finalist vector was searched under survivors; reading
      the new rule through old-rule habits is the §85f train/select leak

@@ -338,7 +338,7 @@ foreground timeout — verified by PID at +13 min).
   refs at `--hops=11`). Named, not this phase's question; it rides to
   §92 with the re-search.
 
-### 89d — ⛔ the threshold docket (AWAITING the user's sign)
+### 89d — ⛔ the threshold docket — SIGNED 2026-09-03 (the user, in chat: the recommendation as proposed — overkill ≥ 3 share ≤ 0.30, no arm above 0.40; written into the spec's keep criterion 1)
 
 **Recommendation:** keep criterion 1 = **the OVERKILL ≥ 3 share of pool
 deaths** (blow − arrival ≥ 3), read with the 89b2 reader on the
@@ -490,7 +490,7 @@ match to paired noise — a mismatch is an instrument bug, not a finding.
   83b rule) re-derived every number from results.json; 0 render
   mismatches across four batches; the batch.log seam lines agree.
 
-### The §90 close docket (AWAITING the user's sign)
+### The §90 close docket — SIGNED 2026-09-03 (the user, in chat; the tag `pre-casualty-experiment` placed on the close commit and pushed). The user's read of the paired result: the minimal floor effect "hints toward the act-1-trivial" picture — recorded as two facts pointing one way: the seam was already nearly full (act 1 costs survivors little; act-1 clear 0.675/0.825 vs the signed 0.6) AND +3 pool at the seam rescues few act-2 deaths (the 61% overkill ≥ 3 from the other side — the casualty rule's target).
 
 Exit criteria vs the charter: **the dial live at 1.0** ✅ (90a; the
 shipped-value pin) · **the paired read in BALANCE** ✅ (2026-09-03 §90)

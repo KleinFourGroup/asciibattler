@@ -2336,6 +2336,17 @@ body {
   color: #664600; /* DARK_TERMINAL_AMBER */
 }
 
+/* 89e — the pre-turn RISK line: sits directly under the pool gauges it reads
+   against, in the enemy pool's hue so "at risk" and "their pool" read as the
+   same ledger. */
+.preturn-risk {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ff3131; /* NEON_RED */
+  margin-top: 6px;
+}
+
 /* Wb1 — the encounter NAME: the fight's headline, the second-most prominent
    line after "Turn N". Brighter + larger than the hop/map sub-lines below it
    (the dark-amber hop line separates it from the amber map line). An elite/boss

@@ -65,10 +65,11 @@ isolation cohort. No snapshot bump; fuzz baselines hold.
   Exit: a dated BALANCE entry + WORKLOG findings.
 - [ ] **89d** — ⛔ the alpha-strike threshold PINNED (user-signed) → the
   spec's keep criterion 1 + WORKLOG.
-- [ ] **89e** — the pre-turn risk line: `turn:starting.poolAtRisk` via a
-  PURE wave preview off the keyed `battle` stream (no cursor write; pin
-  test preview == fielded wave) + the PreTurnScreen line. Builds while
-  89c drains; browser-verified native.
+- [x] **89e** — the pre-turn risk line: `turn:starting.poolAtRisk` via
+  the PURE `rollTurnWave` preview (no cursor write; pins: preview ==
+  fielded on turns 1+2, gated == headless waves) + the PreTurnScreen
+  line. Landed 2026-09-03 (built in a worktree while 89c drained;
+  browser-verified: "up to 9" == the fielded 6 bandits + 2 archers).
 
 ## Phase 90 — The seam floor (decided; kept under both outcomes)
 

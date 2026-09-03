@@ -1193,6 +1193,73 @@ describe('Run', () => {
       expect(run.phase).toBe('defeat');
     });
 
+    it('89e — poolAtRisk previews the FIELDED wave (Σ power × chip, capped at the pool) on every turn', () => {
+      const { run, bus } = freshRunWithBus(1);
+      run.pauseAtTurnGates = true;
+      const startings: GameEvents['turn:starting'][] = [];
+      const started: GameEvents['battle:started'][] = [];
+      bus.on('turn:starting', (p) => startings.push(p));
+      bus.on('battle:started', (p) => started.push(p));
+      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+      run.dispatch({ kind: 'advanceTurn' }); // gate → the wave is actually rolled
+      // Turn 1: the preview matched the wave beginTurn fielded (an independent
+      // surface: the battle payload's templates, summed here by hand).
+      const bound = (enemy: readonly { stats: { power: number } }[], pool: number): number =>
+        Math.min(pool, enemy.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
+      expect(startings).toHaveLength(1);
+      expect(started).toHaveLength(1);
+      expect(started[0]!.encounter.enemyTeam.length).toBeGreaterThan(0);
+      expect(startings[0]!.poolAtRisk).toBe(
+        bound(started[0]!.encounter.enemyTeam, HEALTH.playerHealthMax),
+      );
+      expect(startings[0]!.poolAtRisk).toBeGreaterThan(0);
+
+      // Turn 2 (the cursor advanced, the pools moved): still the fielded wave.
+      chipTurn(bus, { player: 1, enemy: 2 }); // sub-lethal → ongoing
+      run.dispatch({ kind: 'advanceTurn' }); // outcome → next turn's gate
+      run.dispatch({ kind: 'advanceTurn' }); // gate → battle
+      expect(startings).toHaveLength(2);
+      expect(started).toHaveLength(2);
+      expect(startings[1]!.poolAtRisk).toBe(
+        bound(started[1]!.encounter.enemyTeam, HEALTH.playerHealthMax - 2),
+      );
+    });
+
+    it('89e — the preview derive perturbs nothing: the gated run fields the headless run\'s waves', () => {
+      // The H4b RNG-alignment contract, re-pinned against the preview: the
+      // gated path previews EVERY turn's wave before the gate (an extra
+      // stream derive per turn); the headless path never previews. If the
+      // preview consumed from a shared stream, the two would diverge.
+      const field = (gated: boolean): { seed: number; team: string }[] => {
+        const { run, bus } = freshRunWithBus(7);
+        run.pauseAtTurnGates = gated;
+        const out: { seed: number; team: string }[] = [];
+        bus.on('battle:started', (p) =>
+          out.push({
+            seed: p.worldSeed,
+            team: p.encounter.enemyTeam.map((t) => `${t.archetype}:${t.level}`).join(','),
+          }),
+        );
+        // Read the phase through a call so TS doesn't narrow it across the
+        // dispatches (the machine moves inside them).
+        const phase = (): string => run.phase;
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        if (gated) run.dispatch({ kind: 'advanceTurn' });
+        for (let turn = 0; turn < 3 && phase() !== 'defeat' && phase() !== 'map'; turn++) {
+          chipTurn(bus, { player: 1, enemy: 1 });
+          if (gated && phase() === 'turn-outcome') {
+            run.dispatch({ kind: 'advanceTurn' });
+            if (phase() === 'turn-intro') run.dispatch({ kind: 'advanceTurn' });
+          }
+        }
+        return out;
+      };
+      const headless = field(false);
+      const gated = field(true);
+      expect(headless.length).toBeGreaterThan(1);
+      expect(gated).toEqual(headless);
+    });
+
     it('drives a full gated encounter: intro → battle → outcome → recruit on a win', () => {
       const { run, bus } = freshRunWithBus(1);
       run.pauseAtTurnGates = true;

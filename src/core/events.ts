@@ -595,6 +595,12 @@ export interface GameEvents extends Record<string, unknown> {
       gridH: number;
       theme: Theme;
     };
+    /** 89e — the pre-turn RISK line: the most pool this turn can cost the
+     *  player under the shipped chip rule, capped at the pool
+     *  (`Run.previewPoolAtRisk` — the wave previewed off the keyed stream
+     *  `beginTurn` will roll it from, so it IS the fielded wave's bound).
+     *  Display-only; never serialized. */
+    poolAtRisk: number;
   };
 
   /**

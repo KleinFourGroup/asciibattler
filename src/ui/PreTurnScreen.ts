@@ -618,6 +618,16 @@ export class PreTurnScreen {
       renderPoolGauge('enemy', 'Enemy Pool', info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
+    // 89e — the risk line, right under the gauges it reads against: the
+    // most pool this turn can cost (the fielded wave's Σ power × chip, capped
+    // at the pool). The "add your own numbers" fairness surface — the
+    // player sees the worst case BEFORE committing the redraw/empower.
+    const risk = document.createElement('div');
+    risk.className = 'preturn-risk';
+    risk.textContent = `⚠ At risk this turn: up to ${info.poolAtRisk} pool`;
+    risk.title =
+      'The most your pool can lose this turn: every enemy in the wave surviving the fight. Kill them and you lose nothing.';
+    panel.appendChild(risk);
     // 49f — held for the packet-fire re-render (`updatePacketUsed`).
     this.poolsEl = pools;
     this.poolBounds = {

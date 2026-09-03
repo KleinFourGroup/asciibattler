@@ -2252,6 +2252,10 @@ export class Run {
         // 65e — the folded draw amount for the "Draw: N" chip (the §65
         // transparency surface; derived, so a draw daemon moves it live).
         drawAmount: this.effectiveDrawAmount,
+        // 89e — the risk line ("at risk this turn: up to N"): the wave this
+        // turn will field, previewed off the same keyed stream `beginTurn`
+        // rolls it from (see `rollTurnWave`), summed to its chip bound.
+        poolAtRisk: this.previewPoolAtRisk(),
       });
     } else {
       this.phase = 'battle';
@@ -2673,37 +2677,44 @@ export class Run {
    * mid-encounter save/resume re-derives every future turn's wave from the
    * root and counters alone.
    */
-  private beginTurn(): void {
-    // 77d2 — one turn = one 'battle' occurrence, keyed (sectorIndex,
-    // nodeId, turnIndex): worldSeed + the wave rolls ride it, and a prior
-    // encounter's LENGTH can no longer shift a later turn's stream (the
-    // old per-turn positional fork did exactly that).
+  /**
+   * 89e — roll the turn's world seed + enemy wave off the keyed `battle`
+   * stream WITHOUT touching run state: a pure function of the serialized
+   * state at the turn boundary (stream root, sector/node/turn, the wave
+   * cursor, the pools, the roster + fold). `beginTurn` commits its result
+   * (assigns the cursor, fields the team); the pre-turn RISK PREVIEW calls
+   * it before the gate and discards everything but Σ power. Both get the
+   * identical wave because `streamRng` is hash-DERIVED per occurrence
+   * (`deriveRng`, no parent consumption — gotcha #125), so a preview
+   * derive is byte-neutral for every other stream, and nothing between the
+   * gate and the fight can change an input: `removeRosterUnit` is
+   * map-only, packet draws mutate `hand` not the fold, `healPool` touches
+   * the PLAYER pool only (the stage condition reads the enemy pool).
+   * Pinned by the preview==fielded test in Run.test.ts.
+   *
+   * 77d2 — one turn = one 'battle' occurrence, keyed (sectorIndex, nodeId,
+   * turnIndex): worldSeed + the wave rolls ride it, and a prior encounter's
+   * LENGTH can no longer shift a later turn's stream (the old per-turn
+   * positional fork did exactly that). U3 — the per-turn enemy team comes
+   * from the selected ENCOUNTER, not the random `rollEnemyWave`: advance the
+   * wave-list grammar one turn (`waveForTurn`, U2) to get this turn's spec +
+   * cursor, then resolve it to a team (`resolveWave`, U1). Both draw
+   * `battleRng` — the last consumer, so their variable draw count stays
+   * downstream-safe. The stage condition reads the live pool fraction at
+   * this turn boundary.
+   */
+  private rollTurnWave(): { worldSeed: number; cursor: WaveCursor | null; enemyTeam: UnitTemplate[] } {
     const battleRng = this.streamRng('battle', this.sectorIndex, this.currentNodeId, this.turnIndex);
     const worldSeed = Math.floor(battleRng.next() * 0x1_0000_0000);
-    // K3.5 — the battlefield is the ENCOUNTER's (rolled once in
-    // `beginEncounter`); only the world seed above and the enemy wave below
-    // stay per-turn. The pre-K3.5 per-turn layout/terrain/theme rolls lived
-    // right here — see `rollEncounterMap`.
-    if (this.encounterMap === null) {
-      throw new Error('Run.beginTurn: no encounterMap — beginTurn outside an encounter');
-    }
-    const { layoutId, gridW, gridH, terrainSeed, theme } = this.encounterMap;
-    // U3 — the per-turn enemy team now comes from the selected ENCOUNTER, not the
-    // random `rollEnemyWave`: advance the wave-list grammar one turn (`waveForTurn`,
-    // U2) to get this turn's spec + cursor, then resolve it to a team (`resolveWave`,
-    // U1). Both draw `battleRng` — the last consumer, so their variable draw count
-    // stays downstream-safe (as `rollEnemyWave` was). The stage condition reads the
-    // live pool fraction at this turn boundary.
     const encounter = this.selectedEncounter;
     if (encounter === null) {
-      throw new Error('Run.beginTurn: no selected encounter — beginTurn outside an encounter');
+      throw new Error('Run.rollTurnWave: no selected encounter — outside an encounter');
     }
     const encounterState: EncounterState = {
       poolFraction: encounter.healthPool > 0 ? this.enemyHealth / encounter.healthPool : 0,
       turn: this.turnIndex + 1,
     };
     const { spec, cursor } = waveForTurn(encounter.waves, this.waveCursor, encounterState, battleRng);
-    this.waveCursor = cursor;
     const waveContext: WaveContext = {
       roster: this.team,
       // 65b — the count/budget basis is the FIELDED hand: min(roster,
@@ -2725,6 +2736,42 @@ export class Run {
       levelBudgetMultiplier: this.difficultyMultipliers.levelBudget,
     };
     const enemyTeam = resolveWave(spec, waveContext, battleRng);
+    return { worldSeed, cursor, enemyTeam };
+  }
+
+  /**
+   * 89e — the pre-turn RISK line's number: the most pool this turn can cost
+   * the player, under the shipped chip rule (survivors: every enemy in the
+   * wave survives → Σ their `power` × `chipMultiplier`), capped at the pool
+   * (you can't lose what you don't have). Reads the wave's BASE power
+   * (template stats — the number the player could add up from the enemy
+   * cards); in-battle buffs/debuffs on enemy power move the realized chip
+   * off this bound, and a spawn-queue overflow that never reaches the grid
+   * counts here but chips nothing (`World.survivorPower` excludes the
+   * queue) — an upper bound in both directions is the point. Display-only:
+   * consumed by `turn:starting`, never serialized, never read by the sim.
+   */
+  private previewPoolAtRisk(): number {
+    const { enemyTeam } = this.rollTurnWave();
+    const wavePower = enemyTeam.reduce((sum, t) => sum + t.stats.power, 0);
+    return Math.min(this.playerHealth, wavePower * HEALTH.chipMultiplier);
+  }
+
+  private beginTurn(): void {
+    // K3.5 — the battlefield is the ENCOUNTER's (rolled once in
+    // `beginEncounter`); only the world seed and the enemy wave (both from
+    // `rollTurnWave`) stay per-turn. The pre-K3.5 per-turn layout/terrain/
+    // theme rolls lived right here — see `rollEncounterMap`.
+    if (this.encounterMap === null) {
+      throw new Error('Run.beginTurn: no encounterMap — beginTurn outside an encounter');
+    }
+    const { layoutId, gridW, gridH, terrainSeed, theme } = this.encounterMap;
+    const encounter = this.selectedEncounter;
+    if (encounter === null) {
+      throw new Error('Run.beginTurn: no selected encounter — beginTurn outside an encounter');
+    }
+    const { worldSeed, cursor, enemyTeam } = this.rollTurnWave();
+    this.waveCursor = cursor;
 
     // E4/H5 — the hand was drawn in `startNextTurn` (`drawTurnHand`) so the
     // pre-turn screen could show it; here we just field it. Stamp each drawn

@@ -1669,6 +1669,16 @@ export interface AlphaStrikeSectorStats {
   /** Share of pool deaths that arrived at the killing turn under 25% of poolMax
    *  (the "act 3 opens under ten" corner, measured). */
   shareArrivalLt25: number;
+  /** 89b2 — the OVERKILL margin (pool-HP): the killing turn's uncapped blow
+   *  minus the pool the run arrived with — how much MORE pool the run would
+   *  have needed to survive that turn. The user's metric (2026-09-02): "even
+   *  with better play (+1–3 pool) it still would have ended the run". p50
+   *  over pool deaths, and the share at ≥ 3 / ≥ 5 (deaths that 3 / 5 more
+   *  pool would NOT have saved). Uses the blow, so under the casualty rule
+   *  it needs the pre-clamp charge recorded (§91's cut). */
+  overkillP50: number;
+  shareOverkillGe3: number;
+  shareOverkillGe5: number;
 }
 
 export interface AlphaStrikeStats {
@@ -1702,8 +1712,10 @@ export function alphaStrikeStats(
     killApplied: number[];
     killBlow: number[];
     arrivals: number[];
+    /** blow − arrival, pool-HP (89b2). */
+    overkill: number[];
   }
-  const fresh = (): Acc => ({ fracs: [], killApplied: [], killBlow: [], arrivals: [] });
+  const fresh = (): Acc => ({ fracs: [], killApplied: [], killBlow: [], arrivals: [], overkill: [] });
   const all = fresh();
   const bySector = new Map<number, Acc>();
   const sectorAcc = (s: number): Acc => {
@@ -1735,6 +1747,7 @@ export function alphaStrikeStats(
         a.killApplied.push(applied);
         a.killBlow.push(blow);
         a.arrivals.push(last.playerPoolBefore);
+        a.overkill.push(last.enemy * chipMult - last.playerPoolBefore);
       }
     }
   }
@@ -1757,6 +1770,9 @@ export function alphaStrikeStats(
       arrivalP50: quantile(a.arrivals, 0.5),
       arrivalP75: quantile(a.arrivals, 0.75),
       shareArrivalLt25: share(a.arrivals, (p) => p < 0.25 * poolMax),
+      overkillP50: quantile(a.overkill, 0.5),
+      shareOverkillGe3: share(a.overkill, (m) => m >= 3),
+      shareOverkillGe5: share(a.overkill, (m) => m >= 5),
     };
   };
 
@@ -1797,6 +1813,9 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     '  AlphaBlow = killing turn\'s uncapped survivors×chip ≥ 50% of max (SURVIVORS-rule-specific). Arrival = pool',
   );
   lines.push('  at the killing turn (p25/p50/p75); <25% = share that arrived under a quarter pool.');
+  lines.push(
+    '  Overkill = blow − arrival (pool the run would have needed on top): p50, and the share ≥ 3 / ≥ 5.',
+  );
   if (s.runsWithTelemetry === 0) {
     lines.push('(no pool data — telemetry was off; --per-encounter enables it.)');
   }
@@ -1814,6 +1833,9 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     'AlphaBlow',
     'Arrival p25/p50/p75',
     '<25%',
+    'Overkill p50',
+    '≥3',
+    '≥5',
   ];
   const pct = (x: number): string => `${(x * 100).toFixed(0)}%`;
   const cell = (r: AlphaStrikeSectorStats): string[] => [
@@ -1829,6 +1851,9 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     r.poolDeaths === 0 ? '—' : `${r.alphaDeathsBlow} (${pct(r.alphaDeathsBlow / r.poolDeaths)})`,
     r.poolDeaths === 0 ? '—' : `${r.arrivalP25}/${r.arrivalP50}/${r.arrivalP75}`,
     r.poolDeaths === 0 ? '—' : pct(r.shareArrivalLt25),
+    r.poolDeaths === 0 ? '—' : String(r.overkillP50),
+    r.poolDeaths === 0 ? '—' : pct(r.shareOverkillGe3),
+    r.poolDeaths === 0 ? '—' : pct(r.shareOverkillGe5),
   ];
   lines.push(renderTable(header, s.bySector.map(cell)));
   lines.push('');
@@ -1842,7 +1867,8 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
 export function renderAlphaStrikeCsv(s: AlphaStrikeStats): string {
   const header =
     'sector,turns,chipFracP50,chipFracP90,chipFracMax,shareChipGe25,shareChipGe50,poolDeaths,' +
-    'alphaDeathsApplied,alphaDeathsBlow,arrivalP25,arrivalP50,arrivalP75,shareArrivalLt25';
+    'alphaDeathsApplied,alphaDeathsBlow,arrivalP25,arrivalP50,arrivalP75,shareArrivalLt25,' +
+    'overkillP50,shareOverkillGe3,shareOverkillGe5';
   const rows = s.bySector.map((r) =>
     [
       r.sector,
@@ -1859,6 +1885,9 @@ export function renderAlphaStrikeCsv(s: AlphaStrikeStats): string {
       r.arrivalP50,
       r.arrivalP75,
       r.shareArrivalLt25.toFixed(4),
+      r.overkillP50,
+      r.shareOverkillGe3.toFixed(4),
+      r.shareOverkillGe5.toFixed(4),
     ].join(','),
   );
   return [header, ...rows].join('\n') + '\n';

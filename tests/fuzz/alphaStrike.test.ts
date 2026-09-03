@@ -151,6 +151,25 @@ describe('alphaStrikeStats (89b)', () => {
     // Blows halve: B 12.5/20 = 62.5% (still ≥ 50%), F 7/20 = 35% (drops out).
     expect(all.alphaDeathsBlow).toBe(1);
     expect(all.alphaDeathsApplied).toBe(1); // unchanged — applied deltas are what they are
+    // Overkill halves with the blow: B 12.5−20 = −7.5, C 3−6 = −3, F 7−4 = 3 → ≥3: F only.
+    expect(all.shareOverkillGe3).toBeCloseTo(1 / 3);
+    expect(all.shareOverkillGe5).toBe(0);
+  });
+
+  it('89b2 — the overkill margin is blow minus arrival, per death', () => {
+    const s = alphaStrikeStats(results, POOL_MAX, 1);
+    const all = s.bySector[0]!;
+    // B: 25 − 20 = 5 · C: 6 − 6 = 0 · F: 14 − 4 = 10 → sorted 0 5 10: p50 = 5;
+    // ≥ 3: B, F = 2/3; ≥ 5: B, F = 2/3 (B sits exactly at 5).
+    expect(all.overkillP50).toBe(5);
+    expect(all.shareOverkillGe3).toBeCloseTo(2 / 3);
+    expect(all.shareOverkillGe5).toBeCloseTo(2 / 3);
+    // Per sector: act 1 = F (10) → 100% ≥ 3; act 2 = B, C → 1/2.
+    expect(s.bySector[1]!.overkillP50).toBe(10);
+    expect(s.bySector[2]!.shareOverkillGe3).toBeCloseTo(1 / 2);
+    // The render + CSV carry the columns.
+    expect(renderAlphaStrike(results)).toContain('Overkill p50');
+    expect(renderAlphaStrikeCsv(s).split('\n')[0]).toContain('overkillP50,shareOverkillGe3,shareOverkillGe5');
   });
 
   it('renders a table + the seam line, and says so when telemetry is off', () => {

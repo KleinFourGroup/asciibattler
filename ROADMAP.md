@@ -97,14 +97,15 @@ WORKLOG §90 — the cut held; the predicted two-act re-pin did not exist).
   `DP_TAIL_SCALE` re-expressed, pinned byte-identical at 5. `f58e5fb`.
 - [x] **90c** — the SectorClearedScreen pool line ("Pool restored 7 →
   20" / "Pool 20 / 20 carries on"); browser-verified. `d30f0bf`.
-- [ ] **90d** — the paired cohort: the two soldier walk twins × floor 1
-  vs 0 (`--set=health.seamHealFloor=0`), n=120, `--per-encounter
-  --emit-results`, `box-drive.sh --poll=120 --est-hours=3
-  --artifact=results.json`; independent recompute from results.json.
-- [ ] **90e** — BALANCE (dated 2026-09-03 §90: the paired read; the
-  seam-pool band → a diagnostic, pre-floor value still recorded) +
-  WORKLOG + the HANDOFF cursor. ⛔ The tag `pre-casualty-experiment` +
-  the close sign are the USER's (morning).
+- [x] **90d** — the paired cohort at `71a5000` (4/4 verified, box
+  destroyed): floor 1 − 0 paired Δwin +0.017 regen / +0.033 deploy
+  (inside noise); act-2 opens full 100%; ⭐⭐ both floor-0 legs
+  BYTE-IDENTICAL to 89c @`9b4423a`. BALANCE 2026-09-03 §90 · WORKLOG.
+- [x] **90e** — BALANCE (the dated read + the seam pool → a DIAGNOSTIC
+  in the header; the user-signed sheet field untouched → §92) + WORKLOG
+  (the close docket) + the HANDOFF cursor. ⛔ **The tag
+  `pre-casualty-experiment` + the close sign are the USER's** (docket
+  WORKLOG §90).
 
 ## Phase 91 — The casualty rule (the experiment's build)
 

@@ -466,3 +466,39 @@ SURVIVORS rule — so §91's rule-flip read starts from a baseline that
 already includes the floor. The seam column stays PRE-floor on both
 legs by construction (90a), so the two legs' seam distributions should
 match to paired noise — a mismatch is an instrument bug, not a finding.
+
+### 90d — the findings (2026-09-03; numbers BALANCE 2026-09-03 §90)
+
+- **The floor's effect is small and in the predicted direction:** paired
+  Δwin +0.017 regen / +0.033 deploy (pooled +0.025, 9/3 discordant, z
+  1.73); act-2 clear +2.5 / +4.1 pt. The 89c reading ("cheap insurance
+  for a 1-in-15 tail, not a rescue") stands. Every act-2 opening is at a
+  full pool on the floor-1 legs (100% vs 53–54%) — the independent-acts
+  frame now holds structurally, not statistically.
+- ⭐⭐ **Byte-identity, twice.** The seams are identical across the legs
+  on every crossing (81/81, 99/99 — act 1 is untouched by the floor and
+  the column reads pre-floor), AND both floor-0 legs' `summary.csv` are
+  byte-identical to the 89c batches at `9b4423a`: the whole §90 build
+  plus 89e is byte-neutral at floor 0 on 240 walk runs. The audit's
+  "predicted re-pin did not exist" now has a measured twin — nothing
+  moved that wasn't meant to.
+- **The §91 baseline:** the rule-flip paired read starts from the
+  floor-1 twins (regen 0.308 / act-2 0.457 · deploy 0.475 / 0.576). Act-2
+  clear brackets the signed 0.5 from both sides at floor 1 — the
+  per-act frame is live for §92 with no act-1 residue to disentangle.
+- Instrument: `recompute90d.mjs` (scratchpad, not repo-resident — the
+  83b rule) re-derived every number from results.json; 0 render
+  mismatches across four batches; the batch.log seam lines agree.
+
+### The §90 close docket (AWAITING the user's sign)
+
+Exit criteria vs the charter: **the dial live at 1.0** ✅ (90a; the
+shipped-value pin) · **the paired read in BALANCE** ✅ (2026-09-03 §90)
+· **the tag placed** ⛔ the user's: `git tag pre-casualty-experiment
+<close HEAD>` after this docket is signed (the spec: the tag sits AFTER
+the floor, so a §93 rollback is one contiguous revert of §91+§92 on top
+of it). BALANCE: the seam-pool band demoted to a diagnostic in prose
+(the header note); the sheet's `seamPoolBand` field is user-signed and
+was deliberately NOT edited — its disposition (keep as a diagnostic row
+/ retire / re-sign) is a §92 lineage-draft line. Also pending the user:
+⛔ 89d (WORKLOG §89d). Nothing in §90 is open on the build side.

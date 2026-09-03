@@ -29,6 +29,17 @@ wall**). Win rate is deliberately DERIVED from reach and wall rather
 than tuned directly — get reach and wall right and winning takes care
 of itself.
 
+**§90 (2026-09-03): the seam pool is a DIAGNOSTIC, no longer a band.**
+With `health.seamHealFloor` shipped at 1.0 every act opens on a full
+pool (the casualty experiment's independent-acts frame), so the pool
+crossing the boundary no longer sets act 2's entry state. The column
+(`poolAtSectorEnd`) keeps recording the PRE-floor value — act-1
+attrition, the seam-hazard tail as it was — and the sheet's
+`seamPoolBand` still machine-checks that number; its verdict now reads
+"how much act 1 cost", not "how act 2 opens". Whether the row stays,
+retires, or re-signs is the §92 lineage draft's call (the sheet is
+user-signed; the field was deliberately left untouched at §90).
+
 **Why a gradient beats a win rate.** A win rate alone can't tell a fair
 game from a coin flip. The health metric is the **skill gradient**: the
 gap between what the best-found strategy achieves and what a dumb
@@ -4265,3 +4276,35 @@ deltas. The pre-X H7c→O log lives at
   OVERKILL ≥ 3 share (0.61 pooled baseline), not on either alpha
   definition. Batch dirs `output/box-batches/2026090{2-234741,3-002114,
   3-005836,3-012601,3-015515,3-022441}-9b4423a`.
+- **2026-09-03 (§90) — THE SEAM FLOOR, the paired read** (the casualty
+  experiment's floor, encounter-feel-spec §The seam floor; box-drive
+  cohort `tests/fuzz/output/queue-90d.txt` at `71a5000`, 4/4
+  artifact-verified, 03:23→05:29Z ≈ 2.1 h, box destroyed on drain;
+  every manifest at HEAD, dirty false; every batch recomputed
+  independently from results.json and matched its render exactly).
+  **Shape: the two soldier ARM two-act WALK twins** (regen / deploy) ×
+  `health.seamHealFloor` **1** (HEAD as shipped) vs **0** (the pre-§90
+  carry via `--set=health.seamHealFloor=0`), n=120 same seeds,
+  `--per-encounter --emit-results`. **The floor at 1.0 (win · act-1 clear
+  · act-2 clear · act-2 openings at a full pool):** regen **0.308 · 0.675
+  · 0.457 · 100%** · deploy **0.475 · 0.825 · 0.576 · 100%**. **Floor 0:**
+  regen 0.292 · 0.675 · 0.432 · 53% · deploy 0.442 · 0.825 · 0.535 · 54%.
+  **Paired same-seed Δ (floor 1 − 0):** regen win **+0.017** (3/1
+  discordant, z 1.00) · deploy **+0.033** (6/2, z 1.41) · pooled
+  +0.025 (9/3, z 1.73) — act-2 clear +2.5 / +4.1 pt. Small, inside
+  per-arm paired noise, pooled borderline: the 89c reading stands ("cheap
+  insurance for a 1-in-15 tail, not a rescue" — 6.2% / 4.0% of crossings
+  arrived under 10). ⭐⭐ **Two byte-identities:** (1) act 1 is IDENTICAL
+  across the legs (81/81 and 99/99 seam values equal; the seam column
+  reads PRE-floor on both — 17/20/20, mean 17.27 / 17.77 — by
+  construction, 90a); (2) **both floor-0 legs' summary.csv are
+  BYTE-IDENTICAL to the 89c batches at `9b4423a`** — the §90 build
+  (floor · payload · harness read · `restHealFraction` · `DP_TAIL_SCALE`)
+  AND 89e are byte-neutral at floor 0 on 240 n=120 walk runs, a stronger
+  no-baseline-change proof than the suite's absence of two-act pins.
+  **What the sheet does with it:** the seam pool is a DIAGNOSTIC now (the
+  header note above); the §91 rule-flip read starts from the floor-1
+  numbers as its survivors-rule baseline (regen 0.308 / 0.457 · deploy
+  0.475 / 0.576 — act-2 clear brackets the signed 0.5 from both sides).
+  Batch dirs `output/box-batches/20260903-{032344,035305,042229,
+  045544}-71a5000` (regen 1 · regen 0 · deploy 1 · deploy 0).

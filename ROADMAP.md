@@ -87,6 +87,25 @@ serializes). **Exit:** the dial live at 1.0; the paired read in BALANCE;
 the tag placed. **NOT doing:** the per-act band decision (dissolves
 under independence); heal-drop inflation.
 
+Cut at the 2026-09-03 kickoff (USER-SIGNED in chat 2026-09-02; audit →
+WORKLOG §90 — the cut held; the predicted two-act re-pin did not exist).
+
+- [x] **90a** — `health.seamHealFloor` (shipped 1.0) clamps at
+  `advanceSector` BEFORE the emit; `sector:cleared` gains `poolBefore`/
+  `poolAfter`; the harness records the PRE-floor seam. `bd44a3a`.
+- [x] **90b** — `restHealAmount` 5 → `restHealFraction` 0.25 of max;
+  `DP_TAIL_SCALE` re-expressed, pinned byte-identical at 5. `f58e5fb`.
+- [x] **90c** — the SectorClearedScreen pool line ("Pool restored 7 →
+  20" / "Pool 20 / 20 carries on"); browser-verified. `d30f0bf`.
+- [ ] **90d** — the paired cohort: the two soldier walk twins × floor 1
+  vs 0 (`--set=health.seamHealFloor=0`), n=120, `--per-encounter
+  --emit-results`, `box-drive.sh --poll=120 --est-hours=3
+  --artifact=results.json`; independent recompute from results.json.
+- [ ] **90e** — BALANCE (dated 2026-09-03 §90: the paired read; the
+  seam-pool band → a diagnostic, pre-floor value still recorded) +
+  WORKLOG + the HANDOFF cursor. ⛔ The tag `pre-casualty-experiment` +
+  the close sign are the USER's (morning).
+
 ## Phase 91 — The casualty rule (the experiment's build)
 
 Charter: `health.chipMode: survivors | casualties` (both alive; default

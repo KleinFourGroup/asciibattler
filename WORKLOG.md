@@ -368,3 +368,101 @@ criterion at §93, not signed.
 The rest of the spec's audit register (neutrals in the survivor sum ·
 summons · the evaluator objective · XP on death) is the §91 kickoff's
 file:line pass, not this phase's.
+
+## Phase 90 — The seam floor
+
+Built by a second session (asciibattler-5c) while the §89 session
+closed its phase — the user's "option 1" (2026-09-02 chat); the cut
+below was user-signed in chat and relayed at the handoff (2026-09-03
+≈ 03:00Z, tree free at `353b71d`).
+
+### §90 kickoff (2026-09-03) — the code-reality audit (at `353b71d`)
+
+The cut HOLDS against code reality; four things it didn't name, none a
+contradiction:
+
+- **The pool max is UNFOLDED.** Every `playerHealthMax` read in Run.ts is
+  the raw config (`HEALTH.playerHealthMax` — refill, packet-heal caps,
+  the risk line, the pool fraction); no daemon/rule folds it. The floor
+  clamps to the raw config, correctly.
+- ⭐ **The rest heal had a hidden consumer:** the arbitrated arm's
+  `DP_TAIL_SCALE` (70e) priced one path-weight point at
+  `HEALTH.restHealAmount`. Re-expressed as `restHealFraction ×
+  playerHealthMax` it is the same 5 — the ARM's tail is byte-identical
+  across the rename, pinned both ways (definition + the exact 5). A
+  future fraction/max move re-pins the arm deliberately with §92's
+  re-search. Import-time evaluation kept (the tail prices at the
+  SHIPPED config; `--set` never dials rest heals).
+- **The harness read the LIVE pool at `sector:cleared`** (`run.playerHealth`
+  in the handler) — under floor 1.0 that is a constant 20 and the
+  seam-hazard read goes blind. Hence the payload's `poolBefore` and the
+  recorder switch (the cut's item 2, confirmed necessary).
+- **`--set=health.seamHealFloor=0` is admissible:** `KNOB_GROUPS.health`
+  IS the parsed HEALTH object (balanceSweep.ts), `applySetOverrides`
+  mutates it in place at run-mode entry before any Run exists, `--jobs`
+  children re-apply from argv, and rollout clones share the module —
+  the floor-0 leg is consistent live and in rollouts. `--set` is not in
+  the `--arbitrate` refusal list (it isn't a RunConfig dial).
+- Smaller: the existing payload test's 33-pool sentinel sits ABOVE max,
+  so the floor leaves it alone (before == after == 33); no live doc names
+  `restHealAmount` (archives only — left as history).
+
+**Predictions checked:** NO snapshot bump — held (`playerHealth` already
+serializes; toJSON untouched). ⭐ **The predicted two-act summary.csv
+re-pin did NOT materialize:** no test pins a two-act walk's outcome
+exactly (the determinism/baseline pins are single-battle or
+single-sector), so the floor-1.0 default changed no fuzz baseline. The
+90d cohort is therefore the FIRST floored walk read — nothing on disk
+predates it at the new default.
+
+### The cut (user-signed 2026-09-02, relayed at the handoff)
+
+90a the floor + the payload + the harness pre-floor read → 90b the rest
+fraction → 90c the screen line → 90d the paired cohort → 90e the docs;
+the tag `pre-casualty-experiment` and the close sign are the USER's.
+
+### 90a/90b/90c — the build (2026-09-03; `bd44a3a` · `f58e5fb` · `d30f0bf`)
+
+- **90a** — `health.seamHealFloor` (0–1, shipped 1.0; `max`, never `min`)
+  applied at the top of `advanceSector`, BEFORE the emit; `sector:cleared`
+  gains `poolBefore`/`poolAfter`; the harness records `poolBefore`. Tests:
+  the clamp at 0 / 0.5 / 1.0 (config-derived), the shipped-1.0 pin, the
+  emit-order pin (a live-pool subscriber sees the healed value — exactly
+  why the harness can't read live), no floor at a sink, and the harness
+  pin re-derived from a surface the recorder doesn't consult (the same
+  seed at floor 0, where seam == live pool by construction; act 2 opens on
+  max vs the seam — the §79e circular-verification lesson applied).
+- **90b** — `restHealAmount` 5 → `restHealFraction` 0.25 (identical at max
+  20); `DP_TAIL_SCALE` re-expressed + pinned; a new pin flips
+  `playerHealthMax` in place and proves the heal scales. Packets stay
+  absolute; fatigue untouched (§91).
+- **90c** — `sectorClearedPoolLine`: "Pool restored 7 → 20" on a heal,
+  "Pool 20 / 20 carries on" when the floor didn't bite (the screen never
+  implies a heal that didn't happen). Browser-verified on `dev-preview`
+  (5191): a 7-pool run driven through the post-turn gate emitted
+  `{poolBefore 7, poolAfter 20}`, the DOM read the amber line, Press on
+  released to The Deep End's map; the full-pool branch read the carried
+  form.
+- Gate at each commit: typecheck clean · main 2714 → 2720 (90a) → +1 (90b)
+  · fuzz:smoke 549 → 551 → 552 · no re-pins.
+
+### Riders relayed from the §89 close (→ §92, recorded so they aren't rediscovered)
+
+The 89c priest/regen walk arm is a parity item (win 0.175, act-2 clear
+0.27 — the board reads priests at `--hops=11` only); act-1 clear pooled
+0.73 vs the signed 0.6, act-2 0.44 vs 0.5.
+
+### 90d — the paired cohort (launched 2026-09-03)
+
+Four ARM two-act WALK arms at `n=120`: the two soldier twins
+(regen/deploy — the board's arb-walk shape, NO `--hops`: the act-1 refs
+have zero crossings) × floor **1** (HEAD as shipped) vs floor **0**
+(`--set=health.seamHealFloor=0`, the pre-§90 carry), `--per-encounter
+--emit-results`, `scripts/box-drive.sh --poll=120 --est-hours=3
+--artifact=results.json`, queue `tests/fuzz/output/queue-90d.txt`
+(gitignored, modelled on `queue-89c`). What the pair isolates: the
+floor's effect on act-2 clear / win / the seam distribution, on the
+SURVIVORS rule — so §91's rule-flip read starts from a baseline that
+already includes the floor. The seam column stays PRE-floor on both
+legs by construction (90a), so the two legs' seam distributions should
+match to paired noise — a mismatch is an instrument bug, not a finding.

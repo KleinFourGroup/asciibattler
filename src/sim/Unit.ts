@@ -438,13 +438,17 @@ export class Unit {
     this.summonedBy = init.summonedBy ?? null;
     this.campId = init.campId ?? null;
     // K1 — seed spawn-time effects (fatigue / encounter buffs / rehydrate).
-    // `currentHp` was just set to the base maxHp above; no K1 effect modifies
-    // `constitution`, so the recompute below leaves maxHp unchanged and that
-    // currentHp stays valid (the maxHp↔currentHp clamp policy is deferred to
-    // the first real temp-HP consumer).
+    // `currentHp` was just set to the BASE maxHp above; the recompute below
+    // re-derives maxHp from the folded stats, so an effect that lowers
+    // `constitution` (the §91c Fatigued retarget — the first such consumer)
+    // would otherwise leave the unit spawning OVER its max. The clamp the K1
+    // comment deferred lands here. Byte-neutral when nothing touches
+    // constitution (maxHp unchanged ⇒ the min is the identity); the snapshot
+    // rehydrate path overwrites currentHp after construction regardless.
     if (init.effects && init.effects.length > 0) {
       for (const effect of init.effects) this.effects.push(cloneEffect(effect));
       this.recomputeEffective();
+      this.currentHp = Math.min(this.currentHp, this.derived.maxHp);
     }
   }
 
@@ -506,10 +510,13 @@ export class Unit {
   }
 
   /**
-   * K1 — recompute the derived block from `effectiveStats`. A no-op in practice
-   * for every K1 effect (none touch `constitution` / `mobility`, the only
-   * stats that feed `derived`), but the seam is live for future temp-maxHp /
-   * temp-move-speed effects — at which point this gains the currentHp clamp.
+   * K1 — recompute the derived block from `effectiveStats`. A no-op for every
+   * effect that leaves `constitution` / `mobility` alone (the only stats that
+   * feed `derived`). The §91c Fatigued retarget is the first constitution
+   * consumer, seeded at SPAWN only (`endOfTurn`) — the constructor clamps
+   * currentHp after seeding. A RUNTIME constitution effect (an `addEffect`
+   * mid-battle) would need the clamp here too — deferred to the first such
+   * consumer.
    */
   refreshDerived(): void {
     this.derived = deriveStats(this.effectiveStats, this.derived.attackRange);

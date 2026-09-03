@@ -130,8 +130,11 @@ experiment (the rollback range).
   sprite anchors against the asset (WORKLOG §91-pre2). **91-pre2b** — the
   X / ! objective markers compensated (`inkBottomLift`): ink-true gaps
   0.100 / 0.200 re-derived live (the user’s eyeball find).
-- [ ] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
-  the currentHp clamp). Byte-identical.
+- [x] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
+  the currentHp clamp). Landed 2026-09-03: `fatigueEffect` mods
+  `constitution` (magnitude clamped), the constructor clamp; 7 new pins
+  (the curve / the cap / power untouched / the spawn-at-max clamp);
+  byte-identical at rate 0 (WORKLOG §91c).
 - [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode
   (browser-verified) → **tag `casualty-seams`**.
 - [ ] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;

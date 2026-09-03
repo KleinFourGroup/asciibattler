@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Unit } from './Unit';
 import type { UnitStats } from './Unit';
 import { deriveStats } from './stats';
-import type { StatusEffect } from './statusEffects';
+import { foldEffects, type StatusEffect } from './statusEffects';
 
 const STATS: UnitStats = {
   constitution: 20,
@@ -47,6 +47,25 @@ describe('Unit', () => {
     expect(u.currentHp).toBe(derived.maxHp);
     expect(u.position).toEqual({ x: 0, y: 0 });
     expect(u.behaviors).toEqual([]);
+  });
+
+  it('clamps currentHp to the re-derived maxHp when seeded with a constitution debuff (§91c)', () => {
+    // The clamp the K1 constructor deferred: a spawn-time effect that lowers
+    // constitution lowers maxHp, and the unit must spawn AT that max, not over
+    // it. Expected values re-derived from the fold + deriveStats, not from Unit.
+    const fatigued = eff({ key: 'fatigued', magnitude: 2, merge: 'add', mods: { constitution: { mul: 0.9 } } });
+    const u = makeUnit({ effects: [fatigued] });
+    const expectedMaxHp = deriveStats(foldEffects(STATS, [fatigued]), 1).maxHp;
+    expect(expectedMaxHp).toBeLessThan(deriveStats(STATS, 1).maxHp);
+    expect(u.derived.maxHp).toBe(expectedMaxHp);
+    expect(u.currentHp).toBe(expectedMaxHp);
+  });
+
+  it('keeps currentHp at the base maxHp when a seeded effect leaves constitution alone', () => {
+    // The byte-neutral leg of the clamp: min(base, base) is the identity.
+    const u = makeUnit({ effects: [eff({ key: 'empowered', mods: { strength: { add: 2 } } })] });
+    expect(u.derived.maxHp).toBe(deriveStats(STATS, 1).maxHp);
+    expect(u.currentHp).toBe(deriveStats(STATS, 1).maxHp);
   });
 });
 

@@ -47,19 +47,21 @@ describe('foldEffects', () => {
   });
 
   it('recovers the exact fatigue curve (mul delta scales linearly with magnitude)', () => {
-    // Fatigued: power × (1 − rate·stacks). rate 0.1, stacks 2 → ×0.8.
+    // Fatigued (§91c: on constitution): constitution × (1 − rate·stacks).
+    // rate 0.1, stacks 2 → ×0.8.
     const rate = 0.1;
-    const out = foldEffects(base({ power: 10 }), [
-      effect({ magnitude: 2, merge: 'add', mods: { power: { mul: 1 - rate } } }),
+    const out = foldEffects(base({ constitution: 10 }), [
+      effect({ magnitude: 2, merge: 'add', mods: { constitution: { mul: 1 - rate } } }),
     ]);
-    expect(out.power).toBe(Math.round(10 * (1 - rate * 2))); // = 8
+    expect(out.constitution).toBe(Math.round(10 * (1 - rate * 2))); // = 8
+    expect(out.power).toBe(10); // untouched stats keep base
   });
 
   it('is inert at magnitude 0 / rate 0 (the default-fatigue no-op)', () => {
-    const out = foldEffects(base({ power: 10 }), [
-      effect({ magnitude: 5, mods: { power: { mul: 1 - 0 } } }),
+    const out = foldEffects(base({ constitution: 10 }), [
+      effect({ magnitude: 5, mods: { constitution: { mul: 1 - 0 } } }),
     ]);
-    expect(out.power).toBe(10);
+    expect(out.constitution).toBe(10);
   });
 
   it('multiplies multiplicative modifiers across separate instances', () => {

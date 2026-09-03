@@ -245,7 +245,7 @@ src/
                              # portLegendaryOffers (64c — count of tier-forced port slots, base 0), and
                              # drawAmount (65a — per-turn draw, base = deck.json handSize; read clamped to
                              # [1, deck.json maxHandSize] — the 65d user-signed cap, one basis for deal + budget)
-    fatigue.ts               # H6c→K1: fatigueEffect — the Fatigued status debuff (null/inert at the default rate)
+    fatigue.ts               # H6c→K1→91c: fatigueEffect — the Fatigued status debuff on CONSTITUTION (starting HP; stacks clamped at health.fatigueMaxStacks; null/inert at the default rate 0)
     RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))

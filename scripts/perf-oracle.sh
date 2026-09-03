@@ -55,6 +55,13 @@ cmd //c mklink //J "$(cygpath -w "$WT/node_modules")" "$(cygpath -w "$ROOT/node_
 VECTOR="--strategy=tests/fuzz/fixtures/59-regen-vector.json"
 SHAPE_SCORED="--count=4 --hops=4 --character=soldier $VECTOR"
 SHAPE_ARM="--count=1 --hops=5 --character=soldier $VECTOR --searcher --audition --redraw=level:2 --empower=level:hi --arbitrate --prior-lambda=0.5"
+# 91c — an OPTIONAL third shape from the environment: `ORACLE_EXTRA_SHAPE="<fuzz
+# flags>"` runs it as shape 'extra' on both trees (e.g. the n=20 ARM walk twin
+# `--count=20 --character=soldier $VECTOR <ARM> --per-encounter --emit-results
+# --jobs=8` — the 91a2 oracle, ~4 min, the default exit for any byte-identity
+# claim per retro/scratchpad). Every CSV the run emits is compared; results.json
+# is NOT (it carries the new telemetry fields a seam commit adds by design).
+SHAPE_EXTRA="${ORACLE_EXTRA_SHAPE:-}"
 
 run_shape() { # run_shape <tree-dir> <out-dir> <flags...>
   local tree="$1" out="$2"
@@ -86,21 +93,28 @@ compare() { # compare <name> <file> <base-dir> <cand-dir>
   fi
 }
 
-for shape in scored arm; do
+SHAPES="scored arm"
+[ -n "$SHAPE_EXTRA" ] && SHAPES="$SHAPES extra"
+for shape in $SHAPES; do
   case "$shape" in
     scored) flags="$SHAPE_SCORED" ;;
     arm) flags="$SHAPE_ARM" ;;
+    extra) flags="$SHAPE_EXTRA" ;;
   esac
   echo "shape '$shape': $flags"
   # shellcheck disable=SC2086 — flags are a deliberate word-split flag list.
   run_shape "$WT" "$SCRATCH/base-$shape" $flags
   run_shape "$ROOT" "$SCRATCH/cand-$shape" $flags
-  compare "$shape" summary.csv "$SCRATCH/base-$shape" "$SCRATCH/cand-$shape"
-  compare "$shape" decisions.csv "$SCRATCH/base-$shape" "$SCRATCH/cand-$shape"
+  # summary + decisions are the contract on every shape; the per-encounter /
+  # alpha-strike / rosters CSVs exist only when the shape asks for them (n/a
+  # otherwise, never a failure) — timings.csv stays out (wall clock).
+  for file in summary.csv decisions.csv per-encounter.csv alpha-strike.csv rosters.csv; do
+    compare "$shape" "$file" "$SCRATCH/base-$shape" "$SCRATCH/cand-$shape"
+  done
 done
 
 if [ "$FAILURES" -gt 0 ]; then
   echo "perf-oracle: FAIL ($FAILURES mismatch(es)) — the candidate CHANGED BEHAVIOR vs $BASE_SHA."
   exit 1
 fi
-echo "perf-oracle: PASS — live tree byte-identical to $BASE_SHA on both shapes."
+echo "perf-oracle: PASS — live tree byte-identical to $BASE_SHA on every shape ($SHAPES)."

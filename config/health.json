@@ -8,5 +8,6 @@
   "capPenalty": "survivors",
   "restHealFraction": 0.25,
   "seamHealFloor": 1.0,
-  "fatiguePerStack": 0
+  "fatiguePerStack": 0,
+  "fatigueMaxStacks": 5
 }

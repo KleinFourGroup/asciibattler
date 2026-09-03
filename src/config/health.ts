@@ -49,15 +49,19 @@
  *                       CALL time (the fuzz `--set=health.seamHealFloor=0`
  *                       probe arm mutates this object in place).
  *
- * Fatigue (H6c — INERT by default):
- * - `fatiguePerStack` — the per-stack debuff rate behind `fatigueFactor`. A
- *                       unit accrues one stack per prior turn it fought THIS
- *                       encounter (off H3's `deploymentCounts`); the factor
- *                       scales its power as it's fielded. Default **0** ⇒
- *                       factor 1.0 ⇒ zero gameplay effect. The real curve /
- *                       magnitude (and whether a richer status-effect shape
- *                       replaces the power scale) is H7's call — see
- *                       `src/run/fatigue.ts`.
+ * Fatigue (H6c → §91c — INERT by default):
+ * - `fatiguePerStack` — the per-stack debuff rate. A unit accrues one stack per
+ *                       prior turn it fought THIS encounter (off H3's
+ *                       `deploymentCounts`); the `Fatigued` effect scales its
+ *                       CONSTITUTION (starting HP) by `1 − rate·stacks` as it's
+ *                       fielded. §91c re-targeted it off `power` — meaningless
+ *                       under the casualties chip rule, where power is what a
+ *                       fallen unit COSTS (a tired unit would have been cheaper
+ *                       to lose). Default **0** ⇒ no effect seeded ⇒
+ *                       byte-identical. Switched on (the spec's −10%/stack) as
+ *                       its own paired read at §92 — see `src/run/fatigue.ts`.
+ * - `fatigueMaxStacks` — the stack clamp: stacks beyond it add nothing. The
+ *                       spec's cap (at −10%/stack, 5 stacks = −50%).
  *
  * Safety / termination:
  * - `maxTurns`        — hard cap on turns per encounter. A run of all-mutual-
@@ -90,6 +94,7 @@ const HealthSchema = z.object({
   restHealFraction: z.number().min(0).max(1),
   seamHealFloor: z.number().min(0).max(1),
   fatiguePerStack: z.number().nonnegative(),
+  fatigueMaxStacks: z.number().int().positive(),
 });
 
 export type HealthConfig = z.infer<typeof HealthSchema>;

@@ -1021,3 +1021,50 @@ A tooling note: the battle clock only advances on animation frames, and
 the Browser pane goes hidden while tools run, so the probe drained the
 objective command with one manual `world.tick()` + `battleRenderer.update()`
 — the same reason a “stalled” preview battle is not a sim bug.
+
+### 91c — the fatigue retarget at rate 0 (2026-09-03)
+
+Landed as cut. `fatigueEffect` now mods `constitution: { mul: 1 − rate }`
+at magnitude `min(stacks, fatigueMaxStacks)` (the new `health.fatigueMaxStacks`
+5, zod `int().positive()`, an injectable third arg beside `rate`); the
+K1 fold recovers `constitution × (1 − rate·stacks)` exactly, so the spec's
+curve reads −10%/stack, flat past 5 stacks = −50%. Why constitution: under
+the casualties rule `power` is what a fallen unit COSTS, so the old power
+debuff made a tired unit CHEAPER to lose — the retarget puts the penalty
+where it reads (less starting HP on the field). The deferred K1 clamp lands
+in the `Unit` constructor: after seeding, `currentHp = min(currentHp,
+derived.maxHp)` — the first constitution consumer would otherwise spawn OVER
+its max. Placement per the signed cut (at seed): fatigue is seeded at spawn
+only (`endOfTurn`), and a sweep of `config/*.json` + `src/` found NO other
+effect that touches constitution, so the clamp is the identity on every
+existing spawn; the snapshot rehydrate path overwrites `currentHp` after
+construction regardless. A RUNTIME constitution effect (`addEffect`
+mid-battle) would still need the clamp in `refreshDerived` — deferred to the
+first such consumer, noted at the seam. Pins (+7, all re-derived from the
+fold + `deriveStats`, never from `Unit`): the constitution curve · power
+UNTOUCHED (the retarget's point) · starting HP through `deriveStats` (config
+`hpPerConstitution`) · the stack cap (magnitude tracks stacks to
+`fatigueMaxStacks`, then holds; at the spec's 0.1 the cap is 50) · the
+explicit-maxStacks seam · the spawn-at-max clamp with the production effect
+(fatigue.test) and with a generic constitution debuff + the byte-neutral
+non-constitution leg (Unit.test); the Run-level fatigue block re-expressed
+on constitution (folded stats ARE the base object at rate 0; at 0.6 the
+fielded constitution and maxHp fall, power holds, the roster is untouched);
+statusEffects' curve pin re-targeted. 2759 main green (2752 + 7), typecheck
+clean.
+
+⭐ **Byte-identity, RUN two ways** (the scratchpad's "n=20 oracle as the
+default exit"): `scripts/perf-oracle.sh HEAD` (the mechanized 47e oracle —
+worktree-pinned `6b348b5` vs the dirty tree) PASSED on its two shapes
+(scored n=4: summary `fabc597e5466` · rosters; ARM n=1 hops=5: summary
+`da56367572a1` · decisions `9a377b1bb2ed` · rosters) AND on a new optional
+third shape — the script gained `ORACLE_EXTRA_SHAPE="<flags>"` (a shape
+'extra' on both trees; every emitted CSV compared, results.json deliberately
+not) — run as the regen twin, full ARM, n=20 `--per-encounter
+--emit-results --jobs=8`: summary `5bdf7fbc2939` · decisions `4e2f1d13e5d4`
+· per-encounter `5e53a6d848f8` · alpha-strike `3e4054a39587` · rosters
+`67f1795c1ad2`, ALL identical (~12 min for the three shapes sequentially;
+the per-shape CSV list is now summary + decisions + per-encounter +
+alpha-strike + rosters, n/a when a shape doesn't emit one). The mechanism
+is a provable null at rate 0 — `fatigueEffect` returns before the new code
+— but the oracle is what makes the claim a measurement.

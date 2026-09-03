@@ -11,6 +11,7 @@ import { SectorMapSchema } from '../config/sectorMap';
 import type { GameEvents } from '../core/events';
 import { ARCHETYPE_CONFIG, DRAFTABLE_BY_TIER } from '../sim/archetypes';
 import { scaleStats } from '../sim/leveling';
+import { deriveStats } from '../sim/stats';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
 import { DIFFICULTY } from '../config/difficulty';
@@ -2170,20 +2171,21 @@ describe('Run', () => {
     const fielded = (run: Run, rosterIndex: number) =>
       run.currentEncounter!.playerTeam.find((u) => u.rosterIndex === rosterIndex)!;
 
-    /** Effective power of that fielded unit — base `stats.power` folded with the
+    /** Effective stats of that fielded unit — base `stats` folded with the
      *  seeded `effects` (where the Fatigued debuff now lives, post-K1). */
-    const fieldedPower = (run: Run, rosterIndex: number): number => {
+    const fieldedStats = (run: Run, rosterIndex: number) => {
       const t = fielded(run, rosterIndex);
-      return foldEffects(t.stats, t.effects ?? []).power;
+      return foldEffects(t.stats, t.effects ?? []);
     };
 
-    it('is inert at the shipped knob: NO effect seeded, fielded power equals base', () => {
+    it('is inert at the shipped knob: NO effect seeded, fielded stats ARE the base block', () => {
       const { run, bus } = freshRunWithBus(1);
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      // Turn 1 (0 stacks): no Fatigued effect, every fielded unit at base power.
+      // Turn 1 (0 stacks): no Fatigued effect, every fielded unit at base stats
+      // (the fold's identity fast path — the same object, not a copy).
       for (const u of run.currentEncounter!.playerTeam) {
         expect(u.effects ?? []).toEqual([]);
-        expect(fieldedPower(run, u.rosterIndex!)).toBe(run.team[u.rosterIndex!]!.stats.power);
+        expect(fieldedStats(run, u.rosterIndex!)).toBe(run.team[u.rosterIndex!]!.stats);
       }
       // Turn 2 (1 prior deployment): STILL no effect at the default rate 0.
       chipTurn(bus, { player: 1, enemy: 0 }); // sub-lethal → encounter continues
@@ -2192,34 +2194,40 @@ describe('Run', () => {
       }
     });
 
-    it('seeds a Fatigued effect that reduces effective power once the knob is positive', () => {
-      // rate > 0.5 so even a power-1 unit rounds strictly down at 1 stack.
+    it('seeds a Fatigued effect that reduces CONSTITUTION (starting HP), not power, once the knob is positive (§91c)', () => {
+      // rate > 0.5 so even a low-constitution unit rounds strictly down at 1 stack.
       HEALTH.fatiguePerStack = 0.6;
       const { run, bus } = freshShortRosterRun(1); // slot 0 must field every turn (K2)
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
 
-      const baseP = run.team[0]!.stats.power;
+      const base = run.team[0]!.stats;
       expect(fielded(run, 0).effects ?? []).toEqual([]); // turn 1 = 0 stacks → no effect
-      expect(fieldedPower(run, 0)).toBe(baseP);
+      expect(fieldedStats(run, 0)).toBe(base);
 
       chipTurn(bus, { player: 1, enemy: 0 }); // → turn 2, 1 prior deployment
       const seeded = fielded(run, 0).effects ?? [];
       expect(seeded).toHaveLength(1);
       expect(seeded[0]!.key).toBe(FATIGUE_KEY);
       // Derived from the very effect the production seam applies — no literal.
-      expect(fieldedPower(run, 0)).toBe(foldEffects(fielded(run, 0).stats, [fatigueEffect(1)!]).power);
-      expect(fieldedPower(run, 0)).toBeLessThan(baseP);
+      const folded = fieldedStats(run, 0);
+      expect(folded).toEqual(foldEffects(fielded(run, 0).stats, [fatigueEffect(1)!]));
+      expect(folded.constitution).toBeLessThan(base.constitution);
+      // The retarget's point: power (what the unit COSTS when it falls under the
+      // casualties rule) is untouched — a tired unit is not cheaper to lose.
+      expect(folded.power).toBe(base.power);
+      // And it lands where it reads: less starting HP on the field.
+      expect(deriveStats(folded, 1).maxHp).toBeLessThan(deriveStats(base, 1).maxHp);
     });
 
     it('never mutates the roster canonical stats when fielding a fatigued copy', () => {
       HEALTH.fatiguePerStack = 0.6;
       const { run, bus } = freshRunWithBus(1);
-      const baseP = run.team[0]!.stats.power;
+      const baseCon = run.team[0]!.stats.constitution;
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 1, enemy: 0 });
-      // The roster template keeps its canonical power AND carries no effect —
-      // fatigue rode the transient stamped copy.
-      expect(run.team[0]!.stats.power).toBe(baseP);
+      // The roster template keeps its canonical constitution AND carries no
+      // effect — fatigue rode the transient stamped copy.
+      expect(run.team[0]!.stats.constitution).toBe(baseCon);
       expect((run.team[0] as { effects?: unknown }).effects).toBeUndefined();
     });
   });

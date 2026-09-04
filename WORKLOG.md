@@ -1523,3 +1523,281 @@ Round 6 riders (priest/regen walk parity · act-1/act-2 vs the signed
 0.6 / 0.5 · `seamPoolBand`) carried unchanged. **Process notes →
 retro/scratchpad** (the HANDOFF char cap, the two-vocabulary fake, split
 pre-reads by arm, the monitor pattern, the wall-time estimate).
+
+## Phase 92 — The rebalance (under the casualty rule)
+
+### §92 kickoff (2026-09-04) — the code-reality audit (at `deb180c`)
+
+Started from the §91g riders. Every claim below is a file:line or a number
+recomputed from the 91f batch dirs; nothing is built yet.
+
+**A. The `--set` registry cannot reach an encounter.** `resolveKnob`
+([tests/fuzz/balanceSweep.ts:70](tests/fuzz/balanceSweep.ts)) resolves
+`group.key` over four FLAT groups — `difficulty` · `health` · `leveling` ·
+`sim`. An encounter's `healthPool` / wave `count.factor` / a unit entry live
+under `encounters.json` by id, so a per-encounter pool candidate is a COMMIT,
+and ONE HEAD PER COHORT (box-drive) makes every candidate table its own
+push + cohort. `health.playerHealthMax`, `health.chipMultiplier`,
+`health.restHealFraction`, `health.fatiguePerStack` ARE probe arms today.
+→ a decision: extend the registry with an id-keyed `encounter.<id>.healthPool`
+(+ the first wave's `count.factor`) so pool candidates ride one cohort as
+`--set` arms; or design once on the desk and read once. (Cut line 92b.)
+
+**B. The pacing/burn read has no repo-resident reader.** `per-encounter.csv`
+([tests/fuzz/reporters.ts:1560–1578](tests/fuzz/reporters.ts)) carries
+`waves` / `instances` (turns per instance, all instances) and DEATH counts
+per battle — and death counts are not booked power (gotcha #130: the
+summoner encounters read 17–70 "deaths" per turn while the ledger books
+1.7–2.5). The 91f pacing table came from a scratchpad probe over
+`results.json` (`telemetry.poolChips`: per turn `encounterId` · `reason` ·
+`playerCharge` / `enemyCharge` · `fallenPlayer` / `fallenEnemy` · the pool
+before/after) — the probe is gone with its session, and §92 reads this
+table on every cohort. → 92a: `pacing.csv` beside `per-encounter.csv`
+(turns per WON instance · booked burn / cost per turn per side · player
+cost per instance · cap share, by encounter and by kind), config-derived
+test, rides `--per-encounter --emit-results`. The forgetful-path rule: the
+reader ships with the batch, not in a scratchpad.
+
+**C. The re-search recipe exists verbatim** —
+`output/box-batches/88d2-derive.queue`: `--search --refine --searcher
+--audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85
+--seed-offset=1000 --jobs=8`, artifact `best-strategy.json`, ~2.7 h box at
+88d2b (post-perf). The search runs under the SHIPPED `health.json`
+(casualties, surcharge) — the spec's criterion-2 recipe exactly. What the
+search does NOT do: pick the deploy vector. 85g5's shape follows —
+regenerate the base finalists from `generateVectors(DEFAULT_BOX, 85, 96)`
+(non-circular check: the refined winner must lie inside its parent's 0.15
+perturb envelope), then the K=4 arbitrated-selection cohort (n=30 @ offset
+1000 under the ARM, ~1 h) → the argmax is the deploy decision (user-signed,
+as at 85g5). Two circularities to name, not fix: (1) the selection cohort's
+arb rows load the v3 PRIOR TABLE (measured under survivors, the regen
+vector) — stale by the registry's own rule until v4; (2) the arm adapts to
+the pools we then move — the closing fresh derive at the amendment board
+(the registry's standing requirement) is the ceiling read that closes it.
+The regen vector is NOT re-searched (the hand-authored 59 twin, the drift
+anchor).
+
+**D. The prior table v4** — `88d2-prior-v3.queue` (the TRAIN bank 1001–1120,
+`--shadow-horizon=run`, ~1.5 h) measured under the REGEN vector. Under
+casualties the regen twin wins 0.042 (28:1 paired against survivors) — a v4
+on the regen vector would price items on runs that die in act 1. → a
+decision: v4 measured under the RE-SEARCHED deploy vector (the 85h
+deployed-semantics rule read literally: measure under what ships). The
+roster table rebuilds off the §92 board's own ARM rows (`npm run
+roster:table -- <board-dir>`, a free rider). Both invalidate AGAIN on every
+config move, so both build ONCE at the final config, before the board.
+
+**E. The power override is a small seam, one prediction.** `resolveWave`
+([src/run/encounters/wave.ts:164](src/run/encounters/wave.ts)) builds each
+instance via `scaledUnit(archetype, level)`; `WaveUnitSchema`
+([src/config/encounters.ts:111](src/config/encounters.ts)) is
+`{archetype, count, level}`. An optional `power` on the entry → the
+resolver stamps `stats.power` on the template after scaling
+(`growthRates.power` = 0 since 91b, so level scaling never disturbs it);
+`World.recordFallen` ([src/sim/World.ts:2381](src/sim/World.ts)) books
+`effectiveStats.power`, so the stamp rides straight into the ledger; the
+risk line (`playerExposure`, [src/run/chipRule.ts](src/run/chipRule.ts))
+reads the player's OWN fielded power under casualties, untouched. The
+encounter editor gains a field. Snapshot prediction: NO bump — the wave is
+resolved at encounter start and templates already serialize `stats`
+(verify at step zero: the resolved wave is not itself in `RunSnapshot`).
+It DIVERGES from the spec's "power = headcount weight fixed per archetype"
+(the `units.test.ts` §91b pin stays: the CATALOG stays {1,2}; the override
+is per-entry) → a spec amendment on the user's signature, and the pin
+gains a row: an override books its stamped power. The override goes BOTH
+ways — a boss-shaped unit "worth 6" (the user's ask) AND fodder "worth
+0.5" in a swarm (halves the wipe burn without touching the count).
+
+**F. Fatigue's switch-on is a probe arm, not a commit.**
+`health.fatiguePerStack` ([config/health.json](config/health.json), 0;
+[src/run/fatigue.ts:46](src/run/fatigue.ts)) is a flat health key → the
+paired read is `--set=health.fatiguePerStack=0.1` against the default on
+the same seeds, no commit until it reads. Its bite scales with turns per
+encounter (deployment stacks reset per encounter) — read AFTER the pools
+move, on the design candidate, or it reads on one-turn swarms and says
+nothing.
+
+**G. The board + the walk shape.** The signing board is the 88d shape
+(`88d-board.queue`: 15 base rows n=40 + 10 checked rows extended to n=120;
+~9.6 h at 85g5, and the 91f legs fought ~30% more turns on the new table —
+budget 10–12 h). Criterion 1 (overkill ≥ 3, pooled over the SIX ARM walk
+arms) is not on the board — it is the 89c shape (`queue-89c.txt`: 3
+characters × 2 vectors, n=120, `--per-encounter --emit-results`, ~3.1 h at
+the old table). The §93 read needs both at ONE HEAD plus the survivors
+comparator on the SAME table (`--set=health.chipMode=survivors
+--set=health.capPenalty=survivors` twins — the 91f rider) — so the §92
+closing cohort = board + the six walk arms + the two survivors walk twins,
+~16–18 h, two nights. The prior tripwire fires on `npm test` the moment the
+deploy vector changes (the ARM changed) — v4 must land in the same commit
+as the deploy flip or the tree goes red.
+
+**H. THE DESK TABLE — booked charges, the 91f casualties legs**
+(`20260904-135211` regen · `-154006` deploy, pooled; scratchpad probe
+`pacing-desk.js` over `results.json`; an INSTANCE = one (seed, sector, hop);
+`turns` = per WON instance; burn/cost = booked pool-HP per turn; `pool@T` =
+burn × the user's target turns (normal 2.5 / elite 4.5 / boss 6);
+`pCost@T` = the player's per-turn cost × T):
+
+| encounter | kind | pool | n | win | turns | burn/turn | pCost/turn | pCost/inst | cap% | pool@T | pCost@T |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| highwaymen | normal | 10 | 176 | 1.00 | 1.04 | 11.7 | 1.43 | 1.5 | 0 | 29 | 3.6 |
+| plagueVictims | normal | 10 | 130 | 1.00 | 1.00 | 11.9 | 0.24 | 0.2 | 3 | 30 | 0.6 |
+| deserters | normal | 9 | 163 | 0.99 | 1.07 | 11.4 | 1.62 | 1.7 | 3 | 29 | 4.0 |
+| artillery | normal | 8 | 268 | 1.00 | 1.05 | 8.7 | 1.74 | 1.8 | 0 | 22 | 4.3 |
+| plagueDoctors | normal | 7 | 120 | 1.00 | 1.06 | 8.5 | 3.39 | 3.6 | 0 | 21 | 8.5 |
+| brigands | normal | 7 | 146 | 1.00 | 1.08 | 7.7 | 2.51 | 2.7 | 0 | 19 | 6.3 |
+| elementalTrio | normal | 9 | 163 | 0.98 | 2.01 | 6.3 | 1.76 | 3.5 | 0 | 16 | 4.4 |
+| miscreants | normal | 10 | 32 | 0.88 | 2.11 | 7.5 | 3.76 | 7.4 | 2 | 19 | 9.4 |
+| adventurer-with-guards | normal | 8 | 314 | 0.98 | 2.33 | 3.4 | 1.70 | 4.0 | 0 | 9 | 4.3 |
+| infernalColumn | normal | 10 | 29 | 0.69 | 2.50 | 3.9 | 4.83 | 11.8 | 1 | 10 | 12.1 |
+| ronin-vs-mages | normal | 8 | 163 | 0.91 | 3.28 | 2.9 | 2.69 | 8.7 | 0 | 7 | 6.7 |
+| warband-vanguard | elite | 8 | 79 | 0.96 | 2.18 | 4.5 | 3.07 | 6.6 | 0 | 20 | 13.8 |
+| brigand-champions | elite | 12 | 63 | 0.92 | 2.34 | 6.4 | 3.71 | 8.4 | 0 | 29 | 16.7 |
+| plagueSpreaders | elite | 10 | 40 | 0.68 | 3.56 | 2.5 | 3.61 | 15.3 | **42** | 11 | 16.2 |
+| darkMagicPosse | elite | 7 | 43 | 0.67 | 4.07 | 1.7 | 3.73 | 13.7 | **15** | 8 | 16.8 |
+| bandit-king | boss | 13 | 110 | 0.91 | 2.40 | 6.0 | 3.00 | 7.0 | 0 | 36 | 18.0 |
+| generalissimo | boss | 13 | 40 | 0.72 | 2.48 | 5.1 | 4.32 | 10.4 | 0 | 31 | 25.9 |
+| witch-hunt | boss | 20 | 39 | 0.64 | 3.36 | 6.4 | 3.80 | 11.7 | 0 | 39 | 22.8 |
+| banditQueen | boss | 20 | 87 | 0.85 | 3.42 | 6.4 | 3.06 | 10.4 | 2 | 38 | 18.3 |
+
+**What the table says (the findings the shape-lock turns on):**
+
+1. **The swarms are one turn by arithmetic and the fix is ×2.5–3 on their
+   pools** (19–30 vs 7–10) — the pre-registered `pool ≈ T × wave power`
+   holds cleanly: a full wipe books the whole wave (8–12) and the pool is
+   smaller than one wave.
+2. ⭐ **The player's per-turn cost does NOT fall when the enemy pool rises,
+   so the targets blow the PLAYER budget.** Booked cost per turn is
+   1.4–3.4 on normals, 3.1–3.7 elites, 3.0–4.3 bosses. An act at the
+   targets is ~6 × 2.5 + 2 × 4.5 + 6 ≈ 30 turns against a budget of 20 +
+   two rests × 5 = ~30 pool → ~1 pool per turn for a sure clear, and the
+   user's own targets say a boss alone would cost 18–26 of a 20 pool. So
+   pool-only pacing is not a rebalance — it is a guaranteed loss. The
+   lever pair is (enemy pools UP) × (player pool max UP ~2–2.5×, 20 → 40–50,
+   `--set`-able; criterion 1's threshold already scales as 0.15 ×
+   `playerHealthMax` — the §91 amendment anticipated exactly this move), or
+   the per-turn cost falls by design (fewer bodies per wave → fewer player
+   deaths per turn AND less burn per turn — the count factor). The ROADMAP's
+   "pool-max vs per-unit-cost" decision point is this row.
+3. **The bosses cannot reach 6+ turns on pool alone** — even at pool max 50
+   a 6-turn boss at 3–4.3 per turn eats half the run's pool. A 6-turn boss
+   needs a per-turn cost ≈ 1.5–2: fewer attackers per wave around a boss
+   unit worth MORE (the override at 4–6 on the named unit, fodder counts
+   down, pool ≈ 30–36). This is wave DESIGN per boss, not a re-pin — the
+   §94 per-encounter pass's territory; §92 sets the boss pool + the
+   override seam and names the shape.
+4. **The slogs are the two summoner elites, and they are CAP fights:**
+   plagueSpreaders 42% of turns tick-capped, darkMagicPosse 15% — booked
+   burn 1.7–2.5 per turn because their bodies are summons (0), so the pool
+   drains only when the summoners die; the surcharge is charging the player
+   the enemy's standing power on nearly half of plagueSpreaders' turns.
+   Both already sit at the elite turn target (3.6 / 4.1); the defect is
+   composition (the §87d list had plagueSpreaders at 10.57 pool damage,
+   OVER the elite band under survivors too). → by composition at §94, or a
+   cap on the summoners' summon rate; not a pool move.
+5. **The four small waves are IN BAND by turns already** — adventurer 2.33
+   · infernalColumn 2.50 · elementalTrio 2.01 · ronin-vs-mages 3.28 (a hair
+   over) against 2–3; their pools at burn × 2.5 come out at 7–16 (at or
+   near the authored 8–10). Leave their pools; the two with a real defect
+   are infernalColumn (win 0.69 on a NORMAL, cost 11.8 — the 87d 7.7
+   pool-damage member) and miscreants (0.88 / 7.4) — composition, §94.
+6. **The elite/normal cost ratio is the boss-shaped-wave finding in
+   miniature:** elites cost 6.6–15 per instance vs normals 1.5–4 — the
+   bite is right; the TURNS are half the target because their pools
+   (7–12) are one to two wipes of a 6–9-body wave.
+
+**The run budget, stated once** (the frame every number above answers to):
+player pool max `P` + rests (`restHealFraction` × `P` each; ~2 per act)
++ the seam floor (refill to `P`) per act vs Σ (per-turn cost × turns) over
+~9 fights. At the user's targets that is ~30 turns per act. The design
+choice is which side moves: `P` (cheap, one key, scales criterion 1) or
+per-turn lethality (wave counts — content). Recommendation below.
+
+### The draft cut (2026-09-04 — pending shape-lock)
+
+Ordering principle: the arm first (every read after it is on the
+re-searched arm), instruments before the design, the design as ONE
+candidate commit read once (not a sweep — finding 2 says the levers
+interact, and a 3 × 3 grid of (P, pool scale) is 9 cohorts), the
+derived artifacts at the final config, the board last.
+
+- **92a — the pacing reader.** `pacing.csv` per batch (finding B): by
+  encounter + by kind, turns per won instance, booked burn / cost per turn
+  per side, player cost per instance, cap share; config-derived test off a
+  synthetic `results` fixture. Rides `--per-encounter --emit-results`.
+  Exit: the 91f casualties legs re-read through it reproduce the table
+  above. Snapshot: none. (~1 h)
+- **92b — the `encounter.<id>.<key>` `--set` group** (finding A; optional,
+  the user's call): `healthPool` + the wave `count.factor` reachable as
+  probe arms so a candidate table can ride a cohort WITHOUT a commit.
+  Exit: `--set=encounter.brigands.healthPool=19` moves the fielded pool
+  (harness pin). (~1 h) — SKIP if the design is committed once (92e).
+- **92c — the RE-SEARCH** (the rider's first number; finding C): the
+  88d2-derive line verbatim at HEAD (~2.7 h) → finalist regeneration +
+  the K=4 selection cohort (~1 h) → ⛔ the deploy decision (user-signed
+  argmax) → the fixture + `board.ts` DEPLOY path + the prior table v4 in
+  the SAME commit (finding G: the tripwire). Exit: the new deploy vector
+  fixtured; v4 measured under it (~1.5 h box). Box: ~5.5 h = night 1,
+  with 92a/92b landing locally while it cooks (no commits until the last
+  launch fires — the three launches are sequential queue lines, so 92a
+  commits go in AFTER the selection cohort's fetch).
+- **92d — the desk design → the candidate table** (findings 1–6): the
+  player pool max `P` (⛔ decision: 40 or 50), `restHealFraction` held
+  (heals scale with `P`), enemy pools at burn × T for the six swarms
+  (19–30) and the elites/bosses per the table (bosses 30–36 pending the
+  override), the four small waves + the two summoner elites UNTOUCHED
+  (§94's list), fatigue still 0. One config commit through the encounter
+  editor's formatter (the 83d per-id printout). Exit: the printout
+  enumerates every encounter's (old → new) pool; typecheck + tests green
+  (the pool pins are config-derived).
+- **92e — the power override** (finding E; ⛔ decision — spec amendment):
+  `WaveUnitSpec.power?` → resolver stamp → editor field → the pin row.
+  Snapshot: no bump (predicted; verify at step zero). If signed, the four
+  bosses' named unit gets its weight in 92d's table. (~2 h)
+- **92f — the candidate read + fatigue** (night 2, ~8 h): the two soldier
+  walk twins at the candidate (n=120, the 91f shape) + the same twins at
+  `--set=health.fatiguePerStack=0.1` (the paired fatigue read, finding F)
+  — four legs. Exit: pacing by kind vs the targets; the player budget
+  (pool lost per run vs `P` + heals); fatigue's paired Δ. One adjustment
+  commit allowed (92f2) if the read misses by a band, then the final
+  config is FROZEN.
+- **92g — the derived artifacts at the final config**: prior table v4
+  re-measured IF 92d moved after v4 (it will — v4 at 92c precedes the
+  pools; the registry rule says re-measure at the amendment board: budget
+  it, ~1.5 h) + the fresh derive as the ceiling read (~2.7 h).
+- **92h — the closing cohort** (nights 3–4, ~16–18 h; finding G): the
+  88d board shape at the new table + the six 89c walk arms + the two
+  survivors@HEAD walk twins (the §93 comparator on the SAME table) →
+  `npm run roster:table` off the board's ARM rows → the board report.
+- **92i — the reads + the DRAFT lineage**: criterion 1 (the 89b2 reader,
+  six arms) · the gradient (the fresh derive's ceiling vs the deployed
+  ARM, and the survivors gradient re-read at HEAD as the comparator) · the
+  §88 rarity / price re-read on v4 · the Round 6 riders (superseded under
+  keep, read for the record) → `signed-sheet.json` DRAFT (seam / wall /
+  reach / act-1 refs at the new `P`; NOT signed — §93 decides) → HANDOFF
+  cursor → the §93 handoff: the user's five casualties playtests at the
+  92h HEAD, verdict written before the board is read.
+
+**Box budget:** 92c 5.5 h · 92f 8 h · 92g 4 h · 92h 17 h ≈ 35 h ≈ 4 nights
+(the ROADMAP's 3–4). Every cohort at one HEAD; every candidate table one
+commit.
+
+**The decision points, with recommendations:**
+
+- ⛔ **The lever (finding 2):** `P` 20 → **40** (×2, criterion 1's threshold
+  → 6) with the enemy pools at burn × T. Why not lethality: fewer bodies
+  per wave changes the content the user just praised ("health steadily
+  dropping"; the swarms as swarms); `P` is one key, probe-able, and the
+  spec pre-scaled criterion 1 for it. 50 is the fallback if 92f reads the
+  act-1 clear under the signed 0.6.
+- ⛔ **The swarm pools:** burn × 2.5 rounded — highwaymen 29 · plagueVictims
+  30 · deserters 29 · artillery 22 · plagueDoctors 21 · brigands 19; the
+  two elites with real waves 20 / 29 (warband / champions); bosses 36 /
+  31 / 39 / 38 pending the override.
+- ⛔ **The four small waves + the two summoner elites: NO pool move** (in
+  band by turns; composition defects → §94).
+- ⛔ **The power override: BUILD** (both directions; spec amendment). The
+  boss shape at 6+ turns is unreachable without it (finding 3).
+- ⛔ **v4 under the re-searched deploy vector**, not regen (finding D).
+- ⛔ **92b (the encounter `--set` group): SKIP** — the design lands once
+  (92d) and reads once (92f); a sweep is 9 cohorts the budget doesn't have.

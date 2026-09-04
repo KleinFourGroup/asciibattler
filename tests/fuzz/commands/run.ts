@@ -49,6 +49,9 @@ import {
   alphaStrikeStats,
   renderAlphaStrike,
   renderAlphaStrikeCsv,
+  pacingStats,
+  renderPacing,
+  renderPacingCsv,
   seamInputsOf,
   renderSeamHazard,
 } from '../reporters';
@@ -686,6 +689,12 @@ export function writeAggregateAnalyses(
     // so a batch.log carries the §89 baseline and the §93 re-read alike.
     process.stdout.write('\n' + renderAlphaStrike(allResults));
     writeFileSync(join(args.outDir, 'alpha-strike.csv'), renderAlphaStrikeCsv(alphaStrikeStats(allResults)));
+    // 92a — the pacing reader (turns per won instance + the BOOKED charge per
+    // turn per side, by encounter and by kind) rides the same flag: the §92
+    // rebalance reads it on every cohort, so it ships with the batch instead
+    // of living in a scratchpad probe (the 91f table did, and is gone).
+    process.stdout.write('\n' + renderPacing(allResults));
+    writeFileSync(join(args.outDir, 'pacing.csv'), renderPacingCsv(pacingStats(allResults)));
   }
 }
 

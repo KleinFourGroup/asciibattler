@@ -143,7 +143,7 @@ alpha-strike and gradient reads recomputed on the re-searched arm; the
 decision is §93.
 
 The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
-- [ ] **92a** the pacing reader — `pacing.csv` per batch (turns per won instance · booked burn/cost per turn per side · cost per instance · cap share, by encounter + kind), config-derived test; exit: the 91f legs reproduce the desk table.
+- [x] **92a** the pacing reader ✅ 2026-09-04 — `pacing.csv` + the batch.log table ride `--per-encounter`; the 91f casualties legs re-read through it reproduce the desk table row for row (WORKLOG §92a).
 - [ ] **92c1** the RE-SEARCH — the 88d2-derive line verbatim at HEAD (night 1, ~2.7 h; `queue-92c1.txt`).
 - [ ] **92c2** finalist regeneration (the 85g5 non-circular envelope check) → the K=4 selection cohort (n=30 @ 1000, ~1 h) → ⛔ the deploy decision → the fixture + `board.ts` DEPLOY + prior v4 (~1.5 h) in ONE commit (the tripwire).
 - [ ] **92d** the candidate table — `playerHealthMax` 40, swarm/elite/boss pools per the desk table, one config commit through the formatter with the per-id (old → new) printout.

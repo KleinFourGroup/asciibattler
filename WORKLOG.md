@@ -1816,3 +1816,29 @@ the swarm pools per the desk table · NO pool move on the four small waves
 both directions (a spec amendment lands with 92e) · prior v4 measured
 under the re-searched deploy vector · 92b SKIPPED. The cut is in ROADMAP
 §92 as checkboxes; night 1 (the derive) launches from this commit.
+
+### 92a — the pacing reader (2026-09-04, built while 92c1 cooked)
+
+`pacingStats` / `renderPacing` / `renderPacingCsv` in
+[tests/fuzz/reporters.ts](tests/fuzz/reporters.ts), written beside the
+alpha-strike reader and riding the same `--per-encounter` flag in
+`writeAggregateAnalyses` (`pacing.csv` + a batch.log table). The unit of
+read is the encounter INSTANCE — one (sector, hop) visit off
+`telemetry.poolChips` — WON when its last chip leaves the enemy pool at 0;
+turns per won instance is the number the user's targets are stated in.
+Burn and cost are the BOOKED charges (`chargeToEnemy` / `chargeToPlayer`,
+so a pre-91a2 batch reads the survivors arithmetic), never death counts —
+the reader exists because the death-count table over-read the summoner
+encounters by 7–28× (finding B / gotcha #130). Rows by encounter (kind
+order, then id) and by kind + `all`. Ten pins in `pacing.test.ts`, every
+expected number derived by hand from a synthetic chip fixture; the kinds
+are config-derived (the catalog is asserted, not assumed).
+
+**Exit check RUN:** the two 91f casualties legs (`20260904-135211` ·
+`-154006`, 240 runs) re-read through the real reader reproduce the
+kickoff's desk table row for row — the desk probe was an independent JS
+derivation over the same `results.json` (highwaymen 176 / 1.04 / 11.7 /
+1.43 · plagueSpreaders cap 42.0% · banditQueen 3.42 · the kind rows normal
+1.61 / elite 2.72 / boss 2.85 turns per won instance, cost per instance
+3.35 / 10.0 / 9.2). 2793 main + 575 fuzz:smoke (565 + 10) green,
+typecheck clean.

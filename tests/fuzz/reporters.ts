@@ -1948,3 +1948,226 @@ export function renderEncounterCsv(stats: readonly EncounterStats[]): string {
   );
   return [header, ...rows].join('\n') + '\n';
 }
+
+// ---------------------------------------------------------------------------
+// 92a — THE PACING READER (`pacing.csv` beside `per-encounter.csv`).
+//
+// The §92 rebalance's instrument: turns per encounter INSTANCE against the
+// user's turn targets, and the BOOKED charge per turn per side (the chip
+// rule's actual pool-HP, via `chargeToPlayer` / `chargeToEnemy`) — never
+// death counts (gotcha #130: a summoned body dies at 0). An instance is one
+// (seed, sector, hop) visit read off `telemetry.poolChips`; it is WON when its
+// last chip leaves the enemy pool at 0 (a run that dies mid-encounter is an
+// instance, not a won one). Cap share = the share of turns the tick cap ended
+// (`reason === 'cap'`; absent on pre-91a2 records → 0). Rides the same
+// `--per-encounter` telemetry flag as the alpha-strike reader.
+// ---------------------------------------------------------------------------
+
+export interface PacingRow {
+  /** An encounter id (byEncounter), a kind (byKind), or `'all'`. */
+  key: string;
+  kind: EncounterKind | 'unknown' | 'all';
+  instances: number;
+  wonInstances: number;
+  /** Turns fought (chips) — the sample size. */
+  turns: number;
+  turnsPerInstance: number;
+  /** Turns per WON instance — the number the user's targets are stated in. 0 with no won instance. */
+  turnsPerWonInstance: number;
+  /** Booked charge to the ENEMY pool per turn (pool-HP). */
+  enemyBurnPerTurn: number;
+  /** Booked charge to the PLAYER pool per turn / per instance (pool-HP). */
+  playerCostPerTurn: number;
+  playerCostPerInstance: number;
+  capTurns: number;
+  capShare: number;
+}
+
+export interface PacingStats {
+  runs: number;
+  runsWithTelemetry: number;
+  byEncounter: PacingRow[];
+  /** normal · elite · boss (· unknown when present) · all. */
+  byKind: PacingRow[];
+}
+
+interface PacingAcc {
+  instances: number;
+  won: number;
+  turns: number;
+  turnsWon: number;
+  enemyCharge: number;
+  playerCharge: number;
+  cap: number;
+}
+
+const PACING_KIND_ORDER: readonly (EncounterKind | 'unknown')[] = ['normal', 'elite', 'boss', 'unknown'];
+
+function freshPacingAcc(): PacingAcc {
+  return { instances: 0, won: 0, turns: 0, turnsWon: 0, enemyCharge: 0, playerCharge: 0, cap: 0 };
+}
+
+function pacingRow(key: string, kind: PacingRow['kind'], a: PacingAcc): PacingRow {
+  const div = (num: number, den: number): number => (den === 0 ? 0 : num / den);
+  return {
+    key,
+    kind,
+    instances: a.instances,
+    wonInstances: a.won,
+    turns: a.turns,
+    turnsPerInstance: div(a.turns, a.instances),
+    turnsPerWonInstance: div(a.turnsWon, a.won),
+    enemyBurnPerTurn: div(a.enemyCharge, a.turns),
+    playerCostPerTurn: div(a.playerCharge, a.turns),
+    playerCostPerInstance: div(a.playerCharge, a.instances),
+    capTurns: a.cap,
+    capShare: div(a.cap, a.turns),
+  };
+}
+
+export function pacingStats(
+  results: readonly RunResult[],
+  chipMult: number = HEALTH.chipMultiplier,
+): PacingStats {
+  interface Inst {
+    enc: string;
+    turns: number;
+    enemyCharge: number;
+    playerCharge: number;
+    cap: number;
+    won: boolean;
+  }
+  const byEnc = new Map<string, PacingAcc>();
+  let runsWithTelemetry = 0;
+  for (const r of results) {
+    const chips = r.telemetry?.poolChips;
+    if (chips === undefined) continue;
+    runsWithTelemetry++;
+    // Group this run's chips by instance (sector, hop), in chip order.
+    const insts = new Map<string, Inst>();
+    for (const c of chips) {
+      const k = `${c.sector}:${c.hop}`;
+      let i = insts.get(k);
+      if (!i) {
+        i = { enc: c.encounterId, turns: 0, enemyCharge: 0, playerCharge: 0, cap: 0, won: false };
+        insts.set(k, i);
+      }
+      i.turns++;
+      i.enemyCharge += chargeToEnemy(c, chipMult);
+      i.playerCharge += chargeToPlayer(c, chipMult);
+      if (c.reason === 'cap') i.cap++;
+      // The LAST chip decides: an instance is won when it leaves the enemy pool at 0.
+      i.won = c.enemyPoolAfter <= 0;
+    }
+    for (const i of insts.values()) {
+      let a = byEnc.get(i.enc);
+      if (!a) {
+        a = freshPacingAcc();
+        byEnc.set(i.enc, a);
+      }
+      a.instances++;
+      a.turns += i.turns;
+      a.enemyCharge += i.enemyCharge;
+      a.playerCharge += i.playerCharge;
+      a.cap += i.cap;
+      if (i.won) {
+        a.won++;
+        a.turnsWon += i.turns;
+      }
+    }
+  }
+
+  const kindOf = new Map<string, EncounterKind | 'unknown'>();
+  for (const id of byEnc.keys()) kindOf.set(id, encounterKindOf(id));
+  const byEncounter = [...byEnc.entries()]
+    .sort(([ia], [ib]) => {
+      const ka = PACING_KIND_ORDER.indexOf(kindOf.get(ia)!);
+      const kb = PACING_KIND_ORDER.indexOf(kindOf.get(ib)!);
+      return ka - kb || ia.localeCompare(ib);
+    })
+    .map(([id, a]) => pacingRow(id, kindOf.get(id)!, a));
+
+  const byKindAcc = new Map<EncounterKind | 'unknown', PacingAcc>();
+  const all = freshPacingAcc();
+  for (const [id, a] of byEnc) {
+    const kind = kindOf.get(id)!;
+    let k = byKindAcc.get(kind);
+    if (!k) {
+      k = freshPacingAcc();
+      byKindAcc.set(kind, k);
+    }
+    for (const t of [k, all]) {
+      t.instances += a.instances;
+      t.won += a.won;
+      t.turns += a.turns;
+      t.turnsWon += a.turnsWon;
+      t.enemyCharge += a.enemyCharge;
+      t.playerCharge += a.playerCharge;
+      t.cap += a.cap;
+    }
+  }
+  const byKind: PacingRow[] = [];
+  for (const kind of PACING_KIND_ORDER) {
+    const a = byKindAcc.get(kind);
+    if (a) byKind.push(pacingRow(kind, kind, a));
+  }
+  byKind.push(pacingRow('all', 'all', all));
+
+  return { runs: results.length, runsWithTelemetry, byEncounter, byKind };
+}
+
+/** The batch.log render of `pacingStats` (by encounter, then by kind). */
+export function renderPacing(results: readonly RunResult[]): string {
+  const s = pacingStats(results);
+  const lines: string[] = [];
+  lines.push(
+    `### Pacing — turns per encounter + booked charge per turn (92a; ${s.runsWithTelemetry}/${s.runs} runs with telemetry)`,
+  );
+  lines.push('Inst = (sector, hop) visits · Won = the last turn left the enemy pool at 0 · Turns/won = per WON instance');
+  lines.push("  (the user's targets: normal 2–3 / elite 4–5 / boss 6+). Burn/Cost = the chip rule's BOOKED pool-HP per");
+  lines.push('  turn (never death counts). Cap% = turns the tick cap ended.');
+  if (s.runsWithTelemetry === 0) {
+    lines.push('(no pool data — telemetry was off; --per-encounter enables it.)');
+  }
+  lines.push('');
+  const header = ['Encounter', 'Kind', 'Inst', 'Won', 'Turns', 'Turns/inst', 'Turns/won', 'Burn/turn', 'Cost/turn', 'Cost/inst', 'Cap%'];
+  const cell = (r: PacingRow): string[] => [
+    r.key,
+    r.kind,
+    String(r.instances),
+    String(r.wonInstances),
+    String(r.turns),
+    r.turnsPerInstance.toFixed(2),
+    r.wonInstances === 0 ? '—' : r.turnsPerWonInstance.toFixed(2),
+    r.enemyBurnPerTurn.toFixed(2),
+    r.playerCostPerTurn.toFixed(2),
+    r.playerCostPerInstance.toFixed(2),
+    `${(r.capShare * 100).toFixed(1)}%`,
+  ];
+  lines.push(renderTable(header, [...s.byEncounter, ...s.byKind].map(cell), 2));
+  return lines.join('\n') + '\n';
+}
+
+/** CSV twin of `pacingStats`: the encounter rows, then the kind rows (+ `all`). */
+export function renderPacingCsv(s: PacingStats): string {
+  const header =
+    'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,' +
+    'playerCostPerTurn,playerCostPerInstance,capTurns,capShare';
+  const rows = [...s.byEncounter, ...s.byKind].map((r) =>
+    [
+      r.key,
+      r.kind,
+      r.instances,
+      r.wonInstances,
+      r.turns,
+      r.turnsPerInstance.toFixed(4),
+      r.turnsPerWonInstance.toFixed(4),
+      r.enemyBurnPerTurn.toFixed(4),
+      r.playerCostPerTurn.toFixed(4),
+      r.playerCostPerInstance.toFixed(4),
+      r.capTurns,
+      r.capShare.toFixed(4),
+    ].join(','),
+  );
+  return [header, ...rows].join('\n') + '\n';
+}

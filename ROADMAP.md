@@ -151,10 +151,9 @@ experiment (the rollback range).
   Read 2026-09-04: the twins SPLIT (regen 0.308 → 0.042, deploy 0.475 →
   0.300 — the ARM decides); pacing ~½ the targets (BALANCE §91f · WORKLOG).
 - [ ] **91g** — docs + the HANDOFF cursor; the §91 close.
-- ⛔ Decision point (91f): the `capPenalty` default flips only on a
-  cap-draw share that rises under casualties (the searcher is
-  pool-blind — the read is armor against a human stall). **READ: a rise on
-  deploy (×3.4), flat on regen — docket WORKLOG §91f item 4, PENDING.**
+- ✅ DECIDED (2026-09-04, user-endorsed): the `capPenalty` default flips
+  to `survivors` (the SURCHARGE) — the cap-draw share rose under
+  casualties on deploy (×3.4), flat on regen (WORKLOG §91f item 4).
 - [x] **91e2** (inserted 2026-09-04 off the user's first casualties
   playtest, user-signed): summons weigh 0 by the `summonedBy` STAMP in the
   fallen ledger, not by archetype; the ghoul's table row → 1 (a fielded

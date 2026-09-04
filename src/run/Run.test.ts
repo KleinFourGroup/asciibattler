@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { Run } from './Run';
 import { PRE_ROOT_NODE_ID } from './NodeMap';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
+import { rulesForTurn } from './chipRule';
 import { foldEffects, combineMagnitude, type StatusEffect } from '../sim/statusEffects';
 import { EventBus } from '../core/EventBus';
 import { LAYOUT_IDS, THEMES, getLayout } from '../sim/layouts';
@@ -5184,16 +5185,19 @@ function loseEncounter(bus: EventBus<GameEvents>): void {
   });
 }
 
-/** H4 → 91e — emit one turn's `battle:ended` that CHIPS the pools by
+/** H4 → 91e/91g — emit one turn's `battle:ended` that CHIPS the pools by
  *  `chips.player` (the player's contribution → the ENEMY pool) and
  *  `chips.enemy` (→ the PLAYER pool), for multi-turn encounter-loop tests.
- *  Pre-91e this was the survivor-power vector alone; since the default flip
- *  the fake states the same chips in both vocabularies — survivors
- *  `{player, enemy}` AND the mirrored fallen `{player: chips.enemy, enemy:
- *  chips.player}` — so the applied losses are identical under either
- *  `health.chipMode` (a cap turn under two DIFFERENT modes would double up;
- *  the shipped pair is one rule). Rule-SPECIFIC tests pass `extra.fallenPower`
- *  explicitly (it wins over the mirror) and flip `HEALTH` themselves. */
+ *  Pre-91e this was the survivor-power vector alone; the fake now states the
+ *  same chips in whichever vocabulary the LIVE rule set for this turn reads
+ *  (`rulesForTurn`): when the set contains `survivors` the survivor half
+ *  carries the chips and the fallen half is 0 (a two-rule cap turn — the
+ *  shipped (casualties, survivors) surcharge since 91g — would otherwise
+ *  DOUBLE the charge, gotcha #129); when it is casualties alone, the
+ *  mirrored fallen `{player: chips.enemy, enemy: chips.player}` carries them.
+ *  So the applied losses equal `chips` under every mode pair. Rule-SPECIFIC
+ *  tests pass `extra.fallenPower` explicitly (it wins over the derivation)
+ *  and flip `HEALTH` themselves. */
 function chipTurn(
   bus: EventBus<GameEvents>,
   chips: { player: number; enemy: number },
@@ -5208,11 +5212,18 @@ function chipTurn(
     winner?: GameEvents['battle:ended']['winner'];
   },
 ): void {
+  const winner = extra?.winner ?? 'draw';
+  // The same mapping Run.handleTurnEnded applies to a reason-less fake.
+  const reason = extra?.reason ?? (winner === 'draw' ? 'cap' : 'decisive');
+  const rules = rulesForTurn(reason);
+  const fallenPower =
+    extra?.fallenPower ??
+    (rules.has('survivors') ? { player: 0, enemy: 0 } : { player: chips.enemy, enemy: chips.player });
   bus.emit('battle:ended', {
-    winner: extra?.winner ?? 'draw',
+    winner,
     xpAwards,
     survivorPower: chips,
-    fallenPower: extra?.fallenPower ?? { player: chips.enemy, enemy: chips.player },
+    fallenPower,
     ...(tallies !== undefined ? { tallies } : {}),
     ...(extra?.reason !== undefined ? { reason: extra.reason } : {}),
   });

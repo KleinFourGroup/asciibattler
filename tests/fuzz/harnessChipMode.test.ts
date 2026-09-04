@@ -39,9 +39,9 @@ describe('91e — the chip modes through the harness, every pair via the --set p
     setMode('capPenalty', original.capPenalty);
   });
 
-  it('the shipped default is (casualties, casualties) — the signed 91e flip', () => {
+  it('the shipped default is (casualties, survivors) — the 91e flip + the 91f docket (the surcharge, user-endorsed)', () => {
     expect(HEALTH.chipMode).toBe('casualties');
-    expect(HEALTH.capPenalty).toBe('casualties');
+    expect(HEALTH.capPenalty).toBe('survivors');
   });
 
   it.each(PAIRS)(

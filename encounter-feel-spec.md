@@ -131,7 +131,13 @@ kill removes some."
   config is the experiment's instrument all round; the human A/B is
   one line in `health.json` under hot reload.
 - **The cap penalty is its own mode from day one:**
-  `health.capPenalty: "survivors" | "casualties"`, default casualties.
+  `health.capPenalty: "survivors" | "casualties"`, default casualties —
+  ⭑ AMENDED 2026-09-04 (91g, user-endorsed): **default `survivors`** (the
+  surcharge). The pre-registered flip criterion (a cap-draw share that
+  RISES under casualties) was met on the 91f deploy twin (0.034 vs
+  0.010, ×3.4; flat on regen) — a compositional rise (the slog fights),
+  not an incentive, but a rise in how often the cap decides a fight
+  (BALANCE 2026-09-04 §91f · WORKLOG §91f item 4).
   ⭑ SEMANTICS (2026-09-03, §91 kickoff, user-signed): keyed on the
   TICK-CAP draw only (a mutual wipe is a casualty turn, never a stall —
   `battle:ended.reason`), and a SURCHARGE: a capped turn always pays its

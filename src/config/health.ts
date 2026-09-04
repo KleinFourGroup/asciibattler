@@ -24,12 +24,14 @@
  *                       kiting to the cap is never cheaper than fighting. A
  *                       mutual wipe never reads it. Shipped `survivors` beside
  *                       `chipMode: survivors` through the seam commits (one
- *                       rule — byte-identical to pre-§91); **`casualties`
- *                       since 91e** (the signed default: one rule again, so a
- *                       stall pays only its fallen); the first flip read (91f)
- *                       decides whether it stays there — it flips to
- *                       `survivors` only on a cap-draw share that RISES under
- *                       casualties (ROADMAP §91's decision point).
+ *                       rule — byte-identical to pre-§91); `casualties` at 91e
+ *                       (one rule again); **`survivors` since 91g** — the 91f
+ *                       flip read found the cap-draw share RISING under
+ *                       casualties on the deploy twin (0.034 vs 0.010), the
+ *                       criterion ROADMAP §91 pre-registered for the flip, so
+ *                       the shipped pair is the SURCHARGE: a stall pays its
+ *                       own fallen PLUS the enemy's standing power
+ *                       (user-endorsed 2026-09-04; WORKLOG §91f item 4).
  * - `chipMultiplier`  — scales every charge (× power → pool-HP).
  * Balance-tuned in H6 — these are starting points.
  *

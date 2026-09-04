@@ -1068,3 +1068,61 @@ the per-shape CSV list is now summary + decisions + per-encounter +
 alpha-strike + rosters, n/a when a shape doesn't emit one). The mechanism
 is a provable null at rate 0 — `fatigueEffect` returns before the new code
 — but the oracle is what makes the claim a measurement.
+
+### 91d — the player-facing lines by mode (2026-09-03) → tag `casualty-seams`
+
+Landed as cut, plus one small addition. The arithmetic stays in
+`chipRule.ts`; a new pure `src/ui/chipLabels.ts` owns what the screens SAY
+about it, keyed on the rule SET a turn pays, so the three surfaces flip
+together at 91e and a two-rule cap turn says so instead of mislabeling one:
+
+- **The risk line** — `chipRule.playerExposure(fielded)`: under survivors
+  the WAVE's Σ base power (89e's preview, unchanged), under casualties the
+  HAND's Σ base power (the player's own numbers, free at the gate); × mult,
+  the caller clamps at the pool. The cap-turn SURCHARGE is deliberately
+  OUTSIDE the bound (documented at the method + the helper): the line bounds
+  the ordinary turn; a stall is the exception the surcharge exists to make
+  expensive, and folding it in would inflate every ordinary turn's number
+  by the whole wave. The PreTurnScreen's hover text reads by mode.
+- **The PostTurnScreen** — `turn:resolved` gains `reason` (Run's resolved
+  `why`, so a reason-less fake maps 'draw' → 'cap', else 'decisive');
+  `chipLineLabels(rulesForTurn(reason))` labels the two chip lines: opposing
+  survivors / own fallen / both. The one addition beyond the cut: a draw
+  heading names its kind ("Skirmish Drawn — tick cap" / "— mutual wipe") —
+  the surcharge's trigger should read differently from the largest casualty
+  turn, and the user's playtests are where that reads first.
+- **The UnitCard power tooltip** — `powerTooltip(mode, team)`: the compact
+  battle cards say "what YOUR pool loses if this unit falls" / "what the
+  ENEMY pool loses when this unit falls"; the side-agnostic stat rows
+  (roster / recruit / promotion) say "its side's pool"; survivors keeps
+  "chips the opposing health pool each turn it survives".
+
+Pins: `playerExposure` (wave vs hand × mult, uncapped, the live default) ·
+the 91d Run pin (under `HEALTH.chipMode = 'casualties'`, mutated + restored:
+`poolAtRisk` == the payload's OWN hand templates summed by hand, turns 1 and
+2 against the live pool; `turn:resolved.reason` follows the documented fake
+mapping) · `chipLabels.test.ts` (each rule set names the RIGHT quantity on
+each pool and never the wrong one; the two-rule set names both; composed
+with `rulesForTurn` the same turn reads differently by reason; the title +
+tooltip words per mode). The 89e survivors pins stand unchanged.
+
+**Browser-verified, BOTH modes, off the DOM** (the mode flipped by a
+temporary `health.json` edit, reverted before the commit): survivors —
+pre-turn "up to 8 pool" with the wave hover text, six stat rows reading
+"chips the opposing health pool each turn it survives", post-turn "Your
+survivors → enemy pool −6" / "Enemy survivors → your pool 0", enemy 8 → 2;
+casualties — pre-turn "up to 6 pool" re-derived from the six cards' OWN
+power-row values (1 each — the DOM, not the preview method) with the hand
+hover text, every stat row "what its side's pool loses if this unit falls",
+in battle the compact cards split by side ("your pool loses" / "the enemy
+pool loses"), post-turn "Enemy fallen → enemy pool −9" / "Your fallen →
+your pool −2", pools 18/20 · 0/9 (two power-1 losses; the wave's power past
+the enemy pool, clamped at 9). A tooling note for the record: the Deserters
+wave took ~2.5 min of wall at 3× before the outcome screen mounted — the
+battle DOES advance across `wait` actions here (the 91-pre2b probe's
+hidden-pane stall did not recur), just slowly.
+
+The tag **`casualty-seams`** goes on this commit: everything at or below it
+(the ledger, the modes, the telemetry, the fatigue retarget, the lines by
+mode, the three pre-fixes) is KEPT under either §93 outcome; a rollback is
+one contiguous revert of what lands above it (91b → §92).

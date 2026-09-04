@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { rulesForTurn, turnCharges, type TurnEndReason } from './chipRule';
+import { rulesForTurn, turnCharges, playerExposure, type TurnEndReason } from './chipRule';
 import { HEALTH } from '../config/health';
 
 const survivors = { player: 3, enemy: 5 };
@@ -83,6 +83,16 @@ describe('chipRule (§91a2)', () => {
     // A charge past any pool stays uncapped here (the 89d rider: the overkill
     // read needs the pre-clamp number).
     expect(turnCharges('decisive', { player: 0, enemy: 99 }, fallen, h('survivors', 'survivors', 3)).player).toBe(297);
+  });
+
+  it('§91d playerExposure: the risk bound reads the WAVE under survivors and the HAND under casualties, × mult, uncapped', () => {
+    const fielded = { player: 4, enemy: 9 };
+    expect(playerExposure(fielded, { chipMode: 'survivors', chipMultiplier: 1 })).toBe(9);
+    expect(playerExposure(fielded, { chipMode: 'casualties', chipMultiplier: 1 })).toBe(4);
+    expect(playerExposure(fielded, { chipMode: 'casualties', chipMultiplier: 2.5 })).toBe(10);
+    // Never capped here (the caller clamps at the pool); the live default wires HEALTH.
+    expect(playerExposure({ player: 0, enemy: 99 }, { chipMode: 'survivors', chipMultiplier: 3 })).toBe(297);
+    expect(playerExposure(fielded)).toBe(playerExposure(fielded, HEALTH));
   });
 
   it('defaults to the LIVE config (the production wiring) — the shipped modes are the two legal literals', () => {

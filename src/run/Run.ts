@@ -60,7 +60,7 @@ import {
 import type { UnitRarity } from '../config/units';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
-import { turnCharges, type SidePower, type TurnEndReason } from './chipRule';
+import { turnCharges, playerExposure, type SidePower, type TurnEndReason } from './chipRule';
 import { redrawRejection } from './redraw';
 import { empowerRejection, empowerEffect, type EmpowerStackView } from './empower';
 import {
@@ -2744,21 +2744,28 @@ export class Run {
   }
 
   /**
-   * 89e — the pre-turn RISK line's number: the most pool this turn can cost
-   * the player, under the shipped chip rule (survivors: every enemy in the
-   * wave survives → Σ their `power` × `chipMultiplier`), capped at the pool
-   * (you can't lose what you don't have). Reads the wave's BASE power
-   * (template stats — the number the player could add up from the enemy
-   * cards); in-battle buffs/debuffs on enemy power move the realized chip
-   * off this bound, and a spawn-queue overflow that never reaches the grid
-   * counts here but chips nothing (`World.survivorPower` excludes the
-   * queue) — an upper bound in both directions is the point. Display-only:
-   * consumed by `turn:starting`, never serialized, never read by the sim.
+   * 89e → §91d — the pre-turn RISK line's number: the most pool this turn can
+   * cost the player under the shipped `health.chipMode`, capped at the pool
+   * (you can't lose what you don't have). SURVIVORS: every enemy in the wave
+   * survives → Σ their `power` × `chipMultiplier` — the wave previewed off the
+   * same keyed stream `beginTurn` rolls it from (`rollTurnWave`, pure, no
+   * state writes). CASUALTIES: every unit in the HAND falls → Σ the hand's
+   * `power` × mult — the player's own numbers, known at the gate for free.
+   * Both read BASE template power (the number the player can add up from the
+   * cards); in-battle power buffs, a spawn-queue overflow that never lands
+   * (`World.survivorPower` excludes the queue), and the cap-turn SURCHARGE
+   * (`health.capPenalty`, the stall path) all sit outside the bound — an
+   * upper bound on the ORDINARY turn is the point (`playerExposure`).
+   * Display-only: consumed by `turn:starting`, never serialized, never read
+   * by the sim.
    */
   private previewPoolAtRisk(): number {
     const { enemyTeam } = this.rollTurnWave();
-    const wavePower = enemyTeam.reduce((sum, t) => sum + t.stats.power, 0);
-    return Math.min(this.playerHealth, wavePower * HEALTH.chipMultiplier);
+    const fielded = {
+      player: this.hand.reduce((sum, idx) => sum + this.team[idx]!.stats.power, 0),
+      enemy: enemyTeam.reduce((sum, t) => sum + t.stats.power, 0),
+    };
+    return Math.min(this.playerHealth, playerExposure(fielded));
   }
 
   private beginTurn(): void {
@@ -3005,6 +3012,9 @@ export class Run {
       this.bus.emit('turn:resolved', {
         turn: this.turnIndex,
         winner,
+        // §91d — WHY the turn ended, so the outcome screen labels the chip
+        // lines by the rule set the turn actually paid (`rulesForTurn`).
+        reason: why,
         // §91a2 — the APPLIED losses (what each pool actually lost), not a
         // re-derivation of the rule's arithmetic (the kickoff audit's
         // second-copy finding); the uncapped charges ride pools:chipped.

@@ -1,16 +1,20 @@
 /**
  * H4b — the post-turn outcome screen. Shown after each turn resolves (on
- * `turn:resolved`): the tactical winner, the Σ`power` each side's survivors
- * chipped the opposing pool, both pools after the chip, and the encounter's
- * status. Advances ONLY on the Continue click (M3 removed the H4b
- * auto-timer, matching the K3 pre-turn change — turn pacing is fully
- * player-driven); `advanceTurn` either rolls into the next turn or ends
- * the encounter.
+ * `turn:resolved`): the tactical winner, what each pool LOST this turn (the
+ * APPLIED chips, §91a2 — labeled by the rule set the turn paid, §91d: the
+ * opposing survivors under the survivors rule, each pool's own fallen under
+ * casualties, both on a tick-capped turn under the surcharge), both pools
+ * after the chip, and the encounter's status. Advances ONLY on the Continue
+ * click (M3 removed the H4b auto-timer, matching the K3 pre-turn change —
+ * turn pacing is fully player-driven); `advanceTurn` either rolls into the
+ * next turn or ends the encounter.
  */
 
 import type { GameEvents } from '../core/events';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import { rulesForTurn } from '../run/chipRule';
+import { chipLineLabels } from './chipLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 
@@ -48,19 +52,29 @@ export class PostTurnScreen {
 
     const heading = document.createElement('div');
     heading.className = `postturn-heading postturn-heading--${info.winner}`;
+    // §91d — a draw names its kind: a tick-cap stall (the surcharge's trigger)
+    // reads differently from a mutual wipe (the largest casualty turn).
     heading.textContent =
       info.winner === 'player'
         ? 'Skirmish Won'
         : info.winner === 'enemy'
           ? 'Skirmish Lost'
-          : 'Skirmish Drawn';
+          : info.reason === 'cap'
+            ? 'Skirmish Drawn — tick cap'
+            : info.reason === 'mutualWipe'
+              ? 'Skirmish Drawn — mutual wipe'
+              : 'Skirmish Drawn';
     panel.appendChild(heading);
 
+    // §91d — the chip lines are labeled by the rule set THIS turn paid (the
+    // live modes + the reason), so the words match the applied numbers under
+    // either rule, and a two-rule cap turn says so.
+    const labels = chipLineLabels(rulesForTurn(info.reason));
     const chips = document.createElement('div');
     chips.className = 'postturn-chips';
     chips.append(
-      chipLine('player', 'Your survivors → enemy pool', info.enemyPoolChip),
-      chipLine('enemy', 'Enemy survivors → your pool', info.playerPoolChip),
+      chipLine('player', labels.toEnemyPool, info.enemyPoolChip),
+      chipLine('enemy', labels.toPlayerPool, info.playerPoolChip),
     );
     panel.appendChild(chips);
 

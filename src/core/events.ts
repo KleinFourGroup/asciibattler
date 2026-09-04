@@ -627,11 +627,12 @@ export interface GameEvents extends Record<string, unknown> {
       gridH: number;
       theme: Theme;
     };
-    /** 89e — the pre-turn RISK line: the most pool this turn can cost the
-     *  player under the shipped chip rule, capped at the pool
-     *  (`Run.previewPoolAtRisk` — the wave previewed off the keyed stream
-     *  `beginTurn` will roll it from, so it IS the fielded wave's bound).
-     *  Display-only; never serialized. */
+    /** 89e → §91d — the pre-turn RISK line: the most pool this turn can cost
+     *  the player under the shipped `health.chipMode`, capped at the pool
+     *  (`Run.previewPoolAtRisk`): under survivors the wave's Σ power (the
+     *  wave previewed off the keyed stream `beginTurn` will roll it from, so
+     *  it IS the fielded wave's bound); under casualties the HAND's Σ power
+     *  (the player's own fielded numbers). Display-only; never serialized. */
     poolAtRisk: number;
   };
 
@@ -736,6 +737,12 @@ export interface GameEvents extends Record<string, unknown> {
   'turn:resolved': {
     turn: number;
     winner: 'player' | 'enemy' | 'draw';
+    /** §91d — why the battle ended (`battle:ended.reason`, resolved by Run —
+     *  a fake without one maps 'draw' → 'cap', else 'decisive'). The outcome
+     *  screen labels its chip lines by the rule set this reason paid
+     *  (`rulesForTurn`): a tick-capped turn under a cap penalty pays TWO rules
+     *  and says so; a mutual wipe never does. */
+    reason: 'decisive' | 'mutualWipe' | 'cap';
     /** §91a2 — the APPLIED loss of each pool this turn (clamped at the pool:
      *  "what you lost"), whatever the chip rule; pre-91a2 these re-derived
      *  survivors × chipMultiplier (a second copy of the rule's arithmetic).

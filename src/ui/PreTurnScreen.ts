@@ -74,6 +74,8 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
+import { HEALTH } from '../config/health';
+import { riskLineTitle } from './chipLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
@@ -618,15 +620,15 @@ export class PreTurnScreen {
       renderPoolGauge('enemy', 'Enemy Pool', info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
-    // 89e — the risk line, right under the gauges it reads against: the
-    // most pool this turn can cost (the fielded wave's Σ power × chip, capped
-    // at the pool). The "add your own numbers" fairness surface — the
+    // 89e → §91d — the risk line, right under the gauges it reads against:
+    // the most pool this turn can cost under the live chip mode (survivors:
+    // the fielded wave's Σ power; casualties: the hand's own Σ power; × chip,
+    // capped at the pool). The "add your own numbers" fairness surface — the
     // player sees the worst case BEFORE committing the redraw/empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
     risk.textContent = `⚠ At risk this turn: up to ${info.poolAtRisk} pool`;
-    risk.title =
-      'The most your pool can lose this turn: every enemy in the wave surviving the fight. Kill them and you lose nothing.';
+    risk.title = riskLineTitle(HEALTH.chipMode);
     panel.appendChild(risk);
     // 49f — held for the packet-fire re-render (`updatePacketUsed`).
     this.poolsEl = pools;

@@ -135,8 +135,11 @@ experiment (the rollback range).
   `constitution` (magnitude clamped), the constructor clamp; 7 new pins
   (the curve / the cap / power untouched / the spawn-at-max clamp);
   byte-identical at rate 0 (WORKLOG §91c).
-- [ ] **91d** — the risk line / PostTurnScreen / UnitCard by mode
-  (browser-verified) → **tag `casualty-seams`**.
+- [x] **91d** — the risk line / PostTurnScreen / UnitCard by mode
+  (browser-verified) → **tag `casualty-seams`**. Landed 2026-09-03:
+  `playerExposure` (wave vs hand), `turn:resolved.reason`, the pure
+  `ui/chipLabels.ts` by rule set (+ a draw names its kind); 8 pins;
+  browser-verified BOTH modes off the DOM (WORKLOG §91d).
 - [ ] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
   healer 0 → 1) + the config-derived pin + the (power, level) picker
   re-key. Baselines re-pin. REVERTS under rollback.

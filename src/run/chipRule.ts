@@ -83,3 +83,21 @@ export function turnCharges(
   }
   return { player, enemy };
 }
+
+/**
+ * §91d — the pre-turn RISK bound: the most the PLAYER pool can be charged
+ * this turn by `chipMode` alone, from what each side FIELDS (`player` = the
+ * hand's Σ base power, `enemy` = the wave's). Survivors: the whole wave
+ * standing → the enemy's fielded power; casualties: the whole hand falling →
+ * the player's own. × `chipMultiplier`, UNCAPPED (the caller clamps at the
+ * pool). The cap-turn surcharge (`capPenalty`) is deliberately outside it:
+ * the line bounds the ordinary turn, and a stall is the exception it exists
+ * to make expensive.
+ */
+export function playerExposure(
+  fielded: SidePower,
+  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+): number {
+  const own = health.chipMode === 'casualties' ? fielded.player : fielded.enemy;
+  return own * health.chipMultiplier;
+}

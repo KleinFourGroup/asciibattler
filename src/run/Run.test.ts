@@ -1230,6 +1230,41 @@ describe('Run', () => {
       );
     });
 
+    it('91d — under casualties, poolAtRisk previews the HAND (Σ its power × chip, capped at the pool), and turn:resolved carries the reason', () => {
+      const originalMode = HEALTH.chipMode;
+      HEALTH.chipMode = 'casualties';
+      try {
+        const { run, bus } = freshRunWithBus(1);
+        run.pauseAtTurnGates = true;
+        const startings: GameEvents['turn:starting'][] = [];
+        const resolved: GameEvents['turn:resolved'][] = [];
+        bus.on('turn:starting', (p) => startings.push(p));
+        bus.on('turn:resolved', (p) => resolved.push(p));
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        // The bound re-derived from an independent surface: the payload's own
+        // hand templates, summed here by hand (never `previewPoolAtRisk`).
+        const handBound = (hand: readonly { stats: { power: number } }[], pool: number): number =>
+          Math.min(pool, hand.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
+        expect(startings).toHaveLength(1);
+        expect(startings[0]!.hand.length).toBeGreaterThan(0);
+        expect(startings[0]!.poolAtRisk).toBe(handBound(startings[0]!.hand, startings[0]!.playerHealth));
+
+        run.dispatch({ kind: 'advanceTurn' }); // gate → battle
+        chipTurn(bus, { player: 1, enemy: 2 }); // a fake without a reason → the documented mapping
+        expect(resolved).toHaveLength(1);
+        // A reason-less fake maps 'draw' → 'cap' (the driver's cap) and anything
+        // else → 'decisive' — the pre-§91a1 emitters' meaning (Run.handleTurnEnded).
+        expect(resolved[0]!.reason).toBe(resolved[0]!.winner === 'draw' ? 'cap' : 'decisive');
+
+        // Turn 2 (a fresh hand): still the hand's bound against the live pool.
+        run.dispatch({ kind: 'advanceTurn' }); // outcome → next turn's gate
+        expect(startings).toHaveLength(2);
+        expect(startings[1]!.poolAtRisk).toBe(handBound(startings[1]!.hand, startings[1]!.playerHealth));
+      } finally {
+        HEALTH.chipMode = originalMode;
+      }
+    });
+
     it('89e — the preview derive perturbs nothing: the gated run fields the headless run\'s waves', () => {
       // The H4b RNG-alignment contract, re-pinned against the preview: the
       // gated path previews EVERY turn's wave before the gate (an extra

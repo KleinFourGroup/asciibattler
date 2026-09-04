@@ -35,6 +35,8 @@ import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
 import { statusColor, empowerColor } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
+import { HEALTH } from '../config/health';
+import { powerTooltip } from './chipLabels';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { EmpowerStackView } from '../run/empower';
 
@@ -255,7 +257,8 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
   const power = document.createElement('span');
   power.className = 'unit-card__compact-power';
   power.textContent = String(data.stats.power);
-  power.title = `${STAT_LABELS.power} ${data.stats.power} — chips the opposing health pool each turn`;
+  // §91d — the clarifier reads by the live chip mode + this card's side.
+  power.title = `${STAT_LABELS.power} ${data.stats.power} — ${powerTooltip(HEALTH.chipMode, opts.team ?? 'player')}`;
   top.append(level, power);
 
   const glyph = document.createElement('div');
@@ -503,7 +506,8 @@ function buildStatRow(
   label.className = 'unit-card__stat-label';
   label.textContent = STAT_LABELS[key];
   if (isPower) {
-    row.title = 'Power — chips the opposing health pool each turn';
+    // §91d — side-agnostic here (roster / recruit / promotion cards).
+    row.title = `Power — ${powerTooltip(HEALTH.chipMode)}`;
     const hint = document.createElement('span');
     hint.className = 'unit-card__power-hint';
     hint.textContent = 'pool';

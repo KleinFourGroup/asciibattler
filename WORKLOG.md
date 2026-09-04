@@ -1219,3 +1219,72 @@ is NOT claimed (the flip changes the rule by design; 91f measures it). What
 the tree plays now: casualties on the 91b table — the experiment's arm. The
 user's SURVIVORS playtests belong at the `casualty-seams` tag (old table,
 survivors), never at HEAD.
+
+### The user's first casualties playtest (2026-09-04, at 91e — INTERIM feel, pre-§92; NOT the §93 verdict)
+
+The user's report, verbatim in substance (one run, won):
+
+1. Most basic "swarm" fights end with the enemy dying in ONE turn — as they
+   suspected. 1.1 Unless the swarm is ghouls: "those fights feel weird."
+2. Fights built around one or two really strong enemies don't feel great
+   any more — they end up dealing minimal pool damage.
+3. Together these suggest some sort of POWER OVERRIDE in the encounter
+   designer, maybe.
+4. Healing kept pace with the new damage levels reasonably (the run was won).
+5. "We definitely nailed the feel of health steadily dropping."
+6. The biggest issue: some fights really easy, others slogs.
+7. A target feel: **2–3 turns for most encounters, elites 4–5, bosses 6+**
+   — "pure vague vibes" (the user's words) for the numbers.
+
+The code-reality read behind each (off `encounters.json` + the table):
+
+- **(1) the one-turn swarms are arithmetic.** Under casualties the enemy pool
+  falls by the wave's fallen power; normal waves are `hand × 1.3–2` = ~8–12
+  units at power 1 against pools of 7–10 (brigands 7 vs ~8; highwaymen 10 vs
+  ~12; deserters 9 vs ~12). A wipe clears the pool in one turn by
+  construction. Turns-to-clear under this rule ≈ pool ÷ (wave power killed
+  per turn) — so the lever is the per-encounter `healthPool` RELATIVE to the
+  wave's Σ power, and it is already authored per encounter (no new
+  mechanism): pool ≈ T × expected wave power for a T-turn fight. That is the
+  §92 sheet's job; the user's (7) are its working per-kind targets.
+- **(1.1) the ghoul swarms are a DEFECT of the summon-0 premise, not a feel.**
+  The table zeroes the ghoul by ARCHETYPE ("the one summon"), but two
+  encounters FIELD ghouls directly — `plagueVictims` (pool 10, `hand × 2`,
+  ghoul weight 4 vs healer weight 1 ⇒ ~9–10 of ~12 units are worth 0; a full
+  wipe chips ~2–3) and `plagueDoctors` (3 corrupters + ~6 ghouls, pool 7) —
+  and two camps (`ghoul-nest`, the barrow-haunt) do too. Killing them
+  progresses nothing: the "weird" is the enemy pool not moving while the
+  field empties. Proposed fix (a spec AMENDMENT — user decision, cheap):
+  weight a unit 0 in the fallen ledger by the `summonedBy` STAMP (spawned by a
+  `summon` op, `World.spawnSummon`) instead of by archetype; the ghoul row in
+  the table becomes 1 like everyone else; the config-derived pin re-expresses
+  (no summon-set row; a ledger pin that a stamped summon reaps at 0). Then a
+  summoned ghoul still costs its side nothing and a fielded ghoul is a body
+  like any other. Should land BEFORE 91f measures, or the read carries the
+  artifact on both plague encounters (→ a 91e2 insert, pending the user).
+- **(2) the strong-enemy fights are two facts.** (a) Threat to the PLAYER
+  pool under casualties = kill rate: a lone strong unit that kills one of
+  yours a turn costs you 1 — inherent to the rule, not a tuning miss; the
+  levers are lethality / composition (a heavy hitter plus fodder — but the
+  fodder's deaths cost the ENEMY), or, if the rule is kept, a hybrid at §93
+  (the surcharge already mixes rules on a cap turn; a partial-survivors mix
+  is the same machinery). (b) Progress on THEIR pool when the big unit dies
+  = its weight: 1 (or 2 for a legendary) against pools of 7–20 — the "slog"
+  half of (6) for boss-shaped waves (banditQueen / witch-hunt pool 20 vs
+  ~8–9 power per wave). The user's (3) — a per-encounter POWER OVERRIDE in
+  the designer — addresses (b) directly (the Bandit King "worth 6" reads
+  fine under "add your own numbers"); it is buildable (an optional
+  `power` on a wave unit entry, stamped by the resolver) but DIVERGES from
+  the pre-registered "power = headcount weight fixed per archetype" — so it
+  is a §92 DECISION POINT, not a build now.
+- **(6) easy-vs-slog is the pool/wave-power RATIO spread across the
+  catalog**: brigands ~0.9 (one turn) · darkMagicPosse 7 vs ~4 · plagueVictims
+  ~3+ effective turns of zero-cost kills · witch-hunt 20 vs ~9. The §92
+  re-anchor flattens the spread to the (7) targets by kind.
+- **(4)(5)** are the experiment's positive reads — filed as-is for §93.
+
+What this changes in the plan: 91f-pre (the desk pre-read) now ALSO predicts
+turns-to-clear per encounter off the 90d kills (pool ÷ fallen-per-turn) and
+checks it against (7); the ghoul weighting is a pending insert (91e2) before
+91f; the power override is a §92 decision point. Nothing built off this
+report yet — it is the feel record the numbers get checked against.

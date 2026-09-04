@@ -131,28 +131,18 @@ experiment (the rollback range).
   X / ! objective markers compensated (`inkBottomLift`): ink-true gaps
   0.100 / 0.200 re-derived live (the user’s eyeball find).
 - [x] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
-  the currentHp clamp). Landed 2026-09-03: `fatigueEffect` mods
-  `constitution` (magnitude clamped), the constructor clamp; 7 new pins
-  (the curve / the cap / power untouched / the spawn-at-max clamp);
-  byte-identical at rate 0 (WORKLOG §91c).
+  the currentHp clamp). Landed 2026-09-03, byte-identical (the oracle's
+  new n=20 shape; WORKLOG §91c).
 - [x] **91d** — the risk line / PostTurnScreen / UnitCard by mode
-  (browser-verified) → **tag `casualty-seams`**. Landed 2026-09-03:
-  `playerExposure` (wave vs hand), `turn:resolved.reason`, the pure
-  `ui/chipLabels.ts` by rule set (+ a draw names its kind); 8 pins;
-  browser-verified BOTH modes off the DOM (WORKLOG §91d).
+  (browser-verified) → **tag `casualty-seams`**. Landed 2026-09-03; both
+  modes verified off the DOM (WORKLOG §91d).
 - [x] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
   healer 0 → 1) + the config-derived pin + the (power, level) picker
-  re-key. Baselines re-pin. REVERTS under rollback. Landed 2026-09-03:
-  27 field changes through the byte-faithful formatter, verified per id;
-  25 + 3 pins; **re-pin count ZERO** (the fuzz pins are run-vs-run, not
-  literals) while the oracle FAILS on every CSV by design — the table is
-  live in the numbers (WORKLOG §91b).
-- [x] **91e** — defaults → casualties (both modes); fakes carry fallen;
-  baselines re-pin; the per-mode-pair harness pin. Landed 2026-09-03: both
-  `health.json` modes `casualties`; every chip fake states its chips in BOTH
-  vocabularies (rule-agnostic); the tick-cap integration pin per pair;
-  `tests/fuzz/harnessChipMode.test.ts` (4 pairs via the `--set` path + the
-  modes-differ control); re-pin count ZERO again (WORKLOG §91e).
+  re-key. REVERTS under rollback. Landed 2026-09-03; re-pin count ZERO,
+  the oracle FAILS by design — the table is live (WORKLOG §91b).
+- [x] **91e** — defaults → casualties (both modes); fakes carry fallen
+  (both vocabularies); the per-mode-pair harness pin via `--set`. Landed
+  2026-09-03; re-pin count ZERO again (WORKLOG §91e).
 - [ ] **91f-pre** — the desk pre-read off the 90d results.json (the
   prediction 91f is checked against).
 - [ ] **91f** — the box flip read (the 90d twins × both modes flipped
@@ -161,6 +151,9 @@ experiment (the rollback range).
 - ⛔ Decision point (91f): the `capPenalty` default flips only on a
   cap-draw share that rises under casualties (the searcher is
   pool-blind — the read is armor against a human stall).
+- ⛔ PENDING insert **91e2** (the user's first casualties playtest,
+  2026-09-04 — WORKLOG §91): summons weigh 0 by the `summonedBy` STAMP, not
+  by archetype (fielded ghouls are priced 0 today); lands BEFORE 91f.
 
 ## Phase 92 — The rebalance (under the casualty rule)
 
@@ -174,7 +167,13 @@ recipes) / the **fully MANIFESTED board at ONE HEAD** → the new sheet
 lineage DRAFT. Pacing (turns per encounter) is read here, not designed.
 **Depends on:** §91's flip read. **Risk:** high (every band re-anchors;
 the largest box spend of the round — 3–4 nights). **Decision points:**
-pool-max vs per-unit-cost as the lever; the enemy pool re-pin per kind.
+pool-max vs per-unit-cost as the lever; the enemy pool re-pin per kind;
+(added 2026-09-04 off the user's first casualties playtest — WORKLOG §91)
+whether pacing gets DESIGNED here after all: the user's turn targets
+(normal 2–3 / elite 4–5 / boss 6+, "vague vibes") as the enemy-pool
+re-pin's anchor via pool ≈ turns × wave power; and a per-encounter POWER
+OVERRIDE in the encounter designer (the user's ask) — diverges from the
+pre-registered per-archetype weight, so a decision, not a default.
 **Exit:** the board green at the draft lineage; the alpha-strike and
 gradient reads recomputed on the re-searched arm; the §88 rarity/price
 re-read filed. **NOT doing:** signing anything — the decision is §93.

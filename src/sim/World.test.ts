@@ -1425,18 +1425,32 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
   });
 
-  it('a summoned minion is booked at ITS OWN power when it falls (0 by the table, whatever the table says)', () => {
+  it('91e2 — a SUMMONED minion is booked at 0 by its summonedBy stamp, whatever its archetype weighs', () => {
     const { w, enemy, ends } = pair();
     const minion = w.spawnSummon('ghoul', 1, 'enemy', { x: 8, y: 8 }, enemy.id);
     w.tick(); // the summon joins
+    expect(minion.summonedBy).toBe(enemy.id);
+    // The premise the pin rests on: the archetype itself is NOT free (the
+    // table prices a ghoul like any body since 91e2) — the zero is the stamp.
+    expect(minion.effectiveStats.power).toBeGreaterThan(0);
     minion.currentHp = 0;
     w.tick(); // reaped; the summoner still stands → no end
     expect(w.ended).toBe(false);
     w.resolveAsDraw();
-    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: minion.effectiveStats.power });
-    // The ledger reads the minion's stats, not a hardcoded 0: the §91b table
-    // pins ghoul at 0 separately (units.json), this pin only says "its own".
-    expect(minion.effectiveStats.power).toBe(ARCHETYPE_CONFIG.ghoul.baseStats.power);
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
+  });
+
+  it('91e2 — a FIELDED ghoul (no stamp — an encounter or camp placed it) is booked at its table power', () => {
+    const { w, ends } = pair();
+    const fielded = w.spawnUnit(rollUnit('ghoul', new RNG(11)), 'enemy', { x: 8, y: 8 });
+    expect(fielded.summonedBy).toBeNull();
+    fielded.currentHp = 0;
+    w.tick(); // reaped; the other enemy still stands → no end
+    expect(w.ended).toBe(false);
+    w.resolveAsDraw();
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: fielded.effectiveStats.power });
+    expect(fielded.effectiveStats.power).toBe(ARCHETYPE_CONFIG.ghoul.baseStats.power);
+    expect(fielded.effectiveStats.power).toBeGreaterThan(0);
   });
 
   it('the periodic-status reap path (a burn-tile DoT kill, reapDead) books the fallen too', () => {

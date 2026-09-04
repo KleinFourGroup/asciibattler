@@ -2368,9 +2368,15 @@ export class World {
    * fallen read the same `effectiveStats.power` the survivors do. Neutrals
    * charge nobody (a camp member's death is not a side's loss; a player
    * unit killed BY a camp is still the player's fallen — team, not killer,
-   * is what's booked).
+   * is what's booked). §91e2 — a SUMMONED unit (the `summonedBy` stamp,
+   * `spawnSummon`) is booked at 0 whatever its archetype's power: a
+   * conjured body is not a loss its side paid for. The table used to carry
+   * this as the ghoul's power 0, but two encounters + two camps FIELD
+   * ghouls, and a fielded ghoul is a body like any other — the user's first
+   * casualties playtest found the pool not moving while the field emptied.
    */
   private recordFallen(unit: Unit): void {
+    if (unit.summonedBy != null) return;
     if (unit.team === 'player' || unit.team === 'enemy') {
       this.fallenPower[unit.team] += unit.effectiveStats.power;
     }

@@ -151,9 +151,10 @@ experiment (the rollback range).
 - ⛔ Decision point (91f): the `capPenalty` default flips only on a
   cap-draw share that rises under casualties (the searcher is
   pool-blind — the read is armor against a human stall).
-- ⛔ PENDING insert **91e2** (the user's first casualties playtest,
-  2026-09-04 — WORKLOG §91): summons weigh 0 by the `summonedBy` STAMP, not
-  by archetype (fielded ghouls are priced 0 today); lands BEFORE 91f.
+- [x] **91e2** (inserted 2026-09-04 off the user's first casualties
+  playtest, user-signed): summons weigh 0 by the `summonedBy` STAMP in the
+  fallen ledger, not by archetype; the ghoul's table row → 1 (a fielded
+  ghoul is a body). Landed 2026-09-04; spec amended (WORKLOG §91e2).
 
 ## Phase 92 — The rebalance (under the casualty rule)
 

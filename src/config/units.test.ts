@@ -331,13 +331,15 @@ describe('§76f — the stat-identity roster', () => {
 });
 
 /**
- * §91b — THE POWER TABLE (the casualty experiment, encounter-feel-spec §The
- * casualty chip rule): `power` is a HEADCOUNT WEIGHT fixed per archetype —
- * 1 everywhere, legendary 2, the summoned minion 0 — and it never grows.
- * Config-derived: the legendary set comes from `rarity`, the summon set from
- * the abilities catalog (the archetype any `summon` op spawns), so a new
- * legendary or a new summon fails here until its weight is set on purpose.
- * REVERTS under a §93 rollback (it sits above the `casualty-seams` tag).
+ * §91b → §91e2 — THE POWER TABLE (the casualty experiment, encounter-feel-spec
+ * §The casualty chip rule): `power` is a HEADCOUNT WEIGHT fixed per archetype
+ * — 1 everywhere, legendary 2 — and it never grows. Config-derived: the
+ * legendary set comes from `rarity`, so a new legendary fails here until its
+ * weight is set on purpose. Summons are NOT a table row (91e2): a conjured
+ * unit is zeroed in the fallen LEDGER by its `summonedBy` stamp
+ * (`World.recordFallen`), so the summoned archetype (the ghoul) prices like
+ * any body when an encounter FIELDS it. REVERTS under a §93 rollback (it sits
+ * above the `casualty-seams` tag).
  */
 describe('§91b — the power table (headcount weights)', () => {
   const summoned = new Set(
@@ -346,19 +348,20 @@ describe('§91b — the power table (headcount weights)', () => {
     ),
   );
 
-  it('the catalog has at least one legendary and exactly one summoned archetype (the table has all three rows)', () => {
+  it('the catalog has at least one legendary; the summoned archetype is a table row like any other (91e2)', () => {
     expect(COMBATANT_ENTRIES.some(([, d]) => d.rarity === 'legendary')).toBe(true);
     expect([...summoned]).toEqual(['ghoul']);
-    expect(summoned.has('ghoul') && UNIT_DEFS.ghoul !== undefined).toBe(true);
+    // The ledger, not the table, zeroes summons — a fielded ghoul is a body.
+    expect(UNIT_DEFS.ghoul!.baseStats.power).toBe(1);
   });
 
-  it.each(COMBATANT_ENTRIES)('%s: power = summon 0 / legendary 2 / else 1, and power growth 0', (id, def) => {
-    const expected = summoned.has(id) ? 0 : def.rarity === 'legendary' ? 2 : 1;
+  it.each(COMBATANT_ENTRIES)('%s: power = legendary 2 / else 1, and power growth 0', (_id, def) => {
+    const expected = def.rarity === 'legendary' ? 2 : 1;
     expect(def.baseStats.power).toBe(expected);
     expect(def.growthRates.power).toBe(0);
   });
 
-  it('every power sits in {0, 1, 2} — no archetype carries a hidden weight', () => {
-    for (const [, def] of COMBATANT_ENTRIES) expect([0, 1, 2]).toContain(def.baseStats.power);
+  it('every power sits in {1, 2} — no archetype carries a hidden weight or a zero', () => {
+    for (const [, def] of COMBATANT_ENTRIES) expect([1, 2]).toContain(def.baseStats.power);
   });
 });

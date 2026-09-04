@@ -1288,3 +1288,26 @@ turns-to-clear per encounter off the 90d kills (pool ÷ fallen-per-turn) and
 checks it against (7); the ghoul weighting is a pending insert (91e2) before
 91f; the power override is a §92 decision point. Nothing built off this
 report yet — it is the feel record the numbers get checked against.
+
+### 91e2 — summons weigh 0 by the STAMP, not the table (2026-09-04, user-signed in chat)
+
+The premise the 91b table carried ("ghoul = the one summon ⇒ power 0")
+was false in the catalog: `plagueVictims` / `plagueDoctors` and the
+`ghoul-nest` / barrow-haunt camps FIELD ghouls. Landed: `World.recordFallen`
+returns before booking when `unit.summonedBy != null` (the §29d stamp
+`spawnSummon` sets — the same signal the summon-XP ledger and the `maxLive`
+cap already key on), so a conjured body costs its side nothing whatever its
+archetype weighs; `units.json` ghoul power 0 → **1** (one field, through the
+formatter, verified) — a fielded ghoul is a body like any other. The pins:
+the 91a1 "a summon books its own power" pin re-expressed as "a summon books
+0 by its stamp, and its archetype is NOT free" + a new sibling "a FIELDED
+ghoul (no stamp) books its table power" (World.test); the §91b table pin
+drops the summon row (power ∈ {1,2}, legendary ⇒ 2; the ghoul pinned at 1
+with the reason). The spec's table bullet amended in place; `events.ts`'s
+`fallenPower` doc notes the identity survivors + fallen = fielded now
+excludes fallen summons. 2793 main (+1) + 565 fuzz green, typecheck clean;
+no byte-identity claim (the two plague encounters + both ghoul camps now
+chip when their ghouls fall — the point). Design note for §92: this also
+means a summoner's minions are free bodies for the ENEMY too (the warlock's
+ghouls die for nothing), which is the intended reading — summoning is
+tempo, not headcount.

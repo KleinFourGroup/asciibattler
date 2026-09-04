@@ -102,9 +102,11 @@ export interface GameEvents extends Record<string, unknown> {
      * §91a1: Σ`effectiveStats.power` over each team's combatants REAPED this
      * battle (both death sites, booked before the splice) — the casualty
      * chip rule's input: each side pays its OWN fallen
-     * (`health.chipMode: 'casualties'`). Neutrals charge nobody; a summon
-     * counts at its own power. Fielded on-grid power = survivors + fallen by
-     * construction. Optional on the `survivorPower` rationale.
+     * (`health.chipMode: 'casualties'`). Neutrals charge nobody; a SUMMONED
+     * unit (the `summonedBy` stamp) books 0 whatever its archetype weighs
+     * (§91e2 — a conjured body is not a loss its side paid for; a FIELDED
+     * ghoul is). So fielded on-grid power = survivors + fallen, minus any
+     * summons that fell. Optional on the `survivorPower` rationale.
      */
     fallenPower?: { player: number; enemy: number };
     /**

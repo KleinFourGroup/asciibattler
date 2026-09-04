@@ -115,12 +115,17 @@ progress the fight and the enemy pool reads as "their strength; every
 kill removes some."
 
 - **Power = headcount weight**, fixed per archetype: **1 everywhere,
-  legendary 2, summons 0** (§91 kickoff: healer 0 → 1; prodigy — the
-  event-granted legendary — 2 on both sides; ghoul the one summon); `growthRates.power = 0`. Symmetric (an enemy
-  stormcaller = two kills). The existing `power` stat IS the weight (no
-  new field); a config-derived test pins power ∈ {0,1,2}, legendary ⇒
-  2, summon ⇒ 0. A player's max per-turn exposure = the power they
-  fielded — the "add your own numbers" legibility.
+  legendary 2** (§91 kickoff: healer 0 → 1; prodigy — the event-granted
+  legendary — 2 on both sides); `growthRates.power = 0`. Symmetric (an
+  enemy stormcaller = two kills). **Summons weigh 0 by the `summonedBy`
+  STAMP in the fallen ledger, not by archetype** (91e2 amendment,
+  2026-09-04: the first casualties playtest found two encounters + two
+  camps FIELD ghouls, which the original "ghoul = 0" row priced at nothing
+  — a fielded ghoul is a body like any other; a conjured one still costs
+  its side nothing). The existing `power` stat IS the weight (no new
+  field); a config-derived test pins power ∈ {1,2}, legendary ⇒ 2; a
+  World pin zeroes the stamped summon. A player's max per-turn exposure
+  = the power they fielded — the "add your own numbers" legibility.
 - **Both rules stay alive behind `health.chipMode: "survivors" |
   "casualties"`** — the paired same-seed A/B of the rule flip at any
   config is the experiment's instrument all round; the human A/B is

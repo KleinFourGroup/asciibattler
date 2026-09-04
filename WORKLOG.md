@@ -1311,3 +1311,76 @@ chip when their ghouls fall — the point). Design note for §92: this also
 means a summoner's minions are free bodies for the ENEMY too (the warlock's
 ghouls die for nothing), which is the intended reading — summoning is
 tempo, not headcount.
+
+### 91f-pre — the DESK pre-read (2026-09-04): the prediction 91f is checked against
+
+Method (a scratchpad probe, not repo-resident): the 90d floor-1 twins'
+`results.json` (regen `20260903-032344-71a5000`, deploy `-042229-`; n=120
+each; every battle record = one TURN's World with `playerDeaths` /
+`enemyDeaths` / the wave size, and the applied survivors chip beside it in
+`telemetry.poolChips`). Casualties applied FIRST-ORDER: a side's pool loses
+deaths × 1 per turn (the 91b table at power 1 — legendary waves are an
+UNDER-estimate by 1 per legendary death: darkMagicPosse / elementalTrio /
+plagueSpreaders / witch-hunt; summoner waves an OVER-estimate on the enemy
+side since 91e2 zeroes summoned ghouls: warlock / miscreants), the enemy
+pool = the encounter's authored `healthPool` (read off the chip record).
+Per encounter instance (consecutive turns at one node): the predicted
+turns-to-clear = the first turn where cumulative enemy deaths ≥ pool
+("unresolved" = the survivors run ended the node before that — the
+casualties fight would have run LONGER than the record shows); the
+predicted player cost = Σ player deaths over those turns. The battles
+themselves are taken as-is (turn 1 of each node is byte-identical across
+rules; later turns diverge — the read is a bound, not a simulation).
+
+**Prediction 1 — the PLAYER pool is the knob, and it moves ~2×.** Per run,
+the player pool lost (Σ applied) under survivors vs predicted under
+casualties: regen **29.8 → 65.2** · deploy **27.3 → 49.5** (truncated at
+the predicted clears; 95.5 / 80.3 if every recorded turn were fought).
+Act 1 alone: **15.4 → 33.3** · **11.7 → 21.9**; runs whose predicted act-1
+loss reaches a whole pool (20, heals ignored): **102/120** (regen, vs 49
+actual) · **65/120** (deploy, vs 33). So at UNCHANGED config the paired
+flip read should show win rate and act-1 clear falling sharply on both
+twins — regen (0.308 win / 0.675 act-1 clear) and deploy (0.475 / 0.825)
+both well under, act-1 clear plausibly near or below 0.5. The mechanism
+is the ARM, not only the rule: the finalist vector was searched under
+survivors, where a player death cost nothing (~4 player deaths per normal
+encounter, 10–13 per boss); casualties price exactly the behaviour the
+searcher learned to spend. **91f measures the rule on a MALADAPTED arm —
+the drop is expected and is not the verdict; the shape reads are.**
+
+**Prediction 2 — the enemy side runs SHORT of the user's turn targets, by
+~2× on every kind.** Predicted turns-to-clear (resolved instances) vs the
+target: normal **1.31 / 1.35** vs 2–3 (57% / 54% of normals clear on turn
+1 — deserters / highwaymen / plagueVictims 0.96–1.00, artillery / brigands
+/ plagueDoctors 0.88–0.95); elite **2.04 / 1.80** vs 4–5 (darkMagicPosse
+clears turn 1 in 82% / 97% — 13–19 kills against pool 7); boss **2.74 /
+2.84** vs 6+ (banditQueen / witch-hunt 3.2 against pool 20; bandit-king /
+generalissimo 2.4–2.5 against 13). The one-turn swarms the user felt are
+the record's modal normal. And the OTHER failure mode is in the same
+table: the small-wave fights are "unresolved" — adventurer-with-guards
+0.51 / 0.46, ronin-vs-mages 0.71 / 0.74, elementalTrio 0.47 / 0.31,
+infernalColumn 0.27 / 0.50 — waves at hand × 0.7 or fixed counts whose Σ
+power sits under the pool, so a clear needs two or more full wipes: the
+user's slogs. Easy-vs-slog = the pool ÷ wave-power spread, in numbers.
+
+**Prediction 3 — elites lose their bite relative to normals.** Predicted
+per-encounter player cost vs actual: normal **1.2 → 4.0 / 1.1 → 3.3**
+(×3.3 / ×2.9), elite **7.4 → 9.9 / 7.0 → 8.2** (×1.3 / ×1.2), boss **7.6 →
+12.8 / 7.9 → 11.7** (×1.7 / ×1.5). The elite ÷ normal cost ratio falls
+from ~6 to ~2.5 — the user's "strong enemies deal minimal pool damage" is
+a RELATIVE statement and the arithmetic agrees: under casualties a few
+strong units kill slowly, a swarm kills more of yours.
+
+**What 91f should therefore show, in order of confidence:** (a) the player
+pool burn roughly doubles per encounter, most on normals; (b) both twins'
+win / act-1 clear drop well below the 90d floor-1 numbers, more on regen;
+(c) the enemy side: most normals clear in one turn, the four small-wave
+encounters lengthen, bosses ~3 turns; (d) the cap-draw share — no
+prediction from this data (the 90d record has no reason column; the
+searcher is pool-blind so kiting has no incentive to change) — this is the
+91f decision-point read and it stays open. What the desk read CANNOT
+say: the overkill share (criterion 1 — no per-death HP in the record) and
+anything about a re-searched arm (§92). The §92 lever the numbers point
+at, for the record: enemy pools ≈ 2× to reach the turn targets on
+swarms, with the small-wave encounters needing composition or count
+changes rather than pool changes (their Σ power is the binding term).

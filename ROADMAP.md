@@ -143,8 +143,11 @@ experiment (the rollback range).
 - [x] **91e** — defaults → casualties (both modes); fakes carry fallen
   (both vocabularies); the per-mode-pair harness pin via `--set`. Landed
   2026-09-03; re-pin count ZERO again (WORKLOG §91e).
-- [ ] **91f-pre** — the desk pre-read off the 90d results.json (the
-  prediction 91f is checked against).
+- [x] **91f-pre** — the desk pre-read off the 90d results.json (the
+  prediction 91f is checked against). Filed 2026-09-04 (WORKLOG §91f-pre):
+  the player pool burn ~2× per run, both twins' win / act-1 clear well
+  under 90d on the maladapted arm; turns-to-clear ~½ the user's targets
+  on every kind; elites lose relative bite; the cap share stays open.
 - [ ] **91f** — the box flip read (the 90d twins × both modes flipped
   together, n=120, ONE HEAD; three-way vs 90d) → BALANCE (own commit).
 - [ ] **91g** — docs + the HANDOFF cursor; the §91 close.

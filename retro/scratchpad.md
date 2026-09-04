@@ -62,3 +62,38 @@ _(The post-Round-6 entries start here — the §89 interstitial.)_
 - **The worktree diff oracle at n=20 took ~4 min for both legs in parallel** —
   cheap enough to be the default exit criterion for any byte-identity claim,
   not a special occasion.
+
+## §91 build session (2026-09-03 → 09-04, 91c → the close)
+
+- **The HANDOFF CHAR cap trips before the line cap now** (48k chars; 91c
+  tripped it at 48,378 with the line caps green): dense one-line rows are
+  the failure mode, and the fix is the structural demotion (P–Qb and S–W
+  Current-state bullets → one archive line each, ~3k chars), not word
+  trimming — the first trim (378 over) left 188 over. Demote a completed
+  round's bullets the moment the cap is within ~2k.
+- **A "rule-agnostic" test fake is only agnostic under the rule set it was
+  written against.** The 91e two-vocabulary mirror was exact under a
+  ONE-rule pair and doubled under the two-rule surcharge (gotcha #129) —
+  derive the fake's halves from `rulesForTurn`, never from the pair you
+  happen to ship today.
+- **Pre-register by ARM, not pooled.** The 91f-pre desk read pooled both
+  finalists' death rates and missed that the twins would split 28:1 vs
+  27:16 on the same rule; the arm that spent units under the old rule is
+  the one the new rule punishes. And never count a kill the ledger won't
+  book (gotcha #130 — summoned ghouls were the whole darkMagicPosse miss).
+- **`perf-oracle.sh` doubles as the behaviour-CHANGE control:** a FAIL on
+  every CSV (91b, the table) is the proof a config change is live, the
+  mirror of a PASS proving a seam inert (91c). Run it both ways on purpose.
+- **The box wall-time estimate must come from the SAME table:** the 90d
+  legs (~30 min each) predicted 2.5 h; the new-table survivors legs fought
+  ~30% more turns and the cohort ran 3.6 h. The 2× hatch never armed, but
+  an estimate carried across a table change is a guess.
+- **The log monitor pattern worked cleanly** (`tail -f | grep --line-buffered
+  "launch|fetched|HOLD|refus|error|destroy|EXIT"`, persistent, TaskStop
+  after the driver's EXIT) — every transition surfaced, no polling, and the
+  ONE-HEAD hold on the tree was easy to honour because the fourth launch
+  line was an event, not a guess.
+- **Reading a fetched leg mid-cohort is fine as a DIRECTION check** (the
+  regen casualties leg was read after fetch 1) as long as the write-up
+  waits for the full cohort — the partial was labelled a sanity glance and
+  the signing table came from all four legs.

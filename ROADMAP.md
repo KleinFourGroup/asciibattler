@@ -78,86 +78,43 @@ rollback baseline for §93 = the tag. Cut + audit + docket: WORKLOG §90.
   (the close docket) + the HANDOFF cursor. ✅ The close SIGNED + the
   tag `pre-casualty-experiment` placed 2026-09-03 (WORKLOG §90).
 
-## Phase 91 — The casualty rule (the experiment's build)
+## Phase 91 — The casualty rule (the experiment's build) ✅ CLOSED 2026-09-04 (user-endorsed)
 
-Charter: `health.chipMode: survivors | casualties` (both alive; default
-casualties) + `health.capPenalty` (its own mode, default casualties) +
-the telemetry carrying APPLIED deltas + the per-encounter reader on
-deltas (same commit as the rule) + the power table (1 / legendary 2 /
-summon 0, `growthRates.power = 0`, the config-derived pin) + the
-fatigue re-target to constitution (−10%/stack, cap 50%; rate 0 here) +
-the kickoff audit register (neutrals excluded from the sum · summons ·
-the rollout evaluator's objective → pool deltas · XP on death) — then
-**the rule-flip paired same-seed read at UNCHANGED config** (the
-"which knob moves" read: the arithmetic predicts the PLAYER pool, not
-the enemy pools; verify, never assume). The adversarial review of the
-spec + this plan (reviewer unpinned — the strongest available second
-model + a read-only file:line peer) runs at this kickoff.
-**Depends on:** §90 (the floor in the baseline). **Risk:** medium-high
-(the sim's loss semantics; the instrument's meaning). **Decision
-points:** the cap-penalty default if the searcher finds a free kiting
-vector (config flip); evaluator objective change if it proxies survivor
-power. **Snapshot prediction:** no bump. **Exit:** both modes green
-under `npm test` + fuzz:smoke; the flip read in BALANCE naming the knob.
-**NOT doing:** retreat / optional deploy (Round 9); any balance move.
-Kickoff 2026-09-03 (user-signed; WORKLOG §91 — the audit, the
-adversarial review, the docket): the snapshot prediction CORRECTED to
-**World v35 → v36** (the fallen are spliced out at death); the cap
-penalty = a SURCHARGE keyed on the tick cap only; criteria 1 + 2
-amended in the spec; order = kept seams → tag `casualty-seams` → the
-experiment (the rollback range).
+Outcome: the casualty chip rule is BUILT and SHIPPED as the experiment's
+arm — the fallen ledger (World v36), both modes + the cap surcharge as
+their own mode, the charge telemetry, fatigue → constitution at rate 0,
+the lines by rule set, the `casualty-seams` tag (the kept floor), the
+power table (1 / legendary 2 / growth 0; summons zeroed by stamp), the
+default flip, the surcharge default; the flip read (three-way, n=120 × 4)
+found the twins SPLIT (regen 0.308 → 0.042, deploy 0.475 → 0.300 — the
+survivors-searched ARM decides, the §92 re-search is the first real
+number), the table alone moving the old rule's game, pacing bimodal at
+~½ the user's targets. Re-pin count across the phase: zero. Detail:
+WORKLOG §91 (kickoff → 91g) · BALANCE 2026-09-04 §91f · gotchas #129–130.
+Kickoff 2026-09-03 (user-signed): World v35 → v36 predicted-corrected;
+the cap penalty = a surcharge on the tick cap only; criteria 1 + 2
+amended; order = kept seams → tag → table → flip.
 
-- [x] **91a1** — World: the fallen-power ledger at both reap sites
-  (neutrals excluded), serialized (**v36**), `battle:ended.fallenPower` +
-  `reason`. Landed 2026-09-03: 10 pins (partition / mutual wipe / cap /
-  neutral / summon / the DoT reap path / the v36 round-trip + v35 reject);
-  baselines byte-identical (WORKLOG §91a1).
-- [x] **91a2** — `health.chipMode` + `health.capPenalty` (defaults
-  survivors HERE; `src/run/chipRule.ts` — a cap turn charges by every rule
-  in {chipMode, capPenalty}); `pools:chipped` charges; `turn:resolved`
-  applied chips; the readers on charges (old-shape fallback); the harness
-  `reason` + the draw split; `--set` strings. Landed 2026-09-03: ⭐ the
-  worktree diff oracle RUN — tag vs HEAD, regen twin n=20: every CSV
-  BYTE-IDENTICAL, results.json identical modulo the new fields (WORKLOG).
-- [x] **91-pre** — the frost-coven ghoul fix (a camp member’s summon JOINS
-  the camp: campId + CampWanderBehavior + the wipe count; user-signed
-  2026-09-03 mid-playtest, its fuzz footprint accepted) — inserted here so
-  it lands BEFORE `casualty-seams` and survives a rollback (WORKLOG §91-pre).
-- [x] **91-pre2** — the glyph stand line = the TERMINAL-CELL rule (the
-  baseline sits a measured descender room above the tile; blocks unchanged;
-  user-signed 2026-09-03, superseding the misread 79d2 baseline-on-tile
-  rule). Render-only; browser-verified 47/47 atlas glyphs + 68/68 live
-  sprite anchors against the asset (WORKLOG §91-pre2). **91-pre2b** — the
-  X / ! objective markers compensated (`inkBottomLift`): ink-true gaps
-  0.100 / 0.200 re-derived live (the user’s eyeball find).
-- [x] **91c** — fatigue → constitution at rate 0 (`fatigueMaxStacks` 5,
-  the currentHp clamp). Landed 2026-09-03, byte-identical (the oracle's
-  new n=20 shape; WORKLOG §91c).
-- [x] **91d** — the risk line / PostTurnScreen / UnitCard by mode
-  (browser-verified) → **tag `casualty-seams`**. Landed 2026-09-03; both
-  modes verified off the DOM (WORKLOG §91d).
-- [x] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
-  healer 0 → 1) + the config-derived pin + the (power, level) picker
-  re-key. REVERTS under rollback. Landed 2026-09-03; re-pin count ZERO,
-  the oracle FAILS by design — the table is live (WORKLOG §91b).
-- [x] **91e** — defaults → casualties (both modes); fakes carry fallen
-  (both vocabularies); the per-mode-pair harness pin via `--set`. Landed
-  2026-09-03; re-pin count ZERO again (WORKLOG §91e).
-- [x] **91f-pre** — the desk pre-read off the 90d results.json (the
-  prediction 91f is checked against). Filed 2026-09-04: pool burn ~2×,
-  turns ~½ the targets, elites lose bite, cap share open (WORKLOG §91f-pre).
-- [x] **91f** — the box flip read (the 90d twins × both modes flipped
-  together, n=120, ONE HEAD; three-way vs 90d) → BALANCE (own commit).
-  Read 2026-09-04: the twins SPLIT (regen 0.308 → 0.042, deploy 0.475 →
-  0.300 — the ARM decides); pacing ~½ the targets (BALANCE §91f · WORKLOG).
-- [ ] **91g** — docs + the HANDOFF cursor; the §91 close.
-- ✅ DECIDED (2026-09-04, user-endorsed): the `capPenalty` default flips
-  to `survivors` (the SURCHARGE) — the cap-draw share rose under
-  casualties on deploy (×3.4), flat on regen (WORKLOG §91f item 4).
-- [x] **91e2** (inserted 2026-09-04 off the user's first casualties
-  playtest, user-signed): summons weigh 0 by the `summonedBy` STAMP in the
-  fallen ledger, not by archetype; the ghoul's table row → 1 (a fielded
-  ghoul is a body). Landed 2026-09-04; spec amended (WORKLOG §91e2).
+- [x] **91a1** the fallen ledger (v36; byte-identical) · [x] **91a2** the
+  modes + telemetry + `--set` strings (the tag-vs-HEAD oracle byte-identical)
+- [x] **91-pre / 91-pre2 / 91-pre2b** — camp summons join the camp · the
+  terminal-cell stand line · the marker compensation (user-signed inserts
+  from the survivors playtests; below the tag)
+- [x] **91c** fatigue → constitution at rate 0 (byte-identical) · [x]
+  **91d** the lines by rule set (both modes off the DOM) → **tag
+  `casualty-seams`**
+- [x] **91b** the power table (REVERTS under rollback; the oracle FAILS by
+  design) · [x] **91e** defaults → casualties (rule-agnostic fakes; the
+  4-pair `--set` pin) · [x] **91e2** summons weigh 0 by the `summonedBy`
+  stamp (from the first casualties playtest)
+- [x] **91f-pre** the desk prediction · [x] **91f** the box flip read
+  (BALANCE 2026-09-04 §91f) · [x] **91g** the flip + the close
+- ✅ DECIDED (2026-09-04, user-endorsed): `capPenalty` → `survivors` (the
+  SURCHARGE) — the cap-draw share rose under casualties on deploy (×3.4).
+- Riders → §92 (WORKLOG §91g): the RE-SEARCH first · the user's turn
+  targets (2–3 / 4–5 / 6+) as the pool re-pin's anchor · the small-wave
+  encounters by composition · the power override · the rollback comparator
+  must share a table · the derived-artifact registry fires.
 
 ## Phase 92 — The rebalance (under the casualty rule)
 

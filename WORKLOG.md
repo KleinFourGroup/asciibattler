@@ -1466,3 +1466,60 @@ split by ARM, and never count a kill the ledger will not book.
 this read is on a maladapted arm and an un-rebalanced board); whether
 the user's turn targets are right (the §92 anchor, "vague vibes" by their
 own label); the rarity / price book (superseded under keep).
+
+### 91g — the flip + the close (2026-09-04, user-endorsed in chat)
+
+**The `capPenalty` docket:** the user endorsed (a) — `health.capPenalty →
+survivors`, the surcharge; the shipped pair is (casualties, survivors).
+The one seam it touched beyond config: the 91e rule-agnostic fakes stated
+their chips in BOTH vocabularies, which is exact only under a ONE-rule
+pair — on a two-rule cap turn (what a reason-less `'draw'` fake maps to)
+the survivors half and the mirrored fallen half both charge, 2× the
+stated number. `chipTurn` now derives the fallen half from
+`rulesForTurn(reason)`: survivors in the set → fallen 0 (the survivor
+half carries the chips), casualties alone → the mirror. Every pair reads
+the stated chips (gotcha #129); `harnessChipMode`'s shipped-default pin
+re-pinned to the pair; health.ts + the spec bullet amended; gotcha #130
+files the pre-read's summoner miss (death counts are not fallen power).
+2793 main + 565 fuzz green at the flip commit `da13e7d`.
+
+**The §91 close — what the phase built** (2026-09-03 → 2026-09-04, 13
+commits from `ee3d305` to the close): the fallen ledger (World v36) · the
+two chip modes + the cap surcharge as their own mode · the charge
+telemetry + every reader on charges · `--set` string knobs · fatigue →
+constitution at rate 0 with the spawn clamp · the player-facing lines by
+rule set · the `casualty-seams` tag (the kept floor) · the power table
+(1 / legendary 2 / growth 0; summons zeroed by stamp) · the default flip
+· the desk pre-read + the box flip read (three-way, n=120 × 4, the
+predictions scored) · the surcharge default. Three user-signed insertions
+from the survivors playtests (the camp summon fix, the terminal-cell
+stand line, the marker compensation) and one from the first casualties
+playtest (91e2). Four byte-identity claims made and RUN (91a1, 91a2,
+91c, the 90d floor-0 legs); two behaviour changes CONTROLLED by an
+expected oracle FAIL (91b) and a modes-differ pin (91e). Re-pin count
+across the whole phase: **zero** — every predicted "baselines re-pin"
+was a structural pin that moved with the run, and the three fake
+re-expressions (91e, 91g) were one idea each.
+
+**Exit criteria, checked:** both modes green under `npm test` +
+`fuzz:smoke` (the 4-pair harness pin walks each) ✓; the flip read in
+BALANCE naming the knob ✓ (the player pool, ×1.3–1.6 per run, ×2.6–3.1
+per turn — and the ARM decides how much). Snapshot prediction: the
+kickoff corrected "no bump" to World v36 (the dead are spliced); Run v44
+held ✓.
+
+**Riders → §92 (the kickoff audit should start from these):** the
+RE-SEARCH is the first number (both finalists were searched under
+survivors; regen is maladapted 28:1, deploy 27:16) · the user's turn
+targets (normal 2–3 / elite 4–5 / boss 6+) as the pool re-pin's anchor
+(pool ≈ turns × wave power for the swarms; composition / count for the
+four small-wave encounters; a per-encounter power override for
+boss-shaped waves — three decision points, all pending) · the table
+changed the OLD rule's game too (the §93 rollback comparator must share
+a table; criterion 1's instrument read the roster mix) · the
+derived-artifact registry fires (prior table v4 + roster table at the
+amendment board) · fatigue's rate switch-on as its own paired read · the
+Round 6 riders (priest/regen walk parity · act-1/act-2 vs the signed
+0.6 / 0.5 · `seamPoolBand`) carried unchanged. **Process notes →
+retro/scratchpad** (the HANDOFF char cap, the two-vocabulary fake, split
+pre-reads by arm, the monitor pattern, the wall-time estimate).

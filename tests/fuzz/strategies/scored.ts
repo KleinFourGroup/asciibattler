@@ -330,29 +330,38 @@ function worstFrontierKind(run: Run): EncounterKind | null {
   return worst;
 }
 
-/** Max-`power` slot index (lowest index ties) — the unit-target heuristic:
- *  `power` chips the pools, so the biggest chipper gets the buff. One field
- *  read, deterministic, no scorer machinery. Exported at 70b: the
+/** Max-(`power`, `level`) slot index (lowest index ties) — the unit-target
+ *  heuristic: `power` chips the pools, so the biggest chipper gets the buff.
+ *  §91b re-keyed it to (power, level): under the flat power table (1 /
+ *  legendary 2 / summon 0) every non-legendary hand ties on power, and a
+ *  power-only key would have buffed slot 0 forever — power stays dominant,
+ *  LEVEL breaks the ties (the stronger body carries the buff further). One
+ *  two-field read, deterministic, no scorer machinery. Exported at 70b: the
  *  arbitrated fire site keeps it as the TARGET nominator (candidates are
  *  per-packet, not per-position — the spec's nominator role). */
 export function maxPowerIndex(units: readonly UnitTemplate[]): number | null {
   if (units.length === 0) return null;
   let best = 0;
   for (let i = 1; i < units.length; i++) {
-    if (units[i]!.stats.power > units[best]!.stats.power) best = i;
+    const u = units[i]!;
+    const b = units[best]!;
+    if (u.stats.power > b.stats.power || (u.stats.power === b.stats.power && u.level > b.level)) best = i;
   }
   return best;
 }
 
-/** Min-`power` slot index (lowest index ties) — the discard polarity (68a): a
- *  `discardCards` sheds the WEAKEST card; the max heuristic above was written
- *  for buffs and silently inverted the discard. Exported at 70b with its
- *  sibling above. */
+/** Min-(`power`, `level`) slot index (lowest index ties) — the discard
+ *  polarity (68a): a `discardCards` sheds the WEAKEST card; the max heuristic
+ *  above was written for buffs and silently inverted the discard. §91b: the
+ *  same (power, level) key, minimized — the lowest power, then the LOWEST
+ *  level among equals. Exported at 70b with its sibling above. */
 export function minPowerIndex(units: readonly UnitTemplate[]): number | null {
   if (units.length === 0) return null;
   let best = 0;
   for (let i = 1; i < units.length; i++) {
-    if (units[i]!.stats.power < units[best]!.stats.power) best = i;
+    const u = units[i]!;
+    const b = units[best]!;
+    if (u.stats.power < b.stats.power || (u.stats.power === b.stats.power && u.level < b.level)) best = i;
   }
   return best;
 }

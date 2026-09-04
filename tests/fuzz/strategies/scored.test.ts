@@ -14,7 +14,7 @@ import type { MapNode, MapEdge } from '../../../src/run/NodeMap';
 import type { UnitStats, UnitTemplate } from '../../../src/sim/Unit';
 import { ALL_ARCHETYPES, baseStatsForArchetype, type Archetype } from '../../../src/sim/archetypes';
 import { STAT_KEYS } from './policies';
-import { scoredStrategy, selectByScore } from './scored';
+import { scoredStrategy, selectByScore, maxPowerIndex, minPowerIndex } from './scored';
 import {
   parseWeights,
   serializeWeights,
@@ -456,6 +456,33 @@ function fireRun(parts: {
 function fireStrategy(fire: FireWeights): FuzzStrategyWithPort {
   return scoredStrategy('fire-test', { ...zeroWeights(), fire });
 }
+
+describe('the (power, level) index pickers (§91b re-key)', () => {
+  // Under the flat power table every non-legendary hand ties on power; the
+  // re-key lets LEVEL break the tie so the nominator stops pointing at slot 0.
+  const at = (power: number, level: number): UnitTemplate => ({ ...meleeWithPower(power), level });
+
+  it('power stays dominant: a higher power beats any level', () => {
+    const team = [at(1, 9), at(2, 1), at(1, 5)];
+    expect(maxPowerIndex(team)).toBe(1);
+    expect(minPowerIndex([at(2, 1), at(1, 9), at(2, 3)])).toBe(1);
+  });
+
+  it('level breaks a power tie — max takes the HIGHEST level, min the LOWEST', () => {
+    const team = [at(1, 3), at(1, 7), at(1, 5)];
+    expect(maxPowerIndex(team)).toBe(1);
+    expect(minPowerIndex(team)).toBe(0);
+    expect(minPowerIndex([at(1, 4), at(1, 2), at(1, 6)])).toBe(1);
+  });
+
+  it('a full tie on both keys keeps the lowest index (the pre-91b tie rule, so old pins hold)', () => {
+    const team = [at(1, 2), at(1, 2), at(1, 2)];
+    expect(maxPowerIndex(team)).toBe(0);
+    expect(minPowerIndex(team)).toBe(0);
+    expect(maxPowerIndex([])).toBeNull();
+    expect(minPowerIndex([])).toBeNull();
+  });
+});
 
 describe('scored packet-fire policy (59c)', () => {
   it('absent fire group → NO pickPacketFire (old vectors never fire, gates stay off)', () => {

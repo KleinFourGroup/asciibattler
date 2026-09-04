@@ -12,7 +12,7 @@ import {
   isDestructibleNeutral,
   isAutoTargetNeutral,
 } from './units';
-import { abilityDef } from './abilities';
+import { abilityDef, ABILITY_DEFS } from './abilities';
 import { STATUS_DEFS } from './statuses';
 
 // §38d — the catalog is SPLIT by kind at runtime: `UNIT_DEFS` = the combatant
@@ -327,5 +327,38 @@ describe('§76f — the stat-identity roster', () => {
     expect(inspired.periodic).toBeUndefined();
     expect(inspired.behavior).toBeUndefined();
     expect(inspired.statMods?.mobility?.add).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * §91b — THE POWER TABLE (the casualty experiment, encounter-feel-spec §The
+ * casualty chip rule): `power` is a HEADCOUNT WEIGHT fixed per archetype —
+ * 1 everywhere, legendary 2, the summoned minion 0 — and it never grows.
+ * Config-derived: the legendary set comes from `rarity`, the summon set from
+ * the abilities catalog (the archetype any `summon` op spawns), so a new
+ * legendary or a new summon fails here until its weight is set on purpose.
+ * REVERTS under a §93 rollback (it sits above the `casualty-seams` tag).
+ */
+describe('§91b — the power table (headcount weights)', () => {
+  const summoned = new Set(
+    Object.values(ABILITY_DEFS).flatMap((def) =>
+      def.effects.flatMap((e) => (e.op.kind === 'summon' ? [e.op.summon.archetype] : [])),
+    ),
+  );
+
+  it('the catalog has at least one legendary and exactly one summoned archetype (the table has all three rows)', () => {
+    expect(COMBATANT_ENTRIES.some(([, d]) => d.rarity === 'legendary')).toBe(true);
+    expect([...summoned]).toEqual(['ghoul']);
+    expect(summoned.has('ghoul') && UNIT_DEFS.ghoul !== undefined).toBe(true);
+  });
+
+  it.each(COMBATANT_ENTRIES)('%s: power = summon 0 / legendary 2 / else 1, and power growth 0', (id, def) => {
+    const expected = summoned.has(id) ? 0 : def.rarity === 'legendary' ? 2 : 1;
+    expect(def.baseStats.power).toBe(expected);
+    expect(def.growthRates.power).toBe(0);
+  });
+
+  it('every power sits in {0, 1, 2} — no archetype carries a hidden weight', () => {
+    for (const [, def] of COMBATANT_ENTRIES) expect([0, 1, 2]).toContain(def.baseStats.power);
   });
 });

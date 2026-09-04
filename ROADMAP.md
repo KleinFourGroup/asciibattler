@@ -140,9 +140,13 @@ experiment (the rollback range).
   `playerExposure` (wave vs hand), `turn:resolved.reason`, the pure
   `ui/chipLabels.ts` by rule set (+ a draw names its kind); 8 pins;
   browser-verified BOTH modes off the DOM (WORKLOG §91d).
-- [ ] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
+- [x] **91b** — the power table (1 / legendary 2 / summon 0, growth 0;
   healer 0 → 1) + the config-derived pin + the (power, level) picker
-  re-key. Baselines re-pin. REVERTS under rollback.
+  re-key. Baselines re-pin. REVERTS under rollback. Landed 2026-09-03:
+  27 field changes through the byte-faithful formatter, verified per id;
+  25 + 3 pins; **re-pin count ZERO** (the fuzz pins are run-vs-run, not
+  literals) while the oracle FAILS on every CSV by design — the table is
+  live in the numbers (WORKLOG §91b).
 - [ ] **91e** — defaults → casualties (both modes); fakes carry fallen;
   baselines re-pin; the per-mode-pair harness pin.
 - [ ] **91f-pre** — the desk pre-read off the 90d results.json (the

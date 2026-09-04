@@ -29,7 +29,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.26,
-      "power": 0.1
+      "power": 0
     }
   },
   "adventurer": {
@@ -63,7 +63,7 @@
       "evasion": 0.45,
       "speed": 0.35,
       "mobility": 0.26,
-      "power": 0.1
+      "power": 0
     }
   },
   "ronin": {
@@ -97,7 +97,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.26,
-      "power": 0.1
+      "power": 0
     }
   },
   "bandit": {
@@ -130,7 +130,7 @@
       "evasion": 0.1,
       "speed": 0.15,
       "mobility": 0.14,
-      "power": 0.05
+      "power": 0
     }
   },
   "archer": {
@@ -164,7 +164,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "rogue": {
@@ -197,7 +197,7 @@
       "evasion": 0.5,
       "speed": 0.6,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "healer": {
@@ -218,7 +218,7 @@
       "evasion": 6,
       "speed": 6,
       "mobility": 2,
-      "power": 0
+      "power": 1
     },
     "growthRates": {
       "constitution": 0.5,
@@ -231,7 +231,7 @@
       "evasion": 0.2,
       "speed": 0.4,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "mage": {
@@ -265,7 +265,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "catapult": {
@@ -299,7 +299,7 @@
       "evasion": 0.2,
       "speed": 0.2,
       "mobility": 0.14,
-      "power": 0.1
+      "power": 0
     }
   },
   "reaver": {
@@ -333,7 +333,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.26,
-      "power": 0.1
+      "power": 0
     }
   },
   "corrupter": {
@@ -367,7 +367,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "ice_mage": {
@@ -401,7 +401,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "warlock": {
@@ -435,7 +435,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "luminant": {
@@ -469,7 +469,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "banshee": {
@@ -503,7 +503,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "stormcaller": {
@@ -524,7 +524,7 @@
       "evasion": 6,
       "speed": 4,
       "mobility": 2,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.5,
@@ -537,7 +537,7 @@
       "evasion": 0.2,
       "speed": 0.3,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "shaman": {
@@ -557,7 +557,7 @@
       "evasion": 5,
       "speed": 4,
       "mobility": -14,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.5,
@@ -570,7 +570,7 @@
       "evasion": 0.2,
       "speed": 0.2,
       "mobility": 0.14,
-      "power": 0.1
+      "power": 0
     }
   },
   "ghoul": {
@@ -604,7 +604,7 @@
       "evasion": 0.1,
       "speed": 0.15,
       "mobility": 0.14,
-      "power": 0.05
+      "power": 0
     }
   },
   "wall": {
@@ -666,7 +666,7 @@
       "evasion": 5,
       "speed": 5,
       "mobility": 4,
-      "power": 1
+      "power": 2
     },
     "growthRates": {
       "constitution": 0.9,
@@ -679,7 +679,7 @@
       "evasion": 0.4,
       "speed": 0.5,
       "mobility": 0.4,
-      "power": 0.1
+      "power": 0
     }
   },
   "rioter": {
@@ -712,7 +712,7 @@
       "evasion": 0.45,
       "speed": 0.35,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "gunslinger": {
@@ -745,7 +745,7 @@
       "evasion": 0.2,
       "speed": 0.4,
       "mobility": 0.2,
-      "power": 0.1
+      "power": 0
     }
   },
   "halberdier": {
@@ -779,7 +779,7 @@
       "evasion": 0.1,
       "speed": 0.2,
       "mobility": 0.14,
-      "power": 0.1
+      "power": 0
     }
   },
   "officer": {
@@ -813,7 +813,7 @@
       "evasion": 0.3,
       "speed": 0.4,
       "mobility": 0.26,
-      "power": 0.1
+      "power": 0
     }
   }
 }

@@ -1126,3 +1126,43 @@ The tag **`casualty-seams`** goes on this commit: everything at or below it
 (the ledger, the modes, the telemetry, the fatigue retarget, the lines by
 mode, the three pre-fixes) is KEPT under either §93 outcome; a rollback is
 one contiguous revert of what lands above it (91b → §92).
+
+### 91b — the power table (2026-09-03) — the first commit ABOVE the tag; REVERTS under rollback
+
+Landed as signed: `units.json` power = **1** everywhere, **2** for the three
+legendaries (stormcaller / shaman / prodigy — prodigy on both sides, the
+kickoff's correction), **0** for the ghoul (the one summoned archetype),
+**healer 0 → 1** (a lost healer costs pool — the user's kickoff call), and
+`growthRates.power` **0** for all 23 combatants. The surgery ran through the
+archetype editor's `formatArchetypesJson` (byte-faithful on the current file
+modulo the trailing newline, checked before writing), so the diff is exactly
+the 27 changed fields — 27 lines, no formatting noise — and the 83d rule held:
+the printout enumerated every id with its power / growth / rarity after the
+write.
+
+**The pin** (`units.test.ts` §91b): config-derived on both axes — the
+legendary set from `rarity`, the summon set from the ABILITIES catalog (the
+archetype any `summon` op spawns; pinned to be exactly `{ghoul}` today) — so a
+new legendary or a new summon fails until its weight is set on purpose; one
+`it.each` row per combatant (23) + the three-row sanity + the {0,1,2} sweep.
+**The re-key**: `maxPowerIndex` / `minPowerIndex` (the arbitrated arm's
+packet nominators, `scored.ts`) compare (power, level) — power dominant,
+level breaks the tie (max → the highest level, min → the lowest), a full tie
+keeps the lowest index so every old pin holds; without it the flat table
+would have buffed / discarded slot 0 forever (audit item 9). 3 pins in
+`scored.test.ts`.
+
+**Re-pin count: ZERO** — the cut's "baselines re-pin" prediction did not
+materialize: 2792 main (2767 + 25) + 559 fuzz:smoke (556 + 3) green on the
+first run, typecheck clean. The fuzz determinism pins are run-vs-run
+equalities (`toEqual(a, b)` across two drives), not literal outcomes, so a
+table that moves every outcome moves both sides together. The CONTROL that
+the table is live: `scripts/perf-oracle.sh HEAD` **FAILS on all five
+compared CSVs** (scored summary + rosters; ARM summary + decisions + rosters
+— e.g. summary `fabc597e5466 → f1a85269c1ec`), exactly as predicted (L10
+power 1.9 → 1 and legendary 1 → 2 change survivor chips under the shipped
+rule) — the opposite of 91c's PASS, and the reason the 91f read is
+three-way (survivors@HEAD ≠ the 90d legs by the table alone). Rider → §92:
+the derived-artifact registry's trigger fires (a sim change that moves item
+values) — the prior table + roster table re-derive at the §92 amendment
+board, not before (BALANCE §"The derived-artifact registry").

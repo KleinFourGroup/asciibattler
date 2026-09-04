@@ -4308,3 +4308,78 @@ deltas. The pre-X H7c→O log lives at
   0.475 / 0.576 — act-2 clear brackets the signed 0.5 from both sides).
   Batch dirs `output/box-batches/20260903-{032344,035305,042229,
   045544}-71a5000` (regen 1 · regen 0 · deploy 1 · deploy 0).
+- **2026-09-04 (§91f) — THE CASUALTY RULE'S FLIP READ, three-way** (the
+  casualty experiment, encounter-feel-spec §The casualty chip rule; the
+  prediction on file WORKLOG §91f-pre; box-drive cohort
+  `tests/fuzz/output/queue-91f.txt` at `4c06999`, 4/4 artifact-verified
+  (`results.json`), 13:52→17:25Z ≈ 3.6 h (~55 min per n=120 leg — the
+  new-table survivors legs fight ~30% more turns), box destroyed on drain;
+  every manifest HEAD `4c06999`, dirty false, seeds 1–120). **Shape: the
+  two soldier ARM two-act WALK twins** (regen / deploy, the 90d shape) ×
+  {**casualties@HEAD** = the shipped default on the 91b/91e2 table,
+  **survivors@HEAD** via `--set=health.chipMode=survivors
+  --set=health.capPenalty=survivors`}, n=120 same seeds as 90d; the 90d
+  floor-1 legs are the third arm (survivors on the OLD table). **The
+  read is on the UNCHANGED arm — the finalist vectors were searched under
+  survivors (§85g5), so this measures the rule on a bot that learned to
+  spend units; the drop is the pre-registered expectation, not the
+  verdict (§92 re-searches; §93 judges).**
+  | twin · leg | win | act-1 clear | pool lost / run | turns | draw | cap | enemy burn / turn | overkill ≥ 3 |
+  |---|---|---|---|---|---|---|---|---|
+  | regen · survivors@90d | 0.308 | 0.675 | 29.8 | 2964 | 0.012 | — | 4.25 | 0.578 |
+  | regen · survivors@HEAD | 0.267 | 0.750 | 29.5 | 3895 | 0.019 | 0.018 | 3.45 | 0.443 |
+  | regen · **casualties@HEAD** | **0.042** | **0.467** | 39.4 | 1985 | 0.022 | 0.022 | 5.04 | 0.391 |
+  | deploy · survivors@90d | 0.475 | 0.825 | 27.3 | 2656 | 0.015 | — | 4.12 | 0.698 |
+  | deploy · survivors@HEAD | 0.392 | 0.792 | 28.0 | 3361 | 0.012 | 0.010 | 3.15 | 0.466 |
+  | deploy · **casualties@HEAD** | **0.300** | **0.817** | 44.6 | 2189 | 0.035 | 0.034 | 4.75 | 0.417 |
+  **The rule flip, paired same-seed (casualties vs survivors@HEAD):**
+  regen 1 casualties-only win vs **28** survivors-only (z −5.0) · deploy
+  16 vs 27 (z −1.7). **The twins SPLIT:** regen collapses (−22.5 pt win,
+  −28 pt act-1 clear), deploy holds (−9 pt win, act-1 clear +2.5 pt) —
+  the "maladapted arm" is ARM-specific: the deploy finalist spends fewer
+  units. **The table alone (survivors@HEAD vs 90d, same rule, same
+  seeds):** win −4 / −8 pt, act-1 clear +7.5 / −3.3 pt, turns +31% /
+  +27% (flat power 1 shrinks the old rule's chips, so fights run longer),
+  enemy burn/turn 4.2 → 3.4 / 3.2 — and overkill ≥ 3 fell 0.58 → 0.44 /
+  0.70 → 0.47 on the table ALONE (the instrument reads the roster mix,
+  not the rule — a caveat on criterion 1). **Which knob moves (the 91f-pre
+  question): BOTH pools, the player's most.** Player pool lost per run
+  ×1.34 / ×1.59 vs survivors@HEAD — under the desk's ×2.2 / ×1.8 because
+  runs DIE sooner and stop spending (regen fights 1985 turns vs 3895);
+  per TURN the burn is ×2.6 / ×3.1. The enemy pool burns FASTER per turn
+  (5.04 / 4.75 vs 3.45 / 3.15): the wipes.
+  **Pacing under casualties (won instances; the user's targets normal
+  2–3 / elite 4–5 / boss 6+):** normal **1.59 / 1.64** turns (54–58% clear
+  on turn 1 — BIMODAL: the swarms highwaymen / plagueVictims / deserters /
+  artillery / brigands / plagueDoctors 1.00–1.10, the small waves
+  ronin-vs-mages 3.2–3.4 · adventurer-with-guards 2.3–2.4 · infernalColumn
+  2.5 · elementalTrio 2.0) · elite **2.44 / 3.03** · boss **2.75 / 2.90**
+  (banditQueen / witch-hunt 3.3–3.5, bandit-king / generalissimo 2.3–2.5).
+  Player cost per encounter: normal 3.3 / 3.2 (survivors 1.1–1.2) · elite
+  8.5 / 10.8 (7.3 / 7.1) · boss 7.7 / 9.1 (6.6 / 8.6) — the elite ÷ normal
+  ratio 6.4 → 2.6 / 6.1 → 3.4.
+  **The pre-read, checked:** (1) direction and mechanism RIGHT (the player
+  pool, the arm), magnitude over-called on pool/run (truncation by early
+  deaths) and the twin split unforeseen; (2) turns: bosses spot-on (pred
+  2.74 / 2.84), normals close (pred 1.31 / 1.35 — the bimodality
+  predicted), elites UNDER (pred 2.0 / 1.8 vs 2.4 / 3.0) — darkMagicPosse
+  predicted ~1 turn, measured 3.5 / 4.4: the survivors-era kills there
+  were warlock-summoned ghouls, which 91e2 prices at 0 — the summoner
+  bias the pre-read flagged was the whole story for that encounter; (3)
+  the elite bite-loss RIGHT. ⛔ **The decision-point read (cap-draw share,
+  casualties vs survivors@HEAD):** regen 0.022 vs 0.018 (43 / 1985 vs 70 /
+  3895 turns — flat) · deploy **0.034 vs 0.010** (74 / 2189 vs 34 / 3361 —
+  ×3.4, unambiguous). A RISE on one twin. Mechanism caveat: the searcher is
+  pool-blind, so this is not a stall INCENTIVE — the mix shifts toward the
+  slog fights once swarms clear in one turn, and those are where the cap
+  bites (ronin-vs-mages, the guards). The `capPenalty` docket → WORKLOG
+  §91f (the user's call). **Criterion 1 PREVIEW (not a signing read; §93
+  judges on the rebalanced build):** overkill ≥ 3 share 0.391 / 0.417
+  under casualties — down from 0.58 / 0.70, above the pinned 0.30 keep
+  line, deploy a hair over the 0.40 per-arm ceiling; and most of the drop
+  came with the TABLE, not the rule. Batch dirs
+  `output/box-batches/20260904-{135211,145221,154006,164816}-4c06999`
+  (regen casualties · regen survivors · deploy casualties · deploy
+  survivors); the read script is a scratchpad probe (recompute from
+  `results.json`: outcome / sectorsCleared / battles / telemetry.poolChips
+  with reason, and alpha-strike.csv's `shareOverkillGe3` row `all`).

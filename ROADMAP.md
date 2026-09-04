@@ -144,16 +144,17 @@ experiment (the rollback range).
   (both vocabularies); the per-mode-pair harness pin via `--set`. Landed
   2026-09-03; re-pin count ZERO again (WORKLOG §91e).
 - [x] **91f-pre** — the desk pre-read off the 90d results.json (the
-  prediction 91f is checked against). Filed 2026-09-04 (WORKLOG §91f-pre):
-  the player pool burn ~2× per run, both twins' win / act-1 clear well
-  under 90d on the maladapted arm; turns-to-clear ~½ the user's targets
-  on every kind; elites lose relative bite; the cap share stays open.
-- [ ] **91f** — the box flip read (the 90d twins × both modes flipped
+  prediction 91f is checked against). Filed 2026-09-04: pool burn ~2×,
+  turns ~½ the targets, elites lose bite, cap share open (WORKLOG §91f-pre).
+- [x] **91f** — the box flip read (the 90d twins × both modes flipped
   together, n=120, ONE HEAD; three-way vs 90d) → BALANCE (own commit).
+  Read 2026-09-04: the twins SPLIT (regen 0.308 → 0.042, deploy 0.475 →
+  0.300 — the ARM decides); pacing ~½ the targets (BALANCE §91f · WORKLOG).
 - [ ] **91g** — docs + the HANDOFF cursor; the §91 close.
 - ⛔ Decision point (91f): the `capPenalty` default flips only on a
   cap-draw share that rises under casualties (the searcher is
-  pool-blind — the read is armor against a human stall).
+  pool-blind — the read is armor against a human stall). **READ: a rise on
+  deploy (×3.4), flat on regen — docket WORKLOG §91f item 4, PENDING.**
 - [x] **91e2** (inserted 2026-09-04 off the user's first casualties
   playtest, user-signed): summons weigh 0 by the `summonedBy` STAMP in the
   fallen ledger, not by archetype; the ghoul's table row → 1 (a fielded

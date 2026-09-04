@@ -1384,3 +1384,85 @@ anything about a re-searched arm (§92). The §92 lever the numbers point
 at, for the record: enemy pools ≈ 2× to reach the turn targets on
 swarms, with the small-wave encounters needing composition or count
 changes rather than pool changes (their Σ power is the binding term).
+
+### 91f — the flip read (2026-09-04; numbers BALANCE 2026-09-04 §91f)
+
+The cohort: `scripts/box-drive.sh tests/fuzz/output/queue-91f.txt
+--poll=120 --est-hours=2.5 --artifact=results.json` at `4c06999` (pushed
+first — the user granted standing push permission for box runs this
+session; saved to the agent memory), 4/4 verified, ~3.6 h (the 2.5 h
+estimate missed because the new-table survivors legs fight ~30% more
+turns — a pacing fact, not a driver fault; the 2× hatch never armed),
+box `abox-20260904-135117` destroyed on drain. The log monitor pattern
+(launch / fetched / HOLD / refus / error / destroy / EXIT) caught every
+transition; the tree stayed untouched until the fourth launch fired.
+
+**Findings, in the order the cut asked for them:**
+
+1. **Which knob moves: both pools, the player's most, and the ARM decides
+   how much.** Regen collapses (win 0.267 → 0.042 paired 28:1), deploy
+   holds (0.392 → 0.300, 27:16; act-1 clear unchanged at 0.82). The two
+   finalists were searched under a rule where a player death was free;
+   the regen vector spends units and casualties prices exactly that. So
+   the flip read says less about the rule's viability than about the
+   arm — the §92 RE-SEARCH is the experiment's real first number, as the
+   spec's criterion 2 always said (the finalist's recipe re-run under the
+   new rule, the survivors gradient at HEAD as the comparator).
+2. **The table is its own experiment.** Survivors@HEAD vs 90d moved every
+   headline (win −4 / −8, act-1 +7.5 / −3.3, turns +31% / +27%, overkill
+   ≥ 3 down 0.14 / 0.23) on the same rule and seeds. Two consequences: the
+   §93 rollback range (91b upward) reverts a table that CHANGED the old
+   rule's game too — a rollback is not "back to 90d" without re-reading;
+   and criterion 1's instrument is reading the roster mix (the table
+   shrank every unit's chip weight; the overkill share is computed off
+   deaths' HP margins on a longer, differently-composed fight), so the
+   §93 keep read must compare LIKE tables.
+3. **Pacing is bimodal and half the target.** The swarms clear on turn 1
+   (six normals at 1.00–1.10); the four small-wave encounters run 2–3.4;
+   elites 2.4 / 3.0 and bosses 2.75 / 2.9 sit at roughly half the user's
+   4–5 / 6+. The §92 levers the numbers point at: enemy pools ≈ 2× for the
+   swarms (pool ≈ turns × wave power), and composition / count for the
+   small waves (their Σ power under the pool is the binding term — a
+   bigger pool there makes a longer slog, not a better fight); the
+   per-encounter power override the user floated is the third lever for
+   boss-shaped waves (their pool 13–20 vs ~8 power per wave).
+4. ⛔ **The `capPenalty` decision point.** The cap-draw share ROSE under
+   casualties on the deploy twin (0.034 vs 0.010, 74 vs 34 capped turns)
+   and held flat on regen (0.022 vs 0.018). The ROADMAP rule says the
+   default flips to the surcharge (`capPenalty: survivors`) on a rise.
+   The honest mechanism: the searcher cannot stall on purpose (it never
+   reads the rule), so the rise is a MIX shift — once swarms clear in one
+   turn, a larger share of the remaining turns are the slog fights where
+   the tick cap bites (ronin-vs-mages, the guards) — not a kiting
+   incentive. The docket, for the user: **(a) flip** `capPenalty →
+   survivors` — the surcharge costs an ordinary turn nothing, arms the
+   rule against a HUMAN stall (the read the rule was written for), and
+   the criterion as written is met; the cost is that 2–3% of bot turns
+   get pricier on the §92 board and the shipped pair becomes two rules
+   (the PostTurnScreen already labels it); **(b) hold** `casualties` —
+   one rule, the rise is compositional, revisit at §93 with the human
+   playtests as the stall read. Recommendation: (a) — the surcharge is
+   armor, the searcher is not the threat it guards against, and a
+   compositional rise is still a rise in how often the cap decides a
+   fight. Either way a one-field config flip + one pin
+   (`harnessChipMode.test`'s shipped-default row).
+5. **Criterion 1, previewed only:** 0.39 / 0.42 — above the 0.30 keep
+   line, deploy over the 0.40 ceiling by a hair, and most of the movement
+   from 0.58 / 0.70 came with the table. Not a signing read (the rule is
+   judged at §93 on the rebalanced build, and finding 2 says the
+   comparator must share the table).
+
+**The pre-read scorecard** (the point of pre-registering): mechanism and
+direction right on all three predictions; magnitude over-called on pool
+per run (early deaths truncate spending — the desk's "truncated at the
+predicted clear" still fought every turn to the clear); the twin split
+unforeseen (the desk pooled both arms' death rates without asking which
+arm spends); bosses' turns exact, normals close, elites under by the
+summoner effect (darkMagicPosse 1.0 predicted / 3.5–4.4 measured — the
+survivors-era kills were free ghouls). The lesson for the next pre-read:
+split by ARM, and never count a kill the ledger will not book.
+
+**What the numbers do NOT decide:** keep-or-rollback (§93, after §92 —
+this read is on a maladapted arm and an un-rebalanced board); whether
+the user's turn targets are right (the §92 anchor, "vague vibes" by their
+own label); the rarity / price book (superseded under keep).

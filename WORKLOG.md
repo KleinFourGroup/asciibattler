@@ -1896,3 +1896,43 @@ name; the 91f recompute used `shareOverkillGe3` and still can). One pin:
 at 20 the scaled share equals the ≥ 3 share; at 40 the threshold is 6 and
 only the 10-margin death clears it while the absolute share is untouched.
 21 reader tests green, typecheck clean.
+
+### The overnight pre-signatures (2026-09-04 evening, USER-SIGNED in chat — "pause for my review if any number looks suspicious, otherwise see you in the morning")
+
+Signed after the 92e/92d-pre landings, so the session can run the box
+chain through the night without a morning gate at each step:
+
+- **The boss weights for 92d** (the four bosses' named unit, one per boss):
+  bandit-king adventurer **6** (final stage) · witch-hunt luminant **6**
+  (final stage) · banditQueen banshee **3** (every stage) · generalissimo
+  officer **3** (every stage); pools **36 / 39 / 44 / 36** (the Queen and
+  the Generalissimo rise above the shape-lock's 38 / 31 to absorb a
+  per-turn payoff — an every-stage unit dies most turns, so a 6 there is a
+  burn floor, not a turning point). 92f checks them.
+- **(a) The deploy decision at 92c2** = the pre-registered argmax over the
+  four selection arms by TRAIN-bank win count; tie → a base finalist over
+  the refined winner (the 85g5 inversion); HOLD for the user only on a
+  driver HOLD, an envelope-check failure, or an exact top-two tie.
+- **(b) The 92c2 arm loads the stale v3 prior table** (λ=0.5 stays in the
+  ARM — measure under what ships; v3 was measured under survivors; v4 lands
+  at 92g). Accepted, noted.
+- **(c) 92d commits and 92f launches the same night**: after the 92c2
+  fetch — the deploy fixture + `board.ts` DEPLOY path, then the signed
+  table (pool max 40 · the pools · the boss weights) as its own commit,
+  push, and the 92f cohort (the regen + NEW-deploy walk twins × fatigue
+  {0, 0.1}, n=120, `--per-encounter --emit-results`; ~8 h).
+- **(d) The 92f2 adjustment RULE** (the one allowed adjustment, mechanical):
+  pool max 40 → 50 if the deploy twin's act-1 clear < 0.6 · a kind whose
+  turns per won instance misses its target (normal 2.5 / elite 4.5 /
+  boss 6) by > 20% has its pools rescaled by target ÷ measured · fatigue
+  stays 0.1 only if its paired win Δ is inside noise (else 0) · all in band
+  → the config FREEZES untouched. Then 92g (prior v4 under the deployed
+  vector + the fresh derive, ~4 h) launches on the frozen config. Anything
+  92f reads that the rule does not cover is WRITTEN UP AND HELD.
+- **Standing clause:** any number that looks suspicious pauses the chain
+  for the user's review.
+
+Correction folded in at the same time (kickoff finding G, checked at
+92e): the prior tripwire checks catalog MEMBERSHIP, not the deploy vector,
+so a vector change does not trip `npm test` — v4 builds ONCE at 92g (the
+92c2 line no longer carries it; ~1.5 h of box saved).

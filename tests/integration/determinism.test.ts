@@ -177,7 +177,11 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
     bus.emit('battle:ended', {
       winner: 'player',
       xpAwards: [],
+      // 91e — the chip in both rule vocabularies (survivors: the player's
+      // standing power; casualties: the enemy's fallen), so the fake drains
+      // the enemy pool under either shipped `health.chipMode`.
       survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+      fallenPower: { player: 0, enemy: HEALTH.enemyHealthMax },
     });
     while (phase() === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
     if (phase() === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
@@ -194,6 +198,7 @@ function driveTwoBattles(seed: number): BattleEncounter[] {
     winner: 'player',
     xpAwards: [],
     survivorPower: { player: HEALTH.enemyHealthMax, enemy: 0 },
+    fallenPower: { player: 0, enemy: HEALTH.enemyHealthMax }, // 91e — both vocabularies
   });
 
   return encounters;
@@ -222,6 +227,7 @@ function driveForcedRun(
     winner: 'player',
     xpAwards: [],
     survivorPower: { player: run.enemyHealthPoolMax, enemy: 0 },
+    fallenPower: { player: 0, enemy: run.enemyHealthPoolMax }, // 91e — both vocabularies
   });
   // 48f — boss rewards fire before run:victory; accept through the pause so
   // the drive lands at its terminal phase.

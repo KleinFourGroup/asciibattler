@@ -1198,36 +1198,44 @@ describe('Run', () => {
       expect(run.phase).toBe('defeat');
     });
 
-    it('89e — poolAtRisk previews the FIELDED wave (Σ power × chip, capped at the pool) on every turn', () => {
-      const { run, bus } = freshRunWithBus(1);
-      run.pauseAtTurnGates = true;
-      const startings: GameEvents['turn:starting'][] = [];
-      const started: GameEvents['battle:started'][] = [];
-      bus.on('turn:starting', (p) => startings.push(p));
-      bus.on('battle:started', (p) => started.push(p));
-      run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
-      run.dispatch({ kind: 'advanceTurn' }); // gate → the wave is actually rolled
-      // Turn 1: the preview matched the wave beginTurn fielded (an independent
-      // surface: the battle payload's templates, summed here by hand).
-      const bound = (enemy: readonly { stats: { power: number } }[], pool: number): number =>
-        Math.min(pool, enemy.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
-      expect(startings).toHaveLength(1);
-      expect(started).toHaveLength(1);
-      expect(started[0]!.encounter.enemyTeam.length).toBeGreaterThan(0);
-      expect(startings[0]!.poolAtRisk).toBe(
-        bound(started[0]!.encounter.enemyTeam, HEALTH.playerHealthMax),
-      );
-      expect(startings[0]!.poolAtRisk).toBeGreaterThan(0);
+    it('89e — under survivors, poolAtRisk previews the FIELDED wave (Σ power × chip, capped at the pool) on every turn', () => {
+      // 91e — the shipped default is casualties now; this is the SURVIVORS
+      // branch's pin, so it names its mode (mutated + restored).
+      const originalMode = HEALTH.chipMode;
+      HEALTH.chipMode = 'survivors';
+      try {
+        const { run, bus } = freshRunWithBus(1);
+        run.pauseAtTurnGates = true;
+        const startings: GameEvents['turn:starting'][] = [];
+        const started: GameEvents['battle:started'][] = [];
+        bus.on('turn:starting', (p) => startings.push(p));
+        bus.on('battle:started', (p) => started.push(p));
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        run.dispatch({ kind: 'advanceTurn' }); // gate → the wave is actually rolled
+        // Turn 1: the preview matched the wave beginTurn fielded (an independent
+        // surface: the battle payload's templates, summed here by hand).
+        const bound = (enemy: readonly { stats: { power: number } }[], pool: number): number =>
+          Math.min(pool, enemy.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
+        expect(startings).toHaveLength(1);
+        expect(started).toHaveLength(1);
+        expect(started[0]!.encounter.enemyTeam.length).toBeGreaterThan(0);
+        expect(startings[0]!.poolAtRisk).toBe(
+          bound(started[0]!.encounter.enemyTeam, HEALTH.playerHealthMax),
+        );
+        expect(startings[0]!.poolAtRisk).toBeGreaterThan(0);
 
-      // Turn 2 (the cursor advanced, the pools moved): still the fielded wave.
-      chipTurn(bus, { player: 1, enemy: 2 }); // sub-lethal → ongoing
-      run.dispatch({ kind: 'advanceTurn' }); // outcome → next turn's gate
-      run.dispatch({ kind: 'advanceTurn' }); // gate → battle
-      expect(startings).toHaveLength(2);
-      expect(started).toHaveLength(2);
-      expect(startings[1]!.poolAtRisk).toBe(
-        bound(started[1]!.encounter.enemyTeam, HEALTH.playerHealthMax - 2),
-      );
+        // Turn 2 (the cursor advanced, the pools moved): still the fielded wave.
+        chipTurn(bus, { player: 1, enemy: 2 }); // sub-lethal → ongoing
+        run.dispatch({ kind: 'advanceTurn' }); // outcome → next turn's gate
+        run.dispatch({ kind: 'advanceTurn' }); // gate → battle
+        expect(startings).toHaveLength(2);
+        expect(started).toHaveLength(2);
+        expect(startings[1]!.poolAtRisk).toBe(
+          bound(started[1]!.encounter.enemyTeam, HEALTH.playerHealthMax - 2),
+        );
+      } finally {
+        HEALTH.chipMode = originalMode;
+      }
     });
 
     it('91d — under casualties, poolAtRisk previews the HAND (Σ its power × chip, capped at the pool), and turn:resolved carries the reason', () => {
@@ -3489,6 +3497,7 @@ describe('Run', () => {
         winner: 'enemy',
         xpAwards: [],
         survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+        fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // 91e — both vocabularies
         tallies: { bits: 50 },
       });
       expect(run.phase).toBe('defeat');
@@ -5153,31 +5162,46 @@ function winEncounter(
   bus.emit('battle:ended', {
     winner: 'player',
     xpAwards,
+    // 91e — both rule vocabularies (the player's standing power / the enemy's
+    // fallen), so the win drains the enemy pool under either shipped mode.
     survivorPower: { player: poolMax, enemy: 0 },
+    fallenPower: { player: 0, enemy: poolMax },
     ...(tallies !== undefined ? { tallies } : {}),
   });
 }
 
-/** H4 — emit a `battle:ended` whose ENEMY survivors chip the player pool by
- *  `HEALTH.playerHealthMax`, losing the run in this one turn. */
+/** H4 → 91e — emit a `battle:ended` that costs the player pool
+ *  `HEALTH.playerHealthMax`, losing the run in this one turn — expressed in
+ *  BOTH rule vocabularies (the enemy's standing power under survivors, the
+ *  player's fallen under casualties), so it loses the run under either
+ *  shipped `health.chipMode`. */
 function loseEncounter(bus: EventBus<GameEvents>): void {
   bus.emit('battle:ended', {
     winner: 'enemy',
     xpAwards: [],
     survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+    fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 },
   });
 }
 
-/** H4 — emit one turn's `battle:ended` with an explicit survivor-power chip
- *  (and optional XP awards), for multi-turn encounter-loop tests. */
+/** H4 → 91e — emit one turn's `battle:ended` that CHIPS the pools by
+ *  `chips.player` (the player's contribution → the ENEMY pool) and
+ *  `chips.enemy` (→ the PLAYER pool), for multi-turn encounter-loop tests.
+ *  Pre-91e this was the survivor-power vector alone; since the default flip
+ *  the fake states the same chips in both vocabularies — survivors
+ *  `{player, enemy}` AND the mirrored fallen `{player: chips.enemy, enemy:
+ *  chips.player}` — so the applied losses are identical under either
+ *  `health.chipMode` (a cap turn under two DIFFERENT modes would double up;
+ *  the shipped pair is one rule). Rule-SPECIFIC tests pass `extra.fallenPower`
+ *  explicitly (it wins over the mirror) and flip `HEALTH` themselves. */
 function chipTurn(
   bus: EventBus<GameEvents>,
-  survivorPower: { player: number; enemy: number },
+  chips: { player: number; enemy: number },
   xpAwards: GameEvents['battle:ended']['xpAwards'] = [],
   // 47f — optional battle tally (the settle-seam tests).
   tallies?: GameEvents['battle:ended']['tallies'],
-  // 91a2 — the casualty rule's inputs: the fallen half + why the turn ended
-  // (absent = a pre-91a1 fake: no fallen, a 'draw' read as the cap).
+  // 91a2 — the casualty rule's inputs: an explicit fallen half + why the turn
+  // ended (a 'draw' without a reason reads as the cap).
   extra?: {
     fallenPower?: GameEvents['battle:ended']['fallenPower'];
     reason?: GameEvents['battle:ended']['reason'];
@@ -5187,9 +5211,9 @@ function chipTurn(
   bus.emit('battle:ended', {
     winner: extra?.winner ?? 'draw',
     xpAwards,
-    survivorPower,
+    survivorPower: chips,
+    fallenPower: extra?.fallenPower ?? { player: chips.enemy, enemy: chips.player },
     ...(tallies !== undefined ? { tallies } : {}),
-    ...(extra?.fallenPower !== undefined ? { fallenPower: extra.fallenPower } : {}),
     ...(extra?.reason !== undefined ? { reason: extra.reason } : {}),
   });
 }
@@ -6202,6 +6226,7 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
       winner: 'enemy',
       xpAwards: [],
       survivorPower: { player: 0, enemy: HEALTH.playerHealthMax },
+      fallenPower: { player: HEALTH.playerHealthMax, enemy: 0 }, // 91e — both vocabularies
       campKills: CAMP_KILL,
     });
     expect(run.phase).toBe('defeat');
@@ -6215,6 +6240,7 @@ describe('75g — camp-kill loot rides the turn boundary as reward portions', ()
       winner: 'player',
       xpAwards: [],
       survivorPower: { player: 1_000, enemy: 0 },
+      fallenPower: { player: 0, enemy: 1_000 }, // 91e — a decisive WIN under either mode
       tallies: { bits: 6 },
       campKills: CAMP_KILL,
     });

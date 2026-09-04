@@ -20,6 +20,7 @@ import { RNG } from '../../src/core/RNG';
 import { spawnEncounter } from '../../src/sim/battleSetup';
 import { secondsToTicks } from '../../src/config';
 import { HEALTH } from '../../src/config/health';
+import { rulesForTurn } from '../../src/run/chipRule';
 import type { GameEvents } from '../../src/core/events';
 import { Run, type BattleEncounter } from '../../src/run/Run';
 
@@ -152,21 +153,52 @@ describe('H4: encounter loop over real battles', () => {
     expect(b.enemyHealth).toBe(a.enemyHealth);
   }, 20_000);
 
-  it('a per-turn tick cap resolves as a draw that chips BOTH pools', () => {
-    const bus = new EventBus<GameEvents>();
-    const run = new Run(1, bus, { ...NO_EVENTS, startingRoster: LVL1_ROSTER });
-    run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });
+  it('a per-turn tick cap resolves as a draw charged by the CAP rule set — both pools dent iff a rule reads survivors', () => {
+    // 91e — the shipped pair is (casualties, casualties): a 1-tick cap turn
+    // has NO fallen, so it charges nothing and the encounter runs to maxTurns.
+    // Under any pair that reads survivors on a cap turn (the pre-91e default,
+    // or the surcharge pair) both full standing teams chip on turn 1. Pinned
+    // for every pair off `rulesForTurn('cap')` — the same World, one real
+    // battle per turn, the modes mutated + restored.
+    const pairs = [
+      ['survivors', 'survivors'],
+      ['casualties', 'casualties'],
+      ['casualties', 'survivors'],
+    ] as const;
+    const original = { chipMode: HEALTH.chipMode, capPenalty: HEALTH.capPenalty };
+    try {
+      for (const [chipMode, capPenalty] of pairs) {
+        HEALTH.chipMode = chipMode;
+        HEALTH.capPenalty = capPenalty;
+        const bus = new EventBus<GameEvents>();
+        const run = new Run(1, bus, { ...NO_EVENTS, startingRoster: LVL1_ROSTER });
+        run.dispatch({ kind: 'enterNode', nodeId: firstFrontier(run) });
 
-    // 1-tick cap → no turn resolves decisively; every turn is a draw where
-    // both full surviving teams chip. The first turn must dent BOTH pools.
-    const turns = driveEncounter(run, bus, 1);
-
-    expect(turns[0]!.pool.enemy).toBeLessThan(HEALTH.enemyHealthMax);
-    expect(turns[0]!.pool.player).toBeLessThan(HEALTH.playerHealthMax);
-    // Still terminates within the safety cap.
-    expect(run.phase).not.toBe('battle');
-    expect(run.turnIndex).toBeLessThanOrEqual(HEALTH.maxTurns);
-  });
+        // The enemy pool is the ENCOUNTER's authored `healthPool` (X3), not the
+        // global default — read it off the run.
+        const enemyPoolMax = run.enemyHealthPoolMax;
+        const turns = driveEncounter(run, bus, 1);
+        const readsSurvivors = rulesForTurn('cap').has('survivors');
+        if (readsSurvivors) {
+          // Both full standing teams chip on the very first (capped) turn.
+          expect(turns[0]!.pool.enemy).toBeLessThan(enemyPoolMax);
+          expect(turns[0]!.pool.player).toBeLessThan(HEALTH.playerHealthMax);
+        } else {
+          // Nobody fell in one tick → the casualties rule charges nothing; the
+          // pools sit at their starts and the loop ends only at the turn cap.
+          expect(turns[0]!.pool.enemy).toBe(enemyPoolMax);
+          expect(turns[0]!.pool.player).toBe(HEALTH.playerHealthMax);
+          expect(run.turnIndex).toBe(HEALTH.maxTurns);
+        }
+        // Still terminates within the safety cap under every pair.
+        expect(run.phase).not.toBe('battle');
+        expect(run.turnIndex).toBeLessThanOrEqual(HEALTH.maxTurns);
+      }
+    } finally {
+      HEALTH.chipMode = original.chipMode;
+      HEALTH.capPenalty = original.capPenalty;
+    }
+  }, 20_000);
 
   it('each turn freshly rolls its own battlefield + enemy wave', () => {
     const bus = new EventBus<GameEvents>();

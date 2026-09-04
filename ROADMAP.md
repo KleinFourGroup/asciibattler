@@ -147,8 +147,12 @@ experiment (the rollback range).
   25 + 3 pins; **re-pin count ZERO** (the fuzz pins are run-vs-run, not
   literals) while the oracle FAILS on every CSV by design — the table is
   live in the numbers (WORKLOG §91b).
-- [ ] **91e** — defaults → casualties (both modes); fakes carry fallen;
-  baselines re-pin; the per-mode-pair harness pin.
+- [x] **91e** — defaults → casualties (both modes); fakes carry fallen;
+  baselines re-pin; the per-mode-pair harness pin. Landed 2026-09-03: both
+  `health.json` modes `casualties`; every chip fake states its chips in BOTH
+  vocabularies (rule-agnostic); the tick-cap integration pin per pair;
+  `tests/fuzz/harnessChipMode.test.ts` (4 pairs via the `--set` path + the
+  modes-differ control); re-pin count ZERO again (WORKLOG §91e).
 - [ ] **91f-pre** — the desk pre-read off the 90d results.json (the
   prediction 91f is checked against).
 - [ ] **91f** — the box flip read (the 90d twins × both modes flipped

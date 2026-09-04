@@ -14,17 +14,22 @@
  *                       fallen. Both alive all round — the paired same-seed
  *                       A/B of the flip (`--set=health.chipMode=…`) is the
  *                       experiment's instrument; the human A/B is this line.
- *                       Ships `survivors` until 91e flips the default.
+ *                       Shipped `survivors` through the §91 seam commits;
+ *                       **`casualties` since 91e** (2026-09-03) — the
+ *                       experiment's default until §93 keeps or rolls back.
  * - `capPenalty`      — the rule a TICK-CAPPED turn (`battle:ended.reason ===
  *                       'cap'`) ALSO pays, on top of `chipMode`: under
  *                       (casualties, survivors) a stall pays its own fallen
  *                       PLUS the enemy's standing power — a surcharge, so
  *                       kiting to the cap is never cheaper than fighting. A
- *                       mutual wipe never reads it. Ships `survivors` beside
- *                       `chipMode: survivors` (one rule — byte-identical to
- *                       pre-§91); the signed default is casualties (91e); the
- *                       first flip read decides whether it stays there
- *                       (ROADMAP §91's decision point).
+ *                       mutual wipe never reads it. Shipped `survivors` beside
+ *                       `chipMode: survivors` through the seam commits (one
+ *                       rule — byte-identical to pre-§91); **`casualties`
+ *                       since 91e** (the signed default: one rule again, so a
+ *                       stall pays only its fallen); the first flip read (91f)
+ *                       decides whether it stays there — it flips to
+ *                       `survivors` only on a cap-draw share that RISES under
+ *                       casualties (ROADMAP §91's decision point).
  * - `chipMultiplier`  — scales every charge (× power → pool-HP).
  * Balance-tuned in H6 — these are starting points.
  *

@@ -1166,3 +1166,56 @@ three-way (survivors@HEAD ≠ the 90d legs by the table alone). Rider → §92:
 the derived-artifact registry's trigger fires (a sim change that moves item
 values) — the prior table + roster table re-derive at the §92 amendment
 board, not before (BALANCE §"The derived-artifact registry").
+
+### 91e — the default flip (2026-09-03) — the tree now PLAYS casualties
+
+`config/health.json`: `chipMode` + `capPenalty` → **`casualties`** (one rule
+again — a stall pays only its own fallen; the surcharge pair is the 91f
+decision point, armed by `--set=health.capPenalty=survivors`). The `health.ts`
+doc rows re-worded (shipped survivors through the seam commits; casualties
+since 91e).
+
+**The fakes** (audit item 13, the prediction that held): 72 tests failed on
+the bare flip — every chip fake emitted `survivorPower` alone, so under
+casualties nothing chipped, encounters never resolved, and the cascade
+reached the port / reward / snapshot / camp suites. The re-expression is ONE
+idea, not ~15 rewrites: a fake states the chips it WANTS in both vocabularies
+— `chipTurn(bus, chips)` emits `survivorPower: chips` AND the mirrored
+`fallenPower: { player: chips.enemy, enemy: chips.player }` (an explicit
+`extra.fallenPower` wins); `winEncounter` / `loseEncounter` / the three
+inline fakes in `Run.test.ts` and the three in `determinism.test.ts` carry
+the mirror too. Under either shipped mode the applied losses are identical
+(the shipped pairs are one rule each; a cap turn under two DIFFERENT modes
+would double up, which is why rule-SPECIFIC tests set `HEALTH` themselves —
+the 89e wave-bound pin now names `survivors` explicitly, mutated + restored,
+beside its 91d casualties twin). `runRollout.test`'s `DRAW_CHIP` (0/0) needed
+nothing.
+
+**The integration pin re-expressed**: `encounter-loop.test`'s "a tick cap
+chips BOTH pools" was survivors-specific (a 1-tick cap has NO fallen). It now
+drives one real 1-tick-capped World per turn under three pairs — (survivors,
+survivors) · (casualties, casualties) · (casualties, survivors) — and asserts
+off `rulesForTurn('cap')`: a pair that reads survivors dents both pools on
+turn 1; the shipped pair charges nothing and runs to `maxTurns` (the
+pool-fraction tiebreak ends it); every pair terminates inside the cap. (The
+enemy pool is the ENCOUNTER's authored `healthPool`, read off
+`run.enemyHealthPoolMax` — the first draft compared against the global max
+and read 10 vs 8.)
+
+**The per-mode-pair harness pin** (`tests/fuzz/harnessChipMode.test.ts`, the
+cut's last line): all FOUR pairs, the modes written the way `--set` writes
+them (`resolveKnob('health.<key>')` → the live object, in place), a
+`hopCount: 2` pure-random run with telemetry per pair; on every recorded
+chip `playerCharge / enemyCharge == turnCharges(reason, survivors, fallen)`
+under THAT pair and `applied == min(charge, poolBefore)`; plus the control
+that the modes are not interchangeable (the same seed's first chip charges
+differently under survivors vs casualties — the battle is seeded before the
+rule reads) and the pin that the shipped default IS (casualties,
+casualties).
+
+**Re-pin count: ZERO, again** — 2792 main (unchanged: re-expressions, no new
+main pins) + 565 fuzz:smoke (559 + 6) green, typecheck clean. Byte-identity
+is NOT claimed (the flip changes the rule by design; 91f measures it). What
+the tree plays now: casualties on the 91b table — the experiment's arm. The
+user's SURVIVORS playtests belong at the `casualty-seams` tag (old table,
+survivors), never at HEAD.

@@ -1801,3 +1801,18 @@ commit.
 - ⛔ **v4 under the re-searched deploy vector**, not regen (finding D).
 - ⛔ **92b (the encounter `--set` group): SKIP** — the design lands once
   (92d) and reads once (92f); a sweep is 9 cohorts the budget doesn't have.
+
+### Shape-lock (2026-09-04, USER-SIGNED in chat)
+
+The user signed the draft cut and every recommendation as proposed, after
+one clarification (what the `--set` registry is and why 92b is skipped:
+the design lands once and reads once; an encounter-keyed group earns its
+hour only for a sweep the budget does not have — it stays a candidate tool
+for §94's per-encounter pass if the adjustment round needs it). DECIDED:
+the lever = `health.playerHealthMax` 20 → **40** (50 the fallback if the
+act-1 clear reads under the signed 0.6) with the enemy pools at burn × T ·
+the swarm pools per the desk table · NO pool move on the four small waves
++ the two summoner elites (composition → §94) · the power override BUILT
+both directions (a spec amendment lands with 92e) · prior v4 measured
+under the re-searched deploy vector · 92b SKIPPED. The cut is in ROADMAP
+§92 as checkboxes; night 1 (the derive) launches from this commit.

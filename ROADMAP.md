@@ -127,17 +127,31 @@ derived-artifact rebuilds (prior table v4 + roster table, registry
 recipes) / the **fully MANIFESTED board at ONE HEAD** → the new sheet
 lineage DRAFT. Pacing (turns per encounter) is read here, not designed.
 **Depends on:** §91's flip read. **Risk:** high (every band re-anchors;
-the largest box spend of the round — 3–4 nights). **Decision points:**
-pool-max vs per-unit-cost as the lever; the enemy pool re-pin per kind;
-(added 2026-09-04 off the user's first casualties playtest — WORKLOG §91)
-whether pacing gets DESIGNED here after all: the user's turn targets
-(normal 2–3 / elite 4–5 / boss 6+, "vague vibes") as the enemy-pool
-re-pin's anchor via pool ≈ turns × wave power; and a per-encounter POWER
-OVERRIDE in the encounter designer (the user's ask) — diverges from the
-pre-registered per-archetype weight, so a decision, not a default.
-**Exit:** the board green at the draft lineage; the alpha-strike and
-gradient reads recomputed on the re-searched arm; the §88 rarity/price
-re-read filed. **NOT doing:** signing anything — the decision is §93.
+the largest box spend of the round — ~35 box-hours, 4 nights).
+**Decision points — ✅ DECIDED at the 2026-09-04 shape-lock (user-signed;
+rationale + the desk table WORKLOG §92 kickoff):** the lever = the player
+pool max 20 → 40 (50 the fallback) WITH the enemy pools at booked burn ×
+the user's turn targets (pacing IS designed here) · the swarm pools per
+the desk table, NO move on the four small waves + the two summoner
+elites (composition → §94) · the per-encounter POWER OVERRIDE BUILT,
+both directions (spec amendment with 92e) · prior v4 under the
+re-searched deploy vector · the encounter `--set` group SKIPPED. Still
+open: ⛔ the deploy vector (92c2's argmax, user-signed) · ⛔ 40 vs 50
+after 92f. **Exit:** the board green at the draft lineage; the
+alpha-strike and gradient reads recomputed on the re-searched arm; the
+§88 rarity/price re-read filed. **NOT doing:** signing anything — the
+decision is §93.
+
+The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
+- [ ] **92a** the pacing reader — `pacing.csv` per batch (turns per won instance · booked burn/cost per turn per side · cost per instance · cap share, by encounter + kind), config-derived test; exit: the 91f legs reproduce the desk table.
+- [ ] **92c1** the RE-SEARCH — the 88d2-derive line verbatim at HEAD (night 1, ~2.7 h; `queue-92c1.txt`).
+- [ ] **92c2** finalist regeneration (the 85g5 non-circular envelope check) → the K=4 selection cohort (n=30 @ 1000, ~1 h) → ⛔ the deploy decision → the fixture + `board.ts` DEPLOY + prior v4 (~1.5 h) in ONE commit (the tripwire).
+- [ ] **92d** the candidate table — `playerHealthMax` 40, swarm/elite/boss pools per the desk table, one config commit through the formatter with the per-id (old → new) printout.
+- [ ] **92e** the power override — `WaveUnitSpec.power?` → resolver stamp → editor field → the pin row + the spec amendment; snapshot: no bump (predicted).
+- [ ] **92f** the candidate read — the two soldier walk twins n=120 + the same twins at `--set=health.fatiguePerStack=0.1` (night 2, ~8 h); one adjustment commit (92f2) allowed, then the config FREEZES.
+- [ ] **92g** the derived artifacts at the final config — prior v4 re-measured + the fresh derive (the ceiling read), ~4 h.
+- [ ] **92h** the closing cohort — the 88d board shape + the six 89c walk arms + the two survivors@HEAD walk twins (the §93 comparator on the SAME table), nights 3–4 (~17 h) → `roster:table` off the board's ARM rows.
+- [ ] **92i** the reads + the DRAFT lineage — criterion 1 · the gradient (fresh ceiling vs the ARM; the survivors gradient at HEAD as the comparator) · the §88 rarity/price re-read · the Round 6 riders for the record → `signed-sheet.json` DRAFT (unsigned) → the §93 handoff.
 
 ## Phase 93 — ⛔ Keep or roll back (the decision point)
 

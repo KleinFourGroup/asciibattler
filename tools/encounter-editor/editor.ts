@@ -920,6 +920,24 @@ function renderUnitRow(units: WUnit[], i: number): HTMLElement {
   row.append(el('span', 'field-label', 'lvl'), kindNumberControl(u.level, UNIT_LEVEL_CFG, (o) => {
     u.level = o as WUnit['level'];
   }));
+  // 92e — the per-entry POWER override (the casualty rule's headcount weight
+  // this entry's instances carry instead of the archetype's table power).
+  // Blank = absent = the catalog weight; the field is deleted, never set to
+  // undefined (the exact-optional contract the formatter emits).
+  const pw = el('input', 'kn-num');
+  pw.type = 'number';
+  pw.min = '0';
+  pw.step = '0.5';
+  pw.placeholder = 'table';
+  pw.title = 'power override — the headcount weight each instance of this entry is worth (blank = the archetype table)';
+  pw.value = u.power === undefined ? '' : String(u.power);
+  pw.addEventListener('input', () => {
+    const v = Number.parseFloat(pw.value);
+    if (pw.value.trim() === '' || !Number.isFinite(v) || v < 0) delete u.power;
+    else u.power = v;
+    refreshDerived();
+  });
+  row.append(el('span', 'field-label', 'pow'), pw);
   row.append(nodeControls(units, i));
   return row;
 }

@@ -126,6 +126,16 @@ kill removes some."
   field); a config-derived test pins power ∈ {1,2}, legendary ⇒ 2; a
   World pin zeroes the stamped summon. A player's max per-turn exposure
   = the power they fielded — the "add your own numbers" legibility.
+  ⭑ AMENDED 2026-09-04 (92e, user-signed at the §92 shape-lock): **an
+  encounter may OVERRIDE the weight per wave-unit entry** (`power?` on
+  the entry, stamped onto every instance's `stats.power` at resolve time;
+  the encounter editor's `pow` field). The CATALOG stays the fixed
+  headcount table (the §91b pin holds); the override is the designer's
+  per-encounter lever in both directions — a boss-shaped unit "worth 6"
+  so its fall moves the pool (the user's ask from the first casualties
+  playtest), or fodder "worth 0.5" so a swarm's wipe burns half. Why:
+  the 91f pacing read — bosses cannot reach 6+ turns on pool alone at
+  the player's 3–4 cost per turn (WORKLOG §92 kickoff finding 3).
 - **Both rules stay alive behind `health.chipMode: "survivors" |
   "casualties"`** — the paired same-seed A/B of the rule flip at any
   config is the experiment's instrument all round; the human A/B is

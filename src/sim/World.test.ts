@@ -1453,6 +1453,21 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(fielded.effectiveStats.power).toBeGreaterThan(0);
   });
 
+  it('92e — a template with an OVERRIDDEN power (the per-encounter lever) is booked at the stamped weight, not the table', () => {
+    const { w, ends } = pair();
+    const tpl = rollUnit('mercenary', new RNG(12));
+    const OVERRIDE = 6;
+    expect(ARCHETYPE_CONFIG.mercenary.baseStats.power).not.toBe(OVERRIDE); // the pin would be vacuous otherwise
+    const boss = w.spawnUnit({ ...tpl, stats: { ...tpl.stats, power: OVERRIDE } }, 'enemy', { x: 8, y: 8 });
+    expect(boss.summonedBy).toBeNull();
+    expect(boss.effectiveStats.power).toBe(OVERRIDE);
+    boss.currentHp = 0;
+    w.tick(); // reaped; the other enemy still stands → no end
+    expect(w.ended).toBe(false);
+    w.resolveAsDraw();
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: OVERRIDE });
+  });
+
   it('the periodic-status reap path (a burn-tile DoT kill, reapDead) books the fallen too', () => {
     const { w, player, enemy, ends } = pair();
     const BURN = statusDef('burn');

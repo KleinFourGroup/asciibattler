@@ -147,7 +147,7 @@ The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
 - [ ] **92c1** the RE-SEARCH — the 88d2-derive line verbatim at HEAD (night 1, ~2.7 h; `queue-92c1.txt`).
 - [ ] **92c2** finalist regeneration (the 85g5 non-circular envelope check) → the K=4 selection cohort (n=30 @ 1000, ~1 h) → ⛔ the deploy decision → the fixture + `board.ts` DEPLOY + prior v4 (~1.5 h) in ONE commit (the tripwire).
 - [ ] **92d** the candidate table — `playerHealthMax` 40, swarm/elite/boss pools per the desk table, one config commit through the formatter with the per-id (old → new) printout.
-- [ ] **92e** the power override — `WaveUnitSpec.power?` → resolver stamp → editor field → the pin row + the spec amendment; snapshot: no bump (predicted).
+- [x] **92e** the power override ✅ 2026-09-04 (built ahead of 92c2 while the derive cooked — an inert seam until 92d authors it) — `WaveUnitSpec.power?` → the resolver stamp → the editor's `pow` field → four wave pins + the ledger pin + the spec/DESIGN amendment; no bump (confirmed); the oracle PASSED (WORKLOG §92e).
 - [ ] **92f** the candidate read — the two soldier walk twins n=120 + the same twins at `--set=health.fatiguePerStack=0.1` (night 2, ~8 h); one adjustment commit (92f2) allowed, then the config FREEZES.
 - [ ] **92g** the derived artifacts at the final config — prior v4 re-measured + the fresh derive (the ceiling read), ~4 h.
 - [ ] **92h** the closing cohort — the 88d board shape + the six 89c walk arms + the two survivors@HEAD walk twins (the §93 comparator on the SAME table), nights 3–4 (~17 h) → `roster:table` off the board's ARM rows.

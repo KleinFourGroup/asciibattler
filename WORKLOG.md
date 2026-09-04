@@ -1842,3 +1842,38 @@ derivation over the same `results.json` (highwaymen 176 / 1.04 / 11.7 /
 1.61 / elite 2.72 / boss 2.85 turns per won instance, cost per instance
 3.35 / 10.0 / 9.2). 2793 main + 575 fuzz:smoke (565 + 10) green,
 typecheck clean.
+
+### 92e — the power override (2026-09-04, built ahead of 92c2 while the derive cooked)
+
+Pulled forward in the cut: the seam is INERT until an encounter authors it
+(92d), so it lands before the selection cohort without moving a byte of
+what 92c2 measures — and 92d's table needs it in hand. Landed as audited
+(kickoff finding E): `WaveUnitSpec.power?` ([wave.ts](src/run/encounters/wave.ts)),
+stamped onto the resolved template's `stats.power` AFTER `scaledUnit` (every
+other stat untouched; `growthRates.power` = 0 so level never re-touches it);
+zod `power: nonnegative().optional()` with the `levelCap` boundary cast
+([encounters.ts](src/config/encounters.ts)); the encounter editor's unit row
+gains a `pow` number field (blank = absent = the catalog weight; the field
+is DELETED on blank, never set to undefined — the exact-optional contract
+the formatter emits). Step zero held: the resolved wave is not in
+`RunSnapshot` (it is resolved at `beginTurn`, Run.ts:2742, and the World
+serializes units with their stats) — no bump, World v36 / Run v44.
+
+**Pins (+5):** wave.test — the override stamps EVERY instance of its entry
+and only that entry (bandit 0.5 × 6, mercenary at table × 2) · touches ONLY
+power (stats == scaledUnit's ⊕ power at a scaled level) · absent ≡ the
+pre-92e resolution (toEqual across a spread copy; catalog weights) · 0 is
+legal (a free body by the AUTHOR, distinct from the summon stamp).
+World.test — a template with power 6 is booked at 6 in `fallenPower`
+(mercenary's table power asserted ≠ 6 so the pin cannot be vacuous). The
+§91b catalog pin is unchanged: the TABLE stays {1, 2}; the override is
+per-entry. Spec §The casualty chip rule ⭑ AMENDED 2026-09-04 (the
+user-signed decision) + DESIGN §Run structure one clause. The risk line
+reads the resolved templates' `stats.power` (Run.ts:2765), so an override
+flows into the survivors-mode exposure line by construction.
+
+**The control:** `scripts/perf-oracle.sh HEAD` (the dirty tree vs `70cefa2`,
+both default shapes) — see the result line below; a PASS is the proof the
+seam is inert at the shipped catalog, the 91c pattern.
+
+**Oracle RESULT:** PASS — the live tree byte-identical to `70cefa2` on every compared artifact (scored summary `a423e77ea9e4` · rosters `b6e0766aa819`; ARM summary `8efd140c1c08` · decisions `17565052490a` · rosters `0ef3bb1f6c3b`). The seam is inert at the shipped catalog; 92d is where it turns live (and where the oracle must FAIL, the 91b pattern).

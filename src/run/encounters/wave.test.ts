@@ -215,6 +215,67 @@ describe('resolveWave — level distribution', () => {
   });
 });
 
+describe('resolveWave — 92e the per-entry power override', () => {
+  const unit = (archetype: Archetype, weight: number, power?: number): WaveUnitSpec => ({
+    archetype,
+    count: { kind: 'weight', weight },
+    level: { kind: 'weight', weight: 1 },
+    ...(power === undefined ? {} : { power }),
+  });
+
+  it('an entry with `power` stamps that weight on EVERY instance of the entry; the other entry keeps its table power', () => {
+    const spec: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 40 },
+      count: { kind: 'fixed', value: 8 },
+      units: [unit('bandit', 3, 0.5), unit('mercenary', 1)],
+    };
+    const team = resolveWave(spec, ctx(), new RNG(3));
+    expect(team).toHaveLength(8);
+    const bandits = team.filter((u) => u.archetype === 'bandit');
+    const mercs = team.filter((u) => u.archetype === 'mercenary');
+    expect(bandits).toHaveLength(6);
+    expect(mercs).toHaveLength(2);
+    for (const b of bandits) expect(b.stats.power).toBe(0.5);
+    for (const m of mercs) expect(m.stats.power).toBe(ARCHETYPE_CONFIG.mercenary.baseStats.power);
+  });
+
+  it('the override touches ONLY power — every other stat is the scaledUnit result at that level', () => {
+    const spec: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 30 },
+      count: { kind: 'fixed', value: 3 },
+      units: [unit('mercenary', 1, 6)],
+    };
+    for (const u of resolveWave(spec, ctx(), new RNG(4))) {
+      const cfg = ARCHETYPE_CONFIG[u.archetype];
+      const scaled = scaleStats(cfg.baseStats, cfg.growthRates, u.level - 1);
+      expect(u.stats).toEqual({ ...scaled, power: 6 });
+      expect(u.level).toBeGreaterThan(1); // the budget spends — the override rode a scaled unit
+    }
+  });
+
+  it('absent → the pre-92e resolution, byte-identical (the catalog weight, no stamp)', () => {
+    const plain: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 20 },
+      count: { kind: 'fixed', value: 5 },
+      units: [unit('bandit', 2), unit('archer', 1)],
+    };
+    const withUndefined: WaveSpec = { ...plain, units: plain.units.map((u) => ({ ...u })) };
+    expect(resolveWave(withUndefined, ctx(), new RNG(5))).toEqual(resolveWave(plain, ctx(), new RNG(5)));
+    for (const u of resolveWave(plain, ctx(), new RNG(5))) {
+      expect(u.stats.power).toBe(ARCHETYPE_CONFIG[u.archetype].baseStats.power);
+    }
+  });
+
+  it('a weight of 0 is legal (a free body in the ledger, by the AUTHOR this time — not the summon stamp)', () => {
+    const spec: WaveSpec = {
+      levelBudget: { kind: 'fixed', value: 4 },
+      count: { kind: 'fixed', value: 2 },
+      units: [unit('bandit', 1, 0)],
+    };
+    for (const u of resolveWave(spec, ctx(), new RNG(6))) expect(u.stats.power).toBe(0);
+  });
+});
+
 describe('resolveWave — levelCap (the optional per-wave ceiling)', () => {
   // One weighted unit eating a large budget: with no cap it reaches the full
   // level; a `roster`/`fixed` cap clamps the weighted spread.

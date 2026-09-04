@@ -99,6 +99,18 @@ export interface WaveUnitSpec {
   readonly archetype: Archetype;
   readonly count: UnitCountSpec;
   readonly level: UnitLevelSpec;
+  /**
+   * 92e — the per-encounter POWER OVERRIDE (encounter-feel-spec §The casualty
+   * chip rule, amended 2026-09-04): the headcount weight every instance of this
+   * entry carries INSTEAD of its archetype's table power. Stamped onto the
+   * resolved template's `stats.power` (level scaling never touches it —
+   * `growthRates.power` is 0 since 91b), so the fallen ledger books it, the
+   * survivors rule counts it standing, and the pre-turn risk line reads it.
+   * Both directions are legal: a boss-shaped unit "worth 6" so its fall
+   * moves the pool, or fodder "worth 0.5" so a wipe burns half. Absent →
+   * the catalog weight (the pre-92e resolution, byte-identical).
+   */
+  readonly power?: number;
 }
 
 /** A single wave: a level budget, a total count, and the unit types that fill it.
@@ -152,16 +164,23 @@ export function resolveWave(spec: WaveSpec, context: WaveContext, rng: RNG): Uni
 
   // Expand to a flat instance list in spec order (each carries its type's
   // level-spec). The level step assigns one level per instance, in this order.
-  const instances: { readonly archetype: Archetype; readonly level: UnitLevelSpec }[] = [];
+  const instances: { readonly archetype: Archetype; readonly level: UnitLevelSpec; readonly power?: number }[] = [];
   spec.units.forEach((u, i) => {
-    for (let k = 0; k < counts[i]!; k++) instances.push({ archetype: u.archetype, level: u.level });
+    for (let k = 0; k < counts[i]!; k++) {
+      instances.push(u.power === undefined ? { archetype: u.archetype, level: u.level } : { archetype: u.archetype, level: u.level, power: u.power });
+    }
   });
 
   const totalBudget = resolveLevelBudget(spec.levelBudget, context);
   const cap = resolveLevelCap(spec.levelCap, context.roster);
   const levels = resolveLevels(instances, totalBudget, cap, rng);
 
-  return instances.map((inst, i) => scaledUnit(inst.archetype, levels[i]!));
+  return instances.map((inst, i) => {
+    const t = scaledUnit(inst.archetype, levels[i]!);
+    // 92e — the power override is stamped AFTER scaling: the template's
+    // `stats.power` becomes the authored weight; every other stat is untouched.
+    return inst.power === undefined ? t : { ...t, stats: { ...t.stats, power: inst.power } };
+  });
 }
 
 /**

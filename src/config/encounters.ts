@@ -108,11 +108,15 @@ const UnitLevelSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('weight'), weight: z.number().nonnegative() }),
 ]);
 
-const WaveUnitSchema: z.ZodType<WaveUnitSpec> = z.object({
+// 92e — `power?` is the per-entry headcount-weight override (the casualty
+// rule's per-encounter lever); absent = the archetype's table power. Cast at
+// the zod boundary like `levelCap` (`.optional()` vs exact-optional).
+const WaveUnitSchema = z.object({
   archetype: ArchetypeSchema,
   count: UnitCountSchema,
   level: UnitLevelSchema,
-});
+  power: z.number().nonnegative().optional(),
+}) as z.ZodType<WaveUnitSpec>;
 
 // Cast at the zod boundary (see StageSchema below): `.optional()` emits `T |
 // undefined`, which `exactOptionalPropertyTypes` won't accept against the

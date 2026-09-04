@@ -1877,3 +1877,22 @@ both default shapes) — see the result line below; a PASS is the proof the
 seam is inert at the shipped catalog, the 91c pattern.
 
 **Oracle RESULT:** PASS — the live tree byte-identical to `70cefa2` on every compared artifact (scored summary `a423e77ea9e4` · rosters `b6e0766aa819`; ARM summary `8efd140c1c08` · decisions `17565052490a` · rosters `0ef3bb1f6c3b`). The seam is inert at the shipped catalog; 92d is where it turns live (and where the oracle must FAIL, the 91b pattern).
+
+### 92d-pre — the criterion-1 threshold scales with the pool max (2026-09-04, found prepping 92d)
+
+Step zero on 92d's premise: the spec's keep criterion 1 was amended at the
+§91 kickoff to read the overkill threshold as **0.15 × `playerHealthMax`**
+(= 3 at 20) precisely so a §92 pool-max move could neither pass nor fail
+the test on the lever — and the 89b2 reader that computes it
+(`alphaStrikeStats`, [reporters.ts](tests/fuzz/reporters.ts)) hardcoded
+`>= 3` / `>= 5`. At the signed 40 the §93 read would have been taken at a
+threshold of 3 (7.5% of the pool), reading every death as an overkill.
+Landed: `OVERKILL_FRAC = 0.15`, `overkillThreshold = OVERKILL_FRAC ×
+poolMax` on every sector row, `shareOverkillGeThreshold` beside the
+ABSOLUTE ≥ 3 / ≥ 5 shares (kept as pool-HP columns so old batches stay
+comparable; the keep read is the scaled share). The render gains a
+`≥0.15×max` column, the CSV two trailing columns (consumers read by
+name; the 91f recompute used `shareOverkillGe3` and still can). One pin:
+at 20 the scaled share equals the ≥ 3 share; at 40 the threshold is 6 and
+only the 10-margin death clears it while the absolute share is untouched.
+21 reader tests green, typecheck clean.

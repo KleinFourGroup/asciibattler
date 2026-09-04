@@ -4,7 +4,7 @@
  * number is derived by hand from the fixture — never from the reader.
  */
 import { describe, expect, it } from 'vitest';
-import { alphaStrikeStats, renderAlphaStrike, renderAlphaStrikeCsv, perEncounterStats } from './reporters';
+import { alphaStrikeStats, renderAlphaStrike, renderAlphaStrikeCsv, perEncounterStats, OVERKILL_FRAC } from './reporters';
 import { TelemetryAccumulator, type PoolChip, type RunTelemetry } from './telemetry';
 import type { RunResult } from './harness';
 
@@ -170,6 +170,25 @@ describe('alphaStrikeStats (89b)', () => {
     // The render + CSV carry the columns.
     expect(renderAlphaStrike(results)).toContain('Overkill p50');
     expect(renderAlphaStrikeCsv(s).split('\n')[0]).toContain('overkillP50,shareOverkillGe3,shareOverkillGe5');
+  });
+
+  it('92d-pre — the criterion-1 threshold SCALES with the pool max (0.15 × max), the absolute columns stay', () => {
+    // At the pre-§92 pool of 20 the threshold is 3 → the scaled share equals the ≥ 3 share.
+    const at20 = alphaStrikeStats(results, POOL_MAX, 1).bySector[0]!;
+    expect(at20.overkillThreshold).toBeCloseTo(OVERKILL_FRAC * POOL_MAX);
+    expect(at20.overkillThreshold).toBeCloseTo(3);
+    expect(at20.shareOverkillGeThreshold).toBeCloseTo(at20.shareOverkillGe3);
+    // At a pool max of 40 the threshold is 6: of the margins 5 / 0 / 10 only F (10) clears it,
+    // while the absolute ≥ 3 share is untouched — a pool-max move cannot pass the test on the lever.
+    const at40 = alphaStrikeStats(results, 40, 1).bySector[0]!;
+    expect(at40.overkillThreshold).toBeCloseTo(6);
+    expect(at40.shareOverkillGeThreshold).toBeCloseTo(1 / 3);
+    expect(at40.shareOverkillGe3).toBeCloseTo(2 / 3);
+    // The render + CSV carry the scaled column beside the absolute ones.
+    expect(renderAlphaStrike(results)).toContain(`≥${OVERKILL_FRAC}×max`);
+    const header = renderAlphaStrikeCsv(alphaStrikeStats(results, 40, 1)).split('\n');
+    expect(header[0]).toContain('shareOverkillGe5,overkillThreshold,shareOverkillGeThreshold');
+    expect(header[1]!.split(',').slice(-2)).toEqual(['6', (1 / 3).toFixed(4)]);
   });
 
   it('renders a table + the seam line, and says so when telemetry is off', () => {

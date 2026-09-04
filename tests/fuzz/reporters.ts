@@ -1704,7 +1704,19 @@ export interface AlphaStrikeSectorStats {
   overkillP50: number;
   shareOverkillGe3: number;
   shareOverkillGe5: number;
+  /** 92d-pre — the spec's SCALED threshold (encounter-feel-spec criterion 1,
+   *  ⭑ amended at the §91 kickoff): `OVERKILL_FRAC × poolMax` (= 3 at the
+   *  pre-§92 pool of 20, 6 at 40), so a §92 pool-max move can neither pass
+   *  nor fail the keep test on the lever. The ≥ 3 / ≥ 5 shares above stay as
+   *  ABSOLUTE pool-HP columns (comparable across old batches); the keep read
+   *  is THIS share. */
+  overkillThreshold: number;
+  shareOverkillGeThreshold: number;
 }
+
+/** The criterion-1 threshold as a fraction of the player pool max (the §91
+ *  kickoff amendment: "≥ 0.15 × playerHealthMax"). */
+export const OVERKILL_FRAC = 0.15;
 
 export interface AlphaStrikeStats {
   poolMax: number;
@@ -1777,6 +1789,7 @@ export function alphaStrikeStats(
     }
   }
 
+  const overkillThreshold = OVERKILL_FRAC * poolMax;
   const row = (sector: number | 'all', a: Acc): AlphaStrikeSectorStats => {
     const share = (xs: readonly number[], pred: (x: number) => boolean): number =>
       xs.length === 0 ? 0 : xs.filter(pred).length / xs.length;
@@ -1798,6 +1811,8 @@ export function alphaStrikeStats(
       overkillP50: quantile(a.overkill, 0.5),
       shareOverkillGe3: share(a.overkill, (m) => m >= 3),
       shareOverkillGe5: share(a.overkill, (m) => m >= 5),
+      overkillThreshold,
+      shareOverkillGeThreshold: share(a.overkill, (m) => m >= overkillThreshold),
     };
   };
 
@@ -1861,6 +1876,7 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     'Overkill p50',
     '≥3',
     '≥5',
+    `≥${OVERKILL_FRAC}×max`,
   ];
   const pct = (x: number): string => `${(x * 100).toFixed(0)}%`;
   const cell = (r: AlphaStrikeSectorStats): string[] => [
@@ -1879,6 +1895,7 @@ export function renderAlphaStrike(results: readonly RunResult[]): string {
     r.poolDeaths === 0 ? '—' : String(r.overkillP50),
     r.poolDeaths === 0 ? '—' : pct(r.shareOverkillGe3),
     r.poolDeaths === 0 ? '—' : pct(r.shareOverkillGe5),
+    r.poolDeaths === 0 ? '—' : pct(r.shareOverkillGeThreshold),
   ];
   lines.push(renderTable(header, s.bySector.map(cell)));
   lines.push('');
@@ -1899,7 +1916,7 @@ export function renderAlphaStrikeCsv(s: AlphaStrikeStats): string {
   const header =
     'sector,turns,chipFracP50,chipFracP90,chipFracMax,shareChipGe25,shareChipGe50,poolDeaths,' +
     'alphaDeathsApplied,alphaDeathsBlow,arrivalP25,arrivalP50,arrivalP75,shareArrivalLt25,' +
-    'overkillP50,shareOverkillGe3,shareOverkillGe5';
+    'overkillP50,shareOverkillGe3,shareOverkillGe5,overkillThreshold,shareOverkillGeThreshold';
   const rows = s.bySector.map((r) =>
     [
       r.sector,
@@ -1919,6 +1936,8 @@ export function renderAlphaStrikeCsv(s: AlphaStrikeStats): string {
       r.overkillP50,
       r.shareOverkillGe3.toFixed(4),
       r.shareOverkillGe5.toFixed(4),
+      r.overkillThreshold,
+      r.shareOverkillGeThreshold.toFixed(4),
     ].join(','),
   );
   return [header, ...rows].join('\n') + '\n';

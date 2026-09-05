@@ -119,7 +119,8 @@ describe('formatEncountersJson', () => {
                     spec: {
                       levelBudget: { kind: 'mean', factor: 2 },
                       count: { kind: 'fixed', value: 1 },
-                      units: [{ archetype: 'catapult', count: { kind: 'fixed', value: 1 }, level: { kind: 'weight', weight: 1 } }],
+                      // 92e — the per-entry power override rides the unit line.
+                      units: [{ archetype: 'catapult', count: { kind: 'fixed', value: 1 }, level: { kind: 'weight', weight: 1 }, power: 6 }],
                     },
                   },
                 ],
@@ -129,7 +130,14 @@ describe('formatEncountersJson', () => {
         ],
       },
     ]);
-    const reparsed = EncountersSchema.parse(JSON.parse(formatEncountersJson(fixture)));
+    const text = formatEncountersJson(fixture);
+    const reparsed = EncountersSchema.parse(JSON.parse(text));
     expect(reparsed).toEqual(fixture);
+    // 92e/92d — the override is EMITTED (the 92d surgery found the formatter
+    // dropping it: the editor's Save would have discarded the field silently),
+    // and only where authored — no `power` key on the entries without one.
+    expect(text).toContain('"level": { "kind": "weight", "weight": 1 }, "power": 6 }');
+    expect(text.split('"power"').length - 1).toBe(1);
+    expect(reparsed[0]!.waves[1]).toMatchObject({ kind: 'stages' });
   });
 });

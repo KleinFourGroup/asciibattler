@@ -3681,7 +3681,11 @@ describe('Run', () => {
       expect(run.currentSectorNodeId).toBe('a');
       const teamBefore = run.team;
       const bossMapBefore = run.bossEncounterMap;
-      run.playerHealth = 33; // a sentinel to prove the pool carries across
+      // A sentinel to prove the pool carries across — config-derived ABOVE the
+      // seam floor (92d: the literal 33 was "above the max" only at the pre-§92
+      // pool of 20; at 40 the floor lifted it and the pin read the lever).
+      const SENTINEL = HEALTH.playerHealthMax + 13;
+      run.playerHealth = SENTINEL;
       run.currentNodeId = run.nodeMap.terminalId;
       run.phase = 'battle';
       let victories = 0;
@@ -3696,10 +3700,10 @@ describe('Run', () => {
       expect(run.phase).toBe('sectorCleared');
       const title = getSector('the-start')!.title;
       // §90 — the payload carries both sides of the seam; the sentinel sits
-      // ABOVE the floor (33 > max), so the floor leaves it alone: before ==
+      // ABOVE the floor (> max), so the floor leaves it alone: before ==
       // after == the carried pool.
       expect(cleared).toEqual([
-        { clearedSectorTitle: title, nextSectorTitle: title, poolBefore: 33, poolAfter: 33 },
+        { clearedSectorTitle: title, nextSectorTitle: title, poolBefore: SENTINEL, poolAfter: SENTINEL },
       ]);
       expect(run.currentSectorNodeId).toBe('b');
       expect(run.currentNodeId).toBe(PRE_ROOT_NODE_ID);
@@ -3710,7 +3714,7 @@ describe('Run', () => {
       expect(run.bossEncounterMap).not.toBe(bossMapBefore);
       // Carry-across: same roster reference + the run-wide pool survive.
       expect(run.team).toBe(teamBefore);
-      expect(run.playerHealth).toBe(33);
+      expect(run.playerHealth).toBe(SENTINEL);
       // The dismiss releases the gate onto the new sector's map.
       run.dispatch({ kind: 'dismissSectorCleared' });
       expect(run.phase).toBe('map');

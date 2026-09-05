@@ -692,15 +692,19 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     expect(specs[0]!.tailScore).toBeUndefined();
   });
 
-  it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate held at 5', () => {
+  it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate — re-pinned at 10 (92d)', () => {
     // The definition (config-derived) …
     expect(DP_TAIL_SCALE).toBe(HEALTH.restHealFraction * HEALTH.playerHealthMax);
     // … AND the exact pin: the §85g6d-signed ARM priced one path-weight
     // point at 5 pool HP under the absolute `restHealAmount`; the §90
-    // fraction re-expression must be byte-identical for the arm. A pool-max
-    // or fraction move that changes this is a DELIBERATE arm change — re-pin
-    // it with the re-search (§92), never silently.
-    expect(DP_TAIL_SCALE).toBe(5);
+    // fraction re-expression was byte-identical for the arm. 92d
+    // (2026-09-05, the casualty rebalance's signed pool max 20 → 40): the
+    // rest heal is 10 pool HP, so the exchange rate DOUBLES — the deliberate
+    // arm change this pin exists to make loud (WORKLOG §92d: every pool-HP
+    // quantity in the evaluator scales with the max; the prior table's units
+    // lag until v4 at 92g). A further pool-max or fraction move re-pins here
+    // again, with its rationale — never silently.
+    expect(DP_TAIL_SCALE).toBe(10);
   });
 });
 

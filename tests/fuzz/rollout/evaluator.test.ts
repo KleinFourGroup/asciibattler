@@ -150,8 +150,13 @@ describe('85c — the fold (priorBonus over the holdings delta; the 2026-08-24 s
     const a = after({ daemonIds: ['minerva'], teamArchetypes: ['soldier', 'archer', 'shaman'] });
     const sum = TABLE['daemon:minerva'] + TABLE['unit:shaman'];
     expect(priorBonusOf(b, a, prior({ lambda: 0.5 })).bonus).toBeCloseTo(0.5 * sum, 10);
-    // Force a breach: 6 minervas would read 177.5 > the 100 cap.
-    const stacked = after({ daemonIds: Array(6).fill('minerva') as string[] });
+    // Force a breach: enough minervas to read past the cap (config-derived —
+    // the cap is half the death ordinal, 10 × the pool max; 92d moved the max
+    // 20 → 40 and the old literal "6 minervas = 177.5 > the 100 cap" stopped
+    // breaching at 200).
+    const stackSize = Math.ceil(PRIOR_BONUS_CAP / TABLE['daemon:minerva']!) + 1;
+    expect(stackSize * TABLE['daemon:minerva']!).toBeGreaterThan(PRIOR_BONUS_CAP);
+    const stacked = after({ daemonIds: Array(stackSize).fill('minerva') as string[] });
     const breach = priorBonusOf(b, stacked, prior());
     expect(PRIOR_BONUS_CAP).toBeCloseTo(0.5 * RUN_DEATH_PENALTY, 10);
     expect(breach.bonus).toBe(PRIOR_BONUS_CAP);

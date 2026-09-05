@@ -1,5 +1,5 @@
 {
-  "playerHealthMax": 20,
+  "playerHealthMax": 40,
   "enemyHealthMax": 8,
   "maxTurns": 20,
   "maxTurnSeconds": 150,

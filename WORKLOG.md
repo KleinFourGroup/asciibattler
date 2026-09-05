@@ -1995,3 +1995,75 @@ tripwire reads catalog membership, not the vector — the finding-G
 correction). The read script (scratchpad `read-92c2.ts`) reproduced the
 85g5 record (18/14/16/15, +2 of 10) on the archived batches before it
 read this cohort.
+
+### 92d — the candidate table (2026-09-05, the signed design as ONE config commit)
+
+Through the encounter editor's formatter (the 83d/91b rule: byte-faithful
+on the current file checked first — YES, 31711 vs 31712 chars, the trailing
+newline), the scratchpad surgery `encounters-surgery-92d.ts` with the per-id
+printout; `health.json` `playerHealthMax` 20 → **40** (`restHealFraction`
+0.25 held → a rest heals 10; the seam floor refills to 40). The table, old
+→ new (held rows: the four small waves + the two summoner elites, §94's):
+
+| encounter | kind | pool | override |
+|---|---|---|---|
+| brigands · plagueDoctors · artillery | normal | 7 → 19 · 7 → 21 · 8 → 22 | — |
+| highwaymen · deserters · plagueVictims | normal | 10 → 29 · 9 → 29 · 10 → 30 | — |
+| warband-vanguard · brigand-champions | elite | 8 → 20 · 12 → 29 | — |
+| bandit-king | boss | 13 → 36 | adventurer **6** (the final stage) |
+| witch-hunt | boss | 20 → 39 | luminant **6** (the final stage) |
+| banditQueen | boss | 20 → 44 | banshee **3** (all three stages) |
+| generalissimo | boss | 13 → 36 | officer **3** (all three stages) |
+
+**Two things the landing caught.** (1) The formatter DROPPED `power` on
+emit — the first `--write` produced twelve pool lines and no override: 92e
+had wired the schema, the resolver, the ledger and the editor's field, but
+not `format.ts`'s `inlineUnit`, so the editor's own Save would have
+discarded the field silently. Fixed (`, "power": N` when present) with a
+pin in `encounter-editor.test.ts` (the grammar fixture carries one
+override; the text contains it exactly once; the round-trip holds). The
+lesson is the AGENTS "adding a consumer to an old seam" rule in reverse:
+a new FIELD has to be swept across every EMITTER, not just every reader.
+(2) One test read the lever: the T2 sector-advance pin set the pool to a
+literal 33 as "above the max" — true at 20, a floor-lift at 40. Now
+`HEALTH.playerHealthMax + 13` (the balance-proof rule). 2798 main green
+after it, typecheck clean.
+
+**The control:** `scripts/perf-oracle.sh HEAD` vs `f6ce99d` **FAILS on all
+five compared CSVs** (scored summary `a423e77ea9e4 → 715884f757f2` ·
+rosters · ARM summary `8efd140c1c08 → b2d16212bf8e` · decisions ·
+rosters) — the table is live on every shape, the 91b pattern (a PASS here
+would have meant the surgery never reached the game).
+
+The desk expectation 92f checks (from the kickoff table at the OLD arm;
+the deploy vector is new): swarms ~2.5 turns (pool ≈ burn × 2.5), the two
+moved elites ~4.5, bosses ~5–6 with the override adding ~1 burn per turn
+where the named unit falls; the player's cost per turn unchanged (~2 /
+3.5 / 3.3 by kind), so the run's spend rises with the turns and pool max
+40 + rests of 10 carries it — the act-1 clear on the deploy twin is the
+R1 read.
+
+**⚠ The one judgment call of the night — the ARM's exchange rate (flagged
+for the morning review).** The pre-commit gate blocked the first 92d
+commit on two fuzz pins, both the pool max doubling a pool-HP quantity the
+rollout evaluator derives from config: `DP_TAIL_SCALE` (=
+`restHealFraction × playerHealthMax`, the rate that converts one
+path-weight point into pool HP — 5 → **10**) and `PRIOR_BONUS_CAP` (half
+the death ordinal `10 × max` — 100 → **200**; the fixture that breached it
+with six minervas no longer did). The DP pin's own comment prescribes the
+call: "a pool-max move that changes this is a DELIBERATE arm change —
+re-pin it with the re-search (§92), never silently." Re-pinned at 10 with
+the rationale; the cap fixture made config-derived (the stack size from
+the cap). Why it is right: the evaluator is POOL-RELATIVE by construction
+(`RUN_DEATH_PENALTY` / `RUN_COMPLETION_BONUS` / the tail all scale with
+the max), so at 40 every pool-HP term doubles together and the arbitration
+weighs the same trade-offs in the same proportions. Why it is a watch: (1)
+the prior table's holding margins are pool-HP measured at max 20, so until
+v4 (92g) the fold's effective λ is HALVED against the doubled terms —
+92f reads with a softer fold than 92h will; (2) the deploy vector was
+SELECTED (92c2) at the 20-scale and is READ at the 40-scale — the
+kickoff's named circularity (finding C (2)), closed by the fresh derive at
+92g and, if the 92f read looks arm-shaped rather than table-shaped, a
+re-selection at the final config is the honest extra cohort (~30 min).
+Neither is a HOLD by the pre-signed clause; both are written here for the
+user's eye.

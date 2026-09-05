@@ -2115,3 +2115,137 @@ it). Findings, in the cut's order:
 · R3 fatigue 0 → **FREEZE**. 92g launches on the frozen config from the
 docs commit that carries this entry (a docs-only HEAD move; the config is
 byte-identical to `1d51d06`).
+
+### 92g — the derived artifacts at the frozen config (2026-09-05; numbers BALANCE 2026-09-05 §92g-v4)
+
+Line 1, the prior table **v4** (2.0 h): the 85g2b shadow shape under the
+RE-SEARCHED deploy vector (the one named deviation — kickoff finding D),
+9,879 long-horizon rows, committed at `9c6c60d` with the tripwire green;
+the bank under the deployed vector reads 0.342 / 0.733, agreeing with 92f.
+The sign pattern on its first measurement is the spec's prediction
+(healers and support up, glass and expensive units down — the §88 re-read
+below). Line 2, the fresh derive (3.95 h — the 92c1 derive at pool 20 took
+2.1 h): **train 46.2 → 57.7%, held-out 33.3%** — the criterion-2 ceiling
+read at the frozen config, +15 pt on TRAIN over the pre-rebalance derive
+(30.8 → 42.3), the held-out n=6 identical (2/6) and not comparable at that
+n. Never a deploy decision (the registry rule). **A benign HOLD:** the
+queue mixed a shadow batch (artifact `summary.csv`) with a search
+(`best-strategy.json`) under the driver's ONE `--artifact`; line 2's fetch
+tripped "summary.csv missing" and held the box ~2 min until the manual
+destroy — the derive itself exit 0, fetched, verified. Lesson →
+retro/scratchpad (one artifact KIND per cohort).
+
+### 92h — the closing cohort (2026-09-05; numbers BALANCE 2026-09-05 §92h)
+
+Launched at `9c6c60d` while the derive still cooked (independent cohorts,
+two boxes — ~2 h saved): the 88d board shape with the deploy swapped, the
+six 89c walk arms with telemetry, the two survivors@HEAD twins. **33/33 in
+12.0 h**, every manifest at HEAD, box destroyed on drain. Staged by the
+88d recipe (scratchpad `stage-92h.sh`: ten `--merge-stages` pools, the
+two anchors run locally at HEAD, `--report --dir`): **integrity 17/17
+PASS, 0 FAIL / 16 WARN**. The WARNs are what a DRAFT lineage exists for —
+every reference on the sheet was pinned at pool 20 under survivors; the
+signed BANDS (seam 15–18 in pool HP · reach 40–50 · wall 30–35) were
+written when the pool was 20. The roster table **v2** rebuilt off the
+eight ARM rows (`9c6c60d`, 21,519 rows — ⚠ 4.7 MB against v1's 1.1 MB;
+a compaction rider → TODO: store per-cell distributions, not raw rows).
+
+### 92i — the reads + the DRAFT lineage (2026-09-05; the §93 handoff)
+
+**Criterion 1 — PASSES by a wide margin, and it is the rule.** Overkill ≥
+0.15 × 40 = 6, pooled over the six ARM walk arms: **0.072** (41 of 566
+pool deaths); per arm 0.013–0.138 (priest regen the high). The pinned keep
+line is ≤ 0.30 with no arm above 0.40; the spec's own reading of ≤ 0.15 is
+"the mechanism working as designed". The 89c baseline read 0.61 at pool
+20; the 91f caveat (criterion 1's instrument reads the roster mix) is
+answered by the same-table survivors twins: **0.200 / 0.209** at the same
+threshold on the same seeds — the rule carries the fall, the table a third
+of it. The absolute ≥ 3 share is 0.438 (0.61 → 0.44 for anyone reading
+the old column).
+
+**Criterion 2 — the gradient holds; the arbitration ceiling does not.**
+Anchors random 0.100 < greedy 0.125 < the ARM 0.725 (act-1 deploy) — the
+88d anchors were INVERTED (0.275 ≥ 0.275); the harder game separated
+them. The searched-upper leg (the fresh derive, train 57.7%) sits above
+the ARM as it must. The survivors gradient re-read at HEAD on the same
+table: the soldier deploy walk 0.350 casualties vs 0.250 survivors (paired
+25 / 13, z +1.95); the regen walk 0.133 vs 0.233 (8 / 20, z −2.27) — the
+twins split by vector as at 91f, the re-searched vector preferring the
+rule it was searched under. ⚠ **The standing control WARNs hard:** the
+four arb − doctrine ceilings read **−0.092 · −0.200 · −0.042 · −0.250**
+(88d3 after the v3 repair: −0.050 · −0.025 · −0.008 · −0.108) — the
+doctrine arm (no arbitrate, no prior) wins **0.925** act-1 / **0.600** on
+the walk with the deploy vector against the ARM's 0.725 / 0.350. Under
+the frozen config the arbitrated rollout is net-NEGATIVE by 20–25 pt on
+the deploy shape. This is an ARM-semantics finding (the exchange rate
+doubled at 92d; v4 is fresh so the stale-prior suspect of 88d is gone),
+not a balance one: the game is reachable at the targets on BOTH arms, the
+doctrine arm just plays it better. Docketed for the user beside §93 (below).
+
+**Criterion 3 — the run shape at the targets, floor included.** Pacing on
+six arms: **normal 2.82 · elite 4.19 · boss 5.66** (targets 2.5 / 4.5 /
+6); the deploy twin's act-1 clear 0.725 (signed 0.6); the deploy walk
+seam 16.6 · reach 0.517 · wall 0.323 · win 0.350 — ON the old bands but
+for the reach hair (the standing overperformance watch); the forced
+bosses 0.592 / 0.567 on the doctrine arm (were 0.79 / 0.77) — a 6-turn
+boss IS a wall now, which is the design the user asked for; the seam floor
+refills to 40 so the seam pool (41% of max) is the hazard instrument only.
+
+**Criterion 4** — the user's five casualties playtests at `9c6c60d`,
+verdict written BEFORE the board is read: the §93 kickoff item (the
+session files it).
+
+**Parity (deploy shape, the vector that ships):** soldier 0.725 · priest
+0.775 (+5.0, the hair) · gambler 0.733 (+0.8) — inside the ±5 principle.
+On the maladapted regen vector: priest +5.9 · gambler −7.5 (the named
+item, carried — a parity read on a vector that wins 13% is weak evidence).
+
+**The §88 rarity / price re-read on v4 (a desk read, not a signing):**
+the table's SIGN pattern is the spec's prediction — support holds value
+(healer +14.1 · shaman +8.0 · reaver +23.4 · gunslinger +27.7 · rioter
++9.1 · corrupter +5.3) and the expensive / glass rows read negative
+(officer −40.4 · catapult −26.5 · bandit −24.4 · adventurer −24.1 ·
+halberdier −18.7 · ronin −15.7 · rogue −13.9 · mercenary −13.2). Under
+KEEP the price book turns over: the healer (common, cheapest) is
+under-priced and the officer / halberdier (rare) over-priced by their
+margins; Dis Pater reads −11.0 again (n=72·, thin again — the standing
+`--grant` n=80 rider stands). Dispositions are §94's (under keep: the
+per-encounter pass + the price book; under rollback: moot).
+
+**The Round 6 riders, for the record (superseded under keep):** the walls
+UNDER band — now 0.467 regen (over) / 0.323 deploy (in); the deploy-walk
+overperformance — reach 0.517 (a hair over 0.50, was 0.625); the gambler
+shape-flip — deploy +0.8 / regen −7.5 (the flip persists on the
+maladapted vector); the band promote — moot under a new lineage.
+
+**THE DRAFT LINEAGE (tabled here, UNSIGNED — `signed-sheet.json` is
+untouched; §93 decides, §94 signs):** seam band **as a FRACTION of the
+pool max** 0.40–0.45 (16.6 / 40 = 0.415; the floor refills to 1.0 so the
+band is the hazard read) · reach 40–50 HELD (0.517, the watch) · wall
+30–35 HELD (0.323) · win DERIVED (0.26–0.35; 0.350) · act-1 refs at the
+92h n=120 values: soldier 0.483 / **0.725**, priest 0.542 / 0.775,
+gambler 0.408 / 0.733 (the regen column carries a maladapted-vector note,
+not a target) · banks 89.5 / 61.8 · fires 2.65 / 3.02 · tx 0.36 / 0.89 ·
+forced bosses 0.592 / 0.567 (King > Queen, the durable order) · fire
+channel +0.15 (band held) · the ceiling deltas OPEN pending the ARM
+docket · the overkill threshold 6 = 0.15 × 40 (the spec's amended
+criterion, now in the reader). The sheet's `signedAt` prose gets the
+§92 lineage entry at the §94 signing, not before.
+
+**Open — the ARM docket (for the user, beside §93):** the arbitration's
+negative ceiling is the one number this phase cannot explain from the
+table alone. The cheapest first read is the λ=0 paired probe (the 85g6
+shape: the four arb rows at `--prior-lambda=0`, n=40 + ext, ~1.5 h) —
+if the ceilings close, the v4 fold is over-weighted at the 40-scale; if
+not, the suspect is `DP_TAIL_SCALE` 10 (a dial to build: the evaluator's
+exchange rate as a `--set`-able knob, an hour) with a 5-vs-10 paired
+read. Neither blocks §93's feel verdict; both bear on criterion 2's
+"read with a re-searched arm" if the user wants the ARM repaired before
+the keep decision. **The two morning flags** (the swarms at 3.04 · the
+exchange-rate re-pin) stay HELD by the user's call (2026-09-05).
+
+**Exit criteria, checked:** the board green at the draft lineage — 0 FAIL
+(integrity 17/17), the drift WARNs are the pool-20 refs the draft re-pins
+✓; the alpha-strike and gradient reads recomputed on the re-searched arm ✓
+(0.072 · 0.100 < 0.125 < 0.725); the §88 rarity/price re-read filed ✓.
+NOT done, by charter: signing.

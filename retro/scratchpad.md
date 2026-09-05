@@ -97,3 +97,46 @@ _(The post-Round-6 entries start here — the §89 interstitial.)_
   regen casualties leg was read after fetch 1) as long as the write-up
   waits for the full cohort — the partial was labelled a sanity glance and
   the signing table came from all four legs.
+
+## §92 session notes (2026-09-04/05 — the overnight chain)
+
+- **Pre-sign the chain, not the numbers.** Four pre-signatures (the argmax
+  rule, the stale-prior acceptance, the same-night launch, a MECHANICAL
+  adjustment rule with a pause-on-suspicion clause) let five cohorts run
+  unattended across a night; the one judgment call (the evaluator's
+  exchange rate) was recorded, not decided silently, and the one marginal
+  reading (the swarms at 3.04 vs 2.5) was HELD because the rule's text and
+  the user's own band both said hold. The shape to keep: rules the session
+  can apply, a clause for what it can't, and a written flag for every call.
+- **One artifact KIND per cohort.** `box-drive.sh` takes one `--artifact`;
+  a queue mixing a shadow batch (summary.csv) with a search
+  (best-strategy.json) HELD its box after a clean derive. Split mixed
+  cohorts, or teach the driver a per-line `# artifact=` override (a TODO).
+- **A new FIELD sweeps every EMITTER, not just every reader.** 92e wired
+  `power?` through the schema, the resolver, the ledger, the risk line and
+  the editor's field — and the formatter dropped it on emit; the 92d
+  surgery's diff (twelve pool lines, zero power lines) caught it before the
+  editor's Save would have discarded a designer's number silently. The
+  AGENTS "adding a consumer to an old seam" rule, in reverse.
+- **A pin whose comment names the phase that may move it is the best kind.**
+  `DP_TAIL_SCALE = 5` carried "re-pin it with the re-search (§92), never
+  silently" — when the pool max doubled it, the failure was a prompt to
+  record a deliberate arm change, not a puzzle.
+- **Pool-relative instruments scale with the pool max; sheets written in
+  pool HP do not.** The seam band (15–18), the overkill threshold (3) and
+  the evaluator's ordinals all carried pool-20 numbers; the threshold was
+  caught (92d-pre), the evaluator's terms scale by construction, and the
+  seam band reads at 41% of the new max — the DRAFT lineage re-expresses
+  it as a fraction. Grep a config move's UNIT, not just its key.
+- **Wall-time at the new table (the 91 note's sequel):** a derive 2.1 h at
+  pool 20 → 4.0 h at the frozen config; an n=120 walk leg 55 min (91f) →
+  38 min (92f, fewer longer fights) → ~35 min on the board; the 33-line
+  closing cohort 12 h. Estimates carried across a config change are
+  guesses both ways.
+- **The direction check mid-cohort is worth it, and read the CSV columns
+  by NAME.** A `cut -f` on pacing.csv mis-associated turns-per-won with
+  cost-per-turn and read the bosses at 3.1 turns for ten minutes; the
+  independent recompute settled it. Print the header with the row.
+- **Two boxes at once is fine when the cohorts are independent:** the 92h
+  closing cohort launched while the 92g derive still cooked (the derive is
+  a read, not a config input) — ~2 h saved, no shared state.

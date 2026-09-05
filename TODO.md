@@ -328,3 +328,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   [scripts/box-drive.sh](scripts/box-drive.sh) + the AGENTS ops norm
   (one-head-per-cohort + artifact-verified stand-down mechanized).
   Detail in git.
+
+## §92 riders (2026-09-05)
+
+- [ ] **Compact `roster-table.json`** — v2 (92h) is 4.7 MB / 21,519 raw rows against v1's 1.1 MB; the `--roster=sampled` reader needs per-(character, sector, hop) distributions, not rows — store those (a builder change + a format bump), and the coverage twin of the prior tripwire (the Round 6 rider above) lands with it.
+- [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
+- [ ] **The evaluator exchange rate as a dial** — `DP_TAIL_SCALE` is a module constant (restHealFraction × pool max); the §92 ARM docket wants a 5-vs-10 paired read without touching the rest heal — a `--set`-able override (an hour), if the λ=0 probe does not close the ceilings.

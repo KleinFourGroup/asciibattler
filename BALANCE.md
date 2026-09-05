@@ -294,7 +294,7 @@ has someone's attention).
 | Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
 |---|---|---|---|---|
 | [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v4, measured @`7dc07a3` — 92g, under the deployed 92c2 vector at the frozen 92d config; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank: `scripts/box-drive.sh <queue>` with the `88d2-prior-v3.queue` line (`--count=120 --seed-offset=1000 --character=soldier --strategy=tests/fuzz/fixtures/59-regen-vector.json` + the ARM + `--shadow-horizon=run --jobs=8`, ~1.5 h box) → `npm run prior:table -- output/box-batches/<id> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
-| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (87c v1, measured @`8c47b73`) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | ⚠ none yet — the builder loud-throws on an unknown archetype, and membership drift surfaces only at the next `--roster=sampled` read; a coverage twin of the prior tripwire is the natural next guard |
+| [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (v2, measured @`9c6c60d` — 92h, off the closing board’s eight ARM rows at the frozen casualty config, 21,519 rows / 4.7 MB — a compaction rider in TODO; v1 @`8c47b73` was 87c, survivors era) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | ⚠ none yet — the builder loud-throws on an unknown archetype, and membership drift surfaces only at the next `--roster=sampled` read; a coverage twin of the prior tripwire is the natural next guard |
 | [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, `--artifact=best-strategy.json`, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
 | [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
 
@@ -4482,3 +4482,59 @@ deltas. The pre-X H7c→O log lives at
   measurement; the §88 rarity / price re-read is 92i's (a desk read on this
   table + the 92h board), not a signing. Directional rows (n < 80): the five
   daemons — the §88 targeted-grant list stands.
+- **2026-09-05 (§92h/§92i) — THE CLOSING COHORT at the frozen casualty
+  config + the reads** (ROADMAP §92h/§92i; box-drive cohort
+  `tests/fuzz/output/queue-92h.txt` at `9c6c60d`, **33/33** artifact-verified,
+  07:02→19:00Z ≈ **12.0 h**, box destroyed on drain; staged to
+  `output/board-runs/92h/` (ten n=120 pools via `--merge-stages`, the two
+  anchors run locally at HEAD) → `board-report.txt`: **integrity 17/17 PASS
+  at `9c6c60d`, 0 FAIL / 16 WARN** — the WARNs are the sheet's pool-20-era
+  refs reading a pool-40 casualty game; the DRAFT lineage (WORKLOG §92i)
+  re-pins them, §93 decides, §94 signs). **Config:** the FROZEN 92d table
+  (pool max 40 · twelve pools · the boss overrides) · the deployed 92c2
+  vector · prior v4 · `DP_TAIL_SCALE` 10 · roster table v2 (built off this
+  cohort's eight ARM rows, `9c6c60d`).
+  **The board (act-1 rows n=120 pooled; walks n=120):**
+  | row | value | the 88d read | note |
+  |---|---|---|---|
+  | arb-regen win | **0.483** | 0.683 | the hand-authored regen vector is maladapted under casualties (28:1 at 91f) — the anchor twin, not a defect |
+  | arb-deploy win | **0.725** | 0.717 | the re-searched vector holds act 1 at the old level |
+  | priest regen / deploy | 0.542 / **0.775** | 0.592 / 0.708 | deploy parity +5.0 (hair), regen +5.9 |
+  | gambler regen / deploy | 0.408 / **0.733** | 0.667 / 0.733 | deploy parity +0.8; regen −7.5 (the named item, on the maladapted vector) |
+  | wall-king / wall-queen (doctrine, forced) | **0.592 / 0.567** | 0.792 / 0.767 | the 6-turn bosses are ~20 pt harder — the design target, read as a wall |
+  | arb-walk-regen seam · reach · wall · win | 14.7 · 0.250 · 0.467 · 0.133 | 16.4 · 0.375 · 0.422 · 0.217 | the regen walk collapses under casualties |
+  | arb-walk-deploy seam · reach · wall · win | **16.6 · 0.517 · 0.323 · 0.350** | 17.0 · 0.558 · 0.328 · 0.375 | ON the old bands (reach a hair over, the standing watch) — the seam is now 41% of a 40 pool, the band must become a FRACTION |
+  | banks firer / shopper | 89.5 / 61.8 | 114.5 / 73.2 | fires 2.65 / 3.02 (1.50 / 1.73) · tx 0.36 / 0.89 (0.23 / 0.78) — the longer game fires and shops more |
+  | fire channel Δ | +0.150 | +0.075 | in band (0.05–0.15) |
+  | gradient anchors | random 0.100 < greedy 0.125 < ARM 0.725 | 0.275 ≥ 0.275 INVERTED < 0.717 | the harder game separated the anchors |
+  | ⚠ ceilings (arb − doctrine, paired) | **−0.092 · −0.200 · −0.042 · −0.250** | −0.050 · −0.025 · −0.008 · −0.108 (88d3, post-v3) | arbitration is NET-NEGATIVE under the frozen config: doctrine deploy 0.925 act-1 / 0.600 walk vs arb 0.725 / 0.350 |
+  **The six ARM walk arms (n=120 each, `--per-encounter --emit-results`;
+  criterion 1 + pacing):**
+  | arm | win | act-1 | pool lost / run | pool deaths | overkill ≥ 6 (0.15 × 40) | ≥ 3 abs. |
+  |---|---|---|---|---|---|---|
+  | soldier regen / deploy | 0.133 / 0.350 | 0.483 / 0.725 | 74 / 79 | 104 / 78 | 0.067 / 0.038 | 0.41 / 0.42 |
+  | priest regen / deploy | 0.092 / 0.342 | 0.542 / 0.775 | 77 / 78 | 109 / 79 | **0.138** / 0.013 | 0.50 / 0.27 |
+  | gambler regen / deploy | 0.075 / 0.292 | 0.408 / 0.733 | 71 / 79 | 111 / 85 | 0.081 / 0.071 | 0.48 / 0.52 |
+  | **pooled (criterion 1)** | | | | **566** | **0.072** (41/566) | 0.438 |
+  **Criterion 1: 0.072 pooled, no arm above 0.138** — against the pinned ≤
+  0.30 / no arm > 0.40, and under the spec's own "≤ 0.15 = the mechanism
+  working as designed" line; the 89c baseline read 0.61 (per arm
+  0.57–0.67) at pool 20. The SAME-TABLE survivors comparator (the two
+  soldier survivors@HEAD twins, seeds 1–120) reads **0.200 / 0.209** at the
+  scaled threshold — the rule, not the table, carries most of the fall
+  (the 91f caveat answered). Pacing on the six arms pooled: **normal 2.82
+  · elite 4.19 · boss 5.66** turns per won instance (targets 2.5 / 4.5 /
+  6), burn 7.8 / 4.6 / 7.1, cost per turn 1.96 / 4.08 / 3.32, cost per
+  instance 5.5 / 17.1 / 17.6, cap share 0.5% / 3.0% / 0.7%.
+  **The survivors comparator on the 92d table** (soldier twins, paired
+  same-seed): regen — casualties 0.133 vs survivors 0.233 (8 / 20
+  discordant, z −2.27); deploy — 0.350 vs 0.250 (25 / 13, z +1.95): the
+  twins SPLIT by vector again (the re-searched vector prefers the rule it
+  was searched under; the hand-authored regen prefers survivors). The old
+  rule on the new table is a SLOG — survivors pacing normal 4.2–4.8 ·
+  elite 6.5–6.9 · boss 9.5–12.6 turns (the table was designed for
+  casualties; a §93 rollback reverts the table too — the 91f rider).
+  Batch dirs `output/box-batches/20260905-{070222…175356}-9c6c60d` (33);
+  the reads = the 92a `pacing.csv` per arm + the scratchpad `read-92i.ts`
+  (criterion 1 via `alphaStrikeStats` at the scaled threshold; the paired
+  comparator); the board = `output/board-runs/92h/board-report.txt`.

@@ -1960,3 +1960,38 @@ same base vector tops both rules' coarse screens). Fixtures
 `tests/fuzz/fixtures/92c2-finalist-{80,27,54}.json` + `92c2-winner.json`;
 the selection queue `tests/fuzz/output/queue-92c2.txt` (K=4 arms, n=30 @
 offset 1000, the ARM with λ=0.5 — pre-signature (b)).
+
+### 92c2 — the arbitrated selection + the deploy (2026-09-05; box `abox-20260905-011430`, batches `20260905-{011733,012359,013026,013858}-cf90f56`)
+
+The K=4 cohort at `cf90f56` (the 85g5 shape: n=30 on the TRAIN bank @
+offset 1000 under the full ARM incl. λ=0.5 — pre-signature (b)), 4/4
+artifact-verified in **31 min** (~7 min per arm — the casualty rule's
+shorter fights), every manifest at HEAD, dirty false, box destroyed on
+drain. Wins on the bank:
+
+| arm | wins / 30 | paired vs the argmax (only-argmax · only-other, net of discordant) |
+|---|---|---|
+| finalist-80 (base, the winner's parent) | 10 | 7 · 4 (+3 of 11) |
+| finalist-27 (base) | 8 | 8 · 3 (+5 of 11) |
+| finalist-54 (base) | 5 | 11 · 3 (+8 of 14) |
+| **the refined winner** | **13** | — |
+
+**The argmax is the refined winner, unique — DEPLOYED per pre-signature
+(a)** (no HOLD condition met: no driver HOLD, the envelope check passed
+at 92c1, no top-two tie). The 85g5 inversion did NOT recur: the refine
+step improved 3/3 finalists this time and its winner beat its own parent
++3 net of 11 — thin, as 85g5's +2 of 10 was, and the rule was written for
+exactly that. For scale, the survivors-era selection read 18 / 14 / 16 /
+15 on the same bank at pool max 20; the casualty rule at the PRE-92d
+config wins 5–13 of 30 — the pre-rebalance ceiling the flip read
+predicted, not a verdict.
+
+**The deploy commit:** `board.ts` DEPLOY → `92c2-winner.json`, the four
+`strategyRow` literals `scored:92c2-winner` (ids stay `deploy`); the 85g5
+fixture stays on disk as the survivors-era comparator; the sheet's deploy
+refs are PENDING RE-PIN at the §92 board (DRAFT — §93 decides; no sheet
+edit at §92 by the charter's NOT-doing). Prior v4 waits for 92g (the
+tripwire reads catalog membership, not the vector — the finding-G
+correction). The read script (scratchpad `read-92c2.ts`) reproduced the
+85g5 record (18/14/16/15, +2 of 10) on the archived batches before it
+read this cohort.

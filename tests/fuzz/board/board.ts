@@ -157,8 +157,13 @@ const WALK = ['--count=40']; // the canonical two-act walk (no hop dial)
 const REGEN = '--strategy=tests/fuzz/fixtures/59-regen-vector.json';
 /** 85g5 (2026-08-26) — the DEPLOYED searched vector twin: the frozen
  *  55pre anchor is retired; a future re-derive swaps this path only
- *  (ids stay `deploy`). */
-const DEPLOY = '--strategy=tests/fuzz/fixtures/85g5-finalist-56.json';
+ *  (ids stay `deploy`). 92c2 (2026-09-05) — swapped: the vector RE-SEARCHED
+ *  under the casualty rule (the 92c1 derive's refined winner, the argmax of
+ *  the K=4 arbitrated selection 13/30 — WORKLOG §92c2; the 85g5 finalist-56
+ *  fixture stays on disk as the survivors-era comparator). The deploy act-1
+ *  refs + the shopper economy refs on the sheet are PENDING RE-PIN at the
+ *  §92 board (a DRAFT lineage — §93 decides). */
+const DEPLOY = '--strategy=tests/fuzz/fixtures/92c2-winner.json';
 const ABLATED = '--strategy=tests/fuzz/fixtures/60-fire-ablated-vector.json';
 /** 68d — the paired-noise width the act-1 drift references carry. */
 const WIN_TOL = 0.08;
@@ -182,7 +187,7 @@ function act1Posture(
   const strategyRow =
     posture === 'regen'
       ? 'arbitrated:scored:59-regen-vector'
-      : 'arbitrated:scored:85g5-finalist-56';
+      : 'arbitrated:scored:92c2-winner';
   const provisional = character === 'gambler' ? ` [${sheet.gamblerNote}]` : '';
   const winSource = `85g6d fold-baseline re-pin (act-1 arb λ=0.5, n=120 pooled, ±8)${provisional}`;
   const checks: BoardCheck[] = [
@@ -257,7 +262,7 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
     strategyRow:
       posture === 'regen'
         ? 'arbitrated:scored:59-regen-vector'
-        : 'arbitrated:scored:85g5-finalist-56',
+        : 'arbitrated:scored:92c2-winner',
     checks: [
       {
         metric: 'seamPool',
@@ -337,10 +342,10 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
   ];
   const controls: BoardInstrument[] = [
     control('regen', 'soldier regen vector', [...ACT1, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
-    control('deploy', 'soldier deploy vector', [...ACT1, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:85g5-finalist-56'),
+    control('deploy', 'soldier deploy vector', [...ACT1, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:92c2-winner'),
     control('fire-ablated', 'the fire-channel ablation', [...ACT1, '--character=soldier', ABLATED, ...CONTROL_ARM], 'scored:60-fire-ablated-vector'),
     control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
-    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:85g5-finalist-56'),
+    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:92c2-winner'),
   ];
   // 86e3 (decision C, user-signed) — the skill-gradient anchors: the
   // registry's two bare baselines on the act-1 shape (SAME shape as the arb

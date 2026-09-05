@@ -293,7 +293,7 @@ has someone's attention).
 
 | Artifact | Measures | Invalidated by | Rebuild recipe | Tripwire |
 |---|---|---|---|---|
-| [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v3, measured @`251514d`) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank: `scripts/box-drive.sh <queue>` with the `88d2-prior-v3.queue` line (`--count=120 --seed-offset=1000 --character=soldier --strategy=tests/fuzz/fixtures/59-regen-vector.json` + the ARM + `--shadow-horizon=run --jobs=8`, ~1.5 h box) → `npm run prior:table -- output/box-batches/<id> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
+| [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json) (v4, measured @`7dc07a3` — 92g, under the deployed 92c2 vector at the frozen 92d config; v3 @`251514d` was the survivors era) | per acquirable item (`daemon:*` · `packet:*` · `unit:*`), the paired long-horizon holding margin under the deployed ARM — the §85 fold input | any acquirable-catalog MEMBERSHIP change (`daemons.json` · `packets.json` · a `units.json` `draftable` flip · a character blacklist); any ARM-semantics change (λ_prior, the walker, the deployed vector — the 85h deployed-semantics rule: measure under what ships); any sim/run change that plausibly moves item values (re-measure at the next amendment board) | the 85g2b shape on the TRAIN bank: `scripts/box-drive.sh <queue>` with the `88d2-prior-v3.queue` line (`--count=120 --seed-offset=1000 --character=soldier --strategy=tests/fuzz/fixtures/59-regen-vector.json` + the ARM + `--shadow-horizon=run --jobs=8`, ~1.5 h box) → `npm run prior:table -- output/box-batches/<id> --note=…` → commit the table with its run-log entry | [tests/prior-table-coverage.test.ts](tests/prior-table-coverage.test.ts): every acquirable id has a row or an explicit PENDING acknowledgment (config-derived; `daemon:mars` = the soldier's start idol, structurally unmeasurable on an all-soldier bank) · no stale rows · PENDING honesty. Rides `npm test`. |
 | [tests/fuzz/board/roster-table.json](tests/fuzz/board/roster-table.json) (87c v1, measured @`8c47b73`) | per (character, sector, hop) the REALIZED roster distribution under the 8 ARM board rows — the `--roster=sampled` source | any change to recruitment / draft pools / prices / the archetype catalog / the ARM | the 87b capture cohort (the board's 8 ARM rows carry `rosters.csv`) → `npm run roster:table -- <board-dir>` | ⚠ none yet — the builder loud-throws on an unknown archetype, and membership drift surfaces only at the next `--roster=sampled` read; a coverage twin of the prior tripwire is the natural next guard |
 | [tests/fuzz/fixtures/85g5-finalist-56.json](tests/fuzz/fixtures/85g5-finalist-56.json) (the DEPLOYED searched vector) | the searched-upper ceiling on the act-1 shape, at derive time | a frozen vector's ceiling DRIFTS with every balance change (the pre55ReachRef lesson, 83f→85g5) | at every amendment/re-pin board, a FRESH `--search` derive as the ceiling READ (the `88d2-derive.queue` line: `--search --refine --searcher --audition --preset=heavy --vectors=96 --seeds=32 --sampler-seed=85 --seed-offset=1000 --jobs=8`, `--artifact=best-strategy.json`, ~2.7 h box); DEPLOYING a new vector is its own decision — the 85g5 arbitrated-selection cohort + a sheet re-anchor | the board integrity protocol's fresh-derive requirement (above); no test — a derive is a box run |
 | [tests/fuzz/board/signed-sheet.json](tests/fuzz/board/signed-sheet.json) | NOT derived — the hand-signed refs + bands | — (amended at board runs, user-signed) | — | the board's DRIFT table |
@@ -4451,3 +4451,34 @@ deltas. The pre-X H7c→O log lives at
   (regen 0 · regen 0.1 · deploy 0 · deploy 0.1); the read = the 92a
   `pacing.csv` per leg + the scratchpad `read-92f.ts` over `results.json`
   (the rule evaluator; its output kept at the session scratchpad).
+- **2026-09-05 (§92g-v4) — THE PRIOR TABLE v4** (BALANCE §"The derived-artifact
+  registry"; ROADMAP §92g; the overnight pre-signatures (d)/(D) — box-drive
+  cohort `tests/fuzz/output/queue-92g.txt` line 1 at `7dc07a3`, batch
+  `20260905-044439-7dc07a3`, 04:44→06:46Z ≈ **2.0 h**, artifact-verified,
+  manifest at HEAD, dirty false, seeds 1001–1120). **The recipe, one
+  deviation from v3 named:** the 85g2b shadow shape on the TRAIN bank under
+  the full ARM (`--shadow-horizon=run`) — measured under the RE-SEARCHED
+  **deploy vector** (`92c2-winner.json`) instead of v3's regen vector (the
+  regen twin wins 4% of runs under casualties; a table on it would price
+  items on runs that die in act 1 — WORKLOG §92 kickoff finding D), at the
+  FROZEN 92d config (pool max 40 · the twelve pools · the boss overrides ·
+  `DP_TAIL_SCALE` 10). The bank under the deployed vector: **win 0.342 ·
+  act-1 clear 0.733** (n=120; the 92f deploy twin on seeds 1–120 read 0.350
+  / 0.717 — the banks agree). 66,533 decision rows, **9,879 long-horizon**
+  → `npm run prior:table` → [tests/fuzz/board/prior-table.json](tests/fuzz/board/prior-table.json)
+  (v4, measured @`7dc07a3`); the coverage tripwire green. **What moved
+  (meanΔ, the holding margin in pool HP — now at the 40-pool scale, so the
+  v3 numbers are not directly comparable):** the healer reads **+14.1**
+  (v3-era: a marginal unit) and the shaman +8.0 / reaver +23.4 / gunslinger
+  +27.7 / rioter +9.1 / corrupter +5.3 positive; the glass and the
+  expensive read NEGATIVE — officer **−40.4** · catapult −26.5 · bandit
+  −24.4 · adventurer −24.1 · halberdier −18.7 · ronin −15.7 · rogue −13.9
+  · mercenary −13.2 · mage −7.8 · stormcaller −2.6 · archer −4.4. Daemons:
+  janus **+106** (n=54·, under the floor) · minerva +83 (n=44·) ·
+  cornucopia +6.9 · fortuna −0.4 · Dis Pater **−11.0** (n=72·, the §88
+  watch — negative again, thin again); packet:venom +30.5. The spec's
+  "keeping units alive is now worth pool — healers/Shield/defense rise,
+  glass cannons fall" reads in the table's SIGN pattern on its first
+  measurement; the §88 rarity / price re-read is 92i's (a desk read on this
+  table + the 92h board), not a signing. Directional rows (n < 80): the five
+  daemons — the §88 targeted-grant list stands.

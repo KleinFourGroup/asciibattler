@@ -4383,3 +4383,71 @@ deltas. The pre-X H7c→O log lives at
   survivors); the read script is a scratchpad probe (recompute from
   `results.json`: outcome / sectorsCleared / battles / telemetry.poolChips
   with reason, and alpha-strike.csv's `shareOverkillGe3` row `all`).
+- **2026-09-05 (§92f) — THE CANDIDATE READ at the 92d table** (the casualty
+  rebalance, ROADMAP §92; box-drive cohort `tests/fuzz/output/queue-92f.txt`
+  at `1d51d06`, 4/4 artifact-verified (`results.json` + the 92a `pacing.csv`),
+  02:05→04:39Z ≈ **2.6 h** (~38 min per n=120 walk leg — the 8 h estimate
+  was carried from the 91f table; the new pools make FEWER, longer fights),
+  box destroyed on drain; every manifest at HEAD, dirty false, seeds 1–120).
+  **Config under read:** `playerHealthMax` **40** · the twelve 92d pools
+  (swarms 19–30 · elites 20 / 29 · bosses 36 / 39 / 44 / 36) · the four boss
+  overrides (adventurer 6 · luminant 6 · banshee 3 · officer 3) · the ARM
+  with the RE-SEARCHED deploy vector (`92c2-winner.json`) and
+  `DP_TAIL_SCALE` 10 · the v3 prior table (stale units — v4 at 92g).
+  **Shape:** the two soldier ARM two-act WALK twins × fatigue {0 (shipped),
+  0.1 via `--set=health.fatiguePerStack=0.1`}, n=120 same seeds as 90d/91f.
+  | leg | win | act-1 clear | pool lost / run |
+  |---|---|---|---|
+  | regen · fatigue 0 | 0.142 | 0.467 | 72.7 |
+  | regen · fatigue 0.1 | 0.058 | 0.375 | 69.3 |
+  | **deploy · fatigue 0** | **0.350** | **0.717** | 79.3 |
+  | deploy · fatigue 0.1 | 0.292 | 0.592 | 75.1 |
+  For scale (the 91f casualties legs at pool 20, the OLD deploy vector):
+  regen 0.042 / 0.467 · deploy 0.300 / 0.817 — the deploy twin's WIN rose
+  +5 pt while its act-1 clear fell −10 pt (the pool carries the deep end
+  better than act 1 now; a §92h board read, not a 92f lever); the regen
+  twin's act-1 clear is UNCHANGED at 0.467 on a doubled pool — the arm
+  spends what it is given (its cost per instance 5.8 / 16.6 / 15.2 by kind).
+  **Pacing on the shipped default (the two fatigue-0 twins pooled, 240 runs;
+  turns per WON instance · booked burn / player cost per turn · cost per
+  instance · cap share):**
+  | kind | turns/won | burn | cost/turn | cost/inst | cap | vs target |
+  |---|---|---|---|---|---|---|
+  | normal (all 11) | **2.81** | 7.75 | 2.05 | 5.7 | 0.6% | 2.5: +12% in band |
+  | · the six MOVED swarms | 3.00–3.07 each (3.04 pooled) | 7.7–12.2 | 0.27–3.4 | 0.8–10.3 | ≤ 3% | +22% (the flagged reading) |
+  | · the four held small waves | 2.03 / 2.36 / 2.56 / 3.26 | 3.0–6.3 | 1.7–5.0 | 3.9–12 | ≤ 2% | unchanged from 91f |
+  | elite (all 4) | **4.13** | 4.52 | 4.07 | 17.1 | 2.7% | 4.5: −8% in band |
+  | · brigand-champions / warband-vanguard | 4.71 / 4.61 | 6.4 / 4.5 | 3.8 / 3.0 | 17.0 / 13.6 | 0 | in band |
+  | · darkMagicPosse / plagueSpreaders (held) | 3.78 / 2.54 | 1.6 / 4.7 | 4.9 / 6.9 | 21.2 / 19.2 | **6.2% / 12.5%** (was 15 / 42) | the slogs, §94 |
+  | boss (all 4) | **5.58** | 7.30 | 3.28 | 17.3 | 0.9% | 6: −7% in band |
+  | · king / queen / generalissimo / witch-hunt | 5.52 / 5.90 / 5.19 / 5.46 | 6.8–7.9 | 3.1–4.2 | 15.7–20.5 | ≤ 1.7% | the override at work |
+  The swarms went from ONE turn (91f: 1.00–1.10) to THREE, the elites from
+  2.2–2.3 to 4.6–4.7, the bosses from 2.4–3.4 to 5.2–5.9 — the desk's
+  `pool ≈ burn × T` arithmetic landed within 10–20% on every moved
+  encounter (the burn per turn barely moved: 7.7–12.2 on the swarms, as
+  the 91f table said it would). Player cost per instance rose with the
+  turns (normals 3.3 → 5.7 · elites 10 → 17 · bosses 9 → 17) at an
+  unchanged cost per TURN (2.05 / 4.07 / 3.28 vs 2.06 / 3.52 / 3.31) —
+  kickoff finding 2 exactly; the pool max 40 + rests of 10 carry it to an
+  act-1 clear of 0.717 on the deploy twin (the signed 0.6 is met).
+  **THE PRE-SIGNED 92f2 RULE (WORKLOG §92 pre-signatures (d)), applied:**
+  R1 — the deploy twin's act-1 clear 0.717 ≥ 0.6 → **pool max HOLDS at 40**
+  (50 not taken). R2 — per KIND: normal 2.81 (+12%) · elite 4.13 (−8%) ·
+  boss 5.58 (−7%) → all inside 20% → **no rescale**. ⚠ Read over the MOVED
+  encounters only (the session's announced interpretation, WORKLOG §92f):
+  the swarms 3.04 = +22%, a hair over the line, ×0.822 would be the move
+  (19 → 16 · 29 → 24 · 22 → 18 · 21 → 17 · 30 → 25) — NOT applied: the
+  rule as signed reads the kind, the user's own band is 2–3 turns and 3.0
+  sits inside it; FLAGGED for the morning (a one-commit, one-cohort
+  reversal if the user wants 2.5). R3 — fatigue 0.1 vs 0, paired
+  same-seed wins: regen only-at-0 **13** · only-at-0.1 3 (z −2.50, OUTSIDE
+  noise) · deploy 24 · 17 (z −1.09, inside) → **fatigue back to 0** (it was
+  never on; the rate stays 0 — the constitution seam stays, the effect is
+  NOT shipped: at −10%/stack it costs the player wins on both twins now
+  that fights run 3–6 turns and deployments stack; the spec's "bites only
+  if encounters lengthen" — it does, and it bites the wrong side of the
+  budget). **Config FROZEN at `1d51d06`** — no 92f2 commit; 92g launches on
+  it. Batch dirs `output/box-batches/20260905-{020849,025007,032632,040238}-1d51d06`
+  (regen 0 · regen 0.1 · deploy 0 · deploy 0.1); the read = the 92a
+  `pacing.csv` per leg + the scratchpad `read-92f.ts` over `results.json`
+  (the rule evaluator; its output kept at the session scratchpad).

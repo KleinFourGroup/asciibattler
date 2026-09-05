@@ -2067,3 +2067,51 @@ kickoff's named circularity (finding C (2)), closed by the fresh derive at
 re-selection at the final config is the honest extra cohort (~30 min).
 Neither is a HOLD by the pre-signed clause; both are written here for the
 user's eye.
+
+### 92f — the candidate read + the rule (2026-09-05, overnight; numbers BALANCE 2026-09-05 §92f)
+
+The cohort ran 2.6 h (the 8 h estimate was the 91f table's — the new
+pools make fewer, longer fights; the box-hour budget for 92h shrinks with
+it). Findings, in the cut's order:
+
+1. **The desk arithmetic landed.** Every moved encounter reads within
+   10–20% of `pool ≈ burn × T`: the six swarms 3.00–3.07 turns (one turn at
+   91f), the two moved elites 4.6–4.7 (2.2–2.3), the four bosses 5.2–5.9
+   (2.4–3.4) — the burn per turn did not move (the 91f table's prediction),
+   and the override reads as designed on the bosses (king 5.5 / queen 5.9
+   / generalissimo 5.2 / witch-hunt 5.5). Per kind: normal 2.81 · elite
+   4.13 · boss 5.58 against 2.5 / 4.5 / 6.
+2. **Finding 2 of the kickoff, confirmed:** the player's cost per TURN is
+   unchanged by the pools (2.05 / 4.07 / 3.28 by kind vs 2.06 / 3.52 /
+   3.31 at 91f), so the cost per instance rose with the turns (5.7 / 17 /
+   17) — and the pool max 40 carries it: the deploy twin's act-1 clear is
+   0.717 against the signed 0.6 (R1 holds 40; 50 not taken). The win rate
+   rose +5 pt on the deploy twin while act 1 got 10 pt harder — the deep
+   end is where the doubled pool pays; the regen anchor's act-1 clear is
+   exactly where it was at pool 20 (0.467): the maladapted arm spends what
+   it is given.
+3. **Fatigue does NOT ship.** At −10% constitution per deployment stack
+   the paired same-seed read costs the player wins on both twins (regen
+   13:3 discordant, z −2.50; deploy 24:17, z −1.09) — the spec's "bites
+   only if encounters lengthen" came true and it bites the player's
+   budget. R3 → the rate stays 0; the constitution seam stays (a Round 9
+   candidate with a smaller rate or a per-encounter reset, not a §92
+   lever).
+4. **The slogs moved without being touched:** the two held summoner
+   elites' cap shares fell (plagueSpreaders 42% → 12.5%, darkMagicPosse 15%
+   → 6.2%) — the doubled player pool reaches the cap less often — while
+   their cost per instance rose to 19–21, the highest in the catalog. Still
+   §94's composition item; the number to beat is on file now.
+5. ⚠ **The one reading the rule does not settle — flagged for the user:**
+   R2 as SIGNED reads the kind (normal 2.81, +12%, in band → no rescale);
+   the session's announced moved-only reading puts the six swarms at 3.04
+   (+22%) → ×0.822 (19 → 16 · 29 → 24 · 22 → 18 · 21 → 17 · 30 → 25). The
+   signed text and the user's own "2–3 turns" band both say hold; the
+   stricter reading says trim. **Held** (the config FREEZES at `1d51d06`,
+   no 92f2 commit); a reversal is one config commit + a 92g re-run (~4 h)
+   if the user wants the swarms at 2.5 rather than 3.0.
+
+**The rule's verdict, mechanically:** R1 HOLD 40 · R2 in band (per kind)
+· R3 fatigue 0 → **FREEZE**. 92g launches on the frozen config from the
+docs commit that carries this entry (a docs-only HEAD move; the config is
+byte-identical to `1d51d06`).

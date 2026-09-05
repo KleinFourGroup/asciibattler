@@ -144,7 +144,7 @@ decision is §93.
 
 The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
 - [x] **92a** the pacing reader ✅ 2026-09-04 — `pacing.csv` + the batch.log table ride `--per-encounter`; the 91f casualties legs re-read through it reproduce the desk table row for row (WORKLOG §92a).
-- [ ] **92c1** the RE-SEARCH — the 88d2-derive line verbatim at HEAD (night 1, ~2.7 h; `queue-92c1.txt`).
+- [x] **92c1** the RE-SEARCH ✅ 2026-09-05 — the 88d2-derive line at `f68540e`, 2.1 h: train 30.8 → 42.3% (3/3 finalists improved), test 33.3%; finalists #80 / #27 / #54 + the winner fixtured, envelope-verified (WORKLOG §92c1).
 - [ ] **92c2** finalist regeneration (the 85g5 non-circular envelope check) → the K=4 selection cohort (n=30 @ 1000, ~1 h) → the deploy decision (⭑ PRE-SIGNED 2026-09-04: the argmax, tie → a base finalist; HOLD on anomaly) → the fixture + `board.ts` DEPLOY (prior v4 moved to 92g — the tripwire reads catalog membership, not the vector; WORKLOG §92 pre-signatures).
 - [x] **92d-pre** ✅ 2026-09-04 (inserted: step zero on 92d found the 89b2 reader hardcoding the overkill threshold at 3 while the spec scales it 0.15 × pool max) — `overkillThreshold` + `shareOverkillGeThreshold` on the alpha-strike row/render/CSV, the absolute columns kept (WORKLOG §92d-pre).
 - [ ] **92d** the candidate table — `playerHealthMax` 40, swarm/elite/boss pools per the desk table, one config commit through the formatter with the per-id (old → new) printout.

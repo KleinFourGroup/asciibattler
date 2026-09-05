@@ -1936,3 +1936,27 @@ Correction folded in at the same time (kickoff finding G, checked at
 92e): the prior tripwire checks catalog MEMBERSHIP, not the deploy vector,
 so a vector change does not trip `npm test` — v4 builds ONCE at 92g (the
 92c2 line no longer carries it; ~1.5 h of box saved).
+
+### 92c1 — the RE-SEARCH under the casualty rule (2026-09-04/05; box `abox-20260904-230313`, batch `20260904-230406-f68540e`)
+
+The 88d2-derive line verbatim at `f68540e` (the shipped rule: casualties +
+the surcharge, the 91b/91e2 table, pool max 20 — the PRE-92d config, by the
+cut's order): 23:04Z → 01:10Z, **2.1 h** (88d2b took 2.7 h under survivors —
+shorter fights), artifact-verified, box destroyed on drain. The search:
+96 vectors × 26 train seeds, refine K3×8@0.15 — **3/3 finalists improved,
+train 30.8% → 42.3%**, held-out test **33.3%** (n=6). For scale: the 88d2b
+derive under survivors read train 42.3% → 50.0%, test 16.7% — the casualty
+rule's ceiling is lower on TRAIN by ~8 pt at this budget, and the held-out
+read is not comparable at n=6.
+
+**Finalist materialization** (scratchpad `finalists-92c2.ts`, the 85g5
+procedure mechanized): the ranking off `search-results.csv` → top-3
+**#80 (30.8%) · #27 (23.1%) · #54 (23.1%)**; `generateVectors(DEFAULT_BOX,
+85, 96)` regenerated; the non-circular envelope check PASSED — the refined
+winner sits 0.2974 ≤ 0.30 from #80 on every coordinate and 1.84 / 1.90 from
+#27 / #54 (the script dry-ran on the 88d2b derive first: same shape, #80's
+perturb there too — the same sampler seed proposes the same 96, and the
+same base vector tops both rules' coarse screens). Fixtures
+`tests/fuzz/fixtures/92c2-finalist-{80,27,54}.json` + `92c2-winner.json`;
+the selection queue `tests/fuzz/output/queue-92c2.txt` (K=4 arms, n=30 @
+offset 1000, the ARM with λ=0.5 — pre-signature (b)).

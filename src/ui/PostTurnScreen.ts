@@ -16,7 +16,7 @@ import type { FallenRecord } from '../run/Run';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { rulesForTurn } from '../run/chipRule';
 import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
-import { chipLineLabels } from './chipLabels';
+import { chipLineLabels, POOL_LABELS } from './chipLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 
@@ -87,8 +87,8 @@ export class PostTurnScreen {
     const pools = document.createElement('div');
     pools.className = 'postturn-pools';
     pools.append(
-      renderPoolGauge('player', 'Your Pool', info.playerHealth, info.playerHealthMax),
-      renderPoolGauge('enemy', 'Enemy Pool', info.enemyHealth, info.enemyHealthMax),
+      renderPoolGauge('player', POOL_LABELS.player, info.playerHealth, info.playerHealthMax),
+      renderPoolGauge('enemy', POOL_LABELS.enemy, info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
 

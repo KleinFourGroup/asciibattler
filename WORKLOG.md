@@ -2707,3 +2707,39 @@ would have gone stale on every rest.
   row added.
 - Browser-verified on main across the map → an event → a rest → the seam:
   see the commit.
+
+### 94f — "morale" (⛔ user-signed YES) + the price book on prior v4 (⛔ user-signed) (2026-09-06)
+
+**The naming call.** The user's verdict 7c, taken: the pools are
+presented as MORALE — "Your Morale" / "Enemy Morale" on the turn screens
+and the HUD-adjacent chip, the chip lines ("Enemy fallen → enemy morale"),
+the pre-turn risk line ("The most morale you can lose this turn"), the
+unit card's power clarifier ("what your morale loses if this unit falls"
+/ the `morale` hint under POW), the pre-turn risk line's unit ("up to N morale"), the reward portion ("+N morale") and the sector-seam line ("Morale restored a → b" / "carries on") — the browser pass found the last three after the first sweep. A words-only rename: `POOL_LABELS` +
+the chipLabels strings are the whole surface (the 94e constant paid off
+the same day); the config keys (`healthPool`, `playerHealthMax`) and the
+snapshot fields keep their names — renaming serialized keys would be
+churn for nothing. DESIGN §The encounter loop carries the decision; the
+spec's own prose stays historical. The chipLabels pins re-worded
+(`/enemy morale/` etc.).
+
+**The price book (the rarity protocol, step 1 — every draftable row at
+n ≥ 80 on v4; the read filed at the kickoff, WORKLOG §94 kickoff):**
+gunslinger **common → uncommon** (+28.3 recruit / +26.6 port-buy at the
+cheapest price — the strongest unit in the book; the 88c halberdier
+precedent in reverse: the tier map is now common 6 · uncommon 4 · rare
+5 · legendary 2, still 17) · healer base **30 → 32** (+19.6 free / +4.4
+bought — the nudge the user took) · everything else HOLD: the archer /
+adventurer / rogue / corrupter / catapult sign-split (negative free,
+positive bought) is the shopper choosing well and the DRAFT pool's shape
+(a Round 9 draft-weights item), not a price defect. **Five KIT WATCHES →
+TODO** (officer −42/−36 the worst row · bandit · mercenary · halberdier ·
+stormcaller): negative at FREE acquisition is a kit question price cannot
+fix (protocol step 3); "NOT doing: archetype changes" held. Both moves
+ride the 94h signing board (config; the roster table re-measures there
+under the registry — draft weights moved).
+
+Tree state: typecheck + the UI / config / tripwire / docs suites green
+in the worktree; the full suite + the fuzz smoke re-run for the tier
+change (the draft weights move rosters — the run-vs-run pins move with
+the game).

@@ -75,7 +75,7 @@ import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
 import { HEALTH } from '../config/health';
-import { riskLineTitle } from './chipLabels';
+import { POOL_LABELS, riskLineTitle } from './chipLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
@@ -477,8 +477,8 @@ export class PreTurnScreen {
     this.refreshHand();
     if (this.poolsEl !== null) {
       this.poolsEl.replaceChildren(
-        renderPoolGauge('player', 'Your Pool', payload.playerHealth, this.poolBounds.playerMax),
-        renderPoolGauge('enemy', 'Enemy Pool', this.poolBounds.enemy, this.poolBounds.enemyMax),
+        renderPoolGauge('player', POOL_LABELS.player, payload.playerHealth, this.poolBounds.playerMax),
+        renderPoolGauge('enemy', POOL_LABELS.enemy, this.poolBounds.enemy, this.poolBounds.enemyMax),
       );
     }
   }
@@ -616,8 +616,8 @@ export class PreTurnScreen {
     const pools = document.createElement('div');
     pools.className = 'preturn-pools';
     pools.append(
-      renderPoolGauge('player', 'Your Pool', info.playerHealth, info.playerHealthMax),
-      renderPoolGauge('enemy', 'Enemy Pool', info.enemyHealth, info.enemyHealthMax),
+      renderPoolGauge('player', POOL_LABELS.player, info.playerHealth, info.playerHealthMax),
+      renderPoolGauge('enemy', POOL_LABELS.enemy, info.enemyHealth, info.enemyHealthMax),
     );
     panel.appendChild(pools);
     // 89e → §91d — the risk line, right under the gauges it reads against:
@@ -627,7 +627,7 @@ export class PreTurnScreen {
     // player sees the worst case BEFORE committing the redraw/empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
-    risk.textContent = `⚠ At risk this turn: up to ${info.poolAtRisk} pool`;
+    risk.textContent = `⚠ At risk this turn: up to ${info.poolAtRisk} morale`;
     risk.title = riskLineTitle(HEALTH.chipMode);
     panel.appendChild(risk);
     // 49f — held for the packet-fire re-render (`updatePacketUsed`).

@@ -720,6 +720,7 @@
     "glyph": "G",
     "abilities": ["pistol"],
     "targeting": "nearest",
+    "rarity": "uncommon",
     "damageStat": "ranged",
     "baseStats": {
       "constitution": 16,

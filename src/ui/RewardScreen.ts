@@ -157,7 +157,7 @@ export class RewardScreen {
         // clamps at max — the rest-node discipline).
         const title = document.createElement('div');
         title.className = 'reward-portion__title';
-        title.textContent = `+${portion.amount} pool health`;
+        title.textContent = `+${portion.amount} morale`;
         body.appendChild(title);
       } else {
         // 49c — a packet portion (def-resolved for display; the id is

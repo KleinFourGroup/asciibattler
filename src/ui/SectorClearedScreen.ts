@@ -26,9 +26,9 @@ function fmtPool(n: number): string {
  */
 export function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
   if (poolAfter > poolBefore) {
-    return `Pool restored ${fmtPool(poolBefore)} → ${fmtPool(poolAfter)}`;
+    return `Morale restored ${fmtPool(poolBefore)} → ${fmtPool(poolAfter)}`;
   }
-  return `Pool ${fmtPool(poolAfter)} / ${fmtPool(HEALTH.playerHealthMax)} carries on`;
+  return `Morale ${fmtPool(poolAfter)} / ${fmtPool(HEALTH.playerHealthMax)} carries on`;
 }
 
 export class SectorClearedScreen {

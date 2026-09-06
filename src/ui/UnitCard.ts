@@ -510,7 +510,7 @@ function buildStatRow(
     row.title = `Power — ${powerTooltip(HEALTH.chipMode)}`;
     const hint = document.createElement('span');
     hint.className = 'unit-card__power-hint';
-    hint.textContent = 'pool';
+    hint.textContent = 'morale';
     label.append(' ', hint);
   }
 

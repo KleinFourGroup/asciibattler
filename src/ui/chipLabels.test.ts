@@ -15,18 +15,18 @@ describe('chipLabels (§91d)', () => {
   it('survivors alone: each line names the OPPOSING survivors, never the fallen', () => {
     const l = chipLineLabels(set('survivors'));
     expect(l.toEnemyPool).toMatch(/your survivors/i);
-    expect(l.toEnemyPool).toMatch(/enemy pool/i);
+    expect(l.toEnemyPool).toMatch(/enemy morale/i);
     expect(l.toPlayerPool).toMatch(/enemy survivors/i);
-    expect(l.toPlayerPool).toMatch(/your pool/i);
+    expect(l.toPlayerPool).toMatch(/your morale/i);
     expect(l.toEnemyPool + l.toPlayerPool).not.toMatch(/fallen/i);
   });
 
   it('casualties alone: each line names the pool\'s OWN fallen, never the survivors', () => {
     const l = chipLineLabels(set('casualties'));
     expect(l.toEnemyPool).toMatch(/enemy fallen/i);
-    expect(l.toEnemyPool).toMatch(/enemy pool/i);
+    expect(l.toEnemyPool).toMatch(/enemy morale/i);
     expect(l.toPlayerPool).toMatch(/your fallen/i);
-    expect(l.toPlayerPool).toMatch(/your pool/i);
+    expect(l.toPlayerPool).toMatch(/your morale/i);
     expect(l.toEnemyPool + l.toPlayerPool).not.toMatch(/survivors/i);
   });
 
@@ -57,9 +57,9 @@ describe('chipLabels (§91d)', () => {
   it('the power tooltip says what power COSTS under casualties and what it CHIPS under survivors', () => {
     expect(powerTooltip('survivors')).toMatch(/chips the opposing/i);
     expect(powerTooltip('survivors', 'enemy')).toBe(powerTooltip('survivors'));
-    expect(powerTooltip('casualties', 'player')).toMatch(/your pool loses/i);
-    expect(powerTooltip('casualties', 'enemy')).toMatch(/enemy pool loses/i);
-    expect(powerTooltip('casualties')).toMatch(/its side's pool loses/i);
+    expect(powerTooltip('casualties', 'player')).toMatch(/your morale loses/i);
+    expect(powerTooltip('casualties', 'enemy')).toMatch(/enemy morale loses/i);
+    expect(powerTooltip('casualties')).toMatch(/its side's morale loses/i);
     for (const t of [undefined, 'player', 'enemy'] as const) {
       expect(powerTooltip('casualties', t)).toMatch(/falls/i);
       expect(powerTooltip('casualties', t)).not.toMatch(/chips/i);

@@ -2646,3 +2646,25 @@ driver checks; the diff lands on main once the last launch fires).
   (this turn per side + the encounter by turn) and, the user's second
   idea, the live pool-bar decrement in battle off the same event. The
   run-end stats screen → TODO (the ledger is its source).
+
+### 94d (presentation) — the post-turn screen shows the fallen (2026-09-06)
+
+The first of the user's two ideas (the screen; the live pool bar in
+battle is the second, off the same event — held for their eyeball call
+after this one). `PostTurnScreen` renders `turn:resolved.fallen`:
+
+- **Fallen — Turn N**, two columns (Yours / Theirs, in death order): the
+  unit's field glyph · the catalog name · `LvN` · what the pool lost for
+  it (`−power`; `0` for an override at 0); the column head carries the
+  side's total, which equals the chip line above it by construction (the
+  Run pin). A side with nobody fallen says so.
+- **This encounter** (only once a second turn exists): one line per turn,
+  the fallen of each side as a run of glyphs (`·` for none), the current
+  turn highlighted, names + levels on hover — the "which units died when"
+  the verdict asked for, without a wall of rows.
+- Pure DOM off the payload (the PostTurnScene pattern); eyeball-only per
+  TESTING.md's render/ui policy; the numbers it shows are pinned upstream
+  (the rows add up to the chips; Σ per side over a battle equals the
+  rule's own fallen totals). The archetype name falls back to the id for a
+  row whose archetype left the catalog (an old save).
+- Browser-verified on main (the 3-turn brigands opener): see the commit.

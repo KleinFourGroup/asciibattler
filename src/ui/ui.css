@@ -2730,6 +2730,86 @@ body {
   color: #ff3131; /* NEON_RED — the enemy chipped yours */
 }
 
+/* 94d — the fallen ledger: who fell this turn (both sides) + the encounter so far. */
+.postturn-fallen {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 340px;
+  max-width: 520px;
+  font-size: 12px;
+}
+.postturn-fallen-title {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #888;
+  font-size: 11px;
+}
+.postturn-fallen-sides {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.postturn-fallen-side {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.postturn-fallen-side-head {
+  display: flex;
+  justify-content: space-between;
+  letter-spacing: 0.06em;
+  color: #aaa;
+}
+.postturn-fallen-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  color: #ccc;
+}
+.postturn-fallen-row .postturn-fallen-glyph {
+  display: inline-block;
+  width: 1.2em;
+  font-weight: bold;
+}
+.postturn-fallen-side--player .postturn-fallen-glyph,
+.postturn-fallen-side--player .postturn-fallen-side-head {
+  color: #33ff00; /* TERMINAL_GREEN */
+}
+.postturn-fallen-side--enemy .postturn-fallen-glyph,
+.postturn-fallen-side--enemy .postturn-fallen-side-head {
+  color: #ff3131; /* NEON_RED */
+}
+.postturn-fallen-none {
+  color: #666;
+  font-style: italic;
+}
+.postturn-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+}
+.postturn-ledger-turn {
+  display: flex;
+  gap: 10px;
+}
+.postturn-ledger-turn--current {
+  color: #ccc;
+}
+.postturn-ledger-turn .postturn-ledger-label {
+  min-width: 4.5em;
+  color: #888;
+}
+.postturn-ledger-glyphs--player {
+  color: #33ff00;
+}
+.postturn-ledger-glyphs--enemy {
+  color: #ff3131;
+}
+
 .postturn-status {
   font-size: 13px;
   letter-spacing: 0.1em;

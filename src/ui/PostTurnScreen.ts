@@ -12,8 +12,10 @@
 
 import type { GameEvents } from '../core/events';
 import type { RunDispatcher } from '../run/Command';
+import type { FallenRecord } from '../run/Run';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { rulesForTurn } from '../run/chipRule';
+import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { chipLineLabels } from './chipLabels';
 import { fadeIn, fadeOutAndRemove } from './fade';
 import { renderPoolGauge } from './poolGauge';
@@ -78,6 +80,10 @@ export class PostTurnScreen {
     );
     panel.appendChild(chips);
 
+    // 94d — the fallen ledger: who fell THIS turn on each side (the rows the
+    // chip lines above add up to), then the encounter's record by turn.
+    panel.appendChild(renderFallen(info.fallen, info.turn));
+
     const pools = document.createElement('div');
     pools.className = 'postturn-pools';
     pools.append(
@@ -121,4 +127,104 @@ function chipLine(side: 'player' | 'enemy', label: string, amount: number): HTML
   value.textContent = amount > 0 ? `−${amount}` : '0';
   row.append(text, value);
   return row;
+}
+
+/** 94d — the archetype's display name (the catalog's), falling back to the id
+ *  for a row whose archetype left the catalog (an old save). */
+function nameOf(archetype: string): string {
+  return ARCHETYPE_CONFIG[archetype]?.name ?? archetype;
+}
+
+/** 94d — the fallen block: two columns for THIS turn (yours / theirs, in
+ *  death order: glyph · name · level · what the pool lost), then the
+ *  encounter so far as one line per turn of glyphs per side. Pure DOM off
+ *  the `turn:resolved.fallen` rows — the sums match the chip lines by
+ *  construction (the Run test pins it). */
+function renderFallen(fallen: GameEvents['turn:resolved']['fallen'], turn: number): HTMLDivElement {
+  const block = document.createElement('div');
+  block.className = 'postturn-fallen';
+
+  const title = document.createElement('div');
+  title.className = 'postturn-fallen-title';
+  title.textContent = `Fallen — Turn ${turn}`;
+  block.appendChild(title);
+
+  const sides = document.createElement('div');
+  sides.className = 'postturn-fallen-sides';
+  sides.append(
+    renderSide('player', 'Yours', fallen.thisTurn.filter((r) => r.side === 'player')),
+    renderSide('enemy', 'Theirs', fallen.thisTurn.filter((r) => r.side === 'enemy')),
+  );
+  block.appendChild(sides);
+
+  // The encounter so far — only worth a block once there is a second turn.
+  const turns = [...new Set(fallen.encounter.map((r) => r.turn))].sort((a, b) => a - b);
+  if (turns.length > 1) {
+    const ledgerTitle = document.createElement('div');
+    ledgerTitle.className = 'postturn-fallen-title';
+    ledgerTitle.textContent = 'This encounter';
+    block.appendChild(ledgerTitle);
+    const ledger = document.createElement('div');
+    ledger.className = 'postturn-ledger';
+    for (const t of turns) {
+      const row = document.createElement('div');
+      row.className = `postturn-ledger-turn${t === turn ? ' postturn-ledger-turn--current' : ''}`;
+      const label = document.createElement('span');
+      label.className = 'postturn-ledger-label';
+      label.textContent = `Turn ${t}`;
+      const rows = fallen.encounter.filter((r) => r.turn === t);
+      row.append(label, glyphRun('player', rows), glyphRun('enemy', rows));
+      ledger.appendChild(row);
+    }
+    block.appendChild(ledger);
+  }
+  return block;
+}
+
+function renderSide(side: 'player' | 'enemy', label: string, rows: readonly FallenRecord[]): HTMLDivElement {
+  const col = document.createElement('div');
+  col.className = `postturn-fallen-side postturn-fallen-side--${side}`;
+  const head = document.createElement('div');
+  head.className = 'postturn-fallen-side-head';
+  const name = document.createElement('span');
+  name.textContent = label;
+  const total = document.createElement('span');
+  const lost = rows.reduce((s, r) => s + r.power, 0);
+  total.textContent = lost > 0 ? `−${lost}` : '0';
+  head.append(name, total);
+  col.appendChild(head);
+  if (rows.length === 0) {
+    const none = document.createElement('div');
+    none.className = 'postturn-fallen-none';
+    none.textContent = 'nobody fell';
+    col.appendChild(none);
+    return col;
+  }
+  for (const r of rows) {
+    const line = document.createElement('div');
+    line.className = 'postturn-fallen-row';
+    const who = document.createElement('span');
+    const glyph = document.createElement('span');
+    glyph.className = 'postturn-fallen-glyph';
+    glyph.textContent = glyphForArchetype(r.archetype);
+    const text = document.createElement('span');
+    text.textContent = `${nameOf(r.archetype)} Lv${r.level}`;
+    who.append(glyph, text);
+    const cost = document.createElement('span');
+    cost.textContent = r.power > 0 ? `−${r.power}` : '0';
+    line.append(who, cost);
+    col.appendChild(line);
+  }
+  return col;
+}
+
+/** One side's fallen for a turn as a run of glyphs (`·` when nobody fell),
+ *  titled with the names for a hover. */
+function glyphRun(side: 'player' | 'enemy', rows: readonly FallenRecord[]): HTMLSpanElement {
+  const span = document.createElement('span');
+  span.className = `postturn-ledger-glyphs postturn-ledger-glyphs--${side}`;
+  const mine = rows.filter((r) => r.side === side);
+  span.textContent = mine.length ? mine.map((r) => glyphForArchetype(r.archetype)).join(' ') : '·';
+  span.title = mine.map((r) => `${nameOf(r.archetype)} Lv${r.level} (−${r.power})`).join(', ');
+  return span;
 }

@@ -312,7 +312,9 @@ describe('World inline death handling', () => {
 
     world.tick();
     expect(world.findUnit(units[0]!.id)).toBeUndefined();
-    expect(deaths).toEqual([{ unitId: units[0]!.id, team: 'player', campId: null }]);
+    expect(deaths).toMatchObject([{ unitId: units[0]!.id, team: 'player', campId: null, summoned: false }]);
+    // 94d — the BOOKED power rides the event (what the casualty rule charged).
+    expect(deaths[0]!.power).toBe(units[0]!.effectiveStats.power);
   });
 
   it('removes units with negative HP (overkill)', () => {
@@ -1506,5 +1508,47 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(fp.player + fp.enemy).toBeGreaterThan(0); // somebody died
     expect(sp.player + fp.player).toBe(fielded.player);
     expect(sp.enemy + fp.enemy).toBe(fielded.enemy);
+  });
+
+  it('94d — unit:died carries the identity + the BOOKED power (the ledger\'s input): a combatant at its own power', () => {
+    const { bus, w, player, ends } = pair();
+    const deaths: GameEvents['unit:died'][] = [];
+    bus.on('unit:died', (d) => deaths.push(d));
+    player.currentHp = 0;
+    w.tick(); // the step-1 death site (reapDead shares reapUnit)
+    expect(deaths).toHaveLength(1);
+    expect(deaths[0]).toEqual({
+      unitId: player.id,
+      team: 'player',
+      campId: null,
+      archetype: player.archetype,
+      level: player.level,
+      power: player.effectiveStats.power,
+      summoned: false,
+      tick: w.currentTick,
+    });
+    // The identity the Run ledger's cross-check rests on: the payload's power
+    // IS what the rule booked to that side this battle.
+    expect(ends).toHaveLength(1);
+    expect(ends[0]!.fallenPower!.player).toBe(deaths[0]!.power);
+  });
+
+  it('94d — a summon dies summoned:true at power 0 and a neutral at power 0 (what the rule booked: nothing)', () => {
+    const { bus, w, enemy, ends } = pair();
+    const deaths: GameEvents['unit:died'][] = [];
+    bus.on('unit:died', (d) => deaths.push(d));
+    const minion = w.spawnSummon('ghoul', 1, 'enemy', { x: 8, y: 8 }, enemy.id);
+    const neutral = w.spawnUnit(rollUnit('mercenary', new RNG(7)), 'neutral', { x: 5, y: 5 });
+    w.tick(); // both join
+    expect(minion.effectiveStats.power).toBeGreaterThan(0); // the zero below is the stamp, not the table
+    minion.currentHp = 0;
+    neutral.currentHp = 0;
+    w.tick(); // both reaped; the summoner + the player still stand → no end
+    expect(w.ended).toBe(false);
+    const byId = new Map(deaths.map((d) => [d.unitId, d] as const));
+    expect(byId.get(minion.id)).toMatchObject({ team: 'enemy', archetype: 'ghoul', power: 0, summoned: true });
+    expect(byId.get(neutral.id)).toMatchObject({ team: 'neutral', archetype: 'mercenary', power: 0, summoned: false });
+    w.resolveAsDraw();
+    expect(ends[0]!.fallenPower).toEqual({ player: 0, enemy: 0 });
   });
 });

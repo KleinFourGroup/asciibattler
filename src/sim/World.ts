@@ -1311,9 +1311,7 @@ export class World {
         // K1 — `death` fires while the unit is still on the grid (before the
         // splice), so a handler can read its position/team.
         this.fireTrigger('death', { unit, team: unit.team });
-        this.recordFallen(unit);
-        this.removeUnit(unit.id);
-        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
+        this.reapUnit(unit);
         continue;
       }
 
@@ -1843,9 +1841,7 @@ export class World {
       if (unit.currentHp <= 0) {
         // K1 — fire `death` before the splice (mirrors the step-1 death check).
         this.fireTrigger('death', { unit, team: unit.team });
-        this.recordFallen(unit);
-        this.removeUnit(unit.id);
-        this.bus.emit('unit:died', { unitId: unit.id, team: unit.team, campId: unit.campId });
+        this.reapUnit(unit);
       }
     }
   }
@@ -2375,11 +2371,36 @@ export class World {
    * ghouls, and a fielded ghoul is a body like any other — the user's first
    * casualties playtest found the pool not moving while the field emptied.
    */
-  private recordFallen(unit: Unit): void {
-    if (unit.summonedBy != null) return;
+  private recordFallen(unit: Unit): number {
+    if (unit.summonedBy != null) return 0;
     if (unit.team === 'player' || unit.team === 'enemy') {
-      this.fallenPower[unit.team] += unit.effectiveStats.power;
+      const booked = unit.effectiveStats.power;
+      this.fallenPower[unit.team] += booked;
+      return booked;
     }
+    return 0;
+  }
+
+  /**
+   * 94d — the ONE death-event emit for both death sites: books the fallen
+   * power (`recordFallen`) and puts the unit's identity + the BOOKED amount
+   * on `unit:died`, since the unit is spliced out before the event fires
+   * and nothing downstream can look it up. Call BEFORE `removeUnit` (the
+   * effects are still folded, so `power` reads what the survivors read).
+   */
+  private reapUnit(unit: Unit): void {
+    const power = this.recordFallen(unit);
+    this.removeUnit(unit.id);
+    this.bus.emit('unit:died', {
+      unitId: unit.id,
+      team: unit.team,
+      campId: unit.campId,
+      archetype: unit.archetype,
+      level: unit.level,
+      power,
+      summoned: unit.summonedBy != null,
+      tick: this.tickCount,
+    });
   }
 
   /**

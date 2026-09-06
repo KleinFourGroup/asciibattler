@@ -473,8 +473,37 @@ export interface BattleEncounter {
  *  battleRules pattern: the encounter IS the fixture, so replayTrace and
  *  a mid-battle resume reproduce the gate). A v43 save's mid-battle boss
  *  encounter lacks it → a resumed battle would re-run setup pull-eligible
- *  and silently diverge from this engine's semantics — reject. */
-const RUN_SCHEMA_VERSION = 44;
+ *  and silently diverge from this engine's semantics — reject.
+ *  94d: bumped 44→45. `fallenLedger` — the run-wide record of every
+ *  combatant that fell (both sides; summons and neutrals excluded, the
+ *  same exclusions the casualty rule books), appended off `unit:died`
+ *  during a battle. Run-OWNED (the user's call at the §94 shape-lock) so it
+ *  persists across encounters — the run-end stats' source, and a
+ *  mid-encounter resume keeps the encounter's earlier rows. A v44 save has
+ *  no ledger; a resumed run would show an encounter with rows missing
+ *  from its own record → reject (the standing no-migration rule). */
+const RUN_SCHEMA_VERSION = 45;
+
+/**
+ * 94d — one row of the fallen ledger: a combatant that fell, where and when.
+ * `sector` + `node` name the encounter INSTANCE (an encounter id recurs across
+ * sectors — the adventurer sits in both pools); `turn` is 1-based (the turn
+ * being fought when the unit fell); `power` is the amount the casualty rule
+ * BOOKED (`unit:died.power`), so Σ over a battle per side equals
+ * `battle:ended.fallenPower` — the cross-check the ledger test pins.
+ */
+export interface FallenRecord {
+  readonly sector: number;
+  readonly node: number;
+  readonly hop: number;
+  readonly encounterId: string;
+  readonly turn: number;
+  readonly side: 'player' | 'enemy';
+  readonly archetype: string;
+  readonly level: number;
+  readonly power: number;
+  readonly tick: number;
+}
 
 /**
  * V1 — re-resolve a persisted `selectedEncounterId` to its `Encounter` from the
@@ -661,6 +690,8 @@ export interface RunSnapshot {
   currentNodeId: number;
   phase: RunPhase;
   currentEncounter: BattleEncounter | null;
+  /** 94d (v45): the run-wide fallen ledger, in death order. */
+  fallenLedger: FallenRecord[];
   currentOffer: UnitTemplate[] | null;
   visitedNodes: number[];
   /** E4: the promotions awaiting PromotionScene dismissal. Non-null only
@@ -939,6 +970,9 @@ export class Run {
    */
   pauseAtTurnGates = false;
   currentEncounter: BattleEncounter | null = null;
+  /** 94d — the run-wide fallen ledger (see `FallenRecord`); append-only,
+   *  serialized (v45). Read it through `fallenForTurn` / the snapshot. */
+  fallenLedger: FallenRecord[] = [];
   /** Recruit offer presented after victory, cleared on choice. */
   currentOffer: UnitTemplate[] | null = null;
   /**
@@ -1256,7 +1290,48 @@ export class Run {
         ({ winner, reason, xpAwards, survivorPower, fallenPower, tallies, campKills }) =>
           this.handleTurnEnded(winner, xpAwards, survivorPower, tallies, campKills, reason, fallenPower),
       ),
+      // 94d — the fallen ledger appends off every combatant death during a
+      // battle (the identity rides the event; the unit is already gone).
+      this.bus.on('unit:died', (death) => this.recordFallen(death)),
     );
+  }
+
+  /**
+   * 94d — append one ledger row for a combatant that fell in the live
+   * battle. The exclusions mirror what the casualty rule books
+   * (`World.recordFallen`): neutrals charge nobody and are not "ours" or
+   * "theirs"; a summon is a free body (91e2). Outside a battle (a stray
+   * fake, a scenery reap on a non-battle bus) nothing is recorded.
+   */
+  private recordFallen(death: GameEvents['unit:died']): void {
+    if (this.phase !== 'battle' || this.selectedEncounter === null) return;
+    if (death.team !== 'player' && death.team !== 'enemy') return;
+    if (death.summoned) return;
+    this.fallenLedger.push({
+      sector: this.sectorIndex,
+      node: this.currentNodeId,
+      hop: this.currentHop,
+      encounterId: this.selectedEncounter.id,
+      turn: this.turnIndex + 1,
+      side: death.team,
+      archetype: death.archetype,
+      level: death.level,
+      power: death.power,
+      tick: death.tick,
+    });
+  }
+
+  /**
+   * 94d — the ledger rows for the encounter instance being fought (this
+   * sector + node), and the subset for `turn` (1-based). Copies, in death
+   * order. Called at the turn boundary AFTER `turnIndex` advanced, so the
+   * completed turn's number IS `turnIndex`.
+   */
+  fallenForTurn(turn: number): GameEvents['turn:resolved']['fallen'] {
+    const encounter = this.fallenLedger
+      .filter((r) => r.sector === this.sectorIndex && r.node === this.currentNodeId)
+      .map((r) => ({ ...r }));
+    return { thisTurn: encounter.filter((r) => r.turn === turn), encounter };
   }
 
   /**
@@ -3025,6 +3100,9 @@ export class Run {
         playerHealthMax: HEALTH.playerHealthMax,
         enemyHealth: this.enemyHealth,
         enemyHealthMax: this.enemyHealthPoolMax,
+        // 94d — who fell this turn + the encounter's record (turnIndex has
+        // already advanced in resolveTurn: it IS the completed turn).
+        fallen: this.fallenForTurn(this.turnIndex),
       });
     } else {
       // 48b headless — the gate chain (reward → promotion → continue)
@@ -4110,6 +4188,9 @@ export class Run {
       currentNodeId: this.currentNodeId,
       phase: this.phase,
       currentEncounter: this.currentEncounter,
+      // 94d — row copies (flat objects; the wire image stays independent of
+      // the live append-only array).
+      fallenLedger: this.fallenLedger.map((r) => ({ ...r })),
       currentOffer: this.currentOffer ? this.currentOffer.slice() : null,
       visitedNodes: Array.from(this.visitedNodes),
       pendingPromotions: this.pendingPromotions
@@ -4268,6 +4349,7 @@ export class Run {
     m.currentNodeId = snap.currentNodeId;
     m.phase = snap.phase;
     m.currentEncounter = snap.currentEncounter;
+    m.fallenLedger = snap.fallenLedger.map((r) => ({ ...r }));
     m.currentOffer = snap.currentOffer ? snap.currentOffer.slice() : null;
     m.visitedNodes = new Set(snap.visitedNodes);
     m.pendingPromotions = snap.pendingPromotions

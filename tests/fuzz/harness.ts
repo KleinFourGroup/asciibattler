@@ -223,6 +223,12 @@ export interface HarnessOptions {
    */
   readonly telemetry?: boolean;
   /**
+   * 94d — a pure OBSERVER on the run bus, called once right after the bus is
+   * built (before any subscriber of the harness itself): tally-only tests
+   * (the fallen-ledger cross-check) hook here. Never emit from it.
+   */
+  readonly observe?: (bus: EventBus<GameEvents>) => void;
+  /**
    * J4 — the objective proclivity the bot drives the player team's shared
    * objective with during each battle (`decideObjectiveCommand`, refill-on-null).
    * Undefined / `{ kind: 'none' }` (the default) injects NOTHING — no objective
@@ -453,6 +459,7 @@ function runOneInner(
     : null;
 
   const bus = new EventBus<GameEvents>();
+  options.observe?.(bus); // 94d — the observer hook (tally-only)
   const battles: BattleResult[] = [];
   const recruits: RecruitChoice[] = [];
   // 68e — the walk ordinal. Incremented on every sector transition (the 67a

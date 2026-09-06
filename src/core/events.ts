@@ -18,7 +18,7 @@ import type { Archetype } from '../sim/archetypes';
 import type { ActionPhaseName } from '../sim/Action';
 import type { ObjectiveTeam, TeamObjective } from '../sim/objective';
 import type { WorldCommand } from '../sim/Command';
-import type { BattleEncounter } from '../run/Run';
+import type { BattleEncounter, FallenRecord } from '../run/Run';
 import type { MoveDecisionKind } from '../sim/moveDecision';
 import type { TurnGrantView } from '../run/daemon';
 import type { EmpowerStackView } from '../run/empower';
@@ -338,8 +338,28 @@ export interface GameEvents extends Record<string, unknown> {
    * longer findable. §75h adds `campId` on the same rationale: the death
    * SFX plays for a camp member (an ACTIVE neutral) but not for crumbling
    * scenery, and the dead unit can't be looked up to tell them apart.
+   *
+   * 94d — the fallen LEDGER's input: the unit's IDENTITY rides the event on
+   * the same rationale (nothing can look the dead unit up). `archetype` /
+   * `level` are the unit's; `power` is the amount `World.recordFallen`
+   * BOOKED to its side's fallen total — the same number the casualty chip
+   * rule charges (0 for a neutral, which charges nobody, and 0 for a summon,
+   * §91e2) — so a per-death sum over a battle reproduces `battle:ended.
+   * fallenPower` exactly (the Run ledger's cross-check pin). `summoned` says
+   * WHY a power reads 0 (the `summonedBy` stamp) so a ledger can skip
+   * conjured bodies by kind, not by a zero it might one day author on
+   * purpose. `tick` = the World tick the death was reaped on.
    */
-  'unit:died': { unitId: number; team: Team; campId: number | null };
+  'unit:died': {
+    unitId: number;
+    team: Team;
+    campId: number | null;
+    archetype: string;
+    level: number;
+    power: number;
+    summoned: boolean;
+    tick: number;
+  };
 
   /**
    * Phase 27 — the status-effect lifecycle. A status (burn/bleed/poison/
@@ -756,6 +776,15 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealthMax: number;
     enemyHealth: number;
     enemyHealthMax: number;
+    /** 94d — the fallen ledger's narrative for the outcome screen: who fell
+     *  THIS turn (both sides, in death order) and the whole encounter's
+     *  record so far (this turn included). Copies of `Run.fallenLedger`
+     *  rows; the sum of `power` per side over `thisTurn` is the chip the
+     *  casualty rule charged (the screen can show the rows add up). */
+    fallen: {
+      thisTurn: readonly FallenRecord[];
+      encounter: readonly FallenRecord[];
+    };
   };
 
   /**

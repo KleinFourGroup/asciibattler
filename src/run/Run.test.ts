@@ -2966,7 +2966,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
+      expect(wire.schemaVersion).toBe(45); // 94d — the fallen ledger (83d: encounter kind)
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3156,7 +3156,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
+      expect(wire.schemaVersion).toBe(45); // 94d — the fallen ledger (83d: encounter kind)
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3480,7 +3480,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
+      expect(wire.schemaVersion).toBe(45); // 94d — the fallen ledger (83d: encounter kind)
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5710,7 +5710,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(44); // 83d — encounter kind (the pull's boss gate)
+    expect(wire.schemaVersion).toBe(45); // 94d — the fallen ledger (83d: encounter kind)
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6380,5 +6380,109 @@ describe('§91a2 — the chip modes through the Run (health.chipMode / health.ca
     expect(chipped[0]!.playerAfter).toBe(0);
     expect(resolved[0]!.playerPoolChip).toBe(pool); // what the pool actually LOST
     expect(resolved[0]!.result).toBe('lost');
+  });
+});
+
+describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
+  const death = (over: Partial<GameEvents['unit:died']>): GameEvents['unit:died'] => ({
+    unitId: 1,
+    team: 'player',
+    campId: null,
+    archetype: 'mercenary',
+    level: 3,
+    power: 1,
+    summoned: false,
+    tick: 10,
+    ...over,
+  });
+
+  it('appends combatant deaths during a battle with the encounter instance + the 1-based turn; skips neutrals, summons and out-of-battle events', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    expect(run.fallenLedger).toEqual([]);
+    bus.emit('unit:died', death({ unitId: 9 })); // turn-intro — no battle is live
+    expect(run.fallenLedger).toEqual([]);
+    run.dispatch({ kind: 'advanceTurn' }); // start the battle
+    expect(run.phase).toBe('battle');
+    bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', level: 4, power: 2, tick: 12 }));
+    bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', level: 2, power: 1, tick: 30 }));
+    bus.emit('unit:died', death({ unitId: 3, team: 'neutral', archetype: 'wall', power: 0 }));
+    bus.emit('unit:died', death({ unitId: 4, team: 'enemy', archetype: 'ghoul', power: 0, summoned: true }));
+    const where = {
+      sector: run.toJSON().sectorIndex,
+      node: run.currentNodeId,
+      hop: run.currentHop,
+      encounterId: run.selectedEncounter!.id,
+      turn: 1,
+    };
+    expect(run.fallenLedger).toEqual([
+      { ...where, side: 'player', archetype: 'archer', level: 4, power: 2, tick: 12 },
+      { ...where, side: 'enemy', archetype: 'bandit', level: 2, power: 1, tick: 30 },
+    ]);
+  });
+
+  it('turn:resolved.fallen — this turn\'s rows add up to the applied chips; the encounter record accrues across turns', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    const resolved: GameEvents['turn:resolved'][] = [];
+    bus.on('turn:resolved', (p) => resolved.push(p));
+    run.dispatch({ kind: 'advanceTurn' }); // turn 1
+    bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2, tick: 12 }));
+    bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1, tick: 30 }));
+    // Under casualties the fake books each side's own fallen: player 2, enemy 1.
+    chipTurn(bus, { player: 1, enemy: 2 }, [], undefined, {
+      winner: 'player',
+      reason: 'decisive',
+      fallenPower: { player: 2, enemy: 1 },
+    });
+    expect(run.phase).toBe('turn-outcome');
+    expect(resolved).toHaveLength(1);
+    const t1 = resolved[0]!.fallen;
+    expect(t1.thisTurn.map((r) => [r.turn, r.side, r.archetype])).toEqual([
+      [1, 'player', 'archer'],
+      [1, 'enemy', 'bandit'],
+    ]);
+    expect(t1.encounter).toEqual(t1.thisTurn);
+    const sum = (rows: readonly { side: string; power: number }[], side: string): number =>
+      rows.filter((r) => r.side === side).reduce((s, r) => s + r.power, 0);
+    // The rows on screen add up to the chip lines (the casualty rule's own charge).
+    expect(sum(t1.thisTurn, 'player')).toBe(resolved[0]!.playerPoolChip);
+    expect(sum(t1.thisTurn, 'enemy')).toBe(resolved[0]!.enemyPoolChip);
+
+    run.dispatch({ kind: 'advanceTurn' }); // → turn-intro
+    run.dispatch({ kind: 'advanceTurn' }); // → battle, turn 2
+    expect(run.phase).toBe('battle');
+    bus.emit('unit:died', death({ unitId: 5, team: 'enemy', archetype: 'archer', power: 1, tick: 8 }));
+    chipTurn(bus, { player: 1, enemy: 0 }, [], undefined, {
+      winner: 'player',
+      reason: 'decisive',
+      fallenPower: { player: 0, enemy: 1 },
+    });
+    expect(resolved).toHaveLength(2);
+    const t2 = resolved[1]!.fallen;
+    expect(t2.thisTurn.map((r) => [r.turn, r.side, r.archetype])).toEqual([[2, 'enemy', 'archer']]);
+    expect(t2.encounter).toHaveLength(3);
+    expect(t2.encounter.map((r) => r.turn)).toEqual([1, 1, 2]);
+    // Copies, not the live rows.
+    expect(t2.encounter).not.toBe(run.fallenLedger);
+    expect(run.fallenLedger).toHaveLength(3);
+  });
+
+  it('round-trips through the snapshot (v45), independent of the live array; a v44 wire rejects', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    run.dispatch({ kind: 'advanceTurn' });
+    bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
+    bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
+    const wire = JSON.parse(JSON.stringify(run.toJSON()));
+    expect(wire.schemaVersion).toBe(45); // 94d — the fallen ledger
+    expect(wire.fallenLedger).toHaveLength(2);
+    const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
+    expect(restored.fallenLedger).toEqual(run.fallenLedger);
+    expect(restored.fallenLedger).not.toBe(run.fallenLedger);
+    // The wire image is a copy: a later append does not reach a snapshot taken earlier.
+    bus.emit('unit:died', death({ unitId: 3, team: 'enemy', archetype: 'rogue', power: 1 }));
+    expect(run.fallenLedger).toHaveLength(3);
+    expect(wire.fallenLedger).toHaveLength(2);
+    expect(() => Run.fromJSON({ ...wire, schemaVersion: 44 }, new EventBus<GameEvents>())).toThrow(
+      /unsupported schema version 44/,
+    );
   });
 });

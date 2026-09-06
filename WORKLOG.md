@@ -2602,3 +2602,47 @@ The cut as locked is in ROADMAP §94 (94a–94i). Snapshot prediction
 revised: World v36 holds · **Run v45 at 94d**. The λ=0 probe queue:
 `output/box-batches/94a-lambda0.queue` (the 92h arb rows' `armArgv`
 verbatim at `--prior-lambda=0`, base + ext, the 88d3-ceiling shape).
+
+### 94d (data) — the fallen LEDGER: `unit:died` identity + the Run-owned record, Run v44 → v45 (2026-09-06)
+
+Built in a detached worktree while the 94a cohort held the main tree
+(the AGENTS worktree pattern in reverse: edits never touch the tree the
+driver checks; the diff lands on main once the last launch fires).
+
+- **The audit's premise held:** the ledger existed in no layer.
+  `unit:died` carried `{unitId, team, campId}` and fired after
+  `removeUnit`, so nothing downstream could name the fallen. Both death
+  sites (the step-1 check + `reapDead`) now share ONE emit, `reapUnit`,
+  which books the power (`recordFallen` returns what it booked) and puts
+  the identity on the event: `archetype · level · power (as BOOKED — 0 for
+  a neutral or a summon) · summoned · tick`. Payload-only; no World bump.
+- **`Run.fallenLedger`** (v45): append-only rows `{sector, node, hop,
+  encounterId, turn (1-based), side, archetype, level, power, tick}`,
+  appended off `unit:died` while `phase === 'battle'`; neutrals and
+  summons skipped by KIND (`summoned`), the same exclusions the rule
+  books — never by a zero a designer might one day author on purpose. A
+  v44 wire rejects (the standing no-migration rule: a resumed encounter
+  would show rows missing from its own record). `turn:resolved` gains
+  `fallen: {thisTurn, encounter}` (row copies) — the screen stays
+  payload-driven.
+- **The pins (5 main + 1 fuzz):** the payload at a combatant death (its own
+  `effectiveStats.power`, tick, no stamp) · a summon at 0/`summoned:true`
+  and a neutral at 0 · the ledger's append/skip rule with the encounter
+  instance + turn · `turn:resolved.fallen` rows ADD UP to the applied
+  chips and the encounter record accrues across turns (copies, not the
+  live array) · the v45 round-trip + the v44 reject · ⭐ the CROSS-CHECK on
+  a real run (`tests/fuzz/harnessFallenLedger.test.ts`, two seeds): Σ
+  `unit:died.power` per side === `battle:ended.fallenPower` per side on
+  EVERY battle — two bookkeepings on the same deaths, both death sites,
+  the AGENTS "independent recompute" lint. The harness gained an
+  `observe(bus)` option (tally-only, called before its own subscribers)
+  for it. Four `schemaVersion` pins re-pinned 44 → 45; four death-payload
+  `toEqual` pins widened (`toMatchObject` on the old fields + the booked
+  power asserted).
+- **Snapshot prediction checked:** World v36 holds · Run v45 (predicted at
+  the shape-lock, the user's call). No RNG stream added; the fuzz baselines
+  byte-identical (the smoke green — the ledger consumes nothing).
+- **Deferred to the presentation commit (94d-2):** the post-turn rows
+  (this turn per side + the encounter by turn) and, the user's second
+  idea, the live pool-bar decrement in battle off the same event. The
+  run-end stats screen → TODO (the ledger is its source).

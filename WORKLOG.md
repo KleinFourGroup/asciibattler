@@ -2299,3 +2299,55 @@ per-encounter pass (§94) can lift the held pools and their burn together
 so the numbers on screen read at the swarm scale; (7a/c/d) → TODO riders
 (the banshee rework a Round 7 idiom candidate; "morale" a DESIGN naming
 decision for the user; SFX a content item).
+
+### §93 — ⛔ THE DECISION: KEEP (2026-09-05, USER-SIGNED in chat — "enthusiastically KEEP")
+
+Taken in the pre-registered order: the feel verdict first (above, filed at
+`946a8a2` before the board was shown), then the criteria, then the call.
+
+| criterion | the pinned test | the read (BALANCE 2026-09-05 §92h · WORKLOG §92i) | verdict |
+|---|---|---|---|
+| 1 — the overkill ≥ 0.15 × pool max share of pool deaths, pooled over the six ARM walk arms on the re-searched arm | ≤ 0.30, no arm > 0.40 (0.61 baseline) | **0.072** (41/566), max arm 0.138; the same-table survivors twins 0.20 / 0.21 | PASS — under the spec's own "≤ 0.15 = the mechanism working as designed" |
+| 2 — the skill gradient on the re-searched arm | holds or widens; the survivors gradient re-read at HEAD as the comparator | random 0.100 < greedy 0.125 < the ARM 0.725 (the 88d anchors were inverted); the deploy walk 0.350 casualties vs 0.250 survivors paired (z +1.95) | PASS — ⚠ with the arbitration-ceiling question OPEN (an ARM instrument item, docketed → §94) |
+| 3 — a reachable run shape at the signed per-act targets, floor included | reachable | pacing 2.82 / 4.19 / 5.66 vs 2.5 / 4.5 / 6; deploy act-1 clear 0.725 (signed 0.6); the deploy walk seam 16.6 · reach 0.517 · wall 0.323 · win 0.350; deploy parity inside ±5 | PASS |
+| 4 — the user's feel verdict, written first | 5 runs per rule | 3 casualties runs (stated), "really good"; the survivors runs at `casualty-seams` during §91 | PASS on substance; the count deviation recorded |
+
+**The user's call: KEEP.** The casualty rule ships: `health.chipMode:
+casualties` · `capPenalty: survivors` (the surcharge) · the 91b/91e2 power
+table · the 92d table (pool max 40, the twelve pools, the boss overrides) ·
+the deployed 92c2 vector · prior v4 · roster v2. The rollback tags stay as
+history (`pre-casualty-experiment` · `casualty-seams`), never to be
+reverted to under this outcome.
+
+**What KEEP means, per the spec (encounter-feel-spec §The experiment
+protocol → Under KEEP):** the NEW sheet lineage proceeds to signing at
+§94 (the DRAFT tabled in WORKLOG §92i: the seam band as a fraction 0.40–
+0.45 · reach 40–50 · wall 30–35 · win derived · the act-1 refs at the 92h
+values · banks / fires / tx · the forced bosses 0.592 / 0.567 · the
+overkill threshold 0.15 × max) · the Round 6 riders are SUPERSEDED (the
+walls-under watch, the deploy-walk overperformance, the gambler flip, the
+band promote — read for the record at 92i) · the §88 rarity dispositions
++ the price book are re-read on v4 at §94 · the prior + roster tables are
+current (v4 / v2 at the frozen config) · fuzz baselines: no re-pin fell
+due (the run-vs-run pins moved with the game; the 92d re-pins were the
+sentinel, the DP scale and the cap fixture).
+
+**Carried into §94 from this decision (the user's verdict + the reads):**
+(a) the post-turn screen shows the LEDGER (who fell when, both sides —
+the rule's "add your own numbers" legibility) and the pool everywhere
+(events included) — the user's UI items, the user's ideas lead; (b) the
+λ=0 paired probe on the arbitration ceilings (the user's explicit add to
+the §94 charter) and, if it does not close them, the `DP_TAIL_SCALE`
+dial; (c) the per-encounter pass on the §87d list at the §92 board — the
+held small waves / summoner elites lifted to the swarm scale (the user's
+"sloggy at small numbers" read); (d) the two held flags (the swarms at
+3.04 · the exchange-rate re-pin) dispositioned with the signing; (e) the
+riders → TODO: a won-turn reward shape (a partial refund / the enemy
+paying survivors on a loss — after (a)), power diversity by rarity (1/1/
+2/3 or 1/2/3/4 — a pool re-anchor behind it, Round 9), the AoE-status
+enemy rework, "morale" as the pool's name (a DESIGN naming call), SFX
+diversity.
+
+**Process:** the §94 kickoff runs in a FRESH session (the user's call —
+this one is at ~550k context); the ritual as always (the code-reality
+audit → the cut → shape-lock → ROADMAP).

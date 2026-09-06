@@ -10,8 +10,8 @@ are cut at each phase kickoff (AGENTS "The planning stack"), never here.
 Prior round's plan: [archive/post-83-roadmap.md](archive/post-83-roadmap.md)
 (Round 6, Instruments) with its worklog and spec beside it.
 
-**Status: §89 + §90 ✅ CLOSED; §91 IN PROGRESS (kickoff user-signed
-2026-09-03 — the cut below; audit + review WORKLOG §91).** The §87d3
+**Status: §89–§92 ✅ CLOSED; §93 ✅ DECIDED KEEP 2026-09-05 (user-signed);
+§94 NEXT — its kickoff in a FRESH session (the cut lands there).** The §87d3
 charter (the defect list + the two reopened questions) widened at the
 spec session into **the first experimental round**: the questions share
 one root — the chip rule's bimodality + act coupling — and the user
@@ -116,33 +116,10 @@ amended; order = kept seams → tag → table → flip.
   encounters by composition · the power override · the rollback comparator
   must share a table · the derived-artifact registry fires.
 
-## Phase 92 — The rebalance (under the casualty rule)
+## Phase 92 — The rebalance (under the casualty rule) ✅ CLOSED 2026-09-05 (user-endorsed with the §93 KEEP)
 
-Charter: make the new rule reasonably balanced at the signed per-act
-targets — the player pool max / heal fractions / enemy pools / encounter
-factors (the §87d defect list folds in HERE under the new rule) / fatigue
-switched ON as its own commit + paired read / the **re-search of the
-arm** (the finalist vector was searched under survivors) / the
-derived-artifact rebuilds (prior table v4 + roster table, registry
-recipes) / the **fully MANIFESTED board at ONE HEAD** → the new sheet
-lineage DRAFT. Pacing (turns per encounter) is read here, not designed.
-**Depends on:** §91's flip read. **Risk:** high (every band re-anchors;
-the largest box spend of the round — ~35 box-hours, 4 nights).
-**Decision points — ✅ DECIDED at the 2026-09-04 shape-lock (user-signed;
-rationale + the desk table WORKLOG §92 kickoff):** the lever = the player
-pool max 20 → 40 (50 the fallback) WITH the enemy pools at booked burn ×
-the user's turn targets (pacing IS designed here) · the swarm pools per
-the desk table, NO move on the four small waves + the two summoner
-elites (composition → §94) · the per-encounter POWER OVERRIDE BUILT,
-both directions (spec amendment with 92e) · prior v4 under the
-re-searched deploy vector · the encounter `--set` group SKIPPED. Still
-open: ⛔ the deploy vector (92c2's argmax, user-signed) · ⛔ 40 vs 50
-after 92f. **Exit:** the board green at the draft lineage; the
-alpha-strike and gradient reads recomputed on the re-searched arm; the
-§88 rarity/price re-read filed. **NOT doing:** signing anything — the
-decision is §93.
+Outcome, one breath: the arm RE-SEARCHED under the rule and the refined winner deployed (92c1/92c2) · the signed table landed — pool max 20 → 40, twelve pools at booked burn × the user's turn targets, the per-encounter POWER OVERRIDE built and used on the four bosses (92d/92e) · the candidate read froze the config on the pre-signed rule (92f: pacing 2.81 / 4.13 / 5.58, act-1 0.717; fatigue costs wins → stays 0) · prior v4 + roster v2 + the fresh derive at the frozen config (92g/92h) · the first fully-manifested board of the new game 0 FAIL / 16 WARN → criterion 1 **0.072**, the gradient holds, the DRAFT lineage tabled unsigned (92i). Two instruments born on the way: the pacing reader (92a) and the scaled overkill threshold (92d-pre). ⚠ open → §94: the arbitration ceilings negative (the ARM docket); the two held flags. Detail: WORKLOG §92 · BALANCE 2026-09-05 · git.
 
-The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
 - [x] **92a** the pacing reader ✅ 2026-09-04 — `pacing.csv` + the batch.log table ride `--per-encounter`; the 91f casualties legs re-read through it reproduce the desk table row for row (WORKLOG §92a).
 - [x] **92c1** the RE-SEARCH ✅ 2026-09-05 — the 88d2-derive line at `f68540e`, 2.1 h: train 30.8 → 42.3% (3/3 finalists improved), test 33.3%; finalists #80 / #27 / #54 + the winner fixtured, envelope-verified (WORKLOG §92c1).
 - [x] **92c2** ✅ 2026-09-05 — the K=4 selection cohort at `cf90f56` (31 min): 10 / 8 / 5 / **13** of 30; the refined winner is the unique argmax → DEPLOYED per pre-signature (a) (`board.ts` DEPLOY = `92c2-winner.json`; the sheet's deploy refs PENDING RE-PIN at the §92 board; prior v4 at 92g — WORKLOG §92c2).
@@ -154,20 +131,9 @@ The cut (2026-09-04, user-signed; ~1 line each, detail WORKLOG §92):
 - [x] **92h** ✅ 2026-09-05 — the closing cohort at `9c6c60d`, 33/33 in 12 h: integrity 17/17, 0 FAIL / 16 WARN (the sheet's refs are the pool-20 era); the roster table v2 off the eight ARM rows (BALANCE 2026-09-05 §92h · WORKLOG §92h).
 - [x] **92i** ✅ 2026-09-05 — criterion 1 **0.072** (pooled, max arm 0.138 — the mechanism working as designed) · the gradient holds (0.100 < 0.125 < 0.725) · pacing at the targets on six arms (2.82 / 4.19 / 5.66) · deploy parity inside ±5 · the §88 re-read on v4 filed · the DRAFT lineage tabled UNSIGNED → the §93 handoff; ⚠ the arbitration ceilings NEGATIVE and larger (deploy −0.20 / walk −0.25) — the ARM question docketed beside §93 (WORKLOG §92i).
 
-## Phase 93 — ⛔ Keep or roll back (the decision point)
+## Phase 93 — ⛔ Keep or roll back ✅ DECIDED 2026-09-05: **KEEP** (user-signed)
 
-Charter: the pre-registered keep test, in this order — the user's feel
-verdict from **5 playtest runs per rule** (written BEFORE the numbers) →
-criteria 1–3 (alpha share vs the §89 threshold · the gradient on the
-re-searched arm · the run shape at the targets, floor included). KEEP =
-the new sheet lineage proceeds to signing at §94; the Round 6 riders
-SUPERSEDED. ROLLBACK = revert the §91–§92 range to the tag (the floor,
-the reads, the risk line, the fatigue seam and the mode seams stay);
-§94 runs the original charter.
-**Depends on:** §92. **Risk:** the decision itself. **Decision point:** ⛔
-the whole phase — a STOP, user-signed either way. **Exit:** the verdict
-+ the four criteria recorded in WORKLOG; the tree at the chosen rule.
-**NOT doing:** re-litigating the criteria after the numbers are seen.
+Taken in the pre-registered order: the feel verdict FIRST (three casualties runs, "really good" — filed before the board was shown, the count deviation stated) → criterion 1 **0.072** (≤ 0.30 / max arm 0.138) → the gradient holds (0.10 < 0.125 < 0.725; ⚠ the arbitration ceilings open) → the run shape at the targets (2.82 / 4.19 / 5.66; act-1 0.725) → **KEEP**. The rule ships; the new sheet lineage proceeds to signing at §94; the Round 6 riders SUPERSEDED. Detail: WORKLOG §93.
 
 ## Phase 94 — The encounter list + the close
 
@@ -183,22 +149,21 @@ dispositions (user-signed); the band promote (rollback branch only).
 **Exit:** every §87d member dispositioned; the sheet signed; the
 prior/roster tables current; archives written. **NOT doing:** new
 encounter content; archetype changes; Round 9 mechanisms.
+**Added at the §93 KEEP (2026-09-05, user-signed):** (1) the **λ=0 paired
+probe** on the negative arbitration ceilings (the 85g6 shape, ~1.5 h) and,
+if it does not close them, a `DP_TAIL_SCALE` dial + a 5-vs-10 paired read
+(the ARM docket, WORKLOG §92i); (2) the user's UI items — the post-turn
+screen shows the fallen LEDGER (who fell when, both sides) and the pool is
+shown everywhere, events included (the user's ideas lead); (3) the held
+small waves / summoner elites lifted to the swarm scale in the
+per-encounter pass (the "sloggy at small numbers" read); (4) the two held
+§92 flags dispositioned with the signing (the swarms at 3.04 · the
+exchange-rate re-pin); (5) "morale" as the pool's name — a DESIGN naming
+decision for the user. Riders → TODO (a won-turn reward shape · power by
+rarity · the AoE-status rework · SFX). The kickoff runs in a FRESH session.
 
-## Riders carried in from the Round 6 close
+## Riders carried in from the Round 6 close — ✅ SUPERSEDED by the §93 KEEP (2026-09-05)
 
-One line each; detail = BALANCE 2026-09-01/02 + archive/post-83-worklog.md
-§88d4. **Under KEEP all four are superseded by the new lineage**; under
-ROLLBACK they are read on the §94 board:
-
-- The **band promote question** (X3 per-kind bands → signed sheet),
-  deferred to this round's close.
-- The **walls** UNDER band on the 88d3 partial (0.271 / 0.293) — a
-  full-board read, not a band move.
-- The **deploy-walk overperformance** on BOTH arms (0.625 / 0.550 vs
-  40–50) — the design-target question.
-- The **gambler shape-flip parity item** (deploy −10.0 / regen +5.8).
-- ⚠ **Every config move invalidates the prior table** (BALANCE §"The
-  derived-artifact registry") — the rebuild recipe runs at §92 and again
-  at §94's final config.
+Read for the record at 92i (WORKLOG §92i): the walls (0.467 regen / 0.323 deploy) · the deploy-walk overperformance (reach 0.517) · the gambler shape-flip (deploy +0.8 / regen −7.5 on the maladapted vector) · the band promote (moot under a new lineage). The prior table is v4, the roster table v2 (the registry rebuilt both at the frozen config).
 
 _(Sub-steps cut at each phase kickoff, after shape-lock.)_

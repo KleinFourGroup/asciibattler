@@ -217,6 +217,15 @@ kill removes some."
 - **Cost, honestly:** 4–6 box nights (the alpha read · the rule-flip
   paired read · rebalance sweeps · the re-search · the board); a keep
   is nearer two weeks than one.
+- ⭑ **OUTCOME (2026-09-05, §93, user-signed): KEEP.** Taken in the
+  pre-registered order — the feel verdict first (three casualties runs,
+  "really good"; the count deviation stated) → criterion 1 **0.072**
+  (max arm 0.138; the same-table survivors twins 0.20) → the gradient
+  holds on the re-searched arm (0.10 < 0.125 < 0.725; the arbitration
+  ceilings open, an ARM item → §94) → the run shape at the targets
+  (2.82 / 4.19 / 5.66; act-1 0.725). Actual cost: 5 box cohorts (~21 box
+  hours) over §92's two nights + a day; the keep's second week is §94.
+  Detail: WORKLOG §93 · BALANCE 2026-09-05.
 
 ### Heals
 

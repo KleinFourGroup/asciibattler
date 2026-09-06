@@ -133,7 +133,7 @@
     "id": "ronin-vs-mages",
     "name": "The Ronin and the Mages",
     "description": "A chaotic battle between a ronin and a troop of mages, all of whom now want you gone!",
-    "healthPool": 16,
+    "healthPool": 13,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -184,7 +184,7 @@
     "id": "adventurer-with-guards",
     "name": "Guarded Adventurer",
     "description": "A wandering adventurer and his bodyguards--wait, aren't adventurers supposed to help people?",
-    "healthPool": 20,
+    "healthPool": 14,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -401,7 +401,7 @@
     "id": "elementalTrio",
     "name": "Elemental Trio",
     "description": "Three mages who draw upon the power of nature -- and their band of cultists!",
-    "healthPool": 21,
+    "healthPool": 19,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -553,7 +553,7 @@
     "id": "infernalColumn",
     "name": "Infernal Column",
     "description": "A squad of \"peacekeepers\" sent to quell the bandit problems, by any means necessary.",
-    "healthPool": 21,
+    "healthPool": 17,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -614,7 +614,7 @@
     "id": "miscreants",
     "name": "Miscreants",
     "description": "It's a swarm of thieves, but why the warlock?",
-    "healthPool": 24,
+    "healthPool": 22,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },

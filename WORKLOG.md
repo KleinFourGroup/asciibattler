@@ -3009,3 +3009,39 @@ scratchpad\`): `read-94a.mjs` · `read-94c.mjs` (self-checked against 92h)
 `probe-frontier-94b.ts` · `94b-proposal.md` (the design + the throughput
 lesson) · `94f-price-book.md` · `94d-94e-design.md` · `land-94.sh` · the
 worktree `wt94` (a detached checkout, reset to the last landed HEAD).
+
+### 94c — ⛔ THE DISPOSITION: the rule's trims (2026-09-06, USER-SIGNED in chat — "signing off on all of your recommendations")
+
+**Option A, the pre-signed rule as written**, applied as ONE config commit
+through the 94b surgery shape (the scratchpad `encounters-trim-94c.ts`:
+formatter byte-faithful first, each row's old pool + kind asserted, the
+rule `pool × 3.0 ÷ T` recomputed per id and checked against the table
+within ±0.6, the diff exactly five `healthPool` lines): adventurer-with-guards
+20 → **14** (rule 14.02) · elementalTrio 21 → **19** (19.15) ·
+infernalColumn 21 → **17** (17.26) · miscreants 24 → **22** (22.29) ·
+ronin-vs-mages 16 → **13** (12.60); the elites untouched.
+
+**The override alternative (B), read and rejected:** the lever's schema
+takes a fractional power (`z.number().nonnegative()`), but the fallen
+ledger prints it verbatim — guards @1.5 show "−1.5" on the post-turn
+screen and "1.5" on the unit card; the integer alternative (@2) doubles the
+burn and overshoots the band (~2 turns); and a mercenary worth 2 morale in
+one encounter and 1 in the next is a per-encounter fiction, unlike the
+shipped overrides, which sit on DISTINCT units (the adventurer, the ronin,
+the elementals, the casters). The retreat A takes on the "numbers at the
+swarm scale" ambition (13–14 on adventurer / ronin) is the accepted cost.
+
+**The re-read: the full six-arm cohort again** (`94c-reread.queue`, the
+94c lines verbatim, ~3.7 h) rather than the soldier twins — the deep-end
+rows reach a usable n only pooled over six arms (infernalColumn n=82 across
+all six), so a thin re-read cannot confirm a HOLD on the rows being trimmed.
+A HOLD on every row freezes the config.
+
+**A 94g instrument flag, caught pre-launch:** `read-94g.mjs` pairs the
+dp=5 rows against the 92h rows at dp=10 — which ran at the 92d config,
+before 94b/94c moved seven encounters; same seeds diverge at the first
+moved encounter, so as queued the read would confound the dial with the
+pools. Fix (user-signed): the 94g queue gains a dp=10 CONTROL pair (base
++ ext on both rows, n=120) at the same HEAD — ~3.4 h total — and runs as
+its own cohort from the frozen post-trim HEAD, right after the re-read.
+The reader gains a same-HEAD control column before it is read.

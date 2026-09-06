@@ -4595,3 +4595,6 @@ deltas. The pre-X H7c→O log lives at
   trims 20 → 14 · 21 → 19 · 21 → 17 · 24 → 22 · 16 → 13, or the override
   alternative (lift the burn per kill, keep the pools) — the user's
   call (WORKLOG §94c); the config does not freeze until the re-read.
+  **Disposition (user-signed 2026-09-06): the rule's trims**, landed as
+  the five-line config commit; the re-read = the same six arms
+  (`94c-reread.queue`) → its own entry below.

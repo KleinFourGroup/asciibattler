@@ -2807,3 +2807,36 @@ split is hop 3. Depths 6 → 12 (trials back to 8): five pins green in 35 s.
 The mechanism under test is untouched; the fixture's reach was tuned when
 fights lasted 1–2 turns. Two scans in one commit say the same thing: a
 pacing change moves every fixture that measures its reach in turns.
+
+### 94a — the λ=0 paired probe: the fold is not the cause (2026-09-06; numbers BALANCE 2026-09-06 §94a)
+
+Launched from the shape-lock commit (`77a1ced`) with `scripts/box-drive.sh
+output/box-batches/94a-lambda0.queue --poll=120 --est-hours=2.5`; eight
+batches, ~2.2 h, every fetch artifact-verified, the box destroyed on
+stand-down. The tree held frozen through the last launch (the ONE-HEAD
+rule); 94d/94e/94f were built in a detached worktree meanwhile and landed
+after batch 8 launched.
+
+**The read, in the pre-registered frame (WORKLOG §92i):** "if the
+ceilings close at λ=0, the fold is over-weighted at the 40-scale; if not,
+the exchange rate is the suspect." They do not close — they OPEN. On the
+vector that ships (deploy), the arbitrated arm without the fold loses
+~12 pt at act 1 (6/20 discordant, z −2.75) and −5 pt on the walk (16/22, z −0.97); against doctrine the λ=0 ceiling is −0.325 (−0.225 at λ=0.5 on
+the same 40 seeds). On the regen shapes the fold is a null (7/12 · 6/5)
+— the hand-authored regen vector gives the prior little to price. So the
+§85 fold survives the 40-scale intact (the 85g6d signing's +0.092 reads
++0.117 here on the deploy act-1 shape), and the 20–25-pt doctrine lead is
+the ROLLOUT's own: the arbitrated futures mis-price the trade-offs under
+the doubled pool.
+
+**94g's docket, sharpened:** the exchange rate first (`DP_TAIL_SCALE`
+10 = restHealFraction × max, the 92d mechanical re-pin — a `--set`-able
+dial, then the 5-vs-10 paired read on the deploy pair, ~2.5 h); if 5 does
+not close it, the pool-relative ordinals (`RUN_DEATH_PENALTY` /
+`RUN_COMPLETION_BONUS` / the tail cap) are next — each doubled with the
+max at 92d "in the same proportions", which this read says is not the
+same GAME. The exchange-rate held flag (92f) is therefore NOT closed by
+94a — it moves to 94g with a finding attached. Nothing here bears on the
+§93 KEEP (criterion 2 was read as PASS with the ceiling open): the game
+is reachable at the targets on both arms; the doctrine arm plays it
+better.

@@ -4538,3 +4538,34 @@ deltas. The pre-X H7c→O log lives at
   the reads = the 92a `pacing.csv` per arm + the scratchpad `read-92i.ts`
   (criterion 1 via `alphaStrikeStats` at the scaled threshold; the paired
   comparator); the board = `output/board-runs/92h/board-report.txt`.
+
+- **2026-09-06 §94a — THE λ=0 PAIRED PROBE on the negative arbitration
+  ceilings (the §92i ARM docket; box `abox-20260906-123511`, 8 batches
+  `20260906-{123606,124640,125307,130751,131827,133119,134423,140729}-77a1ced`,
+  ~2.2 h, box destroyed by the driver).** The four 92h arb rows verbatim at
+  `--prior-lambda=0` (base n=40 + ext n=80 → n=120, the 88d3-ceiling shape),
+  paired same-seed against the 92h λ=0.5 rows (n=120) and the 92h doctrine
+  controls (n=40, seeds 1–40) — a PROBE read (WORKLOG §94 kickoff), the
+  mixed-HEAD partial-board rule does not bind it; code + config
+  byte-identical to 9c6c60d (docs commits only). Read: the scratchpad
+  `read-94a.mjs`.
+  | row | win λ=0 (n=120) | win λ=0.5 (92h) | doctrine (92h n=40) | ceiling λ=0 − doc (seeds 1–40) | ceiling λ=0.5 − doc (the 92h board) | paired λ=0 vs λ=0.5 (ab/ba · z · Δ, n=120) |
+  |---|---|---|---|---|---|---|
+  | arb-regen (act 1) | 0.442 | 0.483 | 0.575 | −0.125 | −0.092 | 7/12 · −1.15 · −0.042 |
+  | arb-deploy (act 1) | 0.608 | 0.725 | **0.925** | **−0.325** | −0.200 | **6/20 · −2.75 · −0.117** |
+  | arb-walk-regen | 0.142 | 0.133 | 0.175 | −0.075 | −0.042 | 6/5 · +0.30 · +0.008 |
+  | arb-walk-deploy | 0.300 | 0.350 | 0.600 | **−0.325** | −0.250 | 16/22 · −0.97 · −0.050 |
+  **The fold is NOT the cause — it is the one thing helping.** At λ=0 every
+  ceiling is as negative or worse than at λ=0.5 (deploy act-1 −0.325 vs
+  −0.225 on the same seeds), and removing the fold COSTS the arbitrated arm
+  on the deploy shape (act-1 6/20 discordant, z −2.75, −11.7 pt; the walk
+  −5 pt (16/22, z −0.97, ns)); on the regen shapes the fold is a null (7/12 · 6/5 —
+  the maladapted regen vector has little for the prior to price). The
+  doctrine arm's lead (0.925 vs 0.725 act-1 deploy) is the ROLLOUT's, not
+  the prior's: under the 40-scale the arbitrated futures mis-price the
+  trade-offs by ~20 pt on the vector that ships. Lead suspect for 94g: the
+  evaluator's exchange rate (`DP_TAIL_SCALE` 10 — re-pinned mechanically at
+  92d with the pool max; the 92d judgment call) → the `--set`-able dial +
+  a 5-vs-10 paired read; the pool-relative ordinals
+  (`RUN_DEATH_PENALTY` / `RUN_COMPLETION_BONUS` / the cap) are the
+  second-tier suspects if 5 does not close it.

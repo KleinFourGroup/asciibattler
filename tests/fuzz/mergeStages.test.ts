@@ -164,6 +164,31 @@ describe('--merge-stages: the guards (synthetic dirs)', () => {
     }
   }, 60_000);
 
+  it('94h-pre — pacing.csv is POOLED (an aggregate, never row-concatenated); present in only some stages bails', () => {
+    const scratch = mkdtempSync(join(tmpdir(), 'fuzz-merge-pacing-'));
+    try {
+      const HDR =
+        'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare';
+      const a = fakeStage(scratch, 'a', [1, 2]);
+      const b = fakeStage(scratch, 'b', [3, 4]);
+      writeFileSync(join(a, 'pacing.csv'), [HDR, 'normal,normal,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000', 'all,all,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000'].join('\n') + '\n');
+      writeFileSync(join(b, 'pacing.csv'), [HDR, 'normal,normal,2,1,8,4.0000,4.0000,3.0000,2.0000,8.0000,2,0.2500', 'all,all,2,1,8,4.0000,4.0000,3.0000,2.0000,8.0000,2,0.2500'].join('\n') + '\n');
+      const out = join(scratch, 'out');
+      const r = runCli([`--merge-stages=${a},${b}`, `--out=${out}`]);
+      expect(r.status, r.stderr).toBe(0);
+      const merged = readFileSync(join(out, 'pacing.csv'), 'utf8').trim().split('\n');
+      expect(merged[0]).toBe(HDR);
+      // normal: 4 instances, 3 won, 12 turns; tpw 8/3; burn 4; cost 5/3; cost/inst 5; caps 2 → 0.1667
+      expect(merged[1]).toBe('normal,normal,4,3,12,3.0000,2.6667,4.0000,1.6667,5.0000,2,0.1667');
+      expect(merged[2]).toBe('all,all,4,3,12,3.0000,2.6667,4.0000,1.6667,5.0000,2,0.1667');
+      // Present in only one stage: a protocol error.
+      const c = fakeStage(scratch, 'c', [5, 6]);
+      mergeExpectFail([b, c], join(scratch, 'out2'), 'pacing.csv present in 1/2');
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
+  }, 60_000);
+
   it('bails on overlapping windows', () => {
     const scratch = mkdtempSync(join(tmpdir(), 'fuzz-merge-guards-'));
     try {

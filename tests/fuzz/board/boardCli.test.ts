@@ -18,7 +18,7 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
-import { buildBoard, type BoardInstrument } from './board';
+import { buildBoard, loadSignedSheet, type BoardInstrument } from './board';
 import { writeBatchManifest } from '../manifest';
 
 const CLI_PATH = join(dirname(fileURLToPath(import.meta.url)), 'cli.ts');
@@ -63,6 +63,21 @@ function writeDir(root: string, inst: BoardInstrument, opts: DirOpts = {}): void
     join(dir, 'summary.csv'),
     [HEADER, ...seeds.map((s) => `${s},${strategy},mars,${outcome(s)},10,1,100,2,1,16`)].join('\n') +
       '\n',
+  );
+  // 94h-pre — the walk rows check pacing off pacing.csv (a CHECKED null fails
+  // the verdict closed): every happy dir carries the kind rows at the
+  // sheet's band midpoints (balance-proof).
+  const mid = (b: { min: number; max: number }): string => ((b.min + b.max) / 2).toFixed(4);
+  const pb = loadSignedSheet().pacingBands;
+  writeFileSync(
+    join(dir, 'pacing.csv'),
+    [
+      'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare',
+      `normal,normal,40,40,120,3.0000,${mid(pb.normal)},7.0000,2.0000,6.0000,0,0.0000`,
+      `elite,elite,10,10,45,4.5000,${mid(pb.elite)},4.0000,4.0000,18.0000,0,0.0000`,
+      `boss,boss,10,8,50,5.0000,${mid(pb.boss)},7.0000,3.0000,15.0000,0,0.0000`,
+      'all,all,60,58,215,3.5833,3.7069,6.3721,2.6512,9.5000,0,0.0000',
+    ].join('\n') + '\n',
   );
   if (opts.manifest === false) {
     // Re-writing a happy dir as unmanifested must REMOVE the earlier

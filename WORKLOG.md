@@ -2866,3 +2866,41 @@ evaluator exchange rate as a dial — without touching the rest heal"). Built:
   rows at dp=10 and the doctrine controls (~1.7 h). Launches from the HEAD
   that carries the dial, AFTER 94c's last launch (ONE HEAD per cohort).
   The read: the scratchpad `read-94g.mjs`.
+
+### 94h-pre — the sheet's SHAPE: the seam band as a fraction, the pacing bands as a DRIFT read (2026-09-06; built in the worktree during the 94c freeze)
+
+The two shape changes the shape-lock signed, built ahead of the signing
+cohort so the 94h verdict reads them; the NUMERIC refs stay at their
+85g6d/88 values (PENDING RE-PIN at the 94h board — the sheet says so).
+
+- **`seamPoolFraction` 0.40–0.45** replaces `seamPoolBand` 15–18: the
+  board derives the pool-HP band at verdict time (`× HEALTH.playerHealthMax`
+  — 16–18 at max 40), so the next pool-max move cannot strand it the way
+  92d's doubling stranded 72f's band (the 92 scratchpad note "pool-relative
+  instruments scale; sheets in pool HP do not").
+- **`pacingBands`** (normal 2.5–3.25 · elite 4–5 · boss 5–6.5 turns per
+  WON instance) join the sheet; the two walk primaries carry three
+  `reference` checks (`pacingNormal / Elite / Boss`) read off the batch
+  dir's `pacing.csv` (`pacingMetricsOf`, the 92a reader's kind rows; a
+  kind with no won instance is null — and a CHECKED null fails the verdict
+  closed, so the walk rows now run `--per-encounter`). The walk DOCTRINE
+  controls run it too — the paired-seed contract pin ("same args minus
+  the arm flags") caught the first draft, which had only the primaries.
+- **`--merge-stages` POOLS `pacing.csv`.** It is an aggregate (per-key
+  means), never row-concatenable like the sidecars: `parsePacingCsv` +
+  `poolPacingRows` rebuild the accumulator per key (`turnsWon = tpw × won`,
+  `charge = perTurn × turns`), sum across stages and re-render through the
+  same `pacingRow` — so an n=120 merged walk dir reads pacing exactly as
+  the §92 per-arm reads did (present-in-some-stages bails, the sidecar
+  rule). The reconstruction is exact to the CSV's 4-decimal rounding, not
+  byte-for-byte — the round-trip pin says so field by field (the first
+  draft pinned string identity and failed on `1.6667 × 12`).
+- **Pins:** the walk rows' seam band derived from the fraction + the three
+  pacing checks from the sheet · `pacingMetricsOf` (kind rows only, null
+  on no-won / missing / empty) · the parse ↔ pool ↔ render round-trip · a
+  two-stage pool by the accumulator arithmetic · the merge CLI writes the
+  pooled file and bails on a mixed stack; the board fixtures carry pacing
+  at the sheet's band midpoints (balance-proof), the CLI test's happy dirs
+  write a pacing file. `signedAt` carries the 94h-pre lineage entry.
+- Not here: the numeric re-pins, the parity prose, the swarms flag — all
+  at 94h with the board run.

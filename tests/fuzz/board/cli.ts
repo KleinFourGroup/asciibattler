@@ -32,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 import {
   buildBoard,
   computeMetrics,
+  pacingMetricsOf,
   evaluateBoard,
   evaluateSkillGradient,
   evaluateVerdict,
@@ -199,7 +200,11 @@ function report(
     const { audit, matched } = auditInstrumentDir(join(dir, inst.id), inst.strategyRow);
     audits.set(inst.id, audit);
     if (!audit.summaryFound || audit.parseError !== undefined) continue;
-    metrics.set(inst.id, computeMetrics(matched));
+    // 94h-pre — the pacing DRIFT metrics ride the batch dir's pacing.csv
+    // (present when the row ran --per-encounter; pooled by --merge-stages).
+    const pacingPath = join(dir, inst.id, 'pacing.csv');
+    const pacing = existsSync(pacingPath) ? pacingMetricsOf(readFileSync(pacingPath, 'utf8')) : {};
+    metrics.set(inst.id, { ...computeMetrics(matched), ...pacing });
   }
   // 86e2 — the three-way split: VERDICT (fail-closed integrity, gates the
   // exit) → DRIFT (the reference bands) → INSTRUMENT HEALTH (never gates).

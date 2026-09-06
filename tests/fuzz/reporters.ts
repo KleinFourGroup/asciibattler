@@ -2167,12 +2167,19 @@ export function renderPacing(results: readonly RunResult[]): string {
   return lines.join('\n') + '\n';
 }
 
+const PACING_CSV_HEADER =
+  'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,' +
+  'playerCostPerTurn,playerCostPerInstance,capTurns,capShare';
+
 /** CSV twin of `pacingStats`: the encounter rows, then the kind rows (+ `all`). */
 export function renderPacingCsv(s: PacingStats): string {
-  const header =
-    'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,' +
-    'playerCostPerTurn,playerCostPerInstance,capTurns,capShare';
-  const rows = [...s.byEncounter, ...s.byKind].map((r) =>
+  return renderPacingCsvRows([...s.byEncounter, ...s.byKind]);
+}
+
+/** 94h-pre — the row-level renderer (`renderPacingCsv` and the merge pool share it). */
+export function renderPacingCsvRows(all: readonly PacingRow[]): string {
+  const header = PACING_CSV_HEADER;
+  const rows = all.map((r) =>
     [
       r.key,
       r.kind,
@@ -2189,4 +2196,93 @@ export function renderPacingCsv(s: PacingStats): string {
     ].join(','),
   );
   return [header, ...rows].join('\n') + '\n';
+}
+
+/**
+ * 94h-pre — `pacing.csv` is an AGGREGATE (per-key means), so a base + ext
+ * stack cannot be row-concatenated like summary.csv (`--merge-stages`,
+ * `MERGEABLE`): the pool has to be rebuilt from each stage's rows. Parse by
+ * HEADER NAME (columns append), reconstruct the accumulator per key
+ * (`turnsWon = tpw × won`, `charge = perTurn × turns`), sum across stages,
+ * re-render through `pacingRow` — the same arithmetic the reader used, so a
+ * pool of one stage reproduces that stage to the CSV's 4-decimal rounding.
+ * Order: the encounter rows in first-seen order, then the kinds in
+ * `PACING_KIND_ORDER`, then `all`. The board's pacing DRIFT read
+ * (`board.ts`, the walk rows' `pacingNormal/Elite/Boss`) consumes the pooled
+ * file the merge writes, so the n=120 walk rows read pacing exactly as the
+ * §92 per-arm reads did.
+ */
+export function parsePacingCsv(text: string): PacingRow[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length === 0 || lines[0] === '') return [];
+  const header = lines[0]!.split(',');
+  const col = (name: string): number => {
+    const i = header.indexOf(name);
+    if (i < 0) throw new Error(`pacing.csv: missing column '${name}'`);
+    return i;
+  };
+  const c = {
+    key: col('key'),
+    kind: col('kind'),
+    instances: col('instances'),
+    won: col('wonInstances'),
+    turns: col('turns'),
+    tpi: col('turnsPerInstance'),
+    tpw: col('turnsPerWonInstance'),
+    burn: col('enemyBurnPerTurn'),
+    costTurn: col('playerCostPerTurn'),
+    costInst: col('playerCostPerInstance'),
+    cap: col('capTurns'),
+    capShare: col('capShare'),
+  };
+  return lines.slice(1).map((line) => {
+    const v = line.split(',');
+    return {
+      key: v[c.key]!,
+      kind: v[c.kind] as PacingRow['kind'],
+      instances: Number(v[c.instances]),
+      wonInstances: Number(v[c.won]),
+      turns: Number(v[c.turns]),
+      turnsPerInstance: Number(v[c.tpi]),
+      turnsPerWonInstance: Number(v[c.tpw]),
+      enemyBurnPerTurn: Number(v[c.burn]),
+      playerCostPerTurn: Number(v[c.costTurn]),
+      playerCostPerInstance: Number(v[c.costInst]),
+      capTurns: Number(v[c.cap]),
+      capShare: Number(v[c.capShare]),
+    };
+  });
+}
+
+/** Pool several stages' pacing rows (see the note above). */
+export function poolPacingRows(stages: readonly (readonly PacingRow[])[]): PacingRow[] {
+  const byEncounter = new Map<string, { kind: PacingRow['kind']; acc: PacingAcc }>();
+  const byKind = new Map<string, { kind: PacingRow['kind']; acc: PacingAcc }>();
+  const add = (into: Map<string, { kind: PacingRow['kind']; acc: PacingAcc }>, r: PacingRow): void => {
+    const slot = into.get(r.key) ?? { kind: r.kind, acc: freshPacingAcc() };
+    slot.acc.instances += r.instances;
+    slot.acc.won += r.wonInstances;
+    slot.acc.turns += r.turns;
+    slot.acc.turnsWon += r.turnsPerWonInstance * r.wonInstances;
+    slot.acc.enemyCharge += r.enemyBurnPerTurn * r.turns;
+    slot.acc.playerCharge += r.playerCostPerTurn * r.turns;
+    slot.acc.cap += r.capTurns;
+    into.set(r.key, slot);
+  };
+  const KINDS = new Set<string>([...PACING_KIND_ORDER, 'all']);
+  for (const rows of stages) {
+    for (const r of rows) add(KINDS.has(r.key) && r.key === r.kind ? byKind : byEncounter, r);
+  }
+  const out: PacingRow[] = [];
+  for (const [key, { kind, acc }] of byEncounter) out.push(pacingRow(key, kind, acc));
+  for (const kind of [...PACING_KIND_ORDER, 'all' as const]) {
+    const slot = byKind.get(kind);
+    if (slot) out.push(pacingRow(kind, slot.kind, slot.acc));
+  }
+  return out;
+}
+
+/** The merge's write: pool the stages' `pacing.csv` texts into one CSV. */
+export function poolPacingCsv(texts: readonly string[]): string {
+  return renderPacingCsvRows(poolPacingRows(texts.map(parsePacingCsv)));
 }

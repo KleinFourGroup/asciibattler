@@ -50,6 +50,7 @@ import {
 import { join, resolve } from 'node:path';
 import { bail, type CliArgs } from './args';
 import { mergeSummaries } from './parallel';
+import { poolPacingCsv } from '../reporters';
 import {
   MANIFEST_FILE,
   armSignatureOf,
@@ -216,6 +217,26 @@ export function runMergeStagesCli(args: MergeStagesArgs): void {
   mkdirSync(args.outDir, { recursive: true });
   for (const file of toMerge) {
     writeFileSync(join(args.outDir, file), mergeSummaries(sortedDirs, file));
+  }
+
+  // 94h-pre — pacing.csv is an AGGREGATE (per-key means), never row-
+  // concatenated: pool it from every stage's rows (the same uniformity
+  // rule as the sidecars — a mixed stack is a protocol error). The board's
+  // pacing DRIFT read on the n=120 walk rows consumes this file.
+  {
+    const present = sortedDirs.filter((d) => existsSync(join(d, 'pacing.csv')));
+    if (present.length > 0 && present.length !== sortedDirs.length) {
+      bail(
+        `--merge-stages: pacing.csv present in ${present.length}/${sortedDirs.length} stages — ` +
+          `a mixed stack is a protocol error, not a merge problem`,
+      );
+    }
+    if (present.length === sortedDirs.length) {
+      writeFileSync(
+        join(args.outDir, 'pacing.csv'),
+        poolPacingCsv(sortedDirs.map((d) => readFileSync(join(d, 'pacing.csv'), 'utf8'))),
+      );
+    }
   }
 
   // failures/ — COPY (stages are source archives; filenames are unique per

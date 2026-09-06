@@ -9,6 +9,7 @@ import {
   BOARD_MIN_N,
   buildBoard,
   computeMetrics,
+  pacingMetricsOf,
   evaluateBoard,
   evaluateSkillGradient,
   evaluateVerdict,
@@ -18,6 +19,7 @@ import {
   type InstrumentAudit,
   type InstrumentMetrics,
 } from './board';
+import { HEALTH } from '../../../src/config/health';
 
 // A summary.csv fixture in the REAL column order (parse is by header name,
 // so a column append never breaks this — that's part of what's pinned).
@@ -113,7 +115,7 @@ describe('evaluateBoard', () => {
     winRate,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 14,
+    seamPool: 0.5 * (sheet.seamPoolFraction.min + sheet.seamPoolFraction.max) * HEALTH.playerHealthMax, // 94h-pre: mid-band, a fraction of max
     // 83f — bank/fires come FROM the sheet too (the 72f fixture hardcoded 70 /
     // 2.9 inside the old bands; the §82-economy re-pin exposed it — the
     // balance-proof rule, applied to every ref the row checks). 85g6d: tx
@@ -122,6 +124,9 @@ describe('evaluateBoard', () => {
     transactionRate: sheet.firerTransactionRate,
     terminalBank: sheet.bankRefs.firer,
     firesPerRun: sheet.firerFiresPerRun,
+    pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
+    pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
+    pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
   });
 
   it('an at-reference arb-regen read PASSes every check', () => {
@@ -219,10 +224,13 @@ describe('86e2 — the fail-closed verdict layer (mechanism smoke; the per-class
     winRate: 0.6,
     bossWall: 0.32,
     terminalReach: 0.45,
-    seamPool: 16,
+    seamPool: 0.5 * (sheet.seamPoolFraction.min + sheet.seamPoolFraction.max) * HEALTH.playerHealthMax,
     transactionRate: sheet.firerTransactionRate,
     terminalBank: sheet.bankRefs.firer,
     firesPerRun: sheet.firerFiresPerRun,
+    pacingNormal: 0.5 * (sheet.pacingBands.normal.min + sheet.pacingBands.normal.max),
+    pacingElite: 0.5 * (sheet.pacingBands.elite.min + sheet.pacingBands.elite.max),
+    pacingBoss: 0.5 * (sheet.pacingBands.boss.min + sheet.pacingBands.boss.max),
   });
   const cleanBoardInputs = (): {
     audits: Map<string, InstrumentAudit>;
@@ -353,6 +361,9 @@ describe('86e3 — the skill-gradient health check', () => {
     transactionRate: 0.2,
     terminalBank: 100,
     firesPerRun: 1.7,
+    pacingNormal: 2.9, // 94h-pre — the gradient check reads none of these
+    pacingElite: 4.5,
+    pacingBoss: 5.75,
   });
 
   it('a monotone gradient reads ok on both legs, upper = the best act-1 ARM row', () => {
@@ -442,8 +453,18 @@ describe('the board definition itself', () => {
       const inst = board.instruments.find((i) => i.id === id)!;
       expect(inst.args).not.toContain('--hops=11');
       const seam = inst.checks.find((c) => c.metric === 'seamPool')!;
-      expect(seam.min).toBe(sheet.seamPoolBand.min);
-      expect(seam.max).toBe(sheet.seamPoolBand.max);
+      // 94h-pre — a FRACTION of the pool max, derived at verdict time.
+      expect(seam.min).toBeCloseTo(sheet.seamPoolFraction.min * HEALTH.playerHealthMax);
+      expect(seam.max).toBeCloseTo(sheet.seamPoolFraction.max * HEALTH.playerHealthMax);
+      // 94h-pre — the pacing DRIFT read: the walk rows run --per-encounter and
+      // carry the three kind bands from the sheet.
+      expect(inst.args).toContain('--per-encounter');
+      for (const [metric, kind] of [['pacingNormal', 'normal'], ['pacingElite', 'elite'], ['pacingBoss', 'boss']] as const) {
+        const c = inst.checks.find((x) => x.metric === metric)!;
+        expect(c.grade).toBe('reference');
+        expect(c.min).toBe(sheet.pacingBands[kind].min);
+        expect(c.max).toBe(sheet.pacingBands[kind].max);
+      }
       const reach = inst.checks.find((c) => c.metric === 'terminalReach')!;
       // 85g5 — pre55ReachRef retired with the frozen anchor: BOTH twins ride
       // the signed 40–50 target (the deploy twin is freshly re-derived).
@@ -552,5 +573,28 @@ describe('the board definition itself', () => {
         expect(p.args.filter((a) => !armOnly.has(a))).toEqual([...c.args]);
       }
     });
+  });
+});
+
+describe('94h-pre — pacingMetricsOf: the pacing DRIFT metrics off pacing.csv', () => {
+  const CSV =
+    'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare\n' +
+    'brigands,normal,10,10,30,3.0000,3.0000,7.0000,2.0000,6.0000,0,0.0000\n' +
+    'normal,normal,10,10,30,3.0000,2.9500,7.0000,2.0000,6.0000,0,0.0000\n' +
+    'elite,elite,4,0,9,2.2500,0.0000,4.0000,6.0000,13.5000,2,0.2222\n' +
+    'boss,boss,3,2,16,5.3333,5.7500,7.0000,3.0000,16.0000,0,0.0000\n' +
+    'all,all,17,12,55,3.2353,3.4167,6.5455,2.9455,9.5294,2,0.0364\n';
+
+  it('reads the KIND rows (never the encounter rows); a kind with no won instance is null (a checked null fails the verdict closed)', () => {
+    expect(pacingMetricsOf(CSV)).toEqual({ pacingNormal: 2.95, pacingElite: null, pacingBoss: 5.75 });
+  });
+
+  it('a missing kind row is null; an empty file is all null', () => {
+    expect(pacingMetricsOf(CSV.split('\n').filter((l) => !l.startsWith('boss,')).join('\n'))).toEqual({
+      pacingNormal: 2.95,
+      pacingElite: null,
+      pacingBoss: null,
+    });
+    expect(pacingMetricsOf('')).toEqual({ pacingNormal: null, pacingElite: null, pacingBoss: null });
   });
 });

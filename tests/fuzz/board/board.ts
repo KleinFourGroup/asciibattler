@@ -39,6 +39,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { atOrBeyondWalkPos } from '../walkDepth';
 import { armSignatureOf, type BatchManifest } from '../manifest';
+import { parsePacingCsv } from '../reporters';
+import { HEALTH } from '../../../src/config/health';
 
 // ---- the signed sheet (the user-signed artifact, 68d re-signs) ------------
 
@@ -52,9 +54,12 @@ export interface SignedSheet {
   readonly signedAt: string;
   /** The 68d-signed design principle the per-character rows enforce. */
   readonly characterParity: string;
-  /** 72b (user-signed) — mean pool HP at the act-1→act-2 seam, signed at
-   *  measured reality: enter act 2 at ~two-thirds health. */
-  readonly seamPoolBand: SheetBand;
+  /** 72b (user-signed) — the pool at the act-1→act-2 seam, signed at
+   *  measured reality. 94h-pre: a FRACTION of `HEALTH.playerHealthMax`
+   *  (0.40–0.45 — the 15–18 pool-HP band was written at max 20 and stranded
+   *  when 92d doubled it; the board derives the pool-HP band at verdict
+   *  time, so the next pool-max move cannot strand it again). */
+  readonly seamPoolFraction: SheetBand;
   /** 72b (user-signed) — the fraction of runs that reach the terminal
    *  (sector-aware arrivals ÷ runs). THE load-bearing target: it sets
    *  72c's mid-act-2 ambition; signed 40–50 (human overperformance
@@ -65,6 +70,11 @@ export interface SignedSheet {
   /** The 30–35 wall target — RE-SIGNED at 72b for the deep-end terminal
    *  (the §68g crisis was gotcha #120 contamination). */
   readonly deepEndWallTarget: SheetBand;
+  /** 94h-pre (user-signed at the §94 shape-lock) — the kind pacing targets as
+   *  a DRIFT read on the walk rows: turns per WON instance off the pooled
+   *  `pacing.csv` (the walk rows run `--per-encounter`; `--merge-stages`
+   *  pools the file). Normal 2.5–3.25 · elite 4–5 · boss 5–6.5. */
+  readonly pacingBands: Readonly<Record<'normal' | 'elite' | 'boss', SheetBand>>;
   /** Act-1 continuity drift references (68d observed; ±8pt paired noise).
    *  85g5 (2026-08-26): the `deploy` posture replaces `pre55` — the frozen
    *  55pre anchor retired with its `pre55ReachRef` workaround when the
@@ -101,7 +111,10 @@ export type MetricKey =
   | 'seamPool'
   | 'transactionRate'
   | 'terminalBank'
-  | 'firesPerRun';
+  | 'firesPerRun'
+  | 'pacingNormal'
+  | 'pacingElite'
+  | 'pacingBoss';
 
 export interface BoardCheck {
   readonly metric: MetricKey;
@@ -258,7 +271,9 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
   return {
     id: `arb-walk-${posture}`,
     title: `two-act ${posture} vector (the design-target shape, arbitrated)`,
-    args: [...WALK, '--character=soldier', vector, ...ARM],
+    // 94h-pre — the walk rows run --per-encounter so the batch carries
+    // pacing.csv (the sheet's pacing DRIFT read; a merged dir pools it).
+    args: [...WALK, '--character=soldier', vector, ...ARM, '--per-encounter'],
     strategyRow:
       posture === 'regen'
         ? 'arbitrated:scored:59-regen-vector'
@@ -267,10 +282,19 @@ function walkPosture(posture: 'regen' | 'deploy', sheet: SignedSheet): BoardInst
       {
         metric: 'seamPool',
         grade: 'reference',
-        min: sheet.seamPoolBand.min,
-        max: sheet.seamPoolBand.max,
-        source: '72f RE-SIGNED 15–18 at arb reality (patch fires offset drain; the doctrine-arm 13–15 retired with its arm)',
+        // 94h-pre — a FRACTION of the pool max, derived at verdict time
+        // (balance-proof: a pool-max move moves the band with it).
+        min: sheet.seamPoolFraction.min * HEALTH.playerHealthMax,
+        max: sheet.seamPoolFraction.max * HEALTH.playerHealthMax,
+        source: '94h-pre SIGNED as a fraction 0.40–0.45 of max (the 72f 15–18 pool-HP band at max 20 stranded at 92d; 16.6/40 = 0.415 at 92h, the floor refilling to 1.0 makes the seam the hazard read)',
       },
+      ...(['normal', 'elite', 'boss'] as const).map((kind): BoardCheck => ({
+        metric: `pacing${kind[0]!.toUpperCase()}${kind.slice(1)}` as MetricKey,
+        grade: 'reference',
+        min: sheet.pacingBands[kind].min,
+        max: sheet.pacingBands[kind].max,
+        source: `94h-pre SIGNED (the §94 shape-lock): the user's ${kind} turn target, turns per WON instance off the pooled pacing.csv`,
+      })),
       {
         metric: 'terminalReach',
         grade: 'reference',
@@ -344,8 +368,8 @@ export function buildBoard(sheet: SignedSheet = loadSignedSheet()): Board {
     control('regen', 'soldier regen vector', [...ACT1, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
     control('deploy', 'soldier deploy vector', [...ACT1, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:92c2-winner'),
     control('fire-ablated', 'the fire-channel ablation', [...ACT1, '--character=soldier', ABLATED, ...CONTROL_ARM], 'scored:60-fire-ablated-vector'),
-    control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM], 'scored:59-regen-vector'),
-    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM], 'scored:92c2-winner'),
+    control('walk-regen', 'two-act regen vector', [...WALK, '--character=soldier', REGEN, ...CONTROL_ARM, '--per-encounter'], 'scored:59-regen-vector'),
+    control('walk-deploy', 'two-act deploy vector', [...WALK, '--character=soldier', DEPLOY, ...CONTROL_ARM, '--per-encounter'], 'scored:92c2-winner'),
   ];
   // 86e3 (decision C, user-signed) — the skill-gradient anchors: the
   // registry's two bare baselines on the act-1 shape (SAME shape as the arb
@@ -501,6 +525,13 @@ export interface InstrumentMetrics {
   readonly transactionRate: number;
   readonly terminalBank: number;
   readonly firesPerRun: number;
+  /** 94h-pre — turns per WON instance by kind, from the batch dir's pooled
+   *  `pacing.csv` (`pacingMetricsOf`); null when the batch carries no
+   *  pacing file or the kind saw no won instance — a CHECKED null fails the
+   *  verdict closed (the walk rows must run `--per-encounter`). */
+  readonly pacingNormal: number | null;
+  readonly pacingElite: number | null;
+  readonly pacingBoss: number | null;
 }
 
 interface SummaryRow {
@@ -570,6 +601,9 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
       transactionRate: 0,
       terminalBank: 0,
       firesPerRun: 0,
+      pacingNormal: null,
+      pacingElite: null,
+      pacingBoss: null,
     };
   }
   const wins = rows.filter((r) => r.outcome === 'complete');
@@ -613,7 +647,29 @@ export function computeMetrics(rows: readonly SummaryRow[]): InstrumentMetrics {
     transactionRate: rows.filter((r) => r.portPurchases > 0).length / n,
     terminalBank: mean((r) => r.finalBits),
     firesPerRun: mean((r) => r.packetsFired),
+    // 94h-pre — pacing comes from pacing.csv, merged in by the CLI (`pacingMetricsOf`).
+    pacingNormal: null,
+    pacingElite: null,
+    pacingBoss: null,
   };
+}
+
+/**
+ * 94h-pre — the pacing DRIFT metrics off a batch dir's `pacing.csv` (the
+ * 92a reader's kind rows): turns per WON instance for normal / elite /
+ * boss; null for a kind with no won instance. The CLI spreads this over
+ * `computeMetrics` when the file exists (the walk rows run `--per-encounter`
+ * so it does; a merged n=120 dir carries the POOLED file).
+ */
+export function pacingMetricsOf(
+  pacingCsv: string,
+): Pick<InstrumentMetrics, 'pacingNormal' | 'pacingElite' | 'pacingBoss'> {
+  const rows = parsePacingCsv(pacingCsv);
+  const tpw = (kind: string): number | null => {
+    const r = rows.find((x) => x.key === kind && x.kind === kind);
+    return r === undefined || r.wonInstances === 0 ? null : r.turnsPerWonInstance;
+  };
+  return { pacingNormal: tpw('normal'), pacingElite: tpw('elite'), pacingBoss: tpw('boss') };
 }
 
 // ---- evaluation -----------------------------------------------------------

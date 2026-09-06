@@ -6,7 +6,7 @@
  * is consulted for the ids, the test asserts the kinds it relies on).
  */
 import { describe, expect, it } from 'vitest';
-import { pacingStats, renderPacing, renderPacingCsv } from './reporters';
+import { pacingStats, parsePacingCsv, poolPacingRows, renderPacing, renderPacingCsv, renderPacingCsvRows } from './reporters';
 import { TelemetryAccumulator, type PoolChip, type RunTelemetry } from './telemetry';
 import type { RunResult } from './harness';
 import { HEALTH } from '../../src/config/health';
@@ -206,5 +206,64 @@ describe('pacingStats (92a)', () => {
     expect(text).toContain(NORMAL_ID);
     expect(text).toContain(ELITE_ID);
     expect(text).toContain('all');
+  });
+});
+
+describe('94h-pre — parsePacingCsv / poolPacingRows (the --merge-stages pool of an AGGREGATE file)', () => {
+  it('a pool of ONE stage reproduces that stage (parse ↔ pool ↔ render) to the CSV 4-decimal rounding, field by field', () => {
+    // A self-consistent file (tpi = turns/instances etc. at the CSV's 4 decimals);
+    // the reconstruction multiplies rounded per-turn means back by turns, so the
+    // pool matches to ~1e-3, never byte-for-byte — the pin says so.
+
+    const csv =
+      'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare\n' +
+      'x,normal,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000\n' +
+      'y,elite,4,3,12,3.0000,2.6667,4.0000,1.6667,5.0000,2,0.1667\n' +
+      'normal,normal,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000\n' +
+      'elite,elite,4,3,12,3.0000,2.6667,4.0000,1.6667,5.0000,2,0.1667\n' +
+      'all,all,6,5,16,2.6667,2.4000,4.5000,1.5000,4.0000,2,0.1250\n';
+    const original = parsePacingCsv(csv);
+    const pooled = parsePacingCsv(renderPacingCsvRows(poolPacingRows([original])));
+    expect(pooled.map((r) => r.key)).toEqual(original.map((r) => r.key));
+    for (let i = 0; i < original.length; i++) {
+      const a = original[i]!, b = pooled[i]!;
+      expect(b.kind).toBe(a.kind);
+      for (const k of ['instances', 'wonInstances', 'turns', 'capTurns'] as const) expect(b[k]).toBe(a[k]);
+      for (const k of ['turnsPerInstance', 'turnsPerWonInstance', 'enemyBurnPerTurn', 'playerCostPerTurn', 'playerCostPerInstance', 'capShare'] as const) {
+        expect(b[k]).toBeCloseTo(a[k], 3);
+      }
+    }
+  });
+
+  it('two stages pool by the accumulator arithmetic: turns-per-won weighted by won, burn/cost by turns, caps summed', () => {
+    const a = parsePacingCsv(
+      'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare\n' +
+        'x,normal,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000\n' +
+        'normal,normal,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000\n' +
+        'all,all,2,2,4,2.0000,2.0000,6.0000,1.0000,2.0000,0,0.0000\n',
+    );
+    const b = parsePacingCsv(
+      'key,kind,instances,wonInstances,turns,turnsPerInstance,turnsPerWonInstance,enemyBurnPerTurn,playerCostPerTurn,playerCostPerInstance,capTurns,capShare\n' +
+        'x,normal,2,1,8,4.0000,4.0000,3.0000,2.0000,8.0000,2,0.2500\n' +
+        'normal,normal,2,1,8,4.0000,4.0000,3.0000,2.0000,8.0000,2,0.2500\n' +
+        'all,all,2,1,8,4.0000,4.0000,3.0000,2.0000,8.0000,2,0.2500\n',
+    );
+    const pooled = poolPacingRows([a, b]);
+    expect(pooled.map((r) => r.key)).toEqual(['x', 'normal', 'all']);
+    const x = pooled[0]!;
+    expect(x.instances).toBe(4);
+    expect(x.wonInstances).toBe(3);
+    expect(x.turns).toBe(12);
+    // turnsWon = 2×2 + 4×1 = 8 over 3 won; burn = (6×4 + 3×8)/12 = 4; cost = (1×4 + 2×8)/12 = 5/3;
+    // cost/instance = 20/4 = 5; caps 0 + 2 over 12 turns.
+    expect(x.turnsPerWonInstance).toBeCloseTo(8 / 3);
+    expect(x.enemyBurnPerTurn).toBeCloseTo(4);
+    expect(x.playerCostPerTurn).toBeCloseTo(5 / 3);
+    expect(x.playerCostPerInstance).toBeCloseTo(5);
+    expect(x.capTurns).toBe(2);
+    expect(x.capShare).toBeCloseTo(2 / 12);
+    // The kind rows pool the same way and keep their order (kind, then all).
+    expect(pooled[1]!.turnsPerWonInstance).toBeCloseTo(8 / 3);
+    expect(pooled[2]!.key).toBe('all');
   });
 });

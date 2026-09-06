@@ -2561,3 +2561,44 @@ lands before the derived artifacts re-measure:
 Box budget ~23 h across three cohorts; the 68h rule routes every one to
 the box. Not doing (charter): new encounter content, archetype changes,
 Round 9 mechanisms (the won-turn reward shape · power by rarity · fatigue).
+
+### Shape-lock (2026-09-06, USER-SIGNED in chat) — the four notes + the cut as locked
+
+The user's notes on the draft cut, each resolved:
+
+1. **A live pool bar instead of the post-turn screen** — one of the user's
+   ideas: every death decrements the corresponding pool bar during the
+   battle, and the post-turn screen goes. Flagged for the cut, with the
+   user's own question whether it implies a run snapshot bump. The read:
+   NOT by itself — `World.fallenPower` is live during the battle and
+   serialized since v36, so the battle HUD can decrement the bar per death
+   as a PROJECTION while the charge still books at turn end (`resolveTurn`
+   untouched). Applying the chip to Run state mid-battle would change the
+   rule's TIMING (the cap surcharge, the run-loss check) and re-pin fuzz,
+   still with no snapshot-shape change; the post-turn gate's removal is a
+   flow change (the pre-turn screen still gates). It changes 94d's
+   PRESENTATION, not its data layer → 94d splits: the data commit first,
+   then the presentation commit where the user picks the screen or the
+   live bar (or both — the bar in battle, the ledger as the encounter's
+   end summary).
+2. **The ledger Run-owned, snapshot bump accepted** — the user's call,
+   with the argument that run-end stats are what the roguelike demographic
+   expects. Endorsed (not a misunderstanding): a Run-owned record persists
+   ACROSS encounters, which is what makes run-end stats possible at all;
+   the UI-owned option would have thrown every encounter's rows away at
+   the next node. **Run v44 → v45 at 94d.** The one scope guard, agreed:
+   94d serializes a COMPACT per-death record (encounter · turn · side ·
+   archetype · name · level · power as booked · tick) and shows it
+   post-turn; the run-end stats SCREEN is its own later item (TODO), not
+   94d — the data is what 94d must get right, since a snapshot field is
+   permanent.
+3. **94a launches immediately** after this commit (the tree freezes for
+   the cohort; the 94b table is designed in the scratchpad meanwhile).
+4. **The pacing bands SIGNED onto the sheet at 94h:** normal 2.5–3.25 ·
+   elite 4–5 · boss 5–6.5 turns per won instance, a DRIFT read off the
+   walk rows' `pacing.csv` (a `board.ts` consumer; the 92a reader).
+
+The cut as locked is in ROADMAP §94 (94a–94i). Snapshot prediction
+revised: World v36 holds · **Run v45 at 94d**. The λ=0 probe queue:
+`output/box-batches/94a-lambda0.queue` (the 92h arb rows' `armArgv`
+verbatim at `--prior-lambda=0`, base + ext, the 88d3-ceiling shape).

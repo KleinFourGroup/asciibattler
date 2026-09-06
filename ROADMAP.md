@@ -162,6 +162,17 @@ exchange-rate re-pin); (5) "morale" as the pool's name — a DESIGN naming
 decision for the user. Riders → TODO (a won-turn reward shape · power by
 rarity · the AoE-status rework · SFX). The kickoff runs in a FRESH session.
 
+**Cut (kickoff 2026-09-05, SHAPE-LOCKED 2026-09-06 user-signed — WORKLOG §94):** the per-encounter pass = the SEVEN HELD rows (§92 already dispositioned 7 of the §87d 14 by measurement); snapshot prediction World v36 holds · **Run v44 → v45 at 94d** (the Run-owned fallen ledger — the user's call, run-end stats); the pacing bands SIGNED onto the sheet at 94h (normal 2.5–3.25 · elite 4–5 · boss 5–6.5); box budget ~23 h over three cohorts.
+- [ ] 94a — the λ=0 paired probe (box ~2.5 h; the four arb rows at λ=0, n=40 + ext 80, paired vs the 92h controls + λ=0.5 rows on seeds 1–120; `output/box-batches/94a-lambda0.queue`) → the mechanism named (fold weight vs exchange rate).
+- [ ] 94b — the per-encounter pass: the seven held rows (adventurer-with-guards · elementalTrio · infernalColumn · miscreants · ronin-vs-mages · darkMagicPosse · plagueSpreaders) as ONE config commit through the editor's formatter (⛔ per-row dispositions user-signed).
+- [ ] 94c — the read + the rule (box ~2.6 h, the 92f shape: soldier walk twins n=120 `--per-encounter`; in band + cost/instance ≲ 1.5× the kind mean → HOLD, a breach → one proportional trim + re-read) → the config freezes.
+- [ ] 94d — the fallen ledger, two commits: the DATA (`unit:died` identity payload at the emit site + the Run-owned compact per-death record, **Run v45**, a headless pin) → the PRESENTATION (⛔ the post-turn ledger screen and/or the live pool-bar decrement in battle — the user's ideas lead).
+- [ ] 94e — the pool everywhere (a Game-owned PoolOverlay beside the bits chip, on every screen; the TODO rider folds in).
+- [ ] 94f — ⛔ the "morale" naming call (DESIGN; a words-only rename if yes) + the §88 price book re-read on prior v4 (desk, the rarity protocol step 1; any price move rides 94h).
+- [ ] 94g — ⛔ the ARM disposition from 94a (close via the fold — a λ re-tune / cap re-read + re-probe — or the `DP_TAIL_SCALE` dial + a 5-vs-10 paired read ~2.5 h); an ARM change precedes 94h; the exchange-rate held flag closes here.
+- [ ] 94h — the signing cohort (box ~15 h, one overnight: the fresh derive → the 88d board shape at the final config → prior v5 + roster v3 → the sheet amendment: the seam band as a FRACTION of the pool max [sheet field + board derivation + pin] · the refs re-pinned · the parity prose · the pacing bands · the swarms flag dispositioned) → the board green → ⛔ user-signed.
+- [ ] 94i — the close (scratchpad sweep → archive `post-88-*` + the spec → META-ROADMAP status → HANDOFF cursor: Round 7 Idioms NEXT → TODO → the agent memory).
+
 ## Riders carried in from the Round 6 close — ✅ SUPERSEDED by the §93 KEEP (2026-09-05)
 
 Read for the record at 92i (WORKLOG §92i): the walls (0.467 regen / 0.323 deploy) · the deploy-walk overperformance (reach 0.517) · the gambler shape-flip (deploy +0.8 / regen −7.5 on the maladapted vector) · the band promote (moot under a new lineage). The prior table is v4, the roster table v2 (the registry rebuilt both at the frozen config).

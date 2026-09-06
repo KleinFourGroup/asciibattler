@@ -19,6 +19,7 @@ import { RewardScene } from './scenes/RewardScene';
 import { PortScene } from './scenes/PortScene';
 import { EventScene } from './scenes/EventScene';
 import { BitsOverlay } from './ui/BitsOverlay';
+import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -31,6 +32,7 @@ import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
 import { Keybindings } from './ui/Keybindings';
+import { HEALTH } from './config/health';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -72,6 +74,8 @@ export class Game implements RunDispatcher {
   /** 48d — the persistent bits chip (page-lifetime, survives scene swaps);
    *  held for `resetRun`'s post-reassignment `refresh()`. */
   private readonly bitsOverlay: BitsOverlay;
+  /** 94e — the persistent run-pool chip (the bits chip's sibling). */
+  private readonly poolOverlay: PoolOverlay;
   /** 49f — the persistent cache chip + modal (the bits chip's sibling; same
    *  gotcha #116 lifecycle, incl. the resetRun `refresh()`). */
   private readonly cacheOverlay: CacheOverlay;
@@ -207,6 +211,16 @@ export class Game implements RunDispatcher {
       uiMount,
       this.bus,
       () => this.run?.bits ?? 0,
+      this.run === null,
+    );
+
+    // 94e: the persistent run-pool chip — the bits chip's page-lifetime
+    // sibling (the user's "the pool everywhere"); the same first-paint /
+    // refresh() ordering as the bits chip.
+    this.poolOverlay = new PoolOverlay(
+      uiMount,
+      this.bus,
+      () => ({ current: this.run?.playerHealth ?? 0, max: HEALTH.playerHealthMax }),
       this.run === null,
     );
 
@@ -362,6 +376,7 @@ export class Game implements RunDispatcher {
     }
     this.run = this.createRun(character);
     this.bitsOverlay.refresh();
+    this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
     this.swap(new MapScene());
   }
@@ -561,12 +576,14 @@ export class Game implements RunDispatcher {
       // it), so the overlay's event-driven paint would have read the dead
       // run.
       this.bitsOverlay.refresh();
+      this.poolOverlay.refresh();
       // 49f — same ordering for the cache chip (also closes a stale modal).
       this.cacheOverlay.refresh();
       this.swap(new MapScene());
     } else {
       this.run = null;
       this.bitsOverlay.refresh();
+      this.poolOverlay.refresh();
       this.cacheOverlay.refresh();
       this.swap(new CharacterSelectScene());
     }
@@ -615,6 +632,7 @@ export class Game implements RunDispatcher {
     // 48d/49f — the resetRun ordering: re-paint the page-lifetime chips
     // AFTER the reassignment so their getters read the new run.
     this.bitsOverlay.refresh();
+    this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
     this.swap(new MapScene());
   }

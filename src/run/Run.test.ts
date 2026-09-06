@@ -6486,3 +6486,36 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     );
   });
 });
+
+describe('94e — run:poolChanged from the ONE pool chokepoint (setPlayerHealth)', () => {
+  it('a chip emits {before, after, max, reason: chip}; a no-op write (a heal on a full pool) emits nothing', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    const moves: GameEvents['run:poolChanged'][] = [];
+    bus.on('run:poolChanged', (p) => moves.push(p));
+    run.dispatch({ kind: 'advanceTurn' });
+    chipTurn(bus, { player: 1, enemy: 2 }, [], undefined, {
+      winner: 'player',
+      reason: 'decisive',
+      fallenPower: { player: 2, enemy: 1 },
+    });
+    expect(moves).toEqual([
+      {
+        before: HEALTH.playerHealthMax,
+        after: HEALTH.playerHealthMax - 2,
+        max: HEALTH.playerHealthMax,
+        reason: 'chip',
+      },
+    ]);
+    expect(moves[0]!.after).toBe(run.toJSON().playerHealth);
+  });
+
+  it('a full-pool heal op changes nothing and emits nothing; the chip event carries the applied loss', () => {
+    const { run, bus } = eventRun(106, { daemon: NO_RESOLVE_DAEMON, startingBits: 3 });
+    const moves: GameEvents['run:poolChanged'][] = [];
+    bus.on('run:poolChanged', (p) => moves.push(p));
+    run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+    run.dispatch({ kind: 'chooseEventOption', choiceIndex: 4 }); // heal 3 on a full pool → clamped, unchanged
+    expect(run.toJSON().playerHealth).toBe(HEALTH.playerHealthMax);
+    expect(moves).toEqual([]);
+  });
+});

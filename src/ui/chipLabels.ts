@@ -60,3 +60,13 @@ export function powerTooltip(mode: ChipRule, team?: 'player' | 'enemy'): string 
   }
   return 'chips the opposing health pool each turn it survives';
 }
+
+/** 94e — the pool's player-facing NAMES, in one place: the two full gauges
+ *  (pre/post-turn screens, the HUD) and the persistent chip's short label.
+ *  94f flips these to the "morale" wording (the user's DESIGN call) — the
+ *  config keys and snapshot fields keep their names. */
+export const POOL_LABELS = {
+  player: 'Your Pool',
+  enemy: 'Enemy Pool',
+  chip: 'pool',
+} as const;

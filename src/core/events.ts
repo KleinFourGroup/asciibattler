@@ -27,6 +27,9 @@ import type { Theme } from '../sim/layouts';
 import type { EncounterKind } from '../config/encounters';
 import type { UseContext } from '../config/packets';
 
+/** 94e — what moved the run-wide player pool (`run:poolChanged.reason`). */
+export type PoolChangeReason = 'chip' | 'heal' | 'damage' | 'rest' | 'seam';
+
 export interface GameEvents extends Record<string, unknown> {
   tick: { tick: number };
 
@@ -491,6 +494,19 @@ export interface GameEvents extends Record<string, unknown> {
    * overlay is the intended consumer; no sim/run subscriber exists.
    */
   'run:bitsChanged': { bits: number; delta: number };
+
+  /**
+   * 94e — the run-wide player pool moved: `after` is authoritative, `reason`
+   * names the mover (the chip at a turn boundary · an event's heal / damage
+   * op · the rest heal · the sector-seam refill). Emitted only on a real
+   * change, from the single `Run.setPlayerHealth` chokepoint — the §94
+   * kickoff audit found four of the five pool writes emitting nothing,
+   * which is what would have left a persistent pool chip stale on a rest.
+   * The persistent `PoolOverlay` (the bits chip's sibling) is the intended
+   * consumer; `pools:chipped` (89a) stays the telemetry's turn-boundary
+   * source (it carries the encounter pool + the uncapped charges).
+   */
+  'run:poolChanged': { before: number; after: number; max: number; reason: PoolChangeReason };
 
   /**
    * 49b — the run's cache changed: a packet was added (`Run.addPacket` —

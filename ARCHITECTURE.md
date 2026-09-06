@@ -568,6 +568,7 @@ run:victory             { }
 run:defeated            { }
 sector:cleared          { clearedSectorTitle; nextSectorTitle; poolBefore; poolAfter } # 67a: a non-sink sector terminal cleared — emitted from advanceSector AFTER the state swap (phase lands on sectorCleared); the cleared title rides the payload, the next mirrors currentSectorTitle. §90: poolBefore = the pre-floor pool the act ended on (the harness records THIS as poolAtSectorClears), poolAfter = after health.seamHealFloor lifted it
 run:bitsChanged         { bits: number; delta: number }                             # 47e: the balance moved (bits = new total, delta = post-clamp change); emitted only on a real change from Run.addBits; the §48 overlay's feed
+run:poolChanged        { before; after; max; reason }                                 # 94e: the run-wide player pool moved — from the ONE Run.setPlayerHealth chokepoint (chip · heal · damage · rest · seam), on a real change; the persistent PoolOverlay is the consumer (pools:chipped stays the telemetry's turn-boundary source)
 run:cacheChanged        { packetIds: string[]; size: number }                       # 49b: the cache changed — a packet added/discarded, OR addDaemon moved the DERIVED capacity (size = the folded effectiveCacheSize); the 49f chip+modal's feed
 run:packetUsed          { packetId; context; playerHealth; grants; empowerStacks }  # 49e: a usePacket fired (consume-on-fire; the paired run:cacheChanged carries the shrunk cache) — post-effect health + the re-derived queue/badge column for the 49f strip
 

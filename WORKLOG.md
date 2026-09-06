@@ -2668,3 +2668,42 @@ after this one). `PostTurnScreen` renders `turn:resolved.fallen`:
   rule's own fallen totals). The archetype name falls back to the id for a
   row whose archetype left the catalog (an old save).
 - Browser-verified on main (the 3-turn brigands opener): see the commit.
+
+### 94e — the pool everywhere: `Run.setPlayerHealth` + `run:poolChanged` + the persistent PoolOverlay (2026-09-06)
+
+The verdict's 7b ("the total health pool must be displayed during events
+— really, everywhere"). The audit's finding drove the shape: the pool was
+painted on three screens (the HUD, the pre/post-turn gauges) and absent
+from seven (map · event · port · reward · recruit · promotion · sector-
+cleared), and the player pool MOVED at five Run sites of which only the
+chip emitted anything — a persistent chip fed by `pools:chipped` alone
+would have gone stale on every rest.
+
+- **The chokepoint:** `Run.setPlayerHealth(next, reason)` — the ONE write
+  after construction; floors at 0 and emits `run:poolChanged {before,
+  after, max, reason: chip | heal | damage | rest | seam}` on a real
+  change. Each site keeps its OWN cap (the heals and the rest clamp at
+  max; the seam only floors — the T2 sentinel test caught the first draft
+  clamping the seam at max: a pool above the floor carries untouched, the
+  §90 rule, so the chokepoint adds the event and nothing else). Every
+  write byte-identical to the pre-94e one: the fuzz smoke green, the
+  baselines untouched. `pools:chipped` (89a) stays beside the chip site —
+  it carries the encounter pool + the uncapped charges the telemetry
+  reads.
+- **The chip:** `src/ui/PoolOverlay.ts`, the bits chip's page-lifetime
+  sibling (Game-owned, the 48d/49f pattern verbatim: first paint via the
+  getter, `refresh()` from `confirmCharacter` / `resetRun` / `restore`
+  AFTER the Run reassignment, re-show on `run:started`, hide on defeat /
+  victory), fourth in the left column (bits 20 · cache 76 · the 78e sector-map chip 132 · pool 188 px — the first draft sat ON the map chip; the browser pass caught it):
+  the label + `current / max` + a thin bar; pulses on every move, red
+  when the move was a loss (chip / damage), red value + bar in the last
+  quarter. The battle HUD and the turn screens keep their full gauges.
+- **The label constant:** `POOL_LABELS` in `chipLabels.ts` (player /
+  enemy / chip) — the 94f "morale" rename flips one object.
+- **Pins (2):** a chip emits exactly one `{before, after, max, reason:
+  'chip'}` whose `after` is the snapshot's pool; a heal op on a full pool
+  changes nothing and emits nothing. The rest / seam / damage reasons ride
+  the same method (the type union pins the names). ARCHITECTURE catalog
+  row added.
+- Browser-verified on main across the map → an event → a rest → the seam:
+  see the commit.

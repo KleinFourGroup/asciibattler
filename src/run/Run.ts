@@ -40,7 +40,7 @@
  */
 
 import type { EventBus } from '../core/EventBus';
-import type { GameEvents, PromotionInfo } from '../core/events';
+import type { GameEvents, PoolChangeReason, PromotionInfo } from '../core/events';
 import { glyphForArchetype, ALL_ARCHETYPES } from '../sim/archetypes';
 import { RNG, deriveRng } from '../core/RNG';
 import type { RngStreamKey } from '../core/rngStreams';
@@ -1652,10 +1652,10 @@ export class Run {
         this.spendBits(Math.min(op.amount, this.bits));
         break;
       case 'healPool':
-        this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+        this.setPlayerHealth(Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount), 'heal');
         break;
       case 'damagePool':
-        this.playerHealth = Math.max(0, this.playerHealth - op.amount);
+        this.setPlayerHealth(this.playerHealth - op.amount, 'damage');
         if (this.playerHealth === 0) {
           // An event CAN kill (the FTL lineage). The finishEncounter defeat
           // shape, minus encounter state (there is none mid-event).
@@ -2436,6 +2436,30 @@ export class Run {
    * no-op spend or a ×0 grant stays silent. §50's spend surfaces will call
    * this with negative deltas.
    */
+  /**
+   * 94e — the ONE write to the run-wide player pool after construction:
+   * floors at 0 and emits `run:poolChanged` on a real change, whatever
+   * moved it — the chip, a rest, the seam refill, an event's heal or damage
+   * op. Each site keeps its OWN cap (the heals and the rest clamp at max,
+   * the seam only floors — a pool above the floor carries untouched, the
+   * §90 rule the T2 sentinel pins), so every write is byte-identical to the
+   * pre-94e one; the chokepoint adds the event, nothing else. The §94
+   * kickoff audit found four of the five writes emitting nothing, which is
+   * how a persistent pool chip would have gone stale on a rest; this is
+   * what makes "the pool shown everywhere" true rather than mostly true.
+   * `pools:chipped` (89a) still rides the chip site beside it — that event
+   * carries the encounter pool + the uncapped charges the telemetry reads.
+   * `max` is read at call time (the fuzz `--set` arm mutates HEALTH in place).
+   */
+  private setPlayerHealth(next: number, reason: PoolChangeReason): void {
+    const after = Math.max(0, next);
+    const before = this.playerHealth;
+    this.playerHealth = after;
+    if (after !== before) {
+      this.bus.emit('run:poolChanged', { before, after, max: HEALTH.playerHealthMax, reason });
+    }
+  }
+
   private addBits(delta: number): void {
     const next = Math.max(0, this.bits + delta);
     if (next === this.bits) return;
@@ -2736,7 +2760,7 @@ export class Run {
           this.gainBits(op.amount);
           break;
         case 'healPool':
-          this.playerHealth = Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount);
+          this.setPlayerHealth(Math.min(HEALTH.playerHealthMax, this.playerHealth + op.amount), 'heal');
           break;
         default:
           op satisfies never;
@@ -3166,7 +3190,7 @@ export class Run {
     const playerBefore = this.playerHealth;
     const enemyBefore = this.enemyHealth;
     this.enemyHealth = Math.max(0, this.enemyHealth - charges.enemy);
-    this.playerHealth = Math.max(0, this.playerHealth - charges.player);
+    this.setPlayerHealth(this.playerHealth - charges.player, 'chip');
     // 89a — report the APPLIED deltas from the one site that applies them
     // (both paths; the telemetry's trajectory source — see events.ts), and
     // §91a2 the uncapped charges beside them.
@@ -3677,9 +3701,9 @@ export class Run {
     // above the floor carries untouched. Read from HEALTH at call time — the
     // fuzz `--set` probe arm mutates the config object in place.
     const poolBefore = this.playerHealth;
-    this.playerHealth = Math.max(
-      this.playerHealth,
-      HEALTH.seamHealFloor * HEALTH.playerHealthMax,
+    this.setPlayerHealth(
+      Math.max(this.playerHealth, HEALTH.seamHealFloor * HEALTH.playerHealthMax),
+      'seam',
     );
     // 77d2 — the new sector claims the next index FIRST; its three
     // sector-scoped streams key on it (the constructor's index-0 triple).
@@ -3743,9 +3767,12 @@ export class Run {
     // levels a unit still heals. §90 — a FRACTION of max (0.25 × 20 = the
     // old absolute 5), so the heal tracks a pool-max move; packet heals stay
     // absolute (`healPool` ops).
-    this.playerHealth = Math.min(
-      HEALTH.playerHealthMax,
-      this.playerHealth + HEALTH.restHealFraction * HEALTH.playerHealthMax,
+    this.setPlayerHealth(
+      Math.min(
+        HEALTH.playerHealthMax,
+        this.playerHealth + HEALTH.restHealFraction * HEALTH.playerHealthMax,
+      ),
+      'rest',
     );
     const awards = this.team.map((_, i) => ({
       unitId: i,

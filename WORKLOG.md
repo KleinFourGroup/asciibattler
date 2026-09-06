@@ -2743,3 +2743,67 @@ Tree state: typecheck + the UI / config / tripwire / docs suites green
 in the worktree; the full suite + the fuzz smoke re-run for the tier
 change (the draft weights move rosters — the run-vs-run pins move with
 the game).
+
+### 94b — the per-encounter pass: the SEVEN held rows as ONE config commit (2026-09-06, USER-SIGNED per row)
+
+The table designed at the desk from the 92h numbers (pool ≈ burn × T;
+burn/turn ≈ the wave's fielded power × the measured wipe fraction; the
+signed bands normal 2.5–3.25 · elite 4–5; numbers on screen at the swarm
+scale — the "sloggy at small numbers" read), proposed row by row and
+signed by the user in chat "including the difficulty changes". Through
+the encounter editor's formatter (byte-faithful on the current file
+first, 31812 chars; the per-id printout; `encounters-surgery-94b.ts` in
+the session scratchpad):
+
+| row | pool | the other levers | expected |
+|---|---|---|---|
+| adventurer-with-guards | 8 → **20** | the guards' count 0.7 → **1.2**; the adventurer **@4** | two guard turns ≈ 8 + 8, the adventurer's fall closes it → T ≈ 3.0 |
+| elementalTrio | 9 → **21** | luminant **@2** · ice_mage **@2** (the three elementals weigh 2 like the stormcaller) | burns ≈ 7 / 7 / 7 → T ≈ 3.0; the third stage appears every time (it was truncated at pool 9) |
+| infernalColumn | 10 → **21** | count 1.0 → **1.2** · level 1.25 → **1.0** | more, weaker bodies → T ≈ 3.0; the bite toward ~2.5–3 / turn |
+| miscreants | 10 → **24** | level 1.25 → **1.0** · the warlock **@2** | burn ≈ 8–9 → T ≈ 2.7 |
+| ronin-vs-mages | 8 → **16** | the mages' count 0.9 → **1.3** · the ronin **@3** · level 1.44 → **1.25** (both picks) | burn ≈ 5 → T ≈ 3.2; the duel reads as a 3-point kill |
+| darkMagicPosse (elite) | 7 → **18** | shaman **@4** · warlock **@3** · corrupter **@3** | the casters weigh 7 a wave at the measured ~58% wipe → T ≈ 4.5; cost/inst ~20 |
+| plagueSpreaders (elite) | 10 → **22** | stage-1 count 1.0 → **1.25** · stage-2 shamans 0.75 → **0.5** | stage-1 turns ~7.5, shaman turns ~4 → T ≈ 4–5; three shamans, not five |
+
+Verified per id (the surgery's own guard: every override matched a
+wave-unit entry, every wave edit matched a wave, exactly seven rows
+touched); the twelve 92d rows untouched. The control: `perf-oracle.sh
+HEAD` (the dirty tree vs the pinned pre-table HEAD `40fd7c3`): the ARM
+shape FAILS on all three CSVs (summary · decisions · rosters — the
+arbitrated rollouts sample the encounter pools, so a moved row shows on
+seed 1), the table reached the game; the `scored` 4 × 4-hop act-1 probe
+PASSES because its four short runs never drew the two moved act-1 rows —
+a PASS there is the probe's reach, not a dead table (the 91b/92d pattern
+read with the row count in mind: twelve rows moved at 92d, seven here,
+five of them deep-end).
+94c reads all seven under the pre-signed rule (in band + cost/instance
+≲ 1.5× the kind mean → HOLD; a breach → one proportional trim).
+
+**The hook's catch — two dead level caps (94b-2, same commit).** The
+pre-commit gate blocked the first 94b commit on `levelCapMigration.test`'s
+second invariant ("every STAMPED cap is load-bearing"): at the signed
+numbers the `roster+2` caps on ronin-vs-mages' MAGE wave (level 1.44 →
+1.25 across ×1.3 bodies — ~0.96 × the roster mean each, never near the
+cap) and on adventurer-with-guards' GUARD wave (×1.2 bodies at the same
+budget) no longer bind for any roster/seed — dead stamps. The two ronin
+/ adventurer caps on the LONE-unit waves still bind (one unit carrying a
+whole budget) and stay. Dropped through the formatter (the scratchpad
+`encounters-dropcap-94b.ts`, per wave ordinal); the migration suite's
+"stamping set == biting set" holds again (88 encounter tests green). A
+count or level move on a capped wave re-checks its cap — the test is
+the reminder, and it fired on the forgetful path.
+
+**The hook's second catch — the 70e fixture's scan reach (94b-3, same
+commit).** Three arbitration MECHANISM pins (`arbitratedStrategy.test`
+"arbitrated node choice (70e)") failed as "no multi-node frontier found in
+6 depths × 8 trials": the fixture hunts a map state with a real choice by
+walking N battles then stopping at the next map phase. Widening trials
+8 → 16 (the §81a fix) found nothing either — a scratchpad probe
+(`probe-frontier-94b.ts`, the fixture's loop with the state printed) read
+0/48 hits on the new table vs 1/48 on the old: the depth axis counts
+BATTLES (turns), the 94b table makes the act-1 openers 3-turn fights, so
+six turns now stop at hop 2 where the braid has ONE exit — the first
+split is hop 3. Depths 6 → 12 (trials back to 8): five pins green in 35 s.
+The mechanism under test is untouched; the fixture's reach was tuned when
+fights lasted 1–2 turns. Two scans in one commit say the same thing: a
+pacing change moves every fixture that measures its reach in turns.

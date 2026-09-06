@@ -603,10 +603,15 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     // choiceless nodes at every depth; varying the policy seed re-routes
     // the walk until a stop lands on a split. (Trials 4→8 at §81a: themed
     // procedural battles re-routed every walk trajectory and the old bound
-    // happened to stop choiceless every time — same scan, wider net.)
+    // happened to stop choiceless every time — same scan, wider net. Depths
+    // 6→12 at §94b: the depth axis counts BATTLES (turns), and the 94b table
+    // makes the act-1 openers 3-turn fights, so six turns stop at hop 2 where
+    // the braid has one exit — the first split is hop 3 (the 94b probe read
+    // 0/48 hits at depth ≤ 6 vs 1/48 on the old table); a deeper net, the
+    // mechanism under test untouched.)
     for (let trial = 0; trial < 8; trial++) {
       const t = trial * 1000;
-      for (let battles = 1; battles <= 6; battles++) {
+      for (let battles = 1; battles <= 12; battles++) {
         const s = cloneRunForRollout(
           new Run(SEED, new EventBus<GameEvents>()),
           SEED + 30 + battles + t,
@@ -625,7 +630,7 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
         }
       }
     }
-    throw new Error('no multi-node frontier found in 6 depths x 8 trials');
+    throw new Error('no multi-node frontier found in 12 depths x 8 trials');
   }
 
   it('challengers = the frontier minus the nominee (sorted, kinds labeled); tie → the nominee', () => {

@@ -133,7 +133,7 @@
     "id": "ronin-vs-mages",
     "name": "The Ronin and the Mages",
     "description": "A chaotic battle between a ronin and a troop of mages, all of whom now want you gone!",
-    "healthPool": 8,
+    "healthPool": 16,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -151,9 +151,8 @@
                 "entry": {
                   "kind": "wave",
                   "spec": {
-                    "levelBudget": { "kind": "mean", "factor": 1.44 },
-                    "count": { "kind": "hand", "factor": 0.9 },
-                    "levelCap": { "kind": "roster", "delta": 2 },
+                    "levelBudget": { "kind": "mean", "factor": 1.25 },
+                    "count": { "kind": "hand", "factor": 1.3 },
                     "units": [
                       { "archetype": "mage", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                     ]
@@ -165,11 +164,11 @@
                 "entry": {
                   "kind": "wave",
                   "spec": {
-                    "levelBudget": { "kind": "mean", "factor": 1.44 },
+                    "levelBudget": { "kind": "mean", "factor": 1.25 },
                     "count": { "kind": "fixed", "value": 1 },
                     "levelCap": { "kind": "roster", "delta": 2 },
                     "units": [
-                      { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                      { "archetype": "ronin", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 }
                     ]
                   }
                 },
@@ -185,7 +184,7 @@
     "id": "adventurer-with-guards",
     "name": "Guarded Adventurer",
     "description": "A wandering adventurer and his bodyguards--wait, aren't adventurers supposed to help people?",
-    "healthPool": 8,
+    "healthPool": 20,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -200,8 +199,7 @@
             "kind": "wave",
             "spec": {
               "levelBudget": { "kind": "mean", "factor": 1 },
-              "count": { "kind": "hand", "factor": 0.7 },
-              "levelCap": { "kind": "roster", "delta": 2 },
+              "count": { "kind": "hand", "factor": 1.2 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
@@ -218,7 +216,7 @@
           "count": { "kind": "fixed", "value": 1 },
           "levelCap": { "kind": "roster", "delta": 2 },
           "units": [
-            { "archetype": "adventurer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
+            { "archetype": "adventurer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 }
           ]
         }
       }
@@ -361,7 +359,7 @@
     "id": "darkMagicPosse",
     "name": "Dark Magic Posse",
     "description": "Who are these people, and what unholy horrors do they have in store for you?",
-    "healthPool": 7,
+    "healthPool": 18,
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
@@ -379,8 +377,8 @@
               "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
-                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
+                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 }
               ]
             }
           },
@@ -390,8 +388,8 @@
               "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
-                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "shaman", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 4 },
+                { "archetype": "corrupter", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 3 }
               ]
             }
           }
@@ -403,7 +401,7 @@
     "id": "elementalTrio",
     "name": "Elemental Trio",
     "description": "Three mages who draw upon the power of nature -- and their band of cultists!",
-    "healthPool": 9,
+    "healthPool": 21,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -431,7 +429,7 @@
               "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1 },
               "units": [
-                { "archetype": "luminant", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "luminant", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 2 },
                 { "archetype": "rogue", "count": { "kind": "weight", "weight": 1.5 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
@@ -443,7 +441,7 @@
               "levelBudget": { "kind": "mean", "factor": 1.25 },
               "count": { "kind": "hand", "factor": 1 },
               "units": [
-                { "archetype": "ice_mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
+                { "archetype": "ice_mage", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 2 },
                 { "archetype": "catapult", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "bandit", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
               ]
@@ -555,7 +553,7 @@
     "id": "infernalColumn",
     "name": "Infernal Column",
     "description": "A squad of \"peacekeepers\" sent to quell the bandit problems, by any means necessary.",
-    "healthPool": 10,
+    "healthPool": 21,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -569,8 +567,8 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
-              "count": { "kind": "hand", "factor": 1 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
+              "count": { "kind": "hand", "factor": 1.2 },
               "units": [
                 { "archetype": "mercenary", "count": { "kind": "weight", "weight": 3 }, "level": { "kind": "weight", "weight": 1 } },
                 { "archetype": "reaver", "count": { "kind": "weight", "weight": 0.5 }, "level": { "kind": "weight", "weight": 1 } },
@@ -616,7 +614,7 @@
     "id": "miscreants",
     "name": "Miscreants",
     "description": "It's a swarm of thieves, but why the warlock?",
-    "healthPool": 10,
+    "healthPool": 24,
     "kind": "normal",
     "rewards": [
       { "table": "bits-small", "trigger": { "chance": 1 } },
@@ -630,11 +628,11 @@
           {
             "kind": "wave",
             "spec": {
-              "levelBudget": { "kind": "mean", "factor": 1.25 },
+              "levelBudget": { "kind": "mean", "factor": 1 },
               "count": { "kind": "hand", "factor": 1.5 },
               "units": [
                 { "archetype": "rogue", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
-                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 } }
+                { "archetype": "warlock", "count": { "kind": "fixed", "value": 1 }, "level": { "kind": "weight", "weight": 1 }, "power": 2 }
               ]
             }
           }
@@ -646,7 +644,7 @@
     "id": "plagueSpreaders",
     "name": "Plague Spreaders",
     "description": "The source of the mysterious plague!",
-    "healthPool": 10,
+    "healthPool": 22,
     "kind": "elite",
     "rewards": [
       { "table": "bits-large", "trigger": { "chance": 1 } },
@@ -664,7 +662,7 @@
                 "kind": "wave",
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1 },
-                  "count": { "kind": "hand", "factor": 1 },
+                  "count": { "kind": "hand", "factor": 1.25 },
                   "units": [
                     { "archetype": "mercenary", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
                     { "archetype": "archer", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } },
@@ -680,7 +678,7 @@
                 "kind": "wave",
                 "spec": {
                   "levelBudget": { "kind": "mean", "factor": 1 },
-                  "count": { "kind": "hand", "factor": 0.75 },
+                  "count": { "kind": "hand", "factor": 0.5 },
                   "units": [
                     { "archetype": "shaman", "count": { "kind": "weight", "weight": 1 }, "level": { "kind": "weight", "weight": 1 } }
                   ]

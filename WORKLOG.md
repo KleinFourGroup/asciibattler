@@ -2249,3 +2249,53 @@ exchange-rate re-pin) stay HELD by the user's call (2026-09-05).
 ✓; the alpha-strike and gradient reads recomputed on the re-searched arm ✓
 (0.072 · 0.100 < 0.125 < 0.725); the §88 rarity/price re-read filed ✓.
 NOT done, by charter: signing.
+
+## Phase 93 — ⛔ Keep or roll back (the decision point)
+
+### §93 criterion 4 — the user's CASUALTIES feel verdict (2026-09-05, filed BEFORE the §92 board was shown; the session withheld every 92h/92i number until this was written)
+
+**Protocol deviation, stated:** THREE runs, not the pre-registered five
+("they take a while" — the 3-turn swarms and 6-turn bosses roughly double a
+run's length; the user disclosed it unprompted). One run per character:
+**won with the soldier and the priest "handily", lost with the gambler
+right before the first boss.** Build: HEAD `89c6229` = the frozen 92d
+config (`1d51d06`) + the deployed vector, prior v4, roster v2. The verdict,
+in the user's order (most → least important), substance verbatim:
+
+1. **"It's good. It's really good. I'm enjoying it a lot."**
+2. **The post-turn screen no longer conveys enough** — easy to lose track
+   of which units died when. The user reads it as a UI / display problem,
+   not a mechanic one, and has ideas.
+3. **Winning a turn may need more reward than "maximum damage on the
+   enemy"** — winning by Pyrrhic victory feels a bit weird. Possibly moot
+   once (2) is fixed; the user has ideas if not.
+4. **More diversity in unit power** — instead of 1 / 1 / 1 / 2 by rarity,
+   perhaps 1 / 1 / 2 / 3 or even 1 / 2 / 3 / 4. "A whole new round of health
+   pool inflation … not exactly urgent."
+5. **Some fights still FEEL sloggy** even where the turn counts say they
+   are not — the user's own read: small damage to a low-pool enemy is
+   less satisfying than 10–12 against a 25-pool encounter at the same
+   ratio.
+6. (The outcomes above.)
+7. Unrelated to the overhaul: (a) the AoE-status enemies (banshees) NEED a
+   rework at some point — "really annoying"; some seem to lack projectiles;
+   (b) the total health pool must be displayed during events — "really,
+   everywhere"; (c) consider renaming pool health to **morale** (thematic
+   fit); (d) more diverse SFX.
+
+The session's reading of the verdict against the frame: (1) is the keep
+signal the experiment was built to hear; (2) and (7b) are the §94 UI
+items the rule's legibility depends on ("add your own numbers" needs the
+ledger SHOWN — the post-turn screen predates the fallen ledger); (3) is
+the rule's asymmetry read as a feel: under casualties a decisive win still
+books your own dead, so the reward for winning is the enemy's burn, not a
+refund — a Round 9 / §94 design fork (a partial refund on a decisive win,
+or the enemy paying survivors on a loss — the surcharge machinery already
+mixes rules), not a §93 lever; (4) is a table change with a pool re-anchor
+behind it — a Round 9 item, sequenced after the sheet signs; (5) is
+consistent with the 92h pacing (the held small waves / summoner elites
+run 2.5–4 turns at pools 7–10 while the swarms run 3 at 19–30) — the
+per-encounter pass (§94) can lift the held pools and their burn together
+so the numbers on screen read at the swarm scale; (7a/c/d) → TODO riders
+(the banshee rework a Round 7 idiom candidate; "morale" a DESIGN naming
+decision for the user; SFX a content item).

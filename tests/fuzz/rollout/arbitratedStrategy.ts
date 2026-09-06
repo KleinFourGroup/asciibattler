@@ -247,6 +247,18 @@ export const CAMP_RAID_EPSILON = 6.206;
  */
 export const DP_TAIL_SCALE = HEALTH.restHealFraction * HEALTH.playerHealthMax;
 
+/**
+ * 94g — the exchange rate as a DIAL. `DP_TAIL_SCALE` stays the import-time
+ * default (the shipped config's rest heal in pool HP); the tail reads THIS
+ * object at call time so a `--set=rollout.dpTailScale=<n>` probe arm (the
+ * balance-sweep knob registry, group `rollout`) can price the same run
+ * under another exchange rate without touching the rest heal — the §92i
+ * ARM docket's 5-vs-10 paired read, sharpened by 94a (the fold is not the
+ * cause of the negative ceilings; the rollout's own pricing is the suspect).
+ * A `--set` write lands on this object (the resolveKnob contract).
+ */
+export const ROLLOUT_KNOBS: { dpTailScale: number } = { dpTailScale: DP_TAIL_SCALE };
+
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;
 }
@@ -801,7 +813,7 @@ function arbitrateNodeChoice(
     if (onward.length === 0) return 0;
     let mx = -Infinity;
     for (const c of onward) mx = Math.max(mx, best(c));
-    return DP_TAIL_SCALE * mx;
+    return ROLLOUT_KNOBS.dpTailScale * mx; // 94g — the dial, read at call time
   };
 
   const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));

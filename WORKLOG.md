@@ -2840,3 +2840,29 @@ same GAME. The exchange-rate held flag (92f) is therefore NOT closed by
 §93 KEEP (criterion 2 was read as PASS with the ceiling open): the game
 is reachable at the targets on both arms; the doctrine arm plays it
 better.
+
+### 94g-1 — the exchange rate as a dial: `rollout.dpTailScale` (2026-09-06; built in the worktree during the 94c freeze)
+
+94a named the rollout's own pricing as the suspect, and the docket's next
+instrument is the `DP_TAIL_SCALE` 5-vs-10 paired read (the TODO rider: "the
+evaluator exchange rate as a dial — without touching the rest heal"). Built:
+
+- `ROLLOUT_KNOBS = { dpTailScale: DP_TAIL_SCALE }` in `arbitratedStrategy.ts`
+  — a mutable object the tail reads at CALL time (`tailScore` →
+  `ROLLOUT_KNOBS.dpTailScale × max onward bestScore`); `DP_TAIL_SCALE` stays
+  the import-time default (the shipped config's rest heal in pool HP — the
+  §90 rationale that the tail prices at the shipped config holds: a `--set`
+  is a deliberate probe, not a config).
+- The balance-sweep knob registry gains the `rollout` group, so
+  `--set=rollout.dpTailScale=5` lands on the object exactly the way
+  `health.chipMode` does (`resolveKnob` → the live object) and rides the
+  manifest's argv like every other probe dial.
+- **Pin:** the tail reads the knob (set to half through `resolveKnob` →
+  the tail halves; restored → the default), the default IS
+  `DP_TAIL_SCALE`, non-vacuous (a positive tail on the 70e fixture). The
+  70e mechanism pins + the §90 pin unchanged.
+- The queue: `output/box-batches/94g-dptail5.queue` — the deploy pair
+  (act-1 + walk) at dp=5, base n=40 + ext n=80, paired vs the 92h λ=0.5
+  rows at dp=10 and the doctrine controls (~1.7 h). Launches from the HEAD
+  that carries the dial, AFTER 94c's last launch (ONE HEAD per cohort).
+  The read: the scratchpad `read-94g.mjs`.

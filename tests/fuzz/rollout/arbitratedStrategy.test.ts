@@ -39,6 +39,7 @@ import type { EventDef } from '../../../src/config/events';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
+import { resolveKnob } from '../balanceSweep';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
 import { makeBestScore, maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
@@ -55,6 +56,7 @@ import {
   NODE_CHOICE_EPSILON,
   EVENT_CHOICE_EPSILON,
   DP_TAIL_SCALE,
+  ROLLOUT_KNOBS,
   CAMP_RAID_EPSILON,
   walkPolicyOverlay,
   walkPortBuy,
@@ -695,6 +697,36 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     specs.length = 0;
     arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
     expect(specs[0]!.tailScore).toBeUndefined();
+  });
+
+  it('94g — the exchange rate is a --set dial (rollout.dpTailScale): the tail reads it at call time; the default IS DP_TAIL_SCALE', () => {
+    expect(ROLLOUT_KNOBS.dpTailScale).toBe(DP_TAIL_SCALE);
+    const specs: RunRolloutSpec[] = [];
+    const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+      specs.push(spec);
+      return { score: 0, perSeed: [] };
+    };
+    const run = mapStateWithChoice();
+    const frontier = frontierOf(run);
+    const weights: ScoredWeights = {
+      ...DEFAULT_SCORED_WEIGHTS,
+      path: { ...DEFAULT_SCORED_WEIGHTS.path, rest: 1 },
+    };
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture, weights });
+    arm.pickNextNode(frontier, run, null as never);
+    const spec = specs[0]!;
+    const best = makeBestScore(run.nodeMap, weights);
+    const mx = Math.max(...frontierOf(run).map((id) => best(id)));
+    expect(mx).toBeGreaterThan(0); // the pin would be vacuous on a zero tail
+    // The --set path, exactly as the CLI performs it (resolveKnob → the live object).
+    const knob = resolveKnob('rollout.dpTailScale');
+    try {
+      knob.obj[knob.key] = DP_TAIL_SCALE / 2;
+      expect(spec.tailScore!(run)).toBe((DP_TAIL_SCALE / 2) * mx);
+    } finally {
+      knob.obj[knob.key] = DP_TAIL_SCALE;
+    }
+    expect(spec.tailScore!(run)).toBe(DP_TAIL_SCALE * mx);
   });
 
   it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate — re-pinned at 10 (92d)', () => {

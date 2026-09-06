@@ -2351,3 +2351,213 @@ diversity.
 **Process:** the §94 kickoff runs in a FRESH session (the user's call —
 this one is at ~550k context); the ritual as always (the code-reality
 audit → the cut → shape-lock → ROADMAP).
+
+## Phase 94 — The encounter list + the close
+
+### §94 kickoff (2026-09-05, a fresh session) — the code-reality audit (at `2238ade`)
+
+Surveyed: the §87d3 defect list against the 92d table and the 92h
+per-encounter pacing (`output/board-runs/92h/walk-*/pacing.csv`, the six
+ARM walk arms pooled), the signed sheet + its board reader, the post-turn
+screen + the death/turn events, the pool's display sites, the two derived
+artifacts' invalidation rules, the queue shapes the λ=0 probe copies, and
+the round's close surface. Findings:
+
+- ⭐ **§92 already dispositioned seven of the §87d list's fourteen members
+  by measurement.** The 87d3 softs warband-vanguard · brigands · highwaymen
+  · deserters · artillery · plagueVictims and the King's climax gap all sit
+  in the 92d table and read in band at 92h (swarms 3.00–3.05 turns, the
+  vanguard 4.75, the King 5.56 with the wall 0.323 inside 30–35). The
+  per-encounter pass is the **seven HELD rows** — five §87d members
+  (adventurer-with-guards 8 · elementalTrio 9 · infernalColumn 10 ·
+  miscreants 10 · plagueSpreaders 10) plus the two 92d held rows the list
+  never named (ronin-vs-mages 8 · darkMagicPosse 7). Nothing else in the
+  catalog is off band.
+- **The held rows at 92h, the numbers the pass designs against** (turns
+  per won instance · enemy burn / turn · player cost / turn · cost /
+  instance · n · notes): adventurer-with-guards **2.38** · 3.37 · 1.77 ·
+  4.2 · n=143 (the most-played normal — it sits in BOTH sector pools) ·
+  elementalTrio **2.03** · 6.19 · 1.87 · 3.8 · n=90 · ⭐ **infernalColumn
+  2.45** · 4.87 · **3.90** · 8.6 · n=14 (3 of 14 LOST — a normal that
+  kills) · miscreants **2.15** · 6.91 · **3.98** · 8.6 · n=20 ·
+  ronin-vs-mages **3.19** · 3.07 · 2.69 · 8.6 · n=77 · darkMagicPosse
+  **4.40** · **1.73** · 4.51 · 21.1 · n=28 · cap 3.1% · plagueSpreaders
+  **3.00** · 3.43 · **6.88** · 24.1 · n=22 · **cap 11.7%** · 7 of 22 LOST.
+  The catalog means for scale: normal 2.78 · 7.74 · 1.93 · 5.3; elite
+  4.32 · 4.09 · 4.10 · 18.2.
+- ⭐ **elementalTrio's third stage almost never appears.** It is authored
+  as THREE staged waves (stormcaller → luminant → ice_mage + catapult) and
+  its pool (9) empties in 2.03 turns against a 6.2 burn — the trio is a
+  duo in play. The pool must cover all three stages (≥ ~3 × burn) or the
+  authoring is dead content; this is the clearest composition defect in
+  the list and the 87d3 "soft" read was measuring a truncated encounter.
+- **The two "hot" normals are still hot AND short.** infernalColumn /
+  miscreants cost the player ~4 pool per turn (2× the normal mean) yet
+  last 2.2–2.5 turns on pools of 10 — the "sloggy at small numbers" read
+  is them: a 10-pool that burns 5–7 a turn is over in two turns while
+  taking a boss-scale bite. Lifting their pools to the swarm scale (~20–
+  25) WITHOUT lifting the bite makes them a normal-priced elite (cost ~8–
+  10 / instance at 3 turns, above the 5.3 mean); the pass has to move the
+  wave (count or level factor) or the override together with the pool.
+  ronin-vs-mages is in band on turns (3.2) but at burn 3 on a pool of 8 —
+  the pure "small numbers" case.
+- **The summoner elites are the cap-share item they were at 92f.**
+  plagueSpreaders' cap share fell 42 → 11.7% but it is still the
+  catalog's highest by 4×, and its cost per instance (24.1) plus a 32%
+  loss rate make it the deadliest non-boss fight; darkMagicPosse burns
+  1.73 a turn (summons weigh 0 by the 91e2 stamp — the fielded shaman +
+  warlock are the only bodies) on a pool of 7. Both need bigger fielded
+  waves or per-unit overrides (shaman / corrupter / warlock @2–3) to read
+  at the elite scale (~20 / ~29 like the moved elites) with a 4–5-turn
+  target — the override is the tool 92e built for exactly this.
+- **The signing is a sheet-SHAPE change, not just a re-pin.** The sheet's
+  `seamPoolBand` is absolute pool HP (15–18) and `board.ts` reads it
+  verbatim as the seamPool band; the DRAFT lineage re-expresses it as a
+  FRACTION of `HEALTH.playerHealthMax` (0.40–0.45) — a `SignedSheet` field
+  change + the board's band derivation (fraction × max, config-derived so
+  the next pool-max move cannot strand it again) + a board test pin. The
+  numeric re-pins: the six act-1 refs (92h), banks 89.5 / 61.8, fires
+  2.65 (sheet 1.7), tx 0.36 / 0.89 (sheet 0.25 / 0.775), forced bosses
+  0.592 / 0.567 (sheet 0.775 / 0.675), the fire channel +0.15 (in the
+  0.05–0.15 band; the sheet's 0.10 ref moves), reach / wall bands HELD,
+  win derived. `characterParity` / `gamblerNote` prose re-write at the
+  deploy-shape parity (+5.0 / +0.8; the regen column a maladapted-vector
+  note). The sheet's `signedAt` gets the §92 lineage entry.
+- **The signing board needs its own cohort.** The protocol (BALANCE §"The
+  board integrity protocol" + the registry) wants an amendment board at
+  ONE HEAD with a FRESH `--search` derive as the ceiling read; 92h + the
+  92g derive satisfy that at the FROZEN config — but the per-encounter
+  pass moves config (seven pools + overrides), so the signing board re-
+  runs at the final config: the 88d board shape (~17 lines, ~9 h at the
+  92h per-leg times) + the derive (~4 h) + prior v5 (~2 h; the registry's
+  "any sim/run change that plausibly moves item values — re-measure at
+  the next amendment board") + roster v3 (off the board's eight ARM rows,
+  no extra box). The ARM disposition (λ / `DP_TAIL_SCALE`) must land
+  BEFORE that cohort — the prior table is measured under the deployed
+  ARM. ~15 box-hours in one overnight cohort; plus the λ=0 probe (~2.5 h)
+  and the per-encounter read (~2.6 h, the 92f shape) before it.
+- **The λ=0 probe copies `88d3-ceiling.queue`'s four arb lines with
+  `--prior-lambda=0`** (n=40 + the n=80 extension each, ~2.5 h). The
+  paired comparators already exist at 92h on the same seeds 1–120 (the
+  four doctrine controls + the four arb λ=0.5 rows at `9c6c60d`; the
+  config and code are byte-identical since `1d51d06` — only docs commits
+  since). A PROBE read, not a board: the mixed-HEAD rule that voids a
+  partial board does not bind it, and it is stated here so nobody reads
+  it as one. The read: the four ceilings at λ=0 vs λ=0.5. If they close,
+  the fold is over-weighted at the 40-scale (v4's margins are pool-HP at
+  40, the terms doubled — a λ re-tune or a prior-cap re-read); if not,
+  the suspect is the exchange rate (`DP_TAIL_SCALE` 10) → the `--set`
+  dial (TODO) + a 5-vs-10 paired read (~2.5 h more).
+- **The ledger the user asked for does not exist in any layer.**
+  `turn:resolved` carries aggregate chips + pools; `battle:ended` carries
+  `fallenPower` per side (aggregate); `unit:died` carries `{unitId, team,
+  campId}` and fires AFTER `removeUnit`, so a listener cannot look the
+  unit up. "Who fell when, both sides" needs (a) the death payload widened
+  with the unit's identity at the emit site (`archetype` · `name` · `level`
+  · `power` as booked — 0 for a summon by the 91e2 stamp — plus the tick),
+  an event-payload change with no snapshot behind it (events are not
+  serialized; ARCHITECTURE's catalog row updates), and (b) a per-encounter
+  collector that persists ACROSS turns. Two homes for (b): UI-owned — a
+  Game-level collector (the BitsOverlay ownership precedent) that resets
+  on encounter entry and hands the post-turn screen this turn's fallen +
+  the running ledger — **Run v44 holds**; or Run-owned (the encounter
+  state) — **Run v45** and a mid-encounter reload keeps the ledger. The
+  recommendation below is UI-owned: the ledger is legibility, the fuzz
+  side already has the aggregate it needs, and a reload mid-encounter is
+  the rare path (the screen can say so).
+- **The pool is shown in three places and absent from seven.** The battle
+  HUD, the pre-turn and post-turn screens render `renderPoolGauge`; the
+  map, event, port, reward, recruit, promotion and sector-cleared screens
+  do not. The BitsOverlay (48d) is the exact precedent — Game-owned,
+  page-lifetime, top-left, refreshed by a getter; a sibling PoolOverlay
+  beside it (the player pool + max; the enemy pool only exists inside an
+  encounter and stays on the HUD / turn screens) refreshes on
+  `pools:chipped`, the rest heal, the seam refill and `run:started`.
+- **"Morale" is a words-only rename if taken.** The player-facing surface
+  is `Your Pool` / `Enemy Pool` (PreTurnScreen ×2 sites, PostTurnScreen),
+  the chipLabels strings, the UnitCard power tooltip, the HUD label, and
+  DESIGN.md's prose; the config keys (`health.json`, `healthPool`,
+  `playerHealthMax`) and the snapshot fields stay — renaming serialized
+  keys is churn for nothing. One UI commit + the DESIGN paragraph.
+- **The §88 price book re-read on v4 is desk work** (the rarity protocol
+  step 1 — every draftable row is at n≥80): the sign pattern flipped
+  under casualties (healer +14 at the cheapest price; officer −40 /
+  halberdier −19 at rare). Dispositions are the user's; a price move is
+  config and rides the signing board, so it sequences BEFORE that cohort.
+- **The two held flags:** the swarms at 3.04 (the user's own band is 2–3;
+  the R2 signed text said hold; the KEEP verdict did not name swarm length)
+  and the exchange-rate re-pin (dispositioned by the λ=0 probe's outcome).
+  The DRAFT lineage carries no pacing band — signing the user's kind
+  targets (normal 2.5–3.25 · elite 4–5 · boss 5–6.5) onto the sheet as a
+  DRIFT read off the walk rows' `pacing.csv` is the one optional addition
+  the audit surfaces (a `board.ts` consumer; the reader exists since 92a).
+- **Close surface:** WORKLOG is ~2,350 lines and archives as
+  `archive/post-88-worklog.md` beside `post-88-roadmap.md` and the spec;
+  the scratchpad holds three §91/§92 sections (142 lines) for the sweep;
+  META-ROADMAP's status line, HANDOFF's cursor → Round 7 Idioms.
+- **Snapshot prediction:** World v36 / Run v44 HOLD under the recommended
+  cut (the ledger UI-owned; config JSON + UI + board/sheet + docs). A
+  Run-owned ledger would be v45. No serialized RNG stream is added.
+
+### The draft cut (2026-09-05 — pending shape-lock)
+
+Ordered so the box work overlaps the desk work and every ARM decision
+lands before the derived artifacts re-measure:
+
+- **94a — the λ=0 paired probe** (box, ~2.5 h; launches first). The four
+  arb rows at `--prior-lambda=0`, n=40 + ext 80, paired against the 92h
+  doctrine controls and λ=0.5 rows on seeds 1–120. Exit: the four
+  ceilings read at λ=0 vs λ=0.5, the mechanism named (fold-weight vs
+  exchange rate). Commit: the queue + BALANCE 2026-09-05 §94a + WORKLOG.
+- **94b — the per-encounter pass, ONE config commit.** The seven held rows
+  moved to the swarm / elite scale through the editor's formatter (the
+  92d surgery shape, per-id printout): elementalTrio's pool covers its
+  three stages; the two hot normals lift pool AND wave (or override) so
+  cost / instance lands near the normal mean; ronin-vs-mages and the
+  adventurer lift to ~20 at 3 turns (the adventurer's final stage via an
+  override); the two summoner elites lift to the elite scale with
+  overrides on the summoners. The table is designed at the desk from the
+  92h numbers (pool ≈ burn × T) and proposed to the user per row before
+  the commit — ⛔ the per-encounter dispositions are user-signed. Exit:
+  the table landed, the formatter byte-faithful, `perf-oracle.sh` FAILS
+  (the table is live), tests green.
+- **94c — the read + the rule** (box, ~2.6 h, the 92f shape: the soldier
+  walk twins n=120 `--per-encounter`). Pre-signed rule, the 92f pattern:
+  each moved row in its kind band (normal 2.5–3.25 · elite 4–5) and cost
+  / instance within ~1.5× its kind mean → HOLD; a breach → one
+  proportional trim + a re-read. Exit: seven rows read; the config
+  freezes for the signing.
+- **94d — the fallen LEDGER** (sim event + UI). `unit:died` widened at the
+  emit site with identity + booked power; a Game-owned per-encounter
+  collector; the post-turn screen gains this turn's fallen per side (glyph
+  · name · power) and the running ledger by turn; a headless pin on the
+  payload + the collector (the screen itself eyeball-only). Exit:
+  browser-verified on a 3-turn encounter. Run v44 holds. The user's
+  ideas lead the layout.
+- **94e — the pool everywhere** (UI). A Game-owned PoolOverlay beside the
+  bits chip, on every screen; refreshed on the pool-moving events. Exit:
+  browser-verified across map / event / port / reward. Folds the TODO
+  "show the pool everywhere" rider.
+- **94f — the naming call + the price book (two ⛔ user decisions, desk).**
+  "morale" or not (a DESIGN call; if yes, the words-only rename lands in
+  one UI commit with the DESIGN paragraph); the §88 price book re-read on
+  v4 (the protocol's desk step) → per-archetype dispositions; any price
+  move rides the signing board. Exit: both decided, DESIGN + TODO current.
+- **94g — the ARM disposition** (⛔ decision point, from 94a). Close (a λ
+  re-tune or a cap re-read, then a re-probe) or the `DP_TAIL_SCALE` dial +
+  a 5-vs-10 paired read (~2.5 h). Whatever ships is an ARM change and
+  precedes 94h. The exchange-rate held flag closes here.
+- **94h — the signing cohort** (box, one overnight, ~15 h): the fresh
+  derive → the 88d board shape at the final config → prior v5 + roster v3
+  → the sheet amendment (the seam band as a FRACTION — sheet field + board
+  derivation + pin; the refs re-pinned; the parity prose; the optional
+  pacing DRIFT bands; the swarms flag dispositioned in the prose) → the
+  board green (0 FAIL; WARNs named). ⛔ The signing is user-signed.
+  Exit: the sheet signed, integrity 17/17, the registry current.
+- **94i — the close.** Scratchpad sweep → archive (the spec + the pair
+  as `post-88-*`) → META-ROADMAP status → HANDOFF cursor (Round 7 Idioms
+  NEXT) → TODO → the agent memory.
+
+Box budget ~23 h across three cohorts; the 68h rule routes every one to
+the box. Not doing (charter): new encounter content, archetype changes,
+Round 9 mechanisms (the won-turn reward shape · power by rarity · fatigue).

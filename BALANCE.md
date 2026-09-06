@@ -4569,3 +4569,29 @@ deltas. The pre-X H7c→O log lives at
   a 5-vs-10 paired read; the pool-relative ordinals
   (`RUN_DEATH_PENALTY` / `RUN_COMPLETION_BONUS` / the cap) are the
   second-tier suspects if 5 does not close it.
+
+- **2026-09-06 §94c — THE PER-ENCOUNTER READ of the 94b table (the six ARM
+  walk arms n=120 `--per-encounter --emit-results` at `36776f5`; box
+  `abox-20260906-144920`, batches `20260906-{145014,152738,160509,164831,
+  172603,180025}-36776f5`, 3.6 h, box destroyed).** The seven moved rows,
+  pooled over the six arms (the reader self-checked against the 92h pool):
+  | row | kind | n (won) | turns/won ← 92h | burn/turn | cost/turn | cost/inst ← 92h | cap share ← 92h |
+  |---|---|---|---|---|---|---|---|
+  | adventurer-with-guards (20) | normal | 866 (844) | 4.28 ← 2.40 | 5.11 | 1.50 | 6.3 ← 4.3 | 0.1% ← 0.0% |
+  | elementalTrio (21) | normal | 394 (386) | 3.29 ← 2.02 | 6.70 | 1.85 | 6.0 ← 3.6 | 1.6% ← 0.2% |
+  | infernalColumn (21) | normal | 82 (65) | 3.65 ← 2.57 | 5.71 | 3.52 | 12.4 ← 11.9 | 0.0% ← 0.4% |
+  | miscreants (24) | normal | 107 (97) | 3.23 ← 2.06 | 8.86 | 3.41 | 10.7 ← 8.0 | 0.9% ← 0.0% |
+  | ronin-vs-mages (16) | normal | 480 (457) | 3.81 ← 3.24 | 4.69 | 3.17 | 12.1 ← 9.1 | 0.1% ← 0.1% |
+  | darkMagicPosse (18) | elite | 117 (78) | 4.15 ← 4.19 | 3.82 | 4.77 | 20.6 ← 20.2 | 6.7% ← 4.9% |
+  | plagueSpreaders (22) | elite | 104 (84) | 4.05 ← 2.56 | 5.75 | 5.25 | 20.7 ← 20.6 | 13.2% ← 16.6% |
+  Kind means: normal 3.37 (2.82) · elite 4.53 (4.19) · boss 5.62 (5.66)
+  turns per won instance; cost/instance normal 6.4 (5.5) · elite 17.0
+  (17.1) · boss 16.7 (17.6); cap share 0.6 / 3.1 / 0.9%. **The burn per
+  turn saturates at the player's kill throughput (~5–7 booked power a
+  turn from a 6-card hand), not at the wave's fielded power** — the
+  desk model overshot on the tougher held rows (a ×1.2 guard wave burns
+  5.1, not 7). Both elites in band (HOLD); five normals breach the
+  pre-signed rule (turns and/or cost/instance > 1.5 × 6.4): the rule's
+  trims 20 → 14 · 21 → 19 · 21 → 17 · 24 → 22 · 16 → 13, or the override
+  alternative (lift the burn per kill, keep the pools) — the user's
+  call (WORKLOG §94c); the config does not freeze until the re-read.

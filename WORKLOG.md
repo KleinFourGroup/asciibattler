@@ -2904,3 +2904,108 @@ cohort so the 94h verdict reads them; the NUMERIC refs stay at their
   write a pacing file. `signedAt` carries the 94h-pre lineage entry.
 - Not here: the numeric re-pins, the parity prose, the swarms flag — all
   at 94h with the board run.
+
+### 94c — the per-encounter READ of the 94b table (2026-09-06; the six ARM walk arms n=120 at `36776f5`; numbers BALANCE 2026-09-06 §94c)
+
+Six legs on `abox-20260906-144920` (~37 min each, every fetch
+artifact-verified, the box destroyed on stand-down); the read = the
+scratchpad `read-94c.mjs` (pools the six arms' `pacing.csv` per key with
+the 92a accumulator arithmetic — self-checked first: pointed at the 92h
+batches it reproduces the 92h pool exactly; the check caught two reader
+defects before the cohort landed: the survivors twins pooled in, and
+turns-per-won approximated from total turns). ⚠ The kickoff's held-row
+table quoted ONE arm's rows as "the six arms pooled" (corrected here: the
+pooled 92h read is the "← 92h" column; plagueSpreaders' cap share was
+16.6%, not 11.7% — the design direction held).
+
+| row | kind | n (won) | turns/won ← 92h | burn/turn | cost/turn | cost/inst ← 92h | cap ← 92h | the rule |
+|---|---|---|---|---|---|---|---|---|
+| adventurer-with-guards | normal | 866 (844) | **4.28** ← 2.40 | 5.11 | 1.50 | 6.3 ← 4.3 | 0.1% ← 0.0% | BREACH turns → trim 20 → **14** |
+| elementalTrio | normal | 394 (386) | **3.29** ← 2.02 | 6.70 | 1.85 | 6.0 ← 3.6 | 1.6% ← 0.2% | BREACH turns (a hair) → 21 → **19** |
+| infernalColumn | normal | 82 (65) | **3.65** ← 2.57 | 5.71 | 3.52 | **12.4** ← 11.9 | 0.0% ← 0.4% | BREACH turns + cost → 21 → **17** |
+| miscreants | normal | 107 (97) | 3.23 ← 2.06 | 8.86 | 3.41 | **10.7** ← 8.0 | 0.9% ← 0.0% | BREACH cost (1.5 × 6.4 = 9.6) → 24 → **22** |
+| ronin-vs-mages | normal | 480 (457) | **3.81** ← 3.24 | 4.69 | 3.17 | **12.1** ← 9.1 | 0.1% ← 0.1% | BREACH turns + cost → 16 → **13** |
+| darkMagicPosse | elite | 117 (78) | 4.15 ← 4.19 | 3.82 | 4.77 | 20.6 ← 20.2 | 6.7% ← 4.9% | **HOLD** |
+| plagueSpreaders | elite | 104 (84) | 4.05 ← 2.56 | 5.75 | 5.25 | 20.7 ← 20.6 | 13.2% ← 16.6% | **HOLD** |
+
+Kind means: normal **3.37** turns (2.82 at 92h) · elite **4.53** (4.19) ·
+boss **5.62** (5.66) — the swarms' 3.0 unchanged, the moved normals drag
+the kind up; cost/instance normal 6.4 (5.5) / elite 17.0 (17.1); the
+overall win 5785 / 6248 instances.
+
+**The finding the numbers carry: the burn per turn saturates at the
+player's KILL THROUGHPUT, not the wave's fielded power.** The 94b desk
+model (pool ≈ count × power × T) held on the 92d bandit swarms and
+overshot on the tougher held rows: a ×1.2 guard wave of ~7 bodies burns
+~5.1 a turn, the trio's elementals ~6.7, the mages ~4.7 — a 6-card hand
+kills what it kills, and a bigger or tougher wave just survives longer.
+So the five normals designed at 3.0 turns run 3.2–4.3, and the two cost
+breaches (infernalColumn 12.4 · ronin-vs-mages 12.1 per instance vs the
+1.5 × 6.4 = 9.6 line) are the same fact — more turns at the same bite.
+**Both elites HOLD**: the posse 4.15 at cost 20.6 ≈ the elite mean; the
+spreaders 4.05 (2.56 before) with the cap share 16.6 → 13.2% and the bite
+7.5 → 5.3 / turn — the three-shaman stage did what it was cut to do.
+
+**The pre-signed rule, applied (ROADMAP 94c: in band + cost ≲ 1.5× the
+kind mean → HOLD; a breach → ONE proportional trim + a re-read):** the
+trims are `pool × 3.0 ÷ measured T` — adventurer-with-guards 20 → 14 ·
+elementalTrio 21 → 19 · infernalColumn 21 → 17 · miscreants 24 → 22 ·
+ronin-vs-mages 16 → 13; the elites untouched.
+⛔ **The user's call, left open at the handoff:** the trims retreat from
+the "numbers on screen at the swarm scale" ambition on four normals
+(pools 13–19 against the swarms' 19–30); the alternative the throughput
+finding points at is the 92e lever — per-unit power overrides on the
+guard / mage / column waves (e.g. the guards @1.5, the mages @1.5, the
+column's mercenaries @1.5) so each kill burns more and the pools can STAY
+at 16–21 — lifting the burn rather than cutting the pool (the trio's
+elementals are already @2; its 3.29 is a hair, a 19 pool closes it either
+way). Either is one config commit through the 94b surgery shape + a
+re-read (the six-arm cohort again, ~3.7 h; or the soldier twins only,
+~1.3 h, if a thinner re-read on the rare deep-end rows is acceptable —
+infernalColumn is n=82 pooled over six arms). The config does not freeze
+until the re-read holds; 94h waits on it.
+
+### §94 session handoff (2026-09-06 — the user's call at ~650k context; the ritual continues in a FRESH session)
+
+**Landed on main this session (all hook-green, pushed):** the kickoff +
+shape-lock (`1f5bae9`, `77a1ced`) · 94d data `badbe29` · 94d presentation
+`e63bbea` · 94e `c0e6a37` · 94f `40fd7c3` · 94b `1d59380` · the 94a docs
+`36776f5` · the 94g dial `9945f1d` · the 94h sheet shape `ac40386` · this handoff
+commit. Snapshots World v36 / Run v45.
+
+**In flight at the handoff:** nothing on the box — 94c fetched 6/6 and
+its box destroyed (7 boxes created / 7 destroyed at §94 so far); the read
+is WORKLOG §94c above. ⛔ The 94c disposition is the user's (the trims or
+the overrides), then ONE config commit + a re-read before the config
+freezes.
+
+**Ready, not launched (the next session's first act):** 94g — the
+exchange-rate paired read. The dial is landed; the queue is
+`output/box-batches/94g-dptail5.queue` (the deploy pair at
+`--set=rollout.dpTailScale=5`, base + ext → n=120, ~1.7 h); launch with
+`bash scripts/box-drive.sh output/box-batches/94g-dptail5.queue
+--poll=120 --est-hours=1.7 > output/box-batches/94g-dptail5-drive.log 2>&1`
+from a clean, pushed HEAD; read with the scratchpad `read-94g.mjs <HEAD>`
+(the paired arithmetic of `read-94a.mjs`). A driver's lifetime is its
+session's — never launch as a session's last act.
+
+**Then:** the 94c rule (⛔ the trims vs the override alternative — the
+user's call; a trim is one config commit through
+`encounters-surgery-94b.ts`'s shape + a re-read leg or two) → the config
+FREEZES → ⛔ 94g's disposition (5 vs 10; if 5 closes the ceilings it is an
+ARM change: `DP_TAIL_SCALE`'s default moves, the 92d re-pin reverses,
+the prior re-measures at 94h) → 94h: `94h-derive.queue` (its own cohort,
+`--artifact=best-strategy.json`) beside `94h-board.queue` (the 88d shape
++ `--per-encounter` on the walk lines + the prior v5 shadow), the anchors
+local, `--merge-stages` the ten checked rows (it POOLS pacing.csv now),
+`npm run prior:table` → v5, `npm run roster:table` → v3, the board report
+→ the numeric re-pins onto the sheet (the shape is already there) → ⛔ the
+signing → 94i the close (this file's archive as `post-88-worklog.md`).
+
+**The session's scratchpad** (`C:\Users\mkilg\AppData\Local\Temp\claude\
+C--Users-mkilg-projects-asciibattler\cd2dd75f-30bd-436a-b457-9d57a4f0e057\
+scratchpad\`): `read-94a.mjs` · `read-94c.mjs` (self-checked against 92h)
+· `read-94g.mjs` · `encounters-surgery-94b.ts` / `-dropcap-94b.ts` ·
+`probe-frontier-94b.ts` · `94b-proposal.md` (the design + the throughput
+lesson) · `94f-price-book.md` · `94d-94e-design.md` · `land-94.sh` · the
+worktree `wt94` (a detached checkout, reset to the last landed HEAD).

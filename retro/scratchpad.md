@@ -140,3 +140,54 @@ _(The post-Round-6 entries start here — the §89 interstitial.)_
 - **Two boxes at once is fine when the cohorts are independent:** the 92h
   closing cohort launched while the 92g derive still cooked (the derive is
   a read, not a config input) — ~2 h saved, no shared state.
+
+## §94 session notes (2026-09-05/06 — the kickoff through 94c)
+
+- **Build in a detached worktree while a cohort holds the tree.** The
+  ONE-HEAD rule freezes main for a cohort's whole launch window (2–3.5 h);
+  `git worktree add --detach` + a node_modules junction gave a second tree
+  where 94d/94e/94f/94g/94h-pre were built, typechecked, tested AND
+  fuzz-smoked, then landed on main as file-split commits once the last
+  launch fired. The worktree is reset with `reset --hard <HEAD>` between
+  rounds; `git add -N` makes new files ride `git diff`. Landing split by
+  hunk (`printf answers | git add -p`) works in Git Bash; a file whose
+  hunks straddle two commits is staged from a temporarily-reverted copy.
+- **Heredocs and perl are not a substitute for Write/Edit when the text
+  carries quotes.** Four burns in one session: a `'` in a `-m` message
+  killed a whole command; `\n` inside a perl replacement became a real
+  newline three times (the fix was a node rewrite with `String.fromCharCode`);
+  an apostrophe in a single-quoted TS string parsed by esbuild, not tsc
+  (tsc passed, the fuzz smoke's transform failed). Write the scratch file
+  with the Write tool, splice with `cat`/`head`; perl only for literal,
+  quote-free anchors.
+- **A printout of `rows[0]` is one arm, not the pool.** The kickoff table
+  quoted the first walk arm's pacing rows as "the six ARM walk arms
+  pooled"; the pooled numbers differed (plagueSpreaders' cap share 16.6%,
+  not 11.7%). Caught when the 94c reader's self-check reproduced 92h from
+  the raw files. Pool with a script that prints its arm count, never a
+  dump of the first file.
+- **A pacing change moves every fixture that measures its reach in
+  turns.** Two hook catches on one config commit: the level-cap migration
+  invariant (a stamped cap must bind — two went dead at the new counts)
+  and the 70e frontier scan (6 turns deep no longer reaches the braid's
+  first split under 3-turn openers → depth 12). Widening the wrong axis
+  first (trials 8 → 16) cost a minute; the scratchpad probe that printed
+  the walk's stop position found the real axis in one run.
+- **The burn per turn saturates at the player's kill throughput, not the
+  wave's size.** The 94b desk model (pool ≈ fielded power × turns) held on
+  the 92d bandit swarms and overshot on the tougher held rows (a ×1.2
+  guard wave of ~7 bodies burns ~5 a turn). The pre-signed proportional
+  trim is the correction; the override lever is the alternative that
+  keeps the numbers on screen large.
+- **Self-check a new reader against a known answer before trusting it on
+  new data.** `read-94c.mjs` pointed at the 92h batches had to reproduce
+  the 92h read exactly; it didn't (survivors twins pooled in; turns/won
+  approximated) — two defects found before the cohort landed.
+- **The browser pass finds what the grep sweep misses.** The morale rename
+  swept every `Pool` label by grep; the live pre-turn screen still said
+  "up to 6 pool", and the reward + sector-seam lines carried two more.
+  Read the rendered page's text for the old word, not the source.
+- **The persistent-chip column is measured, not assumed.** The pool chip's
+  first draft sat on the sector-map chip (the 78e third chip hides on the
+  map screen, where the first measurement happened). Measure on the screen
+  where every sibling is shown.

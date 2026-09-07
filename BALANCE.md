@@ -4645,3 +4645,25 @@ deltas. The pre-X H7c→O log lives at
   and moves the ceilings' suspect to the high-override sites. Informational
   cross-config column (92h doctrine n=40): ceiling dp5 − doc −0.350 act-1 ·
   −0.375 walk. ⛔ the ARM disposition re-posed (delete vs wire; WORKLOG).
+- **2026-09-07 §94g-3 — the DP tail WIRED and read, then DELETED
+  (four batches at `565bff1`; box `abox-20260907-135049`, batches
+  `20260907-{135136,141246}-565bff1` act-1 + `20260907-{140005,142726}
+  -565bff1` walk, 1.0 h, box destroyed; the tail-off baseline = the
+  94g-2 dp=10 rows at `d9675b6`, byte-identical to the wiring HEAD at
+  `dpTailScale=0`).** Paired by seed, n=120 per row: act-1 deploy 0.617
+  vs 0.625 (9/10, z −0.23, Δ −0.008 — null) · **walk deploy 0.175 vs
+  0.275 (10/22, z −2.12, Δ −0.100 — the wired tail HURTS)**. Node choice
+  overridden 15–16 % with the tail on vs 5 % off, into battle / elite
+  nodes (55 + 13 of 93 walk overrides) on ~11-point tail gaps with ~1
+  point of rollout support (tail-off overrides: ~8-point rollout gaps).
+  The mechanism: the 70e composition prices the road beyond the entered
+  node in DP currency and the entered node in pool HP — the two disagree
+  on what a rest or a port is worth (gotcha #132). ⛔ **DELETED
+  (user-signed)**: the ARM is byte-identical in outcome to `d9675b6`
+  (perf-oracle: summary + rosters PASS; `decisions.csv` differs only in
+  the `tailBonus` column, "0.000" → blank on node-choice rows). The
+  cross-config ceiling column (92h doctrine n=40): on −0.375 / −0.500 ·
+  off −0.350 / −0.375. The exchange-rate flag is CLOSED (no exchange
+  rate exists); the ceilings' suspect stays the high-override sites
+  (portBuy 93–99 % · rewardDaemon · eventChoice · preTurn — the 94g-2
+  count) → the 94h board read. WORKLOG §"94g-3 — the tail-on read".

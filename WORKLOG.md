@@ -3211,3 +3211,55 @@ against `d9675b6`. The tail's magnitude (~40–60 on a rollout score of order
 5) means differences between challengers' onward DP values (~5–10) now
 dominate ε=3.265 — node choice will mostly follow the DP; the read says
 whether that closes any of the ceiling. ⛔ Keep-or-delete on the read.
+
+### 94g-3 — the tail-on READ + ⛔ THE DELETE (2026-09-07; four batches at `565bff1`, 1.0 h; numbers BALANCE 2026-09-07 §94g-3; USER-SIGNED in chat — "I agree with your recommendation … let's proceed")
+
+**The read (n=120 per row, paired by seed against the 94g-2 dp=10 rows at
+`d9675b6` — the tail-off baseline, byte-identical to the wiring HEAD at
+`dpTailScale=0`):**
+
+| row | tail ON | tail OFF | flips for / against | z | Δ |
+|---|---|---|---|---|---|
+| act-1 deploy | 0.617 | 0.625 | 9 / 10 | −0.23 | −0.008 |
+| walk deploy | **0.175** | 0.275 | 10 / 22 | **−2.12** | **−0.100** |
+
+**The wired tail costs ten points on the full run and does nothing on the
+short shape.** The override count says how: node choice is overridden on
+15–16 % of decisions with the tail on (5 % without), and the detours go
+into battle and elite nodes (55 + 13 of the walk's 93 overrides) instead
+of the rests the tail-off arm occasionally chose. Each override rides an
+11-point tail gap with ~1 point of rollout support; tail-off overrides
+rode ~8-point rollout gaps with no tail.
+
+**The mechanism (gotcha #132): the 70e composition rule mixes currencies.**
+The tail prices only the road BEYOND the entered node, in DP currency
+(path weights × the exchange rate), on the theory that the entered node's
+own value is "realized by the rollout" — but the rollout realizes it in
+pool HP (a battle costs morale, a rest heals), and the DP's path weights
+encode learned route preferences that the one-battle rollout cannot see.
+So the entered node's DP value drops out of the comparison and the arm
+prefers whichever node has a lucrative CHILD, over the doctrine's better
+pick. The exchange rate is not the fix: an 11-point gap halved is still
+over ε = 3.265.
+
+⛔ **THE DISPOSITION (user-signed): DELETE.** Removed: `DP_TAIL_SCALE`,
+`ROLLOUT_KNOBS` + the `rollout` knob group, the arbitration's `tailScore`
+closure and its `weights` config field, the 94g-3 wiring
+(`FuzzStrategy.weights`, the `scoredStrategy` exposure), and the three
+tail pins (§90 · 94g-1 · 94g-3); the 70e site pin now asserts the node
+rollout carries NO tail. Kept: the evaluator's generic `tailScore` seam
+and the decisions log's `tailBonus` column (no reader contract changes).
+The scratch `delete-tail-94g3.mjs` asserted every anchor exactly once
+(21 cuts, dry-run first). **Byte-identity vs `d9675b6`:**
+`scripts/perf-oracle.sh d9675b6` — summary + rosters PASS on both shapes;
+the arm's `decisions.csv` differs ONLY in the `tailBonus` column
+("0.000" → blank on the node-choice rows: no tail contributed, which is
+now true) — re-derived on the pinned worktree: 137 rows, 0 differing once
+that column is dropped. So the ARM is exactly the arm every signed read
+since 70e measured, and 94h launches at the frozen config.
+
+**Filed (TODO, Round 7):** a tail redesign that prices the entered node
+and the road ahead in ONE currency (e.g. `dpTailScale × bestScore(entered)`
+with the rollout's pool-HP outcome as the realization of the same term,
+or a rollout-only horizon of two battles), with today's paired numbers as
+the baseline it must beat. The 94g dial line in TODO is superseded.

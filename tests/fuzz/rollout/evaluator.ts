@@ -179,7 +179,8 @@ export interface RunScoreBreakdown {
   readonly bitsDelta: number;
   readonly rosterDelta: number;
   /** 70e — the DP-tail bonus folded into `score`, present ONLY when the
-   *  spec carried a `tailScore` (the node-choice site). Always visible in
+   *  spec carried a `tailScore` (no shipped site since 94g-3 — the 70e
+   *  node-choice tail was deleted; the seam stays generic). Always visible in
    *  the breakdown when it contributed — the resolution-4 discipline. */
   readonly tailBonus?: number;
   /** 85-pre F1 — the walk's own outcome, attached by evaluateRunCandidate

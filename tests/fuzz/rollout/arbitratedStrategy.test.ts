@@ -39,12 +39,10 @@ import type { EventDef } from '../../../src/config/events';
 import { cloneRunForRollout } from '../../../src/bot/runRollout';
 import { runOne } from '../harness';
 import { walkToHorizon } from './walker';
-import { resolveKnob } from '../balanceSweep';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
-import { makeBestScore, maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
-import { DEFAULT_SCORED_WEIGHTS, loadWeightsFile, type ScoredWeights } from '../strategies/scoredWeights';
-import { arbitratedWrapFromArgs } from '../commands/args';
+import { maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
 import { selectEmpowerPosition } from '../empowerPolicy';
 import {
@@ -56,8 +54,6 @@ import {
   GRANT_EPSILON,
   NODE_CHOICE_EPSILON,
   EVENT_CHOICE_EPSILON,
-  DP_TAIL_SCALE,
-  ROLLOUT_KNOBS,
   CAMP_RAID_EPSILON,
   walkPolicyOverlay,
   walkPortBuy,
@@ -671,7 +667,7 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     expect(rec.labels[1]).toContain(`enterNode:${picked}`);
   });
 
-  it('the rollout override carries the tail + pins the null pick to the base nominator', () => {
+  it('the rollout override pins the null pick to the base nominator and carries NO tail (94g-3: the 70e tail was deleted)', () => {
     const specs: RunRolloutSpec[] = [];
     const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
       specs.push(spec);
@@ -679,107 +675,16 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
     };
     const run = mapStateWithChoice();
     const frontier = frontierOf(run);
-    // Non-zero path weights so the tail has something to price.
-    const weights: ScoredWeights = {
-      ...DEFAULT_SCORED_WEIGHTS,
-      path: { ...DEFAULT_SCORED_WEIGHTS.path, rest: 1 },
-    };
-    const arm = makeArbitratedStrategy(SEED, { evaluate: capture, weights });
+    const arm = makeArbitratedStrategy(SEED, { evaluate: capture });
     arm.pickNextNode(frontier, run, null as never);
     const spec = specs[0]!;
     expect(spec.strategy?.name).toBe('rollout-node');
-    expect(spec.tailScore).toBeDefined();
-    // The tail = DP_TAIL_SCALE × max over ONWARD children of bestScore —
-    // recomputed independently at the live node (self-weight excluded).
-    const best = makeBestScore(run.nodeMap, weights);
-    const onward = frontierOf(run).map((id) => best(id));
-    expect(spec.tailScore!(run)).toBe(DP_TAIL_SCALE * Math.max(...onward));
-    // Other sites carry NO tail (the override never leaks).
+    expect(spec.tailScore).toBeUndefined();
     specs.length = 0;
     arm.pickReward!({ kind: 'daemon', daemonId: 'portunus' }, run, null as never);
     expect(specs[0]!.tailScore).toBeUndefined();
   });
 
-  it('94g — the exchange rate is a --set dial (rollout.dpTailScale): the tail reads it at call time; the default IS DP_TAIL_SCALE', () => {
-    expect(ROLLOUT_KNOBS.dpTailScale).toBe(DP_TAIL_SCALE);
-    const specs: RunRolloutSpec[] = [];
-    const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
-      specs.push(spec);
-      return { score: 0, perSeed: [] };
-    };
-    const run = mapStateWithChoice();
-    const frontier = frontierOf(run);
-    const weights: ScoredWeights = {
-      ...DEFAULT_SCORED_WEIGHTS,
-      path: { ...DEFAULT_SCORED_WEIGHTS.path, rest: 1 },
-    };
-    const arm = makeArbitratedStrategy(SEED, { evaluate: capture, weights });
-    arm.pickNextNode(frontier, run, null as never);
-    const spec = specs[0]!;
-    const best = makeBestScore(run.nodeMap, weights);
-    const mx = Math.max(...frontierOf(run).map((id) => best(id)));
-    expect(mx).toBeGreaterThan(0); // the pin would be vacuous on a zero tail
-    // The --set path, exactly as the CLI performs it (resolveKnob → the live object).
-    const knob = resolveKnob('rollout.dpTailScale');
-    try {
-      knob.obj[knob.key] = DP_TAIL_SCALE / 2;
-      expect(spec.tailScore!(run)).toBe((DP_TAIL_SCALE / 2) * mx);
-    } finally {
-      knob.obj[knob.key] = DP_TAIL_SCALE;
-    }
-    expect(spec.tailScore!(run)).toBe(DP_TAIL_SCALE * mx);
-  });
-
-  it("94g-3 — the vector's path weights reach the tail THROUGH the CLI resolver (arbitratedWrapFromArgs + a scored base); the default base still prices 0", () => {
-    // Gotcha #131: from 70e to 94g-2 no CLI path handed the arbitration the
-    // vector's weights, so the tail was dpTailScale × 0 on every board. This
-    // pin goes through the SAME resolver run.ts / evalShard.ts / search.ts
-    // use, with the base the harness would hand it — never `weights:` direct.
-    const run = mapStateWithChoice();
-    const frontier = frontierOf(run);
-    const winner = loadWeightsFile('tests/fuzz/fixtures/92c2-winner.json');
-    const specsFor = (base: FuzzStrategy): RunRolloutSpec[] => {
-      const specs: RunRolloutSpec[] = [];
-      const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
-        specs.push(spec);
-        return { score: 0, perSeed: [] };
-      };
-      const wrap = arbitratedWrapFromArgs(
-        { arbitrate: true, searcher: false, audition: false, kTelemetry: false },
-        { evaluate: capture },
-      );
-      expect(wrap).toBeDefined();
-      wrap!(SEED, base).pickNextNode(frontier, run, null as never);
-      return specs;
-    };
-    // The deploy vector: expected re-derived from the FIXTURE FILE's path
-    // weights (the surface the arm does not consult), not from the arm.
-    const best = makeBestScore(run.nodeMap, winner);
-    const mx = Math.max(...frontier.map((id) => best(id)));
-    expect(mx).toBeGreaterThan(0); // vacuity guard: the fixture carries real path weights
-    const [deploy] = specsFor(scoredStrategy('deploy', winner));
-    expect(deploy!.tailScore!(run)).toBeGreaterThan(0);
-    expect(deploy!.tailScore!(run)).toBeCloseTo(DP_TAIL_SCALE * mx, 9);
-    // The default vector (the doctrine arm's shape): all path weights 0 →
-    // exactly 0, byte-identical to every pre-94g-3 board.
-    const [doctrine] = specsFor(scoredStrategy('doctrine', DEFAULT_SCORED_WEIGHTS));
-    expect(doctrine!.tailScore!(run)).toBe(0);
-  });
-
-  it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate — re-pinned at 10 (92d)', () => {
-    // The definition (config-derived) …
-    expect(DP_TAIL_SCALE).toBe(HEALTH.restHealFraction * HEALTH.playerHealthMax);
-    // … AND the exact pin: the §85g6d-signed ARM priced one path-weight
-    // point at 5 pool HP under the absolute `restHealAmount`; the §90
-    // fraction re-expression was byte-identical for the arm. 92d
-    // (2026-09-05, the casualty rebalance's signed pool max 20 → 40): the
-    // rest heal is 10 pool HP, so the exchange rate DOUBLES — the deliberate
-    // arm change this pin exists to make loud (WORKLOG §92d: every pool-HP
-    // quantity in the evaluator scales with the max; the prior table's units
-    // lag until v4 at 92g). A further pool-max or fraction move re-pins here
-    // again, with its rationale — never silently.
-    expect(DP_TAIL_SCALE).toBe(10);
-  });
 });
 
 describe('arbitrated node choice (70e) — the elite-detour case (real evaluator)', () => {

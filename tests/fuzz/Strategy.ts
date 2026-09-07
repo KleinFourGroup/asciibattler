@@ -20,7 +20,6 @@ import type { Run, PortStock } from '../../src/run/Run';
 import type { RewardPortion } from '../../src/run/rewards';
 import type { UseContext } from '../../src/config/packets';
 import type { UnitTemplate } from '../../src/sim/Unit';
-import type { ScoredWeights } from './strategies/scoredWeights';
 
 /** 59a — one port-purchase proposal: which stock lane + slot to buy. */
 export interface PortBuy {
@@ -48,14 +47,6 @@ export type GrantAction =
 
 export interface FuzzStrategy {
   readonly name: string;
-  /**
-   * 94g-3 — OPTIONAL: the weight vector a scored strategy was built from,
-   * exposed so the arbitrated arm's DP tail can price the road ahead with
-   * the NOMINATOR's own path weights (`makeArbitratedStrategy` falls back
-   * `config.weights ?? base.weights ?? DEFAULT`). Absent on the hand-authored
-   * policies (their node picks carry no path weights to price with).
-   */
-  readonly weights?: ScoredWeights;
   pickNextNode(frontier: readonly number[], run: Run, rng: RNG): number;
   /**
    * Offer index to recruit, or `null` to PASS (H6b — decline the offer).

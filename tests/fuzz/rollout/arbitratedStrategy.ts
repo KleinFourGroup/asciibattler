@@ -57,11 +57,10 @@ import type { PortStock, Run } from '../../../src/run/Run';
 import type { RewardPortion } from '../../../src/run/rewards';
 import { packetById, type UseContext } from '../../../src/config/packets';
 import { DECK } from '../../../src/config/deck';
-import { HEALTH } from '../../../src/config/health';
 import type { FuzzStrategy, GrantAction, PacketFire, PortBuy } from '../Strategy';
 import type { UnitTemplate } from '../../../src/sim/Unit';
-import { scoredStrategy, makeBestScore, maxPowerIndex, minPowerIndex } from '../strategies/scored';
-import { DEFAULT_SCORED_WEIGHTS, type ScoredWeights } from '../strategies/scoredWeights';
+import { scoredStrategy, maxPowerIndex, minPowerIndex } from '../strategies/scored';
+import { DEFAULT_SCORED_WEIGHTS } from '../strategies/scoredWeights';
 import { selectRedrawPositions } from '../redrawPolicy';
 import {
   RunArbitrationDriver,
@@ -226,38 +225,12 @@ export const RECRUIT_EPSILON = REWARD_DAEMON_EPSILON;
  *  campRaid contexts; armed controls exactly 0). */
 export const CAMP_RAID_EPSILON = 6.206;
 
-/**
- * 70e — the DP-tail exchange rate: pool HP per path-weight unit at the
- * truncation. CONFIG-DERIVED, not hand-tuned: one full path-weight
- * point ≈ one rest-heal of pool value — the only place the codebase
- * already prices "a better node ahead" in pool HP. The naive bootstrap
- * (kickoff resolution 1); its contribution is ALWAYS visible as the
- * breakdown's `tailBonus` column, and "the DP-tail shape if the naive
- * bootstrap misbehaves on the elite-detour cases" is the phase's
- * pre-registered decision point. NB the DEFAULT vector's path weights
- * are all ZERO, so under the doctrine arm the tail is exactly 0 and
- * node arbitration is pure rollout-vs-ε — the tail activates only for
- * searched vectors that carry real path preferences.
- *
- * §90 — the rest heal became a FRACTION of max (`restHealFraction`); the
- * exchange rate is the same pool-HP number (0.25 × 20 = the old 5), so the
- * ARM's tail is byte-identical across the rename (pinned in the test).
- * Import-time evaluation is deliberate: the tail prices at the SHIPPED
- * config, not a `--set` probe's (which never dials rest heals anyway).
- */
-export const DP_TAIL_SCALE = HEALTH.restHealFraction * HEALTH.playerHealthMax;
-
-/**
- * 94g — the exchange rate as a DIAL. `DP_TAIL_SCALE` stays the import-time
- * default (the shipped config's rest heal in pool HP); the tail reads THIS
- * object at call time so a `--set=rollout.dpTailScale=<n>` probe arm (the
- * balance-sweep knob registry, group `rollout`) can price the same run
- * under another exchange rate without touching the rest heal — the §92i
- * ARM docket's 5-vs-10 paired read, sharpened by 94a (the fold is not the
- * cause of the negative ceilings; the rollout's own pricing is the suspect).
- * A `--set` write lands on this object (the resolveKnob contract).
- */
-export const ROLLOUT_KNOBS: { dpTailScale: number } = { dpTailScale: DP_TAIL_SCALE };
+// 94g-3 (2026-09-07) — the 70e DP tail (`DP_TAIL_SCALE` × max onward bestScore,
+// the `rollout.dpTailScale` dial) was DELETED: it priced 0 on every CLI arm from
+// 70e to 94g-2 (gotcha #131), and wired for the first time at 94g-3 it cost
+// −0.100 on the walk (paired n=120) — its composition mixed the DP's currency
+// with the rollout's (gotcha #132; WORKLOG §94g-3). The evaluator's generic
+// `tailScore` seam stays; no shipped site uses it.
 
 export function portBuyEpsilon(_run: Run): number {
   return PORT_BUY_EPSILON;
@@ -297,15 +270,6 @@ export interface ArbitratedConfig {
    *  site's causal value under paired luck. Default true (the 85d
    *  shipping shape). */
   readonly campRaid?: boolean;
-  /** The nominator weight vector the DP tail reads (70e). Resolution order
-   *  (94g-3): this override → `base.weights` (a scored strategy exposes the
-   *  vector it was built from — the CLI's `--strategy` file and the
-   *  search's per-vector eval-shard base both arrive this way) → the
-   *  default vector, under which the tail is exactly 0 (all path weights
-   *  are 0). From 70e to 94g-2 the base fallback did NOT exist and no CLI
-   *  path passed this override, so every ARM read priced the tail at 0
-   *  (gotcha #131). */
-  readonly weights?: ScoredWeights;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
   /** 85c — λ_prior, the fold's board arm ({0, 0.5, 1}; `--prior-lambda`).
@@ -782,12 +746,9 @@ function arbitrateGrant(
  * singleton frontier is not a decision (no rollouts, no log — the
  * pre-root map and forced corridors stay free).
  *
- * Terminal score = the rollout outcome + the DP tail at the truncation
- * (resolution 1): `DP_TAIL_SCALE × max over onward children of
- * bestScore(child)` from wherever the clone stopped — the entered
- * node's own value is REALIZED by the rollout (never double-counted:
- * the tail starts at the children), and the long path stays the DP's
- * job. The rollout strategy override composes the DEFAULT cheap walk
+ * Terminal score = the rollout outcome (94g-3: the 70e DP tail at the
+ * truncation was DELETED — see the tombstone above `portBuyEpsilon`).
+ * The rollout strategy override composes the DEFAULT cheap walk
  * with the base's node picks only; the config-level 85b walkPolicies
  * overlay (fires + the dock policy) rides on top through the evaluator
  * compose — a candidate that enters a port node now realizes shopping
@@ -803,25 +764,6 @@ function arbitrateNodeChoice(
 ): number {
   const nominee = base.pickNextNode(frontier, run, rng);
   if (frontier.length <= 1) return nominee;
-
-  // 94g-3 — the nominator's own path weights price the road ahead (the
-  // 70e design, wired for the first time; before this line the tail was
-  // `dpTailScale × 0` on every CLI arm — gotcha #131).
-  const weights = config.weights ?? base.weights ?? DEFAULT_SCORED_WEIGHTS;
-  const best = makeBestScore(run.nodeMap, weights);
-  const children = new Map<number, number[]>();
-  for (const e of run.nodeMap.edges) {
-    const list = children.get(e.from);
-    if (list) list.push(e.to);
-    else children.set(e.from, [e.to]);
-  }
-  const tailScore = (clone: Run): number => {
-    const onward = children.get(clone.currentNodeId) ?? [];
-    if (onward.length === 0) return 0;
-    let mx = -Infinity;
-    for (const c of onward) mx = Math.max(mx, best(c));
-    return ROLLOUT_KNOBS.dpTailScale * mx; // 94g — the dial, read at call time
-  };
 
   const kindOf = new Map(run.nodeMap.nodes.map((n) => [n.id, n.kind]));
   const rolloutStrategy: FuzzStrategy = {
@@ -841,7 +783,7 @@ function arbitrateNodeChoice(
   }
   const winner = driver.decide('nodeChoice', run, challengers, {
     epsilon: config.nodeChoiceEpsilon ?? NODE_CHOICE_EPSILON,
-    rollout: { strategy: rolloutStrategy, tailScore },
+    rollout: { strategy: rolloutStrategy },
     // 85g1 — a node has no item; walk-bought holdings' beyond-horizon
     // value flowing into a routing margin is exactly the all-holdings
     // channel the 85h protocol de-folds (the 85f WATCH read ≈0 here).

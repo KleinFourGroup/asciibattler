@@ -38,7 +38,6 @@ import {
   type SearchResult,
 } from './search';
 import { evaluateVectorsSharded } from './searchShard';
-import { ROLLOUT_KNOBS } from './rollout/arbitratedStrategy';
 import { aggregateTelemetry, type AggregatedTelemetry } from './telemetry';
 import type { RunTelemetry } from './telemetry';
 import type { ObjectiveProclivity } from './objectiveStrategy';
@@ -73,8 +72,6 @@ const KNOB_GROUPS: Record<string, Record<string, number | string>> = {
   health: HEALTH as unknown as Record<string, number | string>,
   leveling: LEVELING as unknown as Record<string, number | string>,
   sim: SIM as unknown as Record<string, number | string>,
-  // 94g — the rollout evaluator's exchange rate (a probe dial, not config).
-  rollout: ROLLOUT_KNOBS as unknown as Record<string, number | string>,
 };
 
 export interface ResolvedKnob {

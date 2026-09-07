@@ -432,6 +432,7 @@ export function scoredStrategy(name: string, weights: ScoredWeights): FuzzStrate
   const fireWeights = weights.fire;
   return {
     name,
+    weights, // 94g-3 — exposed for the arbitrated arm's DP tail (Strategy.ts)
     pickNextNode: (frontier, run, rng) => {
       const best = makeBestScore(run.nodeMap, weights);
       // Sort by id so equal-bestScore ties resolve to the lowest node id

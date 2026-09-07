@@ -297,10 +297,14 @@ export interface ArbitratedConfig {
    *  site's causal value under paired luck. Default true (the 85d
    *  shipping shape). */
   readonly campRaid?: boolean;
-  /** The nominator weight vector the DP tail reads (70e). Default: the
-   *  default vector. NOT auto-threaded from a `--strategy` file today —
-   *  under the default vector the tail is exactly 0 (all path weights
-   *  are 0), so the omission is inert for the doctrine arm. */
+  /** The nominator weight vector the DP tail reads (70e). Resolution order
+   *  (94g-3): this override → `base.weights` (a scored strategy exposes the
+   *  vector it was built from — the CLI's `--strategy` file and the
+   *  search's per-vector eval-shard base both arrive this way) → the
+   *  default vector, under which the tail is exactly 0 (all path weights
+   *  are 0). From 70e to 94g-2 the base fallback did NOT exist and no CLI
+   *  path passed this override, so every ARM read priced the tail at 0
+   *  (gotcha #131). */
   readonly weights?: ScoredWeights;
   /** Resolution 4's swept exchange rate (default 0 — a board arm). */
   readonly bitsLambda?: number;
@@ -800,7 +804,10 @@ function arbitrateNodeChoice(
   const nominee = base.pickNextNode(frontier, run, rng);
   if (frontier.length <= 1) return nominee;
 
-  const weights = config.weights ?? DEFAULT_SCORED_WEIGHTS;
+  // 94g-3 — the nominator's own path weights price the road ahead (the
+  // 70e design, wired for the first time; before this line the tail was
+  // `dpTailScale × 0` on every CLI arm — gotcha #131).
+  const weights = config.weights ?? base.weights ?? DEFAULT_SCORED_WEIGHTS;
   const best = makeBestScore(run.nodeMap, weights);
   const children = new Map<number, number[]>();
   for (const e of run.nodeMap.edges) {

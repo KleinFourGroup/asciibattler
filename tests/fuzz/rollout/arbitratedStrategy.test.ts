@@ -43,7 +43,8 @@ import { resolveKnob } from '../balanceSweep';
 import type { CandidateApply, RunCandidateResult, RunRolloutSpec } from './evaluator';
 import type { FuzzStrategy, GrantAction, PortBuy } from '../Strategy';
 import { makeBestScore, maxPowerIndex, minPowerIndex, scoredStrategy } from '../strategies/scored';
-import { DEFAULT_SCORED_WEIGHTS, type ScoredWeights } from '../strategies/scoredWeights';
+import { DEFAULT_SCORED_WEIGHTS, loadWeightsFile, type ScoredWeights } from '../strategies/scoredWeights';
+import { arbitratedWrapFromArgs } from '../commands/args';
 import { selectRedrawPositions } from '../redrawPolicy';
 import { selectEmpowerPosition } from '../empowerPolicy';
 import {
@@ -727,6 +728,42 @@ describe('arbitrated node choice (70e) — mechanism pins (injected evaluator)',
       knob.obj[knob.key] = DP_TAIL_SCALE;
     }
     expect(spec.tailScore!(run)).toBe(DP_TAIL_SCALE * mx);
+  });
+
+  it("94g-3 — the vector's path weights reach the tail THROUGH the CLI resolver (arbitratedWrapFromArgs + a scored base); the default base still prices 0", () => {
+    // Gotcha #131: from 70e to 94g-2 no CLI path handed the arbitration the
+    // vector's weights, so the tail was dpTailScale × 0 on every board. This
+    // pin goes through the SAME resolver run.ts / evalShard.ts / search.ts
+    // use, with the base the harness would hand it — never `weights:` direct.
+    const run = mapStateWithChoice();
+    const frontier = frontierOf(run);
+    const winner = loadWeightsFile('tests/fuzz/fixtures/92c2-winner.json');
+    const specsFor = (base: FuzzStrategy): RunRolloutSpec[] => {
+      const specs: RunRolloutSpec[] = [];
+      const capture = (_live: Run, _apply: CandidateApply | null, spec: RunRolloutSpec) => {
+        specs.push(spec);
+        return { score: 0, perSeed: [] };
+      };
+      const wrap = arbitratedWrapFromArgs(
+        { arbitrate: true, searcher: false, audition: false, kTelemetry: false },
+        { evaluate: capture },
+      );
+      expect(wrap).toBeDefined();
+      wrap!(SEED, base).pickNextNode(frontier, run, null as never);
+      return specs;
+    };
+    // The deploy vector: expected re-derived from the FIXTURE FILE's path
+    // weights (the surface the arm does not consult), not from the arm.
+    const best = makeBestScore(run.nodeMap, winner);
+    const mx = Math.max(...frontier.map((id) => best(id)));
+    expect(mx).toBeGreaterThan(0); // vacuity guard: the fixture carries real path weights
+    const [deploy] = specsFor(scoredStrategy('deploy', winner));
+    expect(deploy!.tailScore!(run)).toBeGreaterThan(0);
+    expect(deploy!.tailScore!(run)).toBeCloseTo(DP_TAIL_SCALE * mx, 9);
+    // The default vector (the doctrine arm's shape): all path weights 0 →
+    // exactly 0, byte-identical to every pre-94g-3 board.
+    const [doctrine] = specsFor(scoredStrategy('doctrine', DEFAULT_SCORED_WEIGHTS));
+    expect(doctrine!.tailScore!(run)).toBe(0);
   });
 
   it('§90 — DP_TAIL_SCALE is the rest heal in pool HP: restHealFraction × max, and the ARM exchange rate — re-pinned at 10 (92d)', () => {

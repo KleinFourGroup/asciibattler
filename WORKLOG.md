@@ -3164,3 +3164,50 @@ board read, not a finding.
   real 5-vs-10 read runs first (~3.4 h). Bounded upside per the override
   count; the designed mechanism tested for the first time.
 - (C) leave it; file for Round 7. The cheapest and the least honest.
+
+### 94g-3 — the tail WIRED + the tail-on paired read (2026-09-07, USER-SIGNED in chat — "let's wire it and run the tail-on pair")
+
+**The user's morning questions, answered from the records** (WORKLOG
+§94g-2 above is the finding): (1) yes — since 70e the node-choice site has
+been the one-battle rollout vs ε with the doctrine's DP pick as the null
+arm and no long-horizon term; (2) no signed read ever attributed a gain to
+the tail — the 70e landing recorded it inert on the doctrine arm, §71a read
+node choice at a 2.0 % flip rate and "elite detours n=10, directional", and
+§72f read the walk twins at parity; any remembered lift was node
+arbitration landing at all, not the tail (the 71/72 decision logs are not
+retained locally, so this is the records' silence, not a re-read); (3) a
+dead tail cannot explain the STEP in the ceilings across §92 (equally dead
+at 88d3 and 92h) but can carry part of the BASELINE deficit (4–5 % of node
+choices overridden ≈ one myopic detour every two or three runs). The
+recommendation moved from "delete" to "wire and measure": the dp=10 rows
+from 94g-2 are a tail-off baseline at n=120, so only the tail-on rows need
+running.
+
+**The wiring (three lines + a pin):** `FuzzStrategy.weights?` (Strategy.ts;
+a scored strategy exposes the vector it was built from — `scoredStrategy`
+returns it) · `arbitrateNodeChoice` resolves `config.weights ??
+base.weights ?? DEFAULT_SCORED_WEIGHTS` · the `ArbitratedConfig.weights`
+doc rewritten (it had said "NOT auto-threaded from a `--strategy` file
+today" since 70e — the gap was documented at the config and assumed closed
+at the reads). The search path lights up the same way (evalShard's base is
+the per-vector `scoredStrategy`), so 94h's derive will search under a live
+tail. **The pin** (`arbitratedStrategy.test.ts` "94g-3"): through
+`arbitratedWrapFromArgs` — the resolver run.ts / evalShard.ts / search.ts
+share — with `scoredStrategy('deploy', loadWeightsFile(92c2-winner))` as
+the base, the captured spec's `tailScore` equals `DP_TAIL_SCALE × max
+frontier bestScore` re-derived from the FIXTURE's weights (> 0, vacuity
+guarded); the default-vector base prices exactly 0. The 94g-1 pin stays
+(the knob contract); this one covers the path it could not.
+
+**The local CLI proof (seeds 1–2, the walk row, `--jobs=2`):** tail-on →
+23 of 24 node-choice rows carry a nonzero `tailBonus` (37.9–58.3 at dp=10;
+seed 1's outcome changed) · `--set=rollout.dpTailScale=0` at the new HEAD →
+both `summary.csv` rows BYTE-IDENTICAL to `20260907-034853-d9675b6` (the
+94g-2 dp=10 walk control). So the 94g-2 dp=10 rows ARE the tail-off
+baseline for a same-seed pairing across the wiring commit, and the queue
+runs only the tail-on rows: `94g3-tailon.queue` (the deploy pair at dp=10,
+base + ext → n=120, ~1.2 h); the read `read-94g3.mjs <HEAD>` pairs by seed
+against `d9675b6`. The tail's magnitude (~40–60 on a rollout score of order
+5) means differences between challengers' onward DP values (~5–10) now
+dominate ε=3.265 — node choice will mostly follow the DP; the read says
+whether that closes any of the ceiling. ⛔ Keep-or-delete on the read.

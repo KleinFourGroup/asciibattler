@@ -4598,3 +4598,50 @@ deltas. The pre-X H7c→O log lives at
   **Disposition (user-signed 2026-09-06): the rule's trims**, landed as
   the five-line config commit; the re-read = the same six arms
   (`94c-reread.queue`) → its own entry below.
+- **2026-09-07 §94c RE-READ — the five trims measured + ⛔ THE FREEZE
+  (the six ARM walk arms n=120 `--per-encounter --emit-results` at
+  `d9675b6`; box `abox-20260906-231259`, batches `20260906-{231342,234713}
+  -d9675b6` + `20260907-{002255,010228,013812,020743}-d9675b6`, 3.4 h, box
+  destroyed).** The seven rows pooled over six arms (the reader self-checked
+  against the 94c pool):
+  | row | pool | turns/won ← 94c | burn/turn | cost/turn | cost/inst ← 94c | cap share |
+  |---|---|---|---|---|---|---|
+  | adventurer-with-guards | 14 | 2.49 ← 4.28 | 5.84 | 2.38 | 5.9 ← 6.3 | 0.0% |
+  | elementalTrio | 19 | 3.23 ← 3.29 | 6.67 | 1.93 | 6.2 ← 6.0 | 1.7% |
+  | infernalColumn | 17 | 3.22 ← 3.65 | 5.81 | 3.29 | 10.6 ← 12.4 | 0.7% |
+  | miscreants | 22 | 3.09 ← 3.23 | 8.83 | 3.33 | 10.2 ← 10.7 | 1.4% |
+  | ronin-vs-mages | 13 | 3.32 ← 3.81 | 4.74 | 3.21 | 10.6 ← 12.1 | 0.2% |
+  | darkMagicPosse | 18 | 4.32 ← 4.15 | 4.12 | 4.58 | 19.6 ← 20.6 | 5.1% |
+  | plagueSpreaders | 22 | 3.91 ← 4.05 | 5.73 | 5.29 | 20.9 ← 20.7 | 12.4% |
+  Kind means: normal **2.98** (3.37) · elite 4.53 (4.53) · boss 5.61
+  (5.62) turns per won instance; cost/instance normal 6.2 (6.4) · elite
+  16.8 (17.0) · boss 17.0 (16.7); cap share 0.6 / 2.7 / 0.8%. The noise
+  scale off the untouched elites (4.15 → 4.32, 4.05 → 3.91): ±0.15 turns
+  at n≈100 — the three hair-width band breaches sit inside it. **Turns:
+  every row HOLDS; the normal mean lands on the 3.0 target.** **Cost: the
+  three deep-end rows (column 10.6 · miscreants 10.2 · ronin 10.6) stay
+  over the 1.5× line (9.3)** — a pre-94b property (92h: 11.9 / 8.0 / 9.1
+  vs 8.3) carried by their cost/TURN (3.2–3.3 vs the normal mean 2.1),
+  which the pool lever cannot close. ⛔ **FROZEN at `d9675b6`
+  (user-signed 2026-09-07)**; the cost residual = a §94 sheet flag + TODO
+  (WORKLOG §"94c — the re-read + the freeze").
+- **2026-09-07 §94g-2 — the DP_TAIL_SCALE 5-vs-10 paired read: NULL BY
+  CONSTRUCTION (eight batches at `d9675b6`; box `abox-20260907-023636`,
+  batches `20260907-{023733,024600,025839,031523}-d9675b6` (dp=5) +
+  `20260907-{034025,034853,040138,041819}-d9675b6` (the same-HEAD dp=10
+  controls), 2.1 h, box destroyed).** dp=5 vs dp=10, n=120 per row: act-1
+  deploy 0/0 discordant · walk deploy 0/0 discordant · Δ 0.000 · the
+  artifacts byte-identical (summary sha256 `ed3c0c07` / `4e14002e` on
+  both sides). **The DP tail is 0.000 on every node-choice row of every
+  board since 70e** (88d 852 rows · 88d3 861 · 92h 856 + 1382 · 94g 284 +
+  428 — zero nonzero): the CLI never hands the arbitration the vector's
+  weights, so the tail prices with the default vector's all-zero path
+  weights (WORKLOG §94g-2). Re-graded, not re-signed: the 92d exchange-rate
+  re-pin and the 92i/94a exchange-rate hypothesis concerned a constant
+  multiplying zero; every signed ARM read stands as the measurement of the
+  tail-less arm. The override count (the doctrine nominee overridden on
+  4–5 % of node choices; portBuy 93–99 %, rewardDaemon 22–31 %,
+  eventChoice 21–26 %, preTurn packets 13–15 %) bounds the tail's lever
+  and moves the ceilings' suspect to the high-override sites. Informational
+  cross-config column (92h doctrine n=40): ceiling dp5 − doc −0.350 act-1 ·
+  −0.375 walk. ⛔ the ARM disposition re-posed (delete vs wire; WORKLOG).

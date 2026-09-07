@@ -3045,3 +3045,122 @@ pools. Fix (user-signed): the 94g queue gains a dp=10 CONTROL pair (base
 + ext on both rows, n=120) at the same HEAD — ~3.4 h total — and runs as
 its own cohort from the frozen post-trim HEAD, right after the re-read.
 The reader gains a same-HEAD control column before it is read.
+
+### 94c — the RE-READ + ⛔ THE FREEZE (2026-09-07; the six ARM walk arms n=120 at `d9675b6`; numbers BALANCE 2026-09-07 §94c re-read; USER-SIGNED in chat — "I fully endorse your recommended freeze")
+
+Six legs on `abox-20260906-231259` (~35 min each, 3.4 h, every fetch
+artifact-verified, the box destroyed on stand-down); the read = this
+session's `read-94c2.mjs` (the 94c reader with a "← 94c" column from the
+`36776f5` batches beside "← 92h"; self-checked first: pointed at the 94c
+batches as NOW it reproduces WORKLOG §94c to the digit on every row and
+kind mean).
+
+| row | pool | turns/won NOW ← 94c | burn/turn | cost/inst NOW ← 94c | cap | the rule |
+|---|---|---|---|---|---|---|
+| adventurer-with-guards | 14 | **2.49** ← 4.28 | 5.84 | 5.9 ← 6.3 | 0.0% | a hair under 2.5 → HOLD (noise) |
+| elementalTrio | 19 | 3.23 ← 3.29 | 6.67 | 6.2 ← 6.0 | 1.7% | HOLD |
+| infernalColumn | 17 | 3.22 ← 3.65 | 5.81 | **10.6** ← 12.4 | 0.7% | turns HOLD · cost over 9.3 |
+| miscreants | 22 | 3.09 ← 3.23 | 8.83 | **10.2** ← 10.7 | 1.4% | turns HOLD · cost over |
+| ronin-vs-mages | 13 | 3.32 ← 3.81 | 4.74 | **10.6** ← 12.1 | 0.2% | a hair over 3.25 (noise) · cost over |
+| darkMagicPosse | 18 | 4.32 ← 4.15 | 4.12 | 19.6 ← 20.6 | 5.1% | HOLD |
+| plagueSpreaders | 22 | 3.91 ← 4.05 | 5.73 | 20.9 ← 20.7 | 12.4% | a hair under 4 → HOLD (noise) |
+
+Kind means: normal **2.98** turns (3.37 at 94c; the target 3.0) · elite
+4.53 (4.53) · boss 5.61 (5.62); cost/instance normal 6.2 (6.4) · elite
+16.8 (17.0); the overall win 5945 / 6406.
+
+**The noise scale, read off the untouched rows:** the two elites were NOT
+in the trim commit, yet they moved 4.15 → 4.32 and 4.05 → 3.91 from the
+changed run trajectories alone — ±0.15 turns on an n≈100 row. Every
+hair-width breach (2.49 · 3.32 · 3.91) sits inside it: on TURNS the trims
+did exactly what the rule predicted and the normal kind mean landed on the
+target. One non-linearity worth recording: the guards row's pool moved
+×0.7 and its turns ×0.58 — the adventurer's fall @4 is a lump, and at pool
+14 two guard turns plus the lump close it in two (the trio, by contrast,
+barely moved 3.29 → 3.23 on 21 → 19; its stage loop sets its length).
+
+**The residual is COST on the three deep-end rows** (column 10.6 ·
+miscreants 10.2 · ronin 10.6 against the 1.5 × 6.2 = 9.3 line, which
+itself fell from 9.6 as the kind mean fell). Three facts: (1) it PREDATES
+94b — at 92h the column read 11.9 and ronin 9.1 against a then-line of
+8.3; (2) the pool cannot close it — their cost/TURN is 3.2–3.3 against a
+normal mean of 2.1, the wave's bite, not its length; a pool point buys
+~0.5 of cost, so closing 10.6 → 9.3 by pool means trimming turns below
+the band; (3) the pre-signed rule authorized ONE trim + a re-read —
+anything further is a new lever (count / level on those three waves), a
+design call outside the rule.
+
+⛔ **THE FREEZE (user-signed):** the config is FROZEN at `d9675b6` (pool
+max 40 · the 92d table + the 94b/94c rows · the 92c2 vector · the 94f
+price book). The three cost residuals are filed as a §94 flag on the sheet
+(BALANCE) and a TODO with the bite lever named; 94h runs at this config
+after ⛔ the 94g ARM disposition.
+
+### 94g-2 — the 5-vs-10 read is NULL BY CONSTRUCTION: the DP tail has been DEAD on every CLI arm since 70e (2026-09-07; eight batches at `d9675b6`, 2.1 h, the box destroyed; numbers BALANCE 2026-09-07 §94g-2)
+
+**The read.** dp=5 (n=120, both rows) vs the same-HEAD dp=10 controls
+(n=120): **0/0 discordant pairs on every shared seed, Δ 0.000** — and the
+artifacts are BYTE-IDENTICAL (`summary.csv` sha256 `ed3c0c07` = `ed3c0c07`
+on the act-1 base pair, `4e14002e` = `4e14002e` on the walk base pair, `2c98b5af` / `a96898f6` on the ext pairs; `decisions.csv`
+and `rosters.csv` diff to zero lines). A 1.00 on a lever that should move
+things is the instrument (the 86f rule) — read before the mechanism story.
+
+**The chain.** (1) `decisions.csv`'s `tailBonus` is **0.000 on all 712
+node-choice rows** of the dp=5 batches, at 3–21 hops remaining (the tail's
+home site; the column is PRESENT, so `spec.tailScore` fired and returned
+zero). (2) It is zero on **every board since the tail was born**: 88d
+(852 node-choice rows), 88d3 (861), 92h (856 act-1 / 1382 walk) — 0
+nonzero tails. (3) The code: `arbitrateNodeChoice` prices the tail with
+`config.weights ?? DEFAULT_SCORED_WEIGHTS`, and **no CLI call site passes
+`weights`** — `arbitratedWrapFromArgs` (run.ts, evalShard.ts, search.ts)
+builds the config from the flags + the run-mode extras; the base strategy
+carries the vector's weights inside its closure and `FuzzStrategy` does
+not expose them. The default vector's `path` weights are all zero
+(`config/fuzz-strategies.json`), so `makeBestScore` ≡ 0 on every node and
+the tail ≡ `dpTailScale × 0`. (4) The 70e landing recorded the half of
+this it knew: "the DEFAULT vector's path weights are ALL ZERO … the tail
+activates only for searched vectors carrying real path preferences" — the
+activation was the design, never the wiring. (5) The probe that re-derives
+from a surface the arm does not consult: a clone walked one battle exactly
+as the rollout does, priced with the 92c2 winner's `path` weights through
+`makeBestScore`, reads a tail of **38.9–47.6 at dp=10** (seeds 1–3) —
+what the arm WOULD have added had the weights reached it.
+
+**What this re-grades.** Every ARM read since 70e (2026-07-31) ran with a
+tail-less node choice: the 72 interstitial, the §85 fold reads, the 88d /
+88d3 ceilings, 92c1/92c2's search + selection, the 92h board, 94a, and
+this read. Nothing SIGNED changes — the measured ARM is the ARM that
+shipped in every fixture — but three stories about a constant were about a
+constant multiplying zero: the §90 "the tail prices at the shipped
+config" rationale, the 92d `DP_TAIL_SCALE` 5 → 10 re-pin ("the exchange
+rate DOUBLES"), and 92i/94a's exchange-rate hypothesis for the negative
+ceilings. The 94g-1 pin tested `tailScore` on the LIVE pre-walk state with
+weights handed in directly — self-consistency, never the CLI path.
+
+**How much the tail could have mattered — the override count.** The
+doctrine's nominee is overridden on **4–5 % of node-choice decisions**
+(92h act-1 15/387 · walk 33/621 · 94g 6/129 · 9/193). The sites where the
+ARM diverges from the doctrine: **portBuy 93–99 %** · rewardDaemon 22–31 %
+· eventChoice 21–26 % · packetFire:preTurn 13–15 %; grants, camp raids and
+out-of-battle fires ≈ 0. A live tail (differences of ~5–10 points between
+challengers' onward DP values vs rollout margins of a few points) would
+mostly SUPPRESS those 5 % toward the DP path — a bounded lever. The
+ceilings' suspect moves to the high-override sites; a lead for the 94h
+board read, not a finding.
+
+⛔ **THE ARM DISPOSITION (the user's, re-posed):**
+- **(B) DELETE the dead tail** — `tailScore`, `ROLLOUT_KNOBS`,
+  `DP_TAIL_SCALE`, the `rollout` knob group, their pins — with a
+  byte-identity oracle (`scripts/perf-oracle.sh` against `d9675b6`: the
+  tail added zero, so the arm is unchanged to the byte). NOT an ARM
+  change: 94h launches at the frozen config as planned. **Recommended** —
+  it makes the code say what two rounds measured.
+- **(A) WIRE the tail** — `scoredStrategy` exposes its `weights` on the
+  `FuzzStrategy`; `makeArbitratedStrategy` falls back
+  `config.weights ?? base.weights ?? DEFAULT`; a pin THROUGH
+  `arbitratedWrapFromArgs` on a nonzero-path vector (the forgetful path).
+  An ARM change: the search prices the tail per vector (evalShard's base
+  is the vector), so 94h's derive re-searches under a live tail, and the
+  real 5-vs-10 read runs first (~3.4 h). Bounded upside per the override
+  count; the designed mechanism tested for the first time.
+- (C) leave it; file for Round 7. The cheapest and the least honest.

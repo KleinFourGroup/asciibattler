@@ -4667,3 +4667,54 @@ deltas. The pre-X H7c→O log lives at
   rate exists); the ceilings' suspect stays the high-override sites
   (portBuy 93–99 % · rewardDaemon · eventChoice · preTurn — the 94g-2
   count) → the 94h board read. WORKLOG §"94g-3 — the tail-on read".
+- **2026-09-08 §94h — THE SIGNING BOARD at the frozen §94 config
+  (`4d3fa22`; the derive box `abox-20260907-153213`, batch
+  `20260907-153300-4d3fa22`, 3.0 h; the board box `abox-20260907-183445`,
+  26 batches `20260907-{183538 … 233350}-4d3fa22`, 6.9 h; both destroyed
+  on drain; the anchors local at `4d3fa22`; staged by the 92h recipe into
+  `output/board-runs/94h`, report `94h-report.txt`). Integrity **17/17
+  PASS** at HEAD; **0 FAIL / 17 WARN** before the re-pin → **0 FAIL / 8
+  WARN** after (the eight = the carried watches below). USER-SIGNED
+  2026-09-08 — the sheet amendment `signed-sheet.json` "AMENDED
+  2026-09-08".**
+  ⭐ **Every band SIGNED at the §94 shape-lock PASSES on both walk arms:**
+  | band | regen walk | deploy walk | signed |
+  |---|---|---|---|
+  | seamPool (0.40–0.45 × 40) | 16.02 | 16.97 | 16–18 |
+  | pacing normal | 2.955 | 2.972 | 2.5–3.25 |
+  | pacing elite | 4.386 | 4.565 | 4–5 |
+  | pacing boss | 5.484 | 5.636 | 5–6.5 |
+  The seven §94 rows on the board's ARM walk rows (n=30–296 pooled over
+  four arms) reproduce the 94c re-read row for row (2.43 · 3.29 · 3.09 ·
+  3.06 · 3.30 · 4.17 · 3.89; kind means 2.96 / 4.47 / 5.58).
+  **The re-pins (n=120 pooled; 92h in parentheses):** act-1 wins soldier
+  0.408 / 0.625 (0.483 / 0.725) · priest 0.508 / 0.767 (0.542 / 0.775) ·
+  gambler 0.392 / 0.692 (0.408 / 0.733) · the forced bosses King 0.483 /
+  Queen 0.458 (0.592 / 0.567, order preserved) · banks firer 87.7 /
+  shopper 58.0 (89.5 / 61.8) · firer fires 2.73 (2.65) · tx 0.358 / 0.908
+  (0.358 / 0.892) · the fire channel 0.125 HELD (0.150). The walk shape:
+  regen reach 0.183 · wall 0.727 · win 0.050 (0.250 / 0.467 / 0.133) ·
+  deploy reach 0.508 · wall 0.459 · win 0.275 (0.517 / 0.323 / 0.350).
+  **The user's three calls:** (1) the WALL band 30–35 HELD as a named
+  watch (the bosses unchanged since 92d; the roster arrives weaker under
+  casualties because the 94b act-1 openers are real fights); (2) the
+  PRIEST parity breach NAMED for Round 7 (+14.2 deploy · +10.0 regen over
+  the soldier; 92h +5.0 / +5.9; the gambler +6.7 / −1.6); (3) the cost of
+  the pacing targets ACCEPTED — the ARM −8..11 on every act-1 row, the
+  deploy walk 0.350 → 0.275, **the fresh derive 57.7 → 42.3 % train
+  (held-out 33.3 → 16.7 %, n=6) on identical arguments** — the searched
+  ceiling at the §94 config (92c1 42.3 · 92g 57.7 · 94h 42.3).
+  **Carried:** the ceilings arb − doctrine −0.142 / −0.175 / −0.075 (in
+  band) / −0.200 (92h −0.092 / −0.200 / −0.042 / −0.250) — unchanged by
+  the tail's deletion, as a zero term predicts; the suspect = the
+  high-override sites (94g-2's count) → Round 7 with the tail redesign ·
+  the skill gradient random 0.075 = greedy 0.075 (3/40 each, the check
+  reads a tie as INVERTED — noise at n=40; 92h 0.100 < 0.125) · the deploy
+  reach hair 0.508 · the regen vector's walk collapse (a doctrine-era
+  control). Criterion 1 at the final config: not re-read (the 92i 0.072 at
+  the same rule; the 94b/94c rows moved pools, not the rule).
+  **Derived artifacts (measured at `4d3fa22`):** prior table **v5**
+  (9,372 long-horizon rows off the shadow leg, seeds 1001–1120, walk win
+  0.267; the tripwire green) · roster table **v3** (21,221 rows off the
+  eight ARM rows, 4.6 MB — the compaction rider stands). Detail: WORKLOG
+  §94h · ROADMAP 94h.

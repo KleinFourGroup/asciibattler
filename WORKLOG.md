@@ -3263,3 +3263,60 @@ and the road ahead in ONE currency (e.g. `dpTailScale × bestScore(entered)`
 with the rollout's pool-HP outcome as the realization of the same term,
 or a rollout-only horizon of two battles), with today's paired numbers as
 the baseline it must beat. The 94g dial line in TODO is superseded.
+
+### 94h — the signing cohort + ⛔ THE SIGNING (2026-09-07/08; numbers BALANCE 2026-09-08 §94h; USER-SIGNED in chat — "signing off on all three recommendations")
+
+**The cohort.** Launched 2026-09-07 15:32Z at `4d3fa22` (the frozen config
++ the tail delete) as ONE chained driver: `94h-derive.queue` (its own
+cohort, `--artifact=best-strategy.json`, 3.0 h) then `94h-board.queue`
+(26 batches — the 88d shape, `--per-encounter` on the four walk lines,
+the prior v5 shadow leg — 6.9 h); both boxes destroyed on drain (12
+created / 12 destroyed at §94); the two anchors ran locally at the same
+HEAD while the derive cooked. Staged by the 92h recipe (this session's
+`stage-94h.sh`: the chained log's BOARD section only maps onto the queue
+ids; ten `--merge-stages` pools carrying `pacing.csv`; six copies; the
+anchors' manifests checked against HEAD; `--report --dir`).
+
+**The board.** Integrity 17/17 PASS at HEAD; 0 FAIL / 17 WARN before the
+re-pin — every WARN a reference pinned in the pool-20 era, exactly what
+the 94h-pre amendment predicted. ⭐ Every band SIGNED at the §94
+shape-lock PASSES on both walk arms (seam 16.0 / 17.0 · pacing 2.96 /
+2.97 · 4.39 / 4.57 · 5.48 / 5.64), and the seven §94 rows reproduce the
+94c re-read row for row at the final config. The side-by-side against
+92h (the §92 config, same ARM, same n) is the signing's substance: the
+pacing bands moved ONTO target and the game got harder — the ARM −8..11
+on every act-1 row (soldier deploy 0.725 → 0.625), the isolated bosses
+−11 (King 0.592 → 0.483 · Queen 0.567 → 0.458) with the bosses UNCHANGED,
+the deploy walk's wall 0.323 → 0.459 and win 0.350 → 0.275, the fresh
+derive's searched ceiling 57.7 → 42.3 % train on identical arguments
+(the 42.3 I first matched to "the §92 search" was 92c1's — a different
+config; corrected the same session). The mechanism the numbers carry:
+the 94b act-1 openers are real fights under casualties, so the roster
+arrives at the boss weaker (the 94c cost residuals' cousin).
+
+**The re-pins (mechanical, the amendment lineage):** the six act-1 win
+refs, the forced bosses, the banks, the firer fires, both transaction
+rates — at the 94h n=120 values; the fire channel held. Re-run: **0 FAIL
+/ 8 WARN**, the eight = the carried watches. **⛔ The user's three calls
+(signed):** (1) the WALL band 30–35 HELD as a named watch — re-signing it
+at 0.46 would ratify a side effect as a design; (2) the PRIEST parity
+breach (+14.2 deploy · +10.0 regen) NAMED for Round 7 — healing pays more
+when fights last three turns and the dead are booked; the §94 charter
+excluded archetype changes; (3) the cost of the pacing targets ACCEPTED
+as the §94 reality, stated on the sheet.
+
+**Carried (no action):** the ceilings −0.142 / −0.175 / −0.075 / −0.200
+— three WARN, unchanged by the tail's deletion (a zero term), the
+suspect = the high-override sites (portBuy 93–99 % · rewardDaemon ·
+eventChoice · preTurn) → Round 7 with the tail redesign · the gradient
+tie (random = greedy 0.075, 3/40 each; the check reads ≥ as INVERTED —
+noise, the 92h read separated them 0.100 < 0.125) · the deploy reach
+hair 0.508 · the regen vector's walk collapse (win 0.050, wall 0.727 — a
+doctrine-era control, informational).
+
+**Derived artifacts at `4d3fa22`:** prior table **v5** (`npm run
+prior:table` off the fetched shadow batch — the staged copy lacks the
+HEAD segment in its name, so the build reads the original dir; 9,372
+long-horizon rows; the tripwire 7/7) · roster table **v3** (off the
+eight merged ARM rows; 21,221 rows; 4.6 MB — TODO's compaction rider
+stands). Both commit with the sheet amendment in the signing commit.

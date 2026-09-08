@@ -299,3 +299,12 @@ persistent unit HP (rewrites the run layer, the sheet, the evaluator).
 
 §89 data → §90 floor → §91 rule → §92 rebalance → §93 ⛔ keep-or-rollback
 → §94 the encounter list + the close. Charters in [ROADMAP.md](ROADMAP.md).
+- ⭑ **CLOSED (2026-09-08, §94i, user-signed at 94h).** The defect-list
+  charter landed (the seven held rows re-scaled at 94b, the rule's trims
+  at 94c, the config FROZEN at `d9675b6`); the sheet re-anchored as the
+  new lineage and SIGNED at 94h (every §94 band PASSES on both walk arms;
+  the wall band held as a watch; the priest parity breach named for Round
+  7; the pacing cost accepted). Beside it: the ARM's DP tail found dead
+  since 70e and deleted (gotchas #131/#132). The round's record:
+  [post-88-worklog.md](post-88-worklog.md) · [post-88-roadmap.md](post-88-roadmap.md)
+  · BALANCE 2026-09-03 → 09-08.

@@ -269,6 +269,38 @@ kickoff — has its own section below.)
   the balance board is FAIL-CLOSED on integrity — the protocol is
   BALANCE §"The board integrity protocol"; `--allow-unmanifested`
   is for pre-86e archives only.
+- **Build in a detached worktree while a cohort holds the tree** (§94:
+  the ONE-HEAD rule freezes `main` for a cohort's whole launch window,
+  2–3.5 h; `git worktree add --detach` + a `node_modules` junction gives a
+  second tree where steps are built, typechecked, tested and fuzz-smoked,
+  then landed on `main` as file-split commits once the LAST launch has
+  fired — `git add -N` makes new files ride `git diff`; hunks that straddle
+  two commits are staged from a temporarily-reverted copy).
+- **Write/Edit for any text that carries a quote; heredocs and perl only
+  for literal, quote-free anchors** (§94: four burns in one session — a
+  `'` in a `-m` message killed a whole command, `\n` in a perl replacement
+  became a real newline, an apostrophe parsed by esbuild but not tsc; a
+  bash batch with a stray quote silently ran NOTHING before the error).
+  Write the scratch file with the Write tool, splice with `cat`.
+- **Self-check a new reader against a known answer before it reads new
+  data, and pool with a script that prints its arm count — never
+  `rows[0]`** (94c: the reader pointed at the 92h batches had to
+  reproduce the 92h read exactly and didn't — two defects found before
+  the cohort landed; the kickoff table had quoted one arm's rows as "the
+  six arms pooled").
+- **Pre-sign the CHAIN, not the numbers, for an unattended night** (§92:
+  rules the session can apply, a pause-on-suspicion clause for what it
+  can't, and a written flag for every judgment call let five cohorts run
+  overnight; the one marginal reading was HELD because the rule's text
+  said hold).
+- **A knob pin must reach the knob THROUGH the CLI resolver, and a
+  mechanism designed inert on the arm you measure with gets its first
+  LIVE read scheduled** (94g: the DP tail priced zero on every board for
+  five weeks — two re-pins and two probes reasoned about a constant
+  multiplying zero; the pin handed the tail its weights directly and could
+  not fail; one group-by on the decision log's contribution column would
+  have caught it at 70e — gotchas #131/#132). A paired read with 0/0
+  discordant seeds and byte-identical artifacts is the instrument talking.
 - **Stop preview servers (and other background processes) before
   ending the session.** If you called `preview_start`, call
   `preview_stop` before signing off. Vite spawns child Node processes

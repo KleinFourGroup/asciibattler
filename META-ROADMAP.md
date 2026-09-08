@@ -52,6 +52,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 
 ```
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
+ §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
  7. Idioms ───────┤  i18n + the UI audit → the idiom reference
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
@@ -180,9 +181,7 @@ into the ARM); rarity tiers dispositioned per archetype (halberdier→rare
 protocol standing. Beyond the charter: the FAIL-CLOSED board split (86e),
 the derived-artifact registry + tripwire (88d2), 3.47×/3.32×/2.95× perf.
 Condensed record: HANDOFF §Closed rounds; archives `archive/post-83-*`
-+ `archive/round-6-spec.md`. **The encounter feel interstitial (§89–§94)
-runs BEFORE Round 7 — spec-locked 2026-09-02 as THE CASUALTY EXPERIMENT,
-the first experimental round** ([encounter-feel-spec.md](encounter-feel-spec.md)):
++ `archive/round-6-spec.md`. **The encounter feel interstitial (§89–§94) ✅ CLOSED 2026-09-08 — ran BEFORE Round 7; spec-locked 2026-09-02 as THE CASUALTY EXPERIMENT, the first experimental round; the verdict KEEP (§93, 2026-09-05), the sheet re-anchored + signed at 94h (2026-09-08); archives `archive/post-88-*` + `archive/encounter-feel-spec.md`** ([encounter-feel-spec.md](archive/encounter-feel-spec.md)):
 the §87d3 questions (per-act bands, inter-sector healing) shared one root
 — the chip rule's bimodality + act coupling — so the round builds the
 seam floor (kept regardless) and the casualty chip rule under a

@@ -50,10 +50,12 @@ first touches the surface); no second locale authored.
   §95a); 122 addresses in `locales/en/events.json`, 0 positional; 65
   choice ids stamped through the editor's formatter; the no-bump
   prediction HELD (the snapshot cursor is `{eventId, pageId}`).
-- [ ] **95b — the other ten families.** `prose()` on encounters ·
-  daemons · packets · characters · sectors · camps · statuses · units ·
-  abilities · layouts; the 57 editor-metadata strings stay plain. Exit:
-  240 addresses in the extract. One commit.
+- [x] **95b — the other families.** ✅ 2026-09-09: `prose()` on
+  encounters · daemons · packets · characters · sectors · statuses ·
+  units · abilities · layouts (camps has NO rendered prose — not a
+  family); each loader exports `<FAMILY>_PROSE = loadProse(…)`; **255
+  addresses across 10 files, 0 positional** — the "240" here was the
+  audit's arithmetic (its "57 never-rendered" is 42; WORKLOG §95b).
 - [ ] **95c — the UI string table.** `locales/en/ui.json`; placeholder
   + plural + number helpers on `Intl` built-ins (no dependency); the
   shared tables migrate first (`STAT_LABELS` — its key ORDER is

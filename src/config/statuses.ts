@@ -20,6 +20,8 @@ import statusesJson from '../../config/statuses.json';
 import { StatusDefSchema, type StatusDef } from '../sim/effects/statusSchema';
 import type { AbilityDef } from '../sim/effects/schema';
 
+import { loadProse } from '../i18n/locale';
+
 const StatusDefsFileSchema = z.record(z.string(), StatusDefSchema);
 
 export const STATUS_DEFS: Record<string, StatusDef> = (() => {
@@ -33,6 +35,10 @@ export const STATUS_DEFS: Record<string, StatusDef> = (() => {
   }
   return parsed;
 })();
+
+// §95b — `name` is prose (the schema lives in src/sim/effects/statusSchema.ts;
+// the record key is the address segment: `statuses.<id>.name`).
+export const STATUSES_PROSE = loadProse('statuses', StatusDefsFileSchema, STATUS_DEFS);
 
 /**
  * Resolve a status definition by id, throwing if absent. Callers that have

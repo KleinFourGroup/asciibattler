@@ -50,6 +50,9 @@ interface ZodDefLike {
   readonly options?: readonly z.ZodType[];
   readonly in?: z.ZodType;
   readonly getter?: () => z.ZodType;
+  readonly items?: readonly z.ZodType[];
+  readonly left?: z.ZodType;
+  readonly right?: z.ZodType;
 }
 
 function defOf(schema: z.ZodType): ZodDefLike {
@@ -118,6 +121,16 @@ function walkSchemaDef(schema: z.ZodType, path: readonly string[], out: string[]
     case 'lazy':
       if (def.getter) walkSchema(def.getter(), path, out, stack);
       return;
+    case 'tuple':
+      (def.items ?? []).forEach((item, i) => walkSchema(item, [...path, String(i)], out, stack));
+      return;
+    case 'intersection':
+      if (def.left) walkSchema(def.left, path, out, stack);
+      if (def.right) walkSchema(def.right, path, out, stack);
+      return;
+    // Leaves: no prose can hide inside these. `custom` is the opaque
+    // validator (`z.custom<Archetype>(…)` in encounters.ts / camps.ts) — a
+    // prose field must be declared with `prose()`, never wrapped in one.
     case 'number':
     case 'boolean':
     case 'literal':
@@ -128,12 +141,29 @@ function walkSchemaDef(schema: z.ZodType, path: readonly string[], out: string[]
     case 'unknown':
     case 'int':
     case 'bigint':
+    case 'custom':
+    case 'date':
+    case 'nan':
+    case 'symbol':
+    case 'void':
+    case 'never':
+    case 'template_literal':
       return;
     default:
       throw new Error(
         `i18n: prosePatterns met an unknown zod def type '${def.type}' at '${path.join(ADDRESS_SEPARATOR) || '<root>'}' — disposition it in src/i18n/prose.ts (walk into it, or list it as a leaf)`,
       );
   }
+}
+
+/** A registered prose FAMILY: a catalog with `prose()` fields + its parsed
+ *  data (post-resolution). Built by `loadProse` (locale.ts) in each loader,
+ *  listed in families.ts for the extract and the pins. */
+export interface ProseFamily {
+  /** The address prefix — `events`, `daemons`, … (matches the config file stem). */
+  readonly family: string;
+  readonly schema: z.ZodType;
+  readonly data: unknown;
 }
 
 /** One prose value in a parsed catalog: its address, its current (inline) value, and a setter. */

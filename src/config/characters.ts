@@ -27,6 +27,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import charactersJson from '../../config/characters.json';
 import { UNIT_DEFS } from './units';
 import { daemonById } from './daemons';
@@ -41,8 +43,8 @@ const isCombatantArchetype = (id: string): boolean => id in UNIT_DEFS;
 
 const CharacterSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().min(1),
+  name: prose(),
+  description: prose(),
   roster: z.array(z.string().min(1)).min(1),
   daemon: z.string().min(1),
   /** Additions on top of the global `draftable:false` set — never a
@@ -122,6 +124,9 @@ export interface CharacterConfig {
 }
 
 const parsed = CharactersSchema.parse(charactersJson);
+// §95b — `name` + `description` are prose; resolved on the raw parsed list
+// BEFORE normalizeCharacter copies the fields (addresses `characters.<id>.…`).
+export const CHARACTERS_PROSE = loadProse('characters', z.array(CharacterSchema), parsed.characters);
 
 /** Build always-present-collection configs from the parse (the
  *  `normalizeDaemon` exact-optional discipline). Exported for schema tests

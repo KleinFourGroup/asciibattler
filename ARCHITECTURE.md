@@ -93,7 +93,7 @@ src/
   i18n/                      # §95 (Round 7): the locale layer — CONFIG prose via the SIDECAR (English inline in config/*.json; other locales derived), UI literals via an explicit-key table (95c)
     prose.ts                 #   95a: prose() — a zod .meta marker on a string field: THE DECLARATION IS THE MANIFEST; prosePatterns (the zod-4 def-tree walk, per-path cycle cut, throws on an unknown shape) + proseSites (the data walk: addresses `<family>.<id>.<path>`, arrays keyed by element id else index; collision + separator guards)
     locale.ts                #   95a: the runtime — activeLocale (en = the inline value by definition) · registerLocale(lang, family, file) · applyLocale(family, schema, data) resolves every site IN PLACE once at catalog load; a missing entry under a non-en locale THROWS. LocaleEntry = string | { text } (95e widens to provenance)
-    families.ts              #   95a: PROSE_FAMILIES — every catalog with prose() fields + its parsed data (events; 95b adds the other ten); the extract + the en pins iterate it
+    families.ts              #   95a/b: PROSE_FAMILIES — the ten `<FAMILY>_PROSE` descriptors each loader exports from `loadProse(family, schema, data)` (locale.ts: apply + describe, right after the parse — BEFORE any normalize/map copies the fields); the extract + the en pins iterate it. Camps is not a family (nothing of it renders)
     extract.ts               #   95a: extractFamily → the flat address → English map; `npm run i18n:extract` (scripts/i18n-extract.ts) writes locales/en/<family>.json; tests/i18n-en-extract.test.ts pins it current (missing / orphan / stale — the derived-artifact tripwire shape)
 
   sim/
@@ -378,6 +378,7 @@ src/
 
 locales/                     # §95a: the locale SIDECARS — one flat file per family per locale (address → entry). `en/` is a DERIVED extract of the inline English (`npm run i18n:extract`; tests/i18n-en-extract.test.ts pins it current); another locale is the translator's file, resolved at catalog load by src/i18n/locale.ts
   en/events.json             #   95a: 122 addresses (13 names · 44 page texts · 65 choice labels), catalog order
+                             #   95b: + encounters / daemons / packets / characters / sectors / statuses / units / abilities / layouts .json — 133 more (19 · 22 · 16 · 6 · 2 · 10 · 23 · 24 · 11) = 255 in all; camps + the encounter/sector/layout descriptions are editor metadata, never rendered, NOT here
 
 config/                      # A4: balance JSON source of truth (paired with src/config/*.ts)
   units.json                 # §38 UnitDef catalog (was archetypes.json) — per-unit-kind glyph + baseStats + growthRates + abilities/targeting (E1/E3/§38)

@@ -20,7 +20,7 @@
  */
 
 import type { z } from 'zod';
-import { proseSites, type ProseSite } from './prose';
+import { proseSites, type ProseFamily, type ProseSite } from './prose';
 
 export const DEFAULT_LOCALE = 'en';
 
@@ -90,4 +90,15 @@ export function applyLocale(family: string, schema: z.ZodType, data: unknown): r
     if (resolved !== site.value) site.set(resolved);
   }
   return sites;
+}
+
+/**
+ * The loader seam: resolve a freshly parsed catalog through the active
+ * locale and hand back its registry descriptor. Every loader with prose
+ * exports `<FAMILY>_PROSE = loadProse(...)` right after its parse (before
+ * any normalize/map step copies the fields), and families.ts lists them.
+ */
+export function loadProse(family: string, schema: z.ZodType, data: unknown): ProseFamily {
+  applyLocale(family, schema, data);
+  return { family, schema, data };
 }

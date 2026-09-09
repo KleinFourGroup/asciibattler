@@ -1,0 +1,12 @@
+{
+  "statuses.burn.name": "Burn",
+  "statuses.bleed.name": "Bleed",
+  "statuses.poison.name": "Poison",
+  "statuses.rejuvenate.name": "Rejuvenate",
+  "statuses.frozen.name": "Frozen",
+  "statuses.panic.name": "Panic",
+  "statuses.blind.name": "Blind",
+  "statuses.confusion.name": "Confusion",
+  "statuses.emboldened.name": "Emboldened",
+  "statuses.inspired.name": "Inspired"
+}

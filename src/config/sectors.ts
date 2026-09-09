@@ -51,6 +51,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import sectorsJson from '../../config/sectors.json';
 import { LAYOUT_IDS, ThemeSchema } from './layouts';
 import { ENCOUNTER_KINDS, getEncounter, type EncounterKind } from './encounters';
@@ -152,7 +154,7 @@ export type SectorEncounterPools = z.infer<typeof SectorEncounterPoolsSchema>;
 const SectorSchema = z
   .object({
     id: z.string().min(1),
-    title: z.string().min(1),
+    title: prose(),
     description: z.string().min(1),
     /** Node-map hop count for this sector (NodeMap.generate `hopCount`). */
     length: z.number().int().positive(),
@@ -250,6 +252,8 @@ export const SectorsSchema = z.array(SectorSchema).min(1);
 export type SectorDef = z.infer<typeof SectorSchema>;
 
 const SECTORS_LIST: readonly SectorDef[] = SectorsSchema.parse(sectorsJson);
+// §95b — `title` is prose (`description` is editor metadata, never rendered — plain).
+export const SECTORS_PROSE = loadProse('sectors', SectorsSchema, SECTORS_LIST);
 
 const seenIds = new Set<string>();
 for (const sector of SECTORS_LIST) {

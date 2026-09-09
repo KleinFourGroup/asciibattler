@@ -1,0 +1,13 @@
+{
+  "layouts.labyrinth.name": "Labyrinth",
+  "layouts.river.name": "River",
+  "layouts.endlessCorridors.name": "Endless Corridors",
+  "layouts.junctionAmbush.name": "Junction Ambush",
+  "layouts.strafingFunnel.name": "Strafing Funnel",
+  "layouts.spiralFireLife.name": "Spiral of Fire and Life",
+  "layouts.isthmus.name": "Isthmus",
+  "layouts.icebergs.name": "Icebergs",
+  "layouts.desertFortress.name": "Desert Fortress",
+  "layouts.fetidPond.name": "Fetid Pond",
+  "layouts.rubbleQuarry.name": "Rubble Quarry"
+}

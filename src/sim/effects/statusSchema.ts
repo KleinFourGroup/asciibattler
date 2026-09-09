@@ -37,6 +37,7 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../../i18n/prose';
 import { PeriodicOpSchema } from './schema';
 import type { StatKey } from '../statusEffects';
 
@@ -141,8 +142,8 @@ const StatModSchema = z.object({
 
 export const StatusDefSchema = z.object({
   id: z.string().min(1),
-  /** Player-facing display name (the status overlay / future tooltip). */
-  name: z.string().min(1),
+  /** Player-facing display name (the status overlay / future tooltip). §95b: a locale address (`statuses.<id>.name`). */
+  name: prose(),
   /** Lifetime in seconds (→ a `ticks` lifetime at apply). */
   durationSeconds: z.number().positive(),
   merge: StatusMergeSchema,

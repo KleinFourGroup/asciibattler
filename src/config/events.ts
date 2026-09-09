@@ -38,7 +38,7 @@
 import { z } from 'zod';
 import eventsJson from '../../config/events.json';
 import { prose } from '../i18n/prose';
-import { applyLocale } from '../i18n/locale';
+import { loadProse } from '../i18n/locale';
 import { GainBitsOpSchema, HealPoolOpSchema, DAEMONS } from './daemons';
 import { ENCOUNTER_IDS } from './encounters';
 import {
@@ -288,7 +288,7 @@ const EVENTS_LIST: readonly EventDef[] = EventsSchema.parse(eventsJson);
 // §95a — the prose fields (name · pages.*.text · pages.*.choices.*.label)
 // resolve through the active locale IN PLACE, once, here. Under `en` the
 // values are the inline ones above; the walk still runs its guards at boot.
-applyLocale('events', EventsSchema, EVENTS_LIST);
+export const EVENTS_PROSE = loadProse('events', EventsSchema, EVENTS_LIST);
 
 const seenEventIds = new Set<string>();
 for (const event of EVENTS_LIST) {

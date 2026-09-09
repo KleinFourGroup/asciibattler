@@ -23,6 +23,8 @@ import {
   type EffectOp,
 } from '../sim/effects/schema';
 
+import { loadProse } from '../i18n/locale';
+
 const AbilityDefsFileSchema = z.record(z.string(), AbilityDefSchema);
 
 export const ABILITY_DEFS: Record<string, AbilityDef> = (() => {
@@ -36,6 +38,10 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = (() => {
   }
   return parsed;
 })();
+
+// §95b — `name` is prose (the schema lives in src/sim/effects/schema.ts;
+// the record key is the address segment: `abilities.<id>.name`).
+export const ABILITIES_PROSE = loadProse('abilities', AbilityDefsFileSchema, ABILITY_DEFS);
 
 /**
  * Resolve an ability definition by id, throwing if absent. The registry

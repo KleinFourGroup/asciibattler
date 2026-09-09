@@ -1,0 +1,18 @@
+{
+  "packets.patch.name": "Patch",
+  "packets.hype.name": "Hype",
+  "packets.shield.name": "Shield",
+  "packets.reroute.name": "Reroute",
+  "packets.venom.name": "Venom",
+  "packets.overclock.name": "Overclock",
+  "packets.surge.name": "Surge",
+  "packets.discard-one.name": "Cull",
+  "packets.patch.description": "Apply in the field: restores 6 to your health pool.",
+  "packets.hype.description": "Hype up one drawn card: +8 STR / RNG / MAG for the encounter.",
+  "packets.shield.description": "Raise a shield on one drawn card: +4 DEF for the encounter.",
+  "packets.reroute.description": "Reroute the hand: redraw up to four cards, right now.",
+  "packets.venom.description": "Lace every blade: this encounter, your units' hits inject poison.",
+  "packets.overclock.description": "Overclock a roster unit: +8 STR / RNG / MAG for the next encounter.",
+  "packets.surge.description": "Surge the deck: draw three extra cards into this turn's hand.",
+  "packets.discard-one.description": "Cull one drawn card: send it to the discard, no refill."
+}

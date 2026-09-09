@@ -61,6 +61,15 @@ describe('prosePatterns', () => {
     expect(prosePatterns(S).map((p) => p.join('.'))).toEqual(['eligibility.[].why', 'choice.condition.why']);
   });
 
+  it('treats z.custom as an opaque leaf, walks tuples and intersections', () => {
+    const S = z.object({
+      archetype: z.custom<string>((v) => typeof v === 'string'),
+      pair: z.tuple([z.string(), prose()]),
+      both: z.intersection(z.object({ a: prose() }), z.object({ b: z.number() })),
+    });
+    expect(prosePatterns(S).map((p) => p.join('.'))).toEqual(['pair.1', 'both.a']);
+  });
+
   it('throws on a zod shape it does not know rather than skipping it', () => {
     const S = z.object({ m: z.map(z.string(), prose()) });
     expect(() => prosePatterns(S)).toThrow(/unknown zod def type 'map' at 'm'/);

@@ -56,6 +56,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import packetsJson from '../../config/packets.json';
 import {
   ApplyStatusOpSchema,
@@ -162,8 +164,8 @@ export const PACKET_OP_CONTEXTS = {
 const PacketSchema = z
   .object({
     id: z.string().min(1),
-    name: z.string().min(1),
-    description: z.string().min(1),
+    name: prose(),
+    description: prose(),
     usableIn: z.array(z.enum(USE_CONTEXTS)).min(1),
     target: z.enum(PACKET_TARGET_KINDS),
     effect: PacketEffectSchema,
@@ -241,6 +243,9 @@ export interface PacketConfig {
 }
 
 const parsed = PacketsSchema.parse(packetsJson);
+// §95b — `name` + `description` are prose; resolved on the raw parsed list
+// BEFORE normalizePacket copies the fields (addresses `packets.<id>.…`).
+export const PACKETS_PROSE = loadProse('packets', z.array(PacketSchema), parsed.packets);
 
 type RawPacket = (typeof parsed.packets)[number];
 

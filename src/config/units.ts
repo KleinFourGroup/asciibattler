@@ -58,6 +58,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import unitsJson from '../../config/units.json';
 import { knownAbilityIds } from '../sim/abilities/registry';
 import { knownTargetingIds } from '../sim/targetingStrategies';
@@ -148,7 +150,7 @@ export const CombatantUnitDefSchema = z.object({
   // required, config-owned — no hardcoded UI label map, no humanized raw id).
   // The internal key stays the load-bearing id everywhere (serialization,
   // URL params, error messages); UI surfaces read `nameForArchetype`.
-  name: z.string().min(1),
+  name: prose(),
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
@@ -304,6 +306,11 @@ export function isNeutralUnitDef(def: UnitDef): def is NeutralUnitDef {
  * by the archetype-editor formatter + the whole-catalog round-trip tests.
  */
 export const ALL_UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
+// §95b — combatant `name` is prose (neutral props have none by schema); the
+// record key is the address segment (`units.<archetype>.name`). UNIT_DEFS /
+// NEUTRAL_DEFS below are views over these same objects, so the in-place
+// resolution reaches every consumer.
+export const UNITS_PROSE = loadProse('units', UnitDefsSchema, ALL_UNIT_DEFS);
 
 /**
  * §38d — the catalog is SPLIT by kind at runtime. Every pre-38d consumer reads

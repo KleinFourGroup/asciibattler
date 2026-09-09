@@ -44,6 +44,7 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../../i18n/prose';
 import type { ActionPhaseName, OrphanPolicy } from '../Action';
 
 /* -------------------------------------------------------------------------- */
@@ -435,7 +436,7 @@ export const AbilityDefSchema = z
      * one source of truth instead of hardcoding labels (the retired `ABILITY_UI`
      * map) or humanizing the raw id. Required — every ability names itself.
      */
-    name: z.string().min(1),
+    name: prose(), // §95b — a locale address (`abilities.<id>.name`)
     /** Base re-proposal interval, in seconds. */
     cooldownSeconds: z.number().positive(),
     /**

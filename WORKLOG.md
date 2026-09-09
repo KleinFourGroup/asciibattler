@@ -484,3 +484,48 @@ Round 8 setting and reloads the page).
 accepts `string | { text }` so 95e's provenance object is not a format
 bump; `t()` for UI literals is 95c and shares nothing with the config
 walkers except the locale runtime.
+
+### 95b — the other families (2026-09-09)
+
+**One seam for every loader:** `loadProse(family, schema, data)` (locale.ts)
+applies the locale and returns the registry descriptor; each loader
+exports `<FAMILY>_PROSE` right after its parse, and `families.ts` lists
+the ten. The wrapper-object catalogs (daemons / packets / characters —
+`{ daemons: [...] }`) register the INNER array with `z.array(ElementSchema)`
+and resolve on the raw parsed list BEFORE the `normalize*` map copies
+the fields, so the addresses read `daemons.<id>.name`, not
+`daemons.daemons.<id>.name`, and the resolved values reach the exported
+normalized objects. The record catalogs (units / abilities / statuses)
+use the record key as the segment (`units.mercenary.name`); the
+combatant-vs-neutral union walks both options and only the combatant
+carries a name.
+
+**Two schemas outside src/config carry `prose()` now:**
+`src/sim/effects/schema.ts` (ability name) and
+`src/sim/effects/statusSchema.ts` (status name). That is the sim
+importing `src/i18n/prose.ts` — a zod string with a metadata tag, no
+runtime behaviour, no render/ui import; the sim/render seam is intact.
+The alternative (re-wrapping the sim schemas from the config loaders with
+`.extend`) risked dropping the sim schemas' refinements under zod 4 and
+was not taken.
+
+**The walker's loud failure fired once, as designed:** the encounter and
+camp grammars validate archetypes with `z.custom<Archetype>(…)`, a def
+type the walk had not dispositioned. `custom` is opaque and cannot carry
+prose (a prose field is declared with `prose()`, never wrapped in a
+custom), so it is a leaf now alongside `date / nan / symbol / void /
+never / template_literal`; `tuple` and `intersection` are walked. Pinned.
+
+**Count correction — a second-hand claim caught:** the kickoff audit
+said 57 strings never reach the screen and the ROADMAP cut wrote "240
+addresses" from it. The never-rendered set is encounter `description`
+(19) + sector `description` (2) + layout `description` (11) + camp
+`name` (5) + camp `description` (5) = **42**, so the live total is
+297 − 42 = **255**, and the extract measured exactly that:
+events 122 · encounters 19 · daemons 22 · packets 16 · characters 6 ·
+sectors 2 · statuses 10 · units 23 · abilities 24 · layouts 11. Every
+per-family figure matches the audit's table; only its subtraction was
+wrong. Camps is therefore NOT a prose family at all (nothing of it
+renders) and is not registered. The session self-report had flagged the
+audit's line-level claims as unverified second-hand; this is the first
+one the instrument corrected.

@@ -46,6 +46,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import encountersJson from '../../config/encounters.json';
 import { UNIT_DEFS } from './units';
 import { LAYOUT_IDS } from './layouts';
@@ -196,7 +198,7 @@ export interface Encounter {
 
 const EncounterSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1),
+  name: prose(),
   description: z.string().min(1).optional(),
   healthPool: z.number().int().positive(),
   layouts: z.array(z.string().min(1)).optional(),
@@ -210,6 +212,8 @@ const EncounterSchema = z.object({
 export const EncountersSchema = z.array(EncounterSchema);
 
 const ENCOUNTERS_LIST: readonly Encounter[] = EncountersSchema.parse(encountersJson);
+// §95b — `name` is prose (`description` is editor metadata, never rendered — plain).
+export const ENCOUNTERS_PROSE = loadProse('encounters', EncountersSchema, ENCOUNTERS_LIST);
 
 const seenIds = new Set<string>();
 for (const encounter of ENCOUNTERS_LIST) {

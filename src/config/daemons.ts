@@ -28,6 +28,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import daemonsJson from '../../config/daemons.json';
 import { BuffSchema, normalizeBuff, type EmpowerConfig } from './empower';
 import { RUN_STAT_KEYS, type RunStatKey } from '../run/runStats';
@@ -194,8 +196,8 @@ const RuleSchema = z
 
 const DaemonSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1),
-  description: z.string().min(1),
+  name: prose(),
+  description: prose(),
   rules: z.array(RuleSchema).optional(), // absent = an inert daemon (legal, rule-less)
 });
 
@@ -259,6 +261,9 @@ export interface DaemonConfig {
 }
 
 const parsed = DaemonsSchema.parse(daemonsJson);
+// §95b — `name` + `description` are prose; resolved on the raw parsed list
+// BEFORE normalizeDaemon copies the fields (addresses `daemons.<id>.…`).
+export const DAEMONS_PROSE = loadProse('daemons', z.array(DaemonSchema), parsed.daemons);
 
 type RawDaemon = (typeof parsed.daemons)[number];
 type RawRule = NonNullable<RawDaemon['rules']>[number];

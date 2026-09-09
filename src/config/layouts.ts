@@ -26,6 +26,8 @@
  */
 
 import { z } from 'zod';
+import { prose } from '../i18n/prose';
+import { loadProse } from '../i18n/locale';
 import layoutsJson from '../../config/layouts.json';
 
 const CoordSchema = z.object({
@@ -176,7 +178,7 @@ export type SpawnRegion = z.infer<typeof SpawnRegionSchema>;
 const LayoutSchema = z
   .object({
     id: z.string().min(1),
-    name: z.string().min(1),
+    name: prose(),
     description: z.string().min(1),
     gridW: SideSchema,
     gridH: SideSchema,
@@ -518,6 +520,9 @@ export const LayoutsSchema = z.array(LayoutSchema).min(1);
 export type LayoutDef = z.infer<typeof LayoutSchema>;
 
 const LAYOUTS_LIST: readonly LayoutDef[] = LayoutsSchema.parse(layoutsJson);
+// §95b — `name` is prose (three render sites incl. the boss forewarning);
+// `description` is editor metadata, never rendered — plain.
+export const LAYOUTS_PROSE = loadProse('layouts', LayoutsSchema, LAYOUTS_LIST);
 
 const seenIds = new Set<string>();
 for (const layout of LAYOUTS_LIST) {

@@ -24,6 +24,7 @@
     "gen:sfx": "node scripts/gen-sfx.mjs",
     "trace-mine": "tsx tests/gauntlet/traceMine.ts",
     "gen:font": "tsx scripts/build-font.mjs",
+    "i18n:extract": "tsx scripts/i18n-extract.ts",
     "papercut": "node scripts/papercut.mjs",
     "phase-stats": "node scripts/phase-stats.mjs"
   },

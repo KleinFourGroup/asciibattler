@@ -72,3 +72,29 @@ question and is itself data.
   Cheap to fix, and it is exactly why the extract ran before the commit.
 - (5) The HANDOFF trim recovered ~26k chars; the file reads in one call
   again. The commit-message rule: backticks → `-F <file>`.
+
+**Addendum 2 (95b → 95d, the same session):**
+
+- (1) Nothing missing; the spec + the 95a worklog entry were sufficient
+  orientation for 95b–95d, which is a fair test of them since I wrote
+  them hours earlier under different pressure.
+- (2) Touch-once vs the cut's explicit "unify the duplicated literals"
+  — bent knowingly, one line per site, user-signed; and the spec's
+  "lint rule" recommendation vs the hook's actual contents (no lint) —
+  the test won, because the pin has to be where the mistake happens.
+- (3) The audit's "57 never-rendered / 240 addresses" numbers had
+  propagated into the ROADMAP cut on my say-so; the extract measured
+  255 and the arithmetic error (42, not 57) surfaced only because the
+  instrument counts. I had flagged those numbers as second-hand in the
+  first entry and still wrote them into a plan line. Next time: a
+  second-hand number goes into a plan as "≈, unverified" or not at all.
+- (4) One extra hook run (~8 min) from an ARCHITECTURE tree line that
+  used brace-expansion shorthand the docs guard cannot resolve — the
+  guard was right. The literal-scan false positives cost one extra
+  list/baseline cycle; running the scan on the live tree before setting
+  any rule was the cheap way to find them and I'd do it again.
+- (5) The literal pin's known gap (a lone lowercase word beside a hole)
+  is in the worklog; whoever runs §96–§100 should read `--list` as the
+  worklist AND eyeball each surface for that shape. The next step is
+  95e (provenance) then 95f (the empower key rename, Run v45 → v46) —
+  95f is the first step in §95 a player would notice.

@@ -590,3 +590,57 @@ literals explicitly (user-signed) because unifying a string that lives
 in three files is the string table's proof of value; each touch was one
 line. The §95d baseline will carry those files as "partially migrated"
 until their phase.
+
+### 95d — the literal pin (2026-09-09)
+
+**The mechanism call (the spec left it to this cut): a test, not a lint
+rule.** The pre-commit hook runs typecheck + `npm test` and never ESLint,
+so an ESLint rule would give editor feedback but not the GATE; the pin
+must ride the forgetful path. `src/i18n/literalScan.ts` walks the
+TypeScript AST (the compiler API — already a devDependency; imported
+only by the test and the script, never by app code) and
+`tests/i18n-literal-pin.test.ts` holds every scanned file to its count in
+`tests/i18n-literal-baseline.json` EXACTLY — a ratchet: a new literal
+fails; an extracted one fails until the baseline is lowered in the same
+commit (`npm run i18n:baseline`), so a count can never creep back up.
+`--list` prints every literal with file:line — the extraction worklist
+§96–§100 work from. The round's exit is an empty baseline.
+
+**What counts as prose (deliberately simple, tuned against the live
+list):** two letter-words with whitespace between them, or a single
+Capitalized word with optional trailing punctuation/glyph. Lowercase
+tokens (classes, ids, keys, event names), ALL-CAPS, digits and
+glyph-only strings never match. Template expressions are scanned on
+their static parts joined (so `Boss: ${name} — level ${n}` counts) and
+their holes are walked (a nested `? 'Yes' : 'No'` counts).
+
+**Exclusions found by running the scan, not by imagining them.** The
+first live list (153 hits) had four false-positive classes; each got a
+STRUCTURAL exclusion rather than a marker: css class lists (assignment
+to `className`, any `classList.*` / `querySelector*` call, and the
+shape rule "all lowercase tokens, one hyphenated"); dev-facing messages
+(`new Error(…)`, `console.*`, callees named `fail` / `invariant` /
+`assert*`, and object properties `message` / `fragmentShader` /
+`vertexShader`); css values through `style.*` assignment and
+`style.setProperty`; and the line marker `// i18n-ok` / the file marker
+`i18n-ok-file` for the residue — four sites: a GLSL template constant,
+the font-subset range table (a build table), the two `KeyboardEvent.code`
+prefixes, the font-family name. A `KEYBOARD_CODES` allowlist covers the
+DOM codes that are Capitalized words (`Escape`, `Space`, …).
+
+**The baseline: 117 literals in 22 files** (PreTurnScreen 24 · PortScreen
+17 · PostTurnScreen 16 · HUD 10 · `describeEventCondition` in
+`src/config/events.ts` 9 — the audit's "UI copy in a config module" —
+· SectorClearedScreen 6 · CacheOverlay 6 · UnitCard 5 · RewardScreen 5 ·
+UnitOverlayLayer 2 · promotionDelta 3 · the rest 1–2). The audit's
+"≈260" counted literal SITES incl. every ternary branch and every
+templated fragment; this counts prose-SHAPED literals after the
+exclusions — a different, narrower definition on purpose: the pin's job
+is to catch a new label, not to re-derive the audit.
+
+**A known gap, accepted:** a single lowercase word beside a hole (`${n}
+unit`, `${n}ms`) is not prose-shaped; the plural-suffix idiom
+(`unit${n === 1 ? '' : 's'}`) hides behind it. Two of the three shipped
+instances were migrated at 95c; the per-surface checklist (§103) covers
+the class by eye. Widening the heuristic to catch it would flag every
+`${w}px` — the trade was not worth it.

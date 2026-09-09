@@ -66,12 +66,17 @@ first touches the surface); no second locale authored.
   code, consumed only by views) → `map.uncharted`; the key-scan pins
   (`tests/i18n-ui-keys.test.ts`: every literal key exists · every key
   is referenced · no computed keys · non-en tables match the key set).
-- [ ] **95d — the literal pin.** The guard on the forgetful path: a
-  lint rule rejecting a string literal into a text sink
-  (`textContent` / `innerText` / `title` / `placeholder` /
-  `createTextNode`) outside the locale layer, a glyph-only allowlist,
-  a per-file baseline for unmigrated surfaces, riding pre-commit. Exit:
-  a literal added to a migrated file fails the tree. One commit.
+- [x] **95d — the literal pin.** ✅ 2026-09-09: a vitest scan over the
+  TypeScript AST, not a lint rule (the hook runs typecheck + `npm test`,
+  never lint — the pin rides the forgetful path only as a test);
+  prose-shaped literals (two words with whitespace, or one Capitalized
+  word) in the presentation layer, with structural exclusions (Error /
+  console / assert-fail callees · class + style plumbing · dev
+  properties · types, cases, names) and a reviewable `// i18n-ok` /
+  `i18n-ok-file` opt-out; `tests/i18n-literal-baseline.json` = **117
+  literals in 22 files**, held EXACTLY per file (a ratchet: over fails,
+  under fails until lowered — `npm run i18n:baseline`; `--list` is the
+  extraction worklist).
 - [ ] **95e — provenance.** The entry-object shape (`text` · `source`
   hash · `translator` · `reviewer`), the fuzzy pin over it, the
   `i18n:review` stamp script, the translators-credit extract. Exit: a

@@ -1,5 +1,6 @@
 /**
  * §79-post — the codepoint ranges the shipped JetBrains Mono subset keeps.
+ * (i18n-ok-file: a build table — the range labels are never rendered.)
  *
  * Moved out of `scripts/build-font.mjs` so the coverage guard
  * (`tests/font-coverage.test.ts`) can import them WITHOUT executing the

@@ -105,7 +105,7 @@ export class Keybindings {
  *  `"Digit2"` → `"2"`; anything else (e.g. `"Space"`, `"Escape"`) passes
  *  through verbatim. */
 export function keyLabel(code: string): string {
-  if (code.startsWith('Key')) return code.slice(3);
-  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Key')) return code.slice(3); // i18n-ok: a KeyboardEvent.code prefix
+  if (code.startsWith('Digit')) return code.slice(5); // i18n-ok: a KeyboardEvent.code prefix
   return code;
 }

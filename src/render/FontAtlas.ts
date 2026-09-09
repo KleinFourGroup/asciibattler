@@ -33,7 +33,7 @@ import {
  * then await `ready` as a belt-and-suspenders settle.
  */
 
-const FONT_FAMILY = 'JetBrains Mono';
+const FONT_FAMILY = 'JetBrains Mono'; // i18n-ok: a font-family name, not prose
 
 /** Pixel size of each square cell in the atlas. */
 const CELL_PX = 64;

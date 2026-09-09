@@ -118,7 +118,7 @@ export function createBloomPass(size: THREE.Vector2): UnrealBloomPass {
  * uniforms + signature; only the brightness measure differs (max of the
  * three channels instead of Rec.709 luminance).
  */
-const MAX_CHANNEL_HIGH_PASS_FRAG = /* glsl */ `
+const MAX_CHANNEL_HIGH_PASS_FRAG = /* glsl */ /* i18n-ok: shader source */ `
   uniform sampler2D tDiffuse;
   uniform float luminosityThreshold;
   uniform float smoothWidth;

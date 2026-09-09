@@ -23,7 +23,9 @@
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs",
     "trace-mine": "tsx tests/gauntlet/traceMine.ts",
-    "gen:font": "tsx scripts/build-font.mjs"
+    "gen:font": "tsx scripts/build-font.mjs",
+    "papercut": "node scripts/papercut.mjs",
+    "phase-stats": "node scripts/phase-stats.mjs"
   },
   "dependencies": {
     "simplex-noise": "^4.0.3",

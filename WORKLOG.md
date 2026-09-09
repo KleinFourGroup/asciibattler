@@ -529,3 +529,64 @@ wrong. Camps is therefore NOT a prose family at all (nothing of it
 renders) and is not registered. The session self-report had flagged the
 audit's line-level claims as unverified second-hand; this is the first
 one the instrument corrected.
+
+### 95c — the UI string table (2026-09-09)
+
+**Two mechanisms, matched to the two seams** (the spec's call): config
+prose is the sidecar (English inline, other locales derived); UI
+literals are the OPPOSITE case — they live in code with no entity id and
+share strings across sites — so their English is the SOURCE, in
+`locales/en/ui.json`, under explicit namespaced keys (`stat.power`,
+`roster.empty`, `cache.overflow`). `t(key, params)` (src/i18n/ui.ts)
+resolves through the same `activeLocale()` as the config layer.
+
+**Plurals and numbers on the browser's `Intl`, no dependency.** A plural
+entry is an object keyed by CLDR category (`one` / `other` / …, `other`
+required), selected by `Intl.PluralRules(locale).select(count)`; a
+number param is formatted by `Intl.NumberFormat(locale)` — so a German
+table renders `1.234` where the English renders `1,234`, from the same
+call (pinned). ICU MessageFormat was rejected at the spec as a heavy
+dependency for three plural sites; this covers the three (the cache
+overflow banner, the card-list title, the promotion heading — the last a
+whole-string swap, `Level Up!` vs `{count} Promotions`) without a parser.
+A word that changes with a branch is two whole entries, never a
+fragment. Placeholders `{name}`; a missing param, an unknown key, a
+plural without a numeric `count`, or a non-en table lacking a key all
+THROW (the empower-pin discipline).
+
+**The pins are a static scan, since the table is source, not derived**
+(`tests/i18n-ui-keys.test.ts`): every `t('…')` literal in `src/` exists
+in the table; every table key is referenced (an orphan is a translator's
+wasted work); no call passes a computed key (the scan must see every
+key — a rule, and a pin); every non-en `ui.json` has exactly the English
+key set. The rule this buys: a key typo or a rename under its callers
+fails `npm test`, never a player's screen.
+
+**What migrated (65 call sites, 49 keys):** `STAT_LABELS` (values from
+the table; the object's KEY ORDER stays in code — it is the display
+order, `Object.keys` iteration, and `STAT_KEYS` mirrors it) ·
+`chipLabels` (the six chip lines, two risk titles, four power clauses,
+three pool names — its headless wording pins pass unchanged) · the
+game-over `COPY` · the HUD `OBJECTIVE_BUTTONS` + the enemy-card hint
+that had re-hardcoded `Engage`/`Focus` (now `{engage}`/`{focus}` params
+from the same keys) · the roster button trio (`Roster` / `Your Roster`
+/ `No units in your roster.`, three files → three keys) · `Continue`
+(two screens; the `▸` glyph stays OUTSIDE the value at the site, per the
+spec's glyph rule — §96's shared primary-action class is where it
+becomes a `::after`) · `Buy` ×2 · `Close` ×2 (aria-labels) · the three
+plural sites.
+
+**A sim constant carrying prose, deleted:** `PROCEDURAL_MAP_NAME` in
+`src/sim/layouts.ts` ("Uncharted Ground") had exactly three consumers,
+all view code (the battle banner, the pre-turn map line, and MapScreen's
+own duplicate `UNCHARTED_LABEL`). It is the one key `map.uncharted` now;
+R3's guarantee (one string, no drift) holds through the key, and the sim
+holds no display prose. The layouts.ts comment records the move.
+
+**Touch-once, bent knowingly:** the duplicated-literal sites live in
+files (PreTurnScreen, MapScreen, RecruitScreen, PortScreen, …) that
+§96–§100 will open again for their full extraction. The cut named these
+literals explicitly (user-signed) because unifying a string that lives
+in three files is the string table's proof of value; each touch was one
+line. The §95d baseline will carry those files as "partially migrated"
+until their phase.

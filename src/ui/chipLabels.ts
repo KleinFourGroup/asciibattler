@@ -11,6 +11,7 @@
  */
 
 import type { ChipRule } from '../run/chipRule';
+import { t } from '../i18n/ui';
 
 /** The two post-turn chip lines: what hit the ENEMY pool (the line the player
  *  is glad about) and what hit the PLAYER pool. */
@@ -26,27 +27,25 @@ export function chipLineLabels(rules: ReadonlySet<ChipRule>): ChipLineLabels {
   const casualties = rules.has('casualties');
   if (survivors && casualties) {
     return {
-      toEnemyPool: 'Enemy fallen + your survivors → enemy morale',
-      toPlayerPool: 'Your fallen + enemy survivors → your morale',
+      toEnemyPool: t('chip.line.both.toEnemyPool'),
+      toPlayerPool: t('chip.line.both.toPlayerPool'),
     };
   }
   if (casualties) {
     return {
-      toEnemyPool: 'Enemy fallen → enemy morale',
-      toPlayerPool: 'Your fallen → your morale',
+      toEnemyPool: t('chip.line.casualties.toEnemyPool'),
+      toPlayerPool: t('chip.line.casualties.toPlayerPool'),
     };
   }
   return {
-    toEnemyPool: 'Your survivors → enemy morale',
-    toPlayerPool: 'Enemy survivors → your morale',
+    toEnemyPool: t('chip.line.survivors.toEnemyPool'),
+    toPlayerPool: t('chip.line.survivors.toPlayerPool'),
   };
 }
 
 /** The pre-turn risk line's hover text: what the "up to N" bound counts. */
 export function riskLineTitle(mode: ChipRule): string {
-  return mode === 'casualties'
-    ? 'The most morale you can lose this turn: every unit in your hand falling. Only your own fallen cost you — win without losses and you lose nothing.'
-    : 'The most morale you can lose this turn: every enemy in the wave surviving the fight. Kill them and you lose nothing.';
+  return mode === 'casualties' ? t('chip.risk.casualties') : t('chip.risk.survivors');
 }
 
 /** The unit card's POWER clarifier (the clause after "Power N —"). `team` is
@@ -54,11 +53,11 @@ export function riskLineTitle(mode: ChipRule): string {
  *  for a side-agnostic line (the roster / recruit stat rows). */
 export function powerTooltip(mode: ChipRule, team?: 'player' | 'enemy'): string {
   if (mode === 'casualties') {
-    if (team === 'player') return 'what your morale loses if this unit falls';
-    if (team === 'enemy') return 'what the enemy morale loses when this unit falls';
-    return "what its side's morale loses if this unit falls";
+    if (team === 'player') return t('chip.power.casualties.player');
+    if (team === 'enemy') return t('chip.power.casualties.enemy');
+    return t('chip.power.casualties.side');
   }
-  return 'chips the opposing morale each turn it survives';
+  return t('chip.power.survivors');
 }
 
 /** 94e — the pool's player-facing NAMES, in one place: the two full gauges
@@ -66,7 +65,7 @@ export function powerTooltip(mode: ChipRule, team?: 'player' | 'enemy'): string 
  *  94f flips these to the "morale" wording (the user's DESIGN call) — the
  *  config keys and snapshot fields keep their names. */
 export const POOL_LABELS = {
-  player: 'Your Morale',
-  enemy: 'Enemy Morale',
-  chip: 'morale',
+  player: t('pool.player'),
+  enemy: t('pool.enemy'),
+  chip: t('pool.chip'),
 } as const;

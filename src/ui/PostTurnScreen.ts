@@ -11,6 +11,7 @@
  */
 
 import type { GameEvents } from '../core/events';
+import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { FallenRecord } from '../run/Run';
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -105,7 +106,7 @@ export class PostTurnScreen {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'postturn-continue';
-    button.textContent = 'Continue ▸';
+    button.textContent = `${t('common.continue')} ▸`;
     button.addEventListener('click', () => {
       this.audio.play('click');
       this.advance();

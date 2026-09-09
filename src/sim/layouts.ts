@@ -38,11 +38,7 @@ export {
   type CampRef,
 } from '../config/layouts';
 
-/**
- * R3 — the single display label for a procedural map (`layoutId === null`). The
- * pre-turn map line ([PreTurnScreen](../ui/PreTurnScreen.ts)) and the in-battle
- * banner ([BattleScene](../scenes/BattleScene.ts)) both route through this one
- * constant so they can't drift again — pre-R3 they read "Uncharted ground" and
- * "Nowhere" respectively.
- */
-export const PROCEDURAL_MAP_NAME = 'Uncharted Ground';
+// R3's PROCEDURAL_MAP_NAME ("Uncharted Ground" — the one display label for a
+// procedural map) lived here until §95c: it was prose in sim code, consumed
+// only by view code. It is the UI string `map.uncharted` now (src/i18n/ui.ts);
+// the R3 guarantee (one string, no drift) holds through the one key.

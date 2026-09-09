@@ -22,6 +22,7 @@
  */
 
 import { daemonById } from '../config/daemons';
+import { t } from '../i18n/ui';
 import { packetById } from '../config/packets';
 import { PRICES, packetPrice, sellPrice } from '../config/prices';
 import type { RunDispatcher } from '../run/Command';
@@ -298,7 +299,7 @@ export class PortScreen {
       actions.appendChild(control);
     } else {
       actions.appendChild(this.priceTag(price));
-      const button = this.actionButton('Buy', 'port-buy', onBuy);
+      const button = this.actionButton(t('common.buy'), 'port-buy', onBuy);
       if (this.run.bits < price) button.disabled = true;
       actions.appendChild(button);
     }
@@ -314,7 +315,7 @@ export class PortScreen {
       footer.appendChild(this.soldBadge());
     } else {
       footer.appendChild(this.priceTag(price));
-      const button = this.actionButton('Buy', 'port-buy', onBuy);
+      const button = this.actionButton(t('common.buy'), 'port-buy', onBuy);
       if (this.run.bits < price) button.disabled = true;
       footer.appendChild(button);
     }

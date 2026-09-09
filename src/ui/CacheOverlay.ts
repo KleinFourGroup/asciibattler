@@ -30,6 +30,7 @@
  */
 
 import type { EventBus } from '../core/EventBus';
+import { t } from '../i18n/ui';
 import type { GameEvents } from '../core/events';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -190,7 +191,7 @@ export class CacheOverlay {
       close.type = 'button';
       close.className = 'roster-modal-close';
       close.textContent = '✕';
-      close.setAttribute('aria-label', 'Close');
+      close.setAttribute('aria-label', t('common.close'));
       close.addEventListener('click', () => {
         this.audio.play('click');
         this.closeModal();
@@ -204,8 +205,7 @@ export class CacheOverlay {
     if (overflow > 0) {
       const banner = document.createElement('div');
       banner.className = 'cache-shrink-banner';
-      banner.textContent =
-        `⚠ over capacity — discard ${overflow} packet${overflow === 1 ? '' : 's'} to continue`;
+      banner.textContent = `⚠ ${t('cache.overflow', { count: overflow })}`;
       modal.appendChild(banner);
     }
 

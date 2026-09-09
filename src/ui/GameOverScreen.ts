@@ -11,6 +11,7 @@
  */
 
 import type { RunDispatcher } from '../run/Command';
+import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
 
@@ -22,8 +23,8 @@ interface VariantCopy {
 }
 
 const COPY: Record<GameOverVariant, VariantCopy> = {
-  defeat: { heading: 'Defeat', subtext: 'Your team has fallen.' },
-  complete: { heading: 'Run Complete', subtext: 'You reached the terminal node.' },
+  defeat: { heading: t('gameover.defeat.heading'), subtext: t('gameover.defeat.subtext') },
+  complete: { heading: t('gameover.complete.heading'), subtext: t('gameover.complete.subtext') },
 };
 
 export class GameOverScreen {

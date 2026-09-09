@@ -23,7 +23,8 @@ import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import { TICK_RATE, secondsToTicks } from '../config';
 import { HEALTH } from '../config/health';
 import { PLAYBACK } from '../config/playback';
-import { getLayout, PROCEDURAL_MAP_NAME, type Theme } from '../sim/layouts';
+import { getLayout, type Theme } from '../sim/layouts';
+import { t } from '../i18n/ui';
 import { PreBattleCountdown } from './PreBattleCountdown';
 import { requireRun, type Scene, type SceneContext } from './Scene';
 
@@ -179,15 +180,16 @@ export class BattleScene implements Scene {
     //
     // C1d follow-up: resolve the encounter's layoutId to a display name for
     // the top banner. Procedural encounters (layoutId === null) read as the
-    // shared PROCEDURAL_MAP_NAME (R3: one constant, so the banner + the
-    // pre-turn map line can't drift — was "Nowhere" here).
+    // shared `map.uncharted` UI string (R3: one string, so the banner + the
+    // pre-turn map line can't drift — was "Nowhere" here; §95c moved it from
+    // the sim constant PROCEDURAL_MAP_NAME to the UI table).
     // D8: append the theme as a banner suffix (e.g. "Corridor — Volcanic")
     // so the visual reskin reads as deliberate flavor, not a bug. The
     // `grassland` theme is the canonical look — no suffix added, to keep
     // the banner clean when the palette is the baseline (§37e rename).
     const locationName =
       encounter.layoutId === null
-        ? PROCEDURAL_MAP_NAME
+        ? t('map.uncharted')
         : (getLayout(encounter.layoutId)?.name ?? encounter.layoutId);
     const bannerText =
       encounter.theme === 'grassland'

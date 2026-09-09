@@ -5,6 +5,7 @@
 // own the live HP and the pool gauges. Live-updates from unit:* events.
 
 import type { EventBus } from '../core/EventBus';
+import { t } from '../i18n/ui';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
@@ -50,10 +51,10 @@ interface ObjectiveButtonDef {
 }
 
 const OBJECTIVE_BUTTONS: readonly ObjectiveButtonDef[] = [
-  { mode: 'engage', label: 'Engage', icon: '⌖', action: 'engageObjective', arms: true },
-  { mode: 'focus', label: 'Focus', icon: '!', action: 'focusObjective', arms: true },
-  { mode: 'hold', label: 'Hold', icon: '⊓', action: 'holdObjective', arms: false },
-  { mode: 'stop', label: 'Stop', icon: '✕', action: 'stopObjective', arms: false },
+  { mode: 'engage', label: t('hud.objective.engage'), icon: '⌖', action: 'engageObjective', arms: true },
+  { mode: 'focus', label: t('hud.objective.focus'), icon: '!', action: 'focusObjective', arms: true },
+  { mode: 'hold', label: t('hud.objective.hold'), icon: '⊓', action: 'holdObjective', arms: false },
+  { mode: 'stop', label: t('hud.objective.stop'), icon: '✕', action: 'stopObjective', arms: false },
 ];
 
 /** H4b — the encounter pool snapshot the HUD renders (from `Run` state). */
@@ -321,7 +322,7 @@ export class HUD {
   /**
    * Bind to a fresh battle world. Must be called *before* the battle starts
    * spawning so unit:spawned events find a world to look up against.
-   * `locationName` populates the top banner — pass PROCEDURAL_MAP_NAME
+   * `locationName` populates the top banner — pass `t('map.uncharted')`
    * ("Uncharted Ground") for procedural encounters (no hand-authored layout).
    */
   show(
@@ -556,7 +557,10 @@ export class HUD {
     // dead unit's grayed card goes inert the moment it dies.
     if (team === 'enemy') {
       handles.el.classList.add('hud-card-targetable');
-      handles.el.title = 'Left-click: Engage · right-click: Focus';
+      handles.el.title = t('hud.card.targetHint', {
+        engage: t('hud.objective.engage'),
+        focus: t('hud.objective.focus'),
+      });
       handles.el.addEventListener('click', () => this.setObjectiveOnCard(unitId, 'engage'));
       handles.el.addEventListener('contextmenu', (e) => {
         e.preventDefault();

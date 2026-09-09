@@ -10,6 +10,7 @@
  */
 
 import type { UnitTemplate } from '../sim/Unit';
+import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -54,11 +55,11 @@ export class RecruitScreen {
 
     // R1 — the roster view shows the CURRENT roster (before this pick).
     this.rosterButton = new CardListButton(this.mount, this.audio, {
-      text: 'Roster',
-      title: 'Your Roster',
+      text: t('roster.button'),
+      title: t('roster.title'),
       position: 'roster',
       getUnits: () => roster,
-      emptyText: 'No units in your roster.',
+      emptyText: t('roster.empty'),
     });
     panel.appendChild(this.rosterButton.el);
 

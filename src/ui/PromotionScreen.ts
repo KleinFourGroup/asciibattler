@@ -24,6 +24,7 @@
  */
 
 import type { PromotionInfo } from '../core/events';
+import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { fadeIn, fadeOutAndRemove } from './fade';
@@ -82,8 +83,7 @@ export class PromotionScreen {
 
     const heading = document.createElement('div');
     heading.className = 'promotion-heading';
-    heading.textContent =
-      promotions.length === 1 ? 'Level Up!' : `${promotions.length} Promotions`;
+    heading.textContent = t('promotion.heading', { count: promotions.length });
     panel.appendChild(heading);
 
     const cards = document.createElement('div');

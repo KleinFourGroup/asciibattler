@@ -56,13 +56,16 @@ first touches the surface); no second locale authored.
   family); each loader exports `<FAMILY>_PROSE = loadProse(…)`; **255
   addresses across 10 files, 0 positional** — the "240" here was the
   audit's arithmetic (its "57 never-rendered" is 42; WORKLOG §95b).
-- [ ] **95c — the UI string table.** `locales/en/ui.json`; placeholder
-  + plural + number helpers on `Intl` built-ins (no dependency); the
-  shared tables migrate first (`STAT_LABELS` — its key ORDER is
-  load-bearing · `chipLabels` · the game-over `COPY` · `OBJECTIVE_BUTTONS`
-  · the duplicated literals unified, incl. the two `'Uncharted Ground'`
-  constants); the three plural sites as the proof. Exit: helpers pinned
-  headless. One commit.
+- [x] **95c — the UI string table.** ✅ 2026-09-09: `t(key, params)` over
+  `locales/en/ui.json` (49 keys, the English SOURCE — explicit keys, not
+  a derived extract); plural entries by CLDR category via
+  `Intl.PluralRules`, `{placeholder}` substitution, numbers through
+  `Intl.NumberFormat`, no dependency; the four shared tables + the
+  duplicated literals migrated (65 call sites); the three plural sites
+  as the proof; the sim's `PROCEDURAL_MAP_NAME` DELETED (prose in sim
+  code, consumed only by views) → `map.uncharted`; the key-scan pins
+  (`tests/i18n-ui-keys.test.ts`: every literal key exists · every key
+  is referenced · no computed keys · non-en tables match the key set).
 - [ ] **95d — the literal pin.** The guard on the forgetful path: a
   lint rule rejecting a string literal into a text sink
   (`textContent` / `innerText` / `title` / `placeholder` /

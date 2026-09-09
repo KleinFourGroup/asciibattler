@@ -39,7 +39,9 @@ describe('the en sidecar extract is current (derived-artifact pins)', () => {
   it('every locales/en/*.json names a registered prose family', () => {
     const dir = join(ROOT, 'locales', 'en');
     if (!existsSync(dir)) return;
-    const known = new Set(PROSE_FAMILIES.map((f) => `${f.family}.json`));
+    // `ui.json` is the UI string table (95c) — a SOURCE, not a derived extract;
+    // its own pins are tests/i18n-ui-keys.test.ts.
+    const known = new Set([...PROSE_FAMILIES.map((f) => `${f.family}.json`), 'ui.json']);
     const orphans = readdirSync(dir).filter((f) => f.endsWith('.json') && !known.has(f));
     expect(orphans, `orphan extract files (no registered family — delete them, or register the family): ${orphans.join(', ')}`).toEqual([]);
   });

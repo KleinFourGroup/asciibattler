@@ -20,6 +20,7 @@
  */
 
 import { daemonById } from '../config/daemons';
+import { t } from '../i18n/ui';
 import { packetById } from '../config/packets';
 import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
@@ -60,7 +61,7 @@ export class RewardScreen {
     const cont = document.createElement('button');
     cont.type = 'button';
     cont.className = 'reward-continue';
-    cont.textContent = 'Continue ▸';
+    cont.textContent = `${t('common.continue')} ▸`;
     cont.title = 'Decline the remaining rewards and move on';
     cont.addEventListener('click', () => this.continueRun());
     panel.appendChild(cont);

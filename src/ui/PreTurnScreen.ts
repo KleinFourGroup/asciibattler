@@ -71,7 +71,8 @@ import type { TurnGrantView } from '../run/daemon';
 import type { EmpowerStackView } from '../run/empower';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { getLayout, PROCEDURAL_MAP_NAME } from '../sim/layouts';
+import { getLayout } from '../sim/layouts';
+import { t } from '../i18n/ui';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
 import { HEALTH } from '../config/health';
@@ -541,12 +542,12 @@ export class PreTurnScreen {
     });
     this.cardListButtons = [
       new CardListButton(this.mount, this.audio, {
-        text: 'Roster',
-        title: 'Your Roster',
+        text: t('roster.button'),
+        title: t('roster.title'),
         position: 'roster',
         getUnits: () => this.roster,
         getCount: () => this.roster.length,
-        emptyText: 'No units in your roster.',
+        emptyText: t('roster.empty'),
       }),
       this.drawPileButton,
       this.discardPileButton,
@@ -593,11 +594,12 @@ export class PreTurnScreen {
     // K3.5 — the encounter's battlefield (one map per encounter), so the
     // redraw below is an informed choice. Hand-authored layouts show their
     // authored display name; a procedural roll shows the shared
-    // PROCEDURAL_MAP_NAME (R3 — same constant as the in-battle banner).
+    // `map.uncharted` label (R3 — one string, same as the in-battle banner;
+    // §95c moved it from the sim constant to the UI table).
     const map = document.createElement('div');
     map.className = 'preturn-map';
     const mapName = info.map.layoutId === null
-      ? PROCEDURAL_MAP_NAME
+      ? t('map.uncharted')
       : (getLayout(info.map.layoutId)?.name ?? info.map.layoutId);
     map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);

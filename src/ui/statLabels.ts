@@ -9,17 +9,20 @@
  */
 
 import type { UnitStats } from '../sim/Unit';
+import { t } from '../i18n/ui';
 
+// §95c — the labels come from the UI string table; the KEY ORDER below is
+// the load-bearing part (it is the display order) and stays in code.
 export const STAT_LABELS: Record<keyof UnitStats, string> = {
-  constitution: 'CON',
-  strength: 'STR',
-  ranged: 'RNG',
-  magic: 'MAG',
-  luck: 'LCK',
-  defense: 'DEF',
-  precision: 'PRC',
-  evasion: 'EVA',
-  speed: 'SPD',
-  mobility: 'MOB',
-  power: 'POW',
+  constitution: t('stat.constitution'),
+  strength: t('stat.strength'),
+  ranged: t('stat.ranged'),
+  magic: t('stat.magic'),
+  luck: t('stat.luck'),
+  defense: t('stat.defense'),
+  precision: t('stat.precision'),
+  evasion: t('stat.evasion'),
+  speed: t('stat.speed'),
+  mobility: t('stat.mobility'),
+  power: t('stat.power'),
 };

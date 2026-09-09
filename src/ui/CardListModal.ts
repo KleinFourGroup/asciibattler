@@ -25,6 +25,7 @@
  */
 
 import type { UnitTemplate } from '../sim/Unit';
+import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { orderRosterWithIndices, type RosterOrder } from './rosterOrder';
@@ -93,12 +94,12 @@ export class CardListModal {
     header.className = 'roster-modal-header';
     const titleEl = document.createElement('div');
     titleEl.className = 'roster-modal-title';
-    titleEl.textContent = `${title} — ${units.length} unit${units.length === 1 ? '' : 's'}`;
+    titleEl.textContent = t('cardlist.title', { title, count: units.length });
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'roster-modal-close';
     close.textContent = '✕';
-    close.setAttribute('aria-label', 'Close');
+    close.setAttribute('aria-label', t('common.close'));
     close.addEventListener('click', () => {
       this.audio.play('click');
       this.close();

@@ -14,6 +14,7 @@
  */
 
 import { PRE_ROOT_NODE_ID, type NodeMap, type NodeKind } from '../run/NodeMap';
+import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
@@ -67,7 +68,9 @@ export interface BossForewarning {
 }
 
 /** 66b — the display label for a procedural boss board (user-named). */
-const UNCHARTED_LABEL = 'Uncharted Ground';
+// §95c — one key for every "procedural map" label (this, the pre-turn map
+// line, the battle banner); the sim's PROCEDURAL_MAP_NAME constant is gone.
+const UNCHARTED_LABEL = t('map.uncharted');
 
 export class MapScreen {
   private readonly mount: HTMLElement;
@@ -173,14 +176,14 @@ export class MapScreen {
     // 78e — skipped in readOnly (see the field doc).
     if (!this.readOnly) {
       this.rosterButton = new CardListButton(this.mount, this.audio, {
-        text: 'Roster',
-        title: 'Your Roster',
+        text: t('roster.button'),
+        title: t('roster.title'),
         position: 'roster',
         getUnits: () => roster,
         // 51e — the count badge ("Roster · 10"); the screen re-renders on
         // every show, so no refresh wiring is needed here.
         getCount: () => roster.length,
-        emptyText: 'No units in your roster.',
+        emptyText: t('roster.empty'),
       });
       container.appendChild(this.rosterButton.el);
     }

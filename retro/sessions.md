@@ -51,3 +51,24 @@ question and is itself data.
    prediction hinges on it. HANDOFF sits within ~1k chars of its 48k cap;
    the next cursor edit must shorten, not grow. The user is enthusiastic
    about this instrument — file papercuts in the moment, not at the end.
+
+**Addendum (the same session continued into the HANDOFF trim + 95a):**
+
+- (1) Nothing new missing; the kickoff docs I had just written were the
+  orientation, which is a biased test of them.
+- (2) The AGENTS quoted-text norm names quotes but not backticks — a
+  backticked word in a `-m` message was eaten by bash as a command
+  substitution (filed as a papercut; the commit was amended from a file).
+- (3) The zod-4 mechanism: the spec's parse-time address capture was
+  impossible (no `ctx.path`), and I could have written the runtime the
+  spec described and discovered it at test time; instead a 30-line probe
+  settled the mechanism first. Worth naming as the RIGHT shape rather
+  than a claim: probe the library before building on the assumption.
+- (4) One real miss: my synthetic walker tests mirrored my own mental
+  model of the grammar (no recursion), so the recursive `not` combinator
+  blew the stack on the first LIVE extract, not in the tests. The AGENTS
+  circular-verification lesson in a smaller key — a fixture I author
+  tests what I already believe; the live catalog tested the grammar.
+  Cheap to fix, and it is exactly why the extract ran before the commit.
+- (5) The HANDOFF trim recovered ~26k chars; the file reads in one call
+  again. The commit-message rule: backticks → `-F <file>`.

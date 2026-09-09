@@ -428,3 +428,59 @@ shape-lock (AGENTS: never a same-turn dialog).
   amended to "one authorized bump".
 - **Sound registry → last phase, with the sting rider inside it** and
   the stats screen's sting dispositioned there.
+
+## Phase 95 — the i18n layer
+
+### 95a — the runtime + the events family (2026-09-09)
+
+**Step zero held:** the Run snapshot's event cursor is `{eventId, pageId}`
+(`Run.ts:594`); the choice index lives only in the transient
+`chooseEventOption` command. So a choice `id` is config-only — no bump.
+
+**The mechanism moved once against the spec's sketch.** The spec imagined
+`prose()` capturing its own address at parse time; zod is **4.4.3**, and
+zod 4's refinement/transform context exposes no `path` (zod 3's did). The
+alternative that shipped keeps the spec's property — the declaration is
+the manifest — by a different route: `prose()` = `z.string().min(1).meta({prose:true})`
+(the meta survives chaining; read back through `z.globalRegistry`), and
+`prosePatterns(schema)` walks zod 4's def tree (`_zod.def.type` +
+`shape / element / valueType / innerType / options / in / getter`) to
+derive the field paths; `proseSites(family, schema, data)` then walks
+the parsed data along them. A probe over the events grammar in miniature
+returned exactly `[].name · [].pages.*.text · [].pages.*.choices.[].label`
+before a line of production code was written. The walker THROWS on a def
+type it does not know — a new zod shape is dispositioned in one switch,
+never silently skipped — and on an address collision or a separator
+inside a segment.
+
+**One bug, caught by the first live extract:** the event condition
+grammar is recursive (`not` → condition, via `z.lazy`), and the first
+walker recursed forever (a stack overflow on `npm run i18n:extract`, not
+in the synthetic tests — which had no recursive shape). The cut is a
+per-PATH stack (a schema on the current descent is not re-entered; the
+same schema at two sibling positions is walked at both) plus a depth-64
+backstop for a lazy that mints fresh schemas. Pinned by a recursive
+fixture in `prose.test.ts`.
+
+**Addresses:** `events.<event-id>.name` · `events.<event-id>.pages.<page-id>.text`
+· `events.<event-id>.pages.<page-id>.choices.<choice-id>.label`. Arrays
+key by the element's `id` when present, else the index. The 65 shipped
+choices were stamped (`stampChoiceIds` in the editor's `format.ts` — a
+slug of the label, de-duplicated per page, never rewriting an existing
+id) THROUGH the formatter so the §74h byte-fidelity pin holds by
+construction; the editor stamps at export from now on; the schema rejects
+a duplicate id within a page. Extract: **122 addresses, 0 positional**
+(13 names + 44 texts + 65 labels — the audit's count exactly).
+
+**The `en` pins are the derived-artifact shape:** `locales/en/events.json`
+is a MEASUREMENT of the catalog; `tests/i18n-en-extract.test.ts` fails
+on a missing / orphan / stale address and names the fix
+(`npm run i18n:extract`). A non-`en` locale is exercised by a fixture
+in `locale.test.ts`: a registered sidecar resolves in place; a missing
+entry THROWS. Resolution is once, at catalog load (a locale switch is a
+Round 8 setting and reloads the page).
+
+**Deferred to 95c/95e, noted at the seam:** `LocaleEntry` already
+accepts `string | { text }` so 95e's provenance object is not a format
+bump; `t()` for UI literals is 95c and shares nothing with the config
+walkers except the locale runtime.

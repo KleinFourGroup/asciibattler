@@ -14,9 +14,14 @@
  *    appends one, matching every other editor's emit convention).
  *  - Event key order: `id / name / repeatable? / eligibility? / entry /
  *    pages`; page:
- *    `text / art? / choices`; choice: `label / condition? / outcomes`;
+ *    `text / art? / choices`; choice: `id? / label / condition? / outcomes`;
  *    outcome: `weight? / effects? / next`. Optional keys appear only when
  *    present (authored-field fidelity — the 74c reward-formatter rule).
+ *  - §95a: a choice's `id` is its locale address segment. The editor stamps
+ *    a missing one at export (`stampChoiceIds` below — a slug of the label,
+ *    de-duplicated within the page), so a saved catalog never carries a
+ *    positional address; an existing id is never rewritten (a relabel keeps
+ *    its translations).
  *  - LEAF objects stay inline on one line: every condition (recursively,
  *    `not` included), every effect op, and the `return-to-map` terminal.
  *    The `start-encounter` terminal EXPANDS (kind / encounterId /
@@ -208,10 +213,44 @@ function outcomesValue(pad: string, outcomes: readonly EventOutcome[]): string {
   return arrBlock(pad, elems);
 }
 
-/** One choice block: `label` / `condition?` (inline) / `outcomes`. */
+/** §95a — a choice id from its label: lowercase, runs of non-alphanumerics
+ *  → `-`, trimmed; never contains the locale address separator `.`. */
+export function slugifyChoiceLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** §95a — stamp an `id` on every choice that lacks one, in place: the label's
+ *  slug (or `choice-<index>` when the slug is empty), de-duplicated within
+ *  the page by a `-2`, `-3` … suffix. Existing ids are never touched.
+ *  Returns the number stamped. */
+export function stampChoiceIds(events: readonly EventDef[]): number {
+  let stamped = 0;
+  for (const event of events) {
+    for (const page of Object.values(event.pages)) {
+      const taken = new Set(page.choices.flatMap((c) => (c.id === undefined ? [] : [c.id])));
+      page.choices.forEach((choice, index) => {
+        if (choice.id !== undefined) return;
+        const base = slugifyChoiceLabel(choice.label) || `choice-${index}`;
+        let id = base;
+        for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+        taken.add(id);
+        (choice as { id?: string }).id = id;
+        stamped++;
+      });
+    }
+  }
+  return stamped;
+}
+
+/** One choice block: `id?` / `label` / `condition?` (inline) / `outcomes`. */
 function choiceBlock(pad: string, choice: EventChoice): string {
   const childPad = pad + IND;
-  const lines: string[] = [`${childPad}"label": ${JSON.stringify(choice.label)}`];
+  const lines: string[] = [];
+  if (choice.id !== undefined) lines.push(`${childPad}"id": ${JSON.stringify(choice.id)}`);
+  lines.push(`${childPad}"label": ${JSON.stringify(choice.label)}`);
   if (choice.condition !== undefined) {
     lines.push(`${childPad}"condition": ${inlineCondition(choice.condition)}`);
   }

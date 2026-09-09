@@ -64,7 +64,7 @@ import { UNIT_DEFS } from '../../src/config/units';
 import { ENCOUNTERS, ENCOUNTER_IDS } from '../../src/config/encounters';
 import { REWARD_TABLE_IDS } from '../../src/config/rewards';
 import { SECTORS } from '../../src/config/sectors';
-import { formatEventsJson } from './format';
+import { formatEventsJson, stampChoiceIds } from './format';
 
 // ---- State ----
 // The schema's types are deeply readonly (config is immutable at runtime); the
@@ -1157,6 +1157,9 @@ function refreshValidation(): void {
 }
 
 function refreshExport(): void {
+  // §95a — every exported choice carries its locale-address id (a slug of
+  // the label); existing ids are kept, so a relabel keeps its translations.
+  stampChoiceIds(working);
   exportEl.value = formatEventsJson(working);
 }
 

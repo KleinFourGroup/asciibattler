@@ -12,6 +12,7 @@
  */
 
 import type { z } from 'zod';
+import { EVENTS, EventsSchema } from '../config/events';
 
 export interface ProseFamily {
   /** The address prefix — `events`, `daemons`, … (matches the config file stem). */
@@ -21,7 +22,9 @@ export interface ProseFamily {
   readonly data: unknown;
 }
 
-export const PROSE_FAMILIES: readonly ProseFamily[] = [];
+export const PROSE_FAMILIES: readonly ProseFamily[] = [
+  { family: 'events', schema: EventsSchema, data: EVENTS }, // 95a
+];
 
 export function proseFamily(family: string): ProseFamily | undefined {
   return PROSE_FAMILIES.find((f) => f.family === family);

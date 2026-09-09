@@ -22,7 +22,67 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { EVENTS, EventsSchema, type EventDef } from '../../src/config/events';
-import { formatEventsJson } from '../../tools/event-editor/format';
+import { formatEventsJson, slugifyChoiceLabel, stampChoiceIds } from '../../tools/event-editor/format';
+
+describe('stampChoiceIds (§95a — the locale address segment)', () => {
+  it('is a no-op on the committed catalog: every shipped choice already carries an id', () => {
+    const copy = EventsSchema.parse(JSON.parse(formatEventsJson(EVENTS)));
+    expect(stampChoiceIds(copy)).toBe(0);
+    for (const event of copy) {
+      for (const page of Object.values(event.pages)) {
+        for (const choice of page.choices) expect(choice.id).toBeDefined();
+      }
+    }
+  });
+
+  it('slugs the label, falls back to the index, de-duplicates within a page, and never rewrites an existing id', () => {
+    expect(slugifyChoiceLabel('Scoop the bowl!')).toBe('scoop-the-bowl');
+    expect(slugifyChoiceLabel('  ¿Qué?  ')).toBe('qu');
+    const fixture: EventDef[] = EventsSchema.parse([
+      {
+        id: 'x',
+        name: 'X',
+        entry: 'p',
+        pages: {
+          p: {
+            text: 't',
+            choices: [
+              { label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              { label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              { id: 'kept', label: 'Leave', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              { label: '!!!', outcomes: [{ next: { kind: 'return-to-map' } }] },
+            ],
+          },
+        },
+      },
+    ]);
+    expect(stampChoiceIds(fixture)).toBe(3);
+    expect(fixture[0]!.pages.p!.choices.map((c) => c.id)).toEqual(['leave', 'leave-2', 'kept', 'choice-3']);
+    // Idempotent: a second pass stamps nothing.
+    expect(stampChoiceIds(fixture)).toBe(0);
+  });
+
+  it('rejects two choices sharing an id on one page (the address guard)', () => {
+    expect(() =>
+      EventsSchema.parse([
+        {
+          id: 'x',
+          name: 'X',
+          entry: 'p',
+          pages: {
+            p: {
+              text: 't',
+              choices: [
+                { id: 'same', label: 'A', outcomes: [{ next: { kind: 'return-to-map' } }] },
+                { id: 'same', label: 'B', outcomes: [{ next: { kind: 'return-to-map' } }] },
+              ],
+            },
+          },
+        },
+      ]),
+    ).toThrow(/duplicate choice id 'same'/);
+  });
+});
 
 /** Normalize line endings + trailing blank space so the assertion isn't
  *  hostage to how git checked the file out. */

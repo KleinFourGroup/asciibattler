@@ -59,24 +59,47 @@ function defOf(schema: z.ZodType): ZodDefLike {
 /** Path patterns (segment arrays) to every `prose()` leaf under `schema`. */
 export function prosePatterns(schema: z.ZodType): readonly (readonly string[])[] {
   const out: string[][] = [];
-  walkSchema(schema, [], out);
+  walkSchema(schema, [], out, new Set());
   return out;
 }
 
-function walkSchema(schema: z.ZodType, path: readonly string[], out: string[][]): void {
+/** A recursive grammar (the event condition's `not` combinator is a `z.lazy`
+ *  back to itself) would otherwise walk forever. The cut is per PATH: a schema
+ *  already on the current descent is not re-entered — its prose leaves were
+ *  captured at the first entry, and a prose value nested inside its own
+ *  recursion has no finite address anyway. The same schema reached at two
+ *  sibling positions (a condition under `eligibility` and under a choice) is
+ *  walked at both. The depth guard is the loud backstop for a lazy whose
+ *  getter mints a fresh schema per call. */
+const MAX_SCHEMA_DEPTH = 64;
+
+function walkSchema(schema: z.ZodType, path: readonly string[], out: string[][], stack: Set<z.ZodType>): void {
+  if (stack.has(schema)) return;
+  if (stack.size > MAX_SCHEMA_DEPTH) {
+    throw new Error(`i18n: prosePatterns exceeded depth ${MAX_SCHEMA_DEPTH} at '${path.join(ADDRESS_SEPARATOR)}' — a recursive schema the per-path cut did not catch`);
+  }
+  stack.add(schema);
+  try {
+    walkSchemaDef(schema, path, out, stack);
+  } finally {
+    stack.delete(schema);
+  }
+}
+
+function walkSchemaDef(schema: z.ZodType, path: readonly string[], out: string[][], stack: Set<z.ZodType>): void {
   const def = defOf(schema);
   switch (def.type) {
     case 'string':
       if (isProseSchema(schema)) out.push([...path]);
       return;
     case 'object':
-      for (const [key, child] of Object.entries(def.shape ?? {})) walkSchema(child, [...path, key], out);
+      for (const [key, child] of Object.entries(def.shape ?? {})) walkSchema(child, [...path, key], out, stack);
       return;
     case 'array':
-      if (def.element) walkSchema(def.element, [...path, ARRAY_STEP], out);
+      if (def.element) walkSchema(def.element, [...path, ARRAY_STEP], out, stack);
       return;
     case 'record':
-      if (def.valueType) walkSchema(def.valueType, [...path, RECORD_STEP], out);
+      if (def.valueType) walkSchema(def.valueType, [...path, RECORD_STEP], out, stack);
       return;
     case 'optional':
     case 'nullable':
@@ -84,16 +107,16 @@ function walkSchema(schema: z.ZodType, path: readonly string[], out: string[][])
     case 'nonoptional':
     case 'readonly':
     case 'catch':
-      if (def.innerType) walkSchema(def.innerType, path, out);
+      if (def.innerType) walkSchema(def.innerType, path, out, stack);
       return;
     case 'union':
-      for (const option of def.options ?? []) walkSchema(option, path, out);
+      for (const option of def.options ?? []) walkSchema(option, path, out, stack);
       return;
     case 'pipe':
-      if (def.in) walkSchema(def.in, path, out);
+      if (def.in) walkSchema(def.in, path, out, stack);
       return;
     case 'lazy':
-      if (def.getter) walkSchema(def.getter(), path, out);
+      if (def.getter) walkSchema(def.getter(), path, out, stack);
       return;
     case 'number':
     case 'boolean':

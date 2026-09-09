@@ -43,14 +43,13 @@ with its baseline; the collision gone; **Run v45 → v46**. **Scope
 guards:** no per-surface extraction here (that rides the phase that
 first touches the surface); no second locale authored.
 
-- [ ] **95a — the runtime + the events family.** `t()`, the `prose()`
-  schema wrapper, the address scheme (family · id · field path), the
-  extract script → `locales/en/events.json`, the three sidecar pins
-  (missing / orphan / fuzzy, derived from the live catalog); event
-  choices gain an editor-stamped `id`. Exit: the 13 events resolve
-  through the layer; pins green. Two commits (runtime + pins · the
-  events migration). Predict: NO snapshot bump — verify first that the
-  Run snapshot stores the event page id, not a choice position.
+- [x] **95a — the runtime + the events family.** ✅ 2026-09-09 (`3d8aca7`
+  + the migration commit): `prose()` is a zod `.meta` marker and the
+  walkers derive everything from it (zod 4 has no `ctx.path`, so the
+  parse-time capture the spec sketched became a def-tree walk — WORKLOG
+  §95a); 122 addresses in `locales/en/events.json`, 0 positional; 65
+  choice ids stamped through the editor's formatter; the no-bump
+  prediction HELD (the snapshot cursor is `{eventId, pageId}`).
 - [ ] **95b — the other ten families.** `prose()` on encounters ·
   daemons · packets · characters · sectors · camps · statuses · units ·
   abilities · layouts; the 57 editor-metadata strings stay plain. Exit:

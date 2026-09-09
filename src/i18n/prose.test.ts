@@ -49,6 +49,18 @@ describe('prosePatterns', () => {
     expect(prosePatterns(S).map((p) => p.join('.'))).toEqual(['t.title', 'p', 'l.leaf']);
   });
 
+  it('terminates on a recursive grammar (the event condition `not` combinator shape) and keeps sibling re-use', () => {
+    type Cond = { kind: 'flag'; why?: string | undefined } | { kind: 'not'; condition: Cond };
+    const Cond: z.ZodType<Cond> = z.lazy(() =>
+      z.union([
+        z.object({ kind: z.literal('flag'), why: prose().optional() }),
+        z.object({ kind: z.literal('not'), condition: Cond }),
+      ]),
+    );
+    const S = z.object({ eligibility: z.array(Cond), choice: z.object({ condition: Cond.optional() }) });
+    expect(prosePatterns(S).map((p) => p.join('.'))).toEqual(['eligibility.[].why', 'choice.condition.why']);
+  });
+
   it('throws on a zod shape it does not know rather than skipping it', () => {
     const S = z.object({ m: z.map(z.string(), prose()) });
     expect(() => prosePatterns(S)).toThrow(/unknown zod def type 'map' at 'm'/);

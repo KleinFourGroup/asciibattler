@@ -37,6 +37,8 @@
 
 import { z } from 'zod';
 import eventsJson from '../../config/events.json';
+import { prose } from '../i18n/prose';
+import { applyLocale } from '../i18n/locale';
 import { GainBitsOpSchema, HealPoolOpSchema, DAEMONS } from './daemons';
 import { ENCOUNTER_IDS } from './encounters';
 import {
@@ -157,6 +159,12 @@ export interface EventOutcome {
 }
 
 export interface EventChoice {
+  /** §95a — the choice's stable address segment for the locale layer
+   *  (`events.<event>.pages.<page>.choices.<id>.label`); unique within its
+   *  page. Stamped by the editor at export (`stampChoiceIds`, a slug of the
+   *  label); absent only on hand-authored drafts, where the walker falls
+   *  back to the index — a positional joint a page edit can shift. */
+  id?: string;
   label: string;
   condition?: EventCondition;
   outcomes: readonly EventOutcome[];
@@ -214,13 +222,14 @@ const EventOutcomeSchema = z.object({
 }) as z.ZodType<EventOutcome>;
 
 const EventChoiceSchema = z.object({
-  label: z.string().min(1),
+  id: z.string().min(1).optional(),
+  label: prose(),
   condition: EventConditionSchema.optional(),
   outcomes: z.array(EventOutcomeSchema).min(1),
 }) as z.ZodType<EventChoice>;
 
 const EventPageSchema = z.object({
-  text: z.string().min(1),
+  text: prose(),
   art: z.string().min(1).optional(),
   choices: z.array(EventChoiceSchema).min(1),
 }) as z.ZodType<EventPage>;
@@ -231,7 +240,7 @@ const EventPageSchema = z.object({
 const EventSchema = z
   .object({
     id: z.string().min(1),
-    name: z.string().min(1),
+    name: prose(),
     repeatable: z.boolean().optional(), // absent = false (74i no-repeat default)
     eligibility: z.array(EventConditionSchema).optional(),
     entry: z.string().min(1),
@@ -245,6 +254,18 @@ const EventSchema = z
       });
     }
     for (const [pageId, page] of Object.entries(event.pages)) {
+      // §95a — choice ids are locale addresses: unique within the page.
+      const choiceIds = new Set<string>();
+      for (const choice of page.choices) {
+        if (choice.id === undefined) continue;
+        if (choiceIds.has(choice.id)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `page '${pageId}': duplicate choice id '${choice.id}'`,
+          });
+        }
+        choiceIds.add(choice.id);
+      }
       for (const choice of page.choices) {
         for (const outcome of choice.outcomes) {
           if (typeof outcome.next === 'string' && !(outcome.next in event.pages)) {
@@ -263,6 +284,11 @@ const EventSchema = z
 export const EventsSchema = z.array(EventSchema);
 
 const EVENTS_LIST: readonly EventDef[] = EventsSchema.parse(eventsJson);
+
+// §95a — the prose fields (name · pages.*.text · pages.*.choices.*.label)
+// resolve through the active locale IN PLACE, once, here. Under `en` the
+// values are the inline ones above; the walk still runs its guards at boot.
+applyLocale('events', EventsSchema, EVENTS_LIST);
 
 const seenEventIds = new Set<string>();
 for (const event of EVENTS_LIST) {

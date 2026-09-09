@@ -8,6 +8,7 @@
         "text": "A wayside shrine flickers in the gloom, its idol half-eaten by static. Loose bits glitter in the offering bowl.",
         "choices": [
           {
+            "id": "scoop-the-bowl",
             "label": "Scoop the bowl",
             "outcomes": [
               {
@@ -19,6 +20,7 @@
             ]
           },
           {
+            "id": "make-an-offering-10-bits",
             "label": "Make an offering (10 bits)",
             "condition": { "kind": "bitsAtLeast", "amount": 10 },
             "outcomes": [
@@ -32,6 +34,7 @@
             ]
           },
           {
+            "id": "pass-by",
             "label": "Pass by",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -41,6 +44,7 @@
         "text": "The static coheres. Deserters in rusted mail step out of the shrine's shadow, blades already drawn.",
         "choices": [
           {
+            "id": "stand-and-fight",
             "label": "Stand and fight",
             "outcomes": [
               {
@@ -53,6 +57,7 @@
             ]
           },
           {
+            "id": "scatter-and-run",
             "label": "Scatter and run",
             "outcomes": [
               {
@@ -74,6 +79,7 @@
         "text": "A dead terminal hums back to life as you pass. ONE FAVOR, it prints, FOR ONE FRIEND. The cursor blinks, patient as a grave.",
         "choices": [
           {
+            "id": "type-your-name",
             "label": "Type your name",
             "outcomes": [
               {
@@ -86,6 +92,7 @@
             ]
           },
           {
+            "id": "unplug-it",
             "label": "Unplug it",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -103,6 +110,7 @@
         "text": "Another dead screen lights as you approach. It knows your name. A FRIEND REPAYS, it prints, and the tray fills with bits.",
         "choices": [
           {
+            "id": "accept",
             "label": "Accept",
             "outcomes": [
               {
@@ -112,6 +120,7 @@
             ]
           },
           {
+            "id": "refuse-the-debt",
             "label": "Refuse the debt",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -128,10 +137,12 @@
         "text": "You come upon a mage, silently meditating by a shrine.",
         "choices": [
           {
+            "id": "try-to-recruit-him",
             "label": "Try to recruit him",
             "outcomes": [{ "next": "decision" }]
           },
           {
+            "id": "join-in-meditation",
             "label": "Join in meditation",
             "outcomes": [
               { "next": "happy" },
@@ -144,6 +155,7 @@
         "text": "The mage glares at both you and your band of men.",
         "choices": [
           {
+            "id": "oh-no",
             "label": "Oh no...",
             "outcomes": [
               { "weight": 4, "next": "angered" },
@@ -156,6 +168,7 @@
         "text": "The mage signs out a hex and vanishes in a puff of smoke!",
         "choices": [
           {
+            "id": "ouch",
             "label": "Ouch",
             "outcomes": [
               {
@@ -170,6 +183,7 @@
         "text": "The mage sighs, less angry than disappointed, and wanders off.",
         "choices": [
           {
+            "id": "at-least-he-didn-t-attack-us",
             "label": "At least he didn't attack us",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -179,6 +193,7 @@
         "text": "The mage walks over and sits down amongst your men, a slight smile on his face.",
         "choices": [
           {
+            "id": "welcome-to-the-crew",
             "label": "Welcome to the crew!",
             "outcomes": [
               {
@@ -193,6 +208,7 @@
         "text": "You don't talk to the mage, and the mage doesn't talk to you.",
         "choices": [
           {
+            "id": "well-that-was-peaceful",
             "label": "Well, that was peaceful",
             "outcomes": [
               {
@@ -214,10 +230,12 @@
         "text": "Your band stay the night with an elderly farmer.  While there, the farmer's grandson talks some of your men into a sparring session.  The boy lacks any sort of training, but you can't help but notice that he seems to have an intuitive grasp of the blade.",
         "choices": [
           {
+            "id": "hey-kid",
             "label": "Hey, kid!",
             "outcomes": [{ "next": "payment" }]
           },
           {
+            "id": "that-s-interesting-anyway",
             "label": "That's interesting.  Anyway...",
             "outcomes": [{ "next": "no" }]
           }
@@ -227,6 +245,7 @@
         "text": "The boy darts away to pack his bags before you can even finish your spiel.  His grandfather, though, looks far less enthused.",
         "choices": [
           {
+            "id": "perhaps-some-bits-will-cheer-him-up",
             "label": "Perhaps some bits will cheer him up",
             "condition": { "kind": "bitsAtLeast", "amount": 25 },
             "outcomes": [
@@ -237,6 +256,7 @@
             ]
           },
           {
+            "id": "on-second-thought",
             "label": "On second thought...",
             "outcomes": [{ "next": "cheap" }]
           }
@@ -246,6 +266,7 @@
         "text": "A smile breaks out across the old farmer's face, second only to the one on the boy's.",
         "choices": [
           {
+            "id": "welcome-to-the-team",
             "label": "Welcome to the team!",
             "outcomes": [
               {
@@ -260,6 +281,7 @@
         "text": "The boy, crestfallen, begins to argue with his grandfather.  Better to leave them to it.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -269,6 +291,7 @@
         "text": "A band of adventurers is no place for a teenager.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -285,10 +308,12 @@
         "text": "You and your men come across a notice board, with a listing for \"able-bodied men who know their way around a pickaxe.\"  There are no other details.",
         "choices": [
           {
+            "id": "we-can-do-that",
             "label": "We can do that!",
             "outcomes": [{ "next": "accept" }]
           },
           {
+            "id": "how-about-no",
             "label": "How about no?",
             "outcomes": [{ "next": "no" }]
           }
@@ -298,6 +323,7 @@
         "text": "There's no way that's worth it.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -307,6 +333,7 @@
         "text": "You all report to the mines.  The foreman hands out the promised pickaxes and grunts, \"Start digging.\"",
         "choices": [
           {
+            "id": "dig",
             "label": "Dig",
             "outcomes": [{ "next": "dig1" }]
           }
@@ -316,6 +343,7 @@
         "text": "Hours pass.  Nobody has brought you any water.",
         "choices": [
           {
+            "id": "keep-digging",
             "label": "Keep digging",
             "outcomes": [
               {
@@ -325,6 +353,7 @@
             ]
           },
           {
+            "id": "quit",
             "label": "Quit",
             "outcomes": [{ "next": "quit" }]
           }
@@ -334,6 +363,7 @@
         "text": "Some of your men are beginning to suffer from heat stroke.",
         "choices": [
           {
+            "id": "keep-digging",
             "label": "Keep digging",
             "outcomes": [
               {
@@ -343,6 +373,7 @@
             ]
           },
           {
+            "id": "quit",
             "label": "Quit",
             "outcomes": [{ "next": "quit" }]
           }
@@ -352,6 +383,7 @@
         "text": "A strange gas begins to fill the mines, killing the canaries.",
         "choices": [
           {
+            "id": "keep-digging",
             "label": "Keep digging",
             "outcomes": [
               {
@@ -361,6 +393,7 @@
             ]
           },
           {
+            "id": "quit",
             "label": "Quit",
             "outcomes": [{ "next": "quit" }]
           }
@@ -370,6 +403,7 @@
         "text": "At last the foreman ends the shift.  He collects your pickaxes and presses a small leaden idol into your hands.  It is heavier than it should be.",
         "choices": [
           {
+            "id": "well-it-s-something",
             "label": "Well, it's something",
             "outcomes": [
               {
@@ -384,6 +418,7 @@
         "text": "There's no way this is worth it.  You all collectively abandon the mines.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -401,10 +436,12 @@
         "text": "A small dog scurries up to you.  \"Kindly pay the cheese tax,\" it says.",
         "choices": [
           {
+            "id": "did-that-dog-just-talk",
             "label": "Did that dog just talk!?",
             "outcomes": [{ "next": "flee" }]
           },
           {
+            "id": "will-bits-do-instead",
             "label": "Will bits do instead?",
             "condition": { "kind": "bitsAtLeast", "amount": 10 },
             "outcomes": [
@@ -420,6 +457,7 @@
         "text": "\"Demon!\" one of your men shouts.  All hell breaks loose as your men flee, leaving in their wake a very sad little mutt.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -429,6 +467,7 @@
         "text": "\"Money can be exchanged for cheese,\" it says.  The dog flops on its back and lets your men rub its belly.",
         "choices": [
           {
+            "id": "that-was-therapeutic",
             "label": "That was therapeutic!",
             "outcomes": [
               {
@@ -450,10 +489,12 @@
         "text": "A young woman is quite literally preaching on a soapbox in the middle of the square of the village you all are staying in.  Her tirade bounces around from landlords to kulaks to imperialism, but none of the peasants seem particularly interested.",
         "choices": [
           {
+            "id": "best-put-a-stop-to-this-now",
             "label": "Best put a stop to this now",
             "outcomes": [{ "next": "shoo" }]
           },
           {
+            "id": "take-one-of-her-flyers",
             "label": "Take one of her flyers",
             "outcomes": [{ "next": "listen" }]
           }
@@ -463,6 +504,7 @@
         "text": "Your men surround the woman and begin to shuffle her out of the village square.  She makes a scene of it, calling you a class traitor, whatever that means.  The villagers look relieved, however, and one even rewards you with a few bits.",
         "choices": [
           {
+            "id": "all-s-well-that-ends-well",
             "label": "All's well that ends well",
             "outcomes": [
               {
@@ -477,6 +519,7 @@
         "text": "\"Thank you, comrades!\" she shouts, before turning back to her proselytizing.  The pamphlet is a dense tome about dialectics which makes your eyes glaze over.",
         "choices": [
           {
+            "id": "can-the-villagers-even-read-this",
             "label": "Can the villagers even read this?",
             "outcomes": [
               {
@@ -499,6 +542,7 @@
         "text": "You come across a village in disarray.  A group of guerillas are locked in a standoff with the village priest.  Leading the guerillas is none other than the young woman who'd been ranting on a soapbox some hops ago.\n\n\"Comrades,\" she addresses you.  \"This temple has leached off of the poor for long enough.  Help us burn it down!\"\n\n\"But it's full of plague victims,\" pleads the priest.  ",
         "choices": [
           {
+            "id": "help-the-guerillas",
             "label": "Help the guerillas",
             "outcomes": [
               {
@@ -511,6 +555,7 @@
             ]
           },
           {
+            "id": "defend-the-priest",
             "label": "Defend the priest",
             "outcomes": [{ "next": "defend" }]
           }
@@ -520,6 +565,7 @@
         "text": "\"Sabateur!\" hisses the woman.  Before you can engage, she and her posse flee.  The priest thanks you, and presses a few bits into your hand.\n\n\"Would that we had more to give, but we can barely pay for medicine.\"",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [
               {
@@ -542,10 +588,12 @@
         "text": "Your band arrives at the local county seat and finds a city in chaos.  Squads of men wearing red armbands run rampant, looting anything that looks even vaguely edible.  Or valuable, for that matter.\n\n\"Comrades,\" shouts a familiar voice, \"We're evacuating the city before imperial forces besiege us.  Help us!\"",
         "choices": [
           {
+            "id": "help-with-requisitioning-supplies",
             "label": "Help with requisitioning supplies",
             "outcomes": [{ "next": "loot" }]
           },
           {
+            "id": "evacuate-the-civilians",
             "label": "Evacuate the civilians",
             "outcomes": [{ "next": "help" }]
           }
@@ -555,6 +603,7 @@
         "text": "Your men join in with the guerillas.  There's not much to be found that hasn't already been looted, but you do come across an idol in a burned-out hut.",
         "choices": [
           {
+            "id": "not-our-finest-hour",
             "label": "Not our finest hour",
             "outcomes": [
               {
@@ -569,10 +618,12 @@
         "text": "The woman looks at you as if that were the dumbest idea she's ever heard.  She does not, however, stop you.",
         "choices": [
           {
+            "id": "evacuate-the-city-center",
             "label": "Evacuate the city center",
             "outcomes": [{ "next": "downtown" }]
           },
           {
+            "id": "evacuate-the-outskirts",
             "label": "Evacuate the outskirts",
             "outcomes": [{ "next": "outskirts" }]
           }
@@ -582,6 +633,7 @@
         "text": "You find a group of bureaucrats in the basement of the city hall; apparently they've in hiding since the guerillas seized control.",
         "choices": [
           {
+            "id": "follow-us",
             "label": "Follow us!",
             "outcomes": [{ "next": "escape" }]
           }
@@ -591,6 +643,7 @@
         "text": "You get the bureaucrats to safety with minimal difficulty.  They reward you handsomely.",
         "choices": [
           {
+            "id": "all-in-a-day-s-work",
             "label": "All in a day's work",
             "outcomes": [
               {
@@ -605,6 +658,7 @@
         "text": "You arrive at the outskirts to find an advanced column of government forces.  They don't look particularly friendly.",
         "choices": [
           {
+            "id": "to-arms",
             "label": "To arms!",
             "outcomes": [
               {
@@ -633,10 +687,12 @@
         "text": "Your band comes across a small mob.  They appear to all be short, orange, and musically inclined.  And they appear to be drowning a boy in a river full of...\n\nWait, chocolate?",
         "choices": [
           {
+            "id": "best-not-get-involved",
             "label": "Best not get involved",
             "outcomes": [{ "next": "nope" }]
           },
           {
+            "id": "save-the-boy",
             "label": "Save the boy",
             "outcomes": [{ "next": "help" }]
           }
@@ -646,6 +702,7 @@
         "text": "You detour around the singing lynch mob and instead sample the chocolate river.",
         "choices": [
           {
+            "id": "delicious",
             "label": "Delicious!",
             "outcomes": [
               {
@@ -660,6 +717,7 @@
         "text": "The little, orange men scatter.  The boy thanks you profusely and offers you a small reward.",
         "choices": [
           {
+            "id": "happy-to-help-lad",
             "label": "Happy to help, lad",
             "outcomes": [
               {
@@ -684,6 +742,7 @@
         "text": "A wizened old man beckons you over.  \"This sector is rife with bandits.  Take something to help yourself.\"  He gestures at an array of goods that he's splayed on the ground.",
         "choices": [
           {
+            "id": "a-pile-of-bits",
             "label": "A pile of bits",
             "outcomes": [
               {
@@ -693,6 +752,7 @@
             ]
           },
           {
+            "id": "a-few-packets",
             "label": "A few packets",
             "outcomes": [
               {
@@ -705,6 +765,7 @@
             ]
           },
           {
+            "id": "a-daemon",
             "label": "A daemon",
             "outcomes": [
               {
@@ -727,6 +788,7 @@
         "text": "\"Farewell,\" the man says.  In a burst of static, he vanishes.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
@@ -743,6 +805,7 @@
         "text": "You find a small cabal of mages, and they look to have hostages!  Or slaves.  You really can't tell when it comes to mages.",
         "choices": [
           {
+            "id": "rescue-them",
             "label": "Rescue them!",
             "outcomes": [
               {
@@ -755,6 +818,7 @@
             ]
           },
           {
+            "id": "turn-the-other-way",
             "label": "Turn the other way",
             "outcomes": [{ "next": "run" }]
           }
@@ -764,6 +828,7 @@
         "text": "It's really not any of your business.  Besides, those mages look... Intimidating.",
         "choices": [
           {
+            "id": "leave",
             "label": "Leave",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }

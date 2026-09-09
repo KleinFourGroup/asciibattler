@@ -46,6 +46,12 @@ describe('docs hygiene', () => {
   // comfortably under the cap, with headroom for growth between cleanups. This
   // guards the failure mode the line caps miss: few but enormous lines.
   const HANDOFF_MAX_CHARS = 48_000;
+  // The 2026-09-09 trim (user-signed): "## Closed rounds" had grown to 21k
+  // chars — 44 % of the file — one appended paragraph per close, none ever
+  // leaving. The rule is now ONE LINE per round (the paragraphs live in
+  // archive/closed-rounds.md, append-only). Ten rounds ≈ 4.5k chars; the cap
+  // leaves room for Rounds 7 → 12 plus their .5 insertions at the same shape.
+  const CLOSED_ROUNDS_MAX_CHARS = 8_000;
 
   it(`HANDOFF.md stays under ${HANDOFF_MAX_LINES} lines`, () => {
     const n = lineCount(read('HANDOFF.md'));
@@ -74,6 +80,19 @@ describe('docs hygiene', () => {
       n,
       `HANDOFF.md is ${n} chars (~${Math.round(n / 2.3)} tokens) — past the ~25k-token Read-tool limit, so it can't be read in one call even though it may pass the line caps (dense, oversized lines). Demote completed-phase "Current state" detail to one line + an archive pointer (AGENTS "Keep HANDOFF lean"), or bump HANDOFF_MAX_CHARS deliberately.`,
     ).toBeLessThanOrEqual(HANDOFF_MAX_CHARS);
+  });
+
+  it(`HANDOFF "## Closed rounds" stays under ${CLOSED_ROUNDS_MAX_CHARS} chars (one line per round)`, () => {
+    const lines = read('HANDOFF.md').split(/\r?\n/);
+    const start = lines.findIndex((l) => /^## Closed rounds\b/.test(l));
+    expect(start, 'HANDOFF.md is missing its "## Closed rounds" heading').toBeGreaterThanOrEqual(0);
+    const after = lines.slice(start + 1);
+    const next = after.findIndex((l) => /^## /.test(l));
+    const n = after.slice(0, next === -1 ? after.length : next).join('\n').length;
+    expect(
+      n,
+      `"## Closed rounds" is ${n} chars. It is ONE LINE per round — a close appends its condensed paragraph to archive/closed-rounds.md and one line here (AGENTS "Keep HANDOFF lean"), or bump CLOSED_ROUNDS_MAX_CHARS deliberately.`,
+    ).toBeLessThanOrEqual(CLOSED_ROUNDS_MAX_CHARS);
   });
 
   // TODO.md is a queue, not a log (the 2026-07-06 completion convention): a

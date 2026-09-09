@@ -210,8 +210,15 @@ kickoff — has its own section below.)
   source tree in [ARCHITECTURE.md](ARCHITECTURE.md), and the pre-flight /
   pre-commit / toolchain / collaboration norms here in AGENTS — so HANDOFF
   holds just the 🧭 Cursor (the ONE live-status home), `Current state`,
-  `What's next`, the condensed Closed rounds, and the detailed
-  browser-verify tips.
+  `What's next`, Closed rounds at **ONE LINE per round**, and the detailed
+  browser-verify tips. (The 2026-09-09 trim, user-signed: Closed rounds had
+  grown to 21k chars — 44 % of the file — one appended paragraph per close,
+  none ever leaving, each restating facts whose homes are BALANCE / PATHING /
+  GOTCHAS. The paragraphs now live in
+  [archive/closed-rounds.md](archive/closed-rounds.md), append-only — a
+  close appends its paragraph THERE and its line HERE; `docs.test.ts` caps
+  the section. The Cursor's `Tests` row holds live counts + the permanent
+  gates, never pin history — that is the archived worklogs'.)
 - **Roadmap "decision points" are stops.** Post-MVP doesn't have the
   rigid CHECKPOINT markers, but ROADMAP entries flagged "Decision
   point" call out moments where user input is required — stop and ask.

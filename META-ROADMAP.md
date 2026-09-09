@@ -53,7 +53,8 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 ```
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
- 7. Idioms ───────┤  i18n + the UI audit → the idiom reference
+ 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104)
+ 7.5 Units ───────┤  the glyph rework (fewer special rules) · a team-identity channel · the D4 camera A/B
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
@@ -231,7 +232,53 @@ only new gate). **Decision points:** the locale-file shape for config prose
 NOT here (Round 8). **Exit:** the literal pin green; the idiom reference
 signed; the accessibility rule audited on every surface.
 **Scope guards:** no new screens (the menu is Round 8); no translation work
-beyond English; no sim/snapshot change.
+beyond English; no sim change — **ONE snapshot bump authorized at the
+2026-09-09 spec (the empower buff-key rename, Run v45 → v46)**.
+
+**Kicked off 2026-09-09** — the spec [round-7-spec.md](round-7-spec.md)
+(twelve resolutions, user-signed) over the code-reality audit (WORKLOG
+§Kickoff: 297 config prose fields, ≈260 UI literals, the accessibility
+state); the cut is ten phases §95–§104 (ROADMAP). The locale shape ⛔ →
+**the sidecar** (English inline in config; other locales derived, with
+per-entry provenance). The team-identity channel and the glyph-alignment
+rework were lifted OUT into Round 7.5.
+
+---
+
+## Round 7.5 — Units
+
+**Charter:** the unit/glyph rework. The board's glyph-alignment stack
+(per-glyph measured ink boxes · the floor-family vs baseline stand-line
+classifier · the descender room · three derived lifts · the font-fallback
+probe · the subset gate · a 47/48 atlas) is "too many special rules to get
+something that only 90% works, and brittle" (the user, 2026-09-09) — replace
+it with fewer rules; and give team identity a non-color channel (both sides
+draw one glyph pool today; green vs red is the only tell — Round 7's idiom
+reference writes the requirement this round must satisfy). Rides with it:
+**the D4 camera A/B** (D4 shipped as "dev fit + game scroll"; fit became the
+default by inertia — the modes are a glyph-size lever, so the preference
+test runs against the reworked glyphs: testers get the toggle, one session
+each mode; the winner gets a HUD control + a Round 8 default-mode setting).
+
+**Depends on:** Round 7 (the idiom reference's team-identity requirement;
+the tooltip + shells the board overlays use). **Risk:** medium — render-only
+(never sim), but deep: each special rule has a §79 / §91-pre finding behind
+it and a probe that must be re-derived from the asset, never from the helper
+under test (AGENTS). **Decision points:** the identity channel's shape (a
+per-instance marker sprite vs a dedicated enemy glyph set vs a shape
+suffix) against the atlas budget; the alignment model that replaces the
+classifier. **Exit:** the requirement satisfied and grayscale-verified; the
+A/B read and dispositioned; the special-rule count reduced with the probes
+re-derived. **Scope guards:** no sim; no palette (Round 8); no new
+archetypes. **Spec-first at its own kickoff**, with its own code-reality
+audit of what each rule was defending against.
+
+**The `.5` convention (user-signed 2026-09-09):** an unscheduled round
+inserted between two planned ones takes the `.5` number (the
+`<phase><letter>` form is already the step address). Round numbers are
+charter identities and are never renumbered; the phase counter is the
+durable ordering key. The macro re-audit joins the close ritual (AGENTS)
+so the next `.5` is a line written at a close, not a surprise at a kickoff.
 
 ---
 
@@ -273,7 +320,9 @@ achievements · tutorial seen-flags — `plans/*.md`).
 - Closes with a board re-run (ascension is a balance surface).
 
 **Depends on:** Round 7 (the menu/settings build on audited idioms + the
-string layer). **Risk:** medium-high (the store is the most-depended-on meta
+string layer) and Round 7.5 (the settings' default-camera-mode row reads
+the D4 A/B verdict; the colorblind palette lands on glyphs that already
+carry a non-color team channel). **Risk:** medium-high (the store is the most-depended-on meta
 model left; save/load touches every phase). **Decision points:** 2-vs-3 volume
 axes; what ascension levels DO (dose, pool, draw?) — a design round; whether
 mid-run save is manual, auto-at-gate, or both. **Exit:** a run saved at any

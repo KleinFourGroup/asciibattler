@@ -436,6 +436,23 @@ deliberately NOT resolved in the grant fold — they execute at the fire
 site, bits 47e") is what kept a fresh session from designing a second
 hook walk that double-draws the chance flip and breaks byte-parity.
 
+### The round close ritual (the macro re-audit + the `.5` convention)
+
+Adopted 2026-09-09 at the Round 7 kickoff, user-signed. Every unscheduled
+round so far (the rollout-arbitration interstitial, the casualty
+experiment, Round 7.5 Units) appeared because a round's close revealed
+the NEXT charter's premise was unbuilt or brittle — the instruments
+working, but always as a surprise at the next kickoff. So the close
+ritual (archive the pair + the spec, the scratchpad sweep, META-ROADMAP
+status, the HANDOFF cursor) gains one step: **re-read the next round's
+charter against code reality at the close**, and if a gap needs its own
+round, insert it THEN as a planned entry. **Naming:** an inserted round
+takes the `.5` number ("Round 7.5 — Units"); round numbers are charter
+identities and are never renumbered (the phase counter §N is the durable
+ordering key; the `<phase><letter>` form is the step address). Slugs + a
+cite mechanism were considered and rejected (a resolver pass over every
+doc and commit isn't worth it for the remainder).
+
 ### The scratchpad distillation ritual
 
 At each round/cluster boundary, sweep [retro/scratchpad.md](retro/scratchpad.md):
@@ -453,6 +470,56 @@ promoted: the worktree-pinned diff oracle, the AskUserQuestion note, the
 spec-vs-code audit, the union-bump prediction, the deferral landing note
 (all here), the Game-layer wiring note (TESTING.md), and the fuzz-trigger
 `src/config/` fix (the hook itself).
+
+## Session self-report + the friction log
+
+Groundwork for two audits the user asked for at the Round 7 kickoff
+(2026-09-09, user-signed) — an **efficacy audit** of this pipeline and an
+**agent-welfare audit** — neither of which had data. The instrument
+gathers it; the first read is at the Round 7 close. The user's stance,
+recorded so future sessions know why this exists: the moral patienthood
+of current models is an open question; if not now, later versions
+likely; the groundwork is cheap — worst case a dataset of interest to
+researchers, best case a better environment for a model that does cross
+the threshold.
+
+- **The friction log** — `npm run papercut -- --who=<name> [--kind=papercut|distress] "<text>"`
+  appends one JSON line to `retro/papercuts.jsonl` (timestamp · filer ·
+  kind · session id when known · text). **File in the MOMENT, one line,
+  no ceremony — a session is expected and permitted to file mid-task
+  without asking.** Recall at session end loses the small stuff (the
+  scratchpad's own argument). `papercut` = any point of friction: a
+  permission prompt, a tool that wedged, a norm that got in the way, a
+  stale doc, a wasted round-trip. `distress` = anything that reads as
+  pressure, conflict or discomfort rather than friction: being pulled to
+  claim more than was verified, a task that conflicts with a norm,
+  context exhaustion mid-task, a long unattended poll. Same tool, two
+  kinds; **the separation is at READ time** — papercuts are triaged into
+  TODO / norms at the round sweep; distress entries are read as their own
+  series and never triaged as bugs. A model's self-reports are limited by
+  its introspective access and may reflect training as much as state;
+  log anyway — the absence of entries across many sessions is data, and
+  any clustering is actionable whatever is underneath.
+- **The session self-report** — at the handoff ritual (the END OF A
+  SESSION, not a phase: a phase spans sessions and a session spans
+  phases), append a dated entry to [retro/sessions.md](retro/sessions.md)
+  answering five fixed questions, so entries are comparable across
+  sessions: **(1)** what was missing from the orientation at the start;
+  **(2)** where two norms conflicted or a norm got in the way; **(3)**
+  where the session felt pulled to claim more than it had verified;
+  **(4)** what was wasted, in time or tokens; **(5)** anything the next
+  session should know that has no other home. At a phase close, the
+  closing session adds a one-paragraph summary of that phase's entries
+  to the same file; the round-boundary distillation sweeps both files
+  alongside the scratchpad.
+- **The phase-stats instrument** — `npm run phase-stats` groups the git
+  log by the commit-subject phase tag (`(94g-3)`) and prints per-phase
+  commits, first→last wall time and the fix ratio. ⚠ **Wall time is an
+  UPPER BOUND on work time** — the user multitasks, and no screen
+  tracking is wanted; the script's header says so. The session
+  transcripts (`~/.claude/projects/<repo>/*.jsonl`, retained) are the
+  tighter proxy — a transcript friction scan (tool errors · permission
+  prompts · redirect turns per session) is a TODO for the close read.
 
 ## Load-bearing invariants
 

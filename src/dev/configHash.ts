@@ -17,6 +17,7 @@
  * without updating this list.
  */
 
+import { fnv1a } from '../core/fnv1a';
 import abilities from '../../config/abilities.json';
 import camps from '../../config/camps.json';
 import characters from '../../config/characters.json';
@@ -93,18 +94,13 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
 };
 
 /**
- * 32-bit FNV-1a over a string, as 8 lowercase hex chars. Not cryptographic —
- * this is a change-detector for a dev tool, not a security boundary; a stray
- * collision costs one confusing replay, not an exploit.
+ * 32-bit FNV-1a as 8 hex chars — lives in src/core/fnv1a.ts since 95e (the
+ * i18n provenance hash shares it, and the locale runtime must not pull every
+ * config JSON above into its import graph). Re-exported: the test vectors and
+ * the trace callers read it from here. A stray collision costs one confusing
+ * replay, not an exploit.
  */
-export function fnv1a(input: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return h.toString(16).padStart(8, '0');
-}
+export { fnv1a };
 
 let memo: string | null = null;
 

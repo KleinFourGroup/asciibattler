@@ -14,25 +14,36 @@
  * Resolution happens once, at catalog load. A locale switch is a Round 8
  * setting and reloads the page; there is no live re-resolution.
  *
- * `LocaleEntry` is a plain string today; 95e widens it to the provenance
- * object (`{ text, source, translator, reviewer }`) — readers already
- * accept both shapes so the file format never bumps.
+ * §95e — an entry is a plain string or the provenance object
+ * (provenance.ts: `{ text, source, translator, reviewer }`). A FUZZY entry —
+ * one whose stored `source` hash no longer matches the inline English — is
+ * the one case that does NOT throw: it resolves to the English (the
+ * translation no longer describes it), prefixed with a marker under Vite's
+ * DEV so a dev build shows the drift, and lands in the `fuzzyEntries()`
+ * census. The pin (tests/i18n-en-extract.test.ts) is what keeps a fuzzy
+ * entry out of a shipped locale; the runtime only has to survive one.
  */
 
 import type { z } from 'zod';
 import { proseSites, type ProseFamily, type ProseSite } from './prose';
+import { currencyOf, entryTextOf, type ProvenanceEntry } from './provenance';
 
 export const DEFAULT_LOCALE = 'en';
 
-export interface LocaleEntryObject {
-  readonly text: string;
-}
+export type LocaleEntryObject = ProvenanceEntry<string>;
 export type LocaleEntry = string | LocaleEntryObject;
 export type LocaleFile = Readonly<Record<string, LocaleEntry>>;
 
+/** The dev-mode prefix on a fuzzy entry's English fallback. */
+export const FUZZY_MARKER = '⚠ ';
+const DEV = typeof import.meta.env !== 'undefined' && import.meta.env.DEV === true;
+
 let active = DEFAULT_LOCALE;
+let marker = DEV ? FUZZY_MARKER : '';
 /** lang → family → file */
 const tables = new Map<string, Map<string, LocaleFile>>();
+/** Every fuzzy entry resolved this page-life: config addresses + `ui.<key>`. */
+const fuzzySeen = new Set<string>();
 
 export function activeLocale(): string {
   return active;
@@ -53,14 +64,41 @@ export function registerLocale(lang: string, family: string, file: LocaleFile): 
   families.set(family, file);
 }
 
-/** Test hygiene: drop every registered sidecar and return to `en`. */
+/** Every registered sidecar, for the credits (credits.ts). */
+export function registeredLocaleFiles(): readonly (readonly [lang: string, family: string, file: LocaleFile])[] {
+  const out: (readonly [string, string, LocaleFile])[] = [];
+  for (const [lang, families] of tables) for (const [family, file] of families) out.push([lang, family, file]);
+  return out;
+}
+
+/** Test hygiene: drop every registered sidecar, the fuzzy census, and return to `en`. */
 export function resetLocales(): void {
   tables.clear();
+  fuzzySeen.clear();
   active = DEFAULT_LOCALE;
+  marker = DEV ? FUZZY_MARKER : '';
+}
+
+/** The prefix a fuzzy fallback carries (`''` outside DEV). Tests pin both settings. */
+export function fuzzyMarker(): string {
+  return marker;
+}
+
+export function setFuzzyMarker(next: string): void {
+  marker = next;
+}
+
+/** The census: every fuzzy entry that resolved since the last reset (config addresses, and `ui.<key>` from ui.ts). */
+export function fuzzyEntries(): readonly string[] {
+  return [...fuzzySeen].sort();
+}
+
+export function recordFuzzy(id: string): void {
+  fuzzySeen.add(id);
 }
 
 export function entryText(entry: LocaleEntry): string {
-  return typeof entry === 'string' ? entry : entry.text;
+  return entryTextOf(entry);
 }
 
 /** One address through the active locale. `en` is the inline value by definition. */
@@ -71,6 +109,10 @@ export function resolveProse(family: string, address: string, inline: string): s
     throw new Error(
       `i18n: locale '${active}' has no entry for '${address}' (family '${family}') — extract with \`npm run i18n:extract\`, translate it, and register the sidecar before the catalog loads`,
     );
+  }
+  if (currencyOf(entry, inline) === 'fuzzy') {
+    recordFuzzy(address);
+    return marker + inline;
   }
   return entryText(entry);
 }

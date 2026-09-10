@@ -26,6 +26,7 @@
     "gen:font": "tsx scripts/build-font.mjs",
     "i18n:extract": "tsx scripts/i18n-extract.ts",
     "i18n:baseline": "tsx scripts/i18n-baseline.ts",
+    "i18n:review": "tsx scripts/i18n-review.ts",
     "papercut": "node scripts/papercut.mjs",
     "phase-stats": "node scripts/phase-stats.mjs"
   },

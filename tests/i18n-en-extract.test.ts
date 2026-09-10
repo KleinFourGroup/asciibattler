@@ -14,25 +14,43 @@
  * FILE), and every registered family has an extract on disk.
  *
  * The fix for all of them is the same command: `npm run i18n:extract`.
- * For a non-en locale the same three checks read `source` instead of the
- * value (95e — the fuzzy pin).
+ *
+ * §95e — THE FUZZY PIN for every SHIPPED non-en locale (any `locales/<lang>/`
+ * on disk): per family, the file exists and `auditLocale` (provenance.ts)
+ * finds nothing missing / orphan / UNSTAMPED (no `source`) / FUZZY (the
+ * `source` no longer hashes the current English). The fix is the
+ * translator's: update the text, then `npm run i18n:review --role=translator`.
+ * The audit itself is pinned on a hand-drifted fixture in provenance.test.ts;
+ * this is the same function over the real tree (vacuous until a locale ships).
  */
 
 import { describe, expect, it } from 'vitest';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROSE_FAMILIES } from '../src/i18n/families';
 import { extractFamily, localeFilePath } from '../src/i18n/extract';
-import { entryText, type LocaleFile } from '../src/i18n/locale';
+import { DEFAULT_LOCALE, entryText, type LocaleFile } from '../src/i18n/locale';
+import { auditLocale } from '../src/i18n/provenance';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const FIX = 'run `npm run i18n:extract` and commit the result';
 
-function readExtract(family: string): LocaleFile | null {
-  const path = join(ROOT, localeFilePath('en', family));
+function readLocaleFile(lang: string, family: string): LocaleFile | null {
+  const path = join(ROOT, localeFilePath(lang, family));
   if (!existsSync(path)) return null;
   return JSON.parse(readFileSync(path, 'utf8')) as LocaleFile;
+}
+
+function readExtract(family: string): LocaleFile | null {
+  return readLocaleFile(DEFAULT_LOCALE, family);
+}
+
+/** Every `locales/<lang>/` directory other than `en` — a shipped locale. */
+function shippedLocales(): string[] {
+  const dir = join(ROOT, 'locales');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).filter((name) => name !== DEFAULT_LOCALE && statSync(join(dir, name)).isDirectory());
 }
 
 describe('the en sidecar extract is current (derived-artifact pins)', () => {
@@ -74,4 +92,30 @@ describe('the en sidecar extract is current (derived-artifact pins)', () => {
       });
     });
   }
+});
+
+describe('every shipped non-en locale is complete and CURRENT (the 95e fuzzy pin)', () => {
+  const TRANSLATE = 'the translator updates the text, then `npm run i18n:review -- --lang=<lang> --role=translator --who=<name>`';
+  const CLEAN = { missing: [], orphan: [], unstamped: [], fuzzy: [] };
+
+  for (const lang of shippedLocales()) {
+    describe(`locale '${lang}'`, () => {
+      for (const family of PROSE_FAMILIES) {
+        it(`family '${family.family}': present, no missing / orphan / unstamped / fuzzy entry`, () => {
+          const file = readLocaleFile(lang, family.family);
+          expect(file, `${localeFilePath(lang, family.family)} is missing — copy locales/en/${family.family}.json and translate it`).not.toBeNull();
+          const audit = auditLocale(extractFamily(family), file ?? {});
+          // One assertion over all four lists, so a failing run shows the whole picture at once.
+          expect(
+            audit,
+            `${localeFilePath(lang, family.family)} — missing: addresses the locale lacks · orphan: entries with no live address (delete them) · unstamped: no \`source\` stamp · fuzzy: the English moved after the translation. The fix for missing / unstamped / fuzzy: ${TRANSLATE}`,
+          ).toEqual(CLEAN);
+        });
+      }
+    });
+  }
+
+  it('the pin enumerates the locale directories (a sanity line so an empty run is visibly vacuous)', () => {
+    expect(shippedLocales()).toBeInstanceOf(Array);
+  });
 });

@@ -23,23 +23,39 @@
  * Calling `t()` at module level (STAT_LABELS, the game-over COPY, the HUD
  * button table) is fine: the locale is fixed for the page's life (a switch
  * is a Round 8 setting and reloads).
+ *
+ * §95e — a non-en table entry may carry provenance (provenance.ts:
+ * `{ text, source, … }`, where `text` is the string or plural entry). A
+ * FUZZY entry (its `source` no longer hashes the English) resolves to the
+ * ENGLISH entry with the dev marker and lands in the shared census as
+ * `ui.<key>`; the pin (tests/i18n-ui-keys.test.ts) keeps one out of a
+ * shipped table.
  */
 
 import uiEn from '../../locales/en/ui.json';
-import { DEFAULT_LOCALE, activeLocale } from './locale';
+import { DEFAULT_LOCALE, activeLocale, fuzzyMarker, recordFuzzy } from './locale';
+import { currencyOf, entryTextOf, isProvenanceEntry, type ProvenanceEntry } from './provenance';
 
 export type PluralEntry = Readonly<Partial<Record<Intl.LDMLPluralRule, string>>> & { readonly other: string };
 export type UiEntry = string | PluralEntry;
 export type UiTable = Readonly<Record<string, UiEntry>>;
+/** A registered (non-en) table: plain entries, or provenance-wrapped ones. */
+export type UiLocaleEntry = UiEntry | ProvenanceEntry<UiEntry>;
+export type UiLocaleTable = Readonly<Record<string, UiLocaleEntry>>;
 export type TParams = Readonly<Record<string, string | number>>;
 
-const tables = new Map<string, UiTable>([[DEFAULT_LOCALE, uiEn as UiTable]]);
+const tables = new Map<string, UiLocaleTable>([[DEFAULT_LOCALE, uiEn as UiTable]]);
 
 /** The English source table (the key-scan pins + the extract read it). */
 export const UI_EN: UiTable = uiEn as UiTable;
 
-export function registerUiLocale(lang: string, table: UiTable): void {
+export function registerUiLocale(lang: string, table: UiLocaleTable): void {
   tables.set(lang, table);
+}
+
+/** Every registered table, `en` included, for the credits (credits.ts). */
+export function registeredUiTables(): readonly (readonly [lang: string, table: UiLocaleTable])[] {
+  return [...tables.entries()];
 }
 
 /** Test hygiene: drop every registered non-en table. */
@@ -48,7 +64,7 @@ export function resetUiLocales(): void {
 }
 
 export function isPluralEntry(entry: UiEntry): entry is PluralEntry {
-  return typeof entry !== 'string';
+  return typeof entry !== 'string' && !isProvenanceEntry(entry);
 }
 
 const pluralRules = new Map<string, Intl.PluralRules>();
@@ -89,8 +105,8 @@ export function formatTemplate(lang: string, key: string, template: string, para
 export function t(key: string, params: TParams = {}): string {
   const lang = activeLocale();
   const table = tables.get(lang);
-  const entry = table?.[key];
-  if (entry === undefined) {
+  const raw = table?.[key];
+  if (raw === undefined) {
     if (lang !== DEFAULT_LOCALE && !(key in UI_EN)) {
       throw new Error(`i18n: unknown UI key '${key}' (not in locales/en/ui.json either)`);
     }
@@ -99,6 +115,14 @@ export function t(key: string, params: TParams = {}): string {
         ? `i18n: unknown UI key '${key}' — add it to locales/en/ui.json`
         : `i18n: locale '${lang}' has no UI entry for '${key}' — translate it in locales/${lang}/ui.json`,
     );
+  }
+  let entry: UiEntry = entryTextOf<UiEntry>(raw);
+  let prefix = '';
+  const english = UI_EN[key];
+  if (lang !== DEFAULT_LOCALE && english !== undefined && currencyOf(raw, english) === 'fuzzy') {
+    recordFuzzy(`ui.${key}`);
+    entry = english;
+    prefix = fuzzyMarker();
   }
   let template: string;
   if (isPluralEntry(entry)) {
@@ -110,5 +134,5 @@ export function t(key: string, params: TParams = {}): string {
   } else {
     template = entry;
   }
-  return formatTemplate(lang, key, template, params);
+  return prefix + formatTemplate(lang, key, template, params);
 }

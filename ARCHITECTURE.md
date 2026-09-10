@@ -40,6 +40,7 @@ src/
 
   core/
     EventBus.ts              # Tiny typed pub/sub; on() returns unsub
+    fnv1a.ts                 # 95e: 32-bit FNV-1a → 8 hex chars, PERMANENT — the 53b trace fingerprint (dev/configHash.ts re-exports it) and the i18n provenance `source` hash share it; a change would fuzzy every shipped locale at once
     RNG.ts                   # Mulberry32 PRNG; .next/.int/.pick/.fork
     sampling.ts              # M6: deterministic RNG samplers — weightedPick + sampleRange (triangular bias)
     Clock.ts                 # Fixed-timestep tick loop separated from render loop
@@ -92,12 +93,14 @@ src/
 
   i18n/                      # §95 (Round 7): the locale layer — CONFIG prose via the SIDECAR (English inline in config/*.json; other locales derived), UI literals via an explicit-key table (95c)
     prose.ts                 #   95a: prose() — a zod .meta marker on a string field: THE DECLARATION IS THE MANIFEST; prosePatterns (the zod-4 def-tree walk, per-path cycle cut, throws on an unknown shape) + proseSites (the data walk: addresses `<family>.<id>.<path>`, arrays keyed by element id else index; collision + separator guards)
-    locale.ts                #   95a: the runtime — activeLocale (en = the inline value by definition) · registerLocale(lang, family, file) · applyLocale(family, schema, data) resolves every site IN PLACE once at catalog load; a missing entry under a non-en locale THROWS. LocaleEntry = string | { text } (95e widens to provenance)
+    locale.ts                #   95a: the runtime — activeLocale (en = the inline value by definition) · registerLocale(lang, family, file) · applyLocale(family, schema, data) resolves every site IN PLACE once at catalog load; a missing entry under a non-en locale THROWS. 95e: LocaleEntry = string | the provenance object; a FUZZY entry (its `source` ≠ the English's hash) falls back to the English with the DEV `⚠ ` marker (FUZZY_MARKER) and lands in the fuzzyEntries() census — an UNSTAMPED one resolves as-is (the pin gates it, not the runtime)
     families.ts              #   95a/b: PROSE_FAMILIES — the ten `<FAMILY>_PROSE` descriptors each loader exports from `loadProse(family, schema, data)` (locale.ts: apply + describe, right after the parse — BEFORE any normalize/map copies the fields); the extract + the en pins iterate it. Camps is not a family (nothing of it renders)
     extract.ts               #   95a: extractFamily → the flat address → English map; `npm run i18n:extract` (scripts/i18n-extract.ts) writes locales/en/<family>.json; tests/i18n-en-extract.test.ts pins it current (missing / orphan / stale — the derived-artifact tripwire shape)
     literalScan.ts           #   95d: THE LITERAL PIN's scanner — prose-shaped string literals in the presentation layer, over the TypeScript AST (compiler API; imported only by the test + script): two words with whitespace or one Capitalized word; structural exclusions (Error / console / fail·assert* callees · className, classList, querySelector, style.* · message / shader properties · types, case labels, property names) + `// i18n-ok` line and `i18n-ok-file` markers + KEYBOARD_CODES
     literalBaseline.ts       #   95d: scanRepo over SCAN_ROOTS (src/ui · src/scenes · src/render · Game.ts · main.ts · config/events.ts) → the per-file counts; tests/i18n-literal-baseline.json is held EXACTLY by tests/i18n-literal-pin.test.ts (a ratchet to zero); `npm run i18n:baseline` regenerates, `--list` prints the worklist
-    ui.ts                    #   95c: t(key, params) — the UI string table for literals that live in CODE (English is the SOURCE: locales/en/ui.json, explicit namespaced keys, always a string literal at the call site); plural entries by CLDR category via Intl.PluralRules on `count`, {placeholder} substitution, numbers via Intl.NumberFormat; registerUiLocale(lang, table); every miss THROWS. Pinned by the static key scan tests/i18n-ui-keys.test.ts (every literal key exists · every key referenced · no computed keys · non-en tables match the key set)
+    ui.ts                    #   95c: t(key, params) — the UI string table for literals that live in CODE (English is the SOURCE: locales/en/ui.json, explicit namespaced keys, always a string literal at the call site); plural entries by CLDR category via Intl.PluralRules on `count`, {placeholder} substitution, numbers via Intl.NumberFormat; registerUiLocale(lang, table); every miss THROWS. Pinned by the static key scan tests/i18n-ui-keys.test.ts (every literal key exists · every key referenced · no computed keys · non-en tables match the key set AND pass the 95e audit). 95e: a non-en entry may carry provenance (`text` = the string or the plural object); fuzzy → the English + the marker, censused as `ui.<key>`
+    provenance.ts            #   95e: the per-entry authorship chain `{ text, source, translator: {who, on}, reviewer: {who, on} }` — sourceHash (fnv1a over the English; a plural object canonicalized with sorted keys) · currencyOf (current / unstamped / fuzzy) · auditLocale (missing / orphan / unstamped / fuzzy — the ONE function under both disk pins + the hand-drifted fixture) · translatorStamp (drops any reviewer) / reviewerStamp · creditsOf. English carries none (git is its authorship). Written only by `npm run i18n:review`
+    credits.ts               #   95e: localeCredits() — creditsOf over the REGISTERED sidecars + UI tables (en skipped), browser-safe for the Round 8 credits screen
 
   sim/
     World.ts                 # Battle state: grid + units + tick. tick() runs the selector,
@@ -379,7 +382,7 @@ src/
   audio/
     AudioPlayer.ts           # B6: 4-deep clone ring per sound; per-key volume + pitch jitter; + magicboom (E7.C); §32b: the status/afflicter/summon/catapult SoundKeys (8 generated by scripts/gen-sfx.mjs + the hand-made thud)
 
-locales/                     # §95a: the locale SIDECARS — one flat file per family per locale (address → entry). `en/` is a DERIVED extract of the inline English (`npm run i18n:extract`; tests/i18n-en-extract.test.ts pins it current); another locale is the translator's file, resolved at catalog load by src/i18n/locale.ts
+locales/                     # §95a: the locale SIDECARS — one flat file per family per locale (address → entry). `en/` is a DERIVED extract of the inline English (`npm run i18n:extract`; tests/i18n-en-extract.test.ts pins it current); another locale is the translator's file, resolved at catalog load by src/i18n/locale.ts. 95e: a non-en entry is a plain string (UNSTAMPED) or `{ text, source, translator, reviewer }`; the pins fail a shipped `locales/<lang>/` on missing / orphan / unstamped / fuzzy, per family and for ui.json — `npm run i18n:review` writes the stamps
   en/ui.json                 #   95c: the UI string table — the SOURCE of the code-side English (49 keys at 95c: stat labels · chip lines · pool names · game-over copy · HUD objective buttons · roster button · common Continue/Buy/Close · map.uncharted · three plural entries); NOT a derived extract — its pins are the key scan
   en/events.json             #   95a: 122 addresses (13 names · 44 page texts · 65 choice labels), catalog order
                              #   95b: + encounters / daemons / packets / characters / sectors / statuses / units / abilities / layouts .json — 133 more (19 · 22 · 16 · 6 · 2 · 10 · 23 · 24 · 11) = 255 in all; camps + the encounter/sector/layout descriptions are editor metadata, never rendered, NOT here
@@ -446,6 +449,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
 
 scripts/                     # Dev-only Node utilities; not bundled into dist/
   gen-sfx.mjs                # §32b: deterministic, dependency-free SFX synth → public/audio/ (npm run gen:sfx)
+  i18n-review.ts             # 95e: `npm run i18n:review -- --lang=<l> --who=<name> [--role=translator|reviewer] [--family=a,b,ui] [--address=…] [--on=…] [--dry]` — the ONLY writer of provenance stamps: translator stamps `source` + `translator` on unstamped/fuzzy entries (skips text still equal to its English; scaffolds missing addresses as plain English; never deletes), reviewer stamps CURRENT entries only and exits 1 on anything else; prints the locale's credits. Siblings: i18n-extract.ts (95a) · i18n-baseline.ts (95d)
 
 tests/
   smoke.test.ts

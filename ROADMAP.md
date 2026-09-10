@@ -77,10 +77,14 @@ first touches the surface); no second locale authored.
   literals in 22 files**, held EXACTLY per file (a ratchet: over fails,
   under fails until lowered — `npm run i18n:baseline`; `--list` is the
   extraction worklist).
-- [ ] **95e — provenance.** The entry-object shape (`text` · `source`
-  hash · `translator` · `reviewer`), the fuzzy pin over it, the
-  `i18n:review` stamp script, the translators-credit extract. Exit: a
-  hand-drifted fixture flags fuzzy. One commit.
+- [x] **95e — provenance.** ✅ 2026-09-10: `{ text, source, translator,
+  reviewer }` (provenance.ts; `source` = fnv1a of the English, the hash
+  moved to `src/core/` and PERMANENT); the audit = missing / orphan /
+  **unstamped** / **fuzzy**, one function under both disk pins + a
+  hand-drifted fixture (flags fuzzy — the exit); a fuzzy entry falls back
+  to English at runtime with the DEV `⚠ ` marker + a census; `npm run
+  i18n:review` (translator / reviewer roles — the ONLY stamp writer);
+  `localeCredits()` over the registry for Round 8. WORKLOG §95e.
 - [ ] **95f — the empower key rename.** `"empowered"` → the new key in
   `daemons.json` + `empower.json`; **RunSnapshot v45 → v46**
   (`encounterEffects` serializes it; reject-stale); the EMPOWER_DISPLAY

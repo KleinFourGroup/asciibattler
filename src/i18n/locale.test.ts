@@ -3,13 +3,19 @@ import { z } from 'zod';
 import { prose } from './prose';
 import {
   DEFAULT_LOCALE,
+  FUZZY_MARKER,
   activeLocale,
   applyLocale,
+  fuzzyEntries,
+  fuzzyMarker,
+  recordFuzzy,
   registerLocale,
   resetLocales,
   resolveProse,
   setActiveLocale,
+  setFuzzyMarker,
 } from './locale';
+import { translatorStamp } from './provenance';
 
 const Things = z.array(z.object({ id: z.string(), name: prose(), note: prose().optional() }));
 const parse = () => Things.parse([{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta', note: 'A note' }]);
@@ -52,5 +58,41 @@ describe('locale runtime', () => {
 
   it('rejects an empty locale id', () => {
     expect(() => setActiveLocale('')).toThrow();
+  });
+});
+
+describe('provenance at the runtime (95e)', () => {
+  it('a CURRENT provenance entry resolves to its text; a FUZZY one falls back to the English with the marker, and lands in the census', () => {
+    registerLocale('xx', 'things', {
+      'things.a.name': translatorStamp('Alfa', 'Alpha', { who: 'T', on: '2027-01-01' }),
+      'things.b.name': translatorStamp('Bēta', 'Beta (old)', { who: 'T', on: '2027-01-01' }), // the English moved
+      'things.b.note': 'Eine Notiz', // unstamped resolves as-is — the pin, not the runtime, gates it
+    });
+    setActiveLocale('xx');
+    setFuzzyMarker(FUZZY_MARKER);
+    const data = parse();
+    applyLocale('things', Things, data);
+    expect(data[0]!.name).toBe('Alfa');
+    expect(data[1]!.name).toBe(`${FUZZY_MARKER}Beta`);
+    expect(data[1]!.note).toBe('Eine Notiz');
+    expect(fuzzyEntries()).toEqual(['things.b.name']);
+  });
+
+  it('the marker is empty outside DEV — the fallback is the bare English', () => {
+    registerLocale('xx', 'things', {
+      'things.a.name': translatorStamp('Alfa', 'Alpha?', { who: 'T', on: '2027-01-01' }),
+    });
+    setActiveLocale('xx');
+    setFuzzyMarker('');
+    expect(resolveProse('things', 'things.a.name', 'Alpha')).toBe('Alpha');
+    expect(fuzzyEntries()).toEqual(['things.a.name']);
+  });
+
+  it('resetLocales clears the census and restores the default marker', () => {
+    setFuzzyMarker('!!');
+    recordFuzzy('x');
+    resetLocales();
+    expect(fuzzyEntries()).toEqual([]);
+    expect(fuzzyMarker()).not.toBe('!!');
   });
 });

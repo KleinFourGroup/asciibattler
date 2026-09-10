@@ -644,3 +644,85 @@ unit`, `${n}ms`) is not prose-shaped; the plural-suffix idiom
 instances were migrated at 95c; the per-surface checklist (§103) covers
 the class by eye. Widening the heuristic to catch it would flag every
 `${w}px` — the trade was not worth it.
+
+### 95e — provenance (2026-09-10)
+
+**The shape is the spec's, verbatim** (`src/i18n/provenance.ts`):
+`{ text, source, translator: { who, on }, reviewer: { who, on } }`, where
+`source` is the hash of the English at translation time and `on` is an
+ISO date. One widening: a UI table entry's `text` may itself be a plural
+object, so the hash canonicalizes an object source as sorted-key JSON and
+a string as itself. English carries no provenance (git is its authorship)
+— `locales/en/*.json` stays flat strings and the en pins are untouched.
+
+**The hash is the format contract, so it moved to `src/core/fnv1a.ts`
+and is PERMANENT** (the rngStreams discipline): a change to the function
+or its 8-hex rendering would fuzzy every entry of every shipped locale at
+once. It was the 53b trace fingerprint's `fnv1a` in `src/dev/configHash.ts`
+— which imports all 32 config JSONs, and the locale runtime sits UNDER the
+config loaders in the import graph; the move keeps that graph clean and
+configHash re-exports it (its test vectors still read from there).
+
+**Four checks, one function, one assertion.** `auditLocale(english, file)`
+returns `missing / orphan / unstamped / fuzzy` — `unstamped` is the new
+category the spec's sketch implied but did not name: a plain-string entry
+(or an object without `source`) proves nothing about which English it was
+translated from, so a shipped locale fails on it exactly as on fuzzy. The
+same function runs under both disk pins (the ten config sidecars in
+`tests/i18n-en-extract.test.ts`, `ui.json` in `tests/i18n-ui-keys.test.ts`
+— vacuous until a locale ships, enumerating `locales/<lang>/` directories)
+and over the hand-drifted fixture in `provenance.test.ts` that is the cut's
+exit: an entry stamped against "Old Gamma" reads fuzzy against "Gamma".
+Each disk pin asserts the whole four-list object in ONE `expect` — the
+first probe run stopped at `unstamped` and never showed the fuzzy entry
+that was the point.
+
+**The runtime survives a fuzzy entry; the pin keeps it out.** `resolveProse`
+and `t()` fall back to the English for a fuzzy entry (the translation no
+longer describes it), prefixed `⚠ ` under Vite's DEV so a dev build shows
+the drift (`FUZZY_MARKER`; empty otherwise; `import.meta.env` is guarded
+for tsx, where it is undefined), and record it in one census
+(`fuzzyEntries()`: config addresses + `ui.<key>`). An UNSTAMPED entry
+resolves as-is at runtime — the deliberate asymmetry: the runtime has no
+English to prefer over a translation nobody stamped, and the pin is the
+gate. The missing-entry THROW is unchanged.
+
+**`npm run i18n:review` is the ONLY writer of stamps — two roles.** The
+spec named the reviewer stamp; the probe of the workflow showed the
+translator stamp has to come from the same tool (nobody hand-computes a
+hash), so `--role=translator` stamps `source` + `translator` on every
+unstamped or fuzzy entry in scope and DROPS any reviewer (a re-translation
+needs a fresh sign-off), while `--role=reviewer` (the default) stamps
+`reviewer` on CURRENT entries only and lists everything else with exit 1.
+Three guards found by running it: (1) an entry whose text still EQUALS its
+English is skipped and listed — the scaffold nobody translated is exactly
+the hazard of a bulk stamp; `--address` names one to stamp anyway (a
+proper noun the same in both languages); (2) missing addresses are
+SCAFFOLDED as plain English, unstamped, and a missing file is created that
+way — so "copy the en file" is not even needed; orphans are listed, never
+deleted (the extract's rule); (3) explicit addresses are validated against
+every file in scope BEFORE anything is written (the first cut validated
+after the loop and would have created an empty file first). `en` is
+refused. The run ends by printing the locale's credits.
+
+**The credits extract is a pure fold over stamps** (`creditsOf`) with
+`localeCredits()` (credits.ts) running it over the REGISTERED tables —
+config sidecars + UI tables, `en` skipped — so the Round 8 credits screen
+reads it in the browser with no file access; the script runs the same
+fold over the files on disk.
+
+**The end-to-end probe, on a scratch `locales/xx/` (deleted after):**
+translator scaffold → 10 statuses + 45 ui entries, plain, unstamped ·
+two hand-translated → re-run stamped 2, skipped 8 "still equal to the
+English" · the `source` of one stamped entry hand-drifted to `00000000`
+→ the disk pin FAILED with `fuzzy: [statuses.burn.name]` + the 8
+unstamped in one diff, and the ui pin with the 45 unstamped · the
+reviewer role: 1 stamped (the current entry), 9 blocked (1 fuzzy + 8
+unstamped), exit 1 · `--address=statuses.poison.name` signed that one
+entry, exit 0 · `--lang=en` refused · an unknown `--address` refused
+before any write · `--dry` wrote nothing.
+
+**Count correction:** `locales/en/ui.json` is **45 keys**, not the 49 the
+95c commit and the HANDOFF cursor carried; the table has not changed since
+95c, so 49 was that commit's own miscount (the key-scan pin holds the true
+set). Recorded at 45 from here.

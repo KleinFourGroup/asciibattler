@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { resetLocales, setActiveLocale } from './locale';
+import { FUZZY_MARKER, fuzzyEntries, resetLocales, setActiveLocale, setFuzzyMarker } from './locale';
 import { UI_EN, isPluralEntry, registerUiLocale, resetUiLocales, t } from './ui';
+import { translatorStamp } from './provenance';
+import { localeCredits } from './credits';
 
 afterEach(() => {
   resetLocales();
@@ -48,5 +50,21 @@ describe('t() — the UI string table', () => {
     expect(t('cardlist.title', { title: 'Kader', count: 1234 })).toBe('Kader — 1.234 Einheiten');
     expect(() => t('stat.power')).toThrow(/locale 'de' has no UI entry for 'stat.power'/);
     expect(() => t('no.such.key')).toThrow(/not in locales\/en\/ui.json either/);
+  });
+
+  it('provenance entries (95e): a current one resolves — plural text included; a FUZZY one falls back to the English with the marker', () => {
+    const stamp = { who: 'T', on: '2027-01-01' };
+    registerUiLocale('de', {
+      'common.buy': translatorStamp('Kaufen', UI_EN['common.buy'], stamp),
+      'cardlist.title': translatorStamp({ one: '{title} — {count} Einheit', other: '{title} — {count} Einheiten' }, UI_EN['cardlist.title'], stamp),
+      'stat.power': translatorStamp('MACHT', 'POWER (old)', stamp), // stamped against an English that moved
+    });
+    setActiveLocale('de');
+    setFuzzyMarker(FUZZY_MARKER);
+    expect(t('common.buy')).toBe('Kaufen');
+    expect(t('cardlist.title', { title: 'Kader', count: 1 })).toBe('Kader — 1 Einheit');
+    expect(t('stat.power')).toBe(`${FUZZY_MARKER}POW`);
+    expect(fuzzyEntries()).toEqual(['ui.stat.power']);
+    expect(localeCredits()).toEqual([{ lang: 'de', translators: ['T'], reviewers: [] }]);
   });
 });

@@ -11,7 +11,9 @@ status is HANDOFF's 🧭 Cursor. Sub-steps are cut at each phase kickoff
 (AGENTS "The planning stack"), never here — §95's are cut because its
 kickoff IS the spec session; §96–§104 get theirs at their own kickoffs
 (each a minutes-long audit + cut; the user promoted the audit's seven
-sub-areas to phases to keep the numbering flat). Prior round's plan:
+sub-areas to phases to keep the numbering flat). **§96.5 was inserted
+2026-09-10** from the §95 playtest (the `.5` convention applied to a
+phase — nothing renumbers). Prior round's plan:
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) with its
 worklog and spec beside it.
 
@@ -24,24 +26,14 @@ whichever phase FIRST touches a UI surface extracts its strings into the
 §95c table in that touch; §100 sweeps the remainder and drives the §95d
 baseline to zero.
 
-## Phase 95 — the i18n layer
+## Phase 95 — the i18n layer ✅ CLOSED 2026-09-10
 
-**Charter:** the `t()` runtime + the sidecar locale layer for config
-prose + the explicit-key string table for UI literals + the literal pin
-+ provenance, English-only; the existing 13 events migrate while they
-are few; the empower buff key renames under the authorized bump.
-Headless-first — no UI surface is touched except the shared label
-tables. **Why first:** ordering principle #1 applied to text; every
-later phase extracts strings into a layer that already exists.
-**Depends on:** the spec (signed). **Risk:** low-medium — the string
-pin is the only new gate; the editors do not change (the sidecar's
-whole point). **Decision points:** the literal pin's mechanism (lint
-rule vs headless DOM scan — lint recommended) at 95d; the new empower
-key name at 95f. **Exit:** the three sidecar pins green for `en` over
-240 addresses; the UI helpers pinned headless; the literal pin green
-with its baseline; the collision gone; **Run v45 → v46**. **Scope
-guards:** no per-surface extraction here (that rides the phase that
-first touches the surface); no second locale authored.
+**Outcome (one breath):** the locale layer exists and is pinned —
+`prose()` sidecars (10 families / 255 addresses), `t()` over the 52-key
+UI table, the 115-literal ratchet, provenance + `i18n:review`, the
+empower key `honed` under Run v46 — and the user playtest passed
+(WORKLOG §95 playtest; its two §94 findings became §96.5). The charter
+is in git at `18eeddc`; the cut lines stay below.
 
 - [x] **95a — the runtime + the events family.** ✅ 2026-09-09 (`3d8aca7`
   + the migration commit): `prose()` is a zod `.meta` marker and the
@@ -108,6 +100,39 @@ points:** the chip column's ordering rule when a chip hides. **Exit:**
 three modals, four chips, nine buttons on the shared idioms; zero raw
 hexes in `ui.css`; every `font-size` a token. **Scope guards:** no
 behavior change on any screen; no new chrome.
+
+## Phase 96.5 — the live pool bar + the chip rule (INSERTED 2026-09-10)
+
+**Inserted** at the §95 playtest — the first since §94 closed without
+one — from two §94 presentation findings (WORKLOG §95 playtest). Numbered
+by the round-level `.5` convention applied to a phase (§96–§104 keep
+their identities; step addresses read `96.5a`). **Charter:** (a) the
+persistent morale chip HIDES while a battle or a turn screen is up — the
+HUD and the pre/post-turn gauges are the in-encounter read (the 94e "full
+gauge vs chip" residual, answered by the user); (b) **THE LIVE BAR** — the
+user's 94d shape-lock idea the presentation commit never built (the HUD
+gauges paint once from the encounter's pools; the only death handler
+grays the card): the in-battle gauges decrement per death as a PROJECTION
+off the live `World.fallenPower` (serialized since v36; the charge still
+books at `resolveTurn`, untouched), and the post-turn screen's fate is
+DECIDED — kept as the encounter-end summary, folded into the next
+pre-turn screen, or removed (then the fallen rows' only home is §102's
+run-end stats). **A small design round opens the phase** (what a death
+shows on the bar; what a turn's end shows; where the "at risk this turn"
+line lives). **Why here:** after §96 (the bar and the chip rule build on
+the chip base + the tokens, not before them) and BEFORE §97 / §100 touch
+the post-turn screen (16 un-extracted literals + its `title=` sites —
+touch-once says decide its fate before anyone extracts it) and before
+§103 signs the loop. **Depends on:** §96. **Risk:** low-medium — a flow
+change (the pre-turn screen still gates; the post-turn gate may go),
+eyeball-only; no sim, no snapshot change (the projection reads state the
+snapshot already carries). **Decision points:** the post-turn screen's
+fate · a death's read on the bar (a tick per death vs a re-read) · the
+risk line's home. **Exit:** one morale read per screen; a death moves
+the bar during the battle; the loop's screens agreed and the ledger rows
+have a home. **Scope guards:** no rule/timing change (the chip books at
+turn end — fuzz byte-identical); no run-end stats body here (§102); no
+new screen.
 
 ## Phase 97 — the tooltip system
 

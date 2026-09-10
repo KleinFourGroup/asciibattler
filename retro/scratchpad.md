@@ -45,3 +45,20 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-§94 entries start here — Round 7, Idioms.)_
+
+## The close ritual
+
+- **A round close without a playtest ships its presentation findings to
+  the next round's first playtest** (2026-09-10, the §95 playtest — the
+  first since §94 closed; the user: "clearly I forgot to do a playtest
+  then"). The §94 close had a signed sheet, a frozen config and a
+  fallen-ledger screen nobody had looked at in a live run: two findings
+  (the morale chip doubling the HUD/turn-screen gauges; the 94d
+  shape-lock's live bar NEVER BUILT — it fell through the data/
+  presentation split, with no TODO or roadmap line to catch it) cost
+  nothing to find and an inserted phase (§96.5) to fix. Candidate norm
+  for the close ritual (AGENTS "The round close ritual"): the close
+  PROPOSES a playtest as a step, and a shape-lock note that splits a
+  step into "data now, presentation later" writes the deferred half
+  into TODO in the same commit (the 47c landing-note rule, applied to
+  a user's idea instead of a code seam).

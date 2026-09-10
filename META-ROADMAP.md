@@ -53,7 +53,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 ```
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
- 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104)
+ 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104 + §96.5 inserted 2026-09-10; §95 ✅)
  7.5 Units ───────┤  the glyph rework (fewer special rules) · a team-identity channel · the D4 camera A/B
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
@@ -238,7 +238,9 @@ beyond English; no sim change — **ONE snapshot bump authorized at the
 **Kicked off 2026-09-09** — the spec [round-7-spec.md](round-7-spec.md)
 (twelve resolutions, user-signed) over the code-reality audit (WORKLOG
 §Kickoff: 297 config prose fields, ≈260 UI literals, the accessibility
-state); the cut is ten phases §95–§104 (ROADMAP). The locale shape ⛔ →
+state); the cut is ten phases §95–§104 (ROADMAP; **§96.5 — the live pool
+bar + the chip rule — inserted 2026-09-10** from the §95 playtest, the `.5`
+convention applied to a phase). The locale shape ⛔ →
 **the sidecar** (English inline in config; other locales derived, with
 per-entry provenance). The team-identity channel and the glyph-alignment
 rework were lifted OUT into Round 7.5.

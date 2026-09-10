@@ -784,3 +784,48 @@ surface. The three K1-class comments (`fatigued/empowered/warded`) name
 sides of every merge leaves every fold byte-identical (fuzz:smoke on the
 hook is the check). The user's own localStorage run save will be REJECTED
 at the next load (v45) — expected under the authorized bump.
+
+### The §95 playtest (2026-09-10) — VERDICT: passed; §95 CLOSED
+
+**The user's verdict: "went very well."** §95 closes on it. The playtest
+was also the FIRST since §94 closed — the user's own words: "clearly I
+forgot to do a playtest then" — and both findings it raised are §94
+presentation, not §95:
+
+1. **Morale reads twice on the battle HUD and both turn screens.** By
+   design of 94e: the persistent chip is page-lifetime (every screen) and
+   the HUD + pre/post-turn gauges kept their full gauges as "the
+   authoritative in-encounter read" (`PoolOverlay.ts:6-9`); the Round 7
+   kickoff audit had routed the pool rider as absorbed by 94e with one
+   residual — "full gauge vs chip on the event screen" (§Kickoff H row 5).
+   The playtest answered the mirror question: **the chip HIDES while a
+   battle or a turn screen is up** (the user's pick of three: hide the
+   chip · drop the player gauge and keep the enemy one · keep both).
+2. **The live pool bar was never built** — verified against the code: the
+   HUD's `renderPlayerPool` / `renderEnemyPool` paint ONCE from the
+   encounter's `EncounterPools`, the only `unit:died` handler in `src/ui`
+   grays the card (`HUD.ts:319,591`), and nothing in `src/ui` reads
+   `World.fallenPower`. The idea was the user's note at the 94d
+   shape-lock (2026-09-06, `archive/post-88-worklog.md:2571-2585`): 94d
+   split into data + presentation "where the user picks the screen or the
+   live bar (or both)"; the presentation commit shipped the ledger rows on
+   the post-turn screen and the live-bar half fell through the split — no
+   TODO, no META-ROADMAP line, no Round 7 phase carried it.
+
+**Routing — one inserted phase, §96.5**, both findings together (the
+user's call; the placement mine): after §96 (the bar and the chip rule
+should build on the chip base + the tokens, not precede them) and BEFORE
+§97 / §100 open the post-turn screen (16 un-extracted literals + `title=`
+sites — deciding its fate first is what touch-once demands) and before
+§103 signs the loop. A small design round opens the phase (the user
+asked for one since the bar is unbuilt). Numbered by the round-level `.5`
+convention applied to a phase — renumbering §97–§104 would have touched
+the spec, META-ROADMAP, this worklog, HANDOFF, TODO and the memory for no
+information gain; the convention exists because that churn was rejected
+at the Round 7 kickoff. The docs guard's phase parser (`/^## Phase \d/`)
+accepts the form.
+
+**Process note for the scratchpad:** a round close that skips the
+playtest ships its presentation findings to the NEXT round's first
+playtest. The §94 close had a signed sheet, a frozen config and no eyes
+on the screen; the two findings cost nothing to find and a phase to fix.

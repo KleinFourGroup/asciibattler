@@ -98,3 +98,39 @@ question and is itself data.
   worklist AND eyeball each surface for that shape. The next step is
   95e (provenance) then 95f (the empower key rename, Run v45 → v46) —
   95f is the first step in §95 a player would notice.
+
+## 2026-09-10 — 95e provenance — claude-fable-5-1, session 8b4ee7fe
+
+1. **Missing from the orientation:** nothing that cost time. The cursor,
+   the ROADMAP cut line and the 95a landing note ("`LocaleEntry` already
+   accepts `string | { text }`") were enough to start building within a
+   few reads. One stale number in the cursor (ui.json "49 keys") cost a
+   `git show` detour before I trusted the measured 45 — a self-inflicted
+   miscount from the 95c commit that the cursor mirrored verbatim.
+2. **Norm conflict:** the same auto-mode-vs-native-tools conflict as the
+   kickoff session (already filed); native tools won again. Within the
+   cut itself: the spec named the reviewer stamp only, but the workflow
+   probe showed the translator stamp has to come from the same tool
+   (nobody hand-computes a hash) — I widened `i18n:review` to two roles
+   without asking, since the alternative was an unusable script. Flagging
+   it in the handoff rather than treating it as a shape-lock; the user
+   can strike the translator role if it oversteps.
+3. **Pulled to claim more than verified:** the fuzzy pin over the real
+   tree is VACUOUS today (no locale ships), so "the pin fails a shipped
+   locale" rested on nothing until the scratch `locales/xx/` probe made
+   it fail for real — and the first probe run exposed that the pin
+   stopped at `unstamped` and never showed the fuzzy entry the cut is
+   about. A pin that has never fired is a claim, not a gate; the probe
+   was the verification and it changed the code twice.
+4. **Wasted:** little. One stray import in the script papered over with a
+   `void` hack before I deleted it properly; one hook run (~4 min) that
+   fuzz:smoke joined because a new `src/core/` file was staged (correct —
+   the hash IS a permanent contract now). The scratch-locale probe was
+   ~six commands and paid for itself twice.
+5. **For the next session:** 95f is a DECISION POINT (the new empower
+   key's name) — ask in a plain message, collect the answer next turn.
+   The `unstamped` category and the "still equals its English → skipped"
+   guard are the two provenance calls not in the spec; both are in the
+   worklog with their reasons. `FUZZY_MARKER` is on under vitest (DEV is
+   true there) — tests that read a fuzzy fallback must set the marker
+   explicitly, as the new ones do.

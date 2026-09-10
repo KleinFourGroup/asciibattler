@@ -134,3 +134,25 @@ question and is itself data.
    worklog with their reasons. `FUZZY_MARKER` is on under vitest (DEV is
    true there) — tests that read a fuzzy fallback must set the marker
    explicitly, as the new ones do.
+
+**Addendum (95f, the same session):**
+
+- (1) Nothing missing; the TODO item, the spec §11 and the 78d comment on
+  `buffKeyLabel` together were the whole brief.
+- (2) The decision point was handled by the book — candidates in a plain
+  message, the answer next turn — and it cost one round-trip. Touch-once
+  vs the redraw strings one line from the empower ones: left them this
+  time (the 95c bend was signed for named literals; these were not named).
+- (3) The cut said "the mechanic's surface strings through the table" and
+  I could have read that as the two PreTurnScreen literals and stopped;
+  the untranslatable string was the LABEL, which was the key itself. The
+  step-zero re-read of the code (not the cut) is what found it.
+- (4) Two numbers I wrote from prose instead of from the artifact: the
+  95d worklog's "PreTurnScreen 24" (the baseline file said 23) and my
+  own "24 → 22" in two docs before the regenerated baseline said 21 —
+  both corrected in the same commit, but the pattern is the one flagged
+  at 95b: read the count off the artifact, never off the previous entry.
+- (5) §95 is built, not closed — the user playtest is the exit, and the
+  first thing they will see is a REJECTED v45 save (expected; say so
+  before they think it is a bug). The §96 kickoff needs the code-reality
+  audit of the modal/chip/button surfaces before any cut.

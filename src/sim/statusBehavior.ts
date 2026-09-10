@@ -14,7 +14,7 @@
  * on `STATUS_DEFS[key]` and is looked up here, NOT serialized. So §28 adds no
  * per-unit snapshot state — no `WorldSnapshot` bump (it stays v27).
  *
- * Plain K1 effects (fatigued/empowered — no `STATUS_DEFS` entry) and periodic-
+ * Plain K1 effects (fatigued/honed — no `STATUS_DEFS` entry) and periodic-
  * only statuses (burn — a def, but no `behavior`) contribute nothing; only the
  * four behavior statuses move the flags. The no-behavior common case returns the
  * shared `NEUTRAL` singleton (zero allocation, identity-stable).

@@ -73,18 +73,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   of UI (grey the Camps stat or badge the theme select "no camps")
   saves the next person the hunt. Dev-tool-only, trivial.
 
-- [ ] **"Empower" naming collision (mechanic vs Mars's buff key).**
-  User-flagged at the 78d eyeball (2026-08-14): "empower" names BOTH
-  the pre-turn mechanic (the K4 `empowerUnit` command / grant kind /
-  `empowerStacks` column — source-agnostic since 47d) and Mars's
-  specific buff KEY `"empowered"` (config/daemons.json), so "an
-  empowered card" is ambiguous between "any badge-eligible buff" and
-  "Mars's blessing specifically". Candidate fixes: rename the Mars
-  buff key (NOTE: the key serializes inside `encounterEffects` in Run
-  saves AND is the EMPOWER_DISPLAY/marker key — a rename is a
-  save-shape change, budget a Run bump prediction) or rename the
-  mechanic's surfaces (docs/UI strings only, no serialized shape).
-  Decide at a naming/polish round, not in passing.
+- [x] **"Empower" naming collision (mechanic vs Mars's buff key).** ✅ 95f
+  (2026-09-10): the Mars buff KEY renamed `empowered` → `honed` (the user's
+  pick), Run v45 → v46 reject-stale; the buff labels + the empower strings
+  through the string table. WORKLOG §95f.
 
 - [ ] **Hoist the display color tables into config.** User call at the
   78d eyeball (2026-08-14): `STATUS_DISPLAY` + `EMPOWER_DISPLAY`

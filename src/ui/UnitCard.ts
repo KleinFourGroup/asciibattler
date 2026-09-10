@@ -33,7 +33,7 @@ import { abilityDef } from '../config/abilities';
 import { abilityDetailParts } from './abilityDetail';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
-import { statusColor, empowerColor } from '../render/statusDisplay';
+import { statusColor, empowerColor, empowerLabel } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
 import { HEALTH } from '../config/health';
 import { powerTooltip } from './chipLabels';
@@ -390,12 +390,13 @@ export function updateCardEmpowerMarkers(
   }
 }
 
-/** 78c→78d — human label for a buff key: the keys are authored as adjectives
- *  ("empowered" / "warded" / "hyped" / …), so the label is just the key
- *  capitalized — no second naming table to drift. Shared by the pre-turn
+/** 78c→78d→95f — human label for a buff key. Until 95f this was the key
+ *  capitalized ("no second naming table to drift"); under the i18n layer the
+ *  label comes from the UI string table through EMPOWER_DISPLAY (`buff.<key>`),
+ *  whose coverage pin is what stops the drift instead. Shared by the pre-turn
  *  chips and the in-battle markers. */
 export function buffKeyLabel(key: string): string {
-  return key.charAt(0).toUpperCase() + key.slice(1);
+  return empowerLabel(key);
 }
 
 /** K4→78d — human-readable summary of a buff's mods ("+4 STR · +4 RNG") in

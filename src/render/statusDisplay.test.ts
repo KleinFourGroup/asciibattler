@@ -21,6 +21,7 @@ import {
   statusColor,
   EMPOWER_DISPLAY,
   empowerColor,
+  empowerLabel,
 } from './statusDisplay';
 
 describe('STATUS_DISPLAY coverage', () => {
@@ -74,5 +75,20 @@ describe('EMPOWER_DISPLAY coverage', () => {
     const keys = shippedBuffKeys();
     const orphans = Object.keys(EMPOWER_DISPLAY).filter((key) => !keys.has(key));
     expect(orphans).toEqual([]);
+  });
+
+  // 95f — the label rides the same row (from the UI string table), so the
+  // coverage above is also label coverage; and the retired `empowered` key
+  // (the Mars buff until 95f — it collided with the EMPOWER mechanic that
+  // grants it) must never come back into the catalogs.
+  it('every shipped buff key has a table label (not the capitalized-key fallback), and `empowered` is retired', () => {
+    for (const key of shippedBuffKeys()) {
+      expect(EMPOWER_DISPLAY[key]!.label, key).toBeTypeOf('string');
+      expect(empowerLabel(key), key).toBe(EMPOWER_DISPLAY[key]!.label);
+    }
+    expect(shippedBuffKeys().has('empowered')).toBe(false);
+    expect(shippedBuffKeys().has('honed')).toBe(true);
+    expect(empowerLabel('honed')).toBe('Honed');
+    expect(empowerLabel('no-such-buff')).toBe('No-such-buff'); // the fallback, for a key outside the table
   });
 });

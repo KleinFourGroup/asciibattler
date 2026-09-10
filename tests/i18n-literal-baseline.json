@@ -13,7 +13,7 @@
   "src/ui/PlaybackSpeed.ts": 1,
   "src/ui/PortScreen.ts": 17,
   "src/ui/PostTurnScreen.ts": 16,
-  "src/ui/PreTurnScreen.ts": 23,
+  "src/ui/PreTurnScreen.ts": 21,
   "src/ui/PromotionScreen.ts": 2,
   "src/ui/RecruitScreen.ts": 2,
   "src/ui/RewardScreen.ts": 5,

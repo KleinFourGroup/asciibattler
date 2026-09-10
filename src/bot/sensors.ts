@@ -559,7 +559,7 @@ export function armiesInContact(world: World, team: ObjectiveTeam): boolean {
 export function attritionRead(world: World, team: ObjectiveTeam): AttritionRead {
   const sum = (units: Unit[]) => units.reduce((acc, u) => acc + u.effectiveStats.power, 0);
   // Unit effects are NOT all catalog statuses: plain stat-fold buffs (the
-  // K1 class — fatigued/empowered/warded, statusBehavior.ts) deliberately
+  // K1 class — fatigued/honed/warded, statusBehavior.ts) deliberately
   // have no STATUS_DEFS entry, so the lookup must tolerate a def-less key
   // (a fold buff is never a DoT). The throwing statusDef() here was a
   // latent §54×K4 crash: it only fired when a sensor-driven battle tier

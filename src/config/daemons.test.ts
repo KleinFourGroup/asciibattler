@@ -16,7 +16,7 @@ const withRules = (rules: unknown[]): unknown => ({
   daemons: [{ id: 'test', name: 'Test', description: 'A test daemon.', rules }],
 });
 
-const BUFF = { key: 'empowered', mods: { strength: { add: 4 } }, merge: 'add' };
+const BUFF = { key: 'honed', mods: { strength: { add: 4 } }, merge: 'add' };
 
 const parses = (rules: unknown[]): boolean => DaemonsSchema.safeParse(withRules(rules)).success;
 

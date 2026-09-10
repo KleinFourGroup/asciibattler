@@ -11,7 +11,7 @@ import type { EmpowerConfig } from '../config/empower';
  */
 
 const BUFF: EmpowerConfig['buff'] = {
-  key: 'empowered',
+  key: 'honed',
   mods: { strength: { add: 4 }, ranged: { add: 4 }, magic: { add: 4 } },
   merge: 'add',
 };

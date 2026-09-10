@@ -759,7 +759,7 @@ export class PreTurnScreen {
       wrap.appendChild(renderGateDenied(`${name} is silent — no redraw this turn`));
     }
     for (const name of this.deniedEmpowerIdols) {
-      wrap.appendChild(renderGateDenied(`${name} is silent — no empower this turn`));
+      wrap.appendChild(renderGateDenied(t('preturn.empower.silent', { name })));
     }
   }
 
@@ -861,7 +861,7 @@ export class PreTurnScreen {
       const hint = document.createElement('span');
       hint.className = 'fire-chip-hint';
       if (grant.effect.kind === 'empower') {
-        hint.textContent = 'click a card to empower';
+        hint.textContent = t('preturn.empower.hint');
         chip.disabled = true; // the cards are the buttons
       } else {
         const n = this.selected.size;

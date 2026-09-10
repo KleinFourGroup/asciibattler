@@ -62,7 +62,7 @@ export type EffectLifetime =
 export type MergePolicy = 'replace' | 'add' | 'multiply' | 'independent' | 'ignore';
 
 export interface StatusEffect {
-  /** Identity for merging, e.g. `'fatigued'`, `'empowered'`, `'burn'`. For a
+  /** Identity for merging, e.g. `'fatigued'`, `'honed'`, `'burn'`. For a
    *  status-def effect this is the `StatusDef.id` (the def-resolve link). */
   key: string;
   /** The "empower 3" scalar. Defaults to 1 at the apply sites. */

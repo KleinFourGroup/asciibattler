@@ -52,5 +52,12 @@
   "promotion.heading": {
     "one": "Level Up!",
     "other": "{count} Promotions"
-  }
+  },
+  "buff.honed": "Honed",
+  "buff.warded": "Warded",
+  "buff.hyped": "Hyped",
+  "buff.shielded": "Shielded",
+  "buff.overclocked": "Overclocked",
+  "preturn.empower.silent": "{name} is silent — no empower this turn",
+  "preturn.empower.hint": "click a card to empower"
 }

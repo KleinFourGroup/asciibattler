@@ -481,8 +481,14 @@ export interface BattleEncounter {
  *  persists across encounters — the run-end stats' source, and a
  *  mid-encounter resume keeps the encounter's earlier rows. A v44 save has
  *  no ledger; a resumed run would show an encounter with rows missing
- *  from its own record → reject (the standing no-migration rule). */
-const RUN_SCHEMA_VERSION = 45;
+ *  from its own record → reject (the standing no-migration rule).
+ *  95f: bumped 45→46. The Mars buff KEY renamed `empowered` → `honed`
+ *  (Round 7 spec §11 — it collided with the EMPOWER mechanic that grants
+ *  it; the user's call). The key serializes inside `encounterEffects` (and
+ *  `pendingEncounterEffects`) and is the EMPOWER_DISPLAY / marker / label
+ *  key, so a v45 save's stacks would resume under a key no table knows →
+ *  reject (the ONE bump Round 7 authorized; no migration). */
+const RUN_SCHEMA_VERSION = 46;
 
 /**
  * 94d — one row of the fallen ledger: a combatant that fell, where and when.

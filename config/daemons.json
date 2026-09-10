@@ -12,7 +12,7 @@
             "op": "grantEmpowers",
             "empowersPerTurn": 1,
             "buff": {
-              "key": "empowered",
+              "key": "honed",
               "mods": {
                 "strength": { "add": 8 },
                 "ranged": { "add": 8 },

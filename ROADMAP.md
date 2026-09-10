@@ -85,12 +85,13 @@ first touches the surface); no second locale authored.
   to English at runtime with the DEV `⚠ ` marker + a census; `npm run
   i18n:review` (translator / reviewer roles — the ONLY stamp writer);
   `localeCredits()` over the registry for Round 8. WORKLOG §95e.
-- [ ] **95f — the empower key rename.** `"empowered"` → the new key in
-  `daemons.json` + `empower.json`; **RunSnapshot v45 → v46**
-  (`encounterEffects` serializes it; reject-stale); the EMPOWER_DISPLAY
-  pin retargeted; the mechanic's surface strings through the table.
-  Exit: the collision gone in config, snapshot and copy. One commit;
-  fuzz:smoke on the hook.
+- [x] **95f — the empower key rename.** ✅ 2026-09-10: `"empowered"` →
+  **`"honed"`** (the user's pick from four candidates) in `daemons.json` +
+  `empower.json`; **RunSnapshot v45 → v46** (reject-stale); the buff LABEL
+  now rides EMPOWER_DISPLAY from the string table (`buff.<key>` ×5 — the
+  capitalized key was untranslatable) under the same coverage pin; the two
+  empower strings of PreTurnScreen through the table (baseline 23 → 21).
+  WORKLOG §95f. **§95 exit = the user playtest.**
 
 ## Phase 96 — the shells + the tokens
 

@@ -726,3 +726,61 @@ before any write · `--dry` wrote nothing.
 95c commit and the HANDOFF cursor carried; the table has not changed since
 95c, so 49 was that commit's own miscount (the key-scan pin holds the true
 set). Recorded at 45 from here.
+
+### 95f — the empower key rename (2026-09-10)
+
+**The decision point, resolved: `honed`.** The collision (TODO, user-flagged
+at the 78d eyeball): the pre-turn mechanic is EMPOWER everywhere in code and
+config (`grantEmpowers` · `empowersPerTurn` · `turn:unitEmpowered` ·
+`EMPOWER_DISPLAY`), and the Idol of Mars buff it grants was keyed
+`"empowered"`, so "an empowered card" meant two things. The mechanic keeps
+its name; the BUFF key renames. Four candidates were laid out against the
+sibling keys' rule — describe the effect on the unit, not the source
+(`warded` / `shielded` / `hyped` / `overclocked`) — with the status table's
+`emboldened` / `inspired` ruling out the courage family: **`honed`**
+(recommended — a participle like its siblings, one word on a chip, reads for
+all three damage stats: a honed blade, aim, spell), `wrathful` (Mars
+flavour, but a temperament), `favored` (names the source, says nothing of
+the effect), `sharpened` (honed, longer, melee-leaning). The user endorsed
+`honed`.
+
+**Step zero held on both predictions.** `RUN_SCHEMA_VERSION` was 45 at
+`Run.ts:485` and the key does serialize inside `encounterEffects` (and
+`pendingEncounterEffects`), so the bump is real: **45 → 46**, reject-stale
+(the ONE bump Round 7 authorized; no migration — a v45 save's Mars stacks
+would resume under a key no table knows). The EMPOWER_DISPLAY coverage pin
+is catalog-derived (daemon hooks + packet `applyBuff`), so retargeting it
+was renaming the row, and it now also asserts `empowered` is RETIRED from
+the catalogs and `honed` is present.
+
+**The surface string was the LABEL, and it was the key.** `buffKeyLabel`
+(UnitCard.ts, 78d) capitalized the buff key — "no second naming table to
+drift" — which is exactly the untranslatable shape the i18n layer exists to
+remove. The buff has no `name` in config (adding one would put prose under
+the positional `rules[]` array the sidecar addressing avoids), so the label
+lives in the UI table under `buff.<key>` (five literal keys, so the key-scan
+pin sees them) and RIDES THE EMPOWER_DISPLAY ROW as `label`: one table
+drives color, marker eligibility and label, and the existing catalog-derived
+coverage pin is now label coverage too — the drift the old comment feared is
+caught by the pin instead of avoided by construction. `empowerLabel(key)`
+falls back to the capitalized key for a key outside the table (the
+make-it-visible discipline), which the pin makes unreachable for a shipped
+key. The two empower strings in PreTurnScreen (`{name} is silent — no
+empower this turn` · `click a card to empower`) went through the table; the
+redraw siblings one line away were LEFT for PreTurnScreen's own extraction
+(touch-once, the 95c bend not repeated) — baseline **23 → 21** (the 95d
+entry above says PreTurnScreen 24; the committed baseline said 23 — the
+artifact is the count, the prose was off by one).
+
+**Fixtures:** the two that mirror the config shape (`daemons.test.ts` BUFF,
+`empower.test.ts` BUFF) renamed; the sim-level fixtures that use
+`'empowered'` as an arbitrary K1 key (Unit / statusReadout / statusBehavior /
+sensors / snapshot-roundtrip / the Run K1 store tests) stay — the collision
+is a player-facing one, and an arbitrary effect key in a sim test is not a
+surface. The three K1-class comments (`fatigued/empowered/warded`) name
+`honed` now.
+
+**No sim change** — the key is a merge identity; the same key string on both
+sides of every merge leaves every fold byte-identical (fuzz:smoke on the
+hook is the check). The user's own localStorage run save will be REJECTED
+at the next load (v45) — expected under the authorized bump.

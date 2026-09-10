@@ -20,10 +20,18 @@
  */
 
 import { COLORS } from './palette';
+import { t } from '../i18n/ui';
 
 export interface StatusDisplay {
   /** CSS color for the board pip + the card row swatch. */
   color: string;
+}
+
+/** 95f — an empower-buff row also carries the player-facing LABEL (a buff has
+ *  no `name` in config; its key is an identifier, and the label lives in the
+ *  UI string table under `buff.<key>`). */
+export interface EmpowerDisplay extends StatusDisplay {
+  label: string;
 }
 
 export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
@@ -67,24 +75,38 @@ export function statusColor(statusId: string): string {
  * daemon + packet catalogs — a new buff key fails the pin until it picks a
  * color).
  *
- * Color choices (eyeball-tunable): `empowered` keeps FLOURESCENT_BLUE — the
- * K4 badge accent the player already knows. The rest pick hues clear of the
- * status table's (burn-orange / poison-olive / buff-gold / chaos-purple …):
- * warded = a pale aegis-lavender (calm defense), hyped = party-pink,
- * shielded = steel-blue, overclocked = volt-yellow (brighter + greener than
- * emboldened's gold; they never share a surface — gold lives in the status
- * row, volt in the ▲ markers).
+ * Color choices (eyeball-tunable): `honed` (Mars — the key was `empowered`
+ * until 95f renamed it out of the EMPOWER mechanic's way) keeps
+ * FLOURESCENT_BLUE — the K4 badge accent the player already knows. The rest
+ * pick hues clear of the status table's (burn-orange / poison-olive /
+ * buff-gold / chaos-purple …): warded = a pale aegis-lavender (calm defense),
+ * hyped = party-pink, shielded = steel-blue, overclocked = volt-yellow
+ * (brighter + greener than emboldened's gold; they never share a surface —
+ * gold lives in the status row, volt in the ▲ markers).
+ *
+ * 95f — each row also carries its LABEL from the UI string table (`buff.<key>`,
+ * always a literal key so the key-scan pin sees it); the coverage pin below
+ * therefore proves every shipped buff key has a translatable label, not just
+ * a color. The pre-95f label was the key capitalized — untranslatable.
  */
-export const EMPOWER_DISPLAY: Record<string, StatusDisplay> = {
-  empowered: { color: COLORS.FLOURESCENT_BLUE }, // Mars — the established K4 accent
-  warded: { color: '#C9D1FF' }, // Minerva — aegis-lavender
-  hyped: { color: '#FF7AD9' }, // packet — party-pink
-  shielded: { color: '#6FA8FF' }, // packet — shield-steel
-  overclocked: { color: '#F4FF3D' }, // packet — volt-yellow
+export const EMPOWER_DISPLAY: Record<string, EmpowerDisplay> = {
+  honed: { color: COLORS.FLOURESCENT_BLUE, label: t('buff.honed') }, // Mars — the established K4 accent
+  warded: { color: '#C9D1FF', label: t('buff.warded') }, // Minerva — aegis-lavender
+  hyped: { color: '#FF7AD9', label: t('buff.hyped') }, // packet — party-pink
+  shielded: { color: '#6FA8FF', label: t('buff.shielded') }, // packet — shield-steel
+  overclocked: { color: '#F4FF3D', label: t('buff.overclocked') }, // packet — volt-yellow
 };
 
 /** Resolve an empower-buff key to its display color, or the shared magenta
  *  fallback (same make-it-visible discipline as `statusColor`). */
 export function empowerColor(buffKey: string): string {
   return EMPOWER_DISPLAY[buffKey]?.color ?? STATUS_DISPLAY_FALLBACK;
+}
+
+/** 95f — the player-facing label for a buff key: the table's entry, or the key
+ *  capitalized for one outside the table (the make-it-visible fallback — the
+ *  coverage pin keeps every shipped key in the table). Shared by the pre-turn
+ *  chips and the in-battle markers (UnitCard.buffKeyLabel). */
+export function empowerLabel(buffKey: string): string {
+  return EMPOWER_DISPLAY[buffKey]?.label ?? buffKey.charAt(0).toUpperCase() + buffKey.slice(1);
 }

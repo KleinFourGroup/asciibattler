@@ -113,11 +113,10 @@ in the file (PostTurn's 16 stay for §96.5) · (D) the hidden-chip rule =
 COLLAPSE with a fixed order (bits · cache · map · pool) · (E) focus trap +
 restore is IN (the charter's content; the one behavior it adds).
 
-- [ ] **96a — the color tokens.** `:root` `--color-*`; zero raw hexes
-  outside it; palette tints as `rgb(from var(--color-…) r g b / N%)`;
-  black plate alphas untouched; the pin (`palette.ts` ⇄ `ui.css`, zero
-  hexes outside `:root`). Exit: a scratch oracle resolves every
-  declaration of the new sheet against HEAD's — zero drift.
+- [x] **96a — the color tokens.** ✅ 2026-09-11: 37 tokens (the palette
+  thirteen by kebab + role names + the grays by level); 378 `var()` + 54
+  RCS tints; the pin `tests/ui-tokens.test.ts`; the oracle read **1552
+  declarations, 0 diffs** vs HEAD; RCS browser-verified. WORKLOG §96a.
 - [ ] **96b — the text tokens.** `--text-*` in rem, every `font-size` a
   token, the same oracle proving px equality.
 - [ ] **96c — the Screen base.** `src/ui/Screen.ts` (`present(el)` +

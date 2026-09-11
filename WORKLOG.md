@@ -911,3 +911,48 @@ convert later; the modal shell is last because it is the one step with
 new behavior. Predictions: no snapshot bump (nothing serialized), no fuzz
 trigger (src/ui only — the hook stays ~45 s), the literal baseline drops
 at 96d + 96f, `ui.json` +~25 keys.
+
+### 96a — the color tokens (2026-09-11)
+
+**The rewrite was a script, not 325 hand edits** (scratchpad, deleted):
+a hex → token map (37 tokens: the palette thirteen by kebab of the
+`COLORS` key, used or not; `black` / `white`; ten role names — `amber-hover`
+`#ffd060`, `amber-dim` `#997700`, `amber-faint` `#332300`, `green-dim`,
+`blue-dim`, `blue-rule` `#0e4f4c`, `boss-red`, `miss-white`, `status-name`
+`#d8d2c4`, `status-meta` `#9a9286`; eleven grays BY LEVEL, `gray-d0` …
+`gray-0a` — exact, because collapsing them is a visual sweep for §101 or
+Round 8, not this step; and `miss-glow` `#5aa0ff`, a color that only ever
+existed as a tint) and a triplet → token map for the eight palette
+`rgba()` families. Replacement skipped `:root` and every comment
+(block-comment state tracked across lines); the bare `/* TERMINAL_AMBER */`
+comments the token name now carries were stripped, the ones with a
+rationale kept their rationale. 378 `var(--color-…)` references + 54
+`rgb(from …)` tints; black / white plate alphas (35 sites) untouched by
+decision A.
+
+**Three proofs, none of them the token table:**
+
+1. **The oracle** (scratchpad, deleted): parses HEAD's sheet and the new
+   one into `(path, prop, value)` triples, resolves the new one's `var()`
+   against its `:root` and its RCS against the hex, normalizes both sides
+   (3→6 hex, rgba number formatting), compares in order — **1552
+   declarations, 0 diffs**. Self-checked first: HEAD vs HEAD read 0 diffs
+   only after two defects were fixed in the ORACLE (it resolved `var()` on
+   one side only, and threw on a rule-scoped custom property like
+   `--overlay-gap`) — the reader's known-answer rule, paid at once.
+2. **The pin** (`tests/ui-tokens.test.ts`, rides `npm test`): every
+   `COLORS` entry has its `--color-<kebab>` at the same hex · zero raw
+   hexes outside `:root` · zero palette-triplet `rgba()` outside `:root` ·
+   every ROLE token referenced (the palette tokens exempt — they exist for
+   the swap). Run against the UNCHANGED sheet first: 2 of 4 failed, so it
+   can fail.
+3. **The browser** (the one thing text can't prove — that relative color
+   syntax renders): `CSS.supports` true; the pulsing bits chip's shadow
+   computes to `color(srgb 0.2 1 0 / 0.55)` = `(51,255,0,0.55)`, the modal
+   glow to `(255,176,0,0.25)`, the miss halo to `(90,160,255,0.85)` —
+   HEAD's literals exactly.
+
+**Declined:** tokenizing the black/white plate alphas (`rgba(0,0,0,.7)`
+×14 etc.) — not palette, and a naming sweep (`--plate`, `--backdrop`)
+would be judgment under a mechanical step; a Round 8 "plate opacity"
+setting can mint them then.

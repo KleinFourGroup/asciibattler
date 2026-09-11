@@ -3,17 +3,63 @@
      in src/main.ts. The fallback chain catches the brief moment before the
      font is parsed, plus belt-and-suspenders if the bundle ever changes. */
   --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  /* 96a — THE COLOR TOKENS. The palette thirteen mirror COLORS in
+     src/render/palette.ts — kebab of the key — and tests/ui-tokens.test.ts
+     pins them byte-equal (palette.ts stays the source of truth; the sheet
+     stays standalone). A Round 8 palette swap sets these at runtime over
+     the defaults. Alpha tints go through relative color syntax
+     (`rgb(from var(--color-x) r g b / a)`) so ONE token serves every
+     tint — the pin forbids a raw hex or a palette-triplet rgba() below.
+     Black / white plate alphas are not palette and stay literal. */
+  --color-terminal-black: #282828;
+  --color-terminal-green: #33ff00;
+  --color-dark-terminal-green: #0a3300;
+  --color-terminal-amber: #ffb000;
+  --color-dark-terminal-amber: #664600;
+  --color-flourescent-blue: #15f4ee;
+  --color-dark-flourescent-blue: #034947;
+  --color-terminal-blue: #3d7bff;
+  --color-neon-red: #ff3131;
+  --color-dark-neon-red: #990000;
+  --color-neon-purple: #9d00ff;
+  --color-terminal-stone: #7a7066;
+  --color-cracked-stone: #b5843c;
+  --color-black: #000;
+  --color-white: #fff;
+  --color-amber-hover: #ffd060;
+  --color-amber-dim: #997700;
+  --color-amber-faint: #332300;
+  --color-green-dim: #1a4d00;
+  --color-blue-dim: #0a6a66;
+  --color-blue-rule: #0e4f4c;
+  --color-boss-red: #ff3030;
+  --color-miss-white: #eaf2ff;
+  --color-status-name: #d8d2c4;
+  --color-status-meta: #9a9286;
+  --color-gray-d0: #d0d0d0;
+  --color-gray-cc: #ccc;
+  --color-gray-b0: #b0b0b0;
+  --color-gray-aa: #aaa;
+  --color-gray-99: #999;
+  --color-gray-88: #888;
+  --color-gray-80: #808080;
+  --color-gray-66: #666;
+  --color-gray-40: #404040;
+  --color-gray-22: #222;
+  --color-gray-0a: #0a0a0a;
+  --color-miss-glow: #5aa0ff;
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #000;
+  background: var(--color-black);
   overflow: hidden;
   height: 100%;
   font-family: var(--font-mono);
-  color: #fff;
+  color: var(--color-white);
 }
 
 #game-canvas {
@@ -94,8 +140,8 @@ body {
   align-self: flex-end;
   padding: 0 4px;
   background: rgba(0, 0, 0, 0.8);
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
   font-size: 9px;
   line-height: 1.4;
   letter-spacing: 0.08em;
@@ -117,7 +163,7 @@ body {
 
 .unit-overlay .action-progress {
   height: 3px;
-  border-color: rgba(21, 244, 238, 0.4);
+  border-color: rgb(from var(--color-flourescent-blue) r g b / 0.4);
 }
 
 .unit-overlay .action-progress[hidden] {
@@ -134,7 +180,7 @@ body {
 .unit-overlay .action-progress-fill {
   height: 100%;
   width: 0%;
-  background: #15f4ee; /* FLOURESCENT_BLUE */
+  background: var(--color-flourescent-blue);
 }
 
 /* 82e2 — the release-gate re-aim bar (unit:actionHeld): the SAME element in
@@ -143,11 +189,11 @@ body {
    catapult can't misread as another incoming shot; regular cooldowns stay
    barless, which makes this the unique "held fire, re-aiming" tell. */
 .unit-overlay .action-progress.reaim {
-  border-color: rgba(255, 176, 0, 0.4);
+  border-color: rgb(from var(--color-terminal-amber) r g b / 0.4);
 }
 
 .unit-overlay .action-progress.reaim .action-progress-fill {
-  background: #ffb000; /* TERMINAL_AMBER */
+  background: var(--color-terminal-amber);
 }
 
 /* §32c: the per-unit status pip-strip (above the HP bar). A centered, wrapping
@@ -206,7 +252,7 @@ body {
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
-  color: #fff;
+  color: var(--color-white);
   /* Dark halo so light numbers stay legible over bright sprites/terrain. */
   text-shadow:
     0 0 3px rgba(0, 0, 0, 0.9),
@@ -215,19 +261,19 @@ body {
 }
 
 .hitsplat--crit {
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
   font-size: 21px;
   text-shadow:
-    0 0 6px rgba(255, 49, 49, 0.6),
+    0 0 6px rgb(from var(--color-neon-red) r g b / 0.6),
     0 1px 2px rgba(0, 0, 0, 0.95);
 }
 
 .hitsplat--heal {
-  color: #15f4ee; /* FLOURESCENT_BLUE (cyan) */
+  color: var(--color-flourescent-blue); /* FLOURESCENT_BLUE (cyan) */
 }
 
 .hitsplat--burn {
-  color: #ffb000; /* TERMINAL_AMBER (orange) */
+  color: var(--color-terminal-amber); /* TERMINAL_AMBER (orange) */
 }
 
 /* I2 — a dodged single-target strike. A loud, bright italic call-out that
@@ -235,13 +281,13 @@ body {
    colors (white damage / red crit / cyan heal / amber burn): a cool near-white
    with a blue glow halo, bigger + heavier than a damage number. Tune freely. */
 .hitsplat--miss {
-  color: #eaf2ff; /* bright cool white */
+  color: var(--color-miss-white); /* bright cool white */
   font-size: 20px;
   font-style: italic;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-shadow:
-    0 0 8px rgba(90, 160, 255, 0.85), /* blue glow so it pops, not red/cyan/amber */
+    0 0 8px rgb(from var(--color-miss-glow) r g b / 0.85), /* blue glow so it pops, not red/cyan/amber */
     0 0 3px rgba(0, 0, 0, 0.95),
     0 1px 2px rgba(0, 0, 0, 0.95);
 }
@@ -319,7 +365,7 @@ body {
   inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  background: #000; /* opaque — no battle-canvas bleed */
+  background: var(--color-black); /* opaque — no battle-canvas bleed */
   /* T2 — clear the fixed top-center sector banner so hop 0 (the root, near the
      board top at the pre-root start) doesn't tuck under it. The fixed banner +
      roster button are viewport-anchored, so this just pads the scrollable board.
@@ -351,8 +397,8 @@ body {
   z-index: 5;
   padding: 12px 32px; /* 51e — the sector title headlines the screen */
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   font-family: var(--font-mono);
   white-space: nowrap;
   pointer-events: none;
@@ -373,7 +419,7 @@ body {
   font-size: 13px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
   opacity: 0.85;
 }
 
@@ -386,14 +432,14 @@ body {
 }
 
 .map-edge {
-  stroke: #034947; /* DARK_FLOURESCENT_BLUE */
+  stroke: var(--color-dark-flourescent-blue);
   stroke-width: 1.5;
   fill: none;
   vector-effect: non-scaling-stroke;
 }
 
 .map-edge.frontier {
-  stroke: #15f4ee; /* FLOURESCENT_BLUE */
+  stroke: var(--color-flourescent-blue);
   stroke-width: 2.5;
 }
 
@@ -404,9 +450,9 @@ body {
   margin-left: -20px;
   margin-top: -20px;
   border-radius: 50%;
-  border: 2px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #aaa;
+  border: 2px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-gray-aa);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -417,25 +463,25 @@ body {
 }
 
 .map-node.current {
-  border-color: #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
-  box-shadow: 0 0 10px rgba(255, 176, 0, 0.6);
+  border-color: var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
+  box-shadow: 0 0 10px rgb(from var(--color-terminal-amber) r g b / 0.6);
 }
 
 .map-node.frontier {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
   cursor: pointer;
 }
 
 .map-node.frontier:hover {
-  background: #15f4ee;
-  color: #000;
+  background: var(--color-flourescent-blue);
+  color: var(--color-black);
 }
 
 .map-node.visited {
-  border-color: #664600; /* DARK_TERMINAL_AMBER */
-  color: #664600;
+  border-color: var(--color-dark-terminal-amber);
+  color: var(--color-dark-terminal-amber);
 }
 
 .map-node.locked {
@@ -446,8 +492,8 @@ body {
      edges beneath the node) and the node reads as "inactive" via a neutral
      dim border + a muted-grey glyph — the actionable states still stand out
      by HUE (saturated cyan/amber), not brightness, so the hierarchy holds. */
-  border-color: #404040;
-  color: #b0b0b0;
+  border-color: var(--color-gray-40);
+  color: var(--color-gray-b0);
 }
 
 /* G3 — node-kind accents. Color-code the GLYPH by kind so rests and the boss
@@ -458,29 +504,29 @@ body {
    grey/cyan/amber, and state is still conveyed by the border + ring/glow.
    Rest = TERMINAL_GREEN (a respite), boss = NEON_RED (the destination). */
 .map-node.boss {
-  color: #ff3131; /* NEON_RED */
-  text-shadow: 0 0 4px #ff3131, 0 0 9px #ff3131;
+  color: var(--color-neon-red);
+  text-shadow: 0 0 4px var(--color-neon-red), 0 0 9px var(--color-neon-red);
 }
 
 .map-node.rest {
-  color: #33ff00; /* TERMINAL_GREEN */
-  text-shadow: 0 0 4px #33ff00, 0 0 9px #33ff00;
+  color: var(--color-terminal-green);
+  text-shadow: 0 0 4px var(--color-terminal-green), 0 0 9px var(--color-terminal-green);
 }
 
 /* W2 — elite nodes: an optional, harder fight. NEON_PURPLE (the palette's
    long-reserved rare/elite hue) so the `*` reads as "dangerous detour" against
    the green rests + red boss during route planning. */
 .map-node.elite {
-  color: #9d00ff; /* NEON_PURPLE */
-  text-shadow: 0 0 4px #9d00ff, 0 0 9px #9d00ff;
+  color: var(--color-neon-purple);
+  text-shadow: 0 0 4px var(--color-neon-purple), 0 0 9px var(--color-neon-purple);
 }
 
 /* 50c — port nodes: the shop dock. TERMINAL_AMBER (the money hue — bits
    chrome reads amber too) so the `$` reads as "somewhere to spend" against
    the green rests + purple elites during route planning. */
 .map-node.port {
-  color: #ffb000; /* TERMINAL_AMBER */
-  text-shadow: 0 0 4px #ffb000, 0 0 9px #ffb000;
+  color: var(--color-terminal-amber);
+  text-shadow: 0 0 4px var(--color-terminal-amber), 0 0 9px var(--color-terminal-amber);
 }
 
 /* 74e follow-up — event nodes: the ?-node. TERMINAL_BLUE (a true blue, NOT
@@ -489,8 +535,8 @@ body {
    as "unknown detour" against green/purple/amber during route planning.
    User call at the 74e close: without an accent they blended into battles. */
 .map-node.event {
-  color: #3d7bff; /* TERMINAL_BLUE */
-  text-shadow: 0 0 4px #3d7bff, 0 0 9px #3d7bff;
+  color: var(--color-terminal-blue);
+  text-shadow: 0 0 4px var(--color-terminal-blue), 0 0 9px var(--color-terminal-blue);
 }
 
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between
@@ -505,11 +551,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 24px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
 .recruit-heading {
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   font-family: var(--font-mono);
   font-size: 22px;
   letter-spacing: 0.05em;
@@ -529,7 +575,7 @@ body {
    (§61e filled the seam — see below). */
 .unit-card {
   padding: 16px 12px;
-  background: #000;
+  background: var(--color-black);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -540,7 +586,7 @@ body {
 .unit-card__glyph {
   font-size: 48px;
   line-height: 1;
-  color: #33ff00; /* TERMINAL_GREEN — these are player units */
+  color: var(--color-terminal-green); /* these are player units */
   font-weight: bold;
 }
 
@@ -560,15 +606,15 @@ body {
    green/cyan/purple/gold (TERMINAL_GREEN / FLOURESCENT_BLUE / NEON_PURPLE /
    TERMINAL_AMBER). */
 .unit-card--rarity-common {
-  background-image: linear-gradient(rgba(51, 255, 0, 0.07), rgba(51, 255, 0, 0.07));
+  background-image: linear-gradient(rgb(from var(--color-terminal-green) r g b / 0.07), rgb(from var(--color-terminal-green) r g b / 0.07));
 }
 
 .unit-card--rarity-uncommon {
-  background-image: linear-gradient(rgba(21, 244, 238, 0.09), rgba(21, 244, 238, 0.09));
+  background-image: linear-gradient(rgb(from var(--color-flourescent-blue) r g b / 0.09), rgb(from var(--color-flourescent-blue) r g b / 0.09));
 }
 
 .unit-card--rarity-rare {
-  background-image: linear-gradient(rgba(157, 0, 255, 0.16), rgba(157, 0, 255, 0.16));
+  background-image: linear-gradient(rgb(from var(--color-neon-purple) r g b / 0.16), rgb(from var(--color-neon-purple) r g b / 0.16));
 }
 
 /* Legendary gets an extra INSET edge-glow on top of its wash ("lit from
@@ -577,8 +623,8 @@ body {
    state that sets its own box-shadow (preturn selected etc.) outspecifies
    this and wins while active, same doctrine as the hover wash. */
 .unit-card--rarity-legendary {
-  background-image: linear-gradient(rgba(255, 176, 0, 0.12), rgba(255, 176, 0, 0.12));
-  box-shadow: inset 0 0 16px rgba(255, 176, 0, 0.25);
+  background-image: linear-gradient(rgb(from var(--color-terminal-amber) r g b / 0.12), rgb(from var(--color-terminal-amber) r g b / 0.12));
+  box-shadow: inset 0 0 16px rgb(from var(--color-terminal-amber) r g b / 0.25);
 }
 
 .unit-card__header {
@@ -625,11 +671,11 @@ body {
 .unit-card__stat--power {
   align-self: stretch;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(21, 244, 238, 0.25); /* dim FLOURESCENT_BLUE */
+  border-bottom: 1px solid rgb(from var(--color-flourescent-blue) r g b / 0.25); /* dim FLOURESCENT_BLUE */
 }
 
 .unit-card__stat--power .unit-card__stat-label {
-  color: #15f4ee; /* FLOURESCENT_BLUE — meta accent */
+  color: var(--color-flourescent-blue); /* meta accent */
   letter-spacing: 0.06em;
 }
 
@@ -654,7 +700,7 @@ body {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #664600; /* DARK_TERMINAL_AMBER — chrome label */
+  color: var(--color-dark-terminal-amber); /* chrome label */
 }
 
 .unit-card__ability {
@@ -665,7 +711,7 @@ body {
 }
 
 .unit-card__ability-name {
-  color: #33ff00; /* TERMINAL_GREEN — names lead the eye */
+  color: var(--color-terminal-green); /* names lead the eye */
   letter-spacing: 0.04em;
 }
 
@@ -680,7 +726,7 @@ body {
 }
 
 .unit-card__ability-aoe {
-  color: #15f4ee; /* FLOURESCENT_BLUE accent */
+  color: var(--color-flourescent-blue); /* FLOURESCENT_BLUE accent */
   letter-spacing: 0.04em;
 }
 
@@ -697,13 +743,13 @@ body {
 
 .unit-card__xp-track {
   height: 6px;
-  background: rgba(51, 255, 0, 0.1); /* dim TERMINAL_GREEN wash */
-  border: 1px solid #1a4d00; /* dim TERMINAL_GREEN */
+  background: rgb(from var(--color-terminal-green) r g b / 0.1); /* dim TERMINAL_GREEN wash */
+  border: 1px solid var(--color-green-dim); /* dim TERMINAL_GREEN */
 }
 
 .unit-card__xp-fill {
   height: 100%;
-  background: #33ff00; /* TERMINAL_GREEN */
+  background: var(--color-terminal-green);
 }
 
 .unit-card__xp-label {
@@ -716,8 +762,8 @@ body {
 /* --- Recruit skin (was .recruit-card*): amber, clickable, two-col stats. --- */
 .unit-card--recruit {
   width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
   transition: border-color 0.1s, background 0.1s;
 }
 
@@ -726,8 +772,8 @@ body {
 }
 
 .unit-card--recruit.unit-card--clickable:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  background: rgba(21, 244, 238, 0.08);
+  border-color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
 /* H6b — decline-the-offer button. Sits below the cards (panel is a centered
@@ -739,17 +785,17 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 8px 28px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   opacity: 0.7;
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, opacity 0.1s;
 }
 
 .recruit-pass:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  background: rgba(21, 244, 238, 0.08);
+  border-color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
   opacity: 1;
 }
 
@@ -767,11 +813,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 24px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
 .promotion-heading {
-  color: #15f4ee; /* FLOURESCENT_BLUE — distinguishes from recruit's amber */
+  color: var(--color-flourescent-blue); /* distinguishes from recruit's amber */
   font-family: var(--font-mono);
   font-size: 24px;
   letter-spacing: 0.1em;
@@ -792,8 +838,8 @@ body {
    PromotionScreen.ts, driving the card via UnitCard's exposed handles. --- */
 .unit-card--promotion {
   width: 180px;
-  border: 1px solid #0a6a66; /* dim FLOURESCENT_BLUE */
-  color: #15f4ee;
+  border: 1px solid var(--color-blue-dim); /* dim FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
   /* M2 — cards start hidden; .is-landed pops them in. The back-out cubic
      overshoots ~5% past scale(1) for the "pop". */
   opacity: 0;
@@ -812,7 +858,7 @@ body {
 /* M2 — the one card currently revealing its gains (phase 2 runs strictly
    card-by-card); the brightened border marks the single focal point. */
 .unit-card--promotion.is-revealing {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
+  border-color: var(--color-flourescent-blue);
 }
 
 .unit-card--promotion .unit-card__header {
@@ -826,14 +872,14 @@ body {
 }
 
 .unit-card--promotion .unit-card__stat {
-  color: #ffb000; /* TERMINAL_AMBER baseline */
+  color: var(--color-terminal-amber); /* TERMINAL_AMBER baseline */
   opacity: 0.55;
   /* M2 — rows reveal at runtime; ease the amber→green flip. */
   transition: color 150ms ease-out, opacity 150ms ease-out;
 }
 
 .unit-card--promotion .unit-card__stat--gain {
-  color: #33ff00; /* TERMINAL_GREEN — eyes pulled to the growth */
+  color: var(--color-terminal-green); /* eyes pulled to the growth */
   opacity: 1;
 }
 
@@ -844,7 +890,7 @@ body {
 }
 
 .unit-card__level-value.is-revealed {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
   animation: unit-card-pop 220ms ease-out;
 }
 
@@ -856,7 +902,7 @@ body {
 .unit-card__stat-delta {
   display: inline-block;
   font-size: 11px;
-  color: #33ff00;
+  color: var(--color-terminal-green);
   animation: unit-card-pop 220ms ease-out;
 }
 
@@ -870,13 +916,13 @@ body {
 .unit-card--promotion .unit-card__derived {
   margin-top: 8px;
   padding-top: 6px;
-  border-top: 1px dashed #0a6a66; /* dim FLOURESCENT_BLUE — matches the card frame */
+  border-top: 1px dashed var(--color-blue-dim); /* dim FLOURESCENT_BLUE — matches the card frame */
   display: flex;
   flex-direction: column;
   gap: 2px;
   text-align: left;
   font-size: 10px;
-  color: #33ff00; /* TERMINAL_GREEN — these rows only ever show gains-made-real */
+  color: var(--color-terminal-green); /* these rows only ever show gains-made-real */
   visibility: hidden;
 }
 
@@ -903,17 +949,17 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000;
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
 .promotion-continue:hover {
-  border-color: #15f4ee;
-  background: rgba(21, 244, 238, 0.08);
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
+  color: var(--color-flourescent-blue);
 }
 
 /* RewardScreen (48c). Shown on a won encounter whose reward refs rolled an
@@ -930,11 +976,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 24px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
 .reward-heading {
-  color: #ffb000; /* TERMINAL_AMBER — loot is treasure (promotion keeps blue) */
+  color: var(--color-terminal-amber); /* loot is treasure (promotion keeps blue) */
   font-family: var(--font-mono);
   font-size: 24px;
   letter-spacing: 0.1em;
@@ -954,19 +1000,19 @@ body {
   justify-content: space-between;
   gap: 18px;
   padding: 14px 18px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
 }
 
 .reward-portion__title {
-  color: #33ff00; /* TERMINAL_GREEN — the gain */
+  color: var(--color-terminal-green); /* the gain */
   font-family: var(--font-mono);
   font-size: 16px;
   letter-spacing: 0.06em;
 }
 
 .reward-portion__desc {
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   opacity: 0.75;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -988,15 +1034,15 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 7px 18px;
-  background: #000;
+  background: var(--color-black);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, opacity 0.1s;
-  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
-  color: #33ff00;
+  border: 1px solid var(--color-terminal-green); /* the affirmative */
+  color: var(--color-terminal-green);
 }
 
 .reward-accept:hover {
-  background: rgba(51, 255, 0, 0.12);
+  background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
 /* 50e — the port screen (spec §Ports; the kickoff shape-lock: ONE sectioned
@@ -1013,11 +1059,11 @@ body {
   gap: 10px;
   padding: 40px 24px 60px;
   overflow-y: auto;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
 .port-heading {
-  color: #ffb000; /* TERMINAL_AMBER — commerce */
+  color: var(--color-terminal-amber); /* commerce */
   font-family: var(--font-mono);
   font-size: 24px;
   letter-spacing: 0.1em;
@@ -1025,7 +1071,7 @@ body {
 }
 
 .port-subtitle {
-  color: #b0b0b0;
+  color: var(--color-gray-b0);
   font-family: var(--font-mono);
   font-size: 12px;
 }
@@ -1041,15 +1087,15 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 8px 18px;
-  background: #000;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  background: var(--color-black);
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   transition: background 0.1s;
 }
 
 .port-leave:hover {
-  background: rgba(255, 176, 0, 0.12);
+  background: rgb(from var(--color-terminal-amber) r g b / 0.12);
 }
 
 .port-body {
@@ -1061,17 +1107,17 @@ body {
 
 .port-section-heading {
   margin-top: 18px;
-  color: #15f4ee; /* FLOURESCENT_BLUE — the section rail */
+  color: var(--color-flourescent-blue); /* the section rail */
   font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-bottom: 1px solid #0e4f4c;
+  border-bottom: 1px solid var(--color-blue-rule);
   padding-bottom: 4px;
 }
 
 .port-empty-line {
-  color: #808080;
+  color: var(--color-gray-80);
   font-family: var(--font-mono);
   font-size: 12px;
 }
@@ -1096,7 +1142,7 @@ body {
   justify-content: space-between;
   gap: 10px;
   padding: 6px 8px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
 }
 
@@ -1106,18 +1152,18 @@ body {
   justify-content: space-between;
   gap: 18px;
   padding: 10px 14px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER — the reward-portion shape */
+  border: 1px solid var(--color-dark-terminal-amber); /* the reward-portion shape */
   background: rgba(0, 0, 0, 0.7);
 }
 
 .port-row__title {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
   font-family: var(--font-mono);
   font-size: 14px;
 }
 
 .port-row__desc {
-  color: #b0b0b0;
+  color: var(--color-gray-b0);
   font-family: var(--font-mono);
   font-size: 11px;
   margin-top: 2px;
@@ -1131,7 +1177,7 @@ body {
 }
 
 .port-price {
-  color: #ffb000; /* TERMINAL_AMBER — what it costs / pays */
+  color: var(--color-terminal-amber); /* what it costs / pays */
   font-family: var(--font-mono);
   font-size: 12px;
 }
@@ -1143,28 +1189,28 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 7px 18px;
-  background: #000;
+  background: var(--color-black);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, opacity 0.1s;
 }
 
 .port-buy {
-  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
-  color: #33ff00;
+  border: 1px solid var(--color-terminal-green); /* the affirmative */
+  color: var(--color-terminal-green);
 }
 
 .port-buy:hover:not(:disabled) {
-  background: rgba(51, 255, 0, 0.12);
+  background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
 .port-remove {
-  border: 1px solid #ff3131; /* NEON_RED — removal is destructive */
-  color: #ff3131;
+  border: 1px solid var(--color-neon-red); /* removal is destructive */
+  color: var(--color-neon-red);
   opacity: 0.85;
 }
 
 .port-remove:hover:not(:disabled) {
-  background: rgba(255, 49, 49, 0.12);
+  background: rgb(from var(--color-neon-red) r g b / 0.12);
 }
 
 .port-buy:disabled,
@@ -1174,7 +1220,7 @@ body {
 }
 
 .port-sold {
-  color: #808080;
+  color: var(--color-gray-80);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.15em;
@@ -1194,7 +1240,7 @@ body {
   justify-content: center;
   padding: 40px 24px 60px;
   overflow-y: auto;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
 .event-body {
@@ -1205,8 +1251,8 @@ body {
 }
 
 .event-heading {
-  color: #3d7bff; /* TERMINAL_BLUE — the ?-node hue */
-  text-shadow: 0 0 6px rgba(61, 123, 255, 0.55);
+  color: var(--color-terminal-blue); /* the ?-node hue */
+  text-shadow: 0 0 6px rgb(from var(--color-terminal-blue) r g b / 0.55);
   font-family: var(--font-mono);
   font-size: 24px;
   letter-spacing: 0.1em;
@@ -1214,7 +1260,7 @@ body {
 }
 
 .event-page-text {
-  color: #d0d0d0;
+  color: var(--color-gray-d0);
   font-family: var(--font-mono);
   font-size: 15px;
   line-height: 1.7;
@@ -1232,23 +1278,23 @@ body {
   font-size: 14px;
   text-align: left;
   padding: 12px 16px;
-  background: #000;
-  border: 1px solid #3d7bff; /* TERMINAL_BLUE */
-  color: #d0d0d0;
+  background: var(--color-black);
+  border: 1px solid var(--color-terminal-blue);
+  color: var(--color-gray-d0);
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s, opacity 0.1s;
 }
 
 .event-choice:hover:not(:disabled) {
-  background: rgba(61, 123, 255, 0.12);
+  background: rgb(from var(--color-terminal-blue) r g b / 0.12);
 }
 
 .event-choice:disabled {
   /* The shape-lock: failing choices are SHOWN-disabled, requirement
      visible — dim the row but keep it fully legible (the locked-node
      lesson: hue conveys state, brightness stays readable). */
-  border-color: #404040;
-  color: #808080;
+  border-color: var(--color-gray-40);
+  color: var(--color-gray-80);
   cursor: default;
 }
 
@@ -1261,11 +1307,11 @@ body {
   margin-top: 5px;
   font-size: 11px;
   letter-spacing: 0.05em;
-  color: #808080;
+  color: var(--color-gray-80);
 }
 
 .event-choice__req--unmet {
-  color: #ffb000; /* TERMINAL_AMBER — the unmet cost, not an error red */
+  color: var(--color-terminal-amber); /* the unmet cost, not an error red */
 }
 
 .port-swap {
@@ -1277,9 +1323,9 @@ body {
 .port-swap__select {
   font-family: var(--font-mono);
   font-size: 12px;
-  background: #000;
-  color: #33ff00;
-  border: 1px solid #664600;
+  background: var(--color-black);
+  color: var(--color-terminal-green);
+  border: 1px solid var(--color-dark-terminal-amber);
   padding: 6px;
 }
 
@@ -1287,7 +1333,7 @@ body {
    portion is pending) + the full-cache swap picker (select over held
    packets + the Swap button, an Accept variant). */
 .reward-cache-line {
-  color: #15f4ee; /* FLOURESCENT_BLUE — the relic/system layer */
+  color: var(--color-flourescent-blue); /* the relic/system layer */
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.08em;
@@ -1303,9 +1349,9 @@ body {
 .reward-swap__select {
   font-family: var(--font-mono);
   font-size: 12px;
-  background: #000;
-  color: #ffb000; /* TERMINAL_AMBER */
-  border: 1px solid #664600;
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
+  border: 1px solid var(--color-dark-terminal-amber);
   padding: 6px 8px;
 }
 
@@ -1322,7 +1368,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
   font-family: var(--font-mono);
 }
 
@@ -1337,19 +1383,19 @@ body {
 }
 
 .gameover-screen--defeat .gameover-heading {
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
 }
 
 .gameover-screen--defeat .gameover-subtext {
-  color: #990000; /* DARK_NEON_RED */
+  color: var(--color-dark-neon-red);
 }
 
 .gameover-screen--complete .gameover-heading {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 
 .gameover-screen--complete .gameover-subtext {
-  color: #0a3300; /* DARK_TERMINAL_GREEN */
+  color: var(--color-dark-terminal-green);
   /* DARK_TERMINAL_GREEN is very dim against black; lift slightly so the
      subtext reads cleanly without competing with the heading. */
   filter: brightness(2);
@@ -1358,8 +1404,8 @@ body {
 .gameover-button {
   margin-top: 16px;
   background: transparent;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   padding: 10px 24px;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -1370,8 +1416,8 @@ body {
 }
 
 .gameover-button:hover {
-  background: #ffb000;
-  color: #000;
+  background: var(--color-terminal-amber);
+  color: var(--color-black);
 }
 
 /* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
@@ -1387,7 +1433,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
   font-family: var(--font-mono);
 }
 
@@ -1395,12 +1441,12 @@ body {
   font-size: 42px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 
 .sectorcleared-subtext {
   font-size: 14px;
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
   /* Dim against black (the gameover--complete subtext trick): lift so it
      reads without competing with the heading. */
   filter: brightness(1.6);
@@ -1411,20 +1457,20 @@ body {
      the run's own pool, not the road ahead), one step brighter than the
      subtext so the number reads. */
   font-size: 14px;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   letter-spacing: 0.05em;
 }
 
 .sectorcleared-next {
   font-size: 14px;
-  color: #33ff00; /* TERMINAL_GREEN — the road ahead */
+  color: var(--color-terminal-green); /* the road ahead */
 }
 
 .sectorcleared-button {
   margin-top: 16px;
   background: transparent;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   padding: 10px 24px;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -1435,8 +1481,8 @@ body {
 }
 
 .sectorcleared-button:hover {
-  background: #ffb000;
-  color: #000;
+  background: var(--color-terminal-amber);
+  color: var(--color-black);
 }
 
 /* Character select (63e). The run's first screen when no ?character= pins
@@ -1451,7 +1497,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 32px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
   font-family: var(--font-mono);
 }
 
@@ -1459,7 +1505,7 @@ body {
   font-size: 32px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 
 .charselect-row {
@@ -1477,8 +1523,8 @@ body {
   width: 300px;
   padding: 20px;
   background: transparent;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   font-family: var(--font-mono);
   text-align: left;
   cursor: pointer;
@@ -1486,7 +1532,7 @@ body {
 }
 
 .charselect-card:hover {
-  background: rgba(255, 176, 0, 0.12);
+  background: rgb(from var(--color-terminal-amber) r g b / 0.12);
   transform: translateY(-2px);
 }
 
@@ -1494,25 +1540,25 @@ body {
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 
 .charselect-card__desc {
   font-size: 12px;
   line-height: 1.5;
-  color: #ffb000;
+  color: var(--color-terminal-amber);
 }
 
 .charselect-card__roster {
   font-size: 12px;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
 }
 
 .charselect-card__daemon {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9d00ff; /* NEON_PURPLE */
+  color: var(--color-neon-purple);
 }
 
 /* Battle banner (C1d follow-up). Top-center label naming the encounter's
@@ -1527,8 +1573,8 @@ body {
   transform: translateX(-50%);
   padding: 6px 20px;
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   font-family: var(--font-mono);
   font-size: 14px;
   letter-spacing: 0.15em;
@@ -1560,9 +1606,9 @@ body {
   gap: 6px;
   padding: 14px 28px;
   background: rgba(0, 0, 0, 0.72);
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-terminal-amber);
   font-family: var(--font-mono);
-  color: #ffb000;
+  color: var(--color-terminal-amber);
   text-align: center;
 }
 
@@ -1584,8 +1630,8 @@ body {
   font-size: 56px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: #33ff00; /* TERMINAL_GREEN */
-  text-shadow: 0 0 12px rgba(51, 255, 0, 0.5);
+  color: var(--color-terminal-green);
+  text-shadow: 0 0 12px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
 .battle-countdown__fight {
@@ -1593,9 +1639,9 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.08em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.4);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 4px 14px;
   cursor: pointer;
   transition:
@@ -1611,9 +1657,9 @@ body {
 }
 
 .battle-countdown__fight:hover {
-  color: #33ff00; /* TERMINAL_GREEN */
-  border-color: #33ff00;
-  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+  color: var(--color-terminal-green);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
 /* Q6 — the in-battle hop/turn chip. The monolithic left HUD side panel was
@@ -1633,9 +1679,9 @@ body {
   font-size: 18px; /* 51e — the chip row stays one scale */
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
 }
 
@@ -1661,16 +1707,16 @@ body {
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
   min-width: 128px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .bits-overlay__value {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 
 .bits-overlay__label {
@@ -1679,8 +1725,8 @@ body {
 }
 
 .bits-overlay.is-pulsing {
-  border-color: #33ff00;
-  box-shadow: 0 0 8px rgba(51, 255, 0, 0.55);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.55);
 }
 
 .bits-overlay.is-hidden {
@@ -1706,9 +1752,9 @@ body {
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
   min-width: 128px;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -1724,33 +1770,33 @@ body {
   opacity: 0.85;
 }
 .pool-overlay__value {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
   font-variant-numeric: tabular-nums;
 }
 .pool-overlay__bar {
   height: 4px;
-  background: rgba(255, 176, 0, 0.25);
+  background: rgb(from var(--color-terminal-amber) r g b / 0.25);
 }
 .pool-overlay__fill {
   height: 100%;
-  background: #33ff00;
+  background: var(--color-terminal-green);
   transition: width 0.25s;
 }
 .pool-overlay.is-low .pool-overlay__value,
 .pool-overlay.is-low .pool-overlay__fill {
-  color: #ff3131; /* NEON_RED */
-  background-color: #ff3131;
+  color: var(--color-neon-red);
+  background-color: var(--color-neon-red);
 }
 .pool-overlay.is-low .pool-overlay__value {
   background: none;
 }
 .pool-overlay.is-pulsing {
-  border-color: #33ff00;
-  box-shadow: 0 0 8px rgba(51, 255, 0, 0.55);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.55);
 }
 .pool-overlay.is-pulsing.is-losing {
-  border-color: #ff3131;
-  box-shadow: 0 0 8px rgba(255, 49, 49, 0.55);
+  border-color: var(--color-neon-red);
+  box-shadow: 0 0 8px rgb(from var(--color-neon-red) r g b / 0.55);
 }
 .pool-overlay.is-hidden {
   display: none;
@@ -1775,9 +1821,9 @@ body {
   font-size: 18px; /* 51e — the card-list-button scale, with the bits chip */
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
   min-width: 128px;
   cursor: pointer;
@@ -1785,12 +1831,12 @@ body {
 }
 
 .cache-overlay:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
 }
 
 .cache-overlay__value {
-  color: #15f4ee; /* FLOURESCENT_BLUE — the packet accent */
+  color: var(--color-flourescent-blue); /* the packet accent */
 }
 
 .cache-overlay__label {
@@ -1799,14 +1845,14 @@ body {
 }
 
 .cache-overlay.is-pulsing {
-  border-color: #15f4ee;
-  box-shadow: 0 0 8px rgba(21, 244, 238, 0.55);
+  border-color: var(--color-flourescent-blue);
+  box-shadow: 0 0 8px rgb(from var(--color-flourescent-blue) r g b / 0.55);
 }
 
 .cache-overlay.is-over,
 .cache-overlay.is-over .cache-overlay__value {
-  border-color: #ff3131; /* NEON_RED — over capacity, the forced-keep flag */
-  color: #ff3131;
+  border-color: var(--color-neon-red); /* over capacity, the forced-keep flag */
+  color: var(--color-neon-red);
 }
 
 .cache-overlay.is-hidden {
@@ -1827,9 +1873,9 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-align: left;
-  color: #ffb000; /* TERMINAL_AMBER — the map/current-node accent */
+  color: var(--color-terminal-amber); /* the map/current-node accent */
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
   min-width: 128px;
   cursor: pointer;
@@ -1837,8 +1883,8 @@ body {
 }
 
 .sector-map-chip:hover {
-  border-color: #ffd060;
-  color: #ffd060;
+  border-color: var(--color-amber-hover);
+  color: var(--color-amber-hover);
 }
 
 .sector-map-chip.is-hidden {
@@ -1868,17 +1914,17 @@ body {
   font-size: 18px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
   cursor: pointer;
   transition: border-color 0.15s, color 0.15s;
 }
 
 .sector-map-overlay__close:hover {
-  border-color: #ffd060;
-  color: #ffd060;
+  border-color: var(--color-amber-hover);
+  color: var(--color-amber-hover);
 }
 
 /* The close hint — fixed bottom-center, above the opaque map screen. */
@@ -1891,7 +1937,7 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.1em;
-  color: #ffb000;
+  color: var(--color-terminal-amber);
   opacity: 0.75;
 }
 
@@ -1914,9 +1960,9 @@ body {
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #ff3131; /* NEON_RED */
-  border: 1px solid #ff3131;
-  background: rgba(255, 49, 49, 0.08);
+  color: var(--color-neon-red);
+  border: 1px solid var(--color-neon-red);
+  background: rgb(from var(--color-neon-red) r g b / 0.08);
   padding: 8px 12px;
   margin: 0 16px 12px;
 }
@@ -1935,7 +1981,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px 16px;
-  border: 1px solid rgba(255, 176, 0, 0.5);
+  border: 1px solid rgb(from var(--color-terminal-amber) r g b / 0.5);
   background: rgba(0, 0, 0, 0.5);
   padding: 10px 14px;
 }
@@ -1948,7 +1994,7 @@ body {
 .cache-row-name {
   font-family: var(--font-mono);
   font-size: 16px;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -1956,7 +2002,7 @@ body {
 .cache-row-desc {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #ffb000;
+  color: var(--color-terminal-amber);
   opacity: 0.85;
   margin-top: 2px;
 }
@@ -1973,26 +2019,26 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #ffb000;
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   padding: 6px 14px;
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
 .cache-fire-button {
-  border-color: #15f4ee;
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
 }
 
 .cache-fire-button:hover {
-  background: rgba(21, 244, 238, 0.12);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
 .cache-discard-button:hover {
-  border-color: #ff3131;
-  color: #ff3131;
-  background: rgba(255, 49, 49, 0.08);
+  border-color: var(--color-neon-red);
+  color: var(--color-neon-red);
+  background: rgb(from var(--color-neon-red) r g b / 0.08);
 }
 
 /* The inline roster picker (overclock's "pick a roster unit"). */
@@ -2002,14 +2048,14 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  border-top: 1px dashed rgba(255, 176, 0, 0.4);
+  border-top: 1px dashed rgb(from var(--color-terminal-amber) r g b / 0.4);
   padding-top: 8px;
 }
 
 .cache-roster-pick-hint {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #ffb000;
+  color: var(--color-terminal-amber);
   opacity: 0.85;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -2019,17 +2065,17 @@ body {
   font-family: var(--font-mono);
   font-size: 13px;
   background: rgba(0, 0, 0, 0.6);
-  border: 1px solid #ffb000;
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  color: var(--color-terminal-amber);
   padding: 4px 10px;
   cursor: pointer;
   transition: border-color 0.1s, color 0.1s, background 0.1s;
 }
 
 .cache-roster-pick-unit:hover {
-  border-color: #15f4ee;
-  color: #15f4ee;
-  background: rgba(21, 244, 238, 0.08);
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
 /* Q1 — speed-command pane (top-right): one button per enabled speed (ascending,
@@ -2052,9 +2098,9 @@ body {
   font-size: 13px;
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 4px 10px;
   cursor: pointer;
   transition:
@@ -2064,14 +2110,14 @@ body {
 }
 
 .hud-speed:hover {
-  color: #ffd060;
-  border-color: #ffd060;
+  color: var(--color-amber-hover);
+  border-color: var(--color-amber-hover);
 }
 
 .hud-speed.is-active {
-  color: #33ff00; /* TERMINAL_GREEN */
-  border-color: #33ff00;
-  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+  color: var(--color-terminal-green);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
 /* The pause toggle leads the pane (slowest = leftmost) and reads as its own
@@ -2113,9 +2159,9 @@ body {
   font-size: 16px;
   letter-spacing: 0.08em;
   text-align: left;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
-  border: 1px solid #ffb000;
+  border: 1px solid var(--color-terminal-amber);
   padding: 9px 16px;
   cursor: pointer;
   transition:
@@ -2125,20 +2171,20 @@ body {
 }
 
 .hud-objective-btn:hover {
-  color: #ffd060;
-  border-color: #ffd060;
+  color: var(--color-amber-hover);
+  border-color: var(--color-amber-hover);
 }
 
 .hud-objective-btn.is-active {
-  color: #33ff00; /* TERMINAL_GREEN */
-  border-color: #33ff00;
-  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+  color: var(--color-terminal-green);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
 .hud-objective-btn.is-armed {
-  color: #33ff00; /* TERMINAL_GREEN */
-  border-color: #33ff00;
-  box-shadow: 0 0 6px rgba(51, 255, 0, 0.5);
+  color: var(--color-terminal-green);
+  border-color: var(--color-terminal-green);
+  box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
   animation: hud-status-pulse 1.4s ease-in-out infinite;
 }
 
@@ -2175,7 +2221,7 @@ body {
   width: 64px;
   padding: 5px 6px 7px;
   gap: 5px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER chrome */
+  border: 1px solid var(--color-dark-terminal-amber); /* DARK_TERMINAL_AMBER chrome */
   /* background-COLOR, not the shorthand — the shorthand implicitly resets
      background-image and would eat the §61e rarity tint layer. */
   background-color: rgba(0, 0, 0, 0.7);
@@ -2196,24 +2242,24 @@ body {
 }
 
 .unit-card__compact-level {
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 
 .unit-card__compact-power {
-  color: #15f4ee; /* FLOURESCENT_BLUE — the established POW meta accent */
+  color: var(--color-flourescent-blue); /* the established POW meta accent */
   font-weight: bold;
 }
 
 .unit-card__compact-hp {
   align-self: stretch;
   height: 5px;
-  border: 1px solid #222;
-  background: #0a0a0a;
+  border: 1px solid var(--color-gray-22);
+  background: var(--color-gray-0a);
 }
 
 .unit-card__compact-hp-fill {
   height: 100%;
-  background: #33ff00; /* TERMINAL_GREEN — player default; Q5 overrides enemy */
+  background: var(--color-terminal-green); /* player default; Q5 overrides enemy */
   transition: width 0.2s ease;
 }
 
@@ -2226,11 +2272,11 @@ body {
    defaults (above); this overrides glyph + HP fill to NEON_RED. The level/power
    corners stay team-neutral chrome (amber/blue). */
 .unit-card--compact.unit-card--enemy .unit-card__glyph {
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
 }
 
 .unit-card--compact.unit-card--enemy .unit-card__compact-hp-fill {
-  background: #ff3131; /* NEON_RED */
+  background: var(--color-neon-red);
 }
 
 /* §32c — the compact card's status row (below the HP bar). One two-line chip per
@@ -2243,7 +2289,7 @@ body {
   flex-direction: column;
   gap: 3px;
   padding-top: 4px;
-  border-top: 1px solid rgba(255, 176, 0, 0.18); /* faint amber section divider */
+  border-top: 1px solid rgb(from var(--color-terminal-amber) r g b / 0.18); /* faint amber section divider */
 }
 
 .unit-card__statuses[hidden] {
@@ -2270,7 +2316,7 @@ body {
 .unit-card__status-name {
   grid-row: 1;
   grid-column: 2;
-  color: #d8d2c4;
+  color: var(--color-status-name);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -2280,7 +2326,7 @@ body {
 .unit-card__status-meta {
   grid-row: 2;
   grid-column: 2;
-  color: #9a9286;
+  color: var(--color-status-meta);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2349,8 +2395,8 @@ body {
   cursor: pointer;
 }
 .hud-card-targetable:not(.is-dead):hover {
-  outline: 1px solid #ffd060;
-  box-shadow: 0 0 6px rgba(255, 208, 96, 0.5);
+  outline: 1px solid var(--color-amber-hover);
+  box-shadow: 0 0 6px rgb(from var(--color-amber-hover) r g b / 0.5);
 }
 
 /* The pulse the objective pane's armed-target prompt rides (`.is-armed`). It
@@ -2380,7 +2426,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 20px;
-  background: #000; /* opaque — DOM scenes fully mask the battle canvas */
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas */
   font-family: var(--font-mono);
 }
 
@@ -2404,14 +2450,14 @@ body {
   font-size: 24px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
 }
 
 .preturn-sub {
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
 }
 
 /* 89e — the pre-turn RISK line: sits directly under the pool gauges it reads
@@ -2421,7 +2467,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
   margin-top: 6px;
 }
 
@@ -2435,7 +2481,7 @@ body {
   gap: 10px;
   font-size: 17px;
   letter-spacing: 0.08em;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 .preturn-encounter-name {
   text-transform: uppercase;
@@ -2449,10 +2495,10 @@ body {
   border: 1px solid currentColor;
 }
 .preturn-encounter-kind--elite {
-  color: #9d00ff; /* NEON_PURPLE — the elite `*` map-glyph hue */
+  color: var(--color-neon-purple); /* the elite `*` map-glyph hue */
 }
 .preturn-encounter-kind--boss {
-  color: #ff3030; /* a boss red */
+  color: var(--color-boss-red); /* a boss red */
 }
 
 /* K3.5 — the encounter's battlefield line (one map per encounter): brighter
@@ -2461,7 +2507,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 
 /* L1 — the run's daemon banner: the relic/meta layer reads FLOURESCENT_BLUE
@@ -2470,7 +2516,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
   max-width: 520px;
 }
 
@@ -2481,7 +2527,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
 }
 
 /* H5b — the drawn hand: a small label over a row of compact unit cards. */
@@ -2496,7 +2542,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
 }
 
 .preturn-hand-cards {
@@ -2521,8 +2567,8 @@ body {
      borders made each card 186px, overflowing the computed balanced-wrap
      max-width by 2px/card and wrapping one card early (4+4+2, not 5+5). */
   box-sizing: border-box;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
 }
 
 /* K3/K4 — a hand card turns selectable while the turn's redraw/empower budget
@@ -2539,12 +2585,12 @@ body {
    cursor still sits on the just-clicked card (the glow shows, the border
    doesn't, until you move the mouse). */
 .unit-card--preturn.unit-card--clickable:hover:not(.is-selected) {
-  border-color: #ffb000; /* TERMINAL_AMBER */
+  border-color: var(--color-terminal-amber);
 }
 
 .unit-card--preturn.is-selected {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
+  border-color: var(--color-flourescent-blue);
+  box-shadow: 0 0 6px rgb(from var(--color-flourescent-blue) r g b / 0.5);
 }
 
 /* 49f — THE GUIDED FIRE STRIP (replaces the K3/K4→49d per-grant control
@@ -2570,17 +2616,17 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 6px 12px;
-  background: #000;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  color: #664600;
+  background: var(--color-black);
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-dark-terminal-amber);
   text-align: left;
   cursor: default;
 }
 
 .fire-chip--active {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  color: #15f4ee;
-  box-shadow: 0 0 8px rgba(21, 244, 238, 0.45);
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
+  box-shadow: 0 0 8px rgb(from var(--color-flourescent-blue) r g b / 0.45);
 }
 
 /* The active REDRAW chip doubles as the confirm button — clickable once a
@@ -2590,22 +2636,22 @@ body {
 }
 
 .fire-chip--active:not(:disabled):hover {
-  background: rgba(21, 244, 238, 0.12);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
 .fire-chip--queued {
-  border-color: #664600;
-  color: #664600;
+  border-color: var(--color-dark-terminal-amber);
+  color: var(--color-dark-terminal-amber);
 }
 
 .fire-chip--spent {
-  border-color: #332300;
-  color: #332300;
+  border-color: var(--color-amber-faint);
+  color: var(--color-amber-faint);
 }
 
 .fire-chip--passed {
-  border-color: #332300;
-  color: #332300;
+  border-color: var(--color-amber-faint);
+  color: var(--color-amber-faint);
   text-decoration: line-through;
 }
 
@@ -2626,18 +2672,18 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 14px;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000;
+  border: 1px solid var(--color-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   align-self: center;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
 .preturn-pass:hover {
-  border-color: #ff3131; /* NEON_RED — pass is FINAL, the hover says so */
-  color: #ff3131;
-  background: rgba(255, 49, 49, 0.08);
+  border-color: var(--color-neon-red); /* pass is FINAL, the hover says so */
+  color: var(--color-neon-red);
+  background: rgb(from var(--color-neon-red) r g b / 0.08);
 }
 
 /* 49f — the at-will packet row (below the strip): the held preTurn-usable
@@ -2655,7 +2701,7 @@ body {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
 }
 
 .packet-chip {
@@ -2664,20 +2710,20 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 5px 12px;
-  background: #000;
-  border: 1px solid #15f4ee; /* FLOURESCENT_BLUE — the packet accent */
-  color: #15f4ee;
+  background: var(--color-black);
+  border: 1px solid var(--color-flourescent-blue); /* the packet accent */
+  color: var(--color-flourescent-blue);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s, box-shadow 0.1s;
 }
 
 .packet-chip:hover {
-  background: rgba(21, 244, 238, 0.12);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
 .packet-chip--armed {
-  box-shadow: 0 0 8px rgba(21, 244, 238, 0.55);
-  background: rgba(21, 244, 238, 0.15);
+  box-shadow: 0 0 8px rgb(from var(--color-flourescent-blue) r g b / 0.55);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.15);
 }
 
 /* The armed-packet banner (hype's pick-a-card state). */
@@ -2686,7 +2732,7 @@ body {
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #15f4ee; /* FLOURESCENT_BLUE */
+  color: var(--color-flourescent-blue);
 }
 
 /* K4→78c — the buffed-card badge: a top-right corner overlay (anchored by
@@ -2710,7 +2756,7 @@ body {
   letter-spacing: 0.08em;
   /* 78d — per-key color set INLINE off EMPOWER_DISPLAY (statusDisplay.ts);
      FLOURESCENT_BLUE stands as the no-map fallback shade. */
-  color: #15f4ee;
+  color: var(--color-flourescent-blue);
 }
 
 .preturn-pools,
@@ -2731,9 +2777,9 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000;
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
@@ -2741,9 +2787,9 @@ body {
 .preturn-continue:hover,
 .postturn-continue:hover,
 .reward-continue:hover {
-  border-color: #15f4ee;
-  background: rgba(21, 244, 238, 0.08);
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
+  color: var(--color-flourescent-blue);
 }
 
 /* 73c — the pre-turn Fight ▸ button is viewport-pinned (the PortScreen
@@ -2762,13 +2808,13 @@ body {
 
 /* Post-turn heading tinted by the tactical winner of the turn. */
 .postturn-heading--player {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 .postturn-heading--enemy {
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
 }
 .postturn-heading--draw {
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 
 .postturn-chips {
@@ -2784,7 +2830,7 @@ body {
   justify-content: space-between;
   gap: 24px;
   letter-spacing: 0.04em;
-  color: #aaa;
+  color: var(--color-gray-aa);
 }
 
 .postturn-chip-amount {
@@ -2793,10 +2839,10 @@ body {
 }
 
 .postturn-chip--player .postturn-chip-amount {
-  color: #33ff00; /* TERMINAL_GREEN — you chipped the enemy pool */
+  color: var(--color-terminal-green); /* you chipped the enemy pool */
 }
 .postturn-chip--enemy .postturn-chip-amount {
-  color: #ff3131; /* NEON_RED — the enemy chipped yours */
+  color: var(--color-neon-red); /* the enemy chipped yours */
 }
 
 /* 94d — the fallen ledger: who fell this turn (both sides) + the encounter so far. */
@@ -2811,7 +2857,7 @@ body {
 .postturn-fallen-title {
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #888;
+  color: var(--color-gray-88);
   font-size: 11px;
 }
 .postturn-fallen-sides {
@@ -2828,14 +2874,14 @@ body {
   display: flex;
   justify-content: space-between;
   letter-spacing: 0.06em;
-  color: #aaa;
+  color: var(--color-gray-aa);
 }
 .postturn-fallen-row {
   display: flex;
   justify-content: space-between;
   gap: 8px;
   font-variant-numeric: tabular-nums;
-  color: #ccc;
+  color: var(--color-gray-cc);
 }
 .postturn-fallen-row .postturn-fallen-glyph {
   display: inline-block;
@@ -2844,21 +2890,21 @@ body {
 }
 .postturn-fallen-side--player .postturn-fallen-glyph,
 .postturn-fallen-side--player .postturn-fallen-side-head {
-  color: #33ff00; /* TERMINAL_GREEN */
+  color: var(--color-terminal-green);
 }
 .postturn-fallen-side--enemy .postturn-fallen-glyph,
 .postturn-fallen-side--enemy .postturn-fallen-side-head {
-  color: #ff3131; /* NEON_RED */
+  color: var(--color-neon-red);
 }
 .postturn-fallen-none {
-  color: #666;
+  color: var(--color-gray-66);
   font-style: italic;
 }
 .postturn-ledger {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  color: #999;
+  color: var(--color-gray-99);
   font-variant-numeric: tabular-nums;
 }
 .postturn-ledger-turn {
@@ -2866,17 +2912,17 @@ body {
   gap: 10px;
 }
 .postturn-ledger-turn--current {
-  color: #ccc;
+  color: var(--color-gray-cc);
 }
 .postturn-ledger-turn .postturn-ledger-label {
   min-width: 4.5em;
-  color: #888;
+  color: var(--color-gray-88);
 }
 .postturn-ledger-glyphs--player {
-  color: #33ff00;
+  color: var(--color-terminal-green);
 }
 .postturn-ledger-glyphs--enemy {
-  color: #ff3131;
+  color: var(--color-neon-red);
 }
 
 .postturn-status {
@@ -2886,13 +2932,13 @@ body {
 }
 
 .postturn-status--won {
-  color: #33ff00;
+  color: var(--color-terminal-green);
 }
 .postturn-status--lost {
-  color: #ff3131;
+  color: var(--color-neon-red);
 }
 .postturn-status--ongoing {
-  color: #15f4ee;
+  color: var(--color-flourescent-blue);
   opacity: 0.85;
 }
 
@@ -2919,8 +2965,8 @@ body {
 
 .pool-gauge-bar {
   height: 14px;
-  border: 1px solid #222;
-  background: #0a0a0a;
+  border: 1px solid var(--color-gray-22);
+  background: var(--color-gray-0a);
 }
 
 .pool-gauge-fill {
@@ -2930,18 +2976,18 @@ body {
 
 .pool-gauge--player .pool-gauge-label,
 .pool-gauge--player .pool-gauge-value {
-  color: #33ff00;
+  color: var(--color-terminal-green);
 }
 .pool-gauge--player .pool-gauge-fill {
-  background: #33ff00;
+  background: var(--color-terminal-green);
 }
 
 .pool-gauge--enemy .pool-gauge-label,
 .pool-gauge--enemy .pool-gauge-value {
-  color: #ff3131;
+  color: var(--color-neon-red);
 }
 .pool-gauge--enemy .pool-gauge-fill {
-  background: #ff3131;
+  background: var(--color-neon-red);
 }
 
 /* R1/R2 — the shared card-list affordance + modal (src/ui/CardListModal.ts).
@@ -2959,17 +3005,17 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 12px 24px; /* scaled 1.5× with the font so the button isn't cramped */
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
 .card-list-button:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  background: rgba(21, 244, 238, 0.08);
-  color: #15f4ee;
+  border-color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
+  color: var(--color-flourescent-blue);
 }
 
 /* Corner anchors — roster top-right (R1); the piles in the bottom corners (R2),
@@ -3002,9 +3048,9 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 16px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #997700; /* dimmed amber — informational, not clickable */
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-amber-dim); /* dimmed amber — informational, not clickable */
 }
 
 /* A card entering the hand (the initial deal / a redraw refill / a Surge
@@ -3061,8 +3107,8 @@ body {
   }
   35% {
     transform: scale(1.1);
-    border-color: #ffb000; /* TERMINAL_AMBER */
-    color: #fff;
+    border-color: var(--color-terminal-amber);
+    color: var(--color-white);
   }
   100% {
     transform: scale(1);
@@ -3078,13 +3124,13 @@ body {
   }
   30% {
     transform: rotate(-3deg) scale(1.08);
-    border-color: #15f4ee; /* FLOURESCENT_BLUE */
-    color: #15f4ee;
+    border-color: var(--color-flourescent-blue);
+    color: var(--color-flourescent-blue);
   }
   70% {
     transform: rotate(3deg) scale(1.08);
-    border-color: #15f4ee;
-    color: #15f4ee;
+    border-color: var(--color-flourescent-blue);
+    color: var(--color-flourescent-blue);
   }
   100% {
     transform: rotate(0) scale(1);
@@ -3112,9 +3158,9 @@ body {
   min-height: 0; /* lets the grid below scroll within the capped modal */
   padding: 20px 24px;
   box-sizing: border-box;
-  border: 1px solid #ffb000; /* TERMINAL_AMBER */
-  background: #000;
-  box-shadow: 0 0 24px rgba(255, 176, 0, 0.25);
+  border: 1px solid var(--color-terminal-amber);
+  background: var(--color-black);
+  box-shadow: 0 0 24px rgb(from var(--color-terminal-amber) r g b / 0.25);
 }
 
 .roster-modal-header {
@@ -3130,7 +3176,7 @@ body {
   font-size: 16px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #ffb000; /* TERMINAL_AMBER */
+  color: var(--color-terminal-amber);
 }
 
 .roster-modal-close {
@@ -3138,17 +3184,17 @@ body {
   font-size: 16px;
   line-height: 1;
   padding: 4px 10px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  background: #000;
-  color: #ffb000;
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
   cursor: pointer;
   transition: border-color 0.1s, color 0.1s, background 0.1s;
 }
 
 .roster-modal-close:hover {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  color: #15f4ee;
-  background: rgba(21, 244, 238, 0.08);
+  border-color: var(--color-flourescent-blue);
+  color: var(--color-flourescent-blue);
+  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
 .roster-grid {
@@ -3163,7 +3209,7 @@ body {
 }
 
 .roster-empty {
-  color: #664600; /* DARK_TERMINAL_AMBER */
+  color: var(--color-dark-terminal-amber);
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.08em;
@@ -3179,8 +3225,8 @@ body {
    pre-turn hand's affordance vocabulary (amber hover, blue selected). --- */
 .unit-card--roster {
   width: 184px;
-  border: 1px solid #664600; /* DARK_TERMINAL_AMBER */
-  color: #ffb000; /* TERMINAL_AMBER */
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
 }
 
 .unit-card--roster.unit-card--clickable {
@@ -3191,12 +3237,12 @@ body {
 /* The :not keeps the hover border from masking the selected border while the
    cursor still sits on the just-clicked card (the preturn-skin lesson). */
 .unit-card--roster.unit-card--clickable:hover:not(.is-selected) {
-  border-color: #ffb000; /* TERMINAL_AMBER */
+  border-color: var(--color-terminal-amber);
 }
 
 .unit-card--roster.is-selected {
-  border-color: #15f4ee; /* FLOURESCENT_BLUE */
-  box-shadow: 0 0 6px rgba(21, 244, 238, 0.5);
+  border-color: var(--color-flourescent-blue);
+  box-shadow: 0 0 6px rgb(from var(--color-flourescent-blue) r g b / 0.5);
 }
 
 /* 51c — the picker footer: the confirm button under the grid, the shared
@@ -3214,20 +3260,20 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;
-  border: 1px solid #33ff00; /* TERMINAL_GREEN — the affirmative */
-  background: #000;
-  color: #33ff00;
+  border: 1px solid var(--color-terminal-green); /* the affirmative */
+  background: var(--color-black);
+  color: var(--color-terminal-green);
   cursor: pointer;
   transition: border-color 0.1s, background 0.1s, color 0.1s, opacity 0.1s;
 }
 
 .roster-modal-confirm:hover:not(:disabled) {
-  background: rgba(51, 255, 0, 0.12);
+  background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
 .roster-modal-confirm:disabled {
-  border-color: #664600; /* DARK_TERMINAL_AMBER */
-  color: #664600;
+  border-color: var(--color-dark-terminal-amber);
+  color: var(--color-dark-terminal-amber);
   cursor: default;
   opacity: 0.7;
 }

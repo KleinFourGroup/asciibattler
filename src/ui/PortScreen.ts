@@ -32,10 +32,9 @@ import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListModal } from './CardListModal';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
-export class PortScreen {
-  private container: HTMLDivElement | null = null;
+export class PortScreen extends Screen {
   private bodyEl: HTMLDivElement | null = null;
   private unsubscribes: Array<() => void> = [];
   // 51d — the crew-removal picker (the 51c selectable roster view). One
@@ -43,19 +42,20 @@ export class PortScreen {
   private readonly removalPicker: CardListModal;
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly run: Run,
     private readonly bus: EventBus<GameEvents>,
   ) {
+    super(mount);
     this.removalPicker = new CardListModal(mount, audio);
   }
 
   show(): void {
     this.hide();
     const panel = document.createElement('div');
-    panel.className = 'port-screen screen-fade';
+    panel.className = 'port-screen';
 
     const heading = document.createElement('div');
     heading.className = 'port-heading';
@@ -92,20 +92,15 @@ export class PortScreen {
       this.bus.on('run:cacheChanged', () => this.renderBody()),
     );
 
-    this.container = panel;
-    this.mount.appendChild(panel);
-    fadeIn(panel);
+    this.present(panel);
   }
 
-  hide(): void {
+  override hide(): void {
     this.removalPicker.dispose();
     for (const off of this.unsubscribes) off();
     this.unsubscribes = [];
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-      this.bodyEl = null;
-    }
+    super.hide();
+    this.bodyEl = null;
   }
 
   /** Full re-render from live state (the RewardScreen renderPortions

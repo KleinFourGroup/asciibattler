@@ -18,31 +18,22 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { rulesForTurn } from '../run/chipRule';
 import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { chipLineLabels, POOL_LABELS } from './chipLabels';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 import { renderPoolGauge } from './poolGauge';
 
-export class PostTurnScreen {
-  private container: HTMLDivElement | null = null;
+export class PostTurnScreen extends Screen {
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(info: GameEvents['turn:resolved']): void {
     this.hide();
-    this.container = this.render(info);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
-  }
-
-  hide(): void {
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    this.present(this.render(info));
   }
 
   private advance(): void {

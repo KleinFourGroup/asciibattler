@@ -18,7 +18,7 @@ import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 import { CardListButton } from './CardListModal';
 
 /**
@@ -72,8 +72,7 @@ export interface BossForewarning {
 // line, the battle banner); the sim's PROCEDURAL_MAP_NAME constant is gone.
 const UNCHARTED_LABEL = t('map.uncharted');
 
-export class MapScreen {
-  private readonly mount: HTMLElement;
+export class MapScreen extends Screen {
   private readonly dispatcher: RunDispatcher;
   private readonly audio: AudioPlayer;
   /** 78e — a read-only view never dispatches (frontier nodes render but don't
@@ -81,7 +80,6 @@ export class MapScreen {
    *  surface; nesting a second modal under it would fight the overlay's own
    *  chrome). The sector-map overlay's mode; MapScene uses the default. */
   private readonly readOnly: boolean;
-  private container: HTMLDivElement | null = null;
   // R1 — the shared "view roster" affordance (top-right), disposed on hide.
   private rosterButton: CardListButton | null = null;
 
@@ -91,7 +89,7 @@ export class MapScreen {
     audio: AudioPlayer,
     opts: { readOnly?: boolean } = {},
   ) {
-    this.mount = mount;
+    super(mount);
     this.dispatcher = dispatcher;
     this.audio = audio;
     this.readOnly = opts.readOnly ?? false;
@@ -106,27 +104,24 @@ export class MapScreen {
     forewarning: BossForewarning | null = null,
   ): void {
     this.hide();
-    this.container = this.render(map, currentNodeId, visited, roster, sectorTitle, forewarning);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
+    const el = this.render(map, currentNodeId, visited, roster, sectorTitle, forewarning);
+    this.present(el);
     // Center the current node in the viewport. Reading offsetTop forces the
-    // layout that makes the scroll math valid; the browser clamps scrollTop to
-    // range, so the root (near the board top) settles at the top and deeper
-    // nodes pull the view down with them.
-    const current = this.container.querySelector<HTMLElement>('.map-node.current');
+    // layout that makes the scroll math valid (present() has mounted `el`;
+    // its fade-in is a next-frame class flip, so the read lands on a laid-out
+    // tree either way); the browser clamps scrollTop to range, so the root
+    // (near the board top) settles at the top and deeper nodes pull the view
+    // down with them.
+    const current = el.querySelector<HTMLElement>('.map-node.current');
     if (current) {
-      this.container.scrollTop = current.offsetTop - this.container.clientHeight / 2;
+      el.scrollTop = current.offsetTop - el.clientHeight / 2;
     }
-    fadeIn(this.container);
   }
 
-  hide(): void {
+  override hide(): void {
     this.rosterButton?.dispose();
     this.rosterButton = null;
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    super.hide();
   }
 
   private render(

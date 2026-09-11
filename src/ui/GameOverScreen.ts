@@ -13,7 +13,7 @@
 import type { RunDispatcher } from '../run/Command';
 import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
 export type GameOverVariant = 'defeat' | 'complete';
 
@@ -27,28 +27,19 @@ const COPY: Record<GameOverVariant, VariantCopy> = {
   complete: { heading: t('gameover.complete.heading'), subtext: t('gameover.complete.subtext') },
 };
 
-export class GameOverScreen {
-  private container: HTMLDivElement | null = null;
+export class GameOverScreen extends Screen {
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(variant: GameOverVariant = 'defeat'): void {
     this.hide();
-    this.container = this.render(variant);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
-  }
-
-  hide(): void {
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    this.present(this.render(variant));
   }
 
   private render(variant: GameOverVariant): HTMLDivElement {

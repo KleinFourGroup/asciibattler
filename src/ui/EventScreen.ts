@@ -29,25 +29,26 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
-export class EventScreen {
-  private container: HTMLDivElement | null = null;
+export class EventScreen extends Screen {
   private bodyEl: HTMLDivElement | null = null;
   private unsubscribes: Array<() => void> = [];
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly run: Run,
     private readonly bus: EventBus<GameEvents>,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(): void {
     this.hide();
     const panel = document.createElement('div');
-    panel.className = 'event-screen screen-fade';
+    panel.className = 'event-screen';
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.className = 'event-body';
@@ -59,19 +60,14 @@ export class EventScreen {
       this.bus.on('run:bitsChanged', () => this.renderBody()),
     );
 
-    this.container = panel;
-    this.mount.appendChild(panel);
-    fadeIn(panel);
+    this.present(panel);
   }
 
-  hide(): void {
+  override hide(): void {
     for (const off of this.unsubscribes) off();
     this.unsubscribes = [];
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-      this.bodyEl = null;
-    }
+    super.hide();
+    this.bodyEl = null;
   }
 
   /** Full re-render from live state (the PortScreen renderBody discipline —

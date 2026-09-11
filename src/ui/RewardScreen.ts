@@ -26,25 +26,26 @@ import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
-export class RewardScreen {
-  private container: HTMLDivElement | null = null;
+export class RewardScreen extends Screen {
   private portionsEl: HTMLDivElement | null = null;
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     // Scene-scoped like the screen itself (disposed on swap), so holding the
     // live Run is safe — reads always reflect the current offer + folds.
     private readonly run: Run,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(): void {
     this.hide();
     const panel = document.createElement('div');
-    panel.className = 'reward-screen screen-fade';
+    panel.className = 'reward-screen';
 
     const heading = document.createElement('div');
     heading.className = 'reward-heading';
@@ -66,17 +67,12 @@ export class RewardScreen {
     cont.addEventListener('click', () => this.continueRun());
     panel.appendChild(cont);
 
-    this.container = panel;
-    this.mount.appendChild(panel);
-    fadeIn(panel);
+    this.present(panel);
   }
 
-  hide(): void {
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-      this.portionsEl = null;
-    }
+  override hide(): void {
+    super.hide();
+    this.portionsEl = null;
   }
 
   /**

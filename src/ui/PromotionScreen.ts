@@ -27,7 +27,7 @@ import type { PromotionInfo } from '../core/events';
 import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 import { promotionDeltaParts } from './promotionDelta';
 
@@ -50,31 +50,26 @@ interface Beat {
   fire: (skipped: boolean) => void;
 }
 
-export class PromotionScreen {
-  private container: HTMLDivElement | null = null;
+export class PromotionScreen extends Screen {
   private beats: Beat[] = [];
   private timers: number[] = [];
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(promotions: readonly PromotionInfo[]): void {
     this.hide();
-    this.container = this.render(promotions);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
+    this.present(this.render(promotions));
   }
 
-  hide(): void {
+  override hide(): void {
     this.cancelTimeline();
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    super.hide();
   }
 
   private render(promotions: readonly PromotionInfo[]): HTMLDivElement {

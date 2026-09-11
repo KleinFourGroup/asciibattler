@@ -121,9 +121,11 @@ restore is IN (the charter's content; the one behavior it adds).
   in rem, 109 references, exact 1:1; the oracle **1552 / 0 diffs** vs
   `6539610`; the pin's 96b block; six browser probes = HEAD's px. WORKLOG
   §96b.
-- [ ] **96c — the Screen base.** `src/ui/Screen.ts` (`present(el)` +
-  `hide()`); the eleven screens migrate; the HUD, the scenes and every
-  `show()` signature untouched.
+- [x] **96c — the Screen base.** ✅ 2026-09-11: `src/ui/Screen.ts`
+  (`present(el)` + `hide()`); the eleven screens migrate (−69 lines; seven
+  keep an `override hide()`), the HUD, the scenes and every `show()`
+  signature untouched; a hand-driven browser walk reached 8/11 screens,
+  one root mounted per swap. WORKLOG §96c.
 - [ ] **96d — the button factory + `.btn--primary`.** `src/ui/button.ts`
   (type · class · label · click); the two `actionButton` copies fold in;
   the nine primary sites on one class + modifiers (transparent ×2, the

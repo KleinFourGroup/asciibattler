@@ -16,7 +16,7 @@ import { daemonById } from '../config/daemons';
 import { nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
 /** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
@@ -27,28 +27,19 @@ function rosterSummary(character: CharacterConfig): string {
     .join(' · ');
 }
 
-export class CharacterSelectScreen {
-  private container: HTMLDivElement | null = null;
+export class CharacterSelectScreen extends Screen {
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(): void {
     this.hide();
-    this.container = this.render();
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
-  }
-
-  hide(): void {
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    this.present(this.render());
   }
 
   private render(): HTMLDivElement {

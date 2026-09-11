@@ -978,3 +978,49 @@ font-size }` scales every token; `--text-12` then renders 13.5px at
 1.125×. The name is the STEP, not a promise of pixels — and the ladder
 (20 steps, 12 singletons) is the one an eye-led §101 / Round 8 sweep
 collapses, with the pin and the oracle as its instruments.
+
+**The token pair's playtest (2026-09-11): clear** — the user's verdict
+before the shells opened.
+
+### 96c — the Screen base (2026-09-11)
+
+**The shape** (`src/ui/Screen.ts`): abstract, `protected container`,
+`protected present(el)` = add `.screen-fade` + mount + fadeIn, `hide()` =
+fadeOutAndRemove + null. Each screen keeps its own `show(...)` signature
+(no scene call site moved) and its EXPLICIT leading `this.hide()`: the
+base must never hide implicitly, because PreTurnScreen's `show()` seeds
+fresh state (cues, grants, the selection) BETWEEN its `hide()` and its
+render, and an implicit hide inside `present()` would wipe it. Seven
+screens keep an `override hide()` for their own teardown (Event · Port ·
+Reward null a body handle; Map · Recruit dispose a roster button; PreTurn
+its cue timers + clones + card-list buttons; Promotion its timeline) and
+call `super.hide()`; four (CharacterSelect · GameOver · PostTurn ·
+SectorCleared) lost their `hide()` entirely. MapScreen's scroll-centering
+now reads `offsetTop` after `present()` — the fade-in is a next-frame
+class flip either way, so the read lands on the same laid-out tree.
+`noImplicitOverride` is on, so a forgotten `override` is a compile error.
+The HUD (seven independently faded panes) is not a Screen and is untouched.
+
+**A codemod, with every replacement asserting it fired exactly once**
+(scratchpad, deleted) — a shape that drifted from the audit fails loudly.
+It did, twice, both times usefully: its residue guard flagged
+PreTurnScreen's `this.mount.appendChild(clone)` (the 65f exit clones — a
+legitimate mount use, guard loosened to the fade calls), and
+RecruitScreen's working copy was CRLF against an LF index (the LF-anchored
+pattern matched 0×; normalized on read). MapScreen (field-style mount, the
+scroll step) was done by hand. Net −69 lines.
+
+**Verification:** tsc clean; a browser walk under `?eventChance=0&seed=7
+&character=soldier` driving the sim by hand (`world.tick()` +
+`battleRenderer.update(0.05)` — the HANDOFF recipe; the preview pane was
+hidden so no rAF ran) reached **eight of the eleven** screens — map ·
+event · pre-turn · the battle HUD · post-turn · reward · recruit · game
+over, plus character select at the un-pinned boot — asserting after each
+swap that exactly ONE `.screen-fade` root is mounted and the outgoing one
+is gone after its fade (no leak, no double-mount). Port · promotion ·
+sector-cleared were not reachable in a two-battle run; they carry the
+identical codemod shape (Port an override like Event; SectorCleared a
+base hide like GameOver) and the user's phase-exit eyeball walk covers
+them. **What the pane could NOT show:** `.is-visible` — the fade-in is a
+rAF class flip in the UNTOUCHED `fade.ts`, and `rafFiredDuring: 0` in a
+hidden pane; the eye owns the fade. Console: no errors across the walk.

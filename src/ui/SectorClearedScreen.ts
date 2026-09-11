@@ -11,7 +11,7 @@
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { HEALTH } from '../config/health';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 
 /** The pool carries fractional chips (power × 1.1/level); print integers bare
  *  and anything else to one decimal — the between-acts beat isn't a ledger. */
@@ -31,14 +31,15 @@ export function sectorClearedPoolLine(poolBefore: number, poolAfter: number): st
   return `Morale ${fmtPool(poolAfter)} / ${fmtPool(HEALTH.playerHealthMax)} carries on`;
 }
 
-export class SectorClearedScreen {
-  private container: HTMLDivElement | null = null;
+export class SectorClearedScreen extends Screen {
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(
     clearedSectorTitle: string,
@@ -47,17 +48,7 @@ export class SectorClearedScreen {
     poolAfter: number,
   ): void {
     this.hide();
-    this.container = this.render(clearedSectorTitle, nextSectorTitle, poolBefore, poolAfter);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
-  }
-
-  hide(): void {
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    this.present(this.render(clearedSectorTitle, nextSectorTitle, poolBefore, poolAfter));
   }
 
   private render(

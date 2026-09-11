@@ -13,37 +13,32 @@ import type { UnitTemplate } from '../sim/Unit';
 import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListButton } from './CardListModal';
 
-export class RecruitScreen {
-  private container: HTMLDivElement | null = null;
+export class RecruitScreen extends Screen {
   // R1 — the shared "view roster" affordance (top-right). Disposed on hide so
   // a dismissed screen can't leave an open overlay or a live Esc handler.
   private rosterButton: CardListButton | null = null;
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(offer: readonly UnitTemplate[], roster: readonly UnitTemplate[]): void {
     this.hide();
-    this.container = this.render(offer, roster);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
+    this.present(this.render(offer, roster));
   }
 
-  hide(): void {
+  override hide(): void {
     this.rosterButton?.dispose();
     this.rosterButton = null;
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    super.hide();
   }
 
   private render(

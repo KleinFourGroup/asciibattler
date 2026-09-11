@@ -77,7 +77,7 @@ import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
 import { HEALTH } from '../config/health';
 import { POOL_LABELS, riskLineTitle } from './chipLabels';
-import { fadeIn, fadeOutAndRemove } from './fade';
+import { Screen } from './Screen';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
 import { empowerColor } from '../render/statusDisplay';
@@ -96,8 +96,7 @@ export interface DeckCue {
   readonly discardPile: number;
 }
 
-export class PreTurnScreen {
-  private container: HTMLDivElement | null = null;
+export class PreTurnScreen extends Screen {
   // K3 — the live hand + redraw budget (swapped by `updateHand`), the selected
   // hand POSITIONS, and the DOM bits `refreshHand` rebuilds in place.
   // K4 — plus the empower budget + per-card stack column (`updateEmpower`).
@@ -162,10 +161,12 @@ export class PreTurnScreen {
   private discardPileButton: CardListButton | null = null;
 
   constructor(
-    private readonly mount: HTMLElement,
+    mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-  ) {}
+  ) {
+    super(mount);
+  }
 
   show(
     info: GameEvents['turn:starting'],
@@ -217,13 +218,10 @@ export class PreTurnScreen {
       )
       .map((d) => d.name);
     this.selected.clear();
-    this.container = this.render(info);
-    this.container.classList.add('screen-fade');
-    this.mount.appendChild(this.container);
-    fadeIn(this.container);
+    this.present(this.render(info));
   }
 
-  hide(): void {
+  override hide(): void {
     // 65f — kill the pulse schedule FIRST (its callbacks touch the buttons
     // disposed below), drop the count overrides, and sweep any exit clones
     // still awaiting their cue.
@@ -237,10 +235,7 @@ export class PreTurnScreen {
     this.cardListButtons = [];
     this.drawPileButton = null;
     this.discardPileButton = null;
-    if (this.container) {
-      fadeOutAndRemove(this.container);
-      this.container = null;
-    }
+    super.hide();
     this.handWrap = null;
     this.poolsEl = null;
     this.armedPacketIndex = null;

@@ -167,6 +167,65 @@ exit. (The rule was signed when the 78e sector-map overlay shipped with only
 the ✕ button is the corrective precedent.) Audit candidates against this rule
 whenever a new modal, overlay, or hotkey lands.
 
+## UI idioms (Round 7 — the reference; §103 signs the whole)
+
+The shared shapes every UI surface is built from, written as each phase
+lands its part (§96 the shells + the tokens, 2026-09-11; §97–§102 append
+theirs). A new surface reaches for these first; a surface that needs
+something none of them give is a reason to extend the idiom, not to
+hand-roll a second one. The code homes are in ARCHITECTURE's `src/ui/`
+tree.
+
+**Tokens (96a/96b).** Every color in `ui.css` is a `--color-*` token from
+the `:root` block; the palette thirteen mirror `COLORS` (`src/render/palette.ts`,
+the source of truth — a test pins them equal), the rest are role names
+(`--color-amber-hover`, the grays by level). An alpha tint is
+`rgb(from var(--color-x) r g b / a)`, never a literal triplet, so one
+token serves every tint and a Round 8 palette swap is one table. Every
+`font-size` is a `--text-<px>` token authored in rem against the browser's
+16px; a Round 8 text-scale setting sets the html font-size and the ladder
+follows. The pins: zero raw hexes and zero literal font-sizes below
+`:root`.
+
+**Screens (96c).** A full-viewport DOM screen extends `Screen`: it keeps
+its own `show(...)` signature, opens with an explicit `this.hide()`,
+builds its root, and `present(el)`s it (the 180ms `screen-fade`); a
+screen with its own teardown overrides `hide()` and ends in
+`super.hide()`. The HUD is seven independently faded panes, not a Screen.
+
+**Buttons (96d).** `button(label, {className, onClick, title?})` mints
+every `<button>` (type · class · label · click); the audio cue stays in
+the handler. `.btn--primary` is the walk-on action's look; its three
+modifiers name a deliberate delta (`btn--dim` a pass, `btn--exit` the
+sole control on an end screen — the hover fills it, `btn--corner` a
+viewport-pinned corner control). A site's POSITION stays on its own class.
+Secondary buttons keep their own classes until an idiom for them earns
+its place.
+
+**Chips (96e).** A page-lifetime chip is `.chip` (the plate) + its own
+class, pulses through `chipPulse`, and mounts into the chrome column
+(`createChromeColumn`), whose order is CSS `order` (bits · cache · map ·
+pool). **A hidden chip collapses** — the ones below move up; bits never
+moves, cache never hides, the map chip is always third when present, the
+pool chip is display-only, so no click target ever shifts. A chip's modal
+or overlay mounts on the page, never in the column. The column passes
+clicks through its gaps; the chips take them.
+
+**Modals (96f).** `openModal(mount, opts)` is the one shell: a `panel`
+(backdrop › bordered panel › title + ✕) or a `viewport` (an opaque
+full-viewport host + a pinned ✕). **Esc, the backdrop and the ✕ are one
+gate** (`setDismissable`) — a modal is dismissable or it is not, never
+half. `onClose` fires exactly once from any route; all teardown lives
+there. The modal takes focus on open, Tab cycles inside it, and focus
+returns to the opener on close; `role="dialog"` + `aria-modal` are set.
+A modal's sounds are its own (`onCloseClick` is the ✕ only; Esc and the
+backdrop are silent).
+
+**Strings.** Anything a shell or factory carries goes through `t()` at
+the touch that rewrites the line (the touch-once rule for a shell phase,
+§96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay
+outside the locale value.
+
 ## Determinism
 
 A single seeded RNG instance is threaded through everything that involves randomness: map generation, unit stat rolls, recruitment offers, target tie-breaking. The same seed produces the same run, byte-for-byte. This is non-negotiable from day one — it makes replays, bug reports, and shareable seeds trivial to add later, and it keeps "deterministic spectacle" actually deterministic.

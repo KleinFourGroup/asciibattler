@@ -62,3 +62,54 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   step into "data now, presentation later" writes the deferred half
   into TODO in the same commit (the 47c landing-note rule, applied to
   a user's idea instead of a code seam).
+
+## The idiom pass (§96)
+
+- **A behavior-equivalence refactor of PRESENTATION gets a stylesheet
+  oracle, not a fuzz oracle** (2026-09-11, 96a–96e): the 47c/47d diff
+  oracle re-derived on CSS — parse HEAD's sheet and the working sheet,
+  resolve `var()` / relative color syntax / rem on the new side, compare
+  declaration by declaration (96a/b: 1552 declarations, 0 diffs) or, when
+  selectors move, element by element through a tiny cascade (96d/e:
+  class lists × pseudo states × whole-selector specificity). Same rules
+  as the fuzz oracle: self-check on HEAD-vs-HEAD FIRST (it found two
+  defects in the oracle before it read anything real, and a third —
+  descendant-selector specificity — at 96e), negative-control it (strip a
+  modifier: 29 diffs), and pin the "before" from `git show HEAD:`, never
+  the live file. Candidate: a `scripts/css-oracle` promoted from the
+  scratchpad if §101 or Round 8 collapses the ladders.
+- **The oracle proves the CASCADE; the browser proves the BOX** (96e):
+  a fixed flex column read 0 diffs and still swallowed map clicks in its
+  gaps — and the obvious `pointer-events: none` was silently outranked by
+  `#ui > * { pointer-events: auto }` at id specificity. Two lessons: a
+  layout wrapper is a hit-test change no declaration-diff can see (probe
+  `elementFromPoint` in the wrapper's empty space), and before writing a
+  rule against `#ui`'s children, grep for the precedent (`#ui >
+  .battle-countdown` had the answer).
+- **A preview probe that reads zero stylesheets is reading nothing**
+  (96a, 96d — twice): `preview_start` returns before the page has loaded;
+  a `getComputedStyle` probe in the same breath reads UA defaults (13.33px
+  buttons, black text) and looks like a catastrophic regression. Reload +
+  a 5 s wait, and assert `document.styleSheets.length` + `window.__game`
+  before believing a number.
+- **The console buffer is cumulative and HMR fires between edits** (96e):
+  seven `ReferenceError`s from reloads that ran while an import landed
+  after its first use. Read the console only after a fresh navigation of
+  the FINISHED tree, and read the `?t=` timestamps against the last edit
+  before calling anything a bug.
+- **A codemod with exactly-once guards is a code-reality audit that runs
+  itself** (96c): every replacement asserting one match caught a
+  legitimate second `mount.appendChild` (the exit clones) and a CRLF
+  working copy against an LF index — both real, neither a regression.
+  Normalize line endings on read; loosen a guard only to the exact shape
+  it was wrong about.
+- **A hidden pane runs no rAF, so a fade-in class flip can never be
+  observed there** (96c): `rafFiredDuring: 0`. Assert the structural half
+  (one root mounted per swap, the outgoing one gone after its fade) and
+  hand the visual half to the playtest explicitly — don't write
+  "verified" over a class you could not see.
+- **The per-step playtest paid for itself five times** (§96): the user
+  played after every commit instead of once at the close; nothing was
+  found, which is the point — a phase that touches every screen with a
+  step's worth of change at a time is auditable by eye; a phase-end walk
+  of seven steps' changes would not have been.

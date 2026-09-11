@@ -148,11 +148,13 @@ restore is IN (the charter's content; the one behavior it adds).
   consumers migrated, one CSS rule added; four keys → `ui.json` (67), the
   baseline 103 → 99; browser-proven (focus returns to the roster button /
   the map chip). WORKLOG §96f.
-- [ ] **96g — the docs + the exit.** DESIGN §UI idioms gains the shells
-  section (§103 signs the whole); ARCHITECTURE's ui tree; the ROADMAP
-  stub. **Exit = the user's eyeball walk through every screen.**
-  Predictions: no snapshot bump; no fuzz trigger (src/ui only); ui.json
-  +~25 keys.
+- [x] **96g — the docs + the exit.** ✅ 2026-09-11: DESIGN §UI idioms
+  created with the shells section (tokens · screens · buttons · chips ·
+  modals · strings; §103 signs the whole); ARCHITECTURE's ui tree kept per
+  step; the scratchpad's §96 entries. Predictions held: no snapshot bump,
+  no fuzz trigger, ui.json +15 keys (52 → 67; the "~25" over-counted the
+  non-primary buttons touch-once left for §100). **Exit = the user's
+  eyeball walk — taken as five per-step playtests, every one clear.**
 
 ## Phase 96.5 — the live pool bar + the chip rule (INSERTED 2026-09-10)
 

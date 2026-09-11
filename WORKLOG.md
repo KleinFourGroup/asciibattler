@@ -1090,3 +1090,62 @@ computed exactly HEAD's declared values (the dim pass 0.7 / 13px / 8px
 the corner 12px / 8px 18px / fixed 16/16; the base 14px / 10px 28px / the
 dark-amber frame). The page-not-loaded trap bit a second time (a probe
 read zero stylesheets — reload + a 5 s wait before believing a probe).
+
+**The 96d playtest (2026-09-11): clear.**
+
+### 96e — the chip base + the chrome column (2026-09-11)
+
+**The shape** (`src/ui/chip.ts` + ui.css): `.chip` is the plate the four
+page-lifetime chips shared by copy (font · 18px · uppercase · amber on
+translucent black · the frame · 10px 18px · min-width 128); `chipPulse(el)`
+is the one 450 ms `.is-pulsing` flash (three byte-identical copies
+deleted); `createChromeColumn(mount)` is a Game-owned `position: fixed`
+flex column at 20/20 the chips mount INTO — the four `position: fixed;
+top: N` pins (20 · 76 · 132 · 188, each "measured" from the chip above)
+are gone. **Order is CSS `order`** (bits 1 · cache 2 · map 3 · pool 4),
+so Game's construction (and bus-subscription) order stays untouched — no
+behavior change. **A hidden chip collapses** (decision D): one
+`.chrome-column > .is-hidden { display: none }` replaces four per-chip
+rules, and the chips below move up.
+
+**Measured first, then chosen:** the old offsets implied gaps of 11 / 10
+/ 10 px against chip heights of 45 / 46 / 46 (the bits chip is one pixel
+shorter — its baseline-aligned 13px label). One `gap: 10px` lands the
+column at **20 / 75 / 131 / 187** — a one-pixel lift on three chips, the
+price of one gap instead of three measurements, reported rather than
+hidden. On MapScene (the map chip hidden) the pool chip now sits at 131,
+in the third slot, where before it floated at 188 over a 56px hole.
+
+**Two mounts, not one:** the cache modal and the sector-map overlay used
+the same `mount` as their chips. Inside the column they would inherit its
+`z-index: 15` stacking context and a `z-index: 30` modal would render
+UNDER the `z-index: 20` corner buttons — so both constructors now take
+the page mount for the overlay and the column for the chip, and the
+browser confirmed the modal's parent is `#ui` and it covers the chip.
+
+**The one thing the CSS oracle structurally cannot see, and the browser
+caught:** a fixed flex column is a BOX over the corner of every screen,
+and its gaps (and the width past a narrow chip) intercept clicks the old
+free-floating chips never did. `.chrome-column { pointer-events: none }`
++ `.chrome-column > * { pointer-events: auto }` was the fix — and the
+first probe read `pointer-events: auto` on the column and a gap hit that
+landed ON it: `#ui > * { pointer-events: auto }` outranks a class at id
+specificity. The stylesheet already carried the answer (`#ui >
+.battle-countdown`), so the rule is `#ui > .chrome-column`. The re-probe:
+the gap hits the screen beneath, the chips still take their clicks.
+
+**Proofs:** tsc clean; the cascade oracle over **14 chip states (bits ·
+cache · map · pool × plain / pulsing / hidden / over / low / losing) × 3
+pseudo states, 651 properties, 0 diffs** with the four moved properties
+(position · top · left · z-index) and `order` on an explicit ignore list —
+the control run without the list flagged exactly those and nothing else;
+the oracle itself needed a fix first (it scored `.chrome-column >
+.is-hidden` as ONE class and read nine phantom `display` diffs — whole-
+selector specificity now; the 96d sites re-read 0 under it); the browser:
+the tops above, the collapse on MapScene, the pulse (class on, gone at
+600 ms), the modal above the column and closing on Esc, the click-through
+after the fix. Console: no error from the finished tree — the buffer
+(which persists across reloads) holds seven `ReferenceError`s from the
+HMR reloads that fired BETWEEN edits (an import landing after its first
+use), every one timestamped before the last edit; a fresh load after it
+added none.

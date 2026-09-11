@@ -31,16 +31,16 @@
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
-
-/** How long the value-change pulse glows (`.is-pulsing`). */
-const PULSE_MS = 450;
+import { chipPulse } from './chip';
 
 export class BitsOverlay {
   private readonly el: HTMLDivElement;
   private readonly value: HTMLSpanElement;
-  private pulseTimer: number | null = null;
+  /** A brief glow so an earn is noticeable mid-battle without a hitsplat. */
+  private readonly pulse: () => void;
 
   constructor(
+    /** 96e — the chrome column (src/ui/chip.ts), not the page mount. */
     mount: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly getBits: () => number,
@@ -51,7 +51,8 @@ export class BitsOverlay {
     startHidden = false,
   ) {
     this.el = document.createElement('div');
-    this.el.className = 'bits-overlay';
+    this.el.className = 'chip bits-overlay';
+    this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
     this.value = document.createElement('span');
     this.value.className = 'bits-overlay__value';
@@ -81,15 +82,5 @@ export class BitsOverlay {
    *  the only sites where the balance changes without a `run:bitsChanged`). */
   refresh(): void {
     this.value.textContent = String(this.getBits());
-  }
-
-  /** A brief glow so an earn is noticeable mid-battle without a hitsplat. */
-  private pulse(): void {
-    if (this.pulseTimer !== null) window.clearTimeout(this.pulseTimer);
-    this.el.classList.add('is-pulsing');
-    this.pulseTimer = window.setTimeout(() => {
-      this.el.classList.remove('is-pulsing');
-      this.pulseTimer = null;
-    }, PULSE_MS);
   }
 }

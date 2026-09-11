@@ -1630,25 +1630,51 @@ body {
   padding: 10px 18px;
 }
 
-/* 48d — the persistent bits chip: the game's first PAGE-LIFETIME UI element
-   (Game-owned, appended once to #ui, survives every scene swap). Top-left in
-   and out of battle — the .hud-hop chip moved to its right. Fixed (ignores
-   host-screen scroll, like the corner card-list buttons); z-index 15 = above
-   the plain screens (which carry no z-index), below the corner buttons (20) /
-   modals (30), and under the #scanlines rake (1000) like all chrome. The
-   value is TERMINAL_GREEN (the gain color); .is-pulsing flashes the border
-   green for PULSE_MS on any balance change so mid-run earns register. */
-.bits-overlay {
+/* 96e — THE CHROME COLUMN + THE CHIP PLATE (src/ui/chip.ts). The four
+   page-lifetime chips (bits 48d · cache 49f · sector map 78e · pool 94e)
+   mount into ONE Game-owned flex column in the top-left corner instead of
+   each pinning itself at a top: N measured from the chip above (20 · 76 ·
+   132 · 188 px — a 5-digit balance or a font change desynchronized them).
+   Fixed (ignores host-screen scroll, like the corner card-list buttons);
+   z-index 15 = above the plain screens (no z-index), below the corner
+   buttons (20) / modals (30), under the #scanlines rake (1000) like all
+   chrome. The column takes NO pointer events (its gaps and its width past
+   a narrow chip must not swallow a map click); the chips do. The order is
+   fixed by `order` on each chip class, and a hidden chip COLLAPSES — the
+   ones below move up (the §96 decision D; the map chip hides on MapScene).
+   The .hud-hop battle chip still sits to the bits chip's right (HUD-owned). */
+.chrome-column {
   position: fixed;
   top: 20px;
   left: 20px;
   z-index: 15;
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px; /* the old measured offsets implied 11 / 10 / 10 — one gap now */
+}
+
+/* The id-qualified form is what beats `#ui > * { pointer-events: auto }`
+   (the .battle-countdown precedent): the column is a box over the corner
+   of every screen and its gaps must pass clicks through; the chips take
+   them back. */
+#ui > .chrome-column {
+  pointer-events: none;
+}
+
+.chrome-column > * {
+  pointer-events: auto;
+}
+
+.chrome-column > .is-hidden {
+  display: none;
+}
+
+/* The plate every chip shares: the 51e card-list-button scale (the R1 1.5×
+   user call), amber terminal chrome on a translucent black. A chip's own
+   class adds its layout (flex row / column), accent, cursor and transition. */
+.chip {
   font-family: var(--font-mono);
-  /* 51e — raised to the card-list-button scale (the R1 1.5× user call
-     finally applied here too; the cache chip + .hud-hop pins move with it). */
   font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -1658,6 +1684,18 @@ body {
   padding: 10px 18px;
   min-width: 128px;
   transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* 48d — the persistent bits chip: the game's first PAGE-LIFETIME UI element
+   (Game-owned, survives every scene swap), first in the column in and out
+   of battle. The value is TERMINAL_GREEN (the gain color); .is-pulsing
+   flashes the border green for CHIP_PULSE_MS on any balance change so
+   mid-run earns register. */
+.bits-overlay {
+  order: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .bits-overlay__value {
@@ -1674,35 +1712,18 @@ body {
   box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.55);
 }
 
-.bits-overlay.is-hidden {
-  display: none;
-}
-
-/* 94e — the persistent run-pool chip (src/ui/PoolOverlay.ts): the FOURTH chip
-   of the left column (bits 20 · cache 76 · sector-map 132 · pool 188 px,
-   measured — the 78e map chip hides on MapScene, so the slot is its), on
-   every screen — the map, an event, the port, a reward, a recruit, the seam.
-   The battle HUD + the turn screens keep their full gauges; this is the
-   always-on one. Pulses on every pool move (run:poolChanged); .is-losing
-   flags a loss (chip / damage), .is-low the last quarter. */
+/* 94e — the persistent run-pool chip (src/ui/PoolOverlay.ts): the FOURTH
+   chip of the column, on every screen — the map, an event, the port, a
+   reward, a recruit, the seam (96e: when the map chip hides on MapScene it
+   moves up into the third slot). The battle HUD + the turn screens keep
+   their full gauges; this is the always-on one (§96.5 hides it there).
+   Pulses on every pool move (run:poolChanged); .is-losing flags a loss
+   (chip / damage), .is-low the last quarter. */
 .pool-overlay {
-  position: fixed;
-  top: 188px; /* under the sector-map chip (132px + its measured height) */
-  left: 20px;
-  z-index: 15;
+  order: 4;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: var(--font-mono);
-  font-size: var(--text-18);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-terminal-amber);
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--color-terminal-amber);
-  padding: 10px 18px;
-  min-width: 128px;
-  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .pool-overlay__head {
   display: flex;
@@ -1743,34 +1764,19 @@ body {
   border-color: var(--color-neon-red);
   box-shadow: 0 0 8px rgb(from var(--color-neon-red) r g b / 0.55);
 }
-.pool-overlay.is-hidden {
-  display: none;
-}
 
 /* 49f — the persistent cache chip: the bits chip's page-lifetime sibling
-   (src/ui/CacheOverlay.ts), stacked BELOW it — the in-battle .hud-hop chip
-   owns the slot to the bits chip's right, so persistent chrome grows as a
-   left COLUMN (§51's cohesion review owns refinements, same note as
-   .hud-hop). Clickable: it opens the cache modal on any screen. Fluorescent
-   blue value (the relic/packet accent, vs the bits chip's gain-green);
-   .is-over flags the forced-keep shrink state (held > derived capacity). */
+   (src/ui/CacheOverlay.ts), second in the column — the in-battle .hud-hop
+   chip owns the slot to the bits chip's right, so persistent chrome grows
+   as a left COLUMN. Clickable: it opens the cache modal on any screen.
+   Fluorescent blue value (the relic/packet accent, vs the bits chip's
+   gain-green); .is-over flags the forced-keep shrink state (held > derived
+   capacity). */
 .cache-overlay {
-  position: fixed;
-  top: 76px; /* 51e — stacks under the enlarged bits chip (measured) */
-  left: 20px;
-  z-index: 15;
+  order: 2;
   display: flex;
   align-items: baseline;
   gap: 8px;
-  font-family: var(--font-mono);
-  font-size: var(--text-18); /* 51e — the card-list-button scale, with the bits chip */
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-terminal-amber);
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--color-terminal-amber);
-  padding: 10px 18px;
-  min-width: 128px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
 }
@@ -1800,29 +1806,14 @@ body {
   color: var(--color-neon-red);
 }
 
-.cache-overlay.is-hidden {
-  display: none;
-}
-
 /* 78e — the sector-map chip: the third chrome-column chip (bits → cache →
    map), same terminal plate as its siblings. Clicking it (or `M`) opens the
    read-only sector-map overlay from any screen it's shown on; Game hides it
-   on MapScene (redundant), pre-run, and game-over. */
+   on MapScene (redundant), pre-run, and game-over — and the pool chip
+   below moves up into its slot (96e). */
 .sector-map-chip {
-  position: fixed;
-  top: 132px; /* stacks under the cache chip (76px + its measured height) */
-  left: 20px;
-  z-index: 15;
-  font-family: var(--font-mono);
-  font-size: var(--text-18);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  order: 3;
   text-align: left;
-  color: var(--color-terminal-amber); /* the map/current-node accent */
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--color-terminal-amber);
-  padding: 10px 18px;
-  min-width: 128px;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
 }
@@ -1830,10 +1821,6 @@ body {
 .sector-map-chip:hover {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
-}
-
-.sector-map-chip.is-hidden {
-  display: none;
 }
 
 /* 78e — the overlay the chip/keybind opens: a fixed full-viewport host the

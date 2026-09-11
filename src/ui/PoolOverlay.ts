@@ -26,9 +26,7 @@
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { POOL_LABELS } from './chipLabels';
-
-/** How long the value-change pulse glows (`.is-pulsing`). */
-const PULSE_MS = 450;
+import { chipPulse } from './chip';
 
 export interface PoolReading {
   readonly current: number;
@@ -39,16 +37,18 @@ export class PoolOverlay {
   private readonly el: HTMLDivElement;
   private readonly value: HTMLSpanElement;
   private readonly fill: HTMLDivElement;
-  private pulseTimer: number | null = null;
+  private readonly pulse: () => void;
 
   constructor(
+    /** 96e — the chrome column (src/ui/chip.ts), not the page mount. */
     mount: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly getPool: () => PoolReading,
     startHidden = false,
   ) {
     this.el = document.createElement('div');
-    this.el.className = 'pool-overlay';
+    this.el.className = 'chip pool-overlay';
+    this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
     const head = document.createElement('div');
     head.className = 'pool-overlay__head';
@@ -92,14 +92,5 @@ export class PoolOverlay {
     const pct = max > 0 ? Math.max(0, Math.min(1, current / max)) : 0;
     this.fill.style.width = `${pct * 100}%`;
     this.el.classList.toggle('is-low', max > 0 && current / max <= 0.25);
-  }
-
-  private pulse(): void {
-    if (this.pulseTimer !== null) window.clearTimeout(this.pulseTimer);
-    this.el.classList.add('is-pulsing');
-    this.pulseTimer = window.setTimeout(() => {
-      this.el.classList.remove('is-pulsing');
-      this.pulseTimer = null;
-    }, PULSE_MS);
   }
 }

@@ -48,7 +48,11 @@ export class SectorMapOverlay {
   };
 
   constructor(
+    /** The page mount — the OVERLAY's host (fixed full-viewport, z 40; it
+     *  must not sit inside the chrome column's stacking context). */
     private readonly mount: HTMLElement,
+    /** 96e — the chrome column the CHIP mounts into (src/ui/chip.ts). */
+    chips: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly getView: () => SectorMapView | null,
@@ -59,11 +63,11 @@ export class SectorMapOverlay {
   ) {
     this.chip = document.createElement('button');
     this.chip.type = 'button';
-    this.chip.className = 'sector-map-chip is-hidden';
+    this.chip.className = 'chip sector-map-chip is-hidden';
     this.chip.textContent = '⊞ map';
     this.chip.title = `Sector map (${keyLabel})`;
     this.chip.addEventListener('click', () => this.toggle());
-    mount.appendChild(this.chip);
+    chips.appendChild(this.chip);
   }
 
   /** Game.swap pushes scene-derived availability. Going unavailable closes an

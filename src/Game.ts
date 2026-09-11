@@ -22,6 +22,7 @@ import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
+import { createChromeColumn } from './ui/chip';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
@@ -207,8 +208,12 @@ export class Game implements RunDispatcher {
     // reassignment (see the ordering note there).
     // 63e — getters are null-safe (a pre-select boot has no run; the chip
     // starts hidden then and `run:started` reveals it on confirm).
+    // 96e — the four chips mount into ONE chrome column (src/ui/chip.ts);
+    // their order is CSS `order`, not construction order, so the
+    // construction (and subscription) order below is untouched.
+    const chips = createChromeColumn(uiMount);
     this.bitsOverlay = new BitsOverlay(
-      uiMount,
+      chips,
       this.bus,
       () => this.run?.bits ?? 0,
       this.run === null,
@@ -218,7 +223,7 @@ export class Game implements RunDispatcher {
     // sibling (the user's "the pool everywhere"); the same first-paint /
     // refresh() ordering as the bits chip.
     this.poolOverlay = new PoolOverlay(
-      uiMount,
+      chips,
       this.bus,
       () => ({ current: this.run?.playerHealth ?? 0, max: HEALTH.playerHealthMax }),
       this.run === null,
@@ -229,6 +234,7 @@ export class Game implements RunDispatcher {
     // invisible (the dispatcher pattern); `this` is the RunDispatcher.
     this.cacheOverlay = new CacheOverlay(
       uiMount,
+      chips,
       this.bus,
       this,
       this.audio,
@@ -250,6 +256,7 @@ export class Game implements RunDispatcher {
     // shows on (scene availability is pushed from `swap`).
     this.sectorMapOverlay = new SectorMapOverlay(
       uiMount,
+      chips,
       this,
       this.audio,
       () => {

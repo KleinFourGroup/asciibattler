@@ -133,10 +133,14 @@ restore is IN (the charter's content; the one behavior it adds).
   `actionButton` copies folded; the three `type="button"` fixed; eleven
   keys → `ui.json` (52 → 63), baseline 115 → 103; the cascade oracle 367
   properties / 0 diffs; six browser probes = HEAD. WORKLOG §96d.
-- [ ] **96e — the chip base.** `src/ui/chip.ts` (the plate + the one
-  pulse); a Game-owned flex column hosts the four chips in fixed order;
-  the four pixel offsets deleted; collapse on hide (D). The cache chip
-  stays a `<div>` (a `<button>` adds keyboard reach — §100's rule).
+- [x] **96e — the chip base.** ✅ 2026-09-11: `src/ui/chip.ts` (`.chip` +
+  `chipPulse` + `createChromeColumn`); the four pixel pins → one flex
+  column with CSS `order` (construction order untouched), `gap: 10px` →
+  20 / 75 / 131 / 187 (a 1px lift on three); collapse on hide (D) live —
+  the pool chip sits third on MapScene; the modal/overlay keep the page
+  mount; `#ui > .chrome-column` passes clicks through (the browser caught
+  the id-specificity trap); the oracle 651 properties / 0 diffs. The cache
+  chip stays a `<div>` (§100). WORKLOG §96e.
 - [ ] **96f — the modal shell.** `src/ui/modal.ts` (title · dismissable ·
   a body slot; focus trap + restore, ONE Esc handler, backdrop, ✕); the
   three consumers migrate (the cache modal re-renders its body inside the

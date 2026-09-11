@@ -38,9 +38,7 @@ import type { UnitTemplate } from '../sim/Unit';
 import { packetById, type PacketConfig, type UseContext } from '../config/packets';
 import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunPhase } from '../run/Run';
-
-/** How long the value-change pulse glows (matches the bits chip). */
-const PULSE_MS = 450;
+import { chipPulse } from './chip';
 
 /** The live run state the overlay reads — injected as getters (the
  *  BitsOverlay `getBits` pattern), so a Run swap on reset is invisible. */
@@ -55,14 +53,18 @@ export interface CacheOverlayDeps {
 export class CacheOverlay {
   private readonly el: HTMLDivElement;
   private readonly value: HTMLSpanElement;
-  private pulseTimer: number | null = null;
+  private readonly pulse: () => void;
   private modalOverlay: HTMLDivElement | null = null;
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.key === 'Escape' && this.deps.getOverflow() === 0) this.closeModal();
   };
 
   constructor(
+    /** The page mount — the MODAL's host (a fixed full-viewport overlay;
+     *  it must not sit inside the chrome column's stacking context). */
     private readonly mount: HTMLElement,
+    /** 96e — the chrome column the CHIP mounts into (src/ui/chip.ts). */
+    chips: HTMLElement,
     bus: EventBus<GameEvents>,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
@@ -71,7 +73,8 @@ export class CacheOverlay {
     startHidden = false,
   ) {
     this.el = document.createElement('div');
-    this.el.className = 'cache-overlay';
+    this.el.className = 'chip cache-overlay';
+    this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
     this.el.title = 'The cache — your held packets';
     this.value = document.createElement('span');
@@ -85,7 +88,7 @@ export class CacheOverlay {
       this.audio.play('click');
       this.openModal();
     });
-    mount.appendChild(this.el);
+    chips.appendChild(this.el);
     this.refresh();
 
     // Page-lifetime subscriptions — never unsubscribed (the chip lives as
@@ -123,15 +126,6 @@ export class CacheOverlay {
     const size = this.deps.getSize();
     this.value.textContent = `▤ ${held}/${size}`;
     this.el.classList.toggle('is-over', this.deps.getOverflow() > 0);
-  }
-
-  private pulse(): void {
-    if (this.pulseTimer !== null) window.clearTimeout(this.pulseTimer);
-    this.el.classList.add('is-pulsing');
-    this.pulseTimer = window.setTimeout(() => {
-      this.el.classList.remove('is-pulsing');
-      this.pulseTimer = null;
-    }, PULSE_MS);
   }
 
   /** The 49e engine's phase→context derivation, mirrored for availability

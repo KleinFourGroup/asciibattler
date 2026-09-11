@@ -346,7 +346,7 @@ src/
     CharacterSelectScene.ts  #   63e: DOM-only, wraps CharacterSelectScreen — the ONE scene that mounts with ctx.run === null (the choice precedes Run construction); every other scene asserts via requireRun(ctx)
 
   ui/
-    ui.css                   # 96a: `:root` holds the `--color-*` tokens — the palette thirteen mirror COLORS (src/render/palette.ts, the source of truth; tests/ui-tokens.test.ts pins them equal) + role names + the grays by level; zero raw hexes below :root, palette tints via relative color syntax `rgb(from var(--color-x) r g b / a)`; a Round 8 palette swap sets the tokens at runtime over the defaults
+    ui.css                   # 96a: `:root` holds the `--color-*` tokens — the palette thirteen mirror COLORS (src/render/palette.ts, the source of truth; tests/ui-tokens.test.ts pins them equal) + role names + the grays by level; zero raw hexes below :root, palette tints via relative color syntax `rgb(from var(--color-x) r g b / a)`; a Round 8 palette swap sets the tokens at runtime over the defaults. 96b: the 20 `--text-<px>` tokens in rem (exact 1:1 with the old px ladder; every `font-size` below :root is a token — a Round 8 text-scale setting sets the html font-size and the ladder follows)
     fade.ts                  # fadeIn / fadeOutAndRemove — shared screen transitions
     HUD.ts                   # In-battle HUD: the hop·turn chip (top-left) + location banner (top-center) + the four card/control panes below. unit:* events drive the card panes (addCard/refreshHp/removeUnit over one cards map); §32c refreshStatuses (BattleScene-driven, per-tick gated) updates each compact card's status row
                              # Q1: speed-command pane (top-right): per-speed buttons 0.5/1/2/3 + pause toggle (hotkeyed via Keybindings)
@@ -453,7 +453,7 @@ scripts/                     # Dev-only Node utilities; not bundled into dist/
 
 tests/
   smoke.test.ts
-  ui-tokens.test.ts          # 96a: the CSS token pins (palette.ts ⇄ ui.css :root at the same hex · zero raw hexes outside :root · zero palette-triplet rgba() · every role token referenced) — the derived-artifact tripwire shape on the stylesheet
+  ui-tokens.test.ts          # 96a: the CSS token pins (palette.ts ⇄ ui.css :root at the same hex · zero raw hexes outside :root · zero palette-triplet rgba() · every role token referenced · 96b: every font-size a rem `--text-*` token, every token referenced) — the derived-artifact tripwire shape on the stylesheet
   integration/               # determinism, snapshot-roundtrip, variable-size, layout-deadlock,
                              # spawn-overflow, corridor-flow, per-archetype battle tests
   fuzz/                      # A3: headless balance harness (opt-in CLI)

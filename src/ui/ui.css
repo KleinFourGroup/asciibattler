@@ -49,6 +49,33 @@
   --color-gray-22: #222;
   --color-gray-0a: #0a0a0a;
   --color-miss-glow: #5aa0ff;
+
+  /* 96b — THE TEXT TOKENS, in rem against the browser default 16px. Exact
+     1:1 with the px sizes the sheet had (decision B — collapsing the ladder
+     is a visual sweep, not this step); the name is the default-scale px so
+     the mapping is legible. A Round 8 text-scale setting sets the html
+     font-size and every token follows. tests/ui-tokens.test.ts pins: every
+     font-size below :root is a token, every token is rem and referenced. */
+  --text-8-5: 0.53125rem; /* 8.5px */
+  --text-9: 0.5625rem; /* 9px */
+  --text-10: 0.625rem; /* 10px */
+  --text-11: 0.6875rem; /* 11px */
+  --text-12: 0.75rem; /* 12px */
+  --text-13: 0.8125rem; /* 13px */
+  --text-14: 0.875rem; /* 14px */
+  --text-15: 0.9375rem; /* 15px */
+  --text-16: 1rem; /* 16px */
+  --text-17: 1.0625rem; /* 17px */
+  --text-18: 1.125rem; /* 18px */
+  --text-20: 1.25rem; /* 20px */
+  --text-21: 1.3125rem; /* 21px */
+  --text-22: 1.375rem; /* 22px */
+  --text-24: 1.5rem; /* 24px */
+  --text-32: 2rem; /* 32px */
+  --text-34: 2.125rem; /* 34px */
+  --text-42: 2.625rem; /* 42px */
+  --text-48: 3rem; /* 48px */
+  --text-56: 3.5rem; /* 56px */
 }
 
 html,
@@ -142,7 +169,7 @@ body {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid var(--color-dark-terminal-amber);
   color: var(--color-terminal-amber);
-  font-size: 9px;
+  font-size: var(--text-9);
   line-height: 1.4;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -248,7 +275,7 @@ body {
   position: absolute;
   /* Center on the anchor and sit just above the unit body; the keyframe
      takes over the transform for the rise. */
-  font-size: 16px;
+  font-size: var(--text-16);
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
@@ -262,7 +289,7 @@ body {
 
 .hitsplat--crit {
   color: var(--color-neon-red);
-  font-size: 21px;
+  font-size: var(--text-21);
   text-shadow:
     0 0 6px rgb(from var(--color-neon-red) r g b / 0.6),
     0 1px 2px rgba(0, 0, 0, 0.95);
@@ -282,7 +309,7 @@ body {
    with a blue glow halo, bigger + heavier than a damage number. Tune freely. */
 .hitsplat--miss {
   color: var(--color-miss-white); /* bright cool white */
-  font-size: 20px;
+  font-size: var(--text-20);
   font-style: italic;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -406,7 +433,7 @@ body {
 }
 
 .map-banner-title {
-  font-size: 22px; /* 51e — a step above the chip scale (user call) */
+  font-size: var(--text-22); /* 51e — a step above the chip scale (user call) */
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -416,7 +443,7 @@ body {
    forewarns (dimmed vs the node glyph — a notice, not an alarm). */
 .map-banner-boss {
   margin-top: 4px;
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-neon-red);
@@ -456,7 +483,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: var(--text-16);
   font-family: var(--font-mono);
   user-select: none;
   cursor: default;
@@ -557,7 +584,7 @@ body {
 .recruit-heading {
   color: var(--color-terminal-amber);
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: var(--text-22);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -584,7 +611,7 @@ body {
 }
 
 .unit-card__glyph {
-  font-size: 48px;
+  font-size: var(--text-48);
   line-height: 1;
   color: var(--color-terminal-green); /* these are player units */
   font-weight: bold;
@@ -628,7 +655,7 @@ body {
 }
 
 .unit-card__header {
-  font-size: 12px;
+  font-size: var(--text-12);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   opacity: 0.7;
@@ -639,7 +666,7 @@ body {
    column for its card-by-card reveal. */
 .unit-card__stats {
   align-self: stretch;
-  font-size: 13px;
+  font-size: var(--text-13);
   display: grid;
   grid-template-columns: 1fr 1fr;
   column-gap: 12px;
@@ -680,7 +707,7 @@ body {
 }
 
 .unit-card__power-hint {
-  font-size: 9px;
+  font-size: var(--text-9);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   opacity: 0.6;
@@ -697,7 +724,7 @@ body {
 }
 
 .unit-card__abilities-heading {
-  font-size: 10px;
+  font-size: var(--text-10);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-dark-terminal-amber); /* chrome label */
@@ -707,7 +734,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .unit-card__ability-name {
@@ -720,7 +747,7 @@ body {
 }
 
 .unit-card__ability-cadence {
-  font-size: 11px;
+  font-size: var(--text-11);
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }
@@ -753,7 +780,7 @@ body {
 }
 
 .unit-card__xp-label {
-  font-size: 10px;
+  font-size: var(--text-10);
   letter-spacing: 0.08em;
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
@@ -781,7 +808,7 @@ body {
    choice, with the same fluorescent-blue hover. */
 .recruit-pass {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 8px 28px;
@@ -819,7 +846,7 @@ body {
 .promotion-heading {
   color: var(--color-flourescent-blue); /* distinguishes from recruit's amber */
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--text-24);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -901,7 +928,7 @@ body {
 /* M2 — the +N chip appears the moment its stat reveals. */
 .unit-card__stat-delta {
   display: inline-block;
-  font-size: 11px;
+  font-size: var(--text-11);
   color: var(--color-terminal-green);
   animation: unit-card-pop 220ms ease-out;
 }
@@ -921,7 +948,7 @@ body {
   flex-direction: column;
   gap: 2px;
   text-align: left;
-  font-size: 10px;
+  font-size: var(--text-10);
   color: var(--color-terminal-green); /* these rows only ever show gains-made-real */
   visibility: hidden;
 }
@@ -945,7 +972,7 @@ body {
 
 .promotion-continue {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;
@@ -982,7 +1009,7 @@ body {
 .reward-heading {
   color: var(--color-terminal-amber); /* loot is treasure (promotion keeps blue) */
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--text-24);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1007,7 +1034,7 @@ body {
 .reward-portion__title {
   color: var(--color-terminal-green); /* the gain */
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--text-16);
   letter-spacing: 0.06em;
 }
 
@@ -1015,7 +1042,7 @@ body {
   color: var(--color-terminal-amber);
   opacity: 0.75;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   margin-top: 4px;
   max-width: 320px;
 }
@@ -1030,7 +1057,7 @@ body {
    walk-away control (declines everything left). */
 .reward-accept {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 7px 18px;
@@ -1065,7 +1092,7 @@ body {
 .port-heading {
   color: var(--color-terminal-amber); /* commerce */
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--text-24);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1073,7 +1100,7 @@ body {
 .port-subtitle {
   color: var(--color-gray-b0);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 /* Viewport-pinned so Leave never scrolls away (the roster-button idiom). */
@@ -1083,7 +1110,7 @@ body {
   right: 16px;
   z-index: 5;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 8px 18px;
@@ -1109,7 +1136,7 @@ body {
   margin-top: 18px;
   color: var(--color-flourescent-blue); /* the section rail */
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border-bottom: 1px solid var(--color-blue-rule);
@@ -1119,7 +1146,7 @@ body {
 .port-empty-line {
   color: var(--color-gray-80);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .port-unit-grid {
@@ -1159,13 +1186,13 @@ body {
 .port-row__title {
   color: var(--color-terminal-green);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
 }
 
 .port-row__desc {
   color: var(--color-gray-b0);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-11);
   margin-top: 2px;
 }
 
@@ -1179,13 +1206,13 @@ body {
 .port-price {
   color: var(--color-terminal-amber); /* what it costs / pays */
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 
 .port-buy,
 .port-remove {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   padding: 7px 18px;
@@ -1222,7 +1249,7 @@ body {
 .port-sold {
   color: var(--color-gray-80);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
@@ -1254,7 +1281,7 @@ body {
   color: var(--color-terminal-blue); /* the ?-node hue */
   text-shadow: 0 0 6px rgb(from var(--color-terminal-blue) r g b / 0.55);
   font-family: var(--font-mono);
-  font-size: 24px;
+  font-size: var(--text-24);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1262,7 +1289,7 @@ body {
 .event-page-text {
   color: var(--color-gray-d0);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: var(--text-15);
   line-height: 1.7;
 }
 
@@ -1275,7 +1302,7 @@ body {
 
 .event-choice {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   text-align: left;
   padding: 12px 16px;
   background: var(--color-black);
@@ -1305,7 +1332,7 @@ body {
 .event-choice__req {
   pointer-events: none;
   margin-top: 5px;
-  font-size: 11px;
+  font-size: var(--text-11);
   letter-spacing: 0.05em;
   color: var(--color-gray-80);
 }
@@ -1322,7 +1349,7 @@ body {
 
 .port-swap__select {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   background: var(--color-black);
   color: var(--color-terminal-green);
   border: 1px solid var(--color-dark-terminal-amber);
@@ -1335,7 +1362,7 @@ body {
 .reward-cache-line {
   color: var(--color-flourescent-blue); /* the relic/system layer */
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
@@ -1348,7 +1375,7 @@ body {
 
 .reward-swap__select {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   background: var(--color-black);
   color: var(--color-terminal-amber);
   border: 1px solid var(--color-dark-terminal-amber);
@@ -1373,13 +1400,13 @@ body {
 }
 
 .gameover-heading {
-  font-size: 42px;
+  font-size: var(--text-42);
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
 .gameover-subtext {
-  font-size: 14px;
+  font-size: var(--text-14);
 }
 
 .gameover-screen--defeat .gameover-heading {
@@ -1408,7 +1435,7 @@ body {
   color: var(--color-terminal-amber);
   padding: 10px 24px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -1438,14 +1465,14 @@ body {
 }
 
 .sectorcleared-heading {
-  font-size: 42px;
+  font-size: var(--text-42);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-terminal-amber);
 }
 
 .sectorcleared-subtext {
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--color-dark-terminal-amber);
   /* Dim against black (the gameover--complete subtext trick): lift so it
      reads without competing with the heading. */
@@ -1456,13 +1483,13 @@ body {
   /* §90 — the seam floor's heal line. Amber like the heading's family (it's
      the run's own pool, not the road ahead), one step brighter than the
      subtext so the number reads. */
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--color-terminal-amber);
   letter-spacing: 0.05em;
 }
 
 .sectorcleared-next {
-  font-size: 14px;
+  font-size: var(--text-14);
   color: var(--color-terminal-green); /* the road ahead */
 }
 
@@ -1473,7 +1500,7 @@ body {
   color: var(--color-terminal-amber);
   padding: 10px 24px;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   cursor: pointer;
@@ -1502,7 +1529,7 @@ body {
 }
 
 .charselect-heading {
-  font-size: 32px;
+  font-size: var(--text-32);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--color-terminal-green);
@@ -1537,25 +1564,25 @@ body {
 }
 
 .charselect-card__name {
-  font-size: 18px;
+  font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-green);
 }
 
 .charselect-card__desc {
-  font-size: 12px;
+  font-size: var(--text-12);
   line-height: 1.5;
   color: var(--color-terminal-amber);
 }
 
 .charselect-card__roster {
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--color-flourescent-blue);
 }
 
 .charselect-card__daemon {
-  font-size: 12px;
+  font-size: var(--text-12);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-neon-purple);
@@ -1576,7 +1603,7 @@ body {
   border: 1px solid var(--color-terminal-amber);
   color: var(--color-terminal-amber);
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1621,13 +1648,13 @@ body {
 }
 
 .battle-countdown__label {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .battle-countdown__count {
-  font-size: 56px;
+  font-size: var(--text-56);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--color-terminal-green);
@@ -1637,7 +1664,7 @@ body {
 .battle-countdown__fight {
   margin-top: 4px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.08em;
   color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.4);
@@ -1676,7 +1703,7 @@ body {
   top: 20px;
   left: 200px; /* 51e — re-pinned beside the enlarged bits chip (measured) */
   font-family: var(--font-mono);
-  font-size: 18px; /* 51e — the chip row stays one scale */
+  font-size: var(--text-18); /* 51e — the chip row stays one scale */
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
@@ -1704,7 +1731,7 @@ body {
   font-family: var(--font-mono);
   /* 51e — raised to the card-list-button scale (the R1 1.5× user call
      finally applied here too; the cache chip + .hud-hop pins move with it). */
-  font-size: 18px;
+  font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
@@ -1720,7 +1747,7 @@ body {
 }
 
 .bits-overlay__label {
-  font-size: 13px; /* 51e — scaled with the chip */
+  font-size: var(--text-13); /* 51e — scaled with the chip */
   opacity: 0.85;
 }
 
@@ -1749,7 +1776,7 @@ body {
   flex-direction: column;
   gap: 6px;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
@@ -1766,7 +1793,7 @@ body {
   gap: 12px;
 }
 .pool-overlay__label {
-  font-size: 13px;
+  font-size: var(--text-13);
   opacity: 0.85;
 }
 .pool-overlay__value {
@@ -1818,7 +1845,7 @@ body {
   align-items: baseline;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 18px; /* 51e — the card-list-button scale, with the bits chip */
+  font-size: var(--text-18); /* 51e — the card-list-button scale, with the bits chip */
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
@@ -1840,7 +1867,7 @@ body {
 }
 
 .cache-overlay__label {
-  font-size: 13px; /* 51e — scaled with the chip */
+  font-size: var(--text-13); /* 51e — scaled with the chip */
   opacity: 0.85;
 }
 
@@ -1869,7 +1896,7 @@ body {
   left: 20px;
   z-index: 15;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-align: left;
@@ -1911,7 +1938,7 @@ body {
   right: 20px;
   z-index: 42;
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: var(--text-18);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
@@ -1935,7 +1962,7 @@ body {
   transform: translateX(-50%);
   z-index: 42;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.1em;
   color: var(--color-terminal-amber);
   opacity: 0.75;
@@ -1957,7 +1984,7 @@ body {
 
 .cache-shrink-banner {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-neon-red);
@@ -1993,7 +2020,7 @@ body {
 
 .cache-row-name {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--text-16);
   color: var(--color-flourescent-blue);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2001,7 +2028,7 @@ body {
 
 .cache-row-desc {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--color-terminal-amber);
   opacity: 0.85;
   margin-top: 2px;
@@ -2015,7 +2042,7 @@ body {
 .cache-fire-button,
 .cache-discard-button {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   background: rgba(0, 0, 0, 0.6);
@@ -2054,7 +2081,7 @@ body {
 
 .cache-roster-pick-hint {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   color: var(--color-terminal-amber);
   opacity: 0.85;
   text-transform: uppercase;
@@ -2063,7 +2090,7 @@ body {
 
 .cache-roster-pick-unit {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid var(--color-terminal-amber);
   color: var(--color-terminal-amber);
@@ -2095,7 +2122,7 @@ body {
 
 .hud-speed {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
   color: var(--color-terminal-amber);
@@ -2156,7 +2183,7 @@ body {
   /* 78a — enlarged from 13px/4px 10px (a long-standing user nit): the pane is
      the primary in-battle command surface, so it reads at a glance and gives a
      fatter click target. */
-  font-size: 16px;
+  font-size: var(--text-16);
   letter-spacing: 0.08em;
   text-align: left;
   color: var(--color-terminal-amber);
@@ -2228,7 +2255,7 @@ body {
 }
 
 .unit-card--compact .unit-card__glyph {
-  font-size: 34px;
+  font-size: var(--text-34);
 }
 
 .unit-card__compact-top {
@@ -2236,7 +2263,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 11px;
+  font-size: var(--text-11);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
@@ -2301,7 +2328,7 @@ body {
   grid-template-columns: 6px 1fr;
   column-gap: 4px;
   align-items: center;
-  font-size: 8.5px;
+  font-size: var(--text-8-5);
   line-height: 1.3;
 }
 
@@ -2348,7 +2375,7 @@ body {
 }
 
 .unit-card__empower-chip {
-  font-size: 10px;
+  font-size: var(--text-10);
   line-height: 1;
   letter-spacing: 0.08em;
 }
@@ -2447,14 +2474,14 @@ body {
 
 .preturn-heading,
 .postturn-heading {
-  font-size: 24px;
+  font-size: var(--text-24);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-flourescent-blue);
 }
 
 .preturn-sub {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-dark-terminal-amber);
@@ -2464,7 +2491,7 @@ body {
    against, in the enemy pool's hue so "at risk" and "their pool" read as the
    same ledger. */
 .preturn-risk {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-neon-red);
@@ -2479,7 +2506,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  font-size: 17px;
+  font-size: var(--text-17);
   letter-spacing: 0.08em;
   color: var(--color-terminal-amber);
 }
@@ -2487,7 +2514,7 @@ body {
   text-transform: uppercase;
 }
 .preturn-encounter-kind {
-  font-size: 11px;
+  font-size: var(--text-11);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 1px 7px;
@@ -2504,7 +2531,7 @@ body {
 /* K3.5 — the encounter's battlefield line (one map per encounter): brighter
    than the hop sub-line because it's the input to the redraw decision. */
 .preturn-map {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-terminal-amber);
@@ -2513,7 +2540,7 @@ body {
 /* L1 — the run's daemon banner: the relic/meta layer reads FLOURESCENT_BLUE
    (the K4 empower accent) against the amber battlefield line above it. */
 .preturn-daemon {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-flourescent-blue);
@@ -2524,7 +2551,7 @@ body {
    dim line standing where the control would be. A SPENT gate leaves nothing —
    only a denial speaks. */
 .preturn-gate-denied {
-  font-size: 11px;
+  font-size: var(--text-11);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-dark-terminal-amber);
@@ -2539,7 +2566,7 @@ body {
 }
 
 .preturn-hand-label {
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-dark-terminal-amber);
@@ -2612,7 +2639,7 @@ body {
   align-items: flex-start;
   gap: 2px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 6px 12px;
@@ -2660,7 +2687,7 @@ body {
 }
 
 .fire-chip-hint {
-  font-size: 10px;
+  font-size: var(--text-10);
   opacity: 0.85;
   text-transform: none;
   letter-spacing: 0.04em;
@@ -2668,7 +2695,7 @@ body {
 
 .preturn-pass {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 14px;
@@ -2698,7 +2725,7 @@ body {
 
 .preturn-packets-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-11);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-dark-terminal-amber);
@@ -2706,7 +2733,7 @@ body {
 
 .packet-chip {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 5px 12px;
@@ -2729,7 +2756,7 @@ body {
 /* The armed-packet banner (hype's pick-a-card state). */
 .preturn-arm-hint {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-flourescent-blue);
@@ -2751,7 +2778,7 @@ body {
 }
 
 .preturn-card-empower-chip {
-  font-size: 13px;
+  font-size: var(--text-13);
   line-height: 1;
   letter-spacing: 0.08em;
   /* 78d — per-key color set INLINE off EMPOWER_DISPLAY (statusDisplay.ts);
@@ -2773,7 +2800,7 @@ body {
 .postturn-continue,
 .reward-continue {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;
@@ -2821,7 +2848,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--text-13);
   min-width: 340px;
 }
 
@@ -2852,13 +2879,13 @@ body {
   gap: 8px;
   min-width: 340px;
   max-width: 520px;
-  font-size: 12px;
+  font-size: var(--text-12);
 }
 .postturn-fallen-title {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-gray-88);
-  font-size: 11px;
+  font-size: var(--text-11);
 }
 .postturn-fallen-sides {
   display: grid;
@@ -2926,7 +2953,7 @@ body {
 }
 
 .postturn-status {
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -2953,7 +2980,7 @@ body {
 .pool-gauge-head {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -3001,7 +3028,7 @@ body {
   position: fixed;
   z-index: 20;
   font-family: var(--font-mono);
-  font-size: 18px; /* fix(R1): 1.5× the original 12px — user call */
+  font-size: var(--text-18); /* fix(R1): 1.5× the original 12px — user call */
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 12px 24px; /* scaled 1.5× with the font so the button isn't cramped */
@@ -3044,7 +3071,7 @@ body {
   right: 16px;
   z-index: 20;
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 6px 16px;
@@ -3173,7 +3200,7 @@ body {
 
 .roster-modal-title {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--text-16);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-terminal-amber);
@@ -3181,7 +3208,7 @@ body {
 
 .roster-modal-close {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--text-16);
   line-height: 1;
   padding: 4px 10px;
   border: 1px solid var(--color-dark-terminal-amber);
@@ -3211,7 +3238,7 @@ body {
 .roster-empty {
   color: var(--color-dark-terminal-amber);
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-13);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 24px;
@@ -3256,7 +3283,7 @@ body {
 
 .roster-modal-confirm {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-14);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   padding: 10px 28px;

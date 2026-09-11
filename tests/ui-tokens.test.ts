@@ -93,3 +93,36 @@ describe('96a — the CSS color tokens', () => {
     expect(orphans, `unreferenced role tokens in ${SHEET} :root: ${orphans.join(' ')}`).toEqual([]);
   });
 });
+
+/**
+ * 96b — the text tokens: every `font-size` below `:root` is a `--text-*`
+ * token, every token is authored in rem (a Round 8 text-scale setting sets
+ * the html font-size and the ladder follows), and every token is referenced.
+ */
+describe('96b — the CSS text tokens', () => {
+  const textTokens = new Map<string, string>();
+  for (const m of rootBlock.matchAll(/(--text-[a-z0-9-]+)\s*:\s*([^;]+);/g)) {
+    textTokens.set(m[1]!, m[2]!.trim());
+  }
+
+  it('authors every text token in rem', () => {
+    const bad = [...textTokens].filter(([, v]) => !/^[0-9.]+rem$/.test(v)).map(([k, v]) => `${k}: ${v}`);
+    expect(textTokens.size, 'no --text-* tokens in :root').toBeGreaterThan(0);
+    expect(bad, `non-rem text tokens: ${bad.join(' ')}`).toEqual([]);
+  });
+
+  it('routes every font-size below :root through a token', () => {
+    const hits = [...body.matchAll(/font-size\s*:\s*([^;]+);/g)]
+      .map((m) => m[1]!.trim())
+      .filter((v) => !/^var\(--text-[a-z0-9-]+\)$/.test(v));
+    expect(hits, `literal font-size in ${SHEET} — add a --text-* token: ${hits.join(' ')}`).toEqual([]);
+    for (const m of body.matchAll(/var\((--text-[a-z0-9-]+)\)/g)) {
+      expect(textTokens.has(m[1]!), `font-size references an undefined token ${m[1]}`).toBe(true);
+    }
+  });
+
+  it('references every text token at least once', () => {
+    const orphans = [...textTokens.keys()].filter((name) => !body.includes(`var(${name})`));
+    expect(orphans, `unreferenced text tokens in ${SHEET} :root: ${orphans.join(' ')}`).toEqual([]);
+  });
+});

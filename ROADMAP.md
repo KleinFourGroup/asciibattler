@@ -117,8 +117,10 @@ restore is IN (the charter's content; the one behavior it adds).
   thirteen by kebab + role names + the grays by level); 378 `var()` + 54
   RCS tints; the pin `tests/ui-tokens.test.ts`; the oracle read **1552
   declarations, 0 diffs** vs HEAD; RCS browser-verified. WORKLOG §96a.
-- [ ] **96b — the text tokens.** `--text-*` in rem, every `font-size` a
-  token, the same oracle proving px equality.
+- [x] **96b — the text tokens.** ✅ 2026-09-11: 20 `--text-<px>` tokens
+  in rem, 109 references, exact 1:1; the oracle **1552 / 0 diffs** vs
+  `6539610`; the pin's 96b block; six browser probes = HEAD's px. WORKLOG
+  §96b.
 - [ ] **96c — the Screen base.** `src/ui/Screen.ts` (`present(el)` +
   `hide()`); the eleven screens migrate; the HUD, the scenes and every
   `show()` signature untouched.

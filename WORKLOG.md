@@ -956,3 +956,25 @@ decision A.
 ×14 etc.) — not palette, and a naming sweep (`--plate`, `--backdrop`)
 would be judgment under a mechanical step; a Round 8 "plate opacity"
 setting can mint them then.
+
+### 96b — the text tokens (2026-09-11)
+
+The 96a script's sibling: every `font-size: <n>px` below `:root` →
+`var(--text-<n>)`, the 20 tokens inserted in rem against the browser
+default 16px (nothing sets an html font-size; every value is an exact
+binary fraction — `--text-8-5: 0.53125rem`, `--text-13: 0.8125rem`), the
+name the default-scale px so the mapping reads at a glance. **109
+references, 20 tokens, exact 1:1** (decision B). The same three proofs:
+the oracle (rem × 16 → px on the new side) read **1552 declarations, 0
+diffs** vs HEAD (`6539610`); the pin gained a 96b block (every token rem
+· every `font-size` below `:root` a token · every token referenced) and
+was run against the UNCHANGED sheet first — 2 of 7 failed; the browser
+computed 18 / 8.5 / 20 / 42 / 15 / 11px on six probe classes after the
+HMR update, each equal to HEAD's literal for that class (grep'd from the
+pinned HEAD sheet, since the update outran the "before" capture).
+
+**A naming note for Round 8:** a text-scale setting that sets `html {
+font-size }` scales every token; `--text-12` then renders 13.5px at
+1.125×. The name is the STEP, not a promise of pixels — and the ladder
+(20 steps, 12 singletons) is the one an eye-led §101 / Round 8 sweep
+collapses, with the pin and the oracle as its instruments.

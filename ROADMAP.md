@@ -101,6 +101,49 @@ three modals, four chips, nine buttons on the shared idioms; zero raw
 hexes in `ui.css`; every `font-size` a token. **Scope guards:** no
 behavior change on any screen; no new chrome.
 
+**Cut 2026-09-11 (user-signed; the audit + the five decisions are WORKLOG
+§96 kickoff).** The census corrected: 330 hex declarations / 33 distinct
+(the "~90" counted the palette-commented ones) + 89 `rgba()` tints; 109
+`font-size` / 20 distinct px. **Decisions ✅ DECIDED:** (A) the palette
+twelve named after `COLORS`, role names for the rest, palette tints via
+relative color syntax, the `:root` block PINNED equal to `palette.ts` by a
+test · (B) text tokens exact 1:1 (20, rem) · (C) touch-once for a shell
+phase = extract the strings that pass THROUGH the new idiom, nothing else
+in the file (PostTurn's 16 stay for §96.5) · (D) the hidden-chip rule =
+COLLAPSE with a fixed order (bits · cache · map · pool) · (E) focus trap +
+restore is IN (the charter's content; the one behavior it adds).
+
+- [ ] **96a — the color tokens.** `:root` `--color-*`; zero raw hexes
+  outside it; palette tints as `rgb(from var(--color-…) r g b / N%)`;
+  black plate alphas untouched; the pin (`palette.ts` ⇄ `ui.css`, zero
+  hexes outside `:root`). Exit: a scratch oracle resolves every
+  declaration of the new sheet against HEAD's — zero drift.
+- [ ] **96b — the text tokens.** `--text-*` in rem, every `font-size` a
+  token, the same oracle proving px equality.
+- [ ] **96c — the Screen base.** `src/ui/Screen.ts` (`present(el)` +
+  `hide()`); the eleven screens migrate; the HUD, the scenes and every
+  `show()` signature untouched.
+- [ ] **96d — the button factory + `.btn--primary`.** `src/ui/button.ts`
+  (type · class · label · click); the two `actionButton` copies fold in;
+  the nine primary sites on one class + modifiers (transparent ×2, the
+  0.7 pass); the three missing `type="button"`; the labels that pass
+  through the factory → `ui.json` (baseline lowered).
+- [ ] **96e — the chip base.** `src/ui/chip.ts` (the plate + the one
+  pulse); a Game-owned flex column hosts the four chips in fixed order;
+  the four pixel offsets deleted; collapse on hide (D). The cache chip
+  stays a `<div>` (a `<button>` adds keyboard reach — §100's rule).
+- [ ] **96f — the modal shell.** `src/ui/modal.ts` (title · dismissable ·
+  a body slot; focus trap + restore, ONE Esc handler, backdrop, ✕); the
+  three consumers migrate (the cache modal re-renders its body inside the
+  shell; the sector map = the full-viewport variant); the strings that
+  pass through the shell → `ui.json`. Last: the riskiest, the longest
+  eyeball.
+- [ ] **96g — the docs + the exit.** DESIGN §UI idioms gains the shells
+  section (§103 signs the whole); ARCHITECTURE's ui tree; the ROADMAP
+  stub. **Exit = the user's eyeball walk through every screen.**
+  Predictions: no snapshot bump; no fuzz trigger (src/ui only); ui.json
+  +~25 keys.
+
 ## Phase 96.5 — the live pool bar + the chip rule (INSERTED 2026-09-10)
 
 **Inserted** at the §95 playtest — the first since §94 closed without

@@ -829,3 +829,85 @@ accepts the form.
 playtest ships its presentation findings to the NEXT round's first
 playtest. The §94 close had a signed sheet, a frozen config and no eyes
 on the screen; the two findings cost nothing to find and a phase to fix.
+
+## Phase 96 — the shells + the tokens
+
+### Kickoff (2026-09-11) — the code-reality audit + the cut
+
+Pre-flight green at `31dc00b` (typecheck clean · 2922 tests / 37 s). The
+audit re-measured the §Kickoff §E census at HEAD (§95 had since opened
+most of these files for extraction); the deltas that changed the cut:
+
+- **Hexes: 330 declarations, 33 distinct — not "~90".** The ~90 was the
+  count of hexes carrying a palette-name comment. Twelve distinct values
+  are `COLORS` entries; the rest: a hover amber `#ffd060` (×9), eleven
+  grays, `#000`/`#fff`, eight one-offs. Separately **89 `rgba()` tints (41
+  distinct)**, most the palette triplets at an alpha
+  (`rgba(21,244,238,0.08)` = FLOURESCENT_BLUE at 8%). The charter's exit
+  reads "zero raw hexes"; a Round 8 palette swap fails if the tints stay
+  literal — hence decision A's relative-color-syntax rule (one token per
+  palette color serves every tint; browser floor Chrome 119 / Safari 16.4
+  / Firefox 128, well under the WebGL2 floor three r184 already sets).
+- **`font-size`: 109 declarations, 20 distinct px (8.5 → 56), twelve
+  singletons.** Nothing sets a root size — rem is against the browser's
+  16px, so every value is an exact binary-friendly fraction (8.5px =
+  0.53125rem); a 1:1 mapping renders pixel-identical (decision B).
+- **No focus management exists anywhere in `src/ui`** — zero `focus()`,
+  `tabindex`, `aria-modal`, `role=`. "Focus trap + restore" is therefore
+  NEW behavior under a "no behavior change" scope guard; the user's call
+  (E): in — it is the charter's stated content and the only behavior it
+  adds is focus staying inside an open modal.
+- **The three modals confirmed** (CardListModal the reusable one;
+  CacheOverlay re-creating `.roster-overlay/.roster-modal` by hand and
+  REMOVING the ✕ while `overflow > 0` — the forced-keep flow, so the shell
+  takes a `dismissable` flag; SectorMapOverlay the full-viewport variant
+  with `✕ close` + a hint), each with its own window keydown Esc handler.
+- **The four chips confirmed**; the pulse is byte-identical in three
+  files; the column is pixel-pinned at 20/76/132/188px. The map chip
+  ALREADY hides (MapScene / pre-run / game-over) and leaves a 56px hole
+  above the pool chip today; §96.5 adds the pool chip hiding in battle, so
+  the hidden-chip rule is load-bearing now. **Decision D: collapse with a
+  fixed order** — bits never moves, cache never hides, map is always third
+  when present, the pool chip is display-only, so no click target ever
+  shifts; the reserve-the-slot alternative (§101's hysteresis idiom) would
+  leave up to two blank slots once §96.5 lands. The cache chip is a
+  `<div>` taking clicks, not a `<button>` — left so (a button adds keyboard
+  reach, §100's rule). The in-battle `.hud-hop` chip sits beside the bits
+  chip at a "measured" 200px — HUD-owned, a §101 item, not touched here.
+- **Buttons: 28 inline `createElement('button')` in 14 files.** The nine
+  primary rules are near-identical except two `transparent` backgrounds
+  (gameover · sectorcleared), the 0.7-opacity recruit pass, and
+  `.charselect-card` being a 300px card; `actionButton()` is byte-identical
+  in PortScreen + RewardScreen; **three** buttons lack `type="button"`
+  (GameOver · Recruit pass · SectorCleared — the audit's "4" was one high).
+- **Screens: eleven classes** carry the identical show/hide/fade pair (the
+  audit's "13" counted the HUD + a modal); the HUD is seven panes with
+  their own fade lifecycle — not a screen, stays out; the scenes call each
+  screen's own `show(args)` signature, so the base exposes `present(el)` +
+  `hide()` and forces no signature.
+- **Touch-once collides with a shell phase.** §96 opens every screen file;
+  read literally the rule extracts all 115 literals here, contradicting
+  §96.5 ("decide PostTurn's fate before anyone extracts it") and §100 ("the
+  remainder"). **Decision C: a §96 touch extracts the strings that pass
+  THROUGH the new idiom at the rewritten lines** (button labels, modal
+  titles/close text, chip labels — ~25) and nothing else in the file; the
+  95c "bent knowingly" precedent, now stated as the rule for a shell phase.
+- **Token source of truth (A):** `palette.ts` stays it; the CSS `:root`
+  block is PINNED byte-equal by a test (the derived-artifact tripwire
+  pattern), so the stylesheet works standalone and Round 8 swaps by
+  `setProperty` over the defaults. Boot-time injection from `palette.ts`
+  was the alternative — rejected because it makes the sheet unrenderable
+  without the game's JS for no gain the pin doesn't give. No tool GUI
+  imports `ui.css` (nodemap-viz mirrors hues in comments only).
+
+**The cut** (ROADMAP §96): 96a color tokens → 96b text tokens → 96c the
+Screen base → 96d the button factory → 96e the chip base → 96f the modal
+shell → 96g docs + the eyeball exit. Ordered by risk: the two token steps
+are mechanical and proven by a scratch oracle that resolves every
+declaration of the new sheet against HEAD's (re-derived from the OLD
+file, never from the token table — the §79e circularity rule); the shell
+steps follow so their CSS lands on tokens instead of minting hexes to
+convert later; the modal shell is last because it is the one step with
+new behavior. Predictions: no snapshot bump (nothing serialized), no fuzz
+trigger (src/ui only — the hook stays ~45 s), the literal baseline drops
+at 96d + 96f, `ui.json` +~25 keys.

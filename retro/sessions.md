@@ -156,3 +156,70 @@ question and is itself data.
   first thing they will see is a REJECTED v45 save (expected; say so
   before they think it is a bug). The §96 kickoff needs the code-reality
   audit of the modal/chip/button surfaces before any cut.
+
+## 2026-09-11 — §96 the shells + the tokens, kickoff → close — claude-fable-5-1, session 43084f7b
+
+1. **Missing from the orientation:** nothing structural. The charter's
+   "~90 palette-annotated hexes" was a count of the COMMENTED hexes (the
+   real census: 330 declarations / 33 distinct + 89 rgba tints) — found
+   by the kickoff audit in one grep, which is what the audit is for. What
+   the orientation could not have told me: that `#ui > *` re-enables
+   pointer events on every direct child (96e), that RecruitScreen's
+   working copy was CRLF (96c), and that no focus management existed
+   anywhere (the trap was NEW behavior under a "no behavior change" scope
+   guard — surfaced as decision E at the kickoff, not discovered
+   mid-build).
+2. **Norm conflict:** the standing auto-mode-vs-native-tools tension
+   again (filed before); Bash for reads, Read/Edit for quote-bearing
+   text, which is what the norms actually optimize for. "Pause between
+   commits for the user's playtest" vs "operate autonomously": resolved by
+   pausing after every CODE step (five times) and not after docs — the
+   user's cadence confirmed it each time. The charter's "nine buttons on
+   one class" vs "no behavior change": unifying nine near-identical rules
+   WITHOUT visual drift means the incidental deltas survive inside
+   modifiers — I chose zero drift and listed the deltas for a later eye
+   rather than taking a taste call inside a mechanical step.
+3. **Pulled to claim more than verified:** three places, each caught by
+   an instrument before the claim landed. The 96a "before" browser
+   capture ran AFTER the HMR update (the values were matched to HEAD's px
+   by grep instead, and the worklog says so). The 96c walk could not
+   observe the fade-in class in a hidden pane (`rafFiredDuring: 0`) — the
+   worklog hands the fade to the eye explicitly. The 96e "console clean"
+   was written before I saw the buffer held seven mid-edit errors; the
+   line was rewritten to say what the timestamps prove. And the cascade
+   oracle's nine phantom `display` diffs were the oracle's own specificity
+   bug — a 0-diff read from an oracle you have not self-checked is a
+   claim, not a proof.
+4. **Wasted:** the first probe after each `preview_start` (96a and 96d)
+   read zero stylesheets and cost a reload round-trip each; the codemod's
+   two guard trips (a legitimate mount use, a CRLF file) cost a minute
+   each and were both right to trip; the 96e first click-through probe
+   was the one real failure and cost one grep + one rule. Token cost was
+   dominated by long file reads for Edit anchors — the price of the
+   Read-before-Edit contract, paid deliberately for quote safety.
+5. **For the next session:** §96.5 opens with a SMALL DESIGN ROUND the
+   user asked for (a death's read on the live bar · the post-turn screen's
+   fate · the risk line's home) — pose it as a plain-message shape-lock,
+   not a dialog. The scratch oracles (`css-oracle.mjs`,
+   `cascade-oracle.mjs`) lived in this session's scratchpad only; if §101
+   or Round 8 collapses the ladders, re-author from the WORKLOG §96a /
+   §96d descriptions (or promote to `scripts/` then). The three
+   `type="button"` fixes, the hint's un-hardcoded `M`, and the one-pixel
+   chip lift are the only behavior deltas the phase carries; all three
+   are in the worklog.
+
+### §96 — the phase summary (2026-09-11; one session, seven step commits + the kickoff + the close)
+
+One session, kickoff to close: the audit corrected the charter's census
+in one grep; five decisions were posed in a plain message and signed in
+one turn; the two token steps were mechanical and proven by a declaration
+oracle (1552 declarations / 0 diffs, twice); the four shell steps were
+proven by a per-element cascade oracle (367 · 651 properties, 0 diffs)
+plus a browser probe each, and the browser caught the one defect the
+oracles structurally could not (a wrapper's hit-test). Every code step
+was playtested by the user before the next began, five for five clear,
+and the phase-end walk was therefore already done. The pattern across
+the self-report: the instruments (self-check, negative control, the
+zero-stylesheet tell, the console timestamps) did the catching, and each
+catch was written into the worklog as what it was rather than smoothed
+over.

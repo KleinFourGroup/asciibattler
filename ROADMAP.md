@@ -85,33 +85,20 @@ is in git at `18eeddc`; the cut lines stay below.
   empower strings of PreTurnScreen through the table (baseline 23 → 21).
   WORKLOG §95f. **§95 exit = the user playtest.**
 
-## Phase 96 — the shells + the tokens
+## Phase 96 — the shells + the tokens ✅ CLOSED 2026-09-11
 
-**Charter:** ONE modal shell (focus trap + restore, Esc, backdrop, ✕),
-ONE chip base (the shared pulse; a flex column replacing the measured
-pixel offsets), ONE button factory + one primary-action class, a
-`Screen` base for show / hide / fade; the CSS tokens — `--color-*` from
-the ~90 palette-annotated hexes, `--text-*` sizes in rem. **Why here:**
-every later phase builds on the shells (the tooltip on the shell; the
-palette and text-scale settings of Round 8 on the tokens). **Depends
-on:** §95 (the strings these shells carry go through the table).
-**Risk:** medium (touches every screen; eyeball-only). **Decision
-points:** the chip column's ordering rule when a chip hides. **Exit:**
-three modals, four chips, nine buttons on the shared idioms; zero raw
-hexes in `ui.css`; every `font-size` a token. **Scope guards:** no
-behavior change on any screen; no new chrome.
-
-**Cut 2026-09-11 (user-signed; the audit + the five decisions are WORKLOG
-§96 kickoff).** The census corrected: 330 hex declarations / 33 distinct
-(the "~90" counted the palette-commented ones) + 89 `rgba()` tints; 109
-`font-size` / 20 distinct px. **Decisions ✅ DECIDED:** (A) the palette
-twelve named after `COLORS`, role names for the rest, palette tints via
-relative color syntax, the `:root` block PINNED equal to `palette.ts` by a
-test · (B) text tokens exact 1:1 (20, rem) · (C) touch-once for a shell
-phase = extract the strings that pass THROUGH the new idiom, nothing else
-in the file (PostTurn's 16 stay for §96.5) · (D) the hidden-chip rule =
-COLLAPSE with a fixed order (bits · cache · map · pool) · (E) focus trap +
-restore is IN (the charter's content; the one behavior it adds).
+**Outcome (one breath):** the four shells exist and every surface is on
+them — 57 CSS tokens (`--color-*` pinned to `palette.ts`, `--text-*` in
+rem; zero raw hexes or font-sizes below `:root`), the `Screen` base under
+eleven screens, `button()` + `.btn--primary` under the nine walk-on
+buttons, `.chip` + the chrome column under the four chips (a hidden chip
+collapses — decision D), and `openModal` under the three modals with the
+focus trap + restore (the phase's one new behavior — decision E); every
+step proven zero-drift by a stylesheet oracle and playtested by the user
+(five for five clear — the exit). `ui.json` 52 → 67; the literal baseline
+115 → 99; no snapshot bump. The charter is in git at `aaf91b7` (the
+kickoff, with the five signed decisions A–E); DESIGN §UI idioms holds the
+reference; the cut lines stay below.
 
 - [x] **96a — the color tokens.** ✅ 2026-09-11: 37 tokens (the palette
   thirteen by kebab + role names + the grays by level); 378 `var()` + 54

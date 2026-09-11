@@ -27,6 +27,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
 import { Screen } from './Screen';
+import { button } from './button';
 
 export class RewardScreen extends Screen {
   private portionsEl: HTMLDivElement | null = null;
@@ -59,12 +60,11 @@ export class RewardScreen extends Screen {
 
     // 51b — the single exit: Continue declines every remaining portion
     // (accept what you want, walk away in one click instead of N).
-    const cont = document.createElement('button');
-    cont.type = 'button';
-    cont.className = 'reward-continue';
-    cont.textContent = `${t('common.continue')} ▸`;
-    cont.title = 'Decline the remaining rewards and move on';
-    cont.addEventListener('click', () => this.continueRun());
+    const cont = button(`${t('common.continue')} ▸`, {
+      className: 'btn--primary',
+      title: t('reward.continueTitle'),
+      onClick: () => this.continueRun(),
+    });
     panel.appendChild(cont);
 
     this.present(panel);
@@ -182,9 +182,9 @@ export class RewardScreen extends Screen {
         // 51b: skipping it is Continue's job now (declines ride the exit).
         actions.appendChild(this.swapControl(index));
       } else {
-        actions.appendChild(this.actionButton('Accept', 'reward-accept', () =>
-          this.accept(index),
-        ));
+        actions.appendChild(
+          button(t('reward.accept'), { className: 'reward-accept', onClick: () => this.accept(index) }),
+        );
       }
       row.appendChild(actions);
 
@@ -209,25 +209,21 @@ export class RewardScreen extends Screen {
     });
     wrap.appendChild(select);
 
-    wrap.appendChild(this.actionButton('Swap', 'reward-accept reward-swap__button', () => {
-      this.audio.play('pickup');
-      this.dispatcher.dispatch({
-        kind: 'acceptReward',
-        index: portionIndex,
-        swapCacheIndex: Number(select.value),
-      });
-      this.renderPortions();
-    }));
+    wrap.appendChild(
+      button(t('reward.swap'), {
+        className: 'reward-accept reward-swap__button',
+        onClick: () => {
+          this.audio.play('pickup');
+          this.dispatcher.dispatch({
+            kind: 'acceptReward',
+            index: portionIndex,
+            swapCacheIndex: Number(select.value),
+          });
+          this.renderPortions();
+        },
+      }),
+    );
     return wrap;
-  }
-
-  private actionButton(label: string, className: string, onClick: () => void): HTMLButtonElement {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = className;
-    button.textContent = label;
-    button.addEventListener('click', onClick);
-    return button;
   }
 
   private accept(index: number): void {

@@ -19,6 +19,7 @@ import { rulesForTurn } from '../run/chipRule';
 import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { chipLineLabels, POOL_LABELS } from './chipLabels';
 import { Screen } from './Screen';
+import { button } from './button';
 import { renderPoolGauge } from './poolGauge';
 
 export class PostTurnScreen extends Screen {
@@ -94,15 +95,14 @@ export class PostTurnScreen extends Screen {
           : `Next: Turn ${info.turn + 1}`;
     panel.appendChild(status);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'postturn-continue';
-    button.textContent = `${t('common.continue')} ▸`;
-    button.addEventListener('click', () => {
-      this.audio.play('click');
-      this.advance();
+    const cont = button(`${t('common.continue')} ▸`, {
+      className: 'btn--primary',
+      onClick: () => {
+        this.audio.play('click');
+        this.advance();
+      },
     });
-    panel.appendChild(button);
+    panel.appendChild(cont);
 
     return panel;
   }

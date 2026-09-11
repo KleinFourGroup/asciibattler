@@ -14,6 +14,7 @@ import type { RunDispatcher } from '../run/Command';
 import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
+import { button } from './button';
 
 export type GameOverVariant = 'defeat' | 'complete';
 
@@ -58,14 +59,14 @@ export class GameOverScreen extends Screen {
     subtext.textContent = copy.subtext;
     panel.appendChild(subtext);
 
-    const button = document.createElement('button');
-    button.className = 'gameover-button';
-    button.textContent = 'Begin a new run';
-    button.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'resetRun' });
+    const reset = button(t('gameover.newRun'), {
+      className: 'btn--primary btn--exit',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'resetRun' });
+      },
     });
-    panel.appendChild(button);
+    panel.appendChild(reset);
 
     return panel;
   }

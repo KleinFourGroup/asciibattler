@@ -14,6 +14,7 @@ import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
+import { button } from './button';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListButton } from './CardListModal';
 
@@ -73,12 +74,12 @@ export class RecruitScreen extends Screen {
     // H6b — decline the offer. Trial default: always available + free. Leaves
     // the roster + deck untouched and returns to the map (the deck-dilution
     // counterplay grows as the roster outpaces the hand).
-    const pass = document.createElement('button');
-    pass.className = 'recruit-pass';
-    pass.textContent = 'Pass';
-    pass.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'passRecruit' });
+    const pass = button(t('common.pass'), {
+      className: 'btn--primary btn--dim',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'passRecruit' });
+      },
     });
     panel.appendChild(pass);
 

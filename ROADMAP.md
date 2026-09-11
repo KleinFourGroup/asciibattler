@@ -126,11 +126,13 @@ restore is IN (the charter's content; the one behavior it adds).
   keep an `override hide()`), the HUD, the scenes and every `show()`
   signature untouched; a hand-driven browser walk reached 8/11 screens,
   one root mounted per swap. WORKLOG §96c.
-- [ ] **96d — the button factory + `.btn--primary`.** `src/ui/button.ts`
-  (type · class · label · click); the two `actionButton` copies fold in;
-  the nine primary sites on one class + modifiers (transparent ×2, the
-  0.7 pass); the three missing `type="button"`; the labels that pass
-  through the factory → `ui.json` (baseline lowered).
+- [x] **96d — the button factory + `.btn--primary`.** ✅ 2026-09-11:
+  `src/ui/button.ts`; nine rules → `.btn--primary` + `btn--dim` /
+  `btn--exit` / `btn--corner` (the deliberate deltas; the incidental ones
+  preserved inside them, listed for a later collapse); the two
+  `actionButton` copies folded; the three `type="button"` fixed; eleven
+  keys → `ui.json` (52 → 63), baseline 115 → 103; the cascade oracle 367
+  properties / 0 diffs; six browser probes = HEAD. WORKLOG §96d.
 - [ ] **96e — the chip base.** `src/ui/chip.ts` (the plate + the one
   pulse); a Game-owned flex column hosts the four chips in fixed order;
   the four pixel offsets deleted; collapse on hide (D). The cache chip

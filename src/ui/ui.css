@@ -803,28 +803,9 @@ body {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
-/* H6b — decline-the-offer button. Sits below the cards (panel is a centered
-   flex column); muted relative to the cards so it reads as the secondary
-   choice, with the same fluorescent-blue hover. */
-.recruit-pass {
-  font-family: var(--font-mono);
-  font-size: var(--text-13);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 8px 28px;
-  border: 1px solid var(--color-dark-terminal-amber);
-  background: var(--color-black);
-  color: var(--color-terminal-amber);
-  opacity: 0.7;
-  cursor: pointer;
-  transition: border-color 0.1s, background 0.1s, opacity 0.1s;
-}
-
-.recruit-pass:hover {
-  border-color: var(--color-flourescent-blue);
-  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
-  opacity: 1;
-}
+/* H6b — the decline-the-offer button sits below the cards (panel is a
+   centered flex column); 96d: it is `.btn--primary.btn--dim` — the muted
+   pass idiom. */
 
 /* PromotionScreen (E4; M2 staggered reveal). Shown at turn boundaries when
    roster units leveled. The cards themselves are the shared unit card
@@ -970,24 +951,7 @@ body {
   }
 }
 
-.promotion-continue {
-  font-family: var(--font-mono);
-  font-size: var(--text-14);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 10px 28px;
-  border: 1px solid var(--color-dark-terminal-amber);
-  background: var(--color-black);
-  color: var(--color-terminal-amber);
-  cursor: pointer;
-  transition: border-color 0.1s, background 0.1s, color 0.1s;
-}
-
-.promotion-continue:hover {
-  border-color: var(--color-flourescent-blue);
-  background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
-  color: var(--color-flourescent-blue);
-}
+/* The promotion Continue is a bare `.btn--primary` (96d). */
 
 /* RewardScreen (48c). Shown on a won encounter whose reward refs rolled an
    offer (battle → rewards → promotion → recruit). Each portion row resolves
@@ -1103,26 +1067,13 @@ body {
   font-size: var(--text-12);
 }
 
-/* Viewport-pinned so Leave never scrolls away (the roster-button idiom). */
+/* Viewport-pinned so Leave never scrolls away (the roster-button idiom).
+   96d: the look is `.btn--primary.btn--corner`; this class is its POSITION. */
 .port-leave {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 5;
-  font-family: var(--font-mono);
-  font-size: var(--text-12);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  padding: 8px 18px;
-  background: var(--color-black);
-  border: 1px solid var(--color-terminal-amber);
-  color: var(--color-terminal-amber);
-  cursor: pointer;
-  transition: background 0.1s;
-}
-
-.port-leave:hover {
-  background: rgb(from var(--color-terminal-amber) r g b / 0.12);
 }
 
 .port-body {
@@ -1428,24 +1379,7 @@ body {
   filter: brightness(2);
 }
 
-.gameover-button {
-  margin-top: 16px;
-  background: transparent;
-  border: 1px solid var(--color-terminal-amber);
-  color: var(--color-terminal-amber);
-  padding: 10px 24px;
-  font-family: var(--font-mono);
-  font-size: var(--text-14);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: background 0.1s, color 0.1s;
-}
-
-.gameover-button:hover {
-  background: var(--color-terminal-amber);
-  color: var(--color-black);
-}
+/* The game-over button is `.btn--primary.btn--exit` (96d). */
 
 /* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
    (opaque black, mono, amber button), but its own accent story — an amber
@@ -1493,24 +1427,8 @@ body {
   color: var(--color-terminal-green); /* the road ahead */
 }
 
-.sectorcleared-button {
-  margin-top: 16px;
-  background: transparent;
-  border: 1px solid var(--color-terminal-amber);
-  color: var(--color-terminal-amber);
-  padding: 10px 24px;
-  font-family: var(--font-mono);
-  font-size: var(--text-14);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  transition: background 0.1s, color 0.1s;
-}
-
-.sectorcleared-button:hover {
-  background: var(--color-terminal-amber);
-  color: var(--color-black);
-}
+/* The sector-cleared button is `.btn--primary.btn--exit` (96d), the
+   game-over clone it always was. */
 
 /* Character select (63e). The run's first screen when no ?character= pins
    the choice. Functional, not art-directed (the §63 scope guard) — the
@@ -2794,11 +2712,17 @@ body {
   justify-content: center;
 }
 
-/* 51b — .reward-continue joins the shared continue-button chrome (the
-   cohesion move: one walk-on shape across the gate screens). */
-.preturn-continue,
-.postturn-continue,
-.reward-continue {
+/* 96d — THE PRIMARY-ACTION BUTTON: the button factory's idiom
+   (src/ui/button.ts). ONE look for the walk-on buttons that carried nine
+   near-identical rules before (51b's continue trio · the promotion
+   Continue · the recruit pass · the port Leave · game over · sector
+   cleared; the character-select card is a card and keeps its own chrome).
+   Three modifiers name a DELIBERATE per-site delta; every computed value
+   a site had is preserved (the 96d cascade oracle) — the incidental ones
+   (a 13px here, a 24px pad there) are listed in WORKLOG §96d for a later
+   collapse. A site's POSITION stays on its own class (.preturn-continue
+   below, .port-leave) — layout is the screen's, look is the idiom's. */
+.btn--primary {
   font-family: var(--font-mono);
   font-size: var(--text-14);
   letter-spacing: 0.1em;
@@ -2811,12 +2735,56 @@ body {
   transition: border-color 0.1s, background 0.1s, color 0.1s;
 }
 
-.preturn-continue:hover,
-.postturn-continue:hover,
-.reward-continue:hover {
+.btn--primary:hover {
   border-color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
   color: var(--color-flourescent-blue);
+}
+
+/* btn--dim — a PASS (H6b's recruit pass): muted until hovered; the hover
+   lifts the opacity, never the color. */
+.btn--primary.btn--dim {
+  font-size: var(--text-13);
+  padding: 8px 28px;
+  opacity: 0.7;
+  transition: border-color 0.1s, background 0.1s, opacity 0.1s;
+}
+
+.btn--primary.btn--dim:hover {
+  color: var(--color-terminal-amber);
+  opacity: 1;
+}
+
+/* btn--exit — the only control on an opaque end screen (game over ·
+   sector cleared): a full amber frame under the subtext, and the hover
+   FILLS it. */
+.btn--primary.btn--exit {
+  margin-top: 16px;
+  background: transparent;
+  border-color: var(--color-terminal-amber);
+  padding: 10px 24px;
+  transition: background 0.1s, color 0.1s;
+}
+
+.btn--primary.btn--exit:hover {
+  border-color: var(--color-terminal-amber);
+  background: var(--color-terminal-amber);
+  color: var(--color-black);
+}
+
+/* btn--corner — a viewport-pinned corner control (the port Leave):
+   smaller, a full amber frame, an amber wash on hover. */
+.btn--primary.btn--corner {
+  font-size: var(--text-12);
+  padding: 8px 18px;
+  border-color: var(--color-terminal-amber);
+  transition: background 0.1s;
+}
+
+.btn--primary.btn--corner:hover {
+  border-color: var(--color-terminal-amber);
+  background: rgb(from var(--color-terminal-amber) r g b / 0.12);
+  color: var(--color-terminal-amber);
 }
 
 /* 73c — the pre-turn Fight ▸ button is viewport-pinned (the PortScreen

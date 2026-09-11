@@ -78,6 +78,7 @@ import { DECK } from '../config/deck';
 import { HEALTH } from '../config/health';
 import { POOL_LABELS, riskLineTitle } from './chipLabels';
 import { Screen } from './Screen';
+import { button } from './button';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
 import { empowerColor } from '../render/statusDisplay';
@@ -640,15 +641,14 @@ export class PreTurnScreen extends Screen {
     this.refreshHand();
     panel.appendChild(this.handWrap);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'preturn-continue';
-    button.textContent = 'Fight ▸';
-    button.addEventListener('click', () => {
-      this.audio.play('click');
-      this.advance();
+    const fight = button(`${t('preturn.fight')} ▸`, {
+      className: 'btn--primary preturn-continue',
+      onClick: () => {
+        this.audio.play('click');
+        this.advance();
+      },
     });
-    panel.appendChild(button);
+    panel.appendChild(fight);
 
     return panel;
   }

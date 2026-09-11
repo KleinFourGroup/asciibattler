@@ -1024,3 +1024,69 @@ base hide like GameOver) and the user's phase-exit eyeball walk covers
 them. **What the pane could NOT show:** `.is-visible` — the fade-in is a
 rAF class flip in the UNTOUCHED `fade.ts`, and `rafFiredDuring: 0` in a
 hidden pane; the eye owns the fade. Console: no errors across the walk.
+
+**The 96c playtest (2026-09-11): clear through the sector seam** — the
+user reached the sector-cleared beat, so all eleven screens (including
+the three the walk could not reach) are user-verified.
+
+### 96d — the button factory + `.btn--primary` (2026-09-11)
+
+**The factory** (`src/ui/button.ts`): `button(label, {className, onClick,
+title?})` — type · class · label · click, deliberately dumb; the audio cue
+stays in the caller's handler (most play `click`, the reward/port swaps
+`pickup`, the sector-map close nothing — the factory must not decide).
+The two byte-identical `actionButton()` copies (PortScreen, RewardScreen)
+folded into it; the three buttons that lacked `type="button"` (game over ·
+recruit pass · sector cleared) have it now; the character-select card is
+minted by the factory with `label: ''` and keeps its own card chrome.
+
+**The class:** `.btn--primary` = the look the continue trio and the
+promotion Continue already shared byte-for-byte (14px · 10px 28px · a
+dark-amber frame · black · amber · the blue hover). **Three modifiers name
+a DELIBERATE per-site delta** and nothing else: `btn--dim` (the recruit
+pass — 0.7 until hovered, and the hover lifts opacity, never color),
+`btn--exit` (game over + sector cleared — transparent over an opaque
+screen, a full amber frame, the hover FILLS it, the 16px margin under the
+subtext), `btn--corner` (the port Leave — smaller, a full amber frame, an
+amber wash on hover). A site's POSITION stays on its own class
+(`.preturn-continue` bottom-center, `.port-leave` top-right); the four
+site classes with no rule left (promotion · post-turn · reward · recruit)
+are gone from the markup. Nine rules → one rule + three modifiers.
+
+**Zero visual drift, by construction — and the incidental deltas are
+therefore STILL THERE, inside the modifiers:** the pass's 13px / 8px 28px
+vs the base 14px / 10px 28px, the exit pair's 10px 24px, the corner's 12px
+/ 8px 18px, and three different `transition` lists. Each is one line to
+delete when an eye decides the ladder collapses (§101 or the Round 8
+polish); 96d preserved every computed value because "no behavior change
+on any screen" was the scope guard and a mechanical step should not carry
+a taste call.
+
+**Extraction (decision C, the strings that pass THROUGH the factory at the
+rewritten lines):** eleven keys — `preturn.fight` · `common.pass` ·
+`gameover.newRun` · `sectorcleared.pressOn` · `port.leave` · `port.sell` ·
+`port.choose` · `port.swapIn` · `reward.accept` · `reward.swap` ·
+`reward.continueTitle`; the `▸` suffix stays outside the value (the spec's
+glyph rule, the 95f `common.continue` precedent). `ui.json` 52 → **63**;
+the literal baseline **115 → 103** (PreTurn 21→20 · Port 17→13 · Reward
+5→2 · GameOver 1→0 · Promotion 2→1 · Recruit 2→1 · SectorCleared 6→5),
+exactly the prediction. The pre-turn `Pass ▸` and the port's `Remove for N
+bits ▸` (a CardListModal confirm — 96f's) were NOT rewritten and keep
+their literals.
+
+**Four proofs:** (1) tsc clean — it caught two leftover
+`createElement('button')` lines shadowing the import in PostTurn and
+Promotion before anything ran; (2) **a cascade oracle** (scratchpad,
+deleted): per site, the OLD class list against HEAD's sheet vs the NEW
+class list against the working sheet, in three pseudo states, resolved to
+a property map (the `border` shorthand expanded to its longhands so a
+`border-color` over a base compares equal) — **9 sites × 3 states, 367
+properties, 0 diffs**; self-checked HEAD-vs-HEAD (0) and negative-
+controlled by stripping two modifiers (29 diffs) — it can fail; (3) the
+pins — ui-tokens · the key scan · the literal ratchet · the i18n suite, 76
+green; (4) **the browser**: six probe elements with the new class lists
+computed exactly HEAD's declared values (the dim pass 0.7 / 13px / 8px
+28px; the exit pair transparent / amber frame / 10px 24px / 16px margin;
+the corner 12px / 8px 18px / fixed 16/16; the base 14px / 10px 28px / the
+dark-amber frame). The page-not-loaded trap bit a second time (a probe
+read zero stylesheets — reload + a 5 s wait before believing a probe).

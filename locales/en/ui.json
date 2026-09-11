@@ -59,5 +59,16 @@
   "buff.shielded": "Shielded",
   "buff.overclocked": "Overclocked",
   "preturn.empower.silent": "{name} is silent — no empower this turn",
-  "preturn.empower.hint": "click a card to empower"
+  "preturn.empower.hint": "click a card to empower",
+  "preturn.fight": "Fight",
+  "common.pass": "Pass",
+  "gameover.newRun": "Begin a new run",
+  "sectorcleared.pressOn": "Press on",
+  "port.leave": "Leave port",
+  "port.sell": "Sell",
+  "port.choose": "Choose…",
+  "port.swapIn": "Swap in",
+  "reward.accept": "Accept",
+  "reward.swap": "Swap",
+  "reward.continueTitle": "Decline the remaining rewards and move on"
 }

@@ -28,6 +28,7 @@ import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
+import { button } from './button';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 import { promotionDeltaParts } from './promotionDelta';
 
@@ -106,19 +107,18 @@ export class PromotionScreen extends Screen {
     }
     panel.appendChild(cards);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'promotion-continue';
-    button.textContent = 'Continue';
-    button.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'dismissPromotion' });
+    const cont = button(t('common.continue'), {
+      className: 'btn--primary',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'dismissPromotion' });
+      },
     });
-    panel.appendChild(button);
+    panel.appendChild(cont);
 
     // Click-anywhere-to-skip (Continue excluded — its click dismisses).
     panel.addEventListener('click', (ev) => {
-      if (button.contains(ev.target as Node)) return;
+      if (cont.contains(ev.target as Node)) return;
       this.finishTimeline();
     });
 

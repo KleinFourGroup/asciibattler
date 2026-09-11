@@ -33,6 +33,7 @@ import type { GameEvents } from '../core/events';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListModal } from './CardListModal';
 import { Screen } from './Screen';
+import { button } from './button';
 
 export class PortScreen extends Screen {
   private bodyEl: HTMLDivElement | null = null;
@@ -69,13 +70,12 @@ export class PortScreen extends Screen {
 
     // Fixed (viewport-pinned) so it survives the scroll — leaving must never
     // require finding the bottom of a long stock list.
-    const leave = document.createElement('button');
-    leave.type = 'button';
-    leave.className = 'port-leave';
-    leave.textContent = 'Leave port ▸';
-    leave.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'leavePort' });
+    const leave = button(`${t('port.leave')} ▸`, {
+      className: 'btn--primary btn--corner port-leave',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'leavePort' });
+      },
     });
     panel.appendChild(leave);
 
@@ -184,9 +184,10 @@ export class PortScreen extends Screen {
       actions.className = 'port-row__actions';
       actions.appendChild(this.priceTag(refund));
       actions.appendChild(
-        this.actionButton('Sell', 'port-buy', () =>
-          this.transact('pickup', { kind: 'sellPacket', cacheIndex }),
-        ),
+        button(t('port.sell'), {
+          className: 'port-buy',
+          onClick: () => this.transact('pickup', { kind: 'sellPacket', cacheIndex }),
+        }),
       );
       row.appendChild(actions);
       this.bodyEl!.appendChild(row);
@@ -206,15 +207,18 @@ export class PortScreen extends Screen {
     const actions = document.createElement('div');
     actions.className = 'port-row__actions';
     actions.appendChild(this.priceTag(PRICES.unitRemovalPrice));
-    const button = this.actionButton('Choose… ▸', 'port-remove', () => {
-      this.audio.play('click');
-      this.openRemovalPicker();
+    const choose = button(`${t('port.choose')} ▸`, {
+      className: 'port-remove',
+      onClick: () => {
+        this.audio.play('click');
+        this.openRemovalPicker();
+      },
     });
     // The engine's silent no-op conditions, surfaced as disables.
     if (this.run.team.length <= 1 || this.run.bits < PRICES.unitRemovalPrice) {
-      button.disabled = true;
+      choose.disabled = true;
     }
-    actions.appendChild(button);
+    actions.appendChild(choose);
     row.appendChild(actions);
     this.bodyEl.appendChild(row);
   }
@@ -294,9 +298,9 @@ export class PortScreen extends Screen {
       actions.appendChild(control);
     } else {
       actions.appendChild(this.priceTag(price));
-      const button = this.actionButton(t('common.buy'), 'port-buy', onBuy);
-      if (this.run.bits < price) button.disabled = true;
-      actions.appendChild(button);
+      const buy = button(t('common.buy'), { className: 'port-buy', onClick: onBuy });
+      if (this.run.bits < price) buy.disabled = true;
+      actions.appendChild(buy);
     }
     row.appendChild(actions);
     return row;
@@ -310,9 +314,9 @@ export class PortScreen extends Screen {
       footer.appendChild(this.soldBadge());
     } else {
       footer.appendChild(this.priceTag(price));
-      const button = this.actionButton(t('common.buy'), 'port-buy', onBuy);
-      if (this.run.bits < price) button.disabled = true;
-      footer.appendChild(button);
+      const buy = button(t('common.buy'), { className: 'port-buy', onClick: onBuy });
+      if (this.run.bits < price) buy.disabled = true;
+      footer.appendChild(buy);
     }
     return footer;
   }
@@ -331,15 +335,17 @@ export class PortScreen extends Screen {
       select.appendChild(option);
     });
     wrap.appendChild(select);
-    const button = this.actionButton('Swap in', 'port-buy port-swap__button', () =>
-      this.transact('pickup', {
-        kind: 'buyPortPacket',
-        index: stockIndex,
-        swapCacheIndex: Number(select.value),
-      }),
-    );
-    if (this.run.bits < price) button.disabled = true;
-    wrap.appendChild(button);
+    const swapIn = button(t('port.swapIn'), {
+      className: 'port-buy port-swap__button',
+      onClick: () =>
+        this.transact('pickup', {
+          kind: 'buyPortPacket',
+          index: stockIndex,
+          swapCacheIndex: Number(select.value),
+        }),
+    });
+    if (this.run.bits < price) swapIn.disabled = true;
+    wrap.appendChild(swapIn);
     return wrap;
   }
 
@@ -355,14 +361,5 @@ export class PortScreen extends Screen {
     el.className = 'port-sold';
     el.textContent = 'SOLD';
     return el;
-  }
-
-  private actionButton(label: string, className: string, onClick: () => void): HTMLButtonElement {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = className;
-    button.textContent = label;
-    button.addEventListener('click', onClick);
-    return button;
   }
 }

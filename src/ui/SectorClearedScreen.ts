@@ -12,6 +12,8 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { HEALTH } from '../config/health';
 import { Screen } from './Screen';
+import { button } from './button';
+import { t } from '../i18n/ui';
 
 /** The pool carries fractional chips (power × 1.1/level); print integers bare
  *  and anything else to one decimal — the between-acts beat isn't a ledger. */
@@ -82,14 +84,14 @@ export class SectorClearedScreen extends Screen {
     next.textContent = `Next: ${nextSectorTitle}`;
     panel.appendChild(next);
 
-    const button = document.createElement('button');
-    button.className = 'sectorcleared-button';
-    button.textContent = 'Press on';
-    button.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'dismissSectorCleared' });
+    const pressOn = button(t('sectorcleared.pressOn'), {
+      className: 'btn--primary btn--exit',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'dismissSectorCleared' });
+      },
     });
-    panel.appendChild(button);
+    panel.appendChild(pressOn);
 
     return panel;
   }

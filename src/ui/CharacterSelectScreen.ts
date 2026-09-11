@@ -17,6 +17,7 @@ import { nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
+import { button } from './button';
 
 /** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
@@ -63,8 +64,15 @@ export class CharacterSelectScreen extends Screen {
   }
 
   private renderCard(character: CharacterConfig): HTMLButtonElement {
-    const card = document.createElement('button');
-    card.className = 'charselect-card';
+    // A card-shaped button: the factory mints it (type · class · click), the
+    // card chrome stays its own class — it is not the primary-action idiom.
+    const card = button('', {
+      className: 'charselect-card',
+      onClick: () => {
+        this.audio.play('click');
+        this.dispatcher.dispatch({ kind: 'chooseCharacter', characterId: character.id });
+      },
+    });
 
     const name = document.createElement('div');
     name.className = 'charselect-card__name';
@@ -87,11 +95,6 @@ export class CharacterSelectScreen extends Screen {
     // ever drift (display-only — Run construction still fails loud).
     daemon.textContent = daemonById(character.daemon)?.name ?? character.daemon;
     card.appendChild(daemon);
-
-    card.addEventListener('click', () => {
-      this.audio.play('click');
-      this.dispatcher.dispatch({ kind: 'chooseCharacter', characterId: character.id });
-    });
 
     return card;
   }

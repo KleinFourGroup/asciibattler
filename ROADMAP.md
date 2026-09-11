@@ -141,12 +141,13 @@ restore is IN (the charter's content; the one behavior it adds).
   mount; `#ui > .chrome-column` passes clicks through (the browser caught
   the id-specificity trap); the oracle 651 properties / 0 diffs. The cache
   chip stays a `<div>` (§100). WORKLOG §96e.
-- [ ] **96f — the modal shell.** `src/ui/modal.ts` (title · dismissable ·
-  a body slot; focus trap + restore, ONE Esc handler, backdrop, ✕); the
-  three consumers migrate (the cache modal re-renders its body inside the
-  shell; the sector map = the full-viewport variant); the strings that
-  pass through the shell → `ui.json`. Last: the riskiest, the longest
-  eyeball.
+- [x] **96f — the modal shell.** ✅ 2026-09-11: `src/ui/modal.ts` (two
+  variants reproducing the consumers' DOM; ONE dismissable gate for Esc +
+  backdrop + ✕; `onClose` once from any route; the focus trap + restore =
+  the phase's one new behavior; role/aria-modal ride along); the three
+  consumers migrated, one CSS rule added; four keys → `ui.json` (67), the
+  baseline 103 → 99; browser-proven (focus returns to the roster button /
+  the map chip). WORKLOG §96f.
 - [ ] **96g — the docs + the exit.** DESIGN §UI idioms gains the shells
   section (§103 signs the whole); ARCHITECTURE's ui tree; the ROADMAP
   stub. **Exit = the user's eyeball walk through every screen.**

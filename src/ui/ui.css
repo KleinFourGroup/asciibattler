@@ -3145,6 +3145,14 @@ body {
   box-shadow: 0 0 24px rgb(from var(--color-terminal-amber) r g b / 0.25);
 }
 
+/* 96f — the modal shell (src/ui/modal.ts) focuses its container on open
+   (tabindex=-1, the trap's anchor). The container is not a control, so a
+   focus ring on it is noise — the ✕ and the body's buttons keep theirs. */
+.roster-modal:focus,
+.sector-map-overlay:focus {
+  outline: none;
+}
+
 .roster-modal-header {
   display: flex;
   align-items: center;

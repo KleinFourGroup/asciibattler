@@ -29,6 +29,7 @@ import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { orderRosterWithIndices, type RosterOrder } from './rosterOrder';
+import { openModal, type ModalHandle } from './modal';
 
 /** 51c — the picker contract. `count` cards must be selected to confirm. */
 export interface CardListSelection {
@@ -57,13 +58,12 @@ export interface CardListModalOptions {
  * screen's fade/scroll state.
  */
 export class CardListModal {
-  private overlay: HTMLDivElement | null = null;
+  /** 96f — the shell (src/ui/modal.ts) owns the overlay, the header, the ✕,
+   *  Esc / backdrop and the focus trap; this class owns the body. */
+  private handle: ModalHandle | null = null;
   // 51c — the picker's confirm control (null in view mode); the selection
   // state itself is open()-scoped, so a re-open always starts clean.
   private confirmButton: HTMLButtonElement | null = null;
-  private readonly onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') this.close();
-  };
 
   constructor(
     private readonly mount: HTMLElement,
@@ -71,40 +71,24 @@ export class CardListModal {
   ) {}
 
   get isOpen(): boolean {
-    return this.overlay !== null;
+    return this.handle !== null;
   }
 
   /** Open the modal listing `units`. `title` is the heading prefix ("Your
    *  Roster" / "Draw Pile" / "Discard Pile"); the count is appended. */
   open(title: string, units: readonly UnitTemplate[], opts?: CardListModalOptions): void {
-    if (this.overlay) return; // already open — idempotent
+    if (this.handle !== null) return; // already open — idempotent
 
-    const overlay = document.createElement('div');
-    overlay.className = 'roster-overlay';
-    // Only a click on the backdrop itself (not one bubbling up from the modal)
-    // dismisses, so clicks inside the panel don't close it.
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) this.close();
+    const handle = openModal(this.mount, {
+      title: t('cardlist.title', { title, count: units.length }),
+      onCloseClick: () => this.audio.play('click'),
+      onClose: () => {
+        this.handle = null;
+        this.confirmButton = null;
+      },
     });
-
-    const modal = document.createElement('div');
-    modal.className = 'roster-modal';
-
-    const header = document.createElement('div');
-    header.className = 'roster-modal-header';
-    const titleEl = document.createElement('div');
-    titleEl.className = 'roster-modal-title';
-    titleEl.textContent = t('cardlist.title', { title, count: units.length });
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'roster-modal-close';
-    close.textContent = '✕';
-    close.setAttribute('aria-label', t('common.close'));
-    close.addEventListener('click', () => {
-      this.audio.play('click');
-      this.close();
-    });
-    header.append(titleEl, close);
+    this.handle = handle;
+    const modal = handle.content;
 
     const selection = opts?.selection;
     const picking = selection !== undefined && selection.count > 0;
@@ -118,7 +102,7 @@ export class CardListModal {
     if (units.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'roster-empty';
-      empty.textContent = opts?.emptyText ?? 'No units.';
+      empty.textContent = opts?.emptyText ?? t('cardlist.empty');
       grid.appendChild(empty);
     } else {
       for (const { unit, sourceIndex } of orderRosterWithIndices(units, opts?.order)) {
@@ -138,7 +122,7 @@ export class CardListModal {
       }
     }
 
-    modal.append(header, grid);
+    modal.appendChild(grid);
 
     // 51c — the picker footer: confirm enables at exactly `count` selected;
     // confirming closes FIRST (the callback sees a clean modal state), then
@@ -162,11 +146,6 @@ export class CardListModal {
       footer.appendChild(this.confirmButton);
       modal.appendChild(footer);
     }
-
-    overlay.appendChild(modal);
-    this.mount.appendChild(overlay);
-    this.overlay = overlay;
-    window.addEventListener('keydown', this.onKeyDown);
   }
 
   /** 51c — toggle a card in/out of the selection. A one-card picker click
@@ -197,11 +176,8 @@ export class CardListModal {
   }
 
   close(): void {
-    if (!this.overlay) return;
-    window.removeEventListener('keydown', this.onKeyDown);
-    this.overlay.remove();
-    this.overlay = null;
-    this.confirmButton = null;
+    // The shell's onClose nulls the handle + the confirm button.
+    this.handle?.close();
   }
 
   /** Tear down for a host-screen `hide()` — closes any open overlay + detaches

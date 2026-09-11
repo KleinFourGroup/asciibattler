@@ -39,6 +39,7 @@ import { packetById, type PacketConfig, type UseContext } from '../config/packet
 import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunPhase } from '../run/Run';
 import { chipPulse } from './chip';
+import { openModal, type ModalHandle } from './modal';
 
 /** The live run state the overlay reads — injected as getters (the
  *  BitsOverlay `getBits` pattern), so a Run swap on reset is invisible. */
@@ -54,10 +55,10 @@ export class CacheOverlay {
   private readonly el: HTMLDivElement;
   private readonly value: HTMLSpanElement;
   private readonly pulse: () => void;
-  private modalOverlay: HTMLDivElement | null = null;
-  private readonly onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape' && this.deps.getOverflow() === 0) this.closeModal();
-  };
+  /** 96f — the modal shell (src/ui/modal.ts): it owns the overlay, the
+   *  header, the ✕, Esc / backdrop (gated by `setDismissable` — the
+   *  forced-keep flow) and the focus trap; this class owns the body. */
+  private modal: ModalHandle | null = null;
 
   constructor(
     /** The page mount — the MODAL's host (a fixed full-viewport overlay;
@@ -98,7 +99,7 @@ export class CacheOverlay {
       this.pulse();
       // A held modal re-renders in place (a fire/discard just landed); an
       // overflow (the forced-keep shrink) force-opens it on ANY screen.
-      if (this.modalOverlay !== null) this.renderModalContents();
+      if (this.modal !== null) this.renderModalContents();
       else if (this.deps.getOverflow() > 0) this.openModal();
     });
     // Re-SHOW only — the reset re-paint comes from Game.resetRun via
@@ -138,69 +139,45 @@ export class CacheOverlay {
   // ── the modal ──────────────────────────────────────────────────────────
 
   private openModal(): void {
-    if (this.modalOverlay !== null) return; // idempotent
-    const overlay = document.createElement('div');
-    overlay.className = 'roster-overlay';
-    overlay.addEventListener('click', (e) => {
-      // Backdrop click dismisses — except mid-shrink (forced-keep).
-      if (e.target === overlay && this.deps.getOverflow() === 0) this.closeModal();
+    if (this.modal !== null) return; // idempotent
+    this.modal = openModal(this.mount, {
+      panelClass: 'cache-modal',
+      onCloseClick: () => this.audio.play('click'),
+      onClose: () => {
+        this.modal = null;
+      },
     });
-    this.modalOverlay = overlay;
-    this.mount.appendChild(overlay);
-    window.addEventListener('keydown', this.onKeyDown);
     this.renderModalContents();
   }
 
   private closeModal(): void {
-    if (this.modalOverlay === null) return;
-    window.removeEventListener('keydown', this.onKeyDown);
-    this.modalOverlay.remove();
-    this.modalOverlay = null;
+    this.modal?.close(); // the shell's onClose nulls the handle
   }
 
-  /** (Re)build the modal panel from live state — run at open and after
+  /** (Re)build the modal BODY from live state — run at open and after
    *  every `run:cacheChanged` while open, so a fire/discard/shrink is
    *  reflected without an optimistic local copy (the K3 events-only
-   *  discipline, applied to a modal). */
+   *  discipline, applied to a modal). The shell keeps the header: the
+   *  title re-reads, and the ✕ / Esc / backdrop gate on the overflow. */
   private renderModalContents(): void {
-    const overlay = this.modalOverlay;
-    if (overlay === null) return;
-    overlay.replaceChildren();
+    const modal = this.modal;
+    if (modal === null) return;
 
     const cache = this.deps.getCache();
     const size = this.deps.getSize();
     const overflow = this.deps.getOverflow();
 
-    const modal = document.createElement('div');
-    modal.className = 'roster-modal cache-modal';
-
-    const header = document.createElement('div');
-    header.className = 'roster-modal-header';
-    const title = document.createElement('div');
-    title.className = 'roster-modal-title';
-    title.textContent = `Cache — ${cache.length}/${size}`;
-    header.appendChild(title);
-    if (overflow === 0) {
-      const close = document.createElement('button');
-      close.type = 'button';
-      close.className = 'roster-modal-close';
-      close.textContent = '✕';
-      close.setAttribute('aria-label', t('common.close'));
-      close.addEventListener('click', () => {
-        this.audio.play('click');
-        this.closeModal();
-      });
-      header.appendChild(close);
-    }
-    modal.appendChild(header);
-
-    // The forced-keep banner: a shrink left more packets than slots — the
+    modal.setTitle(t('cache.title', { held: cache.length, size }));
+    // The forced-keep flow: while a shrink left more packets than slots the
     // modal is un-dismissable until the player discards down to capacity.
+    modal.setDismissable(overflow === 0);
+
+    const body: Node[] = [];
     if (overflow > 0) {
       const banner = document.createElement('div');
       banner.className = 'cache-shrink-banner';
       banner.textContent = `⚠ ${t('cache.overflow', { count: overflow })}`;
-      modal.appendChild(banner);
+      body.push(banner);
     }
 
     const list = document.createElement('div');
@@ -208,7 +185,7 @@ export class CacheOverlay {
     if (cache.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'roster-empty';
-      empty.textContent = 'The cache is empty — packets arrive as battle rewards.';
+      empty.textContent = t('cache.empty');
       list.appendChild(empty);
     } else {
       cache.forEach((id, index) => {
@@ -218,8 +195,8 @@ export class CacheOverlay {
         if (packet !== undefined) list.appendChild(this.renderRow(packet, index, overflow > 0));
       });
     }
-    modal.appendChild(list);
-    overlay.appendChild(modal);
+    body.push(list);
+    modal.replaceBody(...body);
   }
 
   /** One held slot: name + description + its actions. Mid-shrink the row is

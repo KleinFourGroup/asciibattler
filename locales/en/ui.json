@@ -70,5 +70,9 @@
   "port.swapIn": "Swap in",
   "reward.accept": "Accept",
   "reward.swap": "Swap",
-  "reward.continueTitle": "Decline the remaining rewards and move on"
+  "reward.continueTitle": "Decline the remaining rewards and move on",
+  "cardlist.empty": "No units.",
+  "cache.title": "Cache — {held}/{size}",
+  "cache.empty": "The cache is empty — packets arrive as battle rewards.",
+  "sectormap.hint": "[ map view — {key} / Esc closes ]"
 }

@@ -3,8 +3,7 @@
   "src/config/events.ts": 9,
   "src/render/BattleRenderer.ts": 1,
   "src/render/UnitOverlayLayer.ts": 2,
-  "src/ui/CacheOverlay.ts": 6,
-  "src/ui/CardListModal.ts": 1,
+  "src/ui/CacheOverlay.ts": 4,
   "src/ui/CharacterSelectScreen.ts": 1,
   "src/ui/EventScreen.ts": 2,
   "src/ui/HUD.ts": 10,
@@ -17,7 +16,7 @@
   "src/ui/RecruitScreen.ts": 1,
   "src/ui/RewardScreen.ts": 2,
   "src/ui/SectorClearedScreen.ts": 5,
-  "src/ui/SectorMapOverlay.ts": 2,
+  "src/ui/SectorMapOverlay.ts": 1,
   "src/ui/UnitCard.ts": 5,
   "src/ui/promotionDelta.ts": 3
 }

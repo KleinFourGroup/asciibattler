@@ -1149,3 +1149,62 @@ after the fix. Console: no error from the finished tree — the buffer
 HMR reloads that fired BETWEEN edits (an import landing after its first
 use), every one timestamped before the last edit; a fresh load after it
 added none.
+
+**The 96e playtest (2026-09-11): clear.**
+
+### 96f — the modal shell (2026-09-11)
+
+**The shape** (`src/ui/modal.ts`): `openModal(mount, opts)` returns a
+handle. Two variants reproduce the consumers' DOM and classes EXACTLY —
+`panel` (`.roster-overlay` › `.roster-modal` › a `.roster-modal-header`
+with the title + the ✕; the consumer appends its body after the header or
+`replaceBody`s it) and `viewport` (`.sector-map-overlay` + the pinned
+`.sector-map-overlay__close`; the consumer renders into it) — so the
+cascade is untouched and `ui.css` gains ONE rule (`outline: none` on the
+focused container: it is not a control). **One `dismissable` flag gates
+Esc, the backdrop and the ✕ together** (`setDismissable(false)` hides the
+✕ and ignores the other two — the cache's forced-keep flow, which used to
+REMOVE the ✕ from its hand-built header on every re-render), so a shell
+can never be half-dismissable. **`onClose` fires exactly once per open,
+from any route including `handle.close()`** — every consumer's teardown
+lives there and nowhere else (CardListModal nulls its handle + confirm
+button; the cache nulls its handle; the sector map hides its MapScreen).
+Sounds stay the consumer's: `onCloseClick` fires on the ✕ only (the
+card-list and cache modals play `click`; the sector map plays nothing;
+Esc and the backdrop were always silent).
+
+**The new behavior (decision E):** the container takes focus on open
+(`tabindex=-1`, `preventScroll`), Tab / Shift+Tab cycle among the
+focusables inside (from the container: Tab → the first, Shift+Tab → the
+last; none → the key is eaten), and on close focus returns to the element
+that had it, when it is still in the document and not `<body>`.
+`role="dialog"` + `aria-modal="true"` + `aria-labelledby` (a titled
+panel) ride along; nothing visible changes. Three Esc handlers → one.
+
+**Consumers:** CardListModal keeps the body (the grid, the 51c picker
+footer, the selection state); the cache modal re-renders its BODY per
+`run:cacheChanged` and re-reads the title + the dismissable gate (before,
+it rebuilt the whole overlay including the header); the sector-map
+overlay keeps its hint + the read-only MapScreen. **Strings through the
+shell (decision C):** `cardlist.empty` · `cache.title` · `cache.empty` ·
+`sectormap.hint` — and the sector map's `✕ close` became
+`✕ ${t('common.close')}`, which renders identically because the class
+upper-cases the face. The hint's `M` was HARDCODED; it now takes the live
+keybind label the constructor already received (identical output at the
+default bind — a latent rebind bug closed in passing). `ui.json` 63 →
+**67**; the baseline **103 → 99** (the scanner flagged the shell's
+focusable-selector string as prose — `// i18n-ok`, structural).
+
+**Proofs:** tsc clean; the pins (ui-tokens · key scan · literal ratchet ·
+i18n, 76 green); **the browser, under a fresh console:** the roster modal
+from its real corner button — `role=dialog`, `aria-modal`, `aria-labelledby`
+→ the title, focus on the panel, Shift+Tab → the ✕, Esc closes, **focus
+back on the roster button**; the cache modal from the chip — the title
+`Cache — 0/6` byte-equal to the old template, the header + list body, the
+✕ shown at overflow 0, a backdrop click closes; the sector map from its
+chip on an event screen — focus on the host, the hint byte-equal, the
+close face `✕ Close` computed `uppercase`, the read-only map rendered,
+Esc closes, **focus back on the map chip**. Console: no errors. What the
+synthetic probe could not do: a dispatched Tab never moves focus
+natively, so the forward-Tab-from-the-container case was made explicit
+(→ the first focusable) rather than left to native order.

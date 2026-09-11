@@ -24,6 +24,8 @@ import type { RunDispatcher } from '../run/Command';
 import type { NodeMap } from '../run/NodeMap';
 import type { UnitTemplate } from '../sim/Unit';
 import { MapScreen, type BossForewarning } from './MapScreen';
+import { openModal, type ModalHandle } from './modal';
+import { t } from '../i18n/ui';
 
 /** Everything a read-only map render needs — the MapScreen.show argument list,
  *  bundled (Game builds it from the live Run; null = no run yet). */
@@ -38,14 +40,15 @@ export interface SectorMapView {
 
 export class SectorMapOverlay {
   private readonly chip: HTMLButtonElement;
-  private overlayEl: HTMLDivElement | null = null;
+  /** 96f — the modal shell's viewport variant (src/ui/modal.ts): it owns
+   *  the host, the ✕ close, Esc / backdrop and the focus trap; the read-only
+   *  MapScreen renders into it. */
+  private modal: ModalHandle | null = null;
   private screen: MapScreen | null = null;
   /** Scene-derived availability (Game.swap pushes it); the chip hides and the
    *  keybind no-ops while false. */
   private available = false;
-  private readonly onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key === 'Escape') this.close();
-  };
+  private readonly keyLabel: string;
 
   constructor(
     /** The page mount — the OVERLAY's host (fixed full-viewport, z 40; it
@@ -61,6 +64,7 @@ export class SectorMapOverlay {
      *  screen, when it lands, re-labels via its own pass). */
     keyLabel: string,
   ) {
+    this.keyLabel = keyLabel;
     this.chip = document.createElement('button');
     this.chip.type = 'button';
     this.chip.className = 'chip sector-map-chip is-hidden';
@@ -80,7 +84,7 @@ export class SectorMapOverlay {
 
   /** The chip click + the `toggleSectorMap` keybind (Game subscribes). */
   toggle(): void {
-    if (this.overlayEl !== null) {
+    if (this.modal !== null) {
       this.close();
       return;
     }
@@ -88,31 +92,29 @@ export class SectorMapOverlay {
     const view = this.getView();
     if (view === null) return;
     this.audio.play('click');
-    const overlay = document.createElement('div');
-    overlay.className = 'sector-map-overlay';
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) this.close();
-    });
-    const hint = document.createElement('div');
-    hint.className = 'sector-map-overlay__hint';
-    hint.textContent = '[ map view — M / Esc closes ]';
-    overlay.appendChild(hint);
     // 78e fix — a CLICKABLE close (user call): the read-only map screen is
     // opaque and full-viewport, so the backdrop is unreachable and the chip
-    // is buried beneath the overlay — without this button a pure-mouse (or
-    // touch) player has no way out. Keyboard stays the fast path; the game
-    // must remain playable without it.
-    const close = document.createElement('button');
-    close.type = 'button';
-    close.className = 'sector-map-overlay__close';
-    close.textContent = '✕ close';
-    close.addEventListener('click', () => this.close());
-    overlay.appendChild(close);
-    this.overlayEl = overlay;
-    this.mount.appendChild(overlay);
-    // The read-only screen renders INTO the overlay backdrop; the dispatcher
+    // is buried beneath the overlay — without the shell's ✕ a pure-mouse
+    // (or touch) player has no way out. Keyboard stays the fast path; the
+    // game must remain playable without it. (The face reads `✕ CLOSE`
+    // either way — the class upper-cases it.)
+    const modal = openModal(this.mount, {
+      variant: 'viewport',
+      closeText: `✕ ${t('common.close')}`,
+      onClose: () => {
+        this.screen?.hide();
+        this.screen = null;
+        this.modal = null;
+      },
+    });
+    this.modal = modal;
+    const hint = document.createElement('div');
+    hint.className = 'sector-map-overlay__hint';
+    hint.textContent = t('sectormap.hint', { key: this.keyLabel });
+    modal.content.appendChild(hint);
+    // The read-only screen renders INTO the overlay host; the dispatcher
     // is threaded but never called (readOnly suppresses the frontier clicks).
-    this.screen = new MapScreen(overlay, this.dispatcher, this.audio, { readOnly: true });
+    this.screen = new MapScreen(modal.content, this.dispatcher, this.audio, { readOnly: true });
     this.screen.show(
       view.map,
       view.currentNodeId,
@@ -121,15 +123,9 @@ export class SectorMapOverlay {
       view.sectorTitle,
       view.forewarning,
     );
-    window.addEventListener('keydown', this.onKeyDown);
   }
 
   private close(): void {
-    if (this.overlayEl === null) return;
-    window.removeEventListener('keydown', this.onKeyDown);
-    this.screen?.hide();
-    this.screen = null;
-    this.overlayEl.remove();
-    this.overlayEl = null;
+    this.modal?.close(); // the shell's onClose hides the screen + nulls
   }
 }

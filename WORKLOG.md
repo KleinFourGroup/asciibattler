@@ -1292,3 +1292,36 @@ reads state v36 already serializes); the hook's fuzz smoke fires ONCE
 derivation), byte-identical; `ui.json` gains the strip's and the ghost
 value's strings only; the post-turn deletion drops the literal baseline
 by its 16.
+
+### 96.5a — the chip rule (2026-09-12)
+
+**Step zero held:** the chip had exactly the 94e wiring (hide on defeat /
+victory, show on `run:started`, `startHidden` pre-run) and nothing
+scene-aware; `Game.swap` already pushes the map chip's availability from
+the one chokepoint by `instanceof` (78e), so the pool chip takes the same
+route rather than six event subscriptions (`turn:starting` ·
+`battle:started` · `reward:offered` · `promotion:pending` ·
+`recruit:offered` · the map return …), any one of which a future scene
+could miss.
+
+**The shape:** `PoolOverlay` keeps TWO flags under ONE class — `runHidden`
+(the 94e sources) and `suppressed` (96.5a, `setSuppressed(bool)`), with
+`is-hidden` = either. The two-flag form is load-bearing, not tidiness: a
+run defeat fires from inside a battle, and the `GameOverScene` swap that
+follows sets `suppressed = false` — a single class toggled from both
+sources would have re-shown the chip on the game-over screen. Game's swap
+suppresses for `PreTurnScene | BattleScene | PostTurnScene` (the
+PostTurn entry leaves with 96.5d). No CSS change: the 96e collapse rule
+already does the layout.
+
+**Browser-walked on the 5191 preview** (the zero-stylesheet trap bit once
+more — `sheets: 0` on the first probe after `preview_start`; a reload + a
+6 s wait read 2; and the hidden pane's zero rAF froze the battle at tick 2,
+so the scene's `tick(1/60)` was driven from JS for 1,129 iterations to
+reach the outcome): the chip `display: flex` on MapScene and EventScene,
+`display: none` with the column collapsing to 20 / 75 / 131 on
+PreTurnScene, BattleScene (the two HUD gauges present), PostTurnScene
+("Skirmish Won") and the next PreTurnScene (turn 2); a synthetic
+`run:defeated` → GameOverScene stays hidden (both flags); `resetRun` →
+CharacterSelectScene hidden (no run); a character pick → MapScene shown
+at `40 / 40`. Console: no errors. **Playtest: pending (the user's).**

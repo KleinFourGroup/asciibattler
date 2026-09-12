@@ -688,6 +688,15 @@ export class Game implements RunDispatcher {
         !(next instanceof CharacterSelectScene) &&
         !(next instanceof GameOverScene),
     );
+    // 96.5a — the morale chip hides while a turn screen or the battle is up:
+    // the HUD's gauges and the pre/post-turn gauges are the one in-encounter
+    // read (the §95 playtest: "morale reads twice"). Same chokepoint, same
+    // reason — every swap path is covered. The chrome column collapses the
+    // slot (96e decision D: the pool chip is display-only, nothing below it
+    // shifts).
+    this.poolOverlay.setSuppressed(
+      next instanceof PreTurnScene || next instanceof BattleScene || next instanceof PostTurnScene,
+    );
   }
 
   /** M3 — swap after `ms`, letting the current scene play out (the

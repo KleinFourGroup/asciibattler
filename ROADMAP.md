@@ -189,9 +189,12 @@ turn 2; the encounter's last rows wait for §102) · the risk line STAYS on
 the pre-turn screen (re-rendered after a redraw — a latent staleness the
 audit found) + a ceiling tick on the battle bar. The cut:
 
-- [ ] **96.5a — the chip rule.** The pool chip hides while a pre-turn or
-  battle scene is mounted (driven from Game's swap, not from events); the
-  collapse rule moves nothing below it. Eyeball exit; no sim.
+- [x] **96.5a — the chip rule.** ✅ 2026-09-12: `PoolOverlay.setSuppressed`
+  (two flags, one class — run-hidden ∨ scene-suppressed) pushed from
+  `Game.swap` for PreTurn / Battle / PostTurn (the 78e map-chip
+  chokepoint); browser-walked map → event → pre-turn → battle → post-turn
+  → pre-turn 2 → game-over → reset → map, the column collapsing to
+  20 / 75 / 131; no console errors. WORKLOG §96.5a.
 - [ ] **96.5b1 — the loss-event model + the ghost (headless-first).**
   `chipRule.ts` gains the pure derivation (the immediate events for a
   death · the end sequence from survivors + fallen + reason; a cause is a

@@ -4,9 +4,11 @@
  * mount/dispose cycle), the FOURTH chip of the left column (bits · cache · the 78e sector-map chip · this).
  * The user's §93 verdict item 7b: the pool "must be displayed during events —
  * really, everywhere." The battle HUD and the pre/post-turn screens keep
- * their own full gauges (the authoritative in-encounter read); this chip is
- * the always-on one, so the map, an event, the port, a reward, a recruit
- * and the sector seam never hide the run's real budget.
+ * their own full gauges (the authoritative in-encounter read) — and since
+ * 96.5a the chip HIDES while one of those is up (`setSuppressed`, pushed
+ * from Game's swap), so morale reads once per screen; everywhere else (the
+ * map, an event, the port, a reward, a recruit, the sector seam) this chip
+ * is the one read of the run's real budget.
  *
  * Wiring (the BitsOverlay notes apply verbatim):
  * - Run's constructor sets `playerHealth` directly — no event — so the first
@@ -38,6 +40,14 @@ export class PoolOverlay {
   private readonly value: HTMLSpanElement;
   private readonly fill: HTMLDivElement;
   private readonly pulse: () => void;
+  /** Hidden by the RUN's state: pre-run / defeat / victory (the 94e wiring). */
+  private runHidden: boolean;
+  /** 96.5a — hidden by the SCENE: a pre-turn / battle / post-turn screen is
+   *  up, where the full gauges are the one morale read (the §95 playtest's
+   *  "morale reads twice" finding). Pushed by Game's swap chokepoint. Two
+   *  flags, one class: `is-hidden` = either, so a defeat inside a battle
+   *  and the game-over swap that follows cannot fight over the class. */
+  private suppressed = false;
 
   constructor(
     /** 96e — the chrome column (src/ui/chip.ts), not the page mount. */
@@ -49,7 +59,8 @@ export class PoolOverlay {
     this.el = document.createElement('div');
     this.el.className = 'chip pool-overlay';
     this.pulse = chipPulse(this.el);
-    if (startHidden) this.el.classList.add('is-hidden');
+    this.runHidden = startHidden;
+    this.applyHidden();
     const head = document.createElement('div');
     head.className = 'pool-overlay__head';
     const label = document.createElement('span');
@@ -74,9 +85,26 @@ export class PoolOverlay {
       this.el.classList.toggle('is-losing', reason === 'chip' || reason === 'damage');
       this.pulse();
     });
-    bus.on('run:started', () => this.el.classList.remove('is-hidden'));
-    bus.on('run:defeated', () => this.el.classList.add('is-hidden'));
-    bus.on('run:victory', () => this.el.classList.add('is-hidden'));
+    bus.on('run:started', () => this.setRunHidden(false));
+    bus.on('run:defeated', () => this.setRunHidden(true));
+    bus.on('run:victory', () => this.setRunHidden(true));
+  }
+
+  /** 96.5a — the scene-derived hide (Game's `swap` pushes it on every
+   *  swap path, the 78e map-chip precedent): true while a pre-turn / battle
+   *  / post-turn scene is mounted. The chrome column collapses the slot. */
+  setSuppressed(suppressed: boolean): void {
+    this.suppressed = suppressed;
+    this.applyHidden();
+  }
+
+  private setRunHidden(hidden: boolean): void {
+    this.runHidden = hidden;
+    this.applyHidden();
+  }
+
+  private applyHidden(): void {
+    this.el.classList.toggle('is-hidden', this.runHidden || this.suppressed);
   }
 
   /** Re-read the live pool (the first paint + Game's post-reassignment

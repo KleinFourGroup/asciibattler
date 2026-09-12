@@ -16,6 +16,8 @@
  * screens keep (a ghost of 0 renders exactly the H4b gauge).
  */
 
+import { chipPulse } from './chip';
+
 export type PoolSide = 'player' | 'enemy';
 
 export interface PoolGaugeHandle {
@@ -26,6 +28,13 @@ export interface PoolGaugeHandle {
   setPending(loss: number): void;
   /** Fold the ghost into the fill: the pool becomes `current − pending`. */
   commit(): void;
+  /** 96.5b2 — the live numbers (the shake scales by `max`). */
+  reading(): { current: number; max: number; pending: number };
+  /** 96.5b2 — the orb's landing point (viewport): the fill's leading edge
+   *  as the ghost currently leaves it — where the next loss grows from. */
+  anchor(): { x: number; y: number };
+  /** 96.5b2 — the landing flash (`.is-pulsing`, the chip's pulse). */
+  pulse(): void;
 }
 
 /** The readout: `current / max`, or `remaining (−pending) / max` while a loss
@@ -72,6 +81,7 @@ export function createPoolGauge(
   bar.append(fill, ghost);
 
   gauge.append(head, bar);
+  const pulse = chipPulse(gauge);
 
   let cur = current;
   let mx = max;
@@ -110,6 +120,16 @@ export function createPoolGauge(
       pend = 0;
       paint();
     },
+    reading(): { current: number; max: number; pending: number } {
+      return { current: cur, max: mx, pending: pend };
+    },
+    anchor(): { x: number; y: number } {
+      const r = bar.getBoundingClientRect();
+      const parts = poolValueParts(cur, mx, pend);
+      const frac = mx > 0 ? Math.max(0, Math.min(1, parts.remaining / mx)) : 0;
+      return { x: r.left + r.width * frac, y: r.top + r.height / 2 };
+    },
+    pulse,
   };
 }
 

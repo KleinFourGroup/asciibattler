@@ -1428,3 +1428,64 @@ px, gauge 54 → 38 px, the enemy card row 126 → 110 px; the value box 108
 px with AND without the parenthetical, its left edge constant; through
 two more deaths and the end commit nothing moved. `tests/ui-tokens`
 green (no raw values). Console clean.
+
+### 96.5b2 — the orb + the shake + the end sequence (2026-09-12)
+
+**The spec, signed in plain messages** (the user's "I'm nervous about the
+orbs" → a concrete spec with defaults, every one a UI constant): a `●`
+glyph in the paying side's hue with a glow, sized by amount / max, flown
+from the causing unit's card to the paying gauge on a slight arc in 400
+ms wall-clock (fast-forward never shortens it), landing on the fill's
+leading edge; **the ghost ticks ON THE LANDING**, not at the event (the
+eye follows the cause to the effect — b1's at-event tick is now the
+reduced-motion / no-card path); the survivors end sequence one orb per
+standing enemy at 120 ms in card order (the user's pick over a volley);
+the last landing + a 250 ms settle → the commit → `lossesSettled()`
+resolves → `BattleScene.outro()` → Game's outro = max(900 ms, it) (M3's
+`swapAfter` folded into `swapAfterOutro`, still cancelled by any direct
+swap through a token); the shake only for losses to YOUR pool at ≥ 5 % of
+the max (2 of 40 — a one-point Mercenary never rattles the screen), 2 → 6
+px between 5 % and 15 %, 220 ms, on the canvas + `#ui` together with the
+scanlines glass still; `prefers-reduced-motion` → no flight, no shake. No
+sound (§104's registry). No skip. No extra win beat (the user: the commit
+is enough). **The user's floated seam, built:** THE SHAKE POLICY (`player`
+ships — "you got hurt"; `enemy` — "you achieved something"; `both` /
+`none` for free), a module constant with a dev key (Ctrl+Alt+K, K is off
+the bound codes) that cycles it live in a battle so the A/B is runnable
+without a rebuild; a settings toggle is Round 8's. The pure parts
+(`shakePx` thresholds · `orbSizePx` · the policy + its cycle) are pinned
+headless in `lossFx.test.ts` off the exported constants — a retune moves
+the pins.
+
+**The finding the pane handed over — and the code change it earned:** on
+the 5191 preview the orb's Web Animation sat at `currentTime` 50 ms while
+`document.timeline` advanced and `visibilityState` read "visible", and a
+programmatic `finish()` flipped `playState` to "finished" WITHOUT firing
+its event — the pane's rendering loop is frozen (the §96 zero-rAF trap)
+and WAAPI rides that loop. Turn 1 had landed every orb (the swap fired at
+919 ms) because the battle ran while the pane painted for a screenshot;
+turn 2's orb never landed. A real tab paints, but a throttled BACKGROUND
+tab could strand an orb the same way — and with it the settle promise
+Game's outro waits on. So `flyOrb` gained a wall-clock backstop: the
+landing fires at the FIRST of the animation's finish and a
+`ORB_FLIGHT_MS + 100` timer, `finish` idempotent, so the normal path is
+untouched and a stalled one lands on the clock. The instrument found a
+real robustness hole, not just its own limitation.
+
+**Browser-proven (the backstop makes the frozen pane a valid instrument
+for the WIRING; the flight itself is the user's eye):** at the first
+enemy death one `.loss-orb--enemy` at 13 px in flight and the gauge
+UNCHANGED (`29 / 29`, ghost 0 — the on-landing design); ~1 s later the
+orb gone, `28 (−1) / 29`, ghost 3.45 %, one pulse counted by a 20 ms
+poll; a burst of seven deaths at the end → seven orbs in flight, then the
+outro 926 ms (the timer bound: the settle's 500 + 250 fit inside 900),
+the post-turn gauges `34 / 40` and `27 / 29` = the run's pools, zero orbs
+left; the dev key's two presses logged `→ enemy` then `→ both`; `shakeView`
+through a dynamic import: 1 of 40 → no animation, 4 of 40 → one animation
+each on the canvas and `#ui` with the 4 px decaying keyframes; no shake
+fired live in the two walks because every loss was one point (below the
+threshold on both pools — by design). Console: no errors. **Not exercised
+live:** the survivors end sequence (the shipped rule is casualties; the
+stagger loop is three lines over the shared `deliver`), a reduced-motion
+run (the function is a media-query read; the pane cannot emulate it).
+**Playtest: pending (the user's).**

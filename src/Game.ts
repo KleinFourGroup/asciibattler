@@ -127,6 +127,9 @@ export class Game implements RunDispatcher {
   private readonly runConfig: RunConfig;
   /** The scene currently mounted. Null only briefly during swap(). */
   private activeScene: Scene | null = null;
+  /** 96.5b2 — the in-flight outro's cancellation token (`swapAfterOutro`);
+   *  null when no outro is pending. */
+  private pendingOutro: { cancelled: boolean } | null = null;
   /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
    *  swap() cancels it, so a scheduled scene can never replace one that
    *  arrived after it. */
@@ -338,9 +341,16 @@ export class Game implements RunDispatcher {
       this.deckCues.length = 0;
     });
     this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info, this.deckCues.splice(0))));
-    this.bus.on('turn:resolved', (info) =>
-      this.swapAfter(TURN_OUTRO_MS, () => new PostTurnScene(info)),
-    );
+    // 96.5b2 — the outro also waits for the BattleScene's own settle (the
+    // loss orbs landing + the ghost commit + the settle beat): the swap fires
+    // at the LONGER of the fixed outro and the scene's promise, so a survivors
+    // end sequence is never cut short and a decisive casualties end still
+    // breathes the full 900 ms.
+    this.bus.on('turn:resolved', (info) => {
+      const settle =
+        this.activeScene instanceof BattleScene ? this.activeScene.outro() : Promise.resolve();
+      this.swapAfterOutro(TURN_OUTRO_MS, settle, () => new PostTurnScene(info));
+    });
 
     // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
     // World/Scene lifetimes live in BattleScene (see unit:attacked /
@@ -699,21 +709,38 @@ export class Game implements RunDispatcher {
     );
   }
 
-  /** M3 — swap after `ms`, letting the current scene play out (the
-   *  after-turn outro). The factory runs at fire time so the scene mounts
-   *  against the freshest state. Superseded by any direct swap(). */
-  private swapAfter(ms: number, make: () => Scene): void {
+  /** M3 → 96.5b2 — swap after BOTH `ms` (the fixed after-turn outro, letting
+   *  the current scene play out) and `settle` (the battle's own outro: the
+   *  loss orbs + the ghost commit). The factory runs at fire time so the
+   *  scene mounts against the freshest state; superseded by any direct
+   *  swap() — the timer is cleared and the token flips, so a reset
+   *  mid-outro can never mount a stale outcome screen. (M3's `swapAfter`
+   *  was this without the settle; its one caller was `turn:resolved`.) */
+  private swapAfterOutro(ms: number, settle: Promise<void>, make: () => Scene): void {
     this.cancelPendingSwap();
-    this.pendingSwapTimer = window.setTimeout(() => {
-      this.pendingSwapTimer = null;
+    const token = { cancelled: false };
+    this.pendingOutro = token;
+    const timer = new Promise<void>((resolve) => {
+      this.pendingSwapTimer = window.setTimeout(() => {
+        this.pendingSwapTimer = null;
+        resolve();
+      }, ms);
+    });
+    void Promise.all([timer, settle]).then(() => {
+      if (token.cancelled) return;
+      this.pendingOutro = null;
       this.swap(make());
-    }, ms);
+    });
   }
 
   private cancelPendingSwap(): void {
     if (this.pendingSwapTimer !== null) {
       window.clearTimeout(this.pendingSwapTimer);
       this.pendingSwapTimer = null;
+    }
+    if (this.pendingOutro !== null) {
+      this.pendingOutro.cancelled = true;
+      this.pendingOutro = null;
     }
   }
 

@@ -200,13 +200,13 @@ audit found) + a ceiling tick on the battle bar. The cut:
 - [x] **96.5b2-pre — the gauge head's hysteresis.** ✅ 2026-09-12 (the
   user's b1 finding): the head never wraps, the value reserves its widest
   form, the HUD gauges widen 220 → 320 px. WORKLOG §96.5b2-pre.
-- [ ] **96.5b2 — the orb + the shake + the end sequence (eyeball).** A DOM
-  orb from the paying unit's card to its side's gauge per event (a team
-  cause or no card → the gauge pulses in place); the shake only for
-  PLAYER-pool losses above a UI-constant fraction of the max, never under
-  `prefers-reduced-motion`; the survivors sequence plays in the outro and
-  the BattleScene reports done, so Game's outro = max(900 ms, the
-  sequence). No skip click; no extra win beat.
+- [x] **96.5b2 — the orb + the shake + the end sequence (eyeball).** ✅
+  2026-09-12: `lossFx.ts` (the `●` orb card → gauge, the ghost grows on
+  the landing; the thresholded shake; the SHAKE POLICY seam + Ctrl+Alt+K —
+  the user's A/B; reduced motion honored; a wall-clock backstop against a
+  stalled animation); the HUD's end sequence → `lossesSettled()` →
+  `BattleScene.outro()` → Game's outro = max(900 ms, it). Browser-proven;
+  the user's playtest pending. WORKLOG §96.5b2.
 - [ ] **96.5c — the risk line.** Re-render after a redraw (the latent
   staleness); the ceiling tick on the battle bar at the same number.
 - [ ] **96.5d — the post-turn removal.** Game buffers the last

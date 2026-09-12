@@ -74,6 +74,16 @@ export class BattleScene implements Scene {
   private countdown: PreBattleCountdown | null = null;
   private readonly subscriptions: Array<() => void> = [];
 
+  /** 96.5b2 — the after-turn outro's OWN settle: resolves once the HUD's
+   *  loss orbs have all landed, the ghost has committed and the settle
+   *  beat has passed (the end sequence under the survivors rule can run
+   *  past the fixed outro). Game waits for the LONGER of this and
+   *  TURN_OUTRO_MS before swapping the outcome screen in. Resolved at once
+   *  when no battle is up. */
+  outro(): Promise<void> {
+    return this.hud?.lossesSettled() ?? Promise.resolve();
+  }
+
   mount(ctx: SceneContext): void {
     const run = requireRun(ctx);
     const encounter = run.currentEncounter;

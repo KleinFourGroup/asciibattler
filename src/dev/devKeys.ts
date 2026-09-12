@@ -17,6 +17,10 @@
  *                save/load, Cluster 6).
  *   Ctrl+Alt+D — dump the trace ring: the whole localStorage ring → one JSON
  *                download (D not T — KeyT is the bound stopObjective code).
+ *   Ctrl+Alt+K — 96.5b2: cycle the loss-fx SHAKE POLICY (player → enemy →
+ *                both → none) — the user's A/B seam: does a shake read as
+ *                "you got hurt" or as "you achieved something"? Flippable
+ *                live in a battle; logged to the console.
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */
@@ -24,6 +28,7 @@
 import type { Game } from '../Game';
 import type { RunSnapshot } from '../run/Run';
 import { loadTraces } from './traceStore';
+import { cycleShakePolicy } from '../ui/lossFx';
 
 export function attachDevKeys(game: Game): void {
   window.addEventListener('keydown', (e) => {
@@ -40,6 +45,10 @@ export function attachDevKeys(game: Game): void {
       case 'KeyD':
         e.preventDefault();
         exportTraces();
+        break;
+      case 'KeyK':
+        e.preventDefault();
+        console.info(`[dev-keys] loss-fx shake policy → ${cycleShakePolicy()}`);
         break;
     }
   });

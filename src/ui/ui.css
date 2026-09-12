@@ -3005,6 +3005,41 @@ body {
   font-weight: normal;
 }
 
+/* 96.5b2 — the landing flash (chipPulse's .is-pulsing on the gauge): the
+   readout and the fill glow for the pulse, then settle. */
+.pool-gauge.is-pulsing .pool-gauge-value {
+  text-shadow: 0 0 8px currentColor;
+}
+.pool-gauge.is-pulsing .pool-gauge-fill {
+  filter: brightness(1.5);
+}
+
+/* 96.5b2 — THE ORB (src/ui/lossFx.ts): a `●` in the paying side's hue with a
+   glow, flown card → gauge by the Web Animations API (position: fixed at the
+   launch point, the flight on transform). Above the HUD panes and the chrome
+   column (15) + the corner buttons (20), below the modals (30). No pointer
+   events — it is never a target. */
+.loss-orb {
+  position: fixed;
+  z-index: 25;
+  pointer-events: none;
+  line-height: 1;
+  font-family: var(--font-mono);
+  will-change: transform;
+}
+.loss-orb--player {
+  color: var(--color-terminal-green);
+  text-shadow:
+    0 0 6px var(--color-terminal-green),
+    0 0 14px rgb(from var(--color-terminal-green) r g b / 0.6);
+}
+.loss-orb--enemy {
+  color: var(--color-neon-red);
+  text-shadow:
+    0 0 6px var(--color-neon-red),
+    0 0 14px rgb(from var(--color-neon-red) r g b / 0.6);
+}
+
 .pool-gauge--player .pool-gauge-label,
 .pool-gauge--player .pool-gauge-value {
   color: var(--color-terminal-green);

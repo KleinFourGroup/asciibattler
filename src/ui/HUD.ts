@@ -26,6 +26,21 @@ import {
   lossEventsForDeath,
   type PoolLossEvent,
 } from '../run/chipRule';
+import {
+  SETTLE_MS,
+  SURVIVOR_STAGGER_MS,
+  centerOf,
+  flyOrb,
+  prefersReducedMotion,
+  shakeAllowed,
+  shakeView,
+  type OrbHandle,
+} from './lossFx';
+
+/** 96.5b2 — a wall-clock wait (the loss fx are presentation: never the sim's clock). */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
@@ -143,6 +158,13 @@ export class HUD {
   /** 96.5b1 — the un-booked loss per pool so far this battle (uncapped
    *  pool-HP; the gauge clamps). Opens at the booked fallen on a restore. */
   private pending = { player: 0, enemy: 0 };
+  /** 96.5b2 — the orbs in flight (cancelled on dispose so a teardown
+   *  mid-flight leaves no glyph on the page) and their landing promises. */
+  private readonly orbs = new Set<OrbHandle>();
+  private readonly inFlight = new Set<Promise<void>>();
+  /** 96.5b2 — the after-battle settle: the end sequence launched, every orb
+   *  landed, the settle beat, the commit. Null until `battle:ended`. */
+  private settled: Promise<void> | null = null;
   /** unitId → its compact card handles, for O(1) HP refresh + death gray-out.
    *  BOTH teams (player + enemy); dead cards stay (grayed) for positional
    *  stability. The team is fixed at spawn, so one map keyed by id suffices —
@@ -339,28 +361,77 @@ export class HUD {
         this.applyLosses(lossEventsForDeath(death));
       }),
     );
-    // 96.5b1 — the end sequence: the survivors rule (and the cap surcharge)
-    // becomes a fact only now. b1 applies the end events and COMMITS the
-    // ghost at once; b2 plays them as the orb sequence during the outro and
-    // moves the commit to its end (the kickoff's point 3/5).
+    // 96.5b1 → b2 — the end sequence: the survivors rule (and the cap
+    // surcharge) becomes a fact only now. The end events launch as the orb
+    // sequence (one per standing survivor, staggered); once every orb of
+    // either kind has landed, the settle beat, then the COMMIT — and
+    // `lossesSettled()` resolves, which the BattleScene hands Game as the
+    // outro's own length (the kickoff's points 3 + 5).
     this.subscriptions.push(
       bus.on('battle:ended', ({ winner, reason, fallenPower }) => {
         if (!this.world) return;
         const why = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
-        this.applyLosses(
-          lossEventsAtEnd(why, this.world.survivorsByUnit(), fallenPower ?? this.world.fallenPowerSoFar()),
+        const endEvents = lossEventsAtEnd(
+          why,
+          this.world.survivorsByUnit(),
+          fallenPower ?? this.world.fallenPowerSoFar(),
         );
-        this.commitLosses();
+        this.settled = this.runEndSequence(endEvents);
       }),
     );
   }
 
-  /** 96.5b1 — fold a loss-event batch into the pending totals and repaint
-   *  the paying gauges' ghosts. */
+  /** 96.5b1/b2 — deliver a loss-event batch: each event becomes an orb from
+   *  its cause's card to the paying gauge (the ghost grows ON THE LANDING);
+   *  a cause with no card, a team cause, or reduced motion lands at once. */
   private applyLosses(events: readonly PoolLossEvent[]): void {
-    for (const e of events) this.pending[e.target] += e.amount;
-    this.playerGauge?.setPending(this.pending.player);
-    this.enemyGauge?.setPending(this.pending.enemy);
+    for (const e of events) this.deliver(e);
+  }
+
+  private deliver(e: PoolLossEvent): void {
+    const gauge = e.target === 'player' ? this.playerGauge : this.enemyGauge;
+    const card = e.cause.kind === 'unit' ? this.cards.get(e.cause.unitId) : undefined;
+    const land = (): void => {
+      this.pending[e.target] += e.amount;
+      if (!gauge) return;
+      gauge.setPending(this.pending[e.target]);
+      gauge.pulse();
+      if (shakeAllowed(e.target)) shakeView(e.amount, gauge.reading().max);
+    };
+    const mount = this.playerCardPane.parentElement;
+    if (!gauge || !card || !mount || prefersReducedMotion()) {
+      land();
+      return;
+    }
+    const orb = flyOrb(mount, centerOf(card.el), gauge.anchor(), e.target, e.amount, gauge.reading().max);
+    this.orbs.add(orb);
+    const flight = orb.done.then(() => {
+      this.orbs.delete(orb);
+      this.inFlight.delete(flight);
+      // A cancelled orb (dispose mid-flight) still books its loss — the
+      // ghost's arithmetic must not depend on the animation completing.
+      land();
+    });
+    this.inFlight.add(flight);
+  }
+
+  /** 96.5b2 — launch the end events at the stagger, wait for every orb in
+   *  flight (the last deaths' included), the settle beat, then commit. */
+  private async runEndSequence(events: readonly PoolLossEvent[]): Promise<void> {
+    const reduced = prefersReducedMotion();
+    for (let i = 0; i < events.length; i++) {
+      if (i > 0 && !reduced) await delay(SURVIVOR_STAGGER_MS);
+      this.deliver(events[i]!);
+    }
+    while (this.inFlight.size > 0) await Promise.all([...this.inFlight]);
+    await delay(SETTLE_MS);
+    this.commitLosses();
+  }
+
+  /** 96.5b2 — resolves when the after-battle sequence has committed (at
+   *  once when no battle has ended on this HUD). */
+  lossesSettled(): Promise<void> {
+    return this.settled ?? Promise.resolve();
   }
 
   /** 96.5b1 — the ghost becomes the fill (Run has already booked the same
@@ -369,6 +440,12 @@ export class HUD {
     this.playerGauge?.commit();
     this.enemyGauge?.commit();
     this.pending = { player: 0, enemy: 0 };
+  }
+
+  /** 96.5b2 — drop every orb (a teardown mid-flight, or a fresh show()). */
+  private cancelOrbs(): void {
+    for (const orb of this.orbs) orb.cancel();
+    this.orbs.clear();
   }
 
   /**
@@ -403,6 +480,9 @@ export class HUD {
     this.pending = bookedImmediateLoss(world.fallenPowerSoFar());
     this.playerGauge?.setPending(this.pending.player);
     this.enemyGauge?.setPending(this.pending.enemy);
+    // 96.5b2 — a fresh battle starts with no orbs and no settle pending.
+    this.cancelOrbs();
+    this.settled = null;
     fadeIn(this.hopLabel);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
@@ -443,6 +523,8 @@ export class HUD {
     fadeOutAndRemove(this.playerCardPane);
     fadeOutAndRemove(this.enemyCardPane);
     fadeOutAndRemove(this.countdownEl);
+    // 96.5b2 — an orb mid-flight would outlive the panes it flew between.
+    this.cancelOrbs();
     this.world = null;
   }
 

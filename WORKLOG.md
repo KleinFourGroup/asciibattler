@@ -1392,5 +1392,39 @@ paused mid-battle on the first player death: `31 (−1) / 40`, the fifth
 card grayed, the screenshot taken (the 5 px hatch is below what a preview
 JPEG resolves — the user's eye is the visual check; the geometry is the
 proof here). Console: no errors. The hidden pane's zero rAF again: the
-scene's `tick(1/60)` driven from JS to reach each stop. **Playtest:
-pending (the user's).**
+scene's `tick(1/60)` driven from JS to reach each stop. **The 96.5b1
+playtest (2026-09-12): clear, with one finding — the user's.**
+
+### 96.5b2-pre — the gauge head's layout hysteresis (2026-09-12, the user's b1 finding)
+
+**The finding:** the readout widening to `X (−Y) / Z` moved the layout —
+"our y-coordinate hysteresis failure" (the §101 shape, caught by the
+user's eye at b1). **The mechanism, control-probed on the UNFIXED tree
+first** (the confirm-the-deficit norm): the gauge is a fixed 220 px and
+its head a flex row (label left, value right); on the enemy gauge the
+label is the ENCOUNTER NAME, so the head WRAPS under width pressure and
+the gauge grows, moving the enemy card row beneath it. The probe found
+it wider than the parenthetical: this run's encounter, "The Ronin and the
+Mages" (23 glyphs, the catalog's longest), sat on TWO lines before any
+death — head 32 px vs the player's 16, the enemy card row at 126 px —
+while "Guarded Adventurer" (18) had sat on one at b1. The enemy gauge's
+height already varied PER ENCOUNTER; the parenthetical was one more way
+across the wrap. **The fix, two layers, one CSS block:** (1) the head can
+never wrap — `white-space: nowrap`, the label `min-width: 0` +
+`text-overflow: ellipsis` (the structural guarantee: no string, font or
+future readout changes the height); (2) the value RESERVES its widest
+live form — `min-width: 15ch` (`44 (−44) / 44`: the enemy pool max is 44
+in `encounters.json`, the player's 40; 13 glyphs + the 0.08em spacing),
+right-aligned, so the value's box and the label's room are constant
+through a battle (`/ max` stays put, only the remaining number slides —
+no horizontal re-ellipsis per death either). And the user's call: the
+HUD's two gauges widen (`.hud-player-pool / .hud-enemy-pool .pool-gauge`)
+so the name survives beside the reserved value — 300 px clipped the
+23-glyph name by 4 px (label room 184 vs 188 needed), **320 px** fits it
+(187.7 px of 204) with room for a future 25-glyph name; the turn screens
+keep 220 (their labels are `Your / Enemy Morale`, unclipped, heads 16 px).
+**Browser, before → after** (the same battle, HMR): enemy head 32 → 16
+px, gauge 54 → 38 px, the enemy card row 126 → 110 px; the value box 108
+px with AND without the parenthetical, its left edge constant; through
+two more deaths and the end commit nothing moved. `tests/ui-tokens`
+green (no raw values). Console clean.

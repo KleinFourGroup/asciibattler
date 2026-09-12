@@ -2932,15 +2932,41 @@ body {
   gap: 6px;
 }
 
+/* 96.5b2-pre — the HUD's two gauges are wider than the turn screens' (the
+   user's call): the enemy label is the ENCOUNTER NAME there, and at 220px a
+   long name already sat on two lines while a short one sat on one — the
+   gauge's height varied per encounter and moved the card row with it. */
+.hud-player-pool .pool-gauge,
+.hud-enemy-pool .pool-gauge {
+  width: 320px; /* the longest catalog name (23 glyphs) fits beside the reserved value */
+}
+
+/* 96.5b2-pre — the head can never wrap: the live readout widens per loss
+   event (`33 (−7) / 40`) and a wrap moved the card row (the §101 failure
+   the user caught); the label gives way with an ellipsis, and the value
+   RESERVES its widest live form (`44 (−44) / 44`, 13 glyphs + the
+   letter-spacing) so its box — and the label's room — is constant through
+   a battle: `/ max` stays put, only the remaining number slides. */
 .pool-gauge-head {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
+  white-space: nowrap;
   font-size: var(--text-12);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.pool-gauge-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .pool-gauge-value {
+  flex: none;
+  min-width: 15ch;
+  text-align: right;
   font-variant-numeric: tabular-nums;
   font-weight: bold;
 }

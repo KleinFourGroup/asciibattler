@@ -190,22 +190,16 @@ the pre-turn screen (re-rendered after a redraw — a latent staleness the
 audit found) + a ceiling tick on the battle bar. The cut:
 
 - [x] **96.5a — the chip rule.** ✅ 2026-09-12: `PoolOverlay.setSuppressed`
-  (two flags, one class — run-hidden ∨ scene-suppressed) pushed from
-  `Game.swap` for PreTurn / Battle / PostTurn (the 78e map-chip
-  chokepoint); browser-walked map → event → pre-turn → battle → post-turn
-  → pre-turn 2 → game-over → reset → map, the column collapsing to
-  20 / 75 / 131; no console errors. WORKLOG §96.5a.
+  (two flags, one class) pushed from `Game.swap` for PreTurn / Battle /
+  PostTurn; browser-walked, playtest clear. WORKLOG §96.5a.
 - [x] **96.5b1 — the loss-event model + the ghost (headless-first).** ✅
-  2026-09-12: `chipRule.ts` lossEventsForDeath / lossEventsAtEnd /
-  bookedImmediateLoss / sumLossEvents, pinned Σ stream = `turnCharges`
-  over {mode}² × reason × mult (+ four shape pins); World gains TWO reads
-  (`survivorsByUnit` — `survivorPower` now sums it — and
-  `fallenPowerSoFar`), not the one predicted; `createPoolGauge` handle +
-  the hatched ghost + `(−N)`; the HUD paints from events and commits at
-  `battle:ended` (b2 re-times it). Browser: the ghost read −2 against a
-  raw death tally of 2, the commit landed at the run's pools and the
-  post-turn gauges. The fuzz-smoke prediction is scored at the commit.
-  WORKLOG §96.5b1.
+  2026-09-12: the model in `chipRule.ts` pinned Σ stream = `turnCharges`;
+  World gains TWO reads (not the one predicted); the gauge handle + the
+  ghost; the HUD commits at `battle:ended` (b2 re-times it). The fuzz
+  smoke fired once and held. Playtest clear. WORKLOG §96.5b1.
+- [x] **96.5b2-pre — the gauge head's hysteresis.** ✅ 2026-09-12 (the
+  user's b1 finding): the head never wraps, the value reserves its widest
+  form, the HUD gauges widen 220 → 320 px. WORKLOG §96.5b2-pre.
 - [ ] **96.5b2 — the orb + the shake + the end sequence (eyeball).** A DOM
   orb from the paying unit's card to its side's gauge per event (a team
   cause or no card → the gauge pulses in place); the shake only for

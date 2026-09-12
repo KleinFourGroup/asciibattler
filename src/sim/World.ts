@@ -2346,15 +2346,42 @@ export class World {
   private survivorPower(): { player: number; enemy: number } {
     let player = 0;
     let enemy = 0;
+    // 96.5b1 — summed off the per-unit read so the two cannot drift: the
+    // live bar's end-of-battle survivor events are one row each of exactly
+    // the units this sum counts.
+    for (const u of this.survivorsByUnit()) {
+      if (u.team === 'player') player += u.power;
+      else enemy += u.power;
+    }
+    return { player, enemy };
+  }
+
+  /**
+   * 96.5b1 — the living on-grid combatants, one row each (`survivorPower`'s
+   * per-unit form; the same filter — the spawn queue is not on the grid).
+   * The live bar's survivors-rule end sequence reads it at `battle:ended`
+   * (the loss-event model, src/run/chipRule.ts). Display-only: the sim
+   * never consults it.
+   */
+  survivorsByUnit(): { unitId: number; team: 'player' | 'enemy'; power: number }[] {
+    const out: { unitId: number; team: 'player' | 'enemy'; power: number }[] = [];
     for (const u of this.units) {
       if (u.currentHp <= 0) continue;
       // K1 — pool chip reads `effectiveStats.power` so a power buff/debuff (the
       // fatigue migration's target) shows up at the turn boundary. Identity-
       // equal to `stats.power` when the unit has no effects.
-      if (u.team === 'player') player += u.effectiveStats.power;
-      else if (u.team === 'enemy') enemy += u.effectiveStats.power;
+      if (u.team === 'player' || u.team === 'enemy') {
+        out.push({ unitId: u.id, team: u.team, power: u.effectiveStats.power });
+      }
     }
-    return { player, enemy };
+    return out;
+  }
+
+  /** 96.5b1 — the fallen power booked SO FAR this battle (a copy of the
+   *  §91a1 accumulator, live until the World is discarded): a consumer that
+   *  attaches mid-battle (a restore) opens its ghost here. Display-only. */
+  fallenPowerSoFar(): { player: number; enemy: number } {
+    return { ...this.fallenPower };
   }
 
   /**

@@ -1533,6 +1533,30 @@ describe('§91a1 — the fallen-power ledger + the battle:ended reason (the casu
     expect(ends[0]!.fallenPower!.player).toBe(deaths[0]!.power);
   });
 
+  it('96.5b1 — survivorsByUnit is the per-unit form of survivorPower, and fallenPowerSoFar the live accumulator (both equal the battle:ended payload at the end)', () => {
+    const { w, player, enemy, ends } = pair();
+    // Mid-battle: nobody fallen, both standing, one row each.
+    expect(w.fallenPowerSoFar()).toEqual({ player: 0, enemy: 0 });
+    expect(w.survivorsByUnit()).toEqual([
+      { unitId: player.id, team: 'player', power: player.effectiveStats.power },
+      { unitId: enemy.id, team: 'enemy', power: enemy.effectiveStats.power },
+    ]);
+    player.currentHp = 0;
+    w.tick(); // reaped → enemy wins
+    expect(ends).toHaveLength(1);
+    expect(w.fallenPowerSoFar()).toEqual(ends[0]!.fallenPower);
+    const rows = w.survivorsByUnit();
+    expect(rows).toEqual([{ unitId: enemy.id, team: 'enemy', power: enemy.effectiveStats.power }]);
+    expect({
+      player: rows.filter((r) => r.team === 'player').reduce((s, r) => s + r.power, 0),
+      enemy: rows.filter((r) => r.team === 'enemy').reduce((s, r) => s + r.power, 0),
+    }).toEqual(ends[0]!.survivorPower);
+    // A copy, never the accumulator.
+    const snap = w.fallenPowerSoFar();
+    snap.player = 999;
+    expect(w.fallenPowerSoFar().player).not.toBe(999);
+  });
+
   it('94d — a summon dies summoned:true at power 0 and a neutral at power 0 (what the rule booked: nothing)', () => {
     const { bus, w, enemy, ends } = pair();
     const deaths: GameEvents['unit:died'][] = [];

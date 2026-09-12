@@ -6,7 +6,16 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { rulesForTurn, turnCharges, playerExposure, type TurnEndReason } from './chipRule';
+import {
+  rulesForTurn,
+  turnCharges,
+  playerExposure,
+  lossEventsForDeath,
+  lossEventsAtEnd,
+  bookedImmediateLoss,
+  sumLossEvents,
+  type TurnEndReason,
+} from './chipRule';
 import { HEALTH } from '../config/health';
 
 const survivors = { player: 3, enemy: 5 };
@@ -99,5 +108,102 @@ describe('chipRule (§91a2)', () => {
     expect(['survivors', 'casualties']).toContain(HEALTH.chipMode);
     expect(['survivors', 'casualties']).toContain(HEALTH.capPenalty);
     expect(turnCharges('decisive', survivors, fallen)).toEqual(turnCharges('decisive', survivors, fallen, HEALTH));
+  });
+});
+
+/**
+ * 96.5b1 — the loss-event model: the stream the live bar consumes must SUM
+ * to what the turn books, whatever the rule pair and reason. Each side's
+ * fielded units are fixed; the dead + the standing partition them, so the
+ * per-unit rows re-derive the same `survivors` / `fallen` totals the charge
+ * reads — the expectation is `turnCharges` itself, never re-typed numbers.
+ */
+describe('chipRule — the loss-event model (96.5b1)', () => {
+  const dead = [
+    { unitId: 1, team: 'player' as const, power: 2 },
+    { unitId: 2, team: 'enemy' as const, power: 4 },
+    { unitId: 3, team: 'enemy' as const, power: 3 },
+  ];
+  const standing = [
+    { unitId: 4, team: 'player' as const, power: 3 },
+    { unitId: 5, team: 'enemy' as const, power: 5 },
+  ];
+  const fallenOf = (rows: typeof dead) => ({
+    player: rows.filter((r) => r.team === 'player').reduce((s, r) => s + r.power, 0),
+    enemy: rows.filter((r) => r.team === 'enemy').reduce((s, r) => s + r.power, 0),
+  });
+  const standingOf = (rows: typeof standing) => ({
+    player: rows.filter((r) => r.team === 'player').reduce((s, r) => s + r.power, 0),
+    enemy: rows.filter((r) => r.team === 'enemy').reduce((s, r) => s + r.power, 0),
+  });
+  const MODES = ['survivors', 'casualties'] as const;
+
+  it('Σ(immediate events over the dead) + Σ(end events) = turnCharges, for every {chipMode} × {capPenalty} × {reason} × mult', () => {
+    for (const chipMode of MODES) {
+      for (const capPenalty of MODES) {
+        for (const mult of [1, 1.5]) {
+          const health = h(chipMode, capPenalty, mult);
+          for (const reason of REASONS) {
+            const stream = [
+              ...dead.flatMap((d) => lossEventsForDeath(d, health)),
+              ...lossEventsAtEnd(reason, standing, fallenOf(dead), health),
+            ];
+            expect(sumLossEvents(stream), `${chipMode}/${capPenalty}/${reason}/×${mult}`).toEqual(
+              turnCharges(reason, standingOf(standing), fallenOf(dead), health),
+            );
+          }
+        }
+      }
+    }
+  });
+
+  it('casualties: a death fires ONE immediate event, the dead unit\'s own side pays, the cause is the unit; nothing fires at a decisive end', () => {
+    const health = h('casualties', 'survivors', 2);
+    expect(lossEventsForDeath(dead[1]!, health)).toEqual([
+      { target: 'enemy', amount: 8, phase: 'immediate', cause: { kind: 'unit', unitId: 2, team: 'enemy' } },
+    ]);
+    expect(lossEventsAtEnd('decisive', standing, fallenOf(dead), health)).toEqual([]);
+    expect(lossEventsAtEnd('mutualWipe', [], fallenOf(dead), health)).toEqual([]);
+  });
+
+  it('survivors: a death fires nothing; the end fires one event PER STANDING UNIT charged to the OPPOSING pool, cause = the survivor', () => {
+    const health = h('survivors', 'survivors', 1);
+    for (const d of dead) expect(lossEventsForDeath(d, health)).toEqual([]);
+    expect(lossEventsAtEnd('decisive', standing, fallenOf(dead), health)).toEqual([
+      { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
+      { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
+    ]);
+    // (survivors, survivors) on a cap turn is one rule — the stream is not doubled.
+    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), health)).toHaveLength(2);
+  });
+
+  it('the cap surcharge: under (casualties, survivors) the end adds the survivor rows; under (survivors, casualties) it adds ONE team-cause event per side off the fallen totals', () => {
+    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), h('casualties', 'survivors'))).toEqual([
+      { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
+      { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
+    ]);
+    expect(lossEventsAtEnd('cap', standing, fallenOf(dead), h('survivors', 'casualties'))).toEqual([
+      { target: 'enemy', amount: 3, phase: 'end', cause: { kind: 'unit', unitId: 4, team: 'player' } },
+      { target: 'player', amount: 5, phase: 'end', cause: { kind: 'unit', unitId: 5, team: 'enemy' } },
+      { target: 'player', amount: 2, phase: 'end', cause: { kind: 'team', team: 'player' } },
+      { target: 'enemy', amount: 7, phase: 'end', cause: { kind: 'team', team: 'enemy' } },
+    ]);
+  });
+
+  it('a zero booking (a summon), a neutral, and a zero-power survivor emit nothing', () => {
+    const health = h('casualties', 'survivors');
+    expect(lossEventsForDeath({ unitId: 9, team: 'enemy', power: 0 }, health)).toEqual([]);
+    expect(lossEventsForDeath({ unitId: 9, team: 'neutral', power: 5 }, health)).toEqual([]);
+    expect(lossEventsAtEnd('cap', [{ unitId: 9, team: 'enemy', power: 0 }], { player: 0, enemy: 0 }, health)).toEqual([]);
+  });
+
+  it('bookedImmediateLoss — the mid-battle restore opening: the fallen totals × mult under casualties, nothing under survivors', () => {
+    expect(bookedImmediateLoss(fallen, h('casualties', 'survivors', 2))).toEqual({ player: 4, enemy: 14 });
+    expect(bookedImmediateLoss(fallen, h('survivors', 'casualties', 2))).toEqual({ player: 0, enemy: 0 });
+    // Equal to the immediate stream summed — the restore path and the live path agree.
+    const health = h('casualties', 'casualties', 1.5);
+    expect(bookedImmediateLoss(fallenOf(dead), health)).toEqual(
+      sumLossEvents(dead.flatMap((d) => lossEventsForDeath(d, health))),
+    );
   });
 });

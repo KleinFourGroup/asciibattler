@@ -19,7 +19,13 @@ import {
 } from './UnitCard';
 import { EMPOWER_DISPLAY } from '../render/statusDisplay';
 import { readUnitStatuses } from '../sim/statusReadout';
-import { renderPoolGauge } from './poolGauge';
+import { createPoolGauge, type PoolGaugeHandle } from './poolGauge';
+import {
+  bookedImmediateLoss,
+  lossEventsAtEnd,
+  lossEventsForDeath,
+  type PoolLossEvent,
+} from '../run/chipRule';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
@@ -130,6 +136,13 @@ export class HUD {
   private readonly enemyCardRow: HTMLElement;
   /** The enemy encounter-pool gauge's slot above the cards (repainted in show()). */
   private readonly enemyPoolWrap: HTMLElement;
+  /** 96.5b1 — the live gauge handles (null on a bare mount with no
+   *  encounter): the loss-event stream moves their ghosts. */
+  private playerGauge: PoolGaugeHandle | null = null;
+  private enemyGauge: PoolGaugeHandle | null = null;
+  /** 96.5b1 — the un-booked loss per pool so far this battle (uncapped
+   *  pool-HP; the gauge clamps). Opens at the booked fallen on a restore. */
+  private pending = { player: 0, enemy: 0 };
   /** unitId → its compact card handles, for O(1) HP refresh + death gray-out.
    *  BOTH teams (player + enemy); dead cards stay (grayed) for positional
    *  stability. The team is fixed at spawn, so one map keyed by id suffices —
@@ -316,7 +329,46 @@ export class HUD {
     // too. The roster rows get the same refresh for free.
     this.subscriptions.push(bus.on('status:ticked', ({ unitId }) => this.refreshHp(unitId)));
     this.subscriptions.push(bus.on('unit:healed', ({ unitId }) => this.refreshHp(unitId)));
-    this.subscriptions.push(bus.on('unit:died', ({ unitId }) => this.removeUnit(unitId)));
+    this.subscriptions.push(
+      bus.on('unit:died', (death) => {
+        this.removeUnit(death.unitId);
+        // 96.5b1 — the live bar: a casualties loss is a fact at the death
+        // (the loss-event model, src/run/chipRule.ts); the payload's power is
+        // what the World booked, so the ghost and the ledger agree by
+        // construction. Under survivors a death fires nothing here.
+        this.applyLosses(lossEventsForDeath(death));
+      }),
+    );
+    // 96.5b1 — the end sequence: the survivors rule (and the cap surcharge)
+    // becomes a fact only now. b1 applies the end events and COMMITS the
+    // ghost at once; b2 plays them as the orb sequence during the outro and
+    // moves the commit to its end (the kickoff's point 3/5).
+    this.subscriptions.push(
+      bus.on('battle:ended', ({ winner, reason, fallenPower }) => {
+        if (!this.world) return;
+        const why = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
+        this.applyLosses(
+          lossEventsAtEnd(why, this.world.survivorsByUnit(), fallenPower ?? this.world.fallenPowerSoFar()),
+        );
+        this.commitLosses();
+      }),
+    );
+  }
+
+  /** 96.5b1 — fold a loss-event batch into the pending totals and repaint
+   *  the paying gauges' ghosts. */
+  private applyLosses(events: readonly PoolLossEvent[]): void {
+    for (const e of events) this.pending[e.target] += e.amount;
+    this.playerGauge?.setPending(this.pending.player);
+    this.enemyGauge?.setPending(this.pending.enemy);
+  }
+
+  /** 96.5b1 — the ghost becomes the fill (Run has already booked the same
+   *  charge through `resolveTurn`; this is the bar catching up to it). */
+  private commitLosses(): void {
+    this.playerGauge?.commit();
+    this.enemyGauge?.commit();
+    this.pending = { player: 0, enemy: 0 };
   }
 
   /**
@@ -345,6 +397,12 @@ export class HUD {
     this.cards.clear();
     this.renderPlayerPool(encounter);
     this.renderEnemyPool(encounter);
+    // 96.5b1 — the opening ghost: a fresh battle has booked nothing; a
+    // mid-battle restore opens at the deaths already booked (World v36
+    // serializes the accumulator), so the bar reads the same after a reload.
+    this.pending = bookedImmediateLoss(world.fallenPowerSoFar());
+    this.playerGauge?.setPending(this.pending.player);
+    this.enemyGauge?.setPending(this.pending.enemy);
     fadeIn(this.hopLabel);
     fadeIn(this.banner);
     fadeIn(this.speedPane);
@@ -604,20 +662,21 @@ export class HUD {
    *  (e.g. a bare test mount). */
   private renderPlayerPool(e?: EncounterPools): void {
     this.playerPoolWrap.replaceChildren();
+    this.playerGauge = null;
     if (!e) return;
-    this.playerPoolWrap.appendChild(
-      renderPoolGauge('player', 'You', e.playerHealth, e.playerHealthMax),
-    );
+    // 96.5b1 — a live handle (the ghost moves per loss event), not a one-shot.
+    this.playerGauge = createPoolGauge('player', 'You', e.playerHealth, e.playerHealthMax);
+    this.playerPoolWrap.appendChild(this.playerGauge.el);
   }
 
   /** Q5 — paint the enemy encounter health-pool gauge above the enemy cards.
    *  Cleared when no encounter info is supplied (e.g. a bare test mount). */
   private renderEnemyPool(e?: EncounterPools): void {
     this.enemyPoolWrap.replaceChildren();
+    this.enemyGauge = null;
     if (!e) return;
-    this.enemyPoolWrap.appendChild(
-      renderPoolGauge('enemy', e.enemyName ?? 'Foe', e.enemyHealth, e.enemyHealthMax),
-    );
+    this.enemyGauge = createPoolGauge('enemy', e.enemyName ?? 'Foe', e.enemyHealth, e.enemyHealthMax);
+    this.enemyPoolWrap.appendChild(this.enemyGauge.el);
   }
 
   /**

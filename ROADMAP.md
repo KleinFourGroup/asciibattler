@@ -195,16 +195,17 @@ audit found) + a ceiling tick on the battle bar. The cut:
   chokepoint); browser-walked map → event → pre-turn → battle → post-turn
   → pre-turn 2 → game-over → reset → map, the column collapsing to
   20 / 75 / 131; no console errors. WORKLOG §96.5a.
-- [ ] **96.5b1 — the loss-event model + the ghost (headless-first).**
-  `chipRule.ts` gains the pure derivation (the immediate events for a
-  death · the end sequence from survivors + fallen + reason; a cause is a
-  unit card or a team gauge; phase immediate / end); a test pins Σ events
-  per side = `turnCharges` under every rule pair × reason, and a
-  mid-battle restore's opening ghost = the serialized fallen power (one
-  public World read); `poolGauge` gains the ghost segment, the
-  `33 (−7) / 40` value and the commit; the HUD paints from events, no
-  motion. Prediction: `src/sim/World.ts` + `src/run/chipRule.ts` touched
-  → the hook's fuzz smoke fires once, byte-identical; no snapshot bump.
+- [x] **96.5b1 — the loss-event model + the ghost (headless-first).** ✅
+  2026-09-12: `chipRule.ts` lossEventsForDeath / lossEventsAtEnd /
+  bookedImmediateLoss / sumLossEvents, pinned Σ stream = `turnCharges`
+  over {mode}² × reason × mult (+ four shape pins); World gains TWO reads
+  (`survivorsByUnit` — `survivorPower` now sums it — and
+  `fallenPowerSoFar`), not the one predicted; `createPoolGauge` handle +
+  the hatched ghost + `(−N)`; the HUD paints from events and commits at
+  `battle:ended` (b2 re-times it). Browser: the ghost read −2 against a
+  raw death tally of 2, the commit landed at the run's pools and the
+  post-turn gauges. The fuzz-smoke prediction is scored at the commit.
+  WORKLOG §96.5b1.
 - [ ] **96.5b2 — the orb + the shake + the end sequence (eyeball).** A DOM
   orb from the paying unit's card to its side's gauge per event (a team
   cause or no card → the gauge pulses in place); the shake only for

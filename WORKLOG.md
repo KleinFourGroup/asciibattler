@@ -1324,4 +1324,73 @@ PreTurnScene, BattleScene (the two HUD gauges present), PostTurnScene
 ("Skirmish Won") and the next PreTurnScene (turn 2); a synthetic
 `run:defeated` → GameOverScene stays hidden (both flags); `resetRun` →
 CharacterSelectScene hidden (no run); a character pick → MapScene shown
-at `40 / 40`. Console: no errors. **Playtest: pending (the user's).**
+at `40 / 40`. Console: no errors. **The 96.5a playtest (2026-09-12):
+clear.**
+
+### 96.5b1 — the loss-event model + the ghost (2026-09-12)
+
+**The model, in `chipRule.ts` beside the arithmetic it mirrors** (the
+kickoff's point 1): `lossEventsForDeath` — under casualties one IMMEDIATE
+event per death, the dead unit's own side pays its booked power, the cause
+is the unit; under survivors nothing (a death is not a survivors fact).
+`lossEventsAtEnd(reason, standing, fallen)` — the survivors rule, when
+`rulesForTurn` names it, as one END event per standing unit charged to the
+OPPOSING pool; the casualties rule ONLY as the cap surcharge over a
+survivors chip mode (under a casualties mode every death already fired,
+and the rule set dedupes), then as one TEAM-cause event per side off the
+fallen totals — the team cause's first real use, beside the no-card
+fallback and the flat-turn future. `bookedImmediateLoss(fallen)` — the
+opening ghost for a consumer attaching mid-battle. **The pin:** Σ
+(immediate over the dead) + Σ (end) per side = `turnCharges` for every
+{chipMode}² × {reason} × {mult 1, 1.5} — the expectation is the charge
+function itself over totals the per-unit rows re-derive, never re-typed
+numbers; plus four shape pins (the casualties row, the survivors rows,
+the surcharge under both orders, the zero/neutral exclusions) and the
+restore opening = the immediate stream summed.
+
+**Two World reads, not the cut's one:** `survivorsByUnit()` (the per-unit
+form of `survivorPower`, which now SUMS it so the two cannot drift — the
+end sequence must be one row per exactly the units the charge counts) and
+`fallenPowerSoFar()` (a copy of the §91a1 accumulator). The cut line
+predicted one because it only thought about the restore; the survivors
+end sequence needs the standing rows too. World.test pins both against
+the `battle:ended` payload and the copy against the accumulator.
+
+**The ghost (`poolGauge.ts`):** `createPoolGauge` returns a handle (`set` ·
+`setPending` · `commit`); `renderPoolGauge` is now the one-shot form over
+it, so the pre/post-turn gauges render EXACTLY as before (browser: `40 /
+40`, ghost width 0 %, the pending span hidden). The ghost is a hatched
+segment (the side's hue at 55 % over the bar's ground, relative color
+syntax — the 96a token rule, `tests/ui-tokens` green) positioned over the
+fill's leading edge from the projected remainder to the booked pool; the
+readout `31 (−1) / 40` with the `(−N)` on its own dimmed span;
+`poolValueParts` clamps the pending loss at the pool (the applied charge
+is clamped), so the ghost never crosses zero. `commit()` sets the pool to
+the remainder and zeroes the ghost.
+
+**The HUD:** both gauges become handles; `unit:died` feeds
+`lossEventsForDeath`; `battle:ended` feeds `lossEventsAtEnd` off
+`world.survivorsByUnit()` + the payload's `fallenPower` (the reason
+fallback mirrors Run's: a fake's missing reason maps draw → cap, else
+decisive) and then COMMITS at once — b2 moves the commit to the orb
+sequence's end (the kickoff's points 3 + 5; the seam is one method). `show()`
+opens the ghost at `bookedImmediateLoss(world.fallenPowerSoFar())` — a
+mid-battle restore reads the same after a reload. **Finding:** no run
+autosave exists (`localStorage` in `src/` is the dev trace store only), so
+that path is reachable only through the dev `Game.restore`; it stays
+correct and pinned at the model level, and the wiring is three lines.
+
+**Browser-walked on the 5191 preview** with an INDEPENDENT re-derivation
+(the §79 rule): a page-level `unit:died` tally summing the raw payloads'
+power per team, installed before the battle. Turn 1: a neutral death (0)
+moved nothing; after two player deaths the player gauge read
+`38 (−2) / 40`, ghost left 95 % / width 5 %, the tally 2; at the decisive
+end the HUD committed to `34 / 40` and `12 / 14` = `run.playerHealth` /
+`run.enemyHealth` = the post-turn gauges = the chip lines (−6 / −2) = the
+tally (player 6, enemy 2 — the `battle:ended` payload's fallen). Turn 4,
+paused mid-battle on the first player death: `31 (−1) / 40`, the fifth
+card grayed, the screenshot taken (the 5 px hatch is below what a preview
+JPEG resolves — the user's eye is the visual check; the geometry is the
+proof here). Console: no errors. The hidden pane's zero rAF again: the
+scene's `tick(1/60)` driven from JS to reach each stop. **Playtest:
+pending (the user's).**

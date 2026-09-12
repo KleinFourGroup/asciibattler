@@ -2946,6 +2946,7 @@ body {
 }
 
 .pool-gauge-bar {
+  position: relative; /* 96.5b1 — the ghost is positioned over the fill */
   height: 14px;
   border: 1px solid var(--color-gray-22);
   background: var(--color-gray-0a);
@@ -2956,12 +2957,43 @@ body {
   transition: width 0.2s ease;
 }
 
+/* 96.5b1 — the GHOST: the loss the turn has made a fact of but Run has not
+   booked yet (the loss-event model). It sits over the fill's leading segment
+   as the bar's dark ground hatched in the side's hue, so the solid fill still
+   reads as the booked pool and the hatch as "spoken for"; `commit()` shrinks
+   the fill under it and it collapses to zero width. The readout's `(−N)`
+   rides `.pool-gauge-pending` in the same hue, dimmed. */
+.pool-gauge-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  transition:
+    left 0.2s ease,
+    width 0.2s ease;
+}
+
+.pool-gauge-pending {
+  opacity: 0.7;
+  font-weight: normal;
+}
+
 .pool-gauge--player .pool-gauge-label,
 .pool-gauge--player .pool-gauge-value {
   color: var(--color-terminal-green);
 }
 .pool-gauge--player .pool-gauge-fill {
   background: var(--color-terminal-green);
+}
+.pool-gauge--player .pool-gauge-ghost {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgb(from var(--color-terminal-green) r g b / 0.55) 0 3px,
+      transparent 3px 6px
+    ),
+    var(--color-gray-0a);
 }
 
 .pool-gauge--enemy .pool-gauge-label,
@@ -2970,6 +3002,15 @@ body {
 }
 .pool-gauge--enemy .pool-gauge-fill {
   background: var(--color-neon-red);
+}
+.pool-gauge--enemy .pool-gauge-ghost {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgb(from var(--color-neon-red) r g b / 0.55) 0 3px,
+      transparent 3px 6px
+    ),
+    var(--color-gray-0a);
 }
 
 /* R1/R2 — the shared card-list affordance + modal (src/ui/CardListModal.ts).

@@ -101,3 +101,139 @@ export function playerExposure(
   const own = health.chipMode === 'casualties' ? fielded.player : fielded.enemy;
   return own * health.chipMultiplier;
 }
+
+/**
+ * 96.5b1 — THE LOSS-EVENT MODEL (the live pool bar, Round 7 §96.5; the
+ * user's design at the kickoff). The battle HUD moves each side's gauge by
+ * a stream of LOSS EVENTS rather than by a projection, and each event fires
+ * at the moment the rule makes the loss a FACT: a casualties loss at the
+ * death (the dead unit's own side pays — the event's cause is the unit, so
+ * the bar can be fed from its card); a survivors loss only once the battle
+ * has ended (a survivor's charge is not a fact until then), one event per
+ * standing unit, paid by the OPPOSING pool; the cap-turn surcharge is just
+ * more end events. The event stream is display-only — Run books the turn
+ * through `turnCharges` exactly as before — and `sumLossEvents` over the
+ * whole stream equals `turnCharges` for every rule pair × reason (the
+ * chipRule.test pin), so the bar cannot disagree with what the turn books.
+ *
+ * `cause.kind === 'team'` is the CAUSELESS shape: the cap surcharge under
+ * (survivors, casualties) charges each side's fallen total at the end with
+ * no per-unit rows to hand out, and a future flat turn-win/loss effect
+ * (the kickoff's future-proofing — a rule not built here) would use it too;
+ * a consumer with no card for a unit cause falls back to it as well.
+ *
+ * Everything here is pure; `health` is injectable like the rest of the file.
+ */
+export type LossPhase = 'immediate' | 'end';
+
+export type LossCause =
+  | { readonly kind: 'unit'; readonly unitId: number; readonly team: 'player' | 'enemy' }
+  | { readonly kind: 'team'; readonly team: 'player' | 'enemy' };
+
+export interface PoolLossEvent {
+  /** The pool that pays. */
+  readonly target: 'player' | 'enemy';
+  /** Uncapped pool-HP (× `chipMultiplier`); the consumer clamps at the pool. */
+  readonly amount: number;
+  readonly phase: LossPhase;
+  readonly cause: LossCause;
+}
+
+/** The `unit:died` payload's slice the model reads. `power` is the amount
+ *  the World BOOKED (a summon 0, a neutral excluded by team). */
+export interface FallenUnit {
+  readonly unitId: number;
+  readonly team: 'player' | 'enemy' | 'neutral';
+  readonly power: number;
+}
+
+/** A living on-grid combatant at battle end (`World.survivorsByUnit`). */
+export interface StandingUnit {
+  readonly unitId: number;
+  readonly team: 'player' | 'enemy';
+  readonly power: number;
+}
+
+/** The IMMEDIATE events for one death: under casualties, the dead unit's
+ *  own side pays its booked power now; under survivors a death charges
+ *  nothing by itself (the loss lands on the killer's side's survivors at
+ *  the end). A zero booking (a summon) and a neutral emit nothing. */
+export function lossEventsForDeath(
+  death: FallenUnit,
+  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+): readonly PoolLossEvent[] {
+  if (health.chipMode !== 'casualties') return [];
+  if (death.team === 'neutral' || death.power <= 0) return [];
+  return [
+    {
+      target: death.team,
+      amount: death.power * health.chipMultiplier,
+      phase: 'immediate',
+      cause: { kind: 'unit', unitId: death.unitId, team: death.team },
+    },
+  ];
+}
+
+/** The END events for a turn ending for `reason`: the survivors rule (when
+ *  the turn pays it) as one event per standing unit charged to the OPPOSING
+ *  pool; the casualties rule ONLY when it is the cap surcharge over a
+ *  survivors chip mode (under a casualties chip mode every death already
+ *  fired its immediate event, and `rulesForTurn` is a set, so the rule is
+ *  never paid twice) — then as one team-cause event per side off the
+ *  booked fallen totals. */
+export function lossEventsAtEnd(
+  reason: TurnEndReason,
+  standing: readonly StandingUnit[],
+  fallen: SidePower,
+  health: Pick<HealthConfig, 'chipMode' | 'capPenalty' | 'chipMultiplier'> = HEALTH,
+): readonly PoolLossEvent[] {
+  const rules = rulesForTurn(reason, health);
+  const mult = health.chipMultiplier;
+  const out: PoolLossEvent[] = [];
+  if (rules.has('survivors')) {
+    for (const u of standing) {
+      if (u.power <= 0) continue;
+      out.push({
+        target: u.team === 'player' ? 'enemy' : 'player',
+        amount: u.power * mult,
+        phase: 'end',
+        cause: { kind: 'unit', unitId: u.unitId, team: u.team },
+      });
+    }
+  }
+  if (rules.has('casualties') && health.chipMode !== 'casualties') {
+    for (const side of ['player', 'enemy'] as const) {
+      if (fallen[side] <= 0) continue;
+      out.push({
+        target: side,
+        amount: fallen[side] * mult,
+        phase: 'end',
+        cause: { kind: 'team', team: side },
+      });
+    }
+  }
+  return out;
+}
+
+/** The loss already made a fact of BEFORE a consumer attached — a
+ *  mid-battle restore opens the bar here: under casualties the booked
+ *  fallen totals (every death's immediate event, summed); under survivors
+ *  nothing has fired yet. Off `World.fallenPowerSoFar()`. */
+export function bookedImmediateLoss(
+  fallen: SidePower,
+  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+): SidePower {
+  if (health.chipMode !== 'casualties') return { player: 0, enemy: 0 };
+  return { player: fallen.player * health.chipMultiplier, enemy: fallen.enemy * health.chipMultiplier };
+}
+
+/** Σ amount per paying side over a stream — the pin's left-hand side. */
+export function sumLossEvents(events: readonly PoolLossEvent[]): TurnCharges {
+  let player = 0;
+  let enemy = 0;
+  for (const e of events) {
+    if (e.target === 'player') player += e.amount;
+    else enemy += e.amount;
+  }
+  return { player, enemy };
+}

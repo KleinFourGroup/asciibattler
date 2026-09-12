@@ -176,6 +176,52 @@ have a home. **Scope guards:** no rule/timing change (the chip books at
 turn end — fuzz byte-identical); no run-end stats body here (§102); no
 new screen.
 
+**Kickoff 2026-09-12** (WORKLOG §96.5 Kickoff — the audit + the design
+round, six points user-signed). **Decision points ✅ DECIDED:** a death's
+read = a LOSS-EVENT stream, not a projection (a casualties event fires at
+the death; a survivors event fires per surviving enemy in an
+end-of-battle sequence during the outro; the cap surcharge is just more
+end events; the flat-turn future rides a team-gauge cause, shape only) ·
+the bar GHOSTS (the solid fill stays the booked pool; the ghost commits
+at the outro's end) · the post-turn screen is REMOVED (Game auto-advances
+after the outro; a one-line "last turn" strip on the pre-turn screen from
+turn 2; the encounter's last rows wait for §102) · the risk line STAYS on
+the pre-turn screen (re-rendered after a redraw — a latent staleness the
+audit found) + a ceiling tick on the battle bar. The cut:
+
+- [ ] **96.5a — the chip rule.** The pool chip hides while a pre-turn or
+  battle scene is mounted (driven from Game's swap, not from events); the
+  collapse rule moves nothing below it. Eyeball exit; no sim.
+- [ ] **96.5b1 — the loss-event model + the ghost (headless-first).**
+  `chipRule.ts` gains the pure derivation (the immediate events for a
+  death · the end sequence from survivors + fallen + reason; a cause is a
+  unit card or a team gauge; phase immediate / end); a test pins Σ events
+  per side = `turnCharges` under every rule pair × reason, and a
+  mid-battle restore's opening ghost = the serialized fallen power (one
+  public World read); `poolGauge` gains the ghost segment, the
+  `33 (−7) / 40` value and the commit; the HUD paints from events, no
+  motion. Prediction: `src/sim/World.ts` + `src/run/chipRule.ts` touched
+  → the hook's fuzz smoke fires once, byte-identical; no snapshot bump.
+- [ ] **96.5b2 — the orb + the shake + the end sequence (eyeball).** A DOM
+  orb from the paying unit's card to its side's gauge per event (a team
+  cause or no card → the gauge pulses in place); the shake only for
+  PLAYER-pool losses above a UI-constant fraction of the max, never under
+  `prefers-reduced-motion`; the survivors sequence plays in the outro and
+  the BattleScene reports done, so Game's outro = max(900 ms, the
+  sequence). No skip click; no extra win beat.
+- [ ] **96.5c — the risk line.** Re-render after a redraw (the latent
+  staleness); the ceiling tick on the battle bar at the same number.
+- [ ] **96.5d — the post-turn removal.** Game buffers the last
+  `turn:resolved` (the 65f deck-cue pattern) and hands it to the pre-turn
+  scene as the "last turn" strip (turn ≥ 2); Game dispatches `advanceTurn`
+  itself after the outro; `PostTurnScreen` + `PostTurnScene` + the 33 CSS
+  rules deleted; ARCHITECTURE's ui tree + catalog notes. Run's
+  `turn-outcome` phase STAYS (the fuzz bot drives it, `harness.ts:733`) —
+  fuzz byte-identical by construction.
+- [ ] **96.5e — the docs + the exit.** DESIGN §UI idioms gains the
+  live-bar paragraph; ROADMAP demotes; the close. Exit = the user's
+  per-step playtests (the §96 rhythm).
+
 ## Phase 97 — the tooltip system
 
 **Charter:** one component, one live element, terminal idiom; hover /

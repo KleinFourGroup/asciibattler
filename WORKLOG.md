@@ -1208,3 +1208,87 @@ Esc closes, **focus back on the map chip**. Console: no errors. What the
 synthetic probe could not do: a dispatched Tab never moves focus
 natively, so the forward-Tab-from-the-container case was made explicit
 (→ the first focusable) rather than left to native order.
+
+## Phase 96.5 — the live pool bar + the chip rule
+
+### Kickoff (2026-09-12) — the code-reality audit + the design round + the cut
+
+Pre-flight at `ee69a18` (clean tree; the §96 close). The audit, against
+the charter's three premises:
+
+- **The HUD gauges paint once — confirmed.** BattleScene hands the
+  encounter's pools to `HUD.show()` at mount; the HUD's only death handler
+  grays the card and zeroes its HP bar (`HUD.ts:591`); nothing in `src/ui`
+  reads fallen power.
+- **A death already carries its BOOKED power.** `World.reapUnit` is the
+  one death emit for both death sites and puts `recordFallen`'s return on
+  `unit:died.power` (a summon 0, a neutral excluded by team —
+  `World.ts:2381`); Run's ledger sums exactly those numbers. So a
+  per-death read needs no World accessor; a restore-mid-battle read does
+  (`fallenPower` and `survivorPower` are both private, copied only into
+  `battle:ended` and the snapshot).
+- **The pool chip never hides** except on defeat / victory
+  (`PoolOverlay.ts:82`); the map chip's class toggle is the precedent and
+  the 96e collapse rule already moves the column.
+- **The post-turn gate is driven by the fuzz bot too** — the harness sets
+  `pauseAtTurnGates` on and dispatches `advanceTurn` at every
+  `turn-outcome` (`harness.ts:733`). Removing the phase from Run would
+  touch the bot loop for no player-visible gain; Game dispatching the
+  advance itself after the outro leaves Run and the fuzz byte-identical
+  by construction.
+- **The post-turn screen's footprint:** `PostTurnScreen.ts` (222 lines,
+  16 un-extracted literals) + `PostTurnScene.ts` + 33 `.postturn-*` CSS
+  rules + zero locale keys; its only test pins the `turn:resolved`
+  PAYLOAD in Run, not the screen — so no test breaks whichever way it
+  goes, and the payload keeps its shape.
+- **A latent finding:** the pre-turn risk line is painted once from
+  `turn:starting.poolAtRisk` and never re-rendered (`PreTurnScreen.ts:628`);
+  a redraw changes the hand, and under casualties the hand's Σ power IS
+  the bound, so the "up to N" goes stale after a redraw. Folded into 96.5c.
+
+**The design round (a plain-message shape-lock, two turns).** The first
+proposal: a re-read PROJECTION — `turnCharges` with the decisive reason
+over the live survivors + fallen, so the same function books the turn
+and previews it under either rule. The user caught the flaw: under
+survivors that ghosts the WHOLE wave off the player's bar at battle start
+and shrinks it per kill — rule-consistent and backwards, because a
+survivor's charge is not a fact until the battle ends. **The user's model,
+adopted: a LOSS-EVENT stream.** Each loss is an event with a target
+gauge, an amount, a phase and a cause; a casualties loss fires at the
+death (from the dead unit's own card to its own side's gauge); a
+survivors loss fires per surviving enemy in a sequence after
+`battle:ended` and before the scene leaves (from the survivor's card to
+the OPPOSING gauge); the cap surcharge is just more end events; a
+mid-battle restore opens with the booked casualties already ghosted; and
+a future flat turn-win/loss effect rides a team-gauge cause at the end —
+shape only, no rule built. The VFX: an orb from the card to the gauge in
+the spirit of Mechabellum's health-bar projectile, a shake by magnitude.
+Six refinements, all user-signed: (1) the arithmetic lives beside
+`turnCharges` in `chipRule.ts` as a pure derivation, never re-computed
+in the HUD (the §91a2 second-copy finding), with a test pinning Σ events
+= the charge; (2) the event shape above, the team-gauge cause doubling
+as the no-card fallback; (3) the ghost commits into the solid fill at the
+outro's end, since Run has already booked the pool before any of this
+plays (`battle:ended` resolves the turn synchronously) — the bar leaves
+the screen at the number the next pre-turn gauge shows; (4) the shake
+only for PLAYER-pool losses above a threshold fraction of the max, never
+under `prefers-reduced-motion`, the orb on every event; (5) the outro
+becomes max(900 ms, the end sequence) — the BattleScene reports done and
+Game auto-advances; no skip click; (6) 96.5b splits headless-first (b1
+the model + the ghost, no motion) / render-second (b2 the orb + the shake
++ the sequence). The post-turn screen: REMOVED, with a one-line "last
+turn" strip on the pre-turn screen from turn 2 (Game buffers the last
+`turn:resolved` the way it buffers deck cues — Run's events keep their
+shape); the encounter's LAST turn's rows have no home until §102's
+run-end stats, the user's own roguelike-demographic argument from 94d.
+The encounter-end-summary alternative (a screen at a win, the rows homed
+now) was named and declined; no extra win beat beyond the commit.
+The risk line stays on the pre-turn screen (the decision surface) and
+gains the ceiling tick on the battle bar at the same number.
+
+**Predictions to score at the close:** no snapshot bump (the projection
+reads state v36 already serializes); the hook's fuzz smoke fires ONCE
+(96.5b1 touches `World.ts` for the public read and `chipRule.ts` for the
+derivation), byte-identical; `ui.json` gains the strip's and the ghost
+value's strings only; the post-turn deletion drops the literal baseline
+by its 16.

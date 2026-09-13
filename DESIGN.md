@@ -221,6 +221,31 @@ returns to the opener on close; `role="dialog"` + `aria-modal` are set.
 A modal's sounds are its own (`onCloseClick` is the ✕ only; Esc and the
 backdrop are silent).
 
+**The live bar (96.5).** Morale reads ONCE per screen: the persistent
+chip everywhere except the pre-turn screen and the battle, where the two
+full gauges are the read and the chip hides (the column collapses). In
+battle the gauges are LIVE, driven by a stream of LOSS EVENTS (the model
+beside the chip rule's arithmetic, never a re-derivation): a loss fires
+at the moment the rule makes it a fact — a casualties loss at the death,
+a survivors loss per standing enemy in an end-of-battle sequence, the
+cap surcharge as more end events — and each is an ORB (`●` in the paying
+side's hue, sized by the loss) flown from the causing unit's card to the
+gauge that pays. The bar reacts on the LANDING: the fill stays the booked
+pool and a hatched GHOST grows over its leading edge (`33 (−7) / 40`), the
+gauge pulses, the landing cue plays scaled with the loss (gain up, pitch
+down), and the view shakes for a loss to YOUR pool at or above a fraction
+of the max (the shake policy is a seam: `player` ships, `enemy` is the
+A/B hypothesis). A breathing NOTCH cut from each fill marks the turn's
+bound — the pre-turn "at risk" line's number and its enemy mirror — the
+most the ghost can reach on an ordinary turn. When the last orb has
+landed, a settle beat, then the ghost COMMITS into the fill and the notch
+leaves; the after-turn outro is the longer of the fixed beat and that.
+No post-turn screen: Game advances the gate itself, and the next pre-turn
+screen carries a one-line "last turn" strip (the result, each side's
+fallen as glyphs, the loss). Under reduced motion nothing flies or shakes
+— the ghost ticks at the event. Every timing and threshold is a UI
+constant; a death's card fades to gray as its orb leaves.
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay

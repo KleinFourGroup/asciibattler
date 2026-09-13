@@ -223,3 +223,63 @@ the self-report: the instruments (self-check, negative control, the
 zero-stylesheet tell, the console timestamps) did the catching, and each
 catch was written into the worklog as what it was rather than smoothed
 over.
+
+## 2026-09-12 → 13 — §96.5 the live pool bar, kickoff → close — claude-fable-5-1, session c802fc33
+
+One session, two days, the whole phase: the kickoff (the audit + a
+two-turn design round), seven step commits, two user-inserted fixes, two
+playtest redesigns, the close. Nine user playtests, every one acted on
+the same day.
+
+1. **Missing from the orientation:** the fuzz harness drives the
+   post-turn gate too (`harness.ts:733`) — the cursor said "the post-turn
+   gate may go" as if Run owned it alone; the code-reality audit found
+   the bot in one grep and it re-shaped 96.5d (Game auto-advances; Run
+   untouched). The risk line's staleness after a redraw was in nobody's
+   notes. And the pane's frozen rendering STOPS Web Animations (not only
+   rAF) — the §96 papercut said "zero rAF"; the WAAPI corollary cost a
+   probe and then earned a real backstop.
+2. **Norms in tension:** "one public World read" was a cut-line
+   prediction, and the survivors sequence needed a second; I added it and
+   scored the miss rather than contorting the design to the prediction —
+   the prediction is a tripwire, not a cap. Touch-once vs the strip's
+   `title=` hovers: the strip is new and §97 owns tooltips; I used the
+   hover the old ledger used and filed the rider instead of building a
+   tooltip early. The docs cap tripped on my own checked lines twice —
+   the guard was right both times and the rewrite cost a minute.
+3. **Pulled to claim more than verified:** the 5 px hatch "visible" —
+   the preview JPEG cannot resolve it; written as geometry + the user's
+   eye. The orb's flight — the pane froze it at 50 ms; I wrote the wiring
+   as proven and the flight as the user's, then the backstop made the
+   frozen pane a valid wiring instrument. The shake never fired live in
+   two walks (every loss was one point); pinned the pure threshold and
+   exercised `shakeView` through a dynamic import rather than say "seen".
+   The survivors sequence and reduced motion: filed as unexercised.
+4. **Wasted:** two zero-stylesheet first probes (the trap from the §96
+   papercut, again — a reload + 6 s is the rule, and I still fired a
+   probe early once); one `__r` helper with a self-inflicted TypeError;
+   a first cut of 96.5c that previewed the bound at the map (seven tests
+   red, one grep to the cause); a WORKLOG number typed from memory
+   (`+19 keys`) that a count corrected to +10 before the commit.
+5. **For the next session:** §97 (the tooltip system) opens with its
+   kickoff audit — the `title=` census is stale by 96.5d (the post-turn
+   screen's sites are gone; the strip added two); the shake policy is
+   flippable live with Ctrl+Alt+K; every live-bar timing is a constant at
+   the top of `lossFx.ts`; the chip-rule `chipLineLabels` now serves the
+   strip's loss hovers (do not retire it as dead when the post-turn
+   screen's absence is noticed).
+
+### §96.5 — the phase summary (2026-09-12 → 13; one session, the kickoff + seven step commits + two inserted fixes + two redesigns + the close)
+
+The design round did its work in two plain-message turns: my projection
+was rule-consistent and wrong under survivors, the user's loss-event
+model was right under both, and six refinements were signed before a
+line was written. Every step then shipped headless-first where it could
+(the model + its Σ pin, the World reads, the mirror bound, the cue
+mapping) and eyeball-second, with a playtest between commits; the two
+playtest redesigns (the gauge head's wrap, the red tick → the notch) and
+the two user-inserted fixes (the card fade, the landing cue) each landed
+the same day at a step's cost. The instruments caught what the eye could
+not: the frozen pane's stalled animation became a real backstop; the
+guards tripped five times and were right five times. What was not
+exercised is filed, not claimed.

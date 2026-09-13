@@ -143,51 +143,23 @@ reference; the cut lines stay below.
   non-primary buttons touch-once left for §100). **Exit = the user's
   eyeball walk — taken as five per-step playtests, every one clear.**
 
-## Phase 96.5 — the live pool bar + the chip rule (INSERTED 2026-09-10)
+## Phase 96.5 — the live pool bar + the chip rule ✅ CLOSED 2026-09-13
 
-**Inserted** at the §95 playtest — the first since §94 closed without
-one — from two §94 presentation findings (WORKLOG §95 playtest). Numbered
-by the round-level `.5` convention applied to a phase (§96–§104 keep
-their identities; step addresses read `96.5a`). **Charter:** (a) the
-persistent morale chip HIDES while a battle or a turn screen is up — the
-HUD and the pre/post-turn gauges are the in-encounter read (the 94e "full
-gauge vs chip" residual, answered by the user); (b) **THE LIVE BAR** — the
-user's 94d shape-lock idea the presentation commit never built (the HUD
-gauges paint once from the encounter's pools; the only death handler
-grays the card): the in-battle gauges decrement per death as a PROJECTION
-off the live `World.fallenPower` (serialized since v36; the charge still
-books at `resolveTurn`, untouched), and the post-turn screen's fate is
-DECIDED — kept as the encounter-end summary, folded into the next
-pre-turn screen, or removed (then the fallen rows' only home is §102's
-run-end stats). **A small design round opens the phase** (what a death
-shows on the bar; what a turn's end shows; where the "at risk this turn"
-line lives). **Why here:** after §96 (the bar and the chip rule build on
-the chip base + the tokens, not before them) and BEFORE §97 / §100 touch
-the post-turn screen (16 un-extracted literals + its `title=` sites —
-touch-once says decide its fate before anyone extracts it) and before
-§103 signs the loop. **Depends on:** §96. **Risk:** low-medium — a flow
-change (the pre-turn screen still gates; the post-turn gate may go),
-eyeball-only; no sim, no snapshot change (the projection reads state the
-snapshot already carries). **Decision points:** the post-turn screen's
-fate · a death's read on the bar (a tick per death vs a re-read) · the
-risk line's home. **Exit:** one morale read per screen; a death moves
-the bar during the battle; the loop's screens agreed and the ledger rows
-have a home. **Scope guards:** no rule/timing change (the chip books at
-turn end — fuzz byte-identical); no run-end stats body here (§102); no
-new screen.
-
-**Kickoff 2026-09-12** (WORKLOG §96.5 Kickoff — the audit + the design
-round, six points user-signed). **Decision points ✅ DECIDED:** a death's
-read = a LOSS-EVENT stream, not a projection (a casualties event fires at
-the death; a survivors event fires per surviving enemy in an
-end-of-battle sequence during the outro; the cap surcharge is just more
-end events; the flat-turn future rides a team-gauge cause, shape only) ·
-the bar GHOSTS (the solid fill stays the booked pool; the ghost commits
-at the outro's end) · the post-turn screen is REMOVED (Game auto-advances
-after the outro; a one-line "last turn" strip on the pre-turn screen from
-turn 2; the encounter's last rows wait for §102) · the risk line STAYS on
-the pre-turn screen (re-rendered after a redraw — a latent staleness the
-audit found) + a ceiling tick on the battle bar. The cut:
+**Inserted 2026-09-10** at the §95 playtest (two §94 presentation
+findings; the `.5` convention applied to a phase). **Outcome:** morale
+reads once per screen (the chip hides on the turn screen + the battle);
+the battle gauges are LIVE off a loss-event stream beside the chip rule's
+arithmetic (the user's model over the kickoff's projection) — an orb per
+loss from the causing card to the paying gauge, the ghost growing on the
+landing, the pulse, the scaled cue, the thresholded shake with the policy
+seam, the breathing notch at each turn's bound, the commit at the settle;
+the post-turn screen removed (Game advances the gate after the outro; the
+pre-turn "last turn" strip records the turn); the risk line repaints at
+the source. Run untouched; no snapshot bump; the fuzz smoke held on every
+firing. The charter, the design round and the decisions live in git at
+`011893e`; the narrative in WORKLOG §96.5; the idiom in DESIGN §UI idioms
+"The live bar". The cut, as landed (two user-inserted steps, two playtest
+redesigns):
 
 - [x] **96.5a — the chip rule.** ✅ 2026-09-12: `PoolOverlay.setSuppressed`
   (two flags, one class) pushed from `Game.swap` for PreTurn / Battle /
@@ -222,9 +194,13 @@ audit found) + a ceiling tick on the battle bar. The cut:
   `PostTurnScreen` + `PostTurnScene` + 33 CSS rules + two orphaned gray
   tokens deleted; Run untouched. Browser: battle → pre-turn 2 with the
   strip, battle → reward at the encounter's end. WORKLOG §96.5d.
-- [ ] **96.5e — the docs + the exit.** DESIGN §UI idioms gains the
-  live-bar paragraph; ROADMAP demotes; the close. Exit = the user's
-  per-step playtests (the §96 rhythm).
+- [x] **96.5e — the docs + the exit.** ✅ 2026-09-13: DESIGN §UI idioms
+  "The live bar"; this stub; the scratchpad + the session report; the
+  §96.5 riders in TODO. **Exit met on the user's per-step playtests (all
+  clear; two redesigns absorbed in-phase):** one morale read per screen ·
+  a death moves the bar · the loop's screens agreed (pre-turn → battle →
+  the next gate) · the ledger rows homed (the strip now, §102 for the run).
+  WORKLOG §96.5e.
 
 ## Phase 97 — the tooltip system
 

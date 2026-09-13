@@ -113,3 +113,50 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   found, which is the point — a phase that touches every screen with a
   step's worth of change at a time is auditable by eye; a phase-end walk
   of seven steps' changes would not have been.
+
+### §96.5 — the live pool bar (2026-09-12 → 13)
+
+- **Fire at the moment the rule makes it a fact.** My first design
+  projected "what the rule would charge if the battle ended now" — the
+  same function that books the turn, so it could not disagree with it —
+  and under the survivors rule it ghosted the WHOLE wave off the player's
+  bar at tick 0 and shrank it per kill: consistent and backwards. The
+  user's model fires one event per loss when that loss becomes a fact (a
+  death now, a survivor at the end) and reads right under either rule.
+  Rule-agnosticism by re-using the booking function is not the same as
+  reading right; the test is what the bar says at tick 0.
+- **A frozen pane freezes the Web Animations API too** (b2): the orb sat
+  at `currentTime` 50 ms with `visibilityState` "visible" and a
+  programmatic `finish()` flipped `playState` without firing its event.
+  The §96 "zero rAF" papercut generalizes: anything that rides the
+  rendering loop is dead there. The instrument's limitation turned out to
+  be a REAL hole (a throttled background tab strands the outro), so the
+  fix was a wall-clock backstop in the code, not a workaround in the
+  probe — and the backstop then made the frozen pane a valid wiring
+  instrument.
+- **The guards were right five times in two days** — the ROADMAP phase
+  cap on my own checked lines (twice), the literal pin on a CSS transform
+  string, a media query and a deleted file's baseline entry, the token
+  pin on two grays orphaned by a deletion. Zero false positives; each
+  cost a minute. A guard that trips on the closer's own prose is the
+  guard working — rewrite the prose, never widen the guard.
+- **Control-probe the design's premise, not just the bug's** (96.5b2-pre,
+  96.5c2): the gauge-head wrap probe on the UNFIXED tree found the head
+  already on two lines for a long encounter name — the parenthetical was
+  one more way across a wrap that varied per encounter; the notch's
+  "moves during the outro" was a real anchoring bug the redesign fixed in
+  passing. A user's presentation note is a bug report until proven
+  otherwise.
+- **A prediction is a tripwire, not a cap** (96.5b1's "one public World
+  read" → two; "the fuzz smoke fires once" → four, all held). Score the
+  miss in the worklog and move on; a cut line that was reasoned about
+  only one consumer is the finding.
+- **Playtest per step, again, and the redesigns absorb in-phase** — two
+  user redesigns (the gauge head, the tick → the notch) and two inserted
+  fixes (the fade, the cue) each landed the same day at one step's cost;
+  a phase-end walk would have found them all at once and re-opened three
+  commits.
+- **Count before you write the number** — a WORKLOG close line typed
+  "+19 keys" from memory; one `Object.keys().length` read +10 before the
+  commit. The AGENTS "second-hand number" rule applies to one's own
+  memory too.

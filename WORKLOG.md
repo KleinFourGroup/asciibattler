@@ -1642,4 +1642,45 @@ hovers and the rule wording on the losses; turn 3 ended the encounter
 (enemy 0) → `[BattleScene, RewardScene]`, the chip back on the reward
 screen (the 96.5a rule: only turn screens and the battle hide it).
 Console clean; tsc; the literal pin, the tokens, i18n, chipLabels and the
-docs guard 88 green. **Playtest: pending (the user's).**
+docs guard 88 green. **The 96.5d playtest (2026-09-13): "perfect."**
+
+### 96.5e — the close (2026-09-13)
+
+**The exit, scored against the charter's four criteria** — every one on
+the user's per-step playtests (six verdicts, all clear; two redesigns
+absorbed in-phase rather than deferred): **one morale read per screen**
+(96.5a: the chip hides on the pre-turn screen and the battle, the column
+collapses; the gauges are the read there, the chip everywhere else);
+**a death moves the bar during the battle** (b1 the ghost, b2 the orb
+landing it, the cue, the shake); **the loop's screens agreed** (96.5d:
+pre-turn → battle → the next gate, no outcome stop; the user's own 94d
+wish); **the ledger rows have a home** (the "last turn" strip for the
+turn; §102's run-end stats for the run — the encounter's last turn's rows
+are the accepted gap until then).
+
+**Predictions scored.** No snapshot bump — held (the projection reads
+v36's accumulator; nothing serialized). The fuzz smoke "fires once, at
+b1" — it fired FOUR times (b1 World.ts; 96.5c the Run payloads; c2 the
+mirror bound; d a Run comment) and held byte-identical every time; the
+trigger is path-based, the prediction had counted only the sim touch.
+"One public World read" — two (`survivorsByUnit` + `fallenPowerSoFar`);
+the cut had thought only about the restore. `ui.json`: +10 keys (67 → 77:
+`preturn.risk` + nine `lastturn.*`); the literal baseline 99 → 82 across
+20 → 19 files (the post-turn screen's 16 + PreTurnScreen 20 → 19). The DESIGN paragraph, the ARCHITECTURE
+lines (four tree lines + three catalog lines), the AudioPlayer's per-play
+scale and the `moraleloss` key are the phase's other residue.
+
+**What the phase taught (the scratchpad carries the distilled forms):**
+the user's loss-event model over my projection — a survivor's charge is
+not a fact until the end, and a design that fires at the moment the rule
+makes a loss a FACT is right under either rule; the frozen preview pane
+handing over a REAL robustness hole (the WAAPI backstop); the guards
+tripping five times, every one correct (the docs cap, the literal pin
+thrice, the token pin); a playtest per step absorbing two redesigns (the
+gauge head, the notch) at a step's cost each.
+
+**Riders → TODO (§96.5):** the survivors end sequence + the reduced-motion
+path unexercised live (the shipped rule is casualties; the pane cannot
+emulate the media query); a settings toggle for the shake policy (Round
+8); the encounter's last turn's rows (§102); the two `title=` hovers on
+the strip (§97's sweep).

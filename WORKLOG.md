@@ -1563,4 +1563,33 @@ clean. Pins: the Run suite + the literal pin + the tokens + i18n, 431
 green. **Prediction check:** the two payload additions are display-only
 fields on gated events — the fuzz smoke is the hook's call at the commit
 (`src/run/` staged) and should hold byte-identical (nothing consumed the
-fields before they existed).
+fields before they existed). (Scored: 2944 + 582 green at `e290726`.)
+
+**The 96.5c playtest (2026-09-13): the tick "might need some redesign" —
+three notes, all right, and the user's redesign adopted (96.5c2):** (1)
+the red tick fought the green fill — high contrast, jarring; (2) a tick on
+the player gauge and none on the enemy's read as an oversight, not a
+decision; (3) it MOVED during the outro — a real bug in the anchoring:
+`commit()` dropped the pool and repainted with the ceiling still set, so
+the tick re-derived against the new pool and jumped. **The user's design:
+a NOTCH** — a 2 px slice REMOVED from the fill (the bar's own ground
+showing through, `--color-gray-0a`, so it blends by construction and is
+the same negative space on either gauge), gently breathing (opacity 1 →
+0.3 → 1 over 1.8 s; static under `prefers-reduced-motion`), omitted when
+it would sit at zero morale. Built: `enemyExposure` in `chipRule.ts` (the
+mirror bound — their fielded wave under casualties, the hand under
+survivors; pinned, with the partition identity: the two bounds sum to
+everything fielded under either rule) and `Run.previewPoolsAtRisk()`
+returning both (the old `previewPoolAtRisk` = its player half — no
+payload change, the pre-turn line stays the player's fairness surface);
+the BattleScene hands both to the HUD, each gauge's `setCeiling`; the
+notch hides when the bound covers the whole pool; **`commit()` clears the
+ceiling** — the notch is THIS turn's bound and leaves with the ghost.
+Browser: at the gate bounds {player 6, enemy 12} against the hand's Σ 6
+and the enemy pool 29; in the battle both notches with `background` =
+the bar's ground `rgb(10, 10, 10)` and the breathe animation, the
+player's at 85 %, the enemy's at 58.62 % = (29 − 12) / 29 (the wave's
+on-grid power read 8 at that moment — the bound is the WHOLE wave's base
+power, the spawn queue included, as documented); at the commit both
+hidden (the enemy pool 17 / 29 — the whole wave fell, exactly the bound).
+Console clean; chipRule + Run + tokens + the literal pin 403 green.

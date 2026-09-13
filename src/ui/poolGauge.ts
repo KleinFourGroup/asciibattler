@@ -35,10 +35,11 @@ export interface PoolGaugeHandle {
   anchor(): { x: number; y: number };
   /** 96.5b2 — the landing flash (`.is-pulsing`, the chip's pulse). */
   pulse(): void;
-  /** 96.5c — the CEILING TICK: a mark at `current − loss` (the pre-turn
-   *  "at risk: up to N" bound), the most the ghost can reach on an ordinary
-   *  turn; 0 hides it. Anchored to the BOOKED pool, so it holds still while
-   *  the ghost grows toward it and leaves with the commit. */
+  /** 96.5c/c2 — the NOTCH: a 2px slice out of the fill at `current − loss`
+   *  (the pre-turn "at risk: up to N" bound, or its enemy mirror), the most
+   *  the ghost can reach on an ordinary turn; 0 hides it, as does a bound
+   *  covering the whole pool. Anchored to the BOOKED pool, so it holds still
+   *  while the ghost grows toward it; `commit()` clears it (the turn's over). */
   setCeiling(loss: number): void;
 }
 
@@ -109,12 +110,13 @@ export function createPoolGauge(
     ghost.style.left = `${pct(parts.remaining) * 100}%`;
     ghost.style.width = `${(pct(parts.remaining + parts.pending) - pct(parts.remaining)) * 100}%`;
     gauge.classList.toggle('is-pending', parts.pending > 0);
-    // The ceiling tick sits at the booked pool minus the bound (clamped at
-    // zero): the ghost's leading edge can reach it and, on an ordinary turn,
-    // not pass it.
-    const floor = Math.max(0, Math.max(0, cur) - ceil);
-    risk.hidden = ceil <= 0 || mx <= 0;
-    risk.style.left = `${pct(floor) * 100}%`;
+    // 96.5c2 — the NOTCH sits at the booked pool minus the bound: the
+    // ghost's leading edge can reach it and, on an ordinary turn, not pass
+    // it. Hidden when there is no bound, and when the bound covers the whole
+    // pool (a notch at zero morale is the bar's own end).
+    const floor = Math.max(0, cur) - ceil;
+    risk.hidden = ceil <= 0 || mx <= 0 || floor <= 0;
+    risk.style.left = `${pct(Math.max(0, floor)) * 100}%`;
   };
   paint();
 
@@ -133,6 +135,10 @@ export function createPoolGauge(
       const parts = poolValueParts(cur, mx, pend);
       cur = parts.remaining;
       pend = 0;
+      // 96.5c2 — the notch is THIS turn's bound; the commit ends the turn,
+      // so it leaves with the ghost (the user's playtest: it used to
+      // re-derive against the dropped pool and jump during the outro).
+      ceil = 0;
       paint();
     },
     reading(): { current: number; max: number; pending: number } {

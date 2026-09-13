@@ -212,8 +212,10 @@ audit found) + a ceiling tick on the battle bar. The cut:
 - [x] **96.5c — the risk line.** ✅ 2026-09-13: `poolAtRisk` rides
   `turn:handRedrawn` + `run:packetUsed` (gate-only, 0 elsewhere — the
   map-fired patch tripped seven tests first), the line repaints through
-  one function via `t()`; the player gauge's ceiling tick at pool − bound
-  (85 % for 6 of 40). WORKLOG §96.5c.
+  one function via `t()`; the ceiling tick → **96.5c2 the NOTCH** (the
+  user's redesign, 2026-09-13): a breathing 2 px cut in the fill on BOTH
+  gauges (`enemyExposure` the mirror bound), cleared at the commit.
+  WORKLOG §96.5c.
 - [ ] **96.5d — the post-turn removal.** Game buffers the last
   `turn:resolved` (the 65f deck-cue pattern) and hands it to the pre-turn
   scene as the "last turn" strip (turn ≥ 2); Game dispatches `advanceTurn`

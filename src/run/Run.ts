@@ -60,7 +60,13 @@ import {
 import type { UnitRarity } from '../config/units';
 import { avgTeamLevel } from './enemyBudget';
 import { fatigueEffect } from './fatigue';
-import { turnCharges, playerExposure, type SidePower, type TurnEndReason } from './chipRule';
+import {
+  turnCharges,
+  playerExposure,
+  enemyExposure,
+  type SidePower,
+  type TurnEndReason,
+} from './chipRule';
 import { redrawRejection } from './redraw';
 import { empowerRejection, empowerEffect, type EmpowerStackView } from './empower';
 import {
@@ -2872,12 +2878,23 @@ export class Run {
    * second call previews the same wave.
    */
   previewPoolAtRisk(): number {
+    return this.previewPoolsAtRisk().player;
+  }
+
+  /** 96.5c2 — both bounds at once (the live bar's notch on EACH gauge): the
+   *  player's (`playerExposure`, capped at the player pool) and the enemy's
+   *  mirror (`enemyExposure`, capped at the enemy pool). One wave preview
+   *  serves both. Display-only; never serialized; never read by the sim. */
+  previewPoolsAtRisk(): { player: number; enemy: number } {
     const { enemyTeam } = this.rollTurnWave();
     const fielded = {
       player: this.hand.reduce((sum, idx) => sum + this.team[idx]!.stats.power, 0),
       enemy: enemyTeam.reduce((sum, t) => sum + t.stats.power, 0),
     };
-    return Math.min(this.playerHealth, playerExposure(fielded));
+    return {
+      player: Math.min(this.playerHealth, playerExposure(fielded)),
+      enemy: Math.min(this.enemyHealth, enemyExposure(fielded)),
+    };
   }
 
   private beginTurn(): void {

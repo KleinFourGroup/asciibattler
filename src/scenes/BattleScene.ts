@@ -217,10 +217,13 @@ export class BattleScene implements Scene {
       // the hardcoded "Foe").
       enemyHealthMax: run.enemyHealthPoolMax,
       ...(run.currentEncounterName ? { enemyName: run.currentEncounterName } : {}),
-      // 96.5c — the pre-turn bound as the player bar's ceiling tick (the
-      // same pure preview the risk line read; the wave roll is keyed, so a
-      // re-derive here previews the wave being fought).
-      poolAtRisk: run.previewPoolAtRisk(),
+      // 96.5c/c2 — the two bounds as each bar's NOTCH (the same pure preview
+      // the risk line read; the wave roll is keyed, so a re-derive here
+      // previews the wave being fought).
+      ...(() => {
+        const bounds = run.previewPoolsAtRisk();
+        return { poolAtRisk: bounds.player, enemyPoolAtRisk: bounds.enemy };
+      })(),
     });
     this.battleRenderer.attach(this.world);
     const spawnRegions = applyTerrain(this.world, encounter);

@@ -102,6 +102,18 @@ export function playerExposure(
   return own * health.chipMultiplier;
 }
 
+/** 96.5c2 — the ENEMY pool's mirror bound (the live bar's notch on their
+ *  gauge): casualties → their own fielded wave falling; survivors → the
+ *  whole hand standing → the hand's Σ power. Same exclusions as
+ *  `playerExposure` (base power; the cap surcharge outside). */
+export function enemyExposure(
+  fielded: SidePower,
+  health: Pick<HealthConfig, 'chipMode' | 'chipMultiplier'> = HEALTH,
+): number {
+  const own = health.chipMode === 'casualties' ? fielded.enemy : fielded.player;
+  return own * health.chipMultiplier;
+}
+
 /**
  * 96.5b1 — THE LOSS-EVENT MODEL (the live pool bar, Round 7 §96.5; the
  * user's design at the kickoff). The battle HUD moves each side's gauge by

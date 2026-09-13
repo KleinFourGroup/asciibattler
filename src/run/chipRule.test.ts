@@ -10,6 +10,7 @@ import {
   rulesForTurn,
   turnCharges,
   playerExposure,
+  enemyExposure,
   lossEventsForDeath,
   lossEventsAtEnd,
   bookedImmediateLoss,
@@ -102,6 +103,19 @@ describe('chipRule (§91a2)', () => {
     // Never capped here (the caller clamps at the pool); the live default wires HEALTH.
     expect(playerExposure({ player: 0, enemy: 99 }, { chipMode: 'survivors', chipMultiplier: 3 })).toBe(297);
     expect(playerExposure(fielded)).toBe(playerExposure(fielded, HEALTH));
+  });
+
+  it('96.5c2 enemyExposure: the mirror bound — the WAVE under casualties, the HAND under survivors, × mult, uncapped', () => {
+    const fielded = { player: 4, enemy: 9 };
+    expect(enemyExposure(fielded, h('casualties', 'survivors', 1))).toBe(9);
+    expect(enemyExposure(fielded, h('survivors', 'survivors', 1))).toBe(4);
+    expect(enemyExposure(fielded, h('casualties', 'casualties', 2))).toBe(18);
+    // The two bounds partition the fielded power under either rule: what
+    // the player can lose plus what the enemy can lose = everything fielded.
+    for (const mode of ['survivors', 'casualties'] as const) {
+      const health = h(mode, mode, 1);
+      expect(playerExposure(fielded, health) + enemyExposure(fielded, health)).toBe(fielded.player + fielded.enemy);
+    }
   });
 
   it('defaults to the LIVE config (the production wiring) — the shipped modes are the two legal literals', () => {

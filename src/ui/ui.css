@@ -2199,6 +2199,15 @@ body {
   filter: grayscale(1);
   opacity: 0.4;
 }
+/* 96.5b2-post (the user's playtest note): the death readout FADES to gray
+   over the orb's launch rather than flipping — the card and the glyph it
+   sends to the gauge leave together. Only the dead card animates: a live
+   card's filter/opacity never change, so the transition is inert there. */
+.unit-card--compact {
+  transition:
+    filter 0.45s ease-out,
+    opacity 0.45s ease-out;
+}
 
 /* Q5 — enemy team coloring for the compact card. The player greens are the
    defaults (above); this overrides glyph + HP fill to NEON_RED. The level/power

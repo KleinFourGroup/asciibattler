@@ -50,6 +50,16 @@ const entry = {
   text,
 };
 
+// Attribution guard (the 2026-09-13 early read: five of the round's first
+// seven entries had no session — $CLAUDE_SESSION_ID is empty under the
+// desktop app). The entry still lands; the warning is for the filer.
+if (!entry.session) {
+  console.warn('papercut: no --session and $CLAUDE_SESSION_ID is empty — pass --session=<id> (the scratchpad directory name; 8 chars suffice) so the round sweep can attribute the entry');
+}
+if (!entry.phase) {
+  console.warn('papercut: no --phase — pass --phase=<tag> (e.g. 96a) so the round sweep can group by phase');
+}
+
 mkdirSync(dirname(LOG), { recursive: true });
 appendFileSync(LOG, JSON.stringify(entry) + '\n', 'utf8');
 console.log(`${kind} filed by ${who} → retro/papercuts.jsonl`);

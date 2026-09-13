@@ -160,3 +160,17 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   "+19 keys" from memory; one `Object.keys().length` read +10 before the
   commit. The AGENTS "second-hand number" rule applies to one's own
   memory too.
+- **The instrument's first read came early, and paid** (2026-09-13,
+  mid-Round 7, user-called): seven papercuts + four session reports were
+  enough to show one class biting four times with no doc home (the
+  `preview_start` first-probe trap → a HANDOFF tip), one norm overridden
+  identically by every session (native-tools → retired, the batching
+  discipline kept), an attribution gap in the log itself (five of seven
+  entries unattributed — `$CLAUDE_SESSION_ID` is empty under the desktop
+  app; the script now warns), and a norm candidate named in three
+  sessions' Q4 (numbers typed from prose, not the artifact — held for
+  the close read). Zero distress entries; the doc's distress examples are
+  all large events, so whether a smaller one would be recognized as
+  filable is an open question for the close read. Lesson: a long round's
+  instrument gets a mid-round read — the designated close is a floor,
+  not a schedule.

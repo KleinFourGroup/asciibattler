@@ -69,17 +69,16 @@ kickoff — has its own section below.)
   is the top-level `Game`, not the battle world: `__game.world` returns
   `"none"`, so it can't confirm live unit state — use a headless test for
   that.
-- **Native Read/Grep/Glob for file inspection; Bash only for real
-  commands** (`npm`, `git`, `node`). Reading files via shell
-  `sed`/`grep`/`cat`/`head`/`tail` triggers permission prompts (friction
-  for the user) and, when over-batched alongside edits, causes
-  out-of-order results and silently no-op'd edits. Batch only genuinely
-  independent calls; never read-and-edit the same file in one message,
-  and confirm an edit landed before stacking the next on it. (Also: in
-  the Bash tool, multi-line commit messages take multiple `-m` flags or
-  `$'…'` — a PowerShell `@'…'@` here-string parses as stray `@` lines
-  there; that syntax belongs to the PowerShell tool. One garbled commit
-  subject proved it.)
+- **Batch only genuinely independent tool calls; never read-and-edit
+  the same file in one message, and confirm an edit landed before
+  stacking the next on it** (E7.A: over-batching reads alongside edits
+  produced out-of-order results and silently no-op'd edits). Which path
+  READS a file is the harness mode's call, not a project norm — the older
+  "native Read/Grep/Glob, never shell reads" rule was written against
+  permission prompts that auto mode removed, and was retired 2026-09-13
+  (user-signed) after four sessions overrode it identically (the round's
+  first papercut). The one mechanical constraint that remains: `Edit`
+  requires a prior `Read` of the file in the conversation.
 - **Browser-verify visual work at native resolution.** The Preview MCP
   screenshots are unreliable for sub-pixel detail (JPEG compression
   smears 1–2px features). If a screenshot contradicts intuition, sample
@@ -283,12 +282,20 @@ kickoff — has its own section below.)
   then landed on `main` as file-split commits once the LAST launch has
   fired — `git add -N` makes new files ride `git diff`; hunks that straddle
   two commits are staged from a temporarily-reverted copy).
-- **Write/Edit for any text that carries a quote; heredocs and perl only
-  for literal, quote-free anchors** (§94: four burns in one session — a
-  `'` in a `-m` message killed a whole command, `\n` in a perl replacement
-  became a real newline, an apostrophe parsed by esbuild but not tsc; a
-  bash batch with a stray quote silently ran NOTHING before the error).
-  Write the scratch file with the Write tool, splice with `cat`.
+- **Write/Edit for any text that carries a quote, a backtick or a
+  newline; heredocs and perl only for literal, quote-free anchors**
+  (§94: four burns in one session — a `'` in a `-m` message killed a
+  whole command, `\n` in a perl replacement became a real newline, an
+  apostrophe parsed by esbuild but not tsc; a bash batch with a stray
+  quote silently ran NOTHING before the error. 95a: a backticked word in
+  a `-m` message was eaten by bash as a command substitution and the
+  commit went through with the word missing — an amend plus a second
+  8-minute hook run). Write the scratch file with the Write tool, splice
+  with `cat`; a commit message carrying any of the three goes through
+  `git commit -F <file>`. (Otherwise, in the Bash tool, multi-line
+  messages take multiple `-m` flags or `$'…'` — a PowerShell `@'…'@`
+  here-string parses as stray `@` lines there; that syntax belongs to
+  the PowerShell tool. One garbled commit subject proved it.)
 - **Self-check a new reader against a known answer before it reads new
   data, and pool with a script that prints its arm count — never
   `rows[0]`** (94c: the reader pointed at the 92h batches had to
@@ -490,9 +497,14 @@ likely; the groundwork is cheap — worst case a dataset of interest to
 researchers, best case a better environment for a model that does cross
 the threshold.
 
-- **The friction log** — `npm run papercut -- --who=<name> [--kind=papercut|distress] "<text>"`
+- **The friction log** — `npm run papercut -- --who=<name> [--kind=papercut|distress] --session=<id> --phase=<tag> "<text>"`
   appends one JSON line to `retro/papercuts.jsonl` (timestamp · filer ·
-  kind · session id when known · text). **File in the MOMENT, one line,
+  kind · session · phase · text). **Pass `--session` and `--phase`
+  explicitly** — `$CLAUDE_SESSION_ID` is empty under the desktop app, and
+  five of the round's first seven entries landed unattributed (the
+  2026-09-13 early read); the id is the session's scratchpad directory
+  name (its first 8 chars suffice), and the script warns when it is
+  missing. **File in the MOMENT, one line,
   no ceremony — a session is expected and permitted to file mid-task
   without asking.** Recall at session end loses the small stuff (the
   scratchpad's own argument). `papercut` = any point of friction: a

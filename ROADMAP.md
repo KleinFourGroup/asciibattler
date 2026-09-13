@@ -216,13 +216,12 @@ audit found) + a ceiling tick on the battle bar. The cut:
   user's redesign, 2026-09-13): a breathing 2 px cut in the fill on BOTH
   gauges (`enemyExposure` the mirror bound), cleared at the commit.
   WORKLOG §96.5c.
-- [ ] **96.5d — the post-turn removal.** Game buffers the last
-  `turn:resolved` (the 65f deck-cue pattern) and hands it to the pre-turn
-  scene as the "last turn" strip (turn ≥ 2); Game dispatches `advanceTurn`
-  itself after the outro; `PostTurnScreen` + `PostTurnScene` + the 33 CSS
-  rules deleted; ARCHITECTURE's ui tree + catalog notes. Run's
-  `turn-outcome` phase STAYS (the fuzz bot drives it, `harness.ts:733`) —
-  fuzz byte-identical by construction.
+- [x] **96.5d — the post-turn removal.** ✅ 2026-09-13: Game buffers the
+  last `turn:resolved` and auto-dispatches `advanceTurn` after the outro;
+  the pre-turn "last turn" strip from turn 2 (nine `lastturn.*` keys);
+  `PostTurnScreen` + `PostTurnScene` + 33 CSS rules + two orphaned gray
+  tokens deleted; Run untouched. Browser: battle → pre-turn 2 with the
+  strip, battle → reward at the encounter's end. WORKLOG §96.5d.
 - [ ] **96.5e — the docs + the exit.** DESIGN §UI idioms gains the
   live-bar paragraph; ROADMAP demotes; the close. Exit = the user's
   per-step playtests (the §96 rhythm).

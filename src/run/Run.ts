@@ -3134,7 +3134,9 @@ export class Run {
       this.pendingRewards = portions.length > 0 ? portions : null;
     }
     if (this.pauseAtTurnGates) {
-      // Pause on the post-turn outcome screen; the player's `advanceTurn`
+      // Pause at the turn-outcome gate (96.5d: no screen — Game dispatches
+      // the advance itself after the battle's outro; the fuzz bot dispatches
+      // it directly — the phase and the event are unchanged); the `advanceTurn`
       // resumes into the promotion pause (if any units leveled) and then
       // `continueAfterTurn`.
       this.phase = 'turn-outcome';

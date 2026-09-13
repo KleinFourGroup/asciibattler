@@ -29,7 +29,6 @@ import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import type { DeckCue } from './ui/PreTurnScreen';
-import { PostTurnScene } from './scenes/PostTurnScene';
 import { AudioPlayer } from './audio/AudioPlayer';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
 import { Keybindings } from './ui/Keybindings';
@@ -127,9 +126,16 @@ export class Game implements RunDispatcher {
   private readonly runConfig: RunConfig;
   /** The scene currently mounted. Null only briefly during swap(). */
   private activeScene: Scene | null = null;
-  /** 96.5b2 — the in-flight outro's cancellation token (`swapAfterOutro`);
+  /** 96.5b2 — the in-flight outro's cancellation token (`afterOutro`);
    *  null when no outro is pending. */
   private pendingOutro: { cancelled: boolean } | null = null;
+  /** 96.5d — the last `turn:resolved` payload, buffered for the next
+   *  pre-turn scene's "last turn" strip (the deck-cue pattern: the event
+   *  fires before the scene that shows it exists). Taken and cleared at
+   *  `turn:starting`; the screen also guards by turn number, so a payload
+   *  left over from an encounter's LAST turn never renders on the next
+   *  encounter's first. */
+  private lastResolved: GameEvents['turn:resolved'] | null = null;
   /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
    *  swap() cancels it, so a scheduled scene can never replace one that
    *  arrived after it. */
@@ -313,20 +319,21 @@ export class Game implements RunDispatcher {
       ),
     );
 
-    // H4b — the turn-gate screens. These only fire when `run.pauseAtTurnGates`
-    // is on (Game sets it in createRun); the headless loop never emits them.
-    // `turn:starting` opens the pre-turn screen; `turn:resolved` the post-turn
-    // outcome screen. Both advance via the `advanceTurn` command, whose
-    // continuations (battle:started / the next turn:starting / recruit:offered /
-    // promotion:pending / run:*) drive their own swaps.
+    // H4b — the turn gates. These only fire when `run.pauseAtTurnGates` is
+    // on (Game sets it in createRun); the headless loop never emits them.
+    // `turn:starting` opens the pre-turn screen; `turn:resolved` is the
+    // turn-outcome gate, which since 96.5d has NO screen — Game advances it
+    // itself after the outro. Both continue via the `advanceTurn` command,
+    // whose continuations (battle:started / the next turn:starting /
+    // recruit:offered / promotion:pending / run:*) drive their own swaps.
     //
     // M3 — turn:resolved fires from inside the ending world.tick(), but the
-    // PostTurnScene swap is DEFERRED by a brief outro so the final board state
-    // breathes (death fades + hitsplats drain) before the outcome screen
-    // masks it. Safe to linger: World.tick() no-ops once `_ended`, so the
-    // BattleScene's clock spins harmlessly through the outro, and nothing
-    // else can swap until `advanceTurn` (which the outcome screen hasn't
-    // offered yet) — swap() cancels the timer anyway, defensively.
+    // advance is DEFERRED by a brief outro so the final board state breathes
+    // (death fades + hitsplats drain + the 96.5b2 orbs landing) before the
+    // next screen masks it. Safe to linger: World.tick() no-ops once
+    // `_ended`, so the BattleScene's clock spins harmlessly through the
+    // outro, and nothing else can advance until the deferred dispatch —
+    // swap() cancels the timer anyway, defensively.
     // 65f — the deck-cue buffer: the deal's per-card cues fire DURING
     // `startNextTurn`, before `turn:starting` mounts the scene, so a
     // scene-scoped subscription can never see them. Game (page-lifetime)
@@ -340,16 +347,31 @@ export class Game implements RunDispatcher {
     this.bus.on('battle:started', () => {
       this.deckCues.length = 0;
     });
-    this.bus.on('turn:starting', (info) => this.swap(new PreTurnScene(info, this.deckCues.splice(0))));
-    // 96.5b2 — the outro also waits for the BattleScene's own settle (the
-    // loss orbs landing + the ghost commit + the settle beat): the swap fires
-    // at the LONGER of the fixed outro and the scene's promise, so a survivors
-    // end sequence is never cut short and a decisive casualties end still
-    // breathes the full 900 ms.
+    // 96.5d — the pre-turn scene also takes the PREVIOUS turn's outcome (the
+    // "last turn" strip), buffered below the same way as the deck cues; taken
+    // once, so nothing stale survives past the next turn start.
+    this.bus.on('turn:starting', (info) => {
+      const lastTurn = this.lastResolved;
+      this.lastResolved = null;
+      this.swap(new PreTurnScene(info, this.deckCues.splice(0), lastTurn));
+    });
+    // 96.5b2 → 96.5d — the after-turn outro: the LONGER of the fixed
+    // TURN_OUTRO_MS and the BattleScene's own settle (the loss orbs landing
+    // + the ghost commit + the settle beat), so a survivors end sequence is
+    // never cut short and a decisive casualties end still breathes the full
+    // 900 ms. Then, instead of mounting the post-turn screen (deleted at
+    // 96.5d — the live bar carries the outcome), Game dispatches the
+    // `advanceTurn` the screen's Continue used to: Run's turn-outcome phase
+    // is untouched (the fuzz bot drives it the same way), and the
+    // continuation (reward / promotion / recruit / the next turn:starting /
+    // run:*) drives its own swap. The payload is kept for the strip.
     this.bus.on('turn:resolved', (info) => {
       const settle =
         this.activeScene instanceof BattleScene ? this.activeScene.outro() : Promise.resolve();
-      this.swapAfterOutro(TURN_OUTRO_MS, settle, () => new PostTurnScene(info));
+      this.afterOutro(TURN_OUTRO_MS, settle, () => {
+        this.lastResolved = info;
+        this.dispatch({ kind: 'advanceTurn' });
+      });
     });
 
     // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
@@ -704,19 +726,17 @@ export class Game implements RunDispatcher {
     // reason — every swap path is covered. The chrome column collapses the
     // slot (96e decision D: the pool chip is display-only, nothing below it
     // shifts).
-    this.poolOverlay.setSuppressed(
-      next instanceof PreTurnScene || next instanceof BattleScene || next instanceof PostTurnScene,
-    );
+    this.poolOverlay.setSuppressed(next instanceof PreTurnScene || next instanceof BattleScene);
   }
 
-  /** M3 → 96.5b2 — swap after BOTH `ms` (the fixed after-turn outro, letting
-   *  the current scene play out) and `settle` (the battle's own outro: the
-   *  loss orbs + the ghost commit). The factory runs at fire time so the
-   *  scene mounts against the freshest state; superseded by any direct
-   *  swap() — the timer is cleared and the token flips, so a reset
-   *  mid-outro can never mount a stale outcome screen. (M3's `swapAfter`
-   *  was this without the settle; its one caller was `turn:resolved`.) */
-  private swapAfterOutro(ms: number, settle: Promise<void>, make: () => Scene): void {
+  /** M3 → 96.5b2 → 96.5d — run `action` after BOTH `ms` (the fixed after-turn
+   *  outro, letting the current scene play out) and `settle` (the battle's
+   *  own outro: the loss orbs + the ghost commit). The action runs at fire
+   *  time against the freshest state; superseded by any direct swap() — the
+   *  timer is cleared and the token flips, so a reset mid-outro never fires
+   *  a stale advance. (M3's `swapAfter` mounted the post-turn screen here;
+   *  96.5d's action dispatches the advance the screen's Continue used to.) */
+  private afterOutro(ms: number, settle: Promise<void>, action: () => void): void {
     this.cancelPendingSwap();
     const token = { cancelled: false };
     this.pendingOutro = token;
@@ -729,7 +749,7 @@ export class Game implements RunDispatcher {
     void Promise.all([timer, settle]).then(() => {
       if (token.cancelled) return;
       this.pendingOutro = null;
-      this.swap(make());
+      action();
     });
   }
 

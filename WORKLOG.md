@@ -1592,4 +1592,54 @@ player's at 85 %, the enemy's at 58.62 % = (29 − 12) / 29 (the wave's
 on-grid power read 8 at that moment — the bound is the WHOLE wave's base
 power, the spawn queue included, as documented); at the commit both
 hidden (the enemy pool 17 / 29 — the whole wave fell, exactly the bound).
-Console clean; chipRule + Run + tokens + the literal pin 403 green.
+Console clean; chipRule + Run + tokens + the literal pin 403 green. **The
+96.5c2 playtest (2026-09-13): "perfect — the notch looks great."**
+
+### 96.5d — the post-turn removal (2026-09-13)
+
+**The shape, as the kickoff cut it:** Run is UNTOUCHED — its `turn-outcome`
+phase and the `turn:resolved` emit stay (the fuzz bot dispatches the
+advance at that phase, `harness.ts:733`; the smoke is byte-identical by
+construction — the hook skipped it, no `src/run` change beyond a
+comment). Game, on `turn:resolved`, no longer mounts a scene: `afterOutro`
+(the 96.5b2 `swapAfterOutro` generalized to an action) waits the longer
+of the 900 ms and the battle's own settle, then dispatches the
+`advanceTurn` the post-turn Continue used to, so the continuation
+(reward / promotion / recruit / the next `turn:starting` / `run:*`)
+drives its own swap exactly as before. The payload is BUFFERED (the 65f
+deck-cue pattern — the event fires before the scene that shows it
+exists), taken and cleared at the next `turn:starting`, and the PreTurn
+scene hands it to the screen as the **"last turn" strip**: one line under
+the gauges + the risk line — `Last turn · Skirmish lost · yours M M a a a
+a −6 · theirs M M M M M r −6` — the label, the result in the winner's hue,
+each side's fallen as a glyph run (the names + levels + power as the
+hover, through `t('lastturn.fallen')`) and the loss the rows add up to
+(the rule wording as ITS hover via `chipLineLabels`, which keeps that
+function and its four keys alive with a purpose; §97 turns both hovers
+into tooltips). Guarded twice against staleness: taken-and-cleared at
+`turn:starting`, and the screen renders it only when `info.turn > 1 &&
+lastTurn.turn === info.turn − 1` — a buffer left over from an encounter's
+LAST turn (a won encounter goes to the reward flow, no `turn:starting`
+follows) never renders on the next encounter's first turn. Nine
+`lastturn.*` keys → `ui.json` (the strip's strings through `t()` at
+birth); the 96.5a suppress entry loses its PostTurn clause.
+
+**Deleted:** `PostTurnScreen.ts` (222 lines, 16 literals — the baseline
+regenerated, its one entry gone, PreTurnScreen's 19 unchanged) +
+`PostTurnScene.ts` + the 33 `.postturn-*` rules (three shared selectors
+trimmed to their `.preturn-*` half) + **two role tokens the 96a pin caught
+orphaned** (`--color-gray-cc` / `--color-gray-99` had no reference left
+outside the deleted rules — the "every role token referenced" pin working
+as designed; removed rather than propped up). The encounter's LAST turn's
+rows now have no screen until §102's run-end stats — the kickoff's
+accepted cost.
+
+**Browser:** turn 1's pre-turn with NO strip and the chip hidden; the
+battle driven to its end → after the outro the scene log read
+`[BattleScene, PreTurnScene]` — no outcome screen — with turn 2's strip
+carrying the six-and-six loss the pools show (34 / 40, 8 / 14), the glyph
+hovers and the rule wording on the losses; turn 3 ended the encounter
+(enemy 0) → `[BattleScene, RewardScene]`, the chip back on the reward
+screen (the 96.5a rule: only turn screens and the battle hide it).
+Console clean; tsc; the literal pin, the tokens, i18n, chipLabels and the
+docs guard 88 green. **Playtest: pending (the user's).**

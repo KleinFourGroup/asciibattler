@@ -24,9 +24,14 @@ export class PreTurnScene implements Scene {
 
   // 65f — `dealCues` is the deal's deck-cue sequence, buffered by Game (the
   // cues fire before this scene exists — see Game's wiring comment).
+  // 96.5d — `lastTurn` is the previous turn's `turn:resolved` payload,
+  // buffered by Game the same way (it fires before this scene exists); the
+  // screen renders it as the "last turn" strip from turn 2 on. Null on an
+  // encounter's first turn.
   constructor(
     private readonly info: GameEvents['turn:starting'],
     private readonly dealCues: readonly DeckCue[] = [],
+    private readonly lastTurn: GameEvents['turn:resolved'] | null = null,
   ) {}
 
   mount(ctx: SceneContext): void {
@@ -34,7 +39,7 @@ export class PreTurnScene implements Scene {
     // 49f — the cache thunk feeds the at-will packet row (read live at
     // render time, the CardListButton getUnits pattern).
     const run = requireRun(ctx);
-    this.screen.show(this.info, run.team, () => run.cache, this.dealCues);
+    this.screen.show(this.info, run.team, () => run.cache, this.dealCues, this.lastTurn);
     this.unsubscribes = [
       ctx.bus.on('turn:handRedrawn', (payload) => this.screen?.updateHand(payload)),
       // 65f — gate-time deck cues (redraw / Surge / Cull) queue on the

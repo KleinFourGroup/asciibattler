@@ -76,7 +76,10 @@ import { t } from '../i18n/ui';
 import { packetById, type PacketConfig } from '../config/packets';
 import { DECK } from '../config/deck';
 import { HEALTH } from '../config/health';
-import { POOL_LABELS, riskLineTitle } from './chipLabels';
+import { POOL_LABELS, chipLineLabels, riskLineTitle } from './chipLabels';
+import { rulesForTurn } from '../run/chipRule';
+import type { FallenRecord } from '../run/Run';
+import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { Screen } from './Screen';
 import { button } from './button';
 import { renderPoolGauge } from './poolGauge';
@@ -121,6 +124,10 @@ export class PreTurnScreen extends Screen {
    *  it from the payload's re-derived bound (it used to paint once at
    *  turn start and go stale after a redraw — the kickoff audit's finding). */
   private riskEl: HTMLDivElement | null = null;
+  /** 96.5d — the previous turn's outcome for the "last turn" strip (null on
+   *  an encounter's first turn, or when the buffered payload is not the
+   *  turn just before this one). */
+  private lastTurn: GameEvents['turn:resolved'] | null = null;
   // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
   // the FRESH `turn:starting` payload (an idol authors the hook but granted
   // nothing → denied), so a later spent budget never reads as "denied".
@@ -178,8 +185,14 @@ export class PreTurnScreen extends Screen {
     roster: readonly UnitTemplate[],
     getCache: () => readonly string[],
     dealCues: readonly DeckCue[] = [],
+    lastTurn: GameEvents['turn:resolved'] | null = null,
   ): void {
     this.hide();
+    // 96.5d — the previous turn's outcome, shown as one strip under the
+    // gauges from turn 2 on (the post-turn screen's replacement). Guarded
+    // by turn number: a buffer left over from another encounter's last turn
+    // never renders on a fresh encounter's first turn.
+    this.lastTurn = lastTurn !== null && info.turn > 1 && lastTurn.turn === info.turn - 1 ? lastTurn : null;
     this.roster = roster;
     this.getCache = getCache;
     this.armedPacketIndex = null;
@@ -645,6 +658,10 @@ export class PreTurnScreen extends Screen {
     // at this touch — the shell-phase rule; the ⚠ stays outside the value).
     this.riskEl = risk;
     this.paintRisk(info.poolAtRisk);
+    // 96.5d — the "last turn" strip (the post-turn screen's replacement):
+    // the skirmish result + each side's fallen as a glyph run with its loss,
+    // right under the morale reads it explains. Turn 2 on.
+    if (this.lastTurn !== null) panel.appendChild(renderLastTurn(this.lastTurn));
     // 49f — held for the packet-fire re-render (`updatePacketUsed`).
     this.poolsEl = pools;
     this.poolBounds = {
@@ -981,5 +998,85 @@ function renderGateDenied(text: string): HTMLDivElement {
   row.className = 'preturn-gate-denied';
   row.textContent = `◈ ${text}`;
   return row;
+}
+
+/**
+ * 96.5d — THE "LAST TURN" STRIP: one line under the gauges — `Last turn ·
+ * Skirmish won · yours M M −2 · theirs A M M R −7` — off the previous
+ * turn's `turn:resolved` payload (the fallen rows are `Run.fallenLedger`
+ * copies; each side's Σ power over `thisTurn` is the chip the casualty rule
+ * charged, so the numbers here are the ledger's, not a re-derivation).
+ * Replaces the post-turn screen: the live bar carried the moment, the
+ * pre-turn screen is the mandatory stop, and the encounter's LAST turn's
+ * rows wait for §102's run-end stats. The loss numbers carry the rule
+ * wording as a hover (`chipLineLabels`, §97 turns it into a tooltip).
+ */
+function renderLastTurn(info: GameEvents['turn:resolved']): HTMLDivElement {
+  const strip = document.createElement('div');
+  strip.className = 'preturn-lastturn';
+
+  const label = document.createElement('span');
+  label.className = 'preturn-lastturn-label';
+  label.textContent = t('lastturn.label');
+
+  const result = document.createElement('span');
+  result.className = `preturn-lastturn-result preturn-lastturn-result--${info.winner}`;
+  result.textContent =
+    info.winner === 'player'
+      ? t('lastturn.won')
+      : info.winner === 'enemy'
+        ? t('lastturn.lost')
+        : info.reason === 'cap'
+          ? t('lastturn.drawnCap')
+          : t('lastturn.drawnWipe');
+
+  const labels = chipLineLabels(rulesForTurn(info.reason));
+  strip.append(
+    label,
+    result,
+    lastTurnSide('player', t('lastturn.yours'), info.fallen.thisTurn, labels.toPlayerPool),
+    lastTurnSide('enemy', t('lastturn.theirs'), info.fallen.thisTurn, labels.toEnemyPool),
+  );
+  return strip;
+}
+
+/** One side of the strip: its label, its fallen as a glyph run (`nobody
+ *  fell` when none), and the loss the rows add up to. */
+function lastTurnSide(
+  side: 'player' | 'enemy',
+  label: string,
+  rows: readonly FallenRecord[],
+  ruleWording: string,
+): HTMLSpanElement {
+  const mine = rows.filter((r) => r.side === side);
+  const el = document.createElement('span');
+  el.className = `preturn-lastturn-side preturn-lastturn-side--${side}`;
+  const name = document.createElement('span');
+  name.className = 'preturn-lastturn-side-label';
+  name.textContent = label;
+  const glyphs = document.createElement('span');
+  glyphs.className = 'preturn-lastturn-glyphs';
+  if (mine.length === 0) {
+    glyphs.classList.add('preturn-lastturn-glyphs--none');
+    glyphs.textContent = t('lastturn.nobody');
+  } else {
+    glyphs.textContent = mine.map((r) => glyphForArchetype(r.archetype)).join(' ');
+    glyphs.title = mine
+      .map((r) =>
+        t('lastturn.fallen', {
+          name: ARCHETYPE_CONFIG[r.archetype]?.name ?? r.archetype,
+          level: r.level,
+          power: r.power,
+        }),
+      )
+      .join(', ');
+  }
+  const loss = document.createElement('span');
+  loss.className = 'preturn-lastturn-loss';
+  const lost = mine.reduce((s, r) => s + r.power, 0);
+  loss.textContent = lost > 0 ? `−${lost}` : '0';
+  loss.title = ruleWording;
+  el.append(name, glyphs, loss);
+  return el;
 }
 

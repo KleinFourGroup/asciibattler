@@ -10,7 +10,6 @@
   "src/ui/MapScreen.ts": 1,
   "src/ui/PlaybackSpeed.ts": 1,
   "src/ui/PortScreen.ts": 13,
-  "src/ui/PostTurnScreen.ts": 16,
   "src/ui/PreTurnScreen.ts": 19,
   "src/ui/PromotionScreen.ts": 1,
   "src/ui/RecruitScreen.ts": 1,

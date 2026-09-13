@@ -38,10 +38,8 @@
   --color-status-name: #d8d2c4;
   --color-status-meta: #9a9286;
   --color-gray-d0: #d0d0d0;
-  --color-gray-cc: #ccc;
   --color-gray-b0: #b0b0b0;
   --color-gray-aa: #aaa;
-  --color-gray-99: #999;
   --color-gray-88: #888;
   --color-gray-80: #808080;
   --color-gray-66: #666;
@@ -2353,13 +2351,14 @@ body {
   }
 }
 
-/* ── H4b: turn screens (pre-turn / post-turn) + shared pool gauges ─────────
-   Both screens are full opaque overlays (same as promotion / recruit) that
-   bracket each tactical turn. Pool palette throughout: player = TERMINAL_GREEN,
-   enemy = NEON_RED, accents = FLOURESCENT_BLUE. */
+/* ── H4b: the turn screen + shared pool gauges ─────────────────────────────
+   A full opaque overlay (same as promotion / recruit) at each tactical
+   turn's start. Pool palette throughout: player = TERMINAL_GREEN, enemy =
+   NEON_RED, accents = FLOURESCENT_BLUE. (96.5d: the post-turn screen is gone
+   — the live bar carries the outcome and the pre-turn "last turn" strip
+   records it.) */
 
-.preturn-screen,
-.postturn-screen {
+.preturn-screen {
   position: absolute;
   inset: 0;
   display: flex;
@@ -2386,8 +2385,7 @@ body {
   padding: 24px 0 96px;
 }
 
-.preturn-heading,
-.postturn-heading {
+.preturn-heading {
   font-size: var(--text-24);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -2410,6 +2408,73 @@ body {
   text-transform: uppercase;
   color: var(--color-neon-red);
   margin-top: 6px;
+}
+
+/* 96.5d — THE "LAST TURN" STRIP (the post-turn screen's replacement): one
+   line under the gauges + the risk line — the label, the skirmish result in
+   the winner's hue, then each side's fallen as a glyph run with its loss in
+   the side's hue. Wraps on a narrow viewport; the sides never split
+   internally. */
+.preturn-lastturn {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px 18px;
+  font-size: var(--text-12);
+  letter-spacing: 0.06em;
+  color: var(--color-gray-aa);
+  margin-top: 2px;
+}
+.preturn-lastturn-label {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+  font-size: var(--text-11);
+}
+.preturn-lastturn-result {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.preturn-lastturn-result--player {
+  color: var(--color-terminal-green);
+}
+.preturn-lastturn-result--enemy {
+  color: var(--color-neon-red);
+}
+.preturn-lastturn-result--draw {
+  color: var(--color-terminal-amber);
+}
+.preturn-lastturn-side {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+}
+.preturn-lastturn-side-label {
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+  font-size: var(--text-11);
+}
+.preturn-lastturn-glyphs {
+  font-weight: bold;
+}
+.preturn-lastturn-glyphs--none {
+  font-weight: normal;
+  font-style: italic;
+  color: var(--color-gray-66);
+}
+.preturn-lastturn-loss {
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+}
+.preturn-lastturn-side--player .preturn-lastturn-glyphs,
+.preturn-lastturn-side--player .preturn-lastturn-loss {
+  color: var(--color-terminal-green);
+}
+.preturn-lastturn-side--enemy .preturn-lastturn-glyphs,
+.preturn-lastturn-side--enemy .preturn-lastturn-loss {
+  color: var(--color-neon-red);
 }
 
 /* Wb1 — the encounter NAME: the fight's headline, the second-most prominent
@@ -2700,8 +2765,7 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-.preturn-pools,
-.postturn-pools {
+.preturn-pools {
   display: flex;
   gap: 28px;
   flex-wrap: wrap;
@@ -2797,143 +2861,8 @@ body {
   z-index: 5;
 }
 
-/* Post-turn heading tinted by the tactical winner of the turn. */
-.postturn-heading--player {
-  color: var(--color-terminal-green);
-}
-.postturn-heading--enemy {
-  color: var(--color-neon-red);
-}
-.postturn-heading--draw {
-  color: var(--color-terminal-amber);
-}
-
-.postturn-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: var(--text-13);
-  min-width: 340px;
-}
-
-.postturn-chip {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  letter-spacing: 0.04em;
-  color: var(--color-gray-aa);
-}
-
-.postturn-chip-amount {
-  font-variant-numeric: tabular-nums;
-  font-weight: bold;
-}
-
-.postturn-chip--player .postturn-chip-amount {
-  color: var(--color-terminal-green); /* you chipped the enemy pool */
-}
-.postturn-chip--enemy .postturn-chip-amount {
-  color: var(--color-neon-red); /* the enemy chipped yours */
-}
-
-/* 94d — the fallen ledger: who fell this turn (both sides) + the encounter so far. */
-.postturn-fallen {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 340px;
-  max-width: 520px;
-  font-size: var(--text-12);
-}
-.postturn-fallen-title {
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-gray-88);
-  font-size: var(--text-11);
-}
-.postturn-fallen-sides {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.postturn-fallen-side {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.postturn-fallen-side-head {
-  display: flex;
-  justify-content: space-between;
-  letter-spacing: 0.06em;
-  color: var(--color-gray-aa);
-}
-.postturn-fallen-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-gray-cc);
-}
-.postturn-fallen-row .postturn-fallen-glyph {
-  display: inline-block;
-  width: 1.2em;
-  font-weight: bold;
-}
-.postturn-fallen-side--player .postturn-fallen-glyph,
-.postturn-fallen-side--player .postturn-fallen-side-head {
-  color: var(--color-terminal-green);
-}
-.postturn-fallen-side--enemy .postturn-fallen-glyph,
-.postturn-fallen-side--enemy .postturn-fallen-side-head {
-  color: var(--color-neon-red);
-}
-.postturn-fallen-none {
-  color: var(--color-gray-66);
-  font-style: italic;
-}
-.postturn-ledger {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--color-gray-99);
-  font-variant-numeric: tabular-nums;
-}
-.postturn-ledger-turn {
-  display: flex;
-  gap: 10px;
-}
-.postturn-ledger-turn--current {
-  color: var(--color-gray-cc);
-}
-.postturn-ledger-turn .postturn-ledger-label {
-  min-width: 4.5em;
-  color: var(--color-gray-88);
-}
-.postturn-ledger-glyphs--player {
-  color: var(--color-terminal-green);
-}
-.postturn-ledger-glyphs--enemy {
-  color: var(--color-neon-red);
-}
-
-.postturn-status {
-  font-size: var(--text-13);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.postturn-status--won {
-  color: var(--color-terminal-green);
-}
-.postturn-status--lost {
-  color: var(--color-neon-red);
-}
-.postturn-status--ongoing {
-  color: var(--color-flourescent-blue);
-  opacity: 0.85;
-}
-
-/* Shared pool gauge (both screens): a labeled value over a proportional bar. */
+/* Shared pool gauge (the pre-turn screen + the HUD): a labeled value over a
+   proportional bar. */
 .pool-gauge {
   width: 220px;
   display: flex;

@@ -31,6 +31,7 @@ import {
   SURVIVOR_STAGGER_MS,
   centerOf,
   flyOrb,
+  lossCue,
   prefersReducedMotion,
   shakeAllowed,
   shakeView,
@@ -42,6 +43,7 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 import type { PlaybackSpeed } from './PlaybackSpeed';
+import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Keybindings } from './Keybindings';
 import type { KeybindAction } from '../config/keybindings';
 import type { ObjectiveControls, ObjectiveArmMode } from './ObjectiveController';
@@ -118,6 +120,9 @@ export class HUD {
   /** J3/Q3 — the objective input controller (arm engage/focus, or hold/stop).
    *  Owned by BattleScene; the HUD pane buttons + hotkeys drive it. */
   private readonly objective: ObjectiveControls;
+  /** 96.5b2-post — the page-lifetime audio player (from ctx via
+   *  BattleScene), for the live bar's landing cue. */
+  private readonly audio: AudioPlayer;
   /** Q3 — the objective-command pane (bottom-right): Engage / Focus / Hold /
    *  Stop on O's typed model. Lives outside the side-panel root (like the speed
    *  pane) so it anchors bottom-right; same screen-fade lifecycle. */
@@ -188,10 +193,12 @@ export class HUD {
     playback: PlaybackSpeed,
     keybindings: Keybindings,
     objective: ObjectiveControls,
+    audio: AudioPlayer,
   ) {
     this.playback = playback;
     this.keybindings = keybindings;
     this.objective = objective;
+    this.audio = audio;
 
     // C1d follow-up: top-of-screen banner naming the current battle's
     // layout ("Corridor" / "Diamond" / "Labyrinth" / "Uncharted Ground" for
@@ -396,7 +403,13 @@ export class HUD {
       if (!gauge) return;
       gauge.setPending(this.pending[e.target]);
       gauge.pulse();
-      if (shakeAllowed(e.target)) shakeView(e.amount, gauge.reading().max);
+      const max = gauge.reading().max;
+      // 96.5b2-post — the landing cue, scaled with the loss (gain up, pitch
+      // down); it plays under reduced motion too (a sound is not motion),
+      // and for either pool whatever the shake policy — the shake is the
+      // policy's, the cue is every landing's.
+      this.audio.play('moraleloss', lossCue(e.amount, max));
+      if (shakeAllowed(e.target)) shakeView(e.amount, max);
     };
     const mount = this.playerCardPane.parentElement;
     if (!gauge || !card || !mount || prefersReducedMotion()) {

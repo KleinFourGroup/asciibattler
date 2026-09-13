@@ -135,7 +135,7 @@ export class BattleScene implements Scene {
       // candidates too, so a manual focus/engage can order an attack on one.
       () => this.battleRenderer?.destructibleBillboards() ?? [],
     );
-    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective);
+    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective, ctx.audio);
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
     // B6 audio: per-battle subscriptions for the non-keyed combat sounds.

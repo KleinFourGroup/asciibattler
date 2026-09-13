@@ -167,6 +167,29 @@ export function flyOrb(
   };
 }
 
+/**
+ * 96.5b2-post — THE LANDING CUE's scale (the user's playtest note: the
+ * shake can't be judged without a sound, and the sound should grow with
+ * the loss). Two dials off the loss's fraction of the pool max, both
+ * saturating at SHAKE_MAX_FRACTION (the shake's ceiling, so the ear and
+ * the eye peak together): `gain` from CUE_GAIN_MIN at a zero loss up to 1
+ * (× the key's table volume), and `rate` from 1 down to CUE_RATE_MIN —
+ * a lower playback rate deepens the pitch AND lengthens the sample, so a
+ * big loss lands as a slow low thump and a small one as a light tick.
+ * Pure; the HUD passes the result to `AudioPlayer.play('moraleloss', …)`.
+ */
+export const CUE_GAIN_MIN = 0.5;
+export const CUE_RATE_MIN = 0.7;
+
+export function lossCue(amount: number, max: number): { gain: number; rate: number } {
+  const frac = max > 0 ? Math.max(0, Math.min(1, amount / max)) : 0;
+  const t = Math.min(1, frac / SHAKE_MAX_FRACTION);
+  return {
+    gain: CUE_GAIN_MIN + (1 - CUE_GAIN_MIN) * t,
+    rate: 1 - (1 - CUE_RATE_MIN) * t,
+  };
+}
+
 /** The shake amplitude for a loss, or 0 below the threshold. */
 export function shakePx(amount: number, max: number): number {
   const frac = max > 0 ? amount / max : 0;

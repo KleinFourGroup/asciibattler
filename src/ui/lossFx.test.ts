@@ -8,12 +8,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  CUE_GAIN_MIN,
+  CUE_RATE_MIN,
   SHAKE_MAX_FRACTION,
   SHAKE_MAX_PX,
   SHAKE_MIN_FRACTION,
   SHAKE_MIN_PX,
   cycleShakePolicy,
   getShakePolicy,
+  lossCue,
   orbSizePx,
   setShakePolicy,
   shakeAllowed,
@@ -42,6 +45,24 @@ describe('lossFx — the shake threshold + amplitude (96.5b2)', () => {
     expect(px).toBeGreaterThan(SHAKE_MIN_PX);
     expect(px).toBeLessThan(SHAKE_MAX_PX);
     expect(px).toBeCloseTo((SHAKE_MIN_PX + SHAKE_MAX_PX) / 2, 6);
+  });
+});
+
+describe('lossFx — the landing cue scale (96.5b2-post)', () => {
+  it('a zero loss is the floor (CUE_GAIN_MIN, rate 1); at SHAKE_MAX_FRACTION and above it saturates (gain 1, CUE_RATE_MIN)', () => {
+    expect(lossCue(0, 40)).toEqual({ gain: CUE_GAIN_MIN, rate: 1 });
+    expect(lossCue(SHAKE_MAX_FRACTION * 40, 40)).toEqual({ gain: 1, rate: CUE_RATE_MIN });
+    expect(lossCue(40, 40)).toEqual({ gain: 1, rate: CUE_RATE_MIN });
+    expect(lossCue(3, 0)).toEqual({ gain: CUE_GAIN_MIN, rate: 1 }); // an empty pool never divides by zero
+  });
+
+  it('between them the gain rises and the rate falls monotonically, peaking with the shake', () => {
+    const a = lossCue(1, 40);
+    const b = lossCue(4, 40);
+    expect(b.gain).toBeGreaterThan(a.gain);
+    expect(b.rate).toBeLessThan(a.rate);
+    expect(a.gain).toBeGreaterThan(CUE_GAIN_MIN);
+    expect(a.rate).toBeLessThan(1);
   });
 });
 

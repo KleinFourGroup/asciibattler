@@ -33,6 +33,7 @@ export type SoundKey =
   | 'lose'
   | 'magicboom'
   | 'melee'
+  | 'moraleloss'
   | 'pickup'
   | 'poison'
   | 'recruit'
@@ -77,6 +78,11 @@ const SOURCES: Record<SoundKey, string> = {
   wail: 'audio/wail.wav',
   summon: 'audio/summon.wav',
   thud: 'audio/thud.wav',
+  // 96.5b2-post — the live pool bar's LANDING cue (src/ui/lossFx.ts): the
+  // user's chiptone placeholder, hand-dropped like `thud` (not generated).
+  // Played by the HUD on every orb landing, scaled per play (`lossCue` —
+  // gain up + rate down with the loss's fraction of the pool max).
+  moraleloss: 'audio/morale_loss.wav',
 };
 
 /**
@@ -119,6 +125,10 @@ const VOLUMES: Record<SoundKey, number> = {
   wail: 0.75,
   summon: 0.8,
   thud: 0.85,
+  // 96.5b2-post — the landing cue's CEILING: `lossCue` scales the per-play
+  // gain from ~half of this at a one-point loss up to all of it at the
+  // shake ceiling, so a small loss ticks and a big one lands.
+  moraleloss: 0.85,
 };
 
 /**
@@ -148,6 +158,9 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   dash: 0.08,
   death: 0.08,
   healtick: 0.08,
+  // 96.5b2-post — a landing cue that can fire in a burst (seven deaths at
+  // a wipe): light jitter on top of the per-play rate `lossCue` sets.
+  moraleloss: 0.05,
   lose: 0,
   // E7.C — subtle jitter so repeated booms don't sound identical, but kept
   // low (±8%): too much tempo shift makes an explosion read as a broken sample.
@@ -198,14 +211,24 @@ export class AudioPlayer {
     }
   }
 
-  play(key: SoundKey): void {
+  /**
+   * Play one cue. 96.5b2-post — the optional per-play SCALE: `gain`
+   * multiplies the key's table volume (clamped to [0, 1] with the master)
+   * and `rate` multiplies the playback rate under the key's jitter — the
+   * live pool bar's landing cue scales both with the loss (`lossCue`,
+   * src/ui/lossFx.ts). Both are set on the node per play, so a scaled play
+   * never leaks into the next unscaled one on the same pool node.
+   */
+  play(key: SoundKey, scale?: { readonly gain?: number; readonly rate?: number }): void {
     if (this.muted) return;
     const pool = this.pools[key];
     const cursor = this.cursors[key];
     const audio = pool[cursor]!;
     this.cursors[key] = (cursor + 1) % POOL_SIZE;
     const variance = PITCH_VARIANCE[key];
-    audio.playbackRate = variance > 0 ? 1 + (Math.random() * 2 - 1) * variance : 1;
+    const jitter = variance > 0 ? 1 + (Math.random() * 2 - 1) * variance : 1;
+    audio.playbackRate = (scale?.rate ?? 1) * jitter;
+    audio.volume = Math.max(0, Math.min(1, this.masterVolume * VOLUMES[key] * (scale?.gain ?? 1)));
     audio.currentTime = 0;
     audio.play().catch(() => {
       // Autoplay policy may reject before any user gesture, and stolen

@@ -206,7 +206,9 @@ audit found) + a ceiling tick on the battle bar. The cut:
   the user's A/B; reduced motion honored; a wall-clock backstop against a
   stalled animation); the HUD's end sequence → `lossesSettled()` →
   `BattleScene.outro()` → Game's outro = max(900 ms, it). Browser-proven;
-  the user's playtest pending. WORKLOG §96.5b2.
+  playtest "pretty good" → 96.5b2-post ✅ 2026-09-13: the death readout
+  fades, the `moraleloss` landing cue scaled per play (`lossCue`), the
+  shake stays fraction-of-max. WORKLOG §96.5b2.
 - [ ] **96.5c — the risk line.** Re-render after a redraw (the latent
   staleness); the ceiling tick on the battle bar at the same number.
 - [ ] **96.5d — the post-turn removal.** Game buffers the last

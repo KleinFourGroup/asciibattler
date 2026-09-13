@@ -1488,4 +1488,33 @@ threshold on both pools — by design). Console: no errors. **Not exercised
 live:** the survivors end sequence (the shipped rule is casualties; the
 stagger loop is three lines over the shared `deliver`), a reduced-motion
 run (the function is a media-query read; the pane cannot emulate it).
-**Playtest: pending (the user's).**
+
+**The 96.5b2 playtest (2026-09-13): "pretty good", three notes, all
+landed the same day (96.5b2-post):** (1) **the death readout fades** — a
+0.45 s filter/opacity transition on the compact card, so the card and the
+orb it launches leave together (inert on a living card; nothing else on
+the card animated, so no competing rule); (2) **the landing cue** — the
+shake could not be judged without a sound: the audio player was wired
+(page-lifetime, the battle scene already plays the death cry) but the HUD
+had no handle, `play(key)` took no per-play parameters, and no sample
+existed; the catapult thud was declined by the user's ear, and they
+dropped a chiptone placeholder (`public/audio/morale_loss.wav`, 270 ms,
+hand-made like `thud`, outside `gen-sfx`). Now `moraleloss` is a SoundKey
+(volume 0.85, jitter 0.05), `play(key, {gain, rate})` scales one play
+(gain × the table volume, rate × the jitter, both set on the node so a
+scaled play never leaks into the next), and `lossCue(amount, max)` maps
+the loss to both dials — gain 0.5 → 1 and rate 1 → 0.7, saturating at
+the shake's ceiling so the ear and the eye peak together (a lower rate
+deepens the pitch AND lengthens the sample: a big loss lands as a slow
+low thump, a small one as a tick); the HUD plays it on every landing, for
+either pool whatever the shake policy and under reduced motion too (a
+sound is not motion). Pinned in `lossFx.test.ts` (30 green with the
+literal pin); the sample resolves on the preview (HTTP 206, decodes,
+0.27 s); (3) **fraction vs absolute for the shake — fraction of the MAX,
+kept** (the user's agreement): unit power is absolute and small (1–7)
+while pool maxima range 13–44, so the same kill is a third of one pool
+and a tenth of another and the shake should say which; absolute
+thresholds go stale under a rebalance (§92's 20 → 40 would have halved
+every shake's meaning); fraction of the CURRENT pool (escalating as you
+run low) named as the third option, to try only if flat feels dull. Not
+built as a seam — one constant if it is ever wanted.

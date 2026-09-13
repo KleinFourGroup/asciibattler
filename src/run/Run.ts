@@ -2730,6 +2730,10 @@ export class Run {
       playerHealth: this.playerHealth,
       grants: this.grantViews(),
       empowerStacks: this.empowerStacks(),
+      // 96.5c — a packet that moved the pool moved the bound's cap. The
+      // preview rolls the turn's wave, which exists only inside an encounter
+      // — at the map (a patch heal) there is no bound to re-derive: 0.
+      poolAtRisk: this.phase === 'turn-intro' ? this.previewPoolAtRisk() : 0,
     });
     // 65e — the hand emit goes LAST: the cache/packet repaints above
     // rebuild the pre-turn card row WITHOUT enter animations (the screen's
@@ -2861,10 +2865,13 @@ export class Run {
    * (`World.survivorPower` excludes the queue), and the cap-turn SURCHARGE
    * (`health.capPenalty`, the stall path) all sit outside the bound — an
    * upper bound on the ORDINARY turn is the point (`playerExposure`).
-   * Display-only: consumed by `turn:starting`, never serialized, never read
-   * by the sim.
+   * Display-only: consumed by `turn:starting` (and, 96.5c, re-derived on
+   * `turn:handRedrawn` / `run:packetUsed`, and read by the BattleScene for
+   * the live bar's ceiling tick — public for that one reader), never
+   * serialized, never read by the sim. Pure: `rollTurnWave` is keyed, so a
+   * second call previews the same wave.
    */
-  private previewPoolAtRisk(): number {
+  previewPoolAtRisk(): number {
     const { enemyTeam } = this.rollTurnWave();
     const fielded = {
       player: this.hand.reduce((sum, idx) => sum + this.team[idx]!.stats.power, 0),
@@ -3358,6 +3365,11 @@ export class Run {
       discardPile: this.resolvePileForDisplay(this.discardPile),
       grants: this.grantViews(),
       empowerStacks: this.empowerStacks(),
+      // 96.5c — the bound moves with the hand (casualties reads the hand's
+      // Σ power); re-derived off the same pure preview as turn:starting.
+      // Gate-only: the preview needs the encounter's wave (a hand-changing
+      // packet fired anywhere else reads 0 — no risk line is up to repaint).
+      poolAtRisk: this.phase === 'turn-intro' ? this.previewPoolAtRisk() : 0,
     });
   }
 

@@ -535,6 +535,10 @@ export interface GameEvents extends Record<string, unknown> {
     playerHealth: number;
     grants: TurnGrantView[];
     empowerStacks: EmpowerStackView[][];
+    /** 96.5c — the risk bound re-derived: a packet that moved the pool moves
+     *  its cap (`min(pool, exposure)`); a hand-changing packet's hand emit
+     *  follows with its own. Meaningful at the pre-turn gate only. */
+    poolAtRisk: number;
   };
 
   /**
@@ -737,6 +741,11 @@ export interface GameEvents extends Record<string, unknown> {
      *  possibly the cursor too). */
     grants: TurnGrantView[];
     empowerStacks: EmpowerStackView[][];
+    /** 96.5c — the risk bound RE-DERIVED for the new hand (`Run.previewPoolAtRisk`,
+     *  the same number `turn:starting` carried): under casualties the hand's Σ
+     *  power IS the bound, so a redraw moves it — the pre-turn risk line was
+     *  painted once at turn start and went stale (the §96.5 kickoff audit). */
+    poolAtRisk: number;
   };
 
   /**

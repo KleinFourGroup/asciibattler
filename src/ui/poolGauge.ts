@@ -35,6 +35,11 @@ export interface PoolGaugeHandle {
   anchor(): { x: number; y: number };
   /** 96.5b2 — the landing flash (`.is-pulsing`, the chip's pulse). */
   pulse(): void;
+  /** 96.5c — the CEILING TICK: a mark at `current − loss` (the pre-turn
+   *  "at risk: up to N" bound), the most the ghost can reach on an ordinary
+   *  turn; 0 hides it. Anchored to the BOOKED pool, so it holds still while
+   *  the ghost grows toward it and leaves with the commit. */
+  setCeiling(loss: number): void;
 }
 
 /** The readout: `current / max`, or `remaining (−pending) / max` while a loss
@@ -78,7 +83,10 @@ export function createPoolGauge(
   fill.className = 'pool-gauge-fill';
   const ghost = document.createElement('div');
   ghost.className = 'pool-gauge-ghost';
-  bar.append(fill, ghost);
+  const risk = document.createElement('div');
+  risk.className = 'pool-gauge-risk';
+  risk.hidden = true;
+  bar.append(fill, ghost, risk);
 
   gauge.append(head, bar);
   const pulse = chipPulse(gauge);
@@ -86,6 +94,7 @@ export function createPoolGauge(
   let cur = current;
   let mx = max;
   let pend = 0;
+  let ceil = 0;
 
   const paint = (): void => {
     const parts = poolValueParts(cur, mx, pend);
@@ -100,6 +109,12 @@ export function createPoolGauge(
     ghost.style.left = `${pct(parts.remaining) * 100}%`;
     ghost.style.width = `${(pct(parts.remaining + parts.pending) - pct(parts.remaining)) * 100}%`;
     gauge.classList.toggle('is-pending', parts.pending > 0);
+    // The ceiling tick sits at the booked pool minus the bound (clamped at
+    // zero): the ghost's leading edge can reach it and, on an ordinary turn,
+    // not pass it.
+    const floor = Math.max(0, Math.max(0, cur) - ceil);
+    risk.hidden = ceil <= 0 || mx <= 0;
+    risk.style.left = `${pct(floor) * 100}%`;
   };
   paint();
 
@@ -130,6 +145,10 @@ export function createPoolGauge(
       return { x: r.left + r.width * frac, y: r.top + r.height / 2 };
     },
     pulse,
+    setCeiling(loss: number): void {
+      ceil = Math.max(0, loss);
+      paint();
+    },
   };
 }
 

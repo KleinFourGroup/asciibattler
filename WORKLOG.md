@@ -1517,4 +1517,50 @@ and a tenth of another and the shake should say which; absolute
 thresholds go stale under a rebalance (§92's 20 → 40 would have halved
 every shake's meaning); fraction of the CURRENT pool (escalating as you
 run low) named as the third option, to try only if flat feels dull. Not
-built as a seam — one constant if it is ever wanted.
+built as a seam — one constant if it is ever wanted. **The user on the
+cue: "I'm loving that."**
+
+### 96.5c — the risk line (2026-09-13)
+
+**The staleness, closed at the source.** The risk bound is Run's number
+(`previewPoolAtRisk`, pure over the keyed wave roll + the hand's base
+power, capped at the pool), so the fix rides the two pre-turn refresh
+events rather than a UI re-derivation (the §91a2 second-copy smell):
+`turn:handRedrawn` now carries `poolAtRisk` re-derived for the NEW hand
+(under casualties the hand's Σ power IS the bound, so a redraw moves it),
+and `run:packetUsed` carries it too (a packet that moved the pool moved
+the cap). **Gate-only, 0 elsewhere:** the first cut previewed
+unconditionally and the hook's Run suite failed seven tests at once —
+`Run.rollTurnWave: no selected encounter` — because a patch heal fires
+`run:packetUsed` at the MAP, where no wave exists; the emits read the
+bound only in `turn-intro`, which is the only phase with a risk line up to
+repaint. The PreTurnScreen holds the line element and paints it through
+ONE function from `turn:starting`, `updateHand` and `updatePacketUsed`;
+the string went through `t('preturn.risk', {n})` at the touch (the
+shell-phase rule; the ⚠ outside the value), the PreTurnScreen literal
+baseline 20 → 19. Run.test pins the hand-swap payload's bound against
+the payload's own hand summed by hand (never the preview).
+
+**The ceiling tick.** `previewPoolAtRisk` is public for one reader: the
+BattleScene hands it to the HUD as `poolAtRisk`, and the player gauge's
+new `setCeiling(loss)` places a 2 px tick in the risk line's hue (the
+enemy pool's — the same ledger) at the BOOKED pool minus the bound,
+overhanging the bar a pixel each way so it reads as a mark on the bar.
+It is anchored to the booked pool, not the projected remainder, so it
+holds still while the ghost grows toward it and leaves with the commit;
+on an ordinary turn the ghost cannot pass it (the cap surcharge can — the
+bound's documented exclusion). The enemy gauge never shows one (the bound
+is the player's exposure).
+
+**Browser:** at the gate the line read `up to 6` against an independent
+sum of the hand's base power = 6 (pool 40); this character's starting
+daemon carries no redraw grant (the queue: empower only), so a live redraw
+was rejected and the two repaint handlers were exercised on turn 2 with
+synthetic payloads over the real hand + grants: `6 → 3` on the hand-swap
+event, `→ 5` on the packet event; in the battle the tick was shown at
+`left: 85 %` = (40 − 6) / 40, 2 px wide, the enemy gauge's hidden. Console
+clean. Pins: the Run suite + the literal pin + the tokens + i18n, 431
+green. **Prediction check:** the two payload additions are display-only
+fields on gated events — the fuzz smoke is the hook's call at the commit
+(`src/run/` staged) and should hold byte-identical (nothing consumed the
+fields before they existed).

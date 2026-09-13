@@ -209,8 +209,11 @@ audit found) + a ceiling tick on the battle bar. The cut:
   playtest "pretty good" → 96.5b2-post ✅ 2026-09-13: the death readout
   fades, the `moraleloss` landing cue scaled per play (`lossCue`), the
   shake stays fraction-of-max. WORKLOG §96.5b2.
-- [ ] **96.5c — the risk line.** Re-render after a redraw (the latent
-  staleness); the ceiling tick on the battle bar at the same number.
+- [x] **96.5c — the risk line.** ✅ 2026-09-13: `poolAtRisk` rides
+  `turn:handRedrawn` + `run:packetUsed` (gate-only, 0 elsewhere — the
+  map-fired patch tripped seven tests first), the line repaints through
+  one function via `t()`; the player gauge's ceiling tick at pool − bound
+  (85 % for 6 of 40). WORKLOG §96.5c.
 - [ ] **96.5d — the post-turn removal.** Game buffers the last
   `turn:resolved` (the 65f deck-cue pattern) and hands it to the pre-turn
   scene as the "last turn" strip (turn ≥ 2); Game dispatches `advanceTurn`

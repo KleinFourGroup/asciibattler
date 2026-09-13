@@ -1375,6 +1375,25 @@ describe('Run', () => {
       expect(run.discardPile).toEqual(expect.arrayContaining([before[1]!, before[3]!]));
     });
 
+    it('96.5c — the hand-swap payload re-derives poolAtRisk for the NEW hand (the pre-turn risk line re-paints from it)', () => {
+      const originalMode = HEALTH.chipMode;
+      HEALTH.chipMode = 'casualties'; // the bound IS the hand's Σ power here
+      try {
+        const { run, bus } = gatedToFirstTurnIntro(1);
+        const swaps: GameEvents['turn:handRedrawn'][] = [];
+        bus.on('turn:handRedrawn', (p) => swaps.push(p));
+        // Re-derived from the payload's OWN hand, never from previewPoolAtRisk.
+        const handBound = (hand: readonly { stats: { power: number } }[], pool: number): number =>
+          Math.min(pool, hand.reduce((s, t) => s + t.stats.power, 0) * HEALTH.chipMultiplier);
+        run.dispatch({ kind: 'redrawCards', handIndices: [3, 1], grantIndex: 0 });
+        expect(swaps).toHaveLength(1);
+        expect(swaps[0]!.poolAtRisk).toBe(handBound(swaps[0]!.hand, run.playerHealth));
+        expect(swaps[0]!.poolAtRisk).toBe(run.previewPoolAtRisk());
+      } finally {
+        HEALTH.chipMode = originalMode;
+      }
+    });
+
     it('consumes the grant budget; a request past it is a silent no-op (49d: per-source)', () => {
       const { run } = gatedToFirstTurnIntro(2);
       // Burn the redraw grant's action budget (derived from the config dial

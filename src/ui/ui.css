@@ -3014,6 +3014,22 @@ body {
   font-weight: normal;
 }
 
+/* 96.5c — the CEILING TICK: the pre-turn "at risk: up to N" bound marked on
+   the battle bar at the booked pool minus N, in the risk line's hue (the
+   enemy pool's — the same ledger), overhanging the bar by a pixel each way
+   so it reads as a mark ON the bar, not a segment of it. The ghost grows
+   toward it; on an ordinary turn it cannot pass it. */
+.pool-gauge-risk {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-neon-red);
+  box-shadow: 0 0 4px rgb(from var(--color-neon-red) r g b / 0.7);
+  pointer-events: none;
+}
+
 /* 96.5b2 — the landing flash (chipPulse's .is-pulsing on the gauge): the
    readout and the fill glow for the pulse, then settle. */
 .pool-gauge.is-pulsing .pool-gauge-value {

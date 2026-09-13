@@ -90,6 +90,10 @@ interface EncounterPools {
   /** U3 — the encounter's display name, labelling the enemy pool gauge (replaces
    *  the old hardcoded "Foe"). Falls back to "Foe" when absent. */
   enemyName?: string;
+  /** 96.5c — the pre-turn risk bound (`Run.previewPoolAtRisk`, the number
+   *  the risk line showed): the player gauge marks it as a CEILING TICK the
+   *  ghost grows toward, so the two reads are one across the seam. */
+  poolAtRisk?: number;
 }
 
 export class HUD {
@@ -496,6 +500,8 @@ export class HUD {
     // 96.5b2 — a fresh battle starts with no orbs and no settle pending.
     this.cancelOrbs();
     this.settled = null;
+    // 96.5c — the ceiling tick: the pre-turn bound on the player bar.
+    this.playerGauge?.setCeiling(encounter?.poolAtRisk ?? 0);
     fadeIn(this.hopLabel);
     fadeIn(this.banner);
     fadeIn(this.speedPane);

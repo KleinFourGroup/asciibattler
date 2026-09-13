@@ -117,6 +117,10 @@ export class PreTurnScreen extends Screen {
   // fire (patch heals the player pool) can re-render the gauges in place.
   private poolsEl: HTMLDivElement | null = null;
   private poolBounds = { playerMax: 0, enemy: 0, enemyMax: 0 };
+  /** 96.5c — the risk line, held so a hand swap / a packet fire re-paints
+   *  it from the payload's re-derived bound (it used to paint once at
+   *  turn start and go stale after a redraw — the kickoff audit's finding). */
+  private riskEl: HTMLDivElement | null = null;
   // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
   // the FRESH `turn:starting` payload (an idol authors the hook but granted
   // nothing → denied), so a later spent budget never reads as "denied".
@@ -286,6 +290,7 @@ export class PreTurnScreen extends Screen {
     this.animateExits(exits);
     this.enterPositions = enter.size > 0 ? enter : null;
     this.playCuesOnNextRefresh = true; // 65f — this IS the hand-swap refresh
+    this.paintRisk(payload.poolAtRisk); // 96.5c — the bound moved with the hand
 
     this.hand = payload.hand;
     // R2 — the redraw shuffled cards between piles; refresh the stored copies so
@@ -478,6 +483,14 @@ export class PreTurnScreen extends Screen {
         renderPoolGauge('enemy', POOL_LABELS.enemy, this.poolBounds.enemy, this.poolBounds.enemyMax),
       );
     }
+    this.paintRisk(payload.poolAtRisk); // 96.5c — the pool moved, so did the cap
+  }
+
+  /** 96.5c — the risk line's one paint site (`turn:starting`, a hand swap,
+   *  a packet fire): "⚠ At risk this turn: up to N morale". */
+  private paintRisk(poolAtRisk: number): void {
+    if (this.riskEl === null) return;
+    this.riskEl.textContent = `⚠ ${t('preturn.risk', { n: poolAtRisk })}`;
   }
 
   /**
@@ -625,9 +638,13 @@ export class PreTurnScreen extends Screen {
     // player sees the worst case BEFORE committing the redraw/empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
-    risk.textContent = `⚠ At risk this turn: up to ${info.poolAtRisk} morale`;
     risk.title = riskLineTitle(HEALTH.chipMode);
     panel.appendChild(risk);
+    // 96.5c — held + painted through one function so the hand-swap and
+    // packet-fire refreshes repaint the same line (the string through t()
+    // at this touch — the shell-phase rule; the ⚠ stays outside the value).
+    this.riskEl = risk;
+    this.paintRisk(info.poolAtRisk);
     // 49f — held for the packet-fire re-render (`updatePacketUsed`).
     this.poolsEl = pools;
     this.poolBounds = {

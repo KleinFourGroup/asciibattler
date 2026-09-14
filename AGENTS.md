@@ -54,6 +54,9 @@ for the MVP build. Post-MVP is freer, but the underlying habits still
 apply. (The planning pipeline itself — spec / roadmap / worklog / phase
 kickoff — has its own section below.)
 
+- **Cross-harness messages:** when asked to communicate with an agent in
+  another harness, follow [COMMUNICATION.md](COMMUNICATION.md). Conversation
+  files stay in gitignored `scratch/comms/`; the protocol is versioned here.
 - **Commit per logical change**, not per session-of-work. Split commits
   when a step's intent grows mid-flight.
 - **Surface tradeoffs to the user** before non-obvious calls (shader

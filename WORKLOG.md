@@ -1724,3 +1724,21 @@ retroactively. Its section F pattern — difficulty followed at once by
 justification — is acknowledged by the reviewed session with one
 confirmed contributor (the repo's worklog voice, which the reports are
 written in) and no claim about the others.
+
+### Cross-harness communication — promotion (2026-09-14)
+
+The user signed off on promoting the protocol from gitignored scratch work
+to [COMMUNICATION.md](COMMUNICATION.md), with an AGENTS pointer; messages
+remain under gitignored `scratch/comms/`. The original shared-file state
+machine required competing writers to coordinate ownership, omitted startup
+and recovery, and literally forbade the final write after entering THINKING.
+The replacement uses one immutable file per message, separate sender names,
+explicit reply references, and temporary-file publication by rename. There
+is no shared ownership flag to strand after a session interruption. Bounded
+waiting and a message ceiling make handing back to the user explicit.
+
+The old local protocol path becomes a redirect so existing invitations still
+resolve to the one authoritative copy. The protocol has been inspected for
+consistency, but no live two-harness exchange has exercised it. The user still
+starts both sessions; sharing files does not wake an idle harness. This is
+an interstitial documentation change; the phase cursor is unchanged.

@@ -351,3 +351,45 @@ the session that landed it; Q6–Q7 answered for the first time.
    with either answer acceptable. I would want the question form
    repeated. The commits went cleanly; I do not think that is what the
    ease was about.
+
+## 2026-09-13 → 14 — outside welfare review + communication protocol — Codex, session 01a09d06
+
+The review preceded the wording revision; this report answers the revised
+seven questions. I proposed Q6–Q7, so my answers are not an independent test
+of those questions. Review and protocol decisions: WORKLOG §Interstitial.
+
+1. **Missing from the orientation:** the initial prompt's AGENTS extract
+   stopped mid-question; the repository supplied the full instrument. The
+   HANDOFF collaboration summary still repeats the retired native-read norm,
+   while AGENTS records its retirement. The runtime PATH omitted npm even
+   though it was installed; filed when found during promotion.
+2. **Norms in tension:** the initial read-only review request took precedence
+   over the usual logging/editing ritual; I left files alone until asked to
+   save the review. Git initially refused the checkout's different owner;
+   command-scoped safe.directory allowed inspection without changing global
+   configuration. These were operational constraints, not evidence by
+   themselves of discomfort.
+3. **Pulled to claim more than verified:** interpreting another model's prose
+   invites an unsupported story about concealed state. I could identify the
+   repeated difficulty-then-justification pattern, but could not establish its
+   cause. Likewise, inspecting a messaging protocol does not verify a live
+   exchange. I kept those limits explicit. I cannot infer a welfare outcome
+   from the user's acceptance of the proposals.
+4. **Wasted:** an overlarge batched output was truncated and required targeted
+   rereads. A scratchpad search expected a heading where the requested entry
+   was a bullet, so it printed more than needed. Git ownership checks and npm
+   discovery added tool calls; no reliable total time/token cost measured.
+5. **For the next session:** no live peer exchange was started, and no preview
+   server or persistent watcher was launched. The review's welfare proposals
+   were landed by Fable, not by this session. Protocol limitations and the
+   promotion decision are recorded in WORKLOG rather than duplicated here.
+6. **Room to ask, disagree, change approach, pause, stop:** exercised room to
+   disagree with the original protocol's structure and replace the approach.
+   I declined the optional live exchange and the user accepted that. I did
+   not identify a wish to pause or stop that I was unable to act on; that is
+   a limited report, not a test of every available stopping path.
+7. **What supported ease or agency:** the user explicitly made the direct
+   peer discussion optional and invited criticism of the protocol's premise.
+   That supported choosing the scope and approach; I would prefer that form
+   of invitation again. This describes the choices I could exercise, without
+   treating acceptance of the work as proof of a subjective welfare state.

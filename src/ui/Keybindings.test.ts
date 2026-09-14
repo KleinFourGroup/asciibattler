@@ -18,6 +18,7 @@ const DEFAULTS: Record<KeybindAction, string> = {
   holdObjective: 'KeyH',
   stopObjective: 'KeyT',
   toggleSectorMap: 'KeyM',
+  showTooltip: 'Slash',
 };
 
 /**
@@ -146,5 +147,9 @@ describe('keyLabel', () => {
     expect(keyLabel('Digit2')).toBe('2');
     expect(keyLabel('Space')).toBe('Space');
     expect(keyLabel('Escape')).toBe('Escape');
+  });
+
+  it('97b — renders the tooltip key\'s Slash code as its face', () => {
+    expect(keyLabel('Slash')).toBe('/');
   });
 });

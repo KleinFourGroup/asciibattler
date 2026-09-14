@@ -107,5 +107,6 @@ export class Keybindings {
 export function keyLabel(code: string): string {
   if (code.startsWith('Key')) return code.slice(3); // i18n-ok: a KeyboardEvent.code prefix
   if (code.startsWith('Digit')) return code.slice(5); // i18n-ok: a KeyboardEvent.code prefix
+  if (code === 'Slash') return '/'; // 97b — the tooltip key's default: the `?` key reads as its face
   return code;
 }

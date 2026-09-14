@@ -23,7 +23,7 @@ import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { createChromeColumn } from './ui/chip';
-import { installTooltipHost } from './ui/tooltip';
+import { installTooltipHost, toggleTooltipKey } from './ui/tooltip';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
@@ -286,6 +286,10 @@ export class Game implements RunDispatcher {
       this.keybindings.labelFor('toggleSectorMap'),
     );
     this.keybindings.on('toggleSectorMap', () => this.sectorMapOverlay.toggle());
+    // 97b — the tooltip key, page-lifetime like the map key: pin the open
+    // tooltip / close a pinned one / open pinned for the focused or hovered
+    // trigger (src/ui/tooltip.ts).
+    this.keybindings.on('showTooltip', () => toggleTooltipKey());
 
     // Scene transitions driven by Run lifecycle events. All of the
     // post-battle handlers fire *after* Run has already updated phase +

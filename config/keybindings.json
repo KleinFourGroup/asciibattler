@@ -8,5 +8,6 @@
   "focusObjective": "KeyF",
   "holdObjective": "KeyH",
   "stopObjective": "KeyT",
-  "toggleSectorMap": "KeyM"
+  "toggleSectorMap": "KeyM",
+  "showTooltip": "Slash"
 }

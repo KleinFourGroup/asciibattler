@@ -63,6 +63,7 @@ export const KEYBOARD_CODES: ReadonlySet<string> = new Set([
   'End',
   'Insert',
   'Pause',
+  'Slash',
 ]);
 
 const LETTER_WORD = /\p{L}{2,}/gu;

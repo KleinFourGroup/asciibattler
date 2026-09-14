@@ -48,6 +48,7 @@ export const KEYBIND_ACTIONS = [
   'holdObjective',
   'stopObjective',
   'toggleSectorMap',
+  'showTooltip',
 ] as const;
 export type KeybindAction = (typeof KEYBIND_ACTIONS)[number];
 
@@ -76,6 +77,11 @@ const KeybindingsSchema = z.object({
    *  keybind subscriber (Game, not a scene) — the map view must open from
    *  any screen, so the handler survives scene swaps. */
   toggleSectorMap: z.string().min(1),
+  /** 97b — the tooltip key (src/ui/tooltip.ts `toggleTooltipKey`): pin the
+   *  open tooltip, close a pinned one, or open pinned for the focused /
+   *  hovered trigger. Page-lifetime (Game), like the map key. Default
+   *  `Slash` — the `?` key; dispatch is code-based, so unshifted works. */
+  showTooltip: z.string().min(1),
 });
 
 export type KeybindingsConfig = z.infer<typeof KeybindingsSchema>;

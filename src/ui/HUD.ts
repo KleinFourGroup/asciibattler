@@ -6,6 +6,7 @@
 
 import type { EventBus } from '../core/EventBus';
 import { t } from '../i18n/ui';
+import { attachTooltip, keyedTooltip, refreshTooltip } from './tooltip';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
@@ -194,6 +195,9 @@ export class HUD {
    * from accumulating across battles.
    */
   private readonly subscriptions: Array<() => void> = [];
+  /** 97c — the enemy cards' tooltip detaches, keyed by unit (torn down with
+   *  the cards at `show()` and `dispose()`). */
+  private readonly cardTooltips = new Map<number, () => void>();
 
   constructor(
     mount: HTMLElement,
@@ -242,6 +246,17 @@ export class HUD {
       this.pauseButton.type = 'button';
       this.pauseButton.className = 'hud-speed hud-speed--pause';
       this.pauseButton.addEventListener('click', () => this.togglePause());
+      // 97c — the words are live (pause ↔ resume ↔ fight now), so the
+      // content is a thunk read at every open; renderSpeedPane refreshes an
+      // open one when the hotkey path flips the label.
+      attachTooltip(
+        this.pauseButton,
+        keyedTooltip(
+          () => this.pauseLabel(),
+          () => keybindings.labelFor('togglePause'),
+        ),
+        { touch: 'press' },
+      );
       this.speedPane.appendChild(this.pauseButton);
       this.subscriptions.push(keybindings.on('togglePause', () => this.togglePause()));
     } else {
@@ -259,6 +274,14 @@ export class HUD {
       // through to the browser rather than being silently swallowed.
       const action = SPEED_HOTKEY.get(value);
       if (action) this.subscriptions.push(keybindings.on(action, () => this.selectSpeed(value)));
+      // 97c — the tooltip carries the live binding (a rebind shows up).
+      attachTooltip(
+        btn,
+        action
+          ? keyedTooltip(t('hud.tooltip.speed', { speed: value }), () => keybindings.labelFor(action))
+          : t('hud.tooltip.speed', { speed: value }),
+        { touch: 'press' },
+      );
     }
     mount.appendChild(this.speedPane);
     this.renderSpeedPane();
@@ -301,6 +324,12 @@ export class HUD {
       this.objectiveButtons.set(def.mode, btn);
       this.objectivePane.appendChild(btn);
       this.subscriptions.push(keybindings.on(def.action, () => this.invokeObjective(def)));
+      // 97c (78a) — the fast-path hint per mode: engage owns the bare
+      // left-click, focus owns the right-click; hold / stop just name
+      // themselves. The key is read live so a rebind shows up.
+      const hint =
+        def.mode === 'engage' ? t('hud.tooltip.engage') : def.mode === 'focus' ? t('hud.tooltip.focus') : def.label;
+      attachTooltip(btn, keyedTooltip(hint, () => keybindings.labelFor(def.action)), { touch: 'press' });
     }
     mount.appendChild(this.objectivePane);
     this.renderObjectivePane();
@@ -493,6 +522,7 @@ export class HUD {
     this.playerCardRow.replaceChildren();
     this.enemyCardRow.replaceChildren();
     this.cards.clear();
+    this.detachCardTooltips();
     this.renderPlayerPool(encounter);
     this.renderEnemyPool(encounter);
     // 96.5b1 — the opening ghost: a fresh battle has booked nothing; a
@@ -541,6 +571,7 @@ export class HUD {
     // page-lifetime too.
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
+    this.detachCardTooltips();
     fadeOutAndRemove(this.hopLabel);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
@@ -576,21 +607,23 @@ export class HUD {
       const active = !paused && value === selected;
       btn.classList.toggle('is-active', active);
       btn.setAttribute('aria-pressed', String(active));
-      const action = SPEED_HOTKEY.get(value);
-      btn.title = action
-        ? `${value}× speed (${this.keybindings.labelFor(action)})`
-        : `${value}× speed`;
     }
     if (this.pauseButton) {
       this.pauseButton.textContent = paused ? '▶' : '⏸';
       this.pauseButton.classList.toggle('is-active', paused);
       this.pauseButton.setAttribute('aria-pressed', String(paused));
-      // Q2 — during the countdown the board is held and ▶ means "start the
-      // fight", so the toggle reads "Fight now" rather than "Resume".
-      const label = this.inCountdown ? 'Fight now' : paused ? 'Resume' : 'Pause';
-      this.pauseButton.setAttribute('aria-label', label);
-      this.pauseButton.title = `${label} (${this.keybindings.labelFor('togglePause')})`;
+      this.pauseButton.setAttribute('aria-label', this.pauseLabel());
+      // 97c — an open tooltip re-reads the label (the hotkey path repaints
+      // without a click; the click path refreshes itself).
+      refreshTooltip(this.pauseButton);
     }
+  }
+
+  /** Q2 — during the countdown the board is held and ▶ means "start the
+   *  fight", so the toggle reads "Fight now" rather than "Resume". */
+  private pauseLabel(): string {
+    if (this.inCountdown) return t('hud.pause.fightNow');
+    return this.playback.isPaused ? t('hud.pause.resume') : t('hud.pause.pause');
   }
 
   /** Q2 — show / update the pre-battle countdown readout (BattleScene drives it
@@ -673,11 +706,6 @@ export class HUD {
       btn.textContent = armed
         ? `${def.icon} Click a target…`
         : `${def.icon} ${def.label} (${key})`;
-      // 78a — the fast-path hint per mode: engage owns the bare left-click,
-      // focus owns the right-click.
-      btn.title = def.arms
-        ? `${def.label}: click then left-click a target, or ${def.mode === 'engage' ? 'left' : 'right'}-click the board (${key})`
-        : `${def.label} (${key})`;
       // Active highlight yields to the armed prompt so the two greens don't fight.
       btn.classList.toggle('is-active', active && !armed);
       btn.classList.toggle('is-armed', armed);
@@ -722,10 +750,21 @@ export class HUD {
     // dead unit's grayed card goes inert the moment it dies.
     if (team === 'enemy') {
       handles.el.classList.add('hud-card-targetable');
-      handles.el.title = t('hud.card.targetHint', {
-        engage: t('hud.objective.engage'),
-        focus: t('hud.objective.focus'),
-      });
+      // 97c — hover / key only (`touch: 'none'`): the card's contextmenu IS
+      // the focus objective, so a long-press cannot also be the tooltip; the
+      // focus route lands when §100 makes the card focusable. Never
+      // sole-source — the objective pane carries the same two actions.
+      this.cardTooltips.set(
+        unitId,
+        attachTooltip(
+          handles.el,
+          t('hud.card.targetHint', {
+            engage: t('hud.objective.engage'),
+            focus: t('hud.objective.focus'),
+          }),
+          { touch: 'none' },
+        ),
+      );
       handles.el.addEventListener('click', () => this.setObjectiveOnCard(unitId, 'engage'));
       handles.el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -751,6 +790,12 @@ export class HUD {
     if (!unit) return;
     const card = this.cards.get(unitId);
     if (card) updateCardHp(card, unit);
+  }
+
+  /** 97c — drop every enemy card's tooltip registration (closing an open one). */
+  private detachCardTooltips(): void {
+    for (const detach of this.cardTooltips.values()) detach();
+    this.cardTooltips.clear();
   }
 
   private removeUnit(unitId: number): void {

@@ -84,5 +84,13 @@
   "cardlist.empty": "No units.",
   "cache.title": "Cache — {held}/{size}",
   "cache.empty": "The cache is empty — packets arrive as battle rewards.",
-  "sectormap.hint": "[ map view — {key} / Esc closes ]"
+  "sectormap.hint": "[ map view — {key} / Esc closes ]",
+  "sectormap.chipTooltip": "Sector map",
+  "cache.chipTooltip": "The cache — your held packets",
+  "hud.tooltip.speed": "{speed}× speed",
+  "hud.tooltip.engage": "Engage: click, then left-click a target — or left-click the board",
+  "hud.tooltip.focus": "Focus: click, then left-click a target — or right-click the board",
+  "hud.pause.pause": "Pause",
+  "hud.pause.resume": "Resume",
+  "hud.pause.fightNow": "Fight now"
 }

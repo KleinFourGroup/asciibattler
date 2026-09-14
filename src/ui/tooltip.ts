@@ -176,6 +176,22 @@ export function installTooltipHost(mount: HTMLElement): HTMLDivElement {
   return host;
 }
 
+/** A tooltip that ends in a keyboard hint — `text [key]`, the key in the
+ *  amber `.tooltip__kbd` accent. Both parts may be thunks so a live label
+ *  (pause ↔ resume) or a rebound key is read at every open; the brackets
+ *  are glyphs, outside the locale value. */
+export function keyedTooltip(text: string | (() => string), key: string | (() => string)): () => Node {
+  return () => {
+    const frag = document.createDocumentFragment();
+    frag.append(typeof text === 'function' ? text() : text, ' ');
+    const kbd = document.createElement('span');
+    kbd.className = 'tooltip__kbd';
+    kbd.textContent = `[${typeof key === 'function' ? key() : key}]`;
+    frag.appendChild(kbd);
+    return frag;
+  };
+}
+
 /** Register `el` as a trigger. Returns the detach (closes it if open). */
 export function attachTooltip(el: HTMLElement, content: TooltipContent, opts: TooltipOptions = {}): () => void {
   const entry: Entry = { el, content, touch: opts.touch ?? 'tap' };

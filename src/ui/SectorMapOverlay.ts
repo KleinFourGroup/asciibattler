@@ -26,6 +26,7 @@ import type { UnitTemplate } from '../sim/Unit';
 import { MapScreen, type BossForewarning } from './MapScreen';
 import { openModal, type ModalHandle } from './modal';
 import { t } from '../i18n/ui';
+import { attachTooltip, keyedTooltip } from './tooltip';
 
 /** Everything a read-only map render needs — the MapScreen.show argument list,
  *  bundled (Game builds it from the live Run; null = no run yet). */
@@ -69,7 +70,9 @@ export class SectorMapOverlay {
     this.chip.type = 'button';
     this.chip.className = 'chip sector-map-chip is-hidden';
     this.chip.textContent = '⊞ map';
-    this.chip.title = `Sector map (${keyLabel})`;
+    // 97c — the chip's tooltip (a long-press on touch; the chip's tap opens
+    // the map).
+    attachTooltip(this.chip, keyedTooltip(t('sectormap.chipTooltip'), keyLabel), { touch: 'press' });
     this.chip.addEventListener('click', () => this.toggle());
     chips.appendChild(this.chip);
   }

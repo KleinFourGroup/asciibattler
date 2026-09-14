@@ -31,6 +31,7 @@
 
 import type { EventBus } from '../core/EventBus';
 import { t } from '../i18n/ui';
+import { attachTooltip } from './tooltip';
 import type { GameEvents } from '../core/events';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -77,7 +78,8 @@ export class CacheOverlay {
     this.el.className = 'chip cache-overlay';
     this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
-    this.el.title = 'The cache — your held packets';
+    // 97c — the chip's tooltip (a long-press on touch; the tap opens the modal).
+    attachTooltip(this.el, t('cache.chipTooltip'), { touch: 'press' });
     this.value = document.createElement('span');
     this.value.className = 'cache-overlay__value';
     const label = document.createElement('span');

@@ -1917,3 +1917,47 @@ recorder tests compare against the live hash).
   physical key; F1 is browser help on some platforms. The registry
   `preventDefault`s it whenever a subscriber exists — page-lifetime now —
   so Firefox's quick-find `/` is suppressed in-game, accepted.
+
+### 97c — the controls (2026-09-14)
+
+Ten sites → `attachTooltip` (`9812f6c`): the HUD's speed ×4 / pause /
+objectives ×4 and the enemy compact cards, the sector-map chip, the cache
+chip. Every control takes `touch: 'press'` (call B) except the enemy card
+(`'none'` — its contextmenu is the focus objective; the comment at the
+site names the collision for §100). The literal baseline 82 → 77.
+
+- **`keyedTooltip(text, key)` is the hint shape** — `text [key]`, the key
+  in the amber `.tooltip__kbd` accent, both parts thunks. It returns a
+  getter that builds a FRESH fragment per open: a static
+  `DocumentFragment` empties on its first append, so a static node would
+  render once and never again (caught while designing, not by a probe).
+- **The pause label is live three ways** (pause ↔ resume ↔ fight now) and
+  the aria-label reads the same `pauseLabel()`; the three literals moved
+  to `hud.pause.*`. The hotkey path repaints without a click, so
+  `renderSpeedPane` calls `refreshTooltip` on the button — proven in the
+  browser: `Resume [Space]` → `Pause [Space]` → `Resume [Space]` under two
+  Space keydowns with the tooltip open.
+- **The objective hints are two whole sentences** (`hud.tooltip.engage` /
+  `.focus`) rather than the old template with a `left`/`right` hole — a
+  translator gets a sentence, not a word to slot. Hold / Stop are the
+  label + the key. The `t()` key must be a literal (the ui-keys scan
+  forbids computed keys), hence the ternary over two literal calls.
+- **The enemy cards' detaches are kept by unit** and torn down at
+  `show()` (the card rows are replaced) and `dispose()`. A dead card is
+  NOT removed (it grays in place), so the disconnected-trigger poll gets
+  no read here after all; the first real read is a scene swap under an
+  open tooltip.
+- **The probe's second module instance.** After an HMR cycle,
+  `await import('/src/ui/tooltip.ts')` in the pane returned a module
+  instance SEPARATE from the one the app holds (Vite's timestamped
+  importer URLs): its `openTooltipTrigger()` read null while the DOM
+  showed the tooltip open with `aria-describedby` set. The DOM is the
+  signal; module-state reads through a dynamic import are only valid on a
+  fresh load. (97a's walk was on a fresh load, which is why it agreed.)
+- **The walk** (character → map → an event → the map → a battle, all
+  through `__game.dispatch` + one event-choice click): every control
+  opens on hover with `aria-describedby`; the objective pane flips BELOW
+  (it sits at the bottom edge) and the speed pane opens below too (top
+  edge); the only `[title]` elements left in the battle DOM are the 26
+  compact-card level/power spans — 97e's. The long-press is the user's
+  phone read.

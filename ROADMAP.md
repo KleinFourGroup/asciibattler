@@ -232,10 +232,11 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   registry (default `Slash` → `/`), Game's page-lifetime subscription; the
   fuzz smoke fired and held; the pane's key tool sends no `code`, so the
   key's live read is the user's keyboard. WORKLOG §97b.
-- [ ] **97c — the controls.** HUD speed / pause / objectives / the enemy
-  card (no long-press — its `contextmenu` is the focus objective, §100
-  note) · the sector-map chip · the cache chip; strings through `t()`;
-  lazy content for the live labels; the long-press proven on the phone.
+- [x] **97c — the controls.** ✅ 2026-09-14 `9812f6c`: ten sites (HUD
+  speed / pause / objectives / the enemy cards · the sector-map chip · the
+  cache chip), `keyedTooltip` for the `[key]` hints, eight `t()` keys, the
+  baseline 82 → 77; browser-walked in a live battle (the pause label live
+  under the hotkey). ⏳ the long-press on the user's phone. WORKLOG §97c.
 - [ ] **97d — the pre-turn screen + the reward button.** Draw chip · risk
   line · pass · packet chip · hand-card `▲` chips · the strip's two; the
   reward Continue; `button()`'s option renamed; `tabindex=0` on the five

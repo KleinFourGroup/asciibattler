@@ -1742,3 +1742,89 @@ resolve to the one authoritative copy. The protocol has been inspected for
 consistency, but no live two-harness exchange has exercised it. The user still
 starts both sessions; sharing files does not wake an idle harness. This is
 an interstitial documentation change; the phase cursor is unchanged.
+
+## Phase 97 — the tooltip system
+
+### Kickoff (2026-09-14) — the code-reality audit + the cut
+
+Pre-flight green at `e882352` (typecheck clean · 2944 tests / 37 s). The
+audit re-took the `title=` census the cursor flagged stale (96.5d deleted
+the post-turn screen; the pre-turn strip added two), then surveyed the
+seams the component builds on (the button factory's `title?` option, the
+modal shell's Esc + focus discipline, the chip plate, the keybinding
+registry, the literal scanner's sink rules, the overlay's pointer-events).
+
+- **The census is 20 sites in 8 files, not 19.** Ten on interactive
+  controls (HUD speed ×4 / pause / objectives ×4 · the enemy compact card ·
+  the boss map node · the pass button · the packet chip · the sector-map
+  chip · the cache chip · the reward Continue through `button()`'s
+  option); ten on non-interactive text (the draw chip · the risk line · the
+  hand card's `▲` chips · the strip's glyph run + loss · the compact card's
+  level + power · the compact `▲` chip · the full card's power row · the
+  board status pip).
+- **The status pip's title was never reachable** — `#unit-overlays` is
+  `pointer-events: none` (ui.css:115) and nothing beneath re-enables it. The
+  kickoff's "sole-source pip name" was dead on arrival; the compact card's
+  status row already carries swatch + name + meta for the same status.
+- **The boss forewarning is probably not sole-source either** — the 66b
+  comment (MapScreen.ts:255) says the banner sub-line carries the
+  always-visible copy; unverified in the browser, so 97f verifies it.
+- **Two sole-source sites are real:** the compact card's bare level/power
+  numbers and the empower chip's unlabelled triangles. Both get a
+  persistent label (97e).
+- **The literal scanner keeps its eyes on the new helper:** a prose string
+  passed to a non-dev callee is reported (the `excluded()` walk), so
+  `attachTooltip(el, 'prose')` cannot exit the pin — touch-once extraction
+  applies at every converted site.
+- **The HUD re-sets its titles per render** (the live pause/speed labels)
+  → the component takes LAZY content so those sites attach once.
+- **Focus reach is missing on the div controls** (the enemy card, the cache
+  chip, the map node — §96 left them divs for §100's rule); their focus
+  route lands when §100 makes them focusable.
+- **Touch is virgin territory** — zero pointer/touch handling in `src/`;
+  §97 writes the first, only what the tooltip needs.
+- **The registry is the right seam for the key:** one config line + one
+  schema line + one action; a page-lifetime subscriber from Game is how
+  the sector-map key already rides it. (The dev-keys file's reason for
+  staying off the registry — a dev-only action can't be in the shipped
+  JSON — doesn't apply.)
+
+**The five calls (user-signed 2026-09-14):**
+
+- **A — the key joins the registry** as `showTooltip`, default `Slash`
+  (the `?` key; dispatch is code-based so unshifted works); `keyLabel`
+  renders it `/`. Over a hard-coded key beside Esc: the camera keys are the
+  cautionary tale, and the hint text can then say the live key.
+- **B — touch: tap-toggle on the ten non-interactive sites; LONG-PRESS
+  (~450 ms, pointer type touch, the trailing click swallowed) on the
+  controls.** The tap on a control must keep firing the action, so
+  tap-toggle can't live there; long-press is the standard mobile idiom,
+  ~40 lines inside the component, the tap path byte-identical for anyone
+  who never holds. Two wrinkles named at the lock: Android's own
+  long-press `contextmenu` (→ `touch-action: manipulation` + a guarded
+  `preventDefault` + `user-select: none`, checked on the user's phone —
+  the pane can't emulate it); and the enemy compact card, whose
+  `contextmenu` is already the focus objective — it gets NO long-press
+  (hover / key / focus-once-§100), with a code comment naming the
+  collision for §100. If the phone check finds the browser fighting it,
+  the fallback is deleting the block (option B: controls keep three routes,
+  the charter amended one line).
+- **C — the board pip: delete the dead title, mint no tooltip.** The card's
+  status row is the persistent read; a board pip has no sensible focus or
+  tap route, and a hover-only tooltip there fails the four-route exit.
+- **D — tab stops: `tabindex=0` on the pre-turn screen's five text sites
+  now** (the screen where the player has time to Tab); the in-battle card
+  sub-spans stay hover + key reads until §100 sweeps focus order (the
+  spec-literal alternative adds ~30 tab stops to a battle).
+- **E — the empower chip's persistent label: the user's eye at 97e** (the
+  key's short label beside the triangles on the compact chip, or only on
+  the pre-turn hand card where there is room).
+
+**The cut** (ROADMAP §97): 97a the component (headless-first: the
+placement math pure + pinned) → 97b the key → 97c the controls (the
+long-press proven on the phone) → 97d the pre-turn screen + the reward
+button → 97e the cards + the board → 97f the boss node + the exit (the
+zero-`title=` tripwire on the forgetful path, DESIGN "Tooltips", the
+playtest). Predictions: no snapshot bump (nothing serialized); **97b fires
+the fuzz smoke** (`config/` is a hook trigger path); the literal baseline
+drops in six files; `ui.json` +~20 keys; the hook stays ~45 s elsewhere.

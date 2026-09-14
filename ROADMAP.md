@@ -210,10 +210,43 @@ close it; flip-positioned (never shifts layout); rich content;
 `aria-describedby`. Replaces the 19 native `title=` sites; the four
 sole-source sites gain persistent labels. **Depends on:** §96 (built on
 the shell). **Risk:** low-medium. **Decision points:** the keyboard
-trigger key and whether it joins the rebindable registry. **Exit:** every
-tooltip reachable by hover, focus, tap and key; zero `title=` in
-`src/ui` + `src/render`. **Scope guards:** a tooltip is never the sole
-channel for actionable information.
+trigger key and whether it joins the rebindable registry — ✅ DECIDED
+2026-09-14: `showTooltip` joins the registry, default `Slash` (WORKLOG
+§97 kickoff, call A). **Exit:** every tooltip reachable by hover, focus,
+tap and key; zero `title=` in `src/ui` + `src/render`. **Scope guards:** a
+tooltip is never the sole channel for actionable information.
+
+**Kickoff 2026-09-14** (WORKLOG §97 kickoff — the census re-taken at 20
+sites / 8 files; the pip's title found dead behind `pointer-events:
+none`; five calls user-signed: the key on the registry · long-press on
+controls, tap-toggle on text · the pip's tooltip not minted · tab stops
+on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
+
+- [ ] **97a — the component (headless-first).** `src/ui/tooltip.ts`:
+  `attachTooltip(el, content)` (string or lazy getter → string | Node), ONE
+  live element in the ui root, `role="tooltip"` + `aria-describedby` while
+  open; hover (short delay, warm window) · focus-visible · tap-toggle ·
+  Esc / pointer-leave / focus-out / a disconnected trigger; fixed,
+  flip-positioned, clamped, a caret. The placement math pure + pinned.
+  Exit: a scratch trigger shows on every route in the browser.
+- [ ] **97b — the key.** `showTooltip` in config + schema + the action
+  list + a registry pin; Game wires it; `keyLabel` renders `Slash` as `/`.
+  Prediction: fires the fuzz smoke (`config/`).
+- [ ] **97c — the controls.** HUD speed / pause / objectives / the enemy
+  card (no long-press — its `contextmenu` is the focus objective, §100
+  note) · the sector-map chip · the cache chip; strings through `t()`;
+  lazy content for the live labels; the long-press proven on the phone.
+- [ ] **97d — the pre-turn screen + the reward button.** Draw chip · risk
+  line · pass · packet chip · hand-card `▲` chips · the strip's two; the
+  reward Continue; `button()`'s option renamed; `tabindex=0` on the five
+  text sites. Closes the §96.5 TODO rider.
+- [ ] **97e — the cards + the board.** Compact level + power with
+  persistent labels · the compact `▲` chip + its label (the user's eye) ·
+  the full card's power row · the pip's dead title deleted.
+- [ ] **97f — the boss node + the exit.** The node's tooltip, the banner
+  verified as the label; the zero-`title=` tripwire test; DESIGN §UI idioms
+  "Tooltips"; the ARCHITECTURE line; this stub; the literal baseline
+  regenerated; the playtest.
 
 ## Phase 98 — color redundancy
 

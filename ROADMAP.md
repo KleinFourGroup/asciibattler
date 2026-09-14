@@ -228,9 +228,10 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   the plate in ui.css; browser-walked on scratch triggers — every route
   but the disconnected-trigger poll (rAF stalled in the hidden pane).
   WORKLOG §97a.
-- [ ] **97b — the key.** `showTooltip` in config + schema + the action
-  list + a registry pin; Game wires it; `keyLabel` renders `Slash` as `/`.
-  Prediction: fires the fuzz smoke (`config/`).
+- [x] **97b — the key.** ✅ 2026-09-14 `6574f49`: `showTooltip` on the
+  registry (default `Slash` → `/`), Game's page-lifetime subscription; the
+  fuzz smoke fired and held; the pane's key tool sends no `code`, so the
+  key's live read is the user's keyboard. WORKLOG §97b.
 - [ ] **97c — the controls.** HUD speed / pause / objectives / the enemy
   card (no long-press — its `contextmenu` is the focus objective, §100
   note) · the sector-map chip · the cache chip; strings through `t()`;

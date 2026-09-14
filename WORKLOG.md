@@ -1893,3 +1893,27 @@ live site that disposes under an open tooltip (97c's HUD cards) is where
 it gets its read. The `is-visible` class never shows in a blocking eval
 (it rides a rAF) — a screenshot after the eval returns is the proof, as
 HANDOFF's tips say.
+
+### 97b — the key (2026-09-14)
+
+`showTooltip` on the registry, default `Slash` (`6574f49`): the JSON + the
+schema + `KEYBIND_ACTIONS`, Game's page-lifetime subscription beside the
+map key, `keyLabel('Slash') → '/'`, `Slash` on the scanner's
+KEYBOARD_CODES allowlist (the literal pin would otherwise read the code
+as a Capitalized word). The fuzz smoke fired as predicted (`config/`) and
+held; the config hash moved with the JSON (nothing pins its value — the
+recorder tests compare against the live hash).
+
+- **The pane's key tool cannot drive a registry key.** A real `/` press
+  through the computer tool arrived as `key: '/'` with `code: ''`, so the
+  code-based dispatch never saw it; one round-trip went to a phantom
+  "the key does not pin". A window keydown carrying `code: 'Slash'` was
+  eaten by the registry (`defaultPrevented`) and pinned the open tooltip
+  through a pointer-leave; a second closed it. The earlier Tab walk was
+  the browser's own focus traversal, not the registry. Papercut filed;
+  the user's keyboard is the real read for every registry key from here.
+- **Why `Slash` and not `KeyI` / `F1`:** the `?` key is the help
+  convention; a code-based binding makes the unshifted `/` the same
+  physical key; F1 is browser help on some platforms. The registry
+  `preventDefault`s it whenever a subscriber exists — page-lifetime now —
+  so Firefox's quick-find `/` is suppressed in-game, accepted.

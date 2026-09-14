@@ -1828,3 +1828,68 @@ zero-`title=` tripwire on the forgetful path, DESIGN "Tooltips", the
 playtest). Predictions: no snapshot bump (nothing serialized); **97b fires
 the fuzz smoke** (`config/` is a hook trigger path); the literal baseline
 drops in six files; `ui.json` +~20 keys; the hook stays ~45 s elsewhere.
+
+### 97a — the component (2026-09-14)
+
+`src/ui/tooltip.ts` + `.tooltip` in ui.css + the host installed from Game
+beside the chrome column (`8942d72`). The shape as built, where it
+departs from or sharpens the kickoff sketch:
+
+- **Lazy content is the default shape** — a getter resolved at every open
+  (string | Node), so the HUD's live labels attach once; `refreshTooltip(el)`
+  re-reads an OPEN tooltip, and a mouse click on the trigger re-reads it a
+  tick later on its own (pause ↔ resume under an open tooltip).
+- **The key's semantics** (`toggleTooltipKey`, 97b binds it): with one
+  open, it PINS (a pointer user parks the hover); pinned, it closes; with
+  none open, it opens pinned for the focused trigger (walking up from
+  `document.activeElement`), else the hovered one. Pinned = survives
+  pointer-leave; blur and an outside pointerdown still close it.
+- **Esc is a window CAPTURE listener with `stopImmediatePropagation`** — the
+  first Esc takes the tooltip and the modal shell's bubble-phase Esc
+  never sees it; the next Esc takes the modal. The layering falls out of
+  the DOM's stop flag (the window's bubble invocation is skipped once the
+  capture one stops it).
+- **The long-press swallows the click from a window-capture `click`
+  listener**, armed by the fired press and cleared a tick after the
+  release, so a drag-away that never clicks cannot eat a later real tap.
+  The trigger's `contextmenu` is `preventDefault`ed while the press is
+  armed or just fired (Android's own long-press menu), and the CSS puts
+  `touch-action: manipulation` on every touch trigger + `user-select:
+  none` / no callout on the press ones.
+- **The follow poll** (a rAF while open) closes on a disconnected trigger
+  or a 0×0 box (a hidden chip) and re-positions a moved one — the card
+  shifting when a unit dies. Zero cost while nothing is open.
+- **`placeTooltip` is pure**: above by default; below when the top would
+  clip; when neither side fits, the roomier one, clamped; x clamped to the
+  margins with the caret sliding to stay on the trigger's center (inset
+  CARET_INSET_PX from the box ends). Nine pins, every expectation from the
+  constants + the inputs. Two of my first expectations were wrong (a
+  500 px box DOES fit below a y=50 trigger in a 600 px viewport; x=60 is
+  not yet in the clamp zone) — the code was right both times.
+- **The plate:** fixed, z-index 50 (above the sector-map overlay + its ✕,
+  below the scanlines), the green plate at `--text-13`, `white-space:
+  pre-line` (a `\n` in content is a line break), a 120 ms opacity fade
+  with a 2 px rise (dropped under reduced motion by `.is-still`, set by the
+  host at install — the JS check, not the round's first media query, which
+  is §99's), `#ui > .tooltip { pointer-events: none }` (the id-qualified
+  form beats the ui root's `> *` rule), and a `.tooltip__kbd` amber accent
+  for 97b's key hints.
+
+**Browser walk** (a scratch attach through the dev server's module graph —
+`await import('/src/ui/tooltip.ts')` is the SAME module instance Game
+holds, so the scratch triggers rendered into the real host; nothing
+committed): hover → open after the delay with `aria-describedby`, leave →
+closed, a warm re-open instant, the key pin surviving leave, Esc, a
+long-press opening with the trailing click swallowed (0) and the next tap
+counted (1), an outside pointerdown closing a pinned one, tap-toggle open
++ close on the bits chip (flipped BELOW at the top edge, the caret on the
+chip's center — screenshot), and a REAL Tab press (the computer tool)
+opening on the roster button with `:focus-visible` true. A programmatic
+`focus()` after pointer use reads `:focus-visible` false and opens
+nothing — the browser's heuristic, the wanted behavior. **Not verified:**
+the disconnected-trigger poll — the pane went hidden mid-probe and rAF
+stalled (the §96a bite again); it reads from code only, and the first
+live site that disposes under an open tooltip (97c's HUD cards) is where
+it gets its read. The `is-visible` class never shows in a blocking eval
+(it rides a rAF) — a screenshot after the eval returns is the proof, as
+HANDOFF's tips say.

@@ -222,13 +222,12 @@ none`; five calls user-signed: the key on the registry · long-press on
 controls, tap-toggle on text · the pip's tooltip not minted · tab stops
 on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
 
-- [ ] **97a — the component (headless-first).** `src/ui/tooltip.ts`:
-  `attachTooltip(el, content)` (string or lazy getter → string | Node), ONE
-  live element in the ui root, `role="tooltip"` + `aria-describedby` while
-  open; hover (short delay, warm window) · focus-visible · tap-toggle ·
-  Esc / pointer-leave / focus-out / a disconnected trigger; fixed,
-  flip-positioned, clamped, a caret. The placement math pure + pinned.
-  Exit: a scratch trigger shows on every route in the browser.
+- [x] **97a — the component (headless-first).** ✅ 2026-09-14 `8942d72`:
+  `src/ui/tooltip.ts` (`attachTooltip` / `installTooltipHost` /
+  `toggleTooltipKey` / `refreshTooltip`), `placeTooltip` pure + nine pins,
+  the plate in ui.css; browser-walked on scratch triggers — every route
+  but the disconnected-trigger poll (rAF stalled in the hidden pane).
+  WORKLOG §97a.
 - [ ] **97b — the key.** `showTooltip` in config + schema + the action
   list + a registry pin; Game wires it; `keyLabel` renders `Slash` as `/`.
   Prediction: fires the fuzz smoke (`config/`).

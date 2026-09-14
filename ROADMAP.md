@@ -237,10 +237,12 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   cache chip), `keyedTooltip` for the `[key]` hints, eight `t()` keys, the
   baseline 82 → 77; browser-walked in a live battle (the pause label live
   under the hotkey). ⏳ the long-press on the user's phone. WORKLOG §97c.
-- [ ] **97d — the pre-turn screen + the reward button.** Draw chip · risk
-  line · pass · packet chip · hand-card `▲` chips · the strip's two; the
-  reward Continue; `button()`'s option renamed; `tabindex=0` on the five
-  text sites. Closes the §96.5 TODO rider.
+- [x] **97d — the pre-turn screen + the reward button.** ✅ 2026-09-14
+  `277fb10`: seven sites (draw chip · risk line · pass · packet chip ·
+  hand-card `▲` chips · the strip's two) + `button({tooltip})` (the reward
+  Continue); `tabindex=0` on the text sites; the §96.5 rider closed; the
+  baseline 77 → 73; browser-walked to turn 2 (⏳ the packet chip, the `▲`
+  chips and the reward Continue read at the next playtest). WORKLOG §97d.
 - [ ] **97e — the cards + the board.** Compact level + power with
   persistent labels · the compact `▲` chip + its label (the user's eye) ·
   the full card's power row · the pip's dead title deleted.

@@ -1961,3 +1961,45 @@ site names the collision for §100). The literal baseline 82 → 77.
   edge); the only `[title]` elements left in the battle DOM are the 26
   compact-card level/power spans — 97e's. The long-press is the user's
   phone read.
+
+### 97d — the pre-turn screen + the reward button (2026-09-14)
+
+Seven sites → `attachTooltip` + the button factory's option (`277fb10`);
+the §96.5 strip rider closed in TODO; the literal baseline 77 → 73.
+
+- **A text site nested in a control takes the long-press, not the tap.**
+  The hand card's `▲` chips sit in the badge corner of a card whose click
+  IS the redraw / empower pick; a tap-toggle there would hijack the
+  card's tap in a 13 px corner. Call B's split (tap for text, press for
+  controls) gains its corollary: nested text inherits the control's
+  route. The chip still takes `tabindex=0` (call D).
+- **The risk line's content is a thunk** (`() => riskLineTitle(HEALTH.chipMode)`)
+  — the wording follows the live chip mode the way the line's own paint
+  does, instead of freezing at construction.
+- **The packet tooltip is two lines:** the config prose (the §95 sidecar's
+  text, untouched) on the first, the click hint (`pickHint` / `fireHint`,
+  two keys — not a template with a hole) on the second, joined by `\n`
+  under the plate's `pre-line`. The strip's glyph run reads one fallen
+  per line the same way (the old title joined them with commas).
+- **`buffChipTooltip` is the one shape** for the `▲` chip's words — added
+  to UnitCard.ts beside `buffModsSummary` now so 97e's in-battle marker
+  reuses it rather than re-composing the same template; the pre-turn
+  import kept `buffModsSummary` for the grant chip (the typecheck caught
+  the dropped import — the hook's value, once more, on the forgetful
+  path).
+- **`button({tooltip})` replaces `button({title})`;** the reward Continue
+  is the one consumer. The factory attaches with `touch: 'press'` since
+  everything it mints is a control.
+- **The walk** (a fresh run: the first frontier node was an event both
+  times this session — "A pile of bits" → Leave → the map → a battle):
+  the draw chip flips BELOW (it is pinned near the bottom edge), the risk
+  line, the pass (`Skip Idol of Mars — …`), then the battle hand-driven
+  (2000 `world.tick()` + `update(0.05)` pairs in 50-tick slices with a
+  30 ms yield so the end sequence's timers ran) to the turn-2 pre-turn
+  screen: both strip glyph runs (five and six fallen, one per line) and
+  the loss. **Not exercised:** the packet chip (nothing held), the `▲`
+  chips (no buffed slot by turn 2 — the Idol grant was passed by the
+  probe's blind "click the first button" walk, not taken), the reward
+  Continue (the encounter ran on). The next playtest that holds a packet,
+  empowers a card or clears an encounter reads all three; the code paths
+  are typechecked and identical in shape to the six that rendered.

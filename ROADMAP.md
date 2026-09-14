@@ -243,9 +243,12 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   Continue); `tabindex=0` on the text sites; the §96.5 rider closed; the
   baseline 77 → 73; browser-walked to turn 2 (⏳ the packet chip, the `▲`
   chips and the reward Continue read at the next playtest). WORKLOG §97d.
-- [ ] **97e — the cards + the board.** Compact level + power with
-  persistent labels · the compact `▲` chip + its label (the user's eye) ·
-  the full card's power row · the pip's dead title deleted.
+- [x] **97e — the cards + the board.** ✅ 2026-09-14 `e46b5c6`: the compact
+  card reads `LV 5` / `1 POW` (hints beside the number spans), the `▲`
+  chips labelled on both cards (⏳ the user's eye on which stays), the
+  three power tooltips, the level's title deleted, the pip's dead title
+  deleted; the baseline 73 → 71; browser-walked incl. a taken grant.
+  WORKLOG §97e.
 - [ ] **97f — the boss node + the exit.** The node's tooltip, the banner
   verified as the label; the zero-`title=` tripwire test; DESIGN §UI idioms
   "Tooltips"; the ARCHITECTURE line; this stub; the literal baseline

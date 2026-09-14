@@ -2003,3 +2003,43 @@ the §96.5 strip rider closed in TODO; the literal baseline 77 → 73.
   Continue (the encounter ran on). The next playtest that holds a packet,
   empowers a card or clears an encounter reads all three; the code paths
   are typechecked and identical in shape to the six that rendered.
+
+### 97e — the cards + the board (2026-09-14)
+
+The two real sole-source sites labelled, three power tooltips, the pip's
+dead title deleted (`e46b5c6`); the literal baseline 73 → 71.
+
+- **The persistent hints live BESIDE the number spans, never inside.** A
+  promotion writes `levelValue.textContent` (the compact card points it at
+  the level span), so a hint nested in that span would vanish at the
+  first level-up; each number keeps its span and gains a wrapper
+  (`-level-wrap` / `-power-wrap`) carrying the 9 px uppercase hint and the
+  color. At 11 px the two wraps measure 21 + 27 px inside the 64 px card.
+- **The level's title is deleted, not converted.** Once the number reads
+  `LV 5`, a tooltip saying "Level 5" is the label twice; the charter's
+  "replaces the sites" is met by the label. The power keeps the §91d
+  clarifier as its tooltip (a thunk over the live number).
+- **Call E is built on both chips for the user's eye:** `▲ HONED` at
+  10 px on the compact card (a 40 px chip in the 64 px card) and at 13 px
+  on the pre-turn hand card. Trimming either is a two-line delete. The
+  `▲` tooltip is `buffChipTooltip` on both (`Honed ×1` / the mods line).
+- **The nested-text corollary applied by team:** a chip or a power wrap
+  inside an ENEMY compact card is inside a control (its click is the
+  engage objective) → the long-press; inside a player card → a tap. The
+  team is read off the card's own `unit-card--enemy` class in the
+  updater, which has no other handle on it. The full card's power row
+  takes the long-press everywhere (a recruit card is a pick).
+- **Call C landed as a deletion:** the pip's `title` line and its "hover
+  nicety" comment are gone, with the reason at the site (the host is
+  `pointer-events: none`; the compact card's status row is the read).
+- **The walk:** a fresh run (the same event → Leave → battle path); the
+  compact cards read `LV 5 · 1 POW` / `LV 4 · 1 POW` with both power
+  tooltips and no level tooltip; the full card's power row on the hand;
+  the Idol of Mars grant taken on a hand card → the labelled chip on the
+  hand card, then on the compact card in battle. One instrument note: the
+  compact `▲` chip is painted by the HUD's per-frame status pass, so a DOM
+  read in the same eval as the scene swap found 0 chips while the
+  screenshot taken after the eval showed the chip — the read a frame
+  later found it (a rAF-painted element is invisible to a same-task
+  probe; the §96a lesson in a new coat). Zero `[title]` elements left in
+  the battle DOM; the census is down to the boss map node (97f).

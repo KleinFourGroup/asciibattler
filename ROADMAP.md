@@ -249,10 +249,13 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   three power tooltips, the level's title deleted, the pip's dead title
   deleted; the baseline 73 → 71; browser-walked incl. a taken grant.
   WORKLOG §97e.
-- [ ] **97f — the boss node + the exit.** The node's tooltip, the banner
-  verified as the label; the zero-`title=` tripwire test; DESIGN §UI idioms
-  "Tooltips"; the ARCHITECTURE line; this stub; the literal baseline
-  regenerated; the playtest.
+- [x] **97f — the boss node + the exit.** ✅ 2026-09-14 `2c4adcc`: the
+  node's tooltip (the banner carries the copy — never sole-source);
+  `tests/ui-tooltips.test.ts` pins zero native `title=` in src/ui +
+  src/render (its regex self-checked against the pre-97c tree); DESIGN
+  §UI idioms "Tooltips (97)"; the ARCHITECTURE line. ⏳ **the user's
+  playtest closes the phase** (the tap / long-press on the phone; the
+  packet chip + reward Continue unreached by the pane). WORKLOG §97f.
 
 ## Phase 98 — color redundancy
 

@@ -2043,3 +2043,41 @@ dead title deleted (`e46b5c6`); the literal baseline 73 → 71.
   later found it (a rAF-painted element is invisible to a same-task
   probe; the §96a lesson in a new coat). Zero `[title]` elements left in
   the battle DOM; the census is down to the boss map node (97f).
+
+### 97f — the boss node + the exit (2026-09-14)
+
+The last site converted, the tripwire landed, the idiom written
+(`2c4adcc`). `src/ui` + `src/render` carry zero native `title=`.
+
+- **The boss forewarning was never sole-source** — the kickoff flagged it
+  as one of four; the banner sub-line (`Boss: name — layout`,
+  MapScreen.ts:203) carries the copy in full, read in the browser beside
+  the tooltip. The four "sole-source" sites of the Round 7 audit resolved
+  as: the pip DEAD (never reachable, 97e deleted it), the boss node NOT
+  sole-source (the banner), the compact level/power and the `▲` chip REAL
+  (97e labelled them). Two of four — the audit's finding was right in
+  shape and half-right in count; the kickoff's re-audit is what found the
+  other two before a label was minted for nothing.
+- **The tripwire's regex was self-checked against the pre-97c tree
+  before it was trusted** (the 94c rule): a line-based `grep -E` variant
+  reported 5 pre-turn sites where the file had 7 — two assignments carry
+  their value on the NEXT line (`drawChip.title =\n  '…'`), and a
+  `=[^=]` tail needs a character after the `=`. The test's `=(?!=)`
+  lookahead matches at end of line and listed all seven plus the HUD's
+  four. An instrument that reads "5" for a known 7 is the instrument
+  talking — the reader was re-derived, not the expectation.
+- **DESIGN §UI idioms "Tooltips (97)"** states the idiom in one
+  paragraph: the one element, the four routes, the touch split by what
+  the element IS, the key's pin semantics, the never-sole-channel rule
+  with the three labels it produced, the tab-stop placement, the pip's
+  deliberate absence. ARCHITECTURE's tree gains tooltip.ts and the
+  factory's `tooltip?`.
+- **What the exit criterion reads at this commit:** every one of the 20
+  census sites is an `attachTooltip` site or a deliberate deletion (the
+  pip, the compact level); hover / focus / key are browser-proven across
+  97a–97f; the tap and the long-press are code-proven (synthetic touch
+  pointer events in 97a) and phone-pending — the user's playtest is the
+  read that closes the phase. Unexercised in the pane across the phase:
+  the packet chip and the reward Continue (no packet held, no encounter
+  cleared in a probe run), the disconnected-trigger poll (rAF stalls in a
+  hidden pane; a dead card grays in place).

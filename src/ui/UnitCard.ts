@@ -37,6 +37,8 @@ import { statusColor, empowerColor, empowerLabel } from '../render/statusDisplay
 import { STAT_LABELS } from './statLabels';
 import { HEALTH } from '../config/health';
 import { powerTooltip } from './chipLabels';
+import { attachTooltip } from './tooltip';
+import { t } from '../i18n/ui';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { EmpowerStackView } from '../run/empower';
 
@@ -250,16 +252,39 @@ function buildCompactCard(data: UnitCardData, opts: UnitCardOptions): UnitCardHa
 
   const top = document.createElement('div');
   top.className = 'unit-card__compact-top';
+  // 97e — the two numbers were bare (a hover title was their only name: the
+  // kickoff's sole-source finding). Each now carries a PERSISTENT hint in a
+  // wrapper beside the number span — never inside it, because a promotion
+  // rewrites `levelValue.textContent` and would eat a nested hint. The level
+  // needs no tooltip once it reads `LV 5`; the power keeps the §91d clarifier.
+  const levelWrap = document.createElement('span');
+  levelWrap.className = 'unit-card__compact-level-wrap';
+  const levelHint = document.createElement('span');
+  levelHint.className = 'unit-card__compact-hint';
+  levelHint.textContent = t('card.hint.level');
   const level = document.createElement('span');
   level.className = 'unit-card__compact-level';
   level.textContent = String(data.level);
-  level.title = `Level ${data.level}`;
+  levelWrap.append(levelHint, level);
+  const powerWrap = document.createElement('span');
+  powerWrap.className = 'unit-card__compact-power-wrap';
   const power = document.createElement('span');
   power.className = 'unit-card__compact-power';
   power.textContent = String(data.stats.power);
-  // §91d — the clarifier reads by the live chip mode + this card's side.
-  power.title = `${STAT_LABELS.power} ${data.stats.power} — ${powerTooltip(HEALTH.chipMode, opts.team ?? 'player')}`;
-  top.append(level, power);
+  const powerHint = document.createElement('span');
+  powerHint.className = 'unit-card__compact-hint';
+  powerHint.textContent = STAT_LABELS.power;
+  powerWrap.append(power, powerHint);
+  // §91d — the clarifier reads by the live chip mode + this card's side. An
+  // enemy card is a control (its click is the engage objective), so the
+  // nested text takes the long-press; a player card is inert, so a tap.
+  const team = opts.team ?? 'player';
+  attachTooltip(
+    powerWrap,
+    () => `${STAT_LABELS.power} ${power.textContent} — ${powerTooltip(HEALTH.chipMode, team)}`,
+    { touch: team === 'enemy' ? 'press' : 'tap' },
+  );
+  top.append(levelWrap, powerWrap);
 
   const glyph = document.createElement('div');
   glyph.className = 'unit-card__glyph';
@@ -380,12 +405,22 @@ export function updateCardEmpowerMarkers(
   row.dataset.sig = signature;
   row.replaceChildren();
   row.hidden = stacks.length === 0;
+  // 97e — a chip inside an ENEMY card is nested in a control (the card's
+  // click is the engage objective) → the long-press; a player card's → a tap.
+  const touch = handles.el.classList.contains('unit-card--enemy') ? 'press' : 'tap';
   for (const s of stacks) {
     const chip = document.createElement('span');
     chip.className = 'unit-card__empower-chip';
     chip.style.color = empowerColor(s.key);
     chip.textContent = s.magnitude <= 3 ? '▲'.repeat(s.magnitude) : `▲×${s.magnitude}`;
-    chip.title = `${buffKeyLabel(s.key)} ×${s.magnitude} — ${buffModsSummary(s.mods)}`;
+    // 97e — the persistent label (the kickoff's call E, by the user's eye):
+    // the key's name beside the triangles, so the hue is never the only
+    // channel. The tooltip carries the mods.
+    const label = document.createElement('span');
+    label.className = 'unit-card__empower-chip-label';
+    label.textContent = buffKeyLabel(s.key);
+    chip.appendChild(label);
+    attachTooltip(chip, buffChipTooltip(s.key, s.magnitude, s.mods), { touch });
     row.appendChild(chip);
   }
 }
@@ -513,11 +548,13 @@ function buildStatRow(
   label.className = 'unit-card__stat-label';
   label.textContent = STAT_LABELS[key];
   if (isPower) {
-    // §91d — side-agnostic here (roster / recruit / promotion cards).
-    row.title = `Power — ${powerTooltip(HEALTH.chipMode)}`;
+    // §91d — side-agnostic here (roster / recruit / promotion cards). 97e —
+    // the row sits inside cards that may be controls (a recruit pick), so
+    // the touch route is the long-press.
+    attachTooltip(row, () => `${STAT_LABELS.power} — ${powerTooltip(HEALTH.chipMode)}`, { touch: 'press' });
     const hint = document.createElement('span');
     hint.className = 'unit-card__power-hint';
-    hint.textContent = 'morale';
+    hint.textContent = t('card.hint.morale');
     label.append(' ', hint);
   }
 

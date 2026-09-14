@@ -362,11 +362,13 @@ export class UnitOverlayLayer {
       const r = readouts[i]!;
       const pip = strip.children[i] as HTMLDivElement;
       const fill = pip.firstElementChild as HTMLDivElement;
-      // Recolor + retitle only when this slot's status identity changes (the
-      // common per-tick path keeps the same status here and skips these writes).
+      // Recolor only when this slot's status identity changes (the common
+      // per-tick path keeps the same status here and skips the write). 97e —
+      // no title and no tooltip: the overlay host is `pointer-events: none`,
+      // so the old hover name was never reachable, and the compact card's
+      // status row (swatch + name + meta) is the read for this pip.
       if (pip.dataset.sid !== r.statusId) {
         pip.dataset.sid = r.statusId;
-        pip.title = r.name; // a hover nicety; the card row carries the live numbers
         fill.style.background = statusColor(r.statusId);
       }
       const opacity = pipBrightness(r).toFixed(2);

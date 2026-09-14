@@ -3417,3 +3417,43 @@ body {
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+/* 97e — THE COMPACT CARD'S PERSISTENT HINTS (the §97 sole-source fix): the
+   level and power numbers each carry a tiny uppercase hint in a wrapper
+   beside the number span (`LV 5` / `1 POW`), the wrap owning the color so
+   the hint inherits it. The `▲` chips carry the buff key's name beside the
+   triangles (the kickoff's call E — by the user's eye; the hue is never the
+   only channel). */
+.unit-card__compact-level-wrap,
+.unit-card__compact-power-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+.unit-card__compact-level-wrap {
+  color: var(--color-terminal-amber);
+}
+.unit-card__compact-power-wrap {
+  color: var(--color-flourescent-blue);
+}
+.unit-card__compact-hint {
+  font-size: var(--text-9);
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+.unit-card__empower-chip-label {
+  font-size: var(--text-9);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  margin-left: 3px;
+}
+.preturn-card-empower-chip-label {
+  font-size: var(--text-10);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.8;
+  margin-left: 4px;
+}

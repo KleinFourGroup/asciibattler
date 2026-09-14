@@ -96,5 +96,7 @@
   "preturn.drawChip.tooltip": "Cards dealt into your hand each turn. Daemons can raise it permanently; packets can draw extra this turn.",
   "preturn.pass.tooltip": "Skip {name} — final for this turn (the queue moves on)",
   "preturn.packet.pickHint": "click, then pick a card",
-  "preturn.packet.fireHint": "fires on click"
+  "preturn.packet.fireHint": "fires on click",
+  "card.hint.level": "Lv",
+  "card.hint.morale": "morale"
 }

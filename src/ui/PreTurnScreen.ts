@@ -85,7 +85,7 @@ import { button } from './button';
 import { attachTooltip } from './tooltip';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffChipTooltip, buffModsSummary } from './UnitCard';
-import { empowerColor } from '../render/statusDisplay';
+import { empowerColor, empowerLabel } from '../render/statusDisplay';
 import { CardListButton } from './CardListModal';
 
 /**
@@ -989,6 +989,11 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
       // color the in-battle marker uses, so the vocabulary carries over).
       chip.style.color = empowerColor(stack.key);
       chip.textContent = stack.magnitude <= 3 ? '▲'.repeat(stack.magnitude) : `▲×${stack.magnitude}`;
+      // 97e — the persistent label beside the triangles (call E, by eye).
+      const label = document.createElement('span');
+      label.className = 'preturn-card-empower-chip-label';
+      label.textContent = empowerLabel(stack.key);
+      chip.appendChild(label);
       // 97d — a text site NESTED in a control (the card's click is the
       // redraw / empower pick), so the touch route is the long-press: a tap
       // on the badge corner belongs to the card. Tab reaches it.

@@ -15,6 +15,6 @@
   "src/ui/RecruitScreen.ts": 1,
   "src/ui/RewardScreen.ts": 2,
   "src/ui/SectorClearedScreen.ts": 5,
-  "src/ui/UnitCard.ts": 5,
+  "src/ui/UnitCard.ts": 3,
   "src/ui/promotionDelta.ts": 3
 }

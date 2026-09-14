@@ -62,7 +62,7 @@ export class RewardScreen extends Screen {
     // (accept what you want, walk away in one click instead of N).
     const cont = button(`${t('common.continue')} ▸`, {
       className: 'btn--primary',
-      title: t('reward.continueTitle'),
+      tooltip: t('reward.continueTitle'),
       onClick: () => this.continueRun(),
     });
     panel.appendChild(cont);

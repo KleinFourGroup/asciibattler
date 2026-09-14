@@ -346,4 +346,4 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **The reduced-motion path, unverified.** `prefersReducedMotion()` → no orb flight, no shake, no notch breathing; the preview pane cannot emulate the media query. One native-browser check with the OS setting on.
 - [ ] **A settings toggle for the shake policy** (`lossFx.ts` SHAKE POLICY: `player` ships, `enemy` the user's A/B hypothesis; Ctrl+Alt+K cycles it dev-only) — Round 8's settings surface, with the fraction-vs-absolute question if flat ever feels dull.
 - [ ] **The encounter's LAST turn's fallen rows** have no screen since 96.5d (the pre-turn strip shows the previous turn; a won encounter goes to the reward flow) — §102's run-end stats is the home; if the wait bites in a playtest, a one-line strip on the reward screen is the cheap interim.
-- [ ] **The strip's two `title=` hovers** (the glyph run's names, the loss's rule wording) — §97's tooltip sweep.
+- [x] **The strip's two `title=` hovers** (the glyph run's names, the loss's rule wording) — ✅ 97d (2026-09-14): both are `attachTooltip` text sites, one fallen per line, Tab-reachable (WORKLOG §97d).

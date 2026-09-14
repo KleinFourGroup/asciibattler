@@ -92,5 +92,9 @@
   "hud.tooltip.focus": "Focus: click, then left-click a target — or right-click the board",
   "hud.pause.pause": "Pause",
   "hud.pause.resume": "Resume",
-  "hud.pause.fightNow": "Fight now"
+  "hud.pause.fightNow": "Fight now",
+  "preturn.drawChip.tooltip": "Cards dealt into your hand each turn. Daemons can raise it permanently; packets can draw extra this turn.",
+  "preturn.pass.tooltip": "Skip {name} — final for this turn (the queue moves on)",
+  "preturn.packet.pickHint": "click, then pick a card",
+  "preturn.packet.fireHint": "fires on click"
 }

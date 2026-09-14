@@ -18,13 +18,16 @@
  * right) — layout is the screen's, look is the idiom's.
  *
  * `label` may be '' for a button that carries children (the character
- * select card); `title` is the native tooltip until §97 replaces it.
+ * select card); `tooltip` (97d) attaches the §97 tooltip — a control, so a
+ * long-press on touch, the tap keeps acting.
  */
+
+import { attachTooltip, type TooltipContent } from './tooltip';
 
 export interface ButtonOptions {
   readonly className: string;
   readonly onClick: (ev: MouseEvent) => void;
-  readonly title?: string;
+  readonly tooltip?: TooltipContent;
 }
 
 export function button(label: string, opts: ButtonOptions): HTMLButtonElement {
@@ -32,7 +35,7 @@ export function button(label: string, opts: ButtonOptions): HTMLButtonElement {
   el.type = 'button';
   el.className = opts.className;
   if (label !== '') el.textContent = label;
-  if (opts.title !== undefined) el.title = opts.title;
+  if (opts.tooltip !== undefined) attachTooltip(el, opts.tooltip, { touch: 'press' });
   el.addEventListener('click', opts.onClick);
   return el;
 }

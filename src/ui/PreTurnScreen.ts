@@ -82,8 +82,9 @@ import type { FallenRecord } from '../run/Run';
 import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { Screen } from './Screen';
 import { button } from './button';
+import { attachTooltip } from './tooltip';
 import { renderPoolGauge } from './poolGauge';
-import { buildUnitCard, unitCardFromTemplate, buffKeyLabel, buffModsSummary } from './UnitCard';
+import { buildUnitCard, unitCardFromTemplate, buffChipTooltip, buffModsSummary } from './UnitCard';
 import { empowerColor } from '../render/statusDisplay';
 import { CardListButton } from './CardListModal';
 
@@ -582,8 +583,9 @@ export class PreTurnScreen extends Screen {
     const drawChip = document.createElement('div');
     drawChip.className = 'preturn-draw-chip';
     drawChip.textContent = `Draw: ${this.drawAmount}`;
-    drawChip.title =
-      'Cards dealt into your hand each turn. Daemons can raise it permanently; packets can draw extra this turn.';
+    // 97d — a text site: tap toggles, Tab reaches it (the kickoff's call D).
+    drawChip.tabIndex = 0;
+    attachTooltip(drawChip, t('preturn.drawChip.tooltip'));
     panel.appendChild(drawChip);
 
     const heading = document.createElement('div');
@@ -651,7 +653,8 @@ export class PreTurnScreen extends Screen {
     // player sees the worst case BEFORE committing the redraw/empower.
     const risk = document.createElement('div');
     risk.className = 'preturn-risk';
-    risk.title = riskLineTitle(HEALTH.chipMode);
+    risk.tabIndex = 0;
+    attachTooltip(risk, () => riskLineTitle(HEALTH.chipMode));
     panel.appendChild(risk);
     // 96.5c — held + painted through one function so the hand-swap and
     // packet-fire refreshes repaint the same line (the string through t()
@@ -850,7 +853,7 @@ export class PreTurnScreen extends Screen {
       pass.type = 'button';
       pass.className = 'preturn-pass';
       pass.textContent = 'Pass ▸';
-      pass.title = `Skip ${active.name} — final for this turn (the queue moves on)`;
+      attachTooltip(pass, t('preturn.pass.tooltip', { name: active.name }), { touch: 'press' });
       pass.addEventListener('click', () => {
         this.audio.play('click');
         // The refresh rides turn:grantPassed → updateGrantPassed.
@@ -943,9 +946,13 @@ export class PreTurnScreen extends Screen {
     const isArmed = this.armedPacketIndex === cacheIndex;
     chip.className = `packet-chip${isArmed ? ' packet-chip--armed' : ''}`;
     chip.textContent = `▤ ${packet.name}`;
-    chip.title =
-      packet.description +
-      (packet.target === 'unit' ? ' — click, then pick a card' : ' — fires on click');
+    // 97d — the packet's prose (config, the §95 sidecar) on the first line,
+    // the click hint on the second; a long-press on touch (the tap fires).
+    attachTooltip(
+      chip,
+      `${packet.description}\n${packet.target === 'unit' ? t('preturn.packet.pickHint') : t('preturn.packet.fireHint')}`,
+      { touch: 'press' },
+    );
     chip.addEventListener('click', () => {
       this.audio.play('click');
       if (packet.target === 'none') {
@@ -982,7 +989,11 @@ function renderHandCard(unit: UnitTemplate, stacks: readonly EmpowerStackView[])
       // color the in-battle marker uses, so the vocabulary carries over).
       chip.style.color = empowerColor(stack.key);
       chip.textContent = stack.magnitude <= 3 ? '▲'.repeat(stack.magnitude) : `▲×${stack.magnitude}`;
-      chip.title = `${buffKeyLabel(stack.key)} ×${stack.magnitude} — ${buffModsSummary(stack.mods)}`;
+      // 97d — a text site NESTED in a control (the card's click is the
+      // redraw / empower pick), so the touch route is the long-press: a tap
+      // on the badge corner belongs to the card. Tab reaches it.
+      chip.tabIndex = 0;
+      attachTooltip(chip, buffChipTooltip(stack.key, stack.magnitude, stack.mods), { touch: 'press' });
       badge.appendChild(chip);
     }
     el.appendChild(badge);
@@ -1061,21 +1072,28 @@ function lastTurnSide(
     glyphs.textContent = t('lastturn.nobody');
   } else {
     glyphs.textContent = mine.map((r) => glyphForArchetype(r.archetype)).join(' ');
-    glyphs.title = mine
-      .map((r) =>
-        t('lastturn.fallen', {
-          name: ARCHETYPE_CONFIG[r.archetype]?.name ?? r.archetype,
-          level: r.level,
-          power: r.power,
-        }),
-      )
-      .join(', ');
+    // 97d — one fallen per line (the §96.5 rider closed): a text site, tap
+    // toggles, Tab reaches it.
+    glyphs.tabIndex = 0;
+    attachTooltip(
+      glyphs,
+      mine
+        .map((r) =>
+          t('lastturn.fallen', {
+            name: ARCHETYPE_CONFIG[r.archetype]?.name ?? r.archetype,
+            level: r.level,
+            power: r.power,
+          }),
+        )
+        .join('\n'),
+    );
   }
   const loss = document.createElement('span');
   loss.className = 'preturn-lastturn-loss';
   const lost = mine.reduce((s, r) => s + r.power, 0);
   loss.textContent = lost > 0 ? `−${lost}` : '0';
-  loss.title = ruleWording;
+  loss.tabIndex = 0;
+  attachTooltip(loss, ruleWording);
   el.append(name, glyphs, loss);
   return el;
 }

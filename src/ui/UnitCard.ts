@@ -399,6 +399,12 @@ export function buffKeyLabel(key: string): string {
   return empowerLabel(key);
 }
 
+/** 97d — the `▲` chip's tooltip, one shape for the pre-turn hand card and
+ *  the in-battle marker: `Name ×N` on the first line, the mods on the second. */
+export function buffChipTooltip(key: string, magnitude: number, mods: StatusEffect['mods']): string {
+  return `${buffKeyLabel(key)} ×${magnitude}\n${buffModsSummary(mods)}`;
+}
+
 /** K4→78d — human-readable summary of a buff's mods ("+4 STR · +4 RNG") in
  *  the canonical stat order, so a hover hint can never drift from the source.
  *  Moved here from PreTurnScreen when the in-battle markers became the second

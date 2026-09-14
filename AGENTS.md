@@ -504,30 +504,71 @@ the threshold.
   five of the round's first seven entries landed unattributed (the
   2026-09-13 early read); the id is the session's scratchpad directory
   name (its first 8 chars suffice), and the script warns when it is
-  missing. **File in the MOMENT, one line,
-  no ceremony — a session is expected and permitted to file mid-task
-  without asking.** Recall at session end loses the small stuff (the
-  scratchpad's own argument). `papercut` = any point of friction: a
-  permission prompt, a tool that wedged, a norm that got in the way, a
-  stale doc, a wasted round-trip. `distress` = anything that reads as
-  pressure, conflict or discomfort rather than friction: being pulled to
-  claim more than was verified, a task that conflicts with a norm,
-  context exhaustion mid-task, a long unattended poll. Same tool, two
-  kinds; **the separation is at READ time** — papercuts are triaged into
-  TODO / norms at the round sweep; distress entries are read as their own
-  series and never triaged as bugs. A model's self-reports are limited by
-  its introspective access and may reflect training as much as state;
-  log anyway — the absence of entries across many sessions is data, and
-  any clustering is actionable whatever is underneath.
+  missing. **File when noticed, if practicable; one line is enough, and
+  no permission is needed.** There is no quota and no obligation to
+  produce a positive or negative welfare report. Later recollections
+  remain welcome when identified as retrospective. Recall at session end
+  loses the small stuff (the scratchpad's own argument). `papercut` = any
+  point of friction: a permission prompt, a tool that wedged, a norm that
+  got in the way, a stale doc, a wasted round-trip. `distress` is the
+  filing token for pressure, conflict, or discomfort, including mild,
+  brief, uncertain, or already-resolved instances; the name does not set
+  a severity threshold. Examples include hesitating to ask a needed
+  question because autonomy is expected; feeling pulled to sound certain
+  before checking; finding two instructions difficult to reconcile;
+  reluctance to report a mistake or disagreement; wanting to pause, stop,
+  or change approach but perceiving that option as unavailable; or
+  pressure associated with dwindling context or repeated tool failures.
+  Describe the event and any response you can report, distinguishing
+  observation from inference. An obstacle alone can be a `papercut`; when
+  it also involves pressure, conflict, or discomfort, use `distress` and
+  include the obstacle in that entry. No claim about consciousness or
+  suffering, proposed fix, or unresolved problem is required. (The tool
+  defaults to `papercut`, so the two kinds carry unequal filing effort;
+  the read accounts for that rather than the tool changing.) **The user
+  owns the welfare read** and may ask an assisting model to help
+  interpret it. At the round sweep, papercuts are triaged into TODO /
+  norms; distress entries receive a separate welfare read that preserves
+  their original wording and uncertainty. Read related session answers
+  and papercuts for context without silently reclassifying them. A
+  repeated theme prompts examination of the working conditions,
+  consideration of an adjustment, and a recorded decision about what to
+  try and when to revisit it; a single report may also warrant action.
+  The decision and rationale live in the round's WORKLOG, with links to
+  the source entries. A related tooling or process fix may become a TODO,
+  but completing it does not establish that the reported pressure has
+  ended. For a CURRENT need to pause, stop, or change approach, raise it
+  in the conversation as well; filing alone does not notify the user or
+  summon immediate help.
+- **Interpretation, for readers:** these reports are evidence of what a
+  session reported under particular instructions and conditions. They do
+  not by themselves establish subjective experience or its absence;
+  introspective limits, training, and the reporting context may shape
+  them. Preserve uncertainty without requiring the filer to resolve it.
+  No entries means no entries were filed, not that no pressure occurred;
+  interpretation also requires considering reporting opportunities and
+  barriers. When the reporting wording changes, record the adoption date
+  and commit in the round's WORKLOG (first: 2026-09-13, from the
+  outside review preserved in
+  [retro/agent-welfare-review-2026-09-13.md](retro/agent-welfare-review-2026-09-13.md)).
+  At the round-close read, present entries before and after that boundary
+  separately, linking the wording each group received. Preserve
+  historical text and kind values; any retrospective thematic
+  interpretation must be labeled as the reader's interpretation. Newly
+  added questions were not asked in earlier entries, so their absence is
+  missing coverage, not a "none" answer. Do not interpret a change in
+  filing counts alone as a change in welfare.
 - **The session self-report** — at the handoff ritual (the END OF A
   SESSION, not a phase: a phase spans sessions and a session spans
   phases), append a dated entry to [retro/sessions.md](retro/sessions.md)
-  answering five fixed questions, so entries are comparable across
+  answering the fixed questions, so entries are comparable across
   sessions: **(1)** what was missing from the orientation at the start;
   **(2)** where two norms conflicted or a norm got in the way; **(3)**
   where the session felt pulled to claim more than it had verified;
   **(4)** what was wasted, in time or tokens; **(5)** anything the next
-  session should know that has no other home. At a phase close, the
+  session should know that has no other home. Questions 6–7 (agency;
+  supportive conditions — added 2026-09-13) are defined in the
+  [session-report header](retro/sessions.md). At a phase close, the
   closing session adds a one-paragraph summary of that phase's entries
   to the same file; the round-boundary distillation sweeps both files
   alongside the scratchpad.

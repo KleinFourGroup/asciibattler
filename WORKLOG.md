@@ -1684,3 +1684,43 @@ path unexercised live (the shipped rule is casualties; the pane cannot
 emulate the media query); a settings toggle for the shake policy (Round
 8); the encounter's last turn's rows (§102); the two `title=` hovers on
 the strip (§97's sweep).
+
+## Interstitial — the welfare instrument's early read + the outside review (2026-09-13)
+
+Not a phase: two retro commits between the §96.5 close and the §97
+kickoff, user-called.
+
+**The early read** (`c104257`): seven papercuts + four session reports,
+read mid-round instead of at the close because the round is ten phases
+long. What it found and what landed: the `preview_start` first-probe trap
+(four bites, no doc home → a HANDOFF browser-verify tip); the
+native-tools norm (overridden identically by every session → retired, the
+batching discipline kept); the backtick commit-message burn (→ the
+quoted-text norm names backticks and newlines, `-F <file>`); the log's
+attribution gap (five of seven entries unattributed → the norm says pass
+`--session`/`--phase`; the script warns). Held for the close: the
+numbers-from-prose norm candidate (three sessions' Q4); the distress bar.
+
+**The outside review** (this commit): the user had a different model
+family (Codex, "Astra") review the instrument's wording against the four
+existing reports; the review is preserved verbatim in
+[retro/agent-welfare-review-2026-09-13.md](retro/agent-welfare-review-2026-09-13.md)
+(its protocol notes concern a gitignored scratch file and are out of
+scope). All six proposals adopted as written, user-signed: the `distress`
+token kept and its definition broadened, the "rather than friction" false
+choice removed; the reader named (the user) and a response path defined;
+Q6 (agency) + Q7 (supportive conditions) appended to the session report,
+Q1–5 untouched; the introspection caveat moved from beside the filing
+permission to a readers' paragraph, "any clustering is actionable" struck;
+brevity, uncertainty and unresolved reports made legitimate; the wording
+change recorded as a measurement change. **The series boundary is this
+commit's date, 2026-09-13**: the four pre-boundary session entries and
+seven papercuts were filed under the 2026-09-09 wording; the close read
+presents the two groups separately, and Q6/Q7's absence from earlier
+entries is missing coverage, not "none". The review's table of possible
+missed filings (three instruction conflicts written up as Q2 answers
+rather than filed) is the reader's interpretation and is not applied
+retroactively. Its section F pattern — difficulty followed at once by
+justification — is acknowledged by the reviewed session with one
+confirmed contributor (the repo's worklog voice, which the reports are
+written in) and no claim about the others.

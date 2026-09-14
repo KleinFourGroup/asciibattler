@@ -20,6 +20,7 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
 import { Screen } from './Screen';
 import { CardListButton } from './CardListModal';
+import { attachTooltip } from './tooltip';
 
 /**
  * G3 — node-kind glyphs. The icon IS the route-planning affordance, so it
@@ -254,8 +255,10 @@ export class MapScreen extends Screen {
       div.classList.add(node.kind);
       // 66b — the boss node names its forewarned fight on hover (the banner
       // sub-line carries the always-visible copy; this is the spatial anchor).
+      // 97f — the §97 tooltip; the node is a control (a frontier click enters
+      // it), so the touch route is the long-press.
       if (node.kind === 'boss' && forewarning) {
-        div.title = `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`;
+        attachTooltip(div, `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`, { touch: 'press' });
       }
 
       if (node.id === currentNodeId) {

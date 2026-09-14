@@ -246,6 +246,34 @@ fallen as glyphs, the loss). Under reduced motion nothing flies or shakes
 — the ghost ticks at the event. Every timing and threshold is a UI
 constant; a death's card fades to gray as its orb leaves.
 
+**Tooltips (97).** One component, ONE live element (`attachTooltip(el,
+content, {touch})`, src/ui/tooltip.ts), the terminal plate at the small
+text size, fixed and out of flow so it never shifts layout: above the
+trigger's center, flipped below when the top would clip, clamped to the
+viewport with the caret kept on the trigger. Four routes: hover (a short
+delay, none inside the warm window after a close), keyboard focus when
+`:focus-visible` holds, touch, and the `showTooltip` key (`/`, on the
+rebindable registry: it PINS the open one so a pointer can leave, closes
+a pinned one, or opens pinned on the focused else hovered trigger). Esc,
+pointer-leave (unpinned), focus-out, a pointerdown elsewhere, and a
+trigger leaving the document close it; the trigger carries
+`aria-describedby` while open. **Touch splits by what the element IS:** a
+text site (a number, a chip, a strip) TAP-toggles; a control (a button, a
+clickable card or node) LONG-PRESSES, since its tap must keep acting, and
+the trailing click is swallowed; text nested inside a control inherits the
+control's route. Content is a string or a thunk read at every open (a live
+label, a rebound key), rich content is a node; `keyedTooltip(text, key)`
+ends a hint in `[key]` in the amber accent; a line break in content is a
+line. **A tooltip is never the sole channel for information the player
+must act on** (the spec's rule): the compact card reads `LV 5` / `1 POW`
+in a persistent hint, the `▲` empower chip carries its key's name beside
+the triangles, the boss node's copy is on the map banner. Tab stops on
+tooltip-only text live where the player has time to Tab (the pre-turn
+screen); battle-card text is a hover and key read until §100 sweeps focus
+order. The board status pip has NO tooltip — the overlay takes no pointer
+events, and the compact card's status row is its read. Zero native
+`title=` in `src/ui` + `src/render` (a tripwire test).
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay

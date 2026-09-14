@@ -3343,3 +3343,77 @@ body {
   opacity: 0.7;
 }
 
+
+/* 97a — THE TOOLTIP (src/ui/tooltip.ts): ONE live element in #ui, the
+   terminal plate at the small text size, fixed + out of flow so it never
+   shifts layout; above the trigger by default, flipped below (data-side)
+   when the top would clip; the caret rides `left` and points at the
+   trigger's center even when the box is clamped to the viewport edge. The
+   id-qualified form beats `#ui > * { pointer-events: auto }` — a pointer
+   must never hover the tooltip itself (it would flicker over its trigger).
+   z-index 50: above the sector-map overlay (40) + its ✕ (42), below
+   #scanlines (1000). The fade mirrors TOOLTIP_FADE_MS; `.is-still` (reduced
+   motion, set by the host at install) drops the rise and keeps the fade. */
+#ui > .tooltip {
+  pointer-events: none;
+}
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  max-width: 280px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: var(--color-terminal-green);
+  background: rgba(0, 0, 0, 0.92);
+  border: 1px solid var(--color-terminal-green);
+  box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.35);
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.tooltip[data-side='below'] {
+  transform: translateY(-2px);
+}
+.tooltip.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.tooltip.is-still {
+  transform: none;
+  transition: opacity 120ms ease;
+}
+.tooltip__body {
+  white-space: pre-line;
+}
+.tooltip__caret {
+  position: absolute;
+  width: 0;
+  height: 0;
+  margin-left: -6px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.tooltip[data-side='above'] .tooltip__caret {
+  bottom: -7px;
+  border-top: 6px solid var(--color-terminal-green);
+}
+.tooltip[data-side='below'] .tooltip__caret {
+  top: -7px;
+  border-bottom: 6px solid var(--color-terminal-green);
+}
+/* A keyboard hint inside a tooltip (`[/]`, `[Space]`): the amber accent. */
+.tooltip__kbd {
+  color: var(--color-terminal-amber);
+}
+/* The touch routes: a long-press trigger must not raise the browser's own
+   long-press callout / selection; a tap trigger must not double-tap-zoom. */
+[data-tooltip-touch] {
+  touch-action: manipulation;
+}
+[data-tooltip-touch='press'] {
+  user-select: none;
+  -webkit-touch-callout: none;
+}

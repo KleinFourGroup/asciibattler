@@ -23,6 +23,7 @@ import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { createChromeColumn } from './ui/chip';
+import { installTooltipHost } from './ui/tooltip';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
@@ -221,6 +222,9 @@ export class Game implements RunDispatcher {
     // their order is CSS `order`, not construction order, so the
     // construction (and subscription) order below is untouched.
     const chips = createChromeColumn(uiMount);
+    // 97a — the ONE tooltip host (src/ui/tooltip.ts): page-lifetime chrome
+    // like the column; every `attachTooltip` site renders into it.
+    installTooltipHost(uiMount);
     this.bitsOverlay = new BitsOverlay(
       chips,
       this.bus,

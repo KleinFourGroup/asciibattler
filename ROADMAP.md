@@ -202,25 +202,20 @@ redesigns):
   the next gate) · the ledger rows homed (the strip now, §102 for the run).
   WORKLOG §96.5e.
 
-## Phase 97 — the tooltip system
+## Phase 97 — the tooltip system ✅ CLOSED 2026-09-15
 
-**Charter:** one component, one live element, terminal idiom; hover /
-focus / tap-toggle / a keyboard key; Esc, pointer-leave, focus-out
-close it; flip-positioned (never shifts layout); rich content;
-`aria-describedby`. Replaces the 19 native `title=` sites; the four
-sole-source sites gain persistent labels. **Depends on:** §96 (built on
-the shell). **Risk:** low-medium. **Decision points:** the keyboard
-trigger key and whether it joins the rebindable registry — ✅ DECIDED
-2026-09-14: `showTooltip` joins the registry, default `Slash` (WORKLOG
-§97 kickoff, call A). **Exit:** every tooltip reachable by hover, focus,
-tap and key; zero `title=` in `src/ui` + `src/render`. **Scope guards:** a
-tooltip is never the sole channel for actionable information.
-
-**Kickoff 2026-09-14** (WORKLOG §97 kickoff — the census re-taken at 20
-sites / 8 files; the pip's title found dead behind `pointer-events:
-none`; five calls user-signed: the key on the registry · long-press on
-controls, tap-toggle on text · the pip's tooltip not minted · tab stops
-on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
+**Outcome:** one component, ONE live element (`src/ui/tooltip.ts`), the
+terminal plate, flip-positioned; hover / focus-visible / tap or
+long-press / the `showTooltip` key (`Slash`, on the registry); the 20
+census sites converted or deliberately deleted (the pip's dead title, the
+labelled level) — ZERO native `title=` in `src/ui` + `src/render`, pinned
+by `tests/ui-tooltips.test.ts`; the two real sole-source sites labelled
+(`LV 5` / `1 POW`, `▲ HONED` on both cards — the user kept both); the §96.5
+strip rider closed; `ui.json` 83 → 97 keys, the literal baseline 82 → 71;
+Run and World untouched, no snapshot bump. The user's playtest passed
+2026-09-15 with one finding absorbed in-phase (97f-post). The charter and
+the five kickoff calls live in git at `2af6c70`; the narrative in WORKLOG
+§97; the idiom in DESIGN §UI idioms "Tooltips (97)". The cut, as landed:
 
 - [x] **97a — the component (headless-first).** ✅ 2026-09-14 `8942d72`:
   `src/ui/tooltip.ts` (`attachTooltip` / `installTooltipHost` /
@@ -253,9 +248,10 @@ on the pre-turn text sites only · the `▲` label by eye at 97e). The cut:
   node's tooltip (the banner carries the copy — never sole-source);
   `tests/ui-tooltips.test.ts` pins zero native `title=` in src/ui +
   src/render (its regex self-checked against the pre-97c tree); DESIGN
-  §UI idioms "Tooltips (97)"; the ARCHITECTURE line. ⏳ **the user's
-  playtest closes the phase** (the tap / long-press on the phone; the
-  packet chip + reward Continue unreached by the pane). WORKLOG §97f.
+  §UI idioms "Tooltips (97)"; the ARCHITECTURE line. **The playtest passed
+  2026-09-15** (both `▲` labels kept) → **97f-post** `59a7503`: the HUD
+  cards' markers + status rows now paint DURING the countdown (the branch
+  returned before `refreshStatuses`; the user's catch). WORKLOG §97f.
 
 ## Phase 98 — color redundancy
 

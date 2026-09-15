@@ -2081,3 +2081,31 @@ The last site converted, the tripwire landed, the idiom written
   the packet chip and the reward Continue (no packet held, no encounter
   cleared in a probe run), the disconnected-trigger poll (rAF stalls in a
   hidden pane; a dead card grays in place).
+
+### The §97 playtest (2026-09-15) — VERDICT: passed; §97 CLOSED
+
+The user's read: clear across the phase, both `▲` labels kept (call E
+resolved: the compact card AND the hand card carry the key's name), and
+one finding — **the HUD cards' `▲ HONED` chips appeared only when the
+battle unpaused.** Not a tick drain: the countdown branch of
+`BattleScene.tick` returned before the running path's
+`hud.refreshStatuses()`, so the HUD's one paint pass for the status rows
+and the empower markers never ran while the countdown held; the 78d reset
+(`statusTick = -1` on `addCard`, "the next frame's pass repopulates every
+card even on a parked clock") had assumed a pass that did not exist on
+that branch, and seeded statuses carried the same gap since §32c. The 97e
+label made a two-second absence legible that a faint triangle had hidden
+for months. **97f-post `59a7503`:** one call inside the countdown branch;
+the HUD's tick gate makes it a no-op after the first pass on the parked
+clock. Proven in the pane by hand-driving `scene.tick(0.016)` three
+frames with the countdown active at tick 0: chips 0 → 1 (`▲Honed`, one
+honed unit in the world), the countdown still active.
+
+**The exit, read at the close:** every tooltip reachable by hover, focus,
+tap and key (the pane proved hover / focus / the synthetic touch and key
+paths; the user's phone the real tap + long-press) · zero `title=` in
+`src/ui` + `src/render` (the tripwire) · a tooltip is nowhere the sole
+channel (the three labels, the banner, the card's status row). The
+phase's shape held: six steps as cut plus one absorbed finding, no
+snapshot bump, no sim touch, the fuzz smoke fired once (97b) and held.
+Riders → TODO §97.

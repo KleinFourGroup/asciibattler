@@ -174,3 +174,38 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   filable is an open question for the close read. Lesson: a long round's
   instrument gets a mid-round read — the designated close is a floor,
   not a schedule.
+
+
+## §97 — the tooltip system (2026-09-14 → 15)
+
+- **Re-derive the delivered signal before naming the bug** — three
+  pane reads in one phase would each have minted a false bug: a real
+  `/` press arrived with `code: ''` (the registry dispatches on code —
+  "the key does not pin"); `await import('/src/ui/tooltip.ts')` after an
+  HMR cycle was a SECOND module instance (`openTooltipTrigger()` null
+  while the DOM showed the tooltip open); a rAF-painted chip read 0 in
+  the same eval as the scene swap and 1 a frame later. Each was resolved
+  by reading what was actually delivered (the event's fields, the DOM,
+  the next frame) — the §79g "symptom fingerprint" rule for probes.
+- **A "sole-source" audit finding is a hypothesis about the CSS too** —
+  the pip's title sat under a `pointer-events: none` host and had never
+  shown; the boss node's copy was on the banner per a code comment the
+  audit had not read. Two of four resolved away at the kickoff re-audit;
+  a label minted for either would have been noise.
+- **Self-check the reader on the tree you replaced** — the tripwire's
+  regex was run against `9812f6c~1` before being trusted; a line-based
+  `grep -E` variant read 5 for a known 7 (values on the next line), the
+  `(?!=)` lookahead read 7. Cheap, and it is the 94c rule applied to a
+  three-line test.
+- **A signed rule earns its corollary at the next site** — "text taps,
+  controls long-press" (call B) met a text chip nested in a clickable
+  card at 97d; "nested text inherits the control's route" followed
+  without a re-ask and applied again at 97e by team. Worth writing the
+  corollary into the idiom paragraph the moment it is used twice.
+- **A new label makes an old gap legible** — the countdown had skipped
+  the HUD's paint pass since §32c; a faint triangle hid it, `▲ HONED`
+  did not. Presentation changes are also instruments on the code they
+  sit on.
+- **The pause norm read by purpose:** with nothing player-visible (97a,
+  97b) the per-commit pause is a formality; the pause after the first
+  visible step (97c) and at the exit were the ones that mattered.

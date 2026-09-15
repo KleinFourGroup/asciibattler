@@ -347,3 +347,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **A settings toggle for the shake policy** (`lossFx.ts` SHAKE POLICY: `player` ships, `enemy` the user's A/B hypothesis; Ctrl+Alt+K cycles it dev-only) — Round 8's settings surface, with the fraction-vs-absolute question if flat ever feels dull.
 - [ ] **The encounter's LAST turn's fallen rows** have no screen since 96.5d (the pre-turn strip shows the previous turn; a won encounter goes to the reward flow) — §102's run-end stats is the home; if the wait bites in a playtest, a one-line strip on the reward screen is the cheap interim.
 - [x] **The strip's two `title=` hovers** (the glyph run's names, the loss's rule wording) — ✅ 97d (2026-09-14): both are `attachTooltip` text sites, one fallen per line, Tab-reachable (WORKLOG §97d).
+
+## §97 riders (the tooltip system — the close, 2026-09-15)
+
+- [ ] **The enemy compact card's focus route + its long-press.** The card is a clickable `<div>` with `contextmenu` = the focus objective, so §97 gave it `touch: 'none'` and no tab stop (HUD.ts, the 97c comment). §100 (input accessibility) makes it focusable — the tooltip's focus route lands then — and owns the touch-vs-contextmenu collision (a touch player has no right-click today).
+- [ ] **Tab stops for the battle cards' text sites** (the compact `LV` / `POW` wraps, the `▲` chips) — hover + key reads until §100 sweeps focus order (the kickoff's call D: ~30 stops in a battle was too many to add blind).
+- [ ] **The disconnected-trigger poll has no live read.** `tooltip.ts`'s rAF `follow()` closes on a trigger that left the document or lost its box; the pane could not exercise it (rAF stalls hidden; a dead card grays in place). A scene swap under an open tooltip is the natural read — watch for a stranded plate in a playtest.
+- [ ] **A focus ring for the `tabindex=0` text sites.** They ride the UA default outline today; §100's focus-visible styling should cover them with the buttons.
+- [ ] **The pane's key tool sends no `KeyboardEvent.code`** (papercut 2026-09-14): a registry-bound key can only be walked with a synthetic window keydown; the user's keyboard is the live read for every hotkey.

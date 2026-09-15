@@ -316,6 +316,14 @@ export class BattleScene implements Scene {
       if (this.countdown.active) {
         // Still counting: paint the readout + advance visuals only.
         this.hud?.showCountdown(this.countdown.displaySeconds);
+        // 97f-post — the compact cards' status rows + empower markers paint
+        // in refreshStatuses, which the running path below calls per frame;
+        // this branch returned before reaching it, so a seeded status or a
+        // pre-turn empower showed only when the countdown ended (the 78d
+        // reset assumed a pass that never ran here — the user's §97
+        // playtest catch). The HUD's tick gate keeps it a no-op after the
+        // first pass on the parked clock.
+        this.hud?.refreshStatuses();
         this.battleRenderer?.update(dt);
         this.terrain?.advanceTime(dt);
         this.apron?.advanceTime(dt);

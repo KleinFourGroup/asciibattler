@@ -673,6 +673,7 @@ body {
    (§101's layout-stability rule, met early). */
 .unit-card__rarity {
   display: block;
+  text-align: center; /* 98b-post — centered under the header text (user call) */
   margin-top: 2px;
   letter-spacing: 0.02em;
   white-space: nowrap;

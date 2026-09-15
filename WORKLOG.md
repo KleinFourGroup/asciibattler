@@ -2297,3 +2297,5 @@ the seam). ⏳ Not photographed: a non-common run (the starting roster is
 all common) — the pure pins cover the count; the user's eye on the hue
 at the next recruit. Typecheck clean; the key-scan, literal-ratchet and
 `title=` gates green; no snapshot bump, no sim touch.
+
+**98b-post (2026-09-15, the user call):** the star run centered under the header text (text-align: center on the block line); pane-measured — the header midpoint and the run midpoint both 294 px.

@@ -285,9 +285,11 @@ team-identity residuals → a Round 7.5 rider). The cut:
   `★☆☆☆`…`★★★★` run (its own block line — inline it wrapped by name
   length) in the tier hue, the name on a §97 tooltip (`rarity.<tier>`
   ×4); the compact card untouched; pane-verified. WORKLOG §98b.
-- [ ] **98c — the map state shapes + the kind legend.** CSS shapes on
-  the four state classes (by the user's eye); a fixed bottom-left legend
-  naming the six kinds + four states, present in the read-only overlay.
+- [x] **98c — the map state shapes + the kind legend.** ✅ 2026-09-15:
+  filled / double / dashed / dotted rings on the four state classes (no
+  layout change); the bottom-left legend names the six kinds + four
+  states off shared selectors (`map.legend.*` ×11), carried by the
+  read-only overlay; pane-verified incl. grey. WORKLOG §98c.
 - [ ] **98d — the hitsplat split.** `kind` → `burn | bleed | poison |
   heal` threaded fxRegistry → BattleRenderer → `spawnHitsplat` → three
   `.hitsplat--*` classes in the status hues + a per-kind prefix glyph (by

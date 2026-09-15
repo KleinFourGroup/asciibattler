@@ -38,6 +38,88 @@ const KIND_GLYPH: Record<NodeKind, string> = {
 };
 
 /**
+ * 98c — the legend's KIND names, one literal key per kind (the key-scan pin
+ * cannot see a computed key). `Record<NodeKind, …>` keeps it exhaustive with
+ * KIND_GLYPH: a new kind fails tsc here until it is named. The order is the
+ * route-planning read (the common node first, the destination last).
+ */
+const KIND_LABEL: Record<NodeKind, string> = {
+  battle: t('map.legend.kind.battle'),
+  rest: t('map.legend.kind.rest'),
+  boss: t('map.legend.kind.boss'),
+  elite: t('map.legend.kind.elite'),
+  port: t('map.legend.kind.port'),
+  event: t('map.legend.kind.event'),
+};
+const KIND_ORDER: readonly NodeKind[] = ['battle', 'rest', 'elite', 'port', 'event', 'boss'];
+
+/** 98c — the four node STATES the board stamps (`.current` / `.frontier` /
+ *  `.visited` / `.locked`, the classes the loop below adds) and their legend
+ *  names — "which nodes can I click" answered in words beside the shape. */
+type NodeState = 'current' | 'frontier' | 'visited' | 'locked';
+const STATE_LABEL: Record<NodeState, string> = {
+  current: t('map.legend.state.current'),
+  frontier: t('map.legend.state.frontier'),
+  visited: t('map.legend.state.visited'),
+  locked: t('map.legend.state.locked'),
+};
+const STATE_ORDER: readonly NodeState[] = ['current', 'frontier', 'visited', 'locked'];
+
+/**
+ * 98c — THE MAP LEGEND (bottom-left, fixed; the user's corner call). Two
+ * columns: the six kinds (the glyph in its kind hue — the `.map-legend__swatch
+ * .<kind>` selectors share the board's `.map-node.<kind>` color rules) and the
+ * four states (a ring swatch in the state's SHAPE — the shared `.<state>`
+ * selectors, so the key and the board can never drift). The names are the
+ * "never color alone" second channel: the 98a grey read lost the `*` / `?`
+ * kinds and could not tell a reachable ring from a locked one. A pure DOM
+ * read — pointer-events none, no tooltip (the words are already here).
+ */
+function buildMapLegend(): HTMLDivElement {
+  const legend = document.createElement('div');
+  legend.className = 'map-legend';
+
+  const kinds = document.createElement('div');
+  kinds.className = 'map-legend__col';
+  const title = document.createElement('div');
+  title.className = 'map-legend__title';
+  title.textContent = t('map.legend.title');
+  kinds.appendChild(title);
+  for (const kind of KIND_ORDER) {
+    const row = document.createElement('div');
+    row.className = 'map-legend__row';
+    const swatch = document.createElement('span');
+    swatch.className = `map-legend__swatch map-legend__swatch--kind ${kind}`;
+    swatch.textContent = KIND_GLYPH[kind];
+    const name = document.createElement('span');
+    name.textContent = KIND_LABEL[kind];
+    row.append(swatch, name);
+    kinds.appendChild(row);
+  }
+
+  const states = document.createElement('div');
+  states.className = 'map-legend__col';
+  // A spacer row keeps the two columns' first swatches level under the title.
+  const spacer = document.createElement('div');
+  spacer.className = 'map-legend__title';
+  spacer.textContent = ' ';
+  states.appendChild(spacer);
+  for (const state of STATE_ORDER) {
+    const row = document.createElement('div');
+    row.className = 'map-legend__row';
+    const swatch = document.createElement('span');
+    swatch.className = `map-legend__swatch ${state}`;
+    const name = document.createElement('span');
+    name.textContent = STATE_LABEL[state];
+    row.append(swatch, name);
+    states.appendChild(row);
+  }
+
+  legend.append(kinds, states);
+  return legend;
+}
+
+/**
  * Vertical pixels allotted per hop on the scrollable board. The board height
  * is `hopCount * HOP_PX`; a tall board (10+ hops) overflows the viewport
  * and scrolls, with the current node centered on show. `.map-board`'s
@@ -206,6 +288,10 @@ export class MapScreen extends Screen {
       }
       container.appendChild(banner);
     }
+
+    // 98c — the legend (bottom-left, fixed). Inside the container so it fades
+    // and disposes with the screen, and so the read-only overlay carries it.
+    container.appendChild(buildMapLegend());
 
     // The board carries the hop-scaled height; the scroll container
     // (.map-screen) clips it. Edges + nodes lay out against the board, not the

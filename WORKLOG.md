@@ -2299,3 +2299,52 @@ at the next recruit. Typecheck clean; the key-scan, literal-ratchet and
 `title=` gates green; no snapshot bump, no sim touch.
 
 **98b-post (2026-09-15, the user call):** the star run centered under the header text (text-align: center on the block line); pane-measured — the header midpoint and the run midpoint both 294 px.
+
+### 98c — the map state shapes + the kind legend (2026-09-15)
+
+**The shapes** (ui.css, the four state rules): current = a FILLED amber
+disc with a black glyph and no kind glow — the one state rule placed
+AFTER the kind accents, so ordering rather than specificity lets it
+outrank them (you are standing on it; its kind is spent) · frontier = a
+DOUBLE ring (`outline: 2px` at `outline-offset: 3px`; an outline follows
+`border-radius` in every shipping engine and costs no layout) · visited =
+a DASHED ring · locked = a DOTTED ring. None touches layout: the node is
+content-box 40 px + a 2 px border centered by −20 px margins, so a
+border-WIDTH change would shift it — the shapes are border-STYLE, an
+outline and a fill (the pane measured the node box at 44 px before and
+after). The frontier hover fill is unchanged.
+
+**The legend** (`buildMapLegend`, MapScreen.ts; `.map-legend`, ui.css):
+fixed bottom-left (call C), two columns — the six KINDS as the glyph in
+its kind hue + the name, the four STATES as a 14 px ring swatch in the
+state's shape + the name. The swatches share the board's selectors
+(`.map-node.<state>, .map-legend__swatch.<state>` and the same for each
+kind's accent), so the key and the board cannot drift. `KIND_LABEL` and
+`STATE_LABEL` are `Record<…, string>` over literal keys (a new kind fails
+tsc until named; the key-scan pin sees each): `map.legend.*` ×11,
+`ui.json` 101 → 112. Terminal-plate chrome at the chip scale, z-index 5
+with the banner, pointer-events none — a read, never a control. It rides
+inside `.map-screen`, so it fades and disposes with the screen and the
+78e read-only overlay carries it.
+
+**Pane-verified** (`?layout=isthmus&seed=7&character=soldier`): at the
+run start the lone reachable `?` wears the double ring and every hop-1
+`X` the dotted one; after the event, node 0 is the filled disc
+(`background rgb(255,176,0)`, `color rgb(0,0,0)`, `text-shadow none` —
+computed) and the three frontier `X`s the double ring; the legend's
+swatches compute `dashed` / `dotted` / outline `solid` / the elite
+purple; the overlay from the pre-turn chip opens with the legend at
+(20, 534) 208×166 and, with node 0 visited, shows ALL FOUR states on one
+board. **Under Ctrl+Alt+G** the three live states are unmistakable
+(filled / double / dotted) and the legend names the `*` and `?` kinds
+the 98a read had lost. The pre-turn hand cards also showed the 98b
+stars centered on the way through. Typecheck clean; the key-scan,
+literal-ratchet, `title=` and token gates green; no snapshot bump, no
+sim touch.
+
+⏳ For the user's eye: the four ring styles at native resolution (the
+pane's JPEG blurs a 2 px dotted ring); the dashed visited ring beside
+the dotted locked ring in particular. Riders: the legend is fixed and a
+tall board's bottom nodes scroll under it (as they do under the banner);
+a phone-width viewport may want the legend collapsed (§101 / §102's
+surface riders).

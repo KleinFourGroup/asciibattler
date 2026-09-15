@@ -41,6 +41,17 @@
   "roster.title": "Your Roster",
   "roster.empty": "No units in your roster.",
   "map.uncharted": "Uncharted Ground",
+  "map.legend.title": "Legend",
+  "map.legend.kind.battle": "Battle",
+  "map.legend.kind.rest": "Rest",
+  "map.legend.kind.boss": "Boss",
+  "map.legend.kind.elite": "Elite",
+  "map.legend.kind.port": "Port",
+  "map.legend.kind.event": "Event",
+  "map.legend.state.current": "Here",
+  "map.legend.state.frontier": "Reachable",
+  "map.legend.state.visited": "Visited",
+  "map.legend.state.locked": "Locked",
   "cache.overflow": {
     "one": "over capacity — discard {count} packet to continue",
     "other": "over capacity — discard {count} packets to continue"

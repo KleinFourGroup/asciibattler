@@ -487,15 +487,33 @@ body {
   cursor: default;
 }
 
-.map-node.current {
+/* 98c — node STATE carries a SHAPE beside its hue (the "never color alone"
+   idiom; the 98a grey read showed frontier and locked rings identical once
+   the hue went). Four ring styles, none touching layout (the node is
+   content-box 40px + a 2px border, centered by -20px margins — a border-
+   WIDTH change would shift it, so the shapes are border-STYLE + an outline
+   + a fill): current = a FILLED disc (the one state rule that outranks the
+   kind accents, placed after them below) · frontier = a DOUBLE ring (an
+   outline 3px out; `outline` follows border-radius in every shipping
+   engine) · visited = a DASHED ring · locked = a DOTTED ring. The legend's
+   swatches (`.map-legend__swatch.<state>`) share these selectors so the key
+   and the board can never drift apart. */
+.map-node.current,
+.map-legend__swatch.current {
   border-color: var(--color-terminal-amber);
   color: var(--color-terminal-amber);
   box-shadow: 0 0 10px rgb(from var(--color-terminal-amber) r g b / 0.6);
 }
 
-.map-node.frontier {
+.map-node.frontier,
+.map-legend__swatch.frontier {
   border-color: var(--color-flourescent-blue);
   color: var(--color-flourescent-blue);
+  outline: 2px solid var(--color-flourescent-blue);
+  outline-offset: 3px;
+}
+
+.map-node.frontier {
   cursor: pointer;
 }
 
@@ -504,20 +522,25 @@ body {
   color: var(--color-black);
 }
 
-.map-node.visited {
+.map-node.visited,
+.map-legend__swatch.visited {
   border-color: var(--color-dark-terminal-amber);
+  border-style: dashed;
   color: var(--color-dark-terminal-amber);
 }
 
-.map-node.locked {
+.map-node.locked,
+.map-legend__swatch.locked {
   /* De-emphasized but still legible. We deliberately AVOID element `opacity`
      here: it would make the #000 background semi-transparent (so the SVG
      edges show through and muddy the glyph) and dim the kind glow + glyph
      into illegibility. Instead the background stays opaque (covering the
      edges beneath the node) and the node reads as "inactive" via a neutral
      dim border + a muted-grey glyph — the actionable states still stand out
-     by HUE (saturated cyan/amber), not brightness, so the hierarchy holds. */
+     by HUE (saturated cyan/amber) AND, since 98c, by SHAPE (the dotted ring
+     vs the frontier's double ring), so the hierarchy holds in grey too. */
   border-color: var(--color-gray-40);
+  border-style: dotted;
   color: var(--color-gray-b0);
 }
 
@@ -528,12 +551,14 @@ body {
    glyph color for rest/boss nodes ONLY — battle nodes keep their state-based
    grey/cyan/amber, and state is still conveyed by the border + ring/glow.
    Rest = TERMINAL_GREEN (a respite), boss = NEON_RED (the destination). */
-.map-node.boss {
+.map-node.boss,
+.map-legend__swatch.boss {
   color: var(--color-neon-red);
   text-shadow: 0 0 4px var(--color-neon-red), 0 0 9px var(--color-neon-red);
 }
 
-.map-node.rest {
+.map-node.rest,
+.map-legend__swatch.rest {
   color: var(--color-terminal-green);
   text-shadow: 0 0 4px var(--color-terminal-green), 0 0 9px var(--color-terminal-green);
 }
@@ -541,7 +566,8 @@ body {
 /* W2 — elite nodes: an optional, harder fight. NEON_PURPLE (the palette's
    long-reserved rare/elite hue) so the `*` reads as "dangerous detour" against
    the green rests + red boss during route planning. */
-.map-node.elite {
+.map-node.elite,
+.map-legend__swatch.elite {
   color: var(--color-neon-purple);
   text-shadow: 0 0 4px var(--color-neon-purple), 0 0 9px var(--color-neon-purple);
 }
@@ -549,7 +575,8 @@ body {
 /* 50c — port nodes: the shop dock. TERMINAL_AMBER (the money hue — bits
    chrome reads amber too) so the `$` reads as "somewhere to spend" against
    the green rests + purple elites during route planning. */
-.map-node.port {
+.map-node.port,
+.map-legend__swatch.port {
   color: var(--color-terminal-amber);
   text-shadow: 0 0 4px var(--color-terminal-amber), 0 0 9px var(--color-terminal-amber);
 }
@@ -559,9 +586,105 @@ body {
    a kind accent in the same hue would read as actionable) so the `?` reads
    as "unknown detour" against green/purple/amber during route planning.
    User call at the 74e close: without an accent they blended into battles. */
-.map-node.event {
+.map-node.event,
+.map-legend__swatch.event {
   color: var(--color-terminal-blue);
   text-shadow: 0 0 4px var(--color-terminal-blue), 0 0 9px var(--color-terminal-blue);
+}
+
+/* 98c — the CURRENT node is a FILLED disc: amber plate, black glyph, no kind
+   glow. Deliberately AFTER the kind accents above — it is the one state that
+   outranks them (you are standing on it; its kind is already spent), and
+   ordering rather than specificity keeps every rule single-class. The legend
+   swatch shares it. The kind accents keep their glyph hue on every OTHER
+   state — 98c's legend swatches for kinds reuse `.map-node.<kind>`'s color
+   through the same class, so the key can never drift from the board. */
+.map-node.current,
+.map-legend__swatch.current {
+  background: var(--color-terminal-amber);
+  color: var(--color-black);
+  text-shadow: none;
+}
+
+/* 98c — THE MAP LEGEND (bottom-left, position: fixed like the banner and
+   the roster button; the user's corner call). Two columns — the six node
+   KINDS (the glyph in its kind hue + the name) and the four node STATES (a
+   swatch ring in the state's shape + the name). Names are the second
+   channel: the 98a grey read lost the `*` and `?` kinds outright (purple
+   and true blue are the palette's two darkest hues) and could not tell a
+   reachable ring from a locked one. Terminal-plate chrome at the chip
+   scale; pointer-events none (a read, never a control); z-index 5 with the
+   banner — under the chrome column (15) and the corner buttons (20). Rides
+   inside .map-screen so the read-only overlay (78e) carries it too. */
+.map-legend {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  z-index: 5;
+  display: flex;
+  gap: 18px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--color-dark-terminal-amber);
+  color: var(--color-gray-aa);
+  font-family: var(--font-mono);
+  font-size: var(--text-11);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+}
+
+.map-legend__col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-legend__title {
+  color: var(--color-dark-terminal-amber);
+  margin-bottom: 2px;
+}
+
+.map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* A kind swatch is the node glyph in its kind hue — `.map-node.<kind>` sets
+   the color + glow; the swatch class only sizes it. Battle nodes have no
+   kind accent (their glyph takes the state color), so the swatch's own
+   color is the base grey the board uses. A state swatch is a 14px ring in
+   the state's shape (the shared selectors above), with no glyph. */
+.map-legend__swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-dark-terminal-amber);
+  border-radius: 50%;
+  background: var(--color-black);
+  color: var(--color-gray-aa);
+  font-size: var(--text-12);
+  line-height: 1;
+  flex: none;
+}
+
+.map-legend__swatch--kind {
+  border-color: transparent;
+  background: transparent;
+}
+
+.map-legend__swatch.frontier {
+  outline-width: 1px;
+  outline-offset: 2px;
+}
+
+.map-legend__swatch.current {
+  box-shadow: 0 0 6px rgb(from var(--color-terminal-amber) r g b / 0.6);
 }
 
 /* RecruitScreen (Step 4.4). Full-overlay modal that appears between

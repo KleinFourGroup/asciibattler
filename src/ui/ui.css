@@ -659,6 +659,46 @@ body {
   opacity: 0.7;
 }
 
+/* 98b — the rarity STARS at the header's tail (full cards only; the compact
+   battle card has no room and the battle never acts on rarity). A fixed-width
+   filled + hollow run (`★☆☆☆` … `★★★★`) is the "never color alone" channel —
+   a COUNT survives grayscale where the §61e wash (alpha ≤ 0.16) cannot. The
+   hue is the tier's own tint token (comfort, the same four as the wash);
+   hollow stars sit dimmer so the filled count pops. The tier name is a §97
+   tooltip on the run. Tighter tracking than the header's 0.1em — the stars
+   are a bar, not a word. Its OWN line under the header text (display:
+   block): inline, the run wrapped `LEVEL 5 MERCENARY` but not `LEVEL 5
+   ARCHER` in the roster's narrow cards, so card height varied by name
+   length — a block line grows every full card by exactly one line
+   (§101's layout-stability rule, met early). */
+.unit-card__rarity {
+  display: block;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.unit-card__rarity-hollow {
+  opacity: 0.45;
+}
+
+.unit-card--rarity-common .unit-card__rarity {
+  color: var(--color-terminal-green);
+}
+
+.unit-card--rarity-uncommon .unit-card__rarity {
+  color: var(--color-flourescent-blue);
+}
+
+.unit-card--rarity-rare .unit-card__rarity {
+  color: var(--color-neon-purple);
+}
+
+.unit-card--rarity-legendary .unit-card__rarity {
+  color: var(--color-terminal-amber);
+}
+
 /* The raw stat block (all UnitStats). One DOM shape for every skin. Full-detail
    default is a two-up grid (recruit + pre-turn); promotion overrides to a single
    column for its card-by-card reveal. */

@@ -2258,3 +2258,42 @@ loss. 98e's bands are a margin question, not a rescue: the read exists
 in grey and the pattern makes it structural (screen brightness, bloom
 and the scanline rake all eat luminance margins; a shape does not
 depend on one).
+
+### 98b — the rarity stars (2026-09-15)
+
+`src/ui/rarityDisplay.ts` (pure: `rarityRank` / `rarityStarParts` /
+`rarityStars` / `rarityLabel`, the run's length = `RARITY_TIERS.length`,
+the label table `Record<UnitRarity, string>` so a fifth tier fails tsc
+until it picks a label) + `rarityDisplay.test.ts` (four pins, every
+expectation derived from the tier order — never a hardcoded 4). The card
+builder's `buildHeader` appends the run to EVERY full-mode header (the
+recruit / pre-turn / roster line and the promotion's `NAME • Lv N`); the
+compact battle card is untouched (call A). Two spans — filled + hollow —
+so the hollow half sits at 0.45 opacity and the filled count pops; the
+hue is the tier's own §61e tint token; the tier name is a §97 tooltip
+on the run (`rarity.<tier>` ×4 literal keys — the EMPOWER_DISPLAY
+discipline, the key-scan pin sees each; `ui.json` 97 → 101). The tooltip's
+touch route follows the card: a clickable card (recruit / pre-turn — the
+click is the pick) nests the run in a control → the long-press; the
+roster's and promotion's inert cards → a tap.
+
+**One finding, absorbed in-step.** Inline at the header's tail, the run
+wrapped `LEVEL 5 MERCENARY` onto two lines in the roster's narrow cards
+but left `LEVEL 5 ARCHER` on one — card height varied by NAME LENGTH,
+the shape §101 exists to forbid. The run is now `display: block`, its
+own line under the header text: every full card grows by exactly one
+line, and the header centers cleanly above it (the pane, both rows).
+
+**Pane-verified** (`?layout=isthmus&seed=7&character=soldier`, the
+roster modal): ten runs of `★☆☆☆` in TERMINAL_GREEN, the computed font
+stack JetBrains Mono (the star glyphs render — whether from the face or
+its fallback is invisible at this size); hover on the run → the plate
+reads `Common`, `visibility: visible`; under Ctrl+Alt+G the filled star
+is plainly brighter than the three hollow — the count survives grey.
+The 97e "beside, never inside" rule holds by construction here: only the
+promotion skin ever writes the level handle, and that skin has its own
+span, so the appended run is never clobbered (a code comment says so at
+the seam). ⏳ Not photographed: a non-common run (the starting roster is
+all common) — the pure pins cover the count; the user's eye on the hue
+at the next recruit. Typecheck clean; the key-scan, literal-ratchet and
+`title=` gates green; no snapshot bump, no sim touch.

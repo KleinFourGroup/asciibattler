@@ -38,6 +38,7 @@ import { STAT_LABELS } from './statLabels';
 import { HEALTH } from '../config/health';
 import { powerTooltip } from './chipLabels';
 import { attachTooltip } from './tooltip';
+import { rarityStarParts, rarityLabel } from './rarityDisplay';
 import { t } from '../i18n/ui';
 import type { StatusEffect } from '../sim/statusEffects';
 import type { EmpowerStackView } from '../run/empower';
@@ -201,7 +202,8 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
     `unit-card--${opts.mode}`,
     `unit-card--rarity-${data.rarity}`,
   ].join(' ');
-  if (opts.clickable ?? defaultClickable(opts.skin)) {
+  const clickable = opts.clickable ?? defaultClickable(opts.skin);
+  if (clickable) {
     card.classList.add('unit-card--clickable');
   }
 
@@ -210,7 +212,8 @@ export function buildUnitCard(data: UnitCardData, opts: UnitCardOptions): UnitCa
   glyph.textContent = data.glyph;
   card.appendChild(glyph);
 
-  const { headerEl, levelValue } = buildHeader(data, opts.skin);
+  // 98b — the star run's tooltip route: nested in a control → the long-press.
+  const { headerEl, levelValue } = buildHeader(data, opts.skin, clickable ? 'press' : 'tap');
   card.appendChild(headerEl);
 
   const { statsEl, powerRow, statRows } = buildStats(data.stats);
@@ -480,6 +483,7 @@ function statusChipMeta(r: StatusReadout): string {
 function buildHeader(
   data: UnitCardData,
   skin: UnitCardSkin,
+  touch: 'tap' | 'press',
 ): { headerEl: HTMLDivElement; levelValue: HTMLElement } {
   const header = document.createElement('div');
   header.className = 'unit-card__header';
@@ -491,14 +495,42 @@ function buildHeader(
     const value = document.createElement('span');
     value.className = 'unit-card__level-value';
     value.textContent = `Lv ${data.level}`;
-    header.append(label, value);
+    header.append(label, value, buildRarityStars(data.rarity, touch));
     return { headerEl: header, levelValue: value };
   }
 
   header.textContent = `Level ${data.level} ${nameForArchetype(data.archetype)}`;
+  header.appendChild(buildRarityStars(data.rarity, touch));
   // No reveal for this skin — point the handle at the header itself so callers
-  // have a non-null target.
+  // have a non-null target. (Only the promotion skin ever WRITES the handle —
+  // PromotionScreen's level flip — and that skin has its own span, so the
+  // appended star run is never clobbered; the 97e "beside, never inside"
+  // rule holds by that fact, not by luck.)
   return { headerEl: header, levelValue: header };
+}
+
+/**
+ * 98b — the rarity STARS at the header's tail (`rarityDisplay.ts`): the
+ * "never color alone" channel for the tier — a fixed-width filled + hollow
+ * COUNT that survives grayscale where the §61e wash cannot. Two spans so the
+ * hollow half sits dimmer (CSS). The tier NAME is a §97 tooltip on the run:
+ * a full card is a control on the recruit / pre-turn screens (its click is
+ * the pick), so nested text takes the long-press there; the roster's and
+ * the promotion's cards are inert, so a tap toggles. Full cards only — the
+ * compact battle card has no room and the battle never acts on rarity.
+ */
+function buildRarityStars(rarity: UnitRarity, touch: 'tap' | 'press'): HTMLSpanElement {
+  const run = document.createElement('span');
+  run.className = 'unit-card__rarity';
+  const { filled, hollow } = rarityStarParts(rarity);
+  const filledEl = document.createElement('span');
+  filledEl.textContent = filled;
+  const hollowEl = document.createElement('span');
+  hollowEl.className = 'unit-card__rarity-hollow';
+  hollowEl.textContent = hollow;
+  run.append(filledEl, hollowEl);
+  attachTooltip(run, rarityLabel(rarity), { touch });
+  return run;
 }
 
 /**

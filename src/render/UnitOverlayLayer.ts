@@ -3,6 +3,7 @@ import type { Team } from '../sim/Unit';
 import type { StatusReadout } from '../sim/statusReadout';
 import { displayLevel } from '../sim/xp';
 import { statusColor } from './statusDisplay';
+import { isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
 
 /**
  * E3.6 — DOM-based per-unit overlay (HP bar + action progress bar + level
@@ -265,7 +266,7 @@ export class UnitOverlayLayer {
   spawnHitsplat(
     worldTop: THREE.Vector3,
     text: string,
-    kind: 'normal' | 'crit' | 'heal' | 'burn' | 'miss',
+    kind: HitsplatKind,
     stackKey: number,
   ): void {
     const top = this.projectToCss(worldTop);
@@ -281,6 +282,10 @@ export class UnitOverlayLayer {
 
     const el = document.createElement('div');
     el.className = `hitsplat hitsplat--${kind}`;
+    // 98d — a DoT number draws in its STATUS hue (the kind is the status id):
+    // pip, card swatch and number from one table. The other kinds keep their
+    // CSS colors (`.hitsplat--crit` red, `--heal` cyan, `--miss` white).
+    if (isDotHitsplatKind(kind)) el.style.color = statusColor(kind);
     el.textContent = text;
     anchor.appendChild(el);
 

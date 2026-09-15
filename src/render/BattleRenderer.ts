@@ -19,10 +19,12 @@ import {
   assertFxKeysResolve,
   assertStatusFxKeysResolve,
   fxDescriptor,
+  hitsplatText,
   type FxBurst,
   type FxProjectile,
   type FxShove,
   type FxTracer,
+  type HitsplatKind,
 } from './fxRegistry';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { ABILITY_DEFS } from '../config/abilities';
@@ -1162,7 +1164,7 @@ export class BattleRenderer {
   private spawnHitsplat(
     unitId: number,
     text: string,
-    kind: 'normal' | 'crit' | 'heal' | 'burn' | 'miss',
+    kind: HitsplatKind,
   ): void {
     const handle = this.handles.get(unitId);
     if (!handle) return;
@@ -1373,8 +1375,9 @@ export class BattleRenderer {
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.sparkle) this.spawnSparkle(unitId, fx.sparkle.color);
     if (fx.hitsplat && amount !== undefined && amount > 0) {
-      const text = fx.hitsplat.kind === 'heal' ? `+${amount}` : String(amount);
-      this.spawnHitsplat(unitId, text, fx.hitsplat.kind);
+      // 98d — the kind's prefix glyph rides the number (`+N` heal, `~N` burn,
+      // `‡N` bleed, `☠N` poison): the shape channel beside the hue.
+      this.spawnHitsplat(unitId, hitsplatText(fx.hitsplat.kind, amount), fx.hitsplat.kind);
       this.refreshHpBar(unitId);
     }
   }

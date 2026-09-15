@@ -86,12 +86,52 @@ export interface FxTracer {
 
 /**
  * A floating hitsplat number (27e — the status tick's HP delta). `kind` picks
- * the existing hitsplat style: `burn` an amber damage number (DoTs), `heal` a
- * cyan `+N` (HoTs). The driver supplies the amount off the `status:ticked`
- * event; an amount of 0 (a HoT onto a full unit) draws nothing.
+ * the hitsplat style. 98d — the three DoTs are three KINDS (`burn` / `bleed`
+ * / `poison`), where until 98d all three rode `burn` (one amber number) and
+ * only the sparkle hue and the SOUND told them apart — an audio-off player
+ * lost the distinction, and every player lost it in grey. Each DoT kind now
+ * carries its status-table hue (`statusColor(kind)` — the kind IS the status
+ * id, so pip, card swatch and number share one source) AND a prefix glyph
+ * (`HITSPLAT_PREFIX`, the "never color alone" channel). `heal` stays the cyan
+ * `+N`. The driver supplies the amount off the `status:ticked` event; an
+ * amount of 0 (a HoT onto a full unit) draws nothing.
  */
 export interface FxHitsplat {
-  kind: 'burn' | 'heal';
+  kind: 'burn' | 'bleed' | 'poison' | 'heal';
+}
+
+/** 98d — every hitsplat kind the overlay can draw: the three strike kinds
+ *  (`normal` / `crit` / `miss`, event-driven) + the four status kinds above.
+ *  ONE union, imported by BattleRenderer and UnitOverlayLayer (each carried
+ *  its own copy before 98d). */
+export type HitsplatKind = 'normal' | 'crit' | 'miss' | FxHitsplat['kind'];
+
+/** 98d — the per-kind PREFIX glyph, the shape channel beside the hue: a DoT
+ *  number reads as its kind in grey (`~7` burn · `‡7` bleed · `☠7` poison),
+ *  a HoT keeps its `+`, a strike number is bare (its size / italic carry crit
+ *  and miss already). DOM text — never the glyph atlas. Exhaustive by type:
+ *  a new kind fails tsc until it picks a prefix (possibly the empty one). The
+ *  glyphs are the kickoff's starting set (call D), the user's eye at 98d. */
+export const HITSPLAT_PREFIX: Record<HitsplatKind, string> = {
+  normal: '',
+  crit: '',
+  miss: '',
+  heal: '+',
+  burn: '~',
+  bleed: '‡',
+  poison: '☠',
+};
+
+/** 98d — the number as drawn: the kind's prefix + the amount. Pure. */
+export function hitsplatText(kind: HitsplatKind, amount: number): string {
+  return `${HITSPLAT_PREFIX[kind]}${amount}`;
+}
+
+/** 98d — the DoT kinds, whose hue is the status table's (the kind is the
+ *  status id). `heal` is not a status id (rejuvenate's number is `heal`), so
+ *  it keeps its CSS cyan. */
+export function isDotHitsplatKind(kind: HitsplatKind): kind is 'burn' | 'bleed' | 'poison' {
+  return kind === 'burn' || kind === 'bleed' || kind === 'poison';
 }
 
 /**
@@ -207,13 +247,17 @@ export const FX_REGISTRY = {
   // §32b — ALL four now carry a `sound` (burn/rejuvenate re-homed the retired
   // fire/heal tile-chip cues in 27e; bleed/poison got their generated ticks here,
   // the §Z "one key = visual + SFX" model). Sparkle colors: burn amber embers,
-  // bleed blood-red, poison toxic-green, rejuvenate heal-cyan (the DoT/HoT numbers
-  // all reuse the `burn`/`heal` hitsplat styles — the sparkle color distinguishes
-  // them). The apply-flash (`_apply`) keys were dropped post-playtest (the cue
-  // fired mid-lerp onto a tile); a status now signals only on its ticks.
+  // bleed blood-red, poison toxic-green, rejuvenate heal-cyan. 98d — the three
+  // DoT numbers are three KINDS now (until 98d all three reused `burn`, and the
+  // sparkle hue + the sound were the only tells — hue-only in grey, nothing
+  // with audio off): each kind draws in its status-table hue with its own
+  // prefix glyph (HITSPLAT_PREFIX), pinned distinct by fxRegistry.test.ts off
+  // the status catalog. The apply-flash (`_apply`) keys were dropped
+  // post-playtest (the cue fired mid-lerp onto a tile); a status now signals
+  // only on its ticks.
   burn_tick: { sparkle: { color: COLORS.TERMINAL_AMBER }, hitsplat: { kind: 'burn' }, sound: 'burn' },
-  bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'burn' }, sound: 'bleed' },
-  poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'burn' }, sound: 'poison' },
+  bleed_tick: { sparkle: { color: COLORS.NEON_RED }, hitsplat: { kind: 'bleed' }, sound: 'bleed' },
+  poison_tick: { sparkle: { color: COLORS.TERMINAL_GREEN }, hitsplat: { kind: 'poison' }, sound: 'poison' },
   rejuvenate_tick: {
     sparkle: { color: COLORS.FLOURESCENT_BLUE },
     hitsplat: { kind: 'heal' },

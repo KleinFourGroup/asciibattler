@@ -2350,3 +2350,46 @@ a phone-width viewport may want the legend collapsed (§101 / §102's
 surface riders).
 
 **98c-post (2026-09-15, the user call):** the legend read too small at the first cut (11 px, 14 px swatches) and now sits at the chip scale — 15 px rows, a 13 px title, 20 px swatches, 12/18 px padding; pane-measured 296 x 232 px, clear of the chrome column.
+
+### 98d — the hitsplat split (2026-09-15)
+
+`FxHitsplat.kind` is `burn | bleed | poison | heal` (fxRegistry.ts); the
+three DoT tick keys each name their own kind where all three rode `burn`
+since 27e. ONE `HitsplatKind` union now (`normal | crit | miss` + the
+four) — BattleRenderer and UnitOverlayLayer each carried a private copy
+of the old five-way literal, both retired. The two channels beside the
+hue: **the prefix glyph** (`HITSPLAT_PREFIX`, a `Record<HitsplatKind,
+string>` — `~` burn · `‡` bleed · `☠` poison · `+` heal · bare strikes;
+exhaustive by type, so a new kind fails tsc until it picks one) through
+the pure `hitsplatText(kind, amount)` at the one status-tick site; and
+**the hue from the status table** — the overlay sets `el.style.color =
+statusColor(kind)` for a DoT kind (the kind IS the status id), so the
+board pip, the card swatch and the floating number draw from ONE table;
+the CSS `.hitsplat--burn/--bleed/--poison` block keeps the old amber as
+a fallback only. Crit's neon red vs bleed's crimson was the one pair
+close in hue — the `‡` carries it.
+
+**The pin** (fxRegistry.test.ts, config-derived): every periodic DAMAGE
+status in the catalog authors a ticked key whose hitsplat kind is
+distinct across the DoTs, is never `heal`, and NAMES ITS OWN STATUS ID;
+every periodic HEAL status draws `heal`; every DoT prefix is non-empty
+and distinct from the others and from `+`; the strike kinds stay bare;
+`hitsplatText` = prefix + amount. A fourth DoT joins the pin the moment
+its status ships.
+
+**Pane-verified by a DOM observer** (a 0.6 s number is luck to
+photograph; a MutationObserver on `.hitsplat` insertions is not): in a
+forced `plagueDoctors` fight on the isthmus (`&encounter=plagueDoctors`;
+`firstNode=battle` did not take at this seed — the event still gated),
+110 hitsplats in ~30 s at 3×: `hitsplat--miss` / `--normal` / `--crit`
+and `--poison` with text `☠3` / `☠5` and inline `rgb(143, 195, 31)` =
+STATUS_DISPLAY's `#8FC31F`. Burn and bleed follow the same code path
+(`isDotHitsplatKind` + the prefix table); the pins cover them. Typecheck
+clean; the token, tooltip and literal gates green; no snapshot bump, no
+sim touch, the fuzz smoke does not fire (src/render only).
+
+⏳ For the user's eye: the three prefix glyphs at native resolution on a
+live tick (`~` may read thin at 16 px bold; `☠` is a two-column glyph in
+some fallbacks — the font stack's JetBrains Mono carries U+2620 per its
+charset, unverified here), and a grey read of `☠N` beside a white strike
+number. The kickoff's call D stands: glyphs by eye at 98d.

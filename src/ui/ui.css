@@ -297,8 +297,17 @@ body {
   color: var(--color-flourescent-blue); /* FLOURESCENT_BLUE (cyan) */
 }
 
-.hitsplat--burn {
-  color: var(--color-terminal-amber); /* TERMINAL_AMBER (orange) */
+/* 98d — the three DoT kinds (burn / bleed / poison; until 98d one amber
+   `--burn` class carried all three). Their HUE is set INLINE by the overlay
+   from the status table (`statusColor(kind)` — pip, card swatch and number
+   from one source), and their PREFIX glyph (`~` / `‡` / `☠`, HITSPLAT_PREFIX
+   in fxRegistry.ts) is the "never color alone" channel; the classes exist
+   for a shared shape tweak only. The amber fallback keeps a DoT number
+   legible if the inline hue ever fails to land. */
+.hitsplat--burn,
+.hitsplat--bleed,
+.hitsplat--poison {
+  color: var(--color-terminal-amber);
 }
 
 /* I2 — a dodged single-target strike. A loud, bright italic call-out that

@@ -290,10 +290,11 @@ team-identity residuals → a Round 7.5 rider). The cut:
   layout change); the bottom-left legend names the six kinds + four
   states off shared selectors (`map.legend.*` ×11), carried by the
   read-only overlay; pane-verified incl. grey. WORKLOG §98c.
-- [ ] **98d — the hitsplat split.** `kind` → `burn | bleed | poison |
-  heal` threaded fxRegistry → BattleRenderer → `spawnHitsplat` → three
-  `.hitsplat--*` classes in the status hues + a per-kind prefix glyph (by
-  eye); a pin that every DoT tick key maps to a distinct kind.
+- [x] **98d — the hitsplat split.** ✅ 2026-09-15: `kind` → `burn | bleed
+  | poison | heal`, ONE `HitsplatKind` union, the hue from the status
+  table inline + `HITSPLAT_PREFIX` (`~` / `‡` / `☠`, by eye) through
+  `hitsplatText`; the config-derived pin; DOM-observed `☠3` in a forced
+  plagueDoctors fight. WORKLOG §98d.
 - [ ] **98e — deep water.** A third `vAnim.x` id stamps static bands on
   deep tiles (the shader; the stale `DEEP_WATER_TOP_Y` comment fixed);
   the phase drift deferred to §99 with a landing note at the seam.

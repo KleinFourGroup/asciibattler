@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { assertFxKeysResolve, assertStatusFxKeysResolve, fxDescriptor, FX_REGISTRY } from './fxRegistry';
+import {
+  assertFxKeysResolve,
+  assertStatusFxKeysResolve,
+  fxDescriptor,
+  FX_REGISTRY,
+  HITSPLAT_PREFIX,
+  hitsplatText,
+  isDotHitsplatKind,
+  type HitsplatKind,
+} from './fxRegistry';
 import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
 
@@ -137,6 +146,64 @@ describe('fxRegistry — the Z3 re-home (config-derived)', () => {
       for (const key of Object.values(ABILITY_DEFS[id]!.fx ?? {})) {
         expect(key !== undefined && key in FX_REGISTRY).toBe(true);
       }
+    }
+  });
+});
+
+describe('fxRegistry — 98d the hitsplat kinds (config-derived)', () => {
+  /** Every periodic status's `ticked` descriptor, keyed by status id, with the
+   *  op kind the sim will apply — derived from the status catalog, so a new
+   *  DoT/HoT joins the pin the moment it ships. */
+  function periodicTicks(): Map<string, { op: 'damage' | 'heal'; kind: HitsplatKind }> {
+    const out = new Map<string, { op: 'damage' | 'heal'; kind: HitsplatKind }>();
+    for (const def of Object.values(STATUS_DEFS)) {
+      if (!def.periodic) continue;
+      const key = def.fx?.ticked;
+      expect(key, `${def.id} — a periodic status authors a ticked fx key`).toBeDefined();
+      const fx = fxDescriptor(key!);
+      expect(fx?.hitsplat, `${def.id} — its tick carries a hitsplat`).toBeDefined();
+      out.set(def.id, { op: def.periodic.op.kind, kind: fx!.hitsplat!.kind });
+    }
+    return out;
+  }
+
+  it('every periodic DAMAGE status draws its own hitsplat kind, and never the heal kind', () => {
+    const ticks = periodicTicks();
+    const dots = [...ticks.entries()].filter(([, t]) => t.op === 'damage');
+    expect(dots.length).toBeGreaterThanOrEqual(3); // burn / bleed / poison ship
+    const kinds = dots.map(([, t]) => t.kind);
+    expect(new Set(kinds).size, `distinct kinds across ${dots.map(([id]) => id).join(' / ')}`).toBe(kinds.length);
+    for (const [id, t] of dots) {
+      expect(t.kind, id).not.toBe('heal');
+      expect(isDotHitsplatKind(t.kind), `${id} draws a DoT kind`).toBe(true);
+      // The kind IS the status id — one table (STATUS_DISPLAY) colors pip,
+      // card swatch and number.
+      expect(t.kind, `${id}'s kind names its own status`).toBe(id);
+    }
+  });
+
+  it('every periodic HEAL status draws the heal kind', () => {
+    for (const [id, t] of periodicTicks()) {
+      if (t.op === 'heal') expect(t.kind, id).toBe('heal');
+    }
+  });
+
+  it('every DoT kind carries a non-empty prefix glyph, distinct from the others and from heal', () => {
+    const dotKinds = (Object.keys(HITSPLAT_PREFIX) as HitsplatKind[]).filter(isDotHitsplatKind);
+    const prefixes = dotKinds.map((k) => HITSPLAT_PREFIX[k]);
+    for (const [i, p] of prefixes.entries()) expect(p.length, dotKinds[i]).toBeGreaterThan(0);
+    expect(new Set([...prefixes, HITSPLAT_PREFIX.heal]).size).toBe(prefixes.length + 1);
+    // The strike kinds stay bare — their size / italic already carry crit and miss.
+    expect(HITSPLAT_PREFIX.normal).toBe('');
+    expect(HITSPLAT_PREFIX.crit).toBe('');
+    expect(HITSPLAT_PREFIX.miss).toBe('');
+  });
+
+  it('hitsplatText is the prefix + the amount', () => {
+    expect(hitsplatText('heal', 4)).toBe('+4');
+    expect(hitsplatText('normal', 12)).toBe('12');
+    for (const kind of (Object.keys(HITSPLAT_PREFIX) as HitsplatKind[]).filter(isDotHitsplatKind)) {
+      expect(hitsplatText(kind, 7)).toBe(`${HITSPLAT_PREFIX[kind]}7`);
     }
   });
 });

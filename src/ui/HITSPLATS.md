@@ -2,8 +2,9 @@
 
 **Hitsplats** are the little bits of text that float up off a unit when
 something happens to it in battle: a **damage number**, a red **crit**, a cyan
-**heal** (`+5`), an amber **burn**, or the italic **"Miss"**. This guide is for
-changing how they *look*. Everything here lives in one file:
+**heal** (`+5`), a **DoT tick** (`~5` burn, `‡5` bleed, `☠5` poison — each in
+its status colour), or the italic **"Miss"**. This guide is for changing how
+they *look*. Everything here lives in one file:
 
 ```
 src/ui/ui.css      ← the section that starts with ".hitsplat"
@@ -37,7 +38,7 @@ everything else from the base.
 | plain damage | a normal hit | `.hitsplat` (the **base** — there is no `--normal` rule) |
 | crit | a critical hit | `.hitsplat--crit` |
 | heal | an ability heal (`+N`) | `.hitsplat--heal` |
-| burn | standing in fire | `.hitsplat--burn` |
+| burn / bleed / poison | a DoT tick (`~5` / `‡5` / `☠5`) | `.hitsplat--burn`, `--bleed`, `--poison` — **the colour is NOT here**: the overlay sets it inline from the status table (`statusColor` in `src/render/statusDisplay.ts`, the same hue as the unit's status pip); the prefix glyph is `HITSPLAT_PREFIX` in `src/render/fxRegistry.ts`. The CSS rule is a shared fallback + shape tweak only. (98d) |
 | **miss** | a dodged strike ("Miss") | `.hitsplat--miss` |
 
 Two gotchas worth knowing up front:
@@ -96,7 +97,7 @@ The palette already in use (handy to stay on-theme):
 | white | `#ffffff` | plain damage |
 | neon red | `#ff3131` | crit |
 | cyan | `#15f4ee` | heal |
-| amber | `#ffb000` | burn |
+| amber | `#ffb000` | the DoT kinds' CSS **fallback** only — a live DoT number takes its status colour inline (`STATUS_DISPLAY` in `src/render/statusDisplay.ts`: burn `#FF6A00`, bleed `#D41E3A`, poison `#8FC31F`); change those there, and the unit's status pip follows |
 | cool white | `#eaf2ff` | miss |
 
 Don't want to think about hex? You can also just write common names —

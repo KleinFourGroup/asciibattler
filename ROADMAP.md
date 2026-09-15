@@ -264,9 +264,38 @@ every surface must survive grayscale. **Depends on:** §96 (tokens).
 `MapScreen.ts:265-280`, `UnitOverlayLayer.ts:358-374`,
 `fxRegistry.ts:214-216`). **Decision points:** ⛔ deep-water
 coplanarity was an aesthetic call (`TerrainRenderer.ts:219-222`) — a
-depth tell is a design re-decision. **Exit:** the grayscale test passes
+depth tell is a design re-decision — **✅ DECIDED 2026-09-15 (the
+kickoff): the SHADER** — static bands on deep tiles are the tell, the
+wave drift lands behind §99's gate; the §37b sink is not taken (WORKLOG
+§98 kickoff, call E). **Exit:** the grayscale test passes
 on every surface. **Scope guards:** no palette change (Round 8); no
 team-identity work (Round 7.5); no atlas change.
+
+**Kicked off 2026-09-15** — the code-reality audit + six user-signed
+calls in WORKLOG §98 (two charter items already satisfied by §97's text
+channel: the labelled `▲` chips, the pip's card row; the two
+team-identity residuals → a Round 7.5 rider). The cut:
+
+- [ ] **98a — the instrument.** Ctrl+Alt+G toggles a root
+  `filter: grayscale(1)` (DOM + canvas) in `devKeys.ts`; the BEFORE-set
+  of desaturated screenshots on the five surfaces → WORKLOG.
+- [ ] **98b — the rarity stars.** The full-card header carries a
+  fixed-width `★☆☆☆`…`★★★★` run in the tier hue with the tier name on a
+  §97 tooltip (`rarity.<tier>` ×4, coverage-pinned against
+  `RARITY_TIERS`); the compact card untouched.
+- [ ] **98c — the map state shapes + the kind legend.** CSS shapes on
+  the four state classes (by the user's eye); a fixed bottom-left legend
+  naming the six kinds + four states, present in the read-only overlay.
+- [ ] **98d — the hitsplat split.** `kind` → `burn | bleed | poison |
+  heal` threaded fxRegistry → BattleRenderer → `spawnHitsplat` → three
+  `.hitsplat--*` classes in the status hues + a per-kind prefix glyph (by
+  eye); a pin that every DoT tick key maps to a distinct kind.
+- [ ] **98e — deep water.** A third `vAnim.x` id stamps static bands on
+  deep tiles (the shader; the stale `DEEP_WATER_TOP_Y` comment fixed);
+  the phase drift deferred to §99 with a landing note at the seam.
+- [ ] **98f — the exit.** The AFTER-set passes on every surface; DESIGN
+  §UI idioms "Color redundancy (98)"; the playtest; riders → TODO §98.
+  Predictions: no bump, no sim touch, the fuzz smoke does not fire.
 
 ## Phase 99 — the reduced-motion seam
 

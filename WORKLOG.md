@@ -2109,3 +2109,100 @@ channel (the three labels, the banner, the card's status row). The
 phase's shape held: six steps as cut plus one absorbed finding, no
 snapshot bump, no sim touch, the fuzz smoke fired once (97b) and held.
 Riders → TODO §97.
+
+## Phase 98 — color redundancy
+
+### Kickoff (2026-09-15) — the code-reality audit + the cut
+
+Pre-flight green at `bd9e552` (typecheck clean · 2954 tests / 34 s). The
+audit re-read the five charter choke points against the tree §97 left
+(the cursor flagged two as moved), then surveyed the seams a fix would
+ride: the card header builder, the map's state/kind classes and its fixed
+chrome, the hitsplat kind union end to end, the terrain shader's per-tile
+animation channel, and the dev-keys chord set.
+
+- **Two of the five charter items are already satisfied under §97**, by
+  the TEXT channel the spec's §1 allows for many-category cases: the
+  empower `▲` chips carry the buff's name on both cards (97e, the user
+  kept both), and the board pip's read is the compact card's status row
+  (swatch + name + meta, `updateCardStatusRow`). No per-pip or per-chip
+  shape is owed. Residual: camp units have NO HUD card (the §75h signed
+  call, `HUD.ts:721`), so a pip on a camp unit is hue-only; and the
+  held-body tints for panic (TERMINAL_AMBER) and blind (TERMINAL_STONE)
+  are the camp and neutral TEAM colors (`fxRegistry.ts:230-233` vs
+  `spriteColor.ts`). Both are team-identity questions → a Round 7.5
+  rider (call F), not built here.
+- **Rarity has no text anywhere.** Four card tints at alpha 0.07–0.16
+  (`ui.css:633-654`) vanish entirely in grayscale. The seam is the
+  full-card header (`buildHeader`, `UnitCard.ts:480`); every screen where
+  the player CHOOSES on rarity (recruit / port / roster / promotion /
+  pre-turn) is a full card; the compact battle card has no room and the
+  battle never acts on rarity. `RARITY_TIERS` (`config/units.ts:79`) is
+  the ordered vocabulary a coverage pin derives from.
+- **Map node STATE is border hue + cursor** (`ui.css:489-521`), the
+  kickoff's finding unchanged; the four state classes and six kind
+  classes already ride every node (`MapScreen.ts:255-281`), so shapes
+  are CSS-only. No legend exists anywhere in `src/ui`. The map's fixed
+  chrome takes the top-left (the chrome column), top-center (the banner)
+  and top-right (the roster button); both bottom corners are free.
+  MapScreen's strings are already through `t()` (touch-once satisfied).
+- **The three DoT ticks share ONE hitsplat kind** (`kind: 'burn'`,
+  `fxRegistry.ts:214-216`; the union is `'burn' | 'heal'` at line 94)
+  while carrying three sounds and three sparkle hues. The kind threads
+  `BattleRenderer.ts:1375-1377` → `UnitOverlayLayer.spawnHitsplat`
+  (`'normal' | 'crit' | 'heal' | 'burn' | 'miss'`) → `.hitsplat--*`
+  (`ui.css:288-320`). Hitsplats are DOM text, so a per-kind prefix glyph
+  costs nothing from the atlas.
+- **Deep water may already pass the grayscale test.** `#1F5B7A` vs
+  `#0e3047` differ ~1.9× in Rec.709 luminance. The comment at
+  `TerrainRenderer.ts:571-573` is STALE — it credits a `DEEP_WATER_TOP_Y`
+  recess that does not exist (§37b made deep water coplanar in the same
+  step, `heightAt` line 219-222). The fragment shader's per-tile channel
+  (`vAnim.x`: 0 none · 1 fire · 2 healing) has room for a third id, and
+  `vTopUV` is already in scope — a static surface pattern on deep tiles
+  needs no plane change, no motion and no atlas.
+- **No desaturate instrument exists** (zero `grayscale`/`filter:` in
+  `src/`). The dev-keys chord set (`src/dev/devKeys.ts`, Ctrl+Alt+<key>,
+  off the registry's bound codes) has KeyG free — the registry binds
+  E F H M T, the digits, Space and Slash.
+- **The charter's line refs are stale but the seams are the same files**
+  (`UnitCard.ts:200` → the two class stamps at 202/248 and `buildHeader`
+  at 480; the other four within a few lines).
+
+**The six calls (user-signed 2026-09-15):**
+
+- **A — rarity: STARS in the full-card header, never on the compact
+  card.** The user's shape over a written tier name: a count is a shape
+  channel, survives grayscale, and reads ordinally where "Uncommon" needs
+  the ladder known. Refined at the lock: fixed-width filled + hollow
+  (`★☆☆☆` common → `★★★★` legendary) so the count reads without counting
+  and the header never shifts width; tinted in the tier hue (comfort);
+  the tier NAME rides a §97 tooltip on the star run, so the four
+  `rarity.<tier>` keys land and the ladder is learnable once.
+- **B — the state shapes:** solid filled disc for current, a double ring
+  for frontier, a thin dim ring for visited, a dotted ring for locked —
+  tuned by the user's eye at 98c.
+- **C — the legend: fixed BOTTOM-LEFT**, kinds + states, present in the
+  read-only overlay too (the plan-ahead read is the overlay's point).
+- **D — the DoT prefix glyphs by the user's eye at 98d**; the starting
+  set `~` burn · `‡` bleed · `☠` poison.
+- **E — deep water: THE SHADER.** The ⛔ resolved on the mechanism, the
+  read still measured first at 98a. The user floated a wave; a wave alone
+  is motion and §99 is the reduced-motion seam, so the two compose in one
+  branch: the TELL is static sinusoidal bands across each deep tile (the
+  wave's shape, frozen); drifting their phase against `uTime` is the wave,
+  flair that lands behind §99's gate. The §37b sink is not taken.
+- **F — the two team-identity residuals** (card-less camp pips; the panic
+  / blind tints on the camp / neutral team colors) → a Round 7.5 rider.
+
+**The cut** (ROADMAP §98): 98a the instrument (Ctrl+Alt+G root
+`filter: grayscale(1)`, DOM + canvas; the BEFORE-set of desaturated
+screenshots on the five surfaces) → 98b the rarity stars → 98c the map
+state shapes + the kind legend → 98d the hitsplat split (the four-valued
+kind union threaded end to end; a pin that every DoT tick key maps to a
+distinct kind) → 98e deep water (the static bands; the drift deferred to
+§99) → 98f the exit (the AFTER-set passes on every surface, DESIGN "Color
+redundancy (98)", the playtest, riders → TODO). Predictions: no snapshot
+bump (nothing serialized); no sim touch; **the fuzz smoke does NOT fire**
+(`src/render` / `src/ui` / `src/dev` / `locales/` are not trigger paths);
+`ui.json` +~14 keys; the literal baseline unchanged or down.

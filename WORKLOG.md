@@ -2206,3 +2206,55 @@ redundancy (98)", the playtest, riders → TODO). Predictions: no snapshot
 bump (nothing serialized); no sim touch; **the fuzz smoke does NOT fire**
 (`src/render` / `src/ui` / `src/dev` / `locales/` are not trigger paths);
 `ui.json` +~14 keys; the literal baseline unchanged or down.
+
+### 98a — the instrument (2026-09-15)
+
+`toggleGrayscaleAudit()` in `src/dev/devKeys.ts`, on Ctrl+Alt+G: a
+`filter: grayscale(1)` on `document.documentElement`, so the WebGL canvas
+and the DOM UI desaturate in ONE pass (a filter on the root makes `<html>`
+the containing block for `position: fixed` descendants — the chrome
+column, the banner, the tooltip plate — which is the viewport anyway; the
+page body never scrolls). Exported so a probe can force it without a
+synthetic key. Dev-only by design: the CVD-safe palette is Round 8's
+setting; this is the lint, not the feature. Proven in the pane (the
+pane's key tool sends no `code`, so the chord went in as a synthetic
+window keydown): the root filter read `grayscale(1)` / `""` on alternate
+presses, the console logged `grayscale audit → ON`, and every screenshot
+pair desaturated.
+
+**The BEFORE-set** (the pane at 1280×800, `?layout=isthmus&seed=7
+&character=soldier`; four surfaces, colour then grey):
+
+- **The map.** Colour: current cyan ring, three cyan frontier rings, the
+  rest dark-amber / grey, the `Z` green, the `*` purple, the `$` amber,
+  the `?` blue. Grey: the CURRENT node still reads (its glow is the
+  brightest ring), but **frontier and locked rings are identical** — the
+  "which nodes can I click" question has no answer; and the `*` elite
+  and `?` event glyphs go near-black (purple and true blue are the two
+  darkest hues in the palette), so route-planning loses two kinds at
+  once. The `Z` / `$` / `!` keep some luminance.
+- **The roster modal (full cards, the `roster` skin).** All ten starting
+  units are common, so the tint gap could not be photographed; in colour
+  the 0.07-alpha green wash is already at the JPEG floor. By
+  construction (alpha ≤ 0.16 on black) no tier survives grey — the 98b
+  stars are the answer regardless.
+- **The event screen.** Survives grey outright — it is text and boxes;
+  the title's blue is the only casualty and it is a heading, not a
+  choice.
+- **The isthmus battle (turn 1, the countdown).** Colour: the deep-water
+  band is navy against the shallow blue. Grey: **the depth STILL reads,
+  thinly** — the ~1.9× luminance gap (`#1F5B7A` vs `#0e3047`, derived
+  from the palette constants, not the screenshot) shows as a darker
+  outer band around the mid-grey ford. Bloom flattens the sprites:
+  ally `M` and enemy `M` are the same grey (team identity, Round 7.5's).
+  No status pip or DoT hitsplat was live at the countdown; the hitsplat
+  finding is structural (one CSS class for three kinds, `fxRegistry.ts:
+  214-216`) and needs no photograph.
+
+**What the set changes about the cut:** nothing in shape; two in
+emphasis. 98c's legend must carry the KIND names, not only the state
+shapes — the grey `*` / `?` collapse is a kind loss as well as a state
+loss. 98e's bands are a margin question, not a rescue: the read exists
+in grey and the pattern makes it structural (screen brightness, bloom
+and the scanline rake all eat luminance margins; a shape does not
+depend on one).

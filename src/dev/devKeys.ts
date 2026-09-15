@@ -21,6 +21,16 @@
  *                both → none) — the user's A/B seam: does a shake read as
  *                "you got hurt" or as "you achieved something"? Flippable
  *                live in a battle; logged to the console.
+ *   Ctrl+Alt+G — 98a: toggle the GRAYSCALE audit (`filter: grayscale(1)` on
+ *                the root element — the canvas AND the DOM UI desaturate
+ *                together). The Round 7 "never color alone" lint: a surface
+ *                that survives this survives every colour-vision deficiency
+ *                (spec §1). Dev-only by design — the CVD-safe palette proper
+ *                is a Round 8 setting; this is the audit, not the feature.
+ *                (KeyG is off the registry's bound codes; a root filter makes
+ *                `<html>` the containing block for `position: fixed`
+ *                descendants, which is the viewport anyway — the page body
+ *                never scrolls.)
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */
@@ -50,8 +60,22 @@ export function attachDevKeys(game: Game): void {
         e.preventDefault();
         console.info(`[dev-keys] loss-fx shake policy → ${cycleShakePolicy()}`);
         break;
+      case 'KeyG':
+        e.preventDefault();
+        console.info(`[dev-keys] grayscale audit → ${toggleGrayscaleAudit() ? 'ON' : 'off'}`);
+        break;
     }
   });
+}
+
+/** 98a — flip the root grayscale filter; returns the new state. Exported so a
+ *  scratch probe (or `window.__game`-driven verify) can set it without a
+ *  synthetic key event. */
+export function toggleGrayscaleAudit(force?: boolean): boolean {
+  const root = document.documentElement;
+  const on = force ?? root.style.filter === '';
+  root.style.filter = on ? 'grayscale(1)' : '';
+  return on;
 }
 
 function exportTraces(): void {

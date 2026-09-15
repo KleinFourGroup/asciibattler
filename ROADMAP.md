@@ -276,9 +276,10 @@ calls in WORKLOG §98 (two charter items already satisfied by §97's text
 channel: the labelled `▲` chips, the pip's card row; the two
 team-identity residuals → a Round 7.5 rider). The cut:
 
-- [ ] **98a — the instrument.** Ctrl+Alt+G toggles a root
+- [x] **98a — the instrument.** ✅ 2026-09-15: Ctrl+Alt+G toggles a root
   `filter: grayscale(1)` (DOM + canvas) in `devKeys.ts`; the BEFORE-set
-  of desaturated screenshots on the five surfaces → WORKLOG.
+  read in the pane — frontier = locked in grey, the `*` / `?` glyphs
+  near-black, deep water reads thinly by luminance. WORKLOG §98a.
 - [ ] **98b — the rarity stars.** The full-card header carries a
   fixed-width `★☆☆☆`…`★★★★` run in the tier hue with the tier name on a
   §97 tooltip (`rarity.<tier>` ×4, coverage-pinned against

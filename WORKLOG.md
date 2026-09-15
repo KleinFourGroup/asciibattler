@@ -2348,3 +2348,5 @@ the dotted locked ring in particular. Riders: the legend is fixed and a
 tall board's bottom nodes scroll under it (as they do under the banner);
 a phone-width viewport may want the legend collapsed (§101 / §102's
 surface riders).
+
+**98c-post (2026-09-15, the user call):** the legend read too small at the first cut (11 px, 14 px swatches) and now sits at the chip scale — 15 px rows, a 13 px title, 20 px swatches, 12/18 px padding; pane-measured 296 x 232 px, clear of the chrome column.

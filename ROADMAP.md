@@ -253,28 +253,24 @@ the five kickoff calls live in git at `2af6c70`; the narrative in WORKLOG
   cards' markers + status rows now paint DURING the countdown (the branch
   returned before `refreshStatuses`; the user's catch). WORKLOG §97f.
 
-## Phase 98 — color redundancy
+## Phase 98 — color redundancy ✅ CLOSED 2026-09-16
 
-**Charter:** the "never color alone" idiom applied: a rarity text
-label; map node-STATE shapes + a kind legend; status-pip and empower-`▲`
-shape redundancy; the burn / bleed / poison hitsplat kinds split; the
-deep-water depth tell. **The audit test is a desaturated screenshot** —
-every surface must survive grayscale. **Depends on:** §96 (tokens).
-**Risk:** low (small changes at single choke points: `UnitCard.ts:200`,
-`MapScreen.ts:265-280`, `UnitOverlayLayer.ts:358-374`,
-`fxRegistry.ts:214-216`). **Decision points:** ⛔ deep-water
-coplanarity was an aesthetic call (`TerrainRenderer.ts:219-222`) — a
-depth tell is a design re-decision — **✅ DECIDED 2026-09-15 (the
-kickoff): the SHADER** — static bands on deep tiles are the tell, the
-wave drift lands behind §99's gate; the §37b sink is not taken (WORKLOG
-§98 kickoff, call E). **Exit:** the grayscale test passes
-on every surface. **Scope guards:** no palette change (Round 8); no
-team-identity work (Round 7.5); no atlas change.
-
-**Kicked off 2026-09-15** — the code-reality audit + six user-signed
-calls in WORKLOG §98 (two charter items already satisfied by §97's text
-channel: the labelled `▲` chips, the pip's card row; the two
-team-identity residuals → a Round 7.5 rider). The cut:
+**Outcome:** "never color alone" applied at five seams, each with a
+second channel beside its hue and every surface read under a
+desaturated screenshot before and after (Ctrl+Alt+G, the 98a dev key):
+rarity is a COUNT (the star run on every full-card header), map node
+state is a RING SHAPE and node kind is NAMED (the bottom-left legend off
+shared selectors), a DoT number carries its KIND (a prefix glyph + the
+status-table hue, one `HitsplatKind` union), deep water is a SURFACE
+PATTERN (static world-space bands in both shaders; the drift term is the
+§99 seam). Two charter items were already met by §97's text channel; the
+⛔ resolved to the shader at the kickoff (call E); the two team-identity
+residuals → a Round 7.5 rider (TODO §98). `ui.json` 97 → 112; tests 2954
+→ 2965; no sim touch, no bump, the fuzz smoke never fired. The user's
+eye on every step, four in-step reads absorbed. The charter and the six
+kickoff calls live in git at `58ada9c`; the narrative in WORKLOG §98;
+the idiom in DESIGN §UI idioms "Color redundancy (98)". The cut, as
+landed:
 
 - [x] **98a — the instrument.** ✅ 2026-09-15: Ctrl+Alt+G toggles a root
   `filter: grayscale(1)` (DOM + canvas) in `devKeys.ts`; the BEFORE-set
@@ -300,9 +296,11 @@ team-identity residuals → a Round 7.5 rider). The cut:
   (`DEEP_DRIFT` 0.0 = the §99 seam); `animTypeFor` the one kind → branch
   map, pinned; the stale recess comment fixed; pane-verified incl. grey.
   WORKLOG §98e.
-- [ ] **98f — the exit.** The AFTER-set passes on every surface; DESIGN
-  §UI idioms "Color redundancy (98)"; the playtest; riders → TODO §98.
-  Predictions: no bump, no sim touch, the fuzz smoke does not fire.
+- [x] **98f — the exit.** ✅ 2026-09-16: the AFTER-set passes on every
+  surface under Ctrl+Alt+G; DESIGN §UI idioms "Color redundancy (98)";
+  the user's reads absorbed (98b-post the centered stars · 98c-post the
+  legend at chip scale · 98e-post the apron diagonal + one band per
+  tile); riders → TODO §98; the predictions held. WORKLOG §98f.
 
 ## Phase 99 — the reduced-motion seam
 

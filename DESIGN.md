@@ -274,6 +274,34 @@ order. The board status pip has NO tooltip — the overlay takes no pointer
 events, and the compact card's status row is its read. Zero native
 `title=` in `src/ui` + `src/render` (a tripwire test).
 
+**Color redundancy (98).** "Never color alone": anything the player must
+act on with few categories carries a SECOND channel beside its hue —
+shape, text, count, position or border — so the palette is comfort, not
+correctness. **The audit is a desaturated screenshot:** a surface that
+survives grey survives every colour-vision deficiency; Ctrl+Alt+G (a dev
+key, `src/dev/devKeys.ts`) puts `filter: grayscale(1)` on the root so the
+canvas and the DOM desaturate together, and every §98 surface was read
+under it before and after. The channels as built: **rarity is a count** —
+a fixed-width star run on every full-card header (`★☆☆☆` common →
+`★★★★` legendary, its own line, the tier name on a tooltip; the compact
+battle card has no room and the battle never acts on rarity). **Map node
+STATE is a ring shape** — here = a filled disc, reachable = a double
+ring, visited = dashed, locked = dotted, none touching layout — and
+**node KIND is named** in a bottom-left legend whose swatches share the
+board's own selectors (the key cannot drift from the board); the legend
+rides the read-only overlay too. **A DoT number carries its kind** — a
+prefix glyph (`~` burn · `‡` bleed · `☠` poison · `+` heal, bare strikes)
+and the hue from the status table, so pip, card swatch and floating
+number draw from one source. **Deep water is a surface pattern** — one
+static diagonal band per tile in world space across the board and the
+apron (the plane stays coplanar with shallow water, §37b); the drift term
+is zero and is only the §99 seam. Many-category cases (the ten status
+hues, the five empower hues) satisfy the rule through their TEXT channel
+(the card's labelled row, the `▲` chip's name), not a per-pip shape. Team
+identity on the board (green vs red glyphs) is Round 7.5's, and so are
+its two residuals: card-less camp units' hue-only pips and the panic /
+blind held tints on the camp / neutral team colours.
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay

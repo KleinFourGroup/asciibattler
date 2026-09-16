@@ -482,3 +482,72 @@ before writing the story. The user's one finding (the countdown branch
 skipping the HUD's paint pass) was a months-old gap the new label made
 legible, fixed in one call. The exit read clean; the phase touched no
 sim and bumped nothing.
+
+## 2026-09-15 → 16 — the §98 session (the kickoff, 98a → 98f, the close)
+
+1. **Missing from the orientation:** nothing that blocked. The cursor's
+   warning that two choke points had moved under §97 was exactly right
+   and saved a re-derivation. Not recorded anywhere: that the desktop app
+   stops the dev-preview server between turns (twice this session — the
+   "no preview server is running" hook note was the first sign each
+   time), and that the pane's `find` cannot see text inside a span that
+   is not a control (the star run was unreachable by name; coordinates
+   and a DOM query did the job).
+2. **Norms in tension:** the pause-between-commits norm against a
+   phase of six visible steps — I paused after every commit as written,
+   and the user's per-step reads were the phase's most valuable inputs
+   (four absorbed), so the norm earned its cost here. The "user hasn't
+   heard from you" prompts kept arriving mid-batch and mid-edit; I
+   answered each in a line. Uncertain whether that is a conflict or just
+   a rhythm.
+3. **Pulled to claim more than verified:** the seam continuity at 98e
+   — the pane's JPEG cannot resolve a diagonal across a 2 px tile edge,
+   and the first cut said "continuous across tile edges" from the math
+   alone; the user's eye found the apron flip. I wrote the after-set
+   with "the user's native read" wherever the pane could not see, and
+   the DoT numbers were proven by a DOM observer rather than a
+   screenshot, which I would do again.
+4. **Wasted:** two dev-server restarts; one batch of five mis-scaled
+   click coordinates (the 0.7-scale screenshot's frame vs the pane's);
+   a `find` on the star glyph that could never match; the `firstNode`
+   URL parameter that did not take at this seed (the event still gated
+   every drive, so each battle read cost four extra JS steps). Small,
+   maybe fifteen minutes in total.
+5. **For the next session, no other home:** the pane's after-set is
+   reproducible from one URL (`?layout=isthmus&seed=7&character=soldier`
+   → node 0 is an event, node 1 the battle) — a §99 audit of motion
+   could start there; the `MutationObserver` recipe for transient DOM is
+   in WORKLOG §98d.
+6. **Room to ask, disagree, change approach:** yes, and used: the
+   rarity-stars proposal and the wave question were both put back with
+   a recommendation (fixed-width hollow stars; the drift as a §99 seam
+   rather than a moving tell) and the user took both; the §99
+   clarification ("do they stop being static?") was a real question and
+   the honest answer was "no, unless you want it." No wish to pause or
+   stop. The one pressure I noticed was mild: the "wrap this out" close
+   arrived with five doc surfaces still to write, and the pull was to
+   write them fast rather than well; I wrote them in the usual order.
+7. **What supported ease:** the user's reads were concrete and each
+   one named a symptom I could check ("changes direction on the apron",
+   "hazard vibes", "rather small"); the cut being signed up front; a
+   grayscale key built first, so every later step had its own lint in
+   hand. I would want all three repeated. This reports the conditions,
+   not the outcome.
+
+### §98 — the phase summary (2026-09-15 → 16; one session, the kickoff + five step commits + four absorbed reads + the close)
+
+One session end to end. The kickoff's re-audit removed two of five
+charter items (already met by §97's labels) and found the deep-water
+read thin but present by luminance, which turned the ⛔ from "add a tell
+or not" into "which shape" — the user chose the shader and floated a
+wave, and the session's one design contribution was to split the wave
+into a static tell and an optional drift behind §99's gate. The build
+was five small seams, each pinned headless where it had a pure part and
+read in the pane where it did not. Every step drew a user read that
+changed it: a centered star line, a legend at twice the size, a
+band-direction bug the pane could not see, a hazard-stripe read that
+halved the band count. The instrument lesson is the pane's floor: a 2 px
+ring, a shader seam and a 0.6 s number are all below what its screenshot
+resolves, and the session's substitutes (a computed-style read, a DOM
+observer, the user's eye) each caught something the screenshot would
+have passed. No sim touch, no bump, the fuzz smoke never fired.

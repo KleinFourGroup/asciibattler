@@ -2444,3 +2444,42 @@ term is only the seam where §99 could add a slow drift for motion-on
 players, that phase's (and the user's) call; at 0.0 nothing moves.
 Pane-checked: the coarser diagonal on the deep ring, zero shader errors;
 the seam continuity is the user's native read.
+
+### 98f — the exit (2026-09-16) — the phase CLOSES
+
+**The AFTER-set under Ctrl+Alt+G, every §98 surface:** the map — the
+filled disc / double / dashed / dotted rings tell the four states apart
+without hue, and the legend names the `*` / `?` kinds the before-set had
+lost · the roster (full cards) — `★☆☆☆` reads as a count, the filled
+star plainly brighter than the hollow · the event screen — text and
+boxes, unchanged · the isthmus battle — the deep ring is a STRIPED dark
+band against the flat mid-grey ford (98e-post, one band per tile, one
+diagonal across the apron seam) · the DoT numbers — `☠N` in the status
+hue, DOM-observed (98d). Zero console errors across the set. **The exit
+criterion holds: the grayscale test passes on every surface.**
+
+**The playtest verdict:** the user's eye on every step, each signed with
+its in-step read absorbed — 98b the stars centered · 98c the legend
+scaled to the chip plate · 98e the diagonal flip at the apron seam (a
+real bug: tile-UV vs world space) + the hazard-stripe read (two bands →
+one) · 98d "very hard to test" (→ the hitsplat-gallery rider) and
+otherwise clear. The kickoff's six calls held; call D's glyphs (`~` /
+`‡` / `☠`) stood by eye.
+
+**DESIGN §UI idioms "Color redundancy (98)"** written: the rule, the
+grayscale audit and its dev key, the four channels as built, the
+text-channel cases, and the Round 7.5 boundary.
+
+**The phase's shape:** six steps as cut plus four absorbed reads; no
+snapshot bump, no sim touch, the fuzz smoke never fired (no trigger path
+touched — the prediction held). `ui.json` 97 → 112 keys; tests 2954 →
+2965 (+4 rarity, +4 hitsplat, +3 terrain); the literal baseline
+unchanged. Two charter items closed by §97's text channel without new
+code (the labelled `▲` chips; the pip's card row). Riders → TODO §98
+(the hitsplat gallery · the legend at phone width · the deep-water drift
+for §99 · the band constants · the Round 7.5 team-identity residuals).
+
+**Handed to §99:** the `DEEP_DRIFT` term in terrain.frag + apron.frag
+is a named landing site, and `lossFx.ts` already honors
+`prefersReducedMotion` (96.5b2) — the §99 audit should re-count the
+seam against that JS-side gate, not only the CSS.

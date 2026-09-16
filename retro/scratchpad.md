@@ -209,3 +209,33 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
 - **The pause norm read by purpose:** with nothing player-visible (97a,
   97b) the per-commit pause is a formality; the pause after the first
   visible step (97c) and at the exit were the ones that mattered.
+
+
+## §98 — color redundancy (2026-09-15 → 16)
+
+- **The pane's floor, named:** a 2 px ring style, a shader seam, and a
+  0.6 s hitsplat are all below what the pane's JPEG resolves. Three
+  substitutes worked, each once: a computed-style read for the rings
+  (`borderStyle` / `outlineStyle`), a `MutationObserver` on `.hitsplat`
+  insertions for the numbers (110 captured in ~30 s), and the user's
+  native eye for the seam (the apron diagonal flip — the pane could not
+  have shown it). Reach for the substitute BEFORE writing "verified".
+- **One formula in two coordinate spaces is a bug class** — tile-UV on
+  the board, world space on the apron, "the same sin" drew opposite
+  diagonals because the tile's V runs against world Z. When two shaders
+  must agree, give them the same varying, not the same expression.
+- **A tell that reads as a warning is a tuning question, not a design
+  one** — two bands per tile read as a hazard stripe; one band read as
+  water. The amplitude never moved. Widen before you dim.
+- **"Very hard to test" from the user is a rider, the same day** — the
+  hitsplat split needed a forced encounter + a DOM observer to see once;
+  a dev key that spawns one of each kind is a two-second check forever.
+  Filed at 98e under TODO §98.
+- **The desktop app stops the dev-preview server between turns** — twice
+  this session; the hook's "no preview server is running" line was the
+  tell each time. Budget a `preview_start` per verify turn, not per
+  session.
+- **A build-first instrument pays for the phase:** Ctrl+Alt+G (98a) was
+  the first commit and every later step had its own lint in hand; the
+  before-set it produced re-scoped 98c (name the kinds, not only the
+  states) and reframed 98e (a margin, not a rescue).

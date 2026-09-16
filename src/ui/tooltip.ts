@@ -44,8 +44,6 @@
  * No prose lives here; every site's words go through `t()` at its touch.
  */
 
-import { reducedMotion } from '../render/motion';
-
 /** Hover: the wait before a tooltip opens (a sweep across a row must not
  *  flash each one). */
 export const HOVER_DELAY_MS = 150;
@@ -166,7 +164,8 @@ export function installTooltipHost(mount: HTMLElement): HTMLDivElement {
   host.id = HOST_ID;
   host.setAttribute('role', 'tooltip');
   host.hidden = true;
-  if (reducedMotion()) host.classList.add('is-still');
+  // Reduced motion (the rise dropped, the fade kept) is the sheet's — the §99
+  // block keys off the root attribute the motion gate stamps (99b).
   body = document.createElement('div');
   body.className = 'tooltip__body';
   caret = document.createElement('div');

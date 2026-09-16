@@ -3220,12 +3220,8 @@ body {
     opacity: 0.3;
   }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .pool-gauge-risk {
-    animation: none;
-  }
-}
+/* Its reduced form (no breathing) is in the §99 block at the end of the
+   sheet with every other animation's — not a local @media block (99b). */
 
 /* 96.5b2 — the landing flash (chipPulse's .is-pulsing on the gauge): the
    readout and the fill glow for the pulse, then settle. */
@@ -3612,8 +3608,8 @@ body {
    id-qualified form beats `#ui > * { pointer-events: auto }` — a pointer
    must never hover the tooltip itself (it would flicker over its trigger).
    z-index 50: above the sector-map overlay (40) + its ✕ (42), below
-   #scanlines (1000). The fade mirrors TOOLTIP_FADE_MS; `.is-still` (reduced
-   motion, set by the host at install) drops the rise and keeps the fade. */
+   #scanlines (1000). The fade mirrors TOOLTIP_FADE_MS; under reduced motion
+   (the §99 block at the end of the sheet) the rise goes, the fade stays. */
 #ui > .tooltip {
   pointer-events: none;
 }
@@ -3642,10 +3638,6 @@ body {
 .tooltip.is-visible {
   opacity: 1;
   transform: none;
-}
-.tooltip.is-still {
-  transform: none;
-  transition: opacity 120ms ease;
 }
 .tooltip__body {
   white-space: pre-line;
@@ -3718,4 +3710,86 @@ body {
   letter-spacing: 0.06em;
   opacity: 0.8;
   margin-left: 4px;
+}
+
+/* ── §99 — REDUCED MOTION (99b) ──────────────────────────────────────────
+   ONE gate: `html[data-motion='reduced']`, stamped by src/render/motion.ts
+   from the OS `prefers-reduced-motion` query or the (Round 8) override —
+   deliberately NOT a `@media` block, which a setting could never flip.
+   EVERY `animation:` in this sheet has its reduced form HERE, and
+   tests/ui-motion.test.ts pins it (a new keyframe fails until it picks
+   one; a `-still` keyframe may not carry a transform; no `infinite`; a
+   reduced form that is not `none` keeps the ORIGINAL duration). The
+   shapes: an animation something WAITS on (the hitsplat's `animationend`
+   self-removal, the pre-turn exit ghost's) keeps its duration and loses
+   its motion — a `-still` keyframe that only fades (a bare `none` would
+   leave every number on screen forever); a pure-motion one-shot goes
+   `none`; the two infinite pulses go `none` (the armed / at-risk states
+   keep their static colour + glow); the chip pulses keep their COLOUR
+   flash (the cue that a card moved) without the scale / rotate; the
+   tooltip keeps its fade and drops its 2 px rise. Vestibular triggers
+   only — the opacity / colour / width transitions elsewhere are not
+   motion. The camera shake, the bursts and the sparkles are the JS
+   half (99c, fxDescriptor); the orb + the view shake are lossFx's. */
+:root[data-motion='reduced'] .hitsplat {
+  transform: translate(-50%, -150%);
+  animation: hitsplat-still 0.6s ease-out forwards;
+}
+@keyframes hitsplat-still {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+:root[data-motion='reduced'] .unit-card__level-value.is-revealed,
+:root[data-motion='reduced'] .unit-card__stat-value.is-revealed,
+:root[data-motion='reduced'] .unit-card__stat-delta,
+:root[data-motion='reduced'] .unit-card--promotion .unit-card__derived.is-revealed {
+  animation: none;
+}
+:root[data-motion='reduced'] .hud-objective-btn.is-armed {
+  animation: none;
+}
+:root[data-motion='reduced'] .pool-gauge-risk {
+  animation: none;
+}
+:root[data-motion='reduced'] .preturn-card-enter {
+  animation: none;
+}
+:root[data-motion='reduced'] .preturn-card-exit {
+  animation: preturn-card-exit-still 0.28s ease-in forwards;
+}
+@keyframes preturn-card-exit-still {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+:root[data-motion='reduced'] .card-list-button--pulse {
+  animation: chip-pulse-still 0.18s ease-out;
+}
+@keyframes chip-pulse-still {
+  35% {
+    border-color: var(--color-terminal-amber);
+    color: var(--color-white);
+  }
+}
+:root[data-motion='reduced'] .card-list-button--reshuffle {
+  animation: chip-reshuffle-still 0.4s ease-in-out;
+}
+@keyframes chip-reshuffle-still {
+  30%,
+  70% {
+    border-color: var(--color-flourescent-blue);
+    color: var(--color-flourescent-blue);
+  }
+}
+:root[data-motion='reduced'] .tooltip {
+  transform: none;
+  transition: opacity 120ms ease;
 }

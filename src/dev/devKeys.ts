@@ -82,7 +82,9 @@ export function attachDevKeys(game: Game): void {
       case 'KeyA': {
         e.preventDefault();
         const next = cycleReducedMotionOverride();
-        console.info(`[dev-keys] reduced-motion override → ${next === null ? 'OS' : next ? 'REDUCED' : 'full'}`);
+        console.info(
+          `[dev-keys] reduced-motion override → ${next === null ? 'OS' : next ? 'REDUCED' : 'full'}`,
+        );
         break;
       }
     }

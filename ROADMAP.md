@@ -330,10 +330,13 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
   commit — Firefox's Reader View owns it, gotcha #134); the three
   readers moved; `shakeView` gates itself (the bug); six pins;
   pane-verified (boot · reduced · full · OS). WORKLOG §99a.
-- [ ] **99b — the CSS block.** The eight keyframes under the root
-  attribute: fade-only `hitsplat-rise` / `preturn-card-exit` (they must
-  END), `none` for the six; the notch `@media` + `.tooltip.is-still`
-  folded in. A sheet-derived pin: every `@keyframes` has a reduced rule.
+- [x] **99b — the CSS block.** ✅ 2026-09-16: ONE block keyed off
+  `:root[data-motion='reduced']` — `hitsplat-still` / `preturn-card-exit-
+  still` (fade-only, same duration), `none` for the pops + the two
+  pulses, the chip flashes kept colour-only, the notch `@media` + the
+  tooltip's `.is-still` folded in; `tests/ui-motion.test.ts` (seven pins,
+  self-checked to fail); pane-verified — 86 hitsplats on the still form,
+  0 leaked. WORKLOG §99b.
 - [ ] **99c — the filter.** `fxDescriptor(key, reduced)` strips the
   call-B set; the four sites pass the gate; pins over every key.
 - [ ] **99d — the browser decision point.** ⛔ The drift eyeball (E:

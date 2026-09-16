@@ -159,6 +159,13 @@ animation-duration: 1s;
 fade (0 = invisible, 1 = solid) and the `translate(-50%, …%)` numbers move it
 (more-negative second number = floats higher). This too is shared by all kinds.
 
+**Reduced motion (§99)** — a player whose OS asks for less motion gets
+`@keyframes hitsplat-still` instead (the §99 block at the END of ui.css):
+the number appears in place and fades, same `0.6s`. If you change the base
+duration above, change it there too — the number self-removes when its
+animation ends, and a test (`tests/ui-motion.test.ts`) fails if the two
+durations drift apart.
+
 ---
 
 ## What you *can't* change from this file

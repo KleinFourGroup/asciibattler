@@ -2636,4 +2636,66 @@ registry's, the dev file's) and missed the third — the browsers' own.
 Moved to **Ctrl+Alt+A** (accessibility; off every set); the devKeys
 header now names the three-set rule; gotcha #134. The pane cannot
 verify a chord against a browser it isn't — the user's Firefox is the
-read.
+read. **The user's Firefox playtest passed on Ctrl+Alt+A.**
+
+### 99b — the CSS block + the sheet-derived pin (2026-09-16)
+
+ONE block at the end of `ui.css`, keyed off `:root[data-motion='reduced']`
+(the attribute 99a stamps — no `@media`, which a setting could never
+flip): `.hitsplat` → `hitsplat-still` (opacity-only, the translate moved
+to the gated base rule, the SAME 0.6 s so `animationend` still removes
+it) · `.preturn-card-exit` → `preturn-card-exit-still` (the fade, 0.28 s)
+· the four card pops + `.preturn-card-enter` + the two infinite pulses
+(`.hud-objective-btn.is-armed`, `.pool-gauge-risk`) → `none` · the two
+chip pulses keep their COLOUR flash as `chip-pulse-still` /
+`chip-reshuffle-still` (the cue that a card moved, without the scale /
+rotate — a small deliberate departure from the cut's "none for the six":
+the flash is information, the movement was the motion) · `.tooltip` →
+`transform: none` + an opacity-only transition. The notch's local
+`@media` block (96.5c) and the tooltip's JS-set `.is-still` (97a) are
+FOLDED IN and deleted — three idioms became one. `HITSPLATS.md` names
+the twin duration.
+
+**The pin, `tests/ui-motion.test.ts`** (seven `it`s, the 96a shape): a
+flat block walker over the sheet; the gate selector DERIVED from
+`motion.ts`'s constants; (1) every `animation:` selector outside the
+gate has the same selector under it with an `animation:`; (2) no mixed
+gated / ungated selector lists; (3) every reduced keyframe is defined,
+carries no `transform`, is never `infinite`; (4) a reduced form that is
+not `none` keeps the ORIGINAL duration; (5) no dead `@keyframes`; (6)
+zero `@media (prefers-reduced-motion)` blocks. **Self-checked against a
+known answer** (the §94c norm): with the `.pool-gauge-risk` reduced rule
+deleted from the live sheet, the pin FAILED naming exactly
+`.pool-gauge-risk`; restored byte-identical.
+
+**The pane read** (`:5191`, the gate forced by the chord): the character
+screen's tooltip transition `opacity, transform` → `opacity` on the
+press; the pre-turn screen (a forced plagueDoctors fight via
+`?layout=isthmus&encounter=plagueDoctors`): `.preturn-card-enter` ×3 →
+`none`, both notches → `none`, a chip caught mid-flash on
+`chip-pulse-still`; the battle: a body-wide `MutationObserver` counted
+**86 hitsplats spawned, every one computing `hitsplat-still`**, a 50 ms
+poll saw at most **9 alive at once** (texts `Miss` · `1` · `☠6` · `10` —
+the 98d poison prefix under the still form), and after the fight **0
+anchors, 0 animations** — no leak (the kickoff's `animation: none` fear
+was real: a bare `none` never fires `animationend`). Two pane tells for
+the log: Vite full-reloads the tab on a `.ts` swap (the override resets —
+`performance.getEntriesByType('navigation')[0].type === 'reload'` is the
+check), and the isthmus armies take ~20 s to meet, so an observer read
+before that counts zero honestly.
+
+**A watch, not a finding:** under Space (the sim pause) nine anchors held
+past their 0.6 s lifetime and drained on unpause. Nothing in `src`
+pauses DOM animations (`getAnimations` / `playState` grep: none) and
+99b changes only the keyframe body, so this is pause's, not 99b's —
+TODO §99 carries it (a pause that freezes the overlay's animations is
+arguably right; a pause that merely hides `animationend` is a leak
+window).
+
+Prettier: the sheet had drifted (~30 pre-existing hunks, the wrapped
+`text-shadow` lists); the pass went in as its own commit ahead of this
+one (`43e06d7`) so this diff is the change alone. The hook blocked that
+commit's first attempt correctly — the new pin on disk failed against
+the block-less sheet the hook tested; the retry ran green once the
+block was back on disk (the hook tests the WORKING tree, the commit
+carries the INDEX — a format-only commit is safe either way).

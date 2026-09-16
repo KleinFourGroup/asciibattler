@@ -337,8 +337,12 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
   tooltip's `.is-still` folded in; `tests/ui-motion.test.ts` (seven pins,
   self-checked to fail); pane-verified — 86 hitsplats on the still form,
   0 leaked. WORKLOG §99b.
-- [ ] **99c — the filter.** `fxDescriptor(key, reduced)` strips the
-  call-B set; the four sites pass the gate; pins over every key.
+- [x] **99c — the filter.** ✅ 2026-09-16: `fxDescriptor(key, reduced)`
+  strips `REDUCED_MOTION_STRIPS` (shake · burst · sparkle) via the pure
+  `stripMotion` copy; the four sites pass `reducedMotion()`; five pins
+  over every key under both readings; pane-verified by call counters at
+  the effect methods (0 / 0 / 0 stripped under the gate across ~180
+  hitsplats; burst + sparkle fire under full). WORKLOG §99c.
 - [ ] **99d — the browser decision point.** ⛔ The drift eyeball (E:
   one candidate `DEEP_DRIFT`, keep or revert live), THEN the shader
   freeze call (D) with both states seen under Ctrl+Alt+A.

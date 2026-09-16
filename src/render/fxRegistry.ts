@@ -278,9 +278,36 @@ export const FX_REGISTRY = {
 /** The closed set of authored keys — the §30 editor's option list. */
 export type FxKey = keyof typeof FX_REGISTRY;
 
-/** Resolve a key to its descriptor, or `undefined` for an unknown key. */
-export function fxDescriptor(key: string): FxDescriptor | undefined {
-  return (FX_REGISTRY as Record<string, FxDescriptor>)[key];
+/**
+ * 99c — the channels a reduced-motion player does NOT get (Round 7 §99, the
+ * kickoff's call B, user-signed): the camera `shake` (the one vestibular
+ * trigger in the registry), the impact `burst` and the status `sparkle`
+ * (particle motion that carries nothing the sound / hitsplat / overlay
+ * don't). KEPT: `sound` (not motion), `hitsplat` + `overlay` (static
+ * information), `projectile` / `tracer` / `shove` (they show WHO hits WHOM —
+ * one small glyph on a straight line, the essential-motion exemption).
+ * `satisfies` keeps the set honest against the descriptor's channel names.
+ */
+export const REDUCED_MOTION_STRIPS = ['shake', 'burst', 'sparkle'] as const satisfies readonly (keyof FxDescriptor)[];
+
+/** A descriptor with the REDUCED_MOTION_STRIPS channels removed (a copy; the registry entry is never mutated). */
+export function stripMotion(fx: FxDescriptor): FxDescriptor {
+  const out: FxDescriptor = { ...fx };
+  for (const channel of REDUCED_MOTION_STRIPS) delete out[channel];
+  return out;
+}
+
+/**
+ * Resolve a key to its descriptor, or `undefined` for an unknown key. THE ONE
+ * choke point every dispatch site walks (BattleRenderer: the action phases,
+ * the status moments, the overlay tint, the chain arc): `reduced` strips the
+ * motion channels (99c). The caller passes the gate's answer
+ * (`reducedMotion()`, src/render/motion.ts) so this module stays pure data —
+ * a headless pin can walk every key under both readings.
+ */
+export function fxDescriptor(key: string, reduced = false): FxDescriptor | undefined {
+  const fx = (FX_REGISTRY as Record<string, FxDescriptor>)[key];
+  return fx !== undefined && reduced ? stripMotion(fx) : fx;
 }
 
 /**

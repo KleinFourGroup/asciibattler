@@ -8,6 +8,9 @@ import {
   hitsplatText,
   isDotHitsplatKind,
   type HitsplatKind,
+  type FxDescriptor,
+  REDUCED_MOTION_STRIPS,
+  stripMotion,
 } from './fxRegistry';
 import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
@@ -205,5 +208,61 @@ describe('fxRegistry — 98d the hitsplat kinds (config-derived)', () => {
     for (const kind of (Object.keys(HITSPLAT_PREFIX) as HitsplatKind[]).filter(isDotHitsplatKind)) {
       expect(hitsplatText(kind, 7)).toBe(`${HITSPLAT_PREFIX[kind]}7`);
     }
+  });
+});
+
+/**
+ * 99c — the reduced-motion filter, walked over EVERY registry key under both
+ * readings. The strip set is pinned by value (the §99 exit criterion: no
+ * shake, burst or sparkle) and the kept channels byte-equal, so a channel
+ * added to the descriptor later is kept until someone decides otherwise here.
+ */
+describe('99c — fxDescriptor under reduced motion', () => {
+  const keys = Object.keys(FX_REGISTRY);
+  const stripped = new Set<keyof FxDescriptor>(REDUCED_MOTION_STRIPS);
+
+  it('strips exactly shake, burst and sparkle', () => {
+    expect([...REDUCED_MOTION_STRIPS].sort()).toEqual(['burst', 'shake', 'sparkle']);
+  });
+
+  it('the registry exercises every stripped channel (the pin is not vacuous)', () => {
+    for (const channel of REDUCED_MOTION_STRIPS) {
+      const carriers = keys.filter((k) => fxDescriptor(k)![channel] !== undefined);
+      expect(carriers.length, `no key carries \`${channel}\``).toBeGreaterThan(0);
+    }
+  });
+
+  it('every key: the reduced reading has none of the stripped channels and all of the others, byte-equal', () => {
+    for (const k of keys) {
+      const full = fxDescriptor(k)!;
+      const reduced = fxDescriptor(k, true)!;
+      for (const channel of REDUCED_MOTION_STRIPS) {
+        expect(reduced[channel], `${k}.${channel} under reduced motion`).toBeUndefined();
+      }
+      for (const channel of Object.keys(full) as (keyof FxDescriptor)[]) {
+        if (stripped.has(channel)) continue;
+        expect(reduced[channel], `${k}.${channel} must survive reduced motion`).toEqual(full[channel]);
+      }
+      // The full reading is the registry entry itself; the reduced one never mutates it.
+      expect(fxDescriptor(k, false)).toBe(full);
+      expect(full).toEqual(FX_REGISTRY[k as keyof typeof FX_REGISTRY]);
+    }
+  });
+
+  it('the informational channels ride through: a bolt still launches, a DoT still splats, a tint still holds', () => {
+    expect(fxDescriptor('magic_bolt_launch', true)).toEqual({ projectile: { style: 'straight' } });
+    expect(fxDescriptor('magic_bolt_burst', true)).toEqual({ sound: 'magicboom' });
+    expect(fxDescriptor('poison_tick', true)?.hitsplat).toEqual(fxDescriptor('poison_tick')?.hitsplat);
+    expect(fxDescriptor('poison_tick', true)?.sparkle).toBeUndefined();
+    expect(fxDescriptor('chain_arc', true)).toEqual({ tracer: {}, sound: 'chain' });
+    expect(fxDescriptor('no_such_key', true)).toBeUndefined();
+  });
+
+  it('stripMotion is a copy, not a mutation', () => {
+    const fx: FxDescriptor = { sound: 'thud', shake: { intensity: 1, durationSeconds: 1 }, burst: { style: 'dud' } };
+    const out = stripMotion(fx);
+    expect(out).toEqual({ sound: 'thud' });
+    expect(fx.shake).toBeDefined();
+    expect(fx.burst).toBeDefined();
   });
 });

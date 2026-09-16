@@ -26,6 +26,7 @@ import {
   type FxTracer,
   type HitsplatKind,
 } from './fxRegistry';
+import { reducedMotion } from './motion';
 import { TICK_RATE, ticksToSeconds } from '../config';
 import { ABILITY_DEFS } from '../config/abilities';
 import { STATUS_DEFS } from '../config/statuses';
@@ -1271,7 +1272,7 @@ export class BattleRenderer {
     this.spawnProjectile(fromPos, toPos, color, undefined, 0, CHAIN_ARC_SECONDS, undefined, PROJECTILE_SIZE);
     // The per-hop zap + the gentle electric jolt (the registry authors both; the
     // unified one-key = visual + SFX model, like onActionPhase).
-    const fx = fxDescriptor('chain_arc');
+    const fx = fxDescriptor('chain_arc', reducedMotion());
     if (fx?.sound) this.audio.play(fx.sound);
     if (fx?.shake) this.renderer.shakeCamera(fx.shake.intensity, fx.shake.durationSeconds);
   };
@@ -1335,7 +1336,9 @@ export class BattleRenderer {
   }: GameEvents['action:phase']): void => {
     const key = ABILITY_DEFS[actionId]?.fx?.[phase];
     if (!key) return;
-    const fx = fxDescriptor(key);
+    // 99c — the gate rides the resolver: under reduced motion the shake, the
+    // burst and the sparkle channels come back absent (REDUCED_MOTION_STRIPS).
+    const fx = fxDescriptor(key, reducedMotion());
     if (!fx || !this.world) return;
 
     // Unified cue (the Z VFX+SFX decision): the sound fires WITH the visual.
@@ -1370,7 +1373,7 @@ export class BattleRenderer {
   ): void {
     const key = STATUS_DEFS[statusId]?.fx?.[moment];
     if (!key) return;
-    const fx = fxDescriptor(key);
+    const fx = fxDescriptor(key, reducedMotion());
     if (!fx) return;
     if (fx.sound) this.audio.play(fx.sound);
     if (fx.sparkle) this.spawnSparkle(unitId, fx.sparkle.color);
@@ -1400,7 +1403,7 @@ export class BattleRenderer {
    */
   private onStatusApplied = ({ unitId, statusId }: GameEvents['status:applied']): void => {
     const key = STATUS_DEFS[statusId]?.fx?.active;
-    const tint = key ? fxDescriptor(key)?.overlay?.tint : undefined;
+    const tint = key ? fxDescriptor(key, reducedMotion())?.overlay?.tint : undefined;
     if (!tint) return;
     let tints = this.statusOverlays.get(unitId);
     if (!tints) {

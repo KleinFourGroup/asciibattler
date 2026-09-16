@@ -2699,3 +2699,53 @@ commit's first attempt correctly — the new pin on disk failed against
 the block-less sheet the hook tested; the retry ran green once the
 block was back on disk (the hook tests the WORKING tree, the commit
 carries the INDEX — a format-only commit is safe either way).
+
+**The user's Firefox playtest passed** (2026-09-16): numbers in place,
+no card rise, no notch breathing, the chips flash without wobble.
+
+### 99c — the filter (2026-09-16)
+
+`fxRegistry.ts`: `REDUCED_MOTION_STRIPS = ['shake', 'burst', 'sparkle']`
+(`as const satisfies readonly (keyof FxDescriptor)[]` — the set can only
+name real channels), `stripMotion(fx)` a copy with those deleted, and
+`fxDescriptor(key, reduced = false)` — the ONE choke point — returns the
+stripped copy under `reduced`; the module stays pure (the caller passes
+the gate's answer). `BattleRenderer`'s four sites pass `reducedMotion()`
+(the chain arc · `onActionPhase` · `driveStatusFx` · the overlay tint —
+the tint is a kept channel, but every site walks the gate so the
+pattern has no exception to remember). Five pins in `fxRegistry.test.ts`:
+the strip set by value (the exit criterion), the registry exercises
+every stripped channel (not vacuous), every key under both readings —
+stripped channels absent, every other channel byte-equal, the full
+reading IS the registry entry — the informational channels ride through
+(a bolt still launches, a DoT still splats, the chain arc keeps its
+tracer + sound), `stripMotion` never mutates. Tests 2971 → 2983 across
+99b + 99c; typecheck + lint clean. Prettier flags the three touched
+files, but it flagged them at HEAD too — left alone (a sweep is its own
+commit, as 99b-pre was).
+
+**The pane read** — the seam the filter does NOT own: call counters
+wrapped around `BattleRenderer.prototype`'s `spawnBurstFx` /
+`spawnSparkle` / `triggerShoveFx` / `launchProjectileFx` /
+`triggerTracerFx` / `spawnHitsplat` and `Renderer.prototype.shakeCamera`
+(TS-private, runtime-reachable via `__game.activeScene.battleRenderer`
+and `__game.renderer`), the Gambler's team (the mage) into the forced
+plagueDoctors fight. ⚠ **The pane was HIDDEN, and a hidden pane stalls
+`requestAnimationFrame` — the sim stops with it** (70 s of "battle"
+produced zero ticks; the earlier 99b fight ran only because the pane
+was showing). The read drove `activeScene.tick(1/60)` in a loop
+instead — the dispatch seam needs no frame loop:
+
+| window (12–25 s of sim) | hitsplat | launch | shove | tracer | **burst** | **sparkle** | **shake** |
+|---|---|---|---|---|---|---|---|
+| REDUCED (fight 1) | 84 | 16 | 8 | 10 | **0** | **0** | **0** |
+| REDUCED (fight 2) | 94 | 19 | 19 | 10 | **0** | **0** | **0** |
+| FULL (fight 2, the tail) | 3 | 0 | 0 | 1 | **1** | **1** | 0 |
+
+The kept channels fire under the gate; the stripped ones never do; the
+same code under FULL fires burst + sparkle. `shake` had no live source
+in these fights (no catapult; the mage's bolt-burst shake didn't land in
+the FULL tail) — its strip is the headless pin's (`magic_bolt_burst`
+reduces to `{ sound: 'magicboom' }`). The first FULL window read all
+zeros because the isthmus armies take ~20 s of sim to meet — the order
+of the windows matters; read the control with combat in it.

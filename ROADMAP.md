@@ -314,6 +314,32 @@ headless; the CSS block present; a reduced-motion browser shows no
 shake, burst, sparkle or infinite pulse. **Scope guards:** no bloom
 dial, no scanline toggle (both are settings — Round 8).
 
+**Kickoff 2026-09-16** (WORKLOG §99 Kickoff — the audit + the five
+calls, user-signed): the seam re-counted at EIGHT keyframes / TWO
+infinite pulses + two partial gates already in the sheet; `shakeView`
+found un-gated (a bug); the gate re-homed to ONE module whose root
+attribute drives CSS and JS alike (call A — the spec's intent over its
+letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
+(call B); the shader-clock freeze (D) decided AFTER the drift eyeball
+(E), both in the browser at 99d. The cut:
+
+- [ ] **99a — the gate.** `src/render/motion.ts` (`reducedMotion()` =
+  override ?? matchMedia; `setReducedMotionOverride`; the root
+  `data-motion` stamp at boot + on `change`) + Ctrl+Alt+R; `lossFx`'s
+  reader + its three callers move over; `shakeView` gated. Pure pins on
+  the precedence.
+- [ ] **99b — the CSS block.** The eight keyframes under the root
+  attribute: fade-only `hitsplat-rise` / `preturn-card-exit` (they must
+  END), `none` for the six; the notch `@media` + `.tooltip.is-still`
+  folded in. A sheet-derived pin: every `@keyframes` has a reduced rule.
+- [ ] **99c — the filter.** `fxDescriptor(key, reduced)` strips the
+  call-B set; the four sites pass the gate; pins over every key.
+- [ ] **99d — the browser decision point.** ⛔ The drift eyeball (E:
+  one candidate `DEEP_DRIFT`, keep or revert live), THEN the shader
+  freeze call (D) with both states seen under Ctrl+Alt+R.
+- [ ] **99e — the exit.** DESIGN "Reduced motion (99)"; the §96.5 +
+  §98 riders closed; the stub; the cursor.
+
 ## Phase 100 — input accessibility + the extraction sweep
 
 **Charter:** DESIGN §Input accessibility extended to hover and to

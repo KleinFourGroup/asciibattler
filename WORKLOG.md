@@ -2483,3 +2483,110 @@ for §99 · the band constants · the Round 7.5 team-identity residuals).
 is a named landing site, and `lossFx.ts` already honors
 `prefersReducedMotion` (96.5b2) — the §99 audit should re-count the
 seam against that JS-side gate, not only the CSS.
+
+## Phase 99 — the reduced-motion seam
+
+### Kickoff (2026-09-16) — the code-reality audit + the cut
+
+Pre-flight green at `d7e0b0e` (typecheck clean · 2965 tests / 34 s). The
+audit re-counted the seam the charter names (the keyframes, the one
+choke point) against the tree §96.5–§98 left, then walked the seams a
+gate would ride: the three JS-side readers of `prefersReducedMotion`,
+every animation's REMOVAL mechanic, the shader-time plumbing behind the
+`DEEP_DRIFT` seam, and the Round 8 hook the charter promises.
+
+- **The count moved: EIGHT keyframes, TWO infinite pulses, and a
+  reduced-motion block already exists.** `ui.css` carries
+  `hitsplat-rise` · `unit-card-pop` · `hud-status-pulse` (infinite, on
+  `.hud-objective-btn.is-armed`) · `pool-notch-breathe` (infinite, on
+  `.pool-gauge-risk`, 96.5c) · `preturn-card-enter` · `preturn-card-exit`
+  · `chip-pulse` · `chip-reshuffle`. The notch already has its own
+  `@media (prefers-reduced-motion: reduce)` block (`ui.css:3149`), and
+  the tooltip's rise is dropped by a JS-set class (`.tooltip.is-still`,
+  97a) — two partial gates in two idioms, neither the charter's.
+- **The JS-side gate has THREE readers and ONE hole.** `HUD.deliver`
+  (no orb flight), `HUD.runEndSequence` (no stagger) and the tooltip
+  install read `prefersReducedMotion()` (`lossFx.ts:70`, a bare
+  `matchMedia`). But `shakeView` — the pool-loss VIEW shake, a Web
+  Animations `translate` on the canvas + `#ui` — is called from `land()`,
+  which the reduced branch runs too (`HUD.ts:452-455`). DESIGN's "nothing
+  flies or shakes" is half-true today: under reduced motion the orb
+  doesn't fly, the view still shakes. The TODO §96.5 rider ("the
+  reduced-motion path, unverified") would have found it.
+- **Two shakes, two paths.** The fx `shake` channel drives
+  `Renderer.shakeCamera` (a three.js camera jitter, Z2); the pool loss
+  drives `shakeView` (DOM). One gate has to reach both.
+- **`fxDescriptor()` is still the one choke point, with FOUR sites now**
+  (`fxRegistry.ts:282`; `BattleRenderer.ts` 1274 chain_arc · 1338
+  `onActionPhase` · 1373 `driveStatusFx` · 1403 the overlay tint — the
+  charter's "three" predates 98d). The module is pure (no `window`), so
+  the filter must take the gate as an ARGUMENT, never read the media
+  query itself. Nine channels: `sound` `projectile` `burst` `shake`
+  `shove` `tracer` `hitsplat` `sparkle` `overlay`.
+- **`animation: none` would LEAK hitsplats.** `UnitOverlayLayer.
+  spawnHitsplat` (`:296`) removes the anchor and decrements the stack
+  count on `animationend`; an animation that never runs never ends, so
+  a bare `none` under reduced motion leaves every number on screen
+  forever and the stack offset climbing. The reduced form of
+  `hitsplat-rise` must still END — a fade-only keyframe at the same
+  0.6 s. The pre-turn exit ghost has the same dependency with a 600 ms
+  timeout net (`PreTurnScreen.ts:355-357`); the chip pulses and card pops
+  are class-toggled one-shots with no removal dependency.
+- **The shader clock is ONE seam.** `uTime` drives the fire flicker
+  (id 1), the healing shimmer (id 2), the apron mist creep + fog, the
+  backdrop mist, and the `DEEP_DRIFT` term (0.0, id 3); all three
+  renderers get it from `BattleScene.ts:328-330 / 358-363`
+  (`advanceTime(dt)`). Holding `dt` there under the gate freezes every
+  shader motion at once — no shader change, no uniform.
+- **No settings module exists** (`settings` matches only `locale.ts` and
+  the shake policy in `lossFx.ts`). The Round 8 hook needs an owner: a
+  module with an override the setting flips. And a pure `@media` block
+  can NOT be flipped by a setting without duplicating every rule — the
+  spec's letter ("a `prefers-reduced-motion` block") and its intent
+  ("the Round 8 setting flips the same gate without touching the seam
+  again") pull apart; call A below.
+- **The pane cannot emulate the media query** (the §96.5 rider);
+  Ctrl+Alt+R is free (dev keys bind S L D K G; the registry E F H M T +
+  digits / Space / Slash). Tests run in the `node` environment — the
+  gate's pins are pure functions; the CSS pin reads the sheet as text
+  (the 96a `ui-tokens.test.ts` shape).
+- **Transitions are out.** 37 `transition:` rules, all opacity / color /
+  width / a 2 px tooltip rise — none a vestibular trigger; the charter's
+  scope (keyframes + the pulses) holds.
+
+**The five calls (user-signed 2026-09-16):**
+
+- **A — ONE gate module, a root attribute, no `@media` block.**
+  `src/render/motion.ts` owns `reducedMotion()` (override ?? `matchMedia`)
+  and `setReducedMotionOverride()`, and stamps `data-motion="reduced"`
+  on the root at boot and on the query's `change`; the CSS keys off the
+  attribute. Rationale: a `@media` block can't be flipped by a setting
+  without duplicating every rule, so the spec's letter ("a
+  `prefers-reduced-motion` block") and its intent ("Round 8 flips the
+  same gate without touching the seam") pull apart; the attribute honors
+  the intent — CSS and JS consult one source, and Round 8 sets one
+  override. Cost: the OS preference is honored only once the module has
+  booted (it stamps synchronously at import, before any screen renders).
+  The module lives in `render` because `render` never imports `ui` (the
+  reverse is already common: `Renderer`, `TerrainRenderer`,
+  `statusDisplay`).
+- **B — strip `shake` · `burst` · `sparkle`; keep the six others.**
+  `sound` is not motion; `hitsplat` and `overlay` are static
+  information; `projectile` / `tracer` / `shove` show WHO hits WHOM (a
+  single small glyph on a straight line, the essential-motion exemption;
+  `shove` kept on the same reasoning — the user's call).
+- **C — the `shakeView` hole is a bug; fixed through the same gate.**
+- **D — the shader-clock freeze is DEFERRED to 99d**, decided after the
+  drift eyeball (both parties low-confidence: the freeze trades the
+  diorama's ambient life for consistency, and the drift is the one piece
+  of that motion that can be added and removed live — see both states
+  before ruling).
+- **E — deep water's drift gets ONE browser eyeball at 99d**: a
+  candidate `DEEP_DRIFT`, keep or revert on the user's read; under the
+  gate the bands go static either way (with D) or stay at 0 (without).
+
+**The cut** (in ROADMAP §99): 99a the gate + Ctrl+Alt+R · 99b the CSS
+block + the sheet-derived pin · 99c the filter + the key pins · 99d the
+browser decision point (E then D) · 99e the exit. Predictions: no
+snapshot bump, no sim touch, the fuzz smoke never fires (no trigger path
+— `src/render` + `src/ui` + `src/dev` + `src/scenes` only).

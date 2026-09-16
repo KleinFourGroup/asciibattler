@@ -2393,3 +2393,39 @@ live tick (`~` may read thin at 16 px bold; `☠` is a two-column glyph in
 some fallbacks — the font stack's JetBrains Mono carries U+2620 per its
 charset, unverified here), and a grey read of `☠N` beside a white strike
 number. The kickoff's call D stands: glyphs by eye at 98d.
+
+### 98e — deep water: the static bands (2026-09-16)
+
+**The tell** (`terrain.frag.glsl`, `vAnim.x` id 3 = `ANIM_DEEP_WATER`):
+diagonal bands across each deep tile's top face — `sin((u + v) · 2π ·
+2)` at ±0.22 of the base navy, two bands per tile (an integer count, so
+the pattern is continuous across tile edges), the sides untouched. Not an
+animation: **`DEEP_DRIFT` is 0.0** and the `uTime · DEEP_DRIFT` term is
+the named §99 seam where a slow phase drift lands, gated on
+prefers-reduced-motion (the kickoff's call E — the static bands are the
+tell, the wave is flair; a motion-only tell would fail the reduced-motion
+player). The apron shader carries the same bands in WORLD space (it has
+no top-face UV) so a clamp-sampled deep edge tile continues its pattern
+into the fog. The plane is untouched — the §37b sink is not taken.
+
+**The mapping:** `animTypeFor(kind)` (TerrainRenderer.ts) is the ONE
+kind → branch-id map — the terrain and the apron each carried a private
+ternary until 98e — pinned by `TerrainRenderer.test.ts` with a
+`Record<TileKind, number>` expected table (a new tile kind fails tsc
+until it is placed; deep water is the only kind on the band branch,
+shallow stays plain, the ids read 0 < 1 < 2 < 3 as the shader thresholds
+expect). The stale comment at `_deepWaterColor` (a `DEEP_WATER_TOP_Y`
+recess that never existed — the 98a finding) is rewritten to say what
+carries the read now.
+
+**Pane-verified** (the isthmus at seed 7, turn 1, the pane's 800×450):
+the outer deep ring shows the diagonal striping where the 98a before-set
+had a flat navy; under Ctrl+Alt+G the striped dark ring reads against
+the flat mid-grey ford — a SHAPE now, not a luminance margin; zero
+console errors (both shaders compiled). Typecheck clean; no snapshot
+bump, no sim touch; the fuzz smoke does not fire.
+
+⏳ For the user's eye at native resolution: the band amplitude (0.22 —
+too loud reads as a hazard stripe, too quiet is the old luminance read
+again) and whether two bands per tile is the right pitch on a 16×16
+board at the D4 camera; both are one constant each.

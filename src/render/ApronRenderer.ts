@@ -8,9 +8,7 @@ import {
   SIDE_SHADE,
   AMBIENT,
   LIGHT_DIR,
-  ANIM_NONE,
-  ANIM_FIRE,
-  ANIM_HEALING,
+  animTypeFor,
   topColorFor,
 } from './TerrainRenderer';
 import VERTEX_SHADER from './shaders/apron.vert.glsl?raw';
@@ -197,10 +195,7 @@ export class ApronRenderer {
         this.tmpSideColor.copy(this.tmpTopColor).multiplyScalar(SIDE_SHADE);
         const top = this.tmpTopColor;
         const side = this.tmpSideColor;
-        const animType =
-          kind === 'fire' ? ANIM_FIRE :
-          kind === 'healing' ? ANIM_HEALING :
-          ANIM_NONE;
+        const animType = animTypeFor(kind); // 98e — the terrain's mapping, incl. deep water's bands
         const animPhase = (cx * 13 + cy * 7) * 0.43;
         const tileVertStart = vi;
 

@@ -295,9 +295,11 @@ team-identity residuals → a Round 7.5 rider). The cut:
   table inline + `HITSPLAT_PREFIX` (`~` / `‡` / `☠`, by eye) through
   `hitsplatText`; the config-derived pin; DOM-observed `☠3` in a forced
   plagueDoctors fight. WORKLOG §98d.
-- [ ] **98e — deep water.** A third `vAnim.x` id stamps static bands on
-  deep tiles (the shader; the stale `DEEP_WATER_TOP_Y` comment fixed);
-  the phase drift deferred to §99 with a landing note at the seam.
+- [x] **98e — deep water.** ✅ 2026-09-16: `ANIM_DEEP_WATER` (id 3) stamps
+  two static diagonal bands per tile in terrain.frag + apron.frag
+  (`DEEP_DRIFT` 0.0 = the §99 seam); `animTypeFor` the one kind → branch
+  map, pinned; the stale recess comment fixed; pane-verified incl. grey.
+  WORKLOG §98e.
 - [ ] **98f — the exit.** The AFTER-set passes on every surface; DESIGN
   §UI idioms "Color redundancy (98)"; the playtest; riders → TODO §98.
   Predictions: no bump, no sim touch, the fuzz smoke does not fire.

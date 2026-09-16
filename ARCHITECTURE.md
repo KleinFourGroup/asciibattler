@@ -297,7 +297,7 @@ src/
                              # badge), positioned via projectToCss. E6.C: spawnHitsplat floats
                              # transient damage/crit/heal/burn numbers via the same projector
                              # §32c: updateStatuses reconciles the status pip-strip (above the HP bar) — one depleting pip per active status (width=duration, opacity=stacks)
-    TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical
+    TerrainRenderer.ts       # C1c: faceted low-poly prism-per-tile, heightAt is canonical; 98e: `animTypeFor(kind)` the ONE kind → `aAnim.x` branch map (fire 1 · healing 2 · DEEP WATER 3 — static diagonal bands in terrain.frag + apron.frag, the passable / impassable tell beside the hue; `DEEP_DRIFT` 0.0 = the §99 seam), pinned in TerrainRenderer.test.ts
                              # for sprite Y. D7.C: per-tile flicker/pulse + chasm sink + theme
     ApronRenderer.ts         # M4: backdrop apron — non-playable fog-faded prism ring around the
                              # board (clamp-to-edge tile sampling; render-only, sim never sees it).

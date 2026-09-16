@@ -355,3 +355,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **The disconnected-trigger poll has no live read.** `tooltip.ts`'s rAF `follow()` closes on a trigger that left the document or lost its box; the pane could not exercise it (rAF stalls hidden; a dead card grays in place). A scene swap under an open tooltip is the natural read — watch for a stranded plate in a playtest.
 - [ ] **A focus ring for the `tabindex=0` text sites.** They ride the UA default outline today; §100's focus-visible styling should cover them with the buttons.
 - [ ] **The pane's key tool sends no `KeyboardEvent.code`** (papercut 2026-09-14): a registry-bound key can only be walked with a synthetic window keydown; the user's keyboard is the live read for every hotkey.
+
+## §98 riders (color redundancy — opened at 98e, 2026-09-16)
+
+- [ ] **A hitsplat gallery dev key.** The 98d split was "very hard to test" (the user, 2026-09-16): a DoT number lives 0.6 s and needs a DoT-applying enemy on the board (the shortcut used: `?layout=isthmus&encounter=plagueDoctors`, then a DOM `MutationObserver` on `.hitsplat`). A Ctrl+Alt chord that spawns one sample of EVERY `HitsplatKind` on the first player unit (`~7` / `‡7` / `☠7` / `+7` / `12` / a crit / Miss) would make any number tweak a two-second eyeball check. `src/dev/devKeys.ts` is the home; the overlay's `spawnHitsplat` is private to BattleRenderer today — needs a dev hook through Game or BattleScene.
+- [ ] **The map legend on a phone-width viewport** (98c) — fixed bottom-left at 296 × 232 px; a narrow board may want it collapsed to a toggle (§101 / §102's surface riders). A tall board's bottom nodes scroll under it, as they do under the banner.
+- [ ] **Deep water's drift** (98e) — `DEEP_DRIFT` is 0.0 in both terrain.frag and apron.frag; §99 lands the slow phase drift behind its prefers-reduced-motion gate (the named seam in both shaders).
+- [ ] **The band constants by eye** (98e) — amplitude 0.22 and two bands per tile; one constant each in terrain.frag (`DEEP_BAND_AMPLITUDE` / `DEEP_BANDS_PER_TILE`) and the literal pair in apron.frag.

@@ -94,10 +94,29 @@ const GRID_LINE_WIDTH = 0.06;
  *  The fragment shader switches on these values to apply a sine flicker
  *  (fire) or a slower pulse (healing). 0 = no animation. M4: exported —
  *  the apron's clamp-sampled fire/healing tiles keep animating into the
- *  fog, so its shader branches on the same encoding. */
+ *  fog, so its shader branches on the same encoding. 98e: id 3 is DEEP
+ *  WATER — not an animation but a static band pattern (the passable /
+ *  impassable tell beside the hue; both shaders, the drift a §99 seam). */
 export const ANIM_NONE = 0;
 export const ANIM_FIRE = 1;
 export const ANIM_HEALING = 2;
+export const ANIM_DEEP_WATER = 3;
+
+/** 98e — the ONE kind → `aAnim.x` mapping (the terrain and the apron each
+ *  carried a private ternary until 98e). Pure; pinned in
+ *  TerrainRenderer.test.ts so a kind can never fall to the wrong branch. */
+export function animTypeFor(kind: TileKind): number {
+  switch (kind) {
+    case 'fire':
+      return ANIM_FIRE;
+    case 'healing':
+      return ANIM_HEALING;
+    case 'deep_water':
+      return ANIM_DEEP_WATER;
+    default:
+      return ANIM_NONE;
+  }
+}
 
 /** Per-renderer-instance vertex capacity. Sized at the largest D3-allowed
  *  grid (32×32) so any per-encounter size fits without reallocating. */
@@ -319,10 +338,7 @@ export class TerrainRenderer {
         // threading it through every writeVert call. Phase is a deterministic
         // hash of (cx, cy) so neighboring fire tiles don't pulse in unison;
         // doesn't need to be uniform-distributed, just non-coherent.
-        const animType =
-          kind === 'fire' ? ANIM_FIRE :
-          kind === 'healing' ? ANIM_HEALING :
-          ANIM_NONE;
+        const animType = animTypeFor(kind); // 98e — one mapping, shared with the apron
         const animPhase = (cx * 13 + cy * 7) * 0.43;
         const tileVertStart = vi; // captured before writes; the 30 verts
                                   // below all land in [tileVertStart, vi)
@@ -569,8 +585,13 @@ const _fireHigh = new THREE.Color('#ffaa00');
 const _healLow = new THREE.Color('#0d4d4a');
 const _healHigh = new THREE.Color('#15f4ee');
 /** §37b — deep water: a darker, colder navy than shallow water (`#1F5B7A`).
- *  The deeper recess (DEEP_WATER_TOP_Y) carries the "impassable, don't wade"
- *  read; the color just confirms it (flat, like shallow water + chasm). */
+ *  98e — the comment here credited a `DEEP_WATER_TOP_Y` recess for the
+ *  "impassable, don't wade" read; no such constant exists — §37b made deep
+ *  water COPLANAR with shallow in the same step (`heightAt`: a sunken deep
+ *  tile looked wrong butted against regular water), so until 98e the ~1.9×
+ *  luminance gap between the two blues was the ONLY read. The read is now
+ *  the shader's static bands (`ANIM_DEEP_WATER`, terrain.frag id 3); the
+ *  color confirms it (flat, like shallow water + chasm). */
 const _deepWaterColor = new THREE.Color('#0e3047');
 /** §37b — mud: flat wet brown. The slight sink (MUD_TOP_Y) + dark earth read
  *  as a bog. Fixed-height tile, so every mud cell shares this one color. */

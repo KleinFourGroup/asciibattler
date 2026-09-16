@@ -2590,3 +2590,31 @@ block + the sheet-derived pin · 99c the filter + the key pins · 99d the
 browser decision point (E then D) · 99e the exit. Predictions: no
 snapshot bump, no sim touch, the fuzz smoke never fires (no trigger path
 — `src/render` + `src/ui` + `src/dev` + `src/scenes` only).
+
+### 99a — the gate (2026-09-16)
+
+`src/render/motion.ts`: `resolveReducedMotion(override, osPrefers)` the
+pure rule (override wins, else the OS), `reducedMotion()` the gate every
+consumer asks (the query created lazily, so a pre-boot or harness call
+resolves — to the OS or to `false`), `setReducedMotionOverride` /
+`getReducedMotionOverride` the Round 8 seam, `cycleReducedMotionOverride`
+the dev read (OS → reduced → full → OS), `stampRoot` the
+`html[data-motion="reduced"]` write, `installMotionGate()` the boot
+(stamp + the query's `change` listener; idempotent) — called at the top
+of `main.ts`, before the Game constructs. `lossFx.prefersReducedMotion`
+deleted; its three readers (HUD's orb flight + end stagger, the tooltip's
+`is-still`) import the gate; **`shakeView` gates ITSELF** (the kickoff's
+finding: the reduced branch still shook — the gate now sits on the
+effect, so no caller can forget it). Ctrl+Alt+R in `devKeys.ts`. Eight
+pins in `motion.test.ts` (the precedence table, the round-trip, the
+cycle, the CSS-contract constants 99b's sheet pin will derive from).
+
+Browser read (the pane at `:5191`, a synthetic Ctrl+Alt+R keydown since
+the pane's key tool sends no `code`): booted · OS query `false` · no
+attribute at boot · press 1 → `data-motion="reduced"` · press 2 → cleared
+(full) · press 3 → cleared (OS); the three `[dev-keys]` lines in the
+console. The first probe ran against a tab that had loaded before Vite
+was ready (black canvas, no `__game`, no console at all) — a reload fixed
+it; worth remembering as the pane's "not booted" tell. Typecheck + lint
+clean; the literal ratchet and the docs tree pass (the three module
+strings carry `i18n-ok`; `motion.ts` is in the ARCHITECTURE tree).

@@ -6,14 +6,19 @@
  * edge — the ghost grows, the gauge pulses and (by policy) the view shakes
  * ON THE LANDING, so the eye follows the cause to the effect (the
  * Mechabellum health-bar projectile, in our terminal idiom: a `●` glyph in
- * the paying side's hue with a glow, sized by the amount). Under
- * `prefers-reduced-motion` nothing flies and nothing shakes: the ghost
- * ticks at the event, as 96.5b1 shipped it.
+ * the paying side's hue with a glow, sized by the amount). Under reduced
+ * motion (THE MOTION GATE, src/render/motion.ts — 99a) nothing flies and
+ * nothing shakes: the ghost ticks at the event, as 96.5b1 shipped it. The
+ * flight gate is the caller's (HUD.deliver); the shake gate is HERE, on
+ * `shakeView` itself — 99a's audit found the reduced branch still shaking
+ * (the shake rode `land()`, which both branches run).
  *
  * All timings and thresholds are UI constants — tune from the playtest.
  * DOM-only, eyeball-verified (the TESTING policy); the Web Animations API
  * does the motion so nothing here ticks.
  */
+
+import { reducedMotion } from '../render/motion';
 
 export type PoolSideName = 'player' | 'enemy';
 
@@ -65,12 +70,6 @@ export function cycleShakePolicy(): ShakePolicy {
 /** Whether a loss to `target`'s pool shakes under the live policy. */
 export function shakeAllowed(target: PoolSideName): boolean {
   return shakePolicy === 'both' || shakePolicy === target;
-}
-
-export function prefersReducedMotion(): boolean {
-  return typeof window.matchMedia === 'function'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches // i18n-ok — a media query
-    : false;
 }
 
 export interface Point {
@@ -201,9 +200,13 @@ export function shakePx(amount: number, max: number): number {
 /**
  * Shake the VIEW — the canvas and the #ui mount together (siblings under
  * body; the #scanlines glass stays still, so the picture moves behind the
- * CRT). A decaying jitter over SHAKE_MS; the policy check is the caller's.
+ * CRT). A decaying jitter over SHAKE_MS; the policy check is the caller's,
+ * the motion gate is this function's (99a — a shake is the one vestibular
+ * trigger in the loss fx; the gate sits on the effect so no caller can
+ * forget it).
  */
 export function shakeView(amount: number, max: number): void {
+  if (reducedMotion()) return;
   const px = shakePx(amount, max);
   if (px <= 0) return;
   const targets = [document.getElementById('game-canvas'), document.getElementById('ui')].filter(

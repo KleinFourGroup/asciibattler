@@ -31,6 +31,12 @@
  *                `<html>` the containing block for `position: fixed`
  *                descendants, which is the viewport anyway — the page body
  *                never scrolls.)
+ *   Ctrl+Alt+R — 99a: cycle the REDUCED-MOTION override (OS → reduced → full
+ *                → OS; src/render/motion.ts — the ONE gate the CSS root
+ *                attribute and every JS motion consumer read). The preview
+ *                pane cannot emulate `prefers-reduced-motion`, so this is
+ *                the browser read for the whole §99 surface; Round 8's
+ *                setting sets the same override. (KeyR is off the bound codes.)
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */
@@ -39,6 +45,7 @@ import type { Game } from '../Game';
 import type { RunSnapshot } from '../run/Run';
 import { loadTraces } from './traceStore';
 import { cycleShakePolicy } from '../ui/lossFx';
+import { cycleReducedMotionOverride } from '../render/motion';
 
 export function attachDevKeys(game: Game): void {
   window.addEventListener('keydown', (e) => {
@@ -64,6 +71,12 @@ export function attachDevKeys(game: Game): void {
         e.preventDefault();
         console.info(`[dev-keys] grayscale audit → ${toggleGrayscaleAudit() ? 'ON' : 'off'}`);
         break;
+      case 'KeyR': {
+        e.preventDefault();
+        const next = cycleReducedMotionOverride();
+        console.info(`[dev-keys] reduced-motion override → ${next === null ? 'OS' : next ? 'REDUCED' : 'full'}`);
+        break;
+      }
     }
   });
 }

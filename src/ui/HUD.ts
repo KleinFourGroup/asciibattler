@@ -33,11 +33,11 @@ import {
   centerOf,
   flyOrb,
   lossCue,
-  prefersReducedMotion,
   shakeAllowed,
   shakeView,
   type OrbHandle,
 } from './lossFx';
+import { reducedMotion } from '../render/motion';
 
 /** 96.5b2 — a wall-clock wait (the loss fx are presentation: never the sim's clock). */
 function delay(ms: number): Promise<void> {
@@ -449,7 +449,7 @@ export class HUD {
       if (shakeAllowed(e.target)) shakeView(e.amount, max);
     };
     const mount = this.playerCardPane.parentElement;
-    if (!gauge || !card || !mount || prefersReducedMotion()) {
+    if (!gauge || !card || !mount || reducedMotion()) {
       land();
       return;
     }
@@ -468,7 +468,7 @@ export class HUD {
   /** 96.5b2 — launch the end events at the stagger, wait for every orb in
    *  flight (the last deaths' included), the settle beat, then commit. */
   private async runEndSequence(events: readonly PoolLossEvent[]): Promise<void> {
-    const reduced = prefersReducedMotion();
+    const reduced = reducedMotion();
     for (let i = 0; i < events.length; i++) {
       if (i > 0 && !reduced) await delay(SURVIVOR_STAGGER_MS);
       this.deliver(events[i]!);

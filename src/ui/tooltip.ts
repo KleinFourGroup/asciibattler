@@ -44,7 +44,7 @@
  * No prose lives here; every site's words go through `t()` at its touch.
  */
 
-import { prefersReducedMotion } from './lossFx';
+import { reducedMotion } from '../render/motion';
 
 /** Hover: the wait before a tooltip opens (a sweep across a row must not
  *  flash each one). */
@@ -162,7 +162,7 @@ export function installTooltipHost(mount: HTMLElement): HTMLDivElement {
   host.id = HOST_ID;
   host.setAttribute('role', 'tooltip');
   host.hidden = true;
-  if (prefersReducedMotion()) host.classList.add('is-still');
+  if (reducedMotion()) host.classList.add('is-still');
   body = document.createElement('div');
   body.className = 'tooltip__body';
   caret = document.createElement('div');

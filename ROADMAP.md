@@ -323,11 +323,12 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
 (call B); the shader-clock freeze (D) decided AFTER the drift eyeball
 (E), both in the browser at 99d. The cut:
 
-- [ ] **99a — the gate.** `src/render/motion.ts` (`reducedMotion()` =
-  override ?? matchMedia; `setReducedMotionOverride`; the root
-  `data-motion` stamp at boot + on `change`) + Ctrl+Alt+R; `lossFx`'s
-  reader + its three callers move over; `shakeView` gated. Pure pins on
-  the precedence.
+- [x] **99a — the gate.** ✅ 2026-09-16: `src/render/motion.ts`
+  (`reducedMotion()` = override ?? the OS query; `installMotionGate()` in
+  main.ts stamps `html[data-motion="reduced"]` + follows `change`;
+  `setReducedMotionOverride` = the Round 8 seam) + Ctrl+Alt+R; the three
+  readers moved; `shakeView` gates itself (the bug); eight pins;
+  pane-verified (boot · reduced · full · OS). WORKLOG §99a.
 - [ ] **99b — the CSS block.** The eight keyframes under the root
   attribute: fade-only `hitsplat-rise` / `preturn-card-exit` (they must
   END), `none` for the six; the notch `@media` + `.tooltip.is-still`

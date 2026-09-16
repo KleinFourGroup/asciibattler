@@ -15,8 +15,14 @@ import type { Team } from './sim/Unit';
 import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
 import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
 import { attachDevKeys } from './dev/devKeys';
+import { installMotionGate } from './render/motion';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
+
+// 99a — the motion gate stamps `html[data-motion]` from the OS preference
+// BEFORE any screen renders (the CSS keys off the attribute, the JS off
+// `reducedMotion()`); it follows the OS live and Round 8's setting overrides it.
+installMotionGate();
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
 if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');

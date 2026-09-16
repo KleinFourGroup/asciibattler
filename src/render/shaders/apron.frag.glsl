@@ -56,12 +56,14 @@ void main() {
   vec3 base = vColor * shading;
 
   if (vAnim.x > 2.5) {
-    // 98e — deep water's static bands (terrain.frag's id 3), in WORLD space
-    // here (the apron has no top-face UV): the same two bands per tile, so a
-    // clamp-sampled deep edge tile continues its pattern into the fog. The
-    // uTime term is the §99 drift seam, 0.0 here — see terrain.frag.
+    // 98e — deep water's static bands (terrain.frag's id 3): the SAME
+    // world-space formula as terrain.frag (98e-post — both shaders run on
+    // vWorldPos now; a tile-UV formula on the board flipped the diagonal at
+    // the edge), one band per tile, so a clamp-sampled deep edge tile
+    // continues its pattern into the fog. The uTime term is the §99 drift
+    // seam, 0.0 here — see terrain.frag.
     const float DEEP_DRIFT = 0.0;
-    float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * 2.0 + uTime * DEEP_DRIFT);
+    float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * 1.0 + uTime * DEEP_DRIFT);
     base *= 1.0 + 0.22 * wave;
   } else if (vAnim.x > 1.5) {
     base *= 1.0 + 0.10 * sin(uTime * 1.6 + vAnim.y);

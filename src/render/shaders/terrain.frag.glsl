@@ -17,8 +17,12 @@
 // diagonal bands across the top face, the "never color alone" tell for the
 // passable / impassable split (deep water is coplanar with shallow since
 // §37b, so until 98e the two blues' luminance gap was the only read). The
-// band count per tile is an integer so the pattern is continuous across
-// tile edges; the amplitude is small (the tile stays a dark navy plane).
+// bands run in WORLD space (`vWorldPos`, 98e-post) with an integer count
+// per world unit — the same formula as apron.frag — so the pattern is
+// continuous across tile edges AND across the board edge into the apron
+// (a tile-UV formula ran the opposite diagonal there: the user's catch).
+// One band per tile (98e-post, the user's read: two read as a hazard
+// stripe); the amplitude is small (the tile stays a dark navy plane).
 // The `uTime * DEEP_DRIFT` term is the §99 seam: DEEP_DRIFT is 0.0 here —
 // the bands never move — and §99 (the reduced-motion seam) is where a
 // slow drift lands, gated on prefers-reduced-motion (the kickoff's call E:
@@ -37,6 +41,7 @@ varying vec3 vNormalW;
 varying vec2 vTopUV;
 varying float vIsTop;
 varying vec2 vAnim;
+varying vec3 vWorldPos;
 
 void main() {
   float diffuse = max(0.0, dot(normalize(vNormalW), normalize(uLightDir)));
@@ -49,11 +54,12 @@ void main() {
   // not a flicker.
   if (vAnim.x > 2.5) {
     // 98e — deep water: static diagonal bands on the top face (see the header).
-    const float DEEP_BANDS_PER_TILE = 2.0; // integer → continuous across tiles
+    const float DEEP_BANDS_PER_TILE = 1.0; // integer → continuous across tiles; 98e-post: 2 read as a hazard stripe
     const float DEEP_BAND_AMPLITUDE = 0.22;
     const float DEEP_DRIFT = 0.0; // the §99 seam — never non-zero here
     if (vIsTop > 0.5) {
-      float wave = sin((vTopUV.x + vTopUV.y) * 6.28318530718 * DEEP_BANDS_PER_TILE + uTime * DEEP_DRIFT);
+      // World space, the apron's formula verbatim — one diagonal on both sides of the board edge.
+      float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * DEEP_BANDS_PER_TILE + uTime * DEEP_DRIFT);
       base *= 1.0 + DEEP_BAND_AMPLITUDE * wave;
     }
   } else if (vAnim.x > 1.5) {

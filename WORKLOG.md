@@ -2429,3 +2429,18 @@ bump, no sim touch; the fuzz smoke does not fire.
 too loud reads as a hazard stripe, too quiet is the old luminance read
 again) and whether two bands per tile is the right pitch on a 16×16
 board at the D4 camera; both are one constant each.
+
+**98e-post (2026-09-16, the user's three reads):** (1) **the diagonal
+flipped at the board edge** — the board ran `sin((u + v)…)` in tile-UV
+space and the apron `sin((x + z)…)` in world space, and the tile's V axis
+runs opposite to world Z, so the same formula drew the opposite diagonal
+on each side of the seam. terrain.vert now carries `vWorldPos` (the
+apron's varying since M4) and BOTH shaders run one world-space formula —
+continuous across tile edges and the board edge, tile origin included.
+(2) **Hazard-stripe vibes → wider bands:** `DEEP_BANDS_PER_TILE` 2 → 1 in
+both shaders, the amplitude kept at 0.22. (3) **"Do they stop being
+static in §99?"** — no: static for everyone by default; the `DEEP_DRIFT`
+term is only the seam where §99 could add a slow drift for motion-on
+players, that phase's (and the user's) call; at 0.0 nothing moves.
+Pane-checked: the coarser diagonal on the deep ring, zero shader errors;
+the seam continuity is the user's native read.

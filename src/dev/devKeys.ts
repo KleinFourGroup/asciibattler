@@ -31,12 +31,20 @@
  *                `<html>` the containing block for `position: fixed`
  *                descendants, which is the viewport anyway — the page body
  *                never scrolls.)
- *   Ctrl+Alt+R — 99a: cycle the REDUCED-MOTION override (OS → reduced → full
+ *   Ctrl+Alt+A — 99a: cycle the REDUCED-MOTION override (OS → reduced → full
  *                → OS; src/render/motion.ts — the ONE gate the CSS root
  *                attribute and every JS motion consumer read). The preview
  *                pane cannot emulate `prefers-reduced-motion`, so this is
  *                the browser read for the whole §99 surface; Round 8's
- *                setting sets the same override. (KeyR is off the bound codes.)
+ *                setting sets the same override. (A = accessibility; KeyA is
+ *                off the bound codes. It shipped as KeyR for one commit —
+ *                FIREFOX OWNS Ctrl+Alt+R (Reader View) at the chrome level,
+ *                so the page never saw the keydown; gotcha #134.)
+ *
+ * ⚠ A new chord must clear THREE key sets, not two: the registry's bound
+ * codes, this file's, and the BROWSERS' own Ctrl+Alt chords — the pane is
+ * Chromium and cannot catch a Firefox-reserved chord; test a new chord in
+ * Firefox before calling it verified.
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */
@@ -71,7 +79,7 @@ export function attachDevKeys(game: Game): void {
         e.preventDefault();
         console.info(`[dev-keys] grayscale audit → ${toggleGrayscaleAudit() ? 'ON' : 'off'}`);
         break;
-      case 'KeyR': {
+      case 'KeyA': {
         e.preventDefault();
         const next = cycleReducedMotionOverride();
         console.info(`[dev-keys] reduced-motion override → ${next === null ? 'OS' : next ? 'REDUCED' : 'full'}`);

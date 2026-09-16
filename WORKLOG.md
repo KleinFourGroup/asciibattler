@@ -2605,9 +2605,11 @@ of `main.ts`, before the Game constructs. `lossFx.prefersReducedMotion`
 deleted; its three readers (HUD's orb flight + end stagger, the tooltip's
 `is-still`) import the gate; **`shakeView` gates ITSELF** (the kickoff's
 finding: the reduced branch still shook — the gate now sits on the
-effect, so no caller can forget it). Ctrl+Alt+R in `devKeys.ts`. Eight
+effect, so no caller can forget it). Ctrl+Alt+R in `devKeys.ts`. Six
 pins in `motion.test.ts` (the precedence table, the round-trip, the
-cycle, the CSS-contract constants 99b's sheet pin will derive from).
+cycle, the CSS-contract constants 99b's sheet pin will derive from) —
+the commit subject says "eight"; the suite count (2965 → 2971) is the
+truth.
 
 Browser read (the pane at `:5191`, a synthetic Ctrl+Alt+R keydown since
 the pane's key tool sends no `code`): booted · OS query `false` · no
@@ -2618,3 +2620,20 @@ was ready (black canvas, no `__game`, no console at all) — a reload fixed
 it; worth remembering as the pane's "not booted" tell. Typecheck + lint
 clean; the literal ratchet and the docs tree pass (the three module
 strings carry `i18n-ok`; `motion.ts` is in the ARCHITECTURE tree).
+
+### 99a-post — the chord moves R → A (2026-09-16, the user's read)
+
+The user's Firefox (their normal browser) saw NO console line on
+Ctrl+Alt+R after a forced reload, while the other chords fired. Not
+staleness — the five-day-old `:5173` Vite process served the new
+modules on a curl probe (main.ts / devKeys.ts / motion.ts all current)
+— and not the cycle's two `undefined` states: **Firefox owns Ctrl+Alt+R
+as its Reader View toggle**, at the chrome level, so the page never
+receives the keydown. The pane is Chromium, which doesn't bind it, so
+the synthetic-keydown read passed on a chord a real Firefox keyboard
+can't send. The audit's "KeyR is free" checked two key sets (the
+registry's, the dev file's) and missed the third — the browsers' own.
+Moved to **Ctrl+Alt+A** (accessibility; off every set); the devKeys
+header now names the three-set rule; gotcha #134. The pane cannot
+verify a chord against a browser it isn't — the user's Firefox is the
+read.

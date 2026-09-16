@@ -326,8 +326,9 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
 - [x] **99a — the gate.** ✅ 2026-09-16: `src/render/motion.ts`
   (`reducedMotion()` = override ?? the OS query; `installMotionGate()` in
   main.ts stamps `html[data-motion="reduced"]` + follows `change`;
-  `setReducedMotionOverride` = the Round 8 seam) + Ctrl+Alt+R; the three
-  readers moved; `shakeView` gates itself (the bug); eight pins;
+  `setReducedMotionOverride` = the Round 8 seam) + Ctrl+Alt+A (R for one
+  commit — Firefox's Reader View owns it, gotcha #134); the three
+  readers moved; `shakeView` gates itself (the bug); six pins;
   pane-verified (boot · reduced · full · OS). WORKLOG §99a.
 - [ ] **99b — the CSS block.** The eight keyframes under the root
   attribute: fade-only `hitsplat-rise` / `preturn-card-exit` (they must
@@ -337,7 +338,7 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
   call-B set; the four sites pass the gate; pins over every key.
 - [ ] **99d — the browser decision point.** ⛔ The drift eyeball (E:
   one candidate `DEEP_DRIFT`, keep or revert live), THEN the shader
-  freeze call (D) with both states seen under Ctrl+Alt+R.
+  freeze call (D) with both states seen under Ctrl+Alt+A.
 - [ ] **99e — the exit.** DESIGN "Reduced motion (99)"; the §96.5 +
   §98 riders closed; the stub; the cursor.
 

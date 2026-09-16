@@ -20,7 +20,7 @@
  * Lives in `render` because `render` never imports `ui` and `ui` imports
  * `render` freely; `fxRegistry` (99c) takes the gate's answer as an ARGUMENT
  * and stays pure data. The DOM stamp is eyeball-verified (the TESTING
- * policy) via Ctrl+Alt+R (src/dev/devKeys.ts), which cycles the override —
+ * policy) via Ctrl+Alt+A (src/dev/devKeys.ts), which cycles the override —
  * the preview pane cannot emulate the media query (the §96.5 rider).
  */
 

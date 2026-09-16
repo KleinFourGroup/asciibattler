@@ -16,7 +16,7 @@ import {
  * module-level override round-trips without a document (the `node` test
  * environment has no `matchMedia`, so the OS half reads `false` here and the
  * root stamp is a no-op — the stamp and the `change` listener are
- * eyeball-verified via Ctrl+Alt+R, the TESTING policy).
+ * eyeball-verified via Ctrl+Alt+A, the TESTING policy).
  */
 
 afterEach(() => {

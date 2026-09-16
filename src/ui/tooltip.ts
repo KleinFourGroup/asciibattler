@@ -117,7 +117,11 @@ export function placeTooltip(
 
   const center = trigger.x + trigger.w / 2;
   const x = clamp(center - tip.w / 2, margin, Math.max(margin, viewport.w - margin - tip.w));
-  const caretX = clamp(center - x, Math.min(caretInset, tip.w / 2), Math.max(tip.w - caretInset, tip.w / 2));
+  const caretX = clamp(
+    center - x,
+    Math.min(caretInset, tip.w / 2),
+    Math.max(tip.w - caretInset, tip.w / 2),
+  );
   return { x, y, side, caretX };
 }
 
@@ -180,7 +184,10 @@ export function installTooltipHost(mount: HTMLElement): HTMLDivElement {
  *  amber `.tooltip__kbd` accent. Both parts may be thunks so a live label
  *  (pause ↔ resume) or a rebound key is read at every open; the brackets
  *  are glyphs, outside the locale value. */
-export function keyedTooltip(text: string | (() => string), key: string | (() => string)): () => Node {
+export function keyedTooltip(
+  text: string | (() => string),
+  key: string | (() => string),
+): () => Node {
   return () => {
     const frag = document.createDocumentFragment();
     frag.append(typeof text === 'function' ? text() : text, ' ');
@@ -193,7 +200,11 @@ export function keyedTooltip(text: string | (() => string), key: string | (() =>
 }
 
 /** Register `el` as a trigger. Returns the detach (closes it if open). */
-export function attachTooltip(el: HTMLElement, content: TooltipContent, opts: TooltipOptions = {}): () => void {
+export function attachTooltip(
+  el: HTMLElement,
+  content: TooltipContent,
+  opts: TooltipOptions = {},
+): () => void {
   const entry: Entry = { el, content, touch: opts.touch ?? 'tap' };
   entries.set(el, entry);
   if (entry.touch !== 'none') el.dataset['tooltipTouch'] = entry.touch;
@@ -250,7 +261,11 @@ export function attachTooltip(el: HTMLElement, content: TooltipContent, opts: To
   };
   const onMove = (e: PointerEvent): void => {
     if (pressTimer === null) return;
-    if (Math.abs(e.clientX - pressX) > PRESS_SLOP_PX || Math.abs(e.clientY - pressY) > PRESS_SLOP_PX) cancelPress();
+    if (
+      Math.abs(e.clientX - pressX) > PRESS_SLOP_PX ||
+      Math.abs(e.clientY - pressY) > PRESS_SLOP_PX
+    )
+      cancelPress();
   };
   const onUp = (): void => {
     cancelPress();

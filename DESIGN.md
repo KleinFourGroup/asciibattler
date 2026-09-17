@@ -302,6 +302,31 @@ identity on the board (green vs red glyphs) is Round 7.5's, and so are
 its two residuals: card-less camp units' hue-only pips and the panic /
 blind held tints on the camp / neutral team colours.
 
+**Reduced motion (99).** ONE gate, `reducedMotion()` in
+src/render/motion.ts — the OS `prefers-reduced-motion` query or an
+override (the Round 8 setting's seam; Ctrl+Alt+A cycles it dev-only) —
+stamped on the root as `data-motion="reduced"`, so the stylesheet and
+the JS read the same answer; never a `@media` block (a setting could not
+flip one). The rule for what goes: **vestibular and decorative motion
+stops, information stays.** In the sheet every `animation:` has its
+reduced twin under the attribute (a pin fails a new keyframe that lacks
+one): an animation something waits on keeps its duration and only fades
+(the hitsplat, the exit ghost — a bare `none` never ends and leaks
+them); pure-motion one-shots and the infinite pulses go to `none`; a
+pulse that means something keeps its colour flash without the movement
+(the pile chips). In the fx registry the resolver strips `shake`,
+`burst` and `sparkle` and keeps sound, the hitsplat, the held tint and
+the projectile / tracer / shove that show WHO hits WHOM. The view shake
+and the orb flight are lossFx's own checks of the same gate. The shader
+clock HOLDS under the gate (BattleScene's one `advanceShaderTime` site),
+so the fire flicker, the healing shimmer, the mist and deep water's
+band drift stand still with no shader branch — the diorama goes still
+and the units are the only things that move. Deep water DRIFTS for
+motion-on players (0.6 rad/s along its diagonal, the same constant in
+both shaders, pinned equal): the static bands are the tell, the drift is
+the flair. A new motion picks its reduced form when it is authored; the
+pins are the forgetful-path guard.
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay

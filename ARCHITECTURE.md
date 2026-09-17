@@ -330,7 +330,7 @@ src/
 
   scenes/                    # A5: Scene system — single-active swap driven from Game
     Scene.ts                 #   Scene interface + SceneContext bundle (+ I3 playback, J3 keybindings, M4 apron)
-    BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio
+    BattleScene.ts           #   World + Clock + BattleRenderer + HUD + per-battle audio; 99d: `advanceShaderTime(dt)` — the ONE site the terrain / apron / backdrop `uTime`s advance (both the countdown and the running branch), fed 0 under `reducedMotion()` so every shader motion holds at once
                              #   I3/Q1: tick() scales dt by playback.current (fast-forward batches ticks; pause = 0 parks the sim)
                              #   Q2: opens with a PreBattleCountdown (sim parked, board shown) — playback.pause()'d; unpause = Fight now
                              #   J3: owns the ObjectiveController (canvas input + enemy-billboard provider)

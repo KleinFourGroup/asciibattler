@@ -302,26 +302,28 @@ landed:
   legend at chip scale · 98e-post the apron diagonal + one band per
   tile); riders → TODO §98; the predictions held. WORKLOG §98f.
 
-## Phase 99 — the reduced-motion seam
+## Phase 99 — the reduced-motion seam ✅ CLOSED 2026-09-16
 
-**Charter:** a `prefers-reduced-motion` block in `ui.css` over the seven
-keyframes and the one infinite pulse; a channel-stripping filter in
-`fxDescriptor()` (`fxRegistry.ts:238-240` — the single choke point all
-three dispatch sites walk) driven by the same media query. OS-driven
-now; the Round 8 setting flips the same gate. **Depends on:** nothing in
-this round (pure + headless). **Risk:** low. **Exit:** the filter pinned
-headless; the CSS block present; a reduced-motion browser shows no
-shake, burst, sparkle or infinite pulse. **Scope guards:** no bloom
-dial, no scanline toggle (both are settings — Round 8).
-
-**Kickoff 2026-09-16** (WORKLOG §99 Kickoff — the audit + the five
-calls, user-signed): the seam re-counted at EIGHT keyframes / TWO
-infinite pulses + two partial gates already in the sheet; `shakeView`
-found un-gated (a bug); the gate re-homed to ONE module whose root
-attribute drives CSS and JS alike (call A — the spec's intent over its
-letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
-(call B); the shader-clock freeze (D) decided AFTER the drift eyeball
-(E), both in the browser at 99d. The cut:
+**Outcome:** ONE motion gate (`src/render/motion.ts`: the OS query or
+the Round 8 override, stamped on the root as `data-motion="reduced"`)
+that the stylesheet, the fx registry, the loss fx and the shader clock
+all read — the spec's intent (Round 8 flips one gate) over its letter (a
+`@media` block, which a setting could never flip). The sheet's eight
+keyframes and two pulses have their reduced twins under the attribute
+(fade-only where something waits on `animationend`, `none` elsewhere,
+colour-only for the chip pulses); `fxDescriptor` strips shake / burst /
+sparkle and keeps the informational channels; `shakeView` gates itself
+(the audit's bug: the reduced branch still shook); the shader clock
+holds (`BattleScene.advanceShaderTime`) so the diorama goes still; deep
+water DRIFTS for motion-on players (0.6 rad/s, pinned equal in both
+shaders — the user's eye, twice). Three sheet-derived / key-walking pin
+files; every step read in the pane by a seam the code under test did
+not own (a synthetic chord, a DOM observer, call counters, the uniforms)
+and in the user's Firefox. One dev chord moved (R → A: Firefox's Reader
+View, gotcha #134). Tests 2965 → 2984; no sim touch, no bump, the fuzz
+smoke never fired. The charter and the five kickoff calls live in git at
+`9a944d6`; the narrative in WORKLOG §99; the idiom in DESIGN §UI idioms
+"Reduced motion (99)". The cut, as landed:
 
 - [x] **99a — the gate.** ✅ 2026-09-16: `src/render/motion.ts`
   (`reducedMotion()` = override ?? the OS query; `installMotionGate()` in
@@ -349,8 +351,10 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
   together; **D — the freeze is KEPT** (`BattleScene.advanceShaderTime`,
   the one site, feeds 0 under the gate; pane-read 2.000 vs 0 over 2 s).
   WORKLOG §99d.
-- [ ] **99e — the exit.** DESIGN "Reduced motion (99)"; the §96.5 +
-  §98 riders closed; the stub; the cursor.
+- [x] **99e — the exit.** ✅ 2026-09-16: DESIGN "Reduced motion (99)";
+  the §96.5 rider closed (the OS-query leg noted), the §98 drift rider
+  closed at 99d; this stub; the cursor → §100; the pane lessons into
+  HANDOFF's browser-verify tips. WORKLOG §99e.
 
 ## Phase 100 — input accessibility + the extraction sweep
 

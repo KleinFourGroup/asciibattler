@@ -2782,3 +2782,25 @@ retuned 0.4 → 0.6 rad/s** ("I like the drift"; one band width per
 closes. The seam is now: motion-on = drifting water + the ambient
 shader life; reduced = a still diorama with the units the only things
 that move (plus the informational fx 99c keeps).
+
+### 99e — the exit (2026-09-16) — the phase CLOSES
+
+DESIGN §UI idioms "Reduced motion (99)": the one-gate rule, the "motion
+stops, information stays" test, the three surfaces (the sheet's twins,
+the registry's strip set, the shader clock's hold), the drift as
+motion-on flair. The §96.5 rider ("the reduced-motion path,
+unverified") closes with its finding named (the un-gated shake) and its
+one untested leg noted (the OS query itself — a one-minute Windows
+"Animation effects off" check, whenever convenient; the resolution rule
+is pinned either way); the §98 drift rider closed at 99d. ROADMAP §99 →
+the stub; the cursor → §100 (its kickoff inputs named: the §97 riders,
+the three-key-set chord rule, the pane's key tool sending no `code`);
+HANDOFF's browser-verify tips gain the §99 bullet (the Firefox chord,
+the hidden-pane sim stall + `activeScene.tick` drive + prototype
+counters, the `.ts`-swap reload resetting module state). TESTING.md
+unchanged (the sheet pins are the ui-tokens shape it already covers by
+policy). The predictions held: no bump, no sim touch, the fuzz smoke
+never fired (`src/render` + `src/ui` + `src/dev` + `src/scenes` +
+`main.ts` only). Tests 2965 → 2984 (+6 motion · +7 ui-motion · +5
+fxDescriptor · +1 drift). Seven code commits + the kickoff + this close;
+one prettier commit; every step read in the user's Firefox.

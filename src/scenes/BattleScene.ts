@@ -27,6 +27,7 @@ import { getLayout, type Theme } from '../sim/layouts';
 import { t } from '../i18n/ui';
 import { PreBattleCountdown } from './PreBattleCountdown';
 import { requireRun, type Scene, type SceneContext } from './Scene';
+import { reducedMotion } from '../render/motion';
 
 /** D8 — banner suffix helper. The theme enum stores lowercase
  *  (default / rock / volcanic); the banner wants Title Case so the
@@ -325,9 +326,7 @@ export class BattleScene implements Scene {
         // first pass on the parked clock.
         this.hud?.refreshStatuses();
         this.battleRenderer?.update(dt);
-        this.terrain?.advanceTime(dt);
-        this.apron?.advanceTime(dt);
-        this.backdrop?.advanceTime(dt);
+        this.advanceShaderTime(dt);
       } else {
         // Just ended (expiry or skip): start the sim at the selected speed and
         // clear the readout. The sim's first tick lands NEXT frame — this
@@ -351,16 +350,28 @@ export class BattleScene implements Scene {
     // §32c — refresh the compact cards' status rows (gated on the sim tick
     // inside the HUD; the readout is constant between ticks).
     this.hud?.refreshStatuses();
-    // D7.C: drive the terrain shader's `uTime` for per-tile fire flicker
-    // and healing pulse. Lives on tick (not the rAF loop) because only
-    // BattleScene puts animated tile kinds into the renderer — non-battle
-    // scenes call terrain.clear() and don't need the animation to advance.
-    this.terrain?.advanceTime(dtScaled);
-    // M4 — the apron's fog creep (and any clamp-extended fire/healing
-    // flicker) + the mist floor's drift ride the same scaled time as the
-    // board's tile animation.
-    this.apron?.advanceTime(dtScaled);
-    this.backdrop?.advanceTime(dtScaled);
+    this.advanceShaderTime(dtScaled);
+  }
+
+  /**
+   * D7.C: drive the terrain shader's `uTime` for per-tile fire flicker and
+   * healing pulse. Lives on tick (not the rAF loop) because only BattleScene
+   * puts animated tile kinds into the renderer — non-battle scenes call
+   * terrain.clear() and don't need the animation to advance. M4 — the apron's
+   * fog creep (and any clamp-extended fire/healing flicker) + the mist
+   * floor's drift ride the same scaled time as the board's tile animation.
+   *
+   * 99d — THE ONE shader-motion gate: under reduced motion the clock HOLDS
+   * (dt → 0), so every `uTime`-driven motion — the fire flicker, the healing
+   * shimmer, the mist creep, the fog, deep water's band drift — freezes at
+   * once, in all three shaders, with no uniform and no shader branch. The
+   * gate is read per frame, so the dev chord (Ctrl+Alt+A) flips it live.
+   */
+  private advanceShaderTime(dt: number): void {
+    const d = reducedMotion() ? 0 : dt;
+    this.terrain?.advanceTime(d);
+    this.apron?.advanceTime(d);
+    this.backdrop?.advanceTime(d);
   }
 
   dispose(): void {

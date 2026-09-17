@@ -61,8 +61,9 @@ void main() {
     // vWorldPos now; a tile-UV formula on the board flipped the diagonal at
     // the edge), one band per tile, so a clamp-sampled deep edge tile
     // continues its pattern into the fog. The uTime term is the §99 drift
-    // seam, 0.0 here — see terrain.frag.
-    const float DEEP_DRIFT = 0.0;
+    // (99d) — the SAME constant as terrain.frag, or the two halves of one
+    // band slide apart at the edge; reduced motion holds uTime upstream.
+    const float DEEP_DRIFT = 0.4;
     float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * 1.0 + uTime * DEEP_DRIFT);
     base *= 1.0 + 0.22 * wave;
   } else if (vAnim.x > 1.5) {

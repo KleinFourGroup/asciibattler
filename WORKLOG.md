@@ -2749,3 +2749,29 @@ the FULL tail) — its strip is the headless pin's (`magic_bolt_burst`
 reduces to `{ sound: 'magicboom' }`). The first FULL window read all
 zeros because the isthmus armies take ~20 s of sim to meet — the order
 of the windows matters; read the control with combat in it.
+
+**The user's Firefox playtest passed** (2026-09-16).
+
+### 99d — the probe (2026-09-16) — the decision point is OPEN
+
+Both halves landed together so the user reads them in one Firefox
+session, flipping with Ctrl+Alt+A. **D (the freeze):**
+`BattleScene.advanceShaderTime(dt)` — the one place the three renderers'
+`uTime` advance (the countdown branch and the running branch both call
+it) — feeds `0` under `reducedMotion()`, read per frame, so the fire
+flicker, the healing shimmer, the mist creep, the fog and the band drift
+hold at once with no uniform and no shader branch. **E (the drift):**
+`DEEP_DRIFT` 0.0 → **0.4 rad/s** in terrain.frag AND apron.frag (one
+band width per ~16 s along the diagonal); a text pin in
+`TerrainRenderer.test.ts` reads both shader sources and fails if the two
+constants ever differ (the edge continuity depends on it). Typecheck +
+lint clean; the pane read (the sim driven by `activeScene.tick`, the
+pane hidden): 2 s of sim advanced terrain / apron / backdrop `uTime` by
+**2.000 / 2.000 / 2.000** under full and **0 / 0 / 0** under reduced —
+the three clocks were byte-equal throughout, as `advanceShaderTime`
+promises. The drift itself is the user's eye — the pane can't judge
+"reads as a hazard stripe" (98e-post's lesson).
+
+Two outcomes to record when the user rules: E keep / retune / revert
+(revert = `DEEP_DRIFT` back to 0.0 in both files; the pin stays); D keep
+/ revert (revert = drop the ternary; the helper stays as the one site).

@@ -26,41 +26,14 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MOTION_ATTR, MOTION_REDUCED } from '../src/render/motion';
+import { blocksOf, stripCssComments } from './cssBlocks';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHEET = 'src/ui/ui.css';
 const GATE = `[${MOTION_ATTR}='${MOTION_REDUCED}']`;
 
 const raw = readFileSync(join(ROOT, SHEET), 'utf8');
-const css = raw.replace(/\/\*[\s\S]*?\*\//g, '');
-
-interface Block {
-  readonly prelude: string;
-  readonly body: string;
-}
-
-/** A flat walk over `prelude { body }` blocks at one nesting level. */
-function blocksOf(src: string): Block[] {
-  const out: Block[] = [];
-  let depth = 0;
-  let prelude = '';
-  let body = '';
-  for (const ch of src) {
-    if (ch === '{') {
-      if (depth++ === 0) continue;
-    } else if (ch === '}') {
-      if (--depth === 0) {
-        out.push({ prelude: prelude.trim(), body });
-        prelude = '';
-        body = '';
-        continue;
-      }
-    }
-    if (depth === 0) prelude += ch;
-    else body += ch;
-  }
-  return out;
-}
+const css = stripCssComments(raw);
 
 interface AnimRule {
   readonly selector: string;

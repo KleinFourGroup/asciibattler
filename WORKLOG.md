@@ -2961,3 +2961,44 @@ event proves only the wiring).
 live; the verdict on scroll mode itself: "the game feels very different",
 and a scroll camera that stays needs a proper minimap first. Slotted as a
 rider on the Round 7.5 D4 A/B (META-ROADMAP §Round 7.5), not §100 work.
+
+### 100b — the focus idiom (2026-09-17)
+
+**The idiom: the focus state IS the hover state, plus ONE ring.** Every
+`X:hover` rule in `ui.css` (29 — the 30th `:hover` in the sheet is a
+specificity comment) now carries `X:focus-visible` in its selector list,
+same block, same declarations, by a one-line perl over the sheet (each
+hover prelude was a single selector on one line; the `:not(:disabled)` /
+`:not(.is-selected)` tails ride along). ONE ring rule, placed before the
+§99 block: `:where(button, select, [role='button'], [tabindex='0'])
+:focus-visible { outline: 2px solid var(--color-white); outline-offset:
+2px }` — `:where` for zero specificity, so a control's own `outline`
+(98c's frontier double ring, the enemy card's hover outline) outranks it
+by design; white because it is nobody's state hue (amber hover · blue
+frontier/selection · green active), and a ring is a shape, so the 98a
+grey read passes by construction. The map node's ring rides `box-shadow`
+(a black gap to 6px, white to 8px — outside 98c's 2px + 3px-offset
+outline), as the kickoff predicted.
+
+**The pin** — `tests/ui-focus.test.ts` (five tests): every `:hover`
+selector's twin in the same list; the ring rule at its pinned selector
+with a solid outline; `outline: none` only on the two 96f containers and
+never under `:focus-visible`; `.map-node:focus-visible` on box-shadow
+with no outline. Self-checked in the natural order: run BEFORE the ring
+block was spliced, contracts 2 + 4 failed and 1 + 3 passed. The CSS
+walker (`blocksOf` + the comment strip) moved from `ui-motion.test.ts`
+into `tests/cssBlocks.ts` (rule-of-two for a parser; the motion pins
+import it unchanged, 7/7 green).
+
+**Pane read** (the character select, three Tabs): the focused
+`.charselect-card` computes `outline: solid 2px rgb(255,255,255)`,
+`outline-offset: 2px`, `:focus-visible` true; after frames were forced
+it ALSO computes the hover twin — `background: color(srgb 1 0.69 0 /
+0.12)`, `transform: matrix(1,0,0,1,0,-2)`. ⚠ Instrument note: the first
+reads showed the twin ABSENT (transparent, identity) while the rule
+matched the element — the hidden pane throttles the animation clock, so
+a 0.1s `transition` sat at its start until a screenshot forced a frame;
+read computed styles AFTER a screenshot, or the transition lies (the §99
+hidden-pane sim stall's CSS cousin — HANDOFF tips). The 97d text sites
+(`tabindex=0`) and the buttons' rings across the screens are the user's
+Firefox read at the pause.

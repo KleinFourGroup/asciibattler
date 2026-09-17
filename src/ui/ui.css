@@ -530,7 +530,8 @@ body {
   cursor: pointer;
 }
 
-.map-node.frontier:hover {
+.map-node.frontier:hover,
+.map-node.frontier:focus-visible {
   background: var(--color-flourescent-blue);
   color: var(--color-black);
 }
@@ -998,7 +999,8 @@ body {
   cursor: pointer;
 }
 
-.unit-card--recruit.unit-card--clickable:hover {
+.unit-card--recruit.unit-card--clickable:hover,
+.unit-card--recruit.unit-card--clickable:focus-visible {
   border-color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
@@ -1237,7 +1239,8 @@ body {
   color: var(--color-terminal-green);
 }
 
-.reward-accept:hover {
+.reward-accept:hover,
+.reward-accept:focus-visible {
   background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
@@ -1385,7 +1388,8 @@ body {
   color: var(--color-terminal-green);
 }
 
-.port-buy:hover:not(:disabled) {
+.port-buy:hover:not(:disabled),
+.port-buy:focus-visible:not(:disabled) {
   background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
@@ -1395,7 +1399,8 @@ body {
   opacity: 0.85;
 }
 
-.port-remove:hover:not(:disabled) {
+.port-remove:hover:not(:disabled),
+.port-remove:focus-visible:not(:disabled) {
   background: rgb(from var(--color-neon-red) r g b / 0.12);
 }
 
@@ -1474,7 +1479,8 @@ body {
     opacity 0.1s;
 }
 
-.event-choice:hover:not(:disabled) {
+.event-choice:hover:not(:disabled),
+.event-choice:focus-visible:not(:disabled) {
   background: rgb(from var(--color-terminal-blue) r g b / 0.12);
 }
 
@@ -1690,7 +1696,8 @@ body {
     transform 0.1s;
 }
 
-.charselect-card:hover {
+.charselect-card:hover,
+.charselect-card:focus-visible {
   background: rgb(from var(--color-terminal-amber) r g b / 0.12);
   transform: translateY(-2px);
 }
@@ -1815,7 +1822,8 @@ body {
   pointer-events: auto;
 }
 
-.battle-countdown__fight:hover {
+.battle-countdown__fight:hover,
+.battle-countdown__fight:focus-visible {
   color: var(--color-terminal-green);
   border-color: var(--color-terminal-green);
   box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
@@ -2000,7 +2008,8 @@ body {
     color 0.15s;
 }
 
-.cache-overlay:hover {
+.cache-overlay:hover,
+.cache-overlay:focus-visible {
   border-color: var(--color-flourescent-blue);
   color: var(--color-flourescent-blue);
 }
@@ -2040,7 +2049,8 @@ body {
     color 0.15s;
 }
 
-.sector-map-chip:hover {
+.sector-map-chip:hover,
+.sector-map-chip:focus-visible {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
 }
@@ -2078,7 +2088,8 @@ body {
     color 0.15s;
 }
 
-.sector-map-overlay__close:hover {
+.sector-map-overlay__close:hover,
+.sector-map-overlay__close:focus-visible {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
 }
@@ -2190,11 +2201,13 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-.cache-fire-button:hover {
+.cache-fire-button:hover,
+.cache-fire-button:focus-visible {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
-.cache-discard-button:hover {
+.cache-discard-button:hover,
+.cache-discard-button:focus-visible {
   border-color: var(--color-neon-red);
   color: var(--color-neon-red);
   background: rgb(from var(--color-neon-red) r g b / 0.08);
@@ -2234,7 +2247,8 @@ body {
     background 0.1s;
 }
 
-.cache-roster-pick-unit:hover {
+.cache-roster-pick-unit:hover,
+.cache-roster-pick-unit:focus-visible {
   border-color: var(--color-flourescent-blue);
   color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
@@ -2271,7 +2285,8 @@ body {
     box-shadow 0.12s ease;
 }
 
-.hud-speed:hover {
+.hud-speed:hover,
+.hud-speed:focus-visible {
   color: var(--color-amber-hover);
   border-color: var(--color-amber-hover);
 }
@@ -2332,7 +2347,8 @@ body {
     box-shadow 0.12s ease;
 }
 
-.hud-objective-btn:hover {
+.hud-objective-btn:hover,
+.hud-objective-btn:focus-visible {
   color: var(--color-amber-hover);
   border-color: var(--color-amber-hover);
 }
@@ -2565,7 +2581,8 @@ body {
 .hud-card-targetable:not(.is-dead) {
   cursor: pointer;
 }
-.hud-card-targetable:not(.is-dead):hover {
+.hud-card-targetable:not(.is-dead):hover,
+.hud-card-targetable:not(.is-dead):focus-visible {
   outline: 1px solid var(--color-amber-hover);
   box-shadow: 0 0 6px rgb(from var(--color-amber-hover) r g b / 0.5);
 }
@@ -2824,7 +2841,8 @@ body {
    (0,2,0), so the amber hover border masks the blue SELECTED border while the
    cursor still sits on the just-clicked card (the glow shows, the border
    doesn't, until you move the mouse). */
-.unit-card--preturn.unit-card--clickable:hover:not(.is-selected) {
+.unit-card--preturn.unit-card--clickable:hover:not(.is-selected),
+.unit-card--preturn.unit-card--clickable:focus-visible:not(.is-selected) {
   border-color: var(--color-terminal-amber);
 }
 
@@ -2875,7 +2893,8 @@ body {
   cursor: pointer;
 }
 
-.fire-chip--active:not(:disabled):hover {
+.fire-chip--active:not(:disabled):hover,
+.fire-chip--active:not(:disabled):focus-visible {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
@@ -2923,7 +2942,8 @@ body {
     color 0.1s;
 }
 
-.preturn-pass:hover {
+.preturn-pass:hover,
+.preturn-pass:focus-visible {
   border-color: var(--color-neon-red); /* pass is FINAL, the hover says so */
   color: var(--color-neon-red);
   background: rgb(from var(--color-neon-red) r g b / 0.08);
@@ -2964,7 +2984,8 @@ body {
     box-shadow 0.1s;
 }
 
-.packet-chip:hover {
+.packet-chip:hover,
+.packet-chip:focus-visible {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.12);
 }
 
@@ -3039,7 +3060,8 @@ body {
     color 0.1s;
 }
 
-.btn--primary:hover {
+.btn--primary:hover,
+.btn--primary:focus-visible {
   border-color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
   color: var(--color-flourescent-blue);
@@ -3057,7 +3079,8 @@ body {
     opacity 0.1s;
 }
 
-.btn--primary.btn--dim:hover {
+.btn--primary.btn--dim:hover,
+.btn--primary.btn--dim:focus-visible {
   color: var(--color-terminal-amber);
   opacity: 1;
 }
@@ -3075,7 +3098,8 @@ body {
     color 0.1s;
 }
 
-.btn--primary.btn--exit:hover {
+.btn--primary.btn--exit:hover,
+.btn--primary.btn--exit:focus-visible {
   border-color: var(--color-terminal-amber);
   background: var(--color-terminal-amber);
   color: var(--color-black);
@@ -3090,7 +3114,8 @@ body {
   transition: background 0.1s;
 }
 
-.btn--primary.btn--corner:hover {
+.btn--primary.btn--corner:hover,
+.btn--primary.btn--corner:focus-visible {
   border-color: var(--color-terminal-amber);
   background: rgb(from var(--color-terminal-amber) r g b / 0.12);
   color: var(--color-terminal-amber);
@@ -3317,7 +3342,8 @@ body {
     color 0.1s;
 }
 
-.card-list-button:hover {
+.card-list-button:hover,
+.card-list-button:focus-visible {
   border-color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
   color: var(--color-flourescent-blue);
@@ -3507,7 +3533,8 @@ body {
     background 0.1s;
 }
 
-.roster-modal-close:hover {
+.roster-modal-close:hover,
+.roster-modal-close:focus-visible {
   border-color: var(--color-flourescent-blue);
   color: var(--color-flourescent-blue);
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
@@ -3554,7 +3581,8 @@ body {
 
 /* The :not keeps the hover border from masking the selected border while the
    cursor still sits on the just-clicked card (the preturn-skin lesson). */
-.unit-card--roster.unit-card--clickable:hover:not(.is-selected) {
+.unit-card--roster.unit-card--clickable:hover:not(.is-selected),
+.unit-card--roster.unit-card--clickable:focus-visible:not(.is-selected) {
   border-color: var(--color-terminal-amber);
 }
 
@@ -3589,7 +3617,8 @@ body {
     opacity 0.1s;
 }
 
-.roster-modal-confirm:hover:not(:disabled) {
+.roster-modal-confirm:hover:not(:disabled),
+.roster-modal-confirm:focus-visible:not(:disabled) {
   background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
@@ -3710,6 +3739,37 @@ body {
   letter-spacing: 0.06em;
   opacity: 0.8;
   margin-left: 4px;
+}
+
+/* ── §100 — THE FOCUS RING (100b) ─────────────────────────────────────────
+   The keyboard's hover. Two rules, one idiom (DESIGN §UI idioms "Focus"):
+   1. every `X:hover` rule above carries `X:focus-visible` in its selector
+      list — the focus state IS the hover state (tests/ui-focus.test.ts
+      fails a hover rule without its twin);
+   2. this ONE ring on every control — `button`, `select`, `[role=button]`
+      (the cards, 100c2) and the `tabindex=0` text sites (97d) — under
+      `:focus-visible` only, so a mouse click or a tap never paints it
+      (both engines grant focus-visible to keyboard focus alone). `:where`
+      keeps it at zero specificity: a control's own outline (98c's frontier
+      double ring, the enemy card's hover outline) outranks it by design,
+      and the map node gets its ring on `box-shadow` below.
+   White, not a state hue: amber is hover, blue is frontier / selection,
+   green is active — the ring is its own channel, and a ring is a SHAPE,
+   so it survives the 98a grey read by construction. */
+:where(button, select, [role='button'], [tabindex='0']):focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 2px;
+}
+
+/* The map node's frontier state OWNS `outline` (98c's double ring, 2px at
+   a 3px offset = 5px out), so its focus ring rides `box-shadow`: a black
+   gap to 6px, then the white ring to 8px — outside the 98c ring, never
+   over it. Placed after `.map-node.current` (which also paints a
+   box-shadow) so the ring wins by order if a current node is ever focused. */
+.map-node:focus-visible {
+  box-shadow:
+    0 0 0 6px var(--color-black),
+    0 0 0 8px var(--color-white);
 }
 
 /* ── §99 — REDUCED MOTION (99b) ──────────────────────────────────────────

@@ -382,15 +382,20 @@ armed pick (a 78b behaviour change) · `Screen.present` focuses its
 container · the c1/c2 split. No sim touch, no bump; the fuzz smoke fires
 once (100e touches `src/config/events.ts`).
 
-- [ ] **100a — the camera gate:** Backquote handler removed; the pan
+- [x] **100a — the camera gate:** Backquote handler removed; the pan
       listeners attach under `import.meta.env.DEV` only; the toggle → devKeys
       Ctrl+Alt+C; gotchas #52/#54 noted. Exit: no camera keydown in the shipped
-      bundle; the chord toggles in the user's Firefox.
-- [ ] **100b — the focus idiom:** one global `:focus-visible` ring rule on
+      bundle; the chord toggles in the user's Firefox. ✅ `7f941b9` + `74c7204`
+      (2026-09-17): the bundle's keydown attaches counted (3, none the
+      Renderer's); the chord landed in Firefox; the user's scroll-mode verdict
+      → a minimap rider on the Round 7.5 A/B (META-ROADMAP). WORKLOG §100a.
+- [x] **100b — the focus idiom:** one global `:focus-visible` ring rule on
       controls; every `:hover` rule's `:focus-visible` twin; the map-node ring
       on box-shadow; `tests/ui-focus.test.ts` (the ui-motion shape — a hover
       rule without its twin fails). Exit: pins green; the ring on the pre-turn
-      text sites in Firefox.
+      text sites in Firefox. ✅ (2026-09-17): 29 twins + the white ring + the
+      node's shadow ring; five pins, self-checked; the pane computes ring +
+      twin on a focused card. WORKLOG §100b.
 - [ ] **100c1 — `pressable()` + the leaf buttons:** the helper (role +
       tabindex + Enter/Space → the click handler; a pure key predicate,
       pinned); map nodes + the cache chip → real `<button>`s; MapScreen +

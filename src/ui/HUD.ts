@@ -76,7 +76,7 @@ interface ObjectiveButtonDef {
 }
 
 const OBJECTIVE_BUTTONS: readonly ObjectiveButtonDef[] = [
-  { mode: 'engage', label: t('hud.objective.engage'), icon: '⌖', action: 'engageObjective', arms: true },
+  { mode: 'engage', label: t('hud.objective.engage'), icon: '◎', action: 'engageObjective', arms: true },
   { mode: 'focus', label: t('hud.objective.focus'), icon: '!', action: 'focusObjective', arms: true },
   { mode: 'hold', label: t('hud.objective.hold'), icon: '⊓', action: 'holdObjective', arms: false },
   { mode: 'stop', label: t('hud.objective.stop'), icon: '✕', action: 'stopObjective', arms: false },
@@ -610,7 +610,9 @@ export class HUD {
       btn.setAttribute('aria-pressed', String(active));
     }
     if (this.pauseButton) {
-      this.pauseButton.textContent = paused ? '▶' : '⏸';
+      // 101a — `❚❚`, not U+23F8 ⏸: neither shipped face has the pause
+      // symbol (the inventory pin), and a heavy bar pair reads as one.
+      this.pauseButton.textContent = paused ? '▶' : '❚❚';
       this.pauseButton.classList.toggle('is-active', paused);
       this.pauseButton.setAttribute('aria-pressed', String(paused));
       this.pauseButton.setAttribute('aria-label', this.pauseLabel());

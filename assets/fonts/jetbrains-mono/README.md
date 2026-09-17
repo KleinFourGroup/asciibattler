@@ -51,10 +51,13 @@ source font is missing any glyph the live unit catalog declares, so a future
 font upgrade that drops one is caught at build rather than reaching a player as
 a silent fallback. `FontAtlas`'s DEV boot assert is the second net.
 
-To add a weight or style, add an entry to `FACES` in
-[`scripts/build-font.mjs`](../../../scripts/build-font.mjs) and re-run — the
-`@font-face` CSS is generated from that list. (§79f decided *not* to build the
-font/style axis yet; this only keeps it a drop-in.)
+To add a face, add an entry to `FACES` in
+[`src/render/fontSubset.ts`](../../../src/render/fontSubset.ts) (shared with
+the guard test and the renderer's font stack) and re-run — the `@font-face`
+CSS is generated from that list. §101a added the second: DejaVu Sans Mono
+([`../dejavu-sans-mono/`](../dejavu-sans-mono/README.md)), the ONE fallback,
+whose subset keeps only what this primary lacks. This face stays the primary;
+a glyph it has always paints from it.
 
 ## Licence obligations — don't quietly break these
 

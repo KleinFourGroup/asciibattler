@@ -1,25 +1,36 @@
 /**
- * §79-post — the codepoint ranges the shipped JetBrains Mono subset keeps.
- * (i18n-ok-file: a build table — the range labels are never rendered.)
+ * §79-post / §101a — the faces we ship + the codepoint ranges their subsets
+ * keep. (i18n-ok-file: a build table — the labels are never rendered.)
  *
  * Moved out of `scripts/build-font.mjs` so the coverage guard
- * (`tests/font-coverage.test.ts`) can import them WITHOUT executing the
- * generator: gen:font's own checks only run when someone runs gen:font, which
- * is precisely the moment nobody forgets the font. The test makes the
- * contract structural — a new catalog glyph outside these ranges fails
- * `npm test` instead of degrading to the DEV boot warn (the §79f class: a
- * silent OS fallback whose ink metrics re-classify a stand line on someone
- * else's machine).
+ * (`tests/font-coverage.test.ts`) and the renderer (`FontAtlas`'s font stack)
+ * can import them WITHOUT executing the generator: gen:font's own checks only
+ * run when someone runs gen:font, which is precisely the moment nobody forgets
+ * the font. The test makes the contract structural — a new catalog glyph or a
+ * new UI glyph outside the shipped subsets fails `npm test` instead of
+ * degrading to an OS fallback (the §79f class on the canvas: ink metrics that
+ * re-classify a stand line on someone else's machine; the §101 class in the
+ * DOM: a fallback face's taller ascent growing a line box — the 46 / 45 px
+ * chip).
  *
- * Deliberate HEADROOM (user-signed at the 79g shape-lock): the atlas needs 47
- * glyphs today, but regenerating on every new glyph is exactly the chore that
- * gets forgotten until it breaks a boss. Upstream coverage measured at 79g:
- * ASCII 95/95, Latin-1 96/96, box-drawing 128/128, blocks 32/32 — all
- * COMPLETE; geometric shapes 43/96 and arrows 35/112 are PARTIAL, so don't
- * assume an arbitrary shape exists there (the vendored-TTF check in the guard
- * test is what tells you).
+ * TWO FACES (§101a, user-signed 2026-09-17 — the §79f multi-face trigger
+ * fired on purpose): JetBrains Mono is the PRIMARY and supplies every glyph
+ * it has; DejaVu Sans Mono is the ONE shipped FALLBACK and its subset keeps
+ * only what the primary lacks inside SUBSET_RANGES, so a glyph the primary
+ * can't paint still comes from a face we ship — the same letterform on every
+ * machine, a line box that never grows (DejaVu's ascent / descent 0.93 / 0.24
+ * sit inside JetBrains' 1.02 / 0.30; its 0.602 advance matches the 0.600
+ * cell). The CSS `font-family` chain and the canvas atlas's `ctx.font` both
+ * use FONT_STACK, so the DOM and the atlas share one provenance rule.
  *
- * Regenerate the font after changing these: `npm run gen:font`.
+ * Deliberate HEADROOM (user-signed at the 79g shape-lock): whole blocks, not
+ * the glyphs in use, so a new glyph choice inside a kept block needs no
+ * regeneration. Upstream JetBrains coverage: ASCII, Latin-1, box-drawing and
+ * blocks COMPLETE; every other block PARTIAL — the fallback fills the rest
+ * where DejaVu has it, and the guard test (not this table) is what says
+ * whether a given codepoint is shipped.
+ *
+ * Regenerate the fonts after changing these: `npm run gen:font`.
  */
 
 /** `[firstCodePoint, lastCodePoint, label]`, inclusive on both ends. */
@@ -28,13 +39,52 @@ export type SubsetRange = readonly [number, number, string];
 export const SUBSET_RANGES: readonly SubsetRange[] = [
   [0x0020, 0x007e, 'ASCII printable'],
   [0x00a0, 0x00ff, 'Latin-1 supplement'],
+  [0x2000, 0x206f, 'General punctuation (partial upstream)'],
   [0x2190, 0x21ff, 'Arrows (partial upstream)'],
+  [0x2200, 0x22ff, 'Mathematical operators (partial upstream)'],
+  [0x2300, 0x23ff, 'Miscellaneous technical (partial upstream)'],
   [0x2500, 0x257f, 'Box drawing'],
   [0x2580, 0x259f, 'Block elements'],
   [0x25a0, 0x25ff, 'Geometric shapes (partial upstream)'],
+  [0x2600, 0x26ff, 'Miscellaneous symbols (partial upstream)'],
+  [0x2700, 0x27bf, 'Dingbats (partial upstream)'],
 ];
 
 /** Whether the kept subset ranges include `codePoint`. */
 export function subsetCovers(codePoint: number): boolean {
   return SUBSET_RANGES.some(([lo, hi]) => codePoint >= lo && codePoint <= hi);
 }
+
+/** One shipped face: a vendored source TTF under `assets/fonts/<dir>/`, the
+ *  woff2 the generator writes beside it, and the CSS family name. */
+export interface ShippedFace {
+  readonly family: string;
+  readonly dir: string;
+  readonly source: string;
+  readonly out: string;
+  /** `primary` supplies everything it has; a `fallback` keeps only what the
+   *  primary lacks. Exactly one primary, listed first. */
+  readonly role: 'primary' | 'fallback';
+}
+
+export const FACES: readonly ShippedFace[] = [
+  {
+    family: 'JetBrains Mono',
+    dir: 'jetbrains-mono',
+    source: 'JetBrainsMono-Regular.ttf',
+    out: 'jetbrains-mono-subset-400.woff2',
+    role: 'primary',
+  },
+  {
+    family: 'DejaVu Sans Mono',
+    dir: 'dejavu-sans-mono',
+    source: 'DejaVuSansMono.ttf',
+    out: 'dejavu-sans-mono-subset-400.woff2',
+    role: 'fallback',
+  },
+];
+
+/** The font stack every consumer names — the shipped faces, primary first,
+ *  each quoted for CSS / canvas `font` strings (`'JetBrains Mono', 'DejaVu
+ *  Sans Mono'`). The sheet's `--font-mono` appends the generic tail. */
+export const FONT_STACK = FACES.map((face) => `'${face.family}'`).join(', ');

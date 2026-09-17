@@ -386,7 +386,7 @@ interactive children; a toggle mirrors its selected class as
 
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
-§96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay
+§96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ◎ ▸ ⚠ ✕`) stay
 outside the locale value. Since 100e the literal baseline is EMPTY: every
 presentation file is at zero and the pin's absent-means-zero clause holds
 the whole layer; a dev console line takes `// i18n-ok`, never a key.

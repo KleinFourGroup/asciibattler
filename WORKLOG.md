@@ -3422,3 +3422,70 @@ scripted content sweeps in the pane (999 → 1000, a fired packet, an
 accepted reward, a bought slot: the flagged click target's box
 byte-equal before and after) — and the user's Firefox eye on each, as
 §100.
+
+### 101a — the second face + the UI glyph inventory pin (2026-09-17)
+
+**Built:** `src/render/fontSubset.ts` now owns the face registry as well
+as the ranges — `FACES` (JetBrains Mono the `primary` · DejaVu Sans Mono
+the one `fallback`), `ShippedFace`, and `FONT_STACK` (`'JetBrains Mono',
+'DejaVu Sans Mono'`), the string the sheet's `--font-mono` mirrors and
+`FontAtlas` draws + `fonts.load`s through (its `FONT_FAMILY` constant is
+gone; the DEV assert's backstop probe and message read "a shipped
+face"). `SUBSET_RANGES` widened by five blocks (General Punctuation ·
+Mathematical Operators · Miscellaneous Technical · Miscellaneous Symbols ·
+Dingbats — every one partial upstream, so the fourteen in-JetBrains
+glyphs the old ranges excluded now ship from the primary). The generator
+(`scripts/build-font.mjs`) loads every face's cmap FIRST and gates on the
+UNION (a live atlas glyph must be in SOME shipped face; exactly one
+primary, listed first); the primary keeps everything it has in the
+ranges, a fallback keeps only what the primary lacks — the two subsets
+never overlap. Sizes after `gen:font`: JetBrains 712 glyphs → 52.2 KB,
+DejaVu 531 glyphs → 45.1 KB (of 1631 requested); `src/fonts.css` carries
+two `@font-face` blocks. The vendored face: `assets/fonts/dejavu-sans-mono/`
+(the 2.37 TTF + `LICENSE.txt` + `AUTHORS.txt` verbatim + a README with
+the zip / TTF sha256s, the candidate table and the four licence
+obligations); `public/THIRD-PARTY-LICENSES.txt` gains the DejaVu section
+with the upstream LICENSE reproduced in full (the Bitstream Vera + Arev
+rename clauses quoted — "DejaVu Sans Mono" carries none of the four
+names, so the subset keeps its). The two glyphs DejaVu lacks re-chosen:
+`⏸` → `❚❚` (HUD's pause button; the `.hud-speed--pause` 32 px content
+min-width still holds both states — 17.8 px vs 7.8 px of ink), `⌖` → `◎`
+(the engage objective's icon + the pre-turn map line; DESIGN §UI idioms
+"Strings" updated). ARCHITECTURE's tree gains the `fontSubset.ts` line;
+the JetBrains README's "to add a face" paragraph re-pointed at FACES.
+
+**The pin** (`tests/font-coverage.test.ts`, three describes now): the §79
+pair re-derived over the face union; **the UI glyph inventory** walks
+`src/**` (non-test `.ts` / `.css`), `locales/**`, `config/**`, strips
+comments (block comments blanked; whole-line `//` and ` * ` lines; a
+trailing ` // …` with whitespace on both sides, so a `://` URL in a
+string survives), and requires every non-ASCII codepoint SHIPPED — inside
+`SUBSET_RANGES` AND in some face's cmap — reporting the first `file:line`
+per offender and which half failed. A self-check that the walk found the
+inventory (≥ 24 codepoints; 32 at 101a). **Self-checked against a known
+answer** before it was believed: a planted `src/ui/__glyphProbe.ts`
+carrying `⏸` failed it with "⏸ U+23F8 (src/ui/__glyphProbe.ts:1) — in
+range but no shipped face has it"; the probe deleted, the pin green at
+zero offenders.
+
+**Browser (the pane, `dev-preview`, after the reload + the styleSheets /
+`__game` poll):** `document.fonts` reports both faces `loaded`; the
+computed `font-family` on `body` is the five-entry chain; the console is
+clean (no FontAtlas assert). **The live instance closed here, one step
+before 101b's line-height:** on the map the cache chip measures **45 px
+to the bits chip's 45** (was 46 / 45 at 100c1) with both chips at
+`line-height: normal` — DejaVu's ascent sits inside the JetBrains line,
+so the fallback glyph no longer grows the box. Provenance proven by a
+canvas `measureText` at 18 px: with the stack `▤` / `★` / `☠` measure
+10.84 px each (DejaVu's 0.602 cell), while JetBrains alone falls to the
+OS face at 15.04 / 14.99 / 18.00 — the same numbers `serif` gives; `❚`
+measures 10.8 from JetBrains itself. (`document.fonts.check` is NOT a
+cmap check — it answered `true` for every glyph in every family once the
+faces were loaded; the width probe is the read.) Noted for 101b: the pool
+chip stands 55 px to the text chips' 45 (its gauge bar — "one height"
+means the three text chips), widths 166 / 157 / hidden.
+
+Typecheck clean; the font / atlas / i18n suites 52/52; no sim touch, no
+bump, no fuzz trigger (`src/render` + `src/ui` + `scripts` + `assets` +
+`tests`). The user's Firefox read: the chips, the rarity stars, a skull
+hitsplat, the pause button, the pre-turn map line.

@@ -11,6 +11,7 @@ import {
   padInk,
   type GlyphInk,
 } from './glyphs';
+import { FONT_STACK } from './fontSubset';
 
 /**
  * Generates a monospace glyph atlas at startup. Each glyph occupies a fixed-
@@ -33,7 +34,9 @@ import {
  * then await `ready` as a belt-and-suspenders settle.
  */
 
-const FONT_FAMILY = 'JetBrains Mono'; // i18n-ok: a font-family name, not prose
+// The font is FONT_STACK (src/render/fontSubset.ts): the primary face + the
+// one shipped fallback (101a), the same chain the sheet's --font-mono names,
+// so a glyph the primary lacks rasterizes from a face we ship — never the OS.
 
 /** Pixel size of each square cell in the atlas. */
 const CELL_PX = 64;
@@ -72,8 +75,8 @@ export interface GlyphUV {
 }
 
 /**
- * §79g — DEV guard: prove every registered glyph actually came from
- * `FONT_FAMILY` and not from an OS fallback.
+ * §79g — DEV guard: prove every registered glyph actually came from a
+ * shipped face (`FONT_STACK`) and not from an OS fallback.
  *
  * The bug this exists to prevent (found at §79f, fixed at §79g): we loaded a
  * font subset that silently lacked `╥` and `▄`, so those two — every wall,
@@ -105,7 +108,7 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
   const alphaOf = (glyph: string, backstop: string): Uint8ClampedArray => {
     ctx.clearRect(0, 0, CELL_PX, CELL_PX);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `${FONT_PX}px '${FONT_FAMILY}', ${backstop}`;
+    ctx.font = `${FONT_PX}px ${FONT_STACK}, ${backstop}`;
     ctx.textAlign = atlasCtx.textAlign;
     ctx.textBaseline = atlasCtx.textBaseline;
     ctx.fillText(glyph, CELL_PX / 2, CELL_PX / 2);
@@ -124,11 +127,11 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
   if (fellBack.length > 0) {
     console.error(
       `[FontAtlas] ${fellBack.length} of ${GLYPHS.length} glyphs did NOT come from ` +
-        `'${FONT_FAMILY}' and were rasterized from an OS fallback: ` +
+        `a shipped face (${FONT_STACK}) and were rasterized from an OS fallback: ` +
         `${fellBack.map((c) => `${c} (U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')})`).join(', ')}. ` +
         `Their ink metrics — and so their stand line (§79d2) and every lift derived ` +
         `from it — vary by machine. Fix: widen SUBSET_RANGES in src/render/fontSubset.ts ` +
-        `and re-run \`npm run gen:font\`.`,
+        `(or add the glyph to a shipped face) and re-run \`npm run gen:font\`.`,
     );
   }
 }
@@ -186,7 +189,9 @@ export class FontAtlas {
     // FontFace(s), or an empty array if the family is undeclared (it never
     // throws), so a missing font degrades to the old fallback rather than
     // crashing startup. `await fonts.ready` then settles any stragglers.
-    await document.fonts.load(`${FONT_PX}px '${FONT_FAMILY}'`);
+    // `load` with the whole stack fetches EVERY listed face (101a: the
+    // fallback too, so a fallback-supplied glyph never bakes serif either).
+    await document.fonts.load(`${FONT_PX}px ${FONT_STACK}`);
     await document.fonts.ready;
 
     const canvas = document.createElement('canvas');
@@ -200,7 +205,7 @@ export class FontAtlas {
     // multiplies into RGB; the atlas's alpha channel carries glyph coverage.
     ctx.clearRect(0, 0, ATLAS_W, ATLAS_H);
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `${FONT_PX}px '${FONT_FAMILY}'`;
+    ctx.font = `${FONT_PX}px ${FONT_STACK}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -253,7 +258,11 @@ export class FontAtlas {
     // §91-pre2 — the descender room, off the ink just measured (the deepest
     // letterform bottom below the baseline + the barrier): the line every
     // letterform stands on now sits this far above the tile.
-    const descenderRoom = descenderRoomFor(inkByGlyph.values(), baselineY, DESCENDER_BARRIER_PX / CELL_PX);
+    const descenderRoom = descenderRoomFor(
+      inkByGlyph.values(),
+      baselineY,
+      DESCENDER_BARRIER_PX / CELL_PX,
+    );
 
     if (import.meta.env.DEV) assertGlyphsCameFromFont(ctx);
 

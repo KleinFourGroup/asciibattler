@@ -626,7 +626,7 @@ export class PreTurnScreen extends Screen {
     const mapName = info.map.layoutId === null
       ? t('map.uncharted')
       : (getLayout(info.map.layoutId)?.name ?? info.map.layoutId);
-    map.textContent = `⌖ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
+    map.textContent = `◎ ${mapName} — ${info.map.gridW}×${info.map.gridH}`;
     panel.appendChild(map);
 
     // L1→47d — the daemon banners: one stacked line per owned idol (the 47

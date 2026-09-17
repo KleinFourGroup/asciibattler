@@ -415,12 +415,15 @@ user-signed calls: the widest-live-form idiom replaces `tabular-nums`;
 JetBrains line, keeps the cell; Noto Symbols 2 + Unifont rejected);
 the column stretches to one width; the accepted reward row stays.
 
-- [ ] **101a — the second face + the inventory pin:** DejaVu Sans Mono
+- [x] **101a — the second face + the inventory pin:** DejaVu Sans Mono
       joins `FACES` (a symbol subset, its notice into
       `THIRD-PARTY-LICENSES.txt`); the `font-family` chain JBM → DejaVu →
       monospace; `⏸` → `❚❚`, `⌖` → `◎`; `SUBSET_RANGES` widened for the
       fourteen in-JBM glyphs; a permanent pin — every non-ASCII codepoint
       in the UI's strings is in a shipped subset. Exit: the pin at zero.
+      ✅ (2026-09-17): the pin at zero, self-checked on a planted `⏸`;
+      the cache chip 45 px to the bits chip's 45 in the pane (the live
+      instance closed a step early). WORKLOG §101a.
 - [ ] **101b — the line box + the chip plate:** an explicit `line-height`
       on `#ui` + the overlay root at the face's normal; `.chip`
       `box-sizing: border-box`; the column `align-items: stretch`;

@@ -371,6 +371,44 @@ a keyboard route, every surface passes the checklist row; baseline
 zero. **Scope guards:** no rebind UI (Round 8); the camera modes are
 gated, not designed (the D4 A/B is Round 7.5).
 
+**Kickoff 2026-09-17** (WORKLOG §100 Kickoff — the audit found the cards
+cannot be `<button>`s (interactive children), the map node's ring cannot
+be `outline` (98c owns it), `type="button"` already done by 96d, a latent
+78b armed-pick miss on the enemy card, and a Space-vs-focused-button
+collision). **Decisions (user-signed):** Ctrl+Alt+C for the camera
+toggle, the user's Firefox read decides · hotkeys WIN over a focused
+button in battle, Enter is the button route · the enemy card honours an
+armed pick (a 78b behaviour change) · `Screen.present` focuses its
+container · the c1/c2 split. No sim touch, no bump; the fuzz smoke fires
+once (100e touches `src/config/events.ts`).
+
+- [ ] **100a — the camera gate:** Backquote handler removed; the pan
+      listeners attach under `import.meta.env.DEV` only; the toggle → devKeys
+      Ctrl+Alt+C; gotchas #52/#54 noted. Exit: no camera keydown in the shipped
+      bundle; the chord toggles in the user's Firefox.
+- [ ] **100b — the focus idiom:** one global `:focus-visible` ring rule on
+      controls; every `:hover` rule's `:focus-visible` twin; the map-node ring
+      on box-shadow; `tests/ui-focus.test.ts` (the ui-motion shape — a hover
+      rule without its twin fails). Exit: pins green; the ring on the pre-turn
+      text sites in Firefox.
+- [ ] **100c1 — `pressable()` + the leaf buttons:** the helper (role +
+      tabindex + Enter/Space → the click handler; a pure key predicate,
+      pinned); map nodes + the cache chip → real `<button>`s; MapScreen +
+      CacheOverlay literals extracted. Exit: Tab + Enter enters a node / opens
+      the cache in Firefox.
+- [ ] **100c2 — the cards:** hand / recruit / picker / enemy cards through the
+      helper, `aria-pressed` mirrors `is-selected`, the enemy card honours
+      `armedMode`, the hint wording; HUD + PreTurn + Recruit literals extracted.
+      Exit: the §97 riders 1–3 close; arm Focus then Enter a card sets focus.
+- [ ] **100d — the selects:** `aria-label` via `t()` on both; Port + Reward
+      literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0.
+- [ ] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`
+      (a `t()` per kind; `SCAN_ROOTS` drops the file), `common.lv`, the rest;
+      `Screen.present` focuses its container. Exit: the baseline is `{}`.
+- [ ] **100f — the close:** DESIGN §Input accessibility extended in place
+      (hover + focus, the Space rule, the per-surface checklist table),
+      "Focus (100)" in §UI idioms, HANDOFF tips, the stub.
+
 ## Phase 101 — layout stability
 
 **Charter:** the "Y-coordinate hysteresis" class fixed, not the

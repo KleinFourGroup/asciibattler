@@ -2804,3 +2804,130 @@ never fired (`src/render` + `src/ui` + `src/dev` + `src/scenes` +
 `main.ts` only). Tests 2965 → 2984 (+6 motion · +7 ui-motion · +5
 fxDescriptor · +1 drift). Seven code commits + the kickoff + this close;
 one prettier commit; every step read in the user's Firefox.
+
+## Phase 100 — input accessibility + the extraction sweep
+
+### Kickoff (2026-09-17) — the code-reality audit + the cut
+
+The charter (ROADMAP §100) was authored at the round kickoff against the
+2026-09-08 audit (§Kickoff C); five phases later, re-read at `73a3bf3`.
+The §97 riders (TODO §97 riders 1–3) are inputs. Findings, by surface:
+
+**A. The camera bindings — untouched since D4.** `Renderer.ts`:
+`CAMERA_TOGGLE_CODE = 'Backquote'`, `PAN_KEY_CODES` = WASD + arrows,
+both on page-lifetime `window` listeners (gotcha #54), no DEV gate, not
+in the registry; `setCameraMode` has NO caller outside Renderer, so the
+key is the only way in. Scroll mode already has a MOUSE pan route
+(edge-scroll, 40 px) — the gap is the TOGGLE, not the pan. The gate: the
+toggle moves to `devKeys.ts` as a Ctrl+Alt chord and the pan listeners
+attach under `import.meta.env.DEV` only (the FontAtlas precedent), so the
+shipped bundle never sees a camera keydown. Chord audit per gotcha #134:
+the registry binds E/F/H/T, digits, Space, M, Slash; devKeys holds
+S/L/D/K/G/A; Firefox owns Ctrl+Alt+R. **Ctrl+Alt+C** (camera) is off all
+three sets — the user's Firefox read decides it, never the pane. Docs
+naming the key: gotchas #52 + #54 (a 100-note each, no renumber).
+
+**B. The eight clickable `<div>`s — all still `<div>`s.** Map nodes
+(`MapScreen.ts:330–358`, frontier nodes only get the listener), the cache
+chip (`CacheOverlay.ts:77` — its sibling map chip IS
+`<button class="chip">`, `SectorMapOverlay.ts:69`: the precedent), hand
+cards (`PreTurnScreen.ts:759`), recruit cards (`RecruitScreen.ts:99`),
+picker cards (`CardListModal.ts:116`), enemy compact cards (`HUD.ts:768`
+click = engage, `:769` contextmenu = focus). The shape fork the charter's
+"made focusable buttons" hides: the CARDS carry interactive children (the
+97d tab-stop chips at `PreTurnScreen.ts:1000`, the stat rows' tooltips) —
+interactive content inside a `<button>` is invalid HTML and both engines
+break inner focus — so cards get `role="button"` + `tabindex="0"` +
+Enter/Space through ONE helper, while the two LEAF controls (map node,
+cache chip) become real `<button>`s. `type="button"`: all 16 inline
+`createElement('button')` sites set it (96d closed the audit's "4 lack")
+— nothing to do.
+
+**C. Focus styling — zero `:focus-visible` rules in `ui.css`.** 30
+`:hover` rules; the ONE `:focus` rule is 96f's `outline: none` on the two
+modal containers (correct — a container is not a control). The five 97d
+text sites ride the UA default ring. ⚠ The map node's frontier state
+ALREADY uses `outline` (98c's double ring), so a node's focus ring cannot
+be `outline` — a `box-shadow` ring, or the ring on `::after`. The idiom
+proposed: the focus state IS the hover state plus a ring — every
+`X:hover` selector gains its `X:focus-visible` twin (same block), one
+global ring rule on controls, and a `tests/ui-focus.test.ts` oracle in
+the ui-motion shape (every `:hover` has its twin; no `outline: none`
+outside the two containers; the ring rule present).
+
+**D. Hotkeys vs a focused button — a real collision, ruled.** The
+Keybindings sink (`Keybindings.ts:92`) dispatches on bare `code` with no
+target guard and `preventDefault`s when a handler is live (battle only):
+Space on a FOCUSED HUD button toggles pause AND cancels the button's
+activation (a prevented Space keydown suppresses the click). Enter still
+activates. The alternative — the sink yields Space to a focused button —
+would REGRESS the mouse player: a clicked button holds focus in both
+engines, so the next Space would re-fire the button instead of pausing.
+Call: hotkeys WIN (byte-identical today); Enter is every button's
+keyboard route in battle; the helper maps Enter AND Space (Space reaches
+it outside battle, where no handler is live). DESIGN records the rule.
+
+**E. Focus at a screen swap — nobody moves it.** `Screen.present` and the
+HUD never touch focus; the removed element's focus falls to `body`, so
+Tab starts at the chrome column (bits · cache · map chips) then the
+screen in DOM order. Proposal: `present()` focuses its container
+(`tabindex=-1`, no ring — the 96f container precedent) so Tab enters the
+screen first. Small; a decision point.
+
+**F. The modal shell needs nothing.** 96f already traps, restores focus
+to the opener, and stamps `role="dialog"`; its `FOCUSABLE` selector
+includes `[tabindex]:not([tabindex="-1"])`, so role=button cards join
+the trap on their own.
+
+**G. The enemy compact card (the §97 rider) — a latent 78b bug is the
+route.** `setObjectiveOnCard(unitId, 'engage')` passes the mode
+LITERALLY: a pane-armed FOCUS pick followed by a card click sets ENGAGE
+(the board pick honours the armed mode; the card ignores it). Honouring
+`armedMode ?? 'engage'` on the card click gives keyboard AND touch the
+focus objective with no long-press and no contextmenu: arm Focus (the
+pane button or F), then Enter / tap the card. The contextmenu route
+stays for the mouse; the tooltip stays `touch: 'none'` (the tap acts);
+the hint wording gains the armed route. Riders 1 (focus route + touch),
+2 (the in-battle tab stops — the cards themselves become the stops; the
+inner `LV`/`POW` wraps stay hover + key reads, ~30 stops was and is too
+many) and 3 (the ring) close in this phase.
+
+**H. The literal sweep — 71 literals in 18 files** (`npm run
+i18n:baseline -- --list`, captured at the kickoff). Clusters: `"Lv"` ×5
+(Game · UnitOverlayLayer ×2 · PromotionScreen · UnitCard) → one
+`common.lv`; `src/config/events.ts` ×9 = `describeEventCondition`, config
+prose whose ONLY consumer is `EventScreen.ts:107` → the describer MOVES to
+`src/ui` with a `t()` per condition kind (config stays prose-free;
+`SCAN_ROOTS` drops the file) — ⚠ that touch of `src/config/` fires the
+pre-commit fuzz smoke once; PortScreen 13 · PreTurnScreen 15 · HUD 7 ·
+SectorCleared 5 · CacheOverlay 3 · UnitCard 3 · promotionDelta 3 · the
+rest 1–2. Touch-each-file-once: the extraction rides the focus step that
+opens the file where one does; the remainder is one pure extraction
+commit; the pin's "absent = zero" then covers every file.
+
+**I. The two `<select>`s** (`PortScreen.ts:329`, `RewardScreen.ts:202`):
+unlabelled, rebuilt per render, no visible label element. An
+`aria-label` through `t()` is the no-layout route (a visible `<label>`
+shifts the row — §101's business, and the button beside each select
+already names the action).
+
+**J. Test reach.** vitest runs `environment: 'node'`; no jsdom in the
+tree. So: the helper's key predicate is a pure function and pinned; the
+stylesheet oracle pins the ring idiom structurally; the DOM wiring and
+every hotkey route are the user's FIREFOX read (the pane's key tool sends
+no `code`, gotcha #134). The spec's exit — "one row per surface, every
+row ticked" — is a DESIGN table the user reads.
+
+**K. ARIA now: 13 sites** (96f's dialog trio, the tooltip's `role`, the
+HUD's `aria-pressed` + labels). `aria-pressed` mirroring `is-selected` on
+the hand-swap and picker cards is a line each inside the helper's opt.
+
+**L. Doc homes.** DESIGN §Input accessibility (78e) is EXTENDED in place
+(hover + focus, the Space rule, the per-surface checklist); §UI idioms
+gains "Focus (100)"; gotchas #52/#54 get their 100-notes; HANDOFF's
+browser-verify tips gain the chord.
+
+No sim touch, no snapshot bump; the fuzz smoke fires once (100e's
+`src/config/events.ts` touch). The cut + the decision points went to the
+user in a plain message (the AskUserQuestion note in AGENTS); the
+ROADMAP gets the cut lines on approval.

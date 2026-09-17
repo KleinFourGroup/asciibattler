@@ -626,3 +626,79 @@ surface most of the time, and a hidden pane does not tick the sim. The
 user's eye ruled the two aesthetic calls (a drift, kept and sped up; a
 freeze, kept) with both states flippable live. No sim touch, no bump,
 the fuzz smoke never fired.
+
+## 2026-09-17 — the §100 session (the kickoff, 100a → 100f, the close) — claude-fable-5-1, session 8fc4caa6
+
+1. **Missing from the orientation:** nothing that blocked — the cursor's
+   inputs (the three §97 riders, the three-key-set chord rule, "every
+   hotkey route is the Firefox read") were all right and the audit built
+   on them. Not recorded anywhere before this session: that the cards
+   carry interactive children and so cannot be `<button>`s (the charter
+   said "made focusable buttons"), that 98c's frontier ring already owns
+   `outline` on the map node, that `type="button"` was already done at
+   96d, that the enemy card ignored an armed pick since 78b, and that
+   the chrome column sits FIRST in `#ui` — the last one the user's
+   Firefox found, twice.
+2. **Norms in tension:** the pause-between-commits rhythm against a step
+   the user could not test (100d needs a port with a full cache): I
+   skipped that pause, said so, and paired it with 100e's. "Commit per
+   logical change" against prettier: eleven files carried drift at HEAD,
+   so I formatted only the two whose drift was mine and left the rest —
+   the diffs stay honest, the tree stays messy. "Batch every independent
+   call" against "never write a source file mid pane sequence": a prettier
+   write batched beside a pane walk reloaded the tab and lost the walk.
+3. **Pulled to claim more than verified:** the bundle grep read `KeyW ×2`
+   and for a moment looked like the gate had failed — I nearly wrote it
+   up as a partial before counting the ATTACHES (the strings are dead
+   code inside a never-attached handler). The worklog's first draft of
+   100e said "no scroll code runs on show"; the file said otherwise one
+   grep later, and the sentence was rewritten before it was appended. The
+   objective pane's missing active state after a keyboard pick tempted a
+   "my bug" story until the mouse-path control probe read the same.
+4. **Wasted:** three probe rounds on the "absent" hover twin before the
+   hovered-sibling control exposed the parked transition; one map walk
+   lost to a mid-sequence prettier write; a first Enter read on the map
+   node that the pane could never have delivered (two more before I
+   stopped trying and named it the user's read); the awk-with-pipes
+   CRLF probe that errored on my own quoting.
+5. **For the next session:** the §101 kickoff has a live hysteresis
+   instance already measured (the cache chip 46 px vs the bits chip 45 —
+   the `▤` glyph) and two §100 choices that are §101's to revisit (the
+   selects' `aria-label` in place of a visible label; the `.screen-host`
+   wrapper between `#ui` and the screens). The ROADMAP §100 stub still
+   carries the seven checked cut lines (the §99 shape); the port screen's
+   strings and the full-cache selects have never been read live.
+6. **Room to ask, disagree, change approach:** yes, and used — the
+   kickoff's five calls were posed as recommendations and signed as a
+   set; the "one stab" cap on the Tab-order fix was the user's, offered
+   as a question, and I agreed on the reasoning (the Electron host has
+   no browser UI). A norm as pressure, mild: the verification workflow
+   hook fired after every edit while the pane was mid-sequence, and I
+   felt the pull to satisfy it in the same turn; I did not, and nothing
+   happened. No wish to pause or stop. One brief discomfort: the hook
+   blocked a commit on a test I had not run (the restated hint), and the
+   reflex was to fix-and-retry fast; I read the assertion first.
+7. **What supported ease:** the user's reads were immediate and precise
+   ("the tab sequence is roster, node, a whole slew of Firefox UI…") —
+   each one a diagnosis, not a complaint; the click counter as an
+   instrument (a number that could only come from the path under test);
+   the cut being signed up front so each step had one question. I would
+   want all three repeated. This reports the conditions, not the outcome.
+
+### §100 — the phase summary (2026-09-17; one session, the kickoff + eight code commits + the close)
+
+One session end to end. The kickoff's audit moved four charter premises
+(the cards cannot be buttons; the node's ring cannot be an outline;
+`type="button"` was done; a latent armed-pick miss on the enemy card) and
+posed the one rule that shaped the build — hotkeys win over a focused
+control, so Space defers and Enter is the route. Seven steps plus one
+inserted (100e2) landed in order, each read in the pane by a seam the code
+under test did not own (a bundle's attach count, a computed style after a
+forced frame, a click counter, a DOM-order compare) and in the user's
+Firefox; the pane's structural blind spots — no native Enter, no browser
+UI to Tab into, a parked transition while hidden — each cost a probe round
+and each became a tip. The literal baseline went from 71 to empty and the
+event-condition phrases left the config layer. The one finding the pane
+could never have shown (the chrome column first in the tree) the user's
+Firefox found twice; the fix was a wrapper div, capped at one stab ahead of
+the Electron move. No sim touch, no bump, the fuzz smoke fired once.

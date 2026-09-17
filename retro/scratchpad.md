@@ -239,3 +239,39 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   the first commit and every later step had its own lint in hand; the
   before-set it produced re-scoped 98c (name the kinds, not only the
   states) and reframed 98e (a margin, not a rescue).
+
+## §100 — input accessibility (2026-09-17)
+
+- **The pane cannot Enter a native button, and a synthetic key proves only
+  JS.** Two reads in one phase said the same thing from opposite sides: the
+  charselect card and a map node took focus but never activated on the
+  pane's Enter (native default actions never fire from its key tool); the
+  pressable helper's Enter / Space WERE provable, because they are JS
+  listeners, by a click counter on the card. Name which kind a route is
+  before choosing the instrument.
+- **A control probe on the OLD path, again:** the objective pane never
+  showed an active mode after the keyboard pick — and a plain
+  `card.click()` (the unchanged 78b mouse path) read the same. Ten seconds
+  of probe saved a wrong mechanism story (the §99 hidden-pane sim stall
+  was the likely cause). Same shape at 100b: the hover twin "absent" on
+  the focused card read the same on a HOVERED card — the instrument (a
+  parked transition), not the sheet.
+- **Firefox-only bugs exist in the Tab order, and the pane wraps
+  silently.** The chrome column's DOM position (100c1 → 100e → 100e2) was
+  invisible to Chromium-in-a-pane: no browser UI to detour through. The
+  user's read found it twice; the second time the diagnosis was right and
+  the fix was one wrapper div. When a finding is "the walk goes somewhere
+  odd", ask WHERE IN THE DOM the next control sits, not where focus starts.
+- **A test that restates English is a hook failure waiting** — three of
+  them this phase (`hud.card.targetHint`, `'Paused'`, the delta labels).
+  The fix each time: derive the expectation from the table (`t()` /
+  `UI_EN`). The balance-proof rule's converse ("primitive tests pin
+  literals") does not cover UI COPY — copy is content, and content moves.
+- **Extract what the scan misses when you are in the file anyway** (the
+  `$ Port` heading, `— level N`): the heuristic is the pin, not the goal;
+  the touch-once rule is the goal.
+- **No source writes while a pane sequence is in flight** — a prettier
+  pass reloaded the tab mid-walk (100c1). Format BEFORE the walk, or after.
+- **One stab, capped by the user, is a fine shape for a host we are
+  leaving** (the Electron move): the 100e2 wrapper took ten minutes; a
+  design would have taken the afternoon.

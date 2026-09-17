@@ -3219,3 +3219,33 @@ Tab walk from the focused root: roster button → the frontier node → the
 cache chip → (the wrap) → the roster button. The map renders unchanged.
 The Firefox walk — the chips reached BEFORE the document's end — is the
 user's read at the close.
+
+### 100f — the close (2026-09-17)
+
+DESIGN §Input accessibility extended in place (hover + keyboard focus as
+channels, the `pressable()` / `aria-disabled` / `<select>` name / screen
+focus / chrome-order rules, THE SPACE RULE, the dev-only camera, and the
+per-surface checklist — seven rows, every column ticked, the pins that
+hold them named); DESIGN §UI idioms gains "Focus (100)" (the hover twin +
+the one white ring + where `outline: none` is legal) and "Strings" notes
+the empty baseline. Gotcha #135 (the deferred Space). ARCHITECTURE: the
+tree lines for Game (the screen host) · devKeys (C) · events.ts (the
+describer moved) · literalScan (SCAN_ROOTS, the empty baseline) ·
+Renderer (the DEV gate) · ui.css (the ring) · Screen (the focus) · HUD ·
+MapScreen · PreTurn · Recruit · CardListModal · EventScreen ·
+CacheOverlay, plus `pressable.ts` · `eventConditionText.ts` ·
+`tests/ui-focus.test.ts` · `tests/cssBlocks.ts`. HANDOFF: the cursor →
+§101 with its kickoff inputs (the 46 / 45 px chips, the selects' label,
+the wrapper), the §100 Last-phase row, §99 demoted, the §100 tips
+bullet, the Tests row at 2974 + 582. ROADMAP §100 → the stub. The
+scratchpad's §100 section; the session report + the phase summary in
+retro/sessions.md; two papercuts filed at 100b / 100c1. TODO §100
+carries one rider (the "Click a target…" wording now that Enter picks).
+
+Tests 2984 → 2974 (+5 focus · +3 pressable · −18 baseline per-file rows
+as files hit zero); `ui.json` 112 → 190; no sim touch, no bump; the fuzz
+smoke fired once (100e, the config touch: 582 green). Eight code
+commits (`7f941b9` 100a · `74c7204` the read · `fa51874` 100b ·
+`49fc3f8` 100c1 · `5a8b143` 100c2 · `3bfd100` 100d · `fc3a6e3` 100e ·
+`ef59b62` 100e2) + the kickoff `edc9371` + this close; every step read
+in the user's Firefox.

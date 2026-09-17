@@ -356,31 +356,27 @@ smoke never fired. The charter and the five kickoff calls live in git at
   closed at 99d; this stub; the cursor → §100; the pane lessons into
   HANDOFF's browser-verify tips. WORKLOG §99e.
 
-## Phase 100 — input accessibility + the extraction sweep
+## Phase 100 — input accessibility + the extraction sweep ✅ CLOSED 2026-09-17
 
-**Charter:** DESIGN §Input accessibility extended to hover and to
-keyboard focus, audited on every surface: the camera bindings gated
-dev-only (the Ctrl+Alt pattern); the eight clickable `<div>` controls
-(map nodes · cache chip · hand / recruit / picker / enemy cards) made
-focusable buttons; `type="button"`; a `:focus-visible` rule; the two
-`<select>`s labelled; per-surface string extraction on every surface
-not yet touched → the §95d baseline to ZERO. **Depends on:** §96 (the
-shells) + §97 (tooltips replace the hover-only sites). **Risk:**
-medium (wide). **Exit:** every hotkey has a click route, every click has
-a keyboard route, every surface passes the checklist row; baseline
-zero. **Scope guards:** no rebind UI (Round 8); the camera modes are
-gated, not designed (the D4 A/B is Round 7.5).
-
-**Kickoff 2026-09-17** (WORKLOG §100 Kickoff — the audit found the cards
-cannot be `<button>`s (interactive children), the map node's ring cannot
-be `outline` (98c owns it), `type="button"` already done by 96d, a latent
-78b armed-pick miss on the enemy card, and a Space-vs-focused-button
-collision). **Decisions (user-signed):** Ctrl+Alt+C for the camera
-toggle, the user's Firefox read decides · hotkeys WIN over a focused
-button in battle, Enter is the button route · the enemy card honours an
-armed pick (a 78b behaviour change) · `Screen.present` focuses its
-container · the c1/c2 split. No sim touch, no bump; the fuzz smoke fires
-once (100e touches `src/config/events.ts`).
+**Outcome:** every control on every surface is a real `<button>` or a
+`pressable()` (the cards — interactive children forbid `<button>`), Tab-
+reachable and Enter-activatable, with ONE white focus ring and every
+hover rule's `:focus-visible` twin (a pin fails a new hover without one);
+the camera bindings are dev-only (Ctrl+Alt+C; the shipped bundle attaches
+no camera listener); the two `<select>`s carry an accessible name; the
+enemy card honours an armed pick (the latent 78b miss — the focus
+objective's keyboard AND touch route in one line, closing the three §97
+riders); screens take focus on present and the chrome column sits after
+them in the tree (the user's Firefox Tab-walk finding, two steps); the
+literal baseline is `{}` (71 → 0 across 18 files, the event-condition
+phrases moved out of config). The Space rule — hotkeys WIN over a focused
+control in battle (gotcha #135). One rider from the camera gate: scroll
+mode needs a minimap before the Round 7.5 A/B (META-ROADMAP). Tests 2984
+→ 2974 (the baseline's per-file tests retired as files hit zero); no sim
+touch, no bump; the fuzz smoke fired once (100e). The charter + the five
+kickoff calls live in git at `edc9371`; the narrative in WORKLOG §100;
+the rule in DESIGN §Input accessibility (the checklist) + "Focus (100)".
+The cut, as landed:
 
 - [x] **100a — the camera gate:** Backquote handler removed; the pan
       listeners attach under `import.meta.env.DEV` only; the toggle → devKeys
@@ -427,9 +423,11 @@ once (100e touches `src/config/events.ts`).
       `.screen-host` div created before the column is the scenes' mount;
       screens first, chips last, no detour. One stab, user-capped (the
       Electron shell has no browser UI to detour through). WORKLOG §100e2.
-- [ ] **100f — the close:** DESIGN §Input accessibility extended in place
+- [x] **100f — the close:** DESIGN §Input accessibility extended in place
       (hover + focus, the Space rule, the per-surface checklist table),
-      "Focus (100)" in §UI idioms, HANDOFF tips, the stub.
+      "Focus (100)" in §UI idioms, HANDOFF tips, the stub. ✅ (2026-09-17):
+      + gotcha #135, ARCHITECTURE's tree lines, the cursor → §101 with its
+      kickoff inputs, the session report + the phase summary. WORKLOG §100f.
 
 ## Phase 101 — layout stability
 

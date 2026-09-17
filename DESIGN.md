@@ -157,7 +157,7 @@ Color + bloomIntensity per instance are instanced attributes so a single draw ca
 
 **Camera:** Fixed perspective, tilted ~45° down with a slight angle so the grid reads as a grid but billboards face the camera cleanly. Non-rotatable in MVP. Camera rotation is deferred along with larger maps.
 
-## Input accessibility (78e, user-signed 2026-08-14)
+## Input accessibility (78e, user-signed 2026-08-14; extended §100, 2026-09-17)
 
 **Keyboard is the fast path; a pure mouse (and eventually touch) must always
 be *sufficient*.** Every UI surface needs a clickable route for everything a
@@ -166,6 +166,46 @@ exit. (The rule was signed when the 78e sector-map overlay shipped with only
 `M`/Esc to close — an opaque full-viewport view with no clickable way out;
 the ✕ button is the corrective precedent.) Audit candidates against this rule
 whenever a new modal, overlay, or hotkey lands.
+
+**§100 extends it to the other two channels.** *Hover* is never the sole
+carrier of information — every hover read (a tooltip, a hint) also opens on
+keyboard focus and on a tap or long-press (the §97 tooltip's three routes);
+*keyboard focus* reaches every control: a control is a real `<button>` or,
+when it carries interactive children (the cards), a `pressable()` (`role=
+"button"` + a tab stop + Enter / Space → its own click, so mouse, touch and
+keyboard run ONE code path); an inert control leaves the Tab order by
+`aria-disabled`, never `disabled` (a disabled element swallows the hover its
+tooltip needs); every `<select>` has an accessible name; every screen takes
+focus on present so Tab enters it first, and the chrome column sits AFTER
+the screens in the tree so the walk reaches the chips before the browser's
+own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
+focused control — Space is pause everywhere, Enter is every control's route
+(gotcha #135); yielding Space to a focused button would re-fire the last
+clicked one instead of pausing. A camera mode is dev-only (Ctrl+Alt+C; the
+D4 A/B is Round 7.5's) — a shipped binding with no click route is a bug.
+The focus ring is the "Focus (100)" idiom below.
+
+**The per-surface checklist (the Round 7 spec's exit; every row ticked
+2026-09-17):** *click* = every action has a clickable control; *keys* =
+every control is Tab-reachable and Enter-activatable (Space where no hotkey
+claims it); *touch* = every hover read has a tap / long-press route;
+*hover-only* = information carried by hover alone.
+
+| Surface | Controls | Click | Keys | Touch | Hover-only |
+|---|---|---|---|---|---|
+| Character select | the three cards (`button`) | ✓ | ✓ | ✓ | none |
+| Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none |
+| Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none |
+| Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none |
+| Promotion · Recruit · Reward · Port · Event · Sector cleared · Game over | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none |
+| The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none |
+| The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none |
+
+The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
+`title=`), `tests/ui-focus.test.ts` (every hover twin + the ring),
+`src/ui/pressable.test.ts` (the Space rule's premise), and the literal pin's
+empty baseline. A new control is a `button()` or a `pressable()` — a
+clickable `<div>` is the one shape this rule forbids.
 
 ## UI idioms (Round 7 — the reference; §103 signs the whole)
 
@@ -327,10 +367,29 @@ both shaders, pinned equal): the static bands are the tell, the drift is
 the flair. A new motion picks its reduced form when it is authored; the
 pins are the forgetful-path guard.
 
+**Focus (100).** The focus state IS the hover state, plus ONE ring. Every
+`X:hover` rule in `ui.css` carries `X:focus-visible` in the same selector
+list (a pin fails a hover rule without its twin), and one zero-specificity
+ring — `:where(button, select, [role='button'], [tabindex='0'])
+:focus-visible`, 2px solid WHITE at a 2px offset — paints on every control
+under keyboard focus only (a click or a tap never shows it). White because
+it is nobody's state hue (amber is hover, blue is frontier / selection,
+green is active), and a ring is a shape, so the 98a grey read passes by
+construction. A control whose own `outline` means something (98c's frontier
+double ring, the enemy card's hover outline) outranks the ring by design;
+the map node's ring rides `box-shadow` instead. `outline: none` is legal on
+CONTAINERS only (the 96f modals, the screen root a `Screen` focuses on
+present) — never on a control. Controls: a real `<button>` (`button()`, or
+inline with `type="button"`), or `pressable()` for one that carries
+interactive children; a toggle mirrors its selected class as
+`aria-pressed`; an inert one is `aria-disabled` + out of the Tab order.
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ⌖ ▸ ⚠ ✕`) stay
-outside the locale value.
+outside the locale value. Since 100e the literal baseline is EMPTY: every
+presentation file is at zero and the pin's absent-means-zero clause holds
+the whole layer; a dev console line takes `// i18n-ok`, never a key.
 
 ## Determinism
 

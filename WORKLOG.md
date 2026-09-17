@@ -2956,3 +2956,8 @@ Ctrl+Alt+C keydown flipped `fit → scroll → fit` with both console lines
 left the mode at `fit`. The REAL chord is the user's Firefox read (gotcha
 #134 — the pane cannot deliver a browser-reserved chord, and a synthetic
 event proves only the wiring).
+
+**The Firefox read (2026-09-17):** Ctrl+Alt+C lands — the user toggled
+live; the verdict on scroll mode itself: "the game feels very different",
+and a scroll camera that stays needs a proper minimap first. Slotted as a
+rider on the Round 7.5 D4 A/B (META-ROADMAP §Round 7.5), not §100 work.

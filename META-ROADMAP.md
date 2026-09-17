@@ -261,6 +261,12 @@ reference writes the requirement this round must satisfy). Rides with it:
 default by inertia — the modes are a glyph-size lever, so the preference
 test runs against the reworked glyphs: testers get the toggle, one session
 each mode; the winner gets a HUD control + a Round 8 default-mode setting).
+**Rider (100a, the user's Firefox read 2026-09-17):** scroll mode as it
+stands is not A/B-ready — "the game feels very different"; a 12-tile
+window on a bigger board loses the whole-board read, so **if scroll is to
+stay it needs a proper minimap** (the board's shape + unit positions +
+the window rectangle) BEFORE the preference test is fair. The A/B's cut
+line predicts it: build the minimap first or A/B fit against nothing.
 
 **Depends on:** Round 7 (the idiom reference's team-identity requirement;
 the tooltip + shells the board overlays use). **Risk:** medium — render-only

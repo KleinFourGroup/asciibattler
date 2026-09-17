@@ -26,6 +26,10 @@
  *
  * Only a keydown TARGETED at the element counts: a 97d chip inside a card
  * is its own tab stop, and Enter on it must not fire the card.
+ *
+ * Consumers (100c2): the pre-turn hand cards (a toggle while a redraw is
+ * active — `pressed`), the recruit cards, the picker cards (a toggle), the
+ * enemy compact cards in battle (where the Space rule bites).
  */
 
 export type PressableActivation = 'now' | 'deferred' | null;
@@ -40,15 +44,17 @@ export function pressableActivation(key: string, repeat: boolean): PressableActi
   return null;
 }
 
-export interface PressableHandle {
-  /** Mirror a selection state as `aria-pressed` (the hand-swap and picker
-   *  cards' `is-selected`, 100c2) — call it where the class toggles. */
-  setPressed(pressed: boolean): void;
+export interface PressableOptions {
+  /** A TOGGLE's initial `aria-pressed` (the hand-swap and picker cards'
+   *  `is-selected`, 100c2). The site that flips the class flips the
+   *  attribute beside it — one line, no handle to thread. */
+  readonly pressed?: boolean;
 }
 
-export function pressable(el: HTMLElement): PressableHandle {
+export function pressable(el: HTMLElement, opts: PressableOptions = {}): void {
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
+  if (opts.pressed !== undefined) el.setAttribute('aria-pressed', String(opts.pressed));
   el.addEventListener('keydown', (e) => {
     if (e.target !== el) return;
     const when = pressableActivation(e.key, e.repeat);
@@ -62,7 +68,4 @@ export function pressable(el: HTMLElement): PressableHandle {
       if (!e.defaultPrevented && el.isConnected) el.click();
     }, 0);
   });
-  return {
-    setPressed: (pressed) => el.setAttribute('aria-pressed', String(pressed)),
-  };
 }

@@ -7,6 +7,7 @@
 import type { EventBus } from '../core/EventBus';
 import { t } from '../i18n/ui';
 import { attachTooltip, keyedTooltip, refreshTooltip } from './tooltip';
+import { pressable } from './pressable';
 import type { GameEvents } from '../core/events';
 import type { World } from '../sim/World';
 import type { Unit } from '../sim/Unit';
@@ -295,13 +296,13 @@ export class HUD {
     this.countdownEl.className = 'battle-countdown screen-fade';
     const countdownLabel = document.createElement('div');
     countdownLabel.className = 'battle-countdown__label';
-    countdownLabel.textContent = 'Battle begins in';
+    countdownLabel.textContent = t('hud.countdown.label');
     this.countdownCount = document.createElement('div');
     this.countdownCount.className = 'battle-countdown__count';
     const fightNow = document.createElement('button');
     fightNow.type = 'button';
     fightNow.className = 'battle-countdown__fight';
-    fightNow.textContent = `▶ Fight now (${keybindings.labelFor('togglePause')})`;
+    fightNow.textContent = `▶ ${t('hud.pause.fightNow')} (${keybindings.labelFor('togglePause')})`;
     fightNow.addEventListener('click', () => this.fightNow());
     this.countdownEl.append(countdownLabel, this.countdownCount, fightNow);
     mount.appendChild(this.countdownEl);
@@ -514,8 +515,8 @@ export class HUD {
     // Q6 — the hop chip folds in the per-turn counter (the dropped HUD-pool
     // "Turn N" line) so no run context is lost with the old panel gone.
     this.hopLabel.textContent = encounter
-      ? `Hop ${hop} · Turn ${encounter.turn}`
-      : `Hop ${hop}`;
+      ? t('hud.hopTurn', { hop, turn: encounter.turn })
+      : t('common.hop', { hop });
     this.banner.textContent = locationName;
     // Q4/Q5 — reset both card panes: drop last battle's cards (one map covers
     // both teams), repaint the pool gauges from this encounter's pools.
@@ -704,7 +705,7 @@ export class HUD {
       const armed = def.arms && this.armedMode === def.mode;
       const active = this.activeObjectiveMode === def.mode;
       btn.textContent = armed
-        ? `${def.icon} Click a target…`
+        ? `${def.icon} ${t('hud.objective.pickTarget')}`
         : `${def.icon} ${def.label} (${key})`;
       // Active highlight yields to the armed prompt so the two greens don't fight.
       btn.classList.toggle('is-active', active && !armed);
@@ -750,10 +751,15 @@ export class HUD {
     // dead unit's grayed card goes inert the moment it dies.
     if (team === 'enemy') {
       handles.el.classList.add('hud-card-targetable');
+      // 100c2 — the keyboard route (role=button + Enter; Space is the pause
+      // hotkey in battle and the helper defers to it — pressable.ts). The
+      // tooltip's focus route (97c's rider) lands with the tab stop.
+      pressable(handles.el);
       // 97c — hover / key only (`touch: 'none'`): the card's contextmenu IS
-      // the focus objective, so a long-press cannot also be the tooltip; the
-      // focus route lands when §100 makes the card focusable. Never
-      // sole-source — the objective pane carries the same two actions.
+      // the focus objective, so a long-press cannot also be the tooltip; a
+      // tap acts (100c2: it honours an armed pick, so touch has the focus
+      // objective through the pane too). Never sole-source — the objective
+      // pane carries the same two actions.
       this.cardTooltips.set(
         unitId,
         attachTooltip(
@@ -765,7 +771,14 @@ export class HUD {
           { touch: 'none' },
         ),
       );
-      handles.el.addEventListener('click', () => this.setObjectiveOnCard(unitId, 'engage'));
+      // 100c2 — the click HONOURS an armed pick (the board pick always did;
+      // the card passed 'engage' literally since 78b — the kickoff audit §G):
+      // arm Focus on the pane (or F), then click / tap / Enter the card. That
+      // is the focus objective's keyboard AND touch route; right-click stays
+      // the mouse's shortcut.
+      handles.el.addEventListener('click', () =>
+        this.setObjectiveOnCard(unitId, this.armedMode ?? 'engage'),
+      );
       handles.el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         this.setObjectiveOnCard(unitId, 'focus');
@@ -806,6 +819,13 @@ export class HUD {
     if (card) {
       card.el.classList.add('is-dead');
       if (card.hpFill) card.hpFill.style.width = '0%';
+      // 100c2 — a dead enemy card leaves the Tab order (the click path already
+      // no-ops on a dead unit; the tab stop would be a dead end). The 100c1
+      // map-node shape: `aria-disabled`, never `disabled`.
+      if (card.el.getAttribute('role') === 'button') {
+        card.el.tabIndex = -1;
+        card.el.setAttribute('aria-disabled', 'true');
+      }
     }
   }
 
@@ -817,7 +837,7 @@ export class HUD {
     this.playerGauge = null;
     if (!e) return;
     // 96.5b1 — a live handle (the ghost moves per loss event), not a one-shot.
-    this.playerGauge = createPoolGauge('player', 'You', e.playerHealth, e.playerHealthMax);
+    this.playerGauge = createPoolGauge('player', t('hud.pool.you'), e.playerHealth, e.playerHealthMax);
     this.playerPoolWrap.appendChild(this.playerGauge.el);
   }
 
@@ -827,7 +847,7 @@ export class HUD {
     this.enemyPoolWrap.replaceChildren();
     this.enemyGauge = null;
     if (!e) return;
-    this.enemyGauge = createPoolGauge('enemy', e.enemyName ?? 'Foe', e.enemyHealth, e.enemyHealthMax);
+    this.enemyGauge = createPoolGauge('enemy', e.enemyName ?? t('hud.pool.foe'), e.enemyHealth, e.enemyHealthMax);
     this.enemyPoolWrap.appendChild(this.enemyGauge.el);
   }
 

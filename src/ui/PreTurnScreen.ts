@@ -83,6 +83,7 @@ import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
 import { Screen } from './Screen';
 import { button } from './button';
 import { attachTooltip } from './tooltip';
+import { pressable } from './pressable';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffChipTooltip, buffModsSummary } from './UnitCard';
 import { empowerColor, empowerLabel } from '../render/statusDisplay';
@@ -548,20 +549,20 @@ export class PreTurnScreen extends Screen {
     // counts read the schedule's displayed overrides while a serial pulse
     // sequence plays (null = the authoritative pile).
     this.drawPileButton = new CardListButton(this.mount, this.audio, {
-      text: 'Draw Pile',
-      title: 'Draw Pile',
+      text: t('preturn.drawPile'),
+      title: t('preturn.drawPile'),
       position: 'draw',
       getUnits: () => this.drawPile,
       getCount: () => this.displayedDraw ?? this.drawPile.length,
-      emptyText: 'The draw pile is empty.',
+      emptyText: t('preturn.drawPileEmpty'),
     });
     this.discardPileButton = new CardListButton(this.mount, this.audio, {
-      text: 'Discard Pile',
-      title: 'Discard Pile',
+      text: t('preturn.discardPile'),
+      title: t('preturn.discardPile'),
       position: 'discard',
       getUnits: () => this.discardPile,
       getCount: () => this.displayedDiscard ?? this.discardPile.length,
-      emptyText: 'The discard pile is empty.',
+      emptyText: t('preturn.discardPileEmpty'),
     });
     this.cardListButtons = [
       new CardListButton(this.mount, this.audio, {
@@ -582,7 +583,7 @@ export class PreTurnScreen extends Screen {
     // player already reasons about the deck. Non-interactive.
     const drawChip = document.createElement('div');
     drawChip.className = 'preturn-draw-chip';
-    drawChip.textContent = `Draw: ${this.drawAmount}`;
+    drawChip.textContent = t('preturn.draw', { n: this.drawAmount });
     // 97d — a text site: tap toggles, Tab reaches it (the kickoff's call D).
     drawChip.tabIndex = 0;
     attachTooltip(drawChip, t('preturn.drawChip.tooltip'));
@@ -590,7 +591,7 @@ export class PreTurnScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'preturn-heading';
-    heading.textContent = `Turn ${info.turn}`;
+    heading.textContent = t('preturn.turn', { turn: info.turn });
     panel.appendChild(heading);
 
     // Wb1 — the encounter's NAME (the fight's headline), so the player reads
@@ -612,7 +613,7 @@ export class PreTurnScreen extends Screen {
 
     const sub = document.createElement('div');
     sub.className = 'preturn-sub';
-    sub.textContent = `Hop ${info.hop}`;
+    sub.textContent = t('common.hop', { hop: info.hop });
     panel.appendChild(sub);
 
     // K3.5 — the encounter's battlefield (one map per encounter), so the
@@ -722,7 +723,7 @@ export class PreTurnScreen extends Screen {
 
     const label = document.createElement('div');
     label.className = 'preturn-hand-label';
-    label.textContent = `Your hand — ${this.hand.length} drawn`;
+    label.textContent = t('preturn.handLabel', { n: this.hand.length });
     wrap.appendChild(label);
 
     const armed = this.armedPacket();
@@ -756,6 +757,10 @@ export class PreTurnScreen extends Screen {
       if (selectable) {
         card.classList.add('unit-card--clickable');
         if (this.selected.has(pos)) card.classList.add('is-selected');
+        // 100c2 — a keyboard route (role=button + Enter/Space, src/ui/
+        // pressable.ts); the hand re-renders on every pick, so the toggle's
+        // `aria-pressed` is set at build time from the selection.
+        pressable(card, { pressed: this.selected.has(pos) });
         card.addEventListener('click', () => this.onCardClick(pos));
       }
       cards.appendChild(card);
@@ -778,8 +783,7 @@ export class PreTurnScreen extends Screen {
     if (armed !== null) {
       const banner = document.createElement('div');
       banner.className = 'preturn-arm-hint';
-      banner.textContent =
-        `▤ ${armed.packet.name} armed — click a card to fire it (click the chip again to cancel)`;
+      banner.textContent = t('preturn.packet.armedHint', { name: armed.packet.name });
       wrap.appendChild(banner);
     }
 
@@ -788,7 +792,7 @@ export class PreTurnScreen extends Screen {
     if (packetRow !== null) wrap.appendChild(packetRow);
 
     for (const name of this.deniedRedrawIdols) {
-      wrap.appendChild(renderGateDenied(`${name} is silent — no redraw this turn`));
+      wrap.appendChild(renderGateDenied(t('preturn.redraw.silent', { name })));
     }
     for (const name of this.deniedEmpowerIdols) {
       wrap.appendChild(renderGateDenied(t('preturn.empower.silent', { name })));
@@ -852,7 +856,7 @@ export class PreTurnScreen extends Screen {
       const pass = document.createElement('button');
       pass.type = 'button';
       pass.className = 'preturn-pass';
-      pass.textContent = 'Pass ▸';
+      pass.textContent = `${t('common.pass')} ▸`;
       attachTooltip(pass, t('preturn.pass.tooltip', { name: active.name }), { touch: 'press' });
       pass.addEventListener('click', () => {
         this.audio.play('click');
@@ -897,7 +901,7 @@ export class PreTurnScreen extends Screen {
         chip.disabled = true; // the cards are the buttons
       } else {
         const n = this.selected.size;
-        hint.textContent = n === 0 ? 'click cards to swap' : `swap ${n} ▸ confirm`;
+        hint.textContent = n === 0 ? t('preturn.swap.hint') : t('preturn.swap.confirm', { n });
         chip.disabled = n === 0 || n > grant.effect.maxCards;
         chip.addEventListener('click', () => {
           this.audio.play('click');

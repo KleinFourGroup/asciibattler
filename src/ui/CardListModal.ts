@@ -28,6 +28,7 @@ import type { UnitTemplate } from '../sim/Unit';
 import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { pressable } from './pressable';
 import { orderRosterWithIndices, type RosterOrder } from './rosterOrder';
 import { openModal, type ModalHandle } from './modal';
 
@@ -113,6 +114,10 @@ export class CardListModal {
         if (picking) {
           el.classList.add('unit-card--clickable');
           cardEls.set(sourceIndex, el);
+          // 100c2 — the keyboard route (role=button + Enter/Space,
+          // pressable.ts); a toggle, so `aria-pressed` tracks `is-selected`
+          // (toggleSelection flips both).
+          pressable(el, { pressed: false });
           el.addEventListener('click', () => {
             this.audio.play('click');
             this.toggleSelection(selection, selected, cardEls, sourceIndex);
@@ -161,7 +166,10 @@ export class CardListModal {
     if (selected.has(sourceIndex)) {
       selected.delete(sourceIndex);
     } else if (selection.count === 1) {
-      for (const prev of selected) cardEls.get(prev)?.classList.remove('is-selected');
+      for (const prev of selected) {
+        cardEls.get(prev)?.classList.remove('is-selected');
+        cardEls.get(prev)?.setAttribute('aria-pressed', 'false');
+      }
       selected.clear();
       selected.add(sourceIndex);
     } else if (selected.size < selection.count) {
@@ -170,6 +178,7 @@ export class CardListModal {
       return; // at cap — the K3 ignore
     }
     cardEls.get(sourceIndex)?.classList.toggle('is-selected', selected.has(sourceIndex));
+    cardEls.get(sourceIndex)?.setAttribute('aria-pressed', String(selected.has(sourceIndex)));
     if (this.confirmButton !== null) {
       this.confirmButton.disabled = selected.size !== selection.count;
     }

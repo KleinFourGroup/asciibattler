@@ -3050,3 +3050,54 @@ user's Firefox read. A source-file write mid-sequence (the prettier pass)
 triggered Vite's full reload and threw the walk back to the character
 select — the HANDOFF .ts-swap tip, re-learned: no writes while a pane
 sequence is in flight.
+
+### 100c2 — the cards (2026-09-17)
+
+**Four consumers of `pressable()`:** the pre-turn hand cards while
+selectable (a toggle — `aria-pressed` set at build from the selection,
+the hand re-renders on every pick), the recruit cards, the picker cards
+(a toggle — `toggleSelection` flips `aria-pressed` beside `is-selected`,
+the one-card picker's replaced pick too), the enemy compact cards. The
+helper lost its handle: `pressable(el, { pressed? })` sets the initial
+`aria-pressed`, and the site that flips the class flips the attribute in
+the same line — a handle to thread through `cardEls` was more surface
+than the two sites earn.
+
+**The enemy card honours an armed pick** — `this.armedMode ?? 'engage'`
+on click (the kickoff audit §G: the board pick always honoured the arm;
+the card passed `'engage'` literally since 78b). That one line IS the
+focus objective's keyboard and touch route: arm Focus on the pane (or
+F), then Enter / tap the card; right-click stays the mouse's shortcut;
+the tooltip keeps `touch: 'none'` (a tap acts) and its hint reads
+"Click / Enter: Engage · right-click: Focus — or arm Focus, then pick the
+card". A dead card leaves the Tab order (`tabIndex -1` +
+`aria-disabled`, the 100c1 node shape) — the click path already no-op'd
+on a dead unit. The §97 riders 1–3 close: the focus route, the touch
+collision, the ring (100b) — and rider 2's "~30 tab stops in a battle"
+is answered by the cards themselves being the stops (7 enemy cards here)
+while the inner `LV` / `POW` wraps stay hover + key reads.
+
+**Literals:** HUD 7 · PreTurn 15 · Recruit 1 → nineteen keys (the shared
+`common.hop`; `hud.pause.fightNow` reused under the `▶`; `common.pass`
+under the `▸`). "Click a target…" kept byte-equal under
+`hud.objective.pickTarget` (a wording call for the user, not a sweep's).
+Baseline 67 → 44 in 13 files. The three files' prettier drift predates
+this step (HEAD copies fail `--check` too) — left for a prettier pass.
+
+**Pane read** (the Soldier, event → event → a battle node, 7 enemy
+cards): the six hand cards `role=button · tabIndex 0 · aria-pressed
+false · clickable` on the pre-turn screen; every enemy card `role=button
+· tabIndex 0`. By a click counter on one card: a synthetic Enter keydown
+= **1 click**; a synthetic Space keydown (`code: 'Space'`) in battle =
+**0 clicks** with pause TOGGLED and `defaultPrevented` true — the
+Keybindings sink took it and the deferred activation read the verdict;
+a second Space toggled pause back, still 0. An armed Focus on the pane
+(`! Click a target…`, `.is-armed`) + Enter on the card → DISARMED (only
+`setOn` disarms — the click reached the controller with the armed
+mode). The objective pane never showed an `aria-pressed` mode after the
+card route; the control probe (a plain `card.click()`, the unchanged 78b
+mouse path, and an armed Engage + `card.click()`) read the same — pre-
+existing pane behaviour under the hidden pane (the §99 sim-stall tip:
+the objective event that flips `activeObjectiveMode` rides the sim), not
+c2's. The picker and recruit cards ride the same helper; their Enter is
+the user's Firefox read, with the hand-card toggle under a live redraw.

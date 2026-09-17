@@ -403,10 +403,14 @@ once (100e touches `src/config/events.ts`).
       the cache in Firefox. ✅ (2026-09-17): inert nodes by `aria-disabled`,
       never `disabled` (the boss tooltip's hover); baseline 71 → 67; the
       pane cannot Enter a native button — the Firefox read. WORKLOG §100c1.
-- [ ] **100c2 — the cards:** hand / recruit / picker / enemy cards through the
+- [x] **100c2 — the cards:** hand / recruit / picker / enemy cards through the
       helper, `aria-pressed` mirrors `is-selected`, the enemy card honours
       `armedMode`, the hint wording; HUD + PreTurn + Recruit literals extracted.
       Exit: the §97 riders 1–3 close; arm Focus then Enter a card sets focus.
+      ✅ (2026-09-17): a dead card leaves the Tab order; baseline 67 → 44 / 13
+      files; pane-read by click counts — Enter = 1 click, Space in battle = 0
+      (pause toggled, the event prevented), an armed pick disarmed by Enter.
+      WORKLOG §100c2.
 - [ ] **100d — the selects:** `aria-label` via `t()` on both; Port + Reward
       literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0.
 - [ ] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`

@@ -16,7 +16,15 @@ describe('t() — the UI string table', () => {
   });
 
   it('substitutes {placeholders} and formats numbers through Intl', () => {
-    expect(t('hud.card.targetHint', { engage: 'Engage', focus: 'Focus' })).toBe('Left-click: Engage · right-click: Focus');
+    // 100c2 — derived from the table, not restated: the entry's WORDING is the
+    // content's to change (it did at 100c2); what this pins is that every
+    // `{placeholder}` is substituted and nothing else moves.
+    const hint = UI_EN['hud.card.targetHint'] as string;
+    expect(hint).toContain('{engage}');
+    expect(hint).toContain('{focus}');
+    expect(t('hud.card.targetHint', { engage: 'E1', focus: 'F1' })).toBe(
+      hint.replaceAll('{engage}', 'E1').replaceAll('{focus}', 'F1'),
+    );
     expect(t('cardlist.title', { title: 'Roster', count: 1234 })).toBe('Roster — 1,234 units');
   });
 

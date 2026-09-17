@@ -16,6 +16,7 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
 import { button } from './button';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
+import { pressable } from './pressable';
 import { CardListButton } from './CardListModal';
 
 export class RecruitScreen extends Screen {
@@ -61,7 +62,7 @@ export class RecruitScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'recruit-heading';
-    heading.textContent = 'Victory — choose a new unit';
+    heading.textContent = t('recruit.heading');
     panel.appendChild(heading);
 
     const cards = document.createElement('div');
@@ -96,6 +97,8 @@ export class RecruitScreen extends Screen {
       skin: 'recruit',
     });
 
+    // 100c2 — the keyboard route (role=button + Enter/Space, pressable.ts).
+    pressable(el);
     el.addEventListener('click', () => {
       this.audio.play('click');
       this.dispatcher.dispatch({ kind: 'chooseRecruit', unitTemplate: template });

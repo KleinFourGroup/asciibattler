@@ -3002,3 +3002,51 @@ read computed styles AFTER a screenshot, or the transition lies (the §99
 hidden-pane sim stall's CSS cousin — HANDOFF tips). The 97d text sites
 (`tabindex=0`) and the buttons' rings across the screens are the user's
 Firefox read at the pause.
+
+### 100c1 — `pressable()` + the leaf buttons (2026-09-17)
+
+**The helper** (`src/ui/pressable.ts`, first consumers at c2): `role=
+"button"` + `tabIndex = 0` + Enter / Space → the element's own `click()`,
+so mouse, touch and keyboard run ONE code path through the existing
+listeners. The Space rule made concrete: the Keybindings sink sits on
+`window`, AFTER the element in the bubble, and `preventDefault`s exactly
+when a bound handler is live — so Space's activation is deferred past the
+whole dispatch by `setTimeout 0` (a microtask checkpoint runs BETWEEN the
+listeners of a UA-dispatched event, so a microtask would read the verdict
+too early) and fires only if the sink left the event unprevented. Enter
+activates at once — the pin derives the premise from
+`config/keybindings.json` (Enter / NumpadEnter bound to nothing, Space
+bound). Only a keydown TARGETED at the element counts: a 97d chip inside
+a card is its own tab stop. `setPressed` mirrors `aria-pressed` for c2's
+selectable cards. The surface is deliberately that small.
+
+**Map nodes → real `<button type="button">`s.** The one design call: a
+node with nothing to do (current · visited · locked · every node under
+readOnly) is INERT by `aria-disabled="true"` + `tabIndex = -1`, never
+`disabled` — a disabled button swallows pointer events in both engines,
+and the boss node's 97f forewarning tooltip must keep its hover while the
+boss is still locked (the usual case). `.map-node` gains `padding: 0;
+box-sizing: content-box` so the button's box is byte-what the div's was
+(98c's centering math). The boss banner literal → `map.bossBanner`.
+
+**The cache chip → `<button type="button" class="chip cache-overlay">`**,
+its sibling the map chip's shape (96e). Three literals → `cache.fire` ·
+`cache.discard` · `cache.pickRosterUnit`. Baseline 71 → 67 in 16 files
+(MapScreen + CacheOverlay at zero, absent from the table).
+
+**Pane read** (a fresh run, the map): 39 nodes, every one a BUTTON — 38
+inert with `tabIndex -1`, the one frontier node at 0; the Tab order runs
+roster button → frontier node → cache chip, each `:focus-visible`. The
+focused node computes 44 × 44 content-box, padding 0, the 98c outline
+(`solid 2px` blue — it outranks the ring rule, as designed), the shadow
+ring (`0 0 0 6px black, 0 0 0 8px white`) AND the hover twin's blue fill.
+The chip: 46 px tall as a button; a same-class `<div>` clone with the
+same innerHTML measures 46 too — the 1 px it differs from the bits chip
+(45) is the `▤` glyph's, not the tag's; no shift from the conversion. ⚠
+The pane's key tool could not activate a native button by Enter (nothing
+on the charselect card either, a `<button>` since 96d) — consistent with
+its `code`-less events (gotcha #134); Enter on a node / the chip is the
+user's Firefox read. A source-file write mid-sequence (the prettier pass)
+triggered Vite's full reload and threw the walk back to the character
+select — the HANDOFF .ts-swap tip, re-learned: no writes while a pane
+sequence is in flight.

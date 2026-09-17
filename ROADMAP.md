@@ -396,11 +396,13 @@ once (100e touches `src/config/events.ts`).
       text sites in Firefox. ✅ (2026-09-17): 29 twins + the white ring + the
       node's shadow ring; five pins, self-checked; the pane computes ring +
       twin on a focused card. WORKLOG §100b.
-- [ ] **100c1 — `pressable()` + the leaf buttons:** the helper (role +
+- [x] **100c1 — `pressable()` + the leaf buttons:** the helper (role +
       tabindex + Enter/Space → the click handler; a pure key predicate,
       pinned); map nodes + the cache chip → real `<button>`s; MapScreen +
       CacheOverlay literals extracted. Exit: Tab + Enter enters a node / opens
-      the cache in Firefox.
+      the cache in Firefox. ✅ (2026-09-17): inert nodes by `aria-disabled`,
+      never `disabled` (the boss tooltip's hover); baseline 71 → 67; the
+      pane cannot Enter a native button — the Firefox read. WORKLOG §100c1.
 - [ ] **100c2 — the cards:** hand / recruit / picker / enemy cards through the
       helper, `aria-pressed` mirrors `is-selected`, the enemy card honours
       `armedMode`, the hint wording; HUD + PreTurn + Recruit literals extracted.

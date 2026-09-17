@@ -482,6 +482,11 @@ body {
 }
 
 .map-node {
+  /* 100c1 — a `<button>` since the nodes became keyboard-reachable: the
+     UA's button padding goes, and the box model is pinned to what the
+     `<div>` had (98c's centering math is content-box 40px + the 2px border). */
+  padding: 0;
+  box-sizing: content-box;
   position: absolute;
   width: 40px;
   height: 40px;

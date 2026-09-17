@@ -283,7 +283,10 @@ export class MapScreen extends Screen {
       if (forewarning) {
         const boss = document.createElement('div');
         boss.className = 'map-banner-boss';
-        boss.textContent = `Boss: ${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`;
+        boss.textContent = t('map.bossBanner', {
+          name: forewarning.name,
+          layout: forewarning.layoutName ?? UNCHARTED_LABEL,
+        });
         banner.appendChild(boss);
       }
       container.appendChild(banner);
@@ -327,46 +330,62 @@ export class MapScreen extends Screen {
 
     for (const node of map.nodes) {
       const pos = positions.get(node.id)!;
-      const div = document.createElement('div');
-      div.className = 'map-node';
-      div.style.left = `${pos.x * 100}%`;
-      div.style.top = `${pos.y * 100}%`;
+      // 100c1 — a node is a real `<button>` (the run's primary navigation was
+      // a clickable `<div>` with no keyboard route — the Round 7 kickoff audit
+      // §C). A node with nothing to do (current / visited / locked, or every
+      // node under readOnly) is INERT by `aria-disabled` + no tab stop, never
+      // `disabled`: a disabled button swallows pointer events in both
+      // engines, and the boss node's 97f forewarning tooltip must keep its
+      // hover while the boss is still locked (the usual case).
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'map-node';
+      el.style.left = `${pos.x * 100}%`;
+      el.style.top = `${pos.y * 100}%`;
       // Every node shows its kind glyph (G3): X battle, Z rest, ! boss — the
       // route-planning affordance. (S2: the root lost its `@` origin marker —
       // it's a normal selectable node now, so it reads like any other.) A
       // `.{kind}` class rides alongside the state classes (.current/.frontier/…)
       // so CSS can color rest/boss distinctly without touching this dispatch.
-      div.textContent = KIND_GLYPH[node.kind];
-      div.dataset.nodeId = String(node.id);
-      div.classList.add(node.kind);
+      el.textContent = KIND_GLYPH[node.kind];
+      el.dataset.nodeId = String(node.id);
+      el.classList.add(node.kind);
       // 66b — the boss node names its forewarned fight on hover (the banner
       // sub-line carries the always-visible copy; this is the spatial anchor).
       // 97f — the §97 tooltip; the node is a control (a frontier click enters
       // it), so the touch route is the long-press.
       if (node.kind === 'boss' && forewarning) {
-        attachTooltip(div, `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`, { touch: 'press' });
+        attachTooltip(el, `${forewarning.name} — ${forewarning.layoutName ?? UNCHARTED_LABEL}`, {
+          touch: 'press',
+        });
       }
 
+      let live = false;
       if (node.id === currentNodeId) {
-        div.classList.add('current');
+        el.classList.add('current');
       } else if (frontier.has(node.id)) {
-        div.classList.add('frontier');
+        el.classList.add('frontier');
         // 78e — readOnly keeps the frontier STYLING (the plan-ahead read is
         // the overlay's whole point) but never dispatches; the CSS drops the
         // pointer cursor via .map-screen--readonly.
         if (!this.readOnly) {
-          div.addEventListener('click', () => {
+          live = true;
+          el.addEventListener('click', () => {
             this.audio.play('click');
             this.dispatcher.dispatch({ kind: 'enterNode', nodeId: node.id });
           });
         }
       } else if (visited.has(node.id)) {
-        div.classList.add('visited');
+        el.classList.add('visited');
       } else {
-        div.classList.add('locked');
+        el.classList.add('locked');
+      }
+      if (!live) {
+        el.setAttribute('aria-disabled', 'true');
+        el.tabIndex = -1;
       }
 
-      board.appendChild(div);
+      board.appendChild(el);
     }
 
     return container;

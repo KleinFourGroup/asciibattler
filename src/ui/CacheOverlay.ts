@@ -53,7 +53,9 @@ export interface CacheOverlayDeps {
 }
 
 export class CacheOverlay {
-  private readonly el: HTMLDivElement;
+  /** 100c1 — a real `<button>` (its sibling, the map chip, always was); the
+   *  `.chip` plate styles it, the ring rule + the hover twin cover focus. */
+  private readonly el: HTMLButtonElement;
   private readonly value: HTMLSpanElement;
   private readonly pulse: () => void;
   /** 96f — the modal shell (src/ui/modal.ts): it owns the overlay, the
@@ -74,7 +76,8 @@ export class CacheOverlay {
     /** 63e — start hidden pre-run (the BitsOverlay contract). */
     startHidden = false,
   ) {
-    this.el = document.createElement('div');
+    this.el = document.createElement('button');
+    this.el.type = 'button';
     this.el.className = 'chip cache-overlay';
     this.pulse = chipPulse(this.el);
     if (startHidden) this.el.classList.add('is-hidden');
@@ -234,7 +237,7 @@ export class CacheOverlay {
       const fire = document.createElement('button');
       fire.type = 'button';
       fire.className = 'cache-fire-button';
-      fire.textContent = 'Fire ▸';
+      fire.textContent = t('cache.fire');
       fire.addEventListener('click', () => {
         this.audio.play('click');
         if (packet.target === 'none') {
@@ -251,7 +254,7 @@ export class CacheOverlay {
     const discard = document.createElement('button');
     discard.type = 'button';
     discard.className = 'cache-discard-button';
-    discard.textContent = 'Discard';
+    discard.textContent = t('cache.discard');
     discard.addEventListener('click', () => {
       this.audio.play('click');
       this.dispatcher.dispatch({ kind: 'discardPacket', cacheIndex });
@@ -275,7 +278,7 @@ export class CacheOverlay {
     pick.className = 'cache-roster-pick';
     const hint = document.createElement('div');
     hint.className = 'cache-roster-pick-hint';
-    hint.textContent = 'pick a roster unit:';
+    hint.textContent = t('cache.pickRosterUnit');
     pick.appendChild(hint);
     this.deps.getRoster().forEach((unit, rosterIndex) => {
       const button = document.createElement('button');

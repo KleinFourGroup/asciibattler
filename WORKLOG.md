@@ -3249,3 +3249,176 @@ commits (`7f941b9` 100a · `74c7204` the read · `fa51874` 100b ·
 `49fc3f8` 100c1 · `5a8b143` 100c2 · `3bfd100` 100d · `fc3a6e3` 100e ·
 `ef59b62` 100e2) + the kickoff `edc9371` + this close; every step read
 in the user's Firefox.
+
+## Phase 101 — layout stability
+
+### Kickoff (2026-09-17) — the code-reality audit + the cut
+
+The charter (ROADMAP §101) was authored at the round kickoff against the
+2026-09-08 audit (§Kickoff D); six phases later, re-read at `5067be1`
+with two parallel read-only sweeps (the chrome column + the digit sinks;
+the countdown + the conditional blocks) and three scratch probes against
+the vendored font. The §100 inputs (the 46 / 45 px chips, the selects'
+`aria-label`, the `.screen-host` wrapper) are inputs. Findings:
+
+**A. The charter's first lever is a near no-op.** `tabular-nums` makes
+digits share one advance in a PROPORTIONAL face; every DOM surface is
+JetBrains Mono, a monospace, so `1111` and `8888` already match. Ten
+rules set it today (`ui.css` 950 · 956 · 990 · 1803 · 1969 · 2281 ·
+2423 · 2522 · 2722 · 3187) and none of them is what holds a surface
+still. The class has three real mechanisms, and the live chip instance
+is none of the ones the charter guessed:
+
+1. **A fallback glyph grows the line box.** `▤` (the cache chip,
+   `CacheOverlay.ts:133`) is ABSENT from the vendored TTF — verified
+   against the cmap with `tools/font/ttfCmap.ts` — so an OS fallback
+   paints it, and with no `line-height` on `.chip` (`ui.css:1903-1916`)
+   the line box follows the tallest face: 46 px to the bits chip's 45.
+   A scan of every string the DOM UI can render (src/ui + src/render +
+   locales + config, comment lines skipped): 32 non-ASCII codepoints,
+   **20 outside the shipped font** — fourteen in the TTF but outside
+   `SUBSET_RANGES` (`– — ’ ‡ • … − ≤ ≥ ⊓ ⊞ ⚠ ✕` + the en dash), six not
+   in the font at all (`▤ ★ ☆ ☠ ⏸ ⌖`). The §79 coverage pin
+   (`tests/font-coverage.test.ts`) guards the canvas atlas's `GLYPHS`
+   only — never a UI string. The DOM loads the SAME self-hosted subset
+   (`src/fonts.css`; the fontsource import was replaced at §79g), so
+   "in the TTF" is not enough — a glyph must be in the subset too.
+2. **Character-count growth** (999 → 1000; `Accept` → a `<select>` +
+   Swap; `XP 12 / 40` → `MAX`) with no reserved width. The one correct
+   instance in the tree is the 96.5b2-pre gauge value
+   (`.pool-gauge-value`: `min-width: 15ch; flex: none; text-align:
+   right`) — the idiom this phase generalizes.
+3. **Conditional blocks that collapse** (`display: none` via `[hidden]`,
+   or a child not rendered) on CENTERED flex columns (`.reward-screen`,
+   `.event-screen`, `.preturn-screen`), where removing a child
+   re-centers everything above it too. The sheet holds ONE true
+   reservation: the Promotion delta block (`ui.css:1133-1148`,
+   `PromotionScreen.ts:176-191`, `visibility: hidden` → `.is-revealed`).
+
+**B. The chrome column.** Already a flex column with no measured
+offsets (`ui.css:1873-1882`; the 20/76/132/188 px column died at 96e),
+order by CSS `order`. Three residuals: `.chip` has no `box-sizing`, so
+the two `<button>` chips (cache, map — UA `border-box`) and the two
+`<div>` chips (bits, pool — `content-box`) read `min-width: 128px` as
+128 vs 166 px outer; `align-items: flex-start` leaves the column's
+right edge ragged and every chip's width a function of its text; and
+`.hud-hop` (`ui.css:1846-1858`) still sits at a MEASURED `left: 200px`
+beside the bits chip — a duplicate of the plate outside the column,
+14 px of clearance, colliding at ~8 digits. The pool chip jumping when
+the map chip hides is §96's decision D (collapse; the pool chip is
+display-only) — user-signed, not re-litigated.
+
+**C. The countdown.** `HUD.positionCountdown()` (`HUD.ts:656-661`)
+measures the enemy pane's bottom ONCE in the `!inCountdown` entry
+branch (`:634-638`); no `ResizeObserver`, no resize listener in HUD or
+BattleScene. And an ordering bug: `BattleScene.ts:319` shows the
+countdown (measures), then `:327` calls `refreshStatuses()` on the same
+frame — the 97f-post branch that un-hides the status / empower rows
+(`UnitCard.ts:354, 410`, each `display: none` under `[hidden]` with a
+`border-top` + `padding-top`). Every seeded status on an enemy makes the
+measurement short. `.hud-enemy-cards` wraps freely to `max-height:
+30vh` (`ui.css:2567-2579`), so the pane bottom is card count × viewport
+width × per-card height. Reserving the rows on every compact tile
+would cost 6–10 tiles of vertical budget; the countdown is the pane
+bottom's only consumer → re-measure, not reserve.
+
+**D. The conditional blocks, walked** (the screens rebuild wholesale, so
+the instability is a child present in one render and absent in the
+next). Flagged = the toggle sits ABOVE the click target that fires it:
+- PreTurn: ⚑ the armed-packet hint (`PreTurnScreen.ts:783-788`,
+  inserted between the cards and the strip by the packet chip you just
+  clicked); ⚑ the packet row deleting itself when the last packet fires
+  (`:791-792, 929-944`); the hand's 1⇄2-row wrap (a Surge draw) — left
+  alone (a whole card row; the Fight button is already `position:
+  fixed`, `ui.css:3135-3141`); the active chip's hint line — width
+  only; the empower badge is already `position: absolute` (good).
+- Reward: ⚑ the accepted row VANISHES and the panel re-centers, so the
+  next Accept lands under a moved button (`RewardScreen.ts:86-88,
+  102-195`) — the worst case; the cache line (`:94-100`) disappears
+  when the last packet portion resolves; Accept ⇄ select + Swap
+  (`:181-191`) changes the row's height + left-column width.
+- Port: ⚑ the SOLD badge replacing price + Buy shrinks the row ~10 px
+  under the next Buy (`PortScreen.ts:292-318`); the swap control
+  flipping EVERY remaining packet row when the cache fills
+  (`:147-149`); the empty / sold-out lines (`:136, 156-158, 174-176`).
+- Cache modal: ⚑ the ✕ hides by `hidden` and the header shrinks
+  (`modal.ts:181-184` via `setDismissable`, `CacheOverlay.ts:178`); ⚑
+  the shrink banner (`:181-186`, the FIRST body node, ~45 px) removed
+  by the final Discard beneath it; the per-row Fire button
+  (`:236-252`); the inline roster picker (`:271-276`) — a deliberate
+  disclosure UNDER its trigger, left alone.
+- Event: the page text re-centers the choice buttons per page
+  (`EventScreen.ts:87-90`, `.event-screen` centered) — the shift lands
+  on the click that turns the page, not mid-gesture.
+- Map · SectorCleared · Recruit · GameOver · CharSelect: clean (the map
+  banner + legend are `position: fixed`; the reference "float the
+  conditional chrome" pattern).
+
+**E. The selects' label — KEEP the `aria-label`** (the §100 note
+resolved): a visible `<label>` in `.port-row__actions` (`flex-shrink:
+0`) would push the row BODY into a wrap (a height change), and the
+Reward row is hard-capped at 560 px with price + select + Swap already
+filling it. A visible label would have to be a reserved-height line
+above the cluster — a redesign, the scope guard.
+
+**The decisions (user-signed 2026-09-17):**
+
+1. **The premise swap** — `tabular-nums` retires as the headline lever;
+   the idiom is "reserve the widest live form" (`min-width: Nch`,
+   right-aligned — the 96.5b2-pre shape). One global
+   `font-variant-numeric: tabular-nums` stays as a belt for a future
+   face.
+2. **A unified backup face, not glyph-by-glyph swaps** (the user's
+   framing: this has bitten repeatedly — §79f/g, 98b's stars, now the
+   chip — and "defaulting to an unknown OS fallback isn't something I'm
+   interested in"). The three candidates were FETCHED and probed
+   (scratchpad `faceProbe.ts`: cmap + `hhea`/`OS/2` metrics + the
+   embedded licence strings):
+
+   | Face | Covers of the 20 | Ascent / descent vs JBM's 1.02 / 0.30 | Advance | Licence |
+   |---|---|---|---|---|
+   | DejaVu Sans Mono 2.37 | 18 (misses `⌖ ⏸`) | 0.93 / 0.24 — fits INSIDE the line | 0.602 (JBM 0.600) | Bitstream Vera (permissive) + DejaVu PD + Arev |
+   | Unifont 18.0.01 | 20 | 0.88 / 0.13 — fits | 1.00, a 16 px bitmap grid | OFL 1.1 / GPL2+ w/ embedding exception (dual) |
+   | Noto Sans Symbols 2 v2.008 | 15 (misses `‡ ≤ ≥ ⊓ ⊞` — all in JBM) | 1.07 / 0.63 — 29 % TALLER | 0.80, proportional | OFL 1.1, no RFN |
+
+   **DejaVu Sans Mono — CHOSEN.** It fits the line (a fallback glyph
+   can never grow a box even before 101b's explicit line-height), keeps
+   the cell (a `★` in a chip occupies a letter's advance), and the
+   licence asks for nothing new: the notice travels (the existing
+   `public/THIRD-PARTY-LICENSES.txt` mechanism), no sale by itself, and
+   a MODIFIED font (a subset is one) must not carry "Bitstream", "Vera",
+   "Arev" or "Tavmjong Bah" — "DejaVu Sans Mono" contains none, so the
+   subset keeps its name. Rejected: Noto (the metrics + a third-wider
+   cell; it would grow every line it touched until 101b, and its
+   symbols overhang the grid after), Unifont (fits, but a 16 px bitmap
+   design at our 18 px chips renders between pixel rows; its OFL RFN
+   declaration could not be fetched from the mirror — a read owed if it
+   is ever picked). The two DejaVu gaps: `⏸` → `❚❚` (a heavy bar pair,
+   in both faces), `⌖` → `◎` / `◉` (both in DejaVu). Every other glyph
+   stays as chosen — the §98 stars, the skull. **This fires the §79f
+   multi-face trigger on purpose:** `FACES` in `scripts/build-font.mjs`
+   gains its second entry, the `font-family` chain becomes JetBrains
+   Mono → DejaVu Sans Mono → monospace, and the same chain feeds the
+   canvas atlas (`FontAtlas` rasterizes through the CSS font stack), so
+   unit glyphs get the same coverage.
+3. **One column width** — `align-items: stretch` on the chrome column
+   (the map chip widens to the bits chip's width; one right edge; a
+   chip's width stops depending on its text). A visible change, flagged
+   against the no-redesign guard and taken.
+4. **The accepted Reward row STAYS** in place, dimmed and marked taken,
+   until Continue — a small new state; the alternative (top-align the
+   list) still slides the rows below up by one.
+
+**The cut** (ROADMAP §101): 101a the second face + the UI glyph
+inventory pin · 101b the line box + the chip plate (+ the hop chip into
+the plate) · 101c the digit sinks · 101d the countdown re-measures ·
+101e the conditional blocks · 101f the exit. Predictions: no snapshot
+bump, no sim touch, the fuzz smoke never fires (`src/render/fontSubset.ts`
++ `src/ui` + `src/scenes` + `scripts/` + `assets/` + `tests/` — no
+trigger path). Proof per step: 101a by the pin at zero uncovered
+codepoints; 101b by a §96-shaped cascade oracle (zero drift on every
+non-chip declaration) + a pane box read of the four chips; 101c–e by
+scripted content sweeps in the pane (999 → 1000, a fired packet, an
+accepted reward, a bought slot: the flagged click target's box
+byte-equal before and after) — and the user's Firefox eye on each, as
+§100.

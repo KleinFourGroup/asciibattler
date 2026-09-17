@@ -378,56 +378,22 @@ kickoff calls live in git at `edc9371`; the narrative in WORKLOG §100;
 the rule in DESIGN §Input accessibility (the checklist) + "Focus (100)".
 The cut, as landed:
 
-- [x] **100a — the camera gate:** Backquote handler removed; the pan
-      listeners attach under `import.meta.env.DEV` only; the toggle → devKeys
-      Ctrl+Alt+C; gotchas #52/#54 noted. Exit: no camera keydown in the shipped
-      bundle; the chord toggles in the user's Firefox. ✅ `7f941b9` + `74c7204`
-      (2026-09-17): the bundle's keydown attaches counted (3, none the
-      Renderer's); the chord landed in Firefox; the user's scroll-mode verdict
-      → a minimap rider on the Round 7.5 A/B (META-ROADMAP). WORKLOG §100a.
-- [x] **100b — the focus idiom:** one global `:focus-visible` ring rule on
-      controls; every `:hover` rule's `:focus-visible` twin; the map-node ring
-      on box-shadow; `tests/ui-focus.test.ts` (the ui-motion shape — a hover
-      rule without its twin fails). Exit: pins green; the ring on the pre-turn
-      text sites in Firefox. ✅ (2026-09-17): 29 twins + the white ring + the
-      node's shadow ring; five pins, self-checked; the pane computes ring +
-      twin on a focused card. WORKLOG §100b.
-- [x] **100c1 — `pressable()` + the leaf buttons:** the helper (role +
-      tabindex + Enter/Space → the click handler; a pure key predicate,
-      pinned); map nodes + the cache chip → real `<button>`s; MapScreen +
-      CacheOverlay literals extracted. Exit: Tab + Enter enters a node / opens
-      the cache in Firefox. ✅ (2026-09-17): inert nodes by `aria-disabled`,
-      never `disabled` (the boss tooltip's hover); baseline 71 → 67; the
-      pane cannot Enter a native button — the Firefox read. WORKLOG §100c1.
-- [x] **100c2 — the cards:** hand / recruit / picker / enemy cards through the
-      helper, `aria-pressed` mirrors `is-selected`, the enemy card honours
-      `armedMode`, the hint wording; HUD + PreTurn + Recruit literals extracted.
-      Exit: the §97 riders 1–3 close; arm Focus then Enter a card sets focus.
-      ✅ (2026-09-17): a dead card leaves the Tab order; baseline 67 → 44 / 13
-      files; pane-read by click counts — Enter = 1 click, Space in battle = 0
-      (pause toggled, the event prevented), an armed pick disarmed by Enter.
-      WORKLOG §100c2.
-- [x] **100d — the selects:** `aria-label` via `t()` on both; Port + Reward
-      literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0. ✅
-      (2026-09-17): one shared `common.swapSelectLabel`; 18 keys; baseline
-      44 → 29 / 11 files. WORKLOG §100d.
-- [x] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`
-      (a `t()` per kind; `SCAN_ROOTS` drops the file), `common.lv`, the rest;
-      `Screen.present` focuses its container. Exit: the baseline is `{}`. ✅
-      (2026-09-17): `src/ui/eventConditionText.ts` (the editor re-pointed);
-      29 keys; the dev console line marked `i18n-ok`; two test pins
-      re-derived from the table; baseline 29 → `{}`. WORKLOG §100e.
-- [x] **100e2 — the chrome column after the screens** (inserted 2026-09-17
-      from the user's 100e Firefox read: the detour through the browser UI
-      survived the container focus — the column sat FIRST in `#ui`). A
-      `.screen-host` div created before the column is the scenes' mount;
-      screens first, chips last, no detour. One stab, user-capped (the
-      Electron shell has no browser UI to detour through). WORKLOG §100e2.
-- [x] **100f — the close:** DESIGN §Input accessibility extended in place
-      (hover + focus, the Space rule, the per-surface checklist table),
-      "Focus (100)" in §UI idioms, HANDOFF tips, the stub. ✅ (2026-09-17):
-      + gotcha #135, ARCHITECTURE's tree lines, the cursor → §101 with its
-      kickoff inputs, the session report + the phase summary. WORKLOG §100f.
+- [x] **100a — the camera gate** ✅ `7f941b9` + `74c7204`: dev-only pan
+      listeners, Ctrl+Alt+C, the minimap rider. WORKLOG §100a.
+- [x] **100b — the focus idiom** ✅: the ONE ring + 29 `:focus-visible`
+      twins, `tests/ui-focus.test.ts`. WORKLOG §100b.
+- [x] **100c1 — `pressable()` + the leaf buttons** ✅: map nodes + the
+      cache chip real `<button>`s, `aria-disabled` never `disabled`.
+      WORKLOG §100c1.
+- [x] **100c2 — the cards** ✅: the four card kinds, `aria-pressed`, the
+      enemy card honours an armed pick (the §97 riders close). WORKLOG §100c2.
+- [x] **100d — the selects** ✅: one shared `aria-label` key. WORKLOG §100d.
+- [x] **100e — the extraction remainder** ✅: the baseline `{}`,
+      `Screen.present` focuses its root. WORKLOG §100e.
+- [x] **100e2 — the chrome column after the screens** ✅ (inserted from
+      the user's Firefox Tab walk): `.screen-host`. WORKLOG §100e2.
+- [x] **100f — the close** ✅: DESIGN §Input accessibility + "Focus
+      (100)", gotcha #135, the cursor. WORKLOG §100f.
 
 ## Phase 101 — layout stability
 
@@ -438,6 +404,47 @@ re-measures; the conditional blocks from WORKLOG §Kickoff D reserve
 their space or hide by `visibility`. **Depends on:** §96. **Risk:** low.
 **Exit:** no surface shifts as its content changes (the audit's list
 walked). **Scope guards:** no redesign of any surface.
+
+Kickoff 2026-09-17 (WORKLOG §101 Kickoff): `tabular-nums` is a near
+no-op on a monospace face — the class is fallback glyphs growing the
+line box (20 of the UI's 32 non-ASCII codepoints are outside the
+shipped font, `▤` the live chip instance), character-count growth with
+no reserved width, and collapsing blocks on centered columns. Four
+user-signed calls: the widest-live-form idiom replaces `tabular-nums`;
+**DejaVu Sans Mono as the ONE shipped fallback face** (fits inside the
+JetBrains line, keeps the cell; Noto Symbols 2 + Unifont rejected);
+the column stretches to one width; the accepted reward row stays.
+
+- [ ] **101a — the second face + the inventory pin:** DejaVu Sans Mono
+      joins `FACES` (a symbol subset, its notice into
+      `THIRD-PARTY-LICENSES.txt`); the `font-family` chain JBM → DejaVu →
+      monospace; `⏸` → `❚❚`, `⌖` → `◎`; `SUBSET_RANGES` widened for the
+      fourteen in-JBM glyphs; a permanent pin — every non-ASCII codepoint
+      in the UI's strings is in a shipped subset. Exit: the pin at zero.
+- [ ] **101b — the line box + the chip plate:** an explicit `line-height`
+      on `#ui` + the overlay root at the face's normal; `.chip`
+      `box-sizing: border-box`; the column `align-items: stretch`;
+      `.hud-hop` → a `.chip` positioned off the bits chip's reserved
+      width. Exit: four chips one height + one width; the cascade
+      oracle at zero drift elsewhere.
+- [ ] **101c — the digit sinks:** the `min-width: Nch` idiom on the
+      bits / cache / pool-chip / hop / port-price / card-list-badge
+      values, the XP `MAX` slot, the promotion delta; one global
+      `font-variant-numeric` belt. Exit: 999 → 1000 moves no sibling.
+- [ ] **101d — the countdown re-measures:** a `ResizeObserver` on the
+      enemy pane for the countdown's life; the showCountdown /
+      refreshStatuses order swapped. Exit: a card or status row added
+      mid-countdown moves the countdown, not the cards.
+- [ ] **101e — the conditional blocks:** the Promotion `visibility`
+      precedent on the flagged list — PreTurn's arm hint + packet row
+      slots, the accepted Reward row dimmed in place, Port + Reward
+      action clusters at a `min-height` covering SOLD and the select,
+      the cache ✕ by `visibility` + the shrink banner's slot, the event
+      page text's tallest-page reserve. Exit: every flagged click target
+      byte-equal across its own click.
+- [ ] **101f — the exit:** DESIGN "Layout stability (101)" (the
+      reservation idiom + the fallback-face rule), the §100 select note
+      resolved (KEEP the `aria-label`), the stub, the cursor.
 
 ## Phase 102 — the two surface riders
 

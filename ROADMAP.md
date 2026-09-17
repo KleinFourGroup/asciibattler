@@ -343,11 +343,12 @@ letter, so Round 8 flips one gate); strip = `shake` `burst` `sparkle`
   over every key under both readings; pane-verified by call counters at
   the effect methods (0 / 0 / 0 stripped under the gate across ~180
   hitsplats; burst + sparkle fire under full). WORKLOG §99c.
-- [ ] **99d — the browser decision point.** ⛔ OPEN — the probe landed
-  2026-09-16 (`DEEP_DRIFT` 0.4 in both shaders + the drift-equality pin;
-  `BattleScene.advanceShaderTime` holds `uTime` under the gate, pane-read
-  2.000 vs 0 over 2 s); the user's Firefox eye rules E (the drift: keep /
-  retune / revert) then D (the freeze: keep / revert). WORKLOG §99d.
+- [x] **99d — the browser decision point.** ✅ DECIDED 2026-09-16 (the
+  user's Firefox eye): **E — the drift SHIPS at 0.6 rad/s** (retuned from
+  the 0.4 probe) in both shaders, the drift-equality pin holds them
+  together; **D — the freeze is KEPT** (`BattleScene.advanceShaderTime`,
+  the one site, feeds 0 under the gate; pane-read 2.000 vs 0 over 2 s).
+  WORKLOG §99d.
 - [ ] **99e — the exit.** DESIGN "Reduced motion (99)"; the §96.5 +
   §98 riders closed; the stub; the cursor.
 

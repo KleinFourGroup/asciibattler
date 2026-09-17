@@ -24,9 +24,10 @@
 // One band per tile (98e-post, the user's read: two read as a hazard
 // stripe); the amplitude is small (the tile stays a dark navy plane).
 // The `uTime * DEEP_DRIFT` term is the §99 drift (99d): a slow phase
-// drift along the diagonal — one band width per ~16 s at 0.4 rad/s — for
-// motion-on players; the static bands are the tell, the wave is flair
-// (the §98 kickoff's call E). Under reduced motion BattleScene HOLDS
+// drift along the diagonal — one band width per ~10 s at 0.6 rad/s (the
+// user's retune from a 0.4 probe, 2026-09-16) — for motion-on players;
+// the static bands are the tell, the wave is flair (the §98 kickoff's
+// call E). Under reduced motion BattleScene HOLDS
 // `uTime` (`advanceShaderTime`, the one shader-motion gate), so the bands
 // (and the fire flicker, the healing shimmer, the mist) stand still with
 // no branch here. Keep the constant equal in apron.frag — the two shaders
@@ -60,7 +61,7 @@ void main() {
     // 98e — deep water: static diagonal bands on the top face (see the header).
     const float DEEP_BANDS_PER_TILE = 1.0; // integer → continuous across tiles; 98e-post: 2 read as a hazard stripe
     const float DEEP_BAND_AMPLITUDE = 0.22;
-    const float DEEP_DRIFT = 0.4; // 99d: rad/s along the diagonal (= apron.frag); reduced motion holds uTime instead
+    const float DEEP_DRIFT = 0.6; // 99d: rad/s along the diagonal (= apron.frag); reduced motion holds uTime instead
     if (vIsTop > 0.5) {
       // World space, the apron's formula verbatim — one diagonal on both sides of the board edge.
       float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * DEEP_BANDS_PER_TILE + uTime * DEEP_DRIFT);

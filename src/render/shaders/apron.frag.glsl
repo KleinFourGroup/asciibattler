@@ -63,7 +63,7 @@ void main() {
     // continues its pattern into the fog. The uTime term is the §99 drift
     // (99d) — the SAME constant as terrain.frag, or the two halves of one
     // band slide apart at the edge; reduced motion holds uTime upstream.
-    const float DEEP_DRIFT = 0.4;
+    const float DEEP_DRIFT = 0.6;
     float wave = sin((vWorldPos.x + vWorldPos.z) * 6.28318530718 * 1.0 + uTime * DEEP_DRIFT);
     base *= 1.0 + 0.22 * wave;
   } else if (vAnim.x > 1.5) {

@@ -2775,3 +2775,10 @@ promises. The drift itself is the user's eye — the pane can't judge
 Two outcomes to record when the user rules: E keep / retune / revert
 (revert = `DEEP_DRIFT` back to 0.0 in both files; the pin stays); D keep
 / revert (revert = drop the ternary; the helper stays as the one site).
+
+**RULED (the user's Firefox eye, 2026-09-16): E — the drift stays,
+retuned 0.4 → 0.6 rad/s** ("I like the drift"; one band width per
+~10 s); **D — the freeze is KEPT.** Both by the user; the §98 drift rider
+closes. The seam is now: motion-on = drifting water + the ambient
+shader life; reduced = a still diorama with the units the only things
+that move (plus the informational fx 99c keeps).

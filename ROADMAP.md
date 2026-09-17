@@ -421,6 +421,12 @@ once (100e touches `src/config/events.ts`).
       (2026-09-17): `src/ui/eventConditionText.ts` (the editor re-pointed);
       29 keys; the dev console line marked `i18n-ok`; two test pins
       re-derived from the table; baseline 29 → `{}`. WORKLOG §100e.
+- [x] **100e2 — the chrome column after the screens** (inserted 2026-09-17
+      from the user's 100e Firefox read: the detour through the browser UI
+      survived the container focus — the column sat FIRST in `#ui`). A
+      `.screen-host` div created before the column is the scenes' mount;
+      screens first, chips last, no detour. One stab, user-capped (the
+      Electron shell has no browser UI to detour through). WORKLOG §100e2.
 - [ ] **100f — the close:** DESIGN §Input accessibility extended in place
       (hover + focus, the Space rule, the per-surface checklist table),
       "Focus (100)" in §UI idioms, HANDOFF tips, the stub.

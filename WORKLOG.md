@@ -3184,3 +3184,38 @@ clamped to range), so the focus call's `preventScroll` cannot suppress
 it, and a root near the board top clamps to 0 — the centred read, as
 the show() comment predicts. Firefox's Tab walk after a
 screen swap is the user's read at the pause.
+
+### 100e2 — the chrome column after the screens (2026-09-17)
+
+The user's Firefox read of 100e: the container focus fixed the START of
+the walk (Tab enters the screen) but the detour survived — roster → node
+→ the whole browser UI → the cache chip. The reason is DOM order, not
+the start point: `createChromeColumn(uiMount)` appended the column to
+`#ui` at Game construction, before any screen ever mounted, so every
+screen sat AFTER the chips; from a screen's last control the only
+forward path to the chips ran off the document's end, through Firefox's
+own chrome, and around. Chromium in the pane has no chrome to enter and
+read roster → node → chip all along, which is why the pane could not
+show the bug (the 100c1 diagnosis had it right; 100e fixed only half).
+
+**One stab, user-capped:** the Electron shell this is headed for has no
+browser UI to detour through, so this got one quick attempt before the
+close, not a design. The stab: a `.screen-host` `<div>` created FIRST
+inside `#ui` (before the column and the tooltip host) and passed as the
+scenes' `uiMount`, so every Screen and the HUD mount inside it — screens
+first, chips last. A static, unsized div: the screens are absolute /
+fixed and resolve against `#ui` exactly as before (`#ui > *` still grants
+pointer events to the host, and a zero-height box swallows nothing); the
+column is fixed with its own z-index 15, so stacking never depended on
+DOM order; the modals keep `#ui` (appended last at open, as before).
+Game's `uiMount` field went with it — nothing read it after
+construction. ⚠ A screen's relative order to the HUD is unchanged (both
+mount in the host, in the order they always did).
+
+**Pane read** (a fresh run, the map): `#ui`'s children are
+`screen-host · chrome-column · tooltip`; the map screen is inside the
+host, and the host precedes the column; the host's box is 1280 × 0. The
+Tab walk from the focused root: roster button → the frontier node → the
+cache chip → (the wrap) → the roster button. The map renders unchanged.
+The Firefox walk — the chips reached BEFORE the document's end — is the
+user's read at the close.

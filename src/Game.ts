@@ -89,7 +89,16 @@ export class Game implements RunDispatcher {
   private readonly apron: ApronRenderer;
   /** M4 — the mist floor (page-lifetime scenery; only its uTime advances). */
   private readonly backdrop: BackdropRenderer;
-  private readonly uiMount: HTMLElement;
+  /** 100e2 — the SCREEN HOST: the scenes' mount (every Screen + the HUD),
+   *  created FIRST inside #ui so it sits BEFORE the chrome column and the
+   *  tooltip host in DOM order. A static, unsized div — the screens are
+   *  absolute / fixed and resolve against #ui exactly as before; the column
+   *  is fixed with its own z-index, so stacking never depended on DOM order.
+   *  What DOES depend on it is the Tab walk: with the column first, the only
+   *  forward path from a screen's last control to the chips ran off the
+   *  document's end — through Firefox's own UI — and around (the user's
+   *  100c1 + 100e reads). Screens first, chips last, no detour. */
+  private readonly screenHost: HTMLDivElement;
   private readonly audio: AudioPlayer;
   /**
    * I3 — fast-forward speed (1×/2×/3×). Page-lifetime so the chosen speed
@@ -144,7 +153,13 @@ export class Game implements RunDispatcher {
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
     this.fontAtlas = fontAtlas;
-    this.uiMount = uiMount;
+    // 100e2 — the screen host goes in before any other #ui child (see the
+    // field): the chrome column + the tooltip host append after it below.
+    // (#ui itself is not kept — the page-lifetime chrome takes it here, at
+    // construction, and nothing reads it later.)
+    this.screenHost = document.createElement('div');
+    this.screenHost.className = 'screen-host';
+    uiMount.appendChild(this.screenHost);
     this.audio = new AudioPlayer();
 
     // G1 — one URL parser builds the RunConfig (seed / floors / roster /
@@ -783,7 +798,9 @@ export class Game implements RunDispatcher {
       apron: this.apron,
       backdrop: this.backdrop,
       fontAtlas: this.fontAtlas,
-      uiMount: this.uiMount,
+      // 100e2 — the scenes mount into the screen host (before the chrome
+      // column in DOM order); the page-lifetime chrome keeps #ui itself.
+      uiMount: this.screenHost,
       dispatcher: this,
       run: this.run,
       audio: this.audio,

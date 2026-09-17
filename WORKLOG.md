@@ -2931,3 +2931,28 @@ No sim touch, no snapshot bump; the fuzz smoke fires once (100e's
 `src/config/events.ts` touch). The cut + the decision points went to the
 user in a plain message (the AskUserQuestion note in AGENTS); the
 ROADMAP gets the cut lines on approval.
+
+### 100a — the camera gate (2026-09-17)
+
+The Backquote keydown is gone from `Renderer.ts`; `toggleCameraMode()`
+(public, returns the new mode) is the one entry, and the devKeys chord
+**Ctrl+Alt+C** calls it through the main.ts cast convention (Game keeps
+`renderer` TS-private; private is runtime-accessible). All four D4 input
+listeners (pan keys + edge-scroll) attach under a `DEV` const
+(`import.meta.env.DEV`, the locale.ts `typeof` guard) — `stop()` still
+removes them unconditionally, a no-op when never attached. Gotchas #52 +
+#54 carry the 100a notes.
+
+Proof, from a production build to the scratchpad: `Backquote` and the
+`dev-keys` module are absent from the bundle; the five `keydown` mentions
+left are three `addEventListener`s (tooltip · modal · Keybindings) and
+two `removeEventListener`s (Renderer's `stop`, modal's close) — the
+Renderer's ATTACH is gone (esbuild drops the `if (false)` block; the
+`PAN_KEY_CODES` strings survive as dead code inside the never-attached
+handler, which is why a string grep alone is the wrong instrument — it
+read `KeyW ×2` and looked like a failure). Pane read (dev): a synthetic
+Ctrl+Alt+C keydown flipped `fit → scroll → fit` with both console lines
+(`[dev-keys] camera mode → …` + `[camera] mode: …`); a bare Backquote
+left the mode at `fit`. The REAL chord is the user's Firefox read (gotcha
+#134 — the pane cannot deliver a browser-reserved chord, and a synthetic
+event proves only the wiring).

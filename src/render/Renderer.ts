@@ -32,10 +32,17 @@ export type CameraMode = 'fit' | 'scroll';
 
 /**
  * D4 dev default. Scroll mode is implemented and toggleable via the dev
- * keystroke from day one, but the default stays `fit` until D5 (spawn
- * regions) gives scroll a richer initial focal point than "player rows".
+ * chord (100a: Ctrl+Alt+C in src/dev/devKeys.ts → `toggleCameraMode`),
+ * but the default stays `fit` until the D4 A/B (Round 7.5) rules on it.
  */
 const DEV_DEFAULT_MODE: CameraMode = 'fit';
+
+/** 100a — the scroll-mode INPUT (pan keys + edge-scroll) is DEV-only: the
+ *  listeners attach only under `import.meta.env.DEV`, so the shipped bundle
+ *  never sees a camera keydown (the mode itself is unreachable there — the
+ *  toggle lives in devKeys, which main.ts wires under the same flag). The
+ *  `typeof` guard is the locale.ts precedent for a non-Vite import. */
+const DEV = typeof import.meta.env !== 'undefined' && import.meta.env.DEV === true;
 
 /**
  * D4 scroll-mode visible window — tiles per side. Matches the pre-D3
@@ -51,12 +58,11 @@ const EDGE_SCROLL_THRESHOLD_PX = 40;
 /** D4 pan speed (tiles/sec) for both WASD and edge-scroll. */
 const PAN_SPEED_TILES_PER_SEC = 12;
 
-/** D4 dev keystroke that toggles camera mode (Backquote = the `~` key). */
-const CAMERA_TOGGLE_CODE = 'Backquote';
-
 /** D4 pan keys: WASD and arrow keys (both active simultaneously). Tracked
  *  in `keysHeld` and summed into the XZ pan direction in
- *  `updateScrollFromInput`. `e.code` is layout-independent. */
+ *  `updateScrollFromInput`. `e.code` is layout-independent. DEV-only since
+ *  100a (see `DEV`); the Backquote mode toggle that lived beside them moved
+ *  to the devKeys chord the same step. */
 const PAN_KEY_CODES = new Set<string>([
   'KeyW', 'KeyA', 'KeyS', 'KeyD',
   'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight',
@@ -199,10 +205,15 @@ export class Renderer {
     // D4 input listeners: keys on window so the user doesn't need to focus
     // the canvas; mouse position on the canvas so edge-scroll only triggers
     // when the cursor is over the play area (HUD hover doesn't pan).
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
-    this.webgl.domElement.addEventListener('mousemove', this.handleMouseMove);
-    this.webgl.domElement.addEventListener('mouseleave', this.handleMouseLeave);
+    // 100a — DEV-only: scroll mode is a dev seam until the Round 7.5 A/B,
+    // so the shipped bundle attaches none of them (`stop()` removes them
+    // unconditionally — a no-op for a never-attached listener).
+    if (DEV) {
+      window.addEventListener('keydown', this.handleKeyDown);
+      window.addEventListener('keyup', this.handleKeyUp);
+      this.webgl.domElement.addEventListener('mousemove', this.handleMouseMove);
+      this.webgl.domElement.addEventListener('mouseleave', this.handleMouseLeave);
+    }
   }
 
   start(): void {
@@ -315,6 +326,16 @@ export class Renderer {
   }
 
   getCameraMode(): CameraMode {
+    return this.cameraMode;
+  }
+
+  /** 100a — the dev chord's entry (Ctrl+Alt+C, devKeys.ts): flip fit ↔
+   *  scroll and report the new mode. The Backquote keydown it replaces was
+   *  an unregistered, undocumented hotkey with no click route (the Round 7
+   *  kickoff audit §C) — gating it dev-only is the §100 charter's call; the
+   *  mode's design (the D4 A/B) is Round 7.5's. */
+  toggleCameraMode(): CameraMode {
+    this.setCameraMode(this.cameraMode === 'fit' ? 'scroll' : 'fit');
     return this.cameraMode;
   }
 
@@ -545,11 +566,6 @@ export class Renderer {
   }
 
   private handleKeyDown = (e: KeyboardEvent): void => {
-    if (e.code === CAMERA_TOGGLE_CODE) {
-      if (e.repeat) return;
-      this.setCameraMode(this.cameraMode === 'fit' ? 'scroll' : 'fit');
-      return;
-    }
     if (PAN_KEY_CODES.has(e.code)) {
       this.keysHeld.add(e.code);
     }

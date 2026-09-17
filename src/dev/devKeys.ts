@@ -40,6 +40,15 @@
  *                off the bound codes. It shipped as KeyR for one commit —
  *                FIREFOX OWNS Ctrl+Alt+R (Reader View) at the chrome level,
  *                so the page never saw the keydown; gotcha #134.)
+ *   Ctrl+Alt+C — 100a: toggle the CAMERA MODE (fit ↔ scroll,
+ *                `Renderer.toggleCameraMode`). It replaces the D4 Backquote
+ *                keydown — an unregistered hotkey with no click route (the
+ *                Round 7 kickoff audit §C); the §100 charter gates the camera
+ *                dev-only, the D4 A/B on which mode plays better is Round
+ *                7.5. The pan keys (WASD / arrows) and edge-scroll attach in
+ *                Renderer under the same DEV flag. (C = camera; KeyC is off
+ *                the bound codes and this file's, and neither browser binds
+ *                Ctrl+Alt+C — the user's Firefox read confirms, per #134.)
  *
  * ⚠ A new chord must clear THREE key sets, not two: the registry's bound
  * codes, this file's, and the BROWSERS' own Ctrl+Alt chords — the pane is
@@ -54,6 +63,7 @@ import type { RunSnapshot } from '../run/Run';
 import { loadTraces } from './traceStore';
 import { cycleShakePolicy } from '../ui/lossFx';
 import { cycleReducedMotionOverride } from '../render/motion';
+import type { Renderer } from '../render/Renderer';
 
 export function attachDevKeys(game: Game): void {
   window.addEventListener('keydown', (e) => {
@@ -85,6 +95,14 @@ export function attachDevKeys(game: Game): void {
         console.info(
           `[dev-keys] reduced-motion override → ${next === null ? 'OS' : next ? 'REDUCED' : 'full'}`,
         );
+        break;
+      }
+      case 'KeyC': {
+        e.preventDefault();
+        // Game keeps `renderer` TS-private; the dev convention (main.ts's
+        // `bus` reach-in) is a cast — private is runtime-accessible.
+        const renderer = (game as unknown as { renderer: Renderer }).renderer;
+        console.info(`[dev-keys] camera mode → ${renderer.toggleCameraMode()}`);
         break;
       }
     }

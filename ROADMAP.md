@@ -411,8 +411,10 @@ once (100e touches `src/config/events.ts`).
       files; pane-read by click counts — Enter = 1 click, Space in battle = 0
       (pause toggled, the event prevented), an armed pick disarmed by Enter.
       WORKLOG §100c2.
-- [ ] **100d — the selects:** `aria-label` via `t()` on both; Port + Reward
-      literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0.
+- [x] **100d — the selects:** `aria-label` via `t()` on both; Port + Reward
+      literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0. ✅
+      (2026-09-17): one shared `common.swapSelectLabel`; 18 keys; baseline
+      44 → 29 / 11 files. WORKLOG §100d.
 - [ ] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`
       (a `t()` per kind; `SCAN_ROOTS` drops the file), `common.lv`, the rest;
       `Screen.present` focuses its container. Exit: the baseline is `{}`.

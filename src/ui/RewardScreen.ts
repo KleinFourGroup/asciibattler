@@ -50,7 +50,7 @@ export class RewardScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'reward-heading';
-    heading.textContent = 'Rewards';
+    heading.textContent = t('reward.heading');
     panel.appendChild(heading);
 
     this.portionsEl = document.createElement('div');
@@ -143,11 +143,14 @@ export class RewardScreen extends Screen {
         const title = document.createElement('div');
         title.className = 'reward-portion__title';
         const glyph = glyphForArchetype(portion.template.archetype);
-        title.textContent = `${glyph} ${nameForArchetype(portion.template.archetype)} — level ${portion.template.level}`;
+        title.textContent = `${glyph} ${t('reward.unitTitle', {
+          name: nameForArchetype(portion.template.archetype),
+          level: portion.template.level,
+        })}`;
         body.appendChild(title);
         const desc = document.createElement('div');
         desc.className = 'reward-portion__desc';
-        desc.textContent = 'Joins the roster.';
+        desc.textContent = t('reward.joinsRoster');
         body.appendChild(desc);
       } else if (portion.kind === 'poolHealth') {
         // 74c — a flat pool heal (display the authored amount; the settle
@@ -201,6 +204,9 @@ export class RewardScreen extends Screen {
 
     const select = document.createElement('select');
     select.className = 'reward-swap__select';
+    // 100d — the accessible name (see PortScreen.swapBuyControl: aria-label,
+    // not a visible label — the row must not shift).
+    select.setAttribute('aria-label', t('common.swapSelectLabel'));
     this.run.cache.forEach((packetId, slot) => {
       const option = document.createElement('option');
       option.value = String(slot);

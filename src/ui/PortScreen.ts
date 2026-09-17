@@ -60,12 +60,12 @@ export class PortScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'port-heading';
-    heading.textContent = '$ Port';
+    heading.textContent = `$ ${t('port.heading')}`;
     panel.appendChild(heading);
 
     const subtitle = document.createElement('div');
     subtitle.className = 'port-subtitle';
-    subtitle.textContent = 'Dock and trade — your bits, top-left.';
+    subtitle.textContent = t('port.subtitle');
     panel.appendChild(subtitle);
 
     // Fixed (viewport-pinned) so it survives the scroll — leaving must never
@@ -111,7 +111,7 @@ export class PortScreen extends Screen {
     const stock = this.run.portStock;
     if (stock === null) return; // undocking — the fading DOM needs nothing
 
-    this.bodyEl.appendChild(this.sectionHeading('Units for hire'));
+    this.bodyEl.appendChild(this.sectionHeading(t('port.section.units')));
     const unitGrid = document.createElement('div');
     unitGrid.className = 'port-unit-grid';
     stock.units.forEach((slot, index) => {
@@ -132,8 +132,8 @@ export class PortScreen extends Screen {
     });
     this.bodyEl.appendChild(unitGrid);
 
-    this.bodyEl.appendChild(this.sectionHeading('Packets'));
-    if (stock.packets.length === 0) this.bodyEl.appendChild(this.emptyLine('Sold out.'));
+    this.bodyEl.appendChild(this.sectionHeading(t('port.section.packets')));
+    if (stock.packets.length === 0) this.bodyEl.appendChild(this.emptyLine(t('port.soldOut')));
     stock.packets.forEach((slot, index) => {
       const packet = packetById(slot.packetId);
       this.bodyEl!.appendChild(
@@ -152,9 +152,9 @@ export class PortScreen extends Screen {
       );
     });
 
-    this.bodyEl.appendChild(this.sectionHeading('Daemons'));
+    this.bodyEl.appendChild(this.sectionHeading(t('port.section.daemons')));
     if (stock.daemons.length === 0) {
-      this.bodyEl.appendChild(this.emptyLine('Nothing you don’t already own.'));
+      this.bodyEl.appendChild(this.emptyLine(t('port.daemonsOwned')));
     }
     stock.daemons.forEach((slot, index) => {
       const daemon = daemonById(slot.daemonId);
@@ -170,9 +170,9 @@ export class PortScreen extends Screen {
       );
     });
 
-    this.bodyEl.appendChild(this.sectionHeading('Sell packets'));
+    this.bodyEl.appendChild(this.sectionHeading(t('port.section.sell')));
     if (this.run.cache.length === 0) {
-      this.bodyEl.appendChild(this.emptyLine('Your cache is empty.'));
+      this.bodyEl.appendChild(this.emptyLine(t('port.cacheEmpty')));
     }
     this.run.cache.forEach((packetId, cacheIndex) => {
       const packet = packetById(packetId);
@@ -193,17 +193,15 @@ export class PortScreen extends Screen {
       this.bodyEl!.appendChild(row);
     });
 
-    this.bodyEl.appendChild(this.sectionHeading('Crew removal'));
+    this.bodyEl.appendChild(this.sectionHeading(t('port.section.removal')));
     // 51d — the signature-thin per-unit rows ("rogue · Lv 5" × N identical)
     // retire for the 51c roster PICKER: one launch row; the modal shows the
     // full cards (stats/abilities/XP), select one, confirm strikes it.
-    const removalNote = this.emptyLine(
-      `Pay ${PRICES.unitRemovalPrice} bits to strike a unit from the roster — its deck card goes with it.`,
-    );
+    const removalNote = this.emptyLine(t('port.removalNote', { price: PRICES.unitRemovalPrice }));
     this.bodyEl.appendChild(removalNote);
     const row = document.createElement('div');
     row.className = 'port-row';
-    row.appendChild(this.rowBody(`✕ Strike a unit from the crew`, undefined));
+    row.appendChild(this.rowBody(`✕ ${t('port.removalRow')}`, undefined));
     const actions = document.createElement('div');
     actions.className = 'port-row__actions';
     actions.appendChild(this.priceTag(PRICES.unitRemovalPrice));
@@ -228,10 +226,10 @@ export class PortScreen extends Screen {
    *  SOURCE index, which IS the rosterIndex (`run.team` passed unsorted —
    *  and the mapping would hold even under a sorted display order). */
   private openRemovalPicker(): void {
-    this.removalPicker.open('Strike a unit', this.run.team, {
+    this.removalPicker.open(t('port.removalTitle'), this.run.team, {
       selection: {
         count: 1,
-        confirmText: `Remove for ${PRICES.unitRemovalPrice} bits ▸`,
+        confirmText: `${t('port.removalConfirm', { price: PRICES.unitRemovalPrice })} ▸`,
         onConfirm: ([rosterIndex]) => {
           if (rosterIndex === undefined) return;
           this.transact('click', { kind: 'payToRemoveUnit', rosterIndex });
@@ -328,6 +326,10 @@ export class PortScreen extends Screen {
     wrap.className = 'port-swap';
     const select = document.createElement('select');
     select.className = 'port-swap__select';
+    // 100d — the select's accessible name (the kickoff audit: both `<select>`s
+    // were unlabelled). `aria-label`, not a visible `<label>`: a label element
+    // would shift the row, and the button beside it already names the action.
+    select.setAttribute('aria-label', t('common.swapSelectLabel'));
     this.run.cache.forEach((packetId, slot) => {
       const option = document.createElement('option');
       option.value = String(slot);

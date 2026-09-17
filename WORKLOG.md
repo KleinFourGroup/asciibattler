@@ -3101,3 +3101,30 @@ existing pane behaviour under the hidden pane (the §99 sim-stall tip:
 the objective event that flips `activeObjectiveMode` rides the sim), not
 c2's. The picker and recruit cards ride the same helper; their Enter is
 the user's Firefox read, with the hand-card toggle under a live redraw.
+
+### 100d — the selects (2026-09-17)
+
+Both `<select>`s (the port's swap-buy control, the reward screen's swap
+control — the 49c idiom, rebuilt per render) carry an `aria-label` from
+ONE shared key, `common.swapSelectLabel` ("Cache slot to swap out"). An
+`aria-label`, not a visible `<label>`: a label element would shift the
+row (§101's class) and the Swap button beside each select already names
+the action; the accessible name is what was missing (the kickoff audit
+§C: "the two `<select>`s are unlabelled"). Both sites carry the 100d
+comment.
+
+**Literals:** Port 13 + Reward 2 flagged, plus two the scan's prose
+heuristic let through and the touch-once rule sweeps anyway — the `$
+Port` heading (`port.heading` under the `$` glyph) and the reward unit
+title's `— level {level}` (`reward.unitTitle`, the glyph outside).
+Eighteen keys; the `▸` glyphs and the `✕` stay outside the values (the
+97 precedent). Baseline 44 → 29 in 11 files; PortScreen + RewardScreen
+at zero. Both files' prettier drift predates the step.
+
+**Read:** the pins (the key scan, the literal ratchet, the string table,
+the title tripwire) 24/24. The pane walk from a fresh run found only
+battle nodes after the event chain, and the swap selects render only
+with a FULL cache — so the port screen's strings and both selects'
+accessible names are the user's Firefox read whenever a port with a full
+cache comes up; the extraction is byte-equal by construction (every
+value is the old literal, verbatim).

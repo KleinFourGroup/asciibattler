@@ -144,7 +144,7 @@ export class PromotionScreen extends Screen {
 
     const reveals: ((skipped: boolean) => void)[] = [];
     reveals.push((skipped) => {
-      levelValue.textContent = `Lv ${p.newLevel}`;
+      levelValue.textContent = t('common.lv', { level: p.newLevel });
       levelValue.classList.add('is-revealed');
       if (!skipped) this.audio.play('healtick');
     });

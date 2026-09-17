@@ -33,14 +33,16 @@
  *     for a non-prose literal the heuristic misreads).
  *
  * SCOPE: the presentation layer — src/ui, src/scenes, src/render, src/Game.ts,
- * src/main.ts, plus src/config/events.ts (`describeEventCondition`, UI copy
- * living in a config module — audit finding). Sim/run/core carry no
- * player-facing prose by design; a violation there is a review matter.
+ * src/main.ts. (src/config/events.ts rode along until 100e, for 74f's
+ * `describeEventCondition` — UI copy living in a config module, the audit
+ * finding; the phrases now live in src/ui/eventConditionText.ts.) Sim / run /
+ * core / config carry no player-facing prose by design; a violation there is
+ * a review matter.
  */
 
 import ts from 'typescript';
 
-export const SCAN_ROOTS: readonly string[] = ['src/ui', 'src/scenes', 'src/render', 'src/Game.ts', 'src/main.ts', 'src/config/events.ts'];
+export const SCAN_ROOTS: readonly string[] = ['src/ui', 'src/scenes', 'src/render', 'src/Game.ts', 'src/main.ts'];
 
 export const I18N_OK_MARKER = 'i18n-ok';
 /** In a file's first lines: the whole file is a build/dev table, never player-facing. */

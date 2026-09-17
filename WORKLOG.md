@@ -3128,3 +3128,59 @@ with a FULL cache — so the port screen's strings and both selects'
 accessible names are the user's Firefox read whenever a port with a full
 cache comes up; the extraction is byte-equal by construction (every
 value is the old literal, verbatim).
+
+### 100e — the extraction remainder + the screen focus (2026-09-17)
+
+**The baseline is `{}`.** The literal pin's "a file ABSENT from the
+baseline must have zero" clause now covers every scanned file — the §95d
+ratchet has nothing left to ratchet, and a new prose literal anywhere in
+the presentation layer fails `npm test` from here on.
+
+**`describeEventCondition` → `src/ui/eventConditionText.ts`.** The 74f
+phrases were UI copy living in a config module (the round kickoff's
+audit finding; the literal scan had to reach into `src/config/` for that
+one file). Now a `t()` per condition kind (`event.cond.*`, twelve keys;
+the `not` combinator composes through `event.cond.not`), the EventScreen
+and the 74h event editor (`tools/event-editor`) re-pointed at it — the
+same copy in both places, as before — and `SCAN_ROOTS` drops
+`src/config/events.ts`; the config module's `packetById` /
+`characterById` imports went with the function. ⚠ `t()` formats numbers
+through Intl, so a 1000-bit threshold would read "1,000+ bits" — none is
+authored; noted at the module head. The touch of `src/config/` fires the
+pre-commit fuzz smoke (predicted at the kickoff).
+
+**The rest:** `common.lv` ("Lv {level}") for the four level badges
+(UnitOverlayLayer ×2 · PromotionScreen · UnitCard); `hitsplat.miss`
+(`src/render` imports `t()` now — it was already a scan root);
+`unit.levelName` · `unit.abilities`; the three `promotion.delta.*` row
+labels; `playback.paused`; `charselect.heading`; five `sectorcleared.*`
+(the pool line's two forms — a pure function, so its pins moved with it).
+The one non-extraction: `Game.ts`'s `[dev] starting roster override`
+console line is marked `// i18n-ok` — dev output, never rendered. Two
+test pins had restated English (`'Paused'`, the three delta labels) and
+now derive from the table — the ui.test.ts lesson from c2, applied
+before the hook could catch it. 29 keys; baseline 29 → `{}`.
+
+**`Screen.present` focuses its container** (`tabIndex = -1`,
+`preventScroll`), the modal shell's 96f shape; `.screen-fade:focus`
+joins the two modal containers in the outline-free rule and the
+ui-focus pin's allowlist (contract 3 reworded: CONTAINERS). This is the
+start-point half of the user's 100c1 Firefox finding (Tab ran off the
+document through the browser UI before reaching the chrome column): the
+next Tab now enters the CURRENT screen's controls; Shift+Tab from there
+reaches the chips in one press. The DOM-order half stays TODO §100.
+
+**Pane read** (a fresh load → the Soldier → the map → the event node):
+the active element on load is `.charselect-screen.screen-fade` (`DIV`,
+tabIndex −1, computed `outline: none`, not `:focus-visible`); Tab → the
+first `.charselect-card`; after the click the active element is
+`.map-screen.screen-fade` and Tab → the roster button (the screen's
+first control, not the chrome column); after entering the node the
+active element is `.event-screen.screen-fade` and Tab → the first
+`.event-choice` ("▸ A pile of bits"). The map's `scrollTop` read 0 with
+a 1078 px board in a 720 px viewport — `MapScreen.show` centres the
+current node AFTER `present()` (`scrollTop = offsetTop − clientHeight/2`,
+clamped to range), so the focus call's `preventScroll` cannot suppress
+it, and a root near the board top clamps to 0 — the centred read, as
+the show() comment predicts. Firefox's Tab walk after a
+screen swap is the user's read at the pause.

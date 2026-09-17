@@ -13,9 +13,10 @@
  *      selector list — same declarations, by construction;
  *   2. the ONE ring rule exists, at the pinned selector, and sets a non-none
  *      `outline` (a ring is a SHAPE — it survives the 98a grey read);
- *   3. no rule sets `outline: none` / `outline: 0` except the two modal
- *      containers' `:focus` rules (96f — a container is not a control);
- *      never under `:focus-visible`, never on a control;
+ *   3. no rule sets `outline: none` / `outline: 0` except the CONTAINERS'
+ *      `:focus` rules — the two 96f modals and the 100e screen root (a
+ *      container is not a control); never under `:focus-visible`, never on
+ *      a control;
  *   4. the map node's ring rides `box-shadow`, never `outline` (98c's
  *      frontier double ring owns `outline` on the node).
  */
@@ -31,8 +32,13 @@ const SHEET = 'src/ui/ui.css';
 
 /** The one ring rule's selector, verbatim (ui.css §100). */
 const RING_SELECTOR = ":where(button, select, [role='button'], [tabindex='0']):focus-visible";
-/** The only rules allowed to drop the outline: the 96f modal containers. */
-const OUTLINE_NONE_ALLOWED = ['.roster-modal:focus', '.sector-map-overlay:focus'];
+/** The only rules allowed to drop the outline: the 96f modal containers and
+ *  the 100e screen container (`Screen.present` focuses it, tabindex=-1). */
+const OUTLINE_NONE_ALLOWED = [
+  '.roster-modal:focus',
+  '.sector-map-overlay:focus',
+  '.screen-fade:focus',
+];
 
 const css = stripCssComments(readFileSync(join(ROOT, SHEET), 'utf8'));
 const rules = styleRulesOf(css);

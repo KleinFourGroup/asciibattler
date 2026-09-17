@@ -28,9 +28,12 @@ function fmtPool(n: number): string {
  */
 export function sectorClearedPoolLine(poolBefore: number, poolAfter: number): string {
   if (poolAfter > poolBefore) {
-    return `Morale restored ${fmtPool(poolBefore)} → ${fmtPool(poolAfter)}`;
+    return t('sectorcleared.poolRestored', { before: fmtPool(poolBefore), after: fmtPool(poolAfter) });
   }
-  return `Morale ${fmtPool(poolAfter)} / ${fmtPool(HEALTH.playerHealthMax)} carries on`;
+  return t('sectorcleared.poolCarries', {
+    pool: fmtPool(poolAfter),
+    max: fmtPool(HEALTH.playerHealthMax),
+  });
 }
 
 export class SectorClearedScreen extends Screen {
@@ -64,12 +67,12 @@ export class SectorClearedScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'sectorcleared-heading';
-    heading.textContent = 'Sector Cleared';
+    heading.textContent = t('sectorcleared.heading');
     panel.appendChild(heading);
 
     const subtext = document.createElement('div');
     subtext.className = 'sectorcleared-subtext';
-    subtext.textContent = `${clearedSectorTitle} is behind you.`;
+    subtext.textContent = t('sectorcleared.behind', { sector: clearedSectorTitle });
     panel.appendChild(subtext);
 
     // §90 — the seam floor's heal, named (a hidden heal is the one thing the
@@ -81,7 +84,7 @@ export class SectorClearedScreen extends Screen {
 
     const next = document.createElement('div');
     next.className = 'sectorcleared-next';
-    next.textContent = `Next: ${nextSectorTitle}`;
+    next.textContent = t('sectorcleared.next', { sector: nextSectorTitle });
     panel.appendChild(next);
 
     const pressOn = button(t('sectorcleared.pressOn'), {

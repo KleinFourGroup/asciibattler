@@ -3501,9 +3501,13 @@ body {
 
 /* 96f — the modal shell (src/ui/modal.ts) focuses its container on open
    (tabindex=-1, the trap's anchor). The container is not a control, so a
-   focus ring on it is noise — the ✕ and the body's buttons keep theirs. */
+   focus ring on it is noise — the ✕ and the body's buttons keep theirs.
+   100e — the screen root joins it: `Screen.present` focuses the screen so
+   the next Tab enters its controls (tests/ui-focus.test.ts allows exactly
+   these three containers to drop the outline). */
 .roster-modal:focus,
-.sector-map-overlay:focus {
+.sector-map-overlay:focus,
+.screen-fade:focus {
   outline: none;
 }
 

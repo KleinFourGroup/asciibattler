@@ -11,6 +11,7 @@ import {
 } from '../sim/stats';
 import { ticksToSeconds } from '../config';
 import type { UnitStats } from '../sim/Unit';
+import { t } from '../i18n/ui';
 
 /**
  * §76g — the promotion derived-delta lines. Balance-proof by construction:
@@ -36,8 +37,9 @@ describe('promotionDeltaParts (§76g — derived deltas, only-if-changed)', () =
   it('a constitution gain shows the Max HP delta (via deriveStats)', () => {
     const grown = bump({ constitution: base.constitution + 3 });
     const lines = promotionDeltaParts(base, grown, 'mercenary');
+    // 100e — the row labels come from the table (t()), never restated here.
     expect(lines).toContain(
-      `Max HP ${deriveStats(base, 0).maxHp} → ${deriveStats(grown, 0).maxHp}`,
+      `${t('promotion.delta.maxHp')} ${deriveStats(base, 0).maxHp} → ${deriveStats(grown, 0).maxHp}`,
     );
   });
 
@@ -45,7 +47,7 @@ describe('promotionDeltaParts (§76g — derived deltas, only-if-changed)', () =
     const grown = bump({ evasion: base.evasion + 2 });
     const lines = promotionDeltaParts(base, grown, 'mercenary');
     const dodge = (s: UnitStats) => Math.round((1 - hitChanceFor(0.6, 0, s.evasion)) * 100);
-    expect(lines).toContain(`Dodge ${dodge(base)}% → ${dodge(grown)}%`);
+    expect(lines).toContain(`${t('promotion.delta.dodge')} ${dodge(base)}% → ${dodge(grown)}%`);
   });
 
   it('a mobility gain shows the Move cadence delta in seconds', () => {
@@ -53,7 +55,7 @@ describe('promotionDeltaParts (§76g — derived deltas, only-if-changed)', () =
     const lines = promotionDeltaParts(base, grown, 'mercenary');
     const cad = (s: UnitStats) =>
       ticksToSeconds(deriveStats(s, 0).moveCooldownTicks).toFixed(2);
-    expect(lines).toContain(`Move cadence ${cad(base)}s → ${cad(grown)}s`);
+    expect(lines).toContain(`${t('promotion.delta.moveCadence')} ${cad(base)}s → ${cad(grown)}s`);
   });
 
   it('a strength gain shows the per-ability damage delta under the ability name', () => {

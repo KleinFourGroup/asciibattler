@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { PlaybackSpeed } from './PlaybackSpeed';
 import type { SpeedStep } from '../config/playback';
+import { t } from '../i18n/ui';
 
 // Mechanic test — explicit literal steps, never the shipped config (the
 // balance-proof rule's converse: primitive/mechanic tests pin literals).
@@ -61,7 +62,7 @@ describe('PlaybackSpeed', () => {
     expect(p.isPaused).toBe(true);
     expect(p.current).toBe(0); // sim parks
     expect(p.selectedSpeed).toBe(3); // selection survives
-    expect(p.label).toBe('Paused');
+    expect(p.label).toBe(t('playback.paused')); // 100e — the table's word, not restated
   });
 
   it('resumes at the prior speed on unpause', () => {

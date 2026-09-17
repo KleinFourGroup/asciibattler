@@ -6,6 +6,7 @@ import type { World } from '../sim/World';
 import type { ObjectiveTarget } from '../sim/objective';
 import { isInertNeutral, type Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
+import { t } from '../i18n/ui';
 import { aboveAnchor } from './anchor';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
@@ -1150,7 +1151,7 @@ export class BattleRenderer {
    * so this handler no longer triggers the lunge/tracer; it floats only the splat.
    */
   private onUnitMissed = ({ targetId }: GameEvents['unit:missed']): void => {
-    this.spawnHitsplat(targetId, 'Miss', 'miss');
+    this.spawnHitsplat(targetId, t('hitsplat.miss'), 'miss');
   };
 
   /**

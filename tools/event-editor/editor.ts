@@ -51,12 +51,14 @@ import {
   assertEventPagesReachable,
   assertEventReservedFlags,
   assertEventRefs,
-  describeEventCondition,
   type EventCondition,
   type EventDef,
   type EventEffectOp,
   type EventFlagValue,
 } from '../../src/config/events';
+// 100e — the requirement phrases moved to the UI layer (t()-backed); the
+// editor keeps showing the SAME copy the EventScreen renders.
+import { describeEventCondition } from '../../src/ui/eventConditionText';
 import { DAEMONS } from '../../src/config/daemons';
 import { PACKETS, PACKET_IDS } from '../../src/config/packets';
 import { CHARACTERS, CHARACTER_IDS } from '../../src/config/characters';

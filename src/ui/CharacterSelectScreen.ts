@@ -18,6 +18,7 @@ import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
 import { button } from './button';
+import { t } from '../i18n/ui';
 
 /** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
@@ -49,7 +50,7 @@ export class CharacterSelectScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'charselect-heading';
-    heading.textContent = 'Choose Your Character';
+    heading.textContent = t('charselect.heading');
     panel.appendChild(heading);
 
     const row = document.createElement('div');

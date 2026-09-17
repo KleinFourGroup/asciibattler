@@ -494,12 +494,15 @@ function buildHeader(
     label.textContent = `${nameForArchetype(data.archetype).toUpperCase()} • `;
     const value = document.createElement('span');
     value.className = 'unit-card__level-value';
-    value.textContent = `Lv ${data.level}`;
+    value.textContent = t('common.lv', { level: data.level });
     header.append(label, value, buildRarityStars(data.rarity, touch));
     return { headerEl: header, levelValue: value };
   }
 
-  header.textContent = `Level ${data.level} ${nameForArchetype(data.archetype)}`;
+  header.textContent = t('unit.levelName', {
+    level: data.level,
+    name: nameForArchetype(data.archetype),
+  });
   header.appendChild(buildRarityStars(data.rarity, touch));
   // No reveal for this skin — point the handle at the header itself so callers
   // have a non-null target. (Only the promotion skin ever WRITES the handle —
@@ -612,7 +615,7 @@ function buildAbilities(archetype: Archetype, stats: UnitStats): HTMLDivElement 
 
   const heading = document.createElement('div');
   heading.className = 'unit-card__abilities-heading';
-  heading.textContent = 'Abilities';
+  heading.textContent = t('unit.abilities');
   abilities.appendChild(heading);
 
   for (const id of abilityIdsForArchetype(archetype)) {

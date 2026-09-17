@@ -23,7 +23,8 @@
  * scope guard).
  */
 
-import { describeEventCondition } from '../config/events';
+import { describeEventCondition } from './eventConditionText';
+import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
@@ -80,7 +81,7 @@ export class EventScreen extends Screen {
 
     const heading = document.createElement('div');
     heading.className = 'event-heading';
-    heading.textContent = `? ${this.run.activeEventName ?? 'Event'}`;
+    heading.textContent = `? ${this.run.activeEventName ?? t('event.fallbackName')}`;
     this.bodyEl.appendChild(heading);
 
     const text = document.createElement('div');
@@ -104,7 +105,7 @@ export class EventScreen extends Screen {
         req.className = enabled
           ? 'event-choice__req'
           : 'event-choice__req event-choice__req--unmet';
-        req.textContent = `Requires ${describeEventCondition(choice.condition)}`;
+        req.textContent = t('event.requires', { cond: describeEventCondition(choice.condition) });
         button.appendChild(req);
       }
       if (enabled) {

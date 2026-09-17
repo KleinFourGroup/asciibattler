@@ -415,9 +415,12 @@ once (100e touches `src/config/events.ts`).
       literals extracted. Exit: baseline Port 13 → 0, Reward 2 → 0. ✅
       (2026-09-17): one shared `common.swapSelectLabel`; 18 keys; baseline
       44 → 29 / 11 files. WORKLOG §100d.
-- [ ] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`
+- [x] **100e — the extraction remainder:** `describeEventCondition` → `src/ui`
       (a `t()` per kind; `SCAN_ROOTS` drops the file), `common.lv`, the rest;
-      `Screen.present` focuses its container. Exit: the baseline is `{}`.
+      `Screen.present` focuses its container. Exit: the baseline is `{}`. ✅
+      (2026-09-17): `src/ui/eventConditionText.ts` (the editor re-pointed);
+      29 keys; the dev console line marked `i18n-ok`; two test pins
+      re-derived from the table; baseline 29 → `{}`. WORKLOG §100e.
 - [ ] **100f — the close:** DESIGN §Input accessibility extended in place
       (hover + focus, the Space rule, the per-surface checklist table),
       "Focus (100)" in §UI idioms, HANDOFF tips, the stub.

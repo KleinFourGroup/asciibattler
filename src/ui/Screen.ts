@@ -42,6 +42,15 @@ export abstract class Screen {
     el.classList.add('screen-fade');
     this.mount.appendChild(el);
     this.container = el;
+    // 100e — the screen takes focus on present (`tabindex=-1`, no scroll, no
+    // ring: `.screen-fade:focus { outline: none }` — a container is not a
+    // control, the 96f modal precedent), so the next Tab enters THIS screen's
+    // controls instead of resuming from wherever the previous screen's
+    // removed control sat — which, in Firefox, ran the walk off the document
+    // through the browser UI and around to the chrome column (the user's
+    // 100c1 read; TODO §100 riders holds the DOM-order call).
+    el.tabIndex = -1;
+    el.focus({ preventScroll: true });
     fadeIn(el);
   }
 

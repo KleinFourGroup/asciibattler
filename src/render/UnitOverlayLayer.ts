@@ -4,6 +4,7 @@ import type { StatusReadout } from '../sim/statusReadout';
 import { displayLevel } from '../sim/xp';
 import { statusColor } from './statusDisplay';
 import { isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
+import { t } from '../i18n/ui';
 
 /**
  * E3.6 — DOM-based per-unit overlay (HP bar + action progress bar + level
@@ -106,7 +107,7 @@ export class UnitOverlayLayer {
 
     const levelBadge = document.createElement('div');
     levelBadge.className = 'level-badge';
-    levelBadge.textContent = `Lv ${displayLevel(level)}`;
+    levelBadge.textContent = t('common.lv', { level: displayLevel(level) });
 
     // §32c — the status pip-strip, just ABOVE the HP bar (below the level
     // badge). Hidden until the unit carries at least one status.
@@ -336,7 +337,7 @@ export class UnitOverlayLayer {
   updateLevel(handle: UnitOverlayHandle, level: number): void {
     if (handle.level === level) return;
     handle.level = level;
-    handle.levelBadge.textContent = `Lv ${displayLevel(level)}`;
+    handle.levelBadge.textContent = t('common.lv', { level: displayLevel(level) });
   }
 
   /**

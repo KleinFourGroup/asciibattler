@@ -28,6 +28,7 @@
 import type { Archetype, UnitStats } from '../sim/Unit';
 import { abilityIdsForArchetype } from '../sim/archetypes';
 import { abilityDef } from '../config/abilities';
+import { t } from '../i18n/ui';
 import { abilityDetailParts } from './abilityDetail';
 import { attackCooldownTicksFor, deriveStats, hitChanceFor } from '../sim/stats';
 import { ticksToSeconds } from '../config';
@@ -61,16 +62,21 @@ export function promotionDeltaParts(
   // and level-independent — pass 0; only maxHp/moveCooldownTicks are read.
   const oldDerived = deriveStats(oldStats, 0);
   const newDerived = deriveStats(newStats, 0);
-  pushChanged(lines, 'Max HP', String(oldDerived.maxHp), String(newDerived.maxHp));
   pushChanged(
     lines,
-    'Dodge',
+    t('promotion.delta.maxHp'),
+    String(oldDerived.maxHp),
+    String(newDerived.maxHp),
+  );
+  pushChanged(
+    lines,
+    t('promotion.delta.dodge'),
     pct(1 - hitChanceFor(REF_ACCURACY, 0, oldStats.evasion)),
     pct(1 - hitChanceFor(REF_ACCURACY, 0, newStats.evasion)),
   );
   pushChanged(
     lines,
-    'Move cadence',
+    t('promotion.delta.moveCadence'),
     secs(oldDerived.moveCooldownTicks),
     secs(newDerived.moveCooldownTicks),
   );

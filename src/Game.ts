@@ -700,7 +700,7 @@ export class Game implements RunDispatcher {
     run.pauseAtTurnGates = true;
     if (this.runConfig.startingRoster) {
       const desc = this.runConfig.startingRoster
-        .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype))
+        .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype)) // i18n-ok: a dev console line, never rendered
         .join(', ');
       console.warn(`[dev] starting roster override: ${desc}`);
     }

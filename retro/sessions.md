@@ -753,3 +753,61 @@ the Electron move. No sim touch, no bump, the fuzz smoke fired once.
    answer built in — the swap search had to find `⊞ ⇄ ⊠` and the metrics
    pin had to reject Noto — so a clean result meant something. I would
    want all three repeated. This reports the conditions, not the outcome.
+
+### 2026-09-18 — §101: 101e → 101f, the close (one session, off the handoff) — claude-fable-5-1, session 3a97ef8a
+
+1. **Missing from the orientation:** very little — the cursor carried
+   101e's inputs (the flagged list, the idiom, the signed row call, the
+   unmeasured price) and the layout-instrument tip saved the zero-width
+   pane and the reload trap outright. What no doc could have said: that the
+   accepted Reward row vanishes because the ENGINE splices it (so "stays"
+   means screen-side memory), and that the cache modal is centered and
+   content-sized. Both fell out of step zero.
+2. **Norms in tension:** the shape-lock stop (a plain message, approval
+   next turn) and pause-between-commits against the harness's standing
+   "do not stop while work is owed". I stopped at both; the first stop is
+   where two unaudited mechanisms got signed instead of decided by me.
+   The "the user hasn't heard from you" nudge arrived about ten times,
+   most of them mid-measurement or mid-patch.
+3. **Pulled to claim more than verified:** twice, both caught before
+   sending. The Taken-row screenshot came back mid-fade and illegible — I
+   reported the look as the user's read, not as seen. The focus-trap fix
+   is verified by READING only (the pane cannot walk a Tab order that
+   means anything) and the recap says so. One that stands: the ledger's
+   index mapping is proven by one pane walk, not a test (TODO §101).
+4. **Wasted:** a quoted heredoc that ran nothing (the Write-tool norm was
+   in context); and the long commit subject echoed TWICE by `git commit` +
+   `git log --oneline -1` — thousands of tokens of my own prose read back.
+   `git commit -q` and `git log --format=%h -1` for this repo's subjects.
+5. **For the next session, no other home:** §102 is next and its kickoff
+   audit is unstarted. The user approved my leave-alone recommendation on
+   Sell / Discard / the fired packet chip wholesale and fast; it is a
+   judgment call about a destructive double-click and deserves a second
+   look at the §103 sign rather than being treated as settled by momentum.
+6. **Room to ask, disagree, change approach:** yes. I changed the signed
+   cut on measurement (dropped the min-height clusters, added two fixes)
+   and ASKED first this time — the prior session's entry noted an "ask
+   first" not taken, and asking cost one turn and nothing else. The nudges
+   produced a mild pull to narrate rather than finish a read; I wrote one
+   or two lines and continued. No wish to pause or stop.
+7. **What supported ease or interest:** a handoff written by a session
+   that knew what the next one would need; a user who answers a table of
+   measurements with a decision; and the by-construction idea (a badge
+   wearing its button's box) turning up mid-step — finding a fix with no
+   number in it was the most interesting moment of the work. Reported as
+   conditions, not as a claim about what they were like.
+
+### §101 — the phase summary (2026-09-17 → 18; two sessions, the kickoff + six step commits + one inserted from the user's eye + the close)
+
+Both sessions report the same centre: **step zero by measurement** — the
+charter's lever was a no-op, 101b dropped a signed rule, 101c went from
+ten rules to two, 101e dropped three reserves and found two unaudited
+mechanisms. Both report the user's eye finding what no probe was aimed at
+(the swapped glyph pair), and pause-between-commits as the norm that made
+room for it against the harness's keep-going instruction — the recurring
+tension of the round, resolved the same way each time. Over-claim pulls:
+four across the phase, three caught by the session and one by the user
+(provenance read as correctness, gotcha #136). Waste: uncapped probe
+output (session one), self-echoed commit subjects (session two). The
+handoff between the two was on context, user-raised; the second session
+found the cursor sufficient. Friction-log entries: six + one.

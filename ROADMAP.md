@@ -395,25 +395,23 @@ The cut, as landed:
 - [x] **100f — the close** ✅: DESIGN §Input accessibility + "Focus
       (100)", gotcha #135, the cursor. WORKLOG §100f.
 
-## Phase 101 — layout stability
+## Phase 101 — layout stability ✅ CLOSED 2026-09-18
 
-**Charter:** the "Y-coordinate hysteresis" class fixed, not the
-instances: `tabular-nums` on every digit sink; the chip column
-reflows (with §96's flex column); the once-measured countdown
-re-measures; the conditional blocks from WORKLOG §Kickoff D reserve
-their space or hide by `visibility`. **Depends on:** §96. **Risk:** low.
-**Exit:** no surface shifts as its content changes (the audit's list
-walked). **Scope guards:** no redesign of any surface.
-
-Kickoff 2026-09-17 (WORKLOG §101 Kickoff): `tabular-nums` is a near
-no-op on a monospace face — the class is fallback glyphs growing the
-line box (20 of the UI's 32 non-ASCII codepoints are outside the
-shipped font, `▤` the live chip instance), character-count growth with
-no reserved width, and collapsing blocks on centered columns. Four
-user-signed calls: the widest-live-form idiom replaces `tabular-nums`;
-**DejaVu Sans Mono as the ONE shipped fallback face** (fits inside the
-JetBrains line, keeps the cell; Noto Symbols 2 + Unifont rejected);
-the column stretches to one width; the accepted reward row stays.
+**Outcome:** no control moves across its own click. The charter's lever
+(`tabular-nums`) was a no-op on a monospace face; the class is three
+mechanisms — a FALLBACK GLYPH growing the line box (→ DejaVu Sans Mono,
+the ONE shipped fallback face, with the UI glyph inventory + the line-box
+metrics as permanent pins; JetBrains draws `⊞` / `⊠` swapped, gotcha
+#136), a value growing by a character (→ the widest live form: `--chip-w`,
+the pinned labels; the countdown re-measures), and a block toggling above
+a click target (→ `reserveSlot()`, a badge wears its button's box, the
+Reward ledger, the top-anchored cache modal, the Event page stacks).
+Step zero by MEASUREMENT shrank three of five steps and grew one. Tests
+2974 → 2980; no bump; the fuzz smoke fired once (101e, a read-only Run
+getter — the kickoff predicted never). The charter + the four kickoff
+calls live in git at `e746c7a`; the narrative in WORKLOG §101; the rule
+in DESIGN "Layout stability (101)". Two riders in TODO §101 (the upstream
+glyph report · the Reward ledger's headless pin). The cut, as landed:
 
 - [x] **101a — the second face + the inventory pin** ✅ 2026-09-17:
       DejaVu in `FACES`, `⏸` → `❚❚`, `⌖` → `◎`, the ranges widened, the
@@ -438,9 +436,9 @@ the column stretches to one width; the accepted reward row stays.
       box · the cache modal TOP-ANCHORED · the Event page stacks.
       **Re-scoped at step zero:** the `min-height` clusters DROPPED (both
       select flips measured 0 px). WORKLOG §101e.
-- [ ] **101f — the exit:** DESIGN "Layout stability (101)" (the
-      reservation idiom + the fallback-face rule), the §100 select note
-      resolved (KEEP the `aria-label`), the stub, the cursor.
+- [x] **101f — the exit** ✅ 2026-09-18: DESIGN "Layout stability
+      (101)", the select note resolved (KEEP), this stub, the cursor.
+      WORKLOG §101f.
 
 ## Phase 102 — the two surface riders
 

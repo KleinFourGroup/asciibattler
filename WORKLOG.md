@@ -3839,3 +3839,33 @@ layout also co-locates successive pages' first choices — true before too
 
 Owed: the user's Firefox read (the Taken row's look at `opacity: 0.45`, the
 top-anchored cache modal, an event walked by eye).
+
+**101e — the user's Firefox read (2026-09-18): PASSED** (the Taken row, the
+top-anchored cache modal, an event walked by eye, the arm hint, a bought
+unit).
+
+### 101f — the exit (2026-09-18) — the phase CLOSES
+
+DESIGN gains **"Layout stability (101)"** under §UI idioms: the rule (a
+control must not move across its own click), the three mechanisms with
+their idioms (the shipped-faces rule + the two font pins · the widest live
+form + re-measure · the reservation idiom, the wear-the-box rule, the
+shared grid cell, the ledger, the top-anchored list panel), the
+deliberately-NOT-reserved list with reasons, and the §100 select note
+resolved — KEEP the `aria-label` (a visible `<label>` wraps the row; Kickoff
+E). ROADMAP §101 demoted to its stub; the cursor moves to §102.
+
+**The phase in one breath:** the charter's lever was a no-op and the
+kickoff said so before a line was written; five steps + one inserted from
+the user's eye (101a-post, the swapped `⊞` / `⊠`, gotcha #136); step zero
+by measurement re-scoped 101b, 101c and 101e; three permanent pins
+(`tests/font-coverage.test.ts`); tests 2974 → 2980; no bump; the fuzz
+smoke fired once (101e — the kickoff predicted never). The user's Firefox
+read passed on 101a-post, 101d and 101e. Two riders in TODO §101: triage +
+report the JetBrains swap upstream (its own session), and a headless pin
+for the Reward ledger's index mapping (proven by one pane walk, no test).
+
+A count that did not reproduce: the cursor's §100 row says `ui.json` 112 →
+190; `json.load` reads 106 keys at `edc9371`, 174 at `e746c7a` and 175 at
+HEAD (+`reward.taken`). The §101 row records 174 → 175; the older figure is
+left as written, flagged here rather than silently rewritten.

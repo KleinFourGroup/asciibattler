@@ -317,3 +317,26 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   "stub" still carried its ✅ as-built tails — demote-as-you-close was
   applied late. A close that leaves tails passes the cap until the next
   phase writes its cut.
+- **101e — step zero can GROW a step, and that is the same instrument
+  working.** Measuring the five flagged surfaces dropped three planned
+  reserves (both select flips, SOLD on a stock row: 0 px) and found two
+  mechanisms no audit had named (a centered content-sized modal re-centers
+  on every list deletion; a centered column re-centers on choice COUNT, so
+  the cut's text-only reserve would have measured as nothing). A fix built
+  to the cut line would have shipped a no-op and missed the real mover.
+- **Fixture a screen through the run's private fields + the bus** (set
+  `run.pendingRewards` / `run.rollPortStock(n)`, emit `reward:offered` /
+  `port:entered`): a five-row offer with two packets and a nearly-full
+  cache exists in one eval, on one run — no reload, so before/after are the
+  same page. The layout analog of the URL dials.
+- **Size by construction, not by number.** A badge that wears its button's
+  box, a hidden element carrying its real text, alternatives sharing one
+  grid cell: none can drift when a font size changes. Every `min-height`
+  I first reached for was a measured number with a half-life.
+- **Swapping `hidden` for `visibility` has a consumer:** the modal focus
+  trap filtered on `hidden` + `offsetParent`, and a reserved ✕ passes both
+  (the 75j2 "new consumer on an old seam" shape, found by reading the
+  setter's neighbours before editing it).
+- **A kickoff's "the smoke never fires" is a prediction about the FIX, and
+  the fix was not designed yet.** The Event stacks needed one read-only Run
+  getter. Predict trigger paths per step at the cut, not per phase.

@@ -384,6 +384,47 @@ inline with `type="button"`), or `pressable()` for one that carries
 interactive children; a toggle mirrors its selected class as
 `aria-pressed`; an inert one is `aria-disabled` + out of the Tab order.
 
+**Layout stability (101).** A control must not move across its own click.
+The class has three mechanisms and `tabular-nums` is none of them (both
+faces are monospace; it stays on `html, body` as a belt for a future face):
+
+1. *A fallback glyph grows the line box.* Every non-ASCII codepoint the UI
+   can render is inside the SHIPPED subset of a SHIPPED face — JetBrains
+   Mono, then DejaVu Sans Mono, the ONE fallback (`FACES` / `FONT_STACK`,
+   `src/render/fontSubset.ts`); an OS fallback is never the plan. A
+   fallback face must fit INSIDE the primary's line (ascent, descent and
+   normal line ≤ the primary's in hhea, OS/2 typo and OS/2 win) and keep
+   its cell. Both rules are pins in `tests/font-coverage.test.ts`; a glyph
+   the primary draws wrong goes in `PRIMARY_EXCLUDES` (gotcha #136). No
+   global `line-height` — browsers round `normal` per font-size, a
+   multiplier does not.
+2. *A value grows by a character.* Reserve the WIDEST LIVE FORM: a fixed
+   plate (`--chip-w`), `min-width: Nch` right-aligned (the gauge value), or
+   `space-between` with the value pinned to the far edge. Whatever follows
+   an element's bottom edge for its life re-measures instead (the battle
+   countdown: a `ResizeObserver` + the window `resize`).
+3. *A block comes and goes above a click target* — worst on a centered
+   column, where a removed child re-centers everything. **The reservation
+   idiom:** the block keeps its slot and hides by `visibility`
+   (`reserveSlot()`, `.is-reserved`), carrying its REAL content so the slot
+   is sized by construction; **a state badge wears the box of the button it
+   replaces** (`.reward-taken`, `.port-sold` — same font-size, vertical
+   padding, border width); alternatives share ONE grid cell so the tallest
+   sizes it (the Event pages, `.event-stack`); a resolved list row the
+   player will click BELOW stays, dimmed (the Reward ledger); a panel whose
+   body is a list the player deletes from is TOP-ANCHORED, not centered
+   (the cache modal). Never a measured `min-height`. A reserved element is
+   out of hit-testing and the Tab order by itself, but a hand-rolled focus
+   walk must skip `.is-reserved` (the modal trap does).
+
+Deliberately NOT reserved: a disclosure that opens UNDER its trigger, a
+whole card row wrapping, the promotion delta chip (a slot would spoil which
+stats grow), and a list row leaving from under the pointer that removed it
+(Sell, Discard, a fired packet chip — repeat-click-to-clear is the
+gesture). The two swap `<select>`s keep `aria-label`: a visible `<label>`
+would wrap the row. The proof shape is the same-run toggle + the box
+oracle, and step zero is a MEASUREMENT — three of five steps shrank at it.
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ◎ ▸ ⚠ ✕`) stay

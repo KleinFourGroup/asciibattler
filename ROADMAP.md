@@ -438,10 +438,12 @@ the column stretches to one width; the accepted reward row stays.
       text leaves; 101a already closed the instance) → a metrics pin (a
       fallback face must fit inside the primary's line). ✅ (2026-09-18):
       five screens, 0 changed outside the chrome. WORKLOG §101b.
-- [ ] **101c — the digit sinks:** the `min-width: Nch` idiom on the
-      bits / cache / pool-chip / hop / port-price / card-list-badge
-      values, the XP `MAX` slot, the promotion delta; one global
-      `font-variant-numeric` belt. Exit: 999 → 1000 moves no sibling.
+- [x] **101c — the digit sinks:** one global `font-variant-numeric`
+      belt + room for every live number. Exit: 999 → 1000 moves no
+      sibling. ✅ (2026-09-18): a content sweep over fourteen sinks found
+      TWO that move a neighbour (the bits + cache labels) — pinned by
+      `space-between`; twelve already held; the promotion delta left
+      alone (a slot spoils the reveal). WORKLOG §101c.
 - [ ] **101d — the countdown re-measures:** a `ResizeObserver` on the
       enemy pane for the countdown's life; the showCountdown /
       refreshStatuses order swapped. Exit: a card or status row added

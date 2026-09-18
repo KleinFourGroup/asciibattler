@@ -95,6 +95,14 @@ body {
   overflow: hidden;
   height: 100%;
   font-family: var(--font-mono);
+  /* 101c — a BELT, not the fix: both shipped faces are monospace, so every
+     digit already has one advance and this changes nothing today (the box
+     oracle read zero drift). It holds the line if a proportional face ever
+     joins FACES. What keeps a surface still when a number grows is ROOM —
+     a fixed box, a pinned label, a `min-width: Nch` (DESIGN "Layout
+     stability"). Form controls reset `font` in the UA sheet and do not
+     inherit this; none of them prints a live number beside a sibling. */
+  font-variant-numeric: tabular-nums;
   color: var(--color-white);
 }
 
@@ -1944,6 +1952,10 @@ body {
   order: 1;
   display: flex;
   align-items: baseline;
+  /* 101c — the label is PINNED to the chip's far edge (the pool chip's
+     shape, mirrored): the value grows toward it through the chip's fixed
+     width (101b) and the label never slides — it moved 50px on 0 → 12345. */
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -2025,6 +2037,7 @@ body {
   order: 2;
   display: flex;
   align-items: baseline;
+  justify-content: space-between; /* 101c — the label pinned, as the bits chip */
   gap: 8px;
   cursor: pointer;
   transition:

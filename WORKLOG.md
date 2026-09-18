@@ -3600,3 +3600,64 @@ chip now ends at 448 px, 34 px further right than before, toward the
 centered battle banner. The user's Firefox read: the column's one edge on
 the map / an event / the pre-turn screen / a battle, and the hop chip's
 gutter.
+
+### 101c — the digit sinks (2026-09-18)
+
+**Step zero, by measurement, shrank the card from ten rules to two.** The
+cut listed the `min-width: Nch` idiom for the bits / cache / pool-chip /
+hop / port-price / card-list-badge values, the XP `MAX` slot and the
+promotion delta. Instead of arguing each from the CSS, a CONTENT SWEEP in
+the pane: write a longer value into ONE sink, list every OTHER element
+whose box moved (the sink and its ancestors excluded), restore. Fourteen
+sinks over the map, the pre-turn screen and a frozen battle:
+
+| Sink | Swept to | Others moved |
+|---|---|---|
+| bits value | `12345` | **1 — its label, 50 px** |
+| cache value | `▤ 10/10` | **1 — its label, 25 px** |
+| pool chip value | `9 / 40` | 0 (label left, value right-pinned; 101b fixed the chip's width) |
+| roster · draw-pile · discard buttons | `· 100` | 0 (`position: fixed`, one anchored edge each) |
+| pre-turn draw chip | `Draw: 600` | 0 (fixed bottom-right) |
+| pre-turn risk line | a long form | 0 (a block line) |
+| pool gauge value (pre-turn + HUD) | `4 (−36) / 40` | 0 (the 96.5b2-pre `15ch` reserve) |
+| XP label | `MAX` | 0 (a stretch column) |
+| hop chip | `Hop 10 · Turn 12` / `Hop 1` | 0 (left-anchored, nothing to its right) |
+| compact card level · power | `10` · `100` | 0 (`space-between`) |
+
+(The countdown read was INVALID — the count was empty when written into,
+so the "move" was a line appearing, not a digit growing; it always carries
+a digit while shown.) Twelve of fourteen already hold, three of them
+because 101b gave the chips a fixed width. **The fix for the two:**
+`justify-content: space-between` on `.bits-overlay` + `.cache-overlay` —
+the label PINNED to the chip's far edge (the pool chip's shape, mirrored),
+the value growing toward it through the fixed width. Chosen over a `ch`
+reserve on the value: left-aligned it reads `0    BITS`, right-aligned it
+strands the digit mid-chip; the pinned label costs nothing and matches
+the chip below. Re-swept: bits at `12345` AND `1234567`, cache at `10/10`
+— 0 others moved. A visible change (the labels sit at the right edge) —
+the user's read.
+
+**The belt:** `font-variant-numeric: tabular-nums` on `html, body`, one
+rule, commented as a belt — both shipped faces are monospace, so it
+changes nothing today. The comment claimed "zero drift" before it was
+measured; then measured by the same-run toggle: **0 of 20 / 161 / 26 / 22
+/ 417 / 280 elements** (character select · map · two event pages ·
+pre-turn · battle incl. the unit overlays). UA-reset form controls do not
+inherit it; none prints a live number beside a sibling. The ten scattered
+`tabular-nums` rules stay (no churn for a no-op).
+
+**Left alone, with the reason:**
+- **The promotion `+N` delta chip** (`PromotionScreen.ts:161-164` appends
+  it into the right cluster of a `space-between` row, so the value steps
+  left by the chip's width as it pops). A reserved slot on the rows that
+  GAIN would inset those values before the reveal — a spoiler for which
+  stats grow; a slot on EVERY row is a two-column card, a redesign (the
+  scope guard). Horizontal, inside a card with no click target, on the
+  beat that is already an animation.
+- **The port price** — NOT measured (no port on the walked route);
+  reasoned from the sheet: `.port-row` is `space-between` and the Buy
+  button is the LAST child of the right-packed `.port-row__actions`, so a
+  price grows away from it; prices are static per slot. 101e walks the
+  port for the SOLD badge and measures this there.
+
+CSS only. Stylesheet pins green. No sim touch, no bump.

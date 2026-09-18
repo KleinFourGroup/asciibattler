@@ -4115,3 +4115,8 @@ scratchpad): a forcing flag is a request — count the forced id's
 
 Hook: 102a's predicted fuzz smoke FIRED (582 green, `ab4625f`); this step
 stages `config/` again, the same prediction.
+
+**The verdict (the user, Firefox, same day): PASSED on the first go.** The
+team-colored star reads, both splits hold (hex 0.15 / 0.25, wail 0.2 /
+0.3). The pre-signed 102b2 retime and the B2 per-key glyph are NOT taken —
+the sim stays byte-identical to the frozen config across the whole rider.

@@ -459,11 +459,11 @@ wrong in the letter — a timeline is sim config, so the carve is PROVEN.
       wail 0.2 / 0.3, the same 8 / 10 ticks to impact; byte-identical on
       the default shapes + the three FORCED encounters, a +2-tick control
       FAILED on all of them. No bump. WORKLOG §102a.
-- [ ] **102b — the fx keys (render):** BUILT 2026-09-18 (`hex_launch` /
-      `wail_launch` + the flight pin; the pane read 6 / 6 and 37 / 37
-      launches, WORKLOG §102b) — OPEN on its exit = the user's Firefox
-      eye. Fuzz smoke fires (`config/`). ✅ DECIDED: a hex retime to
-      0.2 / 0.3 (+2 ticks, user-signed) is a one-line 102b2 IF the eye asks.
+- [x] **102b — the fx keys (render)** ✅ 2026-09-18: `hex_launch` /
+      `wail_launch` + the flight pin; the user's Firefox read PASSED first
+      go — the `*` and both splits KEPT. WORKLOG §102b.
+      ✅ DECIDED: the pre-signed hex retime (102b2) NOT TAKEN — the eye
+      did not ask.
 - [ ] **102c — the aggregator (headless):** a pure fold over
       `FallenRecord[]` in `src/run/` (per encounter instance / side /
       archetype + run totals) + the defeat-turn ledger pin. Fuzz smoke fires.

@@ -3900,3 +3900,14 @@ taken without the user's say; the 2024-10 comment postdates that build.
 the issue number, so a future JetBrains upgrade knows what to look for.
 An optional contribution, the user's call and account: a comment on #676
 with finding 2 (which table is wrong) — the thread does not say.
+
+**The `master` check (same day, the user's go-ahead for the one download):**
+`fonts/ttf/JetBrainsMono-Regular.ttf` at upstream `1937130` fetched to the
+scratchpad and read by the same probe — a genuinely different build
+(270,224 bytes vs the vendored 273,900; sha256 `e6fd0d7e…` vs `a0bf60ef…`;
+the pair at gids 1374 / 1375, not 1107 / 1108) with the IDENTICAL defect:
+`uni229E` = four triangular counters, `uni22A0` = four square ones. The
+"NOT checked" line above is closed; the triage has no open end. A comment
+for #676 naming the wrong table was drafted for the user to post (their
+account, their call). The `.glyphs` SOURCE was not read — the claim is
+about the built fonts only.

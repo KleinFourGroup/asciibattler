@@ -1658,6 +1658,82 @@ body {
 
 /* The game-over button is `.btn--primary.btn--exit` (96d). */
 
+/* 102d — the run-end stats body ("the fallen"): the run's totals, then one
+   row per encounter somebody fell in. The side cells are `.fallen-side`
+   (fallenSide.ts, shared with the pre-turn strip). Static after mount. The
+   TABLE scrolls, never the screen: the New Run button sits below it at a
+   fixed place however long the run was (§101 — a list grows inside its own
+   box). */
+.gameover-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 0; /* lets the table shrink inside the centered column */
+  max-width: min(920px, 92vw);
+  font-size: var(--text-12);
+  letter-spacing: 0.06em;
+  color: var(--color-gray-aa);
+}
+
+.gameover-stats-title {
+  font-size: var(--text-11);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+}
+
+.gameover-stats-none {
+  font-style: italic;
+  color: var(--color-gray-66);
+}
+
+.gameover-stats-totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 28px;
+  font-size: var(--text-13);
+}
+
+.gameover-stats-table {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  gap: 4px 20px;
+  align-items: baseline;
+  max-height: 38vh;
+  overflow-y: auto;
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-gray-22);
+  border-bottom: 1px solid var(--color-gray-22);
+}
+
+/* The belt under the archetype grouping: a side cell may wrap inside the
+   table, so no run can widen the page (`.fallen-side` is nowrap for the
+   pre-turn strip's one line). */
+.gameover-stats-table {
+  max-width: 100%;
+  /* The native bar is a light-grey slab on the black screen. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+.gameover-stats-table .fallen-side {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+.gameover-stats-where {
+  font-size: var(--text-11);
+  text-transform: uppercase;
+  color: var(--color-gray-66);
+  white-space: nowrap;
+}
+
+.gameover-stats-name {
+  color: var(--color-gray-d0);
+  white-space: nowrap;
+}
+
 /* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
    (opaque black, mono, amber button), but its own accent story — an amber
    heading (a milestone, not the run's end: green stays reserved for Run
@@ -2782,35 +2858,35 @@ body {
 .preturn-lastturn-result--draw {
   color: var(--color-terminal-amber);
 }
-.preturn-lastturn-side {
+.fallen-side {
   display: inline-flex;
   align-items: baseline;
   gap: 8px;
   white-space: nowrap;
 }
-.preturn-lastturn-side-label {
+.fallen-side-label {
   text-transform: uppercase;
   color: var(--color-gray-88);
   font-size: var(--text-11);
 }
-.preturn-lastturn-glyphs {
+.fallen-glyphs {
   font-weight: bold;
 }
-.preturn-lastturn-glyphs--none {
+.fallen-glyphs--none {
   font-weight: normal;
   font-style: italic;
   color: var(--color-gray-66);
 }
-.preturn-lastturn-loss {
+.fallen-loss {
   font-variant-numeric: tabular-nums;
   font-weight: bold;
 }
-.preturn-lastturn-side--player .preturn-lastturn-glyphs,
-.preturn-lastturn-side--player .preturn-lastturn-loss {
+.fallen-side--player .fallen-glyphs,
+.fallen-side--player .fallen-loss {
   color: var(--color-terminal-green);
 }
-.preturn-lastturn-side--enemy .preturn-lastturn-glyphs,
-.preturn-lastturn-side--enemy .preturn-lastturn-loss {
+.fallen-side--enemy .fallen-glyphs,
+.fallen-side--enemy .fallen-loss {
   color: var(--color-neon-red);
 }
 

@@ -79,7 +79,7 @@ import { HEALTH } from '../config/health';
 import { POOL_LABELS, chipLineLabels, riskLineTitle } from './chipLabels';
 import { rulesForTurn } from '../run/chipRule';
 import type { FallenRecord } from '../run/Run';
-import { ARCHETYPE_CONFIG, glyphForArchetype } from '../sim/archetypes';
+import { fallenGlyphRun, fallenLines, fallenSide } from './fallenSide';
 import { Screen } from './Screen';
 import { button } from './button';
 import { attachTooltip } from './tooltip';
@@ -1100,42 +1100,17 @@ function lastTurnSide(
   rows: readonly FallenRecord[],
   ruleWording: string,
 ): HTMLSpanElement {
+  // 102d — the cell itself lives in fallenSide.ts (the run-end stats is its
+  // second consumer). 97d — one fallen per line: a text site, tap toggles,
+  // Tab reaches it.
   const mine = rows.filter((r) => r.side === side);
-  const el = document.createElement('span');
-  el.className = `preturn-lastturn-side preturn-lastturn-side--${side}`;
-  const name = document.createElement('span');
-  name.className = 'preturn-lastturn-side-label';
-  name.textContent = label;
-  const glyphs = document.createElement('span');
-  glyphs.className = 'preturn-lastturn-glyphs';
-  if (mine.length === 0) {
-    glyphs.classList.add('preturn-lastturn-glyphs--none');
-    glyphs.textContent = t('lastturn.nobody');
-  } else {
-    glyphs.textContent = mine.map((r) => glyphForArchetype(r.archetype)).join(' ');
-    // 97d — one fallen per line (the §96.5 rider closed): a text site, tap
-    // toggles, Tab reaches it.
-    glyphs.tabIndex = 0;
-    attachTooltip(
-      glyphs,
-      mine
-        .map((r) =>
-          t('lastturn.fallen', {
-            name: ARCHETYPE_CONFIG[r.archetype]?.name ?? r.archetype,
-            level: r.level,
-            power: r.power,
-          }),
-        )
-        .join('\n'),
-    );
-  }
-  const loss = document.createElement('span');
-  loss.className = 'preturn-lastturn-loss';
-  const lost = mine.reduce((s, r) => s + r.power, 0);
-  loss.textContent = lost > 0 ? `−${lost}` : '0';
-  loss.tabIndex = 0;
-  attachTooltip(loss, ruleWording);
-  el.append(name, glyphs, loss);
-  return el;
+  return fallenSide({
+    side,
+    label,
+    glyphs: fallenGlyphRun(mine),
+    glyphTooltip: fallenLines(mine),
+    loss: mine.reduce((s, r) => s + r.power, 0),
+    lossTooltip: ruleWording,
+  });
 }
 

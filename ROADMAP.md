@@ -457,20 +457,19 @@ wrong in the letter — a timeline is sim config, so the carve is PROVEN.
 
 - [x] **102a — the carve (headless)** ✅ 2026-09-18: hex 0.15 / 0.25 ·
       wail 0.2 / 0.3, the same 8 / 10 ticks to impact; byte-identical on
-      the default shapes + the three FORCED encounters, a +2-tick control
-      FAILED on all of them. No bump. WORKLOG §102a.
+      every shape, a +2-tick control FAILED on all. WORKLOG §102a (+ §102b).
 - [x] **102b — the fx keys (render)** ✅ 2026-09-18: `hex_launch` /
       `wail_launch` + the flight pin; the user's Firefox read PASSED first
       go — the `*` and both splits KEPT. WORKLOG §102b.
-      ✅ DECIDED: the pre-signed hex retime (102b2) NOT TAKEN — the eye
-      did not ask.
+      ✅ DECIDED: the pre-signed hex retime (102b2) NOT TAKEN.
 - [x] **102c — the aggregator (headless)** ✅ 2026-09-18:
       `summarizeFallen` (`src/run/fallenStats.ts`, pure; instance / side /
       archetype / turn, rows handed back) + the defeat pin walks the
       `turn-outcome` gate. DEATHS only — no "fights" count. WORKLOG §102c.
-- [ ] **102d — the stats body:** totals + a per-encounter table on both
-      GameOverScreen variants, per-turn detail in tooltips, the button
-      pinned; exit = the user's won + lost run. No sim, no smoke.
+- [ ] **102d — the stats body:** BUILT 2026-09-18 (totals + the
+      per-encounter table, GROUPED by archetype — a real run's 27-death
+      fight broke the per-fallen form; per-turn tooltips; the button
+      pinned; WORKLOG §102d) — OPEN on its exit = the user's won + lost run.
 - [ ] **102e — the exit:** the DESIGN note, this stub, the cursor.
 
 ## Phase 103 — the idiom reference (the signing)

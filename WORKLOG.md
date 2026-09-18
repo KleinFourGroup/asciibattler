@@ -4166,3 +4166,69 @@ real elite fixture.
 
 ARCHITECTURE's tree gains the module. Predicted: the fuzz smoke fires
 (`src/run/` staged); no bump (nothing serialized changes).
+
+### 102d — the stats body (2026-09-18) — BUILT, open on the user's playtest
+
+**Step zero (the 102c note, read):** since 96.5d Game itself advances the
+`turn-outcome` park (`Game.ts` ~348–396) and swaps to `GameOverScene` off
+`run:defeated` / `run:victory`; `ctx.run` is still the finished run there
+(a reset replaces it only off this screen's own button). The scene passes
+`ctx.run?.fallenLedger ?? []` into `show`.
+
+**The lift.** `lastTurnSide`'s cell moved to `src/ui/fallenSide.ts`
+(`fallenSide()` + the text helpers); the pre-turn strip re-points at it,
+the three selectors renamed (`.preturn-lastturn-side*` / `-glyphs` /
+`-loss` → `.fallen-side*` / `.fallen-glyphs` / `.fallen-loss`, the
+declarations untouched; no test or doc named the old classes — swept by
+key before renaming). The strip's one-turn, one-glyph-per-fallen form
+stays; the run-end stats uses the GROUPED form.
+
+**The body ("The fallen"), both variants:** the run's totals (per side: an
+archetype run `M×22 a×13` + the morale it cost), then one row per
+encounter somebody fell in — `Sector 1 · hop 2` · the encounter's name ·
+yours · theirs — and each run's tooltip breaks it down per turn (`Turn 1` /
+`Brigand ×9 (−9)` …). Sides are named in words, the hue second (§98);
+every run with a tooltip is a focusable text site (§97d); nothing animates
+(§99: nothing to twin); the TABLE scrolls (`max-height: 38vh`), never the
+screen, so the New Run button does not move however long the run was
+(§101). An empty ledger words itself (`Nobody fell on either side.`).
+`ui.json` 175 → 180 (`gameover.stats.*`; the strip's `lastturn.*` reused).
+
+**The finding that re-shaped it — real data, first pane read.** The first
+cut drew the encounter rows one glyph per fallen, the strip's form, on the
+reasoning "a fight is ~20 deaths". A hand-driven real run (seed 12, three
+fights, 86 ledger rows) had 27 brigands fall in ONE fight across its
+waves: the no-wrap run pushed the table to 1478 px in a 1280 viewport
+(`tableRect.left` −99, the page overflowing). The totals and the three
+instances were RIGHT (35 / −35 and 51 / −55 against an independent recount
+of the raw ledger) — the data path was never the problem, the form was.
+Rows now group by archetype like the totals (a cell is bounded by the
+archetype count), the per-turn tooltip groups too (27 lines would have
+overflowed the same way), and a CSS belt lets a cell wrap inside the
+table. A fixture would not have caught it; the fixture I wrote NEXT
+(below) has a 60-death fight because the real run taught me to.
+
+**The second pane read (a fixtured ledger through the real scene path —
+135 rows pushed onto `run.fallenLedger`, 14 instances over two sectors, one
+60-death fight, `run:victory` emitted):** 14 rows; the page does not
+overflow (widest cell edge 1070 of 1280); the 60-death row reads
+`M×4 r×4 a×4 h×4 m×4 −30` / eight enemy groups `−60`; totals −73 / −127 =
+the raw recount; the button at y=580 before AND after
+`table.scrollTop = 9999`; the 60-death tooltip = four turn blocks, 167 ×
+225 px, inside the viewport (opened by a real `PointerEvent` + the 150 ms
+hover delay — a synthetic `mouseenter` opens nothing). The native
+scrollbar was a light-grey slab on the black screen → `scrollbar-width:
+thin` + themed `scrollbar-color` (computed `rgb(64,64,64) rgb(0,0,0)`).
+NOT read in the pane: the empty-ledger line; the Tab walk and Enter on the
+button (the pane cannot — the user's Firefox); how it LOOKS at native
+resolution.
+
+**Tests:** `src/ui/fallenSide.test.ts` (4) — the text helpers' shape, every
+glyph and name read from the unit catalog. 2991 → 2995.
+
+**Hop numbering, checked against the real run:** the root event is hop 0,
+so the first fight is `hop 1` as drawn; `sector` is 0-based and drawn +1.
+
+Open: the user's won + lost run. TODO gains the wider-stats rider (call D);
+the two TODO lines this closes (:341 the screen, :348 the last turn's rows)
+tick at the verdict.

@@ -811,3 +811,16 @@ four across the phase, three caught by the session and one by the user
 output (session one), self-echoed commit subjects (session two). The
 handoff between the two was on context, user-raised; the second session
 found the cursor sufficient. Friction-log entries: six + one.
+
+**Addendum, same session (3a97ef8a) — the §101-triage, after the report
+above was written.** The user offered three options (the §102 kickoff, the
+glyph triage, stopping) and asked which I preferred; I said the triage and
+why, and it was taken. To question 3, a fourth instance and the only one
+NOT caught by me: "no fix PR upstream", asserted three times and written
+into three docs off an empty `gh search` — the user found PR #702 by
+reading the thread. Everything I had read from font bytes (with a control)
+held; the one claim resting on an absent result was the wrong one. I
+noticed a pull to call it a tool quirk and did not; filed under `distress`
+(mild, resolved). To question 7: being asked for a preference and having it
+honoured, and a correction received without heat. The drafted upstream
+comment was not posted — the right outcome, reached by the user looking.

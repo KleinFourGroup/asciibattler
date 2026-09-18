@@ -415,39 +415,24 @@ user-signed calls: the widest-live-form idiom replaces `tabular-nums`;
 JetBrains line, keeps the cell; Noto Symbols 2 + Unifont rejected);
 the column stretches to one width; the accepted reward row stays.
 
-- [x] **101a — the second face + the inventory pin:** DejaVu Sans Mono
-      joins `FACES` (a symbol subset, its notice into
-      `THIRD-PARTY-LICENSES.txt`); the `font-family` chain JBM → DejaVu →
-      monospace; `⏸` → `❚❚`, `⌖` → `◎`; `SUBSET_RANGES` widened for the
-      fourteen in-JBM glyphs; a permanent pin — every non-ASCII codepoint
-      in the UI's strings is in a shipped subset. Exit: the pin at zero.
-      ✅ (2026-09-17): the pin at zero, self-checked on a planted `⏸`;
-      the cache chip 45 px to the bits chip's 45 in the pane (the live
-      instance closed a step early). WORKLOG §101a.
-- [x] **101a-post — the swapped pair** (inserted 2026-09-18 from the
-      user's Firefox read): JetBrains Mono 2.304 draws `⊞` / `⊠` swapped;
-      `PRIMARY_EXCLUDES` ships them from DejaVu; a 338-codepoint swap
-      search found only this pair. Gotcha #136 · TODO §101 (the upstream
-      report). WORKLOG §101a-post.
-- [x] **101b — the chip plate + the line-box pin:** `.chip`
-      `box-sizing: border-box` + `nowrap`; the column owns `--chip-w` and
-      the chips stretch; `.hud-hop` → a `.chip` positioned off the
-      column's width. Exit: the text chips one height + one width; the
-      box oracle at zero drift elsewhere. **Re-scoped at step zero:** the
-      explicit global `line-height` DROPPED (probed: it drifts 19 of 65
-      text leaves; 101a already closed the instance) → a metrics pin (a
-      fallback face must fit inside the primary's line). ✅ (2026-09-18):
-      five screens, 0 changed outside the chrome. WORKLOG §101b.
-- [x] **101c — the digit sinks:** one global `font-variant-numeric`
-      belt + room for every live number. Exit: 999 → 1000 moves no
-      sibling. ✅ (2026-09-18): a content sweep over fourteen sinks found
-      TWO that move a neighbour (the bits + cache labels) — pinned by
-      `space-between`; twelve already held; the promotion delta left
-      alone (a slot spoils the reveal). WORKLOG §101c.
-- [ ] **101d — the countdown re-measures:** a `ResizeObserver` on the
-      enemy pane for the countdown's life; the showCountdown /
-      refreshStatuses order swapped. Exit: a card or status row added
-      mid-countdown moves the countdown, not the cards.
+- [x] **101a — the second face + the inventory pin** ✅ 2026-09-17:
+      DejaVu in `FACES`, `⏸` → `❚❚`, `⌖` → `◎`, the ranges widened, the
+      pin at zero; the 46 / 45 px chip closed here. WORKLOG §101a.
+- [x] **101a-post — the swapped pair** ✅ (inserted 2026-09-18, the
+      user's read): JetBrains draws `⊞` / `⊠` swapped → `PRIMARY_EXCLUDES`.
+      Gotcha #136 · TODO §101. WORKLOG §101a-post.
+- [x] **101b — the chip plate + the line-box pin** ✅ 2026-09-18:
+      `--chip-w`, border-box + nowrap, the hop chip derived. **Re-scoped
+      at step zero:** the global `line-height` DROPPED (it drifts 19 of
+      65 text leaves) → a metrics pin. WORKLOG §101b.
+- [x] **101c — the digit sinks** ✅ 2026-09-18: a content sweep — 2 of 14
+      sinks moved a neighbour (the bits + cache labels, now pinned); the
+      belt a measured no-op. WORKLOG §101c.
+- [x] **101d — the countdown re-measures** ✅ 2026-09-18: a
+      `ResizeObserver` on the enemy pane + the window `resize`, for the
+      countdown's life; refreshStatuses before showCountdown. The control
+      sat 43 px inside a grown pane; watched, it holds 24 px below through
+      growth, shrink and a 520 px re-wrap. WORKLOG §101d.
 - [ ] **101e — the conditional blocks:** the Promotion `visibility`
       precedent on the flagged list — PreTurn's arm hint + packet row
       slots, the accepted Reward row dimmed in place, Port + Reward

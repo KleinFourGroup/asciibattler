@@ -3661,3 +3661,70 @@ inherit it; none prints a live number beside a sibling. The ten scattered
   port for the SOLD badge and measures this there.
 
 CSS only. Stylesheet pins green. No sim touch, no bump.
+
+### 101d — the countdown re-measures (2026-09-18)
+
+**Step zero:** the kickoff's two findings stood at `51743d5` —
+`positionCountdown()` ran once in `showCountdown`'s entry branch, no
+observer and no resize listener anywhere in HUD or BattleScene; and
+BattleScene's held-frame branch called `showCountdown` (the measure) one
+line BEFORE `refreshStatuses` (the 97f-post pass that un-hides the compact
+tiles' status + empower rows), so every battle with a seeded enemy status
+measured a pane that grew one call later.
+
+**Built:** `HUD.watchCountdownAnchor()` — a `ResizeObserver` on
+`enemyCardPane` + a window `resize` listener, both calling
+`positionCountdown()` while `inCountdown`; created on countdown entry
+(after the synchronous first measure, so no frame paints at the CSS
+default), torn down by `unwatchCountdownAnchor()` in `hideCountdown` AND in
+`dispose` (a scene swap mid-countdown). The observer is guarded on
+`typeof ResizeObserver` (a headless DOM keeps the entry measure + the
+resize listener). The window listener earns its place: a height-only
+resize moves the `18%` default without resizing the pane, so the observer
+alone would miss it. **Re-measure, not reserve** (the kickoff's call,
+kept): the countdown is the pane bottom's only consumer, and a reserved
+status + empower row on every compact tile would spend 6–10 tiles of
+vertical budget to hold one number still. BattleScene: `refreshStatuses`
+now runs BEFORE `showCountdown`, so the first measure is right on its own
+(the 97f-post comment kept, a 101d paragraph added).
+
+**Browser — a control first, and two instruments discarded on the way.**
+The hidden pane parks rAF, so the scene was hand-ticked
+(`activeScene.tick(1/600)`) and a screenshot forced each frame (the
+observer delivers between layout and paint — it needs one). (1) Growing
+the pane by un-hiding the tiles' status rows was UNDONE by production —
+the next frame's `refreshStatuses` re-hid them; the read was void. (2) The
+countdown then EXPIRED under the forced frames (real seconds passed), so
+`inCountdown` went false and nothing could follow. The instrument that
+held: `countdown.advance = () => {}` (the clock parked, frames free) and a
+filler tile appended to `.hud-enemy-cards` (`flex: 0 0 100%`, a node
+production never touches). The gap is read off TWO RECTS (the readout's
+top − the pane's bottom), never off the helper:
+
+| State | Pane bottom | Readout top | Gap |
+|---|---|---|---|
+| baseline, 1280 px | 205 | 230 (the CSS default) | 25 |
+| **CONTROL — watch torn down, +60 px tile, one frame later** | 273 | 230 | **−43 (overlapping)** |
+| watch on, one frame | 273 | 297 | 24 |
+| +40 px more, one frame | 321 | 345 | 24 |
+| both tiles removed → the viewport to 520 px (cards re-wrap to 3 rows) | 342 | 366 | 24 |
+| back to 1280 px | 205 | 230 | 25 |
+
+Inside the SAME script task as a mutation the gap reads stale (−24) — the
+observer has not delivered yet; nothing paints there. Teardown:
+`hideCountdown()` → `inCountdown` false, the watch null, exactly one
+window `resize` listener removed (counted by wrapping
+`removeEventListener`). One probe artifact recorded so it is not mistaken
+for a bug: calling `countdown.skip()` from OUTSIDE BattleScene's held
+branch leaves the HUD counting (the branch that calls `hideCountdown` is
+gated on `countdown.active` at the top of `tick`); production only ever
+skips from inside it.
+
+Noted at the 520 px frame, not 101d's: the narrow battle HUD is crowded
+(the hop chip under the speed pane, the chips over the banner) — the
+§102 surface-rider territory, with 101b's hop-chip note.
+
+Typecheck + eslint clean. `src/ui` + `src/scenes` only — no sim touch, no
+bump, no fuzz trigger. The user's Firefox read: a battle whose enemies
+carry a seeded status (the readout clear of the cards from its first
+frame), and a window narrowed mid-countdown.

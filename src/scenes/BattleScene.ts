@@ -92,12 +92,7 @@ export class BattleScene implements Scene {
       throw new Error('BattleScene.mount: no Run encounter');
     }
 
-    this.world = new World(
-      ctx.bus,
-      new RNG(encounter.worldSeed),
-      encounter.gridW,
-      encounter.gridH,
-    );
+    this.world = new World(ctx.bus, new RNG(encounter.worldSeed), encounter.gridW, encounter.gridH);
     // 47f — install the run's compiled daemon battle-hooks (data on the
     // encounter; the fuzz harness mirrors this at ITS construction site).
     this.world.installBattleRules(encounter.battleRules ?? []);
@@ -136,7 +131,14 @@ export class BattleScene implements Scene {
       // candidates too, so a manual focus/engage can order an attack on one.
       () => this.battleRenderer?.destructibleBillboards() ?? [],
     );
-    this.hud = new HUD(ctx.uiMount, ctx.bus, ctx.playback, ctx.keybindings, this.objective, ctx.audio);
+    this.hud = new HUD(
+      ctx.uiMount,
+      ctx.bus,
+      ctx.playback,
+      ctx.keybindings,
+      this.objective,
+      ctx.audio,
+    );
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
     // B6 audio: per-battle subscriptions for the non-keyed combat sounds.
@@ -232,22 +234,12 @@ export class BattleScene implements Scene {
     // grid. Walls render via SpriteRenderer (they're neutral-team Units),
     // and their per-tile Y is picked up via `terrain.heightAt` inside
     // BattleRenderer.
-    ctx.terrain.setTiles(
-      this.world.tileGrid,
-      this.world.gridW,
-      this.world.gridH,
-      encounter.theme,
-    );
+    ctx.terrain.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH, encounter.theme);
     this.terrain = ctx.terrain;
     // M4 — the backdrop apron continues the board outward (clamp-to-edge
     // tile sampling) and fog-fades it into the void. Same grid + theme as
     // the board mesh; the sim never sees these tiles.
-    ctx.apron.setTiles(
-      this.world.tileGrid,
-      this.world.gridW,
-      this.world.gridH,
-      encounter.theme,
-    );
+    ctx.apron.setTiles(this.world.tileGrid, this.world.gridW, this.world.gridH, encounter.theme);
     this.apron = ctx.apron;
     this.backdrop = ctx.backdrop;
     // D3 — frame the camera to whatever rectangle this encounter rolled
@@ -258,10 +250,7 @@ export class BattleScene implements Scene {
     // harness uses, then place units one per shuffled tile within
     // their region.
     const setupRng = setupRngFor(encounter);
-    const { player: playerRegion, enemy: enemyRegion } = pickSpawnRegions(
-      spawnRegions,
-      setupRng,
-    );
+    const { player: playerRegion, enemy: enemyRegion } = pickSpawnRegions(spawnRegions, setupRng);
 
     // D5.E — anchor the scroll-mode camera on the centroid of the
     // player's rolled spawn region (replaces D4's `(0, gridH/2 - 2)`
@@ -278,11 +267,7 @@ export class BattleScene implements Scene {
     }
     const meanX = sumX / playerRegion.tiles.length;
     const meanY = sumY / playerRegion.tiles.length;
-    const anchor = gridToWorld(
-      { x: meanX, y: meanY },
-      this.world.gridW,
-      this.world.gridH,
-    );
+    const anchor = gridToWorld({ x: meanX, y: meanY }, this.world.gridW, this.world.gridH);
     ctx.renderer.setCameraTarget(anchor.x, anchor.z);
 
     spawnTeam(this.world, 'player', encounter.playerTeam, playerRegion, setupRng);
@@ -316,7 +301,6 @@ export class BattleScene implements Scene {
       }
       if (this.countdown.active) {
         // Still counting: paint the readout + advance visuals only.
-        this.hud?.showCountdown(this.countdown.displaySeconds);
         // 97f-post — the compact cards' status rows + empower markers paint
         // in refreshStatuses, which the running path below calls per frame;
         // this branch returned before reaching it, so a seeded status or a
@@ -324,7 +308,13 @@ export class BattleScene implements Scene {
         // reset assumed a pass that never ran here — the user's §97
         // playtest catch). The HUD's tick gate keeps it a no-op after the
         // first pass on the parked clock.
+        // 101d — it runs BEFORE showCountdown: the readout's entry measure
+        // reads the enemy pane's bottom, and these rows are part of it (the
+        // old order measured a pane that grew one call later, every time an
+        // enemy carried a seeded status). The HUD re-measures for the
+        // countdown's life as well; this makes the first measure right.
         this.hud?.refreshStatuses();
+        this.hud?.showCountdown(this.countdown.displaySeconds);
         this.battleRenderer?.update(dt);
         this.advanceShaderTime(dt);
       } else {

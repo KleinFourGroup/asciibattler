@@ -134,6 +134,9 @@ export class HUD {
   private inCountdown = false;
   /** Last whole-second painted into the readout, to skip redundant DOM writes. */
   private countdownShown = -1;
+  /** 101d — tears down the countdown's anchor watch (the enemy pane's
+   *  ResizeObserver + the window resize listener); null while not counting. */
+  private countdownAnchorWatch: (() => void) | null = null;
   private readonly playback: PlaybackSpeed;
   /** J3 — the rebindable-hotkey registry. The HUD subscribes its control
    *  surface (fast-forward + the objective controls) to it and reads `labelFor`
@@ -599,6 +602,9 @@ export class HUD {
     for (const unsub of this.subscriptions) unsub();
     this.subscriptions.length = 0;
     this.detachCardTooltips();
+    // 101d — a dispose mid-countdown (a scene swap) must not leave the
+    // observer + the window listener behind.
+    this.unwatchCountdownAnchor();
     fadeOutAndRemove(this.hopLabel);
     fadeOutAndRemove(this.banner);
     fadeOutAndRemove(this.speedPane);
@@ -663,6 +669,7 @@ export class HUD {
       this.inCountdown = true;
       this.countdownEl.classList.add('is-visible');
       this.positionCountdown();
+      this.watchCountdownAnchor();
       this.renderSpeedPane();
     }
     if (seconds !== this.countdownShown) {
@@ -678,8 +685,11 @@ export class HUD {
    * grows past any static value — so measure it and push the readout below the
    * pane's actual bottom when needed. Only ever moves it DOWN from the CSS
    * default (never above the aesthetic 18%/230 placement the one-row case uses).
-   * Measured on countdown entry; the pane is static while the sim is parked, and
-   * the enemy cards are spawned before the first held frame drives this.
+   * Measured on countdown entry AND re-measured for the countdown's life
+   * (`watchCountdownAnchor`, 101d) — "the pane is static while the sim is
+   * parked" was the assumption that broke: a card added mid-hold, a status or
+   * empower row un-hiding (`refreshStatuses` paints them on the parked clock
+   * since 97f-post), a wrap from a window resize all move the pane's bottom.
    */
   private positionCountdown(): void {
     const enemyBottom = this.enemyCardPane.getBoundingClientRect().bottom;
@@ -688,11 +698,45 @@ export class HUD {
     this.countdownEl.style.top = `${Math.round(top)}px`;
   }
 
+  /**
+   * 101d — the once-measured countdown RE-MEASURES. The enemy pane's bottom is
+   * the readout's anchor and the countdown is its only consumer, so instead of
+   * reserving a status + empower row on every compact tile (6–10 tiles of
+   * vertical budget to hold one number still), the consumer follows the
+   * anchor: a ResizeObserver on the pane (its box changes whenever a card is
+   * added, a row un-hides or the cards re-wrap) plus the window's `resize` (a
+   * height-only resize moves the 18% default without resizing the pane). Both
+   * live only while the countdown holds — `unwatchCountdownAnchor` runs on
+   * hide and on dispose. The observer delivers between layout and paint, so
+   * the readout never paints a frame at a stale `top`.
+   */
+  private watchCountdownAnchor(): void {
+    this.unwatchCountdownAnchor();
+    const reposition = (): void => {
+      if (this.inCountdown) this.positionCountdown();
+    };
+    window.addEventListener('resize', reposition);
+    // Guarded: a headless DOM (a test harness) has no ResizeObserver; the
+    // entry measure + the resize listener still stand there.
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(reposition);
+    observer?.observe(this.enemyCardPane);
+    this.countdownAnchorWatch = () => {
+      window.removeEventListener('resize', reposition);
+      observer?.disconnect();
+    };
+  }
+
+  private unwatchCountdownAnchor(): void {
+    this.countdownAnchorWatch?.();
+    this.countdownAnchorWatch = null;
+  }
+
   /** Q2 — hide the countdown readout (the fight has started). */
   hideCountdown(): void {
     if (!this.inCountdown) return;
     this.inCountdown = false;
     this.countdownShown = -1;
+    this.unwatchCountdownAnchor();
     this.countdownEl.classList.remove('is-visible');
     this.renderSpeedPane();
   }

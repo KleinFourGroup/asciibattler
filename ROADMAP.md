@@ -441,36 +441,27 @@ upstream, JetBrainsMono#676, nothing to file). The cut, as landed:
       (101)", the select note resolved (KEEP), this stub, the cursor.
       WORKLOG §101f.
 
-## Phase 102 — the two surface riders
+## Phase 102 — the two surface riders ✅ CLOSED 2026-09-18
 
-**Charter:** (a) `wail` / `hex` gain a `release` phase + a projectile
-fx key — the presentation half of the split TODO item (the retune is
-Round 9); (b) the run-end stats body on the EXISTING GameOverScreen — a
-pure aggregator over `Run.fallenLedger` (per encounter / side /
-archetype), both variants. **Depends on:** §96 (the screen base) +
-§101. **Risk:** low (config + fxRegistry; a pure aggregator; no sim, no
-bump). **Exit:** a wail visibly flies; a run ends with stats. **Scope
-guards:** no range / cooldown / duration change; the stats sting is
-dispositioned in §104, not here. **Kickoff 2026-09-18 (WORKLOG §102):**
-the projectile seam is BUILT (three abilities fly already); "no sim" is
-wrong in the letter — a timeline is sim config, so the carve is PROVEN.
+**Outcome:** a wail visibly flies and a run ends with stats — one session,
+the user's Firefox on both. (a) `hex` / `wail` gain `release` + `travel`
+CARVED out of the windup at constant sum + a projectile key each; the
+kickoff corrected the charter twice (the projectile seam was BUILT; a
+timeline is sim config, so "no sim" became a byte-identity PROOF with a
+control that fails); the pre-signed hex retime was not taken. (b) "The
+fallen" on both GameOverScreen variants: `summarizeFallen` (pure) → the
+totals + a per-encounter table, GROUPED by archetype (a real run's
+27-death fight broke the per-fallen form), per-turn tooltips, the button
+pinned. Tests 2980 → 2995; `ui.json` 175 → 180; no bump; the fuzz smoke
+fired three times, each predicted per step. The charter + the four calls
+live in git at `9233faf`; the narrative in WORKLOG §102; the rules in
+DESIGN "A cast that lands at range FLIES" + "A list of the fallen
+GROUPS". Rider: TODO (the run-end stats beyond the fallen). As landed:
 
-- [x] **102a — the carve (headless)** ✅ 2026-09-18: hex 0.15 / 0.25 ·
-      wail 0.2 / 0.3, the same 8 / 10 ticks to impact; byte-identical on
-      every shape, a +2-tick control FAILED on all. WORKLOG §102a (+ §102b).
-- [x] **102b — the fx keys (render)** ✅ 2026-09-18: `hex_launch` /
-      `wail_launch` + the flight pin; the user's Firefox read PASSED first
-      go — the `*` and both splits KEPT. WORKLOG §102b.
-      ✅ DECIDED: the pre-signed hex retime (102b2) NOT TAKEN.
-- [x] **102c — the aggregator (headless)** ✅ 2026-09-18:
-      `summarizeFallen` (`src/run/fallenStats.ts`, pure; instance / side /
-      archetype / turn, rows handed back) + the defeat pin walks the
-      `turn-outcome` gate. DEATHS only — no "fights" count. WORKLOG §102c.
-- [ ] **102d — the stats body:** BUILT 2026-09-18 (totals + the
-      per-encounter table, GROUPED by archetype — a real run's 27-death
-      fight broke the per-fallen form; per-turn tooltips; the button
-      pinned; WORKLOG §102d) — OPEN on its exit = the user's won + lost run.
-- [ ] **102e — the exit:** the DESIGN note, this stub, the cursor.
+- [x] **102a — the carve** ✅ `ab4625f` · **102b — the fx keys** ✅
+      `1eb815b` (+ the verdict `7cf6d8d`) · **102c — the aggregator** ✅
+      `a9c16ef` · **102d — the stats body** ✅ `650f3b6` · **102e — the
+      exit** ✅ — all 2026-09-18, WORKLOG §102a–e.
 
 ## Phase 103 — the idiom reference (the signing)
 

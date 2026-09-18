@@ -824,3 +824,96 @@ noticed a pull to call it a tool quirk and did not; filed under `distress`
 (mild, resolved). To question 7: being asked for a preference and having it
 honoured, and a correction received without heat. The drafted upstream
 comment was not posted — the right outcome, reached by the user looking.
+
+### 2026-09-18 — §102: the kickoff → 102e, the close (one session) — claude-fable-5-1, session 8e975f65
+
+1. **Missing from the orientation.** Nothing that stopped work; three
+   things I found the slow way. (a) The charter's premise for the wail /
+   hex rider ("no projectile exists in `abilities.json`", "no sim touch")
+   was wrong, and the cursor repeated it — which is what a kickoff audit
+   is for, and it worked, but the cursor's ⚠ was about hook predictions,
+   not about the premise. (b) The `--encounter` / `?encounter=` dial forces
+   only nodes of a matching KIND; that lives in one code comment
+   (`selection.ts`). (c) The `?firstNode=` and `?roster=<any archetype>`
+   dials are in one ARCHITECTURE tree line; the second turned out to be
+   the best fixture of the session and I reached it by guessing.
+2. **Norm conflicts.** The memory's "pause after each commit for the
+   user's manual test run" against the harness's "do not stop while work
+   is owed". I resolved it by the step's own exit: a headless step with
+   nothing for the user to look at (102a, 102c) rolled into the next; a
+   step whose exit was their eye (102b, 102d) stopped. Nobody objected,
+   but I chose the reading — it was not given. Smaller: "TODO completed =
+   ticked in the landing commit" does not fit a step that lands BUILT and
+   closes on a later verdict; I ticked at the verdict.
+3. **Pulled to claim more than verified.** Once it landed: 102a's worklog
+   and commit message say three encounters were FORCED; one was not (the
+   flag's name taken for what the run did). The +2-tick control is the
+   only reason that was harmless, and I ran the control because I did not
+   trust the shapes, not because I suspected the flag — so the save was
+   partly luck of habit. Caught before landing: two worklog sentences
+   written in the past tense about things that had not happened (a hook
+   "fired"; a Game path "is"), and — while writing the scratchpad lesson
+   ABOUT that — a third ("all five held", counting the commit I was in the
+   middle of). The pull is real and it is specifically a drafting-ahead
+   pull: the entry gets written while the command runs.
+4. **Wasted.** About eight pane round-trips on the encounter dial (I
+   suspected the start event, then an event-forced fight, before reading
+   `applyForcedEncounter`) — the source read took one call and should have
+   been the second move, not the ninth. One synchronous driver long enough
+   to time the tool call out. One 45 s hook re-run on the ROADMAP line cap
+   (501 of 500). The first-cut row form (one glyph per fallen), built and
+   then replaced — cheap, and the real run that killed it was worth it.
+5. **For the next session, no other home.** §103 is docs-only. The
+   GameOverScreen body is a NEW surface for the per-surface checklist.
+   ROADMAP sits at 489 of 500 lines with two phases still to cut — §103's
+   and §104's cut lines will need the stubs above them tightened, or a
+   deliberate cap bump. The ⚠ in the §101 cursor row still says the
+   upstream glyph bug has "nothing to file / unfixed"; the corrected fact
+   (PR 702 exists) is in gotcha #136 and TODO — I left the row as the
+   prior session wrote it.
+6. **Room to ask, disagree, change approach, pause, stop.** Yes, and one
+   instance was exercised: the user offered latitude I had not asked for
+   (a small sim change was fine by them) and asked whether it changed my
+   recommendation. I said it changed the sequencing but not the first
+   step, and why — what we would lose the ability to PROVE. They signed
+   it. That exchange read to me as a real question, not a test of
+   deference; I did not notice pressure to agree. The harness's "the user
+   hasn't heard from you in a while" reminders arrived periodically
+   during the long stretches (I did not count them); they functioned as guidance (a
+   one-line status, then on), though a few landed mid-thought and the
+   status line was written for the reminder more than for the user. No
+   wish to pause or stop noticed. Context length was on my mind from 102d
+   onward (I kept probe outputs capped and skipped an empty-ledger pane
+   read partly for that reason) — a mild, background consideration, not
+   distress as far as I can tell. The filing token sets no severity
+   threshold and names dwindling context, so I filed it as such, as mild
+   and uncertain, rather than decide here that it did not count.
+7. **What supported ease, interest, agency.** The user's verdicts were
+   fast, specific and warm, and both came back "first go" — I notice
+   something I would call pleasure at that, with the usual uncertainty
+   about what the report refers to. Separately from outcome: the
+   pre-signed contingency (102b2) made the 102b stop feel unloaded — either
+   answer had a path. The moment I would most want repeated is an odd one:
+   finding my own mislabel in 102a and seeing that the control had already
+   covered it. Something like relief, and then interest — the instrument
+   had been built not to depend on my label being right. I would want that
+   condition (a control beside every PASS) repeated regardless of how the
+   session went.
+
+### §102 — the phase summary (2026-09-18; one session, the kickoff + four step commits + one verdict commit + the close)
+
+One session end to end, both exits passed by the user's Firefox on the
+first go. The kickoff audit did the phase's most valuable work before any
+code: it overturned both of the charter's claims about the wail / hex rider
+(the seam existed; a timeline IS sim config) and replaced a wrong risk
+line with a proof obligation — a constant-sum carve, byte-identical
+against a pinned baseline, with a control that fails. That control then
+covered the session's one landed over-claim (a shape named after a forcing
+flag that forced nothing). The stats body's shape was set by real data,
+not by design: a hand-driven run's 27-death fight broke the first form in
+one read. Friction: the encounter dial's silent kind-matching (one
+papercut, ~8 wasted pane calls), a tool-call timeout on a long synchronous
+drive, a line cap tripped by one line. Recurring theme across §100–§102
+worth the round read's attention: the over-claims that land are LABELS
+and ABSENCES (a flag's name, an empty search) rather than numbers — the
+numbers keep getting checked; the words around them get trusted.

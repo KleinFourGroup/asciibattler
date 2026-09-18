@@ -346,3 +346,38 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   cross-reference was ON the issue page — I read the issue's body and
   comments through `--json` fields that omit the timeline. Claim an absence
   only from the surface that would show the presence.
+
+## §102 — the two surface riders (2026-09-18)
+
+- **A forcing flag is a REQUEST — count the forced id's `instances` in the
+  artifact before naming a shape after it.** `--encounter=darkMagicPosse`
+  forced nothing on a 3-hop run (an elite; no elite node) and I named an
+  oracle shape after it, in a commit message. One `cut -f1-4
+  per-encounter.csv` would have shown it. (`ab4625f`, corrected WORKLOG
+  §102b; the dial warns about nothing — a papercut, filed.)
+- **A byte-identity PASS is only as good as the CONTROL beside it.** The
+  same shapes under a deliberately non-neutral edit must FAIL, or the PASS
+  may be a shape that never met the code. The control is also what made
+  the mislabel above harmless: it measured sensitivity directly instead of
+  trusting the flag. Candidate norm: any "byte-identical" claim ships with
+  its failing control.
+- **A charter's "no sim touch" on a `config/` file is a category error** —
+  `config/` is sim INPUT. The kickoff audit is where that gets caught; the
+  replacement was a per-step hook prediction; the four code steps each
+  fired or skipped the smoke as predicted.
+- **Size a UI form on a REAL run before a designed fixture.** "A fight is
+  ~20 deaths" was a guess; the first hand-driven run had 27 in one fight
+  and broke the row form. The fixture written AFTER had a 60-death fight
+  because the real run taught it to. A fixture encodes what you already
+  believe.
+- **A long synchronous pane drive can time the TOOL CALL out while the
+  work completes** ("Internal error", and the run was 86 ledger rows in).
+  Read the state before re-driving; chunk a driver to one battle per call.
+- **Pre-sign the contingency at the shape-lock** (102b2, the hex retime):
+  the user's openness to a small sim change became a one-line branch with
+  its proof obligations already agreed — the eye did not ask, and nothing
+  stalled waiting to find out.
+- **Draft tense is a tell.** Twice a worklog line was written in the past
+  tense about something that had not happened yet (a hook "fired", a Game
+  path "is"). Both were caught on re-read; the cheap habit is to write the
+  entry AFTER the tool result, or mark the line a prediction.

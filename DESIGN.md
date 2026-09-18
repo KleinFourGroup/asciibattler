@@ -425,6 +425,27 @@ gesture). The two swap `<select>`s keep `aria-label`: a visible `<label>`
 would wrap the row. The proof shape is the same-run toggle + the box
 oracle, and step zero is a MEASUREMENT — three of five steps shrank at it.
 
+**A cast that lands at range FLIES (102).** An effect that appears on a
+cell away from its caster says whose it is by travelling there: a
+projectile on the ability's `release` boundary, its flight the `travel`
+phase (the renderer reads the caster's live phase — one clock with the
+sim). `travel` is real ticks, carved out of the windup so the impact tick
+does not move; a 0-length travel lands the glyph AFTER its burst, so
+"launches a projectile ⇒ has travel time" is a catalog-walking pin
+(`fxRegistry.test.ts`). One fx key per ability, so a look can change
+without touching config. A timeline is SIM config: a carve is proven
+byte-identical against a pinned baseline, with a control that fails.
+
+**A list of the fallen GROUPS (102).** One glyph per fallen fits a single
+turn (the pre-turn strip); an encounter is many waves and a run is many
+encounters, so anything wider groups by archetype (`M×22 a×13`) and puts
+the finer grain — per turn, per group — in the tooltip. The cell is ONE
+helper for every surface (`fallenSide.ts`): the side in words, the hue
+second. The run-end body ("The fallen", both GameOverScreen variants)
+words itself as what the ledger records — deaths — never as "the
+fights"; its table scrolls inside its own box and the New Run button
+does not move (the §101 rule on a list of unknown length).
+
 **Strings.** Anything a shell or factory carries goes through `t()` at
 the touch that rewrites the line (the touch-once rule for a shell phase,
 §96 kickoff decision C); glyph prefixes and suffixes (`◈ ▤ ◎ ▸ ⚠ ✕`) stay

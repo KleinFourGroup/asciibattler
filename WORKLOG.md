@@ -4232,3 +4232,47 @@ so the first fight is `hop 1` as drawn; `sector` is 0-based and drawn +1.
 Open: the user's won + lost run. TODO gains the wider-stats rider (call D);
 the two TODO lines this closes (:341 the screen, :348 the last turn's rows)
 tick at the verdict.
+
+**The 102d verdict (the user, Firefox, same day): PASSED** — "working
+perfectly", the won and the lost run; the grouped form stands.
+
+### 102e — the exit (2026-09-18) — the phase CLOSES
+
+One session, kickoff → close; both exits the user's Firefox, both passed
+on the first go. What landed: DESIGN §UI idioms gains two rules — "A cast
+that lands at range FLIES (102)" (the release projectile, the carve, the
+travel-time pin, and that a timeline is SIM config so a carve is proven
+with a control that fails) and "A list of the fallen GROUPS (102)" (one
+glyph per fallen fits a turn, never an encounter; the one cell helper; the
+body words itself as deaths; the table scrolls, the button stays).
+ROADMAP §102 demoted to its stub (the cap had tripped once at 102d — 501
+of 500 — and the BUILT-but-open lines were tightened rather than the cap
+bumped; the stub leaves 489). The cursor moves to §103 (docs only; its
+audit is a doc-vs-code read, and the GameOverScreen body is a surface the
+per-surface checklist has not seen). TODO: three items ticked (the wail /
+hex presentation half · the run-end stats screen · the last turn's rows),
+one opened at 102d (the stats beyond the fallen).
+
+**The phase against its charter.** Exit met ("a wail visibly flies; a run
+ends with stats"). Scope guards held: no range / cooldown / duration
+change (constant sum, proven), no sting (§104). The risk line was WRONG —
+"config + fxRegistry; no sim" — and the kickoff said so before a line was
+written; the prediction that replaced it (the fuzz smoke fires on 102a,
+102b, 102c; not on 102d; no bump anywhere) held on the four code steps —
+the §101f per-step rule's first outing (this docs commit predicts no
+smoke; its own hook is the check).
+
+**What I got wrong, in one place:** the 102a shape label (§102b's
+correction) — a flag's name taken for what the run did. It is in a commit
+message (`ab4625f`) and stays there; the worklog carries the correction.
+Three smaller ones were caught before they landed: a "the fuzz smoke
+FIRED" line drafted before the commit that would fire it, a sentence about
+Game's gated path drafted as fact before reading it (both reworded to what
+they were — a prediction, an open read), and a first-cut row form sized on
+a guess ("a fight is ~20 deaths") that a real run's 27-brigand fight
+corrected in one pane read.
+
+Numbers: tests 2980 → 2995 (fxRegistry +3, fallenStats +7, the Run pin +1,
+fallenSide +4) · `ui.json` 175 → 180 · fuzz:smoke 582, fired ×3 · no
+snapshot bump · commits `9233faf` (kickoff) → `ab4625f` → `1eb815b` →
+`7cf6d8d` → `a9c16ef` → `650f3b6` → the close.

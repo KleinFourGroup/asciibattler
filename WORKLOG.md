@@ -3489,3 +3489,48 @@ Typecheck clean; the font / atlas / i18n suites 52/52; no sim touch, no
 bump, no fuzz trigger (`src/render` + `src/ui` + `scripts` + `assets` +
 `tests`). The user's Firefox read: the chips, the rarity stars, a skull
 hitsplat, the pause button, the pre-turn map line.
+
+### 101a-post — the swapped pair (2026-09-18, the user's read)
+
+**The finding:** the user's Firefox showed the map chip as a boxed X
+(`⊠ MAP`) where the source is U+229E `⊞` (bytes `e2 8a 9e`, checked).
+**The mechanism, read in the pane before any fix:** a grid of U+229E ·
+U+22A0 · U+229F · U+25A4 rendered from each face ALONE — JetBrains Mono
+2.304 draws U+229E as a boxed X and U+22A0 as a boxed plus; DejaVu and the
+OS face draw both correctly. **An upstream font bug the fallback class had
+been hiding:** until 101a `⊞` sat outside `SUBSET_RANGES`, so the OS face
+painted it, right; the widening re-homed it onto the primary, which has the
+codepoint and the wrong picture. The 101a pin could not see it — it proves
+a face HAS a codepoint, never that it draws it right. (The user's question
+had been about my recap's "pre-turn map line" — a different site, the `◎
+<layout> — 12×9` line on the pre-turn screen; the chip's glyph was never
+re-chosen.)
+
+**The class, audited the same hour** (one swap makes every newly re-homed
+block suspect): all 338 codepoints both faces carry in the symbol blocks
+(box-drawing + blocks excluded — shipped from JetBrains since §79g, known
+good), a mutual-swap search in the pane. First instrument DISCARDED: raw
+64×64 mask IoU scored thin strokes 0 against themselves (the em dash 0.00,
+200 "mismatches") — an implausible reading is the instrument. Second:
+ink-bbox-normalized 8×8 density grids, cosine × aspect ratio, a pair flags
+when A-in-JetBrains ≈ B-in-DejaVu AND vice versa (both > 0.8, beating the
+self-match sum by > 0.25). **One pair: `⊞ U+229E ⇄ ⊠ U+22A0`** (cross 1.82
+vs self 1.52) — the known answer, and nothing else; median self-match 0.74.
+The UI's own re-homed glyphs self-score 0.67–0.99 except the near-1D ones
+(`– — − … →`, 0.15–0.32 — a dash normalized to its bbox is a filled box;
+an artifact of the metric, not a defect).
+
+**The fix, as data:** `PRIMARY_EXCLUDES = [0x229E, 0x22A0]` in
+`fontSubset.ts`; the generator reads an excluded codepoint as ABSENT from
+the primary, so the fallback's "what the primary lacks" rule ships it
+(JetBrains 712 → 710 glyphs, DejaVu 531 → 533). The guard test mirrors the
+rule in its `shipped` predicate and gains a pin: every exclusion is inside
+the ranges and in a fallback's cmap (an exclusion with nothing behind it
+would unship the glyph — the OS face again). Rejected: writing U+22A0 in
+the source so JetBrains paints a plus (a wrong codepoint that breaks the
+day upstream fixes the font, and lies to a screen reader).
+
+**Browser, re-derived from the ink, not the pipeline:** after the reload,
+under the stack U+229E has ink at the bbox's mid-top and none on its
+diagonal (PLUS), U+22A0 the reverse (X); DejaVu-alone and `serif` agree.
+Typecheck clean; font pins 6/6. Gotcha #136. No sim touch.

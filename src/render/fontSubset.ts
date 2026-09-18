@@ -55,6 +55,20 @@ export function subsetCovers(codePoint: number): boolean {
   return SUBSET_RANGES.some(([lo, hi]) => codePoint >= lo && codePoint <= hi);
 }
 
+/**
+ * 101a-post — codepoints the PRIMARY face carries but draws WRONG, so the
+ * generator drops them from its subset and the fallback supplies them.
+ * JetBrains Mono 2.304 has U+229E SQUARED PLUS and U+22A0 SQUARED TIMES
+ * SWAPPED (its ⊞ paints a boxed X, its ⊠ a boxed plus) — caught by the
+ * user's eye on the map chip the morning after 101a widened the ranges
+ * (before that, `⊞` sat outside the subset and the OS face painted it
+ * right). Audited then: a mutual-swap search over all 338 codepoints both
+ * faces carry (ink-bbox-normalized density grids, JetBrains vs DejaVu) found
+ * this pair and only this pair. Re-check on a JetBrains upgrade; the guard
+ * test pins that a fallback really has every entry.
+ */
+export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
+
 /** One shipped face: a vendored source TTF under `assets/fonts/<dir>/`, the
  *  woff2 the generator writes beside it, and the CSS family name. */
 export interface ShippedFace {

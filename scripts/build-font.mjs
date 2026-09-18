@@ -50,7 +50,7 @@ import subsetFont from 'subset-font';
 // instead of mirroring them: the renderer, this generator, and the guard test
 // (tests/font-coverage.test.ts) now consume one source of truth each way.
 import { GLYPHS } from '../src/render/glyphs.ts';
-import { SUBSET_RANGES, FACES } from '../src/render/fontSubset.ts';
+import { SUBSET_RANGES, FACES, PRIMARY_EXCLUDES } from '../src/render/fontSubset.ts';
 import { ttfCmapLookup } from '../tools/font/ttfCmap.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -77,7 +77,13 @@ const required = [...GLYPHS];
 // keep-set depends on the primary's coverage.
 const loaded = FACES.map((face) => {
   const src = readFileSync(join(FONTS_DIR, face.dir, face.source));
-  return { face, src, has: ttfCmapLookup(src) };
+  const cmapHas = ttfCmapLookup(src);
+  // 101a-post — PRIMARY_EXCLUDES: glyphs the primary carries but draws wrong
+  // (JetBrains 2.304's swapped ⊞ / ⊠) read as ABSENT from it, so the
+  // fallback's "what the primary lacks" rule picks them up.
+  const has =
+    face.role === 'primary' ? (cp) => cmapHas(cp) && !PRIMARY_EXCLUDES.includes(cp) : cmapHas;
+  return { face, src, has };
 });
 const primary = loaded.find((f) => f.face.role === 'primary');
 if (!primary || loaded.filter((f) => f.face.role === 'primary').length !== 1) {

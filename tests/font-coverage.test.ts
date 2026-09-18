@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { GLYPHS } from '../src/render/glyphs';
-import { subsetCovers, FACES } from '../src/render/fontSubset';
+import { subsetCovers, FACES, PRIMARY_EXCLUDES } from '../src/render/fontSubset';
 import { ttfCmapLookup } from '../tools/font/ttfCmap';
 
 // §79-post — structural guards for the self-hosted font pipeline (§79g).
@@ -42,10 +42,19 @@ import { ttfCmapLookup } from '../tools/font/ttfCmap';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
-const faces = FACES.map((face) => ({
-  face,
-  has: ttfCmapLookup(readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source))),
-}));
+// The generator's rule, mirrored: the primary reads as LACKING its
+// PRIMARY_EXCLUDES (glyphs it carries but draws wrong — 101a-post), so
+// "shipped" here means what gen:font would actually put in a subset.
+const faces = FACES.map((face) => {
+  const cmapHas = ttfCmapLookup(
+    readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)),
+  );
+  const has =
+    face.role === 'primary'
+      ? (cp: number): boolean => cmapHas(cp) && !PRIMARY_EXCLUDES.includes(cp)
+      : cmapHas;
+  return { face, has };
+});
 const someFaceHas = (cp: number): boolean => faces.some((f) => f.has(cp));
 const shipped = (cp: number): boolean => subsetCovers(cp) && someFaceHas(cp);
 
@@ -71,6 +80,16 @@ describe('font subset coverage (§79-post)', () => {
   it('lists exactly one primary face, first', () => {
     expect(FACES.filter((f) => f.role === 'primary')).toHaveLength(1);
     expect(FACES[0]?.role).toBe('primary');
+  });
+
+  it('a fallback face supplies every PRIMARY_EXCLUDES codepoint, inside the ranges', () => {
+    // An exclusion with no fallback behind it would UNSHIP the glyph — back
+    // to the OS face, the exact class the exclusion exists to avoid.
+    const fallbacks = faces.filter((f) => f.face.role === 'fallback');
+    const orphaned = PRIMARY_EXCLUDES.filter(
+      (cp) => !subsetCovers(cp) || !fallbacks.some((f) => f.has(cp)),
+    ).map((cp) => `U+${cp.toString(16).toUpperCase()}`);
+    expect(orphaned, 'excluded from the primary but no fallback carries it').toEqual([]);
   });
 });
 

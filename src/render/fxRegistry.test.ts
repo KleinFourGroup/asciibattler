@@ -126,6 +126,50 @@ describe('fxRegistry — the Z1 re-home (config-derived)', () => {
   });
 });
 
+describe('fxRegistry — 102b a launched projectile has a flight (config-derived)', () => {
+  /** Every ability whose `release` key launches a projectile but whose
+   *  timeline gives it no `travel` time. The renderer times the flight off the
+   *  caster's live `travel` ticks and falls back to a fixed 0.18 s when there
+   *  are none — so a 0-length travel lands the glyph AFTER the burst it
+   *  announces (the §102 kickoff finding). Walks the catalog, never an id list:
+   *  a new projectile ability joins the pin the moment it ships. */
+  function projectilesWithoutFlight(defs: typeof ABILITY_DEFS): string[] {
+    const out: string[] = [];
+    for (const def of Object.values(defs)) {
+      const key = def.fx?.release;
+      if (key === undefined || fxDescriptor(key)?.projectile === undefined) continue;
+      const travel = def.timeline.find((p) => p.phase === 'travel');
+      if (travel === undefined || typeof travel.seconds !== 'number' || travel.seconds <= 0) {
+        out.push(def.id);
+      }
+    }
+    return out;
+  }
+
+  it('the pin can fail: a doctored 0-length travel is flagged', () => {
+    const vial = ABILITY_DEFS.vial!;
+    const doctored = {
+      vial: {
+        ...vial,
+        timeline: vial.timeline.map((p) => (p.phase === 'travel' ? { ...p, seconds: 0 } : p)),
+      },
+    };
+    expect(projectilesWithoutFlight(doctored)).toEqual(['vial']);
+  });
+
+  it('every ability that launches a projectile on release has travel time', () => {
+    expect(projectilesWithoutFlight(ABILITY_DEFS)).toEqual([]);
+  });
+
+  it('the two pure afflicters launch one (they were impact-only before 102)', () => {
+    for (const id of ['hex', 'wail']) {
+      const key = ABILITY_DEFS[id]!.fx?.release;
+      expect(key, `${id} authors a release key`).toBeDefined();
+      expect(fxDescriptor(key!)?.projectile, `${id}'s release key flies`).toBeDefined();
+    }
+  });
+});
+
 describe('fxRegistry — the Z3 re-home (config-derived)', () => {
   // The four melee weapons + the rogue gambit all swing; the gambit authors it
   // on `windup` (where it deals damage) instead of `impact`. Deriving the

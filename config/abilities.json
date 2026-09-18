@@ -410,7 +410,7 @@
         "op": { "kind": "applyStatus", "statusId": "confusion", "durationSeconds": { "base": 4, "stat": "luck", "perPoint": 0.3, "max": 8 } }
       }
     ],
-    "fx": { "impact": "hex_burst" }
+    "fx": { "release": "hex_launch", "impact": "hex_burst" }
   },
   "light_ray": {
     "id": "light_ray",
@@ -467,7 +467,7 @@
         "op": { "kind": "applyStatus", "statusId": "panic", "durationSeconds": { "base": 3, "stat": "luck", "perPoint": 0.15, "max": 6 } }
       }
     ],
-    "fx": { "impact": "wail_burst" }
+    "fx": { "release": "wail_launch", "impact": "wail_burst" }
   },
   "chain_lightning": {
     "id": "chain_lightning",

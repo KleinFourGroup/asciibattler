@@ -228,6 +228,14 @@ export const FX_REGISTRY = {
   hex_burst: { burst: { style: 'explosion' }, sound: 'hex' }, // a confusion warble (no damage — pure applier)
   light_ray: { tracer: {}, sound: 'lightray' }, // an archer-style beam (blind on the landed hit)
   wail_burst: { burst: { style: 'explosion' }, sound: 'wail', shake: { intensity: 0.1, durationSeconds: 0.3 } }, // the fear scream
+  // 102b — the two pure afflicters FLY (they were impact-only: a burst appeared
+  // on a cell with nothing saying whose it was). A straight projectile on the
+  // `release` boundary, timed off the `travel` phase 102a carved out of the
+  // windup (impact tick unchanged). One key per ability, like the vial, so a
+  // per-key look can land later without touching config. Silent: the cast SFX
+  // stays on the burst (once per cast, at the moment the status lands).
+  hex_launch: { projectile: { style: 'straight' } },
+  wail_launch: { projectile: { style: 'straight' } },
 
   // 29c — the stormcaller's chain lightning. Driven per HOP off `unit:chained`
   // (not `action:phase`), so the bolt visibly travels jump by jump: each arc flies

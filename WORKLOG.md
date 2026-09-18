@@ -4060,3 +4060,58 @@ its own commit, as signed.
 Hook: the fuzz smoke is PREDICTED to fire (`config/` staged) — this entry
 is written before the commit, so the landing commit's hook is the check;
 102b's entry records what it did. No bump.
+
+### 102b — the fx keys (2026-09-18)
+
+`FX_REGISTRY` gains `hex_launch` + `wail_launch` (`projectile: straight`,
+silent — the cast SFX stays on the burst, once per cast); `abilities.json`
+authors them on `fx.release`. One key per ability (the vial's shape), so
+call B's per-key look can land later without touching config. The look is
+the team-colored `*` (call B1). Reduced motion keeps a projectile (§99's
+essential-motion set) — no new reading to author.
+
+**The pin (`fxRegistry.test.ts`, config-derived, permanent):** every
+ability whose `release` key launches a projectile has `travel` time > 0 —
+the kickoff's finding as a gate (the renderer falls back to a fixed 0.18 s
+on a 0-length travel and the glyph lands AFTER its burst). It walks the
+catalog, never an id list, and self-checks: a doctored 0-length vial is
+flagged. Tests 2980 → 2983.
+
+**The pane read — wiring only, through the real renderer.**
+`?encounter=miscreants&seed=12&roster=banshee:2,warlock:2,mercenary:2`
+(the roster dial takes ANY archetype, so the two enemy-only casters can be
+fielded by the player — the fast fixture for the user's eye too), the loop
+hand-driven (`activeScene.tick(1/20)`), `spawnProjectile` wrapped on the
+prototype, `action:phase` tapped:
+
+| | casts | windup → release | release → impact | launched on the release tick | flight |
+|---|---|---|---|---|---|
+| hex | 6 | 3 ticks | 5 ticks | 6 / 6 | 0.25 s |
+| wail | 37 | 4 ticks | 6 ticks | 37 / 37 | 0.30 s |
+
+(An enemy warlock in a plain `miscreants` run read the same: 8 casts,
+535 → 538 → 543.) The flight equals the `travel` phase by construction —
+the renderer reads the caster's live phase. What the pane can NOT say: how
+it LOOKS (a hidden pane composites nothing) — the exit is the user's
+Firefox.
+
+**A correction to §102a (found here, the 102a entry left as written).**
+`--encounter=<id>` forces only nodes whose KIND matches the encounter's
+(`applyForcedEncounter` returns null otherwise) — learned when the pane's
+`?encounter=darkMagicPosse` kept fighting `adventurer-with-guards`.
+`darkMagicPosse` is an ELITE, and a 3-hop run has no elite node: re-running
+the three shapes and reading `per-encounter.csv` (`instances`), the
+"darkMagicPosse" shape fought ZERO of it — 8 `banditQueen` (the natural
+boss of every shape), 8 `bandit-king`, 16 plain normals. 102a's table row
+and its commit message (`ab4625f`) name a forcing that did not happen. The
+CONCLUSION stands, on per-ability coverage rather than per-encounter: hex
+was exercised by 16 `miscreants` instances (62 waves), wail by 8–16
+`banditQueen` instances per shape (46–104 waves), and the +2-tick control
+FAILED on each — which is the only reason the mislabel was harmless: the
+control measured sensitivity directly instead of trusting the flag. Not
+re-run with a real elite shape: it is the same `hex` def. The lesson (the
+scratchpad): a forcing flag is a request — count the forced id's
+`instances` in the artifact before naming the shape after it.
+
+Hook: 102a's predicted fuzz smoke FIRED (582 green, `ab4625f`); this step
+stages `config/` again, the same prediction.

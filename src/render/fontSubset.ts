@@ -69,8 +69,10 @@ export function subsetCovers(codePoint: number): boolean {
  *
  * Triaged 2026-09-18: a DRAWING error in the raw vendored TTF (cmap + `post`
  * names are right — `uni229E` / `uni22A0` — the outlines under them are each
- * other's), known upstream as JetBrains/JetBrainsMono#676, OPEN and unfixed;
- * v2.304 is still the latest release. Nothing of ours to report.
+ * other's), known upstream as JetBrains/JetBrainsMono#676, OPEN; the fix is
+ * PR #702 (unmerged — blocked behind an unrelated regression, #699). v2.304
+ * is still the latest release. Nothing of ours to report; empty this list
+ * only on a vendored release that carries #702, after a swap-search re-run.
  */
 export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
 

@@ -3911,3 +3911,20 @@ the pair at gids 1374 / 1375, not 1107 / 1108) with the IDENTICAL defect:
 for #676 naming the wrong table was drafted for the user to post (their
 account, their call). The `.glyphs` SOURCE was not read — the claim is
 about the built fonts only.
+
+**A correction (same day, the user's catch): "no fix PR" was WRONG.** I
+reported it three times and wrote it into gotcha #136, TODO §101 and step 4
+above, off a `gh search prs` call whose `OR` query returned nothing — an
+EMPTY result read as a negative, the exact "errored or empty = could not
+verify" case AGENTS names. The user, reading the thread itself, found
+**PR #702** ("Swap U+22A0 SQUARED TIMES and U+229E SQUARED PLUS glyphs
+back", 2024-10-18, by the #676 commenter; open, mergeable, 54 rebuilt font
+files, no reviews); a maintainer replied 2026-09-09 that an upgrade is ready
+on a fork but blocked on an unrelated Greek regression (#699), and the
+thread was active 2026-09-12. Step 4 above stands corrected here, not
+rewritten. Consequences: the drafted #676 comment was NOT posted (the
+issue needs no re-upping and the PR makes "which table" moot); the docs now
+name #702 as the thing to watch. The lesson for the scratchpad: a search
+that finds nothing has not searched — read the issue's own timeline
+(`gh issue view --json timelineItems`, or the page) before claiming an
+absence about it.

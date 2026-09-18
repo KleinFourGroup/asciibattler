@@ -340,3 +340,9 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
 - **A kickoff's "the smoke never fires" is a prediction about the FIX, and
   the fix was not designed yet.** The Event stacks needed one read-only Run
   getter. Predict trigger paths per step at the cut, not per phase.
+- **An empty search is not a negative (the §101-triage miss).** "No fix PR"
+  went into three docs off one `gh search prs` with an `OR` query that
+  returned nothing; the user found PR #702 by reading the issue thread. The
+  cross-reference was ON the issue page — I read the issue's body and
+  comments through `--json` fields that omit the timeline. Claim an absence
+  only from the surface that would show the presence.

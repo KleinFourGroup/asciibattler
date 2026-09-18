@@ -134,7 +134,10 @@ export function openModal(mount: HTMLElement, opts: ModalOptions): ModalHandle {
     }
     if (e.key !== 'Tab') return;
     const focusables = [...overlay.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-      (el) => !el.hidden && el.offsetParent !== null,
+      // 101e — a reserved slot (`.is-reserved`, visibility: hidden) still has
+      // a box, so `offsetParent` alone would hand the trap an element that
+      // silently refuses focus and strand the Tab wrap on it.
+      (el) => !el.hidden && el.offsetParent !== null && el.closest('.is-reserved') === null,
     );
     if (focusables.length === 0) {
       e.preventDefault();
@@ -180,7 +183,12 @@ export function openModal(mount: HTMLElement, opts: ModalOptions): ModalHandle {
     },
     setDismissable(on) {
       dismissable = on;
-      closeButton.hidden = !on;
+      // 101e — the ✕ keeps its slot (the header measured 21 ⇄ 26 px across
+      // the flip, moving every row under it); reserveSlot's two halves,
+      // toggled because this one comes back.
+      closeButton.classList.toggle('is-reserved', !on);
+      if (on) closeButton.removeAttribute('aria-hidden');
+      else closeButton.setAttribute('aria-hidden', 'true');
     },
     replaceBody(...nodes) {
       if (header === null) {

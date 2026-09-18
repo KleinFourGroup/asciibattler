@@ -1268,6 +1268,24 @@ body {
   background: rgb(from var(--color-terminal-green) r g b / 0.12);
 }
 
+/* 101e — an accepted row STAYS, dimmed, until the screen leaves (a vanished
+   row re-centered this column under the pointer). The badge WEARS the Accept
+   button's box — same font-size, padding and border width — so the row's
+   height is equal by construction, not by a measured number. */
+.reward-portion.is-taken {
+  opacity: 0.45;
+}
+
+.reward-taken {
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 7px 0;
+  border: 1px solid transparent;
+  color: var(--color-gray-b0);
+}
+
 /* 50e — the port screen (spec §Ports; the kickoff shape-lock: ONE sectioned
    scrolling screen). Amber commerce chrome (the $ node / bits hue); stock
    rows reuse the reward-portion shape; unit slots wrap recruit-skin cards
@@ -1434,12 +1452,18 @@ body {
   cursor: default;
 }
 
+/* 101e — the badge WEARS the Buy button's box (font-size, vertical padding,
+   border width), so a sold slot keeps its height by construction: the unit
+   footer measured 46 → 30 px on a buy, and a fully-sold grid row pulled
+   everything under it up 16 px. */
 .port-sold {
   color: var(--color-gray-80);
   font-family: var(--font-mono);
   font-size: var(--text-12);
   letter-spacing: 0.15em;
   text-transform: uppercase;
+  padding: 7px 0;
+  border: 1px solid transparent;
 }
 
 /* 74f — the event screen (the port-screen shape). Chrome keyed to
@@ -1472,6 +1496,18 @@ body {
   font-size: var(--text-24);
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+/* 101e — every page of the event shares ONE grid cell (the text stack and
+   the choice stack, EventScreen.ts); the pages that are not current are
+   `.is-reserved`. The tallest page sizes the cell, so a page turn moves
+   nothing on this centered column. */
+.event-stack {
+  display: grid;
+}
+
+.event-stack > * {
+  grid-area: 1 / 1;
 }
 
 .event-page-text {
@@ -2156,8 +2192,21 @@ body {
    held slot: name + description on the left, Fire/Discard on the right;
    the inline roster picker (a unit-target out-of-battle fire) expands
    under its row. The shrink banner tops the list while over capacity. */
+/* 101e — TOP-ANCHORED, this modal only (the roster pickers stay centered):
+   its body is a list the player deletes from, and a centered content-sized
+   panel re-centered on every Discard under the 86vh cap — the first Discard
+   button measured 180.0 → 215.5 px across one click. The top sits where a
+   FULL (capped) panel's top sits — (100 − 86) / 2 vh — less the overlay's
+   32px padding, so a full cache opens exactly where it always did. */
 .cache-modal {
   max-width: 720px;
+  align-self: flex-start;
+  margin-top: calc(7vh - 32px);
+}
+
+/* 101e — the reservation idiom (src/ui/reserveSlot.ts): hidden, slot kept. */
+.is-reserved {
+  visibility: hidden;
 }
 
 .cache-shrink-banner {

@@ -433,13 +433,11 @@ the column stretches to one width; the accepted reward row stays.
       countdown's life; refreshStatuses before showCountdown. The control
       sat 43 px inside a grown pane; watched, it holds 24 px below through
       growth, shrink and a 520 px re-wrap. WORKLOG §101d.
-- [ ] **101e — the conditional blocks:** the Promotion `visibility`
-      precedent on the flagged list — PreTurn's arm hint + packet row
-      slots, the accepted Reward row dimmed in place, Port + Reward
-      action clusters at a `min-height` covering SOLD and the select,
-      the cache ✕ by `visibility` + the shrink banner's slot, the event
-      page text's tallest-page reserve. Exit: every flagged click target
-      byte-equal across its own click.
+- [x] **101e — the conditional blocks** ✅ 2026-09-18: `reserveSlot()` +
+      the Reward ledger (taken rows stay) · the SOLD badge wears the Buy
+      box · the cache modal TOP-ANCHORED · the Event page stacks.
+      **Re-scoped at step zero:** the `min-height` clusters DROPPED (both
+      select flips measured 0 px). WORKLOG §101e.
 - [ ] **101f — the exit:** DESIGN "Layout stability (101)" (the
       reservation idiom + the fallback-face rule), the §100 select note
       resolved (KEEP the `aria-label`), the stub, the cursor.

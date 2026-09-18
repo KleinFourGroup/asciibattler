@@ -84,6 +84,7 @@ import { Screen } from './Screen';
 import { button } from './button';
 import { attachTooltip } from './tooltip';
 import { pressable } from './pressable';
+import { reserveSlot } from './reserveSlot';
 import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffChipTooltip, buffModsSummary } from './UnitCard';
 import { empowerColor, empowerLabel } from '../render/statusDisplay';
@@ -144,6 +145,13 @@ export class PreTurnScreen extends Screen {
   // shift under fires/discards, and re-deriving beats holding a stale one.
   private getCache: () => readonly string[] = () => [];
   private armedPacketIndex: number | null = null;
+  // 101e — the two reserved slots, held for the screen's life once they have
+  // appeared: the arm hint sits ABOVE the packet chip that toggles it (arming
+  // Hype pushed the chip 26 px down, out from under the pointer), and the
+  // packet row deleted itself when its last packet fired. `armSlotName` is
+  // the packet name the hidden hint is sized with.
+  private armSlotName: string | null = null;
+  private packetRowHeld = false;
   // R1/R2 — the shared card-list affordances: roster (top-right) + draw
   // (bottom-right) + discard (bottom-left) pile views. All disposed on hide.
   private cardListButtons: CardListButton[] = [];
@@ -198,6 +206,8 @@ export class PreTurnScreen extends Screen {
     this.roster = roster;
     this.getCache = getCache;
     this.armedPacketIndex = null;
+    this.armSlotName = null;
+    this.packetRowHeld = false;
     this.hand = info.hand;
     this.drawPile = info.drawPile;
     this.discardPile = info.discardPile;
@@ -778,18 +788,38 @@ export class PreTurnScreen extends Screen {
       });
     }
 
+    const packets = this.renderPacketRow();
+    if (packets.armable !== null) this.armSlotName = packets.armable;
+    if (packets.count > 0) this.packetRowHeld = true;
+
     // The armed-packet banner (hype's pick-a-card state) outranks the
-    // strip's own hints — it's the transient, user-initiated mode.
-    if (armed !== null) {
+    // strip's own hints — it's the transient, user-initiated mode. 101e: the
+    // line keeps its slot (`visibility: hidden`, the Promotion precedent)
+    // from the moment a unit-target chip could raise it.
+    const hintName = armed?.packet.name ?? this.armSlotName;
+    if (hintName !== null) {
       const banner = document.createElement('div');
       banner.className = 'preturn-arm-hint';
-      banner.textContent = t('preturn.packet.armedHint', { name: armed.packet.name });
+      banner.textContent = t('preturn.packet.armedHint', { name: hintName });
+      if (armed === null) reserveSlot(banner);
       wrap.appendChild(banner);
     }
 
     if (this.grants.length > 0) wrap.appendChild(this.renderStrip());
-    const packetRow = this.renderPacketRow();
-    if (packetRow !== null) wrap.appendChild(packetRow);
+    if (this.packetRowHeld) {
+      if (packets.count === 0) {
+        // An emptied row holds its height with one inert chip — the chip's
+        // own box, not a measured min-height.
+        const spacer = document.createElement('button');
+        spacer.type = 'button';
+        spacer.className = 'packet-chip';
+        spacer.disabled = true;
+        spacer.textContent = '▤';
+        packets.row.appendChild(spacer);
+        reserveSlot(packets.row);
+      }
+      wrap.appendChild(packets.row);
+    }
 
     for (const name of this.deniedRedrawIdols) {
       wrap.appendChild(renderGateDenied(t('preturn.redraw.silent', { name })));
@@ -926,7 +956,7 @@ export class PreTurnScreen extends Screen {
    * between, or after idol chips — the at-will economy lock); a unit-target
    * chip (hype) toggles the pick-a-card arming state.
    */
-  private renderPacketRow(): HTMLDivElement | null {
+  private renderPacketRow(): { row: HTMLDivElement; count: number; armable: string | null } {
     const row = document.createElement('div');
     row.className = 'preturn-packets';
     const label = document.createElement('span');
@@ -935,13 +965,15 @@ export class PreTurnScreen extends Screen {
     row.appendChild(label);
 
     let count = 0;
+    let armable: string | null = null;
     this.getCache().forEach((id, cacheIndex) => {
       const packet = packetById(id);
       if (packet === undefined || !packet.usableIn.includes('preTurn')) return;
       row.appendChild(this.renderPacketChip(packet, cacheIndex));
       count += 1;
+      if (armable === null && packet.target === 'unit') armable = packet.name;
     });
-    return count > 0 ? row : null;
+    return { row, count, armable };
   }
 
   private renderPacketChip(packet: PacketConfig, cacheIndex: number): HTMLButtonElement {

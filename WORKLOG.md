@@ -3755,3 +3755,87 @@ narrowed mid-countdown; the readout dropped as the enemy cards re-wrapped
 and stayed clear of them — the real window `resize` path the pane could
 only emulate, and the step's one live read. 101d closes verified in both
 browsers.
+
+### 101e — the conditional blocks (2026-09-18)
+
+A fresh session off the handoff. **Step zero by measurement, per surface,
+BEFORE any code** (one run in the pane at 1280×720, offers and stock
+fixtured through the private fields + the bus — `run.pendingRewards` +
+`reward:offered`, `run.rollPortStock` + `port:entered` — no reload between
+a before and an after). It shrank the step twice and grew it twice:
+
+| Surface | Toggle | Measured | Verdict |
+|---|---|---|---|
+| Reward | the accepted row vanishes | every Accept below + Continue −38 px | real |
+| Reward | Accept ⇄ select + Swap | row 87 → 87, cluster 32 → 32 | **no-op** |
+| Port | SOLD on a stock row | 56 → 56 (the desc sets the height) | **no-op** |
+| Port | SOLD on a unit footer | 46 → 30; a fully-sold grid row pulls the page up 16 px | real |
+| Port | the cache-full flip | heights + button tops equal, the button widens leftward | **no-op** |
+| Port | the price, `12` → `1234567` | 0 neighbours moved (row + footer) | the 101c rider CLOSES |
+| PreTurn | the arm hint | the Hype chip just clicked +26 px | real |
+| Cache modal | ✕ + banner at the overflow boundary | header 21 → 26, banner −48 | real |
+| Event | a page turn | heading 195 → 275; "Leave" under the choice just clicked | real |
+
+So the cut line's `min-height` action clusters were DROPPED unbuilt. And
+two mechanisms the kickoff audit missed: **(1) the cache modal is centered
+AND content-sized** — under its 86vh cap every Discard re-centers it (the
+first Discard button 180.0 → 215.5 px across one click), so the ✕ + banner
+fixes alone could never reach byte-equality; **(2) the Event column
+re-centers on the CHOICE COUNT too** (3 → 1), so the cut's text-only
+reserve would have measured as nothing. Both taken to the user with the
+table; the cut + both calls signed the same turn.
+
+**The idiom — `src/ui/reserveSlot.ts`:** `.is-reserved` (`visibility:
+hidden`) + `aria-hidden`; the element carries its REAL content, so the slot
+is sized by construction. The same rule for badges: a state badge WEARS
+the box of the button it replaces (same font-size, vertical padding, a
+transparent border of the same width) — no measured `min-height` anywhere
+in the step.
+
+- **Reward:** the engine splices a resolved portion (`takePendingReward`),
+  so "stays dimmed" needs screen-side memory: a LEDGER of the offer as
+  first shown; the live offer is always its un-taken rows in order (checked
+  by identity on every render — any mismatch rebuilds from the live offer,
+  the pre-101e behavior), a row's engine index = the un-taken rows before
+  it, a row is marked taken only if the offer actually SHRANK (the engine's
+  silent no-ops leave it pending), a taken bits row freezes at the amount it
+  paid. The cache line keys on the ledger. One new key, `reward.taken`.
+- **Port:** `.port-sold` wears the Buy box. Nothing else.
+- **PreTurn:** the arm hint holds its slot from the moment a unit-target
+  chip is in the row; the packet row, once shown, holds its height with one
+  inert chip. Both for the screen's life (reset in `show`).
+- **Cache modal:** `.cache-modal` TOP-ANCHORED (this modal only) at
+  `calc(7vh − 32px)` — where a FULL panel's top always sat, so a full cache
+  opens unmoved; the shell's ✕ reserves instead of `hidden` (every modal's
+  header is now one height); the banner, once shown in a modal session,
+  reserves. **The focus trap filtered on `hidden` + `offsetParent`** — a
+  reserved ✕ passes both and silently refuses focus, which would strand the
+  Tab wrap: the filter gains `closest('.is-reserved') === null`.
+- **Event:** two `.event-stack` grid cells (text · choices), every page of
+  the event in each, the non-current reserved + unwired; the tallest page
+  sizes the cell, no JS measuring. Needs `Run.activeEventPages()` — a
+  read-only getter (the catalog stays private). ⚠ **The kickoff's "no
+  `src/run` touch, the fuzz smoke never fires" prediction MISSED here** —
+  the alternative (the screen importing the config catalog) could drift from
+  an injected catalog, the display-honesty rule.
+
+**Proof (the same walk, after):** Event heading 195.25 = 195.25, first
+choice 352.8 = 352.8 across the turn · PreTurn the Hype chip 858.0 through
+arm / un-arm (the snapshot JSON-equal), the row 858.0 / 28 through both
+fires, scroll height 982 throughout · Cache modal first Discard 192.4
+across the overflow boundary and three more discards, panel top 50.4 (= the
+old capped top) · Reward five rows + Continue byte-equal through four
+accepts out of order incl. a swap, AND the mapping: ledger row 4 paid
+exactly 40, the swap dropped slot 0, the remainder `bits:25` · Port a
+fully-sold grid row, every footer 46 = 46, the rows under it unmoved.
+Typecheck clean · 2980 green.
+
+**Left alone, user-signed:** list deletions under the pointer — a Port
+Sell row, a cache Discard row, and (seen on the after-walk) a fired packet
+chip re-centering its row horizontally. The row you clicked is the row
+that leaves; repeat-click-to-clear is arguably the gesture. A stable Event
+layout also co-locates successive pages' first choices — true before too
+(381 vs 353), inherent to the exit criterion.
+
+Owed: the user's Firefox read (the Taken row's look at `opacity: 0.45`, the
+top-anchored cache modal, an event walked by eye).

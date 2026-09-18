@@ -41,6 +41,7 @@ import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunPhase } from '../run/Run';
 import { chipPulse } from './chip';
 import { openModal, type ModalHandle } from './modal';
+import { reserveSlot } from './reserveSlot';
 
 /** The live run state the overlay reads — injected as getters (the
  *  BitsOverlay `getBits` pattern), so a Run swap on reset is invisible. */
@@ -62,6 +63,12 @@ export class CacheOverlay {
    *  header, the ✕, Esc / backdrop (gated by `setDismissable` — the
    *  forced-keep flow) and the focus trap; this class owns the body. */
   private modal: ModalHandle | null = null;
+  /** 101e — the last overflow count the shrink banner showed in THIS modal
+   *  session (0 = never shown). The banner is the first body node, above
+   *  every Discard; the final discard of a forced-keep flow removed it and
+   *  pulled the list up 48 px under the pointer — so once shown it keeps its
+   *  slot (reserved, same text = same box) until the modal closes. */
+  private heldOverflow = 0;
 
   constructor(
     /** The page mount — the MODAL's host (a fixed full-viewport overlay;
@@ -145,6 +152,7 @@ export class CacheOverlay {
 
   private openModal(): void {
     if (this.modal !== null) return; // idempotent
+    this.heldOverflow = 0;
     this.modal = openModal(this.mount, {
       panelClass: 'cache-modal',
       onCloseClick: () => this.audio.play('click'),
@@ -178,10 +186,12 @@ export class CacheOverlay {
     modal.setDismissable(overflow === 0);
 
     const body: Node[] = [];
-    if (overflow > 0) {
+    if (overflow > 0) this.heldOverflow = overflow;
+    if (this.heldOverflow > 0) {
       const banner = document.createElement('div');
       banner.className = 'cache-shrink-banner';
-      banner.textContent = `⚠ ${t('cache.overflow', { count: overflow })}`;
+      banner.textContent = `⚠ ${t('cache.overflow', { count: this.heldOverflow })}`;
+      if (overflow === 0) reserveSlot(banner);
       body.push(banner);
     }
 

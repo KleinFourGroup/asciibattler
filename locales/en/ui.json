@@ -95,6 +95,7 @@
   "port.swapIn": "Swap in",
   "reward.accept": "Accept",
   "reward.swap": "Swap",
+  "reward.taken": "Taken",
   "reward.continueTitle": "Decline the remaining rewards and move on",
   "reward.heading": "Rewards",
   "reward.unitTitle": "{name} — level {level}",

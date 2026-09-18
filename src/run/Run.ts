@@ -1811,6 +1811,17 @@ export class Run {
     return def?.pages[this.activeEvent.pageId] ?? null;
   }
 
+  /** 101e — EVERY page of the active event, in authored order ([] outside
+   *  the phase). A LAYOUT read only: the EventScreen sizes its text and
+   *  choice slots to the tallest page so a page turn moves nothing; what is
+   *  live stays `currentEventPage` (the returned objects are the catalog's
+   *  own, so the screen finds the current page by identity). */
+  activeEventPages(): readonly EventPage[] {
+    if (this.activeEvent === null) return [];
+    const def = this.eventCatalog.find((e) => e.id === this.activeEvent!.eventId);
+    return def === undefined ? [] : Object.values(def.pages);
+  }
+
   /** 74f — the active event's display name (null outside the phase). The
    *  EventScreen's heading; the catalog stays private (the def is engine
    *  state — the screen gets exactly the read it needs). */

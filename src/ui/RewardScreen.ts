@@ -17,6 +17,14 @@
  * accepting a bits-fold daemon (Moneta) from a mixed offer visibly re-prices
  * the remaining bits rows on the spot — derive-don't-cache doing
  * player-facing work.
+ *
+ * 101e — layout stability: an ACCEPTED row STAYS in place, dimmed and marked
+ * taken, until the screen leaves (user-signed at the §101 kickoff). The
+ * engine splices a resolved portion out of `run.pendingRewards`, and on this
+ * centered column a vanished row re-centered the panel — every Accept below
+ * it jumped 38 px under the pointer. So the screen keeps a LEDGER of the
+ * offer as first shown; the live offer is always the ledger's un-taken rows,
+ * in order, which is what maps a row back onto its engine index.
  */
 
 import { daemonById } from '../config/daemons';
@@ -26,11 +34,21 @@ import { glyphForArchetype, nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
+import type { RewardPortion } from '../run/rewards';
 import { Screen } from './Screen';
 import { button } from './button';
 
+/** 101e — one row of the offer AS SHOWN. `settledBits` freezes a taken bits
+ *  row at the amount it actually paid (the live rows keep re-pricing). */
+interface LedgerRow {
+  readonly portion: RewardPortion;
+  taken: boolean;
+  settledBits: number | null;
+}
+
 export class RewardScreen extends Screen {
   private portionsEl: HTMLDivElement | null = null;
+  private ledger: LedgerRow[] = [];
 
   constructor(
     mount: HTMLElement,
@@ -56,6 +74,7 @@ export class RewardScreen extends Screen {
     this.portionsEl = document.createElement('div');
     this.portionsEl.className = 'reward-portions';
     panel.appendChild(this.portionsEl);
+    this.ledger = [];
     this.renderPortions();
 
     // 51b — the single exit: Continue declines every remaining portion
@@ -76,9 +95,10 @@ export class RewardScreen extends Screen {
   }
 
   /**
-   * (Re)render the rows from the LIVE offer. Row indices map 1:1 onto
-   * `run.pendingRewards` positions — the offer shrinks as portions resolve,
-   * so a full re-render after each command keeps every button's index true.
+   * (Re)render the rows from the ledger over the LIVE offer. A pending
+   * row's engine index is its position among the un-taken rows (the offer
+   * shrinks as portions resolve; `resolve` recomputes it at click time), so
+   * a full re-render after each command keeps every button true.
    * 49c: cache state re-derives here too, so accepting/swapping a packet
    * visibly moves the `n/size` line and flips later packet rows between the
    * plain Accept and the swap control.
@@ -86,12 +106,13 @@ export class RewardScreen extends Screen {
   private renderPortions(): void {
     if (this.portionsEl === null) return;
     this.portionsEl.replaceChildren();
-    const portions = this.run.pendingRewards ?? [];
+    this.syncLedger();
 
     // 49c — the live cache line (spec §Cache: "the reward screen shows
-    // cache state"), rendered only while a packet portion is pending — a
-    // bits/daemon-only offer has no cache decision to inform.
-    if (portions.some((p) => p.kind === 'packet')) {
+    // cache state"), rendered only for an offer that carries a packet — a
+    // bits/daemon-only offer has no cache decision to inform. 101e: keyed on
+    // the LEDGER, so the line holds its slot after the last packet resolves.
+    if (this.ledger.some((r) => r.portion.kind === 'packet')) {
       const cacheLine = document.createElement('div');
       cacheLine.className = 'reward-cache-line';
       // ▤ is the cache mark (the coming 49f chip vocabulary).
@@ -99,9 +120,10 @@ export class RewardScreen extends Screen {
       this.portionsEl.appendChild(cacheLine);
     }
 
-    portions.forEach((portion, index) => {
+    this.ledger.forEach((entry, ledgerIndex) => {
+      const portion = entry.portion;
       const row = document.createElement('div');
-      row.className = 'reward-portion';
+      row.className = entry.taken ? 'reward-portion is-taken' : 'reward-portion';
 
       const body = document.createElement('div');
       body.className = 'reward-portion__body';
@@ -121,7 +143,8 @@ export class RewardScreen extends Screen {
           const mark = packet !== undefined ? '▤' : '◈';
           source = `${mark} ${daemon?.name ?? packet?.name ?? portion.source} — `;
         }
-        title.textContent = `${source}${this.run.effectiveBits(portion.base)} bits`;
+        const bits = entry.settledBits ?? this.run.effectiveBits(portion.base);
+        title.textContent = `${source}${bits} bits`;
         body.appendChild(title);
       } else if (portion.kind === 'daemon') {
         const daemon = daemonById(portion.daemonId);
@@ -178,15 +201,25 @@ export class RewardScreen extends Screen {
 
       const actions = document.createElement('div');
       actions.className = 'reward-portion__actions';
-      if (portion.kind === 'packet' && !this.run.cacheHasRoom) {
+      if (entry.taken) {
+        // 101e — the badge wears the Accept button's box (ui.css), so the
+        // row's height cannot change across its own click.
+        const taken = document.createElement('div');
+        taken.className = 'reward-taken';
+        taken.textContent = t('reward.taken');
+        actions.appendChild(taken);
+      } else if (portion.kind === 'packet' && !this.run.cacheHasRoom) {
         // 49c — the decline-or-swap control: pick a held packet to drop,
         // then Swap dispatches the accept WITH the slot (the engine
         // enforces the same contract — a swap-less accept would no-op).
         // 51b: skipping it is Continue's job now (declines ride the exit).
-        actions.appendChild(this.swapControl(index));
+        actions.appendChild(this.swapControl(ledgerIndex));
       } else {
         actions.appendChild(
-          button(t('reward.accept'), { className: 'reward-accept', onClick: () => this.accept(index) }),
+          button(t('reward.accept'), {
+            className: 'reward-accept',
+            onClick: () => this.resolve(ledgerIndex),
+          }),
         );
       }
       row.appendChild(actions);
@@ -198,7 +231,7 @@ export class RewardScreen extends Screen {
   /** 49c — the full-cache swap picker: a select over the HELD packets (by
    *  slot) + a Swap button carrying the chosen `swapCacheIndex`. Rebuilt on
    *  every re-render, so the slot list is always the live cache. */
-  private swapControl(portionIndex: number): HTMLSpanElement {
+  private swapControl(ledgerIndex: number): HTMLSpanElement {
     const wrap = document.createElement('span');
     wrap.className = 'reward-swap';
 
@@ -218,23 +251,46 @@ export class RewardScreen extends Screen {
     wrap.appendChild(
       button(t('reward.swap'), {
         className: 'reward-accept reward-swap__button',
-        onClick: () => {
-          this.audio.play('pickup');
-          this.dispatcher.dispatch({
-            kind: 'acceptReward',
-            index: portionIndex,
-            swapCacheIndex: Number(select.value),
-          });
-          this.renderPortions();
-        },
+        onClick: () => this.resolve(ledgerIndex, Number(select.value)),
       }),
     );
     return wrap;
   }
 
-  private accept(index: number): void {
+  /**
+   * 101e — the ledger follows the live offer. Its un-taken rows must BE
+   * `run.pendingRewards`, in order (same objects — nothing but this screen's
+   * own commands resolves a portion while it is up). First render, or any
+   * mismatch: rebuild from the live offer — the pre-101e behavior, never a
+   * row whose button points at the wrong portion.
+   */
+  private syncLedger(): void {
+    const live = this.run.pendingRewards ?? [];
+    const pending = this.ledger.filter((r) => !r.taken);
+    if (pending.length === live.length && pending.every((r, i) => r.portion === live[i])) return;
+    this.ledger = live.map((portion) => ({ portion, taken: false, settledBits: null }));
+  }
+
+  /** Accept one ledger row (with the full-cache swap slot, when given). The
+   *  row is marked taken only if the offer actually shrank — the engine's
+   *  silent no-ops (a swap-less accept on a full cache) leave it pending. */
+  private resolve(ledgerIndex: number, swapCacheIndex?: number): void {
+    const entry = this.ledger[ledgerIndex];
+    if (entry === undefined || entry.taken) return;
+    const index = this.ledger.slice(0, ledgerIndex).filter((r) => !r.taken).length;
+    const before = this.run.pendingRewards?.length ?? 0;
+    const settledBits =
+      entry.portion.kind === 'bits' ? this.run.effectiveBits(entry.portion.base) : null;
     this.audio.play('pickup');
-    this.dispatcher.dispatch({ kind: 'acceptReward', index });
+    this.dispatcher.dispatch(
+      swapCacheIndex === undefined
+        ? { kind: 'acceptReward', index }
+        : { kind: 'acceptReward', index, swapCacheIndex },
+    );
+    if ((this.run.pendingRewards?.length ?? 0) < before) {
+      entry.taken = true;
+      entry.settledBits = settledBits;
+    }
     // Resolving the LAST portion advances the run synchronously inside the
     // dispatch — Game swaps the scene and `hide()` has already nulled the
     // mount points, making this re-render a no-op on the fading DOM.

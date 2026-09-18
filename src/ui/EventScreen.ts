@@ -21,6 +21,14 @@
  * (the same check the engine applies at dispatch) — never a re-derivation
  * that could drift. The `art` seam renders nothing this cluster (spec
  * scope guard).
+ *
+ * 101e — layout stability: the text and the choice list are each a STACK of
+ * every page of the event in one grid cell (`.event-stack`), the pages that
+ * are not current reserved (`reserveSlot` — hidden, inert, slot kept). The
+ * tallest page sizes both cells, so on this centered column a page turn
+ * moves neither the heading nor the first choice (measured before: the
+ * heading 195 → 275 px, and the next page's "Leave" landed under the choice
+ * just clicked). No measuring — the browser sizes the cell, resizes included.
  */
 
 import { describeEventCondition } from './eventConditionText';
@@ -28,9 +36,11 @@ import { t } from '../i18n/ui';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { Run } from '../run/Run';
+import type { EventPage } from '../config/events';
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { Screen } from './Screen';
+import { reserveSlot } from './reserveSlot';
 
 export class EventScreen extends Screen {
   private bodyEl: HTMLDivElement | null = null;
@@ -84,15 +94,39 @@ export class EventScreen extends Screen {
     heading.textContent = `? ${this.run.activeEventName ?? t('event.fallbackName')}`;
     this.bodyEl.appendChild(heading);
 
-    const text = document.createElement('div');
-    text.className = 'event-page-text';
-    text.textContent = page.text;
-    this.bodyEl.appendChild(text);
+    // Every page, authored order; the grid cell overlaps them. A current
+    // page the catalog walk cannot find (unreachable) renders alone.
+    const all = this.run.activeEventPages();
+    const pages = all.includes(page) ? all : [page];
 
+    const textStack = document.createElement('div');
+    textStack.className = 'event-stack';
+    const choiceStack = document.createElement('div');
+    choiceStack.className = 'event-stack';
+    for (const p of pages) {
+      const text = document.createElement('div');
+      text.className = 'event-page-text';
+      text.textContent = p.text;
+      const choices = this.renderChoices(p, p === page);
+      if (p !== page) {
+        reserveSlot(text);
+        reserveSlot(choices);
+      }
+      textStack.appendChild(text);
+      choiceStack.appendChild(choices);
+    }
+    this.bodyEl.append(textStack, choiceStack);
+  }
+
+  /** One page's choice list. `live` = the current page: real enabled state
+   *  + click handlers. A reserved page gets the same boxes (the label and,
+   *  where authored, the requirement line — the only things that set a
+   *  row's height), disabled and unwired. */
+  private renderChoices(page: EventPage, live: boolean): HTMLDivElement {
     const choices = document.createElement('div');
     choices.className = 'event-choices';
     page.choices.forEach((choice, choiceIndex) => {
-      const enabled = this.run.eventChoiceEnabled(choiceIndex);
+      const enabled = live && this.run.eventChoiceEnabled(choiceIndex);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'event-choice';
@@ -118,6 +152,6 @@ export class EventScreen extends Screen {
       }
       choices.appendChild(button);
     });
-    this.bodyEl.appendChild(choices);
+    return choices;
   }
 }

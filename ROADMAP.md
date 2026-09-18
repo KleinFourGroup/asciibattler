@@ -451,7 +451,25 @@ archetype), both variants. **Depends on:** §96 (the screen base) +
 §101. **Risk:** low (config + fxRegistry; a pure aggregator; no sim, no
 bump). **Exit:** a wail visibly flies; a run ends with stats. **Scope
 guards:** no range / cooldown / duration change; the stats sting is
-dispositioned in §104, not here.
+dispositioned in §104, not here. **Kickoff 2026-09-18 (WORKLOG §102):**
+the projectile seam is BUILT (three abilities fly already); "no sim" is
+wrong in the letter — a timeline is sim config, so the carve is PROVEN.
+
+- [ ] **102a — the carve (headless):** `release` + `travel` carved out of
+      the windup at CONSTANT SUM (hex 0.15 / 0.25 · wail 0.2 / 0.3); exit =
+      the worktree-pinned fuzz-arm `summary.csv` byte-identity. Fuzz smoke
+      FIRES (`config/`); no bump; no RNG stream.
+- [ ] **102b — the fx keys (render):** two `projectile: straight` keys on
+      `fx.release` (the team-colored `*` first); exit = the user's Firefox
+      eye. Fuzz smoke fires (`config/`). ✅ DECIDED: a hex retime to
+      0.2 / 0.3 (+2 ticks, user-signed) is a one-line 102b2 IF the eye asks.
+- [ ] **102c — the aggregator (headless):** a pure fold over
+      `FallenRecord[]` in `src/run/` (per encounter instance / side /
+      archetype + run totals) + the defeat-turn ledger pin. Fuzz smoke fires.
+- [ ] **102d — the stats body:** totals + a per-encounter table on both
+      GameOverScreen variants, per-turn detail in tooltips, the button
+      pinned; exit = the user's won + lost run. No sim, no smoke.
+- [ ] **102e — the exit:** the DESIGN note, this stub, the cursor.
 
 ## Phase 103 — the idiom reference (the signing)
 

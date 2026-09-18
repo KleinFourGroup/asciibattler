@@ -3928,3 +3928,83 @@ name #702 as the thing to watch. The lesson for the scratchpad: a search
 that finds nothing has not searched — read the issue's own timeline
 (`gh issue view --json timelineItems`, or the page) before claiming an
 absence about it.
+
+## Phase 102 — the two surface riders
+
+### Kickoff (2026-09-18) — the code-reality audit + the cut
+
+Pre-flight at `5c7f171`: 2980 tests green, typecheck clean, the tree clean.
+Both surfaces read as they exist now; the charter corrected twice on (a),
+confirmed on (b).
+
+**(a) wail / hex — two charter corrections.**
+
+1. **The projectile seam is BUILT.** The spec's "no projectile exists
+   anywhere in `abilities.json`" (round-7-spec §8, WORKLOG §Kickoff H.9) is
+   wrong as worded: `magic_bolt`, `catapult_shot` and both `vial` abilities
+   author `release` → `travel` → `impact` with a projectile fx key
+   (`magic_bolt_launch` / `catapult_launch` / `vial_throw`), and
+   `BattleRenderer.launchProjectileFx` reads the flight time off the
+   caster's live `travel` ticks (one source of truth with the sim). What
+   IS true: `hex` and `wail` are `windup` → `impact` with an impact-only
+   key. The step is content on an existing seam, not a mechanism.
+2. **"No sim touch" is wrong in the letter.** A timeline is sim config and
+   `travel` is a tick-counted sim phase (`Action.ts:15`). A 0-length travel
+   is not an option: the renderer falls back to `PROJECTILE_SECONDS` and
+   the glyph would arrive 0.18 s AFTER the burst it announces. So the
+   travel is carved out of the windup — the F3 precedent (mage / catapult),
+   impact tick unchanged, range / cooldown / total duration untouched (the
+   scope guard holds).
+   - The only sim reader of a phase NAME found: `EffectAction.holdCheck`
+     (`releaseGate`, which neither ability authors) and the two
+     sum-to-impact loops (`occupancy.ts:434`, `SwapAction.ts:249`, both
+     move-only). No interrupt keys on a phase. So outcome-neutrality is
+     EXPECTED — and proven, not asserted: the worktree-pinned fuzz-arm
+     `summary.csv` byte-identity oracle (AGENTS). Not identical = stop, a
+     finding.
+   - Predictions: the fuzz smoke FIRES on 102a and 102b (`config/`
+     staged); no snapshot bump (`activeAction.phases` is an array of the
+     same shape; a mid-battle v36 save restores its old phases); no RNG
+     stream; the `action:phase` stream gains two boundaries per cast. The
+     derived-artifact tripwire is catalog-membership only — it does not
+     trip. `configHash` covers `abilities.json`, so the hash moves off the
+     frozen `d9675b6` value under ANY carve; byte-identical arms are what
+     lets the signed 94h sheet stand at the new hash.
+   - To check at 102a's step zero: whether the determinism test compares
+     against a stored stream or run-vs-run (read so far: it taps
+     `action:phase` into the compared stream).
+
+**(b) the run-end stats — clean.** `GameOverScreen` is 73 lines on the §96
+`Screen` base (heading / subtext / the New Run button); `GameOverScene`
+holds `ctx.run`, so the ledger passes in at `show`. `FallenRecord` carries
+sector / node / hop / encounterId / turn / side / archetype / level / power
+/ tick. The glyph-run + tooltip renderer exists as `lastTurnSide`
+(`PreTurnScreen.ts:1097`) — lift, don't copy. The ledger is DEATHS only:
+the user's "lots of good stats" is wider (damage, turns won, bits); the
+charter scopes to the ledger, the rest goes to TODO rather than growing the
+phase.
+
+**The shape-lock (the user, same day) — four calls:**
+
+- **A — the carve split: CONSTANT SUM first** (hex 0.15 / 0.25 = 3 + 5
+  ticks of the 8; wail 0.2 / 0.3 = 4 + 6 of the 10). The user's first guess
+  was 0.2 / 0.3 on both and they are open to a small sim change (the AoE
+  units are overhauled in Round 9; +2 ticks on one ability sits under the
+  measurement noise). The recommendation held anyway, for what we would
+  lose the ability to PROVE, not for the size of the change: at constant
+  sum byte-identity is the only cheap proof that the two new phases are
+  inert in the sim, the bot and the rollouts; move the sum in the same
+  commit and every diff reads as "expected". So: 102a at constant sum →
+  the user's eye at 102b → a hex retime to 0.2 / 0.3 is a one-line
+  **102b2**, user-signed in advance, its diff expected and attributable,
+  no re-measure (Round 9 overhauls the unit). Rejected: straight to 0.2 /
+  0.3 on both (wail is constant-sum there anyway; hex is not).
+- **B — the look:** the existing team-colored `*` first (zero new code); an
+  optional `glyph` on `FxProjectile` only if the eye reads "a second mage
+  bolt" (the atlas budget is checked then).
+- **C — the aggregator's home:** `src/run/` (inside the tested policy,
+  reusable by the fuzz harness; one ~7-min hook).
+- **D — the body's depth:** totals + a per-encounter table, per-turn
+  detail in tooltips only; non-ledger stats → TODO.
+
+The cut (102a–102e) is in ROADMAP §102.

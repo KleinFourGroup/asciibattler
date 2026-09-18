@@ -396,7 +396,9 @@
     "minRangeCells": 2,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
-      { "phase": "windup", "seconds": 0.4 },
+      { "phase": "windup", "seconds": 0.15 },
+      { "phase": "release", "seconds": 0 },
+      { "phase": "travel", "seconds": 0.25 },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],
@@ -451,7 +453,9 @@
     "rangeCells": 4,
     "target": { "kind": "aoe", "shape": "square", "radius": 1, "anchor": "targetCell", "affects": "enemies" },
     "timeline": [
-      { "phase": "windup", "seconds": 0.5 },
+      { "phase": "windup", "seconds": 0.2 },
+      { "phase": "release", "seconds": 0 },
+      { "phase": "travel", "seconds": 0.3 },
       { "phase": "impact", "seconds": 0 },
       { "phase": "recovery", "seconds": "fill" }
     ],

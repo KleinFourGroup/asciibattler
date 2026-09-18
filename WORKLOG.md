@@ -4008,3 +4008,55 @@ phase.
   detail in tooltips only; non-ledger stats → TODO.
 
 The cut (102a–102e) is in ROADMAP §102.
+
+### 102a — the carve (2026-09-18)
+
+`config/abilities.json`, two timelines: `hex` windup 0.4 → windup 0.15 +
+release 0 + travel 0.25 (3 + 0 + 5 = the same 8 ticks to impact); `wail`
+windup 0.5 → 0.2 + 0 + 0.3 (4 + 0 + 6 = the same 10). Verified per ability
+id through `secondsToTicks`' own rule (`Math.round(s × 20)`), not by
+indent. No fx key yet — 102b authors `fx.release`; until then the release
+boundary fires with nothing on it (the renderer's dispatch is key-driven).
+
+**Step zero.** The determinism test is run-vs-run (it taps `action:phase`
+into both streams) — no stored stream to re-baseline, as predicted. The
+full phase-reader sweep over `src/sim|bot|run|core` matched the kickoff's
+claim: `holdCheck` (release-gated abilities only), the two move-only
+sum-to-impact loops, tick-offset lookups and the snapshot copies.
+
+**The oracle — and the shape problem it would have had.** `warlock` and
+`banshee` are enemy-only, in three encounters (`darkMagicPosse`,
+`miscreants`, `banditQueen`) and two camps. The standing
+`scripts/perf-oracle.sh` shapes (n=4 scored, n=1 ARM) could have passed
+without one cast, so each encounter was FORCED as the extra shape
+(`ORACLE_EXTRA_SHAPE="--count=8 --hops=3 --character=soldier
+--encounter=<id> --per-encounter"`), baseline `9233faf` pinned in a
+worktree vs the dirty tree:
+
+| shape | the carve (constant sum) | the control (+2 ticks each) |
+|---|---|---|
+| scored + arm (default) | PASS | FAIL |
+| extra `darkMagicPosse` | PASS — summary `068636fa`, per-encounter `521f1542` | FAIL |
+| extra `miscreants` | PASS — `cd215137` / `542a56f7` | FAIL |
+| extra `banditQueen` | PASS — `db6e47e4` / `fb9f22a6` | FAIL |
+
+**The control** is what makes the PASS column mean something: the same
+runs under a deliberately non-neutral edit (hex 0.2 / 0.3, wail 0.3 / 0.3 —
+two more ticks to impact each) FAILED on every shape, 7 mismatched
+artifacts per run, the default shapes included (so they do meet these
+units). The instrument can fail on exactly this surface, and did not for
+the carve: the two new phases are inert in the sim, the bot and the
+rollouts; the signed 94h sheet stands at the new `configHash`. The
+control's edit was written by a node one-liner over a scratchpad backup
+and the carve restored from the backup, the diff re-read after (8 lines,
+the two timelines).
+
+A note for 102b2, should the eye ask for it: the control's hex leg IS the
+0.2 / 0.3 retime, and it diverges the artifacts — expected (any tick shift
+re-routes a deterministic battle), and not evidence of a balance effect in
+either direction; it only means the retime is a real sim change and gets
+its own commit, as signed.
+
+Hook: the fuzz smoke is PREDICTED to fire (`config/` staged) — this entry
+is written before the commit, so the landing commit's hook is the check;
+102b's entry records what it did. No bump.

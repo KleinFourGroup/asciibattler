@@ -455,10 +455,10 @@ dispositioned in §104, not here. **Kickoff 2026-09-18 (WORKLOG §102):**
 the projectile seam is BUILT (three abilities fly already); "no sim" is
 wrong in the letter — a timeline is sim config, so the carve is PROVEN.
 
-- [ ] **102a — the carve (headless):** `release` + `travel` carved out of
-      the windup at CONSTANT SUM (hex 0.15 / 0.25 · wail 0.2 / 0.3); exit =
-      the worktree-pinned fuzz-arm `summary.csv` byte-identity. Fuzz smoke
-      FIRES (`config/`); no bump; no RNG stream.
+- [x] **102a — the carve (headless)** ✅ 2026-09-18: hex 0.15 / 0.25 ·
+      wail 0.2 / 0.3, the same 8 / 10 ticks to impact; byte-identical on
+      the default shapes + the three FORCED encounters, a +2-tick control
+      FAILED on all of them. No bump. WORKLOG §102a.
 - [ ] **102b — the fx keys (render):** two `projectile: straight` keys on
       `fx.release` (the team-colored `*` first); exit = the user's Firefox
       eye. Fuzz smoke fires (`config/`). ✅ DECIDED: a hex retime to

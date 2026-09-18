@@ -687,7 +687,9 @@ Windows.
 
 - Node 25.5, npm 11.8
 - TypeScript 6.0.3, Vite 8.0.13
-- three.js 0.184.0, simplex-noise 4.0.3, @fontsource/jetbrains-mono 5.2.8
+- three.js 0.184.0, simplex-noise 4.0.3; fonts are SELF-HOSTED subsets
+  (JetBrains Mono 2.304 + DejaVu Sans Mono 2.37 under `assets/fonts/`,
+  built by `npm run gen:font` — `@fontsource` left at §79g)
 - Vitest 4.1.6, ESLint 10.4.0, typescript-eslint 8.59.3, prettier 3.8.3
 
 ## Project tree (abbreviated)

@@ -275,3 +275,45 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
 - **One stab, capped by the user, is a fine shape for a host we are
   leaving** (the Electron move): the 100e2 wrapper took ten minutes; a
   design would have taken the afternoon.
+
+## §101 — layout stability (2026-09-17 → 18, the kickoff → 101d)
+
+- **Step zero by MEASUREMENT shrank three steps running.** 101b dropped a
+  signed global `line-height` (a style injection showed it drifting 19 of
+  65 text leaves; 101a had already closed the instance). 101c went from
+  ten reserve-a-width rules to two pinned labels (a content sweep: 12 of
+  14 sinks moved nothing). The charter's headline lever, `tabular-nums`,
+  was a no-op on a monospace face from the start. A cut written from an
+  audit is a list of HYPOTHESES; ten seconds of probe per item beats
+  building the item. The probe that shrinks a step is the step's best
+  commit.
+- **A coverage pin proves HAS, never DRAWS RIGHT** (gotcha #136). Widening
+  a font subset silently re-homes every glyph in the new blocks from an
+  unknown-but-usually-correct OS face onto the primary. The fallback class
+  had been HIDING an upstream font bug. A widening is a visual change on
+  every glyph it moves.
+- **Two instruments discarded for implausible readings, the 86f rule
+  twice:** raw mask IoU scored the em dash 0.00 against itself (normalize
+  to the ink before comparing two designs); an after-reload box diff
+  "found" 60 moved elements because an unseeded reload is a different run
+  (the same-run revert-stylesheet toggle replaced it). Both were caught
+  because the reading was too big to be true, and both rebuilt instruments
+  carried a known answer.
+- **An instrument with a known answer inside it.** The swap search had to
+  find `⊞ ⇄ ⊠`; the metrics pin had to reject Noto Sans Symbols 2; the
+  inventory pin had to fail on a planted `⏸`; the countdown probe ran its
+  CONTROL (watch torn down) before its treatment. Every one of the
+  session's trusted negatives rests on one of these.
+- **I wrote a measurement into a comment before taking it** ("the box
+  oracle read zero drift"). It then read zero. The order is the defect:
+  a comment is a claim with a longer half-life than a chat message.
+- **The user's eye found what no probe was aimed at, again** (the map
+  chip's glyph, the morning after). Pause-between-commits is the norm
+  that made room for it; the harness's keep-going instruction would have
+  buried it under three more commits.
+- **Cap a probe's output.** Two uncapped diffs cost thousands of tokens
+  each in a session that ended on context.
+- **The ROADMAP cap tripped at the KICKOFF** (519 / 500) because §100's
+  "stub" still carried its ✅ as-built tails — demote-as-you-close was
+  applied late. A close that leaves tails passes the cap until the next
+  phase writes its cut.

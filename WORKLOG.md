@@ -3728,3 +3728,24 @@ Typecheck + eslint clean. `src/ui` + `src/scenes` only — no sim touch, no
 bump, no fuzz trigger. The user's Firefox read: a battle whose enemies
 carry a seeded status (the readout clear of the cards from its first
 frame), and a window narrowed mid-countdown.
+
+**101d — a correction at the handoff (2026-09-18, the user's question):**
+the entry above says the old call order mis-measured "every battle with a
+seeded enemy status". No authored encounter seeds one today — a grep of
+`config/` and the spawn paths for a start-of-battle status comes back
+empty; the daemons' `turnStart` ops land on the PLAYER's units, the other
+pane. The swap is proofing for content not yet authored, not a fix for a
+live symptom; the observer is the part that changes behaviour today (a
+window resize, a late card). The user's Firefox read is therefore
+optional — narrowing the window mid-countdown is the one path the pane
+could only emulate.
+
+### The session handoff (2026-09-18) — §101 pauses at 101d
+
+Handed off on context before 101e, the user's call and mine. The cursor
+carries 101e's inputs; the pane's three layout lies + the two oracles are
+a new HANDOFF tip; AGENTS' stale `@fontsource` toolchain line is fixed;
+the session report + the scratchpad's §101 section + six friction-log
+entries are filed. Commits this session: `e746c7a` the kickoff · `c8952ee`
+101a · `14312f6` 101a-post · `f702d89` the TODO rider · `7b6ac61` 101b ·
+`51743d5` 101c · `76fad77` 101d · this handoff. Tests 2974 → 2980.

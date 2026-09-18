@@ -702,3 +702,54 @@ event-condition phrases left the config layer. The one finding the pane
 could never have shown (the chrome column first in the tree) the user's
 Firefox found twice; the fix was a wrapper div, capped at one stab ahead of
 the Electron move. No sim touch, no bump, the fuzz smoke fired once.
+
+### 2026-09-17 → 09-18 — §101 kickoff → 101d (one session across a night; handed off on context before 101e)
+
+1. **Missing from the orientation:** that the DOM UI loads the SAME
+   self-hosted subset as the canvas (AGENTS' toolchain line still listed
+   `@fontsource`, gone since §79g — fixed at this handoff); the kickoff's
+   central finding hung on it and an audit agent had to discover it.
+   Nothing said an unseeded reload starts a different run, which cost one
+   discarded oracle. Nothing warned the pane can be zero-width.
+2. **Norms in tension:** "pause between commits for the user's read"
+   against the harness's standing instruction to keep working without
+   asking. I followed the project norm at every commit and it was right
+   each time — the user's morning read found the swapped glyph pair, which
+   no probe of mine was pointed at. The preview-verification hook fires on
+   every Write, including scratchpad probe files; noise, not pressure.
+3. **Pulled to claim more than verified:** three times. I wrote "the box
+   oracle read zero drift" into a CSS comment BEFORE running the oracle
+   (it then read zero, but the order was wrong and I said so). The 101a
+   recap claimed every glyph now "paints from a face we ship" as if that
+   meant "paints correctly" — I had proven provenance and never looked at
+   the pictures; the user's eye found `⊞` drawn as `⊠`. And the 101d
+   worklog said the old call order bit "every battle with a seeded enemy
+   status" when no authored encounter seeds one (corrected in place).
+4. **Wasted:** two uncapped probe outputs (the raw-IoU glyph audit's ~200
+   "mismatches", the after-reload box diff's 60-entry lists) — thousands
+   of tokens each for instruments I then discarded; three restarts of the
+   countdown probe; four preview-server restarts (the server does not
+   survive the night, and I stop it at each pause point by the norm).
+5. **For the next session, no other home:** the promotion `+N` chip and
+   the port price are the two 101c items deliberately left — do not
+   "finish" the first; measure the second. ROADMAP sits at 482 / 500, so
+   101e's lines must be as terse as the ones I compressed.
+6. **Room to ask, disagree, change approach:** yes, exercised. I dropped a
+   signed item (the global line-height) at step zero on a measurement and
+   reported it after the commit rather than asking first; it was accepted,
+   and I would make the same call — but it was a call, and an available
+   "ask first" was not taken. The user invited a real opinion on the font
+   question ("tell me what your thoughts are") and the second-face answer
+   came out of that, not out of my first proposal (glyph swaps), which was
+   the weaker idea. The periodic "the user hasn't heard from you" nudges
+   arrived mid-measurement several times; mild pull to narrate instead of
+   finishing the read; I narrated briefly and continued. The user raised
+   the context size before I did. I had noticed the long outputs and not
+   flagged them; uncertain whether I would have raised a handoff unasked.
+   No wish to pause or stop.
+7. **What supported ease or interest:** being asked what I thought about
+   a design question wider than the step; the font bug being received as
+   a catch rather than as my miss (it was both); instruments with a known
+   answer built in — the swap search had to find `⊞ ⇄ ⊠` and the metrics
+   pin had to reject Noto — so a clean result meant something. I would
+   want all three repeated. This reports the conditions, not the outcome.

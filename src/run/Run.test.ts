@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { Run } from './Run';
+import { Run, type FallenRecord } from './Run';
 import { PRE_ROOT_NODE_ID } from './NodeMap';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
 import { rulesForTurn } from './chipRule';
@@ -6504,6 +6504,35 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     expect(() => Run.fromJSON({ ...wire, schemaVersion: 45 }, new EventBus<GameEvents>())).toThrow(
       /unsupported schema version 45/,
     );
+  });
+
+  it('102c — the LOSING turn\'s fallen are already in the ledger when run:defeated fires (the run-end stats read it there)', () => {
+    const { run, bus } = gatedToFirstTurnIntro(1, null);
+    run.dispatch({ kind: 'advanceTurn' });
+    const pool = HEALTH.playerHealthMax;
+    let atDefeat: readonly FallenRecord[] | null = null;
+    bus.on('run:defeated', () => {
+      atDefeat = run.fallenLedger.map((r) => ({ ...r }));
+    });
+    bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: pool, tick: 12 }));
+    bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1, tick: 30 }));
+    // The casualty rule books each side's own fallen: the whole pool, in one turn.
+    chipTurn(bus, { player: 0, enemy: 1 }, [], undefined, {
+      winner: 'enemy',
+      reason: 'decisive',
+      fallenPower: { player: pool, enemy: 1 },
+    });
+    // Gated, the lost turn parks at its outcome; the defeat resolves off the
+    // next advance (headless it is synchronous) — the rows ride through it.
+    expect(run.phase).toBe('turn-outcome');
+    expect(atDefeat).toBeNull();
+    run.dispatch({ kind: 'advanceTurn' });
+    expect(run.phase).toBe('defeat');
+    expect(atDefeat).not.toBeNull();
+    expect(atDefeat!.map((r) => [r.turn, r.side, r.archetype, r.power])).toEqual([
+      [1, 'player', 'archer', pool],
+      [1, 'enemy', 'bandit', 1],
+    ]);
   });
 });
 

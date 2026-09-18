@@ -4120,3 +4120,49 @@ stages `config/` again, the same prediction.
 team-colored star reads, both splits hold (hex 0.15 / 0.25, wail 0.2 /
 0.3). The pre-signed 102b2 retime and the B2 per-key glyph are NOT taken —
 the sim stays byte-identical to the frozen config across the whole rider.
+
+### 102c — the aggregator (2026-09-18)
+
+`src/run/fallenStats.ts` — `summarizeFallen(ledger)`, pure over
+`FallenRecord[]` (no Run, no bus, no config — the fuzz harness can call it
+on a results file). The run's totals, then one entry per encounter
+INSTANCE (`sector` + `node`, the ledger's own key — an encounter id recurs
+across sectors), each split per side → per archetype, and per turn. Every
+scope hands back its `rows` (a filtered view, death order), so 102d's
+glyph run reads them directly instead of re-deriving.
+
+**What the fold will not pretend (written into the module header):** the
+ledger is DEATHS only, so a fight nobody fell in has no entry and a
+bloodless turn is absent from `turns` — the screen must word its table as
+"the fallen", never as "the fights" or "the turns". A turns-fought or
+encounters-won count needs a second source (`turn:resolved`), which is the
+wider-stats TODO, not this phase.
+
+**Ordering, decided here:** encounters by first death (the ledger is
+append-only, so that is fought order), turns ascending (sorted, not
+assumed — pinned with a shuffled input), archetypes by first death in
+their scope. No sort by count or power: the screen can sort a copy, and a
+stable, explainable default beats a tie-break rule nobody remembers.
+
+**Tests (8, `fallenStats.test.ts` + one Run pin).** The expectation side
+never calls the module — plain loops over the raw fixture rows (the
+circular-verification norm): per-scope count / power / rows, the archetype
+split adds back up and never repeats an id, every row lands in exactly one
+encounter and one turn, the recurring-id instance split, the frozen-input
+no-mutation check. **The Run pin** — the LOSING turn's fallen are in the
+ledger when `run:defeated` fires — failed on its first run, and the
+failure was the fixture's premise, not the code: gated
+(`pauseAtTurnGates`), a lost turn parks at `turn-outcome` and the defeat
+resolves off the next `advanceTurn` (`continueAfterTurn`). The pin now
+walks the gate (null at the outcome, the two rows at the event), which is
+the stronger statement: the rows ride through the park. For 102d's step
+zero (NOT read yet): how Game walks the `turn-outcome` park now that 96.5d
+deleted the post-turn screen, and that the GameOverScene mounts off
+`run:defeated` / `run:victory` with `ctx.run` still the finished run.
+
+A dial learned too late for 102a/b: `?firstNode=elite|event` (ARCHITECTURE,
+the RunConfig line) — `?encounter=darkMagicPosse&firstNode=elite` is the
+real elite fixture.
+
+ARCHITECTURE's tree gains the module. Predicted: the fuzz smoke fires
+(`src/run/` staged); no bump (nothing serialized changes).

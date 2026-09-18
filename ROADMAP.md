@@ -464,9 +464,10 @@ wrong in the letter — a timeline is sim config, so the carve is PROVEN.
       go — the `*` and both splits KEPT. WORKLOG §102b.
       ✅ DECIDED: the pre-signed hex retime (102b2) NOT TAKEN — the eye
       did not ask.
-- [ ] **102c — the aggregator (headless):** a pure fold over
-      `FallenRecord[]` in `src/run/` (per encounter instance / side /
-      archetype + run totals) + the defeat-turn ledger pin. Fuzz smoke fires.
+- [x] **102c — the aggregator (headless)** ✅ 2026-09-18:
+      `summarizeFallen` (`src/run/fallenStats.ts`, pure; instance / side /
+      archetype / turn, rows handed back) + the defeat pin walks the
+      `turn-outcome` gate. DEATHS only — no "fights" count. WORKLOG §102c.
 - [ ] **102d — the stats body:** totals + a per-encounter table on both
       GameOverScreen variants, per-turn detail in tooltips, the button
       pinned; exit = the user's won + lost run. No sim, no smoke.

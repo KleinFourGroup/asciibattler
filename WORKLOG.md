@@ -3749,3 +3749,9 @@ the session report + the scratchpad's §101 section + six friction-log
 entries are filed. Commits this session: `e746c7a` the kickoff · `c8952ee`
 101a · `14312f6` 101a-post · `f702d89` the TODO rider · `7b6ac61` 101b ·
 `51743d5` 101c · `76fad77` 101d · this handoff. Tests 2974 → 2980.
+
+**101d — the user's Firefox read (2026-09-18): PASSED.** The window
+narrowed mid-countdown; the readout dropped as the enemy cards re-wrapped
+and stayed clear of them — the real window `resize` path the pane could
+only emulate, and the step's one live read. 101d closes verified in both
+browsers.

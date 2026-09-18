@@ -8,6 +8,13 @@
      FONT_STACK here when FACES changes. */
   --font-mono: 'JetBrains Mono', 'DejaVu Sans Mono', ui-monospace, 'Courier New', monospace;
 
+  /* 101b — the chrome column's ONE width (outer, border-box). Sized off the
+     widest live one-line form measured at 18px: the pool chip's `MORALE 40 /
+     40` = 196px (cache at `10/10` 182 · bits at five digits 147). The column
+     owns it, the chips stretch to it, and the battle HUD's hop chip sits at
+     20px + this + a gutter. A third pool digit needs this widened. */
+  --chip-w: 200px;
+
   /* 96a — THE COLOR TOKENS. The palette thirteen mirror COLORS in
      src/render/palette.ts — kebab of the key — and tests/ui-tokens.test.ts
      pins them byte-equal (palette.ts stays the source of truth; the sheet
@@ -1847,18 +1854,15 @@ body {
    call: persistent chrome outranks scene chrome), so this chip sits to its
    RIGHT. The fixed offset clears a 4-digit balance; if the two ever crowd,
    §51's cohesion review owns the refinement (the user's noted expectation). */
+/* 101b — the hop chip wears the `.chip` plate (HUD.ts adds the class; the
+   duplicated plate block that sat here is gone) and its `left` is DERIVED:
+   the chrome column's left (20px) + the column's one width + a 14px gutter
+   (the clearance the old measured `left: 200px` gave a 166px bits chip). A
+   wider column can no longer slide under it. */
 .hud-hop {
   position: absolute;
   top: 20px;
-  left: 200px; /* 51e — re-pinned beside the enlarged bits chip (measured) */
-  font-family: var(--font-mono);
-  font-size: var(--text-18); /* 51e — the chip row stays one scale */
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-terminal-amber);
-  background: rgba(0, 0, 0, 0.7);
-  border: 1px solid var(--color-terminal-amber);
-  padding: 10px 18px;
+  left: calc(20px + var(--chip-w) + 14px);
 }
 
 /* 96e — THE CHROME COLUMN + THE CHIP PLATE (src/ui/chip.ts). The four
@@ -1881,7 +1885,13 @@ body {
   z-index: 15;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  /* 101b — ONE column width (user-signed at the §101 kickoff): the column
+     owns `--chip-w` and every chip stretches to it, so a chip's width
+     depends on neither its own text nor which siblings are showing (plain
+     `stretch` with no width would re-size the column every time the pool
+     chip — the widest — hides for a battle). */
+  width: var(--chip-w);
+  align-items: stretch;
   gap: 10px; /* the old measured offsets implied 11 / 10 / 10 — one gap now */
 }
 
@@ -1913,7 +1923,13 @@ body {
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--color-terminal-amber);
   padding: 10px 18px;
-  min-width: 128px;
+  /* 101b — the plate's box is explicit: two chips are <button>s (UA
+     border-box) and two are <div>s (content-box), so the old `min-width:
+     128px` meant 128 vs 166 px outer in one column; the width now comes from
+     the column. One line, always: a chip is furniture of a fixed height, and
+     a narrow viewport once wrapped the pool value under its label. */
+  box-sizing: border-box;
+  white-space: nowrap;
   transition:
     border-color 0.15s,
     box-shadow 0.15s;

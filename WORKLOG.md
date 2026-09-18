@@ -3534,3 +3534,69 @@ day upstream fixes the font, and lies to a screen reader).
 under the stack U+229E has ink at the bbox's mid-top and none on its
 diagonal (PLUS), U+22A0 the reverse (X); DejaVu-alone and `serif` agree.
 Typecheck clean; font pins 6/6. Gotcha #136. No sim touch.
+
+### 101b — the chip plate + the line-box pin (2026-09-18)
+
+**Step zero moved the card.** 101b was cut to set an explicit
+`line-height` on `#ui` + the overlay root "at the face's normal" so a
+fallback glyph could never grow a box. 101a had already closed the live
+instance (DejaVu sits inside the JetBrains line), so the premise was
+probed before building: a style injection of `#ui, #unit-overlays {
+line-height: 1.32 }` on the map **moved 19 of 65 text leaves by up to 1.5
+px and made the chips 45.75 px** — browsers round `normal`'s ascent and
+descent to whole pixels per font-size (18 px → 18 + 5 = 23), a multiplier
+does not (23.76). It would fix nothing 101a left broken and drift every
+surface. **Re-scoped (a legal mutation, one line in ROADMAP): the global
+line-height is DROPPED; the guard becomes a METRICS PIN** on the path
+where the mistake happens — adding or upgrading a face.
+`tools/font/ttfMetrics.ts` (the ttfCmap sibling: `head` · `hhea` · `OS/2`
+off a DataView, normalized by unitsPerEm) + a third describe in
+`tests/font-coverage.test.ts`: every fallback face's ascent AND descent ≤
+the primary's in all three tables (browsers disagree on which they read),
+and both `normal` lines ≤ the primary's. **Self-checked against known
+answers** (yesterday's independent `faceProbe.ts` numbers) before it was
+believed: JetBrains 1.020 / 0.300, DejaVu 0.928 / 0.236 (typo 0.760 /
+0.240) FITS, **Noto Sans Symbols 2 1.069 / 0.630 → TOO TALL** — the rule
+rejects the face the kickoff rejected, so the pin can fail.
+
+**The plate.** `--chip-w: 200px` in `:root`, sized off the widest live
+one-line form MEASURED in the pane at 18 px (the pool chip's `MORALE 40 /
+40` = 195.8 px natural; the cache at `10/10` 182.3; bits at five digits
+147.4; a third pool digit would need 221 — the token's comment says so).
+The column owns it (`width: var(--chip-w); align-items: stretch`) — plain
+`stretch` with no width was REJECTED at the probe: the pool chip is the
+widest and hides for the turn screen + the battle, so the column would
+have breathed 195.8 ⇄ 166 on every battle (it already did, invisibly,
+under `flex-start`). `.chip` gains `box-sizing: border-box` (two chips are
+`<button>`s, UA border-box; two are `<div>`s, content-box — the old
+`min-width: 128px` meant 128 vs 166 px outer) and `white-space: nowrap`
+(found by accident: the pane had collapsed to a 0-px viewport and the pool
+value wrapped under its label, 55 → 78 px — an artifact there, a real
+wrap on a narrow viewport); the base `min-width` is gone. **The hop chip**
+wears the plate (`HUD.ts`: `chip hud-hop screen-fade`; its duplicated
+plate block deleted) and its `left` is `calc(20px + var(--chip-w) +
+14px)` — the measured `200px` (51e) is gone, the 14 px gutter it implied
+is kept.
+
+**The oracle, and the instrument that was discarded first.** A box oracle
+(every visible `#ui` element's rect keyed by DOM path). In place under CSS
+HMR on a frozen battle: 202 compared, 5 changed, all chrome, **0 outside**.
+The after-reload re-walk against sessionStorage snapshots then "found" 12–60
+moved elements per screen — every one run CONTENT (an unseeded reload is
+a different run: another map, other encounter names, other cards per
+slot). Discarded; replaced by a SAME-RUN toggle: a stylesheet that REVERTS
+101b gives "before", removing it gives "after", same page, same instant.
+Five screens (character select 20 · map 146 · event 26 · pre-turn 417 ·
+battle 202 elements): **0 changed outside the chrome on every one**; bits
+166 → 200, cache 157.05 → 200, map 128 → 200, pool 195.81 → 200, every
+text chip 45 px tall (the pool chip 55 — its gauge bar; "one height" is
+the three text chips); the hop chip `200,20,214.41×45 → 234,20,214.41×45`
+(the plate byte-equal, the position derived); the column 200 px with and
+without the pool chip.
+
+Typecheck clean; the font + stylesheet pins 27/27. No sim touch, no bump.
+Noted for a narrow viewport (a §102 surface rider if it bites): the hop
+chip now ends at 448 px, 34 px further right than before, toward the
+centered battle banner. The user's Firefox read: the column's one edge on
+the map / an event / the pre-turn screen / a battle, and the hop chip's
+gutter.

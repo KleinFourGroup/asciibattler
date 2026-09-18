@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { GLYPHS } from '../src/render/glyphs';
 import { subsetCovers, FACES, PRIMARY_EXCLUDES } from '../src/render/fontSubset';
 import { ttfCmapLookup } from '../tools/font/ttfCmap';
+import { ttfVerticalMetrics } from '../tools/font/ttfMetrics';
 
 // §79-post — structural guards for the self-hosted font pipeline (§79g).
 //
@@ -91,6 +92,48 @@ describe('font subset coverage (§79-post)', () => {
     ).map((cp) => `U+${cp.toString(16).toUpperCase()}`);
     expect(orphaned, 'excluded from the primary but no fallback carries it').toEqual([]);
   });
+});
+
+// §101b — THE LINE-BOX PIN. Under `line-height: normal` a line is as tall as
+// the TALLEST face painting a glyph on it, so a fallback whose ascent or
+// descent exceeds the primary's grows every line it touches (the §101 class:
+// an OS face made the cache chip 46px to the bits chip's 45). An explicit
+// `line-height` on #ui was probed and rejected — it moved 19 of 65 text
+// leaves by up to 1.5px (tools/font/ttfMetrics.ts has the story) — so the
+// guard sits here, where a face gets added or upgraded. All three tables,
+// because browsers disagree on which one they read.
+describe('the fallback line box (§101b)', () => {
+  const metricsOf = (face: (typeof FACES)[number]) =>
+    ttfVerticalMetrics(readFileSync(join(repoRoot, 'assets', 'fonts', face.dir, face.source)));
+  const primary = metricsOf(FACES.find((f) => f.role === 'primary')!);
+  const fallbacks = FACES.filter((f) => f.role === 'fallback');
+
+  it('read real metrics off the primary (the parser or the font drifted otherwise)', () => {
+    // JetBrains Mono 2.304: 1.02 / 0.30 in all three tables, a 1.32 line.
+    expect(primary.unitsPerEm).toBeGreaterThan(0);
+    expect(primary.hhea[0]).toBeGreaterThan(0.5);
+    expect(primary.hhea[1]).toBeGreaterThan(0.05);
+    expect(primary.hheaLine).toBeGreaterThan(1);
+  });
+
+  it.each(fallbacks.map((f) => [f.family, f] as const))(
+    '%s fits inside the primary line in hhea, OS/2 typo and OS/2 win',
+    (_family, face) => {
+      const m = metricsOf(face);
+      const over: string[] = [];
+      for (const table of ['hhea', 'typo', 'win'] as const) {
+        if (m[table][0] > primary[table][0])
+          over.push(`${table} ascent ${m[table][0].toFixed(3)} > ${primary[table][0].toFixed(3)}`);
+        if (m[table][1] > primary[table][1])
+          over.push(`${table} descent ${m[table][1].toFixed(3)} > ${primary[table][1].toFixed(3)}`);
+      }
+      if (m.hheaLine > primary.hheaLine)
+        over.push(`hhea line ${m.hheaLine.toFixed(3)} > ${primary.hheaLine.toFixed(3)}`);
+      if (m.typoLine > primary.typoLine)
+        over.push(`typo line ${m.typoLine.toFixed(3)} > ${primary.typoLine.toFixed(3)}`);
+      expect(over, 'this face would grow every line one of its glyphs lands on').toEqual([]);
+    },
+  );
 });
 
 // The roots a DOM string can come from. `src/` wholesale (sim / core carry no

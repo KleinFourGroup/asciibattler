@@ -76,8 +76,20 @@ interface ObjectiveButtonDef {
 }
 
 const OBJECTIVE_BUTTONS: readonly ObjectiveButtonDef[] = [
-  { mode: 'engage', label: t('hud.objective.engage'), icon: '◎', action: 'engageObjective', arms: true },
-  { mode: 'focus', label: t('hud.objective.focus'), icon: '!', action: 'focusObjective', arms: true },
+  {
+    mode: 'engage',
+    label: t('hud.objective.engage'),
+    icon: '◎',
+    action: 'engageObjective',
+    arms: true,
+  },
+  {
+    mode: 'focus',
+    label: t('hud.objective.focus'),
+    icon: '!',
+    action: 'focusObjective',
+    arms: true,
+  },
   { mode: 'hold', label: t('hud.objective.hold'), icon: '⊓', action: 'holdObjective', arms: false },
   { mode: 'stop', label: t('hud.objective.stop'), icon: '✕', action: 'stopObjective', arms: false },
 ];
@@ -224,7 +236,9 @@ export class HUD {
     // now a standalone top-left element (mirroring the top-right speed pane),
     // with the banner centered between them. Its own screen-fade lifecycle.
     this.hopLabel = document.createElement('div');
-    this.hopLabel.className = 'hud-hop screen-fade';
+    // 101b — it wears the shared `.chip` plate; `.hud-hop` keeps only its
+    // position, derived from the chrome column's width (ui.css).
+    this.hopLabel.className = 'chip hud-hop screen-fade';
     mount.appendChild(this.hopLabel);
 
     // Q1 — speed-command pane (top-right): one button per ENABLED speed
@@ -279,7 +293,9 @@ export class HUD {
       attachTooltip(
         btn,
         action
-          ? keyedTooltip(t('hud.tooltip.speed', { speed: value }), () => keybindings.labelFor(action))
+          ? keyedTooltip(t('hud.tooltip.speed', { speed: value }), () =>
+              keybindings.labelFor(action),
+            )
           : t('hud.tooltip.speed', { speed: value }),
         { touch: 'press' },
       );
@@ -329,8 +345,16 @@ export class HUD {
       // left-click, focus owns the right-click; hold / stop just name
       // themselves. The key is read live so a rebind shows up.
       const hint =
-        def.mode === 'engage' ? t('hud.tooltip.engage') : def.mode === 'focus' ? t('hud.tooltip.focus') : def.label;
-      attachTooltip(btn, keyedTooltip(hint, () => keybindings.labelFor(def.action)), { touch: 'press' });
+        def.mode === 'engage'
+          ? t('hud.tooltip.engage')
+          : def.mode === 'focus'
+            ? t('hud.tooltip.focus')
+            : def.label;
+      attachTooltip(
+        btn,
+        keyedTooltip(hint, () => keybindings.labelFor(def.action)),
+        { touch: 'press' },
+      );
     }
     mount.appendChild(this.objectivePane);
     this.renderObjectivePane();
@@ -454,7 +478,14 @@ export class HUD {
       land();
       return;
     }
-    const orb = flyOrb(mount, centerOf(card.el), gauge.anchor(), e.target, e.amount, gauge.reading().max);
+    const orb = flyOrb(
+      mount,
+      centerOf(card.el),
+      gauge.anchor(),
+      e.target,
+      e.amount,
+      gauge.reading().max,
+    );
     this.orbs.add(orb);
     const flight = orb.done.then(() => {
       this.orbs.delete(orb);
@@ -505,12 +536,7 @@ export class HUD {
    * `locationName` populates the top banner — pass `t('map.uncharted')`
    * ("Uncharted Ground") for procedural encounters (no hand-authored layout).
    */
-  show(
-    world: World,
-    hop: number,
-    locationName: string,
-    encounter?: EncounterPools,
-  ): void {
+  show(world: World, hop: number, locationName: string, encounter?: EncounterPools): void {
     this.world = world;
     // Q6 — the hop chip folds in the per-turn counter (the dropped HUD-pool
     // "Turn N" line) so no run context is lost with the old panel gone.
@@ -839,7 +865,12 @@ export class HUD {
     this.playerGauge = null;
     if (!e) return;
     // 96.5b1 — a live handle (the ghost moves per loss event), not a one-shot.
-    this.playerGauge = createPoolGauge('player', t('hud.pool.you'), e.playerHealth, e.playerHealthMax);
+    this.playerGauge = createPoolGauge(
+      'player',
+      t('hud.pool.you'),
+      e.playerHealth,
+      e.playerHealthMax,
+    );
     this.playerPoolWrap.appendChild(this.playerGauge.el);
   }
 
@@ -849,7 +880,12 @@ export class HUD {
     this.enemyPoolWrap.replaceChildren();
     this.enemyGauge = null;
     if (!e) return;
-    this.enemyGauge = createPoolGauge('enemy', e.enemyName ?? t('hud.pool.foe'), e.enemyHealth, e.enemyHealthMax);
+    this.enemyGauge = createPoolGauge(
+      'enemy',
+      e.enemyName ?? t('hud.pool.foe'),
+      e.enemyHealth,
+      e.enemyHealthMax,
+    );
     this.enemyPoolWrap.appendChild(this.enemyGauge.el);
   }
 
@@ -878,7 +914,6 @@ export class HUD {
       );
     }
   }
-
 }
 
 /** Q4 — drive a compact card's HP bar from the live unit. Clamps like the sim:

@@ -424,12 +424,20 @@ the column stretches to one width; the accepted reward row stays.
       ✅ (2026-09-17): the pin at zero, self-checked on a planted `⏸`;
       the cache chip 45 px to the bits chip's 45 in the pane (the live
       instance closed a step early). WORKLOG §101a.
-- [ ] **101b — the line box + the chip plate:** an explicit `line-height`
-      on `#ui` + the overlay root at the face's normal; `.chip`
-      `box-sizing: border-box`; the column `align-items: stretch`;
-      `.hud-hop` → a `.chip` positioned off the bits chip's reserved
-      width. Exit: four chips one height + one width; the cascade
-      oracle at zero drift elsewhere.
+- [x] **101a-post — the swapped pair** (inserted 2026-09-18 from the
+      user's Firefox read): JetBrains Mono 2.304 draws `⊞` / `⊠` swapped;
+      `PRIMARY_EXCLUDES` ships them from DejaVu; a 338-codepoint swap
+      search found only this pair. Gotcha #136 · TODO §101 (the upstream
+      report). WORKLOG §101a-post.
+- [x] **101b — the chip plate + the line-box pin:** `.chip`
+      `box-sizing: border-box` + `nowrap`; the column owns `--chip-w` and
+      the chips stretch; `.hud-hop` → a `.chip` positioned off the
+      column's width. Exit: the text chips one height + one width; the
+      box oracle at zero drift elsewhere. **Re-scoped at step zero:** the
+      explicit global `line-height` DROPPED (probed: it drifts 19 of 65
+      text leaves; 101a already closed the instance) → a metrics pin (a
+      fallback face must fit inside the primary's line). ✅ (2026-09-18):
+      five screens, 0 changed outside the chrome. WORKLOG §101b.
 - [ ] **101c — the digit sinks:** the `min-width: Nch` idiom on the
       bits / cache / pool-chip / hop / port-price / card-list-badge
       values, the XP `MAX` slot, the promotion delta; one global

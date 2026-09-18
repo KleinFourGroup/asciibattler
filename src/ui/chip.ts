@@ -18,6 +18,13 @@
  * The column itself takes no pointer events (it is a box over the corner
  * of every screen — its gaps must not swallow a map click); the chips do.
  *
+ * 101b — ONE WIDTH: the column owns `--chip-w` (ui.css `:root`) and every
+ * chip stretches to it, so a chip's box depends on neither its text nor
+ * which siblings are showing; the plate is `box-sizing: border-box` +
+ * `white-space: nowrap` (two chips are <button>s, two are <div>s — the old
+ * `min-width` meant two different outer widths). The battle HUD's hop chip
+ * wears the same plate and sits at the column's left + `--chip-w` + a gutter.
+ *
  * A chip's modal / overlay (the cache modal, the sector-map overlay) must
  * NOT mount into the column: the column's z-index makes a stacking
  * context that would trap a `z-index: 30` modal under the `z-index: 20`

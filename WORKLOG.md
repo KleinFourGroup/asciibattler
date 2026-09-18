@@ -3869,3 +3869,34 @@ A count that did not reproduce: the cursor's §100 row says `ui.json` 112 →
 190; `json.load` reads 106 keys at `edc9371`, 174 at `e746c7a` and 175 at
 HEAD (+`reward.taken`). The §101 row records 174 → 175; the older figure is
 left as written, flagged here rather than silently rewritten.
+
+### §101-triage — the swapped pair, upstream (2026-09-18, the TODO §101 rider)
+
+The four-step triage, same session as the close, all read-only:
+
+1. **The raw vendored TTF has it — our pipeline is ruled out.** A scratch
+   probe (three tables hand-parsed, no library: `cmap` → gid, `post` 2.0 →
+   the glyph's name, `glyf` → per-contour edge directions) read
+   `assets/fonts/jetbrains-mono/JetBrainsMono-Regular.ttf` directly. No
+   subsetter, no woff2, no browser.
+2. **A DRAWING error, not a cmap error.** U+229E → gid 1107, named
+   `uni229E`: a square + four 3-point TRIANGULAR counters (diagonal edges —
+   the negative space of an ×). U+22A0 → gid 1108, named `uni22A0`: a square
+   + four 4-point SQUARE counters (axis-aligned — the negative space of a
+   +). The names follow the codepoints; the pictures under them are each
+   other's. **The control:** the same probe on DejaVu Sans Mono read
+   `uni229E` = axis-aligned, `uni22A0` = diagonal — PLUS / TIMES, the known
+   answer — before the JetBrains reading was believed; U+229F / U+22A1
+   read sane in both faces.
+3. **No newer release:** v2.304 (2023-01-14) is still upstream's latest.
+4. **Already reported:** JetBrains/JetBrainsMono#676 (2024-04-22, from
+   YouTrack IJPL-148600), OPEN, no labels, no fix PR; one 2024-10 comment
+   "still an issue"; #697 is a closed duplicate.
+
+So nothing to file. NOT checked: `master`'s TTF, rebuilt 2024-08-08 ("Built
+fonts") after #676 opened — reading it means downloading the file, not
+taken without the user's say; the 2024-10 comment postdates that build.
+`PRIMARY_EXCLUDES` stays; gotcha #136 + the constant's comment now carry
+the issue number, so a future JetBrains upgrade knows what to look for.
+An optional contribution, the user's call and account: a comment on #676
+with finding 2 (which table is wrong) — the thread does not say.

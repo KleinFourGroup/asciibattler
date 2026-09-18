@@ -410,8 +410,9 @@ Step zero by MEASUREMENT shrank three of five steps and grew one. Tests
 2974 → 2980; no bump; the fuzz smoke fired once (101e, a read-only Run
 getter — the kickoff predicted never). The charter + the four kickoff
 calls live in git at `e746c7a`; the narrative in WORKLOG §101; the rule
-in DESIGN "Layout stability (101)". Two riders in TODO §101 (the upstream
-glyph report · the Reward ledger's headless pin). The cut, as landed:
+in DESIGN "Layout stability (101)". Riders in TODO §101: the Reward ledger's
+headless pin (open) · the upstream glyph triage (✅ same day — known
+upstream, JetBrainsMono#676, nothing to file). The cut, as landed:
 
 - [x] **101a — the second face + the inventory pin** ✅ 2026-09-17:
       DejaVu in `FACES`, `⏸` → `❚❚`, `⌖` → `◎`, the ranges widened, the

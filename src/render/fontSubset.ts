@@ -66,6 +66,11 @@ export function subsetCovers(codePoint: number): boolean {
  * faces carry (ink-bbox-normalized density grids, JetBrains vs DejaVu) found
  * this pair and only this pair. Re-check on a JetBrains upgrade; the guard
  * test pins that a fallback really has every entry.
+ *
+ * Triaged 2026-09-18: a DRAWING error in the raw vendored TTF (cmap + `post`
+ * names are right — `uni229E` / `uni22A0` — the outlines under them are each
+ * other's), known upstream as JetBrains/JetBrainsMono#676, OPEN and unfixed;
+ * v2.304 is still the latest release. Nothing of ours to report.
  */
 export const PRIMARY_EXCLUDES: readonly number[] = [0x229e, 0x22a0];
 

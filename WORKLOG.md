@@ -4482,3 +4482,57 @@ pending one.
 The section heading keeps its "§103 signs the whole" parenthetical until
 103e, when it takes the signature's date (every cross-reference is by
 name, "DESIGN §UI idioms", never by anchor — checked).
+
+### 103e — the exit (2026-09-18) — the phase CLOSES
+
+**The user's three answers, same day.** (1) The Firefox Tab walk of the
+run-end fallen table: "Confirming that it works" — the checklist's one ⏳
+cell flips to ✓ with the read's date, and ROADMAP 103b closes on it.
+(2) The clause-5 flag: **strike the candidate** — "I feel comfortable
+ruling that out purely on art direction grounds." META-ROADMAP Round 7.5's
+decision point now reads a per-instance marker sprite vs a shape suffix,
+with "a dedicated enemy glyph set" struck through, dated, and attributed
+(the user's art-direction call; DESIGN's clauses 2 + 4 + 5 rule it out
+independently). The five clauses stand exactly as signed at the kickoff.
+(3) The reference: signed. DESIGN's heading reads "SIGNED 2026-09-18,
+§103"; the checklist's lead says every row was ticked again that day.
+
+Docs: ROADMAP §103 demoted to its stub (478 of 500 lines). The cursor
+moves to §104 with two warnings — it is CODE (count the events fresh;
+predict the smoke per step, the event catalog is under `src/core/`), and
+it is Round 7's LAST phase, so its close is the round close and the first
+full read of the session reports + the friction log. §103 takes the Last
+phase row, §102 moves to Before it, §101 goes terse into Earlier.
+META-ROADMAP's sequence line says §95–§103 ✅.
+
+**The phase against its charter.** Exit met: the reference signed, the
+checklist complete, Rounds 8 and 11 have the artifact. Every item the
+charter lists is in DESIGN under a findable name — the intro maps the
+spec's seven to their paragraphs. Scope guard held: no code; tests 2995 at
+every hook; the prediction (no smoke, no bump, any step) held six for six.
+
+**What the audit says about how the section was written.** All six
+findings have one cause: append-only authoring. Each phase wrote its
+paragraph true and nobody owned the paragraphs above it — §99 made a §98
+sentence false the day after it was written, 97d renamed an option 96d
+had documented, §100 resolved a tense §97 left pending. AGENTS' "keep
+DESIGN honest in the same commit" is a code → doc rule; this was doc →
+doc. The scratchpad carries the candidate norm.
+
+**What I got wrong.** One landed, three caught. LANDED (in the kickoff
+message, not in a file): I posed clause 5 to the user as "my inference,
+drop it if you'd rather 7.5 decide" without having read the two
+META-ROADMAP lines that list the candidates it eliminates — my windowed
+read of the 7.5 charter ended one line short, mid-sentence, at "the
+identity channel's shape (a". The user signed a clause without knowing it
+closed an option in their own charter; 103c found it and the call went
+back to them. CAUGHT before landing: "the hint already carries what that
+text says" (the tooltip adds a clarifier — read `UnitCard.ts` and
+reworded); a ✓ in the new Game-over row's Keys cell written from
+reasoning (made ⏳ until the read); "Round 11 (the ship audit)" (it is
+Onboarding & Feel — caught by opening META-ROADMAP for the pass).
+
+Numbers: tests 2995 → 2995 · `ui.json` 180, untouched · no smoke · no bump
+· commits `841563d` (kickoff) → `a171a8f` → `9145fdc` → `b44f718` →
+`f063678` → `60e41e9` (the cursor) → the close. One bounced hook (103a —
+the 4-line cap on a ticked TODO item).

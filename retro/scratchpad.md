@@ -381,3 +381,33 @@ _(The post-§94 entries start here — Round 7, Idioms.)_
   tense about something that had not happened yet (a hook "fired", a Game
   path "is"). Both were caught on re-read; the cheap habit is to write the
   entry AFTER the tool result, or mark the line a prediction.
+
+## §103 — the idiom reference (2026-09-18)
+
+- **An append-only reference rots by CONTRADICTION, not by omission.** All
+  six audit findings were a later phase making an earlier paragraph false
+  (§99 vs §98's "drift is zero", 25 lines apart, one day apart). AGENTS'
+  "keep DESIGN honest in the same commit" covers code → doc; nothing
+  covers doc → doc. Candidate norm: a phase that appends a rule greps the
+  section for the sentences its change touches (the option name, the
+  number, any "until §N") and fixes them in the same commit.
+- **A windowed read that ends mid-sentence is a truncated read.** `sed -n
+  250,275p` stopped at "the identity channel's shape (a" — the next two
+  lines listed the candidates that made a clause I then posed for
+  signature a conflict. Before posing a decision ON a paragraph, read to
+  the paragraph's end; the tell was on screen (an open parenthesis).
+- **A ✓ written from reasoning is a claim.** The Game-over Keys cell went
+  in as ⏳ with the reason, and flipped on the user's read. A signed
+  checklist needs a pending mark in its vocabulary or every new row gets
+  ticked by argument.
+- **Re-count a dated number instead of quoting it** ("47 / 48" was the
+  spec's, nine days old; a one-line failing assertion read it live). The
+  same phase's cursor now tells §104 to re-count its "47 events".
+- **Two documents that must agree should name each other.** The §103
+  charter's "team-identity requirement" and META-ROADMAP 7.5's candidate
+  list constrained one another and neither pointed at the other; they do
+  now (the Depends-on line names the paragraph).
+- **A rule → pin → READ table earns its third column.** Naming the manual
+  read (the grey read, Ctrl+Alt+A, the Firefox Tab walk, the box oracle)
+  is what makes an unpinned rule checkable the same way twice; saying "no
+  pin" on the shells row is better than implying one.

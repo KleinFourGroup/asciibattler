@@ -444,37 +444,25 @@ GROUPS". Rider: TODO (the run-end stats beyond the fallen). As landed:
       `a9c16ef` · **102d — the stats body** ✅ `650f3b6` · **102e — the
       exit** ✅ — all 2026-09-18, WORKLOG §102a–e.
 
-## Phase 103 — the idiom reference (the signing)
+## Phase 103 — the idiom reference (the signing) ✅ CLOSED 2026-09-18
 
-**Charter:** DESIGN §UI idioms written and signed: the color rule + its
-grayscale test · the tooltip rule · the hysteresis class · the shells
-(modal / chip / button / screen) · the input rule extended to hover and
-focus · the string rule (no literal outside the table) · the
-team-identity requirement Round 7.5 must satisfy. The per-surface
-checklist (one row per surface) with every row ticked. **Depends on:**
-§96–§102. **Risk:** low (docs). **Exit:** the reference signed; the
-checklist complete; Rounds 8 and 11 have the artifact they are checked
-against. **Scope guards:** no code.
+**Outcome:** DESIGN §UI idioms + §Input accessibility read against the
+tree and SIGNED — one session, docs only, the user's Firefox on the one
+surface the checklist had not seen. The audit found six drifts, all from
+append-only writing (a later phase making an earlier sentence false):
+three corrected; the per-surface checklist gained the Game-over row and a
+Morale column (the spec's §9 line); "Team identity on the board" written
+as five testable clauses for Round 7.5 — and at the signing the user
+STRUCK "a dedicated enemy glyph set" from 7.5's candidates (META-ROADMAP);
+a rule → pin → read table so Rounds 8 and 11 check a surface the same way
+every time. Tests 2995, unchanged; no code, no smoke, no bump — each as
+predicted. The charter + calls A/B live in git at `841563d`; the
+narrative in WORKLOG §103. As landed:
 
-**The cut (2026-09-18, user-signed — audit + calls A/B in WORKLOG §103
-Kickoff; no fuzz smoke and no bump predicted on any step):**
-
-- [x] **103a — the corrections** ✅ 2026-09-18 (WORKLOG §103a): the three paragraphs the audit found
-      behind the code (Buttons `title?` → `tooltip?` · §98's "drift is
-      zero" vs §99 · the Tooltips "until §100" tense) + the stale TODO
-      layout-sweep item ticked. Exit: each fix cites its file:line.
-- [ ] **103b — the checklist:** the Game-over row re-audited for the
-      102d body; a morale-read line per surface (chip vs gauges — the
-      spec §9 promise). Exit: the fallen table's Tab walk is the user's
-      Firefox read.
-- [x] **103c — the team-identity requirement** ✅ 2026-09-18 (WORKLOG §103c; one open flag — clause 5 vs a META-ROADMAP candidate): a new DESIGN paragraph,
-      five testable clauses (signed as drafted, call B); META-ROADMAP
-      Round 7.5 + the TODO rider point at it.
-- [x] **103d — the reference pass (call A, LIGHT)** ✅ 2026-09-18 (WORKLOG §103d): the header as a
-      signed reference · the hysteresis alias · a rule → pin / manual
-      test index · stale tenses. No rule changes meaning.
-- [ ] **103e — the exit:** the user's read + signature, this stub, the
-      cursor → §104, the session report.
+- [x] **103a — the corrections** ✅ `a171a8f` · **103b — the checklist**
+      ✅ `9145fdc` · **103c — the team-identity requirement** ✅ `b44f718`
+      · **103d — the reference pass (LIGHT)** ✅ `f063678` · **103e — the
+      exit** ✅ — all 2026-09-18, WORKLOG §103a–e.
 
 ## Phase 104 — the event-keyed sound registry
 

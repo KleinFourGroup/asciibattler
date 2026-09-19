@@ -53,7 +53,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 ```
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
- 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104 + §96.5 inserted 2026-09-10; §95 ✅)
+ 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104 + §96.5 inserted 2026-09-10; §95–§103 ✅, the idiom reference SIGNED 2026-09-18)
  7.5 Units ───────┤  the glyph rework (fewer special rules) · a team-identity channel · the D4 camera A/B
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
@@ -274,8 +274,10 @@ tooltip + shells the board overlays use). **Risk:** medium — render-only
 (never sim), but deep: each special rule has a §79 / §91-pre finding behind
 it and a probe that must be re-derived from the asset, never from the helper
 under test (AGENTS). **Decision points:** the identity channel's shape (a
-per-instance marker sprite vs a dedicated enemy glyph set vs a shape
-suffix) against the atlas budget; the alignment model that replaces the
+per-instance marker sprite vs a shape suffix; ~~a dedicated enemy glyph
+set~~ STRUCK 2026-09-18 at the §103 signing — the user's call on
+art-direction grounds, and DESIGN's clauses 2 + 4 + 5 rule it out) against
+the atlas budget; the alignment model that replaces the
 classifier. **Exit:** the requirement satisfied and grayscale-verified; the
 A/B read and dispositioned; the special-rule count reduced with the probes
 re-derived. **Scope guards:** no sim; no palette (Round 8); no new

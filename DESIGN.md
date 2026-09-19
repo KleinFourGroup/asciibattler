@@ -186,7 +186,7 @@ D4 A/B is Round 7.5's) — a shipped binding with no click route is a bug.
 The focus ring is the "Focus (100)" idiom below.
 
 **The per-surface checklist (the Round 7 spec's exit; every row ticked
-2026-09-17, re-audited at §103 for the 102d run-end body):** *click* =
+2026-09-17; re-audited and every row ticked again 2026-09-18, §103, with the 102d run-end body):** *click* =
 every action has a clickable control; *keys* = every control is
 Tab-reachable and Enter-activatable (Space where no hotkey claims it);
 *touch* = every hover read has a tap / long-press route; *hover-only* =
@@ -201,7 +201,7 @@ none where no run is live).
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
 | Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none | gauges (live) |
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
-| Game over (both variants) | New Run (`button()`); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ⏳ the table walk — open on the Firefox read, §103b (every row holds a tab stop, so focus should scroll it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
+| Game over (both variants) | New Run (`button()`); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
@@ -211,7 +211,7 @@ The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
 empty baseline. A new control is a `button()` or a `pressable()` — a
 clickable `<div>` is the one shape this rule forbids.
 
-## UI idioms (Round 7 — the reference; §103 signs the whole)
+## UI idioms (Round 7 — the reference; SIGNED 2026-09-18, §103)
 
 The shared shapes every UI surface is built from, and the artifact Rounds
 8 (Foundations — the menu + settings) and 11 (Onboarding & Feel — the

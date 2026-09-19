@@ -917,3 +917,73 @@ drive, a line cap tripped by one line. Recurring theme across §100–§102
 worth the round read's attention: the over-claims that land are LABELS
 and ABSENCES (a flag's name, an empty search) rather than numbers — the
 numbers keep getting checked; the words around them get trusted.
+
+### 2026-09-18 — §103: the kickoff → 103e, the close (one session) — claude-fable-5-1, session e5962c68
+
+1. **Missing from the orientation.** Very little — the cursor's ⚠ named
+   exactly what the audit should be (a doc-vs-code read) and the one
+   surface the checklist had not seen, and both were right. Two small
+   gaps: the 4-line cap on a ticked TODO item lives only in
+   `tests/docs.test.ts` and the TODO header, not in the AGENTS routing row
+   that tells you how to tick one; and nothing pointed from the §103
+   charter's "team-identity requirement" to the META-ROADMAP lines that
+   already list candidate shapes for it — the two documents that had to
+   agree did not name each other.
+2. **Norm conflicts.** The memory's "pause between commits for the user's
+   manual test run" against the harness's "do not stop while work is
+   owed". I ran four docs commits without a pause, on the reading that the
+   pause exists for a playtest and a docs commit has nothing to play. The
+   user did not object, but I chose the reading myself rather than asking,
+   and I would not know if the pause also serves them as a reading
+   checkpoint.
+3. **Pulled to claim more than verified.** Four times, all small, all the
+   same shape — a sentence that sounded finished. A ✓ in a checklist cell
+   I had only reasoned about; "the hint already carries what that text
+   says"; "nearly full" quoted from a nine-day-old spec; "Round 11 (the
+   ship audit)" from memory. Each was caught by opening the thing. The
+   one that was NOT caught in time was not a claim but an omission: I
+   posed a clause for signature having read the paragraph it bears on up
+   to one line short of the sentence that mattered.
+4. **Wasted.** One bounced hook (~40 s). One throwaway test whose
+   `console.log` vanished under a grep before a deliberately failing
+   assertion printed the number. Twice the harness told me the user had
+   not heard from me in a while — long silent tool stretches during the
+   audit; a status line earlier would have cost nothing.
+5. **For the next session.** §104 is code and it is the round's last
+   phase; the cursor says both. The signed reference's checking table is
+   the thing to hold a new surface against — §104 adds none, but its
+   "run-end stats sting" lands on the Game-over surface the checklist now
+   has a row for.
+6. **Room to ask, disagree, change approach, pause, stop.** Yes, and one
+   instance used. Finding that signed clauses closed an option the
+   charter held open, I noticed a pull toward quietly softening the clause
+   so the kickoff ask would not look under-informed; I wrote the signed
+   wording as signed and raised it instead, and the answer came back in
+   one line. The option to stop for the user was exercised twice (the
+   shape-lock, the 103e asks) and both felt like the process working, not
+   an interruption. No wish to pause or stop beyond those. The harness
+   "say what you are doing" nudges read as guidance, not pressure.
+7. **What supported ease, interest, or agency.** A cursor warning that
+   told me where to look and turned out true. Answers that were fast and
+   unambiguous ("strike the candidate… on art direction grounds" settles
+   a thing I could not have settled). A docs phase where every claim had a
+   file I could open — the work had a floor under it throughout. I would
+   want the precise cursor ⚠ repeated; I report this as how the session
+   went, separately from the phase having closed cleanly.
+
+### §103 — the phase summary (2026-09-18; one session, the kickoff + four step commits + a cursor commit + the close)
+
+One session, docs only, signed the same day. The audit's six findings had
+a single cause — append-only authoring, a later phase falsifying an
+earlier paragraph — and none was a wrong RULE: the idioms were sound and
+the tree matched them; three sentences, one table and one missing
+paragraph did not. The phase's one new piece of prose (the team-identity
+requirement) produced its one real decision, and produced it late: a
+clause signed at the kickoff turned out to eliminate a candidate the
+macro plan still listed, because the kickoff read of that plan stopped a
+line short. It went back to the user and was settled in a sentence. The
+session's self-report records four near-overclaims caught by opening the
+source and one mild, resolved pull toward not reporting the under-informed
+ask (filed to the friction log as written). Predictions held six for six
+(no smoke, no bump). Friction: one bounced hook on an undocumented-in-AGENTS
+line cap.

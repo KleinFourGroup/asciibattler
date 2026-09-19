@@ -268,8 +268,9 @@ stay it needs a proper minimap** (the board's shape + unit positions +
 the window rectangle) BEFORE the preference test is fair. The A/B's cut
 line predicts it: build the minimap first or A/B fit against nothing.
 
-**Depends on:** Round 7 (the idiom reference's team-identity requirement;
-the tooltip + shells the board overlays use). **Risk:** medium — render-only
+**Depends on:** Round 7 (the idiom reference's team-identity requirement —
+WRITTEN at 103c: DESIGN "Team identity on the board", five clauses; the
+tooltip + shells the board overlays use). **Risk:** medium — render-only
 (never sim), but deep: each special rule has a §79 / §91-pre finding behind
 it and a probe that must be re-derived from the asset, never from the helper
 under test (AGENTS). **Decision points:** the identity channel's shape (a

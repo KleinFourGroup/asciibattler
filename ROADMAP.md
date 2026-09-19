@@ -467,7 +467,7 @@ Kickoff; no fuzz smoke and no bump predicted on any step):**
       102d body; a morale-read line per surface (chip vs gauges — the
       spec §9 promise). Exit: the fallen table's Tab walk is the user's
       Firefox read.
-- [ ] **103c — the team-identity requirement:** a new DESIGN paragraph,
+- [x] **103c — the team-identity requirement** ✅ 2026-09-18 (WORKLOG §103c; one open flag — clause 5 vs a META-ROADMAP candidate): a new DESIGN paragraph,
       five testable clauses (signed as drafted, call B); META-ROADMAP
       Round 7.5 + the TODO rider point at it.
 - [ ] **103d — the reference pass (call A, LIGHT):** the header as a

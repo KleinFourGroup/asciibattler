@@ -347,7 +347,39 @@ hues, the five empower hues) satisfy the rule through their TEXT channel
 (the card's labelled row, the `▲` chip's name), not a per-pip shape. Team
 identity on the board (green vs red glyphs) is Round 7.5's, and so are
 its two residuals: card-less camp units' hue-only pips and the panic /
-blind held tints on the camp / neutral team colours.
+blind held tints on the camp / neutral team colours — the requirement it
+builds to is the next paragraph.
+
+**Team identity on the board — the requirement Round 7.5 must satisfy
+(103).** The one place "never color alone" does not hold yet. Both sides
+draw from one glyph pool — a camp bandit wears the enemy bandit's glyph,
+`spriteColor.ts` — so on the board the hue is the ONLY tell, and the HUD
+card is a second channel only for a unit that has one. The rework is done
+when all five hold; the channel's SHAPE is that round's decision, this
+says what it must do:
+
+1. *The grey read.* Under Ctrl+Alt+G, in a live battle, a player can say
+   whose any unit is from the board alone — no card, no hover. This is the
+   §98 audit applied to the sprite layer, and it is the acceptance test.
+2. *Per instance, for every identity.* The channel belongs to the unit
+   instance, never to its archetype or glyph (the same glyph fights on
+   both sides), and it separates all FOUR identities the board draws from
+   the sim's three teams: yours, the enemy's, an active camp (a `neutral`
+   with a `campId`) and inert scenery — not only the first two.
+3. *It survives the held tints.* A held status tint recolours a body for
+   its duration, and two of them (panic's amber, blind's stone) ARE other
+   identities' hues. The channel reads through any held tint, so it is not
+   hue and is nothing a tint can wash out.
+4. *Card-less units carry it.* A camp unit has no HUD card (§75h); the
+   board is its only surface, so the channel lives on the sprite. (Its
+   hue-only status pip is the same residual — TODO, the 7.5 rider.)
+5. *It does not spend the atlas per team.* The glyph atlas is budgeted
+   (`ATLAS_CELL_BUDGET` = 48, 47 cells used at this writing); a per-team
+   copy of each glyph is not the route.
+
+The standing idioms bind it like any surface: render-only, never sim; not
+motion alone (99); a channel that is a shape passes the grey read by
+construction (the 100 ring's argument).
 
 **Reduced motion (99).** ONE gate, `reducedMotion()` in
 src/render/motion.ts — the OS `prefers-reduced-motion` query or an

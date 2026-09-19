@@ -4410,3 +4410,40 @@ map and the six between-fight screens, the Event screen among them · the
 two gauges on pre-turn and battle (`setSuppressed`, `Game.ts:752`) · none
 on game over (`run:defeated` / `run:victory` hide it,
 `PoolOverlay.ts:89-90`) · a modal shows its host's.
+
+### 103c — the team-identity requirement (2026-09-18)
+
+DESIGN gains "Team identity on the board — the requirement Round 7.5 must
+satisfy (103)", placed straight after "Color redundancy (98)" (it is that
+rule's one open case): the five clauses signed at the kickoff, each
+grounded in the tree before it was written.
+
+- **Clause 2 was sharpened by the code, not changed.** The kickoff draft
+  said "all four teams (player / enemy / camp / neutral)". The sim has
+  THREE (`Unit.ts:24`: player · enemy · neutral); the board draws FOUR
+  identities from them — an active camp is a `neutral` with a `campId`,
+  drawn TERMINAL_AMBER (`spriteColor.ts:11-16, 56`). The clause now says
+  that. The same header comment supplied the sentence the paragraph opens
+  on: a camp bandit wears the enemy bandit's glyph, "the color IS the
+  tell" — the requirement exists to retire that sentence.
+- **Clause 5's number was re-counted, not quoted.** The spec's "47 / 48"
+  is nine days old; a throwaway assertion read `GLYPHS.length` = 47
+  against `ATLAS_CELL_BUDGET` = 48 (`glyphs.ts:34`) today. The paragraph
+  dates the count ("at this writing") since the catalog will move it.
+- A closing sentence binds the standing idioms (render-only · not motion
+  alone · a shape passes the grey read by construction) instead of minting
+  a sixth clause — they already apply to any surface.
+
+**⚠ One flag, raised with the user, not decided:** META-ROADMAP's Round
+7.5 decision point lists three candidate shapes — "a per-instance marker
+sprite vs a dedicated enemy glyph set vs a shape suffix" — *against* the
+atlas budget, i.e. as a weighing. Clauses 2 ("never to its archetype or
+glyph") and 5 ("a per-team copy of each glyph is not the route") rule the
+middle candidate OUT. At the kickoff I flagged clause 5 as my inference
+but had not read the META-ROADMAP candidates, so the user signed it
+without knowing it closes an option their own charter holds open. The
+signed wording stands in the commit; the call — keep the ban (and strike
+the candidate) or soften 5 to a cost — is the user's, one line either way.
+
+Pointers: META-ROADMAP Round 7.5 "Depends on" names the paragraph; the
+TODO 7.5 rider (the two residuals) names clauses 3 + 4.

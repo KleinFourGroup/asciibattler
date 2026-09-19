@@ -414,32 +414,13 @@ in DESIGN "Layout stability (101)". Riders in TODO §101: the Reward ledger's
 headless pin (open) · the upstream glyph triage (✅ same day — known
 upstream, JetBrainsMono#676, nothing to file). The cut, as landed:
 
-- [x] **101a — the second face + the inventory pin** ✅ 2026-09-17:
-      DejaVu in `FACES`, `⏸` → `❚❚`, `⌖` → `◎`, the ranges widened, the
-      pin at zero; the 46 / 45 px chip closed here. WORKLOG §101a.
-- [x] **101a-post — the swapped pair** ✅ (inserted 2026-09-18, the
-      user's read): JetBrains draws `⊞` / `⊠` swapped → `PRIMARY_EXCLUDES`.
-      Gotcha #136 · TODO §101. WORKLOG §101a-post.
-- [x] **101b — the chip plate + the line-box pin** ✅ 2026-09-18:
-      `--chip-w`, border-box + nowrap, the hop chip derived. **Re-scoped
-      at step zero:** the global `line-height` DROPPED (it drifts 19 of
-      65 text leaves) → a metrics pin. WORKLOG §101b.
-- [x] **101c — the digit sinks** ✅ 2026-09-18: a content sweep — 2 of 14
-      sinks moved a neighbour (the bits + cache labels, now pinned); the
-      belt a measured no-op. WORKLOG §101c.
-- [x] **101d — the countdown re-measures** ✅ 2026-09-18: a
-      `ResizeObserver` on the enemy pane + the window `resize`, for the
-      countdown's life; refreshStatuses before showCountdown. The control
-      sat 43 px inside a grown pane; watched, it holds 24 px below through
-      growth, shrink and a 520 px re-wrap. WORKLOG §101d.
-- [x] **101e — the conditional blocks** ✅ 2026-09-18: `reserveSlot()` +
-      the Reward ledger (taken rows stay) · the SOLD badge wears the Buy
-      box · the cache modal TOP-ANCHORED · the Event page stacks.
-      **Re-scoped at step zero:** the `min-height` clusters DROPPED (both
-      select flips measured 0 px). WORKLOG §101e.
-- [x] **101f — the exit** ✅ 2026-09-18: DESIGN "Layout stability
-      (101)", the select note resolved (KEEP), this stub, the cursor.
-      WORKLOG §101f.
+- [x] **101a** the second face + the inventory pin · **101a-post** the
+      swapped pair (inserted, gotcha #136) · **101b** the chip plate + the
+      line-box pin (the global `line-height` DROPPED at step zero) ·
+      **101c** the digit sinks (2 of 14) · **101d** the countdown
+      re-measures · **101e** the conditional blocks (the `min-height`
+      clusters DROPPED at step zero) · **101f** the exit ✅ — all
+      2026-09-17/18, WORKLOG §101a–f.
 
 ## Phase 102 — the two surface riders ✅ CLOSED 2026-09-18
 
@@ -474,6 +455,26 @@ checklist (one row per surface) with every row ticked. **Depends on:**
 §96–§102. **Risk:** low (docs). **Exit:** the reference signed; the
 checklist complete; Rounds 8 and 11 have the artifact they are checked
 against. **Scope guards:** no code.
+
+**The cut (2026-09-18, user-signed — audit + calls A/B in WORKLOG §103
+Kickoff; no fuzz smoke and no bump predicted on any step):**
+
+- [ ] **103a — the corrections:** the three paragraphs the audit found
+      behind the code (Buttons `title?` → `tooltip?` · §98's "drift is
+      zero" vs §99 · the Tooltips "until §100" tense) + the stale TODO
+      layout-sweep item ticked. Exit: each fix cites its file:line.
+- [ ] **103b — the checklist:** the Game-over row re-audited for the
+      102d body; a morale-read line per surface (chip vs gauges — the
+      spec §9 promise). Exit: the fallen table's Tab walk is the user's
+      Firefox read.
+- [ ] **103c — the team-identity requirement:** a new DESIGN paragraph,
+      five testable clauses (signed as drafted, call B); META-ROADMAP
+      Round 7.5 + the TODO rider point at it.
+- [ ] **103d — the reference pass (call A, LIGHT):** the header as a
+      signed reference · the hysteresis alias · a rule → pin / manual
+      test index · stale tenses. No rule changes meaning.
+- [ ] **103e — the exit:** the user's read + signature, this stub, the
+      cursor → §104, the session report.
 
 ## Phase 104 — the event-keyed sound registry
 

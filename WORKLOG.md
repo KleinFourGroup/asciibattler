@@ -4276,3 +4276,80 @@ Numbers: tests 2980 → 2995 (fxRegistry +3, fallenStats +7, the Run pin +1,
 fallenSide +4) · `ui.json` 175 → 180 · fuzz:smoke 582, fired ×3 · no
 snapshot bump · commits `9233faf` (kickoff) → `ab4625f` → `1eb815b` →
 `7cf6d8d` → `a9c16ef` → `650f3b6` → the close.
+
+## Phase 103 — the idiom reference (the signing)
+
+### Kickoff (2026-09-18) — the doc-vs-code audit + the cut
+
+Docs only, so the audit is a read of DESIGN §UI idioms + §Input
+accessibility against the tree at `9419ac4`. Every idiom paragraph was
+written at its own phase's close, append-only; the question is which
+sentences a LATER phase made false.
+
+**What held, checked at file:line:** ten `extends Screen` subclasses
+(`src/ui/*Screen.ts`) · the HUD's seven `screen-fade` panes
+(`HUD.ts:235-410`: banner, hop chip, speed, countdown, objective, player,
+enemy) · the chrome column's four `order` values (`ui.css:2064-2193`) ·
+`openModal`'s `panel` / `viewport` variants, `setDismissable`,
+`onCloseClick` (`modal.ts:42-64`) · the tooltip API (`attachTooltip`,
+`keyedTooltip`, `placeTooltip`) · `reserveSlot`, `pressable`, `fallenSide`
+· the chip suppression rule, pre-turn + battle only (`Game.ts:752`) ·
+`DEEP_DRIFT = 0.6` in both shaders (`terrain.frag.glsl:64`,
+`apron.frag.glsl:66`). The rest of the section rides permanent pins
+(tokens, tooltips, focus, motion, font coverage, the literal baseline), so
+it is true by construction and was not re-read.
+
+**What drifted — six findings:**
+
+1. **Buttons (96d)** reads `button(label, {className, onClick, title?})`;
+   the option is `tooltip?` since 97d (`button.ts:30,38`). A native `title`
+   is what the §97 tripwire forbids — the doc named the banned shape.
+2. **Color redundancy (98)** says deep water's "drift term is zero and is
+   only the §99 seam"; **Reduced motion (99)**, 25 lines on, says it drifts
+   at 0.6 rad/s. The code agrees with §99. An internal contradiction —
+   98's sentence was true for one day.
+3. **Tooltips (97)** says battle-card text is a hover + key read "until
+   §100 sweeps focus order". §100 swept it and DECIDED it (WORKLOG §100c2):
+   the cards themselves are the battle's tab stops, the inner `LV` / `POW`
+   wraps stay hover + key reads, and the compact card's persistent hint
+   keeps them off the sole-channel list. The sentence needs the as-landed
+   answer, not a pending tense.
+4. **"The hysteresis class"** is named by the charter and the spec (§2)
+   and appears nowhere in DESIGN. It is "Layout stability (101)" plus the
+   tooltip's out-of-flow placement. One alias sentence, so a Round 8 / 11
+   reader searching the spec's word lands on the rule.
+5. **The checklist is one surface behind.** The Game-over row predates
+   102d: the fallen table adds focusable text sites (`fallenSide.ts:77,86`)
+   and a scrolling box. And the spec's §9 promise — "full gauge vs chip on
+   the event screen becomes a line in the per-surface checklist" — was
+   never written; §96.5 answered it (the chip; gauges only on pre-turn +
+   battle) but no row says so.
+6. **The team-identity requirement does not exist** — only a deferral
+   sentence inside "Color redundancy (98)". META-ROADMAP's Round 7.5
+   "Depends on" names it. The phase's one piece of new prose. Beside it:
+   TODO's open "Layout-stability sweep" item (`TODO.md:99`) is §101, done.
+
+Structural: the section's header calls itself a thing "written as each
+phase lands its part" — a build diary's voice on the artifact Rounds 8 and
+11 are checked against.
+
+**The cut (user-signed the same day, both recommendations taken):** 103a
+the corrections (1–3 + the TODO tick) · 103b the checklist (5) · 103c the
+team-identity requirement (6) · 103d the reference pass (4 + the header +
+a rule → pin index) · 103e the exit. No fuzz smoke and no bump predicted
+on any step — every commit is docs, and each hook run is the check.
+
+- **Call A — 103d's depth: LIGHT.** New header, the index, the alias,
+  stale tenses; the paragraphs otherwise stand as written. Rejected: a
+  full restructure into rule / rationale / pin triplets — it reads better
+  and re-opens every sentence the user already signed at a phase close.
+- **Call B — 103c's five clauses, signed as drafted:** (i) team reads on
+  the board under Ctrl+Alt+G; (ii) the channel is per-instance and holds
+  for all four teams (player / enemy / camp / neutral); (iii) it survives
+  the held status tints (the panic / blind residual); (iv) card-less units
+  carry it (the camp-pip residual); (v) it does not spend an atlas cell
+  per team. Flagged at the ask: (v) is my inference from the 47 / 48 atlas,
+  not a constraint anyone had stated — the user kept it.
+
+ROADMAP: the §101 stub's as-landed list collapsed to one entry (the §102
+precedent) to make room — 489 → 471 lines before the cut went in.

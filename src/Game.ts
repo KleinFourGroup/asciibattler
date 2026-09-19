@@ -31,6 +31,7 @@ import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import type { DeckCue } from './ui/PreTurnScreen';
 import { AudioPlayer } from './audio/AudioPlayer';
+import { attachEventSounds } from './audio/eventSounds';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
 import { Keybindings } from './ui/Keybindings';
 import { HEALTH } from './config/health';
@@ -397,16 +398,12 @@ export class Game implements RunDispatcher {
       });
     });
 
-    // B6 audio hooks at the page-lifetime layer. Subscriptions tied to
-    // World/Scene lifetimes live in BattleScene (see unit:attacked /
-    // unit:died handlers there); subscriptions that span scenes belong
-    // here so they survive scene swaps.
-    this.bus.on('recruit:offered', () => this.audio.play('recruit'));
-    this.bus.on('run:victory', () => this.audio.play('win'));
-    this.bus.on('run:defeated', () => this.audio.play('lose'));
-    // 67b — the sector-cleared beat shares the win sting (a victory moment,
-    // just not the last one). Revisit at the feel-read if it wants its own.
-    this.bus.on('sector:cleared', () => this.audio.play('win'));
+    // §104 — every EVENT-keyed sound, one subscriber over the registry
+    // (src/audio/eventSounds.ts: which event plays what, and why the rest
+    // are silent). Page-lifetime, so it survives scene swaps; the battle
+    // cues (death / heal / dash) are safe here because BattleScene builds
+    // the only World on this bus.
+    attachEventSounds(this.bus, this.audio);
 
     // J3 — one page-lifetime keydown sink for every rebindable hotkey. On
     // `window` (not the canvas) so a binding fires without the play area being

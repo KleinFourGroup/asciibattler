@@ -73,7 +73,6 @@ export class BattleScene implements Scene {
    *  ticking later — the tick sequence itself is untouched. Null between
    *  battles; built fresh on mount. */
   private countdown: PreBattleCountdown | null = null;
-  private readonly subscriptions: Array<() => void> = [];
 
   /** 96.5b2 — the after-turn outro's OWN settle: resolves once the HUD's
    *  loss orbs have all landed, the ghost has committed and the settle
@@ -141,49 +140,12 @@ export class BattleScene implements Scene {
     );
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 
-    // B6 audio: per-battle subscriptions for the non-keyed combat sounds.
-    // Lives here rather than Game so it tears down with the world.
-    //
-    // §Z — every KEYED attack cue (one FxKey → visual + sound) now rides the FX
-    // registry, driven by BattleRenderer off `action:phase`: the mage bolt's
-    // `magicboom` + the catapult's `shoot` (Z1), and — as of Z3 — the melee
-    // swing's `melee` + the bow's `shoot` whoosh. Driving the whoosh off the
-    // phase event means a MISS plays it for free (the phase fires on hit AND
-    // miss), so the old `unit:attacked` / `unit:missed` audio handlers (which
-    // inferred melee-vs-ranged from the attacker's range) are gone. What stays
-    // here is the per-event sounds with no fx key: death, fire/heal tile chips,
-    // and the dash leap.
-    //
-    // C1b: skip INERT neutral deaths — walls have HP plumbed but the
-    // generic combat death cry would read as a unit dying rather than a
-    // wall crumbling. When C2's AoE damage actually lands wall hits, swap
-    // this for a dedicated `wall_destroyed` sample. §75h — an ACTIVE
-    // neutral (camp member, campId on the payload — the dead unit is
-    // already spliced out, so no lookup) IS a unit dying: it cries.
-    this.subscriptions.push(
-      ctx.bus.on('unit:died', ({ team, campId }) => {
-        if (team === 'neutral' && campId === null) return;
-        ctx.audio.play('death');
-      }),
-      // 27d/27e — the fire-tile burn SFX re-homed off the retired `unit:burned`
-      // onto the `burn` status's tick fx (one FxKey = visual + sound, the §Z
-      // model); BattleRenderer's status-fx driver plays it. Likewise the
-      // healing-tile chip-heal sound now rides the `rejuvenate` tick fx.
-      // D7.C — the ABILITY-heal cue stays here on `unit:healed` (the heal
-      // mechanic's own event). Skip amount === 0 (a heal onto a full unit emits
-      // a no-op per gotcha #80; a sound on a zero-effect event would feel buggy).
-      ctx.bus.on('unit:healed', ({ amount }) => {
-        if (amount <= 0) return;
-        ctx.audio.play('healtick');
-      }),
-      // N1 — the rogue dash whoosh, off the first-class `unit:dashed` (mirrors
-      // the swap cue). Keying off the LEAP itself — not an inferred move
-      // distance — means a one-cell dash (closing on an enemy 2 cells away, which
-      // lands adjacent) still whooshes. Team-agnostic: anything that leaps fires it.
-      ctx.bus.on('unit:dashed', () => {
-        ctx.audio.play('dash');
-      }),
-    );
+    // Battle audio has no subscriptions here (§104). Every KEYED attack /
+    // status cue (one FxKey → visual + sound, §Z) rides the FX registry,
+    // driven by BattleRenderer off `action:phase` — so a MISS plays its
+    // whoosh for free. The per-EVENT cues with no fx key (death, the
+    // ability heal, the dash leap) are rows of the event-sound registry
+    // (src/audio/eventSounds.ts), attached once by Game.
 
     // HUD and BattleRenderer must be bound BEFORE any spawn so unit:spawned
     // handlers find the world. Terrain comes before teams so the spawn
@@ -365,8 +327,6 @@ export class BattleScene implements Scene {
   }
 
   dispose(): void {
-    for (const unsub of this.subscriptions) unsub();
-    this.subscriptions.length = 0;
     this.objective?.dispose();
     this.battleRenderer?.detach();
     this.battleRenderer?.dispose();

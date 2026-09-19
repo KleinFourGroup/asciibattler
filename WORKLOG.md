@@ -4655,3 +4655,39 @@ the 41 reasons were not individually signed. The `candidate` list (14):
 
 Numbers: tests 2995 → 3004 (+9) · typecheck clean · eslint + prettier
 clean on the two files · no smoke, no bump (predicted).
+
+### 104b — the swap (2026-09-19) — BUILT, open on the user's ear-check
+
+`Game` calls `attachEventSounds(this.bus, this.audio)` once; the four
+`Game.ts` closures and the three `BattleScene.ts` closures are deleted.
+With nothing left to push to it, BattleScene's `subscriptions` field and
+its teardown loop went too (a hollow loop is a future reader's puzzle).
+A sweep for any remaining `bus.on(…)` line that calls `play(` found none.
+
+**What was verified, and how far it reaches.** Game wiring is an untested
+zone by policy (TESTING.md — headless never runs `Game`'s handlers), so
+the proof is the pane, with a recorder wrapped over the live
+`AudioPlayer.play` and emits through the real `__game.bus`:
+
+- On the CHARACTER SELECT — before any battle exists — all seven keys
+  hold a handler set, and the three battle keys hold exactly ONE handler
+  each. The old scene-lifetime closures could not have been there; this
+  is the page-lifetime attach, and "one" is the no-double-fire read.
+- Six emits, each read back: a dash → `dash` · a wall's death (neutral,
+  no camp) → nothing · a camp member's death → `death` · a player death →
+  `death` · a zero heal → nothing · a heal of 5 → `healtick`. Exactly one
+  play per audible emit.
+
+NOT exercised in the pane: the four run-level events — emitting
+`recruit:offered` / `run:victory` / `run:defeated` / `sector:cleared` by
+hand would drive Game's own scene swaps on a bogus payload. They go
+through the same `subscribe<K>` loop the unit tests walk key by key, and
+their handler sets are present; whether they SOUND right is the user's
+ear, as is everything about how any of it sounds. The pane has no ears.
+
+Pre-existing, not bundled: `src/Game.ts:318` fails `prettier --check` at
+HEAD (a `promotion:pending` handler prettier would re-wrap).
+
+Numbers: tests 3004 (unchanged — the swap is wiring) · typecheck + eslint
+clean · no smoke, no bump (predicted; `src/Game.ts` and `src/scenes/` are
+not trigger paths).

@@ -247,6 +247,7 @@ READ, and the read is named here so it is the same read every time:
 | The fallen GROUP | `fallenSide.test.ts` · `src/run/fallenStats.test.ts` | size the form on a REAL run |
 | Strings | `tests/i18n-literal-pin.test.ts` · `tests/i18n-ui-keys.test.ts` | — |
 | Input accessibility | the four pins under its checklist | a new surface adds its ROW; a clickable `<div>` is the forbidden shape |
+| Sound (104) | `src/audio/eventSounds.test.ts` (every bus event is cued or silent WITH A REASON) · `src/audio/AudioPlayer.test.ts` (every key has its file) | **the ear:** no test hears a cue — is it the right sound, at the right loudness, for the moment? a `candidate` row is an open question, not a decision |
 
 **Tokens (96a/96b).** Every color in `ui.css` is a `--color-*` token from
 the `:root` block; the palette thirteen mirror `COLORS` (`src/render/palette.ts`,

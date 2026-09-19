@@ -4785,3 +4785,40 @@ anchor — the raw tail is the read.)
 
 Numbers: tests 3006 (unchanged) · typecheck + eslint clean · no smoke, no
 bump (predicted).
+
+**104d's exit (2026-09-19):** the user's ear — the tick "sounds pretty
+good", the 0.6 volume right. The rising-pitch tally was explained on
+request (per-beat `rate` up a major scale, reset per card; bigger
+promotions climb higher) and is the user's open feel call — if wanted it
+lands as its own small commit, 104d2, so the two can be compared.
+
+### 104e — the docs (2026-09-19)
+
+- **ARCHITECTURE:** the `audio/` tree gains `eventSounds.ts` (the two
+  tables, the reasons, the subscriber, the two-layer pin and WHY it is
+  two-layer) and the AudioPlayer line gains the two keys + the asset pin;
+  BattleScene's "per-battle audio" is struck.
+- **A catalog hole found by the same diff that found `tick`.** Diffing
+  the `events.ts` keys against ARCHITECTURE's event catalog: the catalog
+  listed 47 INCLUDING `tick`, so a real event was missing —
+  `unit:chained`, absent since §29c. Row added. The spec's "47" and the
+  catalog's 47 were the same number for different reasons, each one
+  short; neither was ever diffed against the source. The coverage pin
+  does not cover this table (it is prose) — AGENTS' "A new event" bullet
+  is the only guard, and it now also names the sound disposition.
+- **DESIGN §UI idioms, the rule → pin → read table:** one new row,
+  "Sound (104)" — the two pins, and the read no test can make (the ear;
+  a `candidate` row is an open question, not a decision). No signed rule
+  changes meaning; the row is additive.
+- **`plans/sound-registry.md`:** a LANDED banner listing where the build
+  departed from the plan (48 not ~45 · the two-layer pin · key → reason ·
+  `when` a function · both reuse rows shipped · `moraleloss`) — the body
+  kept as the audit record.
+- **The run-end stats sting — DISPOSITIONED: none** (call 4). "THE
+  FALLEN" is a static body with no reveal timeline; `run:victory` /
+  `run:defeated` already sound as the GameOverScreen mounts. If the body
+  ever gains a reveal, `stattick` is the tally cue that exists for it.
+- **TODO:** the FX_REGISTRY coverage gap (call 5); "SFX diversity" now
+  points at the 14 `candidate` rows as its worklist.
+
+Numbers: docs only · tests 3006 · no smoke, no bump.

@@ -1,5 +1,18 @@
 # Plan — The event-keyed sound registry
 
+> **✅ LANDED at §104 (2026-09-19)** — `src/audio/eventSounds.ts`. Kept as
+> the audit record; read the code + WORKLOG §104 for the as-built shape.
+> Where the build departed from this plan: the catalog is **48** events
+> (not ~45); the pin is TWO-LAYER, because `GameEvents` has an index
+> signature and no runtime keys, so `keys(GameEvents)` below has nothing
+> to walk (tsc over the stripped keys + a vitest pin parsing the
+> `events.ts` source); `SILENT_EVENTS` is key → REASON, not an array;
+> `when` is a function reference, not a string name; `sectorwin` and
+> `stattick` both shipped (the two "KEEP for now / candidate" rows of the
+> reuse table); `moraleloss` (§96.5) postdates the census and stays a
+> direct HUD site. The FX_REGISTRY blind spot ("Optionally…") was NOT
+> closed — TODO. "What Cluster 6 must not break" still stands verbatim.
+
 A **§80 feasibility-audit doc**: audit + proposal only, ZERO
 implementation (the phase's scope guard). Audited 2026-08-16 at
 `50c2c74`; the site inventory below is the measured census at that

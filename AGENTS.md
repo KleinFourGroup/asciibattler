@@ -708,7 +708,9 @@ all three trees listing retired files and stale snapshot versions by GP1.
   the browser. No tests; the `render`/`ui` policy is eyeball-only.
 - **A new event:** add to the catalog in [src/core/events.ts](src/core/events.ts).
   Naming: `subject:verbed`. Document it in ARCHITECTURE.md's event
-  catalog table.
+  catalog table, and disposition its SOUND in
+  [src/audio/eventSounds.ts](src/audio/eventSounds.ts) — cued, or silent
+  with a reason; typecheck and `npm test` both fail until you do (§104).
 - **A new gotcha that bit you:** add to [GOTCHAS.md](GOTCHAS.md) with a
   commit reference (permanent "gotcha #N" numbering — never renumber).
   Future-you will thank you.

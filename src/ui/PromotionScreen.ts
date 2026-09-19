@@ -32,6 +32,7 @@ import { Screen } from './Screen';
 import { button } from './button';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 import { promotionDeltaParts } from './promotionDelta';
+import { tallyRate } from './promotionTally';
 
 /** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
  *  (FADE_MS=180) finish before the first card pops, so the entrance
@@ -99,10 +100,16 @@ export class PromotionScreen extends Screen {
       INTRO_DELAY_MS + (rendered.length - 1) * CARD_STAGGER_MS + LAND_TO_REVEAL_MS;
     for (const { el, reveals } of rendered) {
       this.scheduleBeat(at, () => el.classList.add('is-revealing'));
-      for (const reveal of reveals) {
-        this.scheduleBeat(at, reveal);
+      // 104d2 — the ONE tick site: the beat's index within its card sets the
+      // pitch (`tallyRate` — the count restarts per card). A skipped beat is
+      // silent, as before.
+      reveals.forEach((reveal, beat) => {
+        this.scheduleBeat(at, (skipped) => {
+          reveal();
+          if (!skipped) this.audio.play('stattick', { rate: tallyRate(beat) });
+        });
         at += REVEAL_STAGGER_MS;
-      }
+      });
       this.scheduleBeat(at, () => el.classList.remove('is-revealing'));
       at += CARD_HANDOFF_MS;
     }
@@ -136,18 +143,17 @@ export class PromotionScreen extends Screen {
    */
   private renderCard(p: PromotionInfo): {
     el: HTMLDivElement;
-    reveals: ((skipped: boolean) => void)[];
+    reveals: (() => void)[];
   } {
     const { el, levelValue, statRows } = buildUnitCard(unitCardFromPromotion(p), {
       mode: 'full',
       skin: 'promotion',
     });
 
-    const reveals: ((skipped: boolean) => void)[] = [];
-    reveals.push((skipped) => {
+    const reveals: (() => void)[] = [];
+    reveals.push(() => {
       levelValue.textContent = t('common.lv', { level: p.newLevel });
       levelValue.classList.add('is-revealed');
-      if (!skipped) this.audio.play('stattick');
     });
 
     // Iterate the card's stat rows in render order (POW first, then the combat
@@ -155,7 +161,7 @@ export class PromotionScreen extends Screen {
     for (const [key, { row, value, right }] of statRows) {
       const delta = p.newStats[key] - p.oldStats[key];
       if (delta <= 0) continue;
-      reveals.push((skipped) => {
+      reveals.push(() => {
         row.classList.add('unit-card__stat--gain');
         value.textContent = String(p.newStats[key]);
         value.classList.add('is-revealed');
@@ -163,7 +169,6 @@ export class PromotionScreen extends Screen {
         chip.className = 'unit-card__stat-delta';
         chip.textContent = `+${delta}`;
         right.appendChild(chip);
-        if (!skipped) this.audio.play('stattick');
       });
     }
 
@@ -185,9 +190,8 @@ export class PromotionScreen extends Screen {
         box.appendChild(row);
       }
       el.appendChild(box);
-      reveals.push((skipped) => {
+      reveals.push(() => {
         box.classList.add('is-revealed');
-        if (!skipped) this.audio.play('stattick');
       });
     }
 

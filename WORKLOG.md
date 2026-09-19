@@ -4822,3 +4822,35 @@ lands as its own small commit, 104d2, so the two can be compared.
   points at the 14 `candidate` rows as its worklist.
 
 Numbers: docs only · tests 3006 · no smoke, no bump.
+
+### 104d2 — the rising tally (2026-09-19) — INSERTED; BUILT for the user's A/B
+
+The user asked to hear it against the flat tick ("just so I can
+compare"); everything else in the phase is signed. So this step is a
+COMPARISON BUILD, and its exit is the user's pick, not a pass / fail.
+
+`src/ui/promotionTally.ts` — pure `tallyRate(beat, rises = TALLY_RISES)`:
+beat 0 is the sample as recorded (E6), each later beat one degree up a
+major scale (0 2 4 5 7 9 11 12 semitones), CLAMPED at the octave (past it
+a square tick goes shrill — E7 is 2.6 kHz — and a card that long reads as
+"topped out"). `TALLY_RISES` is the one-line switch: `false` = the flat
+104d tick, byte-for-byte the same calls with `rate: 1`.
+
+PromotionScreen's three `play('stattick')` sites collapsed into ONE, in
+the scheduling loop where the beat's index within its card is known; the
+reveal closures lost their `skipped` parameter (the mute-on-skip rule
+lives at the one site now). Whichever reading wins, the single site is
+the better shape and stays.
+
+**Verified in the pane on the REAL screen** (a recorder over
+`AudioPlayer.play`, a synthetic `promotion:pending` with two cards built
+off the live roster's stats): card A (3 grown stats) played five beats at
+0 / 2 / 4 / 5 / 7 semitones, ~400 ms apart; card B restarted at 0 (0 / 2 /
+4), 800 ms after A's last. The SKIP path: a click 400 ms in revealed all
+four beats of a fresh card and played NOTHING. The unit test pins the
+interval pattern (W W H W W W H), the exact octave, monotonicity, the
+clamp and the flat reading. What it SOUNDS like is the user's ear — that
+is the whole point of the step.
+
+Numbers: tests 3006 → 3010 (+4) · typecheck + eslint clean · no smoke, no
+bump.

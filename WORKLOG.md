@@ -4609,3 +4609,49 @@ against the tree; the plan's SHAPE holds, five of its facts do not.
 Predicted for every step: no snapshot bump, no fuzz smoke — nothing under
 `src/core|sim|run|config|bot` or `tests/fuzz/` is staged. A smoke that
 fires is a finding.
+
+### 104a — the registry, inert (2026-09-19)
+
+`src/audio/eventSounds.ts`: `EVENT_SOUNDS` (7 cued — the closures' exact
+mapping, the two filters lifted to the named predicates `audibleDeath` /
+`positiveAmount`) + `SILENT_EVENTS` (41, key → reason) + the ONE generic
+subscriber `attachEventSounds(bus, audio)`. Nothing calls it yet — the
+seven closures still own the sound; 104b swaps.
+
+**The tsc half was control-probed, not assumed.** Three doctorings, each
+must fail: an unknown key in `EVENT_SOUNDS` (TS2353 via `satisfies`), a
+cued key repeated in `SILENT_EVENTS` (TS2353, excess property), a silent
+key removed (TS2741). The first run doctored all three at once and showed
+TWO errors — the missing-property error is masked while the same literal
+carries an excess-property error — so the third was re-run alone and bit.
+A combined control can under-report; one doctoring per run.
+
+**The vitest half** parses the member keys out of the `events.ts` source
+(exactly-two-space members, quoted AND bare forms), asserts the set equals
+cued ∪ silent and the tables are disjoint, and self-checks: a doctored
+source gaining one member of each form reports both as missing; a catalog
+that lost `unit:dashed` reports the entry stale; the parse starts at
+`tick` and reaches `pools:chipped`. No event count is hardcoded.
+
+**One kickoff line corrected.** I wrote that `pools:chipped` is audible
+"through the HUD landing". The HUD's loss-event deliveries derive from
+`unit:died` (mid-battle) and `battle:ended` (the end sequence) —
+`HUD.ts:427/443`; `pools:chipped` is the 89a telemetry event and nothing
+presentational subscribes to it. So `battle:ended` carries `uiChannel` and
+`pools:chipped` is `bookkeeping`. The reason vocabulary is unchanged.
+
+**The typing wrinkle.** A loop over the key union cannot keep a cue's
+predicate correlated with the bus payload (contravariant parameter, the
+union of payloads is not assignable to one payload); `subscribe<K>` is
+generic over one key so `table[key]` and `bus.on(key, …)` share `K`. No
+cast in the module.
+
+**The per-key silent calls are mine and open to the user's re-read** —
+the 41 reasons were not individually signed. The `candidate` list (14):
+`battle:started` · `run:bitsChanged` · `run:poolChanged` ·
+`run:packetUsed` · `port:entered` · `event:entered` · `reward:offered` ·
+`turn:starting` · `deck:cardDrawn` / `cardDiscarded` / `reshuffled` ·
+`turn:handRedrawn` · `turn:unitEmpowered` · `turn:resolved`.
+
+Numbers: tests 2995 → 3004 (+9) · typecheck clean · eslint + prettier
+clean on the two files · no smoke, no bump (predicted).

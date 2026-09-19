@@ -485,8 +485,9 @@ key → reason · the two samples are `gen:sfx` recipes · the run-end stats
 body gets NO sting · the FX registry's own gap → TODO. Predicted per
 step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
 
-- [ ] **104a — the registry, inert:** `src/audio/eventSounds.ts` (tables
+- [x] **104a — the registry, inert:** `src/audio/eventSounds.ts` (tables
       + predicates + `attachEventSounds`) + the coverage pin; unwired.
+      ✅ 2026-09-19 — 7 cued + 41 silent = 48; WORKLOG §104a.
 - [ ] **104b — the swap:** Game attaches once; the 7 closures deleted;
       behavior-identical. Exit: the user's ear-check.
 - [ ] **104c — `sectorwin`:** key + recipe + the one-line table swap.

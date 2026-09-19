@@ -186,20 +186,24 @@ D4 A/B is Round 7.5's) — a shipped binding with no click route is a bug.
 The focus ring is the "Focus (100)" idiom below.
 
 **The per-surface checklist (the Round 7 spec's exit; every row ticked
-2026-09-17):** *click* = every action has a clickable control; *keys* =
-every control is Tab-reachable and Enter-activatable (Space where no hotkey
-claims it); *touch* = every hover read has a tap / long-press route;
-*hover-only* = information carried by hover alone.
+2026-09-17, re-audited at §103 for the 102d run-end body):** *click* =
+every action has a clickable control; *keys* = every control is
+Tab-reachable and Enter-activatable (Space where no hotkey claims it);
+*touch* = every hover read has a tap / long-press route; *hover-only* =
+information carried by hover alone; *morale* = the surface's ONE read of
+the run pool ("The live bar" below — the chip, the two full gauges, or
+none where no run is live).
 
-| Surface | Controls | Click | Keys | Touch | Hover-only |
-|---|---|---|---|---|---|
-| Character select | the three cards (`button`) | ✓ | ✓ | ✓ | none |
-| Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none |
-| Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none |
-| Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none |
-| Promotion · Recruit · Reward · Port · Event · Sector cleared · Game over | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none |
-| The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none |
-| The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none |
+| Surface | Controls | Click | Keys | Touch | Hover-only | Morale |
+|---|---|---|---|---|---|---|
+| Character select | the three cards (`button`) | ✓ | ✓ | ✓ | none | none (no run) |
+| Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none | chip |
+| Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
+| Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none | gauges (live) |
+| Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
+| Game over (both variants) | New Run (`button()`); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ⏳ the table walk — open on the Firefox read, §103b (every row holds a tab stop, so focus should scroll it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
+| The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
+| The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
 `title=`), `tests/ui-focus.test.ts` (every hover twin + the ring),

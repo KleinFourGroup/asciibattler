@@ -4380,3 +4380,33 @@ changes meaning.
 TODO: the open "Layout-stability sweep" item (the 76g catch) ticked with a
 pointer — §101 was that sweep, and its Reward ledger is the fix for the
 very screen the note names.
+
+### 103b — the checklist (2026-09-18) — WRITTEN, open on the user's Firefox read
+
+The per-surface checklist in DESIGN §Input accessibility re-audited against
+the tree; two changes.
+
+**The Game-over row splits out of the six-screen row.** As built
+(`GameOverScreen.ts:64-175`, `fallenSide.ts:60-92`): New Run is a
+`button()`; "The fallen" adds glyph runs that are focusable text sites
+(`tabIndex = 0` + a tooltip whenever a breakdown exists — the default
+`touch: 'tap'`, so a tap toggles) inside a table that is a scroll box
+(`overflow-y: auto`, `max-height: 38vh`, `ui.css:1699`). Nothing there is
+hover-only: the per-turn breakdown opens on all four tooltip routes, and
+the run is over, so none of it is information to act on. The keyboard
+route through the scroll box is by construction — a row exists only when
+somebody fell in it, so every row holds at least one tab stop and focus
+scrolls it into view — **but that is reasoning, not a read**: the pane
+cannot show a Firefox Tab walk (HANDOFF tips §100), and 102d's commit said
+the Tab walk was NOT read. The Keys cell carries ⏳, not ✓, until the
+user's read; ROADMAP 103b stays open on it.
+
+**A Morale column — the spec's §9 promise.** "Full gauge vs chip on the
+event screen becomes a line in the per-surface checklist" was never
+written; §96.5 answered it without closing the loop. One read per
+surface, each from code: none on character select (the chip is
+constructed hidden when `run === null`, `Game.ts:257`) · the chip on the
+map and the six between-fight screens, the Event screen among them · the
+two gauges on pre-turn and battle (`setSuppressed`, `Game.ts:752`) · none
+on game over (`run:defeated` / `run:victory` hide it,
+`PoolOverlay.ts:89-90`) · a modal shows its host's.

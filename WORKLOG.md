@@ -4854,3 +4854,13 @@ is the whole point of the step.
 
 Numbers: tests 3006 → 3010 (+4) · typecheck + eslint clean · no smoke, no
 bump.
+
+**104d2's exit (2026-09-19): the user's ear picked FLAT.** Both readings
+heard in Firefox through the one-line switch. `promotionTally.ts` and its
+test are DELETED (no switch kept for a hypothetical revisit — the recipe
+is in git at `898983f`, one `git show` away); the single tick site stays,
+playing `stattick` plain, with a comment that says a rising tally was
+built, heard and declined, so the next reader does not rebuild it as a
+fresh idea. Tests 3010 → 3006. A comparison build whose answer is "no" is
+the step working: the cost was one small commit each way, and the call is
+now made by ear instead of by my guess that the look "would suit" it.

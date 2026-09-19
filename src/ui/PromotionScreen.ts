@@ -32,7 +32,6 @@ import { Screen } from './Screen';
 import { button } from './button';
 import { buildUnitCard, unitCardFromPromotion } from './UnitCard';
 import { promotionDeltaParts } from './promotionDelta';
-import { tallyRate } from './promotionTally';
 
 /** Reveal cadence (M2). INTRO_DELAY_MS lets the screen's own fade-in
  *  (FADE_MS=180) finish before the first card pops, so the entrance
@@ -100,16 +99,16 @@ export class PromotionScreen extends Screen {
       INTRO_DELAY_MS + (rendered.length - 1) * CARD_STAGGER_MS + LAND_TO_REVEAL_MS;
     for (const { el, reveals } of rendered) {
       this.scheduleBeat(at, () => el.classList.add('is-revealing'));
-      // 104d2 — the ONE tick site: the beat's index within its card sets the
-      // pitch (`tallyRate` — the count restarts per card). A skipped beat is
-      // silent, as before.
-      reveals.forEach((reveal, beat) => {
+      // 104d2 — the ONE tick site. FLAT on purpose: a per-card rising tally
+      // (each beat a major-scale degree up) was built and A/B'd by ear, and
+      // the flat tick won. A skipped beat is silent.
+      for (const reveal of reveals) {
         this.scheduleBeat(at, (skipped) => {
           reveal();
-          if (!skipped) this.audio.play('stattick', { rate: tallyRate(beat) });
+          if (!skipped) this.audio.play('stattick');
         });
         at += REVEAL_STAGGER_MS;
-      });
+      }
       this.scheduleBeat(at, () => el.classList.remove('is-revealing'));
       at += CARD_HANDOFF_MS;
     }

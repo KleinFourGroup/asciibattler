@@ -493,7 +493,7 @@ step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
 - [x] **104c — `sectorwin`:** key + recipe + the one-line table swap
       (+ the asset pin, `AudioPlayer.test.ts`). ✅ 2026-09-19, ear clear.
 - [x] **104d — `stattick`:** key + recipe + the PromotionScreen sites. ✅
-- [ ] **104d2 — the rising tally** (INSERTED, the user's A/B ask). BUILT.
+- [x] **104d2 — the rising tally** (INSERTED, an A/B) — ✅ FLAT WON; deleted.
 - [x] **104e — docs:** ARCHITECTURE (+ the missing `unit:chained` row) ·
       DESIGN's pin table · the plan LANDED · no stats sting · the TODOs. ✅
 - [ ] **104f — the exit** (the ROUND close ritual is its own session).

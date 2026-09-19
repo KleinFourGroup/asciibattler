@@ -4536,3 +4536,76 @@ Numbers: tests 2995 → 2995 · `ui.json` 180, untouched · no smoke · no bump
 · commits `841563d` (kickoff) → `a171a8f` → `9145fdc` → `b44f718` →
 `f063678` → `60e41e9` (the cursor) → the close. One bounced hook (103a —
 the 4-line cap on a ticked TODO item).
+
+## Phase 104 — the event-keyed sound registry
+
+### Kickoff (2026-09-19) — the code-reality audit + the cut
+
+Pre-flight at `9605673`: typecheck clean, 2995 green, the tree clean. The
+audit read `plans/sound-registry.md` (audited 2026-08-16 at `50c2c74`)
+against the tree; the plan's SHAPE holds, five of its facts do not.
+
+**Findings.**
+
+1. **48 events, not 47.** The spec's count (and my first regex) matched
+   QUOTED keys; `tick: { tick: number }` (`events.ts:34`) is an unquoted
+   member of `GameEvents`. The cross-check that caught it: counting
+   2-space-indented members of the interface two ways (quoted / unquoted)
+   instead of trusting one pattern that happened to reproduce the
+   expected number. A count that matches the charter is not a
+   verification of the count.
+2. **The plan's pin is unbuildable as written.** `GameEvents` is an
+   `interface … extends Record<string, unknown>`: no runtime key list
+   exists, and `keyof GameEvents` is `string` (the index signature
+   swallows the literals), so `satisfies Partial<Record<GameEventKey, …>>`
+   would type-check ANY string key and `keys(GameEvents)` has nothing to
+   walk. Call 1 below.
+3. **The 7 closures are intact**, line numbers drifted: `Game.ts:404–409`
+   (the plan's `:325` / the charter's `:347`) and `BattleScene.ts:163–185`.
+4. **The page-lifetime collapse is safe.** `BattleScene.ts:95` is the only
+   `new World(` on the game bus (`src/dev/replayTrace.ts` builds its own),
+   so `unit:died` / `unit:healed` / `unit:dashed` cannot reach a
+   page-lifetime subscriber outside a battle.
+5. **One cue postdates the plan: `moraleloss` (§96.5b2-post).** Played by
+   the HUD at the ORB LANDING (`HUD.ts:476`), scaled per play by
+   `lossCue`. Derived from `pools:chipped` / `battle:ended` through the
+   loss-event model but time-shifted to the landing, so it is not an
+   event → key mapping and stays a direct site. It does mean the silent
+   list needs a reason the plan did not have: "cued on the UI channel".
+6. **Silence has three reasons, not one:** bookkeeping · cued on another
+   channel (the FX registry for `action:phase` / `status:ticked` /
+   `unit:chained` / `unit:attacked` / `unit:missed`; the HUD landing for
+   `pools:chipped`) · a candidate the Round 11 feel sweep may cue.
+7. **`sectorwin` and `stattick` need samples that do not exist.** The
+   three `healtick` borrows stand at `PromotionScreen.ts:149/165/189`.
+
+**The five calls (user-signed 2026-09-19, each as recommended).**
+
+1. *The pin is two-layer.* tsc: a mapped type strips the index signature
+   (`string extends K ? never : K`), and `SILENT_EVENTS` is typed
+   `Record<Exclude<Known, keyof typeof EVENT_SOUNDS>, SilentReason>` — a
+   missing key or a key in both tables fails the typecheck. vitest: the
+   pin parses the key set out of the `events.ts` SOURCE TEXT — a surface
+   the registry does not consult (the §79 circular-verification rule) —
+   and asserts it equals cued ∪ silent, disjoint; self-checked against a
+   doctored catalog. The helper type lives in `src/audio/`, so no
+   fuzz-trigger path is touched. Rejected: a runtime `GAME_EVENT_KEYS`
+   array in `src/core/` (a second list to keep in step with the
+   interface — the very drift the pin exists to catch — and a sim-side
+   edit for a presentation need).
+2. *`SILENT_EVENTS` is key → reason* (`bookkeeping` · `fxChannel` ·
+   `uiChannel` · `candidate`), not the plan's bare array: the Round 11
+   candidate list lives in code. No candidate gets a cue this phase.
+3. *The two samples are `gen:sfx` recipes* (deterministic, the `pickup`
+   precedent); the user can overwrite either file with a chiptone.
+4. *The run-end stats body gets NO sting:* "THE FALLEN" is static (no
+   reveal timeline) and `run:victory` / `run:defeated` already sound as
+   the screen mounts.
+5. *The FX registry's own coverage gap* (`*_tick` keys without a `sound`)
+   → a TODO line; the scope guard says that channel is untouched.
+
+**The cut** is in ROADMAP §104 (104a the registry inert · 104b the swap ·
+104c `sectorwin` · 104d `stattick` · 104e docs · 104f the exit).
+Predicted for every step: no snapshot bump, no fuzz smoke — nothing under
+`src/core|sim|run|config|bot` or `tests/fuzz/` is staged. A smoke that
+fires is a finding.

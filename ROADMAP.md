@@ -476,3 +476,21 @@ PromotionScreen `healtick` borrow → `stattick`. **Depends on:** §102
 (`plans/sound-registry.md` holds byte-for-byte). **Exit:** the coverage
 pin green; no event ships silent by default. **Scope guards:** the FX
 registry channel untouched; no volume/mute UI (Round 8).
+
+**The cut (kickoff 2026-09-19, user-signed — WORKLOG §104 Kickoff).** The
+count is **48** (`tick` is an unquoted member the 47 missed). ✅ DECIDED,
+five calls: the pin is two-layer (tsc over the index-signature-stripped
+keys + a vitest pin parsing `events.ts` source) · `SILENT_EVENTS` is
+key → reason · the two samples are `gen:sfx` recipes · the run-end stats
+body gets NO sting · the FX registry's own gap → TODO. Predicted per
+step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
+
+- [ ] **104a — the registry, inert:** `src/audio/eventSounds.ts` (tables
+      + predicates + `attachEventSounds`) + the coverage pin; unwired.
+- [ ] **104b — the swap:** Game attaches once; the 7 closures deleted;
+      behavior-identical. Exit: the user's ear-check.
+- [ ] **104c — `sectorwin`:** key + recipe + the one-line table swap.
+- [ ] **104d — `stattick`:** key + recipe + the three PromotionScreen sites.
+- [ ] **104e — docs:** ARCHITECTURE · DESIGN's pin table · the plan marked
+      landed · the stats-sting disposition · the FX-gap TODO.
+- [ ] **104f — the exit** (the ROUND close ritual is its own session).

@@ -39,6 +39,7 @@ export type SoundKey =
   | 'recruit'
   | 'sectorwin'
   | 'shoot'
+  | 'stattick'
   | 'summon'
   | 'thud'
   | 'vial'
@@ -87,6 +88,9 @@ export const SOUND_SOURCES: Record<SoundKey, string> = {
   // §104c — the sector-cleared sting (gen-sfx recipe): `win`'s little
   // sibling, off `sector:cleared` in the event-sound registry.
   sectorwin: 'audio/sectorwin.wav',
+  // §104d — the promotion card's reveal tick (gen-sfx recipe); a direct UI
+  // site (PromotionScreen's reveal timeline), not a registry row.
+  stattick: 'audio/stattick.wav',
 };
 
 /**
@@ -135,6 +139,9 @@ const VOLUMES: Record<SoundKey, number> = {
   moraleloss: 0.85,
   // §104c — a fanfare, so it sits with win / lose (0.7), under the impacts.
   sectorwin: 0.7,
+  // §104d — fires ~5 beats in a row per promoted card; a touch over the
+  // `healtick` (0.55) it replaces because the sample is far shorter.
+  stattick: 0.6,
 };
 
 /**
@@ -178,6 +185,9 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   recruit: 0,
   sectorwin: 0, // a one-shot fanfare (the click / recruit rule)
   shoot: 0.1,
+  // §104d — a counter, not an impact: the beats of one tally must match
+  // (the `healtick` borrow brought ±8% jitter a counter never wanted).
+  stattick: 0,
   win: 0,
   // §32b — DoT ticks jitter hard (±12%, like burn) so a board-wide tick reads
   // as a crackle; the characterful casts/wail keep low jitter (too much reads as

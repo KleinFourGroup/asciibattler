@@ -4740,3 +4740,48 @@ fails `prettier --check` at HEAD; the new recipe is clean.
 
 Numbers: tests 3004 → 3006 (+2) · typecheck + eslint clean · no smoke, no
 bump (predicted).
+
+**104c's exit (2026-09-19):** the user's ear — "a great sting, perfect".
+The `gen:sfx` recipe stands; no hand-made replacement wanted.
+
+### 104d — `stattick` (2026-09-19) — BUILT, open on the user's ear
+
+The key + a `gen:sfx` recipe + the three PromotionScreen reveal sites
+(`:149` the level, `:165` each grown stat, `:189` the derived block),
+swapped by the exact call and then ENUMERATED BY KEY: three `stattick`
+sites, and `healtick` left at exactly its two principled uses (the
+`unit:healed` registry row + the `rejuvenate_tick` fx). The screen's
+header comment named the borrow and was corrected with it.
+
+The tick: a ~30 ms dry square blip at E6 (1319 Hz — the top of `pickup`'s
+B5 → E6 chime, so the reward family stays in one key), a fast decay, a
+whisper of low-passed noise on the first few ms for the "clack". No tail:
+a card reveals ~5 beats in a row and they should read as a tally, not a
+melody. Volume 0.6 (the borrowed `healtick` sat at 0.55 but is twice as
+long); jitter 0 — a counter's beats must match, and the borrow had been
+bringing `healtick`'s ±8 % along.
+
+**Verified by instrument, not by ear.** The WAV reader at 10 ms windows:
+~1500 Hz in the first window (the noise click), ~1300–1350 Hz after, RMS
+falling 0.38 → 0.006 across 70 ms. One thing the read showed that the
+recipe does not say: the peak is 0.67, not the 0.8 `finish` normalizes to
+— its 4 ms anti-click fade-in lands on top of a 2 ms attack. The onset is
+still sharp and loudness is the volume table's job, so it stands; a
+sub-10 ms recipe would want `finish` to take a shorter fade. The asset
+pin (104c) covers the file; the ten existing recipes regenerated
+byte-identical. No pane run: the sites are direct typed calls, and the
+`public/audio/` serving path was proven at 104c.
+
+**Not built, offered:** `AudioPlayer.play` takes a per-play `rate`, so the
+tally could RISE in pitch beat by beat (the classic level-up count). The
+flat tick is the like-for-like replacement the charter asked for; the
+rising form is a feel call for the user's ear, one line per site.
+
+**A class sized once, so it stops being reported per file.** Three files
+this phase showed `prettier --check` drift at HEAD; the whole-tree count
+is 346 files — prettier is not a gate here (no hook runs it). Not a
+finding. (The first count read 0: ANSI colour codes defeated the grep
+anchor — the raw tail is the read.)
+
+Numbers: tests 3006 (unchanged) · typecheck + eslint clean · no smoke, no
+bump (predicted).

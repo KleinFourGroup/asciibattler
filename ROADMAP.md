@@ -490,9 +490,10 @@ step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
       ✅ 2026-09-19 — 7 cued + 41 silent = 48; WORKLOG §104a.
 - [x] **104b — the swap:** Game attaches once; the 7 closures deleted;
       behavior-identical. ✅ 2026-09-19, the user's ear-check clear.
-- [ ] **104c — `sectorwin`:** key + recipe + the one-line table swap
-      (+ the asset pin, `AudioPlayer.test.ts`). BUILT — open on the ear.
-- [ ] **104d — `stattick`:** key + recipe + the three PromotionScreen sites.
+- [x] **104c — `sectorwin`:** key + recipe + the one-line table swap
+      (+ the asset pin, `AudioPlayer.test.ts`). ✅ 2026-09-19, ear clear.
+- [ ] **104d — `stattick`:** key + recipe + the three PromotionScreen
+      sites. BUILT — open on the ear.
 - [ ] **104e — docs:** ARCHITECTURE · DESIGN's pin table · the plan marked
       landed · the stats-sting disposition · the FX-gap TODO.
 - [ ] **104f — the exit** (the ROUND close ritual is its own session).

@@ -7,9 +7,10 @@
  * TIME — level first, then each grown stat turns green and flips to the
  * new value with a `+N` chip — so the eye is never drawn to two units at
  * once (the active card carries .is-revealing, a brightened border). Each
- * reveal beat plays the healtick blip. (The original cascading-pipeline
- * shape — cards revealing while later ones were still landing — was
- * revised to this after playtest: multiple simultaneous motions.)
+ * reveal beat plays the `stattick` tick (§104d — it borrowed `healtick`
+ * until then). (The original cascading-pipeline shape — cards revealing
+ * while later ones were still landing — was revised to this after
+ * playtest: multiple simultaneous motions.)
  *
  * Clicking anywhere except Continue fast-forwards every pending beat to
  * the fully-revealed end state (audio muted — no blip machine-gun).
@@ -146,7 +147,7 @@ export class PromotionScreen extends Screen {
     reveals.push((skipped) => {
       levelValue.textContent = t('common.lv', { level: p.newLevel });
       levelValue.classList.add('is-revealed');
-      if (!skipped) this.audio.play('healtick');
+      if (!skipped) this.audio.play('stattick');
     });
 
     // Iterate the card's stat rows in render order (POW first, then the combat
@@ -162,7 +163,7 @@ export class PromotionScreen extends Screen {
         chip.className = 'unit-card__stat-delta';
         chip.textContent = `+${delta}`;
         right.appendChild(chip);
-        if (!skipped) this.audio.play('healtick');
+        if (!skipped) this.audio.play('stattick');
       });
     }
 
@@ -186,7 +187,7 @@ export class PromotionScreen extends Screen {
       el.appendChild(box);
       reveals.push((skipped) => {
         box.classList.add('is-revealed');
-        if (!skipped) this.audio.play('healtick');
+        if (!skipped) this.audio.play('stattick');
       });
     }
 

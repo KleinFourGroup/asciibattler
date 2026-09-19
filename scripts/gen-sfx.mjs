@@ -288,6 +288,22 @@ const SOUNDS = {
     addOsc(b, { type: 'sine', freq: (t) => 2 * note(t), amp: (t) => 0.08 * env(0.16)(t) });
     return finish(b, 0.8);
   },
+
+  // §104d — the promotion card's reveal tick (the level, each grown stat,
+  // the derived block — one beat each, ~5 in a row). It borrowed `healtick`
+  // until now, which said "healing" about a counter. A DRY tick: a very
+  // short square blip with a fast decay and a whisper of noise on the
+  // attack for the mechanical "clack" — no tail, so a run of beats reads as
+  // a tally, not a melody. Pitched at E6, inside `pickup`'s B5 → E6 chime,
+  // so the reward family stays in one key.
+  stattick: () => {
+    const b = buffer(0.07);
+    const rng = mulberry32(0x57a7);
+    addOsc(b, { type: 'square', freq: 1319, amp: (t) => 0.3 * attack(0.002)(t) * expDecay(0.014)(t) });
+    addOsc(b, { type: 'sine', freq: 2637, amp: (t) => 0.1 * expDecay(0.01)(t) });
+    addNoise(b, { amp: (t) => 0.12 * expDecay(0.003)(t), rng, lp: 0.6 });
+    return finish(b, 0.8);
+  },
 };
 
 /* --------------------------------- main --------------------------------- */

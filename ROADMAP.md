@@ -464,36 +464,20 @@ narrative in WORKLOG §103. As landed:
       · **103d — the reference pass (LIGHT)** ✅ `f063678` · **103e — the
       exit** ✅ — all 2026-09-18, WORKLOG §103a–e.
 
-## Phase 104 — the event-keyed sound registry
+## Phase 104 — the event-keyed sound registry ✅ CLOSED 2026-09-19
 
-**Charter:** `EVENT_SOUNDS` + `SILENT_EVENTS` + the coverage pin over
-all **47** events (the plan counted ~45 and predates `run:poolChanged`,
-`pools:chipped`, `turn:resolved.reason`); the 7 closures retired; the
-dedicated sector-win key (the sting rider — the registry's own line,
-`Game.ts:347`); the run-end stats sting dispositioned; the
-PromotionScreen `healtick` borrow → `stattick`. **Depends on:** §102
-(the stats screen exists to disposition). **Risk:** low
-(`plans/sound-registry.md` holds byte-for-byte). **Exit:** the coverage
-pin green; no event ships silent by default. **Scope guards:** the FX
-registry channel untouched; no volume/mute UI (Round 8).
+One session, kickoff → signature; Round 7's LAST phase. Every one of the
+**48** bus events (the charter's 47 missed the unquoted `tick`) is cued or
+silent WITH A REASON in `src/audio/eventSounds.ts`, held by a two-layer
+pin (tsc over the index-signature-stripped keys + a vitest pin parsing
+the `events.ts` source); the 7 closures retired for one subscriber;
+`sectorwin` and `stattick` shipped as `gen:sfx` recipes, each passed by
+the user's ear; an asset pin (every key has its file) rode along. Tests
+2995 → 3006; no smoke, no bump — each predicted. The charter + the five
+calls live in git at `7149b55`; the narrative in WORKLOG §104. As landed:
 
-**The cut (kickoff 2026-09-19, user-signed — WORKLOG §104 Kickoff).** The
-count is **48** (`tick` is an unquoted member the 47 missed). ✅ DECIDED,
-five calls: the pin is two-layer (tsc over the index-signature-stripped
-keys + a vitest pin parsing `events.ts` source) · `SILENT_EVENTS` is
-key → reason · the two samples are `gen:sfx` recipes · the run-end stats
-body gets NO sting · the FX registry's own gap → TODO. Predicted per
-step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
-
-- [x] **104a — the registry, inert:** `src/audio/eventSounds.ts` (tables
-      + predicates + `attachEventSounds`) + the coverage pin; unwired.
-      ✅ 2026-09-19 — 7 cued + 41 silent = 48; WORKLOG §104a.
-- [x] **104b — the swap:** Game attaches once; the 7 closures deleted;
-      behavior-identical. ✅ 2026-09-19, the user's ear-check clear.
-- [x] **104c — `sectorwin`:** key + recipe + the one-line table swap
-      (+ the asset pin, `AudioPlayer.test.ts`). ✅ 2026-09-19, ear clear.
-- [x] **104d — `stattick`:** key + recipe + the PromotionScreen sites. ✅
-- [x] **104d2 — the rising tally** (INSERTED, an A/B) — ✅ FLAT WON; deleted.
-- [x] **104e — docs:** ARCHITECTURE (+ the missing `unit:chained` row) ·
-      DESIGN's pin table · the plan LANDED · no stats sting · the TODOs. ✅
-- [ ] **104f — the exit** (the ROUND close ritual is its own session).
+- [x] **104a — the registry, inert** ✅ `8ae3e6d` · **104b — the swap**
+      ✅ `b0c5995` · **104c — `sectorwin`** ✅ `0c8c410` · **104d —
+      `stattick`** ✅ `dad6bb3` · **104d2 — the rising tally** (INSERTED,
+      an A/B; FLAT WON, deleted) `898983f` → `8f48f98` · **104e — docs**
+      ✅ `6cd2493` · **104f — the exit** ✅ — all 2026-09-19.

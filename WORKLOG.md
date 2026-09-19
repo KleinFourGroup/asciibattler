@@ -4864,3 +4864,61 @@ built, heard and declined, so the next reader does not rebuild it as a
 fresh idea. Tests 3010 → 3006. A comparison build whose answer is "no" is
 the step working: the cost was one small commit each way, and the call is
 now made by ear instead of by my guess that the look "would suit" it.
+
+### 104f — the exit (2026-09-19) — the phase CLOSES, and with it Round 7's build
+
+**Signed by the user 2026-09-19** on the three ear-checks (104b "test
+looks clear" · 104c "a great sting, perfect" · 104d "sounds pretty good,
+the volume too") plus the 104d2 pick (flat). Charter exit met: the
+coverage pin is green and no event ships silent by default — a new bus
+event fails the typecheck AND `npm test` until it picks a table. Scope
+guards held: the FX registry channel untouched (its own gap → TODO); no
+volume / mute UI.
+
+**What the phase says about the plan doc it built from.**
+`plans/sound-registry.md` was a good plan and five of its facts were
+wrong a month later — and the one that mattered most (the pin's
+mechanism) was wrong the day it was written: it proposed
+`keys(GameEvents)` over an interface. A feasibility audit that never
+opened a TypeScript file to try the type would not have caught it either;
+the kickoff caught it only because the module had to compile. The
+durable parts survived exactly as AGENTS predicts — the two-table shape,
+the out-of-scope list, "what Cluster 6 must not break".
+
+**Two counts that agreed and were both wrong.** The spec said 47; the
+ARCHITECTURE catalog held 47 rows; my first regex printed 47. Three
+sources, one number, zero diffs against the source until the kickoff's
+second count (quoted vs bare members) and 104e's key-set diff. The spec
+missed `tick`; the catalog had `tick` and missed `unit:chained`. The
+coverage pin now holds the CODE's set; the catalog table is still prose
+with only an AGENTS bullet guarding it — a catalog-vs-source key diff in
+`tests/docs.test.ts` would be the same one command, mechanized (TODO
+candidate for the close sweep; not built — out of this phase's charter).
+
+**What I got wrong.** LANDED, in the kickoff message the user signed
+from: "`pools:chipped` is audible through the HUD landing". It is not —
+the landings derive from `unit:died` and `battle:ended`; I had inferred
+the subscriber from the event's name instead of grepping for it.
+Corrected at 104a, and it surfaced again as the user's own (reasonable)
+confusion at 104b — a wrong sentence in a kickoff costs a round-trip
+later even after it is fixed in the file. CAUGHT before landing: the
+first event count (one regex that reproduced the expected number); a
+combined three-way tsc control that showed two errors and would have let
+me write "all three bite" (re-run singly); a prettier count of 0 through
+an ANSI-blind grep; one bounced hook (the ROADMAP cap's off-by-one). A
+CALL, not an error: I guessed the rising tally "would suit" the look; the
+user's ear said flat. That is what the comparison build was for.
+
+**Norm note.** Twice I batched several `Edit`s to one file in a single
+message (four distinct anchors in `AudioPlayer.ts`), against the letter
+of "confirm an edit landed before stacking the next". Each batch was
+verified by enumeration afterwards and the `Record<SoundKey, …>` tables
+make a missed one a type error — but it was a judgment that the norm's
+risk did not apply, made silently at the time. Recorded here instead.
+
+Numbers: tests 2995 → 3006 (+9 the registry, +2 the asset pin; the tally's
++4 came and went) · `ui.json` 180, untouched · no smoke, no bump on any
+of nine commits — each predicted · one bounced hook · commits `7149b55`
+(kickoff) → `8ae3e6d` → `b0c5995` → `0c8c410` → `dad6bb3` → `6cd2493` →
+`898983f` → `8f48f98` → the close. NEXT: the Round 7 close ritual, its own
+session (HANDOFF 🧭).

@@ -470,7 +470,7 @@ Kickoff; no fuzz smoke and no bump predicted on any step):**
 - [x] **103c — the team-identity requirement** ✅ 2026-09-18 (WORKLOG §103c; one open flag — clause 5 vs a META-ROADMAP candidate): a new DESIGN paragraph,
       five testable clauses (signed as drafted, call B); META-ROADMAP
       Round 7.5 + the TODO rider point at it.
-- [ ] **103d — the reference pass (call A, LIGHT):** the header as a
+- [x] **103d — the reference pass (call A, LIGHT)** ✅ 2026-09-18 (WORKLOG §103d): the header as a
       signed reference · the hysteresis alias · a rule → pin / manual
       test index · stale tenses. No rule changes meaning.
 - [ ] **103e — the exit:** the user's read + signature, this stub, the

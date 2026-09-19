@@ -4447,3 +4447,38 @@ the candidate) or soften 5 to a cost — is the user's, one line either way.
 
 Pointers: META-ROADMAP Round 7.5 "Depends on" names the paragraph; the
 TODO 7.5 rider (the two residuals) names clauses 3 + 4.
+
+### 103d — the reference pass, LIGHT (2026-09-18)
+
+Call A as signed: the paragraphs stand as written; three additions.
+
+- **The intro** drops the build-diary voice ("written as each phase lands
+  its part") for what the section IS — the artifact Rounds 8 and 11 are
+  checked against — says what the number in each title means, and maps
+  the spec's seven exit items to their paragraphs by name, so a reader
+  holding the spec can find each one.
+- **"Checking a surface against this"** — a rule → pin → read table. The
+  point of it is the third column: a rule with a pin cannot break quietly,
+  a rule without one is a READ, and naming the read makes it the same read
+  each time (the grey read · Ctrl+Alt+A · the Firefox Tab walk · the
+  same-run toggle + the box oracle · sizing a form on a real run). The
+  shells row says plainly that it has NO pin — `src/ui` DOM is
+  eyeball-only by policy — rather than implying one.
+- **The hysteresis alias** sits inside "Layout stability (101)", with the
+  tooltip named as the class's first member (the spec's §2 used the word
+  for the tooltip's out-of-flow placement before §101 existed).
+
+Every pin the table names was opened, not recalled: the loss-event Σ is in
+`src/run/chipRule.test.ts:135`, the drift equality in
+`TerrainRenderer.test.ts:37`, the star-run width in
+`rarityDisplay.test.ts:13`, the key-scan in `tests/i18n-ui-keys.test.ts`.
+**One error of mine caught on that pass:** the intro's first draft glossed
+Round 11 as "the ship audit". META-ROADMAP has Round 11 = Onboarding &
+Feel (the tutorial) and Round 12 = Ship; fixed before the commit. The
+stale-tense scan found nothing further — "Secondary buttons keep their own
+classes until an idiom for them earns its place" is a standing rule, not a
+pending one.
+
+The section heading keeps its "§103 signs the whole" parenthetical until
+103e, when it takes the signature's date (every cross-reference is by
+name, "DESIGN §UI idioms", never by anchor — checked).

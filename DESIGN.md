@@ -213,12 +213,40 @@ clickable `<div>` is the one shape this rule forbids.
 
 ## UI idioms (Round 7 — the reference; §103 signs the whole)
 
-The shared shapes every UI surface is built from, written as each phase
-lands its part (§96 the shells + the tokens, 2026-09-11; §97–§102 append
-theirs). A new surface reaches for these first; a surface that needs
-something none of them give is a reason to extend the idiom, not to
-hand-roll a second one. The code homes are in ARCHITECTURE's `src/ui/`
-tree.
+The shared shapes every UI surface is built from, and the artifact Rounds
+8 (Foundations — the menu + settings) and 11 (Onboarding & Feel — the
+tutorial) are checked against. A new surface
+reaches for these first; a surface that needs something none of them give
+is a reason to extend the idiom, not to hand-roll a second one. Each rule
+was written at the close of the phase that built it and the number in its
+title is that phase (the narrative: the Round 7 WORKLOG §N); §103 read the
+whole against the tree and signed it. The code homes are in
+ARCHITECTURE's `src/ui/` tree. With "Input accessibility" above, these are
+the spec's seven: the color rule + its grey test (98) · the tooltip rule
+(97) · the hysteresis class (101 — the spec's word for layout stability)
+· the shells (96) · the input rule extended to hover and focus (§Input
+accessibility + 100) · the string rule (Strings) · the team-identity
+requirement (103).
+
+**Checking a surface against this.** A rule with a pin is held by `npm
+test` — a new surface cannot break it quietly. A rule without one is a
+READ, and the read is named here so it is the same read every time:
+
+| Rule | Held by | The read (what no test can see) |
+|---|---|---|
+| Tokens | `tests/ui-tokens.test.ts` | — |
+| Screens · Buttons · Chips · Modals | no pin (`src/ui` is eyeball-only, TESTING.md) | does the surface use the shell, or hand-roll one? a modal: Esc = backdrop = ✕, focus returns to the opener |
+| The live bar | `src/run/chipRule.test.ts` · `src/ui/lossFx.test.ts` | morale reads ONCE (the checklist's Morale column) |
+| Tooltips | `tests/ui-tooltips.test.ts` · `src/ui/tooltip.test.ts` | is any tooltip the SOLE channel for something to act on? |
+| Color redundancy | `rarityDisplay.test.ts` · `statusDisplay.test.ts` | **the grey read:** Ctrl+Alt+G, before and after |
+| Team identity | — (Round 7.5) | the grey read on a live board, clause 1 |
+| Reduced motion | `tests/ui-motion.test.ts` · `motion.test.ts` · `fxRegistry.test.ts` · `TerrainRenderer.test.ts` | Ctrl+Alt+A: does information survive, does anything still sway? |
+| Focus | `tests/ui-focus.test.ts` · `src/ui/pressable.test.ts` | the Tab walk in FIREFOX (the pane wraps where Firefox exits) |
+| Layout stability | `tests/font-coverage.test.ts` | the same-run toggle + the box oracle; step zero is a measurement |
+| A cast FLIES | `fxRegistry.test.ts` | how the flight looks |
+| The fallen GROUP | `fallenSide.test.ts` · `src/run/fallenStats.test.ts` | size the form on a REAL run |
+| Strings | `tests/i18n-literal-pin.test.ts` · `tests/i18n-ui-keys.test.ts` | — |
+| Input accessibility | the four pins under its checklist | a new surface adds its ROW; a clickable `<div>` is the forbidden shape |
 
 **Tokens (96a/96b).** Every color in `ui.css` is a `--color-*` token from
 the `:root` block; the palette thirteen mirror `COLORS` (`src/render/palette.ts`,
@@ -424,7 +452,10 @@ interactive children; a toggle mirrors its selected class as
 `aria-pressed`; an inert one is `aria-disabled` + out of the Tab order.
 
 **Layout stability (101).** A control must not move across its own click.
-The class has three mechanisms and `tabular-nums` is none of them (both
+(The spec and the older notes call this "the hysteresis class" / "the
+Y-coordinate hysteresis"; the tooltip is its first member — fixed and out
+of flow, so opening one never shifts the page.) The class has three
+mechanisms and `tabular-nums` is none of them (both
 faces are monospace; it stays on `html, body` as a belt for a future face):
 
 1. *A fallback glyph grows the line box.* Every non-ASCII codepoint the UI

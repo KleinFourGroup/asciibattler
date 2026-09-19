@@ -96,16 +96,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   the losers + the switch, or promote it to a real settings surface
   (which needs a home — no options screen exists yet).
 
-- [ ] **Layout-stability sweep (the "Y-coordinate hysteresis" class).**
-  User-caught at the 76g eyeball (2026-08-10): screens whose content
-  grows/shrinks mid-interaction re-center vertically and everything
-  jumps — confirmed on the RewardScreen (accepting a portion shifts
-  the whole list); the 76g derived-block instance was fixed at the
-  source (space reserved via `visibility`, git 76g fix commit). A
-  dedicated pass should enumerate the class (any flex-centered screen
-  with mid-life content changes: rewards, recruit, pre-turn redraw?)
-  and pick a per-screen fix (reserve space / top-anchor / fixed
-  slots). Candidate slot: a later UI/polish round.
+- [x] **Layout-stability sweep (the "Y-coordinate hysteresis" class).** ✅ §101
+  (2026-09-18; ticked at the 103 kickoff audit): three mechanisms + the
+  reservation idiom; the Reward ledger fixes the 76g catch. DESIGN "Layout
+  stability (101)" · WORKLOG §101.
 
 - [ ] **`--sector-hops` in the run-config tool + sweep GUI.** 68b plumbed
   the two-act dial through the fuzz CLI's run/search/sweep (+ shard

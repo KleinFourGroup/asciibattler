@@ -4353,3 +4353,30 @@ on any step — every commit is docs, and each hook run is the check.
 
 ROADMAP: the §101 stub's as-landed list collapsed to one entry (the §102
 precedent) to make room — 489 → 471 lines before the cut went in.
+
+### 103a — the corrections (2026-09-18)
+
+Three sentences in DESIGN §UI idioms brought level with the tree; no rule
+changes meaning.
+
+- **Buttons:** `title?` → `tooltip?`, with what the option does (the §97
+  tooltip on the control's long-press route, `button.ts:30,38`) and the
+  ban it replaces.
+- **Color redundancy (98):** "the drift term is zero and is only the §99
+  seam" → the bands are the tell, and whether they drift is §99's. The
+  paragraph 25 lines down owns the number; 98 no longer states one.
+- **Tooltips (97):** the pending "until §100 sweeps focus order" → the
+  as-landed answer from 100c2 — in a battle the cards are the tab stops
+  and the text inside one stays a hover + key read. The run-end table
+  joins the pre-turn screen as a place tooltip-only text takes a tab stop
+  (`fallenSide.ts:77,86`). **A draft overclaim caught before it landed:**
+  my first wording said the compact card's persistent hint "already
+  carries what that text says"; reading `UnitCard.ts:285-289` showed the
+  power tooltip adds a clarifier (what power means under the live chip
+  mode) the hint does not — reworded to "the hint shows the numbers; the
+  tooltip only explains them", which is what keeps it off the
+  sole-channel list.
+
+TODO: the open "Layout-stability sweep" item (the 76g catch) ticked with a
+pointer — §101 was that sweep, and its Reward ledger is the fix for the
+very screen the note names.

@@ -233,9 +233,10 @@ builds its root, and `present(el)`s it (the 180ms `screen-fade`); a
 screen with its own teardown overrides `hide()` and ends in
 `super.hide()`. The HUD is seven independently faded panes, not a Screen.
 
-**Buttons (96d).** `button(label, {className, onClick, title?})` mints
-every `<button>` (type · class · label · click); the audio cue stays in
-the handler. `.btn--primary` is the walk-on action's look; its three
+**Buttons (96d).** `button(label, {className, onClick, tooltip?})` mints
+every `<button>` (type · class · label · click; `tooltip` attaches the §97
+tooltip with the control's long-press route — never a native `title`); the
+audio cue stays in the handler. `.btn--primary` is the walk-on action's look; its three
 modifiers name a deliberate delta (`btn--dim` a pass, `btn--exit` the
 sole control on an end screen — the hover fills it, `btn--corner` a
 viewport-pinned corner control). A site's POSITION stays on its own class.
@@ -309,8 +310,10 @@ must act on** (the spec's rule): the compact card reads `LV 5` / `1 POW`
 in a persistent hint, the `▲` empower chip carries its key's name beside
 the triangles, the boss node's copy is on the map banner. Tab stops on
 tooltip-only text live where the player has time to Tab (the pre-turn
-screen); battle-card text is a hover and key read until §100 sweeps focus
-order. The board status pip has NO tooltip — the overlay takes no pointer
+screen, the run-end table); in a battle the CARDS are the tab stops
+(100c2) and the text inside one stays a hover and key read — the
+alternative is ~30 stops per fight, and the compact card's persistent
+hint shows the numbers; the tooltip only explains them. The board status pip has NO tooltip — the overlay takes no pointer
 events, and the compact card's status row is its read. Zero native
 `title=` in `src/ui` + `src/render` (a tripwire test).
 
@@ -334,8 +337,8 @@ prefix glyph (`~` burn · `‡` bleed · `☠` poison · `+` heal, bare strikes)
 and the hue from the status table, so pip, card swatch and floating
 number draw from one source. **Deep water is a surface pattern** — one
 static diagonal band per tile in world space across the board and the
-apron (the plane stays coplanar with shallow water, §37b); the drift term
-is zero and is only the §99 seam. Many-category cases (the ten status
+apron (the plane stays coplanar with shallow water, §37b); the bands are the
+tell, and whether they drift is §99's (below). Many-category cases (the ten status
 hues, the five empower hues) satisfy the rule through their TEXT channel
 (the card's labelled row, the `▲` chip's name), not a per-pip shape. Team
 identity on the board (green vs red glyphs) is Round 7.5's, and so are

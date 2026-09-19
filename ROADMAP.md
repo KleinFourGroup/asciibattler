@@ -459,7 +459,7 @@ against. **Scope guards:** no code.
 **The cut (2026-09-18, user-signed — audit + calls A/B in WORKLOG §103
 Kickoff; no fuzz smoke and no bump predicted on any step):**
 
-- [ ] **103a — the corrections:** the three paragraphs the audit found
+- [x] **103a — the corrections** ✅ 2026-09-18 (WORKLOG §103a): the three paragraphs the audit found
       behind the code (Buttons `title?` → `tooltip?` · §98's "drift is
       zero" vs §99 · the Tooltips "until §100" tense) + the stale TODO
       layout-sweep item ticked. Exit: each fix cites its file:line.

@@ -488,9 +488,10 @@ step: no bump, no fuzz smoke (nothing under `src/core|sim|run|config`).
 - [x] **104a — the registry, inert:** `src/audio/eventSounds.ts` (tables
       + predicates + `attachEventSounds`) + the coverage pin; unwired.
       ✅ 2026-09-19 — 7 cued + 41 silent = 48; WORKLOG §104a.
-- [ ] **104b — the swap:** Game attaches once; the 7 closures deleted;
-      behavior-identical. Exit: the user's ear-check.
-- [ ] **104c — `sectorwin`:** key + recipe + the one-line table swap.
+- [x] **104b — the swap:** Game attaches once; the 7 closures deleted;
+      behavior-identical. ✅ 2026-09-19, the user's ear-check clear.
+- [ ] **104c — `sectorwin`:** key + recipe + the one-line table swap
+      (+ the asset pin, `AudioPlayer.test.ts`). BUILT — open on the ear.
 - [ ] **104d — `stattick`:** key + recipe + the three PromotionScreen sites.
 - [ ] **104e — docs:** ARCHITECTURE · DESIGN's pin table · the plan marked
       landed · the stats-sting disposition · the FX-gap TODO.

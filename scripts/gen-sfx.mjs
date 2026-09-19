@@ -267,6 +267,27 @@ const SOUNDS = {
     });
     return finish(b, 0.8);
   },
+
+  // §104c — the sector-cleared sting: a victory moment that is NOT the last
+  // one, so it must read as `win`'s little sibling (win.wav runs ~2.7 s) —
+  // a four-note rising C-major arpeggio (C5 E5 G5 → C6), three quick steps
+  // and a held top note that rings out. Same square + octave-sine voice as
+  // `pickup`, so the two "you gained something" cues sound related.
+  sectorwin: () => {
+    const b = buffer(0.8);
+    const notes = [523.25, 659.25, 783.99, 1046.5];
+    const step = 0.085;
+    const last = (notes.length - 1) * step; // the top note's onset
+    const note = (t) => notes[Math.min(notes.length - 1, Math.floor(t / step))];
+    // each step re-attacks (a 4 ms ramp off its own onset); the top note decays
+    const env = (tau) => (t) => {
+      const onset = Math.min(last, Math.floor(t / step) * step);
+      return attack(0.004)(t - onset) * (t < last ? 1 : Math.exp(-(t - last) / tau));
+    };
+    addOsc(b, { type: 'square', freq: note, amp: (t) => 0.3 * env(0.22)(t) });
+    addOsc(b, { type: 'sine', freq: (t) => 2 * note(t), amp: (t) => 0.08 * env(0.16)(t) });
+    return finish(b, 0.8);
+  },
 };
 
 /* --------------------------------- main --------------------------------- */

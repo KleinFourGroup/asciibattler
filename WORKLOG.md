@@ -4691,3 +4691,52 @@ HEAD (a `promotion:pending` handler prettier would re-wrap).
 Numbers: tests 3004 (unchanged — the swap is wiring) · typecheck + eslint
 clean · no smoke, no bump (predicted; `src/Game.ts` and `src/scenes/` are
 not trigger paths).
+
+**104b's exit (2026-09-19):** the user's Firefox ear-check came back clear
+— nothing sounds different, which is the pass. One exchange worth keeping:
+the user expected `moraleloss` to hang off `pools:chipped`, reading "loss
+events" as bus events. They are not — `PoolLossEvent` is a plain value the
+HUD computes (`lossEventsForDeath` on `unit:died`, `lossEventsAtEnd` on
+`battle:ended`, `src/run/chipRule.ts`) so the gauge can fall DURING the
+battle, per cause; `pools:chipped` arrives after `resolveTurn` with the
+totals and no UI subscriber (`Run.ts:3240`; the Σ pin ties the two). The
+name invites the confusion; nothing to change, but a reader of the
+registry's `battle:ended: 'uiChannel'` row now has the comment that says
+why.
+
+### 104c — `sectorwin` (2026-09-19) — BUILT, open on the user's ear
+
+The key + a `gen:sfx` recipe + the one-line table swap
+(`'sector:cleared'` → `sectorwin`; `win` is `run:victory`'s alone again).
+The sting: a four-note rising C-major arpeggio, three 85 ms steps
+(C5 E5 G5) into a held C6 that rings out — 0.8 s against `win`'s ~2.7 s,
+the same square + octave-sine voice as `pickup` so the two "you gained
+something" cues sound related. Volume 0.7 (with `win` / `lose`), no
+jitter (a one-shot).
+
+**What was verified — and it is not the sound.** I cannot hear. (1) The
+regen is byte-identical for the nine existing recipes (`git status` shows
+only the new file). (2) A scratch WAV reader — zero-crossing pitch + RMS
+per 85 ms window, reading the ASSET, sharing nothing with the generator —
+reads ~518 / 659 / 794 Hz at a flat 0.63 RMS, then ~1047 Hz decaying
+0.52 → 0.08: the file is what the recipe says. (3) In the pane the file
+serves 200 `audio/wav`, 70 604 bytes (= 44 + 0.8 s × 44.1 k × 2), and its
+pool reaches `readyState 4` beside `win` and `click` (a first read of 0
+was the preload not yet done — the control on `win` settled it). Whether
+it is a GOOD sting, and whether it sits right after a boss, is the ear's.
+
+**An unplanned pin, in scope by the charter's own exit** ("no event ships
+silent by default"): `AudioPlayer.play` swallows a failed playback, so a
+key with a missing or misnamed file is silent with no error anywhere —
+and this phase lands two new files. `src/audio/AudioPlayer.test.ts`:
+every `SOUND_SOURCES` path exists non-empty under `public/` (checked
+against the directory, not a path the player resolved), and every file in
+`public/audio/` is some key's (no orphan ships). Control: with
+`sectorwin.wav` moved away and an `orphan.wav` dropped in, both failed by
+name. `SOURCES` became the exported `SOUND_SOURCES` for it.
+
+Pre-existing, not bundled: `scripts/gen-sfx.mjs`'s last `console.log`
+fails `prettier --check` at HEAD; the new recipe is clean.
+
+Numbers: tests 3004 → 3006 (+2) · typecheck + eslint clean · no smoke, no
+bump (predicted).

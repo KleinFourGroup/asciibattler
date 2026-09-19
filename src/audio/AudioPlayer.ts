@@ -37,6 +37,7 @@ export type SoundKey =
   | 'pickup'
   | 'poison'
   | 'recruit'
+  | 'sectorwin'
   | 'shoot'
   | 'summon'
   | 'thud'
@@ -44,7 +45,7 @@ export type SoundKey =
   | 'wail'
   | 'win';
 
-const SOURCES: Record<SoundKey, string> = {
+export const SOUND_SOURCES: Record<SoundKey, string> = {
   burn: 'audio/burn.wav',
   // §29c — the stormcaller's chain-lightning arc. Plays per HOP (off the
   // `chain_arc` fx key on `unit:chained`), so a 3-jump cast crackles zap-zap-zap.
@@ -83,6 +84,9 @@ const SOURCES: Record<SoundKey, string> = {
   // Played by the HUD on every orb landing, scaled per play (`lossCue` —
   // gain up + rate down with the loss's fraction of the pool max).
   moraleloss: 'audio/morale_loss.wav',
+  // §104c — the sector-cleared sting (gen-sfx recipe): `win`'s little
+  // sibling, off `sector:cleared` in the event-sound registry.
+  sectorwin: 'audio/sectorwin.wav',
 };
 
 /**
@@ -129,6 +133,8 @@ const VOLUMES: Record<SoundKey, number> = {
   // gain from ~half of this at a one-point loss up to all of it at the
   // shake ceiling, so a small loss ticks and a big one lands.
   moraleloss: 0.85,
+  // §104c — a fanfare, so it sits with win / lose (0.7), under the impacts.
+  sectorwin: 0.7,
 };
 
 /**
@@ -170,6 +176,7 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
   // something heard in isolation reads as inconsistency, not life).
   pickup: 0,
   recruit: 0,
+  sectorwin: 0, // a one-shot fanfare (the click / recruit rule)
   shoot: 0.1,
   win: 0,
   // §32b — DoT ticks jitter hard (±12%, like burn) so a board-wide tick reads
@@ -198,10 +205,10 @@ export class AudioPlayer {
   constructor() {
     this.pools = {} as Record<SoundKey, HTMLAudioElement[]>;
     this.cursors = {} as Record<SoundKey, number>;
-    for (const key of Object.keys(SOURCES) as SoundKey[]) {
+    for (const key of Object.keys(SOUND_SOURCES) as SoundKey[]) {
       const pool: HTMLAudioElement[] = [];
       for (let i = 0; i < POOL_SIZE; i++) {
-        const audio = new Audio(SOURCES[key]);
+        const audio = new Audio(SOUND_SOURCES[key]);
         audio.preload = 'auto';
         audio.volume = this.masterVolume * VOLUMES[key];
         pool.push(audio);

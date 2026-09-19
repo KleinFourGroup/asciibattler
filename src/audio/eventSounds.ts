@@ -64,10 +64,9 @@ export const EVENT_SOUNDS = {
   'recruit:offered': { sound: 'recruit' },
   'run:victory': { sound: 'win' },
   'run:defeated': { sound: 'lose' },
-  // 67b — the sector-cleared beat shares the win sting (a victory moment,
-  // just not the last one). The reuse is now VISIBLE here; 104c gives it
-  // its own key.
-  'sector:cleared': { sound: 'win' },
+  // A victory moment, just not the last one: its own short sting (104c),
+  // `win`'s little sibling — it borrowed `win` itself from 67b until then.
+  'sector:cleared': { sound: 'sectorwin' },
   'unit:died': { sound: 'death', when: audibleDeath },
   // D7.C — the ABILITY-heal cue (the heal mechanic's own event). The
   // healing-TILE chip rides the `rejuvenate` tick fx instead (27d).

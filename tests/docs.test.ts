@@ -31,7 +31,11 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel: string) => readFileSync(join(repoRoot, rel), 'utf8');
-const lineCount = (s: string) => s.split(/\r?\n/).length;
+// A file's LINES, as an editor or `wc -l` counts them: the trailing newline
+// terminates the last line, it does not start another. (Until 2026-09-20 a
+// 500-line file read 501 here and bounced two hooks one line under the cap —
+// an off-by-one in the ruler, not a wider cap: 500 now means 500.)
+const lineCount = (s: string) => s.replace(/\r?\n$/, '').split(/\r?\n/).length;
 
 describe('docs hygiene', () => {
   // The rule (AGENTS "Keep HANDOFF lean"): only the in-progress phase stays

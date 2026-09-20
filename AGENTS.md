@@ -71,7 +71,25 @@ kickoff — has its own section below.)
   5v5" — from `preview_*` calls that had all errored.) Note `window.__game`
   is the top-level `Game`, not the battle world: `__game.world` returns
   `"none"`, so it can't confirm live unit state — use a headless test for
-  that.
+  that. **The over-claims that LAND are labels and absences, not numbers**
+  (the Round 7 read: numbers get re-counted, the words around them get
+  trusted). Claim an absence only from the surface that would show the
+  presence (§101-triage: "no fix PR upstream" went into three docs off one
+  empty `gh search`; the cross-reference was on the issue page). A forcing
+  flag is a REQUEST — count the forced id's instances in the artifact
+  before naming anything after it (§102). Re-count a dated or second-hand
+  number instead of quoting it, your own memory included — two agreeing
+  numbers nobody diffed against the source are not confirmation (§104: the
+  charter and ARCHITECTURE both said 47 events, each one short for a
+  different reason). And draft tense is a tell: write the entry AFTER the
+  tool result or mark the line a prediction — a code comment is a claim
+  with a longer half-life than a chat message (§101c, §102).
+- **A filtered count of zero is the instrument until the raw tail
+  agrees.** An npm notice filled a piped tail and a commit was chained
+  onto an unread result; a `console.log` vanished under a grep; a
+  colourised CLI defeated an anchored pattern and read 0 for 346 (three
+  Round 7 papercuts, one family). For a one-number probe, a deliberately
+  failing `expect()` beats a log line — it prints first try.
 - **Batch only genuinely independent tool calls; never read-and-edit
   the same file in one message, and confirm an edit landed before
   stacking the next on it** (E7.A: over-batching reads alongside edits
@@ -147,11 +165,25 @@ kickoff — has its own section below.)
   baseline checkout with `git worktree add --detach <tmp> HEAD` + a
   `node_modules` junction — NEVER a background capture against the
   live tree: the CLI compiles imports at run time, so edits landing
-  underneath crash or silently poison the capture (47e).
+  underneath crash or silently poison the capture (47e). **A
+  byte-identity PASS ships with its failing CONTROL** (§102): the same
+  shapes under a deliberately non-neutral edit must FAIL, or the PASS may
+  be a shape that never met the code (the control is what made a
+  mislabelled shape harmless). **A refactor of PRESENTATION gets a
+  stylesheet oracle** instead (§96): parse HEAD's sheet and the working
+  sheet, resolve `var()`, compare declaration by declaration — or element
+  by element through a small cascade when selectors move — self-checked
+  HEAD-vs-HEAD first and negative-controlled. It proves the CASCADE; only
+  the browser proves the BOX (a wrapper is a hit-test change no
+  declaration diff sees — gotcha #137).
 - **Shape-lock proposals go in a plain message; collect the approval
   next turn.** AskUserQuestion dialogs hide same-turn assistant text in
   the desktop app (bit twice at the 47 kickoff) — a proposal presented
   in the same turn as the question dialog is invisible to the user.
+  Before posing a decision ON a paragraph, read to the paragraph's end: a
+  windowed read that stops mid-sentence is a truncated read (§103c — a
+  clause went up for signature one line short of the sentence it
+  conflicted with; the tell, an open parenthesis, was on screen).
 - **External adversarial review + a read-only peer that verifies
   file:line before anything is believed** (the §85f tiger-team shape):
   a second model found six real defects in a fresh instrument plus the
@@ -194,7 +226,13 @@ kickoff — has its own section below.)
   `rewardOverride` only when the schema went strict).
 - **Keep DESIGN.md / ARCHITECTURE.md honest.** If a change reveals a
   documented decision is wrong, update the doc in the same commit as
-  the code change.
+  the code change. That covers code → doc; the §103 audit found the other
+  direction: **an append-only reference rots by CONTRADICTION, not
+  omission** — all six findings were a later phase making an earlier
+  paragraph false (one day and 25 lines apart). A phase that appends a
+  rule greps the section for the sentences its change touches (the option
+  name, the number, any "until §N") and fixes them in the same commit; two
+  documents that must agree name each other.
 - **Keep HANDOFF lean — a structural rule, not "trim when it feels big"**
   (the old discretionary version let it reach 600+ lines before anyone
   acted). `Current state` keeps **only the in-progress phase verbose**;
@@ -285,8 +323,13 @@ kickoff — has its own section below.)
   then landed on `main` as file-split commits once the LAST launch has
   fired — `git add -N` makes new files ride `git diff`; hunks that straddle
   two commits are staged from a temporarily-reverted copy).
-- **Write/Edit for any text that carries a quote, a backtick or a
-  newline; heredocs and perl only for literal, quote-free anchors**
+- **Write/Edit for any text that carries a quote, a backtick, a
+  BACKSLASH or a newline; heredocs and perl only for literal, quote-free
+  anchors** (the Round 7 close: a heredoc ate a regex's backslashes twice
+  in one session — once loudly, once as a wrong-but-running `s+`. A patch
+  script that carries a regex is written with the Write tool; the shape
+  that worked for multi-hunk edits is a small script of ASSERTED anchors —
+  each replacement throws unless it matches exactly once)
   (§94: four burns in one session — a `'` in a `-m` message killed a
   whole command, `\n` in a perl replacement became a real newline, an
   apostrophe parsed by esbuild but not tsc; a bash batch with a stray
@@ -298,13 +341,18 @@ kickoff — has its own section below.)
   `git commit -F <file>`. (Otherwise, in the Bash tool, multi-line
   messages take multiple `-m` flags or `$'…'` — a PowerShell `@'…'@`
   here-string parses as stray `@` lines there; that syntax belongs to
-  the PowerShell tool. One garbled commit subject proved it.)
+  the PowerShell tool. One garbled commit subject proved it.) And this
+  repo's paragraph-long subjects are echoed back by git: `git commit -q`
+  and `git log --format=%h -1`, or every commit costs its own prose twice.
 - **Self-check a new reader against a known answer before it reads new
   data, and pool with a script that prints its arm count — never
   `rows[0]`** (94c: the reader pointed at the 92h batches had to
   reproduce the 92h read exactly and didn't — two defects found before
   the cohort landed; the kickoff table had quoted one arm's rows as "the
-  six arms pooled").
+  six arms pooled"). Best of all, build the known answer INTO the
+  instrument (§101: the glyph-swap search had to find `⊞ ⇄ ⊠`, the metrics
+  pin had to reject a face known to be too tall, the inventory pin had to
+  fail on a planted `⏸`) — a trusted negative rests on one of these.
 - **Pre-sign the CHAIN, not the numbers, for an unattended night** (§92:
   rules the session can apply, a pause-on-suspicion clause for what it
   can't, and a written flag for every judgment call let five cohorts run
@@ -389,7 +437,7 @@ is wrong — link instead.
 | Hard-won weirdness that must not be re-litigated | [GOTCHAS.md](GOTCHAS.md) ("gotcha #N", never renumber) |
 | Process lessons | [retro/scratchpad.md](retro/scratchpad.md), distilled by the ritual below |
 | Source tree, event/command catalogs | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| Small non-roadmap follow-ups | [TODO.md](TODO.md) — completed = one ✅ line + pointer, in the landing commit |
+| Small non-roadmap follow-ups | [TODO.md](TODO.md) — completed = one ✅ line + pointer, in the landing commit (`tests/docs.test.ts` caps a ticked item at 4 LINES — match a ticked neighbour's length, not just its format) |
 
 ### Legal ROADMAP mutations (everything else → the worklog)
 
@@ -426,7 +474,11 @@ authored. At phase start:
    a step that adds a SERIALIZED RNG STREAM predicts the seed
    re-baseline (74b promised byte-identity by reasoning about node
    reachability; the `eventRng` construction fork shifted every
-   downstream stream and broke three seed-sensitive tests). When a risky
+   downstream stream and broke three seed-sensitive tests). Predict the
+   fuzz-smoke trigger PER STEP, not per phase — a phase-level "the smoke
+   never fires" is a prediction about fixes not yet designed (§101), and
+   `config/` is sim INPUT, so a charter's "no sim touch" on a config file
+   is a category error (§102). When a risky
    change has a separable UI, cut it
    headless-core-first, render-second (the H4a/H4b precedent) — it
    shrinks the eyeball-only surface to what's actually visual.
@@ -483,7 +535,13 @@ dedicated planning session.
 current code before building.** H2's specced mechanic had been live
 since D5.B; H4's predicted snapshot bump didn't exist. When a card
 predicts a side effect, the *absence* of that side effect is a tell the
-work is already done.
+work is already done. **Step zero is a MEASUREMENT, not a read-through**
+(§101, three steps running): a cut written from an audit is a list of
+HYPOTHESES, and ten seconds of probe per item beats building the item — it
+dropped a signed global rule, took ten reserve-a-width rules to two, and at
+101e GREW a step by finding two mechanisms no audit had named. A change to
+the signed cut that falls out of step zero goes back to the user before it
+is built.
 
 **When a step deliberately defers work to a later step, write the
 landing note** — what was left, where it lands, and what invariant the
@@ -497,14 +555,23 @@ hook walk that double-draws the chance flip and breaks byte-parity.
 
 Adopted 2026-09-09 at the Round 7 kickoff, user-signed. Every unscheduled
 round so far (the rollout-arbitration interstitial, the casualty
-experiment, Round 7.5 Units) appeared because a round's close revealed
+experiment, Round 7.5) appeared because a round's close revealed
 the NEXT charter's premise was unbuilt or brittle — the instruments
 working, but always as a surprise at the next kickoff. So the close
 ritual (archive the pair + the spec, the scratchpad sweep, META-ROADMAP
 status, the HANDOFF cursor) gains one step: **re-read the next round's
 charter against code reality at the close**, and if a gap needs its own
-round, insert it THEN as a planned entry. **Naming:** an inserted round
-takes the `.5` number ("Round 7.5 — Units"); round numbers are charter
+round, insert it THEN as a planned entry. (Its first run, at the Round 7
+close, found no missing round but a contested PREMISE — Round 7.5 was
+re-chartered from "Units" to "The Board" with a spike ahead of its spec —
+so: the re-audit poses the charter to the USER as well as to the code.)
+**The close also PROPOSES a playtest** of the round's build, and a
+shape-lock that splits a step into "data now, presentation later" writes
+the deferred half into TODO in the same commit — the §94 close shipped a
+signed sheet and a fallen-ledger screen nobody had looked at live, and the
+§94d live bar was never built because no line anywhere held it; both cost
+an inserted phase (§96.5). **Naming:** an inserted round
+takes the `.5` number ("Round 7.5 — The Board"); round numbers are charter
 identities and are never renumbered (the phase counter §N is the durable
 ordering key; the `<phase><letter>` form is the step address). Slugs + a
 cite mechanism were considered and rejected (a resolver pass over every
@@ -614,7 +681,11 @@ the threshold.
   [session-report header](retro/sessions.md). At a phase close, the
   closing session adds a one-paragraph summary of that phase's entries
   to the same file; the round-boundary distillation sweeps both files
-  alongside the scratchpad.
+  alongside the scratchpad. **A long round's instrument gets a mid-round
+  read — the designated close is a floor, not a schedule** (the 2026-09-13
+  early read, user-called: seven papercuts and four reports were enough to
+  retire a norm every session was overriding and to find the log's own
+  attribution gap).
 - **Standing decisions from the welfare reads** (the first read,
   2026-09-20, user-signed; the rationale + the source entries are in
   `archive/post-94-worklog.md` §The Round 7 close, C3; revisit at the

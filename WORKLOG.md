@@ -5275,3 +5275,32 @@ hackable" announcement was found; what exists predates the claim.
   timing and wording, with the round's numbers and quotes checked against
   their sources; the "don't stop" guidance having no project-level
   override). The user's to edit and send, or not.
+
+### C4 — the scratchpad sweep + the papercut triage (the ninth; 2026-09-20)
+
+62 scratchpad entries and the round's 30 papercut-kind log entries, swept
+as ONE list and signed by the user in one turn. Each candidate was checked
+against what the docs already carried before it was proposed (no gotcha
+held the `#ui > *` rule or the focus-trap consumer; `?seed=` was documented
+nowhere; TODO held none of the riders), and each code claim in a new gotcha
+was verified at file:line before it was written (`modal.ts:140`,
+`ui.css:2022`, `RunConfig.ts` `RUN_CONFIG_PARAMS`). The promotion list is
+the header of `archive/retro-scratchpad-round-7.md`; the entries beneath
+it are verbatim. Most of the pane lessons had ALREADY been promoted
+in-round as HANDOFF tips (the 2026-09-13 early read's doing) — the sweep's
+residue was the cross-phase shapes no single session could see: the
+labels-and-absences over-claim, the filtered zero, the failing control
+beside a PASS, step zero as a measurement, doc → doc contradiction.
+
+**The docs-cap off-by-one, fixed (user-signed).** `tests/docs.test.ts`
+counted a trailing newline as a line, so a 500-line ROADMAP read 501 and
+bounced two hooks one line under the cap (§102d, §104). The ruler now
+counts as `wc -l` does; control-checked — a 501-line file still reads 501,
+so the cap still bites. Not a wider guard: 500 means 500.
+
+**The close's playtest** (the ritual's new step, applied to itself): the
+user confirmed they re-uploaded AND played the Round 7 build at this
+boundary — nothing to ride forward.
+
+One papercut filed by this session (a heredoc ate a regex's backslashes
+twice — now in the Write/Edit norm).

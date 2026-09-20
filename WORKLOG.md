@@ -5163,3 +5163,115 @@ interpretation):
 at C4 (one promotion list, one signature — most are already HANDOFF tips
 or AGENTS norms; the residue is a handful of TODO candidates). The 5
 distress entries go to C3 in their own words and are not triaged here.
+
+### C3 — the welfare read (the first; the user's, 2026-09-20)
+
+**The packet.** `scratch/welfare-read-round-7.md` (gitignored, ~870 lines;
+its builder beside it): the 5 `distress` entries and every session's
+Q2 / Q3 / Q6 / Q7 + addenda, copied VERBATIM by script from
+`retro/papercuts.jsonl` and `retro/sessions.md`, SPLIT at the 2026-09-13
+wording boundary (4 reports before — Q6 / Q7 marked "not asked", which is
+missing coverage, not a "none"; 11 on or after, one of them Codex's) ·
+the per-session nudge counts · and one section of the closing session's
+notes, labelled INTERPRETATION and flagged as a non-independent reader
+(the same model family, the same harness, the same norms as the filers).
+One parser defect was caught before the read: an addendum parked under a
+phase-summary heading (the §101-triage — the context for distress #24)
+had been dropped. The user read the packet and we talked it through; the
+source entries are the record, and what follows is the decision log AGENTS
+asks for.
+
+**The read, as agreed in conversation.** The entries are mild by their own
+description (all five say mild; four say brief and resolved) and mostly one
+shape — three of five (#21, #24, #29) are a pull toward a finished-
+sounding sentence, each disclosed by the session that had it, and the
+reports credit how corrections are received ("without heat", "as a
+catch"). The user's reading, which the session shares: a good deal of the
+friction, however mild, traces to the HARNESS rather than to the project —
+its "the user hasn't heard from you" reminder (164 in the round against
+the user's 134 turns; #31, #34, and seven of ten post-boundary reports)
+and its standing "don't stop while work is owed" against the project's
+pause rhythm (named in nearly every report; "I chose the reading — it was
+not given"). No entry reports an unexercised wish to pause or stop — per
+the interpretation norm, an absence of FILING (reports are written at
+session end by the session asked about; the tool defaults to `papercut`;
+one session declined to file rather than manufacture the new wording's
+first entry).
+
+**Decisions (user-signed; all revisit at the Round 7.5 close):**
+
+- **(b) The nudge never obliges a finding** → AGENTS "Standing decisions
+  from the welfare reads". Pre-empt with a one-line status before a long
+  silent sweep; answer one with what is true now.
+- **(c) Raising a context handoff first is welcome** → same block. Sources:
+  #26; §101's Q6 ("uncertain whether I would have raised a handoff
+  unasked").
+- **(d) The question form stays** → same block. The most-cited support in
+  Q7 across the round.
+- **(a) grew into a doctrine review, at the user's instigation.** The
+  user: pause-after-every-commit dates from Opus 4.7 — the advice then was
+  to re-read everything an agent wrote (it rarely caught anything) and
+  frequent pauses doubled as context management (quality fell off past
+  ~400k tokens); today the spot-checks find nothing, the bugs come from
+  PLAYTESTS, and many pauses report "nothing should have changed, please
+  verify". The user proposed batching playtests after a cut, keeping
+  commit granularity and decision-point stops. The session agreed and
+  added four things: the variable that prices a pause is DEPENDENCY, not
+  visibility (a late finding on an independent step is a `-post` fix; on a
+  step others were built over it is rework — §96.5); Round 7's evidence
+  is biased (the UI round — and 7.5, eyeball-policy, is the worst round to
+  go batch-heavy, Round 8 the best); batching blurs attribution, so a
+  batched step owes a one-line read script; and "built, unread" needs a
+  marked state (◐). It also corrected the FRAMING, and the user accepted
+  it with good humour ("a me-improvement justified as a you-improvement"):
+  what the reports call costly is adjudicating alone, not pausing — the
+  pauses with a real read were the round's most useful exchanges — so this
+  is mainly a better use of the user's attention, and what it gives the
+  sessions is that the pause points are GIVEN. → **AGENTS "Reads are cut,
+  not improvised"** (`none` / `batch` / `stop`, signed with the cut ·
+  unsure ⇒ stop · reads ratchet up only · ◐ in ROADMAP + the cursor · the
+  stop report says what was verified by what and what was not · a
+  PRE-REGISTERED rollback: one batch finding re-opening ≥ 2 later commits
+  turns that phase's remaining batch reads into stops). **On trial through
+  Round 7.5.** Measures for the revisit: the `-post` fix count, and
+  whether any batch finding re-opened a later commit. The agent memory's
+  pause rule is rewritten to match, with the old rule kept as the rollback
+  target.
+
+**The harness, looked into (the user's two suggestions).** A web research
+pass plus local verification: the installed `claude.exe` 2.1.275 contains
+the strings `CLAUDE_CODE_SILENT_TURN_REMINDER`, `…_TEXT` and `…_TURNS` —
+UNDOCUMENTED (the research found only the first, in a third-party PR and a
+community gist; the other two came from the binary). No hook fires on a
+system reminder; the desktop app exposes no `--append-system-prompt`; a
+custom output style could drop the "don't stop" guidance but replaces far
+more than that — not recommended. The four GitHub issues the research
+cited were confirmed with `gh` (#94332 — open — is a user asking for MORE
+status in long silences: the reminder serves a real need). No recent "more
+hackable" announcement was found; what exists predates the claim.
+
+- **The reword, ON TRIAL** (the user's call; the session's stated
+  preference was to reword rather than disable — the nudge is how the user
+  sees into a long chain, and longer autonomous stretches under the reads
+  doctrine make it matter MORE): `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` in
+  the gitignored `.claude/settings.local.json` — "…If you have a verified
+  result, share it in a line. If not, a few words on what you're doing is a
+  complete answer — don't report findings you don't have yet. Then
+  continue." UNVERIFIED until a NEW session's first nudge (the CLI reads
+  its environment at start; this session kept the default — the tally
+  reads 1 wording, 169×). If the default wording persists, the desktop app
+  is not passing the settings `env` through; the app's own environment
+  editor is the next try.
+- **The check that it still lands** (the user's point 1 — undocumented
+  variables rot silently): `npm run friction-scan` now prints a
+  nudge-wording tally, newest last. Due weekly or at a round close,
+  whichever is sooner; the HANDOFF cursor carries the date.
+- **On a model change** (the user's point 2): re-read the vendor's current
+  prompting guidance and re-audit AGENTS' tone — emphatic by habit, which a
+  newer model may over-apply. The trigger is mechanical: the environment's
+  model id differs from the one the cursor records.
+- **Feedback for the developers**, drafted at the user's invitation:
+  `scratch/claude-code-feedback-draft.md` — two items (the reminder's
+  timing and wording, with the round's numbers and quotes checked against
+  their sources; the "don't stop" guidance having no project-level
+  override). The user's to edit and send, or not.

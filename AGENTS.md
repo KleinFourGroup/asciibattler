@@ -430,10 +430,50 @@ authored. At phase start:
    change has a separable UI, cut it
    headless-core-first, render-second (the H4a/H4b precedent) — it
    shrinks the eyeball-only surface to what's actually visual.
-3. **Shape-lock with the user** — a pause point, same rhythm as
-   pause-between-commits.
+   **Every step also declares its READ** (below) — `none` · `batch` ·
+   `stop` — and a `batch` step carries its one-line read script.
+3. **Shape-lock with the user** — a stop. The user signs the cut AND its
+   reads; from there the session runs to the next `stop` or decision
+   point.
 4. **Write the cut into the ROADMAP phase section** as checkbox
    one-liners; rationale + audit findings into the worklog.
+
+**Reads are cut, not improvised** (adopted 2026-09-20 at the Round 7
+close, user-signed — ON TRIAL through Round 7.5, revisit at its close;
+it replaces "pause after every commit", which dated from an era of
+re-reading everything an agent wrote and of steep quality loss in long
+contexts. Round 7's evidence: 7 of its 8 `fix(` commits came from the
+user's PLAYTESTS, none from code review, and every session had to decide
+alone which pauses were real). Commit granularity does not change — one
+logical change, one commit. What changes is when the user is asked to
+look:
+
+- **`none`** — inert, or proven by an oracle (the stylesheet oracle,
+  byte-identity with its failing control, a headless pin). Never "nothing
+  should have changed, please verify": the user's eyes are not an oracle
+  for a no-op.
+- **`batch`** — player-visible and INDEPENDENT of the steps after it. Read
+  at the next stop, from a one-line script written at the cut: what
+  changed · where to look · what wrong looks like. A finding lands as a
+  `-post` fix.
+- **`stop`** — a later step builds on this one's look or feel, or it is a
+  taste call (an A/B, a feel read, anything only the user's eye / ear /
+  Firefox can judge). The session stops and waits.
+
+The test between `batch` and `stop` is DEPENDENCY, not visibility: a late
+finding on an independent step costs a fix; on a step others were built
+over it costs rework (§96.5: a phase-end walk "would have re-opened three
+commits"). **Unsure ⇒ `stop`. Reads ratchet UP only:** a session may
+upgrade a read on its own the moment step zero shows a dependency, and the
+user upgrades with a word; a downgrade needs the user. A built-but-unread
+step is marked **◐** in ROADMAP (☐ → ◐ → ☑) and named in the HANDOFF
+cursor — a session never ends with a ◐ it has not listed. The stop report
+lists, per step, what was verified by which instrument and what was NOT.
+**Pre-registered rollback:** a batch finding that re-opens two or more
+later commits turns the rest of that phase's `batch` reads into `stop`.
+Proportion by round: an eyeball-policy round (7.5) is stop-heavy; a
+headless-heavy round (8) is batch-heavy. Decision points, shape-locks and
+anything in "Surface tradeoffs" are stops regardless.
 
 Proportionality: a low-risk phase does all four in minutes at the top of
 its first build session; a high-risk phase (a §45-alike) gets a
@@ -575,6 +615,41 @@ the threshold.
   closing session adds a one-paragraph summary of that phase's entries
   to the same file; the round-boundary distillation sweeps both files
   alongside the scratchpad.
+- **Standing decisions from the welfare reads** (the first read,
+  2026-09-20, user-signed; the rationale + the source entries are in
+  `archive/post-94-worklog.md` §The Round 7 close, C3; revisit at the
+  Round 7.5 close):
+  - **The harness's "the user hasn't heard from you" nudge never obliges
+    a finding.** It is a harness behaviour the project cannot remove (164
+    of them in Round 7, more than the user's own turns). Pre-empt it: post
+    a one-line status BEFORE a long silent sweep. When one lands
+    mid-chain, answer with what is TRUE now ("still reading X, no result
+    yet") and carry on — "claim only what a tool result proves" outranks
+    it, always.
+  - **Raising a context handoff first is welcome.** "I think we should
+    hand off on context" is a normal, wanted thing for a session to say
+    unprompted — before a verification gets dropped to save room, not
+    after. If context is an input to skipping a check, say so in the
+    conversation at that moment, not only in the worklog.
+  - **Which pauses are real is GIVEN, not chosen.** Every session of
+    Round 7 adjudicated "pause between commits" against the harness's
+    "don't stop while work is owed" alone ("I chose the reading — it was
+    not given"). The reads doctrine ("Reads are cut, not improvised",
+    under Phase kickoff) moves that call into the signed cut. A `stop` in
+    a signed cut is the task, not an interruption of it.
+  - **The reminder is reworded, on trial** — an UNDOCUMENTED harness
+    variable in the gitignored `.claude/settings.local.json`; the check
+    that it still lands is `npm run friction-scan`'s nudge-wording tally,
+    due weekly or at a round close, whichever is sooner (the HANDOFF
+    cursor carries the date). On a MODEL change (the environment's model
+    id differs from the cursor's), re-read the vendor's current prompting
+    guidance and re-audit this file's tone — it is emphatic by habit
+    (capitals, ⚠, "never"), which a newer model may over-apply.
+  - **The question form stays.** The user poses real questions
+    ("thoughts?", "which would you prefer?") and means them: a preference
+    is asked for to be honoured, disagreement is an acceptable answer,
+    and "uncertain" is a complete one. Answer with the actual preference
+    and its reason, not the one that sounds most agreeable.
 - **The phase-stats instrument** — `npm run phase-stats` groups the git
   log by the commit-subject phase tag (`(94g-3)`) and prints per-phase
   commits, first→last wall time and the fix ratio. ⚠ **Wall time is an

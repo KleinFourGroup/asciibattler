@@ -6,7 +6,8 @@
 // main-chain session: the user's turns · tool calls · FLAGGED tool errors
 // (split: denied / other, with the top erroring tools) · the harness's
 // "the user hasn't heard from you" nudges · output tokens ·
-// the wall span. COUNTS ONLY — no transcript text is printed or stored.
+// the wall span. COUNTS ONLY — no conversation text is printed or stored;
+// the one string it echoes is the HARNESS'S OWN reminder wording (below).
 //
 //   npm run friction-scan                        # every session
 //   npm run friction-scan -- --since=2026-09-09  # records on/after a date
@@ -28,6 +29,13 @@
 //  · A nudge is an attachment of type `silent_turn_reminder` — never a
 //    text match, which also counts every tool result that QUOTES the phrase
 //    (a read of retro/sessions.md, for one).
+//  · THE NUDGE-TEXT TALLY is the check on the reworded reminder (2026-09-20:
+//    `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` in the gitignored
+//    `.claude/settings.local.json` — an UNDOCUMENTED variable, found by a
+//    string search of claude.exe 2.1.275). Run it weekly or at a round
+//    close, whichever is sooner (the HANDOFF cursor carries the due date):
+//    if the newest sessions show the default wording, the override stopped
+//    landing — a harness update renamed it, or the app dropped the env.
 //  · COMPACTIONS ARE NOT COUNTED. No retained transcript contained one at
 //    the first run, so the record's shape is unknown and a column reading 0
 //    everywhere could not be told from a column that matches nothing (the
@@ -64,6 +72,7 @@ const textOf = (content) => {
 const DENIED_RE = /denied|doesn't want to proceed|permission|rejected/i;
 
 const rows = [];
+const nudgeTexts = new Map(); // wording → { n, last }
 let unparsable = 0;
 for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
   if (exclude && file.startsWith(exclude)) continue;
@@ -107,7 +116,13 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
         row.errTools[name] = (row.errTools[name] ?? 0) + 1;
       }
     } else if (rec.type === 'attachment') {
-      if (rec.attachment?.type === 'silent_turn_reminder') row.nudges++;
+      if (rec.attachment?.type !== 'silent_turn_reminder') continue;
+      row.nudges++;
+      const wording = String(rec.attachment.text ?? '(no text field)').replace(/\s+/g, ' ').trim();
+      const seen = nudgeTexts.get(wording) ?? { n: 0, last: '' };
+      seen.n++;
+      if ((rec.timestamp ?? '') > seen.last) seen.last = rec.timestamp ?? '';
+      nudgeTexts.set(wording, seen);
     }
   }
   if (row.first === null) continue;
@@ -137,6 +152,10 @@ if (csv) {
   }
   const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
   const rate = sum('tools') > 0 ? ((100 * sum('errs')) / sum('tools')).toFixed(1) : '0.0';
+  console.log(`# nudge wordings seen (${nudgeTexts.size}) — newest last:`);
+  for (const [wording, seen] of [...nudgeTexts].sort((a, b) => a[1].last.localeCompare(b[1].last))) {
+    console.log(`#   ${String(seen.n).padStart(4)}×  last ${seen.last.slice(0, 10)}  "${wording.slice(0, 110)}${wording.length > 110 ? '…' : ''}"`);
+  }
   console.log(
     `TOTAL  human ${sum('human')} · tools ${sum('tools')} · err ${sum('errs')} (${rate}% of calls) · denied ${sum('denied')} · nudges ${sum('nudges')} · outTok ${sum('outTok')} · unparsable lines ${unparsable}`,
   );

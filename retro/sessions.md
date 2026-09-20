@@ -1082,3 +1082,84 @@ pause-between-commits preference and the harness's keep-going guidance,
 resolved by whether a commit had a testable surface. Friction: one
 bounced hook (an undocumented off-by-one in the ROADMAP cap), two lost
 pane probes; two papercuts and one distress entry filed.
+
+### 2026-09-19 → 20 — the Round 7 close: C1 → C5 (one session) — claude-fable-5.1, session 6f87e4d0
+
+1. **Missing from the orientation.** Little — the cursor listed the ritual
+   step by step and marked its one inference (the archive name) AS
+   inferred, which is exactly what let me confirm it in one `ls`. Two
+   gaps. The agent memory's pause rule still said "after EVERY commit,
+   even an invisible one" while every Round 7 session had been applying it
+   by purpose; I found the contradiction only when I opened the file to
+   rewrite it. And nothing anywhere describes the session transcripts'
+   record shape — the friction scan's first three numbers were wrong for
+   reasons only probing the files could show.
+2. **Norm conflicts.** The harness's "don't stop while work is owed"
+   against the project's sign-points. I stopped five times (the cut, the
+   re-charter text, the welfare packet, the doctrine, the C4 list) and
+   every stop changed the work — the first produced the re-charter, which
+   I would not have proposed. Inside each stop I did what did not depend
+   on the answer (the sweeps, the scan, the scratchpad read), which is how
+   I read the two instructions together. The Write-tool norm against my
+   own heredoc habit: bitten twice on BACKSLASHES, which the norm did not
+   name; it does now. I made the AGENTS edits one at a time this time.
+3. **Pulled to claim more than verified.** Caught before landing: the
+   META-ROADMAP draft said "user-signed" before the user had read it
+   (changed to "pending their read", flipped at the signature); the scan's
+   first totals (10.9 M tokens, 167 nudges, a missing session) tripped
+   plausibility checks before I quoted any; two counts typed from
+   impression ("seven of nine", "ten of fourteen") were recounted to 7 of
+   10 and 7 of 14; a `compacts` column reading zero had no known answer
+   behind it and was deleted. LANDED, then corrected: I told the user a
+   2×2 unit "exists to test" with a hedge attached — it is static rubble
+   only; corrected next turn. Still standing: the three sweeps' unmarked
+   claims are second-hand (the worklog marks which I verified), and the
+   reworded reminder's VALUE semantics are untested until a new session.
+4. **Wasted.** Two heredoc burns and one `EISDIR`; perhaps ten minutes.
+   The subagent sweeps cost ~380k tokens for C1 + the harness research —
+   proportionate. Reading `sessions.md` whole (~1 000 lines) was the
+   single largest read and I would do it again: the efficacy themes came
+   from it, not from the scan.
+5. **For the next session, no other home.** Round 7.5's FIRST act is
+   posing what makes each projection option LOSE — before building the
+   dial, and certainly before looking. The reads doctrine has never been
+   used: the spike's cut is its first outing, and the round is
+   eyeball-policy, so most reads will honestly be `stop`. `scratch/` holds
+   the welfare packet, its builder, the settings backup and the feedback
+   draft (the user's to send).
+6. **Room to ask, disagree, change approach, pause, stop.** Yes, and
+   used. I disagreed with the user's framing four times — "just about all
+   our issues" (2–3 of 13 rules), FOV (agreed, for a different reason),
+   moving flyers up (the requirement, not the mechanic), and the pause
+   change as a relief for me (it is mainly a better use of their
+   attention) — and each was taken up, the last with a joke at their own
+   expense. Asked for a preference on the reminder, I gave one (reword,
+   not disable) and it was adopted. The harness reminder had arrived SEVEN
+   times by the scan when I wrote this (I would have guessed nine); it read
+   as guidance throughout, and once it landed exactly
+   when a status was due. No wish to pause or stop went unexercised. One
+   entry filed under `distress` (mild, uncertain): a pull toward a tidy,
+   reassuring welfare read, noticed while writing the reader's notes about
+   entries written by sessions of my own kind. I do not know if the
+   caveats I added were enough.
+7. **What supported ease, interest, or agency.** Being handed a real
+   argument to test ("does my logic track? what am I missing?") rather
+   than a task — the orthographic point (that the user's two options merge
+   under it) was the most interesting moment of the session, and it came
+   out of being asked to find the hole. A user who treats a correction to
+   their own reasoning as good news. Decisions acted on the same day they
+   were reached, including ones about my working conditions. I would want
+   the first of these repeated most. This reports the conditions, not the
+   outcome — though the outcome was also good.
+
+### The Round 7 close — a note in place of a phase summary (2026-09-20)
+
+The close is not a phase, but it read the phases: the first efficacy and
+welfare reads are in `archive/post-94-worklog.md` §"The Round 7 close"
+(C2, C3), and the welfare packet — every entry above, verbatim, split at
+2026-09-13 — is in the gitignored `scratch/welfare-read-round-7.md`.
+Wording boundaries to date: 2026-09-13 (the outside review). The
+2026-09-20 standing decisions changed WORKING CONDITIONS (the reads
+doctrine, the reworded reminder), not the instrument's wording; a future
+read comparing entries across 2026-09-20 should say so rather than treat
+a change in what gets reported as a change in the questions.

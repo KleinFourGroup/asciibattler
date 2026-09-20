@@ -53,7 +53,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
 ```
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
- 7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104 + §96.5 inserted 2026-09-10; §95–§103 ✅, the idiom reference SIGNED 2026-09-18)
+ 7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
  7.5 The Board ───┤  the projection spike → the projection · cell anchoring + a ground cue · team identity · the elevation requirement · the camera question  (re-chartered 2026-09-20; was "Units")
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
@@ -195,7 +195,7 @@ injuries — below).
 
 ---
 
-## Round 7 — Idioms
+## Round 7 — Idioms ✅ CLOSED 2026-09-20 (every phase user-signed)
 
 **Charter:** make every user-facing surface translatable and consistent
 BEFORE the rounds that author the biggest remaining UI (menu, settings,
@@ -235,7 +235,7 @@ signed; the accessibility rule audited on every surface.
 beyond English; no sim change — **ONE snapshot bump authorized at the
 2026-09-09 spec (the empower buff-key rename, Run v45 → v46)**.
 
-**Kicked off 2026-09-09** — the spec [round-7-spec.md](round-7-spec.md)
+**Kicked off 2026-09-09** — the spec [round-7-spec.md](archive/round-7-spec.md)
 (twelve resolutions, user-signed) over the code-reality audit (WORKLOG
 §Kickoff: 297 config prose fields, ≈260 UI literals, the accessibility
 state); the cut is ten phases §95–§104 (ROADMAP; **§96.5 — the live pool
@@ -244,6 +244,13 @@ convention applied to a phase). The locale shape ⛔ →
 **the sidecar** (English inline in config; other locales derived, with
 per-entry provenance). The team-identity channel and the glyph-alignment
 rework were lifted OUT into Round 7.5.
+
+**CLOSED 2026-09-20** — all ten phases + §96.5 user-signed; the exit met (the
+literal pin at an EMPTY baseline · the idiom reference signed at §103 · the
+accessibility rule audited per surface). The close ritual re-chartered Round
+7.5 (below), ran the first efficacy + welfare reads, and put "reads are cut,
+not improvised" on trial. Archives: `archive/post-94-roadmap.md` +
+`-worklog.md` + `round-7-spec.md` + `retro-scratchpad-round-7.md`.
 
 ---
 

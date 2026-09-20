@@ -54,7 +54,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
  7. Idioms ───────┤  i18n + the UI audit → the idiom reference  (KICKED OFF 2026-09-09 — spec signed; §95–§104 + §96.5 inserted 2026-09-10; §95–§103 ✅, the idiom reference SIGNED 2026-09-18)
- 7.5 Units ───────┤  the glyph rework (fewer special rules) · a team-identity channel · the D4 camera A/B
+ 7.5 The Board ───┤  the projection spike → the projection · cell anchoring + a ground cue · team identity · the elevation requirement · the camera question  (re-chartered 2026-09-20; was "Units")
  8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
@@ -247,42 +247,95 @@ rework were lifted OUT into Round 7.5.
 
 ---
 
-## Round 7.5 — Units
+## Round 7.5 — The Board
 
-**Charter:** the unit/glyph rework. The board's glyph-alignment stack
-(per-glyph measured ink boxes · the floor-family vs baseline stand-line
-classifier · the descender room · three derived lifts · the font-fallback
-probe · the subset gate · a 47/48 atlas) is "too many special rules to get
-something that only 90% works, and brittle" (the user, 2026-09-09) — replace
-it with fewer rules; and give team identity a non-color channel (both sides
-draw one glyph pool today; green vs red is the only tell — Round 7's idiom
-reference writes the requirement this round must satisfy). Rides with it:
-**the D4 camera A/B** (D4 shipped as "dev fit + game scroll"; fit became the
-default by inertia — the modes are a glyph-size lever, so the preference
-test runs against the reworked glyphs: testers get the toggle, one session
-each mode; the winner gets a HUD control + a Round 8 default-mode setting).
-**Rider (100a, the user's Firefox read 2026-09-17):** scroll mode as it
-stands is not A/B-ready — "the game feels very different"; a 12-tile
-window on a bigger board loses the whole-board read, so **if scroll is to
-stay it needs a proper minimap** (the board's shape + unit positions +
-the window rectangle) BEFORE the preference test is fair. The A/B's cut
-line predicts it: build the minimap first or A/B fit against nothing.
+_(Re-chartered 2026-09-20 at the Round 7 close's macro re-audit —
+user-signed (the text read and approved the same day); the 2026-09-09 entry, "Units", chartered a glyph-RULE rework
+and is superseded. The argument, the three code sweeps and the rejected
+alternatives: WORKLOG §The Round 7 close, C1 → `archive/post-94-worklog.md`.)_
 
-**Depends on:** Round 7 (the idiom reference's team-identity requirement —
-WRITTEN at 103c: DESIGN "Team identity on the board", five clauses; the
-tooltip + shells the board overlays use). **Risk:** medium — render-only
-(never sim), but deep: each special rule has a §79 / §91-pre finding behind
-it and a probe that must be re-derived from the asset, never from the helper
-under test (AGENTS). **Decision points:** the identity channel's shape (a
-per-instance marker sprite vs a shape suffix; ~~a dedicated enemy glyph
-set~~ STRUCK 2026-09-18 at the §103 signing — the user's call on
-art-direction grounds, and DESIGN's clauses 2 + 4 + 5 rule it out) against
-the atlas budget; the alignment model that replaces the
-classifier. **Exit:** the requirement satisfied and grayscale-verified; the
-A/B read and dispositioned; the special-rule count reduced with the probes
-re-derived. **Scope guards:** no sim; no palette (Round 8); no new
-archetypes. **Spec-first at its own kickoff**, with its own code-reality
-audit of what each rule was defending against.
+**Charter:** how the board is PROJECTED and how a unit stands on it. The
+glyph-alignment stack (13 rules at the 2026-09-19 audit — "too many special
+rules to get something that only 90% works, and brittle", the user,
+2026-09-09) is a symptom: glyph quads are axis-aligned in SCREEN space while
+the ground lives in perspective WORLD space (a world vertical leans ≈24° at
+a fitted board's flank, ≈40° at the screen edge — derived, the spike
+measures it), so a float drifts, a tether leans, and the glyph's inked foot
+is the only grounding cue — which is why it is anchored by ink, with a
+classifier, a descender room and three lifts to make that work. Tuning
+those rules would not survive flyers. So: **settle the projection first**
+(the candidate is an ORTHOGRAPHIC camera, under which a camera-facing
+billboard IS a world-space rectangle and the contradiction disappears
+without skewing a letterform; head-on vs a 45° yaw and the pitch are open
+dials), **then** anchor the CELL against a separate ground cue and delete
+the ink-anchoring rules that cue makes unnecessary; give team identity its
+non-color channel (DESIGN "Team identity on the board", five clauses); write
+the **"Elevation on the board"** requirement Round 9's flyer must satisfy;
+and re-pose the D4 camera question under the chosen projection.
+
+**In scope**
+
+- **The projection spike (FIRST — the Round 8 Electron-spike shape: it
+  informs the spec, which is written after it).** Dev-only, render-only:
+  the projection dial (perspective-50 as the control · head-on orthographic
+  · yaw-45 orthographic, each with a pitch dial; an FOV sweep as a
+  DIAGNOSTIC only — a long lens shrinks the lean and deletes no rule, so it
+  is not a candidate) · glyph pixel height at fit per projection per board
+  size, as a number · a ground-cue mock, shape per side, read under
+  Ctrl+Alt+G · **the uniform-anchor flag** (bypass the ink-derived lifts,
+  anchor every cell identically — the direct test of what the rule deletion
+  rests on) · the fixtures (a dense melee clump · a 24×24 board ·
+  `endlessCorridors` · screen-edge units · a render-only FAKE FLYER with a
+  shadow · `rubble_2x2` / `_3x3`) · a headless lean measurement that
+  becomes the pin "world-up projects to screen-up". **What makes each
+  option LOSE is pre-registered before anyone looks.**
+- **The projection, built** — the camera + the fit math, picking, the DOM
+  overlay projection, shake; the camera gotchas (#17, #51–54, #68–69) and
+  DESIGN's Camera paragraph re-audited, not assumed.
+- **Cell anchoring + the ground cue** — the rule deletion, gated on the
+  uniform-anchor read. Ink boxes (click targets) and the font-provenance
+  gates stay: **§101's gates (`FACES` roles · `PRIMARY_EXCLUDES` · the
+  line-box pin · the UI glyph inventory) are OUT of the "fewer rules"
+  goal** — signed, permanent.
+- **Team identity** — candidates: the ground mark doubling as the channel
+  (per instance, tint-proof, atlas-free) · a shader-drawn per-instance mark
+  · the DOM overlay's unused `unit-overlay--<team>` class · a marker sprite
+  / a shape suffix against a 47 / 48 atlas; ~~a dedicated enemy glyph set~~
+  STRUCK 2026-09-18 at the §103 signing (art direction; DESIGN's clauses
+  2 + 4 + 5 rule it out). Clause 3's collision is LIVE today (a panicked
+  ally is camp-amber).
+- **The "Elevation on the board" requirement** → DESIGN, proven on the
+  fake flyer. The flyer MECHANIC stays Round 9 (it is sim).
+- **The D4 camera A/B, re-posed** — scroll stays a candidate (the user,
+  2026-09-19), but under an orthographic camera fit-vs-scroll is a ZOOM
+  level, and the spike's glyph-size number may move the question before it
+  is run. Unbuilt at the audit: scroll mode is unreachable in a production
+  build (its listeners are DEV-only since 100a) · no drag / wheel / touch
+  pan (DESIGN §Input accessibility) · no URL dial for tester assignment ·
+  no test of either mode · **no minimap — and the 100a rider stands: if a
+  windowed view is to be tested it needs a proper minimap FIRST** (the
+  board's shape + unit positions + the window rectangle). The winner gets a
+  HUD control + a Round 8 default-mode setting.
+
+**Depends on:** Round 7 (✅ — the idiom reference's team-identity
+requirement; the tooltip + shells the board overlays use; Ctrl+Alt+G).
+**Risk:** medium, WIDER than first chartered — render-only (never sim, no
+snapshot bump), but the projection touches every screen-space seam, and the
+whole surface is eyeball-policy: the spike's instruments come first, and
+every probe is re-derived from the asset or the camera math, never from the
+helper under test (AGENTS). **Decision points:** the projection (head-on /
+yaw-45 / pitch — or, only if both orthographic options lose, world-space
+unit quads: ranked last, it skews the letterforms §98 / §101 made legible)
+· the ground cue's shape and whether it IS the identity channel · the
+elevation requirement's clauses · the windowed view's fate once the
+glyph-size number is in. **Exit:** the projection chosen by pre-registered
+criteria and built; world-up = screen-up pinned headless; the identity
+requirement satisfied and grayscale-verified; the elevation requirement
+signed; the special-rule count reduced with the probes re-derived; the
+camera question read and dispositioned. **Scope guards:** no sim; no flyer
+mechanic; no walking N×N; no palette (Round 8); no new archetypes; no
+rotatable camera. **Spike-first, then spec, at its own kickoff** — with its
+own code-reality audit of what each rule was defending against.
 
 **The `.5` convention (user-signed 2026-09-09):** an unscheduled round
 inserted between two planned ones takes the `.5` number (the
@@ -476,7 +529,10 @@ to land), run layer second (the three Run bumps land in one window — the
 bump-economics note from the C5 spec, now under reject-stale), spatial third
 (the highest-risk items, with the flight re-audit as their step zero).
 **Depends on:** Round 8 (reject-stale signed; save/load shipped so the bumps
-are exercised by the chaos driver). **Risk:** high (the C2-class spatial
+are exercised by the chaos driver) and Round 7.5 (the flyer's PRESENTATION
+is built to DESIGN's "Elevation on the board" requirement, written and
+proven on a render-only fixture there so the projection is not re-opened
+here). **Risk:** high (the C2-class spatial
 work). **Decision points:** named per item above. **Exit:** every seam has a
 headless test AND one shipped consumer (a vampire, a special, a marine, a
 flyer, a walking 2×2 in one encounter) — seams without a consumer are the C2

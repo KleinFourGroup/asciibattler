@@ -4922,3 +4922,155 @@ of nine commits — each predicted · one bounced hook · commits `7149b55`
 (kickoff) → `8ae3e6d` → `b0c5995` → `0c8c410` → `dad6bb3` → `6cd2493` →
 `898983f` → `8f48f98` → the close. NEXT: the Round 7 close ritual, its own
 session (HANDOFF 🧭).
+
+---
+
+## The Round 7 close (2026-09-19 → 20)
+
+The close ritual, its own session (6f87e4d0). The cut, user-signed in a
+plain message: **C1** the macro re-audit of Round 7.5 · **C2** the efficacy
+read (phase-stats + the transcript friction scan, promoted to a kept
+script) · **C3** the welfare read (the user's; a packet file + a
+conversation) · **C4** the scratchpad sweep · **C5** the archive
+(`post-94-*`, the name confirmed against the `post-88-*` precedent) + the
+cursor. Pre-flight: 3006 tests green, typecheck clean, HEAD `dd89f7a`.
+**The live build was re-uploaded at this boundary** (the user, 2026-09-20)
+— Round 7's player-facing work is fixed where players get it.
+
+### C1 — the macro re-audit: Round 7.5 is RE-CHARTERED ("The Board")
+
+**The instrument.** Three parallel read-only sweeps (the glyph-alignment
+stack · the team-identity surfaces · the D4 camera), ~5 min wall. Claims
+marked ✔ below were re-verified by the session at file:line; the rest are
+carried at second hand and the 7.5 kickoff audit re-verifies what it
+touches.
+
+**What the sweeps found (the charter as written 2026-09-09 vs code).**
+
+- *The alignment stack is 13 rules, not the charter's 7*, and everything
+  the charter lists exists. Since the charter, §101 ADDED font-provenance
+  gates (`FACES` roles · `PRIMARY_EXCLUDES` · the line-box pin · the UI
+  glyph inventory) — signed permanent gates that a "fewer rules" goal must
+  scope OUT or it re-opens §101. The rules most likely to be replaced (the
+  three lifts, the baseline measurement, the fallback probe, the explicit
+  `fonts.load`) have NO headless pin, and the one historical probe of the
+  lifts was circular (`archive/post-72-worklog.md:3910`). Small drift: ✔
+  `glyphs.ts:243` still says the descender barrier is "the same 3px" as
+  `INK_PAD_PX`, which has been 5 since §79e; gotcha #33 points `GLYPHS` at
+  `FontAtlas.ts` (it lives in `glyphs.ts`); a font-coverage sentinel reads
+  `≥24` under a comment that says 32 (the last two unverified — TODO).
+- *Team identity: the five clauses hold, and clause 3's collision is LIVE.*
+  ✔ Held tints overwrite `instanceColor` wholesale, and ✔ `panic_active` =
+  `TERMINAL_AMBER` (the camp hue), `blind_active` = `TERMINAL_STONE` (the
+  scenery hue) — `fxRegistry.ts:281-282`: a panicked ally IS camp-amber
+  today. ✔ `spriteColorForUnit` paints FIVE lanes off three teams (the
+  fifth is §40c's `CRACKED_STONE` destructible wall — a color-only
+  sub-tell of scenery the clauses never enumerate; open question whether
+  §98 owed it a second channel). The atlas is 47 / 48, so a marker sprite
+  spends the last cell and a shape suffix spends one per shape. Two
+  candidates the charter does not list: a shader-drawn per-instance mark
+  (an 8th instance attribute; five hand-enumerated attribute lists in
+  `SpriteRenderer`), and the DOM overlay, which already stamps
+  `unit-overlay--<team>` on its root with ✔ no CSS rule consuming it. The
+  grayscale instrument is a root CSS filter applied after bloom, so a
+  brightness-only channel cannot pass clause 1.
+- *The camera A/B is the biggest gap.* ✔ Scroll mode is unreachable in a
+  production build (the four pan listeners attach under `if (DEV)`,
+  `Renderer.ts:211`); its inputs are WASD / arrows / edge-scroll only — no
+  drag, no wheel, no touch pan, against DESIGN §Input accessibility; ✔ no
+  minimap exists; no URL dial for tester assignment, no prefs store, no
+  test of either mode. 9 of 11 authored layouts and ~12 / 13 procedural
+  rolls exceed the 12-tile window. Making the A/B fair is 1–2 phases alone.
+  ✔ Multi-tile units today are static rubble only (`rubble_2x2` / `_3x3`);
+  a WALKING N×N is Round 9's.
+
+**The user's challenge to the premise (2026-09-20), and the analysis.**
+The user: the charter is too narrow — the board's recurring trouble is a
+contradiction between glyph quads that are axis-aligned in SCREEN space
+and a ground that lives in perspective WORLD space (a world-up float
+drifts sideways off-centre; a ground outline per unit risks clutter; a
+world-space tether accentuates the lean; the descender-room padding hides
+which tile a unit is on; flyers make all of it worse). Two proposed ways
+out: (1) units become world-space rectangles, the glyph a texture — "very
+early RuneScape"; (2) drop perspective — an isometric projection, likely
+with a 45° yaw.
+
+The session's read, accepted by the user:
+
+- *The mismatch is real and large.* At 45° pitch a world vertical leans
+  off screen-vertical by `atan(x′·tan 45°)`, x′ the off-axis tangent:
+  ≈24° at the flank of a fitted board, ≈40° at the screen edge at the
+  50° FOV. DERIVED from the camera math, not measured — it agrees in
+  magnitude with §79b's ±9 px at 720p; the spike measures it (below).
+- *"Just about all our issues" oversells it, and the user agreed.* Of the
+  13 rules, 2–3 are projection-class (camera-up stacking, the view-space
+  anchor, the lifts' units). The rest are TYPOGRAPHY-class — glyphs have
+  baselines and descenders under any projection. The indirect path is the
+  real one, and it is the user's stated intuition: we anchor by INK because
+  the glyph's foot is the only grounding cue; with a separate ground cue
+  the CELL can be anchored uniformly, and the classifier, the descender
+  room and the three lifts become deletable. A consistent projection is
+  what makes a ground cue look right. Ink boxes (click targets) and the
+  fallback probe (font provenance) are separate and stay.
+- *Under an orthographic camera the two options MERGE.* A camera-facing
+  billboard IS a world-space rectangle there (one rectangle, the same for
+  every unit), so the contradiction disappears without skewing a
+  letterform; glyphs also render at one pixel size across the board —
+  more terminal, not less. three.js ships `OrthographicCamera`.
+- *Option 1 ranks last, both agreed.* Upright world quads are squashed to
+  71 % at this pitch and sheared in opposite directions on each side of
+  the screen; the letterforms are the art and the thing §98 / §101 made
+  legible; early RuneScape earns the skew with a rotating camera, ours is
+  fixed. Held in reserve only if the orthographic options fail.
+- *A long lens is NOT a candidate* (the user's pushback, accepted for a
+  different reason than the one raised): FOV is an accessibility dial
+  mainly where the camera moves through space, which ours does not — but a
+  narrower FOV only SHRINKS the lean, so every camera-up rule must stay to
+  cover the residue. It buys less wrongness and deletes nothing. The FOV
+  sweep stays in the spike as a diagnostic of how much perspective the
+  look actually misses; depth cues can return without projection (shadow,
+  depth-darkening, a slight glyph scale-by-depth over an orthographic
+  ground).
+- *The 45° yaw is a second, independent dial with a cost:* adjacent diamond
+  tiles sit ~0.7 tile-widths apart on screen against one-tile-wide glyph
+  cells, so melee clumps overlap more. Head-on orthographic is the classic
+  ¾ top-down and keeps the row / column grid. Eyes decide.
+- *A ground mark can double as the team-identity channel* — per instance,
+  tint-proof, atlas-free, shape-readable in grayscale; information, not
+  clutter. A candidate, not a decision.
+- *Flyers: the REQUIREMENT moves up, the mechanic does not* (the user
+  asked whether flyers should move to 7.5 so the projection is not
+  re-opened). The mechanic is sim (pathing around queues, the attack
+  matrix, auras across planes, unreachable objectives — META-ROADMAP
+  Round 9) and 7.5's no-sim guard is what keeps it safe. 7.5 instead
+  proves the projection against a RENDER-ONLY fake flyer and writes an
+  "Elevation on the board" requirement into DESIGN that Round 9 builds to
+  — the §103 team-identity move again.
+- *No renumber* (the user raised it): round numbers are charter
+  identities, size is not what they encode, and the resolver pass was
+  rejected once already (AGENTS "The round close ritual"). Renamed
+  instead: **Round 7.5 — The Board**.
+
+**The spike's experiments (agreed; all dev-only, render-only).** (1) the
+projection dial — perspective-50 as the control · head-on orthographic ·
+yaw-45 orthographic, each with a pitch dial (45° / 35° / 30°), plus the
+FOV sweep as a diagnostic; (2) glyph pixel height at fit, per projection
+per board size — a NUMBER (a yawed square board is a wide diamond, which
+may fit 16:9 better and so change the fit-vs-scroll question before it is
+run); (3) a ground-cue mock, shape per side, read under Ctrl+Alt+G;
+(4) THE UNIFORM-ANCHOR FLAG — bypass the ink-derived lifts, anchor every
+cell identically, read `g` / `▄` / `╥` / `M` side by side: the direct test
+of the intuition the rule deletion rests on; (5) the fixtures — a dense
+melee clump, a 24×24 board, `endlessCorridors` (12×32), screen-edge units,
+a fake flyer (lift N units by h, with a shadow), `rubble_2x2` / `_3x3`;
+(6) a headless lean measurement (project a world vertical at the board
+corners, print the angle) — it replaces the derivation above with a
+measurement and, under an orthographic camera, becomes the one-line pin
+"world-up projects to screen-up" that retires the `aboveAnchor` rule.
+**Pre-register what makes each option LOSE before looking** (e.g. yaw-45
+loses if the clump is unreadable in grayscale; orthographic loses if the
+diorama feel dies and the non-projective depth cues do not restore it).
+
+**Landed:** META-ROADMAP — the 7.5 entry rewritten, the sequence line, a
+Round 9 dependency on the elevation requirement. No `.5` insertion: the
+gaps are inside 7.5's own widened scope.

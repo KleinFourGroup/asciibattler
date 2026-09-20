@@ -579,10 +579,21 @@ the threshold.
   log by the commit-subject phase tag (`(94g-3)`) and prints per-phase
   commits, first→last wall time and the fix ratio. ⚠ **Wall time is an
   UPPER BOUND on work time** — the user multitasks, and no screen
-  tracking is wanted; the script's header says so. The session
-  transcripts (`~/.claude/projects/<repo>/*.jsonl`, retained) are the
-  tighter proxy — a transcript friction scan (tool errors · permission
-  prompts · redirect turns per session) is a TODO for the close read.
+  tracking is wanted; the script's header says so. ⚠ The fix ratio
+  word-matches the SUBJECT, and this repo's paragraph-long subjects
+  inflate it (§101 read 40 % off six matches; one was a `fix(` commit) —
+  count commit TYPES beside it before quoting it.
+- **The transcript friction scan** — `npm run friction-scan -- --since=<date> --exclude=<your session id>`
+  reads the retained session transcripts
+  (`~/.claude/projects/<repo-slug>/*.jsonl`) and prints per session: the
+  user's turns · tool calls · flagged tool errors + denials · the
+  harness's "the user hasn't heard from you" nudges · output tokens ·
+  the wall span. Counts only — no transcript text. ⚠ **`err` is a FLOOR**
+  (flagged results only; the papercut log's friction is mostly reads that
+  succeeded and lied), and the script's header carries the four reader
+  bugs its first run found (the session-level date filter · per-record
+  token repeats · the text-matched nudge · an unvalidated zero column) —
+  read it before adding a column.
 
 ## Load-bearing invariants
 

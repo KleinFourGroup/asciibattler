@@ -33,7 +33,10 @@ const raw = execFileSync('git', ['log', '--reverse', '--format=%H%x1f%at%x1f%s']
 });
 
 const TAG_RE = /^[a-z]+(?:\(([^)]*)\))?[!]?:\s/;
-const PHASE_RE = /^([A-Z]*\d+|[A-Z]+\d*)/;
+// A purely numeric phase may carry the inserted-phase `.5` (96.5b2 → 96.5;
+// before 2026-09-20 it folded into 96). Lettered eras keep their old parse
+// (E3.5 → E3: there the `.5` was a step, not a phase).
+const PHASE_RE = /^(\d+\.5(?!\d)|[A-Z]*\d+|[A-Z]+\d*)/;
 const FIX_RE = /\b(fix|hotfix|repair|revert|regress|correct|typo|oops|follow-?up|band-?aid|patch)\b/i;
 
 const phases = new Map();

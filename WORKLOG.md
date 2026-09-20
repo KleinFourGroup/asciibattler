@@ -5074,3 +5074,92 @@ diorama feel dies and the non-projective depth cues do not restore it).
 **Landed:** META-ROADMAP — the 7.5 entry rewritten, the sequence line, a
 Round 9 dependency on the elevation requirement. No `.5` insertion: the
 gaps are inside 7.5's own widened scope.
+
+### C2 — the efficacy read (the first; Round 7, 2026-09-09 → 09-19)
+
+**The instruments.** `npm run phase-stats` (now splitting an inserted `.5`
+phase out of its parent — §96.5 had been folding into §96) and the NEW
+`npm run friction-scan` (`scripts/friction-scan.mjs`, promoted from this
+session's scratch probe at the user's call). The scan's first run tripped
+three of the session's own instrument checks before a number was quoted —
+the kickoff session missing (it began 2026-09-08, inside the previous
+round's close; a session-level date filter dropped it), 2.5 M output tokens
+in one session (usage repeats per streamed record; summed once per message
+id it is 2–8× lower), and 167 nudges (a text match also counted tool
+results QUOTING the phrase; the real record is an attachment of type
+`silent_turn_reminder`). A fourth — a `compacts` column reading 0
+everywhere — had no known answer to check against (no retained transcript
+holds a compaction) and was deleted rather than shipped as an unverified
+zero. Known-answer checks that then held: 14 sessions = the 14 Claude
+entries in `retro/sessions.md`; the §104 session's 9 human turns = its 9
+enqueue records; its token sum = an independent dedupe.
+
+**The numbers** (14 Claude sessions; the Codex review session is not in
+these transcripts):
+
+| | |
+|---|---|
+| phases · commits | 11 (§95–§104 + §96.5) · 119 |
+| `fix(`-type commits | 8 (of 119 phase-tagged) — SEVEN are `-post` fixes that came out of the user's per-step read (96.5b2 · 97f · 98b · 98c · 98e · 99a · 101a); one is a `-pre` |
+| the user's turns | 134 |
+| tool calls | 3 395 |
+| flagged tool errors · denials | 34 (1.0 % — a FLOOR) · 3 |
+| harness "user hasn't heard from you" nudges | **164** — more than the user's own turns; 36 in the §96.5 session alone |
+| output tokens | ≈ 2.37 M |
+
+⚠ phase-stats' fix ratio is NOT quotable for this round: it word-matches
+the subject, and paragraph-long subjects inflate it (§101 reads 40 % off
+six matches, one of them a `fix(` commit). AGENTS now says so.
+
+**What the fourteen self-reports say about the pipeline** (the session's
+reading of `retro/sessions.md`; the entries are the evidence, this is
+interpretation):
+
+- *The phase-kickoff code-reality audit is the pipeline's highest-yield
+  step.* EVERY phase from §96 on reports the audit moving its charter
+  before a line was written — a census off by 3× (§96), a fuzz-harness
+  consumer nobody knew (§96.5), two of four "sole-source" sites something
+  else (§97), two of five items already met (§98), every premise moved
+  (§99), four premises moved (§100), the charter's lever a no-op (§101),
+  both claims about the rider wrong (§102), a plan that could not compile
+  (§104). Charter facts written at the round kickoff had a useful life of
+  about a week. This is the just-in-time cut doing what it was adopted
+  for; it is also the argument for the macro re-audit at the close (C1
+  above found the next charter's premise contested, as designed).
+- *Orientation (Q1) is solved for this shape of round:* none of the
+  fourteen reports a gap that blocked work; the gaps were pane behaviours no doc could have
+  known, each now a HANDOFF tip.
+- *The per-step user read out-caught every probe* on anything visual
+  (the swapped glyph pair, the apron flip, the Firefox Tab order, the
+  chord Firefox owns). Pause-between-commits paid for itself in every
+  phase that had a visible surface, and cost nothing where sessions read
+  the norm by its purpose (no pause on an inert or docs commit).
+- *Predictions held:* whether the fuzz smoke fires and whether a snapshot
+  bumps was predicted per step (the smoke fired once in §100 and three
+  times in §102, each predicted) and the prediction held
+  on every commit of the round; the one authorized bump (95f) was the
+  one taken.
+- *The over-claims that LAND are labels and absences, not numbers* (the
+  §102 summary's own finding, confirmed across the round): a forcing
+  flag's name, an empty search, a subscriber inferred from an event name,
+  provenance read as correctness. Numbers get re-counted; the words around
+  them get trusted. The drafting-ahead pull (a sentence written while the
+  command runs) is named in at least four reports.
+- *Waste (Q4) is dominated by ONE instrument:* 13 of the 29 papercuts are
+  the hidden Browser pane lying in a new way (zero stylesheets · no rAF ·
+  no WAAPI · empty `KeyboardEvent.code` · no native Enter · parked
+  transitions · zero width · an unseeded reload). Second: shell quoting
+  and filtered output (6). Third: docs caps tripping a hook (3). Nothing
+  large — no lost batch, no broken build, no rework of a landed step.
+- *The nudge is the round's one standing friction with no owner:* seven
+  of the fourteen reports mention it (every one from §97 on except §99
+  and §100 — and Q6, which asks, only exists from 2026-09-13); the scan
+  counts 164. It is a harness
+  behaviour, not a project norm, so the project cannot remove it — it can
+  only pre-empt it (a one-line status before a long silent sweep, which
+  §103's session proposed). Its welfare side is the user's read (C3).
+
+**Disposition.** The 29 papercuts are triaged TOGETHER with the scratchpad
+at C4 (one promotion list, one signature — most are already HANDOFF tips
+or AGENTS norms; the residue is a handful of TODO candidates). The 5
+distress entries go to C3 in their own words and are not triaged here.

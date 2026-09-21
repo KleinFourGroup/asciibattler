@@ -19,6 +19,7 @@
     "roster:table": "tsx tests/fuzz/roster/cli.ts",
     "gauntlet": "tsx tests/gauntlet/cli.ts",
     "pathing": "tsx tests/pathing/cli.ts",
+    "board-geometry": "tsx tests/board/cli.ts",
     "nodemap:metrics": "tsx tools/nodemap-viz/report.ts",
     "run-config": "tsx tools/run-config/cli.ts",
     "gen:sfx": "node scripts/gen-sfx.mjs",

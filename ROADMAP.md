@@ -51,7 +51,7 @@ for players; §101's font gates are out of scope for the whole round.
 
 The cut (user-signed 2026-09-21; each step declares its READ):
 
-- [ ] **105a — the headless geometry instrument.** Pure camera math + a
+- [x] **105a — the headless geometry instrument.** ✅ 2026-09-21 — `npm run board-geometry`; §79b reproduced to ~1 %; WORKLOG §105a. Pure camera math + a
   dumped ink census, independent of `Renderer`: lean at the corners · glyph
   px at fit (CSS + device) · clump overlap · own-tile fraction ·
   flyer-over-north-neighbour overlap, over projection × pitch × yaw × FOV ×

@@ -238,3 +238,73 @@ the build's seed if a non-control wins, reverted if perspective does.
 The cut lines + reads: ROADMAP §105.
 
 ## Phase 105 — the projection spike, pass one
+
+### 105a — the headless geometry instrument (2026-09-21)
+
+`tests/board/` — `geometry.ts` (pure; imports NOTHING from `src/render`:
+three's own cameras, a re-derived basis-projection fit that covers yaw +
+ortho, the billboard re-stated from the shader, the ink from a dumped
+census) · `inkCensus.json` (47 glyphs off the LIVE atlas in the Chromium
+pane, provenance in the file) · `geometry.test.ts` (11 known answers) ·
+`cli.ts` → `npm run board-geometry` (5 760 rows in ~7 s → the gitignored
+`tests/board/output/sweep.csv`; `--viewport=` / `--board=` for the
+condensed read). The precedent is `tests/pathing/`.
+
+**The known answers held, raw** (§79b measured the LIVE camera in a real
+15×15 battle at 1280×720 — a surface this file shares no code with): the
+0.5 world-Y skew ±9.1 / ±5.0 / ±3.2 px → **9.21 / 5.10 / 3.24**; the near-row
+half-quad 26.3 px → **26.48**. A consistent ~1 % high — the live probe's
+tile tops carried terrain height, this model is FLAT; the tests hold ±0.5 px.
+Also pinned: the grid centre at x = 640 · a camera-up lift drifts 0 under
+every view · C1's closed form `atan(x′·tan pitch)` at the look-at row ·
+**ortho: world-up = screen-up at every corner of every board, yawed or not
+(the future pin), with perspective as its failing control** · the restated
+anchor reproduces the measured −0.4375 / −0.5 · every view × board ×
+viewport FITS · overlap is 0 for distant units, > 0 for an oversized clump,
+and viewport-independent under ortho.
+
+**Two blind spots in the FIRST table, both the instrument's, both fixed
+before the numbers were believed** (the first run read "near-corner clump
+0 %" and "flyer→neighbour 0 % under yaw"): (1) perspective's worst clump is
+the FAR row — near rows see a steeper effective pitch, far rows a shallower
+one — and only the centre + the near corner were measured; (2) under yaw
+"straight up the screen" lands on a DIAGONAL neighbour and the fixture
+checked grid-north only. Now: a far-row clump, the flyer's WORST of three
+far neighbours, and the frontier judges the worst of the three clumps.
+
+**What the numbers say (2560×1440, glyph scale 1, the ink-RECT upper
+bound — they rule regions out, they do not pick a winner):**
+
+| | today (persp50 · 45° · yaw 0) | ortho 45° | long lens (20°) 45° | ortho 45° yaw 45 |
+|---|---|---|---|---|
+| glyph px near / far, 15×15 | 105.9 / 63.1 | 107.7 / 107.7 | 107.1 / 85.0 | 78.8 / 78.8 |
+| glyph px near / far, 24×24 | 70.5 / 40.5 | 71.8 / 71.8 | 71.3 / 55.5 | 51.9 / 51.9 |
+| glyph px near / far, 12×32 | 54.3 / 30.7 | 55.4 / 55.4 | 55.0 / 42.5 | 56.2 / 56.2 |
+| worst clump mean / max, 15×15 | 6 % / 23 % (the FAR row) | 1 % / 7 % | 2 % / 15 % | 0 % / 0 % |
+| lean at the near corner, 15×15 | 36.0° | 0° | 11.9° | 0° |
+| flyer (lift 1.0) covers its worst far neighbour | 46 % | 54 % | 50 % | **100 %** |
+
+- **Perspective's cost is concentrated in the far row**: it is both the
+  smallest glyph on the board and the most overlapped. At MATCHED worst-clump
+  overlap (the frontier), ortho's smallest glyph is **~2× today's** on every
+  board (1.96× / 2.04× / 2.35× at 45°), a long lens ~1.35–1.6×. The near row
+  is a wash (the fit is bound by the near edge either way).
+- **Shallow pitch is out by the constraint under today's camera**: persp50
+  at 30° has NO swept scale (down to 0.7) matching today's overlap; 35° needs
+  0.7. Every STEEPER pitch is strictly better on overlap and own-tile
+  fraction (25 % → 38 % at 60°) — its costs (terrain biting glyph tops, less
+  side-face, the flyer covering more of its neighbour: 67–79 %) are NOT in
+  this flat model. The panel is where they show.
+- **Yaw kills clump overlap (0 % everywhere) and pays in size** (−27 % glyph
+  px on square boards under ortho; the 12×32 corridor is the exception — the
+  diamond fits 16:9 better, +1 %) **and in the flyer**: at yaw 45 / pitch 45
+  a lift of exactly 1.0 lands a flyer ON its diagonal neighbour
+  (√2·sin 45° = 1.0 — geometry, not an artefact; the cover is lift-dependent,
+  the panel's lift dial is where it is read).
+- The lean, MEASURED: 36.0° at a 15×15's near corner, 39.9° on 24×24, 17.5°
+  on 12×32 (C1 derived "≈24° at the flank, ≈40° at the screen edge").
+- Own-tile fraction is LOW everywhere (25 % today): most of a glyph's ink
+  already sits over the tile behind it, under every projection at 45°. The
+  "which tile is it on" complaint is pitch + anchor, not projection.
+
+No `src/` touch; no smoke (predicted). Tests 3006 → 3017.

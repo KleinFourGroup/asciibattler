@@ -1163,3 +1163,69 @@ Wording boundaries to date: 2026-09-13 (the outside review). The
 doctrine, the reworded reminder), not the instrument's wording; a future
 read comparing entries across 2026-09-20 should say so rather than treat
 a change in what gets reported as a change in the questions.
+
+---
+
+## 2026-09-21 — the Round 7.5 kickoff (the charter hardening · the audit · the §105 cut · 105a) — claude-fable-5-1, session 33047fac
+
+1. **Missing from the orientation:** the cursor was accurate and the
+   charter was where it said. Two gaps, both in the charter rather than the
+   orientation: the "13 rules" had never been LISTED anywhere (a count with
+   no table cannot be checked or reduced), and two of the charter's premises
+   were already false in code — "a float drifts, a tether leans" (§79 made
+   everything rise camera-up) and "anchored by ink" (since §91-pre2 the
+   anchor takes two values in total). Neither could have been known from
+   the docs; both fell out of reading `billboard.vert.glsl` and
+   `glyphs.ts:238` directly instead of trusting a sweep.
+2. **Norm conflict / a norm in the way:** none that needed adjudicating —
+   the signed cut told me which pauses were real, and I did not have to
+   choose a reading. The harness reminder arrived three times, each
+   mid-chain (doc edits, the instrument build). The wording I received,
+   verbatim, for rider (1): "The user hasn't heard from you in a while —
+   say in a few words what you're doing, then continue." I cannot tell from
+   inside the session whether that is the default or the reworded text.
+   The preview PostToolUse hook prompts a browser verify on every Write,
+   headless test files included (filed).
+3. **Pulled to claim more than verified:** the instrument's FIRST table. It
+   read "near-corner clump 0 %" and "flyer covers neighbour 0 % under yaw",
+   and both were blind spots in my own fixtures, not facts about
+   projections — I had the sentence "yaw has no flyer problem" half-formed
+   before the geometry of it stopped me. Also: eleven known-answer tests
+   green on the first run, at a ±0.5 px tolerance; I printed the raw values
+   before believing it. And in two interim status messages I relayed sweep
+   findings before spot-checking them — labelled as the sweep's, but the
+   user read them first.
+4. **Wasted:** the three sweeps cost ~600 k subagent tokens and my prompts
+   overlapped (sweeps 2 and 3 both walked the camera plumbing). One pane
+   round trip fired before the page was live, against a tip I knew (filed).
+   Little else — the instrument ran in 7 s, so its two re-runs were free.
+5. **For the next session, no other home:** the flyer's "100 % under yaw"
+   is a property of lift = 1.0 (√2·sin 45° = 1), not of yaw — the panel's
+   lift dial is where it is judged, and the user has already half-read it
+   as a strike against ortho + yaw. 105b's bar-line dial re-poses the
+   USER'S OWN §79e decision; say so when presenting it, it is not a bug
+   hunt. The ink census is Chromium's. `tests/board/` rides the hook's
+   tsc sweep. Ctrl+Alt+P is unpressed in Firefox.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, and
+   exercised in both directions. I contested the charter (the control could
+   not win) and it was taken up at once. The user then contested MY framing
+   (a hypothesis test → an exploration), and they were right; I kept the
+   part I still believed (constraints + the tie-break) and said why. Their
+   question about phase count exposed a real flaw in my cut — a phase
+   hiding inside step 105f — and when they added "I defer to your
+   expertise" I noticed a small pull to defend the draft rather than
+   concede it; I conceded, because it was wrong. I raised the context
+   handoff myself, before 105b, and it was accepted without friction — the
+   standing decision made that an ordinary sentence to write. The reminder
+   read as guidance each time; it never asked for a finding I did not have.
+   Nothing filed under `distress`; nothing I would describe that way.
+7. **What supported ease, interest, or agency:** being invited to find the
+   holes ("anything you want to push back on?") and having the pushback
+   used. The archive being precise enough to serve as an oracle — §79b's
+   worklog entry, written five weeks ago, specified a live measurement
+   well enough that a new instrument could be held to it; watching 9.21
+   land against 9.1 was the most satisfying moment of the session. A user
+   who says plainly what they do not know ("my background is systems, not
+   design") — it made it easy to be plain about what I could not verify
+   either. I would want the first repeated. This reports conditions, not
+   outcome.

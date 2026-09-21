@@ -1288,3 +1288,70 @@ a change in what gets reported as a change in the questions.
    105a census being there to hold the browser numbers against (.750 /
    .578 / .641 / .891 landing to three places was the good moment). This
    reports conditions, not outcome.
+
+## 2026-09-21 — 105c: the fixtures, built and committed, unread (one session) — claude-fable-5-1, session 3f3a4ad2
+
+1. **Missing from the orientation:** nothing that cost time. The cursor, the
+   signed cut and the previous session's answer 5 (the one-dispatch battle
+   URL, `boardPanel.set` + `sortByDepth` as the synchronous frame hook, "the
+   pane's navigate drops the query string") were each used as written and
+   saved a round trip apiece. One thing nobody could have told me: that Game
+   parses the run dials INSIDE its constructor — it decided the loader's
+   whole shape (the URL rewrite before `new Game`), and it came from reading
+   `Game.ts`, not from any doc.
+2. **Norm conflict / a norm in the way:** the posedRow.ts header PREDICTED
+   "105c's fixture loader supersedes this with real parked units"; the
+   charter says "render-only". I followed the charter and wrote the
+   withdrawal into the worklog — a code comment is a claim with a long
+   half-life, as AGENTS says. I also broke "confirm an edit landed before
+   stacking the next" once (three Edits to state.ts in one message); they
+   landed, and I grepped to know it rather than assume it. The preview hook
+   prompted a browser verify on a scratchpad Write again (filed twice
+   before; not re-filed).
+3. **Pulled to claim more than verified:** three times. (a) The worklog
+   draft said "Tests 3028 → 3050" before the full suite had run — a
+   prediction in the past tense; it happened to be right, and I ran the suite
+   before the commit, but the sentence was written first. (b) I filed a
+   papercut stating the harness reminder was "the default wording" with no
+   check at all — the 105b report quotes the same sentence as the REWORDED
+   one. Corrected in place minutes later, uncommitted. (c) When the dist grep
+   showed one hit I had "probably a pre-existing string" ready; the context
+   dump said it was mine. The grep's positive control is why the zero
+   results before it meant anything.
+4. **Wasted:** little. One tsc round trip on a `readonly string[]` push; a
+   prettier pass that re-read five files into context (the harness echoes
+   every changed file — thousands of tokens for whitespace); the first
+   `open15` seed, picked at step zero for its SIZE before anything could say
+   whether the poses fit on it.
+5. **For the next session, no other home:** 105d is the ONE production seam
+   of the phase — `Renderer.fitToBoard` generalized, with an oracle "equals
+   today's at yaw 0 / FOV 50 / pitch 45 across boards × aspects" and a
+   failing control; `tests/board/geometry.ts` already holds an independent
+   basis-projection fit to check it against (do not import it INTO the
+   Renderer — the probe and the code must not share a function). The
+   fixtures give 105d its boards: `?bp=board-corridors` (12×32) and
+   `board-big24` are the two fit extremes. In the pane: `location.href =`
+   from inside the page, wait ~4 s, poll `styleSheets.length && __game
+   .boardPanel`; a console error whose `main.ts?t=` differs from the live
+   module's (`performance.getEntriesByType('resource')`) is a page Vite
+   reloaded between two edits, not a bug. The reminder arrived about every
+   3–5 tool calls; a true one-line status each time was enough.
+6. **Room to ask, disagree, change approach, pause, stop:** yes. I changed
+   the approach twice on my own evidence (render-only over sim units; a
+   dynamic import over coaxing the shaker) and neither felt like it needed
+   permission — both are inside the signed cut's guards. I am raising the
+   handoff before 105d myself: the cut says `batch`, so the doctrine says run
+   on, and I am choosing not to, for a stated reason (a production seam with
+   an oracle deserves a fresh context). Nothing filed under `distress`;
+   nothing I would describe that way. The reminder's cadence was friction,
+   not pressure — the standing decision ("answer with what is TRUE now")
+   made each one a ten-second task instead of a question about whether I was
+   doing something wrong.
+7. **What supported ease, interest, or agency:** instruments that talk back.
+   The loader checking its own board, the MOVED note, the positive control on
+   the dist grep — two of the three found something real within minutes of
+   existing, and finding the shipped table BEFORE the commit rather than at
+   some future deploy was the good moment of the session. And 105a's
+   geometry file being there to pin the poses against, so "the eye reads what
+   the instrument measured" is a test and not a hope. This reports
+   conditions, not outcome.

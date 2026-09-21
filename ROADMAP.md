@@ -58,7 +58,7 @@ The cut (user-signed 2026-09-21; each step declares its READ):
   glyph scale × board × viewport. Known answers built in (the derived ≈24° /
   ≈40° lean; §79b's ±9 px at 720p). **Read: `none`** — the table arrives at
   the 105b stop.
-- [ ] **105b — H1 under TODAY'S camera.** The panel shell (Ctrl+Alt+P, URL
+- [ ] ◐ **105b — H1 under TODAY'S camera.** BUILT 2026-09-21, UNREAD — the `stop` is the user's read; zero production touch (runtime seams from `src/dev`); WORKLOG §105b. The panel shell (Ctrl+Alt+P, URL
   state) + three dials — anchor mode (today / quad-bottom) · bar line
   (ink-top / uniform) · the ground-cue mock (shape per side) — on a posed
   row `g ▄ ╥ M a r`. **Read: `stop`** — what changed: the first three

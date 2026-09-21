@@ -7,7 +7,7 @@
  * registry — its zod schema requires every action present in the shipped
  * config JSON, so a dev-only action can't ride it (worklog §53 kickoff).
  * All chords are Ctrl+Alt+<key>, and the chord keys must stay OFF the
- * registry's bound codes (E/F/H/T, digits, Space): `Keybindings.handleKeyDown`
+ * registry's bound codes (E/F/H/T/M, digits, Space, Slash): `Keybindings.handleKeyDown`
  * dispatches on bare `KeyboardEvent.code` with no modifier check, so a chord
  * on a bound code would co-fire the battle hotkey.
  *
@@ -49,6 +49,11 @@
  *                Renderer under the same DEV flag. (C = camera; KeyC is off
  *                the bound codes and this file's, and neither browser binds
  *                Ctrl+Alt+C — the user's Firefox read confirms, per #134.)
+ *   Ctrl+Alt+P — 105b: toggle the BOARD EXPLORER (src/dev/boardPanel — the
+ *                Round 7.5 projection spike's live dial panel; its state is a
+ *                `?bp=` bookmark). (P = projection / panel; KeyP is off the
+ *                bound codes and this file's; the user's Firefox press is
+ *                the check that counts, per #134.)
  *
  * ⚠ A new chord must clear THREE key sets, not two: the registry's bound
  * codes, this file's, and the BROWSERS' own Ctrl+Alt chords — the pane is
@@ -64,8 +69,9 @@ import { loadTraces } from './traceStore';
 import { cycleShakePolicy } from '../ui/lossFx';
 import { cycleReducedMotionOverride } from '../render/motion';
 import type { Renderer } from '../render/Renderer';
+import type { BoardPanel } from './boardPanel';
 
-export function attachDevKeys(game: Game): void {
+export function attachDevKeys(game: Game, boardPanel: BoardPanel): void {
   window.addEventListener('keydown', (e) => {
     if (!e.ctrlKey || !e.altKey || e.repeat) return;
     switch (e.code) {
@@ -97,6 +103,10 @@ export function attachDevKeys(game: Game): void {
         );
         break;
       }
+      case 'KeyP':
+        e.preventDefault();
+        console.info(`[dev-keys] board explorer → ${boardPanel.toggle() ? 'OPEN' : 'closed'}`);
+        break;
       case 'KeyC': {
         e.preventDefault();
         // Game keeps `renderer` TS-private; the dev convention (main.ts's

@@ -308,3 +308,103 @@ bound — they rule regions out, they do not pick a winner):**
   "which tile is it on" complaint is pitch + anchor, not projection.
 
 No `src/` touch; no smoke (predicted). Tests 3006 → 3017.
+
+### 105b — the panel shell + the H1 dials, under today's camera (2026-09-21) — ◐ BUILT, UNREAD
+
+Session b1d90d3c. `src/dev/boardPanel/` (six files) + the `KeyP` case in
+`devKeys.ts` + two lines in `main.ts`'s DEV block. Tests 3017 → 3028; no
+smoke (predicted — nothing under the hook's paths), no bump.
+
+**Step zero held the cut, and found the build was cheaper than its card.**
+Nothing of 105b existed. Measured, not read: the anchor is stamped into a
+per-instance attribute at glyph-write time from `FontAtlas.baseAnchorY`
+(`SpriteRenderer.ts:450`), and all three lifts (`FontAtlas.ts:318-339`) and
+the mirror pick route through that same method — so ONE override point moves
+the stand line and everything stacked on it, consistently. The overlay stack
+and the hitsplat share `inkTopLiftFor` (§79e's "one definition"). And Game's
+frame callback (`Game.ts:185-188`) calls `sprites.sortByDepth` after the
+scene settles and before the render — the exact moment a follower must sync.
+
+**The decision: ZERO production touch.** The cut's scope guard names ONE
+production seam for the whole phase (105d's fit), so 105b's three dials
+reach the renderer as RUNTIME patches applied from `src/dev` (`seams.ts`):
+`atlas.baseAnchorY` on the instance, `inkTopLiftFor` on the prototype (a
+BattleRenderer is built per battle), `sortByDepth` on the instance as the
+frame hook. Each falls through to the original at the default dial.
+Rejected: DEV-gated setters inside `FontAtlas` / `BattleRenderer` — typed
+and sturdier, but production edits to a render path for a spike that may be
+reverted, and they would need their own unchanged-at-default oracle. The
+price, accepted and guarded: the reaches are name-keyed into privates tsc
+cannot check, so each is asserted at install and a renamed seam logs a loud
+`[board-panel] seam moved` instead of reading as "the dial does nothing" —
+which is exactly what the cut says WRONG looks like.
+
+**What the dials are** (the table is `state.ts`; a dial is one row — the
+control, the typed state and the bookmark derive from it, so 105d / 105e add
+a projection or glyph-scale dial as a line):
+
+- `anchor` today / bottom — the H1 read. `bottom` = −0.5 for every glyph
+  (the floor family is already there, so only letterforms move: 4/64 of a
+  cell DOWN; `g`'s tail then clears the tile by 7 rows, not 3).
+- `bar` ink / uniform + `barY` — **this re-poses the USER'S OWN §79e
+  reversal; it is a taste call, not a bug hunt.** The uniform line is
+  defined in cell units above the QUAD BOTTOM so it is orthogonal to the
+  anchor dial. Default 0.90: the first default (0.89) was caught by its own
+  pin — `M`'s ink top is 57/64 = 0.890625.
+- `cue` off / outline / filled + size + opacity — flat WORLD-space meshes
+  (they will project correctly under whatever 105d dials in), one SHAPE per
+  side: circle = yours · diamond = the enemy's · triangle = an active camp ·
+  inert scenery none — DESIGN's four identities, clause 1 by construction.
+  `renderOrder −1`, depth-tested, no depth write, layer 0 (never blooms).
+- `row` — the posed row. RENDER-ONLY dev sprites + REAL overlay stacks
+  (`UnitOverlayLayer.add` / `addDestructible` — the production bar DOM and
+  CSS), on the first run of six clear, dry, passable tiles scanning from the
+  middle row TOWARD the camera. No sim unit exists for them: live units walk
+  through the row. 105c's parked fixtures supersede it.
+- The bookmark: `?bp=anchor-bottom_bar-uniform`, non-defaults only, every
+  other query pair left byte-for-byte; a `bp` param opens the panel at boot
+  and the seams install at boot, so a bookmarked dial is live before the
+  first battle stamps a sprite.
+
+**Verified, by which instrument** (the pane is Chromium, hidden, 1280×720; a
+parked 12×12 elite battle, `?seed=7&layout=river&firstNode=elite`):
+
+| claim | instrument | result |
+|---|---|---|
+| the default state is today's board | the raw `aAnchor` GPU buffer vs the CENSUS values | 9 letterforms −0.4375, 6 blocks −0.5; restored exactly after a flip |
+| `anchor=bottom` reaches every base sprite | the same buffer; `restamped` vs an independent tally | 21 of 21 at −0.5 |
+| the bar line, posed row, all four anchor × bar combos | bar height above the quad bottom in cell units = three's own projection of the ground point + the bar's DOM transform + the raw anchor — NOT `barLift` | ink: .750 .578 .640 .891 .750 .750 vs the census ink tops .75 .578 .641 .891 .75 .75 · uniform: .900 ± .001 on all six, under both anchors |
+| the same, LIVE units (the prototype patch, not the row's path) | as above, via `br.update(0)` | ink tops under `ink`; .900 × footprint under `uniform` (a 3×3 rubble 2.700) |
+| the cue splits by side | mesh count by shape key | 6 circles, 7 diamonds, none under inert scenery |
+| keys typed in the panel stay there | Space on a focused dial vs Space on `<body>` (the control) | pause untouched vs toggled; Ctrl+Alt+P closes from inside |
+| nothing ships | `npm run build` + grep `dist/` for five panel-unique strings, with a positive control | 0 hits; control 3 |
+| the codec · the bar rule | `state.test.ts`, 11 tests, expectations off `tests/board/inkCensus.json` | green |
+
+**NOT verified — the user's:** every LOOK (whether 4 atlas px of stand line
+is visible at all, whether `g` reads as standing or floating under `bottom`,
+whether the uniform line reads calmer or wrong, whether the cue hides the
+tile or carries the grey read under Ctrl+Alt+G) · **the Ctrl+Alt+P press in
+Firefox** (a synthetic Chromium `KeyboardEvent` proves the wiring only —
+gotcha #134) · motion (the battle was parked throughout) · 2560×1440.
+
+**Known cosmetic limits of the mock:** a cue follows its unit's ground
+anchor, so mid-step between tiles of different height its far edge can dip
+into the taller tile · cues ignore spawn fade-ins · the panel covers the
+top-right HUD corner.
+
+**Three of my own defects, each caught before it was believed.** (1) The
+first URL writer used `URLSearchParams.set`, which re-serialized the WHOLE
+query (`roster=a,b` → `a%2Cb`) → `spliceBookmark`, pinned. (2) A quoted
+heredoc still ate a regex backslash (`/^\?/` → `/^?/`, invalid) — the AGENTS
+norm names this burn exactly; caught by grepping the result, fixed
+regex-free (papercut filed). (3) ⚠ **A pane script that TIMES OUT is not
+dead.** The first measurement awaited `requestAnimationFrame` in the hidden
+pane and timed out at 45 s; it stayed suspended, and every later screenshot
+forced a frame that resumed it one step — so it kept calling
+`boardPanel.set()` for minutes, and two captures seconds apart showed dial
+states never set together. It read exactly like a panel bug (or the user
+trying the pane). The tell was that the state changed with NO `change` event
+on the control; a reload killed it. Never await rAF in a pane probe — the
+frame hook is reachable synchronously (`__game.sprites.sortByDepth(camera)`)
+— and reload after any timed-out script (papercut filed; a HANDOFF pane tip
+at the round sweep).

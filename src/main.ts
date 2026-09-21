@@ -15,6 +15,7 @@ import type { Team } from './sim/Unit';
 import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
 import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
 import { attachDevKeys } from './dev/devKeys';
+import { attachBoardPanel, type BoardPanel } from './dev/boardPanel';
 import { installMotionGate } from './render/motion';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
@@ -48,6 +49,7 @@ if (import.meta.env.DEV) {
       traceRecorder?: TraceRecorder;
       dumpTraces?: () => BattleTrace[];
       clearTraces?: () => void;
+      boardPanel?: BoardPanel;
     };
   };
   handle.__game = game;
@@ -70,7 +72,11 @@ if (import.meta.env.DEV) {
   // map-phase saves only / Ctrl+Alt+D dump the trace ring). A separate window
   // listener, NOT the Keybindings registry (its zod schema ships every
   // action — worklog §53).
-  attachDevKeys(game);
+  // 105b — the board explorer (Ctrl+Alt+P; Round 7.5's projection spike). Its
+  // seams install HERE, at boot, so a `?bp=` bookmark is live before the first
+  // battle stamps a sprite. From the console: __game.boardPanel.set('cue', 'outline').
+  handle.__game.boardPanel = attachBoardPanel(game);
+  attachDevKeys(game, handle.__game.boardPanel);
   // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
   // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
   // status-on-hit applier ships. From the browser console:

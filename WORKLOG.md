@@ -408,3 +408,51 @@ on the control; a reload killed it. Never await rAF in a pane probe — the
 frame hook is reachable synchronously (`__game.sprites.sortByDepth(camera)`)
 — and reload after any timed-out script (papercut filed; a HANDOFF pane tip
 at the round sweep).
+
+### 105b — the user's read (2026-09-21) ✅ + 105b-post, the `cueDepth` dial
+
+**The verdict, the user's words:** "I had a LOT of fun playing with this!
+The chord is usable, every dial is working, and the URL is updating
+properly. The cues all nicely convey who a unit belongs to." So: Ctrl+Alt+P
+clears Firefox (gotcha #134's third key set — the one check the pane could
+not make); none of the cut's three "wrong looks like" fired. No verdict yet
+on the anchor or the bar line — those are read with the cross at 105e, not
+here. Two notes:
+
+1. **Static multi-tile bodies (rubble) will need an indicator too.**
+   DEFERRED to §106 at the user's call ("the location where we place glyphs
+   might change") — and the audit agrees from the other side: the natural
+   form is a footprint frame in world space, which sits on R11, the
+   footprint anchor written against "the camera never rotates". → TODO, to
+   be posed at the §106 kickoff audit (the §94d lesson: a deferred half gets
+   a line somewhere, in the same commit).
+2. **The cues clip through taller tiles.** The user gave the session the
+   slotting call. → NOW, as `105b-post`, and as a DIAL rather than a patch.
+
+**The mechanism, checked before the fix was designed.** Tile tops are flat
+full-tile quads (`TerrainRenderer.ts:353-358`), so a cue ≤ 1 tile cannot
+intersect a neighbour. The "clipping" is the DEPTH TEST: the cue lies on
+the ground, so a taller tile NEARER the camera occludes it exactly as it
+occludes that ground (so does a hill's pyramid, and a mid-step boundary
+crossing). Physically right; reads as a defect, because the cue is UI. My
+105b "known limit" had named only the mid-step case — the static one is the
+larger, and it was the user's eye that found it.
+
+**Why now, and why a dial.** (a) The artefact is PROJECTION-DEPENDENT —
+shallower pitch, more near-tile occlusion — so left in, it would have
+biased the cue's read across the 105e cross by pitch. (b) It is a real
+design fork, not only a bug: a cue IN the world (grounded, occludable) vs ON
+it (always whole, slightly x-ray), and which reads better plausibly differs
+between ortho and perspective. `cueDepth: overlay | world`, default
+`overlay`; one table row + one material line, the control / codec /
+round-trip test derive from the table. Glyphs cover the cue under both
+(renderOrder −1; sprites never write depth).
+
+**Verified:** three's OWN offscreen render of the real scene (terrain + cues
+only, cues painted magenta, 640×360, a parked 12×12 river battle, cue size
+1.1) — `world` 4084 cue px · `overlay` 4145 · `world` again 4084: the test
+hides 61 px (1.5 %) here, reproducibly, and the dial removes it. A flat
+board; a hillier one hides more. `?bp=…cueDepth-world` parsed at boot.
+Tests 3028 (the table-driven round-trip covers the new row), tsc clean.
+**NOT verified:** the LOOK of `overlay` (does x-ray over a tall near tile
+misplace "which tile"?) — a `batch` read, at 105e with the cross.

@@ -10,10 +10,18 @@
  * active camp. Inert scenery gets none. The hue rides along (the sprite's own
  * colour rule) but carries nothing the shape does not.
  *
- * A MOCK: a small pool of plain meshes, no instancing, no shader. Known
- * cosmetic limits, accepted for the spike — a cue follows its unit's ground
- * anchor, so mid-step between tiles of different height its far edge can dip
- * into the taller tile (depth-tested); it ignores spawn fade-ins.
+ * A MOCK: a small pool of plain meshes, no instancing, no shader. It ignores
+ * spawn fade-ins, and it cues COMBATANTS only — a static multi-tile body
+ * (rubble) gets no indicator yet: the user's 105b read asked for one, deferred
+ * to §106 because its natural form (a footprint frame) sits on the footprint
+ * anchor, which pass two may move (TODO).
+ *
+ * The `cueDepth` dial (105b-post): tile tops are flat, so a cue never
+ * intersects a neighbour — what the 105b read saw as "clipping" is the DEPTH
+ * TEST, a taller tile nearer the camera occluding the ground behind it (and a
+ * hill's pyramid, and a mid-step boundary crossing). `overlay` drops the test;
+ * glyphs still cover the cue either way (renderOrder −1, sprites don't write
+ * depth).
  */
 
 import * as THREE from 'three';
@@ -113,6 +121,7 @@ export class GroundCues {
     const material = mesh.material as THREE.MeshBasicMaterial;
     material.color.set(spriteColorForUnit(subject));
     material.opacity = dials.cueAlpha;
+    material.depthTest = dials.cueDepth === 'world';
     mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z - (footprint - 1) / 2);
     mesh.scale.setScalar(dials.cueSize * footprint);
   }

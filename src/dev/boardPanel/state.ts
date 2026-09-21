@@ -82,6 +82,18 @@ export const DIALS = {
   },
   cueSize: { kind: 'range', label: 'cue size', min: 0.4, max: 1.1, step: 0.05, def: 0.8 },
   cueAlpha: { kind: 'range', label: 'cue opacity', min: 0.1, max: 1, step: 0.05, def: 0.55 },
+  /** 105b-post (the user's read) — is the cue IN the world or ON it? `world`
+   *  depth-tests it, so a taller tile nearer the camera occludes it like any
+   *  ground (honest depth; read as "clipping" — and the amount is
+   *  pitch-dependent, so it would bias the cross). `overlay` draws it over the
+   *  terrain, always whole, glyphs still on top. A treatment, not a bug fix. */
+  cueDepth: {
+    kind: 'enum',
+    label: 'cue depth',
+    options: ['overlay', 'world'],
+    def: 'overlay',
+    hint: 'overlay = always whole, drawn over terrain · world = taller near tiles occlude it',
+  },
   /** The posed row `g ▄ ╥ M a r` — render-only sprites with real overlay bars,
    *  on the first clear floor row near the board centre. */
   row: { kind: 'bool', label: 'posed row', def: false, hint: 'g ▄ ╥ M a r, with real bars' },

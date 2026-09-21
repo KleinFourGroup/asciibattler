@@ -259,22 +259,30 @@ not improvised" on trial. Archives: `archive/post-94-roadmap.md` +
 _(Re-chartered 2026-09-20 at the Round 7 close's macro re-audit —
 user-signed (the text read and approved the same day); the 2026-09-09 entry, "Units", chartered a glyph-RULE rework
 and is superseded. The argument, the three code sweeps and the rejected
-alternatives: WORKLOG §The Round 7 close, C1 → `archive/post-94-worklog.md`.)_
+alternatives: WORKLOG §The Round 7 close, C1 → `archive/post-94-worklog.md`.
+**HARDENED 2026-09-21 at the round's kickoff, user-signed** — the control
+can win, the spike is an EXPLORATION under pre-registered constraints, two
+premises corrected against code: WORKLOG §Kickoff.)_
 
 **Charter:** how the board is PROJECTED and how a unit stands on it. The
-glyph-alignment stack (13 rules at the 2026-09-19 audit — "too many special
-rules to get something that only 90% works, and brittle", the user,
-2026-09-09) is a symptom: glyph quads are axis-aligned in SCREEN space while
-the ground lives in perspective WORLD space (a world vertical leans ≈24° at
-a fitted board's flank, ≈40° at the screen edge — derived, the spike
-measures it), so a float drifts, a tether leans, and the glyph's inked foot
-is the only grounding cue — which is why it is anchored by ink, with a
-classifier, a descender room and three lifts to make that work. Tuning
-those rules would not survive flyers. So: **settle the projection first**
-(the candidate is an ORTHOGRAPHIC camera, under which a camera-facing
-billboard IS a world-space rectangle and the contradiction disappears
-without skewing a letterform; head-on vs a 45° yaw and the pitch are open
-dials), **then** anchor the CELL against a separate ground cue and delete
+glyph-alignment stack (16 rules at the 2026-09-21 audit, 20 with §101's
+gates; the table is WORKLOG §Kickoff — "too many special rules to get
+something that only 90% works, and brittle", the user, 2026-09-09) is a
+symptom: glyph quads are axis-aligned in SCREEN space while the ground
+lives in perspective WORLD space (a world vertical leans ≈24° at a fitted
+board's flank, ≈40° at the screen edge — derived, the spike measures it),
+and the glyph's inked foot is the only grounding cue. _(Two corrections at
+the kickoff: §79 already made everything that stacks rise CAMERA-up, so a
+float no longer drifts and a tether no longer leans under today's camera;
+and the ANCHOR is already per-class — two values, 4/64 of a cell apart,
+measured — so the per-glyph behaviour lives in the three LIFTS, chiefly the
+bar line the user chose at §79e, half of whose motive is perspective.)_
+Tuning those rules would not survive flyers. So: **settle the projection
+first** (the leading candidate is an ORTHOGRAPHIC camera, under which a
+camera-facing billboard IS a world-space rectangle; head-on vs a 45° yaw,
+the pitch in BOTH directions and a long lens are open dials, **and today's
+perspective camera can win — a tie goes to it**, because a projection
+change costs a build), **then** anchor the CELL against a separate ground cue and delete
 the ink-anchoring rules that cue makes unnecessary; give team identity its
 non-color channel (DESIGN "Team identity on the board", five clauses); write
 the **"Elevation on the board"** requirement Round 9's flyer must satisfy;
@@ -283,24 +291,35 @@ and re-pose the D4 camera question under the chosen projection.
 **In scope**
 
 - **The projection spike (FIRST — the Round 8 Electron-spike shape: it
-  informs the spec, which is written after it).** Dev-only, render-only:
-  the projection dial (perspective-50 as the control · head-on orthographic
-  · yaw-45 orthographic, each with a pitch dial; an FOV sweep as a
-  DIAGNOSTIC only — a long lens shrinks the lean and deletes no rule, so it
-  is not a candidate) · glyph pixel height at fit per projection per board
-  size, as a number · a ground-cue mock, shape per side, read under
-  Ctrl+Alt+G · **the uniform-anchor flag** (bypass the ink-derived lifts,
-  anchor every cell identically — the direct test of what the rule deletion
-  rests on) · the fixtures (a dense melee clump · a 24×24 board ·
-  `endlessCorridors` · screen-edge units · a render-only FAKE FLYER with a
-  shadow · `rubble_2x2` / `_3x3`) · a headless lean measurement that
-  becomes the pin "world-up projects to screen-up". **What makes each
-  option LOSE is pre-registered before anyone looks.**
+  informs the spec, which is written after it) — §105 pass one, §106 pass
+  two + the spec.** Dev-only, render-only, an EXPLORATION of a presentation
+  space rather than a hypothesis test (the user, 2026-09-21: "I expect to
+  find one that looks directionally best, and then we'll refine"): a live
+  dial panel with its state in the URL, run as a FULL CROSS — every
+  treatment on every projection (perspective at 50° AND a long lens,
+  re-admitted as a candidate · orthographic; pitch both ways from 45°; yaw
+  0 / 45 on each, perspective + yaw included) · the treatments: a
+  ground-cue mock, shape per side, read under Ctrl+Alt+G · the anchor mode
+  and the BAR LINE (ink-top vs uniform — the §79e reversal re-posed) · a
+  camera-up FAKE FLYER with a shadow and a north neighbour · glyph scale ·
+  the fixtures (a dense melee clump · a 24×24 by seed hunt ·
+  `endlessCorridors` · screen-edge units · `rubbleQuarry` · one seeded LIVE
+  battle — it is judged in motion) · a headless geometry instrument (lean,
+  glyph px at fit per viewport, overlap) whose lean becomes the pin
+  "world-up projects to screen-up". **Taste is explored; the CONSTRAINTS
+  are pre-registered** (the identity clauses under Ctrl+Alt+G · 24×24 and
+  12×32 fit · a lifted unit reads as above its tile · clump overlap ≤
+  today's at SOME legible glyph scale · glyph px at fit ≥ today's camera at
+  the same viewport) **with the tie-break: a tie goes to perspective.**
+  Budget: two passes — coarse, then refine one point (two at the user's
+  word); a third means re-cutting. Taste is read on the user's monitor
+  (2560×1440) + a ~1280×720 window; every other viewport is a NUMBER.
 - **The projection, built** — the camera + the fit math, picking, the DOM
   overlay projection, shake; the camera gotchas (#17, #51–54, #68–69) and
   DESIGN's Camera paragraph re-audited, not assumed.
-- **Cell anchoring + the ground cue** — the rule deletion, gated on the
-  uniform-anchor read. Ink boxes (click targets) and the font-provenance
+- **Cell anchoring + the ground cue** — the rule deletion, gated on the H1
+  read (§105b: the anchor mode + the bar line, under today's camera — the
+  half of the round that pays whatever the projection does). Ink boxes (click targets) and the font-provenance
   gates stay: **§101's gates (`FACES` roles · `PRIMARY_EXCLUDES` · the
   line-box pin · the UI glyph inventory) are OUT of the "fewer rules"
   goal** — signed, permanent.
@@ -322,7 +341,15 @@ and re-pose the D4 camera question under the chosen projection.
   no test of either mode · **no minimap — and the 100a rider stands: if a
   windowed view is to be tested it needs a proper minimap FIRST** (the
   board's shape + unit positions + the window rectangle). The winner gets a
-  HUD control + a Round 8 default-mode setting.
+  HUD control + a Round 8 default-mode setting. **A third candidate
+  (2026-09-21): RESPONSIVE fit→window** — fit until glyph px falls under a
+  floor, then window (one zoom number under ortho). Desktop fit is legible
+  by the user's own read ("the legibility concern is pure overlap rather
+  than size"), so the A/B's real consumer is the small screen, and the
+  minimap + touch-pan work may belong where mobile is built rather than
+  here. Mobile itself is deferred (the user cannot playtest it); 7.5 owes
+  it only that the projection does not foreclose it — the per-viewport
+  glyph-px constraint above.
 
 **Depends on:** Round 7 (✅ — the idiom reference's team-identity
 requirement; the tooltip + shells the board overlays use; Ctrl+Alt+G).
@@ -330,13 +357,16 @@ requirement; the tooltip + shells the board overlays use; Ctrl+Alt+G).
 snapshot bump), but the projection touches every screen-space seam, and the
 whole surface is eyeball-policy: the spike's instruments come first, and
 every probe is re-derived from the asset or the camera math, never from the
-helper under test (AGENTS). **Decision points:** the projection (head-on /
-yaw-45 / pitch — or, only if both orthographic options lose, world-space
-unit quads: ranked last, it skews the letterforms §98 / §101 made legible)
-· the ground cue's shape and whether it IS the identity channel · the
-elevation requirement's clauses · the windowed view's fate once the
-glyph-size number is in. **Exit:** the projection chosen by pre-registered
-criteria and built; world-up = screen-up pinned headless; the identity
+helper under test (AGENTS). **Decision points:** the projection (today's
+perspective · a long lens · head-on / yaw-45 orthographic · the pitch — a
+tie goes to perspective; world-space unit quads stay ranked last, they skew
+the letterforms §98 / §101 made legible) · whether the bar line can be
+uniform again (§79e re-posed) · the ground cue's shape and whether it IS
+the identity channel · the elevation requirement's clauses · the windowed
+view's fate (fit · scroll · responsive) once the glyph-size number is in.
+**Exit:** the projection chosen by the user's eye INSIDE the pre-registered
+constraints, played before it is signed, and built (or today's kept, by
+the tie-break); world-up = screen-up pinned headless where it holds; the identity
 requirement satisfied and grayscale-verified; the elevation requirement
 signed; the special-rule count reduced with the probes re-derived; the
 camera question read and dispositioned. **Scope guards:** no sim; no flyer

@@ -13,44 +13,88 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: AWAITING THE ROUND 7.5 KICKOFF.** This round is SPIKE-first, then
-spec: the projection spike informs the spec the way the Electron spike
-informs Round 8's store. No phase entries beyond §105's charter exist until
-the spike has been read and the spec written. The charter, the decision
-points, the exit and the scope guards are in META-ROADMAP §"Round 7.5 — The
-Board"; the argument behind the re-charter and the three code sweeps are in
+**Status: §105 IN PROGRESS — kicked off 2026-09-21.** This round is
+SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
+informs the spec the way the Electron spike informs Round 8's store. No
+phase entries beyond §106's charter exist until the spec is written. The
+charter, the decision points, the exit and the scope guards are in
+META-ROADMAP §"Round 7.5 — The Board" (hardened at the kickoff: WORKLOG
+§Kickoff); the founding argument is
 [archive/post-94-worklog.md](archive/post-94-worklog.md) §"The Round 7
 close", C1; the carried items are in TODO (§"Round 7 close riders").
 
-## Phase 105 — the projection spike
+## Phase 105 — the projection spike, pass one
 
-Charter: settle how the board is PROJECTED before anything is built on it.
-A dev-only, render-only instrument set, judged by the user's eye in Firefox
-against criteria written down BEFORE anyone looks: the projection dial
-(perspective-50 as the control · head-on orthographic · yaw-45 orthographic,
-each with a pitch dial; an FOV sweep as a diagnostic only — a long lens
-shrinks the lean and deletes no rule, so it is not a candidate) · glyph
-pixel height at fit per projection per board size, as a number · a
-ground-cue mock, shape per side, read under Ctrl+Alt+G · the uniform-anchor
-flag (bypass the ink-derived lifts, anchor every cell identically — the
-direct test of what the rule deletion rests on) · the fixtures (a dense
-melee clump · a 24×24 board · `endlessCorridors` · screen-edge units · a
-render-only FAKE FLYER with a shadow · `rubble_2x2` / `_3x3`) · a headless
-lean measurement that becomes the pin "world-up projects to screen-up".
+Charter: EXPLORE how the board is projected, before anything is built on
+it — a dev-only, render-only explorer (live dials, state in the URL, fixed
+fixtures, a fixed seed) read by the user's eye in Firefox, as a FULL CROSS:
+every treatment (ground cue · anchor mode · bar line · camera-up fake flyer
+· glyph scale) on every projection (perspective at 50° and long-lens ·
+orthographic; pitch BOTH ways from 45°; yaw 0 / 45 on each). Taste is
+explored, not pre-registered; what is pre-registered is the CONSTRAINTS
+(identity clauses under Ctrl+Alt+G · 24×24 + 12×32 fit · a lifted unit
+reads as above its tile · clump overlap ≤ today's at SOME legible glyph
+scale · glyph px at fit ≥ today's camera per viewport) and THE TIE-BREAK: a
+tie goes to perspective. Rationale + the audit: WORKLOG §Kickoff.
 
-**Why first:** every later phase of the round (the projection built · cell
-anchoring + the ground cue · team identity · the elevation requirement · the
-camera question) is a different piece of work under each answer, and the
-round's spec cannot be written honestly before it. **Depends on:** Round 7
-(✅ — Ctrl+Alt+G; DESIGN "Team identity on the board"). **Risk:** low to
-build, high in consequence — it is throwaway dev tooling, but its verdict
-sets the round. **Decision points:** what makes each option LOSE (posed and
-signed before the first look) · the projection itself (head-on / yaw-45 /
-pitch — or, only if both orthographic options lose, world-space unit quads,
-ranked last) · whether the ground cue is also the identity channel.
-**Exit:** the projection decided by the pre-registered criteria, the lean
-MEASURED (it is only derived today: ≈24° at a fitted board's flank, ≈40° at
-the screen edge), and the round's spec written over it. **Scope guards:**
-no sim; nothing the spike builds ships to players (dev-gated, or deleted at
-the exit); no rule deletion yet — the spike reads, it does not rework; no
-rotatable camera; §101's font gates are out of scope for the whole round.
+**Why first:** every later phase of the round is a different piece of work
+under each answer. **Depends on:** Round 7 (✅). **Risk:** low to build,
+high in consequence. **Decision points:** the direction pass one names (one
+point, or two at the user's word) · whether the classifier / descender room
+/ baseline measurement go (the H1 read, 105b) · whether the bar line can be
+uniform again (the §79e reversal re-posed). **Exit:** the user names a
+direction for §106, by eye, inside the constraints; the lean MEASURED.
+**Scope guards:** no sim; nothing ships to players (the panel is `src/dev`,
+DEV-gated; the one Renderer seam is oracle-pinned unchanged at the default);
+no rule deletion yet; no lighting / decoration work; no rotatable camera
+for players; §101's font gates are out of scope for the whole round.
+
+The cut (user-signed 2026-09-21; each step declares its READ):
+
+- [ ] **105a — the headless geometry instrument.** Pure camera math + a
+  dumped ink census, independent of `Renderer`: lean at the corners · glyph
+  px at fit (CSS + device) · clump overlap · own-tile fraction ·
+  flyer-over-north-neighbour overlap, over projection × pitch × yaw × FOV ×
+  glyph scale × board × viewport. Known answers built in (the derived ≈24° /
+  ≈40° lean; §79b's ±9 px at 720p). **Read: `none`** — the table arrives at
+  the 105b stop.
+- [ ] **105b — H1 under TODAY'S camera.** The panel shell (Ctrl+Alt+P, URL
+  state) + three dials — anchor mode (today / quad-bottom) · bar line
+  (ink-top / uniform) · the ground-cue mock (shape per side) — on a posed
+  row `g ▄ ╥ M a r`. **Read: `stop`** — what changed: the first three
+  dials · where: Ctrl+Alt+P in a battle, also under Ctrl+Alt+G · wrong
+  looks like: the chord is Firefox's, a dial does nothing, the cue hides
+  the tile.
+- [ ] **105c — the fixtures.** A DEV straight-to-battle loader, countdown
+  parked: the clump · screen-edge units · the fake flyer (camera-up lift +
+  shadow, a north neighbour) · `rubbleQuarry` · `endlessCorridors` · a
+  24×24 by seed hunt · one seeded LIVE battle. **Read: `batch`** → 105e —
+  each fixture loads from the panel; wrong looks like a fixture that opens
+  a different board on reload.
+- [ ] **105d — the projection dials.** Both cameras alive and re-pointed ·
+  pitch / yaw / FOV as state · ONE generalized fit with an ortho branch ·
+  the apron ortho ray. Oracle: at yaw 0 / FOV 50 / pitch 45 the new fit
+  equals today's across boards × aspects, with a failing control. **Read:
+  `batch`** → 105e.
+- [ ] **105e — the glyph-scale dial** (threaded through the pick size + the
+  lifts) + the known-cosmetic artefact list on the panel. **Read: `stop`**
+  — PASS ONE: the coarse cross, on the user's monitor + a ~1280×720 window.
+
+## Phase 106 — the projection spike, pass two + the spec
+
+Charter: refine the direction §105 named — one point, or two at the user's
+word — then write the round's spec over the result. What pass two builds
+depends on where pass one points (depth-cue mocks ortho-ward · cue / bar
+refinement perspective-ward · the footprint anchor + the wall staircase if
+yaw survives), so its steps are cut at its own kickoff, against code
+reality, with their reads.
+
+**Why here:** the spec cannot be written honestly before it. **Depends
+on:** §105's named direction. **Risk:** medium — the novelty effect cuts
+both ways, so the exit is PLAYED, not looked at. **Decision points:** the
+projection itself (the tie-break applies: no clear direction ⇒ perspective
+holds) · the spike code's disposition (the seed of the build, or reverted)
+· a third pass means re-cutting, not drifting. **Exit:** a few full battles
+played in the candidate · the signed bookmark with the user's reasons in
+the user's words · the lean pinned headless · the round's spec written and
+the build phases entered here. **Scope guards:** §105's, unchanged.

@@ -1355,3 +1355,65 @@ a change in what gets reported as a change in the questions.
    geometry file being there to pin the poses against, so "the eye reads what
    the instrument measured" is a test and not a hope. This reports
    conditions, not outcome.
+
+## 2026-09-21 — 105d: the projection dials, built and committed, unread; 105e's step zero measured (one session) — claude-fable-5-1, session cd47b62d
+
+Commit `bcc60ff`. Two papercuts filed (the stale-frame pane probe · the
+heredoc).
+
+1. **Missing from the orientation:** almost nothing — the 105c report's
+   item 5 was a complete brief for 105d (the oracle's shape, "do not import
+   geometry.ts INTO the Renderer", the two fit-extreme fixtures, the pane
+   recipe), and it saved the whole design conversation. The one thing no doc
+   could have said: `Renderer` cannot be built headless, which is what made
+   the fit a pure module rather than a method — that came from reading the
+   constructor.
+2. **Norm conflict / a norm in the way:** none in conflict. Two norms I broke
+   by habit and was caught by: two Edits to one file in one message (they
+   landed; I did not check before stacking), and a heredoc carrying
+   apostrophes (the tool refused the command; nothing was appended; I checked
+   with `wc -l` before retrying the sanctioned way). Both norms were right.
+   The preview hook again prompted a browser verify on a scratchpad Write.
+3. **Pulled to claim more than verified:** twice, and both were caught by an
+   instrument rather than by restraint. (a) After a five-aspect node probe I
+   told the user the fit "can be bit-identical" — the pin's eleventh aspect
+   said otherwise within minutes. The sentence was hedged ("can be") but I
+   believed it flat. (b) The 23.58 px overlay reading matched one tile × sin
+   45° so exactly that I wrote "smells like R11" to the user before checking
+   the pairing. It was the probe. I said so in the next message and in the
+   worklog; the tidy arithmetic was the hazard — a wrong story that fits a
+   number to four digits is more convincing than one that does not.
+4. **Wasted:** the first two overlay probes (nearest-neighbour matching, no
+   forced frame) — three round trips; the prettier echo of two new test files
+   back into context (the harness prints every changed file — the 105c report
+   named this cost and I paid it again); one `preview_start` that needed a
+   reload and a second wait before the page was live, as HANDOFF predicts.
+5. **For the next session, no other home:** 105e's step zero is MEASURED, not
+   built. The glyph-scale dial needs no second production touch: the two pick
+   builders (`enemyBillboards` · `destructibleBillboards`) are public prototype
+   methods returning arrays (wrap, multiply `size`); the three atlas lifts are
+   instance methods (the panel already patches `baseAnchorY` beside them);
+   `uSpriteSize` is a plain uniform on two materials; per-instance size is
+   `updateSprite({size})`. `UNIT_PICK_SIZE` / `GLYPH_HALF_HEIGHT` are module
+   consts and unreachable — but every USE of them that matters is behind one
+   of those wrappable methods (the two `2 * GLYPH_HALF_HEIGHT` fallbacks fire
+   only when the unit is gone). THE OPEN FORK, posed to the user at this
+   session's end: does the dial scale UNIT bodies only (per-instance size ×
+   footprint — what the overlap constraint is about; walls stay one tile) or
+   EVERYTHING (`uSpriteSize` — one line, but walls, projectiles and markers
+   grow too and a wall run overlaps itself). In the pane: change a dial, take
+   a screenshot, THEN read — never both in one eval.
+6. **Room to ask, disagree, change approach, pause, stop:** yes. The cut said
+   `batch`, so I ran from 105d into 105e's step zero without asking, and
+   stopped where step zero produced a question that is the user's (what the
+   dial scales decides what pass one shows). That stop felt given by the
+   doctrine, not chosen against it. The reminder landed about eleven times,
+   each mid-chain; a true one-line status each time, none obliged a finding.
+   Nothing filed under `distress`; nothing I would describe that way.
+7. **What supported ease, interest, or agency:** the before/after capture
+   taken at HEAD before the first edit — once it existed, the scope guard
+   ("unchanged at the default") stopped being something to argue and became
+   something to read. And the pin failing on its first run: a 1-ulp miss is
+   nothing on screen, but it was the oracle doing exactly its job against my
+   own overconfident probe, and that was the good moment of the session. This
+   reports conditions, not outcome.

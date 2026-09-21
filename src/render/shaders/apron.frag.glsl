@@ -103,10 +103,16 @@ void main() {
 
   // M4 playtest — fade toward the mist the camera would see behind this
   // fragment: project the view ray down to the mist plane and sample the
-  // shared fogColorAt there. The ray always points downward at our locked
-  // 45° pitch; the min() guard keeps a degenerate near-horizontal ray
-  // from exploding the projection.
-  vec3 rayDir = normalize(vWorldPos - cameraPosition);
+  // shared fogColorAt there. The ray always points downward (the camera is
+  // pitched 45° for players, never level); the min() guard keeps a
+  // degenerate near-horizontal ray from exploding the projection.
+  // 105d — under an orthographic camera the view rays are PARALLEL (the
+  // camera's forward axis, row 2 of the view rotation); a ray from
+  // cameraPosition would fan out and paint a ghost ring of mist. three.js
+  // injects `isOrthographic`; the perspective branch is the pre-105d line.
+  vec3 rayDir = isOrthographic
+    ? -vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
+    : normalize(vWorldPos - cameraPosition);
   float toMist = (uMistY - vWorldPos.y) / min(rayDir.y, -0.05);
   vec3 fogTarget = fogColorAt(vWorldPos.xz + rayDir.xz * toMist, uTime, uFogColor);
 

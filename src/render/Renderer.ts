@@ -7,13 +7,17 @@ import { COLORS } from './palette';
 import { createBloomMixPass, createBloomPass, createSatClampedPass } from './PostProcess';
 import { BLOOM_LAYER } from './SpriteRenderer';
 import { pickInstanceAtNdc, type PickCandidate } from './pick';
+import {
+  DEFAULT_CAMERA_VIEW,
+  applyCameraFit,
+  fitCameraToBox,
+  type CameraView,
+  type FitCamera,
+} from './cameraFit';
 import { GRID_SIZE } from '../config';
 import type { GridCoord } from '../core/types';
 
-export type { PickCandidate };
-
-/** Camera pitch from horizontal. 45° down matches the diorama framing. */
-const CAMERA_PITCH_RAD = Math.PI / 4;
+export type { PickCandidate, CameraView };
 
 /**
  * X/Z padding around the arena AABB and Y headroom for the sprite layer.
@@ -73,14 +77,31 @@ const PAN_KEY_CODES = new Set<string>([
  * loop. The scene, camera, and clear color live here so gameplay code never
  * reaches into three.js directly.
  *
- * Camera is locked to a fixed pitch (CAMERA_PITCH_RAD). The visible-arena
- * size is set per-encounter via `fitToBoard(gridW, gridH)` (D3); pre-D3
- * the size was a fixed `GRID_SIZE × GRID_SIZE` constant.
+ * The camera's VIEW (projection · FOV · pitch · yaw) is `DEFAULT_CAMERA_VIEW`
+ * — the 45° diorama framing at a 50° lens — for every player; 105d made it
+ * state so Round 7.5's projection spike can dial it from the dev-only board
+ * explorer (`setCameraView`), and `cameraFit.test.ts` pins the default
+ * bit-identical to the constants it replaced. The visible-arena size is set
+ * per-encounter via `fitToBoard(gridW, gridH)` (D3); pre-D3 the size was a
+ * fixed `GRID_SIZE × GRID_SIZE` constant.
  */
 export class Renderer {
   readonly scene: THREE.Scene;
-  readonly camera: THREE.PerspectiveCamera;
   readonly webgl: THREE.WebGLRenderer;
+
+  /** 105d — BOTH cameras live for the Renderer's whole life and the view picks
+   *  one, so a projection swap is a re-point, never a rebuild. ⚠ Read
+   *  `renderer.camera` per use; a holder that CAPTURES it goes stale on a swap
+   *  (the two RenderPasses below are re-pointed here; `UnitOverlayLayer`
+   *  captures at construction — only the dev explorer swaps, and it re-points
+   *  that one itself. If a swap ever ships, give the overlay a getter). */
+  private readonly perspectiveCamera: THREE.PerspectiveCamera;
+  private readonly orthographicCamera: THREE.OrthographicCamera;
+  private activeCamera: FitCamera;
+  private view: CameraView = DEFAULT_CAMERA_VIEW;
+  /** Canvas w / h, kept here because an orthographic camera has no `.aspect`. */
+  private aspect = 1;
+  private readonly renderPasses: RenderPass[] = [];
 
   // B1.1 selective bloom: two composers driven off the same scene+camera
   // via layer membership. `bloomComposer` renders only BLOOM_LAYER (the
@@ -155,7 +176,9 @@ export class Renderer {
     this.sceneBackground = new THREE.Color(COLORS.TERMINAL_BLACK);
     this.scene.background = this.sceneBackground;
 
-    this.camera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+    this.perspectiveCamera = new THREE.PerspectiveCamera(DEFAULT_CAMERA_VIEW.fovDeg, 1, 0.1, 1000);
+    this.orthographicCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+    this.activeCamera = this.perspectiveCamera;
     // Position + lookAt are set by fitCamera() in handleResize once aspect is
     // known; no placeholder needed because handleResize runs before start().
 
@@ -173,9 +196,14 @@ export class Renderer {
     // only the sprite bloomMesh contribution + its blurred halo.
     this.bloomComposer = new EffectComposer(this.webgl);
     this.bloomComposer.renderToScreen = false;
-    this.bloomComposer.addPass(
-      new RenderPass(this.scene, this.camera, null, new THREE.Color(0x000000), 0),
+    const bloomRenderPass = new RenderPass(
+      this.scene,
+      this.activeCamera,
+      null,
+      new THREE.Color(0x000000),
+      0,
     );
+    this.bloomComposer.addPass(bloomRenderPass);
     this.bloomComposer.addPass(createBloomPass(new THREE.Vector2(1, 1)));
 
     // ---- mainComposer: layer-0 only, mixes bloom in, output ----
@@ -190,7 +218,9 @@ export class Renderer {
     // post-process pass.
     this.bloomMixPass = createBloomMixPass();
     this.mainComposer = new EffectComposer(this.webgl);
-    this.mainComposer.addPass(new RenderPass(this.scene, this.camera));
+    const mainRenderPass = new RenderPass(this.scene, this.activeCamera);
+    this.mainComposer.addPass(mainRenderPass);
+    this.renderPasses.push(bloomRenderPass, mainRenderPass);
     this.mainComposer.addPass(createSatClampedPass());
     this.mainComposer.addPass(this.bloomMixPass);
     // OutputPass converts the composer's internal linear-sRGB framebuffer to
@@ -235,6 +265,35 @@ export class Renderer {
       this.clearCameraShake();
     };
     loop();
+  }
+
+  /** The camera the frame is drawn with. Read it per use — see the ⚠ on the
+   *  two camera fields. */
+  get camera(): FitCamera {
+    return this.activeCamera;
+  }
+
+  getCameraView(): CameraView {
+    return this.view;
+  }
+
+  /**
+   * 105d — re-point the board's projection: any subset of projection / FOV /
+   * pitch / yaw, re-fitted at once. Its ONE caller is the dev-only board
+   * explorer (src/dev/boardPanel — Round 7.5's projection spike); nothing a
+   * player can reach calls it, so the shipped camera is `DEFAULT_CAMERA_VIEW`.
+   * The caller owns the dial ranges — pitch must stay clear of 0° and 90°
+   * (the fit divides by tan θ under ortho, and `lookAt` degenerates overhead).
+   */
+  setCameraView(change: Partial<CameraView>): void {
+    this.view = { ...this.view, ...change };
+    const next =
+      this.view.projection === 'orthographic' ? this.orthographicCamera : this.perspectiveCamera;
+    if (next !== this.activeCamera) {
+      this.activeCamera = next;
+      for (const pass of this.renderPasses) pass.camera = next;
+    }
+    this.fitCamera();
   }
 
   /**
@@ -383,97 +442,36 @@ export class Renderer {
     this.webgl.setSize(w, h, false);
     this.bloomComposer.setSize(w, h);
     this.mainComposer.setSize(w, h);
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    this.aspect = w / h;
     this.fitCamera();
   };
 
   /**
    * Position the camera so the active frame (whole arena in fit mode;
    * fixed window in scroll mode) sits inside the viewport at the current
-   * pitch and aspect.
+   * view and aspect.
    *
-   * Shared math lives in `computeCameraDistance`. The two modes differ
-   * only in (a) the half-extents that drive the AABB, and (b) the look-at
-   * point — fit always points at world origin; scroll points at
-   * `(cameraTargetX, 0, cameraTargetZ)` so panning translates the frame.
+   * The math is `fitCameraToBox` (cameraFit.ts — ONE fit for both modes and
+   * both projections, gotcha #52) and `applyCameraFit` is where it becomes a
+   * camera. The two modes differ only in (a) the half-extents of the box, and
+   * (b) the look-at point — fit always points at world origin; scroll points
+   * at `(cameraTargetX, 0, cameraTargetZ)` so panning translates the frame.
    */
   private fitCamera(): void {
+    let hx = SCROLL_WINDOW_TILES / 2;
+    let hz = SCROLL_WINDOW_TILES / 2;
+    let targetX = 0;
+    let targetZ = 0;
     if (this.cameraMode === 'fit') {
-      this.fitCameraFit();
+      hx = this.boardW / 2 + XZ_PADDING;
+      hz = this.boardH / 2 + XZ_PADDING;
     } else {
-      this.fitCameraScroll();
+      this.clampCameraTarget();
+      targetX = this.cameraTargetX;
+      targetZ = this.cameraTargetZ;
     }
-  }
-
-  private fitCameraFit(): void {
-    const sinP = Math.sin(CAMERA_PITCH_RAD);
-    const cosP = Math.cos(CAMERA_PITCH_RAD);
-    const hx = this.boardW / 2 + XZ_PADDING;
-    const hz = this.boardH / 2 + XZ_PADDING;
-    const D = this.computeCameraDistance(hx, Y_HALF_EXTENT, hz);
-    this.camera.position.set(0, D * sinP, D * cosP);
-    this.camera.lookAt(0, 0, 0);
-  }
-
-  private fitCameraScroll(): void {
-    this.clampCameraTarget();
-    const sinP = Math.sin(CAMERA_PITCH_RAD);
-    const cosP = Math.cos(CAMERA_PITCH_RAD);
-    const half = SCROLL_WINDOW_TILES / 2;
-    const D = this.computeCameraDistance(half, Y_HALF_EXTENT, half);
-    this.camera.position.set(
-      this.cameraTargetX,
-      D * sinP,
-      this.cameraTargetZ + D * cosP,
-    );
-    this.camera.lookAt(this.cameraTargetX, 0, this.cameraTargetZ);
-  }
-
-  /**
-   * Min camera distance D such that the box of half-extents (hx, hy, hz)
-   * centered at the camera's look-at point fits inside both FOV cones.
-   *
-   * For each of the 8 corners, compute the minimum D such that the
-   * corner sits inside both the vertical and horizontal FOV cones; take
-   * the max across corners and both axes, then apply FIT_MARGIN.
-   *
-   * Derivation: camera basis at pitch θ is
-   *   forward = (0, -sinθ, -cosθ),  up = (0, cosθ, -sinθ),  right = (1, 0, 0)
-   * For a corner P relative to camera at (0, D·sinθ, D·cosθ):
-   *   depth     = D - py·sinθ - pz·cosθ
-   *   up_coord  = py·cosθ - pz·sinθ           (D cancels)
-   *   right_coord = px                        (D cancels)
-   * Fit: |up_coord| ≤ depth·tan(fovV/2) and same for horizontal. Solving
-   * yields D ≥ py·sinθ + pz·cosθ + |coord|/tan(fov/2). Translation of
-   * the look-at point doesn't change this — both camera and box shift
-   * by the same amount.
-   */
-  private computeCameraDistance(hx: number, hy: number, hz: number): number {
-    const fovV = (this.camera.fov * Math.PI) / 180;
-    const fovH = 2 * Math.atan(Math.tan(fovV / 2) * this.camera.aspect);
-    const sinP = Math.sin(CAMERA_PITCH_RAD);
-    const cosP = Math.cos(CAMERA_PITCH_RAD);
-    const tanV = Math.tan(fovV / 2);
-    const tanH = Math.tan(fovH / 2);
-
-    let maxD = 0;
-    for (const sx of [-1, 1] as const) {
-      for (const sy of [-1, 1] as const) {
-        for (const sz of [-1, 1] as const) {
-          const px = sx * hx;
-          const py = sy * hy;
-          const pz = sz * hz;
-          const lateral = py * sinP + pz * cosP;
-          const upC = py * cosP - pz * sinP;
-          const fromHeight = lateral + Math.abs(upC) / tanV;
-          const fromWidth = lateral + Math.abs(px) / tanH;
-          if (fromHeight > maxD) maxD = fromHeight;
-          if (fromWidth > maxD) maxD = fromWidth;
-        }
-      }
-    }
-    return maxD * FIT_MARGIN;
+    const fit = fitCameraToBox(this.view, this.aspect, hx, Y_HALF_EXTENT, hz, FIT_MARGIN);
+    applyCameraFit(this.activeCamera, this.view, fit, this.aspect, targetX, targetZ);
   }
 
   /**
@@ -497,8 +495,11 @@ export class Renderer {
    * PAN_SPEED_TILES_PER_SEC scaled by dt. Cheap to call every frame;
    * skips the matrix update + clamp when no input is active.
    *
-   * Screen-up at the locked pitch maps to world -Z (the far edge of the
-   * arena), so W / mouse-near-top → -Z, S / mouse-near-bottom → +Z.
+   * Screen-up at yaw 0 maps to world -Z (the far edge of the arena), so
+   * W / mouse-near-top → -Z, S / mouse-near-bottom → +Z. ⚠ The pan and the
+   * clamp are WORLD-axis: under a dialled yaw (105d, dev-only) W no longer
+   * pans screen-up — a known artefact of the spike, not fixed until a yaw
+   * ships.
    */
   private updateScrollFromInput(dt: number): void {
     let dx = 0;

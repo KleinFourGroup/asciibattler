@@ -570,3 +570,103 @@ lift` / `flyer shadow` dials · where — Ctrl+Alt+P, or paste
 `?bp=board-open15_pose-clump` · wrong looks like — a fixture that opens a
 different board on reload, a `FIXTURE … FAILED` line, a parked board that
 starts on its own.
+
+### 105d — the projection dials (2026-09-21) — ◐ BUILT, UNREAD (a `batch` read → 105e)
+
+Session cd47b62d. THE PHASE'S ONE PRODUCTION SEAM. New: `src/render/cameraFit.ts`
+(pure) + its test · `tests/board/cameraFit.test.ts`. Changed: `Renderer.ts`
+(two cameras, the view as state, `setCameraView`, `camera` a getter; the
+`fitCameraFit` / `fitCameraScroll` / `computeCameraDistance` trio folded into
+`fitCamera()` + the pure fit) · `apron.frag.glsl` (the ortho ray) · the panel
+(`state.ts` +4 dials `proj` · `fov` · `pitch` · `yaw`, `seams.ts`
+`applyCameraView`, `index.ts`). Tests 3050 → 3065; no smoke (predicted —
+nothing under the hook's paths), no bump.
+
+**Step zero was three probes; one of them was wrong, and the oracle said so.**
+`RenderPass.camera` is a plain mutable field · three injects `isOrthographic`
+into a `ShaderMaterial`'s fragment prefix and the apron is one · and a quick
+node probe said the generalized fit could be BIT-identical to today's
+(`45·π/180 === π/4`; `tan(atan(t·aspect)) === t·aspect` on five aspects). The
+pin then ran eleven aspects and failed on one: at 1919 / 947 the round trip
+through `atan` is 1 ulp off `tanV · aspect`. "Unchanged at the default" means
+the bits, so the fit keeps HEAD's roundabout `tanH`, with a comment naming the
+aspect. A five-sample "always" was a guess; the first run of the pin is also
+its failing control.
+
+**The decisions.**
+
+- **The fit is a pure module, not a Renderer method** — `Renderer` needs WebGL
+  and cannot be built headless, so a fit that lives inside it can only be
+  pinned by restating it. `fitCameraToBox` (the math) + `applyCameraFit` (the
+  one place a fit becomes a camera) are both exercised by the pin; `Renderer`
+  keeps ~15 lines of box-and-target selection. Gotcha #52's "one function"
+  holds harder than before: fit mode, scroll mode AND the projection are one
+  loop.
+- **Both cameras alive; `camera` is a getter.** Every per-use reader
+  (`BattleRenderer`'s lifts, the depth sort, the picks, shake, the panel's
+  posed set) follows a swap for free. The two CAPTURES are re-pointed: the
+  RenderPasses inside `setCameraView`; `UnitOverlayLayer` from `src/dev`
+  (`applyCameraView`), not by a production getter — only the panel swaps.
+  **Landing note** (also at the seam, on the Renderer's camera fields): if a
+  swap ships, the overlay reads `renderer.camera` per use and the cast goes.
+- **Ortho stands further back than the picture needs.** An orthographic
+  frustum is a slab that starts AT the camera plane; at a shallow pitch the
+  ground at the bottom of the screen is `halfHeight / tan θ` nearer than the
+  look-at point and would fall behind it. The distance is the 50° fit's plus
+  exactly that — pinned by a property (the near plane's bottom-centre
+  unprojects above every glyph top) with a control (strip the stand-off at 15°
+  and it does not).
+- **Dial ranges:** FOV 10–70 · pitch 20–80 (clear of the fit's two
+  singularities, pinned) · yaw −90…90 by 5. A bookmarked projection is applied
+  at attach, before the first battle mounts; an untouched panel never calls
+  the seam at all.
+
+**Verified, by which instrument:**
+
+| claim | instrument | result |
+|---|---|---|
+| the default fit is HEAD's, bit for bit | `cameraFit.test.ts` vs `computeCameraDistance` copied verbatim from `fa4f51b`, `toBe`, 7 boxes × 11 aspects; the applied camera's position / quaternion / projection vs HEAD's restated | 77 / 77 · equal |
+| … the control | one degree of pitch / FOV / yaw; and the pin's own first run (the 1-ulp `tanH`) | 0 of 77 equal, ×3 · failed as it should |
+| … and LIVE, through the real Renderer | BEFORE captured at `fa4f51b` in the pane, before any edit: 6 boards × fit + scroll × 3 viewports (1280×720 · 1024×768 · 800×1000), 39 numbers a case (position · quaternion · projection · matrixWorld) → AFTER | 3 × 468 serialize identically. ⚠ JSON drops the sign of zero: two `matrixWorld` entries are `−0` now and the BEFORE cannot say — they are composed from a position and a quaternion that did match |
+| … the live control + the way back | pitch 46 → the camera moves; dial back to the default on `open15` → vs the HEAD capture | moved · 39 / 39 |
+| the box fills the frame under the whole cross | three's own `project()`: persp 50 / 20 / 10 + ortho × pitch 25–80 × yaw 0 / 45 / −30 / 90 × 7 boxes × 3 aspects at margin 1 — no corner outside, the binding axis at 1 | 1 344 cases; a fit made for another yaw fails |
+| the dialled camera is the one 105a measured | `tests/board/cameraFit.test.ts`: the production fit vs `geometry.ts`'s (independent basis, written a step earlier) — same world point ⇒ same NDC, 27 views × boards × viewports | < 1e-9; one degree apart differs |
+| a bookmark boots into its projection | `?bp=board-open15_proj-ortho_pitch-60_yaw-45…` → `getCameraView()`, `isOrthographicCamera`, both `RenderPass.camera === renderer.camera`, `overlays.camera === renderer.camera`, the fixture line | all true · `ok` |
+| overlays follow a swap | per unit (`overlayHandles` ↔ `handles`, exact pairing): the overlay's CSS x vs its sprite's projected x, a screenshot forcing a real frame first | ortho/60/45 and persp-20/60/−30: worst 0.05 px, 11 / 11 above the ground point. CONTROL — the overlay left on the dead camera: 225 px |
+| the ortho apron branch compiles | the console after ortho frames | no new error (the seven logged carry earlier `main.ts?t=` stamps — pages Vite reloaded between sequential edits) |
+| nothing of the panel ships; the seam does | build + grep: eight panel strings · `setCameraView` · `isOrthographic` | 0 × 8 · 1 · 2 |
+
+**Two wrong turns in the live probe, both the instrument's.** (1) The first
+overlay check matched each overlay to the NEAREST sprite by x and read 381 px
+under TODAY'S camera — the control-probe of the old path is what showed it was
+the probe: in the hidden pane no frame runs between a dial change and the
+read, so the overlays were still where the previous view put them (a
+screenshot forces the frame). (2) With frames forced it still read 23.58 px,
+and 23.58 = one tile × sin 45° at that zoom, so a tidy story about R11 ("the
+footprint anchor assumes no yaw") wrote itself — and was false: exact pairing
+through `overlayHandles` reads 0.05. Nearest-neighbour matching on a board of
+49 sprites and 15 overlays is not an instrument.
+
+**NOT verified — the user's, at 105e:** every LOOK — whether the apron's mist
+reads right under ortho (the branch compiles and is inert under perspective;
+the ghost ring it prevents was never seen, so its absence proves nothing) ·
+the backdrop's edge at a long lens or a shallow pitch ("no seam EXPECTED", per
+the audit — read, not seen) · Firefox · motion under a dialled view.
+
+**Known artefacts of a dialled view (for 105e's list on the panel):** scroll
+mode's pan + clamp are WORLD-axis, so under yaw W no longer pans screen-up ·
+event-time FX endpoints (`cellVisualCenter`, the miss splat, the sparkle) are
+lifted along camera-up WHEN PLACED, so one in flight across a dial change
+finishes on the old up-vector; the per-frame followers (overlays, the
+objective marker, the posed set) re-lift every frame · `Y_HALF_EXTENT = 1`
+does not cover a scaled glyph's top (105e's dial) · R11's footprint anchor is
+still written against "the camera never rotates" — untested here (no N×N unit
+on `open15`).
+
+**The batch read (→ 105e):** what changed — the `projection` / `FOV` /
+`pitch` / `yaw` dials · where — Ctrl+Alt+P on any `board-` fixture, or paste
+`?bp=board-open15_proj-ortho_yaw-45_pose-clump` · wrong looks like — the board
+cut off or floating small at some dial (the fit), HP bars left behind when the
+projection flips (the stale camera), a ring or fan in the mist around the
+board under ortho (the apron ray), and ANYTHING different with the panel
+untouched.

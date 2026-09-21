@@ -71,7 +71,7 @@ The cut (user-signed 2026-09-21; each step declares its READ):
   24×24 by seed hunt · one seeded LIVE battle. **Read: `batch`** → 105e —
   each fixture loads from the panel; wrong looks like a fixture that opens
   a different board on reload.
-- [ ] **105d — the projection dials.** Both cameras alive and re-pointed ·
+- [ ] ◐ **105d — the projection dials.** BUILT 2026-09-21, UNREAD (the `batch` read lands at 105e) — the pure fit `src/render/cameraFit.ts` is bit-identical to HEAD's at the default (headless + a live before/after), both controls fail; the overlay's captured camera is re-pointed from `src/dev`; WORKLOG §105d. Both cameras alive and re-pointed ·
   pitch / yaw / FOV as state · ONE generalized fit with an ortho branch ·
   the apron ortho ray. Oracle: at yaw 0 / FOV 50 / pitch 45 the new fit
   equals today's across boards × aspects, with a failing control. **Read:

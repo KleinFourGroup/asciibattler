@@ -53,6 +53,44 @@ export const DIALS = {
     def: 'off',
     hint: 'a fixed battle, straight from boot — changing it RELOADS and replaces your run dials (seed, layout, roster…)',
   },
+  /** 105d — THE PROJECTION, through the phase's one production seam
+   *  (`Renderer.setCameraView`). The defaults ARE `DEFAULT_CAMERA_VIEW`
+   *  (state.test.ts pins the four against it), so an untouched panel never
+   *  calls the seam with anything but today's camera. */
+  proj: {
+    kind: 'enum',
+    label: 'projection',
+    options: ['persp', 'ortho'],
+    def: 'persp',
+    hint: 'persp = a lens (see FOV) · ortho = parallel rays: no lean, no far-row shrink',
+  },
+  fov: {
+    kind: 'range',
+    label: 'FOV',
+    min: 10,
+    max: 70,
+    step: 1,
+    def: 50,
+    hint: 'vertical degrees, perspective only — today 50; a long lens is 10-25 (the camera backs off to keep the fit)',
+  },
+  pitch: {
+    kind: 'range',
+    label: 'pitch',
+    min: 20,
+    max: 80,
+    step: 1,
+    def: 45,
+    hint: 'degrees down from level — today 45; steeper = more map-like, shallower = rows hide rows',
+  },
+  yaw: {
+    kind: 'range',
+    label: 'yaw',
+    min: -90,
+    max: 90,
+    step: 5,
+    def: 0,
+    hint: 'degrees about the vertical — 45 = the diamond board',
+  },
   /** The stand line: today's per-class rule (letterforms on the terminal-cell
    *  line, blocks on the quad bottom) vs ONE rule — the quad bottom for all.
    *  The H1 read: can the classifier / descender room / baseline go? */
@@ -212,6 +250,25 @@ export function spliceBookmark(search: string, encoded: string): string {
   if (encoded !== '') kept.push(`${BOARD_PANEL_PARAM}=${encoded}`);
   return kept.length === 0 ? '' : `?${kept.join('&')}`;
 }
+
+/** The four projection dials as the Renderer's `CameraView` (105d). Structural
+ *  on purpose — state.ts stays free of render imports; index.ts hands it to
+ *  `Renderer.setCameraView`, where tsc checks the shape. */
+export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | 'yaw'>): {
+  projection: 'perspective' | 'orthographic';
+  fovDeg: number;
+  pitchDeg: number;
+  yawDeg: number;
+} {
+  return {
+    projection: state.proj === 'ortho' ? 'orthographic' : 'perspective',
+    fovDeg: state.fov,
+    pitchDeg: state.pitch,
+    yawDeg: state.yaw,
+  };
+}
+
+export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
 /**
  * THE bar-line rule, in one place: the camera-up lift (world units at size 1;

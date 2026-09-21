@@ -77,6 +77,31 @@ export function seamMoved(what: string): void {
   );
 }
 
+/**
+ * 105d — dial the projection through the phase's ONE production seam
+ * (`Renderer.setCameraView`, typed — tsc checks this one), then re-point the
+ * one holder that CAPTURED the camera: `UnitOverlayLayer` takes it at
+ * construction (Game.ts), so after a perspective ⇄ ortho swap its bars would
+ * project through the dead camera. Re-pointed from here rather than by a
+ * production getter: only this panel ever swaps. Landing note — if a swap
+ * ships (§106's call), the overlay reads `renderer.camera` per use instead and
+ * this cast goes. Returns false when the overlay seam has moved.
+ */
+export function applyCameraView(
+  game: Game,
+  view: Parameters<Renderer['setCameraView']>[0],
+): boolean {
+  const { renderer, overlays } = internalsOf(game);
+  renderer.setCameraView(view);
+  const holder = overlays as unknown as { camera?: THREE.Camera };
+  if (!(holder.camera && 'isCamera' in holder.camera)) {
+    seamMoved('UnitOverlayLayer.camera');
+    return false;
+  }
+  holder.camera = renderer.camera;
+  return true;
+}
+
 interface SpriteInternals {
   readonly aGlyphUV: THREE.InstancedBufferAttribute;
   readonly aAnchor: THREE.InstancedBufferAttribute;

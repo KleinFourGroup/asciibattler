@@ -21,10 +21,12 @@ import { fixtureSearch } from './fixtures';
 import { GroundCues } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
-import { installSeams, internalsOf, liveBattleOf, type LiveBattle } from './seams';
+import { applyCameraView, installSeams, internalsOf, liveBattleOf, type LiveBattle } from './seams';
 import {
   BOARD_PANEL_PARAM,
   DIALS,
+  VIEW_DIALS,
+  cameraViewOf,
   defaultDials,
   encodeDials,
   spliceBookmark,
@@ -99,6 +101,12 @@ export function attachBoardPanel(game: Game): BoardPanel {
 
   const seams = installSeams(game, () => dials, onFrame);
 
+  // 105d — a bookmarked projection is live before the first battle mounts. An
+  // untouched panel never calls the seam: the Renderer boots at the default.
+  if (VIEW_DIALS.some((key) => dials[key] !== DIALS[key].def)) {
+    applyCameraView(game, cameraViewOf(dials));
+  }
+
   const bookmarkedSearch = (): string => spliceBookmark(location.search, encodeDials(dials));
 
   const writeUrl = (): void => {
@@ -119,6 +127,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
 
   /** What a dial change must DO beyond being read next frame. */
   const apply = (key: DialKey): void => {
+    if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'anchor') lastRestamped = seams.restampAnchors();
     if (key === 'pose') {
       const battle = liveBattleOf(game);
@@ -151,6 +160,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       // it would reload), and so does where the panel starts.
       const { hide, board } = dials;
       dials = { ...defaultDials(), hide, board };
+      apply('proj');
       apply('anchor');
       apply('pose');
       writeUrl();

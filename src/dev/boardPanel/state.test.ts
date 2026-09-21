@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   DIALS,
   DIAL_KEYS,
+  VIEW_DIALS,
   barLift,
+  cameraViewOf,
   coerceDial,
   defaultDials,
   encodeDials,
@@ -12,6 +14,34 @@ import {
 } from './state';
 import { baseAnchorYFor } from '../../render/glyphs';
 import census from '../../../tests/board/inkCensus.json';
+import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
+
+describe('105d — the projection dials', () => {
+  it('the four defaults ARE the Renderer’s default view — an untouched panel is today’s camera', () => {
+    expect(cameraViewOf(defaultDials())).toEqual(DEFAULT_CAMERA_VIEW);
+    // …and the view is exactly those four dials: a fifth field on CameraView
+    // must pick a dial (or a reason) here.
+    expect(Object.keys(DEFAULT_CAMERA_VIEW).length).toBe(VIEW_DIALS.length);
+  });
+
+  it('a projection bookmark round-trips, negative yaw included', () => {
+    const state = parseDials('proj-ortho_fov-20_pitch-60_yaw--45');
+    expect(cameraViewOf(state)).toEqual({
+      projection: 'orthographic',
+      fovDeg: 20,
+      pitchDeg: 60,
+      yawDeg: -45,
+    });
+    expect(encodeDials(state)).toBe('proj-ortho_fov-20_pitch-60_yaw--45');
+  });
+
+  it('the pitch dial cannot reach the fit’s two singularities (level, overhead)', () => {
+    expect(DIALS.pitch.min).toBeGreaterThan(0);
+    expect(DIALS.pitch.max).toBeLessThan(90);
+    expect(coerceDial('pitch', '90')).toBe(DIALS.pitch.max);
+    expect(coerceDial('pitch', '-5')).toBe(DIALS.pitch.min);
+  });
+});
 
 describe('105b — the board explorer dial table', () => {
   it('the default state is NO bookmark, and no bookmark is the default state', () => {

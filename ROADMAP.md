@@ -65,7 +65,7 @@ The cut (user-signed 2026-09-21; each step declares its READ):
   dials · where: Ctrl+Alt+P in a battle, also under Ctrl+Alt+G · wrong
   looks like: the chord is Firefox's, a dial does nothing, the cue hides
   the tile.
-- [ ] **105c — the fixtures.** A DEV straight-to-battle loader, countdown
+- [ ] ◐ **105c — the fixtures.** BUILT 2026-09-21, UNREAD (the `batch` read lands at 105e) — `bp=board-<id>` is the one source of the board, the poses are 105a's cell for cell; main.ts's panel import went DYNAMIC (the fixture table had shipped ~200 B); WORKLOG §105c. A DEV straight-to-battle loader, countdown
   parked: the clump · screen-edge units · the fake flyer (camera-up lift +
   shadow, a north neighbour) · `rubbleQuarry` · `endlessCorridors` · a
   24×24 by seed hunt · one seeded LIVE battle. **Read: `batch`** → 105e —

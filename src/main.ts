@@ -15,7 +15,7 @@ import type { Team } from './sim/Unit';
 import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
 import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
 import { attachDevKeys } from './dev/devKeys';
-import { attachBoardPanel, type BoardPanel } from './dev/boardPanel';
+import type { BoardPanel } from './dev/boardPanel';
 import { installMotionGate } from './render/motion';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
@@ -34,6 +34,17 @@ if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
 // Top-level await: Vite + ESM + modern browsers handle it; the module just
 // pauses until the font has parsed and the atlas is rasterized.
 const fontAtlas = await FontAtlas.create();
+
+// 105c — the board explorer loads by a DEV-gated DYNAMIC import: `DEV` is a
+// build-time constant, so in a production build this branch — and with it the
+// whole src/dev/boardPanel module graph — is gone. (A static import relied on
+// the tree-shaker proving the module's top level pure; 105c's fixture table,
+// template literals and spreads, left ~200 bytes of it in `dist/`.)
+const boardPanelModule = import.meta.env.DEV ? await import('./dev/boardPanel') : null;
+// A fixture bookmark (`?bp=board-…`) stands for a set of run dials, and Game
+// parses the run dials in its constructor — so its run pairs are written into
+// the URL first (src/dev/boardPanel/boot.ts).
+if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
 
 const game = new Game(canvas, fontAtlas, uiMount);
 game.start();
@@ -75,8 +86,10 @@ if (import.meta.env.DEV) {
   // 105b — the board explorer (Ctrl+Alt+P; Round 7.5's projection spike). Its
   // seams install HERE, at boot, so a `?bp=` bookmark is live before the first
   // battle stamps a sprite. From the console: __game.boardPanel.set('cue', 'outline').
-  handle.__game.boardPanel = attachBoardPanel(game);
-  attachDevKeys(game, handle.__game.boardPanel);
+  if (boardPanelModule) {
+    handle.__game.boardPanel = boardPanelModule.attachBoardPanel(game);
+    attachDevKeys(game, handle.__game.boardPanel);
+  }
   // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
   // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
   // status-on-hit applier ships. From the browser console:

@@ -70,9 +70,9 @@ export function liveBattleOf(game: Game): LiveBattle | null {
   return { battleRenderer, world, handles };
 }
 
-function seamMoved(what: string): void {
+export function seamMoved(what: string): void {
   console.error(
-    `[board-panel] seam moved: ${what} is not where 105b found it — the dial that rides it is INERT. ` +
+    `[board-panel] seam moved: ${what} is not where §105 found it — whatever rides it is INERT. ` +
       `Re-point src/dev/boardPanel/seams.ts.`,
   );
 }

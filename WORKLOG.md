@@ -456,3 +456,117 @@ board; a hillier one hides more. `?bp=…cueDepth-world` parsed at boot.
 Tests 3028 (the table-driven round-trip covers the new row), tsc clean.
 **NOT verified:** the LOOK of `overlay` (does x-ray over a tall near tile
 misplace "which tile"?) — a `batch` read, at 105e with the cross.
+
+### 105c — the fixtures (2026-09-21) — ◐ BUILT, UNREAD (a `batch` read → 105e)
+
+Session 3f3a4ad2. `src/dev/boardPanel/` gains `fixtures.ts` (pure) ·
+`posed.ts` (supersedes `posedRow.ts`, deleted) · `boot.ts` + their test;
+`state.ts` +4 dials (`board` · `pose`, replacing the `row` bool · `lift` ·
+`shadow`); `groundCue.ts` + the shadow disc; `main.ts` — the panel's import
+became DYNAMIC (below). Tests 3028 → 3050 (the panel's 11 → 33); no smoke
+(predicted — nothing under the hook's paths), no bump.
+
+**Step zero was a probe, and it held the card** (a scratch `.ts` driving the
+real `Run` as `Game.createRun` does): root `enterNode` + `advanceTurn` reaches
+`battle` on every candidate URL · the same URL twice gives an equal
+encounter · a seed hunt over 1..400 found 30 procedural 24×24s (seed 10 the
+first). One thing no audit had named: **the enemy budget scales with the
+roster** (8 enemies vs 5 on the same seed), so a fixture pins `roster=` too.
+
+**The decisions.**
+
+- **Posed things stay RENDER-ONLY** (the charter's word), generalizing
+  105b's row instead of spawning sim units through `world.spawnUnit`. The
+  rejected path buys real click boxes and nothing pass one reads; it costs
+  HUD cards for every posed unit, a reach into the seeded fight the `live`
+  fixture must leave byte-alone, and `removeUnit` emits no event — the
+  renderer would keep the sprites. 105b's comment had PREDICTED "real parked
+  units"; the prediction is withdrawn, not the cut (the cut says "fixtures").
+- **`bp=board-<id>` is the ONE source of the board.** Game parses the run
+  dials inside its constructor, before the panel exists, so a fixture cannot
+  apply after boot. `applyBoardFixtureUrl` runs BEFORE `new Game` and rewrites
+  the run pairs from the table on every load (`replaceState`, no navigation);
+  the `board` dial is the one dial that RELOADS. What the cut calls wrong — a
+  fixture opening a different board on reload — is then structural: a
+  hand-typed `seed=` beside a `board-` is overwritten. The price, said on the
+  dial's hint: choosing a fixture replaces the user's own run dials.
+- **The loader checks itself.** After its two dispatches it compares the
+  opened layout + grid to the table's `expect` and prints `FIXTURE … FAILED`
+  in the panel on a mismatch — the cut's "wrong looks like", on the surface
+  where it would be seen.
+- **The poses are 105a's, cell for cell** — `clumpAt(centre | 1,1 | cx,h−2)`
+  with its nine glyphs in its order, the flyer `V` at the centre over three
+  `M`s in the row behind (105a's diagonal-neighbour fix) — pinned against
+  `tests/board/geometry.ts`, so the eye reads what the instrument measured.
+  A group lands on its ideal cells or on the nearest clear fit, and a moved
+  group SAYS "MOVED … not the measured spot" in the panel.
+- **The flyer rides `aboveAnchor`** (camera-up, per frame), so it stays
+  "straight up the screen" under whatever 105d dials in; its cue + shadow
+  stay on the tile. `lift` defaults to 105a's 1.0; `shadow` is a dial because
+  "the shadow alone carries which tile" IS the read.
+- `live` is not parked (the normal 5 s countdown); every other fixture is,
+  by the HANDOFF instance patch on `countdown.advance` — Space still fights,
+  so any parked board is one key from motion.
+
+**Two findings, both from running it rather than reading it.**
+
+1. **No 15×15 seed hosts every pose on its measured spot.** The first live
+   load of `open15` (seed 6, step zero's pick) printed `flyer … MOVED`. A
+   hunt over 1..600 (43 seeds roll 15×15, the real terrain + both teams
+   placed by `spawnEncounter`): none is clean — a team spawns where the
+   far-row clump goes. Seeds 91 and 437 move ONLY that clump (91: to 4,11).
+   → `open15` = seed 91, pinned headless ("every pose on its spot except the
+   far-row clump", with seed 6 as the failing control) — and the LIVE panel
+   printed the same one line, `far row @4,11`, from `BattleScene.mount`'s own
+   setup: two independent placements agreeing. So the far-row clump, the
+   worst one 105a measured, is read two rows nearer than it was measured;
+   the panel says so. On `corridors` the four corners are walls (edges move
+   one tile); on `big24` the near-corner and far-row clumps move.
+2. **⚠ The fixture table SHIPPED.** The nothing-ships grep (five panel
+   strings + a positive control) found `firstNode=elite&roster` in `dist/`:
+   `BOARD_IDS`, `RUN_BASE`, `POSE_IDS` and five `${…}` residues — main.ts
+   imported the panel STATICALLY, relying on the tree-shaker to prove the
+   module's top level pure, and template literals / spreads are not provably
+   so. ~200 bytes of inert strings, but the phase's scope guard is "nothing
+   ships". Fixed structurally, not by coaxing the shaker: a DEV-gated
+   `await import('./dev/boardPanel')` — `DEV` is a build constant, so the
+   branch and the module graph behind it are gone (the first fix left a dead
+   `null?.applyBoardFixtureUrl()`; an `if` removed it). Re-grepped: 0 on
+   eight strings, control 1. The other static DEV imports (`devKeys`, the
+   trace recorder) were audited the same way: clean. 105b's five-string check
+   passed because 105b's tables happened to be shakeable — the check was
+   right and the pattern was luck.
+
+**Verified, by which instrument** (the pane is Chromium, hidden, 1280×720):
+
+| claim | instrument | result |
+|---|---|---|
+| each fixture opens the board the table names | fixtures.test.ts through the real parser + `Run`; a wrong-seed control | 5 / 5; the control fails |
+| … and live | the loader's own check + `world.gridW/H` | quarry 14×12 · open15 15×15 · corridors 12×32 · big24 24×24 · live 12×12, all `ok` |
+| a bare `?bp=board-…` is enough; a hand-typed run dial cannot win | `location.search` after boot, from `?seed=123&layout=river&bp=board-open15` | rewritten to seed 91 / procedural |
+| a reload opens the same board | a hash over the grid, every tile kind and every unit's archetype : team : cell, kept in sessionStorage across `location.reload()` | equal (nav type `reload`); a different board hashes differently |
+| parked means parked | 600 × `activeScene.tick(1/60)` | remaining 5, tick 0, paused |
+| the control: `live` is not | 480 × the same | remaining 0, tick 59 |
+| the panel's own board switch | `boardPanel.set('board', …)` → the next page's state | lands on the fixture; `off` leaves `?bp=cue-outline` and the character select |
+| the flyer is at ground + camera-up × lift | the raw `aPosition` buffer vs the camera matrix's up column (NOT `aboveAnchor`) | 3e-8 at 1.0 · 7e-9 at 1.5 · nothing left at the old spot (0.5 away) |
+| the shadow dial | meshes at `renderOrder −2` | 1 → 0 |
+| the pose cells | fixtures.test.ts vs `tests/board/geometry.ts` | equal; blocked / off-board / doubled cells: none, on a ⅓-blocked board |
+| nothing ships | build + grep, eight strings, a positive control; the FIRST run is the failing control | 0 × 8, control 1 |
+
+**NOT verified — the user's, at 105e:** every LOOK (do the clumps read as
+clumps, does the flyer read as above its tile, is the shadow the right
+size / darkness) · motion on the `live` fixture · Firefox. A console error
+seen mid-session (`attachBoardPanel is not defined`) was the page Vite
+reloaded BETWEEN two main.ts edits — the live module's `?t=` differs and a
+fresh reload adds none.
+
+**Known limits:** a `row-1` bookmark from 105b silently loses its row (the
+bool became `pose-row`) · a posed sprite has no click box and live units walk
+through it · the pose rebuilds per battle, so after a fixture's first fight
+it re-lands on the next board · `probe().cues` now counts the shadow too.
+
+**The batch read (→ 105e):** what changed — the `board` / `pose` / `flyer
+lift` / `flyer shadow` dials · where — Ctrl+Alt+P, or paste
+`?bp=board-open15_pose-clump` · wrong looks like — a fixture that opens a
+different board on reload, a `FIXTURE … FAILED` line, a parked board that
+starts on its own.

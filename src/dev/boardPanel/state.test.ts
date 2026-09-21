@@ -51,24 +51,26 @@ describe('105b — the board explorer dial table', () => {
       bar: 'uniform',
       barY: 0.95,
       cue: 'outline',
-      row: true,
+      pose: 'row',
     };
-    expect(encodeDials(state)).toBe('anchor-bottom_bar-uniform_barY-0.95_cue-outline_row-1');
+    expect(encodeDials(state)).toBe('anchor-bottom_bar-uniform_barY-0.95_cue-outline_pose-row');
     expect(parseDials(encodeDials(state))).toEqual(state);
   });
 
   it('a stale bookmark degrades to defaults instead of throwing', () => {
-    const parsed = parseDials('anchor-sideways_nope-1_bar_barY-abc_cue-filled_-x_row-yes');
+    const parsed = parseDials(
+      'anchor-sideways_nope-1_bar_barY-abc_cue-filled_-x_pose-sideways_shadow-yes',
+    );
     expect(parsed).toEqual({ ...defaultDials(), cue: 'filled' });
   });
 
   it('splicing the bookmark leaves every other pair byte-for-byte', () => {
     const typed = '?seed=7&roster=mercenary,archer&layout=river';
     expect(spliceBookmark(typed, 'cue-outline')).toBe(`${typed}&bp=cue-outline`);
-    expect(spliceBookmark(`${typed}&bp=row-1`, 'cue-outline')).toBe(`${typed}&bp=cue-outline`);
-    expect(spliceBookmark('?bp=row-1&seed=7', '')).toBe('?seed=7');
-    expect(spliceBookmark('?bp=row-1', '')).toBe('');
-    expect(spliceBookmark('', 'row-1')).toBe('?bp=row-1');
+    expect(spliceBookmark(`${typed}&bp=pose-row`, 'cue-outline')).toBe(`${typed}&bp=cue-outline`);
+    expect(spliceBookmark('?bp=pose-row&seed=7', '')).toBe('?seed=7');
+    expect(spliceBookmark('?bp=pose-row', '')).toBe('');
+    expect(spliceBookmark('', 'pose-row')).toBe('?bp=pose-row');
     // a param that merely STARTS with the name is someone else's
     expect(spliceBookmark('?bpm=120', '')).toBe('?bpm=120');
   });

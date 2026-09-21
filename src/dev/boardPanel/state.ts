@@ -19,6 +19,8 @@
  * readable. Keys therefore never contain `_` or `-`.
  */
 
+import { BOARD_IDS, POSE_IDS } from './fixtures';
+
 export type DialSpec =
   | {
       readonly kind: 'enum';
@@ -39,6 +41,18 @@ export type DialSpec =
   | { readonly kind: 'bool'; readonly label: string; readonly def: boolean; readonly hint?: string };
 
 export const DIALS = {
+  /** 105c — WHICH BATTLE is on screen (fixtures.ts `BOARDS`). Unlike every
+   *  other dial this one cannot apply live: the run dials it stands for are
+   *  parsed inside `new Game`, so a change rewrites the URL and RELOADS, and
+   *  boot.ts re-derives the run pairs from the table on every load. `off` = the
+   *  panel leaves the run alone (your own `?seed=` / `?layout=` apply). */
+  board: {
+    kind: 'enum',
+    label: 'board',
+    options: ['off', ...BOARD_IDS],
+    def: 'off',
+    hint: 'a fixed battle, straight from boot — changing it RELOADS and replaces your run dials (seed, layout, roster…)',
+  },
   /** The stand line: today's per-class rule (letterforms on the terminal-cell
    *  line, blocks on the quad bottom) vs ONE rule — the quad bottom for all.
    *  The H1 read: can the classifier / descender room / baseline go? */
@@ -94,9 +108,28 @@ export const DIALS = {
     def: 'overlay',
     hint: 'overlay = always whole, drawn over terrain · world = taller near tiles occlude it',
   },
-  /** The posed row `g ▄ ╥ M a r` — render-only sprites with real overlay bars,
-   *  on the first clear floor row near the board centre. */
-  row: { kind: 'bool', label: 'posed row', def: false, hint: 'g ▄ ╥ M a r, with real bars' },
+  /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
+   *  with real overlay bars, on whatever board is up. `row` is 105b's
+   *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */
+  pose: {
+    kind: 'enum',
+    label: 'pose',
+    options: ['off', ...POSE_IDS],
+    def: 'off',
+    hint: 'row = g ▄ ╥ M a r · clump = centre + near corner + far row · edges = corners + mids · flyer = V over three far neighbours',
+  },
+  /** The fake flyer's camera-up lift, world units (105a measured 1.0: at yaw 45
+   *  / pitch 45 that lands it exactly ON its diagonal neighbour). */
+  lift: {
+    kind: 'range',
+    label: 'flyer lift',
+    min: 0,
+    max: 2,
+    step: 0.05,
+    def: 1,
+    hint: 'camera-up, in tiles — the flyer pose only',
+  },
+  shadow: { kind: 'bool', label: 'flyer shadow', def: true, hint: 'a dark disc on the tile the flyer is over' },
   /** Bookmark-only: the panel starts collapsed (the dials still apply). */
   hide: { kind: 'bool', label: 'start hidden', def: false },
 } as const satisfies Record<string, DialSpec>;

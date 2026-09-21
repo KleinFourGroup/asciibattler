@@ -56,6 +56,9 @@ const SHAPE: Record<CueSide, { segments: number; thetaStart: number }> = {
 const OUTLINE_STROKE = 0.16;
 /** Lift off the tile top — with polygonOffset, enough to never z-fight it. */
 const GROUND_EPSILON = 0.012;
+/** 105c — the flyer shadow: a disc a little smaller than the default cue. */
+const SHADOW_SIZE = 0.6;
+const SHADOW_OPACITY = 0.5;
 
 function buildGeometry(side: CueSide, filled: boolean): THREE.BufferGeometry {
   const { segments, thetaStart } = SHAPE[side];
@@ -124,6 +127,38 @@ export class GroundCues {
     material.depthTest = dials.cueDepth === 'world';
     mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z - (footprint - 1) / 2);
     mesh.scale.setScalar(dials.cueSize * footprint);
+  }
+
+  /**
+   * 105c — the fake flyer's SHADOW: a dark disc on the tile it is over, the
+   * one thing that says "which tile" once the glyph has left it. Same pool,
+   * same frame protocol and the same `cueDepth` treatment as the cues; drawn
+   * UNDER them (renderOrder −2) so a cue ring stays whole on top of it.
+   */
+  placeShadow(key: string, ground: THREE.Vector3, dials: DialState): void {
+    this.seen.add(key);
+    let mesh = this.meshes.get(key);
+    if (!mesh) {
+      mesh = new THREE.Mesh(
+        this.geometryFor('shadow', 'player', true),
+        new THREE.MeshBasicMaterial({
+          color: 0x000000,
+          opacity: SHADOW_OPACITY,
+          transparent: true,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+          side: THREE.DoubleSide,
+        }),
+      );
+      mesh.renderOrder = -2;
+      this.scene.add(mesh);
+      this.meshes.set(key, mesh);
+    }
+    (mesh.material as THREE.MeshBasicMaterial).depthTest = dials.cueDepth === 'world';
+    mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z);
+    mesh.scale.setScalar(SHADOW_SIZE);
   }
 
   endFrame(): void {

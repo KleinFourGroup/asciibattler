@@ -42,6 +42,9 @@ export interface PosedMember {
 
 export class PosedSet {
   private members: PosedMember[] = [];
+  /** 105e — the scale the members' quads were last sized to (a fresh build
+   *  starts at 1, the atlas default). */
+  private sizedAt = 1;
   private readonly scratch = new THREE.Vector3();
   private readonly lifted = new THREE.Vector3();
   /** Where the pose landed (one line per group), for the panel's readout. */
@@ -112,15 +115,19 @@ export class PosedSet {
   }
 
   /** Per frame: the bars follow the SAME rule the live units' bars do, and the
-   *  flyer follows the lift dial along the CURRENT camera's up. */
-  sync(dials: DialState): void {
+   *  flyer follows the lift dial along the CURRENT camera's up. 105e: a posed
+   *  body is a unit body, so it wears the glyph scale too — `inkTopLiftAtSize1`
+   *  is the atlas's lift BEFORE seams.ts's scale patch (`barLift`'s contract). */
+  sync(dials: DialState, inkTopLiftAtSize1: (glyph: string) => number): void {
     const { sprites, overlays, renderer } = this.internals;
+    if (this.sizedAt !== dials.scale) {
+      this.sizedAt = dials.scale;
+      for (const m of this.members) sprites.updateSprite(m.sprite, { size: dials.scale });
+    }
     for (const m of this.members) {
-      const lift = barLift(
-        dials,
-        this.atlas.inkTopLift(m.spec.glyph),
-        this.atlas.baseAnchorY(m.spec.glyph),
-      );
+      const lift =
+        barLift(dials, inkTopLiftAtSize1(m.spec.glyph), this.atlas.baseAnchorY(m.spec.glyph)) *
+        dials.scale;
       const rise = m.flies ? dials.lift : 0;
       if (m.flies) {
         sprites.updateSprite(m.sprite, {
@@ -142,6 +149,7 @@ export class PosedSet {
       overlays.remove(m.overlay);
     }
     this.members = [];
+    this.sizedAt = 1;
     this.where = null;
   }
 }

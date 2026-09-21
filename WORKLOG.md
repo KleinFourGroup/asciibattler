@@ -670,3 +670,68 @@ cut off or floating small at some dial (the fit), HP bars left behind when the
 projection flips (the stale camera), a ring or fan in the mist around the
 board under ortho (the apron ray), and ANYTHING different with the panel
 untouched.
+
+### 105e — the glyph-scale dial + the artefact list (2026-09-21) — BUILT; the `stop` is PASS ONE
+
+Session cd47b62d. The user SIGNED the fork posed at the 105d handoff: **the
+dial scales UNIT BODIES only** — walls, projectiles and markers stay size 1, so
+a wall run never overlaps itself and the read is about the units, which is
+what the overlap and glyph-px constraints are about. Zero production touch
+(the whole step is `src/dev`): `state.ts` +1 dial `scale` (0.5–2, def 1) +
+`KNOWN_ARTEFACTS` · `seams.ts` (the two unit lifts, the pick wrap,
+`stampSizes`) · `posed.ts` · `panel.ts` (a collapsed `<details>` block) ·
+`index.ts`. Tests 3065 → 3067; no smoke, no bump.
+
+**How the scale reaches everything that must follow the glyph, with no
+production edit:**
+
+- **The bodies:** spawn writes a unit's size ONCE (`footprint`,
+  `onUnitSpawned`) and nothing tweens it, so `stampSizes` — per frame, from
+  the sortByDepth hook — writes `footprint × scale` onto every non-inert
+  unit whose stamped size differs. Keyed by handle id, with spawn's own
+  `footprint` as the assumed initial value: **an untouched dial writes
+  nothing** (the probe's `sized` stays 0). Posed bodies are unit bodies: the
+  posed set sizes its members when the scale changes.
+- **The lifts:** `atlas.inkTopLift` / `atlas.inkCenterLift` are patched on the
+  instance × scale — they are world units at size 1, and the scaled quad's ink
+  top and centre are that much further up. Every consumer follows: bars and
+  hitsplats (`inkTopLiftFor` → the patched atlas), the marker over its target
+  (reads the atlas directly), FX endpoints (`cellVisualCenter`).
+  `inkBottomLift` is NOT patched: its one consumer is the objective marker's
+  OWN glyph, which stays size 1. The uniform bar line takes the SIZE-1 lift
+  (`barLift`'s contract) and multiplies by scale itself, so `barY` stays in
+  cell units of the quad.
+- **The click box:** `enemyBillboards` / `destructibleBillboards` are wrapped
+  on the prototype; a candidate's `size` × scale, its `ink` and `anchor` are
+  quad-local, so the box hugs the bigger ink.
+
+**Verified, by which instrument** (the pane, 1280×720, `open15` + the clump
+pose; a screenshot forces the frame between a dial and its read — the 105d
+papercut):
+
+| claim | instrument | result |
+|---|---|---|
+| an untouched panel writes no size | `probe().sized` after the first frames | 0 |
+| the dial scales combatants and posed bodies, nothing else | `aSize` per slot at 1.5: slots at 1.5 vs 11 combatants + 27 posed; the 32 walls and 6 half-cover by archetype | 38 / 38 · walls 1 · cover 1 |
+| the bars follow | mean overlay-to-ground px gap over the 11 live overlays, 1 → 1.5 | 31.7 → 47.5 (×1.50) |
+| the click box follows | `renderer.pickInstance` on an `M`: at 0.3 camera-up (inside at any size) and at 1.1 (above a size-1 quad's ink top, inside a 1.5's) | ground: hit, hit · 1.1: MISS at 1, hit at 1.5 |
+| the way back | dial to 1: `aSize` slots at 1.5 · sizes · gap · pick | 0 · all 1 · 31.7 · miss |
+| the artefact list renders | `.board-panel details li` count | 8 |
+| nothing ships | build + grep (five strings, control `setCameraView`) | 0 × 5 · 1 |
+
+**NOT verified — the user's, at the stop:** the FX endpoints under scale (no
+attack fired in the parked fixture) · the marker over a scaled target · the
+posed set under scale AND a projection at once · every LOOK.
+
+**The artefact list** (`KNOWN_ARTEFACTS`, eight lines, on the panel as "known
+artefacts — not findings"): yaw's world-axis pan, wall staircases and the
+untested R11 · an in-flight FX lifted on the old camera-up · the one-tile fit
+box under scale · the marker's own size · posed sprites' missing click box ·
+the apron ray under ortho / a long lens, read by no eye yet. A ninth line
+about the depth sort under ortho was drafted and CUT: it was a prediction, not
+an observation.
+
+**THE STOP — PASS ONE.** What lands here: 105c's batch read (the fixtures) ·
+105d's (the projection dials) · 105e's (the scale) · and the coarse cross
+itself, on the user's monitor and a ~1280×720 window. The exit is a
+direction for §106, by eye, inside the constraints; a tie goes to perspective.

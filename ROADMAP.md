@@ -76,7 +76,7 @@ The cut (user-signed 2026-09-21; each step declares its READ):
   the apron ortho ray. Oracle: at yaw 0 / FOV 50 / pitch 45 the new fit
   equals today's across boards × aspects, with a failing control. **Read:
   `batch`** → 105e.
-- [ ] **105e — the glyph-scale dial** (threaded through the pick size + the
+- [ ] ◐ **105e — the glyph-scale dial.** BUILT 2026-09-21 (units only, user-signed; zero production touch; the bars, the click box and 38/38 bodies follow in the pane); THE STOP IS OPEN — pass one waits on the user's read; WORKLOG §105e. (threaded through the pick size + the
   lifts) + the known-cosmetic artefact list on the panel. **Read: `stop`**
   — PASS ONE: the coarse cross, on the user's monitor + a ~1280×720 window.
 

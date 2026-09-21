@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DIALS,
   DIAL_KEYS,
+  KNOWN_ARTEFACTS,
   VIEW_DIALS,
   barLift,
   cameraViewOf,
@@ -15,6 +16,22 @@ import {
 import { baseAnchorYFor } from '../../render/glyphs';
 import census from '../../../tests/board/inkCensus.json';
 import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
+
+describe('105e — the glyph scale + the artefact list', () => {
+  it('the scale defaults to 1 (the atlas default — an untouched panel writes no size)', () => {
+    expect(DIALS.scale.def).toBe(1);
+    expect(DIALS.scale.min).toBeGreaterThan(0);
+    expect(coerceDial('scale', '1.5')).toBe(1.5);
+  });
+
+  it('every known artefact names the dial that shows it, and none is empty', () => {
+    expect(KNOWN_ARTEFACTS.length).toBeGreaterThan(0);
+    for (const text of KNOWN_ARTEFACTS) {
+      expect(text.trim().length, text).toBeGreaterThan(20);
+      expect(/^(yaw|glyph scale|ortho|any dial change)/.test(text), text).toBe(true);
+    }
+  });
+});
 
 describe('105d — the projection dials', () => {
   it('the four defaults ARE the Renderer’s default view — an untouched panel is today’s camera', () => {

@@ -38,7 +38,12 @@ export type DialSpec =
       readonly def: number;
       readonly hint?: string;
     }
-  | { readonly kind: 'bool'; readonly label: string; readonly def: boolean; readonly hint?: string };
+  | {
+      readonly kind: 'bool';
+      readonly label: string;
+      readonly def: boolean;
+      readonly hint?: string;
+    };
 
 export const DIALS = {
   /** 105c — WHICH BATTLE is on screen (fixtures.ts `BOARDS`). Unlike every
@@ -90,6 +95,21 @@ export const DIALS = {
     step: 5,
     def: 0,
     hint: 'degrees about the vertical — 45 = the diamond board',
+  },
+  /** 105e — THE GLYPH SCALE: a multiplier on every UNIT BODY's quad (user-
+   *  signed: units only — walls, projectiles and markers stay size 1, so a
+   *  wall run never overlaps itself and the read is about the units). Threaded
+   *  through the mirror pick (`enemyBillboards` / `destructibleBillboards`)
+   *  and the two unit lifts (`inkTopLift` · `inkCenterLift`), so bars,
+   *  hitsplats, FX endpoints and click boxes stay glued to the bigger glyph. */
+  scale: {
+    kind: 'range',
+    label: 'glyph scale',
+    min: 0.5,
+    max: 2,
+    step: 0.05,
+    def: 1,
+    hint: 'unit bodies only (walls stay one tile) — bars, hitsplats and click boxes follow',
   },
   /** The stand line: today's per-class rule (letterforms on the terminal-cell
    *  line, blocks on the quad bottom) vs ONE rule — the quad bottom for all.
@@ -167,7 +187,12 @@ export const DIALS = {
     def: 1,
     hint: 'camera-up, in tiles — the flyer pose only',
   },
-  shadow: { kind: 'bool', label: 'flyer shadow', def: true, hint: 'a dark disc on the tile the flyer is over' },
+  shadow: {
+    kind: 'bool',
+    label: 'flyer shadow',
+    def: true,
+    hint: 'a dark disc on the tile the flyer is over',
+  },
   /** Bookmark-only: the panel starts collapsed (the dials still apply). */
   hide: { kind: 'bool', label: 'start hidden', def: false },
 } as const satisfies Record<string, DialSpec>;
@@ -271,8 +296,27 @@ export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | '
 export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
 /**
+ * 105e — THE KNOWN COSMETIC ARTEFACTS of a dialled board, shown on the panel
+ * so the user's read discounts them instead of filing them. Each is a seam the
+ * spike deliberately did not touch (the charter: nothing ships, no rule
+ * deletion yet); the phase that ships a direction fixes the ones it inherits.
+ * Text only — the panel renders it, state.test.ts pins that none is empty.
+ */
+export const KNOWN_ARTEFACTS: readonly string[] = [
+  'yaw: WASD / edge-scroll pan along WORLD axes (scroll mode), so W is no longer screen-up',
+  'yaw: wall runs (#) staircase on diamond tiles; an NxN slab is a screen rectangle over a wider footprint',
+  'yaw: the footprint anchor (R11) is written against a camera that never rotates - where an NxN body stands under yaw is UNTESTED',
+  'any dial change: an FX already in flight (bolt, lob, splat) was lifted on the OLD camera-up and lands there; the next one is right',
+  'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',
+  'glyph scale: the objective marker keeps its own size; only its target lifts',
+  'glyph scale: posed units and live units scale; a posed sprite still has no click box',
+  'ortho / long lens: the mist around the board is the apron ray, re-derived for parallel rays but read by no eye before yours',
+];
+
+/**
  * THE bar-line rule, in one place: the camera-up lift (world units at size 1;
- * callers scale by footprint) from a glyph's ground anchor to where its
+ * callers scale by footprint × the 105e glyph scale, and pass the SIZE-1
+ * `inkTopLift` — the atlas instance is scale-patched by seams.ts) from a glyph's ground anchor to where its
  * overlay stack sits. `inkTopLift` is today's answer (the atlas's, measured);
  * the uniform line is `barY` cell units above the QUAD BOTTOM, which is
  * `barY - 0.5` in quad-local y, minus wherever this glyph's anchor sits —

@@ -13,7 +13,14 @@
  * panel from inside it, Ctrl+Alt+G must grey the board while a dial has focus).
  */
 
-import { DIALS, DIAL_KEYS, type DialKey, type DialSpec, type DialState } from './state';
+import {
+  DIALS,
+  DIAL_KEYS,
+  KNOWN_ARTEFACTS,
+  type DialKey,
+  type DialSpec,
+  type DialState,
+} from './state';
 
 const STYLE_ID = 'board-panel-style';
 
@@ -39,6 +46,10 @@ const CSS = `
 .board-panel button { flex: 1; background: #0d1510; color: inherit; border: 1px solid #3c6b4a; font: inherit; padding: 3px 0; cursor: pointer; }
 .board-panel button:hover, .board-panel button:focus-visible { border-color: #7fd69a; }
 .board-panel .bp-status { margin-top: 6px; color: #6f8f78; font-size: 11px; white-space: pre-wrap; }
+.board-panel details { margin-top: 8px; font-size: 11px; color: #6f8f78; }
+.board-panel summary { cursor: pointer; color: #9fc4a8; }
+.board-panel details ul { margin: 4px 0 0; padding-left: 14px; }
+.board-panel details li { margin: 2px 0; }
 `;
 
 export interface PanelCallbacks {
@@ -96,6 +107,19 @@ export class BoardPanelView {
     this.status = document.createElement('div');
     this.status.className = 'bp-status';
     this.root.appendChild(this.status);
+
+    // 105e — the known cosmetic artefacts, collapsed: what NOT to file.
+    const known = document.createElement('details');
+    const summary = document.createElement('summary');
+    summary.textContent = `known artefacts (${KNOWN_ARTEFACTS.length}) - not findings`;
+    const list = document.createElement('ul');
+    for (const text of KNOWN_ARTEFACTS) {
+      const li = document.createElement('li');
+      li.textContent = text;
+      list.appendChild(li);
+    }
+    known.append(summary, list);
+    this.root.appendChild(known);
 
     document.body.appendChild(this.root);
   }

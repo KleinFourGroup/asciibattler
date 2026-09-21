@@ -53,6 +53,8 @@ export interface BoardPanel {
       ground: [number, number, number];
     }[];
     restamped: number;
+    /** 105e — size writes so far (unit bodies stamped `footprint × scale`). */
+    sized: number;
     battle: boolean;
     fixture: FixtureReport | null;
   };
@@ -68,6 +70,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const posed = new PosedSet(internals, internals.sprites.atlas);
   let lastBattleRenderer: LiveBattle['battleRenderer'] | null = null;
   let lastRestamped = 0;
+  /** 105e — cumulative size writes (a probe reads it before / after a dial). */
+  let lastSized = 0;
   let fixture: FixtureReport | null = null;
 
   const onFrame = (): void => {
@@ -94,11 +98,13 @@ export function attachBoardPanel(game: Game): BoardPanel {
         cues.place(`p${i}`, m.spec, m.ground, 1, dials);
         if (m.flies && dials.shadow) cues.placeShadow(`s${i}`, m.ground, dials);
       });
-      posed.sync(dials);
+      posed.sync(dials, seams.inkTopLiftAtSize1);
+      lastSized += seams.stampSizes(battle);
     }
     cues.endFrame();
   };
 
+  // `onFrame` runs only from the sortByDepth hook, after this returns.
   const seams = installSeams(game, () => dials, onFrame);
 
   // 105d — a bookmarked projection is live before the first battle mounts. An
@@ -207,6 +213,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
         ground: [m.ground.x, m.ground.y, m.ground.z] as [number, number, number],
       })),
       restamped: lastRestamped,
+      sized: lastSized,
       battle: liveBattleOf(game) !== null,
       fixture,
     }),

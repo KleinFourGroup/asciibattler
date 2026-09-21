@@ -34,8 +34,9 @@ import type { TerrainRenderer } from '../../render/TerrainRenderer';
 import type { FontAtlas } from '../../render/FontAtlas';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import { BattleRenderer } from '../../render/BattleRenderer';
+import type { PickCandidate } from '../../render/pick';
 import { footprintOf } from '../../sim/occupancy';
-import type { Unit } from '../../sim/Unit';
+import { isInertNeutral, type Unit } from '../../sim/Unit';
 import type { World } from '../../sim/World';
 import { barLift, type DialState } from './state';
 
@@ -116,6 +117,13 @@ export interface Seams {
   restampAnchors(): number;
   /** The patched atlas — followers read lifts through it. */
   readonly atlas: FontAtlas;
+  /** 105e — `inkTopLift` BEFORE the scale patch, for a caller that applies
+   *  the scale itself (`barLift`'s contract). */
+  inkTopLiftAtSize1(glyph: string): number;
+  /** 105e — write `footprint × scale` onto every live unit body whose stamped
+   *  size differs (walls and other inert neutrals stay size 1). Idempotent per
+   *  frame: a Map lookup per unit, a buffer write only on change. */
+  stampSizes(battle: LiveBattle): number;
 }
 
 export function installSeams(game: Game, dials: () => DialState, onFrame: () => void): Seams {
@@ -131,9 +139,21 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
       dials().anchor === 'bottom' ? -0.5 : todayAnchorY(glyph);
   }
 
+  // --- 105e: the two UNIT lifts scale with the glyph --------------------------
+  // `inkTopLift` (bars, hitsplats, the marker over its target) and
+  // `inkCenterLift` (FX endpoints) are world units at size 1, so a scaled quad's
+  // ink top and centre are `scale` × further up. `inkBottomLift` is NOT patched:
+  // its one consumer is the objective marker's OWN glyph, which stays size 1.
+  const inkTopLiftAtSize1 = atlas.inkTopLift.bind(atlas);
+  const inkCenterLiftAtSize1 = atlas.inkCenterLift.bind(atlas);
+  atlas.inkTopLift = (glyph: string): number => inkTopLiftAtSize1(glyph) * dials().scale;
+  atlas.inkCenterLift = (glyph: string): number => inkCenterLiftAtSize1(glyph) * dials().scale;
+
   // --- the bar line ----------------------------------------------------------
   const proto = BattleRenderer.prototype as unknown as {
     inkTopLiftFor?: (this: BattleRenderer, unit: Unit) => number;
+    enemyBillboards?: (this: BattleRenderer) => PickCandidate[];
+    destructibleBillboards?: (this: BattleRenderer) => PickCandidate[];
   };
   const todayInkTopLiftFor = proto.inkTopLiftFor;
   if (typeof todayInkTopLiftFor !== 'function') {
@@ -141,10 +161,29 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
   } else {
     proto.inkTopLiftFor = function (this: BattleRenderer, unit: Unit): number {
       const d = dials();
+      // Today's path reads the scale-patched atlas, so it is already × scale.
       if (d.bar === 'ink') return todayInkTopLiftFor.call(this, unit);
       return (
-        barLift(d, atlas.inkTopLift(unit.glyph), atlas.baseAnchorY(unit.glyph)) * footprintOf(unit)
+        barLift(d, inkTopLiftAtSize1(unit.glyph), atlas.baseAnchorY(unit.glyph)) *
+        footprintOf(unit) *
+        d.scale
       );
+    };
+  }
+
+  // --- 105e: the mirror pick follows the scaled quad -------------------------
+  // A candidate's `size` is the quad's world extent; its `ink` and `anchor` are
+  // quad-local, so scaling `size` alone keeps the click box on the visible ink.
+  for (const name of ['enemyBillboards', 'destructibleBillboards'] as const) {
+    const today = proto[name];
+    if (typeof today !== 'function') {
+      seamMoved(`BattleRenderer.prototype.${name}`);
+      continue;
+    }
+    proto[name] = function (this: BattleRenderer): PickCandidate[] {
+      const scale = dials().scale;
+      const out = today.call(this);
+      return scale === 1 ? out : out.map((c) => ({ ...c, size: c.size * scale }));
     };
   }
 
@@ -186,5 +225,29 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     return written;
   };
 
-  return { restampAnchors, atlas };
+  // --- 105e: the unit bodies' size ---------------------------------------------
+  // Spawn writes a unit's size ONCE (`footprint`, BattleRenderer.onUnitSpawned)
+  // and nothing tweens it, so a per-frame "stamp what differs" is the whole
+  // mechanism. Keyed by handle id: a new battle's handles are new ids, and a
+  // dead unit's handle simply stops appearing.
+  const stampedSize = new Map<number, number>();
+  const stampSizes = (battle: LiveBattle): number => {
+    const scale = dials().scale;
+    let written = 0;
+    for (const unit of battle.world.units) {
+      if (isInertNeutral(unit)) continue;
+      const handle = battle.handles.get(unit.id);
+      if (!handle) continue;
+      const footprint = footprintOf(unit);
+      const size = footprint * scale;
+      // Spawn's own write IS `footprint`, so an untouched dial writes nothing.
+      if ((stampedSize.get(handle.id) ?? footprint) === size) continue;
+      sprites.updateSprite(handle, { size });
+      stampedSize.set(handle.id, size);
+      written++;
+    }
+    return written;
+  };
+
+  return { restampAnchors, atlas, inkTopLiftAtSize1, stampSizes };
 }

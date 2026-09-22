@@ -1093,3 +1093,54 @@ mock's 105b design), and no N×N combatant exists — rubble's ground mark is
 then yaw 30 — each slab stands on the middle of its plot; wrong looks like a
 slab hanging over the edge of its diamond, or a hill biting its lower band
 (flip `NxN stand` to `today` for the before).
+
+### 106c — the ground mark + the footprint plate (2026-09-22) — ◐ BUILT; the `stop` is open
+
+Four dials (state.ts, after the cue group): **`ground: cue | shadow | both |
+merged`** ("ground mark", default `cue` = 105b's behaviour exactly — the cue
+dials decide, so an untouched panel still draws nothing) · `shadowSize`
+("contact size", 0.55 of a tile) · `shadowAlpha` ("contact opacity", 0.45) ·
+**`plate: off | frame | filled`** ("NxN plate"). `groundCue.ts` is one
+mark-drawing path now (pool, frame protocol and the `cueDepth` treatment
+shared): `shadow` = a dark disc at contact size; `both` = the cue (outline
+unless `filled`) over that disc; `merged` = ONE mark, the team shape at
+contact size, dark-filled at the contact opacity and outlined in the team
+colour at the cue opacity; the plate = the N×N footprint, inset 0.06, as a
+coloured square outline (`frame`) or a dark footprint under it (`filled`),
+under any N×N body that gets no cue of its own (rubble — `cueSideOf` null,
+alive). The posed flyer's marks stay on its tile; 105c's flyer shadow draws
+only under `ground-cue` (every other mode already puts a contact mark there).
+Draw order: plate −3 · dark −2 · colour −1 · sprites 0.
+
+**Verified:** `groundCue.test.ts` (4) pins the semantics on a bare scene —
+untouched = 0 marks; cue 1 · shadow 1 · both 2 · merged 2 meshes; scenery gets
+no mark in any mode, only the plate (frame 1 · filled 2); an unplaced mark is
+dropped at the frame's end. In the pane (the quarry fixture, ortho y45, the
+hidden pane driven by calling the hooked `sortByDepth` directly — rAF was
+stalled): 15 combatants + 5 slabs read cue 20 · shadow 20 · both 35 · merged
+35 · +plate-filled 40 · plate-off 30, and all five plates sit on their
+footprint centres re-derived from the grid + `heightAt` (0 offset). The font
+inventory pin passes (the new hints are ASCII + `·`). **NOT verified:** any
+look — the one screenshot (JPEG, 800×450) showed nothing absurd, which is all
+it can show.
+
+**THE STOP — the read (the user's; yaw 45, 30 as the check, Ctrl+Alt+G on each):**
+
+1. **The ground mark** — on the §105 bookmark
+   `?bp=board-big24_proj-ortho_yaw-45_cue-outline_cueAlpha-0.3_pose-clump_lift-0.45`
+   (then `pose-flyer`), flip `ground mark` cue → shadow → both → merged, and
+   the two contact dials. Which says TOUCHING and WHOSE at once? Wrong looks
+   like two marks fighting (`both`), a merged shape too small to tell apart, a
+   shadow that reads as a hole. (By arithmetic, not yet seen: at yaw 45 the
+   enemy's WORLD diamond draws as a screen rectangle — audit finding 5.)
+2. **The anchor circle-back** — with the winning mark on, flip `anchor` today ↔
+   bottom. Still not tellable in isolation ⇒ R5–R7 + R10 are deletable (the
+   spec records it).
+3. **106b's batch read** — `?bp=board-quarry_proj-ortho_yaw-45_slab-centre`,
+   `NxN stand` today ↔ centre, then yaw 30: each slab on the middle of its
+   plot; wrong = overhanging its diamond, a hill biting its lower band.
+4. **The plate** — on the same board, `NxN plate` off / frame / filled: does a
+   slab read as standing ON its plot?
+5. **An open question from the verdict** ("I wonder if everything might need
+   it"): scenery (walls, 1×1 rubble, cover) gets NO mark in any mode today —
+   does it want grounding too? A yes is a small follow-up dial, not built.

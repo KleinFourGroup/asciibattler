@@ -177,6 +177,29 @@ export const DIALS = {
     def: 'overlay',
     hint: 'overlay = always whole, drawn over terrain · world = taller near tiles occlude it',
   },
+  /** 106c — THE GROUND MARK (the §105 verdict's finding 1: "floaty" is a
+   *  grounding question). `cue` is 105b's behaviour exactly (the cue dials
+   *  decide), so an untouched panel still draws no mark. groundCue.ts. */
+  ground: {
+    kind: 'enum',
+    label: 'ground mark',
+    options: ['cue', 'shadow', 'both', 'merged'],
+    def: 'cue',
+    hint: 'cue = the team shape (cue dials) · shadow = a dark contact disc · both = the two · merged = ONE mark: the team shape at contact size, dark-filled, colour-outlined',
+  },
+  /** The contact mark's size (tile units) — the shadow disc and the merged mark. */
+  shadowSize: { kind: 'range', label: 'contact size', min: 0.3, max: 1, step: 0.05, def: 0.55 },
+  /** The contact mark's darkness — the shadow disc, the merged fill, the filled plate. */
+  shadowAlpha: { kind: 'range', label: 'contact opacity', min: 0.1, max: 0.9, step: 0.05, def: 0.45 },
+  /** 106c — the FOOTPRINT PLATE under a static N×N body (rubble): which tiles it
+   *  holds (the user's 105b read, deferred to §106 on purpose — TODO). */
+  plate: {
+    kind: 'enum',
+    label: 'NxN plate',
+    options: ['off', 'frame', 'filled'],
+    def: 'off',
+    hint: 'frame = the footprint outlined in the body colour · filled = a dark footprint under that outline',
+  },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
    *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */

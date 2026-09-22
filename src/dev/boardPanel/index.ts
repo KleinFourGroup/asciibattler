@@ -18,7 +18,7 @@ import { footprintOf } from '../../sim/occupancy';
 import { isInertNeutral } from '../../sim/Unit';
 import { enterBoardFixture, type FixtureReport } from './boot';
 import { fixtureSearch } from './fixtures';
-import { GroundCues } from './groundCue';
+import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
 import { footprintCentre } from './slab';
@@ -52,7 +52,8 @@ export interface BoardPanel {
   readonly dials: DialState;
   /** Live counts, for a probe that must not trust the panel's own readout. */
   probe(): {
-    /** Ground meshes on the board — the cues AND the flyer's shadow. */
+    /** Ground meshes on the board — every mark `ground` draws (a `both` or
+     *  `merged` unit has two), the N×N plates, and the flyer's 105c shadow. */
     cues: number;
     posed: {
       glyph: string;
@@ -103,22 +104,30 @@ export function attachBoardPanel(game: Game): BoardPanel {
     if (battle) {
       const ground = slabGroundOf(battle.world, internals.terrain);
       for (const unit of battle.world.units) {
-        if (isInertNeutral(unit)) continue;
         const handle = battle.handles.get(unit.id);
+        if (!handle) continue;
         const n = footprintOf(unit);
-        // 106b — an N×N body's cue stands on its FOOTPRINT, never its sprite
+        // 106b — an N×N body's marks stand on its FOOTPRINT, never its sprite
         // anchor (which the `slab` rule may slide toward the camera).
-        const at =
+        const centre =
           n > 1
             ? footprintCentre(unit.position.x, unit.position.y, n, battle.world.gridW, battle.world.gridH, ground.heightAt)
-            : handle && internals.sprites.getPosition(handle, scratch);
-        if (!handle || !at) continue;
+            : null;
+        // 106c — a static N×N body with no cue of its own (rubble) gets the plate.
+        if (centre && cueSideOf(unit) === null && unit.currentHp > 0) {
+          cues.placePlate(`n${unit.id}`, unit, centre, n, dials);
+        }
+        if (isInertNeutral(unit)) continue;
+        const at = centre ?? internals.sprites.getPosition(handle, scratch);
+        if (!at) continue;
         cues.place(`u${unit.id}`, unit, at, n, dials);
       }
       posed.live.forEach((m, i) => {
-        // A flyer's cue and shadow stay on its TILE — the glyph is what leaves.
+        // A flyer's marks stay on its TILE — the glyph is what leaves.
         cues.place(`p${i}`, m.spec, m.ground, 1, dials);
-        if (m.flies && dials.shadow) cues.placeShadow(`s${i}`, m.ground, dials);
+        // 105c's flyer shadow belongs to `ground-cue`; every other mode already
+        // puts a contact mark under the flyer through `place`.
+        if (m.flies && dials.shadow && dials.ground === 'cue') cues.placeShadow(`s${i}`, m.ground, dials);
       });
       posed.sync(dials, seams.inkTopLiftAtSize1);
       lastSized += seams.stampSizes(battle);

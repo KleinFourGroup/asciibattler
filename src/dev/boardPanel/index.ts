@@ -21,7 +21,15 @@ import { fixtureSearch } from './fixtures';
 import { GroundCues } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
-import { applyCameraView, installSeams, internalsOf, liveBattleOf, type LiveBattle } from './seams';
+import { footprintCentre } from './slab';
+import {
+  applyCameraView,
+  installSeams,
+  internalsOf,
+  liveBattleOf,
+  slabGroundOf,
+  type LiveBattle,
+} from './seams';
 import {
   BOARD_PANEL_PARAM,
   DIALS,
@@ -55,6 +63,8 @@ export interface BoardPanel {
     restamped: number;
     /** 105e — size writes so far (unit bodies stamped `footprint × scale`). */
     sized: number;
+    /** 106b — N×N bodies re-stood by the last `slab` / view change. */
+    slabs: number;
     battle: boolean;
     fixture: FixtureReport | null;
   };
@@ -72,6 +82,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let lastRestamped = 0;
   /** 105e — cumulative size writes (a probe reads it before / after a dial). */
   let lastSized = 0;
+  /** 106b — N×N bodies re-stood by the last `slab` / view change. */
+  let lastSlabs = 0;
   let fixture: FixtureReport | null = null;
 
   const onFrame = (): void => {
@@ -82,16 +94,26 @@ export function attachBoardPanel(game: Game): BoardPanel {
       lastBattleRenderer = current;
       posed.clear();
       if (battle && dials.pose !== 'off') posed.build(battle, dials.pose);
+      // 106b — the rubble spawned under the dialled rule, but maybe before the
+      // camera was re-fitted to THIS board (a lens slide reads its position).
+      if (battle && dials.slab !== 'today') seams.restampSlabs(battle);
       describe();
     }
     cues.beginFrame();
     if (battle) {
+      const ground = slabGroundOf(battle.world, internals.terrain);
       for (const unit of battle.world.units) {
         if (isInertNeutral(unit)) continue;
         const handle = battle.handles.get(unit.id);
-        const ground = handle && internals.sprites.getPosition(handle, scratch);
-        if (!ground) continue;
-        cues.place(`u${unit.id}`, unit, ground, footprintOf(unit), dials);
+        const n = footprintOf(unit);
+        // 106b — an N×N body's cue stands on its FOOTPRINT, never its sprite
+        // anchor (which the `slab` rule may slide toward the camera).
+        const at =
+          n > 1
+            ? footprintCentre(unit.position.x, unit.position.y, n, battle.world.gridW, battle.world.gridH, ground.heightAt)
+            : handle && internals.sprites.getPosition(handle, scratch);
+        if (!handle || !at) continue;
+        cues.place(`u${unit.id}`, unit, at, n, dials);
       }
       posed.live.forEach((m, i) => {
         // A flyer's cue and shadow stay on its TILE — the glyph is what leaves.
@@ -135,6 +157,11 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'anchor') lastRestamped = seams.restampAnchors();
+    // 106b — the slab rule reads the camera, so a view change re-stands it too.
+    if (key === 'slab' || VIEW_DIALS.includes(key)) {
+      const battle = liveBattleOf(game);
+      if (battle) lastSlabs = seams.restampSlabs(battle);
+    }
     if (key === 'pose') {
       const battle = liveBattleOf(game);
       if (dials.pose !== 'off' && battle) posed.build(battle, dials.pose);
@@ -168,6 +195,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       dials = { ...defaultDials(), hide, board };
       apply('proj');
       apply('anchor');
+      apply('slab');
       apply('pose');
       writeUrl();
       view.refresh();
@@ -214,6 +242,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       })),
       restamped: lastRestamped,
       sized: lastSized,
+      slabs: lastSlabs,
       battle: liveBattleOf(game) !== null,
       fixture,
     }),

@@ -82,9 +82,11 @@ export class GroundCues {
   }
 
   /**
-   * Put `key`'s cue under `subject` at ground point `ground` (the sprite's
-   * base anchor). `footprint` scales it and re-centres it on an N×N body,
-   * whose anchor is its NEAR-row centre (`unitAnchorPos`).
+   * Put `key`'s cue under `subject` at ground point `ground`, scaled by
+   * `footprint`. For a 1×1 body `ground` is the sprite's base anchor (it tracks
+   * the move lerp); for an N×N body the CALLER passes the footprint's centre
+   * (slab.ts `footprintCentre`) — never the sprite anchor, which today's rule
+   * puts on the near row and 106b's `slab-centre` slides toward the camera.
    */
   place(
     key: string,
@@ -125,7 +127,7 @@ export class GroundCues {
     material.color.set(spriteColorForUnit(subject));
     material.opacity = dials.cueAlpha;
     material.depthTest = dials.cueDepth === 'world';
-    mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z - (footprint - 1) / 2);
+    mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z);
     mesh.scale.setScalar(dials.cueSize * footprint);
   }
 

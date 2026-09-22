@@ -1049,3 +1049,47 @@ the measures stay the instrument's. The cue mock's N×N re-centre
 (`groundCue.ts:128`) must follow the new anchor.
 
 Tests 3067 → 3074. No bump, no smoke (as predicted).
+
+### 106b — the N×N seam: the `slab` dial (2026-09-22) — ◐ BUILT, UNREAD (a `batch` read → 106c's stop)
+
+`src/dev/boardPanel/slab.ts` (pure: `slabAnchor` · `footprintCentre` ·
+`slabViewOf`) + the `slab: today | centre` dial ("NxN stand", default
+`today`) + the patch on `BattleRenderer.prototype.unitAnchorPos` (1×1 bodies
+and `slab-today` fall through to the original) + `restampSlabs`, fired by the
+`slab` dial, any view dial, and each new battle (a lens slide reads the camera
+POSITION, which may still be fitted to the previous board when the rubble
+spawns). The cue mock no longer re-centres by `z − (n−1)/2`: an N×N body's cue
+stands on `footprintCentre`, never on its sprite. The R11 artefact line now
+names the dial. Zero production touch.
+
+**The pin** (`tests/board/slab.test.ts`, 3): the seam's OWN function through
+the 106a measures — lateral < 0.02 · base inside · occluded 0 · sort cost 0,
+over 12 views (yaw 30 · 35 · 40 · 45 · −30 · −45 × ortho and the lens-20) × 5
+slabs × 4 height patterns × mounds on / off = 480 cases; the CONTROL (the same
+centre with no slide is bitten by the mounds, > 0.1 — the sweep can see a
+missing slide); and `slabViewOf` reading the camera the PRODUCTION fit just
+built with no render and no manual matrix update (the matrix-lag worry,
+closed by `getWorldDirection`'s own update).
+
+**Wiring, verified in the pane** (Chromium, 1280×720, `?bp=board-quarry_proj-ortho_yaw-45`;
+re-derived from the grid, `heightAt` and the live camera — not from
+`slabAnchor`): at `slab-today` every one of the five slabs' sprites projects
+onto its near-row centre to 0.000 px (today's rule untouched); at
+`slab-centre` onto its footprint centre at the footprint's highest tile top to
+0.000 px — while each sprite slid 0.98–1.47 world units toward the camera:
+the slide is screen-invariant in the LIVE renderer, not just the instrument.
+The 3×3s moved (31.5, −22.2) px and the 2×2s ≈ (15.7, −11.6) px — right and
+up, onto the diamond's centre. `probe().slabs` = 5.
+
+**NOT verified:** the depth effect (the bite gone) — pinned headless only; the
+look is the user's. The click box following the slid slab — by construction
+(`destructibleBillboards` reads the sprite's live position), not probed. The
+cue re-centre is LATENT: ✔ rubble gets no cue at all (15 cue meshes = 6
+player + 8 enemy + 1 camp; the 5 N×N and 10 inert neutrals have none, by the
+mock's 105b design), and no N×N combatant exists — rubble's ground mark is
+106c's footprint plate.
+
+**The batch read's line (at 106c's stop):** `?bp=board-quarry_proj-ortho_yaw-45_slab-centre`,
+then yaw 30 — each slab stands on the middle of its plot; wrong looks like a
+slab hanging over the edge of its diamond, or a hill biting its lower band
+(flip `NxN stand` to `today` for the before).

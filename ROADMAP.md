@@ -74,7 +74,7 @@ the build phases entered here. **Scope guards:** §105's, unchanged.
 Kickoff).** No bump, no smoke on any step, no production touch.
 
 - [x] **106a** — the instrument: an N×N slab's base corners inside its footprint + no footprint terrain over its quad, yaw [30, 45], today's rule the FAILING control at 45 · the flyer at lift 0.45 · the lean pinned through the production camera. Read `none`. ✅ the centre at the footprint max clears tile terrain; the slide is for hill mounds, free under ortho — 106b's shape stands (WORKLOG §106a).
-- [ ] **106b** — the N×N seam (dev): centre + the slide along the view ray, restamped on a view change; the cue follows. Read `batch` → 106c's stop: rubbleQuarry at 45 and 30, each slab on its plot; wrong = overhanging its diamond, or a hill biting its lower band.
+- [ ] ◐ **106b** — the N×N seam (dev): centre + the slide along the view ray, restamped on a view change; the cue follows. Read `batch` → 106c's stop: rubbleQuarry at 45 and 30, each slab on its plot; wrong = overhanging its diamond, or a hill biting its lower band. ◐ built, the `slab` dial (WORKLOG §106b).
 - [ ] **106c** — the `ground: cue | shadow | both | merged` dial under every combatant (the flyer's = the mark with a gap) + the footprint plate. Read `stop` — with the anchor circle-back + 106b's batch; yaw 45, 30 the check; Ctrl+Alt+G.
 - [ ] **106d** — THE PLAYED READ: a few full battles under the bookmark (step zero: a whole run plays under it); watch the stack in clumps, the wall staircase, picks under yaw. Read `stop` — the bookmark signed in the user's words.
 - [ ] **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`.

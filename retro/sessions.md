@@ -1417,3 +1417,19 @@ heredoc).
    nothing on screen, but it was the oracle doing exactly its job against my
    own overconfident probe, and that was the good moment of the session. This
    reports conditions, not outcome.
+
+### Addendum, the same session — 105e built after the user signed the fork (commit `8df5474`)
+
+The fork ("unit bodies only, or every sprite") was signed in one line and
+105e built in the same session; the cut's `stop` is now open. Three notes
+with no other home: (1) the first live probe read `sized: 11` with the panel
+untouched — `stampSizes` was writing size 1 onto every combatant on the first
+frame because its Map started empty; the fix was to assume spawn's own
+`footprint` as the initial value, and the claim "an untouched dial writes
+nothing" is now a probe reading (0), not a design intent. (2) A ninth
+artefact line about the depth sort under ortho was drafted from reasoning
+and cut before commit — the list is for OBSERVED artefacts, and "may swap"
+was a prediction. (3) The lifted-point pick check (a point 1.1 camera-up
+misses a size-1 `M` and hits a 1.5 one) is the cheapest proof that the click
+box follows the quad; the probe is in the 105e worklog table. Reminder
+cadence as before; a one-line status each time.

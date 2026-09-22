@@ -735,3 +735,172 @@ an observation.
 105d's (the projection dials) · 105e's (the scale) · and the coarse cross
 itself, on the user's monitor and a ~1280×720 window. The exit is a
 direction for §106, by eye, inside the constraints; a tie goes to perspective.
+
+### The pass-one read + THE VERDICT (2026-09-22) — §105 ✅ CLOSED
+
+The user read the coarse cross on their monitor (2560×1440) and a ~1280×720
+window, over four messages (this session, cd47b62d). **All three batch reads
+(105c · 105d · 105e) came back CLEAR** — no fixture opened a different board,
+no bar was left behind on a projection flip, no ring in the mist, nothing
+different with the panel untouched. Then the direction, in the user's words:
+
+> Ortho with yaw anywhere in (0,45] looks really good. Like shockingly good.
+> We need very little adjustment to it. Pitch... It looks best at 45, IMO. I
+> don't think that there's something worse about the others. They're just
+> different. But tie goes to the null hypothesis.
+>
+> In the big surprise of the day, long lens got us 95% of the way to ortho. I
+> was too bearish on it. I'm going to still give the edge to ortho, because
+> the strict regularity meshes better with the terminal aesthetic. But it's
+> close.
+>
+> Regular perspective is a distant third. And it had some real weirdness at
+> yaw > 0 that made things look even more distorted than before.
+>
+> Interestingly, ortho with no yaw was my least favorite. It created this
+> uncanny valley effect where my brain was screaming, "This is top-down," but
+> it also clearly wasn't. Even the slightest bit of yaw fixed this.
+
+**THE DIRECTION FOR §106 — one point, and a named fallback (user-signed):**
+
+- **Orthographic · pitch 45 · yaw in [30, 45]** — the user's narrowed range.
+  The tentative bookmark (their error bars apply):
+  `?bp=board-big24_proj-ortho_fov-29_yaw-45_anchor-bottom_cue-outline_cueAlpha-0.3_pose-clump_lift-0.45`
+  (`fov` is inert under ortho; `anchor-bottom` is IN the bookmark, not a
+  preference — see below).
+- **The fallback: the long lens, FOV 20** (perspective, pitch 45, the same
+  yaw) — "95 % of the way"; recorded as the documented fallback, NOT a second
+  §106 point, so pass two refines one picture. If ortho's walls or N×N bodies
+  turn out ugly in a played fight, the lens keeps nearly all the gain with no
+  parallel-ray artefacts.
+- **Perspective 50 is a distant third; ortho at yaw 0 is out** (the uncanny
+  valley). The tie-break was never reached.
+
+**Why the yaw-0 finding matters beyond taste:** with parallel rays and no
+yaw, a pitched rectangular board projects to a RECTANGLE — the only 3D cue
+left is the height-squash, and the eye reads a rectangle as top-down, then
+the upright billboards contradict it. Any yaw makes the board a
+parallelogram, the ancient "oblique = 3D" signal. So under ortho the yaw is
+LOAD-BEARING, part of the projection, not a treatment on it — §106 refines it
+inside [30, 45], never to 0.
+
+**The treatments, as read (each user-signed unless marked):**
+
+| dial | verdict | note |
+|---|---|---|
+| pitch | 45 — tie → the null hypothesis | others "just different" |
+| glyph scale | 1 — tie → the control; "all pretty legible" | a Round 11 ACCESSIBILITY dial candidate (TODO) — 105e threaded the pick + lifts, so it is cheap |
+| bar line | **ink stays** — "the bar is just too high for the smaller letters" | §79e had two motives: (a) short glyphs wear a uniform bar high, (b) a px gap reads tight near / high far under perspective. Ortho deletes (b); (a) alone is sufficient. R9 survives on typographic grounds only |
+| anchor (today / bottom) | **UNDECIDED, both "too floaty"** — "the difference is there when actively switching, but I don't think I could reliably tell in isolation… I don't particularly like either" | PROVISIONAL: a rule no reader can tell in isolation is deletable (R5–R7 + R10) — held until the circle-back. The floatiness is predicted to be a GROUNDING problem, not an anchor one (below) |
+| ground cue | outline, opacity ≈ 0.3 — "really nice" | cue size / depth at defaults |
+| flyer lift | ≈ 0.45 — LOW confidence | 105a's 1.0 was the worst case by design; under ortho the shadow carries the tile, the lift only has to say "elevated" |
+| flyer shadow | on — and "I wonder if everything might need it" — LOW confidence | the user: "that's a large part of why I'm liking the ground cues. I wonder if the two might collide a bit" |
+| viewports / constraints | "everything stayed pretty legible in the bigger maps" (24×24 · 12×32 under ortho + yaw); Ctrl+Alt+G read | one caveat: "in clumps, the bars sometimes obfuscated things" — low confidence, "doesn't really happen in the live tests" |
+
+**Three findings from the read that seed §106:**
+
+1. **Floatiness = grounding, not anchoring.** The anchor moves a letterform by
+   4/64 of a cell; "floaty" is whether the glyph reads as IN CONTACT with the
+   ground. Ortho removes two grounding cues perspective gave for free (the lean
+   and the size gradient), and an upright billboard on the centre of a flat
+   parallelogram has little left saying "touching". The user's "shadow for
+   everything" instinct points the same way — a contact shadow is the cheapest
+   grounding cue there is — and so does why the cues read well at 0.3 (a thin
+   outline is already half a contact shadow). The cue (WHOSE — shape per side,
+   grayscale-safe) and the shadow (TOUCHING — dark, at the feet, small) do
+   different jobs and would collide as two marks; the candidate is ONE ground
+   mark with both properties (the team shape, drawn dark with a coloured
+   outline, contact-sized), the flyer's being the same mark with a gap. A §106
+   dial: `ground: cue | shadow | both | merged` — read FIRST, since it may
+   answer the anchor question for free.
+2. **The N×N bodies under yaw** (the user's screenshot: 2×2 rubble slabs
+   askew, not within their footprint, the bottom clipping through the ground).
+   `unitAnchorPos` (`BattleRenderer.ts:1084–1118`, R11) anchors an N×N body at
+   its NEAR-ROW CENTRE and its comment records the same bite it now shows
+   again: "the camera never rotates" (line 1090). Under yaw there is no near
+   row — the nearest ground is a CORNER — so (a) the screen-aligned quad stands
+   on the midpoint of an edge that runs diagonally (askew, overhanging one
+   side), and (b) nearer footprint terrain depth-clips its lower band (the
+   pre-79d2 "jagged bite", back). The user's call, and it tracks: **CENTRE
+   them** — the diamond is widest at its centre row (2.83 tiles for a 2×2 at
+   yaw 45; the quad is 2 wide), where the nearest-point rule would overhang a
+   POINT by a tile either side. Centring alone re-opens the bite on any raised
+   tile nearer than the centre (`big24` is hilly), so the shape is **centre
+   the quad + depth-test it as if it stood at the footprint's nearest point**
+   — under ortho a per-instance constant from N × yaw, one attribute in
+   `billboard.vert` (sprites don't depth-write and sort among themselves by the
+   view axis, so the bias changes only what TERRAIN may occlude a slab). Plus
+   the footprint plate (the 105b-deferred indicator, TODO) so the eye reads
+   "standing on its plot" where the front half of the footprint is floor in
+   front of the block. Instrument-pinnable before any eye: the base corners
+   inside the footprint polygon and no footprint terrain occluding the quad,
+   at every yaw in [30, 45], across the fixtures — with today's rule as the
+   failing control at 45 (the screenshot as a test). A per-kind third way if
+   neither reads: slabs (rubble / cover) TILE as N×N single glyphs; creatures
+   stay one big glyph on a plate. The user's eye decides block-at-centre vs
+   block-at-front when it exists.
+3. **The overlay stack in clumps.** The bars are CSS at fixed screen px,
+   scaled by FOOTPRINT only (`--fp-scale`, §40f), a fixed `--overlay-gap` above
+   the ink top — they follow neither camera distance, nor the glyph scale, nor
+   the projection. Under ortho every row has the SAME screen pitch, so a stack
+   that under perspective collided only in the shrunken far row collides
+   uniformly; and the clump pose is the pre-registered worst case (three 3×3
+   blocks of nine, which live fights rarely hold). → **watch in play** at §106,
+   not build; three cheap fixes in reserve (size the stack to the glyph's
+   screen height — a constant ratio under ortho, one CSS var; thin the bar;
+   drop the LV / POW chips when a unit's tile has occupied neighbours).
+
+**Yaw as a PLAYER-facing setting — asked and answered (recommendation, the
+user's call deferred to Round 11):** structurally, almost nothing breaks —
+and under ortho LESS than under perspective, because world-up projects to
+screen-up at ANY yaw (the up-vector has no component along the camera's
+right axis; 105a's "lean 0 everywhere"), so the three world-Y offsets the
+audit flagged (the lob arc, the sparkle rise, the aura motes) are straight
+verticals at every yaw and the §79 camera-up-vs-world-Y distinction
+collapses. Per-frame followers re-lift; event-time endpoints misplace only
+the one FX in flight at the instant of a change. What DOES depend on yaw is
+art: the N×N anchor (finding 2, needed anyway), the wall staircase (varies
+with yaw), the scroll-mode pan (world-axis, trivial to rotate), and — the real
+cost — every eyeball read multiplied by the range's ends. **Recommendation:
+keep yaw a knob in the code (the seam exists), art-direct §106 at ONE value,
+don't expose it in pass two; revisit at Round 11 with the accessibility list,
+where a reason may appear (a mirrored yaw for reading direction is free —
+nothing stops [−45, −30]).** The §105 scope guard "no rotatable camera for
+players" was written for the spike, not as doctrine.
+
+**THE LEAN, MEASURED** (the exit's word — `tests/board/geometry.ts` via a
+scratch driver, deleted after; scale 1, anchor today, FLAT model, the flyer at
+the instrument's 1.0, not the user's 0.45). On the user's 2560×1440:
+
+| view | 15×15 px near→far | 24×24 | 12×32 | lean max | clump far max | own tile |
+|---|---|---|---|---|---|---|
+| today (persp 50 · p45 · y0) | 105.9 → 63.1 | 70.5 → 40.5 | 54.3 → 30.7 | 36–40° | 0.23–0.27 | 0.21–0.25 |
+| **ortho · p45 · y45** | 78.8 | 51.9 | 56.2 | **0.0°** | **0.00** | 0.36 |
+| ortho · p45 · y30 | 81.3 | 53.7 | 52.3 | 0.0° | 0.00 | 0.32 |
+| ortho · p45 · y0 (rejected) | 107.7 | 71.8 | 55.4 | 0.0° | 0.07 | 0.25 |
+| lens 20 · p45 · y45 (fallback) | 72.9 → 64.8 | 48.0 → 42.3 | 53.7 → 44.6 | 9–11° | 0.00 | 0.35 |
+
+Every fit `true` on every viewport. The pre-registered constraints, on the
+numbers: the SMALLEST glyph at fit under ortho-45 (51.9 px, 24×24) is 1.28×
+today's smallest (40.5) and 1.7× today's 12×32 far row — met, per viewport
+(the 1920×1080 and phone rows scale alike); clump ink-rect overlap 0.00
+against today's 0.23–0.27 — met at scale 1; the 24×24 + 12×32 fit — met; a
+lifted unit reading as above its tile — the user's eye, at 0.45; the identity
+clauses — Ctrl+Alt+G, the user's eye. One number for §106 to re-measure:
+`flyerCoversNeighbour` at yaw 45 is 1.00 at lift 1.0 (105a's diagonal-
+neighbour finding) and 0.20 at yaw 30 — the user's 0.45 was read by eye only.
+
+**§105's decision points, resolved:** the direction — ortho · p45 · yaw
+[30, 45], the lens-20 fallback ✅ · the classifier / descender room / baseline
+— PROVISIONALLY deletable, held for the circle-back ✅ · the bar line — ink
+stays, on (a) alone ✅. **Exit met:** a direction, by eye, inside the
+constraints; the lean measured (0.0°).
+
+**Carried into §106's kickoff** (its audit and cut are its own, against the
+code the direction touches): the yaw value to art-direct at (45 = the
+bookmark, 30 as the control read — proposed, not signed) · the ground mark
+dial (finding 1) · the N×N centre + depth bias + plate (finding 2, with the
+TODO indicator) · the overlay stack watch (finding 3) · the wall staircase ·
+the scroll-mode pan under yaw · the flyer at 0.45 re-measured · the anchor
+circle-back · the fallback held as a bookmark. The spike code's disposition
+(the seed of the build, or reverted) is §106's decision point, unchanged.

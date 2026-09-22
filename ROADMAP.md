@@ -60,8 +60,10 @@ WORKLOG §"THE VERDICT"; the kickoff audit turns them into a cut). **Risk:**
 medium — the novelty effect cuts both ways, so the exit is PLAYED, not
 looked at. **Decision points:** the projection itself (the tie-break applies:
 no clear direction ⇒ perspective holds — NOT reached; ortho was clear) · the
-yaw value to art-direct at, inside [30, 45] (45 = the bookmark proposed, 30
-the control read) · the anchor pair's circle-back (provisionally deletable) ·
+yaw value to art-direct at — ✅ DECIDED 2026-09-22 (user-signed): **45** (the
+bookmark), **30 as the check** · the anchor pair's circle-back (provisionally
+deletable) — ✅ DECIDED to ride the ground-mark dial: re-read only once
+`ground` exists ·
 the spike code's disposition (the seed of the build, or reverted) · a third
 pass means re-cutting, not drifting. **Exit:** a few full battles
 played in the candidate · the signed bookmark with the user's reasons in

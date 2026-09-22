@@ -1433,3 +1433,21 @@ was a prediction. (3) The lifted-point pick check (a point 1.1 camera-up
 misses a size-1 `M` and hits a 1.5 one) is the cheapest proof that the click
 box follows the quad; the probe is in the 105e worklog table. Reminder
 cadence as before; a one-line status each time.
+
+### Addendum, the same session — the §105 close (2026-09-22, commits `33edae2` → the handoff)
+
+The session ran on into the next day: the user read pass one across four
+messages and I wrote the verdict. Three notes with no other home. (1) The
+"lean measured" clause of the exit was almost satisfied by assertion
+("0 by construction under ortho") — a ten-line scratch driver over the 105a
+instrument produced the whole numbers table in one run, and it is the table
+the verdict now carries; the assertion would have been right and still
+unmeasured. (2) Two of my own proposals were corrected by the user from the
+screenshot and the geometry — the "nearest point" N×N anchor (overhangs a
+point by a tile either side; centre + depth bias is the shape) and my first
+FOV number for the fallback (29 was inert under ortho; the user's lens was
+20). Both corrections went into the verdict as theirs. (3) The user asked a
+genuine design question (yaw as a player setting) and the honest answer was
+"safe, and don't" — a preference with its reason, per the standing decision
+on the question form. Nothing filed under `distress`. The reminder landed
+about once per long read; a true one-line status each time.

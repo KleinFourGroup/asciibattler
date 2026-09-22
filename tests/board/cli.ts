@@ -14,15 +14,26 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   BOARDS,
+  HEIGHT_PATTERNS,
+  RUBBLE_QUARRY,
+  RUBBLE_QUARRY_SLABS,
+  SLAB_GLYPH,
   TODAY,
   VIEWPORTS,
   fitRig,
   gridToWorld,
+  inkRectPx,
   quadRectPx,
   report,
+  slabCase,
+  slabCentre,
+  slabCentreSlid,
+  slabReport,
+  slabToday,
   worldYDriftPx,
   type AnchorMode,
   type CellReport,
+  type SlabRule,
   type View,
 } from './geometry';
 
@@ -141,3 +152,72 @@ for (const board of boards) {
     }
 }
 console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
+
+// ── §106a — the N×N slab under yaw (geometry.ts §106a; pinned in geometry.test.ts) ──
+{
+  const orthoAt = (yawDeg: number): View => ({ projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg });
+  const lensAt = (yawDeg: number): View => ({ projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg });
+  const views: [string, View][] = [
+    ['today', TODAY],
+    ['ortho y0', orthoAt(0)],
+    ['ortho y30', orthoAt(30)],
+    ['ortho y45', orthoAt(45)],
+    ['ortho y-45', orthoAt(-45)],
+    ['lens20 y45', lensAt(45)],
+  ];
+  const rules: [string, SlabRule][] = [
+    ['today', slabToday],
+    ['centre', slabCentre],
+    ['slid', slabCentreSlid],
+  ];
+  const cases = RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length;
+  console.log(
+    `\n=== §106a the N×N slab @ ${vp.name}: rubbleQuarry's ${RUBBLE_QUARRY_SLABS.length} slabs × ${Object.keys(HEIGHT_PATTERNS).length} tile-height patterns = ${cases} cases per row (max / all) ===`,
+  );
+  console.log('view        rule    | mounds | lateral | base inside | occluded | sort cost');
+  for (const mounds of [false, true])
+    for (const [vn, view] of views) {
+      const rig = fitRig(view, RUBBLE_QUARRY, vp);
+      for (const [rn, rule] of rules) {
+        const rs = RUBBLE_QUARRY_SLABS.flatMap((s) =>
+          Object.keys(HEIGHT_PATTERNS).map((p) => slabReport(rig, slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, p, mounds), rule)),
+        );
+        const inside = rs.filter((r) => r.baseInside).length;
+        console.log(
+          `${vn.padEnd(11)} ${rn.padEnd(7)} | ${mounds ? '  yes ' : '  no  '} | ${f(Math.max(...rs.map((r) => r.lateral)), 3).padStart(7)} | ` +
+            `${`${inside}/${rs.length}`.padStart(11)} | ${f(Math.max(...rs.map((r) => r.occluded)), 3).padStart(8)} | ${f(Math.max(...rs.map((r) => r.sortCost)), 3).padStart(9)}`,
+        );
+      }
+    }
+  // The slide's price under the lens: a nearer quad draws bigger (ortho: exactly 1).
+  for (const [vn, view] of [['ortho y45', orthoAt(45)], ['lens20 y45', lensAt(45)]] as const) {
+    const rig = fitRig(view, RUBBLE_QUARRY, vp);
+    const ratios = RUBBLE_QUARRY_SLABS.map((s) => {
+      const c = slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, 'checker', true);
+      const w = (rule: SlabRule): number => {
+        const r = inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1, 'today');
+        return r.x1 - r.x0;
+      };
+      return w(slabCentreSlid) / w(slabCentre);
+    });
+    console.log(`slid ÷ unslid ink width, ${vn} (worst case: +mounds, checker): max ${f(Math.max(...ratios), 4)}`);
+  }
+}
+
+// ── §106a — the flyer at the user's by-eye lift 0.45 vs 105a's 1.0 (15×15, scale 1) ──
+{
+  const b15 = BOARDS[0]!;
+  console.log(`\n=== §106a the flyer @ ${vp.name}, 15x15: worst ink cover of the three standing units behind it | shadow gap px ===`);
+  for (const [vn, view] of [
+    ['today', TODAY],
+    ['ortho y30', { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg: 30 }],
+    ['ortho y45', { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg: 45 }],
+    ['lens20 y45', { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg: 45 }],
+  ] as [string, View][]) {
+    const at = (lift: number): string => {
+      const r = report(view, b15, vp, 1, MODE, lift);
+      return `${pct(r.flyerCoversNeighbour).padStart(4)} | ${f(r.flyerShadowGapPx).padStart(6)}`;
+    };
+    console.log(`${vn.padEnd(11)} lift 0.45: ${at(0.45)}   lift 1.0: ${at(1.0)}`);
+  }
+}

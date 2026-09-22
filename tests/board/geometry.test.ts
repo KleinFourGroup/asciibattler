@@ -10,12 +10,24 @@ import {
   coveredFractions,
   fitRig,
   gridToWorld,
+  HEIGHT_PATTERNS,
+  inkRectPx,
   leanDeg,
   quadRectPx,
   report,
+  RUBBLE_QUARRY,
+  RUBBLE_QUARRY_SLABS,
+  SLAB_GLYPH,
+  slabCase,
+  slabCentre,
+  slabCentreSlid,
+  slabReport,
+  slabToday,
   toPx,
   worldYDriftPx,
   type Board,
+  type SlabReport,
+  type SlabRule,
   type View,
   type Viewport,
 } from './geometry';
@@ -124,5 +136,97 @@ describe('the overlap measure', () => {
     const b = report(ORTHO, B15, { name: 'b', w: 2560, h: 1440, dpr: 1 }, 1, 'today');
     expect(a.clumpCentreMean).toBeCloseTo(b.clumpCentreMean, 6);
     expect(b.glyphPxCentre / a.glyphPxCentre).toBeCloseTo(2, 6);
+  });
+});
+
+// §106a — THE N×N SLAB UNDER YAW (geometry.ts §106a). The §105 verdict's
+// screenshot — 2×2 rubble askew on its diamond, off its plot, the bottom
+// clipped — is the FAILING CONTROL; the rule 106b builds must pass the same
+// three measures. Swept over rubbleQuarry's five real slabs × every tile-height
+// pattern, at the user's 2560×1440 (only the fit's px scale depends on it).
+describe('§106a — the N×N slab under yaw', () => {
+  const vp = VIEWPORTS[0]!;
+  const ortho = (yawDeg: number): View => ({ projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg });
+  const lens20 = (yawDeg: number): View => ({ projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg });
+  const CANDIDATE_YAWS = [30, 35, 40, 45, -30, -45];
+
+  const sweep = (view: View, rule: SlabRule, mounds = false): (SlabReport & { what: string })[] => {
+    const rig = fitRig(view, RUBBLE_QUARRY, vp);
+    const out: (SlabReport & { what: string })[] = [];
+    for (const s of RUBBLE_QUARRY_SLABS)
+      for (const pattern of Object.keys(HEIGHT_PATTERNS)) {
+        const r = slabReport(rig, slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, pattern, mounds), rule);
+        out.push({ ...r, what: `${JSON.stringify(view)} ${s.n}x${s.n}@(${s.gx},${s.gy}) ${pattern}${mounds ? ' +mounds' : ''}` });
+      }
+    return out;
+  };
+
+  it('KNOWN ANSWER — today’s rule where it was signed: on its plot and unbitten under today’s camera; also centred under ortho at yaw 0', () => {
+    // Under today's PERSPECTIVE the rule reads ~0.08 lateral — parallax on an
+    // off-centre slab (its near row is nearer than its centre), not yaw — so the
+    // "not askew" half of the known answer is taken with parallel rays.
+    const today = sweep(TODAY, slabToday);
+    const orthoY0 = sweep(ortho(0), slabToday);
+    expect(today.length).toBe(RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length);
+    for (const r of today) {
+      expect(r.baseInside, r.what).toBe(true);
+      expect(r.occluded, r.what).toBe(0);
+    }
+    for (const r of orthoY0) {
+      expect(r.lateral, r.what).toBeLessThan(0.02);
+      expect(r.baseInside, r.what).toBe(true);
+      expect(r.occluded, r.what).toBe(0);
+    }
+  });
+
+  it('FAILING CONTROL — the screenshot as a test: under yaw, today’s rule stands every slab askew, overhangs a 3×3, and is bitten by a taller back row', () => {
+    for (const yaw of [30, 45, -45]) {
+      const rs = sweep(ortho(yaw), slabToday);
+      for (const r of rs) expect(r.lateral, r.what).toBeGreaterThan(0.05);
+      expect(rs.some((r) => !r.baseInside)).toBe(true);
+      expect(Math.max(...rs.map((r) => r.occluded))).toBeGreaterThan(0.01);
+    }
+  });
+
+  it('THE CANDIDATE — the footprint centre at the footprint’s highest tile top: centred, on its plot, unbitten by tile terrain, at every candidate yaw, ortho and the lens-20 fallback', () => {
+    for (const view of CANDIDATE_YAWS.flatMap((y) => [ortho(y), lens20(y)])) {
+      for (const rule of [slabCentre, slabCentreSlid]) {
+        for (const r of sweep(view, rule)) {
+          expect(r.lateral, r.what).toBeLessThan(0.02);
+          expect(r.baseInside, r.what).toBe(true);
+          expect(r.occluded, r.what).toBe(0);
+        }
+      }
+    }
+  });
+
+  it('the §37b hill mounds bite an UNSLID slab; the slide clears them at no measured sort price', () => {
+    // No shipped rubble stands on hills as far as the §106 audit read — this is
+    // the worst case (every footprint tile a hills tile, every mound max-size,
+    // jittered outward), and why the verdict's shape carries the slide.
+    for (const yaw of [30, 45, -45]) {
+      expect(Math.max(...sweep(ortho(yaw), slabCentre, true).map((r) => r.occluded))).toBeGreaterThan(0.1);
+      for (const r of sweep(ortho(yaw), slabCentreSlid, true)) {
+        expect(r.occluded, r.what).toBe(0);
+        expect(r.sortCost, r.what).toBe(0);
+      }
+    }
+  });
+
+  it('under ortho the slide is SCREEN-INVARIANT (it moves only the depth); under the lens it is not', () => {
+    const inkAt = (view: View, rule: SlabRule) => {
+      const rig = fitRig(view, RUBBLE_QUARRY, vp);
+      const s = RUBBLE_QUARRY_SLABS[0]!;
+      const c = slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, 'checker', true);
+      return inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1, 'today');
+    };
+    for (const yaw of [30, 45]) {
+      const a = inkAt(ortho(yaw), slabCentre);
+      const b = inkAt(ortho(yaw), slabCentreSlid);
+      expect(Math.max(Math.abs(a.x0 - b.x0), Math.abs(a.x1 - b.x1), Math.abs(a.y0 - b.y0), Math.abs(a.y1 - b.y1))).toBeLessThan(1e-6);
+    }
+    const a = inkAt(lens20(45), slabCentre);
+    const b = inkAt(lens20(45), slabCentreSlid);
+    expect((b.x1 - b.x0) / (a.x1 - a.x0)).toBeGreaterThan(1.001);
   });
 });

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { applyCameraFit, fitCameraToBox, type CameraView } from '../../src/render/cameraFit';
+import {
+  DEFAULT_CAMERA_VIEW,
+  applyCameraFit,
+  fitCameraToBox,
+  type CameraView,
+} from '../../src/render/cameraFit';
 import {
   BOARDS,
   FIT_MARGIN,
@@ -8,6 +13,7 @@ import {
   XZ_PADDING,
   Y_HALF_EXTENT,
   fitRig,
+  gridToWorld,
   type View,
 } from './geometry';
 
@@ -123,5 +129,59 @@ describe('105d — the production fit draws the picture the 105a instrument meas
     const a = new THREE.Vector3(board.w / 2, 0, board.h / 2).project(rig.camera);
     const b = new THREE.Vector3(board.w / 2, 0, board.h / 2).project(camera);
     expect(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBeGreaterThan(1e-3);
+  });
+});
+
+/**
+ * §106a — THE LEAN PIN, through the PRODUCTION camera (the Round 7.5 exit's
+ * "world-up = screen-up, pinned headless where it holds"). 105a pinned it on
+ * the instrument's own rig (geometry.test.ts); the pin above ties that rig to
+ * production only transitively. This one asks the camera `fitCameraToBox` +
+ * `applyCameraFit` actually build: a world vertical standing on ANY tile draws
+ * as a screen vertical — zero NDC-x between its foot and a point above it.
+ */
+describe('§106a — world-up projects to screen-up through the production camera', () => {
+  const cameraFor = (cv: CameraView, board: (typeof BOARDS)[number], aspect: number): THREE.Camera => {
+    const camera =
+      cv.projection === 'perspective'
+        ? new THREE.PerspectiveCamera(1, 1, 0.1, 5000)
+        : new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
+    const fit = fitCameraToBox(cv, aspect, board.w / 2 + XZ_PADDING, Y_HALF_EXTENT, board.h / 2 + XZ_PADDING, FIT_MARGIN);
+    applyCameraFit(camera, cv, fit, aspect, 0, 0);
+    camera.updateMatrixWorld(true);
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    return camera;
+  };
+  const leanNdc = (camera: THREE.Camera, foot: THREE.Vector3): number => {
+    const a = foot.clone().project(camera);
+    const b = foot.clone().add(new THREE.Vector3(0, 1, 0)).project(camera);
+    return Math.abs(a.x - b.x);
+  };
+
+  it('under ortho at pitch 45 and every candidate yaw: zero lean on every tile of every board', () => {
+    let tiles = 0;
+    let worst = 0;
+    for (const yawDeg of [30, 35, 40, 45, -30, -45]) {
+      const cv: CameraView = { projection: 'orthographic', fovDeg: 50, pitchDeg: 45, yawDeg };
+      for (const board of BOARDS) {
+        for (const viewport of [VIEWPORTS[0]!, VIEWPORTS[3]!]) {
+          const camera = cameraFor(cv, board, viewport.w / viewport.h);
+          for (let gy = 0; gy < board.h; gy++)
+            for (let gx = 0; gx < board.w; gx++) {
+              worst = Math.max(worst, leanNdc(camera, gridToWorld(board, gx, gy)));
+              tiles++;
+            }
+        }
+      }
+    }
+    expect(tiles).toBe(6 * 2 * BOARDS.reduce((s, b) => s + b.w * b.h, 0));
+    expect(worst).toBeLessThan(1e-12);
+  });
+
+  it('CONTROL — today’s perspective camera leans at a board corner, through the same path', () => {
+    const board = BOARDS[0]!;
+    const viewport = VIEWPORTS[0]!;
+    const camera = cameraFor(DEFAULT_CAMERA_VIEW, board, viewport.w / viewport.h);
+    expect(leanNdc(camera, gridToWorld(board, 0, 0))).toBeGreaterThan(1e-3);
   });
 });

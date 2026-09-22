@@ -968,3 +968,84 @@ lens-20 read at 106d is the fallback, not a third pass.
 rider. This session carries the OLD AGENTS in context, so it runs §106 until
 it recommends a handoff; the audit gets a DEDICATED fresh session (a cold read
 is the thing being audited); §106 resumes from the handoff after it.
+
+### 106a — the instrument: the N×N slab, the flyer at 0.45, the lean through production (2026-09-22) — read `none`
+
+`tests/board/geometry.ts` §106a + seven pins (`geometry.test.ts` 5 ·
+`cameraFit.test.ts` 2) + two CLI sections (`npm run board-geometry`). The
+slab section is the instrument's first NON-flat model: per-cell heights are a
+test input (four patterns inside the floor band [−0.3, 0] — `flat` ·
+`farHigh` · `nearHigh` · `checker`), plus the §37b hill mounds at their worst
+case (✔ `TerrainRenderer.ts:486-503`: axis-aligned pyramids, and a noise
+JITTER of ±0.1 the audit missed — pushed outward, a max mound overhangs its
+own tile by 0.08). Swept over ✔ rubbleQuarry's five real slabs
+(`config/layouts.json:1903-1915`) at 2560×1440. Three measures, re-derived
+from the camera and the tile geometry: `lateral` (the ink's base midpoint vs
+the footprint's on-screen centre, sideways, ÷ its width — "askew"),
+`baseInside` (both ink base corners in the footprint's on-screen polygon),
+`occluded` (ink fraction whose ray to the camera crosses FOOTPRINT terrain);
+plus `sortCost`, report-only (a nearer-than-centre neighbour's ink the slab
+paints over).
+
+| view | rule | lateral | base inside | occluded | + mounds | sort |
+|---|---|---|---|---|---|---|
+| today (persp 50 · y0) | today | 0.078 | 20/20 | 0 | 0.030 | 0 |
+| ortho · y0 | today | 0.008 | 20/20 | 0 | 0.019 | 0 |
+| ortho · y30 | today | 0.116 | 15/20 | 0.021 | 0.184 | 0 |
+| ortho · y45 | today | **0.161** | **6/20** | **0.043** | 0.196 | 0 |
+| ortho · y45 | centre | 0.006 | 20/20 | **0** | **0.181** | 0 |
+| ortho · y45 | centre + slide | 0.006 | 20/20 | 0 | **0** | 0 |
+| lens 20 · y45 | centre + slide | 0.006 | 20/20 | 0 | 0 | 0 |
+
+(y −45 reads like y45; every centre / slide row at y30, y−45 and lens 20 is
+the same 0.006 / 20 of 20 / 0.)
+
+**What it says:**
+
+1. **The screenshot is a test now** — today's rule under yaw fails all three
+   measures (askew on EVERY slab > 0.05; 3×3s overhang; a taller back row
+   bites it), and passes where it was signed (under today's camera: on its
+   plot, unbitten; ortho y0: centred too).
+2. **The centre alone clears TILE terrain — no slide needed for it.** With Y at
+   the footprint's HIGHEST tile top, every ray from the quad above its base
+   climbs from ≥ that height, so no footprint prism can be on it — at any xz
+   placement, any yaw, either projection (derived, then measured: 0 on every
+   case). The verdict's shape never named the Y; the §79d2 rider-2 row-max,
+   generalized to the whole footprint, is it.
+3. **The slide is for the hill MOUNDS** — they stand up to 0.34 above the
+   tile top and bite an unslid centred slab (0.18) as much as today's rule
+   under yaw. The slide clears them (0), at ZERO measured sort cost (an `M`
+   neighbour's padded ink never meets the slab's), and it is SCREEN-INVARIANT
+   under ortho (pinned to 1e-6 px) — 3.3 % wider under the lens-20 fallback,
+   the measured size of the audit's "a few %". → **106b's signed shape stands
+   unchanged** (centre + slide), with Y = the footprint max.
+4. **Latent, not live:** today's rule is bitten by mounds under TODAY'S camera
+   too (0.030) — but no shipped rubble found standing on hills (rubbleQuarry is
+   floor; the other two rubble layouts, `layouts.json:99,182`, were NOT
+   checked; ✔ procedural maps place none — `terrainGen.ts:245` `rubble: []`). And today's rule reads
+   0.078 lateral under today's perspective — parallax on an off-centre slab,
+   not yaw; nobody has flagged it, and ortho removes it.
+5. **The flyer at the user's by-eye 0.45** (15×15, 2560×1440 — worst ink cover
+   of the three units behind it | the shadow gap): ortho y45 **13 %** | 51 px
+   (100 % at lift 1.0) · ortho y30 **3 %** | 53 px (20 %) · lens 20 y45 17 %
+   | 45 px (96 %) · today 67 % | 52 px (46 %). Under ortho the eye's 0.45 is
+   the lift that stops the flyer landing on its diagonal neighbour; under
+   today's camera the same lift would be WORSE than 1.0 — ortho is what makes
+   the low lift work.
+6. **The lean, through production:** under ortho at p45 and every candidate
+   yaw (30 · 35 · 40 · 45 · −30 · −45), the camera `fitCameraToBox` +
+   `applyCameraFit` build draws a world vertical on every tile of all three
+   boards as a screen vertical (NDC-x difference < 1e-12); today's camera
+   leans at a corner through the same path (the control). The exit's
+   "world-up = screen-up, pinned headless" is met for the candidate.
+
+**Landing note for 106b:** the seam must implement `slabCentreSlid`'s rule
+against the LIVE terrain — Y = the max `heightAt` over the footprint; the
+slide's target = the nearest footprint terrain vertex, which on a `hills`
+tile means the mound envelope (the live mounds are noise-sized; the
+instrument's max-reach mound is the safe bound, and the seam need not read
+the bump mesh). Its pin runs the seam's own function through `slabReport` —
+the measures stay the instrument's. The cue mock's N×N re-centre
+(`groundCue.ts:128`) must follow the new anchor.
+
+Tests 3067 → 3074. No bump, no smoke (as predicted).

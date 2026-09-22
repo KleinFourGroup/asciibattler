@@ -19,7 +19,9 @@ import census from './inkCensus.json';
  * catch a wrong copy: §79b's live-camera measurements (±9.1 / ±5.0 / ±3.2 px
  * and the 26.3 px half-quad, a 15×15 board at 1280×720).
  *
- * The model is FLAT: every tile top at y = 0 (terrain height is ignored).
+ * The model is FLAT: every tile top at y = 0 (terrain height is ignored) —
+ * EXCEPT the §106a N×N slab section at the end, whose bite is a height effect,
+ * so its per-cell heights are a test input (`HeightField`).
  */
 
 // Copied from src/render/Renderer.ts (XZ_PADDING / Y_HALF_EXTENT / FIT_MARGIN).
@@ -194,6 +196,8 @@ export interface Sprite {
   pos: THREE.Vector3;
   /** Camera-up lift, world units (a fake flyer); 0 = standing. */
   lift?: number;
+  /** §106a — the per-instance size (an N×N body's `instanceSize` = N); 1 when absent. */
+  size?: number;
 }
 
 /**
@@ -203,10 +207,11 @@ export interface Sprite {
  */
 function spriteRectPx(rig: Rig, s: Sprite, scale: number, mode: AnchorMode, cell: [number, number, number, number]): Rect {
   const anchorY = anchorYFor(s.glyph, mode);
+  const k = scale * (s.size ?? 1);
   const ground = s.pos.clone().addScaledVector(rig.up, s.lift ?? 0);
   const v = ground.applyMatrix4(rig.camera.matrixWorldInverse);
-  const a = viewToPx(rig, v.x + (cell[0] - 0.5) * scale, v.y + (cell[1] - 0.5 - anchorY) * scale, v.z);
-  const b = viewToPx(rig, v.x + (cell[2] - 0.5) * scale, v.y + (cell[3] - 0.5 - anchorY) * scale, v.z);
+  const a = viewToPx(rig, v.x + (cell[0] - 0.5) * k, v.y + (cell[1] - 0.5 - anchorY) * k, v.z);
+  const b = viewToPx(rig, v.x + (cell[2] - 0.5) * k, v.y + (cell[3] - 0.5 - anchorY) * k, v.z);
   return { x0: Math.min(a.x, b.x), y0: Math.min(a.y, b.y), x1: Math.max(a.x, b.x), y1: Math.max(a.y, b.y) };
 }
 
@@ -341,7 +346,15 @@ export interface CellReport {
 
 export const FLYER_LIFT = 1.0;
 
-export function report(view: View, board: Board, viewport: Viewport, scale: number, mode: AnchorMode): CellReport {
+/** `flyerLift` — §106a re-measures the user's by-eye 0.45 (the §105 verdict); the default stays 105a's worst case. */
+export function report(
+  view: View,
+  board: Board,
+  viewport: Viewport,
+  scale: number,
+  mode: AnchorMode,
+  flyerLift: number = FLYER_LIFT,
+): CellReport {
   const rig = fitRig(view, board, viewport);
   const cx = Math.floor(board.w / 2);
   const cy = Math.floor(board.h / 2);
@@ -371,7 +384,7 @@ export function report(view: View, board: Board, viewport: Viewport, scale: numb
 
   const ink = inkRectPx(rig, { glyph: 'M', pos: gridToWorld(board, cx, cy) }, scale, mode);
 
-  const flyer: Sprite = { glyph: 'V', pos: gridToWorld(board, cx, cy), lift: FLYER_LIFT };
+  const flyer: Sprite = { glyph: 'V', pos: gridToWorld(board, cx, cy), lift: flyerLift };
   const flyerCover = Math.max(
     ...[-1, 0, 1].map((dx) => {
       const behind: Sprite = { glyph: 'M', pos: gridToWorld(board, cx + dx, cy + 1) };
@@ -430,4 +443,245 @@ export const VIEWPORTS: Viewport[] = [
   { name: '1024x768', w: 1024, h: 768, dpr: 1 },
   { name: '844x390 phone-land', w: 844, h: 390, dpr: 3 },
   { name: '390x844 phone-port', w: 390, h: 844, dpr: 3 },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// §106a — THE N×N SLAB UNDER YAW (the §105 verdict's finding 2). At yaw 45 a
+// rubble slab stood askew on its diamond with its bottom clipped, because R11
+// (`BattleRenderer.unitAnchorPos`) anchors an N×N body at its NEAR-ROW centre —
+// written for "the camera never rotates". Three measures, each re-derived here
+// from the camera and the tile geometry (never from BattleRenderer):
+//   - `lateral`   the ink's base midpoint vs the footprint's on-screen centre,
+//                 sideways ("askew"), as a fraction of the footprint's width;
+//   - `baseInside` both ink base corners inside the footprint's on-screen
+//                 polygon (the plane of the footprint's highest tile top);
+//   - `occluded`  the fraction of the ink whose ray to the camera passes
+//                 through FOOTPRINT terrain — tile prisms and §37b hill mounds.
+//                 Terrain OUTSIDE the footprint may occlude a slab legitimately
+//                 (a hill in front of it) and is not counted.
+// Plus `sortCost`, report-only: the worst ink fraction of a neighbouring unit
+// nearer than the footprint's centre that the slab paints OVER (the sort key
+// is the instance position, so a rule that moves it moves the sort).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Copied from TerrainRenderer: the prism bottom, the floor band, the §37b mound constants. */
+export const TERRAIN_BOTTOM_Y = -1.5;
+export const FLOOR_LO = -0.3;
+export const FLOOR_HI = 0.0;
+/** A mound's centre: its quadrant offset (±0.22) plus the MAX noise jitter (`jx * 0.1`), pushed
+ *  OUTWARD — the worst case, where a max-radius mound overhangs its own tile by 0.08. */
+const MOUND_REACH = 0.22 + 0.1;
+const MOUND_OFFSETS = [
+  [-MOUND_REACH, -MOUND_REACH],
+  [MOUND_REACH, -MOUND_REACH],
+  [MOUND_REACH, MOUND_REACH],
+  [-MOUND_REACH, MOUND_REACH],
+] as const;
+const MOUND_MAX_H = 0.34;
+const MOUND_MAX_R = 0.26;
+
+/** Every N×N body in the catalog today is rubble (`rubble_2x2` / `rubble_3x3`). */
+export const SLAB_GLYPH = '▄';
+
+/** Tile-top world Y per grid cell — a TEST INPUT (the real field is TerrainRenderer's noise). */
+export type HeightField = (gx: number, gy: number) => number;
+
+export interface SlabCase {
+  board: Board;
+  /** The canonical corner (`unit.position`: the min-x, min-y cell) and the side. */
+  gx: number;
+  gy: number;
+  n: number;
+  heights: HeightField;
+  /** Every footprint cell a `hills` tile carrying four MAX-size mounds — the worst case. */
+  mounds?: boolean;
+}
+
+/** A slab rule: the INSTANCE POSITION — what the billboard shader and the depth sort both read. */
+export type SlabRule = (c: SlabCase, rig: Rig) => THREE.Vector3;
+
+function footprintCells(c: SlabCase): [number, number][] {
+  const out: [number, number][] = [];
+  for (let dy = 0; dy < c.n; dy++) for (let dx = 0; dx < c.n; dx++) out.push([c.gx + dx, c.gy + dy]);
+  return out;
+}
+
+function footprintTopY(c: SlabCase): number {
+  return Math.max(...footprintCells(c).map(([x, y]) => c.heights(x, y)));
+}
+
+/** The footprint's outer rectangle in world XZ (grid +y runs toward world −z). */
+function footprintBounds(c: SlabCase): { x0: number; x1: number; z0: number; z1: number } {
+  const x0 = c.gx - c.board.w / 2;
+  const zNear = c.board.h / 2 - c.gy;
+  return { x0, x1: x0 + c.n, z0: zNear - c.n, z1: zNear };
+}
+
+function mound(cx: number, base: number, cz: number): { apex: THREE.Vector3; corners: THREE.Vector3[] } {
+  return {
+    apex: new THREE.Vector3(cx, base + MOUND_MAX_H, cz),
+    corners: [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ].map(([sx, sz]) => new THREE.Vector3(cx + sx! * MOUND_MAX_R, base, cz + sz! * MOUND_MAX_R)),
+  };
+}
+
+function footprintMounds(c: SlabCase): ReturnType<typeof mound>[] {
+  if (!c.mounds) return [];
+  return footprintCells(c).flatMap(([gx, gy]) => {
+    const centre = gridToWorld(c.board, gx, gy);
+    return MOUND_OFFSETS.map(([ox, oz]) => mound(centre.x + ox, c.heights(gx, gy), centre.z + oz));
+  });
+}
+
+/** Every VERTEX of the footprint's terrain: a linear depth is minimized at one. */
+function footprintTerrainVertices(c: SlabCase): THREE.Vector3[] {
+  const out: THREE.Vector3[] = [];
+  for (const [gx, gy] of footprintCells(c)) {
+    const centre = gridToWorld(c.board, gx, gy);
+    const h = c.heights(gx, gy);
+    for (const sx of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) out.push(new THREE.Vector3(centre.x + sx, h, centre.z + sz));
+  }
+  for (const m of footprintMounds(c)) out.push(m.apex, ...m.corners);
+  return out;
+}
+
+function isOrtho(rig: Rig): boolean {
+  return (rig.camera as THREE.OrthographicCamera).isOrthographicCamera === true;
+}
+
+/** Unit vector from `p` toward the camera along the ray that draws `p`. */
+function towardCamera(rig: Rig, p: THREE.Vector3): THREE.Vector3 {
+  if (isOrtho(rig)) return rig.fwd.clone().negate();
+  return new THREE.Vector3().setFromMatrixPosition(rig.camera.matrixWorld).sub(p).normalize();
+}
+
+/** Today's rule, restated from `unitAnchorPos` (R11): the NEAR-ROW centre, Y = the near row's max. */
+export const slabToday: SlabRule = (c) => {
+  const p = gridToWorld(c.board, c.gx, c.gy);
+  p.x += (c.n - 1) / 2;
+  p.y = Math.max(...Array.from({ length: c.n }, (_, i) => c.heights(c.gx + i, c.gy)));
+  return p;
+};
+
+/** The verdict's shape, part one: the footprint CENTRE, Y = the WHOLE footprint's max (§79d2 rider 2's near-row max, generalized). */
+export const slabCentre: SlabRule = (c) => {
+  const b = footprintBounds(c);
+  return new THREE.Vector3((b.x0 + b.x1) / 2, footprintTopY(c), (b.z0 + b.z1) / 2);
+};
+
+/** Part two: `slabCentre` slid along its own view ray until it is nearer than every footprint terrain vertex. */
+export const slabCentreSlid: SlabRule = (c, rig) => {
+  const p = slabCentre(c, rig);
+  const nearest = Math.min(...footprintTerrainVertices(c).map((q) => q.dot(rig.fwd)));
+  const gap = p.dot(rig.fwd) - nearest;
+  if (gap <= 0) return p;
+  const toward = towardCamera(rig, p);
+  // Moving s along `toward` changes the planar depth by s · (toward · fwd), which is < 0.
+  return p.addScaledVector(toward, (gap + 1e-4) / -toward.dot(rig.fwd));
+};
+
+export interface SlabReport {
+  lateral: number;
+  baseInside: boolean;
+  occluded: number;
+  sortCost: number;
+}
+
+const _ray = new THREE.Ray();
+const _box = new THREE.Box3();
+const _hit = new THREE.Vector3();
+
+function hitsFootprintTerrain(c: SlabCase, origin: THREE.Vector3, dir: THREE.Vector3): boolean {
+  _ray.origin.copy(origin).addScaledVector(dir, 1e-7);
+  _ray.direction.copy(dir);
+  for (const [gx, gy] of footprintCells(c)) {
+    const centre = gridToWorld(c.board, gx, gy);
+    _box.min.set(centre.x - 0.5, TERRAIN_BOTTOM_Y, centre.z - 0.5);
+    _box.max.set(centre.x + 0.5, c.heights(gx, gy), centre.z + 0.5);
+    if (_ray.intersectsBox(_box)) return true;
+  }
+  for (const m of footprintMounds(c)) {
+    for (let i = 0; i < 4; i++) {
+      if (_ray.intersectTriangle(m.apex, m.corners[i]!, m.corners[(i + 1) % 4]!, false, _hit)) return true;
+    }
+  }
+  return false;
+}
+
+export function slabReport(rig: Rig, c: SlabCase, rule: SlabRule): SlabReport {
+  const anchor = rule(c, rig);
+  const slab: Sprite = { glyph: SLAB_GLYPH, pos: anchor, size: c.n };
+  const ink = inkRectPx(rig, slab, 1, 'today');
+
+  const b = footprintBounds(c);
+  const top = footprintTopY(c);
+  const poly = [
+    [b.x0, b.z1],
+    [b.x1, b.z1],
+    [b.x1, b.z0],
+    [b.x0, b.z0],
+  ].map(([x, z]) => toPx(rig, new THREE.Vector3(x!, top, z!)));
+  const xs = poly.map((p) => p.x);
+  const centre = toPx(rig, new THREE.Vector3((b.x0 + b.x1) / 2, top, (b.z0 + b.z1) / 2));
+  const lateral = Math.abs((ink.x0 + ink.x1) / 2 - centre.x) / (Math.max(...xs) - Math.min(...xs));
+  const baseInside = pointInConvexQuad(ink.x0, ink.y1, poly) && pointInConvexQuad(ink.x1, ink.y1, poly);
+
+  // The ink, sampled in WORLD space: the quad offsets along the camera's right /
+  // up about the anchor (billboard.vert.glsl, view space = the camera basis).
+  const [ix0, iy0, ix1, iy1] = inkOf(SLAB_GLYPH);
+  const anchorY = anchorYFor(SLAB_GLYPH, 'today');
+  let hits = 0;
+  const q = new THREE.Vector3();
+  for (let i = 0; i < SAMPLES; i++)
+    for (let j = 0; j < SAMPLES; j++) {
+      const cx = ix0 + ((i + 0.5) / SAMPLES) * (ix1 - ix0);
+      const cy = iy0 + ((j + 0.5) / SAMPLES) * (iy1 - iy0);
+      q.copy(anchor)
+        .addScaledVector(rig.right, (cx - 0.5) * c.n)
+        .addScaledVector(rig.up, (cy - 0.5 - anchorY) * c.n);
+      if (hitsFootprintTerrain(c, q, towardCamera(rig, q))) hits++;
+    }
+
+  const centreDepth = new THREE.Vector3((b.x0 + b.x1) / 2, top, (b.z0 + b.z1) / 2).dot(rig.fwd);
+  let sortCost = 0;
+  for (let gy = c.gy - 1; gy <= c.gy + c.n; gy++)
+    for (let gx = c.gx - 1; gx <= c.gx + c.n; gx++) {
+      const inside = gx >= c.gx && gx < c.gx + c.n && gy >= c.gy && gy < c.gy + c.n;
+      if (inside || gx < 0 || gy < 0 || gx >= c.board.w || gy >= c.board.h) continue;
+      const pos = gridToWorld(c.board, gx, gy);
+      pos.y = c.heights(gx, gy);
+      if (pos.dot(rig.fwd) >= centreDepth) continue; // not in front of the slab
+      sortCost = Math.max(sortCost, coveredFractions(rig, [{ glyph: 'M', pos }, slab], 1, 'today')[0]!);
+    }
+
+  return { lateral, baseInside, occluded: hits / (SAMPLES * SAMPLES), sortCost };
+}
+
+/** The height patterns the pins sweep, as functions of the offset from the slab's corner. */
+export const HEIGHT_PATTERNS: Record<string, (dx: number, dy: number) => number> = {
+  flat: () => 0,
+  /** The rows today's rule ignores stand TALLER than its near row — the §79d2 bite, re-armed by yaw. */
+  farHigh: (_dx, dy) => (dy <= 0 ? FLOOR_LO : FLOOR_HI),
+  nearHigh: (_dx, dy) => (dy <= 0 ? FLOOR_HI : FLOOR_LO),
+  checker: (dx, dy) => ((((dx + dy) % 2) + 2) % 2 === 0 ? FLOOR_HI : FLOOR_LO),
+};
+
+export function slabCase(board: Board, gx: number, gy: number, n: number, pattern: string, mounds = false): SlabCase {
+  const f = HEIGHT_PATTERNS[pattern];
+  if (!f) throw new Error(`no height pattern ${JSON.stringify(pattern)}`);
+  return { board, gx, gy, n, heights: (x, y) => f(x - gx, y - gy), mounds };
+}
+
+/** `rubbleQuarry`'s five N×N slabs, cell for cell (config/layouts.json — the §105c fixture). */
+export const RUBBLE_QUARRY: Board = { name: 'rubbleQuarry 14x12', w: 14, h: 12 };
+export const RUBBLE_QUARRY_SLABS: readonly { gx: number; gy: number; n: number }[] = [
+  { gx: 2, gy: 5, n: 3 },
+  { gx: 8, gy: 5, n: 2 },
+  { gx: 10, gy: 7, n: 2 },
+  { gx: 5, gy: 2, n: 3 },
+  { gx: 11, gy: 3, n: 3 },
 ];

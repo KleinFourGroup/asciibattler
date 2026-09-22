@@ -1144,3 +1144,46 @@ it can show.
 5. **An open question from the verdict** ("I wonder if everything might need
    it"): scenery (walls, 1×1 rubble, cover) gets NO mark in any mode today —
    does it want grounding too? A yes is a small follow-up dial, not built.
+
+### 106c — THE READ (2026-09-22, the user's; 106b's batch read with it)
+
+All five items answered in one message, in the user's words:
+
+1. **The ground mark: `merged`** — "and it's not even close! 😂 That looks
+   really nice, grounds everything, and makes team clear." → finding 1 of the
+   verdict CONFIRMED: floatiness was grounding; ONE mark carries WHOSE and
+   TOUCHING. The identity-channel candidate for the spec.
+2. **The anchor circle-back: DELETE** — "the rule can indeed be deleted! The
+   few extra pixels that bottom gives just aren't that noticeable now that we
+   have proper grounding." → R5 (the classifier) · R6 (the descender room) ·
+   R7 (the baseline measurement) · R10 (the marker lifts that follow R6) are
+   DELETABLE under a uniform quad-bottom anchor + the ground mark — the spec
+   records it; the rule deletion is a build step (§105's decision point,
+   closed).
+3. **106b's batch read: CLEAR** — "Center looks great!"
+4. **The plate: `filled`** — "for sure! Also, I had to slightly darken the
+   opacity to make them properly pop." (`shadowAlpha` drives the merged fill
+   AND the filled plate — which one the darker value is for is asked.)
+5. **Scenery grounding: YES, try it** — "I think we definitely want to try this!"
+
+**Two flags, the user's** — and one mechanism: every mark is ONE flat mesh
+at ONE height, while the ground is a staircase of flat-topped prisms (✔
+`TerrainRenderer.heightAt`: the floor band [−0.3, 0] per cell, mud −0.25,
+water −0.4). (a) "The shadows for the NxN rubble … don't follow the different
+heights of the ground tiles beneath. They look flat when the terrain clearly
+isn't" — the plate sits at the footprint's HIGHEST top and floats over the
+lower tiles. (b) "I suspect the same will be true of the regular unit shadows
+as they move over the edges of tiles" — PREDICTED by the mechanism, not yet
+seen: at rest a contact mark (0.55) fits inside its own tile; mid-step it
+rides the sprite's Y (the §81c2 climb-early / descend-late profile), so half
+of it hovers over the lower tile, drawn whole under `cueDepth-overlay`.
+
+**The session's proposal (posed to the user, not yet signed):** a 106c-post —
+split every mark PER TILE (clip its triangles against each tile square it
+overlaps; each piece on that tile's own top — exact for flat tops) · extend
+the plate to all scenery behind a dial (a grid square — no team shape to
+collide with) · a separate plate opacity if the user's darker value was for
+the plate only. What per-tile splitting does NOT do: drape the vertical step
+faces between tiles (a break of ≤ 0.3 in the floor band) or follow the hill
+mounds — both want the marks drawn BY the terrain (a decal in the terrain
+shader), a build decision for the spec.

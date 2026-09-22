@@ -189,7 +189,7 @@ export const DIALS = {
   },
   /** The contact mark's size (tile units) — the shadow disc and the merged mark. */
   shadowSize: { kind: 'range', label: 'contact size', min: 0.3, max: 1, step: 0.05, def: 0.55 },
-  /** The contact mark's darkness — the shadow disc, the merged fill, the filled plate. */
+  /** The contact mark's darkness — the shadow disc and the merged fill (the filled plate has its own, `plateAlpha`). */
   shadowAlpha: { kind: 'range', label: 'contact opacity', min: 0.1, max: 0.9, step: 0.05, def: 0.45 },
   /** 106c — the FOOTPRINT PLATE under a static N×N body (rubble): which tiles it
    *  holds (the user's 105b read, deferred to §106 on purpose — TODO). */
@@ -200,6 +200,19 @@ export const DIALS = {
     def: 'off',
     hint: 'frame = the footprint outlined in the body colour · filled = a dark footprint under that outline',
   },
+  /** 106c-post — the user's item 5 ("we definitely want to try this"): the
+   *  plate under EVERY scenery body, not just the N×N slabs. A grid square, so
+   *  it collides with no team shape. */
+  plateScope: {
+    kind: 'enum',
+    label: 'plate under',
+    options: ['nxn', 'all'],
+    def: 'nxn',
+    hint: 'nxn = the rubble slabs only · all = every scenery body (walls, cover, 1x1 rubble)',
+  },
+  /** 106c-post — the filled plate's own darkness (the user darkened it at the
+   *  106c read; 0.6 is a guess at "slightly darker" than the contact 0.45). */
+  plateAlpha: { kind: 'range', label: 'plate opacity', min: 0.1, max: 0.95, step: 0.05, def: 0.6 },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
    *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */
@@ -345,6 +358,7 @@ export const KNOWN_ARTEFACTS: readonly string[] = [
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
   'ortho / long lens: the mist around the board is the apron ray, re-derived for parallel rays but read by no eye before yours',
+  'ground mark: marks and plates are cut per tile onto the tile TOPS - they do not drape the vertical step between two tiles of different heights, nor follow the hill mounds',
 ];
 
 /**

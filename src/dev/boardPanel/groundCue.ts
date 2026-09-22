@@ -39,6 +39,7 @@
 import * as THREE from 'three';
 import { spriteColorForUnit } from '../../render/spriteColor';
 import type { Team } from '../../sim/Unit';
+import { conformToTiles, type TileTops } from './conform';
 import type { DialState } from './state';
 
 export type CueSide = 'player' | 'enemy' | 'camp';
@@ -108,13 +109,24 @@ function plateGeometry(n: number, filled: boolean): THREE.BufferGeometry {
 export class GroundCues {
   private readonly meshes = new Map<string, THREE.Mesh>();
   private readonly geometries = new Map<string, THREE.BufferGeometry>();
+  /** A template's flat triangles as (x, z) pairs, unit scale, about the origin. */
+  private readonly templateTris = new Map<string, number[]>();
   private readonly seen = new Set<string>();
+  private tops: TileTops | null = null;
 
   constructor(private readonly scene: THREE.Scene) {}
 
-  /** Start a frame's sync; every mark not placed before `endFrame` is dropped. */
-  beginFrame(): void {
+  /**
+   * Start a frame's sync; every mark not placed before `endFrame` is dropped.
+   * 106c-post — with the battle's `tops` every mark is CUT PER TILE and laid on
+   * each tile's own top (conform.ts); without them (no battle, a bare-scene
+   * test) a mark is one flat mesh at its ground point, as before. Pass the SAME
+   * object for a whole battle: a mark is re-cut only when its placement or the
+   * tops change, so a still mark is built once and a moving one per frame.
+   */
+  beginFrame(tops: TileTops | null = null): void {
     this.seen.clear();
+    this.tops = tops;
   }
 
   /**
@@ -176,7 +188,7 @@ export class GroundCues {
     if (dials.plate === 'off') return;
     if (dials.plate === 'filled') {
       this.mark(`${key}:pf`, `plate:f:${n}`, () => plateGeometry(n, true),
-        BLACK, dials.shadowAlpha, 1, ORDER.plate, centre, dials);
+        BLACK, dials.plateAlpha, 1, ORDER.plate, centre, dials);
     }
     this.mark(`${key}:po`, `plate:o:${n}`, () => plateGeometry(n, false),
       spriteColorForUnit(subject), dials.cueAlpha, 1, ORDER.plate, centre, dials);
@@ -186,6 +198,7 @@ export class GroundCues {
     for (const [key, mesh] of this.meshes) {
       if (this.seen.has(key)) continue;
       this.scene.remove(mesh);
+      this.release(mesh);
       (mesh.material as THREE.Material).dispose();
       this.meshes.delete(key);
     }
@@ -208,10 +221,11 @@ export class GroundCues {
     dials: DialState,
   ): void {
     this.seen.add(key);
+    const template = this.geometryFor(shapeKey, build);
     let mesh = this.meshes.get(key);
     if (!mesh) {
       mesh = new THREE.Mesh(
-        this.geometryFor(shapeKey, build),
+        template,
         new THREE.MeshBasicMaterial({
           transparent: true,
           depthWrite: false,
@@ -221,12 +235,35 @@ export class GroundCues {
           side: THREE.DoubleSide,
         }),
       );
-      mesh.userData.shapeKey = shapeKey;
       this.scene.add(mesh);
       this.meshes.set(key, mesh);
-    } else if (mesh.userData.shapeKey !== shapeKey) {
-      mesh.geometry = this.geometryFor(shapeKey, build);
-      mesh.userData.shapeKey = shapeKey;
+    }
+    const tops = this.tops;
+    if (tops) {
+      // 106c-post — cut per tile, in world space; re-cut only on a new placement.
+      const placement = `${shapeKey}|${ground.x}|${ground.z}|${scale}`;
+      if (mesh.userData.placement !== placement || mesh.userData.tops !== tops) {
+        const tris = this.trianglesOf(shapeKey, template).map((v, i) =>
+          i % 2 === 0 ? ground.x + v * scale : ground.z + v * scale,
+        );
+        const cut = new THREE.BufferGeometry();
+        cut.setAttribute('position', new THREE.Float32BufferAttribute(conformToTiles(tris, tops, GROUND_EPSILON), 3));
+        this.release(mesh);
+        mesh.geometry = cut;
+        mesh.userData.owned = true;
+        mesh.userData.placement = placement;
+        mesh.userData.tops = tops;
+      }
+      mesh.position.set(0, 0, 0);
+      mesh.scale.setScalar(1);
+    } else {
+      if (mesh.geometry !== template) {
+        this.release(mesh);
+        mesh.geometry = template;
+        mesh.userData.placement = undefined;
+      }
+      mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z);
+      mesh.scale.setScalar(scale);
     }
     // Sprites are `depthWrite: false` and draw at renderOrder 0 — a mark that
     // sorted AFTER them would paint over the glyph standing on it.
@@ -235,8 +272,30 @@ export class GroundCues {
     material.color.set(colour);
     material.opacity = opacity;
     material.depthTest = dials.cueDepth === 'world';
-    mesh.position.set(ground.x, ground.y + GROUND_EPSILON, ground.z);
-    mesh.scale.setScalar(scale);
+  }
+
+  /** Dispose a mesh's geometry if it owns it (a per-tile cut), never a shared template. */
+  private release(mesh: THREE.Mesh): void {
+    if (!mesh.userData.owned) return;
+    mesh.geometry.dispose();
+    mesh.userData.owned = false;
+  }
+
+  /** A template's flat triangles as (x, z) pairs — read once per shape. */
+  private trianglesOf(shapeKey: string, template: THREE.BufferGeometry): number[] {
+    let tris = this.templateTris.get(shapeKey);
+    if (!tris) {
+      const pos = template.getAttribute('position');
+      const index = template.getIndex();
+      const count = index ? index.count : pos.count;
+      tris = [];
+      for (let i = 0; i < count; i++) {
+        const v = index ? index.getX(i) : i;
+        tris.push(pos.getX(v), pos.getZ(v));
+      }
+      this.templateTris.set(shapeKey, tris);
+    }
+    return tris;
   }
 
   private geometryFor(shapeKey: string, build: () => THREE.BufferGeometry): THREE.BufferGeometry {

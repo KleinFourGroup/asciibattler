@@ -22,6 +22,7 @@ import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
 import { footprintCentre } from './slab';
+import type { TileTops } from './conform';
 import {
   applyCameraView,
   installSeams,
@@ -85,6 +86,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let lastSized = 0;
   /** 106b — N×N bodies re-stood by the last `slab` / view change. */
   let lastSlabs = 0;
+  /** 106c-post — the live battle's tile tops, built once per battle. */
+  let tops: TileTops | null = null;
   let fixture: FixtureReport | null = null;
 
   const onFrame = (): void => {
@@ -98,24 +101,33 @@ export function attachBoardPanel(game: Game): BoardPanel {
       // 106b — the rubble spawned under the dialled rule, but maybe before the
       // camera was re-fitted to THIS board (a lens slide reads its position).
       if (battle && dials.slab !== 'today') seams.restampSlabs(battle);
+      // 106c-post — ONE tile-tops object per battle: the marks re-cut only when
+      // a placement changes, and that is decided by this object's identity.
+      if (battle) {
+        const ground = slabGroundOf(battle.world, internals.terrain);
+        tops = { gridW: battle.world.gridW, gridH: battle.world.gridH, heightAt: ground.heightAt };
+      } else {
+        tops = null;
+      }
       describe();
     }
-    cues.beginFrame();
-    if (battle) {
-      const ground = slabGroundOf(battle.world, internals.terrain);
+    cues.beginFrame(tops);
+    if (battle && tops) {
       for (const unit of battle.world.units) {
         const handle = battle.handles.get(unit.id);
-        if (!handle) continue;
+        if (!handle) continue; // the dead leave `world.units` (World.removeUnit)
         const n = footprintOf(unit);
         // 106b — an N×N body's marks stand on its FOOTPRINT, never its sprite
         // anchor (which the `slab` rule may slide toward the camera).
         const centre =
           n > 1
-            ? footprintCentre(unit.position.x, unit.position.y, n, battle.world.gridW, battle.world.gridH, ground.heightAt)
+            ? footprintCentre(unit.position.x, unit.position.y, n, tops.gridW, tops.gridH, tops.heightAt)
             : null;
-        // 106c — a static N×N body with no cue of its own (rubble) gets the plate.
-        if (centre && cueSideOf(unit) === null && unit.currentHp > 0) {
-          cues.placePlate(`n${unit.id}`, unit, centre, n, dials);
+        // 106c — a body with no cue of its own (scenery) gets the plate: the N×N
+        // slabs, or (106c-post, `plateScope-all`) every one of them.
+        if (cueSideOf(unit) === null && (centre || dials.plateScope === 'all')) {
+          const at = centre ?? footprintCentre(unit.position.x, unit.position.y, 1, tops.gridW, tops.gridH, tops.heightAt);
+          cues.placePlate(`n${unit.id}`, unit, at, n, dials);
         }
         if (isInertNeutral(unit)) continue;
         const at = centre ?? internals.sprites.getPosition(handle, scratch);

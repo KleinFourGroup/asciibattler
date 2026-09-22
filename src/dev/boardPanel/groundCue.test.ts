@@ -40,6 +40,28 @@ describe('106c — the ground mark', () => {
     expect(marks({ plate: 'filled' }, (c, d) => c.placePlate('n', SCENERY, at, 2, d))).toBe(2);
   });
 
+  it('106c-post — with tile tops, a mark straddling an edge lies on BOTH tiles’ tops; the filled plate reads its own opacity', () => {
+    // A 2×1 board: cell (0,0) is x ∈ [−1, 0] at height 0, cell (1,0) is x ∈ [0, 1] at −0.3.
+    const tops = { gridW: 2, gridH: 1, heightAt: (gx: number) => (gx === 0 ? 0 : -0.3) };
+    const scene = new THREE.Scene();
+    const cues = new GroundCues(scene);
+    const d = { ...defaultDials(), ground: 'merged' as const, plate: 'filled' as const, plateAlpha: 0.8 };
+    cues.beginFrame(tops);
+    cues.place('u', PLAYER, new THREE.Vector3(0, 99, 0), 1, d); // the sprite's Y is ignored
+    cues.placePlate('n', SCENERY, new THREE.Vector3(0.5, -0.3, 0), 1, d);
+    cues.endFrame();
+    const ys = new Set<number>();
+    const opacities: number[] = [];
+    scene.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      const pos = o.geometry.getAttribute('position');
+      if (o.renderOrder !== -3) for (let i = 0; i < pos.count; i++) ys.add(Number(pos.getY(i).toFixed(4)));
+      if (o.renderOrder === -3) opacities.push((o.material as THREE.MeshBasicMaterial).opacity);
+    });
+    expect([...ys].sort()).toEqual([-0.288, 0.012]); // each top + the 0.012 lift
+    expect(opacities).toContain(0.8);
+  });
+
   it('a mark not placed in a frame is dropped at its end', () => {
     const cues = new GroundCues(new THREE.Scene());
     const d = { ...defaultDials(), ground: 'both' as const };

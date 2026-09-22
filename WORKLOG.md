@@ -1187,3 +1187,59 @@ the plate only. What per-tile splitting does NOT do: drape the vertical step
 faces between tiles (a break of ≤ 0.3 in the floor band) or follow the hill
 mounds — both want the marks drawn BY the terrain (a decal in the terrain
 shader), a build decision for the spec.
+
+**Signed 2026-09-22** ("If you want to build it here, then I'm down for
+that!") **with a pre-commitment, the user's:** any refinement from the
+-post's read lands in the NEXT session — the session agreed and added bugs to
+it (a bug found at the read also goes next, first in line).
+
+### 106c-post — marks follow the tiles + scenery plates + the plate opacity (2026-09-22) — ◐ BUILT; the `stop` is open
+
+`src/dev/boardPanel/conform.ts` (pure): flat triangles in world XZ → each
+clipped (Sutherland–Hodgman) against every tile square it overlaps and laid
+on that tile's own top. `GroundCues.beginFrame(tops)` takes the battle's tile
+tops (ONE object per battle, built in index.ts on a battle change — a mark
+is re-cut only when its placement or that identity changes, so a still mark
+is built once and a moving one per frame); every mark and plate goes through
+it, and the sprite's Y is no longer read (the mid-step float). Without tops
+(no battle, a bare-scene test) a mark is one flat mesh as before. Two dials:
+`plateScope: nxn | all` ("plate under" — `all` = every cue-less body: walls,
+cover, 1×1 rubble) · `plateAlpha` ("plate opacity", **0.6 — a GUESS** at the
+user's "slightly darker"; the value they used was asked and not given — set
+it at the read). The alive test is PRESENCE (✔ the dead leave `world.units`,
+`World.removeUnit`) — the 106c `currentHp > 0` check is gone (an hp-less
+wall's `maxHp` was never checked). A ninth known artefact (counted): the cut
+lies on the TOPS only (no step faces, no mounds).
+
+**Two defects the instruments caught on the way** (both in `conformToTiles`):
+(1) a clip at a tile CORNER repeats a vertex, so a sound polygon's fan could
+emit a zero-area triangle ON the boundary (`conform.test.ts`'s four-way split
+failed — the first hypothesis, a zero-area POLYGON, fixed nothing; the
+values named it); (2) the pane's whole-battle check then found 15 more
+triangles per 400 frames, every one area 0 and ON an edge — slivers a few
+1e-7 wide, above the 1e-12 cut in doubles, zero-width in float32. The cut is
+now `MIN_AREA = 1e-6` world² (≈ 0.01 px² at fit).
+
+**Verified:** `conform.test.ts` (4, a hand-stated 2×2 board — whole in one
+tile · the four-way corner split, each piece on ITS tile, area conserved ·
+an edge split, half each side · the off-board part dropped) +
+`groundCue.test.ts` (+1: through `GroundCues`, a mark straddling an edge
+lies on both tops, the sprite's Y ignored; the filled plate reads
+`plateAlpha`). In the pane (the quarry fixture, ortho y45, merged + filled
+plates; the hidden pane driven by `activeScene.tick(1/60)` × 400 after
+unparking, the marks synced through the hooked `sortByDepth` each tick),
+re-derived from the grid + `heightAt`: **0 of 430 811 unit-mark triangles and
+0 of 145 600 plate triangles off their tile's top** (worst 1.0e-8, float32),
+marks straddling an edge in 392 of 400 frames — the user's predicted case,
+exercised throughout. Counts: merged 30 + plates — `nxn` filled 40 · `all`
+filled 60 · `all` frame 45 (15 combatants, 5 slabs + 10 1×1 scenery).
+**NOT verified:** any look.
+
+**THE STOP — the read (the pre-commitment applies: refinements → next
+session):** `?bp=board-quarry_proj-ortho_yaw-45_slab-centre_cue-outline_cueAlpha-0.3_ground-merged_plate-filled`
+— (1) the slab plates now step with the tiles beneath; (2) let the fight run
+(Space): a unit's mark stays on the ground as it crosses a height step;
+(3) `plate under` = all — walls, cover and 1×1 rubble grounded; (4) set
+`plate opacity` to your value (and `contact opacity`, if the darker value was
+for the marks too). Wrong looks like a mark or plate that floats, a piece on
+the wrong tile, a scenery plate that reads as a team mark.

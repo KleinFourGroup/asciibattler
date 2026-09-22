@@ -28,7 +28,7 @@ describe('105e — the glyph scale + the artefact list', () => {
     expect(KNOWN_ARTEFACTS.length).toBeGreaterThan(0);
     for (const text of KNOWN_ARTEFACTS) {
       expect(text.trim().length, text).toBeGreaterThan(20);
-      expect(/^(yaw|glyph scale|ortho|any dial change)/.test(text), text).toBe(true);
+      expect(/^(yaw|glyph scale|ortho|any dial change|ground mark)/.test(text), text).toBe(true);
     }
   });
 });

@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named: ortho · p45 · yaw [30, 45]; the lens-20 fallback); §106 is NEXT — its kickoff audit + cut are not yet written.** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named: ortho · p45 · yaw [30, 45]; the lens-20 fallback); §106 KICKED OFF 2026-09-22 — the cut + reads signed (below).** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. No
 phase entries beyond §106's charter exist until the spec is written. The
@@ -69,3 +69,12 @@ pass means re-cutting, not drifting. **Exit:** a few full battles
 played in the candidate · the signed bookmark with the user's reasons in
 the user's words · the lean pinned headless · the round's spec written and
 the build phases entered here. **Scope guards:** §105's, unchanged.
+
+**The cut (user-signed 2026-09-22; the audit + why this order: WORKLOG §106
+Kickoff).** No bump, no smoke on any step, no production touch.
+
+- [ ] **106a** — the instrument: an N×N slab's base corners inside its footprint + no footprint terrain over its quad, yaw [30, 45], today's rule the FAILING control at 45 · the flyer at lift 0.45 · the lean pinned through the production camera. Read `none`.
+- [ ] **106b** — the N×N seam (dev): centre + the slide along the view ray, restamped on a view change; the cue follows. Read `batch` → 106c's stop: rubbleQuarry at 45 and 30, each slab on its plot; wrong = overhanging its diamond, or a hill biting its lower band.
+- [ ] **106c** — the `ground: cue | shadow | both | merged` dial under every combatant (the flyer's = the mark with a gap) + the footprint plate. Read `stop` — with the anchor circle-back + 106b's batch; yaw 45, 30 the check; Ctrl+Alt+G.
+- [ ] **106d** — THE PLAYED READ: a few full battles under the bookmark (step zero: a whole run plays under it); watch the stack in clumps, the wall staircase, picks under yaw. Read `stop` — the bookmark signed in the user's words.
+- [ ] **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`.

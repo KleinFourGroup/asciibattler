@@ -904,3 +904,67 @@ TODO indicator) · the overlay stack watch (finding 3) · the wall staircase ·
 the scroll-mode pan under yaw · the flyer at 0.45 re-measured · the anchor
 circle-back · the fallback held as a bookmark. The spike code's disposition
 (the seed of the build, or reverted) is §106's decision point, unchanged.
+
+## Phase 106 — the projection spike, pass two + the spec
+
+### Kickoff (2026-09-22) — the audit at `356b958` + the cut, user-signed
+
+Session 40f4ba9e. ✔ = read at file:line by this session; everything else is
+DERIVED and pinned by the step that touches it.
+
+1. **Playing the candidate needs no new code — PREDICTED** (106d's step zero
+   probes it): ✔ the view is Renderer state (`setCameraView`,
+   `Renderer.ts:288-297`) and survives a battle swap; ✔ the cues sync under
+   every live combatant from the `sortByDepth` hook
+   (`boardPanel/index.ts:77-105`), in any battle, not only a fixture; ✔
+   `pickCell` raycasts the terrain surface through `setFromCamera`
+   (`Renderer.ts:340-352`), which three supports for an ortho camera.
+2. **N×N is rubble only:** ✔ `rubble_2x2` / `rubble_3x3`
+   (`config/units.json:636-648`), `▄`, inert; no N×N combatant in the catalog,
+   and META's "no walking N×N". The verdict's "creatures stay one big glyph"
+   has no customer this round — the fix is for slabs.
+3. **The depth bias needs no shader under ortho** (derived; 106a pins it): ✔
+   the billboard offsets in VIEW space (`billboard.vert.glsl:47-48`), so an
+   anchor slid along the view direction changes only its view-z. Under
+   parallel rays the quad, its bars (`projectToCss` of anchor + camera-up), the
+   FX endpoints and a world-space cue translated with it all project to the
+   same px; what moves is the depth test and the sprite sort (`sortByDepth`'s
+   view-axis key) — both toward the footprint's nearest corner, which is the
+   point. → **centre + slide** as a dev seam on `unitAnchorPos` (✔
+   `BattleRenderer.ts:1101-1118`, TS-private, runtime-reachable like the 105b
+   seams): zero production touch. Exact under ortho ONLY — under the lens-20
+   fallback a slid quad grows by the depth ratio (a few %), so the BUILD
+   chooses slide vs a shader bias. ✔ The cue mock's N×N re-centre
+   (`groundCue.ts:128`, `z − (n−1)/2`) assumes the near-row anchor and must
+   follow it.
+4. **The lean pin exists on the INSTRUMENT** (✔
+   `tests/board/geometry.test.ts:79-91`, with its perspective control) and
+   reaches production only transitively (`cameraFit.test.ts` pins instrument
+   NDC = production NDC across the cross). A direct pin through
+   `applyCameraFit` + a real `OrthographicCamera` is 106a.
+5. **The enemy's "diamond" cue is a WORLD diamond** (✔ `groundCue.ts:49-53`: 4
+   segments from θ 0, vertices on the grid axes). At yaw 45 the grid axes
+   project to screen diagonals, so it draws as a screen-axis RECTANGLE (≈ 1.41 :
+   1, derived) while the TILE becomes the screen diamond. The three shapes stay
+   distinct; the identity clauses must be worded in SCREEN terms. Derived, not
+   rendered.
+6. ✔ **Walls are 1×1 `#` inert billboards** (`config/units.json:610-617`) — the
+   staircase is an art read in play (106d), with no cheap code fix; the
+   scroll-mode pan under yaw stays DEV-only (✔ `Renderer.ts:238-246`) → the
+   spec's D4 re-pose, not §106.
+
+**The cut (user-signed 2026-09-22 — "all signed enthusiastically"):** ROADMAP
+§106. Why this order: 106a is headless and gives 106b its oracle; **106b's
+read is batched into 106c's stop** because the plate sits on the footprint
+tiles wherever the block stands, so 106c does not build on 106b's look (the
+dependency test); 106c precedes 106d so the played read runs the candidate as
+close to final as the spike can make it; the spec is last. **Predictions:** no
+snapshot bump; the fuzz smoke fires on NO step (`tests/board/` is not in the
+hook's trigger set); no production touch — the one seam stays 105d's fit. A
+lens-20 read at 106d is the fallback, not a third pass.
+
+**The session plan (the user's, 2026-09-22):** the model changed
+(`claude-fable-5-1` → `claude-opus-5-5`), which fires the AGENTS tone-audit
+rider. This session carries the OLD AGENTS in context, so it runs §106 until
+it recommends a handoff; the audit gets a DEDICATED fresh session (a cold read
+is the thing being audited); §106 resumes from the handoff after it.

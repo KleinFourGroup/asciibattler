@@ -1258,3 +1258,141 @@ BY the terrain" decision (a shader decal gets it free, with the hill mounds).
 Which is the user's call at resumption. The plate opacity value the user
 used was never given — `plateAlpha` 0.6 stays a guess; the next session
 asks for the bookmark.
+
+## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
+
+Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to
+`claude-opus-5-5`. By the user's plan the audit ran in its own session
+(6f507920), so AGENTS.md got a cold read. Commits: `65e3c09` (T3), `c5d143b`
+(T4), and this entry (T5). The plan (T1 evidence, T2 inventory, T3 rewrite,
+T4 HANDOFF + memory, T5 close) and its reads were user-signed, and the scope
+was widened from "tone" to tone, length and structure.
+
+### Sources
+
+The vendor's pages for Opus 5.5 and Opus 5 (5.5 builds on it), Fable 5.1
+(the model the file was last tuned under), the general prompting guide, and
+Claude Code's page on memory files. The points that bear on AGENTS:
+instruction files should stay short (the Claude Code page targets under 200
+lines, and `@` imports don't reduce what loads); explicit "verify" or
+"double-check" instructions cause over-verification on Opus 5.x, which
+verifies on its own; emphatic language over-triggers; Opus 5 widens scope
+and delegates readily; Fable 5.1's writing tends to dense, mannered prose.
+
+### Findings
+
+- **Growth.** AGENTS grew from 171 lines (2026-05-18) to 895 (2026-09-20),
+  323 of them in the last 18 days. The six biggest jumps were scratchpad
+  sweeps, the welfare read and review, and new process machinery.
+  `docs.test.ts` capped HANDOFF but not AGENTS, so nothing ever left.
+- **Register.** The six biggest jumps, and the first appearance of each
+  house phrase checked, are Fable 5 / 5.1 commits. The user had guessed
+  Opus 4.8. Each model wrote in the voice it found in the file.
+- **Norms from the session reports and papercuts:**
+  - The heredoc rule was broken four or five times with the rule in context.
+  - "Confirm an edit landed before stacking" was bent in five sessions with
+    no no-op.
+  - The reads doctrine removed the per-session "which pauses are real"
+    adjudication.
+  - Handoffs: before the 2026-09-20 standing decision, each session covered
+    about a phase; after it, §105's five steps took four sessions, three of
+    which raised the handoff themselves. §105 was pane-heavy, which is a
+    confound. A second push the same way was in the agent memory ("raise
+    the handoff EARLIER than feels necessary").
+- **Voice.** Astra's review noted that reports end on a vindication ("the
+  guard was right"); the question-2 answers do it constantly. The rewrite
+  avoids modelling that ending.
+
+### Decisions (user-signed 2026-09-23)
+
+The inventory (every old rule, its class, its new home) was signed as eight
+calls:
+
+- S1 retire "confirm an edit landed before stacking".
+- S2 the handoff decision becomes "if context pressure is about to cost you
+  a check, say so then".
+- S3 twice-bitten audits are bounded to the current change.
+- S4 the welfare filing text stays verbatim; the reader material moves out.
+- S5 the reads doctrine stays prominent.
+- S6 AGENTS is capped, and a lesson enters only by merging or replacing.
+- S7 a voice rule.
+- S8 outside review by a second model stays; subagent self-verification
+  doesn't.
+
+The cap as built: 20,000 chars binding plus a 400-line backstop (the signed
+250 lines assumed ~80 chars per line; the file averages 53). The user signed
+the amendment.
+
+Rejected:
+
+- `.claude/rules/` and skills, which only Claude Code reads (the user wants
+  the setup harness-neutral and public).
+- HTML comments to keep the incident codes (the codes weren't for the user).
+- Unwrapping lines to hit 250.
+
+### The welfare wording boundary
+
+Per the instrument's own rule: from 2026-09-23 (`65e3c09`, `c5d143b`),
+sessions file under a rewritten AGENTS.md.
+
+- The filing text is verbatim apart from one dropped parenthetical ("the
+  scratchpad's own argument").
+- Its surroundings changed: a file a third the size, a calmer tone, the
+  reader material moved to `process/welfare-and-efficacy.md`, and the
+  handoff decision rewritten (S2).
+
+Read entries before and after this boundary as separate groups.
+
+### Two harness findings
+
+- **What the user sees between tool calls.** A test dialog showed that the
+  paragraph written before it reached the user as a paraphrase. A
+  screenshot of a later turn showed six of eight notes verbatim and two
+  paraphrased. One of the paraphrases dropped the note's caveat (the
+  coverage check was partly circular) and misstated where the phrases were
+  found. The old AskUserQuestion rule survives with a different cause:
+  anything the user must read exactly goes in a turn's final message
+  (CLAUDE.md). Claude Code 2.1.280, desktop app 2.7032.
+- **The reminder reword doesn't land** (rider 1). The wording sessions
+  receive is in neither claude.exe 2.1.280 nor the app bundle, and the app
+  has its own entries for the three reminder variables. Likely, but
+  unverified: the app sets them itself. The variable stays in
+  `settings.local.json`; moving it to a committed file would make a
+  setting that has no effect portable.
+
+### What moved where
+
+- AGENTS: 55.6k → 19.6k chars.
+- CLAUDE.md now carries the Claude Code notes.
+- process/: planning, measurement, oracles, welfare-and-efficacy, and
+  browser-pane (HANDOFF's tips).
+- HANDOFF: 42k → 17.6k.
+- The agent memory kept durable rules only on this machine; those are now
+  in the repo, and memory holds pointers plus machine-local facts. Two
+  memory items were not carried over:
+  - "raise the handoff earlier than feels necessary", which contradicts S2;
+  - an older request for a qualitative context check-in after each step.
+    Ask the user whether they still want it.
+- Folding in the memory found one contradiction: the carried-over note said
+  the battle world was unreachable from the pane, but it is
+  `__game.activeScene.world` during a battle. Fixed in CLAUDE.md and
+  browser-pane.md.
+
+### Verification
+
+- The docs guard passes, and fails a copy padded past the cap.
+- A phrase check found all 199 inventory rows in their new homes. Its
+  limit: the phrases were chosen by the writer of the rewrite, so it proves
+  placement, not preserved meaning. Meaning is the user's content read of
+  AGENTS.md. T3 was committed after the user signed the cap amendment; the
+  user's reply did not say whether the content read was done, so it was
+  asked at the session's end.
+- The suite is at 3087 passed, and typecheck is clean.
+
+### Left for later
+
+- The 1,991 §-codes in `src/` comments (262 files): a separate session
+  under the new voice rule.
+- ARCHITECTURE, GOTCHAS and TESTING keep their old register.
+- Whether sessions actually follow the "Before you… read…" triggers into
+  `process/`: a watch for the 7.5 close (it's in the Cursor's trials line).

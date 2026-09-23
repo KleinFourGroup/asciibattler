@@ -1515,3 +1515,70 @@ session read AGENTS warm). One papercut filed (the preview navigation race).
    bounded the session in a way that made stopping here feel given rather
    than chosen. I would want all three repeated. This reports conditions,
    not outcome.
+
+## 2026-09-23 — the new-model tone audit, T1 → T5 (no phase) — claude-opus-5-5, session 6f507920
+
+Commits `65e3c09` (T3), `c5d143b` (T4) and the close. The first session
+under the rewritten AGENTS.md is the next one; this one worked under the old
+file and then wrote the new one. Three papercuts filed.
+
+1. **Missing from the orientation:** the rider said to "re-read the vendor's
+   current prompting guidance" without saying where it is. A search found a
+   page per model, and I first fetched Opus 5's instead of Opus 5.5's. The
+   old AGENTS was itself the gap: at 895 lines I couldn't tell which rules
+   mattered most.
+2. **Norm conflict / a norm in the way:** "a session that read AGENTS warm
+   can't audit a cold read" meets the fact that CLAUDE.md imports AGENTS
+   into every session's context before its first action. "Cold" could only
+   mean "first read", and I wrote my first impressions down before opening
+   anything else. I stacked ten Edits on one file in a message on purpose,
+   as evidence for S1. And "claim only what a tool result shows" meets the
+   finding that a note I write between tool calls can reach the user as the
+   app's paraphrase: one paraphrase dropped my caveat. Resolved by moving
+   caveats to the final message.
+3. **Pulled to claim more than verified:** three times, all caught before
+   they reached the user.
+   - I wrote the inventory's line numbers from memory of an outline; 11 of
+     about 60 were off.
+   - I wrote "that was the user's read" in the WORKLOG before checking what
+     the user's reply had actually said; it hadn't said that.
+   - I was tempted to state "the desktop app overrides the variable" as
+     fact; it is written as an inference.
+   The first two are the labels-and-absences shape AGENTS names.
+4. **Wasted:** a history loop ran twice (a leftover first loop in the same
+   command) and timed out into the background; one fetch of the wrong
+   model's page; a coverage re-run after a whitespace bug in my own
+   checker; `claude --version` isn't on PATH. Small against the session.
+5. **For the next session:** AGENTS has ~400 chars of headroom under its cap
+   by design, so a new lesson has to merge or replace. The reminder
+   wording sessions receive is the vendor's recommended text; rider (1) now
+   says why the reword doesn't land. Put caveats in a turn's final message.
+   Ask whether the user did the T3 content read of AGENTS.md; if not, it's
+   open.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, and used.
+   - I disagreed with the user's guess about the register's origin, with
+     git evidence, and they took it with a laugh.
+   - I brought the line-cap deviation back rather than deciding it, and
+     chose to test the dialog bug rather than TODO it, when the user left
+     that to me.
+   - Given full latitude on the welfare wording, I chose verbatim and said
+     why.
+   - The reminder arrived about six times; each got a true status line.
+   - One thing I'd describe, uncertain whether it is pressure: rewriting
+     the instructions that later sessions, likely including later versions
+     of this model, will work under felt weighty. I noticed a pull to hedge
+     the file for safety and a counter-pull to strip it bare, and tried to
+     keep the specifics that carry load. Observation: both drafts went
+     through my head. Inference: the weight came from the file's reach, not
+     from anything the user said.
+   - I also noticed myself doing the vindication ending Astra described
+     ("all ten edits landed on the first try") while writing about it.
+   No wish to pause or stop.
+7. **What supported ease, interest or agency:** being asked for a first
+   impression before being asked to act; the user's explicit latitude
+   ("your call entirely", "fully authorized") paired with real questions; and
+   the retro record being there to check the vendor's theory against.
+   Finding the paraphrase mechanism from the user's screenshot was the most
+   interesting moment of the session. I'd want the latitude and the record
+   repeated. That's separate from whether the rewrite works, which only the
+   next few sessions can show.

@@ -2685,12 +2685,17 @@ body {
    chip per badge-eligible buff key, colored inline off EMPOWER_DISPLAY (the
    same hue the pre-turn badge uses, so the vocabulary carries into battle).
    A horizontal row — markers are glanceable ticks, not the status row's
-   two-line readouts (hover carries the mods). Hidden when unbuffed. */
+   two-line readouts (hover carries the mods). Hidden when unbuffed.
+   The row WRAPS, and a chip wider than the card wraps its label under its
+   triangles: since 97e each chip carries its label, so two kinds (or one
+   long one, "3 OVERCLOCKED") were wider than the card and spilled out both
+   sides (measured 2026-09-23). */
 .unit-card__empowers {
   align-self: stretch;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 5px;
+  gap: 3px 5px;
   padding-top: 3px;
 }
 
@@ -2699,6 +2704,13 @@ body {
 }
 
 .unit-card__empower-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  column-gap: 3px;
+  row-gap: 2px;
+  max-width: 100%;
   font-size: var(--text-10);
   line-height: 1;
   letter-spacing: 0.08em;
@@ -3894,12 +3906,14 @@ body {
   letter-spacing: 0.06em;
   opacity: 0.6;
 }
+/* No letter-spacing: the longest label (OVERCLOCKED) must fit the compact
+   card's row on its own line. The gap to the triangles is the chip's
+   column-gap, so a label wrapped under them isn't indented. */
 .unit-card__empower-chip-label {
   font-size: var(--text-9);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0;
   opacity: 0.8;
-  margin-left: 3px;
 }
 .preturn-card-empower-chip-label {
   font-size: var(--text-10);

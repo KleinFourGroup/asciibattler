@@ -1413,14 +1413,61 @@ correct it). **Two items carried to 106e, the user's:**
   through a mark cut to the flat top). The user's view: extending the cut to
   the mounds would be complicated and brittle, needing special handling for
   each future non-flat tile, and the durable fix is stamping the marks into
-  the terrain's own rendering, as considered for 106e. The session's view is
-  in its reply (a terrain decal; a mesh-reading CPU cut is general but pays
-  per moving mark per frame and still needs the drape special case).
+  the terrain's own rendering, as considered for 106e. The session agreed: a
+  CPU cut that reads the drawn terrain triangles would be general, but it
+  pays per moving mark per frame and still needs the drape as a special
+  case, while a mark drawn by the terrain's shaders appears on tops, faces,
+  mounds and any future shape, and is occluded honestly by construction.
+  **Decided (2026-09-23, the session's pick, the user's lean too):** the
+  spec builds the marks as signed-distance shapes evaluated in the terrain
+  shader from a small per-frame table, binned per tile, rather than as a
+  top-down render target sampled by world XZ. The shapes stay crisp at any
+  resolution and make rounded corners and stroke width parameters; the
+  render target is the smaller port but, by rough arithmetic, needs ~2048²
+  on a large board to keep the thin outline crisp at 1440p. The mounds use
+  a clone of the terrain material, so they get the marks with it.
 - **Rounded corners on the static plates**: low confidence, the user's.
 
 **Two pre-existing bugs, reported at the read** (TODO §106 riders, with
 their causes): the hill colour ignores the layout theme; several empower
 kinds overflow a compact card's chip row.
+
+### The 106d riders — two pre-existing bugs, fixed before 106e (2026-09-23) — ◐ BUILT, `batch` reads
+
+The user's call ("If you want to do them now, then I'm all for that!").
+Both read `batch`, at 106e's stop.
+
+**Hills follow the theme.** A hills tile top now falls through to the
+theme's floor palette in `topColorFor`, and each mound is its own tile's top
+colour brightened ×1.25–1.75 by mound height (clamped at 1). The first build
+lerped each mound toward the palette's high end; the pane's per-theme
+averages showed grassland's high end is amber, so grassland hills went
+brown, and the rule changed before the commit. **Verified:**
+`TerrainRenderer.test.ts` +2 (a hills top equals its theme's floor colour at
+four heights on every theme; the mound colours differ on every theme), both
+failing on the old renderer. In the pane, on a 6×6 hill patch per theme,
+all 144 mounds read 1.28–1.73× their own tile's brightness in the same hue
+on all six themes, read from the drawn vertex buffers. **Not verified:** the
+look; two pane screenshots showed nothing absurd. **Read:** a battle on a
+grassland, tundra, barren or volcanic board with hills. The hills should
+look like the board with lighter mounds, not green; wrong looks like hills
+that vanish into the floor, or mounds that glow.
+
+**The empower chips fit.** Step zero changed the fix. Measured in the pane
+at 1280×720: one `▲▲ HONED` chip is 46 px in the 64 px row, but a lone
+`▲▲▲ OVERCLOCKED` is 89 px and `▲▲▲ SHIELDED` 71 px, so wrapping the row
+alone would not have fixed a single long chip. The fix: the row wraps; a
+chip wraps its label under its triangles when it is wider than the row; and
+the compact label's letter-spacing goes from 0.06em to 0, so OVERCLOCKED
+(65 px with the spacing) fits on its own line. **Verified** in the pane: 0 px
+of spill for one to five chips, the lone long chips included. The cost is
+height: the card is 79 px unbuffed, 97 with one chip (as before), 110 with
+two, 123 with three, 171 with all five, and the pane's row stretches every
+card to the tallest, as it already did. **Not verified:** Firefox's font
+metrics (the fonts are self-hosted, so they should match) and the look.
+**Read:** a unit with two or three empower kinds. The chips stack inside the
+card; wrong looks like a chip or label crossing the card's edge, or labels
+that read cramped.
 
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 

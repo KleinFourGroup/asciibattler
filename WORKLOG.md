@@ -1243,3 +1243,18 @@ session):** `?bp=board-quarry_proj-ortho_yaw-45_slab-centre_cue-outline_cueAlpha
 `plate opacity` to your value (and `contact opacity`, if the darker value was
 for the marks too). Wrong looks like a mark or plate that floats, a piece on
 the wrong tile, a scenery plate that reads as a team mark.
+
+### 106c-post — THE READ (2026-09-22, the user's) — CLEAR, one refinement
+
+"The only thing I think would be a nice improvement would be having the
+marks hang down on the verticals between tiles, as you mentioned, but that
+is so minor; you absolutely nailed this!" → the four items clear; ONE
+refinement, **the step-face drape** (a mark continuing down the vertical face
+where two tiles of different heights meet) — by the pre-commitment it is the
+NEXT session's first work: either a spike `-post` (the cut already knows
+where each piece's edge meets a lower neighbour — a vertical quad down that
+face per such edge is the cheap mock) or folded into the spec's "marks drawn
+BY the terrain" decision (a shader decal gets it free, with the hill mounds).
+Which is the user's call at resumption. The plate opacity value the user
+used was never given — `plateAlpha` 0.6 stays a guess; the next session
+asks for the bookmark.

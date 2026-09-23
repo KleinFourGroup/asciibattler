@@ -1343,6 +1343,56 @@ guess). Yaw 30 as the check.
    (106e).
 3. **Plate opacity: 0.6 stays** — the guess is now the user's value.
 
+### 106d — step zero: a whole run under the bookmark (2026-09-23) — the `stop` is open
+
+**The prediction held** (kickoff finding 1: playing the candidate needs no
+new code). The bookmark
+`?bp=proj-ortho_yaw-45_cue-outline_cueAlpha-0.3_slab-centre_ground-merged_plate-filled_plateScope-all_anchor-bottom_drape-1_cueDepth-world`
+on a real run, no fixture: `?seed=7&character=soldier` at the default
+length, driven in the hidden pane from the page (a phase-by-phase dispatcher
+over `__game.run`; battles by `activeScene.tick(0.1)` with the marks synced
+through the hooked `sortByDepth`). It played an event, four battles and an
+elite (13 turns) to a defeat at hop 6; `resetRun` into a new run whose first
+turns audited the same (same seed); and `&hops=2` through the boss (6 turns)
+to `complete`. Every 10th frame of every turn, an audit:
+
+- the camera ortho, looking along (−0.5, −0.707, −0.5) (yaw 45);
+- the mark count equal to 2 per live combatant plus 2 per scenery body (the
+  merged mark; the filled plate under `all`), from the world's units;
+- every base-anchored sprite slot at −0.5 (`anchor-bottom` stamps each new
+  battle through the patched atlas);
+- every drape triangle against the terrain mesh (106c-post2's oracle);
+- up to 6 units' tile centres, projected by the camera, through
+  `Renderer.pickCell` onto the terrain mesh: each picks its own cell.
+
+**Result, the default-length run:** 426 audits, 0 findings: 0 mark counts
+off, 0 anchors off the rule, 0 of 2 543 picks off their tile, 0 of 24 260
+drape triangles off a real step face. **The boss run:** 6 turns, 126 audits,
+0 findings. Each check failed its planted case: `anchor` today made 20 of 20
+slots off (and 0 again on flipping back); aiming at the neighbour's centre
+picked the neighbour; `ground` shadow made the count read 20 of 40. No
+console errors. The driver's one hiccup: a first `acceptReward` on the boss's
+reward screen was a no-op and the same command on a retry went through. It
+is a timing detail of the hand driver, not of the board, and was not chased.
+
+**What step zero does not cover:** any look; clicks on GLYPHS (`pickSprite`,
+the billboard-aware pick; only the terrain pick was probed); Firefox; the
+real-time loop and the speed buttons (the drive was hand-ticked); and the
+WASD / edge-scroll pan, which still runs along world axes under yaw (a known
+artefact, the spec's D4).
+
+**THE STOP — the played read (the user's; Firefox, their own server):**
+`http://localhost:5173/?bp=proj-ortho_yaw-45_cue-outline_cueAlpha-0.3_slab-centre_ground-merged_plate-filled_plateScope-all_anchor-bottom_drape-1_cueDepth-world`
+— play a few full battles, a whole run if the mood takes you. Watch:
+(1) **the overlay stack in clumps**: bars, LV and POW chips over a crowd,
+now the same screen pitch in every row (three fixes in reserve: size the
+stack to the glyph, thin the bar, drop the chips beside occupied tiles);
+(2) **the wall staircase**: `#` runs on diamond tiles; (3) **picks under
+yaw**: clicking a glyph and clicking a tile select what you meant;
+(4) **`anchor-bottom` in play**: anything that now stands wrong. Then sign
+the bookmark in your words, or name what to change. `hide-1` starts the
+panel collapsed; Ctrl+Alt+P toggles it.
+
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 
 Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to

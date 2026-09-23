@@ -386,6 +386,27 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). WORKLOG §"THE VERDICT".
 - [x] ✅ **§106: a ground indicator for STATIC MULTI-TILE bodies (rubble)** — the footprint PLATE (106c, `filled` by the user's read), cut per tile onto the tile tops and extendable to all scenery (106c-post); the slab stands centred on it (106b). WORKLOG §106c / §106c-post.
 
+## §106 riders (the 106d played read, 2026-09-23)
+
+- [ ] **Hills ignore the layout theme** (the user, pre-existing). The
+  cluster-two spec says a hills tile "otherwise visually conforms to the
+  layout's palette", but `topColorFor`'s `hills` branch
+  (`src/render/TerrainRenderer.ts`) and the mound fill (`fillHillBumps`)
+  both lerp the fixed `_hillLow` / `_hillHigh` greens; only the plain floor
+  branch reads `FLOOR_PALETTE[theme]`. Hills occur on grassland, tundra,
+  barren and volcanic boards (DESIGN "Per-theme tile palettes"). Fix: the
+  base top takes the theme's floor palette like any floor tile, and the
+  mounds take that palette lightened toward the crest; the mound SHAPE keeps
+  the tile readable as hills without the green. Eye read per theme.
+- [ ] **Several empower kinds overflow a compact card's chip row** (the
+  user, pre-existing). `.unit-card__empowers` (`src/ui/ui.css`) is a flex
+  row that never wraps, and since 97e each chip carries its text label
+  beside the triangles (`updateCardEmpowerMarkers`, `src/ui/UnitCard.ts`),
+  so two or more kinds are wider than the card. Fix: let the row wrap
+  (`flex-wrap: wrap` plus a row gap), keeping the label, because the label
+  is the non-colour channel DESIGN §UI idioms requires. Eye read with 2–3
+  kinds on one unit.
+
 ## Tone audit riders (2026-09-23)
 
 - [ ] **Rewrite the phase codes out of `src/` code comments** under the

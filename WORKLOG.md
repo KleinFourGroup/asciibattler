@@ -1393,6 +1393,35 @@ yaw**: clicking a glyph and clicking a tile select what you meant;
 the bookmark in your words, or name what to change. `hide-1` starts the
 panel collapsed; Ctrl+Alt+P toggles it.
 
+### 106d — THE READ (2026-09-23, the user's: a full run to defeat) — CLEAR
+
+1. **The overlay stack: no fix needed.** "The units form local frontlines
+   rather than the clumps in the preview, typically." If it becomes an
+   issue, narrow the stack (the user's pick among the three in reserve).
+   The verdict's finding 3 closes as a watch with no build.
+2. **The wall staircase: not a concern.** "With the ground cues … it very
+   clearly reads as a straight line of units, rather than a staircase."
+3. **Picks under yaw: no errors found.**
+4. **`anchor-bottom` in play: all clear.** The R5–R7 + R10 deletion now
+   has its played read as well as the 106c isolation read.
+
+The session records the four clears as the bookmark SIGNED (the user may
+correct it). **Two items carried to 106e, the user's:**
+
+- **The marks glitch through the hill MOUNDS** (the §37b pyramids standing
+  up to 0.34 above a `hills` tile's top; under `cueDepth-world` they poke
+  through a mark cut to the flat top). The user's view: extending the cut to
+  the mounds would be complicated and brittle, needing special handling for
+  each future non-flat tile, and the durable fix is stamping the marks into
+  the terrain's own rendering, as considered for 106e. The session's view is
+  in its reply (a terrain decal; a mesh-reading CPU cut is general but pays
+  per moving mark per frame and still needs the drape special case).
+- **Rounded corners on the static plates**: low confidence, the user's.
+
+**Two pre-existing bugs, reported at the read** (TODO §106 riders, with
+their causes): the hill colour ignores the layout theme; several empower
+kinds overflow a compact card's chip row.
+
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 
 Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to

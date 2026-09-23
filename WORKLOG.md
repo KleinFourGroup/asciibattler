@@ -1331,6 +1331,18 @@ tile's far side, or a drape that reads as a dark wall. (2) With it on,
 becomes the default if you like. (3) `plate opacity`, re-checked (0.6 is the
 guess). Yaw 30 as the check.
 
+### 106c-post2 — THE READ (2026-09-23, the user's) — CLEAR
+
+1. **The drape: on** — "working exactly as expected … On looks amazing."
+2. **Cue depth: `world`** — "the flat quads were just slightly overwriting
+   the edges of higher tiles in front." The session's prediction held. The
+   dial's DEFAULT stays `overlay`: a bookmark records only the dials that
+   differ from their defaults, so a new default would silently change what
+   every recorded read bookmark shows. 106d's bookmark carries
+   `cueDepth-world` explicitly, and the shipped treatment is the spec's call
+   (106e).
+3. **Plate opacity: 0.6 stays** — the guess is now the user's value.
+
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 
 Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to

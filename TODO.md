@@ -385,3 +385,13 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **Round 11: the glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
 - [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). WORKLOG §"THE VERDICT".
 - [x] ✅ **§106: a ground indicator for STATIC MULTI-TILE bodies (rubble)** — the footprint PLATE (106c, `filled` by the user's read), cut per tile onto the tile tops and extendable to all scenery (106c-post); the slab stands centred on it (106b). WORKLOG §106c / §106c-post.
+
+## Tone audit riders (2026-09-23)
+
+- [ ] **Rewrite the phase codes out of `src/` code comments** under the
+  AGENTS "Voice" rule: 1,991 `§`-codes across 262 files (the 48
+  `gotcha #N` refs stay). Comments only, proven by a comment-stripped
+  before/after diff with a failing control. Timing: after §106's spec
+  (106e), so no sweep touches spike code the spec may delete, and before the
+  first build phase edits the same render files. WORKLOG "The new-model tone
+  audit".

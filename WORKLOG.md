@@ -1396,3 +1396,12 @@ Read entries before and after this boundary as separate groups.
 - ARCHITECTURE, GOTCHAS and TESTING keep their old register.
 - Whether sessions actually follow the "Before you… read…" triggers into
   `process/`: a watch for the 7.5 close (it's in the Cursor's trials line).
+
+### Close-out (the user's answers, 2026-09-23)
+
+- The T3 content read of AGENTS.md and the T4 `batch` read: both clear.
+- The per-step context check-in was a one-time experiment; it stays dropped.
+- Rider (1): the weekly check is dropped because it is answered; whether to
+  retire the reword trial or pursue it with the Claude Code developers is
+  open for the 7.5 close. The app's menus show no environment editor.
+- The `src/` comment sweep is a TODO item, timed after 106e.

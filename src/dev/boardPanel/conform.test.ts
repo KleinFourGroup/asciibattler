@@ -64,3 +64,53 @@ describe('106c-post — conformToTiles', () => {
     expect(ps.reduce((s, p) => s + p.area, 0)).toBeCloseTo(0.125, 12);
   });
 });
+
+/** The vertical output triangles (all three x equal, or all three z equal), with their true 3-D area. */
+function faces(out: number[]): { area: number; plane: string; ys: number[] }[] {
+  const res = [];
+  for (let i = 0; i < out.length; i += 9) {
+    const v = out.slice(i, i + 9) as [number, number, number, number, number, number, number, number, number];
+    const [ax, ay, az, bx, by, bz, cx, cy, cz] = v;
+    const plane = ax === bx && bx === cx ? `x=${ax}` : az === bz && bz === cz ? `z=${az}` : null;
+    if (plane === null) continue;
+    const [ux, uy, uz, wx, wy, wz] = [bx - ax, by - ay, bz - az, cx - ax, cy - ay, cz - az];
+    const area = Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx) / 2;
+    res.push({ area, plane, ys: [ay, by, cy] });
+  }
+  return res;
+}
+
+const areaOn = (fs: ReturnType<typeof faces>, plane: string): number =>
+  fs.filter((f) => f.plane === plane).reduce((s, f) => s + f.area, 0);
+
+describe('106c-post2 — the step-face drape', () => {
+  const SEES_ALL: TileTops = { ...TOPS, drape: { faces: () => true } };
+
+  it('a mark across a step drapes the face from the high top to the low top, and only from the high side', () => {
+    // (0,0) at 0 | (1,0) at −0.1: the face is x = 0, z ∈ [0.2, 0.8], 0.1 tall.
+    const fs = faces(conformToTiles(square(0, 0.5, 0.3), SEES_ALL, 0.01));
+    expect(fs.reduce((s, f) => s + f.area, 0)).toBeCloseTo(0.6 * 0.1, 12);
+    expect(areaOn(fs, 'x=0')).toBeCloseTo(0.06, 12);
+    for (const f of fs) for (const y of f.ys) expect([0.01, -0.1 + 0.01]).toContainEqual(y);
+  });
+
+  it('the four-way corner drapes all four faces, each between its own pair of tops', () => {
+    // x = 0: (0,0)|(1,0) Δ0.1 over z ∈ [0, 0.5] and (0,1)|(1,1) Δ0.1 over z ∈ [−0.5, 0];
+    // z = 0: (0,0)|(0,1) Δ0.2 over x ∈ [−0.5, 0] and (1,0)|(1,1) Δ0.2 over x ∈ [0, 0.5].
+    const fs = faces(conformToTiles(square(0, 0, 0.5), SEES_ALL, 0));
+    expect(areaOn(fs, 'x=0')).toBeCloseTo(0.05 + 0.05, 12);
+    expect(areaOn(fs, 'z=0')).toBeCloseTo(0.1 + 0.1, 12);
+    expect(fs.reduce((s, f) => s + f.area, 0)).toBeCloseTo(0.3, 12);
+  });
+
+  it('a face turned away from the camera gets no drape, and the tops are the same either way', () => {
+    const away: TileTops = { ...TOPS, drape: { faces: (nx) => nx !== 1 } };
+    const out = conformToTiles(square(0, 0.5, 0.3), away, 0);
+    expect(faces(out)).toHaveLength(0);
+    expect(out).toEqual(conformToTiles(square(0, 0.5, 0.3), TOPS, 0));
+  });
+
+  it('a mark inside one tile drapes nothing', () => {
+    expect(faces(conformToTiles(square(0.5, 0.5, 0.25), SEES_ALL, 0))).toHaveLength(0);
+  });
+});

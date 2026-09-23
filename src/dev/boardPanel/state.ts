@@ -213,6 +213,15 @@ export const DIALS = {
   /** 106c-post — the filled plate's own darkness (the user darkened it at the
    *  106c read; 0.6 is a guess at "slightly darker" than the contact 0.45). */
   plateAlpha: { kind: 'range', label: 'plate opacity', min: 0.1, max: 0.95, step: 0.05, def: 0.6 },
+  /** 106c-post2 — the step-face drape (the user's one refinement at the
+   *  106c-post read): marks and plates continue down the vertical faces where
+   *  their tile meets a lower one, on the faces the camera can see. conform.ts. */
+  drape: {
+    kind: 'bool',
+    label: 'step drape',
+    def: false,
+    hint: 'marks and plates hang down the step faces the camera can see',
+  },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
    *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */
@@ -358,7 +367,7 @@ export const KNOWN_ARTEFACTS: readonly string[] = [
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
   'ortho / long lens: the mist around the board is the apron ray, re-derived for parallel rays but read by no eye before yours',
-  'ground mark: marks and plates are cut per tile onto the tile TOPS - they do not drape the vertical step between two tiles of different heights, nor follow the hill mounds',
+  'ground mark: marks and plates are cut per tile onto the tile TOPS, and step drape = on hangs them down the step faces the camera sees - neither follows the hill mounds',
 ];
 
 /**

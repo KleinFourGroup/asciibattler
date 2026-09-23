@@ -1259,6 +1259,78 @@ Which is the user's call at resumption. The plate opacity value the user
 used was never given — `plateAlpha` 0.6 stays a guess; the next session
 asks for the bookmark.
 
+### 106c-post2 — the step-face drape (2026-09-23) — ◐ BUILT; the `stop` is open (106d's sitting)
+
+Session 40c1f5f4. (Written here, above the tone audit's section, so it
+stays under Phase 106.)
+
+**The calls (the user's, 2026-09-23):** a spike `-post` rather than folding
+the drape into the spec's "marks drawn by the terrain" decision; read `stop`.
+`plateAlpha` stays 0.6 (the value used at the 106c read is not remembered)
+and is re-checked after this read. `anchor-bottom` joins 106d's bookmark.
+The user offered to change the `cue depth` default (`overlay` dates from
+when the cue was one flat quad) and left it to the session, which put it into
+this read (below).
+
+**Step zero:** the default `cue depth` is `overlay` (no depth test), so a
+drape on a face turned away from the camera would paint over the taller
+tile's top. The mock draws only faces turned toward the camera: under ortho
+one answer per face direction (at yaw 45, the +x and +z faces), under a lens
+per face position.
+
+**Built:** in `conformToTiles`, with `tops.drape`, each clipped piece's edge
+that lies on its tile boundary (the clip returns the boundary value itself,
+so equality finds it) with a LOWER neighbour emits a vertical quad in the
+face's plane, from its top + lift to the neighbour's top + lift, so it meets
+both halves edge to edge with no overlap to double-blend. Only the higher
+side drapes. index.ts makes a new tops object when the dial or the set of
+visible faces changes (a 4-bit key under ortho), so each mark re-cuts once
+per change. The dial is `drape` ("step drape", bool, default off, bookmark
+`drape-1`); the artefact line says what it covers. This is what a terrain
+decal sampled by world XZ would draw on a vertical face, so the mock
+previews that path; it does not follow the hill mounds.
+
+**Verified:** `conform.test.ts` +4, hand-computed on the 2×2 board: a step
+drapes 0.6 × 0.1 from the high side only; the four-way corner drapes 0.3
+across its four faces; a face turned away drapes nothing and leaves the tops
+equal; a mark inside one tile drapes nothing. A mutation that lets the low
+side drape too fails 3 of the 4. In the pane (the quarry fixture, ortho y45,
+merged marks, filled plates under `all`, drape on; the hidden pane driven by
+`activeScene.tick(1/60)` × 400 after unparking, the marks synced through the
+hooked `sortByDepth` each tick) an oracle that reads the TERRAIN MESH (each
+cell's top-face Y, the drawn side faces and their normals), not `heightAt`
+or conform: **0 of 57 724 drape triangles off a real step face** (each on a
+cell boundary, its Y exactly the two tops + lift, on a drawn side face of the
+higher cell whose normal faces the camera); unit-mark drapes in 92 of the
+400 frames (the first ~100 were the countdown). The oracle rejected both
+planted cases (a real drape lifted 0.1; a correct-height drape on a face
+turned away). Render, at a frozen frame: the drape changes 1 011 px of
+1280×720 (960 darker), an off-vs-off control 0; drape-only, 1 041 px under
+`overlay` and 1 020 under `world`, so 98 % survive the depth test in the
+face's own plane and the polygon offset holds (a repeat: 0). A first render
+probe counted 0 magenta pixels in both modes, failed its known answer, and
+was replaced by the hidden-mesh diff. No console errors. **NOT verified:**
+any look. The faces are a few px at 1280×720, the pane's screenshot is an
+800×450 JPEG, and it can't crop.
+
+**The cue-depth question, put into this read:** with the marks lying on the
+terrain now, `world` hides a mark behind a taller near tile exactly as it
+hides the ground there and the glyph's feet (sprites depth-test against the
+terrain and only skip depth writes), while `overlay` paints it over that
+tile. The session leans `world` as a prediction: the 105b "clipping" read was
+of this same occlusion, when the mark didn't yet lie on the terrain. It is a
+taste call.
+
+**THE STOP — the read (it opens 106d's sitting):**
+`?bp=board-quarry_proj-ortho_yaw-45_slab-centre_cue-outline_cueAlpha-0.3_ground-merged_plate-filled_plateScope-all_drape-1`
+— (1) `step drape` off ↔ on on a slab plate over uneven tiles, then Space
+and watch a unit's mark cross a step toward the camera. Wrong looks like a
+bare strip between a mark's two halves (off), a drape in the air or on a
+tile's far side, or a drape that reads as a dark wall. (2) With it on,
+`cue depth` overlay ↔ world: the one you keep goes into 106d's bookmark, and
+becomes the default if you like. (3) `plate opacity`, re-checked (0.6 is the
+guess). Yaw 30 as the check.
+
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 
 Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to

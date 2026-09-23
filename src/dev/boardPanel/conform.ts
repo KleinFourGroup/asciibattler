@@ -5,10 +5,19 @@
  *
  * The board's ground is a staircase of FLAT-topped prisms (TerrainRenderer:
  * one height per cell), so a mark cut per tile and laid on each tile's own top
- * follows the ground exactly — on the tops. What it does NOT do: drape the
- * vertical step faces between tiles (a break of ≤ 0.3 in the floor band) or
- * follow the §37b hill mounds. Both want the marks drawn BY the terrain (a
- * decal in its shader) — a build decision for the Round 7.5 spec.
+ * follows the ground exactly — on the tops. It does not follow the §37b hill
+ * mounds; that wants the marks drawn BY the terrain (a decal in its shader) —
+ * a build decision for the Round 7.5 spec.
+ *
+ * 106c-post2 — THE STEP-FACE DRAPE (the user's one refinement at the 106c-post
+ * read): with a `drape` view, a piece whose edge lies on its tile's boundary
+ * with a LOWER neighbour continues down that vertical face, from its own top
+ * to the neighbour's, so a mark crossing a step no longer shows the bare face
+ * between its two halves. That is what a terrain decal sampled by world XZ
+ * would draw on a vertical face (the mark's edge stretched down), so this mock
+ * previews that path. Only faces turned toward the camera get one: under the
+ * `overlay` cue depth (no depth test) a face turned away would paint over the
+ * taller tile's top.
  *
  * Pure: flat triangles in world XZ in, triangles in world XYZ out.
  */
@@ -18,6 +27,13 @@ export interface TileTops {
   readonly gridH: number;
   /** Tile-top world Y of cell (gx, gy) — `TerrainRenderer.heightAt` with its kind. */
   heightAt(gx: number, gy: number): number;
+  /** 106c-post2 — drape the step faces this view can see; absent = the tops only. */
+  readonly drape?: DrapeView;
+}
+
+export interface DrapeView {
+  /** Is the vertical face with outward normal (nx, 0, nz) through world (x, z) turned toward the camera? */
+  faces(nx: number, nz: number, x: number, z: number): boolean;
 }
 
 type Pt = readonly [number, number];
@@ -69,7 +85,10 @@ const atZ = (z: number) => (a: Pt, b: Pt): Pt => {
  * input triangle clipped to every tile it overlaps and lifted to that tile's
  * top + `lift`. Pieces off the board are dropped. The grid mapping is
  * `gridToWorld`'s: cell (gx, gy) spans x ∈ [gx − W/2, gx + 1 − W/2] and
- * z ∈ [H/2 − gy − 1, H/2 − gy] (grid +y runs toward world −z).
+ * z ∈ [H/2 − gy − 1, H/2 − gy] (grid +y runs toward world −z). With
+ * `tops.drape`, each piece's edges on a step down also emit a vertical quad in
+ * the face's plane, from this top + `lift` to the neighbour's top + `lift`, so
+ * it meets both pieces edge to edge (no overlap to double-blend).
  */
 export function conformToTiles(tris: ArrayLike<number>, tops: TileTops, lift: number): number[] {
   const out: number[] = [];
@@ -108,7 +127,48 @@ export function conformToTiles(tris: ArrayLike<number>, tops: TileTops, lift: nu
           if (Math.abs(signedArea(fan)) < MIN_AREA) continue;
           for (const p of fan) out.push(p[0], y, p[1]);
         }
+        if (tops.drape) drapeEdges(poly, gx, gy, x0, x1, z0, z1, y, tops, lift, out);
       }
   }
   return out;
+}
+
+/**
+ * 106c-post2 — one piece's drapes. A clipped edge on the tile boundary sits
+ * EXACTLY on it (`atX` / `atZ` return the boundary value itself), so equality
+ * finds the edges. Only the higher side drapes a face; the lower side's piece
+ * meets the drape's foot.
+ */
+function drapeEdges(
+  poly: Pt[],
+  gx: number,
+  gy: number,
+  x0: number,
+  x1: number,
+  z0: number,
+  z1: number,
+  y: number,
+  tops: TileTops,
+  lift: number,
+  out: number[],
+): void {
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i]!;
+    const b = poly[(i + 1) % poly.length]!;
+    let nx = 0;
+    let nz = 0;
+    if (a[0] === x0 && b[0] === x0) nx = -1;
+    else if (a[0] === x1 && b[0] === x1) nx = 1;
+    else if (a[1] === z0 && b[1] === z0) nz = -1; // world −z is grid +y
+    else if (a[1] === z1 && b[1] === z1) nz = 1;
+    else continue;
+    const ngx = gx + nx;
+    const ngy = gy - nz;
+    if (ngx < 0 || ngx >= tops.gridW || ngy < 0 || ngy >= tops.gridH) continue;
+    const foot = tops.heightAt(ngx, ngy) + lift;
+    if ((y - foot) * Math.hypot(b[0] - a[0], b[1] - a[1]) < MIN_AREA) continue; // no step down, or a sliver
+    if (!tops.drape!.faces(nx, nz, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2)) continue;
+    out.push(a[0], y, a[1], b[0], y, b[1], b[0], foot, b[1]);
+    out.push(a[0], y, a[1], b[0], foot, b[1], a[0], foot, a[1]);
+  }
 }

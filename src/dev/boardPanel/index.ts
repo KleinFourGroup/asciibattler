@@ -21,8 +21,8 @@ import { fixtureSearch } from './fixtures';
 import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
-import { footprintCentre } from './slab';
-import type { TileTops } from './conform';
+import { footprintCentre, slabViewOf } from './slab';
+import type { DrapeView, TileTops } from './conform';
 import {
   applyCameraView,
   installSeams,
@@ -45,6 +45,26 @@ import {
 } from './state';
 
 export { applyBoardFixtureUrl } from './boot';
+
+/**
+ * 106c-post2 — which step faces the live camera sees, and a key that changes
+ * exactly when that answer can. Under parallel rays a face is turned toward the
+ * camera iff its normal points against the view direction, so four bits say it
+ * all; under a lens it depends on where the face is, so the key is the pose.
+ */
+function drapeViewOf(camera: THREE.Camera): { view: DrapeView; key: string } {
+  camera.updateMatrixWorld(); // the frame hook runs before the render refreshes it
+  const { fwd, position: p, ortho } = slabViewOf(camera);
+  if (ortho) {
+    const faces = (nx: number, nz: number): boolean => nx * fwd.x + nz * fwd.z < 0;
+    const key = [faces(-1, 0), faces(1, 0), faces(0, -1), faces(0, 1)].map(Number).join('');
+    return { view: { faces }, key: `ortho:${key}` };
+  }
+  return {
+    view: { faces: (nx, nz, x, z) => nx * (p.x - x) + nz * (p.z - z) > 0 },
+    key: `lens:${p.x},${p.y},${p.z}`,
+  };
+}
 
 export interface BoardPanel {
   toggle(): boolean;
@@ -86,8 +106,10 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let lastSized = 0;
   /** 106b — N×N bodies re-stood by the last `slab` / view change. */
   let lastSlabs = 0;
-  /** 106c-post — the live battle's tile tops, built once per battle. */
+  /** 106c-post — the live battle's tile tops, built once per battle
+   *  (106c-post2: and again when the drape's visible faces change). */
   let tops: TileTops | null = null;
+  let topsKey = '';
   let fixture: FixtureReport | null = null;
 
   const onFrame = (): void => {
@@ -101,15 +123,22 @@ export function attachBoardPanel(game: Game): BoardPanel {
       // 106b — the rubble spawned under the dialled rule, but maybe before the
       // camera was re-fitted to THIS board (a lens slide reads its position).
       if (battle && dials.slab !== 'today') seams.restampSlabs(battle);
-      // 106c-post — ONE tile-tops object per battle: the marks re-cut only when
-      // a placement changes, and that is decided by this object's identity.
-      if (battle) {
+      tops = null;
+      describe();
+    }
+    // 106c-post — ONE tile-tops object per battle: the marks re-cut only when
+    // a placement changes, and that is decided by this object's identity.
+    // 106c-post2 — the drape's faces follow the view, so a change in what the
+    // camera sees (or the dial) makes a new object, and every mark re-cuts once.
+    if (battle) {
+      const drape = dials.drape ? drapeViewOf(internals.renderer.camera) : null;
+      const key = drape?.key ?? 'tops';
+      if (!tops || key !== topsKey) {
         const ground = slabGroundOf(battle.world, internals.terrain);
         tops = { gridW: battle.world.gridW, gridH: battle.world.gridH, heightAt: ground.heightAt };
-      } else {
-        tops = null;
+        if (drape) tops = { ...tops, drape: drape.view };
+        topsKey = key;
       }
-      describe();
     }
     cues.beginFrame(tops);
     if (battle && tops) {

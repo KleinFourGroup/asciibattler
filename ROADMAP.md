@@ -15,8 +15,9 @@ experiment).
 
 **Status: §105 ✅ CLOSED 2026-09-22 (the direction named: ortho · p45 · yaw [30, 45]; the lens-20 fallback); §106 KICKED OFF 2026-09-22 — the cut + reads signed (below).** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
-informs the spec the way the Electron spike informs Round 8's store. No
-phase entries beyond §106's charter exist until the spec is written. The
+informs the spec the way the Electron spike informs Round 8's store. The
+spec is drafted ([round-7.5-spec.md](round-7.5-spec.md), 106e) and the build
+phases §107–§109 are entered below as proposals until the user signs it. The
 charter, the decision points, the exit and the scope guards are in
 META-ROADMAP §"Round 7.5 — The Board" (hardened at the kickoff: WORKLOG
 §Kickoff); the founding argument is
@@ -79,4 +80,52 @@ Kickoff).** No bump, no smoke on any step, no production touch.
 - [x] **106c-post** — inserted from the 106c read (the user's two flags + item 5): marks + plates cut per tile onto the tile tops · the plate under ALL scenery (a dial) · the plate's own opacity. Read `stop`; refinements → the next session (user's pre-commitment). ✅ READ CLEAR ("you absolutely nailed this"); one refinement → next session: the step-face drape (WORKLOG §106c-post THE READ).
 - [x] **106c-post2** — inserted 2026-09-23 (the user's call: a spike `-post`, not folded into the spec): the step-face drape — marks and plates hang down the camera-facing step faces, behind a `drape` dial. Read `stop`, in 106d's sitting. ✅ READ CLEAR ("On looks amazing"); `cueDepth` world wins; `plateAlpha` 0.6 kept (WORKLOG §106c-post2 THE READ).
 - [x] **106d** — THE PLAYED READ: a few full battles under the bookmark (step zero: a whole run plays under it; `anchor-bottom` added, the user's yes 2026-09-23; `drape-1` + `cueDepth-world` from 106c-post2's read); watch the stack in clumps, the wall staircase, picks under yaw. Read `stop` — the bookmark signed in the user's words. ✅ READ CLEAR (a full run): all four watches clear; to 106e: the marks vs the hill mounds, rounded plate corners (WORKLOG §106d THE READ).
-- [ ] **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`.
+- [ ] ◐ **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`. ◐ drafted: D1–D8 proposed (D3 decided: shapes in the terrain shader), §107–§109 entered below (WORKLOG §106e).
+
+## Phase 107 — the projection, built (PROPOSED at 106e, unsigned)
+
+Charter: the spike's projection becomes the shipped view — orthographic ·
+pitch 45 · yaw 45 as `DEFAULT_CAMERA_VIEW` — and the N×N slab rule replaces
+R11 (spec D1, D2, and D7's dev pan). **Why first:** every later read in the
+round happens under the shipping projection, and the marks and the anchor
+are judged against it. **Risk:** medium, lower than chartered — both
+cameras, the fit and the apron's parallel-ray branch already exist behind
+the 105d seam; what is owed is the overlay layer's camera, the resize and
+shake paths, and a camera-gotcha re-audit. **Decision points:** none open
+(the projection, the yaw and the slab rule are signed). **Exit:** the
+default view shipped and played; `cameraFit.test.ts` re-pinned at the new
+default with the lean pin permanent; the slab rule pinned against
+production; gotchas #17, #51–54, #68–69 and DESIGN's Camera paragraph
+re-audited; the slab seam deleted. **Scope guards:** the spec's; no
+windowed view (D7).
+
+## Phase 108 — the ground mark, drawn by the terrain (PROPOSED at 106e, unsigned)
+
+Charter: the merged mark and the scenery plate, drawn as signed-distance
+shapes in the terrain shader from a per-frame, per-tile table (spec D3);
+team identity checked clause by clause, with the grey read as the
+acceptance test (D5); the "Elevation on the board" requirement written into
+DESIGN (D6). **Why here:** after §107 so every read is under the shipping
+projection; before §109 because the anchor deletion was signed on the
+strength of the grounding these marks give. **Risk:** medium-high — a new
+shader path and a per-frame data path, judged by eye, with a frame-cost
+measurement owed. **Decision points:** the two identity residuals (a camp
+unit's hue-only status pip; the cracked-stone wall tell) · rounded plate
+corners (a parameter, read at the stop) · the elevation clauses' wording.
+**Exit:** the marks on tops, step faces and mounds, read by the user; the
+grey read passed in a live battle; the residuals decided; the elevation
+requirement signed; frame cost measured; the mock-mark seams deleted.
+**Scope guards:** the spec's; no flyer mechanic.
+
+## Phase 109 — the rule deletion + the round close (PROPOSED at 106e, unsigned)
+
+Charter: the uniform quad-bottom anchor replaces R5–R7 + R10, with probes
+re-derived from the atlas and the special-rule count recorded (spec D4);
+the last spike seams go (D8); then the round close. **Why last:** the
+deletion is safe only once the production marks ground the glyphs.
+**Risk:** low-medium — typography and pins, no new look beyond the few
+pixels the user already judged invisible. **Decision points:** none open.
+**Exit:** the four rules deleted; the three C1 doc drifts fixed; the rule
+count before and after in the WORKLOG; the board explorer trimmed to its
+keepers (D8); the round closed per `process/planning.md`. **Scope guards:**
+the spec's; §101's gates untouched.

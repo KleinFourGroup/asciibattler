@@ -1469,6 +1469,35 @@ metrics (the fonts are self-hosted, so they should match) and the look.
 card; wrong looks like a chip or label crossing the card's edge, or labels
 that read cramped.
 
+### 106e — the spec, drafted (2026-09-23) — the `stop` is open
+
+[round-7.5-spec.md](round-7.5-spec.md): the charter's intent in the user's
+words; twelve items the spike settled, each with the read that signed it;
+eight build decisions (D1–D8), proposals except D3; scope guards, exit and
+marked uncertainty; the three build phases, entered in ROADMAP as §107–§109
+(unsigned). Step zero, what writing it checked against the code:
+
+- **Shipping the projection is smaller than the charter assumed.** ✔
+  Production already holds both cameras, `setCameraView` (which already
+  re-points both `RenderPass`es) and the apron's `isOrthographic` branch;
+  `UnitOverlayLayer` still captures its camera at construction, harmless
+  while production never swaps (the dev panel re-points it through a seam).
+  D1 lists what is owed.
+- ✔ The mark's outline colour comes from `spriteColorForUnit` (team,
+  archetype, camp id), which no held tint reaches, so clause 3 holds twice
+  over: the shape, and an untinted outline.
+- ✔ The atlas holds 47 of 48 cells (counted from `GLYPHS`), so one cell is
+  left for any glyph-based answer to the cracked-stone residual.
+- The destructible wall's plate frame would be `CRACKED_STONE` against a
+  plain wall's stone, so the plate alone keeps that sub-tell colour-only;
+  it stays a D5 residual.
+
+**THE STOP — the read (the user's):** the spec, especially the eight build
+decisions (D3 is decided; D1, D2 and D4–D8 await a signature), the three
+phase entries in ROADMAP, and marked uncertainty. Also due at this stop:
+the two `batch` reads from the 106d riders (hills on a themed board; a unit
+with two or three empower kinds).
+
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 
 Rider (2) fired on 2026-09-22: the model changed from `claude-fable-5-1` to

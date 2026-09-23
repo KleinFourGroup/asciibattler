@@ -32,7 +32,10 @@ Boxes are created on demand and destroyed after use.
 - `scripts/box-drive.sh` is the overnight driver: create, launch each queue
   line, poll, fetch with artifact checks (a `fetched →` line, exit code 0,
   a non-empty `--artifact`), stand down. On any anomaly it holds the box
-  and exits loudly. Extend it rather than writing a new driver. Scale
+  and exits loudly. `--artifact` takes one file name per run
+  (`summary.csv` by default, `best-strategy.json` for a search), so a
+  cohort holds one artifact kind; split mixed work into separate cohorts.
+  Extend the script rather than writing a new driver. Scale
   `--poll` to the batch: `--poll=60` for a cohort of two-minute arms; the
   900 s default is for hour-long batches.
 - Box addresses and the API token stay out of this public repo. The token

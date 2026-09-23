@@ -86,7 +86,8 @@ The user is Matthew. What helps:
   and prefer robust optimizations to fragile ones while features are still
   landing.
 - When they float a speculative technical idea, give an honest cost and
-  feasibility read rather than deference.
+  feasibility read rather than deference; the instinct behind it often
+  points at a real need.
 - They often multitask, so wall-clock time is an upper bound on work time.
 - You can't read your own context use, and past estimates were off by 2–3×
   in both directions. Don't give a number; ask the user for the meter
@@ -254,10 +255,11 @@ to the first instead.
   merging with or replacing a line already here; most lessons belong in
   `process/`, GOTCHAS or TESTING.
 - **Voice.** Write plain, literal prose, and give the reason in a clause.
-  Refer to a gotcha by its number, but don't put phase or incident codes
-  (like `§101c` or `86c-L2b`) in docs or code comments, because readers
-  can't resolve them. End a rule when the rule ends; the story of how it
-  was learned belongs in the WORKLOG.
+  Refer to a gotcha by its number. Phase and step addresses (§106, 106c)
+  are fine where they name the plan, but don't cite them or incident tags
+  (like `86c-L2b`) as the reason inside a rule or a code comment, because
+  readers can't resolve them. End a rule when the rule ends; the story of
+  how it was learned belongs in the WORKLOG.
 
 ## Before you… read…
 

@@ -489,6 +489,7 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
   measurement.md             # batches, the measurement box, benchmarks, balance edits
   oracles.md                 # refactor oracles, failing controls, instrument self-checks
   welfare-and-efficacy.md    # reading the friction log, session reports, phase-stats, friction-scan
+  browser-pane.md            # Claude Code's Browser pane: getting a live page, the hidden pane, fixtures
 
 archive/                     # superseded roadmaps + feedback + phase worklogs
 

@@ -110,6 +110,10 @@ its own which pauses were real.
   commits, the rest of that phase's `batch` reads become `stop`.
 - Proportion by round: an eyeball-heavy round is stop-heavy; a
   headless-heavy round is batch-heavy.
+- Make each readable step reachable in play, and say how (a URL dial, a
+  roster string).
+- If the trial is rolled back, the fallback is the old rule: pause after
+  every commit.
 
 ## HANDOFF upkeep
 

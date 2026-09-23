@@ -40,9 +40,10 @@ in AGENTS.md, which other harnesses read too.
   has their own dev server on 5173, and the preview tools won't attach to a
   server they didn't start. Screenshots smear 1–2 px detail, so sample
   pixels with `getImageData` or ask the user to look natively.
-  `window.__game` is the top-level `Game`, not the battle world
-  (`__game.world` is `"none"`), so use a headless test to confirm unit
-  state. Before any pane verify, read HANDOFF's "Browser-verify tips".
+  `window.__game` is the top-level `Game` (`__game.world` is `"none"`);
+  during a battle the live sim is `__game.activeScene.world`. For logic,
+  a headless test is still the better instrument. Before any pane verify, read
+  [process/browser-pane.md](process/browser-pane.md).
 - **The preview hook** asks for a browser verify after every Write,
   including headless tests and scratch files. Follow it only when the change
   is observable in the pane.

@@ -79,7 +79,7 @@ export function enterBoardFixture(game: Game): FixtureReport | null {
 
   let parked = '';
   if (fixture.park) {
-    // The HANDOFF recipe: the countdown object is per-battle, so an instance
+    // The pane recipe (process/browser-pane.md): the countdown object is per-battle, so an instance
     // patch parks THIS board only. Space / a speed button still skips it
     // (BattleScene.tick reads the unpause), so a parked board is one key from live.
     const countdown = (

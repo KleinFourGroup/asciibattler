@@ -139,8 +139,8 @@ describe('docs hygiene', () => {
   // §58 only — §59's cut tripped it at 570, and §60's kickoff cut + close-out
   // one-liners were still to come.
   // RE-SIZED 600→500 at the Cluster-4 authoring (2026-07-21): the
-  // closed-phase DEMOTION rule (adopted at the §60f close — AGENTS "Legal
-  // ROADMAP mutations") now collapses each phase to a stub as it closes, so
+  // closed-phase DEMOTION rule (adopted at the §60f close — process/planning.md
+  // "Legal ROADMAP changes") now collapses each phase to a stub as it closes, so
   // the cap holds structurally instead of by dated bump. The C4 roadmap
   // authored at ~215 lines for 8 phases; 500 = that plus eight kickoffs'
   // worth of cut lines, with demotion reclaiming space behind the cursor.
@@ -258,6 +258,25 @@ describe('docs hygiene', () => {
       read('CLAUDE.md'),
       'CLAUDE.md must keep its "@AGENTS.md" import line (the auto-load pointer)',
     ).toMatch(/^@AGENTS\.md\s*$/m);
+  });
+
+  // AGENTS.md loads into every session in every harness, and instruction
+  // files lose adherence as they grow. It went from 171 lines (2026-05-18) to
+  // 895 (2026-09-20) with no cap: each lesson promoted into it was justified
+  // on its own and nothing ever left. The rewrite of 2026-09-23 (user-signed)
+  // caps it, and a lesson now enters only by merging with or replacing an
+  // existing line; trigger-specific procedures live in process/. Characters
+  // are the binding measure (a proxy for tokens that ignores wrapping); the
+  // line cap is a backstop.
+  const AGENTS_MAX_CHARS = 20_000;
+  const AGENTS_MAX_LINES = 400;
+
+  it(`AGENTS.md stays under ${AGENTS_MAX_CHARS} chars and ${AGENTS_MAX_LINES} lines`, () => {
+    const text = read('AGENTS.md');
+    const hint =
+      'Merge the new lesson into an existing line or replace one; if it only applies on a trigger, put it in the process/ doc for that trigger (AGENTS "Where things go"). Raise the cap only deliberately, with the user.';
+    expect(text.length, `AGENTS.md is ${text.length} chars. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_CHARS);
+    expect(lineCount(text), `AGENTS.md is ${lineCount(text)} lines. ${hint}`).toBeLessThanOrEqual(AGENTS_MAX_LINES);
   });
 
   // ARCHITECTURE.md "Top-level structure" is the single canonical source tree

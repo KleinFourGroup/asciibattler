@@ -484,6 +484,12 @@ retro/
   scratchpad.md              # rolling process notes
   post-mvp-review.md         # CHECKPOINT 7 retrospective
 
+process/                     # agent procedures read on a trigger (AGENTS.md "Before you… read…")
+  planning.md                # kickoffs, closes, ROADMAP changes, the scratchpad sweep
+  measurement.md             # batches, the measurement box, benchmarks, balance edits
+  oracles.md                 # refactor oracles, failing controls, instrument self-checks
+  welfare-and-efficacy.md    # reading the friction log, session reports, phase-stats, friction-scan
+
 archive/                     # superseded roadmaps + feedback + phase worklogs
 
 index.html                   # Mounts <canvas> + <div id="ui">

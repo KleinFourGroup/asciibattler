@@ -10,14 +10,52 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { TileKind } from '../sim/TileGrid';
+import * as THREE from 'three';
+import { THEMES } from '../config/layouts';
+import { TileGrid, type TileKind } from '../sim/TileGrid';
 import {
   ANIM_DEEP_WATER,
   ANIM_FIRE,
   ANIM_HEALING,
   ANIM_NONE,
+  TerrainRenderer,
   animTypeFor,
+  topColorFor,
 } from './TerrainRenderer';
+
+/**
+ * Hills take the board's theme (the cluster-two spec: a hills tile
+ * "otherwise visually conforms to the layout's palette"). They shipped a fixed
+ * green on every theme from §37b until 2026-09-23. The look is eyeball-only;
+ * these pin that the colour follows the theme at all.
+ */
+describe('hills follow the board theme', () => {
+  it('a hills tile top is its theme’s floor colour, on every theme', () => {
+    const hills = new THREE.Color();
+    const floor = new THREE.Color();
+    for (const theme of THEMES)
+      for (const y of [-0.3, -0.2, -0.1, 0]) {
+        topColorFor(y, 'hills', theme, hills);
+        topColorFor(y, 'floor', theme, floor);
+        expect(hills.getHex(), `${theme} @ ${y}`).toBe(floor.getHex());
+      }
+  });
+
+  it('the mounds change colour with the theme', () => {
+    const grid = new TileGrid(3, 3);
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) grid.setKind({ x, y }, 'hills');
+    const moundColours = (theme: (typeof THEMES)[number]): string => {
+      const terrain = new TerrainRenderer();
+      terrain.setTiles(grid, 3, 3, theme);
+      const bumps = (terrain as unknown as { bumpsGeometry: THREE.BufferGeometry }).bumpsGeometry;
+      const col = bumps.getAttribute('aColor');
+      expect(col.count, theme).toBeGreaterThan(0);
+      return Array.from(col.array as Float32Array, (v) => v.toFixed(4)).join(',');
+    };
+    const seen = new Set(THEMES.map(moundColours));
+    expect(seen.size).toBe(THEMES.length);
+  });
+});
 
 /**
  * 99d — deep water's band drift is ONE constant in two shaders (the board

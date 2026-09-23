@@ -459,7 +459,10 @@ export class TerrainRenderer {
         [wx - r, wz - r], [wx + r, wz - r], [wx + r, wz + r], [wx - r, wz + r],
       ];
       const ht = Math.max(0, Math.min(1, (hgt - HILL_BUMP_MIN_H) / (HILL_BUMP_MAX_H - HILL_BUMP_MIN_H)));
-      tmp.copy(_hillLow).lerp(_hillHigh, ht); // taller mounds catch more light
+      // Taller mounds catch more light: the tile's own top, brighter.
+      topColorFor(baseY, 'hills', this.theme, tmp);
+      tmp.multiplyScalar(MOUND_BRIGHTEN_MIN + (MOUND_BRIGHTEN_MAX - MOUND_BRIGHTEN_MIN) * ht);
+      tmp.setRGB(Math.min(1, tmp.r), Math.min(1, tmp.g), Math.min(1, tmp.b));
       for (let s = 0; s < 4; s++) {
         const a = cs[s]!;
         const b = cs[(s + 1) % 4]!;
@@ -596,10 +599,14 @@ const _deepWaterColor = new THREE.Color('#0e3047');
 /** §37b — mud: flat wet brown. The slight sink (MUD_TOP_Y) + dark earth read
  *  as a bog. Fixed-height tile, so every mud cell shares this one color. */
 const _mudColor = new THREE.Color('#46361f');
-/** §37b — hills: grassy ridge lerped lighter toward the crest (by hill height,
- *  not the floor band) so a cluster reads as lit, rolling high ground. */
-const _hillLow = new THREE.Color('#3f5a2c');
-const _hillHigh = new THREE.Color('#7a9a48');
+/** Hills take the board theme's floor palette (the cluster-two spec: a hills
+ *  tile "otherwise visually conforms to the layout's palette"); the mounds
+ *  carry the read by shape. Each mound is its own tile's top colour made
+ *  brighter by this factor, more for a taller mound, so a cluster reads as lit
+ *  high ground in the tile's own hue. (Not a lerp toward the palette's high
+ *  end: grassland's runs green → amber, which turned its hills brown.) */
+const MOUND_BRIGHTEN_MIN = 1.25;
+const MOUND_BRIGHTEN_MAX = 1.75;
 /** §37b — ice: pale blue-white, slick + cold; flat (floor band). Bright, but
  *  terrain renders on layer 0 only (no sprite bloom), like the healing cyan. */
 const _iceLow = new THREE.Color('#9fd0e0');
@@ -614,9 +621,10 @@ const _sandHigh = new THREE.Color('#d8c488');
  * does the work). Floor / fire / healing tiles share the simplex height
  * field and lerp their respective palette pair across it, so adjacent
  * cells of the same kind show subtle variance as well as the per-tile
- * shader animation. **D8**: only the floor branch consults `theme` —
- * water / chasm / fire / healing keep their fixed D7 palettes so they
- * read the same regardless of the surrounding board's theming.
+ * shader animation. **D8**: only the floor branch consults `theme` (and
+ * hills, which share it) — water / chasm / fire / healing / ice / sand / mud
+ * keep their fixed palettes so they read the same regardless of the
+ * surrounding board's theming.
  * **M4**: exported — ApronRenderer colors its ring through this exact
  * function so the apron is canonical-by-construction, not a lookalike.
  */
@@ -654,11 +662,7 @@ export function topColorFor(topY: number, kind: TileKind, theme: Theme, out: THR
     out.copy(_sandLow).lerp(_sandHigh, t); // §37b
     return;
   }
-  if (kind === 'hills') {
-    // §37b — flat grassy base; the overlaid mound mesh carries the relief.
-    out.copy(_hillLow).lerp(_hillHigh, t);
-    return;
-  }
+  // Hills fall through: a flat floor-coloured base, the mound mesh carries the relief.
   const palette = FLOOR_PALETTE[theme];
   out.copy(palette.low).lerp(palette.high, t);
 }

@@ -388,16 +388,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §106 riders (the 106d played read, 2026-09-23)
 
-- [ ] **Hills ignore the layout theme** (the user, pre-existing). The
-  cluster-two spec says a hills tile "otherwise visually conforms to the
-  layout's palette", but `topColorFor`'s `hills` branch
-  (`src/render/TerrainRenderer.ts`) and the mound fill (`fillHillBumps`)
-  both lerp the fixed `_hillLow` / `_hillHigh` greens; only the plain floor
-  branch reads `FLOOR_PALETTE[theme]`. Hills occur on grassland, tundra,
-  barren and volcanic boards (DESIGN "Per-theme tile palettes"). Fix: the
-  base top takes the theme's floor palette like any floor tile, and the
-  mounds take that palette lightened toward the crest; the mound SHAPE keeps
-  the tile readable as hills without the green. Eye read per theme.
+- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (a `batch` read at 106e's stop): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. WORKLOG §"The 106d riders".
 - [ ] **Several empower kinds overflow a compact card's chip row** (the
   user, pre-existing). `.unit-card__empowers` (`src/ui/ui.css`) is a flex
   row that never wraps, and since 97e each chip carries its text label

@@ -388,8 +388,8 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §106 riders (the 106d played read, 2026-09-23)
 
-- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (a `batch` read at 106e's stop): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. WORKLOG §"The 106d riders".
-- [x] ✅ **Several empower kinds overflow a compact card's chip row** — fixed 2026-09-23 (a `batch` read at 106e's stop): the row wraps, a chip wider than the card wraps its label under its triangles, and the compact label dropped its letter-spacing so OVERCLOCKED fits. WORKLOG §"The 106d riders".
+- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (`batch` read clear): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. WORKLOG §"The 106d riders".
+- [x] ✅ **Several empower kinds overflow a compact card's chip row** — fixed 2026-09-23 (`batch` read clear): the row wraps, a chip wider than the card wraps its label under its triangles, and the compact label dropped its letter-spacing so OVERCLOCKED fits. WORKLOG §"The 106d riders".
 
 ## Tone audit riders (2026-09-23)
 

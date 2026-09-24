@@ -51,3 +51,5 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-§104 entries start here — Round 7.5, The Board.)_
+
+- **Step zero that widens an approved fix: build and flag, judged appropriate** (2026-09-23, 106d riders, `0970be0`). The user approved "let the chip row wrap"; step zero measured a single long chip overflowing too, so the session added two CSS rules inside the same intent (labels kept, chips fit) and flagged them in its report instead of asking first. AGENTS says to take a step-zero change to a signed cut to the user before building. The user, asked in the session report: "your bending the rule was appropriate". A candidate nuance for the round-close sweep: a change that stays inside the approved intent can be built and flagged; one that changes the intent goes back first.

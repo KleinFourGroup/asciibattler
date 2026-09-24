@@ -1502,9 +1502,11 @@ with two or three empower kinds).
 ### 106e — THE READ (2026-09-23, the user's) — SIGNED; §106 ✅ CLOSED
 
 "Fully signed, Claude! 😁 I'm in complete agreement." The spec, D1–D8 and
-§107–§109 are signed as written. The two 106d-rider `batch` reads were not
-reported at this stop, so they stay open (◐, in the HANDOFF Cursor) for the
-next one. **§106's exit, met:** a full run played in the candidate · the
+§107–§109 are signed as written. The two 106d-rider `batch` reads came in
+the next message, both CLEAR: "I can also confirm the two fixes worked". In
+the same message the user judged the chip fix's build-then-flag
+"appropriate" (the session report had asked; retro/scratchpad.md holds the
+observation for the round-close sweep). **§106's exit, met:** a full run played in the candidate · the
 signed bookmark with the user's reasons in their words (106d) · the lean
 pinned headless (106a) · the spec written and the build phases entered
 (106e). The user asked whether §107 starts in a fresh session; the session

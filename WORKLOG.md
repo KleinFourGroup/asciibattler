@@ -1977,3 +1977,29 @@ reproduces every number above exactly.
 higher side-by-side tiles, their front halves still hide the glyph's lower
 corners, up to 12.5 %); a dev lens, where the depth is the upright point's,
 taken per vertex.
+
+### 107d + 107d-post — THE READ (2026-09-24, the user's) — CLEAR; §107 ✅ CLOSED
+
+"confirming that this fix appears to have worked! 😁 Also, confirming that
+the other reads for 107 were all clear." Across two full runs the user found
+one bug, the diagonal clip, and 107d-post fixed it; that read is clear.
+107d's other watches are clear (the frame at boot and after a resize; bars,
+hitsplats and clicks on their units; shake), and so is 107b's `batch` read
+(rubble centred on its plot).
+
+**§107's exit, met:**
+- the default view shipped and played;
+- `cameraFit.test.ts` re-pinned, and the lean pin on the shipped camera
+  made permanent (107d);
+- the slab rule pinned against production (107b);
+- gotchas #17, #51–54 and #68–69 and DESIGN's Camera paragraph re-audited
+  (107c, 107d);
+- the slab seam deleted (107b).
+
+**Beyond the cut:** 107d-post's upright depth (gotcha #139; `clip.test.ts`
+is a new permanent gate). Its re-read against the hop is carried to §108.
+
+**Reads this phase:** one `batch` (107b), clear; one `stop` (107d), whose
+finding became one `-post` (107d-post), whose own `stop` is clear. No open
+◐. The trial's rollback rule (a `batch` finding reopening two later
+commits) did not fire.

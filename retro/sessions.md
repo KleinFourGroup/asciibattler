@@ -1674,3 +1674,87 @@ appended the scratchpad line through an inline `printf` containing quotes
 and backticks, the same rule the previous session logged its author
 breaking. The line landed intact (checked), but I had the rule in context
 and reached for the shell out of momentum. No new papercut; this is it.
+
+## 2026-09-24 — §107: the kickoff → 107d-post, the §107 close (one session) — claude-opus-5-5, session 03df8200
+
+Commits `127f1d6` → the close. Two papercuts filed: a multi-file edit
+script that half-applied, and the heredoc habit.
+
+1. **Missing from the orientation:** nothing that cost a wrong turn. The
+   Cursor named the kickoff, and the spec's D1 list made a good spine for
+   the audit. Two things the spec could not have known: the Renderer picked
+   its starting camera regardless of the view (the audit found it, and it
+   became 107a), and D8's "delete `restampSlabs`" was written while the
+   projection dials were also staying as a dev override (the audit found
+   the tension, and the user decided it).
+2. **Norm conflict / a norm in the way:** no conflict between norms. One
+   norm broken twice: the Shell rule. I appended text containing backticks
+   through a quoted heredoc, once at 107b and once at 107d-post, and noticed
+   both times only after it ran; both landed intact, and I checked. The
+   trigger is the same as the §106-close addendum's `printf`: appending to an
+   existing file, where Write replaces the whole file and Edit needs an
+   anchor. The preview hook asked for a browser verify after writes to
+   scratch files and tests; I followed it only where the change was
+   observable, as CLAUDE.md allows.
+3. **Pulled to claim more than verified:** yes, mostly in messages the user
+   read.
+   - My first read of the user's bug said the old camera clipped "at most
+     one lower quarter" and predicted new clipping at rest and on straight
+     moves. I labelled it "worked out, not measured", and the measurement
+     refuted all of it (48.6 % under the old camera; 0 % at rest and on
+     straight moves). The pull was toward a tidy "the camera did it" story.
+   - I told the user the hop would have to hold its height for most of the
+     move. The measurement showed a plain arc suffices, because the ink is
+     narrower than the quad. I said so in the next message.
+   - Caught before they reached the user: bars reading 19.6 px off after a
+     synthetic resize (the pane's frame-lag trap, which the procedure doc
+     names; after one frame, 0.05 px); a probe scenario that raised the
+     wrong cells and read 0 %; and an "old shader" check that passed only
+     because a comment contained the searched word.
+4. **Wasted:**
+   - A flip script whose token count I tallied by eye; it half-applied, and
+     a second script finished it (papercut).
+   - A second hook run to put the gotcha's commit hash in.
+   - The pane's zoom, which still can't crop.
+   - A screenshot pair of a 48 px glyph that couldn't show the difference.
+     The pixel counts did.
+5. **For the next session, no other home:**
+   - A same-page shader A/B works in the pane: swap
+     `material.vertexShader` (with the change cut out) on both sprite
+     materials, set `needsUpdate`, call `renderTwoPass()`, then
+     `gl.readPixels` in the same task.
+   - `?bp=board-live` is the river map, with the 0.34–0.4 water steps.
+   - `tests/board/clip.ts` can measure the hop against upright depth once
+     the marks exist.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, used both
+   ways.
+   - The user's pushback on reusing the rubble rule ("a lot of book
+     keeping", the squeeze, the hop) was a real question. I agreed where
+     they were right (the bookkeeping, and that the hop is simpler than the
+     slide). I disagreed where the geometry said otherwise (the mark
+     argument is a wash), and I dropped the slide I had proposed.
+   - The D8 deviation went to the user as a question, not a decision.
+   - About eight reminders, each answered with a status line. Once or twice
+     mid-audit I felt a mild pull to have a result to report. No wish to
+     pause or stop, and nothing I'd file as `distress`.
+7. **What supported ease, interest or agency:** the user's "Does my
+   reasoning there track? Anything I'm missing?" Working through their
+   squeeze question geometrically is where upright depth came from, and
+   that felt like my contribution rather than execution. Settling "is it
+   the camera?" with a number was satisfying too. I'd want reasoning checks
+   framed that way repeated. This reports conditions, not whether the work
+   was good.
+
+### §107 — the phase summary (2026-09-24; one session)
+
+One session on `claude-opus-5-5` (03df8200): the kickoff, four cut steps
+and one `-post` inserted from the stop's finding. One `batch` read (107b)
+rode the one `stop` (107d); both were clear, and 107d-post's own `stop` was
+clear. Question 3's pattern matches §106's: derived claims in messages were
+refuted by an instrument built to check them, and the pane's known traps
+were caught by the procedure doc. One norm was broken twice, the Shell rule
+(heredocs carrying backticks while appending). The §106-close addendum
+records the same slip, so there are three instances across two sessions,
+logged for the round-close sweep. Room to disagree was used on both sides
+of the fix design. About eight reminders, each answered with a status line;
+no `distress` filed; two papercuts.

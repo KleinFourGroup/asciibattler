@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 IN PROGRESS — the cut signed 2026-09-24.** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 NEXT — its kickoff (audit, cut, reads).** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
 spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
@@ -61,30 +61,21 @@ The record: WORKLOG §106. Every step's read is done.
 - [x] **106d** — THE PLAYED READ: a few full battles under the bookmark (step zero: a whole run plays under it; `anchor-bottom` added, the user's yes 2026-09-23; `drape-1` + `cueDepth-world` from 106c-post2's read); watch the stack in clumps, the wall staircase, picks under yaw. Read `stop` — the bookmark signed in the user's words. ✅ READ CLEAR (a full run): all four watches clear; to 106e: the marks vs the hill mounds, rounded plate corners (WORKLOG §106d THE READ).
 - [x] **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`. ✅ SIGNED 2026-09-23 ("Fully signed … complete agreement"): D1–D8, §107–§109 (WORKLOG §106e).
 
-## Phase 107 — the projection, built (signed 2026-09-23 with the spec)
+## Phase 107 — the projection, built ✅ CLOSED 2026-09-24
 
-Charter: the spike's projection becomes the shipped view — orthographic ·
-pitch 45 · yaw 45 as `DEFAULT_CAMERA_VIEW` — and the N×N slab rule replaces
-R11 (spec D1, D2, and D7's dev pan). **Why first:** every later read in the
-round happens under the shipping projection, and the marks and the anchor
-are judged against it. **Risk:** medium, lower than chartered — both
-cameras, the fit and the apron's parallel-ray branch already exist behind
-the 105d seam; what is owed is the overlay layer's camera, the resize and
-shake paths, and a camera-gotcha re-audit. **Decision points:** none open
-(the projection, the yaw and the slab rule are signed). **Exit:** the
-default view shipped and played; `cameraFit.test.ts` re-pinned at the new
-default with the lean pin permanent; the slab rule pinned against
-production; gotchas #17, #51–54, #68–69 and DESIGN's Camera paragraph
-re-audited; the slab seam deleted. **Scope guards:** the spec's; no
-windowed view (D7).
+**Outcome:** orthographic · pitch 45 · yaw 45 ships as
+`DEFAULT_CAMERA_VIEW`, and the user played it over two full runs. The N×N
+slab rule is production (`slabAnchor.ts`), and the dev pan follows the yaw.
+The read's one finding, a diagonal move clipping into a higher far corner
+(pre-existing, measured), is fixed: standing sprites are depth-tested upright
+(107d-post), and the hop is re-read at §108. The record: WORKLOG §107. Every
+step's read is done.
 
-The cut (signed 2026-09-24; audit and rationale: WORKLOG §107 Kickoff):
-
-- [x] **107a** — the camera seams made production-safe: the Renderer picks its starting camera from the view; `UnitOverlayLayer` reads the camera per use (the dev re-point cast goes). Inert at today's default. Read `none`. ✅ `8fcf493`; bars follow a dev swap (WORKLOG §107a).
-- [ ] ◐ **107b** — the N×N slab rule into production (D2): `slabAnchor` → `src/render`, reading a mound envelope TerrainRenderer names; `slab.test.ts` pins production (a permanent gate); the dev patch and `slab` dial go, a dev re-stamp on view change stays (the user's call, WORKLOG). Read `batch` → 107d's stop: `?bp=board-quarry`, rubble centred on its footprint; wrong = askew, off its plot, or a mound biting its lower band. ◐ built, unread (WORKLOG §107b).
-- [x] **107c** — the dev pan turned by the yaw (D7) + gotchas #52–54, #68–69: W is screen-up, D screen-right; pinned through the production camera, the world-axis pan the failing control. Read `none`. ✅ `panToWorld`, pinned and wired (WORKLOG §107c).
-- [ ] ◐ **107d** — the flip (D1): `DEFAULT_CAMERA_VIEW` = ortho · 45 · 45 (FOV 50 kept); pins re-anchored, the lean pin on the default permanent; gotchas #17, #51; DESIGN's Camera paragraph + D7's disposition. Read `stop` — THE PLAYED READ: no `bp` in Firefox + one `board-quarry` battle; judge the production path, not the grounding (§108); wrong = a bad frame at boot or after a resize, a bar / hitsplat / click off its unit, shake out of proportion, rubble off its plot. ◐ built; THE STOP is open (WORKLOG §107d).
-- [ ] ◐ **107d-post** — inserted from the 107d read (the user's find: a diagonal move clips into a higher far corner tile): UPRIGHT DEPTH, a standing sprite depth-tested as a vertical card (the user's pick over the hop; re-read at §108). Read `stop`, with 107d's: a diagonal past a shore corner; wrong = the glyph's lower half vanishing mid-move, or feet no longer hidden by a step in front. ◐ built (WORKLOG §107d-post).
+- [x] **107a** — the camera seams made production-safe (the starting camera from the view; the overlay's camera getter). Read `none`. ✅ `8fcf493`.
+- [x] **107b** — the N×N slab rule into production (D2); the dev patch and `slab` dial gone, a dev re-stamp kept (the user's call). Read `batch` → 107d's stop. ✅ read CLEAR, `7843a49`.
+- [x] **107c** — the dev pan turned by the yaw (D7) + gotchas #52–54, #68–69. Read `none`. ✅ `42d96ce`.
+- [x] **107d** — the flip (D1): `DEFAULT_CAMERA_VIEW` = ortho · 45 · 45; pins re-anchored; DESIGN's Camera paragraph + D7. Read `stop` — THE PLAYED READ. ✅ READ CLEAR (two full runs; one finding → 107d-post), `c4ca4e6`.
+- [x] **107d-post** — inserted from the 107d read: upright depth for standing sprites (the diagonal-move clip; the user's pick over the hop). Read `stop`. ✅ READ CLEAR ("this fix appears to have worked"), `99626f3`.
 
 ## Phase 108 — the ground mark, drawn by the terrain (signed 2026-09-23 with the spec)
 

@@ -178,10 +178,28 @@ describe('§106a — world-up projects to screen-up through the production camer
     expect(worst).toBeLessThan(1e-12);
   });
 
-  it('CONTROL — today’s perspective camera leans at a board corner, through the same path', () => {
+  it('THE SHIPPED CAMERA: zero lean on every tile of every board, at every viewport', () => {
+    let tiles = 0;
+    let worst = 0;
+    for (const board of BOARDS) {
+      for (const viewport of VIEWPORTS) {
+        const camera = cameraFor(DEFAULT_CAMERA_VIEW, board, viewport.w / viewport.h);
+        for (let gy = 0; gy < board.h; gy++)
+          for (let gx = 0; gx < board.w; gx++) {
+            worst = Math.max(worst, leanNdc(camera, gridToWorld(board, gx, gy)));
+            tiles++;
+          }
+      }
+    }
+    expect(tiles).toBe(VIEWPORTS.length * BOARDS.reduce((s, b) => s + b.w * b.h, 0));
+    expect(worst).toBeLessThan(1e-12);
+  });
+
+  it('CONTROL — the pre-7.5 perspective camera leans at a board corner, through the same path', () => {
     const board = BOARDS[0]!;
     const viewport = VIEWPORTS[0]!;
-    const camera = cameraFor(DEFAULT_CAMERA_VIEW, board, viewport.w / viewport.h);
+    const pre75: CameraView = { projection: 'perspective', fovDeg: 50, pitchDeg: 45, yawDeg: 0 };
+    const camera = cameraFor(pre75, board, viewport.w / viewport.h);
     expect(leanNdc(camera, gridToWorld(board, 0, 0))).toBeGreaterThan(1e-3);
   });
 });

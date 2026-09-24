@@ -1826,3 +1826,49 @@ pan artefact line is gone.
   player anchor, which sits at the clamp's edge (tz = −6), W moved only X,
   because the world-axis clamp held Z. That is the behaviour #53 now
   documents.
+
+### 107d — the flip (2026-09-24) — ◐ BUILT; THE STOP (the played read) is open
+
+`DEFAULT_CAMERA_VIEW` is orthographic · FOV 50 · pitch 45 · yaw 45. The
+FOV sets only the ortho stand-off distance, and 50 matches the §106
+bookmark's camera. Pins:
+- `cameraFit.test.ts`: the bit-identity pin and its controls now name the
+  pre-7.5 view as a literal (`PRE_75_VIEW`), so they still pin the fit's
+  perspective branch against the frozen function. A tripwire pins the
+  default to the signed view. The yaw control moved to the lens, because an
+  ortho picture ignores the distance that control swaps in.
+- `tests/board/cameraFit.test.ts`: the shipped camera's lean is zero on
+  every tile of every board at every viewport (permanent). The control is
+  the pre-7.5 perspective camera, named explicitly.
+- `state.test.ts`: the explorer's `proj` and `yaw` defaults follow the view,
+  so the round-trip test now uses `proj-persp`, and a new test shows that the
+  §106 bookmark, `slab-centre` included, parses to the shipped view and
+  encodes to nothing.
+
+The instrument's `TODAY` is now `PRE_75`, and its CLI output says
+`pre-7.5`. The CLI runs (exit 0). The explorer's "ortho mist, read by no
+eye" artefact line is gone: the user played ortho through a full run at
+106d. Docs: DESIGN's Camera paragraph (the projection, why yaw 0 is out, fit
+the only production view, the windowed view to the mobile round),
+§Input accessibility's camera-mode sentence, gotchas #17 and #51, and
+ARCHITECTURE's Renderer and cameraFit entries.
+
+**Verified, step zero in the pane:**
+- Booted with no `bp`: the camera is orthographic from the constructor,
+  both RenderPasses hold it, and the frustum's aspect is 1.778 at 1280×720.
+  This is 107a's constructor pick, seen at last.
+- `?bp=board-quarry` under the default view: 30 bars within 0.05 px of
+  their unit's projection, and the 5 slabs on their footprint centres (to
+  1.3e-8 NDC) and nearer than their terrain.
+  - A first read showed bars 19.6 px off. It was taken after a synthetic
+    resize with no frame drawn since, the pane trap `process/browser-pane.md`
+    names. After a forced frame: 0.05 px.
+- Resize: at 1024×768 and 1680×720 the frustum follows (1.3333, 2.3333),
+  the board stays inside the frame, and the bars stay within 0.05 px.
+- Picks: all 168 tile centres pick their own tile at 1680×720.
+- Shake: the offset lies in the camera's screen plane (2.3e-15 along the
+  view), and clearing it restores the camera exactly.
+- No console errors. Suite: 3101 main, green.
+
+**Not verified here, and the read's to judge:** Firefox; the look and feel
+in play; shake's size in play (measured on paper at kickoff, finding 5).

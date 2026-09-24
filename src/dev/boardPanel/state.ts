@@ -66,7 +66,7 @@ export const DIALS = {
     kind: 'enum',
     label: 'projection',
     options: ['persp', 'ortho'],
-    def: 'persp',
+    def: 'ortho',
     hint: 'persp = a lens (see FOV) · ortho = parallel rays: no lean, no far-row shrink',
   },
   fov: {
@@ -76,7 +76,7 @@ export const DIALS = {
     max: 70,
     step: 1,
     def: 50,
-    hint: 'vertical degrees, perspective only — today 50; a long lens is 10-25 (the camera backs off to keep the fit)',
+    hint: 'vertical degrees, perspective only (the pre-7.5 lens was 50); a long lens is 10-25 (the camera backs off to keep the fit)',
   },
   pitch: {
     kind: 'range',
@@ -93,8 +93,8 @@ export const DIALS = {
     min: -90,
     max: 90,
     step: 5,
-    def: 0,
-    hint: 'degrees about the vertical — 45 = the diamond board',
+    def: 45,
+    hint: 'degrees about the vertical — 45 = the diamond board (shipped); 0 = square to the board',
   },
   /** 105e — THE GLYPH SCALE: a multiplier on every UNIT BODY's quad (user-
    *  signed: units only — walls, projectiles and markers stay size 1, so a
@@ -353,7 +353,6 @@ export const KNOWN_ARTEFACTS: readonly string[] = [
   'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
-  'ortho / long lens: the mist around the board is the apron ray, re-derived for parallel rays but read by no eye before yours',
   'ground mark: marks and plates are cut per tile onto the tile TOPS, and step drape = on hangs them down the step faces the camera sees - neither follows the hill mounds',
 ];
 

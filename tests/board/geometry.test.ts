@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import {
   BOARDS,
-  TODAY,
+  PRE_75,
   VIEWPORTS,
   anchorYFor,
   cameraUpDriftPx,
@@ -44,7 +44,7 @@ const ORTHO: View = { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg
 const ORTHO_YAW: View = { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg: 45 };
 
 describe("the known answers — §79b's live-camera measurements", () => {
-  const rig = fitRig(TODAY, B15, P720);
+  const rig = fitRig(PRE_75, B15, P720);
 
   it('the grid centre projects to the viewport centre (79b: x = 640 on a 1280 canvas)', () => {
     const c = toPx(rig, new THREE.Vector3(0, 0, 0));
@@ -69,7 +69,7 @@ describe("the known answers — §79b's live-camera measurements", () => {
   });
 
   it('a CAMERA-up lift never drifts (anchor.ts, by construction) — under every view', () => {
-    for (const view of [TODAY, ORTHO, ORTHO_YAW, { ...TODAY, yawDeg: 45 }, { ...TODAY, pitchDeg: 60 }]) {
+    for (const view of [PRE_75, ORTHO, ORTHO_YAW, { ...PRE_75, yawDeg: 45 }, { ...PRE_75, pitchDeg: 60 }]) {
       const r = fitRig(view, B15, P720);
       for (const [gx, gy] of [[0, 0], [14, 0], [0, 14], [14, 14]] as const)
         expect(Math.abs(cameraUpDriftPx(r, gridToWorld(B15, gx, gy), 1))).toBeLessThan(1e-6);
@@ -79,7 +79,7 @@ describe("the known answers — §79b's live-camera measurements", () => {
 
 describe('the closed forms', () => {
   it('perspective: at the centre row the lean is atan(x′·tan pitch), x′ the off-axis tangent (C1\'s derivation)', () => {
-    const rig = fitRig(TODAY, B15, P720);
+    const rig = fitRig(PRE_75, B15, P720);
     // A ground point on the look-at row (z = 0 ⇒ view-space y = 0).
     const p = new THREE.Vector3(5, 0, 0);
     const v = p.clone().applyMatrix4(rig.camera.matrixWorldInverse);
@@ -98,7 +98,7 @@ describe('the closed forms', () => {
   });
 
   it('perspective: it does NOT (the failing control for the pin above)', () => {
-    const rig = fitRig(TODAY, B15, P720);
+    const rig = fitRig(PRE_75, B15, P720);
     expect(Math.abs(leanDeg(rig, gridToWorld(B15, 0, 0)))).toBeGreaterThan(5);
   });
 });
@@ -112,7 +112,7 @@ describe('the anchor, restated', () => {
 
 describe('the fit', () => {
   it('every view × board × viewport keeps the padded frame on screen, and touches an edge (it is a FIT, not a guess)', () => {
-    const views: View[] = [TODAY, { ...TODAY, yawDeg: 45 }, { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 60, yawDeg: 0 }, ORTHO, ORTHO_YAW];
+    const views: View[] = [PRE_75, { ...PRE_75, yawDeg: 45 }, { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 60, yawDeg: 0 }, ORTHO, ORTHO_YAW];
     for (const view of views)
       for (const board of BOARDS)
         for (const vp of VIEWPORTS) expect(report(view, board, vp, 1, 'today').fits, `${JSON.stringify(view)} ${board.name} ${vp.name}`).toBe(true);
@@ -121,7 +121,7 @@ describe('the fit', () => {
 
 describe('the overlap measure', () => {
   it('is 0 for units too far apart to touch, and > 0 for a clump under an oversized glyph', () => {
-    const rig = fitRig(TODAY, B15, P720);
+    const rig = fitRig(PRE_75, B15, P720);
     const apart = [
       { glyph: 'M', pos: gridToWorld(B15, 2, 2) },
       { glyph: 'M', pos: gridToWorld(B15, 12, 12) },
@@ -161,11 +161,11 @@ describe('§106a — the N×N slab under yaw', () => {
     return out;
   };
 
-  it('KNOWN ANSWER — the near-row rule where it was signed: on its plot and unbitten under today’s camera; also centred under ortho at yaw 0', () => {
-    // Under today's PERSPECTIVE the rule reads ~0.08 lateral — parallax on an
+  it('KNOWN ANSWER — the near-row rule where it was signed: on its plot and unbitten under the pre-7.5 camera; also centred under ortho at yaw 0', () => {
+    // Under the pre-7.5 PERSPECTIVE the rule reads ~0.08 lateral — parallax on an
     // off-centre slab (its near row is nearer than its centre), not yaw — so the
     // "not askew" half of the known answer is taken with parallel rays.
-    const today = sweep(TODAY, slabNearRow);
+    const today = sweep(PRE_75, slabNearRow);
     const orthoY0 = sweep(ortho(0), slabNearRow);
     expect(today.length).toBe(RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length);
     for (const r of today) {

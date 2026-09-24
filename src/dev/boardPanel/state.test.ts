@@ -34,7 +34,7 @@ describe('105e — the glyph scale + the artefact list', () => {
 });
 
 describe('105d — the projection dials', () => {
-  it('the four defaults ARE the Renderer’s default view — an untouched panel is today’s camera', () => {
+  it('the four defaults ARE the Renderer’s default view — an untouched panel is the shipped camera', () => {
     expect(cameraViewOf(defaultDials())).toEqual(DEFAULT_CAMERA_VIEW);
     // …and the view is exactly those four dials: a fifth field on CameraView
     // must pick a dial (or a reason) here.
@@ -42,14 +42,22 @@ describe('105d — the projection dials', () => {
   });
 
   it('a projection bookmark round-trips, negative yaw included', () => {
-    const state = parseDials('proj-ortho_fov-20_pitch-60_yaw--45');
+    // `persp`: since 107d the shipped default is ortho, so ortho is never written.
+    const state = parseDials('proj-persp_fov-20_pitch-60_yaw--45');
     expect(cameraViewOf(state)).toEqual({
-      projection: 'orthographic',
+      projection: 'perspective',
       fovDeg: 20,
       pitchDeg: 60,
       yawDeg: -45,
     });
-    expect(encodeDials(state)).toBe('proj-ortho_fov-20_pitch-60_yaw--45');
+    expect(encodeDials(state)).toBe('proj-persp_fov-20_pitch-60_yaw--45');
+  });
+
+  it('the §106 bookmark still means the shipped view: its proj and yaw are now the defaults', () => {
+    const state = parseDials('proj-ortho_yaw-45_slab-centre');
+    expect(cameraViewOf(state)).toEqual(DEFAULT_CAMERA_VIEW);
+    // `slab` left the table at 107b; an unknown key is dropped, never thrown on.
+    expect(encodeDials(state)).toBe('');
   });
 
   it('the pitch dial cannot reach the fit’s two singularities (level, overhead)', () => {

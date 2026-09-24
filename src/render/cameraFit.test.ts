@@ -70,6 +70,9 @@ function computeCameraDistanceAtHead(
 
 const MARGIN = 1.05;
 
+/** The frozen function's view: the default until 107d. */
+const PRE_75_VIEW: CameraView = { projection: 'perspective', fovDeg: 50, pitchDeg: 45, yawDeg: 0 };
+
 /** (hx, hy, hz): every authored board size + the procedural extremes, padded
  *  as `Renderer` pads them, and scroll mode's fixed 12-tile window. */
 const BOXES: readonly (readonly [string, number, number, number])[] = [
@@ -100,12 +103,17 @@ const ASPECTS: readonly number[] = [
   1919 / 947,
 ];
 
-describe('fitCameraToBox — the default view is today’s fit, bit for bit', () => {
+describe('fitCameraToBox — the pre-7.5 view is the pre-105d fit, bit for bit', () => {
+  it('the shipped default is the signed view (spec D1): ortho · pitch 45 · yaw 45', () => {
+    // A tripwire, not a probe: changing the shipped camera is a design call.
+    expect(DEFAULT_CAMERA_VIEW).toEqual({ projection: 'orthographic', fovDeg: 50, pitchDeg: 45, yawDeg: 45 });
+  });
+
   it('equals the frozen computeCameraDistance on every box × aspect', () => {
     let cases = 0;
     for (const [name, hx, hy, hz] of BOXES) {
       for (const aspect of ASPECTS) {
-        const fit = fitCameraToBox(DEFAULT_CAMERA_VIEW, aspect, hx, hy, hz, MARGIN);
+        const fit = fitCameraToBox(PRE_75_VIEW, aspect, hx, hy, hz, MARGIN);
         const ref = computeCameraDistanceAtHead(50, aspect, hx, hy, hz);
         expect(fit.distance, `${name} @ ${aspect}`).toBe(ref);
         cases++;
@@ -115,7 +123,7 @@ describe('fitCameraToBox — the default view is today’s fit, bit for bit', ()
   });
 
   it('points the camera where HEAD did: (0, D·sin 45°, D·cos 45°), no ortho frustum', () => {
-    const fit = fitCameraToBox(DEFAULT_CAMERA_VIEW, 16 / 9, 8, 1, 8, MARGIN);
+    const fit = fitCameraToBox(PRE_75_VIEW, 16 / 9, 8, 1, 8, MARGIN);
     expect(fit.dirX).toBe(0);
     expect(fit.dirY).toBe(Math.sin(Math.PI / 4));
     expect(fit.dirZ).toBe(Math.cos(Math.PI / 4));
@@ -132,8 +140,8 @@ describe('fitCameraToBox — the default view is today’s fit, bit for bit', ()
       [2.25, -3.5],
     ] as const) {
       for (const aspect of ASPECTS) {
-        const fit = fitCameraToBox(DEFAULT_CAMERA_VIEW, aspect, 6, 1, 6, MARGIN);
-        applyCameraFit(camera, DEFAULT_CAMERA_VIEW, fit, aspect, tx, tz);
+        const fit = fitCameraToBox(PRE_75_VIEW, aspect, 6, 1, 6, MARGIN);
+        applyCameraFit(camera, PRE_75_VIEW, fit, aspect, tx, tz);
         // HEAD's fitCameraScroll + handleResize, restated (fit mode is tx = tz = 0).
         const D = computeCameraDistanceAtHead(50, aspect, 6, 1, 6);
         head.aspect = aspect;
@@ -149,9 +157,9 @@ describe('fitCameraToBox — the default view is today’s fit, bit for bit', ()
 
   it('CONTROL — one degree of pitch, FOV or yaw breaks the identity on every case', () => {
     const nudges: readonly CameraView[] = [
-      { ...DEFAULT_CAMERA_VIEW, pitchDeg: 46 },
-      { ...DEFAULT_CAMERA_VIEW, fovDeg: 51 },
-      { ...DEFAULT_CAMERA_VIEW, yawDeg: 1 },
+      { ...PRE_75_VIEW, pitchDeg: 46 },
+      { ...PRE_75_VIEW, fovDeg: 51 },
+      { ...PRE_75_VIEW, yawDeg: 1 },
     ];
     for (const view of nudges) {
       let equal = 0;
@@ -228,8 +236,9 @@ describe('fitCameraToBox — the box fills the frame under every view of the cro
   });
 
   it('CONTROL — a fit made for one yaw does not fill the frame at another', () => {
-    const made: CameraView = { ...DEFAULT_CAMERA_VIEW, yawDeg: 0 };
-    const shown: CameraView = { ...DEFAULT_CAMERA_VIEW, yawDeg: 45 };
+    // Under a lens: an ortho picture ignores the distance this swaps in.
+    const made: CameraView = { ...PRE_75_VIEW, yawDeg: 0 };
+    const shown: CameraView = { ...PRE_75_VIEW, yawDeg: 45 };
     const camera = cameraFor(shown);
     const fit = fitCameraToBox(made, 16 / 9, 6.5, 1, 16.5, 1);
     const turned = fitCameraToBox(shown, 16 / 9, 6.5, 1, 16.5, 1);

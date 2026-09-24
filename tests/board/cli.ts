@@ -7,7 +7,9 @@
  *   npm run board-geometry -- --viewport=1280x720 --board=24x24
  *
  * Read `geometry.ts`'s header first: the model is FLAT, and the overlap is
- * over ink RECTS (an upper bound on ink-over-ink).
+ * over ink RECTS (an upper bound on ink-over-ink). "Today" in this output is
+ * the pre-7.5 camera (`PRE_75`: perspective 50 · 45 · 0), the baseline §105
+ * compared against; the shipped camera since 107d is ortho · 45 · 45.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -18,7 +20,7 @@ import {
   RUBBLE_QUARRY,
   RUBBLE_QUARRY_SLABS,
   SLAB_GLYPH,
-  TODAY,
+  PRE_75,
   VIEWPORTS,
   fitRig,
   gridToWorld,
@@ -57,7 +59,7 @@ const pct = (v: number): string => `${(v * 100).toFixed(0)}%`;
 {
   const b15 = BOARDS[0]!;
   const p720 = VIEWPORTS.find((v) => v.name === '1280x720')!;
-  const rig = fitRig(TODAY, b15, p720);
+  const rig = fitRig(PRE_75, b15, p720);
   const skew = (gx: number, gy: number): string => f(worldYDriftPx(rig, gridToWorld(b15, gx, gy), 0.5), 2);
   const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(b15, 7, 0) }, 1, MODE);
   console.log('KNOWN ANSWERS (79b, live camera, 15x15 @ 1280x720) — expected | this model (flat terrain)');
@@ -82,7 +84,7 @@ const key = (p: string, pitch: number, yaw: number, s: number, b: string, v: str
 
 for (const board of BOARDS)
   for (const vp of VIEWPORTS) {
-    const today = report(TODAY, board, vp, 1, MODE);
+    const today = report(PRE_75, board, vp, 1, MODE);
     for (const proj of PROJECTIONS)
       for (const pitch of PITCHES)
         for (const yaw of YAWS)
@@ -158,7 +160,7 @@ console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
   const orthoAt = (yawDeg: number): View => ({ projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg });
   const lensAt = (yawDeg: number): View => ({ projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg });
   const views: [string, View][] = [
-    ['today', TODAY],
+    ['pre-7.5', PRE_75],
     ['ortho y0', orthoAt(0)],
     ['ortho y30', orthoAt(30)],
     ['ortho y45', orthoAt(45)],
@@ -209,7 +211,7 @@ console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
   const b15 = BOARDS[0]!;
   console.log(`\n=== §106a the flyer @ ${vp.name}, 15x15: worst ink cover of the three standing units behind it | shadow gap px ===`);
   for (const [vn, view] of [
-    ['today', TODAY],
+    ['pre-7.5', PRE_75],
     ['ortho y30', { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg: 30 }],
     ['ortho y45', { projection: { kind: 'orthographic' }, pitchDeg: 45, yawDeg: 45 }],
     ['lens20 y45', { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg: 45 }],

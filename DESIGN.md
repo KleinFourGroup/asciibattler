@@ -155,7 +155,7 @@ Color + bloomIntensity per instance are instanced attributes so a single draw ca
 
 **Post-processing:** `EffectComposer` chain — RenderPass → saturation-clamp → bloom (UnrealBloomPass with a max-channel high-pass) → scanlines → OutputPass. CRT curvature and chromatic aberration are future hooks (drop-in additions).
 
-**Camera:** Fixed perspective, tilted ~45° down with a slight angle so the grid reads as a grid but billboards face the camera cleanly. Non-rotatable in MVP. Camera rotation is deferred along with larger maps.
+**Camera:** Orthographic, pitched 45° down and turned 45° about the vertical, so the board reads as a diamond (Round 7.5, spec D1; shipped at 107d). Parallel rays make a world vertical draw as a screen vertical on every tile, so a billboard stands upright wherever it is, and the far rows don't shrink: the smallest glyph at fit measured about 1.28× the old perspective camera's (§105). Yaw 0 is out: a pitched board then projects to a rectangle and reads as top-down against upright glyphs. The view is fixed for players: no rotation, pan or zoom. **Fit is the only production view** (spec D7): the whole board framed at any aspect. Scroll mode stays dev-only (Ctrl+Alt+C), and a windowed view, with the minimap and the drag, wheel and touch pan it needs, belongs to the round that builds mobile, its consumer. Yaw and glyph scale are Round 11 accessibility candidates, not settings yet.
 
 ## Input accessibility (78e, user-signed 2026-08-14; extended §100, 2026-09-17)
 
@@ -181,8 +181,9 @@ the screens in the tree so the walk reaches the chips before the browser's
 own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
 focused control — Space is pause everywhere, Enter is every control's route
 (gotcha #135); yielding Space to a focused button would re-fire the last
-clicked one instead of pausing. A camera mode is dev-only (Ctrl+Alt+C; the
-D4 A/B is Round 7.5's) — a shipped binding with no click route is a bug.
+clicked one instead of pausing. A camera mode is dev-only (Ctrl+Alt+C; fit
+is the only production view, "Camera" above) — a shipped binding with no
+click route is a bug.
 The focus ring is the "Focus (100)" idiom below.
 
 **The per-surface checklist (the Round 7 spec's exit; every row ticked

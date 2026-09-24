@@ -36,9 +36,9 @@ export type Projection = { kind: 'perspective'; fovDeg: number } | { kind: 'orth
 
 export interface View {
   projection: Projection;
-  /** Camera pitch from horizontal, degrees (today: 45). */
+  /** Camera pitch from horizontal, degrees (shipped: 45). */
   pitchDeg: number;
-  /** Camera yaw about world-Y, degrees (today: 0). */
+  /** Camera yaw about world-Y, degrees (shipped: 45; the pre-7.5 camera: 0). */
   yawDeg: number;
 }
 
@@ -65,7 +65,8 @@ export interface Rect {
   y1: number;
 }
 
-export const TODAY: View = { projection: { kind: 'perspective', fovDeg: 50 }, pitchDeg: 45, yawDeg: 0 };
+/** The pre-7.5 camera (the default until 107d), the baseline §105 compared against. */
+export const PRE_75: View = { projection: { kind: 'perspective', fovDeg: 50 }, pitchDeg: 45, yawDeg: 0 };
 
 const INKS = census.inks as unknown as Record<string, [number, number, number, number]>;
 

@@ -65,7 +65,7 @@ const EDGE_SCROLL_THRESHOLD_PX = 40;
 const PAN_SPEED_TILES_PER_SEC = 12;
 
 /** D4 pan keys: WASD and arrow keys (both active simultaneously). Tracked
- *  in `keysHeld` and summed into the XZ pan direction in
+ *  in `keysHeld` and summed into a screen pan direction in
  *  `updateScrollFromInput`. `e.code` is layout-independent. DEV-only since
  *  100a (see `DEV`); the Backquote mode toggle that lived beside them moved
  *  to the devKeys chord the same step. */
@@ -80,12 +80,10 @@ const PAN_KEY_CODES = new Set<string>([
  * reaches into three.js directly.
  *
  * The camera's VIEW (projection · FOV · pitch · yaw) is `DEFAULT_CAMERA_VIEW`
- * — the 45° diorama framing at a 50° lens — for every player; 105d made it
- * state so Round 7.5's projection spike can dial it from the dev-only board
- * explorer (`setCameraView`), and `cameraFit.test.ts` pins the default
- * bit-identical to the constants it replaced. The visible-arena size is set
- * per-encounter via `fitToBoard(gridW, gridH)` (D3); pre-D3 the size was a
- * fixed `GRID_SIZE × GRID_SIZE` constant.
+ * — orthographic, pitch 45°, yaw 45° since 107d — for every player; 105d made
+ * it state so the dev-only board explorer can dial it (`setCameraView`). The
+ * visible-arena size is set per-encounter via `fitToBoard(gridW, gridH)` (D3);
+ * pre-D3 the size was a fixed `GRID_SIZE × GRID_SIZE` constant.
  */
 export class Renderer {
   readonly scene: THREE.Scene;

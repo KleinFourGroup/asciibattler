@@ -7,12 +7,12 @@
  * call it, and a projection is a branch inside it, never a second function.
  * It generalizes the pre-105d `computeCameraDistance`, whose derivation
  * hard-coded right = (1, 0, 0) (no yaw) and read `camera.fov` (no ortho). At
- * `DEFAULT_CAMERA_VIEW` the result is BIT-identical to that function —
- * `cameraFit.test.ts` pins it against a frozen copy across boards × aspects,
- * with failing controls.
+ * that function's view (perspective · 50° · pitch 45 · yaw 0, the default until
+ * 107d) the result is BIT-identical to it — `cameraFit.test.ts` pins it
+ * against a frozen copy across boards × aspects, with failing controls.
  *
- * Round 7.5's projection spike (§105) is what drives the non-default views,
- * from the dev-only board explorer; players only ever get the default.
+ * Players get `DEFAULT_CAMERA_VIEW`; the dev-only board explorer dials the
+ * others (`Renderer.setCameraView`).
  */
 
 import type * as THREE from 'three';
@@ -29,12 +29,19 @@ export interface CameraView {
   readonly yawDeg: number;
 }
 
-/** Today's camera: the 45° diorama framing at a 50° lens, square to the board. */
+/**
+ * The shipped camera (Round 7.5, spec D1, 107d): orthographic, pitched 45°,
+ * yawed 45° so the board reads as a diamond. Under ortho a world vertical
+ * draws as a screen vertical on every tile (the lean pin,
+ * `tests/board/cameraFit.test.ts`), and the far rows don't shrink. `fovDeg`
+ * sets only the ortho stand-off distance (see `fitCameraToBox`), never the
+ * picture; 50 keeps the camera exactly where the §106 bookmark put it.
+ */
 export const DEFAULT_CAMERA_VIEW: CameraView = {
-  projection: 'perspective',
+  projection: 'orthographic',
   fovDeg: 50,
   pitchDeg: 45,
-  yawDeg: 0,
+  yawDeg: 45,
 };
 
 export interface CameraFit {

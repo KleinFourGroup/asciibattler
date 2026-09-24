@@ -326,7 +326,7 @@ src/
     glyphs.ts                # E7.A: THREE-free GLYPHS set (FontAtlas.test asserts archetype coverage); J3: 'X' = objective marker (atlas now 32/32 FULL)
     PostProcess.ts           # SatClamp + Bloom + BloomMix factories (B1.1)
                              # Scanlines retained as dormant code; CRT lines now run via CSS (B5)
-    shaders/                 # .glsl source files loaded via Vite ?raw imports (A4)
+    shaders/                 # .glsl source files loaded via Vite ?raw imports (A4). billboard.vert.glsl: 107d-post UPRIGHT DEPTH, a base-anchored sprite takes the depth of a vertical card through its anchor, its screen position untouched (gotcha #139; pinned by tests/board/clip.test.ts)
     palette.ts               # COLORS table — TERMINAL_STONE added for neutrals (C1a)
     motion.ts                # 99a: THE MOTION GATE — `reducedMotion()` = override ?? the OS `prefers-reduced-motion` query (the pure `resolveReducedMotion` pinned in motion.test.ts); `installMotionGate()` (main.ts, before the Game) stamps `html[data-motion="reduced"]` and follows the query's `change`; `setReducedMotionOverride` is Round 8's setting seam, `cycleReducedMotionOverride` the Ctrl+Alt+A dev read. ONE source for the CSS (99b keys off the attribute — no `@media` block, which a setting can't flip) and the JS (HUD's orb flight + end stagger, lossFx.shakeView, the tooltip's rise; 99c's fxDescriptor filter takes its answer as an argument). Lives in render because render never imports ui
     animation/

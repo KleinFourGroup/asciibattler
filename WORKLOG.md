@@ -1930,4 +1930,50 @@ linear-Y step up) is caught (25.0 % / 13.9 %) while its profile clears it.
   (the §108 marks, the sort) would need the unmoved one. The user's
   objection was bookkeeping.
 
-The pick is open with the user.
+**Decided (the user, 2026-09-24):** "Let's try upright depth, quickly, with
+a note to revisit it after the ground cues are in". Whether a hopping glyph
+matches the draped marks can't be judged until they exist, so the hop stays
+the rival until then (ROADMAP §108 carries the note).
+
+### 107d-post — upright depth (2026-09-24) — ◐ BUILT; read with 107d's stop
+
+`billboard.vert.glsl`: for a base-anchored sprite (`instanceAnchor.y < 0`:
+units, walls, rubble, the objective marker), each vertex keeps its screen
+position (x, y, w untouched) and takes the clip depth of the world-vertical
+card through the anchor: view-space world-up is (0, upV.y, upV.z), so a
+vertex `offset.y` up the screen stands `offset.y · upV.z / upV.y` nearer.
+Centred sprites (projectiles, motes) keep the plain card: an upright card
+would push their lower half back into the ground. Gotcha #139.
+
+The measure moved into the instrument (`hiddenInk`, `worstHidden` in
+`tests/board/geometry.ts`), and `clip.ts` became its CLI. The move
+reproduces every number above exactly.
+
+**Verified:**
+- `tests/board/clip.test.ts` (6 tests, a permanent gate), under the shipped
+  camera:
+  - known answers: a flat patch hides nothing; the §81c2 defect is caught
+    (> 10 %), and its profile under upright hides 0;
+  - the control: the leaning card hides more than half the glyph on the
+    user's case;
+  - upright hides exactly 0 on the far-corner, all-behind-high and floor-band
+    diagonals, at rest, and on straight moves;
+  - a step in front hides exactly what it did under the card;
+  - the side-by-side case keeps at most 15 %;
+  - the pre-7.5 camera hid more than 40 % on the same move.
+- **The shader, in the pane** (`?bp=board-live`, the river layout, 1280×720,
+  a player `c` frozen at t = 0.5 of a water-to-water diagonal past a floor
+  corner 0.34 higher). Same page, with the old shader source (the block
+  removed) swapped into both sprite materials, then read back with
+  `readPixels` over the glyph's 48×48 box:
+  - the card showed 111 bright glyph pixels, upright showed 237 (the unit
+    standing on its own tile: 244);
+  - the control, the unit standing on its tile, is pixel-identical under
+    both shaders;
+  - on `open15`'s largest step (0.159): 202 against 211;
+  - no console errors, so the shader compiles.
+
+**Not verified:** Firefox; the look in motion; the squeeze read (between two
+higher side-by-side tiles, their front halves still hide the glyph's lower
+corners, up to 12.5 %); a dev lens, where the depth is the upright point's,
+taken per vertex.

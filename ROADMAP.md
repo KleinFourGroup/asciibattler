@@ -84,6 +84,7 @@ The cut (signed 2026-09-24; audit and rationale: WORKLOG §107 Kickoff):
 - [ ] ◐ **107b** — the N×N slab rule into production (D2): `slabAnchor` → `src/render`, reading a mound envelope TerrainRenderer names; `slab.test.ts` pins production (a permanent gate); the dev patch and `slab` dial go, a dev re-stamp on view change stays (the user's call, WORKLOG). Read `batch` → 107d's stop: `?bp=board-quarry`, rubble centred on its footprint; wrong = askew, off its plot, or a mound biting its lower band. ◐ built, unread (WORKLOG §107b).
 - [x] **107c** — the dev pan turned by the yaw (D7) + gotchas #52–54, #68–69: W is screen-up, D screen-right; pinned through the production camera, the world-axis pan the failing control. Read `none`. ✅ `panToWorld`, pinned and wired (WORKLOG §107c).
 - [ ] ◐ **107d** — the flip (D1): `DEFAULT_CAMERA_VIEW` = ortho · 45 · 45 (FOV 50 kept); pins re-anchored, the lean pin on the default permanent; gotchas #17, #51; DESIGN's Camera paragraph + D7's disposition. Read `stop` — THE PLAYED READ: no `bp` in Firefox + one `board-quarry` battle; judge the production path, not the grounding (§108); wrong = a bad frame at boot or after a resize, a bar / hitsplat / click off its unit, shake out of proportion, rubble off its plot. ◐ built; THE STOP is open (WORKLOG §107d).
+- [ ] ◐ **107d-post** — inserted from the 107d read (the user's find: a diagonal move clips into a higher far corner tile): UPRIGHT DEPTH, a standing sprite depth-tested as a vertical card (the user's pick over the hop; re-read at §108). Read `stop`, with 107d's: a diagonal past a shore corner; wrong = the glyph's lower half vanishing mid-move, or feet no longer hidden by a step in front. ◐ built (WORKLOG §107d-post).
 
 ## Phase 108 — the ground mark, drawn by the terrain (signed 2026-09-23 with the spec)
 
@@ -97,7 +98,9 @@ strength of the grounding these marks give. **Risk:** medium-high — a new
 shader path and a per-frame data path, judged by eye, with a frame-cost
 measurement owed. **Decision points:** the two identity residuals (a camp
 unit's hue-only status pip; the cracked-stone wall tell) · rounded plate
-corners (a parameter, read at the stop) · the elevation clauses' wording.
+corners (a parameter, read at the stop) · the elevation clauses' wording ·
+107d-post's upright depth vs the hop, re-read once the marks exist (the user's
+note, 2026-09-24).
 **Exit:** the marks on tops, step faces and mounds, read by the user; the
 grey read passed in a live battle; the residuals decided; the elevation
 requirement signed; frame cost measured; the mock-mark seams deleted.

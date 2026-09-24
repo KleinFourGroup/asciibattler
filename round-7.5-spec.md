@@ -8,9 +8,10 @@ store. This spec is written over the spike's signed results. The charter is
 line here is [WORKLOG.md](WORKLOG.md) (§Kickoff, §105, §106); the plan is
 [ROADMAP.md](ROADMAP.md).
 
-**Status: DRAFT, written at 106e (2026-09-23).** "What the spike settled"
-is signed, read by read. "Build decisions" are proposals until the user
-signs this file; D3 is already decided.
+**Status: SIGNED 2026-09-23** ("Fully signed … I'm in complete
+agreement"), written at 106e. "What the spike settled" was signed read by
+read; the build decisions D1–D8 and the phases §107–§109 were signed with
+this file.
 
 ## Intent (the charter, in the user's words)
 

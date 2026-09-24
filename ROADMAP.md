@@ -13,11 +13,11 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named: ortho · p45 · yaw [30, 45]; the lens-20 fallback); §106 KICKED OFF 2026-09-22 — the cut + reads signed (below).** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 NEXT — its kickoff (audit, cut, reads) in a fresh session.** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
-spec is drafted ([round-7.5-spec.md](round-7.5-spec.md), 106e) and the build
-phases §107–§109 are entered below as proposals until the user signs it. The
+spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
+build phases §107–§109 are entered below. The
 charter, the decision points, the exit and the scope guards are in
 META-ROADMAP §"Round 7.5 — The Board" (hardened at the kickoff: WORKLOG
 §Kickoff); the founding argument is
@@ -43,36 +43,15 @@ the cut's rationale: WORKLOG §Kickoff / §105a–e. Every step's read is done.
 - [x] **105d** — the projection dials through the ONE production seam (`cameraFit.ts`, bit-identical at the default). Read `batch` ✅ clear.
 - [x] **105e** — the glyph-scale dial (unit bodies only) + the artefact list; THE STOP = pass one. Read `stop` ✅ — the verdict above.
 
-## Phase 106 — the projection spike, pass two + the spec
+## Phase 106 — the projection spike, pass two + the spec ✅ CLOSED 2026-09-23
 
-Charter: refine the direction §105 named — one point, or two at the user's
-word — then write the round's spec over the result. What pass two builds
-depends on where pass one points (depth-cue mocks ortho-ward · cue / bar
-refinement perspective-ward · the footprint anchor + the wall staircase if
-yaw survives), so its steps are cut at its own kickoff, against code
-reality, with their reads.
-
-**Why here:** the spec cannot be written honestly before it. **Depends
-on:** §105's named direction — **NAMED 2026-09-22: ortho · pitch 45 · yaw
-[30, 45], the lens-20 fallback** (so pass two is ortho-ward: the ground mark
-· the N×N centre + depth bias + plate · the wall staircase · the overlay
-stack in clumps · the flyer at 0.45 — the seeds are listed at the end of
-WORKLOG §"THE VERDICT"; the kickoff audit turns them into a cut). **Risk:**
-medium — the novelty effect cuts both ways, so the exit is PLAYED, not
-looked at. **Decision points:** the projection itself (the tie-break applies:
-no clear direction ⇒ perspective holds — NOT reached; ortho was clear) · the
-yaw value to art-direct at — ✅ DECIDED 2026-09-22 (user-signed): **45** (the
-bookmark), **30 as the check** · the anchor pair's circle-back (provisionally
-deletable) — ✅ DECIDED to ride the ground-mark dial: re-read only once
-`ground` exists ·
-the spike code's disposition (the seed of the build, or reverted) · a third
-pass means re-cutting, not drifting. **Exit:** a few full battles
-played in the candidate · the signed bookmark with the user's reasons in
-the user's words · the lean pinned headless · the round's spec written and
-the build phases entered here. **Scope guards:** §105's, unchanged.
-
-**The cut (user-signed 2026-09-22; the audit + why this order: WORKLOG §106
-Kickoff).** No bump, no smoke on any step, no production touch.
+**Outcome:** the candidate refined and played — one merged ground mark per
+combatant (the team shape, dark-filled, colour-outlined), a filled plate
+under every scenery body, the marks cut to each tile and draped down the
+step faces, N×N slabs centred on their footprint, the anchor rule R5–R7 +
+R10 deletable; the bookmark signed after a full run; the spec written and
+signed ([round-7.5-spec.md](round-7.5-spec.md)), with §107–§109 entered.
+The record: WORKLOG §106. Every step's read is done.
 
 - [x] **106a** — the instrument: an N×N slab's base corners inside its footprint + no footprint terrain over its quad, yaw [30, 45], today's rule the FAILING control at 45 · the flyer at lift 0.45 · the lean pinned through the production camera. Read `none`. ✅ the centre at the footprint max clears tile terrain; the slide is for hill mounds, free under ortho — 106b's shape stands (WORKLOG §106a).
 - [x] **106b** — the N×N seam (dev): centre + the slide along the view ray, restamped on a view change; the cue follows. Read `batch` → 106c's stop: rubbleQuarry at 45 and 30, each slab on its plot; wrong = overhanging its diamond, or a hill biting its lower band. ✅ read CLEAR ("Center looks great!") — the `slab` dial (WORKLOG §106b).
@@ -80,9 +59,9 @@ Kickoff).** No bump, no smoke on any step, no production touch.
 - [x] **106c-post** — inserted from the 106c read (the user's two flags + item 5): marks + plates cut per tile onto the tile tops · the plate under ALL scenery (a dial) · the plate's own opacity. Read `stop`; refinements → the next session (user's pre-commitment). ✅ READ CLEAR ("you absolutely nailed this"); one refinement → next session: the step-face drape (WORKLOG §106c-post THE READ).
 - [x] **106c-post2** — inserted 2026-09-23 (the user's call: a spike `-post`, not folded into the spec): the step-face drape — marks and plates hang down the camera-facing step faces, behind a `drape` dial. Read `stop`, in 106d's sitting. ✅ READ CLEAR ("On looks amazing"); `cueDepth` world wins; `plateAlpha` 0.6 kept (WORKLOG §106c-post2 THE READ).
 - [x] **106d** — THE PLAYED READ: a few full battles under the bookmark (step zero: a whole run plays under it; `anchor-bottom` added, the user's yes 2026-09-23; `drape-1` + `cueDepth-world` from 106c-post2's read); watch the stack in clumps, the wall staircase, picks under yaw. Read `stop` — the bookmark signed in the user's words. ✅ READ CLEAR (a full run): all four watches clear; to 106e: the marks vs the hill mounds, rounded plate corners (WORKLOG §106d THE READ).
-- [ ] ◐ **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`. ◐ drafted: D1–D8 proposed (D3 decided: shapes in the terrain shader), §107–§109 entered below (WORKLOG §106e).
+- [x] **106e** — the spec (`round-7.5-spec.md`) + the build phases entered here + the spike code's disposition. Read `stop`. ✅ SIGNED 2026-09-23 ("Fully signed … complete agreement"): D1–D8, §107–§109 (WORKLOG §106e).
 
-## Phase 107 — the projection, built (PROPOSED at 106e, unsigned)
+## Phase 107 — the projection, built (signed 2026-09-23 with the spec)
 
 Charter: the spike's projection becomes the shipped view — orthographic ·
 pitch 45 · yaw 45 as `DEFAULT_CAMERA_VIEW` — and the N×N slab rule replaces
@@ -99,7 +78,7 @@ production; gotchas #17, #51–54, #68–69 and DESIGN's Camera paragraph
 re-audited; the slab seam deleted. **Scope guards:** the spec's; no
 windowed view (D7).
 
-## Phase 108 — the ground mark, drawn by the terrain (PROPOSED at 106e, unsigned)
+## Phase 108 — the ground mark, drawn by the terrain (signed 2026-09-23 with the spec)
 
 Charter: the merged mark and the scenery plate, drawn as signed-distance
 shapes in the terrain shader from a per-frame, per-tile table (spec D3);
@@ -117,7 +96,7 @@ grey read passed in a live battle; the residuals decided; the elevation
 requirement signed; frame cost measured; the mock-mark seams deleted.
 **Scope guards:** the spec's; no flyer mechanic.
 
-## Phase 109 — the rule deletion + the round close (PROPOSED at 106e, unsigned)
+## Phase 109 — the rule deletion + the round close (signed 2026-09-23 with the spec)
 
 Charter: the uniform quad-bottom anchor replaces R5–R7 + R10, with probes
 re-derived from the atlas and the special-rule count recorded (spec D4);

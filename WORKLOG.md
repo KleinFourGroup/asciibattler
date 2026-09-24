@@ -1372,8 +1372,9 @@ drape triangles off a real step face. **The boss run:** 6 turns, 126 audits,
 slots off (and 0 again on flipping back); aiming at the neighbour's centre
 picked the neighbour; `ground` shadow made the count read 20 of 40. No
 console errors. The driver's one hiccup: a first `acceptReward` on the boss's
-reward screen was a no-op and the same command on a retry went through. It
-is a timing detail of the hand driver, not of the board, and was not chased.
+reward screen was a no-op and the same command on a retry went through. Not
+diagnosed; the board panel touches no run command, so it is not a board
+finding.
 
 **What step zero does not cover:** any look; clicks on GLYPHS (`pickSprite`,
 the billboard-aware pick; only the terrain pick was probed); Firefox; the
@@ -1497,6 +1498,18 @@ decisions (D3 is decided; D1, D2 and D4–D8 await a signature), the three
 phase entries in ROADMAP, and marked uncertainty. Also due at this stop:
 the two `batch` reads from the 106d riders (hills on a themed board; a unit
 with two or three empower kinds).
+
+### 106e — THE READ (2026-09-23, the user's) — SIGNED; §106 ✅ CLOSED
+
+"Fully signed, Claude! 😁 I'm in complete agreement." The spec, D1–D8 and
+§107–§109 are signed as written. The two 106d-rider `batch` reads were not
+reported at this stop, so they stay open (◐, in the HANDOFF Cursor) for the
+next one. **§106's exit, met:** a full run played in the candidate · the
+signed bookmark with the user's reasons in their words (106d) · the lean
+pinned headless (106a) · the spec written and the build phases entered
+(106e). The user asked whether §107 starts in a fresh session; the session
+agreed: §107 opens with a cold audit of the camera code, and everything this
+session learned is in the spec, this log and the Cursor.
 
 ## The new-model tone audit (2026-09-23, between 106c-post and the step-face drape)
 

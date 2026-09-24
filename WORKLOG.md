@@ -1872,3 +1872,62 @@ ARCHITECTURE's Renderer and cameraFit entries.
 
 **Not verified here, and the read's to judge:** Firefox; the look and feel
 in play; shake's size in play (measured on paper at kickoff, finding 5).
+
+### 107d — the read, in progress (2026-09-24): one finding, measured
+
+The user played two full runs and found one bug, with a screenshot: when a
+unit moves diagonally and the farther of the two corner tiles it passes
+between is higher, the glyph's lower part disappears into that tile.
+
+**The mechanism (read in the code):** §81c2's ground lerp
+(`SpriteAnimator.ts:263`) shapes the move's Y from the origin and
+destination heights only. Mid-diagonal, the anchor sits on the corner
+vertex the four cells share, at the higher of the two path heights. The
+glyph is a camera-facing card at its anchor's depth, tilted back 45° from
+vertical, so a higher corner cell's top near that vertex is nearer than the
+card's lower band.
+
+**Measured** (`npx tsx tests/board/clip.ts`: rays from 576 ink samples of
+`B` toward the camera against the tile prisms of a 7×7 patch, 2560×1440,
+15×15, a 0.4 step, which is water against the floor band's top; the worst
+hidden ink over the move):
+
+| Case | pre-7.5 camera | shipped |
+|---|---|---|
+| diagonal, far corner high (the bug) | 48.6 % | 56.1 % |
+| diagonal, near corner high (feet behind a step in front) | 8.7 % | 3.5 % |
+| diagonal, both corners high | 53.5 % | 56.1 % |
+| the other diagonal, both side corners high | 55.9 % | 45.8 % |
+| at rest, every neighbour not in front high | 0 % | 0 % |
+| straight moves, every cell not in front of the path high | 0 % | 0 % |
+
+The known answers hold: a flat patch hides nothing, and the §81c2 defect (a
+linear-Y step up) is caught (25.0 % / 13.9 %) while its profile clears it.
+
+**Findings:**
+- **The bug predates the new camera.** The old camera hid up to 48.6 % on
+  the same move. The new camera puts the clip at mid-move and under the
+  whole lower band.
+- **Diagonal moves are the only case.** Standing units and straight moves
+  hide nothing under either camera. This refutes the kickoff session's
+  derived concern about the new camera's corners.
+
+**Candidate fixes, measured on the shipped camera:**
+- **The hop:** lift the move over the higher corner. The existing E7.D arc,
+  peaking at the corner's height, clears every case. The ink is about 0.4
+  tile wide, so it only overlaps the corner near mid-move, where the arc
+  peaks. Its cost is a 22 px bob at the user's resolution on a 0.4 step
+  (17 px on 0.3), and it also lifts the feet out from behind a step in
+  front (3.5 % → 0).
+- **Upright depth:** the card keeps its screen position, but its depth is
+  that of a vertical card through the anchor, the way a standing body's
+  would be. It clears the far corner (56.1 % → 0) and keeps the in-front
+  occlusion exactly (3.5 % → 3.5 %). Between two side-by-side higher corner
+  tiles it still hides 12.5 %, because their front halves are in front of
+  the unit.
+- **The rubble rule's slide** was ruled out in conversation. It moves the
+  sprite's position off its ground point, and every reader of that point
+  (the §108 marks, the sort) would need the unmoved one. The user's
+  objection was bookkeeping.
+
+The pick is open with the user.

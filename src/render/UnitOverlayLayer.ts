@@ -62,7 +62,10 @@ export interface UnitOverlayHandle {
 
 export class UnitOverlayLayer {
   readonly root: HTMLDivElement;
-  private readonly camera: THREE.Camera;
+  /** 107a — a getter, read per projection: the Renderer's camera is swapped
+   *  (not rebuilt) when the dev board explorer changes the projection, so a
+   *  captured camera would go stale. */
+  private readonly cameraOf: () => THREE.Camera;
   private readonly canvas: HTMLCanvasElement;
   private readonly overlays = new Map<number, UnitOverlayHandle>();
   private nextId = 1;
@@ -79,11 +82,11 @@ export class UnitOverlayLayer {
    * obscure menus. Pass `null` to append at the end.
    */
   constructor(
-    camera: THREE.Camera,
+    cameraOf: () => THREE.Camera,
     canvas: HTMLCanvasElement,
     insertBefore: HTMLElement,
   ) {
-    this.camera = camera;
+    this.cameraOf = cameraOf;
     this.canvas = canvas;
     this.root = document.createElement('div');
     this.root.id = 'unit-overlays';
@@ -240,7 +243,7 @@ export class UnitOverlayLayer {
    * and E6.C hitsplats — one source of truth for world→screen.
    */
   private projectToCss(worldPos: THREE.Vector3): { x: number; y: number } | null {
-    const v = this.projectScratch.copy(worldPos).project(this.camera);
+    const v = this.projectScratch.copy(worldPos).project(this.cameraOf());
     if (v.z > 1 || v.z < -1) return null;
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;

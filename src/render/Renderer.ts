@@ -90,11 +90,10 @@ export class Renderer {
   readonly webgl: THREE.WebGLRenderer;
 
   /** 105d — BOTH cameras live for the Renderer's whole life and the view picks
-   *  one, so a projection swap is a re-point, never a rebuild. ⚠ Read
-   *  `renderer.camera` per use; a holder that CAPTURES it goes stale on a swap
-   *  (the two RenderPasses below are re-pointed here; `UnitOverlayLayer`
-   *  captures at construction — only the dev explorer swaps, and it re-points
-   *  that one itself. If a swap ever ships, give the overlay a getter). */
+   *  one (`cameraFor`), so a projection swap is a re-point, never a rebuild.
+   *  ⚠ Read `renderer.camera` per use; a holder that CAPTURES it goes stale on
+   *  a swap. The two RenderPasses below are the only captures, re-pointed in
+   *  `setCameraView`; `UnitOverlayLayer` takes a getter (107a). */
   private readonly perspectiveCamera: THREE.PerspectiveCamera;
   private readonly orthographicCamera: THREE.OrthographicCamera;
   private activeCamera: FitCamera;
@@ -178,7 +177,10 @@ export class Renderer {
 
     this.perspectiveCamera = new THREE.PerspectiveCamera(DEFAULT_CAMERA_VIEW.fovDeg, 1, 0.1, 1000);
     this.orthographicCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-    this.activeCamera = this.perspectiveCamera;
+    // 107a — from the view, never a fixed pick: `fitCamera` builds the fit for
+    // `this.view`, and an ortho fit on the perspective camera frames the board
+    // from the ortho stand-off at a 50° lens (too far back).
+    this.activeCamera = this.cameraFor(this.view);
     // Position + lookAt are set by fitCamera() in handleResize once aspect is
     // known; no placeholder needed because handleResize runs before start().
 
@@ -287,13 +289,18 @@ export class Renderer {
    */
   setCameraView(change: Partial<CameraView>): void {
     this.view = { ...this.view, ...change };
-    const next =
-      this.view.projection === 'orthographic' ? this.orthographicCamera : this.perspectiveCamera;
+    const next = this.cameraFor(this.view);
     if (next !== this.activeCamera) {
       this.activeCamera = next;
       for (const pass of this.renderPasses) pass.camera = next;
     }
     this.fitCamera();
+  }
+
+  /** The live camera for a view's projection — the constructor's pick and
+   *  `setCameraView`'s swap read the same line. */
+  private cameraFor(view: CameraView): FitCamera {
+    return view.projection === 'orthographic' ? this.orthographicCamera : this.perspectiveCamera;
   }
 
   /**

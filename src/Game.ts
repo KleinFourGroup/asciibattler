@@ -224,7 +224,7 @@ export class Game implements RunDispatcher {
     // paint on top — overlays are world content, the HUD is chrome and
     // wins z-order disputes. #scanlines (z-index 1000) still rakes
     // across the overlays.
-    this.overlays = new UnitOverlayLayer(this.renderer.camera, canvas, uiMount);
+    this.overlays = new UnitOverlayLayer(() => this.renderer.camera, canvas, uiMount);
 
     // 48d: the persistent bits overlay — page-lifetime chrome appended once
     // to the shared #ui mount, NEVER touched by scene swaps (the first UI

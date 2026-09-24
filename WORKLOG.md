@@ -1659,3 +1659,80 @@ Read entries before and after this boundary as separate groups.
   retire the reword trial or pursue it with the Claude Code developers is
   open for the 7.5 close. The app's menus show no environment editor.
 - The `src/` comment sweep is a TODO item, timed after 106e.
+
+## Phase 107 — the projection, built
+
+### Kickoff (2026-09-24) — the audit at `3d8bdfc`; the cut is drafted, the shape-lock is open
+
+Session 03df8200. ✔ = read at file:line by this session; everything else is
+derived and pinned by the step that touches it.
+
+1. **The Renderer starts on the perspective camera whatever the view says**
+   (✔ `Renderer.ts:181`, while `view` is `DEFAULT_CAMERA_VIEW` at `:101`).
+   With an ortho default, `fitCamera` would hand an ortho fit (the stand-off
+   distance) to the perspective camera: the board framed from too far back at
+   a 50° lens. The dev panel would hide it, because its first `setCameraView`
+   swaps cameras. The constructor has to pick the camera from the view; at
+   today's default that is inert.
+2. **One holder captures the camera:** `UnitOverlayLayer` (✔ `:65`, `:86`),
+   built at `Game.ts:227`; the dev panel re-points it (✔
+   `boardPanel/seams.ts:105-118`). Once finding 1 is fixed, production is
+   correct without more work, because the overlay would capture the ortho
+   camera. The per-use read is for the dev override, and D1 asks for it.
+3. **Everything else reads the camera per use:** BattleRenderer's lifts, picks
+   and marker (✔ `:644`, `:678`, `:854`, `:872`, `:1037`, `:1058`, `:1183`,
+   `:1629`, `:1779`); the depth sort (✔ `Game.ts:187` → `SpriteRenderer.ts:346`,
+   a planar key along the view direction, right under both projections); shake
+   (✔ `Renderer.ts:549`, right and up taken from the camera's world matrix);
+   `pickCell` (`setFromCamera`). Of the shaders, only the apron's reads the
+   camera position, and it branches on `isOrthographic` (✔
+   `apron.frag.glsl:113`).
+4. **Resize needs no new code:** `handleResize` → `fitCamera` →
+   `applyCameraFit` sets the ortho frustum from the aspect (✔
+   `Renderer.ts:438`, `cameraFit.ts:70-77`), and the property pin already
+   covers ortho · 45 · 45 across the boxes × three aspects. A live check in
+   the pane belongs to the flip.
+5. **Shake needs no retune — MEASURED** (a scratch probe through three's own
+   projection: the look-at point's NDC shift per world unit of camera move,
+   at fit, new camera over old). Square boards and 14×12: 0.92–1.05. 12×32:
+   1.43. 32×12: 0.78–1.22, depending on aspect. The ratio is the board's zoom
+   change, the same factor the glyphs grow by, so a shake keeps its size
+   relative to the units. The old camera already spread the shake's size in
+   pixels about 4× across board sizes (0.0023–0.0097 NDC). The played read
+   watches it.
+6. **The slab rule:** production R11 is at ✔ `BattleRenderer.ts:1101-1118`;
+   the spike's `slabAnchor` is at ✔ `boardPanel/slab.ts:83`, measured by
+   `tests/board/slab.test.ts` through the instrument, which shares no code
+   with it. The mound envelope is copied from TerrainRenderer. The heights
+   and radius are named there (✔ `TerrainRenderer.ts:67-75`), but the jitter
+   is an inline `* 0.1` (✔ `:500-501`). The production rule should import a
+   named envelope, and the instrument keeps its own copy as the independent
+   probe. Under ortho the anchor depends only on the view direction, so a
+   resize does not move it; a dev view change does.
+7. **Tests that assume the default is perspective:** `cameraFit.test.ts`
+   (the bit-identity pin, its placement test, and the ortho-ignores-FOV test
+   all spread `DEFAULT_CAMERA_VIEW`); ✔ `tests/board/cameraFit.test.ts:181`
+   (the lean CONTROL uses the default as "today's perspective");
+   `boardPanel/state.test.ts:38` (the dial defaults equal the default view).
+   The instrument's `TODAY` (✔ `tests/board/geometry.ts:68`) names the old
+   camera.
+8. **The bookmark after the flip:** the codec writes only non-default dials
+   (✔ `state.ts:311`), so a bookmark that omits `proj` / `yaw` will mean
+   ortho · 45. The pre-7.5 camera becomes `bp=proj-persp_yaw-0`. Unknown keys
+   are dropped (✔ `state.ts:296`), so the signed bookmark keeps working once
+   the `slab` dial is deleted.
+9. **The dev scroll pan is world-axis** (✔ `Renderer.ts:504`, and the ⚠ in
+   its doc comment). At yaw ψ, screen-up on the ground is (−sinψ, 0, −cosψ)
+   and screen-right is (cosψ, 0, −sinψ), derived from the fit's basis (✔
+   `cameraFit.ts:96-99`). The clamp stays world-axis (gotcha #53), so a pan
+   along a diagonal slides along the board's edge.
+10. **Docs:** #52's "D5 will flip it to `scroll`" is stale (D7 makes fit the
+    only production view); #17 and #51 still hold; #53, #54, #68 and #69
+    describe the dev scroll mode and hold with a yaw note. DESIGN's Camera
+    paragraph (✔ `DESIGN.md:158`, "Fixed perspective … slight angle") and
+    §Input accessibility's "the D4 A/B is Round 7.5's" (✔ `:184`) both take
+    D7's disposition.
+
+**Predictions for the whole phase:** no snapshot bump; the fuzz smoke fires
+on no step (`src/render`, `src/dev`, `tests/board` and docs are outside the
+hook's trigger set).

@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 NEXT — its kickoff (audit, cut, reads) in a fresh session.** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 IN PROGRESS — the cut signed 2026-09-24.** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
 spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
@@ -77,6 +77,13 @@ default with the lean pin permanent; the slab rule pinned against
 production; gotchas #17, #51–54, #68–69 and DESIGN's Camera paragraph
 re-audited; the slab seam deleted. **Scope guards:** the spec's; no
 windowed view (D7).
+
+The cut (signed 2026-09-24; audit and rationale: WORKLOG §107 Kickoff):
+
+- [ ] **107a** — the camera seams made production-safe: the Renderer picks its starting camera from the view; `UnitOverlayLayer` reads the camera per use (the dev re-point cast goes). Inert at today's default. Read `none`.
+- [ ] **107b** — the N×N slab rule into production (D2): `slabAnchor` → `src/render`, reading a mound envelope TerrainRenderer names; `slab.test.ts` pins production (a permanent gate); the dev patch and `slab` dial go, a dev re-stamp on view change stays (the user's call, WORKLOG). Read `batch` → 107d's stop: `?bp=board-quarry`, rubble centred on its footprint; wrong = askew, off its plot, or a mound biting its lower band.
+- [ ] **107c** — the dev pan turned by the yaw (D7) + gotchas #52–54, #68–69: W is screen-up, D screen-right; pinned through the production camera, the world-axis pan the failing control. Read `none`.
+- [ ] **107d** — the flip (D1): `DEFAULT_CAMERA_VIEW` = ortho · 45 · 45 (FOV 50 kept); pins re-anchored, the lean pin on the default permanent; gotchas #17, #51; DESIGN's Camera paragraph + D7's disposition. Read `stop` — THE PLAYED READ: no `bp` in Firefox + one `board-quarry` battle; judge the production path, not the grounding (§108); wrong = a bad frame at boot or after a resize, a bar / hitsplat / click off its unit, shake out of proportion, rubble off its plot.
 
 ## Phase 108 — the ground mark, drawn by the terrain (signed 2026-09-23 with the spec)
 

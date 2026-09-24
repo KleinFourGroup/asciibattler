@@ -1662,7 +1662,7 @@ Read entries before and after this boundary as separate groups.
 
 ## Phase 107 — the projection, built
 
-### Kickoff (2026-09-24) — the audit at `3d8bdfc`; the cut is drafted, the shape-lock is open
+### Kickoff (2026-09-24) — the audit at `3d8bdfc` + the cut, user-signed
 
 Session 03df8200. ✔ = read at file:line by this session; everything else is
 derived and pinned by the step that touches it.
@@ -1736,3 +1736,20 @@ derived and pinned by the step that touches it.
 **Predictions for the whole phase:** no snapshot bump; the fuzz smoke fires
 on no step (`src/render`, `src/dev`, `tests/board` and docs are outside the
 hook's trigger set).
+
+**The cut (user-signed 2026-09-24, "That looks great to me"):** ROADMAP
+§107. Why this order: 107a makes the flip safe (finding 1) and is inert
+alone; the slab rule lands before the flip, so no commit stands rubble askew
+under the shipped camera; the pan is the identity at yaw 0, so it is inert
+until the flip; the flip is last, so the phase's one stop follows it
+directly. One stop, because everything else is pinned headless.
+
+**A deviation from the spec's D8, decided (the user's call, 2026-09-24):**
+D8 deletes `restampSlabs` with the slab patch at D2. The patch goes, but a
+dev re-stamp stays: the production rule reads the camera once, at spawn,
+while the projection dials stay as the dev override (yaw is kept for
+Round 11), so after a dev view change a slab would keep the old view's
+slide, shifted a little on screen and open to a mound's bite again. The
+re-stamp calls the production rule from `applyCameraView`, where the
+override already re-points what a swap leaves stale. The user: "a very low
+cost to fix a bug, even if the bug is probably quite rare".

@@ -220,7 +220,7 @@ export class BattleScene implements Scene {
     // grid coords; convert the mean through `gridToWorld` so the anchor
     // lands in the same world-XZ space the renderer pans. fit mode
     // ignores this visually, but the target is preserved across the
-    // backtick toggle. Renderer.clampCameraTarget caps to the board.
+    // dev mode toggle (Ctrl+Alt+C). Renderer.clampCameraTarget caps to the board.
     let sumX = 0;
     let sumY = 0;
     for (const t of playerRegion.tiles) {

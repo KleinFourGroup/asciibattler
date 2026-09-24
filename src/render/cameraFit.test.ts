@@ -4,6 +4,7 @@ import {
   DEFAULT_CAMERA_VIEW,
   applyCameraFit,
   fitCameraToBox,
+  panToWorld,
   type CameraView,
   type FitCamera,
 } from './cameraFit';
@@ -292,5 +293,61 @@ describe('fitCameraToBox — the box fills the frame under every view of the cro
       fitCameraToBox(ortho, 1.5, 8, 1, 8, MARGIN),
     );
     expect(fitCameraToBox(ortho, 1.5, 8, 1, 8, MARGIN).orthoHalfHeight).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * 107c — the dev scroll pan moves the picture along the SCREEN's axes at any
+ * yaw. Read through three's own projection, which `panToWorld` does not
+ * consult: pan the look-at point by `panToWorld(view, 0, 1)` (W) and the point
+ * that was at the centre of the screen must now sit straight below it (NDC
+ * x = 0, y < 0); pan by `(1, 0)` (D) and it sits straight left (y = 0, x < 0).
+ */
+describe('panToWorld — a screen pan moves the picture along the screen axes', () => {
+  const oldCentreAfterPan = (view: CameraView, dx: number, dz: number): THREE.Vector3 => {
+    const camera: FitCamera =
+      view.projection === 'perspective'
+        ? new THREE.PerspectiveCamera(1, 1, 0.1, 5000)
+        : new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 5000);
+    applyCameraFit(camera, view, fitCameraToBox(view, 16 / 9, 6, 1, 6, MARGIN), 16 / 9, dx, dz);
+    camera.updateMatrixWorld(true);
+    camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    return new THREE.Vector3(0, 0, 0).project(camera);
+  };
+
+  it('W leaves the old centre straight below, D straight left — every yaw, both projections', () => {
+    let cases = 0;
+    for (const projection of ['perspective', 'orthographic'] as const) {
+      for (const yawDeg of [0, 30, 45, -45, 90, 135]) {
+        const view: CameraView = { projection, fovDeg: 50, pitchDeg: 45, yawDeg };
+        const w = panToWorld(view, 0, 1);
+        const d = panToWorld(view, 1, 0);
+        const afterW = oldCentreAfterPan(view, w.dx, w.dz);
+        const afterD = oldCentreAfterPan(view, d.dx, d.dz);
+        const label = JSON.stringify(view);
+        expect(Math.abs(afterW.x), label).toBeLessThan(1e-9);
+        expect(afterW.y, label).toBeLessThan(-1e-3);
+        expect(Math.abs(afterD.y), label).toBeLessThan(1e-9);
+        expect(afterD.x, label).toBeLessThan(-1e-3);
+        expect(Math.hypot(w.dx, w.dz), label).toBeCloseTo(1, 12);
+        cases++;
+      }
+    }
+    expect(cases).toBe(12);
+  });
+
+  it('at yaw 0 it is the pre-107c world-axis pan: W → −Z, D → +X', () => {
+    const view: CameraView = { projection: 'perspective', fovDeg: 50, pitchDeg: 45, yawDeg: 0 };
+    const w = panToWorld(view, 0, 1);
+    const d = panToWorld(view, 1, 0);
+    expect(w.dx).toBeCloseTo(0, 15);
+    expect(w.dz).toBe(-1);
+    expect(d.dx).toBe(1);
+    expect(d.dz).toBeCloseTo(0, 15);
+  });
+
+  it('CONTROL — the world-axis pan (W → −Z) moves the picture diagonally at yaw 45', () => {
+    const view: CameraView = { projection: 'orthographic', fovDeg: 50, pitchDeg: 45, yawDeg: 45 };
+    expect(Math.abs(oldCentreAfterPan(view, 0, -1).x)).toBeGreaterThan(1e-2);
   });
 });

@@ -88,6 +88,20 @@ export function applyCameraFit(
 const DEG = Math.PI / 180;
 
 /**
+ * 107c — a screen-space pan as a world-XZ move of the look-at point: `right`
+ * and `up` are screen amounts (W / mouse-near-top is up = +1), turned by the
+ * view's yaw. On the ground, screen-up is the camera's `dir` flattened and
+ * reversed, (−sinψ, 0, −cosψ), and screen-right is (cosψ, 0, −sinψ) (the basis
+ * under `fitCameraToBox`). At yaw 0 this is the pre-107c world-axis pan.
+ */
+export function panToWorld(view: CameraView, right: number, up: number): { dx: number; dz: number } {
+  const yaw = view.yawDeg * DEG;
+  const sinY = Math.sin(yaw);
+  const cosY = Math.cos(yaw);
+  return { dx: right * cosY - up * sinY, dz: -right * sinY - up * cosY };
+}
+
+/**
  * Fit the box of half-extents (hx, hy, hz), centred on the look-at point, into
  * a viewport of `aspect` (w / h), with `margin` of breathing room (> 1).
  *

@@ -1802,3 +1802,27 @@ Under ortho it moves nothing on screen; under a lens every slab draws a
 little bigger, which is what 106a measured (3.3 % at FOV 20).
 
 **Not verified here:** the look. That is the `batch` read at 107d.
+
+### 107c — the dev pan turned by the yaw (2026-09-24) — read `none` ✅
+
+`panToWorld(view, right, up)` in `cameraFit.ts` turns a screen pan into a
+world-XZ move by the view's yaw; `updateScrollFromInput` sums screen amounts
+and calls it. The clamp stays world-axis (gotcha #53). Gotchas: #52's "D5
+will flip it to `scroll`" and "the D4 A/B is Round 7.5" were stale and now
+record D7; #53 and #54 gain the yaw; #68 still holds, and #69 gains a note
+that its mode is dev-only. The stale "D4 A/B" comments in Renderer and
+devKeys and the "backtick toggle" in BattleScene are fixed, and the panel's
+pan artefact line is gone.
+
+**Verified:**
+- `cameraFit.test.ts`, through three's projection: under both projections
+  at yaw 0, 30, 45, −45, 90 and 135, W leaves the old screen centre straight
+  below (NDC x < 1e-9) and D straight left, with a unit-length move. At yaw 0
+  the pan is the old world-axis one. The control: the world-axis pan at
+  yaw 45 moves the picture diagonally (|x| > 0.01).
+- The pane, `?bp=board-big24_proj-ortho_yaw-45`, scroll mode, a synthetic
+  key held for one 0.1 s step from the board centre: W → old centre at NDC
+  (0, −0.120), D → (−0.096, 0), S → (0, +0.120), A → (+0.096, 0). From the
+  player anchor, which sits at the clamp's edge (tz = −6), W moved only X,
+  because the world-axis clamp held Z. That is the behaviour #53 now
+  documents.

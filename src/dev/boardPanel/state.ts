@@ -348,7 +348,6 @@ export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
  * Text only — the panel renders it, state.test.ts pins that none is empty.
  */
 export const KNOWN_ARTEFACTS: readonly string[] = [
-  'yaw: WASD / edge-scroll pan along WORLD axes (scroll mode), so W is no longer screen-up',
   'yaw: wall runs (#) staircase on diamond tiles; an NxN slab is a screen rectangle over a wider footprint',
   'any dial change: an FX already in flight (bolt, lob, splat) was lifted on the OLD camera-up and lands there; the next one is right',
   'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',

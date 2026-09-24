@@ -11,6 +11,7 @@ import {
   DEFAULT_CAMERA_VIEW,
   applyCameraFit,
   fitCameraToBox,
+  panToWorld,
   type CameraView,
   type FitCamera,
 } from './cameraFit';
@@ -36,8 +37,9 @@ export type CameraMode = 'fit' | 'scroll';
 
 /**
  * D4 dev default. Scroll mode is implemented and toggleable via the dev
- * chord (100a: Ctrl+Alt+C in src/dev/devKeys.ts → `toggleCameraMode`),
- * but the default stays `fit` until the D4 A/B (Round 7.5) rules on it.
+ * chord (100a: Ctrl+Alt+C in src/dev/devKeys.ts → `toggleCameraMode`).
+ * Fit is the only production view (Round 7.5, spec D7); a windowed view
+ * belongs to the round that builds mobile, its consumer.
  */
 const DEV_DEFAULT_MODE: CameraMode = 'fit';
 
@@ -237,9 +239,10 @@ export class Renderer {
     // D4 input listeners: keys on window so the user doesn't need to focus
     // the canvas; mouse position on the canvas so edge-scroll only triggers
     // when the cursor is over the play area (HUD hover doesn't pan).
-    // 100a — DEV-only: scroll mode is a dev seam until the Round 7.5 A/B,
-    // so the shipped bundle attaches none of them (`stop()` removes them
-    // unconditionally — a no-op for a never-attached listener).
+    // 100a — DEV-only: scroll mode is a dev seam (fit is the only production
+    // view, Round 7.5's D7), so the shipped bundle attaches none of them
+    // (`stop()` removes them unconditionally — a no-op for a never-attached
+    // listener).
     if (DEV) {
       window.addEventListener('keydown', this.handleKeyDown);
       window.addEventListener('keyup', this.handleKeyUp);
@@ -398,8 +401,8 @@ export class Renderer {
   /** 100a — the dev chord's entry (Ctrl+Alt+C, devKeys.ts): flip fit ↔
    *  scroll and report the new mode. The Backquote keydown it replaces was
    *  an unregistered, undocumented hotkey with no click route (the Round 7
-   *  kickoff audit §C) — gating it dev-only is the §100 charter's call; the
-   *  mode's design (the D4 A/B) is Round 7.5's. */
+   *  kickoff audit §C) — gating it dev-only is the §100 charter's call, and
+   *  Round 7.5 (D7) kept it there: fit is the only production view. */
   toggleCameraMode(): CameraMode {
     this.setCameraMode(this.cameraMode === 'fit' ? 'scroll' : 'fit');
     return this.cameraMode;
@@ -498,35 +501,35 @@ export class Renderer {
 
   /**
    * D4 per-frame scroll-camera driver. Sums WASD and edge-scroll input
-   * into an XZ direction, then translates the camera target at
+   * into a SCREEN direction, turns it by the view's yaw into world XZ
+   * (`panToWorld`, 107c), then translates the camera target at
    * PAN_SPEED_TILES_PER_SEC scaled by dt. Cheap to call every frame;
    * skips the matrix update + clamp when no input is active.
    *
-   * Screen-up at yaw 0 maps to world -Z (the far edge of the arena), so
-   * W / mouse-near-top → -Z, S / mouse-near-bottom → +Z. ⚠ The pan and the
-   * clamp are WORLD-axis: under a dialled yaw (105d, dev-only) W no longer
-   * pans screen-up — a known artefact of the spike, not fixed until a yaw
-   * ships.
+   * W / mouse-near-top pans screen-up at any yaw (world −Z at yaw 0, the far
+   * edge of the arena). The clamp stays WORLD-axis (gotcha #53), so under a
+   * yaw a pan along a diagonal slides along the board's edge.
    */
   private updateScrollFromInput(dt: number): void {
-    let dx = 0;
-    let dz = 0;
-    if (this.keysHeld.has('KeyA') || this.keysHeld.has('ArrowLeft')) dx -= 1;
-    if (this.keysHeld.has('KeyD') || this.keysHeld.has('ArrowRight')) dx += 1;
-    if (this.keysHeld.has('KeyW') || this.keysHeld.has('ArrowUp')) dz -= 1;
-    if (this.keysHeld.has('KeyS') || this.keysHeld.has('ArrowDown')) dz += 1;
+    let right = 0;
+    let up = 0;
+    if (this.keysHeld.has('KeyA') || this.keysHeld.has('ArrowLeft')) right -= 1;
+    if (this.keysHeld.has('KeyD') || this.keysHeld.has('ArrowRight')) right += 1;
+    if (this.keysHeld.has('KeyW') || this.keysHeld.has('ArrowUp')) up += 1;
+    if (this.keysHeld.has('KeyS') || this.keysHeld.has('ArrowDown')) up -= 1;
 
     if (this.mouseX !== null && this.mouseY !== null) {
       const w = this.webgl.domElement.clientWidth;
       const h = this.webgl.domElement.clientHeight;
-      if (this.mouseX < EDGE_SCROLL_THRESHOLD_PX) dx -= 1;
-      else if (this.mouseX > w - EDGE_SCROLL_THRESHOLD_PX) dx += 1;
-      if (this.mouseY < EDGE_SCROLL_THRESHOLD_PX) dz -= 1;
-      else if (this.mouseY > h - EDGE_SCROLL_THRESHOLD_PX) dz += 1;
+      if (this.mouseX < EDGE_SCROLL_THRESHOLD_PX) right -= 1;
+      else if (this.mouseX > w - EDGE_SCROLL_THRESHOLD_PX) right += 1;
+      if (this.mouseY < EDGE_SCROLL_THRESHOLD_PX) up += 1;
+      else if (this.mouseY > h - EDGE_SCROLL_THRESHOLD_PX) up -= 1;
     }
 
-    if (dx === 0 && dz === 0) return;
+    if (right === 0 && up === 0) return;
     const step = PAN_SPEED_TILES_PER_SEC * dt;
+    const { dx, dz } = panToWorld(this.view, right, up);
     this.cameraTargetX += dx * step;
     this.cameraTargetZ += dz * step;
     this.fitCamera();

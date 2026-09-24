@@ -44,8 +44,9 @@
  *                `Renderer.toggleCameraMode`). It replaces the D4 Backquote
  *                keydown — an unregistered hotkey with no click route (the
  *                Round 7 kickoff audit §C); the §100 charter gates the camera
- *                dev-only, the D4 A/B on which mode plays better is Round
- *                7.5. The pan keys (WASD / arrows) and edge-scroll attach in
+ *                dev-only, and Round 7.5 (D7) kept it there: fit is the
+ *                only production view. The pan keys (WASD / arrows) and
+ *                edge-scroll, turned by the yaw since 107c, attach in
  *                Renderer under the same DEV flag. (C = camera; KeyC is off
  *                the bound codes and this file's, and neither browser binds
  *                Ctrl+Alt+C — the user's Firefox read confirms, per #134.)

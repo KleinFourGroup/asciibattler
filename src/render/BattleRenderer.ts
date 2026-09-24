@@ -38,6 +38,7 @@ import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 import { statusColor } from './statusDisplay';
+import { slabAnchor, slabGroundOf, slabViewOf } from './slabAnchor';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -1083,38 +1084,32 @@ export class BattleRenderer {
   /**
    * §39d/§79d — the GROUND anchor for a unit's BODY sprite, footprint-aware.
    * `corner` is the canonical `unit.position` (the min-XY cell); the N×N block
-   * extends +x/+y (see `footprintCells`). We render one scaled glyph
-   * (`instanceSize = n`) BASE-ANCHORED on the **NEAR-ROW center**: +½ per
-   * extra cell in x (centered across the columns), z UNSHIFTED — the corner
-   * row is the footprint's camera-near row (grid +y is world −z, and the
-   * camera never rotates), so the body STANDS at its front row and its ink
-   * rises to cover the rows behind (§79d2 rubble fix, user-signed). Anchoring
-   * mid-footprint put the front rows NEARER than the sprite's own depth, so
-   * their tile-tops depth-clipped the slab's lower band (the jagged bite) and
-   * the ground contact read as the center row. `n = 1` degenerates to the
-   * plain tile center — no special case. The pre-79d
-   * `SPRITE_CENTER_OFFSET·(n−1)` flush-fixup is gone — a base-anchored quad
-   * grows UP from its anchor at any size, so a big glyph can't sink into the
-   * terrain by construction. Y reads the corner tile's height (fine while
-   * footprints are inert / on flat rubble ground — §40 revisits if needed).
+   * extends +x/+y (see `footprintCells`). A 1×1 body stands on its tile's
+   * ground point. An N×N body is one scaled glyph (`instanceSize = n`),
+   * base-anchored by the slab rule (`slabAnchor.ts`): the footprint's centre
+   * at its highest tile top, slid along the view ray clear of its own terrain,
+   * so it stands on its plot and no footprint tile or hill mound bites its
+   * lower band at any yaw. A base-anchored quad grows UP from its anchor at
+   * any size, so a big glyph can't sink into the terrain by construction.
+   *
+   * The rule reads the camera, so a slab stands for the view it was placed
+   * under. Players' view never changes; the dev board explorer re-stands the
+   * slabs after it changes the view. Rubble spawns before `fitToBoard`
+   * (BattleScene), which is harmless under ortho, where the slide reads only
+   * the view direction.
    */
   private unitAnchorPos(corner: GridCoord, footprint: number): THREE.Vector3 {
-    const pos = this.tileGroundPos(corner);
-    if (footprint === 1) return pos;
-    pos.x += (footprint - 1) / 2;
-    // §79d2 rider 2 (user diagnosis) — Y = the MAX tile-top height across the
-    // near row's cells, not the corner's. The terrain height profile varies
-    // per cell, so a TALLER front-row tile's top rises above a corner-height
-    // base line while its front half sits nearer in depth → it bites the slab
-    // bottom. At the row max, every nearer front-row surface projects BELOW
-    // the base line — the self-clip is impossible again.
-    for (let i = 1; i < footprint; i++) {
-      const cell = { x: corner.x + i, y: corner.y };
-      const kind = this.world!.tileGrid.kindAt(cell);
-      const h = this.terrain.heightAt(cell.x, cell.y, kind);
-      if (h > pos.y) pos.y = h;
-    }
-    return pos;
+    if (footprint === 1) return this.tileGroundPos(corner);
+    const world = this.world!;
+    return slabAnchor(
+      corner.x,
+      corner.y,
+      footprint,
+      world.gridW,
+      world.gridH,
+      slabGroundOf(world, this.terrain),
+      slabViewOf(this.renderer.camera),
+    );
   }
 
   /** Footprint (N) of a live unit by id; 1 if it's gone or single-cell. */

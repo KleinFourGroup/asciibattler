@@ -20,8 +20,9 @@
  *    is exactly when a follower (the ground cue, the posed row's bars) must
  *    sync. Wrapping it costs no frame of lag, unlike a second rAF.
  * Later steps added (each in its own section below): 105e's glyph scale (the
- * two unit lifts + the two pick builders) and 106b's `unitAnchorPos` — where
- * an N×N body stands (the `slab` dial, slab.ts).
+ * two unit lifts + the two pick builders). 106b's `unitAnchorPos` patch went
+ * when its rule shipped (107b, `render/slabAnchor.ts`); what stays is
+ * `restampSlabs`, which re-stands the N×N bodies after a view change.
  *
  * ⚠ These are name-keyed reaches into private members tsc cannot check. Each
  * is guarded at install: a renamed seam logs a loud `[board-panel]` error and
@@ -42,17 +43,7 @@ import type { PickCandidate } from '../../render/pick';
 import { footprintOf } from '../../sim/occupancy';
 import { isInertNeutral, type Unit } from '../../sim/Unit';
 import type { World } from '../../sim/World';
-import { slabAnchor, slabViewOf, type SlabGround } from './slab';
 import { barLift, type DialState } from './state';
-
-/** 106b — a battle's live terrain, as the slab rule reads it: the tile-top
- *  height `unitAnchorPos` itself reads, and whether the cell grows mounds. */
-export function slabGroundOf(world: World, terrain: TerrainRenderer): SlabGround {
-  return {
-    heightAt: (x, y) => terrain.heightAt(x, y, world.tileGrid.kindAt({ x, y })),
-    hasMounds: (x, y) => world.tileGrid.kindAt({ x, y }) === 'hills',
-  };
-}
 
 /** What the panel reaches on the live Game (all TS-private there). */
 export interface GameInternals {
@@ -126,17 +117,10 @@ export interface Seams {
    *  size differs (walls and other inert neutrals stay size 1). Idempotent per
    *  frame: a Map lookup per unit, a buffer write only on change. */
   stampSizes(battle: LiveBattle): number;
-  /** 106b — re-stand every live N×N body under the current `slab` dial AND the
-   *  current camera (the slide is view-dependent). Call after the `slab` dial or
-   *  any view dial changes. Returns the bodies written. */
+  /** 107b — re-stand every live N×N body by the production slab rule under
+   *  the current camera (the slide is view-dependent). Call after a view dial
+   *  changes or a battle mounts. Returns the bodies written. */
   restampSlabs(battle: LiveBattle): number;
-}
-
-/** What the 106b patch reaches on a BattleRenderer (all TS-private there). */
-interface BattleInternals {
-  readonly world: World | null;
-  readonly terrain: TerrainRenderer;
-  readonly renderer: Renderer;
 }
 
 export function installSeams(game: Game, dials: () => DialState, onFrame: () => void): Seams {
@@ -201,34 +185,16 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     };
   }
 
-  // --- 106b: where an N×N body stands ------------------------------------------
-  // `unitAnchorPos` (R11) is every footprint caller's anchor (spawn · settle ·
-  // step). Rubble never moves, so a spawn under the dialled rule plus
-  // `restampSlabs` on a dial / view change covers every path. 1×1 bodies and
-  // `slab-today` fall through to the original, byte for byte.
-  const todayUnitAnchorPos = proto.unitAnchorPos;
-  if (typeof todayUnitAnchorPos !== 'function') {
-    seamMoved('BattleRenderer.prototype.unitAnchorPos');
-  } else {
-    proto.unitAnchorPos = function (this: BattleRenderer, corner: GridCoord, footprint: number): THREE.Vector3 {
-      const self = this as unknown as BattleInternals;
-      if (footprint === 1 || dials().slab === 'today' || !self.world) {
-        return todayUnitAnchorPos.call(this, corner, footprint);
-      }
-      return slabAnchor(
-        corner.x,
-        corner.y,
-        footprint,
-        self.world.gridW,
-        self.world.gridH,
-        slabGroundOf(self.world, self.terrain),
-        slabViewOf(self.renderer.camera),
-      );
-    };
-  }
+  // --- 107b: re-standing the N×N bodies ---------------------------------------
+  // The production slab rule (`unitAnchorPos` → `render/slabAnchor.ts`) reads
+  // the camera when a body is placed, and rubble never moves, so after a dev
+  // view change a slab would keep the old view's slide: shifted a little on
+  // screen, and open to a mound's bite. This calls the production rule again
+  // under the current camera. No patch: the rule is production's own.
+  const anchorPos = proto.unitAnchorPos;
+  if (typeof anchorPos !== 'function') seamMoved('BattleRenderer.prototype.unitAnchorPos');
 
   const restampSlabs = (battle: LiveBattle): number => {
-    const anchorPos = proto.unitAnchorPos;
     if (typeof anchorPos !== 'function') return 0;
     let written = 0;
     for (const unit of battle.world.units) {

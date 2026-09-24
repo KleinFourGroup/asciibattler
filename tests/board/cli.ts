@@ -29,7 +29,7 @@ import {
   slabCentre,
   slabCentreSlid,
   slabReport,
-  slabToday,
+  slabNearRow,
   worldYDriftPx,
   type AnchorMode,
   type CellReport,
@@ -166,7 +166,7 @@ console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
     ['lens20 y45', lensAt(45)],
   ];
   const rules: [string, SlabRule][] = [
-    ['today', slabToday],
+    ['near-row', slabNearRow],
     ['centre', slabCentre],
     ['slid', slabCentreSlid],
   ];

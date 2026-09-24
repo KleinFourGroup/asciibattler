@@ -22,7 +22,7 @@ import {
   slabCentre,
   slabCentreSlid,
   slabReport,
-  slabToday,
+  slabNearRow,
   toPx,
   worldYDriftPx,
   type Board,
@@ -161,12 +161,12 @@ describe('§106a — the N×N slab under yaw', () => {
     return out;
   };
 
-  it('KNOWN ANSWER — today’s rule where it was signed: on its plot and unbitten under today’s camera; also centred under ortho at yaw 0', () => {
+  it('KNOWN ANSWER — the near-row rule where it was signed: on its plot and unbitten under today’s camera; also centred under ortho at yaw 0', () => {
     // Under today's PERSPECTIVE the rule reads ~0.08 lateral — parallax on an
     // off-centre slab (its near row is nearer than its centre), not yaw — so the
     // "not askew" half of the known answer is taken with parallel rays.
-    const today = sweep(TODAY, slabToday);
-    const orthoY0 = sweep(ortho(0), slabToday);
+    const today = sweep(TODAY, slabNearRow);
+    const orthoY0 = sweep(ortho(0), slabNearRow);
     expect(today.length).toBe(RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length);
     for (const r of today) {
       expect(r.baseInside, r.what).toBe(true);
@@ -179,9 +179,9 @@ describe('§106a — the N×N slab under yaw', () => {
     }
   });
 
-  it('FAILING CONTROL — the screenshot as a test: under yaw, today’s rule stands every slab askew, overhangs a 3×3, and is bitten by a taller back row', () => {
+  it('FAILING CONTROL — the screenshot as a test: under yaw, the near-row rule stands every slab askew, overhangs a 3×3, and is bitten by a taller back row', () => {
     for (const yaw of [30, 45, -45]) {
-      const rs = sweep(ortho(yaw), slabToday);
+      const rs = sweep(ortho(yaw), slabNearRow);
       for (const r of rs) expect(r.lateral, r.what).toBeGreaterThan(0.05);
       expect(rs.some((r) => !r.baseInside)).toBe(true);
       expect(Math.max(...rs.map((r) => r.occluded))).toBeGreaterThan(0.01);

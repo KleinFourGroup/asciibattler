@@ -21,14 +21,13 @@ import { fixtureSearch } from './fixtures';
 import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
-import { footprintCentre, slabViewOf } from './slab';
+import { footprintCentre, slabGroundOf, slabViewOf } from '../../render/slabAnchor';
 import type { DrapeView, TileTops } from './conform';
 import {
   applyCameraView,
   installSeams,
   internalsOf,
   liveBattleOf,
-  slabGroundOf,
   type LiveBattle,
 } from './seams';
 import {
@@ -85,7 +84,7 @@ export interface BoardPanel {
     restamped: number;
     /** 105e — size writes so far (unit bodies stamped `footprint × scale`). */
     sized: number;
-    /** 106b — N×N bodies re-stood by the last `slab` / view change. */
+    /** 107b — N×N bodies re-stood by the last view or battle change. */
     slabs: number;
     battle: boolean;
     fixture: FixtureReport | null;
@@ -104,7 +103,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let lastRestamped = 0;
   /** 105e — cumulative size writes (a probe reads it before / after a dial). */
   let lastSized = 0;
-  /** 106b — N×N bodies re-stood by the last `slab` / view change. */
+  /** 107b — N×N bodies re-stood by the last view or battle change. */
   let lastSlabs = 0;
   /** 106c-post — the live battle's tile tops, built once per battle
    *  (106c-post2: and again when the drape's visible faces change). */
@@ -120,9 +119,10 @@ export function attachBoardPanel(game: Game): BoardPanel {
       lastBattleRenderer = current;
       posed.clear();
       if (battle && dials.pose !== 'off') posed.build(battle, dials.pose);
-      // 106b — the rubble spawned under the dialled rule, but maybe before the
-      // camera was re-fitted to THIS board (a lens slide reads its position).
-      if (battle && dials.slab !== 'today') seams.restampSlabs(battle);
+      // 107b — rubble spawns before the camera is re-fitted to THIS board, and
+      // a dialled lens's slide reads the camera's position. Under ortho the
+      // re-stand writes the positions the rubble already has.
+      if (battle) lastSlabs = seams.restampSlabs(battle);
       tops = null;
       describe();
     }
@@ -147,7 +147,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
         if (!handle) continue; // the dead leave `world.units` (World.removeUnit)
         const n = footprintOf(unit);
         // 106b — an N×N body's marks stand on its FOOTPRINT, never its sprite
-        // anchor (which the `slab` rule may slide toward the camera).
+        // anchor (which the slab rule may slide toward the camera).
         const centre =
           n > 1
             ? footprintCentre(unit.position.x, unit.position.y, n, tops.gridW, tops.gridH, tops.heightAt)
@@ -207,8 +207,8 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'anchor') lastRestamped = seams.restampAnchors();
-    // 106b — the slab rule reads the camera, so a view change re-stands it too.
-    if (key === 'slab' || VIEW_DIALS.includes(key)) {
+    // 107b — the slab rule reads the camera, so a view change re-stands it.
+    if (VIEW_DIALS.includes(key)) {
       const battle = liveBattleOf(game);
       if (battle) lastSlabs = seams.restampSlabs(battle);
     }
@@ -245,7 +245,6 @@ export function attachBoardPanel(game: Game): BoardPanel {
       dials = { ...defaultDials(), hide, board };
       apply('proj');
       apply('anchor');
-      apply('slab');
       apply('pose');
       writeUrl();
       view.refresh();

@@ -133,9 +133,8 @@ export class GroundCues {
    * Put `key`'s ground mark(s) under `subject` at ground point `ground`, per the
    * `ground` dial, scaled by `footprint`. For a 1×1 body `ground` is the
    * sprite's base anchor (it tracks the move lerp); for an N×N body the CALLER
-   * passes the footprint's centre (slab.ts `footprintCentre`) — never the
-   * sprite anchor, which today's rule puts on the near row and 106b's
-   * `slab-centre` slides toward the camera.
+   * passes the footprint's centre (`render/slabAnchor.ts` `footprintCentre`) —
+   * never the sprite anchor, which the slab rule slides toward the camera.
    */
   place(
     key: string,
@@ -181,7 +180,7 @@ export class GroundCues {
 
   /**
    * 106c — the PLATE: a static N×N body's whole footprint, centred on
-   * `centre` (slab.ts `footprintCentre`). `frame` = its outline in the body's
+   * `centre` (`render/slabAnchor.ts` `footprintCentre`). `frame` = its outline in the body's
    * colour; `filled` = a dark footprint under that outline.
    */
   placePlate(key: string, subject: CueSubject, centre: THREE.Vector3, n: number, dials: DialState): void {

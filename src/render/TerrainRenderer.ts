@@ -67,13 +67,31 @@ const HILL_BUMP_MIN_H = 0.12;
 const HILL_BUMP_MAX_H = 0.34;
 const HILL_BUMP_MIN_R = 0.15;
 const HILL_BUMP_MAX_R = 0.26;
-/** Per-mound base position within a cell (cell-local, the cell spans 1 unit). */
+/** Each mound's base sits ±this from its cell centre on both axes (cell-local,
+ *  the cell spans 1 unit), before the jitter. */
+const HILL_BUMP_QUAD = 0.22;
+/** The noise jitter on a mound's base position, per axis (noise is in [−1, 1]). */
+const HILL_BUMP_JITTER = 0.1;
+/** Per-mound base position within a cell. */
 const QUAD_OFFSETS: ReadonlyArray<readonly [number, number]> = [
-  [-0.22, -0.22],
-  [0.22, -0.22],
-  [0.22, 0.22],
-  [-0.22, 0.22],
+  [-HILL_BUMP_QUAD, -HILL_BUMP_QUAD],
+  [HILL_BUMP_QUAD, -HILL_BUMP_QUAD],
+  [HILL_BUMP_QUAD, HILL_BUMP_QUAD],
+  [-HILL_BUMP_QUAD, HILL_BUMP_QUAD],
 ];
+
+/**
+ * The worst-case hill mound, for code that must clear the mounds without
+ * reading the bump mesh (the N×N slab rule, `slabAnchor.ts`): a mound's apex
+ * is at most `reach` from its cell centre on each axis and at most `maxH`
+ * above the tile top, and its base extends at most `maxR` from the apex on
+ * each axis.
+ */
+export const HILL_MOUND_ENVELOPE = {
+  reach: HILL_BUMP_QUAD + HILL_BUMP_JITTER,
+  maxH: HILL_BUMP_MAX_H,
+  maxR: HILL_BUMP_MAX_R,
+} as const;
 const NOISE_FREQ = 0.42;
 /** Fixed seed: the visual character is canonical, not a per-battle roll. */
 const NOISE_SEED = 0xb1c1a1b;
@@ -497,8 +515,8 @@ export class TerrainRenderer {
           const jz = this.noise2D((cx * 2 + 3) * NOISE_FREQ, (cy * 2 + m * 1.7 + 19) * NOISE_FREQ);
           const sh = this.noise2D((cx * 3 + m * 0.9 + 2) * NOISE_FREQ, (cy * 3 + m * 0.9 + 7) * NOISE_FREQ);
           const sr = this.noise2D((cx * 3 + 13) * NOISE_FREQ, (cy * 3 + m * 0.9 + 1) * NOISE_FREQ);
-          const wx = ccx + q[0] + jx * 0.1;
-          const wz = ccz + q[1] + jz * 0.1;
+          const wx = ccx + q[0] + jx * HILL_BUMP_JITTER;
+          const wz = ccz + q[1] + jz * HILL_BUMP_JITTER;
           const hgt = HILL_BUMP_MIN_H + (sh * 0.5 + 0.5) * (HILL_BUMP_MAX_H - HILL_BUMP_MIN_H);
           const r = HILL_BUMP_MIN_R + (sr * 0.5 + 0.5) * (HILL_BUMP_MAX_R - HILL_BUMP_MIN_R);
           emitMound(wx, wz, baseY, r, hgt);

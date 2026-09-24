@@ -559,8 +559,8 @@ function towardCamera(rig: Rig, p: THREE.Vector3): THREE.Vector3 {
   return new THREE.Vector3().setFromMatrixPosition(rig.camera.matrixWorld).sub(p).normalize();
 }
 
-/** Today's rule, restated from `unitAnchorPos` (R11): the NEAR-ROW centre, Y = the near row's max. */
-export const slabToday: SlabRule = (c) => {
+/** The near-row rule (R11, production until 107b), restated from `unitAnchorPos`: the NEAR-ROW centre, Y = the near row's max. */
+export const slabNearRow: SlabRule = (c) => {
   const p = gridToWorld(c.board, c.gx, c.gy);
   p.x += (c.n - 1) / 2;
   p.y = Math.max(...Array.from({ length: c.n }, (_, i) => c.heights(c.gx + i, c.gy)));
@@ -664,7 +664,7 @@ export function slabReport(rig: Rig, c: SlabCase, rule: SlabRule): SlabReport {
 /** The height patterns the pins sweep, as functions of the offset from the slab's corner. */
 export const HEIGHT_PATTERNS: Record<string, (dx: number, dy: number) => number> = {
   flat: () => 0,
-  /** The rows today's rule ignores stand TALLER than its near row — the §79d2 bite, re-armed by yaw. */
+  /** The rows the near-row rule ignores stand TALLER than its near row — the §79d2 bite, re-armed by yaw. */
   farHigh: (_dx, dy) => (dy <= 0 ? FLOOR_LO : FLOOR_HI),
   nearHigh: (_dx, dy) => (dy <= 0 ? FLOOR_HI : FLOOR_LO),
   checker: (dx, dy) => ((((dx + dy) % 2) + 2) % 2 === 0 ? FLOOR_HI : FLOOR_LO),

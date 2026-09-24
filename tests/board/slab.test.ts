@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { applyCameraFit, fitCameraToBox, type CameraView } from '../../src/render/cameraFit';
-import { footprintCentre, slabAnchor, slabViewOf } from '../../src/dev/boardPanel/slab';
+import { footprintCentre, slabAnchor, slabViewOf } from '../../src/render/slabAnchor';
 import {
   FIT_MARGIN,
   HEIGHT_PATTERNS,
@@ -18,10 +18,13 @@ import {
 } from './geometry';
 
 /**
- * 106b — THE SEAM'S OWN RULE, through the 106a measures. `slabAnchor` is what
- * the board explorer stands a live N×N body on (`slab-centre`); the measures
- * — askew, off its plot, bitten — are the instrument's, which shares no code
- * with it. The spec is the MEASURES, never a restated copy of the rule.
+ * THE N×N SLAB RULE, through the 106a measures (a permanent gate since 107b,
+ * when the rule shipped). `slabAnchor` is what `BattleRenderer.unitAnchorPos`
+ * stands every N×N body on; the measures (askew, off its plot, bitten) are the
+ * instrument's, which shares no code with it. The spec is the MEASURES, never
+ * a restated copy of the rule. The instrument models the mounds with its own
+ * copy of their envelope; `TerrainRenderer.test.ts` pins the production
+ * envelope against the drawn mesh.
  */
 
 const vp = VIEWPORTS[0]!;
@@ -29,8 +32,8 @@ const ortho = (yawDeg: number): View => ({ projection: { kind: 'orthographic' },
 const lens20 = (yawDeg: number): View => ({ projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg });
 const VIEWS = [30, 35, 40, 45, -30, -45].flatMap((y) => [ortho(y), lens20(y)]);
 
-/** The seam's function, as a rule the instrument can measure. */
-const seamRule: SlabRule = (c, rig) =>
+/** The production rule, as a rule the instrument can measure. */
+const productionRule: SlabRule = (c, rig) =>
   slabAnchor(
     c.gx,
     c.gy,
@@ -59,9 +62,9 @@ const sweep = (rule: SlabRule, mounds: boolean) =>
     );
   });
 
-describe('106b — the seam’s slab rule passes the 106a measures', () => {
+describe('the production slab rule passes the 106a measures', () => {
   it('centred, on its plot, unbitten and sort-clean — every candidate yaw, ortho and the lens, with and without mounds', () => {
-    const rs = [...sweep(seamRule, false), ...sweep(seamRule, true)];
+    const rs = [...sweep(productionRule, false), ...sweep(productionRule, true)];
     expect(rs.length).toBe(2 * VIEWS.length * RUBBLE_QUARRY_SLABS.length * Object.keys(HEIGHT_PATTERNS).length);
     for (const r of rs) {
       expect(r.lateral, r.what).toBeLessThan(0.02);

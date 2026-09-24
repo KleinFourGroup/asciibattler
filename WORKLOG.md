@@ -1753,3 +1753,52 @@ slide, shifted a little on screen and open to a mound's bite again. The
 re-stamp calls the production rule from `applyCameraView`, where the
 override already re-points what a swap leaves stale. The user: "a very low
 cost to fix a bug, even if the bug is probably quite rare".
+
+### 107a — the camera seams made production-safe (2026-09-24) — read `none` ✅
+
+`8fcf493`. The Renderer's constructor and `setCameraView` pick the camera by
+one method (`cameraFor`); `UnitOverlayLayer` takes a getter; the dev
+panel's re-point cast is gone. **Verified:** typecheck and the suite (the
+hook); in the pane at `?bp=board-quarry`, 1280×720, after a dev swap to ortho
+the 30 bars' screen x sit within 0.05 px of their unit's projection through
+the live camera (the transform rounds to 0.1 px), and at least 2.0 px from
+the stale perspective camera's at yaw 45 (the control; at yaw 0 the two
+pictures nearly agree, and the gap is still at least 0.66 px). **Not
+verified here:** the constructor's pick at an ortho default. At today's
+perspective default it can't show, so 107d's step zero boots with no `bp`.
+
+### 107b — the N×N slab rule into production (2026-09-24) — ◐ BUILT, a `batch` read → 107d's stop
+
+`src/render/slabAnchor.ts` is the spike's rule, moved, and
+`unitAnchorPos`'s N×N branch calls it. The mound envelope comes from
+TerrainRenderer (`HILL_MOUND_ENVELOPE`; the inline jitter `* 0.1` is now
+`HILL_BUMP_JITTER`). The dev patch, the `slab` dial and its artefact line
+are gone. The dev re-stamp calls the production method on a view change and
+on a battle change: rubble spawns inside `applyTerrain`, before
+`fitToBoard`, and a dialled lens's slide reads the camera position. The
+instrument's `slabToday` is now `slabNearRow`, since R11 is no longer
+today's rule.
+
+**Verified:**
+- `tests/board/slab.test.ts` imports the production rule; it becomes a
+  permanent gate (HANDOFF).
+- New pin, `TerrainRenderer.test.ts`: the envelope bounds every drawn mound
+  on a 24×24 all-hills board (2304 mounds, read from the bump geometry),
+  with a control: shrink any one bound by 10 % and some mound exceeds it.
+- In the pane (`?bp=board-quarry`): the 5 live slabs project to their
+  footprint centres, which the probe re-derives from the grid and the tile
+  heights, within 2e-8 NDC. Each is nearer than every footprint tile corner.
+  This holds under perspective at yaw 0, and after the dev dials moved to
+  ortho yaw 0 and then ortho yaw 45, which shows the re-stamp ran: without
+  it the old slide would sit about 0.5 world units off the new view ray. The
+  control, the pre-107b near-row point, lands 0.04–0.09 NDC away (about
+  25–56 px). No console errors and no `[board-panel] seam moved`.
+
+**A finding, not a change:** the slide fires on every slab, not only on
+hills. A footprint's near-edge tile corners are always nearer than its
+centre, so the slab slides to the near edge's depth: 0.70–0.71 world units
+for a 2×2 and 1.03–1.08 for a 3×3, measured under perspective at yaw 0.
+Under ortho it moves nothing on screen; under a lens every slab draws a
+little bigger, which is what 106a measured (3.3 % at FOV 20).
+
+**Not verified here:** the look. That is the `batch` read at 107d.

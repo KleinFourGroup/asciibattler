@@ -18,10 +18,70 @@ import {
   ANIM_FIRE,
   ANIM_HEALING,
   ANIM_NONE,
+  HILL_MOUND_ENVELOPE,
   TerrainRenderer,
   animTypeFor,
   topColorFor,
 } from './TerrainRenderer';
+
+/**
+ * 107b — the mound envelope bounds every drawn mound. The N×N slab rule
+ * (`slabAnchor.ts`) clears the hill mounds through `HILL_MOUND_ENVELOPE`
+ * without reading the mesh, so a mound that outgrew the envelope would bite a
+ * slab again. Read from the bump geometry itself: 12 vertices per mound, four
+ * side triangles of (base, base, apex), emitted cell by cell, row-major, four
+ * mounds per `hills` cell.
+ */
+describe('107b — HILL_MOUND_ENVELOPE bounds the drawn mounds', () => {
+  const W = 24;
+  const H = 24;
+  const grid = new TileGrid(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) grid.setKind({ x, y }, 'hills');
+  const terrain = new TerrainRenderer();
+  terrain.setTiles(grid, W, H, THEMES[0]!);
+  const pos = (terrain as unknown as { bumpsGeometry: THREE.BufferGeometry }).bumpsGeometry.getAttribute('position');
+
+  type Envelope = { reach: number; maxH: number; maxR: number };
+  /** The largest amount any mound exceeds each bound by (≤ 0 = inside). */
+  const excess = (env: Envelope): Envelope => {
+    const out = { reach: -Infinity, maxH: -Infinity, maxR: -Infinity };
+    const mounds = pos.count / 12;
+    for (let k = 0; k < mounds; k++) {
+      const cell = Math.floor(k / 4);
+      const cx = cell % W;
+      const cy = Math.floor(cell / W);
+      const ccx = cx - W / 2 + 0.5;
+      const ccz = H / 2 - cy - 0.5;
+      const top = terrain.heightAt(cx, cy, 'hills');
+      const apex = k * 12 + 2;
+      const ax = pos.getX(apex);
+      const az = pos.getZ(apex);
+      out.reach = Math.max(out.reach, Math.abs(ax - ccx) - env.reach, Math.abs(az - ccz) - env.reach);
+      out.maxH = Math.max(out.maxH, pos.getY(apex) - top - env.maxH);
+      for (let t = 0; t < 4; t++)
+        for (const v of [k * 12 + t * 3, k * 12 + t * 3 + 1]) {
+          expect(pos.getY(v)).toBeCloseTo(top, 5);
+          out.maxR = Math.max(out.maxR, Math.abs(pos.getX(v) - ax) - env.maxR, Math.abs(pos.getZ(v) - az) - env.maxR);
+        }
+    }
+    return out;
+  };
+
+  it('no apex beyond `reach` of its cell centre or `maxH` above its tile top, no base corner beyond `maxR`', () => {
+    expect(pos.count).toBe(W * H * 4 * 12);
+    const e = excess(HILL_MOUND_ENVELOPE);
+    expect(e.reach).toBeLessThanOrEqual(1e-6);
+    expect(e.maxH).toBeLessThanOrEqual(1e-6);
+    expect(e.maxR).toBeLessThanOrEqual(1e-6);
+  });
+
+  it('CONTROL — shrink any one bound by 10 % and some mound exceeds it', () => {
+    for (const key of ['reach', 'maxH', 'maxR'] as const) {
+      const shrunk = { ...HILL_MOUND_ENVELOPE, [key]: HILL_MOUND_ENVELOPE[key] * 0.9 };
+      expect(excess(shrunk)[key], key).toBeGreaterThan(0);
+    }
+  });
+});
 
 /**
  * Hills take the board's theme (the cluster-two spec: a hills tile

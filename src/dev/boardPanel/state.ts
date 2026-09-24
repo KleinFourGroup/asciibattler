@@ -121,17 +121,6 @@ export const DIALS = {
     def: 'today',
     hint: 'today = the per-class stand line · bottom = every quad stands on its bottom edge',
   },
-  /** 106b — where an N×N body (rubble) stands: today's rule (R11, the NEAR-ROW
-   *  centre, written for an unrotated camera) vs the footprint CENTRE at its
-   *  highest tile top, slid along its view ray clear of the hill mounds
-   *  (slab.ts; measured in tests/board). 1×1 bodies are untouched either way. */
-  slab: {
-    kind: 'enum',
-    label: 'NxN stand',
-    options: ['today', 'centre'],
-    def: 'today',
-    hint: 'today = the near-row centre (askew under yaw) · centre = the footprint centre, clear of its own terrain',
-  },
   /** The HP-bar line: today's ink-top follow (the user's §79e reversal) vs one
    *  uniform line across a row of mixed glyphs (§79d2's original call). */
   bar: {
@@ -361,7 +350,6 @@ export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 export const KNOWN_ARTEFACTS: readonly string[] = [
   'yaw: WASD / edge-scroll pan along WORLD axes (scroll mode), so W is no longer screen-up',
   'yaw: wall runs (#) staircase on diamond tiles; an NxN slab is a screen rectangle over a wider footprint',
-  'yaw: with NxN stand = today, an NxN slab stands askew on its diamond and a taller back tile bites it (R11 assumes no rotation) - NxN stand = centre is the 106b fix',
   'any dial change: an FX already in flight (bolt, lob, splat) was lifted on the OLD camera-up and lands there; the next one is right',
   'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',
   'glyph scale: the objective marker keeps its own size; only its target lifts',

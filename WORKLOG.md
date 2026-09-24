@@ -2003,3 +2003,124 @@ is a new permanent gate). Its re-read against the hop is carried to §108.
 finding became one `-post` (107d-post), whose own `stop` is clear. No open
 ◐. The trial's rollback rule (a `batch` finding reopening two later
 commits) did not fire.
+
+## Phase 108 — the ground mark, drawn by the terrain
+
+### Kickoff (2026-09-24) — the audit at `faaf940`; the cut awaits the user's signature
+
+Session 3516a79a. ✔ = read at file:line by this session; everything else is
+derived and marked so, and the step that touches it measures it.
+
+1. **A step face is the drape, for free.** The terrain is one prism per tile,
+   non-indexed, its side faces running down to `BOTTOM_Y` (✔
+   `TerrainRenderer.ts:38`, `:45`, `:378-408`); the face between two tiles
+   belongs to the higher tile's prism, and the lower tile's top hides
+   everything below its own height. A mark evaluated by world XZ on that
+   face is its edge stretched down, which is what `conform.ts` built by hand
+   (✔ `conform.ts:12-21`). The prisms' material is single-sided, so only
+   faces turned toward the camera get it, as in the mock (the mounds are
+   double-sided, ✔ `:242`, but a mound's back faces sit behind its front
+   ones).
+2. **The fragment knows its world position, not its tile** (✔
+   `terrain.vert.glsl:38`). On a side face world XZ lies exactly on the tile
+   boundary, so the tile comes from XZ nudged inward along the face normal,
+   or from a per-vertex attribute. A hill mound can overhang its tile by up
+   to 0.08 (reach 0.32 + radius 0.26, ✔ `:66-94`); looked up by its own XZ,
+   the overhang reads the neighbour's marks, which is the right answer for a
+   mark drawn by XZ.
+3. **The mounds are a clone of the terrain material** (✔ `:241-242`), and
+   the clone copies the uniforms: the comment at ✔ `:153-157` already notes
+   that the clone's `uTime` is frozen. A mark table handed over by uniform
+   reaches the mounds only if the clone is re-pointed at the same uniform
+   objects; otherwise the mounds show stale marks or none, silently.
+4. **The table goes in data textures** (derived). three r184 is WebGL2-only,
+   so the shader has `texelFetch` and integer textures, while ES 3.0
+   guarantees a fragment shader only 224 uniform vectors, too few for a
+   32×32 board's bodies.
+5. **Frame order** (✔ `Game.ts:185-188`): the scene's tick, then
+   `BattleRenderer.update` (the lerps, ✔ `BattleRenderer.ts:296-308`), then
+   the depth sort, then the render. A table built at the end of `update`
+   sees this frame's positions. The explorer's frame hook runs inside the
+   sort (✔ `boardPanel/seams.ts:211-215`), after `update`, so the posed
+   set's marks need the table uploaded at render, not at `update`.
+6. **The dead keep their sprite; the mock did not keep their mark.** A dead
+   unit leaves `world.units` at once but its sprite fades for
+   `FADE_SECONDS` (✔ `BattleRenderer.ts:1699-1702`); a mid-battle
+   reinforcement fades in (✔ `:877-886`); inert neutrals pop (✔
+   `:846-859`). The mock iterated `world.units` (✔ `boardPanel/index.ts:145`),
+   so its mark vanished at a death while the glyph faded, and appeared at
+   full under a reinforcement still fading in. A table keyed by sprite
+   handle, with each mark's identity recorded at spawn, can follow the
+   sprite's alpha instead (a proposal in the cut).
+7. **The inputs.** A 1×1 body's mark sits at its sprite position, which is
+   still its ground point (§107d-post changed only depth). N×N bodies are
+   only `rubble_2x2` and `rubble_3x3` (✔ `config/units.json:636-648`), all
+   scenery, so every combatant's mark is 1×1 and N×N appears only as a plate
+   at `footprintCentre` (✔ `boardPanel/index.ts:151-159`). The outline
+   colour is `spriteColorForUnit` (✔ `spriteColor.ts:51-63`), a function of
+   team, archetype and camp id; held tints are written onto the sprite
+   separately (✔ `BattleRenderer.ts:135-141`), so none reaches the outline.
+8. **The signed look, as numbers.** The merged mark is the side's shape at
+   0.55 × footprint across its vertices (vertex radius 0.275), filled black
+   at 0.45, outlined in the team colour at 0.3, the ring's stroke radial at
+   0.16 of the vertex radius (✔ `groundCue.ts:69`, `:161-167`; ✔
+   `state.ts:156`, `:180-182`; the bookmark's `cueAlpha-0.3`). The plate is a
+   world square of half-side n/2 − 0.06, filled black at 0.6, framed in the
+   body's colour at 0.3 with a 0.07 stroke (✔ `groundCue.ts:76-77`,
+   `:186-194`; ✔ `state.ts:204`). Shapes: a 40-gon circle, a 4-gon with its
+   vertices on the grid axes, a 3-gon from θ = π/2 (✔ `:62-66`). Order:
+   plates, then fills, then outlines (✔ `:80`). Derived: a radial stroke is
+   0.16·r·cos(π/n) wide across an edge, so the triangle's outline is half as
+   thick as the circle's; an SDF that reproduces the mock scales the polygon
+   rather than offsetting it by a constant width.
+9. **The mock was aliased** (derived, unmeasured). Both composers render into
+   EffectComposer's own targets, created with no `samples` (✔
+   `Renderer.ts:199`, `:222`); `antialias: true` (✔ `:167`) reaches only the
+   canvas OutputPass writes to. SDF marks with derivative anti-aliasing will
+   have softer edges than the signed mock, so a pixel comparison can hold
+   interiors to a tolerance, not edges.
+10. **Colour matches by construction** (derived). The targets are linear and
+    OutputPass converts at the end (✔ `Renderer.ts:228-233`). The mock's
+    `MeshBasicMaterial` blended `THREE.Color` (linear) values into that
+    target; the terrain writes its `aColor`, also a `THREE.Color`, the same
+    way. Colours passed as `THREE.Color` and composited with `mix` reproduce
+    the mock's blend; the saturation clamp runs after both (✔ `:226`).
+11. **The grey read needs no plumbing.** Ctrl+Alt+G sets
+    `filter: grayscale(1)` on the root (✔ `devKeys.ts:126-131`), so marks
+    drawn by the terrain grey with the canvas.
+12. **The two residuals, as they stand.** (a) The board status pip is a DOM
+    bar (✔ `UnitOverlayLayer.ts:347-383`) coloured from a ten-hue table (✔
+    `statusDisplay.ts:37-56`). A carded unit's status has a text channel,
+    its card's row; a camp unit has no card (DESIGN §Color redundancy and
+    "Team identity on the board" clause 4). (b) The destructible wall's
+    tell is `CRACKED_STONE` on the indestructible wall's glyph (✔
+    `spriteColor.ts:37-45`, `:59-60`); rubble is excluded by the same
+    predicate. The atlas has one cell left (WORKLOG §106e).
+13. **No frame-time instrument exists.** A search of `src/`, `scripts/` and
+    `process/` for `gl.finish`, timer queries, frame time and
+    `performance.now` found the render loop's clock, the tooltip's warm
+    timer and comments, and no instrument. The loop's clock (✔
+    `Renderer.ts:253-257`) is paced by the display, so a shader cost below
+    the refresh interval never shows in it. Not verified here: that Firefox
+    hides `EXT_disjoint_timer_query_webgl2` by default and coarsens
+    `performance.now`. A synchronous timing (render a frame, then a
+    one-pixel `readPixels` to wait for the GPU), averaged over many frames,
+    works in both browsers.
+14. **Fixtures.** `board-quarry` has a camp and the rubble slabs (✔
+    `fixtures.ts:62-67`). Which fixture has hills or destructible walls is
+    not known; step zero finds them.
+15. **The hop exists only in the instrument** (WORKLOG §107d, "Candidate
+    fixes"); nothing in the renderer draws it. Re-reading upright depth
+    against the hop needs a dev dial that draws it.
+16. **What D8 deletes this phase, as the code stands:** `GroundCues` and its
+    test, `conform.ts` and its test, `drapeViewOf` and the tops block in the
+    explorer's frame hook, the dials `cue`, `cueSize`, `cueAlpha`,
+    `cueDepth`, `ground`, `shadowSize`, `shadowAlpha`, `plate`, `plateScope`,
+    `plateAlpha`, `drape` and `shadow`, the ground-mark artefact line, and
+    `probe().cues`. The posed flyer stays (Round 9), so its mark moves onto
+    production's table. Unknown keys drop (✔ `state.ts:292`), so the signed
+    bookmark shrinks to `anchor-bottom` and keeps parsing.
+
+**Predictions for the whole phase:** no snapshot bump; no RNG; the fuzz
+smoke fires on no step (`src/render`, `src/dev`, `src/ui`, `tests/board`
+and docs are outside the hook's trigger set).

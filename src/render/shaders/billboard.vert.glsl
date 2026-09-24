@@ -45,8 +45,30 @@ varying float vBloomIntensity;
 
 void main() {
   vec4 mvPos = modelViewMatrix * vec4(instancePosition, 1.0);
-  mvPos.xy += (position.xy - instanceAnchor) * uSpriteSize * instanceSize;
+  vec2 offset = (position.xy - instanceAnchor) * uSpriteSize * instanceSize;
+  mvPos.xy += offset;
   gl_Position = projectionMatrix * mvPos;
+
+  // 107d-post — UPRIGHT DEPTH for a sprite that stands (base-anchored: its
+  // anchor sits below the quad's centre). The camera-facing card leans back
+  // by the camera's pitch, so a tile just behind the anchor that stands higher
+  // (a diagonal move past a higher corner) was nearer than the card's lower
+  // band and hid it. Each vertex keeps its screen position and takes the depth
+  // of the world-vertical card through the anchor instead: world-up in view
+  // space is (0, upV.y, upV.z), so a point `offset.y` up the screen stands
+  // `offset.y * upV.z / upV.y` nearer. Terrain behind the anchor can no longer
+  // cut into a standing glyph; terrain in front of it still hides the feet.
+  // Exact under ortho; under a dev lens the depth is the upright point's, taken
+  // at this vertex. Pinned by tests/board/clip.test.ts. Landing note: re-read
+  // against the hop (lifting the move over the corner) once §108's ground
+  // marks exist (ROADMAP §108).
+  if (instanceAnchor.y < 0.0) {
+    vec3 upV = mat3(viewMatrix) * vec3(0.0, 1.0, 0.0);
+    vec4 upright = mvPos;
+    upright.z += offset.y * upV.z / upV.y;
+    vec4 clip = projectionMatrix * upright;
+    gl_Position.z = clip.z / clip.w * gl_Position.w;
+  }
 
   vAtlasUV = mix(instanceGlyphUV.xy, instanceGlyphUV.zw, uv);
   vColor = instanceColor;

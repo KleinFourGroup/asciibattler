@@ -686,3 +686,123 @@ export const RUBBLE_QUARRY_SLABS: readonly { gx: number; gy: number; n: number }
   { gx: 5, gy: 2, n: 3 },
   { gx: 11, gy: 3, n: 3 },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 107d-post — THE DIAGONAL-MOVE CLIP. A glyph is a camera-facing card, which
+// leans back by the camera's pitch. Mid-diagonal its anchor sits on the corner
+// vertex four cells share, so a HIGHER corner cell behind it was nearer than
+// the card's lower band and hid it (the user's 107d find). `hiddenInk` measures
+// the fraction of a glyph's ink whose ray to the camera meets a tile prism,
+// with the card's depth as drawn before 107d-post (`card`) or as a vertical
+// card through the anchor (`upright`). Re-derived from the camera and the tile
+// geometry; nothing is read from src/render.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type DepthRule = 'card' | 'upright';
+
+const CLIP_SAMPLES = 24;
+
+export function hiddenInk(
+  rig: Rig,
+  board: Board,
+  glyph: string,
+  heights: HeightField,
+  anchor: THREE.Vector3,
+  rule: DepthRule,
+  cells: readonly [number, number][],
+): number {
+  const [ix0, iy0, ix1, iy1] = inkOf(glyph);
+  const anchorY = anchorYFor(glyph, 'today');
+  const ortho = isOrtho(rig);
+  const camPos = new THREE.Vector3().setFromMatrixPosition(rig.camera.matrixWorld);
+  // The upright card: vertical, through the anchor, containing camera-right.
+  const normal = new THREE.Vector3().crossVectors(rig.right, new THREE.Vector3(0, 1, 0)).normalize();
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, anchor);
+  const q = new THREE.Vector3();
+  const p = new THREE.Vector3();
+  let hits = 0;
+  for (let i = 0; i < CLIP_SAMPLES; i++)
+    for (let j = 0; j < CLIP_SAMPLES; j++) {
+      const cx = ix0 + ((i + 0.5) / CLIP_SAMPLES) * (ix1 - ix0);
+      const cy = iy0 + ((j + 0.5) / CLIP_SAMPLES) * (iy1 - iy0);
+      q.copy(anchor).addScaledVector(rig.right, cx - 0.5).addScaledVector(rig.up, cy - 0.5 - anchorY);
+      p.copy(q);
+      if (rule === 'upright') {
+        // The same pixel's ray, met at the upright card.
+        const dir = ortho ? rig.fwd.clone() : q.clone().sub(camPos).normalize();
+        const origin = ortho ? q.clone().addScaledVector(rig.fwd, -100) : camPos.clone();
+        const met = new THREE.Ray(origin, dir).intersectPlane(plane, new THREE.Vector3());
+        if (met) p.copy(met);
+      }
+      const toward = ortho ? rig.fwd.clone().negate() : camPos.clone().sub(p).normalize();
+      _ray.origin.copy(p).addScaledVector(toward, 1e-6);
+      _ray.direction.copy(toward);
+      for (const [gx, gy] of cells) {
+        const c = gridToWorld(board, gx, gy);
+        _box.min.set(c.x - 0.5, TERRAIN_BOTTOM_Y, c.z - 0.5);
+        _box.max.set(c.x + 0.5, heights(gx, gy), c.z + 0.5);
+        if (_ray.intersectsBox(_box)) {
+          hits++;
+          break;
+        }
+      }
+    }
+  return hits / (CLIP_SAMPLES * CLIP_SAMPLES);
+}
+
+/** §81c2's move Y (SpriteAnimator), restated: a climb completes by t = 0.5, a descent starts there. */
+export function stepY(fromY: number, toY: number, t: number, linear = false): number {
+  if (linear || fromY === toY) return fromY + (toY - fromY) * t;
+  const yT = toY > fromY ? Math.min(1, 2 * t) : Math.max(0, 2 * t - 1);
+  return fromY + (toY - fromY) * yT;
+}
+
+export interface ClipMove {
+  from: [number, number];
+  to: [number, number];
+  heights: HeightField;
+  /** The §81c2 defect, as a known answer: a straight-line Y. */
+  linearY?: boolean;
+}
+
+/** A candidate fix that lifts the move: `arc` peaks at the high corner's height mid-move (E7.D's 4t(1−t)); `plateau` holds it. */
+export type ClipLift = 'none' | 'arc' | 'plateau';
+
+/** The worst hidden ink over a move (19 samples of t), its value at t = 0.5, and the largest lift applied (world). */
+export function worstHidden(
+  rig: Rig,
+  board: Board,
+  glyph: string,
+  m: ClipMove,
+  rule: DepthRule,
+  lift: ClipLift = 'none',
+): { worst: number; atMid: number; lift: number } {
+  const a = gridToWorld(board, ...m.from);
+  const b = gridToWorld(board, ...m.to);
+  const hA = m.heights(...m.from);
+  const hB = m.heights(...m.to);
+  const path: [number, number][] = [m.from, m.to];
+  if (m.from[0] !== m.to[0] && m.from[1] !== m.to[1]) path.push([m.to[0], m.from[1]], [m.from[0], m.to[1]]);
+  const peak = Math.max(...path.map(([x, y]) => m.heights(x, y)));
+  const cells: [number, number][] = [];
+  for (let gy = Math.min(m.from[1], m.to[1]) - 3; gy <= Math.max(m.from[1], m.to[1]) + 3; gy++)
+    for (let gx = Math.min(m.from[0], m.to[0]) - 3; gx <= Math.max(m.from[0], m.to[0]) + 3; gx++) cells.push([gx, gy]);
+  const still = m.from[0] === m.to[0] && m.from[1] === m.to[1];
+  const ts = still ? [0.5] : Array.from({ length: 19 }, (_, k) => (k + 1) / 20);
+  let worst = 0;
+  let atMid = 0;
+  let lifted = 0;
+  for (const t of ts) {
+    const pos = a.clone().lerp(b, t);
+    const base = stepY(hA, hB, t, m.linearY);
+    let y = base;
+    if (lift === 'arc') y = base + Math.max(0, peak - Math.max(hA, hB)) * 4 * t * (1 - t);
+    if (lift === 'plateau') y = Math.max(base, peak);
+    lifted = Math.max(lifted, y - base);
+    pos.y = y;
+    const f = hiddenInk(rig, board, glyph, m.heights, pos, rule, cells);
+    worst = Math.max(worst, f);
+    if (t === 0.5) atMid = f;
+  }
+  return { worst, atMid, lift: lifted };
+}

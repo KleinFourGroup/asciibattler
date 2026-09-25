@@ -92,8 +92,8 @@ unit's hue-only status pip → Round 8 with the colourblind palette (TODO);
 the cracked-stone wall tell → a dashed plate frame (108b); marks fade with
 their glyph · ✅ DECIDED at stop 1: square plate corners for now (the
 dashes did the walls' job; rubble a tie), the rounding kept for organic
-scenery (TODO) · open: the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
-hop, re-read with the marks through a dev dial (108c, stop 2).
+scenery (TODO) · ✅ DECIDED at stop 2: the elevation clauses' wording signed · upright depth alone
+ships (the hop reopens once in a movement polish, TODO) · the frame cost acceptable (WORKLOG §108 STOP 2).
 **Exit:** the marks on tops, step faces and mounds, read by the user; the
 grey read passed in a live battle; the residuals decided; the elevation
 requirement signed; frame cost measured; the mock-mark seams deleted.
@@ -103,10 +103,10 @@ requirement signed; frame cost measured; the mock-mark seams deleted.
 Kickoff).** Two stops.
 - [x] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`. ✅ 12 tests, two failing controls (WORKLOG §108a).
 - [x] **108b** — ✅ STOP 1 READ CLEAR 2026-09-25, the defaults signed (WORKLOG §108b). The terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
-- [◐] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2. ◐ built 2026-09-25: the `hop` dial + a `board-wade` fixture; the hop fires on a third or more of diagonals, mostly small, so a minimum height is a stop-2 question (WORKLOG §108c).
-- [◐] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440. ◐ built 2026-09-25: the panel's `frame-cost bench` button; in the pane (Chromium, 2560×1440) the marks read +0.17–0.20 ms per synced frame, all checks passing (WORKLOG §108d).
-- [◐] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording. ◐ drafted 2026-09-25; STOP 2 open, its script in WORKLOG §108e.
-- [ ] **108f** — the mock seams deleted (D8) with the read dials, except `plateCorner` (kept for organic scenery, the user's call at stop 1); the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion).
+- [x] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2. ✅ READ at stop 2: upright alone ships. Built 2026-09-25: the `hop` dial + a `board-wade` fixture; the hop fires on a third or more of diagonals, mostly small, so a minimum height is a stop-2 question (WORKLOG §108c).
+- [x] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440. ✅ READ at stop 2: Firefox +0.19 ms per frame, acceptable. Built 2026-09-25: the panel's `frame-cost bench` button; in the pane (Chromium, 2560×1440) the marks read +0.17–0.20 ms per synced frame, all checks passing (WORKLOG §108d).
+- [x] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording. ✅ STOP 2 READ CLEAR 2026-09-25: the grey read passed, the wording signed (WORKLOG §108 STOP 2).
+- [ ] **108f** — the mock seams deleted (D8) with the read dials, except `plateCorner` (kept for organic scenery, the user's call at stop 1); the hop dial and its code deleted (the stop-2 verdict; `board-wade` stays); the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion).
 
 ## Phase 109 — the rule deletion + the round close (signed 2026-09-23 with the spec)
 

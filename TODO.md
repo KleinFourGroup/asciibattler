@@ -402,3 +402,27 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   (106e), so no sweep touches spike code the spec may delete, and before the
   first build phase edits the same render files. WORKLOG "The new-model tone
   audit".
+
+## §108 riders (stop 2, 2026-09-25)
+
+- [ ] **Movement polish: smooth the vertical motion of ground moves, then
+  reopen the hop one final time** (the user at §108's stop 2). §81c2's
+  profile does a step's whole height change in half the step, in a
+  straight line, and stops dead at the midpoint. Floor heights are
+  continuous noise, so nearly every step has one; at the 0.3 s mobility
+  floor it lasts 0.15 s (0.05 s at 3×), and the user read the sharp corner
+  as jitter on fast units. A candidate: smoothstep over the half-step. It
+  still reaches the new height by the midpoint, which is what keeps the
+  anchor at or above the surface it is over; check it with
+  `tests/board/clip.ts`. Then the hop question reopens once, as the user
+  asked: the measurements are in WORKLOG §108c, the dial's code at
+  `d045497`, and `?bp=board-wade` is the fixture. Reduced motion drops any
+  hop (DESIGN §Reduced motion).
+- [ ] **Round 9: flyers float** (the user at §108's stop 2: "some sort of
+  floating animation (maybe just a simple sine wave?)"). What DESIGN's
+  "Elevation on the board" already asks of it: the bob's highest point
+  keeps clause 2 (about 15 % of a neighbour's ink at most; the lift of
+  0.45 measured 13 %, so a small amplitude or a lower base lift), and the
+  mark stays still on the tile. Also: a phase per unit, so a flock doesn't
+  bob in unison; under reduced motion the lift stays and the bob goes; and
+  a read on whether the bar and hitsplats bob with the glyph.

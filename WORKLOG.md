@@ -2546,3 +2546,70 @@ with or without a minimum height); whether the bench's numbers are
 acceptable; the elevation clauses' wording; and whether the bench, as a
 new instrument that a decision rests on, should get a second model's
 review (`process/oracles.md`).
+
+### 108c–108e — STOP 2, THE READ (2026-09-25, the user's, Firefox) — CLEAR
+
+- **The grey read** (identity clause 1, D5's acceptance test): "The gray
+  read was incredibly clear!" Passed.
+- **The posed flyer at lift 0.45:** "Elevation looked good." The elevation
+  clauses hold; signed with the wording. The user's idea for the mechanic:
+  "when we actually implement flyers, though, we're going to want them to
+  have some sort of floating animation (maybe just a simple sine wave?)"
+  (TODO, "Round 9: flyers float").
+- **Upright vs the hop:** the hop is "not particularly noticeable", and
+  "looks a bit more natural for side to side diagonal movements", which is
+  the squeeze, the one case upright depth leaves (12.5 % at a 0.4 step).
+  But "some of the preexisting hops look a tad jittery for fast units":
+  the user confirmed these are §81c2's half-step height changes, and that
+  the sharp stop at the midpoint is what reads as jitter. **Decided: upright
+  depth alone ships**, because "it's just more correct than what we were
+  doing before", and a future polish round smooths the vertical motion and
+  "we reopen the hop question one final time" (the user's edit to the
+  session's plan). Any hop drops under reduced motion. 108f deletes the dial
+  and its code; `board-wade` stays. TODO, "Movement polish".
+- **The wording:** "The wording looks good!" DESIGN's Terrain paragraph,
+  "As built (§108)" and "Elevation on the board" are signed; the grey read
+  and the hop verdict are now written into them.
+- **The bench:** the session's reasoning (the frame budget, not the old
+  frame time; the synced frame overstates; the full bins as a worst case;
+  weak hardware unknown; no second-model review, since even a 3× error
+  would not change the verdict): "That all tracks to me". **Acceptable.**
+
+**The Firefox runs** (the user's machine, `board-quarry`):
+
+| | run 1, 2560×1440 | run 2, 2560×1139 |
+|---|---|---|
+| marks off → on | +0.188 [+0.063, +0.313] | +0.109 [+0.031, +0.281] |
+| A/A | +0.047 [−0.094, +0.219] | −0.047 [−0.094, +0.063] |
+| planted 1.00 ms | 1.078 | 1.125 |
+| full bins | +0.328 | +0.344 |
+| the frame, marks off | 1.684 | 1.289 |
+
+All checks passed in both. Run 1 is the measurement at the user's
+resolution: the marks cost +0.19 ms per synced frame, matching the pane's
+Chromium +0.17 and +0.20. Run 2's canvas was 1139 px tall, most likely the
+console open below the page; the report's canvas line caught it, so it is
+a second size, not a repeat.
+
+**What the Firefox runs showed about the instrument:**
+- Firefox's clock steps 1.000 ms (Chromium's 0.1). An 8-frame chunk then
+  reads in steps of 1/8 ms, and every figure above is a multiple of 1/32
+  ms, which is that step carried through the median and the pairing. The
+  checks still passed. Longer chunks would sharpen a Firefox run if one
+  is ever needed.
+- The GPU line in Firefox is its generalized name for fingerprinting
+  ("GeForce GTX 980 … or similar"), not the hardware; the pane on the same
+  machine reports the RTX 4080 SUPER.
+- The first line of the paste points at `benchRig.ts:70`, the query of
+  `WEBGL_debug_renderer_info`. Most likely it is Firefox's warning that the
+  extension is deprecated (the message itself wasn't pasted). 108f reads
+  `RENDERER` first and uses the extension only where the plain name is
+  generic.
+
+**§108's exit, met except 108f:** the marks on tops, step faces and mounds
+read (stop 1); the grey read passed; both residuals decided (the pip to
+Round 8, the tints answered by the shape); the elevation requirement
+signed; the frame cost measured. Left: the mock seams and the hop deleted
+(108f).
+
+**Reads this phase:** 0 `batch`, 2 `stop`s; stop 2 clear, no `-post`.

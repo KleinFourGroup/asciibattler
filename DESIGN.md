@@ -422,9 +422,9 @@ the body's colour, and its frame is dashed on a destructible wall or
 cover, so that tell, until then a stone hue alone, now has a shape too.
 Against the five clauses:
 
-1. *The grey read* is the acceptance test, and it is the user's, in a
-   live battle, at §108's second stop. A shape survives the grey filter by
-   construction.
+1. *The grey read*, the acceptance test, passed: the user, in a live
+   battle at §108's second stop (2026-09-25), "incredibly clear". A shape
+   survives the grey filter by construction.
 2. *Per instance.* The shape comes from the body's team and camp id
    (`markShapeOf`, pinned in `groundMarks.test.ts`), never from its glyph
    or archetype, so a camp bandit and an enemy bandit wear different
@@ -438,7 +438,7 @@ A mark fades with its glyph: out with a death, in with a reinforcement.
 It stays on the ground when its glyph lifts or hops (the next paragraph).
 
 **Elevation on the board — the requirement a lifted unit must satisfy
-(§108, spec D6).** No unit leaves the ground yet. Round 9's flyer is the
+(§108, spec D6; signed 2026-09-25).** No unit leaves the ground yet. Round 9's flyer is the
 first consumer, and until then the explorer's posed flyer (`pose-flyer`)
 is the proof.
 
@@ -455,8 +455,12 @@ is the proof.
 Terrain height is not elevation. A unit on a higher tile stands on its
 top, and a move between heights keeps its anchor at or above the surface
 it is over (§81c2's profile). A standing glyph is depth-tested upright, so
-no terrain behind it cuts into it (gotcha #139). Whether a diagonal move
-past a higher corner also hops over it is §108's stop-2 read (108c).
+no terrain behind it cuts into it (gotcha #139). A diagonal move past a
+higher corner does not hop over it: at §108's stop 2 the hop fired on a
+third of diagonals, mostly by a few pixels, for one case's gain (the
+squeeze between two higher side tiles, where upright depth still hides a
+little). The movement polish reopens the question once, together with
+smoothing the step's vertical motion (TODO).
 
 **Reduced motion (99).** ONE gate, `reducedMotion()` in
 src/render/motion.ts — the OS `prefers-reduced-motion` query or an

@@ -1857,3 +1857,17 @@ WORKLOG §108b, where 108e will find it.
    ABAB order reading 0.313 against a true 0.300 was the clearest
    moment. I'd want instruments built with their controls from the start
    again. This reports conditions, not whether the work was good.
+
+### Addendum, the same session — stop 2 and the handoff (2026-09-25)
+
+The user read stop 2 clear in Firefox: the grey read "incredibly clear",
+the wording and the elevation clauses signed, upright depth alone ships,
+and the bench acceptable at +0.19 ms per frame. Their "preexisting hops"
+turned out to be §81c2's half-step height changes, which I had guessed
+from that profile's shape and the fastest units' step time; asking instead
+of assuming kept the jitter from being recorded as a fault of the hop dial. The second bench run had the
+console open, and the report's canvas line caught it, which is the
+self-labelling working as meant. The user gave the meter reading (472k)
+when I asked, and we agreed to hand off before 108f, whose pixel oracle
+needs a long stretch in the pane. The Cursor, ROADMAP and WORKLOG §108
+STOP 2 hold what 108f needs.

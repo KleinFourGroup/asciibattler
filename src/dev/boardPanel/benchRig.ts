@@ -66,9 +66,17 @@ function clockStep(): number {
   return steps.length > 0 ? median(steps) : Infinity;
 }
 
+/** A `RENDERER` string that names the browser, not the GPU (Chromium's). */
+const GENERIC_RENDERERS = new Set(['WebKit WebGL']);
+
+/** The GPU's name: `RENDERER` first, and the debug extension only when that is
+ *  generic, because Firefox warns on the extension's use (it is deprecated
+ *  there, and its `RENDERER` already carries the name). */
 function gpuName(gl: WebGL2RenderingContext | WebGLRenderingContext): string {
+  const plain: unknown = gl.getParameter(gl.RENDERER);
+  if (typeof plain === 'string' && plain !== '' && !GENERIC_RENDERERS.has(plain)) return plain;
   const info = gl.getExtension('WEBGL_debug_renderer_info');
-  const name: unknown = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  const name: unknown = info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : plain;
   return typeof name === 'string' ? name : 'unknown GPU';
 }
 

@@ -151,7 +151,7 @@ The palette is **enforced at art-direction time**, not by the shader. The `COLOR
 
 Color + bloomIntensity per instance are instanced attributes so a single draw call covers all units of all teams (B1.1 selective bloom renders sprites twice — once at natural color into the main framebuffer, once at `color × bloomIntensity` into a separate bloom buffer that's blurred and additively mixed back in — but both draws share the same per-instance buffers). `bloomIntensity` (default 1.0) is a bloom-buffer multiplier *decoupled from visible color*: 0 = no halo (sprite still visible at natural color), 1 = natural halo (blooms iff color crosses the high-pass threshold), >1 = forced glow. Used for attack flashes, charge-ups, elite tier, etc. Lerping 0↔1 smoothly fades the halo without changing the sprite's visible color — future systems (B3 HP bars going from full-glow to dim as health drops, C2 mage charge windup ramping the halo as the ability spools up) reach for this channel.
 
-**Terrain:** A subdivided plane with vertex displacement from seeded simplex noise. Colored in the fragment shader by height and slope using dark palette variants (DARK_FLOURESCENT_BLUE → DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER). Decorative only for MVP — does not affect movement or combat.
+**Terrain:** One faceted prism per tile, its top at the tile's height (`TerrainRenderer.heightAt`, the one source every sprite stands on). Floor and its variants (hills, ice, sand, fire, healing) share a seeded noise band 0.3 deep; mud sits at −0.25, water at −0.4 (deep water is coplanar with shallow and told by its diagonal bands), a chasm at −1.2. Hills carry low-poly mounds, fire and healing tiles animate in the fragment shader, and a thin grid line outlines every tile. The heights are presentation: movement and combat read a tile's kind, never its height (Battle mechanics). **The terrain draws the ground marks** (Round 7.5, spec D3): each frame, a small per-tile table of marks, one under every body, evaluated as shapes in the terrain's own shader. So a mark lies on tile tops, hangs down the step faces the camera sees, and covers the hill mounds, with the terrain's own depth. The marks are the team-identity channel (**Team identity on the board**, under UI idioms).
 
 **Post-processing:** `EffectComposer` chain — RenderPass → saturation-clamp → bloom (UnrealBloomPass with a max-channel high-pass) → scanlines → OutputPass. CRT curvature and chromatic aberration are future hooks (drop-in additions).
 
@@ -240,7 +240,7 @@ READ, and the read is named here so it is the same read every time:
 | The live bar | `src/run/chipRule.test.ts` · `src/ui/lossFx.test.ts` | morale reads ONCE (the checklist's Morale column) |
 | Tooltips | `tests/ui-tooltips.test.ts` · `src/ui/tooltip.test.ts` | is any tooltip the SOLE channel for something to act on? |
 | Color redundancy | `rarityDisplay.test.ts` · `statusDisplay.test.ts` | **the grey read:** Ctrl+Alt+G, before and after |
-| Team identity | — (Round 7.5) | the grey read on a live board, clause 1 |
+| Team identity | `groundMarks.test.ts` (the shape per identity) | the grey read on a live board, clause 1 |
 | Reduced motion | `tests/ui-motion.test.ts` · `motion.test.ts` · `fxRegistry.test.ts` · `TerrainRenderer.test.ts` | Ctrl+Alt+A: does information survive, does anything still sway? |
 | Focus | `tests/ui-focus.test.ts` · `src/ui/pressable.test.ts` | the Tab walk in FIREFOX (the pane wraps where Firefox exits) |
 | Layout stability | `tests/font-coverage.test.ts` | the same-run toggle + the box oracle; step zero is a measurement |
@@ -375,10 +375,11 @@ apron (the plane stays coplanar with shallow water, §37b); the bands are the
 tell, and whether they drift is §99's (below). Many-category cases (the ten status
 hues, the five empower hues) satisfy the rule through their TEXT channel
 (the card's labelled row, the `▲` chip's name), not a per-pip shape. Team
-identity on the board (green vs red glyphs) is Round 7.5's, and so are
-its two residuals: card-less camp units' hue-only pips and the panic /
-blind held tints on the camp / neutral team colours — the requirement it
-builds to is the next paragraph.
+identity on the board is the ground mark's since §108 (the next paragraph,
+as built). Of its two residuals, the panic / blind held tints on the camp /
+neutral team colours are answered by the mark's shape (clause 3), and a
+card-less camp unit's hue-only status pip moved to Round 8, with the
+colourblind palette that re-picks those hues (TODO).
 
 **Team identity on the board — the requirement Round 7.5 must satisfy
 (103).** The one place "never color alone" does not hold yet. Both sides
@@ -402,7 +403,8 @@ says what it must do:
    hue and is nothing a tint can wash out.
 4. *Card-less units carry it.* A camp unit has no HUD card (§75h); the
    board is its only surface, so the channel lives on the sprite. (Its
-   hue-only status pip is the same residual — TODO, the 7.5 rider.)
+   hue-only status pip is the same residual, moved to Round 8 at the §108
+   kickoff: TODO.)
 5. *It does not spend the atlas per team.* The glyph atlas is budgeted
    (`ATLAS_CELL_BUDGET` = 48, 47 cells used at this writing); a per-team
    copy of each glyph is not the route.
@@ -410,6 +412,51 @@ says what it must do:
 The standing idioms bind it like any surface: render-only, never sim; not
 motion alone (99); a channel that is a shape passes the grey read by
 construction (the 100 ring's argument).
+
+**As built (§108, spec D5): the ground mark.** Every body has one mark on
+the ground under it, drawn by the terrain: a circle under yours, a diamond
+under the enemy's, a triangle under an active camp's, and a square plate
+under inert scenery (walls, cover, rubble). A contact mark is filled dark
+and outlined in the body's colour; a plate is a darker square framed in
+the body's colour, and its frame is dashed on a destructible wall or
+cover, so that tell, until then a stone hue alone, now has a shape too.
+Against the five clauses:
+
+1. *The grey read* is the acceptance test, and it is the user's, in a
+   live battle, at §108's second stop. A shape survives the grey filter by
+   construction.
+2. *Per instance.* The shape comes from the body's team and camp id
+   (`markShapeOf`, pinned in `groundMarks.test.ts`), never from its glyph
+   or archetype, so a camp bandit and an enemy bandit wear different
+   marks, and all four identities have one.
+3. *Held tints.* The identity is the shape. The outline's colour is
+   `spriteColorForUnit` (team, archetype, camp), which no held tint writes.
+4. *Card-less units.* A camp unit's triangle is on the board.
+5. *No atlas cost.* The marks are shader shapes; no glyph cell is spent.
+
+A mark fades with its glyph: out with a death, in with a reinforcement.
+It stays on the ground when its glyph lifts or hops (the next paragraph).
+
+**Elevation on the board — the requirement a lifted unit must satisfy
+(§108, spec D6).** No unit leaves the ground yet. Round 9's flyer is the
+first consumer, and until then the explorer's posed flyer (`pose-flyer`)
+is the proof.
+
+1. A lifted unit's glyph rises camera-up, which under the projection is
+   screen-up (the lean pin, `tests/board/cameraFit.test.ts`). Its ground mark stays on
+   its tile.
+2. The gap between glyph and mark is the read. The lift must say
+   "elevated" without landing the glyph on a neighbour's: at yaw 45, no
+   more than about 15 % of any neighbour's ink covered (13 % measured at a
+   lift of 0.45, §106a).
+3. The mark alone says which tile.
+4. It passes the grey read, because the mark is a shape.
+
+Terrain height is not elevation. A unit on a higher tile stands on its
+top, and a move between heights keeps its anchor at or above the surface
+it is over (§81c2's profile). A standing glyph is depth-tested upright, so
+no terrain behind it cuts into it (gotcha #139). Whether a diagonal move
+past a higher corner also hops over it is §108's stop-2 read (108c).
 
 **Reduced motion (99).** ONE gate, `reducedMotion()` in
 src/render/motion.ts — the OS `prefers-reduced-motion` query or an

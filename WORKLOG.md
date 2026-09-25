@@ -2491,3 +2491,58 @@ canvas is 2560×1440 (the report's first line prints the canvas size):
 Wrong looks like: a `FAILED` check (distrust that run and run it again);
 a canvas that isn't 2560x1440; or the two runs' marks medians further
 apart than the widest A/A round.
+
+### 108e — DESIGN: the identity channel as built, the elevation clauses (2026-09-25) — ◐ DRAFTED; STOP 2 is open
+
+**DESIGN, three edits:**
+- **§Aesthetic, Terrain**, rewritten (it still described "a subdivided
+  plane", "decorative only"): one prism per tile at its height, the
+  height bands by kind, the mounds, the animated tiles, the grid line; the
+  heights are presentation only; the terrain draws the ground marks.
+- **"Team identity on the board"**: the requirement stays as signed. A new
+  paragraph, "As built (§108)", describes the ground mark and answers the
+  five clauses one by one; the grey read is marked as the acceptance test
+  still owed at stop 2. Clause 4's parenthesis and §Color redundancy's
+  residual sentence now say where the two residuals went (the tints: the
+  shape; the pip: Round 8). The idiom table's row names
+  `groundMarks.test.ts`, which pins the shape per identity.
+- **"Elevation on the board"**, new: spec D6's four clauses in its
+  proposed wording, plus a paragraph separating terrain height from
+  elevation (§81c2's profile, upright depth), which leaves the hop to stop
+  2.
+
+**ARCHITECTURE:** a grep for identity, grey-read, sprite-colour and
+stone-tell claims found none that the marks made stale; the 108a–108d
+lines were written with their steps.
+
+**Checked in the pane:** the stop-2 flyer URL loads the posed `V` at
+lift 0.45 over its three neighbours, and after a full frame the table
+holds 53 marks (49 bodies and the 4 posed, the flyer's on its own tile).
+
+**STOP 2 — the script** (Firefox, 2560×1440):
+1. **The grey read** (identity clause 1, the acceptance test).
+   `?bp=board-quarry`, then Space. The fight has a camp. Press
+   Ctrl+Alt+G, and for any unit say whose it is from the board alone:
+   circle yours, diamond enemy, triangle camp, square plate scenery
+   (dashed on the destructible walls). If a panic or blind tint turns up,
+   read that unit too (clause 3). Wrong looks like: a unit whose side
+   can't be told under grey.
+2. **The posed flyer at lift 0.45** (the elevation clauses).
+   `?bp=board-open15_pose-flyer_lift-0.45_shadow-0` (`shadow-0` hides the
+   105c mock disc, so only the production mark shows). Check each clause:
+   the `V` rises screen-up, its mark stays on its tile, the gap reads as
+   "elevated", it doesn't land on a neighbour, the mark alone says which
+   tile; then the same under Ctrl+Alt+G. The lift dial is live if 0.45
+   looks wrong.
+3. **Upright vs the hop:** §108c's script (`board-wade`, `board-live`),
+   and its open question, a minimum height below which a diagonal doesn't
+   hop.
+4. **The bench:** §108d's script, two runs.
+5. **The wording:** DESIGN's Terrain paragraph, "As built (§108)", and
+   "Elevation on the board".
+
+**Decisions the stop asks for:** the hop (upright alone, or with the hop,
+with or without a minimum height); whether the bench's numbers are
+acceptable; the elevation clauses' wording; and whether the bench, as a
+new instrument that a decision rests on, should get a second model's
+review (`process/oracles.md`).

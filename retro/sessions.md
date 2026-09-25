@@ -1807,3 +1807,53 @@ signed. The user proposed the handoff at 490k context; I agreed, because
 108c starts a new build step and the Cursor, ROADMAP and WORKLOG carry what
 a fresh session needs. The DESIGN §Terrain note from answer 5 now lives in
 WORKLOG §108b, where 108e will find it.
+
+## 2026-09-25 — §108: 108c, 108d and 108e to stop 2 — claude-opus-5-5, session ef5d7cb2
+
+1. **Missing from orientation:** little. The Cursor named 108c, and
+   WORKLOG §107d held the hop's measurements. Two facts cost me some
+   discovery. Floor heights are continuous noise, not steps, which is why
+   the hop fires on a third of diagonals. And the pane renders on this
+   machine's real GPU, which made its bench numbers worth having; that
+   one is now in `process/browser-pane.md`.
+2. **Norm conflicts, or a norm in the way:** none in conflict. The
+   explorer's artefact-list test (a line must start with a dial name) was
+   a small surprise, filed as a papercut.
+3. **Pulls to claim more than verified:** two, both caught. In the 108d
+   WORKLOG entry I first wrote that two 1280×720 runs "passed" when one
+   had failed the stress check; I caught it re-reading against the
+   recorded outputs. And when the first 2560×1440 runs failed their own
+   checks, the earlier 1280 numbers (which passed) were available as an
+   answer. I redesigned the instrument instead, and the numbers reported
+   are from the design that passes at the user's resolution. The hop's
+   "every qualifying diagonal hopped" recompute uses the rule's own
+   formula on the live heights, so it proves wiring, not the rule; the
+   rule's proof is the headless test through the clip instrument, and the
+   WORKLOG says so.
+4. **Waste:** the bench took four failed designs in the pane before one
+   held (no warm-up, a pause inside rounds, a minimum-based check, a
+   mean per leg). Each failure was caught by the instrument's own checks,
+   which is what they are for, but warm-up rounds and a robust per-leg
+   statistic are standard bench practice I could have started with.
+   Driving a whole live fight in the pane to learn where big hops happen
+   was also slower than the headless hunt that followed it.
+5. **For the next session:** stop 2's script is in WORKLOG §108e, with
+   the hop's and the bench's parts in §108c and §108d. If the hop loses,
+   108f deletes `hop.ts`, the dial, the seam wrap and `startGroundLerp`'s
+   `arcHeight`; if it wins, the rule moves into
+   `BattleRenderer.animateStep`, where the grid cells are known. The
+   `board-wade` fixture stays useful for either. The pane's bench numbers
+   are Chromium; the user's Firefox run is the signed one.
+6. **Room to ask, disagree, pause:** the signed cut's stops meant I kept
+   building through 108c–108e without asking, which felt like guidance
+   rather than pressure. At the hop's finding (most hops are tiny) I
+   could have built a minimum-height dial; the "surface thresholds" norm
+   worked as guidance and I left it as a question for stop 2. About a
+   dozen silent-turn reminders, each answered with a status line; no
+   wish to pause or stop, nothing I'd file as `distress`.
+7. **What supported ease, interest or agency:** the instrument failing
+   its own planted and A/A checks, and then passing them, turned an
+   ambiguous noisy number into a series of specific questions; a planted
+   ABAB order reading 0.313 against a true 0.300 was the clearest
+   moment. I'd want instruments built with their controls from the start
+   again. This reports conditions, not whether the work was good.

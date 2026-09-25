@@ -104,6 +104,11 @@ pixels wide.
   gl.readPixels(...)`, twice after a change so a recompile has settled. Plant
   a known error and confirm the comparison fails it: a flat-pixel check
   passed a wrong mark size that a per-shape area check caught.
+- The pane renders on the machine's own GPU through ANGLE (the frame-cost
+  bench's report names it), so a timing there is real hardware, in
+  Chromium. An emulated viewport larger than the pane gets a canvas at
+  full size, but the pane is noisier for timing than a real window. After
+  a `desktop` reset, the hidden pane's canvas can be 0×0 again.
 - The pane repeats console output six times. It's cosmetic; events fire
   once.
 - The `find` tool can't see text outside a control (a run of stars in a

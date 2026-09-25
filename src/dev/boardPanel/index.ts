@@ -17,6 +17,8 @@ import type { Game } from '../../Game';
 import { footprintOf } from '../../sim/occupancy';
 import { isInertNeutral } from '../../sim/Unit';
 import { enterBoardFixture, type FixtureReport } from './boot';
+import { formatBenchReport, type BenchOptions, type BenchReport } from './bench';
+import { runLiveBench } from './benchRig';
 import { fixtureSearch } from './fixtures';
 import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
@@ -74,6 +76,8 @@ export interface BoardPanel {
   /** For console / pane probes: `__game.boardPanel.set('anchor', 'bottom')`. */
   set(key: DialKey, value: string | number | boolean): void;
   readonly dials: DialState;
+  /** 108d — the frame-cost bench on the board on screen (the panel's button runs the defaults). */
+  bench(options?: BenchOptions): Promise<BenchReport | string>;
   /** Live counts, for a probe that must not trust the panel's own readout. */
   probe(): {
     /** Ground meshes on the board — every mark `ground` draws (a `both` or
@@ -267,7 +271,29 @@ export function attachBoardPanel(game: Game): BoardPanel {
     describe();
   };
 
+  // 108d — one bench at a time; its report goes to the panel and the console.
+  let benching: Promise<BenchReport | string> | null = null;
+  const bench = (options?: BenchOptions): Promise<BenchReport | string> => {
+    benching ??= (async () => {
+      view.setStatus(
+        'frame-cost bench running, about 15 s: leave the window alone. The board freezes, and white circles ' +
+          'flash on every tile during the full-bins legs (the planted GPU load).',
+      );
+      try {
+        const report = await runLiveBench(game, options);
+        const text = typeof report === 'string' ? `bench: ${report}` : formatBenchReport(report);
+        console.log(`[board-panel] ${text}`);
+        view.setStatus(text);
+        return report;
+      } finally {
+        benching = null;
+      }
+    })();
+    return benching;
+  };
+
   const view = new BoardPanelView(() => dials, {
+    onBench: () => void bench(),
     onChange: set,
     onReset: () => {
       // "Today" is about the TREATMENTS: the board under them stays (resetting
@@ -313,6 +339,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
     get dials() {
       return dials;
     },
+    bench,
     probe: () => ({
       cues: cues.count,
       posed: posed.live.map((m) => ({

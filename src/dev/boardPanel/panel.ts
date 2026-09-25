@@ -55,6 +55,8 @@ const CSS = `
 export interface PanelCallbacks {
   onChange(key: DialKey, value: string | number | boolean): void;
   onReset(): void;
+  /** 108d — run the frame-cost bench on the board on screen. */
+  onBench(): void;
 }
 
 export class BoardPanelView {
@@ -101,7 +103,11 @@ export class BoardPanelView {
         () => this.setStatus(location.href),
       );
     });
-    foot.append(reset, copy);
+    const bench = document.createElement('button');
+    bench.type = 'button';
+    bench.textContent = 'frame-cost bench';
+    bench.addEventListener('click', () => this.callbacks.onBench());
+    foot.append(reset, copy, bench);
     this.root.appendChild(foot);
 
     this.status = document.createElement('div');

@@ -2384,3 +2384,110 @@ and hitsplats, sits over the marks, which stay on the tiles); a dev lens.
 Wrong looks like: a hop on a straight move or on flat ground; a glyph
 dipping into the corner it passes; a mark lifting with its glyph; a move
 that snaps at its start or end.
+
+### 108d — the frame-cost bench (2026-09-25) — ◐ BUILT; the user's Firefox run is at STOP 2
+
+**Step zero.** Kickoff finding 13 still holds: nothing in the tree times a
+frame, and the render loop's clock is paced by the display. The marks' cost
+has two parts, both on the marks-on path only: the CPU builds, bins and
+uploads the table every frame (`updateGroundMarks`, then `commitMarks`
+re-uploading two 64 KB float textures), and every terrain fragment reads its
+tile's bin and evaluates its marks. With the marks off, neither runs, and
+the shaders are the two files byte for byte. A bench frame has to contain
+both parts.
+
+**Built:** a button on the explorer panel, `frame-cost bench`, and
+`__game.boardPanel.bench()`.
+- `bench.ts` (pure). Three discarded warm-up rounds, then four blocks,
+  each 8 rounds of A B B A, run back to back with a pause only between
+  rounds:
+  - marks off → on;
+  - an A/A control (off → off);
+  - a planted CPU spin of 1 ms, which must read back at its size;
+  - marks on → every tile's bin filled as far as the table allows, which
+    must read above the A/A spread.
+
+  Every leg starts from the same marks-toggle round trip and 3 untimed
+  frames. It times 6 chunks of 8 frames and reads the median chunk mean.
+  The report gives each block's A and B, the median paired difference with
+  its min and max, the three checks, and the bins (marks, fullest bin,
+  overflow).
+- `benchRig.ts` (the live side). A frame is `BattleRenderer.update(0)`
+  (where the table is built), the sort with the explorer's hook, the
+  two-pass render, and a one-pixel `readPixels` that waits for the GPU. The
+  sim doesn't step, so every leg draws the same board. The spin is
+  calibrated at the start of each run, over at least 100 ms, and the
+  report gives the GPU's name, the canvas size and the clock's measured
+  step.
+
+**The instrument's own read, in the pane,** found four problems, and each
+changed the design:
+1. The first cut, with a pause after every leg and no warm-up, failed its
+   checks: the A/A read −0.27 ms, and the planted 1 ms read 0.70. The
+   marks-off legs' means fell from 2.0 to 1.4 ms across the first three
+   blocks. That is a warm-up, which no leg order cancels, so warm-up
+   rounds were added.
+2. With the warm-up, the A/A read +0.24 ms, every round positive: the
+   opposite sign, so noise that differed from leg to leg rather than a
+   fixed bias. The legs of a round now run back to back, and the default
+   went from 4 rounds × 30 frames to 8 × 40. At 1280×720 two runs then
+   read the A/A at +0.006 and +0.013 and the planted 1 ms at 1.006 and
+   1.074.
+3. In the second of those runs the stress check (every round above the
+   A/A range) failed on one outlier round (0.09, next to another at 2.96:
+   single-leg stalls). The check now uses the median.
+4. At 2560×1440, 2 runs failed badly (A/A rounds up to ±1.45 ms; the
+   planted 1 ms read 0.21, then 1.25). A leg is now the median of its chunk
+   means, so a stalled chunk drops out. Under a linear drift the median
+   still equals the leg mean, and the chunks are long enough that a
+   coarse clock costs them little.
+
+**Verified, headless:** `bench.test.ts`, 7 tests against a fake clock with
+known costs and a linear drift. Every cost reads back exactly, and so does
+the schedule's frame and toggle count. A 50 ms stall in one chunk drops
+out. Three controls fail as they should:
+- one chunk per leg, where the stall moves the round's difference;
+- a planted cost that never reaches the timed frame, which fails its check;
+- full bins that cost nothing, which fail theirs.
+
+A planted error in the bench itself, the rounds run ABAB instead of ABBA,
+reads 0.313 for a true 0.300 under the drift, and the known-answer test
+fails.
+
+**Measured in the pane** (Chromium, on this machine's GPU: ANGLE D3D11,
+RTX 4080 SUPER; `board-quarry`, 14×12, parked; the viewport emulated at
+2560×1440 with a 2560×1440 canvas; clock step 0.1 ms). Two runs of the
+final design, milliseconds per frame, median over the rounds:
+
+| Block | run 1 | run 2 |
+|---|---|---|
+| marks off → on (30 marks, fullest bin 1) | +0.202 [−0.29, +0.49] | +0.167 [+0.01, +0.37] |
+| A/A | +0.066 [−0.10, +0.31] | +0.050 [−0.21, +0.31] |
+| planted 1.00 ms | 1.119 | 1.130 |
+| full bins (2046 marks, fullest 13) | +0.538 | +0.778 |
+| the frame, marks off | 1.249 | 1.325 |
+
+All three checks passed in both. In this browser at this resolution the
+marks cost about 0.17–0.20 ms per synced frame, 13–16 % of a frame that
+takes 1.25–1.33 ms here. The planted cost reads 12–13 % high; the A/A's
++0.05–0.07 accounts for about half of that. How the cost splits between
+the table upload and the shader is not measured.
+
+**Not verified:** Firefox (the stop-2 read; its clock step and its
+WebGL, which runs in a separate GPU process, may behave differently from
+Chromium's); other boards; a real screen rather than the pane's emulated
+viewport; the CPU/GPU split.
+
+**Stop 2 script, the bench part.** In Firefox, full screen (F11) so the
+canvas is 2560×1440 (the report's first line prints the canvas size):
+1. `?bp=board-quarry`, then Ctrl+Alt+P, then the `frame-cost bench`
+   button. It takes about 15 s: leave the window alone. The board freezes,
+   and white circles flash on every tile during the full-bins legs. The
+   report appears in the panel and in the console (`[board-panel]`),
+   where it can be copied.
+2. Run it twice. The two `marks off -> on` medians should agree within
+   the A/A spread.
+
+Wrong looks like: a `FAILED` check (distrust that run and run it again);
+a canvas that isn't 2560x1440; or the two runs' marks medians further
+apart than the widest A/A round.

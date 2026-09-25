@@ -60,6 +60,9 @@ export interface MarkStyle {
   readonly plateOutline: number;
   /** The plate's corner radius, world units (0 = square; the spec's open read). */
   readonly plateCorner: number;
+  /** A destructible body's dashed frame: each gap's width, world units (0 =
+   *  solid). Not in the signed bookmark: 108b's proposal, read at stop 1. */
+  readonly plateDashGap: number;
 }
 
 export const DEFAULT_MARK_STYLE: MarkStyle = {
@@ -72,6 +75,7 @@ export const DEFAULT_MARK_STYLE: MarkStyle = {
   plateFill: 0.6,
   plateOutline: 0.3,
   plateCorner: 0,
+  plateDashGap: 0.1,
 };
 
 /**
@@ -87,14 +91,16 @@ export const BIN_MARGIN = 0.05;
 export const BIN_DEPTH = 16;
 /** Mark indices per bin texel (RGBA). */
 const BIN_LANES = 4;
-const BIN_TEXELS = BIN_DEPTH / BIN_LANES;
+/** Texels per tile in the bins texture. */
+export const BIN_TEXELS = BIN_DEPTH / BIN_LANES;
 
 /** The largest table: one body per tile on the largest board, twice over for
  *  bodies fading out where new ones stand. */
 export const MAX_MARKS = 2 * LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE;
 /** Texels per mark: (x, z, extent, shape code) and (r, g, b, alpha). */
 const MARK_TEXELS = 2;
-const MARKS_PER_ROW = 128;
+/** Marks per row of the marks texture. */
+export const MARKS_PER_ROW = 128;
 
 /** The marks texture (RGBA32F): mark i's texels at x = 2·(i mod 128) and
  *  x + 1, y = ⌊i / 128⌋. */
@@ -169,6 +175,11 @@ export class MarkTable {
   private gridH = 0;
   private readonly binCount = new Uint8Array(LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE);
   private readonly binDemand = new Uint16Array(LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE);
+
+  /** The board the table was begun for. */
+  get grid(): { readonly gridW: number; readonly gridH: number } {
+    return { gridW: this.gridW, gridH: this.gridH };
+  }
 
   begin(gridW: number, gridH: number): void {
     if (gridW > LAYOUT_MAX_SIDE || gridH > LAYOUT_MAX_SIDE) {

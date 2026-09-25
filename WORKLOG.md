@@ -2180,3 +2180,93 @@ flipping the z mapping fails 3.
 
 **Not verified:** that the shader reads this layout the same way (108b's
 pane check against the mock).
+
+### 108b — the terrain draws the marks (2026-09-24) — ◐ BUILT; STOP 1 (the look) is open
+
+`shaders/terrainMarks.glsl` evaluates each mark in the fragment's tile bin
+as a shape at the fragment's world XZ (a circle; a diamond and a triangle as
+the max of their edge planes, so the corners stay sharp; the plate as a
+rounded square), anti-aliased from `dFdx`/`dFdy` of the world position,
+taken once before the per-tile loops diverge. Plates first (fill, then
+frame), then every contact fill, then every contact outline: the mock's
+order. `TerrainRenderer.groundMarkShaders()` splices the chunk in (a
+world-space normal varying for the tile pick, the chunk before `main`, one
+call before the write); with marks off the materials hold the two shader
+files untouched. The table's two DataTextures and the style ride uniform
+objects shared with the mounds' material (finding 3). BattleRenderer
+records each body's mark at spawn (`markSpecs`) and, after the lerps each
+frame, adds one mark per sprite in `handles` at the sprite's alpha, so a
+dying body's mark fades with it and a reinforcement's fades in (decision 4);
+the table uploads at the first terrain draw, so the explorer's posed marks,
+added in its later frame hook, are in the frame. A destructible wall or
+cover gets two 0.1-wide gaps per side of its frame (decision 2; the gap is
+a proposal). The explorer gains `marks` (production on/off) and six look
+dials (`markSize`, `markFill`, `markLine`, `plateFill`, `plateCorner`,
+`plateDash`) through the typed `setMarkStyle`, and `probe().marks`.
+
+**Verified, headless:** `TerrainRenderer.test.ts` +5: marks off is both
+shader files byte for byte (read from disk, not through the import); marks
+on keeps every line of both files in order and calls the chunk once, before
+the write; the mounds hold the same seven uniform objects (the control: a
+bare clone does not); a frame uploads once however many terrain meshes
+draw; marks off takes no marks; the style reaches the uniforms.
+`state.test.ts` +2: the look dials' defaults are `DEFAULT_MARK_STYLE`.
+
+**Verified in the pane** (Chromium, 1280×720, `?bp=board-quarry`: 30
+bodies, the countdown parked, shader time held, sprites hidden, each
+capture rendered and read in one task):
+- The shader compiles; no console errors. 30 marks, the fullest bin 1, no
+  overflow.
+- **Against the mock** (the signed bookmark's mark dials, terrain marks
+  off, dash gap 0 since the mock has none):
+  - on every locally flat pixel inside a mock mark (29,209), production is
+    within 4/255;
+  - per contact mark, the fill's area in linear light (outlines at 0):
+    production / mock 1.00–1.01 for the six circles and 0.96–1.04 for the
+    eight diamonds (production steady at about 211 px², the aliased mock
+    203–220 with pixel phase), the triangle 1.012 once the plates are out
+    of its window; mask IoU 0.89–1.00. The triangle's disagreeing pixels
+    are a band on its top edge (mock only) and its bottom edge (production
+    only), which fits the mock's 0.012 lift above the tile top, about
+    0.33 px up the screen here (derived);
+  - **the known answer's control:** contact size 0.50 instead of 0.55
+    reads 0.79–0.86 by area (expected (0.50/0.55)² = 0.83). A flat-pixel
+    check alone passed that planted error, because size is an edge
+    property; the area check is what catches it.
+- **A finding about the mock:** inside some multi-tile rubble plates the
+  mock blended its fill twice along lines (at plate opacity 0.6 it left
+  0.16 of the light, 0.4²; at 0.3 it left 0.49, 0.7²), where production
+  blends once (0.40). The signed look carried faint dark seams production
+  doesn't have.
+- **Fading with the glyph:** a player unit's sprite at alpha 0.5 darkens
+  0.498 as much as at 1. A real `onUnitDied` on an enemy: the mark is
+  still in the table 0.15 s into the sprite's 0.3 s fade (alpha 0.5), and
+  both are gone after it (30 → 29 marks).
+- **The dashed frame:** 754 px of frame colour open into gaps across the 4
+  destructible walls between dash gap 0 and 0.1.
+- **Mounds** (`layout=desertFortress`, 67 hills tiles, 8 enemies on them):
+  1,178 pixels of mound surface change when the marks are on; with the
+  mounds' `uMarkCount` swapped for an unshared uniform, 0.
+
+**Not verified:** Firefox (the shader has not compiled there yet); the look
+at the user's resolution and in motion; the dash's proportions; the step
+faces were drawn in the comparison but not measured apart from the tops.
+
+**Stop 1 script (the look).** In Firefox:
+1. `?bp=board-quarry`: circles under yours, diamonds under the enemy's, a
+   triangle under the camp bandit; filled plates under rubble and walls,
+   dashed frames on the 4 destructible walls. Space starts the fight:
+   marks follow moves, and fade out with a death.
+2. The same board with the mock alone, for comparison:
+   `?bp=board-quarry_cue-outline_cueAlpha-0.3_ground-merged_plate-filled_plateScope-all_drape-1_cueDepth-world_marks-0`.
+   Expected differences: slightly softer edges, and no dark seams inside
+   the big rubble plates.
+3. Hills: `?seed=7&layout=desertFortress&character=soldier&firstNode=elite&roster=mercenary,archer,rogue,healer,mage,catapult`,
+   then the top map node: the enemies' diamonds lie over the mounds.
+4. The explorer's dials (Ctrl+Alt+P) for the values: mark size, fill and
+   outline; plate fill; plate corner (the open read on rounding); dash gap.
+
+Wrong looks like: a mark missing from a mound or a step face, a mark
+spilling onto a neighbour's face, a mark left behind after a death, a shape
+or size off from the bookmark, or the terrain failing to draw at all (a
+shader that does not compile in Firefox).

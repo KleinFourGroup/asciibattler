@@ -211,6 +211,48 @@ export const DIALS = {
     def: false,
     hint: 'marks and plates hang down the step faces the camera can see',
   },
+  /** 108b — the PRODUCTION ground marks, drawn by the terrain (spec D3). Off =
+   *  the plain terrain shaders: the frame-cost bench's before leg, and the way
+   *  to compare with the §106 mock above, whose dials draw OVER these. */
+  marks: {
+    kind: 'bool',
+    label: 'terrain marks',
+    def: true,
+    hint: 'the shipped marks, drawn by the terrain (108b) - off = the plain terrain shader; the mock dials above draw over them',
+  },
+  /** 108b — the terrain marks' look, for the stop-1 read (`markStyleOf` →
+   *  `TerrainRenderer.setMarkStyle`); the defaults ARE `DEFAULT_MARK_STYLE`
+   *  (state.test.ts). They go once their values are signed (108f). */
+  markSize: { kind: 'range', label: 'mark size', min: 0.3, max: 1, step: 0.05, def: 0.55 },
+  markFill: { kind: 'range', label: 'mark fill', min: 0.1, max: 0.9, step: 0.05, def: 0.45 },
+  markLine: {
+    kind: 'range',
+    label: 'mark outline',
+    min: 0.1,
+    max: 1,
+    step: 0.05,
+    def: 0.3,
+    hint: 'the outline opacity of the contact marks AND the plate frames (one dial set both in the signed bookmark)',
+  },
+  plateFill: { kind: 'range', label: 'plate fill', min: 0.1, max: 0.95, step: 0.05, def: 0.6 },
+  plateCorner: {
+    kind: 'range',
+    label: 'plate corner',
+    min: 0,
+    max: 0.3,
+    step: 0.01,
+    def: 0,
+    hint: 'the plate corner radius, world units - 0 = square; a large radius drifts toward the player circle',
+  },
+  plateDash: {
+    kind: 'range',
+    label: 'dash gap',
+    min: 0,
+    max: 0.25,
+    step: 0.01,
+    def: 0.1,
+    hint: 'a destructible wall or cover: its frame gap width, world units (0 = solid)',
+  },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
    *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */
@@ -340,6 +382,40 @@ export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | '
 
 export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
+/** 108b — the look dials as the `MarkStyle` fields they set. Structural, like
+ *  `cameraViewOf`: index.ts merges it over `DEFAULT_MARK_STYLE`, where tsc
+ *  checks the shape. One outline dial sets both outlines, as `cueAlpha` did. */
+export function markStyleOf(
+  state: Pick<DialState, 'markSize' | 'markFill' | 'markLine' | 'plateFill' | 'plateCorner' | 'plateDash'>,
+): {
+  contactSize: number;
+  contactFill: number;
+  contactOutline: number;
+  plateOutline: number;
+  plateFill: number;
+  plateCorner: number;
+  plateDashGap: number;
+} {
+  return {
+    contactSize: state.markSize,
+    contactFill: state.markFill,
+    contactOutline: state.markLine,
+    plateOutline: state.markLine,
+    plateFill: state.plateFill,
+    plateCorner: state.plateCorner,
+    plateDashGap: state.plateDash,
+  };
+}
+
+export const MARK_STYLE_DIALS: readonly DialKey[] = [
+  'markSize',
+  'markFill',
+  'markLine',
+  'plateFill',
+  'plateCorner',
+  'plateDash',
+];
+
 /**
  * 105e — THE KNOWN COSMETIC ARTEFACTS of a dialled board, shown on the panel
  * so the user's read discounts them instead of filing them. Each is a seam the
@@ -354,6 +430,7 @@ export const KNOWN_ARTEFACTS: readonly string[] = [
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
   'ground mark: marks and plates are cut per tile onto the tile TOPS, and step drape = on hangs them down the step faces the camera sees - neither follows the hill mounds',
+  'ground mark: the 106 mock dials (ground mark, ground cue, NxN plate) draw OVER the terrain marks - set terrain marks off to see the mock alone (108f deletes it)',
 ];
 
 /**

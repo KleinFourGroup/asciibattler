@@ -6,6 +6,20 @@ import { COLORS } from './palette';
 import { LAYOUT_MAX_SIDE, type Theme } from '../config/layouts';
 import VERTEX_SHADER from './shaders/terrain.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
+import MARKS_CHUNK from './shaders/terrainMarks.glsl?raw';
+import {
+  BIN_DEPTH,
+  BIN_TEXELS,
+  BINS_TEX_H,
+  BINS_TEX_W,
+  DEFAULT_MARK_STYLE,
+  MARKS_PER_ROW,
+  MARKS_TEX_H,
+  MARKS_TEX_W,
+  MarkTable,
+  type Mark,
+  type MarkStyle,
+} from './groundMarks';
 
 /**
  * C1c terrain: one faceted prism per tile.
@@ -33,6 +47,13 @@ import FRAGMENT_SHADER from './shaders/terrain.frag.glsl?raw';
  * `heightAt(cx, cy, kind)` is the public hook into the height field —
  * BattleRenderer uses it to set per-tile sprite Y so units stand on
  * their tile top instead of floating at a fixed plane.
+ *
+ * **108b — the ground marks** (Round 7.5 spec D3): the terrain draws every
+ * body's ground mark itself, as shapes evaluated per fragment from a per-frame
+ * table binned per tile (groundMarks.ts, shaders/terrainMarks.glsl), so a mark
+ * lies on tile tops, step faces and hill mounds alike, and its depth is the
+ * terrain's. `beginMarks` / `addMark` each frame; the table uploads at the
+ * first terrain draw.
  */
 
 const VERTS_PER_TILE = 30; // 5 quads × 2 tris × 3 verts (top + 4 sides; bottom omitted — never visible from the locked camera pitch)
@@ -140,6 +161,54 @@ export function animTypeFor(kind: TileKind): number {
  *  grid (32×32) so any per-encounter size fits without reallocating. */
 const MAX_TILES = LAYOUT_MAX_SIDE * LAYOUT_MAX_SIDE;
 
+/** Replace the one occurrence of `anchor` in `source`; throw if it is not there
+ *  exactly once, so a shader edit that moves an anchor fails loudly. */
+function spliceOnce(source: string, anchor: string, replacement: string): string {
+  const at = source.indexOf(anchor);
+  if (at < 0 || source.indexOf(anchor, at + 1) >= 0) {
+    throw new Error(`TerrainRenderer: shader anchor must occur exactly once: ${anchor}`);
+  }
+  return source.slice(0, at) + replacement + source.slice(at + anchor.length);
+}
+
+const VERTEX_MARKS_ANCHOR = '  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;'; // i18n-ok — shader source
+const FRAGMENT_MARKS_ANCHOR = '  gl_FragColor = vec4(base, 1.0);'; // i18n-ok — shader source
+
+/**
+ * 108b — the terrain shaders with the ground marks spliced in (spec D3; the
+ * chunk is shaders/terrainMarks.glsl). Only insertions: the world-space normal
+ * the tile lookup needs, the chunk before `main`, and one call before the
+ * fragment's write. With the marks off the terrain uses `VERTEX_SHADER` and
+ * `FRAGMENT_SHADER` untouched, which is what the frame-cost bench's before
+ * leg measures.
+ */
+export function groundMarkShaders(): { vertexShader: string; fragmentShader: string } {
+  const defines =
+    `#define MARK_BIN_DEPTH ${BIN_DEPTH}\n` + // i18n-ok — shader source
+    `#define MARK_BIN_TEXELS ${BIN_TEXELS}\n` + // i18n-ok — shader source
+    `#define MARKS_PER_ROW ${MARKS_PER_ROW}\n`; // i18n-ok — shader source
+  let vertexShader = spliceOnce(VERTEX_SHADER, 'void main() {', 'varying vec3 vMarkNormal;\n\nvoid main() {'); // i18n-ok — shader source
+  vertexShader = spliceOnce(
+    vertexShader,
+    VERTEX_MARKS_ANCHOR,
+    `${VERTEX_MARKS_ANCHOR}\n  vMarkNormal = mat3(modelMatrix) * normal;`, // i18n-ok — shader source
+  );
+  let fragmentShader = spliceOnce(FRAGMENT_SHADER, 'void main() {', `${defines}\n${MARKS_CHUNK}\nvoid main() {`); // i18n-ok — shader source
+  fragmentShader = spliceOnce(
+    fragmentShader,
+    FRAGMENT_MARKS_ANCHOR,
+    `  base = applyGroundMarks(base);\n${FRAGMENT_MARKS_ANCHOR}`, // i18n-ok — shader source
+  );
+  return { vertexShader, fragmentShader };
+}
+
+/** An unfiltered RGBA32F texture over `data`, for `texelFetch`. */
+function dataTexture(data: Float32Array, width: number, height: number): THREE.DataTexture {
+  const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.FloatType);
+  texture.needsUpdate = true;
+  return texture;
+}
+
 export class TerrainRenderer {
   readonly mesh: THREE.Mesh;
 
@@ -175,6 +244,28 @@ export class TerrainRenderer {
   private readonly noise2D: (x: number, y: number) => number;
   private readonly tmpTopColor = new THREE.Color();
   private readonly tmpSideColor = new THREE.Color();
+
+  /** 108b — this frame's ground marks (groundMarks.ts). BattleRenderer begins
+   *  and fills it after the lerps; the dev explorer adds its posed marks after
+   *  that; the first terrain draw of the frame bins and uploads it. */
+  private readonly markTable = new MarkTable();
+  private readonly marksTexture: THREE.DataTexture;
+  private readonly binsTexture: THREE.DataTexture;
+  /** The marks' uniform OBJECTS, shared by the prisms' material and the
+   *  mounds' clone: `ShaderMaterial.clone()` copies uniforms (see the mound
+   *  field above), so a clone left alone would draw stale marks or none. */
+  private readonly markUniforms: {
+    readonly uMarks: THREE.IUniform<THREE.DataTexture>;
+    readonly uMarkBins: THREE.IUniform<THREE.DataTexture>;
+    readonly uMarkGrid: THREE.IUniform<THREE.Vector2>;
+    readonly uMarkCount: THREE.IUniform<number>;
+    readonly uContactStyle: THREE.IUniform<THREE.Vector4>;
+    readonly uPlateStyle: THREE.IUniform<THREE.Vector4>;
+    readonly uPlateDashGap: THREE.IUniform<number>;
+  };
+  private marksDirty = false;
+  private marksOn = true;
+  private style: MarkStyle = DEFAULT_MARK_STYLE;
 
   constructor() {
     this.gridW = 0;
@@ -216,10 +307,23 @@ export class TerrainRenderer {
     // and the draw range. Pre-setTiles renders read an empty mesh.
     this.geometry.setDrawRange(0, 0);
 
+    this.marksTexture = dataTexture(this.markTable.marks, MARKS_TEX_W, MARKS_TEX_H);
+    this.binsTexture = dataTexture(this.markTable.bins, BINS_TEX_W, BINS_TEX_H);
+    this.markUniforms = {
+      uMarks: { value: this.marksTexture },
+      uMarkBins: { value: this.binsTexture },
+      uMarkGrid: { value: new THREE.Vector2(0, 0) },
+      uMarkCount: { value: 0 },
+      uContactStyle: { value: new THREE.Vector4() },
+      uPlateStyle: { value: new THREE.Vector4() },
+      uPlateDashGap: { value: 0 },
+    };
+    this.writeMarkStyle();
+
     this.material = new THREE.ShaderMaterial({
-      vertexShader: VERTEX_SHADER,
-      fragmentShader: FRAGMENT_SHADER,
+      ...groundMarkShaders(),
       uniforms: {
+        ...this.markUniforms,
         uLightDir: { value: LIGHT_DIR.clone() },
         uAmbient: { value: AMBIENT },
         uGridLineColor: { value: new THREE.Color(COLORS.TERMINAL_BLACK) },
@@ -240,10 +344,87 @@ export class TerrainRenderer {
     this.bumpsGeometry.setDrawRange(0, 0);
     this.bumpsMaterial = this.material.clone();
     this.bumpsMaterial.side = THREE.DoubleSide;
+    // 108b — the clone copied the mark uniforms; point it back at the shared ones.
+    Object.assign(this.bumpsMaterial.uniforms, this.markUniforms);
     this.bumpsMesh = new THREE.Mesh(this.bumpsGeometry, this.bumpsMaterial);
     this.bumpsMesh.frustumCulled = false; // small geometry, always in frame
     this.bumpsMesh.raycast = () => {}; // unclickable — picking hits the base tile
     this.mesh.add(this.bumpsMesh);
+
+    // 108b — the frame's marks are uploaded by whichever of the two meshes
+    // draws first (opaque draw order is three's to choose).
+    this.mesh.onBeforeRender = () => this.commitMarks();
+    this.bumpsMesh.onBeforeRender = () => this.commitMarks();
+  }
+
+  /** 108b — the marks' look; the dev explorer dials it for the stop-1 read. */
+  get markStyle(): MarkStyle {
+    return this.style;
+  }
+
+  setMarkStyle(style: MarkStyle): void {
+    this.style = style;
+    this.writeMarkStyle();
+  }
+
+  /** 108b — are the ground marks drawn? */
+  get groundMarksOn(): boolean {
+    return this.marksOn;
+  }
+
+  /**
+   * 108b — draw the ground marks or not. Off swaps both materials back to the
+   * plain terrain shaders (a recompile) and empties the table: the frame-cost
+   * bench's before leg, and the explorer's comparison with the §106 mock.
+   */
+  setGroundMarks(on: boolean): void {
+    if (on === this.marksOn) return;
+    this.marksOn = on;
+    const shaders = on ? groundMarkShaders() : { vertexShader: VERTEX_SHADER, fragmentShader: FRAGMENT_SHADER };
+    for (const material of [this.material, this.bumpsMaterial]) {
+      material.vertexShader = shaders.vertexShader;
+      material.fragmentShader = shaders.fragmentShader;
+      material.needsUpdate = true;
+    }
+    this.beginMarks(this.markTable.grid.gridW, this.markTable.grid.gridH);
+  }
+
+  /**
+   * 108b — start this frame's marks for a `gridW × gridH` board; `addMark` each
+   * one. The table is binned and uploaded when the terrain next draws, so
+   * anything added before the render is in the frame.
+   */
+  beginMarks(gridW: number, gridH: number): void {
+    this.markTable.begin(gridW, gridH);
+    this.marksDirty = true;
+  }
+
+  addMark(mark: Mark): void {
+    if (this.marksOn) this.markTable.add(mark);
+  }
+
+  /** 108b — the last upload's counts, for probes and the bench. */
+  get markStats(): { count: number; overflow: number; maxBin: number } {
+    const t = this.markTable;
+    return { count: t.count, overflow: t.overflow, maxBin: t.maxBin };
+  }
+
+  private commitMarks(): void {
+    if (!this.marksDirty) return;
+    this.marksDirty = false;
+    this.markTable.finish();
+    this.marksTexture.needsUpdate = true;
+    this.binsTexture.needsUpdate = true;
+    const { gridW, gridH } = this.markTable.grid;
+    this.markUniforms.uMarkGrid.value.set(gridW, gridH);
+    this.markUniforms.uMarkCount.value = this.marksOn ? this.markTable.count : 0;
+  }
+
+  private writeMarkStyle(): void {
+    const s = this.style;
+    this.markUniforms.uContactStyle.value.set(s.contactFill, s.contactOutline, s.contactStroke, 0);
+    this.markUniforms.uPlateStyle.value.set(s.plateFill, s.plateOutline, s.plateStroke, s.plateCorner);
+    this.markUniforms.uPlateDashGap.value = s.plateDashGap;
   }
 
   /**
@@ -306,6 +487,7 @@ export class TerrainRenderer {
     this.gridH = 0;
     this.geometry.setDrawRange(0, 0);
     this.bumpsGeometry.setDrawRange(0, 0); // §37b
+    this.beginMarks(0, 0); // 108b
   }
 
   dispose(): void {
@@ -313,6 +495,8 @@ export class TerrainRenderer {
     this.material.dispose();
     this.bumpsGeometry.dispose(); // §37b
     this.bumpsMaterial.dispose();
+    this.marksTexture.dispose(); // 108b
+    this.binsTexture.dispose();
   }
 
   /** Walks every cell, computes height + color, writes 30 verts per cell. */

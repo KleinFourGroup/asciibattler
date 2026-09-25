@@ -9,6 +9,7 @@ import {
   coerceDial,
   defaultDials,
   encodeDials,
+  markStyleOf,
   parseDials,
   spliceBookmark,
   type DialState,
@@ -16,6 +17,20 @@ import {
 import { baseAnchorYFor } from '../../render/glyphs';
 import census from '../../../tests/board/inkCensus.json';
 import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
+import { DEFAULT_MARK_STYLE } from '../../render/groundMarks';
+
+describe('108b — the terrain marks’ dials', () => {
+  it('their defaults ARE the shipped style — an untouched panel dials nothing', () => {
+    expect({ ...DEFAULT_MARK_STYLE, ...markStyleOf(defaultDials()) }).toEqual(DEFAULT_MARK_STYLE);
+    expect(DIALS.marks.def).toBe(true);
+  });
+
+  it('every look field but the three the spike never dialled has a dial', () => {
+    const dialled = Object.keys(markStyleOf(defaultDials())).sort();
+    const fixed = Object.keys(DEFAULT_MARK_STYLE).filter((k) => !dialled.includes(k)).sort();
+    expect(fixed).toEqual(['contactStroke', 'plateInset', 'plateStroke']);
+  });
+});
 
 describe('105e — the glyph scale + the artefact list', () => {
   it('the scale defaults to 1 (the atlas default — an untouched panel writes no size)', () => {

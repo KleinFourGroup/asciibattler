@@ -38,7 +38,8 @@ import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 import { statusColor } from './statusDisplay';
-import { slabAnchor, slabGroundOf, slabViewOf } from './slabAnchor';
+import { footprintCentre, slabAnchor, slabGroundOf, slabViewOf } from './slabAnchor';
+import { isDashedPlate, markExtent, markShapeOf, type MarkShape } from './groundMarks';
 
 /**
  * The simulation/render seam. Subscribes to sim events and turns them into
@@ -128,8 +129,29 @@ interface AuraPulseParticle {
 
 type AuraFxMode = 'track' | 'fixed' | 'fill';
 
+/**
+ * 108b — a body's ground mark, fixed at spawn: its side's shape, its colour
+ * (linear RGB of `spriteColorForUnit`, which no held tint reaches) and, for an
+ * N×N body, where it lies. Recorded then because a dying body leaves
+ * `world.units` at once while its sprite, and so its mark, fades.
+ */
+interface MarkSpec {
+  readonly shape: MarkShape;
+  readonly dashed: boolean;
+  readonly footprint: number;
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  /** An N×N body's footprint centre (its sprite is slid by the slab rule);
+   *  null = the mark follows the sprite's ground point. */
+  readonly fixed: { readonly x: number; readonly z: number } | null;
+}
+
 export class BattleRenderer {
   private readonly handles = new Map<number, SpriteHandle>();
+  /** 108b — unitId → its ground mark, for every body in `handles`. */
+  private readonly markSpecs = new Map<number, MarkSpec>();
+  private readonly markColour = new THREE.Color();
   private readonly overlayHandles = new Map<number, UnitOverlayHandle>();
   /**
    * 28 — per-unit held status-overlay tints, keyed `unitId → (statusId → tint
@@ -305,6 +327,40 @@ export class BattleRenderer {
     // After overlays so an enemy mark reads the target's already-lerped position
     // this frame (no one-frame lag behind the unit it's pinned to).
     this.updateObjectiveMarker();
+    // 108b — after every sprite has moved and faded for this frame.
+    this.updateGroundMarks();
+  }
+
+  /**
+   * 108b — this frame's ground marks: one per body with a sprite, the dying
+   * included at their fading alpha, handed to the terrain, which bins and
+   * uploads them at its next draw (spec D3). A 1×1 body's mark follows its
+   * sprite's ground point through every lerp and shove, as the §106 mock's
+   * did; an N×N body's lies on its footprint.
+   */
+  private updateGroundMarks(): void {
+    const world = this.world;
+    if (!world || !this.terrain.groundMarksOn) return;
+    this.terrain.beginMarks(world.gridW, world.gridH);
+    const style = this.terrain.markStyle;
+    for (const [unitId, handle] of this.handles) {
+      const spec = this.markSpecs.get(unitId);
+      const alpha = this.sprites.getAlpha(handle);
+      if (!spec || alpha === null || alpha <= 0) continue;
+      const at = spec.fixed ?? this.sprites.getPosition(handle, this.scratchPos);
+      if (!at) continue;
+      this.terrain.addMark({
+        x: at.x,
+        z: at.z,
+        shape: spec.shape,
+        extent: markExtent(spec.shape, spec.footprint, style),
+        dashed: spec.dashed,
+        r: spec.r,
+        g: spec.g,
+        b: spec.b,
+        alpha,
+      });
+    }
   }
 
   /**
@@ -774,6 +830,10 @@ export class BattleRenderer {
       this.sprites.removeSprite(handle);
     }
     this.handles.clear();
+    // 108b — the marks go with the bodies; the terrain draws none until the
+    // next battle's first frame.
+    this.markSpecs.clear();
+    this.terrain.beginMarks(0, 0);
     // E6.B — animator.clear() drops the projectile lerps without firing
     // their onComplete (the despawn callback), so sweep the tracer sprites
     // here. removeSprite is idempotent, so a late callback is harmless.
@@ -826,6 +886,21 @@ export class BattleRenderer {
     // screen-up (the off-axis fix; see SpriteAnchor).
     const handle = this.sprites.addSprite(unit.glyph, spriteColorForUnit(unit), spritePos, 'base');
     this.handles.set(unit.id, handle);
+    // 108b — its ground mark: the side's shape, or scenery's plate.
+    const colour = this.markColour.set(spriteColorForUnit(unit));
+    const centre =
+      footprint > 1
+        ? footprintCentre(unit.position.x, unit.position.y, footprint, this.world.gridW, this.world.gridH, () => 0)
+        : null;
+    this.markSpecs.set(unit.id, {
+      shape: markShapeOf(unit),
+      dashed: isDashedPlate(unit),
+      footprint,
+      r: colour.r,
+      g: colour.g,
+      b: colour.b,
+      fixed: centre && { x: centre.x, z: centre.z },
+    });
     // §39d — a multi-tile body renders as one glyph scaled to its footprint
     // (the SpriteRenderer per-instance `size`, E6.B). Single-cell units keep the
     // default size, so the shipped roster's render is untouched.
@@ -1699,6 +1774,7 @@ export class BattleRenderer {
     this.animator.startFade(handle, FADE_SECONDS, () => {
       this.sprites.removeSprite(handle);
       this.handles.delete(unitId);
+      this.markSpecs.delete(unitId); // 108b — the mark faded with the sprite
     });
     const overlay = this.overlayHandles.get(unitId);
     if (overlay) {

@@ -22,6 +22,8 @@ import { GroundCues, cueSideOf } from './groundCue';
 import { BoardPanelView } from './panel';
 import { PosedSet } from './posed';
 import { footprintCentre, slabGroundOf, slabViewOf } from '../../render/slabAnchor';
+import { DEFAULT_MARK_STYLE, isDashedPlate, markExtent, markShapeOf } from '../../render/groundMarks';
+import { spriteColorForUnit } from '../../render/spriteColor';
 import type { DrapeView, TileTops } from './conform';
 import {
   applyCameraView,
@@ -33,8 +35,10 @@ import {
 import {
   BOARD_PANEL_PARAM,
   DIALS,
+  MARK_STYLE_DIALS,
   VIEW_DIALS,
   cameraViewOf,
+  markStyleOf,
   defaultDials,
   encodeDials,
   spliceBookmark,
@@ -86,6 +90,8 @@ export interface BoardPanel {
     sized: number;
     /** 107b — N×N bodies re-stood by the last view or battle change. */
     slabs: number;
+    /** 108b — the terrain marks' last upload: marks, dropped placements, the fullest bin. */
+    marks: { count: number; overflow: number; maxBin: number };
     battle: boolean;
     fixture: FixtureReport | null;
   };
@@ -96,6 +102,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const internals = internalsOf(game);
   const cues = new GroundCues(internals.renderer.scene);
   const scratch = new THREE.Vector3();
+  const markColour = new THREE.Color();
   // The atlas INSTANCE is what installSeams patches below, so the posed set's
   // lifts read the dialled rule.
   const posed = new PosedSet(internals, internals.sprites.atlas);
@@ -169,6 +176,21 @@ export function attachBoardPanel(game: Game): BoardPanel {
         // 105c's flyer shadow belongs to `ground-cue`; every other mode already
         // puts a contact mark under the flyer through `place`.
         if (m.flies && dials.shadow && dials.ground === 'cue') cues.placeShadow(`s${i}`, m.ground, dials);
+        // 108b — and its production mark, on the same table as the live bodies'
+        // (BattleRenderer began this frame's before this hook ran).
+        const shape = markShapeOf(m.spec);
+        markColour.set(spriteColorForUnit(m.spec));
+        internals.terrain.addMark({
+          x: m.ground.x,
+          z: m.ground.z,
+          shape,
+          extent: markExtent(shape, 1, internals.terrain.markStyle),
+          dashed: isDashedPlate(m.spec),
+          r: markColour.r,
+          g: markColour.g,
+          b: markColour.b,
+          alpha: 1,
+        });
       });
       posed.sync(dials, seams.inkTopLiftAtSize1);
       lastSized += seams.stampSizes(battle);
@@ -184,6 +206,12 @@ export function attachBoardPanel(game: Game): BoardPanel {
   if (VIEW_DIALS.some((key) => dials[key] !== DIALS[key].def)) {
     applyCameraView(game, cameraViewOf(dials));
   }
+  // 108b — so are bookmarked terrain marks (typed calls on the terrain, no patch).
+  const applyMarks = (): void => {
+    internals.terrain.setGroundMarks(dials.marks);
+    internals.terrain.setMarkStyle({ ...DEFAULT_MARK_STYLE, ...markStyleOf(dials) });
+  };
+  if ([...MARK_STYLE_DIALS, 'marks' as const].some((key) => dials[key] !== DIALS[key].def)) applyMarks();
 
   const bookmarkedSearch = (): string => spliceBookmark(location.search, encodeDials(dials));
 
@@ -206,6 +234,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
   /** What a dial change must DO beyond being read next frame. */
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
+    if (key === 'marks' || MARK_STYLE_DIALS.includes(key)) applyMarks();
     if (key === 'anchor') lastRestamped = seams.restampAnchors();
     // 107b — the slab rule reads the camera, so a view change re-stands it.
     if (VIEW_DIALS.includes(key)) {
@@ -246,6 +275,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       apply('proj');
       apply('anchor');
       apply('pose');
+      apply('marks');
       writeUrl();
       view.refresh();
       describe();
@@ -292,6 +322,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       restamped: lastRestamped,
       sized: lastSized,
       slabs: lastSlabs,
+      marks: internals.terrain.markStats,
       battle: liveBattleOf(game) !== null,
       fixture,
     }),

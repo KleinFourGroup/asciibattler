@@ -316,6 +316,15 @@ export class SpriteRenderer {
     return out.set(arr[slot * 3]!, arr[slot * 3 + 1]!, arr[slot * 3 + 2]!);
   }
 
+  /** 108b — a sprite's current alpha, or `null` once removed. A body's ground
+   *  mark reads it, so the mark fades with its glyph (death, a reinforcement's
+   *  arrival). */
+  getAlpha(handle: SpriteHandle): number | null {
+    const slot = this.slotByHandle.get(handle.id);
+    if (slot === undefined) return null;
+    return (this.aAlpha.array as Float32Array)[slot]!;
+  }
+
   /**
    * Qb#2 — depth-sort the live instances back-to-front for `camera`, so the
    * painter's-order draw (instances rasterize in slot order, 0→count) matches

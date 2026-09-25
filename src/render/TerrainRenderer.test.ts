@@ -21,8 +21,10 @@ import {
   HILL_MOUND_ENVELOPE,
   TerrainRenderer,
   animTypeFor,
+  groundMarkShaders,
   topColorFor,
 } from './TerrainRenderer';
+import { BIN_DEPTH, DEFAULT_MARK_STYLE, MARKS_PER_ROW, type Mark } from './groundMarks';
 
 /**
  * 107b — the mound envelope bounds every drawn mound. The N×N slab rule
@@ -170,5 +172,96 @@ describe('98e — animTypeFor', () => {
       (k) => animTypeFor(k) === ANIM_DEEP_WATER,
     );
     expect(onBands).toEqual(['deep_water']);
+  });
+});
+
+/**
+ * 108b — the ground marks' seam into the terrain shader. The shader's look is
+ * read by eye and by the pane's pixel comparison with the §106 mock; pinned
+ * here is what a headless test can see: marks off IS today's terrain shader,
+ * read straight from the files (the frame-cost bench's before leg); marks on
+ * only inserts; the mounds share the marks' uniform objects (their material is
+ * a clone, and a clone copies uniforms); a frame uploads once.
+ */
+describe('108b — the ground marks in the terrain shader', () => {
+  const read = (file: string): string => readFileSync(join(SHADERS, file), 'utf8');
+  const parts = (t: TerrainRenderer) =>
+    t as unknown as { material: THREE.ShaderMaterial; bumpsMaterial: THREE.ShaderMaterial; mesh: THREE.Mesh };
+  const draw = (mesh: THREE.Mesh): void =>
+    mesh.onBeforeRender({} as never, {} as never, {} as never, {} as never, {} as never, {} as never);
+  const MARK: Mark = { x: 0, z: 0, shape: 'circle', extent: 0.275, dashed: false, r: 1, g: 0, b: 0, alpha: 1 };
+  const MARK_UNIFORMS = ['uMarks', 'uMarkBins', 'uMarkGrid', 'uMarkCount', 'uContactStyle', 'uPlateStyle', 'uPlateDashGap'];
+
+  it('marks off draws from the two terrain files, byte for byte', () => {
+    const terrain = new TerrainRenderer();
+    expect(terrain.groundMarksOn).toBe(true); // the shipped default
+    terrain.setGroundMarks(false);
+    for (const m of [parts(terrain).material, parts(terrain).bumpsMaterial]) {
+      expect(m.vertexShader).toBe(read('terrain.vert.glsl'));
+      expect(m.fragmentShader).toBe(read('terrain.frag.glsl'));
+    }
+    terrain.setGroundMarks(true);
+    expect(parts(terrain).bumpsMaterial.fragmentShader).toBe(groundMarkShaders().fragmentShader);
+  });
+
+  it('marks on only inserts: every line of both files survives, in order', () => {
+    const { vertexShader, fragmentShader } = groundMarkShaders();
+    const keepsInOrder = (whole: string, part: string): boolean => {
+      const lines = whole.split('\n');
+      let at = 0;
+      for (const line of part.split('\n')) {
+        at = lines.indexOf(line, at);
+        if (at < 0) return false;
+        at++;
+      }
+      return true;
+    };
+    expect(keepsInOrder(vertexShader, read('terrain.vert.glsl'))).toBe(true);
+    expect(keepsInOrder(fragmentShader, read('terrain.frag.glsl'))).toBe(true);
+    expect(fragmentShader.split('base = applyGroundMarks(base);')).toHaveLength(2);
+    expect(fragmentShader.indexOf('base = applyGroundMarks(base);')).toBeLessThan(
+      fragmentShader.indexOf('gl_FragColor = vec4(base, 1.0);'),
+    );
+    expect(vertexShader).toContain('vMarkNormal = mat3(modelMatrix) * normal;');
+    // The chunk reads the table's layout from the table's own constants.
+    expect(fragmentShader).toContain(`#define MARK_BIN_DEPTH ${BIN_DEPTH}\n`);
+    expect(fragmentShader).toContain(`#define MARKS_PER_ROW ${MARKS_PER_ROW}\n`);
+  });
+
+  it('the mounds share the marks’ uniform objects, where a bare clone would not', () => {
+    const { material, bumpsMaterial } = parts(new TerrainRenderer());
+    for (const key of MARK_UNIFORMS) expect(bumpsMaterial.uniforms[key], key).toBe(material.uniforms[key]);
+    // The control: what the mounds would hold without the re-point.
+    expect(material.clone().uniforms['uMarkCount']).not.toBe(material.uniforms['uMarkCount']);
+  });
+
+  it('uploads a frame’s marks at the first terrain draw, once', () => {
+    const terrain = new TerrainRenderer();
+    const { material, mesh, bumpsMaterial } = parts(terrain);
+    const marks = material.uniforms['uMarks']!.value as THREE.DataTexture;
+    terrain.beginMarks(7, 5);
+    terrain.addMark(MARK);
+    const before = marks.version;
+    draw(mesh);
+    expect(marks.version).toBe(before + 1);
+    expect(material.uniforms['uMarkCount']!.value).toBe(1);
+    expect((bumpsMaterial.uniforms['uMarkGrid']!.value as THREE.Vector2).toArray()).toEqual([7, 5]);
+    draw(mesh); // the mounds' draw in the same frame
+    expect(marks.version).toBe(before + 1);
+    expect(terrain.markStats).toEqual({ count: 1, overflow: 0, maxBin: 1 });
+  });
+
+  it('marks off takes no marks; the style reaches the uniforms', () => {
+    const terrain = new TerrainRenderer();
+    const { material, mesh } = parts(terrain);
+    terrain.setGroundMarks(false);
+    terrain.beginMarks(7, 5);
+    terrain.addMark(MARK);
+    draw(mesh);
+    expect(material.uniforms['uMarkCount']!.value).toBe(0);
+    terrain.setMarkStyle({ ...DEFAULT_MARK_STYLE, plateCorner: 0.2, contactFill: 0.7, plateDashGap: 0 });
+    expect((material.uniforms['uPlateStyle']!.value as THREE.Vector4).w).toBeCloseTo(0.2, 12);
+    expect((material.uniforms['uContactStyle']!.value as THREE.Vector4).x).toBeCloseTo(0.7, 12);
+    expect(material.uniforms['uPlateDashGap']!.value).toBe(0);
   });
 });

@@ -267,6 +267,7 @@ describe('the mark each body gets', () => {
       plateFill: 0.6,
       plateOutline: 0.3,
       plateCorner: 0,
+      plateDashGap: 0.1, // 108b's proposal, not the bookmark's: read at stop 1
     });
     expect(markExtent('circle', 1, DEFAULT_MARK_STYLE)).toBeCloseTo(0.275, 12);
     expect(markExtent('plate', 1, DEFAULT_MARK_STYLE)).toBeCloseTo(0.44, 12);

@@ -70,8 +70,11 @@ function clockStep(): number {
 const GENERIC_RENDERERS = new Set(['WebKit WebGL']);
 
 /** The GPU's name: `RENDERER` first, and the debug extension only when that is
- *  generic, because Firefox warns on the extension's use (it is deprecated
- *  there, and its `RENDERER` already carries the name). */
+ *  generic. The user's Firefox run logged a console message at the extension
+ *  query (not pasted; most likely a deprecation warning), so the query is
+ *  skipped wherever `RENDERER` already reads as a name. Unverified in Firefox:
+ *  what its `RENDERER` returns. If the report's GPU line reads generic there,
+ *  add that string to the set above. */
 function gpuName(gl: WebGL2RenderingContext | WebGLRenderingContext): string {
   const plain: unknown = gl.getParameter(gl.RENDERER);
   if (typeof plain === 'string' && plain !== '' && !GENERIC_RENDERERS.has(plain)) return plain;

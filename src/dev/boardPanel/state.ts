@@ -142,99 +142,18 @@ export const DIALS = {
     def: 0.9,
     hint: 'cell units above the quad bottom — 0.90 just clears a capital letter',
   },
-  /** The ground-cue mock: a flat shape on the unit's tile, one SHAPE per side
-   *  (circle = yours · diamond = enemy · triangle = camp) so it survives the
-   *  grey read by construction. */
-  cue: {
-    kind: 'enum',
-    label: 'ground cue',
-    options: ['off', 'outline', 'filled'],
-    def: 'off',
-    hint: 'circle = yours · diamond = enemy · triangle = camp',
-  },
-  cueSize: { kind: 'range', label: 'cue size', min: 0.4, max: 1.1, step: 0.05, def: 0.8 },
-  cueAlpha: { kind: 'range', label: 'cue opacity', min: 0.1, max: 1, step: 0.05, def: 0.55 },
-  /** 105b-post (the user's read) — is the cue IN the world or ON it? `world`
-   *  depth-tests it, so a taller tile nearer the camera occludes it like any
-   *  ground (honest depth; read as "clipping" — and the amount is
-   *  pitch-dependent, so it would bias the cross). `overlay` draws it over the
-   *  terrain, always whole, glyphs still on top. A treatment, not a bug fix. */
-  cueDepth: {
-    kind: 'enum',
-    label: 'cue depth',
-    options: ['overlay', 'world'],
-    def: 'overlay',
-    hint: 'overlay = always whole, drawn over terrain · world = taller near tiles occlude it',
-  },
-  /** 106c — THE GROUND MARK (the §105 verdict's finding 1: "floaty" is a
-   *  grounding question). `cue` is 105b's behaviour exactly (the cue dials
-   *  decide), so an untouched panel still draws no mark. groundCue.ts. */
-  ground: {
-    kind: 'enum',
-    label: 'ground mark',
-    options: ['cue', 'shadow', 'both', 'merged'],
-    def: 'cue',
-    hint: 'cue = the team shape (cue dials) · shadow = a dark contact disc · both = the two · merged = ONE mark: the team shape at contact size, dark-filled, colour-outlined',
-  },
-  /** The contact mark's size (tile units) — the shadow disc and the merged mark. */
-  shadowSize: { kind: 'range', label: 'contact size', min: 0.3, max: 1, step: 0.05, def: 0.55 },
-  /** The contact mark's darkness — the shadow disc and the merged fill (the filled plate has its own, `plateAlpha`). */
-  shadowAlpha: { kind: 'range', label: 'contact opacity', min: 0.1, max: 0.9, step: 0.05, def: 0.45 },
-  /** 106c — the FOOTPRINT PLATE under a static N×N body (rubble): which tiles it
-   *  holds (the user's 105b read, deferred to §106 on purpose — TODO). */
-  plate: {
-    kind: 'enum',
-    label: 'NxN plate',
-    options: ['off', 'frame', 'filled'],
-    def: 'off',
-    hint: 'frame = the footprint outlined in the body colour · filled = a dark footprint under that outline',
-  },
-  /** 106c-post — the user's item 5 ("we definitely want to try this"): the
-   *  plate under EVERY scenery body, not just the N×N slabs. A grid square, so
-   *  it collides with no team shape. */
-  plateScope: {
-    kind: 'enum',
-    label: 'plate under',
-    options: ['nxn', 'all'],
-    def: 'nxn',
-    hint: 'nxn = the rubble slabs only · all = every scenery body (walls, cover, 1x1 rubble)',
-  },
-  /** 106c-post — the filled plate's own darkness (the user darkened it at the
-   *  106c read; 0.6 is a guess at "slightly darker" than the contact 0.45). */
-  plateAlpha: { kind: 'range', label: 'plate opacity', min: 0.1, max: 0.95, step: 0.05, def: 0.6 },
-  /** 106c-post2 — the step-face drape (the user's one refinement at the
-   *  106c-post read): marks and plates continue down the vertical faces where
-   *  their tile meets a lower one, on the faces the camera can see. conform.ts. */
-  drape: {
-    kind: 'bool',
-    label: 'step drape',
-    def: false,
-    hint: 'marks and plates hang down the step faces the camera can see',
-  },
-  /** 108b — the PRODUCTION ground marks, drawn by the terrain (spec D3). Off =
-   *  the plain terrain shaders: the frame-cost bench's before leg, and the way
-   *  to compare with the §106 mock above, whose dials draw OVER these. */
+  /** The shipped ground marks, drawn by the terrain (spec D3). Off = the plain
+   *  terrain shaders, the frame-cost bench's before leg. */
   marks: {
     kind: 'bool',
     label: 'terrain marks',
     def: true,
-    hint: 'the shipped marks, drawn by the terrain (108b) - off = the plain terrain shader; the mock dials above draw over them',
+    hint: 'the shipped marks, drawn by the terrain - off = the plain terrain shader',
   },
-  /** 108b — the terrain marks' look, for the stop-1 read (`markStyleOf` →
-   *  `TerrainRenderer.setMarkStyle`); the defaults ARE `DEFAULT_MARK_STYLE`
-   *  (state.test.ts). They go once their values are signed (108f). */
-  markSize: { kind: 'range', label: 'mark size', min: 0.3, max: 1, step: 0.05, def: 0.55 },
-  markFill: { kind: 'range', label: 'mark fill', min: 0.1, max: 0.9, step: 0.05, def: 0.45 },
-  markLine: {
-    kind: 'range',
-    label: 'mark outline',
-    min: 0.1,
-    max: 1,
-    step: 0.05,
-    def: 0.3,
-    hint: 'the outline opacity of the contact marks AND the plate frames (one dial set both in the signed bookmark)',
-  },
-  plateFill: { kind: 'range', label: 'plate fill', min: 0.1, max: 0.95, step: 0.05, def: 0.6 },
+  /** The plate corner radius (`MarkStyle.plateCorner`), the one look dial kept
+   *  once the marks' values were signed: square shipped, and the rounding waits
+   *  for organic scenery such as trees (TODO). The default IS the shipped
+   *  style's (state.test.ts). */
   plateCorner: {
     kind: 'range',
     label: 'plate corner',
@@ -243,24 +162,6 @@ export const DIALS = {
     step: 0.01,
     def: 0,
     hint: 'the plate corner radius, world units - 0 = square; a large radius drifts toward the player circle',
-  },
-  plateDash: {
-    kind: 'range',
-    label: 'dash gap',
-    min: 0,
-    max: 0.25,
-    step: 0.01,
-    def: 0.1,
-    hint: 'a destructible wall or cover: its frame gap width, world units (0 = solid)',
-  },
-  /** 108c — the hop (hop.ts): a diagonal move arcs over a corner cell higher
-   *  than both its ends. The rival to upright depth, read at stop 2; upright
-   *  depth stays on either way. A move already under way keeps its arc. */
-  hop: {
-    kind: 'bool',
-    label: 'diagonal hop',
-    def: false,
-    hint: 'a diagonal move arcs over a higher corner tile, peaking at its height (upright depth stays on) - the next move takes it',
   },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
@@ -282,12 +183,6 @@ export const DIALS = {
     step: 0.05,
     def: 1,
     hint: 'camera-up, in tiles — the flyer pose only',
-  },
-  shadow: {
-    kind: 'bool',
-    label: 'flyer shadow',
-    def: true,
-    hint: 'a dark disc on the tile the flyer is over',
   },
   /** Bookmark-only: the panel starts collapsed (the dials still apply). */
   hide: { kind: 'bool', label: 'start hidden', def: false },
@@ -391,40 +286,6 @@ export function cameraViewOf(state: Pick<DialState, 'proj' | 'fov' | 'pitch' | '
 
 export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
-/** 108b — the look dials as the `MarkStyle` fields they set. Structural, like
- *  `cameraViewOf`: index.ts merges it over `DEFAULT_MARK_STYLE`, where tsc
- *  checks the shape. One outline dial sets both outlines, as `cueAlpha` did. */
-export function markStyleOf(
-  state: Pick<DialState, 'markSize' | 'markFill' | 'markLine' | 'plateFill' | 'plateCorner' | 'plateDash'>,
-): {
-  contactSize: number;
-  contactFill: number;
-  contactOutline: number;
-  plateOutline: number;
-  plateFill: number;
-  plateCorner: number;
-  plateDashGap: number;
-} {
-  return {
-    contactSize: state.markSize,
-    contactFill: state.markFill,
-    contactOutline: state.markLine,
-    plateOutline: state.markLine,
-    plateFill: state.plateFill,
-    plateCorner: state.plateCorner,
-    plateDashGap: state.plateDash,
-  };
-}
-
-export const MARK_STYLE_DIALS: readonly DialKey[] = [
-  'markSize',
-  'markFill',
-  'markLine',
-  'plateFill',
-  'plateCorner',
-  'plateDash',
-];
-
 /**
  * 105e — THE KNOWN COSMETIC ARTEFACTS of a dialled board, shown on the panel
  * so the user's read discounts them instead of filing them. Each is a seam the
@@ -438,8 +299,6 @@ export const KNOWN_ARTEFACTS: readonly string[] = [
   'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
-  'ground mark: marks and plates are cut per tile onto the tile TOPS, and step drape = on hangs them down the step faces the camera sees - neither follows the hill mounds',
-  'ground mark: the 106 mock dials (ground mark, ground cue, NxN plate) draw OVER the terrain marks - set terrain marks off to see the mock alone (108f deletes it)',
 ];
 
 /**

@@ -94,7 +94,8 @@ export const CLIP_SHIPPED = SHIPPED;
 
 function main(): void {
   const pct = (v: number) => `${(v * 100).toFixed(1).padStart(5)}%`;
-  // `upright+arc` is 108c's dial: the hop drawn over the shipped depth rule.
+  // `upright+arc` is the diagonal hop drawn over the shipped depth rule. Upright
+  // depth shipped alone; the movement polish reopens the hop (TODO).
   const cols = ['card', 'arc', 'plateau', 'upright', 'upright+arc'] as const;
   for (const [camName, view] of [
     ['pre-7.5 (persp 50, yaw 0)', PRE_75],

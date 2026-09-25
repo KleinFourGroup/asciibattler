@@ -15,8 +15,9 @@
  * The FLYER is the one member that moves per frame: its sprite rides the
  * `lift` dial along CAMERA-up (`aboveAnchor` — so it stays "straight up the
  * screen" under whatever camera 105d dials in), its bar rides above that, and
- * its ground point keeps the shadow + the cue, which is the whole read: the
- * glyph lands over the unit behind it and only the ground says which tile.
+ * its ground point keeps its mark (index.ts puts it on the terrain's table),
+ * which is the whole read: the glyph lands over the unit behind it and only
+ * the ground says which tile.
  */
 
 import * as THREE from 'three';

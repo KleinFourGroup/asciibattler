@@ -9,7 +9,6 @@ import {
   coerceDial,
   defaultDials,
   encodeDials,
-  markStyleOf,
   parseDials,
   spliceBookmark,
   type DialState,
@@ -20,15 +19,19 @@ import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
 import { DEFAULT_MARK_STYLE } from '../../render/groundMarks';
 
 describe('108b — the terrain marks’ dials', () => {
-  it('their defaults ARE the shipped style — an untouched panel dials nothing', () => {
-    expect({ ...DEFAULT_MARK_STYLE, ...markStyleOf(defaultDials()) }).toEqual(DEFAULT_MARK_STYLE);
+  it('their defaults ARE the shipped marks — an untouched panel dials nothing', () => {
+    expect(DIALS.plateCorner.def).toBe(DEFAULT_MARK_STYLE.plateCorner);
     expect(DIALS.marks.def).toBe(true);
   });
 
-  it('every look field but the three the spike never dialled has a dial', () => {
-    const dialled = Object.keys(markStyleOf(defaultDials())).sort();
-    const fixed = Object.keys(DEFAULT_MARK_STYLE).filter((k) => !dialled.includes(k)).sort();
-    expect(fixed).toEqual(['contactStroke', 'plateInset', 'plateStroke']);
+  it('the signed 106d bookmark means `anchor-bottom` alone: its mock dials left the table (108f)', () => {
+    const signed = parseDials(
+      'cue-outline_cueAlpha-0.3_ground-merged_plate-filled_plateScope-all_anchor-bottom_drape-1_cueDepth-world',
+    );
+    expect(signed).toEqual({ ...defaultDials(), anchor: 'bottom' });
+    expect(encodeDials(signed)).toBe('anchor-bottom');
+    // …and so do the look dials and the hop: a stop-2 URL keeps only its board.
+    expect(encodeDials(parseDials('board-wade_hop-1_markSize-0.7_plateDash-0'))).toBe('board-wade');
   });
 });
 
@@ -43,7 +46,7 @@ describe('105e — the glyph scale + the artefact list', () => {
     expect(KNOWN_ARTEFACTS.length).toBeGreaterThan(0);
     for (const text of KNOWN_ARTEFACTS) {
       expect(text.trim().length, text).toBeGreaterThan(20);
-      expect(/^(yaw|glyph scale|ortho|any dial change|ground mark)/.test(text), text).toBe(true);
+      expect(/^(yaw|glyph scale|ortho|any dial change)/.test(text), text).toBe(true);
     }
   });
 });
@@ -120,24 +123,24 @@ describe('105b — the board explorer dial table', () => {
       anchor: 'bottom',
       bar: 'uniform',
       barY: 0.95,
-      cue: 'outline',
+      plateCorner: 0.1,
       pose: 'row',
     };
-    expect(encodeDials(state)).toBe('anchor-bottom_bar-uniform_barY-0.95_cue-outline_pose-row');
+    expect(encodeDials(state)).toBe('anchor-bottom_bar-uniform_barY-0.95_plateCorner-0.1_pose-row');
     expect(parseDials(encodeDials(state))).toEqual(state);
   });
 
   it('a stale bookmark degrades to defaults instead of throwing', () => {
     const parsed = parseDials(
-      'anchor-sideways_nope-1_bar_barY-abc_cue-filled_-x_pose-sideways_shadow-yes',
+      'anchor-sideways_nope-1_bar_barY-abc_marks-0_-x_pose-sideways_hide-yes',
     );
-    expect(parsed).toEqual({ ...defaultDials(), cue: 'filled' });
+    expect(parsed).toEqual({ ...defaultDials(), marks: false });
   });
 
   it('splicing the bookmark leaves every other pair byte-for-byte', () => {
     const typed = '?seed=7&roster=mercenary,archer&layout=river';
-    expect(spliceBookmark(typed, 'cue-outline')).toBe(`${typed}&bp=cue-outline`);
-    expect(spliceBookmark(`${typed}&bp=pose-row`, 'cue-outline')).toBe(`${typed}&bp=cue-outline`);
+    expect(spliceBookmark(typed, 'anchor-bottom')).toBe(`${typed}&bp=anchor-bottom`);
+    expect(spliceBookmark(`${typed}&bp=pose-row`, 'anchor-bottom')).toBe(`${typed}&bp=anchor-bottom`);
     expect(spliceBookmark('?bp=pose-row&seed=7', '')).toBe('?seed=7');
     expect(spliceBookmark('?bp=pose-row', '')).toBe('');
     expect(spliceBookmark('', 'pose-row')).toBe('?bp=pose-row');

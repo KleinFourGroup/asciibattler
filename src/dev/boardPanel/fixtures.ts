@@ -89,7 +89,9 @@ export const BOARDS: Record<BoardId, BoardFixture> = {
   },
   // 108c — the hop's read. A diagonal between two water tiles past a corner on
   // land arcs 0.1-0.4 world; `live`'s fight has no such move. Seed 1 had the
-  // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in.
+  // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in. The
+  // dial is gone (upright depth shipped alone); the fixture stays for the
+  // movement polish, which reopens the hop (TODO).
   wade: {
     label: 'Icebergs 16x16, LIVE (units wade diagonally past the floes: the hop read)',
     run: `seed=1&layout=icebergs&${RUN_BASE}`,
@@ -135,7 +137,7 @@ export function fixtureSearch(search: string, board: BoardId | null): string {
 export const POSE_IDS = ['row', 'clump', 'edges', 'flyer'] as const;
 export type PoseId = (typeof POSE_IDS)[number];
 
-/** A posed sprite's identity — structurally a `CueSubject` (groundCue.ts). */
+/** A posed sprite's identity — structurally a `MarkSubject` (render/groundMarks.ts). */
 export interface PosedSpec {
   readonly glyph: string;
   readonly team: Team;
@@ -149,7 +151,7 @@ export interface PosedSpec {
 export interface Placement {
   readonly spec: PosedSpec;
   readonly cell: { readonly x: number; readonly y: number };
-  /** Rides the `lift` dial (camera-up) and casts the shadow. */
+  /** Rides the `lift` dial (camera-up); its ground mark stays on its tile. */
   readonly flies: boolean;
 }
 

@@ -2613,3 +2613,71 @@ signed; the frame cost measured. Left: the mock seams and the hop deleted
 (108f).
 
 **Reads this phase:** 0 `batch`, 2 `stop`s; stop 2 clear, no `-post`.
+
+### 108f — the mock seams, the look dials and the hop dial deleted (2026-09-25) — read `none` ✅
+
+**Step zero.** Kickoff finding 16's list, checked against the code at
+`dc5e6d3`: everything on it was still there. The deletion also reached
+three things the list didn't name:
+- two `KNOWN_ARTEFACTS` lines about the mock (tops-only cutting, and the
+  mock drawing over the terrain marks);
+- the `shadow` dial drew the 105c mock disc under the posed flyer by default,
+  so the flyer's before capture needs `shadow-0`;
+- 108c's code outside the explorer: `arcHeight` on
+  `SpriteAnimator.startGroundLerp` (no production caller) and
+  `tests/board/hop.test.ts`.
+
+Two things kept, as outside the cut's letter: the `marks` on/off dial
+(production's own toggle and the bench's before leg, not a look dial), and
+the clip instrument's `upright+arc` column (`tests/board`'s instrument stays
+under D8, and the movement polish reopens the hop against it; its comment
+now says so).
+
+**Deleted:** `groundCue.ts` and its test (5 tests), `conform.ts` and its
+test (8), `hop.ts`, `tests/board/hop.test.ts` (4); in `index.ts` the tile-tops
+block, `drapeViewOf`, the mock's per-unit loop, and `probe().cues` and
+`.hops`; the hop wrap in `seams.ts`; `markStyleOf` and `MARK_STYLE_DIALS`.
+18 dials go: the mock's 12 (`cue`, `cueSize`, `cueAlpha`, `cueDepth`,
+`ground`, `shadowSize`, `shadowAlpha`, `plate`, `plateScope`, `plateAlpha`,
+`drape`, `shadow`), 5 look dials (`markSize`, `markFill`, `markLine`,
+`plateFill`, `plateDash`) and `hop`. The table keeps 14, `plateCorner`
+among them (the user's call at stop 1). `SpriteAnimator.ts` is its
+pre-108c file byte for byte (`git diff d045497^` is empty). The posed set's
+production marks stay in the frame hook. The bench now reads the GPU name
+from `RENDERER` first and asks `WEBGL_debug_renderer_info` only for a
+generic name (`03f1f7a`).
+
+**Verified:**
+- Typecheck clean. With `arcHeight` gone from `startGroundLerp`, a caller
+  still passing one would not compile.
+- `npm test`: 3121, which is 3138 less the 17 deleted tests.
+  `state.test.ts` swaps one for one: the look-dial coverage test out, and
+  in, a pin that the signed 106d bookmark's long form parses to
+  `anchor-bottom` alone and a stop-2 URL (`board-wade_hop-1_…`) to its
+  board.
+- **The pixel oracle** (Chromium pane, 1280×720, sprites hidden, `uTime` 0
+  on the terrain, apron and backdrop, 2 settle frames, then the whole canvas
+  read back and hashed; frames 3 and 4 identical in every capture). HEAD
+  `dc5e6d3` against the deletion:
+
+  | `bp=` | HEAD | after |
+  |---|---|---|
+  | `board-quarry` (30 marks) | 2cc8b01a | 2cc8b01a |
+  | `board-quarry_plateCorner-0.1` | 41aa2de7 | 41aa2de7 |
+  | `board-quarry_marks-0` | 9cadfb15 | 9cadfb15 |
+  | `board-open15_pose-flyer_lift-0.45_shadow-0` (53 marks) | 6eeedb0f | 6eeedb0f |
+
+  The self-check: `board-quarry` read 2cc8b01a again across a reload at
+  HEAD. The controls: the corner and marks-off bookmarks each hash apart
+  from the default, before and after. Dropping the four posed marks from
+  the table (49 of 53) reads e391f5c5, and restoring them reads 6eeedb0f,
+  so the flyer's hash covers the loop this step rewrote.
+- The bench's GPU line in the pane: Chromium's `RENDERER` is "WebKit
+  WebGL", so the name still comes from the extension (the RTX 4080 SUPER).
+
+**Not verified:** Firefox: that its `RENDERER` carries the GPU name and the
+deprecation warning is gone. The next Firefox bench run shows both; it isn't
+a read. The pane's console held five failed module fetches from the edits
+(index.ts importing deleted files mid-edit), and none after a clean reload.
+
+**§108's exit is met:** the mock-mark seams are deleted.

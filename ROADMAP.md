@@ -90,8 +90,9 @@ shader path and a per-frame data path, judged by eye, with a frame-cost
 measurement owed. **Decision points:** ✅ DECIDED at the kickoff: the camp
 unit's hue-only status pip → Round 8 with the colourblind palette (TODO);
 the cracked-stone wall tell → a dashed plate frame (108b); marks fade with
-their glyph · ✅ DECIDED at stop 1: square plate corners (the defaults
-signed) · open: the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
+their glyph · ✅ DECIDED at stop 1: square plate corners for now (the
+dashes did the walls' job; rubble a tie), the rounding kept for organic
+scenery (TODO) · open: the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
 hop, re-read with the marks through a dev dial (108c, stop 2).
 **Exit:** the marks on tops, step faces and mounds, read by the user; the
 grey read passed in a live battle; the residuals decided; the elevation
@@ -105,7 +106,7 @@ Kickoff).** Two stops.
 - [ ] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2.
 - [ ] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440.
 - [ ] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording.
-- [ ] **108f** — the mock seams deleted (D8) with the read dials; the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion).
+- [ ] **108f** — the mock seams deleted (D8) with the read dials, except `plateCorner` (kept for organic scenery, the user's call at stop 1); the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion).
 
 ## Phase 109 — the rule deletion + the round close (signed 2026-09-23 with the spec)
 

@@ -2281,8 +2281,15 @@ compiles and draws in Firefox, which the pane could not show.
 **Signed with it:** the defaults, `DEFAULT_MARK_STYLE` as committed: contact
 size 0.55, fill 0.45, outline 0.3; plate fill 0.6; **square plate corners**
 (the spec's open rounding read, answered by the default 0); the dashed
-frame's 0.1 gap. The six look dials have done their job; 108f deletes them
-with the mock, as cut.
+frame's 0.1 gap. On the corners, the user's elaboration: "for the
+destructible walls, the dashes did on their own what I hoped the rounded
+corners would do. For the rubble... It was a bit more of a tie goes to the
+default situation. I wouldn't delete the seam yet, because one bit of
+content I'm imagining for the future are trees, and I think that the
+rounding might thematically fit for 'organic' scenery." So 108f deletes the
+look dials except `plateCorner`, which stays as an explorer keeper with the
+production parameter behind it (TODO, "Rounded plates for organic
+scenery").
 
 **For 108e:** DESIGN's §Terrain paragraph is far out of date (it still
 describes "a subdivided plane" that is "decorative only"); rewrite it with

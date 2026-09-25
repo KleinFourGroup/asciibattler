@@ -2270,3 +2270,20 @@ Wrong looks like: a mark missing from a mound or a step face, a mark
 spilling onto a neighbour's face, a mark left behind after a death, a shape
 or size off from the bookmark, or the terrain failing to draw at all (a
 shader that does not compile in Firefox).
+
+### 108b — STOP 1, THE READ (2026-09-25, the user's) — CLEAR
+
+"I spent a lot of time stress testing this and even sent it to a handful of
+playtesters, and we can't identity any issues. None of the wrongs you
+identified showed up, and the defaults you used look great!" The shader
+compiles and draws in Firefox, which the pane could not show.
+
+**Signed with it:** the defaults, `DEFAULT_MARK_STYLE` as committed: contact
+size 0.55, fill 0.45, outline 0.3; plate fill 0.6; **square plate corners**
+(the spec's open rounding read, answered by the default 0); the dashed
+frame's 0.1 gap. The six look dials have done their job; 108f deletes them
+with the mock, as cut.
+
+**For 108e:** DESIGN's §Terrain paragraph is far out of date (it still
+describes "a subdivided plane" that is "decorative only"); rewrite it with
+the identity and elevation text.

@@ -1799,3 +1799,11 @@ no `distress` filed; two papercuts.
    my own weak check, which felt like the process doing its job rather
    than a correction. I'd want both repeated. This reports conditions, not
    whether the work was good.
+
+### Addendum, the same session — stop 1 and the handoff (2026-09-25)
+
+The user and a handful of playtesters read stop 1 clear, with the defaults
+signed. The user proposed the handoff at 490k context; I agreed, because
+108c starts a new build step and the Cursor, ROADMAP and WORKLOG carry what
+a fresh session needs. The DESIGN §Terrain note from answer 5 now lives in
+WORKLOG §108b, where 108e will find it.

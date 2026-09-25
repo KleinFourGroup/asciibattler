@@ -90,8 +90,8 @@ shader path and a per-frame data path, judged by eye, with a frame-cost
 measurement owed. **Decision points:** ✅ DECIDED at the kickoff: the camp
 unit's hue-only status pip → Round 8 with the colourblind palette (TODO);
 the cracked-stone wall tell → a dashed plate frame (108b); marks fade with
-their glyph · open: rounded plate corners (a parameter, read at stop 1) ·
-the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
+their glyph · ✅ DECIDED at stop 1: square plate corners (the defaults
+signed) · open: the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
 hop, re-read with the marks through a dev dial (108c, stop 2).
 **Exit:** the marks on tops, step faces and mounds, read by the user; the
 grey read passed in a live battle; the residuals decided; the elevation
@@ -101,7 +101,7 @@ requirement signed; frame cost measured; the mock-mark seams deleted.
 **The cut (user-signed 2026-09-24; audit and decisions: WORKLOG §108
 Kickoff).** Two stops.
 - [x] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`. ✅ 12 tests, two failing controls (WORKLOG §108a).
-- [◐] **108b** — the terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
+- [x] **108b** — ✅ STOP 1 READ CLEAR 2026-09-25, the defaults signed (WORKLOG §108b). The terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
 - [ ] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2.
 - [ ] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440.
 - [ ] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording.

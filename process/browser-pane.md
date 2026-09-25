@@ -97,6 +97,13 @@ pixels wide.
   or ask the user to look natively. On a WebGL canvas `getImageData` can
   return a cleared buffer (`preserveDrawingBuffer` is false): read in the
   same frame as the render, or set it to true temporarily for debugging.
+- A pixel A/B of the board: park the countdown, hold shader
+  time (`scene.advanceShaderTime = () => {}`), hide the sprites
+  (`__game.sprites.mesh` and `bloomMesh` `.visible = false`), then render
+  and read in one eval: `renderer.onFrame(0); renderer.renderTwoPass();
+  gl.readPixels(...)`, twice after a change so a recompile has settled. Plant
+  a known error and confirm the comparison fails it: a flat-pixel check
+  passed a wrong mark size that a per-shape area check caught.
 - The pane repeats console output six times. It's cosmetic; events fire
   once.
 - The `find` tool can't see text outside a control (a run of stars in a

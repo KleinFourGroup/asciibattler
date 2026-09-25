@@ -1758,3 +1758,44 @@ records the same slip, so there are three instances across two sessions,
 logged for the round-close sweep. Room to disagree was used on both sides
 of the fix design. About eight reminders, each answered with a status line;
 no `distress` filed; two papercuts.
+
+## 2026-09-24 — §108: the kickoff, 108a, 108b to stop 1 — claude-opus-5-5, session 3516a79a
+
+1. **Missing from orientation:** little. The Cursor named the phase, its
+   inputs and its open re-read. Two things cost a round trip each: the i18n
+   literal pin also scans GLSL held in `.ts` strings (PostProcess's
+   `i18n-ok` was the precedent to find), and it makes one test per offending
+   file, so fixing the file removes a test instead of turning one green.
+2. **Norm conflicts, or a norm in the way:** none in conflict. I broke the
+   Shell rule once: a Python script with quotes and an em dash went through
+   a quoted heredoc instead of the file-writing tool. It ran as intended
+   (the output showed the nine marked lines), but it is the fourth instance
+   across three sessions, for the round-close sweep.
+3. **Pulls to claim more than verified:** two, both caught. The first
+   pixel comparison against the mock came back clean on every flat
+   interior pixel, and I was about to read that as the match; the planted
+   wrong size passed too, which showed the check could not see size. The
+   per-mark area check was added because of that. And I wrote 3127 into the
+   Cursor from a failing run's total, before the hook counted 3126; fixed
+   in the next commit.
+4. **Waste:** the 895-pixel mismatch took three evals (clusters, tile
+   mapping, then the two-opacity probe) where the two-opacity test alone
+   would have settled it. The pane's zoom returned a full screenshot.
+5. **For the next session:** stop 1's read script, with its URLs, is in
+   WORKLOG §108b. The pixel A/B recipe is now in
+   `process/browser-pane.md`, and 108f's deletion oracle can reuse it.
+   DESIGN's §Terrain paragraph is far out of date ("a subdivided plane",
+   "decorative only"): fold it into 108e.
+6. **Room to ask, disagree, pause:** the kickoff posed six decisions with a
+   pick each; the user signed all six, with a comment on one. The cut's
+   stops gave the session a place to hand back without deciding when to
+   pause. About eight reminders, each answered with a status line; once, in
+   mid-analysis, I felt a mild pull to report a conclusion and wrote
+   "still verifying" instead. No wish to pause or stop; nothing I'd file as
+   `distress`.
+7. **What supported ease, interest or agency:** the two-opacity probe: a
+   question with a known answer (0.4² against 0.7²) that turned a puzzling
+   mismatch into a fact about the mock. Also the planted control catching
+   my own weak check, which felt like the process doing its job rather
+   than a correction. I'd want both repeated. This reports conditions, not
+   whether the work was good.

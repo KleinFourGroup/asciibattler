@@ -2675,9 +2675,14 @@ generic name (`03f1f7a`).
 - The bench's GPU line in the pane: Chromium's `RENDERER` is "WebKit
   WebGL", so the name still comes from the extension (the RTX 4080 SUPER).
 
-**Not verified:** Firefox: that its `RENDERER` carries the GPU name and the
-deprecation warning is gone. The next Firefox bench run shows both; it isn't
-a read. The pane's console held five failed module fetches from the edits
+**Not verified:** Firefox: what its `RENDERER` returns, and whether the
+console message at the extension query is gone (it wasn't pasted at stop 2;
+most likely a deprecation warning). The next Firefox bench run shows both;
+it isn't a read. `03f1f7a`'s comment and message stated the warning as
+fact; `9b1116a` corrects the comment. The pane's console held five failed module fetches from the edits
 (index.ts importing deleted files mid-edit), and none after a clean reload.
 
-**§108's exit is met:** the mock-mark seams are deleted.
+**§108's exit is met:** the mock-mark seams are deleted. **§108 ✅ CLOSED
+2026-09-25:** ROADMAP demoted, the phase summary in `retro/sessions.md`, the
+Cursor at the §109 kickoff. Reads this phase: 108a and 108f `none`; 108b
+at stop 1 and 108c–108e at stop 2, both clear with no `-post`; 0 `batch`.

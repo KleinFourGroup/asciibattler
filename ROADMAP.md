@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 IN PROGRESS — its cut signed 2026-09-24.** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 ✅ CLOSED 2026-09-25 (the marks drawn by the terrain); §109 NEXT — its kickoff.** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
 spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
@@ -77,36 +77,26 @@ step's read is done.
 - [x] **107d** — the flip (D1): `DEFAULT_CAMERA_VIEW` = ortho · 45 · 45; pins re-anchored; DESIGN's Camera paragraph + D7. Read `stop` — THE PLAYED READ. ✅ READ CLEAR (two full runs; one finding → 107d-post), `c4ca4e6`.
 - [x] **107d-post** — inserted from the 107d read: upright depth for standing sprites (the diagonal-move clip; the user's pick over the hop). Read `stop`. ✅ READ CLEAR ("this fix appears to have worked"), `99626f3`.
 
-## Phase 108 — the ground mark, drawn by the terrain (signed 2026-09-23 with the spec)
+## Phase 108 — the ground mark, drawn by the terrain ✅ CLOSED 2026-09-25
 
-Charter: the merged mark and the scenery plate, drawn as signed-distance
-shapes in the terrain shader from a per-frame, per-tile table (spec D3);
-team identity checked clause by clause, with the grey read as the
-acceptance test (D5); the "Elevation on the board" requirement written into
-DESIGN (D6). **Why here:** after §107 so every read is under the shipping
-projection; before §109 because the anchor deletion was signed on the
-strength of the grounding these marks give. **Risk:** medium-high — a new
-shader path and a per-frame data path, judged by eye, with a frame-cost
-measurement owed. **Decision points:** ✅ DECIDED at the kickoff: the camp
-unit's hue-only status pip → Round 8 with the colourblind palette (TODO);
-the cracked-stone wall tell → a dashed plate frame (108b); marks fade with
-their glyph · ✅ DECIDED at stop 1: square plate corners for now (the
-dashes did the walls' job; rubble a tie), the rounding kept for organic
-scenery (TODO) · ✅ DECIDED at stop 2: the elevation clauses' wording signed · upright depth alone
-ships (the hop reopens once in a movement polish, TODO) · the frame cost acceptable (WORKLOG §108 STOP 2).
-**Exit:** the marks on tops, step faces and mounds, read by the user; the
-grey read passed in a live battle; the residuals decided; the elevation
-requirement signed; frame cost measured; the mock-mark seams deleted.
-**Scope guards:** the spec's; no flyer mechanic.
+**Outcome:** the terrain draws the ground marks, as signed-distance shapes
+from a per-frame, per-tile table: a side shape under each combatant, a
+plate under scenery, dashed on a destructible wall or cover. They reach
+tops, step faces and mounds, and fade with their glyph. The user and
+playtesters read the look clear in Firefox (stop 1: square corners, the
+defaults signed); the grey read passed, the elevation clauses were signed
+into DESIGN, upright depth ships alone (the hop reopens in a movement
+polish, TODO), and the marks cost +0.19 ms per frame in Firefox at
+2560×1440, accepted (stop 2). The camp pip went to Round 8. The mock and
+the hop dial are deleted, with the marks' pixels byte-identical across it.
+The record: WORKLOG §108. Every step's read is done.
 
-**The cut (user-signed 2026-09-24; audit and decisions: WORKLOG §108
-Kickoff).** Two stops.
-- [x] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`. ✅ 12 tests, two failing controls (WORKLOG §108a).
-- [x] **108b** — ✅ STOP 1 READ CLEAR 2026-09-25, the defaults signed (WORKLOG §108b). The terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
-- [x] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2. ✅ READ at stop 2: upright alone ships. Built 2026-09-25: the `hop` dial + a `board-wade` fixture; the hop fires on a third or more of diagonals, mostly small, so a minimum height is a stop-2 question (WORKLOG §108c).
-- [x] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440. ✅ READ at stop 2: Firefox +0.19 ms per frame, acceptable. Built 2026-09-25: the panel's `frame-cost bench` button; in the pane (Chromium, 2560×1440) the marks read +0.17–0.20 ms per synced frame, all checks passing (WORKLOG §108d).
-- [x] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording. ✅ STOP 2 READ CLEAR 2026-09-25: the grey read passed, the wording signed (WORKLOG §108 STOP 2).
-- [x] **108f** — the mock seams deleted (D8) with the read dials, except `plateCorner` (kept for organic scenery, the user's call at stop 1); the hop dial and its code deleted (the stop-2 verdict; `board-wade` stays); the bench's GPU name read from `RENDERER` first (the Firefox warning, WORKLOG §108 STOP 2); the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion). ✅ Byte-identical on four bookmarks, with controls; 18 dials gone (WORKLOG §108f).
+- [x] **108a** — the mark table, headless (`groundMarks.ts`), pinned against shapes re-derived by sampling. Read `none`. ✅ `be5f5f2`.
+- [x] **108b** — the terrain draws the marks (SDF shapes, the mounds sharing the table, fading with the glyph, the dashed frame). Read `stop` — STOP 1, the look. ✅ READ CLEAR, the defaults signed, `509387b`.
+- [x] **108c** — the hop as a dev dial + the `board-wade` fixture. Read `stop` → stop 2. ✅ READ: upright depth alone ships, `d045497`.
+- [x] **108d** — the frame-cost bench (paired legs, an A/A control, a planted cost). Read `stop` → stop 2. ✅ READ: Firefox +0.19 ms per frame, acceptable, `1c40495`.
+- [x] **108e** — DESIGN: the identity channel as built, the elevation clauses (D5, D6). Read `stop` — STOP 2. ✅ READ CLEAR (the grey read passed, the wording signed), `8f59c2e`.
+- [x] **108f** — the mock seams, the look dials but `plateCorner`, and the hop dial deleted (D8); the bench's GPU name from `RENDERER`. Read `none`. ✅ the marks' pixels byte-identical, `4071397` + `03f1f7a`.
 
 ## Phase 109 — the rule deletion + the round close (signed 2026-09-23 with the spec)
 

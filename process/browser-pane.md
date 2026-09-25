@@ -104,6 +104,11 @@ pixels wide.
   gl.readPixels(...)`, twice after a change so a recompile has settled. Plant
   a known error and confirm the comparison fails it: a flat-pixel check
   passed a wrong mark size that a per-shape area check caught.
+- A pixel A/B across a reload (a code change between the captures): also set
+  `material.uniforms.uTime.value = 0` on the scene's `terrain`, `apron` and
+  `backdrop`, since a hold keeps whatever time the page had reached. Hash the
+  whole readback, and take the baseline twice across a reload before
+  trusting a match. WORKLOG §108f has the procedure and its controls.
 - The pane renders on the machine's own GPU through ANGLE (the frame-cost
   bench's report names it), so a timing there is real hardware, in
   Chromium. An emulated viewport larger than the pane gets a canvas at

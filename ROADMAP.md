@@ -100,7 +100,7 @@ requirement signed; frame cost measured; the mock-mark seams deleted.
 
 **The cut (user-signed 2026-09-24; audit and decisions: WORKLOG §108
 Kickoff).** Two stops.
-- [ ] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`.
+- [x] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`. ✅ 12 tests, two failing controls (WORKLOG §108a).
 - [ ] **108b** — the terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
 - [ ] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2.
 - [ ] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440.

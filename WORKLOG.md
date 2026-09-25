@@ -2149,3 +2149,34 @@ it; the mock stays until the last step because it is the known answer for
    in, alternating) rather than a separate before taken now; the off leg is
    today's shader, byte for byte.
 6. **Two stops** (the look, then the requirements).
+
+### 108a — the mark table, headless (2026-09-24) — read `none` ✅
+
+`src/render/groundMarks.ts`, THREE-free: `MarkTable` packs one frame's
+marks into two RGBA32F arrays the terrain shader will read (a mark is
+`(x, z, extent, shape code)` and `(r, g, b, alpha)`; a tile's bin is four
+texels of mark index + 1, 0 ending the list) and bins each mark into the
+tiles it can reach, plates first. A contact mark is binned by its
+circumscribed circle grown by `BIN_MARGIN` (0.05), a plate by its square
+grown the same; the margin stays under the plate's inset, so a 1×1 plate
+stays in its own tile. `BIN_DEPTH` is 16, the table holds 2048 marks (every
+tile of a 32×32 board, twice), and every dropped placement is counted in
+`overflow`, with `maxBin` the frame's peak demand. `markShapeOf`,
+`isDashedPlate` (the §40c predicate, so both destructible walls and
+destructible cover, never rubble or a camp member) and `markExtent` map a
+body to its mark; `DEFAULT_MARK_STYLE` holds the signed numbers.
+
+**Verified:** `groundMarks.test.ts`, 12 tests. The known answers are
+re-derived in the test: tiles from `gridToWorld`'s centre formula, shapes
+from the mock's construction (three's polygon laid flat, (x, y) → (x, −y)).
+Over 150 random six-mark boards, every tile a shape reaches (13×13 samples
+of the closed tile) holds the mark, and no bin holds a mark past its bound;
+a standing mark and a 1×1, 2×2 or 3×3 plate stay on their own tiles; a
+planted crowd of 11 marks at contact size 1 on one tile fits; a full bin
+and a full table count what they drop; plates come first; nothing bins off
+the board; the packed layout is where the header says. The failing
+controls: shrinking the reach to 0.8 of the extent fails 2 tests, and
+flipping the z mapping fails 3.
+
+**Not verified:** that the shader reads this layout the same way (108b's
+pane check against the mock).

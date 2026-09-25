@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 NEXT — its kickoff (audit, cut, reads).** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 IN PROGRESS — its cut signed 2026-09-24.** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
 spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
@@ -87,15 +87,25 @@ DESIGN (D6). **Why here:** after §107 so every read is under the shipping
 projection; before §109 because the anchor deletion was signed on the
 strength of the grounding these marks give. **Risk:** medium-high — a new
 shader path and a per-frame data path, judged by eye, with a frame-cost
-measurement owed. **Decision points:** the two identity residuals (a camp
-unit's hue-only status pip; the cracked-stone wall tell) · rounded plate
-corners (a parameter, read at the stop) · the elevation clauses' wording ·
-107d-post's upright depth vs the hop, re-read once the marks exist (the user's
-note, 2026-09-24).
+measurement owed. **Decision points:** ✅ DECIDED at the kickoff: the camp
+unit's hue-only status pip → Round 8 with the colourblind palette (TODO);
+the cracked-stone wall tell → a dashed plate frame (108b); marks fade with
+their glyph · open: rounded plate corners (a parameter, read at stop 1) ·
+the elevation clauses' wording (stop 2) · 107d-post's upright depth vs the
+hop, re-read with the marks through a dev dial (108c, stop 2).
 **Exit:** the marks on tops, step faces and mounds, read by the user; the
 grey read passed in a live battle; the residuals decided; the elevation
 requirement signed; frame cost measured; the mock-mark seams deleted.
 **Scope guards:** the spec's; no flyer mechanic.
+
+**The cut (user-signed 2026-09-24; audit and decisions: WORKLOG §108
+Kickoff).** Two stops.
+- [ ] **108a** — the mark table, headless (`groundMarks.ts`: per-tile bins, a fixed depth, overflow counted), pinned against shapes re-derived by sampling. Read `none`.
+- [ ] **108b** — the terrain draws the marks: SDF shapes after the grid line, the mounds sharing the table, marks-off = today's shader byte for byte; keyed by sprite so a mark fades with its glyph; the dashed frame; the read dials. Read `stop` — STOP 1, the look: the bookmark's marks on tops and step faces, now on mounds too; wrong = a mark missing from a mound or face, spilling onto a neighbour's face, left after a death, or off the bookmark's shape or size.
+- [ ] **108c** — the hop as a dev dial (a diagonal arcs over the higher corner; upright depth stays). Read `stop` → stop 2.
+- [ ] **108d** — the frame-cost bench (paired off/on legs; an A/A control and a planted cost). Read `stop` → stop 2: the user's Firefox run at 2560×1440.
+- [ ] **108e** — DESIGN: the identity channel as built and the elevation clauses (D5, D6); ARCHITECTURE. Read `stop` — STOP 2: the grey read in a live battle, the posed flyer at lift 0.45, upright vs the hop, the bench, the wording.
+- [ ] **108f** — the mock seams deleted (D8) with the read dials; the bookmark → `anchor-bottom`. Read `none` (the marks' pixels unchanged across the deletion).
 
 ## Phase 109 — the rule deletion + the round close (signed 2026-09-23 with the spec)
 

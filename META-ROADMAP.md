@@ -412,7 +412,8 @@ achievements · tutorial seen-flags — `plans/*.md`).
 - **Settings** — **the volume-axis split FIRST** (SFX / music, ± master —
   decided before any slider is coded, `plans/music.md`), then the in-game
   rebind UI (labels from the registry), default playback speed, the
-  colorblind-safe palette, the aura-FX mode graduated from the dev switch.
+  colorblind-safe palette (with the camp unit's status pip, deferred from
+  §108: TODO), the aura-FX mode graduated from the dev switch.
 - **Difficulty / ascension** (groundwork: per-speed enable, the focus-tile
   switch, the X1 multipliers) + **the unlock MECHANISM** (cross-run unlocks
   resolve at run creation only; the content MAPPING waits for Round 10).

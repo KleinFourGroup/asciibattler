@@ -2124,3 +2124,28 @@ derived and marked so, and the step that touches it measures it.
 **Predictions for the whole phase:** no snapshot bump; no RNG; the fuzz
 smoke fires on no step (`src/render`, `src/dev`, `src/ui`, `tests/board`
 and docs are outside the hook's trigger set).
+
+**The cut (user-signed 2026-09-24, "This cut looks great"):** ROADMAP §108,
+six steps and two stops. Why this order: the bins are pinned headless before
+a shader reads them; the look is read at stop 1 before anything builds on
+it; the mock stays until the last step because it is the known answer for
+"production matches the signed look".
+
+**The six decisions, all the session's proposals, signed as posed:**
+1. **The camp unit's hue-only status pip is deferred to Round 8** (TODO).
+   The fix is a DOM and font change, not the board, and Round 8 re-picks the
+   status hues for its colourblind palette, so the pip's symbols and hues get
+   one design pass, not two. DESIGN's clause-4 note is re-pointed at 108e.
+2. **The destructible wall's tell becomes a dashed plate frame** ("a good
+   catch! Fully signed"): a flag and a dash term in the same SDF, a shape so
+   it passes the grey read, no atlas cell spent. Built at 108b, on the
+   `isDestructibleObstacle` predicate the colour tell already uses.
+3. **The hop gets a dev dial (108c)**, so stop 2 compares it with upright
+   depth on screen; the user's 107d note kept the hop as the rival until the
+   marks exist. Deleted with the verdict.
+4. **A mark fades with its glyph** (finding 6): out on a death, in with a
+   reinforcement.
+5. **The frame cost is paired legs in one sitting** (marks compiled out vs
+   in, alternating) rather than a separate before taken now; the off leg is
+   today's shader, byte for byte.
+6. **Two stops** (the look, then the requirements).

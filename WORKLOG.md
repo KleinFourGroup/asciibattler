@@ -2294,3 +2294,93 @@ scenery").
 **For 108e:** DESIGN's §Terrain paragraph is far out of date (it still
 describes "a subdivided plane" that is "decorative only"); rewrite it with
 the identity and elevation text.
+
+### 108c — the hop as a dev dial (2026-09-25) — ◐ BUILT; read at STOP 2
+
+**Step zero, the premise against the code.** The hop still existed only in
+the instrument: `startGroundLerp` hard-coded an arc of 0. But
+`SpriteAnimator.update` already adds E7.D's arc, `arcHeight · 4t(1−t)`, on
+top of the §81c2 ground profile, which is the instrument's `arc` lift, so
+the dial needed one pass-through parameter and no new motion path. What the
+hop adds over upright depth, measured with a new `upright+arc` column in
+`npx tsx tests/board/clip.ts` (shipped camera, 2560×1440, 15×15, a 0.4
+step):
+
+| Case | upright | upright + hop |
+|---|---|---|
+| far corner high, both corners high, floor band | 0 % | 0 % |
+| near corner high (a step in front, S2) | 3.5 % | 0 % |
+| the squeeze, both side corners high (S4, S10) | 12.5 % | 0 % |
+
+The cost is the bob: 22 px on a 0.4 step, 17 px on 0.3. The cut stands as
+signed.
+
+**Built:**
+- `SpriteAnimator.startGroundLerp` takes an optional `arcHeight` (default
+  0; no production caller passes one).
+- `src/dev/boardPanel/hop.ts`, `diagonalHop`: a whole-tile diagonal (both
+  axes within 1e-3 of one tile, so a settle-back from mid-move never
+  qualifies) arcs by how far its higher corner cell stands above its higher
+  end; anything else gets 0.
+- The `hop` dial (off by default). seams.ts wraps
+  `SpriteAnimator.prototype.startGroundLerp`, a public method, so tsc checks
+  the wrap; with the dial on it adds `diagonalHop` on the live world's tile
+  heights (`slabGroundOf`). `probe().hops` counts the lifted moves and the
+  highest arc.
+- A board fixture, `wade` (icebergs, seed 1, live), because the `live`
+  river fight has no diagonal between two water tiles. A headless hunt
+  (the real `Run` and `World`, 12 seeds each of nine layouts) counted such
+  moves past a land corner: river 0–6 per fight (seed 7, `live`: 0),
+  isthmus 2–8, icebergs 8–25 (seed 1: 25, the first 2.9 s in).
+
+**Verified, headless:** `tests/board/hop.test.ts`, 4 tests, driving the
+real animator through the clip instrument: the rule's known answers from
+world positions; the glyph stands on the higher corner at t = 0.5; the
+controls without the hop (the card rule hides over 40 % on S1, upright
+over 10 % on the squeeze and more than 0 on S2); with the hop, 0 hidden on
+all seven diagonal cases under both depth rules. Two planted errors: a
+half-height arc fails 3 of the 4 tests (10.4 % hidden on S1), and reading
+the move's end cells instead of its corners fails the same 3 (56.1 %).
+`fixtures.test.ts` pins `wade` opening icebergs at 16×16.
+
+**Verified in the pane** (Chromium, hidden, driven by
+`activeScene.tick(1/60)`):
+- `board-live` with the dial on, the whole fight (40 s, a player win): 71
+  diagonal moves, 30 hopped. In the first 20 s, every diagonal whose corner
+  stood higher got exactly the rule's arc (22 of 22, no mismatch), and
+  none else. A hopping sprite sampled every frame peaks at −0.023, the
+  corner's tile top. The control, the dial off for the next 15 s: 4
+  qualifying diagonals, 0 arcs, and the bookmark drops `hop-1`.
+- `board-wade`: the live fight matches the headless hunt tick for tick
+  (t57 enemy R, t91 camp a, t100 enemy B). Through tick 937: 157
+  diagonals, 54 hops (13 under 0.05, 12 from 0.05 to 0.1, 29 of 0.1 or
+  more, 10 of 0.2 or more), the highest 0.344. The first big one peaks at
+  its corner's height (−0.0789 against −0.079).
+- No console errors.
+
+**Finding: the hop is common, and mostly small.** Floor, hills, ice and
+sand share one height-noise band, [−0.3, 0] (`TerrainRenderer.heightAt`);
+water sits at −0.4 and mud at −0.25. So a third or more of diagonal moves
+(30 of 71 on the river, 54 of 157 on the icebergs) pass a corner a little
+higher than both ends. At the user's resolution a world unit of lift draws
+about 67 px on the 12×12 river and 53 px on the 16×16 icebergs: `live`'s
+hops are 0.3–9.5 px, `wade`'s hops of 0.1 or more 5–18 px. The instrument's squeeze case is a 0.4 step;
+what a small noise step hides under upright alone is not measured. A
+minimum height below which a diagonal doesn't hop would be a threshold, so
+it is a question for stop 2, not built.
+
+**Not verified:** Firefox; the look in motion (whether the small bobs read
+as a hop, as jitter, or not at all, and how a lifted glyph, with its bar
+and hitsplats, sits over the marks, which stay on the tiles); a dev lens.
+
+**Stop 2 script, the hop part.** In Firefox:
+1. `?bp=board-wade_hop-1`. Space starts the fight. The larger hops, in
+   fight time at 1× speed: the player's archer about 7 s and 9 s in (right
+   of centre, low), an enemy
+   `R` about 13 s in (centre, low), a camp archer about 14 s in (centre,
+   high). Toggle "diagonal hop" in the explorer (Ctrl+Alt+P) to compare
+   with upright depth alone; a toggle applies from the next move.
+2. `?bp=board-live_hop-1`, the river fight: only the small land hops.
+Wrong looks like: a hop on a straight move or on flat ground; a glyph
+dipping into the corner it passes; a mark lifting with its glyph; a move
+that snaps at its start or end.

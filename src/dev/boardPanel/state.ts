@@ -253,6 +253,15 @@ export const DIALS = {
     def: 0.1,
     hint: 'a destructible wall or cover: its frame gap width, world units (0 = solid)',
   },
+  /** 108c — the hop (hop.ts): a diagonal move arcs over a corner cell higher
+   *  than both its ends. The rival to upright depth, read at stop 2; upright
+   *  depth stays on either way. A move already under way keeps its arc. */
+  hop: {
+    kind: 'bool',
+    label: 'diagonal hop',
+    def: false,
+    hint: 'a diagonal move arcs over a higher corner tile, peaking at its height (upright depth stays on) - the next move takes it',
+  },
   /** 105c — the posed fixtures (fixtures.ts `placePose`): render-only sprites
    *  with real overlay bars, on whatever board is up. `row` is 105b's
    *  `g ▄ ╥ M a r`; the clumps and the flyer are 105a's, cell for cell. */

@@ -92,6 +92,8 @@ export interface BoardPanel {
     slabs: number;
     /** 108b — the terrain marks' last upload: marks, dropped placements, the fullest bin. */
     marks: { count: number; overflow: number; maxBin: number };
+    /** 108c — moves the hop dial lifted since boot, and the highest arc (world). */
+    hops: { count: number; maxArc: number };
     battle: boolean;
     fixture: FixtureReport | null;
   };
@@ -323,6 +325,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
       sized: lastSized,
       slabs: lastSlabs,
       marks: internals.terrain.markStats,
+      hops: { ...seams.hops },
       battle: liveBattleOf(game) !== null,
       fixture,
     }),

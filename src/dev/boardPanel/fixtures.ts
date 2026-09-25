@@ -27,7 +27,7 @@ import type { Team } from '../../sim/Unit';
 
 // --- boards ------------------------------------------------------------------
 
-export const BOARD_IDS = ['open15', 'quarry', 'corridors', 'big24', 'live'] as const;
+export const BOARD_IDS = ['open15', 'quarry', 'corridors', 'big24', 'live', 'wade'] as const;
 export type BoardId = (typeof BOARD_IDS)[number];
 
 export interface BoardFixture {
@@ -86,6 +86,15 @@ export const BOARDS: Record<BoardId, BoardFixture> = {
     run: `seed=7&layout=river&${RUN_BASE}`,
     park: false,
     expect: { layoutId: 'river', gridW: 12, gridH: 12 },
+  },
+  // 108c — the hop's read. A diagonal between two water tiles past a corner on
+  // land arcs 0.1-0.4 world; `live`'s fight has no such move. Seed 1 had the
+  // most of 12 icebergs seeds in a headless hunt: 25, the first 2.9 s in.
+  wade: {
+    label: 'Icebergs 16x16, LIVE (units wade diagonally past the floes: the hop read)',
+    run: `seed=1&layout=icebergs&${RUN_BASE}`,
+    park: false,
+    expect: { layoutId: 'icebergs', gridW: 16, gridH: 16 },
   },
 };
 

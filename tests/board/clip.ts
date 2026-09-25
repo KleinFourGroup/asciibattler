@@ -94,7 +94,8 @@ export const CLIP_SHIPPED = SHIPPED;
 
 function main(): void {
   const pct = (v: number) => `${(v * 100).toFixed(1).padStart(5)}%`;
-  const cols = ['card', 'arc', 'plateau', 'upright'] as const;
+  // `upright+arc` is 108c's dial: the hop drawn over the shipped depth rule.
+  const cols = ['card', 'arc', 'plateau', 'upright', 'upright+arc'] as const;
   for (const [camName, view] of [
     ['pre-7.5 (persp 50, yaw 0)', PRE_75],
     ['shipped (ortho, yaw 45)', SHIPPED],
@@ -107,12 +108,14 @@ function main(): void {
         const r =
           c === 'upright'
             ? worstHidden(rig, BOARD, GLYPH, m, 'upright')
-            : worstHidden(rig, BOARD, GLYPH, m, 'card', c === 'card' ? 'none' : c);
+            : c === 'upright+arc'
+              ? worstHidden(rig, BOARD, GLYPH, m, 'upright', 'arc')
+              : worstHidden(rig, BOARD, GLYPH, m, 'card', c === 'card' ? 'none' : c);
         // A world lift L draws L·cos(pitch) up the screen; px per world unit from the fit.
         const p0 = gridToWorld(BOARD, C, C).project(rig.camera);
         const p1 = gridToWorld(BOARD, C, C).setY(r.lift).project(rig.camera);
         const px = Math.hypot((p1.x - p0.x) * VP.w, (p1.y - p0.y) * VP.h) / 2;
-        const lift = c === 'arc' || c === 'plateau' ? ` ${px.toFixed(0).padStart(3)}px` : '      ';
+        const lift = c === 'upright' || c === 'card' ? '      ' : ` ${px.toFixed(0).padStart(3)}px`;
         return `${pct(r.worst)} (${pct(r.atMid)})${lift}`.padStart(20);
       });
       console.log(`${name.padEnd(50)} ${cells.join(' ')}`);

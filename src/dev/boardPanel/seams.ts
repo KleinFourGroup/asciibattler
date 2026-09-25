@@ -22,7 +22,9 @@
  * Later steps added (each in its own section below): 105e's glyph scale (the
  * two unit lifts + the two pick builders). 106b's `unitAnchorPos` patch went
  * when its rule shipped (107b, `render/slabAnchor.ts`); what stays is
- * `restampSlabs`, which re-stands the N×N bodies after a view change.
+ * `restampSlabs`, which re-stands the N×N bodies after a view change. 108c's
+ * hop wraps `SpriteAnimator.prototype.startGroundLerp`, a public method, so tsc
+ * checks that one.
  *
  * ⚠ These are name-keyed reaches into private members tsc cannot check. Each
  * is guarded at install: a renamed seam logs a loud `[board-panel]` error and
@@ -40,9 +42,12 @@ import type { FontAtlas } from '../../render/FontAtlas';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import { BattleRenderer } from '../../render/BattleRenderer';
 import type { PickCandidate } from '../../render/pick';
+import { SpriteAnimator } from '../../render/animation/SpriteAnimator';
+import { slabGroundOf } from '../../render/slabAnchor';
 import { footprintOf } from '../../sim/occupancy';
 import { isInertNeutral, type Unit } from '../../sim/Unit';
 import type { World } from '../../sim/World';
+import { diagonalHop } from './hop';
 import { barLift, type DialState } from './state';
 
 /** What the panel reaches on the live Game (all TS-private there). */
@@ -121,6 +126,8 @@ export interface Seams {
    *  the current camera (the slide is view-dependent). Call after a view dial
    *  changes or a battle mounts. Returns the bodies written. */
   restampSlabs(battle: LiveBattle): number;
+  /** 108c — ground lerps the hop dial has lifted since boot, and the highest arc (world). */
+  readonly hops: { readonly count: number; readonly maxArc: number };
 }
 
 export function installSeams(game: Game, dials: () => DialState, onFrame: () => void): Seams {
@@ -207,6 +214,33 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     return written;
   };
 
+  // --- 108c: the diagonal hop ---------------------------------------------------
+  // Every unit ground relocation (moves, swaps, settle-backs) goes through the
+  // animator's `startGroundLerp`; the hop rides its `arcHeight`. A settle-back
+  // from mid-move is never a whole-tile diagonal, so it never hops.
+  const hops = { count: 0, maxArc: 0 };
+  const todayGroundLerp = SpriteAnimator.prototype.startGroundLerp;
+  SpriteAnimator.prototype.startGroundLerp = function (
+    this: SpriteAnimator,
+    handle,
+    from,
+    to,
+    durationSeconds,
+    arcHeight = 0,
+  ): void {
+    const battle = dials().hop ? liveBattleOf(game) : null;
+    if (battle) {
+      const { world } = battle;
+      const hop = diagonalHop(from, to, world.gridW, world.gridH, slabGroundOf(world, internalsOf(game).terrain).heightAt);
+      if (hop > 0) {
+        hops.count++;
+        hops.maxArc = Math.max(hops.maxArc, hop);
+        arcHeight = Math.max(arcHeight, hop);
+      }
+    }
+    todayGroundLerp.call(this, handle, from, to, durationSeconds, arcHeight);
+  };
+
   // --- the pre-render frame hook --------------------------------------------
   const sortByDepth = sprites.sortByDepth.bind(sprites);
   sprites.sortByDepth = (camera: THREE.Camera): void => {
@@ -269,5 +303,5 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     return written;
   };
 
-  return { restampAnchors, atlas, inkTopLiftAtSize1, stampSizes, restampSlabs };
+  return { restampAnchors, atlas, inkTopLiftAtSize1, stampSizes, restampSlabs, hops };
 }

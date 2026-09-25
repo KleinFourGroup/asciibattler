@@ -124,12 +124,15 @@ export class SpriteAnimator {
    * climb-early / descend-late Y profile (see `ActiveLerp.groundStepY`).
    * Callers: move/swap steps + the §36c settle-backs — anything whose from/to
    * are both terrain ground anchors. Same override semantics as `startLerp`.
+   * `arcHeight` (E7.D's arc, added on top of the ground profile) is 0 from
+   * every production caller; 108c's dev dial passes the diagonal hop through it.
    */
   startGroundLerp(
     handle: SpriteHandle,
     from: THREE.Vector3,
     to: THREE.Vector3,
     durationSeconds: number,
+    arcHeight = 0,
   ): void {
     this.shoves.delete(handle);
     if (durationSeconds <= 0) {
@@ -142,7 +145,7 @@ export class SpriteAnimator {
       to: to.clone(),
       duration: durationSeconds,
       elapsed: 0,
-      arcHeight: 0,
+      arcHeight,
       onComplete: undefined,
       targetProvider: undefined,
       groundStepY: true,

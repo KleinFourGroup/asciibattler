@@ -2883,3 +2883,14 @@ applies: `scale` 1.5 wrote 15 unit sizes and lifted all 36 overlay roots
 back to 1, every root returned to its pixel. One probe read 0 moved first:
 it had selected `.unit-overlay-stack`, whose transform is empty on all 36;
 the root `.unit-overlay` carries it.
+
+### 109c — the C1 doc drifts (2026-09-26) — read `none` ✅
+
+Gotcha #33 re-pointed at `glyphs.ts`, and rewritten for the mechanism as it
+is (checked against `glyphs.ts:7-68`): a unit glyph comes from the catalog
+and needs no edit, a non-unit glyph goes in `NON_UNIT_GLYPHS`, and UVs are
+addressed by the character, so "append, order is stable" no longer applies;
+the count stays within `ATLAS_CELL_BUDGET`. The incident text stays. The
+barrier drift went with R6 (109a); the font sentinel closes with no change
+(kickoff finding 4). TODO's drift item ticked. **§109's build is done:**
+109a–c, every read `none`, no `-post`.

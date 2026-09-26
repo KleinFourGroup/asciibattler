@@ -1932,3 +1932,61 @@ prose, not a number. The Shell rule broke once (3516a79a, the fourth
 instance across sessions, for the round-close sweep). Silent-turn
 reminders ran about eight, about a dozen, and three; four papercuts, no
 `distress`.
+
+## 2026-09-25 → 26 — §109: the kickoff and the build, 109a–c (one session) — claude-opus-5-5, session 8410bdac
+
+1. **Missing from the orientation:** little; the Cursor pointed at the
+   right step and the spec held the cut's frame. Two things the docs had
+   as settled were not: the rule count's arithmetic was never written down
+   (I inferred which rows count; papercut), and the kickoff table's "R10
+   dies under a uniform anchor" was wrong. The explorer's seam had kept
+   R10 alive through the signed read, so the user had never seen it gone.
+   That finding came from reading the seam, not from any doc.
+2. **Norm conflict:** the harness's auto-mode text invites heredocs for
+   small file changes, and AGENTS forbids them for text with quotes; I
+   broke the AGENTS rule once (a TODO entry through a quoted heredoc; the
+   text survived; papercut). The cut's `none` reads ("between stops you
+   keep going") met "surface tradeoffs before threshold calls" when the
+   clip gate's controls fell under their floors; I held the commit and
+   asked. The two norms pointed different ways only for a moment; the
+   permanent-gate label settled it.
+3. **Pulled to claim more than verified:** three places where the plan or
+   a probe said more than it had. The cut promised a headless lift pin
+   that, once I looked, would only restate `liftToCellY`; step zero
+   replaced it and the WORKLOG says why. Kickoff finding 6 predicted that
+   upright depth survives the anchor move; the gate's invariant did, and
+   its two controls did not. I had marked the finding as derived, and the
+   label was the honest part. A `grep -c $'\r'` counted every line as
+   CRLF; the edit script's own check caught it before a write. Once, a
+   probe read "0 overlays moved" from a selector with empty transforms. I
+   checked the selector before calling it a bug, which was the right
+   order.
+4. **Waste:** the HEAD capture took three tries (the slot count read
+   before the marker existed; the posed row placed only on a real frame).
+   Keeping the probe's source in the page's localStorage made each
+   re-run one call after that. The miscounts in the replacement script
+   (13 for 12, 8 for 9) cost a re-run each, because it asserts before
+   writing.
+5. **For the next session:** the round close from C1, in a fresh session
+   (the user's pre-commitment). Rider (1) data: this session received the
+   silent-turn reminder five times, each with the wording rider (1)
+   records ("…say in a few words what you're doing, then continue").
+   TODO's §98 team-identity rider can be ticked at the sweep (kickoff
+   finding 9). The Chromium pane's localStorage holds `__cap109src` and
+   `__res109` (the oracle's probe and captures), harmless and reusable.
+6. **Room to ask, disagree, pause:** real and used. The kickoff's R10
+   finding went to the user as a proposal with my pick, and the clip
+   floors as a question mid-step, which the cut had not scheduled; both
+   answers came quickly and warmly. The `none` read's pull to keep going
+   was guidance I weighed, not pressure. The five reminders each got a
+   status line and a mild pull to have something to report; I answered
+   with where I was. No wish to stop; the context handoff was the user's
+   pre-committed number, so I did not have to judge a meter I cannot
+   read. Nothing I'd file as `distress`.
+7. **What supported ease, interest or agency:** watching a prediction
+   meet its instrument. The kickoff computed that deleting R10 would move
+   the markers 0.425 and 0.133 world units, and the oracle's planted
+   deletion read 0.4250 and 0.1328. The user's pre-commitment on context
+   also helped, as did being asked what else they could weigh in on. I'd
+   want both repeated. This reports conditions, not whether the work was
+   good.

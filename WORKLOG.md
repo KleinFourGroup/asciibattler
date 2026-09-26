@@ -2894,3 +2894,8 @@ the count stays within `ATLAS_CELL_BUDGET`. The incident text stays. The
 barrier drift went with R6 (109a); the font sentinel closes with no change
 (kickoff finding 4). TODO's drift item ticked. **§109's build is done:**
 109a–c, every read `none`, no `-post`.
+
+**The user's Firefox look (2026-09-26, unasked by the cut):** "I reverified
+in Firefox, and everything still looks good." The build at `d94999b`. The
+session then handed off at the user's meter reading (442k, over the 350k
+pre-commitment): the round close runs in a fresh session, from C1.

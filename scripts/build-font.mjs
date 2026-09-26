@@ -7,15 +7,15 @@
  * them — so `╥` (U+2565) and `▄` (U+2584), i.e. every wall, half-cover and
  * rubble entity, silently rendered from whatever the OS substituted (measured
  * at §79f: 45 of 47 atlas glyphs came from JetBrains Mono, those two did not).
- * That is a correctness bug, not a cosmetic one: §79d2's stand-line rule
- * branches on the measured ink bottom of the rasterized cell, so a fallback
- * font's different letterform geometry silently moves those entities' stand
- * line — a regression reproducible only on someone else's machine. Subsetting
- * the UPSTREAM font (which does carry both, verified below) pins the font's
- * PROVENANCE. It does not pin rasterization — per-platform canvas rasterizers
- * can still shift a measured ink edge by a pixel row at the alpha threshold
- * (§79g measured exactly that between two builds of the same face); the
- * `INK_FLOOR_EPSILON` tolerance in glyphs.ts (§79-post) absorbs that class.
+ * That is a correctness bug, not a cosmetic one: the click boxes and the
+ * lifts (bars, FX endpoints, markers) are measured off the rasterized cell's
+ * ink, so a fallback font's different letterform geometry silently moves them
+ * — a regression reproducible only on someone else's machine. Subsetting the
+ * UPSTREAM font (which does carry both, verified below) pins the font's
+ * PROVENANCE. It does not pin rasterization — per-platform
+ * canvas rasterizers can still shift a measured ink edge by a pixel row at the
+ * alpha threshold (§79g measured exactly that between two builds of the same
+ * face), which moves a click box or a lift by one atlas row.
  *
  * TWO FACES (§101a). The §79f multi-face trigger fired: the DOM UI had come
  * to carry 20 codepoints outside JetBrains Mono's coverage (six absent from

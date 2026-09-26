@@ -6,12 +6,8 @@
  * the devKeys / main.ts cast convention), and every patch falls through to
  * the original at the default dial, so an untouched panel is today's board.
  *
- * Three hooks:
- *  - `FontAtlas.baseAnchorY` (instance) — THE anchor rule. The three lifts
- *    (`inkCenterLift` / `inkTopLift` / `inkBottomLift`) and the mirror pick
- *    all read it, so one override moves the stand line AND everything stacked
- *    on it, consistently. The per-instance anchor attribute is written at
- *    glyph-write time, so a flip re-stamps the live slots (`restampAnchors`).
+ * Two hooks (a third, the `anchor` dial's override of the per-glyph stand
+ * line, went when the quad-bottom anchor became the only rule):
  *  - `BattleRenderer.prototype.inkTopLiftFor` — the ONE definition the overlay
  *    stack and the hitsplat anchor share (§79e). Patched once on the
  *    prototype: a BattleRenderer is built per battle.
@@ -37,6 +33,7 @@ import type { SpriteRenderer } from '../../render/SpriteRenderer';
 import type { UnitOverlayLayer } from '../../render/UnitOverlayLayer';
 import type { TerrainRenderer } from '../../render/TerrainRenderer';
 import type { FontAtlas } from '../../render/FontAtlas';
+import { BASE_ANCHOR_Y } from '../../render/glyphs';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import { BattleRenderer } from '../../render/BattleRenderer';
 import type { PickCandidate } from '../../render/pick';
@@ -96,18 +93,7 @@ export function applyCameraView(
   internalsOf(game).renderer.setCameraView(view);
 }
 
-interface SpriteInternals {
-  readonly aGlyphUV: THREE.InstancedBufferAttribute;
-  readonly aAnchor: THREE.InstancedBufferAttribute;
-  readonly anchorModeAtSlot: readonly string[];
-}
-
-const uvKey = (u0: number, v0: number): string => `${Math.fround(u0)}|${Math.fround(v0)}`;
-
 export interface Seams {
-  /** Re-derive every live base-anchored sprite's anchor from the (patched)
-   *  atlas rule. Call after the anchor dial flips. Returns the slots written. */
-  restampAnchors(): number;
   /** The patched atlas — followers read lifts through it. */
   readonly atlas: FontAtlas;
   /** 105e — `inkTopLift` BEFORE the scale patch, for a caller that applies
@@ -126,15 +112,6 @@ export interface Seams {
 export function installSeams(game: Game, dials: () => DialState, onFrame: () => void): Seams {
   const { sprites } = internalsOf(game);
   const atlas = sprites.atlas;
-
-  // --- the anchor rule -------------------------------------------------------
-  if (typeof atlas.baseAnchorY !== 'function') {
-    seamMoved('FontAtlas.baseAnchorY');
-  } else {
-    const todayAnchorY = atlas.baseAnchorY.bind(atlas);
-    atlas.baseAnchorY = (glyph: string): number =>
-      dials().anchor === 'bottom' ? -0.5 : todayAnchorY(glyph);
-  }
 
   // --- 105e: the two UNIT lifts scale with the glyph --------------------------
   // `inkTopLift` (bars, hitsplats, the marker over its target) and
@@ -162,7 +139,7 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
       // Today's path reads the scale-patched atlas, so it is already × scale.
       if (d.bar === 'ink') return todayInkTopLiftFor.call(this, unit);
       return (
-        barLift(d, inkTopLiftAtSize1(unit.glyph), atlas.baseAnchorY(unit.glyph)) *
+        barLift(d, inkTopLiftAtSize1(unit.glyph), BASE_ANCHOR_Y) *
         footprintOf(unit) *
         d.scale
       );
@@ -214,37 +191,6 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     sortByDepth(camera);
   };
 
-  // --- re-stamping live anchors ---------------------------------------------
-  // A slot records its UV rect, not its glyph; the atlas's UV table inverts it.
-  const glyphByUv = new Map<string, string>();
-  const uvByGlyph = (atlas as unknown as { uvByGlyph?: Map<string, { u0: number; v0: number }> })
-    .uvByGlyph;
-  if (uvByGlyph instanceof Map) {
-    for (const [glyph, uv] of uvByGlyph) glyphByUv.set(uvKey(uv.u0, uv.v0), glyph);
-  } else {
-    seamMoved('FontAtlas.uvByGlyph');
-  }
-
-  const restampAnchors = (): number => {
-    const s = sprites as unknown as Partial<SpriteInternals>;
-    if (!s.aGlyphUV || !s.aAnchor || !s.anchorModeAtSlot) {
-      seamMoved('SpriteRenderer.aGlyphUV / aAnchor / anchorModeAtSlot');
-      return 0;
-    }
-    const uv = s.aGlyphUV.array as Float32Array;
-    const anchor = s.aAnchor.array as Float32Array;
-    let written = 0;
-    for (let slot = 0; slot < sprites.count; slot++) {
-      if (s.anchorModeAtSlot[slot] !== 'base') continue;
-      const glyph = glyphByUv.get(uvKey(uv[slot * 4]!, uv[slot * 4 + 1]!));
-      if (glyph === undefined) continue;
-      anchor[slot * 2 + 1] = atlas.baseAnchorY(glyph);
-      written++;
-    }
-    s.aAnchor.needsUpdate = true;
-    return written;
-  };
-
   // --- 105e: the unit bodies' size ---------------------------------------------
   // Spawn writes a unit's size ONCE (`footprint`, BattleRenderer.onUnitSpawned)
   // and nothing tweens it, so a per-frame "stamp what differs" is the whole
@@ -269,5 +215,5 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     return written;
   };
 
-  return { restampAnchors, atlas, inkTopLiftAtSize1, stampSizes, restampSlabs };
+  return { atlas, inkTopLiftAtSize1, stampSizes, restampSlabs };
 }

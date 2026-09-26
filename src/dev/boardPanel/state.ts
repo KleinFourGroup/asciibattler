@@ -5,7 +5,7 @@
  * panel's controls, the typed state, the `?bp=` bookmark — derives from that
  * row, so 105d/105e add a projection or glyph-scale dial as one line here.
  *
- * The state lives in the URL (`?bp=anchor-bottom_bar-uniform`), NEVER in
+ * The state lives in the URL (`?bp=yaw-30_pose-row`), NEVER in
  * `RunConfig`: the run dials ship to players and ride the fuzz hook
  * (src/run), this is `src/dev`, referenced only from main.ts's DEV block.
  * Only NON-default values are written, so the default state is no param at
@@ -111,16 +111,6 @@ export const DIALS = {
     def: 1,
     hint: 'unit bodies only (walls stay one tile) — bars, hitsplats and click boxes follow',
   },
-  /** The stand line: today's per-class rule (letterforms on the terminal-cell
-   *  line, blocks on the quad bottom) vs ONE rule — the quad bottom for all.
-   *  The H1 read: can the classifier / descender room / baseline go? */
-  anchor: {
-    kind: 'enum',
-    label: 'anchor',
-    options: ['today', 'bottom'],
-    def: 'today',
-    hint: 'today = the per-class stand line · bottom = every quad stands on its bottom edge',
-  },
   /** The HP-bar line: today's ink-top follow (the user's §79e reversal) vs one
    *  uniform line across a row of mixed glyphs (§79d2's original call). */
   bar: {
@@ -130,8 +120,8 @@ export const DIALS = {
     def: 'ink',
     hint: 'ink = each bar rides its own ink top (79e) · uniform = one line for every glyph',
   },
-  /** Where the uniform line sits, in CELL units above the quad bottom (so it
-   *  is independent of the anchor dial). 0.9 = just clear of the cap-height ink
+  /** Where the uniform line sits, in CELL units above the quad bottom. 0.9 =
+   *  just clear of the cap-height ink
    *  top (57/64 of a cell, measured) — pinned by state.test.ts. */
   barY: {
     kind: 'range',

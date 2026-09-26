@@ -21,14 +21,18 @@ const measure = (name: string, rule: 'card' | 'upright') => {
 };
 
 describe('107d-post — a standing glyph is depth-tested upright (shipped camera)', () => {
+  // The two controls' floors keep the margin they had when set: the glyph's ink
+  // sits 1/16 of a cell higher since the quad-bottom anchor became the only
+  // rule, so the leaning card hides less of it (K2 13.9 % → 9.4 %, S1 56.1 % →
+  // 49.8 %), and the floors moved 10 % → 6 % and 50 % → 45 % (the user's call).
   it('KNOWN ANSWERS: a flat patch hides nothing; the §81c2 defect is caught and its profile clears it', () => {
     expect(measure('K1 flat, diagonal', 'card')).toBe(0);
-    expect(measure('K2 step up, straight-line Y (the §81c2 defect)', 'card')).toBeGreaterThan(0.1);
+    expect(measure('K2 step up, straight-line Y (the §81c2 defect)', 'card')).toBeGreaterThan(0.06);
     expect(measure('K2 step up, the §81c2 profile', 'upright')).toBe(0);
   });
 
-  it('CONTROL — the leaning card: a higher far corner hides over half the ink mid-diagonal (the 107d find)', () => {
-    expect(measure('S1 diagonal, far corner high (the bug)', 'card')).toBeGreaterThan(0.5);
+  it('CONTROL — the leaning card: a higher far corner hides about half the ink mid-diagonal (the 107d find)', () => {
+    expect(measure('S1 diagonal, far corner high (the bug)', 'card')).toBeGreaterThan(0.45);
   });
 
   it('upright: no terrain behind the path cuts into the glyph, on either diagonal, at either step', () => {

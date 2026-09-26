@@ -114,8 +114,8 @@ the spec's; §101's gates untouched.
 **The cut** (signed 2026-09-26; WORKLOG §109 Kickoff). R10 is re-grounded,
 not deleted: the markers read the X's raw ink bottom (kickoff finding 1).
 
-- [ ] **109a** — the deletion (D4): base sprites stand on the quad bottom; R5–R7 go; the lifts become ink edges; R10 re-grounded; pins re-derived from the atlas; the instrument onto the quad-bottom anchor; the rule count recorded. Read `none` — a numeric pane oracle against HEAD under `?bp=anchor-bottom`, the literal R10 deletion its planted failure.
-- [ ] **109b** — the explorer trimmed to its keepers (D8): the `anchor` dial and `restampAnchors`, `bar` / `barY` / `barLift`; the bench and `marks` stay (the user's call). Read `none`.
+- [x] **109a** — the deletion (D4): base sprites stand on the quad bottom; R5–R7 go; the lifts become ink edges; R10 re-grounded; pins re-derived from the atlas; the instrument onto the quad-bottom anchor; the rule count recorded. Read `none` — a numeric pane oracle against HEAD under `?bp=anchor-bottom`, the literal R10 deletion its planted failure. ✅ identical to the signed look; 17 → 14 rules; the `anchor` dial came in from 109b; the clip controls re-floored (the user's call). WORKLOG §109a.
+- [ ] **109b** — the explorer trimmed to its keepers (D8): `bar` / `barY` / `barLift`; the bench and `marks` stay (the user's call). Read `none`.
 - [ ] **109c** — the C1 doc drifts: gotcha #33 re-pointed; the font sentinel closed with no change. Read `none`.
 - [ ] **C1** — the macro re-audit: Round 8's charter against the code, and what 7.5 hands to Rounds 9 and 11. Read `stop`.
 - [ ] **C2–C5** — the efficacy read · the welfare read (the user's) · the trials and standing decisions · the scratchpad sweep. Read `stop`.

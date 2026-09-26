@@ -29,9 +29,6 @@ export const XZ_PADDING = 0.5;
 export const Y_HALF_EXTENT = 1.0;
 export const FIT_MARGIN = 1.05;
 
-/** glyphs.ts INK_FLOOR_EPSILON — the floor-family classifier, restated. */
-const INK_FLOOR_EPSILON = 3 / 64;
-
 export type Projection = { kind: 'perspective'; fovDeg: number } | { kind: 'orthographic' };
 
 export interface View {
@@ -56,8 +53,6 @@ export interface Board {
   h: number;
 }
 
-export type AnchorMode = 'today' | 'uniform';
-
 export interface Rect {
   x0: number;
   y0: number;
@@ -76,12 +71,9 @@ export function inkOf(glyph: string): [number, number, number, number] {
   return ink;
 }
 
-/** The base-anchor quad-local y. 'today' restates glyphs.ts `baseAnchorYFor`. */
-export function anchorYFor(glyph: string, mode: AnchorMode): number {
-  if (mode === 'uniform') return -0.5;
-  const y0 = inkOf(glyph)[1];
-  return (y0 < INK_FLOOR_EPSILON ? 0 : census.baselineY - census.descenderRoom) - 0.5;
-}
+/** The base-anchor quad-local y, restated from render/glyphs.ts `BASE_ANCHOR_Y`:
+ *  the quad bottom, for every glyph (geometry.test.ts pins the copy). */
+export const ANCHOR_Y = -0.5;
 
 /** BattleRenderer `gridToWorld`, restated: grid +y runs AWAY from the camera. */
 export function gridToWorld(board: Board, gx: number, gy: number): THREE.Vector3 {
@@ -206,8 +198,8 @@ export interface Sprite {
  * space about `instanceAnchor`. Returns the on-screen rect (CSS px, y down) of
  * the quad-local sub-rect [qx0..qx1] × [qy0..qy1] given in 0..1 cell units.
  */
-function spriteRectPx(rig: Rig, s: Sprite, scale: number, mode: AnchorMode, cell: [number, number, number, number]): Rect {
-  const anchorY = anchorYFor(s.glyph, mode);
+function spriteRectPx(rig: Rig, s: Sprite, scale: number, cell: [number, number, number, number]): Rect {
+  const anchorY = ANCHOR_Y;
   const k = scale * (s.size ?? 1);
   const ground = s.pos.clone().addScaledVector(rig.up, s.lift ?? 0);
   const v = ground.applyMatrix4(rig.camera.matrixWorldInverse);
@@ -216,12 +208,12 @@ function spriteRectPx(rig: Rig, s: Sprite, scale: number, mode: AnchorMode, cell
   return { x0: Math.min(a.x, b.x), y0: Math.min(a.y, b.y), x1: Math.max(a.x, b.x), y1: Math.max(a.y, b.y) };
 }
 
-export function inkRectPx(rig: Rig, s: Sprite, scale: number, mode: AnchorMode): Rect {
-  return spriteRectPx(rig, s, scale, mode, inkOf(s.glyph));
+export function inkRectPx(rig: Rig, s: Sprite, scale: number): Rect {
+  return spriteRectPx(rig, s, scale, inkOf(s.glyph));
 }
 
-export function quadRectPx(rig: Rig, s: Sprite, scale: number, mode: AnchorMode): Rect {
-  return spriteRectPx(rig, s, scale, mode, [0, 0, 1, 1]);
+export function quadRectPx(rig: Rig, s: Sprite, scale: number): Rect {
+  return spriteRectPx(rig, s, scale, [0, 0, 1, 1]);
 }
 
 /** Planar view depth — SpriteRenderer.sortByDepth's key, restated. */
@@ -236,8 +228,8 @@ const SAMPLES = 24;
  * sprites drawn in front of it (nearer planar depth; ties → later index).
  * ⚠ Ink RECTS, not ink pixels — an upper bound on real ink-over-ink.
  */
-export function coveredFractions(rig: Rig, sprites: Sprite[], scale: number, mode: AnchorMode): number[] {
-  const rects = sprites.map((s) => inkRectPx(rig, s, scale, mode));
+export function coveredFractions(rig: Rig, sprites: Sprite[], scale: number): number[] {
+  const rects = sprites.map((s) => inkRectPx(rig, s, scale));
   const depths = sprites.map((s) => depthOf(rig, s));
   return sprites.map((_, i) => {
     const r = rects[i]!;
@@ -299,8 +291,8 @@ export function tilePolyPx(rig: Rig, board: Board, gx: number, gy: number): { x:
 }
 
 /** Fraction of a standing unit's ink rect that lies over ITS OWN tile's top face. */
-export function ownTileFraction(rig: Rig, board: Board, gx: number, gy: number, glyph: string, scale: number, mode: AnchorMode): number {
-  const r = inkRectPx(rig, { glyph, pos: gridToWorld(board, gx, gy) }, scale, mode);
+export function ownTileFraction(rig: Rig, board: Board, gx: number, gy: number, glyph: string, scale: number): number {
+  const r = inkRectPx(rig, { glyph, pos: gridToWorld(board, gx, gy) }, scale);
   const poly = tilePolyPx(rig, board, gx, gy);
   let inside = 0;
   for (let ix = 0; ix < SAMPLES; ix++)
@@ -353,14 +345,13 @@ export function report(
   board: Board,
   viewport: Viewport,
   scale: number,
-  mode: AnchorMode,
   flyerLift: number = FLYER_LIFT,
 ): CellReport {
   const rig = fitRig(view, board, viewport);
   const cx = Math.floor(board.w / 2);
   const cy = Math.floor(board.h / 2);
   const quadH = (gx: number, gy: number): number => {
-    const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(board, gx, gy) }, scale, mode);
+    const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(board, gx, gy) }, scale);
     return q.y1 - q.y0;
   };
 
@@ -378,21 +369,21 @@ export function report(
   ] as const;
   const leans = corners.map(([gx, gy]) => Math.abs(leanDeg(rig, gridToWorld(board, gx, gy))));
 
-  const centre = coveredFractions(rig, clumpAt(board, cx, cy), scale, mode);
-  const corner = coveredFractions(rig, clumpAt(board, 1, 1), scale, mode);
-  const far = coveredFractions(rig, clumpAt(board, cx, board.h - 2), scale, mode);
+  const centre = coveredFractions(rig, clumpAt(board, cx, cy), scale);
+  const corner = coveredFractions(rig, clumpAt(board, 1, 1), scale);
+  const far = coveredFractions(rig, clumpAt(board, cx, board.h - 2), scale);
   const mean = (a: number[]): number => a.reduce((s, v) => s + v, 0) / a.length;
 
-  const ink = inkRectPx(rig, { glyph: 'M', pos: gridToWorld(board, cx, cy) }, scale, mode);
+  const ink = inkRectPx(rig, { glyph: 'M', pos: gridToWorld(board, cx, cy) }, scale);
 
   const flyer: Sprite = { glyph: 'V', pos: gridToWorld(board, cx, cy), lift: flyerLift };
   const flyerCover = Math.max(
     ...[-1, 0, 1].map((dx) => {
       const behind: Sprite = { glyph: 'M', pos: gridToWorld(board, cx + dx, cy + 1) };
-      return coveredFractions(rig, [behind, flyer], scale, mode)[0]!;
+      return coveredFractions(rig, [behind, flyer], scale)[0]!;
     }),
   );
-  const flyerInk = inkRectPx(rig, flyer, scale, mode);
+  const flyerInk = inkRectPx(rig, flyer, scale);
   const shadow = toPx(rig, flyer.pos);
 
   // The fit's self-check: every corner of the padded frame box is on screen.
@@ -420,7 +411,7 @@ export function report(
     clumpCornerMax: Math.max(...corner),
     clumpFarMean: mean(far),
     clumpFarMax: Math.max(...far),
-    ownTile: ownTileFraction(rig, board, cx, cy, 'M', scale, mode),
+    ownTile: ownTileFraction(rig, board, cx, cy, 'M', scale),
     rowsSpanned: (ink.y1 - ink.y0) / tileHPx,
     flyerCoversNeighbour: flyerCover,
     flyerShadowGapPx: shadow.y - flyerInk.y1,
@@ -616,7 +607,7 @@ function hitsFootprintTerrain(c: SlabCase, origin: THREE.Vector3, dir: THREE.Vec
 export function slabReport(rig: Rig, c: SlabCase, rule: SlabRule): SlabReport {
   const anchor = rule(c, rig);
   const slab: Sprite = { glyph: SLAB_GLYPH, pos: anchor, size: c.n };
-  const ink = inkRectPx(rig, slab, 1, 'today');
+  const ink = inkRectPx(rig, slab, 1);
 
   const b = footprintBounds(c);
   const top = footprintTopY(c);
@@ -634,7 +625,7 @@ export function slabReport(rig: Rig, c: SlabCase, rule: SlabRule): SlabReport {
   // The ink, sampled in WORLD space: the quad offsets along the camera's right /
   // up about the anchor (billboard.vert.glsl, view space = the camera basis).
   const [ix0, iy0, ix1, iy1] = inkOf(SLAB_GLYPH);
-  const anchorY = anchorYFor(SLAB_GLYPH, 'today');
+  const anchorY = ANCHOR_Y;
   let hits = 0;
   const q = new THREE.Vector3();
   for (let i = 0; i < SAMPLES; i++)
@@ -656,7 +647,7 @@ export function slabReport(rig: Rig, c: SlabCase, rule: SlabRule): SlabReport {
       const pos = gridToWorld(c.board, gx, gy);
       pos.y = c.heights(gx, gy);
       if (pos.dot(rig.fwd) >= centreDepth) continue; // not in front of the slab
-      sortCost = Math.max(sortCost, coveredFractions(rig, [{ glyph: 'M', pos }, slab], 1, 'today')[0]!);
+      sortCost = Math.max(sortCost, coveredFractions(rig, [{ glyph: 'M', pos }, slab], 1)[0]!);
     }
 
   return { lateral, baseInside, occluded: hits / (SAMPLES * SAMPLES), sortCost };
@@ -712,7 +703,7 @@ export function hiddenInk(
   cells: readonly [number, number][],
 ): number {
   const [ix0, iy0, ix1, iy1] = inkOf(glyph);
-  const anchorY = anchorYFor(glyph, 'today');
+  const anchorY = ANCHOR_Y;
   const ortho = isOrtho(rig);
   const camPos = new THREE.Vector3().setFromMatrixPosition(rig.camera.matrixWorld);
   // The upright card: vertical, through the anchor, containing camera-right.

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { FontAtlas } from './FontAtlas';
+import { BASE_ANCHOR_Y } from './glyphs';
 import VERTEX_SHADER from './shaders/billboard.vert.glsl?raw';
 import FRAGMENT_SHADER from './shaders/sprite.frag.glsl?raw';
 import BLOOM_FRAGMENT_SHADER from './shaders/sprite-bloom.frag.glsl?raw';
@@ -39,17 +40,15 @@ export interface SpriteHandle {
  *
  *  - `'center'` — the quad CENTERS on the anchor (the historical behavior;
  *    right for things that float AT a point: projectiles, motes).
- *  - `'base'` — the glyph STANDS on the anchor: its quad-local STAND LINE
- *    (§79d2 — the font baseline for letterforms, the quad bottom for
- *    floor-touching blocks; derived per glyph via `FontAtlas.baseAnchorY`)
- *    coincides with the anchor, the glyph rising screen-up from it.
+ *  - `'base'` — the glyph STANDS on the anchor: its quad BOTTOM
+ *    (`BASE_ANCHOR_Y`) coincides with the anchor, for every glyph, and the
+ *    glyph rises screen-up from it. The ground mark under the glyph says
+ *    where it touches the ground, so no glyph needs a stand line of its own.
  *
  * The offset is applied in VIEW space by the vertex shader, so a base-anchored
- * glyph rises straight up the screen from its anchor's projection — never the
- * off-axis diagonal a world-Y lift produces under the pitched camera (the
- * I2/J3/79b class). Declared at `addSprite`; the MODE is fixed for the
- * sprite's life, but the derived offset re-derives on a glyph swap
- * (`updateSprite({glyph})`) so a base sprite never stands on a stale line.
+ * glyph rises straight up the screen from its anchor's projection, never along
+ * a world-Y lift that a perspective camera would project off-axis. Declared at
+ * `addSprite` and fixed for the sprite's life.
  */
 export type SpriteAnchor = 'center' | 'base';
 
@@ -105,12 +104,6 @@ export class SpriteRenderer {
   private nextHandleId = 1;
   private readonly slotByHandle = new Map<number, number>();
   private readonly handleAtSlot: number[] = [];
-  /** §79d2 — each live slot's anchor MODE, so a glyph swap on a base-anchored
-   *  sprite re-derives its stand line. Follows the slot lifecycle exactly like
-   *  `handleAtSlot` (compaction swap + depth-sort repack). */
-  private readonly anchorModeAtSlot: SpriteAnchor[] = [];
-  /** §79d2 — depth-sort scratch for the mode array (mirrors `_handleScratch`). */
-  private readonly _modeScratch: SpriteAnchor[] = [];
 
   // Scratch THREE.Vector3 to avoid allocating per addSprite.
   private static readonly _scratchColor = new THREE.Color();
@@ -229,8 +222,7 @@ export class SpriteRenderer {
     const slot = this.activeCount;
     const id = this.nextHandleId++;
 
-    // Mode first — writeGlyph derives the anchor offset from it (§79d2).
-    this.anchorModeAtSlot[slot] = anchor;
+    this.writeAnchor(slot, anchor);
     this.writePosition(slot, position);
     this.writeGlyph(slot, glyph);
     this.writeColor(slot, color);
@@ -288,12 +280,10 @@ export class SpriteRenderer {
       const movedId = this.handleAtSlot[lastSlot]!;
       this.slotByHandle.set(movedId, slot);
       this.handleAtSlot[slot] = movedId;
-      this.anchorModeAtSlot[slot] = this.anchorModeAtSlot[lastSlot]!;
     }
 
     this.slotByHandle.delete(handle.id);
     this.handleAtSlot.pop();
-    this.anchorModeAtSlot.pop();
     this.activeCount--;
     this.geometry.instanceCount = this.activeCount;
   }
@@ -397,11 +387,6 @@ export class SpriteRenderer {
       this.handleAtSlot[j] = h;
       this.slotByHandle.set(h, j);
     }
-    // §79d2 — the anchor-mode array rides the same permutation.
-    const modes = this._modeScratch;
-    modes.length = n;
-    for (let j = 0; j < n; j++) modes[j] = this.anchorModeAtSlot[order[j]!]!;
-    for (let j = 0; j < n; j++) this.anchorModeAtSlot[j] = modes[j]!;
   }
 
   /**
@@ -450,13 +435,15 @@ export class SpriteRenderer {
     arr[slot * 4 + 2] = uv.u1;
     arr[slot * 4 + 3] = uv.v1;
     this.aGlyphUV.needsUpdate = true;
-    // §79d2 — the anchor offset is (mode, glyph)-derived, so every glyph write
-    // (add OR swap) refreshes it: 'center' = (0, 0); 'base' = the glyph's
-    // stand line (font baseline / block floor) from the atlas.
-    const mode = this.anchorModeAtSlot[slot] ?? 'center';
-    const anchorArr = this.aAnchor.array as Float32Array;
-    anchorArr[slot * 2] = 0;
-    anchorArr[slot * 2 + 1] = mode === 'base' ? this.atlas.baseAnchorY(glyph) : 0;
+  }
+
+  /** The anchor offset depends on the mode alone, which is fixed for the
+   *  sprite's life, so it is written once, at `addSprite`; compaction and the
+   *  depth sort carry it with the instance. */
+  private writeAnchor(slot: number, mode: SpriteAnchor): void {
+    const arr = this.aAnchor.array as Float32Array;
+    arr[slot * 2] = 0;
+    arr[slot * 2 + 1] = mode === 'base' ? BASE_ANCHOR_Y : 0;
     this.aAnchor.needsUpdate = true;
   }
 

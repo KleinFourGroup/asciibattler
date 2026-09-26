@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
+import { BASE_ANCHOR_Y } from '../../src/render/glyphs';
 import {
   BOARDS,
   PRE_75,
   VIEWPORTS,
-  anchorYFor,
+  ANCHOR_Y,
   cameraUpDriftPx,
   clumpAt,
   coveredFractions,
@@ -64,7 +65,7 @@ describe("the known answers — §79b's live-camera measurements", () => {
   });
 
   it('the half-quad spans 26.3 px on screen at the near rows', () => {
-    const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(B15, 7, 0) }, 1, 'today');
+    const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(B15, 7, 0) }, 1);
     expect((q.y1 - q.y0) / 2).toBeCloseTo(26.3, 0);
   });
 
@@ -104,9 +105,8 @@ describe('the closed forms', () => {
 });
 
 describe('the anchor, restated', () => {
-  it("'today' reproduces the live atlas's two values (measured 2026-09-21: −0.4375 letterforms, −0.5 floor family)", () => {
-    for (const g of ['M', 'g', 'a', 'r', '@', '/', 'X', '#']) expect(anchorYFor(g, 'today')).toBeCloseTo(-0.4375, 4);
-    for (const g of ['╥', '▄']) expect(anchorYFor(g, 'today')).toBe(-0.5);
+  it("is production's: every base sprite stands on its quad bottom (render/glyphs.ts BASE_ANCHOR_Y)", () => {
+    expect(ANCHOR_Y).toBe(BASE_ANCHOR_Y);
   });
 });
 
@@ -115,7 +115,7 @@ describe('the fit', () => {
     const views: View[] = [PRE_75, { ...PRE_75, yawDeg: 45 }, { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 60, yawDeg: 0 }, ORTHO, ORTHO_YAW];
     for (const view of views)
       for (const board of BOARDS)
-        for (const vp of VIEWPORTS) expect(report(view, board, vp, 1, 'today').fits, `${JSON.stringify(view)} ${board.name} ${vp.name}`).toBe(true);
+        for (const vp of VIEWPORTS) expect(report(view, board, vp, 1).fits, `${JSON.stringify(view)} ${board.name} ${vp.name}`).toBe(true);
   });
 });
 
@@ -126,14 +126,14 @@ describe('the overlap measure', () => {
       { glyph: 'M', pos: gridToWorld(B15, 2, 2) },
       { glyph: 'M', pos: gridToWorld(B15, 12, 12) },
     ];
-    expect(coveredFractions(rig, apart, 1, 'today')).toEqual([0, 0]);
-    const big = coveredFractions(rig, clumpAt(B15, 7, 7), 2.5, 'today');
+    expect(coveredFractions(rig, apart, 1)).toEqual([0, 0]);
+    const big = coveredFractions(rig, clumpAt(B15, 7, 7), 2.5);
     expect(Math.max(...big)).toBeGreaterThan(0.2);
   });
 
   it('is viewport-independent under orthographic at one aspect (glyph size is world units)', () => {
-    const a = report(ORTHO, B15, { name: 'a', w: 1280, h: 720, dpr: 1 }, 1, 'today');
-    const b = report(ORTHO, B15, { name: 'b', w: 2560, h: 1440, dpr: 1 }, 1, 'today');
+    const a = report(ORTHO, B15, { name: 'a', w: 1280, h: 720, dpr: 1 }, 1);
+    const b = report(ORTHO, B15, { name: 'b', w: 2560, h: 1440, dpr: 1 }, 1);
     expect(a.clumpCentreMean).toBeCloseTo(b.clumpCentreMean, 6);
     expect(b.glyphPxCentre / a.glyphPxCentre).toBeCloseTo(2, 6);
   });
@@ -218,7 +218,7 @@ describe('§106a — the N×N slab under yaw', () => {
       const rig = fitRig(view, RUBBLE_QUARRY, vp);
       const s = RUBBLE_QUARRY_SLABS[0]!;
       const c = slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, 'checker', true);
-      return inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1, 'today');
+      return inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1);
     };
     for (const yaw of [30, 45]) {
       const a = inkAt(ortho(yaw), slabCentre);

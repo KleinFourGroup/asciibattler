@@ -4,10 +4,8 @@ import {
   ATLAS_CELL_BUDGET,
   FULL_GLYPH_INK,
   INK_PAD_PX,
-  baseAnchorYFor,
-  descenderRoomFor,
-  DESCENDER_BARRIER_PX,
   inkRectFromRgba,
+  liftToCellY,
   padInk,
   type GlyphInk,
 } from './glyphs';
@@ -82,11 +80,11 @@ export interface GlyphUV {
  * font subset that silently lacked `╥` and `▄`, so those two — every wall,
  * half-cover and rubble entity — rasterized from whatever the OS substituted.
  * Nothing failed; the atlas built, the glyphs had ink, the game looked fine on
- * the developer's machine. It matters because `baseAnchorYFor` classifies the
- * stand line off the ink measured from these very cells (floor-family vs
- * baseline, within `INK_FLOOR_EPSILON`), so a fallback font's different
- * letterform geometry silently moves an entity's stand line — a regression
- * reproducible only on someone else's machine.
+ * the developer's machine. It matters because the ink measured from these very
+ * cells places the click boxes and the three lifts (bars, FX endpoints, the
+ * objective markers), so a fallback font's different letterform geometry
+ * silently moves them — a regression reproducible only on someone else's
+ * machine.
  *
  * The test: draw the char with the family backed by `serif`, then by
  * `sans-serif`. If the family supplied the glyph, both draws are the SAME glyph
@@ -129,8 +127,8 @@ function assertGlyphsCameFromFont(atlasCtx: CanvasRenderingContext2D): void {
       `[FontAtlas] ${fellBack.length} of ${GLYPHS.length} glyphs did NOT come from ` +
         `a shipped face (${FONT_STACK}) and were rasterized from an OS fallback: ` +
         `${fellBack.map((c) => `${c} (U+${c.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')})`).join(', ')}. ` +
-        `Their ink metrics — and so their stand line (§79d2) and every lift derived ` +
-        `from it — vary by machine. Fix: widen SUBSET_RANGES in src/render/fontSubset.ts ` +
+        `Their ink metrics — and so their click boxes and every lift derived ` +
+        `from them — vary by machine. Fix: widen SUBSET_RANGES in src/render/fontSubset.ts ` +
         `(or add the glyph to a shipped face) and re-run \`npm run gen:font\`.`,
     );
   }
@@ -146,28 +144,15 @@ export class FontAtlas {
   /** §79a/§79d2 — per-glyph RAW ink bboxes measured off the rasterized cells
    *  at build (no padding — see `getPaddedGlyphInk` for the clickbox rects). */
   private readonly inkByGlyph: ReadonlyMap<string, GlyphInk>;
-  /** §79d2 — the font's alphabetic baseline as a normalized y-up cell coord
-   *  (~0.26 for JetBrains Mono at 56/64): the letterform stand line's reference
-   *  for `baseAnchorY`. */
-  readonly baselineY: number;
-  /** §91-pre2 — how far above the tile the baseline sits (normalized cell
-   *  units): the deepest registered descender + `DESCENDER_BARRIER_PX`,
-   *  measured off this build's ink (`descenderRoomFor`). Exposed for the
-   *  browser probe (re-derive it from `getGlyphInk`, never from here). */
-  readonly descenderRoom: number;
 
   private constructor(
     texture: THREE.CanvasTexture,
     uvByGlyph: Map<string, GlyphUV>,
     inkByGlyph: Map<string, GlyphInk>,
-    baselineY: number,
-    descenderRoom: number,
   ) {
     this.texture = texture;
     this.uvByGlyph = uvByGlyph;
     this.inkByGlyph = inkByGlyph;
-    this.baselineY = baselineY;
-    this.descenderRoom = descenderRoom;
   }
 
   static async create(): Promise<FontAtlas> {
@@ -240,30 +225,6 @@ export class FontAtlas {
       });
     }
 
-    // §79d2 — measure the font's alphabetic baseline once, in the same
-    // font/baseline configuration the cells were drawn with. TextMetrics'
-    // `alphabeticBaseline` is the signed distance from the 'middle' anchor to
-    // the alphabetic baseline (negative = below the anchor in canvas terms),
-    // so the baseline's normalized y-up cell coordinate is
-    // (CELL/2 + alphabeticBaseline) / CELL (~0.26 for JetBrains Mono 56/64).
-    // Fallback for engines without the field: the measured ink bottom of 'X'
-    // (a guaranteed NON_UNIT_GLYPHS cap whose ink stands exactly on the
-    // baseline) — same number by construction.
-    const metrics = ctx.measureText('X');
-    const alphabetic = metrics.alphabeticBaseline;
-    const baselineY = Number.isFinite(alphabetic)
-      ? (CELL_PX / 2 + alphabetic) / CELL_PX
-      : (inkByGlyph.get('X') ?? FULL_GLYPH_INK).y0;
-
-    // §91-pre2 — the descender room, off the ink just measured (the deepest
-    // letterform bottom below the baseline + the barrier): the line every
-    // letterform stands on now sits this far above the tile.
-    const descenderRoom = descenderRoomFor(
-      inkByGlyph.values(),
-      baselineY,
-      DESCENDER_BARRIER_PX / CELL_PX,
-    );
-
     if (import.meta.env.DEV) assertGlyphsCameFromFont(ctx);
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -277,7 +238,7 @@ export class FontAtlas {
     texture.generateMipmaps = false;
     texture.needsUpdate = true;
 
-    return new FontAtlas(texture, uvByGlyph, inkByGlyph, baselineY, descenderRoom);
+    return new FontAtlas(texture, uvByGlyph, inkByGlyph);
   }
 
   /**
@@ -297,45 +258,28 @@ export class FontAtlas {
     return padInk(this.getGlyphInk(glyph), INK_PAD_PX / CELL_PX);
   }
 
-  /**
-   * §79d2 → §91-pre2 — the quad-local anchor y a BASE-anchored sprite of
-   * `glyph` stands on: for letterforms the point `descenderRoom` below the
-   * font baseline (the terminal-cell rule — the baseline floats above the
-   * tile by exactly the room a descender needs), the quad bottom for
-   * floor-touching blocks (and for unmeasured glyphs, via the
-   * `FULL_GLYPH_INK` fallback). The rule itself is the pure `baseAnchorYFor`
-   * (glyphs.ts, headless-tested); this just feeds it the measured data.
-   * SpriteRenderer derives every base sprite's anchor through here —
-   * including on a glyph swap.
-   */
-  baseAnchorY(glyph: string): number {
-    return baseAnchorYFor(this.getGlyphInk(glyph), this.baselineY, this.descenderRoom);
-  }
-
   /** §79d2 — camera-up lift (world units at size 1; callers scale by
    *  footprint) from a base-anchored sprite's ANCHOR to its ink's visual
    *  CENTER. What "at the unit" means for FX endpoints and sparkles. */
   inkCenterLift(glyph: string): number {
     const ink = this.getGlyphInk(glyph);
-    return (ink.y0 + ink.y1) / 2 - 0.5 - this.baseAnchorY(glyph);
+    return liftToCellY((ink.y0 + ink.y1) / 2);
   }
 
   /** §79d2 — camera-up lift from a base-anchored sprite's ANCHOR to its ink's
    *  visual TOP. Where a hitsplat floats: just above the visible glyph, not
    *  above the (taller) empty quad. */
   inkTopLift(glyph: string): number {
-    const ink = this.getGlyphInk(glyph);
-    return ink.y1 - 0.5 - this.baseAnchorY(glyph);
+    return liftToCellY(this.getGlyphInk(glyph).y1);
   }
 
-  /** §91-pre2b — camera-up lift from a base-anchored sprite's ANCHOR to its
-   *  ink's visual BOTTOM: under the terminal-cell rule a letterform's ink
-   *  floats `descenderRoom` (+ any overshoot) above its stand line, so a
-   *  sprite that must stand its INK a fixed gap above a point (the objective
-   *  markers) subtracts this from the gap. 0 for the floor family. */
+  /** Camera-up lift from a base-anchored sprite's ANCHOR to its ink's visual
+   *  BOTTOM. A sprite that must stand its INK, not its quad, a fixed gap above
+   *  a point (the objective markers) subtracts this from the gap: a
+   *  letterform's ink starts at the font baseline, about a quarter-cell above
+   *  the quad bottom it stands on. 0 for a block that fills its cell floor. */
   inkBottomLift(glyph: string): number {
-    const ink = this.getGlyphInk(glyph);
-    return ink.y0 - 0.5 - this.baseAnchorY(glyph);
+    return liftToCellY(this.getGlyphInk(glyph).y0);
   }
 
   getGlyphUV(glyph: string): GlyphUV {

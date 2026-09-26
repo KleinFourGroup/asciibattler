@@ -8,6 +8,7 @@ import { isInertNeutral, type Unit } from '../sim/Unit';
 import type { SpriteHandle, SpriteRenderer } from './SpriteRenderer';
 import { t } from '../i18n/ui';
 import { aboveAnchor } from './anchor';
+import { BASE_ANCHOR_Y } from './glyphs';
 import type { PickCandidate } from './pick';
 import type { UnitOverlayHandle, UnitOverlayLayer } from './UnitOverlayLayer';
 import type { TerrainRenderer } from './TerrainRenderer';
@@ -640,9 +641,9 @@ export class BattleRenderer {
     this.objectiveMarkerGlyph = glyph;
     if (!this.objectiveMarker) {
       // Seed at the origin; updateObjectiveMarker (same frame, end of update())
-      // moves it to the real spot before it's ever drawn. §79d2 — BASE-anchored:
-      // the X/! stands its ink on the marker position (the glyph swap below
-      // re-derives the stand line automatically).
+      // moves it to the real spot before it's ever drawn. BASE-anchored: the
+      // X/! stands on the marker position (its ink's own lift is subtracted
+      // there, per glyph, so the glyph swap below needs nothing more).
       this.objectiveMarker = this.sprites.addSprite(
         glyph,
         OBJECTIVE_MARKER_COLOR,
@@ -687,13 +688,12 @@ export class BattleRenderer {
     if (!marker || !obj || !this.world) return;
 
     if (obj.kind === 'tile') {
-      // §79d2 → §91-pre2b — the marker is base-anchored, and its INK must stand
+      // The marker is base-anchored, and its INK must stand
       // OBJECTIVE_MARKER_TILE_LIFT above the cell's ground point (camera-up, so
-      // it hugs its cell at the screen edges too). Under the terminal-cell
-      // stand line the glyph's ink floats `inkBottomLift` above its anchor
-      // (the descender room), so the anchor drops by that much × the marker's
-      // size: the X hugs its cell under ANY stand-line rule — the 79d2 eyeball
-      // find (the X floating a quarter-cell up) stays dead.
+      // it hugs its cell at the screen edges too). The X's ink starts at the
+      // font baseline, `inkBottomLift` above its quad bottom, so the anchor
+      // drops by that much × the marker's size; without it the X floats a
+      // quarter-cell up (the 79d2 eyeball find).
       const pos = aboveAnchor(
         this.tileGroundPos(obj.cell),
         OBJECTIVE_MARKER_TILE_LIFT -
@@ -719,10 +719,9 @@ export class BattleRenderer {
     // target glyph's visible INK TOP, via the shared camera-up helper (this
     // site's J3 hand-rolled `setFromMatrixColumn` lift was copy #1 of the
     // pattern the helper unifies). The target's ground anchor is live (tracks
-    // its lerp). §91-pre2b — both ends stay ink-true under the terminal-cell
-    // rule: the target's top already includes its room (inkTopLift reads the
-    // anchor), and the mark's own room is subtracted so ITS ink, not its
-    // anchor, sits the gap above.
+    // its lerp). Both ends are ink-true: the target's ink top via
+    // `inkTopLift`, and the mark's own `inkBottomLift` subtracted so ITS ink,
+    // not its quad bottom, sits the gap above.
     const target = this.world.findUnit(obj.unitId);
     const inkTop = target
       ? this.sprites.atlas.inkTopLift(target.glyph) * footprintOf(target)
@@ -766,9 +765,9 @@ export class BattleRenderer {
         // §79a/79d2 — atlas-derived ink (padded for click feel), measured off
         // the same rasterization on screen.
         ink: this.sprites.atlas.getPaddedGlyphInk(unit.glyph),
-        // §79d/79d2 — unit sprites stand on their glyph's derived stand line;
-        // the clickbox must mirror the same anchor exactly.
-        anchor: { x: 0, y: this.sprites.atlas.baseAnchorY(unit.glyph) },
+        // §79d — unit sprites stand on their quad bottom; the clickbox must
+        // mirror the same anchor exactly.
+        anchor: { x: 0, y: BASE_ANCHOR_Y },
       });
     }
     return out;
@@ -801,7 +800,7 @@ export class BattleRenderer {
         position: pos.clone(),
         size: UNIT_PICK_SIZE * footprintOf(unit),
         ink: this.sprites.atlas.getPaddedGlyphInk(unit.glyph),
-        anchor: { x: 0, y: this.sprites.atlas.baseAnchorY(unit.glyph) },
+        anchor: { x: 0, y: BASE_ANCHOR_Y },
       });
     }
     return out;
@@ -2120,9 +2119,8 @@ const GLYPH_HALF_HEIGHT = 0.5;
  *  - tile vs enemy SIZE: a rally tile draws LARGER (the user's call — a big X on
  *    the ground); an enemy mark rides smaller, just atop the target glyph.
  *  - `_TILE_LIFT` — the camera-up gap the rally X's INK stands above its
- *    cell's ground point (§79d2: base-anchored; §91-pre2b: minus the glyph's
- *    own `inkBottomLift` × size, so the gap is ink-true under the
- *    terminal-cell stand line).
+ *    cell's ground point (base-anchored, minus the glyph's own
+ *    `inkBottomLift` × size, so the gap is ink-true).
  *    `_ENEMY_LIFT` — the camera-up gap the enemy mark rides above the target
  *    glyph's visual CENTER — see `updateObjectiveMarker`.
  *
@@ -2148,9 +2146,9 @@ const OBJECTIVE_MARKER_TILE_SIZE = 1.6;
 const OBJECTIVE_MARKER_ENEMY_SIZE = 0.5;
 const OBJECTIVE_MARKER_TILE_LIFT = 0.1;
 /** §79d2 — the camera-up GAP between the target glyph's visible INK TOP and
- *  the enemy mark's own ink (both ends are ink-true now: the target's top via
- *  `inkTopLift`, the mark via its base anchor). 0.2 reproduces the pre-79d2
- *  look, where 0.6-above-center worked out to ≈0.19 above the ink. */
+ *  the enemy mark's own ink (both ends are ink-true: the target's top via
+ *  `inkTopLift`, the mark's bottom via `inkBottomLift`). 0.2 reproduces the
+ *  pre-79d2 look, where 0.6-above-center worked out to ≈0.19 above the ink. */
 const OBJECTIVE_MARKER_ENEMY_LIFT = 0.2;
 
 /**

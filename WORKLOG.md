@@ -2773,3 +2773,87 @@ macro re-audit, `stop`) · C2–C5 (the efficacy read, the welfare read, the
 trials and standing decisions, the scratchpad sweep; one `stop`) · C6 the
 archive + the Cursor (`none`). No snapshot bump and no fuzz smoke anywhere:
 nothing touches `src/sim|run|core|config|bot`, `config/` or `tests/fuzz/`.
+
+### 109a — the deletion (2026-09-26) — read `none` ✅
+
+**Step zero moved two things in the cut.**
+- The `anchor` dial and `restampAnchors` came into 109a from 109b: the
+  dial's seam calls `atlas.baseAnchorY`, so 109a does not typecheck without
+  them (D8 already assigns them to D4).
+- The planned headless lift pin would be circular: with the anchor at the
+  quad bottom a lift IS the ink edge (`liftToCellY(y) = y`), so a pin
+  restates the function. In its place, a tripwire that the instrument's
+  copied anchor equals production's; the lifts are proven by the pane oracle
+  below, which does not share their code path with a restatement.
+
+**Deleted** (R5–R7): `baseAnchorYFor`, `INK_FLOOR_EPSILON`,
+`descenderRoomFor`, `DESCENDER_BARRIER_PX` (and with it C1 drift 1), and
+FontAtlas's `baseAnchorY`, `baselineY`, `descenderRoom` and the TextMetrics
+measurement. SpriteRenderer's per-slot anchor-mode array and its sort
+permutation went too: the anchor now depends on the mode alone, written once
+at `addSprite`. The explorer's `anchor` dial, its seam, `restampAnchors` and
+`probe().restamped`. 12 tests (the two rules' pins in `inkRect.test.ts`).
+
+**Added:** `BASE_ANCHOR_Y` (−0.5) and `liftToCellY` in `glyphs.ts`; the three
+lifts read the ink edge through it, and the pick builders and the sprite
+stamp read the constant. **R10 re-grounded** (the user's call):
+`inkBottomLift` stays, as the X's ink bottom above its quad bottom, and the
+two marker sites keep subtracting it.
+
+**Pins.** SpriteRenderer's four anchor tests rewritten: `'base'` puts every
+glyph on the quad's lowest vertex, read off the geometry's `position`
+attribute rather than the constant, and the stub atlas carries a planted
+per-glyph stand line and a letterform ink. Against HEAD's `SpriteRenderer.ts`
+all four fail (`expected { x: 0, y: -0.25 } to deeply equal { x: 0, y: -0.5 }`);
+on the new code, 9 of 9 pass. The instrument (`tests/board/geometry.ts`)
+drops its anchor mode; `ANCHOR_Y` is pinned equal to `BASE_ANCHOR_Y`; its fit,
+overlap, lean and slab pins hold unchanged under the quad-bottom anchor.
+
+**The oracle** (Chromium pane, 1280×720, `board-quarry` + the posed row
+`g ▄ ╥ M a r`, 37 sprites, 36 overlays; the countdown and shader time held,
+`uTime` 0; per scenario `objective:set` on the bus then `scene.tick(0)`;
+per-slot records of anchor, position, size and UV sorted before hashing, so
+the depth sort's permutation cannot matter; alpha, colour and bloom hashed
+apart; every `translate3d` overlay transform; the marker's position; the
+canvas read back and hashed, four frames identical in every capture):
+
+| capture | geometry (tile · engage · focus) | overlays | marker, tile / enemy | pixels |
+|---|---|---|---|---|
+| HEAD `?bp=…anchor-bottom…` | 3ef24ddb · 19710c69 · fec555df | 3cbbe6f4 | (0.6625, −0.3766, −0.3375) / (−3.9789, 0.5199, 5.0211) | 5d9dbeb4 |
+| the same, after a reload (A/A) | identical | identical | identical | identical |
+| HEAD default (the control) | f6f39c44 · 555fa2d4 · fc1ab7d6 | 4dede480 | moved 0.1000 / 0.03125 camera-up | f2aad77a |
+| **after 109a, default** | **identical to the first row** | **identical** | **identical** | **identical** |
+| after, `inkBottomLift` → 0 (the planted literal R10 deletion) | differs | identical | moved **0.4250** / **0.1328** | 551c8c4c |
+
+Anchors: HEAD's default stamps 24 sprites at −0.4375 and 13 at −0.5; the
+bookmark and the new code stamp all 37 at −0.5. The control's marker moves
+are R10 compensating the anchor exactly (0.0625 × size); the plant's are the
+kickoff's prediction (17/64 × 1.6 and × 0.5). The pane is Chromium, but the
+oracle compares code paths, not rasterization: the seam the user read in
+Firefox at 106d and production now take the same values.
+
+**The rule count** (kickoff finding 3's reading: the non-provenance rows).
+At HEAD, 17: R1–R13, R18–R20, and upright depth (gotcha #139, new this
+round); R11 is the slab rule since 107b. After 109a, **14**: R5, R6 and R7
+deleted; R10 re-grounded, not deleted; R2's and R19's comments re-grounded
+(`anchor.ts`, `UnitOverlayLayer.spawnHitsplat`). With the four provenance
+rows R14–R17: 21 → 18. The 2026-09-21 count was 16 (20).
+
+**The clip gate's two controls, re-floored (the user's call, option A).**
+`tests/board/clip.test.ts` (a permanent gate) keeps its invariant: under the
+upright rule nothing behind a standing glyph hides any ink, every case 0.
+Its two positive controls measure how much the OLD leaning card hid, and
+with the ink 1/16 of a cell higher they fell under their floors: K2 (the
+§81c2 defect) 13.9 % → 9.4 % against > 10 %, and S1 (the far corner, the
+107d find) 56.1 % → 49.8 % against > 50 %. Lowering a floor weakens the
+gate's self-check, so the call went to the user before the commit. Options
+posed: (A) re-floor with the margins they had (K2 > 6 %, S1 > 45 %, S1 now
+"about half"); (B) keep the floors and make the cases harder, at the cost of
+K2 no longer being the §81c2 step; (C) measure the controls at the old
+anchor, which restates the deleted rule. The user took A; 6 of 6 pass.
+
+**Verified:** typecheck clean; `npm test` 3109 (3121 less the 12 deleted
+pins); `npm run board-geometry` runs to exit 0 and still reproduces its
+known answers (the 79b skews 9.21 / 5.10 / 3.24, the half-quad 26.48 px) and
+the flyer's 13 % at lift 0.45, yaw 45. **Not verified:** Firefox, by design
+(the oracle compares code paths); nothing here is for the user's eye.

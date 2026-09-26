@@ -27,6 +27,7 @@ import { spriteColorForUnit } from '../../render/spriteColor';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import type { UnitOverlayHandle } from '../../render/UnitOverlayLayer';
 import type { FontAtlas } from '../../render/FontAtlas';
+import { BASE_ANCHOR_Y } from '../../render/glyphs';
 import { footprintOf } from '../../sim/occupancy';
 import { placePose, type PoseId, type PosedSpec } from './fixtures';
 import type { GameInternals, LiveBattle } from './seams';
@@ -127,7 +128,7 @@ export class PosedSet {
     }
     for (const m of this.members) {
       const lift =
-        barLift(dials, inkTopLiftAtSize1(m.spec.glyph), this.atlas.baseAnchorY(m.spec.glyph)) *
+        barLift(dials, inkTopLiftAtSize1(m.spec.glyph), BASE_ANCHOR_Y) *
         dials.scale;
       const rise = m.flies ? dials.lift : 0;
       if (m.flies) {

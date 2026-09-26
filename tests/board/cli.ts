@@ -33,7 +33,6 @@ import {
   slabReport,
   slabNearRow,
   worldYDriftPx,
-  type AnchorMode,
   type CellReport,
   type SlabRule,
   type View,
@@ -50,7 +49,6 @@ const PROJECTIONS: { name: string; projection: View['projection'] }[] = [
 const PITCHES = [30, 35, 45, 55, 60];
 const YAWS = [0, 45];
 const SCALES = [0.7, 0.85, 1, 1.15, 1.3, 1.5, 1.75, 2];
-const MODE: AnchorMode = 'today';
 
 const f = (v: number, d = 1): string => v.toFixed(d);
 const pct = (v: number): string => `${(v * 100).toFixed(0)}%`;
@@ -61,7 +59,7 @@ const pct = (v: number): string => `${(v * 100).toFixed(0)}%`;
   const p720 = VIEWPORTS.find((v) => v.name === '1280x720')!;
   const rig = fitRig(PRE_75, b15, p720);
   const skew = (gx: number, gy: number): string => f(worldYDriftPx(rig, gridToWorld(b15, gx, gy), 0.5), 2);
-  const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(b15, 7, 0) }, 1, MODE);
+  const q = quadRectPx(rig, { glyph: 'M', pos: gridToWorld(b15, 7, 0) }, 1);
   console.log('KNOWN ANSWERS (79b, live camera, 15x15 @ 1280x720) — expected | this model (flat terrain)');
   console.log(`  world-Y 0.5 skew, near-row edge   ±9.1 | ${skew(14, 0)}`);
   console.log(`  world-Y 0.5 skew, mid-row edge    ±5.0 | ${skew(14, 7)}`);
@@ -84,12 +82,12 @@ const key = (p: string, pitch: number, yaw: number, s: number, b: string, v: str
 
 for (const board of BOARDS)
   for (const vp of VIEWPORTS) {
-    const today = report(PRE_75, board, vp, 1, MODE);
+    const today = report(PRE_75, board, vp, 1);
     for (const proj of PROJECTIONS)
       for (const pitch of PITCHES)
         for (const yaw of YAWS)
           for (const scale of SCALES) {
-            const r = report({ projection: proj.projection, pitchDeg: pitch, yawDeg: yaw }, board, vp, scale, MODE);
+            const r = report({ projection: proj.projection, pitchDeg: pitch, yawDeg: yaw }, board, vp, scale);
             cells.set(key(proj.name, pitch, yaw, scale, board.name, vp.name), r);
             rows.push(
               [
@@ -114,7 +112,7 @@ if (!vp) throw new Error(`no viewport starts with ${JSON.stringify(vpName)}`);
 const boards = arg('board') ? BOARDS.filter((b) => b.name === arg('board')) : BOARDS;
 
 for (const board of boards) {
-  console.log(`=== ${board.name} @ ${vp.name} — glyph scale 1 (today's), anchor '${MODE}' ===`);
+  console.log(`=== ${board.name} @ ${vp.name} — glyph scale 1 (today's) ===`);
   console.log('projection pitch yaw | glyph px near/ctr/far | tile WxH px | lean° corner | clump ctr mean/max | clump FAR mean/max | own-tile | rows | flyer→nbr | shadow gap');
   for (const proj of PROJECTIONS)
     for (const yaw of YAWS)
@@ -197,7 +195,7 @@ console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
     const ratios = RUBBLE_QUARRY_SLABS.map((s) => {
       const c = slabCase(RUBBLE_QUARRY, s.gx, s.gy, s.n, 'checker', true);
       const w = (rule: SlabRule): number => {
-        const r = inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1, 'today');
+        const r = inkRectPx(rig, { glyph: SLAB_GLYPH, pos: rule(c, rig), size: s.n }, 1);
         return r.x1 - r.x0;
       };
       return w(slabCentreSlid) / w(slabCentre);
@@ -217,7 +215,7 @@ console.log(`\n${rows.length - 1} sweep rows → tests/board/output/sweep.csv`);
     ['lens20 y45', { projection: { kind: 'perspective', fovDeg: 20 }, pitchDeg: 45, yawDeg: 45 }],
   ] as [string, View][]) {
     const at = (lift: number): string => {
-      const r = report(view, b15, vp, 1, MODE, lift);
+      const r = report(view, b15, vp, 1, lift);
       return `${pct(r.flyerCoversNeighbour).padStart(4)} | ${f(r.flyerShadowGapPx).padStart(6)}`;
     };
     console.log(`${vn.padEnd(11)} lift 0.45: ${at(0.45)}   lift 1.0: ${at(1.0)}`);

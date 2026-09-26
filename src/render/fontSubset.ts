@@ -9,7 +9,7 @@
  * the font. The test makes the contract structural — a new catalog glyph or a
  * new UI glyph outside the shipped subsets fails `npm test` instead of
  * degrading to an OS fallback (the §79f class on the canvas: ink metrics that
- * re-classify a stand line on someone else's machine; the §101 class in the
+ * move the click boxes and lifts on someone else's machine; the §101 class in the
  * DOM: a fallback face's taller ascent growing a line box — the 46 / 45 px
  * chip).
  *

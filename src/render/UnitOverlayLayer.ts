@@ -259,13 +259,14 @@ export class UnitOverlayLayer {
    * overlap. No-op when the anchor point is off-screen.
    *
    * §79d — `worldTop` is the glyph's visual TOP, already lifted along
-   * CAMERA-UP by the caller (`aboveAnchor` off the ground anchor), so its
-   * projection is both drift-free (camera-up preserves screen X exactly) and
-   * perspective-correct (the lift shrinks with distance) in ONE projection.
-   * This retires the I2 dual-projection workaround that lived here (project
-   * the world-Y-lifted point, keep only its Y, take X from the center — the
-   * fix for "hitsplats drift sideways for units off to the edge"): the anchor
-   * convention now makes the drift impossible upstream.
+   * CAMERA-UP by the caller (`aboveAnchor` off the ground anchor), so ONE
+   * projection lands it on the glyph's top: camera-up preserves screen X
+   * exactly and scales the lift like the quad (under a perspective camera it
+   * also shrinks with distance). This retires the I2 dual-projection
+   * workaround that lived here (project the world-Y-lifted point, keep only
+   * its Y, take X from the center — the fix for "hitsplats drift sideways for
+   * units off to the edge" under the old perspective camera): the anchor
+   * convention makes that drift impossible upstream, under any camera.
    */
   spawnHitsplat(
     worldTop: THREE.Vector3,

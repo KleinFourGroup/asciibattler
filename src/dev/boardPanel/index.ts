@@ -46,7 +46,7 @@ export { applyBoardFixtureUrl } from './boot';
 
 export interface BoardPanel {
   toggle(): boolean;
-  /** For console / pane probes: `__game.boardPanel.set('anchor', 'bottom')`. */
+  /** For console / pane probes: `__game.boardPanel.set('yaw', 30)`. */
   set(key: DialKey, value: string | number | boolean): void;
   readonly dials: DialState;
   /** 108d — the frame-cost bench on the board on screen (the panel's button runs the defaults). */
@@ -59,7 +59,6 @@ export interface BoardPanel {
       flies: boolean;
       ground: [number, number, number];
     }[];
-    restamped: number;
     /** 105e — size writes so far (unit bodies stamped `footprint × scale`). */
     sized: number;
     /** 107b — N×N bodies re-stood by the last view or battle change. */
@@ -75,11 +74,10 @@ export function attachBoardPanel(game: Game): BoardPanel {
   let dials = parseDials(new URLSearchParams(location.search).get(BOARD_PANEL_PARAM));
   const internals = internalsOf(game);
   const markColour = new THREE.Color();
-  // The atlas INSTANCE is what installSeams patches below, so the posed set's
-  // lifts read the dialled rule.
+  // The atlas INSTANCE is what installSeams patches below (the glyph scale),
+  // so the posed set's lifts read the dialled scale.
   const posed = new PosedSet(internals, internals.sprites.atlas);
   let lastBattleRenderer: LiveBattle['battleRenderer'] | null = null;
-  let lastRestamped = 0;
   /** 105e — cumulative size writes (a probe reads it before / after a dial). */
   let lastSized = 0;
   /** 107b — N×N bodies re-stood by the last view or battle change. */
@@ -162,7 +160,6 @@ export function attachBoardPanel(game: Game): BoardPanel {
   const apply = (key: DialKey): void => {
     if (VIEW_DIALS.includes(key)) applyCameraView(game, cameraViewOf(dials));
     if (key === 'marks' || key === 'plateCorner') applyMarks();
-    if (key === 'anchor') lastRestamped = seams.restampAnchors();
     // 107b — the slab rule reads the camera, so a view change re-stands it.
     if (VIEW_DIALS.includes(key)) {
       const battle = liveBattleOf(game);
@@ -222,7 +219,6 @@ export function attachBoardPanel(game: Game): BoardPanel {
       const { hide, board } = dials;
       dials = { ...defaultDials(), hide, board };
       apply('proj');
-      apply('anchor');
       apply('pose');
       apply('marks');
       writeUrl();
@@ -268,7 +264,6 @@ export function attachBoardPanel(game: Game): BoardPanel {
         flies: m.flies,
         ground: [m.ground.x, m.ground.y, m.ground.z] as [number, number, number],
       })),
-      restamped: lastRestamped,
       sized: lastSized,
       slabs: lastSlabs,
       marks: internals.terrain.markStats,

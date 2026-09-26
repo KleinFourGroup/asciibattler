@@ -7,15 +7,19 @@ import * as THREE from 'three';
  * hitsplat anchor, the enemy objective marker, the HP-overlay follow point.
  *
  * Why camera-up and not world-Y: the billboard quad rises from its anchor in
- * VIEW space (screen-up — see `instanceAnchor` in billboard.vert.glsl), and
- * under the pitched perspective camera a world-Y offset projects DIAGONALLY
- * toward the vanishing point for anything away from screen center. That
- * off-axis skew produced three separate bugs fixed three separate ways (the I2
- * hitsplat dual-projection, the J3 marker's hand-rolled camera-up lift, and
- * the §79b sprite-anchor finding: ±9px at 720p screen edges) before §79 made
- * the rule structural. Column 1 of the camera's world matrix is its up axis
- * (unit-length, orthonormal), so the offset is exactly screen-up: the lifted
- * point projects to the SAME screen X as the anchor, always.
+ * VIEW space (screen-up — see `instanceAnchor` in billboard.vert.glsl), so a
+ * follower must rise the same way to stay on its glyph. Column 1 of the
+ * camera's world matrix is its up axis (unit-length, orthonormal), so the
+ * offset is exactly screen-up: the lifted point projects to the SAME screen X
+ * as the anchor, always. Under the shipped orthographic camera a world-Y
+ * offset would also project straight up the screen (the lean pin,
+ * tests/board/cameraFit.test.ts), but only by the pitch's scale, not the
+ * quad's, and under a perspective camera (the long-lens fallback, the dev
+ * explorer) it projects DIAGONALLY toward the vanishing point away from
+ * screen center: the skew that produced three separate bugs (the I2 hitsplat
+ * dual-projection, the J3 marker's hand-rolled camera-up lift, the §79b
+ * sprite-anchor finding of ±9px at 720p screen edges) before §79 made the
+ * rule structural.
  *
  * Pure camera math (no canvas/WebGL) — headless-tested in anchor.test.ts,
  * including the no-horizontal-drift pin. `out` may alias `anchor`.

@@ -1,8 +1,6 @@
 {
-  "_provenance": "Dumped 2026-09-21 (105a) from the LIVE FontAtlas (`__game.sprites.atlas`) in the Chromium Browser pane at HEAD 32ee614. Ink rects are [x0, y0, x1, y1] in normalized cell units, y up, RAW (unpadded). Another engine (the user's Firefox) may rasterize an edge one row (1/64) differently (the 79g finding) — the instrument's outputs are insensitive at that scale. Re-dump if the font, the subset or CELL_PX changes.",
+  "_provenance": "Dumped 2026-09-21 (105a) from the LIVE FontAtlas (`__game.sprites.atlas`) in the Chromium Browser pane at HEAD 32ee614. Ink rects are [x0, y0, x1, y1] in normalized cell units, y up, RAW (unpadded). Another engine (the user's Firefox) may rasterize an edge one row (1/64) differently (the 79g finding) — the instrument's outputs are insensitive at that scale. Re-dump if the font, the subset or CELL_PX changes. The dump's baselineY (0.261475) and descenderRoom (0.198975) fields left at 109a with the rule they fed.",
   "cellSizePx": 64,
-  "baselineY": 0.261475,
-  "descenderRoom": 0.198975,
   "inks": {
     "0": [0.296875, 0.25, 0.703125, 0.90625],
     "1": [0.3125, 0.265625, 0.71875, 0.890625],

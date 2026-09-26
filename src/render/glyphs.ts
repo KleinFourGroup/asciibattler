@@ -141,9 +141,9 @@ export const INK_PAD_PX = 5;
  * `getGlyphUV`'s convention. An all-transparent cell returns `FULL_GLYPH_INK`
  * (no ink to hug — keep the full-quad behavior rather than a degenerate box).
  *
- * §79d2 — returns the RAW bbox (no padding): the raw rect is what anchoring
- * and baseline classification consume. The +INK_PAD_PX click feel moved to
- * `padInk`, applied where PICK candidates are built.
+ * §79d2 — returns the RAW bbox (no padding): the raw rect is what the lifts
+ * (`liftToCellY`) consume. The +INK_PAD_PX click feel moved to `padInk`,
+ * applied where PICK candidates are built.
  */
 export function inkRectFromRgba(
   data: ArrayLike<number>,
@@ -178,7 +178,7 @@ export function inkRectFromRgba(
  * §79d2 — widen an ink rect by `pad` (normalized cell fraction; the default is
  * `INK_PAD_PX` of a `cellPx` cell) on every side, clamped to the cell. The
  * CLICKBOX half of the 79a rider: pick candidates get the breathing room, while
- * anchoring reads the raw rect. `FULL_GLYPH_INK` passes through untouched.
+ * the lifts read the raw rect. `FULL_GLYPH_INK` passes through untouched.
  */
 export function padInk(ink: GlyphInk, pad: number): GlyphInk {
   if (ink === FULL_GLYPH_INK || pad === 0) return ink;
@@ -191,76 +191,19 @@ export function padInk(ink: GlyphInk, pad: number): GlyphInk {
 }
 
 /**
- * §79-post — the floor-vs-baseline classification tolerance for
- * `baseAnchorYFor`, in normalized cell height (3 pixel rows of the `CELL_PX`
- * 64 atlas cell). §79d2 shipped this as an exact `ink.y0 === 0`, which made
- * the stand line one-transparent-pixel-row-sensitive: §79g measured two
- * builds of the SAME face rasterizing an ink edge one row apart at the
- * `INK_ALPHA_THRESHOLD` boundary, and a platform rasterizer doing that at a
- * block glyph's bottom row would silently flip walls/rubble from "flush on
- * the tile" to "on the text baseline". Ink measurements quantize to whole
- * rows, so the tolerance is sized in rows off the 2026-08-16 census (the
- * full 47-glyph set, this machine): the floor family (`▄`, `╥`) at exactly
- * 0; the nearest letterform ink bottoms `@`/`g` at 7 rows (0.109), `/` at
- * 11, the baseline cluster at 16–17. 3 rows absorbs the observed one-row
- * variance class twice over while keeping a 4-row guard band below the
- * nearest real letterform.
+ * The quad-local y ([-0.5, 0.5], y up) a base-anchored sprite stands on: the
+ * quad bottom, for every glyph. The ground mark under each body says where it
+ * touches the ground, so no glyph needs a stand line of its own; a letterform's
+ * ink therefore starts at the font baseline, about a quarter-cell up. The
+ * pick candidates and the vertex shader's anchor attribute both read this.
  */
-export const INK_FLOOR_EPSILON = 3 / 64;
+export const BASE_ANCHOR_Y = -0.5;
 
 /**
- * §79d2 → §91-pre2 — the BASE-anchor quad-local y for a glyph: where its
- * "stand line" sits, in quad coordinates ([-0.5, 0.5], y up). The rule
- * (user-signed 2026-09-03 — the TERMINAL-CELL option, superseding 79d2's
- * baseline-on-tile rule, which the user had misread at signing):
- *
- *  - Ink at the CELL FLOOR (`y0 < INK_FLOOR_EPSILON` — the block-drawing
- *    family: `▄` rubble, `╥`) stands on its ink bottom → anchor at the quad
- *    bottom, byte-identical to the fixed base anchor. (§79-post widened the
- *    original exact `=== 0` by the epsilon — classification robustness only;
- *    the anchor value itself is unchanged.)
- *  - EVERYTHING ELSE stands like a character in a terminal cell: the font's
- *    alphabetic BASELINE (measured once at atlas build via TextMetrics) sits
- *    `descenderRoom` ABOVE the tile — the room a descender needs
- *    (`descenderRoomFor`: the deepest registered descender below the baseline,
- *    plus a barrier), so a row of mixed glyphs still reads as one line of
- *    text, and the census's descender unit glyph (`g`, the ghoul) reaches
- *    DOWN toward the tile but never through it. 79d2 had put the baseline
- *    ITSELF on the tile ("ruled paper"), which stood `g`'s tail in the
- *    ground — the user's 2026-09-03 playtest report. The clickbox is
- *    unrelated: the ink bbox + `INK_PAD_PX` (`padInk`), unchanged.
- *
- * A glyph the atlas hasn't measured gets `FULL_GLYPH_INK` (y0 = 0) and lands
- * in the floor branch → the plain quad-bottom anchor, the safe fallback.
- * `descenderRoom` defaults to 0 = the 79d2 line exactly (the pins keep it).
- * Pure — headless-tested; `FontAtlas.baseAnchorY` feeds it the measured data.
+ * The camera-up lift, in world units at size 1, from a base-anchored sprite's
+ * anchor to height `cellY` in its cell (0 = the cell floor, 1 = its top).
+ * Callers pass an ink edge and scale by the sprite's size.
  */
-export function baseAnchorYFor(ink: GlyphInk, baselineY: number, descenderRoom = 0): number {
-  return (ink.y0 < INK_FLOOR_EPSILON ? 0 : baselineY - descenderRoom) - 0.5;
-}
-
-/**
- * §91-pre2 — the barrier between the deepest descender's ink and the tile,
- * in atlas pixels: the same 3px the clickbox pads by (`INK_PAD_PX`), so
- * "a few pixels of barrier" is one number in two places for one reason.
- */
-export const DESCENDER_BARRIER_PX = 3;
-
-/**
- * §91-pre2 — how far above the tile the font baseline must sit so every
- * registered LETTERFORM's ink clears the tile: the deepest ink bottom below
- * the baseline (the floor family — `y0 < INK_FLOOR_EPSILON`, and the
- * unmeasured `FULL_GLYPH_INK` fallback — is excluded: blocks stand on their
- * own rule) plus `barrier` (normalized cell units). Re-derived from the atlas
- * at every build (the §79e principle — measured off the asset, never a
- * hand-kept census): a future deeper descender lifts the line instead of
- * clipping. With no descender at all the room is the barrier alone.
- */
-export function descenderRoomFor(inks: Iterable<GlyphInk>, baselineY: number, barrier: number): number {
-  let deepest = baselineY;
-  for (const ink of inks) {
-    if (ink.y0 < INK_FLOOR_EPSILON) continue;
-    if (ink.y0 < deepest) deepest = ink.y0;
-  }
-  return baselineY - deepest + barrier;
+export function liftToCellY(cellY: number): number {
+  return cellY - 0.5 - BASE_ANCHOR_Y;
 }

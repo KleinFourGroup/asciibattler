@@ -13,7 +13,6 @@ import {
   spliceBookmark,
   type DialState,
 } from './state';
-import { baseAnchorYFor } from '../../render/glyphs';
 import census from '../../../tests/board/inkCensus.json';
 import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
 import { DEFAULT_MARK_STYLE } from '../../render/groundMarks';
@@ -24,12 +23,12 @@ describe('108b — the terrain marks’ dials', () => {
     expect(DIALS.marks.def).toBe(true);
   });
 
-  it('the signed 106d bookmark means `anchor-bottom` alone: its mock dials left the table (108f)', () => {
+  it('the signed 106d bookmark now means the defaults: its mock dials left at 108f, its anchor dial at 109a', () => {
     const signed = parseDials(
       'cue-outline_cueAlpha-0.3_ground-merged_plate-filled_plateScope-all_anchor-bottom_drape-1_cueDepth-world',
     );
-    expect(signed).toEqual({ ...defaultDials(), anchor: 'bottom' });
-    expect(encodeDials(signed)).toBe('anchor-bottom');
+    expect(signed).toEqual(defaultDials());
+    expect(encodeDials(signed)).toBe('');
     // …and so do the look dials and the hop: a stop-2 URL keeps only its board.
     expect(encodeDials(parseDials('board-wade_hop-1_markSize-0.7_plateDash-0'))).toBe('board-wade');
   });
@@ -120,13 +119,13 @@ describe('105b — the board explorer dial table', () => {
   it('a whole bookmark round-trips, in table order', () => {
     const state: DialState = {
       ...defaultDials(),
-      anchor: 'bottom',
+      yaw: 30,
       bar: 'uniform',
       barY: 0.95,
       plateCorner: 0.1,
       pose: 'row',
     };
-    expect(encodeDials(state)).toBe('anchor-bottom_bar-uniform_barY-0.95_plateCorner-0.1_pose-row');
+    expect(encodeDials(state)).toBe('yaw-30_bar-uniform_barY-0.95_plateCorner-0.1_pose-row');
     expect(parseDials(encodeDials(state))).toEqual(state);
   });
 
@@ -139,8 +138,8 @@ describe('105b — the board explorer dial table', () => {
 
   it('splicing the bookmark leaves every other pair byte-for-byte', () => {
     const typed = '?seed=7&roster=mercenary,archer&layout=river';
-    expect(spliceBookmark(typed, 'anchor-bottom')).toBe(`${typed}&bp=anchor-bottom`);
-    expect(spliceBookmark(`${typed}&bp=pose-row`, 'anchor-bottom')).toBe(`${typed}&bp=anchor-bottom`);
+    expect(spliceBookmark(typed, 'yaw-30')).toBe(`${typed}&bp=yaw-30`);
+    expect(spliceBookmark(`${typed}&bp=pose-row`, 'yaw-30')).toBe(`${typed}&bp=yaw-30`);
     expect(spliceBookmark('?bp=pose-row&seed=7', '')).toBe('?seed=7');
     expect(spliceBookmark('?bp=pose-row', '')).toBe('');
     expect(spliceBookmark('', 'pose-row')).toBe('?bp=pose-row');
@@ -159,27 +158,23 @@ describe('105b — the board explorer dial table', () => {
 });
 
 describe('105b — the bar-line rule', () => {
-  // The expectation is re-derived from the DUMPED atlas census + the pure
-  // anchor rule — surfaces `barLift` does not consult.
+  // The expectation is re-derived from the DUMPED atlas census — a surface
+  // `barLift` does not consult.
   const inkOf = (glyph: string) => {
     const [x0, y0, x1, y1] = (census.inks as Record<string, number[]>)[glyph]!;
     return { x0: x0!, y0: y0!, x1: x1!, y1: y1! };
   };
-  const anchorToday = (glyph: string) =>
-    baseAnchorYFor(inkOf(glyph), census.baselineY, census.descenderRoom);
   const ROW = ['g', '▄', '╥', 'M', 'a', 'r'];
 
   it('ink mode is the atlas answer, untouched', () => {
     expect(barLift({ bar: 'ink', barY: 0.9 }, 0.8281, -0.4375)).toBe(0.8281);
   });
 
-  it('uniform mode puts every glyph of the posed row on ONE line, under either anchor', () => {
+  it('uniform mode puts every glyph of the posed row on ONE line', () => {
     const state = { bar: 'uniform', barY: DIALS.barY.def } as const;
-    for (const anchorOf of [anchorToday, () => -0.5]) {
-      // anchor (quad-local) + lift = the bar line in quad-local y.
-      const lines = ROW.map((g) => anchorOf(g) + barLift(state, Number.NaN, anchorOf(g)));
-      for (const line of lines) expect(line).toBeCloseTo(state.barY - 0.5, 10);
-    }
+    // anchor (quad-local, the quad bottom) + lift = the bar line in quad-local y.
+    const lines = ROW.map(() => -0.5 + barLift(state, Number.NaN, -0.5));
+    for (const line of lines) expect(line).toBeCloseTo(state.barY - 0.5, 10);
   });
 
   it('the control: ink mode does NOT put the row on one line (the 79e price)', () => {

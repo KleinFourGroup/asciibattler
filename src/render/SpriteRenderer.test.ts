@@ -11,16 +11,16 @@ import type { FontAtlas } from './FontAtlas';
 // IS checkable headlessly: that the sort orders correctly AND never scrambles
 // the handle⇄data association).
 
-// §79d2 — the stub's stand lines: a "block" glyph flush at the quad bottom, a
-// "letter" on a fake baseline. Values are arbitrary but distinct (and exact in
-// float32, since they round-trip through the attribute buffer), so a
-// scrambled/stale anchor shows.
-const STUB_BASE_Y: Record<string, number> = { M: -0.5, p: -0.25 };
-
+// The planted failure for the anchor pins below: a per-glyph stand line and a
+// letterform's ink, which the retired rule (a stand line per glyph class) read
+// off the atlas. The quad-bottom anchor must consult neither, so a sprite of
+// 'p' standing anywhere but its quad bottom means the old rule is back.
 const stubAtlas = {
   texture: null,
   getGlyphUV: () => ({ u0: 0, v0: 0, u1: 1, v1: 1 }),
-  baseAnchorY: (glyph: string) => STUB_BASE_Y[glyph] ?? -0.5,
+  baseAnchorY: (glyph: string) => (glyph === 'p' ? -0.25 : -0.5),
+  getGlyphInk: (glyph: string) =>
+    glyph === 'p' ? { x0: 0.3, y0: 0.109, x1: 0.7, y1: 0.75 } : { x0: 0.2, y0: 0, x1: 0.8, y1: 0.6 },
 } as unknown as FontAtlas;
 
 /** A 45°-ish overhead camera like the battle framing (mirrors pick.test.ts). */
@@ -144,14 +144,20 @@ describe('SpriteRenderer.sortByDepth', () => {
   });
 });
 
-// §79c/§79d2 — the per-instance anchor attribute: derived from (mode, glyph)
-// at every glyph write, carried through the removeSprite swap-compaction AND
-// the depth-sort repack with its instance (a scrambled anchor or a stale mode
-// would silently re-line a standing glyph).
+// §79c — the per-instance anchor attribute: set by the mode alone, the same for
+// every glyph, and carried through the removeSprite swap-compaction AND the
+// depth-sort repack with its instance (a scrambled anchor would silently float
+// or sink a standing glyph).
 describe('SpriteRenderer instance anchor', () => {
   const CENTER = { x: 0, y: 0 };
-  const BASE_M = { x: 0, y: STUB_BASE_Y['M']! };
-  const BASE_P = { x: 0, y: STUB_BASE_Y['p']! };
+  // Re-derived from the quad itself, not from the constant the code writes:
+  // 'base' means the quad's lowest vertex sits on the anchor.
+  const quadBottom = (sprites: SpriteRenderer): number => {
+    const pos = sprites.mesh.geometry.getAttribute('position');
+    let min = Infinity;
+    for (let i = 0; i < pos.count; i++) min = Math.min(min, pos.getY(i));
+    return min;
+  };
   const anchorAtSlot = (sprites: SpriteRenderer, slot: number): { x: number; y: number } => {
     const attr = sprites.mesh.geometry.getAttribute('instanceAnchor');
     return { x: attr.getX(slot), y: attr.getY(slot) };
@@ -168,23 +174,23 @@ describe('SpriteRenderer instance anchor', () => {
     throw new Error('slot not found');
   };
 
-  it("defaults to 'center' (0, 0); 'base' derives the glyph's stand line", () => {
+  it("defaults to 'center' (0, 0); 'base' stands every glyph on its quad bottom", () => {
     const sprites = new SpriteRenderer(stubAtlas);
+    const BASE = { x: 0, y: quadBottom(sprites) };
     sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0));
     sprites.addSprite('M', '#33ff00', new THREE.Vector3(1, 0, 0), 'base');
     sprites.addSprite('p', '#33ff00', new THREE.Vector3(2, 0, 0), 'base');
     expect(anchorAtSlot(sprites, 0)).toEqual(CENTER);
-    expect(anchorAtSlot(sprites, 1)).toEqual(BASE_M);
-    expect(anchorAtSlot(sprites, 2)).toEqual(BASE_P); // per-glyph, not fixed
+    expect(anchorAtSlot(sprites, 1)).toEqual(BASE);
+    expect(anchorAtSlot(sprites, 2)).toEqual(BASE); // a letterform too: no stand line per glyph
   });
 
-  it('a glyph swap on a base sprite re-derives its stand line (§79d2)', () => {
+  it('a glyph swap leaves the anchor where the mode put it', () => {
     const sprites = new SpriteRenderer(stubAtlas);
+    const BASE = { x: 0, y: quadBottom(sprites) };
     const h = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0), 'base');
-    expect(anchorAtSlot(sprites, 0)).toEqual(BASE_M);
     sprites.updateSprite(h, { glyph: 'p' });
-    expect(anchorAtSlot(sprites, 0)).toEqual(BASE_P);
-    // A centered sprite's glyph swap stays centered.
+    expect(anchorAtSlot(sprites, 0)).toEqual(BASE);
     const c = sprites.addSprite('M', '#33ff00', new THREE.Vector3(1, 0, 0));
     sprites.updateSprite(c, { glyph: 'p' });
     expect(anchorAtSlot(sprites, 1)).toEqual(CENTER);
@@ -192,26 +198,32 @@ describe('SpriteRenderer instance anchor', () => {
 
   it('the anchor travels with its instance through removeSprite compaction', () => {
     const sprites = new SpriteRenderer(stubAtlas);
-    const doomed = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0));
-    const kept = sprites.addSprite('p', '#33ff00', new THREE.Vector3(1, 0, 0), 'base');
-    sprites.removeSprite(doomed); // swaps the base-anchored sprite into slot 0
-    expect(anchorAtSlot(sprites, 0)).toEqual(BASE_P);
-    // And its MODE moved too: a glyph swap after the compaction still re-derives.
+    const BASE = { x: 0, y: quadBottom(sprites) };
+    const doomed = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0, 0), 'base');
+    const kept = sprites.addSprite('p', '#33ff00', new THREE.Vector3(1, 0, 0));
+    const last = sprites.addSprite('p', '#33ff00', new THREE.Vector3(2, 0, 0), 'base');
+    sprites.removeSprite(doomed); // swaps the last (base) sprite into slot 0
+    expect(anchorAtSlot(sprites, slotOf(sprites, last.id))).toEqual(BASE);
+    expect(anchorAtSlot(sprites, slotOf(sprites, kept.id))).toEqual(CENTER);
+    // A glyph write after the compaction does not disturb either.
+    sprites.updateSprite(last, { glyph: 'M' });
     sprites.updateSprite(kept, { glyph: 'M' });
-    expect(anchorAtSlot(sprites, 0)).toEqual(BASE_M);
+    expect(anchorAtSlot(sprites, slotOf(sprites, last.id))).toEqual(BASE);
+    expect(anchorAtSlot(sprites, slotOf(sprites, kept.id))).toEqual(CENTER);
   });
 
   it('the anchor travels with its instance through the depth-sort repack', () => {
     const cam = makeCamera();
     const sprites = new SpriteRenderer(stubAtlas);
+    const BASE = { x: 0, y: quadBottom(sprites) };
     // Near→far so the sort must reorder; only the near sprite is base-anchored.
     const baseAnchored = sprites.addSprite('p', '#33ff00', new THREE.Vector3(0, 0.5, 4), 'base');
     const centered = sprites.addSprite('M', '#33ff00', new THREE.Vector3(0, 0.5, -4));
     sprites.sortByDepth(cam);
-    expect(anchorAtSlot(sprites, slotOf(sprites, baseAnchored.id))).toEqual(BASE_P);
+    expect(slotOf(sprites, baseAnchored.id)).toBe(1); // the sort did reorder
+    expect(anchorAtSlot(sprites, slotOf(sprites, baseAnchored.id))).toEqual(BASE);
     expect(anchorAtSlot(sprites, slotOf(sprites, centered.id))).toEqual(CENTER);
-    // The MODE array rode the permutation: a swap after the sort re-derives.
     sprites.updateSprite(baseAnchored, { glyph: 'M' });
-    expect(anchorAtSlot(sprites, slotOf(sprites, baseAnchored.id))).toEqual(BASE_M);
+    expect(anchorAtSlot(sprites, slotOf(sprites, baseAnchored.id))).toEqual(BASE);
   });
 });

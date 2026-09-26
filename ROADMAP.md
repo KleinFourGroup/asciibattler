@@ -13,7 +13,7 @@ worklog and spec beside it; before it
 [archive/post-88-roadmap.md](archive/post-88-roadmap.md) (the casualty
 experiment).
 
-**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 ✅ CLOSED 2026-09-25 (the marks drawn by the terrain); §109 NEXT — its kickoff.** This round is
+**Status: §105 ✅ CLOSED 2026-09-22 (the direction named); §106 ✅ CLOSED 2026-09-23 (the spec signed); §107 ✅ CLOSED 2026-09-24 (the projection shipped); §108 ✅ CLOSED 2026-09-25 (the marks drawn by the terrain); §109 IN PROGRESS — the cut signed 2026-09-26.** This round is
 SPIKE-first, then spec: the projection spike (§105 pass one → §106 pass two)
 informs the spec the way the Electron spike informs Round 8's store. The
 spec is signed ([round-7.5-spec.md](round-7.5-spec.md), 2026-09-23) and the
@@ -110,3 +110,13 @@ pixels the user already judged invisible. **Decision points:** none open.
 count before and after in the WORKLOG; the board explorer trimmed to its
 keepers (D8); the round closed per `process/planning.md`. **Scope guards:**
 the spec's; §101's gates untouched.
+
+**The cut** (signed 2026-09-26; WORKLOG §109 Kickoff). R10 is re-grounded,
+not deleted: the markers read the X's raw ink bottom (kickoff finding 1).
+
+- [ ] **109a** — the deletion (D4): base sprites stand on the quad bottom; R5–R7 go; the lifts become ink edges; R10 re-grounded; pins re-derived from the atlas; the instrument onto the quad-bottom anchor; the rule count recorded. Read `none` — a numeric pane oracle against HEAD under `?bp=anchor-bottom`, the literal R10 deletion its planted failure.
+- [ ] **109b** — the explorer trimmed to its keepers (D8): the `anchor` dial and `restampAnchors`, `bar` / `barY` / `barLift`; the bench and `marks` stay (the user's call). Read `none`.
+- [ ] **109c** — the C1 doc drifts: gotcha #33 re-pointed; the font sentinel closed with no change. Read `none`.
+- [ ] **C1** — the macro re-audit: Round 8's charter against the code, and what 7.5 hands to Rounds 9 and 11. Read `stop`.
+- [ ] **C2–C5** — the efficacy read · the welfare read (the user's) · the trials and standing decisions · the scratchpad sweep. Read `stop`.
+- [ ] **C6** — the archive (`post-104-*` + the spec) and the Cursor. Read `none`.

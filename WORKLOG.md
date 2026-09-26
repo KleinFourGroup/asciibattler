@@ -2686,3 +2686,90 @@ fact; `9b1116a` corrects the comment. The pane's console held five failed module
 2026-09-25:** ROADMAP demoted, the phase summary in `retro/sessions.md`, the
 Cursor at the §109 kickoff. Reads this phase: 108a and 108f `none`; 108b
 at stop 1 and 108c–108e at stop 2, both clear with no `-post`; 0 `batch`.
+
+## Phase 109 — the rule deletion + the round close
+
+### Kickoff (2026-09-25 → 26) — the audit at `d5f9683` + the cut, user-signed
+
+Session 8410bdac. ✔ = read at file:line by this session; the rest is
+derived and marked so, and the step that touches it measures it.
+
+1. **R10 is not deletable as the spec words it** (the finding that changes
+   D4). Under the signed `anchor-bottom` read, the explorer's seam replaced
+   `baseAnchorY` on the atlas instance (✔ `boardPanel/seams.ts:131-137`),
+   and all three lifts call that method (✔ `FontAtlas.ts:318-339`), so
+   `inkBottomLift` re-derived to the raw ink bottom and the objective
+   markers never moved: the user never saw R10 removed. Under a quad-bottom
+   anchor the X's ink still sits 17/64 of a cell above its quad bottom (the
+   font baseline; the census `X` y0 = 0.265625, ✔ `inkCensus.json:41`),
+   against 13/64 today. Deleting the marker term lifts the rally X
+   17/64 × 1.6 = 0.425 world units and the enemy mark 17/64 × 0.5 = 0.133
+   (✔ `BattleRenderer.ts:697-737`, sizes `:2147-2148`): the 79d2 find
+   (the X floating a quarter-cell up) again. The kickoff table's "dies
+   under (a)" was wrong for R10: its cause (R6) dies, its job does not.
+2. **The seam reached every consumer of the rule** (a grep for
+   `baseAnchorY`, `baseAnchorYFor`, `descenderRoom`, `baselineY`,
+   `inkBottomLift` over `src`, `tests`, `scripts`): the three lifts,
+   SpriteRenderer's stamp (✔ `:459`), both mirror-pick builders (✔
+   `BattleRenderer.ts:771,804`) and the posed sprites (✔ `posed.ts:130`).
+   So production after the deletion should equal the signed bookmark
+   exactly, which makes a numeric oracle possible (109a).
+3. **The rule count's arithmetic was never written down.** The Kickoff
+   table has 20 rows (R16 spanning the four §101 gates) and says "16 rules,
+   20 with the §101 gates". The reading that works (an inference): 20 rows
+   less the four provenance rows R14–R17. Re-walked at HEAD: R11 became the
+   slab rule (still one rule) and upright depth (gotcha #139, 107d-post) is
+   new, so the before is 17 (21 with the provenance rows). Papercut filed.
+4. **The three C1 drifts.** ✔ `glyphs.ts:243` (the barrier "the same 3px"
+   as `INK_PAD_PX`, which is 5) dies with R6. ✔ Gotcha #33 is real twice
+   over: it names `FontAtlas.ts` (`GLYPHS` is `glyphs.ts:57`) and predates
+   §38e, since which unit glyphs derive from the catalog and only non-unit
+   glyphs are appended (the atlas's own error text, ✔ `FontAtlas.ts:345`).
+   ✔ The font sentinel is not a drift: `tests/font-coverage.test.ts:202-204`
+   says 32 was the count at 101a and floors the walk at 24 below it; the
+   file is a §101 gate, so it closes with no change.
+5. **The geometry instrument still defaults to the deleted rule**: ✔
+   `tests/board/geometry.ts:79-84` restates `baseAnchorYFor`, ✔
+   `cli.ts:53` runs `today`, and eight test sites pass it. It moves to the
+   quad-bottom anchor; its fit and overlap pins re-run under it (derived:
+   a letterform quad's top reaches exactly `Y_HALF_EXTENT`).
+6. **Upright depth survives the anchor move** (derived): the shader keys it
+   on `instanceAnchor.y < 0.0` (✔ `billboard.vert.glsl:65`), still true at
+   −0.5, and `tests/board/clip.ts` models a vertical card through the anchor
+   without reading the anchor rule.
+7. **Stale text the deletion touches:** ✔ `scripts/build-font.mjs:18`
+   (`INK_FLOOR_EPSILON`), ✔ FontAtlas's DEV-assert rationale
+   (`FontAtlas.ts:85-89`, the classifier), ✔ SpriteRenderer's
+   `SpriteAnchor` doc (`:40-44`), ✔ the marker comments
+   (`BattleRenderer.ts:690-696`, `:718-725`, `:2122-2125`), ✔ ARCHITECTURE
+   `:56` (the boardPanel entry: "SPIKE CODE … reverted at §106's close", the
+   anchor patch) and `:328`/`:330` ("atlas now 32/32 FULL"). D4 also
+   re-grounds R2's and R19's comments.
+8. **D8's keeper list vs the 14 dials** (✔ `state.ts:48-189`): it names
+   `board`, the four projection dials, `scale`, `pose`, `lift` and the
+   panel shell (`hide`); `plateCorner` stayed by the user's call at 108's
+   stop 1. Not named: `anchor` (goes, D4), `bar` / `barY` (§105 settled the
+   ink-top line), and `marks` with the 108d bench whose before leg it is.
+   `KNOWN_ARTEFACTS` still lists the slab rectangle D2 fixed.
+9. TODO's §98 team-identity rider is still open, though §108 answered the
+   tints (the grey read) and moved the pip to Round 8; it closes at the
+   sweep.
+
+**The user's calls (2026-09-26):**
+- **R10: re-grounded, not deleted.** The markers stay ink-true by reading
+  the X's ink bottom straight from the atlas: pixel-identical to the signed
+  read, and the count records R10 as re-grounded. The rally X as a terrain
+  mark, the one route by which R10 truly dies, goes to a future polish
+  round (the user: "at some point, we should probably investigate"; TODO).
+- **The bench and `marks` stay** in the explorer; `bar` / `barY` go.
+- **The round close's session:** 109a–c here, then the meter reading;
+  over 350k means a fresh session for the close, under it the user and
+  the session talk it through.
+
+**The cut, signed:** 109a the deletion (read `none`, a numeric pane oracle
+against HEAD under `?bp=anchor-bottom`) · 109b the explorer trim (`none`) ·
+109c the doc drifts (`none`) · the phase close · the round close C1 (the
+macro re-audit, `stop`) · C2–C5 (the efficacy read, the welfare read, the
+trials and standing decisions, the scratchpad sweep; one `stop`) · C6 the
+archive + the Cursor (`none`). No snapshot bump and no fuzz smoke anywhere:
+nothing touches `src/sim|run|core|config|bot`, `config/` or `tests/fuzz/`.

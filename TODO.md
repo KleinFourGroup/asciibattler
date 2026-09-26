@@ -426,3 +426,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   mark stays still on the tile. Also: a phase per unit, so a flock doesn't
   bob in unison; under reduced motion the lift stays and the bob goes; and
   a read on whether the bar and hitsplats bob with the glyph.
+
+## §109 riders (the kickoff, 2026-09-26)
+
+- [ ] **A polish round: the rally X as a terrain mark** (the user at the
+  §109 kickoff: "at some point, we should probably investigate turning the
+  rally glyph into a terrain marker"). The tile objective marker is a glyph
+  sprite that stands its ink, not its quad, a small gap above its cell, so
+  it reads the X's ink bottom from the atlas (R10, re-grounded at 109a:
+  under the quad-bottom anchor the X's ink sits 17/64 of a cell above its
+  quad bottom, and dropping the term floats it 0.43 world units). Drawn by
+  the terrain as a mark shape (the §108 table, a new shape id) it lies on
+  its tile with no ink read at all, and R10 is deleted. A new look, so a
+  read; the enemy mark rides above a glyph and stays a sprite.

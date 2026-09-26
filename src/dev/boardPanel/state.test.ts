@@ -4,7 +4,6 @@ import {
   DIAL_KEYS,
   KNOWN_ARTEFACTS,
   VIEW_DIALS,
-  barLift,
   cameraViewOf,
   coerceDial,
   defaultDials,
@@ -13,7 +12,6 @@ import {
   spliceBookmark,
   type DialState,
 } from './state';
-import census from '../../../tests/board/inkCensus.json';
 import { DEFAULT_CAMERA_VIEW } from '../../render/cameraFit';
 import { DEFAULT_MARK_STYLE } from '../../render/groundMarks';
 
@@ -120,12 +118,11 @@ describe('105b — the board explorer dial table', () => {
     const state: DialState = {
       ...defaultDials(),
       yaw: 30,
-      bar: 'uniform',
-      barY: 0.95,
+      scale: 1.5,
       plateCorner: 0.1,
       pose: 'row',
     };
-    expect(encodeDials(state)).toBe('yaw-30_bar-uniform_barY-0.95_plateCorner-0.1_pose-row');
+    expect(encodeDials(state)).toBe('yaw-30_scale-1.5_plateCorner-0.1_pose-row');
     expect(parseDials(encodeDials(state))).toEqual(state);
   });
 
@@ -148,41 +145,11 @@ describe('105b — the board explorer dial table', () => {
   });
 
   it('a range value is clamped to the dial and snapped to its step', () => {
-    const { min, max } = DIALS.barY;
-    expect(coerceDial('barY', String(max + 5))).toBe(max);
-    expect(coerceDial('barY', String(min - 5))).toBe(min);
-    expect(coerceDial('barY', '0.8949')).toBe(0.89);
-    expect(coerceDial('barY', 'NaN')).toBeUndefined();
-    expect(coerceDial('barY', '')).toBeUndefined();
-  });
-});
-
-describe('105b — the bar-line rule', () => {
-  // The expectation is re-derived from the DUMPED atlas census — a surface
-  // `barLift` does not consult.
-  const inkOf = (glyph: string) => {
-    const [x0, y0, x1, y1] = (census.inks as Record<string, number[]>)[glyph]!;
-    return { x0: x0!, y0: y0!, x1: x1!, y1: y1! };
-  };
-  const ROW = ['g', '▄', '╥', 'M', 'a', 'r'];
-
-  it('ink mode is the atlas answer, untouched', () => {
-    expect(barLift({ bar: 'ink', barY: 0.9 }, 0.8281, -0.4375)).toBe(0.8281);
-  });
-
-  it('uniform mode puts every glyph of the posed row on ONE line', () => {
-    const state = { bar: 'uniform', barY: DIALS.barY.def } as const;
-    // anchor (quad-local, the quad bottom) + lift = the bar line in quad-local y.
-    const lines = ROW.map(() => -0.5 + barLift(state, Number.NaN, -0.5));
-    for (const line of lines) expect(line).toBeCloseTo(state.barY - 0.5, 10);
-  });
-
-  it('the control: ink mode does NOT put the row on one line (the 79e price)', () => {
-    const tops = ROW.map((g) => inkOf(g).y1);
-    expect(Math.max(...tops) - Math.min(...tops)).toBeGreaterThan(0.25);
-  });
-
-  it('the default uniform line clears the tallest ink in the posed row', () => {
-    for (const g of ROW) expect(DIALS.barY.def).toBeGreaterThanOrEqual(inkOf(g).y1 - 1e-9);
+    const { min, max } = DIALS.plateCorner;
+    expect(coerceDial('plateCorner', String(max + 5))).toBe(max);
+    expect(coerceDial('plateCorner', String(min - 5))).toBe(min);
+    expect(coerceDial('plateCorner', '0.1249')).toBe(0.12);
+    expect(coerceDial('plateCorner', 'NaN')).toBeUndefined();
+    expect(coerceDial('plateCorner', '')).toBeUndefined();
   });
 });

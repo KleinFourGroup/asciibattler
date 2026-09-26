@@ -1,7 +1,8 @@
 /**
  * 105b — the board explorer's DIAL TABLE + its URL codec (pure, headless-
- * tested). The projection spike (Round 7.5, §105) is a dev-only, render-only
- * panel of live dials; a dial is one row of `DIALS`, and everything else — the
+ * tested). The board explorer (Round 7.5's projection spike, §105, kept as a
+ * dev tool) is a dev-only, render-only panel of live dials; a dial is one row
+ * of `DIALS`, and everything else — the
  * panel's controls, the typed state, the `?bp=` bookmark — derives from that
  * row, so 105d/105e add a projection or glyph-scale dial as one line here.
  *
@@ -110,27 +111,6 @@ export const DIALS = {
     step: 0.05,
     def: 1,
     hint: 'unit bodies only (walls stay one tile) — bars, hitsplats and click boxes follow',
-  },
-  /** The HP-bar line: today's ink-top follow (the user's §79e reversal) vs one
-   *  uniform line across a row of mixed glyphs (§79d2's original call). */
-  bar: {
-    kind: 'enum',
-    label: 'bar line',
-    options: ['ink', 'uniform'],
-    def: 'ink',
-    hint: 'ink = each bar rides its own ink top (79e) · uniform = one line for every glyph',
-  },
-  /** Where the uniform line sits, in CELL units above the quad bottom. 0.9 =
-   *  just clear of the cap-height ink
-   *  top (57/64 of a cell, measured) — pinned by state.test.ts. */
-  barY: {
-    kind: 'range',
-    label: 'uniform line',
-    min: 0.5,
-    max: 1.2,
-    step: 0.01,
-    def: 0.9,
-    hint: 'cell units above the quad bottom — 0.90 just clears a capital letter',
   },
   /** The shipped ground marks, drawn by the terrain (spec D3). Off = the plain
    *  terrain shaders, the frame-cost bench's before leg. */
@@ -278,33 +258,14 @@ export const VIEW_DIALS: readonly DialKey[] = ['proj', 'fov', 'pitch', 'yaw'];
 
 /**
  * 105e — THE KNOWN COSMETIC ARTEFACTS of a dialled board, shown on the panel
- * so the user's read discounts them instead of filing them. Each is a seam the
- * spike deliberately did not touch (the charter: nothing ships, no rule
- * deletion yet); the phase that ships a direction fixes the ones it inherits.
- * Text only — the panel renders it, state.test.ts pins that none is empty.
+ * so a read discounts them instead of filing them. Each is a seam the dev
+ * dials reach and production does not: an artefact of the shipped board
+ * itself belongs in TODO, not here. Text only — the panel renders it,
+ * state.test.ts pins that none is empty.
  */
 export const KNOWN_ARTEFACTS: readonly string[] = [
-  'yaw: wall runs (#) staircase on diamond tiles; an NxN slab is a screen rectangle over a wider footprint',
   'any dial change: an FX already in flight (bolt, lob, splat) was lifted on the OLD camera-up and lands there; the next one is right',
   'glyph scale: the fit box is one tile tall, so a scaled far-row glyph can graze the frame margin',
   'glyph scale: the objective marker keeps its own size; only its target lifts',
   'glyph scale: posed units and live units scale; a posed sprite still has no click box',
 ];
-
-/**
- * THE bar-line rule, in one place: the camera-up lift (world units at size 1;
- * callers scale by footprint × the 105e glyph scale, and pass the SIZE-1
- * `inkTopLift` — the atlas instance is scale-patched by seams.ts) from a glyph's ground anchor to where its
- * overlay stack sits. `inkTopLift` is today's answer (the atlas's, measured);
- * the uniform line is `barY` cell units above the QUAD BOTTOM, which is
- * `barY - 0.5` in quad-local y, minus wherever this glyph's anchor sits —
- * so it stays one screen line across glyphs under either anchor mode. Both
- * the BattleRenderer patch and the posed row call this; neither re-derives it.
- */
-export function barLift(
-  state: Pick<DialState, 'bar' | 'barY'>,
-  inkTopLift: number,
-  baseAnchorY: number,
-): number {
-  return state.bar === 'ink' ? inkTopLift : state.barY - 0.5 - baseAnchorY;
-}

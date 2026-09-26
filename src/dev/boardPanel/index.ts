@@ -118,7 +118,7 @@ export function attachBoardPanel(game: Game): BoardPanel {
           alpha: 1,
         });
       }
-      posed.sync(dials, seams.inkTopLiftAtSize1);
+      posed.sync(dials);
       lastSized += seams.stampSizes(battle);
     }
   };

@@ -6,19 +6,21 @@
  * the devKeys / main.ts cast convention), and every patch falls through to
  * the original at the default dial, so an untouched panel is today's board.
  *
- * Two hooks (a third, the `anchor` dial's override of the per-glyph stand
- * line, went when the quad-bottom anchor became the only rule):
- *  - `BattleRenderer.prototype.inkTopLiftFor` — the ONE definition the overlay
- *    stack and the hitsplat anchor share (§79e). Patched once on the
- *    prototype: a BattleRenderer is built per battle.
+ * The hooks, each in its own section below:
+ *  - 105e's glyph scale: the two unit lifts on the atlas instance
+ *    (`inkTopLift` · `inkCenterLift`) and the two pick builders on the
+ *    BattleRenderer prototype (patched once: a BattleRenderer is built per
+ *    battle).
  *  - `SpriteRenderer.sortByDepth` (instance) — Game calls it once per frame
  *    AFTER the scene has settled sprite positions and BEFORE the render, which
- *    is exactly when a follower (the ground cue, the posed row's bars) must
- *    sync. Wrapping it costs no frame of lag, unlike a second rAF.
- * Later steps added (each in its own section below): 105e's glyph scale (the
- * two unit lifts + the two pick builders). 106b's `unitAnchorPos` patch went
- * when its rule shipped (107b, `render/slabAnchor.ts`); what stays is
- * `restampSlabs`, which re-stands the N×N bodies after a view change.
+ *    is exactly when a follower (the posed set's bars and marks) must sync.
+ *    Wrapping it costs no frame of lag, unlike a second rAF.
+ *  - `restampSlabs`: no patch, it calls the production slab rule
+ *    (`render/slabAnchor.ts`) again after a view change.
+ * The spike's other hooks went as their questions closed: the anchor dial's
+ * stand-line override (the quad-bottom anchor is the only rule), the bar-line
+ * patch on `inkTopLiftFor` (the ink-top line stays), 106b's `unitAnchorPos`
+ * patch (its rule shipped), and the mock marks and the hop.
  *
  * ⚠ These are name-keyed reaches into private members tsc cannot check. Each
  * is guarded at install: a renamed seam logs a loud `[board-panel]` error and
@@ -33,14 +35,13 @@ import type { SpriteRenderer } from '../../render/SpriteRenderer';
 import type { UnitOverlayLayer } from '../../render/UnitOverlayLayer';
 import type { TerrainRenderer } from '../../render/TerrainRenderer';
 import type { FontAtlas } from '../../render/FontAtlas';
-import { BASE_ANCHOR_Y } from '../../render/glyphs';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import { BattleRenderer } from '../../render/BattleRenderer';
 import type { PickCandidate } from '../../render/pick';
 import { footprintOf } from '../../sim/occupancy';
-import { isInertNeutral, type Unit } from '../../sim/Unit';
+import { isInertNeutral } from '../../sim/Unit';
 import type { World } from '../../sim/World';
-import { barLift, type DialState } from './state';
+import type { DialState } from './state';
 
 /** What the panel reaches on the live Game (all TS-private there). */
 export interface GameInternals {
@@ -96,9 +97,6 @@ export function applyCameraView(
 export interface Seams {
   /** The patched atlas — followers read lifts through it. */
   readonly atlas: FontAtlas;
-  /** 105e — `inkTopLift` BEFORE the scale patch, for a caller that applies
-   *  the scale itself (`barLift`'s contract). */
-  inkTopLiftAtSize1(glyph: string): number;
   /** 105e — write `footprint × scale` onto every live unit body whose stamped
    *  size differs (walls and other inert neutrals stay size 1). Idempotent per
    *  frame: a Map lookup per unit, a buffer write only on change. */
@@ -120,31 +118,16 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
   // its one consumer is the objective marker's OWN glyph, which stays size 1.
   const inkTopLiftAtSize1 = atlas.inkTopLift.bind(atlas);
   const inkCenterLiftAtSize1 = atlas.inkCenterLift.bind(atlas);
+  // BattleRenderer's `inkTopLiftFor` (the overlay stack, hitsplats) and the
+  // posed set read `inkTopLift` through this instance, so both follow.
   atlas.inkTopLift = (glyph: string): number => inkTopLiftAtSize1(glyph) * dials().scale;
   atlas.inkCenterLift = (glyph: string): number => inkCenterLiftAtSize1(glyph) * dials().scale;
 
-  // --- the bar line ----------------------------------------------------------
   const proto = BattleRenderer.prototype as unknown as {
-    inkTopLiftFor?: (this: BattleRenderer, unit: Unit) => number;
     enemyBillboards?: (this: BattleRenderer) => PickCandidate[];
     destructibleBillboards?: (this: BattleRenderer) => PickCandidate[];
     unitAnchorPos?: (this: BattleRenderer, corner: GridCoord, footprint: number) => THREE.Vector3;
   };
-  const todayInkTopLiftFor = proto.inkTopLiftFor;
-  if (typeof todayInkTopLiftFor !== 'function') {
-    seamMoved('BattleRenderer.prototype.inkTopLiftFor');
-  } else {
-    proto.inkTopLiftFor = function (this: BattleRenderer, unit: Unit): number {
-      const d = dials();
-      // Today's path reads the scale-patched atlas, so it is already × scale.
-      if (d.bar === 'ink') return todayInkTopLiftFor.call(this, unit);
-      return (
-        barLift(d, inkTopLiftAtSize1(unit.glyph), BASE_ANCHOR_Y) *
-        footprintOf(unit) *
-        d.scale
-      );
-    };
-  }
 
   // --- 105e: the mirror pick follows the scaled quad -------------------------
   // A candidate's `size` is the quad's world extent; its `ink` and `anchor` are
@@ -215,5 +198,5 @@ export function installSeams(game: Game, dials: () => DialState, onFrame: () => 
     return written;
   };
 
-  return { atlas, inkTopLiftAtSize1, stampSizes, restampSlabs };
+  return { atlas, stampSizes, restampSlabs };
 }

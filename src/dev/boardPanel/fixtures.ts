@@ -339,7 +339,7 @@ export function placePose(pose: PoseId, board: PoseBoard): PoseResult {
   } else {
     // 105b's scan, unchanged: the first run of six, centred-out on each row,
     // from the middle row TOWARD the camera (a near row is the biggest on
-    // screen — the anchor read is a 4-atlas-pixel question), then away.
+    // screen, for reads a few atlas pixels wide), then away.
     const run = POSED_ROW.map((_, i) => ({ x: i, y: 0 }));
     const start = Math.max(0, Math.floor((board.gridW - run.length) / 2));
     const rows: number[] = [];

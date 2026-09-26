@@ -2857,3 +2857,29 @@ pins); `npm run board-geometry` runs to exit 0 and still reproduces its
 known answers (the 79b skews 9.21 / 5.10 / 3.24, the half-quad 26.48 px) and
 the flyer's 13 % at lift 0.45, yaw 45. **Not verified:** Firefox, by design
 (the oracle compares code paths); nothing here is for the user's eye.
+
+### 109b — the explorer trimmed to its keepers (2026-09-26) — read `none` ✅
+
+**Deleted:** the `bar` and `barY` dials, `barLift`, and seams.ts's patch on
+`BattleRenderer.prototype.inkTopLiftFor`, whose only non-default branch was
+the uniform line (the ink-top branch already read the scale-patched atlas).
+The posed set now reads that patched `atlas.inkTopLift` itself, so
+`inkTopLiftAtSize1` left the seam API. `KNOWN_ARTEFACTS` entry 1 went: the
+wall staircase and the slab's screen rectangle are the shipped yaw-45 board
+(read "not a concern" at 106d; the slab centred on its footprint at 107b),
+not artefacts of a dial; the list's header now says so. 4 tests (the
+bar-line pins); the range-coercion test moved to `plateCorner`.
+**Kept:** 11 dials: `board`, `proj`, `fov`, `pitch`, `yaw`, `scale`,
+`marks`, `plateCorner`, `pose`, `lift`, `hide`, with the fixtures, the posed
+set and the 108d bench (the user's call at the kickoff). ARCHITECTURE's
+explorer entry describes the kept tool and what left when.
+
+**Verified:** typecheck clean; `npm test` 3105 (3109 less 4). In the pane,
+109a's oracle re-run after the trim (same URL, same probe): all three
+objective states and the canvas hash identical to HEAD's `anchor-bottom`
+capture, so the posed bars' new path gives the old values. A kept dial
+applies: `scale` 1.5 wrote 15 unit sizes and lifted all 36 overlay roots
+(the 30 live units and the 6 posed, 12.8–38.6 px by glyph and footprint);
+back to 1, every root returned to its pixel. One probe read 0 moved first:
+it had selected `.unit-overlay-stack`, whose transform is empty on all 36;
+the root `.unit-overlay` carries it.

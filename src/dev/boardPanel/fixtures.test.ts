@@ -106,9 +106,9 @@ describe('105c — the board fixtures', () => {
 
 describe('105c — fixtureSearch', () => {
   it('replaces the run pairs and leaves every other pair byte-for-byte', () => {
-    const typed = '?seed=99&foo=a,b&layout=river&bp=board-quarry_anchor-bottom&roster=mage';
+    const typed = '?seed=99&foo=a,b&layout=river&bp=board-quarry_yaw-30&roster=mage';
     const out = fixtureSearch(typed, 'quarry');
-    expect(out).toBe(`?${BOARDS.quarry.run}&foo=a,b&bp=board-quarry_anchor-bottom`);
+    expect(out).toBe(`?${BOARDS.quarry.run}&foo=a,b&bp=board-quarry_yaw-30`);
     // a hand-edited run dial cannot survive next to a `board-`:
     expect(parseRunConfigFromURL(out)).toEqual(parseRunConfigFromURL(`?${BOARDS.quarry.run}`));
   });

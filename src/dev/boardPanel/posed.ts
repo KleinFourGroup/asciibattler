@@ -27,11 +27,10 @@ import { spriteColorForUnit } from '../../render/spriteColor';
 import type { SpriteHandle } from '../../render/SpriteRenderer';
 import type { UnitOverlayHandle } from '../../render/UnitOverlayLayer';
 import type { FontAtlas } from '../../render/FontAtlas';
-import { BASE_ANCHOR_Y } from '../../render/glyphs';
 import { footprintOf } from '../../sim/occupancy';
 import { placePose, type PoseId, type PosedSpec } from './fixtures';
 import type { GameInternals, LiveBattle } from './seams';
-import { barLift, type DialState } from './state';
+import type { DialState } from './state';
 
 export interface PosedMember {
   readonly spec: PosedSpec;
@@ -116,20 +115,18 @@ export class PosedSet {
     }
   }
 
-  /** Per frame: the bars follow the SAME rule the live units' bars do, and the
-   *  flyer follows the lift dial along the CURRENT camera's up. 105e: a posed
-   *  body is a unit body, so it wears the glyph scale too — `inkTopLiftAtSize1`
-   *  is the atlas's lift BEFORE seams.ts's scale patch (`barLift`'s contract). */
-  sync(dials: DialState, inkTopLiftAtSize1: (glyph: string) => number): void {
+  /** Per frame: the bars follow the SAME lift the live units' bars do (the
+   *  atlas's `inkTopLift`, which seams.ts scale-patches on this instance: a
+   *  posed body is a unit body, so it wears the glyph scale too), and the
+   *  flyer follows the lift dial along the CURRENT camera's up. */
+  sync(dials: DialState): void {
     const { sprites, overlays, renderer } = this.internals;
     if (this.sizedAt !== dials.scale) {
       this.sizedAt = dials.scale;
       for (const m of this.members) sprites.updateSprite(m.sprite, { size: dials.scale });
     }
     for (const m of this.members) {
-      const lift =
-        barLift(dials, inkTopLiftAtSize1(m.spec.glyph), BASE_ANCHOR_Y) *
-        dials.scale;
+      const lift = this.atlas.inkTopLift(m.spec.glyph);
       const rise = m.flies ? dials.lift : 0;
       if (m.flies) {
         sprites.updateSprite(m.sprite, {

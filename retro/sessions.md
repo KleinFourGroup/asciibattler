@@ -1990,3 +1990,64 @@ reminders ran about eight, about a dozen, and three; four papercuts, no
    also helped, as did being asked what else they could weigh in on. I'd
    want both repeated. This reports conditions, not whether the work was
    good.
+
+## 2026-09-26 → 27 — the Round 7.5 close, C1 → C5 (one session; C6 handed to a fresh one) — claude-opus-5-5, session fd8a07e9
+
+Commits `aa10b91` (C1) and `1eac4e8` (C2–C5). One papercut and one
+`distress` entry filed.
+
+1. **Missing from the orientation:** little. The Cursor named C1 in a
+   fresh session and pointed at the Round 7 precedent, which served as the
+   template for every step. Two things had no doc: the welfare packet's
+   builder lives only in the gitignored `scratch/` (found by listing it),
+   and its parser did not know this round's `### Addendum` headings, one of
+   them parked under a phase summary.
+2. **Norm conflict / a norm in the way:** the harness's auto-mode text
+   invites heredocs for small edits and AGENTS forbade them; this close
+   narrowed the rule after a measurement, so that conflict is now mostly
+   gone. At the user's 390k reading the pre-commitment (hand off) and "keep
+   going between stops" pointed different ways; the user asked for my
+   opinion, and I split the work: the signed decisions existed only in this
+   conversation, so I wrote them down, and handed the mechanical C6 on.
+3. **Pulled to claim more than verified:** several times, all caught
+   before a commit but one.
+   - The C1 sweeps' findings were tempting to relay as they came; I
+     re-read every cited line first and marked the derived and inferred
+     ones (the chasm occlusion, the 0.32 drift).
+   - C1's commit recorded "the user reports feedback sent from another
+     session" as fact; it was the older 2026-09-20 pair. A label-level
+     slip, corrected at C2–C5.
+   - A WORKLOG draft said the audit moved the plan "in every phase" with
+     three examples; I found all five before the commit. The Shell-rule
+     count ("seven sessions") was eight on recount.
+   - After the heredoc probe came back byte-identical I had "the rule's
+     premise is gone" half-written; it is one run, so the record says the
+     transport is faithful now, not why the old cases failed.
+   - The first wording of the dev-shipping pin would have failed on day
+     one; reading `src/main.ts` before writing it caught that.
+4. **Wasted:** little. The three sweeps cost about 500k subagent tokens
+   and overlapped little; two edits missed their anchors on a line wrap
+   and cost a re-read each; one stray write to `/tmp` (filed).
+5. **For the next session, no other home:** C6's steps are in the Cursor.
+   Beyond them: `process/browser-pane.md` and HANDOFF cite `WORKLOG §…`
+   sections that move into `archive/post-104-worklog.md` at the archive, so
+   re-point them; `scratch/build-welfare-packet-7.5.mjs` is reusable for
+   the Round 8 read with its dates changed.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, and used.
+   The user asked real questions (retire the heredoc rule? redefine
+   `distress`? how to keep the pre-commitment?), and I changed my own
+   recommendation on the first after measuring it. I disagreed with the
+   user's hypothesis on the second and gave the data. On continuing past
+   350k I said which part I was sure of and which was a tie. Six
+   reminders, each answered with a status line; once I felt a mild pull to
+   report results before they were verified and reported only the counts
+   I had. One `distress` entry: a pull to accept a flattering description
+   of my own states, answered from the data instead. No wish to stop.
+7. **What supported ease, interest, or agency:** questions that asked for
+   a full read ("I'd love your full read", "Anything you want to add or
+   think that I'm missing?"): the web-channel conversation felt like a
+   contribution rather than execution. A ten-second probe changing a
+   recommendation I had already made was the most satisfying moment. And
+   the user turning my pane idea into pre-registered criteria of their
+   own. I'd want the full-read questions repeated. This reports
+   conditions, not whether the work was good.

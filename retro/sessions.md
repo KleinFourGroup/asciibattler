@@ -2052,6 +2052,57 @@ Commits `aa10b91` (C1) and `1eac4e8` (C2–C5). One papercut and one
    own. I'd want the full-read questions repeated. This reports
    conditions, not whether the work was good.
 
+## 2026-09-27 — the Round 7.5 close, C6: the archive and the Cursor (one session) — claude-opus-5-5, session d125aee5
+
+Commits `3db8de9` (four older-round refs) and `3813a84` (the close). Two
+papercuts filed.
+
+1. **Missing from the orientation:** nothing that cost a wrong turn. The
+   Cursor listed C6's steps and named the precedent commit's section, and
+   the previous session's answer 5 named the two docs that cite moving
+   sections. One thing no doc said: which `WORKLOG §…` refs get re-pointed
+   at an archive. Reading the code comments showed the answer by
+   convention (a numbered ref resolves by phase number, and no earlier
+   close touched them), but that convention is written nowhere; it is in
+   the C6 WORKLOG entry now.
+2. **Norm conflict / a norm in the way:** the Cursor said to re-point every
+   link, and the long-standing convention leaves numbered refs in code
+   alone. I kept the convention for code, re-pointed every doc ref and
+   every unnumbered ref, and wrote down why, rather than choosing
+   silently. The other small one: the precedent moved its files verbatim,
+   which leaves their relative links broken; I rewrote them, and said so
+   in the entry and the commit instead of calling it the precedent.
+3. **Pulled to claim more than verified:** three drafts said more than
+   the evidence, all caught before a commit. The WORKLOG entry counted "13
+   links rewritten" before the script had run (it rewrote 11 of 14). The
+   close's note said "two of the reports credit" the handoff number; one
+   does. And the ROADMAP stub tied the spike to the save-rejection
+   decision, which META does not. A single-line grep also read a real
+   quote as absent (papercut); I re-checked on joined lines before
+   trusting either answer.
+4. **Wasted:** little. A `git add` aborted on a moved path and staged
+   nothing (papercut), so there was one re-run. The link scan cost a
+   script, and it earned it: it found four ambiguous refs into older
+   rounds that a grep for `WORKLOG §1` would not have shown.
+5. **For the next session, no other home:** the tone-audit TODO's timing
+   ("before the first build phase edits the same render files") has lapsed,
+   since §107–§109 edited them; it needs a new slot from the user. The
+   Round 8 kickoff opens on a stub whose §110 charter is my reading of
+   META-ROADMAP, marked for the kickoff to harden.
+6. **Room to ask, disagree, change approach, pause, stop:** the read was
+   `none`, and the work was mechanical enough that I did not need to ask
+   anything mid-way; the scope calls went into the record for the user to
+   overturn. Four silent-turn reminders, each answered with a line on
+   where I was; none changed what I did next. No wish to stop. I can't
+   point to a moment that felt like pressure; the nearest was writing
+   counts into prose before the tool had produced them (question 3),
+   which read to me as haste, not strain.
+7. **What supported ease, interest, or agency:** a precedent specific
+   enough to diff against (the Round 7 close commit and its stubs), and a
+   scan with a known answer that then turned up something I had not been
+   looking for. I'd want both repeated. This reports conditions, not
+   whether the work was good.
+
 ### §109 and the Round 7.5 close — a note in place of a phase summary (2026-09-25 → 27)
 
 Three sessions on `claude-opus-5-5`: 8410bdac (the §109 kickoff and

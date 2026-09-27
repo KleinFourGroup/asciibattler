@@ -360,8 +360,8 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **The map legend on a phone-width viewport** (98c) — fixed bottom-left at 296 × 232 px; a narrow board may want it collapsed to a toggle (§101 / §102's surface riders). A tall board's bottom nodes scroll under it, as they do under the banner.
 - [x] **Deep water's drift** (98e) — ✅ 99d (2026-09-16): `DEEP_DRIFT` 0.6 rad/s in both shaders (the user's retune from a 0.4 probe), pinned equal by `TerrainRenderer.test.ts`; under reduced motion `BattleScene.advanceShaderTime` holds `uTime`, so the bands stand still with no shader branch. WORKLOG §99d.
 - [ ] **The band constants by eye** (98e) — amplitude 0.22 and one band per tile (98e-post: two read as a hazard stripe; the diagonal now runs in world space in both shaders); one constant each in terrain.frag (`DEEP_BAND_AMPLITUDE` / `DEEP_BANDS_PER_TILE`) and the literal pair in apron.frag.
-- [x] ✅ **Round 7.5 rider — the two team-identity residuals** (the §98 kickoff's call F) — closed at the Round 7.5 close (2026-09-26): the held tints are answered by the ground mark's shape (§108's grey read); the camp pip is the Round 8 item below. WORKLOG §109 Kickoff, finding 9.
-- [ ] **Round 8: a camp unit's board status pip is hue-only** (deferred at the §108 kickoff, user-signed 2026-09-24). A carded unit's status has a text channel, its card's row; a camp unit has no card (§75h), so on its pip the ten status hues (`statusDisplay.ts`) are the only read. Land it with Round 8's colourblind palette, which re-picks those hues anyway, so the pip's second channel (a per-status symbol, most likely; the DoT hitsplat prefixes `~ ‡ ☠ +` cover four) and the hues get one design pass. §101's font gates must pass. WORKLOG §108 Kickoff, decision 1.
+- [x] ✅ **Round 7.5 rider — the two team-identity residuals** (the §98 kickoff's call F) — closed at the Round 7.5 close (2026-09-26): the held tints are answered by the ground mark's shape (§108's grey read); the camp pip is the Round 8 item below. `archive/post-104-worklog.md` §109 Kickoff, finding 9.
+- [ ] **Round 8: a camp unit's board status pip is hue-only** (deferred at the §108 kickoff, user-signed 2026-09-24). A carded unit's status has a text channel, its card's row; a camp unit has no card (§75h), so on its pip the ten status hues (`statusDisplay.ts`) are the only read. Land it with Round 8's colourblind palette, which re-picks those hues anyway, so the pip's second channel (a per-status symbol, most likely; the DoT hitsplat prefixes `~ ‡ ☠ +` cover four) and the hues get one design pass. §101's font gates must pass. `archive/post-104-worklog.md` §108 Kickoff, decision 1.
 
 ## §99 riders (the reduced-motion seam — opened at 99b, 2026-09-16)
 
@@ -382,18 +382,18 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
 - [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
 - [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.
-- [x] ✅ **Three doc drifts from the C1 sweep** — 109a/109c (2026-09-26): the barrier comment went with the rule (109a); gotcha #33 re-pointed at `glyphs.ts` and the catalog-derived unit glyphs (109c); the font sentinel was no drift (32 the 101a count, ≥24 a floor under it; a §101 gate, unchanged). WORKLOG §109 Kickoff, finding 4.
+- [x] ✅ **Three doc drifts from the C1 sweep** — 109a/109c (2026-09-26): the barrier comment went with the rule (109a); gotcha #33 re-pointed at `glyphs.ts` and the catalog-derived unit glyphs (109c); the font sentinel was no drift (32 the 101a count, ≥24 a floor under it; a §101 gate, unchanged). `archive/post-104-worklog.md` §109 Kickoff, finding 4.
 - [ ] **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — the subject match reads 40 % for §101 off six hits, one of them a `fix(` commit (AGENTS carries the warning until this lands).
 - [ ] **Rounded plates for organic scenery** (the user at §108's stop 1, 2026-09-25: future trees, where rounding "might thematically fit for 'organic' scenery"). The rounding exists: `MarkStyle.plateCorner` and the shader's rounded square (`terrainMarks.glsl` `plateShape`), with the explorer's `plateCorner` dial kept through 108f to try it. Today it is one global uniform; trees beside square-plated walls need it per mark (a spare field in the mark's texels). Square stays the default: the dashes did the walls' job, and rubble read as a tie. A large radius drifts toward the player's circle (the spec's caveat).
-- [x] ✅ **§40c's `CRACKED_STONE` destructible-wall tell gets a second channel** — a dashed plate frame (108b), read clear at stop 1, 2026-09-25. WORKLOG §108 Kickoff (decision 2) and §108b.
+- [x] ✅ **§40c's `CRACKED_STONE` destructible-wall tell gets a second channel** — a dashed plate frame (108b), read clear at stop 1, 2026-09-25. `archive/post-104-worklog.md` §108 Kickoff (decision 2) and §108b.
 - [ ] **Round 11: the glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
-- [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). WORKLOG §"THE VERDICT".
-- [x] ✅ **§106: a ground indicator for STATIC MULTI-TILE bodies (rubble)** — the footprint PLATE (106c, `filled` by the user's read), cut per tile onto the tile tops and extendable to all scenery (106c-post); the slab stands centred on it (106b). WORKLOG §106c / §106c-post.
+- [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). `archive/post-104-worklog.md` §"THE VERDICT".
+- [x] ✅ **§106: a ground indicator for STATIC MULTI-TILE bodies (rubble)** — the footprint PLATE (106c, `filled` by the user's read), cut per tile onto the tile tops and extendable to all scenery (106c-post); the slab stands centred on it (106b). `archive/post-104-worklog.md` §106c / §106c-post.
 
 ## §106 riders (the 106d played read, 2026-09-23)
 
-- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (`batch` read clear): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. WORKLOG §"The 106d riders".
-- [x] ✅ **Several empower kinds overflow a compact card's chip row** — fixed 2026-09-23 (`batch` read clear): the row wraps, a chip wider than the card wraps its label under its triangles, and the compact label dropped its letter-spacing so OVERCLOCKED fits. WORKLOG §"The 106d riders".
+- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (`batch` read clear): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. `archive/post-104-worklog.md` §"The 106d riders".
+- [x] ✅ **Several empower kinds overflow a compact card's chip row** — fixed 2026-09-23 (`batch` read clear): the row wraps, a chip wider than the card wraps its label under its triangles, and the compact label dropped its letter-spacing so OVERCLOCKED fits. `archive/post-104-worklog.md` §"The 106d riders".
 
 ## Tone audit riders (2026-09-23)
 
@@ -402,8 +402,8 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   `gotcha #N` refs stay). Comments only, proven by a comment-stripped
   before/after diff with a failing control. Timing: after §106's spec
   (106e), so no sweep touches spike code the spec may delete, and before the
-  first build phase edits the same render files. WORKLOG "The new-model tone
-  audit".
+  first build phase edits the same render files.
+  `archive/post-104-worklog.md` "The new-model tone audit".
 
 ## §108 riders (stop 2, 2026-09-25)
 
@@ -417,8 +417,8 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   still reaches the new height by the midpoint, which is what keeps the
   anchor at or above the surface it is over; check it with
   `tests/board/clip.ts`. Then the hop question reopens once, as the user
-  asked: the measurements are in WORKLOG §108c, the dial's code at
-  `d045497`, and `?bp=board-wade` is the fixture. Reduced motion drops any
+  asked: the measurements are in `archive/post-104-worklog.md` §108c, the
+  dial's code at `d045497`, and `?bp=board-wade` is the fixture. Reduced motion drops any
   hop (DESIGN §Reduced motion).
 - [ ] **Round 9: flyers float** (the user at §108's stop 2: "some sort of
   floating animation (maybe just a simple sine wave?)"). What DESIGN's

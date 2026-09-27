@@ -54,7 +54,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  6. Instruments ──┐  ✅ CLOSED 2026-09-02 — the fold + the perf pass + roster realism + the rarity protocol
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
  7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
- 7.5 The Board ───┤  the projection spike → the projection · cell anchoring + a ground cue · team identity · the elevation requirement · the camera question  (re-chartered 2026-09-20; was "Units")
+ 7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  the store keystone → the run journal → save/load → menu/settings → ascension → the public web channel
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
@@ -259,7 +259,7 @@ not improvised" on trial. Archives: `archive/post-94-roadmap.md` +
 
 ---
 
-## Round 7.5 — The Board
+## Round 7.5 — The Board ✅ CLOSED 2026-09-27 (every phase user-signed)
 
 _(Re-chartered 2026-09-20 at the Round 7 close's macro re-audit —
 user-signed (the text read and approved the same day); the 2026-09-09 entry, "Units", chartered a glyph-RULE rework
@@ -267,11 +267,11 @@ and is superseded. The argument, the three code sweeps and the rejected
 alternatives: WORKLOG §The Round 7 close, C1 → `archive/post-94-worklog.md`.
 **HARDENED 2026-09-21 at the round's kickoff, user-signed** — the control
 can win, the spike is an EXPLORATION under pre-registered constraints, two
-premises corrected against code: WORKLOG §Kickoff.)_
+premises corrected against code: `archive/post-104-worklog.md` §Kickoff.)_
 
 **Charter:** how the board is PROJECTED and how a unit stands on it. The
 glyph-alignment stack (16 rules at the 2026-09-21 audit, 20 with §101's
-gates; the table is WORKLOG §Kickoff — "too many special rules to get
+gates; the table is `archive/post-104-worklog.md` §Kickoff — "too many special rules to get
 something that only 90% works, and brittle", the user, 2026-09-09) is a
 symptom: glyph quads are axis-aligned in SCREEN space while the ground
 lives in perspective WORLD space (a world vertical leans ≈24° at a fitted
@@ -380,6 +380,18 @@ mechanic; no walking N×N; no palette (Round 8); no new archetypes; no
 rotatable camera. **Spike-first, then spec, at its own kickoff** — with its
 own code-reality audit of what each rule was defending against.
 
+**CLOSED 2026-09-27** — all five phases (§105–§109) user-signed; the exit
+met: the projection chosen by the user's eye inside the pre-registered
+constraints, played, and built (ortho · pitch 45 · yaw 45, spec D1);
+world-up = screen-up pinned headless (`tests/board/cameraFit.test.ts`); the
+identity requirement satisfied by the ground mark's shape and
+grayscale-verified (§108's grey read); the elevation clauses signed into
+DESIGN; the special rules 17 → 14 with the probes re-derived from the atlas;
+the camera question dispositioned (fit is the only production view, spec
+D7). The close amended Round 8 (below), moved the atlas resize to Round 9,
+and kept the reads doctrine. Archives: `archive/post-104-roadmap.md` +
+`-worklog.md` + `round-7.5-spec.md` + `retro-scratchpad-round-7.5.md`.
+
 **The `.5` convention (user-signed 2026-09-09):** an unscheduled round
 inserted between two planned ones takes the `.5` number (the
 `<phase><letter>` form is already the step address). Round numbers are
@@ -394,7 +406,7 @@ so the next `.5` is a line written at a close, not a surprise at a kickoff.
 _(Re-audited 2026-09-26 at the Round 7.5 close's macro re-audit,
 user-signed: the camera row struck, the run journal added, three storage
 cases, the public web channel at the round's close. The sweeps and the
-calls: WORKLOG §The Round 7.5 close, C1 → `archive/post-104-worklog.md`.)_
+calls: `archive/post-104-worklog.md` §The Round 7.5 close, C1.)_
 
 **Charter:** the persistent-store keystone and everything that hangs off it.
 The store is to this round what the Rule vocabulary was to Cluster 3:
@@ -519,7 +531,8 @@ consumer seams only); no unlock content mapping; no music.
 item below was code-reality-audited at the planning session
 (`archive/post-83-worklog.md` §Post-C5 planning); sizes are the audit's. _(The flyer's presentation, the
 render side of a walking N×N and the atlas pre-step were added 2026-09-26
-at the Round 7.5 close, user-signed: WORKLOG §The Round 7.5 close, C1.)_
+at the Round 7.5 close, user-signed: `archive/post-104-worklog.md` §The
+Round 7.5 close, C1.)_
 
 **Pre-step, at the first phase that needs a new glyph: the atlas resize**
 (moved from Round 10, 2026-09-26). The atlas uses 47 of its 48 cells (21

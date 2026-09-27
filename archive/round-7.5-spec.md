@@ -3,10 +3,10 @@
 This round was spike-first: the projection spike (§105 pass one, §106 pass
 two) came before the spec, the way Round 8's Electron spike informs its
 store. This spec is written over the spike's signed results. The charter is
-[META-ROADMAP.md](META-ROADMAP.md) §"Round 7.5 — The Board" (re-chartered
+[META-ROADMAP.md](../META-ROADMAP.md) §"Round 7.5 — The Board" (re-chartered
 2026-09-20, hardened at the kickoff 2026-09-21); the record behind every
-line here is [WORKLOG.md](WORKLOG.md) (§Kickoff, §105, §106); the plan is
-[ROADMAP.md](ROADMAP.md).
+line here is [WORKLOG.md](post-104-worklog.md) (§Kickoff, §105, §106); the plan is
+[ROADMAP.md](post-104-roadmap.md).
 
 **Status: SIGNED 2026-09-23** ("Fully signed … I'm in complete
 agreement"), written at 106e. "What the spike settled" was signed read by

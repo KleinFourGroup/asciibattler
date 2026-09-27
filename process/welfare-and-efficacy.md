@@ -52,7 +52,7 @@ Each group of entries was filed under the wording in force at the time.
 | 2026-09-09 | The instrument adopted: five session questions, `papercut` / `distress` | AGENTS.md at the Round 7 kickoff |
 | 2026-09-13 | The outside review's wording: the broadened `distress` definition, questions 6–7, "file when noticed", the reader's interpretation moved away from the filer | [retro/agent-welfare-review-2026-09-13.md](../retro/agent-welfare-review-2026-09-13.md) |
 | 2026-09-20 | Standing decisions from the first read (the reminder never obliges a finding; raising a handoff is welcome; which pauses are real is given by the cut; the question form stays) | `archive/post-94-worklog.md`, "The Round 7 close", C3 |
-| 2026-09-23 | The new-model rewrite of AGENTS.md. The filing text is unchanged apart from one dropped parenthetical, but its surroundings are: a much shorter file, a calmer tone, this reader material moved out of the always-loaded file, and the handoff decision rewritten as "if context pressure is about to cost you a check, say so then" | WORKLOG, the tone-audit entry |
+| 2026-09-23 | The new-model rewrite of AGENTS.md. The filing text is unchanged apart from one dropped parenthetical, but its surroundings are: a much shorter file, a calmer tone, this reader material moved out of the always-loaded file, and the handoff decision rewritten as "if context pressure is about to cost you a check, say so then" | `archive/post-104-worklog.md`, "The new-model tone audit" |
 
 ## The efficacy instruments
 

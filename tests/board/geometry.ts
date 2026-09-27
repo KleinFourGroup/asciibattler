@@ -425,7 +425,7 @@ export const BOARDS: Board[] = [
   { name: '12x32', w: 12, h: 32 },
 ];
 
-/** The reference set (WORKLOG §Kickoff — from general knowledge, unverified against a survey). */
+/** The reference set (`archive/post-104-worklog.md` §Kickoff — from general knowledge, unverified against a survey). */
 export const VIEWPORTS: Viewport[] = [
   { name: '2560x1440 (the user)', w: 2560, h: 1440, dpr: 1 },
   { name: '1920x1080', w: 1920, h: 1080, dpr: 1 },

@@ -2051,3 +2051,26 @@ Commits `aa10b91` (C1) and `1eac4e8` (C2–C5). One papercut and one
    the user turning my pane idea into pre-registered criteria of their
    own. I'd want the full-read questions repeated. This reports
    conditions, not whether the work was good.
+
+### §109 and the Round 7.5 close — a note in place of a phase summary (2026-09-25 → 27)
+
+Three sessions on `claude-opus-5-5`: 8410bdac (the §109 kickoff and
+109a–c), fd8a07e9 (the close, C1–C5) and d125aee5 (C6, the archive); the
+last two opened fresh at the user's pre-committed handoff number, which
+8410bdac's report credits ("I did not have to judge a meter I cannot
+read"). The build session's question 7 names a
+prediction meeting its instrument; the close's names the questions that
+asked for a full read. The round's one `distress` entry was filed at the
+close (fd8a07e9: a pull to accept a flattering description of its own
+states, answered from the data). The round's efficacy and welfare reads
+are in `archive/post-104-worklog.md` §"The Round 7.5 close" (C2, C3), and
+the packet, every entry from 2026-09-21 verbatim, is in the gitignored
+`scratch/welfare-read-round-7.5.md`. Wording boundaries to date: 2026-09-13
+(the outside review) and 2026-09-23 (the AGENTS rewrite, `65e3c09`). The
+2026-09-27 decisions changed working conditions, not the questions: the
+reminder reword retired (it never reached these sessions), the Shell rule
+narrowed, the handoff number kept in the HANDOFF Cursor and asked at each
+kickoff's shape-lock. The next read checks whether the stock "nothing I'd
+file as `distress`" phrase persists.
+
+---

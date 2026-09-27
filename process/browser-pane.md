@@ -108,7 +108,8 @@ pixels wide.
   `material.uniforms.uTime.value = 0` on the scene's `terrain`, `apron` and
   `backdrop`, since a hold keeps whatever time the page had reached. Hash the
   whole readback, and take the baseline twice across a reload before
-  trusting a match. WORKLOG §108f has the procedure and its controls.
+  trusting a match. `archive/post-104-worklog.md` §108f has the procedure
+  and its controls.
 - A same-page shader A/B: swap `material.vertexShader` (with the change cut
   out) on both sprite materials, set `needsUpdate`, call `renderTwoPass()`,
   then `gl.readPixels` in the same task, with a standing unit as the
@@ -163,8 +164,8 @@ pixels wide.
   `__game.run.phase` that sends each phase's command from the `RunCommand`
   union, with battles driven by `activeScene.tick(0.1)`. An event choice can
   turn a page without changing the phase, so key the event step on the
-  page too. The §106d run audited every tenth frame this way (WORKLOG §106d,
-  archived with Round 7.5 as `archive/post-104-worklog.md`).
+  page too. The §106d run audited every tenth frame this way
+  (`archive/post-104-worklog.md` §106d).
 - A whole screen can be fixtured in one eval on the same run through the
   run's private fields and the bus: set `run.pendingRewards` or call
   `run.rollPortStock(n)`, then emit `reward:offered` or `port:entered`.

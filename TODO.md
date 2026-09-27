@@ -360,7 +360,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **The map legend on a phone-width viewport** (98c) — fixed bottom-left at 296 × 232 px; a narrow board may want it collapsed to a toggle (§101 / §102's surface riders). A tall board's bottom nodes scroll under it, as they do under the banner.
 - [x] **Deep water's drift** (98e) — ✅ 99d (2026-09-16): `DEEP_DRIFT` 0.6 rad/s in both shaders (the user's retune from a 0.4 probe), pinned equal by `TerrainRenderer.test.ts`; under reduced motion `BattleScene.advanceShaderTime` holds `uTime`, so the bands stand still with no shader branch. WORKLOG §99d.
 - [ ] **The band constants by eye** (98e) — amplitude 0.22 and one band per tile (98e-post: two read as a hazard stripe; the diagonal now runs in world space in both shaders); one constant each in terrain.frag (`DEEP_BAND_AMPLITUDE` / `DEEP_BANDS_PER_TILE`) and the literal pair in apron.frag.
-- [ ] **Round 7.5 rider — the two team-identity residuals** (the §98 kickoff's call F, user-signed 2026-09-15): camp units have NO HUD card (§75h), so a status pip on a camp unit is hue-only; and the panic / blind held-body tints (`fxRegistry.ts` `panic_active` TERMINAL_AMBER / `blind_active` TERMINAL_STONE) are the camp / neutral TEAM colours (`spriteColor.ts`). Both belong with the glyph rework + team identity in Round 7.5, not §98 (no team-identity work — the scope guard). The requirement both fall under is written: DESIGN "Team identity on the board" clauses 3 + 4 (103c). **Split at the §108 kickoff (2026-09-24):** the tints are clause 3, answered by the ground mark's shape (§108's grey read); the pip moved to Round 8 (the item below).
+- [x] ✅ **Round 7.5 rider — the two team-identity residuals** (the §98 kickoff's call F) — closed at the Round 7.5 close (2026-09-26): the held tints are answered by the ground mark's shape (§108's grey read); the camp pip is the Round 8 item below. WORKLOG §109 Kickoff, finding 9.
 - [ ] **Round 8: a camp unit's board status pip is hue-only** (deferred at the §108 kickoff, user-signed 2026-09-24). A carded unit's status has a text channel, its card's row; a camp unit has no card (§75h), so on its pip the ten status hues (`statusDisplay.ts`) are the only read. Land it with Round 8's colourblind palette, which re-picks those hues anyway, so the pip's second channel (a per-status symbol, most likely; the DoT hitsplat prefixes `~ ‡ ☠ +` cover four) and the hues get one design pass. §101's font gates must pass. WORKLOG §108 Kickoff, decision 1.
 
 ## §99 riders (the reduced-motion seam — opened at 99b, 2026-09-16)
@@ -441,3 +441,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   the terrain as a mark shape (the §108 table, a new shape id) it lies on
   its tile with no ink read at all, and R10 is deleted. A new look, so a
   read; the enemy mark rides above a glyph and stays a sprite.
+
+## Round 7.5 close riders (the sweep, 2026-09-26)
+
+- [ ] **A guard that dev code doesn't ship** (papercut #42, 105c). The 105c
+  nothing-ships check was a dist grep run from memory, and a static DEV
+  import once shipped ~200 B of a fixture table: the tree-shaker can't
+  prove template literals and spreads pure. `src/main.ts` still imports
+  three dev modules statically (`TraceRecorder`, `traceStore`, `devKeys`)
+  and relies on the shaker. Two shapes: a dist check on the deploy path
+  (build, then grep `dist/` for dev-only markers, with a planted leak as
+  its control), or a pin that `src/dev` is reached only through the
+  DEV-gated dynamic import. Round 8's pane probe kit is dev code and rides
+  it.

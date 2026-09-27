@@ -109,6 +109,12 @@ pixels wide.
   `backdrop`, since a hold keeps whatever time the page had reached. Hash the
   whole readback, and take the baseline twice across a reload before
   trusting a match. WORKLOG §108f has the procedure and its controls.
+- A same-page shader A/B: swap `material.vertexShader` (with the change cut
+  out) on both sprite materials, set `needsUpdate`, call `renderTwoPass()`,
+  then `gl.readPixels` in the same task, with a standing unit as the
+  pixel-identical control.
+- The `zoom` action can't crop: it returns the whole screenshot. Read a
+  small region's pixels with `readPixels` instead.
 - The pane renders on the machine's own GPU through ANGLE (the frame-cost
   bench's report names it), so a timing there is real hardware, in
   Chromium. An emulated viewport larger than the pane gets a canvas at
@@ -120,6 +126,9 @@ pixels wide.
   plain span); use a DOM query or coordinates.
 - Cap a probe's output (`.slice(0, 8)`); an uncapped diff can cost thousands
   of tokens.
+- Keep a long probe's source in the page's `localStorage` and run it with
+  one short eval, rather than pasting it into every call; the pane's storage
+  survives reloads.
 
 ## Input
 
@@ -150,6 +159,12 @@ pixels wide.
   only nodes of a matching kind, so `?firstNode=elite` is the real elite
   fixture. An unseeded reload starts a different run, so never compare
   before and after across one.
+- A whole run can be played from the page: a dispatcher over
+  `__game.run.phase` that sends each phase's command from the `RunCommand`
+  union, with battles driven by `activeScene.tick(0.1)`. An event choice can
+  turn a page without changing the phase, so key the event step on the
+  page too. The §106d run audited every tenth frame this way (WORKLOG §106d,
+  archived with Round 7.5 as `archive/post-104-worklog.md`).
 - A whole screen can be fixtured in one eval on the same run through the
   run's private fields and the bus: set `run.pendingRewards` or call
   `run.rollPortStock(n)`, then emit `reward:offered` or `port:entered`.

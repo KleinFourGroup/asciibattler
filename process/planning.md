@@ -69,12 +69,15 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    - a step that adds a serialized RNG stream predicts the seed
      re-baseline (a new stream can shift every stream after it);
    - each step predicts whether the pre-commit fuzz smoke fires. `config/`
-     is sim input, so "no sim touch" is wrong for a config change.
+     is sim input, so "no sim touch" is wrong for a config change;
+   - a count the exit will re-record (a rule count, a census) is written
+     with its derivation: which rows count, and why.
    When a risky change has a separable UI, cut it headless core first and
    render second, so the eyeball-only part is only what's actually visual.
 3. **Shape-lock with the user.** This is a stop: the user signs the cut and
-   its reads. From there the session runs to the next `stop` or decision
-   point.
+   its reads. The same message asks whether the user's context handoff
+   number (in the HANDOFF Cursor) still stands; unanswered, it stands. From
+   there the session runs to the next `stop` or decision point.
 4. **Write the cut into the ROADMAP phase section** as checkbox one-liners;
    rationale and audit findings go to the worklog.
 
@@ -85,7 +88,10 @@ session of its own.
 **Step zero** of each step measures the step's premise before building it:
 ten seconds of probe per item beats building the item. A predicted side
 effect that doesn't show up is a sign the work is already done. If step
-zero changes the signed cut, take the change to the user before building.
+zero changes what the signed cut intends, take the change to the user before
+building. A change inside that intent (an approved fix turns out to need two
+more rules to do what it was approved for) can be built and flagged
+prominently in the report.
 
 **Deferrals.** When a step deliberately leaves work for a later step, write
 a landing note (what was left, where it lands, and what invariant the
@@ -93,13 +99,15 @@ landing must preserve) in the step's worklog entry and in a code comment at
 the seam. Without it, a later session may build a second mechanism that
 breaks the first.
 
-## Reads: the trial terms
+## Reads: the terms
 
-"Reads are cut, not improvised" (AGENTS.md) was adopted 2026-09-20 and is
-on trial through Round 7.5; revisit it at that round's close. It replaced
-"pause after every commit", because most real findings came from the user's
-playtests, not from reviewing commits, and every session had to decide on
-its own which pauses were real.
+"Reads are cut, not improvised" (AGENTS.md) was adopted 2026-09-20, tried
+through Round 7.5 and kept at its close (2026-09-26): 11 stops and 7 `batch`
+reads, four `-post`s all from stops, and the rollback never fired. It
+replaced "pause after every commit", because most real findings came from
+the user's playtests, not from reviewing commits, and every session had to
+decide on its own which pauses were real. The `batch` half was thin in an
+eyeball-heavy round, so the Round 8 close counts `batch` reads again.
 
 - Reads only move up. A session may upgrade a read the moment step zero
   shows a dependency, and the user can upgrade one with a word; a downgrade
@@ -112,8 +120,8 @@ its own which pauses were real.
   headless-heavy round is batch-heavy.
 - Make each readable step reachable in play, and say how (a URL dial, a
   roster string).
-- If the trial is rolled back, the fallback is the old rule: pause after
-  every commit.
+- If the doctrine is ever rolled back, the fallback is the old rule: pause
+  after every commit.
 
 ## HANDOFF upkeep
 

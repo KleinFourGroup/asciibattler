@@ -21,6 +21,9 @@ with the "before" pinned in a worktree.
 - **A PASS ships with its failing control.** Run the same shapes under a
   deliberately non-neutral edit; they must FAIL. Otherwise the PASS may be
   a shape that never reached the code you changed.
+- A control that swaps a file in (HEAD's copy, say) saves and restores it
+  through one path variable, never silences the restore, and prints
+  `git diff --stat` afterwards, so a swapped copy left in place shows.
 
 ## Presentation refactors
 

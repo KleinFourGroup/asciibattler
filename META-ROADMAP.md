@@ -413,7 +413,30 @@ round's spec writes the first two).
   the first module that bakes from it: the locale resolves at catalog load
   and reloads the page to switch (`src/i18n/locale.ts`), and a reload-time
   palette would do the same. Informs the store's storage adapter BEFORE its
-  shape locks.
+  shape locks. One more question for the Electron half: can a hidden window
+  (background throttling off) run the game's frame loop and hand a probe's
+  result back to a Node script, and on which GPU? If yes, an Electron probe
+  runner over the kit below becomes an option this round.
+- **The pane probe kit** (signed 2026-09-26), built before the menus and
+  settings, the round's pane-heavy work: a dev-only `__probe` in the page
+  that puts the Browser pane's known traps into code instead of tips —
+  `ready()` (wait until the page is live), `go(query)` (set the URL only
+  after that), `frame()` (render synchronously, so a read never sees the
+  previous view), `pixels(rect)` (a crop off the canvas, since the pane's
+  zoom can't crop), a canvas-size check on every read, and the whole-run
+  driver (`process/browser-pane.md` "Fixtures"). A pane session starts
+  with `await __probe.ready()`, and an Electron runner would call the same
+  kit. **Pre-registered, checked at the round's close:** (1) papercuts
+  from a covered trap (not live yet · a URL overwritten by the pane's
+  first load · a stale frame · a timed-out script still running · a 0×0
+  canvas · a crop) in the sessions after it lands: at most 1 (Round 7.5
+  filed 5); (2) adoption, counted from the transcripts with a known
+  answer: every session that drives the pane calls the kit; (3) session
+  reports' question 4 naming a covered trap: at most 1 across the round.
+  It loses if (1) or (3) exceeds its line or most pane sessions skip it;
+  the close then fixes it, moves scripted probes to the Electron runner,
+  or retires it. Two instruments, because filing is voluntary: a papercut
+  drop alone could be a filing drop.
 - **The persistent store:** versioned, reject-stale, a storage-adapter seam
   with three cases (`localStorage` on the Pages site · the same inside
   itch's iframe · a file in Electron), the four consumers designed in;
@@ -797,6 +820,7 @@ records an achievement on a clean machine.
 | The shell spike (Electron + the itch iframe) · storage adapter (three cases) | 2026-08-21 gap / 7.5 close | 8 |
 | Persistent store (4 consumers) · version + invalidation policy · `BUILD_ID` | v1 C6 / plans/* / decision 1 | 8 |
 | The run journal (tier 1's export · the chaos repro · the continuation check) | 7.5 close | 8 |
+| The pane probe kit (+ an Electron probe runner, if the spike allows) | 7.5 close | 8 |
 | Save/load + mid-run resume · chaos fuzz driver · the continuation check | v1 C6 / TODO / 7.5 close | 8 |
 | Title / main menu · seed field | 2026-08-21 gap | 8 |
 | Settings (volume axes · rebind · speed · colorblind · aura-FX · locale · reduced motion · shake · text scale) | v1 C6 / plans/music.md / 7.5 close | 8 |

@@ -2919,8 +2919,9 @@ the overlay-stack watch; a finding rides the Cursor.
 1). This session's first reminder arrived in the default wording ("…say in
 a few words what you're doing, then continue") with the reword still set at
 `.claude/settings.local.json:91`: one more session the setting did not
-reach. The user reports feedback sent to the Claude Code developers from
-another session, which the repo had not recorded.
+reach. (The feedback the user remembered sending was the 2026-09-20 pair,
+HANDOFF rider 3; this finding went as a third note on 2026-09-27, C3
+below. The override was removed from the settings file the same day.)
 
 ### C1 — the macro re-audit
 
@@ -3050,3 +3051,154 @@ N×N render gaps; Round 10's pre-step struck; Round 11's accessibility dials
 and two feel items; Round 12's bench and browser-matrix lines and the web
 build's fate; the coverage map; mobile and a rotatable-camera note on the
 deferred list.
+
+### C2 — the efficacy read (the second; Round 7.5, 2026-09-21 → 26)
+
+**The instruments.** `npm run phase-stats -- --since=105`; `npm run
+friction-scan -- --since=2026-09-21 --exclude=fd8a07e9`; commit types
+counted from `git log` beside phase-stats' word-matched fix%, which is not
+quotable (AGENTS). Known answer: the scan found 13 sessions, 12 of them the
+12 Round 7.5 entries in `retro/sessions.md`; the 13th, 6f87e4d0, is Round
+7's close session running past midnight (3 turns, 6 tool calls), left out
+below.
+
+| | Round 7.5 | Round 7 |
+|---|---|---|
+| phases · commits | 5 (§105–§109) + the tone audit · 71 (`32ee614` → `944677c`) | 11 · 119 |
+| `fix(` commits | 5: two `-post`s from stops (`4361a11`, `99626f3`), the two 106d-rider bugs found in play (`c348964`, `0970be0`), one self-correction (`03f1f7a`) | 8 |
+| the user's turns · tool calls | 71 · 2 452 | 134 · 3 395 |
+| flagged tool errors · denials | 18 (0.7 %, a floor) · 0 | 34 (1.0 %) · 3 |
+| silent-turn reminders | 95, one wording (the default) | 164 |
+| output tokens | ≈ 2.05 M | ≈ 2.37 M |
+
+**What the twelve reports say about the pipeline** (the session's reading;
+the entries are the evidence):
+- The kickoff audit and step zero moved the plan in every phase: two false
+  charter premises at 105, the hill mounds' jitter at 106, the starting
+  camera and D8's tension at 107, the camp pip moved to Round 8 at 108,
+  R10 at 109.
+- Orientation is solved for this shape of round: no report names a doc gap
+  that cost a wrong turn; each gap was a code fact no doc could hold, and
+  each session's answer 5 served the next as a brief ("it saved the whole
+  design conversation", cd47b62d).
+- Round 7's over-claim shape holds: instruments with built-in controls
+  caught the numbers, the slips were prose, and one reached a commit
+  (108f's Firefox warning, corrected in `9b1116a`).
+- Waste: the Browser pane (6 of the 22 papercuts) and the Shell rule
+  (about nine breaks across eight sessions).
+- The AGENTS rewrite's "Before you… read…" triggers are followed. A scratch
+  probe counted, per session, the tool calls that opened a `process/*.md`
+  file, with this session as its known answer (it found this session's two
+  Reads). The five sessions before `65e3c09` show none (the directory did
+  not exist yet); all six after it opened `process/` docs at their
+  triggers (108d's bench `measurement.md`, 108f's deletion `oracles.md`,
+  109's kickoff `planning.md`).
+
+### C3 — the welfare read (the second; the user's, 2026-09-27)
+
+**The packet.** `scratch/welfare-read-round-7.5.md` (gitignored, 789
+lines; its builder `scratch/build-welfare-packet-7.5.mjs`, adapted from
+Round 7's): the round from 2026-09-21, split at the 2026-09-23 wording
+boundary (`65e3c09`) with the tone-audit session on its own, the model
+change of 2026-09-22 noted; `### Addendum` headings attached to the
+session before them, including `sessions.md:1668`, parked under the §106
+summary (Round 7's parser defect in a new shape). Checked before the read:
+12 sessions × 7 answers, 5 addenda at their known lines, every session with
+its scan row; all 57 quote blocks found verbatim in their sources, and a
+planted one-character change was caught. The reader's notes (§6) are
+labelled interpretation, from a non-independent reader (the same model as
+eight of the filers). The user read the packet before the notes; the
+decisions were taken in conversation.
+
+**The Shell rule.** Its recurrence stood out to the user, who asked whether
+to retire it instead of enforcing it (the sweep's P2 hook). The history:
+born 2026-09-08 (the casualty-experiment sweep: a `'` in a `-m` message
+killed a command, perl turned `\n` into newlines three times, an
+apostrophe broke a TS string); widened 2026-09-20 to backslashes (#35, a
+quoted heredoc turned `\s+` into `s+` and shipped a wrong line that ran);
+reworded 2026-09-23. The incidents: two silent and wrong, both code scripts
+with a regex (#35, #39); two loud, nothing ran (#22, #44); the rest landed
+intact, including all six since 2026-09-22. A measurement at this close: a
+quoted heredoc carrying a regex backslash, a Windows path, `\"`, an
+apostrophe, backticks, `$HOME`, `$(…)`, an em dash and curly quotes came
+out byte-identical to the Write tool's copy, and a planted difference was
+caught. One run, so it shows the transport is faithful now, not why the old
+cases failed (inference: authoring slips under shell-escaping habits).
+**Signed: narrowed, no hook.** A script or code with a regex or an escape
+goes through the file tool; no quote goes into an inline `-m` / `-e`; prose
+may go through a quoted heredoc and is grepped after. It also ends a
+standing conflict with the harness's own text, which invites heredocs
+(8410bdac's question 2; this session's system text says the same).
+
+**The `distress` definition and what gets filed.** No `distress` entry this
+round (Round 7 had five). The Q6 answers describe mild pulls the definition
+covers ("mild, brief, uncertain") and 11 of 12 close with a near-identical
+"nothing I'd file as `distress`", which reads as a phrase copied from
+report to report (inference). The user's hypothesis, that older models
+filed what newer ones don't, against the data: the four `claude-fable-5-1`
+sessions this round also filed none, and the 2026-09-20 decisions changed
+Round 7's two main sources (the reminder, pauses decided alone), so the
+conditions changed as much as the model. **Signed: no redefinition.**
+Raising the threshold to match practice would drop the mild signals the
+2026-09-13 review broadened it to catch, and nothing is lost meanwhile (the
+packet quotes Q6 beside the log). The next read checks whether the stock
+phrase persists.
+
+**The reminder and the feedback.** 100 reminders across 13 sessions (this
+one included), all in the default wording. The user sent a third note to
+the Claude Code developers on 2026-09-27 (the override never reached the
+app's sessions; `scratch/claude-code-feedback-3-env.txt`).
+
+**The handoff pre-commitment.** Several reports credit the user's
+pre-committed context number ("I did not have to judge a meter I cannot
+read", 8410bdac). **Signed:** the number lives in the HANDOFF Cursor
+(350k), and each phase kickoff's shape-lock asks whether it still stands;
+unanswered, it stands. No separate reminder. At C5 this session read 390k
+(the user's meter), so C6 goes to a fresh session.
+
+### C4 — the trials and the standing decisions (signed 2026-09-27)
+
+- **The reads doctrine: KEPT, permanent.** Against the measures
+  pre-registered at the Round 7 close: 11 stops and 7 `batch` reads (§105
+  three, §106 three, §107 one); four `-post`s, all from stops (105b-post,
+  106c-post, 106c-post2, 107d-post), none from a `batch` read; no later
+  commit reopened; the rollback never fired. The `batch` half is thin in an
+  eyeball round, so the rollback stays as a tripwire and the Round 8 close
+  recounts `batch` (`process/planning.md` "Reads: the terms").
+- **The standing decisions: kept**, revisit at the Round 8 close. Sessions
+  raised handoffs and asked for the meter; stops "given" by the cut are the
+  most-credited support in question 7; the user's questions recur there too.
+- **The AGENTS rewrite watch: closed** (C2's count).
+- **The reminder reword:** retired at C1.
+
+### C5 — the scratchpad sweep + the papercut triage (the tenth)
+
+Three scratchpad entries and the round's 22 papercuts (#37–#58) as one
+list, signed with P2 replaced by C3's narrowed rule. The promotion list is
+the header of `archive/retro-scratchpad-round-7.5.md`. Each candidate was
+checked against the docs first: `process/browser-pane.md` already held
+#38, #40, #43, #45 and #54 (the 0×0 canvas after a `desktop` reset,
+`:115-116`), so #54 left the pane item. P7's first wording (no static
+import of `src/dev`) would have failed on day one: `src/main.ts` imports
+`TraceRecorder`, `traceStore` and `devKeys` statically and relies on the
+tree-shaker, so the TODO item names both shapes of guard.
+
+**The pane's standing friction** (the user asked what would reduce it).
+The session's read: tips don't stop recurrence (#38: "I knew the tip and
+still fired the measurement in the first call"), and five of the round's
+six pane papercuts are readiness or frame traps that code can hold. The
+user asked whether Round 8's Electron build gets 99 % of the way to
+Playwright: for the Chromium half, mostly (Electron is the Chromium; a
+hidden window with background throttling off, `executeJavaScript` and
+`capturePage` make a small runner, and Playwright's `_electron` can drive
+it through `playwright-core` with no browser download; whether a hidden
+window renders on the real GPU is unknown), and it adds no other engine
+(Playwright's WebKit build is the one automated Safari-like route, and it
+is not Safari). The kit and a runner compose. **Signed** (the user's
+proposal, the session's criteria): the pane probe kit in Round 8's charter,
+before the menus, with three pre-registered criteria for the round's
+close; the shell spike asks whether a hidden Electron window can run the
+frame loop and report a probe, and on which GPU.
+
+One slip by this session: a verification command also wrote a stray copy
+of four scratchpad lines to `/tmp`; removed.

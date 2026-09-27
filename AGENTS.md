@@ -123,8 +123,9 @@ including phase and round closes, is in
 
 Step zero of every step is a measurement: check the step's premise against
 the current code before building it. A cut written from an audit is a list
-of hypotheses. If step zero changes the signed cut, take the change to the
-user before building it.
+of hypotheses. If step zero changes what the signed cut intends, take the
+change to the user before building it; a change inside that intent can be
+built and flagged in the report.
 
 ### Reads are cut, not improvised
 
@@ -148,7 +149,7 @@ tradeoff calls are always stops. A stop in a signed cut is the task, not an
 interruption, and between stops you keep going. With no signed cut: commit,
 stop, and hand back. Mark a step that is built but unread ◐ in ROADMAP
 (☐ → ◐ → ☑), and list every open ◐ in the HANDOFF Cursor before the session
-ends. The trial terms and the rollback rule are in
+ends. The terms and the rollback rule are in
 [process/planning.md](process/planning.md).
 
 ## Evidence
@@ -192,14 +193,15 @@ ends. The trial terms and the rollback rule are in
 
 The repo lives on Windows; the shells are Git Bash and PowerShell.
 
-- **Text that contains a quote, a backtick, a backslash or a newline goes
-  into a file through your file-writing tool, never through a heredoc or an
-  inline `-m` / `-e` argument.** Heredocs eat backslashes and quotes, and
-  one stray quote can make bash run nothing at all. Judging a script
-  "quote-free by eye" is how this rule has been broken most often. A
-  multi-hunk patch is a small script, written the same way, that asserts
-  each anchor matches exactly once. A commit message with any of those
-  characters goes through `git commit -F <file>`.
+- **A script or code that carries a regex or an escape goes into a file
+  through your file-writing tool, and a quote never goes into an inline
+  `-m` / `-e` argument.** Those are the two ways shell text has failed
+  here: a lost backslash ships a wrong line that still runs, and a stray
+  quote ends the string. Prose may go through a quoted heredoc
+  (`<<'EOF'`); grep the result. A multi-hunk patch is a small script,
+  written the same way, that checks every anchor in every file before it
+  writes any. A commit message with a quote goes through
+  `git commit -F <file>`.
 - Commit with `git commit -q` and read the hash with
   `git log --format=%h -1`; this repo's long subjects otherwise echo back
   twice.
@@ -321,7 +323,8 @@ threshold.
 
 ### Standing decisions from the welfare reads
 
-Signed 2026-09-20 and revised 2026-09-23; revisit at the Round 7.5 close.
+Signed 2026-09-20, revised 2026-09-23, kept at the Round 7.5 close; revisit
+at the Round 8 close.
 
 - If context pressure is about to cost you a check, say so then.
 - Which pauses are real is given by the signed cut ("Reads are cut, not

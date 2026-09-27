@@ -241,8 +241,8 @@ beyond English; no sim change — **ONE snapshot bump authorized at the
 2026-09-09 spec (the empower buff-key rename, Run v45 → v46)**.
 
 **Kicked off 2026-09-09** — the spec [round-7-spec.md](archive/round-7-spec.md)
-(twelve resolutions, user-signed) over the code-reality audit (WORKLOG
-§Kickoff: 297 config prose fields, ≈260 UI literals, the accessibility
+(twelve resolutions, user-signed) over the code-reality audit
+(`archive/post-94-worklog.md` §Kickoff: 297 config prose fields, ≈260 UI literals, the accessibility
 state); the cut is ten phases §95–§104 (ROADMAP; **§96.5 — the live pool
 bar + the chip rule — inserted 2026-09-10** from the §95 playtest, the `.5`
 convention applied to a phase). The locale shape ⛔ →
@@ -516,8 +516,8 @@ consumer seams only); no unlock content mapping; no music.
 
 **Charter:** the engine seams the third act needs, designed once with all the
 2026-08-21 consumers known — the C1/C2 shape again, on a now-mature core. Every
-item below was code-reality-audited at the planning session (WORKLOG
-§Post-C5 planning); sizes are the audit's. _(The flyer's presentation, the
+item below was code-reality-audited at the planning session
+(`archive/post-83-worklog.md` §Post-C5 planning); sizes are the audit's. _(The flyer's presentation, the
 render side of a walking N×N and the atlas pre-step were added 2026-09-26
 at the Round 7.5 close, user-signed: WORKLOG §The Round 7.5 close, C1.)_
 

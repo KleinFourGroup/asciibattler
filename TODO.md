@@ -400,9 +400,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [ ] **Rewrite the phase codes out of `src/` code comments** under the
   AGENTS "Voice" rule: 1,991 `§`-codes across 262 files (the 48
   `gotcha #N` refs stay). Comments only, proven by a comment-stripped
-  before/after diff with a failing control. Timing: after §106's spec
-  (106e), so no sweep touches spike code the spec may delete, and before the
-  first build phase edits the same render files.
+  before/after diff with a failing control. Timing: **Round 8.5
+  (Housekeeping)**, per file in the deletion pass's touch (META-ROADMAP
+  §Round 8.5, signed 2026-09-27). The first timing, after 106e and before
+  the first build phase, lapsed when §107–§109 edited the render files.
   `archive/post-104-worklog.md` "The new-model tone audit".
 
 ## §108 riders (stop 2, 2026-09-25)

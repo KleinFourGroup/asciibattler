@@ -56,6 +56,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
  8. Foundations ──┤  the store keystone → the run journal → save/load → menu/settings → ascension → the public web channel
+ 8.5 Housekeeping ┤  the census → deletions per subsystem, byte-identical → the source-comment rewrite  (inserted 2026-09-27)
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
 11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary · credits
@@ -524,6 +525,65 @@ consumer seams only); no unlock content mapping; no music.
 
 ---
 
+## Round 8.5 — Housekeeping
+
+_(Inserted 2026-09-27, after the Round 7.5 close, user-signed: the user
+raised a broader codebase review, and the tone audit's source-comment
+rewrite folds into it. The `.5` convention, applied.)_
+
+**Charter:** less code with the same behaviour, before Round 9 builds its
+seams on the core. The engine has grown by accretion for months with
+little deletion: dials that no longer move, duplicate implementations,
+workarounds that could be smoothed, tests that pin removed code. A
+deletion round, not a refactor: no new abstractions (AGENTS), and a
+documented no-op is an acceptable outcome.
+
+**In scope**
+
+- **The census (first, headless):** the candidates, each with its
+  evidence. Every config knob, `RunConfig` field and URL dial, with
+  whether any value but its default is used anywhere (config, tests, the
+  balance arms, scripts); duplicate implementations; tests that pin
+  removed code or duplicate another's coverage; unused exports. Each
+  candidate is checked against GOTCHAS before it is listed, and the user
+  signs the list before anything is deleted.
+- **The deletions, one subsystem per phase** (sim · run · render and UI ·
+  the bot and fuzz instruments · tests), each followed by that
+  subsystem's comment pass.
+- **The source-comment rewrite** (the tone audit's TODO, 2026-09-23): the
+  phase codes rewritten out of `src/` comments under AGENTS "Voice",
+  about 2,000 `§` marks across 269 files at the 7.5 close (a raw count
+  that includes DESIGN section refs). Done per file in the deletion's
+  touch, because resolving a code means reading what it justifies, which
+  is the census's question; committed apart from the deletions, because
+  the two have different oracles (a comment-stripped before/after diff
+  with a failing control, against byte-identical runs).
+
+**Why here:** after Round 8, whose run journal, chaos driver and
+continuation check are the strongest oracles for deleting run and sim code
+(replay whole runs before and after; principle #5); before Round 9, whose
+four seams would otherwise be designed around dead dials (principle #2).
+Round 8 mostly adds new code at the Game and UI layers, and reject-stale
+keeps a later snapshot slimming cheap. The alternative, before Round 8,
+would design the save format on a slimmer Run at the cost of those
+oracles.
+
+**Depends on:** Round 8 (the journal and the chaos driver). **Risk:**
+medium: wide, and in the core, but every deletion is gated on an oracle.
+**Decision points:** each dial's fate, per dial (unchanged for months is
+not enough: the balance instruments Rounds 10 and 12 lean on may need it);
+whether a test is redundant; the round's size, known only after the
+census. **Exit:** the signed census dispositioned (deleted, kept with a
+reason, or moved to TODO); every deletion in sim, run and config
+byte-identical under the determinism test, the fuzz smoke and a journal
+replay; the comment pass done under its oracle. **Scope guards:** no
+behaviour change (a deletion that is not byte-identical is a change, and
+goes to the user with a board re-run); no new abstractions; no gotcha
+undone without its entry read; the permanent gates never relaxed; no
+balance numbers move.
+
+---
+
 ## Round 9 — Extensions
 
 **Charter:** the engine seams the third act needs, designed once with all the
@@ -685,7 +745,8 @@ to land), run layer second (the three Run bumps land in one window — the
 bump-economics note from the C5 spec, now under reject-stale), spatial third
 (the highest-risk items, with the flight re-audit as their step zero).
 **Depends on:** Round 8 (reject-stale signed; save/load shipped so the bumps
-are exercised by the chaos driver) and Round 7.5 (the flyer's PRESENTATION
+are exercised by the chaos driver), Round 8.5 (the seams are designed on
+the cleaned core) and Round 7.5 (the flyer's PRESENTATION
 is built to DESIGN's "Elevation on the board" requirement, written and
 proven on a render-only fixture there so the projection is not re-opened
 here). **Risk:** high (the C2-class spatial
@@ -840,6 +901,7 @@ records an achievement on a clean machine.
 | Difficulty / ascension · unlock mechanism | v1 C6 | 8 |
 | Telemetry tier 1 (export + build id) | plans/telemetry.md | 8 |
 | The public web channel (itch.io alpha) · the browser smoke | 7.5 close | 8 |
+| The codebase review (the census · deletions per subsystem) · the source-comment rewrite | 2026-09-27 (the user) / the tone audit (TODO) | 8.5 |
 | Atlas resize (the pre-step, moved from 10) | #13 / 7.5 close | 9 |
 | Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |

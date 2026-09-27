@@ -268,9 +268,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   fuzz harness has fully evolved into a *balance* harness: the `random`
   strategy randomizes only 2 of the ~10 decision surfaces `Run` exposes
   (node choice + recruit choice) — port purchases are the hardwired 50g
-  buy-all-affordable, rewards are hardwired accept-all, and NOTHING ever
-  dispatches `usePacket`/`sellPortPacket`/`discardPacket`/`declineReward`
-  beyond the fixed policies' paths. A proper chaos driver would dispatch
+  buy-all-affordable, rewards are hardwired accept-if-room, and NOTHING ever
+  dispatches `usePacket`/`sellPacket`/`discardPacket`/`declineReward`
+  beyond the fixed policies' paths. (Promoted into META-ROADMAP Round 8,
+  where it is one of save/load's two oracles beside the run journal's
+  continuation check; names re-checked 2026-09-26.) A proper chaos driver would dispatch
   random *legal* commands in every phase (buys, sells, discards, fires,
   declines, grant passes, dock/undock churn) purely for crash/invariant/
   serialization coverage — a different instrument from the balance harness,

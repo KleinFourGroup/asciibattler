@@ -23,9 +23,9 @@ in AGENTS.md, which other harnesses read too.
 - **The silent-turn reminder.** The harness sometimes adds "The user hasn't
   heard from you in a while". It never obliges a finding: answer with what
   is true now ("still reading X, no result yet") and continue. A one-line
-  status before a long read-only sweep heads it off. A reworded version is
-  on trial via `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT`; its status is a
-  rider in the HANDOFF Cursor.
+  status before a long read-only sweep heads it off. (A reworded text set
+  through `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` never reached sessions
+  under the app; that trial was retired 2026-09-26.)
 - **Session id.** `$CLAUDE_SESSION_ID` is empty under the desktop app. For
   `npm run papercut -- --session=…`, use the first 8 characters of your
   scratchpad directory's name.

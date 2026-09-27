@@ -59,9 +59,9 @@ void main() {
   // `offset.y * upV.z / upV.y` nearer. Terrain behind the anchor can no longer
   // cut into a standing glyph; terrain in front of it still hides the feet.
   // Exact under ortho; under a dev lens the depth is the upright point's, taken
-  // at this vertex. Pinned by tests/board/clip.test.ts. Landing note: re-read
-  // against the hop (lifting the move over the corner) once §108's ground
-  // marks exist (ROADMAP §108).
+  // at this vertex. Pinned by tests/board/clip.test.ts. The hop (lifting a
+  // diagonal move over the corner) was measured once the ground marks
+  // existed and did not ship; the movement polish in TODO reopens it once.
   if (instanceAnchor.y < 0.0) {
     vec3 upV = mat3(viewMatrix) * vec3(0.0, 1.0, 0.0);
     vec4 upright = mvPos;

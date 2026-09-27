@@ -29,13 +29,14 @@
 //  · A nudge is an attachment of type `silent_turn_reminder` — never a
 //    text match, which also counts every tool result that QUOTES the phrase
 //    (a read of retro/sessions.md, for one).
-//  · THE NUDGE-TEXT TALLY is the check on the reworded reminder (2026-09-20:
+//  · THE NUDGE-TEXT TALLY records which wording each session received. It
+//    was the check on a reworded reminder (2026-09-20:
 //    `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` in the gitignored
-//    `.claude/settings.local.json` — an UNDOCUMENTED variable, found by a
-//    string search of claude.exe 2.1.275). Run it weekly or at a round
-//    close, whichever is sooner (the HANDOFF cursor carries the due date):
-//    if the newest sessions show the default wording, the override stopped
-//    landing — a harness update renamed it, or the app dropped the env.
+//    `.claude/settings.local.json`, an UNDOCUMENTED variable found by a
+//    string search of claude.exe 2.1.275). No session under the desktop app
+//    ever received the reword, and the trial was retired 2026-09-26, so the
+//    tally is now a record: a harness change to the default wording shows
+//    up in it.
 //  · COMPACTIONS ARE NOT COUNTED. No retained transcript contained one at
 //    the first run, so the record's shape is unknown and a column reading 0
 //    everywhere could not be told from a column that matches nothing (the

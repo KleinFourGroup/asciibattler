@@ -2899,3 +2899,154 @@ barrier drift went with R6 (109a); the font sentinel closes with no change
 in Firefox, and everything still looks good." The build at `d94999b`. The
 session then handed off at the user's meter reading (442k, over the 350k
 pre-commitment): the round close runs in a fresh session, from C1.
+
+## The Round 7.5 close (2026-09-26)
+
+Session fd8a07e9, fresh (the user's pre-commitment). The cut is §109's,
+signed 2026-09-26: C1 the macro re-audit (`stop`) · C2–C5 the efficacy
+read, the welfare read (the user's), the trials and standing decisions, the
+scratchpad sweep (one `stop`) · C6 the archive (`post-104-*` + the spec)
+and the Cursor (`none`). Pre-flight at `944677c`: typecheck clean, `npm
+test` 3105 of 3105 (206 files).
+
+**The round's build is deployed** (the user, 2026-09-26), so 7.5's board
+is where players get it. No player-facing code changed between `72071bc`
+and HEAD. The playtest proposed at the close: frame rate on the
+playtesters' machines (the marks' cost is measured on the user's only) and
+the overlay-stack watch; a finding rides the Cursor.
+
+**The reminder-reword trial is RETIRED** (the user's call; HANDOFF rider
+1). This session's first reminder arrived in the default wording ("…say in
+a few words what you're doing, then continue") with the reword still set at
+`.claude/settings.local.json:91`: one more session the setting did not
+reach. The user reports feedback sent to the Claude Code developers from
+another session, which the repo had not recorded.
+
+### C1 — the macro re-audit
+
+**The instrument.** Three parallel read-only sweeps at `944677c`: Round 8's
+store, save/load, boot and telemetry items; its settings and ascension
+items; what 7.5 hands to Rounds 9–11. 7–9 minutes wall. Every claim below
+with a file:line was re-read by this session; derived and inferred claims
+are marked.
+
+**7.5's exit, against the spec's list: met.** DESIGN carries the camera
+disposition (`:158`), both identity residuals (the camp pip to Round 8,
+`:405-407`; the dashed frame, `:421-422`), the elevation clauses (`:440`)
+and the identity as built. R10 was re-grounded, not deleted (the user's
+call at 109).
+
+**Round 8's premises that moved.**
+- The default-camera-mode row has no subject: spec D7 made fit the only
+  production view (DESIGN `:158`).
+- "Glyphs that already carry a non-color team channel": the channel is the
+  ground mark's shape, not the glyph.
+- A palette swap is one table for the CSS only; DESIGN "Tokens" is right
+  about `ui.css`. On the canvas, `COLORS` is `as const` (`palette.ts:40`),
+  sprite and mark colours are set at spawn (`BattleRenderer.ts:886-902`),
+  the FX table is built at module load (`fxRegistry.ts:266`), and the HP
+  gradient and the status hues are raw hex (`UnitOverlayLayer.ts:475-477`,
+  `statusDisplay.ts:39-44`). Hence a decision point: swap on reload, as the
+  locale does (`locale.ts:14-15`), or live.
+- The store has to be readable at boot, before the first module that bakes
+  from it (the locale today, a reload-time palette). Whether an Electron
+  file read serves that as easily as `localStorage` is inferred, not
+  checked.
+- Telemetry tier 1 is not "a UI button + the existing trace machinery"
+  (`plans/telemetry.md`): `Run.dispatch` is a bare switch that logs nothing
+  (`Run.ts:1366`), and the battle traces are per battle and DEV-only.
+- `Run.fromJSON` re-resolves the X1 multipliers to their defaults
+  (`Run.ts:4330-4333`, commented). Ascension and save/load share the round,
+  so the level is saved (a Run bump).
+- Settings the code already names as Round 8's that the charter did not
+  list: the locale, the reduced-motion override (`motion.ts:66`), the shake
+  policy (TODO), the text scale (DESIGN "Tokens").
+- Sizes and drifts: browser load is map-phase only (`Game.ts:682`), with a
+  landing note (a Run-side re-emit of the gate event); the sector-cleared
+  screen's titles ride its payload (`Game.ts:336-338`); `plans/` has no
+  save/load or settings plan; nothing bakes a `BUILD_ID` (`package.json`
+  is `0.0.0`); audio is one master axis with no caller of
+  `setMasterVolume` or `setMuted`; two key labels are read once
+  (`HUD.ts:324`, `SectorMapOverlay.ts:66-75`) and `rebind` is a bare set
+  (`Keybindings.ts:68-70`); the chaos TODO named `sellPortPacket` (the
+  command is `sellPacket`) and "accept-all" (the harness accepts if there
+  is room, `harness.ts:1068-1071`). The TODO is fixed.
+
+**R1, the run journal** (the session's proposal, signed). The save/load
+exit's oracle, a snapshot round-trip, tests the save code against the load
+code, so a field both sides drop passes it; the X1 multipliers are one
+today. A check that does not consult the serializer pair: continue a run
+from a gate live and from its reloaded snapshot, and compare the ends. That
+needs the run's commands recorded, and the same journal is telemetry tier
+1's payload and the chaos driver's repro, so it lands once, early, before
+save/load. Its cost is not measured; the recording point is `Run.dispatch`
+plus Game's `resetRun` intercept, and a whole-run replay in the harness is
+likely the larger part (inferred).
+
+**What 7.5 hands forward, and where it went.**
+- *Round 9, the flyer.* No production path lifts a glyph. The posed flyer
+  writes its lift into the sprite position (`posed.ts:130-134`, through
+  `aboveAnchor`, `anchor.ts:29-37`); a 1×1 mark reads the sprite position
+  (`BattleRenderer.ts:351`); camera-up has a horizontal part at pitch 45,
+  so the mark would ride about 0.32 of a tile off (0.45 × sin 45°,
+  derived); the animator writes whole positions
+  (`animation/SpriteAnimator.ts:262-272`). The 15 % clause is measured by
+  the CLI only, and the dev dial defaults to 1.0 (`boardPanel/state.ts:148-155`).
+  A flyer over a chasm or deep water is unread (the sweep: the posed set
+  skips both). → a new line in Round 9's traversal item.
+- *Round 9, a walking N×N.* The mark spec is set once, at spawn
+  (`BattleRenderer.ts:894`), so the mark stays on the spawn footprint; an
+  enemy's pick box is not footprint-scaled (`:764`; a destructible's is,
+  `:801`); the slab anchor is recomputed at spawn, settle and step (`:881`,
+  `:1030`, `:1076-1083`). → Round 9's moving-N×N item.
+- *The atlas*: 47 of 48 (21 in `NON_UNIT_GLYPHS`, `glyphs.ts:43-49`, plus
+  26 distinct glyphs over the 30 defs in `config/units.json`, counted).
+  Round 9's exit ships five consumers. → R2, signed: the resize moves to
+  Round 9's pre-step.
+- *Round 11*: glyph scale and yaw (TODO), both new production code (the
+  scale is the explorer's runtime patches, `seams.ts:1-14`; the slabs
+  re-stand after a view change only under the explorer,
+  `BattleRenderer.ts:1170-1172`), the movement polish with the hop, the
+  rally X. → Round 11's entry and the coverage map.
+- *Mobile*: no round or deferral owned it, though DESIGN `:158` points the
+  windowed view at "the round that builds mobile". → the deferred list.
+- *The frame-cost bench*: the signed +0.19 ms is Firefox on the user's
+  machine. → Round 12's pooling line.
+- *In code*: the shader's hop landing note still pointed at §108
+  (`billboard.vert.glsl:62-64`); re-pointed at the movement-polish TODO.
+
+**The user's calls.** All four signed in one turn: the E-list, R1 the
+journal, R2 the atlas resize to Round 9, R3 no `.5` round (none of the
+gaps needs a round of its own). Before the edits the user raised the web
+build's scheduling. There are four playtesters, two of them reliable but
+not thorough, and no budget for paid testing, so the game needs a
+low-friction channel for early players. An unsigned EXE is a hard sell, so
+the web build stays and goes up on a site such as itch.io; both builds are
+maintained until the Steam release, where the web version probably
+retires; mobile must not be foreclosed.
+
+The session agreed and added six points. Time the public channel by what a
+stranger needs (a menu, a volume control, save/load, a build ID, the trace
+export), which is Round 8's close. Strangers' journals are raw material for
+the human anchor Round 12 re-records. The web build is what keeps mobile
+open, so retiring the web channel at Steam need not retire the web target,
+and a free web demo can feed wishlists. Web saves are less durable (itch's
+iframe origin, Safari's storage clearing; from memory, unverified), so the
+store has three storage cases and the spike tests the web side with a
+private itch draft. Reject-stale keyed on the build ID would wipe every run
+in progress at each upload, so what a save is rejected on becomes a
+decision point. Steam Playtest can carry the Electron build to testers once
+the app exists (general knowledge). The user: "All great points"; there is
+no Apple device, so Safari ships untested and the itch page names Firefox
+and Chrome.
+
+**Landed** (META-ROADMAP): the signed ship-target decision amended; Round 8
+rewritten in place (the shell spike in both shells, three storage cases,
+the run journal, save/load's two oracles, the settings seams, the
+ascension level saved, the web channel in scope and exit, two new decision
+points, the 7.5 dependency re-grounded); the 7.5 entry's camera-mode line
+marked superseded; Round 9's atlas pre-step, the flyer's presentation, the
+N×N render gaps; Round 10's pre-step struck; Round 11's accessibility dials
+and two feel items; Round 12's bench and browser-matrix lines and the web
+build's fate; the coverage map; mobile and a rotatable-camera note on the
+deferred list.

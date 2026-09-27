@@ -55,7 +55,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
  7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
  7.5 The Board ───┤  the projection spike → the projection · cell anchoring + a ground cue · team identity · the elevation requirement · the camera question  (re-chartered 2026-09-20; was "Units")
- 8. Foundations ──┤  the store keystone → save/load → menu/settings → ascension
+ 8. Foundations ──┤  the store keystone → the run journal → save/load → menu/settings → ascension → the public web channel
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
 11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary · credits
@@ -79,7 +79,12 @@ Dependency edges the order satisfies:
 - **Ship target = Steam-shaped** (an Electron wrapper over the same `dist/`;
   the Pages build stays the playtest channel). Electron over Tauri because it
   bundles Chromium — the WebGL/Web Audio browser matrix collapses to one
-  renderer.
+  renderer. **Amended 2026-09-26** (the user, at the Round 7.5 close): the
+  web build is also the low-friction channel for early players (itch.io,
+  from Round 8's close, as an alpha) and stays a supported target until the
+  Steam release, because an unsigned EXE is a hard download to ask of a
+  stranger. The Electron build stays internal until Steam, so the browser
+  matrix it collapses is live until then.
 - **The finished run = THREE acts.**
 - **i18n is IN** — a string layer + locale files + a config-prose convention,
   retrofit before any further content is authored.
@@ -341,7 +346,8 @@ and re-pose the D4 camera question under the chosen projection.
   no test of either mode · **no minimap — and the 100a rider stands: if a
   windowed view is to be tested it needs a proper minimap FIRST** (the
   board's shape + unit positions + the window rectangle). The winner gets a
-  HUD control + a Round 8 default-mode setting. **A third candidate
+  HUD control + a Round 8 default-mode setting _(superseded 2026-09-26: spec
+  D7 made fit the only production view, so there is no mode to set)_. **A third candidate
   (2026-09-21): RESPONSIVE fit→window** — fit until glyph px falls under a
   floor, then window (one zoom number under ortho). Desktop fit is legible
   by the user's own read ("the legibility concern is pure overlap rather
@@ -385,51 +391,99 @@ so the next `.5` is a line written at a close, not a surprise at a kickoff.
 
 ## Round 8 — Foundations
 
+_(Re-audited 2026-09-26 at the Round 7.5 close's macro re-audit,
+user-signed: the camera row struck, the run journal added, three storage
+cases, the public web channel at the round's close. The sweeps and the
+calls: WORKLOG §The Round 7.5 close, C1 → `archive/post-104-worklog.md`.)_
+
 **Charter:** the persistent-store keystone and everything that hangs off it.
 The store is to this round what the Rule vocabulary was to Cluster 3:
 designed ONCE with its four consumers known (save/load · settings ·
-achievements · tutorial seen-flags — `plans/*.md`).
+achievements · tutorial seen-flags; `plans/` holds the last two, and the
+round's spec writes the first two).
 
 **In scope (keystone-then-consumers order)**
 
-- **The Electron shell spike** (one session, first): the build runs under
-  Electron, writes a file under `userData`, reads it back. Informs the store's
-  storage adapter BEFORE its shape locks.
+- **The shell spike** (one session, first), in both shells. The build runs
+  under Electron, writes a file under `userData` and reads it back; and the
+  web build, uploaded as a private itch.io draft, keeps `localStorage`
+  across reloads inside itch's iframe (itch serves HTML5 games from its own
+  CDN domain, and Safari may clear site storage after a stretch without a
+  visit: both unverified). In each shell the store is read at boot, before
+  the first module that bakes from it: the locale resolves at catalog load
+  and reloads the page to switch (`src/i18n/locale.ts`), and a reload-time
+  palette would do the same. Informs the store's storage adapter BEFORE its
+  shape locks.
 - **The persistent store:** versioned, reject-stale, a storage-adapter seam
-  (`localStorage` in the Pages build / a file in Electron), the four consumers
-  designed in; fuzz/headless never writes it (Game-layer wiring, not Run/World).
-  **Version + invalidation policy lands here:** `BUILD_ID`, the store version,
-  the reject-stale rule, the player-facing "this save is from another
-  version" message.
+  with three cases (`localStorage` on the Pages site · the same inside
+  itch's iframe · a file in Electron), the four consumers designed in;
+  fuzz/headless never writes it (Game-layer wiring, not Run/World).
+  **Version + invalidation policy lands here:** `BUILD_ID` (nothing bakes
+  one yet; `package.json` is `0.0.0`), the store version, the reject-stale
+  rule, the player-facing "this save is from another version" message.
+- **The run journal** (signed 2026-09-26): the seed, every `RunCommand` and
+  the battles' command traces, stamped with the `BUILD_ID`. Nothing records
+  a run today: `Run.dispatch` keeps no log, and the battle traces are per
+  battle and DEV-only (`src/dev/TraceRecorder.ts`). One journal, three
+  consumers: telemetry tier 1's export, the chaos driver's repro, and
+  save/load's second oracle (below). It lands before save/load.
 - **Save/load + mid-run resume** (`devLoadRun` past map-phase; a
-  scene-for-phase resolver; a storage trigger; a load entry point) — **with the
-  chaos fuzz driver as its oracle**: random legal `RunCommand` dispatch in every
-  phase, asserting the occupancy invariant + snapshot round-trip at every phase
-  transition (the TODO item, promoted — it is the verification instrument
-  save/load needs, and the §69b combination-crash finder).
+  scene-for-phase resolver, which `Game.devLoadRun`'s landing note says is a
+  Run-side re-emit of the phase's gate event, and the sector-cleared
+  screen's titles ride its payload today; a storage trigger; a load entry
+  point) — **with two oracles.** The chaos fuzz driver: random legal
+  `RunCommand` dispatch in every phase, asserting the occupancy invariant +
+  snapshot round-trip at every phase transition (the TODO item, promoted;
+  the §69b combination-crash finder). And the journal's continuation check:
+  a run continued live from a gate, and the same run continued from its
+  reloaded snapshot, must end the same. A round-trip alone tests the save
+  code against the load code, so a field both sides drop passes it; the X1
+  multipliers are one today.
 - **Title / main menu** — the UI hub the consumers hang off (new run ·
   continue · settings · achievements · credits · a seed field).
 - **Settings** — **the volume-axis split FIRST** (SFX / music, ± master —
-  decided before any slider is coded, `plans/music.md`), then the in-game
-  rebind UI (labels from the registry), default playback speed, the
-  colorblind-safe palette (with the camp unit's status pip, deferred from
-  §108: TODO), the aura-FX mode graduated from the dev switch.
+  decided before any slider is coded, `plans/music.md`; today one master
+  axis, with no control wired to it), then the in-game rebind UI (labels
+  from the registry; the Fight-now button and the sector-map chip read
+  theirs once, and `rebind` has no conflict check), default playback speed,
+  the colorblind-safe palette (with the camp unit's status pip, deferred
+  from §108: TODO), the aura-FX mode graduated from its console switch, and
+  the four seams the code already names as Round 8 settings: the locale,
+  the reduced-motion override, the shake policy (TODO) and the text scale
+  (DESIGN "Tokens").
 - **Difficulty / ascension** (groundwork: per-speed enable, the focus-tile
   switch, the X1 multipliers) + **the unlock MECHANISM** (cross-run unlocks
   resolve at run creation only; the content MAPPING waits for Round 10).
-- **Telemetry tier 1** (`plans/telemetry.md`): the export-run-trace button +
-  the baked `BUILD_ID`; no ingest server unless tier 1 provably loses data.
+  The level is saved in the RunSnapshot (a Run bump): today `Run.fromJSON`
+  re-resolves the X1 multipliers to their defaults, and the focus-tile
+  switch and per-speed enable are page-global, not per run.
+- **Telemetry tier 1** (`plans/telemetry.md`): the export button over the
+  journal; no ingest server unless tier 1 provably loses data.
+- **The public web channel** (the user, 2026-09-26): at the round's close
+  the web build goes up on itch.io as an alpha, the early-player channel an
+  unsigned EXE can't be. The Pages build stays the playtest channel; the
+  Electron build stays internal until Steam. Before it goes up: a browser
+  smoke (Firefox · Chrome; Safari best-effort and untested, with no Apple
+  device to test on), and a how-to-play on the itch page standing in for
+  Round 11's tutorial. Strangers' exported journals are raw material for
+  the human anchor Round 12 re-records, though not its protocol.
 - Closes with a board re-run (ascension is a balance surface).
 
 **Depends on:** Round 7 (the menu/settings build on audited idioms + the
-string layer) and Round 7.5 (the settings' default-camera-mode row reads
-the D4 A/B verdict; the colorblind palette lands on glyphs that already
-carry a non-color team channel). **Risk:** medium-high (the store is the most-depended-on meta
+string layer) and Round 7.5 (✅: fit is the only production view, spec D7,
+so settings carry no camera-mode row; the colorblind palette lands on a
+board whose team channel is the ground mark's shape, not a hue). **Risk:** medium-high (the store is the most-depended-on meta
 model left; save/load touches every phase). **Decision points:** 2-vs-3 volume
 axes; what ascension levels DO (dose, pool, draw?) — a design round; whether
-mid-run save is manual, auto-at-gate, or both. **Exit:** a run saved at any
-gate reloads byte-faithfully (the chaos driver green); settings persist across
-reloads; the menu is the boot screen.
+mid-run save is manual, auto-at-gate, or both; the palette swap, on reload
+(as the locale) or live (sprite and mark colours are set at spawn, the FX
+table at module load, and the HP gradient and the status hues are raw hex,
+so a live swap re-stamps them all); what a save is rejected on, a
+snapshot-schema change or any `BUILD_ID` change (the second wipes every run
+in progress at each upload, harsher once strangers play). **Exit:** a run
+saved at any gate reloads byte-faithfully (the chaos driver and the
+continuation check green); settings persist across reloads; the menu is the
+boot screen; the public web channel is open.
 **Scope guards:** no achievements/tutorial CONTENT (Round 11 — the store's
 consumer seams only); no unlock content mapping; no music.
 
@@ -440,7 +494,16 @@ consumer seams only); no unlock content mapping; no music.
 **Charter:** the engine seams the third act needs, designed once with all the
 2026-08-21 consumers known — the C1/C2 shape again, on a now-mature core. Every
 item below was code-reality-audited at the planning session (WORKLOG
-§Post-C5 planning); sizes are the audit's.
+§Post-C5 planning); sizes are the audit's. _(The flyer's presentation, the
+render side of a walking N×N and the atlas pre-step were added 2026-09-26
+at the Round 7.5 close, user-signed: WORKLOG §The Round 7.5 close, C1.)_
+
+**Pre-step, at the first phase that needs a new glyph: the atlas resize**
+(moved from Round 10, 2026-09-26). The atlas uses 47 of its 48 cells (21
+non-unit glyphs + 26 distinct unit glyphs, counted), and this round's exit
+ships a consumer per seam (a vampire, a special, a marine, a flyer, a
+walking 2×2): two new glyphs overflow it. The grid bump is ~5 lines,
+triple-guarded. Do it once.
 
 **In scope — combat & effects**
 
@@ -551,6 +614,21 @@ item below was code-reality-audited at the planning session (WORKLOG
   over chasm = the fleeing-enemy tell). No-co-location is expected to
   survive; the attack matrix is the likeliest revisit. Drift gates NEVER
   relax; baselines re-pin on the deliberate change (PATHING.md append).
+- **The flyer's presentation**, built to DESIGN "Elevation on the board"
+  (handed on by 7.5). No production path lifts a glyph, and the dev posed
+  flyer's shape does not carry over: it writes the lift into the sprite
+  position (`src/dev/boardPanel/posed.ts`), a 1×1 mark follows the sprite
+  position (`BattleRenderer.updateGroundMarks`), and camera-up has a
+  horizontal part at pitch 45, so a lift done that way drags the mark off
+  its tile (about 0.32 of a tile at a lift of 0.45, derived). The animator
+  also writes whole positions on every move. So the lift is a channel kept
+  apart from the ground point the mark reads. Also owed: what the bars,
+  hitsplats and pick box do under a lift; clause 2's 15 % pinned headless
+  (only the geometry CLI measures it, and the dev dial defaults to 1.0, the
+  lift known to land on a neighbour); the float (TODO); and, at step zero,
+  a flyer and its mark over a chasm and over deep water, never read (a mark
+  1.2 down may be hidden by nearer terrain, which would break clause 3;
+  inferred).
 - **Ice <1 costs** (signed above): `minCost × Chebyshev` with `minCost`
   computed per grid at build (1 on any board without ice ⇒ zero change
   elsewhere), `stepDurationTicks` follows. Same phase, same `CostFn` site.
@@ -560,7 +638,11 @@ item below was code-reality-audited at the planning session (WORKLOG
   only), `spawnTeam` + overflow spawn (no fit check — only the camp drip uses
   `anchorFootprint`), sidestep/swap hard-`return null` on N>1 (a decision:
   big units never swap, or yield rules). Layout legality = spawn-region fit
-  through `anchorFootprint`. No bump.
+  through `anchorFootprint`. No bump. The render side has its own 1×1-blind
+  parts (audited 2026-09-26): an N×N body's mark is fixed at its spawn
+  footprint (`BattleRenderer`'s mark spec is set once), and an enemy's pick
+  box is not scaled by its footprint (a destructible's is). The slab anchor
+  itself is recomputed on every step.
 
 **Why this order:** combat/effects first (no serialized-shape changes, fast
 to land), run layer second (the three Run bumps land in one window — the
@@ -588,9 +670,8 @@ round whose job is simply *more game*, on the engine Rounds 1–9 finished.
 
 **In scope**
 
-- **Pre-step: the atlas resize** — the glyph atlas has ONE free cell (47/48);
-  every new glyph past it forces the grid bump (~5 lines, triple-guarded).
-  Do it once, first.
+- ~~**Pre-step: the atlas resize**~~ — moved to Round 9's pre-step
+  (2026-09-26): that round's consumers need the glyphs first.
 - **The finale design round FIRST:** what the third sector IS (the identity
   arc "sectors shade darker" has no ending written), its theme (volcanic /
   barren / tundra pools exist unconsumed by any sector), its bosses, what the
@@ -644,10 +725,16 @@ content and audited idioms.
   export button · stats · achievements popped).
 - **Credits + the player-facing licence surface** (the §79g OFL obligations
   recommended an in-game credits screen at ship).
+- **The board's accessibility dials** (handed on by 7.5, 2026-09-26; TODO):
+  glyph scale and yaw as player settings, each decided with a reason. Both
+  are new production code, not flags: glyph scale exists only as the dev
+  explorer's patches, and a production yaw needs the slab re-stamp on a view
+  change, which is DEV-only today.
 - **The final global feel/SFX sweep** (catapult hold-fire creak · launch
   creak · dash VFX · the "queued" stance tell · the fleeing-enemy tell · the
-  stalled-battle draw prompt · sparkle placement — the whole TODO feel pile,
-  dispositioned in one pass).
+  stalled-battle draw prompt · sparkle placement · the movement polish, then
+  the hop reopened once · the rally X as a terrain mark — the whole TODO
+  feel pile, dispositioned in one pass).
 
 **Depends on:** Round 10 (tutorial against final act 1) + Round 8 (the store).
 **Risk:** low-medium (render/UI-only; music assets are the unknown-length
@@ -671,8 +758,12 @@ the feel pile is empty or explicitly deferred.
   Verified" wants controller; DESIGN's mouse-sufficient rule already covers
   the trackpad).
 - **The toolchain bump** (the Vite major + the `npm audit` debt — its own
-  verify pass) · object pooling if frame-time measurement says so · browser
-  matrix for the Pages build (Safari/Firefox WebGL2 + Web Audio).
+  verify pass) · object pooling if frame-time measurement says so (the 108d
+  bench: the marks' signed +0.19 ms per frame is Firefox on the user's
+  machine; Electron ships Chromium, and other hardware is unmeasured) · the
+  full browser matrix for the web build (Firefox / Chrome / Safari WebGL2 +
+  Web Audio; Round 8 smokes the first two; Safari has no test device as of
+  2026-09-26).
 - **Human gauntlet #2** — the §53g ~80% baseline predates events, camps,
   rarity, characters, and the braid; re-anchor before ship tuning (closes the
   starting-event-vs-cell TODO). 85h sharpened the gate (2026-08-25,
@@ -682,8 +773,11 @@ the feel pile is empty or explicitly deferred.
 - Store-page assets · the Pages build as the demo channel · the final deploy
   story (hand-upload retires or is formalized).
 
-**Depends on:** everything. **Decision points:** Deck/gamepad; whether the
-Pages build stays public. **Exit:** a Steam build installs, saves, and
+**Depends on:** everything. **Decision points:** Deck/gamepad; the web
+build's fate at the Steam release (the user's lean, 2026-09-26: both until
+Steam, then probably retired. The caveat: the web TARGET is what keeps
+mobile open, and a free web demo can feed Steam wishlists, so retiring the
+channel need not retire the target). **Exit:** a Steam build installs, saves, and
 records an achievement on a clean machine.
 
 ---
@@ -700,18 +794,22 @@ records an achievement on a clean machine.
 | UI style & robustness audit (+ idiom reference) | v1 §Interstitials | 7 |
 | Event screen pool gauge · ice description · RNG/`rng` label · HUD stat line · empower naming · display-color hoist · aura-FX jury · sector-cleared sting · layout-stability sweep | #8 / TODO | 7 |
 | Sound registry | plans/sound-registry.md | 7 |
-| Electron shell spike · storage adapter | 2026-08-21 gap | 8 |
+| The shell spike (Electron + the itch iframe) · storage adapter (three cases) | 2026-08-21 gap / 7.5 close | 8 |
 | Persistent store (4 consumers) · version + invalidation policy · `BUILD_ID` | v1 C6 / plans/* / decision 1 | 8 |
-| Save/load + mid-run resume · chaos fuzz driver | v1 C6 / TODO | 8 |
+| The run journal (tier 1's export · the chaos repro · the continuation check) | 7.5 close | 8 |
+| Save/load + mid-run resume · chaos fuzz driver · the continuation check | v1 C6 / TODO / 7.5 close | 8 |
 | Title / main menu · seed field | 2026-08-21 gap | 8 |
-| Settings (volume axes · rebind · speed · colorblind · aura-FX) | v1 C6 / plans/music.md | 8 |
+| Settings (volume axes · rebind · speed · colorblind · aura-FX · locale · reduced motion · shake · text scale) | v1 C6 / plans/music.md / 7.5 close | 8 |
 | Difficulty / ascension · unlock mechanism | v1 C6 | 8 |
 | Telemetry tier 1 (export + build id) | plans/telemetry.md | 8 |
+| The public web channel (itch.io alpha) · the browser smoke | 7.5 close | 8 |
+| Atlas resize (the pre-step, moved from 10) | #13 / 7.5 close | 9 |
 | Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
-| Traversal (marine + flight + `targetsLayer`) · ice <1 · moving N×N | #11 #12 #15 #5 | 9 |
-| Atlas resize · finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | #13 / C5 deferrals | 10 |
+| Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
+| Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |
 | Tutorial · music · achievements · run summary · credits · feel sweep | plans/* / TODO | 11 |
+| Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 11 |
 | Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 12 |
 | `--sector-hops` in run-config GUI · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | stay in TODO; land opportunistically |
 
@@ -725,4 +823,14 @@ records an achievement on a clean machine.
 - **Telemetry tier 2 (an ingest server)** — only on demonstrated tier-1 loss.
 - **Translations beyond English** — the layer ships; content does not.
 - **Camera rotation · CRT curvature · chromatic aberration** — hooks only.
+  (A player-ROTATABLE camera; a fixed yaw chosen in settings is Round 11's
+  question.)
+- **Mobile** (the windowed view, the minimap, drag / wheel / touch pan, the
+  phone-width map legend) — out until it can be playtested (2026-09-26: no
+  Apple device, no mobile playtest). The web build is what keeps it open,
+  since a mobile release would be the web build in a phone browser or a
+  webview wrapper, so the web target stays healthy through ship. Nothing in
+  the projection forecloses it (under ortho a window is one zoom number),
+  and the tooltip idiom already has a touch path (`attachTooltip`'s
+  `touch` option).
 - **The ML balancer rung** — CLOSED unless the tabular prior drifts.

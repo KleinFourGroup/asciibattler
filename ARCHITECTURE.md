@@ -470,6 +470,9 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
   sweep-gui/                 # command-builder GUI for the fuzz balance harness at /tools/sweep-gui/
   mapgen-prototype/          # M6: procedural node-map generator sandbox at /tools/mapgen-prototype/
 
+shell/
+  electron/                  # §110: the Electron shell (`npm run shell`), the build in a desktop window; plain JS, outside tsc. package.json names the app (userData = %APPDATA%\ASCIIbattler) · main.mjs = the window, `dist/` over file:// or the privileged app:// scheme, the store file (`store.json`, written tmp-then-rename), and `--probe=<name>` (one JSON line on stdout, exit 0 / 1 failed / 2 timeout) · preload.cjs = the sandboxed bridge: the store's text handed over by a SYNCHRONOUS message before any page script, as `window.shellStore.initial`, writes back async
+
 scripts/                     # Dev-only Node utilities; not bundled into dist/
   gen-sfx.mjs                # §32b: deterministic, dependency-free SFX synth → public/audio/ (npm run gen:sfx)
   i18n-review.ts             # 95e: `npm run i18n:review -- --lang=<l> --who=<name> [--role=translator|reviewer] [--family=a,b,ui] [--address=…] [--on=…] [--dry]` — the ONLY writer of provenance stamps: translator stamps `source` + `translator` on unstamped/fuzzy entries (skips text still equal to its English; scaffolds missing addresses as plain English; never deletes), reviewer stamps CURRENT entries only and exits 1 on anything else; prints the locale's credits. Siblings: i18n-extract.ts (95a) · i18n-baseline.ts (95d)

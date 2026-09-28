@@ -130,3 +130,53 @@ as 106e was. (6) The context handoff number stays 350k.
 sitting, 110f the spec).
 
 ## Phase 110 — the shell spike
+
+### The phase's oracle: `dist/` byte-identical (2026-09-28)
+
+`vite build`, every file under `dist/` hashed (SHA-256 per file, a total
+over the sorted list): two builds of `77ef1bc` agree, `7424d4b4…` over 32
+files. The failing control: a planted `console.info` string appended to
+`main.ts` moves the total (`f4c7314f…`); reverted, the total is `7424d4b4…`
+again. §110 re-runs it at each step that touches the tree.
+
+### 110a — the Electron shell (2026-09-28) — read `none` ✅
+
+`shell/electron/`: `package.json` (the app's name, so `userData` is
+`%APPDATA%\ASCIIbattler`), `main.mjs` (the window, the store file, the
+probes), `preload.cjs` (the bridge; a sandboxed preload is CommonJS, so
+one lint line is disabled with its reason). Electron 44.4.5, pinned;
+`npm run shell` plays the build, and `--probe=<name>` prints one JSON line
+and exits 0, 1 (a failed check) or 2 (a timeout). The preload asks main
+for the file's text with a synchronous message before any page script
+runs and exposes it as `window.shellStore.initial`; writes go back async,
+and main writes a temporary file and renames it into place.
+
+**Step zero: `file://` boots.** The prediction (a registered scheme would
+be needed) was wrong for boot: under both `--load=file` and `--load=app`
+(a privileged `app://` scheme serving `dist/`) the UI mounted (3 children
+of `#ui`), the canvas sized, `document.fonts.status` read `loaded`, no
+load failed, and no error was logged; the only warnings were Electron's
+missing-CSP notice (shown only unpackaged) and Chromium's
+`willReadFrequently` hint from the atlas. `app://` stays the default: it
+gives the page a real origin (`app://game`, against `file://`), which is
+the suspect for `<audio>` into Web Audio at 110d, where both are tried.
+
+**The round trip** (each run a fresh launch): in a fresh profile the
+preload saw `null`, then wrote `110a round trip 194419 ✓ ünïcode`; the
+same profile relaunched read that text back; a second fresh profile read
+`null`; Node, reading `store.json` directly, found the same text, and no
+`.tmp` was left. Exit met.
+
+**A premise that was wrong: the box needs nothing.** Electron 44's
+package has no install script (its `package.json` lists no `scripts`), and
+`index.js:21-41` downloads the binary the first time Electron runs, so
+`npm ci` on the box never fetches it. The `ELECTRON_SKIP_BINARY_DOWNLOAD`
+edit to the box scripts was reverted before commit; `install.js` never
+reads that variable.
+
+**For 110c:** `capturePage()` on the never-shown probe window returned a
+drawn frame (the character select, DOM text and the scanlines) under both
+load modes. One frame, not a rate. The window's content was 1264×681
+inside a 1280×720 frame, so a 1080p recording needs `useContentSize`.
+
+`dist/` after 110a: `7424d4b4…`, identical.

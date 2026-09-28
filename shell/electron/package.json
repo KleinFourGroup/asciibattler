@@ -1,0 +1,7 @@
+{
+  "name": "asciibattler-shell",
+  "productName": "ASCIIbattler",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs"
+}

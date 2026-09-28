@@ -2120,7 +2120,9 @@ stopped at nine and reported the drafts as unapplied; finishing and
 staying clear of the limit pulled different ways for a moment (filed as a
 mild `distress` entry). The next turn a single probe edit went through.
 The user asked whether to set up a retry loop or allow everything for an
-hour; the probe made both unnecessary.
+hour; the probe made both unnecessary. One more for question 3: I told the
+user the outage had cleared, from that one successful call. Their
+Downdetector graph showed it had not; the call had simply got through.
 
 ### §109 and the Round 7.5 close — a note in place of a phase summary (2026-09-25 → 27)
 

@@ -34,7 +34,14 @@ from it: the locale resolves at catalog load and reloads the page to
 switch (`src/i18n/locale.ts`), and a reload-time palette would do the
 same. For Electron, one more question: can a hidden window, with
 background throttling off, run the frame loop and hand a probe's result
-back to a Node script, and on which GPU?
+back to a Node script, and on which GPU? And three checks for the
+background recorder that follows, pre-registered (2026-09-28): a window
+that is never shown renders at the target rate on the GPU and records it;
+the file carries the game's sound and nothing else (another app plays a
+sound during the recording as the control) and nothing reaches the
+speakers; a battle recorded at 1080p30 while the user works costs nothing
+they notice (CPU and dropped frames measured, the eye tracker judged by
+the user).
 
 **Why first:** the store is the round's keystone, and its storage adapter
 has three cases (`localStorage` on the Pages site · the same inside itch's

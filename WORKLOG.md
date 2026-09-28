@@ -31,6 +31,30 @@ round and before Round 9 (META-ROADMAP §Round 8.5 has the charter and why
 that slot). For this round, that means a deletion Round 8 does not need
 can wait for the 8.5 census.
 
+### Before the kickoff: the background recorder (2026-09-27 → 28, user-signed 2026-09-28)
+
+The user asked for a way to get video files of battles, events and full
+runs: their current recording process is cumbersome with their
+accessibility tools, and clips would serve before/after reads and
+community interest. Their constraints, which shaped the design: real time
+is fine; it runs in the background while they work, never takes focus;
+none of their own audio (the eye-tracker keyboard's clicks) reaches the
+recording; and, if possible, they don't hear the recording. The Chromium
+render is fine, since a visible difference from Firefox is a bug anyway.
+
+Rejected: a browser-only recorder (a capture dialog per session, and a
+background tab stops rendering); capturing the system's sound output (it
+would record the keyboard clicks); faster-than-real-time rendering (not
+needed; it would mean driving the CSS animations' clock too). Kept: an
+Electron recorder in a never-shown window, with the audio routed inside
+the page into the recording and away from the speakers. It lands right
+after the shell spike, whose three added checks decide the video path,
+because scenes, seeds and before/after need only the shell; full runs wait
+for the journal. A code fact behind check 1: a page that stops rendering
+stalls its CSS animations as well as the board (the stall `lossFx.ts`'s
+backstop timer exists for), while nothing in `src/` pauses on a hidden or
+unfocused window. The entry: META-ROADMAP §Round 8, the recorder.
+
 _(The kickoff entry lands here: the charter against the code, the §110 cut
 with its reads, then, after the spike is read, the spec and the round's
 cut. Charter + decision points: META-ROADMAP §Round 8.)_

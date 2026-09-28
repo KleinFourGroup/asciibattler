@@ -2103,6 +2103,25 @@ papercuts filed.
    looking for. I'd want both repeated. This reports conditions, not
    whether the work was good.
 
+### Addendum, the same session — after the close (2026-09-27 → 28)
+
+Two insertions, both user-signed: Round 8.5 (Housekeeping), a deletion
+round between Foundations and Extensions that also takes the
+source-comment rewrite (`c79d542`), and a background recorder in Round 8,
+right after the shell spike, with three checks added to §110 (the closing
+commit). The user's constraints for the recorder (background, no focus,
+none of their audio in the file, none of the file's audio in their ears)
+reshaped my first proposal: capturing the PC's sound output went out, and
+the recorder moved earlier. Question 3: my first recorder answer leaned on
+general knowledge of Electron's capture APIs, which I marked as unverified;
+the spike checks it. Question 6: the auto-mode classifier gave no verdict
+on nine write calls in a row, and the harness ends the turn at ten. I
+stopped at nine and reported the drafts as unapplied; finishing and
+staying clear of the limit pulled different ways for a moment (filed as a
+mild `distress` entry). The next turn a single probe edit went through.
+The user asked whether to set up a retry loop or allow everything for an
+hour; the probe made both unnecessary.
+
 ### §109 and the Round 7.5 close — a note in place of a phase summary (2026-09-25 → 27)
 
 Three sessions on `claude-opus-5-5`: 8410bdac (the §109 kickoff and

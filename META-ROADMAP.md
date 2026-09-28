@@ -429,7 +429,32 @@ round's spec writes the first two).
   shape locks. One more question for the Electron half: can a hidden window
   (background throttling off) run the game's frame loop and hand a probe's
   result back to a Node script, and on which GPU? If yes, an Electron probe
-  runner over the kit below becomes an option this round.
+  runner over the kit below becomes an option this round. Three more checks,
+  pre-registered for the recorder below (2026-09-28): (1) a window that is
+  never shown runs the frame loop at the target rate on the GPU and records
+  it; (2) the file carries the game's sound and nothing else (the control:
+  another app plays a sound during the recording, and the file must not
+  contain it), and nothing reaches the speakers; (3) a battle recorded at
+  1080p30 while the user works normally costs nothing they notice (CPU load
+  and dropped frames measured; interference with the user's eye tracking
+  judged by the user).
+- **The background recorder** (signed 2026-09-28), right after the spike if
+  its three checks pass; early though it is not the keystone, because
+  before/after clips make the round's UI reads cheaper. An Electron recorder
+  writes video files of battles, events and runs in real time from a window
+  that is never shown, so it runs while the user works, never takes focus
+  and plays nothing aloud. The audio is the game's own, taken inside the
+  page: in record mode `AudioPlayer` routes its `<audio>` pools into the
+  recording stream instead of the speakers, so no other sound on the machine
+  reaches the file (capturing the system's output would record the user's
+  eye-tracker keyboard). The video path, Electron's offscreen rendering or a
+  hidden window recording its own page, is the spike's pick. Inputs first:
+  a board-explorer fixture, a seed, and before/after at two commits side by
+  side; full runs, the user's own included, once the run journal lands. It
+  records the Chromium render, and a visible difference from Firefox is a
+  bug in one of the two builds. Kickoff calls: ffmpeg as an npm dependency
+  or a system install; the default size and rate (1080p30 proposed); clips
+  to a gitignored folder.
 - **The pane probe kit** (signed 2026-09-26), built before the menus and
   settings, the round's pane-heavy work: a dev-only `__probe` in the page
   that puts the Browser pane's known traps into code instead of tips —
@@ -895,6 +920,7 @@ records an achievement on a clean machine.
 | Persistent store (4 consumers) · version + invalidation policy · `BUILD_ID` | v1 C6 / plans/* / decision 1 | 8 |
 | The run journal (tier 1's export · the chaos repro · the continuation check) | 7.5 close | 8 |
 | The pane probe kit (+ an Electron probe runner, if the spike allows) | 7.5 close | 8 |
+| The background recorder (fixtures · seeds · before/after at two commits · full runs after the journal) | 2026-09-27 (the user) | 8 |
 | Save/load + mid-run resume · chaos fuzz driver · the continuation check | v1 C6 / TODO / 7.5 close | 8 |
 | Title / main menu · seed field | 2026-08-21 gap | 8 |
 | Settings (volume axes · rebind · speed · colorblind · aura-FX · locale · reduced motion · shake · text scale) | v1 C6 / plans/music.md / 7.5 close | 8 |

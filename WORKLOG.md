@@ -180,3 +180,41 @@ load modes. One frame, not a rate. The window's content was 1264×681
 inside a 1280×720 frame, so a 1080p recording needs `useContentSize`.
 
 `dist/` after 110a: `7424d4b4…`, identical.
+
+### 110b — the spike build (2026-09-28) — read `none` ✅
+
+`shell/spike/` (disposed of at 110f): its own Vite config (`npm run
+build:spike` → `dist-spike/`, gitignored; the production config
+untouched), an HTML page with the game's three mounts, and `boot.ts`,
+which has no static import of the game. It reads the store with no
+`await` before the read (`window.shellStore.initial` under Electron,
+`localStorage` on the web), bumps a boot counter, shows a panel (the
+counter, the read, the write, the origin, whether it is embedded and in
+what, `persisted()`, `hasStorageAccess()`; Copy puts the whole report on
+the clipboard), and only then `import('../../src/main')`. `?spike-deny`
+plants a throwing store. `shell/spike` joins tsconfig's `include` for the
+spike's life. `main.mjs` gains a `script` probe: a JS file run in the page
+as an async function body.
+
+**Electron** (one profile, two launches): boot 1 read `null` and wrote
+boot 1; boot 2 read boot 1 and wrote boot 2. `#ui` had 0 children at the
+read and 3 once the game booted, so the read ran before the game mounted
+anything. No error, no failed load. **The web** (the pane, `vite preview`
+of `dist-spike/` on :5192): a reload carried the counter 1 → 2, and a
+later reload of the final bytes 2 → 3; `persisted()` false on
+`http://localhost`, `hasStorageAccess()` true. **The planted control:**
+`?spike-deny` reported `SecurityError: planted by ?spike-deny` on the read
+and the write, the game still booted, and the stored value was untouched.
+
+**The zip, and a near miss.** Windows PowerShell 5.1's `Compress-Archive`
+wrote the entries with backslashes (`assets\index-….js`), which an unzip on
+Linux takes as flat file names. Git Bash's `tar -a` then wrote a TAR
+archive under the `.zip` name (GNU tar has no zip writer): its 2,529,280
+bytes, next to the build's 2,497,422 uncompressed, gave it away. PowerShell
+7's `Compress-Archive` wrote 34 entries, none with a backslash,
+`index.html` at the root, 1,224,738 bytes. .NET's `ZipFile` extracted it to
+a tree hash-identical to `dist-spike/` (`4e24fbe2…`, 34 files), and that
+tree booted in Electron (boot 1, no error). The zip is
+`scratch/itch-spike-110.zip`, for 110e.
+
+`dist/` after 110b: `7424d4b4…`, identical.

@@ -8,8 +8,9 @@
 //   --dist=<dir>      the build to load (default: the repo's dist/)
 //   --load=file|app   file:// or the registered app:// scheme (default: app)
 //   --profile=<dir>   the userData directory (a fresh one is the store's control)
-//   --probe=<name>    boot · store-write · store-read
+//   --probe=<name>    boot · store-write · store-read · script
 //   --value=<text>    what store-write writes
+//   --script=<file>   what the script probe runs in the page
 //   --out=<file>      also write the probe's JSON here
 //   --shot=<file>     boot: save a PNG of the page
 //
@@ -161,6 +162,16 @@ const probes = {
   async 'store-read'(win) {
     const initial = await win.webContents.executeJavaScript('window.shellStore?.initial ?? null');
     return { ok: true, result: { initial, file: storeFile() } };
+  },
+
+  /** Run --script=<file> in the page as an async function body; its return
+   *  value is the result, and a returned `{ ok: false }` fails the probe. */
+  async script(win) {
+    const file = flag('script');
+    if (file === undefined) return { ok: false, result: 'script needs --script=<file>' };
+    const body = readFileSync(resolve(file), 'utf8');
+    const result = await win.webContents.executeJavaScript(`(async () => {\n${body}\n})()`);
+    return { ok: result?.ok !== false, result };
   },
 };
 

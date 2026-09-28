@@ -472,6 +472,7 @@ tools/                       # Dev-only; not bundled into dist/ (index page at /
 
 shell/
   electron/                  # §110: the Electron shell (`npm run shell`), the build in a desktop window; plain JS, outside tsc. package.json names the app (userData = %APPDATA%\ASCIIbattler) · main.mjs = the window, `dist/` over file:// or the privileged app:// scheme, the store file (`store.json`, written tmp-then-rename), and `--probe=<name>` (one JSON line on stdout, exit 0 / 1 failed / 2 timeout) · preload.cjs = the sandboxed bridge: the store's text handed over by a SYNCHRONOUS message before any page script, as `window.shellStore.initial`, writes back async
+  spike/                     # §110b, disposed of at 110f: the store's boot read before the game loads (`npm run build:spike` → dist-spike/, its own Vite config). boot.ts reads `shellStore.initial` or `localStorage` synchronously, shows a readout panel (`window.__spike110`; `?spike-deny` plants a throw), then dynamic-imports src/main
 
 scripts/                     # Dev-only Node utilities; not bundled into dist/
   gen-sfx.mjs                # §32b: deterministic, dependency-free SFX synth → public/audio/ (npm run gen:sfx)

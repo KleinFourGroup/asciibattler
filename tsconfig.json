@@ -19,5 +19,5 @@
     "noEmit": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "tools", "tests", "vite.config.ts", "eslint.config.js"]
+  "include": ["src", "tools", "tests", "shell/spike", "vite.config.ts", "eslint.config.js"]
 }

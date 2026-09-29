@@ -361,3 +361,48 @@ shown only for a lead-in that is trimmed off; the explorer panel starts
 hidden in recordings.
 
 `dist/` after 110d: `7424d4b4…`, identical.
+
+### 110e — the sitting, prepared (2026-09-28) — the `stop` is open
+
+**No server needed.** `vite build --mode development` alone still builds
+with DEV off (the same hashed bundle as production); with
+`NODE_ENV=development` set as well, the build keeps the explorer's chunk.
+Loaded from that static build, the record path works under both origins:
+`app://` heard 93 of 93 cues, `file://` 92 of 92, no frame missing. So
+routing `<audio>` into Web Audio does not go silent under `file://`, the
+suspect named at 110a. The sitting records from that build
+(`?bp=board-<id>_hide-1`, the explorer panel hidden), so a dev server the
+desktop app might stop between turns cannot break it.
+
+**The tools** (one-off, in the repo's gitignored `scratch/110e/`):
+`check3.mjs` runs three 160 s stretches 30 s apart at fixed clock times,
+in a shuffled order the user is not told (none · 1080p30 · 1080p60; the
+order goes to a file read only after the user's notes), sampling the
+machine's CPU (Node's `os.cpus` deltas), the Electron and ffmpeg trees
+(`sampler.ps1`, `Get-Process` deltas: a `Get-Counter` call took 1.0–1.7 s
+each and a long-lived query would miss processes started mid-stretch) and
+the GPU with its encoder (`nvidia-smi`, read from stdout, since `-f`
+buffers and a kill loses the file); recordings are analyzed only after the
+last stretch. `tone-run.mjs` records the live fight while PowerShell's
+`SoundPlayer` plays a 2 s, 2500 Hz tone aloud, then runs the analyzer's
+new `--outside` test: the share of 50 ms windows in the tone's span whose
+band power reaches −50 dB. Its known answers: a 2500 Hz span with no
+outside tone reads 0 %, and the planted 3150 Hz tone, found through the
+same clock-to-file conversion, reads 100 %.
+
+**The dry run** (90 s stretches): CPU 19.8 % with no recording, 25.0 % at
+30, 28.3 % at 60; the Electron tree 2.0 % and 3.7 % of the machine, ffmpeg
+0.9 % and 1.5 %; with no recording the GPU already sits at 17–29 % (peaks
+near 61 %), the user's own load. One 60 fps recording had 1 duplicate in
+4011 slots. **A finding:** one 30 fps recording heard 124 of 128 cues; the
+four were all `healtick` (125 ms, sound from the first sample, so no
+leading silence), three sounding 150–400 ms late and one never. The other
+seven recordings heard every cue. Whether the game's `<audio>` pools start
+late under load in normal play too, or the capture adds it, is unmeasured;
+the analyzer now counts late cues apart from lost ones. It bears on the
+settings' volume split, which is natural in Web Audio.
+
+**The clip:** `scratch/110e/clips/corridors-1080p60.mp4` (27 MB), the
+corridors fight with the panel hidden: 0 of 4003 slots missing, 128 of 128
+cues on time, audio to video −18 ms. At 20 s its frame matches the earlier
+60 fps recording's (the same `Miss` in the same place).

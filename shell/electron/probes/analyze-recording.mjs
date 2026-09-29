@@ -108,9 +108,36 @@ const rmsDb = (from, len) => {
   }
   return n === 0 ? -Infinity : 10 * Math.log10(sum / n + 1e-20);
 };
-const cueWin = Math.round(RATE * 0.15);
-const heard = side.cues.filter((c) => rmsDb(Math.round(c.s * RATE), cueWin) >= -45).length;
+const heardWithin = (seconds) =>
+  side.cues.filter((c) => rmsDb(Math.round(c.s * RATE), Math.round(RATE * seconds)) >= -45);
+const heard = heardWithin(0.15).length;
+// A cue heard only in the wider window started late; one heard in neither never sounded.
+const heardLate = heardWithin(0.4).length - heard;
 const overallDb = Math.round(rmsDb(0, pcm.length) * 10) / 10;
+
+// A sustained tone: the share of 50 ms windows in [fromS, fromS + seconds)
+// (file time) whose band power reaches -50 dB. The game's own sound stays
+// under -46 dB at 2500 Hz (§110d), so a leaked outside tone reads near 100 %
+// and its absence near 0; the planted tone is the detector's known positive.
+function sustained(hz, fromS, seconds) {
+  const win = Math.round(RATE * 0.05);
+  const start = Math.round((fromS - audioStart) * RATE);
+  let hot = 0;
+  let n = 0;
+  for (let i = Math.max(0, start); i + win <= Math.min(pcm.length, start + seconds * RATE); i += win) {
+    if (goertzel(hz, i, win) >= 1e-5) hot++;
+    n++;
+  }
+  return { hz, fromS: Math.round(fromS * 1000) / 1000, windows: n, sharePct: n === 0 ? null : Math.round((100 * hot) / n) };
+}
+// --outside=<epochMs>,<seconds>,<hz>: another app's tone, by the wall clock.
+const outsideArg = process.argv.find((a) => a.startsWith('--outside='))?.slice(10);
+let outsideTone = null;
+if (outsideArg) {
+  const [epochMs, seconds, hz] = outsideArg.split(',').map(Number);
+  const fromS = audioStart + (epochMs - side.started.startEpoch) / 1000;
+  outsideTone = { ...sustained(hz, fromS, seconds), control: sustained(side.tone.hz, audioStart + side.tone.fromS, side.tone.seconds) };
+}
 
 const report = {
   file,
@@ -134,6 +161,7 @@ const report = {
   check2: {
     gameCues: side.cues.length,
     cuesHeard: heard,
+    cuesLate: heardLate,
     overallDbfs: overallDb,
     toneDb: { peak: db(tone.peak), median: db(tone.median) },
     toneFound: tone.peak > tone.median * 100,
@@ -144,6 +172,7 @@ const report = {
     band1700Db: { peak: db(outside.peak), median: db(outside.median) },
     audibleTrue: `${side.audibleTrue} of ${side.audibleSamples}`,
     rejections: side.rejections.length,
+    outsideTone,
   },
 };
 console.log(JSON.stringify(report, null, 2));

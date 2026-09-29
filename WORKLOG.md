@@ -218,3 +218,62 @@ tree booted in Electron (boot 1, no error). The zip is
 `scratch/itch-spike-110.zip`, for 110e.
 
 `dist/` after 110b: `7424d4b4…`, identical.
+
+### 110c — the hidden window (2026-09-28) — read `none` ✅
+
+**The instrument.** `shell/electron/probes/frame-rate.js` (kept; the
+recorder's exit re-runs it) waits for a live battle, reads the GPU from the
+page's WebGL context (`UNMASKED_RENDERER_WEBGL`), then for 60 s counts the
+page's animation frames with their timestamps and the game's own renders
+(`renderTwoPass` wrapped on the live Renderer instance, since the loop
+calls it through `this`). A hitch is an interval over 1.5× the median. The
+page is the dev server's `?bp=board-live` (river 12×12, seed 7, the
+countdown running), because the fixtures are DEV-only. A plain Node script
+(`child_process.spawn` of Electron's binary) ran every configuration and
+read each result from stdout with its exit code, so the hand-back question
+is answered by construction. The shell gained `--url`, `--window`,
+`--size`, `--frame-rate`, `--timeout` and `--switches`; a probe's shown
+window opens with `showInactive()`, so it never takes focus.
+
+| window, 1920×1080 unless noted | rate | intervals (ms) | GPU |
+|---|---|---|---|
+| shown, 800×450, 10 s (the control) | 59.88 fps | p50 16.7 · max 33.0 · 1 hitch | RTX 4080 SUPER |
+| offscreen, `setFrameRate(60)`, 60 s | 60.01 fps (3605 paints) | p50 16.7 · p99 16.8 · max 16.8 · 0 | RTX 4080 SUPER |
+| offscreen, `setFrameRate(30)`, 60 s | 30.01 fps (1806 paints) | p50 33.3 · p99 33.4 · max 33.5 · 0 | RTX 4080 SUPER |
+| hidden (never shown, throttling off), 60 s | 0.98 fps | p50 1000.9 · max 1016.7 | RTX 4080 SUPER |
+| hidden + three Chromium switches, 10 s | 1.00 fps | p50 1000.9 | RTX 4080 SUPER |
+| offscreen + `--disable-gpu`, 10 s (the planted control) | 16.08 fps | p50 66.6 · max 100 | Microsoft Basic Render Driver |
+
+The GPU strings are ANGLE on Direct3D 11 in full, e.g. `ANGLE (NVIDIA,
+NVIDIA GeForce RTX 4080 SUPER (0x00002702) Direct3D11 vs_5_0 ps_5_0,
+D3D11)`. The game's render count equalled the frame count in every row.
+
+**What it answers.**
+- **The display's rate is 59.9 Hz:** the shown window's p50 of 16.7 ms and
+  59.88 fps put `Win32_VideoController`'s integer 59 at about 59.94. A
+  display-tied 60 fps target would miss about 0.1 % of slots.
+- **A never-shown ordinary window renders at 1 fps.** `backgroundThrottling:
+  false` does not stop it, and neither do `disable-renderer-backgrounding`,
+  `disable-backgrounding-occluded-windows` and
+  `disable-background-timer-throttling` (each confirmed present by
+  `app.commandLine.hasSwitch`). The page still reports itself `visible`.
+  So "a hidden window recording its own page" fails check 1's rate as
+  built; offscreen rendering is the video path left for 110d.
+- **Offscreen rendering holds its rate exactly,** steadier than the shown
+  window (no vsync jitter): 0 hitches at either rate, on the hardware GPU.
+- **On which GPU:** the hardware one. Chromium's basic GPU info lists the
+  RTX 4080 SUPER and Microsoft's software adapter (WARP) with neither
+  flagged active, so the page's WebGL string is the authority; the planted
+  `--disable-gpu` run reads WARP, so the probe tells them apart.
+  `gpuFeatureStatus` reads `video_encode: enabled`, which bears on 110d.
+- **The probe runner** is viable: a Node script gets a JSON answer and an
+  exit code back from a window the user never sees. Real-time frames need
+  offscreen mode; a probe that drives frames by hand, as the pane recipes
+  do, would not.
+
+**For 110d.** The live fixture's battle ended inside the 60 s (the probe's
+end state read no battle), so a 60-second recording needs a longer fight.
+The offscreen mode copies each frame back to main (`paint`, 1920×1080
+BGRA, about 8 MB a frame), which is part of what check 3 costs.
+
+`dist/` after 110c: `7424d4b4…`, identical.

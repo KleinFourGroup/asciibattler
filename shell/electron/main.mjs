@@ -7,6 +7,15 @@
 // Flags (all optional):
 //   --dist=<dir>      the build to load (default: the repo's dist/)
 //   --load=file|app   file:// or the registered app:// scheme (default: app)
+//   --url=<url>       load this instead of a build (e.g. the dev server's fixture)
+//   --window=shown|hidden|offscreen
+//                     shown by default when playing, hidden for a probe;
+//                     hidden = never shown, background throttling off;
+//                     offscreen = Electron's offscreen rendering, never shown
+//   --size=<w>x<h>    the page's content size (default 1280x720)
+//   --frame-rate=<n>  offscreen: the paint rate (default 60)
+//   --timeout=<ms>    a probe's time limit (default 60000)
+//   --switches=<a,b>  Chromium switches to append (no leading dashes)
 //   --profile=<dir>   the userData directory (a fresh one is the store's control)
 //   --probe=<name>    boot · store-write · store-read · script
 //   --value=<text>    what store-write writes
@@ -32,10 +41,20 @@ function flag(name) {
 const distDir = resolve(flag('dist') ?? join(here, '..', '..', 'dist'));
 const loadMode = flag('load') ?? 'app';
 const probeName = flag('probe');
-const PROBE_TIMEOUT_MS = 60_000;
+const PROBE_TIMEOUT_MS = Number(flag('timeout') ?? 60_000);
+const pageUrl = flag('url');
+const windowMode = flag('window') ?? (probeName === undefined ? 'shown' : 'hidden');
+const [contentW, contentH] = (flag('size') ?? '1280x720').split('x').map(Number);
+const frameRate = Number(flag('frame-rate') ?? 60);
+let paints = 0;
 
 const profile = flag('profile');
 if (profile !== undefined) app.setPath('userData', resolve(profile));
+
+// Chromium switches, appended before `ready` (the spike tries the
+// anti-throttling set on a never-shown window).
+const switches = (flag('switches') ?? '').split(',').filter(Boolean);
+for (const s of switches) app.commandLine.appendSwitch(s);
 
 // The app:// scheme serves dist/ from a real origin. It must be registered as
 // privileged before `ready`.
@@ -80,22 +99,37 @@ function serveDist() {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    show: probeName === undefined,
+    width: contentW,
+    height: contentH,
+    useContentSize: true,
+    // A probe's shown window opens inactive (below), so it never takes focus.
+    show: windowMode === 'shown' && probeName === undefined,
     backgroundColor: '#000000',
     webPreferences: {
       preload: join(here, 'preload.cjs'),
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
+      // A window that is never shown must not be throttled like a background tab.
+      backgroundThrottling: false,
+      offscreen: windowMode === 'offscreen',
     },
   });
   win.setMenuBarVisibility(false);
+  // Hiding the menu bar hands its height to the page; size the content after.
+  win.setContentSize(contentW, contentH);
+  if (windowMode === 'shown' && probeName !== undefined) win.showInactive();
+  if (windowMode === 'offscreen') {
+    win.webContents.setFrameRate(frameRate);
+    win.webContents.on('paint', () => {
+      paints++;
+    });
+  }
   return win;
 }
 
 function load(win) {
+  if (pageUrl !== undefined) return win.loadURL(pageUrl);
   if (loadMode === 'file') return win.loadFile(join(distDir, 'index.html'));
   return win.loadURL('app://game/index.html');
 }
@@ -164,13 +198,14 @@ const probes = {
     return { ok: true, result: { initial, file: storeFile() } };
   },
 
-  /** Run --script=<file> in the page as an async function body; its return
-   *  value is the result, and a returned `{ ok: false }` fails the probe. */
+  /** Run --script=<file> in the page. The file is one `export default async
+   *  function`, so it lints as a module; the export is stripped and the
+   *  function called. Its value is the result, and `{ ok: false }` fails. */
   async script(win) {
     const file = flag('script');
     if (file === undefined) return { ok: false, result: 'script needs --script=<file>' };
-    const body = readFileSync(resolve(file), 'utf8');
-    const result = await win.webContents.executeJavaScript(`(async () => {\n${body}\n})()`);
+    const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
+    const result = await win.webContents.executeJavaScript(`(${source})()`);
     return { ok: result?.ok !== false, result };
   },
 };
@@ -195,7 +230,15 @@ async function runProbe(win) {
     await load(win);
     const { ok, result } = await probe(win);
     clearTimeout(timer);
-    report({ probe: probeName, load: loadMode, ok, result, ...log }, ok ? 0 : 1);
+    const shell = {
+      window: windowMode,
+      content: win.getContentSize(),
+      switches: switches.map((s) => [s, app.commandLine.hasSwitch(s)]),
+      paints: windowMode === 'offscreen' ? paints : null,
+      gpuFeatureStatus: app.getGPUFeatureStatus(),
+      gpuDevices: (await app.getGPUInfo('basic')).gpuDevice,
+    };
+    report({ probe: probeName, load: pageUrl ?? loadMode, ok, result, shell, ...log }, ok ? 0 : 1);
   } catch (err) {
     clearTimeout(timer);
     report({ probe: probeName, load: loadMode, ok: false, error: String(err), ...log }, 1);

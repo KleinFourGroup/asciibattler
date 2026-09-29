@@ -277,3 +277,87 @@ The offscreen mode copies each frame back to main (`paint`, 1920×1080
 BGRA, about 8 MB a frame), which is part of what check 3 costs.
 
 `dist/` after 110c: `7424d4b4…`, identical.
+
+### 110d — the recording, checks 1 and 2 (2026-09-28) — read `none` ✅ (one control moved to 110e)
+
+**The recorder, a first draft** (kept for the recorder phase):
+`shell/electron/record.mjs` pipes every offscreen `paint` (the whole
+composited page as BGRA) into ffmpeg's stdin as one raw frame at the
+window's rate, encoded by NVENC (`h264_nvenc`, the Gyan build lists it;
+1080p60 test frames ran at 2.53× real time). `probes/record-page.js`,
+run in the page by the new `record` probe, reaches into the live game by
+the dev convention: every pooled `<audio>` element (`__game.audio.pools`)
+goes through an `AudioContext` into a `MediaStreamAudioDestinationNode`
+and never to `ctx.destination`; a `MediaRecorder` records it (Opus);
+every `play(key)` is logged; eight DOM squares above the scanlines show the
+page's frame count mod 256, and a ninth is white while a planted 3150 Hz
+tone plays (0.5 s, 3 s in). The page then fights (`playback.resume()`, the
+Fight-now signal). Main muxes the audio in afterwards.
+`probes/analyze-recording.mjs` reads only the finished `.mp4` through
+ffprobe and ffmpeg's decoders: frame continuity from the marker's pixels,
+the tone by a Goertzel filter, each logged cue looked up in the file's
+audio (heard if the next 150 ms reaches −45 dBFS).
+
+**Check 1's instrument, changed within its intent:** the charter said
+"read from the file's timestamps", but a raw pipe at a fixed rate stamps
+every frame uniformly by construction, so the timestamps cannot show a
+drop. The marker can: a count that steps by 2 is a frame that never
+reached the file, a repeat is a duplicate, and its presence proves the
+DOM layer is in the video.
+
+**Two probe bugs, found on the way.** Calling `countdown.skip()` from
+outside left playback paused forever (the handover to playback runs only
+inside `BattleScene.tick`), so no battle ended; the Fight-now signal is
+an unpause. And the first mux put the audio 433 ms ahead of the video.
+Both processes' clocks agree with the wall clock within 1 ms (main 0.76,
+page 0.90), so it is not skew: a paint reaches main about 0.4 s after the
+page drew it. The fix aligns by content: the first video frame showing
+page frame 1 is where the audio starts. After it the offset read −35 ms
+(one frame at 30).
+
+**The battle:** timed with the countdown skipped, live 21.3 s, quarry
+31.0, big24 34.4, wade 49.8, corridors 64.7. Corridors (12×32) is the
+60-second fight; each recording ran it plus a 2 s tail.
+
+| | 1080p30 | 1080p60 |
+|---|---|---|
+| frames in the file (ffprobe) | 2023 | 4025 |
+| marker slots · missing · duplicates | 2005 · 0 · 0 | 4007 · 0 · 0 |
+| paint arrival in main, p99 / max | 44 / 77 ms | 26 / 53 ms |
+| late arrivals (over 1.5 slots) | 8 | 84 |
+| ffmpeg input backlog, peak | 149 MB | 265 MB |
+| game cues heard in the file | 128 / 128 | 128 / 128 |
+| the planted tone, peak / floor | −13.4 / −141 dB | −13.4 / −142 dB |
+| audio to video (tone onset − flash frame) | −35 ms | −34 ms |
+| `isCurrentlyAudible()` true | 0 of 259 | 0 of 261 |
+
+The AudioContext ran without a gesture (`running`; Electron's default
+autoplay policy) and no `play()` was refused. Paint arrival jitters, but
+not one content frame was lost at either rate: **check 1 passes at 30 and
+at 60.** A frame at 20 s (viewed) shows the board, the glyphs, the HP bars,
+the level badges, a `Miss` hitsplat, the HUD panes, the scanline rake and
+the marker. It also shows the board explorer's panel, which a recording
+should start hidden.
+
+**Check 2, the parts answered here.** The game's sound is in the file (every
+cue heard); the planted in-page tone is found; nothing reached an output
+stream (0 audible samples in both runs). **The positive control:** the page
+playing normally but muted (`setAudioMuted`, so the machine stays silent)
+read audible in 55 of 83 samples, so the instrument can say yes. And a
+recording made muted still carried every cue (92 of 92) and the tone, so
+the recorder can mute its page as a second guarantee.
+
+**Moved to 110e, the user's sitting:** the outside-app tone. It plays
+aloud on the user's machine, so it runs when they are there to hear it,
+and their hearing it is the known answer that it played. The band: the
+game's own sound peaks at −24 dB at 1700 Hz but stays at or under −46 dB
+at 2500 Hz (p99 −52) and under −54 dB from 5 kHz up (50 ms Goertzel
+windows over the 60 fps recording). So 2500 Hz, judged as sustained energy
+over the tone's known window, not a peak.
+
+**For the recorder phase:** a backlog of 265 MB at 60 fps means main needs
+backpressure before long runs; alignment needs the marker, or a marker
+shown only for a lead-in that is trimmed off; the explorer panel starts
+hidden in recordings.
+
+`dist/` after 110d: `7424d4b4…`, identical.

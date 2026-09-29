@@ -16,10 +16,14 @@
 //   --frame-rate=<n>  offscreen: the paint rate (default 60)
 //   --timeout=<ms>    a probe's time limit (default 60000)
 //   --switches=<a,b>  Chromium switches to append (no leading dashes)
+//   --muted           mute the page's output (webContents.setAudioMuted)
 //   --profile=<dir>   the userData directory (a fresh one is the store's control)
-//   --probe=<name>    boot · store-write · store-read · script
+//   --probe=<name>    boot · store-write · store-read · script · record
 //   --value=<text>    what store-write writes
 //   --script=<file>   what the script probe runs in the page
+//   --record=<base>   record: the output path without extension
+//   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
+//   --tail-seconds=<n>    record: keep recording this long after it ends (2)
 //   --out=<file>      also write the probe's JSON here
 //   --shot=<file>     boot: save a PNG of the page
 //
@@ -29,6 +33,7 @@ import { app, BrowserWindow, ipcMain, net, protocol } from 'electron';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { firstMarkerFrame, mux, startVideo } from './record.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -198,17 +203,82 @@ const probes = {
     return { ok: true, result: { initial, file: storeFile() } };
   },
 
-  /** Run --script=<file> in the page. The file is one `export default async
-   *  function`, so it lints as a module; the export is stripped and the
-   *  function called. Its value is the result, and `{ ok: false }` fails. */
+  /** Run --script=<file> in the page (see runPageScript). Its value is the
+   *  result, and `{ ok: false }` fails. */
   async script(win) {
     const file = flag('script');
     if (file === undefined) return { ok: false, result: 'script needs --script=<file>' };
-    const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
-    const result = await win.webContents.executeJavaScript(`(${source})()`);
+    const result = await runPageScript(win, file);
     return { ok: result?.ok !== false, result };
   },
+
+  /** §110d: record the battle to --record=<base> (.video.mp4, .audio.webm,
+   *  .mp4 muxed, .json sidecar). Offscreen only: paints are the video. The
+   *  page side (probes/record-page.js) routes the game's audio into its own
+   *  recording and away from the speakers, and draws the frame marker. */
+  async record(win) {
+    if (windowMode !== 'offscreen') return { ok: false, result: 'record needs --window=offscreen' };
+    const base = resolve(flag('record') ?? 'recording');
+    const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'));
+    if (ready?.ok !== true) return { ok: false, result: { ready } };
+
+    const video = startVideo(win, { file: `${base}.video.mp4`, fps: frameRate, width: contentW, height: contentH });
+    const audible = [];
+    const poll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
+    const firstFrameBy = Date.now() + 5000;
+    while (video.stats.frames === 0 && Date.now() < firstFrameBy) await sleep(20);
+    const started = await win.webContents.executeJavaScript('window.__rec110.start()');
+
+    const maxMs = Number(flag('record-seconds') ?? 90) * 1000;
+    const t0 = Date.now();
+    while (Date.now() - t0 < maxMs && !(await win.webContents.executeJavaScript('window.__rec110.state.ended'))) {
+      await sleep(250);
+    }
+    await sleep(Number(flag('tail-seconds') ?? 2) * 1000);
+    const page = await win.webContents.executeJavaScript('window.__rec110.stop()');
+    const wallSeconds = (Date.now() - t0) / 1000;
+    const videoResult = await video.stop();
+    clearInterval(poll);
+
+    writeFileSync(`${base}.audio.webm`, Buffer.from(page.audioBase64, 'base64'));
+    // Align by content (the marker's first frame), not by the two processes' clocks.
+    const clockOffsetS = (page.startEpoch - video.stats.firstEpoch) / 1000;
+    const markerFrame = firstMarkerFrame(`${base}.video.mp4`);
+    const offsetS = markerFrame > 0 ? (markerFrame - 1) / frameRate : clockOffsetS;
+    const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS });
+    const sidecar = {
+      fps: frameRate,
+      size: [contentW, contentH],
+      offsetS,
+      clockOffsetS,
+      markerFrame,
+      skewMs: { main: video.stats.mainSkewMs, page: started.pageSkewMs },
+      wallSeconds,
+      started,
+      pageFrames: page.frames,
+      flashFrames: page.flashFrames,
+      tone: page.tone,
+      cues: page.cues,
+      rejections: page.rejections,
+      ctxState: page.ctxState,
+      battleEnded: page.ended,
+      audibleSamples: audible.length,
+      audibleTrue: audible.filter(Boolean).length,
+      video: videoResult,
+      mux: muxed,
+    };
+    writeFileSync(`${base}.json`, `${JSON.stringify(sidecar, null, 2)}\n`);
+    const { cues, ...brief } = sidecar;
+    return { ok: videoResult.code === 0 && muxed.code === 0, result: { ...brief, cueCount: cues.length } };
+  },
 };
+
+/** Run a page-script file: one `export default async function`, so it lints
+ *  as a module; the export is stripped and the function called in the page. */
+function runPageScript(win, file) {
+  const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
+  return win.webContents.executeJavaScript(`(${source})()`);
+}
 
 function report(out, code) {
   const text = JSON.stringify(out);
@@ -225,16 +295,22 @@ async function runProbe(win) {
     return;
   }
   const log = watch(win);
+  if (process.argv.includes('--muted')) win.webContents.setAudioMuted(true);
+  const audible = [];
+  const audiblePoll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
   const timer = setTimeout(() => report({ probe: probeName, load: loadMode, ok: false, error: 'timeout', ...log }, 2), PROBE_TIMEOUT_MS);
   try {
     await load(win);
     const { ok, result } = await probe(win);
     clearTimeout(timer);
+    clearInterval(audiblePoll);
     const shell = {
       window: windowMode,
       content: win.getContentSize(),
       switches: switches.map((s) => [s, app.commandLine.hasSwitch(s)]),
       paints: windowMode === 'offscreen' ? paints : null,
+      muted: win.webContents.isAudioMuted(),
+      audible: `${audible.filter(Boolean).length} of ${audible.length}`,
       gpuFeatureStatus: app.getGPUFeatureStatus(),
       gpuDevices: (await app.getGPUInfo('basic')).gpuDevice,
     };

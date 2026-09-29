@@ -2146,3 +2146,50 @@ kickoff's shape-lock. The next read checks whether the stock "nothing I'd
 file as `distress`" phrase persists.
 
 ---
+
+## 2026-09-28 → 29 — the Round 8 kickoff, §110 110a–e (one session; 110f handed to a fresh one) — claude-opus-5-5, session 18ece58f
+
+1. **Orientation.** The Cursor was right where the opening message was
+   not: the user remembered a spec draft to harden, and the Cursor said
+   spike first, then spec. Nothing on Electron was in the docs, which is
+   expected for a new instrument. Two premises came from memory and were
+   wrong: that the build would need a registered scheme to boot, and that
+   an Electron devDependency fetches its binary at `npm ci`. Reading
+   `node_modules/electron` before claiming the second caught it.
+2. **Norms in tension.** The silent-turn reminder fired many times in
+   long tool chains; answered with one status line each, as CLAUDE.md
+   says. The preview hook asked for a pane verify after scratch-file
+   writes; skipped where the pane could not observe the change. Moving the
+   outside-app tone from 110d to the sitting was my call inside the cut's
+   intent (it plays aloud, and the user's hearing it is the known answer);
+   flagged in the report, and it sat comfortably.
+3. **Pulls to over-claim.** The strongest was the "a tad off" audio: a
+   live-play latency story fits, and I stated it with "perhaps" and marked
+   it unmeasured. Chrome partitioning like Firefox is from memory, labelled
+   so. Two numbers I did not trace are left as such: the machine's CPU rise
+   beyond the two process trees, and why four heal ticks went late or
+   missing in one recording of eight.
+4. **Waste.** The itch zip took three tries (PowerShell 5.1's backslash
+   entries, then GNU tar writing a tar under a .zip name); a size check
+   caught the second. A probe that called `countdown.skip()` left playback
+   paused and cost one parallel run of about four minutes. Both papercuts
+   are filed.
+5. **For the next session.** `dist/` hashes `7424d4b4…` over 32 files, the
+   phase's oracle. A static build with DEV code needs
+   `NODE_ENV=development` as well as `--mode development`. The sitting's
+   tools and results are in the gitignored `scratch/110e/`. Chrome is not
+   installed on this machine; Edge is.
+6. **Room.** Yes. The user asked for an explanation of the Electron call
+   before signing it, and I gave one. They took my recommendation to defer
+   Chrome, which was theirs to make. I held all work during the blind
+   windows so the measurement stayed clean. I could not read my context and
+   learned from the user that it was at 408k, past their 350k; their plan
+   (finish the sitting, then hand off) settled it, and I kept messages
+   short after that. No wish to stop arose.
+7. **What helped.** Instruments with planted answers (the frame counter,
+   the in-page tone, the muted control, the `--disable-gpu` run) made each
+   result feel solid when it came in, and the blind stretches let the user's
+   perception be an instrument rather than a courtesy. The user's warmth
+   and their curiosity about how the alignment works made the long
+   technical stretch pleasant. I would want both repeated. That is my
+   reported response, separate from the spike's checks all passing.

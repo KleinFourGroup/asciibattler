@@ -406,3 +406,81 @@ settings' volume split, which is natural in Web Audio.
 corridors fight with the panel hidden: 0 of 4003 slots missing, 128 of 128
 cues on time, audio to video −18 ms. At 20 s its frame matches the earlier
 60 fps recording's (the same `Miss` in the same place).
+
+### 110e — THE READ (2026-09-28 → 29, the user's) ✅
+
+**The clip** (the user): "Visually it looks great." Three notes. (1) The
+first frame is the pre-turn screen: viewed, it shows the pre-turn cards
+mid-fade under the battle's `5` countdown, since the fixture enters the
+battle about a second before recording starts and paints reach main about
+0.4 s late. (2) The sharp beep near 4 s is the planted tone. (3) The audio
+"a tad off" although single actions look aligned: after the content
+alignment the sound lands 18–35 ms early, while live play puts it slightly
+late (the output device and `<audio>` add their own delay), a relative
+shift the session estimates at about 50 ms, unmeasured. The user asked for
+an A/B by ear in the recorder phase.
+
+**Check 3, blind** (09:09–09:18, 160 s stretches; the order revealed after
+the user's notes: A 1080p30, B 1080p60, C none). The user noticed no lag
+and no sound in any stretch; a very faint fan hum ran through all three,
+C included, so it is not the recorder's.
+
+| | C, none | A, 30 fps | B, 60 fps |
+|---|---|---|---|
+| machine CPU, mean / p95 | 17.5 / 21.4 % | 24.8 / 31.7 % | 30.0 / 35.9 % |
+| Electron tree + ffmpeg, share of the machine | 0 | 2.4 + 0.7 % | 4.2 + 1.9 % |
+| GPU, mean | 21.9 % | 24.1 % | 19.7 % |
+| GPU encoder, mean | 0 | 4 % | 6.6 % |
+| Electron memory, peak | — | 1.0 GB | 1.3 GB |
+| recordings | — | 2 × (0 missing, 128/128 on time) | 2 × (0 missing, 128/128 on time) |
+
+The machine's CPU rises more than the two process trees account for
+(+7.3 and +12.5 points against 3.1 and 6.1), which the session did not
+trace. The GPU cost is lost in the user's own load. **Check 3 passes at
+both rates; 60 fps is viable.** (The user's later "16 % pegged" was a
+frozen Task Manager; restarted, it read normal.)
+
+**The outside tone:** PowerShell's `SoundPlayer` played the 2 s, 2500 Hz
+tone at 09:37:59 during a recording. The user heard the beep and nothing
+else, the known answer that it played and that the game played nothing
+aloud; in the file, 5 % of its 50 ms windows (2 of 40) touched the band,
+the game's own transients, against 100 % for the planted tone. **Check 2
+is complete.**
+
+**The itch draft, Firefox 156** (embedded in page, 1280×720, a draft on
+`kleinfourgroup.itch.io`): boot 4 read boot 3, so the store survived a
+reload, a closed tab and a browser restart. The game's origin is
+`https://html-classic.itch.zone` (the href `/html/19467267/index.html?v=…`,
+the `v` changing per upload); `hasStorageAccess()` false, `persisted()`
+false, quota 10 GB. The direct href read boot 1: **Firefox partitions the
+iframe's storage by the top-level site**, so a save made on the itch page
+is absent when the game opens any other way. The estimate counted 6.4 MB
+already in use against our ~100 bytes: itch serves every HTML game from
+that one origin, so the store shares its budget and key space with every
+itch game played in the browser (inferred from the number and the URL
+shape). **Chrome is deferred** (the user's call, 2026-09-29; Chrome is not
+installed): the draft is read in Chrome at the round-close browser smoke,
+which needs Chrome anyway, together with the pre-registered days-later
+re-open. From memory, Chrome partitions the same way, and the store's
+design does not change if it does not.
+
+### Inputs to 110f, the spec
+
+- **The adapter can be synchronous in all three shells:** `localStorage`
+  on the web and in itch's iframe; the preload's synchronous hand-over
+  under Electron. So the boot shape can stay a first static import.
+- **The web store's constraints:** keys namespaced, saves small, a quota
+  error meaning "cannot save", an empty store at any boot a new player
+  (Safari unverified; itch's partitioning; the shared itch origin).
+- **The recorder:** offscreen rendering, 30 or 60 fps (both pass 1–3);
+  backpressure in main (265 MB peak backlog at 60); the lead-in trimmed,
+  aligned by content, the marker shown only for that lead-in; the planted
+  tone out of real recordings; the explorer panel hidden; the page muted
+  as a second guarantee; the audio-offset A/B; ffmpeg as a system install
+  so far (the kickoff's call, reopened at the recorder's kickoff); the
+  heal-tick late/lost measurement (normal play against recording).
+- **The probe runner** is viable in offscreen mode.
+- **Deferred and held here:** Chrome's itch read and the days-later
+  re-open, at the round-close browser smoke; Electron's CSP warning
+  (unpackaged only) for Round 12's packaging; `shell/spike/` (and its
+  tsconfig entry) disposed of at 110f.

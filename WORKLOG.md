@@ -852,3 +852,43 @@ two earlier recordings it still reads 0.
 **The normal run:** a clean `--seed=12` clip at the default cap dropped 0,
 the backlog peaking at 108 of 1000 MB (45.7 s, 2740 frames, 107 of 107
 cues, no lead-in frames in the file).
+
+### 111d — before/after (2026-09-30) — ◐ BUILT, UNREAD (a `batch` read → 111f)
+
+**Step zero.** `c4ca4e6^` is `42d96ce` (§107c): it has the corridors
+fixture and the panel's `hide` dial (both from §105), and its lockfile
+differs from HEAD only by Electron's 118 lines. Checked out in a temporary
+`git worktree` with the main tree's `node_modules` linked in by a
+junction, it builds in development mode in 1.6 s with its `boardPanel`
+chunk. The removal was checked before it was trusted: Node's `lstat`
+reports the junction as a link, unlinking it removes only the link (the
+repo's `node_modules` still held 127 entries), and only then is the
+worktree removed.
+
+**Built.** `--before=<ref> [--after=<ref>]` (the after side is the working
+tree when absent): each side built in its own worktree, recorded one after
+the other from its own fresh profile, read back by the analyzer, then
+joined side by side (3848×1128: each half under a 48 px strip naming its
+ref and commit in the game's font, a grey 8 px rule between, the after
+side's sound, tagged BT.709). Both halves open on their go frame. The
+sidecar compares the two cue lists (the matched prefix, where they part,
+how far apart the matched cues fall) and notes a lockfile difference. The
+front door was restructured so one flow serves a clip and a pair, and its
+worktrees are closed in a `finally`; if one fails to close, the temp
+directory is left in place and named, since its junction may remain.
+
+**The known answer, HEAD against HEAD** (corridors): both halves clean (0
+lead-in frames, 128 of 128 cues, 0 dropped), and the same 128 cues in the
+same order, matched cues apart by a median of 1 ms and at most 34 ms (two
+frames). `git worktree list` afterwards showed only the main tree.
+
+**The pair, `c4ca4e6^` against the working tree** (corridors, the exit's
+pair): both halves clean, the same 128 cues, median 3 ms apart, max 18 ms;
+the lockfiles differ (flagged in the output). A frame at 10 s (viewed): the
+perspective board on the left, today's ortho board at yaw 45 on the right,
+the same units in the same places, both labels legible.
+
+**The read at 111f** (`batch`): both halves open on the fight's first frame
+and stay in step, each labelled with its commit. Wrong is a half running
+ahead, a missing label, or halves too small to read. The clip:
+`clips/corridors-42d96ce-vs-<commit>.mp4`, remade at the sitting.

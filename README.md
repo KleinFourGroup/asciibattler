@@ -16,6 +16,8 @@ npm run dev      # serves at http://localhost:5173
 `npm run record -- --board=corridors` (a board-explorer fixture) or
 `npm run record -- --seed=12` records a battle to `clips/` as an `.mp4`,
 from an offscreen window that never takes focus and plays nothing aloud.
+Add `--before=<commit>` for a before/after pair: that commit against the
+working tree (or `--after=<commit>`), side by side.
 It is a development tool (`shell/electron/record-cli.mjs` lists its
 options) with one external requirement: **ffmpeg** on the PATH, built with
 NVENC, and an NVIDIA GPU to run it. On Windows, `winget install

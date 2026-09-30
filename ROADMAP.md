@@ -66,7 +66,8 @@ byte-identical throughout.
 - [x] **111c** — backpressure: a capped backlog, frames over it dropped and counted, a recording with drops exits 1. Read `none`. ✅ (WORKLOG §111c).
 - [x] **111d** — before/after: each commit built in a worktree, recorded in turn, joined side by side and labelled. Read `batch` (at 111f): both halves open on the fight's first frame and stay in step, labelled; wrong is a half ahead, a label missing, halves too small. ✅ READ at 111f (WORKLOG §111d, §111f).
 - [x] **111e** — cue timing, measured: each cue's onset against its frame, and normal play's `<audio>` start latency; the late heal-ticks placed; the A/B's centre. Read `none`. ✅ (WORKLOG §111e).
-- [ ] **111f** — THE SITTING: the A/B by ear (one file, five offsets, A–E), then the exit clips at the pick (corridors, a seed, `c4ca4e6^` against HEAD) with the analyzer and the frame-rate probe beside them. Read `stop`.
+- [ ] **111f** — THE SITTING: the A/B by ear (one file, five offsets, A–E), then the exit clips at the pick (corridors, a seed, `c4ca4e6^` against HEAD) with the analyzer and the frame-rate probe beside them. Read `stop`. Part 1 and the clips READ 2026-09-30 (+25 ms; the pair ✅; two findings → 111f-post).
+- [ ] **111f-post** — inserted at the 111f read (WORKLOG §111f): two openings (`--countdown=full|skip`, full the default), the clip cut before the next screen mounts, +25 ms as the default sound delay. Read `stop`: a full clip, a skip clip, the pair re-made; on it §111 closes.
 
 ## Phase 112 — the pane probe kit and the Electron runner
 

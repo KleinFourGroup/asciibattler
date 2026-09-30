@@ -1002,3 +1002,35 @@ happy with that!" ✅. Two findings, both for a `-post`:
 - **The ending.** The last frames show part of the level-up screen: the
   fixed 2 s tail after `battle:ended` catches the game's swap to the next
   screen (`Game.afterOutro`). Cut it.
+
+### The hand-off (2026-09-30, the user's call at 450k)
+
+The session proposed a `-post` for the read's two findings; the user
+handed off here, with the meter at 450k, and signed `full` as the
+default opening. **111f-post, for a fresh session:**
+- **Two openings, `--countdown=full|skip`, `full` the default.** Full:
+  the countdown held during setup (a fixture parks it already; for a seed
+  the recorder parks it the moment the battle appears) and, at the go
+  frame, restored and reset to its whole seconds (5), so the clip opens on
+  "5" and plays through the game's own handover. Skip: the fight released
+  at the go frame as now, with the countdown box hidden in that frame
+  instead of fading. The seams, checked by name like the others:
+  `PreBattleCountdown.remaining` (private) and `advance` (a fixture's
+  instance patch; `delete` restores the prototype's), and the HUD's
+  countdown element (`is-visible` removed on the handover, a CSS
+  transition the fade).
+- **The ending:** the clip cut before the next screen mounts. On the
+  scene swap (`Game.afterOutro`'s timer, then `activeScene` changes) the
+  page raises the magenta patch again and main stops writing at the first
+  paint that shows it, the lead-in's gate mirrored; a 5 s fallback after
+  `battle:ended`; the audio cut to the video; the analyzer counting only
+  cues before the cut.
+- **+25 ms** as the recorder's default sound delay (a constant added to
+  the placement in `main.mjs`, recorded in the sidecar).
+- **The read is a `stop`:** a full clip, a skip clip and the pair re-made;
+  on it §111 closes.
+
+The exit clips in `clips/` were made at `1802b4b` with the sound as
+recorded (+0); remake them once the default lands rather than shifting
+them. The A/B file, `clips/ab-sound-sync.mp4`, stays with its key recorded
+above.

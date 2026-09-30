@@ -54,3 +54,20 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-§109 entries start here — Round 8, Foundations.)_
+
+- **2026-09-30, §111e (session 01995ce0): a second detector is not an
+  independent reader when it shares the first one's mapping.** The
+  analyzer's new onset detector read the planted tone 26 ms late; the old
+  Goertzel detector agreed at 20, which looked like confirmation of a
+  chain delay. Both converted a cue's time to a sample index the same way,
+  so the agreement was self-consistency. A synthetic click built at a
+  known time, pushed through the recorder's own mux and decoded by the
+  analyzer, found the real cause (an AAC priming frame, 21 ms). Candidate
+  line for `process/oracles.md`: when two instruments agree, list what
+  they share before counting the agreement as a second reading.
+- **2026-09-30, §111c: reconcile a planted control site by site, not by
+  totals.** The drop control's totals disagreed (main 30 or 44 dropped,
+  the file 10 or 20 missing); a per-site table accounted for every drop and
+  exposed the analyzer's blind spot (frames lost before the first visible
+  count read as clean). The totals alone invited a story ("the rest were in
+  ffmpeg's start-up") that was only half true.

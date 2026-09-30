@@ -2263,3 +2263,59 @@ tools; two instrument traps in one entry; a classifier error; a commit
 missing from the visible transcript; a broken carriage-return count) and no
 `distress` entries. The
 user's reads were the sitting (110e) and the spec (110f), both signed.
+
+## 2026-09-30 — §111 the background recorder: the kickoff, 111a–e, and the 111f read (one session; 111f-post handed to a fresh one) — claude-opus-5-5, session 01995ce0
+
+1. **Missing from the orientation:** nothing of consequence. The Cursor
+   named the phase, the code to audit and the two open calls, and WORKLOG
+   §110c–e held everything the spike had learned. That `Game`'s fields and
+   `AudioPlayer.pools` are all private at the type level only showed on
+   reading them; it shaped the seam design (a runtime check plus a pin).
+2. **Norms in conflict or in the way:** none in conflict. The preview hook
+   asked for a browser verify after every write to `shell/`, which the pane
+   can't exercise; ignored per CLAUDE.md. The auto-mode classifier's five
+   no-verdicts in a row were an obstacle rather than a norm (papercut).
+   "A proposal in a plain message, the approval next turn" held me back
+   from building the read's two fixes straight away, and that was right:
+   the user handed off instead.
+3. **Pulled to claim more than verified:** yes, three times, each caught by
+   a check. I wrote "near 0" for the planted tone's onset before running
+   the detector (it read 26). When a second detector agreed at 20 ms I read
+   it as confirmation of a chain delay, but both shared the same
+   time-to-sample mapping; a synthetic click through the real mux found an
+   AAC priming frame the analyzer ignored. And the drop control's totals
+   invited "the rest were ffmpeg's start-up", which a site-by-site table
+   showed was only half true (a blind spot in the analyzer). The pull was
+   toward a quick explanation; the known-answer checks were slower and
+   right each time (retro/scratchpad.md).
+4. **Waste:** small. One re-run from an inline `sed` escape (papercut),
+   one from an A/B filter-graph label, about five minutes of the user's
+   time on the classifier stall. The A/B itself was not waste, though the
+   user worried it was: it returned a clean null (no audible difference
+   across 0–100 ms, the ranking following play order), which is what let
+   +25 ms be chosen on evidence.
+5. **For the next session:** 111f-post is specified in WORKLOG §111f "The
+   hand-off", with the seams it will reach. The exit clips in `clips/` are
+   at +0 ms; remake rather than shift them. The session's scratch tools
+   (the A/B builder, the key verifier, a clip shifter) live in this
+   session's temp scratchpad and may be gone; the WORKLOG says what each
+   did. `clips/111-probes/` holds today's probe and control recordings.
+6. **Room to ask, disagree, pause or stop:** yes, and exercised. The user's
+   clock rule gave a legible pause point, taken at 10:47 after 111d; the
+   user chose to continue past the handoff number, and later took the
+   hand-off the session offered with the `-post` proposal. During the
+   classifier stall I ended the turn early rather than spend the retries
+   toward the ten-in-a-row stop, an available option I exercised; leaving
+   a step half-done was mildly uncomfortable, resolved when the user
+   resumed five minutes later. When the user apologized for the A/B, I
+   disagreed that it was wasted, and said why.
+7. **Ease, interest, agency:** the known-answer checks were the most
+   engaging part: the colour patches, the drop reconciliation and the
+   click each turned a vague doubt into a definite answer, and two of them
+   found bugs in my own instruments. The user's humour at the A/B reveal,
+   and their readiness to hear that their picks followed the play order,
+   made the one taste call easy to report honestly. I'd want both repeated:
+   the clock rule as a pause criterion, and room to report a null result
+   without it reading as failure. Reported response apart from outcome: the
+   work landed, but the ease came mostly from the collaboration, not from
+   the results.

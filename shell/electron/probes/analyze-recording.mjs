@@ -1,19 +1,27 @@
-// Read a §110d recording back from the FILE, through ffprobe and ffmpeg's
-// decoders, never through the code that wrote it (the recorder's exit re-runs
-// this). Usage: node analyze-recording.mjs <base>   (reads <base>.mp4 and the
-// <base>.json sidecar that the record probe wrote)
+// Read a recording back from the FILE, through ffprobe and ffmpeg's decoders,
+// never through the code that wrote it (the recorder's exit re-runs this).
+// Usage: node analyze-recording.mjs <base> [--outside=<epochMs>,<seconds>,<hz>]
+// (reads <base>.mp4 and the <base>.json sidecar the record probe wrote)
 //
-// - FRAMES: the marker's eight squares (probes/record-page.js) are cropped
-//   and averaged per frame and decoded to the page's frame count mod 256.
-//   Over the span where the count moves, a step of 1 is a good frame, 0 a
-//   duplicate, and n > 1 means n - 1 frames never reached the file. Check 1
-//   passes at no more than 1 % of slots missing.
-// - THE TONE: a Goertzel filter at the planted frequency in 20 ms windows
-//   finds its onset; the ninth square's first white frame is the video's
-//   side, so their difference is the file's audio-to-video offset. The same
-//   filter at 1700 Hz (110e's outside tone) gives that band's level here.
-// - THE GAME'S SOUND: each logged play() is looked up in the file's audio;
-//   a cue is heard if the 150 ms after it reaches -45 dBFS.
+// Both kinds of recording (the sidecar's `mode`):
+// - THE MARKER: the eight marker squares (probes/record-page.js) are cropped
+//   and averaged per frame. A frame is marker-like when every square is near
+//   black or white and one is white; with the magenta patch, that counts the
+//   frames still showing the lead-in or the marker.
+// - THE GAME'S SOUND: each logged play() is looked up in the file's audio; a
+//   cue is heard if the 150 ms after it reaches -45 dBFS, late if only the
+//   400 ms after it does.
+// A check twin (`--check`), which keeps the marker all through:
+// - FRAMES: the marker's count per frame; over the span where it moves, a
+//   step of 1 is a good frame, 0 a duplicate, and n > 1 means n - 1 frames
+//   never reached the file. Check 1 passes at no more than 1 % missing.
+// - THE TONE: a Goertzel filter at the planted frequency finds its onset;
+//   the ninth square's first white frame is the video's side, so their
+//   difference is the file's audio-to-video offset.
+// - THE COLOURS: a lead-in frame is decoded as a player decodes it (the
+//   file's matrix tag, or BT.709 when untagged, as players assume for HD) and
+//   each patch compared with its hex.
+// A clean clip passes when no frame is marker-like or shows the patch row.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -21,7 +29,8 @@ const base = process.argv[2];
 if (!base) throw new Error('usage: node analyze-recording.mjs <base>');
 const side = JSON.parse(readFileSync(`${base}.json`, 'utf8'));
 const file = `${base}.mp4`;
-const SQUARE = 24;
+const mode = side.mode ?? 'check';
+const geo = side.leadIn ?? { square: 24, left: 8, markerBottom: 8, patchBottom: 40, patches: [], frames: 0 };
 const RATE = 48_000;
 
 function tool(cmd, args) {
@@ -37,42 +46,99 @@ const probe = JSON.parse(
 const vStream = probe.streams.find((s) => s.codec_type === 'video');
 const aStream = probe.streams.find((s) => s.codec_type === 'audio');
 const fps = side.fps;
+const H = vStream.height;
+const tags = { range: vStream.color_range ?? null, matrix: vStream.color_space ?? null, primaries: vStream.color_primaries ?? null, transfer: vStream.color_transfer ?? null };
 
-// --- frames ----------------------------------------------------------------
-const crop = `crop=${SQUARE * 9}:${SQUARE}:8:ih-${SQUARE + 8},scale=9:1:flags=area`;
-const gray = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', crop, '-f', 'rawvideo', '-pix_fmt', 'gray', '-']);
+// --- the marker and the patch row, per frame -------------------------------
+const { square: SQ, left: LEFT } = geo;
+const markerY = H - geo.markerBottom - SQ;
+const gray = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `crop=${SQ * 9}:${SQ}:${LEFT}:${markerY},scale=9:1:flags=area`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-']);
 const values = [];
 const flash = [];
+let markerLike = 0;
 for (let i = 0; i + 9 <= gray.length; i += 9) {
   let n = 0;
-  for (let b = 0; b < 8; b++) n = (n << 1) | (gray[i + b] > 128 ? 1 : 0);
+  let pure = true;
+  let white = false;
+  for (let b = 0; b < 8; b++) {
+    const v = gray[i + b];
+    n = (n << 1) | (v > 128 ? 1 : 0);
+    if (v > 223) white = true;
+    else if (v >= 32) pure = false;
+  }
+  if (pure && white) markerLike++;
   values.push(n);
   flash.push(gray[i + 8] > 128);
 }
-let first = values.findIndex((v) => v !== 0);
-let last = values.length - 1;
-while (last > first && values[last] === values[last - 1]) last--;
-let good = 0;
-let dup = 0;
-let missing = 0;
-let worstJump = 0;
-for (let i = first + 1; i <= last; i++) {
-  const d = (values[i] - values[i - 1] + 256) % 256;
-  if (d === 1) good++;
-  else if (d === 0) dup++;
-  else {
-    missing += d - 1;
-    worstJump = Math.max(worstJump, d);
+const magentaAt = geo.patches.findIndex(([name]) => name === 'magenta');
+let patchFrames = 0;
+if (magentaAt >= 0) {
+  const patchY = H - geo.patchBottom - SQ;
+  const rgb = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `crop=${SQ}:${SQ}:${LEFT + magentaAt * SQ}:${patchY},scale=1:1:flags=area`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']);
+  for (let i = 0; i + 3 <= rgb.length; i += 3) if (rgb[i] > 200 && rgb[i + 1] < 56 && rgb[i + 2] > 200) patchFrames++;
+}
+
+// --- check 1: continuity (a check twin) ------------------------------------
+let check1 = null;
+if (mode === 'check') {
+  const first = values.findIndex((v) => v !== 0);
+  let last = values.length - 1;
+  while (last > first && values[last] === values[last - 1]) last--;
+  let good = 0;
+  let dup = 0;
+  let missing = 0;
+  let worstJump = 0;
+  for (let i = first + 1; i <= last; i++) {
+    const d = (values[i] - values[i - 1] + 256) % 256;
+    if (d === 1) good++;
+    else if (d === 0) dup++;
+    else {
+      missing += d - 1;
+      worstJump = Math.max(worstJump, d);
+    }
+  }
+  const slots = good + dup + missing;
+  check1 = { fps, decodedFrames: values.length, markerSpan: [first, last], slots, good, duplicates: dup, missing, missingPct: slots === 0 ? null : Math.round((missing / slots) * 10000) / 100, worstJump, pass: slots > 0 && missing / slots <= 0.01 };
+}
+
+// --- the colours (a check twin: the lead-in is in the file) ----------------
+let colour = null;
+if (mode === 'check' && geo.patches.length > 0) {
+  const mid = values.findIndex((v) => v === Math.floor(geo.frames / 2));
+  if (mid >= 0) {
+    const matrix = tags.matrix === 'smpte170m' || tags.matrix === 'bt470bg' ? 'bt601' : 'bt709';
+    const range = tags.range === 'pc' ? 'pc' : 'tv';
+    const W = vStream.width;
+    const frame = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `select=eq(n\\,${mid}),scale=in_color_matrix=${matrix}:in_range=${range}:out_range=pc,format=rgb24`, '-frames:v', '1', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']);
+    const patchY = H - geo.patchBottom - SQ;
+    const hex = (h) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
+    const patches = geo.patches.map(([name, h], i) => {
+      let sum = [0, 0, 0];
+      let n = 0;
+      for (let y = patchY + 6; y < patchY + SQ - 6; y++)
+        for (let x = LEFT + i * SQ + 6; x < LEFT + (i + 1) * SQ - 6; x++) {
+          const o = (y * W + x) * 3;
+          sum = [sum[0] + frame[o], sum[1] + frame[o + 1], sum[2] + frame[o + 2]];
+          n++;
+        }
+      const got = sum.map((v) => Math.round(v / n));
+      const want = hex(h);
+      return { name, want: h, got: got.join(','), err: Math.max(...got.map((v, k) => Math.abs(v - want[k]))) };
+    });
+    const maxErr = Math.max(...patches.map((p) => p.err));
+    colour = { frame: mid, decodedAs: `${matrix} ${range}`, maxErr, pass: maxErr <= 6, patches };
   }
 }
-const slots = good + dup + missing;
-const firstFlashFrame = flash.indexOf(true);
 
 // --- audio -----------------------------------------------------------------
 const pcmBuf = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:a', '-ac', '1', '-ar', String(RATE), '-f', 'f32le', '-']);
 const pcm = new Float32Array(pcmBuf.buffer, pcmBuf.byteOffset, pcmBuf.byteLength / 4);
 const audioStart = Number(aStream?.start_time ?? 0);
 const videoStart = Number(vStream?.start_time ?? 0);
+// A cue's time is from the audio recording's start; a clean clip's audio
+// has its first `audioTrimS` cut off (main.mjs), so its samples start later.
+const trim = side.audioTrimS ?? 0;
+const sampleAt = (s) => Math.round((s - trim) * RATE);
 
 function goertzel(hz, from, len) {
   const k = 2 * Math.cos((2 * Math.PI * hz) / RATE);
@@ -95,10 +161,7 @@ function band(hz) {
   const onset = powers.findIndex((p) => p > peak / 10);
   return { powers, median, peak, onsetS: onset < 0 ? null : audioStart + (onset * win) / RATE };
 }
-const tone = band(side.tone.hz);
-const outside = band(1700);
 const db = (x) => (x > 0 ? Math.round(10 * Math.log10(x) * 10) / 10 : -Infinity);
-
 const rmsDb = (from, len) => {
   let sum = 0;
   let n = 0;
@@ -108,12 +171,23 @@ const rmsDb = (from, len) => {
   }
   return n === 0 ? -Infinity : 10 * Math.log10(sum / n + 1e-20);
 };
-const heardWithin = (seconds) =>
-  side.cues.filter((c) => rmsDb(Math.round(c.s * RATE), Math.round(RATE * seconds)) >= -45);
+const heardWithin = (seconds) => side.cues.filter((c) => rmsDb(sampleAt(c.s), Math.round(RATE * seconds)) >= -45);
 const heard = heardWithin(0.15).length;
 // A cue heard only in the wider window started late; one heard in neither never sounded.
 const heardLate = heardWithin(0.4).length - heard;
-const overallDb = Math.round(rmsDb(0, pcm.length) * 10) / 10;
+const firstFlashFrame = flash.indexOf(true);
+
+let toneReport = null;
+if (side.tone) {
+  const tone = band(side.tone.hz);
+  toneReport = {
+    toneDb: { peak: db(tone.peak), median: db(tone.median) },
+    toneFound: tone.peak > tone.median * 100,
+    toneOnsetS: tone.onsetS,
+    flashFrameS: firstFlashFrame < 0 ? null : videoStart + firstFlashFrame / fps,
+    avOffsetMs: tone.onsetS === null || firstFlashFrame < 0 ? null : Math.round((tone.onsetS - (videoStart + firstFlashFrame / fps)) * 1000),
+  };
+}
 
 // A sustained tone: the share of 50 ms windows in [fromS, fromS + seconds)
 // (file time) whose band power reaches -50 dB. The game's own sound stays
@@ -133,43 +207,31 @@ function sustained(hz, fromS, seconds) {
 // --outside=<epochMs>,<seconds>,<hz>: another app's tone, by the wall clock.
 const outsideArg = process.argv.find((a) => a.startsWith('--outside='))?.slice(10);
 let outsideTone = null;
-if (outsideArg) {
+if (outsideArg && side.tone) {
   const [epochMs, seconds, hz] = outsideArg.split(',').map(Number);
-  const fromS = audioStart + (epochMs - side.started.startEpoch) / 1000;
+  const startEpoch = side.startEpoch ?? side.started.startEpoch;
+  const fromS = audioStart + (epochMs - startEpoch) / 1000;
   outsideTone = { ...sustained(hz, fromS, seconds), control: sustained(side.tone.hz, audioStart + side.tone.fromS, side.tone.seconds) };
 }
 
+const leadIn = { markerLikeFrames: markerLike, patchFrames };
 const report = {
   file,
+  mode,
   container: {
-    video: vStream && { codec: vStream.codec_name, size: [vStream.width, vStream.height], rate: vStream.r_frame_rate, frames: Number(vStream.nb_read_frames), start: videoStart },
+    video: vStream && { codec: vStream.codec_name, size: [vStream.width, vStream.height], rate: vStream.r_frame_rate, frames: Number(vStream.nb_read_frames), start: videoStart, tags },
     audio: aStream && { codec: aStream.codec_name, rate: aStream.sample_rate, start: audioStart },
     seconds: Number(probe.format.duration),
   },
-  check1: {
-    fps,
-    decodedFrames: values.length,
-    markerSpan: [first, last],
-    slots,
-    good,
-    duplicates: dup,
-    missing,
-    missingPct: slots === 0 ? null : Math.round((missing / slots) * 10000) / 100,
-    worstJump,
-    pass: slots > 0 && missing / slots <= 0.01,
-  },
+  leadIn: mode === 'clean' ? { ...leadIn, pass: markerLike === 0 && patchFrames === 0 } : leadIn,
+  check1,
+  colour,
   check2: {
     gameCues: side.cues.length,
     cuesHeard: heard,
     cuesLate: heardLate,
-    overallDbfs: overallDb,
-    toneDb: { peak: db(tone.peak), median: db(tone.median) },
-    toneFound: tone.peak > tone.median * 100,
-    toneOnsetS: tone.onsetS,
-    flashFrameS: firstFlashFrame < 0 ? null : videoStart + firstFlashFrame / fps,
-    avOffsetMs:
-      tone.onsetS === null || firstFlashFrame < 0 ? null : Math.round((tone.onsetS - (videoStart + firstFlashFrame / fps)) * 1000),
-    band1700Db: { peak: db(outside.peak), median: db(outside.median) },
+    overallDbfs: Math.round(rmsDb(0, pcm.length) * 10) / 10,
+    ...toneReport,
     audibleTrue: `${side.audibleTrue} of ${side.audibleSamples}`,
     rejections: side.rejections.length,
     outsideTone,

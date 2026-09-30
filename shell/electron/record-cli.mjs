@@ -10,12 +10,17 @@
 //   --size=<w>x<h>     the page's size in pixels (default 1920x1080)
 //   --max-seconds=<n>  stop by then if the battle has not ended (default 90)
 //   --name=<name>      the clip's file name (default <input>-<commit>)
+//   --check            record the analyzer's twin instead of a clean clip
 //   --keep             keep the temporary build, profile and intermediates
 //
 // Every recording is made from the working tree's development-mode build
 // (built fresh, about a second), in a fresh Electron profile that is deleted
-// afterwards, with the page muted and the board explorer's panel hidden. The
-// clip and a .json sidecar land in clips/ (gitignored); the analyzer
+// afterwards, with the page muted and the board explorer's panel hidden. A
+// clean clip opens on the fight's first frame: a short lead-in (a frame
+// marker and colour patches) is drawn, then left out of the file. A --check
+// twin keeps the lead-in and the marker all through and plants a tone, so
+// the analyzer can read frame continuity, the audio offset and the colours.
+// The clip and a .json sidecar land in clips/ (gitignored); the analyzer
 // (probes/analyze-recording.mjs) then reads the clip back from the file.
 // ffmpeg with NVENC must be on the PATH (README, "Recording clips").
 import { spawn, spawnSync } from 'node:child_process';
@@ -59,6 +64,7 @@ const size = flag('size') ?? '1920x1080';
 if (!/^\d+x\d+$/.test(size)) fail(`--size=${size} is not <width>x<height>`);
 const maxSeconds = Number(flag('max-seconds') ?? 90);
 const keep = process.argv.includes('--keep');
+const check = process.argv.includes('--check');
 
 let query;
 let inputName;
@@ -133,7 +139,7 @@ function uniqueName(name) {
   return candidate;
 }
 mkdirSync(clipsDir, { recursive: true });
-const clipName = uniqueName(flag('name') ?? `${inputName}-${stamp}`);
+const clipName = uniqueName(flag('name') ?? `${inputName}-${stamp}${check ? '-check' : ''}`);
 const base = join(work, 'rec');
 const electronPath = createRequire(join(repo, 'package.json'))('electron');
 const args = [
@@ -150,9 +156,10 @@ const args = [
   `--profile=${profile}`,
   '--muted',
   ...(seed !== undefined ? ['--enter'] : []),
+  ...(check ? ['--check'] : []),
 ];
 
-console.log(`record: recording ${inputName} at ${size}, ${fps} fps (in the background; the battle plays in real time)`);
+console.log(`record: recording ${inputName}${check ? ' (check twin)' : ''} at ${size}, ${fps} fps (in the background; the battle plays in real time)`);
 const child = spawn(electronPath, args, { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'] });
 let stdout = '';
 let stderr = '';
@@ -173,7 +180,7 @@ const clip = join(clipsDir, `${clipName}.mp4`);
 const sidecarFile = join(clipsDir, `${clipName}.json`);
 copyFileSync(`${base}.mp4`, clip);
 const sidecar = JSON.parse(readFileSync(`${base}.json`, 'utf8'));
-sidecar.recorder = { input: board !== undefined ? { board } : { seed: Number(seed), dials: dials ?? null }, query, stamp, fps, size, profile: 'fresh' };
+sidecar.recorder = { input: board !== undefined ? { board } : { seed: Number(seed), dials: dials ?? null }, query, stamp, fps, size, profile: 'fresh', check };
 writeFileSync(sidecarFile, `${JSON.stringify(sidecar, null, 2)}\n`);
 
 const analyzed = spawnSync(process.execPath, [join(here, 'probes', 'analyze-recording.mjs'), join(clipsDir, clipName)], {
@@ -187,13 +194,16 @@ cleanup();
 
 const c1 = analysis?.check1;
 const c2 = analysis?.check2;
-const good = c1?.pass === true && c2 !== undefined && c2.cuesHeard === c2.gameCues;
+const cuesOk = c2 !== undefined && c2.cuesHeard === c2.gameCues;
+const good = check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk;
+const shape = check
+  ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms`
+  : `${analysis?.container.video.frames ?? '?'} frames, lead-in frames in the file ${(analysis?.leadIn?.markerLikeFrames ?? 0) + (analysis?.leadIn?.patchFrames ?? 0)}`;
 console.log(
   [
     `record: ${good ? 'OK' : 'CHECK FAILED'}  ${clip}`,
-    `  ${analysis?.container.seconds.toFixed(1) ?? '?'} s · frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · ` +
-      `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · ` +
-      `audio to video ${c2?.avOffsetMs ?? '?'} ms · backlog peak ${probe.result.video.backlogMaxMB} MB`,
+    `  ${analysis?.container.seconds.toFixed(1) ?? '?'} s · ${shape} · ` +
+      `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · backlog peak ${probe.result.video.backlogMaxMB} MB`,
   ].join('\n'),
 );
 process.exit(good ? 0 : 1);

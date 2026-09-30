@@ -6,24 +6,35 @@
 // and a moved one fails the recording by name (`seam moved: ...`);
 // src/audio/AudioPlayer.test.ts pins the AudioPlayer half on every npm test.
 //
-// Options (from the probe): `enter` makes the two dispatches a player's two
-// clicks would (the root node, then Fight), for a seed opened by run dials
-// alone; a board fixture enters its battle itself (src/dev/boardPanel/boot.ts).
+// Options (from the probe):
+// - `enter`: make the two dispatches a player's two clicks would (the root
+//   node, then Fight), for a seed opened by run dials alone; a board fixture
+//   enters its battle itself (src/dev/boardPanel/boot.ts).
+// - `check`: the analyzer's twin. The marker stays on for the whole recording
+//   and a planted tone plays; without it (a clean clip) both go with the
+//   lead-in.
+// - `leadIn`: the geometry and patch colours (record.mjs, LEAD_IN), and
+//   `leadInFrames`, how long it shows.
 //
-// It installs `window.__rec110` with `start()` and `stop()`:
+// It installs `window.__rec110` with `start()` and `stop()`. The timeline:
+// - THE LEAD-IN, page frames 1..leadInFrames: eight DOM squares above the
+//   scanlines, bottom-left, show the frame count mod 256 in binary, and a row
+//   of colour patches above them shows known colours. Main samples the
+//   patches from the paint bitmap, and for a clean clip it writes nothing
+//   until a paint without the magenta patch.
+// - THE GO FRAME, leadInFrames + 1, in one animation-frame callback: the
+//   patches hide (and the marker, for a clean clip), the audio recording
+//   starts, and the fight starts (an unpause ends the countdown inside
+//   BattleScene.tick).
 // - AUDIO: every pooled <audio> element of the game's AudioPlayer is routed
-//   through an AudioContext into a MediaStreamAudioDestinationNode, and
-//   never to `ctx.destination`, so the speakers get nothing. A MediaRecorder
-//   records that stream. Every `play(key)` call is logged with its time.
-// - THE FRAME MARKER: eight DOM squares above the scanlines, bottom-left,
-//   showing the page's animation-frame count mod 256 in binary, plus a ninth
-//   square that is white while the planted tone plays. The analyzer reads
-//   them back from the file's pixels: a skipped count is a dropped frame, a
-//   repeated one a duplicate, and the marker being there at all proves the
-//   DOM layer is in the video.
-// - THE PLANTED TONE: 3150 Hz for 0.5 s into the recording stream, 3 s after
-//   start, so the analyzer has a known sound to find, and the flash square
-//   lets it measure the file's audio-to-video offset.
+//   through an AudioContext into a MediaStreamAudioDestinationNode, and never
+//   to `ctx.destination`, so the speakers get nothing. A MediaRecorder records
+//   that stream. Every `play(key)` call is logged with its time.
+// - CHECK ONLY: the marker keeps counting, so the analyzer reads frame
+//   continuity from the file (a skipped count is a dropped frame, a repeat a
+//   duplicate); a planted 3150 Hz tone plays 3 s after the go frame, and the
+//   ninth square is white while it does, so the analyzer can measure the
+//   file's audio-to-video offset.
 export default async function recordPage(opts = {}) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const waitFor = async (get, ms) => {
@@ -64,10 +75,12 @@ export default async function recordPage(opts = {}) {
   if (typeof game.bus?.on !== 'function') return moved('Game.bus.on');
   if (typeof scene.playback?.resume !== 'function') return moved('BattleScene.playback.resume');
 
+  const check = opts.check === true;
+  const { square: SQUARE, left: LEFT, markerBottom: MARKER_BOTTOM, patchBottom: PATCH_BOTTOM, patches: PATCHES } = opts.leadIn;
+  const LEAD_IN_FRAMES = opts.leadInFrames;
   const TONE_HZ = 3150;
   const TONE_AT_S = 3;
   const TONE_S = 0.5;
-  const SQUARE = 24;
 
   // --- audio ---------------------------------------------------------------
   const ctx = new AudioContext({ sampleRate: 48_000 });
@@ -96,9 +109,14 @@ export default async function recordPage(opts = {}) {
     return originalPlay.call(this, key, scale);
   };
 
-  // --- the frame marker ----------------------------------------------------
-  const marker = document.createElement('div');
-  marker.style.cssText = `position:fixed;left:8px;bottom:8px;z-index:6000;display:flex;pointer-events:none`;
+  // --- the lead-in: the marker and the patches ------------------------------
+  const row = (bottom) => {
+    const el = document.createElement('div');
+    el.style.cssText = `position:fixed;left:${LEFT}px;bottom:${bottom}px;z-index:6000;display:flex;pointer-events:none`;
+    document.body.append(el);
+    return el;
+  };
+  const marker = row(MARKER_BOTTOM);
   const squares = [];
   for (let i = 0; i < 9; i++) {
     const s = document.createElement('div');
@@ -106,10 +124,16 @@ export default async function recordPage(opts = {}) {
     marker.append(s);
     squares.push(s);
   }
-  document.body.append(marker);
+  const patchRow = row(PATCH_BOTTOM);
+  for (const [, hex] of PATCHES) {
+    const s = document.createElement('div');
+    s.style.cssText = `width:${SQUARE}px;height:${SQUARE}px;background:${hex}`;
+    patchRow.append(s);
+  }
 
   const state = {
     frame: 0,
+    goFrame: LEAD_IN_FRAMES + 1,
     startedAt: null,
     startEpoch: null,
     toneFrom: null,
@@ -121,14 +145,40 @@ export default async function recordPage(opts = {}) {
     recorder: null,
     mime: null,
   };
+
+  const go = () => {
+    patchRow.remove();
+    if (!check) marker.remove();
+    state.recorder.start(1000);
+    state.startedAt = performance.now();
+    state.startEpoch = performance.timeOrigin + state.startedAt;
+    if (check) {
+      // The planted tone, scheduled on the audio clock, and its flash window on the page clock.
+      const osc = ctx.createOscillator();
+      const toneGain = ctx.createGain();
+      osc.frequency.value = TONE_HZ;
+      toneGain.gain.value = 0.3;
+      osc.connect(toneGain).connect(dest);
+      const at = ctx.currentTime + TONE_AT_S;
+      osc.start(at);
+      osc.stop(at + TONE_S);
+      state.toneFrom = state.startedAt + TONE_AT_S * 1000;
+      state.toneTo = state.toneFrom + TONE_S * 1000;
+    }
+    if (scene.countdown?.active) scene.playback.resume();
+  };
+
   const paint = (now) => {
     if (!state.running) return;
     state.frame++;
-    const n = state.frame & 255;
-    for (let b = 0; b < 8; b++) squares[b].style.background = n & (1 << (7 - b)) ? '#fff' : '#000';
-    const flashing = state.toneFrom !== null && now >= state.toneFrom && now < state.toneTo;
-    squares[8].style.background = flashing ? '#fff' : '#000';
-    if (flashing) state.flashFrames.push(state.frame);
+    if (state.frame === state.goFrame) go();
+    if (state.frame < state.goFrame || check) {
+      const n = state.frame & 255;
+      for (let b = 0; b < 8; b++) squares[b].style.background = n & (1 << (7 - b)) ? '#fff' : '#000';
+      const flashing = state.toneFrom !== null && now >= state.toneFrom && now < state.toneTo;
+      squares[8].style.background = flashing ? '#fff' : '#000';
+      if (flashing) state.flashFrames.push(state.frame);
+    }
     requestAnimationFrame(paint);
   };
 
@@ -143,29 +193,13 @@ export default async function recordPage(opts = {}) {
       state.mime = ['audio/webm;codecs=opus', 'audio/webm'].find((m) => MediaRecorder.isTypeSupported(m));
       state.recorder = new MediaRecorder(dest.stream, { mimeType: state.mime });
       state.recorder.ondataavailable = (e) => state.chunks.push(e.data);
-      state.recorder.start(1000);
-      state.startedAt = performance.now();
-      state.startEpoch = performance.timeOrigin + state.startedAt;
       state.running = true;
       requestAnimationFrame(paint);
-      // The planted tone, scheduled on the audio clock, and its flash window on the page clock.
-      const osc = ctx.createOscillator();
-      const toneGain = ctx.createGain();
-      osc.frequency.value = TONE_HZ;
-      toneGain.gain.value = 0.3;
-      osc.connect(toneGain).connect(dest);
-      const at = ctx.currentTime + TONE_AT_S;
-      osc.start(at);
-      osc.stop(at + TONE_S);
-      state.toneFrom = state.startedAt + TONE_AT_S * 1000;
-      state.toneTo = state.toneFrom + TONE_S * 1000;
-      // Fight now: an unpause ends the countdown inside BattleScene.tick.
-      if (scene.countdown?.active) scene.playback.resume();
       return {
-        startEpoch: state.startEpoch,
         pageSkewMs: performance.timeOrigin + performance.now() - Date.now(),
         ctxState: ctx.state,
         mime: state.mime,
+        goFrame: state.goFrame,
       };
     },
     async stop() {
@@ -182,10 +216,11 @@ export default async function recordPage(opts = {}) {
         mime: state.mime,
         startEpoch: state.startEpoch,
         frames: state.frame,
+        goFrame: state.goFrame,
         cues: cues
           .filter((c) => c.t >= state.startedAt)
           .map((c) => ({ key: c.key, s: Math.round(c.t - state.startedAt) / 1000 })),
-        tone: { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S },
+        tone: check ? { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S } : null,
         flashFrames: [state.flashFrames[0] ?? null, state.flashFrames[state.flashFrames.length - 1] ?? null],
         rejections,
         ctxState: ctx.state,

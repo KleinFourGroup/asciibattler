@@ -764,3 +764,57 @@ in the temp dir.
 `dist/` after 111a: `7424d4b4…` over 32 files, identical (the only `src/`
 change is a comment beside `pools`). ESLint is clean on `shell/electron`
 and `src/audio`.
+
+### 111b — the clean clip (2026-09-30) — read `none` ✅
+
+**Step zero: the colours (a hypothesis from the audit, confirmed).** Ten
+known sRGB patches in synthetic BGRA frames, through the recorder's own
+ffmpeg arguments, decoded as players decode untagged HD video (BT.709,
+limited range): the team green `#33FF00` read `37,219,0` (36 levels off),
+magenta 37, purple 29, cyan 23, red 19. ffmpeg's own default decode
+(BT.601 when untagged) read them within 3, which is why the spike's clip
+looked right in any check that used ffmpeg to read it back. Converting
+with an explicit BT.709 matrix brings every patch within 2 under both
+decodes; `setparams` on the frames is what gets the primaries and the
+transfer tagged as well (the encoder options alone tagged only the matrix
+and the range).
+
+**Built.** The lead-in: about half a second (`max(10, fps/2)` page frames)
+of the frame marker and a row of nine colour patches, then the go frame,
+one animation-frame callback that hides them, starts the audio recording
+and releases the fight. A clean clip is gated in main: nothing is written
+until a paint without the magenta patch, so the file opens on the go
+frame, and neither the lead-in nor the pre-turn screen before it reaches
+the file. `--check` records the analyzer's twin: the lead-in kept, the
+marker all through, the planted tone. The encode is BT.709, all four
+fields tagged. The analyzer reads both kinds and decodes the colours with
+the file's matrix tag, or BT.709 when there is none.
+
+**The audio's placement.** Placed by §110d's convention (the audio one
+frame before the frame showing its callback's change), the planted tone
+read 34 ms early, not 18: the spike started the audio just before a
+callback, and the go frame starts it inside one. Placed on the go frame
+itself, it reads −18 ms again, and a clean clip needs no audio trim.
+
+| corridors, 1080p60 | the check twin | the clean clip |
+|---|---|---|
+| frames | 0 of 4036 missing | 4012, lead-in frames in the file: 0 |
+| cues heard | 128 of 128, none late | 128 of 128, none late |
+| audio to video (the tone) | −18 ms | (no tone) |
+| colours, decoded as a player | within 2 (tags bt709 ×3) | the same encode |
+| colours in Chromium's own paint | exact, all nine | — |
+| backlog peak | 191 MB | 75 MB |
+
+**Frame-exact, two readings.** In the check twin the patches show on
+frames 2–46 and the marker reads the go count on frame 47, the first
+frame without them; the clean clip's gate held exactly 47 paints. The
+lead-in detector's known positive is the check twin: 4022 marker-like
+frames and 45 patch frames, against 0 and 0 in the clean clip.
+
+**What the clean clip opens on** (viewed): the board, the HUD and the
+parked countdown box ("BATTLE BEGINS IN 5"), which fades out over the
+first 12 frames (0.2 s: the box's mean brightness climbs from 13 to 54 as
+the board shows through). That is the game's own Fight-now transition, so
+it stays; the user's read at 111f can move the cut past it.
+
+`dist/` untouched (no `src/` change in 111b).

@@ -24,6 +24,8 @@
 //   --record=<base>   record: the output path without extension
 //   --enter           record: enter the run's root battle (a seed opened by run
 //                     dials alone; a board fixture enters its own)
+//   --check           record: the analyzer's twin (the marker all through, the
+//                     planted tone, the lead-in kept) instead of a clean clip
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
 //   --tail-seconds=<n>    record: keep recording this long after it ends (2)
 //   --out=<file>      also write the probe's JSON here
@@ -35,7 +37,7 @@ import { app, BrowserWindow, ipcMain, net, protocol } from 'electron';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { firstMarkerFrame, mux, startVideo } from './record.mjs';
+import { LEAD_IN, markerFrame, mux, startVideo } from './record.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -214,23 +216,30 @@ const probes = {
     return { ok: result?.ok !== false, result };
   },
 
-  /** §110d: record the battle to --record=<base> (.video.mp4, .audio.webm,
-   *  .mp4 muxed, .json sidecar). Offscreen only: paints are the video. The
-   *  page side (probes/record-page.js) routes the game's audio into its own
-   *  recording and away from the speakers, and draws the frame marker. */
+  /** Record the battle to --record=<base> (.video.mp4, .audio.webm, .mp4
+   *  muxed, .json sidecar). Offscreen only: paints are the video. The page
+   *  side (probes/record-page.js) routes the game's audio into its own
+   *  recording and away from the speakers, and draws the lead-in; a clean
+   *  clip starts on the frame after it, a --check twin keeps it all. */
   async record(win) {
     if (windowMode !== 'offscreen') return { ok: false, result: 'record needs --window=offscreen' };
     const base = resolve(flag('record') ?? 'recording');
+    const check = process.argv.includes('--check');
+    const leadInFrames = Math.max(10, Math.round(frameRate * 0.5));
     const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'), {
       enter: process.argv.includes('--enter'),
+      check,
+      leadIn: LEAD_IN,
+      leadInFrames,
     });
     if (ready?.ok !== true) return { ok: false, result: { ready } };
 
-    const video = startVideo(win, { file: `${base}.video.mp4`, fps: frameRate, width: contentW, height: contentH });
+    const video = startVideo(win, { file: `${base}.video.mp4`, fps: frameRate, width: contentW, height: contentH, gate: !check });
     const audible = [];
     const poll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
-    const firstFrameBy = Date.now() + 5000;
-    while (video.stats.frames === 0 && Date.now() < firstFrameBy) await sleep(20);
+    // Paints, not written frames: a clean clip writes none until the lead-in is over.
+    const firstPaintBy = Date.now() + 5000;
+    while (video.stats.paints === 0 && Date.now() < firstPaintBy) await sleep(20);
     const started = await win.webContents.executeJavaScript('window.__rec110.start()');
 
     const maxMs = Number(flag('record-seconds') ?? 90) * 1000;
@@ -245,17 +254,26 @@ const probes = {
     clearInterval(poll);
 
     writeFileSync(`${base}.audio.webm`, Buffer.from(page.audioBase64, 'base64'));
-    // Align by content (the marker's first frame), not by the two processes' clocks.
+    // Align by content, not by the two processes' clocks: the audio starts in
+    // the go frame's callback, so it starts on the video frame showing that
+    // callback's change. A check twin finds that frame by its marker count; a
+    // clean clip opens on it (the gate). (§110d started the audio just before
+    // a callback and placed it one frame earlier; placing this one the same
+    // way read the tone 34 ms early instead of 18, §111b.)
     const clockOffsetS = (page.startEpoch - video.stats.firstEpoch) / 1000;
-    const markerFrame = firstMarkerFrame(`${base}.video.mp4`);
-    const offsetS = markerFrame > 0 ? (markerFrame - 1) / frameRate : clockOffsetS;
+    const goVideoFrame = check ? markerFrame(`${base}.video.mp4`, page.goFrame, contentH) : 0;
+    const offsetS = goVideoFrame >= 0 ? goVideoFrame / frameRate : clockOffsetS;
     const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS });
     const sidecar = {
+      mode: check ? 'check' : 'clean',
       fps: frameRate,
       size: [contentW, contentH],
+      leadIn: { ...LEAD_IN, frames: leadInFrames },
       offsetS,
+      audioTrimS: Math.max(0, -offsetS),
+      startEpoch: page.startEpoch,
       clockOffsetS,
-      markerFrame,
+      goVideoFrame,
       skewMs: { main: video.stats.mainSkewMs, page: started.pageSkewMs },
       wallSeconds,
       started,
@@ -276,6 +294,7 @@ const probes = {
     // Every battle plays cues, so none logged means the play() wrap caught
     // nothing (a moved seam) and the file's sound can't be checked.
     const problems = [
+      !videoResult.gateOpened && 'the lead-in never showed and went, so no frame was written',
       videoResult.code !== 0 && 'ffmpeg (video) failed',
       muxed.code !== 0 && 'ffmpeg (mux) failed',
       cues.length === 0 && 'no cues logged: the AudioPlayer.play wrap caught nothing (seam moved?)',

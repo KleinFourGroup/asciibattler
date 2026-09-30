@@ -21,3 +21,6 @@ scratch/
 # Outward-facing scratchpad; devs cloning the repo don't need it.
 devlog/
 tests/gauntlet/output/
+
+# Recorder clips (npm run record, §111): video files, never committed.
+clips/

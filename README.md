@@ -11,6 +11,18 @@ npm install
 npm run dev      # serves at http://localhost:5173
 ```
 
+## Recording clips
+
+`npm run record -- --board=corridors` (a board-explorer fixture) or
+`npm run record -- --seed=12` records a battle to `clips/` as an `.mp4`,
+from an offscreen window that never takes focus and plays nothing aloud.
+It is a development tool (`shell/electron/record-cli.mjs` lists its
+options) with one external requirement: **ffmpeg** on the PATH, built with
+NVENC, and an NVIDIA GPU to run it. On Windows, `winget install
+Gyan.FFmpeg` provides both ffmpeg and ffprobe; open a new terminal
+afterwards. The recorder checks for them at start and says what is
+missing.
+
 ## Docs
 
 - **AI coding agents:** start at **[AGENTS.md](AGENTS.md)** — it orients you cold and points to everything else.

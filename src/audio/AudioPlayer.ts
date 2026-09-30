@@ -209,6 +209,10 @@ const DEFAULT_MASTER_VOLUME = 0.5;
 export class AudioPlayer {
   private masterVolume = DEFAULT_MASTER_VOLUME;
   private muted = false;
+  // The recorder reaches `pools` and wraps `play` from outside
+  // (shell/electron/probes/record-page.js) to route every element into its
+  // recording; AudioPlayer.test.ts pins that shape. A sound played any other
+  // way would be missing from recordings.
   private readonly pools: Record<SoundKey, HTMLAudioElement[]>;
   private readonly cursors: Record<SoundKey, number>;
 

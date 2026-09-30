@@ -1,6 +1,14 @@
-// The recorder's page side (§110d, a first draft for the recorder phase). The
-// `record` probe runs this in the page before it starts the video pipe; it
-// reaches into the live game by the dev convention, changing no source file.
+// The recorder's page side (§110d, the recorder phase §111). The `record`
+// probe runs this in the page before it starts the video pipe; it reaches into
+// the live game by the dev convention, changing no source file, so the same
+// script records any development-mode build, older commits included (the
+// "before" of a before/after pair). Every name it reaches is checked first,
+// and a moved one fails the recording by name (`seam moved: ...`);
+// src/audio/AudioPlayer.test.ts pins the AudioPlayer half on every npm test.
+//
+// Options (from the probe): `enter` makes the two dispatches a player's two
+// clicks would (the root node, then Fight), for a seed opened by run dials
+// alone; a board fixture enters its battle itself (src/dev/boardPanel/boot.ts).
 //
 // It installs `window.__rec110` with `start()` and `stop()`:
 // - AUDIO: every pooled <audio> element of the game's AudioPlayer is routed
@@ -16,13 +24,45 @@
 // - THE PLANTED TONE: 3150 Hz for 0.5 s into the recording stream, 3 s after
 //   start, so the analyzer has a known sound to find, and the flash square
 //   lets it measure the file's audio-to-video offset.
-export default async function recordPage() {
+export default async function recordPage(opts = {}) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const until = Date.now() + 30_000;
-  while (!window.__game?.activeScene?.world && Date.now() < until) await sleep(200);
-  const game = window.__game;
-  const scene = game?.activeScene;
-  if (!scene?.world) return { ok: false, error: 'no battle within 30 s' };
+  const waitFor = async (get, ms) => {
+    const until = Date.now() + ms;
+    while (!get() && Date.now() < until) await sleep(200);
+    return get();
+  };
+  const moved = (name) => ({ ok: false, error: `seam moved: ${name}` });
+
+  const game = await waitFor(() => window.__game, 20_000);
+  if (!game) return { ok: false, error: 'no window.__game within 20 s: is this a development-mode build?' };
+
+  if (opts.enter) {
+    const rootId = await waitFor(() => game.run?.nodeMap?.rootId, 20_000);
+    if (typeof rootId !== 'number') return moved('Game.run.nodeMap.rootId (or no run at boot: is character= in the URL?)');
+    if (typeof game.dispatch !== 'function') return moved('Game.dispatch');
+    game.dispatch({ kind: 'enterNode', nodeId: rootId });
+    game.dispatch({ kind: 'advanceTurn' });
+  }
+
+  const scene = await waitFor(() => (game.activeScene?.world ? game.activeScene : null), 30_000);
+  if (!scene) {
+    return {
+      ok: false,
+      error: opts.enter
+        ? 'the root node did not open a battle within 30 s (firstNode=elite in the URL?)'
+        : 'no battle within 30 s (is the board one of the explorer fixtures, src/dev/boardPanel/fixtures.ts?)',
+    };
+  }
+
+  // Every other name this script reaches, checked before anything is wrapped.
+  const player = game.audio;
+  if (!player || typeof player.play !== 'function') return moved('Game.audio / AudioPlayer.play');
+  const pools = player.pools && typeof player.pools === 'object' ? Object.values(player.pools) : [];
+  if (pools.length === 0 || !pools.every((p) => Array.isArray(p) && p.length > 0 && p.every((el) => el instanceof HTMLAudioElement))) {
+    return moved('AudioPlayer.pools (a record of <audio> arrays)');
+  }
+  if (typeof game.bus?.on !== 'function') return moved('Game.bus.on');
+  if (typeof scene.playback?.resume !== 'function') return moved('BattleScene.playback.resume');
 
   const TONE_HZ = 3150;
   const TONE_AT_S = 3;
@@ -34,10 +74,9 @@ export default async function recordPage() {
   const dest = ctx.createMediaStreamDestination();
   const bus = ctx.createGain();
   bus.connect(dest);
-  const player = game.audio;
   let elements = 0;
   const rejections = [];
-  for (const pool of Object.values(player.pools)) {
+  for (const pool of pools) {
     for (const el of pool) {
       ctx.createMediaElementSource(el).connect(bus);
       // AudioPlayer.play swallows a refused play(); count refusals here.

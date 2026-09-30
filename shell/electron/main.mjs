@@ -22,6 +22,8 @@
 //   --value=<text>    what store-write writes
 //   --script=<file>   what the script probe runs in the page
 //   --record=<base>   record: the output path without extension
+//   --enter           record: enter the run's root battle (a seed opened by run
+//                     dials alone; a board fixture enters its own)
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
 //   --tail-seconds=<n>    record: keep recording this long after it ends (2)
 //   --out=<file>      also write the probe's JSON here
@@ -219,7 +221,9 @@ const probes = {
   async record(win) {
     if (windowMode !== 'offscreen') return { ok: false, result: 'record needs --window=offscreen' };
     const base = resolve(flag('record') ?? 'recording');
-    const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'));
+    const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'), {
+      enter: process.argv.includes('--enter'),
+    });
     if (ready?.ok !== true) return { ok: false, result: { ready } };
 
     const video = startVideo(win, { file: `${base}.video.mp4`, fps: frameRate, width: contentW, height: contentH });
@@ -269,15 +273,23 @@ const probes = {
     };
     writeFileSync(`${base}.json`, `${JSON.stringify(sidecar, null, 2)}\n`);
     const { cues, ...brief } = sidecar;
-    return { ok: videoResult.code === 0 && muxed.code === 0, result: { ...brief, cueCount: cues.length } };
+    // Every battle plays cues, so none logged means the play() wrap caught
+    // nothing (a moved seam) and the file's sound can't be checked.
+    const problems = [
+      videoResult.code !== 0 && 'ffmpeg (video) failed',
+      muxed.code !== 0 && 'ffmpeg (mux) failed',
+      cues.length === 0 && 'no cues logged: the AudioPlayer.play wrap caught nothing (seam moved?)',
+    ].filter(Boolean);
+    return { ok: problems.length === 0, result: { ...brief, cueCount: cues.length, problems } };
   },
 };
 
 /** Run a page-script file: one `export default async function`, so it lints
- *  as a module; the export is stripped and the function called in the page. */
-function runPageScript(win, file) {
+ *  as a module; the export is stripped and the function called in the page
+ *  with `opts` (JSON) as its argument. */
+function runPageScript(win, file, opts = {}) {
   const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
-  return win.webContents.executeJavaScript(`(${source})()`);
+  return win.webContents.executeJavaScript(`(${source})(${JSON.stringify(opts)})`);
 }
 
 function report(out, code) {

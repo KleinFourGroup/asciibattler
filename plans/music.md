@@ -72,6 +72,14 @@ the playback substrate they require.
      dependency + its license.
    - No recommendation locked here — this is a design-round call at
      build time, with a listening session as its exit criterion.
+6. **The recorder must hear it** (added at §111a). `npm run record`
+   routes the game's sound into its recordings by reaching into
+   `AudioPlayer`'s `<audio>` pools from outside
+   (`shell/electron/probes/record-page.js`); a Web Audio `MusicPlayer`
+   is outside them, so music would be missing from every clip with no
+   error. The music phase routes its bus into the recorder's stream
+   (the page script's `AudioContext`, or the MusicPlayer's own output
+   node) and extends the seam pin in `src/audio/AudioPlayer.test.ts`.
 
 **Cost sketch:** MusicPlayer + bus split + state machine ≈ one small
 phase (render/UI-only, no snapshot risk); assets are a separate

@@ -714,3 +714,53 @@ read at 111f), one `stop` (111f). The user's calls:
   finishes and pauses for the meter at the first step boundary an hour
   after the sign (09:45), or mid-step if one step runs an hour. The clock
   overcounts context during real-time recordings, which errs early.
+
+### 111a — the front door (2026-09-30) — read `none` ✅
+
+**Step zero.** A development-mode build of the working tree
+(`NODE_ENV=development`, `vite build --mode development`) takes 338 ms by
+Vite's count, so the recorder builds fresh every time and keeps no cache.
+The spike's record probe, unchanged, at HEAD on corridors at 1080p60: 0 of
+4012 slots missing, 128 of 128 cues on time, audio to video −18 ms, 0 of
+261 audible samples, the backlog peaking at 207 MB. The path works before
+anything changes.
+
+**Built.** `npm run record -- --board=<id>` or `--seed=<n> [--dials=…]`
+(`shell/electron/record-cli.mjs`): ffmpeg, its NVENC encoder and ffprobe
+checked at start with the fix named; the build made into a temp dir and
+checked for its `boardPanel` chunk (only a DEV build has one); a fresh
+profile per recording, deleted after with the build; the page muted; the
+panel hidden; a seed's root battle entered by the page script's two
+dispatches (`--enter`) under the fixtures' character and roster; the clip
+and a sidecar into `clips/` (never overwritten: a taken name gets `-2`),
+then the analyzer run on the delivered file. The page script checks every
+name it reaches and fails by name; a battle that logs no cues fails the
+recording. The music plan gained the requirement that music route into the
+recorder (`plans/music.md` item 6), since its planned Web Audio player
+sits outside `pools`; that is its home rather than TODO.
+
+| through the front door | seconds | slots missing | cues heard | audio to video | backlog peak |
+|---|---|---|---|---|---|
+| `--seed=12` | 45.9 | 0 of 2733 | 107 of 107 | −18 ms | 257 MB |
+| `--board=corridors` | 67.3 | 0 of 4016 | 128 of 128 | −18 ms | 191 MB |
+
+A frame of the seed clip at 10 s shows the battle with the panel hidden
+(and the marker, until 111b). No `asciibattler-rec-*` directory was left
+in the temp dir.
+
+**The controls.**
+- The pin (`AudioPlayer.test.ts`, "the recorder's seam"): with `pools`
+  renamed, the test fails and `tsc` reports `Property 'pools' does not
+  exist`; restored, it passes.
+- The record-time check, through the `script` probe on the live corridors
+  fixture: unplanted, it passes with 100 elements (25 keys × 4); with
+  `pools` removed it fails with `seam moved: AudioPlayer.pools`, and with
+  `play` removed, `seam moved: Game.audio / AudioPlayer.play`.
+- `--board=nosuch` fails with the fixtures hint, exit 1.
+- **Not controlled:** the "no cues logged" failure. It is one filter in
+  main, and planting a battle with no cues needs a hook the recorder
+  doesn't have.
+
+`dist/` after 111a: `7424d4b4…` over 32 files, identical (the only `src/`
+change is a comment beside `pools`). ESLint is clean on `shell/electron`
+and `src/audio`.

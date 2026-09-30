@@ -26,10 +26,13 @@
 //                     dials alone; a board fixture enters its own)
 //   --check           record: the analyzer's twin (the marker all through, the
 //                     planted tone, the lead-in kept) instead of a clean clip
+//   --countdown=full|skip  record: open on the whole pre-battle countdown
+//                     (full, the default) or on the fight (skip)
 //   --backlog-cap-mb=<n>  record: frames waiting for ffmpeg above this are
 //                     dropped and counted (record.mjs, BACKLOG_CAP_MB)
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
-//   --tail-seconds=<n>    record: keep recording this long after it ends (2)
+//   --tail-seconds=<n>    record: the fallback, if no next screen cuts the
+//                     clip: stop this long after the battle ends (5)
 //   --out=<file>      also write the probe's JSON here
 //   --shot=<file>     boot: save a PNG of the page
 //
@@ -42,6 +45,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { LEAD_IN, markerFrame, mux, startVideo } from './record.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * The recording's sound is placed this much later than its measured start.
+ * In a recording the sound sits 0-15 ms ahead of its picture (§111e), where
+ * live play puts it after; an A/B by ear heard no difference from 0 to
+ * 100 ms (§111f), so the sound goes slightly after its picture, as in play.
+ */
+const SOUND_DELAY_MS = 25;
 
 function flag(name) {
   const prefix = `--${name}=`;
@@ -222,7 +233,8 @@ const probes = {
    *  muxed, .json sidecar). Offscreen only: paints are the video. The page
    *  side (probes/record-page.js) routes the game's audio into its own
    *  recording and away from the speakers, and draws the lead-in; a clean
-   *  clip starts on the frame after it, a --check twin keeps it all. */
+   *  clip starts on the frame after it, a --check twin keeps it all. Either
+   *  ends before the paint that shows the next screen. */
   async record(win) {
     if (windowMode !== 'offscreen') return { ok: false, result: 'record needs --window=offscreen' };
     const base = resolve(flag('record') ?? 'recording');
@@ -231,6 +243,7 @@ const probes = {
     const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'), {
       enter: process.argv.includes('--enter'),
       check,
+      countdown: flag('countdown') ?? 'full',
       leadIn: LEAD_IN,
       leadInFrames,
     });
@@ -252,15 +265,28 @@ const probes = {
     while (video.stats.paints === 0 && Date.now() < firstPaintBy) await sleep(20);
     const started = await win.webContents.executeJavaScript('window.__rec110.start()');
 
+    // Until the cut (the next screen's first paint), or the fallback after
+    // the battle ends, or the time limit.
     const maxMs = Number(flag('record-seconds') ?? 90) * 1000;
+    const tailMs = Number(flag('tail-seconds') ?? 5) * 1000;
     const t0 = Date.now();
-    while (Date.now() - t0 < maxMs && !(await win.webContents.executeJavaScript('window.__rec110.state.ended'))) {
-      await sleep(250);
+    let endedAt = null;
+    let endedBy = 'the time limit';
+    while (Date.now() - t0 < maxMs) {
+      if (video.stats.cut !== null) {
+        endedBy = 'the next screen';
+        break;
+      }
+      if (endedAt === null && (await win.webContents.executeJavaScript('window.__rec110.state.ended'))) endedAt = Date.now();
+      if (endedAt !== null && Date.now() - endedAt >= tailMs) {
+        endedBy = 'the fallback';
+        break;
+      }
+      await sleep(50);
     }
-    await sleep(Number(flag('tail-seconds') ?? 2) * 1000);
+    const videoResult = await video.stop();
     const page = await win.webContents.executeJavaScript('window.__rec110.stop()');
     const wallSeconds = (Date.now() - t0) / 1000;
-    const videoResult = await video.stop();
     clearInterval(poll);
 
     writeFileSync(`${base}.audio.webm`, Buffer.from(page.audioBase64, 'base64'));
@@ -272,15 +298,37 @@ const probes = {
     // way read the tone 34 ms early instead of 18, §111b.)
     const clockOffsetS = (page.startEpoch - video.stats.firstEpoch) / 1000;
     const goVideoFrame = check ? markerFrame(`${base}.video.mp4`, page.goFrame, contentH) : 0;
-    const offsetS = goVideoFrame >= 0 ? goVideoFrame / frameRate : clockOffsetS;
-    const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS });
+    const offsetS = (goVideoFrame >= 0 ? goVideoFrame / frameRate : clockOffsetS) + SOUND_DELAY_MS / 1000;
+    const durationS = videoResult.frames / frameRate;
+    const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS, durationS });
+    const tl = timeline(page, videoResult, goVideoFrame);
+    // A fault leaves a clip worth looking at, so it is delivered and failed by
+    // the front door, like dropped frames. Page frames that never painted are
+    // dropped frames upstream of main, on a busy machine (a planted full-speed
+    // decode lost 322 in one battle, an idle machine none). The cut has two
+    // halves, the page raising the patch at the swap and main stopping at the
+    // paint that shows it; one without the other is a fault (game content
+    // that looks like the patch, or a swap main never saw).
+    const faults = [
+      tl !== null && tl.framesShort > 0 && `the file is ${tl.framesShort} frames short of the page (a busy machine?): its sound falls ${tl.driftMs} ms behind its picture by the cut`,
+      videoResult.cutAtFrame !== null && page.cut === null && 'the file was cut at a magenta paint the page did not raise',
+      endedBy === 'the fallback' && `no cut within ${tailMs / 1000} s of the battle's end; the fallback stopped the recording`,
+    ].filter(Boolean);
     const sidecar = {
       mode: check ? 'check' : 'clean',
+      opening: page.opening,
+      countdownFrom: page.countdownFrom,
       fps: frameRate,
       size: [contentW, contentH],
       leadIn: { ...LEAD_IN, frames: leadInFrames },
+      soundDelayMs: SOUND_DELAY_MS,
       offsetS,
       audioTrimS: Math.max(0, -offsetS),
+      endedBy,
+      cut: page.cut === null && videoResult.cutAtFrame === null ? null : { page: page.cut, atFrame: videoResult.cutAtFrame },
+      timeline: tl,
+      faults,
+      durationS,
       startEpoch: page.startEpoch,
       clockOffsetS,
       goVideoFrame,
@@ -291,6 +339,8 @@ const probes = {
       flashFrames: page.flashFrames,
       tone: page.tone,
       cues: page.cues,
+      cuesAfterCut: page.cuesAfterCut,
+      boxShownAtGo: page.boxShownAtGo,
       rejections: page.rejections,
       ctxState: page.ctxState,
       battleEnded: page.ended,
@@ -312,6 +362,36 @@ const probes = {
     return { ok: problems.length === 0, result: { ...brief, cueCount: cues.length, problems } };
   },
 };
+
+/**
+ * Does the file's picture keep real time? The file plays frame n at n / fps,
+ * and the sound in real time; the page's frame clock (the rAF times of the go
+ * and cut frames) says when the cut frame really came. `driftMs` is how far
+ * the picture has run ahead of its sound by the cut, beyond the fixed delay.
+ * `framesShort` is how many frames the file is short of the page between the
+ * go frame and the cut: page frames that never reached main as a paint, each
+ * a frame of time the file leaves out, less paints that repeated a page frame
+ * (a hitch). A check twin's marker reads the same count from the file (its
+ * missing frames less its repeats). Both sides count from the go frame, the
+ * file's frame `goVideoFrame` (0 in a clean clip; a check twin keeps what
+ * came before it). Null without a cut, whose frame is the only one both
+ * sides know.
+ */
+function timeline(page, videoResult, goVideoFrame) {
+  if (page.cut === null || videoResult.cutAtFrame === null || goVideoFrame < 0) return null;
+  const pageFrames = page.cut.pageFrame - page.goFrame;
+  const fileFrames = videoResult.cutAtFrame - goVideoFrame;
+  const fileS = fileFrames / frameRate;
+  return {
+    pageFrames,
+    fileFrames,
+    framesShort: pageFrames - fileFrames,
+    pageS: page.cut.s,
+    fileS: Math.round(fileS * 1000) / 1000,
+    pageFps: Math.round((pageFrames / page.cut.s) * 1000) / 1000,
+    driftMs: Math.round((page.cut.s - fileS) * 1000),
+  };
+}
 
 /** Run a page-script file: one `export default async function`, so it lints
  *  as a module; the export is stripped and the function called in the page

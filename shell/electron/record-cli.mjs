@@ -8,10 +8,14 @@
 //                                                a before/after pair
 //
 // Options:
+//   --countdown=full|skip  how the clip opens: on the whole pre-battle
+//                      countdown, playing through the game's own handover into
+//                      the fight (full, the default), or on the fight's first
+//                      frame with no countdown (skip, for clips joined together)
 //   --fps=<n>          frames per second (default 60; 30 for long recordings)
 //   --size=<w>x<h>     the page's size in pixels (default 1920x1080)
 //   --max-seconds=<n>  stop by then if the battle has not ended (default 90)
-//   --name=<name>      the clip's file name (default <input>-<commit>)
+//   --name=<name>      the clip's file name (default <input>-<commit>[-skip])
 //   --check            record the analyzer's twin instead of a clean clip
 //   --keep             keep the temporary builds, profiles and intermediates
 //   --backlog-cap-mb=<n>  a control: frames waiting for ffmpeg above this are
@@ -19,9 +23,11 @@
 //
 // Every recording is made from a development-mode build (built fresh, about
 // a second), in a fresh Electron profile that is deleted afterwards, with the
-// page muted and the board explorer's panel hidden. A clean clip opens on the
-// fight's first frame: a short lead-in (a frame marker and colour patches) is
-// drawn, then left out of the file. A --check twin keeps the lead-in and the
+// page muted and the board explorer's panel hidden. A clean clip opens on its
+// opening's first frame: a short lead-in (a frame marker and colour patches) is
+// drawn, then left out of the file. It ends on the battle's last frame before
+// the next screen, its sound placed 25 ms after its picture (main.mjs,
+// SOUND_DELAY_MS). A --check twin keeps the lead-in and the
 // marker all through and plants a tone, so the analyzer can read frame
 // continuity, the audio offset and the colours. The clip and a .json sidecar
 // land in clips/ (gitignored); the analyzer (probes/analyze-recording.mjs)
@@ -156,6 +162,7 @@ async function recordOne({ dist, base, profile, query, opts }) {
     `--timeout=${(opts.maxSeconds + 60) * 1000}`,
     `--profile=${profile}`,
     '--muted',
+    `--countdown=${opts.countdown}`,
     ...(opts.enter ? ['--enter'] : []),
     ...(opts.check ? ['--check'] : []),
     ...(opts.cap !== undefined ? [`--backlog-cap-mb=${opts.cap}`] : []),
@@ -185,15 +192,22 @@ function verdict(probe, analysis, check) {
   const c2 = analysis?.check2;
   const cuesOk = c2 !== undefined && c2.cuesHeard === c2.gameCues;
   const dropped = probe.result.video.dropped;
+  const faults = probe.result.faults;
   const good =
-    dropped === 0 && (check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk);
+    dropped === 0 &&
+    faults.length === 0 &&
+    (check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk);
   const shape = check
     ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms`
     : `${analysis?.container?.video.frames ?? '?'} frames, lead-in frames in the file ${(analysis?.leadIn?.markerLikeFrames ?? 0) + (analysis?.leadIn?.patchFrames ?? 0)}`;
+  const { opening, countdownFrom, endedBy, timeline } = probe.result;
   const line =
-    `${analysis?.container?.seconds.toFixed(1) ?? '?'} s · ${shape} · ` +
+    `${analysis?.container?.seconds.toFixed(1) ?? '?'} s · opens on ${opening === 'full' ? `the countdown at ${countdownFrom}` : 'the fight'}, ` +
+    `ends at ${endedBy} · ${shape} · ` +
+    `picture ahead of its sound by ${timeline?.driftMs ?? '?'} ms at the cut (page ${timeline?.pageFps ?? '?'} fps, the file ${timeline?.framesShort ?? '?'} frames short) · ` +
     `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · ` +
-    `frames dropped ${dropped} · backlog peak ${probe.result.video.backlogMaxMB} of ${probe.result.video.backlogCapMB} MB`;
+    `frames dropped ${dropped} · backlog peak ${probe.result.video.backlogMaxMB} of ${probe.result.video.backlogCapMB} MB` +
+    faults.map((f) => `\n  FAULT: ${f}`).join('');
   return { good, line };
 }
 
@@ -254,7 +268,11 @@ async function main(work, trees) {
   const size = flag('size') ?? '1920x1080';
   if (!/^\d+x\d+$/.test(size)) stop(`--size=${size} is not <width>x<height>`);
   const check = process.argv.includes('--check');
-  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? 90), enter: seed !== undefined, check, cap: flag('backlog-cap-mb') };
+  const countdown = flag('countdown') ?? 'full';
+  if (countdown !== 'full' && countdown !== 'skip') stop(`--countdown=${countdown} must be full or skip`);
+  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? 90), enter: seed !== undefined, check, countdown, cap: flag('backlog-cap-mb') };
+  // The file name says which opening, when it is not the default.
+  const suffix = `${countdown === 'skip' ? '-skip' : ''}${check ? '-check' : ''}`;
 
   let query;
   let inputName;
@@ -291,7 +309,7 @@ async function main(work, trees) {
     console.log(`record: recording ${inputName} (${tree.stamp})${check ? ', check twin' : ''} at ${size}, ${fps} fps, in the background; the battle plays in real time`);
     const probe = await recordOne({ dist, base, profile: join(work, `profile-${label}`), query, opts });
     const sidecar = JSON.parse(readFileSync(`${base}.json`, 'utf8'));
-    sidecar.recorder = { input, query, stamp: tree.stamp, ref: tree.ref, fps, size, profile: 'fresh', check };
+    sidecar.recorder = { input, query, stamp: tree.stamp, ref: tree.ref, fps, size, profile: 'fresh', check, countdown };
     writeFileSync(`${base}.json`, `${JSON.stringify(sidecar, null, 2)}\n`);
     const analysis = analyze(base);
     sidecar.analysis = analysis;
@@ -301,7 +319,7 @@ async function main(work, trees) {
 
   if (beforeRef === undefined) {
     const one = await side('clip', undefined);
-    const name = uniqueName(flag('name') ?? `${inputName}-${one.tree.stamp}${check ? '-check' : ''}`);
+    const name = uniqueName(flag('name') ?? `${inputName}-${one.tree.stamp}${suffix}`);
     copyFileSync(`${one.base}.mp4`, join(clipsDir, `${name}.mp4`));
     copyFileSync(`${one.base}.json`, join(clipsDir, `${name}.json`));
     console.log(`record: ${one.good ? 'OK' : 'CHECK FAILED'}  ${join(clipsDir, `${name}.mp4`)}\n  ${one.line}`);
@@ -310,7 +328,7 @@ async function main(work, trees) {
 
   const before = await side('before', beforeRef);
   const after = await side('after', afterRef);
-  const name = uniqueName(flag('name') ?? `${inputName}-${before.tree.stamp}-vs-${after.tree.stamp}${check ? '-check' : ''}`);
+  const name = uniqueName(flag('name') ?? `${inputName}-${before.tree.stamp}-vs-${after.tree.stamp}${suffix}`);
   const labels = {
     before: `BEFORE  ${before.tree.ref} = ${before.tree.stamp}`,
     after: `AFTER  ${after.tree.ref} = ${after.tree.stamp}`,

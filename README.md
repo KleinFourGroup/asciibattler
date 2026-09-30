@@ -17,7 +17,10 @@ npm run dev      # serves at http://localhost:5173
 `npm run record -- --seed=12` records a battle to `clips/` as an `.mp4`,
 from an offscreen window that never takes focus and plays nothing aloud.
 Add `--before=<commit>` for a before/after pair: that commit against the
-working tree (or `--after=<commit>`), side by side.
+working tree (or `--after=<commit>`), side by side. A clip opens on the
+pre-battle countdown and plays through into the fight; `--countdown=skip`
+opens on the fight's first frame instead, for clips joined together. It
+ends on the battle's last frame before the next screen.
 It is a development tool (`shell/electron/record-cli.mjs` lists its
 options) with one external requirement: **ffmpeg** on the PATH, built with
 NVENC, and an NVIDIA GPU to run it. On Windows, `winget install

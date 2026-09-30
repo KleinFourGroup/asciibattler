@@ -10,7 +10,9 @@
 //   frames still showing the lead-in or the marker.
 // - THE GAME'S SOUND: each logged play() is looked up in the file's audio; a
 //   cue is heard if the 150 ms after it reaches -45 dBFS, late if only the
-//   400 ms after it does.
+//   400 ms after it does. The sidecar's cues are those played before the
+//   swap to the next screen, where the clip is cut; one placed past the
+//   file's last frame anyway is counted apart (`cuesPastEnd`).
 // A check twin (`--check`), which keeps the marker all through:
 // - FRAMES: the marker's count per frame; over the span where it moves, a
 //   step of 1 is a good frame, 0 a duplicate, and n > 1 means n - 1 frames
@@ -216,6 +218,8 @@ const cueOnsets = {
 };
 
 const heardWithin = (seconds) => side.cues.filter((c) => rmsDb(sampleAt(c.s), Math.round(RATE * seconds)) >= -45);
+const videoEndS = videoStart + Number(vStream.nb_read_frames) / fps;
+const cuesPastEnd = side.cues.filter((c) => placed + c.s - trim >= videoEndS).length;
 const heard = heardWithin(0.15).length;
 // A cue heard only in the wider window started late; one heard in neither never sounded.
 const heardLate = heardWithin(0.4).length - heard;
@@ -274,6 +278,7 @@ const report = {
     gameCues: side.cues.length,
     cuesHeard: heard,
     cuesLate: heardLate,
+    cuesPastEnd,
     cueOnsets,
     overallDbfs: Math.round(rmsDb(0, pcm.length) * 10) / 10,
     ...toneReport,

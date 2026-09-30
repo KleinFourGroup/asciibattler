@@ -60,3 +60,22 @@ describe('PreBattleCountdown', () => {
     expect(cd.remainingSeconds).toBe(0);
   });
 });
+
+// The recorder's moves on the countdown, from outside (shell/electron/probes/
+// record-page.js): an instance `advance` holds it, deleting that restores the
+// prototype's, and `remaining` is written directly.
+describe("the recorder's seam", () => {
+  it('an instance `advance` holds it, `delete` lifts the hold, `remaining` resets it', () => {
+    const cd = new PreBattleCountdown(5);
+    expect(cd['remaining']).toBe(5);
+    cd.advance = () => {};
+    cd.advance(1);
+    expect(cd.remainingSeconds).toBe(5);
+    delete (cd as { advance?: unknown }).advance;
+    cd.advance(1);
+    expect(cd.remainingSeconds).toBe(4);
+    cd['remaining'] = 5;
+    expect(cd.displaySeconds).toBe(5);
+    expect(cd.active).toBe(true);
+  });
+});

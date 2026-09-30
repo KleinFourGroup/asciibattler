@@ -91,6 +91,10 @@ export const BACKLOG_CAP_MB = 1000;
  * so the clip opens on the frame the page hid the lead-in in. Either way the
  * first paint that shows the patches is sampled, the colours Chromium itself
  * drew (`patchesInPaint`).
+ *
+ * THE CUT, the gate mirrored: once the lead-in has gone, a paint showing the
+ * magenta patch again is the page's sign that the next screen has mounted
+ * (probes/record-page.js), and nothing is written from it on (`stats.cut`).
  */
 export function startVideo(win, { file, fps, width, height, gate = false, backlogCapMB = BACKLOG_CAP_MB }) {
   const ff = spawn(
@@ -119,10 +123,13 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
     firstEpoch: null,
     intervals: [],
     patchesInPaint: null,
+    cut: null,
+    paintsAfterCut: 0,
   };
   const capBytes = backlogCapMB * 1e6;
   let last = null;
   let seenLeadIn = false;
+  let leadInGone = false;
   let open = !gate;
   const pixel = (bitmap, [x, y]) => {
     const o = (y * width + x) * 4;
@@ -135,6 +142,10 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
       return;
     }
     stats.paints++;
+    if (stats.cut !== null) {
+      stats.paintsAfterCut++;
+      return;
+    }
     const bitmap = image.toBitmap();
     const [r, g, b] = pixel(bitmap, patchCentre(MAGENTA, height));
     const leadIn = r > 200 && g < 56 && b > 200;
@@ -142,8 +153,14 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
       seenLeadIn = true;
       stats.patchesInPaint = LEAD_IN.patches.map(([name, hex], i) => ({ name, want: hex, got: pixel(bitmap, patchCentre(i, height)) }));
     }
+    if (leadIn && leadInGone) {
+      stats.cut = { atFrame: stats.frames, epoch: nowEpoch() };
+      stats.paintsAfterCut++;
+      return;
+    }
+    if (seenLeadIn && !leadIn) leadInGone = true;
     if (!open) {
-      if (!seenLeadIn || leadIn) {
+      if (!leadInGone) {
         stats.heldBeforeGate++;
         return;
       }
@@ -181,6 +198,8 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
         frames: stats.frames,
         heldBeforeGate: stats.heldBeforeGate,
         gateOpened: open,
+        cutAtFrame: stats.cut?.atFrame ?? null,
+        paintsAfterCut: stats.paintsAfterCut,
         dropped: stats.dropped,
         droppedAt: stats.droppedAt,
         backlogCapMB,
@@ -217,14 +236,17 @@ export function markerFrame(videoFile, value, height) {
 }
 
 /** Join the video and the page's audio. `offsetS` is where the audio's start
- *  falls in the video: positive delays it, negative trims its head. */
-export function mux({ video, audio, out, offsetS }) {
+ *  falls in the video: positive delays it, negative trims its head. The page
+ *  records audio until main stops it, past the video's last frame, so the
+ *  output ends at `durationS`, the video's length. */
+export function mux({ video, audio, out, offsetS, durationS }) {
   const place = offsetS >= 0 ? ['-itsoffset', offsetS.toFixed(4)] : ['-ss', (-offsetS).toFixed(4)];
   return run([
     '-hide_banner', '-loglevel', 'error', '-y',
     '-i', video,
     ...place, '-i', audio,
     '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k',
+    '-t', durationS.toFixed(4),
     out,
   ]);
 }

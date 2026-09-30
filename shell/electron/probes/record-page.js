@@ -13,10 +13,16 @@
 // - `check`: the analyzer's twin. The marker stays on for the whole recording
 //   and a planted tone plays; without it (a clean clip) both go with the
 //   lead-in.
+// - `countdown`: how the clip opens. `full` plays the pre-battle countdown
+//   from its whole seconds and the game's own handover into the fight; `skip`
+//   starts the fight at the go frame, the countdown box hidden in that frame.
 // - `leadIn`: the geometry and patch colours (record.mjs, LEAD_IN), and
 //   `leadInFrames`, how long it shows.
 //
 // It installs `window.__rec110` with `start()` and `stop()`. The timeline:
+// - SETUP: the countdown is held (an instance patch on its `advance`, the one
+//   a parked board fixture already has), so it still shows its whole seconds
+//   when the recording starts.
 // - THE LEAD-IN, page frames 1..leadInFrames: eight DOM squares above the
 //   scanlines, bottom-left, show the frame count mod 256 in binary, and a row
 //   of colour patches above them shows known colours. Main samples the
@@ -24,8 +30,13 @@
 //   until a paint without the magenta patch.
 // - THE GO FRAME, leadInFrames + 1, in one animation-frame callback: the
 //   patches hide (and the marker, for a clean clip), the audio recording
-//   starts, and the fight starts (an unpause ends the countdown inside
-//   BattleScene.tick).
+//   starts, and the clip's opening begins. `full`: the hold is lifted and the
+//   countdown reset to its whole seconds, so the file opens on them. `skip`:
+//   the countdown box is hidden without its fade and the fight starts (an
+//   unpause ends the countdown inside BattleScene.tick).
+// - THE CUT: in the first frame after the battle's scene is swapped for the
+//   next screen, the patch row shows again, and main writes nothing from the
+//   paint that shows it. Cues played after the swap are left out.
 // - AUDIO: every pooled <audio> element of the game's AudioPlayer is routed
 //   through an AudioContext into a MediaStreamAudioDestinationNode, and never
 //   to `ctx.destination`, so the speakers get nothing. A MediaRecorder records
@@ -74,8 +85,23 @@ export default async function recordPage(opts = {}) {
   }
   if (typeof game.bus?.on !== 'function') return moved('Game.bus.on');
   if (typeof scene.playback?.resume !== 'function') return moved('BattleScene.playback.resume');
+  const countdown = scene.countdown;
+  if (!countdown || typeof countdown.active !== 'boolean') return moved('BattleScene.countdown');
+  if (typeof countdown.remaining !== 'number') return moved('PreBattleCountdown.remaining');
+  if (typeof Object.getPrototypeOf(countdown).advance !== 'function') return moved('PreBattleCountdown.advance');
+  const boxes = document.querySelectorAll('.battle-countdown');
+  if (boxes.length !== 1) return moved(`the HUD's countdown element (.battle-countdown: ${boxes.length} found)`);
+  const countdownBox = boxes[0];
+  if (!countdown.active) return { ok: false, error: 'the countdown had ended before the recorder could hold it (a live board?)' };
+  // Hold it through setup. A seed's battle was entered just above, with no
+  // frame between, so it holds its whole seconds; a parked fixture is held
+  // already, by the same patch.
+  if (!Object.hasOwn(countdown, 'advance')) countdown.advance = () => {};
+  const countdownFrom = Math.ceil(countdown.remaining);
 
   const check = opts.check === true;
+  const opening = opts.countdown;
+  if (opening !== 'full' && opening !== 'skip') return { ok: false, error: `countdown must be full or skip, not ${opening}` };
   const { square: SQUARE, left: LEFT, markerBottom: MARKER_BOTTOM, patchBottom: PATCH_BOTTOM, patches: PATCHES } = opts.leadIn;
   const LEAD_IN_FRAMES = opts.leadInFrames;
   const TONE_HZ = 3150;
@@ -105,7 +131,8 @@ export default async function recordPage(opts = {}) {
   const cues = [];
   const originalPlay = player.play;
   player.play = function logged(key, scale) {
-    cues.push({ key, t: performance.now() });
+    // `inBattle`: logged before the swap to the next screen, so in the clip.
+    cues.push({ key, t: performance.now(), inBattle: game.activeScene === scene });
     return originalPlay.call(this, key, scale);
   };
 
@@ -141,6 +168,10 @@ export default async function recordPage(opts = {}) {
     flashFrames: [],
     running: false,
     ended: false,
+    goAt: null,
+    cutAt: null,
+    cutFrame: null,
+    boxShownAtGo: null,
     chunks: [],
     recorder: null,
     mime: null,
@@ -165,13 +196,33 @@ export default async function recordPage(opts = {}) {
       state.toneFrom = state.startedAt + TONE_AT_S * 1000;
       state.toneTo = state.toneFrom + TONE_S * 1000;
     }
-    if (scene.countdown?.active) scene.playback.resume();
+    state.boxShownAtGo = countdownBox.classList.contains('is-visible');
+    if (opening === 'full') {
+      delete countdown.advance; // the prototype's again
+      countdown.remaining = countdownFrom;
+    } else {
+      // The box's 180 ms opacity transition is the fade; with none, it goes
+      // in this frame.
+      countdownBox.style.transition = 'none';
+      countdownBox.style.opacity = '0';
+      if (countdown.active) scene.playback.resume();
+    }
   };
 
   const paint = (now) => {
     if (!state.running) return;
     state.frame++;
-    if (state.frame === state.goFrame) go();
+    if (state.frame === state.goFrame) {
+      state.goAt = now;
+      go();
+    }
+    // The swap runs from a timer between frames (Game.afterOutro), so this
+    // callback sees it in the first frame that draws the next screen.
+    if (state.cutAt === null && state.startedAt !== null && game.activeScene !== scene) {
+      state.cutAt = now;
+      state.cutFrame = state.frame;
+      document.body.append(patchRow);
+    }
     if (state.frame < state.goFrame || check) {
       const n = state.frame & 255;
       for (let b = 0; b < 8; b++) squares[b].style.background = n & (1 << (7 - b)) ? '#fff' : '#000';
@@ -217,9 +268,16 @@ export default async function recordPage(opts = {}) {
         startEpoch: state.startEpoch,
         frames: state.frame,
         goFrame: state.goFrame,
+        opening,
+        countdownFrom,
+        boxShownAtGo: state.boxShownAtGo,
+        // On the frame clock (the rAF times of the go and cut frames), so
+        // main can set the page's timeline against the file's frame count.
+        cut: state.cutAt === null ? null : { s: Math.round(state.cutAt - state.goAt) / 1000, pageFrame: state.cutFrame },
         cues: cues
-          .filter((c) => c.t >= state.startedAt)
+          .filter((c) => c.t >= state.startedAt && c.inBattle)
           .map((c) => ({ key: c.key, s: Math.round(c.t - state.startedAt) / 1000 })),
+        cuesAfterCut: cues.filter((c) => c.t >= state.startedAt && !c.inBattle).map((c) => c.key),
         tone: check ? { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S } : null,
         flashFrames: [state.flashFrames[0] ?? null, state.flashFrames[state.flashFrames.length - 1] ?? null],
         rejections,
@@ -228,5 +286,5 @@ export default async function recordPage(opts = {}) {
       };
     },
   };
-  return { ok: true, elements, ctxState: ctx.state, grid: [scene.world.gridW, scene.world.gridH] };
+  return { ok: true, elements, ctxState: ctx.state, grid: [scene.world.gridW, scene.world.gridH], opening, countdownFrom };
 }

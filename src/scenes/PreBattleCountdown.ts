@@ -14,6 +14,9 @@
  * anyway), so the caller passes the unscaled frame `dt`.
  */
 export class PreBattleCountdown {
+  // The recorder holds the countdown by patching `advance` on the instance and
+  // resets `remaining` from outside (shell/electron/probes/record-page.js), as
+  // a parked board fixture does; PreBattleCountdown.test.ts pins that shape.
   private remaining: number;
 
   constructor(seconds: number) {

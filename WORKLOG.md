@@ -947,3 +947,34 @@ one frame.
 
 This is Chromium's audio in an offscreen window; the user plays in
 Firefox, which is why the A/B is by ear.
+
+### 111f — the sitting, prepared (2026-09-30) — the `stop` is open
+
+**The exit clips** (`clips/`, made at `1802b4b` from fresh profiles; the
+sound at the recorded offset until the A/B's pick is applied):
+
+| | clean clip | check twin |
+|---|---|---|
+| corridors (the fixture) | 66.8 s, 4005 frames, 0 lead-in frames, 128/128, 0 dropped | 0 of 4048 missing, colours within 2, −18 ms, 128/128, backlog peak 440 MB |
+| seed 12 | 45.8 s, 2747 frames, 0 lead-in frames, 107/107, 0 dropped | 0 of 2765 missing, colours within 2, −18 ms, 107/107 |
+| `c4ca4e6^` against HEAD | both halves clean (0 lead-in frames, 128/128, 0 dropped); the same 128 cues, median 1 ms apart, max 19 | — |
+
+**The frame-rate probe, re-run** (`?bp=board-live`, offscreen 1080p60,
+60 s, the RTX 4080 SUPER): 60.04 fps for the page and the game, intervals
+p50 16.7, p99 16.8 ms, one hitch (a 100 ms interval, about 5 of 3600
+slots: inside the 1 % bar; §110c's run had none). The corridors check
+twin's backlog peak, 440 MB, is the highest seen, under half the cap.
+
+**The A/B** (`clips/ab-sound-sync.mp4`, 67.5 s): the busiest 12 s of the
+corridors clip (20.5–32.5 s, 52 cues) five times, the sound shifted by 0,
++25, +50, +75 and +100 ms in a shuffled order, each after a lettered card
+and with its letter in the corner. The key is in the session's scratch
+(`ab-key.json`), read only after the pick. Read back from the file's own
+audio (1 ms envelopes cross-correlated against the 0 ms section), every
+section's lag matches its key within 2 ms.
+
+**THE STOP, part 1:** the user watches the A/B and names the letter that
+feels in sync (or two, or none). Part 2 follows the pick: the offset set
+as the recorder's default, the exit clips' sound moved to it, and a fresh
+recording made with the default; then the user reads the clips (the
+first frame, the colours, the pair's layout: 111d's `batch` read).

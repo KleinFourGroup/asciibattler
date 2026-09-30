@@ -12,6 +12,10 @@
 //   --name=<name>      the clip's file name (default <input>-<commit>)
 //   --check            record the analyzer's twin instead of a clean clip
 //   --keep             keep the temporary build, profile and intermediates
+//   --backlog-cap-mb=<n>  a control: frames waiting for ffmpeg above this are
+//                      dropped and counted (default 1000; set low, it plants drops)
+//
+// A recording that dropped frames is still delivered, and exits 1.
 //
 // Every recording is made from the working tree's development-mode build
 // (built fresh, about a second), in a fresh Electron profile that is deleted
@@ -157,6 +161,7 @@ const args = [
   '--muted',
   ...(seed !== undefined ? ['--enter'] : []),
   ...(check ? ['--check'] : []),
+  ...(flag('backlog-cap-mb') !== undefined ? [`--backlog-cap-mb=${flag('backlog-cap-mb')}`] : []),
 ];
 
 console.log(`record: recording ${inputName}${check ? ' (check twin)' : ''} at ${size}, ${fps} fps (in the background; the battle plays in real time)`);
@@ -195,7 +200,9 @@ cleanup();
 const c1 = analysis?.check1;
 const c2 = analysis?.check2;
 const cuesOk = c2 !== undefined && c2.cuesHeard === c2.gameCues;
-const good = check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk;
+const dropped = probe.result.video.dropped;
+const good =
+  dropped === 0 && (check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk);
 const shape = check
   ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms`
   : `${analysis?.container.video.frames ?? '?'} frames, lead-in frames in the file ${(analysis?.leadIn?.markerLikeFrames ?? 0) + (analysis?.leadIn?.patchFrames ?? 0)}`;
@@ -203,7 +210,8 @@ console.log(
   [
     `record: ${good ? 'OK' : 'CHECK FAILED'}  ${clip}`,
     `  ${analysis?.container.seconds.toFixed(1) ?? '?'} s · ${shape} · ` +
-      `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · backlog peak ${probe.result.video.backlogMaxMB} MB`,
+      `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · ` +
+      `frames dropped ${dropped} · backlog peak ${probe.result.video.backlogMaxMB} of ${probe.result.video.backlogCapMB} MB`,
   ].join('\n'),
 );
 process.exit(good ? 0 : 1);

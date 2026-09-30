@@ -26,6 +26,8 @@
 //                     dials alone; a board fixture enters its own)
 //   --check           record: the analyzer's twin (the marker all through, the
 //                     planted tone, the lead-in kept) instead of a clean clip
+//   --backlog-cap-mb=<n>  record: frames waiting for ffmpeg above this are
+//                     dropped and counted (record.mjs, BACKLOG_CAP_MB)
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
 //   --tail-seconds=<n>    record: keep recording this long after it ends (2)
 //   --out=<file>      also write the probe's JSON here
@@ -234,7 +236,15 @@ const probes = {
     });
     if (ready?.ok !== true) return { ok: false, result: { ready } };
 
-    const video = startVideo(win, { file: `${base}.video.mp4`, fps: frameRate, width: contentW, height: contentH, gate: !check });
+    const cap = flag('backlog-cap-mb');
+    const video = startVideo(win, {
+      file: `${base}.video.mp4`,
+      fps: frameRate,
+      width: contentW,
+      height: contentH,
+      gate: !check,
+      ...(cap === undefined ? {} : { backlogCapMB: Number(cap) }),
+    });
     const audible = [];
     const poll = setInterval(() => audible.push(win.webContents.isCurrentlyAudible()), 250);
     // Paints, not written frames: a clean clip writes none until the lead-in is over.

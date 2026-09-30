@@ -818,3 +818,37 @@ the board shows through). That is the game's own Fight-now transition, so
 it stays; the user's read at 111f can move the cut past it.
 
 `dist/` untouched (no `src/` change in 111b).
+
+### 111c — backpressure (2026-09-30) — read `none` ✅
+
+**Built.** Frames waiting for ffmpeg are capped (`BACKLOG_CAP_MB` in
+`record.mjs`, 1 GB: about 120 frames at 1080p, four times the largest peak
+measured). The offscreen window paints in real time whatever ffmpeg does,
+so a backlog can only be held or dropped: above the cap a frame is dropped
+and counted, and `droppedAt` records where in the file each would have
+gone. The front door still delivers a clip with drops, but exits 1.
+
+**The control:** the corridors check twin with the cap at 30 MB (under
+four frames), so that ordinary encoder jitter crosses it. Main dropped 44
+frames, the peak held at 24.9 MB, the front door read CHECK FAILED and
+exited 1. The file's own marker, read site by site against `droppedAt`,
+accounts for all 44:
+- 11 of 11 sites where main dropped distinct page frames show exactly that
+  many missing in the file (20 frames);
+- at one site main dropped 3 paints and the file shows a duplicate and no
+  gap: the page hitched, the compositor repainted one page frame, and the
+  dropped paints were copies of it;
+- 21 fell at the very start, while ffmpeg started up: 14 before the page's
+  marker began, and 7 were lead-in frames 1–7.
+
+**A blind spot found and fixed.** The analyzer counted continuity from the
+first count it could see, so the 7 lost lead-in frames never registered:
+a recording that lost its opening frames would have read clean. It now
+counts from page frame 1 (the marker always starts there) and reports
+`missingBeforeFirst`. Re-run on the same file it reads 27 missing (20 + 7),
+which is main's 44 less the 3 repeated paints and the 14 unmarked ones; on
+two earlier recordings it still reads 0.
+
+**The normal run:** a clean `--seed=12` clip at the default cap dropped 0,
+the backlog peaking at 108 of 1000 MB (45.7 s, 2740 frames, 107 of 107
+cues, no lead-in frames in the file).

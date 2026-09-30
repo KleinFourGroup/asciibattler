@@ -75,6 +75,16 @@ const COLOUR = [
 ];
 
 /**
+ * How many bytes of frames may wait for ffmpeg. The offscreen window paints in
+ * real time whatever ffmpeg does, so a backlog can only be held in memory or
+ * dropped; above this cap a frame is dropped and counted (`dropped`), never
+ * buffered without limit. 1 GB is about 120 frames at 1080p, four times the
+ * largest peak measured (265 MB at 60 fps, §110d), so a recording reaches it
+ * only when the encoder stalls.
+ */
+export const BACKLOG_CAP_MB = 1000;
+
+/**
  * Pipe the window's paints into ffmpeg. With `gate: true` (a clean clip),
  * nothing is written until the lead-in has shown and gone: main waits for a
  * paint with the magenta patch, then writes from the first paint without it,
@@ -82,7 +92,7 @@ const COLOUR = [
  * first paint that shows the patches is sampled, the colours Chromium itself
  * drew (`patchesInPaint`).
  */
-export function startVideo(win, { file, fps, width, height, gate = false }) {
+export function startVideo(win, { file, fps, width, height, gate = false, backlogCapMB = BACKLOG_CAP_MB }) {
   const ff = spawn(
     'ffmpeg',
     [
@@ -102,12 +112,15 @@ export function startVideo(win, { file, fps, width, height, gate = false }) {
     paints: 0,
     frames: 0,
     heldBeforeGate: 0,
+    dropped: 0,
+    droppedAt: [],
     wrongSize: 0,
     backlogMaxBytes: 0,
     firstEpoch: null,
     intervals: [],
     patchesInPaint: null,
   };
+  const capBytes = backlogCapMB * 1e6;
   let last = null;
   let seenLeadIn = false;
   let open = !gate;
@@ -142,6 +155,12 @@ export function startVideo(win, { file, fps, width, height, gate = false }) {
       stats.mainSkewMs = nowEpoch() - Date.now();
     } else stats.intervals.push(now - last);
     last = now;
+    if (ff.stdin.writableLength + bitmap.length > capBytes) {
+      stats.dropped++;
+      // Where in the file each drop falls: the index the frame would have had.
+      if (stats.droppedAt.length < 1000) stats.droppedAt.push(stats.frames);
+      return;
+    }
     ff.stdin.write(bitmap);
     stats.frames++;
     stats.backlogMaxBytes = Math.max(stats.backlogMaxBytes, ff.stdin.writableLength);
@@ -162,6 +181,9 @@ export function startVideo(win, { file, fps, width, height, gate = false }) {
         frames: stats.frames,
         heldBeforeGate: stats.heldBeforeGate,
         gateOpened: open,
+        dropped: stats.dropped,
+        droppedAt: stats.droppedAt,
+        backlogCapMB,
         wrongSize: stats.wrongSize,
         backlogMaxMB: Math.round(stats.backlogMaxBytes / 1e5) / 10,
         paintIntervalMs: quantiles(stats.intervals),

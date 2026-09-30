@@ -97,8 +97,13 @@ if (mode === 'check') {
       worstJump = Math.max(worstJump, d);
     }
   }
+  // The marker counts from page frame 1, so a first visible count above 1
+  // means the frames before it never reached the file (§111c: the encoder's
+  // start-up, with a low cap, lost lead-in frames 1-7 unseen).
+  const missingBeforeFirst = first >= 0 ? values[first] - 1 : 0;
+  missing += missingBeforeFirst;
   const slots = good + dup + missing;
-  check1 = { fps, decodedFrames: values.length, markerSpan: [first, last], slots, good, duplicates: dup, missing, missingPct: slots === 0 ? null : Math.round((missing / slots) * 10000) / 100, worstJump, pass: slots > 0 && missing / slots <= 0.01 };
+  check1 = { fps, decodedFrames: values.length, markerSpan: [first, last], slots, good, duplicates: dup, missing, missingBeforeFirst, missingPct: slots === 0 ? null : Math.round((missing / slots) * 10000) / 100, worstJump, pass: slots > 0 && missing / slots <= 0.01 };
 }
 
 // --- the colours (a check twin: the lead-in is in the file) ----------------

@@ -140,10 +140,15 @@ const pcmBuf = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:a', '-ac', 
 const pcm = new Float32Array(pcmBuf.buffer, pcmBuf.byteOffset, pcmBuf.byteLength / 4);
 const audioStart = Number(aStream?.start_time ?? 0);
 const videoStart = Number(vStream?.start_time ?? 0);
-// A cue's time is from the audio recording's start; a clean clip's audio
-// has its first `audioTrimS` cut off (main.mjs), so its samples start later.
+// A cue's time is from the audio recording's start, which the mux placed at
+// `offsetS` in the file (a negative offset trims the audio's head instead).
+// The decode's first sample is at the stream's start_time, which sits one
+// AAC priming frame (about 21 ms) before the placed start, so a cue's sample
+// is counted from there (§111e: a click at a known time, through this mux,
+// decoded here, lands exactly on its file time only this way).
 const trim = side.audioTrimS ?? 0;
-const sampleAt = (s) => Math.round((s - trim) * RATE);
+const placed = Math.max(0, side.offsetS ?? 0);
+const sampleAt = (s) => Math.round((placed + s - trim - audioStart) * RATE);
 
 function goertzel(hz, from, len) {
   const k = 2 * Math.cos((2 * Math.PI * hz) / RATE);
@@ -176,6 +181,40 @@ const rmsDb = (from, len) => {
   }
   return n === 0 ? -Infinity : 10 * Math.log10(sum / n + 1e-20);
 };
+// A cue's onset: the delay from its logged play() to its sound's rise in the
+// file, the first 2 ms step from 50 ms before the cue that reaches -45 dBFS
+// and stands 10 dB over the 20 ms that ended 10 ms before it. Only quiet
+// starts count (that floor under -50 dBFS, no other cue in the 300 ms
+// before), since a rise inside other sound can't be placed. The planted
+// tone, scheduled on the audio clock 3 s after the audio's start, is the
+// detector's known answer (`toneOnsetMs`, near 0).
+const STEP = Math.round(RATE * 0.002);
+function onsetMs(s) {
+  const at = sampleAt(s);
+  const floor = rmsDb(at - Math.round(RATE * 0.03), Math.round(RATE * 0.02));
+  if (floor >= -50) return null;
+  for (let i = at - Math.round(RATE * 0.05); i < at + Math.round(RATE * 0.4); i += STEP) {
+    const level = rmsDb(i, STEP);
+    if (level >= -45 && level >= floor + 10) return Math.round(((i - at) / RATE) * 1000);
+  }
+  return null;
+}
+const quiet = side.cues.filter((c, i) => !side.cues.slice(0, i).some((p) => c.s - p.s < 0.3));
+const onsets = quiet.map((c) => ({ key: c.key, ms: onsetMs(c.s) })).filter((o) => o.ms !== null);
+const spread = (xs) => {
+  if (xs.length === 0) return null;
+  const s = [...xs].sort((a, b) => a - b);
+  const q = (p) => s[Math.min(s.length - 1, Math.floor(p * s.length))];
+  return { n: s.length, p10: q(0.1), median: q(0.5), p90: q(0.9), max: s[s.length - 1] };
+};
+const byKey = {};
+for (const o of onsets) (byKey[o.key] ??= []).push(o.ms);
+const cueOnsets = {
+  all: spread(onsets.map((o) => o.ms)),
+  byKey: Object.fromEntries(Object.entries(byKey).map(([k, v]) => [k, spread(v)])),
+  toneOnsetMs: side.tone ? onsetMs(side.tone.fromS) : null,
+};
+
 const heardWithin = (seconds) => side.cues.filter((c) => rmsDb(sampleAt(c.s), Math.round(RATE * seconds)) >= -45);
 const heard = heardWithin(0.15).length;
 // A cue heard only in the wider window started late; one heard in neither never sounded.
@@ -235,6 +274,7 @@ const report = {
     gameCues: side.cues.length,
     cuesHeard: heard,
     cuesLate: heardLate,
+    cueOnsets,
     overallDbfs: Math.round(rmsDb(0, pcm.length) * 10) / 10,
     ...toneReport,
     audibleTrue: `${side.audibleTrue} of ${side.audibleSamples}`,

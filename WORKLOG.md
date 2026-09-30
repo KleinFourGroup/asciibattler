@@ -892,3 +892,58 @@ the same units in the same places, both labels legible.
 and stay in step, each labelled with its commit. Wrong is a half running
 ahead, a missing label, or halves too small to read. The clip:
 `clips/corridors-42d96ce-vs-<commit>.mp4`, remade at the sitting.
+
+### 111e — cue timing, measured (2026-09-30) — read `none` ✅
+
+The user's call before it (at the 111d pause, the meter at 359k against the
+350k handoff number): finish §111 in this session, since what is left is
+mostly recording.
+
+**The instrument, and a bug its known answer found.** The analyzer now
+measures each quiet cue's onset: the delay from its logged `play()` to its
+sound's rise in the file (the first 2 ms step reaching −45 dBFS and 10 dB
+over the floor before it). Its known answer, the planted tone scheduled on
+the audio clock, first read 26 ms, and a second detector (the Goertzel
+onset) read 20. The cause was the analyzer's audio clock: the decode's
+first sample sits at the stream's start time, one AAC priming frame
+(21.3 ms) before where the mux placed the audio, and the cue lookups
+counted from the placed start. A synthetic click at exactly 1.000 s,
+through the recorder's own Opus-to-AAC mux and the analyzer's decode,
+lands on its file time (1.5000 s) only when counted from the start time.
+Fixed; the file-time figures (the tone against the flash, −18 ms) were
+already counted that way and stand. "Heard" survived the bug only because
+its window is 150 ms.
+
+**The runs** (corridors, 60 fps, three of each, one batch):
+
+| | `play()` to the sound | heal-ticks | over 100 ms | lost |
+|---|---|---|---|---|
+| normal play (`playing` event, unrouted) | median 19 / 44 / 46 ms, p90 37–73, max 179–263 | median 22–47, max 84 | 1–5 per run (dash, death) | 0 |
+| routed as the recorder (`playing` event) | median 2–3 ms, p90 3–7, max 6–23 | median 2–4 | 0 | 0 |
+| the file, check twins (onset) | median 8 / 18 / 18 ms, p90 10–22, max 22–30 | 10–22 | 0 | 0 of 3 × 128 |
+
+The tone read 6, 16 and 8 ms in the three files, and the tone against its
+flash −18, +2 and −18 ms: the alignment between recordings moves by about
+one frame.
+
+**What it says.**
+- **The capture doesn't make cues late; it makes them earlier.** An
+  unrouted `<audio>` element waits for its output to start (a median of
+  20–45 ms here); routed into the already-running Web Audio graph it
+  starts in 2–3 ms. The routed runs are also the control for the event
+  instrument itself: the `playing` event is dispatched within a few ms, so
+  normal play's figures are the element's own start, not the event's.
+- **The late heal-ticks of 110e's dry run did not reproduce:** 0 late and
+  0 lost across these three recordings and every recording made today
+  (the analyzer counts late cues on each one, so a recurrence will show).
+  They happened once, under the user's load; normal play's own starts are
+  later and more variable than the capture's.
+- **The sound in a recording sits in step with its picture** (cues about
+  10–18 ms after their `play()`, the picture of a page event about 18–24
+  ms after it), while live play puts the sound some 25–35 ms later still,
+  plus the output device's latency. That fits the user's "a tad off" and
+  the spike's estimate of about 50 ms, so the A/B is centred at +50: 0,
+  +25, +50, +75 and +100 ms.
+
+This is Chromium's audio in an offscreen window; the user plays in
+Firefox, which is why the A/B is by ear.

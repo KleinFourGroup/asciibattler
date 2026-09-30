@@ -1,6 +1,5 @@
 node_modules/
 dist/
-dist-spike/
 .vite/
 *.log
 .DS_Store

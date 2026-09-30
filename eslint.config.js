@@ -3,7 +3,7 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'dist-spike/**', 'node_modules/**', 'scratch/**', '*.glsl'],
+    ignores: ['dist/**', 'node_modules/**', 'scratch/**', '*.glsl'],
   },
   ...tseslint.configs.recommended,
   {

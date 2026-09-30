@@ -12,12 +12,6 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5191", "--strictPort"],
       "port": 5191
-    },
-    {
-      "name": "spike-preview",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "preview", "--config", "shell/spike/vite.config.ts", "--port", "5192", "--strictPort"],
-      "port": 5192
     }
   ]
 }

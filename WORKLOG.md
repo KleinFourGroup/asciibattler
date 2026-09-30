@@ -695,3 +695,22 @@ change. No step stages `src/sim|run|core|config|bot`, `config/` or
 `tests/fuzz`, so the fuzz smoke fires on none. `dist/` stays byte-identical
 (`7424d4b4…`, re-hashed at each step that touches `src/`; under (a) that is
 only the pin and a comment beside `pools`).
+
+### The §111 shape-lock (2026-09-30, the user's) — SIGNED
+
+The cut is signed as proposed: six steps, four `none`, one `batch` (111d,
+read at 111f), one `stop` (111f). The user's calls:
+- **Decision point 1:** deferred to the session ("whatever gives us the
+  most robust recorder"). ✅ DECIDED: the reach-in. Its failures are loud
+  (the pin on every `npm test`, the seam check at record time), and it is
+  the only option that records both halves of a pair whose "before" is
+  older than the recorder's own change.
+- **The A/B** is one file with labelled sections.
+- **The exit's pair** is `c4ca4e6^` (the last perspective board, before
+  §107d shipped the projection) against HEAD.
+- **The context handoff number** stays 350k. The user noted that the
+  phase's first stop is its last step, so the number can't act at a stop,
+  and proposed a clock instead: the session notes the time each step
+  finishes and pauses for the meter at the first step boundary an hour
+  after the sign (09:45), or mid-step if one step runs an hour. The clock
+  overcounts context during real-time recordings, which errs early.

@@ -39,6 +39,7 @@ import type { Renderer } from '../../render/Renderer';
 import type { RunPhase } from '../../run/Run';
 import type { BattleScene } from '../../scenes/BattleScene';
 import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
+import { sceneName } from './scenes';
 import {
   canvasProblem,
   glReadRect,
@@ -435,7 +436,7 @@ export function installProbe(game: Game): Probe {
           canvas,
           dpr: devicePixelRatio,
           resized,
-          scene: internals.activeScene?.constructor.name ?? null,
+          scene: sceneName(internals.activeScene),
           phase: internals.run?.phase ?? null,
           running: [...active.keys()].filter((c) => c !== call),
         };
@@ -477,7 +478,7 @@ export function installProbe(game: Game): Probe {
       const world = (internals.activeScene as { world?: { currentTick: number } | null } | null)?.world;
       return {
         call,
-        scene: internals.activeScene?.constructor.name ?? null,
+        scene: sceneName(internals.activeScene),
         tick: world?.currentTick ?? null,
         canvas,
       };

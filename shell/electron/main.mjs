@@ -18,9 +18,10 @@
 //   --switches=<a,b>  Chromium switches to append (no leading dashes)
 //   --muted           mute the page's output (webContents.setAudioMuted)
 //   --profile=<dir>   the userData directory (a fresh one is the store's control)
-//   --probe=<name>    boot · store-write · store-read · script · record
+//   --probe=<name>    boot · store-write · store-read · script · kit · record
 //   --value=<text>    what store-write writes
-//   --script=<file>   what the script probe runs in the page
+//   --script=<file>   what the script and kit probes run in the page
+//   --arg=<json>      kit: the script's argument
 //   --record=<base>   record: the output path without extension
 //   --enter           record: enter the run's root battle (a seed opened by run
 //                     dials alone; a board fixture enters its own)
@@ -228,6 +229,26 @@ const probes = {
     if (file === undefined) return { ok: false, result: 'script needs --script=<file>' };
     const result = await runPageScript(win, file);
     return { ok: result?.ok !== false, result };
+  },
+
+  /** The probe runner's probe (probe-cli.mjs, §112d): wait for the probe kit
+   *  (`window.__probe`, a development-mode build's), pass `__probe.ready()`,
+   *  then run --script=<file> as the script probe does, with --arg=<json> as
+   *  its argument. A page error comes back by its message, and a result of
+   *  `{ ok: false }` fails. */
+  async kit(win) {
+    const file = flag('script');
+    if (file === undefined) return { ok: false, result: 'kit needs --script=<file>' };
+    const installed = await pollPage(win, 'window.__probe?.live === true', 30_000);
+    if (!installed) return { ok: false, result: 'no window.__probe within 30 s: is this a development-mode build?' };
+    const caught = (expr) =>
+      `Promise.resolve().then(() => ${expr}).then((value) => ({ value }), (e) => ({ error: String((e && e.message) || e) }))`;
+    const ready = await win.webContents.executeJavaScript(caught('window.__probe.ready()'));
+    if (ready.error !== undefined) return { ok: false, result: { ready: ready.error } };
+    const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
+    const ran = await win.webContents.executeJavaScript(caught(`(${source})(${flag('arg') ?? '{}'})`));
+    if (ran.error !== undefined) return { ok: false, result: { ready: ready.value, error: ran.error } };
+    return { ok: ran.value?.ok !== false, result: { ready: ready.value, script: ran.value } };
   },
 
   /** Record the battle to --record=<base> (.video.mp4, .audio.webm, .mp4

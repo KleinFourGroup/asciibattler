@@ -43,37 +43,20 @@
 //
 // ffmpeg with NVENC must be on the PATH (README, "Recording clips").
 import { spawn, spawnSync } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  unlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { build, openTree, repo, Stop, stop } from './tree.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repo = resolve(here, '..', '..');
 const clipsDir = join(repo, 'clips');
 
 // The fixtures' character and roster (src/dev/boardPanel/fixtures.ts,
 // RUN_BASE), so a seed's battle is fought by the same team; any of them can be
 // overridden with --dials.
 const SEED_BASE = { character: 'soldier', firstNode: 'elite', roster: 'mercenary,archer,rogue,healer,mage,catapult' };
-
-class Stop extends Error {}
-const stop = (message) => {
-  throw new Stop(message);
-};
 
 function flag(name) {
   const prefix = `--${name}=`;
@@ -93,57 +76,8 @@ function checkTool(name, args) {
   return r.stdout;
 }
 
-function git(args) {
-  const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
-  if (r.status !== 0) stop(`git ${args.join(' ')} failed: ${r.stderr}`);
-  return r.stdout.trim();
-}
-
-// --- a tree to build: the working tree, or a commit in a worktree ----------
-
-/** The tree for `ref` (undefined = the working tree), with its stamp and how
- *  to take it down. A worktree borrows the main tree's node_modules through a
- *  junction, which is unlinked before the worktree is removed, so the removal
- *  can never reach the real one. */
-function openTree(ref, work, label) {
-  if (ref === undefined) {
-    const commit = git(['rev-parse', '--short=7', 'HEAD']);
-    const stamp = git(['status', '--porcelain']) === '' ? commit : `${commit}-dirty`;
-    return { root: repo, stamp, ref: 'working tree', close: () => {} };
-  }
-  const stamp = git(['rev-parse', '--short=7', `${ref}^{commit}`]);
-  const root = join(work, `tree-${label}`);
-  git(['worktree', 'add', '--detach', root, stamp]);
-  const link = join(root, 'node_modules');
-  symlinkSync(join(repo, 'node_modules'), link, 'junction');
-  return {
-    root,
-    stamp,
-    ref,
-    close: () => {
-      if (existsSync(link)) {
-        if (!lstatSync(link).isSymbolicLink()) stop(`${link} is not the junction this script made; not removing ${root}`);
-        unlinkSync(link);
-      }
-      git(['worktree', 'remove', '--force', root]);
-    },
-  };
-}
-
-function build(tree, dist) {
-  console.log(`record: building ${tree.stamp} (${tree.ref}, development mode)`);
-  const built = spawnSync(
-    process.execPath,
-    [join(tree.root, 'node_modules', 'vite', 'bin', 'vite.js'), 'build', '--mode', 'development', '--outDir', dist, '--emptyOutDir', '--logLevel', 'warn'],
-    { cwd: tree.root, env: { ...process.env, NODE_ENV: 'development' }, encoding: 'utf8' },
-  );
-  if (built.status !== 0) stop(`the build of ${tree.stamp} failed:\n${built.stderr || built.stdout}`);
-  // Only a development-mode build carries the board explorer (and __game), so
-  // its chunk is the proof that NODE_ENV reached Vite.
-  if (!readdirSync(join(dist, 'assets')).some((f) => f.startsWith('boardPanel-'))) {
-    stop(`the build of ${tree.stamp} has no boardPanel chunk: DEV was off, and a recording needs the dev handle`);
-  }
-}
+// The tree to build (the working tree, or a commit in a worktree) and its
+// development-mode build: tree.mjs, shared with the probe runner.
 
 // --- one recording ---------------------------------------------------------
 
@@ -304,7 +238,7 @@ async function main(work, trees) {
     const tree = openTree(ref, work, label);
     trees.push(tree);
     const dist = join(work, `dist-${label}`);
-    build(tree, dist);
+    build(tree, dist, (line) => console.log(`record: ${line}`));
     const base = join(work, `rec-${label}`);
     console.log(`record: recording ${inputName} (${tree.stamp})${check ? ', check twin' : ''} at ${size}, ${fps} fps, in the background; the battle plays in real time`);
     const probe = await recordOne({ dist, base, profile: join(work, `profile-${label}`), query, opts });

@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "shell": "electron shell/electron",
     "record": "node shell/electron/record-cli.mjs",
+    "probe": "node shell/electron/probe-cli.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

@@ -1582,3 +1582,41 @@ as the audited run: the audit's renders don't change the run. None was
 sent at `turn-outcome`, which Game advances itself. **Not reached:** the
 sector-cleared gate (the long run lost in its first sector, and `hops=2`
 is one sector); its row is a fixed command.
+
+### 112d — the Electron runner (2026-09-30) — read `none` ✅
+
+**Built.** `npm run probe -- <script> [--seed=<n> [--dials=…] | --board=<id>
+| --query=…]` (`shell/electron/probe-cli.mjs`). It builds the working tree
+in development mode into a temp dir, boots it in a fresh profile in a
+hidden window (`--window=offscreen` when frames must run in real time),
+and runs main.mjs's new `kit` probe: wait for `window.__probe`, pass
+`ready()`, run the script with `--arg`. It prints one JSON line on stdout
+(progress goes to stderr) and exits with main.mjs's code. The kit probe
+catches the page's errors itself, so a page exception comes back by its
+message. `build()` and `openTree()` moved from `record-cli.mjs` into
+`tree.mjs`, which both front doors import; `build()` takes a log function,
+since the runner's stdout carries only its JSON. `probes/drive-run.js`
+plays a whole run through `__probe.drive`, calling it until it's done.
+
+**Checked** (the exit):
+- **A driving script exits 0:** `drive-run.js --seed=7` played the run to
+  `defeat` in 15.8 s (22 s with the build): 12 battles, 46 commands, log
+  `a59ee48f`. That is the pane's log, from a built bundle in Electron's
+  Chromium rather than the dev server in the pane's.
+- **A planted failure exits 1** with the script's `{ ok: false }`; **a
+  planted page error exits 1** with its message; **a planted hang exits
+  2** at `--timeout=20`.
+- **The recorder after the move:** `npm run record -- --board=corridors`,
+  OK: 70.7 s, 0 dropped, 0 short, drift −3 ms, 128 of 128 cues, exit 0.
+  The check clip was deleted afterwards (`clips/` keeps the exit set).
+
+**A finding, fixed:** the report's `scene` read `Pp` in the built page.
+Every build minifies class names, a development-mode one included, so
+`constructor.name` holds only on the dev server. `src/dev/probe/scenes.ts`
+names the scene by `instanceof` against the eleven scene classes, and
+`scenes.test.ts` checks the table against every `export class …Scene` in
+`src/scenes/` (a planted missing entry failed). Re-run on `board-quarry`:
+`BattleScene`, with `frame()` and an 8×8 `pixels()` read working in the
+hidden window (1280×720, 30 distinct colours).
+
+**`dist/`** byte-identical (`d77a6381…`).

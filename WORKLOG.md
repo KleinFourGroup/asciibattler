@@ -602,3 +602,96 @@ The session recommended a fresh one: everything this session learned is in
 the spec, this log and the Cursor, and the kickoff's audit covers code this
 session never opened (`shell/electron/record.mjs`, the probes,
 `AudioPlayer`'s pools), where a cold read is what the audit wants.
+
+## Phase 111 — the background recorder
+
+### The §111 audit and cut (2026-09-30) — the shape-lock is open
+
+Session 01995ce0. The recorder's code is as the spike left it: the last
+commit to touch `shell/electron/` is `41150a6` (110e's prep) and the last
+to touch `src/audio/` is `dad6bb3` (§104d). ✔ = read by this session at
+file:line.
+
+**What is there.**
+- The recorder is one probe inside the shell (✔ `main.mjs:219-273`,
+  `--probe=record`), a page script (✔ `probes/record-page.js`) and the
+  ffmpeg side (✔ `record.mjs`). It is still a test rig: the frame marker
+  runs for the whole recording (✔ `record-page.js:85-94`), the planted tone
+  plays 3 s in (✔ `:112-122`), the page is muted only when `--muted` is
+  passed (✔ `main.mjs:298`), the profile is the shared
+  `%APPDATA%\ASCIIbattler` unless `--profile` is given (✔ `main.mjs:56-57`),
+  and main buffers every paint ffmpeg has not taken yet, without a limit
+  (✔ `record.mjs:59-61`; `writableLength` is only recorded).
+- **Inputs today: a URL.** The fixtures are `?bp=board-<id>`, six boards
+  (✔ `fixtures.ts:30`), each a set of the shipped run dials (✔
+  `fixtures.ts:48-49`) entered by two dispatches after boot (✔
+  `boot.ts:60-61`). A seed is the same dials with another `seed=`; with no
+  `bp=board-` nothing enters the battle, so the recorder makes the two
+  dispatches itself.
+- **The audio seam.** The page script routes every element of
+  `AudioPlayer`'s private `pools` (✔ `AudioPlayer.ts:212`, four per key)
+  and wraps `play` to log the cues (✔ `record-page.js:40-58`). Nothing
+  checks that the seam is still there: a missing `pools` throws, but a
+  renamed `play` logs no cues, and the analyzer's "every cue heard" then
+  reads 0 of 0.
+- `AudioPlayer.setMuted` returns before a cue sounds (✔
+  `AudioPlayer.ts:240`), so the recorder's muted page must stay
+  `webContents.setAudioMuted`, which 110d showed still records every cue.
+- **The build.** Recordings come from a static development-mode build
+  (110e), made by hand; no npm script makes it (✔ `package.json`).
+  `shell/` is outside tsc (✔ `tsconfig.json`) and no test covers it; the
+  analyzer is its oracle. Tests run under Node with no `Audio` global (✔
+  `vite.config.ts:131`), so a pin on `pools` needs a stub.
+- **ffmpeg** on the PATH is 9.0.2 (the Gyan full build) with `h264_nvenc`
+  (✔ `ffmpeg -encoders`). The README names no external requirement (✔).
+
+**Hypotheses for step zero** (from memory, unmeasured):
+- **The clip's colours.** ffmpeg converts BGRA to yuv420p with BT.601
+  coefficients unless told otherwise and tags nothing, and most players
+  decode untagged HD video as BT.709, which would shift saturated colours
+  slightly. The palette is the game's identity and §116 checks a
+  colourblind palette, so colour patches planted in the lead-in and read
+  back from the file decide it.
+- **A frame-exact trim.** A stream copy cuts only at keyframes, so the trim
+  is either a re-encode or main piping only from the first frame after the
+  lead-in (it can read the marker from the bitmap it already holds).
+- **Before/after** needs a build per commit: a temporary worktree with the
+  main tree's `node_modules` linked in, if Vite builds there.
+- **A full run's audio** would cross to main as one base64 string at stop
+  (✔ `record-page.js:137-142`): fine for a battle, a landing note for full
+  runs (§114).
+
+**Decision point 1: where record mode lives.** (a) The reach-in, as now:
+the recorder's page script, injected into whichever build it records. It
+ships nothing, and it works on both sides of a before/after pair, including
+commits older than §111. It is untyped. (b) A typed DEV module in
+`src/dev/`: typechecked and tree-shaken, but a commit older than it has
+none, so it can't be the "before" of a pair. (c) Record mode in
+`AudioPlayer`: typed and tested in place, but it ships bytes for a dev tool
+(the spec's scope guard) and has (b)'s problem with older commits. The
+session's lean is (a), with the guard moved onto `npm test`: a pin that
+builds an `AudioPlayer` over a stubbed `Audio` and checks that `pools`
+holds every key's elements and that `play` is on the prototype, plus a seam
+check at record time that fails the recording loudly. What neither sees: a
+new sound path outside `pools` (music, `plans/music.md`) would be missing
+from recordings without an error, so music's phase routes it (a TODO line).
+
+**Decision point 2: the audio offset.** The spike's residual (−18 to
+−35 ms) was measured on the planted tone, which is scheduled on the audio
+clock and bypasses `<audio>`. The game's cues go through `<audio>`
+elements, whose start latency is their own and varies (the late
+heal-ticks). So the cue offset is measured per cue first (its onset in the
+file against the frame that drew its `play()`), which tells a fixed offset
+from jitter, and the A/B by ear is centred on it. The offset is applied at
+the mux, so each A/B variant is a re-mux of one recording, seconds each.
+
+**Scope readings.** Events arrive with full runs: an event shows nothing
+until choices are made, and the journal supplies them. "A seed" is the
+root battle of that seed under the fixtures' character and roster, with
+any run dial overridable.
+
+**Predictions for the cut.** No snapshot bump, no RNG stream, no config
+change. No step stages `src/sim|run|core|config|bot`, `config/` or
+`tests/fuzz`, so the fuzz smoke fires on none. `dist/` stays byte-identical
+(`7424d4b4…`, re-hashed at each step that touches `src/`; under (a) that is
+only the pin and a comment beside `pools`).

@@ -2377,6 +2377,18 @@ user's reads were the sitting (110e) and the spec (110f), both signed.
    investigation's shape, and the ease from being corrected without
    friction.
 
+### Addendum, the same session — the meter (2026-09-30)
+
+The user read the meter at 424k after the close: past the 350k handoff
+number, which this session never asked about before then. No stop fell
+between the start and the 111f-post stop, and at that stop I didn't ask
+either. Nothing was cut short for it, but the number could not act. A
+session whose first stop comes late might ask for the reading there. The
+user also noted their PC was in use during the planted run, which likely
+explains its 13 s of throttling (WORKLOG, amended). One more slip at the
+very end: a heredoc piped to `python` hung on the Windows alias and had to
+be stopped; nothing was written.
+
 ### §111 — the phase summary (2026-09-30; two sessions)
 
 Two sessions on `claude-opus-5-5`, both on 2026-09-30: 01995ce0 (the

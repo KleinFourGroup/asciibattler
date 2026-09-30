@@ -104,7 +104,7 @@ replays byte-identically headless from its journal; the export downloads;
 the recorder replays a journal offscreen. **Scope guards:** passive, never
 perturbing determinism; no ingest server.
 
-**Carried from §111** (WORKLOG §111f-post): a switch of the display stalls the recorder's renderer, from one 0.2 s stall to 13 s of throttled frames, which long runs recorded while the user is away will cross. Retiming each stall from the long-frame log lands here (the user's (B)); holding the display awake during a recording is the fallback (C); a stepped-clock recorder is the fallback beyond it.
+**Carried from §111** (WORKLOG §111f-post): a switch of the display stalls the recorder's renderer, from one 0.2 s stall on an idle machine to 13 s of throttled frames, 142 never painted, on a busier one, which long runs recorded while the user works and then walks away will cross. Retiming each stall from the long-frame log lands here (the user's (B)), after a step zero that switches the display at idle and under a planted steady load; holding the display awake during a recording is the fallback (C); a stepped-clock recorder is the fallback beyond it.
 
 ## Phase 115 — save/load and mid-run resume
 

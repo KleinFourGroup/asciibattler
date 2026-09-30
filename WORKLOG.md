@@ -1237,9 +1237,15 @@ could not tell apart.
   page at 51.5 fps, 142 frames never painted, the picture 11.6 s ahead of
   its sound by the cut, and no stall at the wake. It recovered on its own,
   and Windows logged nothing. So one switch costs anything from a single
-  0.2 s stall to 13 s of throttling, for reasons not visible here. That
-  bears on (B): a retime can place a stall but not an unpainted frame, so a
-  long run that crosses a switch may still need (C).
+  0.2 s stall to 13 s of throttling. **The difference is likely load**
+  (the user, afterwards): their PC was in use until the display went off,
+  where the two single-stall runs had an idle machine; the throttling
+  began 95 ms after the switch and ended 12 s before the wake, so the
+  switch set it off and the busier machine shaped its size (one run each
+  way, so a reading, not a measurement). That makes the 13 s case the
+  representative one for a long run (the user working, then walking away),
+  and it bears on (B): a retime can place a stall but not an unpainted
+  frame, so such a run may still need (C).
 - **Every saved sidecar judged again** with `faults.mjs`, the check that
   needs no new recording: the 11 clean recordings (the exit set, the
   control, the idle trials) pass; the display test's drift-only clip (0

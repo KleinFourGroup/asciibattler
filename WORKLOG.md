@@ -978,3 +978,27 @@ feels in sync (or two, or none). Part 2 follows the pick: the offset set
 as the recorder's default, the exit clips' sound moved to it, and a fresh
 recording made with the default; then the user reads the clips (the
 first frame, the colours, the pair's layout: 111d's `batch` read).
+
+### 111f — THE READ (2026-09-30, the user's) — part 1 and the clips
+
+**The A/B.** The key: A +25 ms, B +75, C 0, D +100, E +50. The user's
+first read ranked C, D and E over A and B (C and D maybe over E), then
+found them "all bleeding together". The preferred three were 0, +100 and
++50, the extremes among them, so the ranking doesn't follow the offset; it
+follows the play order exactly (A and B were the first two sections). The
+finding: 0–100 ms of added sound delay is not audible to the user on this
+footage, as expected from the asymmetry of sync perception (late sound is
+tolerated far more than early). **Decided: +25 ms** (the user, on the
+session's weak lean): it moves each sound from slightly before its picture
+(0–15 ms, the ear's sharper side) to slightly after, as in live play, at
+no audible cost.
+
+**The clips.** 111d's `batch` read: "The side by side is awesome! Fully
+happy with that!" ✅. Two findings, both for a `-post`:
+- **The opening.** The countdown box's 0.2 s fade is more distracting than
+  expected, and skipping it would be too abrupt for a clip uploaded on its
+  own; for clips stitched together a complete skip is wanted too. So two
+  openings: the full countdown, and a skip with no fade.
+- **The ending.** The last frames show part of the level-up screen: the
+  fixed 2 s tail after `battle:ended` catches the game's swap to the next
+  screen (`Game.afterOutro`). Cut it.

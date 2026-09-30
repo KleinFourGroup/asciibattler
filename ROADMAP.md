@@ -15,8 +15,9 @@ with its worklog and spec beside it; before it
 **Status: §110 IN FLIGHT** (the kickoff's cut signed 2026-09-28). This
 round is SPIKE-first, then spec, as 7.5 was: the shell spike informs the
 store's storage adapter before its shape locks (META-ROADMAP), so the spec
-is written over the spike's read, as §110's last step. No phase entries
-beyond §110 exist until then. The
+is written over the spike's read, as §110's last step. The spec is drafted
+([round-8-spec.md](round-8-spec.md), 110f) and §111–§118 are entered below,
+unsigned. The
 charter, the decision points, the exit and the scope guards are in
 META-ROADMAP §"Round 8 — Foundations"; the re-audit behind its 2026-09-26
 amendment is [archive/post-104-worklog.md](archive/post-104-worklog.md)
@@ -68,4 +69,116 @@ on no step. The audit and the calls: WORKLOG §Kickoff.
 - [ ] **110c** — the hidden window: frame rate over 60 s, the WebGL renderer, the result handed to a Node script as JSON; the same under offscreen rendering. Read `none` — a shown window the rate's control; `--disable-gpu` must read as software. ✅ offscreen holds 60.01 and 30.01 fps with 0 hitches on the RTX 4080 SUPER; a never-shown window renders at 1 fps, so offscreen is the video path; the control reads WARP. WORKLOG §110c.
 - [ ] **110d** — the recording, checks 1 and 2, at 30 and 60 fps, the game's `<audio>` pools routed into the recording by a spike reach-in. Read `none` — ffprobe on the timestamps; the game's sound present; a tone planted in the page found; another app's tone absent; `isCurrentlyAudible()` false, true in a non-record control run. ✅ corridors (64.7 s) at 1080p30 and 1080p60: 0 frames missing of 2005 and 4007; 128 of 128 cues heard; the tone found; 0 audible samples, the muted control 55 of 83; A/V aligned by content to one frame. The outside-app tone moves to 110e (it plays aloud). WORKLOG §110d.
 - [ ] **110e** — THE SITTING: the user uploads the itch draft and reads it in Firefox and Chrome (reload · tab close · browser restart · embedded against the direct URL); check 3 over blind stretches; one clip watched. Read `stop`. ✅ READ (2026-09-29): the clip "looks great" (the lead-in and an audio A/B to the recorder); check 3 unnoticed at 30 and 60; the outside tone heard and absent; Firefox keeps the store across a restart, partitioned by the itch page. Chrome moved to the round-close smoke (the user's call). WORKLOG §110e.
-- [ ] **110f** — the spec (`round-8-spec.md`) over the answers: the adapter's shape, the video path, the probe runner yes or no; the round's phases entered here. Read `stop`.
+- [ ] ◐ **110f** — the spec (`round-8-spec.md`) over the answers: the adapter's shape, the video path, the probe runner yes or no; the round's phases entered here. Read `stop`. ◐ drafted: D1–D10 signed item by item in the drafting conversation (D8's stacking reading proposed), §111–§118 entered below (WORKLOG §110f).
+
+## Phase 111 — the background recorder (PROPOSED at 110f, unsigned)
+
+Charter: an Electron recorder writes video files of battles, events and
+runs from an offscreen window while the user works: the whole composited
+page with the game's own sound, nothing aloud, never taking focus (spec
+D9). Inputs: a board-explorer fixture, a seed, and before/after at two
+commits side by side; full runs join when the journal lands (§114).
+**Why here:** the spike's three checks passed, and clips make the round's
+UI reads cheaper; it needs only the shell. **Risk:** low-medium (the first
+draft passed checks 1 and 2 at both rates; backpressure, the lead-in and a
+pinned profile are new). **Decision points:** record mode in `AudioPlayer`
+or a reach-in in the development-mode build; the audio offset, by an A/B
+by ear. **Exit:** clips of a fixture, a seed and a before/after pair from a
+fresh pinned profile, the lead-in trimmed; §110's frame-rate probe and
+analyzer re-run green on them; ffmpeg named in the README. **Scope
+guards:** a dev tool; no full runs before the journal.
+
+## Phase 112 — the pane probe kit and the Electron runner (PROPOSED at 110f, unsigned)
+
+Charter: a dev-only `__probe` in the page that puts the Browser pane's
+known traps into code (`ready`, `go`, `frame`, `pixels`, a canvas-size
+check, the whole-run driver), and a thin Electron runner that calls the
+same kit from a Node script (spec D10). **Why here:** before the menu and
+settings, the round's pane-heavy work. **Risk:** low. **Decision points:**
+none known. **Exit:** pane sessions start with `await __probe.ready()`;
+the runner hands a probe's JSON and exit code back; `process/browser-pane.md`
+rewritten around the kit. **Scope guards:** DEV-only, no production byte
+change; the three pre-registered criteria are counted at the round close,
+per pane session, runner sessions apart.
+
+## Phase 113 — the store and the build ID (PROPOSED at 110f, unsigned)
+
+Charter: the persistent store, one store in sections with their own
+versions and read policies, over a storage adapter with three cases, read
+synchronously at boot by the first static import (spec D1); the
+`BUILD_ID`, the version scheme, and the save-rejection rule with its
+structure-fingerprint guard (D2). **Why here:** the keystone; every later
+phase writes through it. **Risk:** medium (the most-depended-on model
+left). **Decision points:** the section and key layout; the size budget
+waits on §114's measurement. **Exit:** the store round-trips in all three
+shells, with a throwing store and a fresh profile as its controls; the
+ESLint guard fails on a planted import from `src/sim`; the build ID is
+baked and shown; the fingerprint test fails on a planted shape change
+without a bump. **Scope guards:** its consumers are seams only.
+
+## Phase 114 — the run journal and its export (PROPOSED at 110f, unsigned)
+
+Charter: the seed, every `RunCommand` and the battles' command traces,
+stamped with the build and the config hash, in segments that open at every
+load, with wall-clock time per command as metadata (spec D4); telemetry
+tier 1, the journal as a downloaded `.json` (D5). **Why here:** before
+save/load, whose continuation check and chaos repro need it. **Risk:**
+medium (a whole-run replay in the harness, inferred at the 7.5 close to be
+the larger part). **Decision points:** how many finished journals are
+kept, once step zero measures a run's bytes. **Exit:** a recorded run
+replays byte-identically headless from its journal; the export downloads;
+the recorder replays a journal offscreen. **Scope guards:** passive, never
+perturbing determinism; no ingest server.
+
+## Phase 115 — save/load and mid-run resume (PROPOSED at 110f, unsigned)
+
+Charter: an autosave at every gate into one slot, a load entry point, and
+the scene-for-phase resolver (`Game.devLoadRun`'s landing note: a Run-side
+re-emit of the phase's gate event), so a run resumes at any gate (spec
+D3), with two oracles: the chaos driver and the continuation check. **Why
+here:** after the journal both oracles need. **Risk:** medium-high (it
+touches every phase). **Decision points:** none known. **Exit:** the chaos
+driver and the continuation check green; a run saved at any gate reloads
+byte-faithfully; a stale save rejected with its message. **Scope guards:**
+no manual saves, no mid-battle save, no migrations.
+
+## Phase 116 — the menu and settings (PROPOSED at 110f, unsigned)
+
+Charter: the title menu as the boot screen (spec D6) and the settings
+(D7): the volume levels, the rebind UI, the default speed, the colourblind
+palette on reload, the aura-FX mode, the locale, reduced motion, shake,
+the text scale, and the store's export and import. **Why here:** Continue
+needs save/load, and the pane work needs the kit. **Risk:** medium (wide
+UI, checked against DESIGN §UI idioms and §Input accessibility).
+**Decision points:** which colour deficiencies the palette covers.
+**Exit:** settings persist across reloads in all three shells; the menu
+boots first and the dev entry points skip it; the palette passes its
+numeric check and the user's eye. **Scope guards:** no music slider, no
+achievements row, no camera row.
+
+## Phase 117 — Escalation and the unlock mechanism (PROPOSED at 110f, unsigned)
+
+Charter: the five-level ladder (spec D8): per-character progress, the
+picker on character select, the enemy-morale multiplier beside the three
+that exist, the level saved in the RunSnapshot; and the cross-run unlock
+mechanism, resolved at run creation only. **Why here:** the unlocks need
+the store and the saved level needs save/load. **Risk:** medium (a balance
+surface). **Decision points:** the stacking reading (proposed in the
+spec); the enemy pool's rounding. **Exit:** Escalation off byte-identical
+(the determinism test and the fuzz smoke); each level's multipliers pinned
+headless; the board read at the round close. **Scope guards:** number
+levers only; no unlock content mapping (Round 10); a seeded run unlocks
+nothing.
+
+## Phase 118 — the public web channel, then the round close (PROPOSED at 110f, unsigned)
+
+Charter: the itch page, with a how-to-play standing in for Round 11's
+tutorial; the `0.1.0` upload after the browser smoke (Firefox; Chrome with
+its itch read and the days-later re-open of the draft; the keys visible
+from our iframe that aren't ours); then the round close. **Why last:** a
+stranger needs the menu, a volume control, save/load, a build ID and the
+export first. **Risk:** low-medium. **Decision points:** none known.
+**Exit:** the channel open; the board re-run: Escalation off reproduces
+the signed sheet exactly, and each level is harder than the one before on
+paired same-seed runs. **Scope guards:** Safari untested; the Electron
+build stays internal.

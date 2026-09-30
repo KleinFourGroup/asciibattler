@@ -484,3 +484,98 @@ design does not change if it does not.
   re-open, at the round-close browser smoke; Electron's CSP warning
   (unpackaged only) for Round 12's packaging; `shell/spike/` (and its
   tsconfig entry) disposed of at 110f.
+
+### 110f — the spec, drafted (2026-09-29) — the `stop` is open
+
+Session 8bafaa37. [round-8-spec.md](round-8-spec.md): the intent in the
+user's words, nine things the spike settled, ten decisions (D1–D10),
+scope guards, exit, marked uncertainty, and §111–§118 entered in ROADMAP,
+unsigned. The decisions came out of a conversation in four turns: the
+session posed the charter's decision points, its own calls and twelve
+blind spots, each with a lean, and the user signed them item by item. The
+spike build is disposed of (`4ae0730`); `dist/` hashes to `7424d4b4…` over
+32 files before and after, the phase's known answer.
+
+**The user's calls (2026-09-29), with the alternatives not taken:**
+- **What a save is rejected on:** the save format or a failed load (B).
+  Not taken: any build change (A), which ends every run in progress at
+  every upload; the format or the balance (C), since `configHash()` hashes
+  every config file, the bot's `fuzz-strategies.json` included, so a
+  change no player sees would wipe saves. What decided it: most round
+  uploads change the format anyway, so A and B differ on hotfix uploads,
+  the ones strangers are mid-run for.
+- **Saving:** "rogue like style no manual saves"; one slot; closing
+  mid-battle resumes before the battle with the fight seen, a knowledge
+  edge accepted.
+- **Volume:** three levels stored, a slider only where there is sound.
+  **The palette:** on reload.
+- **Escalation:** a ladder, not a menu of modifiers, because a menu's
+  combinations multiply past what the box can check (ten switches make
+  1,024 settings); progress per character; five levels, whose table the
+  user wrote; the picker hidden until level 1 is unlocked; upward only.
+  The name: Escalation over Overclock, Threat and Ring. The user loved
+  Ring (CPU protection rings counting down to the kernel, and Dante's
+  circles), but it is too clever for a general audience, and a ladder
+  that counts down confuses.
+- **The session's points, signed:** seeded runs count toward nothing; the
+  menu's rows; the Electron runner, yes; the recorder's calls (ffmpeg a
+  system install noted in the README, a gitignored `clips/`, 60 fps for
+  battles); telemetry as a downloaded `.json` ("they can send it wherever
+  they want"; the itch boards for now); the version from `0.1.0`, not
+  `0.8.0`, because players read 0.8 as nearly done and a `.5` round has no
+  number of its own.
+- **The twelve blind spots,** each proposal signed as written: store
+  sections with their own read policies; the itch store as best-effort,
+  with an export and import as the backup; the journal's size measured
+  before the budget; journal segments at every load; `-dirty` builds;
+  dev entry points skip the menu; recordings from a fresh pinned profile;
+  the kit's criteria per pane session; the two-tab lock; the ESLint guard;
+  the palette's numeric check; wall-clock stamps in the journal.
+- **The first ten minutes** are in the spec's Intent, in the user's words.
+
+**The wave lever under the casualty rule** (the user raised it). Checked
+against the code:
+- `resolveTotalCount` scales the count before rounding (`wave.ts:203-206`);
+  the level budget is resolved without the count (`:246-249`) and spread
+  over the wave (`:174-176`), so a larger count spreads the same levels
+  thinner, and most bodies are worth one point of enemy morale (DESIGN).
+  BALANCE's caveat names the trade (`BALANCE.md:537`). No measurement of
+  the lever under the casualty rule was found: BALANCE's sweeps of it date
+  from Phase X, and `archive/post-88-worklog.md` never mentions it.
+- The rounding, over the 34 authored waves in `config/encounters.json` (a
+  scratch count mirroring `resolveTotalCount`): at a hand of 6, +10% adds
+  one enemy to 28 waves and none to 6; at 5, one to 16 and none to 18; at
+  4, one to 20 and none to 14. At +20% and a hand of 6: 2 unchanged, 17 +1,
+  15 +2 or more. `DECK.handSize` is 6, and a wave's hand is the smaller of
+  the team size and the effective draw (`Run.ts:2863`).
+- 5 of the 34 waves carry a `levelCap`, where the budget lever can
+  saturate (`wave.ts:243-245`).
+- The bits lever scales every earn at the settle, multiplied with the
+  `bitsGain` fold (`Run.ts:2418-2420`), so it is clean under casualties.
+
+Signed ("I enthusiastically sign"): the wave lever raises the count, the
+level budget and the enemy's pool together. The fallback not taken:
+−10% of the player's morale (40 → 36), smooth and strictly harder but not
+visible on the board. A repeated lever adds (the user). Different levers
+multiplying is the session's reading, proposed in the spec, so that the
+wave lever never changes a body's strength.
+
+**Step zero, what writing it checked against the code:**
+- ✔ `Run.fromJSON` rejects on `RUN_SCHEMA_VERSION` and throws on unknown
+  daemon and character ids (`Run.ts:4290`, `:4344-4358`).
+- Tests pin the version's number (`Run.test.ts:2988` and four more).
+  Searches of `snapshot-roundtrip.test.ts` for key-set pins, and of the
+  tests for a shape fingerprint, found none, so D2's guard is written as
+  new; a search is not proof of absence, and §113's step zero looks again.
+- ✔ `configHash()` exists (`src/dev/configHash.ts`) over every
+  `config/*.json`.
+- ✔ The only `localStorage` user in `src/` is the DEV trace ring
+  (`asciibattler:traces:v1`, `src/dev/traceStore.ts:15`).
+- ✔ An element's volume is the master level × the key's level
+  (`AudioPlayer.ts:248`), so the volume split is one more factor.
+- ✔ The three per-run multipliers are `DifficultyMultipliers`
+  (`difficulty.ts:132-136`).
+
+**THE STOP — the read (the user's):** the spec as written, especially
+D8's stacking reading (the one line not yet signed), and the eight phase
+entries in ROADMAP. On the signature, §110 closes.

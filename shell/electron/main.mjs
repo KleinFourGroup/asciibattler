@@ -42,6 +42,7 @@ import { app, BrowserWindow, ipcMain, net, protocol } from 'electron';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { faultsOf } from './faults.mjs';
 import { LEAD_IN, markerFrame, mux, startVideo } from './record.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -302,18 +303,8 @@ const probes = {
     const durationS = videoResult.frames / frameRate;
     const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS, durationS });
     const tl = timeline(page, videoResult, goVideoFrame);
-    // A fault leaves a clip worth looking at, so it is delivered and failed by
-    // the front door, like dropped frames. Page frames that never painted are
-    // dropped frames upstream of main, on a busy machine (a planted full-speed
-    // decode lost 322 in one battle, an idle machine none). The cut has two
-    // halves, the page raising the patch at the swap and main stopping at the
-    // paint that shows it; one without the other is a fault (game content
-    // that looks like the patch, or a swap main never saw).
-    const faults = [
-      tl !== null && tl.framesShort > 0 && `the file is ${tl.framesShort} frames short of the page (a busy machine?): its sound falls ${tl.driftMs} ms behind its picture by the cut`,
-      videoResult.cutAtFrame !== null && page.cut === null && 'the file was cut at a magenta paint the page did not raise',
-      endedBy === 'the fallback' && `no cut within ${tailMs / 1000} s of the battle's end; the fallback stopped the recording`,
-    ].filter(Boolean);
+    const cut = page.cut === null && videoResult.cutAtFrame === null ? null : { page: page.cut, atFrame: videoResult.cutAtFrame };
+    const faults = faultsOf({ timeline: tl, cut, endedBy }, tailMs / 1000);
     const sidecar = {
       mode: check ? 'check' : 'clean',
       opening: page.opening,
@@ -325,7 +316,7 @@ const probes = {
       offsetS,
       audioTrimS: Math.max(0, -offsetS),
       endedBy,
-      cut: page.cut === null && videoResult.cutAtFrame === null ? null : { page: page.cut, atFrame: videoResult.cutAtFrame },
+      cut,
       timeline: tl,
       faults,
       durationS,

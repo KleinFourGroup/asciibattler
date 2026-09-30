@@ -1440,3 +1440,32 @@ kit's strings in the bundle.
 **Not verified:** the pane's own first load replacing a URL (#45's
 mechanism) and a hidden pane's real 0×0 canvas (#54); both were planted
 instead, since neither reproduced.
+
+**Three holes, found at 112b's step zero and fixed in the kit's core**
+(the commit after `7638e80`):
+- **A stylesheet that failed to load passed `ready()`.** My `vite.config.ts`
+  edit restarted the dev server while the page's `ui.css` request was in
+  flight: status 0, zero bytes. The page came up with a `<link>` whose rules
+  can't be read, so "stylesheets > 0" held and `ready()` reported a live
+  page whose canvas sat at the HTML default 300×150, `display: inline`, in
+  a 1280×720 viewport. Now `ready()` throws at once, naming the file, when
+  a same-origin sheet's rules can't be read or are empty. The canvas check
+  also compares the canvas box with the page (`ui.css` makes it exactly
+  `100vw` × `100vh`), which catches the same page by its symptom.
+  **Reproduced for real:** a fresh server, `vite.config.ts` touched 4 s
+  into the load, and `ui.css` failed again. The stand-in's `ready()` timed
+  out twice (the restart made the load longer), and the third call threw
+  "`/src/ui/ui.css` failed to load, so the page has no layout". After a
+  reload, it passed in 1 s.
+- **A go record outlived its navigation.** The trap-4 plant left one, the
+  page later reloaded for a source edit, and `ready()` judged the old ask
+  against the new URL. Now the record is judged once, at the kit's install
+  on the first load after `go()`, and the verdict is held for that page
+  only; `go()` marks its own page as navigating. Re-planted: the overwrite
+  is still caught (the second navigation ran before the target's kit
+  installed, so `?other=1` was the first page to judge it), and a later
+  reload passes.
+- **The real 0×0** turned up after the page reloaded under the `desktop`
+  reset: a 0×0 page, and `ready()` threw by name. The stale-call plant was
+  re-run with a new blocker (the UI taken off the page), and was
+  superseded with the blocker still in place.

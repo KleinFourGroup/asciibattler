@@ -15,15 +15,20 @@ export interface CanvasReading {
 }
 
 /**
- * What is wrong with the canvas for a read, or null. The Renderer sizes the
- * drawing buffer to the canvas's CSS box times the pixel ratio on each
- * `resize` event (Renderer.handleResize), so a box that changed without one
- * leaves a stale buffer and a stale camera aspect.
+ * What is wrong with the canvas for a read, or null.
+ * - `viewport`: the page or the canvas is zero-sized (a hidden pane).
+ * - `layout`: the canvas box isn't the page. `ui.css` sizes it to exactly
+ *   `100vw` × `100vh`, so a box that differs means the layout is off (a
+ *   stylesheet that failed to load left it at the HTML default 300×150).
+ * - `buffer`: the Renderer sizes the drawing buffer to the box times the
+ *   pixel ratio on each `resize` event (Renderer.handleResize), so a box that
+ *   changed without one leaves a stale buffer and a stale camera aspect.
  */
-export function canvasProblem(r: CanvasReading): 'viewport' | 'buffer' | null {
+export function canvasProblem(r: CanvasReading): 'viewport' | 'layout' | 'buffer' | null {
   const [vw, vh] = r.viewport;
   const [cw, ch] = r.client;
   if (vw === 0 || vh === 0 || cw === 0 || ch === 0) return 'viewport';
+  if (Math.abs(cw - vw) > 1 || Math.abs(ch - vh) > 1) return 'layout';
   const [bw, bh] = r.buffer;
   if (bw !== Math.round(cw * r.dpr) || bh !== Math.round(ch * r.dpr)) return 'buffer';
   return null;

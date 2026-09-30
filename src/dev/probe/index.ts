@@ -9,8 +9,9 @@
  * this kit (./bootstrap.ts).
  *
  * - `ready()` waits until the page is live and reports it. It fails by name,
- *   never with a quiet wrong read: a canvas the hidden pane left at 0×0, or a
- *   URL that isn't the one `go()` asked for.
+ *   never with a quiet wrong read: a canvas the hidden pane left at 0×0, a
+ *   stylesheet that failed to load (the page up with no layout), or a URL
+ *   that isn't the one `go()` asked for.
  * - `go(query)` navigates, but only once `ready()` has passed on this page,
  *   since a URL set before then can be replaced by the pane's own first load.
  *   The next `ready()` checks the new URL.
@@ -107,6 +108,13 @@ export function installProbe(game: Game): Probe {
       problem = canvasProblem(reading);
     }
     if (problem === 'viewport') throw viewportError(reading);
+    if (problem === 'layout') {
+      throw new Error(
+        `__probe: the canvas box is ${reading.client.join('x')} in a ${reading.viewport.join('x')} page, ` +
+          'where ui.css makes it the whole page: the layout is off (a stylesheet that failed to load?). ' +
+          'location.reload(), then await __probe.ready()',
+      );
+    }
     if (problem === 'buffer') {
       throw new Error(
         `__probe: the canvas buffer is ${reading.buffer.join('x')}, where its box ` +
@@ -116,32 +124,60 @@ export function installProbe(game: Game): Probe {
     return { viewport: reading.viewport, canvas: reading.buffer, resized };
   };
 
-  /** What `go()` asked for, checked once the navigation has happened. */
-  const goPending = (): boolean => {
-    const raw = sessionStorage.getItem(GO_KEY);
-    if (raw === null) return false;
-    const asked = JSON.parse(raw) as { want: string; from: number };
-    if (asked.from === page) return true;
-    sessionStorage.removeItem(GO_KEY);
-    const missing = missingPairs(location.search, asked.want);
-    if (missing.length > 0) {
-      throw new Error(
-        `__probe.ready: go() asked for ?${asked.want}, but the page is at ` +
-          `${location.search === '' ? 'no query' : location.search}; missing ${missing.join(', ')}. ` +
-          'A board fixture replaces the run dials in its URL, and a URL set before the page was ' +
-          'live is replaced by the pane’s own first load.',
-      );
-    }
-    return false;
-  };
+  // What `go()` asked for, judged once, on the first load after it: this one.
+  // Held for this page only, so a later reload is never judged against it.
+  let goVerdict: { want: string; missing: string[] } | null = null;
+  const store = (globalThis as { sessionStorage?: Storage }).sessionStorage;
+  const asked = store?.getItem(GO_KEY) ?? null;
+  if (asked !== null) {
+    store!.removeItem(GO_KEY);
+    const { want } = JSON.parse(asked) as { want: string };
+    goVerdict = { want, missing: missingPairs(location.search, want) };
+  }
+  /** Set by `go()` on this page: its navigation hasn't replaced the page yet. */
+  let navigating: string | null = null;
 
   const notLive = (): string[] => {
     const pending: string[] = [];
     if (document.styleSheets.length === 0) pending.push('no stylesheets yet');
     if (document.fonts.status !== 'loaded') pending.push('fonts still loading');
     if ((document.querySelector('#ui')?.childElementCount ?? 0) === 0) pending.push('the UI has not mounted');
-    if (goPending()) pending.push('the navigation go() started has not happened yet');
+    if (navigating !== null) pending.push(`the navigation go() started (?${navigating}) has not happened yet`);
     return pending;
+  };
+
+  /** Failures that waiting can't fix, checked once the page is live. */
+  const brokenOnLoad = (): void => {
+    // A same-origin stylesheet that failed to load stays in the list with
+    // rules nobody can read (a dev server restarted mid-request did this).
+    const failed = [...document.styleSheets]
+      .filter((s) => s.href !== null && s.href.startsWith(location.origin))
+      .filter((s) => {
+        try {
+          return s.cssRules.length === 0;
+        } catch {
+          return true;
+        }
+      })
+      .map((s) => s.href!.slice(location.origin.length));
+    if (failed.length > 0) {
+      throw new Error(
+        `__probe.ready: ${failed.join(', ')} failed to load, so the page has no layout. ` +
+          'location.reload(), then await __probe.ready()',
+      );
+    }
+    if (goVerdict !== null) {
+      const { want, missing } = goVerdict;
+      goVerdict = null;
+      if (missing.length > 0) {
+        throw new Error(
+          `__probe.ready: go() asked for ?${want}, but the page is at ` +
+            `${location.search === '' ? 'no query' : location.search}; missing ${missing.join(', ')}. ` +
+            'A board fixture replaces the run dials in its URL, and a URL set before the page was ' +
+            'live is replaced by the pane’s own first load.',
+        );
+      }
+    }
   };
 
   const kit: Probe = {
@@ -165,8 +201,8 @@ export function installProbe(game: Game): Probe {
           if (call !== calls) throw new Error(`__probe.ready (call ${call}): superseded by call ${calls}`);
           pending = notLive();
         }
-        // Waiting on a zero-sized canvas helps nothing once the page is up,
-        // so this throws at once.
+        // Waiting on these helps nothing once the page is up, so they throw at once.
+        brokenOnLoad();
         const { viewport, canvas, resized } = checkCanvas();
 
         // One animation frame requested, and a flag set if it fires; the kit
@@ -208,7 +244,8 @@ export function installProbe(game: Game): Probe {
         );
       }
       const want = normalizeQuery(query);
-      sessionStorage.setItem(GO_KEY, JSON.stringify({ want, from: page }));
+      sessionStorage.setItem(GO_KEY, JSON.stringify({ want }));
+      navigating = want;
       location.assign(`${location.pathname}?${want}`);
       return { navigating: `?${want}`, next: 'await __probe.ready() in the next call' };
     },

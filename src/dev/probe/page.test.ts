@@ -17,6 +17,13 @@ describe('canvasProblem (the check on every read)', () => {
     expect(canvasProblem({ ...live, client: [1280, 0] })).toBe('viewport');
   });
 
+  it('names a canvas box that is not the page (its stylesheet failed to load)', () => {
+    // Seen in the pane: ui.css failed, and the canvas kept the HTML default.
+    expect(canvasProblem({ ...live, client: [300, 150], buffer: [300, 150] })).toBe('layout');
+    // A rounding pixel between the box and the page is not a layout fault.
+    expect(canvasProblem({ ...live, client: [1279, 720], buffer: [1279, 720] })).toBeNull();
+  });
+
   it('names a buffer a resize never reached', () => {
     // The HTML default before the Renderer sizes it.
     expect(canvasProblem({ ...live, buffer: [300, 150] })).toBe('buffer');

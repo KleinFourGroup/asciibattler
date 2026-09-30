@@ -1034,3 +1034,119 @@ The exit clips in `clips/` were made at `1802b4b` with the sound as
 recorded (+0); remake them once the default lands rather than shifting
 them. The A/B file, `clips/ab-sound-sync.mp4`, stays with its key recorded
 above.
+
+### 111f-post — two openings, the cut, +25 ms (2026-09-30) — the `stop` is open
+
+Session f74660ed. Built as specified in the hand-off, plus a guard from a
+finding (below). Code `f406442`; `dist/` byte-identical (`7424d4b4…`, 32
+files; the only shipped `src/` change is a comment beside `remaining`).
+
+**Step zero: the known answers, read from the `1802b4b` clips.** A probe
+(scratch, reading only the file) tracks the countdown box's region (the
+box dark at about 14, the board behind it about 54) and the largest
+frame-to-frame change over the last 3 s. The old clips open on the box
+mid-fade (14 → 54 over 11 frames) and cut to the next screen at file frame
+3939 of 4005 (corridors) and 2667–2670 of 2747 (seed 12): 1.1 and 1.3 s of
+the promotions screen at the end. Their page frames after the go frame
+match their file frames within one, so they lost no time.
+
+**Built.**
+- `--countdown=full|skip`, `full` the default. The countdown is held through
+  setup by the instance patch a parked fixture already has (a seed's battle
+  is parked in the same microtask as its two dispatches, so it holds 5.0).
+  Full: at the go frame the hold is lifted and `remaining` reset to its
+  whole seconds. Skip: the box's transition switched off and its opacity 0
+  in the go frame, and the fight released. The seams are checked by name
+  at record time; `PreBattleCountdown.test.ts` pins the countdown half
+  (with `remaining` renamed, that test alone fails; restored, it passes).
+- The cut, the gate mirrored: the page shows the patch row again in the
+  first frame after `activeScene` changes (the swap runs from a timer
+  between frames, so that callback runs in the first frame that draws the
+  next screen), and main writes nothing from the paint that shows it. The
+  audio is cut to the video (`-t` at the mux); cues logged after the swap
+  are listed apart and not counted; the analyzer counts any in-battle cue
+  placed past the last frame (`cuesPastEnd`). With no cut 5 s after
+  `battle:ended`, a fallback stops the recording, and the front door fails
+  it.
+- `SOUND_DELAY_MS = 25` added to the placement, recorded in the sidecar.
+
+**The trials** (the working tree, corridors):
+- **Skip:** the box region at 54 from frame 0, no ramp; no swap in the last
+  3 s (the largest frame-to-frame change 0 at 240×135); the audio ends
+  17 ms after the video (inside one AAC frame, 21 ms); the page's cut frame
+  (3966, less the 31 before the go frame) is the file's cut frame (3935).
+- **Full:** the box region at 14 from frame 0 (the whole box, "5"), its
+  fade starting at file frame 303 (5.05 s), in step with the page's 5 s.
+  It failed: 127 of 128 cues heard, one placed past the end. The page had
+  painted 4239 frames by the cut and the file held 4193, with nothing
+  dropped.
+
+**The finding: a busy machine leaves page frames unpainted, and the file
+loses their time.** Every paint was accounted for (47 held, 4193 written, 2
+after the cut), so 46 page frames never became a paint at all: the
+compositor skipped them upstream of main, where nothing drops or counts
+them. The file plays frame n at n/60, so it lost 763 ms, and the sound fell
+that far behind its picture by the end. While that trial recorded, the
+session was decoding the previous clip at full speed. The planted control,
+the same input with and without a looping full-speed ffmpeg decode:
+
+| corridors, skip | frames short | picture ahead of its sound at the cut | page fps | cues heard |
+|---|---|---|---|---|
+| idle | 0 | −3 ms | 60.003 | 128 / 128 |
+| the planted decode | 322 | 5514 ms | 59.866 | 120 / 128 |
+
+The check twins at `1802b4b` read 0 missing: this is what their marker
+counts, and clean clips had no way to see it.
+
+**The guard.** The cut is the one frame both sides know, so the sidecar's
+`timeline` sets the page's frame clock (the rAF times of the go and cut
+frames) against the file's frame count: `framesShort` (page frames less
+file frames, from the go frame) and `driftMs`. Any frame short is a fault,
+as a drop is (111c): the clip is delivered and the front door exits 1.
+- **Its reading, against the marker:** a check twin under the planted load
+  read 7 frames short; the analyzer's marker, from the file, read 8 missing
+  and 1 repeated. A repeated paint (a hitch, as at 111c) makes the count
+  net, and an idle seed-12 clip read −1 for one repeat. Its first version
+  counted a twin from its first paint rather than its go frame, and read
+  −45; fixed.
+- **Its control:** seed 12, skip, idle then loaded: OK (0 short, −2 ms,
+  107 of 107), then CHECK FAILED (253 short, the sound 4.3 s behind by the
+  cut, 101 of 107) with the fault named, exit 1.
+- **The +25 ms, read from the file:** the loaded twin's tone sits +7 ms
+  against its flash, the spike's −18 plus 25.
+- **Not guarded: a slow page clock with no frame short.** The skip trial
+  read 59.93 fps with 0 frames short (timed from the go callback, a few ms
+  after the go frame), so its picture ran 80 ms ahead of
+  its sound by the cut. Idle recordings read 60.00 (three runs). What
+  slowed that one is not known. It passes the guard; the stop carries the
+  decision.
+
+**The exit set** (`clips/`, at `f406442`, from fresh profiles, the machine
+idle):
+
+| | seconds | opens on | frames short / picture vs sound at the cut | cues heard | the file |
+|---|---|---|---|---|---|
+| `corridors-f406442` | 70.7 | the countdown at 5 | 0 / −3 ms (60.003 fps) | 128 / 128 | box region 14 from frame 0; audio ends +6 ms |
+| `corridors-f406442-skip` | 65.7 | the fight | 0 / −3 ms | 128 / 128 | box region 54 from frame 0; audio +13 ms |
+| `seed12-f406442` | 49.5 | the countdown at 5 | 0 / −2 ms | 107 / 107 | box region 12 from frame 0; audio −2 ms |
+| `corridors-42d96ce-vs-f406442` | 70.7 / 70.6 | both at 5 | −1 / −3 ms, 0 / −2 ms | 128 / 128 each | the same 128 cues, median 2 ms apart, max 18 |
+| `corridors-f406442-check` | 71.5 | the countdown at 5 | 0 / −2 ms | 128 / 128 | 0 of 4267 missing, colours within 2, the tone +7 ms |
+| `seed12-f406442-check` | 50.2 | the countdown at 5 | 0 / −2 ms | 107 / 107 | 0 of 2996 missing, colours within 2, the tone +7 ms |
+
+No clip shows a swap in its last 3 s (the largest frame-to-frame change
+0–0.1), none has lead-in frames, and none dropped a frame. Viewed: the
+full clip's first frame is the whole box at "5", the skip clip's is the
+board with no box, the full clip's last is the battle's own end, and the
+pair opens with both halves at "5", each labelled. `git worktree list`
+afterwards showed only the main tree. The skip clip was recorded twice: the
+session's doc edits made the tree dirty mid-set, so the first was stamped
+`f406442-dirty`, and it was deleted.
+
+**Not verified here:** §110's frame-rate probe was not re-run (nothing in
+this step touches the window; the timeline's page rate under recording,
+60.002–60.003 fps, is this step's reading); Firefox (the recorder is
+Chromium's); the clips by ear and eye, which is the read.
+
+**THE STOP:** the user reads a full clip, a skip clip and the pair, and
+decides on the slow page clock with no frame short. On the read, §111
+closes.

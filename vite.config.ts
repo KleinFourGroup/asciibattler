@@ -3,6 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { join, sep } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type Plugin } from 'vite';
+import { PROBE_BOOTSTRAP } from './src/dev/probe/bootstrap';
 
 /**
  * Dev-only save endpoint for the config editors (the archetype editor in I4;
@@ -93,8 +94,25 @@ function configSavePlugin(): Plugin {
   };
 }
 
+/**
+ * 112a — the probe kit's stand-in, inline at the top of the page on the dev
+ * server only (`apply: 'serve'`; no build carries it, the recorder's
+ * development-mode build included). It lets a pane session's first
+ * `await __probe.ready()` wait while a fresh server holds the modules
+ * (src/dev/probe/bootstrap.ts).
+ */
+function probeBootstrap(): Plugin {
+  return {
+    name: 'asciibattler-probe-bootstrap',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      return { html, tags: [{ tag: 'script', children: PROBE_BOOTSTRAP, injectTo: 'head-prepend' }] };
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [configSavePlugin()],
+  plugins: [configSavePlugin(), probeBootstrap()],
   // Relative asset paths in the built index.html / CSS so the same dist/
   // works under any subpath (GitHub Pages project sites, file://, etc.)
   // without needing a per-deploy `base` value.

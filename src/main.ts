@@ -41,6 +41,8 @@ const fontAtlas = await FontAtlas.create();
 // the tree-shaker proving the module's top level pure; 105c's fixture table,
 // template literals and spreads, left ~200 bytes of it in `dist/`.)
 const boardPanelModule = import.meta.env.DEV ? await import('./dev/boardPanel') : null;
+// 112a — the pane probe kit, the same way (process/browser-pane.md).
+const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
 // A fixture bookmark (`?bp=board-…`) stands for a set of run dials, and Game
 // parses the run dials in its constructor — so its run pairs are written into
 // the URL first (src/dev/boardPanel/boot.ts).
@@ -98,6 +100,10 @@ if (import.meta.env.DEV) {
   //   __game.applyStatus('blind', 7)             → just unit id 7
   handle.__game.applyStatus = (statusId, target = 'enemy') =>
     devApplyStatus(game, statusId, target);
+  // 112a — `window.__probe`, installed last so a `ready()` that returns sees
+  // the whole dev handle (and a board fixture's battle) in place. A pane
+  // session starts with `await __probe.ready()`.
+  probeModule?.installProbe(game);
 }
 
 /** 28 — the `__game.applyStatus` body (DEV-only; tree-shaken from prod builds). */

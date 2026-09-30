@@ -1379,3 +1379,64 @@ development-mode build, whose `build()` both front doors share; criterion
 session**, and the §111 clock applies again: the session pauses for the
 meter at the first step boundary after 20:05, or mid-step if one step runs
 an hour.
+
+### 112a — the kit's core (2026-09-30) — read `none` ✅
+
+**Step zero.**
+- **The not-live state is the HTML with its modules held**, not a blank
+  document. The first call after `preview_start` read `readyState`
+  interactive, the title, 2 scripts, 0 stylesheets, the canvas at the HTML
+  default 300×150, no `__game`, and a hidden 0×0 page. It stayed that way
+  for 38–40 s on each of two fresh starts. **The dev server holds it:**
+  every module request began at 3–5 s and all were answered together at
+  about 40 s, and from Node on a fresh start, curl waited 19.7 s for
+  `main.ts` and 18.0 s for `ui.css`, then 2 ms for a later module.
+  `resize_window` doesn't release it (0×0 for 12 s after one). No second
+  navigation happened in either start (`timeOrigin` unchanged), so #45's
+  overwrite didn't reproduce.
+- **Timers run on time in the hidden pane** (100 ms timeouts land about
+  108 ms apart), and rAF doesn't fire; the page's clock tracks the
+  machine's.
+- **The pane tool gives up at 45 s**, so `ready()` defaults to 30 s.
+
+**One change inside the signed intent, flagged:** the stand-in
+(`src/dev/probe/bootstrap.ts`), an inline script `vite.config.ts` injects
+into the dev server's HTML only (`apply: 'serve'`). Because the HTML is up
+while the modules are held, the stand-in's `ready()` waits for the kit, and
+its other calls refuse by name. Without it, a first `await __probe.ready()`
+throws a ReferenceError for up to 40 s.
+
+**Built** (`src/dev/probe/`, loaded like the board explorer by a DEV-gated
+dynamic import, installed last in `main.ts`'s DEV block): `ready()`,
+`go(query)`, `check()` and `running()`, as ARCHITECTURE's tree describes.
+The private Game fields it reads are typed by indexed access
+(`Game['activeScene']`), so a rename fails typecheck: a planted
+`Game['activeScen']` failed with TS2339.
+
+**The traps, planted in the pane** (Chromium, 1280×720):
+
+| trap | plant | result |
+|---|---|---|
+| not live | a fresh server; the first call, at 1.0 s, is `await __probe.ready()` | the stand-in waited, and the kit answered at 15.7 s with a live report (character select) |
+| a URL overwritten | `go()`, then a second navigation to `?other=1` before any `ready()` | `ready()` threw, naming all three missing pairs; the next `ready()` passed there |
+| (the same, a real case) | `go('bp=board-quarry&seed=99')` | `ready()` threw `missing seed=99` (the fixture replaces its run dials) |
+| (go before live) | `go()` on a page still loading | refused; nothing navigated. It read "is not a function", so the stand-in now refuses by name |
+| a 0×0 canvas | the canvas hidden by CSS (a `desktop` reset left this pane at 1280×720, so #54 didn't reproduce) | `check()` and `ready()` threw at once, with the fix |
+| (a stale buffer) | the canvas box set to 640×360 with no `resize` event | `ready()` sent one: `resized: true`, buffer 640×360 |
+| a stale call still acting | a `ready()` that can't finish (a planted go record from this page), left running | the next call (`check()`) stopped it, "superseded by call 10", with its blocker still set; `running()` then empty |
+
+**Headless** (`page.test.ts`, 12): the canvas check and the URL pairs, each
+with planted cases on both sides; the stand-in's exact text run against a
+fake window (it hands the wait to the kit with the time left, and rejects
+by name); and its names checked against the real kit's own keys (a planted
+missing `running` failed the pin).
+
+**`dist/`** byte-identical: `d77a6381…` over 32 files at `3c46acd` (two
+builds; the total's format differs from §110's `7424d4b4…`, whose script
+wasn't kept) and again after 112a. The failing control: a planted static
+use of the kit outside the DEV gate moved it to `84705543…` and put the
+kit's strings in the bundle.
+
+**Not verified:** the pane's own first load replacing a URL (#45's
+mechanism) and a hidden pane's real 0×0 canvas (#54); both were planted
+instead, since neither reproduced.

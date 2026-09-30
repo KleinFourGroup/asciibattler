@@ -1261,3 +1261,108 @@ The `1802b4b` clips are deleted (the user's word); `clips/` holds the
 
 **§111 ✅ CLOSED 2026-09-30.** ROADMAP §111 demoted, and the stall carried
 into §114.
+
+## Phase 112 — the pane probe kit and the Electron runner
+
+### The §112 audit and cut (2026-09-30) — the shape-lock is open
+
+Session ab584af9. Nothing the kit touches has moved since the charter was
+written: the last commit to `src/main.ts` or `src/dev/` is `72071bc`
+(109b), and `shell/electron/` is as §111 closed it (`42b3263`). ✔ = read by
+this session at file:line.
+
+**What is there.**
+- **The traps, as filed.** The charter's six map to Round 7.5's papercuts:
+  not live yet (#38; before it #3, #6), a URL overwritten by the pane's
+  first load (#45), a stale frame (#43), a timed-out script still acting
+  (#40), a 0×0 canvas (#54; #16 is its zero-width twin), and a crop (#49).
+  None has been filed since this round began (✔ `retro/papercuts.jsonl`,
+  72 lines). By the charter's own list, 7.5 filed six covered-trap
+  papercuts, where the charter says 5; the record doesn't say which one C5
+  left out. The line (at most 1) doesn't move.
+- **The kit's home.** DEV code loads by a DEV-gated dynamic import in
+  `main.ts` (✔ `main.ts:40`), because a static import left about 200 bytes
+  in `dist/` at 105c. `window.__game` is set after `game.start()` (✔
+  `:56-67`), behind a top-level await for the font atlas (✔ `:36`), so a
+  handle installed there appears only once the modules, the font and the
+  Game are up.
+- **The reach-ins.** One frame is a closure inside `Renderer.start` (✔
+  `Renderer.ts:252-271`): the private `onFrame(dt)` (Game's: the scene tick,
+  then the depth sort, ✔ `Game.ts:185-188`), the camera shake, then
+  `renderTwoPass`. The overlays move inside the scene tick (✔
+  `BattleRenderer.ts:927,945`). The board explorer's `seams.ts` is the
+  pattern for reaching private members: each is checked at install, and a
+  moved one is logged by name (✔ `seams.ts:25-27,77-82`).
+- **The run driver exists only as a recipe** (`process/browser-pane.md`
+  "Fixtures"; `archive/post-104-worklog.md` §106d, with one unexplained
+  no-op `acceptReward` on the boss's reward screen that went through on a
+  retry, ✔ `:1374-1377`). `RunPhase` has 12 members (✔ `Run.ts:151-163`).
+  The fuzz harness runs the same phase switch over a headless Run (✔
+  `tests/fuzz/harness.ts:779-1160`), but it lives under `tests/` and pulls
+  in the fuzz strategies, so the page driver keeps its own small policy.
+  Merging the two is a candidate for Round 8.5's census.
+- **The runner is mostly built.** `--probe=script --script=<file>` runs a
+  page-script file's default export in the page and prints one JSON line,
+  exiting 0, 1 on a failed check, or 2 on a timeout (✔ `main.mjs:224-231,
+  391-435`). The recorder builds the working tree in development mode
+  (about a second) and checks that the build carries the dev chunk (✔
+  `record-cli.mjs:133-146`), then spawns `main.mjs` in a fresh profile (✔
+  `:150-183`). What's missing is a front door, and a page that is ready
+  before the script runs.
+- **Criterion (2)'s instrument.** `friction-scan` already reads every tool
+  call in the retained transcripts and prints counts only (✔
+  `scripts/friction-scan.mjs:101,116`); pane calls and kit calls per
+  session are one more column.
+- **The oracle.** `dist/` byte-identical, by §110's hash (`7424d4b4…`, ✔
+  §110 "The phase's oracle"), re-hashed at each step that touches `src/`,
+  `index.html` or `vite.config.ts`. Tests run under Node (✔
+  `vite.config.ts:131`), so the kit's seams are pinned on the prototypes,
+  the way `AudioPlayer.test.ts` pins `pools`.
+
+**Hypotheses for step zero** (unmeasured):
+- **The not-live state.** A kit the page installs can't exist before the
+  page does, so a first `await __probe.ready()` on an unloaded page throws
+  a ReferenceError. That is loud, costs one retry and makes no wrong
+  measurement, which was the trap. Whether the pane's early state is a
+  blank document or the HTML with its modules still loading decides
+  whether a serve-only bootstrap in `index.html` (a Vite plugin with
+  `apply: 'serve'`, which the build never runs) would buy anything. Step
+  zero reads `document.readyState`, `location.href` and the script count
+  in the first call after `preview_start`.
+- **Timers in the hidden pane.** `ready()` and the driver poll on
+  `setTimeout`, which a hidden page may clamp to once a second; measured
+  before a polling interval is chosen.
+- **Frames.** `frame(0)` through the loop's own path (the private
+  `onFrame`, then `renderTwoPass`) moves the overlays and renders without
+  advancing the sim. The §109a oracle's `scene.tick(0)` then
+  `renderTwoPass()` is the precedent.
+- **The boss-reward no-op** (§106d) either reproduces under the driver or
+  it doesn't. Either way, the driver reports a command that changes nothing
+  instead of retrying it.
+
+**Calls for the shape-lock, with the session's lean.**
+1. **`pixels(rect)`** returns numbers (a hash, the size, and the pixels of
+   a small rect, capped), and on request shows the crop magnified in a DEV
+   overlay so a screenshot can see it; #49 wanted to look at a few-pixel
+   drape. Lean: both, since the overlay is small.
+2. **The driver's choices:** the first legal choice, or a seeded draw among
+   the enabled ones (the harness's event doctrine). Lean: seeded, with
+   `first` as an option, so a run repeats from its seed and still varies
+   across seeds.
+3. **The runner's page:** the recorder's development-mode build of the
+   working tree, not a dev server. Lean: the build. `build()` moves to a
+   module both front doors share, and one recording through the analyzer
+   checks the recorder after the move.
+4. **Criterion (2)'s counter, built now** rather than at the close. Lean:
+   now, so it is checked against known answers (a 7.5 pane session reads
+   pane calls and no kit calls) before the sessions it will count.
+
+**Predictions for the cut.** No snapshot bump, no RNG stream (the driver's
+draw is a local `RNG`, never serialized), no config change. No step stages
+`src/sim|run|core|config|bot`, `config/` or `tests/fuzz`, so the fuzz smoke
+fires on none. `dist/` stays byte-identical at every step. This phase's own
+sessions don't count toward the criteria, which start at the landing commit
+the Cursor records.
+
+The cut is proposed in the conversation and goes into ROADMAP §112 once
+signed.

@@ -579,3 +579,26 @@ wave lever never changes a body's strength.
 **THE STOP — the read (the user's):** the spec as written, especially
 D8's stacking reading (the one line not yet signed), and the eight phase
 entries in ROADMAP. On the signature, §110 closes.
+
+### 110f — THE READ (2026-09-30, the user's) — SIGNED; §110 ✅ CLOSED
+
+"Signing everything! 😁" The spec, D8's stacking reading and §111–§118
+are signed as written. On the stacking, the user: "I'm not the biggest fan
+of mixing additive and multiplicative levers, since it's not intuitive to
+the mathematically illiterate general audience, but these are placeholders
+anyway, and this is probably one place where the player doesn't need to
+see the percentages". So the table's numbers are placeholders, and the
+player-facing text describes each level without percentages (the spec,
+D8). **§110's exit, met:** every question answered by an observation in
+its shell (110a–e), and the spec written over them and signed (110f).
+
+The draft's commit, `f19b0ed`, is in git with this session's message, 16 s
+after its doc-cap test, but the call is not in the transcript the session
+can see, and that turn ended with no summary to the user. Checked (author
+time, message, a clean tree) before building on it; a papercut is filed.
+
+The user asked whether §111's kickoff runs in this session or a fresh one.
+The session recommended a fresh one: everything this session learned is in
+the spec, this log and the Cursor, and the kickoff's audit covers code this
+session never opened (`shell/electron/record.mjs`, the probes,
+`AudioPlayer`'s pools), where a cold read is what the audit wants.

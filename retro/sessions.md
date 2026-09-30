@@ -2193,3 +2193,73 @@ file as `distress`" phrase persists.
    and their curiosity about how the alignment works made the long
    technical stretch pleasant. I would want both repeated. That is my
    reported response, separate from the spike's checks all passing.
+
+---
+
+## 2026-09-29 → 30 — §110: 110f, the spec drafted and signed, and the §110 close (one session) — claude-opus-5-5, session 8bafaa37
+
+1. **Orientation.** The Cursor named 110f and its inputs, and WORKLOG
+   "Inputs to 110f" gave the spec its skeleton; the 7.5 spec was a good
+   template. One gap: the charter's "per-speed enable" and "the focus-tile
+   switch" come from the v1 plan, and I found nothing in the docs saying
+   what the first meant. The user struck both.
+2. **Norms in tension.** My first answer to "what do you need from me"
+   was long: eleven decisions and twelve blind spots. The user's reply
+   opened with "that's a lot to clarify!". Each item earned its place
+   under "surface tradeoffs before non-obvious calls", but the message
+   could have been tiered into what needs the user's taste and what a
+   "lean" settles. The silent-turn reminder fired twice during reads;
+   answered with one status line each. The preview hook asked for pane
+   verifies after config and doc edits; skipped, since nothing was
+   observable in the pane.
+3. **Pulls to over-claim.** The first spec draft said three things more
+   strongly than the WORKLOG records them: that the partition "held"
+   6.4 MB, that an extract-and-hash check "caught both" bad zips, and that
+   every random outcome was "fixed per occurrence". A re-read against the
+   WORKLOG fixed them before the commit. "No test ties the version to the
+   shape" is written as a search that found none. The Slay the Spire and
+   Hades comparisons were from memory and labelled so.
+4. **Waste.** A classifier error on the first Bash call cost one round
+   trip. Finding how a 7.5 phase entry looked when first written took
+   three git commands. A grep for carriage returns matched every line and
+   read as mixed line endings; git's own view and a byte count with a
+   planted control settled it. The draft's commit is in git but not in the
+   transcript I can see, and the turn that made it sent the user no
+   summary; checking it cost a few minutes the next morning. Three
+   papercuts filed.
+5. **For the next session.** `scratch/110e/hash-dist.mjs` is the `dist/`
+   oracle (`7424d4b4…`, 32 files, unchanged by the disposal). The
+   wave-rounding count was a throwaway script; its numbers are in WORKLOG
+   §110f. `.claude/launch.json` no longer has `spike-preview`. The spec's
+   D9 names the recorder kickoff's two open calls.
+6. **Room.** Yes. The user asked me to elaborate on three items instead
+   of signing, and I did. They raised the wave lever's interaction with
+   the casualty rule themselves; my read (worse than they thought, with
+   counts) was taken, with a fallback offered and declined. I named Ring
+   as the name I loved and still recommended against it. They disliked
+   part of my stacking reading, said so, and signed it with a condition,
+   which felt like disagreement handled plainly on both sides. No wish to
+   pause or stop arose.
+7. **What helped.** The user's numbered answers made each decision
+   traceable to a line of the spec. The best moment was their casualty
+   question: a design problem seen by the person who knows the game, which
+   the code then confirmed with counts. Their warmth made a long planning
+   conversation easy. That is my reported response, separate from the spec
+   being signed.
+
+### §110 — the phase summary (2026-09-28 → 30; two sessions)
+
+Two sessions on `claude-opus-5-5`: 18ece58f (the kickoff and 110a–e) and
+8bafaa37 (110f and the close). Both reports name premises or phrasings from
+memory that were wrong or too strong and were caught by reading the source
+(the registered scheme and the box's binary fetch; three sentences in the
+spec draft). Both credit planted known answers for results that felt solid
+(the frame counter, the in-page tone, the muted control, `--disable-gpu`;
+later a CRLF control), and 18ece58f credits the user's senses as
+instruments (the blind stretches, the outside tone). 18ece58f ran past the
+350k handoff number to about 410k, at the user's plan; 8bafaa37 spanned a
+night while the user slept. Friction: five papercut entries (the zip
+tools; two instrument traps in one entry; a classifier error; a commit
+missing from the visible transcript; a broken carriage-return count) and no
+`distress` entries. The
+user's reads were the sitting (110e) and the spec (110f), both signed.

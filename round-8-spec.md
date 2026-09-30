@@ -9,10 +9,10 @@ behind every line here is [WORKLOG.md](WORKLOG.md) (§Kickoff, §110a–e, and
 §110f for this spec's reasons and rejected alternatives); the plan is
 [ROADMAP.md](ROADMAP.md).
 
-**Status: DRAFT, written at 110f (2026-09-29).** Decisions D1–D10 were
-signed item by item in the drafting conversation (2026-09-29); the lines
-marked *proposed* and the phase list (§111–§118) await the signature with
-this file.
+**Status: SIGNED 2026-09-30** ("Signing everything! 😁"), written at 110f.
+Decisions D1–D10 were signed item by item in the drafting conversation
+(2026-09-29); D8's stacking reading and the phase list (§111–§118) were
+signed with this file.
 
 ## Intent (the charter, in the user's words)
 
@@ -242,11 +242,13 @@ demonstrated need), no live transport, no third-party analytics.
   fight as long, and the pacing targets hold. This needs one new per-run
   multiplier, enemy morale on the encounter's pool, shaped like the other
   three.
-- **Stacking** (*proposed reading*): a repeated lever adds (+10%, then
-  +20%); different levers multiply, so the wave lever never changes a
-  body's strength and the budget lever is exactly its percentage. At
-  Escalation 5: head count ×1.2, level budget ×1.2 × 1.2 = ×1.44, enemy
-  morale ×1.2, bits ×0.75.
+- **Stacking:** a repeated lever adds (+10%, then +20%); different levers
+  multiply, so the wave lever never changes a body's strength and the
+  budget lever is exactly its percentage. At Escalation 5: head count
+  ×1.2, level budget ×1.2 × 1.2 = ×1.44, enemy morale ×1.2, bits ×0.75.
+  The numbers are placeholders, and the player-facing text describes each
+  level without percentages, since the mix of adding and multiplying is
+  not intuitive to a general audience (the user, at signing).
 - **Saved:** the level goes in the RunSnapshot (a Run bump); the
   multipliers are derived from the level and the table, never stored.
   Today `Run.fromJSON` resets the multipliers to their defaults
@@ -352,8 +354,8 @@ that touch `src/run`, `src/config` or `tests/fuzz`.
 
 ## The build phases
 
-Entered in ROADMAP at 110f (unsigned). Each is cut at its own kickoff
-against the code as it is then, with its reads.
+Entered in ROADMAP at 110f and signed with this file. Each is cut at its
+own kickoff against the code as it is then, with its reads.
 
 - **§111** the background recorder (D9)
 - **§112** the pane probe kit and the Electron runner (D10)

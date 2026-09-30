@@ -1150,3 +1150,66 @@ Chromium's); the clips by ear and eye, which is the read.
 **THE STOP:** the user reads a full clip, a skip clip and the pair, and
 decides on the slow page clock with no frame short. On the read, §111
 closes.
+
+### 111f-post — THE READ, and the display test (2026-09-30, the user's)
+
+**The read:** "those clips all look great!" ✅ (the full clip, the skip
+clip, the pair). On the slow page clock the user took (a), to leave it
+and raise it at §114's kickoff, with a fallback on record: a stepped-clock
+recorder (the page's clocks advanced one frame at a time, each frame
+captured, the soundtrack mixed afterwards from the cue log), possibly on
+the box. The session's read of it: viable and known; the sound becomes a
+reconstruction that can't hear the browser's own audio problems, every
+clock must be caught (CSS transitions run on the browser's animation
+clock), and a box without a GPU renders WebGL in software, so a stepped
+recorder would run locally at low priority as readily. Not needed on
+today's evidence.
+
+**The user's question: was it load, or the monitor locking?** The user was
+away from about 14:30. Windows' logs: the session locked at 14:34:22
+(Winlogon's Sens event 4; its pair, event 5, follows each display wake
+within 3 s), and the display turned off at 14:35:39 (Kernel-Power 566,
+reason 12, an idle timeout) until 17:04:52 (reason 32, the mouse). The
+skip trial straddled the display going off (57 s in); the full trial
+started 35 s after it. Every recording from 14:42 ran locked and dark, and
+its 8 unloaded ones read 0 frames short within 3 ms, so the state alone is
+harmless; the transition was untested.
+
+**The display test** (the user's go, the user present): three corridors
+clips, skip. In two, the session switched the display off
+(`SC_MONITORPOWER`) about 22 s into the fight and woke it with a one-pixel
+mouse move 25 s later. The page now logs every frame over 40 ms with its
+wall-clock time (`timeline.longFrames`).
+
+| | long frames, against the session's stamped requests | frames short | picture ahead of its sound at the cut | cues |
+|---|---|---|---|---|
+| control, display on | none | 0 | −3 ms | 128 / 128 |
+| off, then on | 183 ms from 5 ms after the off; 433 ms from 11 ms after the wake | 3 | 630 ms | 127 / 128 |
+| off, then on | 283 ms from 10 ms after the off; 250 ms from 260 ms before the wake | 0 | 497 ms | 127 / 128 |
+
+**What it says.**
+- **Each display transition stalls the offscreen renderer for 0.18–0.43 s,**
+  starting within 5–11 ms of the request (three of four; the second wake's
+  stall began 260 ms before the nudge, unexplained, perhaps the display
+  waking by itself with the user in front of it). The page stops rather
+  than skipping paints, so each page frame still paints and the file shows
+  the frame after the stall one slot later: the picture runs ahead of its
+  sound by the stall from then on.
+- Windows logged none of these transitions (no 566): a programmatic switch
+  is not the idle timeout's session transition, so the path is related to
+  14:35:39's, not the same.
+- **The two anomalies, placed.** The skip trial's 80 ms with no frame short
+  fits a stall at 14:35:39, inside it (inferred: it predates the long-frame
+  log; main's longest paint gap was 132 ms, against 34–93 ms in idle
+  runs). The full trial's 46 frames short are 767 ms, all of its drift,
+  and no transition fell inside it: load, the session's own decode, as
+  first thought. The user's hypothesis explains the one; load the other.
+- **The guard has a hole.** It fails a file short of frames, and a stall
+  makes none: the second test clip passed it with the sound 497 ms behind,
+  and failed only because one cue fell past the file's end. The slow clock
+  that (a) left alone is this stall, and it recurs whenever the display
+  switches while a recording runs (once a minute into a lock, and when the
+  user returns).
+
+The decision goes back to the user, since (a) was taken on "seen once,
+cause unknown".

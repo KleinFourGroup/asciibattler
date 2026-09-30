@@ -169,6 +169,8 @@ export default async function recordPage(opts = {}) {
     running: false,
     ended: false,
     goAt: null,
+    lastAt: null,
+    longFrames: [],
     cutAt: null,
     cutFrame: null,
     boxShownAtGo: null,
@@ -216,6 +218,13 @@ export default async function recordPage(opts = {}) {
       state.goAt = now;
       go();
     }
+    // A frame over 40 ms (2.4 slots at 60 fps) after the go frame: the file
+    // shows it for one slot, so the picture loses the rest to its sound.
+    // Kept with its wall-clock time, to place it against the machine's events.
+    if (state.goAt !== null && state.lastAt !== null && now - state.lastAt > 40 && state.longFrames.length < 200) {
+      state.longFrames.push({ pageFrame: state.frame, ms: Math.round(now - state.lastAt), epoch: Math.round(performance.timeOrigin + now) });
+    }
+    state.lastAt = now;
     // The swap runs from a timer between frames (Game.afterOutro), so this
     // callback sees it in the first frame that draws the next screen.
     if (state.cutAt === null && state.startedAt !== null && game.activeScene !== scene) {
@@ -278,6 +287,7 @@ export default async function recordPage(opts = {}) {
           .filter((c) => c.t >= state.startedAt && c.inBattle)
           .map((c) => ({ key: c.key, s: Math.round(c.t - state.startedAt) / 1000 })),
         cuesAfterCut: cues.filter((c) => c.t >= state.startedAt && !c.inBattle).map((c) => c.key),
+        longFrames: state.longFrames.filter((f) => state.cutFrame === null || f.pageFrame < state.cutFrame),
         tone: check ? { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S } : null,
         flashFrames: [state.flashFrames[0] ?? null, state.flashFrames[state.flashFrames.length - 1] ?? null],
         rejections,

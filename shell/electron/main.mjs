@@ -390,6 +390,7 @@ function timeline(page, videoResult, goVideoFrame) {
     fileS: Math.round(fileS * 1000) / 1000,
     pageFps: Math.round((pageFrames / page.cut.s) * 1000) / 1000,
     driftMs: Math.round((page.cut.s - fileS) * 1000),
+    longFrames: page.longFrames,
   };
 }
 

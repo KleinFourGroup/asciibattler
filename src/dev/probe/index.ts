@@ -16,19 +16,45 @@
  *   since a URL set before then can be replaced by the pane's own first load.
  *   The next `ready()` checks the new URL.
  * - `check()` is the canvas-size check every read makes.
+ * - 112b: `frame(dt = 0)` runs one frame of the loop's own body now, so a
+ *   read after a change never sees the previous view (a hidden pane runs no
+ *   frames of its own), and `frame(0)` never advances the sim.
+ *   `pixels(rect)` renders and reads a crop of the canvas in one call (the
+ *   drawing buffer isn't kept between tasks) and returns numbers; with
+ *   `show`, it also draws the crop magnified on the page for a screenshot,
+ *   until `hide()`.
  * - Every call gets a number, and a long call stops at its next poll once a
  *   later call starts, so a call the tool gave up on (it stops waiting at
  *   45 s) can't keep acting. `running()` lists the calls still running.
  */
 
 import type { Game } from '../../Game';
-import { canvasProblem, missingPairs, normalizeQuery, type CanvasReading } from './page';
+import type { Renderer } from '../../render/Renderer';
+import {
+  canvasProblem,
+  glReadRect,
+  missingPairs,
+  normalizeQuery,
+  summarizePixels,
+  type CanvasReading,
+  type PageRect,
+  type PixelSummary,
+} from './page';
 
 /** What the kit reads on the live Game. Indexed access types reach private
  *  members, so tsc checks each name here: a rename fails typecheck. */
 interface GameInternals {
   readonly activeScene: Game['activeScene'];
   readonly run: Game['run'];
+  readonly renderer: Game['renderer'];
+}
+
+/** One frame of the loop is `onFrame(dt)` (Game's: the scene tick, then the
+ *  depth sort) and `renderTwoPass()` (Renderer.start); both private. */
+interface RendererInternals {
+  readonly onFrame: Renderer['onFrame'];
+  renderTwoPass: Renderer['renderTwoPass'];
+  readonly webgl: Renderer['webgl'];
 }
 
 export interface PageReport {
@@ -56,12 +82,33 @@ export interface CanvasCheck {
   readonly canvas: readonly [number, number];
 }
 
+export interface FrameReport {
+  readonly call: number;
+  readonly scene: string | null;
+  /** The battle's sim tick, or null outside a battle. `frame(0)` never moves it. */
+  readonly tick: number | null;
+  readonly canvas: readonly [number, number];
+}
+
+export interface PixelsReport extends PixelSummary {
+  readonly call: number;
+  /** The rect asked for, in CSS pixels from the page's top-left. */
+  readonly rect: PageRect;
+  /** Its size in drawing-buffer pixels (CSS × the pixel ratio). */
+  readonly size: readonly [number, number];
+  /** The magnification when `show` drew it on the page, else null. */
+  readonly shown: number | null;
+}
+
 export interface Probe {
   readonly live: true;
   ready(opts?: { timeoutMs?: number }): Promise<PageReport>;
   go(query: string): { navigating: string; next: string };
   check(): CanvasCheck;
   running(): { call: number; name: string; ms: number }[];
+  frame(dt?: number): FrameReport;
+  pixels(rect: PageRect, opts?: { show?: boolean | number; render?: boolean }): PixelsReport;
+  hide(): boolean;
 }
 
 /** Below the pane tool's own 45 s, so the kit's error arrives first. */
@@ -69,11 +116,30 @@ const READY_TIMEOUT_MS = 30_000;
 const POLL_MS = 100;
 /** Where `go()` leaves what it asked for; sessionStorage survives the navigation. */
 const GO_KEY = '__probe.go';
+/** The magnified crop's element, and the widest it is drawn by default. */
+const SHOW_ID = 'probe-pixels';
+const SHOW_MAX_PX = 480;
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
 export function installProbe(game: Game): Probe {
   const internals = game as unknown as GameInternals;
+  const renderer = (): RendererInternals => internals.renderer as unknown as RendererInternals;
+
+  /**
+   * One frame of the loop's own body, run now, with the camera's world matrix
+   * brought current first. The loop moves the overlays inside `onFrame` and
+   * three.js updates the camera's matrices only inside the render, so the
+   * loop's first frame after a camera change projects the bars with the old
+   * camera (measured in the pane at 112b: the bars one frame behind, then
+   * right). The camera shake the loop adds around its render is left out, so
+   * a read is never jittered.
+   */
+  const runFrame = (dt: number): void => {
+    internals.renderer.camera.updateMatrixWorld();
+    renderer().onFrame(dt);
+    renderer().renderTwoPass();
+  };
   const page = Math.round(performance.timeOrigin);
   let calls = 0;
   let readyHere = false;
@@ -260,8 +326,84 @@ export function installProbe(game: Game): Probe {
       const now = Date.now();
       return [...active].map(([call, a]) => ({ call, name: a.name, ms: now - a.since }));
     },
+
+    frame(dt = 0) {
+      const call = ++calls;
+      const { canvas } = checkCanvas();
+      runFrame(dt);
+      const world = (internals.activeScene as { world?: { currentTick: number } | null } | null)?.world;
+      return {
+        call,
+        scene: internals.activeScene?.constructor.name ?? null,
+        tick: world?.currentTick ?? null,
+        canvas,
+      };
+    },
+
+    pixels(rect, opts = {}) {
+      const call = ++calls;
+      const { canvas } = checkCanvas();
+      const gl = glReadRect(rect, devicePixelRatio, canvas);
+      const { webgl } = renderer();
+      // The drawing buffer isn't preserved between tasks, so the render and
+      // the read happen here, together.
+      if (opts.render !== false) runFrame(0);
+      const context = webgl.getContext();
+      const target = webgl.getRenderTarget();
+      webgl.setRenderTarget(null);
+      const bytes = new Uint8Array(gl.w * gl.h * 4);
+      context.readPixels(gl.x, gl.y, gl.w, gl.h, context.RGBA, context.UNSIGNED_BYTE, bytes);
+      webgl.setRenderTarget(target);
+      const summary = summarizePixels(bytes, gl.w, gl.h);
+      const shown = opts.show ? showCrop(bytes, gl.w, gl.h, rect, opts.show) : null;
+      return { call, rect, size: [gl.w, gl.h], shown, ...summary };
+    },
+
+    hide() {
+      const el = document.getElementById(SHOW_ID);
+      el?.remove();
+      return el !== null;
+    },
   };
 
   (window as unknown as { __probe: Probe }).__probe = kit;
   return kit;
+}
+
+/**
+ * Draw a crop magnified in the page's top-left corner, above the game and
+ * its scanlines, so a screenshot shows a few pixels large (the pane's zoom
+ * returns the whole screenshot). The crop is the canvas alone: DOM overlays
+ * (bars, hitsplats) aren't in it. It stays until `__probe.hide()` or the
+ * next shown crop. Returns the magnification.
+ */
+function showCrop(bottomUp: Uint8Array, w: number, h: number, rect: PageRect, show: true | number): number {
+  const scale = typeof show === 'number' ? show : Math.max(1, Math.floor(SHOW_MAX_PX / Math.max(w, h)));
+  const native = document.createElement('canvas');
+  native.width = w;
+  native.height = h;
+  const image = new ImageData(w, h);
+  for (let row = 0; row < h; row++) {
+    image.data.set(bottomUp.subarray((h - 1 - row) * w * 4, (h - row) * w * 4), row * w * 4);
+  }
+  native.getContext('2d')!.putImageData(image, 0, 0);
+
+  document.getElementById(SHOW_ID)?.remove();
+  const box = document.createElement('div');
+  box.id = SHOW_ID;
+  box.style.cssText =
+    'position:fixed;left:8px;top:8px;z-index:2147483647;padding:4px;background:#000;' +
+    'border:1px solid #fff;font:12px monospace;color:#fff;pointer-events:none';
+  const big = document.createElement('canvas');
+  big.width = w * scale;
+  big.height = h * scale;
+  big.style.cssText = 'display:block;image-rendering:pixelated';
+  const ctx = big.getContext('2d')!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(native, 0, 0, w * scale, h * scale);
+  const label = document.createElement('div');
+  label.textContent = `__probe.pixels ${rect.x},${rect.y} ${rect.w}x${rect.h} ×${scale}`;
+  box.append(big, label);
+  document.body.append(box);
+  return scale;
 }

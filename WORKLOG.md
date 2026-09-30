@@ -1469,3 +1469,58 @@ instead, since neither reproduced.
   reset: a 0×0 page, and `ready()` threw by name. The stale-call plant was
   re-run with a new blocker (the UI taken off the page), and was
   superseded with the blocker still in place.
+
+### 112b — `frame()` and `pixels()` (2026-09-30) — read `none` ✅
+
+**Step zero.** `BattleScene.tick(0)` advances no sim tick, parked or
+running (✔ `BattleScene.ts:247-306`); the overlays move inside it, in
+`battleRenderer.update`. By hand in the pane (`board-quarry`, parked): after
+`setCameraView` the overlays still read the old view, and `onFrame(0)` then
+`renderTwoPass()` moved them, the sim tick still 0.
+
+**A finding the plant turned up: the overlays trail a camera move by one
+frame, in the game's own loop.** Against a real frame (a screenshot forces
+one), one `frame()` after a yaw change read the first bar at (0, 195.6),
+where the real frame read (675.8, 81.1). A second `frame()` read (675.8,
+81.1) and held. The loop moves the overlays inside `onFrame`, and three.js
+updates the camera's world matrix only inside the render, so the first
+frame after any camera change projects them with the old camera. The kit's
+`frame()` therefore brings the camera's world matrix current before the
+loop's body; the production loop is out of this phase's scope, so the fix
+there is a TODO rider (§112).
+
+**Built:** `frame(dt = 0)` (the canvas check, then the loop's body: Game's
+`onFrame`, then `renderTwoPass`, both typed by indexed access; no camera
+shake) and `pixels(rect, { show, render })`: the canvas check, the rect
+turned into buffer pixels counted up from the bottom row (`glReadRect`,
+which refuses an empty rect or one leaving the canvas), a render and
+`readPixels` in the same call, and a summary (an FNV-1a hash, the mean,
+distinct colours to 64, translucency, and each pixel as `#rrggbb` for a
+crop of at most 256 pixels). `show` draws the crop magnified in the page's
+top-left, above the scanlines, until `hide()`. The stand-in refuses the
+three new calls by name.
+
+**The plants** (Chromium, 1280×720, `board-quarry` parked):
+- **The stale read.** After a yaw change, a read without `frame()` equals
+  the read before the change (6 of 6 bars); one `frame()` equals a second
+  `frame()` and a real frame, on all 6, with the sim tick 0.
+- **A known colour.** A magenta 40×30 square scissor-cleared into the
+  buffer at page (101, 53) after each render (an instance wrap on
+  `renderTwoPass`). `pixels()` over it read one colour, 255,0,255. Three
+  3×3 reads straddling its left edge, its top edge and its bottom-right
+  corner split inside from outside on the right pixel. The top read's
+  first row is the outside one, which is the flip's direction. The
+  screenshot, a surface the kit doesn't compute, shows the square at the
+  page's top-left under the HUD, and nothing at the bottom-left, where a
+  flipped placement would be.
+- **`show`** drew the crop at ×8, and the screenshot showed the square's
+  block 10 px in from the crop's corner; `hide()` returned true, then
+  false.
+
+**Headless** (`page.test.ts`, 20): `glReadRect` (the bottom-up rows, the
+pixel ratio, the refusals) and `summarizePixels` on a planted 2×2 buffer
+(top row first, the mean, a one-byte change moving the hash, the rows cap).
+**`dist/`** byte-identical (`d77a6381…`).
+
+**Not verified:** a pixel ratio other than 1 (the pane runs at 1; the
+scaling is pinned headless only).

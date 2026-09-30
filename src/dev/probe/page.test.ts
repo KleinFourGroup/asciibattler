@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Game } from '../../Game';
 import { PROBE_BOOTSTRAP } from './bootstrap';
 import { installProbe } from './index';
-import { canvasProblem, missingPairs, normalizeQuery } from './page';
+import { canvasProblem, glReadRect, missingPairs, normalizeQuery, summarizePixels } from './page';
 
 describe('canvasProblem (the check on every read)', () => {
   const live = { viewport: [1280, 720], client: [1280, 720], buffer: [1280, 720], dpr: 1 } as const;
@@ -49,6 +49,57 @@ describe('missingPairs (go() checks the URL it asked for)', () => {
   it('takes a query with or without its ?', () => {
     expect(normalizeQuery('?a=1')).toBe('a=1');
     expect(normalizeQuery('a=1')).toBe('a=1');
+  });
+});
+
+describe('glReadRect (a page rect as gl.readPixels takes it)', () => {
+  it('counts rows up from the buffer bottom', () => {
+    // A 10×4 crop at the page's top-left of a 100×50 canvas is GL rows 46-49.
+    expect(glReadRect({ x: 0, y: 0, w: 10, h: 4 }, 1, [100, 50])).toEqual({ x: 0, y: 46, w: 10, h: 4 });
+    // At the bottom edge it starts at GL row 0.
+    expect(glReadRect({ x: 5, y: 46, w: 3, h: 4 }, 1, [100, 50])).toEqual({ x: 5, y: 0, w: 3, h: 4 });
+  });
+
+  it('scales by the pixel ratio', () => {
+    expect(glReadRect({ x: 10, y: 10, w: 4, h: 2 }, 2, [200, 100])).toEqual({ x: 20, y: 76, w: 8, h: 4 });
+  });
+
+  it('refuses an empty rect or one that leaves the canvas, rather than clip it', () => {
+    expect(() => glReadRect({ x: 0, y: 0, w: 0, h: 4 }, 1, [100, 50])).toThrow(/empty/);
+    expect(() => glReadRect({ x: 95, y: 0, w: 10, h: 4 }, 1, [100, 50])).toThrow(/leaves the 100x50 canvas/);
+    expect(() => glReadRect({ x: 0, y: -1, w: 10, h: 4 }, 1, [100, 50])).toThrow(/leaves/);
+  });
+});
+
+describe('summarizePixels (a readPixels result, top row first)', () => {
+  // 2×2, GL order (bottom row first): bottom = red, green; top = blue, white.
+  const bottomUp = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 255]);
+
+  it('lists rows top first, as the page shows them', () => {
+    expect(summarizePixels(bottomUp, 2, 2).rows).toEqual([
+      ['#0000ff', '#ffffff'],
+      ['#ff0000', '#00ff00'],
+    ]);
+  });
+
+  it('gives the mean, the distinct count and opacity', () => {
+    const s = summarizePixels(bottomUp, 2, 2);
+    expect(s.mean).toEqual([128, 128, 128]);
+    expect(s.distinct).toBe(4);
+    expect(s.translucent).toBe(false);
+    expect(summarizePixels(new Uint8Array([1, 2, 3, 200]), 1, 1).translucent).toBe(true);
+  });
+
+  it('hashes equal crops equally and a one-byte change differently', () => {
+    const changed = bottomUp.slice();
+    changed[0] = 254;
+    expect(summarizePixels(bottomUp.slice(), 2, 2).hash).toBe(summarizePixels(bottomUp, 2, 2).hash);
+    expect(summarizePixels(changed, 2, 2).hash).not.toBe(summarizePixels(bottomUp, 2, 2).hash);
+  });
+
+  it('leaves the rows out above the cap', () => {
+    expect(summarizePixels(new Uint8Array(17 * 16 * 4), 17, 16).rows).toBeNull();
+    expect(summarizePixels(new Uint8Array(16 * 16 * 4), 16, 16).rows).toHaveLength(16);
   });
 });
 

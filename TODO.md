@@ -455,3 +455,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   its control), or a pin that `src/dev` is reached only through the
   DEV-gated dynamic import. Round 8's pane probe kit is dev code and rides
   it.
+
+## §112 riders (the pane probe kit, 2026-09-30)
+
+- [ ] **The overlays trail a camera move by one frame** (found at 112b's
+  step zero). The loop moves the bars and badges inside `onFrame`, and
+  three.js updates the camera's world matrix only inside the render, so
+  the first frame after a camera change projects them with the old camera:
+  in the pane, a yaw change put a bar at x = 0, then at its place a frame
+  later. Invisible at 60 fps while fit is the only shipped view; it would
+  show as bars lagging the board under a moving camera (scroll-mode
+  panning today, a player-facing yaw in Round 11). The likely fix is
+  `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
+  `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).

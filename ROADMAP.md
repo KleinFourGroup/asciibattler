@@ -13,7 +13,8 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §111 ✅ CLOSED 2026-09-30** (the recorder). **§112, the pane
-probe kit and the Electron runner, is NEXT: its kickoff.** The round was spike-first,
+probe kit and the Electron runner, is IN FLIGHT** (its cut signed
+2026-09-30). The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and
@@ -74,6 +75,14 @@ the runner hands a probe's JSON and exit code back; `process/browser-pane.md`
 rewritten around the kit. **Scope guards:** DEV-only, no production byte
 change; the three pre-registered criteria are counted at the round close,
 per pane session, runner sessions apart.
+
+The cut (signed 2026-09-30; the audit and the four calls: WORKLOG §112):
+
+- [ ] **112a** — the kit's core in `src/dev/probe/`, loaded by a DEV dynamic import: `ready()` (waits until live, reports the page), `go(query)` (refused before a `ready()`; an overwritten URL fails the next `ready()` by name), the canvas-size check on every read, and a sequence number that stops a timed-out call; the reach-ins pinned headless. Exit: four traps planted in the pane, each caught by name; `dist/` byte-identical. Read `none`.
+- [ ] **112b** — `frame(dt=0)` through the loop's own path; `pixels(rect)` renders and reads in one call (numbers, and an optional magnified overlay). Exit: a planted stale read caught; a planted known colour read back; `dist/` byte-identical. Read `none`.
+- [ ] **112c** — `drive(...)`: the phase dispatcher (a seeded pick among enabled choices, or `first`), about one battle per call, loud on a command that changes nothing, one row per `RunPhase` enforced by the type. Exit: a seeded run to defeat and a `hops=2` run to `complete` in the pane; the same seed twice, the same phase log; a planted audit fault reported. Read `none`.
+- [ ] **112d** — `npm run probe`: the recorder's shared development-mode build, a fresh profile, `ready()`, the script, one JSON line, exit 0/1/2. Exit: a driving script exits 0; a planted failure 1, a planted hang 2; the recorder still records a clip its analyzer passes. Read `none`.
+- [ ] **112e** — `process/browser-pane.md` rewritten around the kit; `friction-scan` counts pane, kit and runner calls per session; the landing commit recorded as the criteria's start. Exit: the counter matches its known answers. Read `batch` (at §113's kickoff): the doc's first section is the kit and each trap it holds is an API line, not a tip; wrong is a held trap still written as a tip, or a tip dropped for a trap it doesn't hold (CSS transitions, Firefox keys).
 
 ## Phase 113 — the store and the build ID
 

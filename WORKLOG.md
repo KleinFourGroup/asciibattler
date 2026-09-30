@@ -1366,3 +1366,16 @@ the Cursor records.
 
 The cut is proposed in the conversation and goes into ROADMAP §112 once
 signed.
+
+### The §112 shape-lock (2026-09-30, the user's) — SIGNED
+
+Signed at 19:05 as proposed: five steps, four `none` and one `batch`
+(112e, read at §113's kickoff), with no `stop`. All four calls ✅ DECIDED
+at the session's lean: `pixels(rect)` returns numbers plus an optional
+magnified overlay; the driver draws a seeded pick among the enabled
+choices, with `first` as an option; the runner loads the recorder's
+development-mode build, whose `build()` both front doors share; criterion
+(2)'s counter is built now. The context handoff number is **400k for this
+session**, and the §111 clock applies again: the session pauses for the
+meter at the first step boundary after 20:05, or mid-step if one step runs
+an hour.

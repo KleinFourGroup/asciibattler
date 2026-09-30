@@ -1175,7 +1175,7 @@ started 35 s after it. Every recording from 14:42 ran locked and dark, and
 its 8 unloaded ones read 0 frames short within 3 ms, so the state alone is
 harmless; the transition was untested.
 
-**The display test** (the user's go, the user present): three corridors
+**The display test** (the user's go; the user had left the monitor): three corridors
 clips, skip. In two, the session switched the display off
 (`SC_MONITORPOWER`) about 22 s into the fight and woke it with a one-pixel
 mouse move 25 s later. The page now logs every frame over 40 ms with its
@@ -1190,8 +1190,8 @@ wall-clock time (`timeline.longFrames`).
 **What it says.**
 - **Each display transition stalls the offscreen renderer for 0.18–0.43 s,**
   starting within 5–11 ms of the request (three of four; the second wake's
-  stall began 260 ms before the nudge, unexplained, perhaps the display
-  waking by itself with the user in front of it). The page stops rather
+  stall began 260 ms before the nudge, unexplained; the stamp is taken after
+  the call returns, so a call that blocked during the wake would stamp late). The page stops rather
   than skipping paints, so each page frame still paints and the file shows
   the frame after the stall one slot later: the picture runs ahead of its
   sound by the stall from then on.
@@ -1213,3 +1213,45 @@ wall-clock time (`timeline.longFrames`).
 
 The decision goes back to the user, since (a) was taken on "seen once,
 cause unknown".
+
+### 111f-post — the decision, and §111 closed (2026-09-30, the user's)
+
+The user had moved away from the monitor as the display test started, so
+the second wake's early stall is not the display waking for them; the
+entry above now says so.
+
+**Decided** (the user): **(A) now**, a recording fails when its picture
+drifts more than 50 ms from its sound by the cut; **(B) lands in §114**,
+retiming each stall from the long-frame log; **(C), the display held awake
+during a recording, is the fallback** if either fails. The stepped-clock
+recorder stays on record as the fallback beyond them.
+
+**(A), built** (`42b3263`). The faults moved to `shell/electron/faults.mjs`,
+pure over the sidecar, and frames short and drift are judged separately
+(a recording with both reports both). The limit: idle recordings read −3
+to −2 ms, and 50 ms keeps the delay plus the drift under the 100 ms the A/B
+could not tell apart.
+- **The planted run did not isolate it.** The display switched off 22 s in
+  and woken 25 s later again, this time throttling the renderer for about
+  13 s: 45 frames over 40 ms (83–567 ms) from 18:20:22 to 18:20:35, the
+  page at 51.5 fps, 142 frames never painted, the picture 11.6 s ahead of
+  its sound by the cut, and no stall at the wake. It recovered on its own,
+  and Windows logged nothing. So one switch costs anything from a single
+  0.2 s stall to 13 s of throttling, for reasons not visible here. That
+  bears on (B): a retime can place a stall but not an unpainted frame, so a
+  long run that crosses a switch may still need (C).
+- **Every saved sidecar judged again** with `faults.mjs`, the check that
+  needs no new recording: the 11 clean recordings (the exit set, the
+  control, the idle trials) pass; the display test's drift-only clip (0
+  short, 497 ms), which the frames-short rule passed, now fails on drift;
+  the loaded and the throttled runs report both faults. One sidecar was not
+  a valid input: the loaded check twin's timeline predates the go-frame
+  fix (it reads −45).
+- **The real path:** one idle recording through `main.mjs`: OK, no faults,
+  no frame over 40 ms.
+
+The `1802b4b` clips are deleted (the user's word); `clips/` holds the
+`f406442` exit set, the A/B file and `111-probes/`.
+
+**§111 ✅ CLOSED 2026-09-30.** ROADMAP §111 demoted, and the stall carried
+into §114.

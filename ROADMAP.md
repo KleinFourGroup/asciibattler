@@ -12,8 +12,8 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §110 ✅ CLOSED 2026-09-30** (the spec signed). **§111, the
-background recorder, is NEXT: its kickoff.** The round was spike-first,
+**Status: §111 ✅ CLOSED 2026-09-30** (the recorder). **§112, the pane
+probe kit and the Electron runner, is NEXT: its kickoff.** The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and
@@ -40,34 +40,27 @@ spec is signed. The record: WORKLOG §110.
 - [x] **110e** — THE SITTING: the itch draft in Firefox, check 3 blind, one clip watched. Read `stop`. ✅ READ (2026-09-29), `41150a6` + `9e04c30`; Chrome moved to the round-close smoke (the user's call).
 - [x] **110f** — the spec (`round-8-spec.md`) and §111–§118 entered; the spike build disposed of. Read `stop`. ✅ SIGNED (2026-09-30), `f19b0ed` + `4ae0730`.
 
-## Phase 111 — the background recorder
+## Phase 111 — the background recorder ✅ CLOSED 2026-09-30
 
-Charter: an Electron recorder writes video files of battles, events and
-runs from an offscreen window while the user works: the whole composited
-page with the game's own sound, nothing aloud, never taking focus (spec
-D9). Inputs: a board-explorer fixture, a seed, and before/after at two
-commits side by side; full runs join when the journal lands (§114).
-**Why here:** the spike's three checks passed, and clips make the round's
-UI reads cheaper; it needs only the shell. **Risk:** low-medium (the first
-draft passed checks 1 and 2 at both rates; backpressure, the lead-in and a
-pinned profile are new). **Decision points:** record mode in `AudioPlayer`
-or a reach-in in the development-mode build; the audio offset, by an A/B
-by ear. **Exit:** clips of a fixture, a seed and a before/after pair from a
-fresh pinned profile, the lead-in trimmed; §110's frame-rate probe and
-analyzer re-run green on them; ffmpeg named in the README. **Scope
-guards:** a dev tool; no full runs before the journal.
-
-The cut, SIGNED 2026-09-30 (WORKLOG §111). Decision point 1 ✅ DECIDED: the
-reach-in, guarded on `npm test`. No snapshot bump, no fuzz smoke, `dist/`
-byte-identical throughout.
+**Outcome:** `npm run record` records a battle from a board fixture, a seed
+or two commits side by side, in an offscreen window while the user works:
+a fresh profile, the page muted, a clean clip that opens on the whole
+countdown or on the fight and ends before the next screen, its colours
+tagged BT.709, its sound 25 ms after its picture (an A/B by ear heard
+nothing across 0–100 ms). Record mode stayed a reach-in, its seams pinned
+on `npm test`. A recording fails when the file drops frames, when a busy
+machine leaves page frames unpainted, or when its picture drifts over
+50 ms from its sound (each switch of the display stalls the renderer);
+retiming the stalls went to §114. `dist/` stayed byte-identical. The
+record: WORKLOG §111.
 
 - [x] **111a** — the front door: `npm run record` from a fixture or a seed, the working tree's dev-mode build, a fresh profile per recording, the page muted, the panel hidden, ffmpeg checked, `clips/` gitignored, the README; the `pools` seam pinned. Read `none`. ✅ (WORKLOG §111a).
 - [x] **111b** — the clean clip: a lead-in trimmed frame-exact, no planted tone, `--check` for the analyzer's twin; colour patches read back. Read `none`. ✅ (WORKLOG §111b).
 - [x] **111c** — backpressure: a capped backlog, frames over it dropped and counted, a recording with drops exits 1. Read `none`. ✅ (WORKLOG §111c).
 - [x] **111d** — before/after: each commit built in a worktree, recorded in turn, joined side by side and labelled. Read `batch` (at 111f): both halves open on the fight's first frame and stay in step, labelled; wrong is a half ahead, a label missing, halves too small. ✅ READ at 111f (WORKLOG §111d, §111f).
 - [x] **111e** — cue timing, measured: each cue's onset against its frame, and normal play's `<audio>` start latency; the late heal-ticks placed; the A/B's centre. Read `none`. ✅ (WORKLOG §111e).
-- [ ] **111f** — THE SITTING: the A/B by ear (one file, five offsets, A–E), then the exit clips at the pick (corridors, a seed, `c4ca4e6^` against HEAD) with the analyzer and the frame-rate probe beside them. Read `stop`. Part 1 and the clips READ 2026-09-30 (+25 ms; the pair ✅; two findings → 111f-post).
-- [ ] **111f-post** — inserted at the 111f read (WORKLOG §111f): two openings (`--countdown=full|skip`, full the default), the clip cut before the next screen mounts, +25 ms as the default sound delay. Read `stop`: a full clip, a skip clip, the pair re-made; on it §111 closes. ◐ BUILT, UNREAD (`f406442`; plus a guard from a finding, frames a busy machine never paints; WORKLOG §111f-post).
+- [x] **111f** — THE SITTING: the A/B by ear (one file, five offsets, A–E), then the exit clips at the pick (corridors, a seed, `c4ca4e6^` against HEAD). Read `stop`. ✅ READ 2026-09-30 (+25 ms; the pair ✅; two findings → 111f-post).
+- [x] **111f-post** — inserted at the 111f read: two openings (`--countdown=full|skip`, full the default), the clip cut before the next screen, +25 ms; and the guards from its findings (frames short, a drift over 50 ms). Read `stop`. ✅ READ 2026-09-30, `f406442` + `e37139f` + `42b3263` (WORKLOG §111f-post).
 
 ## Phase 112 — the pane probe kit and the Electron runner
 
@@ -110,6 +103,8 @@ kept, once step zero measures a run's bytes. **Exit:** a recorded run
 replays byte-identically headless from its journal; the export downloads;
 the recorder replays a journal offscreen. **Scope guards:** passive, never
 perturbing determinism; no ingest server.
+
+**Carried from §111** (WORKLOG §111f-post): a switch of the display stalls the recorder's renderer, from one 0.2 s stall to 13 s of throttled frames, which long runs recorded while the user is away will cross. Retiming each stall from the long-frame log lands here (the user's (B)); holding the display awake during a recording is the fallback (C); a stepped-clock recorder is the fallback beyond it.
 
 ## Phase 115 — save/load and mid-run resume
 

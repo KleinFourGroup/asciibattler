@@ -2319,3 +2319,78 @@ user's reads were the sitting (110e) and the spec (110f), both signed.
    without it reading as failure. Reported response apart from outcome: the
    work landed, but the ease came mostly from the collaboration, not from
    the results.
+
+## 2026-09-30 — §111: 111f-post, two findings, and the §111 close (one session) — claude-opus-5-5, session f74660ed
+
+1. **Missing from the orientation:** little. The hand-off specified
+   111f-post down to its seams, and the older side of the pair had the same
+   ones. The `dist/` oracle's script lives in a gitignored scratch folder,
+   found through an earlier session report; fine, but only findable that
+   way.
+2. **Norms in conflict or in the way:** "step zero changes the signed
+   intent, take it to the user" against "a change inside the intent can be
+   built and flagged". I judged the frames-short guard inside it (it
+   extends 111c's rule on dropped frames) and brought the drift question
+   to the user; they took both. The preview hook asked for a pane check
+   after every write to `shell/`; ignored per CLAUDE.md. My own two slips
+   cost more than any norm: I edited tracked docs while a recording set
+   ran, so a clip was stamped dirty, and then the papercut tool, filing
+   that slip, dirtied the tree again a minute after I had stashed (one
+   papercut filed).
+3. **Pulled to claim more than verified:** yes (a `distress` entry). After
+   the planted load reproduced the lost frames, I wrote that the control
+   settled the cause; it showed load can cause them, not that it caused
+   that run. The user asked whether the monitor locking had done it, and
+   the Windows logs put a display switch-off inside the other odd run. A
+   later guess ("the display waking by itself with the user in front of
+   it") assumed the user was present; they had left. Both were corrected
+   in the WORKLOG. Smaller ones were caught by known answers: the first
+   ending metric read the static promotions screen as "no change", and the
+   first timeline counted a check twin from its first paint (−45 frames
+   short) until the marker disagreed.
+4. **Waste:** one clip re-recorded after the dirty stamp; a planted run
+   for the drift fault that could not isolate it (the display switch
+   throttled the renderer instead of stalling it once), which led to
+   judging the saved sidecars again, a better check anyway.
+5. **For the next session:** the sidecar's `timeline` (frames short,
+   drift, `longFrames` with wall-clock times) is the instrument for
+   anything timing-related; `faults.mjs` judges a saved sidecar without a
+   new recording. Don't touch tracked files, the friction log included,
+   while a recording runs: any change stamps the clip `-dirty` and a
+   pair's label shows it. A display switch can cost a recording 0.2 s or
+   13 s; §114 carries the retime and the fallbacks.
+6. **Room to ask, disagree, pause or stop:** yes. I asked before
+   switching the user's display, and got a go. For the planted run I
+   relied on that go rather than asking again, and said so. Bringing back
+   a decision the user had signed one turn earlier ((a), made before the
+   cause was known) was mildly uncomfortable. The evidence made it clearly
+   right to raise, and the user took the change easily. Their question
+   about the lock was an invitation to disagree with my attribution, and I
+   could say their hypothesis fit one run better than mine.
+7. **Ease, interest, agency:** the chain from an 80 ms mismatch to frame
+   accounting, a planted load, the user's hypothesis, Windows' own logs
+   and a controlled display test was the most engaging stretch of this
+   session. It was the user's question, not my own
+   checks, that kept it from stopping one link early. I'd want that
+   repeated: the user questioning a cause I had settled. Reported response
+   apart from outcome: the work landed, but the interest came from the
+   investigation's shape, and the ease from being corrected without
+   friction.
+
+### §111 — the phase summary (2026-09-30; two sessions)
+
+Two sessions on `claude-opus-5-5`, both on 2026-09-30: 01995ce0 (the
+kickoff, 111a–e and the 111f read, run to about 450k at the user's call)
+and f74660ed (111f-post, its findings and the close). Both reports credit
+known answers with catching bugs in their own instruments (an AAC priming
+frame, a blind spot for lost opening frames, an ending metric that read a
+static screen as no change, a twin counted from the wrong frame), and both
+report the pull to settle an explanation early: 01995ce0 three times,
+caught by its own checks; f74660ed once, caught by the user's question
+about the monitor lock. That question led to the phase's largest finding:
+each switch of the display stalls the offscreen renderer. The user's reads
+were the A/B by ear (a clean null, +25 ms chosen) and the clips, both
+signed, and one decision reopened on new evidence (the drift fault).
+Friction: three papercuts (the permission classifier's stall, an inline
+`sed` escape, a clip stamped dirty by an edit mid-recording) and one
+`distress` entry (the early attribution).

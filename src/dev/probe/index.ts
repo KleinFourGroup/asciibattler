@@ -23,6 +23,12 @@
  *   drawing buffer isn't kept between tasks) and returns numbers; with
  *   `show`, it also draws the crop magnified on the page for a screenshot,
  *   until `hide()`.
+ * - 112c: `drive(opts)` plays the run: each phase's command from ./drive.ts
+ *   sent through `Game.dispatch`, each battle fought by hand-driven frames
+ *   through its outro until Game swaps the scene, an optional audit on every
+ *   Nth battle frame. It returns at the run's end, at `until`, or at its time
+ *   limit (the next call carries on), and throws on a command that changes
+ *   nothing, since the run would stand still.
  * - Every call gets a number, and a long call stops at its next poll once a
  *   later call starts, so a call the tool gave up on (it stops waiting at
  *   45 s) can't keep acting. `running()` lists the calls still running.
@@ -30,6 +36,9 @@
 
 import type { Game } from '../../Game';
 import type { Renderer } from '../../render/Renderer';
+import type { RunPhase } from '../../run/Run';
+import type { BattleScene } from '../../scenes/BattleScene';
+import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
 import {
   canvasProblem,
   glReadRect,
@@ -55,6 +64,13 @@ interface RendererInternals {
   readonly onFrame: Renderer['onFrame'];
   renderTwoPass: Renderer['renderTwoPass'];
   readonly webgl: Renderer['webgl'];
+}
+
+/** What the driver reads on a live battle scene (all private there). */
+interface BattleInternals {
+  readonly world: BattleScene['world'];
+  readonly playback: BattleScene['playback'];
+  readonly countdown: BattleScene['countdown'];
 }
 
 export interface PageReport {
@@ -100,6 +116,57 @@ export interface PixelsReport extends PixelSummary {
   readonly shown: number | null;
 }
 
+/** A battle frame the driver hands to an audit, rendered first. */
+export interface AuditFrame {
+  /** The driver's battle-frame count on this page. */
+  readonly n: number;
+  readonly tick: number;
+  readonly phase: RunPhase;
+  readonly scene: unknown;
+  readonly world: unknown;
+}
+
+export interface DriveOptions {
+  /** Stop on reaching this phase, or run to the end (the default). */
+  readonly until?: RunPhase | 'end';
+  /** The player's choices: a seeded pick (the default) or always the first. */
+  readonly policy?: DrivePolicy;
+  readonly seed?: number;
+  /** Seconds of play per hand-driven battle frame (0.1). */
+  readonly dt?: number;
+  /** Return after this many battles (no limit by default). */
+  readonly battles?: number;
+  /** The call's own time limit (20 s), under the pane tool's 45 s; the next
+   *  call carries on. */
+  readonly maxMs?: number;
+  /** Called on every `every`-th battle frame (10); each string it returns is
+   *  a finding. */
+  readonly audit?: (frame: AuditFrame) => readonly string[] | void;
+  readonly every?: number;
+  /** Start the log and the choices over on this page. */
+  readonly restart?: boolean;
+}
+
+export interface DriveReport {
+  readonly call: number;
+  /** True once the run is over, or `until` is reached. */
+  readonly done: boolean;
+  readonly stoppedBy: string;
+  readonly phase: RunPhase | null;
+  /** Battles fought (one per turn), frames driven and commands sent on this page. */
+  readonly battles: number;
+  readonly frames: number;
+  readonly steps: number;
+  /** The last commands sent, `phase: command`. */
+  readonly recent: readonly string[];
+  /** Commands sent per phase on this page: which screens the run crossed. */
+  readonly byPhase: Readonly<Record<string, number>>;
+  /** A hash of every command sent on this page: equal runs, equal hashes. */
+  readonly logHash: string;
+  readonly findings: { readonly count: number; readonly first: readonly string[] };
+  readonly ms: number;
+}
+
 export interface Probe {
   readonly live: true;
   ready(opts?: { timeoutMs?: number }): Promise<PageReport>;
@@ -109,6 +176,7 @@ export interface Probe {
   frame(dt?: number): FrameReport;
   pixels(rect: PageRect, opts?: { show?: boolean | number; render?: boolean }): PixelsReport;
   hide(): boolean;
+  drive(opts?: DriveOptions): Promise<DriveReport>;
 }
 
 /** Below the pane tool's own 45 s, so the kit's error arrives first. */
@@ -119,6 +187,12 @@ const GO_KEY = '__probe.go';
 /** The magnified crop's element, and the widest it is drawn by default. */
 const SHOW_ID = 'probe-pixels';
 const SHOW_MAX_PX = 480;
+/** A drive call's own time limit, and how long a battle's outro may take. */
+const DRIVE_MS = 20_000;
+const OUTRO_MAX_MS = 10_000;
+/** Battle frames driven between yields, so a later call can stop a drive. */
+const FRAMES_PER_YIELD = 50;
+const FINDINGS_KEPT = 20;
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 
@@ -144,6 +218,75 @@ export function installProbe(game: Game): Probe {
   let calls = 0;
   let readyHere = false;
   const active = new Map<number, { name: string; since: number }>();
+
+  /** The driver's state on this page; a reload starts it over. */
+  interface Driver {
+    readonly policy: DrivePolicy;
+    readonly seed: number;
+    readonly pick: Chooser;
+    readonly log: string[];
+    battles: number;
+    frames: number;
+    findingCount: number;
+    readonly findings: string[];
+  }
+  let driver: Driver | null = null;
+
+  /**
+   * Fight the battle scene on screen until Game swaps it for the next one.
+   * The fight starts at once (the countdown's Fight, as Space does), and the
+   * frames are driven by hand, since a hidden pane runs none. After the last
+   * tick the phase has moved on, but the scene plays its outro and Game
+   * advances only after it; the outro settles as the scene ticks and its
+   * timer runs on wall time, so the frames go on, slower, until the swap.
+   * Returns false when the call's time runs out first.
+   */
+  const fight = async (call: number, d: Driver, opts: DriveOptions, until: number): Promise<boolean> => {
+    const scene = internals.activeScene;
+    const battle = scene as unknown as BattleInternals | null;
+    if (!battle?.world) throw new Error('__probe.drive: the battle phase with no battle scene on screen');
+    if (battle.countdown?.active) battle.playback?.resume();
+    const dt = opts.dt ?? 0.1;
+    const every = opts.every ?? 10;
+    let outroSince: number | null = null;
+    while (internals.activeScene === scene) {
+      for (let i = 0; i < FRAMES_PER_YIELD && internals.activeScene === scene; i++) {
+        d.frames++;
+        if (opts.audit && d.frames % every === 0) {
+          runFrame(dt);
+          const run = internals.run!;
+          const found = opts.audit({
+            n: d.frames,
+            tick: battle.world?.currentTick ?? -1,
+            phase: run.phase,
+            scene,
+            world: battle.world,
+          });
+          for (const f of found ?? []) {
+            d.findingCount++;
+            if (d.findings.length < FINDINGS_KEPT) d.findings.push(`frame ${d.frames}: ${f}`);
+          }
+        } else {
+          renderer().onFrame(dt);
+        }
+        if (internals.run?.phase !== 'battle') break;
+      }
+      if (internals.activeScene !== scene) break;
+      if (internals.run?.phase !== 'battle') {
+        outroSince ??= Date.now();
+        if (Date.now() - outroSince > OUTRO_MAX_MS) {
+          throw new Error(`__probe.drive: the battle ended ${OUTRO_MAX_MS / 1000} s ago and Game never swapped its scene`);
+        }
+        await sleep(20);
+      } else {
+        await sleep(0);
+      }
+      if (call !== calls) throw new Error(`__probe.drive (call ${call}): superseded by call ${calls}`);
+      if (Date.now() >= until) return false;
+    }
+    d.battles++;
+    return true;
+  };
 
   const readCanvas = (): CanvasReading => {
     const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
@@ -363,6 +506,77 @@ export function installProbe(game: Game): Probe {
       const el = document.getElementById(SHOW_ID);
       el?.remove();
       return el !== null;
+    },
+
+    async drive(opts = {}) {
+      const call = ++calls;
+      const started = Date.now();
+      const until = started + (opts.maxMs ?? DRIVE_MS);
+      const policy = opts.policy ?? 'seeded';
+      const seed = opts.seed ?? 1;
+      if (driver !== null && !opts.restart && (driver.policy !== policy || driver.seed !== seed)) {
+        throw new Error(
+          `__probe.drive: this page is driving ${driver.policy} seed ${driver.seed}; ` +
+            'pass restart: true to change it',
+        );
+      }
+      if (driver === null || opts.restart) {
+        driver = { policy, seed, pick: pickerFor(policy, seed), log: [], battles: 0, frames: 0, findingCount: 0, findings: [] };
+      }
+      const d = driver;
+      const battlesBefore = d.battles;
+      active.set(call, { name: 'drive', since: started });
+      const report = (done: boolean, stoppedBy: string): DriveReport => ({
+        call,
+        done,
+        stoppedBy,
+        phase: internals.run?.phase ?? null,
+        battles: d.battles,
+        frames: d.frames,
+        steps: d.log.length,
+        recent: d.log.slice(-6),
+        byPhase: d.log.reduce<Record<string, number>>((n, line) => {
+          const phase = line.slice(0, line.indexOf(':'));
+          n[phase] = (n[phase] ?? 0) + 1;
+          return n;
+        }, {}),
+        logHash: logHash(d.log),
+        findings: { count: d.findingCount, first: d.findings.slice(0, 5) },
+        ms: Date.now() - started,
+      });
+      try {
+        checkCanvas();
+        for (;;) {
+          if (call !== calls) throw new Error(`__probe.drive (call ${call}): superseded by call ${calls}`);
+          const run = internals.run;
+          if (run === null) throw new Error('__probe.drive: no run (character select?); put character= in the URL');
+          const phase = run.phase;
+          if (opts.until === phase) return report(true, `reached ${phase}`);
+          const step = PHASE_ROWS[phase](run, d.pick);
+          if (step === 'end') return report(true, phase);
+          if (step === 'fight') {
+            const finished = await fight(call, d, opts, until);
+            if (!finished) return report(false, 'the time limit, mid-battle');
+            if (opts.battles !== undefined && d.battles - battlesBefore >= opts.battles) {
+              return report(false, `${opts.battles} battle(s)`);
+            }
+            continue;
+          }
+          // A command that changes nothing would repeat forever; say so.
+          const before = JSON.stringify(run.toJSON());
+          game.dispatch(step.command);
+          const line = `${phase}: ${describeCommand(step.command)}`;
+          if (internals.run === run && JSON.stringify(run.toJSON()) === before) {
+            const after = d.log.length === 0 ? '' : ` (after ${d.log.slice(-3).join(' | ')})`;
+            throw new Error(`__probe.drive: "${line}" changed nothing${after}`);
+          }
+          d.log.push(line);
+          if (Date.now() >= until) return report(false, 'the time limit');
+          await sleep(0);
+        }
+      } finally {
+        active.delete(call);
+      }
     },
   };
 

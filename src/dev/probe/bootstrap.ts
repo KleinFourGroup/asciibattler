@@ -41,7 +41,7 @@ export const PROBE_BOOTSTRAP = `(function () {
       });
     }
   };
-  ['go', 'check', 'running', 'frame', 'pixels', 'hide'].forEach(function (name) {
+  ['go', 'check', 'running', 'frame', 'pixels', 'hide', 'drive'].forEach(function (name) {
     stub[name] = function () {
       throw new Error('__probe.' + name + ': the page is not live yet; await __probe.ready() first.');
     };

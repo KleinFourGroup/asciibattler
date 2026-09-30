@@ -1524,3 +1524,61 @@ pixel ratio, the refusals) and `summarizePixels` on a planted 2×2 buffer
 
 **Not verified:** a pixel ratio other than 1 (the pane runs at 1; the
 scaling is pinned headless only).
+
+### 112c — the whole-run driver (2026-09-30) — read `none` ✅
+
+**Step zero.** The fuzz harness's phase switch gave each row its command
+(✔ `tests/fuzz/harness.ts:779-1180`; `computeFrontier` is private there, at
+`:1217`, so the driver has its own `frontierOf`). `run.toJSON()` refuses
+only when run triggers are registered, and none are (✔ `Run.ts:4182-4193`),
+so a snapshot before and after serves as "did the command change
+anything". **The outro:** at a turn's end Game waits out an outro (900 ms of
+wall clock and the battle scene's own settle) and then sends `advanceTurn`
+itself (✔ `Game.ts:392-399, 759-774`). A driver that sent it at
+`turn-outcome` would cut the outro short, so a fight ends when Game swaps
+the scene, not when the phase moves, and the frames go on through the
+outro with wall time passing.
+
+**Built:** `drive.ts` (`PHASE_ROWS` as a `Record<RunPhase, …>`, the picker,
+`frontierOf`, the log hash) and `__probe.drive(opts)`. The battles are
+driven by hand whatever the page's own loop does: the sim's clock fires
+fixed ticks whoever advances it, and the driver sends no battle commands.
+The fight starts at once (the countdown's Fight, as Space does). A drive
+yields every 50 frames, so a later call can stop it.
+
+**The pane** (Chromium, 1280×720, hidden):
+
+| run | result |
+|---|---|
+| `seed=7&character=soldier`, seeded 1 | to `defeat` in one call: 12 battles, 3955 frames, 46 commands, 21.8 s; log `a59ee48f` |
+| the same again, on a fresh page | the same log, `a59ee48f`: 12 battles, 46 commands (3957 frames: the outro's frames run on wall time) |
+| the control: the same URL, seeded 2 | a different log, `3de46d18` (13 battles, 42 commands) |
+| `…&hops=2` | to `complete`, the boss included: 6 battles, 16 commands |
+| `…&hops=2`, an audit planting a finding every 100th frame | 11 findings over 1131 frames, each naming its frame and tick |
+| a drive left running mid-battle | the next call (`check()`) stopped it: "superseded by call 3" |
+| `Game.dispatch` made a no-op, at the map | "`map: enterNode 0` changed nothing" |
+| the same, mid-battle | Game's own deferred `advanceTurn` went through the no-op too; "the battle ended 10 s ago and Game never swapped its scene" |
+
+**§106d's no-op `acceptReward` did not reproduce:** the boss's reward
+screen took three `acceptReward 0` in a row, and each changed the run.
+
+**One plant of mine failed first:** an audit keyed on `tick % 40` found
+nothing in 113 audits. The ticks on audit frames read 18, 38, 58, …, so
+none is a multiple of 40; keyed on the driver's frame count, it fired.
+
+**Headless** (`drive.test.ts`, 9): the picker (the first; seeded repeats
+from its seed, and another seed differs), `frontierOf`, each row over a
+fake run (the frontier pick and its refusal, the enabled event choices,
+the reward's packet rule, the recruit's pass slot, fight and end), and the
+log hash. **`dist/`** byte-identical (`d77a6381…`).
+
+**Which screens the runs crossed**, from the report's per-phase count
+(added after this line's first draft named screens as unreached on the
+evidence of the last six commands alone): the seed-7 run, a third time on
+`a59ee48f`, sent 9 map, 10 event, 12 pre-turn, 3 reward, 8 promotion,
+3 recruit and 1 port commands. The `hops=2` run sent 2 map, 2 event,
+6 pre-turn, 3 reward and 3 promotion commands, on `86578edc`, the same log
+as the audited run: the audit's renders don't change the run. None was
+sent at `turn-outcome`, which Game advances itself. **Not reached:** the
+sector-cleared gate (the long run lost in its first sector, and `hops=2`
+is one sector); its row is a fixed command.

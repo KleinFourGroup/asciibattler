@@ -136,6 +136,15 @@ export default defineConfig({
   },
   server: {
     open: false,
+    // The watcher sets up a watch per file at startup (fs.watch, a few ms
+    // each on Windows), and the first stylesheet waits for it. The fuzz and
+    // measurement output (about 33,000 files) made a cold dev server's first
+    // page take 46 s; ignored, 0.4 s (WORKLOG §112, "The dev server's cold
+    // start"). Nothing the page serves comes from these, and a fetch of a
+    // file there still works; only a reload on change is lost.
+    watch: {
+      ignored: ['**/output/**', '**/tests/fuzz/output/**'],
+    },
   },
   test: {
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],

@@ -1681,7 +1681,11 @@ release build doesn't. Measured through Vite's own API on a spare port
   first stylesheet took 431 and 415 ms on two cold starts; as configured
   today, 46,591 ms.
 
-**Proposed** (open, the user's call): those two patterns in
+**Proposed and ✅ DONE** (the user, 2026-10-01): those two patterns in
 `vite.config.ts`'s `server.watch.ignored`. The cost is that a change
 inside them no longer reloads a page; nothing the dev server serves
-imports from them, and a `fetch` of a file there still works.
+imports from them, and a `fetch` of a file there still works. With the
+config itself (no inline override), the first stylesheet took 739 and
+670 ms on two cold starts. In the pane, a fresh server's page went live
+0.6 s after it began loading (`ready()` called at 0.14 s), where it took
+38–40 s at 112a. `dist/` unchanged (`d77a6381…`).

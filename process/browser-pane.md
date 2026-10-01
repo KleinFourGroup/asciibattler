@@ -19,9 +19,12 @@ app can stop the server between turns). Then:
   'stopped'` in a hidden pane), the canvas and viewport, the scene, the
   run phase, and `page` (the load; a reload changes it). It fails by name
   rather than let a read see a broken page. Each failure says what to do:
-  - "not live after 30 s": call it again. A freshly started dev server
-    holds the page's modules for 20–40 s; the dev server's stand-in
-    `__probe` waits for them.
+  - "not live after 30 s": call it again. The dev server's stand-in
+    `__probe` waits while a fresh server holds the page's modules, which
+    takes under a second. It took 40 s while the server's file watcher
+    covered the fuzz output (`server.watch.ignored` in `vite.config.ts`
+    now skips it), so a slow first load again means it is watching too
+    much.
   - a stylesheet that failed to load (editing `vite.config.ts` restarts
     the server and can drop a request in flight): `location.reload()`.
   - a 0×0 page or canvas (a hidden pane): `resize_window` to 1280×720.

@@ -19,6 +19,7 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import { Screen } from './Screen';
 import { button } from './button';
 import { t } from '../i18n/ui';
+import { BUILD_ID } from '../buildId';
 
 /** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
@@ -60,6 +61,13 @@ export class CharacterSelectScreen extends Screen {
     for (const character of CHARACTERS) {
       row.appendChild(this.renderCard(character));
     }
+
+    // The build's ID, small in a corner of the boot screen: what a player
+    // quotes in a bug report. It moves to the title menu when there is one.
+    const build = document.createElement('div');
+    build.className = 'charselect-build';
+    build.textContent = BUILD_ID;
+    panel.appendChild(build);
 
     return panel;
   }

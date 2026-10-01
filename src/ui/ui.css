@@ -1863,6 +1863,19 @@ body {
   color: var(--color-neon-purple);
 }
 
+/* The build's ID, pinned to the screen's bottom-right corner: the top-left is
+   the chrome column's and the top-right a corner button's on other screens.
+   Selectable, since it is there to be copied into a bug report. */
+.charselect-build {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  font-size: var(--text-11);
+  letter-spacing: 0.04em;
+  color: var(--color-gray-88);
+  user-select: text;
+}
+
 /* Battle banner (C1d follow-up). Top-center label naming the encounter's
    hand-authored layout ("Corridor" / "Diamond" / etc.) or "Uncharted Ground"
    for procedural battles. Shares the HUD's amber chrome and screen-fade

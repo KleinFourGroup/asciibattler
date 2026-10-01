@@ -17,7 +17,8 @@ app can stop the server between turns). Then:
   after any navigation or reload. It waits until the page is live and
   returns a report: the URL, whether frames are running (`frames:
   'stopped'` in a hidden pane), the canvas and viewport, the scene, the
-  run phase, and `page` (the load; a reload changes it). It fails by name
+  run phase, `page` (the load; a reload changes it), the build's ID and
+  the store's status (its adapter, whether it can save). It fails by name
   rather than let a read see a broken page. Each failure says what to do:
   - "not live after 30 s": call it again. The dev server's stand-in
     `__probe` waits while a fresh server holds the page's modules, which

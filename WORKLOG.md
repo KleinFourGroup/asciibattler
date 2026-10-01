@@ -2176,3 +2176,41 @@ live run's `schemaVersion`, and the root block's 42 property names equal
 change of meaning with no change of type (95f's renamed key inside a
 string) still needs a reviewer to bump. A damaged save at the current
 version that `fromJSON` happens to accept is §115's chaos driver's to find.
+
+The hook ran the fuzz smoke on this commit, as flagged: 582 tests in 62
+files, green, at `08e0c59`.
+
+### 113f — the ID, shown (2026-10-01) — ◐ BUILT, UNREAD (a `batch` read)
+
+**Built.** `CharacterSelectScreen` appends `.charselect-build`, the
+build's ID as text, pinned to the screen's bottom-right corner (the
+top-left is the chrome column's, the top-right a corner button's on other
+screens): `--text-11`, `--color-gray-88`, the screen's mono face,
+selectable so it can be copied into a bug report. It is inside the screen,
+so it fades with it and is gone once a character is chosen. `ready()`'s
+report gains `build` and `store` (the adapter, can-save, the error).
+
+**Checked in the pane** (Chromium; the dev server, so the ID ends `-dev`):
+
+| check | result |
+|---|---|
+| 1280×720 | the label reads `0.0.0+08e0c59-dirty-dev`, the same text as `<html data-build>`; its box is (1102, 694)–(1264, 708); it overlaps none of the heading and the three cards; a screenshot shows it alone in the corner |
+| the text-scale token | 11px at the 16px root, 13.75px with the root set to 20px |
+| 375×812 | no overlap; the last card ends at y 782 and the label starts at 786 |
+| `ready()` | `build` equals the label; `store` reads `web`, can save |
+| the console | no errors |
+
+3200 tests, unchanged (`src/ui` is eyeball-only); typecheck clean.
+
+**Not verified:** Firefox; a clean build's label (a dirty tree on the dev
+server reads `-dirty-dev`; a clean production build's ID was read at 113a
+from the bundle, not from this label). **A limit:** on a viewport too
+short for the three stacked cards the label would sit over the last one;
+the screen itself already overflows there.
+
+**The read** (`batch`, the user's): character select shows the version and
+seven hex digits, small, in the bottom-right corner. On the dev server it
+reads `0.0.0+<commit>-dev`, with `-dirty` before `-dev` when the tree has
+uncommitted changes; a production build of a clean tree reads
+`0.0.0+<commit>` alone. Wrong is a label over the cards or the chips, one
+that doesn't grow with the text scale, or `-dirty` on a clean tree.

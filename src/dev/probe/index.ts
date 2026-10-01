@@ -38,6 +38,9 @@ import type { Game } from '../../Game';
 import type { Renderer } from '../../render/Renderer';
 import type { RunPhase } from '../../run/Run';
 import type { BattleScene } from '../../scenes/BattleScene';
+import { BUILD_ID } from '../../buildId';
+import { store as pageStore } from '../../store';
+import type { StoreStatus } from '../../store/store';
 import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
 import { sceneName } from './scenes';
 import {
@@ -92,6 +95,10 @@ export interface PageReport {
   readonly phase: string | null;
   /** Earlier kit calls still running when this one returned (normally none). */
   readonly running: readonly number[];
+  /** The build's ID (src/buildId.ts): `-dev` on the dev server. */
+  readonly build: string;
+  /** The page's store: its adapter, and whether it can save. */
+  readonly store: StoreStatus;
 }
 
 export interface CanvasCheck {
@@ -439,6 +446,8 @@ export function installProbe(game: Game): Probe {
           scene: sceneName(internals.activeScene),
           phase: internals.run?.phase ?? null,
           running: [...active.keys()].filter((c) => c !== call),
+          build: BUILD_ID,
+          store: pageStore.status(),
         };
       } finally {
         active.delete(call);

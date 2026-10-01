@@ -177,8 +177,10 @@ export const asFile = (journal: RunJournal | null): RunJournal =>
 export const bytes = (run: Run): string => JSON.stringify(run.toJSON());
 
 /** Record a run to its end with `replayPlants`, replay its journal, and
- *  expect the same battles, hash and bytes. */
-export function expectSameReplay(start: JournalStart): { battles: number; discards: number } {
+ *  expect the same battles, hash and bytes. `setupOrders` counts the orders
+ *  the journal holds for the enemy team: no plant sends one, so each is a
+ *  battle setup's own (the camp pull). */
+export function expectSameReplay(start: JournalStart): { battles: number; discards: number; setupOrders: number } {
   const discards: { battle: number }[] = [];
   const seed = start.kind === 'seed' ? start.seed : 1;
   const recorded = driveRun({ start, choiceSeed: seed, plants: replayPlants(discards) });
@@ -190,5 +192,8 @@ export function expectSameReplay(start: JournalStart): { battles: number; discar
   expect(replay.battles).toBe(recorded.battles);
   expect(replay.hash).toBe(recorded.journal!.segments[0]!.end!.hash);
   expect(bytes(replay.run)).toBe(bytes(recorded.run));
-  return { battles: recorded.battles, discards: discards.length };
+  const setupOrders = recorded.journal!.segments[0]!.entries.filter(
+    (e) => e.t === 'order' && e.command.kind === 'setObjective' && e.command.team === 'enemy',
+  ).length;
+  return { battles: recorded.battles, discards: discards.length, setupOrders };
 }

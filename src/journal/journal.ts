@@ -20,7 +20,11 @@
  *    ledger) and a replay must send the command at the same place.
  *  - `order`: a battle command with its effective tick, the first tick whose
  *    unit actions can observe it (`command:applied`'s stamp). A replay
- *    enqueues it before that tick runs.
+ *    enqueues it before that tick runs. Every applied command is recorded,
+ *    the one a battle's own setup enqueues included (the enemy's camp pull,
+ *    src/sim/battleSetup.ts): the bus doesn't say who sent a command. A
+ *    replay's setup enqueues its own again, and setting the same objective
+ *    twice leaves the same state as setting it once.
  *  - `battle`: the checkpoint at a battle's end. A replay that reaches
  *    another winner or another tick count has diverged, and the checkpoint
  *    names the battle it diverged in.

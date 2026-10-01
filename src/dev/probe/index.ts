@@ -29,6 +29,10 @@
  *   Nth battle frame. It returns at the run's end, at `until`, or at its time
  *   limit (the next call carries on), and throws on a command that changes
  *   nothing, since the run would stand still.
+ * - 114c: `journal()` hands out the run's journal as Game holds it (the one
+ *   being recorded, or the finished one once the run is over), and every
+ *   drive report carries `stateHash`, the hash a replay of that journal must
+ *   reach (`npm run replay`).
  * - Every call gets a number, and a long call stops at its next poll once a
  *   later call starts, so a call the tool gave up on (it stops waiting at
  *   45 s) can't keep acting. `running()` lists the calls still running.
@@ -39,6 +43,7 @@ import type { Renderer } from '../../render/Renderer';
 import type { RunPhase } from '../../run/Run';
 import type { BattleScene } from '../../scenes/BattleScene';
 import { BUILD_ID } from '../../buildId';
+import { snapshotHash, type RunJournal } from '../../journal/journal';
 import { store as pageStore } from '../../store';
 import type { StoreStatus } from '../../store/store';
 import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
@@ -171,6 +176,9 @@ export interface DriveReport {
   readonly byPhase: Readonly<Record<string, number>>;
   /** A hash of every command sent on this page: equal runs, equal hashes. */
   readonly logHash: string;
+  /** The journal's `snapshotHash` of the Run as it stands: what a replay of
+   *  the run's journal must reach once the run is over. Null with no run. */
+  readonly stateHash: string | null;
   readonly findings: { readonly count: number; readonly first: readonly string[] };
   readonly ms: number;
 }
@@ -185,6 +193,7 @@ export interface Probe {
   pixels(rect: PageRect, opts?: { show?: boolean | number; render?: boolean }): PixelsReport;
   hide(): boolean;
   drive(opts?: DriveOptions): Promise<DriveReport>;
+  journal(): RunJournal | null;
 }
 
 /** Below the pane tool's own 45 s, so the kit's error arrives first. */
@@ -551,6 +560,7 @@ export function installProbe(game: Game): Probe {
           return n;
         }, {}),
         logHash: logHash(d.log),
+        stateHash: internals.run ? snapshotHash(internals.run.toJSON()) : null,
         findings: { count: d.findingCount, first: d.findings.slice(0, 5) },
         ms: Date.now() - started,
       });
@@ -587,6 +597,12 @@ export function installProbe(game: Game): Probe {
       } finally {
         active.delete(call);
       }
+    },
+
+    // A read of what Game holds; it takes no call number, so it never stops
+    // a drive that is still running.
+    journal() {
+      return game.currentJournal();
     },
   };
 

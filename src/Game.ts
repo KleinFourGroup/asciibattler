@@ -8,7 +8,7 @@ import { BackdropRenderer } from './render/BackdropRenderer';
 import { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { Run, type RunSnapshot } from './run/Run';
-import { parseRunConfigFromURL, type RunConfig } from './run/RunConfig';
+import { parseRunConfigFromURL, runConfigToQueryString, type RunConfig } from './run/RunConfig';
 import type { RunCommand, RunDispatcher } from './run/Command';
 import type { Scene, SceneContext } from './scenes/Scene';
 import { MapScene } from './scenes/MapScene';
@@ -35,6 +35,10 @@ import { attachEventSounds } from './audio/eventSounds';
 import { PlaybackSpeed } from './ui/PlaybackSpeed';
 import { Keybindings } from './ui/Keybindings';
 import { HEALTH } from './config/health';
+import { configHash } from './config/configHash';
+import { BUILD_ID } from './buildId';
+import { JournalRecorder } from './journal/JournalRecorder';
+import type { RunJournal } from './journal/journal';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -69,6 +73,25 @@ const TURN_OUTRO_MS = 900;
  */
 export class Game implements RunDispatcher {
   private readonly bus = new EventBus<GameEvents>();
+  /**
+   * The run journal's recorder (Round 8 spec D4; src/journal). Page-lifetime
+   * and on the bus before any Run, as its header asks. `dispatch` hands it
+   * each command before the Run applies it; `createRun` and `devLoadRun`
+   * open a journal, `resetRun` abandons one. Every call goes through
+   * `journaling`, so a recorder that throws can't take the game with it.
+   */
+  private readonly journalRecorder = new JournalRecorder(
+    this.bus,
+    { build: BUILD_ID, configHash: configHash() },
+    Date.now,
+    (journal) => {
+      this.finishedJournal = journal;
+    },
+  );
+  /** The journal of the run that just ended, until the next run starts. */
+  private finishedJournal: RunJournal | null = null;
+  /** Set when the recorder threw: this page records no more. */
+  private journalBroken = false;
   private readonly renderer: Renderer;
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
@@ -467,6 +490,10 @@ export class Game implements RunDispatcher {
       console.warn(`[Game] '${command.kind}' ignored — no Run yet (character select pending)`);
       return;
     }
+    // Recorded before it is applied, so what it sets off follows it in the
+    // journal; the `settle` after the switch closes the journal if this
+    // command ended the run.
+    this.journaling((recorder) => recorder.command(command));
     switch (command.kind) {
       case 'enterNode':
         // If the hop is accepted, Run synchronously emits `battle:started`,
@@ -608,6 +635,34 @@ export class Game implements RunDispatcher {
         command satisfies never;
         break;
     }
+    this.journaling((recorder) => recorder.settle());
+  }
+
+  /**
+   * Every call on the journal's recorder goes through here. Recording is
+   * passive and must stay harmless: if the recorder throws, the error is
+   * logged once, this page records no more, and the game carries on with no
+   * journal to export.
+   */
+  private journaling(act: (recorder: JournalRecorder) => void): void {
+    if (this.journalBroken) return;
+    try {
+      act(this.journalRecorder);
+    } catch (err) {
+      this.journalBroken = true;
+      this.finishedJournal = null;
+      this.journalRecorder.dispose();
+      console.error('[journal] recording failed; this page records no more', err);
+    }
+  }
+
+  /**
+   * The run's journal: the one being recorded, or, once the run has ended,
+   * the finished one until the next run starts. Null with no run, or after
+   * the recorder failed.
+   */
+  currentJournal(): RunJournal | null {
+    return this.journalRecorder.journal ?? this.finishedJournal;
   }
 
   start(): void {
@@ -622,6 +677,11 @@ export class Game implements RunDispatcher {
    * debug panel.
    */
   private resetRun(): void {
+    // A run reset before its end leaves an abandoned journal; one that had
+    // ended already closed its journal, and this is a no-op. Either way the
+    // finished journal belongs to the run being replaced.
+    this.journaling((recorder) => recorder.abandon());
+    this.finishedJournal = null;
     this.run?.dispose();
     // 63e — the locked reset fork: a `?character=` pin goes straight to a
     // fresh run + map; without it, a new run STARTS at character select
@@ -686,6 +746,12 @@ export class Game implements RunDispatcher {
     }
     const restored = Run.fromJSON(snap, this.bus);
     restored.pauseAtTurnGates = true;
+    // A load starts a journal from the loaded snapshot (spec D4); the
+    // replaced run's journal, if it was still open, is abandoned by `open`.
+    this.journaling((recorder) =>
+      recorder.open({ kind: 'snapshot', snapshot: snap }, () => restored.toJSON()),
+    );
+    this.finishedJournal = null;
     this.run?.dispose();
     this.run = restored;
     // 48d/49f — the resetRun ordering: re-paint the page-lifetime chips
@@ -705,11 +771,19 @@ export class Game implements RunDispatcher {
   private createRun(character?: CharacterConfig): Run {
     const config: RunConfig =
       character !== undefined ? { ...this.runConfig, character } : this.runConfig;
-    const run = new Run(config.seed ?? Date.now(), this.bus, config);
+    const seed = config.seed ?? Date.now();
+    const run = new Run(seed, this.bus, config);
     // H4b — the live game pauses at turn gates so the pre/post-turn screens can
     // show. (Headless tests + the fuzz harness leave this off → the synchronous
     // H4a loop, so they're unaffected.)
     run.pauseAtTurnGates = true;
+    // The journal's start: the seed and the run dials as the URL would spell
+    // them, the character among them. Game's config comes from the URL alone,
+    // so that text reconstructs it (src/journal/replayJournal.ts).
+    this.journaling((recorder) =>
+      recorder.open({ kind: 'seed', seed, dials: runConfigToQueryString(config) }, () => run.toJSON()),
+    );
+    this.finishedJournal = null;
     if (this.runConfig.startingRoster) {
       const desc = this.runConfig.startingRoster
         .map((e) => (e.level > 1 ? `${e.archetype} Lv${e.level}` : e.archetype)) // i18n-ok: a dev console line, never rendered

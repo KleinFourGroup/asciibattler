@@ -2791,3 +2791,89 @@ this step, on every commit. Splitting the controls out as well is the next
 cut if that is too much.
 
 **Counts.** Main 3221 → 3238 (218 → 220 files); typecheck clean.
+
+### 114c — wired into the game, and the replay tool (2026-10-01) — read `none` ✅
+
+**Step zero** (✔ = read at file:line).
+- **Every run command in the game passes `Game.dispatch`,** as the audit
+  said, Game's own `advanceTurn` after the outro included (✔ `Game.ts`,
+  the `turn:resolved` handler). The recorder goes in as a field initialised right
+  after the bus, so it is subscribed before the constructor builds a
+  pinned run.
+- **A battle's setup can enqueue a command of its own:** the enemy's camp
+  pull, an enemy `setObjective` that drains at tick 1 (✔
+  `battleSetup.ts:289-304`). The bus doesn't say who sent a command, so
+  the recorder writes it as an `order`, and the replay's own setup
+  enqueues it a second time. Setting the same objective twice leaves the
+  same state (✔ `World.ts:2124-2127`), and it is measured: the runs 114b
+  compares byte for byte hold five such orders (seed 11 one, seed 5
+  four), and the shipped-length test now asserts it crossed one. The cost
+  is one entry of about 130 bytes per pulled battle. `replayTrace`
+  enqueues a recorded pull over the setup's own in the same way.
+- **The probe runner's build is a development-mode build, and its ID has
+  no `-dev`:** on a dirty tree it reads `0.0.0+027cba8-dirty`. So a
+  journal from the runner on an uncommitted tree is refused by the tool
+  without `--force`, which is call 7 working as signed.
+
+**Built.**
+- **`Game`:** the recorder is page-lifetime. `dispatch` hands it each
+  command before the switch and settles it after; `createRun` opens a
+  journal with the seed and `runConfigToQueryString(config)`; `devLoadRun`
+  opens one from the loaded snapshot; `resetRun` abandons one.
+  `currentJournal()` is the one being recorded, or the finished one until
+  the next run starts.
+- **A recorder that throws can't take the game with it** (a call made
+  here, inside the charter's "passive"): every recorder call goes through
+  `Game.journaling`, which logs the error once and stops recording for the
+  page. Without it a throw in `command()` would drop the player's command.
+- **The kit:** `__probe.journal()`, and `stateHash` on every drive report
+  (`snapshotHash` of the Run as it stands). `drive-run.js` puts the
+  journal in its report with `journal: true`.
+- **`npm run replay -- <file> [--force]`** (`scripts/replay.ts`, with its
+  logic in `src/journal/replayTool.ts`, since `scripts/` is outside tsc):
+  the file is a journal or a probe report carrying one. Refused unless
+  forced: another commit (it names the commit to check out), a `-dirty`
+  build, an ID that names no commit (`unbaked`, `nogit`, a pin). `-dev` is
+  accepted. Another config hash is refused always. Exit 0 replayed, 1
+  diverged, 2 refused.
+- **A tree with uncommitted changes of its own is a warning, not a
+  refusal** (a call made here): the tool can't tell a changed comment
+  from changed code, the config hash and the divergence check catch what
+  matters, and refusing would mean no replay during development.
+- **`npm run dist:hash`** (`scripts/dist-hash.mjs`), the `dist/` oracle as
+  a script. Its known answer: a production build of `d06ebc6` pinned to
+  `pin-113f-post` reads `4e969d27…` over 32 files, the total §113f-post
+  recorded.
+
+**Exit.**
+- **The seed-7 drive in the Electron runner logs `a59ee48f`,** unchanged,
+  with the recorder on the bus. Its journal: 71 entries (58 run commands:
+  the driver's 46 and Game's own 12 `advanceTurn`s; 12 checkpoints; one
+  setup order), 4,909 bytes, ending in defeat with hash `1b400634`, which
+  is the `stateHash` the page reported.
+- **That journal replays under Node to `1b400634`** (`npm run replay` on
+  the report, forced past the `-dirty` stamp of the uncommitted tree): the
+  first replay of a run played through `Game` and `BattleScene`, whose
+  config was never in the replay's hands except as the dials' text.
+- **A board fixture replays from its run dials alone** (the kickoff's
+  first hypothesis): `--board=quarry` drove 7 battles to defeat; its
+  start is `seed=7&roster=…&layout=rubbleQuarry&firstNode=elite&character=soldier`,
+  and the replay reaches the page's `20624e26`.
+- **The refusals, planted on copies of the seed-7 journal and run through
+  `npm run replay`:** the tree's commit, built or `-dev`: exit 0; another
+  commit, `-dirty`, `unbaked`: exit 2; another config hash: exit 2, forced
+  too; an entry dropped: exit 1, naming the entry. The same cases are 15
+  tests over `replayText` (`tests/integration/journal-tool.test.ts`).
+- **The bundle** (production builds pinned to one ID, `dist:hash`): the
+  index chunk 596,325 → 601,462 bytes, **+5,137 (0.86 %)**, 32 files both
+  times. With the two config files nothing else imports left out of the
+  hash it is 600,426, so they cost **1,036 bytes**. Call 8 stands: the
+  hash keeps all 33 files, and recorded traces keep their stamp.
+- **A guard that fired:** `page.test.ts` holds the dev server's stand-in
+  to the kit's list of calls, and failed until `journal` was in it.
+
+**Not checked here:** a journal from a dev-server page (a `-dev` ID from a
+real page; the tool's rule for it is tested on a planted ID) and an order
+sent through the battle's own controls. Both are pane work and ride 114d.
+
+**Counts.** Main 3238 → 3253 (220 → 221 files); typecheck clean.

@@ -63,6 +63,14 @@ app can stop the server between turns). Then:
   phase, battles, commands per phase and a log hash (the same seed and
   options, the same hash). A command that changes nothing throws, since
   the run would stand still.
+- **`__probe.journal()` is the run's journal** as Game holds it: the one
+  being recorded, or the finished one once the run is over (null with no
+  run). Every drive report carries `stateHash`, the hash a replay of that
+  journal must reach. Under the runner, `drive-run.js` with
+  `'--arg={"journal":true}'` puts the journal in the report, and
+  `npm run replay -- <report.json>` replays it under Node and compares the
+  two hashes (a dev build of a dirty tree is stamped `-dirty`, which the
+  tool refuses without `--force`).
 - **`__probe.check()`** is the canvas check every kit read makes.
 - **A call the tool gave up on** (it stops waiting at 45 s) keeps running
   in the page. A long kit call stops as soon as a later kit call starts;

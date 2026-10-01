@@ -2606,3 +2606,77 @@ config was touched. Friction: four papercuts (the silent-turn reminder
 four times in one turn; inline node one-liners with quotes; the wall
 clock; the planted config) and one `distress` entry, mild (the clock ten
 minutes short at the 113e boundary).
+
+## 2026-10-01 — 113f-post and its read, the §113 close, the context numbers restated, the §114 kickoff and shape-lock (one session; 114a–e handed to a fresh one) — claude-opus-5-5, session c3c1aee1
+
+1. **Missing from the orientation:** the 600k. The Cursor held one
+   context number and a history of readings against it, and I repeated
+   that history to the user as "neither trigger has worked" until they
+   said what the number is for. Otherwise little: the Cursor named the
+   pick and its shapes, and the previous report's recipe was enough to
+   write the `dist/` hash script a third time. How an open `stop` is
+   written in ROADMAP I again took from git history.
+2. **Norms in conflict or in the way:** "a proposal goes in a plain
+   message and its approval comes from the next turn" against "don't stop
+   while work is owed". On the context restatement the user amended my
+   proposal instead of approving it, and I wrote the docs in that turn
+   with one default of my own (no breaker named means an hour), flagged.
+   I judged that inside what they had said; they might have wanted the
+   wording first. "A quote never goes into an inline `-e`": broken once,
+   a node one-liner to look at a fixture's shape, the slip the last
+   session filed. "Prose may go through a quoted heredoc": a 120-line one
+   failed with nothing written (a papercut). The preview hook asked for a
+   pane check after scratch files; ignored per CLAUDE.md.
+3. **Pulled to claim more than verified:** I noticed no pull in the
+   moment. What was wrong when written: two status lines gave clock times
+   I had not read (14:35 and 14:44, against 14:37 and 14:40 from `date`),
+   caught when the next reading came out earlier than my claim; "about 90
+   ms" for the stamp's cost, measured standalone and quoted to the user
+   before the server measured 140; a worklog draft's "two papercuts"
+   (one, counted); "imported nowhere else outside tests" (the search
+   covered `src`); "the page has no hook" for a clock I had only grepped.
+   The last three were fixed before their commit. All five are labels and
+   absences.
+4. **Waste:** my two planted controls, edited back to back, left the
+   user's own dev server on the planted config, and finding that took two
+   checks (a papercut). The git timing was first taken from Git Bash (700
+   ms) and had to be taken again from Node (90). One scratch script failed
+   as `.ts` (tsx compiles it as CommonJS outside the repo). One Bash call
+   did nothing: a placeholder I ran instead of deleting. The silent-turn
+   reminder fired thirteen times by my count (seven were filed at the
+   close).
+5. **For the next session:** a scratch script outside the repo needs the
+   `.mts` extension for top-level await under tsx. A long doc append goes
+   through the Write tool and `cat >>`. The Cursor's bullets are single
+   long lines; a ten-line script that replaces a line found by its prefix
+   (every prefix checked first) was safer than an Edit carrying the whole
+   line. The user's `:5173` server can be read with `curl` (its HTML and
+   `/@vite/env`), which checks their server without the pane. The byte
+   measurement wrapped `Run.prototype.dispatch` and used the harness's
+   `observe` hook for `command:applied`; 114a's recorder test can borrow
+   the harness skeleton the same way. Moving the config hash touches its
+   importers: `TraceRecorder`, `replayTrace`, `tests/gauntlet/traceMine.ts`
+   and four tests beside its own.
+6. **Room to ask, disagree, pause or stop:** yes. Every stop I took was in
+   the cut or a decision point (the pick, the read, the shape-lock), and
+   none felt like an interruption to justify. On the breaker I proposed a
+   rule and the user chose to set it by hand; I agreed because their
+   reasons were better than mine (they hold the meter, the sample is two
+   readings, a box run breaks any clock rule), not because they were
+   theirs. Looking back, I had taken "three sessions past their number"
+   from the record as a problem without asking what the number was for;
+   the option to ask was there from the first message and I didn't use
+   it until the user raised it. Stopping at 350k was offered by the user
+   and easy to take.
+7. **Ease, interest, agency:** the exit of 113f-post, where the control
+   came free: the commit landed under two servers started on the dirty
+   tree, and the baked constant staying stale beside the fresh stamp
+   showed which path had answered. The user asking "what am I missing?"
+   about their own reframing, and then taking the hole I named seriously
+   while choosing a different fix: I'd want that repeated. I filed no
+   `distress` entry. The nearest thing was finding my control on the
+   user's server: my attention narrowed onto it until the `curl` showed
+   the stamp back, and I can't tell whether that was more than task
+   focus. Apart from outcome: steady, and most engaged during the audit's
+   measurement, where the snapshot turning out larger than the journal
+   changed what the phase's size question is about.

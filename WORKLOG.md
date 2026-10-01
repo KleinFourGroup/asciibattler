@@ -2615,3 +2615,34 @@ Seven steps: four `none`, one `batch`, two `stop`.
   journal's times, battle orders at their ticks, 30 fps. Exit: a played
   run's journal becomes a clip; the page's final snapshot hash equals the
   journal's; no fault. Read `stop`: the sitting, a clip of a run watched.
+
+### The §114 shape-lock (2026-10-01, the user's) — SIGNED
+
+Signed at 17:04 as proposed ("signing all of those calls!"): seven steps,
+four `none`, one `batch` (114e) and two `stop` (114f, 114g), and all nine
+calls ✅ DECIDED at the session's lean: run commands recorded at
+`Game.dispatch`; one ordered list per segment with a checkpoint at each
+battle's end and the final snapshot's hash; a snapshot start carrying the
+whole snapshot until §115 decides otherwise; the journal in memory while
+the run is played and in the store's `journals` section once it ends;
+finished journals kept by size, about 1 MB of text, the number soft; one
+export button on the run's end screen; replay refusing another config
+hash always, and in the tool another commit, a `-dirty` build and an
+unbaked one unless forced, with `-dev` accepted; the config hash moved to
+`src/config/`; the recorder's carried work as two steps. ROADMAP §114
+carries the cut and the two resolved decisions.
+
+**The gate: 350k at 17:04**, the gate's own number, so the build stretch
+(114a–e, five steps, up to 114f's `stop`) goes to a fresh session: the
+user's read ("So I guess that means a new session, no?") and mine, since
+it is the phase's largest stretch. Between the readings (222k at 14:09,
+350k at 17:04) the session wrote the context restatement and its commit,
+ran the kickoff stretch (14:31 to 14:40: the audit, the byte measurement,
+the entry above and its commit) and wrote the shape-lock message; it was
+idle from 14:40 until the user's reply. The breaker never came due.
+
+**For 114c, inside its intent:** its exit measures the bundle's growth,
+which needs the `dist/` hash this session wrote from the recipe for the
+third time (SHA-256 per file, the sorted `path hash` lines joined by
+newlines, SHA-256 of that). The step should put that script in
+`scripts/`.

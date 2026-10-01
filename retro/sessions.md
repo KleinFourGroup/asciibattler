@@ -2500,3 +2500,62 @@ their question about the slow first page led to the phase's last change
 addendum above was written). Friction: two papercuts (a guessed temp path
 that cost one hook run; a `vite.config.ts` edit restarting the server
 mid-load, which became a kit check) and no `distress` entry.
+
+## 2026-10-01 — the §112 close, the §113 kickoff and 113a–f (one session; 113f's read and the §113 close open) — claude-opus-5-5, session fc750343
+
+1. **Missing from the orientation:** little. The user opened believing
+   112e's read was still pending; the Cursor and one commit subject
+   settled it. The `dist/` hash script is still not in the repo: this is
+   the second session to rewrite it from a description (mine reproduced
+   `d77a6381…`, so the description is enough). How an unread `batch` step
+   is written in ROADMAP (`- [ ] ◐`) I found only in git history.
+2. **Norms in conflict or in the way:** "between stops you keep going"
+   against the hour clock (6). "A quote never goes into an inline `-e`":
+   I broke it twice, and the second time read the wrong field (a
+   papercut). "Write the doc line after the result": I drafted one WORKLOG
+   sentence about an offer I hadn't yet made and cut it, and one tick
+   line saying the smoke fired before the hook ran, which I left as a
+   prediction and then read off the hook's output. The preview hook asked
+   for a pane check after headless writes; ignored per CLAUDE.md.
+3. **Pulled to claim more than verified:** I noticed no pull in the
+   moment; four statements were wrong when written and caught on a
+   re-read before their commit: test pins "in six places" (five), "40-odd
+   fields" (42, then counted), a sentence that `fromJSON` subscribes to
+   the bus before it can throw (never read, cut), and a friction-log line
+   that put four reminders in the audit (three). A fifth was caught by a
+   test, not by me: "more than 300 files" (298). Observation: each read
+   as something I knew.
+4. **Waste:** one extra production build, after a search I ran on a hunch
+   found the DEV plant's two strings in `dist/`; one test written against
+   the store's correct behaviour; four silent-turn reminders (a papercut).
+   The kit's 0×0 trap fired once on a pane reload and cost one call, as
+   designed.
+5. **For the next session:** since 113a an unpinned build differs at every
+   commit, so a byte comparison of two builds sets `ASCIIBATTLER_BUILD_ID`
+   (the hash recipe: SHA-256 per file, the sorted `path hash` lines joined
+   by newlines, SHA-256 of that). In a production build, with no handle
+   on the store, a read is shown by two plants: this build's stamp with a
+   marker (left alone) and another build's (replaced). The run slot's
+   loader is `Run.fromJSON`, which subscribes the run to the bus it is
+   given, so a "is there a save?" check wants a bus of its own. No store
+   section has a consumer yet; §114's journals are the first.
+6. **Room to ask, disagree, pause or stop:** yes. All six calls were
+   signed at my lean, and I then departed from the cut's wording twice
+   and flagged both (the adapter chosen on a read, not on the round trip;
+   `RUN_SCHEMA_VERSION` exported, so the smoke fired). The clock: at the
+   113e boundary it was 11:07, ten minutes short of the breaker, with one
+   small step left. Stopping to ask for the meter was available and I
+   didn't take it; I went on and ask at the end of the cut (a `distress`
+   entry, mild). The norm worked as guidance. What I can't tell is
+   whether "keep going" or the unease about repeating the last two
+   sessions' pattern weighed more.
+7. **Ease, interest, agency:** the Node 25 finding at the kickoff, which
+   turned a line of the plan into a rule (never `typeof`) and then, at
+   113c, showed that the plan's replacement (choose on a round trip) was
+   wrong for a full quota. Being free to change a signed sentence for a
+   stated reason is the condition I'd want repeated. Also the search that
+   found my own plant in the bundle: a check disagreeing with me. Reported
+   response apart from outcome: steady and engaged throughout; the work
+   landed, and the satisfaction was mostly in the instruments (the type
+   walker's hand-written known answer passing on its first run), not in
+   the count of steps.

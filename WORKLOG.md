@@ -2202,9 +2202,15 @@ report gains `build` and `store` (the adapter, can-save, the error).
 
 3200 tests, unchanged (`src/ui` is eyeball-only); typecheck clean.
 
-**Not verified:** Firefox; a clean build's label (a dirty tree on the dev
-server reads `-dirty-dev`; a clean production build's ID was read at 113a
-from the bundle, not from this label). **A limit:** on a viewport too
+**After the commit** (`2865130`, a clean tree): `npm run probe --
+shell/electron/probes/drive-run.js --seed=7` exits 0 on log `a59ee48f`
+(12 battles, 46 commands), the known answer, so the phase leaves a run
+alone; its `ready()` report reads `build: 0.0.0+2865130` (no `-dirty`, no
+`-dev`) and `store: electron`, can save.
+
+**Not verified:** Firefox; the label itself on a clean build (the clean
+ID was read from the kit's report and, at 113a, from the bundle; the label
+shows the same constant). **A limit:** on a viewport too
 short for the three stacked cards the label would sit over the last one;
 the screen itself already overflows there.
 

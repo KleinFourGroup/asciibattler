@@ -13,8 +13,9 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §112 ✅ CLOSED 2026-10-01** (the pane probe kit and the Electron
-runner). **§113, the store and the build ID, is NEXT** (its kickoff:
-audit, cut, shape-lock). The round was spike-first,
+runner). **§113, the store and the build ID, is at its kickoff:** the
+audit is in WORKLOG §113 and the cut is proposed, its shape-lock open
+(2026-10-01). The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and

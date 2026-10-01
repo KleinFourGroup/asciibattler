@@ -1698,3 +1698,175 @@ demoted, the phase summary in `retro/sessions.md`, the HANDOFF Cursor moved
 to the §113 kickoff. Pre-flight at `b105787`: 3138 tests in 209 files,
 typecheck clean. The user opened the session expecting 112e's read to be
 still open; the record has it taken (`eae4a2a`).
+
+## Phase 113 — the store and the build ID
+
+### The §113 audit and cut (2026-10-01) — the shape-lock is open
+
+Session fc750343. ✔ = read by this session at file:line, or measured.
+
+**What is there.**
+- **Nothing in the game persists.** The only `localStorage` user under
+  `src/` is the DEV trace ring (✔ `src/dev/traceStore.ts:15-54`); the other
+  hits are `sessionStorage` in the editors under `tools/` and in the kit's
+  `go()` (✔ a search of `src`, `shell`, `tests`, `scripts`, `tools`). From
+  the page itself, a surface the search doesn't consult: the pane's
+  `localStorage` on `:5191` held one key, `asciibattler:traces:v1`
+  (209,500 characters), and `sessionStorage` none. The speed, the keys and
+  the locale are page-lifetime fields with no stored value (✔
+  `Game.ts:105-122`, `locale.ts:14-15,52-56`).
+- **The boot.** `main.ts`'s first static import is `./fonts.css`, then
+  `./Game` (✔ `main.ts:8-21`), whose graph holds the config loaders; each
+  resolves its prose through the active locale right after its parse
+  (`locale.ts:137-146`, by its own comment; no loader was opened). The locale is fixed
+  before a catalog loads, so the store's module has to evaluate before
+  `./Game` and must not import anything that loads a catalog itself.
+- **The Electron half is as the spike left it:** the preload reads
+  `store.json` as one text with a synchronous message and exposes
+  `window.shellStore.{ shell, initial, write }`; main writes a temporary
+  file and renames it (✔ `preload.cjs:11-19`, `main.mjs:94-109`), and the
+  `store-write` and `store-read` probes work on that raw text (✔
+  `main.mjs:210-222`). One file, one text: the adapter keeps its keys
+  inside it.
+- **The build has no ID.** `package.json` is `0.0.0`, the repo's only tags
+  are the two casualty ones, and `vite.config.ts` has no `define` (✔).
+  The recorder already computes the stamp D2 describes, the short commit
+  plus `-dirty` from `git status --porcelain` (✔ `tree.mjs:28-33`), so the
+  two should share one function.
+- **The save format.** `RUN_SCHEMA_VERSION = 46` is a module-private const
+  (✔ `Run.ts:497`); `toJSON` writes 42 fields (counted at `:4194-4279`),
+  several of them nested data (`nodeMap`, `team`, `currentEncounter`,
+  `portStock`); `fromJSON` rejects on the version and on unknown daemon,
+  character and boss ids (✔ `:4289-4384`). Tests pin the number in five
+  places (✔ `Run.test.ts:2988, 3178, 3502, 5732, 6494`), as 110f counted.
+  A second search for a key-set or shape pin found none
+  (✔ `Object.keys(wire…)` and "import graph" over every `*.test.ts`: no
+  match), which agrees with 110f; neither search would see a pin written
+  another way.
+- **The guard's precedent says a test, not lint.** The `Math.random()` ban
+  is an ESLint rule only (✔ `eslint.config.js:23-39`), the pre-commit hook
+  doesn't run lint, and the i18n literal pin was built as a test for that
+  reason (✔ `literalScan.ts:9-11`). ESLint is clean today on `src/sim`,
+  `src/run`, `src/bot` and `tests/fuzz` (✔ exit 0, no output), so a planted
+  import would be the only finding.
+- **The TypeScript compiler API is already a test dependency** (✔
+  `literalScan.ts:43`, syntax only; no test builds a type checker yet).
+- **`configHash()` lives in `src/dev/`** (✔ `configHash.ts`), and D4 stamps
+  it on shipped journals: §114's move, not this phase's.
+
+**Measured at the kickoff.**
+- **Node 25.5 defines a `localStorage` that doesn't work:** `typeof
+  globalThis.localStorage` is `object`, `setItem` "is not a function", and
+  Node warns about `--localstorage-file` (✔ a scratch script). An adapter
+  chosen by `typeof localStorage` would pick it under `npm test` and under
+  the fuzz CLIs. The choice has to be explicit: `window.shellStore`, then
+  a `window.localStorage` that passes a write, a read and a remove, then
+  memory with "can't save".
+- **The page has what a two-tab lock needs:** on `:5191`,
+  `navigator.locks` is an object with 0 held, `isSecureContext` is true and
+  `BroadcastChannel` exists (✔ the pane). Electron and itch's iframe are
+  unmeasured.
+- **The kit, in its first session after the one that built it:**
+  `await __probe.ready()` was the first call, 3.2 s after the page began
+  loading on a fresh server, and it returned in 204 ms with a live report
+  (character select, 1280×720, frames stopped). No trap fired.
+
+**Hypotheses for step zero** (unmeasured).
+- **The fingerprint by types.** A walker over the type checker expands
+  `RunSnapshot` to its leaves and hashes the text. The cost of building a
+  checker over `Run.ts`'s graph inside `npm test` is unmeasured; if it is
+  more than a few seconds, the fallback is shapes taken from driven runs,
+  which can't see a variant no run reaches.
+- **A recorder worktree's stamp.** `openTree` links `node_modules` into
+  the worktree as a junction; whether `git status --porcelain` there reads
+  clean decides whether an older commit's build is stamped `-dirty`.
+- **`define` under each runner.** Vitest reads `vite.config.ts`, so the
+  constant exists in tests; `tsx` (the fuzz CLIs) has no `define`, so the
+  module that exports the ID needs a fallback that §114's replay can tell
+  from a real one.
+- **The dev server's ID** is computed when the server starts and goes
+  stale as commits land under it. Known for §114, where a journal recorded
+  on the dev server needs the commit at recording time.
+- **An unused i18n key** (the rejection message, before §115 shows it) may
+  trip one of the i18n pins.
+
+**`dist/` stops being the phase's oracle:** this phase changes the
+production bundle by design (the store module, the ID, the label), and a
+baked commit changes it at every commit after. A pinned ID through an
+environment variable keeps byte-identity available to later phases.
+
+**Calls for the shape-lock, with the session's lean.**
+1. **The key layout** (ROADMAP's decision point): one key per section,
+   `asciibattler:meta`, `:settings`, `:progress`, `:run`, `:journals`, each
+   an envelope `{ v, data }`; under Electron the same keys inside the one
+   `store.json`. Lean: this, over one blob, because a write then touches
+   only its section, and a quota failure on the journals can't cost the
+   settings.
+2. **The fingerprint's instrument:** the type walker, if step zero
+   measures it at a few seconds or less; else shapes from driven runs.
+   Lean: types, since the variants no run reaches are where a stale save
+   would bite.
+3. **The headless guard:** D1's ESLint rule, plus a twin on `npm test`
+   (an import scan with a planted violation as its control). Lean: both;
+   the test is the guard, because the hook doesn't run lint.
+4. **Where the ID shows before the menu exists:** a small corner label on
+   character select, today's boot screen, which §116 moves to the menu.
+5. **The itch leg of the exit.** The adapter's itch case is the web case's
+   code, and 110e read it in Firefox. Proving it again here needs a
+   sitting (a zip uploaded to the draft) and something a production build
+   shows that changes across boots. Lean: prove the web (the dev server
+   and the production build) and Electron here, and take the itch leg at
+   the first sitting where a player-visible thing persists (§116's exit
+   says three shells again). It re-scopes a signed exit, so it is the
+   user's call.
+6. **The two-tab lock:** here, or with its first user. Lean: §115, with a
+   landing note at the adapter seam, because the lock guards the run
+   slot's writer and the slot has no writer until then.
+
+**Predictions for the cut.** No snapshot bump (Run v46, World v36), no RNG
+stream, no config change. No step stages `src/sim|run|core|config|bot`,
+`config/` or `tests/fuzz`, so the fuzz smoke fires on none: the ID's
+module sits outside `src/core`, and `RUN_SCHEMA_VERSION` stays private
+(the fingerprint reads the version off a snapshot, as the tests do).
+
+**The cut as proposed (unsigned; it goes into ROADMAP §113 once signed).**
+Six steps, five `none` and one `batch`, at the leans above; call 5 the
+other way adds a `stop` (113g, the itch sitting) and a boot count the
+production build shows.
+- **113a — the build ID.** One function (the version, the short commit,
+  `-dirty`) shared by `vite.config.ts`'s `define` and the recorder's
+  `openTree`; a module that exports it, with a named fallback where
+  nothing baked it; an environment variable that pins it. Exit: a built
+  bundle carries the ID git gives, read from `dist/`; a planted
+  uncommitted change builds `-dirty`; two pinned builds are byte-identical;
+  a recorder worktree stamps clean. Read `none`.
+- **113b — the store's core, headless.** `src/store/`: sections with their
+  own versions, the two read policies, a memory adapter, a status that
+  reads "can't save" and never throws. Exit: planted cases on both sides
+  of each policy (an unknown key dropped, a missing one defaulted, a bad
+  value reset alone; a stale strict section rejected with the lenient ones
+  untouched); a throwing adapter on read and on write. Read `none`.
+- **113c — the three adapters and the boot read.** The web adapter
+  (proven by a round trip, never by `typeof`), the Electron adapter over
+  `window.shellStore`, the choice; the store as `main.ts`'s first static
+  import, with a pin that its import graph reaches no catalog. Exit: the
+  round trip in the pane on the dev server and on the production build,
+  read back from `localStorage` itself; under Electron across two launches
+  of one profile, a fresh profile reading empty; a planted throwing store
+  boots the game and reads "can't save". Read `none`.
+- **113d — the headless guard.** D1's ESLint rule and its twin on
+  `npm test`. Exit: both fail on a planted import of the store from
+  `src/sim`; the twin keeps a planted control in the suite. Read `none`.
+- **113e — the save's fingerprint and the rejection rule.** A test pins
+  `RunSnapshot`'s structure beside its version; the run slot's strict read
+  rejects a stale or unreadable save and leaves settings and progress
+  alone; the message's key and English text (shown, and read, at §115).
+  Exit: the test fails on a planted shape change in a nested optional
+  field without a bump, and passes with the bump and the re-pin; a planted
+  v45 slot reads as rejected. Read `none`.
+- **113f — the ID, shown.** The corner label on character select;
+  `__probe.ready()`'s report carries the build and the store's status.
+  Read `batch` (at the next stop, else §114's kickoff): character select
+  shows the version and seven hex digits, small, in a corner; wrong is a
+  label over the cards or the chips, one that ignores the text-scale
+  token, or `-dirty` on a clean build.

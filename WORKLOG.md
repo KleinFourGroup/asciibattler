@@ -2275,3 +2275,7 @@ close waits on it.
 400k; the hour clock would have fired two minutes later. The session
 recommended handing 113f-post, the close and §114's kickoff to a fresh
 session.
+
+**The hand-off (the user's):** "I'll see you in the post session to change
+it!" So the label changes, and shape 3 is out; between 1 and 2 the user
+has not picked.

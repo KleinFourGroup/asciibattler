@@ -2992,7 +2992,7 @@ driven to its end; the tree uncommitted, so the page's build was
 
 ### The build stretch's end (2026-10-01, session 4d7da9f7)
 
-114a–e ran from 17:19 to 18:15, inside the one-hour breaker: seven
+114a–e ran from 17:19 to 18:15, inside the one-hour breaker: six
 commits, `e6d35de` (114a) to `1fc4fc0` (114e), the fuzz smoke once (114a,
 582 green). The end reading is asked for in the hand-back, with what the
 gate's "400k" named. The session report waits for the session's end.

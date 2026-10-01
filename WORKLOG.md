@@ -2105,3 +2105,74 @@ coverage check failed at 298, which a separate `find` confirmed (120, 41,
 23, 114); the floor is 250.
 
 Both pins joined the Cursor's permanent gates.
+
+### 113e — the save's fingerprint and the rejection rule (2026-10-01) — read `none` ✅
+
+**Step zero: the type checker costs about half a second.** A `ts.Program`
+over `src/run/Run.ts` with the repo's tsconfig, and a walk of
+`RunSnapshot` to its leaves, took 493, 454 and 468 ms on three warm calls
+under tsx. The full suite ran 38.2 s with it in, against 36.4–38.1 s over
+this session's earlier runs. So the fingerprint is by types (call 2), and
+the driven-run fallback wasn't built.
+
+**Built.**
+- `tests/saveShape.ts`: the walker and the pin's rules.
+  `tests/run-snapshot-shape.txt`: the pinned print, 34 definitions in 235
+  lines, `RunSnapshot` first. `tests/save-fingerprint.test.ts`: the pin.
+  `npm run save:fingerprint` (`scripts/save-fingerprint.ts`): the re-pin.
+- `src/store/runSlot.ts`: the run slot's strict section and
+  `runRejectedMessage()`; `save.rejected` in `locales/en/ui.json`: "This
+  run was saved by an older version of the game and can't be continued.
+  Your settings and unlocks are kept." The wording is read at §115, where
+  it is first shown.
+
+**A prediction that missed, flagged: `RUN_SCHEMA_VERSION` is exported, so
+the fuzz smoke fires on this commit.** The cut predicted it would stay
+private. Exported, the slot's envelope carries the save format's own
+number, so a stale save is rejected with `found: 45` before `Run.fromJSON`
+runs at all; left private, every stale save would have gone through
+`fromJSON` and come back as `unreadable`, with no version to report. One
+word in `Run.ts`, no behaviour change, and D2 names that number as the
+format.
+
+**The re-pin can't be used to skip the bump.** A test that only compared
+the types with a file would pass again the moment the file was
+regenerated. So the re-pin refuses a changed shape at an unchanged version
+unless it is given a reason (`--compatible="…"`), and writes the reason
+into the file's header, where a review sees it; a bump clears it. That is
+for a change old saves survive, such as a widened union.
+
+**The exit, on the real types.** With `readonly planted?: number` added
+to `EncounterMap` (nested under `bossEncounterMap` and `encounterMap`):
+- the test fails: "RunSnapshot's structure changed and RUN_SCHEMA_VERSION
+  is still 46 … First difference, line 81: pinned: `terrainSeed: number`,
+  now: `planted?: number | undefined`";
+- `npm run save:fingerprint` exits 1 with the same message, and the file
+  is byte-identical after;
+- with the version bumped to 47, the test fails a second way ("pinned at
+  46: run `npm run save:fingerprint`"), the re-pin writes, and the test
+  passes, 8 of 8.
+Both plants reverted: the re-pin at 46 restored the file byte for byte,
+and `Run.ts`'s diff is the export and its comment.
+
+**The slot** (`runSlot.test.ts`, 5, each on a real `Run`'s snapshot): a
+run round-trips through the store and saves to the snapshot it was loaded
+from; a planted v45 slot is `rejected: stale`, `found: 45`, its loader
+called 0 times, its text and the settings beside it untouched; a current
+slot holding an unknown character, an unknown daemon, an older snapshot or
+no snapshot is `rejected: unreadable` with the error's own message.
+
+**The instrument's known answers** (`save-fingerprint.test.ts`, 8): the
+walker's print of a fixture type equals text written out by hand before
+the first run (a union, a tuple, a record, a `Set`, an optional field, a
+type that contains itself, named types printed once), and it sees one
+optional field added three levels down; the type-level version equals a
+live run's `schemaVersion`, and the root block's 42 property names equal
+`Object.keys(run.toJSON())`, sorted.
+
+3200 tests in 216 files (+13).
+
+**Not verified, and a limit:** the fingerprint sees structure only. A
+change of meaning with no change of type (95f's renamed key inside a
+string) still needs a reviewer to bump. A damaged save at the current
+version that `fromJSON` happens to accept is §115's chaos driver's to find.

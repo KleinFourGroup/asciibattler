@@ -493,8 +493,13 @@ export interface BattleEncounter {
  *  it; the user's call). The key serializes inside `encounterEffects` (and
  *  `pendingEncounterEffects`) and is the EMPOWER_DISPLAY / marker / label
  *  key, so a v45 save's stacks would resume under a key no table knows →
- *  reject (the ONE bump Round 7 authorized; no migration). */
-const RUN_SCHEMA_VERSION = 46;
+ *  reject (the ONE bump Round 7 authorized; no migration).
+ *
+ *  113e: exported, because the store's run slot is stamped with it and
+ *  rejects a save at any other version before `fromJSON` sees it
+ *  (src/store/runSlot.ts). A change to `RunSnapshot`'s structure now fails
+ *  `npm test` until this number moves (tests/save-fingerprint.test.ts). */
+export const RUN_SCHEMA_VERSION = 46;
 
 /**
  * 94d — one row of the fallen ledger: a combatant that fell, where and when.

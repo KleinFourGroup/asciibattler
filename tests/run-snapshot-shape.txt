@@ -1,0 +1,235 @@
+# RunSnapshot's structure, expanded by the type checker (tests/saveShape.ts).
+# tests/save-fingerprint.test.ts holds this file against the types: a change of
+# shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
+#   npm run save:fingerprint
+RUN_SCHEMA_VERSION 46
+
+RunSnapshot = {
+  activeEvent: null | { eventId: string; pageId: string }
+  bits: number
+  bossEncounterId: string
+  bossEncounterMap: EncounterMap
+  cache: Array<string>
+  characterId: string
+  currentEncounter: BattleEncounter | null
+  currentNodeId: number
+  currentOffer: Array<UnitTemplate> | null
+  currentSectorId: string
+  currentSectorNodeId: string
+  daemonIds: Array<string>
+  deckShuffleIndex: number
+  deploymentCounts: Array<number>
+  discardPile: Array<number>
+  drawPile: Array<number>
+  encounterEffects: Array<Array<StatusEffect>>
+  encounterMap: EncounterMap | null
+  enemyHealth: number
+  eventFlags: { [string]: EventFlagValue }
+  eventStep: number
+  fallenLedger: Array<FallenRecord>
+  hand: Array<number>
+  injectedEncounterRules: Array<InjectedRule>
+  injectedRunRules: Array<InjectedRule>
+  nodeMap: NodeMap
+  pendingEncounterEffects: Array<Array<StatusEffect>>
+  pendingPromotions: Array<PromotionInfo> | null
+  pendingRewardOverride: Array<EncounterRewardRef> | null
+  pendingRewards: Array<RewardPortion> | null
+  phase: RunPhase
+  playerHealth: number
+  portStock: PortStock | null
+  schemaVersion: <RUN_SCHEMA_VERSION>
+  sectorIndex: number
+  selectedEncounterId: null | string
+  streamRoot: number
+  team: Array<UnitTemplate>
+  turnGrants: TurnGrants
+  turnIndex: number
+  visitedNodes: Array<number>
+  waveCursor: ListCursor | null
+}
+
+BattleEncounter = {
+  battleRules?: Array<BattleRule> | undefined
+  enemyTeam: Array<UnitTemplate>
+  gridH: number
+  gridW: number
+  kind?: "boss" | "elite" | "normal" | undefined
+  layoutId: null | string
+  playerTeam: Array<UnitTemplate>
+  terrainSeed: number
+  theme: "barren" | "desert" | "grassland" | "swamp" | "tundra" | "volcanic"
+  worldSeed: number
+}
+
+BattleRule = {
+  chance?: number | undefined
+  effect: BattleRuleEffect
+  filter?: BattleRuleFilter | undefined
+  on: BattleRuleTrigger
+}
+
+BattleRuleEffect = { amount: number; op: "gainBits" } | { applyTo?: "actor" | "target" | undefined; durationSeconds?: number | undefined; magnitude?: number | undefined; op: "applyStatus"; statusId: string }
+
+BattleRuleFilter = {
+  archetype?: string | undefined
+  crit?: boolean | undefined
+}
+
+BattleRuleTrigger = "dealHit" | "kill"
+
+EffectLifetime = { expiresAtTick: number; kind: "ticks" } | { kind: "endOfTurn" }
+
+EncounterMap = {
+  gridH: number
+  gridW: number
+  layoutId: null | string
+  terrainSeed: number
+  theme: "barren" | "desert" | "grassland" | "swamp" | "tundra" | "volcanic"
+}
+
+EncounterRewardRef = {
+  table: string
+  trigger: RewardTrigger
+}
+
+EntryCursor = { child: EntryCursor; chosen: number; kind: "pick" } | { child: ListCursor; iteration: number; kind: "loop" } | { child: ListCursor; kind: "stages"; stage: number } | { kind: "wave" }
+
+EventFlagValue = boolean | number | string
+
+FallenRecord = {
+  archetype: string
+  encounterId: string
+  hop: number
+  level: number
+  node: number
+  power: number
+  sector: number
+  side: "enemy" | "player"
+  tick: number
+  turn: number
+}
+
+GrantEffect = { budget: number; buff: { key: string; merge: MergePolicy; mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; evasion?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; precision?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined } }; kind: "empower" } | { budget: number; kind: "redraw"; maxCards: number }
+
+InjectedRule = {
+  rule: BattleRule
+  sourceId: string
+}
+
+ListCursor = {
+  child: EntryCursor
+  index: number
+}
+
+MapEdge = {
+  from: number
+  to: number
+}
+
+MapNode = {
+  hop: number
+  id: number
+  kind: NodeKind
+}
+
+MergePolicy = "add" | "ignore" | "independent" | "multiply" | "replace"
+
+NodeKind = "battle" | "boss" | "elite" | "event" | "port" | "rest"
+
+NodeMap = {
+  edges: Array<MapEdge>
+  hops: Array<Array<number>>
+  nodes: Array<MapNode>
+  rootId: number
+  terminalId: number
+}
+
+PortDaemonSlot = {
+  daemonId: string
+  price: number
+  sold: boolean
+}
+
+PortPacketSlot = {
+  packetId: string
+  price: number
+  sold: boolean
+}
+
+PortStock = {
+  daemons: Array<PortDaemonSlot>
+  packets: Array<PortPacketSlot>
+  units: Array<PortUnitSlot>
+}
+
+PortUnitSlot = {
+  price: number
+  sold: boolean
+  template: UnitTemplate
+}
+
+PromotionInfo = {
+  archetype: string
+  glyph: string
+  newLevel: number
+  newStats: UnitStats
+  oldLevel: number
+  oldStats: UnitStats
+  rosterIndex: number
+}
+
+RewardPortion = { amount: number; kind: "poolHealth" } | { base: number; kind: "bits"; source?: string | undefined } | { daemonId: string; kind: "daemon" } | { kind: "packet"; packetId: string } | { kind: "unit"; template: UnitTemplate }
+
+RewardTrigger = {
+  chance: number
+}
+
+RunPhase = "battle" | "complete" | "defeat" | "event" | "map" | "port" | "promotion" | "recruit" | "reward" | "sectorCleared" | "turn-intro" | "turn-outcome"
+
+StatMod = {
+  add?: number | undefined
+  mul?: number | undefined
+}
+
+StatusEffect = {
+  key: string
+  lifetime: EffectLifetime
+  magnitude: number
+  merge: MergePolicy
+  mods: { constitution?: StatMod | undefined; defense?: StatMod | undefined; evasion?: StatMod | undefined; luck?: StatMod | undefined; magic?: StatMod | undefined; mobility?: StatMod | undefined; power?: StatMod | undefined; precision?: StatMod | undefined; ranged?: StatMod | undefined; speed?: StatMod | undefined; strength?: StatMod | undefined }
+  nextTickAt?: number | undefined
+  sourceUnitId?: null | number | undefined
+}
+
+TurnGrant = {
+  daemonId: string
+  effect: GrantEffect
+  passed: boolean
+  used: number
+}
+
+TurnGrants = Array<TurnGrant>
+
+UnitStats = {
+  constitution: number
+  defense: number
+  evasion: number
+  luck: number
+  magic: number
+  mobility: number
+  power: number
+  precision: number
+  ranged: number
+  speed: number
+  strength: number
+}
+
+UnitTemplate = {
+  archetype: string
+  effects?: Array<StatusEffect> | undefined
+  level: number
+  rosterIndex?: null | number | undefined
+  stats: UnitStats
+  xp: number
+}

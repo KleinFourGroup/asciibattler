@@ -187,5 +187,6 @@
   "preturn.packet.pickHint": "click, then pick a card",
   "preturn.packet.fireHint": "fires on click",
   "card.hint.level": "Lv",
-  "card.hint.morale": "morale"
+  "card.hint.morale": "morale",
+  "save.rejected": "This run was saved by an older version of the game and can't be continued. Your settings and unlocks are kept."
 }

@@ -2559,3 +2559,24 @@ mid-load, which became a kit check) and no `distress` entry.
    landed, and the satisfaction was mostly in the instruments (the type
    walker's hand-written known answer passing on its first run), not in
    the count of steps.
+
+### Addendum, the same session — the meter and the 113f read (2026-10-01)
+
+The user read the meter at 520k at the hand-back (11:15), against this
+session's 400k. The hour clock was two minutes from firing. Three sessions
+running have now passed their number with the clock silent: this one did
+its 120k of overrun inside the hour. A wall clock is the wrong instrument
+for a session whose steps are fast; the number is in tokens, and only the
+user can read it. What would have worked here is asking for the reading
+at each step's commit, which costs the user one number.
+
+The user's 113f read found the label naming an old commit as dirty over a
+clean tree, on their long-running dev server. I had listed exactly that
+case under "not verified" at 113a and then written a read script that
+called it wrong without excepting it. So the read caught what my own
+checks could not have: every pane session started a fresh server. I had
+no reluctance reporting it; the cause was quick to measure (their
+server's env module, and a fresh server as the control), and the user's
+question, "How do you want to handle things?", left the choice open. I
+recommended a fresh session for the fix, because the number was passed
+and the fix reopens a decision §114 builds on.

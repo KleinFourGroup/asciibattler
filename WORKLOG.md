@@ -2220,3 +2220,58 @@ reads `0.0.0+<commit>-dev`, with `-dirty` before `-dev` when the tree has
 uncommitted changes; a production build of a clean tree reads
 `0.0.0+<commit>` alone. Wrong is a label over the cards or the chips, one
 that doesn't grow with the text scale, or `-dirty` on a clean tree.
+
+### 113f — THE READ (2026-10-01, the user's): one finding → 113f-post
+
+**The user, in Firefox on their own dev server (`:5173`):** "The version is
+showing up as `0.0.0+4c1cc96-dirty-dev`, but git status is reporting a
+clean working tree. Already tried a hard refresh." The read's own script
+names that as wrong, and it is: the label states a commit and a dirtiness
+that stopped being true an hour earlier.
+
+**The cause, measured.**
+- Their server serves that value from Vite's own env module:
+  `curl http://localhost:5173/@vite/env` holds `0.0.0+4c1cc96-dirty-dev`
+  (on the dev server a `define` constant is a global set there, not text
+  replaced in `buildId.ts`). The tree was clean at `1e8fae9`.
+- `4c1cc96` was HEAD, with 113a uncommitted, when `vite.config.ts` was
+  last edited; Vite restarts a dev server when its config changes, and
+  the config has not changed since `14fe8bd`. So the server computed the
+  ID then (the restart is inferred from the value; it wasn't watched) and
+  has kept it through eight commits.
+- **The control:** a fresh `dev-preview` server on the same tree read
+  `0.0.0+1e8fae9-dev` in the label, in `<html data-build>` and in
+  `ready()`'s report.
+
+**This is the case 113a listed as not verified** ("the ID on the dev
+server after a commit lands under it … reasoned, not planted"). `-dev` was
+added for it, to mark the commit as the one the server started on. The
+read shows a mark isn't enough: a reader takes the commit and `-dirty` at
+their word. The pane sessions never saw it, because each started a fresh
+server.
+
+**Three shapes for the fix (the user's pick; proposed in the
+conversation):**
+1. **Stamp the ID at each page load on the dev server** (the session's
+   lean). A serve-only plugin injects the ID into the HTML it serves, as
+   the probe stand-in is injected, computed per request (two git calls),
+   and `src/buildId.ts` prefers it over the baked constant. The label is
+   then true at every load, and Vite already reloads the page when a
+   `.ts` file changes. It also settles the item §114 was carrying: a
+   journal recorded on the dev server gets the commit of the load that
+   recorded it, and D4 opens a segment at every load.
+2. **`<version>+dev`, with no commit,** on a served page. One line, and
+   honest, but a journal from the user's own play could never be replayed
+   on its commit, which D9 wants.
+3. **Leave it and correct the read script.** Not recommended: the label
+   stays misleading for whoever reads it next.
+
+**The rollback rule** (a `batch` finding that reopens two or more later
+commits) isn't met: the finding reopens 113a alone, and no `batch` read is
+left in the phase. 113f-post is inserted with a `stop` read, since the
+close waits on it.
+
+**The meter read 520k** at this read (11:15), against this session's
+400k; the hour clock would have fired two minutes later. The session
+recommended handing 113f-post, the close and §114's kickoff to a fresh
+session.

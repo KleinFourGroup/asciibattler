@@ -1894,3 +1894,58 @@ Electron, never in Node. Node runs the tests and the fuzz tools, and Node
 usable unless Node is started with a storage file. The finding only rules
 out one way of writing the adapter's choice (asking whether the global
 exists), since that test would pass under `npm test`.
+
+### 113a — the build ID (2026-10-01) — read `none` ✅
+
+**Step zero.**
+- **A recorder worktree reads clean.** `openTree('HEAD')`, then `git
+  status --porcelain` in it: empty, with the junction listed only under
+  `--ignored` (`!! node_modules/`). The hypothesis that an older commit's
+  build would be stamped `-dirty` is refuted.
+- **The `dist/` oracle, re-made.** A scratch script (SHA-256 per file, a
+  total over the sorted `path hash` lines) read `d77a6381…` over 32 files
+  on a production build of `4c1cc96`, the total ab584af9 recorded, so the
+  script is the same instrument.
+
+**Built.** `scripts/build-id.mjs`: `commitStamp(cwd)` and `buildId({ cwd,
+live })`, plain JS with a `.d.mts` beside it, because the Electron tools
+import it outside tsc. `vite.config.ts` bakes `__BUILD_ID__`;
+`src/buildId.ts` exports `BUILD_ID`, or `unbaked` where nothing baked it;
+`main.ts` stamps it on `<html data-build>`, which gives a production build
+(no `__probe`) a place to be asked; `tree.mjs`'s working-tree stamp is
+`commitStamp`.
+
+**One addition inside the signed intent, flagged: `-dev`.** The dev server
+and Vitest compute the ID when they start and then outlive commits and
+edits, so an ID of theirs that named a clean commit would be a claim
+nothing checks. Under `serve` the ID ends `-dev`; a build never does. §114
+decides what replay does with it (the lean: refuse it as it refuses
+`-dirty`, unless it adds a live check).
+
+**The exit** (each ID read from the built files, `14fe8bd` unless said):
+
+| build | the ID in `dist/` | hash |
+|---|---|---|
+| a clean tree | `0.0.0+14fe8bd`, in the index chunk only | `f946025a…` |
+| a planted untracked file | `0.0.0+14fe8bd-dirty` | `22367c36…` |
+| the clean tree, pinned | `pin-113a` | `2e8a1a66…` |
+| the planted tree, pinned | `pin-113a` | `2e8a1a66…`, identical |
+| a recorder worktree at HEAD (development mode) | `0.0.0+14fe8bd`, stamp `14fe8bd` | — |
+| before the commit, the real uncommitted changes | `0.0.0+4c1cc96-dirty` | — |
+
+- **In the page:** the Electron runner's development-mode build read
+  `0.0.0+4c1cc96-dirty` off `<html data-build>`, the commit and mark its
+  own progress line named (`4c1cc96-dirty`, from `tree.mjs`); the dev
+  server in the pane read `0.0.0+4c1cc96-dirty-dev`; under `tsx` the
+  module read `unbaked`.
+- **The run is left alone:** `npm run probe -- …/drive-run.js --seed=7`
+  exits 0 on log `a59ee48f` (12 battles, 46 commands), the known answer.
+- **Headless** (`tests/build-id.test.ts`, 7): the forms over a fake git
+  (clean, dirty, live, no git, a pin, an empty pin), one case against the
+  real git, and the constant Vite baked for the test run.
+
+3145 tests in 210 files (+7, +1). The fuzz smoke did not fire, as predicted.
+
+**Not verified:** a tree with no git at all (the `nogit` form is pinned
+over a fake only); the ID on the dev server after a commit lands under it
+(the reason for `-dev`, reasoned, not planted).

@@ -33,7 +33,7 @@ No frameworks beyond that. UI is plain HTML/CSS overlaid on the canvas via absol
 ```
 src/
   main.ts                    # Entry point: bootstraps Game, mounts canvas, kicks off run; 113c: its FIRST import is `./store`, so the store is read before any catalog loads; 113a: stamps `<html data-build>` with the build's ID; DEV: window.__game + 28's __game.applyStatus(id, team|unitId) dev hook
-  buildId.ts                 # 113a: `BUILD_ID` (spec D2), `<version>+<commit>` with `-dirty` for a tree with uncommitted changes and `-dev` when served live (the dev server, Vitest), baked by vite.config.ts's `define` from scripts/build-id.mjs; `UNBAKED_BUILD_ID` where nothing baked it (tsx). Stamped on the store, the saves and the journals
+  buildId.ts                 # 113a: `BUILD_ID` (spec D2), `<version>+<commit>` with `-dirty` for a tree with uncommitted changes and `-dev` when served live (the dev server, Vitest), baked by vite.config.ts's `define` from scripts/build-id.mjs; `UNBAKED_BUILD_ID` where nothing baked it (tsx). A dev server's page reads the ID stamped into its HTML at that load before the baked constant, which the server computed once when it started; a build has neither the stamp nor the code that reads it. Stamped on the store, the saves and the journals
   Game.ts                    # Top-level orchestrator: owns Renderer/Bus/Run; scene swapper (A5); 100e2: creates the `.screen-host` div FIRST inside #ui and hands it to the scenes as `uiMount` (every Screen + the HUD mount in it), so the chrome column + the tooltip host follow every screen in DOM order — the Firefox Tab walk reaches the chips before the browser's own UI
                              # builds Run from parseRunConfigFromURL() (G1)
   config.ts                  # Engine constants: TICK_RATE=20, GRID_SIZE=12, secondsToTicks
@@ -493,7 +493,7 @@ scripts/                     # Dev-only Node utilities; not bundled into dist/
 tests/
   smoke.test.ts
   store-boot.test.ts         # 113c: the store boots first — `./store` is main.ts's first import, and the run-time import graph from src/store/index.ts is exactly its own folder plus src/buildId.ts, with no package (type-only imports are erased and don't count). The walker reads source text with the TypeScript parser; its controls: main.ts's graph reaches Game, the locale and the catalogs, and a planted catalog import is reported
-  build-id.test.ts           # 113a: the build ID's forms over a fake git, one case against the real git, and the constant Vite baked for the test run
+  build-id.test.ts           # 113a: the build ID's forms over a fake git, one case against the real git, and the constant Vite baked for the test run; the dev server's stamp, its script run against a fake window and its plugin taken from the real config and checked against git
   store-guard.test.ts        # 113d: HEADLESS NEVER REACHES THE STORE — the run-time import graph from every file under src/sim, src/run, src/bot and tests/fuzz (fuzz output excluded) reaches nothing in src/store, directly or through another module; a failure prints the import chain. Its controls: the walk covers each folder and leaves them, and a planted import is reported directly, through two modules, and not at all when type-only
   save-fingerprint.test.ts   # 113e: THE SAVE'S FINGERPRINT — `RunSnapshot`'s structure, expanded to its leaves by the type checker, must equal the pinned copy (run-snapshot-shape.txt) at its `RUN_SCHEMA_VERSION`: a change of shape at the same version fails with the first differing line, and a bump fails until `npm run save:fingerprint` re-pins. Cross-checked against a live run's `toJSON()` (the version and the 42 top-level keys); the walker has a hand-written known answer (saveShape.fixture.ts), and the verdict and the re-pin are pinned as pure functions
   saveShape.ts               # 113e: the walker (`shapeOfType`: a `ts.Program` over one file, each repo-named type printed once with sorted members, anything else in place; about half a second) + the pin's format, `judge` and `repin` (scripts/save-fingerprint.ts refuses to re-pin a changed shape at an unchanged version without `--compatible="<reason>"`, and writes the reason into the file)
@@ -522,7 +522,7 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
 archive/                     # superseded roadmaps + feedback + phase worklogs
 
 index.html                   # Mounts <canvas> + <div id="ui">
-vite.config.ts               # 113a: `define` bakes `__BUILD_ID__` (scripts/build-id.mjs; live under `serve`); the dev-only plugins (the editors' save endpoint, the probe kit's stand-in); the watcher skips the output folders
+vite.config.ts               # 113a: `define` bakes `__BUILD_ID__` (scripts/build-id.mjs; live under `serve`); the dev-only plugins (the editors' save endpoint, the probe kit's stand-in, the build ID stamped into each page served); the watcher skips the output folders
 tsconfig.json
 eslint.config.js             # Flat config; bans Math.random() in src/sim, src/run and src/bot; 113d: bans importing src/store from those and tests/fuzz (the editor's hint; the guard is tests/store-guard.test.ts, since the hook doesn't run lint)
 .prettierrc

@@ -3,9 +3,11 @@
 //
 //   0.1.0+abc1234          a build of a clean tree at that commit
 //   0.1.0+abc1234-dirty    the tree had uncommitted changes
-//   0.1.0+abc1234-dev      served live (the dev server, Vitest): the commit is
-//                          the one the server started on, and the tree can
-//                          change under it
+//   0.1.0+abc1234-dev      served live (the dev server, Vitest), where the
+//                          tree can change under a running server. A dev
+//                          server's page carries the ID as git gave it when
+//                          the page loaded (vite.config.ts stamps each load);
+//                          Vitest's is the one its run started on
 //   0.1.0+nogit            git couldn't answer (a tree with no repository)
 //
 // One function for the two places that stamp a build: vite.config.ts bakes

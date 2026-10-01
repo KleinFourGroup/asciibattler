@@ -5,6 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type Plugin } from 'vite';
 import { PROBE_BOOTSTRAP } from './src/dev/probe/bootstrap';
 import { buildId } from './scripts/build-id.mjs';
+import { atLoadScript } from './src/buildId';
 
 /**
  * Dev-only save endpoint for the config editors (the archetype editor in I4;
@@ -112,11 +113,32 @@ function probeBootstrap(): Plugin {
   };
 }
 
+/**
+ * 113f-post — the dev server's build ID, stamped at each page load. The
+ * `define` below is computed once, when the server starts, and a dev server
+ * outlives commits and edits, so its constant goes stale. This asks git again
+ * for every HTML page served (two calls, about 90 ms) and sets the answer on
+ * the page ahead of its modules; src/buildId.ts reads it first.
+ * `apply: 'serve'`, so no build carries it.
+ */
+function buildIdAtLoad(): Plugin {
+  return {
+    name: 'asciibattler-build-id-at-load',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      const id = buildId({ cwd: process.cwd(), live: true });
+      return { html, tags: [{ tag: 'script', children: atLoadScript(id), injectTo: 'head-prepend' }] };
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
-  plugins: [configSavePlugin(), probeBootstrap()],
+  plugins: [configSavePlugin(), probeBootstrap(), buildIdAtLoad()],
   // 113a — the build's ID, read through src/buildId.ts. A build bakes the
   // commit it was made from; the dev server and Vitest (`serve`) outlive
-  // commits and edits, so theirs is marked live (scripts/build-id.mjs).
+  // commits and edits, so theirs is marked live (scripts/build-id.mjs). On a
+  // dev server's page the stamp above is read before this constant; Vitest
+  // serves no page, so its ID stays the one its run started on.
   define: {
     __BUILD_ID__: JSON.stringify(buildId({ cwd: process.cwd(), live: command === 'serve' })),
   },

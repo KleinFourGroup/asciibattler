@@ -3,7 +3,7 @@ import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { BattleEncounter } from '../run/Run';
 import { TraceRecorder, type BattleTrace } from './TraceRecorder';
-import { configHash } from './configHash';
+import { configHash } from '../config/configHash';
 
 function makeEncounter(worldSeed: number): BattleEncounter {
   return {

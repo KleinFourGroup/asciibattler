@@ -7,11 +7,13 @@ import { chainTo, repoRead, runtimeGraph, type Read } from './importGraph';
 // The simulation, the run model, the bots and the fuzz harness must never
 // write a player's store, and the structural way to hold that is that none of
 // them can reach the store's modules at run time, directly or through
-// anything they import. eslint.config.js bans the direct import, for the
+// anything they import. The run journal (src/journal) is held to the same
+// rule: its recorder and its replay run headless, and the game layer decides
+// where a journal is kept. eslint.config.js bans the direct import, for the
 // editor; this is the guard, because the pre-commit hook runs `npm test` and
 // not lint, and because it follows the whole graph.
 
-const HEADLESS_ROOTS = ['src/sim', 'src/run', 'src/bot', 'tests/fuzz'] as const;
+const HEADLESS_ROOTS = ['src/sim', 'src/run', 'src/bot', 'src/journal', 'tests/fuzz'] as const;
 const isStore = (path: string): boolean => path.startsWith('src/store/');
 
 /** Every `.ts` file under `dir` (repo-relative, forward slashes). Fuzz output
@@ -36,7 +38,7 @@ function storeReaches(entries: readonly string[], read: Read): string[] {
 describe('113d — headless never reaches the store', () => {
   const entries = HEADLESS_ROOTS.flatMap(sourcesUnder);
 
-  it('no file under src/sim, src/run, src/bot or tests/fuzz reaches src/store at run time', () => {
+  it('no file under src/sim, src/run, src/bot, src/journal or tests/fuzz reaches src/store at run time', () => {
     expect(storeReaches(entries, repoRead)).toEqual([]);
   });
 
@@ -46,6 +48,7 @@ describe('113d — headless never reaches the store', () => {
     expect(entries).toContain('src/sim/World.ts');
     expect(entries).toContain('src/run/Run.ts');
     expect(entries).toContain('tests/fuzz/harness.ts');
+    expect(entries).toContain('src/journal/JournalRecorder.ts');
     expect(entries.every((e) => !e.startsWith('tests/fuzz/output/'))).toBe(true);
     // 298 when written (120 sim, 41 run, 23 bot, 114 fuzz, by a separate `find`).
     expect(entries.length).toBeGreaterThan(250);

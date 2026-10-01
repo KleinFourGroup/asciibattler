@@ -26,7 +26,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { replayTrace } from '../../src/dev/replayTrace';
-import { configHash } from '../../src/dev/configHash';
+import { configHash } from '../../src/config/configHash';
 import type { BattleTrace } from '../../src/dev/TraceRecorder';
 import { EventBus } from '../../src/core/EventBus';
 import type { GameEvents } from '../../src/core/events';

@@ -2646,3 +2646,76 @@ which needs the `dist/` hash this session wrote from the recipe for the
 third time (SHA-256 per file, the sorted `path hash` lines joined by
 newlines, SHA-256 of that). The step should put that script in
 `scripts/`.
+
+### The build stretch's gate (2026-10-01, session 4d7da9f7)
+
+A fresh session; pre-flight green at `34c6eec` (216 files, 3204 tests,
+typecheck clean). The gate's answer, at 17:19: "400k and one hour". The
+breaker is one hour, due 18:19. No meter reading was given, and what the
+400k names (a reading can't be chosen) the session did not ask before
+starting, since a fresh session starts the stretch under any reading of
+it; it asks at the breaker.
+
+### 114a — the journal's format and its recorder (2026-10-01) — read `none` ✅
+
+**Step zero** (✔ = read at file:line). The cut's premise holds; four
+things the audit had not read shaped the format, all inside the signed
+calls.
+- **The Run listens to the battle, not only to its end:** `unit:died`
+  lands in the fallen ledger, which is saved (✔ `Run.ts:1300-1313`). So a
+  run command sent during a battle, and a reset during one, have a place
+  among the ticks that the Run's state depends on. A `run` entry sent in a
+  battle and an abandoned end carry `tick`, the last tick that had run.
+- **A run's end is emitted from inside a dispatch**, with the phase set
+  and the caller's frames still to unwind (✔ `Run.ts:1680`, `:3674`,
+  `:3698`). The recorder notes the end on the bus and takes the hash at
+  `settle()`, which the dispatcher calls once the command has been applied.
+- **A Run with the gates off starts the next battle inside the
+  `battle:ended` emit** (the harness builds its World there, ✔
+  `harness.ts:511`), and handlers run in subscription order. The recorder
+  is constructed before the Run, which is also the game's order (the bus
+  and the recorder are page-lifetime).
+- **Every field a game's run can have set has a URL form:** `Game` takes
+  its `RunConfig` from `parseRunConfigFromURL()` alone (✔ `Game.ts:169`),
+  and `runConfigToQueryString` writes each of the eleven fields
+  `parseRunConfig` sets (✔ `RunConfig.ts:374-461`). So a seed start is the
+  seed and that text. The board fixtures are checked at 114c.
+
+**Built.** `src/journal/journal.ts` (the format) and `JournalRecorder.ts`.
+- A journal is `{ format: 1, segments }`. A segment has the build, the
+  config hash, `openedAt`, the start (`seed` + `dials`, or a whole
+  snapshot), one ordered list of entries, and the end (null while played).
+- Entries: `run` (the command, `ms`, and `tick` in a battle), `order` (a
+  battle command at its effective tick, `command:applied`'s stamp),
+  `battle` (the checkpoint: winner, ticks).
+- The end: `defeat` / `victory` / `abandoned`, `ms`, `tick` in a battle,
+  and `snapshotHash`: `fnv1a` of the settled `Run.toJSON()` as JSON.
+- `chooseCharacter` and `resetRun` are not entries: the first is the
+  segment's start (the dials name the character) and the second its end.
+  `JournaledCommand` excludes them by type, so `Game.dispatch` can only
+  hand the recorder what is left after its two early returns.
+- The recorder copies each command (`chooseRecruit` carries the offered
+  template itself). It emits nothing and reads the clock only for `ms`.
+- `src/journal` joins the headless roots of `tests/store-guard.test.ts`
+  and the ESLint rule: "storage-agnostic" is held by the import graph.
+- `configHash` moved to `src/config/` with its test, still over all 33
+  files; the bundle question is 114c's, where something shipped imports it.
+
+**Exit.** 13 tests over a synthetic bus, and 4 over whole gated runs
+(`tests/integration/journal.test.ts`, driven by `tests/journalDrive.ts`:
+the pane kit's `PHASE_ROWS` for the choices, the harness's battle loop,
+and plants). The plants are the ground truth: an order parked before tick
+1 and one in tick 6's drain in every battle, a `discardPacket` after tick
+3 of the first, an abandon after tick 4 of the second. Pinned: each
+battle's entries are `advanceTurn`, the two orders, the checkpoint; the
+discard sits between the orders with `tick: 3`; the abandon closes with
+`tick: 4`, the Run's hash and no checkpoint for that battle; the same run
+with no recorder ends in the same state, and without the orders in
+another (the control that the comparison can fail).
+- **The planted bad case:** with the driver recording a command after
+  applying it, three of the four whole-run tests fail (`advanceTurn` gains
+  `tick: 0`). Reverted.
+- **One run's numbers** (seed 7, `hops=3&character=soldier`, no orders): 10
+  battles of 195–1004 ticks, a victory, 46 entries, 2,880 bytes of JSON.
+
+**Counts.** Main 3204 → 3221 (216 → 218 files); typecheck clean.

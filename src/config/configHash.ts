@@ -1,10 +1,15 @@
 /**
- * 53b — the config fingerprint for battle traces.
+ * 53b — the config fingerprint for battle traces and run journals.
  *
  * A recorded trace is only replayable against the exact balance config it was
  * recorded under (a price/stat/layout edit changes sim outcomes without
  * touching the seed), so every `BattleTrace` carries `configHash()` and the
- * replay path refuses a mismatch. There is deliberately NO aggregate config
+ * replay path refuses a mismatch. A run journal (src/journal/) carries it for
+ * the same reason, and shipped builds stamp it, which is why this lives in
+ * `src/config/` and not with the DEV tooling. It hashes every file under
+ * `config/`, including the two nothing else under `src/` imports
+ * (`fuzz-strategies.json`, `redraw-level-fisher.json`), so the stamp changes
+ * with any of them. There is deliberately NO aggregate config
  * object in the codebase (each `src/config/*.ts` zod-parses its own file), so
  * this module keeps its own registry of the RAW `config/*.json` sources — the
  * config as authored, not the post-parse shape.

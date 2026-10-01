@@ -31,7 +31,7 @@
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import type { BattleEncounter } from '../run/Run';
-import { configHash } from './configHash';
+import { configHash } from '../config/configHash';
 
 /** One applied command, exactly as `command:applied` carried it (53a). */
 export interface RecordedCommand {

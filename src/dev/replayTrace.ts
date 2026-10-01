@@ -38,7 +38,7 @@ import type { WorldCommand } from '../sim/Command';
 import { spawnEncounter } from '../sim/battleSetup';
 import { secondsToTicks } from '../config';
 import { HEALTH } from '../config/health';
-import { configHash } from './configHash';
+import { configHash } from '../config/configHash';
 import type { BattleTrace } from './TraceRecorder';
 
 export interface ReplayResult {

@@ -2433,3 +2433,185 @@ were written with 350k read as a ceiling.
 **The first reading under the restatement: 222k at 14:09**, at the gate
 before the §114 kickoff, after 113f-post and the §113 close in this
 session (which began near 12:30 from a fresh context).
+
+## Phase 114 — the run journal and its export
+
+### The §114 audit and cut (2026-10-01) — the shape-lock is open
+
+Session c3c1aee1. **The gate:** 222k at 14:09, under 350k; the kickoff
+stretch started at 14:31 with a one-hour breaker (the user's). ✔ = read by
+this session at file:line, or measured.
+
+**What is there.**
+- **A battle already records and replays.** `TraceRecorder` (DEV) is a pure
+  bus subscriber: the encounter from `battle:started`, every
+  `command:applied` with its effective tick, the outcome (✔
+  `src/dev/TraceRecorder.ts:57-103`). `replayTrace` rebuilds the World from
+  the encounter and injects each command before its stamped tick, refusing
+  another config hash (✔ `src/dev/replayTrace.ts:73-135`). The stamp rule
+  is one rule for parked and running drains (✔ `World.ts:951-970`).
+- **The sim takes three commands:** `noop`, `setObjective`,
+  `clearObjective` (✔ `src/sim/Command.ts:19-21`).
+- **Nothing records a run.** Every `RunCommand` in the game passes
+  `Game.dispatch` (✔ `Game.ts:451-611`): the screens hold Game as their
+  dispatcher, Game dispatches the turn-outcome `advanceTurn` itself after
+  the outro (`:392-399`), and the board fixtures and the kit's driver call
+  `game.dispatch`. Outside tests, `run.dispatch(` appears only in
+  `Game.ts` (✔ a search of `src`). Two commands are Game's own:
+  `chooseCharacter` constructs the Run and `resetRun` replaces it
+  (`:457-464`).
+- **What a run is built from:** `new Run(config.seed ?? Date.now(), bus,
+  config)`, with the config parsed once from the URL and the chosen
+  character laid over it, and `pauseAtTurnGates` set by Game (✔
+  `Game.ts:705-720`). `RunConfig` also has fields no URL reaches
+  (`eventCatalog`, the sector map), and `runConfigToQueryString` is the
+  parser's inverse for the fields it sets (✔ `RunConfig.ts:34-170, 420`).
+  `run:started` carries the seed (✔ `events.ts:462`).
+- **A whole run's headless loop exists in the fuzz harness:** a bus, a Run,
+  a World built at `battle:started` with `installBattleRules` and
+  `spawnEncounter`, ticks to the end or the draw at the cap, and a gated
+  mode for turn-intro commands, which its own comment says is RNG-aligned
+  with the ungated one (✔ `tests/fuzz/harness.ts:511-557, 719-734,
+  779-1000`). A journal replay is that skeleton with the journal in the
+  strategy's place.
+- **One command is legal in mid-battle:** `discardPacket`, in any phase (✔
+  `Command.ts:164-172`), so a run command needs its place among a battle's
+  ticks.
+- **The live battle** builds its World in `BattleScene` (✔ `:94`) and
+  drains commands while parked (`:253`). Its clock was not read: how a
+  page-side replay would place an order before its tick is a hypothesis
+  below. The kit's `drive()` fights by hand-driven frames.
+- **The recorder records one battle.** Its inputs are a fixture or a seed's
+  root battle, and its page script cuts at the first scene swap (✔
+  `record-cli.mjs:4-7`, `probes/record-page.js:1-40`). A run from a
+  journal is a new mode.
+- **`configHash()` lives in `src/dev`** and hashes all 33 raw config files
+  (✔ `configHash.ts`). Two of them, `fuzz-strategies.json` and
+  `redraw-level-fisher.json`, are imported by nothing else under `src` (✔
+  a search), so the hash as it stands would bring both into the production
+  bundle.
+- **The store's `journals` section is named and has no user** (✔
+  `store.ts:50`); the run slot's comment says the run's journal joins the
+  snapshot there at §115 (`runSlot.ts:26`).
+- **The end screen** is `GameOverScreen`: heading, the fallen table, one
+  button (✔ `src/ui/GameOverScreen.ts:87-94`).
+
+**Measured: what a journal weighs** (a scratch script; UTF-8 bytes of
+`JSON.stringify`).
+- **Human battle orders** (the 53g gauntlet fixture, 104 battles): 0 / 2 /
+  5 / 8 commands a battle (min / median / p90 / max, mean 2.4); one
+  command is 63–140 bytes (median 130); a battle's commands are 316 bytes
+  on average, 933 at most. The encounter, which a journal doesn't carry,
+  is 1.5–3.6 KB a battle.
+- **Run commands** (eight `greedy` bot runs through the fuzz harness,
+  seeds 1–8, every one a defeat, 10–30 battles; `Run.dispatch` wrapped in
+  the script): 16–71 commands in 0.7–3.7 KB. The bot ran ungated, so the
+  game's two `advanceTurn`s a battle are not in that count (22 bytes
+  each). `chooseRecruit` is the heavy one: it carries a whole unit
+  template, 1.6 KB of the longest run's 3.7.
+- **A snapshot** (`Run.toJSON()` at each dispatch): 20–49 KB at its
+  largest in those runs.
+- **So:** a 30-battle run's journal is about 15 KB by these parts (3.7 KB
+  of run commands, 1.3 of `advanceTurn`s, 9.5 of battle orders at the
+  human mean), before per-command times; a won run is longer and none was
+  measured. A snapshot is larger than the journal of the run it belongs
+  to, so what a segment's start carries decides the size once loads exist.
+
+**Hypotheses for step zero** (unmeasured).
+- A run started from a board fixture replays from its run dials alone.
+- The bundle's growth from the hash, with and without the two files the
+  game doesn't otherwise load.
+- What a download does in each shell: the pane, Firefox, Electron's
+  hidden window, itch's sandboxed frame (the last waits for a sitting).
+- `localStorage`'s limit in characters against bytes, in Firefox.
+- Whether a page-side replay can place a battle order before its tick in
+  the live `BattleScene`, which the recorder's run mode needs.
+
+**Calls for the shape-lock, with the session's lean.**
+1. **Where a run command is recorded.** At `Game.dispatch`, the one door
+   every command passes (the lean): game layer only, no change under
+   `src/run`, and it sees `chooseCharacter` and `resetRun`. The other
+   shape is a bus event emitted by `Run.dispatch`, which changes the
+   event stream and the sim-side catalog for no gain here.
+2. **The journal's shape.** One ordered list per segment: run commands
+   (with milliseconds since the segment opened), battle orders with their
+   ticks, a checkpoint at each battle's end (winner, ticks) and the final
+   snapshot's hash at the run's end, under a header (format version,
+   build, config hash, the start). A start is a seed with the URL's dials
+   as text, or a snapshot. The checkpoints are what "replays
+   byte-identically" is judged against, and they name the battle a
+   divergence starts in.
+3. **A snapshot start carries the whole snapshot in this phase.** Only
+   the DEV load (`Ctrl+Alt+L`) makes one before §115. Whether a later
+   segment on the same build can carry a hash in its place is §115's
+   call, where loads become real and the 20–49 KB matters; the format
+   leaves room.
+4. **Where the journal lives in this phase:** in memory while the run is
+   played, and in the store's `journals` section once it ends. The run in
+   progress is persisted by §115's autosave, as D3 says.
+5. **How many finished journals are kept** (ROADMAP's decision point): by
+   size, not count, since runs differ fourfold: the newest kept within
+   about 1 MB of text, the oldest dropped first (the lean; about 50 runs
+   at the measured size). The real number waits on a played run's bytes
+   and Firefox's limit.
+6. **The export:** one button on the run's end screen that downloads the
+   journal as `.json`; the menu's copy arrives with the menu (§116).
+7. **What replay refuses.** Another config hash, always. In the replay
+   tool, also a build that isn't the tree's commit, a `-dirty` build (D2)
+   and an unbaked one, unless forced. `-dev` is accepted (the lean): since
+   113f-post it names the commit as of the page load.
+8. **The config hash moves to `src/config/`**, since shipped journals are
+   stamped with it (D4), and keeps hashing all 33 files unless step zero
+   shows the two extra files cost the bundle more than they are worth.
+9. **The recorder's carried work is two steps:** the stalls retimed
+   ((B), with (C) the fallback), then the run mode. The display test
+   turns the user's monitor off, so it needs their go when it runs.
+
+**Predictions for the cut.** No snapshot bump (Run v46, World v36: the
+journal is not in `RunSnapshot`), no RNG stream, no new bus event. The
+fuzz smoke fires once, on the step that moves the hash into `src/config`.
+One i18n key (the export button). The production bundle grows at the
+wiring step, measured there.
+
+**The cut as proposed (unsigned; it goes into ROADMAP §114 once signed).**
+Seven steps: four `none`, one `batch`, two `stop`.
+- **114a — the journal's format and its recorder, headless.**
+  `src/journal/`: the types and a recorder fed by the dispatcher and the
+  bus (the `TraceRecorder` pattern, storage-agnostic); the config hash
+  moved. Exit: a gated headless run with planted battle orders is
+  recorded, and pins hold the order of entries around a battle, a
+  mid-battle `discardPacket`, and a reset closing the journal. Read
+  `none`.
+- **114b — the headless replay.** `replayJournal`: the Run from the start,
+  a World per battle, each command at its place; it throws by name where
+  a checkpoint differs. Exit: record, replay, and the final snapshots are
+  equal byte for byte over several seeds with battle orders; controls: a
+  command dropped, a tick moved, another config hash; a snapshot-started
+  segment replays. Read `none`.
+- **114c — wired into the game, and the replay tool.** `Game.dispatch`
+  feeds the recorder, stamped with the build and the hash; the kit hands
+  the live journal out; `npm run replay -- <file>`. Exit: the seed-7
+  drive in the Electron runner still logs `a59ee48f`, and its journal
+  replays under Node to the final snapshot hash the page reported; the
+  refusals of call 7 planted; the bundle's growth measured. Read `none`.
+- **114d — finished journals in the store.** At a run's end the journal
+  goes to the `journals` section within the size cap. Exit: in the pane a
+  run driven to defeat leaves its journal in `localStorage`, read from
+  storage itself and replayed by the tool; a planted section over the cap
+  loses its oldest; `?store=deny` plays on. Read `none`.
+- **114e — the export.** The button on the run's end screen. Read `batch`
+  (at 114f's stop): the end screen has "Export run" beside "Begin a new
+  run"; clicking it saves a `.json` in Firefox, and `npm run replay --
+  <that file>` passes. Wrong is no file, a file that doesn't replay, or a
+  button outside the screen's idiom.
+- **114f — the recorder's stalls, retimed.** Carried from §111: step zero
+  switches the display at idle and under a planted steady load; each
+  stall is retimed from the long-frame log; holding the display awake is
+  the fallback. Exit: a recording across a display switch ends within 50
+  ms of its sound, or the fallback is taken on evidence. Read `stop` (the
+  retime or the fallback is the user's call if the retime falls short).
+- **114g — the recorder replays a journal.** `npm run record --
+  --journal=<file>`: the run driven through Game in the page, paced by the
+  journal's times, battle orders at their ticks, 30 fps. Exit: a played
+  run's journal becomes a clip; the page's final snapshot hash equals the
+  journal's; no fault. Read `stop`: the sitting, a clip of a run watched.

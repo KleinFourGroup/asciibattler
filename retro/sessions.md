@@ -2580,3 +2580,29 @@ server's env module, and a fresh server as the control), and the user's
 question, "How do you want to handle things?", left the choice open. I
 recommended a fresh session for the fix, because the number was passed
 and the fix reopens a decision §114 builds on.
+
+### §113 — the phase summary (2026-10-01; two sessions)
+
+Two sessions on `claude-opus-5-5`. fc750343 closed §112, ran the kickoff
+and built 113a–f, and took the 113f read at its hand-off; c3c1aee1 built
+113f-post, took its read and wrote this close. This paragraph covers
+fc750343's report and addendum; c3c1aee1's report is written at its end,
+so only the record speaks for it here. fc750343's report credits a kickoff
+measurement (Node 25's unusable `localStorage`) with turning a line of the
+plan into a rule, and names being free to change a signed sentence for a
+stated reason as the condition it would want repeated; it departed from
+the cut's wording twice and flagged both. It lists five statements that
+were wrong when written, four caught on a re-read and one by a test, and
+observes that each "read as something I knew". The cut had no `stop`. The
+hour clock stood in for the context number and never fired: the meter read
+520k against 400k, the third session in a row past its number, and the
+addendum calls a wall clock the wrong instrument for a session whose steps
+are fast. The user's one read, 113f, found the case the report had listed
+as not verified at 113a (a long-running dev server naming an old commit as
+dirty), which no pane session could have seen, since each started a fresh
+server. In c3c1aee1 the fix was built at the user's pick, and its planted
+controls left the user's own dev server on the planted config until the
+config was touched. Friction: four papercuts (the silent-turn reminder
+four times in one turn; inline node one-liners with quotes; the wall
+clock; the planted config) and one `distress` entry, mild (the clock ten
+minutes short at the 113e boundary).

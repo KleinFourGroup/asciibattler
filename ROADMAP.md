@@ -12,9 +12,9 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §112 ✅ CLOSED 2026-10-01** (the pane probe kit and the Electron
-runner). **§113, the store and the build ID, is IN FLIGHT** (its cut
-signed 2026-10-01). The round was spike-first,
+**Status: §113 ✅ CLOSED 2026-10-01** (the store and the build ID).
+**§114, the run journal and its export, is NEXT** (its kickoff cuts it).
+The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and
@@ -86,33 +86,29 @@ so a cold server's first page loads in under a second. The record: WORKLOG
 - [x] **112d** — `npm run probe`: a whole run exits 0, the plants exit 1 and 2, the recorder still passes; scenes named by `instanceof`. Read `none`. ✅ (WORKLOG §112d).
 - [x] **112e** — the pane doc rewritten around the kit, `friction-scan`'s pane / kit / runner columns checked against known answers, the criteria's start recorded. Read `batch`. ✅ READ 2026-10-01 (WORKLOG §112e).
 
-## Phase 113 — the store and the build ID
+## Phase 113 — the store and the build ID ✅ CLOSED 2026-10-01
 
-Charter: the persistent store, one store in sections with their own
-versions and read policies, over a storage adapter with three cases, read
-synchronously at boot by the first static import (spec D1); the
-`BUILD_ID`, the version scheme, and the save-rejection rule with its
-structure-fingerprint guard (D2). **Why here:** the keystone; every later
-phase writes through it. **Risk:** medium (the most-depended-on model
-left). **Decision points:** the section and key layout ✅ DECIDED
-2026-10-01 (one key per section; WORKLOG §113); the size budget waits on
-§114's measurement. **Exit:** the store round-trips on the web (the dev
-server and the production build) and under Electron, with a throwing store
-and a fresh profile as its controls (the itch leg moved to §116's sitting,
-the user's call 2026-10-01); the headless guard, D1's ESLint rule and its
-twin on `npm test`, fails on a planted import from `src/sim`; the build ID
-is baked and shown; the fingerprint test fails on a planted shape change
-without a bump. **Scope guards:** its consumers are seams only.
+**Outcome:** the persistent store exists, and nothing consumes it yet. It
+is one store in sections with their own versions (`src/store/`): lenient
+sections keep what they can read, and the strict run slot rejects a stale
+or unloadable save and leaves the rest alone. It sits over three adapters
+(the web, Electron's file, memory at "can't save") and is read by
+`main.ts`'s first import. It round-trips on the dev server, on the
+production build and under Electron; the itch leg moved to §116's sitting
+and the two-tab lock to §115. Headless code can't reach it (an ESLint rule
+and its twin on `npm test`). Every build carries an ID, `<version>+<commit>`
+with `-dirty` and `-dev`, shown on character select; a dev server stamps
+it at each page load. A change to `RunSnapshot`'s structure fails
+`npm test` until `RUN_SCHEMA_VERSION` is bumped and re-pinned. The record:
+WORKLOG §113.
 
-The cut (signed 2026-10-01; the audit and the six calls: WORKLOG §113):
-
-- [x] **113a** — ✅ a clean build carries `0.0.0+<commit>`, a planted change `-dirty`, pinned twins hash the same, a recorder worktree stamps clean; `-dev` added for an ID served live (WORKLOG §113a). the build ID: one function (the version, the short commit, `-dirty`) shared by `vite.config.ts`'s `define` and the recorder's `openTree`; a module that exports it, with a named fallback where nothing baked it; an environment variable that pins it. Exit: a built bundle carries the ID git gives, read from `dist/`; a planted uncommitted change builds `-dirty`; two pinned builds are byte-identical; a recorder worktree stamps clean. Read `none`.
-- [x] **113b** — ✅ both policies pinned on both sides, a planted v45 rejected with the settings untouched, a throwing adapter survived on read and on write; a read that throws makes the store read-only (WORKLOG §113b). the store's core, headless (`src/store/`): sections with their own versions, the two read policies, a memory adapter, a status that reads "can't save" and never throws. Exit: planted cases on both sides of each policy (an unknown key dropped, a missing one defaulted, a bad value reset alone; a stale strict section rejected with the lenient ones untouched); a throwing adapter on read and on write. Read `none`.
-- [x] **113c** — ✅ the round trip on the dev server, the production build and under Electron, read from `localStorage` and `store.json`; `?store=deny` (DEV) boots at can't-save; the adapter is chosen on a read, and the round trip only proves saving (WORKLOG §113c). the three adapters and the boot read: the web adapter (proven by a round trip, never by `typeof`), the Electron adapter over `window.shellStore`, the choice; the store as `main.ts`'s first static import, with a pin that its import graph reaches no catalog. Exit: the round trip in the pane on the dev server and on the production build, read back from `localStorage` itself; under Electron across two launches of one profile, a fresh profile reading empty; a planted throwing store boots the game and reads "can't save". Read `none`.
-- [x] **113d** — ✅ both fail on a planted `import '../store'` in `src/sim`; the test follows the whole run-time graph from 298 files and prints the chain (WORKLOG §113d). the headless guard: D1's ESLint rule and its twin on `npm test`. Exit: both fail on a planted import of the store from `src/sim`; the twin keeps a planted control in the suite. Read `none`.
-- [x] **113e** — ✅ by the type checker (about half a second); a planted optional field in `EncounterMap` fails the test and the re-pin until the bump; a planted v45 slot is `rejected: stale`. `RUN_SCHEMA_VERSION` exported, so the smoke fired (WORKLOG §113e). the save's fingerprint and the rejection rule: a test pins `RunSnapshot`'s structure beside its version (by the type checker if step zero measures it at a few seconds or less, else by shapes from driven runs); the run slot's strict read rejects a stale or unreadable save and leaves settings and progress alone; the message's key and English text (shown, and read, at §115). Exit: the test fails on a planted shape change in a nested optional field without a bump, and passes with the bump and the re-pin; a planted v45 slot reads as rejected. Read `none`.
-- [x] **113f** — ✅ READ 2026-10-01, one finding → 113f-post (on the user's dev server the label named an old commit as dirty over a clean tree); in the pane the label sits alone in the bottom-right corner at 11px and follows the root font size, and `ready()` reports the build and the store (WORKLOG §113f). the ID, shown: the corner label on character select; `__probe.ready()`'s report carries the build and the store's status. Read `batch` (at the next stop, else §114's kickoff): character select shows the version and seven hex digits, small, in a corner; wrong is a label over the cards or the chips, one that ignores the text-scale token, or `-dirty` on a clean build.
-- [ ] ◐ **113f-post** — built, the `stop` open: the dev server stamps the ID into each page it serves and the page reads the stamp first, `-dev` kept (the user's pick, shape 1); a commit landed under two running servers and a reload named it (WORKLOG §113f-post). Inserted at the 113f read: a dev server bakes its ID when it starts and keeps it through later commits, so the label read `4c1cc96-dirty-dev` on a clean tree at `1e8fae9`. Exit: a commit lands under a running dev server, the page reloads, and the label names the new commit and the tree's real state. Read `stop`.
+- [x] **113a** — the build ID: one function shared by `vite.config.ts`'s `define` and the recorder, `-dirty` for uncommitted changes, `-dev` for an ID served live, an environment variable that pins it for a byte comparison. Read `none`. ✅ (WORKLOG §113a).
+- [x] **113b** — the store's core, headless: sections with their own versions, the two read policies, a memory adapter, a status that never throws; a read that throws makes the store read-only. Read `none`. ✅ (WORKLOG §113b).
+- [x] **113c** — the three adapters and the boot read: the adapter chosen on a read, the round trip only proving saving; `?store=deny` on a DEV page; the store as `main.ts`'s first import, its graph reaching no catalog. Read `none`. ✅ (WORKLOG §113c).
+- [x] **113d** — the headless guard: D1's ESLint rule and its twin on `npm test`, which follows the whole run-time graph and prints the chain. Read `none`. ✅ (WORKLOG §113d).
+- [x] **113e** — the save's fingerprint, by the type checker, and the run slot's rejection rule; `RUN_SCHEMA_VERSION` exported. Read `none`. ✅ (WORKLOG §113e).
+- [x] **113f** — the ID on character select; `ready()` reports the build and the store. Read `batch`: the version and seven hex digits, small, in a corner. ✅ READ 2026-10-01, one finding → 113f-post (WORKLOG §113f).
+- [x] **113f-post** — inserted at the 113f read (a dev server baked its ID at its start and kept it through later commits): the dev server stamps the ID into each page it serves, `-dev` kept. Read `stop`. ✅ READ 2026-10-01, `d06ebc6` (WORKLOG §113f-post).
 
 ## Phase 114 — the run journal and its export
 
@@ -129,6 +125,8 @@ the recorder replays a journal offscreen. **Scope guards:** passive, never
 perturbing determinism; no ingest server.
 
 **Carried from §111** (WORKLOG §111f-post): a switch of the display stalls the recorder's renderer, from one 0.2 s stall on an idle machine to 13 s of throttled frames, 142 never painted, on a busier one, which long runs recorded while the user works and then walks away will cross. Retiming each stall from the long-frame log lands here (the user's (B)), after a step zero that switches the display at idle and under a planted steady load; holding the display awake during a recording is the fallback (C); a stepped-clock recorder is the fallback beyond it.
+
+**Carried from §113** (WORKLOG §113a, §113f-post): what replay does with a journal stamped `-dev`. A dev server's page carries the ID git gave at that page load, so the commit is the load's; a stylesheet hot-swapped afterwards is the one drift left. The store's size budget also waits on this phase's measurement of a run's bytes.
 
 ## Phase 115 — save/load and mid-run resume
 

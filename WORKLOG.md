@@ -2358,3 +2358,27 @@ the commit `git log -1` names, with `-dirty` only while `git status` lists
 something. Wrong is an older commit, or `-dirty` over a clean tree. No
 restart by hand is needed: the server restarted itself when
 `vite.config.ts` changed.
+
+### 113f-post — THE READ (2026-10-01, the user's) ✅
+
+**The user, in Firefox on their long-running `:5173` server:** "I'm
+getting the right stamp, Claude!" The server had not been restarted by
+hand; by then two commits (`d06ebc6`, `bf5aef6`) had landed under it. No
+finding.
+
+### §113 closed (2026-10-01)
+
+Session c3c1aee1. Every step is read: five `none`, 113f's `batch` (one
+finding) and 113f-post's `stop`. The close is paperwork: ROADMAP §113
+demoted, the phase summary in `retro/sessions.md`, the HANDOFF Cursor
+moved on. At `bf5aef6`: 3204 tests in 216 files and typecheck clean (the
+hook's run), the seed-7 drive on `a59ee48f` (at `d06ebc6`; the commit
+after it is docs only).
+
+**Carried out of the phase** (each in ROADMAP under its phase): the itch
+leg of the store's round trip (§116's sitting); the two-tab lock (§115,
+with the run slot's first writer); what replay does with a `-dev` journal,
+and the store's size budget (§114).
+
+**Before the §114 kickoff** the user wants to talk about the context
+handoff number, so the kickoff waits on that conversation.

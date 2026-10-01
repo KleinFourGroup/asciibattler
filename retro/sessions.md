@@ -2479,3 +2479,24 @@ with those folders ignored, 0.4 s. A proposal, left for the user's call.
 Answering it past the number felt right as a bounded question with a
 measurement behind it; I kept it to profiling and a control, and left the
 config change unmade.
+
+### §112 — the phase summary (2026-09-30 → 10-01; one session)
+
+One session on `claude-opus-5-5`, ab584af9: the kickoff and 112a–e on
+2026-09-30, then at the hand-off the next morning the 112e read and the dev
+server's cold start. Its report credits surfaces the kit doesn't compute
+with overturning the kit's own answer twice: a real browser frame against
+`frame()`, which found the game loop's one-frame overlay lag, and the
+canvas box against the page, after `ready()` passed a page whose stylesheet
+had failed to load. It names one slip, caught on rereading before the
+commit: screens called unreached on the evidence of a truncated list. "A
+change inside the signed intent" came up five times, each built and
+flagged. The cut had no `stop`, and the context clock, set against step
+boundaries, never fired: the meter read 507k against the session's 400k,
+the second phase in a row where the number had nowhere to act. The user's
+one read was 112e, taken early at the hand-off ("the kit looks great"), and
+their question about the slow first page led to the phase's last change
+(the watcher ignoring the output folders, `b105787`, made after the
+addendum above was written). Friction: two papercuts (a guessed temp path
+that cost one hook run; a `vite.config.ts` edit restarting the server
+mid-load, which became a kit check) and no `distress` entry.

@@ -1621,7 +1621,7 @@ hidden window (1280×720, 30 distinct colours).
 
 **`dist/`** byte-identical (`d77a6381…`).
 
-### 112e — the pane doc, the counter, the criteria's start (2026-09-30) — ◐ BUILT, UNREAD (a `batch` read → §113's kickoff)
+### 112e — the pane doc, the counter, the criteria's start (2026-09-30) — read `batch` ✅ READ 2026-10-01
 
 **The counter.** `friction-scan` gains `pane` (Browser pane calls), `kit`
 (pane calls whose input calls `__probe.ready(` … `drive(`) and `runner`
@@ -1689,3 +1689,12 @@ config itself (no inline override), the first stylesheet took 739 and
 670 ms on two cold starts. In the pane, a fresh server's page went live
 0.6 s after it began loading (`ready()` called at 0.14 s), where it took
 38–40 s at 112a. `dist/` unchanged (`d77a6381…`).
+
+### §112 closed (2026-10-01)
+
+Session fc750343. Every step is read (four `none`, and 112e's `batch` read
+taken by the user at the hand-off), so the close is paperwork: ROADMAP §112
+demoted, the phase summary in `retro/sessions.md`, the HANDOFF Cursor moved
+to the §113 kickoff. Pre-flight at `b105787`: 3138 tests in 209 files,
+typecheck clean. The user opened the session expecting 112e's read to be
+still open; the record has it taken (`eae4a2a`).

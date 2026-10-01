@@ -12,9 +12,9 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §111 ✅ CLOSED 2026-09-30** (the recorder). **§112, the pane
-probe kit and the Electron runner, is IN FLIGHT** (its cut signed
-2026-09-30). The round was spike-first,
+**Status: §112 ✅ CLOSED 2026-10-01** (the pane probe kit and the Electron
+runner). **§113, the store and the build ID, is NEXT** (its kickoff:
+audit, cut, shape-lock). The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and
@@ -63,26 +63,28 @@ record: WORKLOG §111.
 - [x] **111f** — THE SITTING: the A/B by ear (one file, five offsets, A–E), then the exit clips at the pick (corridors, a seed, `c4ca4e6^` against HEAD). Read `stop`. ✅ READ 2026-09-30 (+25 ms; the pair ✅; two findings → 111f-post).
 - [x] **111f-post** — inserted at the 111f read: two openings (`--countdown=full|skip`, full the default), the clip cut before the next screen, +25 ms; and the guards from its findings (frames short, a drift over 50 ms). Read `stop`. ✅ READ 2026-09-30, `f406442` + `e37139f` + `42b3263` (WORKLOG §111f-post).
 
-## Phase 112 — the pane probe kit and the Electron runner
+## Phase 112 — the pane probe kit and the Electron runner ✅ CLOSED 2026-10-01
 
-Charter: a dev-only `__probe` in the page that puts the Browser pane's
-known traps into code (`ready`, `go`, `frame`, `pixels`, a canvas-size
-check, the whole-run driver), and a thin Electron runner that calls the
-same kit from a Node script (spec D10). **Why here:** before the menu and
-settings, the round's pane-heavy work. **Risk:** low. **Decision points:**
-none known. **Exit:** pane sessions start with `await __probe.ready()`;
-the runner hands a probe's JSON and exit code back; `process/browser-pane.md`
-rewritten around the kit. **Scope guards:** DEV-only, no production byte
-change; the three pre-registered criteria are counted at the round close,
-per pane session, runner sessions apart.
+**Outcome:** a pane session starts with `await __probe.ready()`. A
+dev-only `window.__probe` (`src/dev/probe/`) holds the Browser pane's known
+traps as calls that fail by name: a page not live yet, a stylesheet that
+failed to load, a 0×0 or mis-sized canvas, an overwritten URL, a stale
+frame, a crop, a timed-out call still acting. `drive()` plays a whole run
+from a seed, the same seed giving the same phase log. `npm run probe --
+<script>` runs the same kit in a hidden Electron window and hands back one
+JSON line and exit 0, 1 or 2. `process/browser-pane.md` is rewritten around
+the kit, and `friction-scan` counts pane, kit and runner calls per session;
+the three pre-registered criteria are counted at the round close, over the
+sessions that start after ab584af9. `dist/` stayed byte-identical. After
+the phase's last read, the dev server stopped watching the output folders,
+so a cold server's first page loads in under a second. The record: WORKLOG
+§112.
 
-The cut (signed 2026-09-30; the audit and the four calls: WORKLOG §112):
-
-- [x] **112a** — ✅ the four traps planted and caught; a dev-server stand-in added (WORKLOG §112a). The kit's core in `src/dev/probe/`, loaded by a DEV dynamic import: `ready()` (waits until live, reports the page), `go(query)` (refused before a `ready()`; an overwritten URL fails the next `ready()` by name), the canvas-size check on every read, and a sequence number that stops a timed-out call; the reach-ins pinned headless. Exit: four traps planted in the pane, each caught by name; `dist/` byte-identical. Read `none`.
-- [x] **112b** — ✅ the stale read and a known colour; the loop's one-frame overlay lag found, a TODO rider (WORKLOG §112b). `frame(dt=0)` through the loop's own path; `pixels(rect)` renders and reads in one call (numbers, and an optional magnified overlay). Exit: a planted stale read caught; a planted known colour read back; `dist/` byte-identical. Read `none`.
-- [x] **112c** — ✅ runs to defeat and to complete, the same log twice, the plants caught; §106d's no-op not reproduced (WORKLOG §112c). `drive(...)`: the phase dispatcher (a seeded pick among enabled choices, or `first`), about one battle per call, loud on a command that changes nothing, one row per `RunPhase` enforced by the type. Exit: a seeded run to defeat and a `hops=2` run to `complete` in the pane; the same seed twice, the same phase log; a planted audit fault reported. Read `none`.
-- [x] **112d** — ✅ a whole run exits 0 (the pane's log), the plants exit 1 and 2, the recorder still passes; scene names fixed for built pages (WORKLOG §112d). `npm run probe`: the recorder's shared development-mode build, a fresh profile, `ready()`, the script, one JSON line, exit 0/1/2. Exit: a driving script exits 0; a planted failure 1, a planted hang 2; the recorder still records a clip its analyzer passes. Read `none`.
-- [x] **112e** — ✅ READ 2026-10-01 (the user: "the kit looks great"); the counter matches its known answers (WORKLOG §112e). `process/browser-pane.md` rewritten around the kit; `friction-scan` counts pane, kit and runner calls per session; the landing commit recorded as the criteria's start. Exit: the counter matches its known answers. Read `batch` (at §113's kickoff): the doc's first section is the kit and each trap it holds is an API line, not a tip; wrong is a held trap still written as a tip, or a tip dropped for a trap it doesn't hold (CSS transitions, Firefox keys).
+- [x] **112a** — the kit's core: `ready()`, `go(query)`, `check()`, `running()` and a dev-server stand-in; four traps planted and caught by name. Read `none`. ✅ (WORKLOG §112a).
+- [x] **112b** — `frame(dt=0)` and `pixels(rect)`: a planted stale read caught, a planted colour read back; the loop's one-frame overlay lag found, a TODO rider. Read `none`. ✅ (WORKLOG §112b).
+- [x] **112c** — `drive(...)`: a seeded run to defeat and a `hops=2` run to complete, the same log twice, the plants caught. Read `none`. ✅ (WORKLOG §112c).
+- [x] **112d** — `npm run probe`: a whole run exits 0, the plants exit 1 and 2, the recorder still passes; scenes named by `instanceof`. Read `none`. ✅ (WORKLOG §112d).
+- [x] **112e** — the pane doc rewritten around the kit, `friction-scan`'s pane / kit / runner columns checked against known answers, the criteria's start recorded. Read `batch`. ✅ READ 2026-10-01 (WORKLOG §112e).
 
 ## Phase 113 — the store and the build ID
 

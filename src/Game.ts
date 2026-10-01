@@ -39,6 +39,8 @@ import { configHash } from './config/configHash';
 import { BUILD_ID } from './buildId';
 import { JournalRecorder } from './journal/JournalRecorder';
 import type { RunJournal } from './journal/journal';
+import { store } from './store';
+import { keepJournal } from './store/journals';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -79,6 +81,8 @@ export class Game implements RunDispatcher {
    * each command before the Run applies it; `createRun` and `devLoadRun`
    * open a journal, `resetRun` abandons one. Every call goes through
    * `journaling`, so a recorder that throws can't take the game with it.
+   * A journal closed by its run's end is kept in the store
+   * (src/store/journals.ts), within that section's size budget.
    */
   private readonly journalRecorder = new JournalRecorder(
     this.bus,
@@ -86,6 +90,9 @@ export class Game implements RunDispatcher {
     Date.now,
     (journal) => {
       this.finishedJournal = journal;
+      // A run that reached its end joins the store's finished journals. One
+      // abandoned (reset or replaced before its end) is not kept.
+      if (journal.segments.at(-1)?.end?.reason !== 'abandoned') keepJournal(store, journal);
     },
   );
   /** The journal of the run that just ended, until the next run starts. */

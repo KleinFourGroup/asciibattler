@@ -4,10 +4,12 @@
  *   - 'complete' — player won the terminal battle.
  *
  * Same structure for both: heading, subtext, the run-end stats body (102d),
- * "Begin a new run" button. Variant only changes the copy and accent color,
- * so reusing one component keeps the reset/button flow uniform. The button
- * dispatches a `resetRun` command (Game handles it by disposing the current
- * Run and starting a fresh one).
+ * and the two actions side by side: "Begin a new run" and "Export run".
+ * Variant only changes the copy and accent color, so reusing one component
+ * keeps the reset/button flow uniform. The first button dispatches a
+ * `resetRun` command (Game handles it by disposing the current Run and
+ * starting a fresh one); the second downloads the run's journal as a
+ * `.json` file (114e).
  *
  * 102d — THE STATS BODY ("the fallen"): `summarizeFallen(Run.fallenLedger)`
  * drawn as the run's totals and one row per encounter somebody fell in
@@ -30,8 +32,10 @@ import {
 import { getEncounter } from '../config/encounters';
 import { t } from '../i18n/ui';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import { journalFileName, type RunJournal } from '../journal/journal';
 import { Screen } from './Screen';
 import { button } from './button';
+import { downloadText } from './download';
 import { archetypeGlyphRun, archetypeLines, fallenSide } from './fallenSide';
 
 export type GameOverVariant = 'defeat' | 'complete';
@@ -57,6 +61,8 @@ export class GameOverScreen extends Screen {
     mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
+    /** The finished run's journal (`SceneContext.journal`). */
+    private readonly journal: () => RunJournal | null,
   ) {
     super(mount);
   }
@@ -84,14 +90,36 @@ export class GameOverScreen extends Screen {
 
     panel.appendChild(renderStats(summarizeFallen(ledger)));
 
-    const reset = button(t('gameover.newRun'), {
-      className: 'btn--primary btn--exit',
-      onClick: () => {
-        this.audio.play('click');
-        this.dispatcher.dispatch({ kind: 'resetRun' });
-      },
-    });
-    panel.appendChild(reset);
+    const actions = document.createElement('div');
+    actions.className = 'gameover-actions';
+    actions.appendChild(
+      button(t('gameover.newRun'), {
+        className: 'btn--primary btn--exit',
+        onClick: () => {
+          this.audio.play('click');
+          this.dispatcher.dispatch({ kind: 'resetRun' });
+        },
+      }),
+    );
+    // 114e — the run's journal as a file (telemetry tier 1, Round 8 spec D5).
+    // No button when the page holds no journal (its recorder failed). The
+    // journal is read again at the click: this screen mounts from inside the
+    // command that ended the run, before that journal has closed.
+    if (this.journal() !== null) {
+      actions.appendChild(
+        button(t('gameover.export'), {
+          className: 'btn--primary btn--exit',
+          tooltip: t('gameover.exportTip'),
+          onClick: () => {
+            const journal = this.journal();
+            if (journal === null) return;
+            this.audio.play('click');
+            downloadText(journalFileName(journal), JSON.stringify(journal));
+          },
+        }),
+      );
+    }
+    panel.appendChild(actions);
 
     return panel;
   }

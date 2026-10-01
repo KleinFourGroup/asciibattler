@@ -29,6 +29,7 @@ import type { BackdropRenderer } from '../render/BackdropRenderer';
 import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
+import type { RunJournal } from '../journal/journal';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import type { Keybindings } from '../ui/Keybindings';
@@ -57,6 +58,11 @@ export interface SceneContext {
    *  scene asserts via `requireRun(ctx)` at mount — the compiler makes each
    *  scene say whether it can run pre-Run (the kickoff shape-lock). */
   readonly run: Run | null;
+  /** The run's journal as Game holds it now (`Game.currentJournal`): the one
+   *  being recorded, or the finished one once the run has ended; null with
+   *  no run. A function, because the journal of a run that just ended closes
+   *  after the end screen has mounted. */
+  readonly journal: () => RunJournal | null;
   readonly audio: AudioPlayer;
   /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists

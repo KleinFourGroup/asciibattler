@@ -2934,3 +2934,58 @@ Firefox's storage limit (the signed call 5), and both are the user's to
 supply at the 114e read.
 
 **Counts.** Main 3253 → 3261 (221 → 222 files); typecheck clean.
+
+### 114e — the export (2026-10-01) — ◐ BUILT, UNREAD (a `batch` read, at 114f's stop)
+
+**Step zero.** The end screen is `GameOverScreen`, one `btn--exit` under
+the stats (✔ `GameOverScreen.ts`); a download helper existed only in the
+DEV keys (✔ `devKeys.ts:179`), which a build for players doesn't carry.
+One thing the code showed: **the end screen mounts before the run's
+journal closes.** `run:defeated` swaps the scene from inside the command
+that ended the run, and the recorder settles after that command returns.
+So the screen takes a function and reads the journal at the click.
+
+**Built.**
+- **"Export run"** beside "Begin a new run", both `btn--primary btn--exit`
+  in a `.gameover-actions` row (a new run first, in DOM and Tab order).
+  The click downloads `JSON.stringify(journal)` as
+  `asciibattler-journal-<the run's opening time, UTC>.json`
+  (`journalFileName`), through `src/ui/download.ts`. The button has a
+  tooltip (`gameover.exportTip`) saying what the file is and what to do
+  with it. No button when the page holds no journal.
+- **`SceneContext.journal()`** carries `Game.currentJournal` to the scene.
+- **The text is compact JSON,** the same text the store keeps, so the
+  file's size is the number the journals budget needs.
+- **DESIGN §UI idioms** said `btn--exit` is the sole control on an end
+  screen; game over now has two, and the sentence, `button.ts`'s header
+  and the stylesheet's comment say so. Whether two equal buttons is the
+  right weight is part of the read.
+
+**Checked in the pane** (`dev-preview`, `seed=7&hops=2&character=soldier`
+driven to its end; the tree uncommitted, so the page's build was
+`0.0.0+2ab2799-dirty-dev`):
+- the two buttons side by side at the same height, 16 px apart, centred
+  as a pair, the same class and colours (a screenshot; the rects);
+- the click, with `URL.createObjectURL` and the link's `click` wrapped so
+  that nothing was saved: one blob, `application/json`, 1,852 characters,
+  equal to `__probe.journal()` and to the journal `localStorage` holds,
+  its end in place (`victory`, `7184f66e`, the page's `stateHash`); the
+  link in the document at the click, hidden, gone after; the file name
+  `asciibattler-journal-2026-10-01T22-11-47-760Z.json`;
+- the tooltip opens on hover with its text;
+- "Begin a new run" still resets: the map, a new journal with no entries,
+  the stored list unchanged.
+
+**Not checked, and whose it is.**
+- **A real save, in Firefox, and `npm run replay` on that file:** the
+  user's, by the batch script in ROADMAP. The pane proves the wiring; the
+  agent doesn't download files.
+- **A narrow screen** (the row wraps by `flex-wrap`; not looked at).
+- **What a download does in Electron's window and in itch's sandboxed
+  frame** (the kickoff's hypothesis): unmeasured, and nothing here is a
+  finding about either. Carried to the sittings that have those shells in
+  hand (§116's itch leg, §118's smoke), in the Cursor.
+- **Firefox's `localStorage` limit** and **a played run's file size**: the
+  user's, at the same read; they settle the journals budget.
+
+**Counts.** Main 3261 → 3264 (222 → 223 files); typecheck clean.

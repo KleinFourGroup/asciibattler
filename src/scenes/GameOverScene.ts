@@ -13,7 +13,7 @@ export class GameOverScene implements Scene {
   constructor(private readonly variant: GameOverVariant) {}
 
   mount(ctx: SceneContext): void {
-    this.screen = new GameOverScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
+    this.screen = new GameOverScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.journal);
     // 102d — the finished run is still `ctx.run` here (a reset replaces it
     // only off this screen's own button); its ledger is the stats' source.
     this.screen.show(this.variant, ctx.run?.fallenLedger ?? []);

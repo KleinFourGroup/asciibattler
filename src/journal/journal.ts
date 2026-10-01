@@ -104,3 +104,10 @@ export interface RunJournal {
 export function snapshotHash(snapshot: RunSnapshot): string {
   return fnv1a(JSON.stringify(snapshot));
 }
+
+/** The name an exported journal's file gets: when its run began, in UTC, in
+ *  the form the DEV exports use (`asciibattler-journal-2026-10-01T22-03-26-159Z.json`). */
+export function journalFileName(journal: RunJournal): string {
+  const opened = journal.segments[0]?.openedAt ?? 0;
+  return `asciibattler-journal-${new Date(opened).toISOString().replace(/[:.]/g, '-')}.json`;
+}

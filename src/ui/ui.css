@@ -1656,7 +1656,15 @@ body {
   filter: brightness(2);
 }
 
-/* The game-over button is `.btn--primary.btn--exit` (96d). */
+/* The game-over buttons are `.btn--primary.btn--exit` (96d). 114e — two of
+   them, side by side: a new run, and the run's journal as a file. They wrap
+   onto two rows where the screen is too narrow for both. */
+.gameover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 16px;
+}
 
 /* 102d — the run-end stats body ("the fallen"): the run's totals, then one
    row per encounter somebody fell in. The side cells are `.fallen-side`
@@ -3274,9 +3282,9 @@ body {
   opacity: 1;
 }
 
-/* btn--exit — the only control on an opaque end screen (game over ·
-   sector cleared): a full amber frame under the subtext, and the hover
-   FILLS it. */
+/* btn--exit — the controls of an opaque end screen (game over's two ·
+   sector cleared's one): a full amber frame under the subtext, and the
+   hover FILLS it. */
 .btn--primary.btn--exit {
   margin-top: 16px;
   background: transparent;

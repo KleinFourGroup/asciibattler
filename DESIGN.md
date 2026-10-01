@@ -272,7 +272,9 @@ every `<button>` (type · class · label · click; `tooltip` attaches the §97
 tooltip with the control's long-press route — never a native `title`); the
 audio cue stays in the handler. `.btn--primary` is the walk-on action's look; its three
 modifiers name a deliberate delta (`btn--dim` a pass, `btn--exit` the
-sole control on an end screen — the hover fills it, `btn--corner` a
+controls of an end screen, where nothing else can be acted on — the hover
+fills it; sector cleared has one, game over two side by side since §114:
+a new run, and the run's journal as a file — `btn--corner` a
 viewport-pinned corner control). A site's POSITION stays on its own class.
 Secondary buttons keep their own classes until an idiom for them earns
 its place.

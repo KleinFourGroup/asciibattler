@@ -88,6 +88,8 @@
   "lastturn.fallen": "{name} Lv{level} (−{power})",
   "common.pass": "Pass",
   "gameover.newRun": "Begin a new run",
+  "gameover.export": "Export run",
+  "gameover.exportTip": "Save this run's journal as a file: its seed and every choice you made, enough to replay the run. Send it along with a bug report or feedback.",
   "gameover.stats.title": "The fallen",
   "gameover.stats.none": "Nobody fell on either side.",
   "gameover.stats.where": "Sector {sector} · hop {hop}",

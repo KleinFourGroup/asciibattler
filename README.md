@@ -40,6 +40,18 @@ It is a development tool (`shell/electron/probe-cli.mjs` lists its
 options); the probe kit it calls is `window.__probe`
 ([process/browser-pane.md](process/browser-pane.md)).
 
+## Replaying a run
+
+Every run is journaled as it is played: the seed, each choice, each battle
+order. When a run ends, "Export run" on the end screen saves that journal
+as a `.json` file, and the newest finished journals (about 1 MB of them)
+are kept in the browser's storage. `npm run replay -- <file>` replays one headless and says
+whether the replay reached the state the journal recorded (exit 0), diverged
+(1), or was refused (2). A journal replays on the build that recorded it,
+so the tool refuses one from another commit, from a build of uncommitted
+changes, or recorded under other `config/` numbers; `--force` overrides the
+first two.
+
 ## Docs
 
 - **AI coding agents:** start at **[AGENTS.md](AGENTS.md)** — it orients you cold and points to everything else.

@@ -11,8 +11,9 @@
  * close plays nothing — the factory must not decide). Chrome comes from
  * the CLASS: `btn--primary` is THE primary-action idiom (ui.css), with the
  * three look modifiers that name a deliberate per-site delta —
- * `btn--dim` (a pass, 0.7 until hovered), `btn--exit` (the game-over pair:
- * amber fill on hover, the only thing on screen), `btn--corner` (the
+ * `btn--dim` (a pass, 0.7 until hovered), `btn--exit` (the end screens'
+ * controls, game over and sector cleared: amber fill on hover, with
+ * nothing else on screen to act on), `btn--corner` (the
  * pinned port leave, sized for a corner). A site's POSITION stays on its
  * own class (`.preturn-continue` pins bottom-center, `.port-leave` top-
  * right) — layout is the screen's, look is the idiom's.

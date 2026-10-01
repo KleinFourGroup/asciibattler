@@ -881,6 +881,7 @@ export class Game implements RunDispatcher {
       uiMount: this.screenHost,
       dispatcher: this,
       run: this.run,
+      journal: () => this.currentJournal(),
       audio: this.audio,
       playback: this.playback,
       keybindings: this.keybindings,

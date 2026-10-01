@@ -19,6 +19,11 @@ import type { BoardPanel } from './dev/boardPanel';
 import { installMotionGate } from './render/motion';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
+import { BUILD_ID } from './buildId';
+
+// 113a — the build's ID on `<html data-build>`, so any build, a production
+// one included, can be asked which commit it is.
+document.documentElement.dataset.build = BUILD_ID;
 
 // 99a — the motion gate stamps `html[data-motion]` from the OS preference
 // BEFORE any screen renders (the CSS keys off the attribute, the JS off

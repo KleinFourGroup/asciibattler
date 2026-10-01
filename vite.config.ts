@@ -4,6 +4,7 @@ import { join, sep } from 'node:path';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type Plugin } from 'vite';
 import { PROBE_BOOTSTRAP } from './src/dev/probe/bootstrap';
+import { buildId } from './scripts/build-id.mjs';
 
 /**
  * Dev-only save endpoint for the config editors (the archetype editor in I4;
@@ -111,8 +112,14 @@ function probeBootstrap(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [configSavePlugin(), probeBootstrap()],
+  // 113a — the build's ID, read through src/buildId.ts. A build bakes the
+  // commit it was made from; the dev server and Vitest (`serve`) outlive
+  // commits and edits, so theirs is marked live (scripts/build-id.mjs).
+  define: {
+    __BUILD_ID__: JSON.stringify(buildId({ cwd: process.cwd(), live: command === 'serve' })),
+  },
   // Relative asset paths in the built index.html / CSS so the same dist/
   // works under any subpath (GitHub Pages project sites, file://, etc.)
   // without needing a per-deploy `base` value.
@@ -167,4 +174,4 @@ export default defineConfig({
     // double run + shuffled file order + exact-count match (WORKLOG §73).
     isolate: false,
   },
-});
+}));

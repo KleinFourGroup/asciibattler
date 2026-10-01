@@ -6,6 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, lstatSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { commitStamp } from '../../scripts/build-id.mjs';
 
 export const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -27,9 +28,8 @@ export function git(args) {
  *  can never reach the real one. */
 export function openTree(ref, work, label) {
   if (ref === undefined) {
-    const commit = git(['rev-parse', '--short=7', 'HEAD']);
-    const stamp = git(['status', '--porcelain']) === '' ? commit : `${commit}-dirty`;
-    return { root: repo, stamp, ref: 'working tree', close: () => {} };
+    // The stamp the build bakes as its ID's commit part (scripts/build-id.mjs).
+    return { root: repo, stamp: commitStamp(repo, git), ref: 'working tree', close: () => {} };
   }
   const stamp = git(['rev-parse', '--short=7', `${ref}^{commit}`]);
   const root = join(work, `tree-${label}`);

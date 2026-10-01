@@ -2989,3 +2989,24 @@ driven to its end; the tree uncommitted, so the page's build was
   user's, at the same read; they settle the journals budget.
 
 **Counts.** Main 3261 → 3264 (222 → 223 files); typecheck clean.
+
+### The build stretch's end (2026-10-01, session 4d7da9f7)
+
+114a–e ran from 17:19 to 18:15, inside the one-hour breaker: seven
+commits, `e6d35de` (114a) to `1fc4fc0` (114e), the fuzz smoke once (114a,
+582 green). The end reading is asked for in the hand-back, with what the
+gate's "400k" named. The session report waits for the session's end.
+
+**The storage-limit snippet, and what the pane can't say.** The read
+needs Firefox's `localStorage` limit, so the hand-back carries a console
+snippet: it sums what is stored, then bisects the largest value one more
+key will take, and removes the key. Run in the pane first, with a 16 M
+ceiling, it reported the ceiling. With a higher one it fails on
+`QuotaExceededError` at 52,182,016 characters, ASCII or two-byte alike,
+which with the 246,462 in use is 52,428,478, within the bisect's step of
+50 × 2²⁰. So the instrument finds a quota and says so when it hits its
+ceiling (a flag added for that), and **the pane's Chromium allows about
+ten times a stock browser's 5 MB**: the pane can't stand in for a
+browser's storage limit. The preview server was stopped afterwards (no
+listener on 5191; the Vite process left running is the user's own, on
+5173 since the morning).

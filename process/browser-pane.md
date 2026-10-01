@@ -92,6 +92,17 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `"none"`; during a battle `__game.activeScene.world` is the live `World`
   (TypeScript `private` fields are readable at runtime). For logic, prefer
   a headless test.
+- **The production build** has no `__probe` and no `__game`. Build it
+  (`npx vite build`), then `preview_start` with the `dist-preview` config
+  (port 5192, `vite preview` over `dist/`). Wait for `#ui` to hold three
+  children before reading; `<html data-build>` says which build it is. It
+  is another origin, so its `localStorage` is not the dev server's.
+- **The store** (`src/store/`) is the page's first module. On the dev
+  server, `(await import('/src/store/index.ts')).store` is the page's own
+  instance. `?store=deny` (DEV only) boots the game with its storage
+  refused, the way a browser with site data blocked does: the store reads
+  can't-save and touches nothing. To check what is stored, read
+  `localStorage` (or Electron's `store.json`) itself, not the store.
 
 ## What the kit doesn't hold
 

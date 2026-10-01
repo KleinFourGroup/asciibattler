@@ -2001,3 +2001,75 @@ from the adapter's own map, never through the store):
 One slip of mine, caught by the first run: a test asserted the in-memory
 value after a `clear`, which had rightly reset it; the assertion moved
 above the clear.
+
+### 113c — the three adapters and the boot read (2026-10-01) — read `none` ✅
+
+**Built.** `web.ts`, `electron.ts`, `choose.ts` and `index.ts` (the page's
+store, made at import), and `import './store'` as `main.ts`'s first line.
+The preload and `main.mjs` are unchanged: the Electron adapter keeps the
+store's keys as one JSON object in the file the spike already reads and
+writes. ARCHITECTURE's tree has each file.
+
+**Two changes inside the signed intent, flagged.**
+- **The round trip proves saving; it doesn't choose the adapter.** The cut
+  said the web adapter is "proven by a round trip". Choosing on a write
+  would send a player whose quota is full to the memory fallback, and
+  their stored settings would go unread. So `localStorage` is chosen when
+  it has its three methods and a read doesn't throw, and the round trip
+  (`prove`, on a scratch key) runs at a boot that writes nothing else and
+  only sets can't-save. Still never `typeof`: Node 25's shape, an object
+  with no `setItem`, is a pinned case.
+- **`?store=deny`, DEV only:** the planted refusal the exit asks for, as a
+  URL dial so later reads of the can't-save UI can reach it in play, in
+  the pane, in Firefox and under Electron. The first build carried its two
+  strings into `dist/` (the branch sat inside `chooseAdapter`, behind a
+  runtime argument). Moved behind the DEV constant in `index.ts`, the
+  production bundle has 0 of each; the same search found 1 of each before
+  the move, which is its control.
+
+**The exit.** Stored state was read from `localStorage` or from
+`store.json` by Node, not through the store.
+
+| shell | check | result |
+|---|---|---|
+| the pane, dev server | first load | `asciibattler:meta` stamped `0.0.0+6904a87-dirty-dev`; `web`, can save |
+| | a section patched, the page reloaded | the item in `localStorage`; the next page's store read 41 back, `previousBuild` the stamp; cleared after |
+| | `?store=deny`, a settings item planted first | the game booted (character select, 3 UI children); `memory`, can't-save, "planted by ?store=deny"; the read gave the fallback, not the plant; `patch` false; the planted item and the stamp untouched |
+| the pane, production build (`dist-preview`) | first load | no `__probe`; `data-build` `0.0.0+6904a87-dirty`; the stamp in `localStorage` |
+| | this build's stamp planted with a marker, reloaded | the marker kept: read, judged current, nothing written; no scratch key left |
+| | another build's stamp planted, reloaded | re-stamped, the marker gone |
+| Electron, production build | a fresh profile | the preload saw `null`; `store.json` then holds the stamp |
+| | the same profile again | the preload's text equals the file; the file unchanged |
+| | the same-build plant with a marker and a second key | the file still the plant, byte for byte |
+| | another build's plant, the second key beside it | re-stamped, the second key kept, no `.tmp` left |
+| | a second fresh profile (the control) | `null` |
+| | a file that isn't the store's (110a's raw text) | the game boots; the file replaced by the stamp |
+| | `?store=deny` on the production build | ignored: the stamp written |
+| Electron, development-mode build | `?store=deny` | `ready()` passes; no file written |
+| | no query (its control) | the stamp written |
+
+The two plants are what make the production legs a read and not only a
+write: the same page leaves one stored stamp alone and replaces the other,
+so the outcome depends on what it read.
+
+**Headless** (+20): `adapters.test.ts` (15: each adapter over a fake host,
+the choice in order, a storage that reads and can't write, a getter that
+throws, a store round-tripped through the Electron file text) and
+`tests/store-boot.test.ts` (5: `./store` is `main.ts`'s first import; the
+run-time graph from `index.ts` is exactly six files in `src/store/` and
+`src/buildId.ts`, no package; the walker's controls: `main.ts`'s graph
+reaches Game, the locale and the catalogs, and a planted catalog import is
+reported while a type-only one is not). 3184 tests in 213 files. The fuzz
+smoke did not fire.
+
+**The kit, in use:** the pane's reload came up 0×0 and `ready()` threw by
+name with the fix (`resize_window`), which worked on the next call. A
+covered trap, held; not filed as a papercut.
+
+**Also added:** the `dist-preview` launch config (`vite preview` over
+`dist/`, port 5192), since the pane tools attach only to a server they
+start; `process/browser-pane.md` names it and the store's handles.
+
+**Not verified:** a real browser with site data blocked (the refusal is
+planted); a real full quota (planted over a fake `Storage`); Firefox (the
+pane is Chromium); itch's iframe (deferred to §116).

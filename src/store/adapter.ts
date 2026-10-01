@@ -17,6 +17,10 @@ export interface StorageAdapter {
    *  the write itself is asynchronous (Electron). */
   write(key: string, text: string): void | Promise<void>;
   remove(key: string): void | Promise<void>;
+  /** Optional: write, read back and remove a scratch key, throwing if any of
+   *  it fails. The store runs it at a boot that writes nothing else, so the
+   *  player hears "can't save" at the start and not at the first save. */
+  prove?(): void;
 }
 
 /**

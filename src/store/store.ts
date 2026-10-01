@@ -28,7 +28,8 @@
  *
  * THE STORE NEVER THROWS. An adapter that throws on a read leaves every
  * section at its fallbacks and the store read-only for the page's life: a
- * store that couldn't read what is there must not write over it. A failed
+ * store that couldn't read what is there must not write over it. A page with
+ * no storage at all (choose.ts's fallback) starts the same way. A failed
  * write (a quota or a security error) returns false and sets the status to
  * "can't save", for the UI to tell the player; the value still holds in
  * memory for the page's life.
@@ -148,11 +149,19 @@ function parseEnvelope(text: string): Envelope | null {
   return { v: parsed.v, build: typeof parsed.build === 'string' ? parsed.build : '', data: parsed.data };
 }
 
-export function createStore(options: { readonly adapter: StorageAdapter; readonly build: string }): Store {
+export function createStore(options: {
+  readonly adapter: StorageAdapter;
+  readonly build: string;
+  /** Why nothing can be saved on this page (choose.ts's fallback). The store
+   *  then starts, and stays, at can't-save. */
+  readonly unsaved?: string | null;
+}): Store {
   const { adapter, build } = options;
-  let status: StoreStatus = { adapter: adapter.kind, canSave: true, error: null };
-  /** Set by a failed read: the store then writes nothing for the page's life. */
-  let readFailed = false;
+  const unsaved = options.unsaved ?? null;
+  let status: StoreStatus = { adapter: adapter.kind, canSave: unsaved === null, error: unsaved };
+  /** Set by `unsaved` or by a failed read: the store then reads and writes
+   *  nothing for the page's life. */
+  let locked = unsaved !== null;
   const listeners = new Set<(status: StoreStatus) => void>();
   const lenientCache = new Map<SectionName, Record<string, unknown>>();
 
@@ -164,11 +173,11 @@ export function createStore(options: { readonly adapter: StorageAdapter; readonl
 
   /** One key's text; null when nothing is stored or the read failed. */
   const readText = (name: SectionName): string | null => {
-    if (readFailed) return null;
+    if (locked) return null;
     try {
       return adapter.read(storageKey(name));
     } catch (err) {
-      readFailed = true;
+      locked = true;
       setStatus(false, describe(err));
       return null;
     }
@@ -177,7 +186,7 @@ export function createStore(options: { readonly adapter: StorageAdapter; readonl
   /** Run one adapter write. A write that fails later (Electron's are
    *  asynchronous) has already returned true, and reports through the status. */
   const attempt = (write: () => void | Promise<void>): boolean => {
-    if (readFailed) return false;
+    if (locked) return false;
     try {
       const pending = write();
       if (pending instanceof Promise) {
@@ -201,12 +210,16 @@ export function createStore(options: { readonly adapter: StorageAdapter; readonl
   };
 
   // The store's own stamp. Written only when it is missing or another build's,
-  // so a boot on the same build writes nothing.
+  // so a boot on the same build stores nothing; that boot proves the storage
+  // instead, where the adapter can.
   const metaText = readText('meta');
   const meta = metaText === null ? null : parseEnvelope(metaText);
   const previousBuild = meta === null || meta.build === '' ? null : meta.build;
-  if (!readFailed && (meta === null || meta.v !== STORE_VERSION || meta.build !== build)) {
+  if (meta === null || meta.v !== STORE_VERSION || meta.build !== build) {
     writeEnvelope('meta', STORE_VERSION, {});
+  } else if (adapter.prove !== undefined) {
+    const prove = adapter.prove.bind(adapter);
+    attempt(prove);
   }
 
   /** The section's live value: the store's own copy, never handed out. */

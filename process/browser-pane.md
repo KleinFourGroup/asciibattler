@@ -88,6 +88,16 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   state (the kit's driver, anything on `window`). `ready()`'s `page` tells
   you it happened; don't write a source file in the middle of a pane
   sequence.
+- The dev server stamps the build's ID into each page it serves, so
+  `ready()`'s `build` names the commit and the tree's state as of that
+  load (`-dirty` while anything is uncommitted), not as of the server's
+  start.
+- Editing `vite.config.ts`, or a file it imports (`src/buildId.ts`,
+  `scripts/build-id.mjs`, the probe's `bootstrap.ts`), restarts every
+  running dev server, the user's included. Two such edits back to back
+  have left a server on the config between them: after reverting a
+  planted change there, `touch vite.config.ts` and read the server's HTML
+  (`curl http://localhost:5173/`) before trusting it.
 - `window.__game` (DEV only) is the top-level `Game`: `bus`, `renderer`,
   `run`, `activeScene`, `keybindings`, `sprites`. `__game.world` is
   `"none"`; during a battle `__game.activeScene.world` is the live `World`

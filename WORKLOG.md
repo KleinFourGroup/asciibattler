@@ -2279,3 +2279,82 @@ session.
 **The hand-off (the user's):** "I'll see you in the post session to change
 it!" So the label changes, and shape 3 is out; between 1 and 2 the user
 has not picked.
+
+### 113f-post — the ID stamped at each page load (2026-10-01) — the `stop` is open
+
+Session c3c1aee1. **The pick (the user's):** shape 1, the ID stamped at
+each page load on the dev server, and it keeps `-dev` ("Let's go with 1,
+and keep dev!"). `-dev` now reads "true as of this load": a stylesheet edit
+is hot-swapped without a reload, so a loaded page can still drift from its
+label (reasoned, not planted). §114 decides what replay does with it.
+
+**Step zero.**
+- **The stale ID still reproduced:** the user's `:5173` server served
+  `0.0.0+4c1cc96-dirty-dev` from `/@vite/env` over a clean tree at
+  `ed1b99b`.
+- **Vite transforms the HTML on every request:** the dev server's HTML
+  middleware calls `server.transformIndexHtml` per page
+  (`node_modules/vite/dist/node/chunks/node.js:25441`), so a stamp put there
+  is never cached.
+- **The two git calls cost about 90 ms from Node** (`buildId({ live: true
+  })`, 7 runs: 81 / 89 / 136 ms min / median / max; `rev-parse` and
+  `status --porcelain` about 45 ms each). The same two calls timed from Git
+  Bash read 663–728 ms, which is the shell's own process cost: the dev
+  server is a Node process, so Node is the instrument.
+
+**Built.**
+- `vite.config.ts`: `buildIdAtLoad`, a serve-only plugin whose
+  `transformIndexHtml` asks `buildId({ live: true })` for every page and
+  injects an inline script at the top of the head. The `define` stays, for
+  Vitest and as the page's fallback.
+- `src/buildId.ts`: the global's name, `atLoadScript(id)` (the script's
+  text, `<` escaped), `resolveBuildId(baked, atLoad)`, and `BUILD_ID`
+  reading the stamp first behind the DEV constant.
+- `tests/build-id.test.ts` (+4): the order of preference; the script run
+  as text against a fake window; an ID that tries to close the script
+  element; and the plugin taken from the real config (`command: 'serve'`),
+  serve-only, its stamp equal to what git says, asked in the test.
+
+**The exit.**
+
+| check | result |
+|---|---|
+| a production build pinned to `pin-113f-post`, before and after | `4e969d27…` over 32 files both times, the per-file lines identical; no `BUILD_ID_AT_LOAD` in `dist/` |
+| its control: the DEV gate planted open | `11646424…`; the index chunk and `index.html` differ, and the chunk holds the global's name once |
+| the test's control: the plugin planted out of the config | 1 of 11 fails, the plugin test, on `apply` |
+| the pane (`dev-preview`, a server started on the dirty tree at `ed1b99b`), before the commit | the stamp, the label, `<html data-build>` and `ready()` all `0.0.0+ed1b99b-dirty-dev` |
+| the commit (`d06ebc6`) lands under that server; a reload | all four read `0.0.0+d06ebc6-dev`, and the store's meta key is re-stamped with it; `/@vite/env` still holds `0.0.0+ed1b99b-dirty-dev`, so the stamp is what answered |
+| an untracked file planted; a reload | `0.0.0+d06ebc6-dirty-dev` |
+| the file removed; a reload | `0.0.0+d06ebc6-dev`; the label's box (1144, 694)–(1264, 708); no console errors |
+| the user's `:5173` server, by `curl`, after the commit | its HTML stamps `0.0.0+d06ebc6-dev`; its `/@vite/env` holds `0.0.0+ed1b99b-dirty-dev` |
+| an editor page (`/tools/run-config/`) | stamped too |
+| the cost on the server | `/` in 111–183 ms over 5 requests, against 2 ms for a request with no stamp |
+| `npm run probe -- …/drive-run.js --seed=7` at `d06ebc6` | exit 0, log `a59ee48f` (12 battles, 46 commands); `build: 0.0.0+d06ebc6` (a build: no stamp, no `-dev`) |
+
+3204 tests in 216 files (+4). The fuzz smoke did not fire.
+
+**A finding from the controls: a running dev server kept the planted
+config.** The two controls were planted together (the gate in
+`src/buildId.ts`, the plugin out of `vite.config.ts`) and reverted
+together. After the revert the user's `:5173` server served HTML with no
+stamp, while a fresh server on the same tree stamped; a `touch` of
+`vite.config.ts` brought the stamp back on `:5173`. Both files are config
+dependencies, so each edit restarts a dev server; the inference (not
+watched) is that the server restarted on the first of two back-to-back
+edits and missed the second. So a control planted in the config or a file
+it imports reaches every running dev server, and its revert isn't done
+until the server's own HTML has been read. `process/browser-pane.md` has
+the line; a papercut is filed.
+
+**Not verified:** Firefox (the user's read); the drift after a hot-swapped
+stylesheet; a tree with no git on the dev server (the plugin would stamp
+`nogit-dev`, by `buildId`'s pinned form). The 140 ms could be halved by
+running the two git calls side by side; left alone, since it is a dev page
+load only and `commitStamp` is shared with the recorder.
+
+**The read** (`stop`, the user's): on the long-running `:5173` server, in
+Firefox, reload character select. The label reads `0.0.0+<HEAD>-dev` for
+the commit `git log -1` names, with `-dirty` only while `git status` lists
+something. Wrong is an older commit, or `-dirty` over a clean tree. No
+restart by hand is needed: the server restarted itself when
+`vite.config.ts` changed.

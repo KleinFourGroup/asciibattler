@@ -1870,3 +1870,27 @@ production build shows.
   shows the version and seven hex digits, small, in a corner; wrong is a
   label over the cards or the chips, one that ignores the text-scale
   token, or `-dirty` on a clean build.
+
+### The §113 shape-lock (2026-10-01, the user's) — SIGNED
+
+Signed at 10:17 as proposed: six steps, five `none` and one `batch` (113f),
+with no `stop`. All six calls ✅ DECIDED at the session's lean: one key per
+section; the fingerprint by the type checker if step zero measures it at a
+few seconds or less, else by shapes from driven runs; the ESLint rule and
+its twin on `npm test`; the ID on character select until §116's menu; the
+itch leg deferred to §116's sitting ("I'm happy to defer it!"), which
+re-scopes the phase's exit to the web and Electron; the two-tab lock at
+§115. ROADMAP §113 carries the cut and the re-scoped exit, and §115 and
+§116 each carry their item.
+
+The context handoff number is **400k for this session, with the hour
+clock**, as at §112: the session pauses for the meter at the first step
+boundary after 11:17, or mid-step if one step runs an hour.
+
+The user asked what "Node's `localStorage` being broken" meant and whether
+a version needs updating. No: the game's store runs in a browser or in
+Electron, never in Node. Node runs the tests and the fuzz tools, and Node
+25 defines a `localStorage` global of its own there, which holds nothing
+usable unless Node is started with a storage file. The finding only rules
+out one way of writing the adapter's choice (asking whether the global
+exists), since that test would pass under `npm test`.

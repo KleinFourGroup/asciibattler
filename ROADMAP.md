@@ -13,9 +13,8 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §112 ✅ CLOSED 2026-10-01** (the pane probe kit and the Electron
-runner). **§113, the store and the build ID, is at its kickoff:** the
-audit is in WORKLOG §113 and the cut is proposed, its shape-lock open
-(2026-10-01). The round was spike-first,
+runner). **§113, the store and the build ID, is IN FLIGHT** (its cut
+signed 2026-10-01). The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
 each cut at its own kickoff. The charter, the decision points, the exit and
@@ -95,12 +94,24 @@ synchronously at boot by the first static import (spec D1); the
 `BUILD_ID`, the version scheme, and the save-rejection rule with its
 structure-fingerprint guard (D2). **Why here:** the keystone; every later
 phase writes through it. **Risk:** medium (the most-depended-on model
-left). **Decision points:** the section and key layout; the size budget
-waits on §114's measurement. **Exit:** the store round-trips in all three
-shells, with a throwing store and a fresh profile as its controls; the
-ESLint guard fails on a planted import from `src/sim`; the build ID is
-baked and shown; the fingerprint test fails on a planted shape change
+left). **Decision points:** the section and key layout ✅ DECIDED
+2026-10-01 (one key per section; WORKLOG §113); the size budget waits on
+§114's measurement. **Exit:** the store round-trips on the web (the dev
+server and the production build) and under Electron, with a throwing store
+and a fresh profile as its controls (the itch leg moved to §116's sitting,
+the user's call 2026-10-01); the headless guard, D1's ESLint rule and its
+twin on `npm test`, fails on a planted import from `src/sim`; the build ID
+is baked and shown; the fingerprint test fails on a planted shape change
 without a bump. **Scope guards:** its consumers are seams only.
+
+The cut (signed 2026-10-01; the audit and the six calls: WORKLOG §113):
+
+- [ ] **113a** — the build ID: one function (the version, the short commit, `-dirty`) shared by `vite.config.ts`'s `define` and the recorder's `openTree`; a module that exports it, with a named fallback where nothing baked it; an environment variable that pins it. Exit: a built bundle carries the ID git gives, read from `dist/`; a planted uncommitted change builds `-dirty`; two pinned builds are byte-identical; a recorder worktree stamps clean. Read `none`.
+- [ ] **113b** — the store's core, headless (`src/store/`): sections with their own versions, the two read policies, a memory adapter, a status that reads "can't save" and never throws. Exit: planted cases on both sides of each policy (an unknown key dropped, a missing one defaulted, a bad value reset alone; a stale strict section rejected with the lenient ones untouched); a throwing adapter on read and on write. Read `none`.
+- [ ] **113c** — the three adapters and the boot read: the web adapter (proven by a round trip, never by `typeof`), the Electron adapter over `window.shellStore`, the choice; the store as `main.ts`'s first static import, with a pin that its import graph reaches no catalog. Exit: the round trip in the pane on the dev server and on the production build, read back from `localStorage` itself; under Electron across two launches of one profile, a fresh profile reading empty; a planted throwing store boots the game and reads "can't save". Read `none`.
+- [ ] **113d** — the headless guard: D1's ESLint rule and its twin on `npm test`. Exit: both fail on a planted import of the store from `src/sim`; the twin keeps a planted control in the suite. Read `none`.
+- [ ] **113e** — the save's fingerprint and the rejection rule: a test pins `RunSnapshot`'s structure beside its version (by the type checker if step zero measures it at a few seconds or less, else by shapes from driven runs); the run slot's strict read rejects a stale or unreadable save and leaves settings and progress alone; the message's key and English text (shown, and read, at §115). Exit: the test fails on a planted shape change in a nested optional field without a bump, and passes with the bump and the re-pin; a planted v45 slot reads as rejected. Read `none`.
+- [ ] **113f** — the ID, shown: the corner label on character select; `__probe.ready()`'s report carries the build and the store's status. Read `batch` (at the next stop, else §114's kickoff): character select shows the version and seven hex digits, small, in a corner; wrong is a label over the cards or the chips, one that ignores the text-scale token, or `-dirty` on a clean build.
 
 ## Phase 114 — the run journal and its export
 
@@ -130,6 +141,8 @@ driver and the continuation check green; a run saved at any gate reloads
 byte-faithfully; a stale save rejected with its message. **Scope guards:**
 no manual saves, no mid-battle save, no migrations.
 
+**Carried from §113** (WORKLOG §113, call 6): the two-tab lock lands here, with the run slot's first writer. `navigator.locks` exists on the dev page; Electron and itch's iframe are unmeasured.
+
 ## Phase 116 — the menu and settings
 
 Charter: the title menu as the boot screen (spec D6) and the settings
@@ -143,6 +156,8 @@ UI, checked against DESIGN §UI idioms and §Input accessibility).
 boots first and the dev entry points skip it; the palette passes its
 numeric check and the user's eye. **Scope guards:** no music slider, no
 achievements row, no camera row.
+
+**Carried from §113** (WORKLOG §113, call 5): the itch leg of the store's round trip is taken at this phase's sitting, where a setting is there to watch persist.
 
 ## Phase 117 — Escalation and the unlock mechanism
 

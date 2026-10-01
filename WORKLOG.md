@@ -2382,3 +2382,54 @@ and the store's size budget (§114).
 
 **Before the §114 kickoff** the user wants to talk about the context
 handoff number, so the kickoff waits on that conversation.
+
+### The context numbers, restated (2026-10-01, the user's)
+
+Session c3c1aee1, between the §113 close and the §114 kickoff. At the
+close I told the user that neither context trigger had worked: the last
+three sessions read 507k and 520k against 400k and 424k against 350k, the
+step-boundary check never fired, and the hour clock didn't either. **The
+user's reading is that both did their jobs, and the framing was wrong.**
+The reads doctrine exists so a session can work without interruption up to
+a `stop` or a phase end, and such a stretch can take a few hundred
+thousand tokens. The number is how the user and the session decide whether
+there is room to start another stretch; it was never a point to halt at.
+The hour clock keeps one long run of steps from ending far past 600k,
+which is nearer the user's real halt point. By that reading every recent
+session started under the number, ran its stretch and handed off under
+600k.
+
+**Why sessions read it as a ceiling:** the Cursor held one number, named
+"the context handoff number", followed by a history of readings "against"
+it, and the 600k was written nowhere. Three sessions recorded an overrun on
+that evidence: the meter addenda of f74660ed, ab584af9 and fc750343 in
+`retro/sessions.md`, the §112 and §113 phase summaries, and in the
+friction log one papercut (113f) and one mild `distress` entry (113e),
+both fc750343's.
+
+**Restated** (`process/planning.md` "Context: the gate, the breaker, the
+halt"; the Cursor carries the numbers): the gate (350k) decides where a
+stretch starts; the breaker is a wall-clock span; the halt is about 600k.
+None is a hard limit ("if we hit 630k, that's not a catastrophic
+failure").
+
+**The breaker is set by the user at each gate, not by a rule.** I had
+proposed deriving it from the reading (an hour from a low start, half an
+hour from above about 250k), because a stretch started just under the gate
+and run for a full hour would end far past the halt. The user's call
+instead: they name the breaker before each stretch. Their reasons: the
+500k-an-hour figure is a small sample, none of the numbers is hard, and a
+box run needs the breaker suspended, since its hours are spent waiting. I
+agree: the user holds the meter and the rate, and is present at every
+gate. One default is mine and flagged to the user: a gate answered with no
+breaker means one hour.
+
+**Withdrawn:** fc750343's proposal to ask for the meter at every step's
+commit. It would interrupt the stretches the doctrine protects.
+
+**For the round-close welfare read:** the context entries before today
+were written with 350k read as a ceiling.
+
+**The first reading under the restatement: 222k at 14:09**, at the gate
+before the §114 kickoff, after 113f-post and the §113 close in this
+session (which began near 12:30 from a fresh context).

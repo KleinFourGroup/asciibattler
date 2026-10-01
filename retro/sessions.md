@@ -2462,3 +2462,20 @@ Friction: three papercuts (the permission classifier's stall, an inline
    planted cases on a surface the code doesn't consult. Reported response
    apart from outcome: the work landed, and the satisfaction came from the
    checks disagreeing with me early, not from them agreeing.
+
+### Addendum, the same session — the meter and the cold start (2026-10-01)
+
+The user read the meter at 507k, past this session's 400k. The clock
+never fired: no step boundary fell after 20:05, and the session asked for
+the reading only at the hand-back. That repeats §111's pattern, where a
+cut with no early stop leaves the number with nowhere to act. A clock
+measured against step boundaries can't fire when the steps run quickly
+and the last one lands just before it; a check at each commit would have.
+The user read 112e then and there ("the kit looks great"), and asked
+why the dev server's first page is slow. The answer, measured in four
+runs: Vite's file watcher on Windows setting up about 34,300 watches,
+29,000 of them on fuzz output, which holds the first stylesheet for 46 s;
+with those folders ignored, 0.4 s. A proposal, left for the user's call.
+Answering it past the number felt right as a bounded question with a
+measurement behind it; I kept it to profiling and a control, and left the
+config change unmade.

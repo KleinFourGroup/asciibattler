@@ -1655,4 +1655,33 @@ Cursor, "Checked at the Round 8 close").
 **The read** (`batch`, at §113's kickoff): `process/browser-pane.md`'s
 first section is the kit, and each trap it holds is a line of API, not a
 tip. Wrong is a held trap still written as a tip, or a tip dropped for a
-trap it doesn't hold.
+trap it doesn't hold. **✅ READ 2026-10-01** (the user, earlier than
+planned, at the hand-off): "the kit looks great".
+
+### The dev server's cold start, measured (2026-10-01, the user's question)
+
+The user asked why the dev server's first page takes 20–40 s when a
+release build doesn't. Measured through Vite's own API on a spare port
+(scratch scripts; one module at a time, so each time is its own):
+- **One module holds it all:** a cold crawl of `main.ts`'s 280-module
+  graph took 49 s, of which `/src/fonts.css` took 48 s; `main.ts` took
+  759 ms and every other module milliseconds. Warm, the whole graph takes
+  44 ms. The dependency cache was not rebuilt between starts (its
+  `_metadata.json` was last written when `vite.config.ts` changed).
+- **It is the first stylesheet, not that one:** `ui.css` after it took
+  21 ms. A CPU profile of that first transform put 39.2 of 45 s in
+  `FSWatcher` (`fs.watch`): Vite's watcher setting up a watch per file and
+  folder at startup, which the first CSS transform waits behind. A build
+  runs no watcher, hence no delay in release builds.
+- **What it watches:** about 34,300 files, which is everything except
+  `.git` and `node_modules`. Of those, 28,578 (1,751 folders) are in
+  `output/` and 4,661 in `tests/fuzz/output/`, against 408 in `src/`.
+- **The control:** with `server.watch.ignored` set to `**/output/**` and
+  `**/tests/fuzz/output/**` (passed inline, the config untouched), the
+  first stylesheet took 431 and 415 ms on two cold starts; as configured
+  today, 46,591 ms.
+
+**Proposed** (open, the user's call): those two patterns in
+`vite.config.ts`'s `server.watch.ignored`. The cost is that a change
+inside them no longer reloads a page; nothing the dev server serves
+imports from them, and a `fetch` of a file there still works.

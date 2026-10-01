@@ -2877,3 +2877,60 @@ real page; the tool's rule for it is tested on a planted ID) and an order
 sent through the battle's own controls. Both are pane work and ride 114d.
 
 **Counts.** Main 3238 → 3253 (220 → 221 files); typecheck clean.
+
+**After the commit, on the clean tree** (`ee7798b`): the seed-7 drive in
+the runner again logs `a59ee48f` and reports `1b400634`; its journal is
+stamped `0.0.0+ee7798b`, and `npm run replay` takes it unforced, with no
+warning, exit 0.
+
+### 114d — finished journals in the store (2026-10-01) — read `none` ✅
+
+**Step zero.** The store's strict sections are what the cut assumed (✔
+`store.ts:265-291`: a strict read is `empty`, `ok` or `rejected`, a write
+replaces the section, nothing throws, and a locked store reads `empty` and
+writes `false`). `Game` did not import the store before this step; the
+boot module must not import the new section, since it knows the journal's
+shape (`tests/store-boot.test.ts` holds that).
+
+**Built.** `src/store/journals.ts`: the strict `journals` section, a list
+of journals oldest first, at its own version 1.
+- **The cap is characters of the list's JSON text** (what `localStorage`
+  counts), `JOURNALS_BUDGET` = 1,000,000: the newest that fit together are
+  kept and the oldest dropped first. A journal that alone exceeds the
+  budget is not kept.
+- **`Game` keeps a journal when its run reaches its end** (defeat or
+  victory). An abandoned one is not kept (a call made here: the cut says
+  "at a run's end", and before §116's menu the only abandon is the DEV
+  load). The game still holds it until the next run starts.
+- **A rejected section starts the list over** at the next finished run (a
+  call made here: unlike the run slot, these are records to send in, not
+  progress to protect).
+
+**Exit.**
+- **Headless** (`src/store/journals.test.ts`, 8 tests over the memory
+  adapter, the stored text read from the adapter's map): the envelope and
+  the order; **a planted section over the cap loses its oldest** at the
+  next finished run; the budget's edges to the character; a journal alone
+  over the budget; a rejected section (another version, not a list, a list
+  of non-journals, not JSON) starting over; a store that can't save
+  returning false and writing nothing.
+- **In the pane** (`dev-preview`, the clean tree at `e81aa2f`, the page's
+  build `0.0.0+e81aa2f-dev`):
+
+  | check | result |
+  |---|---|
+  | `seed=7&character=soldier` driven to defeat | `a59ee48f` / `1b400634`, the Electron runner's two hashes |
+  | `localStorage['asciibattler:journals']`, read from storage itself | an envelope at v 1 with one journal of 4,945 characters, equal to `__probe.journal()` |
+  | that journal's text copied to a file (its SHA-256 equal to the page's) and `npm run replay` | exit 0, unforced: the `-dev` ID is accepted on its commit; hash `1b400634` |
+  | an order through the battle's own controls (`seed=7&hops=3`): the hold hotkey during the countdown, the stop hotkey after 30 frames | `order` at tick 1 with the world still at tick 0 (the parked drain), `order` at tick 59 (the tick's own drain); the run's journal replays to the page's `4bbf3daf` |
+  | a section planted over the cap (three 400 KB journals, 1,200,620 characters), then that run ending | the oldest gone, the list `102, 103, 7` at 803,266 characters; the store still `canSave` |
+  | `?store=deny` (`seed=7&hops=2`) driven to its end | victory after 6 battles, no page error, no error in the console; the store `memory` / can't save; `localStorage` unchanged; the game still holds the finished journal (`7184f66e`, the page's hash) |
+
+  This also closes the two checks 114c left: a journal from a dev-server
+  page, and orders sent through the battle's own controls.
+
+**Still soft:** the budget's number. It waits on a played run's bytes and
+Firefox's storage limit (the signed call 5), and both are the user's to
+supply at the 114e read.
+
+**Counts.** Main 3253 → 3261 (221 → 222 files); typecheck clean.

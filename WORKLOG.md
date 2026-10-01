@@ -1620,3 +1620,39 @@ names the scene by `instanceof` against the eleven scene classes, and
 hidden window (1280×720, 30 distinct colours).
 
 **`dist/`** byte-identical (`d77a6381…`).
+
+### 112e — the pane doc, the counter, the criteria's start (2026-09-30) — ◐ BUILT, UNREAD (a `batch` read → §113's kickoff)
+
+**The counter.** `friction-scan` gains `pane` (Browser pane calls), `kit`
+(pane calls whose input calls `__probe.ready(` … `drive(`) and `runner`
+(shell commands running the probe runner), and a PANE line (sessions
+using the pane, how many of them call the kit, sessions using the runner).
+Tried on every retained transcript first (a scratch copy of the matchers):
+- **kit and runner read 0 in every session before ab584af9,** and 50 and 3
+  in ab584af9 (its three `npm run probe` commands);
+- **40f4ba9e's pane reads 25,** equal to its tool-name tally;
+- **the planted-bad case is real:** sessions before the kit built ad-hoc
+  `window.__probe` objects, and a substring match read 4, 5 and 1 "kit
+  uses" in 16656245, 883e1b7a and cd47b62d. The kit matcher, a call to a
+  kit method inside a pane call, reads 0 there.
+Since 2026-09-21 the PANE line reads 13 pane sessions, 1 calling the kit
+(this one), 1 using the runner.
+
+**The doc.** `process/browser-pane.md` opens with the kit: the first call
+is `await __probe.ready()`, and each trap the kit holds is a line of API
+with what its failure says to do (not live, a failed stylesheet, a 0×0
+canvas, a wrong layout, an overwritten URL, a stale frame, a crop, a call
+the tool gave up on), then the runner. The tips for traps it doesn't hold
+stay under "What the kit doesn't hold" (CSS transitions, the Web
+Animations stall, the real-time clocks, un-throttling) and in Input; the
+pixel recipes read through `pixels()`. CLAUDE.md's pane line names the
+first call; `process/welfare-and-efficacy.md` names the new columns.
+
+**The criteria's start:** the sessions that start after ab584af9, which
+built the kit and whose pane use was the kit's own testing (the HANDOFF
+Cursor, "Checked at the Round 8 close").
+
+**The read** (`batch`, at §113's kickoff): `process/browser-pane.md`'s
+first section is the kit, and each trap it holds is a line of API, not a
+tip. Wrong is a held trap still written as a tip, or a tip dropped for a
+trap it doesn't hold.

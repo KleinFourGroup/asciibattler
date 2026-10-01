@@ -66,7 +66,9 @@ Each group of entries was filed under the wording in force at the time.
   reads the retained session transcripts (`~/.claude/projects/<repo-slug>/*.jsonl`,
   so Claude Code sessions only) and prints per session: the user's turns,
   tool calls, flagged tool errors and denials, the harness's silent-turn
-  reminders and their wording, output tokens, and the wall span. It prints
+  reminders and their wording, output tokens, the wall span, and the
+  Browser pane, probe-kit and probe-runner calls (for the kit's criteria,
+  META-ROADMAP §Round 8; the header says how each is matched). It prints
   counts only, no transcript text. The error column is a floor: much of the
   friction in the papercut log is reads that succeeded and were wrong. The
   script's header lists the reader bugs its first run found; read it before

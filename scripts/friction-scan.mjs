@@ -47,6 +47,17 @@
 //  · Self-check before trusting a new column: the session count should
 //    equal the round's Claude entries in retro/sessions.md, and `human`
 //    should equal a transcript's enqueue count.
+//  · THE PANE COLUMNS (§112e, for the probe kit's criteria, META-ROADMAP
+//    §Round 8): `pane` counts Browser pane calls (`mcp__Claude_Browser__*`),
+//    `kit` those whose input calls the kit (`__probe.ready(` … `drive(`),
+//    and `runner` shell commands that run the probe runner (`npm run probe`,
+//    `probe-cli.mjs`, `--probe=kit`). The kit match is a CALL, not the name:
+//    sessions before the kit built ad-hoc `window.__probe` objects, and a
+//    substring match read 4, 5 and 1 "kit uses" in 16656245, 883e1b7a and
+//    cd47b62d. Checked at 112e on every retained transcript: kit and runner
+//    0 before ab584af9 (the session that built the kit, 50 and 3), and
+//    40f4ba9e's pane 25 equal to its tool-name tally. A pane session that
+//    skips the kit reads pane > 0 with kit 0.
 
 import fs from 'node:fs';
 import os from 'node:os';
@@ -71,13 +82,17 @@ const textOf = (content) => {
   return content.map((c) => (typeof c === 'string' ? c : (c.text ?? ''))).join('\n');
 };
 const DENIED_RE = /denied|doesn't want to proceed|permission|rejected/i;
+const PANE_RE = /^mcp__Claude_Browser__/;
+const KIT_RE = /__probe\.(ready|go|check|running|frame|pixels|hide|drive)\(/;
+const RUNNER_RE = /npm run (-s )?probe\b|probe-cli\.mjs|--probe=kit/;
+const SHELLS = new Set(['Bash', 'PowerShell']);
 
 const rows = [];
 const nudgeTexts = new Map(); // wording → { n, last }
 let unparsable = 0;
 for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
   if (exclude && file.startsWith(exclude)) continue;
-  const row = { id: file.slice(0, 8), first: null, last: null, human: 0, tools: 0, errs: 0, denied: 0, nudges: 0, errTools: {} };
+  const row = { id: file.slice(0, 8), first: null, last: null, human: 0, tools: 0, errs: 0, denied: 0, nudges: 0, pane: 0, kit: 0, runner: 0, errTools: {} };
   const toolName = new Map();
   const tokens = new Map();
   for (const line of fs.readFileSync(path.join(dir, file), 'utf8').split('\n')) {
@@ -101,6 +116,11 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
         if (c.type !== 'tool_use') continue;
         row.tools++;
         toolName.set(c.id, c.name);
+        if (PANE_RE.test(c.name)) {
+          row.pane++;
+          if (KIT_RE.test(JSON.stringify(c.input ?? {}))) row.kit++;
+        }
+        if (SHELLS.has(c.name) && RUNNER_RE.test(String(c.input?.command ?? ''))) row.runner++;
       }
     } else if (rec.type === 'user') {
       const content = rec.message?.content;
@@ -133,7 +153,7 @@ for (const file of fs.readdirSync(dir).filter((n) => n.endsWith('.jsonl'))) {
 }
 rows.sort((a, b) => a.first.localeCompare(b.first));
 
-const COLS = ['human', 'tools', 'errs', 'denied', 'nudges', 'outTok'];
+const COLS = ['human', 'tools', 'errs', 'denied', 'nudges', 'pane', 'kit', 'runner', 'outTok'];
 const topErrors = (row) =>
   Object.entries(row.errTools)
     .sort((a, b) => b[1] - a[1])
@@ -159,5 +179,10 @@ if (csv) {
   }
   console.log(
     `TOTAL  human ${sum('human')} · tools ${sum('tools')} · err ${sum('errs')} (${rate}% of calls) · denied ${sum('denied')} · nudges ${sum('nudges')} · outTok ${sum('outTok')} · unparsable lines ${unparsable}`,
+  );
+  const paneSessions = rows.filter((r) => r.pane > 0);
+  console.log(
+    `PANE   sessions using the pane ${paneSessions.length} · of those calling the kit ${paneSessions.filter((r) => r.kit > 0).length} · ` +
+      `sessions using the runner ${rows.filter((r) => r.runner > 0).length}`,
   );
 }

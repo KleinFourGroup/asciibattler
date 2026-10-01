@@ -43,7 +43,8 @@ in AGENTS.md, which other harnesses read too.
   `window.__game` is the top-level `Game` (`__game.world` is `"none"`);
   during a battle the live sim is `__game.activeScene.world`. For logic,
   a headless test is still the better instrument. Before any pane verify, read
-  [process/browser-pane.md](process/browser-pane.md).
+  [process/browser-pane.md](process/browser-pane.md); a pane session starts
+  with `await __probe.ready()`.
 - **The preview hook** asks for a browser verify after every Write,
   including headless tests and scratch files. Follow it only when the change
   is observable in the pane.

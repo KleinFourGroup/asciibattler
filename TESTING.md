@@ -8,7 +8,7 @@ How we keep the simulation honest. Companion to `DESIGN.md`, `ARCHITECTURE.md`, 
 - **`src/sim`** — `World`, `Unit`, `Pathfinding`, `Targeting`, `archetypes`, behaviors. The whole point of the determinism contract.
 - **`src/run`** — `NodeMap`, `Recruitment`, `Run`. Generation is seeded, so the same seed must produce the same map / offers.
 - **`src/dev`** — the DEV-only trace tooling's pure logic (`TraceRecorder`, 53b; its `configHash` is tested in `src/config`). Co-located tests; the localStorage ring + `main.ts` wiring stay in the eyeball zone below.
-- **`src/journal`** — the run journal's recorder, over a synthetic bus and over whole gated runs (`tests/integration/journal.test.ts`, driven by `tests/journalDrive.ts`).
+- **`src/journal`** — the run journal's recorder, over a synthetic bus and over whole gated runs (`tests/integration/journal.test.ts`, driven by `tests/journalDrive.ts`), and its replay: a recorded run and its replay must leave the same `Run.toJSON()` bytes, and a journal with a command dropped, a tick moved or another config hash must not replay (`tests/integration/journal-replay.test.ts`, and `journal-replay-full.test.ts` for a run at the shipped length).
 
 ## What does NOT get tested here
 

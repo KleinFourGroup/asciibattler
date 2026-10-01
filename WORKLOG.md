@@ -2718,4 +2718,76 @@ another (the control that the comparison can fail).
 - **One run's numbers** (seed 7, `hops=3&character=soldier`, no orders): 10
   battles of 195–1004 ticks, a victory, 46 entries, 2,880 bytes of JSON.
 
-**Counts.** Main 3204 → 3221 (216 → 218 files); typecheck clean.
+**Counts.** Main 3204 → 3221 (216 → 218 files); typecheck clean; the
+hook's fuzz smoke 582 green at the commit (`e6d35de`).
+
+### 114b — the headless replay (2026-10-01) — read `none` ✅
+
+**Step zero.** The premise holds as cut: `replayTrace` is the per-battle
+rule (✔ `replayTrace.ts:91-120`, an order enqueued before its effective
+tick, the live clock's body with the draw at the cap), and the harness's
+`battle:started` handler is the World's construction (✔
+`harness.ts:511-549`). The replay is those two with the journal's entries
+in the strategy's place.
+
+**Built.** `src/journal/replayJournal.ts`. Each segment replays on its own
+bus: the Run from the start (`runFromStart`: `parseRunConfig` on the dials,
+or `Run.fromJSON`, the gates on), a World per battle, each entry at its
+place, the final `snapshotHash` compared. Two errors: `JournalRefused`
+(another format or config hash, before anything runs) and
+`JournalDivergence`, whose message names the segment, the battle and the
+entry (`segment 0, battle 3, entry 23: the journal's battle ended player
+after 788 ticks, and the replay's ended player after 787`). A segment with
+no end replays as far as it goes. Which builds are accepted is left to the
+caller (114c's tool), since this module doesn't know the build it runs on.
+
+**Exit**, in `tests/integration/journal-replay.test.ts` and
+`journal-replay-full.test.ts` (17 tests). Every journal goes through JSON
+text first, as an exported file does.
+- **Record, replay, compare the Runs' `toJSON()` bytes**, over four runs
+  with orders at ticks 1 (parked), 6, 40 and 60 of every battle and a
+  `discardPacket` after tick 3 of every battle that starts with a packet:
+
+  | seed, dials | battles | end | entries | journal bytes | real discards |
+  |---|---|---|---|---|---|
+  | 7, `hops=3&character=soldier` | 9 | victory | 80 | 6,086 | 0 |
+  | 11, `hops=4&character=priest` | 11 | defeat | 97 | 7,430 | 3 |
+  | 23, `sectorHops=3&character=gambler` | 9 | defeat | 77 | 5,895 | 0 |
+  | 5, `character=soldier` (the shipped length) | 21 | defeat | 202 | 15,574 | 2 |
+
+  The last row's snapshot is 36,889 bytes, so the kickoff's "a snapshot is
+  larger than its run's journal" holds with four orders a battle.
+- **Also replayed to the same bytes:** a run abandoned in mid-battle; a
+  segment started from a snapshot (a run saved at the map after its third
+  battle, continued for three more), and the first half up to that
+  snapshot; a segment with no end.
+- **The controls**, each on seed 7's journal: the first `advanceTurn`
+  dropped (the message names the entry, "an order for tick 1, and the
+  replay is not in a battle"); an order dropped; an order moved from tick
+  6 to 30; a checkpoint's tick moved by one (names battle 3); the final
+  hash changed; another config hash and another format (both
+  `JournalRefused`).
+- **The abandoned end's tick is load-bearing, measured:** a run abandoned
+  one tick before its third battle's end has more rows in the fallen
+  ledger than the same run abandoned at tick 20, and its journal with the
+  end's tick moved to 20 fails on the final hash. (The first attempt
+  abandoned at tick 150 and moved it to 20: no unit had fallen by 150, and
+  the moved journal replayed. The control now checks its own premise.)
+- **Not observable in the bytes:** where among the ticks a mid-battle
+  `discardPacket` lands. The discard has no sim seam and the cache is not
+  read by the battle, so the replay placing it at another tick of the same
+  battle would end in the same state. The recorder's test pins the tick it
+  writes; the replay's use of it is checked only by the divergence rule
+  (the battle must still be going at that tick).
+- **The planted bad case:** with the replay enqueueing each order one tick
+  late, 11 of the 17 tests fail. Reverted.
+
+**Cost.** The replay tests sum to about 13.5 s, the shipped-length run 5.3 s
+of it. In one file `npm test` took 50.0 s against 37.2 s at 114a; with the
+shipped-length run in its own file (`journal-replay-full.test.ts`, so the
+two run side by side) it took 44.5 s. One sample each, so the split's gain
+is a direction and not a number; the suite is about 7 s slower than before
+this step, on every commit. Splitting the controls out as well is the next
+cut if that is too much.
+
+**Counts.** Main 3221 → 3238 (218 → 220 files); typecheck clean.

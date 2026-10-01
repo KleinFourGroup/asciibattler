@@ -1949,3 +1949,55 @@ decides what replay does with it (the lean: refuse it as it refuses
 **Not verified:** a tree with no git at all (the `nogit` form is pinned
 over a fake only); the ID on the dev server after a commit lands under it
 (the reason for `-dev`, reasoned, not planted).
+
+### 113b — the store's core, headless (2026-10-01) — read `none` ✅
+
+**Built** (`src/store/`): `store.ts` (`createStore({ adapter, build })`,
+the section types, the two policies, the status) and `adapter.ts` (the
+adapter's shape and a memory one). ARCHITECTURE's tree has the behaviour;
+what the cut didn't spell out, each inside its intent:
+- **The envelope is `{ v, build, data }`.** The signed layout said
+  `{ v, data }`; D2 stamps the build on the store and the saves, and the
+  envelope is where a section carries it.
+- **A read that throws makes the store read-only for the page's life.** A
+  store that falls back to defaults and then saves would write those
+  defaults over what it couldn't read.
+- **A strict rejection leaves the stored text in place** and returns it as
+  `raw`, because D2 keeps a rejected run's journal exportable. A strict
+  section brings its own `load`, so "the format changed" (the version) and
+  "loading it fails" (the loader throws) are one read with two reasons.
+- **A lenient section's version is written and never judged,** which is
+  what "no upload wipes a player's settings" needs; a field whose meaning
+  changes gets a new name.
+- **The meta key is rewritten only when missing or another build's,** so a
+  boot on the same build writes nothing, and `previousBuild` is null for a
+  new player.
+- **The store takes zod schemas but imports only zod's types,** so the
+  module that boots first has no runtime import beside the adapter.
+
+**The exit** (`store.test.ts`, 19; stored text is planted in and read back
+from the adapter's own map, never through the store):
+- **Lenient, both sides:** one stored section with a good value, a value
+  its schema refuses, a missing key and an unknown key reads as the good
+  value kept, the refused one at its fallback alone, the missing one at
+  its fallback, the unknown one gone; the read rewrites nothing, and the
+  next write stores the declared fields only. Six kinds of text that isn't
+  an envelope read as an empty section. Versions 1, 3 and 99 read the same.
+- **Strict, both sides:** absent is `empty`; current loads; a planted v45
+  under a v46 section is `rejected: stale` with `found: 45`, the text
+  untouched, and the settings beside it still read their stored values;
+  broken JSON and data the loader refuses are `rejected: unreadable`.
+- **A throwing adapter:** on read, the store is created, reads fallbacks,
+  says can't-save with the error's name, and calls the adapter's write 0
+  times across a patch, a strict write and a clear; on write, `patch`
+  returns false, the listeners hear it once, the value holds in memory,
+  and the next good write recovers; a write that rejects later arrives
+  through the status.
+- **The controls on the tests:** two faults planted together in
+  `store.ts` (the read-only rule removed; unknown keys kept) failed the two
+  tests written for them and no other (17 of 19 passing), and were
+  reverted.
+
+One slip of mine, caught by the first run: a test asserted the in-memory
+value after a `clear`, which had rightly reset it; the assertion moved
+above the clear.

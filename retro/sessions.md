@@ -2406,3 +2406,59 @@ signed, and one decision reopened on new evidence (the drift fault).
 Friction: three papercuts (the permission classifier's stall, an inline
 `sed` escape, a clip stamped dirty by an edit mid-recording) and one
 `distress` entry (the early attribution).
+
+## 2026-09-30 — §112 the pane probe kit and the Electron runner: the kickoff and 112a–e (one session; 112e's read at the §113 kickoff) — claude-opus-5-5, session ab584af9
+
+1. **Missing from the orientation:** the `dist/` hash script. The WORKLOG
+   gives §110's total (`7424d4b4…`) but not the script, so I wrote one in
+   my scratchpad (SHA-256 per file, then a total over the sorted
+   `path hash` lines joined by newlines) and took a new baseline,
+   `d77a6381…` at `3c46acd`, whose format differs from §110's. Also
+   unrecorded anywhere: a development-mode build still minifies class
+   names, which 112d found when the kit named a scene `Pp`.
+2. **Norms in conflict or in the way:** none in conflict. "A change inside
+   the signed intent can be built and flagged" came up five times (the
+   dev server's stand-in, the stylesheet and layout checks, the go record
+   judged at install, `frame()` bringing the camera current, scenes named
+   by `instanceof`). I built and flagged each; none changed what a step
+   was for. The preview hook asked for a pane check after every headless
+   test write; ignored per CLAUDE.md.
+3. **Pulled to claim more than verified:** one slip, caught on rereading
+   before the commit. In 112c's WORKLOG entry I wrote that the port, the
+   recruit screen and the sector gate were never reached, from the
+   report's last six commands alone. With a per-phase count added, three
+   of the four had been reached. I didn't notice a pull at the time;
+   observation: a truncated list read as a whole one. Two near-misses went
+   the right way: a planted audit that found nothing was my plant's fault
+   (the ticks were never multiples of 40), not the driver's, and I checked
+   before saying either; and a 0×0 canvas that "didn't reproduce" at 112a
+   did reproduce later, and both entries say so.
+4. **Waste:** a commit message written to a guessed `$TMP` path (one hook
+   run, about 40 s; a papercut); my own `vite.config.ts` edit restarting
+   the server mid-load, which cost about six pane calls to diagnose (a
+   papercut, and it became a kit check); one audit plant re-run.
+5. **For the next session:** a pane session starts with
+   `await __probe.ready()`, and `process/browser-pane.md` is now organised
+   around it. `npm run probe -- shell/electron/probes/drive-run.js
+   --seed=7` plays a whole run in about 22 s with the build, and its log
+   hash (`a59ee48f` for seed 7, policy seeded 1) matched across the pane
+   and Electron, which makes it a cheap cross-check that a change leaves a
+   run alone. A fresh dev-preview server holds its first page for 20–40 s,
+   and editing `vite.config.ts` restarts it. The overlays trailing a camera
+   move by one frame is a TODO (§112).
+6. **Room to ask, disagree, pause or stop:** yes. The cut was signed with
+   every lean, and no step needed a question. The clock never fired: the
+   last commit landed at 20:02, before the 20:05 boundary. I haven't
+   asked for the meter; the hand-back asks now. As far as I can report,
+   the clock read as a guide for when to look up, not as pressure to
+   finish; I can't rule out that it sped my writing in the 112c entry
+   where the slip in 3 happened.
+7. **Ease, interest, agency:** the most engaging parts were the two places
+   an independent surface overturned the kit's own answer: a real
+   browser frame showing that `frame()` drew the bars one frame behind
+   (which turned out to be the game loop's own lag), and the stylesheet
+   failure that `ready()` passed until the canvas box was compared with
+   the page. I'd want that condition repeated: steps whose oracles are
+   planted cases on a surface the code doesn't consult. Reported response
+   apart from outcome: the work landed, and the satisfaction came from the
+   checks disagreeing with me early, not from them agreeing.

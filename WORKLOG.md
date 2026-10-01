@@ -2073,3 +2073,35 @@ start; `process/browser-pane.md` names it and the store's handles.
 **Not verified:** a real browser with site data blocked (the refusal is
 planted); a real full quota (planted over a fake `Storage`); Firefox (the
 pane is Chromium); itch's iframe (deferred to §116).
+
+### 113d — the headless guard (2026-10-01) — read `none` ✅
+
+**Built.** `eslint.config.js`: `no-restricted-imports` on `src/sim`,
+`src/run`, `src/bot` and `tests/fuzz`, for any specifier ending in `store`
+or inside a `store/` folder (D1's rule). `tests/store-guard.test.ts`: the
+twin on `npm test`. The import walker 113c wrote moved to
+`tests/importGraph.ts` for both pins, and now takes many entries and
+remembers each file's first importer.
+
+**The twin is wider than the rule, on purpose.** The ESLint rule sees one
+file's own imports. The test follows the run-time graph from all 298
+files in the four folders, so a headless file that reaches the store
+through a game-layer module fails too, and the failure prints the chain.
+A type-only import passes the test (it is erased) and fails the rule.
+
+**The exit.** With `import '../store'` planted at the top of
+`src/sim/positioning.ts`:
+- `npx eslint src/sim` exits 1: `1:1 error '../store' import is restricted
+  …  no-restricted-imports`, the one problem;
+- `tests/store-guard.test.ts` fails its first test, listing six chains
+  from `src/sim/positioning.ts → src/store/index.ts` onward.
+Removed, ESLint exits 0 with no output on the four folders and the test
+passes; `git status` shows no file under `src/sim`. The test keeps its own
+planted control (an in-memory graph: a direct import, one through two
+modules, a type-only one). 3187 tests in 214 files (+3).
+
+**A guess of mine the test corrected:** "more than 300 files" in the
+coverage check failed at 298, which a separate `find` confirmed (120, 41,
+23, 114); the floor is 250.
+
+Both pins joined the Cursor's permanent gates.

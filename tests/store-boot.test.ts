@@ -1,83 +1,16 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { posix } from 'node:path';
-import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import { repoRead, runtimeGraph, runtimeSpecifiers, type Read } from './importGraph';
 
 // 113c — THE STORE BOOTS FIRST, and reaches no catalog.
 //
 // The store has to be read before any module that bakes from it: the
 // catalogs resolve their prose through the locale as they load, and modules
 // evaluate in import order. Two things hold that, and both are pinned here on
-// the source text, the surface a bundler follows:
+// the source text, the surface a bundler follows (importGraph.ts):
 //   1. `./store` is main.ts's first import;
 //   2. nothing the store's module graph reaches at run time lies outside
 //      `src/store/` and `src/buildId.ts`, and it imports no package.
 // A type-only import is erased and doesn't count.
-
-type Read = (path: string) => string | undefined;
-
-const repoRead: Read = (path) => (existsSync(path) && statSync(path).isFile() ? readFileSync(path, 'utf8') : undefined);
-
-/** The specifiers `source` imports at run time, in order. */
-function runtimeSpecifiers(source: string, fileName: string): string[] {
-  const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.ES2022, true);
-  const out: string[] = [];
-  const visit = (node: ts.Node): void => {
-    if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
-      const clause = node.importClause;
-      const named = clause?.namedBindings;
-      const everyNameIsAType =
-        clause !== undefined &&
-        clause.name === undefined &&
-        named !== undefined &&
-        ts.isNamedImports(named) &&
-        named.elements.length > 0 &&
-        named.elements.every((e) => e.isTypeOnly);
-      if (!(clause?.isTypeOnly ?? false) && !everyNameIsAType) out.push(node.moduleSpecifier.text);
-    } else if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      if (!node.isTypeOnly) out.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-      node.arguments[0] !== undefined &&
-      ts.isStringLiteral(node.arguments[0])
-    ) {
-      out.push(node.arguments[0].text);
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(file);
-  return out;
-}
-
-/** A relative specifier's file, as the bundler resolves it. */
-function resolve(from: string, specifier: string, read: Read): string {
-  // A Vite query (`./pass.glsl?raw`) names the same file.
-  const base = posix.join(posix.dirname(from), specifier.split('?')[0] ?? specifier);
-  for (const candidate of [base, `${base}.ts`, `${base}/index.ts`]) {
-    if (read(candidate) !== undefined) return candidate;
-  }
-  throw new Error(`${from} imports '${specifier}', which resolves to no file`);
-}
-
-/** Every file reached at run time from `entry`, and every package imported on the way. */
-function runtimeGraph(entry: string, read: Read): { files: string[]; packages: string[] } {
-  const files = new Set<string>();
-  const packages = new Set<string>();
-  const walk = (path: string): void => {
-    if (files.has(path)) return;
-    files.add(path);
-    if (!path.endsWith('.ts')) return;
-    const source = read(path);
-    if (source === undefined) throw new Error(`no file ${path}`);
-    for (const specifier of runtimeSpecifiers(source, path)) {
-      if (specifier.startsWith('.')) walk(resolve(path, specifier, read));
-      else packages.add(specifier);
-    }
-  };
-  walk(entry);
-  return { files: [...files].sort(), packages: [...packages].sort() };
-}
 
 const inside = (path: string): boolean => path.startsWith('src/store/') || path === 'src/buildId.ts';
 

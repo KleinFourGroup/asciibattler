@@ -38,4 +38,25 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // The persistent store is game-layer only (Round 8 spec D1): headless code
+    // must never write a player's store. This flags the direct import in the
+    // editor. The guard is tests/store-guard.test.ts, which follows the whole
+    // import graph on `npm test`, since the pre-commit hook doesn't run lint.
+    files: ['src/sim/**/*.ts', 'src/run/**/*.ts', 'src/bot/**/*.ts', 'tests/fuzz/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/store', '**/store/*'],
+              message:
+                'src/store is game-layer only: the simulation, the run model, the bots and the fuzz harness never import the persistent store.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 );

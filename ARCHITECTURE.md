@@ -491,6 +491,8 @@ tests/
   smoke.test.ts
   store-boot.test.ts         # 113c: the store boots first — `./store` is main.ts's first import, and the run-time import graph from src/store/index.ts is exactly its own folder plus src/buildId.ts, with no package (type-only imports are erased and don't count). The walker reads source text with the TypeScript parser; its controls: main.ts's graph reaches Game, the locale and the catalogs, and a planted catalog import is reported
   build-id.test.ts           # 113a: the build ID's forms over a fake git, one case against the real git, and the constant Vite baked for the test run
+  store-guard.test.ts        # 113d: HEADLESS NEVER REACHES THE STORE — the run-time import graph from every file under src/sim, src/run, src/bot and tests/fuzz (fuzz output excluded) reaches nothing in src/store, directly or through another module; a failure prints the import chain. Its controls: the walk covers each folder and leaves them, and a planted import is reported directly, through two modules, and not at all when type-only
+  importGraph.ts             # 113c/d: the shared walker — the run-time import graph read from source text with the TypeScript parser (`runtimeSpecifiers` · `runtimeGraph` from one or many entries, with the first importer of each file · `chainTo`); type-only imports don't count
   ui-tokens.test.ts          # 96a: the CSS token pins (palette.ts ⇄ ui.css :root at the same hex · zero raw hexes outside :root · zero palette-triplet rgba() · every role token referenced · 96b: every font-size a rem `--text-*` token, every token referenced) — the derived-artifact tripwire shape on the stylesheet
   ui-motion.test.ts          # 99b: the reduced-motion pins — every `animation:` selector in ui.css has its twin under `:root[data-motion='reduced']` (the selector derived from motion.ts), reduced keyframes carry no transform and never `infinite`, a non-`none` reduced form keeps the original duration (the `animationend` self-removers), no dead @keyframes, zero `@media (prefers-reduced-motion)` blocks
   ui-focus.test.ts           # 100b: the focus pins — every `:hover` selector in ui.css has its `:focus-visible` twin in the SAME selector list, the ONE ring rule at its pinned selector with a solid outline, `outline: none` only on the three containers (the two 96f modals + `.screen-fade:focus`) and never under `:focus-visible`, the map node's ring on box-shadow with no outline — a permanent gate
@@ -516,7 +518,7 @@ archive/                     # superseded roadmaps + feedback + phase worklogs
 index.html                   # Mounts <canvas> + <div id="ui">
 vite.config.ts               # 113a: `define` bakes `__BUILD_ID__` (scripts/build-id.mjs; live under `serve`); the dev-only plugins (the editors' save endpoint, the probe kit's stand-in); the watcher skips the output folders
 tsconfig.json
-eslint.config.js             # Flat config; bans Math.random() in src/sim and src/run
+eslint.config.js             # Flat config; bans Math.random() in src/sim, src/run and src/bot; 113d: bans importing src/store from those and tests/fuzz (the editor's hint; the guard is tests/store-guard.test.ts, since the hook doesn't run lint)
 .prettierrc
 ```
 

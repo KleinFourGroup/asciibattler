@@ -3042,3 +3042,58 @@ way"). **The end reading: 501k at 08:40 on
 started fresh, so 501k is what orientation and the stretch 114a–e cost
 together; no reading was taken at the stretch's start. Over the gate, so
 114f goes to a fresh session (the user's call).
+
+### 114f — the gate, and step zero's instrument (2026-10-02, session a8073201)
+
+A fresh session; pre-flight green at `27cfb3a` (223 files, 3264 tests,
+typecheck clean). **The gate: 104k at 10:00**, under 350k, so the stretch
+(114f alone) starts here; the breaker is one hour, due 11:00.
+
+**The instrument, before any switch** (`7e813b6`). §111's display test read
+the drift from the timeline's arithmetic (the page's clock against the
+file's frame count) and had one tone, 3 s in, before the switch. Two
+additions, so the display sitting is read from the file and carries what a
+retime would consume:
+- The check twin's tone repeats every 10 s, and the analyzer pairs the k-th
+  rise of the tone's band in the audio with the k-th rise of the ninth
+  marker square in the video (`check2.tones`). Known answers, the display
+  on: +7 ms at all seven tones of a corridors twin (§111f-post's reading of
+  the single tone), and +107 ms at all seven after the same file was
+  re-muxed with its sound 100 ms late.
+- The sidecar holds every page frame's time from the go frame and when main
+  received each written paint.
+
+**The harness** (the session's scratch directory, not in the tree): one
+recording per call, a check twin of corridors with `--countdown=skip`; a
+long-lived Windows PowerShell helper asks the display off
+(`SC_MONITORPOWER`, posted) and wakes it with a one-pixel mouse move,
+stamps both, reads the time since the session's last input at each (so
+input during the dark shows), and holds a hidden window registered for the
+console display's state, so each run records whether the display did go
+off and come back, and when; CPU and GPU use are sampled each second. The
+helper compiles under Windows PowerShell only (PowerShell 7 wants more
+assembly references for a `Form`). Tones through the speakers mark the
+stretches for the user (their proposal): a start and an end sequence
+around the stretch they are away for, and a warning and an all-clear around
+each switch while they work. The recorder takes its sound inside the page,
+so a tone from the speakers cannot reach a clip.
+
+**Two dry runs, the display on, the user at the desk:**
+
+| | CPU, mean / max over the fight | frames short | drift | tones | cues | page frame gaps, max | main's paint gaps over 25 ms |
+|---|---|---|---|---|---|---|---|
+| no planted load | 17 % / 30 % | 0 | −3 ms | +7 ms × 7 | 128 / 128 | 17 ms | 22 (max 143 ms) |
+| an 8-thread looping decode | 46 % / 64 % | 0 | −3 ms | +7 ms × 7 | 128 / 128 | 17 ms | 119 (max 115 ms) |
+
+- **The planted steady load is the 8-thread decode** (`-threads 8` on this
+  32-thread machine): alone it leaves a recording clean, where §111's
+  full-speed decode lost 322 frames with the display on and would bury a
+  switch's effect under its own.
+- **Main's paint times are not the page's frame times.** With a page clock
+  steady to 17 ms, main received 22 paints more than 25 ms after the one
+  before, and 119 under the load. A retime that read main's arrival times
+  would move frames that were on time.
+- The recorder's setup is 3.5 s from its "recording" line to the go frame,
+  so a switch asked 25.5 s after that line falls 22 s into the fight.
+- Windows' display idle timeout on AC is 900 s (`powercfg`), longer than
+  the stretch the user is away for.

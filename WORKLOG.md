@@ -3097,3 +3097,71 @@ so a tone from the speakers cannot reach a clip.
   so a switch asked 25.5 s after that line falls 22 s into the fight.
 - Windows' display idle timeout on AC is 900 s (`powercfg`), longer than
   the stretch the user is away for.
+
+### 114f — step zero, the display sitting (2026-10-02) — the `stop` is open
+
+Ten check twins of corridors (skip), 10:20 to 10:49, the tree clean at
+`9700e04`; the clips, sidecars and each run's `.display.json` are in
+`clips/114f/` with a copy of the harness (`clips/114f/harness/`). Each
+switch was asked about 22.6 s into the fight and the wake 25 s later.
+"Stall" is the page's frame gaps over 25 ms, summed over the slot; "left
+over" is the drift less the stall and less a slot per frame short.
+
+| run | CPU over the fight | the display's state, s from the go frame | page stalls (ms @ s) | frames short | drift | left over | sound to picture at each tone, ms | cues |
+|---|---|---|---|---|---|---|---|---|
+| desk, control | 20 % | on | none | 1 | 14 ms | −3 | 7 ×6, 23 | 128 / 128 |
+| desk, switch 1 | 31 % | 38 offs and 38 ons, 23.0 to 47.3 | 73, 13.75 s in all | 166 | 16.5 s | −3 | 24, 24, 241, 9008, 15458 | 114 / 128 |
+| desk, switch 2 | 30 % | 36 and 36, 23.2 to 47.5 | 68, 10.88 s | 148 | 13.3 s | −2 | 7, 7, 157, 9257, 12157 | 114 / 128 |
+| away, control | 17 % | on | none | 0 | −3 ms | −3 | 7 ×7 | 128 / 128 |
+| away, quiet 1 | 19 % | off 22.86, on 48.00 | 183 @ 22.65 · 50 @ 41.38 · 300 @ 47.66 | −2 | 447 ms | −3 | 7, 7, 173 ×3, 457 ×2 | 128 / 128 |
+| away, quiet 2 | 19 % | off 22.86, on 47.96 | 117 @ 22.71 · 167 @ 47.75 | 0 | 247 ms | −3 | 7, 7, 107 ×3, 257 ×2 | 128 / 128 |
+| away, load control | 42 % | on | none | 0 | −3 ms | −3 | 7 ×7 | 128 / 128 |
+| away, load 1 | 43 % | off 22.62, on 47.82 | 100 @ 22.48 · 283 @ 47.50 | 0 | 347 ms | −3 | 7, 7, 90 ×3, 357 ×2 | 127 / 128 |
+| away, load 2 | 43 % | off 22.80, on 47.88 | 217 @ 22.56 · 283 @ 47.56 | 0 | 465 ms | −2 | 7, 7, 207 ×3, 473 ×2 | 128 / 128 |
+| away, the lock | 19 % | off 14.19 (Windows, 60.7 s after the lock), on 39.51 | 183 @ 9.13 · 67 @ 14.11 · 267 @ 39.21 | 0 | 464 ms | −2 | 7, 174, 224 ×2, 474 ×3 | 128 / 128 |
+
+**What it says.**
+- **The drift is the page's stalls plus its unpainted frames, and nothing
+  else.** In all ten runs what is left over is −3 or −2 ms, the idle
+  reading. The tones, read from the file, step by each stall's length at
+  the tone after it, so the timeline's arithmetic and the file agree.
+- **One switch of the display is one stall at the off and one at the wake,
+  67 to 300 ms, with no frame unpainted, loaded or not.** Each stall begins
+  at the request (within about 30 ms where the session made it) and ends
+  within about 40 ms of Windows reporting the new state. The 8-thread decode changed nothing (100
+  to 283 ms against 117 to 300), so §111's reading that load turns a switch
+  into seconds of throttling does not hold at 43 % CPU.
+- **Windows' own switch behaves the same.** Locked, the display went off
+  60.7 s later: a 67 ms stall there, and a 183 ms one 5 s before it that no
+  display event accounts for. The wake stalled 267 ms. An injected mouse
+  move does wake a locked display.
+- **The 13 s case is an off request met by input, not load.** At the desk
+  Windows reported the display going off and on 38 and 36 times across the
+  25 s, the page stalled 68 to 73 times and 148 to 166 frames never
+  painted: §111's throttled run again (45 long frames, 142 unpainted). The
+  session's last input was 31 to 32 ms old at each request and 16 to 31 ms old at
+  each wake, and never older than 31 ms in a 10 s sample afterwards; with
+  the user away it was minutes old throughout. The user saw 25 s of
+  darkness both times and had the eye tracker paused, so the state changes
+  are not the panel's, and what sends the input is not known. Two things
+  differ between the desk runs and the away runs (input present; the
+  request sent to every window against one), so which one makes the storm
+  is not separated. §111's worklog does not say how its request was sent.
+- **A frame can go unpainted with no switch**, the user working: the desk
+  control lost one (14 ms).
+- **The long-frame log carries the realistic cases and not the storm.** In
+  the five single-switch runs it accounts for the drift to 3 ms. In the
+  storm it carries 13.75 of 16.5 s; the rest is unpainted frames, which
+  only knowing the page frame each paint shows can place.
+
+**Corrections to what the session told the user mid-sitting:** that they
+"probably saw flicker" (they saw darkness), and that the broadcast was "as
+in §111" (not on record).
+
+**Owed when the retime lands:** ARCHITECTURE's recorder paragraph and
+`faults.mjs` still say a switch costs "from 0.2 s to 13 s of throttled
+frames"; ROADMAP §114's carried note says the same of "a busier" machine.
+
+**THE STOP** is the retime's mechanism and what a held frame counts as; the
+proposal is in the session's message at the stop, and the decision lands
+below.

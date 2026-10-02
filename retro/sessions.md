@@ -2911,7 +2911,8 @@ Readings: none at the start (fresh, about 14:15); 352k at about 17:05,
 after the close and the kickoff's audit (the session idle from 14:36 until
 then); none at the end. The commits are `0a7ff11` (the
 close), `356bfd8` (the audit and the proposed cut), `b9a77c7` (the
-shape-lock's first part) and the one that carries this entry.
+shape-lock's first part), the one that carries this entry, and corrections
+to the entry after it.
 
 1. **Missing from the orientation:** little. The Cursor named the close
    and its procedure, and how a close is written I took from §113's

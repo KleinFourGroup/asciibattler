@@ -9,9 +9,11 @@
 //        [--switch=yes|no] [--off=one|all] [--warn=<s>] [--load=none|decode:<threads>]
 //        [--off-at=<s>] [--dark=<s>] [--lock=<s>] [--retime=off]
 //
-// --off=all sends the request to every window, as a broadcast: with input
-//   arriving (someone at the desk) the display's state then changes dozens of
-//   times, the hardest case a recording has met. --off=one asks one window.
+// --off=one asks one window to turn the display off; --off=all posts the
+//   request to every window. With input arriving (someone at the desk whose
+//   eye tracker keeps reporting) the display's state then goes off and on
+//   dozens of times under either, the hardest case a recording has met; with
+//   none it goes off once and stays off until the wake.
 // --retime=off records without the retime, the failing control.
 // --switch=no leaves the display alone (a control, and the dry run).
 // --warn=<s> plays the warn tone that long before the switch and the clear

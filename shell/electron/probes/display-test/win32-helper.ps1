@@ -1,7 +1,8 @@
 # The display test's Win32 side (114f): one long-lived process, so
 # the P/Invoke types compile once and each request is stamped closely.
 # Commands, one per line on stdin; one JSON line back for each:
-#   off              ask the display to turn off (SC_MONITORPOWER, 2)
+#   off              ask the display to turn off (SC_MONITORPOWER, 2), of one window
+#   off-all          the same, of every window
 #   on               wake it with a one-pixel mouse move, there and back
 #   idle             ms since the session's last input (GetLastInputInfo)
 #   events           the display's state changes seen so far (0 off, 1 on, 2 dimmed)
@@ -24,10 +25,10 @@ public static class Disp {
   [DllImport("user32.dll")] public static extern IntPtr RegisterPowerSettingNotification(IntPtr recipient, ref Guid setting, int flags);
 
   public static long Now() { return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(); }
-  // One window's default handler turns the display off once. A broadcast
-  // reaches every top-level window, and each turns it off again as it gets to
-  // the message: with input arriving, the display went off 38 times in 24 s (the desk
-  // stretch; that each late window is the cause is inferred, not shown).
+  // Off asks one window, whose default handler turns the display off; OffAll
+  // posts the same request to every top-level window. Which is used made no
+  // difference: with input arriving the display's state goes off and on
+  // dozens of times under either, and with none it goes off once.
   public static IntPtr Hwnd = IntPtr.Zero;
   public static void Off() { PostMessage(Hwnd, 0x0112, (IntPtr)0xF170, (IntPtr)2); }
   public static void OffAll() { PostMessage((IntPtr)0xFFFF, 0x0112, (IntPtr)0xF170, (IntPtr)2); }

@@ -3250,3 +3250,58 @@ user works still exits 1.
 control, a switch asked of every window, a switch asked of one; and a
 short away stretch for the quiet switch and the lock), then the user's
 call on the two open rules.
+
+### 114f — the display sitting, the retime on (2026-10-02) — the exit met
+
+**The two rules, confirmed** (the user, about 11:48: "Those two rules look
+good to me"): a freeze over 100 ms fails a clip, and frames short still does.
+**The reading: 372k at 11:48**, the breaker half an hour.
+
+Five check twins at `770f5c0` through the tracked harness
+(`clips/114f/sit-*`), 11:49 to 12:06:
+
+| run | the display's state, s from the go frame | input during the dark | page stalls | held | frames short | drift | sound to picture at each tone | cues |
+|---|---|---|---|---|---|---|---|---|
+| desk, control | on | | none | 0 | 0 | −3 ms | 7 ×7 | 128 / 128 |
+| desk, asked of every window | off 22.84, on 36.80 | none for up to 13.5 s | 2, 317 ms | 19 in 2 (83, 233 ms) | 0 | −3 ms | 7 ×7 | 128 / 128 |
+| desk, asked of one window | off 19 times, 22.6 to 47.5 | never older than 234 ms | 44, 5.78 s | 355 in 41 (the longest 300 ms) | 9 | 14 ms | 7 ×4, −60, 23, 23 | 128 / 128 |
+| away, quiet | off 22.77, on 47.78 | none | 2, 317 ms | 19 in 2 (167, 150 ms) | 0 | −3 ms | 18 ×7 | 128 / 128 |
+| away, the lock | off 14.76 (Windows, 61.3 s after the lock), on 40.06 | none | 3, 467 ms | 28 in 3 (167, 50, 250 ms) | 0 | −3 ms | 7 ×7 | 128 / 128 |
+
+- **The exit is met: a recording across a switch of the display ends within
+  50 ms of its sound.** Three real switches end at −3 ms with one tone
+  offset from the first tone to the last, where the morning's same runs
+  ended 247 to 465 ms ahead; the storm ends 14 ms ahead, where the
+  morning's ended 13.3 and 16.5 s ahead with 13 and 14 cues past the end. No frame
+  of any of the five shows the stamp, and the stamp's frame matched the
+  marker's in every paint.
+- **The storm follows the input, not how the request is sent.** It came
+  with the request asked of one window and input arriving throughout, and
+  not with the broadcast while no input arrived: the opposite of the pairing
+  step zero could not separate, so the session's reading that each window
+  turns the display off again is wrong. The user did not touch anything
+  when the display came back at 36.8 s in the second run, and saw nothing
+  different between the two: their eye tracker's software has a
+  long-standing fault where a pause does not always stop its input.
+- **The storm's −60 is a freeze, not a drift.** That tone began while the
+  page was stalled, so its flash was drawn late; the two tones after the
+  storm read 23: a steady run's 7 plus the 14 ms the retime's 25 ms band
+  leaves uncorrected, to within a frame.
+- **The away run's 18 is the sound's start again:** its tone sits 12 ms
+  after its place in the audio and its cues' median onset is 20 ms, against
+  6 to 8 and 8 to 10 in the three other switched runs.
+- **Each run fails on its freezes**, as the rule says: every real switch
+  leaves one or two over 100 ms. The storm also fails on its 9 unpainted
+  frames.
+- Locked, Windows again stalled the page once 5 s before it turned the
+  display off (167 ms at 9.7 s; 183 ms in the morning), with no display
+  event there.
+
+**Not verified:** a long run across a switch; a clean clip (not a check
+twin) across a real switch, though the path is the same and the clean clip
+with nothing planted passes; a busy machine's unpainted frames at scale
+(the storm's 9 and the planted pauses' 28 are what was seen).
+
+**The fallback (C) was not taken**, and nothing here needed it: holding the
+display awake would spare a clip its freeze where the machine is unlocked,
+and was not tried.

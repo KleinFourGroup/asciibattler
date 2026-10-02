@@ -24,7 +24,8 @@
 // - THE COLOURS: a lead-in frame is decoded as a player decodes it (the
 //   file's matrix tag, or BT.709 when untagged, as players assume for HD) and
 //   each patch compared with its hex.
-// A clean clip passes when no frame is marker-like or shows the patch row.
+// A clean clip passes when no frame is marker-like or shows the patch row or
+// the stamp (`stampFrames`, counted in a check twin too).
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
@@ -79,6 +80,25 @@ if (magentaAt >= 0) {
   const patchY = H - geo.patchBottom - SQ;
   const rgb = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `crop=${SQ}:${SQ}:${LEFT + magentaAt * SQ}:${patchY},scale=1:1:flags=area`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']);
   for (let i = 0; i + 3 <= rgb.length; i += 3) if (rgb[i] > 200 && rgb[i + 1] < 56 && rgb[i + 2] > 200) patchFrames++;
+}
+
+// --- the stamp (record.mjs, STAMP): main wipes it, so no frame shows it -----
+// The game draws a flat field along the bottom row at the left edge (values
+// within 6 of each other in a decoded clip); the stamp is black and white
+// pixels there. A frame whose first 64 pixels of that row span more than 60
+// levels still shows it.
+const stampRow = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `format=gray,crop=64:1:0:${H - 1}`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-']);
+let stampFrames = 0;
+let stampRowSpread = 0;
+for (let i = 0; i + 64 <= stampRow.length; i += 64) {
+  let lo = 255;
+  let hi = 0;
+  for (let x = 0; x < 64; x++) {
+    lo = Math.min(lo, stampRow[i + x]);
+    hi = Math.max(hi, stampRow[i + x]);
+  }
+  stampRowSpread = Math.max(stampRowSpread, hi - lo);
+  if (hi - lo > 60) stampFrames++;
 }
 
 // --- check 1: continuity (a check twin) ------------------------------------
@@ -299,7 +319,7 @@ if (outsideArg && side.tone) {
   outsideTone = { ...sustained(hz, fromS, seconds), control: sustained(side.tone.hz, audioStart + side.tone.fromS, side.tone.seconds) };
 }
 
-const leadIn = { markerLikeFrames: markerLike, patchFrames };
+const leadIn = { markerLikeFrames: markerLike, patchFrames, stampFrames, stampRowSpread };
 const report = {
   file,
   mode,
@@ -308,7 +328,7 @@ const report = {
     audio: aStream && { codec: aStream.codec_name, rate: aStream.sample_rate, start: audioStart },
     seconds: Number(probe.format.duration),
   },
-  leadIn: mode === 'clean' ? { ...leadIn, pass: markerLike === 0 && patchFrames === 0 } : leadIn,
+  leadIn: mode === 'clean' ? { ...leadIn, pass: markerLike === 0 && patchFrames === 0 && stampFrames === 0 } : leadIn,
   check1,
   colour,
   check2: {

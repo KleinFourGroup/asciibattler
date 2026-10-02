@@ -3165,3 +3165,88 @@ frames"; ROADMAP §114's carried note says the same of "a busier" machine.
 **THE STOP** is the retime's mechanism and what a held frame counts as; the
 proposal is in the session's message at the stop, and the decision lands
 below.
+
+### 114f — the decision, and the retime built (2026-10-02) — ◐ BUILT, the display sitting owed
+
+**Decided** (the user, just after 11:00): each paint carries the page's clock and main
+keeps the file on it, in place of a retime after the fact from the
+long-frame log (the cut's wording; inside its intent, since the log cannot
+place an unpainted frame). Their two checks, answered: the stamp never
+reaches a file (main wipes it from each paint before the encoder sees it),
+and the change is a canvas in the page script and a branch in main's paint
+handler, with no clock taken over and no sound rebuilt, which is what the
+stepped-clock fallback would need. The harness is tracked, at
+`shell/electron/probes/display-test/`. Their read of the desk input: the
+tracker itself still reports while it sees them, its software paused.
+**The reading: 287k just after 11:00** (104k at 10:00: the hour held
+orientation, the instrument, the harness and both display stretches, with
+several long result dumps read whole); the breaker reset to 40 minutes.
+
+**Step zero for the stamp's place.** The game draws a flat field along the
+bottom rows at the left edge: over every frame of two clean clips, 160
+pixels of each of the last three rows stay within 45 to 51. So the stamp
+sits there and main writes the same row's next 64 pixels over it.
+
+**Built.** `record-page.js` draws the stamp in every frame's callback (a
+64 × 1 canvas: a sync byte, the milliseconds since the go frame, the frame
+count, a check byte). `record.mjs` reads and wipes it in each paint and
+holds or skips against a band of 25 ms (THE RETIME, in its header).
+`timeline` gains `held`, `skipped` and `holds`, and counts `framesShort`
+against the file's frames less those held plus those skipped. `faults.mjs`
+gains a freeze over 100 ms, no stamp at all, and a paint without one after
+the go frame. The analyzer counts frames still showing the stamp
+(`stampFrames`; a clean clip passes at 0). Two planted controls:
+`--plant-pause` (main stops the window painting) and `--plant-stall` (the
+page blocked); `--retime=off` is the failing control.
+
+**The trials** (the working tree on `338f59e`, corridors, `clips/114f/rt-*`):
+
+| | retime | held / skipped | frames short | drift | sound to picture at each tone | the file's marker | stamp frames |
+|---|---|---|---|---|---|---|---|
+| a check twin, nothing planted | on | 0 / 0 | 0 | −3 ms | 7 ×7 (re-analysed; see below) | 3968 good, 0 repeated, 0 missing | 0 |
+| a clean clip, full countdown | on | 0 / 0 | 0 | −3 ms | (no tone) | lead-in frames 0 | 0 |
+| painting stopped 300 ms at 20 s and 150 ms at 40 s | off | 0 / 0 | 28 | 464 ms | 7, 7, 307, 307, 474 ×3 | 28 missing | 0 |
+| the same | on | 28 / 0 (300 and 167 ms) | 28 | −3 ms | 22 ×7 | 28 missing, 28 repeated | 0 |
+| the same, 30 fps | on | 15 / 0 (333 and 167 ms) | 15 | −1 ms | 5 ×7 | 15 missing, 15 repeated | 0 |
+| the page blocked 300 ms and 150 ms | off | 0 / 0 | −23 | −3 ms | 7 ×7 | 23 repeated | 0 |
+| the same | on | 22 / 22 | −24 | −3 ms | 7 ×7 | 24 repeated | 0 |
+| the wipe taken out (planted), 6 s | on | | | | | | 329 of 329 |
+
+- **The retime leaves a steady recording alone**: nothing held or skipped,
+  the marker unbroken, and in every check twin the stamp's frame count
+  equals the marker's in every paint (`markerMismatch` 0), so the canvas
+  and the DOM marker reach the same paint.
+- **A pause in painting is the display-free stand-in for a switch.** The
+  page's frames run on and none is painted, so with the retime off the
+  picture ends 464 ms ahead and fails; with it on, the frames are held
+  where they were lost and the tone's offset is the same at all seven.
+- **A blocked page is not a stand-in.** Its last frame is painted again
+  meanwhile, so no time is lost even with the retime off; with it on the
+  repeats are skipped and held again, to the same file.
+- **The 22 is the sound's start, not the retime.** It is there at 3 s and
+  13 s, before the first pause, and that run's tone sits 16 ms after its
+  scheduled place in the audio where the others sit at 6 to 8; the desk's
+  first switch (before any retime) read 24 the same way, with its tone at
+  18. So the sound track's start varies by about 15 ms from run to run
+  (§111e's 0 to 15 ms), and the step zero table's "24, 24" is this.
+- The analyzer's stamp check failed on its first run (a one-row crop of
+  4:2:0 video is refused; it now converts to grey first), so the first
+  twin's row was read by running the analyzer again on its file.
+- Saved sidecars judged again with the new `faults.mjs`: four from before
+  the retime (two with faults), the retime-off pause twin and the two
+  fault-free new ones read as recorded; the two retime-on pause twins
+  differ only in the reworded frames-short line.
+
+**Not verified:** a real switch of the display with the retime on (the
+sitting below); a long run; unpainted frames from a busy machine with the
+retime on (the pause stands in); Firefox does not apply.
+
+**Open for the read (the session's defaults, built):** a freeze over 100 ms
+fails a clip (delivered, exit 1); frames short still fails one, though the
+retime now gives their time back, so a single unpainted frame while the
+user works still exits 1.
+
+**THE STOP:** the display sitting with the retime on (a desk stretch: a
+control, a switch asked of every window, a switch asked of one; and a
+short away stretch for the quiet switch and the lock), then the user's
+call on the two open rules.

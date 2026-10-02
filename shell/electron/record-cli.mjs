@@ -18,6 +18,12 @@
 //   --name=<name>      the clip's file name (default <input>-<commit>[-skip])
 //   --check            record the analyzer's twin instead of a clean clip
 //   --keep             keep the temporary builds, profiles and intermediates
+//   --retime=off       a control: write each paint as it arrives, so a stall
+//                      leaves the picture ahead of its sound
+//   --plant-stall=<s>:<ms>[,...]  a control: block the page for <ms> at <s>
+//                      seconds into the clip
+//   --plant-pause=<s>:<ms>[,...]  a control: stop the window painting for <ms>
+//                      at about <s> seconds into the clip
 //   --backlog-cap-mb=<n>  a control: frames waiting for ffmpeg above this are
 //                      dropped and counted (default 1000; set low, it plants drops)
 //
@@ -100,6 +106,9 @@ async function recordOne({ dist, base, profile, query, opts }) {
     ...(opts.enter ? ['--enter'] : []),
     ...(opts.check ? ['--check'] : []),
     ...(opts.cap !== undefined ? [`--backlog-cap-mb=${opts.cap}`] : []),
+    ...(opts.retime !== undefined ? [`--retime=${opts.retime}`] : []),
+    ...(opts.stalls !== undefined ? [`--plant-stall=${opts.stalls}`] : []),
+    ...(opts.pauses !== undefined ? [`--plant-pause=${opts.pauses}`] : []),
   ];
   const child = spawn(electronPath, args, { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'] });
   let stdout = '';
@@ -139,7 +148,8 @@ function verdict(probe, analysis, check) {
   const line =
     `${analysis?.container?.seconds.toFixed(1) ?? '?'} s · opens on ${opening === 'full' ? `the countdown at ${countdownFrom}` : 'the fight'}, ` +
     `ends at ${endedBy} · ${shape} · ` +
-    `picture ahead of its sound by ${timeline?.driftMs ?? '?'} ms at the cut (page ${timeline?.pageFps ?? '?'} fps, the file ${timeline?.framesShort ?? '?'} frames short) · ` +
+    `picture ahead of its sound by ${timeline?.driftMs ?? '?'} ms at the cut (page ${timeline?.pageFps ?? '?'} fps, ${timeline?.framesShort ?? '?'} page frames never reached the file) · ` +
+    `retimed: ${timeline?.held ?? '?'} frames held in ${timeline?.holds.length ?? '?'} freezes (the longest ${Math.max(0, ...(timeline?.holds ?? []).map((h) => h.ms))} ms), ${timeline?.skipped ?? '?'} skipped · ` +
     `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · ` +
     `frames dropped ${dropped} · backlog peak ${probe.result.video.backlogMaxMB} of ${probe.result.video.backlogCapMB} MB` +
     faults.map((f) => `\n  FAULT: ${f}`).join('');
@@ -205,7 +215,7 @@ async function main(work, trees) {
   const check = process.argv.includes('--check');
   const countdown = flag('countdown') ?? 'full';
   if (countdown !== 'full' && countdown !== 'skip') stop(`--countdown=${countdown} must be full or skip`);
-  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? 90), enter: seed !== undefined, check, countdown, cap: flag('backlog-cap-mb') };
+  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? 90), enter: seed !== undefined, check, countdown, cap: flag('backlog-cap-mb'), retime: flag('retime'), stalls: flag('plant-stall'), pauses: flag('plant-pause') };
   // The file name says which opening, when it is not the default.
   const suffix = `${countdown === 'skip' ? '-skip' : ''}${check ? '-check' : ''}`;
 

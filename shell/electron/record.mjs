@@ -47,6 +47,42 @@ export function patchCentre(i, height) {
 
 const MAGENTA = LEAD_IN.patches.findIndex(([name]) => name === 'magenta');
 
+/**
+ * THE STAMP: the page's clock, in every paint. The page (probes/record-page.js)
+ * draws `width` pixels along the bottom row from the left edge, one bit each,
+ * white for 1, most significant first: the sync byte, the milliseconds since
+ * the go frame (32 bits; `notStarted` before it), the page frame's count (16
+ * bits) and a check byte (the six payload bytes XORed). Main reads it from
+ * each paint and writes the same row's next `width` pixels over it, so it is
+ * never in the file; the game draws a flat field in that corner.
+ */
+export const STAMP = { width: 64, sync: 0xa5, notStarted: 0xffffffff };
+
+/** How far a paint may sit from its slot before the retime moves it: 25 ms,
+ *  or three quarters of a slot where a slot is longer than that. More than
+ *  half a slot, so a paint corrected by one slot is not corrected back. */
+const RETIME_BAND_MS = 25;
+
+/** Read the stamp from a paint and wipe it. Null when it is not there (the
+ *  sync byte or the check byte does not match). */
+function takeStamp(bitmap, width, height) {
+  const row = (height - 1) * width * 4;
+  const byte = (i) => {
+    let v = 0;
+    for (let b = 0; b < 8; b++) {
+      const o = row + (i * 8 + b) * 4;
+      v = (v << 1) | (bitmap[o] + bitmap[o + 1] + bitmap[o + 2] > 384 ? 1 : 0);
+    }
+    return v;
+  };
+  if (byte(0) !== STAMP.sync) return null;
+  const p = [1, 2, 3, 4, 5, 6].map(byte);
+  const check = byte(7);
+  bitmap.copy(bitmap, row, row + STAMP.width * 4, row + STAMP.width * 8);
+  if ((p[0] ^ p[1] ^ p[2] ^ p[3] ^ p[4] ^ p[5]) !== check) return null;
+  return { t: ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]) >>> 0, frame: (p[4] << 8) | p[5] };
+}
+
 function quantiles(xs) {
   if (xs.length === 0) return null;
   const s = [...xs].sort((a, b) => a - b);
@@ -95,8 +131,21 @@ export const BACKLOG_CAP_MB = 1000;
  * THE CUT, the gate mirrored: once the lead-in has gone, a paint showing the
  * magenta patch again is the page's sign that the next screen has mounted
  * (probes/record-page.js), and nothing is written from it on (`stats.cut`).
+ *
+ * THE RETIME: the file plays frame n at n / fps, and the sound in real time,
+ * so a page that stalls, or a page frame that never paints, would leave the
+ * picture ahead of its sound from then on (a switch of the display stalls the
+ * page 0.1-0.3 s each way, 114f). Each paint's stamp says when the page drew
+ * it, so main keeps the file on the page's clock: a paint more than the band
+ * late for its slot is preceded by the last written frame again, as many
+ * times as it is late (`held`, the freeze the page really had), and one that
+ * much early is left out (`skipped`). Inside the band nothing is moved, so a
+ * steady recording is written exactly as its paints arrive. `retime: false`
+ * is the control: the stamp is still read and wiped, and nothing is moved.
+ * `marker: true` (a check twin) also reads the marker's count from each paint
+ * and counts the paints where the stamp's frame disagrees with it.
  */
-export function startVideo(win, { file, fps, width, height, gate = false, backlogCapMB = BACKLOG_CAP_MB }) {
+export function startVideo(win, { file, fps, width, height, gate = false, backlogCapMB = BACKLOG_CAP_MB, retime = true, marker = false }) {
   const ff = spawn(
     'ffmpeg',
     [
@@ -123,6 +172,14 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
     firstEpoch: null,
     intervals: [],
     paintTimes: [],
+    held: 0,
+    holds: [],
+    skipped: 0,
+    skippedAt: [],
+    stamped: 0,
+    stampUnreadable: 0,
+    unplaced: 0,
+    markerMismatch: 0,
     patchesInPaint: null,
     cut: null,
     paintsAfterCut: 0,
@@ -135,6 +192,49 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
   const pixel = (bitmap, [x, y]) => {
     const o = (y * width + x) * 4;
     return [bitmap[o + 2], bitmap[o + 1], bitmap[o]]; // BGRA → RGB
+  };
+  const slot = 1000 / fps;
+  const band = Math.max(RETIME_BAND_MS / slot, 0.75);
+  let base = null; // the file frame that time zero (the go frame) falls on
+  let lastT = -1;
+  let lastWritten = null;
+  // One frame to ffmpeg, or dropped and counted when its backlog is over the cap.
+  const write = (bitmap) => {
+    if (ff.stdin.writableLength + bitmap.length > capBytes) {
+      stats.dropped++;
+      // Where in the file each drop falls: the index the frame would have had.
+      if (stats.droppedAt.length < 1000) stats.droppedAt.push(stats.frames);
+      return;
+    }
+    ff.stdin.write(bitmap);
+    stats.frames++;
+    stats.paintTimes.push(Math.round((nowEpoch() - stats.firstEpoch) * 10) / 10);
+    stats.backlogMaxBytes = Math.max(stats.backlogMaxBytes, ff.stdin.writableLength);
+    lastWritten = bitmap;
+  };
+  // How many slots late (positive) or early this paint is for the next frame.
+  const deviation = (stamp) => {
+    if (stamp === null || stamp.t === STAMP.notStarted || stamp.t < lastT) return null;
+    lastT = stamp.t;
+    if (base === null) base = stats.frames;
+    return base + (stamp.t * fps) / 1000 - stats.frames;
+  };
+  const hold = (d) => {
+    const n = Math.round(d);
+    if (stats.holds.length < 1000) stats.holds.push({ atFrame: stats.frames, frames: n });
+    for (let i = 0; i < n && lastWritten !== null; i++) {
+      write(lastWritten);
+      stats.held++;
+    }
+  };
+  const markerCount = (bitmap) => {
+    const { square, left, markerBottom } = LEAD_IN;
+    let n = 0;
+    for (let b = 0; b < 8; b++) {
+      const [r, g, bl] = pixel(bitmap, [left + b * square + square / 2, height - markerBottom - square / 2]);
+      n = (n << 1) | (r + g + bl > 384 ? 1 : 0);
+    }
+    return n;
   };
   const onPaint = (_event, _dirty, image) => {
     const size = image.getSize();
@@ -150,11 +250,23 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
     const bitmap = image.toBitmap();
     const [r, g, b] = pixel(bitmap, patchCentre(MAGENTA, height));
     const leadIn = r > 200 && g < 56 && b > 200;
+    const stamp = takeStamp(bitmap, width, height);
+    if (stamp === null) {
+      stats.stampUnreadable++;
+      // From the go frame on, a paint without one is written as it came.
+      if (base !== null) stats.unplaced++;
+    } else {
+      stats.stamped++;
+      if (marker && markerCount(bitmap) !== (stamp.frame & 255)) stats.markerMismatch++;
+    }
+    const d = deviation(stamp);
     if (leadIn && !seenLeadIn) {
       seenLeadIn = true;
       stats.patchesInPaint = LEAD_IN.patches.map(([name, hex], i) => ({ name, want: hex, got: pixel(bitmap, patchCentre(i, height)) }));
     }
     if (leadIn && leadInGone) {
+      // The cut frame is not written, and the file runs up to its time.
+      if (retime && d !== null && d > band) hold(d);
       stats.cut = { atFrame: stats.frames, epoch: nowEpoch() };
       stats.paintsAfterCut++;
       return;
@@ -173,16 +285,15 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
       stats.mainSkewMs = nowEpoch() - Date.now();
     } else stats.intervals.push(now - last);
     last = now;
-    if (ff.stdin.writableLength + bitmap.length > capBytes) {
-      stats.dropped++;
-      // Where in the file each drop falls: the index the frame would have had.
-      if (stats.droppedAt.length < 1000) stats.droppedAt.push(stats.frames);
-      return;
+    if (retime && d !== null) {
+      if (d < -band) {
+        stats.skipped++;
+        if (stats.skippedAt.length < 1000) stats.skippedAt.push(stats.frames);
+        return;
+      }
+      if (d > band) hold(d);
     }
-    ff.stdin.write(bitmap);
-    stats.frames++;
-    stats.paintTimes.push(Math.round((nowEpoch() - stats.firstEpoch) * 10) / 10);
-    stats.backlogMaxBytes = Math.max(stats.backlogMaxBytes, ff.stdin.writableLength);
+    write(bitmap);
   };
   win.webContents.on('paint', onPaint);
 
@@ -192,7 +303,6 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
       win.webContents.off('paint', onPaint);
       ff.stdin.end();
       const code = await exited;
-      const slot = 1000 / fps;
       return {
         code,
         stderr: stderr.slice(-2000),
@@ -204,6 +314,22 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
         paintsAfterCut: stats.paintsAfterCut,
         dropped: stats.dropped,
         droppedAt: stats.droppedAt,
+        // The retime: frames written again before a late paint, and early
+        // paints left out. `goAtFrame` is the file frame of the go frame.
+        retime: {
+          on: retime,
+          bandMs: Math.round(band * slot * 10) / 10,
+          goAtFrame: base,
+          held: stats.held,
+          holds: stats.holds,
+          longestHoldMs: Math.round(Math.max(0, ...stats.holds.map((h) => h.frames)) * slot),
+          skipped: stats.skipped,
+          skippedAt: stats.skippedAt,
+          stamped: stats.stamped,
+          stampUnreadable: stats.stampUnreadable,
+          unplaced: stats.unplaced,
+          markerMismatch: marker ? stats.markerMismatch : null,
+        },
         backlogCapMB,
         wrongSize: stats.wrongSize,
         backlogMaxMB: Math.round(stats.backlogMaxBytes / 1e5) / 10,

@@ -18,6 +18,9 @@
 //   starts the fight at the go frame, the countdown box hidden in that frame.
 // - `leadIn`: the geometry and patch colours (record.mjs, LEAD_IN), and
 //   `leadInFrames`, how long it shows.
+// - `stamp`: the stamp's width and bytes (record.mjs, STAMP).
+// - `stalls`: a control, `[{ atS, ms }]`: block the page that long, that many
+//   seconds after the go frame.
 //
 // It installs `window.__rec110` with `start()` and `stop()`. The timeline:
 // - SETUP: the countdown is held (an instance patch on its `advance`, the one
@@ -37,6 +40,9 @@
 // - THE CUT: in the first frame after the battle's scene is swapped for the
 //   next screen, the patch row shows again, and main writes nothing from the
 //   paint that shows it. Cues played after the swap are left out.
+// - THE STAMP, every frame: 64 pixels of the bottom row carry the frame's
+//   time since the go frame and its count. Main reads it from each paint to
+//   keep the file on the page's clock, and wipes it, so no clip shows it.
 // - AUDIO: every pooled <audio> element of the game's AudioPlayer is routed
 //   through an AudioContext into a MediaStreamAudioDestinationNode, and never
 //   to `ctx.destination`, so the speakers get nothing. A MediaRecorder records
@@ -154,6 +160,26 @@ export default async function recordPage(opts = {}) {
     marker.append(s);
     squares.push(s);
   }
+  // The stamp (record.mjs, STAMP): this frame's time and count along the
+  // bottom row, one pixel a bit, drawn in every frame's callback so the paint
+  // that shows a frame says when the page drew it. Main wipes it.
+  const STAMP = opts.stamp;
+  const stampCanvas = document.createElement('canvas');
+  stampCanvas.width = STAMP.width;
+  stampCanvas.height = 1;
+  stampCanvas.style.cssText = `position:fixed;left:0;bottom:0;width:${STAMP.width}px;height:1px;z-index:6000;pointer-events:none;image-rendering:pixelated`;
+  document.body.append(stampCanvas);
+  const stampCtx = stampCanvas.getContext('2d');
+  const stampImage = stampCtx.createImageData(STAMP.width, 1);
+  const drawStamp = (t, frame) => {
+    const payload = [(t >>> 24) & 255, (t >>> 16) & 255, (t >>> 8) & 255, t & 255, (frame >>> 8) & 255, frame & 255];
+    const bytes = [STAMP.sync, ...payload, payload.reduce((a, b) => a ^ b, 0)];
+    for (let i = 0; i < STAMP.width; i++) {
+      const v = bytes[i >> 3] & (0x80 >> (i & 7)) ? 255 : 0;
+      stampImage.data.set([v, v, v, 255], i * 4);
+    }
+    stampCtx.putImageData(stampImage, 0, 0);
+  };
   const patchRow = row(PATCH_BOTTOM);
   for (const [, hex] of PATCHES) {
     const s = document.createElement('div');
@@ -206,6 +232,13 @@ export default async function recordPage(opts = {}) {
       osc.start(at);
       state.toneFrom = state.startedAt + TONE_AT_S * 1000;
     }
+    // A control: block the page for `ms` at `atS` seconds, as a stall does.
+    for (const stall of opts.stalls ?? []) {
+      setTimeout(() => {
+        const until = performance.now() + stall.ms;
+        while (performance.now() < until);
+      }, stall.atS * 1000);
+    }
     state.boxShownAtGo = countdownBox.classList.contains('is-visible');
     if (opening === 'full') {
       delete countdown.advance; // the prototype's again
@@ -233,6 +266,7 @@ export default async function recordPage(opts = {}) {
       state.longFrames.push({ pageFrame: state.frame, ms: Math.round(now - state.lastAt), epoch: Math.round(performance.timeOrigin + now) });
     }
     state.lastAt = now;
+    drawStamp(state.goAt === null ? STAMP.notStarted : Math.round(now - state.goAt), state.frame & 0xffff);
     // Every frame's time from the go frame (index 0), in ms: what a retime of
     // the file reads. A battle at 60 fps is a few thousand numbers.
     if (state.goAt !== null && state.cutAt === null) state.frameTimes.push(Math.round((now - state.goAt) * 10) / 10);

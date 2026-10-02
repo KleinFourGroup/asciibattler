@@ -31,6 +31,14 @@
 //                     (full, the default) or on the fight (skip)
 //   --backlog-cap-mb=<n>  record: frames waiting for ffmpeg above this are
 //                     dropped and counted (record.mjs, BACKLOG_CAP_MB)
+//   --retime=off      record: a control, write each paint as it arrives
+//                     (record.mjs, THE RETIME)
+//   --plant-stall=<s>:<ms>[,...]  record: a control, block the page for <ms>
+//                     at <s> seconds after the go frame (its last frame is
+//                     painted again meanwhile, so no time is lost)
+//   --plant-pause=<s>:<ms>[,...]  record: a control, stop the window painting
+//                     for <ms> at about <s> seconds after the go frame (no
+//                     paint arrives meanwhile, as when the display switches)
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
 //   --tail-seconds=<n>    record: the fallback, if no next screen cuts the
 //                     clip: stop this long after the battle ends (5)
@@ -44,7 +52,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { faultsOf } from './faults.mjs';
-import { LEAD_IN, markerFrame, mux, startVideo } from './record.mjs';
+import { LEAD_IN, markerFrame, mux, STAMP, startVideo } from './record.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -180,6 +188,13 @@ function watch(win) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** A control's list, `<s>:<ms>[,<s>:<ms>...]`, as [seconds, ms] pairs. */
+const plantList = (name) =>
+  (flag(name) ?? '')
+    .split(',')
+    .filter(Boolean)
+    .map((s) => s.split(':').map(Number));
+
 async function pollPage(win, expr, timeoutMs) {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
@@ -268,6 +283,8 @@ const probes = {
       countdown: flag('countdown') ?? 'full',
       leadIn: LEAD_IN,
       leadInFrames,
+      stamp: STAMP,
+      stalls: plantList('plant-stall').map(([atS, ms]) => ({ atS, ms })),
     });
     if (ready?.ok !== true) return { ok: false, result: { ready } };
 
@@ -278,6 +295,8 @@ const probes = {
       width: contentW,
       height: contentH,
       gate: !check,
+      retime: flag('retime') !== 'off',
+      marker: check,
       ...(cap === undefined ? {} : { backlogCapMB: Number(cap) }),
     });
     const audible = [];
@@ -286,6 +305,12 @@ const probes = {
     const firstPaintBy = Date.now() + 5000;
     while (video.stats.paints === 0 && Date.now() < firstPaintBy) await sleep(20);
     const started = await win.webContents.executeJavaScript('window.__rec110.start()');
+    for (const [atS, ms] of plantList('plant-pause')) {
+      setTimeout(() => {
+        win.webContents.stopPainting();
+        setTimeout(() => win.webContents.startPainting(), ms);
+      }, (leadInFrames / frameRate + atS) * 1000);
+    }
 
     // Until the cut (the next screen's first paint), or the fallback after
     // the battle ends, or the time limit.
@@ -325,7 +350,7 @@ const probes = {
     const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS, durationS });
     const tl = timeline(page, videoResult, goVideoFrame);
     const cut = page.cut === null && videoResult.cutAtFrame === null ? null : { page: page.cut, atFrame: videoResult.cutAtFrame };
-    const faults = faultsOf({ timeline: tl, cut, endedBy }, tailMs / 1000);
+    const faults = faultsOf({ timeline: tl, cut, endedBy, retime: videoResult.retime }, tailMs / 1000);
     const sidecar = {
       mode: check ? 'check' : 'clean',
       opening: page.opening,
@@ -394,16 +419,27 @@ const probes = {
  * file's frame `goVideoFrame` (0 in a clean clip; a check twin keeps what
  * came before it). Null without a cut, whose frame is the only one both
  * sides know.
+ *
+ * With the retime (record.mjs) the file holds frames main wrote again and
+ * lacks paints it left out, so the paints that reached main are the file's
+ * frames less those held, plus those skipped, and `framesShort` is counted
+ * against that. The drift then says whether the retime kept the file on the
+ * page's clock, and `holds` is each freeze it wrote, in file time from the
+ * go frame.
  */
 function timeline(page, videoResult, goVideoFrame) {
   if (page.cut === null || videoResult.cutAtFrame === null || goVideoFrame < 0) return null;
   const pageFrames = page.cut.pageFrame - page.goFrame;
   const fileFrames = videoResult.cutAtFrame - goVideoFrame;
+  const { held, skipped, holds } = videoResult.retime;
   const fileS = fileFrames / frameRate;
   return {
     pageFrames,
     fileFrames,
-    framesShort: pageFrames - fileFrames,
+    framesShort: pageFrames - (fileFrames - held + skipped),
+    held,
+    skipped,
+    holds: holds.map((h) => ({ atS: Math.round(((h.atFrame - goVideoFrame) / frameRate) * 1000) / 1000, ms: Math.round((h.frames * 1000) / frameRate) })),
     pageS: page.cut.s,
     fileS: Math.round(fileS * 1000) / 1000,
     pageFps: Math.round((pageFrames / page.cut.s) * 1000) / 1000,

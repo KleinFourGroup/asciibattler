@@ -3305,3 +3305,12 @@ with nothing planted passes; a busy machine's unpainted frames at scale
 **The fallback (C) was not taken**, and nothing here needed it: holding the
 display awake would spare a clip its freeze where the machine is unlocked,
 and was not tried.
+
+### 114f — THE READ (2026-10-02, the user's) ✅
+
+"114f is read", at about 12:10, on the sitting's report; no finding. 114f
+is ☑. The last reading was 372k at 11:48, over the gate, so 114g goes to a
+fresh session; no reading was taken at the session's end. For 114g: a long
+run across a switch of the display and a clean clip across one are the two
+things 114f did not measure, and a run recorded while the user works will
+meet the frames-short rule (one unpainted frame fails a clip).

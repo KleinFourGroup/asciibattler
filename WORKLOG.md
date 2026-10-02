@@ -3541,3 +3541,231 @@ later word (a8073201); 114g and 114g-post 99k to 389k at the read, none
 taken at the end (b326f055). Each stretch started under its gate except
 114g-post, built at 389k at the user's call, and no reading is past the
 halt.
+
+## Phase 115 — save/load and mid-run resume
+
+### The §115 audit and cut (2026-10-02) — the shape-lock is open
+
+Session 5eda55b6, straight on from the §114 close (`0a7ff11`), from about
+14:25 to 14:35. No reading yet: the session opened fresh, and the reading
+and the breaker are asked for with the shape-lock. ✔ = read by this session
+at file:line, or measured.
+
+**What is there.**
+- **The run slot has a rule and no writer.** `runSlotSection(bus)` is the
+  strict `run` section, stamped with `RUN_SCHEMA_VERSION`; its wire is
+  `{ snapshot }`, and its `load` is `Run.fromJSON(wire.snapshot, bus)` (✔
+  `src/store/runSlot.ts:27-42`). So reading the slot builds a Run that is
+  subscribed to the bus it was given: a read made only to ask "is there a
+  save" leaves a second Run listening unless it is disposed or read on a bus
+  of its own. A rejected read hands the stored text back (✔
+  `store.ts:265-288`).
+- **Nothing shows the player the store's state.** `save.rejected` has its
+  text (✔ `locales/en/ui.json:193`) and `runRejectedMessage()` has no
+  caller; `store.onStatus` has no listener (✔ a search of `src` outside
+  tests). The "can't save" notice of spec D1 is unbuilt.
+- **`Run.fromJSON` resets what the run's config set.** It bypasses the
+  constructor and assigns the shipped default to every input the snapshot
+  doesn't carry: the forced layout and encounter, `singleSectorRun` (the
+  `hops` dial), `sectorHopsOverride`, the difficulty multipliers,
+  `passIsFinal`, `drawAmountAdd`, the sector map, the event catalog and the
+  forced event (✔ `Run.ts:4294-4338`, `:4369-4377`, `:4464-4466`). Of the
+  eleven fields the URL sets (✔ `RunConfig.ts:374-402`), four are read
+  after construction and are lost: `hopCount`, `sectorHops`, the forced
+  layout and the forced encounter. 114b's test already says so in a
+  comment: "a loaded run has the shipped length (the `hops` dial isn't
+  saved)" (✔ `tests/integration/journal-replay.test.ts:60`). The three
+  scatter dials that survive a sector advance (`sectorAdvanceConfig`, ✔
+  `RunConfig.ts:256-269`) have no URL form, and `fromJSON` doesn't assign
+  them either.
+- **The bots clone a run through the same `fromJSON`** (✔
+  `src/bot/runRollout.ts:54-66`), so anything a snapshot gains changes what
+  every rollout clone carries.
+- **Game mounts every screen from a bus event** (✔ `Game.ts:343-374`,
+  `:407-429`), and a silent return to the map by checking the phase after a
+  dispatch (`:517-598`). What each event's payload needs:
+
+  | gate (phase) | event | payload from the Run's saved state? |
+  |---|---|---|
+  | `map` | none (Game checks the phase) | yes |
+  | `port`, `event`, `reward` | `port:entered`, `event:entered`, `reward:offered` | yes; the screens read the Run (✔ `Run.ts:1476`, `:1551`, `:3204`) |
+  | `promotion`, `recruit` | `promotion:pending`, `recruit:offered` | yes: `pendingPromotions`, `currentOffer` (✔ `:3209`, `:3728`) |
+  | `turn-intro` | `turn:starting` | yes: every field is read from state, the risk line re-rolled from the turn's wave (✔ `:2330-2366`; `previewPoolAtRisk` calls `rollTurnWave`, whose body was not read). The scene's two other inputs are Game's buffers, the deal cues and the last turn's outcome (✔ `Game.ts:398-411`), and a load has neither |
+  | `sectorCleared` | `sector:cleared` | **no**: the cleared sector's title and the pool before the seam's heal are locals of `advanceSector` (✔ `:3747-3794`) |
+  | `turn-outcome` | `turn:resolved` | no (winner, reason, the applied chips); it has no screen, and Game sends the `advanceTurn` itself after the outro (✔ `Game.ts:422-429`) |
+  | `defeat`, `complete` | `run:defeated`, `run:victory` | yes (no payload) |
+
+- **`Game.devLoadRun` loads map-phase saves only**, for that reason, and
+  its comment holds the landing note: the resolver is a Run-side re-emit of
+  the phase's gate event (✔ `Game.ts:731-770`). It already opens a journal
+  from the loaded snapshot.
+- **The recorder holds one segment.** `journal` is `{ segments: [segment] }`
+  and `open` abandons whatever was open (✔ `JournalRecorder.ts:99-119`), so
+  a journal across a load doesn't exist yet; `replayJournal` replays each
+  segment on its own bus from its own start (✔ `replayJournal.ts:97-113`);
+  the recorder's `--journal` mode refuses more than one segment (✔
+  `record-cli.mjs:260`).
+- **A command that isn't legal where it is sent is a silent no-op,** by
+  the contract `Command.ts` states for most of its kinds (✔
+  `Command.ts:36-202`: fourteen by this session's count; the other six
+  carry no such sentence there, and no handler was read). `discardPacket`
+  is legal in any phase, a battle included.
+- **A gated headless run exists to build on:** `tests/journalDrive.ts`
+  plays one with a recorder, from the kit's `PHASE_ROWS` (one row per phase;
+  a new phase fails typecheck until it has one, ✔ `src/dev/probe/drive.ts:43`).
+  The fuzz harness asserts occupancy per tick behind a flag (✔
+  `harness.ts:982`). No driver sends the whole command set: TODO's chaos
+  item counts two of about ten decision surfaces randomized.
+- **`navigator.locks` is used nowhere** (✔ a search of `src`, `shell`,
+  `tests`). The probe and record runners give each run a fresh profile (✔
+  `probe-cli.mjs:93`, `record-cli.mjs:378`), so neither can pick up a saved
+  run.
+
+**Measured: what a save costs, and which gates a driven run meets** (a
+scratch script: eight gated runs by the kit's rows, the snapshot taken as
+JSON text before every command outside a battle).
+
+| seed, dials | battles | saves | snapshot text, min / median / max | serialize, median / max |
+|---|---|---|---|---|
+| 1, `character=soldier` | 11 | 51 | 4,718 / 15,281 / 21,827 | 0.02 / 0.40 ms |
+| 2, `character=soldier` | 29 | 136 | 5,457 / 25,605 / 48,740 | 0.03 / 0.52 ms |
+| 3, `character=priest` | 18 | 82 | 5,187 / 16,715 / 28,246 | 0.02 / 0.18 ms |
+| 5, `character=soldier` | 13 | 59 | 5,149 / 18,169 / 27,514 | 0.04 / 0.10 ms |
+| 8, `character=gambler` | 27 | 122 | 5,224 / 25,214 / 49,208 | 0.05 / 0.92 ms |
+| 11, `character=priest` | 9 | 34 | 5,158 / 9,631 / 14,327 | 0.02 / 0.08 ms |
+| 7, `hops=3&character=soldier` | 11 | 37 | 3,096 / 10,681 / 18,332 | 0.03 / 0.07 ms |
+| 23, `sectorHops=3&character=gambler` | 10 | 34 | 3,088 / 10,941 / 18,762 | 0.03 / 0.80 ms |
+
+- **A save is 3 to 49 KB of text and under a millisecond to serialize**
+  (Node; the write itself is unmeasured, in `localStorage` and in
+  Electron's file).
+- **The round trip held at every one of the 555 saves:** text → `fromJSON`
+  → `toJSON` gave the same text. It compares the save code with the load
+  code, so it says nothing about a field both drop.
+- **Every gate kind was met** across the eight: `port` in six runs,
+  `sectorCleared` in two (seeds 2 and 8, the 29- and 27-battle runs). All
+  eight ended in defeat, so no run here reached `complete`.
+
+**Hypotheses for step zero** (unmeasured).
+- `navigator.locks` under Electron's `app://` origin and in itch's frame
+  (the second waits for §116's sitting).
+- What one write costs per command, in `localStorage` and in Electron's
+  file.
+- A short dialed seed that clears a sector, so the sector-cleared gate is
+  in the every-commit tests without a 27-battle run.
+- What the pre-turn screen shows with no deal cues on a first turn.
+(The kit's `drive()` already stops at a named phase, `until`, ✔
+`src/dev/probe/index.ts:144`, which the pane check of a resume needs.)
+
+**Calls for the shape-lock, with the session's lean.**
+1. **What a save carries beside the snapshot: the run's dials as text**
+   (the journal's `dials`), and `Run.fromJSON` takes an optional config for
+   the inputs it resets today (the lean). With no config it is as it is
+   now, so rollout clones don't change. The other shapes: put those inputs
+   in the snapshot, which changes what every rollout under a dial carries
+   and so risks the signed sheet's reproduction; or leave dialed runs
+   unsaved, which takes short runs away from the user's own reads.
+2. **The sector-cleared gate: save its two facts** (the cleared sector and
+   the pool before the heal), a Run bump v46 → v47, the one the spec
+   expects here (the lean; nobody holds a v46 save, since the slot has had
+   no writer). The other shape skips the save at that gate, so a tab closed
+   there reopens on the screen before it.
+3. **Which gates save:** after every command applied while the run waits
+   (every phase but `battle` and `turn-outcome`), and once when the run is
+   created. A `discardPacket` sent in a battle is saved at the next gate. A
+   run's end empties the slot.
+4. **A journal across a load.** The journal saved in the slot ends its open
+   segment as `saved`, with the snapshot's hash. A load on the same build
+   and config opens a segment that starts from that hash, and a replay
+   continues through a reload as the page did; on another build the segment
+   carries the whole snapshot and its dials (the lean). Always carrying the
+   snapshot costs 3 to 49 KB a load, against a 1 MB budget for all finished
+   journals. The format goes to 2.
+5. **The continuation check reloads at every gate in one pass:** one run
+   played straight through, and the same commands sent to a run that is
+   turned to text and loaded again at every gate; the two must be equal
+   byte for byte at each gate and at the end. Its cost is two runs, where
+   continuing separately from each gate is a run per gate. Its controls:
+   the dials withheld from the reload (a `hops` run must fail, at a named
+   gate), and a field blanked in the text.
+6. **The chaos driver's home:** its own gated driver under `tests/chaos/`,
+   built on `journalDrive`'s loop, a few seeds on every `npm test` and
+   `npm run chaos -- --seeds=N` for a sweep (the lean). TODO's candidate was
+   an arm of the fuzz harness, which plays ungated and runs only at the
+   smoke. It sends random legal commands in every phase, some out of range,
+   and random battle orders; it checks the round trip at every phase
+   change, occupancy at every tick, and that its own journal replays to the
+   same bytes, which is also its repro.
+7. **The entry before the menu exists:** `Game.continueRun()` is the entry
+   §116's Continue row will call; until then character select, today's boot
+   screen, shows Continue when the slot holds a run and the rejection
+   message when it holds one that can't be loaded (the lean). The other
+   shapes: resume at boot with no question, or a dev-only entry until §116,
+   which leaves the phase's exit ("rejected with its message") with no
+   surface.
+8. **A boot with run dials in the URL** starts its own run, as today, never
+   continues, and saves over the slot (the lean: one slot, and the user's
+   reads use short dialed runs).
+9. **The second tab** can't continue the run and plays unsaved for its
+   life, saying so (the lean); the first tab to boot holds the lock. Where
+   `navigator.locks` is missing there is no lock.
+10. **What a resumed pre-turn screen loses:** the deal's animation and the
+    last-turn strip (the lean: accept it). Keeping the strip means saving
+    the last turn's outcome, a wider bump.
+11. **The "can't save" notice:** uncertain. The autosave is the first write
+    whose failure costs a player something, which argues for here; the
+    notice wants a home in the chrome and a read against DESIGN §UI idioms,
+    which argues for §116 with the settings. The lean is §116, carried in
+    ROADMAP.
+
+**Predictions for the cut.** One Run bump (v46 → v47, at 115a, with the
+fingerprint re-pinned); no World bump; no RNG stream; no new bus event (a
+resume re-emits existing ones). The fuzz smoke fires at 115a (`src/run`),
+and again wherever the chaos driver's findings touch `src/sim` or
+`src/run`. The journal's format goes 1 → 2 at 115d. Two i18n keys (Continue,
+the other-tab notice). `npm test` grows by the continuation check and the
+chaos seeds, measured at each. The production bundle grows at 115e,
+measured there.
+
+**The cut as proposed (unsigned; it goes into ROADMAP §115 once signed).**
+Seven steps: six `none`, one `stop`.
+- **115a — the Run's side, headless.** `Run.fromJSON(snapshot, bus,
+  config?)`, and `Run.resume()`, which re-emits the gate event of the phase
+  the run is in; the sector-cleared gate's two facts saved (v47). Exit: for
+  each gate kind, a reloaded run's `resume()` emits the payload the live run
+  emitted on arriving there; `turn-outcome` and `battle` refuse by name;
+  with no config, the round-trip, rollout and determinism tests and the
+  fuzz smoke are as they were. Read `none`.
+- **115b — the continuation check.** Call 5, on every `npm test`, over
+  seeds that between them cross every gate kind, with and without dials.
+  Exit: green, and both controls fail at a named gate. Read `none`.
+- **115c — the chaos driver.** Call 6. Exit: a sweep green, or its findings
+  fixed or filed; every command kind sent at least once across the
+  every-commit seeds (a pinned census); a planted round-trip break and a
+  planted overlap caught; a failure prints its seed and writes its journal.
+  Read `none`.
+- **115d — the journal across a load.** Call 4. Exit: a run recorded across
+  loads at several gates replays to the bytes of the same run played
+  straight through; controls: a changed hash, a segment resumed after
+  another build's. Read `none`.
+- **115e — the autosave and the load, in the game.** `Game` writes the slot
+  at every gate and at a run's start and empties it at a run's end;
+  `continueRun()` loads it, resumes the screen and opens the journal's next
+  segment; the DEV load key goes the same way and takes any gate. Exit, in
+  the Electron runner or the pane: a run driven to each gate kind, the page
+  reloaded and continued shows the same screen and state hash, and driven
+  on reaches the hash of the same drive unbroken; the seed-7 drive still
+  logs `a59ee48f` with saving on; the journal of a continued run replays
+  under `npm run replay`; `?store=deny` plays on; a stale slot and an
+  unreadable one are rejected with their text left in place. Read `none`.
+- **115f — the two-tab lock.** Call 9. Exit: headless over a stand-in lock;
+  in the pane with two tabs, the second can't continue and writes nothing
+  to the slot; Electron measured. Read `none`.
+- **115g — Continue and the two messages on character select.** Calls 7
+  and 8. Read `stop`, the sitting in Firefox: start a run, close the tab at
+  the map, at a pre-turn screen, in a battle, at a reward, at a port and at
+  an event, and reopen each time; Continue returns to the screen that was
+  left (the one before the battle, for the battle), with the same team,
+  bits and pool; a second tab says the run is open elsewhere; a planted
+  stale save shows the message. Wrong is a different screen, anything
+  lost, or a fight that goes differently under the same orders.

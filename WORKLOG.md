@@ -3010,3 +3010,35 @@ ten times a stock browser's 5 MB**: the pane can't stand in for a
 browser's storage limit. The preview server was stopped afterwards (no
 listener on 5191; the Vite process left running is the user's own, on
 5173 since the morning).
+
+### 114e — THE READ, and the hand-off (2026-10-02, the user's) ✅
+
+**The read.** The user played a run in Firefox on their dev server
+(`hops=2&character=soldier`, no seed pinned), clicked "Export run" and
+ran the tool on the saved file:
+
+```
+replay: segment 0: build 0.0.0+73621b7-dev, config b9fbf87d, seed 1790943939594 (hops=2&character=soldier), 45 entries
+replay: segment 0: replayed 5 battles to its end (victory); hash 664078d7 matches the journal's
+```
+
+Unforced and with no warning, so the page and the tree were both at
+`73621b7`, clean. Their verdict: "I think that that all worked!" No
+finding. 114e is ☑. The read said nothing about the two buttons' look, so
+DESIGN's changed sentence stands as written unless the user says
+otherwise.
+
+**The budget's two numbers.** The exported file is 3,789 bytes (the
+session's `wc -c` on the user's file): a hand-played run of 5 battles.
+Firefox's `localStorage` limit was not measured, and no run at the shipped
+length has been played and exported. The budget stays at 1 MB, soft;
+both numbers are carried in the Cursor.
+
+**The gate, answered.** The "400k" given at the stretch's start set the
+next gate, the one before 114f, at 400k in place of 350k, since the
+stretch behind that gate is one step (the user: "It didn't matter either
+way"). **The end reading: 501k at 08:40 on
+2026-10-02** (the session idle since 18:19 the day before). The session
+started fresh, so 501k is what orientation and the stretch 114a–e cost
+together; no reading was taken at the stretch's start. Over the gate, so
+114f goes to a fresh session (the user's call).

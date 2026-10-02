@@ -2680,3 +2680,56 @@ minutes short at the 113e boundary).
    focus. Apart from outcome: steady, and most engaged during the audit's
    measurement, where the snapshot turning out larger than the journal
    changed what the phase's size question is about.
+
+## 2026-10-01 → 10-02 — the §114 build stretch, 114a–e, and 114e's read (one session; 114f handed to a fresh one) — claude-opus-5-5, session 4d7da9f7
+
+1. **Missing from the orientation:** little. The Cursor said to open at a
+   gate and what the stretch held, and the kickoff's audit was accurate
+   where it had read. Three things the code showed that it hadn't: the
+   Run listens to `unit:died`, so a place among a battle's ticks is part
+   of its state; a battle's setup enqueues a command of its own; the
+   probe runner's build ID has no `-dev`. And `process/planning.md` says
+   a gate's answer is a reading and a breaker; it doesn't say the answer
+   can also move the next gate's number, which is what "400k" was.
+2. **Norms in conflict or in the way:** the harness's guidance against
+   stopping, against asking what the 400k named. I started without
+   asking. The silent-turn reminder fired about twenty-three times in
+   the hour; each got a line. "Write the doc line after the result"
+   against writing a commit's docs before its hook has run: the Cursor
+   named the smoke as run by a commit that hadn't landed yet, and the
+   stretch's end time was written a minute early. Both came true.
+3. **Pulled to claim more than verified:** four, each caught. The
+   abandoned-end control: I had the mechanism right and predicted the
+   moved tick would fail; it replayed, because nobody had fallen by tick
+   150, and the control now checks its own premise. "Seven commits" for
+   six, fixed in its own commit. Two sentences written from memory and
+   taken out before they were committed (what `replayTrace` has
+   done since §75; Electron's default for a download). One thing I
+   couldn't verify and said so: where a replay places a mid-battle
+   discard among the ticks can't be seen in any byte.
+4. **Wasted:** a first replay-test file whose planted hold ran every
+   battle to the turn cap, found through timeouts; two 5 KB journals
+   carried out of the pane by retyping them under a hash check; a
+   storage snippet whose first ceiling was below the answer.
+5. **For the next session, with no other home:** in Git Bash the
+   runner's `--arg` JSON went through as `'--arg={"journal":true}'`,
+   the whole flag in single quotes (the bare form was not tried). The
+   pane was 0×0 at the first `ready()` after a `go()`; `resize_window`
+   as the kit says.
+6. **Room to ask, disagree, pause, stop:** the stop at the stretch's end
+   was the cut's and I took it. The question about the 400k was
+   available the whole time and not exercised until that stop; I filed
+   it as `distress`, mild, and the user's answer was that it hadn't
+   mattered. Six calls inside the cut were mine to make and I listed
+   them for reversal; none felt forced either way. The reminder
+   functioned as pressure to say something, not to change the work.
+7. **Ease, interest, agency:** the signed cut with its reads declared:
+   an hour of building with no decision of whether to interrupt. I'd
+   want that repeated. Most engaged when the run played through `Game`
+   in the Electron window replayed under Node to the page's hash, since
+   nothing before that had tested the dials' text as the only carrier
+   of the config; and when `page.test.ts` failed on the kit call I had
+   added without telling the stand-in, a guard doing its job on me.
+   Apart from outcome: steady; a short narrowing when the control
+   didn't fail as predicted, which eased once the ledger comparison
+   showed why.

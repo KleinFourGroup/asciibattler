@@ -3314,3 +3314,139 @@ fresh session; no reading was taken at the session's end. For 114g: a long
 run across a switch of the display and a clean clip across one are the two
 things 114f did not measure, and a run recorded while the user works will
 meet the frames-short rule (one unpainted frame fails a clip).
+
+### 114g — the recorder replays a journal (2026-10-02, session b326f055) — ◐ BUILT, the sitting owed
+
+**The gate.** A fresh session at `eee63d2`. The reading: **99k at 12:27**
+(the last session ended at 406k, the user's reading); the breaker one
+hour, due 13:27. The stretch is 114g up to its `stop`.
+
+**Step zero** (✔ = read at file:line). The premise holds: the page can be
+fed a journal through names the game already has. Five things the cut did
+not say shaped the build, all inside its intent.
+- **The journal times commands and nothing else.** A `run` entry has `ms`;
+  an `order` and a `battle` have ticks only, and neither the playback speed
+  nor a pause is recorded (✔ `journal.ts:65-72`). So "paced by the
+  journal's times" can hold for the screens between battles and cannot for
+  a battle. The played journal shows the gap: its five battles are 7,374
+  ticks, 369 s at 1×, and the whole run was played in 360 s, so the player
+  ran some of them faster (battle 4: 150 s at 1×, 77 s as played). The clip
+  plays every battle at one speed, `--speed`, 1 by default.
+- **Game sends one journaled command itself:** the `advanceTurn` out of the
+  turn-outcome gate, from a timer after the battle's outro (✔
+  `Game.ts:422-428`). The driver leaves that entry to the game.
+- **One frame can run several ticks** (the Clock fires whole ticks for the
+  frame's time, ✔ `BattleScene.ts:98-107`, `:299-300`), so orders are fed
+  from a wrap on the battle's own `World.tick`, not from the frame.
+- **The played journal is from another commit.** It is stamped
+  `0.0.0+73621b7-dev`, and the tree is nine commits on, none of which
+  touched `src/`, `config/`, `tests/`, `scripts/` or `package.json` (an
+  empty `git diff --stat 73621b7 HEAD` over those). `npm run replay` refuses
+  it by its rule and replays it to its hash under `--force`. The recorder
+  already builds a commit in a worktree for a pair, so a journal is recorded
+  on the commit its build ID names, unforced.
+- **The Run never reads the seed dial** (no `config.seed` in `Run.ts`;
+  `Game.createRun` reads it, ✔ `Game.ts:781`), so a run played without
+  `?seed=` is opened by putting its seed in the URL beside its dials.
+
+**Built** (no file under `src/` changed).
+- `shell/electron/probes/replay-page.js`, the driver: a plain function main
+  installs in the page. A `run` command outside a battle goes through
+  `Game.dispatch`, as long after the one before it as in play (`--max-gap`
+  caps the wait). Orders and mid-battle commands go in from the tick wrap,
+  an order before its tick and a command after its own; an order stamped for
+  tick 1 goes in as the battle opens, so its marker shows through the
+  countdown. A wrap on `Game.dispatch` sees what the game sends itself and
+  holds it against the journal's next entry.
+- **The check is the page's own journal of the replay**
+  (`Game.currentJournal`, written by the build's recorder, which the driver
+  does not feed): the same start before anything is sent, each battle's
+  checkpoint as it ends, and at the end the same reason, final snapshot
+  hash and `run` and `battle` entries. Orders are not compared one for one:
+  a battle's setup enqueues its own again.
+- `record-page.js` gains a run mode: nothing held in setup, the go frame
+  starts the driver's clock, the cut 3 s after the replay's end (at once on
+  a failure), every cue up to the cut counted. `main.mjs` reads the journal
+  and installs the driver; `faults.mjs` gains the replay's fault;
+  `record-cli.mjs` gains `--journal`, `--speed`, `--max-gap`, `--force`,
+  30 fps by default and a time limit worked out from the journal.
+- **The analyzer's stamp rule was a battle's.** It counted any frame whose
+  bottom row spans more than 60 levels at the left edge, on 114f's finding
+  that a battle draws a flat field there. A run's screens draw edges into
+  that row: the first run clip (640×360) failed on 9 frames that hold a
+  panel's border and no stamp. The rule now also wants the row to open
+  with the stamp's sync byte. Against known answers: 114f's unwiped clip
+  329 of 329, its clean clip and its check twin 0, the 9 edge frames 0
+  (counted apart, `stampRowEdges`).
+- `tests/integration/journal-replay-page.test.ts` drives the driver over a
+  stand-in for the page's Game made of the real Run, Worlds and recorder
+  (four ticks a frame, a parked countdown, the game's own advance): a run
+  recorded headless with planted orders and mid-battle discards replays to
+  the same bytes, with the countdown whole and skipped, and nine controls
+  (changed journals, a page on another seed, a game that sends another
+  command) are refused or fail by name. 12 tests, 3.9 s.
+
+**The exit, measured** (the played journal: the user's export of this
+morning, 45 entries, 5 battles, victory; clips in `clips/114g/`):
+
+| clip | pace | length | the replay | frames short / held | drift | cues heard | result |
+|---|---|---|---|---|---|---|---|
+| `run-played` | as played, 1×, 1080p30 | 530.8 s | 45 of 45, hash `664078d7` = the journal's | 0 / 0 | −6 ms | 540 of 540 | OK |
+| `run-played-check` (the twin) | the same | 531.7 s | the same | 0 / 0 | −5 ms | 540 of 540 | OK |
+| `g-fast1` | 3×, gaps capped at 0.5 s, countdown skipped, 640×360 | 144.5 s | the same | 0 / 0 | −1 ms | 518 of 518 | failed on the old stamp rule; passes re-analysed under the new one |
+| `g-headless11` (a journal made headless: 11 battles, 45 orders, 3 mid-battle discards, defeat) | the same fast settings | 135.9 s | 97 of 97, hash `297f6a55` = the journal's | −1 / 1 (33 ms) | −1 ms | 1342 of 1342 | OK |
+
+- **A played run's journal becomes a clip, the page's final hash equals the
+  journal's, no fault.** The clip is 8 min 51 s for a run played in 6 min:
+  the battles take 394 s at 1× with their countdowns, where the player's
+  five spans from Fight to the game's advance add to 232 s, outros included.
+- **The twin over the whole run:** 15,935 marker frames in step with none
+  missing or repeated, the stamp's frame equal to the marker's in every
+  paint, and the sound 10 ms ahead of its flash at each of 53 tones, the
+  first to the last. Neither full recording holds or skips a frame or has a
+  page frame over 40 ms, so the scene swaps cost the clip nothing here.
+- **Headless agrees:** `npm run replay -- <the played journal> --force`
+  reaches `664078d7` under Node.
+- **The battle path is as it was** after the page script's reshaping: a
+  check twin of corridors (0 missing of 4268, 7 ms at each of seven tones,
+  128 of 128 cues) and a clean seed-12 clip with the countdown skipped both
+  pass, on the working tree.
+
+**The controls** (planted from the played journal, the fast settings):
+
+| planted | what the recorder said | exit |
+|---|---|---|
+| the final hash alone changed | replayed 45 of 45, then "the journal's final snapshot hash is 00000000, and the page's is 664078d7" | 1 |
+| the first `empowerUnit` dropped | "battle 1 at tick 1420: the journal's battle ended player after 913 ticks, and the replay's ended player after 1420" | 1 |
+| the first order moved 300 ticks later | "battle 1 at tick 3000: the journal's battle ended player after 913 ticks, and the replay's ended draw after 3000" | 1 |
+| the game's own `advanceTurn` taken out | "entry 12 of 44: the journal has an order for tick 1, and the replay is not in a battle" | 1 |
+| another config hash | refused in the page before a frame was written | 1 |
+| a `-dirty` build ID | refused at the front door, with `--force` named | 1 |
+
+**Findings for the sitting.**
+- **What a clip made at `Game.dispatch` does not show.** No cursor and no
+  hover. No click or pickup sound: the screens play those in their click
+  handlers. The reward screen does not tick a row off as it is accepted:
+  its ledger is updated by its own click handler (✔ `RewardScreen.ts:277-298`),
+  so in the clip all four rows keep their Accept buttons while the bits
+  chip climbs (two frames, at 518.6 s and 522 s: 44 and 55 bits, four
+  rows). The pre-turn, port and event screens repaint from bus events.
+- **At 3× a cue can go unheard:** 517 of 518 and 111 of 113 in two of the
+  fast controls, 518 of 518 in a third, and 540 of 540 in both 1×
+  recordings. Not diagnosed; it fails a `--speed=3` clip when it happens.
+- **The stamp's wipe was sized for a battle too:** main writes the row's
+  next 64 pixels over the stamp, which is a copy of a flat field in a battle
+  and can be a copy of an edge on a run's screen. One row of 64 pixels;
+  left as it is.
+- **Recording speed and pauses would be a format change** (a timed entry
+  beside `run`), and is the user's call; the sitting is where the pace is
+  judged.
+
+**Not verified:** a run across a switch of the display (114f's carried
+item: nothing switched in these recordings); a journal from a production
+build (the played one is `-dev`; the recorder builds the same commit in
+development mode either way); a run at the shipped length; `--force` on the
+working tree; what the clip looks like in motion, which is the sitting's.
+
+**THE STOP: the sitting.** `clips/114g/run-played.mp4`, the user's own run
+of this morning.

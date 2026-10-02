@@ -21,6 +21,8 @@
 // - `stamp`: the stamp's width and bytes (record.mjs, STAMP).
 // - `stalls`: a control, `[{ atS, ms }]`: block the page that long, that many
 //   seconds after the go frame.
+// - `journal`: record a whole run from its journal instead of one battle
+//   (A RUN, below): `{ segment, speed, maxGapMs, tailMs }`.
 //
 // It installs `window.__rec110` with `start()` and `stop()`. The timeline:
 // - SETUP: the countdown is held (an instance patch on its `advance`, the one
@@ -52,6 +54,15 @@
 //   duplicate); a planted 3150 Hz tone plays 3 s after the go frame and every
 //   10 s from then, and the ninth square is white while it does, so the
 //   analyzer can measure the file's audio-to-video offset all along the clip.
+//
+// A RUN (`journal`, 114g): the page opened on the journal's seed and dials, so
+// its run stands at its first screen, and the replay driver main installed
+// (./replay-page.js, `window.__replayDriver`) feeds it the journal's entries.
+// Nothing is held in setup. The go frame starts the driver's clock, so the
+// clip opens on the run's first screen; every battle's countdown plays whole
+// (`countdown: full`) or is skipped as it opens (`skip`). THE CUT comes
+// `tailMs` after the replay reaches the journal's end, on the end screen, or
+// at once when the replay fails. Every cue up to the cut is in the clip.
 export default async function recordPage(opts = {}) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const waitFor = async (get, ms) => {
@@ -64,25 +75,11 @@ export default async function recordPage(opts = {}) {
   const game = await waitFor(() => window.__game, 20_000);
   if (!game) return { ok: false, error: 'no window.__game within 20 s: is this a development-mode build?' };
 
-  if (opts.enter) {
-    const rootId = await waitFor(() => game.run?.nodeMap?.rootId, 20_000);
-    if (typeof rootId !== 'number') return moved('Game.run.nodeMap.rootId (or no run at boot: is character= in the URL?)');
-    if (typeof game.dispatch !== 'function') return moved('Game.dispatch');
-    game.dispatch({ kind: 'enterNode', nodeId: rootId });
-    game.dispatch({ kind: 'advanceTurn' });
-  }
+  const check = opts.check === true;
+  const opening = opts.countdown;
+  if (opening !== 'full' && opening !== 'skip') return { ok: false, error: `countdown must be full or skip, not ${opening}` };
 
-  const scene = await waitFor(() => (game.activeScene?.world ? game.activeScene : null), 30_000);
-  if (!scene) {
-    return {
-      ok: false,
-      error: opts.enter
-        ? 'the root node did not open a battle within 30 s (firstNode=elite in the URL?)'
-        : 'no battle within 30 s (is the board one of the explorer fixtures, src/dev/boardPanel/fixtures.ts?)',
-    };
-  }
-
-  // Every other name this script reaches, checked before anything is wrapped.
+  // The names both kinds of recording reach, checked before anything is wrapped.
   const player = game.audio;
   if (!player || typeof player.play !== 'function') return moved('Game.audio / AudioPlayer.play');
   const pools = player.pools && typeof player.pools === 'object' ? Object.values(player.pools) : [];
@@ -90,24 +87,58 @@ export default async function recordPage(opts = {}) {
     return moved('AudioPlayer.pools (a record of <audio> arrays)');
   }
   if (typeof game.bus?.on !== 'function') return moved('Game.bus.on');
-  if (typeof scene.playback?.resume !== 'function') return moved('BattleScene.playback.resume');
-  const countdown = scene.countdown;
-  if (!countdown || typeof countdown.active !== 'boolean') return moved('BattleScene.countdown');
-  if (typeof countdown.remaining !== 'number') return moved('PreBattleCountdown.remaining');
-  if (typeof Object.getPrototypeOf(countdown).advance !== 'function') return moved('PreBattleCountdown.advance');
-  const boxes = document.querySelectorAll('.battle-countdown');
-  if (boxes.length !== 1) return moved(`the HUD's countdown element (.battle-countdown: ${boxes.length} found)`);
-  const countdownBox = boxes[0];
-  if (!countdown.active) return { ok: false, error: 'the countdown had ended before the recorder could hold it (a live board?)' };
-  // Hold it through setup. A seed's battle was entered just above, with no
-  // frame between, so it holds its whole seconds; a parked fixture is held
-  // already, by the same patch.
-  if (!Object.hasOwn(countdown, 'advance')) countdown.advance = () => {};
-  const countdownFrom = Math.ceil(countdown.remaining);
 
-  const check = opts.check === true;
-  const opening = opts.countdown;
-  if (opening !== 'full' && opening !== 'skip') return { ok: false, error: `countdown must be full or skip, not ${opening}` };
+  // What the clip shows: one battle (`scene`, its countdown held), or a whole
+  // run fed from its journal (`driver`).
+  let scene = null;
+  let countdown = null;
+  let countdownBox = null;
+  let countdownFrom = null;
+  let driver = null;
+  if (opts.journal) {
+    if (typeof window.__replayDriver !== 'function') return moved('window.__replayDriver (main installs probes/replay-page.js)');
+    await waitFor(() => game.run, 20_000);
+    const made = window.__replayDriver(game, opts.journal.segment, {
+      speed: opts.journal.speed,
+      maxGapMs: opts.journal.maxGapMs ?? Infinity,
+      countdown: opening,
+    });
+    if (made.error !== undefined) return { ok: false, error: made.error };
+    driver = made;
+  } else {
+    if (opts.enter) {
+      const rootId = await waitFor(() => game.run?.nodeMap?.rootId, 20_000);
+      if (typeof rootId !== 'number') return moved('Game.run.nodeMap.rootId (or no run at boot: is character= in the URL?)');
+      if (typeof game.dispatch !== 'function') return moved('Game.dispatch');
+      game.dispatch({ kind: 'enterNode', nodeId: rootId });
+      game.dispatch({ kind: 'advanceTurn' });
+    }
+
+    scene = await waitFor(() => (game.activeScene?.world ? game.activeScene : null), 30_000);
+    if (!scene) {
+      return {
+        ok: false,
+        error: opts.enter
+          ? 'the root node did not open a battle within 30 s (firstNode=elite in the URL?)'
+          : 'no battle within 30 s (is the board one of the explorer fixtures, src/dev/boardPanel/fixtures.ts?)',
+      };
+    }
+    if (typeof scene.playback?.resume !== 'function') return moved('BattleScene.playback.resume');
+    countdown = scene.countdown;
+    if (!countdown || typeof countdown.active !== 'boolean') return moved('BattleScene.countdown');
+    if (typeof countdown.remaining !== 'number') return moved('PreBattleCountdown.remaining');
+    if (typeof Object.getPrototypeOf(countdown).advance !== 'function') return moved('PreBattleCountdown.advance');
+    const boxes = document.querySelectorAll('.battle-countdown');
+    if (boxes.length !== 1) return moved(`the HUD's countdown element (.battle-countdown: ${boxes.length} found)`);
+    countdownBox = boxes[0];
+    if (!countdown.active) return { ok: false, error: 'the countdown had ended before the recorder could hold it (a live board?)' };
+    // Hold it through setup. A seed's battle was entered just above, with no
+    // frame between, so it holds its whole seconds; a parked fixture is held
+    // already, by the same patch.
+    if (!Object.hasOwn(countdown, 'advance')) countdown.advance = () => {};
+    countdownFrom = Math.ceil(countdown.remaining);
+  }
+
   const { square: SQUARE, left: LEFT, markerBottom: MARKER_BOTTOM, patchBottom: PATCH_BOTTOM, patches: PATCHES } = opts.leadIn;
   const LEAD_IN_FRAMES = opts.leadInFrames;
   const TONE_HZ = 3150;
@@ -140,8 +171,9 @@ export default async function recordPage(opts = {}) {
   const cues = [];
   const originalPlay = player.play;
   player.play = function logged(key, scale) {
-    // `inBattle`: logged before the swap to the next screen, so in the clip.
-    cues.push({ key, t: performance.now(), inBattle: game.activeScene === scene });
+    // `inBattle`: logged before the cut (a battle's: the swap to the next
+    // screen), so in the clip.
+    cues.push({ key, t: performance.now(), inBattle: driver === null ? game.activeScene === scene : state.cutAt === null });
     return originalPlay.call(this, key, scale);
   };
 
@@ -204,6 +236,7 @@ export default async function recordPage(opts = {}) {
     longFrames: [],
     cutAt: null,
     cutFrame: null,
+    doneAt: null,
     boxShownAtGo: null,
     chunks: [],
     recorder: null,
@@ -239,6 +272,10 @@ export default async function recordPage(opts = {}) {
         while (performance.now() < until);
       }, stall.atS * 1000);
     }
+    if (driver !== null) {
+      driver.begin(state.goAt);
+      return;
+    }
     state.boxShownAtGo = countdownBox.classList.contains('is-visible');
     if (opening === 'full') {
       delete countdown.advance; // the prototype's again
@@ -271,8 +308,21 @@ export default async function recordPage(opts = {}) {
     // the file reads. A battle at 60 fps is a few thousand numbers.
     if (state.goAt !== null && state.cutAt === null) state.frameTimes.push(Math.round((now - state.goAt) * 10) / 10);
     // The swap runs from a timer between frames (Game.afterOutro), so this
-    // callback sees it in the first frame that draws the next screen.
-    if (state.cutAt === null && state.startedAt !== null && game.activeScene !== scene) {
+    // callback sees it in the first frame that draws the next screen. A run
+    // is cut once its replay is done and the end screen has had its tail.
+    let cutNow = false;
+    if (state.cutAt === null && state.startedAt !== null) {
+      if (driver === null) cutNow = game.activeScene !== scene;
+      else {
+        driver.frame(now);
+        if (driver.done) {
+          state.ended = true;
+          state.doneAt ??= now;
+          cutNow = !driver.report().ok || now - state.doneAt >= (opts.journal.tailMs ?? 3000);
+        }
+      }
+    }
+    if (cutNow) {
       state.cutAt = now;
       state.cutFrame = state.frame;
       document.body.append(patchRow);
@@ -289,9 +339,12 @@ export default async function recordPage(opts = {}) {
     requestAnimationFrame(paint);
   };
 
-  game.bus.on('battle:ended', () => {
-    state.ended = true;
-  });
+  // A run has many battles; its `ended` is the replay's end (the paint loop).
+  if (driver === null) {
+    game.bus.on('battle:ended', () => {
+      state.ended = true;
+    });
+  }
 
   window.__rec110 = {
     state,
@@ -344,8 +397,9 @@ export default async function recordPage(opts = {}) {
         rejections,
         ctxState: ctx.state,
         ended: state.ended,
+        replay: driver === null ? null : driver.report(),
       };
     },
   };
-  return { ok: true, elements, ctxState: ctx.state, grid: [scene.world.gridW, scene.world.gridH], opening, countdownFrom };
+  return { ok: true, elements, ctxState: ctx.state, grid: scene === null ? null : [scene.world.gridW, scene.world.gridH], opening, countdownFrom };
 }

@@ -37,8 +37,11 @@ export const FREEZE_LIMIT_MS = 100;
  * - The cut has two halves, the page raising the patch at the swap and main
  *   stopping at the paint that shows it; one without the other is a fault
  *   (game content that looks like the patch, or a swap main never saw).
+ * - The replay (a run recorded from its journal, `replay`: the driver's
+ *   report, probes/replay-page.js): the clip is the journal's run only if the
+ *   replay reached the journal's end with its final snapshot hash.
  */
-export function faultsOf({ timeline, cut, endedBy, retime }, tailS = 5) {
+export function faultsOf({ timeline, cut, endedBy, retime, replay }, tailS = 5) {
   const freezes = (timeline?.holds ?? []).filter((h) => h.ms > FREEZE_LIMIT_MS);
   const worst = freezes.length === 0 ? null : freezes.reduce((a, h) => (h.ms > a.ms ? h : a));
   const long = timeline?.longFrames ?? [];
@@ -60,6 +63,9 @@ export function faultsOf({ timeline, cut, endedBy, retime }, tailS = 5) {
     retime && retime.on && retime.goAtFrame === null && 'no paint carried a stamp, so nothing was retimed (seam moved: the stamp)',
     retime && retime.on && retime.unplaced > 0 && `${retime.unplaced} paints after the go frame carried no readable stamp and were written as they came`,
     cut?.atFrame != null && cut.page === null && 'the file was cut at a magenta paint the page did not raise',
-    endedBy === 'the fallback' && `no cut within ${tailS} s of the battle's end; the fallback stopped the recording`,
+    endedBy === 'the fallback' && `no cut within ${tailS} s of the ${replay ? 'run' : 'battle'}'s end; the fallback stopped the recording`,
+    replay && replay.failure !== null && `the replay parted from the journal at ${replay.failure}`,
+    replay && replay.failure === null && !replay.finished &&
+      `the recording stopped before the journal's end (${replay.at} of ${replay.entries} entries, ${replay.battles} battles)`,
   ].filter(Boolean);
 }

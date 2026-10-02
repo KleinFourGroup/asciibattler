@@ -39,6 +39,13 @@
 //   --plant-pause=<s>:<ms>[,...]  record: a control, stop the window painting
 //                     for <ms> at about <s> seconds after the go frame (no
 //                     paint arrives meanwhile, as when the display switches)
+//   --journal=<file>  record: replay this run journal (one seed-started
+//                     segment, played to its end) and record the whole run;
+//                     --url must open the journal's seed and dials
+//                     (probes/replay-page.js)
+//   --speed=<n>       record, with --journal: the battles' playback speed (1)
+//   --max-gap=<s>     record, with --journal: the longest wait between two
+//                     commands outside a battle (default: as the journal has it)
 //   --record-seconds=<n>  record: stop by then if the battle has not ended (90)
 //   --tail-seconds=<n>    record: the fallback, if no next screen cuts the
 //                     clip: stop this long after the battle ends (5)
@@ -63,6 +70,9 @@ const here = dirname(fileURLToPath(import.meta.url));
  * 100 ms (§111f), so the sound goes slightly after its picture, as in play.
  */
 const SOUND_DELAY_MS = 25;
+
+/** How long a run's clip stays on the end screen before it is cut. */
+const RUN_TAIL_MS = 3000;
 
 function flag(name) {
   const prefix = `--${name}=`;
@@ -277,7 +287,23 @@ const probes = {
     const base = resolve(flag('record') ?? 'recording');
     const check = process.argv.includes('--check');
     const leadInFrames = Math.max(10, Math.round(frameRate * 0.5));
+    // A run from its journal: the replay driver is installed as a function,
+    // and the page script makes one from it.
+    const journalFile = flag('journal');
+    let journal;
+    if (journalFile !== undefined) {
+      const maxGapS = flag('max-gap');
+      journal = {
+        segment: JSON.parse(readFileSync(resolve(journalFile), 'utf8')).segments[0],
+        speed: Number(flag('speed') ?? 1),
+        tailMs: RUN_TAIL_MS,
+        ...(maxGapS === undefined ? {} : { maxGapMs: Number(maxGapS) * 1000 }),
+      };
+      const driver = readFileSync(join(here, 'probes', 'replay-page.js'), 'utf8').replace(/^export default /m, '');
+      await win.webContents.executeJavaScript(`window.__replayDriver = ${driver}; true`);
+    }
     const ready = await runPageScript(win, join(here, 'probes', 'record-page.js'), {
+      ...(journal === undefined ? {} : { journal }),
       enter: process.argv.includes('--enter'),
       check,
       countdown: flag('countdown') ?? 'full',
@@ -312,16 +338,17 @@ const probes = {
       }, (leadInFrames / frameRate + atS) * 1000);
     }
 
-    // Until the cut (the next screen's first paint), or the fallback after
-    // the battle ends, or the time limit.
+    // Until the cut (the next screen's first paint; a run's: its end screen's
+    // tail), or the fallback after the battle or the run ends, or the time
+    // limit.
     const maxMs = Number(flag('record-seconds') ?? 90) * 1000;
-    const tailMs = Number(flag('tail-seconds') ?? 5) * 1000;
+    const tailMs = Number(flag('tail-seconds') ?? 5) * 1000 + (journal === undefined ? 0 : RUN_TAIL_MS);
     const t0 = Date.now();
     let endedAt = null;
     let endedBy = 'the time limit';
     while (Date.now() - t0 < maxMs) {
       if (video.stats.cut !== null) {
-        endedBy = 'the next screen';
+        endedBy = journal === undefined ? 'the next screen' : 'the run\'s end';
         break;
       }
       if (endedAt === null && (await win.webContents.executeJavaScript('window.__rec110.state.ended'))) endedAt = Date.now();
@@ -350,9 +377,10 @@ const probes = {
     const muxed = await mux({ video: `${base}.video.mp4`, audio: `${base}.audio.webm`, out: `${base}.mp4`, offsetS, durationS });
     const tl = timeline(page, videoResult, goVideoFrame);
     const cut = page.cut === null && videoResult.cutAtFrame === null ? null : { page: page.cut, atFrame: videoResult.cutAtFrame };
-    const faults = faultsOf({ timeline: tl, cut, endedBy, retime: videoResult.retime }, tailMs / 1000);
+    const faults = faultsOf({ timeline: tl, cut, endedBy, retime: videoResult.retime, replay: page.replay }, tailMs / 1000);
     const sidecar = {
       mode: check ? 'check' : 'clean',
+      replay: page.replay,
       opening: page.opening,
       countdownFrom: page.countdownFrom,
       fps: frameRate,

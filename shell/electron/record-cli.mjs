@@ -6,15 +6,36 @@
 //   npm run record -- --seed=12 --dials=layout=river&roster=archer,mage
 //   npm run record -- --board=corridors --before=c4ca4e6^ [--after=<ref>]
 //                                                a before/after pair
+//   npm run record -- --journal=<file>           a whole run, from its journal
+//
+// A RUN (--journal): the file is a run's journal as "Export run" saves it (or
+// a probe report that carries one), played to its end in one sitting. A
+// journal replays on the build that recorded it, so the recorder builds that
+// commit in a temporary worktree, whatever the working tree holds; a journal
+// stamped by a build of uncommitted changes, or by none, is refused unless
+// --force records it on the working tree. The page opens on the journal's
+// seed and dials and is fed its commands (probes/replay-page.js): those
+// outside a battle wait as long as they did when the run was played, each
+// battle's orders go in at their ticks, and every battle plays at --speed,
+// since the journal holds neither the speed nor a pause. The clip opens on the
+// run's first screen and ends 3 s into its end screen, at 30 fps. It fails
+// (exit 1, the clip still delivered) unless the page's final snapshot hash is
+// the journal's.
+//   --speed=<n>        the battles' playback speed (default 1)
+//   --max-gap=<s>      the longest wait between two commands outside a battle
+//                      (default: as long as the journal has it)
+//   --force            record a journal the working tree did not record
 //
 // Options:
 //   --countdown=full|skip  how the clip opens: on the whole pre-battle
 //                      countdown, playing through the game's own handover into
 //                      the fight (full, the default), or on the fight's first
 //                      frame with no countdown (skip, for clips joined together)
-//   --fps=<n>          frames per second (default 60; 30 for long recordings)
+//                      (a run: every battle's countdown played whole, or skipped)
+//   --fps=<n>          frames per second (default 60; a run's default is 30)
 //   --size=<w>x<h>     the page's size in pixels (default 1920x1080)
-//   --max-seconds=<n>  stop by then if the battle has not ended (default 90)
+//   --max-seconds=<n>  stop by then if the battle has not ended (default 90; a
+//                      run's default is worked out from its journal)
 //   --name=<name>      the clip's file name (default <input>-<commit>[-skip])
 //   --check            record the analyzer's twin instead of a clean clip
 //   --keep             keep the temporary builds, profiles and intermediates
@@ -109,6 +130,8 @@ async function recordOne({ dist, base, profile, query, opts }) {
     ...(opts.retime !== undefined ? [`--retime=${opts.retime}`] : []),
     ...(opts.stalls !== undefined ? [`--plant-stall=${opts.stalls}`] : []),
     ...(opts.pauses !== undefined ? [`--plant-pause=${opts.pauses}`] : []),
+    ...(opts.journal !== undefined ? [`--journal=${opts.journal}`, `--speed=${opts.speed}`] : []),
+    ...(opts.maxGap !== undefined ? [`--max-gap=${opts.maxGap}`] : []),
   ];
   const child = spawn(electronPath, args, { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'] });
   let stdout = '';
@@ -119,6 +142,10 @@ async function recordOne({ dist, base, profile, query, opts }) {
   const line = stdout.split(/\r?\n/).find((l) => l.startsWith('{'));
   const probe = line ? JSON.parse(line) : null;
   if (!probe?.ok || !existsSync(`${base}.mp4`)) {
+    // The page script refused before anything was recorded (a moved seam, a
+    // journal this build can't replay): its one line says why.
+    const refused = probe?.result?.ready?.error;
+    if (typeof refused === 'string') stop(`the recording did not start: ${refused}`);
     console.error(JSON.stringify(probe ?? { code, stderr: stderr.slice(-2000) }, null, 2));
     stop(`the recording failed (exit ${code})`);
   }
@@ -144,10 +171,16 @@ function verdict(probe, analysis, check) {
     ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms` +
       ` (at each tone: ${c2?.tones?.offsetsMs.join(', ') ?? '?'})`
     : `${analysis?.container?.video.frames ?? '?'} frames, lead-in frames in the file ${(analysis?.leadIn?.markerLikeFrames ?? 0) + (analysis?.leadIn?.patchFrames ?? 0)}`;
-  const { opening, countdownFrom, endedBy, timeline } = probe.result;
+  const { opening, countdownFrom, endedBy, timeline, replay } = probe.result;
+  const opens = replay ? 'the run\'s first screen' : opening === 'full' ? `the countdown at ${countdownFrom}` : 'the fight';
+  const replayed = !replay
+    ? ''
+    : `replayed ${replay.at} of ${replay.entries} entries (${replay.sent} sent, ${replay.gameSent} the game's own, ${replay.orders} orders) ` +
+      `through ${replay.battles} battles at ${replay.speed}x (${replay.battleSeconds.join(', ')} s) to ${replay.reason.page ?? 'no end'}, ` +
+      `the page's final hash ${replay.hash.page ?? 'none'} ${replay.hash.page === replay.hash.journal ? '= the journal\'s' : `where the journal has ${replay.hash.journal}`} · `;
   const line =
-    `${analysis?.container?.seconds.toFixed(1) ?? '?'} s · opens on ${opening === 'full' ? `the countdown at ${countdownFrom}` : 'the fight'}, ` +
-    `ends at ${endedBy} · ${shape} · ` +
+    `${analysis?.container?.seconds.toFixed(1) ?? '?'} s · opens on ${opens}, ` +
+    `ends at ${endedBy} · ${replayed}${shape} · ` +
     `picture ahead of its sound by ${timeline?.driftMs ?? '?'} ms at the cut (page ${timeline?.pageFps ?? '?'} fps, ${timeline?.framesShort ?? '?'} page frames never reached the file) · ` +
     `retimed: ${timeline?.held ?? '?'} frames held in ${timeline?.holds.length ?? '?'} freezes (the longest ${Math.max(0, ...(timeline?.holds ?? []).map((h) => h.ms))} ms), ${timeline?.skipped ?? '?'} skipped · ` +
     `cues heard ${c2?.cuesHeard ?? '?'} of ${c2?.gameCues ?? '?'} (late ${c2?.cuesLate ?? '?'}) · ` +
@@ -196,32 +229,120 @@ function compose({ work, beforeFile, afterFile, labels, out }) {
   if (r.status !== 0) stop(`composing the pair failed: ${r.stderr.slice(-800)}`);
 }
 
+// --- a run's journal ---------------------------------------------------------
+
+/** The journal's own format (src/journal/journal.ts, JOURNAL_FORMAT). */
+const JOURNAL_FORMAT = 1;
+/** A build ID that names a commit (src/journal/replayTool.ts has the same). */
+const BUILD_ID_SHAPE = /^(.+)\+([0-9a-f]{7})(-dirty)?(-dev)?$/;
+
+/**
+ * Read a journal for the recorder: the segment to replay, the commit to build
+ * (undefined: the working tree, under --force), the page's query, and how long
+ * the recording may take. Stops by name on a file the recorder can't replay.
+ */
+function openJournal(file, { force, speed, maxGap, countdown }) {
+  if (!existsSync(file)) stop(`--journal=${file}: no such file`);
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(file, 'utf8'));
+  } catch (err) {
+    stop(`--journal=${file} is not JSON: ${err.message}`);
+  }
+  // A probe report carries the journal in its script's result (drive-run.js).
+  const journal = parsed?.result?.script?.journal ?? parsed?.journal ?? parsed;
+  if (typeof journal?.format !== 'number' || !Array.isArray(journal.segments)) {
+    stop(`--journal=${file} is not a run journal: no format and segments (nor a probe report with a journal)`);
+  }
+  if (journal.format !== JOURNAL_FORMAT) stop(`the journal's format is ${journal.format}; this recorder reads format ${JOURNAL_FORMAT}`);
+  if (journal.segments.length !== 1) stop(`the journal has ${journal.segments.length} segments; the recorder replays a run played in one sitting`);
+  const segment = journal.segments[0];
+  if (segment.start?.kind !== 'seed') stop('the journal starts from a loaded snapshot; the recorder replays a run started from a seed');
+  if (segment.end?.reason !== 'defeat' && segment.end?.reason !== 'victory') {
+    stop(`the journal's run was not played to its end (${segment.end?.reason ?? 'no end'}); the recorder replays a finished run`);
+  }
+
+  // Which build: the journal's own commit, unless its ID names none.
+  const id = BUILD_ID_SHAPE.exec(segment.build);
+  const refusal =
+    id === null
+      ? `its build ID '${segment.build}' names no commit`
+      : id[3] !== undefined
+        ? `it was recorded on a build of ${id[2]} with uncommitted changes ('${segment.build}'), which no commit holds`
+        : null;
+  if (refusal !== null && !force) stop(`the journal can't be replayed on its own build: ${refusal}. --force records it on the working tree`);
+  if (refusal !== null) console.log(`record: forced past: ${refusal}`);
+
+  const params = new URLSearchParams(segment.start.dials);
+  params.set('seed', String(segment.start.seed));
+  const battles = segment.entries.filter((e) => e.t === 'battle');
+  let waits = 0;
+  let lastMs = 0;
+  for (const e of segment.entries) {
+    if (e.t !== 'run' || e.tick !== undefined) continue;
+    waits += Math.min(e.ms - lastMs, maxGap === undefined ? Infinity : maxGap * 1000);
+    lastMs = e.ms;
+  }
+  // The waits as played (which span the battles as played too), the battles
+  // at this speed, and each battle's countdown and outro; then a margin.
+  const fights = battles.reduce((s, b) => s + b.ticks, 0) / 20 / speed;
+  const estimateS = waits / 1000 + fights + battles.length * ((countdown === 'full' ? 5 : 0) + 5);
+  const opened = new Date(segment.openedAt).toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
+  return {
+    journal,
+    ref: refusal === null ? id[2] : undefined,
+    query: params.toString(),
+    inputName: `run-${opened}`,
+    maxSeconds: Math.ceil(estimateS * 1.25 + 60),
+    describe: `${segment.entries.length} entries, ${battles.length} battles, played in ${Math.round(segment.end.ms / 1000)} s on ${segment.build}`,
+  };
+}
+
 // --- main ------------------------------------------------------------------
 
 async function main(work, trees) {
   const board = flag('board');
   const seed = flag('seed');
   const dials = flag('dials');
+  const journalFile = flag('journal');
   const beforeRef = flag('before');
   const afterRef = flag('after');
-  if ((board === undefined) === (seed === undefined)) stop('give one input: --board=<fixture id> or --seed=<n>');
+  if ([board, seed, journalFile].filter((v) => v !== undefined).length !== 1) {
+    stop('give one input: --board=<fixture id>, --seed=<n> or --journal=<file>');
+  }
   if (board !== undefined && dials !== undefined) stop('--dials goes with --seed; a board fixture owns its run dials');
+  if (journalFile !== undefined && (dials !== undefined || beforeRef !== undefined)) stop('a journal names its own dials and its own build; --dials and --before do not go with it');
   if (seed !== undefined && !Number.isInteger(Number(seed))) stop(`--seed=${seed} is not an integer`);
   if (afterRef !== undefined && beforeRef === undefined) stop('--after goes with --before');
-  const fps = Number(flag('fps') ?? 60);
+  const fps = Number(flag('fps') ?? (journalFile !== undefined ? 30 : 60));
   if (!Number.isInteger(fps) || fps < 1 || fps > 60) stop(`--fps=${flag('fps')} must be a whole number from 1 to 60`);
   const size = flag('size') ?? '1920x1080';
   if (!/^\d+x\d+$/.test(size)) stop(`--size=${size} is not <width>x<height>`);
   const check = process.argv.includes('--check');
   const countdown = flag('countdown') ?? 'full';
   if (countdown !== 'full' && countdown !== 'skip') stop(`--countdown=${countdown} must be full or skip`);
-  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? 90), enter: seed !== undefined, check, countdown, cap: flag('backlog-cap-mb'), retime: flag('retime'), stalls: flag('plant-stall'), pauses: flag('plant-pause') };
+  const speed = Number(flag('speed') ?? 1);
+  const maxGap = flag('max-gap') === undefined ? undefined : Number(flag('max-gap'));
+  if (journalFile === undefined && (flag('speed') !== undefined || maxGap !== undefined)) stop('--speed and --max-gap go with --journal');
+  if (!(speed > 0)) stop(`--speed=${flag('speed')} is not a speed`);
+  if (maxGap !== undefined && !(maxGap >= 0)) stop(`--max-gap=${flag('max-gap')} is not a number of seconds`);
+  const run = journalFile === undefined ? null : openJournal(journalFile, { force: process.argv.includes('--force'), speed, maxGap, countdown });
+  const opts = { fps, size, maxSeconds: Number(flag('max-seconds') ?? run?.maxSeconds ?? 90), enter: seed !== undefined, check, countdown, cap: flag('backlog-cap-mb'), retime: flag('retime'), stalls: flag('plant-stall'), pauses: flag('plant-pause') };
   // The file name says which opening, when it is not the default.
   const suffix = `${countdown === 'skip' ? '-skip' : ''}${check ? '-check' : ''}`;
 
   let query;
   let inputName;
-  if (board !== undefined) {
+  if (run !== null) {
+    // The page replays the journal's one segment, from a copy beside the build.
+    opts.journal = join(work, 'journal.json');
+    writeFileSync(opts.journal, JSON.stringify(run.journal));
+    opts.speed = speed;
+    opts.maxGap = maxGap;
+    query = run.query;
+    inputName = run.inputName;
+    console.log(`record: ${journalFile}: ${run.describe}; the recording may take up to ${opts.maxSeconds} s`);
+  } else if (board !== undefined) {
     query = `bp=board-${board}_hide-1`;
     inputName = board;
   } else {
@@ -242,7 +363,7 @@ async function main(work, trees) {
     for (let n = 2; existsSync(join(clipsDir, `${candidate}.mp4`)); n++) candidate = `${name}-${n}`;
     return candidate;
   };
-  const input = board !== undefined ? { board } : { seed: Number(seed), dials: dials ?? null };
+  const input = run !== null ? { journal: journalFile } : board !== undefined ? { board } : { seed: Number(seed), dials: dials ?? null };
 
   // One side: open its tree, build, record, read it back.
   const side = async (label, ref) => {
@@ -251,7 +372,7 @@ async function main(work, trees) {
     const dist = join(work, `dist-${label}`);
     build(tree, dist, (line) => console.log(`record: ${line}`));
     const base = join(work, `rec-${label}`);
-    console.log(`record: recording ${inputName} (${tree.stamp})${check ? ', check twin' : ''} at ${size}, ${fps} fps, in the background; the battle plays in real time`);
+    console.log(`record: recording ${inputName} (${tree.stamp})${check ? ', check twin' : ''} at ${size}, ${fps} fps, in the background; the ${run !== null ? 'run' : 'battle'} plays in real time`);
     const probe = await recordOne({ dist, base, profile: join(work, `profile-${label}`), query, opts });
     const sidecar = JSON.parse(readFileSync(`${base}.json`, 'utf8'));
     sidecar.recorder = { input, query, stamp: tree.stamp, ref: tree.ref, fps, size, profile: 'fresh', check, countdown };
@@ -263,7 +384,8 @@ async function main(work, trees) {
   };
 
   if (beforeRef === undefined) {
-    const one = await side('clip', undefined);
+    // A run is recorded on the commit that recorded its journal.
+    const one = await side('clip', run?.ref);
     const name = uniqueName(flag('name') ?? `${inputName}-${one.tree.stamp}${suffix}`);
     copyFileSync(`${one.base}.mp4`, join(clipsDir, `${name}.mp4`));
     copyFileSync(`${one.base}.json`, join(clipsDir, `${name}.json`));

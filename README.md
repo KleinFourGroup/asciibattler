@@ -21,6 +21,16 @@ working tree (or `--after=<commit>`), side by side. A clip opens on the
 pre-battle countdown and plays through into the fight; `--countdown=skip`
 opens on the fight's first frame instead, for clips joined together. It
 ends on the battle's last frame before the next screen.
+
+`npm run record -- --journal=<file>` records a whole run from its exported
+journal (below): the commit that recorded the journal is built in a
+temporary worktree, the run is replayed in the page, and the clip runs from
+the run's first screen to its end screen at 30 fps. The time between
+choices is the time the player took (`--max-gap=<seconds>` caps it). A
+journal holds neither the battle speed nor a pause, so every battle plays
+at `--speed` (1 by default). The recording fails unless the replay reaches
+the journal's final state.
+
 It is a development tool (`shell/electron/record-cli.mjs` lists its
 options) with one external requirement: **ffmpeg** on the PATH, built with
 NVENC, and an NVIDIA GPU to run it. On Windows, `winget install

@@ -43,9 +43,9 @@
 //   that stream. Every `play(key)` call is logged with its time.
 // - CHECK ONLY: the marker keeps counting, so the analyzer reads frame
 //   continuity from the file (a skipped count is a dropped frame, a repeat a
-//   duplicate); a planted 3150 Hz tone plays 3 s after the go frame, and the
-//   ninth square is white while it does, so the analyzer can measure the
-//   file's audio-to-video offset.
+//   duplicate); a planted 3150 Hz tone plays 3 s after the go frame and every
+//   10 s from then, and the ninth square is white while it does, so the
+//   analyzer can measure the file's audio-to-video offset all along the clip.
 export default async function recordPage(opts = {}) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const waitFor = async (get, ms) => {
@@ -107,6 +107,9 @@ export default async function recordPage(opts = {}) {
   const TONE_HZ = 3150;
   const TONE_AT_S = 3;
   const TONE_S = 0.5;
+  const TONE_EVERY_S = 10;
+  // Tones are scheduled ahead on the audio clock: an hour's worth.
+  const TONE_COUNT = 360;
 
   // --- audio ---------------------------------------------------------------
   const ctx = new AudioContext({ sampleRate: 48_000 });
@@ -164,8 +167,10 @@ export default async function recordPage(opts = {}) {
     startedAt: null,
     startEpoch: null,
     toneFrom: null,
-    toneTo: null,
     flashFrames: [],
+    flashStarts: [],
+    wasFlashing: false,
+    frameTimes: [],
     running: false,
     ended: false,
     goAt: null,
@@ -186,17 +191,20 @@ export default async function recordPage(opts = {}) {
     state.startedAt = performance.now();
     state.startEpoch = performance.timeOrigin + state.startedAt;
     if (check) {
-      // The planted tone, scheduled on the audio clock, and its flash window on the page clock.
+      // The planted tones, scheduled on the audio clock (one oscillator, its
+      // gain opened for each), and their flash windows on the page clock.
       const osc = ctx.createOscillator();
       const toneGain = ctx.createGain();
       osc.frequency.value = TONE_HZ;
-      toneGain.gain.value = 0.3;
+      toneGain.gain.value = 0;
       osc.connect(toneGain).connect(dest);
       const at = ctx.currentTime + TONE_AT_S;
+      for (let k = 0; k < TONE_COUNT; k++) {
+        toneGain.gain.setValueAtTime(0.3, at + k * TONE_EVERY_S);
+        toneGain.gain.setValueAtTime(0, at + k * TONE_EVERY_S + TONE_S);
+      }
       osc.start(at);
-      osc.stop(at + TONE_S);
       state.toneFrom = state.startedAt + TONE_AT_S * 1000;
-      state.toneTo = state.toneFrom + TONE_S * 1000;
     }
     state.boxShownAtGo = countdownBox.classList.contains('is-visible');
     if (opening === 'full') {
@@ -225,6 +233,9 @@ export default async function recordPage(opts = {}) {
       state.longFrames.push({ pageFrame: state.frame, ms: Math.round(now - state.lastAt), epoch: Math.round(performance.timeOrigin + now) });
     }
     state.lastAt = now;
+    // Every frame's time from the go frame (index 0), in ms: what a retime of
+    // the file reads. A battle at 60 fps is a few thousand numbers.
+    if (state.goAt !== null && state.cutAt === null) state.frameTimes.push(Math.round((now - state.goAt) * 10) / 10);
     // The swap runs from a timer between frames (Game.afterOutro), so this
     // callback sees it in the first frame that draws the next screen.
     if (state.cutAt === null && state.startedAt !== null && game.activeScene !== scene) {
@@ -235,9 +246,11 @@ export default async function recordPage(opts = {}) {
     if (state.frame < state.goFrame || check) {
       const n = state.frame & 255;
       for (let b = 0; b < 8; b++) squares[b].style.background = n & (1 << (7 - b)) ? '#fff' : '#000';
-      const flashing = state.toneFrom !== null && now >= state.toneFrom && now < state.toneTo;
+      const flashing = state.toneFrom !== null && now >= state.toneFrom && (now - state.toneFrom) % (TONE_EVERY_S * 1000) < TONE_S * 1000;
       squares[8].style.background = flashing ? '#fff' : '#000';
-      if (flashing) state.flashFrames.push(state.frame);
+      if (flashing && !state.wasFlashing) state.flashStarts.push(state.frame);
+      if (flashing && state.flashStarts.length === 1) state.flashFrames.push(state.frame);
+      state.wasFlashing = flashing;
     }
     requestAnimationFrame(paint);
   };
@@ -288,8 +301,12 @@ export default async function recordPage(opts = {}) {
           .map((c) => ({ key: c.key, s: Math.round(c.t - state.startedAt) / 1000 })),
         cuesAfterCut: cues.filter((c) => c.t >= state.startedAt && !c.inBattle).map((c) => c.key),
         longFrames: state.longFrames.filter((f) => state.cutFrame === null || f.pageFrame < state.cutFrame),
-        tone: check ? { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S } : null,
+        frameTimesMs: state.frameTimes,
+        tone: check ? { hz: TONE_HZ, fromS: TONE_AT_S, seconds: TONE_S, everyS: TONE_EVERY_S } : null,
+        // The first tone's first and last flashing page frames, then the page
+        // frame each flash began on.
         flashFrames: [state.flashFrames[0] ?? null, state.flashFrames[state.flashFrames.length - 1] ?? null],
+        flashStarts: state.flashStarts,
         rejections,
         ctxState: ctx.state,
         ended: state.ended,

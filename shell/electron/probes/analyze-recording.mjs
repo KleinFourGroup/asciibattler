@@ -19,7 +19,8 @@
 //   never reached the file. Check 1 passes at no more than 1 % missing.
 // - THE TONE: a Goertzel filter at the planted frequency finds its onset;
 //   the ninth square's first white frame is the video's side, so their
-//   difference is the file's audio-to-video offset.
+//   difference is the file's audio-to-video offset. The tone repeats, and
+//   `tones` holds that offset at each one.
 // - THE COLOURS: a lead-in frame is decoded as a player decodes it (the
 //   file's matrix tag, or BT.709 when untagged, as players assume for HD) and
 //   each patch compared with its hex.
@@ -237,6 +238,42 @@ if (side.tone) {
   };
 }
 
+// Every planted tone against its flash, both read from the file: the k-th
+// rise of the tone's band in the audio and the k-th rise of the ninth square
+// in the video. Each difference is the file's audio-to-video offset there, so
+// a picture that runs ahead of its sound shows as a growing offset.
+let tones = null;
+if (side.tone?.everyS) {
+  const win = Math.round(RATE * 0.02);
+  const { powers, peak } = band(side.tone.hz);
+  const hot = (p) => p > peak / 10;
+  const fine = Math.round(RATE * 0.005);
+  const onsets = [];
+  let lastOnset = -Infinity;
+  for (let w = 0; w < powers.length; w++) {
+    if (!hot(powers[w]) || (w > 0 && hot(powers[w - 1])) || (w - lastOnset) * win < RATE) continue;
+    lastOnset = w;
+    // Refine within the 20 ms before the window: the first 5 ms that is hot.
+    let at = w * win;
+    for (let i = Math.max(0, (w - 1) * win); i <= w * win; i += Math.round(RATE * 0.001)) {
+      if (hot(goertzel(side.tone.hz, i, fine))) {
+        at = i;
+        break;
+      }
+    }
+    onsets.push(audioStart + at / RATE);
+  }
+  const rises = [];
+  for (let i = 0; i < flash.length; i++) if (flash[i] && !(i > 0 && flash[i - 1])) rises.push(videoStart + i / fps);
+  const n = Math.min(onsets.length, rises.length);
+  tones = {
+    inAudio: onsets.length,
+    inVideo: rises.length,
+    offsetsMs: onsets.slice(0, n).map((s, k) => Math.round((s - rises[k]) * 1000)),
+    flashAtS: rises.slice(0, n).map((s) => Math.round(s * 100) / 100),
+  };
+}
+
 // A sustained tone: the share of 50 ms windows in [fromS, fromS + seconds)
 // (file time) whose band power reaches -50 dB. The game's own sound stays
 // under -46 dB at 2500 Hz (§110d), so a leaked outside tone reads near 100 %
@@ -282,6 +319,7 @@ const report = {
     cueOnsets,
     overallDbfs: Math.round(rmsDb(0, pcm.length) * 10) / 10,
     ...toneReport,
+    tones,
     audibleTrue: `${side.audibleTrue} of ${side.audibleSamples}`,
     rejections: side.rejections.length,
     outsideTone,

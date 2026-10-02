@@ -132,7 +132,8 @@ function verdict(probe, analysis, check) {
     faults.length === 0 &&
     (check ? c1?.pass === true && analysis?.colour?.pass === true && cuesOk : analysis?.leadIn?.pass === true && cuesOk);
   const shape = check
-    ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms`
+    ? `frames missing ${c1?.missing ?? '?'} of ${c1?.slots ?? '?'} · colours within ${analysis?.colour?.maxErr ?? '?'} · audio to video ${c2?.avOffsetMs ?? '?'} ms` +
+      ` (at each tone: ${c2?.tones?.offsetsMs.join(', ') ?? '?'})`
     : `${analysis?.container?.video.frames ?? '?'} frames, lead-in frames in the file ${(analysis?.leadIn?.markerLikeFrames ?? 0) + (analysis?.leadIn?.patchFrames ?? 0)}`;
   const { opening, countdownFrom, endedBy, timeline } = probe.result;
   const line =

@@ -122,6 +122,7 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
     backlogMaxBytes: 0,
     firstEpoch: null,
     intervals: [],
+    paintTimes: [],
     patchesInPaint: null,
     cut: null,
     paintsAfterCut: 0,
@@ -180,6 +181,7 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
     }
     ff.stdin.write(bitmap);
     stats.frames++;
+    stats.paintTimes.push(Math.round((nowEpoch() - stats.firstEpoch) * 10) / 10);
     stats.backlogMaxBytes = Math.max(stats.backlogMaxBytes, ff.stdin.writableLength);
   };
   win.webContents.on('paint', onPaint);
@@ -207,6 +209,8 @@ export function startVideo(win, { file, fps, width, height, gate = false, backlo
         backlogMaxMB: Math.round(stats.backlogMaxBytes / 1e5) / 10,
         paintIntervalMs: quantiles(stats.intervals),
         paintGapsOver1_5Slots: stats.intervals.filter((d) => d > 1.5 * slot).length,
+        // When main received each written frame, in ms from the first.
+        paintTimesMs: stats.paintTimes,
         patchesInPaint: stats.patchesInPaint,
       };
     },

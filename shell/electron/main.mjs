@@ -348,7 +348,9 @@ const probes = {
       wallSeconds,
       started,
       pageFrames: page.frames,
+      pageFrameTimesMs: page.frameTimesMs,
       flashFrames: page.flashFrames,
+      flashStarts: page.flashStarts,
       tone: page.tone,
       cues: page.cues,
       cuesAfterCut: page.cuesAfterCut,
@@ -362,7 +364,11 @@ const probes = {
       mux: muxed,
     };
     writeFileSync(`${base}.json`, `${JSON.stringify(sidecar, null, 2)}\n`);
-    const { cues, ...brief } = sidecar;
+    // The printed line leaves the long lists to the sidecar.
+    const cues = sidecar.cues;
+    const brief = { ...sidecar, video: { ...videoResult } };
+    for (const list of ['cues', 'pageFrameTimesMs']) delete brief[list];
+    delete brief.video.paintTimesMs;
     // Every battle plays cues, so none logged means the play() wrap caught
     // nothing (a moved seam) and the file's sound can't be checked.
     const problems = [

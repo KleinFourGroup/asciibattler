@@ -3805,3 +3805,63 @@ is refused (`chooseAdapter`'s fallback and its reason, ✔
 boot screen. The shape proposed back: the boot-time case gets a third line
 there in 115g; a write that fails in mid-run (a quota) waits for §116,
 where the settings need the same indicator for their own writes.
+
+### The §115 shape-lock (2026-10-02, the user's) — SIGNED
+
+Signed at about 17:20 ("Signing 10, 11, and the cut as amended!"): all
+eleven calls ✅ DECIDED and the cut of seven steps, six `none` and one
+`stop` (115g). Calls 1–9 stand as proposed in the audit above. The two
+amended at the second message:
+
+- **Call 10:** the last-turn strip is kept across a load. The Run saves
+  the last turn's winner and reason in the v47 bump, `turn:starting`
+  carries the last turn's outcome, and the pre-turn screen takes the strip
+  from that payload live and resumed alike, so Game's buffer of
+  `turn:resolved` for the strip is retired. The deal's cue sequence is not
+  kept. In the cut: the Run's half at 115a, the screen's at 115e, whose
+  exit gains "the strip's text on a seeded drive is as before".
+- **Call 11:** split. Storage refused at boot gets a line on character
+  select at 115g, beside the rejected-save message and the other-tab
+  notice. A write that fails in mid-run waits for §116's indicator (carried
+  in ROADMAP §116). Until then that failure is silent to the player: the
+  run plays on in memory and is lost when the tab closes.
+
+ROADMAP §115 carries the cut and the eight decision lines; §116 carries
+what moves to the menu.
+
+**The gate.** The reading stands at 352k (about 17:05), over the gate, and
+the build stretch (115a–f, then 115g up to its sitting) goes to a fresh
+session: the user's lean and this session's. Thirty minutes here would buy
+about one step, since 115a's commit spends about seven of them in the
+hook's fuzz smoke, and §114's like stretch took a fresh session to 501k.
+
+**For the build stretch, with no other home.**
+- 115a's pin compares payloads at arrival. A field the simulation never
+  reads (the last turn's winner and reason) can't be caught by the
+  continuation check, so that pin is its only guard.
+- Reading the run slot builds a Run subscribed to the bus it is given. A
+  read made to decide whether Continue shows must dispose that Run, or read
+  on a bus of its own (115e or 115g).
+- The recorder's `--journal` refuses a journal of more than one segment.
+  When 115d makes such journals real, a clip of a continued run is a TODO
+  rider, filed there.
+- No short dialed seed that clears a sector is known yet; seeds 2 and 8 at
+  the shipped length do (29 and 27 battles). 115a's and 115b's step zero
+  looks for one.
+- The audit's scratch script (`save-census.mts`, eight gated runs with the
+  snapshot taken at every gate) is in this session's scratch directory and
+  goes with it; it is about eighty lines over `PHASE_ROWS`, and the
+  worklog's table is its output.
+
+**A process question at the close: Claude Code's mods** (the user's: can
+they expose the session's context to the agent?). Read from this build's
+type declarations (Claude Code 2.1.286), nothing built: a mod's hooks can
+call `$.session.usage()`, which returns the live window's `tokens`,
+`window` and `percent` as the status line has them, and `$.tool.register`
+declares a tool the model can call, served by a `tool.call` hook. So a
+mod of about thirty lines could hand the agent its own reading at a step
+boundary. Unverified: whether that figure is the one the user's meter
+shows, and how a mod is loaded in every session under the desktop app
+(the hot-reload switch is per session and the person's alone to answer).
+The observation and what it would change in the gate, the breaker and the
+halt are in `retro/scratchpad.md`.

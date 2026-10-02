@@ -71,3 +71,21 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   exposed the analyzer's blind spot (frames lost before the first visible
   count read as clean). The totals alone invited a story ("the rest were in
   ffmpeg's start-up") that was only half true.
+- **2026-10-02, the §115 kickoff: a mod could give the agent its own
+  context reading.** The user asked whether Claude Code's mods can expose
+  the session's context to the agent. From this build's API declarations
+  (Claude Code 2.1.286; nothing was built or run): a hooks module can call
+  `$.session.usage()`, which returns the live window's `tokens`, `window`
+  and `percent` as the status line has them, and `$.tool.register` declares
+  a tool the model can call. A tool that returns those figures would let a
+  session read its own meter at each step's commit and write the reading
+  into the WORKLOG. That would put a measurement where the breaker's wall
+  clock now stands in for one, and take the gate's reading without asking.
+  Before any rule rests on it (`process/oracles.md`): the tool's number
+  against the user's meter at the same moment, at two readings far apart;
+  what it reads just after a compaction or a resume (the declaration says
+  the figures are absent until the live window's first response); and how
+  the mod loads in every session under the desktop app, since the
+  hot-reload switch is per session and the person's to answer. AGENTS says
+  the agent can't read its own context use; that sentence changes only
+  after the check.

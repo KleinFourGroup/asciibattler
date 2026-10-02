@@ -2975,3 +2975,10 @@ to the entry after it.
    can't read. Apart from outcome: steady, with a short drop on finding
    that "a wider bump" had gone out unread, which eased once the renderer
    showed the fix was small. Filed as `distress`, mild.
+
+### Addendum, the same session — after the hand-off (2026-10-02)
+
+One more commit, not a correction: the user's proposal for the mod (a
+check of the context at each step's start, in place of the asks), recorded
+in `retro/scratchpad.md` with this session's reading of their wording and
+two notes for the rule. No reading was taken.

@@ -89,3 +89,15 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   hot-reload switch is per session and the person's to answer. AGENTS says
   the agent can't read its own context use; that sentence changes only
   after the check.
+- **2026-10-02, the same exchange: what the user would do with it.** If the
+  tool's figure holds, one rule in place of the asks: at the start of each
+  step, read the context, and hand off if it is near the halt (600k). The
+  user's word for what this retires was "the pre-commit"; this session took
+  that to mean the gate's ask and the breaker, not the pre-commit hook, and
+  said so. Two notes for whoever writes the rule. A step started just under
+  the halt ends over it, so the line to check against is the halt less one
+  step's cost, and the per-step readings the tool would log are what
+  measure that cost (none exists yet: the readings so far are per stretch).
+  And the gate today decides where a stretch of several steps starts, so a
+  per-step check means a hand-off can fall between two `none` steps in
+  mid-stretch, which costs the next session an orientation.

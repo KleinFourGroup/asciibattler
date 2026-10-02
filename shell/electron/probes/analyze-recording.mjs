@@ -83,12 +83,17 @@ if (magentaAt >= 0) {
 }
 
 // --- the stamp (record.mjs, STAMP): main wipes it, so no frame shows it -----
-// The game draws a flat field along the bottom row at the left edge (values
-// within 6 of each other in a decoded clip); the stamp is black and white
-// pixels there. A frame whose first 64 pixels of that row span more than 60
-// levels still shows it.
+// The stamp is black and white pixels along the bottom row at the left edge,
+// opening with its sync byte. A battle draws a flat field there (values
+// within 6 of each other in a decoded clip), but a run's screens draw their
+// own edges into that row (`stampRowEdges` counts those frames). So a frame
+// still shows the stamp when the row's first 64 pixels span more than 60
+// levels and its first eight, cut at the middle of that span, read the sync
+// byte.
+const STAMP_SYNC = 0xa5;
 const stampRow = tool('ffmpeg', ['-v', 'error', '-i', file, '-map', '0:v', '-vf', `format=gray,crop=64:1:0:${H - 1}`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-']);
 let stampFrames = 0;
+let stampRowEdges = 0;
 let stampRowSpread = 0;
 for (let i = 0; i + 64 <= stampRow.length; i += 64) {
   let lo = 255;
@@ -98,7 +103,11 @@ for (let i = 0; i + 64 <= stampRow.length; i += 64) {
     hi = Math.max(hi, stampRow[i + x]);
   }
   stampRowSpread = Math.max(stampRowSpread, hi - lo);
-  if (hi - lo > 60) stampFrames++;
+  if (hi - lo <= 60) continue;
+  let sync = 0;
+  for (let x = 0; x < 8; x++) sync = (sync << 1) | (stampRow[i + x] > (lo + hi) / 2 ? 1 : 0);
+  if (sync === STAMP_SYNC) stampFrames++;
+  else stampRowEdges++;
 }
 
 // --- check 1: continuity (a check twin) ------------------------------------
@@ -319,7 +328,7 @@ if (outsideArg && side.tone) {
   outsideTone = { ...sustained(hz, fromS, seconds), control: sustained(side.tone.hz, audioStart + side.tone.fromS, side.tone.seconds) };
 }
 
-const leadIn = { markerLikeFrames: markerLike, patchFrames, stampFrames, stampRowSpread };
+const leadIn = { markerLikeFrames: markerLike, patchFrames, stampFrames, stampRowEdges, stampRowSpread };
 const report = {
   file,
   mode,

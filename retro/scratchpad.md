@@ -105,3 +105,22 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   And the gate today decides where a stretch of several steps starts, so a
   per-step check means a hand-off can fall between two `none` steps in
   mid-stretch, which costs the next session an orientation.
+- **2026-10-02, session 0d584e89: the mod, built and run in this
+  session.** The user agreed to the direction and to two additions: the
+  reading piggybacks on every `git commit` (a `tool.call` hook on Bash and
+  PowerShell adds it as context and as a transcript line), and the mod
+  lives in the repo at `.claude/skills/context-meter/`. Run under hot
+  reload in this session: the tool answered, and a `git commit --dry-run`
+  came back carrying `context: 147039 tokens of 1000000 (15%) at
+  2026-10-02T22:47:57Z`. The first three calls failed because I passed
+  `$.clock.now()`, which returns a Promise, to `new Date` without awaiting
+  it; the hook threw and was skipped, and the engine's message pointed at a
+  missing `tool.call` hook instead, which sent me after the matcher first.
+  `claude plugin validate` passed a copy with that bug planted, and `tsc`
+  against the engine's generated types failed it (TS2769), so `tsc` is the
+  check. Still open: a reading paired with the user's meter at the same
+  moment (the user's 118k was taken at their message, before this turn's
+  tool results); a second pair far from the first; a reading after a
+  compaction or resume; and whether a fresh session under the desktop app
+  loads the mod from the project's `.claude/skills/`, which the reference
+  documents and nothing here has yet shown.

@@ -55,3 +55,18 @@ in AGENTS.md, which other harnesses read too.
   launching a successor. Stop any preview server you started
   (`preview_stop`) before ending the session; Vite's child processes
   outlive a killed parent.
+- **The context meter** is a mod in
+  [.claude/skills/context-meter/](.claude/skills/context-meter/). The tool
+  `mcp__context-meter__read` returns the session's context fill: the input
+  tokens the last response was answered over, as the status line has them.
+  The same reading is added to the result of every Bash or PowerShell
+  command that runs `git commit`, as context for you and a transcript line
+  for the user. It is on trial (`retro/scratchpad.md`, 2026-10-02): whether
+  a fresh session loads it from this folder, and how it compares with the
+  user's meter. If the tool is absent, ask the user for the reading. To
+  type-check it, run `npx tsc -p .claude/skills/context-meter` after a
+  session has loaded it, since the engine writes the types into
+  `.claude-plugin/types/` (gitignored). `claude plugin validate` reads the
+  manifest and the hooks but does not type-check: an unawaited Promise
+  passed it. The CLI is not on PATH here; it is the app's bundled
+  `claude.exe` under `%APPDATA%\Claude\claude-code\<version>\`.

@@ -1,0 +1,5 @@
+{
+  "name": "context-meter",
+  "version": "0.1.0",
+  "description": "A tool the model calls to read the session's context fill, as the status line has it."
+}

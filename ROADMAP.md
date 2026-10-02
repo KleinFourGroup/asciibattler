@@ -12,9 +12,8 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §113 ✅ CLOSED 2026-10-01** (the store and the build ID).
-**§114, the run journal and its export, is IN FLIGHT** (its cut signed
-2026-10-01, nothing built yet).
+**Status: §114 ✅ CLOSED 2026-10-02** (the run journal and its export).
+**§115, save/load and mid-run resume, is NEXT** (cut at its kickoff).
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -111,36 +110,32 @@ WORKLOG §113.
 - [x] **113f** — the ID on character select; `ready()` reports the build and the store. Read `batch`: the version and seven hex digits, small, in a corner. ✅ READ 2026-10-01, one finding → 113f-post (WORKLOG §113f).
 - [x] **113f-post** — inserted at the 113f read (a dev server baked its ID at its start and kept it through later commits): the dev server stamps the ID into each page it serves, `-dev` kept. Read `stop`. ✅ READ 2026-10-01, `d06ebc6` (WORKLOG §113f-post).
 
-## Phase 114 — the run journal and its export
+## Phase 114 — the run journal and its export ✅ CLOSED 2026-10-02
 
-Charter: the seed, every `RunCommand` and the battles' command traces,
-stamped with the build and the config hash, in segments that open at every
-load, with wall-clock time per command as metadata (spec D4); telemetry
-tier 1, the journal as a downloaded `.json` (D5). **Why here:** before
-save/load, whose continuation check and chaos repro need it. **Risk:**
-medium (a whole-run replay in the harness, inferred at the 7.5 close to be
-the larger part). **Decision points:** how many finished journals are
-kept ✅ DECIDED 2026-10-01 (by size: the newest within about 1 MB of text,
-the number soft until a played run and Firefox's limit are measured;
-WORKLOG §114). **Exit:** a recorded run
-replays byte-identically headless from its journal; the export downloads;
-the recorder replays a journal offscreen. **Scope guards:** passive, never
-perturbing determinism; no ingest server.
+**Outcome:** a played run is recorded as a journal and replays from it to
+the same bytes. The journal (`src/journal/`) holds the build, the config
+hash, the start (a seed with the URL's dials as text, or a snapshot),
+every run command with its time, every battle order at its tick, a
+checkpoint at each battle's end and the final snapshot's hash.
+`Game.dispatch` feeds the recorder; `replayJournal` rebuilds the run
+headless and names the entry where a replay differs; `npm run replay --
+<file>` refuses another config hash always, and another commit or a
+`-dirty` build unless forced. A finished run's journal goes to the store's
+`journals` section (the newest within 1 MB of text, the number still soft)
+and downloads from "Export run" on the end screen; the user's exported run
+replayed. The recorder keeps a clip on the page's clock across a switch of
+the display, and `npm run record -- --journal=<file>` turns a journal into
+a clip of the whole run on the commit that recorded it. Run v46 and World
+v36 are unchanged. The record: WORKLOG §114.
 
-**Carried from §111** (WORKLOG §111f-post): a switch of the display stalls the recorder's renderer, from one 0.2 s stall on an idle machine to 13 s of throttled frames, 142 never painted, on a busier one, which long runs recorded while the user works and then walks away will cross. Retiming each stall from the long-frame log lands here (the user's (B)), after a step zero that switches the display at idle and under a planted steady load; holding the display awake during a recording is the fallback (C); a stepped-clock recorder is the fallback beyond it. (114f's step zero, 2026-10-02: the 13 s case is an off request met by input, not a busier machine; WORKLOG §114f.)
-
-**Carried from §113** (WORKLOG §113a, §113f-post): what replay does with a journal stamped `-dev` ✅ DECIDED 2026-10-01 (accepted: a dev server's page carries the ID git gave at that page load; a stylesheet hot-swapped afterwards is the one drift left). The store's size budget also waits on this phase's measurement of a run's bytes.
-
-The cut (signed 2026-10-01; the audit and the nine calls: WORKLOG §114):
-
-- [x] **114a** — the journal's format and its recorder, headless (`src/journal/`): the types, and a recorder fed by the dispatcher and the bus, storage-agnostic; the config hash moves to `src/config/`. Exit: a gated headless run with planted battle orders is recorded, and pins hold the order of entries around a battle, a mid-battle `discardPacket`, and a reset closing the journal. Read `none`. ✅ (WORKLOG §114a).
-- [x] **114b** — the headless replay, `replayJournal`: the Run from the journal's start, a World per battle, each command at its place; it throws by name where a checkpoint differs. Exit: record, replay, and the final snapshots are equal byte for byte over several seeds with battle orders; controls: a command dropped, a tick moved, another config hash; a snapshot-started segment replays. Read `none`. ✅ (WORKLOG §114b).
-- [x] **114c** — wired into the game, and the replay tool: `Game.dispatch` feeds the recorder, stamped with the build and the config hash; the kit hands the live journal out; `npm run replay -- <file>`. Exit: the seed-7 drive in the Electron runner still logs `a59ee48f`, and its journal replays under Node to the final snapshot hash the page reported; the refusals planted (another config hash, another commit, `-dirty`, unbaked); the bundle's growth measured. Read `none`. ✅ (WORKLOG §114c).
-- [x] **114d** — finished journals in the store: at a run's end the journal goes to the `journals` section within the size cap. Exit: in the pane a run driven to defeat leaves its journal in `localStorage`, read from storage itself and replayed by the tool; a planted section over the cap loses its oldest; `?store=deny` plays on. Read `none`. ✅ (WORKLOG §114d).
-- [x] **114e** — the export: a button on the run's end screen downloads the journal as `.json`. Read `batch` (at 114f's stop): the end screen has "Export run" beside "Begin a new run"; clicking it saves a `.json` in Firefox, and `npm run replay -- <that file>` passes; wrong is no file, a file that doesn't replay, or a button outside the screen's idiom. ✅ READ 2026-10-02, no finding (WORKLOG §114e; the journals budget stays soft: Firefox's `localStorage` limit and a played run at the shipped length are still unmeasured).
-- [x] **114f** — the recorder's stalls, retimed (carried from §111): step zero switches the display at idle and under a planted steady load (the user's go, since it turns their monitor off); each stall is retimed from the long-frame log; holding the display awake is the fallback. Exit: a recording across a display switch ends within 50 ms of its sound, or the fallback is taken on evidence. Read `stop`. ✅ READ 2026-10-02, the exit met (the display sitting with the retime on: three real switches end at −3 ms, a storm at 14 ms): step zero found one stall each way per switch (67 to 300 ms, loaded or not) and §111's 13 s case to be an off request met by input, so the retime became a stamp of the page's clock in every paint that main keeps the file on (the user's call at the stop), since the long-frame log cannot place an unpainted frame (WORKLOG §114f).
-- [x] **114g** — the recorder replays a journal, `npm run record -- --journal=<file>`: the run driven through Game in the page, paced by the journal's times, battle orders at their ticks, 30 fps. Exit: a played run's journal becomes a clip; the page's final snapshot hash equals the journal's; no fault. Read `stop`: the sitting, a clip of a run watched. ✅ READ 2026-10-02, the exit met, one finding → 114g-post: the user's exported run is an 8 min 51 s clip on its own commit, the hash equal, no fault; the journal holds no battle speed, so battles play at `--speed`, 1× with the whole countdown by the user's call (WORKLOG §114g).
-- [x] **114g-post** — inserted at the 114g read (in a replayed clip the reward screen's rows kept their Accept buttons, since only its click handler marked one taken): the screen follows the live offer every frame; `--force` records any journal on the working tree. Read: the frames in `clips/114g/post-reward-rows.png`. ✅ READ 2026-10-02, no finding, `b3b9139` (WORKLOG §114g-post).
+- [x] **114a** — the journal's format and its recorder, headless (`src/journal/`); the config hash moved to `src/config/`. Read `none`. ✅ (WORKLOG §114a).
+- [x] **114b** — the headless replay, `replayJournal`: a recorded run and its replay leave the same `Run.toJSON()` bytes over four runs; the controls fail by name. Read `none`. ✅ (WORKLOG §114b).
+- [x] **114c** — wired into the game, and the replay tool: `Game.dispatch` feeds the recorder; `npm run replay -- <file>`; `npm run dist:hash`; the bundle +5,137 bytes. Read `none`. ✅ (WORKLOG §114c).
+- [x] **114d** — finished journals in the store's `journals` section, within the size cap. Read `none`. ✅ (WORKLOG §114d).
+- [x] **114e** — the export: "Export run" on the end screen downloads the journal as `.json`. Read `batch` (at 114f's stop). ✅ READ 2026-10-02, no finding (WORKLOG §114e).
+- [x] **114f** — the recorder's stalls, retimed (carried from §111): a stamp of the page's clock in every paint, which main keeps the file on; three real switches of the display end at −3 ms. Read `stop`. ✅ READ 2026-10-02 (WORKLOG §114f).
+- [x] **114g** — the recorder replays a journal, `npm run record -- --journal=<file>`: the user's exported run as an 8 min 51 s clip, the page's final hash the journal's. Read `stop`. ✅ READ 2026-10-02, one finding → 114g-post (WORKLOG §114g).
+- [x] **114g-post** — inserted at the 114g read: the reward screen follows the live offer every frame; `--force` records any journal on the working tree. Read: four frames of the screen. ✅ READ 2026-10-02, `b3b9139` (WORKLOG §114g-post).
 
 ## Phase 115 — save/load and mid-run resume
 
@@ -155,6 +150,8 @@ byte-faithfully; a stale save rejected with its message. **Scope guards:**
 no manual saves, no mid-battle save, no migrations.
 
 **Carried from §113** (WORKLOG §113, call 6): the two-tab lock lands here, with the run slot's first writer. `navigator.locks` exists on the dev page; Electron and itch's iframe are unmeasured.
+
+**Carried from §114** (WORKLOG §114, the audit's calls 3 and 4): the journal of the run in progress joins the save in the run slot (spec D1), and a load opens a new segment (D4); whether a segment opened on the same build carries the snapshot's hash in place of the whole snapshot (20–49 KB measured) is this phase's call.
 
 ## Phase 116 — the menu and settings
 
@@ -171,6 +168,8 @@ numeric check and the user's eye. **Scope guards:** no music slider, no
 achievements row, no camera row.
 
 **Carried from §113** (WORKLOG §113, call 5): the itch leg of the store's round trip is taken at this phase's sitting, where a setting is there to watch persist.
+
+**Carried from §114** (WORKLOG §114e): the menu's copy of the export (spec D5). At the itch sitting: what a download does in itch's frame, and the two numbers the journals budget (1 MB, soft) waits on, Firefox's `localStorage` limit and the file of a run played at the shipped length.
 
 ## Phase 117 — Escalation and the unlock mechanism
 
@@ -198,3 +197,5 @@ export first. **Risk:** low-medium. **Decision points:** none known.
 the signed sheet exactly, and each level is harder than the one before on
 paired same-seed runs. **Scope guards:** Safari untested; the Electron
 build stays internal.
+
+**Carried from §114** (WORKLOG §114e): what a download does in Electron's window, at the smoke.

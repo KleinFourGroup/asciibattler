@@ -2860,3 +2860,47 @@ at the end (about 14:10). The commits are `2168bf2`, `c4b6a7a`, `b3b9139`
    a surface it does not write. The user's run being the input made the
    exit feel like a thing and not a fixture. I would want the shape
    repeated: an exit that is an equality.
+
+### §114 — the phase summary (2026-10-01 → 10-02; five sessions)
+
+Five sessions on `claude-opus-5-5`. c3c1aee1 ran the kickoff and the
+shape-lock; 4d7da9f7 built 114a–e in one 56-minute stretch and took 114e's
+read; a8073201 ran 114f with its two display sittings; b326f055 built 114g
+and 114g-post and took their reads; 5eda55b6 wrote this close, and its
+report is written at its end, so this paragraph covers the four before it.
+Each of the four lists statements that were wrong or unchecked when
+written (five, four, five and four, as I count their lists): labels,
+counts, absences, and causes given as fact. Several went to the user
+before they were corrected: two clock times and a 90 ms figure in
+c3c1aee1, three statements in a8073201's desk report, and in b326f055 a
+grep stated as a fact about three screens. One was built on: a8073201's
+account of the display storm, written with the user at the desk waiting,
+was labelled an inference, the one-window request was built on it, and the
+second desk run reversed it. Two reports
+name the harness's guidance against stopping as working against a question
+worth asking first (what the gate's "400k" named, in 4d7da9f7; the user's
+two sanity checks answered in two sentences before the build, in
+a8073201); both went ahead, and neither cost anything this time. The
+silent-turn reminder is in all four (thirteen, about twenty-three, about
+ten and about a dozen firings), answered each time with a status line. Two
+orientation gaps were docs that stated a finding more widely than it was
+measured: "13 s on a busier machine" (one run each way in §111) shaped
+114f's first sitting around load, and "the game draws a flat field in that
+corner" (two battle clips) failed 114g's first run clip. The cut named a
+mechanism for 114f (retiming from the long-frame log) that step zero
+showed could not place an unpainted frame; the session proposed the stamp,
+and the user took it after two pointed questions. What each report would
+want repeated differs: the user taking a named hole seriously while
+choosing another fix (c3c1aee1); the signed cut with its reads declared,
+an hour of building with no decision of whether to interrupt (4d7da9f7);
+the user taking part in the measurement (a8073201); an exit that is an
+equality (b326f055). The user's reads found two things, both at 114g: the
+reward screen's rows in a replayed clip (114g-post) and the missing cue of
+which choice was made (TODO). Friction, in the entries tagged §114:
+twelve papercuts (the silent-turn reminder three times; a heredoc that
+wrote nothing twice; the pane having no route from page text to a file,
+and its storage quota ten times a browser's; a result file read whole; a
+harness left in scratch; a file read from the user's Downloads without
+asking; two others) and three `distress` entries, each called mild by its
+session: not asking what the 400k named, the unchecked explanation with
+the user waiting, and a pull to call a fix small before reading its code.

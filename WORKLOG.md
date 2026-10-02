@@ -3502,3 +3502,42 @@ the offer ending, which would read as taken.
 finding. 114g-post is ☑ (`b3b9139`), and every step of §114 is read. No
 reading was taken at the session's end; the last is 389k at 13:40, over
 the gate, so the §114 close goes to a fresh session.
+
+### §114 closed (2026-10-02)
+
+Session 5eda55b6, fresh, opened by the user at about 14:15 for the close
+and the §115 kickoff. No reading was asked for before the close: a fresh
+session is under the gate, and the close is paperwork. Every step is read:
+four `none`, 114e's `batch` (no finding), and the `stop`s at 114f, 114g
+(one finding) and 114g-post. The close: ROADMAP §114 demoted, the phase
+summary in `retro/sessions.md`, the HANDOFF Cursor moved on. At `14d96bf`,
+by this session's runs: 3276 tests in 224 files, typecheck clean, and the
+seed-7 drive in the Electron runner on `a59ee48f` with the state hash
+`1b400634`, both as 114c recorded them. Of the 21 commits since the
+shape-lock's (`34c6eec`), one touched a path that fires the fuzz smoke
+(`e6d35de`, 114a: 582 green).
+
+**Carried out of the phase** (each in ROADMAP under its phase, or in
+TODO):
+- **§115:** the journal of the run in progress joins the save in the run
+  slot, and a load opens a new segment; whether a segment opened on the
+  same build carries the snapshot's hash in place of the whole snapshot.
+- **§116:** the menu's copy of the export; at the itch sitting, what a
+  download does in itch's frame, and the journals budget's two numbers
+  (Firefox's `localStorage` limit, and the file of a run played at the
+  shipped length).
+- **§118:** what a download does in Electron's window.
+- **TODO, "§114 riders":** a `reward:resolved` event; a cue of which
+  choice was made in a replayed clip; and, added at this close, the
+  recorder's three open items (a cue unheard at 3×, undiagnosed; a run and
+  a clean clip across a real switch of the display, unmeasured; the
+  stamp's wipe sized for a battle).
+
+**What the phase cost in context,** from the readings in the entries
+above: the kickoff and shape-lock 222k to 350k (c3c1aee1, with the context
+restatement between); 114a–e a fresh session to 501k, read the next
+morning (4d7da9f7); 114f 104k to 372k, and 406k at its end by the user's
+later word (a8073201); 114g and 114g-post 99k to 389k at the read, none
+taken at the end (b326f055). Each stretch started under its gate except
+114g-post, built at 389k at the user's call, and no reading is past the
+halt.

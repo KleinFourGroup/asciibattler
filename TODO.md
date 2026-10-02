@@ -485,3 +485,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   chosen control would do. The replay driver
   (`shell/electron/probes/replay-page.js`) knows each command before it
   sends it, so the cue can come from there or from the screens.
+- [ ] **The recorder's open items at the §114 close** (WORKLOG §114f,
+  §114g; a dev tool, so none blocks the round). At `--speed=3` a cue can go
+  unheard (517 of 518 and 111 of 113 in two clips, none missing at 1×), not
+  diagnosed, and it fails the clip when it happens. A run recorded across
+  a real switch of the display, and a clean clip (not a check twin) across
+  one, are unmeasured. The stamp's wipe copies the row's next 64 pixels
+  over the stamp, which is a flat field in a battle and can be an edge on a
+  run's screen.

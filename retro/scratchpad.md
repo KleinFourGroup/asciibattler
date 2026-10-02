@@ -124,3 +124,22 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   compaction or resume; and whether a fresh session under the desktop app
   loads the mod from the project's `.claude/skills/`, which the reference
   documents and nothing here has yet shown.
+- **2026-10-02, later: the repo copy does not load, because the workspace
+  counts as untrusted.** The calibration pair held: the tool read 159,886,
+  and the user's meter read 160k just after. Then the user restarted the app
+  (this session resumed), and the repo copy did not load. A fresh session
+  (local_5432b355, "Context meter diagnostics") found it did not load there
+  either, and found why. The bundled CLI's `claude plugin list`, run in the
+  repo, says one directory under `./.claude/skills/` was skipped because the
+  workspace was not trusted when plugins were scanned. `~/.claude.json`
+  holds two entries for the repo: the backslash key has
+  `hasTrustDialogAccepted` true, and the forward-slash key has false. In
+  four arms on scratch copies of that file (`CLAUDE_CONFIG_DIR`, the real
+  file only read), only the forward-slash key decided the skip. I confirmed
+  the warning and both flags read-only. That a desktop session reads the
+  same key as the CLI is an inference (same build, same cwd). The engine
+  writes `.claude-plugin/types/` beside a mod each time it loads it, so that
+  folder's absence beside the repo copy shows no load has reached it. Still
+  open: whether, once the workspace is trusted, a desktop session runs the
+  module's function hooks without the hot-reload consent or an env switch.
+  Trusting the workspace is the user's to do.

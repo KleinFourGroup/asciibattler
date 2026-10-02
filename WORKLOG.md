@@ -3495,3 +3495,10 @@ rows dimmed and marked TAKEN, the cache line going to 1/6 with the packet
 (`clips/114g/post-reward-rows.png`). **Not verified:** the click path in
 play (its code is unchanged), a full-cache swap, and a row declined without
 the offer ending, which would read as taken.
+
+### 114g-post — THE READ (2026-10-02, the user's) ✅
+
+"I've read it, and it looks great", at about 14:05, on the four frames; no
+finding. 114g-post is ☑ (`b3b9139`), and every step of §114 is read. No
+reading was taken at the session's end; the last is 389k at 13:40, over
+the gate, so the §114 close goes to a fresh session.

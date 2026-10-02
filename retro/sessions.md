@@ -2806,8 +2806,8 @@ this entry.
 ## 2026-10-02 — 114g: step zero, the recorder's run mode built, the sitting, the read, 114g-post (one session; the §114 close handed to a fresh one) — claude-opus-5-5, session b326f055
 
 Readings: 99k at 12:27 (the gate), 389k at about 13:40 (the read); none
-at the end (about 14:10). The commits are `2168bf2`, `c4b6a7a` and the one
-that carries this entry.
+at the end (about 14:10). The commits are `2168bf2`, `c4b6a7a`, `b3b9139`
+(which carries this entry) and a docs commit for the read of 114g-post.
 
 1. **Missing from the orientation:** nothing that blocked. Two things
    bent the plan. The Cursor says an exported journal replays unforced

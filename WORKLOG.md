@@ -3450,3 +3450,48 @@ working tree; what the clip looks like in motion, which is the sitting's.
 
 **THE STOP: the sitting.** `clips/114g/run-played.mp4`, the user's own run
 of this morning.
+
+### 114g — THE READ (2026-10-02, the user's) ✅
+
+The user watched the clip ("this looks awesome"; confirmed when asked), at
+about 13:40. 114g is ☑, with one finding. **The reading: 389k at 13:40**
+(99k at 12:27 at the gate; the stretch ended 13:23, inside the hour's
+breaker). Their three calls:
+1. **The pace stays:** every battle at 1× with its whole countdown is "a
+   great default".
+2. **Speed and pauses stay out of the journal.**
+3. **The reward screen should tick its rows off** → 114g-post, small
+   enough to build in this session at their call, over the gate. The event
+   the Run could emit for it is a to-do, at their word, and so is their
+   own finding: a replayed clip gives no cue of which choice was made (an
+   event option changes page with no flash). Both are in TODO, "§114
+   riders".
+
+### 114g-post — the reward screen follows the live offer (2026-10-02) — ◐ BUILT, unread
+
+**Step zero.** The Run emits nothing of its own when a portion resolves (✔
+`Run.ts:3572-3637`: the accept and decline handlers hold no emit; what a
+portion pays changes the bits chip in the clip, and a decline changes
+nothing a screen can hear), so the screen has no event to follow, and only
+its click handler marked a row taken. The event screen needs no such fix: its
+click handler plays a sound and dispatches, and the page turns on
+`event:pageChanged` (the clip's frames at 28.5 s and 30.2 s show the two
+pages).
+
+**Built.** `RewardScreen.syncLedger` marks a row taken once its portion has
+left `run.pendingRewards`, and `RewardScene.tick` asks every frame whether
+one has (`follow`). The click path is as it was, and its bits row still
+freezes at the amount read before the dispatch. No sim file, no new event.
+`--force` on the recorder now means what it means on `npm run replay`: the
+working tree, whatever the journal's build ID says. Before, a journal that
+named a commit was recorded on that commit even when forced, which left no
+way to see a change to a screen on a run played before it.
+
+**Verified** by the played journal recorded on the working tree
+(`clips/114g/post-forced.mp4`: `--force`, 3×, gaps capped at 1 s): the
+replay reaches `664078d7`, 520 of 520 cues heard, no fault, and four frames
+of the last reward screen, one second apart, show none, one, two and three
+rows dimmed and marked TAKEN, the cache line going to 1/6 with the packet
+(`clips/114g/post-reward-rows.png`). **Not verified:** the click path in
+play (its code is unchanged), a full-cache swap, and a row declined without
+the offer ending, which would read as taken.

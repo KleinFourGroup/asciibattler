@@ -19,7 +19,11 @@ export class RewardScene implements Scene {
     this.screen.show();
   }
 
-  tick(_dt: number): void {}
+  // The rows follow the live offer every frame, so a portion resolved by a
+  // command the screen did not send (a replayed journal's) ticks off too.
+  tick(_dt: number): void {
+    this.screen?.follow();
+  }
 
   dispose(): void {
     this.screen?.hide();

@@ -29,7 +29,8 @@ the run's first screen to its end screen at 30 fps. The time between
 choices is the time the player took (`--max-gap=<seconds>` caps it). A
 journal holds neither the battle speed nor a pause, so every battle plays
 at `--speed` (1 by default). The recording fails unless the replay reaches
-the journal's final state.
+the journal's final state. `--force` records the journal on the working
+tree instead of on its own commit.
 
 It is a development tool (`shell/electron/record-cli.mjs` lists its
 options) with one external requirement: **ffmpeg** on the PATH, built with

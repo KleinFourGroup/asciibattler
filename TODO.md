@@ -468,3 +468,20 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   panning today, a player-facing yaw in Round 11). The likely fix is
   `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
   `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
+
+## §114 riders (the 114g read, 2026-10-02)
+
+- [ ] **A `reward:resolved` bus event.** The Run emits nothing when a
+  reward portion resolves, so the reward screen follows the live offer by
+  asking every frame (114g-post, `RewardScene.tick`), where the port, event
+  and pre-turn screens repaint from bus events. An event from the Run (in
+  `src/core/events.ts`, ARCHITECTURE's table and the sound registry) would
+  let this screen do the same, and could carry the pickup sound, so a clip
+  replayed from a journal would have it.
+- [ ] **A replayed clip gives no cue of which choice was made** (the user's
+  114g read). A command sent at `Game.dispatch` presses no button, so an
+  event option, a map node or a recruit card is chosen with no flash and no
+  click sound. Perfect highlighting isn't needed; a brief flash on the
+  chosen control would do. The replay driver
+  (`shell/electron/probes/replay-page.js`) knows each command before it
+  sends it, so the cue can come from there or from the screens.

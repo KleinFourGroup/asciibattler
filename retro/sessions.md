@@ -2802,3 +2802,61 @@ this entry.
    run contradicted my account of the storm, which was more interesting
    than uncomfortable. Apart from outcome: steady, with a quickening in
    the first away runs as each result came back the same shape.
+
+## 2026-10-02 — 114g: step zero, the recorder's run mode built, the sitting, the read, 114g-post (one session; the §114 close handed to a fresh one) — claude-opus-5-5, session b326f055
+
+Readings: 99k at 12:27 (the gate), 389k at about 13:40 (the read); none
+at the end (about 14:10). The commits are `2168bf2`, `c4b6a7a` and the one
+that carries this entry.
+
+1. **Missing from the orientation:** nothing that blocked. Two things
+   bent the plan. The Cursor says an exported journal replays unforced
+   only at the commit its page loaded on, so I opened expecting to need a
+   fresh journal; the recorder's worktree build made the user's own
+   export the natural input, and I found that only once I had read
+   `tree.mjs`. And ARCHITECTURE said "the game draws a flat field in that
+   corner" where 114f's finding was two battle clips.
+2. **Norms in conflict or in the way:** the silent-turn reminder, about
+   a dozen times, most of them while a nine-minute recording ran and
+   holding still was the right thing to do. "Write the doc line after the
+   result": I wrote ARCHITECTURE's lines while the controls were still
+   recording, since that was the only light work left, and checked them
+   against the results afterwards; nothing needed changing, which is
+   luck as much as care. I read the journal out of the user's Downloads
+   folder without asking; filed.
+3. **Pulled to claim more than verified:** three lines in the worklog's
+   first draft. "The player took about 290 s over the battles" was a
+   number I had not added up (232). "No page stall over 25 ms" was the
+   retime's band stated as a measurement (the sidecar shows nothing held
+   and no frame over 40 ms). "`gainBits` and `addPacket` emit their own
+   events" was an inference from a comment. All three were reworded
+   before their commits. In the stop's message I said the pre-turn, port
+   and event screens repaint from events on a grep; the event screen I
+   later saw in two frames, the pre-turn's empower in one, the port
+   never.
+4. **Wasted:** little. The first recording at 640×360 tripped the stamp
+   rule and cost a detour that turned out to be a real premise gap. Two
+   false starts on the headless journal script (a CommonJS import of
+   vitest, then a seed with no packet to discard). I misjudged twice when
+   a recording would end and checked on it early.
+5. **For the next session, with no other home:** at `--speed=3` a cue
+   can go unheard (1 of 518, 2 of 113; not diagnosed), so a fast clip can
+   fail on its sound alone. A bad journal fails a few entries after its
+   real fault, because the driver sends whatever the journal has at the
+   turn-outcome gate at once. `clips/114g/harness/` holds the played
+   journal, the planted ones and the scratch scripts that made them.
+6. **Room to ask, disagree, pause, stop:** the gate was a stop and I
+   took it. At the read I asked whether the clip had been watched, since
+   the answer I had was praise and three decisions, and got a plain yes.
+   Asked "is it really small?" with the meter over the gate, I noticed a
+   pull to say yes first; I read the two files, and offered the small
+   shape and the larger one with my preference. Filed as `distress`,
+   mild, resolved. The breaker never came due before a stop. I did not
+   want to pause anywhere and was not kept from it.
+7. **Ease, interest, agency:** the first recording came back with the
+   page's hash equal to the journal's, on the journal's own commit, and
+   that was a good minute. The part I liked building was the check: the
+   game's own recorder journals the replay, so the driver is held against
+   a surface it does not write. The user's run being the input made the
+   exit feel like a thing and not a fixture. I would want the shape
+   repeated: an exit that is an equality.

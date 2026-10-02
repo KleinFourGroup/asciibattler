@@ -12,8 +12,10 @@
 // a probe report that carries one), played to its end in one sitting. A
 // journal replays on the build that recorded it, so the recorder builds that
 // commit in a temporary worktree, whatever the working tree holds; a journal
-// stamped by a build of uncommitted changes, or by none, is refused unless
-// --force records it on the working tree. The page opens on the journal's
+// stamped by a build of uncommitted changes, or by none, is refused. --force
+// records any journal on the working tree instead (as `npm run replay
+// --force` replays one there): how a change to a screen is seen on a run
+// played before it. The page opens on the journal's
 // seed and dials and is fed its commands (probes/replay-page.js): those
 // outside a battle wait as long as they did when the run was played, each
 // battle's orders go in at their ticks, and every battle plays at --speed,
@@ -24,7 +26,7 @@
 //   --speed=<n>        the battles' playback speed (default 1)
 //   --max-gap=<s>      the longest wait between two commands outside a battle
 //                      (default: as long as the journal has it)
-//   --force            record a journal the working tree did not record
+//   --force            record on the working tree, not on the journal's build
 //
 // Options:
 //   --countdown=full|skip  how the clip opens: on the whole pre-battle
@@ -271,7 +273,7 @@ function openJournal(file, { force, speed, maxGap, countdown }) {
         ? `it was recorded on a build of ${id[2]} with uncommitted changes ('${segment.build}'), which no commit holds`
         : null;
   if (refusal !== null && !force) stop(`the journal can't be replayed on its own build: ${refusal}. --force records it on the working tree`);
-  if (refusal !== null) console.log(`record: forced past: ${refusal}`);
+  if (force) console.log(`record: forced: on the working tree, not on the journal's build ${segment.build}${refusal === null ? '' : ` (${refusal})`}`);
 
   const params = new URLSearchParams(segment.start.dials);
   params.set('seed', String(segment.start.seed));
@@ -290,7 +292,7 @@ function openJournal(file, { force, speed, maxGap, countdown }) {
   const opened = new Date(segment.openedAt).toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-');
   return {
     journal,
-    ref: refusal === null ? id[2] : undefined,
+    ref: force ? undefined : id[2],
     query: params.toString(),
     inputName: `run-${opened}`,
     maxSeconds: Math.ceil(estimateS * 1.25 + 60),

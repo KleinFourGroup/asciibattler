@@ -25,6 +25,12 @@
  * it jumped 38 px under the pointer. So the screen keeps a LEDGER of the
  * offer as first shown; the live offer is always the ledger's un-taken rows,
  * in order, which is what maps a row back onto its engine index.
+ *
+ * The ledger FOLLOWS the live offer, whoever resolved a portion: a row whose
+ * portion has left `run.pendingRewards` is marked taken at the next render,
+ * and the scene asks every frame whether one has (`follow`). A journal
+ * replayed through the dispatcher never goes through this screen's click
+ * handler, and its rows have to tick off all the same.
  */
 
 import { daemonById } from '../config/daemons';
@@ -92,6 +98,14 @@ export class RewardScreen extends Screen {
   override hide(): void {
     super.hide();
     this.portionsEl = null;
+  }
+
+  /** Re-render if a portion was resolved since the last render (the scene
+   *  calls this every frame; with nothing resolved it does nothing). */
+  follow(): void {
+    if (this.portionsEl === null) return;
+    const live = this.run.pendingRewards ?? [];
+    if (this.ledger.some((r) => !r.taken && !live.includes(r.portion))) this.renderPortions();
   }
 
   /**
@@ -258,14 +272,24 @@ export class RewardScreen extends Screen {
   }
 
   /**
-   * 101e — the ledger follows the live offer. Its un-taken rows must BE
-   * `run.pendingRewards`, in order (same objects — nothing but this screen's
-   * own commands resolves a portion while it is up). First render, or any
-   * mismatch: rebuild from the live offer — the pre-101e behavior, never a
-   * row whose button points at the wrong portion.
+   * 101e — the ledger follows the live offer. A row whose portion has left
+   * `run.pendingRewards` was resolved (by this screen's click or by a command
+   * sent from elsewhere), so it is taken; a bits row then freezes at what the
+   * live folds pay now, which is what it paid when this runs in the frame it
+   * was accepted. (A declined row would read the same; a decline comes only
+   * from Continue, which resolves the whole offer and swaps the scene.)
+   * After that its un-taken rows must BE the live offer, in
+   * order (the same objects). First render, or any mismatch: rebuild from the
+   * live offer — the pre-101e behavior, never a row whose button points at
+   * the wrong portion.
    */
   private syncLedger(): void {
     const live = this.run.pendingRewards ?? [];
+    for (const row of this.ledger) {
+      if (row.taken || live.includes(row.portion)) continue;
+      row.taken = true;
+      row.settledBits = row.portion.kind === 'bits' ? this.run.effectiveBits(row.portion.base) : null;
+    }
     const pending = this.ledger.filter((r) => !r.taken);
     if (pending.length === live.length && pending.every((r, i) => r.portion === live[i])) return;
     this.ledger = live.map((portion) => ({ portion, taken: false, settledBits: null }));

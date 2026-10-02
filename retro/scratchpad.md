@@ -137,9 +137,12 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   four arms on scratch copies of that file (`CLAUDE_CONFIG_DIR`, the real
   file only read), only the forward-slash key decided the skip. I confirmed
   the warning and both flags read-only. That a desktop session reads the
-  same key as the CLI is an inference (same build, same cwd). The engine
-  writes `.claude-plugin/types/` beside a mod each time it loads it, so that
-  folder's absence beside the repo copy shows no load has reached it. Still
-  open: whether, once the workspace is trusted, a desktop session runs the
-  module's function hooks without the hot-reload consent or an env switch.
-  Trusting the workspace is the user's to do.
+  same key as the CLI is an inference (same build, same cwd). The user set
+  the flag by hand, and after a relaunch the repo copy loaded (the tool
+  read 209,563). I had offered the absence of `.claude-plugin/types/`
+  beside the repo copy as proof that no load reached it, and that was
+  wrong: the repo copy loaded and no such folder appeared. The engine
+  writes it beside a hot-reload mod, not a skills-folder one. Still open:
+  whether a session that never answered the hot-reload question runs the
+  mod. The rule this enables, and the rest of the record, are in WORKLOG
+  §115 "The context rule, replaced".

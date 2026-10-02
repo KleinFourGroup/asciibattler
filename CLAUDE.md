@@ -61,12 +61,18 @@ in AGENTS.md, which other harnesses read too.
   tokens the last response was answered over, as the status line has them.
   The same reading is added to the result of every Bash or PowerShell
   command that runs `git commit`, as context for you and a transcript line
-  for the user. It is on trial (`retro/scratchpad.md`, 2026-10-02): whether
-  a fresh session loads it from this folder, and how it compares with the
-  user's meter. If the tool is absent, ask the user for the reading. To
-  type-check it, run `npx tsc -p .claude/skills/context-meter` after a
-  session has loaded it, since the engine writes the types into
-  `.claude-plugin/types/` (gitignored). `claude plugin validate` reads the
-  manifest and the hooks but does not type-check: an unawaited Promise
-  passed it. The CLI is not on PATH here; it is the app's bundled
-  `claude.exe` under `%APPDATA%\Claude\claude-code\<version>\`.
+  for the user. The rule that uses it is in
+  [process/planning.md](process/planning.md) ("Context: the halt and the
+  hand-off line"). If the tool is absent, ask the user for the reading.
+  The engine loads the mod only in a trusted workspace. For this repo, the
+  flag it reads is `hasTrustDialogAccepted` under the forward-slash key
+  (`C:/Users/…`) in `~/.claude.json`, not the backslash key the app's
+  dialog set; `claude plugin list` names a folder it skipped. To
+  type-check an edit, write a tsconfig in your scratch directory from the
+  header of the plugin-authoring skill's `types/claude-code.d.ts`, list
+  that file and `hooks/register.ts` under `files`, and run the repo's
+  `tsc -p` on it. Use the skill's declarations: the copy the engine writes
+  beside a hot-reload mod lacks the built-in tools' inputs and passes code
+  the skill's copy fails. `claude plugin validate` does not type-check (an
+  unawaited Promise passed it). The CLI is not on PATH here; it is the
+  app's bundled `claude.exe` under `%APPDATA%\Claude\claude-code\<version>\`.

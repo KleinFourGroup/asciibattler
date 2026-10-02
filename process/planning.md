@@ -75,10 +75,10 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    When a risky change has a separable UI, cut it headless core first and
    render second, so the eyeball-only part is only what's actually visual.
 3. **Shape-lock with the user.** This is a stop: the user signs the cut and
-   its reads. It is also a gate ("Context: the gate, the breaker, the
-   halt", below): the same message says what the stretch the cut opens
-   holds, and asks for the meter reading and the breaker. From there the
-   session runs to the next `stop` or decision point.
+   its reads. The same message says what the stretch the cut opens holds,
+   with the session's context reading ("Context: the halt and the hand-off
+   line", below). From there the session runs to the next `stop` or
+   decision point.
 4. **Write the cut into the ROADMAP phase section** as checkbox one-liners;
    rationale and audit findings go to the worklog.
 
@@ -124,33 +124,35 @@ eyeball-heavy round, so the Round 8 close counts `batch` reads again.
 - If the doctrine is ever rolled back, the fallback is the old rule: pause
   after every commit.
 
-## Context: the gate, the breaker, the halt
+## Context: the halt and the hand-off line
 
-The session can't read its own context use; the user reads the meter. An
-autonomous stretch is the work between two interruptions: from a
+The session reads its own context use where the harness gives it a tool
+(Claude Code: CLAUDE.md "The context meter"); otherwise the user reads the
+meter. An autonomous stretch is the work between two interruptions: from a
 shape-lock or a stop's read to the next `stop`, decision point or phase
 end. The reads doctrine exists to make those stretches long, and one can
-take a few hundred thousand tokens. Three numbers manage that, and none of
-them is a hard limit.
+take a few hundred thousand tokens. Two numbers manage that (both in the
+HANDOFF Cursor), and neither is a hard limit.
 
-- **The gate** (its number is in the HANDOFF Cursor) decides where a
-  stretch starts, never when one ends. Before a stretch, the session says
-  what the stretch holds (steps, audits, pane work; no token estimate) and
-  asks for the reading. Under the gate, the stretch starts here. Over it,
-  the stretch goes to a fresh session, unless the user judges it small
-  enough to fit. A stretch that starts under the gate is expected to end
-  well over it, and that is not an overrun.
-- **The breaker** is a span of wall-clock time the user sets at the gate,
-  for that stretch. When it has passed, the session pauses at the next
-  step boundary and asks for the reading. The user can suspend it, as for
-  a box run, where hours pass in waiting. If the gate's answer names none,
-  it is one hour.
-- **The halt** (in the Cursor, about 600k) is where the user wants the work
-  in a fresh session whatever is in flight: at a reading past it, commit
-  and hand off. Passing it by a little is not a failure.
+- **The halt** (600k) is where the user wants the work in a fresh session,
+  whatever is in flight. Passing it by a little is not a failure.
+- **The hand-off line** (550k) is the halt less one step's cost, so that a
+  step started under it ends near the halt. At the start of each step, read
+  the context; the reading on the previous step's commit counts. Past the
+  line, commit what is done and hand off.
+- **At a stop or a shape-lock**, the report gives the session's reading
+  and says whether the stretch it opens looks likely to fit under the line.
+  The user decides whether the stretch starts here or in a fresh session,
+  so most hand-offs fall at a stop rather than in mid-stretch, where the
+  next session's orientation costs more.
+- **Without the tool**, ask the user for the reading at each stop and
+  shape-lock. The user may name a span of wall-clock time; once it has
+  passed, pause at the next step boundary and ask again.
 
-Write each reading into the WORKLOG with its time, at a stretch's start and
-at its end, so what a stretch costs becomes a measurement.
+Write the readings into the WORKLOG with their times: each step's commit
+reading, and the readings at a stretch's start and end. The hand-off line
+is provisional: the round close measures what steps cost from those
+readings and resets it.
 
 ## HANDOFF upkeep
 

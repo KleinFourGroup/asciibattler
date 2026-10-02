@@ -89,9 +89,10 @@ The user is Matthew. What helps:
   feasibility read rather than deference; the instinct behind it often
   points at a real need.
 - They often multitask, so wall-clock time is an upper bound on work time.
-- You can't read your own context use, and past estimates were off by 2–3×
-  in both directions. Don't give a number; ask the user for the meter
-  reading when it matters.
+- Read your context use from a tool if your harness has one (Claude Code:
+  CLAUDE.md "The context meter"); otherwise ask the user for the meter
+  reading when it matters. Don't estimate it: past estimates were off by
+  2–3× in both directions.
 
 How the work runs:
 

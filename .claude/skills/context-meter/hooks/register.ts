@@ -28,19 +28,28 @@ export const register: Register = on => {
     result: await reading($),
   }))
 
-  // A commit is a step's boundary, so its result carries a reading: the model
-  // reads it as context, and the person sees it as a transcript line.
-  for (const tool of ['Bash', 'PowerShell'] as const) {
-    on('tool.call', { tool }, async ($, e, next) => {
-      const ran = await next(e)
-      if (ran.deny !== undefined || !GIT_COMMIT.test(String(e.command))) {
-        return ran
-      }
+  on('tool.call', { tool: 'Bash' }, ($, e, next) =>
+    withReading($, e.command, next(e)),
+  )
+  on('tool.call', { tool: 'PowerShell' }, ($, e, next) =>
+    withReading($, e.command, next(e)),
+  )
+}
 
-      const line = await reading($)
-      $.ui.log(line)
-
-      return { ...ran, context: [...(ran.context ?? []), line] }
-    })
+// A commit is a step's boundary, so its result carries a reading: the model
+// reads it as context, and the person sees it as a transcript line.
+async function withReading<R extends { deny?: string; context?: readonly string[] }>(
+  $: EngineInterface,
+  command: string,
+  running: Promise<R>,
+): Promise<R> {
+  const ran = await running
+  if (ran.deny !== undefined || !GIT_COMMIT.test(command)) {
+    return ran
   }
+
+  const line = await reading($)
+  $.ui.log(line)
+
+  return { ...ran, context: [...(ran.context ?? []), line] }
 }

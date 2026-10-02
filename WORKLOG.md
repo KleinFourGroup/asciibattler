@@ -3865,3 +3865,47 @@ shows, and how a mod is loaded in every session under the desktop app
 (the hot-reload switch is per session and the person's alone to answer).
 The observation and what it would change in the gate, the breaker and the
 halt are in `retro/scratchpad.md`.
+
+### The context rule, replaced (2026-10-02, the user's)
+
+Session 0d584e89, a process break before the §115 build stretch. The user
+asked whether a Claude Code mod could retire the gate and the breaker by
+giving the session its own context reading. Built: the context-meter mod
+(4409bab; CLAUDE.md "The context meter"), a tool that returns the reading,
+with the same reading added to every commit's result.
+
+**The calibration pair:** the tool read 159,886 at 18:51, and the user's
+meter read 160k just after, with one message between them. The user's
+118k earlier was taken before that turn's tool results, so it pairs with
+nothing. A second pair, far from the first, has not been taken yet.
+
+**Signed** (`process/planning.md` "Context: the halt and the hand-off
+line"; the Cursor carries the numbers): the gate (350k) and the breaker
+retire, and the name "gate" goes with its number, as the user asked. The
+halt stays at 600k. The hand-off line is 550k, the halt less one step's
+cost, checked at the start of each step. At a stop or shape-lock the
+session gives its own reading and says whether the next stretch looks
+likely to fit. Without the tool, the user reads the meter as before.
+
+**The user's prediction, logged before any data:** there will be no
+single average step size. The 550k is provisional, and the round close
+measures step costs from the commit readings and resets it.
+
+**Loading.** The mod loads from the repo only in a trusted workspace. For
+this repo, the forward-slash key in `~/.claude.json` read untrusted while
+the backslash key read trusted. A fresh session ("Context meter
+diagnostics", local_5432b355) found that with a four-arm test on scratch
+copies of the file, and I confirmed the flags and the skip warning
+read-only. The user set the flag by hand. After a relaunch the tool read
+209,563, and a commit dry run carried 210,192. Open: whether a session
+that never answered the hot-reload question runs the mod; the §115
+session's first act tests that.
+
+**Two corrections to my own claims.** First, `claude plugin validate` does
+not type-check; I had said it would have caught the unawaited Promise.
+Second, a skills-folder load writes no `.claude-plugin/types/` beside the
+mod, so that folder's absence never showed that a load was missing. The
+declarations the engine writes beside a hot-reload mod also lack the
+built-in tools' inputs: under the skill's own declarations, the commit
+hook's loop over two tool names failed to type, and it is now two literal
+matchers.

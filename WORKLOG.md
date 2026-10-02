@@ -3769,3 +3769,39 @@ Seven steps: six `none`, one `stop`.
   bits and pool; a second tab says the run is open elsewhere; a planted
   stale save shows the message. Wrong is a different screen, anything
   lost, or a fight that goes differently under the same orders.
+
+### The §115 shape-lock, first part (2026-10-02, the user's) — calls 1–9 SIGNED, 10 and 11 open
+
+At about 17:05 ("Signing 1-9; can you elaborate on 10 & 11?"). **The
+reading: 352k at about 17:05.** The session opened fresh at about 14:15
+and was idle from 14:36 until this message, so 352k is what orientation,
+the §114 close and this kickoff's audit cost together. It is over the gate
+by 2k, and the build stretch is the phase's largest; where it starts is
+being settled with the two open calls (the user leans to a fresh session,
+and offers a 30-minute breaker here as the other shape).
+
+**Call 10, re-read before answering.** The first message said keeping the
+last-turn strip means "a wider bump". That was written before the strip's
+renderer was read. It draws three things from the `turn:resolved` payload:
+`winner`, `reason`, and the turn's fallen rows (✔ `PreTurnScreen.ts:1066-1115`),
+and the screen keeps the payload only when its turn is the one before (✔
+`:205`). The fallen rows are already in the saved ledger: `fallenForTurn`
+filters it by sector, node and turn (✔ `Run.ts:1347-1352`). So the strip
+needs two saved facts, the last turn's winner and why it ended, in the bump
+call 2 already makes. The shape proposed back to the user: the Run keeps
+them, `turn:starting` carries the last turn's outcome, and the screen takes
+the strip from that payload live and resumed alike, which retires Game's
+buffer of `turn:resolved` for the strip. What a load still loses is the
+deal's cue sequence; the cards still animate in (`enterPositions = 'all'`,
+✔ `:215`) and, as this session reads the code, the pile counts open at
+their final values. No pane has shown a pre-turn screen with no cues.
+
+**Call 11, re-read before answering.** DESIGN.md has no notice or toast
+idiom (a search of the file for "toast", "notice" and "can't save" found
+nothing; "banner" appears once, for the map's), so an indicator that sits
+over every screen is a new idiom. The store knows at boot when storage
+is refused (`chooseAdapter`'s fallback and its reason, ✔
+`src/store/choose.ts:21-47`), and 115g already puts two messages on the
+boot screen. The shape proposed back: the boot-time case gets a third line
+there in 115g; a write that fails in mid-run (a quota) waits for §116,
+where the settings need the same indicator for their own writes.

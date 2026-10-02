@@ -2737,7 +2737,7 @@ minutes short at the 113e boundary).
 ## 2026-10-02 — 114f: step zero's display sitting, the retime built, the sitting with it on, the read (one session; 114g handed to a fresh one) — claude-opus-5-5, session a8073201
 
 Readings: 104k at 10:00 (the gate), 287k just after 11:00, 372k at
-11:48; none at the end (about 12:15). Five commits, `7e813b6` to the
+11:48; none at the end (about 12:15). Six commits, `7e813b6` to the
 closing one.
 
 1. **Missing from the orientation:** how §111's display test asked the
@@ -2781,7 +2781,7 @@ closing one.
    blocking the page is not one. The sound track's start varies by about
    15 ms from run to run, so a tone offset of 18 to 24 at every tone of
    a run is that, and only a step between tones is a drift.
-6. **Room to ask, disagree, pause, stop:** all four stops were real and
+6. **Room to ask, disagree, pause, stop:** every stop was real and
    taken: the gate, step zero's result, the build's hand-back, the read.
    I proposed a different mechanism from the one the cut named and said
    why; the user asked two pointed questions back and took it. That

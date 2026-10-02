@@ -2737,8 +2737,8 @@ minutes short at the 113e boundary).
 ## 2026-10-02 — 114f: step zero's display sitting, the retime built, the sitting with it on, the read (one session; 114g handed to a fresh one) — claude-opus-5-5, session a8073201
 
 Readings: 104k at 10:00 (the gate), 287k just after 11:00, 372k at
-11:48; none at the end (about 12:15). Six commits, `7e813b6` to the
-closing one.
+11:48; none at the end (about 12:15). Six commits, `7e813b6` to `4541644`, then corrections to
+this entry.
 
 1. **Missing from the orientation:** how §111's display test asked the
    display off, and the script itself (it had lived in that session's

@@ -4421,3 +4421,29 @@ stylesheet 56.50 kB (56.25). `npm test`: 229 files, 3322 tests, 47.0 s.
 The reading at the stop: **396,242** at 12:59 (115g: about 92k). What is
 left of the phase is the sitting's findings and the close, which looks
 likely to fit under the line.
+
+### The 115g sitting (2026-10-03, the user's) — READ, one finding filed
+
+In Firefox, reported at about 13:50. The verdict: "Everything else seems
+good!"
+
+**The finding: a reward's taken rows don't survive a reload.** "If you
+reload in the middle of accepting rewards, the already accepted rewards
+don't render." The user reads it as fine and as a TODO, and asked whether
+restoring them needs a version bump. Read after the report: the engine
+splices a resolved portion out of `pendingRewards` (`Run.ts`,
+`takePendingReward`), and the rows marked Taken are the screen's own list
+of the offer as first shown (`RewardScreen.ledger`, kept so no row jumps
+under the pointer). The save holds only what is left, so yes: keeping them
+means a `RunSnapshot` field and a bump. Filed in TODO "§115 riders" to
+ride §117's bump or be dropped. The port was checked for the same shape and
+doesn't have it: a sold slot is a flag in the saved stock. The other
+screen-held state a load drops is the deal's cue sequence, decided at the
+shape-lock (call 10).
+
+**The calls.** The 1 s wait: signed. The rejected save, replaced by a new
+run's first save: carried to §116, signed (ROADMAP §116's carried line).
+That a tab is `elsewhere` only when the lock manager names a holder: the
+user asked for it to be explained again; open.
+
+The reading: 408,239 on the 115g commit (`d9d389d`) at 13:02.

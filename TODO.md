@@ -470,6 +470,21 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   record runners, which pass their own `--profile`, still able to run beside
   a playing instance (unchecked: whether Electron's lock is per `userData`).
   The landing note is in `main.mjs` at the store file.
+- [ ] **A reward's taken rows across a reload** (the user's 115g read,
+  2026-10-03). A reload in the middle of a reward, then Continue, shows only
+  the portions still on offer; the rows already accepted, which the live
+  screen keeps dimmed and marked Taken until it leaves, are gone. The engine
+  splices a resolved portion out of `pendingRewards` (`Run.ts`,
+  `takePendingReward`) and the list of taken rows is the screen's own
+  (`RewardScreen.ledger`), so the save holds only what is left. Nothing the
+  run needs is lost, and the ledger's purpose (no row jumps under the
+  pointer) doesn't span a reload. Keeping the rows means the Run remembering
+  the resolved portions and a bits row's settled amount: a `RunSnapshot`
+  field, so a `RUN_SCHEMA_VERSION` bump. A bump costs nobody a run until the
+  first upload that carries saves (§118's `0.1.0`), so this rides §117's
+  bump (the Escalation level) or is dropped; it is not worth a bump of its
+  own after that upload. The port needs nothing: a sold slot is a flag in
+  the saved stock.
 
 ## §114 riders (the 114g read, 2026-10-02)
 

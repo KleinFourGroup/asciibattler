@@ -22,8 +22,8 @@ import { RNG } from '../src/core/RNG';
 import { PHASE_ROWS, pickerFor } from '../src/dev/probe/drive';
 import { JournalRecorder } from '../src/journal/JournalRecorder';
 import type { JournalStart, JournaledCommand, RunJournal } from '../src/journal/journal';
-import { replayJournal } from '../src/journal/replayJournal';
-import { Run } from '../src/run/Run';
+import { replayJournal, runFromStart as replayRunFromStart } from '../src/journal/replayJournal';
+import { Run, type RunSnapshot } from '../src/run/Run';
 import { parseRunConfig } from '../src/run/RunConfig';
 import type { WorldCommand } from '../src/sim/Command';
 import { World } from '../src/sim/World';
@@ -55,6 +55,11 @@ export interface DriveOptions {
   readonly record?: boolean;
   /** The recorder's clock; defaults to one that advances 250 ms per reading. */
   readonly now?: () => number;
+  /** 115d — close the page and open it again at this gate (counted from 0,
+   *  every step outside a battle): the save's journal and snapshot are kept,
+   *  and a new page on `build` loads the run with its dials and resumes the
+   *  journal, as `Game` will. Null goes on without a reload. */
+  readonly reloadAt?: (gate: number, run: Run) => { readonly build: string } | null;
 }
 
 export interface DriveResult {
@@ -67,44 +72,59 @@ export interface DriveResult {
   readonly abandoned: boolean;
 }
 
-/** The Run a journal's start describes, constructed as `Game` constructs it. */
+/** The Run a journal's start describes, constructed as `Game` constructs it
+ *  (the replay's own; a `resume` needs the Run before it). */
 export function runFromStart(start: JournalStart, bus: EventBus<GameEvents>): Run {
-  const run =
-    start.kind === 'seed'
-      ? new Run(start.seed, bus, parseRunConfig(new URLSearchParams(start.dials)))
-      : Run.fromJSON(start.snapshot, bus);
-  run.pauseAtTurnGates = true;
-  return run;
+  return replayRunFromStart(start, bus);
 }
 
 const MAX_COMMANDS = 5000;
 
 export function driveRun(options: DriveOptions): DriveResult {
   const { start, plants = {} } = options;
-  const bus = new EventBus<GameEvents>();
+  const dials = start.kind === 'snapshot' || start.kind === 'seed' ? start.dials : '';
 
   let journal: RunJournal | null = null;
   let closes = 0;
   let clock = 1_000_000;
   const now = options.now ?? (() => (clock += 250));
-  // Before the Run, as the recorder's header asks.
-  const recorder =
-    options.record === false
-      ? null
-      : new JournalRecorder(bus, { build: TEST_BUILD, configHash: configHash() }, now, (closed) => {
-          journal = closed;
-          closes++;
-        });
-
   let world: World | null = null;
-  bus.on('battle:started', ({ worldSeed, encounter }) => {
-    world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
-    world.installBattleRules(encounter.battleRules ?? []);
-    spawnEncounter(world, encounter);
-  });
+  /** A page: a bus with the battle table, and the recorder, before the Run,
+   *  as the recorder's header asks. */
+  const page = (build: string): { bus: EventBus<GameEvents>; recorder: JournalRecorder | null } => {
+    const bus = new EventBus<GameEvents>();
+    const recorder =
+      options.record === false
+        ? null
+        : new JournalRecorder(bus, { build, configHash: configHash() }, now, (closed) => {
+            journal = closed;
+            closes++;
+          });
+    bus.on('battle:started', ({ worldSeed, encounter }) => {
+      world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
+      world.installBattleRules(encounter.battleRules ?? []);
+      spawnEncounter(world, encounter);
+    });
+    return { bus, recorder };
+  };
 
-  const run = runFromStart(start, bus);
+  let { bus, recorder } = page(TEST_BUILD);
+  let run = runFromStart(start, bus);
   recorder?.open(start, () => run.toJSON());
+  /** Close the page at a gate and open it again: what survives is what a
+   *  save keeps, the snapshot and the journal's saved copy. */
+  const reload = (build: string): void => {
+    const snapshot = JSON.parse(JSON.stringify(run.toJSON())) as RunSnapshot;
+    const saved = recorder === null ? null : asFile(recorder.saved(snapshot));
+    recorder?.dispose();
+    run.dispose();
+    ({ bus, recorder } = page(build));
+    run = Run.fromJSON(snapshot, bus, parseRunConfig(new URLSearchParams(dials)));
+    run.pauseAtTurnGates = true;
+    const loaded = run;
+    recorder?.resume(saved, snapshot, dials, () => loaded.toJSON());
+  };
+  let gates = 0;
 
   const send = (command: JournaledCommand): void => {
     recorder?.command(command);
@@ -135,6 +155,10 @@ export function driveRun(options: DriveOptions): DriveResult {
   let abandoned = false;
   for (let sent = 0; ; sent++) {
     if (sent > MAX_COMMANDS) throw new Error(`driveRun: ${MAX_COMMANDS} steps without the run ending`);
+    if (run.phase !== 'battle') {
+      const reloadTo = options.reloadAt?.(gates++, run);
+      if (reloadTo) reload(reloadTo.build);
+    }
     const step = PHASE_ROWS[run.phase](run, pick);
     if (step === 'end') break;
     if (step === 'fight' ? !fight(battles++) : plants.abandonWhen?.(run, battles)) {

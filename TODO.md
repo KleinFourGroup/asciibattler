@@ -451,6 +451,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
   `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
 
+## §115 riders
+
+- [ ] **A clip of a continued run.** `npm run record -- --journal=<file>`
+  replays a journal of one segment started from a seed and refuses more
+  (`shell/electron/record-cli.mjs`, `openJournal`). Since 115d a run loaded
+  from its save is a journal of several segments, so a clip of one needs the
+  replay driver (`shell/electron/probes/replay-page.js`) to load each resume
+  as the page did and go on. Filed at 115d (WORKLOG §115, "For the build
+  stretch").
+
 ## §114 riders (the 114g read, 2026-10-02)
 
 - [ ] **A `reward:resolved` bus event.** The Run emits nothing when a

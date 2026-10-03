@@ -16,9 +16,10 @@
  * `battle:ended` by starting the next battle inside the same emit; the
  * recorder has to see the end first.
  *
- * WHO CALLS WHAT. `open` when a Run is constructed or loaded; `command`
- * before each command is applied, then `settle` once it has been; `abandon`
- * when the Run is reset or replaced. A run's end is noticed on the bus
+ * WHO CALLS WHAT. `open` when a Run is constructed, or `resume` (115d) when
+ * one is loaded with the journal its save kept; `command` before each
+ * command is applied, then `settle` once it has been; `saved` for the copy
+ * a save keeps; `abandon` when the Run is reset or replaced. A run's end is noticed on the bus
  * (`run:defeated`, `run:victory`) and closed at the next `settle`, because
  * the Run can still be changing state when it emits: the hash is taken once
  * control is back with the caller.
@@ -50,6 +51,9 @@ interface OpenSegment extends JournalSegment {
 }
 
 export class JournalRecorder {
+  /** 115d — the segments a load carried over from the save's journal, each
+   *  ended; the segment being recorded follows them. */
+  private earlier: JournalSegment[] = [];
   private segment: OpenSegment | null = null;
   private snapshot: (() => RunSnapshot) | null = null;
   /** The last tick that ran in the battle in progress; null outside one. */
@@ -97,7 +101,7 @@ export class JournalRecorder {
 
   /** The journal being recorded, as it stands; null between runs. */
   get journal(): RunJournal | null {
-    return this.segment ? { format: JOURNAL_FORMAT, segments: [this.segment] } : null;
+    return this.segment ? { format: JOURNAL_FORMAT, segments: [...this.earlier, this.segment] } : null;
   }
 
   /**
@@ -107,6 +111,47 @@ export class JournalRecorder {
    */
   open(start: JournalStart, snapshot: () => RunSnapshot): void {
     this.abandon();
+    this.begin(start, snapshot);
+  }
+
+  /**
+   * 115d — begin the next segment of `saved`, the journal a save kept, for a
+   * Run just loaded from that save's `snapshot` with `dials`. On the build
+   * and config that recorded the save's segment, the new one starts from the
+   * snapshot's hash (`resume`); on another, from the whole snapshot. A
+   * journal that doesn't end `saved` at this snapshot's hash (none, another
+   * format, or another save's) is not carried, and the journal starts over
+   * from the snapshot. Returns the start's kind.
+   */
+  resume(
+    saved: RunJournal | null,
+    snapshot: RunSnapshot,
+    dials: string,
+    read: () => RunSnapshot,
+  ): 'resume' | 'snapshot' {
+    this.abandon();
+    const hash = snapshotHash(snapshot);
+    const last = saved?.format === JOURNAL_FORMAT ? saved.segments.at(-1) : undefined;
+    const carried = last !== undefined && last.end?.reason === 'saved' && last.end.hash === hash;
+    const same = carried && last.build === this.stamp.build && last.configHash === this.stamp.configHash;
+    this.begin(same ? { kind: 'resume', hash, dials } : { kind: 'snapshot', snapshot, dials }, read);
+    this.earlier = carried ? saved!.segments.map((s) => structuredClone(s)) : [];
+    return same ? 'resume' : 'snapshot';
+  }
+
+  /**
+   * 115d — the journal as a save keeps it beside `snapshot`: every segment,
+   * the one being recorded ended `saved` with the snapshot's hash. The
+   * recording goes on. Null with no journal open.
+   */
+  saved(snapshot: RunSnapshot): RunJournal | null {
+    const segment = this.segment;
+    if (!segment) return null;
+    const ended: JournalSegment = { ...segment, entries: segment.entries.slice(), end: this.endOf('saved', snapshot) };
+    return { format: JOURNAL_FORMAT, segments: [...this.earlier, ended] };
+  }
+
+  private begin(start: JournalStart, snapshot: () => RunSnapshot): void {
     this.segment = {
       build: this.stamp.build,
       configHash: this.stamp.configHash,
@@ -161,18 +206,24 @@ export class JournalRecorder {
     const segment = this.segment;
     const snapshot = this.snapshot;
     if (!segment || !snapshot) return;
-    segment.end = {
-      reason,
-      ms: this.elapsed(segment),
-      ...(this.battleTick !== null ? { tick: this.battleTick } : {}),
-      hash: snapshotHash(snapshot()),
-    };
-    const journal: RunJournal = { format: JOURNAL_FORMAT, segments: [segment] };
+    segment.end = this.endOf(reason, snapshot());
+    const journal: RunJournal = { format: JOURNAL_FORMAT, segments: [...this.earlier, segment] };
     this.clear();
     this.onClosed(journal);
   }
 
+  private endOf(reason: JournalEnd['reason'], snapshot: RunSnapshot): JournalEnd {
+    const segment = this.segment!;
+    return {
+      reason,
+      ms: this.elapsed(segment),
+      ...(this.battleTick !== null ? { tick: this.battleTick } : {}),
+      hash: snapshotHash(snapshot),
+    };
+  }
+
   private clear(): void {
+    this.earlier = [];
     this.segment = null;
     this.snapshot = null;
     this.battleTick = null;

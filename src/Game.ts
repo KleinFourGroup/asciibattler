@@ -753,10 +753,11 @@ export class Game implements RunDispatcher {
     }
     const restored = Run.fromJSON(snap, this.bus);
     restored.pauseAtTurnGates = true;
-    // A load starts a journal from the loaded snapshot (spec D4); the
+    // A load starts a journal from the loaded snapshot (spec D4), with no
+    // dials, as `fromJSON` above loads it; the
     // replaced run's journal, if it was still open, is abandoned by `open`.
     this.journaling((recorder) =>
-      recorder.open({ kind: 'snapshot', snapshot: snap }, () => restored.toJSON()),
+      recorder.open({ kind: 'snapshot', snapshot: snap, dials: '' }, () => restored.toJSON()),
     );
     this.finishedJournal = null;
     this.run?.dispose();

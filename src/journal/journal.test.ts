@@ -4,7 +4,7 @@ import type { RunSnapshot } from '../run/Run';
 import { journalFileName, snapshotHash, type RunJournal } from './journal';
 
 const journalOpenedAt = (openedAt: number): RunJournal => ({
-  format: 1,
+  format: 2,
   segments: [
     {
       build: '0.1.0+abc1234',

@@ -3,7 +3,9 @@
  * reached what the journal recorded.
  *
  * Each segment is replayed on its own: the Run from the segment's start (a
- * seed with its dials, or a snapshot), the turn gates on as the game plays,
+ * seed or a snapshot, with its dials; for a `resume`, 115d, the Run the
+ * segment before left, through its text, as the page loaded the save), the
+ * turn gates on as the game plays,
  * and a World per battle, built the way both production sites and
  * `replayTrace` build it (`new World` on the encounter's seed →
  * `installBattleRules` → `spawnEncounter`) and ticked with the live clock's
@@ -34,7 +36,7 @@ import { HEALTH } from '../config/health';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG } from '../core/RNG';
-import { Run } from '../run/Run';
+import { Run, type RunSnapshot } from '../run/Run';
 import { parseRunConfig } from '../run/RunConfig';
 import { World } from '../sim/World';
 import { spawnEncounter } from '../sim/battleSetup';
@@ -64,14 +66,43 @@ export interface JournalReplay {
 }
 
 /** The Run a segment's start describes, constructed as `Game` constructs
- *  it: the dials parsed as the URL's are, the turn gates on. */
-export function runFromStart(start: JournalStart, bus: EventBus<GameEvents>): Run {
-  const run =
-    start.kind === 'seed'
-      ? new Run(start.seed, bus, parseRunConfig(new URLSearchParams(start.dials)))
-      : Run.fromJSON(start.snapshot, bus);
+ *  it: the dials parsed as the URL's are, the turn gates on. A `resume`
+ *  loads `before`, the Run the segment before it left. */
+export function runFromStart(start: JournalStart, bus: EventBus<GameEvents>, before?: Run): Run {
+  const config = parseRunConfig(new URLSearchParams(start.dials));
+  let run: Run;
+  if (start.kind === 'seed') {
+    run = new Run(start.seed, bus, config);
+  } else if (start.kind === 'snapshot') {
+    run = Run.fromJSON(start.snapshot, bus, config);
+  } else {
+    if (before === undefined) throw new JournalRefused('runFromStart: a resume start with no run before it');
+    run = Run.fromJSON(JSON.parse(JSON.stringify(before.toJSON())) as RunSnapshot, bus, config);
+  }
   run.pauseAtTurnGates = true;
   return run;
+}
+
+/** 115d — why a `resume` segment can't follow the one before it, or null. A
+ *  resume replays on from the segment before, so that one must have ended
+ *  `saved` at the hash the resume starts from, on the same build and config. */
+function resumeRefusal(segments: readonly JournalSegment[], i: number): string | null {
+  const start = segments[i]!.start;
+  if (start.kind !== 'resume') return null;
+  const before = segments[i - 1];
+  if (before === undefined) return 'it resumes, and no segment comes before it';
+  if (before.end?.reason !== 'saved') return `it resumes, and segment ${i - 1} ended ${before.end?.reason ?? 'open'}, not saved`;
+  if (before.end.hash !== start.hash) {
+    return `it resumes from hash ${start.hash}, and segment ${i - 1} was saved at ${before.end.hash}`;
+  }
+  const here = segments[i]!;
+  if (before.build !== here.build || before.configHash !== here.configHash) {
+    return (
+      `it resumes, and segment ${i - 1} was recorded on build ${before.build} under config ${before.configHash}, ` +
+      `not ${here.build} under ${here.configHash}: a load on another build starts from the snapshot`
+    );
+  }
+  return null;
 }
 
 /**
@@ -93,11 +124,15 @@ export function replayJournal(journal: RunJournal): JournalReplay {
           `Check out the build that recorded it.`,
       );
     }
+    const refusal = resumeRefusal(journal.segments, i);
+    if (refusal !== null) throw new JournalRefused(`replayJournal: segment ${i}: ${refusal}`);
   });
-  return { segments: journal.segments.map(replaySegment) };
+  const segments: SegmentReplay[] = [];
+  journal.segments.forEach((segment, i) => segments.push(replaySegment(segment, i, segments[i - 1]?.run)));
+  return { segments };
 }
 
-function replaySegment(segment: JournalSegment, index: number): SegmentReplay {
+function replaySegment(segment: JournalSegment, index: number, before: Run | undefined): SegmentReplay {
   const bus = new EventBus<GameEvents>();
   let world: World | null = null;
   let winner: GameEvents['battle:ended']['winner'] | null = null;
@@ -110,7 +145,7 @@ function replaySegment(segment: JournalSegment, index: number): SegmentReplay {
   bus.on('battle:ended', (ended) => {
     winner = ended.winner;
   });
-  const run = runFromStart(segment.start, bus);
+  const run = runFromStart(segment.start, bus, before);
 
   let battles = 0;
   let at = 'the start';

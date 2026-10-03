@@ -14,7 +14,7 @@ const BUILD = '0.1.0+abc1234';
 /** A journal whose JSON text is exactly `chars` long, told apart by `seed`. */
 function journalOf(seed: number, chars: number): RunJournal {
   const make = (pad: string): RunJournal => ({
-    format: 1,
+    format: 2,
     segments: [
       {
         build: BUILD,

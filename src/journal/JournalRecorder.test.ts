@@ -186,11 +186,11 @@ describe('JournalRecorder', () => {
     recorder.command({ kind: 'advanceTurn' });
     bus.emit('battle:started', { worldSeed: 1, encounter: ENCOUNTER });
     bus.emit('tick', { tick: 1 });
-    recorder.open({ kind: 'snapshot', snapshot: snap('loaded') }, () => snap(state.label));
+    recorder.open({ kind: 'snapshot', snapshot: snap('loaded'), dials: '' }, () => snap(state.label));
 
     expect(closed).toHaveLength(1);
     expect(closed[0]!.segments[0]!.end).toEqual({ reason: 'abandoned', ms: 0, tick: 1, hash: snapshotHash(snap('first')) });
-    expect(recorder.journal!.segments[0]!.start).toEqual({ kind: 'snapshot', snapshot: { label: 'loaded' } });
+    expect(recorder.journal!.segments[0]!.start).toEqual({ kind: 'snapshot', snapshot: { label: 'loaded' }, dials: '' });
     // The old battle's tick did not leak into the new journal.
     recorder.command({ kind: 'advanceTurn' });
     expect(shape(recorder.journal!.segments[0]!.entries)).toEqual([{ t: 'run', command: { kind: 'advanceTurn' } }]);

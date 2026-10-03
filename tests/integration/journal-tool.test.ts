@@ -97,7 +97,7 @@ describe('replayText: the tool over a recorded journal', () => {
   });
 
   it('refuses another format with exit 2', () => {
-    expect(replayText(text({ ...journal(), format: 2 }), TREE).code).toBe(2);
+    expect(replayText(text({ ...journal(), format: 1 }), TREE).code).toBe(2);
   });
 
   it('exits 1 on a divergence and prints where', () => {

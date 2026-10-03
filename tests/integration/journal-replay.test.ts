@@ -57,9 +57,9 @@ describe('record, replay, compare', () => {
     const snapshot = first.run.toJSON();
     expect(snapshot.phase).toBe('map');
 
-    // A loaded run has the shipped length (the `hops` dial isn't saved), so
+    // Loaded without its dials, the run has the shipped length, so
     // the continuation is left at the map three battles on.
-    const start = { kind: 'snapshot', snapshot } as const;
+    const start = { kind: 'snapshot', snapshot, dials: '' } as const;
     const recorded = driveRun({
       start,
       choiceSeed: 3,
@@ -163,7 +163,8 @@ describe('the controls: a journal that was changed does not replay', () => {
   });
 
   it('another format is refused', () => {
-    const other = { ...journal, format: 2 } as unknown as RunJournal;
+    // Format 1, the journal before 115d's resume start and saved end.
+    const other = { ...journal, format: 1 } as unknown as RunJournal;
     expect(() => replayJournal(other)).toThrow(JournalRefused);
   });
 });

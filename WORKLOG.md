@@ -4070,3 +4070,46 @@ advanceTurn 2532/2360, redrawCards 419/11, empowerUnit 393/36, passGrant
 in the cache while docked, and the port buys applied once to three times.
 The cut pins kinds sent, so this is the instrument's known weak spot, not
 a failure.
+
+### 115d — the journal across a load (2026-10-02) — read `none` ✅
+
+115c's commit (`e851881`) carried **404,372** at 21:41 (115c: about 82k,
+with the sweeps' output).
+
+**Built** (the journal's format 1 → 2):
+- `journal.ts`: the `resume` start (`hash`, `dials`), the `saved` end, and
+  `dials` on a `snapshot` start, since `fromJSON` now takes them.
+- `JournalRecorder`: `saved(snapshot)` is the journal as a save keeps it
+  (every segment, the one being recorded ended `saved` with the snapshot's
+  hash) while the recording goes on. `resume(saved, snapshot, dials, read)`
+  carries the saved journal's segments and opens the next: a `resume` start
+  on the build and config that recorded the saved segment, else a
+  `snapshot` start. A journal that doesn't end `saved` at that snapshot's
+  hash (none, another format, a finished one) is not carried, and the
+  journal starts over from the snapshot.
+- `replayJournal`: before anything runs, each `resume` segment is checked
+  against the one before (it ended `saved`, at the same hash, on the same
+  build and config), else `JournalRefused` names the segment. A resume
+  loads the Run the segment before left through its text, with the dials,
+  as the page loaded the save. `replayTool` describes the new start;
+  `devLoadRun` opens its journal with no dials, as it loads; the recorder
+  CLI's copy of the format number moved to 2.
+- `driveRun` (`tests/journalDrive.ts`) takes `reloadAt(gate, run)`: at that
+  gate the page closes, keeping the snapshot and the journal's saved copy,
+  and a new page on the given build loads the run with its dials and
+  resumes the journal, as `Game` will at 115e.
+
+**The exit** (`tests/integration/journal-across-loads.test.ts`, 6 tests):
+`sectorHops=2` seed 2, closed at five gates (3, 11, 19, 27, 33), the third
+and fourth reopened on another build. The journal has six segments, started
+`seed, resume, resume, snapshot, resume, snapshot`, the first five ended
+`saved`. It replays with every segment closed, the battles summing to the
+straight run's, to that run's bytes. Controls: a resume from a changed hash
+is refused naming segment 1; segment 1 stamped with another build is
+refused as resuming after segment 0's build. The recorder's resume is
+pinned on its three cases (no journal, a finished one, one saved at this
+snapshot). Two older tests planted format 2 as "another format"; they plant
+format 1 now.
+
+Filed in TODO "§115 riders": a clip of a continued run (the recorder's
+`--journal` replays one segment from a seed).

@@ -62,9 +62,10 @@ export function buildRefusal(build: string, tree: string): string | null {
 
 function describeStart(segment: JournalSegment): string {
   const { start } = segment;
-  return start.kind === 'seed'
-    ? `seed ${start.seed}${start.dials === '' ? '' : ` (${start.dials})`}`
-    : `a snapshot in phase ${start.snapshot.phase}`;
+  const dials = start.dials === '' ? '' : ` (${start.dials})`;
+  if (start.kind === 'seed') return `seed ${start.seed}${dials}`;
+  if (start.kind === 'snapshot') return `a snapshot in phase ${start.snapshot.phase}${dials}`;
+  return `resumed from the segment before at hash ${start.hash}${dials}`;
 }
 
 function isJournal(value: unknown): value is RunJournal {

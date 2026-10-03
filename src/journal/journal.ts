@@ -9,8 +9,14 @@
  * SEGMENTS. A journal is a list of segments, and each segment replays on its
  * own: it is stamped with the build and the config hash that recorded it, and
  * it starts from a seed or from a whole snapshot. A run played in one sitting
- * is one segment. A load opens another, starting from the loaded snapshot, so
- * a run continued on a later build stays replayable piece by piece.
+ * is one segment. A load opens another (115d). The save the run was loaded
+ * from kept a copy of the journal whose open segment ended `saved`, with the
+ * saved snapshot's hash. On the build and config that recorded that segment,
+ * the next one starts from the hash (`resume`), and a replay goes on from the
+ * segment before as the page did: through the snapshot's text, loaded with
+ * the run's dials. On another build or config it starts from the whole
+ * snapshot, so a run continued on a later build stays replayable piece by
+ * piece.
  *
  * ENTRIES are one ordered list per segment, in the order things happened:
  *  - `run`: a command sent to the Run, recorded before it is applied, so
@@ -48,8 +54,9 @@ import type { RunCommand } from '../run/Command';
 import type { RunSnapshot } from '../run/Run';
 import type { WorldCommand } from '../sim/Command';
 
-/** The journal's own format. A replay refuses any other. */
-export const JOURNAL_FORMAT = 1;
+/** The journal's own format. A replay refuses any other. 2 (115d): the
+ *  `resume` start, the `saved` end, and the dials on a `snapshot` start. */
+export const JOURNAL_FORMAT = 2;
 
 /** Every `RunCommand` the Run itself applies (see the header for the two
  *  that are the game's). */
@@ -59,8 +66,13 @@ export type JournalStart =
   /** A new run: the seed it was constructed with and the URL's run dials as
    *  query text (`runConfigToQueryString`), the chosen character among them. */
   | { readonly kind: 'seed'; readonly seed: number; readonly dials: string }
-  /** A loaded run: the whole snapshot it resumed from. */
-  | { readonly kind: 'snapshot'; readonly snapshot: RunSnapshot };
+  /** A loaded run: the whole snapshot it resumed from, and the dials it was
+   *  loaded with (`Run.fromJSON` takes them; the snapshot doesn't hold them). */
+  | { readonly kind: 'snapshot'; readonly snapshot: RunSnapshot; readonly dials: string }
+  /** 115d — a loaded run on the build and config of the segment before, which
+   *  ended `saved` at `hash`: a replay loads that segment's Run from its text
+   *  with the dials, as the page loaded the save. */
+  | { readonly kind: 'resume'; readonly hash: string; readonly dials: string };
 
 export type JournalEntry =
   | { readonly t: 'run'; readonly ms: number; readonly tick?: number; readonly command: JournaledCommand }
@@ -72,8 +84,10 @@ export type JournalEntry =
     };
 
 export interface JournalEnd {
-  /** `abandoned`: the run was reset or replaced before it ended. */
-  readonly reason: 'defeat' | 'victory' | 'abandoned';
+  /** `abandoned`: the run was reset or replaced before it ended. `saved`
+   *  (115d): the copy a save keeps of the segment being recorded; the run
+   *  went on from there, after a load in the next segment. */
+  readonly reason: 'defeat' | 'victory' | 'abandoned' | 'saved';
   readonly ms: number;
   /** Set when the segment ended during a battle: the last tick that had run. */
   readonly tick?: number;

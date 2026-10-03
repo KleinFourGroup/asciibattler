@@ -234,7 +234,7 @@ function compose({ work, beforeFile, afterFile, labels, out }) {
 // --- a run's journal ---------------------------------------------------------
 
 /** The journal's own format (src/journal/journal.ts, JOURNAL_FORMAT). */
-const JOURNAL_FORMAT = 1;
+const JOURNAL_FORMAT = 2;
 /** A build ID that names a commit (src/journal/replayTool.ts has the same). */
 const BUILD_ID_SHAPE = /^(.+)\+([0-9a-f]{7})(-dirty)?(-dev)?$/;
 

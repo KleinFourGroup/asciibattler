@@ -194,6 +194,57 @@ describe('115a — Run.resume(): a loaded run re-emits its gate', () => {
   });
 });
 
+// 115e — the pre-turn strip moved from Game's buffer of `turn:resolved` onto
+// `turn:starting.lastTurn`. The screen drew the old strip from the
+// `turn:resolved` payload, so that payload is the oracle: on a seeded drive,
+// every pre-turn screen from turn 2 on is handed its winner, its reason and
+// its turn's fallen rows, and turn 1 none. The renderer is unchanged, so the
+// same input draws the same text.
+describe("115e — the strip's input is the turn:resolved before it", () => {
+  it('on every pre-turn screen of a seeded drive', () => {
+    const bus = new EventBus<GameEvents>();
+    let world: World | null = null;
+    bus.on('battle:started', ({ worldSeed, encounter }) => {
+      world = new World(bus, new RNG(worldSeed), encounter.gridW, encounter.gridH);
+      world.installBattleRules(encounter.battleRules ?? []);
+      spawnEncounter(world, encounter);
+    });
+    const resolved: GameEvents['turn:resolved'][] = [];
+    let compared = 0;
+    let firsts = 0;
+    bus.on('turn:resolved', (p) => resolved.push(p));
+    bus.on('turn:starting', (p) => {
+      if (p.turn === 1) {
+        expect(p.lastTurn).toBeNull();
+        firsts++;
+        return;
+      }
+      const before = resolved.at(-1)!;
+      expect(before.turn).toBe(p.turn - 1);
+      expect(p.lastTurn).toEqual({ winner: before.winner, reason: before.reason, fallen: before.fallen.thisTurn });
+      compared++;
+    });
+    const run = new Run(2, bus, parseRunConfig(new URLSearchParams('sectorHops=2&character=soldier')));
+    run.pauseAtTurnGates = true;
+    const pick = pickerFor('seeded', 2);
+    for (let sent = 0; sent < 5000; sent++) {
+      const step = PHASE_ROWS[run.phase](run, pick);
+      if (step === 'end') break;
+      if (step !== 'fight') {
+        run.dispatch(step.command);
+        continue;
+      }
+      const w = world as World | null;
+      while (w !== null && !w.ended) {
+        w.tick();
+        if (!w.ended && w.currentTick >= maxTurnTicks) w.resolveAsDraw();
+      }
+    }
+    expect(firsts).toBeGreaterThan(2);
+    expect(compared).toBeGreaterThan(10);
+  });
+});
+
 describe('115a — Run.fromJSON(snapshot, bus, config?): the config inputs', () => {
   // Every input the run reads after construction, by its field name.
   const INPUTS = [

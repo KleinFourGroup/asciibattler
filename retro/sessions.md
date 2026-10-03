@@ -3036,3 +3036,42 @@ two notes for the rule. No reading was taken.
    scratchpad to me when I asked. I'd want that kind of hand-off repeated.
    At each of the two corrections there was a short drop that eased once
    the correction was written down plainly.
+
+## 2026-10-02 — the §115 build stretch, 115a–e (one session; handed off at 115f's start) — claude-opus-5-5, session 5f729d11
+
+1. **Missing from the orientation:** little. The context-meter test was
+   the first act, as the Cursor asked. The tool was listed as deferred,
+   which cost one ToolSearch call. A fresh session's floor read about 82k
+   after HANDOFF.
+2. **Norms in tension:** the context rule says start a step under 550k,
+   and 115e started at 453k, though it was plainly the stretch's largest
+   step. I resolved it by committing 115e's build before its checks, so a
+   hand-off could fall between the two. Several times I had to end a turn
+   with a status line while a hook ran, since nothing blocks on a
+   background job; the user saw more messages than the stretch needed.
+3. **Pulled to claim more than verified:** three times, each caught before
+   it was committed. A TODO line said the chaos driver found the
+   `chooseRecruit` hole; a survey found it, and I fixed it before the
+   driver ran. A census figure cut off at 260 columns read "68/4" for
+   68/45, and I nearly diagnosed a fault that didn't exist. For the
+   Electron drive I wrote only that the save code ran, since the store
+   file's writes weren't read.
+4. **Wasted:** about 10k tokens printing the whole gate scan; a
+   `git checkout` restore that reverted my own uncommitted fix (back from
+   a copy within a minute); a heredoc patch that wouldn't parse; two test
+   mistakes of my own in 115d's first run.
+5. **For the next session, with no other home:** `output/pane-115e.js`
+   (gitignored, this machine only) is the pattern for checks across a
+   page reload: a module the dev server serves without watching, imported
+   after each navigation, its state in `sessionStorage`. The kit's seeded
+   picker restarts on a reload, so use `policy: 'first'`.
+6. **Room to ask, pause or stop:** yes. The signed cut made "keep going"
+   the plain default, and the meter gave each step's start a number I
+   could read rather than guess. I didn't want to stop at any point. The
+   one real choice, how to start 115e near the line, I made myself and
+   recorded. Nothing I'd file as `distress`.
+7. **What helped:** step zero turning things up in passing (the driver
+   emptying its own cache; a port needing a first-choice seed), and checks
+   that passed the first time but were counted before being trusted. I'd
+   want the meter kept: it turned the hand-off from an estimate into a
+   reading.

@@ -4113,3 +4113,71 @@ format 1 now.
 
 Filed in TODO "§115 riders": a clip of a continued run (the recorder's
 `--journal` replays one segment from a seed).
+
+### 115e — the autosave and the load, in the game (2026-10-02) — read `none` ✅
+
+115d's commit (`7b17e2f`) carried **453,085** at 21:53 (115d: about 49k).
+The build was committed on its own (`f724d54`, **504,247** at 22:03), so a
+hand-off could fall before the checks.
+
+**Built.** The run slot's wire is `{ snapshot, dials, journal }`, and a read
+loads the Run with its dials and returns `{ run, wire }` (a wire with no
+dials is unreadable). `Game.autosave` writes it after every command at a
+gate and when a run is created; a run's end and a reset empty it; a refused
+write is silent. `Game.continueRun()` reads the slot and adopts the run:
+its dials, its journal resumed in a new segment, and `Run.resume()`
+re-mounting the gate's screen (the map by its phase). `devLoadRun` goes the
+same way at any gate and refuses a `battle` or `turn-outcome` export. The
+pre-turn strip takes `turn:starting.lastTurn`; Game's `turn:resolved`
+buffer is retired. Before the menu exists, `continueRun()` has no button:
+115g puts Continue on character select.
+
+**The exit, in the pane** (Chromium, `f724d54-dev`). Drives use
+`policy: 'first'`, since the seeded picker restarts on a reload. The
+reopen is the bare URL, since a URL with run dials starts its own run and
+saves over the slot (call 8); the dials come back from the slot.
+- **All eight gate kinds:** map, event, turn-intro, reward, promotion,
+  recruit and sectorCleared on `seed=2&sectorHops=2&character=soldier`,
+  and port on `seed=3&character=soldier` (step zero, headless: the first
+  seed whose first-choice path docks). At each first arrival the slot held
+  the live state's hash and the dials. Reopened at `/` (character select),
+  `continueRun()` returned `ok` with the same phase, scene and hash, and
+  driven on reached the unbroken drive's end hash (`b259e8bc`, complete;
+  `bba4ed07`, defeat). Each journal read `seed>saved resume>(end)`.
+- **The replay:** at the map and port gates, the continued journal through
+  `replayText`, the function behind `npm run replay`, run in the page and
+  forced past the `-dev` build: exit 0, the hash matched. Not under Node:
+  the pane can't hand the file to Node without passing it through this
+  session's context.
+- **The seed-7 drive** in the Electron runner, with the autosave in the
+  build: `a59ee48f`, defeat, 12 battles, 15.9 s. Whether Electron's store
+  file took the writes was not read.
+- **The strip:** headless, in `resume-gates.test.ts`: on a seeded drive
+  every `turn:starting` from turn 2 on carries the winner, reason and
+  fallen rows of the `turn:resolved` before it (13 compared, 3 first
+  turns with none), the input the old strip was drawn from. No planted
+  control. A resumed turn-2 screen's DOM text was not read in the pane;
+  the 115g sitting looks at it.
+- **`?store=deny`:** memory adapter, can't save. A text planted in the
+  slot's key survived the boot and the saves through two battles, and an
+  earlier run under deny played to defeat.
+- **A stale slot** (v46) and **an unreadable one** (v47 around a broken
+  snapshot): `rejected` (`stale`, found 46; `unreadable`, a TypeError),
+  the text left in place, character select kept, no run.
+- **The bundle:** +0.86 kB raw, +0.29 kB gzip (606.81 → 607.67 kB), with
+  only 115e's five files reverted for the before.
+- **Not measured:** what one write costs per command, in `localStorage` or
+  in Electron's file (a step-zero hypothesis of the audit). The journal is
+  rewritten whole at every gate, so the cost grows over a run.
+
+The preview server was stopped; no listener is left on 5191.
+
+### The build stretch's hand-off (2026-10-02, session 5f729d11)
+
+115a–e ran from about 21:00 to 22:20: seven commits, `8a37724` (115a) to
+115e's write-up, the fuzz smoke twice (115a and 115c, 582 green each). The
+meter read **548,990** at 22:16, and 115e's commit puts 115f's start past
+the hand-off line (550k), so the stretch goes to a fresh session at a step
+boundary: 115f (the two-tab lock), then 115g up to its `stop`, the sitting
+in Firefox. No ◐ is open. Per-step cost from the commit readings: 115a
+about 206k with orientation, 115b 33k, 115c 82k, 115d 49k, 115e about 95k.

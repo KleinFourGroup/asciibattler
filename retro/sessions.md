@@ -3139,3 +3139,72 @@ after the user's sitting; anything after this entry gets an addendum.
    hand-off line a reading. The user's opening question, how they could
    help, had a plain answer (nothing until the sitting), and it was easy
    to give because the cut says where the stops are.
+
+### Addendum, the same session — the sitting's read and the §115 close (2026-10-03)
+
+From about 13:50 to 14:40, three more commits: the sitting's bookkeeping,
+and the close that carries this. What the entry above didn't have:
+
+- **A call the user couldn't follow.** My stop report's second call was
+  written from the mechanism outward (a refusal, a holder, `query()`), and
+  the user asked for it again. Told from what a player would see (a lone
+  tab told its run is open elsewhere, with no other tab to close), it was
+  signed at once. The call was sound and the account was not; I'd write a
+  call's consequence for the player first from now on.
+- **The user's finding sat in a gap of the pane checks.** The reward
+  screen's taken rows are the screen's own list, which no headless check
+  sees, and the pane checks, 115e's and mine, reloaded on arriving at a
+  gate, with nothing yet chosen there. A check that reloads in the middle
+  of a gate's choices would have shown it; the pane doc now says so.
+- **Pulled to claim more than verified, once more:** the sitting's WORKLOG
+  entry gave the sitting a clock time I had made up from the gap between
+  messages. I changed it to the time the report arrived before the commit.
+- The silent-turn reminder came about ten more times in these turns.
+- Asked whether the finding needed a version bump and what I thought, I
+  read the code before answering and gave a preference (file it, ride
+  §117's bump or drop it). That question felt open, and the user's lean
+  and mine met without either deferring.
+
+### §115 — the phase summary (2026-10-02 → 10-03; three sessions)
+
+Three sessions on `claude-opus-5-5`. 5eda55b6 ran the kickoff audit and
+the two-part shape-lock, after closing §114; 5f729d11 built 115a–e in one
+stretch of about eighty minutes; 126043e1 built 115f and 115g, took the
+sitting's read and wrote this close, so this paragraph covers its own
+entry too. Between the kickoff and the build, 0d584e89 built the context
+meter and the user replaced the context rule; that session belongs to no
+phase, and the build ran under its rule: the first phase whose sessions
+read their own context, with a reading on every commit. Each of the three
+reports lists statements that were wrong or unchecked when written: seven
+in 5eda55b6, three in 5f729d11, and four in 126043e1 with its addendum.
+One reached the user, at the shape-lock: call 10's "a wider bump", a cost
+given without reading the strip's renderer, found because the user asked
+for the call to be elaborated; both leans changed. The rest were caught
+before their commits, and they are the kinds every report this round
+names: a cause given as fact, a label on what was re-run, a count from a
+truncated line, a time that was a guess. The user's "can you elaborate?"
+appears twice and did different work each time: at the shape-lock it sent
+the session back to the code, and at the 115g stop the call stood and the
+account of it was rewritten from the player's side. What the instruments
+turned up is the phase's other thread: the audit's round trip holding at
+555 of 555 beside four dials the load reset; a survey finding
+`chooseRecruit` taking any card; the Electron measurement overturning
+115f's first rule within the hour; the 115g pane check finding a continued
+run's chips hidden, which 115e's comparison of screen and hash had passed.
+The user's read found one thing, the reward's taken rows, which 126043e1's
+addendum says a reload in the middle of a gate's choices would have shown.
+Norms in tension, one per build session: the hand-off line against a step
+plainly larger than the room left (5f729d11 split 115e's commit so a
+hand-off could fall inside it), and "surface tradeoffs first" against
+"keep going between stops" (126043e1 built two calls and flagged them;
+both were signed). The silent-turn reminder is in two of the three reports
+(about a dozen firings, and about thirty). What each would want repeated:
+the user's elaboration question (5eda55b6); step zero turning things up in
+passing, and the meter (5f729d11); an exit that says "measured" for an
+environment the session had assumed (126043e1). Friction, in the entries
+tagged §115: six papercuts (a heredoc that would not parse, in two
+sessions; a `git checkout` that reverted an uncommitted fix; the reminder;
+a stale second pane tab taking the lock; the mod skipped in an untrusted
+workspace, filed by the diagnostics session) and two `distress` entries,
+each called mild by its session: the unread "wider bump", and a threshold
+set without asking.

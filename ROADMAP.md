@@ -12,9 +12,8 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §114 ✅ CLOSED 2026-10-02** (the run journal and its export).
-**§115, save/load and mid-run resume, is IN FLIGHT** (its cut signed
-2026-10-02, nothing built yet).
+**Status: §115 ✅ CLOSED 2026-10-03** (save/load and mid-run resume).
+**§116, the menu and settings, is NEXT** (cut at its kickoff).
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -138,43 +137,35 @@ v36 are unchanged. The record: WORKLOG §114.
 - [x] **114g** — the recorder replays a journal, `npm run record -- --journal=<file>`: the user's exported run as an 8 min 51 s clip, the page's final hash the journal's. Read `stop`. ✅ READ 2026-10-02, one finding → 114g-post (WORKLOG §114g).
 - [x] **114g-post** — inserted at the 114g read: the reward screen follows the live offer every frame; `--force` records any journal on the working tree. Read: four frames of the screen. ✅ READ 2026-10-02, `b3b9139` (WORKLOG §114g-post).
 
-## Phase 115 — save/load and mid-run resume
+## Phase 115 — save/load and mid-run resume ✅ CLOSED 2026-10-03
 
-Charter: an autosave at every gate into one slot, a load entry point, and
-the scene-for-phase resolver (`Game.devLoadRun`'s landing note: a Run-side
-re-emit of the phase's gate event), so a run resumes at any gate (spec
-D3), with two oracles: the chaos driver and the continuation check. **Why
-here:** after the journal both oracles need. **Risk:** medium-high (it
-touches every phase). **Decision points:** eleven, all ✅ DECIDED at the
-shape-lock (below). **Exit:** the chaos driver and the continuation check
-green; a run saved at any gate reloads byte-faithfully; a stale save
-rejected with its message. **Scope guards:** no manual saves, no
-mid-battle save, no migrations.
+**Outcome:** a run is saved on its own at every gate and continues from
+the screen it was left at. `Game` writes one slot (the snapshot, the run's
+dials as text, the journal) after every command applied outside a battle
+and when a run starts, and a run's end empties it. `Run.fromJSON` takes the
+run's config and `Run.resume()` re-emits the saved gate's event, so
+`Game.continueRun()` re-mounts that screen; a tab closed in a battle comes
+back at the pre-turn screen before it. Two oracles run on every `npm test`:
+the continuation check (a run reloaded at every gate plays as the same run
+played straight through) and the chaos driver (random legal and illegal
+commands in every phase, the round trip at every phase change, occupancy
+at every tick). A journal carries across a load (format 2). The first tab
+to boot holds a Web Lock, and a second tab can't continue and saves no
+run. Character select stands in for the menu: Continue, and a notice for a
+rejected save, for a run open in another tab and for storage that can't
+save. Run v47, one bump; World v36 unchanged. Left open, each with its
+home: a reward's taken rows across a reload (§117's kickoff), one instance
+of the shell per profile and a write's cost per command (TODO), the lock in
+itch's frame and a rejected save's fate under a new run (§116). The record:
+WORKLOG §115.
 
-**Carried from §113** (WORKLOG §113, call 6): the two-tab lock lands here, with the run slot's first writer. `navigator.locks` exists on the dev page; Electron and itch's iframe are unmeasured.
-
-**Carried from §114** (WORKLOG §114, the audit's calls 3 and 4): the journal of the run in progress joins the save in the run slot (spec D1), and a load opens a new segment (D4); whether such a segment carries the snapshot or its hash ✅ DECIDED below.
-
-The decisions (✅ DECIDED 2026-10-02, the user's; the audit, the measurement and the reasons: WORKLOG §115):
-
-- **What a save carries:** the snapshot, the run's dials as text, and the journal. `Run.fromJSON` takes an optional config for the inputs it resets; with none it is unchanged, so rollout clones are.
-- **One Run bump, v46 → v47:** the sector-cleared gate's two facts, and the last turn's winner and reason, so a resumed pre-turn screen keeps its last-turn strip. The deal's cue sequence is not kept.
-- **When it saves:** after every command applied at a gate (every phase but `battle` and `turn-outcome`) and when a run is created; a run's end empties the slot.
-- **A journal across a load:** the saved journal's open segment ends `saved` with the snapshot's hash; a load on the same build and config starts its segment from that hash, and on another build from the whole snapshot and its dials. The journal's format goes to 2.
-- **The continuation check** reloads at every gate in one pass, against the same run played straight through.
-- **The chaos driver** is its own gated driver in `tests/chaos/`, a few seeds on every `npm test`, `npm run chaos` for a sweep.
-- **Before the menu exists:** character select shows Continue and the messages; a boot with run dials starts its own run, never continues, and saves over the slot; a second tab can't continue and plays unsaved, saying so.
-- **"Can't save":** storage refused at boot gets a line on character select here; a write that fails in mid-run waits for §116's indicator.
-
-The cut (signed 2026-10-02):
-
-- [x] **115a** ✅ (WORKLOG §115a) — the Run's side, headless: `Run.fromJSON(snapshot, bus, config?)`; `Run.resume()` re-emits the gate event of the phase the run is in; Run v47, and `turn:starting` carries the last turn's outcome. Exit: for each gate kind a reloaded run's `resume()` emits the payload the live run emitted on arriving there; `turn-outcome` and `battle` refuse by name; with no config the round-trip, rollout and determinism tests and the fuzz smoke are as they were. Read `none`.
-- [x] **115b** ✅ (WORKLOG §115b) — the continuation check, on every `npm test`: a run turned to text and loaded again at every gate, against the same commands played straight through, equal byte for byte at each gate and at the end, over seeds that cross every gate kind, with and without dials. Exit: green; its two controls (the dials withheld from the reload, a field blanked in the text) fail at a named gate. Read `none`.
-- [x] **115c** ✅ (WORKLOG §115c) — the chaos driver: random legal commands in every phase, some out of range, and random battle orders; the round trip at every phase change, occupancy at every tick, and its own journal replaying to the same bytes. Exit: a sweep green, or its findings fixed or filed; every command kind sent at least once across the every-commit seeds (a pinned census); a planted round-trip break and a planted overlap caught; a failure prints its seed and writes its journal. Read `none`.
-- [x] **115d** ✅ (WORKLOG §115d) — the journal across a load: the recorder carries the earlier segments, the two new kinds of start and end, format 2. Exit: a run recorded across loads at several gates replays to the bytes of the same run played straight through; controls: a changed hash, a segment resumed after another build's. Read `none`.
-- [x] **115e** ✅ (WORKLOG §115e) — the autosave and the load, in the game: `Game` writes the slot and empties it; `continueRun()` loads it, resumes the screen and opens the journal's next segment; the DEV load key takes any gate; the pre-turn screen takes its last-turn strip from the `turn:starting` payload. Exit, in the Electron runner or the pane: a run driven to each gate kind, reloaded and continued, shows the same screen and state hash, and driven on reaches the unbroken drive's hash; the seed-7 drive still logs `a59ee48f` with saving on; the strip's text on a seeded drive is as before; a continued run's journal replays under `npm run replay`; `?store=deny` plays on; a stale slot and an unreadable one are rejected with their text left in place. Read `none`.
-- [x] **115f** ✅ (WORKLOG §115f) — the two-tab lock (`navigator.locks`): the first tab to boot holds it; no lock where the API is missing. Exit: headless over a stand-in lock; in the pane with two tabs, the second can't continue and writes nothing to the slot; Electron measured. Read `none`.
-- [x] **115g** ✅ READ 2026-10-03, one finding → TODO "§115 riders" (WORKLOG §115g, "The sitting") — Continue and three messages on character select, stand-ins until §116's menu: the rejected save, the run open in another tab, storage refused at boot. Read `stop`, the sitting in Firefox: start a run, close the tab at the map, at a pre-turn screen, in a battle, at a reward, at a port and at an event, and reopen each time; Continue returns to the screen that was left (the one before the battle, for the battle) with the same team, bits and pool, and from turn 2 on the pre-turn screen shows its last-turn strip; a second tab says the run is open elsewhere; a reload (F5) at a gate still offers Continue (added at 115f: the lock across a reload is unmeasured in Firefox); a planted stale save shows the message. Wrong is a different screen, anything lost, or a fight that goes differently under the same orders.
+- [x] **115a** — the Run's side, headless: `Run.fromJSON(snapshot, bus, config?)`, `Run.resume()`, Run v47, `turn:starting` carries the last turn's outcome. Read `none`. ✅ (WORKLOG §115a).
+- [x] **115b** — the continuation check on every `npm test`: 148 reloads over four runs with no divergence; its two controls fail at a named gate. Read `none`. ✅ (WORKLOG §115b).
+- [x] **115c** — the chaos driver (`tests/chaos/`, `npm run chaos`): every command kind and every order kind sent, four plants caught; `chooseRecruit` now refuses a card that is not in the offer. Read `none`. ✅ (WORKLOG §115c).
+- [x] **115d** — the journal across a load, format 2: a run closed at five gates replays to the straight run's bytes. Read `none`. ✅ (WORKLOG §115d).
+- [x] **115e** — the autosave and the load, in the game: all eight gate kinds continue to the same screen and hash; the pre-turn strip rides the `turn:starting` payload. Read `none`. ✅ (WORKLOG §115e).
+- [x] **115f** — the two-tab lock: a second tab can't continue and writes nothing to the slot; a tab is `elsewhere` only when the lock manager names a holder; a reload took the lock 30 times of 30 in the pane and under Electron. Read `none`. ✅ (WORKLOG §115f).
+- [x] **115g** — Continue and three messages on character select; a continued run shows its chips. Read `stop`, the sitting in Firefox. ✅ READ 2026-10-03, one finding → TODO "§115 riders" (WORKLOG §115g, "The sitting").
 
 ## Phase 116 — the menu and settings
 
@@ -209,6 +200,8 @@ spec); the enemy pool's rounding. **Exit:** Escalation off byte-identical
 headless; the board read at the round close. **Scope guards:** number
 levers only; no unlock content mapping (Round 10); a seeded run unlocks
 nothing.
+
+**Carried from §115** (TODO "§115 riders"): whether a reward's taken rows are saved is decided at this kickoff. It needs a Run bump, this phase makes one anyway, and after §118's upload a bump costs players their runs.
 
 ## Phase 118 — the public web channel, then the round close
 

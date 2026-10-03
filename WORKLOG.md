@@ -4447,3 +4447,67 @@ That a tab is `elsewhere` only when the lock manager names a holder: the
 user asked for it to be explained again; open.
 
 The reading: 408,239 on the 115g commit (`d9d389d`) at 13:02.
+
+### The §115 close (2026-10-03, session 126043e1)
+
+**The last call, signed.** After a second account of it ("that makes
+perfect sense now... signed"), the user signed that a tab is `elsewhere`
+only when the lock manager names a holder. The first account was at fault,
+not the call: it led with the mechanism, and the second led with what a
+player would see. All three calls of the 115g stop are settled, and the
+user asked for the close.
+
+**The exit, against ROADMAP's.**
+- *The chaos driver and the continuation check green:* both run on every
+  `npm test` (229 files, 3322 tests at the close).
+- *A run saved at any gate reloads byte-faithfully:* headless at every gate
+  of four runs (115b, 148 reloads); in the pane at all eight gate kinds
+  (115e); in Firefox at the user's sitting (115g), read good.
+- *A stale save rejected with its message:* the pane, with a planted v46
+  slot (115e for the rejection, 115g for the message on screen).
+
+**The kickoff's predictions, against what happened.** One Run bump, at
+115a (v47): held. No World bump, no RNG stream: held. No new bus event:
+held, and it was a choice once, at 115g, where `reveal()` on the chips was
+taken over emitting `run:started` for a loaded run. The fuzz smoke fired at
+115a and 115c and nowhere else. The journal's format went to 2 at 115d.
+"Two i18n keys" became three (`save.continue`, `save.elsewhere`,
+`save.unavailable`), the third from call 11's split. `npm test` went from
+44.5 s to about 47 s. The production bundle grew 0.86 kB at 115e, 0.71 at
+115f and 1.34 at 115g, to 609.72 kB raw.
+
+**What the phase's instruments turned up that no plan held.** The audit's
+round trip held at 555 saves of 555 beside four dials `fromJSON` reset. The
+handlers' survey for the chaos driver found `chooseRecruit` taking any
+card. The Electron measurement overturned 115f's first rule for a second
+tab within the hour it was written. The 115g pane check found a continued
+run's chips hidden, which 115e's comparison of screen and hash had passed.
+The user's sitting found the reward's taken rows.
+
+**Step costs, from the commit readings** (for the round close, which
+resets the hand-off line): 115a about 206k with a fresh session's
+orientation, 115b 33k, 115c 82k, 115d 49k, 115e about 95k, 115f about 219k
+with orientation, 115g about 92k, the sitting's bookkeeping and this close
+about 43k to the reading below. The user's prediction at the rule's signing
+(no single average step size) holds over these seven: 33k to 219k. Two
+hand-offs, one at a step's start past the line and one at the phase's end.
+
+**Where what is left went.**
+- ROADMAP §116: Continue and the three messages move to the menu; the
+  mid-run write-failure indicator; `navigator.locks` in itch's frame; what
+  a new run does with a rejected save.
+- ROADMAP §117: whether a reward's taken rows are saved, at its kickoff.
+- TODO "§115 riders": a clip of a continued run; one instance of the shell
+  per profile; the reward's taken rows; a write's cost per command, which
+  the audit listed for step zero and no step measured; DESIGN's
+  out-of-scope list, which still names built things as backlog.
+
+**What the close wrote.** ROADMAP §115 demoted to its outcome and ticked
+lines, and the status line moved on. DESIGN gained "Saving" under Run
+structure, and its out-of-scope list lost save/load and replay. The
+HANDOFF Cursor points at the §116 kickoff, with §114 folded into
+"Earlier". `retro/sessions.md` has the phase summary and this session's
+addendum.
+
+The reading at the close: **450,934** at 14:32. The §116 kickoff goes to a
+fresh session: the last close and kickoff audit together read 352k.

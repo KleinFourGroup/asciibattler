@@ -109,6 +109,8 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 
+**Saving (§115; Round 8 spec D3):** roguelike saving. There is one run and one slot, and no manual save. The game saves on its own after every choice made outside a battle and when a run starts, because closing the tab is how a web player quits and only an autosave survives that. Opening the game again offers **Continue**, which returns to the screen that was left with the same team, bits and morale; a run's end empties the slot. A battle is never saved in the middle: a tab closed during a fight comes back at the pre-turn screen before it, with that fight already seen. Nothing can be re-rolled by reloading, since the random streams are keyed per occurrence and the same choices give the same results; the edge a reload gives is knowledge only, and it is accepted. A save is refused only when the save format has changed or the save can't be loaded, not on every new build, so a hotfix keeps the runs in progress; a refused save shows a message, and settings and unlocks are kept (no migrations before 1.0). With the game open in two tabs, the first to open owns the saved run; the second says so, can't continue it, and plays unsaved. Where the browser refuses storage the game plays on and says it can't save. Two things a load does not bring back, both presentation: the order the deal animated in on the pre-turn screen, and a reward's already-taken rows. Until the title menu exists, Continue and these notices sit on character select.
+
 ## Aesthetic
 
 **World identity (locked at the §67 kickoff, 2026-07-26): dark fantasy on a
@@ -601,9 +603,9 @@ Captured here so we can confidently say "not now" during the jam without losing 
 - Larger units (2×2 or 2×1 footprints)
 - High-level player commands during battle (focus-fire, avoid area, etc.)
 - Audio and SFX
-- Save/load and persistence
+- ~~Save/load and persistence~~ ✅ BUILT (§113 the store; §115 the autosave and Continue — see "Saving" under Run structure)
 - Camera rotation and larger maps
 - Line-of-sight for ranged units
 - Terrain affecting movement or combat
 - Status effects and abilities beyond basic attacks
-- Replay system (the determinism work makes this cheap when we want it)
+- ~~Replay system~~ ✅ BUILT for a whole run (§114: the run journal replays headless, `npm run replay`, and as a clip, `npm run record -- --journal`)

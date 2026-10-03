@@ -485,6 +485,19 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   bump (the Escalation level) or is dropped; it is not worth a bump of its
   own after that upload. The port needs nothing: a sold slot is a flag in
   the saved stock.
+- [ ] **What one save costs to write is unmeasured.** The §115 audit
+  measured a save's text (3 to 49 KB) and its serialization (under a
+  millisecond, Node), and listed the write itself, per command, in
+  `localStorage` and in Electron's file, as a step-zero hypothesis; no step
+  took it. The slot is rewritten whole after every command at a gate, and
+  the journal inside it grows over the run. The place to measure it is a
+  sitting that already reads storage in Firefox (§116's, where the
+  `localStorage` limit is taken), on a run of the shipped length.
+- [ ] **DESIGN's "Out of scope" list names as backlog what has since been
+  built** (found at the §115 close, which struck save/load and replay):
+  larger units, in-battle commands, audio, line of sight, terrain and
+  status effects are still listed plain. Strike each with its phase, after
+  checking it against ARCHITECTURE.
 
 ## §114 riders (the 114g read, 2026-10-02)
 

@@ -135,6 +135,11 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   A `.ts` edit reloads every tab on the dev server at once, and the lock
   goes to whichever boots first; a tab opened on run dials then saves its
   own new run over the slot (seen at 115g).
+- **A continue check reloads in the middle of a gate too.** A screen can
+  hold state the Run doesn't save (the reward screen's taken rows), and a
+  reload on arriving at a gate never shows that. Make a first choice
+  there, then reload and continue, and compare the screen as well as the
+  hash.
 
 ## What the kit doesn't hold
 

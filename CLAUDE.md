@@ -63,8 +63,12 @@ in AGENTS.md, which other harnesses read too.
   command that runs `git commit`, as context for you and a transcript line
   for the user. The rule that uses it is in
   [process/planning.md](process/planning.md) ("Context: the halt and the
-  hand-off line"). If the tool is absent, ask the user for the reading.
-  The engine loads the mod only in a trusted workspace. For this repo, the
+  hand-off line"). Under the app it can be listed only as a deferred
+  tool: load it with ToolSearch (`select:mcp__context-meter__read`) before
+  the first call, since deferred is not absent. If it is absent, ask the
+  user for the reading. The engine loads the mod only in a trusted
+  workspace, and that is enough: no hot-reload question needs answering
+  (seen 2026-10-02). For this repo, the
   flag it reads is `hasTrustDialogAccepted` under the forward-slash key
   (`C:/Users/…`) in `~/.claude.json`, not the backslash key the app's
   dialog set; `claude plugin list` names a folder it skipped. To

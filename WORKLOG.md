@@ -4181,3 +4181,11 @@ the hand-off line (550k), so the stretch goes to a fresh session at a step
 boundary: 115f (the two-tab lock), then 115g up to its `stop`, the sitting
 in Firefox. No ◐ is open. Per-step cost from the commit readings: 115a
 about 206k with orientation, 115b 33k, 115c 82k, 115d 49k, 115e about 95k.
+
+**The hot-reload question, answered** (2026-10-03, the user's). Session
+5f729d11 never answered a hot-reload question, and the user saw no prompt
+either; the tool was listed (as a deferred tool) and read on its first
+call. So a trusted workspace alone runs the mod, which closes the question
+"The context rule, replaced" left open. CLAUDE.md "The context meter" now
+says both: load it with ToolSearch when it is deferred, and trust is
+enough.

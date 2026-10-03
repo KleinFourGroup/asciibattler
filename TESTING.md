@@ -45,6 +45,10 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   See the directory for the current set; the load-bearing ones:
   - `determinism.test.ts` — the replay contract backstop (see below).
   - `snapshot-roundtrip.test.ts` — World/Run JSON round-trip (A2).
+  - `continuation.test.ts` — a run saved to text and loaded again at every gate
+    plays as the same run played straight through, byte for byte (115b).
+  - `resume-gates.test.ts` — a loaded run's `resume()` re-emits the gate event
+    the live run emitted on arriving there (115a).
   - `layout-deadlock.test.ts` — each registered layout resolves within 2000 ticks
     (regression pin for the C1d Labyrinth fix).
   - `variable-size.test.ts` — procedural battles at multiple board sizes (D3).
@@ -63,7 +67,7 @@ Concretely, the contract says:
 2. **Cross-seam streams are KEYED, not positional (77d2/77d3).** Every Run/battle-setup stream derives per-occurrence as `deriveRng(root, key, ...stableIds)` — key strings come from the closed registry in `src/core/rngStreams.ts` and are PERMANENT (renaming one, or changing the frozen hash, is a deliberate global stream break; the pinned vectors in `rngStreams.test.ts` enforce it). An occurrence is atomic between snapshots, or carries a serialized counter. `fork()` survives for LOCAL self-contained use only (a test/tool forking off a fresh parent it owns end to end): it produces a child stream deterministic in its own right, advancing the parent by exactly one step.
 3. **No hidden randomness.** No `Math.random()`, no `Date.now()` as entropy, no iteration-order-as-randomness. ESLint catches direct `Math.random()` in `src/sim` and `src/run`; the replay test catches everything else.
 
-The snapshot-roundtrip test extends the contract across serialization: a `World` deserialized from `toJSON()` must produce an identical event trace from that point forward.
+The snapshot-roundtrip test extends the contract across serialization: a `World` deserialized from `toJSON()` must produce an identical event trace from that point forward. The continuation check extends it across a save: a `Run` loaded from its text at any gate, with the run's own config, must play the same commands to the same bytes as the run never saved. A round trip alone (text, load, text) compares the save code with the load code, so it cannot see state both leave out; a continuation can, because the left-out state changes what happens next.
 
 ## Adding a test
 

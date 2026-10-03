@@ -3969,3 +3969,41 @@ about 3.5 s alone, most of it the three runs played at collection.
 
 No RNG stream and no bus event changed; the seed-7 drive's log hash
 covers the commands only, so a snapshot field can't move it.
+
+### 115b — the continuation check (2026-10-02) — read `none` ✅
+
+115a's commit (`8a37724`) carried the reading **288,751** at 21:18: about
+206k for orientation, the stretch's start and 115a together. The hook ran
+the fuzz smoke there, 582 green.
+
+**Built** (`tests/integration/continuation.test.ts`, on every `npm test`).
+A run is played straight through by the pane kit's rows, keeping its steps
+and its text at every gate (every phase but `battle` and `turn-outcome`).
+The same steps are then sent to a run that is turned to text and loaded
+again, on a fresh bus and with its own config, at every gate; the two must
+be equal byte for byte at each gate and at the end. It also asserts that
+the four runs between them cross all ten gate kinds.
+
+**Measured.** It passed on the first run, so the counts came through a
+failing `expect` before the result was trusted:
+
+| seed, dials | gates (= reloads) | battles | end | dials withheld: first divergence |
+|---|---|---|---|---|
+| 2, `sectorHops=2&character=soldier` | 44 | 16 | complete | gate 21, `sectorCleared` |
+| 1, `sectorHops=2&character=soldier` | 37 | 15 | defeat | gate 17, `sectorCleared` |
+| 1, `character=soldier` | 40 | 11 | defeat | none |
+| 7, `hops=3&layout=procedural&character=priest` | 27 | 9 | complete | gate 4, `turn-intro` |
+
+148 reloads, no divergence with the config. The withheld column is the
+first control, and the full-length run's "none" is its null answer: that
+run has no dial a Run reads after construction. The `sectorHops` runs
+diverge where the next sector's map is generated; the forced layout is lost
+at the next encounter's pre-turn screen. The second control blanks the
+fallen ledger in the text at the first reward gate, and the check fails at
+the next gate. The file takes about 8 s alone (4.5 s of tests, the rest
+the straight runs played at collection).
+
+**For 115c, from a survey of the command handlers** (a subagent's report,
+not re-read here): every out-of-range index is a silent no-op, except that
+`chooseRecruit` accepts any template, never checked against the offer
+(`Run.ts`, the recruit handler). The chaos driver will send one.

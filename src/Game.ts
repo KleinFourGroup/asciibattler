@@ -41,8 +41,8 @@ import { JournalRecorder } from './journal/JournalRecorder';
 import type { RunJournal } from './journal/journal';
 import { store } from './store';
 import { keepJournal } from './store/journals';
-import { runSlotSection, type SavedRun } from './store/runSlot';
-import type { StrictRead } from './store/store';
+import type { RunLock } from './store/runLock';
+import { openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -101,6 +101,13 @@ export class Game implements RunDispatcher {
   private finishedJournal: RunJournal | null = null;
   /** Set when the recorder threw: this page records no more. */
   private journalBroken = false;
+  /**
+   * 115f — the run slot as this tab may use it (src/store/runSlot.ts). Every
+   * read, write and clear of the save goes through it, so a second tab (the
+   * two-tab lock held by another) leaves the first tab's save alone and
+   * plays unsaved.
+   */
+  private readonly runSlot: RunSlot;
   private readonly renderer: Renderer;
   private readonly fontAtlas: FontAtlas;
   private readonly sprites: SpriteRenderer;
@@ -181,8 +188,10 @@ export class Game implements RunDispatcher {
    *  arrived after it. */
   private pendingSwapTimer: number | null = null;
 
-  constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement) {
+  constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement, runLock: RunLock) {
     this.fontAtlas = fontAtlas;
+    // 115f — before any run exists: a pinned boot saves below.
+    this.runSlot = openRunSlot(store, this.bus, runLock);
     // 100e2 — the screen host goes in before any other #ui child (see the
     // field): the chrome column + the tooltip host append after it below.
     // (#ui itself is not kept — the page-lifetime chrome takes it here, at
@@ -651,11 +660,12 @@ export class Game implements RunDispatcher {
    * waits at a gate (every phase but `battle` and `turn-outcome`), the run
    * slot gets the snapshot, the dials, and the journal as the save keeps it;
    * a run's end empties the slot. A write the store refuses is silent here
-   * (the indicator is §116's): the run plays on, unsaved.
+   * (the indicator is §116's): the run plays on, unsaved. In a second tab
+   * the slot refuses every write and clear (115f).
    */
   private autosave(run: Run): void {
     if (run.phase === 'defeat' || run.phase === 'complete') {
-      store.clear(runSlotSection(this.bus));
+      this.runSlot.clear();
       return;
     }
     if (run.phase === 'battle' || run.phase === 'turn-outcome') return;
@@ -664,7 +674,7 @@ export class Game implements RunDispatcher {
     this.journaling((recorder) => {
       journal = recorder.saved(snapshot);
     });
-    store.writeStrict(runSlotSection(this.bus), { snapshot, dials: this.runDials, journal });
+    this.runSlot.write({ snapshot, dials: this.runDials, journal });
   }
 
   /**
@@ -672,11 +682,12 @@ export class Game implements RunDispatcher {
    * was saved at (spec D3): the Run with its dials, its journal resumed in a
    * new segment, and the gate's screen re-mounted by `Run.resume()`. Returns
    * the read: on `empty` or `rejected` nothing changes, and a rejected
-   * slot's text stays in place (`store.readStrict`). §116's Continue row
-   * calls this; until then character select's stand-in does (115g).
+   * slot's text stays in place (`store.readStrict`); on `elsewhere` the run
+   * is open in another tab and the slot was not read (115f). §116's Continue
+   * row calls this; until then character select's stand-in does (115g).
    */
-  continueRun(): StrictRead<SavedRun> {
-    const read = store.readStrict(runSlotSection(this.bus));
+  continueRun(): RunSlotRead {
+    const read = this.runSlot.read();
     if (read.status !== 'ok') return read;
     const { run, wire } = read.value;
     this.adopt(run, wire.dials, (recorder) => {
@@ -760,7 +771,7 @@ export class Game implements RunDispatcher {
     this.run?.dispose();
     // 115e — the replaced run is gone, so its save goes with it; a pinned
     // character's new run saves over the slot below.
-    store.clear(runSlotSection(this.bus));
+    this.runSlot.clear();
     // 63e — the locked reset fork: a `?character=` pin goes straight to a
     // fresh run + map; without it, a new run STARTS at character select
     // (the choice is per-run, not sticky). The chips were hidden by the

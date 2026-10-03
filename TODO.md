@@ -460,6 +460,16 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   replay driver (`shell/electron/probes/replay-page.js`) to load each resume
   as the page did and go on. Filed at 115d (WORKLOG §115, "For the build
   stretch").
+- [ ] **One instance of the Electron shell per profile.** The two-tab lock
+  is the browser's own, so a second instance of the shell on the same
+  `userData` is not kept out: measured at 115f, it reads the lock as absent
+  (`none`), saves as if alone, and its writes replace the whole
+  `store.json`. The shell stays internal through Round 8; before it ships to
+  players, `shell/electron/main.mjs` takes `app.requestSingleInstanceLock()`
+  (the second instance quits and the first takes focus), with the probe and
+  record runners, which pass their own `--profile`, still able to run beside
+  a playing instance (unchecked: whether Electron's lock is per `userData`).
+  The landing note is in `main.mjs` at the store file.
 
 ## §114 riders (the 114g read, 2026-10-02)
 

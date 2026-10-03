@@ -27,6 +27,7 @@ import { installMotionGate } from './render/motion';
 import type { EventBus } from './core/EventBus';
 import type { GameEvents } from './core/events';
 import { BUILD_ID } from './buildId';
+import { acquireRunLock, type LockManagerLike } from './store/runLock';
 
 // 113a — the build's ID on `<html data-build>`, so any build, a production
 // one included, can be asked which commit it is.
@@ -45,7 +46,13 @@ if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
 
 // Top-level await: Vite + ESM + modern browsers handle it; the module just
 // pauses until the font has parsed and the atlas is rasterized.
-const fontAtlas = await FontAtlas.create();
+// 115f — the two-tab lock is asked for beside it, since its answer has to be
+// in hand before the Game, the run slot's writer, exists. `navigator.locks`
+// is missing on a page that isn't a secure context.
+const [fontAtlas, runLock] = await Promise.all([
+  FontAtlas.create(),
+  acquireRunLock((navigator as { locks?: LockManagerLike }).locks),
+]);
 
 // 105c — the board explorer loads by a DEV-gated DYNAMIC import: `DEV` is a
 // build-time constant, so in a production build this branch — and with it the
@@ -60,7 +67,7 @@ const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
 // the URL first (src/dev/boardPanel/boot.ts).
 if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
 
-const game = new Game(canvas, fontAtlas, uiMount);
+const game = new Game(canvas, fontAtlas, uiMount, runLock);
 game.start();
 
 // Dev-only debug handle. Exposes the live Game so the browser console

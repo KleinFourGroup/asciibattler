@@ -17,8 +17,10 @@ app can stop the server between turns). Then:
   after any navigation or reload. It waits until the page is live and
   returns a report: the URL, whether frames are running (`frames:
   'stopped'` in a hidden pane), the canvas and viewport, the scene, the
-  run phase, `page` (the load; a reload changes it), the build's ID and
-  the store's status (its adapter, whether it can save). It fails by name
+  run phase, `page` (the load; a reload changes it), the build's ID,
+  the store's status (its adapter, whether it can save) and `lock`, the
+  tab's side of the two-tab lock (`held`, or `elsewhere` in a second tab of
+  the same origin, which then saves no run). It fails by name
   rather than let a read see a broken page. Each failure says what to do:
   - "not live after 30 s": call it again. The dev server's stand-in
     `__probe` waits while a fresh server holds the page's modules, which
@@ -124,6 +126,12 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `localStorage` (or Electron's `store.json`) itself, not the store. The
   pane's `localStorage` takes about 50 Mi characters, some ten times a
   stock browser's, so a quota is never measured here.
+- **Two tabs of one origin** (`tabs_create`, then `navigate`): the first
+  to boot holds the run lock and the second reads `lock: 'elsewhere'`,
+  can't continue and writes nothing to the run slot, for its life. So a
+  tab left open from an earlier check makes the next one a second tab:
+  close it (`tabs_close`) before a save or continue check. Closing the
+  holder frees the lock for the next boot, not for a tab already open.
 
 ## What the kit doesn't hold
 

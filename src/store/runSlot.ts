@@ -12,7 +12,9 @@
  * sections beside it are untouched: the player keeps their settings and
  * unlocks.
  *
- * `Game` writes the slot at every gate and empties it at a run's end (115e).
+ * `Game` writes the slot at every gate and empties it at a run's end (115e),
+ * through `openRunSlot`, which is where the two-tab lock holds (115f): in a
+ * second tab the slot is neither read, written nor emptied.
  * This module imports the run model, so the store's boot module must never
  * import it (tests/store-boot.test.ts).
  */
@@ -23,7 +25,8 @@ import { t } from '../i18n/ui';
 import type { RunJournal } from '../journal/journal';
 import { RUN_SCHEMA_VERSION, Run, type RunSnapshot } from '../run/Run';
 import { parseRunConfig } from '../run/RunConfig';
-import type { StrictSection } from './store';
+import type { RunLock } from './runLock';
+import type { Store, StrictRead, StrictSection } from './store';
 
 /** What the slot stores (Round 8 spec D1, D3). */
 export interface RunSlotWire {
@@ -57,6 +60,41 @@ export function runSlotSection(bus: EventBus<GameEvents>): StrictSection<RunSlot
       const run = Run.fromJSON(wire.snapshot, bus, parseRunConfig(new URLSearchParams(wire.dials)));
       return { run, wire: { snapshot: wire.snapshot, dials: wire.dials, journal: wire.journal ?? null } };
     },
+  };
+}
+
+/** A read of the slot through the lock. `elsewhere`: the run is open in
+ *  another tab, and the slot was not read. */
+export type RunSlotRead = StrictRead<SavedRun> | { readonly status: 'elsewhere' };
+
+/** The run slot as one tab may use it. */
+export interface RunSlot {
+  /** This tab's side of the two-tab lock (runLock.ts). */
+  readonly lock: RunLock;
+  /** The saved run, loaded on the slot's bus; the caller owns it. */
+  read(): RunSlotRead;
+  /** Replace the save. False when it wasn't saved: the store refused it, or
+   *  the run is open in another tab. */
+  write(wire: RunSlotWire): boolean;
+  /** Empty the slot. False when it wasn't emptied, for the same two reasons. */
+  clear(): boolean;
+}
+
+/**
+ * THE SLOT'S ONE DOOR. Every read, write and clear of the run slot goes
+ * through here, so the two-tab lock holds in one place: when the lock is
+ * another tab's (`elsewhere`), the slot is that tab's, and this one neither
+ * loads the save, writes over it, nor empties it. With the lock held, or
+ * with no lock on the page, the slot is the store's strict section.
+ */
+export function openRunSlot(store: Store, bus: EventBus<GameEvents>, lock: RunLock): RunSlot {
+  const section = runSlotSection(bus);
+  const ours = lock !== 'elsewhere';
+  return {
+    lock,
+    read: () => (ours ? store.readStrict(section) : { status: 'elsewhere' }),
+    write: (wire) => ours && store.writeStrict(section, wire),
+    clear: () => ours && store.clear(section),
   };
 }
 

@@ -4189,3 +4189,138 @@ call. So a trusted workspace alone runs the mod, which closes the question
 "The context rule, replaced" left open. CLAUDE.md "The context meter" now
 says both: load it with ToolSearch when it is deferred, and trust is
 enough.
+
+### The build stretch, resumed (2026-10-03, session 126043e1)
+
+A fresh session. The tool read **85,290** at 12:18, after HANDOFF and
+ROADMAP §115 and before this section was read. Pre-flight green at
+`9280558` (228 files, 3307 tests, typecheck clean).
+
+### 115f — the two-tab lock (2026-10-03) — read `none` ✅
+
+**Step zero.** The lock had no code, and no landing note in the source: a
+search of `src`, `shell` and `tests` for the phrase found nothing, so §113's
+call 6 left its note in the roadmap only. `Game` was the slot's one user, at
+four call sites (the autosave's write and clear, `resetRun`'s clear,
+`continueRun`'s read). The finished-journals section is read from storage at
+every write (✔ `src/store/journals.ts:63-72`), so two tabs adding journals
+don't lose each other's, and the lock covers the run slot alone.
+
+**Built.**
+- `src/store/runLock.ts`: `acquireRunLock(navigator.locks)` answers `held`,
+  `elsewhere` or `none`. The first tab to boot takes the Web Lock
+  `asciibattler:run` with `ifAvailable` and holds it for the page's life (a
+  callback promise that never settles). The name is permanent, since a tab
+  on an older build has to contend for the same one.
+- `openRunSlot(store, bus, lock)` in `runSlot.ts`, the slot's one door:
+  `read`, `write` and `clear`. With the lock another tab's, the save is
+  neither loaded, written over nor emptied, and `read` answers
+  `{ status: 'elsewhere' }`. A write refused that way is not a storage
+  failure, so the store's status stays can-save.
+- `main.ts` asks for the lock beside the font atlas (one `Promise.all`),
+  and `Game`'s constructor takes it; `continueRun()` returns the slot's
+  read, which can now be `elsewhere`. The kit's `ready()` report carries
+  `lock`.
+
+**Two calls made inside the cut, flagged for the user at the 115g stop.**
+1. **A boot waits at most 1 s for the lock manager** (`ANSWER_WAIT_MS`),
+   then goes on with no lock. Written before any environment was known to
+   need it, as a guard on a boot that would otherwise hang on an API in an
+   unmeasured frame (itch's).
+2. **`elsewhere` needs a named holder.** The first build took a refusal
+   (`null` from `ifAvailable`) as proof of another tab. The Electron
+   measurement below found a lock manager that refuses a free name and
+   lists nothing held, so a refusal alone now proves nothing: the tab asks
+   `locks.query()`, is `elsewhere` only if the name has a holder, asks once
+   more if it has none (the holder's tab may have closed between the two
+   answers), and is then `none`. The inference, unmeasured in any browser:
+   a lone tab in a browser whose storage is broken the same way would
+   otherwise be told its run is open elsewhere and be unable to save.
+   The cost is one more call in the second tab's boot.
+
+**Headless.** `runLock.test.ts` (10 tests) over a stand-in lock manager
+that keeps the real one's three rules (one holder per name until its
+callback's promise settles or its page goes; `ifAvailable` answered with
+null, in a later task; `query` listing the origin's holders): the first tab
+holds and the second is elsewhere; two tabs booting at once; held for an
+hour, free once the page goes; no lock for a missing API, a missing
+`query`, a throw and a rejection; a refusal with no holder is `none` after
+two requests; the holder closing between the refusal and the query gives
+the lock to the asker; no answer is `none` at 1 s and not at 999 ms; a
+grant after the wait is still held. `runSlot.test.ts` (+3): two stores over
+one adapter as two tabs; the second tab's read, write and clear leave the
+first's text as it was, with no read of the key counted. Both files passed
+on the first run, so four plants were run and each failed by name: the
+hold returned at once (4 tests), the guard always open (the second-tab
+test), the deadline never firing (2), a bare refusal taken as `elsewhere`
+(2).
+
+**In the pane** (Chromium, the dev server, `9280558-dirty-dev`). All of it
+ran on the first build, whose slot guard is the final one; the second
+bullet, with the first tab's `held` before it and its `continueRun()`
+after, ran again on the final code.
+- The first tab reads `held`, and the browser's own `locks.query()` lists
+  `asciibattler:run`, exclusive. Driven to a reward gate on
+  `seed=2&sectorHops=2&character=soldier`, its slot held the live state's
+  hash (`1dcac307`).
+- A second tab at `/` reads `elsewhere`. `continueRun()` returns
+  `{ status: 'elsewhere' }`, character select stays up and no run exists.
+  Reopened at `?seed=7&hops=3&character=soldier`, a pinned boot that would
+  save over the slot, and driven to its defeat (`9fcdfbfe`), the slot's text
+  was the first tab's at boot, at its first reward gate and at the end. It
+  was also unchanged after a `resetRun`, and the second tab's finished
+  journal did join the journals section.
+- The first tab then drove on and its slot followed (`524db0b9`). With that
+  tab closed, the browser listed no holder, and the second tab stayed
+  `elsewhere` and still wrote nothing. A third tab read `held`, and
+  `continueRun()` put it on the pre-turn screen at `524db0b9`, its journal
+  `seed>saved resume>(open)`.
+
+**Does a reloaded page find the lock free?** The risk in `ifAvailable`: a
+reload asks while the page it replaces may still hold the lock. Measured
+with a scratch harness run from a same-origin document that is not the
+game: the production build boots in an iframe, the iframe reloads, and the
+lock manager is asked who holds the name after each boot (a boot that lost
+the race shows no holder). Its control: the outer document takes the lock
+itself, and the next boot must show that document as the holder.
+
+| where | reloads that took the lock | boot, min / median / max | the control |
+|---|---|---|---|
+| the pane, `vite preview` over `dist/` | 30 of 30 | 187 / 231 / 471 ms | read as taken by the outer document |
+| Electron, `app://game` | 30 of 30 | 121 / 183 / 313 ms | the same |
+
+Six top-level reloads of a tab on the dev server also read `held` each
+time. An iframe's reload stands in for a tab's here; no top-level reload of
+the production build was counted.
+
+**Electron.** On the shell's own page (`npm run probe`, `app://game`, the
+preload's store, on the first build): a secure context, `navigator.locks`
+present, the game's lock `held` and listed by `query()`, a second request
+for the name refused, `continueRun()` `empty` on a fresh profile. On the
+final code the seed-7 drive reads `held` and still logs `a59ee48f` (defeat,
+12 battles).
+
+**Two instances of the shell on one profile are not kept apart.** A second
+instance started 6 s after the first, on the same `--profile`: the first
+read `held`; the second read `none`, with the Electron adapter and
+can-save, so it saves as if alone, and every write replaces the whole
+`store.json`. In the second instance a raw request for a free name was
+refused at once and `query()` listed nothing held. Its boot took about 8 s
+against the first's 1.5 s; which of the two paths (the 1 s wait or the
+refusal with no holder) gave its `none` was not measured. That one lock
+manager does not span two processes is the reading of this result, not
+something a document was checked for. The shell stays internal through
+Round 8 (ROADMAP §118's scope guard), so the fix is filed, not built:
+`app.requestSingleInstanceLock()` before the shell ships to players, in
+TODO "§115 riders" with a landing note in `shell/electron/main.mjs`.
+Unchecked there: whether Electron's lock is per `userData`, which decides
+whether the probe and record runners can run beside a playing instance.
+
+**Not measured.** Firefox, where the user plays: the 115g sitting gains a
+reload (F5) at a gate, where Continue must show and the other-tab message
+must not. itch's frame (carried in ROADMAP §116).
+
+**Cost.** The production bundle is 608.38 kB raw, 170.32 kB gzip (115e's
+entry gives 607.67 kB raw; not rebuilt here). `npm test`: 229 files, 3320
+tests, 46.2 s (45.9 s at pre-flight). The reading before the write-up:
+**286,023** at 12:42, about 200k for orientation and 115f together.

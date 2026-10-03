@@ -109,6 +109,15 @@ protocol.registerSchemesAsPrivileged([
 
 // --- the store file --------------------------------------------------------
 
+// LANDING NOTE (115f): one instance per profile is not enforced. The game's
+// two-tab lock (src/store/runLock.ts) is the browser's, so it holds between
+// windows of one instance and not between two instances: a second instance on
+// the same userData reads the lock as absent and saves as if alone, and each
+// write below replaces the whole file. Before the shell ships to players it
+// takes `app.requestSingleInstanceLock()`. The probe and record runners each
+// pass their own --profile and must stay able to run beside a playing
+// instance; whether Electron's lock is per userData is unchecked (TODO,
+// "§115 riders").
 const storeFile = () => join(app.getPath('userData'), 'store.json');
 
 ipcMain.on('shell-store:read', (event) => {

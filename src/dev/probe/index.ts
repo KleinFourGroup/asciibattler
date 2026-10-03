@@ -45,6 +45,7 @@ import type { BattleScene } from '../../scenes/BattleScene';
 import { BUILD_ID } from '../../buildId';
 import { snapshotHash, type RunJournal } from '../../journal/journal';
 import { store as pageStore } from '../../store';
+import type { RunLock } from '../../store/runLock';
 import type { StoreStatus } from '../../store/store';
 import { describeCommand, logHash, PHASE_ROWS, pickerFor, type Chooser, type DrivePolicy } from './drive';
 import { sceneName } from './scenes';
@@ -65,6 +66,7 @@ interface GameInternals {
   readonly activeScene: Game['activeScene'];
   readonly run: Game['run'];
   readonly renderer: Game['renderer'];
+  readonly runSlot: Game['runSlot'];
 }
 
 /** One frame of the loop is `onFrame(dt)` (Game's: the scene tick, then the
@@ -104,6 +106,9 @@ export interface PageReport {
   readonly build: string;
   /** The page's store: its adapter, and whether it can save. */
   readonly store: StoreStatus;
+  /** This tab's side of the two-tab lock: `elsewhere` in a second tab, which
+   *  leaves the run slot alone. */
+  readonly lock: RunLock;
 }
 
 export interface CanvasCheck {
@@ -457,6 +462,7 @@ export function installProbe(game: Game): Probe {
           running: [...active.keys()].filter((c) => c !== call),
           build: BUILD_ID,
           store: pageStore.status(),
+          lock: internals.runSlot.lock,
         };
       } finally {
         active.delete(call);

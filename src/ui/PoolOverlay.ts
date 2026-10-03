@@ -98,6 +98,13 @@ export class PoolOverlay {
     this.applyHidden();
   }
 
+  /** Show the chip for a run that was loaded, not created: a loaded run
+   *  emits no `run:started`, so Game says so itself (`Game.adopt`). The
+   *  scene's own hide still applies. */
+  reveal(): void {
+    this.setRunHidden(false);
+  }
+
   private setRunHidden(hidden: boolean): void {
     this.runHidden = hidden;
     this.applyHidden();

@@ -19,7 +19,7 @@
  * import it (tests/store-boot.test.ts).
  */
 
-import type { EventBus } from '../core/EventBus';
+import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { t } from '../i18n/ui';
 import type { RunJournal } from '../journal/journal';
@@ -67,10 +67,18 @@ export function runSlotSection(bus: EventBus<GameEvents>): StrictSection<RunSlot
  *  another tab, and the slot was not read. */
 export type RunSlotRead = StrictRead<SavedRun> | { readonly status: 'elsewhere' };
 
+/** What a tab can say of the save before continuing it: nothing saved, a
+ *  run that loads, one that is rejected, or a slot that is another tab's. */
+export type RunSlotState = 'empty' | 'saved' | 'rejected' | 'elsewhere';
+
 /** The run slot as one tab may use it. */
 export interface RunSlot {
   /** This tab's side of the two-tab lock (runLock.ts). */
   readonly lock: RunLock;
+  /** Whether there is a run to continue, asked without taking it: the save
+   *  is loaded on a bus of its own and let go, so nothing is left listening
+   *  on the game's. `saved` means `read()` would load it now. */
+  peek(): RunSlotState;
   /** The saved run, loaded on the slot's bus; the caller owns it. */
   read(): RunSlotRead;
   /** Replace the save. False when it wasn't saved: the store refused it, or
@@ -92,6 +100,13 @@ export function openRunSlot(store: Store, bus: EventBus<GameEvents>, lock: RunLo
   const ours = lock !== 'elsewhere';
   return {
     lock,
+    peek() {
+      if (!ours) return 'elsewhere';
+      const read = store.readStrict(runSlotSection(new EventBus<GameEvents>()));
+      if (read.status !== 'ok') return read.status;
+      read.value.run.dispose();
+      return 'saved';
+    },
     read: () => (ours ? store.readStrict(section) : { status: 'elsewhere' }),
     write: (wire) => ours && store.writeStrict(section, wire),
     clear: () => ours && store.clear(section),

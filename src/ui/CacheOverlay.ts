@@ -122,6 +122,12 @@ export class CacheOverlay {
     bus.on('run:victory', () => this.hideForRunEnd());
   }
 
+  /** Show the chip for a run that was loaded, not created: a loaded run
+   *  emits no `run:started`, so Game says so itself (`Game.adopt`). */
+  reveal(): void {
+    this.el.classList.remove('is-hidden');
+  }
+
   /** Re-read the live cache (the first paint + Game.resetRun's re-paint).
    *  Also closes any open modal — a reset's cache is a different run's. */
   refresh(): void {

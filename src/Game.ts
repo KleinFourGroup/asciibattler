@@ -684,7 +684,8 @@ export class Game implements RunDispatcher {
    * the read: on `empty` or `rejected` nothing changes, and a rejected
    * slot's text stays in place (`store.readStrict`); on `elsewhere` the run
    * is open in another tab and the slot was not read (115f). §116's Continue
-   * row calls this; until then character select's stand-in does (115g).
+   * row calls this; until then character select's Continue does (115g,
+   * through the scene context's `save`).
    */
   continueRun(): RunSlotRead {
     const read = this.runSlot.read();
@@ -720,6 +721,13 @@ export class Game implements RunDispatcher {
     this.bitsOverlay.refresh();
     this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
+    // 115g — and show them. A created run's `run:started` reveals the chips;
+    // a loaded run emits none, so one continued from the boot screen (or
+    // loaded after a run's end) would play with its chips hidden. Before the
+    // resume, so a loaded end state's own event hides them again.
+    this.bitsOverlay.reveal();
+    this.poolOverlay.reveal();
+    this.cacheOverlay.reveal();
     if (restored.phase === 'map') this.swap(new MapScene());
     else restored.resume();
   }
@@ -942,6 +950,11 @@ export class Game implements RunDispatcher {
       dispatcher: this,
       run: this.run,
       journal: () => this.currentJournal(),
+      save: {
+        slot: () => this.runSlot.peek(),
+        canSave: () => store.status().canSave,
+        continue: () => this.continueRun().status,
+      },
       audio: this.audio,
       playback: this.playback,
       keybindings: this.keybindings,

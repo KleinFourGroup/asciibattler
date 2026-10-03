@@ -78,6 +78,12 @@ export class BitsOverlay {
     bus.on('run:victory', () => this.el.classList.add('is-hidden'));
   }
 
+  /** Show the chip for a run that was loaded, not created: a loaded run
+   *  emits no `run:started`, so Game says so itself (`Game.adopt`). */
+  reveal(): void {
+    this.el.classList.remove('is-hidden');
+  }
+
   /** Re-read the live balance (the first paint + Game.resetRun's re-paint —
    *  the only sites where the balance changes without a `run:bitsChanged`). */
   refresh(): void {

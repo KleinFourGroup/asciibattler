@@ -167,4 +167,47 @@ describe('115f — the run slot through the two-tab lock', () => {
     expect(slot.clear()).toBe(true);
     expect(shared.entries.has(RUN_KEY)).toBe(false);
   });
+
+  // 115g — `peek`, what the boot screen asks before it offers Continue.
+  /** A bus that counts what subscribes to it. */
+  const counted = (): { bus: EventBus<GameEvents>; subscriptions(): number } => {
+    const b = bus();
+    let n = 0;
+    const on = b.on.bind(b);
+    b.on = ((event, handler) => {
+      n++;
+      return on(event, handler);
+    }) as typeof b.on;
+    return { bus: b, subscriptions: () => n };
+  };
+
+  it('peek says whether a run is saved without taking it: nothing is left on the game bus', () => {
+    const adapter = memoryAdapter();
+    const game = counted();
+    const slot = openRunSlot(createStore({ adapter, build: 'b' }), game.bus, 'held');
+    expect(slot.peek()).toBe('empty');
+    slot.write(wireOf(7));
+    const saved = adapter.entries.get(RUN_KEY)!;
+    expect(slot.peek()).toBe('saved');
+    expect(slot.peek()).toBe('saved');
+    expect(game.subscriptions()).toBe(0);
+    expect(adapter.entries.get(RUN_KEY)).toBe(saved);
+    // The control: a read does load the run onto the game's bus.
+    expect(slot.read().status).toBe('ok');
+    expect(game.subscriptions()).toBeGreaterThan(0);
+  });
+
+  it('peek names a rejected save and leaves its text, and never reads another tab\'s', () => {
+    const stale = slotText(RUN_SCHEMA_VERSION - 1, { snapshot: snapshotOf(7), dials: '' });
+    const unreadable = slotText(RUN_SCHEMA_VERSION, { snapshot: { ...snapshotOf(7), characterId: 'retired-character' }, dials: '' });
+    for (const text of [stale, unreadable]) {
+      const adapter = memoryAdapter({ [RUN_KEY]: text });
+      const slot = openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'held');
+      expect(slot.peek()).toBe('rejected');
+      expect(adapter.entries.get(RUN_KEY)).toBe(text);
+    }
+    const adapter = counting(memoryAdapter({ [RUN_KEY]: stale }));
+    expect(openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'elsewhere').peek()).toBe('elsewhere');
+    expect(adapter.slotReads()).toBe(0);
+  });
 });

@@ -9,6 +9,13 @@
  * CONSTRUCTING the Run (the choice precedes Run construction — the §63
  * seam). This screen is the one UI surface that legally exists with
  * `ctx.run === null`.
+ *
+ * 115g — it is also the boot screen until §116's menu, so it stands in for
+ * the menu's Continue row and for what a boot has to tell the player about
+ * saving: Continue when the run slot holds a run this tab can load, and a
+ * notice for a rejected save, for a run open in another tab, and for a store
+ * that can't save. They are drawn once, when the screen is shown, so nothing
+ * above the cards comes or goes while the player aims at one.
  */
 
 import { CHARACTERS, type CharacterConfig } from '../config/characters';
@@ -16,6 +23,8 @@ import { daemonById } from '../config/daemons';
 import { nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import type { SaveContext } from '../scenes/Scene';
+import { runRejectedMessage } from '../store/runSlot';
 import { Screen } from './Screen';
 import { button } from './button';
 import { t } from '../i18n/ui';
@@ -36,6 +45,7 @@ export class CharacterSelectScreen extends Screen {
     mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
+    private readonly save: SaveContext,
   ) {
     super(mount);
   }
@@ -48,6 +58,37 @@ export class CharacterSelectScreen extends Screen {
   private render(): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'charselect-screen';
+
+    const slot = this.save.slot();
+    if (slot === 'saved') {
+      panel.appendChild(
+        button(t('save.continue'), {
+          className: 'btn--primary charselect-continue',
+          onClick: () => {
+            this.audio.play('click');
+            // The save loaded when this screen was drawn. If it no longer
+            // does, draw the screen again, which says why.
+            if (this.save.continue() !== 'ok') this.show();
+          },
+        }),
+      );
+    }
+    const notices: string[] = [];
+    if (slot === 'rejected') notices.push(runRejectedMessage());
+    if (slot === 'elsewhere') notices.push(t('save.elsewhere'));
+    if (!this.save.canSave()) notices.push(t('save.unavailable'));
+    if (notices.length > 0) {
+      const list = document.createElement('div');
+      list.className = 'charselect-notices';
+      for (const text of notices) {
+        const notice = document.createElement('div');
+        notice.className = 'charselect-notice';
+        // The glyph stays outside the locale value (DESIGN §UI idioms, Strings).
+        notice.textContent = `⚠ ${text}`;
+        list.appendChild(notice);
+      }
+      panel.appendChild(list);
+    }
 
     const heading = document.createElement('div');
     heading.className = 'charselect-heading';

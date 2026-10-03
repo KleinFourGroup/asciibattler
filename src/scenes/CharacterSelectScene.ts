@@ -12,7 +12,7 @@ export class CharacterSelectScene implements Scene {
   private screen: CharacterSelectScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new CharacterSelectScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
+    this.screen = new CharacterSelectScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.save);
     this.screen.show();
   }
 

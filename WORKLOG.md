@@ -4324,3 +4324,100 @@ must not. itch's frame (carried in ROADMAP §116).
 entry gives 607.67 kB raw; not rebuilt here). `npm test`: 229 files, 3320
 tests, 46.2 s (45.9 s at pre-flight). The reading before the write-up:
 **286,023** at 12:42, about 200k for orientation and 115f together.
+
+### 115g — Continue and the three messages on character select (2026-10-03) — read `stop`: ◐ built, the sitting unread
+
+115f's commit (`4b8e286`) carried **304,511** at 12:48 (115f: about 219k
+with orientation).
+
+**Step zero.**
+- `continueRun()` is not a run command. A new kind in `RunCommand` would
+  join the journal's kinds and the chaos census, so Continue reaches the
+  screen as a function in the scene context, as `journal()` did at 114e.
+- Against DESIGN §UI idioms: Continue is a walk-on action, so it is
+  `.btn--primary` with its place on its own class. A notice is not an idiom
+  yet (the indicator over every screen is §116's), so the three messages
+  are plain lines, the `⚠` kept outside the locale value. Both are drawn
+  once with the screen, so nothing above the cards comes or goes while the
+  player aims at one (layout stability, mechanism 3).
+- A read of the slot made only to decide whether Continue shows must not
+  leave a Run on the game's bus (the kickoff's note). It is `peek()`.
+
+**Built.**
+- `RunSlot.peek()`: `empty`, `saved`, `rejected` or `elsewhere`. The save
+  is loaded on a bus of its own and let go, so `saved` means a continue
+  would load it now.
+- `SceneContext.save` (`slot()`, `canSave()`, `continue()`), built by Game
+  at every swap.
+- `CharacterSelectScreen`: Continue above the heading when the slot is
+  `saved`; one notice each for a rejected save (`save.rejected`, which now
+  has its caller), a run open in another tab (`save.elsewhere`) and a store
+  that can't save (`save.unavailable`). A Continue that no longer loads
+  draws the screen again, which then says why.
+- Three keys: `save.continue`, `save.elsewhere`, `save.unavailable`.
+
+**A finding, fixed here: a continued run had no chips.** The bits, morale
+and cache chips start hidden on a boot at character select and are shown by
+`run:started`, which a loaded run never emits. After Continue the map came
+up with all three hidden (their values were repainted, the class stayed).
+115e's pane checks compared the screen and the state hash and never looked
+at the chips; its own list of what it left unread didn't name them. Fixed
+with a `reveal()` on each of the three chips, called by `Game.adopt` before
+the resume, so a loaded end state's own event hides them again. Emitting
+`run:started` from Game was the smaller change and was not taken: a
+continued run is not a started one, and a later listener that counts runs
+would count it twice.
+
+**Headless.** `runSlot.test.ts` +2: `peek` answers `empty`, then `saved`
+twice with no subscription made on the game's bus and the text as it was (a
+`read` on the same slot does subscribe: the control); a stale and an
+unreadable save are `rejected` with their text left; another tab's is
+`elsewhere` with no read of the key. The plant (`peek` loading on the
+game's bus) fails the first by name.
+
+**In the pane** (Chromium; the dev server, `4b8e286-dirty-dev`).
+- **Continue.** A boot at `/` with a run saved shows Continue above the
+  heading and no notice. A click mounts the saved screen at the saved hash
+  with the bits, cache and morale chips shown and reading the run's values.
+- **A pre-turn screen on turn 2** (`seed=2&sectorHops=2&character=soldier`,
+  the first battle's second turn): the strip's text, the state hash, the
+  team, the bits and the pool before the reopen and after Continue are
+  equal. The strip read "Last turn · Skirmish won · yours: nobody fell 0 ·
+  theirs: B b B B B B B B −10". This is the DOM read 115e left open.
+- **A stale save** (the slot's envelope at v46): no Continue, the rejected
+  message, the text left in place. Picking a character then wrote the new
+  run over it (v47).
+- **`?store=deny`:** no Continue and the can't-save line.
+- **A second tab:** no Continue and the other-tab line, while the first
+  tab shows Continue and no notice.
+- **The production build** (`vite preview`, `4b8e286-dirty`): no Continue
+  on an empty store; a character picked, the page reopened, Continue
+  shown; a click brings the map with its three chips shown.
+- Not read in the pane: the deal on a resumed pre-turn screen (a hidden
+  pane holds animations at their first frame), Enter on Continue (the pane
+  runs no native default action), the Tab walk.
+
+**The lock moves under a dev server's reloads.** With two tabs open on the
+dev server, each `.ts` edit reloads both, and the lock goes to whichever
+boots first. A second tab opened on run dials won it once and saved its own
+new run over the slot, which is what call 8 says a boot with dials does.
+`process/browser-pane.md` now says to close the second tab.
+
+**For the user at the stop.**
+1. The two calls of 115f (the 1 s wait; `elsewhere` needs a named holder).
+2. **A rejected save is replaced by the next run's first save.** Spec D2
+   says the rejected run's journal stays exportable. Until §116's menu
+   nothing exports it, and with one slot the new run has to save
+   somewhere. Whether a new run first moves a rejected save's journal to
+   the finished journals, or the slot is held until it is exported, is
+   §116's to decide.
+3. DESIGN has no paragraph on saving. The phase close is the place, once
+   the sitting has read what it would describe.
+4. The stand-ins' place and wording are the sitting's to judge: Continue
+   above the heading, the notices in amber under it.
+
+**Cost.** The production bundle is 609.72 kB raw (608.38 at 115f), the
+stylesheet 56.50 kB (56.25). `npm test`: 229 files, 3322 tests, 47.0 s.
+The reading at the stop: **396,242** at 12:59 (115g: about 92k). What is
+left of the phase is the sitting's findings and the close, which looks
+likely to fit under the line.

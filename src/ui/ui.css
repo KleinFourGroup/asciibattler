@@ -1871,6 +1871,30 @@ body {
   color: var(--color-neon-purple);
 }
 
+/* 115g — the boot screen's stand-ins until the menu: Continue above the
+   heading (the look is .btn--primary's; this class is its place), and what
+   the boot has to say about saving, one line each. Both are drawn with the
+   screen and never come or go while it is up. */
+.charselect-continue {
+  align-self: center;
+}
+
+.charselect-notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 720px;
+  text-align: center;
+}
+
+.charselect-notice {
+  font-size: var(--text-13);
+  line-height: 1.5;
+  color: var(--color-terminal-amber);
+  /* Two lines of about the same length, not one long and a word. */
+  text-wrap: balance;
+}
+
 /* The build's ID, pinned to the screen's bottom-right corner: the top-left is
    the chrome column's and the top-right a corner button's on other screens.
    Selectable, since it is there to be copied into a bug report. */

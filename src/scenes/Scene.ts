@@ -30,6 +30,7 @@ import type { FontAtlas } from '../render/FontAtlas';
 import type { Run } from '../run/Run';
 import type { RunDispatcher } from '../run/Command';
 import type { RunJournal } from '../journal/journal';
+import type { RunSlotRead, RunSlotState } from '../store/runSlot';
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { PlaybackSpeed } from '../ui/PlaybackSpeed';
 import type { Keybindings } from '../ui/Keybindings';
@@ -63,6 +64,9 @@ export interface SceneContext {
    *  no run. A function, because the journal of a run that just ended closes
    *  after the end screen has mounted. */
   readonly journal: () => RunJournal | null;
+  /** 115g — the saved run, as the boot screen asks after it (character
+   *  select until §116's menu). Functions, read when the screen is drawn. */
+  readonly save: SaveContext;
   readonly audio: AudioPlayer;
   /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
@@ -72,6 +76,17 @@ export interface SceneContext {
    *  battle-scoped handlers (fast-forward + the objective controls) on mount
    *  and tears them down on dispose; a rebind persists across scenes. */
   readonly keybindings: Keybindings;
+}
+
+export interface SaveContext {
+  /** The run slot now, read without loading the run into the game. */
+  slot(): RunSlotState;
+  /** False when the store can't save: storage refused at boot, or a write
+   *  that has failed since. */
+  canSave(): boolean;
+  /** Continue the saved run (`Game.continueRun`). `ok`: the run is live and
+   *  its screen is mounting; anything else: nothing changed. */
+  continue(): RunSlotRead['status'];
 }
 
 export interface Scene {

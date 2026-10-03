@@ -132,6 +132,9 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   tab left open from an earlier check makes the next one a second tab:
   close it (`tabs_close`) before a save or continue check. Closing the
   holder frees the lock for the next boot, not for a tab already open.
+  A `.ts` edit reloads every tab on the dev server at once, and the lock
+  goes to whichever boots first; a tab opened on run dials then saves its
+  own new run over the slot (seen at 115g).
 
 ## What the kit doesn't hold
 

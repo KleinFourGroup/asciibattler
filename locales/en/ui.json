@@ -190,5 +190,8 @@
   "preturn.packet.fireHint": "fires on click",
   "card.hint.level": "Lv",
   "card.hint.morale": "morale",
-  "save.rejected": "This run was saved by an older version of the game and can't be continued. Your settings and unlocks are kept."
+  "save.rejected": "This run was saved by an older version of the game and can't be continued. Your settings and unlocks are kept.",
+  "save.continue": "Continue",
+  "save.elsewhere": "The game is open in another tab. This tab can't continue your run, and a run started here won't be saved.",
+  "save.unavailable": "The game can't save here: its storage is blocked or full. A run won't survive closing the tab."
 }

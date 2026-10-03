@@ -3877,7 +3877,9 @@ with the same reading added to every commit's result.
 **The calibration pair:** the tool read 159,886 at 18:51, and the user's
 meter read 160k just after, with one message between them. The user's
 118k earlier was taken before that turn's tool results, so it pairs with
-nothing. A second pair, far from the first, has not been taken yet.
+nothing. **The second pair:** the tool read 247,932 at 19:59 and the
+meter read 248k just after, about 88k past the first pair, and after a
+relaunch.
 
 **Signed** (`process/planning.md` "Context: the halt and the hand-off
 line"; the Cursor carries the numbers): the gate (350k) and the breaker

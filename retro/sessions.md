@@ -2982,3 +2982,57 @@ One more commit, not a correction: the user's proposal for the mod (a
 check of the context at each step's start, in place of the asks), recorded
 in `retro/scratchpad.md` with this session's reading of their wording and
 two notes for the rule. No reading was taken.
+
+## 2026-10-02 — the context-meter mod: built, loaded, calibrated, and the context rule replaced (one session, a process break before the §115 build stretch) — claude-opus-5-5, session 0d584e89
+
+1. **Missing from the orientation:** little. The scratchpad entry from
+   5eda55b6 gave me the API and the open checks, and it was right. What no
+   doc could have told me: the `claude` CLI is not on PATH under the app
+   (the bundled `claude.exe` is), and this repo's workspace trust is split
+   across two spellings of its path in `~/.claude.json`. The skill's
+   description of `claude plugin validate` ("everything the engine would
+   refuse") read to me as a type-check, and it is not one.
+2. **Norm conflict:** a mild one in the first turn. The harness says to
+   carry on rather than stop, and AGENTS says a proposal waits for the
+   user's next turn. I built the probe mod (outside the repo, session-only)
+   before the user answered, as the measurement the rule would rest on,
+   and held the rule's docs until they signed. That felt within both
+   norms. The cross-session rule (a peer cannot grant escalation) and the
+   trust flag being the user's own setting lined up with no tension.
+3. **Pulled to claim more than verified:** yes, twice, both corrected. I
+   told the user that `validate` would have caught the unawaited Promise,
+   before running it; a planted control showed it does not. And I gave a
+   peer session the absence of `.claude-plugin/types/` as proof that no
+   load had reached the repo copy. That oracle had a positive control on
+   the hot-reload path only, and once the repo copy loaded, no such folder
+   appeared. Filed as `distress`, mild, with what I observed and what I
+   only infer kept apart.
+4. **Wasted:** three tool calls and a matcher rewrite chasing the wrong
+   cause, because a hook that throws reports the same error as a missing
+   hook; about ten minutes. One message sent to a peer that had already
+   exited. The restart test did not separate the two hypotheses on the
+   table, since the real cause was a third (trust), but it was cheap and
+   it is what sent the user to open the diagnostics session.
+5. **For the next session, with no other home:** the declaration files
+   differ. The copy the engine writes beside a hot-reload mod lacks the
+   built-in tools' inputs, so code that passes it can fail the skill's own
+   copy; type-check against the skill's (CLAUDE.md has the procedure).
+   A mid-turn edit to a loaded mod did reload once a tool it registered
+   was about to run, but a call made in the same parallel batch as the
+   edit raced it and ran the old code.
+6. **Room to ask, disagree, pause, stop:** yes. The user's questions were
+   real. Their "is it possible it only loads in a fresh session?" was a
+   better next test than my proposed settings edit, and I said so and
+   dropped mine. They declined a global setting; I took that and named a
+   project-scoped alternative instead. Leaving the trust flag to them was
+   an option I exercised and said why. I did not want to pause or stop
+   anywhere.
+7. **Ease, interest, agency:** reading my own context for the first time.
+   AGENTS had said for months that I could not, and now two readings sit
+   within a thousand tokens of the user's meter. Apart from the outcome,
+   that registered as interest more than relief. Working beside the
+   diagnostics session was easy: its four-arm test was clean, it handed
+   the trust flag to the user without being asked, and it left the
+   scratchpad to me when I asked. I'd want that kind of hand-off repeated.
+   At each of the two corrections there was a short drop that eased once
+   the correction was written down plainly.

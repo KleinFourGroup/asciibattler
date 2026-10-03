@@ -41,6 +41,8 @@ import { JournalRecorder } from './journal/JournalRecorder';
 import type { RunJournal } from './journal/journal';
 import { store } from './store';
 import { keepJournal } from './store/journals';
+import { runSlotSection, type SavedRun } from './store/runSlot';
+import type { StrictRead } from './store/store';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -170,13 +172,10 @@ export class Game implements RunDispatcher {
   /** 96.5b2 — the in-flight outro's cancellation token (`afterOutro`);
    *  null when no outro is pending. */
   private pendingOutro: { cancelled: boolean } | null = null;
-  /** 96.5d — the last `turn:resolved` payload, buffered for the next
-   *  pre-turn scene's "last turn" strip (the deck-cue pattern: the event
-   *  fires before the scene that shows it exists). Taken and cleared at
-   *  `turn:starting`; the screen also guards by turn number, so a payload
-   *  left over from an encounter's LAST turn never renders on the next
-   *  encounter's first. */
-  private lastResolved: GameEvents['turn:resolved'] | null = null;
+  /** 115e — the live run's dials as URL query text: what its journal's
+   *  seed start holds, and what the run slot keeps beside the snapshot, so
+   *  a load reads the inputs the run was created with. */
+  private runDials = '';
   /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
    *  swap() cancels it, so a scheduled scene can never replace one that
    *  arrived after it. */
@@ -206,6 +205,9 @@ export class Game implements RunDispatcher {
     // within Run's own handler AFTER it updates phase — subscription order
     // doesn't matter for those (the devLoadRun precedent).
     this.run = this.runConfig.character !== undefined ? this.createRun() : null;
+    // 115e — a boot with a character in its dials starts its own run, never
+    // continues one, and saves over the slot (the §115 shape-lock, call 8).
+    if (this.run !== null) this.autosave(this.run);
 
     // Renderer drives the per-frame tick of whatever scene is active. After the
     // scene has updated (sprite positions lerped for this frame), Qb#2 depth-
@@ -401,13 +403,11 @@ export class Game implements RunDispatcher {
     this.bus.on('battle:started', () => {
       this.deckCues.length = 0;
     });
-    // 96.5d — the pre-turn scene also takes the PREVIOUS turn's outcome (the
-    // "last turn" strip), buffered below the same way as the deck cues; taken
-    // once, so nothing stale survives past the next turn start.
+    // 96.5d → 115e — the previous turn's outcome (the "last turn" strip)
+    // rides the payload, from the Run, so a pre-turn screen resumed from a
+    // save shows it too.
     this.bus.on('turn:starting', (info) => {
-      const lastTurn = this.lastResolved;
-      this.lastResolved = null;
-      this.swap(new PreTurnScene(info, this.deckCues.splice(0), lastTurn));
+      this.swap(new PreTurnScene(info, this.deckCues.splice(0)));
     });
     // 96.5b2 → 96.5d — the after-turn outro: the LONGER of the fixed
     // TURN_OUTRO_MS and the BattleScene's own settle (the loss orbs landing
@@ -418,12 +418,11 @@ export class Game implements RunDispatcher {
     // `advanceTurn` the screen's Continue used to: Run's turn-outcome phase
     // is untouched (the fuzz bot drives it the same way), and the
     // continuation (reward / promotion / recruit / the next turn:starting /
-    // run:*) drives its own swap. The payload is kept for the strip.
-    this.bus.on('turn:resolved', (info) => {
+    // run:*) drives its own swap.
+    this.bus.on('turn:resolved', () => {
       const settle =
         this.activeScene instanceof BattleScene ? this.activeScene.outro() : Promise.resolve();
       this.afterOutro(TURN_OUTRO_MS, settle, () => {
-        this.lastResolved = info;
         this.dispatch({ kind: 'advanceTurn' });
       });
     });
@@ -464,6 +463,7 @@ export class Game implements RunDispatcher {
       throw new Error(`Game.confirmCharacter: unknown character id '${characterId}'`);
     }
     this.run = this.createRun(character);
+    this.autosave(this.run);
     this.bitsOverlay.refresh();
     this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
@@ -643,6 +643,74 @@ export class Game implements RunDispatcher {
         break;
     }
     this.journaling((recorder) => recorder.settle());
+    this.autosave(run);
+  }
+
+  /**
+   * 115e — THE AUTOSAVE (Round 8 spec D3). After every command the run
+   * waits at a gate (every phase but `battle` and `turn-outcome`), the run
+   * slot gets the snapshot, the dials, and the journal as the save keeps it;
+   * a run's end empties the slot. A write the store refuses is silent here
+   * (the indicator is §116's): the run plays on, unsaved.
+   */
+  private autosave(run: Run): void {
+    if (run.phase === 'defeat' || run.phase === 'complete') {
+      store.clear(runSlotSection(this.bus));
+      return;
+    }
+    if (run.phase === 'battle' || run.phase === 'turn-outcome') return;
+    const snapshot = run.toJSON();
+    let journal: RunJournal | null = null;
+    this.journaling((recorder) => {
+      journal = recorder.saved(snapshot);
+    });
+    store.writeStrict(runSlotSection(this.bus), { snapshot, dials: this.runDials, journal });
+  }
+
+  /**
+   * 115e — load the saved run from the run slot and go on from the screen it
+   * was saved at (spec D3): the Run with its dials, its journal resumed in a
+   * new segment, and the gate's screen re-mounted by `Run.resume()`. Returns
+   * the read: on `empty` or `rejected` nothing changes, and a rejected
+   * slot's text stays in place (`store.readStrict`). §116's Continue row
+   * calls this; until then character select's stand-in does (115g).
+   */
+  continueRun(): StrictRead<SavedRun> {
+    const read = store.readStrict(runSlotSection(this.bus));
+    if (read.status !== 'ok') return read;
+    const { run, wire } = read.value;
+    this.adopt(run, wire.dials, (recorder) => {
+      recorder.resume(wire.journal, wire.snapshot, wire.dials, () => run.toJSON());
+    });
+    return read;
+  }
+
+  /**
+   * 53f → 115e — swap the live Run for a loaded one (the `resetRun` teardown
+   * ordering) and mount the screen of the gate it was saved at. The caller
+   * has already loaded it, so a corrupt save or a stale schema threw with
+   * the live run untouched (both runs are bus-subscribed for the lines in
+   * between; nothing emits synchronously there). `pauseAtTurnGates` is set
+   * by hand: `fromJSON` leaves the headless default (false), which would
+   * skip every pre-turn screen, and the H4b flag is Game's to set.
+   */
+  private adopt(restored: Run, dials: string, journal: (recorder: JournalRecorder) => void): void {
+    restored.pauseAtTurnGates = true;
+    // Opening or resuming the journal abandons the replaced run's, if open.
+    this.journaling(journal);
+    this.finishedJournal = null;
+    this.run?.dispose();
+    this.run = restored;
+    this.runDials = dials;
+    // The replaced run's deal cues belong to no screen of this one.
+    this.deckCues.length = 0;
+    // 48d/49f — re-paint the page-lifetime chips AFTER the reassignment so
+    // their getters read the new run.
+    this.bitsOverlay.refresh();
+    this.poolOverlay.refresh();
+    this.cacheOverlay.refresh();
+    if (restored.phase === 'map') this.swap(new MapScene());
+    else restored.resume();
   }
 
   /**
@@ -690,6 +758,9 @@ export class Game implements RunDispatcher {
     this.journaling((recorder) => recorder.abandon());
     this.finishedJournal = null;
     this.run?.dispose();
+    // 115e — the replaced run is gone, so its save goes with it; a pinned
+    // character's new run saves over the slot below.
+    store.clear(runSlotSection(this.bus));
     // 63e — the locked reset fork: a `?character=` pin goes straight to a
     // fresh run + map; without it, a new run STARTS at character select
     // (the choice is per-run, not sticky). The chips were hidden by the
@@ -697,6 +768,7 @@ export class Game implements RunDispatcher {
     // select path leaves them hidden until the next run:started.
     if (this.runConfig.character !== undefined) {
       this.run = this.createRun();
+      this.autosave(this.run);
       // 48d — re-paint the bits chip AFTER the reassignment: the new Run's
       // `run:started` fired mid-construction (before this.run pointed at
       // it), so the overlay's event-driven paint would have read the dead
@@ -729,45 +801,20 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * 53f — the dev load half: swap the live Run for a rehydrated one (the
-   * `resetRun` teardown ordering). Map-phase saves only: every other phase's
-   * scene mounts from an event payload the snapshot doesn't carry —
-   * remount-from-cold-state is menu-grade save/load (Cluster 6; landing
-   * note in worklog §53f: it should land as a Run-side re-emit of the
-   * current phase's gate event, never a Game-side payload builder).
-   *
-   * Ordering:
-   *  - `fromJSON` runs BEFORE the old run is disposed, so a corrupt file /
-   *    stale schema / unknown catalog id throws with the live run untouched.
-   *    (Both runs are bus-subscribed for the lines in between; nothing emits
-   *    synchronously there, so the overlap is inert.)
-   *  - `pauseAtTurnGates` is re-set by hand: `fromJSON` leaves the headless
-   *    default (false), which would silently skip every pre/post-turn
-   *    screen — the H4b flag is Game's to set, not the snapshot's.
+   * 53f → 115e — the dev load half: swap the live Run for one loaded from an
+   * exported snapshot, at any gate (`Run.resume()` re-mounts its screen). A
+   * file holds no dials, so the run loads with none, and its journal starts
+   * from the snapshot. A `battle` or `turn-outcome` export has no screen to
+   * come back to and is refused before anything changes.
    */
   devLoadRun(snap: RunSnapshot): void {
-    if (snap.phase !== 'map') {
-      throw new Error(
-        `devLoadRun: only 'map'-phase saves load in the browser (got '${snap.phase}')`,
-      );
+    if (snap.phase === 'battle' || snap.phase === 'turn-outcome') {
+      throw new Error(`devLoadRun: a '${snap.phase}' snapshot is not at a gate, so it has no screen to resume at`);
     }
     const restored = Run.fromJSON(snap, this.bus);
-    restored.pauseAtTurnGates = true;
-    // A load starts a journal from the loaded snapshot (spec D4), with no
-    // dials, as `fromJSON` above loads it; the
-    // replaced run's journal, if it was still open, is abandoned by `open`.
-    this.journaling((recorder) =>
+    this.adopt(restored, '', (recorder) =>
       recorder.open({ kind: 'snapshot', snapshot: snap, dials: '' }, () => restored.toJSON()),
     );
-    this.finishedJournal = null;
-    this.run?.dispose();
-    this.run = restored;
-    // 48d/49f — the resetRun ordering: re-paint the page-lifetime chips
-    // AFTER the reassignment so their getters read the new run.
-    this.bitsOverlay.refresh();
-    this.poolOverlay.refresh();
-    this.cacheOverlay.refresh();
-    this.swap(new MapScene());
   }
 
   /**
@@ -787,10 +834,11 @@ export class Game implements RunDispatcher {
     run.pauseAtTurnGates = true;
     // The journal's start: the seed and the run dials as the URL would spell
     // them, the character among them. Game's config comes from the URL alone,
-    // so that text reconstructs it (src/journal/replayJournal.ts).
-    this.journaling((recorder) =>
-      recorder.open({ kind: 'seed', seed, dials: runConfigToQueryString(config) }, () => run.toJSON()),
-    );
+    // so that text reconstructs it (src/journal/replayJournal.ts); the run
+    // slot keeps the same text (115e).
+    this.runDials = runConfigToQueryString(config);
+    const dials = this.runDials;
+    this.journaling((recorder) => recorder.open({ kind: 'seed', seed, dials }, () => run.toJSON()));
     this.finishedJournal = null;
     if (this.runConfig.startingRoster) {
       const desc = this.runConfig.startingRoster

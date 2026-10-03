@@ -12,32 +12,51 @@
  * sections beside it are untouched: the player keeps their settings and
  * unlocks.
  *
- * Nothing writes the slot yet; save/load is its first user. This module
- * imports the run model, so the store's boot module must never import it
- * (tests/store-boot.test.ts).
+ * `Game` writes the slot at every gate and empties it at a run's end (115e).
+ * This module imports the run model, so the store's boot module must never
+ * import it (tests/store-boot.test.ts).
  */
 
 import type { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { t } from '../i18n/ui';
+import type { RunJournal } from '../journal/journal';
 import { RUN_SCHEMA_VERSION, Run, type RunSnapshot } from '../run/Run';
+import { parseRunConfig } from '../run/RunConfig';
 import type { StrictSection } from './store';
 
-/** What the slot stores. The run's journal joins the snapshot here. */
+/** What the slot stores (Round 8 spec D1, D3). */
 export interface RunSlotWire {
   readonly snapshot: RunSnapshot;
+  /** The run's dials as URL query text, as its journal's seed start holds
+   *  them: the snapshot doesn't carry them, and `Run.fromJSON` takes them. */
+  readonly dials: string;
+  /** The run's journal as the save keeps it (`JournalRecorder.saved`); null
+   *  when the page wasn't recording one. */
+  readonly journal: RunJournal | null;
+}
+
+/** A read of the slot: the loaded Run and what it was loaded from. */
+export interface SavedRun {
+  readonly run: Run;
+  readonly wire: RunSlotWire;
 }
 
 /**
  * The slot's section. A loaded run subscribes to `bus`, as `Run.fromJSON`
- * does, so the caller owns it from the read on.
+ * does, so the caller owns it from the read on: a read made only to ask
+ * whether a run is saved disposes it, or reads on a bus of its own.
  */
-export function runSlotSection(bus: EventBus<GameEvents>): StrictSection<RunSlotWire, Run> {
+export function runSlotSection(bus: EventBus<GameEvents>): StrictSection<RunSlotWire, SavedRun> {
   return {
     policy: 'strict',
     name: 'run',
     version: RUN_SCHEMA_VERSION,
-    load: (wire) => Run.fromJSON(wire.snapshot, bus),
+    load: (wire) => {
+      if (typeof wire.dials !== 'string') throw new Error('the saved run has no dials');
+      const run = Run.fromJSON(wire.snapshot, bus, parseRunConfig(new URLSearchParams(wire.dials)));
+      return { run, wire: { snapshot: wire.snapshot, dials: wire.dials, journal: wire.journal ?? null } };
+    },
   };
 }
 

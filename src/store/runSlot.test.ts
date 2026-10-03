@@ -35,14 +35,17 @@ describe('113e — the run slot', () => {
     const store = createStore({ adapter, build: '0.1.0+abc1234' });
     const section = runSlotSection(bus());
     const snapshot = snapshotOf(7);
-    expect(store.writeStrict(section, { snapshot })).toBe(true);
+    expect(store.writeStrict(section, { snapshot, dials: 'hops=3', journal: null })).toBe(true);
     const read = store.readStrict(section);
     expect(read.status).toBe('ok');
     if (read.status !== 'ok') return;
-    expect(read.value).toBeInstanceOf(Run);
+    expect(read.value.run).toBeInstanceOf(Run);
     expect(read.build).toBe('0.1.0+abc1234');
     // The loaded run saves to the same snapshot it was loaded from.
-    expect(read.value.toJSON()).toEqual(snapshot);
+    expect(read.value.run.toJSON()).toEqual(snapshot);
+    expect(read.value.wire).toEqual({ snapshot, dials: 'hops=3', journal: null });
+    // 115e — the dials reach the loaded run (`hops` makes it a one-sector run).
+    expect((read.value.run as unknown as { singleSectorRun: boolean }).singleSectorRun).toBe(true);
   });
 
   it('rejects a slot saved at the previous format as stale, before fromJSON, and keeps everything else', () => {
@@ -62,11 +65,12 @@ describe('113e — the run slot', () => {
 
   it('rejects a current slot that fromJSON refuses as unreadable', () => {
     const cases: [string, unknown, string][] = [
-      ['an unknown character', { snapshot: { ...snapshotOf(7), characterId: 'retired-character' } }, "unknown character id 'retired-character'"],
-      ['an unknown daemon', { snapshot: { ...snapshotOf(7), daemonIds: ['retired-daemon'] } }, "unknown daemon id 'retired-daemon'"],
+      ['an unknown character', { snapshot: { ...snapshotOf(7), characterId: 'retired-character' }, dials: '' }, "unknown character id 'retired-character'"],
+      ['an unknown daemon', { snapshot: { ...snapshotOf(7), daemonIds: ['retired-daemon'] }, dials: '' }, "unknown daemon id 'retired-daemon'"],
       // A current envelope around an older snapshot: fromJSON's own version check.
-      ['an older snapshot inside', { snapshot: { ...snapshotOf(7), schemaVersion: RUN_SCHEMA_VERSION - 1 } }, `unsupported schema version ${RUN_SCHEMA_VERSION - 1}`],
-      ['no snapshot at all', {}, 'TypeError'],
+      ['an older snapshot inside', { snapshot: { ...snapshotOf(7), schemaVersion: RUN_SCHEMA_VERSION - 1 }, dials: '' }, `unsupported schema version ${RUN_SCHEMA_VERSION - 1}`],
+      ['no snapshot at all', { dials: '' }, 'TypeError'],
+      ['no dials', { snapshot: snapshotOf(7) }, 'the saved run has no dials'],
     ];
     for (const [name, data, detail] of cases) {
       const text = slotText(RUN_SCHEMA_VERSION, data);

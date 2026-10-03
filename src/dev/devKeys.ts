@@ -13,8 +13,8 @@
  *
  *   Ctrl+Alt+S — export the run: Run.toJSON() → a JSON download.
  *   Ctrl+Alt+L — load a run: file picker → Run.fromJSON → the Game run swap
- *                (map-phase saves only — mid-encounter restore is menu-grade
- *                save/load, Cluster 6).
+ *                (any gate since 115e: the run resumes at the saved screen;
+ *                a battle or turn-outcome export is refused).
  *   Ctrl+Alt+D — dump the trace ring: the whole localStorage ring → one JSON
  *                download (D not T — KeyT is the bound stopObjective code).
  *   Ctrl+Alt+K — 96.5b2: cycle the loss-fx SHAKE POLICY (player → enemy →

@@ -97,6 +97,9 @@ import { CardListButton } from './CardListModal';
  * screen queues them and plays the pile pulses SERIALLY on its own clock;
  * the swap payloads stay authoritative (cue-not-truth — events.ts).
  */
+/** 115e — the previous turn, as `turn:starting` carries it for the strip. */
+type LastTurn = NonNullable<GameEvents['turn:starting']['lastTurn']>;
+
 export interface DeckCue {
   readonly kind: 'drawn' | 'discarded' | 'reshuffled';
   readonly drawPile: number;
@@ -130,7 +133,7 @@ export class PreTurnScreen extends Screen {
   /** 96.5d — the previous turn's outcome for the "last turn" strip (null on
    *  an encounter's first turn, or when the buffered payload is not the
    *  turn just before this one). */
-  private lastTurn: GameEvents['turn:resolved'] | null = null;
+  private lastTurn: LastTurn | null = null;
   // L1→47d — the per-turn chance-denial state, computed ONCE in `show` from
   // the FRESH `turn:starting` payload (an idol authors the hook but granted
   // nothing → denied), so a later spent budget never reads as "denied".
@@ -195,14 +198,12 @@ export class PreTurnScreen extends Screen {
     roster: readonly UnitTemplate[],
     getCache: () => readonly string[],
     dealCues: readonly DeckCue[] = [],
-    lastTurn: GameEvents['turn:resolved'] | null = null,
   ): void {
     this.hide();
-    // 96.5d — the previous turn's outcome, shown as one strip under the
-    // gauges from turn 2 on (the post-turn screen's replacement). Guarded
-    // by turn number: a buffer left over from another encounter's last turn
-    // never renders on a fresh encounter's first turn.
-    this.lastTurn = lastTurn !== null && info.turn > 1 && lastTurn.turn === info.turn - 1 ? lastTurn : null;
+    // 96.5d → 115e — the previous turn's outcome, shown as one strip under
+    // the gauges from turn 2 on (the post-turn screen's replacement). The
+    // Run sends it on the payload, null on an encounter's first turn.
+    this.lastTurn = info.lastTurn;
     this.roster = roster;
     this.getCache = getCache;
     this.armedPacketIndex = null;
@@ -1063,7 +1064,7 @@ function renderGateDenied(text: string): HTMLDivElement {
  * rows wait for §102's run-end stats. The loss numbers carry the rule
  * wording as a hover (`chipLineLabels`, §97 turns it into a tooltip).
  */
-function renderLastTurn(info: GameEvents['turn:resolved']): HTMLDivElement {
+function renderLastTurn(info: LastTurn): HTMLDivElement {
   const strip = document.createElement('div');
   strip.className = 'preturn-lastturn';
 
@@ -1086,8 +1087,8 @@ function renderLastTurn(info: GameEvents['turn:resolved']): HTMLDivElement {
   strip.append(
     label,
     result,
-    lastTurnSide('player', t('lastturn.yours'), info.fallen.thisTurn, labels.toPlayerPool),
-    lastTurnSide('enemy', t('lastturn.theirs'), info.fallen.thisTurn, labels.toEnemyPool),
+    lastTurnSide('player', t('lastturn.yours'), info.fallen, labels.toPlayerPool),
+    lastTurnSide('enemy', t('lastturn.theirs'), info.fallen, labels.toEnemyPool),
   );
   return strip;
 }

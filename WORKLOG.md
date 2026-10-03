@@ -3911,3 +3911,61 @@ declarations the engine writes beside a hot-reload mod also lack the
 built-in tools' inputs: under the skill's own declarations, the commit
 hook's loop over two tool names failed to type, and it is now two literal
 matchers.
+
+### The build stretch's start (2026-10-02, session 5f729d11)
+
+A fresh session. The context-meter tool was listed as a deferred tool (its
+schema loads with one ToolSearch call) and read 82,425 of 1,000,000 at
+20:11, after HANDOFF and before any of §115: the floor a fresh session
+starts from. No hot-reload question appeared in the session's context.
+The user said go at about 21:00; pre-flight green at `a99e1eb` (224 files,
+3276 tests, typecheck clean).
+
+### 115a — the Run's side, headless (2026-10-02) — read `none` ✅
+
+**Step zero: a short dialed run that clears a sector.** A scratch scan
+(`gate-scan.mts`, the audit's census loop) played 120 gated runs:
+`sectorHops=2` and `=3`, three characters, seeds 1–20. 78 cleared their
+first sector, in about 15 battles at `sectorHops=2`, at a median 0.8 s a
+run headless. None met a port: the short sectors scatter none. So the pin
+plays `sectorHops=2&character=soldier` seeds 2 (ends `complete`) and 1
+(ends `defeat`), and seed 1 at full length for the port.
+
+**What the read added to the audit.** `fromJSON` also reset two inputs the
+audit's list didn't name: `rootStampedByDial` (the `firstNodeKind=event`
+dial) and `sectorScatterConfig`, which it never assigned, so a loaded run's
+sector advance dropped the scatter dials.
+
+**Built.**
+- `resolveRunInputs(config)`: the twelve config inputs a Run reads after
+  construction, resolved in one place that the constructor and
+  `fromJSON(snap, bus, config?)` share. No config gives the shipped
+  defaults, as before. The inputs that shaped construction (roster, daemon,
+  bits, character, grants) come from the snapshot, which wins.
+- Run v47: `clearedSector` (the cleared sector's id and the pool before the
+  seam's heal; the title resolves from the catalog, and an unknown id
+  rejects at load) and `lastTurn` (winner and reason, set at every turn
+  boundary on both paths, reset at encounter start and end). Fingerprint
+  re-pinned; the five literal version pins in `Run.test.ts` moved.
+- `turn:starting` carries `lastTurn` (winner, reason, the turn's fallen
+  rows; null on turn 1). Game's `turn:resolved` buffer still feeds the
+  strip until 115e moves the screen onto the payload.
+- `Run.resume()`: re-emits the saved phase's gate event from saved state;
+  no event at `map`; `battle` and `turn-outcome` throw by name; a gate
+  phase with its state missing throws by name.
+
+**The pin** (`tests/integration/resume-gates.test.ts`, 7 tests): the three
+runs keep a save at every arrival at a gate, and each save, loaded with its
+dials on a fresh bus, resumes to exactly the live arrival's event. 109
+arrivals compared: map 15, port 1, event 4, turn-intro 42 (33 with a
+strip), reward 7, promotion 31, recruit 4, sectorCleared 2, defeat 2,
+complete 1 (counted through a failing `expect`). Controls: `lastTurn`
+blanked and `poolBefore` changed each resume to a different payload. The
+inputs pin loads a run under two dialed configs (`hopCount` and
+`sectorHops` exclude each other) and reads the same twelve inputs as the
+live run, and the shipped defaults without the config; its control is that
+every input is off its default in one config or the other. The file takes
+about 3.5 s alone, most of it the three runs played at collection.
+
+No RNG stream and no bus event changed; the seed-7 drive's log hash
+covers the commands only, so a snapshot field can't move it.

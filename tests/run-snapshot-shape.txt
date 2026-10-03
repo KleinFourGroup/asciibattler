@@ -2,7 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
-RUN_SCHEMA_VERSION 46
+RUN_SCHEMA_VERSION 47
 
 RunSnapshot = {
   activeEvent: null | { eventId: string; pageId: string }
@@ -11,6 +11,7 @@ RunSnapshot = {
   bossEncounterMap: EncounterMap
   cache: Array<string>
   characterId: string
+  clearedSector: ClearedSector | null
   currentEncounter: BattleEncounter | null
   currentNodeId: number
   currentOffer: Array<UnitTemplate> | null
@@ -30,6 +31,7 @@ RunSnapshot = {
   hand: Array<number>
   injectedEncounterRules: Array<InjectedRule>
   injectedRunRules: Array<InjectedRule>
+  lastTurn: LastTurn | null
   nodeMap: NodeMap
   pendingEncounterEffects: Array<Array<StatusEffect>>
   pendingPromotions: Array<PromotionInfo> | null
@@ -78,6 +80,11 @@ BattleRuleFilter = {
 
 BattleRuleTrigger = "dealHit" | "kill"
 
+ClearedSector = {
+  poolBefore: number
+  sectorId: string
+}
+
 EffectLifetime = { expiresAtTick: number; kind: "ticks" } | { kind: "endOfTurn" }
 
 EncounterMap = {
@@ -115,6 +122,11 @@ GrantEffect = { budget: number; buff: { key: string; merge: MergePolicy; mods: {
 InjectedRule = {
   rule: BattleRule
   sourceId: string
+}
+
+LastTurn = {
+  reason: TurnEndReason
+  winner: "draw" | "enemy" | "player"
 }
 
 ListCursor = {
@@ -201,6 +213,8 @@ StatusEffect = {
   nextTickAt?: number | undefined
   sourceUnitId?: null | number | undefined
 }
+
+TurnEndReason = "cap" | "decisive" | "mutualWipe"
 
 TurnGrant = {
   daemonId: string

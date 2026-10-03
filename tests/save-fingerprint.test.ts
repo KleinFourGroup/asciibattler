@@ -29,7 +29,7 @@ describe("113e — the save's fingerprint", () => {
       .slice(1, -1)
       .map((line) => (/^ {2}([A-Za-z]+)\??: /.exec(line) as RegExpExecArray)[1]);
     expect(printed).toEqual(Object.keys(wire).sort());
-    expect(printed).toHaveLength(42);
+    expect(printed).toHaveLength(44);
   });
 });
 

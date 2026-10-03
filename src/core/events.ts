@@ -676,6 +676,16 @@ export interface GameEvents extends Record<string, unknown> {
      *  it IS the fielded wave's bound); under casualties the HAND's Σ power
      *  (the player's own fielded numbers). Display-only; never serialized. */
     poolAtRisk: number;
+    /** 115a — the previous turn of this encounter, for the pre-turn
+     *  screen's "last turn" strip: its winner, why it ended, and who fell in
+     *  it (copies of the fallen ledger's rows, both sides, in death order).
+     *  Null on an encounter's first turn. The Run keeps it (saved since
+     *  Run v47), so a pre-turn screen resumed from a save has its strip. */
+    lastTurn: {
+      winner: 'player' | 'enemy' | 'draw';
+      reason: 'decisive' | 'mutualWipe' | 'cap';
+      fallen: readonly FallenRecord[];
+    } | null;
   };
 
   /**

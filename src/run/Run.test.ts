@@ -2985,7 +2985,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(46); // 95f — the honed key (94d: the fallen ledger)
+      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3175,7 +3175,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(46); // 95f — the honed key (94d: the fallen ledger)
+      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3499,7 +3499,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(46); // 95f — the honed key (94d: the fallen ledger)
+      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5729,7 +5729,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(46); // 95f — the honed key (94d: the fallen ledger)
+    expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6491,7 +6491,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
     bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
-    expect(wire.schemaVersion).toBe(46); // 95f — the honed key (94d: the fallen ledger)
+    expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
     expect(wire.fallenLedger).toHaveLength(2);
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.fallenLedger).toEqual(run.fallenLedger);

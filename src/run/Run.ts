@@ -105,7 +105,6 @@ import { rewardTableById, type EncounterRewardRef } from '../config/rewards';
 import { getCamp } from '../config/camps';
 import {
   EVENTS,
-  getEvent,
   visitedFlagFor,
   type EventDef,
   type EventPage,
@@ -498,8 +497,13 @@ export interface BattleEncounter {
  *  113e: exported, because the store's run slot is stamped with it and
  *  rejects a save at any other version before `fromJSON` sees it
  *  (src/store/runSlot.ts). A change to `RunSnapshot`'s structure now fails
- *  `npm test` until this number moves (tests/save-fingerprint.test.ts). */
-export const RUN_SCHEMA_VERSION = 46;
+ *  `npm test` until this number moves (tests/save-fingerprint.test.ts).
+ *  115a: bumped 46→47. `clearedSector` (the sector-cleared gate's two
+ *  facts, which were locals of `advanceSector`) and `lastTurn` (the last
+ *  resolved turn's winner and reason, for the pre-turn screen's strip), so
+ *  `resume()` can rebuild those two gates' payloads from a save. No v46
+ *  save exists outside a test: the run slot had no writer before §115. */
+export const RUN_SCHEMA_VERSION = 47;
 
 /**
  * 94d — one row of the fallen ledger: a combatant that fell, where and when.
@@ -520,6 +524,22 @@ export interface FallenRecord {
   readonly level: number;
   readonly power: number;
   readonly tick: number;
+}
+
+/** 115a — the sector-cleared gate's two facts that the Run can't re-derive
+ *  once the next sector has replaced the cleared one: which sector was
+ *  cleared (by id; its title resolves from the catalog) and the pool before
+ *  the seam's heal. */
+export interface ClearedSector {
+  readonly sectorId: string;
+  readonly poolBefore: number;
+}
+
+/** 115a — the active encounter's last resolved turn, as `turn:resolved`
+ *  reported it. Who fell in it is already in the fallen ledger. */
+export interface LastTurn {
+  readonly winner: 'player' | 'enemy' | 'draw';
+  readonly reason: TurnEndReason;
 }
 
 /**
@@ -556,6 +576,13 @@ function cloneInjectedRule(entry: InjectedRule): InjectedRule {
 function resolveSelectedEncounter(id: string | null): Encounter | null {
   if (id === null) return null;
   return getEncounter(id) ?? null;
+}
+
+/** 115a — the state a gate's payload is built from, which the phase
+ *  guarantees; a save that breaks that throws by name at `resume()`. */
+function gateState<T>(value: T | null, phase: RunPhase, field: string): T {
+  if (value === null) throw new Error(`Run.resume: the '${phase}' phase with no ${field}`);
+  return value;
 }
 
 /**
@@ -721,6 +748,12 @@ export interface RunSnapshot {
    *  each accept/decline removes its portion. Snapshotted so a mid-reward
    *  save reproduces the exact offer (the §48 exit-criterion contract). */
   pendingRewards: RewardPortion[] | null;
+  /** 115a (v47): non-null only while `phase === 'sectorCleared'`; the
+   *  cleared sector's id re-validates against the catalog on load. */
+  clearedSector: ClearedSector | null;
+  /** 115a (v47): the active encounter's last resolved turn; null before an
+   *  encounter's first turn resolves and outside an encounter. */
+  lastTurn: LastTurn | null;
 }
 
 /**
@@ -1011,6 +1044,12 @@ export class Run {
    * mid-reward save reproduces the exact offer.
    */
   pendingRewards: RewardPortion[] | null = null;
+  /** 115a — set in `advanceSector`, cleared at `dismissSectorCleared`; the
+   *  `sector:cleared` payload is built from it (see `ClearedSector`). */
+  private clearedSector: ClearedSector | null = null;
+  /** 115a — set at every turn boundary, reset at encounter start and end;
+   *  `turn:starting` carries it with the turn's fallen rows (see `LastTurn`). */
+  private lastTurn: LastTurn | null = null;
   /**
    * Nodes the player has cleared (entered + survived). Used by MapScreen to
    * draw a visual trail of completed nodes. Root is never added — it's not
@@ -1088,30 +1127,23 @@ export class Run {
       throw new Error(`Run: default character '${DEFAULT_CHARACTER_ID}' missing from the catalog`);
     }
     this.character = character;
-    this.sectorMap = config?.sectorMap ?? SECTOR_MAP;
-    // G1/X2→66a — the two force flags resolve BEFORE the first fork: the
-    // boss pre-roll below honors both, and resolution is pure of RNG (no
-    // draw), so hoisting them from the config tail doesn't perturb the
-    // fork alignment.
-    this.forcedLayoutId = resolveForcedLayoutId(config?.forcedLayoutId);
-    this.forcedEncounterId = resolveForcedEncounterId(config?.forcedEncounterId);
-    // 74b — the event catalog override + forced-event dial resolve here too
-    // (pure of RNG; the forced id validates against the ACTIVE catalog so a
-    // bespoke-catalog test can force its own defs).
-    this.eventCatalog = config?.eventCatalog ?? EVENTS;
-    this.forcedEventId = resolveForcedEventId(config?.forcedEventId, this.eventCatalog);
-    // 67c — the run-shape dials resolve here too (pure of RNG). `hopCount`
-    // says "a bounded SINGLE-sector probe"; `sectorHops` says "walk the full
-    // DAG on shortened sectors" — together they contradict, so fail loud
-    // rather than pick a silent precedence.
-    if (config?.hopCount !== undefined && config?.sectorHops !== undefined) {
-      throw new Error(
-        'Run: hopCount (single-sector probe) and sectorHops (shortened full walk) are mutually exclusive',
-      );
-    }
-    this.singleSectorRun = config?.hopCount !== undefined;
-    this.sectorHopsOverride = config?.sectorHops;
-    this.sectorScatterConfig = sectorAdvanceConfig(config);
+    // 115a — every config input the run reads after construction resolves
+    // in one place, which `fromJSON` shares (`resolveRunInputs`). All pure
+    // of RNG (no draw), so resolving them before the first stream keeps
+    // every stream as it was; the boss pre-roll below reads the force flags.
+    const inputs = resolveRunInputs(config);
+    this.sectorMap = inputs.sectorMap;
+    this.forcedLayoutId = inputs.forcedLayoutId;
+    this.forcedEncounterId = inputs.forcedEncounterId;
+    this.eventCatalog = inputs.eventCatalog;
+    this.forcedEventId = inputs.forcedEventId;
+    this.singleSectorRun = inputs.singleSectorRun;
+    this.sectorHopsOverride = inputs.sectorHopsOverride;
+    this.sectorScatterConfig = inputs.sectorScatterConfig;
+    this.rootStampedByDial = inputs.rootStampedByDial;
+    this.passIsFinal = inputs.passIsFinal;
+    this.drawAmountAdd = inputs.drawAmountAdd;
+    this.difficultyMultipliers = inputs.difficultyMultipliers;
     // 77d2 — the three sector-scoped streams, one per consumer (the T2-era
     // shared `sectorRng` retired): the DAG pick, the node-map generation,
     // and the 66a boss pre-roll each own a derived stream, so a draw-count
@@ -1126,8 +1158,7 @@ export class Run {
     // 74i-c — the dial beats the POOL choice too (see enterEventNode): a
     // dial-stamped root draws from the REGULAR pool, or the dial would have
     // lost its isolation power the day a shipped sector authored a starting
-    // event. NOT persisted (the forcedEventId discipline).
-    this.rootStampedByDial = config?.firstNodeKind === 'event';
+    // event (`rootStampedByDial`, resolved above).
     if (config?.firstNodeKind === undefined) this.stampStartingEventRoot();
     // 66a — pre-roll the sector's boss (the forewarning pair).
     const bossRoll = this.rollBossForSector(this.streamRng('boss', 0));
@@ -1186,19 +1217,8 @@ export class Run {
           : [config.daemon]
         : [this.resolveCharacterDaemon()];
     this.turnGrants = disabledTurnGrants();
-    // 49d — the finality toggle: override ?? deck.json. Pure of RNG.
-    this.passIsFinal = config?.passIsFinal ?? DECK.grantQueue.passIsFinal;
-    // 65d — the forced-draw dial. Pure of RNG.
-    this.drawAmountAdd = config?.drawAmountAdd ?? 0;
-    // (66a — forcedLayoutId/forcedEncounterId moved to the constructor head:
-    // the boss pre-roll reads them.)
-    // X1/48f — resolve the per-run difficulty lever (override ?? difficulty.json
-    // default). Pure of RNG, so it doesn't perturb the fork alignment.
-    this.difficultyMultipliers = resolveDifficultyMultipliers({
-      waveSize: config?.waveSizeMultiplier,
-      levelBudget: config?.levelBudgetMultiplier,
-      bits: config?.bitsMultiplier,
-    });
+    // (49d's finality toggle, 65d's forced-draw dial and X1/48f's difficulty
+    // lever resolve with the other inputs at the constructor head.)
     // 68b — the grant seam, applied LAST (every store it appends to
     // exists). Daemon/packet grants draw nothing; a unit grant levels off
     // the 'team' occurrence stream — construction-scoped, so an inert
@@ -2092,6 +2112,7 @@ export class Run {
     this.waveCursor = null;
     this.enemyHealth = this.selectedEncounter!.healthPool;
     this.turnIndex = 0;
+    this.lastTurn = null;
     // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
     // freshly recruited card is in the deck); hand + discard start empty. The
     // deck is per-encounter — last encounter's pile state is discarded here.
@@ -2322,52 +2343,67 @@ export class Run {
     this.fireTrigger('turnStart', { turn: this.turnIndex + 1, hop: this.currentHop });
     if (this.pauseAtTurnGates) {
       this.phase = 'turn-intro';
-      // K3.5 — `startNextTurn` only runs mid-encounter, so the map is set.
-      const { layoutId, gridW, gridH, theme } = this.encounterMap!;
-      // Wb1 — the selected encounter is held for the whole encounter, so it's
-      // always set here (mid-encounter, same as the map above).
-      const encounter = this.selectedEncounter!;
-      this.bus.emit('turn:starting', {
-        turn: this.turnIndex + 1,
-        hop: this.currentHop,
-        playerHealth: this.playerHealth,
-        playerHealthMax: HEALTH.playerHealthMax,
-        enemyHealth: this.enemyHealth,
-        enemyHealthMax: this.enemyHealthPoolMax,
-        hand: this.hand.map((idx) => this.team[idx]!),
-        // R2 — the other two piles for the pre-turn pile views (recruitment
-        // order; see resolvePileForDisplay).
-        drawPile: this.resolvePileForDisplay(this.drawPile),
-        discardPile: this.resolvePileForDisplay(this.discardPile),
-        // 49d — the grant queue (per-source, walk order; `active` = the
-        // cursor the strict mode enforces).
-        grants: this.grantViews(),
-        empowerStacks: this.empowerStacks(),
-        // 47d — the owned-daemon list (stacked banners). `redrawGate`/
-        // `empowerGate` = "does this idol EVER grant it" (authored hooks,
-        // not this turn's resolution) — the screen tells "denied this turn"
-        // from "never grants it".
-        daemons: this.daemons.map((d) => ({
-          id: d.id,
-          name: d.name,
-          description: d.description,
-          redrawGate: daemonRedrawHook(d) !== undefined,
-          empowerGate: daemonEmpowerHook(d) !== undefined,
-        })),
-        encounter: { name: encounter.name, kind: encounter.kind },
-        map: { layoutId, gridW, gridH, theme },
-        // 65e — the folded draw amount for the "Draw: N" chip (the §65
-        // transparency surface; derived, so a draw daemon moves it live).
-        drawAmount: this.effectiveDrawAmount,
-        // 89e — the risk line ("at risk this turn: up to N"): the wave this
-        // turn will field, previewed off the same keyed stream `beginTurn`
-        // rolls it from (see `rollTurnWave`), summed to its chip bound.
-        poolAtRisk: this.previewPoolAtRisk(),
-      });
+      this.bus.emit('turn:starting', this.turnStartingPayload());
     } else {
       this.phase = 'battle';
       this.beginTurn();
     }
+  }
+
+  /**
+   * H4b → 115a — the `turn:starting` payload, built from the Run's state
+   * alone, so `resume()` rebuilds the one the live run emitted. Only valid
+   * at the pre-turn gate (mid-encounter).
+   */
+  private turnStartingPayload(): GameEvents['turn:starting'] {
+    // K3.5 — the pre-turn gate is only reached mid-encounter, so the map is set.
+    const { layoutId, gridW, gridH, theme } = this.encounterMap!;
+    // Wb1 — the selected encounter is held for the whole encounter, so it's
+    // always set here (mid-encounter, same as the map above).
+    const encounter = this.selectedEncounter!;
+    return {
+      turn: this.turnIndex + 1,
+      hop: this.currentHop,
+      playerHealth: this.playerHealth,
+      playerHealthMax: HEALTH.playerHealthMax,
+      enemyHealth: this.enemyHealth,
+      enemyHealthMax: this.enemyHealthPoolMax,
+      hand: this.hand.map((idx) => this.team[idx]!),
+      // R2 — the other two piles for the pre-turn pile views (recruitment
+      // order; see resolvePileForDisplay).
+      drawPile: this.resolvePileForDisplay(this.drawPile),
+      discardPile: this.resolvePileForDisplay(this.discardPile),
+      // 49d — the grant queue (per-source, walk order; `active` = the
+      // cursor the strict mode enforces).
+      grants: this.grantViews(),
+      empowerStacks: this.empowerStacks(),
+      // 47d — the owned-daemon list (stacked banners). `redrawGate`/
+      // `empowerGate` = "does this idol EVER grant it" (authored hooks,
+      // not this turn's resolution) — the screen tells "denied this turn"
+      // from "never grants it".
+      daemons: this.daemons.map((d) => ({
+        id: d.id,
+        name: d.name,
+        description: d.description,
+        redrawGate: daemonRedrawHook(d) !== undefined,
+        empowerGate: daemonEmpowerHook(d) !== undefined,
+      })),
+      encounter: { name: encounter.name, kind: encounter.kind },
+      map: { layoutId, gridW, gridH, theme },
+      // 65e — the folded draw amount for the "Draw: N" chip (the §65
+      // transparency surface; derived, so a draw daemon moves it live).
+      drawAmount: this.effectiveDrawAmount,
+      // 89e — the risk line ("at risk this turn: up to N"): the wave this
+      // turn will field, previewed off the same keyed stream `beginTurn`
+      // rolls it from (see `rollTurnWave`), summed to its chip bound.
+      poolAtRisk: this.previewPoolAtRisk(),
+      // 115a — the previous turn of this encounter, for the strip; the
+      // completed turn's number is `turnIndex` (resolveTurn advanced it).
+      lastTurn:
+        this.lastTurn === null
+          ? null
+          : { ...this.lastTurn, fallen: this.fallenForTurn(this.turnIndex).thisTurn },
+    };
   }
 
   /**
@@ -3067,6 +3103,8 @@ export class Run {
     const fp = fallenPower ?? { player: 0, enemy: 0 };
     const why: TurnEndReason = reason ?? (winner === 'draw' ? 'cap' : 'decisive');
     const applied = this.resolveTurn(why, sp, fp);
+    // 115a — on both paths, so a gated and a headless run save the same state.
+    this.lastTurn = { winner, reason: why };
     const result = this.turnResult();
     // M1 — bank THIS turn's XP at the boundary (pre-M1: accrued across the
     // encounter, banked once at the end), so a mid-encounter level-up fields
@@ -3666,6 +3704,7 @@ export class Run {
     // U3 — the selected encounter + its wave cursor are encounter-scoped too.
     this.selectedEncounter = null;
     this.waveCursor = null;
+    this.lastTurn = null;
     // 74b — an event-pinned reward table dies with its encounter (the won
     // boundary already consumed it; clearing on BOTH outcomes keeps a
     // defeat from leaking the override into a later fight).
@@ -3740,11 +3779,11 @@ export class Run {
    * silently on 'map': state swaps FIRST (the defeat/complete shape — the
    * screen shows a settled run), then the gate holds until
    * `dismissSectorCleared` releases to the new sector's map. The cleared
-   * sector's title is captured pre-swap for the emit — by emit time the run
-   * only knows the successor.
+   * sector is captured pre-swap — by emit time the run only knows the
+   * successor — and kept in `clearedSector` (115a) for a resumed gate.
    */
   private advanceSector(): void {
-    const clearedSectorTitle = this.currentSectorTitle;
+    const clearedSectorId = this.currentSectorId;
     // §90 — the seam floor: the pool is lifted to `seamHealFloor × max` at
     // the act boundary (the independent-acts frame — each act opens on a
     // known entry pool; 1.0 = a full heal, 0 = the pre-§90 carry). Applied
@@ -3786,12 +3825,21 @@ export class Run {
     this.currentNodeId = PRE_ROOT_NODE_ID;
     this.visitedNodes.clear();
     this.phase = 'sectorCleared';
-    this.bus.emit('sector:cleared', {
-      clearedSectorTitle,
+    this.clearedSector = { sectorId: clearedSectorId, poolBefore };
+    this.bus.emit('sector:cleared', this.sectorClearedPayload());
+  }
+
+  /** 115a — the `sector:cleared` payload from the gate's saved facts. Nothing
+   *  moves the pool while the gate holds (packets fire only pre-turn and on
+   *  the map), so `poolAfter` is the live pool. */
+  private sectorClearedPayload(): GameEvents['sector:cleared'] {
+    const cleared = this.clearedSector!;
+    return {
+      clearedSectorTitle: getSector(cleared.sectorId)!.title,
       nextSectorTitle: this.currentSectorTitle,
-      poolBefore,
+      poolBefore: cleared.poolBefore,
       poolAfter: this.playerHealth,
-    });
+    };
   }
 
   /**
@@ -3802,6 +3850,7 @@ export class Run {
    */
   private handleDismissSectorCleared(): void {
     if (this.phase !== 'sectorCleared') return;
+    this.clearedSector = null;
     this.phase = 'map';
   }
 
@@ -4184,6 +4233,59 @@ export class Run {
     return card;
   }
 
+  /**
+   * 115a — re-emit the gate event of the phase the run is in, so a run
+   * loaded from a save mounts the screen it was saved at: Game mounts every
+   * screen from these events. The payload is the one the live run emitted
+   * on arriving at the gate, rebuilt from saved state. `map` has no event
+   * (Game routes it by the phase). `battle` and `turn-outcome` are not gates
+   * a run is saved at, and throw.
+   */
+  resume(): void {
+    switch (this.phase) {
+      case 'map':
+        return;
+      case 'port':
+        this.bus.emit('port:entered', { nodeId: this.currentNodeId });
+        return;
+      case 'event':
+        this.bus.emit('event:entered', {
+          nodeId: this.currentNodeId,
+          eventId: gateState(this.activeEvent, 'event', 'activeEvent').eventId,
+        });
+        return;
+      case 'turn-intro':
+        this.bus.emit('turn:starting', this.turnStartingPayload());
+        return;
+      case 'reward':
+        this.bus.emit('reward:offered', {
+          rewards: gateState(this.pendingRewards, 'reward', 'pendingRewards').slice(),
+        });
+        return;
+      case 'promotion':
+        this.bus.emit('promotion:pending', {
+          promotions: gateState(this.pendingPromotions, 'promotion', 'pendingPromotions'),
+        });
+        return;
+      case 'recruit':
+        this.bus.emit('recruit:offered', { units: gateState(this.currentOffer, 'recruit', 'currentOffer') });
+        return;
+      case 'sectorCleared':
+        gateState(this.clearedSector, 'sectorCleared', 'clearedSector');
+        this.bus.emit('sector:cleared', this.sectorClearedPayload());
+        return;
+      case 'defeat':
+        this.bus.emit('run:defeated', {});
+        return;
+      case 'complete':
+        this.bus.emit('run:victory', {});
+        return;
+      case 'battle':
+      case 'turn-outcome':
+        throw new Error(`Run.resume: the '${this.phase}' phase is not a gate a run resumes at`);
+    }
+  }
+
   toJSON(): RunSnapshot {
     // 85-pre F4 — the run-trigger landmine assert (WORKLOG §85-pre finding
     // 7): handlers are NOT snapshotted and fromJSON builds a FRESH
@@ -4281,6 +4383,9 @@ export class Run {
       pendingRewards: this.pendingRewards
         ? this.pendingRewards.map((p) => ({ ...p }))
         : null,
+      // 115a — flat objects, copied.
+      clearedSector: this.clearedSector === null ? null : { ...this.clearedSector },
+      lastTurn: this.lastTurn === null ? null : { ...this.lastTurn },
     };
   }
 
@@ -4290,8 +4395,16 @@ export class Run {
    * from the snapshot, then subscribes to the bus for the live
    * `battle:ended` event. Caller supplies the bus — typically a fresh one
    * for replay-trace comparison, or the active game bus for save/load.
+   *
+   * 115a — `config` is the RunConfig the run was created with: the snapshot
+   * doesn't carry the inputs a config sets (a run input, not state), so a
+   * save of a dialed run reloads with its dials. Absent, those inputs are
+   * the shipped defaults, as before (what a rollout clone wants). Only the
+   * inputs read after construction apply (`resolveRunInputs`); the ones
+   * that shaped construction (roster, daemon, bits, character, grants) are
+   * in the snapshot already, which wins.
    */
-  static fromJSON(snap: RunSnapshot, bus: EventBus<GameEvents>): Run {
+  static fromJSON(snap: RunSnapshot, bus: EventBus<GameEvents>, config?: RunConfig): Run {
     if (snap.schemaVersion !== RUN_SCHEMA_VERSION) {
       throw new Error(`Run.fromJSON: unsupported schema version ${snap.schemaVersion}`);
     }
@@ -4303,6 +4416,9 @@ export class Run {
       forcedEncounterId: string | null;
       singleSectorRun: boolean;
       sectorHopsOverride: number | undefined;
+      sectorScatterConfig: RunConfig | undefined;
+      clearedSector: ClearedSector | null;
+      lastTurn: LastTurn | null;
       difficultyMultipliers: DifficultyMultipliers;
       runTriggers: TriggerDispatcher<RunTriggerContextMap, Run>;
       turnGrants: TurnGrants;
@@ -4322,20 +4438,23 @@ export class Run {
     const m = run as unknown as Mut;
     m.bus = bus;
     m.subscriptions = [];
-    // RunConfig isn't persisted; a restored run uses normal procedural rolls.
-    m.forcedLayoutId = null;
-    // 65d — same: the forced-draw dial resets (a RunConfig input).
-    m.drawAmountAdd = 0;
-    // X2 — same: a rehydrated run drops the forced-encounter isolation.
-    m.forcedEncounterId = null;
-    // 67c — same: the run-shape dials are RunConfig inputs; a rehydrated run
-    // is unbounded (full-length sectors, the walk runs to its real sink).
-    m.singleSectorRun = false;
-    m.sectorHopsOverride = undefined;
-    // X1 — RunConfig isn't persisted either, so re-resolve the difficulty lever
-    // to the shipped difficulty.json defaults (an overridden run can't be saved
-    // mid-flight today; a future difficulty system would persist its own source).
-    m.difficultyMultipliers = resolveDifficultyMultipliers();
+    // 115a — the config inputs, as the constructor resolves them. With no
+    // config: normal procedural rolls and encounter selection, unbounded
+    // full-length sectors on the shipped DAG, the shipped event catalog,
+    // finality toggle and difficulty lever, no forced draw.
+    const inputs = resolveRunInputs(config);
+    m.sectorMap = inputs.sectorMap;
+    m.forcedLayoutId = inputs.forcedLayoutId;
+    m.forcedEncounterId = inputs.forcedEncounterId;
+    m.eventCatalog = inputs.eventCatalog;
+    m.forcedEventId = inputs.forcedEventId;
+    m.singleSectorRun = inputs.singleSectorRun;
+    m.sectorHopsOverride = inputs.sectorHopsOverride;
+    m.sectorScatterConfig = inputs.sectorScatterConfig;
+    m.rootStampedByDial = inputs.rootStampedByDial;
+    m.passIsFinal = inputs.passIsFinal;
+    m.drawAmountAdd = inputs.drawAmountAdd;
+    m.difficultyMultipliers = inputs.difficultyMultipliers;
     // 77d2 (v42) — the root + counters restore; streams re-derive at their
     // occurrence sites (nothing else to restore — occurrences are atomic).
     m.streamRoot = snap.streamRoot;
@@ -4364,17 +4483,12 @@ export class Run {
     }
     m.character = character;
     // 49d — copy each queue entry (the live entries mutate in place); the
-    // finality toggle re-reads shipped config (RunConfig isn't persisted).
+    // finality toggle is a config input (above).
     m.turnGrants = snap.turnGrants.map((g) => ({ ...g }));
-    m.passIsFinal = DECK.grantQueue.passIsFinal;
-    // T2 — RunConfig (incl. a sectorMap override) isn't persisted; a restored
-    // run walks the shipped DAG. 67c: the shipped DAG is multi-node now, so a
-    // snapshot taken under a FIXTURE map can rehydrate onto sector-node ids the
-    // shipped map doesn't know (`currentSectorNodeId` isn't re-validated here).
-    // Fine for shipped play — its saves always come from SECTOR_MAP — and the
-    // real save/load story (incl. whether the map itself persists) is
-    // Cluster 6's.
-    m.sectorMap = SECTOR_MAP;
+    // T2 — the sector map is a config input (above). 67c: a snapshot taken
+    // under a FIXTURE map and loaded without it lands on sector-node ids the
+    // shipped map doesn't know (`currentSectorNodeId` isn't re-validated
+    // here); shipped play's saves always come from SECTOR_MAP.
     m.currentSectorId = snap.currentSectorId;
     m.currentSectorNodeId = snap.currentSectorNodeId;
     m.nodeMap = snap.nodeMap;
@@ -4457,15 +4571,13 @@ export class Run {
         })
       : null;
     // 74b — the event-phase state (the streams themselves re-derive — 77d2).
-    // The cursor's ids re-validate against the SHIPPED catalog (the
-    // daemonIds discipline — a bespoke `eventCatalog` override is in-memory
-    // only, like bespoke daemons); the pinned reward table re-validates
-    // against the tables.
-    m.eventCatalog = EVENTS;
-    m.forcedEventId = null;
-    m.rootStampedByDial = false; // a dial, not state (74i-c)
+    // The cursor's ids re-validate against the run's catalog (the daemonIds
+    // discipline; a bespoke `eventCatalog` loads only with the config that
+    // names it, like bespoke daemons never); the pinned reward table
+    // re-validates against the tables.
     if (snap.activeEvent !== null) {
-      const eventDef = getEvent(snap.activeEvent.eventId);
+      const eventId = snap.activeEvent.eventId;
+      const eventDef = inputs.eventCatalog.find((e) => e.id === eventId);
       if (eventDef === undefined) {
         throw new Error(
           `Run.fromJSON: unknown event id '${snap.activeEvent.eventId}' (not in the catalog)`,
@@ -4518,6 +4630,15 @@ export class Run {
               return { ...s };
             }),
           };
+    // 115a — the two gate facts; the cleared sector re-validates against the
+    // catalog (its title is resolved from it at the gate).
+    if (snap.clearedSector !== null && getSector(snap.clearedSector.sectorId) === undefined) {
+      throw new Error(
+        `Run.fromJSON: cleared sector id '${snap.clearedSector.sectorId}' is not in the catalog`,
+      );
+    }
+    m.clearedSector = snap.clearedSector === null ? null : { ...snap.clearedSector };
+    m.lastTurn = snap.lastTurn === null ? null : { ...snap.lastTurn };
     run['subscribe']();
     return run;
   }
@@ -4578,6 +4699,62 @@ function resolveForcedEventId(id: string | undefined, catalog: readonly EventDef
     throw new Error(`Run: unknown forcedEventId="${id}" (not in the event catalog)`);
   }
   return id;
+}
+
+/** 115a — the config inputs a Run reads after construction. A snapshot
+ *  doesn't carry them (a RunConfig is a run input), so a load takes them
+ *  from the same config the run was created with. */
+interface RunInputs {
+  readonly sectorMap: SectorMap;
+  readonly forcedLayoutId: string | null;
+  readonly forcedEncounterId: string | null;
+  readonly eventCatalog: readonly EventDef[];
+  readonly forcedEventId: string | null;
+  readonly singleSectorRun: boolean;
+  readonly sectorHopsOverride: number | undefined;
+  readonly sectorScatterConfig: RunConfig | undefined;
+  readonly rootStampedByDial: boolean;
+  readonly passIsFinal: boolean;
+  readonly drawAmountAdd: number;
+  readonly difficultyMultipliers: DifficultyMultipliers;
+}
+
+/**
+ * 115a — resolve a RunConfig into the inputs the constructor and `fromJSON`
+ * both assign, so a run loaded with its config reads what the live run read.
+ * No config gives the shipped defaults. Pure of RNG. Throws on a forced id
+ * the catalogs don't hold, and on `hopCount` with `sectorHops`: one says "a
+ * bounded single-sector probe", the other "walk the full DAG on shortened
+ * sectors", so together they contradict (67c).
+ */
+function resolveRunInputs(config: RunConfig | undefined): RunInputs {
+  // 74b — the forced event validates against the ACTIVE catalog, so a
+  // bespoke-catalog test can force its own defs.
+  const eventCatalog = config?.eventCatalog ?? EVENTS;
+  const inputs: RunInputs = {
+    sectorMap: config?.sectorMap ?? SECTOR_MAP,
+    forcedLayoutId: resolveForcedLayoutId(config?.forcedLayoutId),
+    forcedEncounterId: resolveForcedEncounterId(config?.forcedEncounterId),
+    eventCatalog,
+    forcedEventId: resolveForcedEventId(config?.forcedEventId, eventCatalog),
+    singleSectorRun: config?.hopCount !== undefined,
+    sectorHopsOverride: config?.sectorHops,
+    sectorScatterConfig: sectorAdvanceConfig(config),
+    rootStampedByDial: config?.firstNodeKind === 'event',
+    passIsFinal: config?.passIsFinal ?? DECK.grantQueue.passIsFinal,
+    drawAmountAdd: config?.drawAmountAdd ?? 0,
+    difficultyMultipliers: resolveDifficultyMultipliers({
+      waveSize: config?.waveSizeMultiplier,
+      levelBudget: config?.levelBudgetMultiplier,
+      bits: config?.bitsMultiplier,
+    }),
+  };
+  if (config?.hopCount !== undefined && config.sectorHops !== undefined) {
+    throw new Error(
+      'Run: hopCount (single-sector probe) and sectorHops (shortened full walk) are mutually exclusive',
+    );
+  }
+  return inputs;
 }
 
 /**

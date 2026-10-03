@@ -264,28 +264,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   kept, §53g citations stand; the next human gauntlet re-opens it. Detail:
   BALANCE §"The instrument registry" + git.
 
-- [ ] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** The
-  fuzz harness has fully evolved into a *balance* harness: the `random`
-  strategy randomizes only 2 of the ~10 decision surfaces `Run` exposes
-  (node choice + recruit choice) — port purchases are the hardwired 50g
-  buy-all-affordable, rewards are hardwired accept-if-room, and NOTHING ever
-  dispatches `usePacket`/`sellPacket`/`discardPacket`/`declineReward`
-  beyond the fixed policies' paths. (Promoted into META-ROADMAP Round 8,
-  where it is one of save/load's two oracles beside the run journal's
-  continuation check; names re-checked 2026-09-26.) A proper chaos driver would dispatch
-  random *legal* commands in every phase (buys, sells, discards, fires,
-  declines, grant passes, dock/undock churn) purely for crash/invariant/
-  serialization coverage — a different instrument from the balance harness,
-  never a balance input (the O5 coverage-bot precedent: kept separate from
-  the measurement proclivity). Candidate shape: a `--chaos` arm beside the
-  strategy arms, driven off its own forked stream, asserting the occupancy
-  invariant + snapshot round-trip per phase transition. Surfaced by the
-  user at the §59 kickoff (2026-07-19, worklog §59); out of §59 scope.
-  **Evidence (2026-07-30, §69b):** the rollout walker's first run surfaced
-  a latent §54×K4 sensor crash (`2023b6d`) purely by being a NEW
-  combination consumer (non-audition battle tier × empowered unit) — no
-  arm had ever crossed the two. A chaos/combination sweep is the
-  instrument that finds this class on purpose instead of by accident.
+- [x] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** ✅ Built
+  at 115c (2026-10-02): `tests/chaos/`, `npm run chaos`; the survey for it
+  found that `chooseRecruit` accepted any template (now a no-op off the
+  offer). WORKLOG §115c; the 2026-07-30 §69b evidence is in git.
 
 - [ ] **`runOne` / rollout-walker deliberate duplication — divergence
   watch.** Filed at the §69 kickoff (2026-07-30, user question). The

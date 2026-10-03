@@ -33,6 +33,7 @@
     "i18n:review": "tsx scripts/i18n-review.ts",
     "save:fingerprint": "tsx scripts/save-fingerprint.ts",
     "replay": "tsx scripts/replay.ts",
+    "chaos": "tsx tests/chaos/cli.ts",
     "dist:hash": "node scripts/dist-hash.mjs",
     "papercut": "node scripts/papercut.mjs",
     "phase-stats": "node scripts/phase-stats.mjs",

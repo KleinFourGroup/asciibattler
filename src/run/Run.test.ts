@@ -2193,6 +2193,20 @@ describe('Run', () => {
       run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.team[0]! });
       expect(run.team).toHaveLength(sizeBefore);
     });
+
+    it('ignores a template that is not in the offer, and takes a copy of one that is (115c)', () => {
+      const { run, bus } = freshRunWithBus(1);
+      driveToRecruitPhase(run, bus);
+      const before = JSON.stringify(run.toJSON());
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.team[0]! });
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: { ...run.currentOffer![0]!, level: 99 } });
+      expect(JSON.stringify(run.toJSON())).toBe(before);
+      // A journal's replay sends the template as a copy through JSON text.
+      const copy = JSON.parse(JSON.stringify(run.currentOffer![1]!)) as typeof run.team[number];
+      run.dispatch({ kind: 'chooseRecruit', unitTemplate: copy });
+      expect(run.phase).toBe('map');
+      expect(run.team[run.team.length - 1]).toEqual(copy);
+    });
   });
 
   describe('passRecruit command (H6b)', () => {

@@ -520,7 +520,14 @@ tests/
   ui-focus.test.ts           # 100b: the focus pins — every `:hover` selector in ui.css has its `:focus-visible` twin in the SAME selector list, the ONE ring rule at its pinned selector with a solid outline, `outline: none` only on the three containers (the two 96f modals + `.screen-fade:focus`) and never under `:focus-visible`, the map node's ring on box-shadow with no outline — a permanent gate
   cssBlocks.ts               # 100b: the stylesheet oracles' shared walker (`stripCssComments` · `blocksOf` · `styleRulesOf` descending @media · `selectorsOf`) — lifted from ui-motion.test.ts when ui-focus.test.ts needed the same walk
   integration/               # determinism, snapshot-roundtrip, variable-size, layout-deadlock,
-                             # spawn-overflow, corridor-flow, per-archetype battle tests
+                             # spawn-overflow, corridor-flow, per-archetype battle tests;
+                             # 115a/b: resume-gates (resume() per gate) + continuation (a run
+                             # reloaded at every gate plays as the run never saved)
+  chaos/                     # 115c: THE CHAOS DRIVER — chaos.ts (random legal + illegal commands at every
+                             # gate, random battle orders; checks: illegal = no-op, round trip per phase change,
+                             # occupancy per tick, its journal replays to the same bytes; a failure names its seed
+                             # + writes its journal) · chaos.test.ts (four seeds every npm test, the census, a
+                             # plant per check) · cli.ts (`npm run chaos -- --seeds=N`, journals to output/chaos/)
   fuzz/                      # A3: headless balance harness (opt-in CLI)
   pathing/                   # §42b/c: movement-metrics harness (MovementMetricsCollector + fixture maps + runner + shipped-layout capture; `npm run pathing` → the PATHING.md tables; baseline.test.ts pins the fixture numbers) — the Pathfinding-Audit instrument; runs in the main suite
 

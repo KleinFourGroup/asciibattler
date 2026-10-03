@@ -3983,6 +3983,12 @@ export class Run {
 
   private handleChooseRecruit(unitTemplate: UnitTemplate): void {
     if (this.phase !== 'recruit') return;
+    // 115c — only a card of the offer joins; anything else is a silent
+    // no-op, like every other illegal command (any template used to be
+    // accepted). Compared by value: a journal's replay and a resumed
+    // screen send copies of the offer's templates, not the objects.
+    const chosen = JSON.stringify(unitTemplate);
+    if (!(this.currentOffer ?? []).some((t) => JSON.stringify(t) === chosen)) return;
     this.appendRosterUnit(unitTemplate);
     this.currentOffer = null;
     this.phase = 'map';

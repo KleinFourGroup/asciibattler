@@ -35,6 +35,14 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
 - **Fuzz smoke:** `npm run fuzz:smoke` — opt-in vitest run on the headless
   balance harness (A3). Uses [vitest.fuzz.config.ts](vitest.fuzz.config.ts);
   the default `npm test` excludes `tests/fuzz/**` to keep pre-commit fast.
+- **Chaos sweep:** `npm run chaos -- --seeds=N [--dials=<query>]` plays the
+  chaos driver (`tests/chaos/chaos.ts`, 115c) over seeds 1..N: random commands
+  of every kind at every gate, legal and illegal, and random battle orders,
+  checking that an illegal command is a no-op, the round trip at every phase
+  change, occupancy after every tick, and that the run's journal replays to the
+  same bytes. A failure names its seed and writes its journal under
+  `output/chaos/`. Four seeds run on every `npm test` (`chaos.test.ts`). It is
+  a crash and invariant instrument, never a balance input.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

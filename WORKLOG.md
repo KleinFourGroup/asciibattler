@@ -4007,3 +4007,66 @@ the straight runs played at collection).
 not re-read here): every out-of-range index is a silent no-op, except that
 `chooseRecruit` accepts any template, never checked against the offer
 (`Run.ts`, the recruit handler). The chaos driver will send one.
+
+### 115c — the chaos driver (2026-10-02) — read `none` ✅
+
+115b's commit (`1f6ee59`) carried **321,698** at 21:26 (115b: about 33k).
+`npm test` went 44.5 s → 45.4 s with the continuation check.
+
+**Step zero: the handlers, surveyed.** A subagent read every `RunCommand`
+handler's guard (its report, not re-read here, except the two below):
+every illegal or out-of-range call is a silent no-op, except that
+`chooseRecruit` appended any template it was given, never checked against
+the offer (read: `Run.ts`, `handleChooseRecruit`). Every caller in the tree
+sends an offered card (searched: the UI, the kit's rows, the fuzz harness,
+the walkers, the tests). **Fixed** inside the cut's "findings fixed or
+filed": a template not in the offer, compared by value since a replay and a
+resumed screen send copies, is now a silent no-op; a `Run.test.ts` case
+pins it, and fails with the guard removed.
+
+**Built** (`tests/chaos/`):
+- `chaos.ts`, the driver. A gated run with a `JournalRecorder`, the kit's
+  rows for the command that moves the run on, and before it, at 60 % of
+  the steps at a gate, a random command: legal-shaped with in-range fields,
+  or (40 %) illegal, either out of phase or with a field out of range
+  (`-1`, the length, length + 3, `0.5`; an off-frontier node; an
+  off-offer card at level 999). In a battle: an order at 3 % of ticks
+  (clear, at will, hold, engage or focus on an enemy, a neutral or a cell
+  on the board) and a run command at 1 %, 90 % of them illegal. The share
+  is that high because a battle's one legal command is a discard: at the
+  gates' share the driver emptied the cache before any gate could fire a
+  packet (the first sweep's `usePacket` applied 0 of 47).
+- Its checks: an illegal command leaves the run's text unchanged (the
+  `Command.ts` contract, which the cut didn't name; added because the
+  out-of-range sends otherwise check only that nothing throws); the round
+  trip at every phase change, loaded with the run's config; occupancy
+  after every tick (`findOverlappingCells`); at the end, its journal
+  replays to the recorded hash and the same bytes. A failure throws with
+  the seed and dials and writes the journal, abandoned where it stopped.
+- `chaos.test.ts`, on every `npm test`: four seeds chosen from a sweep for
+  being short (`hops=3&layout=procedural` 3, no dials 2, `sectorHops=2` 6,
+  `character=gambler&bits=300` 4; the Gambler's Janus grants a redraw every
+  turn). The census: every one of the 20 journaled kinds sent, and all nine
+  kinds of order. A plant per check, each caught with the seed in the
+  message: the bits moved in the first round trip (caught at the `map`
+  phase, the journal written and ending `abandoned`), two units on one cell
+  at tick 5, the first moving command sent as one that must be a no-op,
+  and the first `enterNode` cut from the journal (the replay refuses: an
+  order for tick 4 with no battle). The file runs in about 4 s.
+- `cli.ts`, `npm run chaos -- --seeds=N [--dials=<query>]`: four dial sets
+  (`sectorHops=2`, `hops=3&layout=procedural`, `character=gambler&bits=300`,
+  none), one line per run, journals to `output/chaos/`.
+
+**The sweep** (`npm run chaos -- --seeds=25`, four dial sets, 100 runs):
+green, 196 s, 1180 battles, 10 runs complete and 90 defeated, the
+slowest 8.1 s. Commands sent / applied (applied = the run's text changed):
+enterNode 771/489, chooseRecruit 298/114, passRecruit 264/57,
+dismissPromotion 998/747, dismissSectorCleared 265/15, leavePort 293/34,
+buyPortUnit 195/1, buyPortPacket 208/1, buyPortDaemon 245/3, sellPacket
+218/0, payToRemoveUnit 210/2, acceptReward 505/294, declineReward 242/59,
+advanceTurn 2532/2360, redrawCards 419/11, empowerUnit 393/36, passGrant
+322/115, discardPacket 5197/108, usePacket 538/11, chooseEventOption
+615/306. **The gap:** `sellPacket` never applied, since it needs a packet
+in the cache while docked, and the port buys applied once to three times.
+The cut pins kinds sent, so this is the instrument's known weak spot, not
+a failure.

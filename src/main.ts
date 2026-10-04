@@ -4,6 +4,10 @@
 // what they bake (Round 8 spec D1). tests/store-boot.test.ts holds this line
 // first, and holds the store's own imports clear of every catalog.
 import './store';
+// 116a — THE SETTINGS' BOOT IS THE SECOND. It sets the stored locale before
+// the catalogs load (src/settings/boot.ts); tests/settings-boot.test.ts holds
+// this line second and holds its graph clear of every catalog too.
+import './settings/boot';
 
 // Bundled FOSS monospace font. Loaded first so canvas2d rasterization in the
 // FontAtlas finds it registered when document.fonts.ready resolves.

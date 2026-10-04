@@ -11,8 +11,9 @@
  * (a missing entry is a shipping defect, never a silent English fallback —
  * the failure that hid `emboldened`'s missing colour for weeks).
  *
- * Resolution happens once, at catalog load. A locale switch is a Round 8
- * setting and reloads the page; there is no live re-resolution.
+ * Resolution happens once, at catalog load. A locale switch is a setting
+ * (src/settings) and reloads the page: the stored locale is set at boot,
+ * before the catalogs load, and there is no live re-resolution.
  *
  * §95e — an entry is a plain string or the provenance object
  * (provenance.ts: `{ text, source, translator, reviewer }`). A FUZZY entry —
@@ -29,6 +30,12 @@ import { proseSites, type ProseFamily, type ProseSite } from './prose';
 import { currencyOf, entryTextOf, type ProvenanceEntry } from './provenance';
 
 export const DEFAULT_LOCALE = 'en';
+
+/** The locales this build ships. A stored locale outside this list is left
+ *  alone at boot and the page keeps the default (src/settings/atBoot.ts). A
+ *  second locale joins it where its sidecars are registered,
+ *  src/settings/boot.ts. */
+export const SHIPPED_LOCALES: readonly string[] = [DEFAULT_LOCALE];
 
 export type LocaleEntryObject = ProvenanceEntry<string>;
 export type LocaleEntry = string | LocaleEntryObject;
@@ -49,7 +56,7 @@ export function activeLocale(): string {
   return active;
 }
 
-/** Tests + the future settings row. Takes effect for catalogs loaded AFTER the call. */
+/** Tests, and the settings' boot (src/settings/boot.ts). Takes effect for catalogs loaded AFTER the call. */
 export function setActiveLocale(lang: string): void {
   if (lang.length === 0) throw new Error('i18n: locale must be non-empty');
   active = lang;

@@ -4871,3 +4871,68 @@ user's "I'm good with that rough session plan too", since that plan names
 the cut's steps and its first stop, and has told the user so. Every stop
 in the cut stays a stop, and the first is after 116d; 116a and 116b are
 read `none`. ROADMAP §116 carries the cut and the decision line.
+
+### 116a — the settings, headless (2026-10-04) — read `none` ✅
+
+The reading at the step's start: **350,495** at 09:52, on the signing
+commit (`300c1e5`).
+
+**Step zero.**
+- The boot module's reach was read before it was written: `locale.ts`
+  imports `prose.ts` (zod) and `provenance.ts` (`core/fnv1a`) and no
+  catalog. The pin's expected file list was written from that reading and
+  matched on its first run.
+- **A field is what is stored, not what a consumer accepts.** `keys` holds
+  any action name against any key code and `speed` any positive number.
+  Checking them against the registry's actions or the playback's steps
+  would import `src/config/keybindings.ts` and `playback.ts` into a module
+  that is evaluated before the catalogs. The consumers take what they know
+  (116b).
+- The shake and aura choices are the settings' own lists, with no import
+  from `src/ui` or `src/render`; 116b's wiring is where the compiler ties
+  them to `ShakePolicy` and the aura mode.
+- **A change inside the cut's intent:** the cut's line has the boot apply
+  "the locale, the palette's name". Only the locale is applied here. The
+  palette's name is stored now and has no seam to apply it to until 116f,
+  which adds one to `applyAtBoot`.
+
+**Built.**
+- `src/settings/settings.ts`: `SETTINGS_SECTION`, eleven fields
+  (`volumeMaster`, `volumeSfx`, `volumeMusic`, `keys`, `speed`, `motion`,
+  `shake`, `aura`, `palette`, `textScale`, `locale`), version 1.
+- `model.ts`: `createSettings(store)` with `get`, `set` and `onChange`. A
+  value the field's schema refuses throws; a store that can't save returns
+  false and the value holds for the page.
+- `atBoot.ts` and `boot.ts`: `main.ts`'s second import sets the stored
+  locale when the build ships it. `SHIPPED_LOCALES` (`en`) is in
+  `src/i18n/locale.ts`; a second locale registers its sidecars in
+  `boot.ts`, where the landing note is.
+- `index.ts`: the page's settings, over the page's store. Nothing reads it
+  yet.
+
+**The fallbacks are the game as it was.** Master 0.5 is today's
+`DEFAULT_MASTER_VOLUME`, so spec D7's formula (master × SFX × the sound's
+own level) gives today's loudness with no hidden factor, and SFX and music
+are 1. A master slider would then open at 50 %: 116d's read.
+
+**Tests.** `src/settings/settings.test.ts`, 10: the field names pinned;
+every field set, read from the adapter's text and read back by a second
+store, with the two tables differing in every field; a refused stored
+value falling back alone; `set` refusing; the listener; a store that can't
+save; and the boot seam over a planted locale, with its control.
+`tests/settings-boot.test.ts`, 3: the second import, the exact graph, and
+a catalog planted behind the settings. By hand, then reverted: the boot
+import moved below `fonts.css`, and a config import added to
+`settings.ts`; the two pins failed by name. `tsc` refused an indexed write
+in `model.ts` that Vitest had passed; fixed before the commit.
+
+**A run is left alone.** `npm run probe -- shell/electron/probes/drive-run.js
+--seed=7`: exit 0, `logHash a59ee48f`, 12 battles, on the working tree
+(`0.0.0+300c1e5-dirty`), the store's adapter `electron`.
+
+**Not verified.** No browser read: the page booting with the second import
+was seen only under the Electron runner. No consumer reads the model, so
+nothing a player sees has changed.
+
+**Cost.** The production bundle is 610.94 kB raw (609.72 at 115g), the
+stylesheet 56.50 kB. Typecheck clean.

@@ -3265,3 +3265,9 @@ Written at the hand-off, about 08:20 to 10:25, at 493k.
    know what more to claim about it than that. I would want the
    item-by-item answers repeated. Whether the work succeeded is the
    sitting's to say: nothing built today has been seen by a player's eye.
+
+### Addendum, the same session — after the hand-off (2026-10-04)
+
+The user confirmed the cut ("You read my intention correctly"). So the
+reading in item 2 was right this time. The uncertainty it records was
+real when written, and the rule still doesn't say what counts as signing.

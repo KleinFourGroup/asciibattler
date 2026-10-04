@@ -4872,6 +4872,9 @@ the cut's steps and its first stop, and has told the user so. Every stop
 in the cut stays a stop, and the first is after 116d; 116a and 116b are
 read `none`. ROADMAP §116 carries the cut and the decision line.
 
+**Confirmed after the hand-off** (the user, 2026-10-04: "You read my
+intention correctly"): the cut and its reads are SIGNED.
+
 ### 116a — the settings, headless (2026-10-04) — read `none` ✅
 
 The reading at the step's start: **350,495** at 09:52, on the signing
@@ -5092,7 +5095,7 @@ steps": two of them took 142k.
   116d's.
 - **For the 116d stop, to put to the user:** the master slider opens at
   50 % (the default loudness is master 0.5); `NumpadEnter` is reserved with
-  Enter; Shift passes the modifier rule; the cut itself was taken as
-  signed with the session plan.
+  Enter; Shift passes the modifier rule. (The cut's signature is no longer
+  among them: the user confirmed it after this entry.)
 - **Still to come from the user:** nothing blocks. ChipTone's terms were
   not read; 116j reads them or asks.

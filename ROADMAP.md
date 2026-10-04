@@ -194,8 +194,9 @@ achievements row, no camera row.
 - [x] **116a** — the settings, headless: the lenient section, its model, and `main.ts`'s second import, which sets the locale before the catalogs load. Read `none`. ✅ (WORKLOG §116a).
 - [x] **116b** — the consumers, no surface yet: the two volume axes, the keys (the swap, the modifier rule, the labels live), the starting speed, the motion override, the shake, the aura mode. Read `none`. ✅ (WORKLOG §116b; three launches on one Electron profile, the dev server and the production build).
 - [x] **116c** — the menu as the boot screen: Continue, New run, the seed field, the three notices, the build ID; both end screens exit to it; character select gains Back. Read `stop`, one sitting with 116d. ✅ READ 2026-10-04, one finding → 116c-post (WORKLOG §116c, "The first sitting").
-- [ ] **116c-post** ◐ BUILT 2026-10-04, unread (WORKLOG §116c-post) — inserted at the sitting: the seed's explanation leaves the menu and becomes the tooltip of the word Seed, since the line read as clutter. The read: hover, Tab to, or tap the word; wrong is no explanation, or a click on the word that jumps into the field.
-- [x] **116d** — the settings modal, its two openers, and the rows for volume, speed, motion, shake and aura. Read `stop`, in Firefox: move a volume and hear it, reload and find it kept, open settings from the chip in a battle; wrong is a row that doesn't hold, a control the Tab walk misses, a battle running on behind the modal. ✅ READ 2026-10-04, one finding → TODO "§116 riders" (the chip's home), one question open (WORKLOG "The first sitting").
+- [x] **116c-post** — inserted at the sitting: the seed's explanation leaves the menu and becomes the tooltip of the word Seed, since the line read as clutter. ✅ the user, 2026-10-04 (WORKLOG "The sitting's answers").
+- [ ] **116c-post2** — inserted at the sitting, the user's answer to the stop's question: the end screen shows the run's seed, so a player can type it on the menu. Read `batch` (at 116g's stop): end a run, and the seed is on the end screen, selectable; typed into the menu's field with the same character it gives the same map. Step zero's start is WORKLOG "The sitting's answers".
+- [x] **116d** — the settings modal, its two openers, and the rows for volume, speed, motion, shake and aura. Read `stop`, in Firefox: move a volume and hear it, reload and find it kept, open settings from the chip in a battle; wrong is a row that doesn't hold, a control the Tab walk misses, a battle running on behind the modal. ✅ READ 2026-10-04, one finding → TODO "§116 riders" (the chip's home, §117.5's); the rows' explanation lines stay visible (WORKLOG "The first sitting", "The sitting's answers").
 - [ ] **116e** — the key rows: rebind, swap, reset. Read `batch` (at 116g's stop): rebind Pause to P, and the Fight-now button and tooltips say P; bind Focus to P and the two swap; wrong is a stale label, one key firing two actions, Ctrl+F still swallowed.
 - [ ] **116f** — the palette's mechanism: `COLORS` chosen by name at boot, the copied hexes moved onto it; the default palette's colours equal to the parent commit's table. Read `none`.
 - [ ] **116g** — the colourblind palette, its check on every `npm test`, a symbol per status on the camp unit's pip, the Palette row. Read `stop`, twice: the candidate with its table, then the eye.
@@ -220,6 +221,20 @@ levers only; no unlock content mapping (Round 10); a seeded run unlocks
 nothing.
 
 **Carried from §115** (TODO "§115 riders"): whether a reward's taken rows are saved is decided at this kickoff. It needs a Run bump, this phase makes one anyway, and after §118's upload a bump costs players their runs.
+
+## Phase 117.5 — the UI sweep
+
+Charter (inserted 2026-10-04 at §116's first sitting, user-signed): the
+layout and polish riders that this round's sittings file against its own
+surfaces (the menu, the settings, the chrome column), and whichever older
+TODO riders the user picks at the kickoff. The first is the settings
+chip's home, a second ribbon in the top right (TODO "§116 riders"). **Why
+here:** before §118, so the build that goes to the public web channel is
+the swept one. **Risk:** low-medium (wide layout; each move is checked
+with the box oracle). **Decision points:** the list, picked by the user at
+the kickoff from TODO. **Exit:** every picked item built, and read at one
+sitting. **Scope guards:** layout and polish only; nothing that isn't in
+TODO at the kickoff; no new mechanism and no sim change.
 
 ## Phase 118 — the public web channel, then the round close
 

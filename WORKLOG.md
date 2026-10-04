@@ -5520,3 +5520,40 @@ the word.
 **Cost.** `npm test`: 233 files, 3373 tests. Typecheck clean. The reading
 before this commit: **516,808** at 13:12. The session hands off here: the
 next step, 116e, starts in a fresh session.
+
+### The sitting's answers (2026-10-04, the user's)
+
+The reply to the session's thoughts; the reading on 116c-post's commit
+(`d53ff9f`): **519,004** at 13:13.
+
+- **116c-post, the underline:** "that underline is a really good
+  addition". The session takes this as the step's read and ticks it; the
+  user did not say what they tried.
+- **The settings rows' explanation lines stay visible** ("We'll leave the
+  settings explainers visible"). The reason given to the user: three of
+  the four say what a row's choices do, which a player acts on, and the
+  tooltip rule keeps that off a tooltip alone.
+- **§117.5, the UI sweep, is signed** ("signing off on the 117.5
+  charter"), and is in ROADMAP between §117 and §118. As put to the user:
+  it sits before §118 so that the build for the public web channel is the
+  swept one; it is cut at its own kickoff from TODO, the user picking; and
+  it is layout and polish only. The risk the session named is that it
+  becomes a bin, which the scope guard is there for. Its first item is the
+  settings chip's home (TODO "§116 riders").
+- **A run's seed is shown on the end screen** ("end run screen is a good
+  place to show the seed"). Inserted as 116c-post2, unbuilt, for the next
+  session. What step zero starts from, read today: `Run` keeps
+  `streamRoot = seed >>> 0` and has no accessor for the seed
+  (`Run.ts:1118`); `run:started` carries the seed as given, and so does
+  the journal's seed start (`journal.ts:68`). A getter on `Run` is a
+  change under `src/run`, so the fuzz smoke would fire; the journal's
+  start, or a copy `Game` keeps beside `runDials`, is not. A run loaded
+  from a dev snapshot has no seed start. `seed >>> 0` names the same run
+  and is ten digits at most, where a seed drawn from the clock is
+  thirteen, so it may be the better number to show. Unread: which of these
+  a continued run's journal gives after several loads.
+
+The session hands off here, under the line and without starting
+116c-post2: its step zero has a question in it (where the seed comes
+from), and a fresh session reads that with room. The reading before this
+commit: **534,891** at 13:22.

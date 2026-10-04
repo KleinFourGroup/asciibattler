@@ -535,5 +535,4 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   overlay's ✕ sits there over everything. So the move is a layout step on
   five screens, each checked with the box oracle (DESIGN "Layout
   stability"), and DESIGN's Chips paragraph and the corner comments in the
-  stylesheet change with it. Home: the sweep phase the user proposed at the
-  same sitting, if it is signed; otherwise the next UI round.
+  stylesheet change with it. Home: §117.5, the UI sweep (signed 2026-10-04), as its first item.

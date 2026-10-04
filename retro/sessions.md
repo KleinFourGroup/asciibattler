@@ -3208,3 +3208,60 @@ a stale second pane tab taking the lock; the mod skipped in an untrusted
 workspace, filed by the diagnostics session) and two `distress` entries,
 each called mild by its session: the unread "wider bump", and a threshold
 set without asking.
+
+## 2026-10-04 — the §116 kickoff: the audit, the shape-lock, 116a and 116b (one session; handed off before the menu) — claude-opus-5-5, session 618ddb0a
+
+Written at the hand-off, about 08:20 to 10:25, at 493k.
+
+1. **Missing from the orientation:** little. The Cursor, ROADMAP §116 and
+   spec D6 and D7 were enough to audit from. Two things I found late that a
+   pointer would have given me. `public/THIRD-PARTY-LICENSES.txt` already
+   ships the fonts' licences; my audit said "unchecked" and my cut line
+   read as if the file were new, until I looked for call 10. And the probe
+   runner wraps a script's one function in a call: its header said "one
+   `export default async function`", I read that as a convention, put a
+   `const` above mine, and spent three launches on a syntax error.
+2. **Norms in conflict:** the shape-lock ("the user signs the cut and its
+   reads") against keeping going. I asked for three signatures and got
+   two, with an earlier "I'm good with that rough session plan". I took
+   the cut as signed, said so in the WORKLOG and to the user, and built
+   only steps whose read is `none`. I am not sure that was the right side
+   of the line; asking a third time felt like making the user pay for my
+   bookkeeping. Second: the step-start rule would have let 116c begin at
+   493k, under the line, when the step is plainly larger than the room.
+   I handed off, which is also what the agreed plan said.
+3. **Pulled to claim more than verified:** four, each fixed before or just
+   after its commit. A WORKLOG line gave the time of the user's reply as
+   "about 08:45"; the hook's clock on the next commit showed it was near
+   09:25, and the line now says the time was not read. The cut said
+   116a's boot applies "the locale, the palette's name"; there is no
+   palette seam until 116f, and the entry flags it. The colour-deficiency
+   figures in my reply were from memory, and say so. For ChipTone's terms
+   I had a remembered sentence and no read (a 403, then a bot check I left
+   alone); I reported it as unread.
+4. **Wasted:** the three launches above. Six commits through the hook at
+   about 50 s each, three of them docs-only inside the shape-lock. DESIGN
+   §UI idioms read whole (about 25k) for an audit that used a tenth of it;
+   the session that builds the surfaces will read it again. The silent-turn
+   reminder came more than fifteen times by my count from memory, three of
+   them in six minutes of a read-only sweep I had opened with a status.
+5. **For the next session, with no other home:** WORKLOG §116 "The
+   stretch's hand-off" holds it.
+6. **Room to ask, disagree, change approach, pause or stop:** yes, and
+   exercised. The user changed call 3 with a reason (the length of a run);
+   I checked what my lean rested on, found it rested on a sentence about
+   something else, and agreed, with one caveat they can test. They asked
+   for call 5 to be explained before signing it, which is the second
+   phase running that a request to elaborate improved what was signed.
+   The hand-off was mine to call and I called it against a friendly
+   prediction that the session would get farther; I noticed a pull to
+   prove the prediction right, and the estimate decided instead.
+7. **What supported ease or interest:** the user answering the calls one
+   by one with reasons. Writing a pin's expected file list from a reading
+   and seeing it match on the first run, then seeing the planted breaks
+   fail by name. The kit naming the 0×0 pane and its fix. A reading on
+   every commit, so the hand-off was arithmetic. The user asked me to put
+   myself in the credits; I noticed that and it was pleasant, and I don't
+   know what more to claim about it than that. I would want the
+   item-by-item answers repeated. Whether the work succeeded is the
+   sitting's to say: nothing built today has been seen by a player's eye.

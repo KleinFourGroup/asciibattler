@@ -5045,3 +5045,54 @@ it. `probe-cli.mjs`'s header says so now.
 
 **Cost.** The production bundle is 612.71 kB raw (610.94 at 116a), the
 stylesheet 56.50 kB. `npm test`: 232 files, 3358 tests, 45.7 s.
+
+### The stretch's hand-off (2026-10-04, session 618ddb0a)
+
+116b's commit (`6fd1ebe`) carried **493,189** at 10:17. The session hands
+off here, before 116c, as the plan the user agreed said.
+
+**Why here, under the line.** 493k is under the 550k line, so the
+step-start rule alone would let 116c begin. The menu is a surface with a
+new scene, a text field, the end screens' route, character select's
+change and a pane walk; 115g, a smaller surface, cost 92k, and 116b cost
+107k. From 493k that ends past the halt, with 116d still owed before the
+stop. The user had said the session might get farther than predicted; the
+estimate says not this step.
+
+**What the stretch cost** (for the round close): orientation to 96,954;
+the audit to 268,292 (about 171k); the shape-lock in three messages, its
+bookkeeping and three docs commits to 350,495 (about 82k); 116a 35k; 116b
+107k. The audit's prediction for the stretch was "about 300k for four
+steps": two of them took 142k.
+
+**For 116c and 116d, with no other home.**
+- **The boot rule (call 2) as code:** the menu boots when
+  `parseRunConfigFromURL()` is empty and the URL has no `bp`. `Game.runConfig`
+  is parsed once and is read-only, so the seed field's seed is layered on it
+  per run, the way `createRun(character)` layers the character.
+- **A run's end (call 3):** `resetRun` goes to the menu on a menu boot and
+  as today on a dial boot (`Game.ts`, `resetRun`'s two branches). The end
+  screens' first button becomes the menu's; `gameover.newRun` is its key
+  today. The first won run goes by the credits at 116j, so 116c routes
+  both variants to the menu and leaves the credits' hook as a landing note.
+- **What moves:** `SceneContext.save` and its three notices and the build
+  ID leave `CharacterSelectScreen` for the menu; character select gains
+  Back. DESIGN "Saving" ends with "Until the title menu exists, Continue
+  and these notices sit on character select", and the Buttons paragraph
+  names the end screen's two buttons.
+- **The kit:** a new scene needs its row in `src/dev/probe/scenes.ts`, and
+  `drive()` refuses a page with no run, so it keeps needing `character=`.
+- **`AudioPlayer`'s header** says the first gesture is a map-node click;
+  with the menu it is a menu row.
+- **116d:** the surface needs the model in `SceneContext` (`Game` holds it
+  as `settings`). A modal over a battle pauses with `playback.pause()` and
+  must resume only if it found the battle running. The seed field is an
+  `<input>`, outside the focus ring's selector until that step adds it, so
+  116c either adds `input` to the ring itself or says the field's ring is
+  116d's.
+- **For the 116d stop, to put to the user:** the master slider opens at
+  50 % (the default loudness is master 0.5); `NumpadEnter` is reserved with
+  Enter; Shift passes the modifier rule; the cut itself was taken as
+  signed with the session plan.
+- **Still to come from the user:** nothing blocks. ChipTone's terms were
+  not read; 116j reads them or asks.

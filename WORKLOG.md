@@ -4511,3 +4511,275 @@ addendum.
 
 The reading at the close: **450,934** at 14:32. The §116 kickoff goes to a
 fresh session: the last close and kickoff audit together read 352k.
+
+## Phase 116 — the menu and settings
+
+### The §116 audit and cut (2026-10-04) — the shape-lock is open
+
+Session 618ddb0a, fresh, from about 08:20. Pre-flight: typecheck clean;
+`npm test` 229 files, 3322 tests, 51.8 s. Readings: **96,954** at 08:23,
+after HANDOFF, `process/planning.md`, ROADMAP and the context tool's load;
+**268,292** at 08:29, at the audit's end. ✔ = read by this session at
+file:line, or measured.
+
+**What is there.**
+- **The store has no settings.** `settings` and `progress` are reserved
+  section names (✔ `src/store/store.ts:50`) and no section is defined for
+  either; `store.read` and `store.patch` have no caller outside tests, and
+  `store.onStatus` has no listener (✔ a search of `src`). `canSave` is read
+  once, when character select is drawn (✔ `Game.ts:955`,
+  `CharacterSelectScreen.ts:79`), so a write that fails later shows nowhere.
+- **Nothing sits between the store and the game at boot.** `./store` is
+  `main.ts`'s first import, pinned (✔ `tests/store-boot.test.ts`), and the
+  next module that could apply a stored value is `./Game` itself, whose
+  graph bakes the catalogs' prose and the colour tables as it loads.
+  `setActiveLocale` has no caller, `registerLocale` and `registerUiLocale`
+  have none outside tests, and `locales/` holds `en` only (✔), so there is
+  no second locale to switch to. `locale.ts` reaches `prose.ts` (zod) and
+  `provenance.ts` (`core/fnv1a`) and no catalog (✔), so a boot module can
+  set the locale without loading one.
+- **Every setting the charter names has its seam, and none has a control or
+  is stored:**
+
+  | setting | the seam | today's value | set by, today |
+  |---|---|---|---|
+  | volume | `AudioPlayer.setMasterVolume`, one axis (✔ `AudioPlayer.ts:207`, `:260`) | master 0.5 × the sound's own level | nothing |
+  | keys | `Keybindings.rebind`, no conflict check (✔ `Keybindings.ts:68`); 11 actions (✔ `config/keybindings.json`) | the config's defaults | nothing |
+  | starting speed | `PlaybackSpeed`'s `selected` (✔ `PlaybackSpeed.ts:33`, `:40`) | 1× | the HUD's buttons, per page |
+  | reduced motion | `setReducedMotionOverride` (✔ `motion.ts:66`) | follow the OS | Ctrl+Alt+A |
+  | shake | `setShakePolicy`, four policies (✔ `lossFx.ts:51-61`) | `player` | Ctrl+Alt+K |
+  | aura effect | `window.__auraFx`, read each frame, three modes (✔ `BattleRenderer.ts:131`, `:419`) | `track` | the console |
+  | palette | `COLORS`, a const literal (✔ `palette.ts:5`), imported by nine render modules and nothing else | one palette | nothing |
+  | text scale | 20 `--text-*` tokens in rem (✔ `ui.css:68-87`) | the browser's 16px | nothing |
+  | locale | `setActiveLocale` (✔ `locale.ts:53`) | `en` | nothing |
+
+- **The key registry has no modifier check.** It dispatches on the bare
+  `code` and calls `preventDefault` whenever the bound action has a live
+  handler (✔ `Keybindings.ts:92-101`; `devKeys.ts`'s header says the same).
+  Read from the code and not tried in a browser: with Focus on F, Ctrl+F in
+  a battle arms Focus and the browser's find doesn't open. A rebind surface
+  widens this to any key a player picks (R, with Ctrl+R).
+- **Two key labels are read once** (the charter's two): Fight-now's, built
+  with each battle's HUD (✔ `HUD.ts:324`), and the sector-map chip's, a
+  string handed over at construction for the page's life (✔ `Game.ts:343`).
+- **Colour outside `COLORS`.** Raw hex in `src` outside tests: the status
+  and empower hues, 10 and the magenta fallback (✔ `statusDisplay.ts:39-97`);
+  the HP gradient, 3, each a copy of a `COLORS` value (✔
+  `UnitOverlayLayer.ts:475-477`); the tiles and layout themes, 21 (✔
+  `TerrainRenderer.ts:752-818`). In the stylesheet, 13 tokens mirror
+  `COLORS`, pinned equal, and 22 are role tokens, several of them shades of
+  a palette hue (`--color-amber-hover`, `--color-green-dim`,
+  `--color-blue-dim`, `--color-boss-red`; ✔ `ui.css:26-60`).
+- **The reads carried by hue alone, as the docs list them: one.** A camp
+  unit's status pip (DESIGN "Color redundancy"; TODO §98 riders). Team
+  identity, rarity, map node state and kind, the DoT numbers, deep water
+  and the destructible wall each have their second channel. This session
+  ran no grey read; the list is DESIGN's.
+- **Text set in boxes that don't scale.** `ui.css` has 423 lines with a px
+  length, 38 of them a width or a height, against 1 in ch, rem or em (✔ a
+  count). `--chip-w` is 200px, "sized off the widest live one-line form
+  measured at 18px" (✔ `ui.css:11-16`). So a larger root font-size grows
+  text inside boxes that stay the same. Which screens overflow at which
+  scale is unmeasured.
+- **The boot.** `Game`'s constructor mounts the map when the URL pins a
+  character and character select otherwise (✔ `Game.ts:454`); a reset goes
+  the same way (✔ `:788-806`). Every dev entry pins `character=`: the board
+  fixtures (✔ `fixtures.ts:49`), the probe runner (✔ `probe-cli.mjs:7`),
+  and the recorder and `drive()`, which refuse without a run at boot (✔
+  `record-page.js:111`, `src/dev/probe/index.ts:578`). The kit names a scene
+  from a table of classes (✔ `src/dev/probe/scenes.ts`), so a new scene
+  needs its row there.
+- **Character select holds the menu's parts:** Continue, the three notices
+  and the build ID, through `SceneContext.save` (✔
+  `CharacterSelectScreen.ts:62-111`, `Scene.ts:81-90`).
+- **Finished journals have no surface.** `keepJournal` writes them and
+  nothing reads them back for the player once the end screen is left (✔
+  `journals.ts`, a search for `finishedJournals`). A rejected slot's text
+  stays in place (✔ `store.ts:265-288`) until `confirmCharacter`'s autosave
+  writes over it (✔ `Game.ts:475`).
+- **The store hands out no section's raw text** (✔ the `Store` interface,
+  `store.ts:112-130`), so the export and the import are new surface on it.
+- **A seeded run is already told apart at the game layer.** The run's dials
+  hold `seed=` only when the config set one; a run seeded from `Date.now()`
+  has none (✔ `Game.ts:848-858`, `RunConfig.ts:420-423`). The dials are
+  saved in the slot and in the journal's start.
+- **Credits.** `localeCredits()` gives nothing for `en` (✔ `credits.ts`).
+  The fonts' licences are in the tree (`assets/fonts/jetbrains-mono/OFL.txt`,
+  `assets/fonts/dejavu-sans-mono/LICENSE.txt`, each with `AUTHORS.txt`).
+  Unchecked: whether `dist/` carries them, and the notices of the bundled
+  libraries (three, simplex-noise, zod).
+- **No idiom for four things the phase needs:** a slider, a text field, a
+  settings row, and a notice over every screen. The focus ring's selector
+  is `button, select, [role='button'], [tabindex='0']` (DESIGN "Focus"), so
+  an `<input>` is outside it.
+- **Electron on one profile twice** is possible: `main.mjs` takes
+  `--profile=<dir>` (✔ `:20`), and the probe runner otherwise makes a fresh
+  one per run (✔ `probe-cli.mjs:93`).
+
+**Hypotheses for step zero** (unmeasured).
+- Whether a modal over a live battle needs to pause it; the sector-map
+  overlay holds no playback handle (a search of it for `pause` found none).
+- What `pressable`'s deferred Space does once pause is on another key.
+- How many of the 38 px boxes hold text, and which screens overflow at
+  125 % and 150 %.
+- Whether a colourblind palette can keep the five identity hues apart under
+  all three simulations and still look like this game.
+- What a download does in itch's frame, Firefox's `localStorage` limit,
+  `navigator.locks` in the frame, and a write's cost per command: the
+  sitting's.
+
+**Calls for the shape-lock, with the session's lean.**
+1. **The settings surface is the 96f modal,** opened from the menu's row
+   and, during a run, from a new chip in the chrome column, where it also
+   holds Quit to menu and pauses a battle while open (the lean). A stranger
+   in a fight then reaches the volume without closing the tab. The other
+   shapes: settings on the menu only, or a full screen, which can't sit
+   over a run.
+2. **What skips the menu:** a URL with any run dial, or a `?bp=` bookmark,
+   boots as it does today (the lean). Every dev entry already pins
+   `character=`, so none changes.
+3. **A run's end goes to character select, as today,** and character select
+   gains Back to the menu. New run with a run saved replaces it at the
+   character pick, two clicks from the menu, with no confirm (the lean).
+   The other shape: every new run starts from the menu, one click more.
+4. **The `seeded` flag waits for §117.** The seed field sets the run's
+   seed, which rides the saved dials, so §116 makes no Run bump; §117, the
+   flag's only consumer, chooses between a snapshot field in its own bump
+   and reading the dials (the lean). The other shape: v48 here.
+5. **The colour deficiencies** (ROADMAP's decision point). One alternate
+   palette. Gated, under protan and deutan simulation: the ten pairs among
+   the five identity hues (yours, the enemy's, a camp's, stone, cracked
+   stone). Tritan is measured on the same pairs and reported, and gated too
+   if a candidate passes it at no cost to the look. The status and empower
+   hues are re-picked and reported, not gated: their guarantee is the
+   pip's new symbol and the card's text (the lean). Red-green covers nearly
+   all colour-deficient players, and green against red is the pair this
+   game leans on most. The other shapes: a palette per deficiency, or
+   gating all three from the start.
+6. **The locale has no row yet.** The stored field and the boot seam are
+   built and proven with a locale planted in a test; the row appears when a
+   second locale is registered (the lean). A select with one option is
+   noise.
+7. **Aura and shake as rows.** Aura: two options, `track` (the default) and
+   `fill`; `fixed`, the A/B's loser, is deleted (the lean; TODO's "scrub
+   the losers or promote"). Shake: the four policies as they are, `player`
+   the default.
+8. **The keys.** Binding a key that another action holds swaps the two, so
+   every action stays bound (the lean); Enter, Tab and Escape can't be
+   bound; a keydown with Ctrl, Alt or Meta held fires no hotkey.
+9. **The data rows sit in the settings,** not as a sixth menu row: Export
+   everything and Import (the store's backup, spec D1), and Export last run
+   (spec D5's "from the menu", read as reachable from it). A new run first
+   moves a rejected save's journal to the finished journals, so it stays
+   exportable after the slot is reused; a slot that isn't an envelope has
+   no journal and is replaced (the lean).
+10. **Credits: the names are the user's to give.** The lean for the rest:
+    the fonts and the bundled libraries, each with its licence's name, and
+    the licence texts shipped beside the build.
+
+Folded into the steps rather than posed: the starting speed is its own row,
+which the battle's speed buttons don't write; the default loudness stays
+today's; choices are rows of `button()` toggles and a volume is a native
+range input with − and + buttons, so every value is one click.
+
+**Predictions for the cut.** No Run bump (call 4), no World bump, no RNG
+stream, no new bus event (the settings notify their own listeners, so the
+sound table is untouched). The fuzz smoke fires at no step: nothing planned
+touches `src/sim|run|core|config|bot`, `config/` or `tests/fuzz`; a step
+that does says so. `drive-run --seed=7` logs `a59ee48f` at every step. The
+font subset is regenerated at 116g only if a pip symbol is outside it.
+DESIGN gains: the menu's and the settings' rows in the Input accessibility
+checklist, the settings row and its two controls and the can't-save
+indicator in §UI idioms, and the sentences on "a Round 8 setting" in
+Tokens, Reduced motion and Saving, each rewritten as built. The production
+bundle (609.72 kB raw at 115g) is measured at each step.
+
+**The cut as proposed (unsigned; it goes into ROADMAP §116 once signed).**
+Twelve steps: three `none`, four `batch`, five `stop` read at three
+sittings.
+- **116a — the settings, headless.** `src/settings/`: the lenient section
+  (a field per setting, each with its schema and fallback), a model that
+  reads, patches and notifies, and `main.ts`'s second import, which applies
+  what must be in place before the catalogs and the colour tables load (the
+  locale, the palette's name). Exit: each field round-trips through the
+  memory adapter; a bad stored value falls back alone; the boot module is
+  the second import and reaches no catalog, with its planted control; a
+  locale planted in a test resolves through the seam. Read `none`.
+- **116b — the consumers, no surface.** Each seam takes its stored value at
+  boot and a change live: master × SFX × the sound's own level (music
+  stored); the keys over the config's defaults, with the swap rule, the
+  modifier rule and the two labels live; the starting speed; the motion
+  override; the shake; the aura mode, its console switch retired. Exit:
+  headless pins for the volume arithmetic, the key rules and the starting
+  speed; a value written through the model is applied after a reload on the
+  dev server, on the production build, and under Electron on one profile
+  launched twice. Read `none`.
+- **116c — the menu.** `MenuScene`, the boot screen: the title, Continue
+  when a run is saved, New run, the seed field, the three notices, the
+  build ID. Character select gives those up and gains Back. Calls 2 and 3.
+  Exit, in the pane: each row's route; the four slot states of 115g, on the
+  menu; a recorder fixture and the run driver boot past it. Read `stop`,
+  one sitting with 116d.
+- **116d — the settings surface.** Call 1: the modal, its two openers, and
+  the rows for the two volumes, the starting speed, reduced motion, the
+  shake and the aura effect. DESIGN §UI idioms gains the settings row and
+  its controls; the focus ring gains `input`. Exit: each row changes its
+  consumer live and survives a reload; Esc, the backdrop and ✕ are one
+  gate and focus returns to the opener; the UI pins hold. Read `stop`, in
+  Firefox: boot to the menu; Settings; move a volume and hear it; reload
+  and find it kept; start a run and open settings from the chip in a
+  battle. Wrong is a row that doesn't hold, a control the Tab walk misses,
+  a battle that runs on behind the modal.
+- **116e — the keys.** A row per action with its name and key; a click,
+  then a key, rebinds; call 8's rules; Reset to defaults. Read `batch`, at
+  116g's stop: rebind Pause to P; the Fight-now button and the tooltips say
+  P and Space no longer pauses; bind Focus to P and see the two swap; Reset
+  restores. Wrong is a stale label, one key firing two actions, or Ctrl+F
+  still swallowed.
+- **116f — the palette's mechanism.** `COLORS` is chosen by name at boot;
+  the hexes that copy or extend it (the status and empower hues, the HP
+  gradient, the hue-shade role tokens) move onto palette names, and the
+  stylesheet's tokens are set from the palette at boot. Exit: with the
+  default palette every colour is the value it was, compared against a
+  table taken at the parent commit, with a planted change caught. Read
+  `none`.
+- **116g — the colourblind palette.** The simulator and the distance check
+  on every `npm test`, checked first against known answers (the default
+  green and red must fail under protan and deutan; a published safe pair
+  must pass); the candidate and its table; a symbol per status on the camp
+  unit's pip; the Palette row, which applies on reload and offers it. Read
+  `stop`, twice: the candidate with its table, before it is wired; then the
+  eye, on a battle, the map and a camp fight.
+- **116h — the data rows.** Call 9. Exit, headless: an exported store
+  imported into an empty one reads back equal section by section; a file
+  that isn't an export is refused with nothing written; a rejected slot's
+  journal is in the finished journals after a new run starts. Read `batch`,
+  at the sitting: Export everything, change a setting, Import the file, and
+  the old value is back after the reload.
+- **116i — the can't-save indicator.** A chip, last in the chrome column,
+  shown in words while the store can't save, from `store.onStatus`; a DEV
+  plant fails writes after boot. DESIGN §UI idioms gains its paragraph and
+  its row. Read `batch`, at the sitting: with the plant, the chip appears
+  at the first choice of a run and nothing else moves.
+- **116j — credits.** Call 10: the modal from the menu's row, and the
+  licence texts beside the build. Read `batch`, at the sitting.
+- **116k — the text scale.** Step zero measures: at each scale, on every
+  screen of a driven run, which boxes overflow. Then the row and the boxes
+  that hold text moved to rem. If the count is large, the range comes back
+  to the user before the sweep. Read `stop`, taken at the sitting, which
+  follows it.
+- **116l — THE SITTING.** The production build in Firefox, under Electron,
+  and as the itch draft (the user uploads the zip): a setting kept across a
+  reload, a closed tab and a restart in each; in itch's frame, a download,
+  two tabs for the lock, and, on a build with a diagnostics flag, the
+  `localStorage` limit and a write's cost on a run of the shipped length,
+  whose exported file gives the journals budget its second number. The
+  `batch` reads of 116h–j and 116k's. Then the exit against ROADMAP's, and
+  the close. Read `stop`.
+
+**The stretch and the context.** The first stretch runs from the
+shape-lock to the stop after 116d: two headless steps and two surfaces.
+§115's steps cost 33k to 219k each. From 268k that does not look likely to
+fit under the 550k line. The lean: 116a and 116b here, where this audit is
+in context, then a hand-off, and a fresh session builds the menu and the
+settings surface to the first sitting.

@@ -23,6 +23,14 @@
  * (`config/keybindings.json`: `speedHalf` / `speed1` / `speed2` / `speed3` /
  * `togglePause`). The HUD subscribes each to the matching `setSpeed` /
  * `togglePause` call; this class is purely the speed state.
+ *
+ * 116d — A HOLD is not a pause. A surface that covers the battle and takes
+ * the player's attention (the settings modal) holds the sim while it is up:
+ * `current` reads 0, and the pre-battle countdown stands still too, which a
+ * pause does not do (the countdown runs on real time through a pause and
+ * then starts the fight). The player's own pause is untouched, so when the
+ * hold is released the battle is as it was left: running, paused, or
+ * counting down.
  */
 
 import { PLAYBACK, type SpeedStep } from '../config/playback';
@@ -39,6 +47,9 @@ export class PlaybackSpeed {
   /** The running speed (one of `stepValues`); what `resume()` returns to. */
   private selected = HOME_SPEED;
   private paused = false;
+  /** 116d — how many holds are live (the header). */
+  private holds = 0;
+  private readonly selectListeners = new Set<() => void>();
 
   constructor(steps: readonly SpeedStep[] = PLAYBACK.speeds, pauseEnabled = PLAYBACK.pauseEnabled) {
     this.stepValues = steps
@@ -48,10 +59,29 @@ export class PlaybackSpeed {
     this.canPause = pauseEnabled;
   }
 
-  /** The active multiplier `BattleScene.tick` scales `dt` by. **0 while paused**
-   *  — `Clock.advance(0)` fires no ticks and freezes the board visuals too. */
+  /** The active multiplier `BattleScene.tick` scales `dt` by. **0 while paused
+   *  or held** — `Clock.advance(0)` fires no ticks and freezes the board
+   *  visuals too. */
   get current(): number {
-    return this.paused ? 0 : this.selected;
+    return this.paused || this.holds > 0 ? 0 : this.selected;
+  }
+
+  /** 116d — whether a hold is live. `BattleScene.tick` stands the countdown
+   *  still while it is. */
+  get isHeld(): boolean {
+    return this.holds > 0;
+  }
+
+  /** 116d — hold the sim until the returned release is called. Holds count,
+   *  so two surfaces can each hold; a release called twice releases once. */
+  hold(): () => void {
+    this.holds++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.holds--;
+    };
   }
 
   /** The selected running speed, independent of pause — drives the active-button
@@ -89,8 +119,20 @@ export class PlaybackSpeed {
    *  value is a no-op, as in `setSpeed`. */
   select(value: number): boolean {
     if (!this.stepValues.includes(value)) return false;
+    const changed = this.selected !== value;
     this.selected = value;
+    if (changed) for (const listener of [...this.selectListeners]) listener();
     return true;
+  }
+
+  /** 116d — called after the selected speed changes, by whichever route: the
+   *  speed pane repaints its buttons when the settings change the speed from
+   *  outside it. Returns the unsubscribe. */
+  onSelect(listener: () => void): () => void {
+    this.selectListeners.add(listener);
+    return () => {
+      this.selectListeners.delete(listener);
+    };
   }
 
   /** Toggle pause. No-op when pause is disabled. Resume restores the selected

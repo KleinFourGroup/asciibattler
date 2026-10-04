@@ -109,6 +109,9 @@ export interface MenuContext {
   newRun(seedText: string): void;
   /** Character select's Back: the menu, with nothing started. */
   back(): void;
+  /** 116d — the menu's Settings row: open the settings modal, the one the
+   *  chip opens during a run (src/ui/SettingsOverlay.ts). */
+  openSettings(): void;
 }
 
 export interface Scene {

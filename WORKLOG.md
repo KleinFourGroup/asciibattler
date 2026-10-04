@@ -5249,3 +5249,192 @@ opens on the fight.
 **Cost.** The production bundle is 615.72 kB raw (612.71 at 116b), the
 stylesheet 57.64 kB (56.50). `npm test`: 233 files, 3368 tests, 46.2 s.
 Typecheck clean.
+
+### 116d — the settings modal (2026-10-04) — read `stop`: ◐ built, the sitting unread (with 116c)
+
+The reading at the step's start: **343,050** at 11:52, on 116c's commit
+(`29bb04f`; 116c cost about 251k, orientation and both surfaces' reading
+included).
+
+**Step zero.**
+- **A pause does not hold a fight behind a modal.** The hand-off's note
+  was to pause the playback and resume only if the battle was found
+  running. Read against `BattleScene.tick`: the pre-battle countdown runs
+  on real time through a pause (the countdown is itself a pause with a
+  timer), and when it expires it resumes the playback, so a modal opened
+  during the countdown would have the fight start behind it. And `pause()`
+  does nothing where the config disables pause. So the playback gets a
+  hold of its own: `current` reads 0 while one is live, the countdown gets
+  no time, and the player's pause is never touched, so there is nothing to
+  remember and restore.
+- **A key pressed in the modal reached the battle.** The registry's
+  handlers are live through a modal: Space would toggle the pause under
+  it, a digit would pick a speed and unpause, E and F would arm an order.
+  The registry gains `suspend()`, which the modal holds while it is open.
+  116e's key capture needs the same seam. The cache modal and the sector
+  map are left as they were: Space still pauses under them.
+- **The chip's place.** The column's rule is that no click target shifts
+  (bits never moves, the cache chip never hides, the pool chip is
+  display-only and last). A settings chip after the map and pool chips
+  would move whenever either hides. Third, after the cache chip, it never
+  moves while a run is live, and the map chip is fourth when present.
+- **The starting speed set from outside the speed pane** left the pane's
+  highlight on the old button, since the pane repainted only on its own
+  clicks and keys. The playback tells a listener when the selected speed
+  changes.
+- **Quit to menu can't be `resetRun`,** which empties the slot. It is a
+  closed tab by another route: the slot is left as it is.
+- **The gear and the minus sign** (`⚙`, `−`) are inside the shipped
+  subsets' blocks; `tests/font-coverage.test.ts` passed with both in the
+  source, and no font was regenerated.
+
+**Built.**
+- `PlaybackSpeed`: `hold()` (counted; a release called twice releases
+  once), `isHeld`, `onSelect(listener)`. `BattleScene.tick` gives the
+  countdown no time and reads no skip signal while held.
+- `Keybindings.suspend()`, the sixth key rule.
+- `src/ui/SettingsOverlay.ts`: the chip (`⚙ settings`) and the modal, the
+  96f panel. Three sections: Sound (Master volume, Sound effects), Battle
+  (Starting speed, Aura effect), Comfort (Motion, Screen shake); during a
+  run, Quit to menu with a line under it saying what becomes of the run.
+  A level is − · a range input · + · a `%` readout of fixed width, in
+  steps of 5; a choice is a group of toggles with the chosen one filled.
+- `Game`: owns the overlay; `swap` shows the chip while a run is live and
+  its end screen is not up; `quitToMenu()`; `menu.openSettings`. The three
+  run chips gain `conceal()`, since no run-end event hides them on a quit.
+- The menu's Settings row, after New run.
+- DESIGN: "Saving" (Quit to menu), the Space rule's exception, the
+  checklist (a row for the settings modal; the menu's and the chrome
+  column's rows), Chips (the order), Modals (the hold), "Fields" (the
+  settings row, the choice, the level), and the two sentences that named a
+  Round 8 setting: the shake in "The live bar" and the override in
+  "Reduced motion". ARCHITECTURE and `process/browser-pane.md` follow.
+- 31 strings (`menu.settings` and thirty under `settings.`).
+
+**Changes inside the cut's intent, for the stop.**
+1. **The hold and the key suspension** (above), where the hand-off said a
+   pause. The player's pause is as it was when the modal closes.
+2. **The chip is third,** so the map chip is now fourth.
+3. **The chosen toggle is filled green with black text,** not the HUD speed
+   buttons' green border and glow: a border's hue alone would not survive
+   the grey read.
+4. **The click that lets a level be heard** plays when a slider's move ends
+   (the `change` event) and on each press of − or +, not on every step of a
+   drag.
+5. **The starting speed row changes the speed of the fight behind it too,**
+   which is what 116b's seam does. The HUD's buttons still don't write the
+   setting.
+6. **Quit to menu has no confirm.** With the run saved it loses nothing but
+   a fight in progress, which restarts from its turn; with the run unsaved
+   it ends it, and the line under the button says which.
+7. **The rows' names and their lines** are the session's wording: Sound,
+   Battle, Comfort; Waves and Motes for the aura; System, Reduced and Full;
+   Yours, Theirs, Both and Off for the shake.
+8. Carried from 116b for this stop: the master slider opens at 50 % (the
+   default loudness is master 0.5), `NumpadEnter` is reserved with Enter,
+   and Shift passes the modifier rule.
+
+**Tests,** +5: `PlaybackSpeed.test.ts` 4 (a hold stops the sim and leaves
+the pause as it was, running or paused; it works where pause is disabled;
+holds count; the select listener hears both routes and nothing else),
+`Keybindings.test.ts` 1 (suspended, no key fires and none is prevented;
+suspensions count; the same key fires after). Four plants, each failing by
+name and then restored: `current` ignoring the hold; a release that
+unpauses; the listener never told; a suspended registry that fires.
+
+**In the pane** (Chromium; the dev server, `29bb04f-dirty-dev`).
+- **From the menu.** The Settings row opens the modal with the fallbacks
+  shown (50 %, 100 %, 1×, Waves, System, Yours), no Quit row, focus inside,
+  the hold and the suspension live.
+- **Each row, live.** + twice on the master: 60 % and the player's
+  `masterVolume` 0.6. A slider set to 33 with `input` and `change`: 35 %
+  (the input's own step), and `sfxVolume` 0.35; − once: 0.3. The four
+  choices: the playback's selected speed 2, the aura mode `fill`,
+  `data-motion="reduced"`, the shake policy `none`; each row's one pressed
+  toggle is the one clicked; the stored section holds all six.
+- **The three ways out.** Esc, the ✕ and the backdrop each close it,
+  release the hold and the suspension, and return focus to the Settings
+  row; a click inside the panel does not close it.
+- **Keys.** With the modal open, a synthetic Space and M on the body were
+  not prevented and changed nothing; after it closed, M was prevented
+  again (the control).
+- **A reload** (a new `page` id): the six consumers hold the six values,
+  and the modal shows them.
+- **In a run.** The column on the map: bits, cache, settings, morale (the
+  map chip hidden), the settings chip third, at 130 px. In a battle, from a
+  screenshot: bits, cache, settings, map.
+- **Over a counting-down battle.** The countdown at 4.5 s; with the modal
+  open, three frames worth 3 s left it at 4.5; closed, one frame of 0.5 s
+  took it to 4.0. Focus returned to the chip.
+- **Over a running battle** (tick 20, 1×): two frames worth 1 s with the
+  modal open left the tick at 20, held and not paused. The Starting speed
+  row set to 3× there moved the HUD's highlight to 3×. Closed: 0.5 s took
+  the tick to 50 (30 ticks, 3×). Paused, then opened and closed: still
+  paused, the tick unchanged.
+- **Quit to menu from that battle:** the menu with Continue, no run, the
+  modal closed, the hold released, every chip hidden, the slot kept (its
+  phase `turn-intro`). Continue: the pre-turn screen, the chips shown, the
+  journal in its second segment.
+- **A blocked store** (`?store=deny`): the line under Quit reads that the
+  run can't be saved; a choice made there holds for the page; Quit brings
+  the menu with no Continue.
+- **The chip** shows on the map and is hidden on the end screen and on the
+  menu.
+
+**Under Electron,** one profile, two launches. The first changed six
+settings through the modal (60 %, 95 %, 2×, Motes, Reduced, Off) and read
+them back from the consumers; the second, a new process, found the modal
+showing the same six and the consumers holding them, and the profile's
+`store.json` holds the section. The seed-7 drive: exit 0, `logHash
+a59ee48f`, 12 battles.
+
+**Not verified.**
+- Anything in Firefox: how the range input and its accent look there, the
+  Tab walk through the modal, Space and Enter on a toggle, the ring.
+- By ear: no level was heard, and neither was the click at a move's end.
+- A real key press while the modal is open; the pane's were synthetic.
+- How Waves and Motes look, and reduced motion's effect on a battle: both
+  were read as state.
+- The production build: the bundle was built and measured, not opened
+  with the modal.
+- The modal at a narrow width or with the text scaled.
+- A second tab's Quit line (it takes the same branch as the blocked store:
+  the slot is not `saved`).
+
+**Cost.** The production bundle is 622.76 kB raw (615.72 at 116c), the
+stylesheet 59.95 kB (57.64). `npm test`: 233 files, 3373 tests, 45.7 s.
+Typecheck clean. No fuzz smoke at either step, as the cut predicted.
+
+### The first sitting, prepared (2026-10-04) — the `stop` is open
+
+The reading: **463,623** at 12:08, before 116d's commit (116d: about 120k).
+
+**The read, in Firefox, on a plain URL** (the user's own dev server, after
+a hard reload, or the production build).
+1. The menu: the name, the rows, the seed field and its line, the build's
+   ID. Tab through it; Enter on a row.
+2. Type a seed, New run, Back: the seed is still there. New run, pick a
+   character, play to a choice, reload: Continue is first, and it returns
+   to the screen that was left.
+3. Settings from the menu: move a volume and hear it; change a choice;
+   reload and find both kept.
+4. In a run, the settings chip (third in the column). Open it in a battle
+   during the countdown, and again with the fight running: wrong is a
+   battle that runs on behind the modal, or one that comes back paused
+   when it was running. Press Space with the modal open: wrong is the
+   fight pausing behind it.
+5. Tab through the modal: wrong is a control the walk misses, or one it
+   leaves the modal from.
+6. Quit to menu from a fight, then Continue: the pre-turn screen of that
+   fight.
+7. Lose or win a run: the end screen's first button reads Main menu and
+   goes there.
+
+**The calls put to the user:** 116c's eight and 116d's eight, each under
+"Changes inside the cut's intent".
+
+**The next stretch** is 116e (the key rows), 116f (the palette's
+mechanism) and 116g to its first stop (the candidate palette and its
+table). From about 480k after this commit, with this phase's steps so far at
+35k to 251k, it does not look likely to fit under the 550k line. The sitting's
+findings and their `-post` fixes look likely to.

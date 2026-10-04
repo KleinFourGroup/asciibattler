@@ -29,6 +29,9 @@
  *    browser's find, not Focus. Shift passes, since `?` is Shift+Slash.
  *  - A keydown in a text field fires no hotkey (`isTextEntry`): the key is
  *    the field's, and a hotkey that took it would also swallow the character.
+ *  - While the registry is suspended (`suspend`, 116d) no key fires a hotkey:
+ *    the settings modal holds the battle behind it, so a key pressed there
+ *    must not pause, speed up or order that battle.
  *
  * Lifetimes split cleanly: the registry (codes + the window listener) is
  * page-lifetime; the `on(...)` HANDLERS are battle-scoped (the HUD subscribes on
@@ -124,6 +127,8 @@ export class Keybindings {
   private codes: Map<KeybindAction, string>;
   private readonly handlers = new Map<KeybindAction, Set<Handler>>();
   private readonly changeListeners = new Set<Handler>();
+  /** 116d — how many suspensions are live (`suspend`). */
+  private suspensions = 0;
 
   constructor(defaults: Bindings = KEYBINDING_DEFAULTS) {
     this.defaults = defaults;
@@ -194,6 +199,18 @@ export class Keybindings {
     for (const listener of [...this.changeListeners]) listener();
   }
 
+  /** 116d — fire no hotkey until the returned release is called.
+   *  Suspensions count, and a release called twice releases once. */
+  suspend(): () => void {
+    this.suspensions++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      this.suspensions--;
+    };
+  }
+
   /** Subscribe a handler to an action; returns an unsubscribe. Multiple
    *  handlers per action are allowed (each battle-scoped consumer adds its
    *  own + tears it down on dispose). */
@@ -211,13 +228,15 @@ export class Keybindings {
 
   /** The single keydown sink (Game binds it to `window`). Skips auto-repeat so
    *  one press = one fire, a press with Ctrl, Alt or Meta held, which is the
-   *  browser's or the dev keys', and a press in a text field, which is the
-   *  field's; `preventDefault`s only when a bound action
+   *  browser's or the dev keys', a press in a text field, which is the
+   *  field's, and every press while suspended; `preventDefault`s only when a
+   *  bound action
    *  actually has a live subscriber, so unbound keys and out-of-battle presses
    *  fall through to the browser / other listeners untouched. Bound (arrow) so
    *  it survives being passed to `addEventListener` / `removeEventListener`. */
   readonly handleKeyDown = (e: KeyLike): void => {
     if (e.repeat) return;
+    if (this.suspensions > 0) return;
     if (e.ctrlKey === true || e.altKey === true || e.metaKey === true) return;
     if (isTextEntry(e.target)) return;
     const action = this.actionFor(e.code);

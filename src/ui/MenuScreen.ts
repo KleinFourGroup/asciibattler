@@ -17,9 +17,9 @@
  * is New run. Its text is the page's while character select is up, so Back
  * finds it as it was left.
  *
- * Landing notes: the Settings row arrives with the settings modal (116d) and
- * the Credits row with the credits (116j); both go between New run and the
- * seed field (spec D6's order).
+ * The Settings row (116d) opens the settings modal; focus comes back to the
+ * row when it closes. Landing note: the Credits row arrives with the credits
+ * (116j), between Settings and the seed field (spec D6's order).
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -100,6 +100,15 @@ export class MenuScreen extends Screen {
       );
     }
     rows.appendChild(button(t('menu.newRun'), { className: 'btn--primary', onClick: startNewRun }));
+    rows.appendChild(
+      button(t('menu.settings'), {
+        className: 'btn--primary',
+        onClick: () => {
+          this.audio.play('click');
+          this.menu.openSettings();
+        },
+      }),
+    );
 
     // The field's name is its label's text, so a click on the word focuses it.
     const seed = document.createElement('label');

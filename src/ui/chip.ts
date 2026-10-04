@@ -11,10 +11,12 @@
  * Now: `.chip` is the plate (ui.css), `chipPulse(el)` is the one pulse,
  * and `createChromeColumn(mount)` is a Game-owned flex column the chips
  * mount INTO. Order is fixed by CSS `order` on each chip class (bits ·
- * cache · map · pool) regardless of construction order, and a hidden chip
- * COLLAPSES — the chips below move up (the §96 kickoff decision D: bits
- * never moves, cache never hides, the map chip is always third when
- * present, the pool chip is display-only, so no click target ever shifts).
+ * cache · settings · map · pool; the settings chip is 116d's) regardless
+ * of construction order, and a hidden chip COLLAPSES — the chips below
+ * move up (the §96 kickoff decision D: bits never moves, cache never
+ * hides, the settings chip shows whenever a run is live, the map chip is
+ * always fourth when present, the pool chip is display-only, so no click
+ * target ever shifts).
  * The column itself takes no pointer events (it is a box over the corner
  * of every screen — its gaps must not swallow a map click); the chips do.
  *

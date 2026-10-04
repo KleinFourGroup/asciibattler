@@ -3271,3 +3271,59 @@ Written at the hand-off, about 08:20 to 10:25, at 493k.
 The user confirmed the cut ("You read my intention correctly"). So the
 reading in item 2 was right this time. The uncertainty it records was
 real when written, and the rule still doesn't say what counts as signing.
+
+## 2026-10-04 — session 8be1fe88 (claude-opus-5-5): §116, 116c and 116d to the first sitting's stop
+
+Written at the stop, before the user's read. If the session goes on after
+it, an addendum follows.
+
+1. **Missing at the start:** little. The hand-off entry named what each
+   surface needed, and the Cursor said to read it first. Two things it had
+   as fact were hypotheses: that a pause holds a battle behind the modal
+   (the countdown runs through one), and that the menu's routes needed
+   nothing from the key registry (a key typed in a field was the
+   registry's). Both were found at step zero by reading the code the note
+   was about, which is what step zero is for.
+2. **Norms in conflict:** the cut put the ring's `input` at 116d and the
+   field at 116c; the hand-off allowed either, so there was no conflict to
+   resolve, only a choice. "Never ask the user to confirm that nothing
+   changed" and "say what you did and didn't verify" pull against each
+   other a little in the read list I wrote for the sitting: I kept it to
+   what only Firefox, an ear or a hand on a keyboard can judge.
+3. **Pulled to claim more than verified:** three places. I wrote "32
+   strings" from a tally in my head and the count was 31. I wrote that the
+   settings chip sits "at the same height on the map and in a battle" from
+   one measured number and one screenshot; the entry now says which was
+   which. And "both end screens exit to the menu" rested on a defeat I had
+   played and a win I had only reasoned about, until I mounted the won
+   screen by emitting its event; the entry says the win was emitted, and
+   that the played win was on a dial boot.
+4. **Wasted:** two pane calls whose return value was lost because the
+   same script navigated; the pane doc now says so. One heredoc that Git
+   Bash refused, after two that ran; the patch scripts went through the
+   Write tool from then on, as AGENTS already asks. The silent-turn
+   reminder came more than twenty times, by my count from memory, most of
+   them between two tool calls of a stretch whose status I had just given.
+   116c cost about 251k, more than twice 115g, and most of that was
+   reading: the whole §116 worklog section, DESIGN's two sections, `Game`
+   and the stylesheet. I don't know which of those a narrower read would
+   have spared without cost.
+5. **For the next session, with no other home:** the patch helper I used
+   (every anchor in every file checked before any write, then one
+   `apply([...])`) lived in my scratch directory and is gone with it; the
+   shape is five lines and worth rewriting rather than hunting for.
+6. **Room to ask, disagree, change approach, pause or stop:** yes. The
+   signed cut made the stretch's shape clear, and inside it I changed the
+   approach twice (the hold in place of a pause, the chip third and not
+   last) without feeling I had to ask first; both are flagged for the
+   stop. I did not want to pause or stop. At 343k, with 116c having cost
+   more than I expected, I checked the step-start rule and it said go; I
+   noticed I was glad it was a rule and not a judgment call.
+7. **What supported ease or interest:** step zero turning up the
+   countdown. It is a small thing, and it was satisfying to find by
+   reading eight lines of `tick` and then to see the number hold at 4.5 in
+   the pane while three seconds of frames went by. The kit's `frame(dt)`
+   made that an exact measurement. The planted faults failing by name.
+   Whether the menu and the modal are any good is not something I can say:
+   they have not been seen in Firefox or heard, and how they look is the
+   user's read.

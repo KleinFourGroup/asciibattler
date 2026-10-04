@@ -252,13 +252,22 @@ export class BattleScene implements Scene {
     // while parked, so it's observably identical to draining at the next tick.
     if (this.countdown?.active || this.playback?.isPaused) this.world?.drainCommands();
 
+    // 116d — HELD (the settings modal is up over this battle): everything
+    // below stands still. After the countdown that needs nothing here, since
+    // `playback.current` reads 0 while held and the frame is a paused one.
+    // The countdown runs on real time, so it is stopped by hand.
+    const held = this.playback?.isHeld === true;
+
     // Q2 — the pre-battle countdown. While it holds, the sim is parked and only
     // the visuals advance, at REAL dt (a fast-forward can't shorten the window).
     if (this.countdown?.active) {
-      this.countdown.advance(dt);
+      // The countdown's own frame time: none while held, so the readout, the
+      // sprites and the shaders all stand still with it.
+      const countdownDt = held ? 0 : dt;
+      this.countdown.advance(countdownDt);
       // Fight now: the unified pause control / a speed button resumed playback —
       // that unpause is the skip signal (no separate hotkey, no double-fire).
-      if (this.playback && this.playback.pauseEnabled && !this.playback.isPaused) {
+      if (!held && this.playback && this.playback.pauseEnabled && !this.playback.isPaused) {
         this.countdown.skip();
       }
       if (this.countdown.active) {
@@ -277,8 +286,8 @@ export class BattleScene implements Scene {
         // countdown's life as well; this makes the first measure right.
         this.hud?.refreshStatuses();
         this.hud?.showCountdown(this.countdown.displaySeconds);
-        this.battleRenderer?.update(dt);
-        this.advanceShaderTime(dt);
+        this.battleRenderer?.update(countdownDt);
+        this.advanceShaderTime(countdownDt);
       } else {
         // Just ended (expiry or skip): start the sim at the selected speed and
         // clear the readout. The sim's first tick lands NEXT frame — this

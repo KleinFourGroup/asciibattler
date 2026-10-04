@@ -124,4 +124,59 @@ describe('PlaybackSpeed', () => {
     expect(p.select(7)).toBe(false);
     expect(p.selectedSpeed).toBe(1);
   });
+
+  it('116d — a hold stops the sim and leaves the pause as the player had it', () => {
+    const p = new PlaybackSpeed(STEPS);
+    p.setSpeed(2);
+    // Held while running: stopped, and not paused.
+    const release = p.hold();
+    expect([p.current, p.isHeld, p.isPaused]).toEqual([0, true, false]);
+    release();
+    expect([p.current, p.isHeld, p.isPaused]).toEqual([2, false, false]);
+    // Held while paused: still paused afterwards.
+    p.pause();
+    const again = p.hold();
+    again();
+    expect([p.current, p.isHeld, p.isPaused]).toEqual([0, false, true]);
+  });
+
+  it('116d — a hold works where pause is disabled, since it is not the pause', () => {
+    const p = new PlaybackSpeed(STEPS, false);
+    p.pause();
+    expect(p.current).toBe(1); // the control: pause is off
+    const release = p.hold();
+    expect(p.current).toBe(0);
+    release();
+    expect(p.current).toBe(1);
+  });
+
+  it('116d — holds count, and a release called twice releases once', () => {
+    const p = new PlaybackSpeed(STEPS);
+    const first = p.hold();
+    const second = p.hold();
+    first();
+    first();
+    expect(p.isHeld).toBe(true);
+    second();
+    expect(p.isHeld).toBe(false);
+    expect(p.current).toBe(1);
+  });
+
+  it('116d — a change of the selected speed tells its listeners, by either route', () => {
+    const p = new PlaybackSpeed(STEPS);
+    let calls = 0;
+    const off = p.onSelect(() => {
+      calls++;
+    });
+    p.select(2);
+    p.setSpeed(3);
+    expect(calls).toBe(2);
+    p.select(3); // no change
+    p.select(7); // refused
+    p.togglePause(); // not a speed
+    expect(calls).toBe(2);
+    off();
+    p.select(1);
+    expect(calls).toBe(2);
+  });
 });

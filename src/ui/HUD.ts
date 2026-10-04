@@ -257,6 +257,10 @@ export class HUD {
     // now" once that lands (a countdown is a pause with an auto-unpause timer).
     this.speedPane = document.createElement('div');
     this.speedPane.className = 'hud-speed-pane screen-fade';
+    // 116d — the starting-speed setting selects a speed from outside this
+    // pane (the settings modal, open over the battle), so the buttons follow
+    // the controller and not only this pane's own clicks.
+    this.subscriptions.push(playback.onSelect(() => this.renderSpeedPane()));
     // Pause leads — it's the slowest (speed 0), so it sits leftmost ahead of the
     // ascending speed run.
     if (playback.pauseEnabled) {

@@ -22,6 +22,7 @@ import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
+import { SettingsOverlay } from './ui/SettingsOverlay';
 import { createChromeColumn } from './ui/chip';
 import { installTooltipHost, toggleTooltipKey } from './ui/tooltip';
 import { GameOverScene } from './scenes/GameOverScene';
@@ -131,9 +132,12 @@ export class Game implements RunDispatcher {
   /** 49f — the persistent cache chip + modal (the bits chip's sibling; same
    *  gotcha #116 lifecycle, incl. the resetRun `refresh()`). */
   private readonly cacheOverlay: CacheOverlay;
-  /** 78e — the sector-map chip + read-only overlay (the third chrome-column
+  /** 78e — the sector-map chip + read-only overlay (a chrome-column
    *  chip). Scene-derived availability is pushed from `swap`. */
   private readonly sectorMapOverlay: SectorMapOverlay;
+  /** 116d — the settings chip and modal (the chip is third in the chrome
+   *  column). The menu opens the same modal through the scene context. */
+  private readonly settingsOverlay: SettingsOverlay;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -318,7 +322,7 @@ export class Game implements RunDispatcher {
     // reassignment (see the ordering note there).
     // 63e — getters are null-safe (a pre-select boot has no run; the chip
     // starts hidden then and `run:started` reveals it on confirm).
-    // 96e — the four chips mount into ONE chrome column (src/ui/chip.ts);
+    // 96e — the chips mount into ONE chrome column (src/ui/chip.ts);
     // their order is CSS `order`, not construction order, so the
     // construction (and subscription) order below is untouched.
     const chips = createChromeColumn(uiMount);
@@ -361,8 +365,8 @@ export class Game implements RunDispatcher {
       this.run === null,
     );
 
-    // 78e: the sector-map chip + read-only overlay — the third chrome-column
-    // chip (bits → cache → map). One view getter closing over `this.run`
+    // 78e: the sector-map chip + read-only overlay — a chrome-column chip
+    // (bits → cache → settings → map). One view getter closing over `this.run`
     // (the dispatcher pattern — a reset's Run swap is invisible); the
     // `toggleSectorMap` keybind subscribes at THIS layer, the first
     // page-lifetime keybind consumer, so `M` works on every screen the chip
@@ -386,6 +390,22 @@ export class Game implements RunDispatcher {
       () => this.keybindings.labelFor('toggleSectorMap'),
     );
     this.keybindings.on('toggleSectorMap', () => this.sectorMapOverlay.toggle());
+    // 116d — the settings: a chip while a run is live, and the modal that
+    // chip and the menu's row both open. The modal holds the playback and
+    // suspends the key registry while it is up (src/ui/SettingsOverlay.ts).
+    this.settingsOverlay = new SettingsOverlay(
+      uiMount,
+      chips,
+      this.audio,
+      this.settings,
+      this.playback,
+      this.keybindings,
+      {
+        runLive: () => this.run !== null,
+        runSaved: () => this.runSlot.peek() === 'saved',
+        quitToMenu: () => this.quitToMenu(),
+      },
+    );
     // 97b — the tooltip key, page-lifetime like the map key: pin the open
     // tooltip / close a pinned one / open pinned for the focused or hovered
     // trigger (src/ui/tooltip.ts).
@@ -511,6 +531,30 @@ export class Game implements RunDispatcher {
     }
     this.seedText = seedText;
     this.swap(new CharacterSelectScene());
+  }
+
+  /**
+   * 116d — Quit to menu, from the settings modal during a run. It is what
+   * closing the tab is: the slot keeps the run as of its last gate (a fight
+   * in progress comes back at its turn's pre-turn screen, DESIGN "Saving"),
+   * and the menu's Continue returns to it. So the slot is left as it is,
+   * which is why this is not `resetRun`. The page's own journal of the run
+   * is let go; the slot holds the journal as saved, and Continue resumes
+   * that in a new segment. A run this tab can't save (another tab's slot, a
+   * blocked store) is lost, and the modal says so beside the button.
+   */
+  private quitToMenu(): void {
+    if (this.run === null) return;
+    this.journaling((recorder) => recorder.abandon());
+    this.finishedJournal = null;
+    this.run.dispose();
+    this.run = null;
+    this.deckCues.length = 0;
+    // No run-end event hides the chips for a run that was left.
+    this.bitsOverlay.conceal();
+    this.poolOverlay.conceal();
+    this.cacheOverlay.conceal();
+    this.swap(new MenuScene());
   }
 
   /** 116c — character select's Back: the menu, with nothing started. */
@@ -837,8 +881,8 @@ export class Game implements RunDispatcher {
    * dial it is a fresh run, seeded from the clock unless the URL pins a seed.
    *
    * This empties the run slot, so it is the route for a run that is over.
-   * Landing note for 116d: Quit to menu leaves a live run saved for Continue,
-   * so it must not come through here.
+   * Quit to menu leaves a live run saved for Continue, so it has its own
+   * route (`quitToMenu`).
    */
   private resetRun(): void {
     // A run reset before its end leaves an abandoned journal; one that had
@@ -971,6 +1015,9 @@ export class Game implements RunDispatcher {
         !(next instanceof CharacterSelectScene) &&
         !(next instanceof GameOverScene),
     );
+    // 116d — the settings chip shows while a run is live, up to its end
+    // screen (the menu has its own row). The same chokepoint.
+    this.settingsOverlay.setAvailable(this.run !== null && !(next instanceof GameOverScene));
     // 96.5a — the morale chip hides while a turn screen or the battle is up:
     // the HUD's gauges and the pre/post-turn gauges are the one in-encounter
     // read (the §95 playtest: "morale reads twice"). Same chokepoint, same
@@ -1042,6 +1089,7 @@ export class Game implements RunDispatcher {
         seedText: () => this.seedText,
         newRun: (seedText) => this.openCharacterSelect(seedText),
         back: () => this.backToMenu(),
+        openSettings: () => this.settingsOverlay.open(),
       },
       audio: this.audio,
       playback: this.playback,

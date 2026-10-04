@@ -2118,7 +2118,8 @@ body {
    buttons (20) / modals (30), under the #scanlines rake (1000) like all
    chrome. The column takes NO pointer events (its gaps and its width past
    a narrow chip must not swallow a map click); the chips do. The order is
-   fixed by `order` on each chip class, and a hidden chip COLLAPSES — the
+   fixed by `order` on each chip class (bits · cache · settings · map ·
+   pool; the settings chip is 116d's), and a hidden chip COLLAPSES — the
    ones below move up (the §96 decision D; the map chip hides on MapScene).
    The .hud-hop battle chip still sits to the bits chip's right (HUD-owned). */
 .chrome-column {
@@ -2208,15 +2209,15 @@ body {
   box-shadow: 0 0 8px rgb(from var(--color-terminal-green) r g b / 0.55);
 }
 
-/* 94e — the persistent run-pool chip (src/ui/PoolOverlay.ts): the FOURTH
+/* 94e — the persistent run-pool chip (src/ui/PoolOverlay.ts): the LAST
    chip of the column, on every screen — the map, an event, the port, a
    reward, a recruit, the seam (96e: when the map chip hides on MapScene it
-   moves up into the third slot). The battle HUD + the turn screens keep
+   moves up into its slot). The battle HUD + the turn screens keep
    their full gauges; this is the always-on one (§96.5 hides it there).
    Pulses on every pool move (run:poolChanged); .is-losing flags a loss
    (chip / damage), .is-low the last quarter. */
 .pool-overlay {
-  order: 4;
+  order: 5;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -2307,13 +2308,32 @@ body {
   color: var(--color-neon-red);
 }
 
-/* 78e — the sector-map chip: the third chrome-column chip (bits → cache →
-   map), same terminal plate as its siblings. Clicking it (or `M`) opens the
-   read-only sector-map overlay from any screen it's shown on; Game hides it
-   on MapScene (redundant), pre-run, and game-over — and the pool chip
-   below moves up into its slot (96e). */
-.sector-map-chip {
+/* 116d — the settings chip: third in the column (bits → cache → settings),
+   above the two chips that hide, so it never moves while a run is live. It
+   opens the settings modal on any screen of a run. */
+.settings-chip {
   order: 3;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s;
+}
+
+.settings-chip:hover,
+.settings-chip:focus-visible {
+  border-color: var(--color-amber-hover);
+  color: var(--color-amber-hover);
+}
+
+/* 78e — the sector-map chip: the fourth chrome-column chip (bits → cache →
+   settings → map), same terminal plate as its siblings. Clicking it (or
+   `M`) opens the read-only sector-map overlay from any screen it's shown
+   on; Game hides it on MapScene (redundant), pre-run, and game-over — and
+   the pool chip below moves up into its slot (96e). */
+.sector-map-chip {
+  order: 4;
   text-align: left;
   cursor: pointer;
   transition:
@@ -4044,6 +4064,138 @@ body {
   letter-spacing: 0.06em;
   opacity: 0.8;
   margin-left: 4px;
+}
+
+/* ── 116d — THE SETTINGS MODAL (src/ui/SettingsOverlay.ts) ──────────────────
+   The 96f panel with rows in it (DESIGN §UI idioms, "Fields"): a name on the
+   left, its control on the right. The body scrolls inside the panel, so the
+   header and its ✕ stay put however many rows later steps add. The boxes
+   that hold text are sized in rem, so they grow with the text scale. */
+.settings-modal {
+  width: min(92vw, 44rem);
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px; /* clear of the scroll bar */
+  font-family: var(--font-mono);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+
+.settings-section {
+  margin-top: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-gray-22);
+  font-size: var(--text-11);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 20px;
+}
+
+.settings-row__name {
+  font-size: var(--text-14);
+  letter-spacing: 0.06em;
+  color: var(--color-terminal-amber);
+}
+
+.settings-row__hint {
+  margin-top: 2px;
+  font-size: var(--text-11);
+  line-height: 1.5;
+  color: var(--color-gray-88);
+}
+
+.settings-choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* A toggle of a choice, and the − / + of a level: one plate. */
+.settings-choice,
+.settings-step {
+  font-family: var(--font-mono);
+  font-size: var(--text-13);
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
+  cursor: pointer;
+  transition:
+    border-color 0.1s,
+    background 0.1s,
+    color 0.1s;
+}
+
+.settings-choice:hover,
+.settings-choice:focus-visible,
+.settings-step:hover,
+.settings-step:focus-visible {
+  border-color: var(--color-amber-hover);
+  color: var(--color-amber-hover);
+}
+
+/* The chosen toggle is FILLED: a fill is a shape of light, so the choice
+   survives the grey read, where a green border beside amber ones would not. */
+.settings-choice.is-active,
+.settings-choice.is-active:hover,
+.settings-choice.is-active:focus-visible {
+  border-color: var(--color-terminal-green);
+  background: var(--color-terminal-green);
+  color: var(--color-black);
+}
+
+.settings-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-step {
+  min-width: 2.25rem;
+  text-align: center;
+}
+
+.settings-level__slider {
+  width: 12rem;
+  max-width: 34vw;
+  margin: 0;
+  accent-color: var(--color-terminal-amber);
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+/* The widest live form is `100%`: the readout keeps that width, so the
+   row never moves as the value does. */
+.settings-level__value {
+  min-width: 4ch;
+  text-align: right;
+  font-size: var(--text-13);
+  color: var(--color-terminal-green);
+}
+
+.settings-quit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-gray-22);
 }
 
 /* ── §100 — THE FOCUS RING (100b) ─────────────────────────────────────────

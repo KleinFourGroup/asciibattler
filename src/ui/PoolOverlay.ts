@@ -105,6 +105,12 @@ export class PoolOverlay {
     this.setRunHidden(false);
   }
 
+  /** 116d — hide the chip for a run that was left, not ended (Quit to menu):
+   *  no `run:defeated` or `run:victory` says so. */
+  conceal(): void {
+    this.setRunHidden(true);
+  }
+
   private setRunHidden(hidden: boolean): void {
     this.runHidden = hidden;
     this.applyHidden();

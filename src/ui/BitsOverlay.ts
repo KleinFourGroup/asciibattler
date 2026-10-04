@@ -84,6 +84,12 @@ export class BitsOverlay {
     this.el.classList.remove('is-hidden');
   }
 
+  /** 116d — hide the chip for a run that was left, not ended (Quit to menu):
+   *  no `run:defeated` or `run:victory` says so. */
+  conceal(): void {
+    this.el.classList.add('is-hidden');
+  }
+
   /** Re-read the live balance (the first paint + Game.resetRun's re-paint —
    *  the only sites where the balance changes without a `run:bitsChanged`). */
   refresh(): void {

@@ -109,7 +109,7 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 
-**Saving (§115; Round 8 spec D3):** roguelike saving. There is one run and one slot, and no manual save. The game saves on its own after every choice made outside a battle and when a run starts, because closing the tab is how a web player quits and only an autosave survives that. Opening the game again offers **Continue**, which returns to the screen that was left with the same team, bits and morale; a run's end empties the slot. A battle is never saved in the middle: a tab closed during a fight comes back at the pre-turn screen before it, with that fight already seen. Nothing can be re-rolled by reloading, since the random streams are keyed per occurrence and the same choices give the same results; the edge a reload gives is knowledge only, and it is accepted. A save is refused only when the save format has changed or the save can't be loaded, not on every new build, so a hotfix keeps the runs in progress; a refused save shows a message, and settings and unlocks are kept (no migrations before 1.0). With the game open in two tabs, the first to open owns the saved run; the second says so, can't continue it, and plays unsaved. Where the browser refuses storage the game plays on and says it can't save. Two things a load does not bring back, both presentation: the order the deal animated in on the pre-turn screen, and a reward's already-taken rows. Continue and these notices are on the title menu, the boot screen.
+**Saving (§115; Round 8 spec D3):** roguelike saving. There is one run and one slot, and no manual save. The game saves on its own after every choice made outside a battle and when a run starts, because closing the tab is how a web player quits and only an autosave survives that. Opening the game again offers **Continue**, which returns to the screen that was left with the same team, bits and morale; a run's end empties the slot. A battle is never saved in the middle: a tab closed during a fight comes back at the pre-turn screen before it, with that fight already seen. Nothing can be re-rolled by reloading, since the random streams are keyed per occurrence and the same choices give the same results; the edge a reload gives is knowledge only, and it is accepted. A save is refused only when the save format has changed or the save can't be loaded, not on every new build, so a hotfix keeps the runs in progress; a refused save shows a message, and settings and unlocks are kept (no migrations before 1.0). With the game open in two tabs, the first to open owns the saved run; the second says so, can't continue it, and plays unsaved. Where the browser refuses storage the game plays on and says it can't save. Two things a load does not bring back, both presentation: the order the deal animated in on the pre-turn screen, and a reward's already-taken rows. Continue and these notices are on the title menu, the boot screen. Quit to menu, in the settings during a run, is a closed tab by another route: the slot is left as it is, so a fight in progress comes back at its pre-turn screen, and a run that can't be saved is lost, which the button's own line says.
 
 ## Aesthetic
 
@@ -183,7 +183,9 @@ the screens in the tree so the walk reaches the chips before the browser's
 own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
 focused control — Space is pause everywhere, Enter is every control's route
 (gotcha #135); yielding Space to a focused button would re-fire the last
-clicked one instead of pausing. A camera mode is dev-only (Ctrl+Alt+C; fit
+clicked one instead of pausing. The one exception is the settings modal
+(§116): while it is open the battle is held and the registry is suspended,
+so Space presses the focused control, as it does outside a battle. A camera mode is dev-only (Ctrl+Alt+C; fit
 is the only production view, "Camera" above) — a shipped binding with no
 click route is a bug.
 The focus ring is the "Focus (100)" idiom below.
@@ -199,7 +201,7 @@ none where no run is live).
 
 | Surface | Controls | Click | Keys | Touch | Hover-only | Morale |
 |---|---|---|---|---|---|---|
-| Menu (§116) | Continue, New run (`button()`), the seed field (an `<input>` in its `<label>`; Enter in it is New run) | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read) | none | none (no run) |
+| Menu (§116) | Continue, New run, Settings (`button()`), the seed field (an `<input>` in its `<label>`; Enter in it is New run) | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read) | none | none (no run) |
 | Character select | the three cards (`button`), Back (`button()`, §116) | ✓ | ✓ | ✓ | none | none (no run) |
 | Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none | chip |
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
@@ -207,7 +209,8 @@ none where no run is live).
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
 | Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
-| The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
+| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), Quit to menu during a run | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read; a slider drags natively) | none | the host's |
+| The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
 `title=`), `tests/ui-focus.test.ts` (every hover twin + the ring),
@@ -287,10 +290,11 @@ its place.
 
 **Chips (96e).** A page-lifetime chip is `.chip` (the plate) + its own
 class, pulses through `chipPulse`, and mounts into the chrome column
-(`createChromeColumn`), whose order is CSS `order` (bits · cache · map ·
-pool). **A hidden chip collapses** — the ones below move up; bits never
-moves, cache never hides, the map chip is always third when present, the
-pool chip is display-only, so no click target ever shifts. A chip's modal
+(`createChromeColumn`), whose order is CSS `order` (bits · cache ·
+settings · map · pool). **A hidden chip collapses** — the ones below move
+up; bits never moves, cache never hides, the settings chip (§116) is third
+and shows whenever a run is live, the map chip is always fourth when
+present, the pool chip is display-only, so no click target ever shifts. A chip's modal
 or overlay mounts on the page, never in the column. The column passes
 clicks through its gaps; the chips take them.
 
@@ -302,7 +306,12 @@ half. `onClose` fires exactly once from any route; all teardown lives
 there. The modal takes focus on open, Tab cycles inside it, and focus
 returns to the opener on close; `role="dialog"` + `aria-modal` are set.
 A modal's sounds are its own (`onCloseClick` is the ✕ only; Esc and the
-backdrop are silent).
+backdrop are silent). **The settings modal holds the battle behind it**
+(§116): while it is open the sim and the pre-battle countdown stand still
+(`PlaybackSpeed.hold`, apart from the player's own pause, which is as it
+was when the modal closes) and no hotkey fires (`Keybindings.suspend`). A
+pause would not do: the countdown runs on real time through one and then
+starts the fight. The cache modal and the sector map do neither, as before.
 
 **The live bar (96.5).** Morale reads ONCE per screen: the persistent
 chip everywhere except the pre-turn screen and the battle, where the two
@@ -317,8 +326,8 @@ gauge that pays. The bar reacts on the LANDING: the fill stays the booked
 pool and a hatched GHOST grows over its leading edge (`33 (−7) / 40`), the
 gauge pulses, the landing cue plays scaled with the loss (gain up, pitch
 down), and the view shakes for a loss to YOUR pool at or above a fraction
-of the max (the shake policy is a seam: `player` ships, `enemy` is the
-A/B hypothesis). A breathing NOTCH cut from each fill marks the turn's
+of the max (whose losses shake it is the Screen shake setting, §116: yours by
+default, theirs, both, or off). A breathing NOTCH cut from each fill marks the turn's
 bound — the pre-turn "at risk" line's number and its enemy mirror — the
 most the ghost can reach on an ordinary turn. When the last orb has
 landed, a settle beat, then the ghost COMMITS into the fill and the notch
@@ -472,7 +481,7 @@ smoothing the step's vertical motion (TODO).
 
 **Reduced motion (99).** ONE gate, `reducedMotion()` in
 src/render/motion.ts — the OS `prefers-reduced-motion` query or an
-override (the Round 8 setting's seam; Ctrl+Alt+A cycles it dev-only) —
+override (the Motion setting, §116; Ctrl+Alt+A cycles it dev-only) —
 stamped on the root as `data-motion="reduced"`, so the stylesheet and
 the JS read the same answer; never a `@media` block (a setting could not
 flip one). The rule for what goes: **vestibular and decorative motion
@@ -521,6 +530,17 @@ under it to say so (the seed field keeps digits; `cleanSeedText`). The ring
 covers it, the hover twin is its border, and a key typed in it fires no
 hotkey (`isTextEntry`, with the key rules in `Keybindings.ts`). Enter in a
 field is the action the field feeds. The first is the menu's seed field.
+**A settings row** is a name on the left, with one line under it where the
+name alone doesn't say what the row does, and its control on the right. A
+CHOICE is a group of toggles (`role="group"`, named for its row), the
+chosen one FILLED and mirrored as `aria-pressed`: a fill survives the grey
+read, where a green border among amber ones would not. A LEVEL is a native
+range `<input>` named by `aria-label`, with a − and a + beside it so every
+value is a click away, and its value in a readout of fixed width (the
+widest live form, `100%`). A control writes its setting as it changes, the
+setting reaches what it sets through `connectSettings`, and a level plays
+the click when a move ends, so the new loudness is heard. The rows live in
+the settings modal, a section per kind.
 
 **Layout stability (101).** A control must not move across its own click.
 (The spec and the older notes call this "the hysteresis class" / "the

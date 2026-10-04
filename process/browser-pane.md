@@ -126,6 +126,14 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `localStorage` (or Electron's `store.json`) itself, not the store. The
   pane's `localStorage` takes about 50 Mi characters, some ten times a
   stock browser's, so a quota is never measured here.
+- **The settings modal** (`src/ui/SettingsOverlay.ts`): the menu's
+  Settings row or, in a run, `.settings-chip` opens `.settings-modal`.
+  While it is open `__game.playback.isHeld` is true and
+  `__game.keybindings.suspensions` is 1; a battle behind it is read with
+  `__probe.frame(dt)` before, during and after (the countdown's
+  `remaining`, `world.currentTick`). A row is driven by its control's own
+  click, or for a slider by setting `value` and dispatching `input` then
+  `change`.
 - **The settings** (`src/settings/`): `__game.settings` is the page's
   model. `set(key, value)` stores the value and applies it at once, and
   `get()` reads them all. What a consumer holds is read from the consumer:

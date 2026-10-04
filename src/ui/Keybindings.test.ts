@@ -313,6 +313,29 @@ describe('116b — the key rules', () => {
     expect(map).toHaveBeenCalledTimes(elsewhere.length);
   });
 
+  it('116d — while suspended no key fires a hotkey, and every key is left alone', () => {
+    const kb = new Keybindings(DEFAULTS);
+    const pause = vi.fn();
+    kb.on('togglePause', pause);
+    const release = kb.suspend();
+    const held = keyEvent('Space');
+    kb.handleKeyDown(held.event);
+    expect(pause).not.toHaveBeenCalled();
+    expect(held.preventDefault).not.toHaveBeenCalled();
+    // Suspensions count, and a release called twice releases once.
+    const second = kb.suspend();
+    release();
+    release();
+    kb.handleKeyDown(keyEvent('Space').event);
+    expect(pause).not.toHaveBeenCalled();
+    second();
+    // The control: the same key fires once nothing suspends it.
+    const after = keyEvent('Space');
+    kb.handleKeyDown(after.event);
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(after.preventDefault).toHaveBeenCalledTimes(1);
+  });
+
   it("the shipped defaults give every action its own key, none of them reserved", () => {
     const shipped = new Keybindings().bindings();
     expect(unique(shipped)).toBe(true);

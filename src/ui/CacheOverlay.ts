@@ -128,6 +128,12 @@ export class CacheOverlay {
     this.el.classList.remove('is-hidden');
   }
 
+  /** 116d — hide the chip, and close its modal, for a run that was left, not
+   *  ended (Quit to menu): no `run:defeated` or `run:victory` says so. */
+  conceal(): void {
+    this.hideForRunEnd();
+  }
+
   /** Re-read the live cache (the first paint + Game.resetRun's re-paint).
    *  Also closes any open modal — a reset's cache is a different run's. */
   refresh(): void {

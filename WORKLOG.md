@@ -4786,8 +4786,9 @@ settings surface to the first sitting.
 
 ### The §116 shape-lock, first part (2026-10-04, the user's) — seven calls agreed, 3 amended, 5 and the cut open
 
-At about 08:45. The reading on the audit's commit (`0983f0d`): **301,441**
-at 08:35. The user: "I think that I agree with all of your calls, save
+Between 08:35 and 09:25 (the message's own time was not read; this
+entry's commit, `f3bd815`, carried **321,952** at 09:26). The reading on
+the audit's commit (`0983f0d`): **301,441** at 08:35. The user: "I think that I agree with all of your calls, save
 two", and "I'm good with that rough session plan too, though I think that
 we might get farther than you're predicting". The step-start rule decides
 how far: the reading at each step's start, against the 550k line.
@@ -4840,3 +4841,33 @@ how far: the reading at each step's start, against the 550k line.
   menu after the first won run: a `creditsSeen` flag, the `progress`
   section's first field. The three libraries' notices join
   `public/THIRD-PARTY-LICENSES.txt`.
+
+### The §116 shape-lock (2026-10-04, the user's) — the ten calls SIGNED
+
+After the reply above ("Signing your read of 3! Re five, I understand now;
+thank you! Signed as well."). All ten calls are ✅ DECIDED, calls 3 and 5
+in words and the other eight by "I agree with all of your calls, save two".
+
+- **Call 3, as read:** both end screens exit to the menu; the first won run
+  goes by way of the credits; a dial boot ends a run as today; character
+  select keeps Back. A defeat's two clicks to a retry are watched for in
+  playtests.
+- **Call 5,** after the terms were explained: one alternate palette, gated
+  on protan and deutan over the ten identity pairs, tritan measured and
+  reported, the status and empower hues re-picked and reported.
+- **Call 10:** "Matthew Kilgore" in full, as developer. The twelve sounds
+  with no recorded source were made by the user in ChipTone
+  (sfbgames.itch.io/chiptone) and sfxr.me, so all 25 sounds are the
+  user's own or the repo's recipes. Both tools are credited as a courtesy.
+  Their terms, as far as this session could read them: sfxr.me's page
+  lists "Unrestricted commercial use" for its free version (through a
+  fetch tool's summary, so second-hand); ChipTone's page was not read (a
+  403 to the fetch tool, then a bot check in the pane, which was left
+  alone).
+
+**The cut and its reads were not signed in separate words.** The session
+asked for three signatures and got two. It takes the cut as signed on the
+user's "I'm good with that rough session plan too", since that plan names
+the cut's steps and its first stop, and has told the user so. Every stop
+in the cut stays a stop, and the first is after 116d; 116a and 116b are
+read `none`. ROADMAP §116 carries the cut and the decision line.

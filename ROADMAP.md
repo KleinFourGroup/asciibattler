@@ -13,7 +13,7 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §115 ✅ CLOSED 2026-10-03** (save/load and mid-run resume).
-**§116, the menu and settings, is NEXT** (cut at its kickoff).
+**§116, the menu and settings, is IN BUILD** (cut 2026-10-04, twelve steps).
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -175,7 +175,9 @@ palette on reload, the aura-FX mode, the locale, reduced motion, shake,
 the text scale, and the store's export and import. **Why here:** Continue
 needs save/load, and the pane work needs the kit. **Risk:** medium (wide
 UI, checked against DESIGN §UI idioms and §Input accessibility).
-**Decision points:** which colour deficiencies the palette covers.
+**Decision points:** ✅ DECIDED 2026-10-04: one alternate palette, gated
+on protan and deutan over the identity hues, tritan measured and reported
+(WORKLOG §116, call 5).
 **Exit:** settings persist across reloads in all three shells; the menu
 boots first and the dev entry points skip it; the palette passes its
 numeric check and the user's eye. **Scope guards:** no music slider, no
@@ -186,6 +188,21 @@ achievements row, no camera row.
 **Carried from §114** (WORKLOG §114e): the menu's copy of the export (spec D5). At the itch sitting: what a download does in itch's frame, and the two numbers the journals budget (1 MB, soft) waits on, Firefox's `localStorage` limit and the file of a run played at the shipped length.
 
 **Carried from §115** (WORKLOG §115, calls 7, 9 and 11): Continue and the boot screen's three messages move from character select to the menu; a write that fails in mid-run gets its indicator here, a new idiom for DESIGN §UI idioms that the settings' own writes share; `navigator.locks` in itch's frame is measured at the itch sitting. And from the 115g stop (the user's, 2026-10-03): a new run's first save replaces a rejected save, its journal included, where spec D2 keeps that journal exportable; what a new run does with a rejected save is decided here, with the menu's export.
+
+**Decided at the shape-lock** (2026-10-04; the reasons are WORKLOG §116's): ✅ the settings are a modal, opened from the menu and from a chip during a run · ✅ a run dial or a `?bp=` bookmark in the URL skips the menu · ✅ a run's end goes to the menu, the first won run by way of the credits (the user's amendment) · ✅ the `seeded` flag waits for §117, so no Run bump here · ✅ no locale row while `en` is the only locale · ✅ aura: `track` and `fill`, `fixed` deleted; shake: its four policies · ✅ binding a taken key swaps the two · ✅ the data rows sit in the settings, and a new run keeps a rejected save's journal · ✅ credits: Matthew Kilgore as developer, Claude, the fonts, the libraries, the tools, the two sound tools, the playtesters unnamed.
+
+- [ ] **116a** — the settings, headless: the lenient section, its model, and `main.ts`'s second import, which sets the locale before the catalogs load. Read `none`.
+- [ ] **116b** — the consumers, no surface yet: the two volume axes, the keys (the swap, the modifier rule, the two labels live), the starting speed, the motion override, the shake, the aura mode. Read `none`.
+- [ ] **116c** — the menu as the boot screen: Continue, New run, the seed field, the three notices, the build ID; both end screens exit to it; character select gains Back. Read `stop`, one sitting with 116d.
+- [ ] **116d** — the settings modal, its two openers, and the rows for volume, speed, motion, shake and aura. Read `stop`, in Firefox: move a volume and hear it, reload and find it kept, open settings from the chip in a battle; wrong is a row that doesn't hold, a control the Tab walk misses, a battle running on behind the modal.
+- [ ] **116e** — the key rows: rebind, swap, reset. Read `batch` (at 116g's stop): rebind Pause to P, and the Fight-now button and tooltips say P; bind Focus to P and the two swap; wrong is a stale label, one key firing two actions, Ctrl+F still swallowed.
+- [ ] **116f** — the palette's mechanism: `COLORS` chosen by name at boot, the copied hexes moved onto it; the default palette's colours equal to the parent commit's table. Read `none`.
+- [ ] **116g** — the colourblind palette, its check on every `npm test`, a symbol per status on the camp unit's pip, the Palette row. Read `stop`, twice: the candidate with its table, then the eye.
+- [ ] **116h** — the data rows: the store's export and import, Export last run, a rejected save's journal kept. Read `batch` (at the sitting): export, change a setting, import, and the old value is back after the reload.
+- [ ] **116i** — the can't-save chip, a new idiom for DESIGN. Read `batch` (at the sitting): with the DEV plant, the chip appears at a run's first choice and nothing else moves.
+- [ ] **116j** — credits: a static panel from the menu's row, and once after the first won run; the libraries' notices join the shipped licence file. Read `batch` (at the sitting).
+- [ ] **116k** — the text scale; step zero measures which boxes overflow at each scale. Read `stop`, at the sitting.
+- [ ] **116l** — THE SITTING: Firefox, Electron and the itch draft; the `batch` reads; the exit. Read `stop`.
 
 ## Phase 117 — Escalation and the unlock mechanism
 

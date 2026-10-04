@@ -126,6 +126,17 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `localStorage` (or Electron's `store.json`) itself, not the store. The
   pane's `localStorage` takes about 50 Mi characters, some ten times a
   stock browser's, so a quota is never measured here.
+- **The settings** (`src/settings/`): `__game.settings` is the page's
+  model. `set(key, value)` stores the value and applies it at once, and
+  `get()` reads them all. What a consumer holds is read from the consumer:
+  `__game.audio` (`masterVolume`, `sfxVolume`), `__game.keybindings`,
+  `__game.playback.selectedSpeed`, `<html data-motion>`, and on the dev
+  server the module state behind `import('/src/ui/lossFx.ts')` and
+  `import('/src/render/auraFx.ts')`. A setting written in a check stays in
+  the pane's `localStorage` for the next session: remove
+  `asciibattler:settings` when you're done. On the production build, plant
+  the key's text and reload; `data-motion` is the one consumer a page
+  without `__game` shows.
 - **Two tabs of one origin** (`tabs_create`, then `navigate`): the first
   to boot holds the run lock and the second reads `lock: 'elsewhere'`,
   can't continue and writes nothing to the run slot, for its life. So a
@@ -216,8 +227,9 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
 - The pane is Chromium; the user is on Firefox. A dev chord that passes a
   synthetic `KeyboardEvent` in the pane can be one Firefox takes for itself
   (Ctrl+Alt+R is Reader View; gotcha #134). A new Ctrl+Alt chord has to
-  clear three sets (the keybinding registry's codes, `devKeys.ts`, and the
-  browsers' own) and get one real press in Firefox before it counts.
+  clear two sets (`devKeys.ts` and the browsers' own) and get one real
+  press in Firefox before it counts. The keybinding registry ignores a
+  keydown with Ctrl, Alt or Meta held, so its codes are no longer a third.
 - The pane's key tool delivers an empty `KeyboardEvent.code`, so anything
   bound through the code-based keybinding registry needs a synthetic
   `keydown` that carries the code.

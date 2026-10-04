@@ -39,6 +39,7 @@ import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
 import { SPAWN } from '../config/spawn';
 import { statusColor } from './statusDisplay';
+import { auraFxMode } from './auraFx';
 import { footprintCentre, slabAnchor, slabGroundOf, slabViewOf } from './slabAnchor';
 import { isDashedPlate, markExtent, markShapeOf, type MarkShape } from './groundMarks';
 
@@ -103,19 +104,9 @@ interface ExplosionParticle {
 }
 
 /**
- * §76g4 — the aura-FX mode switch. Born as an A/B rig for the pulse "Doppler"
- * finding (a fixed spawn center + slow travel leaves the wavefront behind a
- * moving carrier — user-caught at the 76g3 eyeball) and KEPT by user call
- * (2026-08-11): the verdict was "leaning track, but hold fill for a wider
- * feel jury — it may graduate to a player-facing graphics setting" (TODO).
- *  - 'track' (default): pulse motes re-anchor to the carrier's LIVE sprite
- *    every frame — concentric waves glide with the Officer. The legibility
- *    pick: the aura's range IS measured from wherever he stands now.
- *  - 'fill':  no pulses; the idle shed samples the whole aura AREA instead of
- *    the boundary. The aesthetic pick.
- *  - 'fixed': the 76g3 fixed-endpoint pulses — honest wave physics (a real
- *    wavefront IS left behind by a moving emitter), Doppler and all.
- * Dev-only switch, read live each frame: `__auraFx = 'fill'` in the console.
+ * §76g4 — one mote of a `track`-mode aura pulse (the modes and their story
+ * are in ./auraFx.ts): it re-anchors to its carrier's live sprite every
+ * frame, so the wave glides with the carrier.
  */
 interface AuraPulseParticle {
   readonly handle: SpriteHandle;
@@ -127,8 +118,6 @@ interface AuraPulseParticle {
   readonly dx: number;
   readonly dz: number;
 }
-
-type AuraFxMode = 'track' | 'fixed' | 'fill';
 
 /**
  * 108b — a body's ground mark, fixed at spawn: its side's shape, its colour
@@ -413,17 +402,13 @@ export class BattleRenderer {
    * Both clocks advance by the speed-scaled `dt`: faster at fast-forward,
    * frozen at pause, breathing at REAL dt during the pre-battle countdown
    * (the Q2 countdown branch feeds unscaled dt — see BattleScene.tick).
+   *
+   * 116b — the mode is a setting, read each frame (./auraFx.ts), so a change
+   * shows mid-battle.
    */
-  /** §76g4 — the A/B switch, read live each frame so the user can flip modes
-   *  mid-battle from the console without a rebuild. */
-  private auraFxMode(): AuraFxMode {
-    const m = (window as { __auraFx?: unknown }).__auraFx;
-    return m === 'fixed' || m === 'fill' ? m : 'track';
-  }
-
   private updateAuraFx(dt: number): void {
     if (!this.world) return;
-    const mode = this.auraFxMode();
+    const mode = auraFxMode();
     this.auraRingClock += dt;
     this.auraPulseClock += dt;
     const shedRing = this.auraRingClock >= AURA_RING_INTERVAL_SECONDS;
@@ -450,10 +435,7 @@ export class BattleRenderer {
           if (mode === 'fill') this.shedAuraFill(center, reach, color);
           else this.shedAuraRing(center, reach, color);
         }
-        if (shedPulse) {
-          if (mode === 'track') this.shedAuraPulseTracked(carrier.id, center, reach, color);
-          else this.shedAuraPulse(center, reach, color);
-        }
+        if (shedPulse) this.shedAuraPulseTracked(carrier.id, center, reach, color);
       }
     }
   }
@@ -485,10 +467,12 @@ export class BattleRenderer {
     }
   }
 
-  /** §76g4 'track' — spawn one wavefront of carrier-tracked pulse motes: same
-   *  perimeter sampling as the fixed pulse, but each mote stores its OFFSET +
-   *  the carrier id, and `updateAuraPulseParticles` re-derives its position
-   *  from the live sprite every frame — the wave glides with the Officer. */
+  /** §76g3/g4 'track' — the radiating pulse: one square wavefront of
+   *  evenly-spaced motes (AURA_PULSE_SAMPLES_PER_SIDE per side, offset half a
+   *  step from the corners so adjacent sides interleave instead of doubling
+   *  the corner motes), ground-flat. Each mote stores its OFFSET + the
+   *  carrier id, and `updateAuraPulseParticles` re-derives its position from
+   *  the live sprite every frame — the wave glides with the Officer. */
   private shedAuraPulseTracked(
     unitId: number,
     center: THREE.Vector3,
@@ -524,8 +508,8 @@ export class BattleRenderer {
   }
 
   /** §76g4 'track' — advance the carrier-tracked pulse motes: position =
-   *  live carrier center + offset × eased(t) (the same ease-out the fixed lane
-   *  applies), alpha fading over the lifetime. A mote whose carrier sprite is
+   *  live carrier center + offset × eased(t) (the ease-out the explosion lane
+   *  applies: fast start, settling at the edge), alpha fading over the lifetime. A mote whose carrier sprite is
    *  gone (death fade finished / detach race) is removed on the spot. */
   private updateAuraPulseParticles(dt: number): void {
     if (this.auraPulses.length === 0) return;
@@ -583,42 +567,6 @@ export class BattleRenderer {
         AURA_RING_BLOOM,
         AURA_RING_ALPHA,
       );
-    }
-  }
-
-  /** §76g3 — the radiating pulse: a square wavefront of evenly-spaced motes
-   *  (AURA_PULSE_SAMPLES_PER_SIDE per side, no corner doubling) expanding from
-   *  just off the carrier out to the boundary, fading as it arrives. Ground-
-   *  flat: the wave travels in XZ only, no rise. */
-  private shedAuraPulse(center: THREE.Vector3, reach: number, color: string): void {
-    const n = AURA_PULSE_SAMPLES_PER_SIDE;
-    for (let side = 0; side < 4; side++) {
-      for (let k = 0; k < n; k++) {
-        // Evenly spaced along the side, offset half a step from the corners so
-        // adjacent sides interleave instead of doubling the corner motes.
-        const t = ((k + 0.5) / n - 0.5) * 2 * reach;
-        const dx = side < 2 ? t : side === 2 ? reach : -reach;
-        const dz = side === 0 ? reach : side === 1 ? -reach : t;
-        const from = center.clone();
-        from.x += dx * AURA_PULSE_START_FRAC;
-        from.z += dz * AURA_PULSE_START_FRAC;
-        from.y += AURA_RING_Y_OFFSET;
-        const to = center.clone();
-        to.x += dx;
-        to.z += dz;
-        to.y += AURA_RING_Y_OFFSET;
-        this.addExplosionParticle(
-          from,
-          to,
-          AURA_RING_GLYPH,
-          color,
-          AURA_PULSE_SIZE,
-          AURA_PULSE_SIZE,
-          AURA_PULSE_SECONDS,
-          AURA_PULSE_BLOOM,
-          AURA_PULSE_ALPHA,
-        );
-      }
     }
   }
 

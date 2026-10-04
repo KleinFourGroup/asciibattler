@@ -99,4 +99,29 @@ describe('PlaybackSpeed', () => {
     expect(p.isPaused).toBe(false);
     expect(p.current).toBe(1);
   });
+
+  it('116b — select takes a starting speed and leaves pause as it is', () => {
+    const p = new PlaybackSpeed(STEPS);
+    expect(p.select(2)).toBe(true);
+    expect(p.selectedSpeed).toBe(2);
+    expect(p.current).toBe(2);
+    // Paused behind the settings: the speed changes, the battle stays paused.
+    p.pause();
+    expect(p.select(3)).toBe(true);
+    expect(p.isPaused).toBe(true);
+    expect(p.current).toBe(0);
+    p.resume();
+    expect(p.current).toBe(3);
+    // The control: setSpeed, the battle's own button, does unpause.
+    p.pause();
+    p.setSpeed(1);
+    expect(p.isPaused).toBe(false);
+  });
+
+  it('116b — select refuses a speed that is not an enabled step', () => {
+    const p = new PlaybackSpeed([{ value: 1, enabled: true }, { value: 2, enabled: false }]);
+    expect(p.select(2)).toBe(false);
+    expect(p.select(7)).toBe(false);
+    expect(p.selectedSpeed).toBe(1);
+  });
 });

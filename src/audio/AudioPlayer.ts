@@ -204,10 +204,23 @@ const PITCH_VARIANCE: Record<SoundKey, number> = {
 };
 
 const POOL_SIZE = 4;
-const DEFAULT_MASTER_VOLUME = 0.5;
+/** The loudness the game had before it had a volume setting; the settings'
+ *  fallback for the master level is this (src/settings/settings.ts). */
+export const DEFAULT_MASTER_VOLUME = 0.5;
+
+/**
+ * 116b — one sound's volume (Round 8 spec D7): master × SFX × the sound's
+ * own level, times a per-play gain, clamped to what an `<audio>` element
+ * takes. Music, when it lands, is master × music × its own level; the split
+ * needs no Web Audio.
+ */
+export function soundVolume(master: number, sfx: number, own: number, gain = 1): number {
+  return Math.max(0, Math.min(1, master * sfx * own * gain));
+}
 
 export class AudioPlayer {
   private masterVolume = DEFAULT_MASTER_VOLUME;
+  private sfxVolume = 1;
   private muted = false;
   // The recorder reaches `pools` and wraps `play` from outside
   // (shell/electron/probes/record-page.js) to route every element into its
@@ -224,7 +237,7 @@ export class AudioPlayer {
       for (let i = 0; i < POOL_SIZE; i++) {
         const audio = new Audio(SOUND_SOURCES[key]);
         audio.preload = 'auto';
-        audio.volume = this.masterVolume * VOLUMES[key];
+        audio.volume = soundVolume(this.masterVolume, this.sfxVolume, VOLUMES[key]);
         pool.push(audio);
       }
       this.pools[key] = pool;
@@ -249,7 +262,7 @@ export class AudioPlayer {
     const variance = PITCH_VARIANCE[key];
     const jitter = variance > 0 ? 1 + (Math.random() * 2 - 1) * variance : 1;
     audio.playbackRate = (scale?.rate ?? 1) * jitter;
-    audio.volume = Math.max(0, Math.min(1, this.masterVolume * VOLUMES[key] * (scale?.gain ?? 1)));
+    audio.volume = soundVolume(this.masterVolume, this.sfxVolume, VOLUMES[key], scale?.gain ?? 1);
     audio.currentTime = 0;
     audio.play().catch(() => {
       // Autoplay policy may reject before any user gesture, and stolen
@@ -257,10 +270,13 @@ export class AudioPlayer {
     });
   }
 
-  setMasterVolume(v: number): void {
-    this.masterVolume = Math.max(0, Math.min(1, v));
+  /** 116b — the two levels the settings hold, each 0 to 1. A sound already
+   *  playing takes the new level at once; `play` sets it again per play. */
+  setVolume(master: number, sfx: number): void {
+    this.masterVolume = Math.max(0, Math.min(1, master));
+    this.sfxVolume = Math.max(0, Math.min(1, sfx));
     for (const key of Object.keys(this.pools) as SoundKey[]) {
-      const target = this.masterVolume * VOLUMES[key];
+      const target = soundVolume(this.masterVolume, this.sfxVolume, VOLUMES[key]);
       for (const audio of this.pools[key]) {
         audio.volume = target;
       }

@@ -19,6 +19,10 @@ the playback substrate they require.
 - **Volume is a single axis** (`masterVolume` × per-key table), and
   `setMasterVolume`/`setMuted` have ZERO call sites — there is no
   volume/mute UI anywhere. Music forces the axis question (below).
+  _(Since §116b, 2026-10-04: the split exists. Three levels are stored in
+  the settings, master, SFX and music; a sound plays at master × SFX × its
+  own level through `AudioPlayer.setVolume(master, sfx)`, and the music
+  level waits for something to play.)_
 - **Autoplay unlock is an assumption**: playback is blocked until
   the first user gesture, and the current design leans on "the first
   trigger is a map-node click — itself a gesture." True for SFX;

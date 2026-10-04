@@ -16,11 +16,16 @@
 //   --size=<w>x<h>     the page's size (default 1280x720)
 //   --timeout=<s>      the run's time limit (default 120)
 //   --arg=<json>       the script's argument
+//   --profile=<dir>    the shell's userData, kept after the run; without it
+//                      each run gets a fresh one and discards it. Two runs on
+//                      one profile are two launches of the shell on one store
 //   --keep             keep the temporary build and profile
 //
 // The script is one `export default async function (arg)`, run in the page
 // after `__probe.ready()`, with `window.__probe` and `window.__game` to hand
-// (process/browser-pane.md). Its value is the result, and `{ ok: false }`
+// (process/browser-pane.md). The runner wraps the file's text in a call, so
+// the function is the file's only top-level statement: a `const` above it is
+// a syntax error in the page ("Unexpected token 'const'"). Its value is the result, and `{ ok: false }`
 // fails it. Stdout carries only the JSON line (main.mjs's probe report);
 // progress goes to stderr. Exit: 0 ok, 1 a failed check or an error, 2 the
 // time limit.
@@ -66,6 +71,7 @@ async function main(work) {
   if (!/^\d+x\d+$/.test(size)) stop(`--size=${size} is not <width>x<height>`);
   const seconds = Number(flag('timeout') ?? 120);
   const query = queryOf();
+  const profile = flag('profile');
   const arg = flag('arg');
   if (arg !== undefined) {
     try {
@@ -90,7 +96,7 @@ async function main(work) {
     `--window=${windowMode}`,
     `--size=${size}`,
     `--timeout=${seconds * 1000}`,
-    `--profile=${join(work, 'profile')}`,
+    `--profile=${profile !== undefined ? resolve(profile) : join(work, 'profile')}`,
     '--muted',
     ...(arg !== undefined ? [`--arg=${arg}`] : []),
   ];

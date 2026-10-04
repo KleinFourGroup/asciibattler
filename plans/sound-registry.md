@@ -154,7 +154,9 @@ dependency on the C6 persistent store.
   tables. C6's options menu will finally call
   `setMasterVolume`/`setMuted` (zero call sites today — the API is
   waiting); it must route through those, not grow per-site volume
-  parameters that bypass the tables.
+  parameters that bypass the tables. _(Since §116b: it is
+  `setVolume(master, sfx)`, called from the settings; the tables are
+  untouched.)_
 - **The sim/render seam.** `EVENT_SOUNDS` is presentation; sim code
   never imports it, and no sound choice may feed back into sim
   logic. (Same law FX_REGISTRY lives under.)

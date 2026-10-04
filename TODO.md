@@ -87,14 +87,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   actual payoff). Cheap, but do it deliberately — the §76b/78d pin
   tests and the fallback-magenta discipline move with it.
 
-- [ ] **Aura-FX mode: the wider feel jury + possible graphics setting.**
-  The §76g4 A/B rig (`window.__auraFx = 'track' | 'fill' | 'fixed'`,
-  BattleRenderer) stays in the tree by user call (2026-08-11): interim
-  verdict "leaning track" (legibility) but fill (aesthetics) is held
-  for other eyes, and the switch may graduate to a player-facing
-  graphics configuration. Resolve at a UI/polish round: either scrub
-  the losers + the switch, or promote it to a real settings surface
-  (which needs a home — no options screen exists yet).
+- [x] ✅ **Aura-FX mode: the wider feel jury + possible graphics setting** —
+  116b (2026-10-04): promoted. `track` and `fill` are the `aura` setting
+  (`src/render/auraFx.ts`); `fixed` and the `__auraFx` console switch are
+  deleted. Its row lands with 116d. WORKLOG §116, call 7 and §116b.
 
 - [x] **Layout-stability sweep (the "Y-coordinate hysteresis" class).** ✅ §101
   (2026-09-18; ticked at the 103 kickoff audit): three mechanisms + the

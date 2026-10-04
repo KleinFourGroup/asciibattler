@@ -6,10 +6,11 @@
  * A separate DEV-only window listener, deliberately NOT the Keybindings
  * registry — its zod schema requires every action present in the shipped
  * config JSON, so a dev-only action can't ride it (worklog §53 kickoff).
- * All chords are Ctrl+Alt+<key>, and the chord keys must stay OFF the
- * registry's bound codes (E/F/H/T/M, digits, Space, Slash): `Keybindings.handleKeyDown`
- * dispatches on bare `KeyboardEvent.code` with no modifier check, so a chord
- * on a bound code would co-fire the battle hotkey.
+ * All chords are Ctrl+Alt+<key>. Since 116b `Keybindings.handleKeyDown`
+ * ignores a keydown with Ctrl, Alt or Meta held, so a chord never co-fires a
+ * battle hotkey, whatever key the player has bound. (Before that the chord
+ * keys had to stay off the registry's bound codes, which is why the notes
+ * below say a key is "off the bound codes".)
  *
  *   Ctrl+Alt+S — export the run: Run.toJSON() → a JSON download.
  *   Ctrl+Alt+L — load a run: file picker → Run.fromJSON → the Game run swap
@@ -56,10 +57,9 @@
  *                bound codes and this file's; the user's Firefox press is
  *                the check that counts, per #134.)
  *
- * ⚠ A new chord must clear THREE key sets, not two: the registry's bound
- * codes, this file's, and the BROWSERS' own Ctrl+Alt chords — the pane is
- * Chromium and cannot catch a Firefox-reserved chord; test a new chord in
- * Firefox before calling it verified.
+ * ⚠ A new chord must clear two key sets: this file's, and the BROWSERS' own
+ * Ctrl+Alt chords — the pane is Chromium and cannot catch a Firefox-reserved
+ * chord; test a new chord in Firefox before calling it verified.
  *
  * Wired in main.ts's DEV block; the shipped bundle never touches this.
  */

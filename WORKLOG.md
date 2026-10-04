@@ -4936,3 +4936,112 @@ nothing a player sees has changed.
 
 **Cost.** The production bundle is 610.94 kB raw (609.72 at 115g), the
 stylesheet 56.50 kB. Typecheck clean.
+
+### 116b — the consumers, no surface (2026-10-04) — read `none` ✅
+
+The reading at the step's start: **385,910** at 10:00, on 116a's commit
+(`c10cca7`; 116a cost about 35k).
+
+**Step zero.**
+- **A third label was read once,** beside the charter's two: the objective
+  pane's buttons carry their keys in their words (`◎ Engage (E)`) and were
+  redrawn only on objective events (`HUD.renderObjectivePane`).
+- The sector-map chip's label had two sites, the chip's tooltip and the
+  overlay's hint, both fed by one string made at construction.
+- `PlaybackSpeed.setSpeed` unpauses, so a starting speed changed behind the
+  settings in a paused battle would start the battle. It gets `select`,
+  which leaves pause alone.
+- The settings are the source of truth for the keys. The registry takes the
+  stored overrides whole (`setOverrides`), and the rules are pure functions,
+  so 116e's surface and a stored set go through the same ones.
+- A bundled page can't reach module state, so under the Electron runner the
+  shake policy and the aura mode are read only as stored. The dev server's
+  page reaches both by `import()`.
+
+**Built.**
+- `src/settings/apply.ts`: `connectSettings(model, consumers)` hands every
+  consumer its stored value at once and its new value on each change. The
+  consumers are functions `Game` passes, so nothing they set imports the
+  settings. `Game` connects them in its constructor, before the first
+  screen, and holds the model as `settings` (a dev console's
+  `__game.settings`).
+- **Volume:** `soundVolume(master, sfx, own, gain)` and
+  `AudioPlayer.setVolume(master, sfx)`, replacing `setMasterVolume`, which
+  had no caller. The recorder's seam (`pools`, `play`) is as it was.
+- **Keys** (`src/ui/Keybindings.ts`): `withRebind` (a taken key swaps the
+  two actions), `RESERVED_CODES`, `resolveBindings`, `overridesOf`,
+  `setOverrides`, `onChange`; a keydown with Ctrl, Alt or Meta held returns
+  before any lookup. The three labels follow `onChange` or read a thunk.
+- **Speed:** `PlaybackSpeed.select`. **Motion, shake:** their existing
+  setters. **Aura:** `src/render/auraFx.ts` holds the mode; the renderer
+  reads it each frame.
+- `npm run probe` takes `--profile=<dir>`, kept between runs, and
+  `shell/electron/probes/settings-persist.js` uses it.
+
+**Changes inside the cut's intent, flagged for the 116d stop.**
+- `NumpadEnter` is reserved with Enter; the signed call names Enter, Tab
+  and Escape.
+- Shift passes the modifier rule, since `?` is Shift+Slash.
+- A stored key set is applied through the swap rule in the registry's
+  action order. A set a rebind made resolves to itself (pinned, a
+  three-key rotation included); one that names a key twice still gives one
+  key per action.
+- `fixed`'s deletion took its 35 lines out of the renderer
+  (`shedAuraPulse`). Nothing watched an aura afterwards.
+
+**Tests,** +23: `Keybindings.test.ts` 11, `PlaybackSpeed.test.ts` 2,
+`AudioPlayer.test.ts` 3, `src/settings/apply.test.ts` 7 (recording
+stand-ins for which call each setting makes; the real registry, playback
+controller, motion gate, shake policy and aura mode read back through
+their own getters; and the fallbacks held against what each consumer
+starts at). Expected values are written by hand from the rules' words.
+Three plants, then reverted: the modifier rule weakened, the motion
+mapping swapped, `select` unpausing. Five tests failed, each named for
+its plant.
+
+**Under the Electron runner, one profile, three launches.**
+
+| launch | master | SFX | pause key | speed | `data-motion` | stored motion · shake · aura |
+|---|---|---|---|---|---|---|
+| fresh profile (the control) | 0.5 | 1 | Space | 1 | none | system · player · track |
+| the write, same page | 0.8 | 0.25 | KeyP | 2 | reduced | reduced · none · fill |
+| a new process, same profile | 0.8 | 0.25 | KeyP | 2 | reduced | reduced · none · fill |
+
+The profile's `store.json`, read from disk after the second launch, holds
+the `asciibattler:settings` envelope with all eleven fields.
+
+**In the pane** (Chromium).
+- *The dev server* (`c10cca7-dirty-dev`): nothing stored and every consumer
+  at its fallback; seven settings written through `__game.settings`, each
+  consumer changed at once (shake `none` and aura `fill` read from their
+  modules); after a reload (a new `page` id) the same seven values, with
+  nothing written in between.
+- *The labels, in a battle on that server:* `▶ Fight now (P)` became `(Q)`
+  and `! Focus (F)` became `(G)` on one `set`; binding Pause to F then gave
+  `▶ Fight now (F)` and `! Focus (Space)`, the swap.
+- *The production build* (`c10cca7-dirty`, no `__game`): `data-motion` was
+  absent with nothing stored; with the settings text planted in
+  `localStorage` (`motion: reduced`) and a reload it was `reduced`.
+
+**A run is left alone.** The seed-7 drive: exit 0, `logHash a59ee48f`, 12
+battles.
+
+**Not verified.**
+- By ear: no sound was played. The levels were read as numbers on the
+  elements and on the player.
+- A real key press. The modifier rule and the swap are pinned headless, and
+  the pane's labels changed through the model. A press in Firefox on the
+  user's keyboard is 116e's read.
+- On the production build only the motion attribute was read; the other
+  consumers there are the same bundle's code, unread.
+- How `track` and `fill` look: the mode was read back as state, and no
+  battle with an aura carrier was watched.
+- The sector-map chip's tooltip and hint after a rebind.
+
+**A trap in the runner, now written down.** A probe script with a `const`
+above its one function fails in the page with "Unexpected token 'const'",
+since the runner wraps the file's text in a call. Three launches went to
+it. `probe-cli.mjs`'s header says so now.
+
+**Cost.** The production bundle is 612.71 kB raw (610.94 at 116a), the
+stylesheet 56.50 kB. `npm test`: 232 files, 3358 tests, 45.7 s.

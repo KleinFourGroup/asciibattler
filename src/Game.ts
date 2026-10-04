@@ -40,6 +40,11 @@ import { BUILD_ID } from './buildId';
 import { JournalRecorder } from './journal/JournalRecorder';
 import type { RunJournal } from './journal/journal';
 import { store } from './store';
+import { settings } from './settings';
+import { connectSettings } from './settings/apply';
+import { setReducedMotionOverride } from './render/motion';
+import { setAuraFxMode } from './render/auraFx';
+import { setShakePolicy } from './ui/lossFx';
 import { keepJournal } from './store/journals';
 import type { RunLock } from './store/runLock';
 import { openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
@@ -159,6 +164,9 @@ export class Game implements RunDispatcher {
    * buildContext like `playback`.
    */
   private readonly keybindings = new Keybindings();
+  /** 116b — the page's settings (src/settings). The constructor connects
+   *  them to what they set; a dev console reaches them as `__game.settings`. */
+  private readonly settings = settings;
   /**
    * Active run. Replaced on `resetRun`, and — 63e — NULL while the
    * CharacterSelectScene is up (the choice precedes Run construction; a
@@ -200,6 +208,19 @@ export class Game implements RunDispatcher {
     this.screenHost.className = 'screen-host';
     uiMount.appendChild(this.screenHost);
     this.audio = new AudioPlayer();
+    // 116b — the settings reach what they set: each consumer takes its stored
+    // value here, before the first screen mounts, and its new value on every
+    // change (src/settings/apply.ts). The page's life is the subscription's.
+    connectSettings(this.settings, {
+      setVolume: (master, sfx) => this.audio.setVolume(master, sfx),
+      setKeys: (overrides) => this.keybindings.setOverrides(overrides),
+      setSpeed: (value) => {
+        this.playback.select(value);
+      },
+      setMotion: setReducedMotionOverride,
+      setShake: setShakePolicy,
+      setAura: setAuraFxMode,
+    });
 
     // G1 — one URL parser builds the RunConfig (seed / floors / roster /
     // layout / width). No params ⇒ empty config ⇒ a normal `Date.now()`-seeded
@@ -340,7 +361,7 @@ export class Game implements RunDispatcher {
           forewarning: this.run.bossForewarning,
         };
       },
-      this.keybindings.labelFor('toggleSectorMap'),
+      () => this.keybindings.labelFor('toggleSectorMap'),
     );
     this.keybindings.on('toggleSectorMap', () => this.sectorMapOverlay.toggle());
     // 97b — the tooltip key, page-lifetime like the map key: pin the open

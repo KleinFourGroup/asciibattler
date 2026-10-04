@@ -78,9 +78,18 @@ export class PlaybackSpeed {
    *  for a speed the difficulty system disabled does nothing. Returns whether it
    *  took (the caller re-renders either way). */
   setSpeed(value: number): boolean {
+    if (!this.select(value)) return false;
+    this.paused = false;
+    return true;
+  }
+
+  /** 116b — select a running speed and leave pause as it is: the starting
+   *  speed, a setting, is taken at boot and when its row changes, which can
+   *  be while a battle is paused behind the settings. A disabled/unknown
+   *  value is a no-op, as in `setSpeed`. */
+  select(value: number): boolean {
     if (!this.stepValues.includes(value)) return false;
     this.selected = value;
-    this.paused = false;
     return true;
   }
 

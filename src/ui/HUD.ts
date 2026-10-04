@@ -321,7 +321,13 @@ export class HUD {
     const fightNow = document.createElement('button');
     fightNow.type = 'button';
     fightNow.className = 'battle-countdown__fight';
-    fightNow.textContent = `▶ ${t('hud.pause.fightNow')} (${keybindings.labelFor('togglePause')})`;
+    // 116b — the key is part of the button's words, so a rebind made while
+    // this battle is up re-labels it (the tooltips read theirs at each open).
+    const labelFightNow = (): void => {
+      fightNow.textContent = `▶ ${t('hud.pause.fightNow')} (${keybindings.labelFor('togglePause')})`;
+    };
+    labelFightNow();
+    this.subscriptions.push(keybindings.onChange(labelFightNow));
     fightNow.addEventListener('click', () => this.fightNow());
     this.countdownEl.append(countdownLabel, this.countdownCount, fightNow);
     mount.appendChild(this.countdownEl);
@@ -361,6 +367,8 @@ export class HUD {
     }
     mount.appendChild(this.objectivePane);
     this.renderObjectivePane();
+    // 116b — the buttons' words carry their keys, so a rebind redraws them.
+    this.subscriptions.push(keybindings.onChange(() => this.renderObjectivePane()));
     // Track the player team's live objective mode so the active button reads
     // "engaged" however it was set (pane / hotkey / board click). A `set` carries
     // the mode; a `clear` (or an explicit atWill set) reverts to the `'atWill'`

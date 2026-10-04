@@ -49,7 +49,7 @@ export class SectorMapOverlay {
   /** Scene-derived availability (Game.swap pushes it); the chip hides and the
    *  keybind no-ops while false. */
   private available = false;
-  private readonly keyLabel: string;
+  private readonly keyLabel: () => string;
 
   constructor(
     /** The page mount — the OVERLAY's host (fixed full-viewport, z 40; it
@@ -60,10 +60,10 @@ export class SectorMapOverlay {
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
     private readonly getView: () => SectorMapView | null,
-    /** The live keybind label for the chip tooltip (tracks a rebind the same
-     *  way the HUD button tooltips do — resolved at construction; a rebind
-     *  screen, when it lands, re-labels via its own pass). */
-    keyLabel: string,
+    /** The live keybind label, read each time it is shown (the chip's tooltip
+     *  at every open, the overlay's hint when the overlay is built), so a
+     *  rebind shows up the way it does on the HUD's button tooltips. */
+    keyLabel: () => string,
   ) {
     this.keyLabel = keyLabel;
     this.chip = document.createElement('button');
@@ -113,7 +113,7 @@ export class SectorMapOverlay {
     this.modal = modal;
     const hint = document.createElement('div');
     hint.className = 'sector-map-overlay__hint';
-    hint.textContent = t('sectormap.hint', { key: this.keyLabel });
+    hint.textContent = t('sectormap.hint', { key: this.keyLabel() });
     modal.content.appendChild(hint);
     // The read-only screen renders INTO the overlay host; the dispatcher
     // is threaded but never called (readOnly suppresses the frontier clicks).

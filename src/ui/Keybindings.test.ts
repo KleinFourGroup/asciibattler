@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Keybindings, keyLabel, type KeyLike } from './Keybindings';
+import {
+  Keybindings,
+  RESERVED_CODES,
+  keyLabel,
+  overridesOf,
+  resolveBindings,
+  withRebind,
+  type KeyLike,
+} from './Keybindings';
 import { KEYBIND_ACTIONS, type KeybindAction } from '../config/keybindings';
 
 // Mechanic test — explicit literal bindings, never the shipped config (the
@@ -151,5 +159,125 @@ describe('keyLabel', () => {
 
   it('97b — renders the tooltip key\'s Slash code as its face', () => {
     expect(keyLabel('Slash')).toBe('/');
+  });
+});
+
+// 116b — the key rules. Every expected binding below is written out by hand
+// from the rule's words, not computed through the functions under test.
+describe('116b — the key rules', () => {
+  const codes = (b: Record<KeybindAction, string>): string[] => KEYBIND_ACTIONS.map((a) => b[a]);
+  const unique = (b: Record<KeybindAction, string>): boolean => new Set(codes(b)).size === KEYBIND_ACTIONS.length;
+
+  it('a free key moves one action and nothing else', () => {
+    expect(withRebind(DEFAULTS, 'togglePause', 'KeyP')).toEqual({ ...DEFAULTS, togglePause: 'KeyP' });
+  });
+
+  it('a taken key swaps the two actions', () => {
+    // Pause takes F; Focus, which held F, takes Space.
+    expect(withRebind(DEFAULTS, 'togglePause', 'KeyF')).toEqual({
+      ...DEFAULTS,
+      togglePause: 'KeyF',
+      focusObjective: 'Space',
+    });
+  });
+
+  it("an action's own key is no change, and a reserved or empty key is refused", () => {
+    expect(withRebind(DEFAULTS, 'togglePause', 'Space')).toEqual(DEFAULTS);
+    for (const code of ['Enter', 'NumpadEnter', 'Tab', 'Escape', '']) {
+      expect(withRebind(DEFAULTS, 'togglePause', code), code).toBeNull();
+    }
+    expect([...RESERVED_CODES].sort()).toEqual(['Enter', 'Escape', 'NumpadEnter', 'Tab']);
+  });
+
+  it('what is stored is the difference from the defaults, and it resolves back to the same bindings', () => {
+    expect(overridesOf(DEFAULTS, DEFAULTS)).toEqual({});
+    const swapped = { ...DEFAULTS, togglePause: 'KeyF', focusObjective: 'Space' };
+    expect(overridesOf(DEFAULTS, swapped)).toEqual({ togglePause: 'KeyF', focusObjective: 'Space' });
+    expect(resolveBindings(DEFAULTS, { togglePause: 'KeyF', focusObjective: 'Space' })).toEqual(swapped);
+    expect(resolveBindings(DEFAULTS, {})).toEqual(DEFAULTS);
+  });
+
+  it('three actions whose keys rotate resolve to the stored bindings', () => {
+    // Engage E → F, Focus F → H, Hold H → E.
+    const rotated = { ...DEFAULTS, engageObjective: 'KeyF', focusObjective: 'KeyH', holdObjective: 'KeyE' };
+    expect(resolveBindings(DEFAULTS, overridesOf(DEFAULTS, rotated))).toEqual(rotated);
+  });
+
+  it('a stored set no rebind could have made still gives one key per action', () => {
+    // Two actions on one key, an action this build doesn't have, a reserved
+    // key and a value that isn't a string.
+    const stored = {
+      togglePause: 'KeyP',
+      holdObjective: 'KeyP',
+      dance: 'KeyD',
+      stopObjective: 'Escape',
+      speed1: 7,
+    } as unknown as Record<string, string>;
+    const resolved = resolveBindings(DEFAULTS, stored);
+    expect(unique(resolved)).toBe(true);
+    // In the registry's order Pause takes P first; Hold then takes it, and
+    // Pause gets Hold's old key.
+    expect(resolved).toEqual({ ...DEFAULTS, togglePause: 'KeyH', holdObjective: 'KeyP' });
+    expect('dance' in resolved).toBe(false);
+  });
+
+  it('the registry takes the stored overrides, says what to store, and goes back to the defaults', () => {
+    const kb = new Keybindings(DEFAULTS);
+    kb.setOverrides({ togglePause: 'KeyF', focusObjective: 'Space' });
+    expect(kb.codeFor('togglePause')).toBe('KeyF');
+    expect(kb.codeFor('focusObjective')).toBe('Space');
+    expect(kb.overrides()).toEqual({ togglePause: 'KeyF', focusObjective: 'Space' });
+    kb.setOverrides({});
+    expect(kb.bindings()).toEqual(DEFAULTS);
+  });
+
+  it('rebind swaps, refuses a reserved key, and tells its listeners of each change', () => {
+    const kb = new Keybindings(DEFAULTS);
+    const heard = vi.fn();
+    const off = kb.onChange(heard);
+    expect(kb.rebind('togglePause', 'KeyF')).toBe(true);
+    expect(kb.codeFor('focusObjective')).toBe('Space');
+    expect(kb.labelFor('togglePause')).toBe('F');
+    expect(kb.rebind('togglePause', 'Escape')).toBe(false);
+    expect(kb.codeFor('togglePause')).toBe('KeyF');
+    expect(heard).toHaveBeenCalledTimes(1);
+    off();
+    kb.setOverrides({});
+    expect(heard).toHaveBeenCalledTimes(1);
+  });
+
+  it('after a swap each key fires its one new action', () => {
+    const kb = new Keybindings(DEFAULTS);
+    const pause = vi.fn();
+    const focus = vi.fn();
+    kb.on('togglePause', pause);
+    kb.on('focusObjective', focus);
+    kb.rebind('togglePause', 'KeyF');
+    kb.handleKeyDown(keyEvent('KeyF').event);
+    expect([pause.mock.calls.length, focus.mock.calls.length]).toEqual([1, 0]);
+    kb.handleKeyDown(keyEvent('Space').event);
+    expect([pause.mock.calls.length, focus.mock.calls.length]).toEqual([1, 1]);
+  });
+
+  it('a key held with Ctrl, Alt or Meta fires no hotkey and is left to the browser; Shift passes', () => {
+    const kb = new Keybindings(DEFAULTS);
+    const focus = vi.fn();
+    kb.on('focusObjective', focus);
+    for (const held of [{ ctrlKey: true }, { altKey: true }, { metaKey: true }, { ctrlKey: true, altKey: true }]) {
+      const { event, preventDefault } = keyEvent('KeyF');
+      kb.handleKeyDown({ ...event, ...held });
+      expect(preventDefault, JSON.stringify(held)).not.toHaveBeenCalled();
+    }
+    expect(focus).not.toHaveBeenCalled();
+    const shifted = keyEvent('KeyF');
+    kb.handleKeyDown({ ...shifted.event, ...{ shiftKey: true } });
+    expect(focus).toHaveBeenCalledTimes(1);
+    expect(shifted.preventDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it("the shipped defaults give every action its own key, none of them reserved", () => {
+    const shipped = new Keybindings().bindings();
+    expect(unique(shipped)).toBe(true);
+    for (const code of codes(shipped)) expect(RESERVED_CODES).not.toContain(code);
   });
 });

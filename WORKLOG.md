@@ -4783,3 +4783,60 @@ shape-lock to the stop after 116d: two headless steps and two surfaces.
 fit under the 550k line. The lean: 116a and 116b here, where this audit is
 in context, then a hand-off, and a fresh session builds the menu and the
 settings surface to the first sitting.
+
+### The §116 shape-lock, first part (2026-10-04, the user's) — seven calls agreed, 3 amended, 5 and the cut open
+
+At about 08:45. The reading on the audit's commit (`0983f0d`): **301,441**
+at 08:35. The user: "I think that I agree with all of your calls, save
+two", and "I'm good with that rough session plan too, though I think that
+we might get farther than you're predicting". The step-start rule decides
+how far: the reading at each step's start, against the 550k line.
+
+- **Calls 1, 2, 4, 6, 7, 8, 9: agreed** as proposed.
+- **Call 3, amended by the user:** a won run goes to the credits the first
+  time and to the menu after, not straight to character select. Their
+  reason: it is the genre's standard, and a run is about 40 minutes when
+  they play, so one more click per run costs nothing; end screen to
+  character select reads as a game of ten-minute runs. The session agrees.
+  Its first lean leaned on the spec's "minimal friction", which is about a
+  player's first ten minutes, getting into a run, and says nothing of what
+  follows one. The session's reading of the amendment, put back to the
+  user: both end screens exit to the menu, a defeat too; the first won
+  run opens the credits on the way; under a dial boot (call 2) a run's end
+  goes as it does today, so the drivers don't change; character select
+  keeps Back. Open until the user confirms the defeat's route.
+- **Call 5:** not a disagreement. The user doesn't know the terms and asked
+  for them; explained in the reply, and open until they sign it.
+- **Call 10, answered:** the user as developer and no playtester by name
+  (none has cleared it); the third-party assets and every framework; and
+  Claude. Still to give: the form of their name.
+- **The cut and its reads:** not yet signed in words.
+
+**Read after the reply, for call 10.**
+- `public/THIRD-PARTY-LICENSES.txt` exists and ships in the build (✔ 321
+  lines; `archive/post-72-worklog.md` §79g says `dist/` carries it). It
+  holds the two fonts with their full licences and nothing else: a search
+  of it for three, simplex and zod found none. The audit's "unchecked:
+  whether `dist/` carries them" is answered for the fonts. The three
+  bundled libraries' notices are missing from the build (✔ `package.json`
+  `dependencies`: simplex-noise, three, zod; their licence files not yet
+  read).
+- The commit trailers name seven Claude models across the history (✔
+  `git log`: Fable 5, Opus 4.8, Fable 5.1, Opus 5.5, Opus 4.7, Opus 4.8 1M,
+  Opus 5), so one line for Claude covers them.
+- The sounds: 11 of the 25 are `gen-sfx` recipes (✔ `scripts/gen-sfx.mjs`),
+  `thud` is hand-made and `morale_loss` is the user's chiptone
+  (ARCHITECTURE). The other 12 (burn, chain, click, dash, death, healtick,
+  lose, magicboom, melee, recruit, shoot, win) have no provenance in the
+  docs searched; asked of the user.
+
+**The two cut lines the amendment changes, as they would read.**
+- **116c** gains: both end screens exit to the menu; under a dial boot a
+  run's end goes as today.
+- **116j** becomes: the credits as a static panel (nothing scrolls by
+  itself, so reduced motion needs no second form): the developer, Claude,
+  the fonts, the bundled libraries, the tools, and the playtesters thanked
+  without names. Opened from the menu's row, and once on the way to the
+  menu after the first won run: a `creditsSeen` flag, the `progress`
+  section's first field. The three libraries' notices join
+  `public/THIRD-PARTY-LICENSES.txt`.

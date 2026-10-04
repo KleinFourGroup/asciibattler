@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   Keybindings,
   RESERVED_CODES,
+  isTextEntry,
   keyLabel,
   overridesOf,
   resolveBindings,
@@ -273,6 +274,43 @@ describe('116b — the key rules', () => {
     kb.handleKeyDown({ ...shifted.event, ...{ shiftKey: true } });
     expect(focus).toHaveBeenCalledTimes(1);
     expect(shifted.preventDefault).toHaveBeenCalledTimes(1);
+  });
+
+  it('116c — a key typed in a text field fires no hotkey and is left to the field', () => {
+    const kb = new Keybindings(DEFAULTS);
+    const map = vi.fn();
+    kb.on('toggleSectorMap', map);
+    const typed = [
+      { tagName: 'INPUT', type: 'text' },
+      { tagName: 'INPUT', type: 'search' },
+      { tagName: 'INPUT', type: 'number' },
+      { tagName: 'TEXTAREA' },
+      { tagName: 'DIV', isContentEditable: true },
+    ];
+    for (const target of typed) {
+      expect(isTextEntry(target), JSON.stringify(target)).toBe(true);
+      const { event, preventDefault } = keyEvent('KeyM');
+      kb.handleKeyDown({ ...event, target });
+      expect(preventDefault, JSON.stringify(target)).not.toHaveBeenCalled();
+    }
+    expect(map).not.toHaveBeenCalled();
+    // The control: the same key anywhere else fires, a slider included.
+    const elsewhere = [
+      undefined,
+      null,
+      { tagName: 'BODY' },
+      { tagName: 'BUTTON', type: 'button' },
+      { tagName: 'INPUT', type: 'range' },
+      { tagName: 'INPUT', type: 'checkbox' },
+      { tagName: 'DIV', isContentEditable: false },
+    ];
+    for (const target of elsewhere) {
+      expect(isTextEntry(target), JSON.stringify(target)).toBe(false);
+      const { event, preventDefault } = keyEvent('KeyM');
+      kb.handleKeyDown({ ...event, target });
+      expect(preventDefault, JSON.stringify(target)).toHaveBeenCalledTimes(1);
+    }
+    expect(map).toHaveBeenCalledTimes(elsewhere.length);
   });
 
   it("the shipped defaults give every action its own key, none of them reserved", () => {

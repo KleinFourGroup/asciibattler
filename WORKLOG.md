@@ -5099,3 +5099,153 @@ steps": two of them took 142k.
   among them: the user confirmed it after this entry.)
 - **Still to come from the user:** nothing blocks. ChipTone's terms were
   not read; 116j reads them or asks.
+
+### The stretch, resumed (2026-10-04, session 8be1fe88)
+
+A fresh session, from 11:28. The reading after HANDOFF, ROADMAP §116 and
+the context tool's load: **92,406** at 11:28. The stretch is 116c and 116d,
+to the first sitting.
+
+### 116c — the menu as the boot screen (2026-10-04) — read `stop`: ◐ built, the sitting unread (it is one sitting with 116d)
+
+**Step zero.**
+- **New run and Back are not run commands.** Each joins two screens that
+  have no run. A kind in `RunCommand` would join the journal's kinds and the
+  chaos census (115g's finding for Continue), and would touch `src/run`. They
+  are functions in the scene context (`menu`), so the fuzz smoke does not
+  fire, as the cut predicted.
+- **A key typed in a text field was the registry's.** `handleKeyDown` took
+  any bound key with a live handler and called `preventDefault`. The map
+  key and the tooltip key have page-lifetime handlers, so M typed in a field
+  was swallowed and sent to the sector map's toggle. The seed field keeps
+  digits only, so nothing a player types there is lost today; after 116e a
+  player can bind a digit to one of those two actions, and the field would
+  then refuse that digit. A fifth key rule went in with the field: a keydown
+  in a text field fires no hotkey.
+- **The seed's grammar.** The URL dial takes any integer. The field keeps
+  digits, 15 at most (every such number is an exact integer, and a seed
+  drawn from the clock is 13 digits), cleaned as typed, so it has no
+  refused state and needs no message that comes and goes. It is read through
+  the dial's own parser.
+- **The board explorer's `bp`** is named in a DEV-only module, which a
+  shipped module can't import without bringing it into the bundle. The rule
+  spells the name itself and a test holds the two equal.
+- **The end screen's first button** has to say where it goes, and that
+  differs by boot: `Main menu` on a page that booted to the menu, `Begin a
+  new run` on a page booted by a dial.
+- Every driver's URL was read again against the rule (the board fixtures,
+  the probe runner's `--seed`, the recorder, `drive()`): each has
+  `character=` or `bp=`.
+
+**Built.**
+- `src/scenes/menuRules.ts`: `bootsToMenu(search)` (no run dial that
+  parses, and no `bp`), `cleanSeedText`, `seedFromText`.
+- `src/ui/MenuScreen.ts` and `src/scenes/MenuScene.ts`: the name; the three
+  notices; Continue when the slot is `saved`; New run; the seed field with
+  its hint; the build's ID in the corner. Drawn once when shown.
+- `Game`: `menuBoot`, fixed at the page's load; the first screen; `resetRun`
+  to the menu on a menu boot and as before on a dial boot; the seed field's
+  text held from New run to the run that takes it, layered over the URL's
+  config the way the character is; `SceneContext.menu`.
+- `CharacterSelectScreen`: Continue, the notices and the build's ID gone;
+  Back under the cards, a pass (`btn--dim`), always there.
+- `GameOverScreen`: the first button's label by the boot.
+- `Keybindings`: `isTextEntry` and the rule.
+- The focus ring's selector gains `input` (the hand-off left it to either
+  step). The kit's scene table gains `MenuScene`.
+- DESIGN: "Saving", the Buttons paragraph, the checklist's Menu row and the
+  two rows it changes, the ring's selector, and a new paragraph, "Fields".
+  ARCHITECTURE and `process/browser-pane.md` follow.
+- Seven strings: `menu.title`, `menu.newRun`, `menu.seed.label`,
+  `menu.seed.placeholder`, `menu.seed.hint`, `charselect.back`,
+  `gameover.toMenu`.
+
+**Changes inside the cut's intent, for the stop.**
+1. **A seed is one run's.** The field is emptied when a run takes it and
+   kept across Back. A seed that stayed would seed the next run without the
+   player asking, and under spec D6 that run would count toward nothing.
+2. **The seed field is the last row and the quietest,** in spec D6's order.
+   The Settings row (116d) and the Credits row (116j) go between New run
+   and it. The other place is directly under New run, whose parameter it is.
+3. **The name is in its own casing,** `ASCIIbattler`, where every other
+   heading is upper-cased.
+4. **The notices sit between the name and the rows,** as they sat above the
+   heading at 115g.
+5. **Enter in the field is New run.**
+6. **Back is on character select on every page,** a dial boot included
+   (the signed reading: "character select keeps Back"). On a page booted by
+   a dial with no character, that is now the only way to Continue or to the
+   three notices, which left character select. Those pages are dev entries.
+7. **The new boxes that hold text are sized in rem** (the rows' column, the
+   notices' width), so 116k has nothing to move here.
+8. **Nowhere shows a player a run's seed.** The exported journal holds it.
+   Whether the end screen or the menu should show it is a question for the
+   stop; nothing is built.
+
+**Tests,** +10: `menuRules.test.ts` 9 (the boot rule over a hand-written
+row per dial, with a census against `RUN_CONFIG_PARAMS` so a new dial fails
+until it has its row; the drivers' URLs; the bookmark, and its name held
+equal to the board explorer's; a dial that parses to nothing; the field's
+cleaning and its seeds, against the URL parser's for the same digits),
+`Keybindings.test.ts` 1 (five kinds of text entry fire nothing; seven other
+targets, a slider among them, fire). Five plants, each failing its test by
+name and then restored: the rule forgetting `bp`; the rule reading one dial
+only; the field keeping letters; the text-field rule removed; a slider
+counted as text entry.
+
+**In the pane** (Chromium; the dev server, `5bc324a-dirty-dev`).
+- **A bare URL** boots `MenuScene` with no run: New run, the field
+  (`inputmode=numeric`, 15 at most, named by its label, described by its
+  hint) and the build's ID; the four chips hidden.
+- **The field:** `seed: 12 34m` typed with the pane's keyboard left `1234`.
+  A synthetic M and `/` on the field were not prevented; the same two on
+  the body were (the control), and an unbound key was not. The ring's
+  computed outline on the focused field: solid 2px white.
+- **The routes:** New run opens character select holding `1234`, with the
+  three cards and Back and none of the 115g stand-ins; Back returns to the
+  menu with `1234` in the field; New run and a card start a run whose dials,
+  saved slot and journal start all read `seed=1234&character=soldier`, with
+  the held text emptied and the chips shown. A synthetic Enter in the field
+  opens character select.
+- **The field's seed is the dial's:** that run's state hash at the map,
+  `782654fc`, equals the hash of a page booted on
+  `?seed=1234&character=soldier`.
+- **A run with the field empty** has dials `character=priest`, no seed.
+- **The four slot states, and a blocked store.** Empty: no Continue, no
+  notice. Saved (after a reload): Continue first, then New run, then the
+  field; a click brings the map at `782654fc` with the chips shown and the
+  journal in its second segment. Rejected (the envelope planted at v46):
+  no Continue, the rejected line, the text left in place. Another tab: no
+  Continue and the other-tab line, while the first tab shows Continue and
+  no notice. `?store=deny`: the menu, no Continue, the can't-save line.
+- **A run's end.** The run driven to a defeat from a menu boot (13 battles):
+  `Main menu` and `Export run`; the click brings the menu with no run, no
+  Continue, the slot empty, the field empty, the chips hidden, and one
+  finished journal kept. A won end screen on a menu boot, mounted by an
+  emitted `run:victory`: the same two buttons, and the menu after.
+- **Dial boots.** `?seed=1234&character=soldier`: the map, no menu.
+  `?seed=7&hops=2`: character select with Back; Back reaches the menu; a run
+  from there has dials `seed=7&hops=2&character=soldier`; played to a win
+  (6 battles), its end screen reads `Begin a new run` and `Export run`, and
+  the click brings character select. `?bp=yaw-30`: character select.
+- **The production build** (`vite preview`, `5bc324a-dirty`, no kit): the
+  menu, with New run, the field and the build's ID; New run opens character
+  select with Back.
+
+**Under Electron.** The seed-7 drive boots to the map: exit 0, `logHash
+a59ee48f`, 12 battles. The build's first screen (no query) is `MenuScene`
+with New run, the field and the build's ID. The recorder on a board fixture
+(`--board=corridors --countdown=skip --max-seconds=6`): OK, 5.5 s, the clip
+opens on the fight.
+
+**Not verified.**
+- Anything in Firefox: the Tab walk, Enter on a row, the ring on the field,
+  how the name and the rows look natively.
+- A win played to its end on a menu boot. The won end screen there came
+  from an emitted event; the played win was on a dial boot.
+- By ear: the click on a row was not heard.
+- On the production build, only the first screen and New run were read.
+
+**Cost.** The production bundle is 615.72 kB raw (612.71 at 116b), the
+stylesheet 57.64 kB (56.50). `npm test`: 233 files, 3368 tests, 46.2 s.
+Typecheck clean.

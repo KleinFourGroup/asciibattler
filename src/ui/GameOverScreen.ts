@@ -4,12 +4,14 @@
  *   - 'complete' — player won the terminal battle.
  *
  * Same structure for both: heading, subtext, the run-end stats body (102d),
- * and the two actions side by side: "Begin a new run" and "Export run".
+ * and the two actions side by side: the way out and "Export run".
  * Variant only changes the copy and accent color, so reusing one component
  * keeps the reset/button flow uniform. The first button dispatches a
- * `resetRun` command (Game handles it by disposing the current Run and
- * starting a fresh one); the second downloads the run's journal as a
- * `.json` file (114e).
+ * `resetRun` command, and Game decides where that leads (116c): the menu on
+ * a page that booted to it, where the button reads "Main menu", and a fresh
+ * run on a page booted by a run dial, where it reads "Begin a new run" as it
+ * always did. The second downloads the run's journal as a `.json` file
+ * (114e).
  *
  * 102d — THE STATS BODY ("the fallen"): `summarizeFallen(Run.fallenLedger)`
  * drawn as the run's totals and one row per encounter somebody fell in
@@ -63,6 +65,8 @@ export class GameOverScreen extends Screen {
     private readonly audio: AudioPlayer,
     /** The finished run's journal (`SceneContext.journal`). */
     private readonly journal: () => RunJournal | null,
+    /** Whether the way out is the menu (`MenuContext.atBoot`). */
+    private readonly toMenu: boolean,
   ) {
     super(mount);
   }
@@ -93,7 +97,7 @@ export class GameOverScreen extends Screen {
     const actions = document.createElement('div');
     actions.className = 'gameover-actions';
     actions.appendChild(
-      button(t('gameover.newRun'), {
+      button(this.toMenu ? t('gameover.toMenu') : t('gameover.newRun'), {
         className: 'btn--primary btn--exit',
         onClick: () => {
           this.audio.play('click');

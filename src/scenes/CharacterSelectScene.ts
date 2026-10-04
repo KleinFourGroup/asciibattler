@@ -1,8 +1,8 @@
 /**
  * CharacterSelectScene (63e). DOM-only wrapper around CharacterSelectScreen —
- * the GameOverScene shape. The ONE scene that mounts with `ctx.run === null`
- * (it exists precisely so the choice can precede Run construction); it
- * deliberately never calls `requireRun`.
+ * the GameOverScene shape. With the MenuScene, one of the two scenes that
+ * mount with `ctx.run === null` (it exists precisely so the choice can
+ * precede Run construction); it deliberately never calls `requireRun`.
  */
 
 import { CharacterSelectScreen } from '../ui/CharacterSelectScreen';
@@ -12,7 +12,7 @@ export class CharacterSelectScene implements Scene {
   private screen: CharacterSelectScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new CharacterSelectScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.save);
+    this.screen = new CharacterSelectScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.menu);
     this.screen.show();
   }
 

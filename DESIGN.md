@@ -109,7 +109,7 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 **Defeat:** Full run reset. A new seed is rolled and a fresh map is generated.
 
-**Saving (§115; Round 8 spec D3):** roguelike saving. There is one run and one slot, and no manual save. The game saves on its own after every choice made outside a battle and when a run starts, because closing the tab is how a web player quits and only an autosave survives that. Opening the game again offers **Continue**, which returns to the screen that was left with the same team, bits and morale; a run's end empties the slot. A battle is never saved in the middle: a tab closed during a fight comes back at the pre-turn screen before it, with that fight already seen. Nothing can be re-rolled by reloading, since the random streams are keyed per occurrence and the same choices give the same results; the edge a reload gives is knowledge only, and it is accepted. A save is refused only when the save format has changed or the save can't be loaded, not on every new build, so a hotfix keeps the runs in progress; a refused save shows a message, and settings and unlocks are kept (no migrations before 1.0). With the game open in two tabs, the first to open owns the saved run; the second says so, can't continue it, and plays unsaved. Where the browser refuses storage the game plays on and says it can't save. Two things a load does not bring back, both presentation: the order the deal animated in on the pre-turn screen, and a reward's already-taken rows. Until the title menu exists, Continue and these notices sit on character select.
+**Saving (§115; Round 8 spec D3):** roguelike saving. There is one run and one slot, and no manual save. The game saves on its own after every choice made outside a battle and when a run starts, because closing the tab is how a web player quits and only an autosave survives that. Opening the game again offers **Continue**, which returns to the screen that was left with the same team, bits and morale; a run's end empties the slot. A battle is never saved in the middle: a tab closed during a fight comes back at the pre-turn screen before it, with that fight already seen. Nothing can be re-rolled by reloading, since the random streams are keyed per occurrence and the same choices give the same results; the edge a reload gives is knowledge only, and it is accepted. A save is refused only when the save format has changed or the save can't be loaded, not on every new build, so a hotfix keeps the runs in progress; a refused save shows a message, and settings and unlocks are kept (no migrations before 1.0). With the game open in two tabs, the first to open owns the saved run; the second says so, can't continue it, and plays unsaved. Where the browser refuses storage the game plays on and says it can't save. Two things a load does not bring back, both presentation: the order the deal animated in on the pre-turn screen, and a reward's already-taken rows. Continue and these notices are on the title menu, the boot screen.
 
 ## Aesthetic
 
@@ -199,12 +199,13 @@ none where no run is live).
 
 | Surface | Controls | Click | Keys | Touch | Hover-only | Morale |
 |---|---|---|---|---|---|---|
-| Character select | the three cards (`button`) | ✓ | ✓ | ✓ | none | none (no run) |
+| Menu (§116) | Continue, New run (`button()`), the seed field (an `<input>` in its `<label>`; Enter in it is New run) | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read) | none | none (no run) |
+| Character select | the three cards (`button`), Back (`button()`, §116) | ✓ | ✓ | ✓ | none | none (no run) |
 | Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none | chip |
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
 | Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none | gauges (live) |
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
-| Game over (both variants) | New Run (`button()`); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
+| Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
@@ -276,8 +277,11 @@ audio cue stays in the handler. `.btn--primary` is the walk-on action's look; it
 modifiers name a deliberate delta (`btn--dim` a pass, `btn--exit` the
 controls of an end screen, where nothing else can be acted on — the hover
 fills it; sector cleared has one, game over two side by side since §114:
-a new run, and the run's journal as a file — `btn--corner` a
-viewport-pinned corner control). A site's POSITION stays on its own class.
+the way out (the menu since §116; a new run on a page booted by a run
+dial), and the run's journal as a file — `btn--corner` a
+viewport-pinned corner control). The menu's rows are bare `.btn--primary`
+in one column of one width, and character select's Back is a pass
+(`btn--dim`). A site's POSITION stays on its own class.
 Secondary buttons keep their own classes until an idiom for them earns
 its place.
 
@@ -494,9 +498,10 @@ pins are the forgetful-path guard.
 **Focus (100).** The focus state IS the hover state, plus ONE ring. Every
 `X:hover` rule in `ui.css` carries `X:focus-visible` in the same selector
 list (a pin fails a hover rule without its twin), and one zero-specificity
-ring — `:where(button, select, [role='button'], [tabindex='0'])
+ring — `:where(button, select, input, [role='button'], [tabindex='0'])
 :focus-visible`, 2px solid WHITE at a 2px offset — paints on every control
-under keyboard focus only (a click or a tap never shows it). White because
+under keyboard focus only (a click or a tap never shows it; a text field
+is the exception, ringed on a click too, since typing follows). White because
 it is nobody's state hue (amber is hover, blue is frontier / selection,
 green is active), and a ring is a shape, so the 98a grey read passes by
 construction. A control whose own `outline` means something (98c's frontier
@@ -507,6 +512,15 @@ present) — never on a control. Controls: a real `<button>` (`button()`, or
 inline with `type="button"`), or `pressable()` for one that carries
 interactive children; a toggle mirrors its selected class as
 `aria-pressed`; an inert one is `aria-disabled` + out of the Tab order.
+
+**Fields (116).** A text field is a native `<input>` inside its `<label>`,
+so the visible name is the accessible name and a click on the word focuses
+the field; a hint under it is tied on with `aria-describedby`. Its text is
+cleaned as it is typed, so a field has no refused state and nothing appears
+under it to say so (the seed field keeps digits; `cleanSeedText`). The ring
+covers it, the hover twin is its border, and a key typed in it fires no
+hotkey (`isTextEntry`, with the key rules in `Keybindings.ts`). Enter in a
+field is the action the field feeds. The first is the menu's seed field.
 
 **Layout stability (101).** A control must not move across its own click.
 (The spec and the older notes call this "the hysteresis class" / "the

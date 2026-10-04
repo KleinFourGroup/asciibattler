@@ -31,7 +31,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHEET = 'src/ui/ui.css';
 
 /** The one ring rule's selector, verbatim (ui.css §100). */
-const RING_SELECTOR = ":where(button, select, [role='button'], [tabindex='0']):focus-visible";
+const RING_SELECTOR = ":where(button, select, input, [role='button'], [tabindex='0']):focus-visible";
 /** The only rules allowed to drop the outline: the 96f modal containers and
  *  the 100e screen container (`Screen.present` focuses it, tabindex=-1). */
 const OUTLINE_NONE_ALLOWED = [

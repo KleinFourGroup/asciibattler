@@ -27,6 +27,8 @@ import { installTooltipHost, toggleTooltipKey } from './ui/tooltip';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
+import { MenuScene } from './scenes/MenuScene';
+import { bootsToMenu, seedFromText } from './scenes/menuRules';
 import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import type { DeckCue } from './ui/PreTurnScreen';
@@ -69,10 +71,14 @@ const TURN_OUTRO_MS = 900;
  *   - run:defeated → GameOverScene('defeat')
  *   - chooseRecruit returning to phase=='map' → MapScene (driven from
  *     dispatch, since no bus event fires for that transition)
- *   - resetRun → MapScene (new Run) with a `?character=` pin, else the
- *     CharacterSelectScene (63e — the choice is per-run)
+ *   - resetRun → MapScene (new Run) with a `?character=` pin; else the
+ *     MenuScene on a page that booted to it (116c), or the
+ *     CharacterSelectScene on a page booted by a run dial (63e — the choice
+ *     is per-run)
  *   - chooseCharacter (63e, select-scene confirm) → construct the Run →
  *     MapScene
+ *   - the menu's New run → CharacterSelectScene, and its Back → MenuScene
+ *     (116c; neither is a command, since no run exists on either side)
  *
  * A2: implements `RunDispatcher`. UI screens (now Scene-owned) hold this as
  * their command sink. Game forwards `enterNode` / `chooseRecruit` to the
@@ -182,6 +188,21 @@ export class Game implements RunDispatcher {
    * an unset seed gives a new `Date.now()` run each time.
    */
   private readonly runConfig: RunConfig;
+  /**
+   * 116c — whether this page booted to the menu: a plain URL, with no run
+   * dial and no board bookmark (src/scenes/menuRules.ts). Fixed for the
+   * page's life. It decides the first screen and where a run's end goes: the
+   * menu here, and as before the menu on a page booted by a dial, so no
+   * driver's path changed.
+   */
+  private readonly menuBoot: boolean;
+  /**
+   * 116c — the menu's seed field, as text. The menu hands it over with New
+   * run, character select's Back finds it as it was left, and the run that
+   * is created takes it (`createRun`), which empties it: a seed is one run's,
+   * so the run after it is seeded from the clock again.
+   */
+  private seedText = '';
   /** The scene currently mounted. Null only briefly during swap(). */
   private activeScene: Scene | null = null;
   /** 96.5b2 — the in-flight outro's cancellation token (`afterOutro`);
@@ -226,6 +247,7 @@ export class Game implements RunDispatcher {
     // layout / width). No params ⇒ empty config ⇒ a normal `Date.now()`-seeded
     // run, byte-identical to pre-G1. Supersedes the old inline `?roster=`.
     this.runConfig = parseRunConfigFromURL();
+    this.menuBoot = bootsToMenu(location.search);
 
     // 63e — construct the Run NOW only when `?character=` pins the choice;
     // otherwise it stays null until the CharacterSelectScene confirms
@@ -470,9 +492,34 @@ export class Game implements RunDispatcher {
     // no-op until a scene subscribes a handler, so this can attach once at boot.
     window.addEventListener('keydown', this.keybindings.handleKeyDown);
 
-    // Boot into the map (a `?character=` pin constructed the Run above) or
-    // the character select (63e — the choice precedes Run construction).
-    this.swap(this.run !== null ? new MapScene() : new CharacterSelectScene());
+    // Boot into the map (a `?character=` pin constructed the Run above), the
+    // menu (116c — a plain URL), or the character select (a run dial with no
+    // character: 63e — the choice precedes Run construction).
+    if (this.run !== null) this.swap(new MapScene());
+    else this.swap(this.menuBoot ? new MenuScene() : new CharacterSelectScene());
+  }
+
+  /**
+   * 116c — the menu's New run: on to character select, holding the seed
+   * field's text for the run that is confirmed there. A run saved in the slot
+   * is untouched until then, so Back still finds Continue.
+   */
+  private openCharacterSelect(seedText: string): void {
+    if (this.run !== null) {
+      console.warn('[Game] the menu New run ignored: a run is already live');
+      return;
+    }
+    this.seedText = seedText;
+    this.swap(new CharacterSelectScene());
+  }
+
+  /** 116c — character select's Back: the menu, with nothing started. */
+  private backToMenu(): void {
+    if (this.run !== null) {
+      console.warn('[Game] character select Back ignored: a run is already live');
+      return;
+    }
+    this.swap(new MenuScene());
   }
 
   /**
@@ -704,9 +751,8 @@ export class Game implements RunDispatcher {
    * new segment, and the gate's screen re-mounted by `Run.resume()`. Returns
    * the read: on `empty` or `rejected` nothing changes, and a rejected
    * slot's text stays in place (`store.readStrict`); on `elsewhere` the run
-   * is open in another tab and the slot was not read (115f). §116's Continue
-   * row calls this; until then character select's Continue does (115g,
-   * through the scene context's `save`).
+   * is open in another tab and the slot was not read (115f). The menu's
+   * Continue row calls this, through the scene context's `save`.
    */
   continueRun(): RunSlotRead {
     const read = this.runSlot.read();
@@ -785,11 +831,14 @@ export class Game implements RunDispatcher {
   }
 
   /**
-   * Tear down the current Run and start a fresh one with a new seed. Wired
-   * to GameOverScreen's "Begin a new run" button via the `resetRun`
-   * command. Date.now() seed gives a different map and team per restart;
-   * replay / shareable seeds can hook in later by reading from URL or a
-   * debug panel.
+   * Tear down the current Run and leave its end screen. Wired to the
+   * GameOverScreen's first button via the `resetRun` command. On a page that
+   * booted to the menu that is the menu (116c); on a page booted by a run
+   * dial it is a fresh run, seeded from the clock unless the URL pins a seed.
+   *
+   * This empties the run slot, so it is the route for a run that is over.
+   * Landing note for 116d: Quit to menu leaves a live run saved for Continue,
+   * so it must not come through here.
    */
   private resetRun(): void {
     // A run reset before its end leaves an abandoned journal; one that had
@@ -802,10 +851,10 @@ export class Game implements RunDispatcher {
     // character's new run saves over the slot below.
     this.runSlot.clear();
     // 63e — the locked reset fork: a `?character=` pin goes straight to a
-    // fresh run + map; without it, a new run STARTS at character select
+    // fresh run + map; without it no run exists until a character is chosen
     // (the choice is per-run, not sticky). The chips were hidden by the
-    // run:defeated/run:victory that preceded the reset button, so the
-    // select path leaves them hidden until the next run:started.
+    // run:defeated/run:victory that preceded the reset button, so that path
+    // leaves them hidden until the next run:started.
     if (this.runConfig.character !== undefined) {
       this.run = this.createRun();
       this.autosave(this.run);
@@ -823,7 +872,11 @@ export class Game implements RunDispatcher {
       this.bitsOverlay.refresh();
       this.poolOverlay.refresh();
       this.cacheOverlay.refresh();
-      this.swap(new CharacterSelectScene());
+      // 116c — a run's end goes to the menu on a page that booted to it, the
+      // defeat and the win alike (the §116 shape-lock, call 3). Landing note
+      // for 116j: the first won run goes to the menu by way of the credits,
+      // from here.
+      this.swap(this.menuBoot ? new MenuScene() : new CharacterSelectScene());
     }
   }
 
@@ -861,11 +914,19 @@ export class Game implements RunDispatcher {
    * G1 — build a fresh Run from the parsed RunConfig. Shared by the
    * constructor, `resetRun`, and — 63e — `confirmCharacter`, which passes
    * the scene-chosen character (layered over the URL config; a URL
-   * `?character=` pin means this is never called with one).
+   * `?character=` pin means this is never called with one). 116c — the
+   * menu's seed field is layered the same way, for this run alone: its seed
+   * goes into the run's dials, which is how a seeded run is told from one
+   * seeded by the clock (the slot and the journal's start keep the dials).
    */
   private createRun(character?: CharacterConfig): Run {
-    const config: RunConfig =
-      character !== undefined ? { ...this.runConfig, character } : this.runConfig;
+    const typedSeed = seedFromText(this.seedText);
+    this.seedText = '';
+    const config: RunConfig = {
+      ...this.runConfig,
+      ...(character !== undefined ? { character } : {}),
+      ...(typedSeed !== undefined ? { seed: typedSeed } : {}),
+    };
     const seed = config.seed ?? Date.now();
     const run = new Run(seed, this.bus, config);
     // H4b — the live game pauses at turn gates so the pre/post-turn screens can
@@ -975,6 +1036,12 @@ export class Game implements RunDispatcher {
         slot: () => this.runSlot.peek(),
         canSave: () => store.status().canSave,
         continue: () => this.continueRun().status,
+      },
+      menu: {
+        atBoot: this.menuBoot,
+        seedText: () => this.seedText,
+        newRun: (seedText) => this.openCharacterSelect(seedText),
+        back: () => this.backToMenu(),
       },
       audio: this.audio,
       playback: this.playback,

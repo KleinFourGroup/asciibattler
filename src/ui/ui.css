@@ -1791,9 +1791,10 @@ body {
 /* The sector-cleared button is `.btn--primary.btn--exit` (96d), the
    game-over clone it always was. */
 
-/* Character select (63e). The run's first screen when no ?character= pins
+/* Character select (63e). Where a new run starts when no ?character= pins
    the choice. Functional, not art-directed (the §63 scope guard) — the
-   gameover-screen chrome vocabulary: opaque black, mono, amber borders. */
+   gameover-screen chrome vocabulary: opaque black, mono, amber borders.
+   116c — Back, under the cards, is a bare `.btn--primary.btn--dim`. */
 
 .charselect-screen {
   position: absolute;
@@ -1871,23 +1872,44 @@ body {
   color: var(--color-neon-purple);
 }
 
-/* 115g — the boot screen's stand-ins until the menu: Continue above the
-   heading (the look is .btn--primary's; this class is its place), and what
-   the boot has to say about saving, one line each. Both are drawn with the
-   screen and never come or go while it is up. */
-.charselect-continue {
-  align-self: center;
+/* The menu (116c), the boot screen: the game's name, what the boot has to
+   say about saving, then the rows. The same chrome vocabulary as the other
+   opaque screens. Everything is drawn with the screen and never comes or
+   goes while it is up. The boxes that hold text are sized in rem, so they
+   grow with the text scale. */
+
+.menu-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
+  font-family: var(--font-mono);
 }
 
-.charselect-notices {
+/* The name in its own casing, not upper-cased like a screen's heading. The
+   left padding equals the tracking after the last letter, so the letters
+   themselves sit on the centre line. */
+.menu-title {
+  padding-left: 0.2em;
+  font-size: var(--text-56);
+  letter-spacing: 0.2em;
+  color: var(--color-terminal-green);
+  text-shadow: 0 0 18px rgb(from var(--color-terminal-green) r g b / 0.35);
+}
+
+.menu-notices {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 720px;
+  max-width: 45rem;
   text-align: center;
 }
 
-.charselect-notice {
+.menu-notice {
   font-size: var(--text-13);
   line-height: 1.5;
   color: var(--color-terminal-amber);
@@ -1895,10 +1917,66 @@ body {
   text-wrap: balance;
 }
 
+/* The rows are one column of one width: each row is a bare `.btn--primary`,
+   stretched to the column. */
+.menu-rows {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 18rem;
+  max-width: 92vw;
+}
+
+/* The seed field, the first text field (DESIGN §UI idioms, "Fields"): the
+   name and the field on one line inside their label, the field taking what
+   the name leaves. Quieter than the rows above it, since most runs never
+   touch it. */
+.menu-seed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: var(--text-12);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+}
+
+.menu-seed__field {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-14);
+  letter-spacing: 0.08em;
+  padding: 8px 10px;
+  border: 1px solid var(--color-dark-terminal-amber);
+  background: var(--color-black);
+  color: var(--color-terminal-amber);
+  caret-color: var(--color-terminal-amber);
+  transition: border-color 0.1s;
+}
+
+.menu-seed__field::placeholder {
+  color: var(--color-gray-66);
+  opacity: 1; /* Firefox dims a placeholder on its own; the token is the dim */
+}
+
+.menu-seed__field:hover,
+.menu-seed__field:focus-visible {
+  border-color: var(--color-flourescent-blue);
+}
+
+.menu-seed__hint {
+  font-size: var(--text-11);
+  line-height: 1.5;
+  color: var(--color-gray-66);
+}
+
 /* The build's ID, pinned to the screen's bottom-right corner: the top-left is
    the chrome column's and the top-right a corner button's on other screens.
    Selectable, since it is there to be copied into a bug report. */
-.charselect-build {
+.menu-build {
   position: absolute;
   right: 16px;
   bottom: 12px;
@@ -3973,17 +4051,19 @@ body {
    1. every `X:hover` rule above carries `X:focus-visible` in its selector
       list — the focus state IS the hover state (tests/ui-focus.test.ts
       fails a hover rule without its twin);
-   2. this ONE ring on every control — `button`, `select`, `[role=button]`
-      (the cards, 100c2) and the `tabindex=0` text sites (97d) — under
-      `:focus-visible` only, so a mouse click or a tap never paints it
-      (both engines grant focus-visible to keyboard focus alone). `:where`
+   2. this ONE ring on every control — `button`, `select`, `input` (116c),
+      `[role=button]` (the cards, 100c2) and the `tabindex=0` text sites
+      (97d) — under `:focus-visible` only, so a mouse click or a tap never
+      paints it (both engines grant focus-visible to keyboard focus alone;
+      a text field is the exception, ringed on a click too, since typing
+      follows). `:where`
       keeps it at zero specificity: a control's own outline (98c's frontier
       double ring, the enemy card's hover outline) outranks it by design,
       and the map node gets its ring on `box-shadow` below.
    White, not a state hue: amber is hover, blue is frontier / selection,
    green is active — the ring is its own channel, and a ring is a SHAPE,
    so it survives the 98a grey read by construction. */
-:where(button, select, [role='button'], [tabindex='0']):focus-visible {
+:where(button, select, input, [role='button'], [tabindex='0']):focus-visible {
   outline: 2px solid var(--color-white);
   outline-offset: 2px;
 }

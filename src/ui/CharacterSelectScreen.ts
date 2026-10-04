@@ -1,21 +1,20 @@
 /**
- * 63e — the character-select screen: the run's FIRST screen when no
- * `?character=` pins the choice (and the landing screen after a reset
- * without the pin). Functional, not art-directed (the §63 scope guard):
- * one card per catalog character — name, description, roster summary,
- * starting daemon — click to confirm.
+ * 63e — the character-select screen: where a new run starts when no
+ * `?character=` pins the choice. The menu's New run opens it (116c); on a
+ * page booted by a run dial it is the first screen, and the landing screen
+ * after a reset. Functional, not art-directed (the §63 scope guard): one
+ * card per catalog character — name, description, roster summary, starting
+ * daemon — click to confirm.
  *
  * The confirm dispatches `chooseCharacter`, which GAME handles by
  * CONSTRUCTING the Run (the choice precedes Run construction — the §63
- * seam). This screen is the one UI surface that legally exists with
- * `ctx.run === null`.
+ * seam). With the menu, this is one of the two UI surfaces that legally
+ * exist with `ctx.run === null`.
  *
- * 115g — it is also the boot screen until §116's menu, so it stands in for
- * the menu's Continue row and for what a boot has to tell the player about
- * saving: Continue when the run slot holds a run this tab can load, and a
- * notice for a rejected save, for a run open in another tab, and for a store
- * that can't save. They are drawn once, when the screen is shown, so nothing
- * above the cards comes or goes while the player aims at one.
+ * 116c — Back, under the cards, returns to the menu with nothing started: a
+ * pass, so it wears the pass's look (`btn--dim`). It is always there, so
+ * nothing on the screen comes or goes. Continue, the three notices about
+ * saving and the build's ID, which stood here from 115g, are the menu's.
  */
 
 import { CHARACTERS, type CharacterConfig } from '../config/characters';
@@ -23,12 +22,10 @@ import { daemonById } from '../config/daemons';
 import { nameForArchetype } from '../sim/archetypes';
 import type { RunDispatcher } from '../run/Command';
 import type { AudioPlayer } from '../audio/AudioPlayer';
-import type { SaveContext } from '../scenes/Scene';
-import { runRejectedMessage } from '../store/runSlot';
+import type { MenuContext } from '../scenes/Scene';
 import { Screen } from './Screen';
 import { button } from './button';
 import { t } from '../i18n/ui';
-import { BUILD_ID } from '../buildId';
 
 /** "6× Mercenary · 4× Archer" — counts in roster order, display names. */
 function rosterSummary(character: CharacterConfig): string {
@@ -45,7 +42,7 @@ export class CharacterSelectScreen extends Screen {
     mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
-    private readonly save: SaveContext,
+    private readonly menu: MenuContext,
   ) {
     super(mount);
   }
@@ -58,37 +55,6 @@ export class CharacterSelectScreen extends Screen {
   private render(): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = 'charselect-screen';
-
-    const slot = this.save.slot();
-    if (slot === 'saved') {
-      panel.appendChild(
-        button(t('save.continue'), {
-          className: 'btn--primary charselect-continue',
-          onClick: () => {
-            this.audio.play('click');
-            // The save loaded when this screen was drawn. If it no longer
-            // does, draw the screen again, which says why.
-            if (this.save.continue() !== 'ok') this.show();
-          },
-        }),
-      );
-    }
-    const notices: string[] = [];
-    if (slot === 'rejected') notices.push(runRejectedMessage());
-    if (slot === 'elsewhere') notices.push(t('save.elsewhere'));
-    if (!this.save.canSave()) notices.push(t('save.unavailable'));
-    if (notices.length > 0) {
-      const list = document.createElement('div');
-      list.className = 'charselect-notices';
-      for (const text of notices) {
-        const notice = document.createElement('div');
-        notice.className = 'charselect-notice';
-        // The glyph stays outside the locale value (DESIGN §UI idioms, Strings).
-        notice.textContent = `⚠ ${text}`;
-        list.appendChild(notice);
-      }
-      panel.appendChild(list);
-    }
 
     const heading = document.createElement('div');
     heading.className = 'charselect-heading';
@@ -103,12 +69,15 @@ export class CharacterSelectScreen extends Screen {
       row.appendChild(this.renderCard(character));
     }
 
-    // The build's ID, small in a corner of the boot screen: what a player
-    // quotes in a bug report. It moves to the title menu when there is one.
-    const build = document.createElement('div');
-    build.className = 'charselect-build';
-    build.textContent = BUILD_ID;
-    panel.appendChild(build);
+    panel.appendChild(
+      button(t('charselect.back'), {
+        className: 'btn--primary btn--dim',
+        onClick: () => {
+          this.audio.play('click');
+          this.menu.back();
+        },
+      }),
+    );
 
     return panel;
   }

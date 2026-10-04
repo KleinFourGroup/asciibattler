@@ -11,6 +11,7 @@ import { CharacterSelectScene } from '../../scenes/CharacterSelectScene';
 import { EventScene } from '../../scenes/EventScene';
 import { GameOverScene } from '../../scenes/GameOverScene';
 import { MapScene } from '../../scenes/MapScene';
+import { MenuScene } from '../../scenes/MenuScene';
 import { PortScene } from '../../scenes/PortScene';
 import { PreTurnScene } from '../../scenes/PreTurnScene';
 import { PromotionScene } from '../../scenes/PromotionScene';
@@ -24,6 +25,7 @@ export const SCENE_CLASSES = {
   EventScene,
   GameOverScene,
   MapScene,
+  MenuScene,
   PortScene,
   PreTurnScene,
   PromotionScene,

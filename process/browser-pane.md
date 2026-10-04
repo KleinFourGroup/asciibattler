@@ -245,6 +245,16 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
 
 ## Fixtures
 
+- A bare URL boots the menu (`ready()` reads `scene: 'MenuScene'`, `phase:
+  null`): a continue check clicks its Continue, and a new run goes through
+  New run and a character card, with no run until the card. Any run dial
+  that parses, or a `bp=` bookmark, skips the menu (`src/scenes/menuRules.ts`),
+  and `drive()` needs a run, so a driven check still puts `character=` in
+  the URL. A page booted by a dial ends a run the old way (a new run, or
+  character select), where a menu boot returns to the menu. `?store=deny`
+  is no run dial, so it boots the menu.
+- A `go()` ends the script it is called in: read what you need in one call
+  and navigate in the next, or the value is lost.
 - URL dials pin a run: `seed=<n>` with `layout=`, `character=`,
   `firstNode=`, `roster=`, `hops=` (a short run, to the boss). For example
   `layout=isthmus&seed=7&character=soldier` gives an event at node 0 and a

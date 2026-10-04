@@ -54,8 +54,8 @@ export interface SceneContext {
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
   readonly dispatcher: RunDispatcher;
-  /** 63e — NULL exactly when no Run exists yet (the pre-select boot: the
-   *  CharacterSelectScene mounts before Run construction). Every other
+  /** 63e — NULL exactly when no Run exists yet (the menu and the
+   *  CharacterSelectScene mount before Run construction). Every other
    *  scene asserts via `requireRun(ctx)` at mount — the compiler makes each
    *  scene say whether it can run pre-Run (the kickoff shape-lock). */
   readonly run: Run | null;
@@ -64,9 +64,11 @@ export interface SceneContext {
    *  no run. A function, because the journal of a run that just ended closes
    *  after the end screen has mounted. */
   readonly journal: () => RunJournal | null;
-  /** 115g — the saved run, as the boot screen asks after it (character
-   *  select until §116's menu). Functions, read when the screen is drawn. */
+  /** 115g — the saved run, as the menu asks after it. Functions, read when
+   *  the screen is drawn. */
   readonly save: SaveContext;
+  /** 116c — the menu's routes: where a run's end goes, New run and Back. */
+  readonly menu: MenuContext;
   readonly audio: AudioPlayer;
   /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
@@ -89,6 +91,26 @@ export interface SaveContext {
   continue(): RunSlotRead['status'];
 }
 
+/**
+ * 116c — the menu's side of the game. These are routes between two screens
+ * that have no run, so they are functions here and not run commands: a
+ * command kind would join the journal's kinds and the chaos census.
+ */
+export interface MenuContext {
+  /** True on a page that booted to the menu (a plain URL;
+   *  src/scenes/menuRules.ts): a run's end goes back to it. False on a page
+   *  booted by a run dial, where a run's end starts the next run. */
+  readonly atBoot: boolean;
+  /** The seed field's text as the page holds it: kept from New run through
+   *  character select's Back, and emptied when a run takes it. */
+  seedText(): string;
+  /** The menu's New run: on to character select. The run started there takes
+   *  `seedText` as its seed; an empty one leaves the seed to the clock. */
+  newRun(seedText: string): void;
+  /** Character select's Back: the menu, with nothing started. */
+  back(): void;
+}
+
 export interface Scene {
   mount(ctx: SceneContext): void;
   tick(dt: number): void;
@@ -96,8 +118,9 @@ export interface Scene {
 }
 
 /** 63e — assert the context carries a live Run (every scene except the
- *  CharacterSelectScene). A null here is a Game sequencing bug — a run-
- *  dependent scene mounted before select confirmed — so throw loud. */
+ *  MenuScene and the CharacterSelectScene). A null here is a Game sequencing
+ *  bug — a run-dependent scene mounted before select confirmed — so throw
+ *  loud. */
 export function requireRun(ctx: SceneContext): Run {
   if (ctx.run === null) {
     throw new Error('Scene requires a live Run, but none exists yet (pre-select boot)');

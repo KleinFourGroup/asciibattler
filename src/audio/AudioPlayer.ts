@@ -10,8 +10,8 @@
  * tick) before stealing the oldest.
  *
  * Browsers block audio playback until the first user gesture. The first
- * trigger in this game is a map-node click — itself a gesture — so the
- * unlock happens transparently. play() rejections from the autoplay
+ * trigger in this game is a click on a menu row (a map node on a page booted
+ * by a run dial) — itself a gesture — so the unlock happens transparently. play() rejections from the autoplay
  * policy are swallowed: gameplay should not break when audio is blocked.
  *
  * Assets live in `public/audio/` and are referenced by relative path so

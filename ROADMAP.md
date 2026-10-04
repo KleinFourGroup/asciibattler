@@ -193,7 +193,7 @@ achievements row, no camera row.
 
 - [x] **116a** — the settings, headless: the lenient section, its model, and `main.ts`'s second import, which sets the locale before the catalogs load. Read `none`. ✅ (WORKLOG §116a).
 - [x] **116b** — the consumers, no surface yet: the two volume axes, the keys (the swap, the modifier rule, the labels live), the starting speed, the motion override, the shake, the aura mode. Read `none`. ✅ (WORKLOG §116b; three launches on one Electron profile, the dev server and the production build).
-- [ ] **116c** — the menu as the boot screen: Continue, New run, the seed field, the three notices, the build ID; both end screens exit to it; character select gains Back. Read `stop`, one sitting with 116d.
+- [ ] **116c** ◐ BUILT 2026-10-04, the sitting unread (WORKLOG §116c) — the menu as the boot screen: Continue, New run, the seed field, the three notices, the build ID; both end screens exit to it; character select gains Back. Read `stop`, one sitting with 116d.
 - [ ] **116d** — the settings modal, its two openers, and the rows for volume, speed, motion, shake and aura. Read `stop`, in Firefox: move a volume and hear it, reload and find it kept, open settings from the chip in a battle; wrong is a row that doesn't hold, a control the Tab walk misses, a battle running on behind the modal.
 - [ ] **116e** — the key rows: rebind, swap, reset. Read `batch` (at 116g's stop): rebind Pause to P, and the Fight-now button and tooltips say P; bind Focus to P and the two swap; wrong is a stale label, one key firing two actions, Ctrl+F still swallowed.
 - [ ] **116f** — the palette's mechanism: `COLORS` chosen by name at boot, the copied hexes moved onto it; the default palette's colours equal to the parent commit's table. Read `none`.

@@ -88,6 +88,7 @@
   "lastturn.fallen": "{name} Lv{level} (−{power})",
   "common.pass": "Pass",
   "gameover.newRun": "Begin a new run",
+  "gameover.toMenu": "Main menu",
   "gameover.export": "Export run",
   "gameover.exportTip": "Save this run's journal as a file: its seed and every choice you made, enough to replay the run. Send it along with a bug report or feedback.",
   "gameover.stats.title": "The fallen",
@@ -145,6 +146,7 @@
   "promotion.delta.moveCadence": "Move cadence",
   "playback.paused": "Paused",
   "charselect.heading": "Choose Your Character",
+  "charselect.back": "Back",
   "sectorcleared.heading": "Sector Cleared",
   "sectorcleared.behind": "{sector} is behind you.",
   "sectorcleared.next": "Next: {sector}",
@@ -193,5 +195,10 @@
   "save.rejected": "This run was saved by an older version of the game and can't be continued. Your settings and unlocks are kept.",
   "save.continue": "Continue",
   "save.elsewhere": "The game is open in another tab. This tab can't continue your run, and a run started here won't be saved.",
-  "save.unavailable": "The game can't save here: its storage is blocked or full. A run won't survive closing the tab."
+  "save.unavailable": "The game can't save here: its storage is blocked or full. A run won't survive closing the tab.",
+  "menu.title": "ASCIIbattler",
+  "menu.newRun": "New run",
+  "menu.seed.label": "Seed",
+  "menu.seed.placeholder": "random",
+  "menu.seed.hint": "The same seed gives the same map and offers. Leave it empty for a random one."
 }

@@ -27,6 +27,8 @@
  *    key per action.
  *  - A keydown with Ctrl, Alt or Meta held fires no hotkey: Ctrl+F is the
  *    browser's find, not Focus. Shift passes, since `?` is Shift+Slash.
+ *  - A keydown in a text field fires no hotkey (`isTextEntry`): the key is
+ *    the field's, and a hotkey that took it would also swallow the character.
  *
  * Lifetimes split cleanly: the registry (codes + the window listener) is
  * page-lifetime; the `on(...)` HANDLERS are battle-scoped (the HUD subscribes on
@@ -44,6 +46,8 @@ export interface KeyLike {
   readonly ctrlKey?: boolean;
   readonly altKey?: boolean;
   readonly metaKey?: boolean;
+  /** What the key was pressed in. A real event's is its `EventTarget`. */
+  readonly target?: unknown;
   preventDefault(): void;
 }
 
@@ -54,6 +58,33 @@ export type Bindings = Readonly<Record<KeybindAction, string>>;
 
 /** The keys no action can take. */
 export const RESERVED_CODES: readonly string[] = ['Enter', 'NumpadEnter', 'Tab', 'Escape'];
+
+/** The `<input>` types that take no typed text; every other type does. */
+const NON_TEXT_INPUT_TYPES: readonly string[] = [
+  'button',
+  'checkbox',
+  'color',
+  'file',
+  'image',
+  'radio',
+  'range',
+  'reset',
+  'submit',
+];
+
+/**
+ * Whether a keydown's target takes typed text: a text `<input>`, a
+ * `<textarea>`, or editable content. Read by shape, with no DOM class, so it
+ * runs where there is no DOM. A slider or a checkbox is not text entry, and a
+ * hotkey still wins over it (the Space rule, DESIGN §Input accessibility).
+ */
+export function isTextEntry(target: unknown): boolean {
+  if (typeof target !== 'object' || target === null) return false;
+  const el = target as { tagName?: unknown; type?: unknown; isContentEditable?: unknown };
+  if (el.isContentEditable === true) return true;
+  if (el.tagName === 'TEXTAREA') return true;
+  return el.tagName === 'INPUT' && !(typeof el.type === 'string' && NON_TEXT_INPUT_TYPES.includes(el.type));
+}
 
 /**
  * `bindings` with `action` on `code`. If another action held `code`, it takes
@@ -179,14 +210,16 @@ export class Keybindings {
   }
 
   /** The single keydown sink (Game binds it to `window`). Skips auto-repeat so
-   *  one press = one fire, and a press with Ctrl, Alt or Meta held, which is
-   *  the browser's or the dev keys'; `preventDefault`s only when a bound action
+   *  one press = one fire, a press with Ctrl, Alt or Meta held, which is the
+   *  browser's or the dev keys', and a press in a text field, which is the
+   *  field's; `preventDefault`s only when a bound action
    *  actually has a live subscriber, so unbound keys and out-of-battle presses
    *  fall through to the browser / other listeners untouched. Bound (arrow) so
    *  it survives being passed to `addEventListener` / `removeEventListener`. */
   readonly handleKeyDown = (e: KeyLike): void => {
     if (e.repeat) return;
     if (e.ctrlKey === true || e.altKey === true || e.metaKey === true) return;
+    if (isTextEntry(e.target)) return;
     const action = this.actionFor(e.code);
     if (!action) return;
     const set = this.handlers.get(action);

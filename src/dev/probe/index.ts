@@ -575,7 +575,7 @@ export function installProbe(game: Game): Probe {
         for (;;) {
           if (call !== calls) throw new Error(`__probe.drive (call ${call}): superseded by call ${calls}`);
           const run = internals.run;
-          if (run === null) throw new Error('__probe.drive: no run (character select?); put character= in the URL');
+          if (run === null) throw new Error('__probe.drive: no run (the menu, or character select?); put character= in the URL');
           const phase = run.phase;
           if (opts.until === phase) return report(true, `reached ${phase}`);
           const step = PHASE_ROWS[phase](run, d.pick);

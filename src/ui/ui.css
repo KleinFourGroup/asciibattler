@@ -1929,9 +1929,10 @@ body {
 }
 
 /* The seed field, the first text field (DESIGN §UI idioms, "Fields"): the
-   name and the field on one line inside their label, the field taking what
-   the name leaves. Quieter than the rows above it, since most runs never
-   touch it. */
+   name and the field on one line, the field taking what the name leaves.
+   Quieter than the rows above it, since most runs never touch it. The word
+   carries the explanation as its tooltip (116c-post), and a dotted
+   underline says it has one. */
 .menu-seed {
   display: flex;
   align-items: center;
@@ -1967,10 +1968,10 @@ body {
   border-color: var(--color-flourescent-blue);
 }
 
-.menu-seed__hint {
-  font-size: var(--text-11);
-  line-height: 1.5;
-  color: var(--color-gray-66);
+.menu-seed__name {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
 }
 
 /* The build's ID, pinned to the screen's bottom-right corner: the top-left is

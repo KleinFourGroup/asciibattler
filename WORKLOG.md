@@ -5438,3 +5438,85 @@ mechanism) and 116g to its first stop (the candidate palette and its
 table). From about 480k after this commit, with this phase's steps so far at
 35k to 251k, it does not look likely to fit under the 550k line. The sitting's
 findings and their `-post` fixes look likely to.
+
+### The first sitting (2026-10-04, the user's) — 116c and 116d READ ✅, two findings and a question
+
+In Firefox. The message's own time was not read; the session's first
+command after it ran at 13:10. The verdict: "All of the points for me
+to read pass." The reading on 116d's commit (`f466dbc`): **476,854** at
+12:12.
+
+**Finding 1: the seed's explanation on the menu reads as clutter.** The
+user: it should exist, but as hover text on the word, not as a line on the
+menu ("If we click on the word 'Seed,' just have the explanation pop up").
+Built as 116c-post, below.
+
+**The question beside it, open.** The lines under the settings rows could
+go the same way, which would be one idiom for every explanation; the user
+is of two minds ("those explanations being always visible might be more
+appropriate there"). The session's lean, put to the user: keep them. Three
+of the four say what the row's choices do (Yours and Theirs mean nothing
+without "whose morale losses shake the view"), which is information a
+player acts on, and DESIGN's tooltip rule keeps that off a tooltip alone.
+The seed's line is not that kind: the placeholder already says what an
+empty field does.
+
+**Finding 2: the settings chip, third in the left column, interrupts the
+game-state chips.** The user agrees it can't go last (it would move) and
+finds first too prominent; their proposal is a second ribbon in the top
+right, probably for it alone, and they are content for it to be a TODO.
+Read after the report, the top-right corner at `f466dbc`: the battle's
+speed pane (`.hud-speed-pane`), the roster button on the map, the pre-turn
+screen and the recruit screen (`.card-list-button--roster`), and the port's
+Leave (`.port-leave`). So five of a run's screens hold a control there, not
+the battle alone; the reward, promotion, event and sector-cleared screens
+are free. Filed in TODO "§116 riders" with the census.
+
+**The user's other proposal: a sweep phase at the round's end** for this
+and the TODOs like it. Not in ROADMAP until signed; the session's lean and
+a shape for it were put to the user in the reply.
+
+**The sixteen calls** of the two steps were not answered one by one. The
+read exercised most of them and the user named what to change, so the
+session takes the rest as standing. One was posed as a question and is
+asked again: whether a run's seed should be shown to the player anywhere.
+
+### 116c-post — the seed's explanation is the word's tooltip (2026-10-04) — ◐ built, unread
+
+**Step zero.** Read against `tooltip.ts`: a mouse click on a text site does
+not toggle a tooltip; hover opens it after 150 ms, so it is up by the time
+a pointer clicks. A tap toggles it and keyboard focus opens it. The word
+was inside the field's `<label>`, whose click also moves focus into the
+field, and on a phone that raises the keyboard under the explanation the
+tap asked for. So the word leaves the label.
+
+**Built.** The line under the field is gone. The word Seed is a §97 text
+site with its own tab stop and the explanation as its tooltip
+(`attachTooltip`, the default `tap` route); the field takes its name from
+the word (`aria-labelledby`). The word has a dotted underline and the help
+cursor, which is new: no other text site marks itself, and here the
+tooltip is the only place the explanation is, so the word says it has one.
+DESIGN "Fields" and the checklist's Menu row, ARCHITECTURE and the
+stylesheet follow. No string changed.
+
+**Against the tooltip rule** ("never the sole channel for information the
+player must act on"): the placeholder `random` says what an empty field
+does, on the menu, always. The tooltip explains what a seed is.
+
+**In the pane** (Chromium; the dev server, `f466dbc-dirty-dev`). The menu
+has no hint line; the rows are New run, Settings and the seed row; the Tab
+order is New run, Settings, Seed, the field. A mouse `pointerenter` on the
+word opened the tooltip with the explanation (`aria-describedby` set, the
+plate drawn above the word in a screenshot, its caret on the word); a
+click on the word left focus where it was; `pointerleave` closed it. A
+touch tap opened it and a second tap closed it.
+
+**Not verified.** In Firefox: the hover, the underline's look, the Tab
+stop's ring and the tooltip it opens. The plate covers part of the
+Settings row while it is open, as a tooltip above its trigger does. A
+screen reader no longer hears the explanation on the field itself, only on
+the word.
+
+**Cost.** `npm test`: 233 files, 3373 tests. Typecheck clean. The reading
+before this commit: **516,808** at 13:12. The session hands off here: the
+next step, 116e, starts in a fresh session.

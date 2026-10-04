@@ -519,3 +519,21 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   one, are unmeasured. The stamp's wipe copies the row's next 64 pixels
   over the stamp, which is a flat field in a battle and can be an edge on a
   run's screen.
+
+## §116 riders (the first sitting, 2026-10-04)
+
+- [ ] **The settings chip's home.** Third in the left column it sits
+  between the game-state chips (the user's read: "it interrupts several
+  game play state chips"); last, it would move whenever the map or morale
+  chip hides; first, it draws the eye. The user's proposal: a second ribbon
+  in the top right, probably for it alone. The top-right corner as of
+  `f466dbc` holds a control on five of a run's screens: the battle's speed
+  pane (`.hud-speed-pane`, top 20 right 20), the roster button on the map,
+  the pre-turn screen and the recruit screen (`.card-list-button--roster`,
+  top 16 right 16), and the port's Leave (`.port-leave`). The reward,
+  promotion, event and sector-cleared screens are free, and the sector-map
+  overlay's ✕ sits there over everything. So the move is a layout step on
+  five screens, each checked with the box oracle (DESIGN "Layout
+  stability"), and DESIGN's Chips paragraph and the corner comments in the
+  stylesheet change with it. Home: the sweep phase the user proposed at the
+  same sitting, if it is signed; otherwise the next UI round.

@@ -3327,3 +3327,23 @@ it, an addendum follows.
    Whether the menu and the modal are any good is not something I can say:
    they have not been seen in Firefox or heard, and how they look is the
    user's read.
+
+### Addendum, the same session — after the sitting (2026-10-04)
+
+The user read both surfaces in Firefox and every point passed, with two
+findings and a question. One finding (the seed's explanation as a tooltip)
+is built as 116c-post; the other (the settings chip's home) is a TODO with
+a census of the corner it would move to.
+
+- On question 6: the user asked for my thoughts on their findings and on a
+  sweep phase, and I gave a lean that differs from one of their two minds
+  (keep the settings rows' lines visible). I checked the code before
+  answering, since my first sense of the top-right corner ("the battle
+  HUD collides") was theirs repeated back; the census found five screens.
+- On question 3: I wrote the time of the user's message into the WORKLOG as
+  "about 13:05" without having read it, the same slip the last session's
+  report names. Caught before the commit; the line says the time was not
+  read.
+- On question 7: the read passing was pleasant to hear. I notice that is a
+  report about my response and not a second verification: what passed is
+  what the user looked at.

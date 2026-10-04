@@ -201,7 +201,7 @@ none where no run is live).
 
 | Surface | Controls | Click | Keys | Touch | Hover-only | Morale |
 |---|---|---|---|---|---|---|
-| Menu (§116) | Continue, New run, Settings (`button()`), the seed field (an `<input>` in its `<label>`; Enter in it is New run) | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read) | none | none (no run) |
+| Menu (§116) | Continue, New run, Settings (`button()`), the seed field (an `<input>` named by the word Seed; Enter in it is New run), the word Seed (a tooltip text site) | ✓ | ✓ the user's Firefox read 2026-10-04 (the word's tab stop came after it, 116c-post) | ✓ (the word's tooltip: a tap) | none | none (no run) |
 | Character select | the three cards (`button`), Back (`button()`, §116) | ✓ | ✓ | ✓ | none | none (no run) |
 | Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none | chip |
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
@@ -209,7 +209,7 @@ none where no run is live).
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
 | Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
-| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), Quit to menu during a run | ✓ | wired in the pane; the Tab walk is the first §116 sitting's, in Firefox | ✓ (no hover read; a slider drags natively) | none | the host's |
+| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
@@ -522,9 +522,13 @@ inline with `type="button"`), or `pressable()` for one that carries
 interactive children; a toggle mirrors its selected class as
 `aria-pressed`; an inert one is `aria-disabled` + out of the Tab order.
 
-**Fields (116).** A text field is a native `<input>` inside its `<label>`,
-so the visible name is the accessible name and a click on the word focuses
-the field; a hint under it is tied on with `aria-describedby`. Its text is
+**Fields (116).** A text field is a native `<input>` named by the word
+beside it (`aria-labelledby`). Where the field needs explaining, the word
+is a §97 text site and the explanation is its tooltip, with a dotted
+underline to say it has one: a line of explanation under the field read as
+clutter on the menu (the user's read, 116c-post), and the placeholder
+already says what an empty field does, so the tooltip is not the only
+channel. Its text is
 cleaned as it is typed, so a field has no refused state and nothing appears
 under it to say so (the seed field keeps digits; `cleanSeedText`). The ring
 covers it, the hover twin is its border, and a key typed in it fires no

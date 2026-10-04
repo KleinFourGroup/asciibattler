@@ -12,10 +12,16 @@
  * no longer loads draws the screen again, which then says why.
  *
  * THE SEED FIELD is the first text field in the game (DESIGN §UI idioms,
- * "Fields"): a native `<input>` inside its `<label>`, cleaned to digits as it
- * is typed (src/scenes/menuRules.ts), so it has no refused state. Enter in it
- * is New run. Its text is the page's while character select is up, so Back
- * finds it as it was left.
+ * "Fields"): a native `<input>`, cleaned to digits as it is typed
+ * (src/scenes/menuRules.ts), so it has no refused state. Enter in it is New
+ * run. Its text is the page's while character select is up, so Back finds it
+ * as it was left. What a seed is, is the word's tooltip (116c-post, the
+ * user's read): a line of explanation on the menu itself read as clutter.
+ * So the word is a §97 text site (hover, keyboard focus, a tap) and not a
+ * `<label>`, whose click would also move focus into the field; the field
+ * takes its name from the word by `aria-labelledby`. The placeholder says
+ * what an empty field does, so the tooltip is never the only place that is
+ * said.
  *
  * The Settings row (116d) opens the settings modal; focus comes back to the
  * row when it closes. Landing note: the Credits row arrives with the credits
@@ -30,9 +36,10 @@ import type { MenuContext, SaveContext } from '../scenes/Scene';
 import { runRejectedMessage } from '../store/runSlot';
 import { Screen } from './Screen';
 import { button } from './button';
+import { attachTooltip } from './tooltip';
 
-/** The hint's id, for the field's `aria-describedby`. One menu is up at a time. */
-const SEED_HINT_ID = 'menu-seed-hint';
+/** The word's id, for the field's `aria-labelledby`. One menu is up at a time. */
+const SEED_NAME_ID = 'menu-seed-name';
 
 export class MenuScreen extends Screen {
   constructor(
@@ -110,23 +117,21 @@ export class MenuScreen extends Screen {
       }),
     );
 
-    // The field's name is its label's text, so a click on the word focuses it.
-    const seed = document.createElement('label');
+    // The word names the field and carries its explanation as a tooltip: a
+    // text site with its own tab stop, so the keyboard reaches it too.
+    const seed = document.createElement('div');
     seed.className = 'menu-seed';
     const name = document.createElement('span');
     name.className = 'menu-seed__name';
+    name.id = SEED_NAME_ID;
     name.textContent = t('menu.seed.label');
+    name.tabIndex = 0;
+    attachTooltip(name, t('menu.seed.hint'));
     seed.append(name, field);
     rows.appendChild(seed);
     field.addEventListener('keydown', (ev) => {
       if (ev.key === 'Enter') startNewRun();
     });
-
-    const hint = document.createElement('div');
-    hint.className = 'menu-seed__hint';
-    hint.id = SEED_HINT_ID;
-    hint.textContent = t('menu.seed.hint');
-    rows.appendChild(hint);
 
     // The build's ID, small in a corner: what a player quotes in a bug report.
     const build = document.createElement('div');
@@ -148,7 +153,7 @@ export class MenuScreen extends Screen {
     field.spellcheck = false;
     field.maxLength = SEED_MAX_DIGITS;
     field.placeholder = t('menu.seed.placeholder');
-    field.setAttribute('aria-describedby', SEED_HINT_ID);
+    field.setAttribute('aria-labelledby', SEED_NAME_ID);
     field.value = cleanSeedText(this.menu.seedText());
     field.addEventListener('input', () => {
       const clean = cleanSeedText(field.value);

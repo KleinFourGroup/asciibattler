@@ -17,6 +17,10 @@
  * The two closest pairs (burn/panic on the warm axis, poison/rejuvenate on the
  * green axis) are a DoT-vs-behavior and a DoT-vs-HoT split that rarely co-occur
  * on one unit; retune here freely if they read ambiguously in the native browser.
+ *
+ * 116f — every hue here is a palette name (src/render/palette.ts), so a second
+ * palette re-picks them with the rest. The tables are built when this module
+ * loads, from the palette the boot chose.
  */
 
 import { COLORS } from './palette';
@@ -36,10 +40,10 @@ export interface EmpowerDisplay extends StatusDisplay {
 
 export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   // DoT / HoT — distinct hues.
-  burn: { color: '#FF6A00' }, // ember-orange (hotter than amber)
-  bleed: { color: '#D41E3A' }, // blood-crimson (deeper than NEON_RED)
-  poison: { color: '#8FC31F' }, // toxic yellow-green
-  rejuvenate: { color: '#2BE57A' }, // regen / life-green
+  burn: { color: COLORS.EMBER_ORANGE }, // ember-orange (hotter than amber)
+  bleed: { color: COLORS.BLOOD_CRIMSON }, // blood-crimson (deeper than NEON_RED)
+  poison: { color: COLORS.TOXIC_GREEN }, // toxic yellow-green
+  rejuvenate: { color: COLORS.REGEN_GREEN }, // regen / life-green
   // Behavior — reuse the 28c held-tint palette for pip↔tint consistency.
   frozen: { color: COLORS.FLOURESCENT_BLUE }, // ice-cyan
   panic: { color: COLORS.TERMINAL_AMBER }, // fear-amber
@@ -49,14 +53,15 @@ export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   // to the magenta fallback; statusDisplay.test.ts now pins coverage). Buff-gold
   // vs panic's fear-amber is a buff-vs-behavior split (the burn/panic
   // precedent) — retune on eyeball if it reads ambiguously.
-  emboldened: { color: '#FFD700' }, // buff-gold
+  emboldened: { color: COLORS.BUFF_GOLD }, // buff-gold
   // §76f — the Officer's Inspire aura (+mobility): a pale spring-green, brighter
   // and lighter than poison's toxic olive (a buff-vs-DoT split; eyeball-tunable).
-  inspired: { color: '#B4FF6E' }, // march-green
+  inspired: { color: COLORS.MARCH_GREEN }, // march-green
 };
 
 /** Fallback color for a status with no display entry (shouldn't happen for a
- *  shipped status — a loud-ish magenta makes a missing mapping visible). */
+ *  shipped status — a loud-ish magenta makes a missing mapping visible). No
+ *  palette name: it is a defect's colour, the same in every palette. */
 export const STATUS_DISPLAY_FALLBACK = '#FF00FF';
 
 /** Resolve a status id to its display color, or the fallback. */
@@ -91,10 +96,10 @@ export function statusColor(statusId: string): string {
  */
 export const EMPOWER_DISPLAY: Record<string, EmpowerDisplay> = {
   honed: { color: COLORS.FLOURESCENT_BLUE, label: t('buff.honed') }, // Mars — the established K4 accent
-  warded: { color: '#C9D1FF', label: t('buff.warded') }, // Minerva — aegis-lavender
-  hyped: { color: '#FF7AD9', label: t('buff.hyped') }, // packet — party-pink
-  shielded: { color: '#6FA8FF', label: t('buff.shielded') }, // packet — shield-steel
-  overclocked: { color: '#F4FF3D', label: t('buff.overclocked') }, // packet — volt-yellow
+  warded: { color: COLORS.AEGIS_LAVENDER, label: t('buff.warded') }, // Minerva — aegis-lavender
+  hyped: { color: COLORS.PARTY_PINK, label: t('buff.hyped') }, // packet — party-pink
+  shielded: { color: COLORS.SHIELD_STEEL, label: t('buff.shielded') }, // packet — shield-steel
+  overclocked: { color: COLORS.VOLT_YELLOW, label: t('buff.overclocked') }, // packet — volt-yellow
 };
 
 /** Resolve an empower-buff key to its display color, or the shared magenta

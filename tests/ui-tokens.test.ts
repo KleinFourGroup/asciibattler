@@ -1,12 +1,15 @@
 /**
  * 96a — THE CSS TOKEN PINS (Round 7 §96, the derived-artifact tripwire shape
  * of prior-table-coverage.test.ts applied to the stylesheet). `ui.css` holds a
- * `:root` block of `--color-*` tokens; the palette thirteen MIRROR `COLORS` in
- * src/render/palette.ts (kebab of the key), and palette.ts stays the source of
- * truth — so a retune there that forgets the sheet fails here, on the
- * forgetful path. The alternative (inject the block from palette.ts at boot)
+ * `:root` block of `--color-*` tokens; the palette's names MIRROR `COLORS` in
+ * src/render/palette.ts (kebab of the key) at the default palette's hexes, and
+ * palette.ts stays the source of truth — so a retune there that forgets the
+ * sheet fails here, on the forgetful path. (Thirteen names at 96a; 116f moved
+ * the sheet's hue shades and the status hues onto the palette, thirty in all.) The alternative (inject the block from palette.ts at boot)
  * was rejected at the §96 kickoff: it makes the sheet unrenderable without the
- * game's JS for nothing this pin doesn't give.
+ * game's JS for nothing this pin doesn't give. 116f's second palette keeps to
+ * that: the sheet spells the default, and the boot sets only the tokens
+ * another palette changes (`tokenOverrides`).
  *
  * Contract (config-derived — the token names are computed from the keys):
  *   1. every COLORS entry has its `--color-<kebab>` token at the same hex;

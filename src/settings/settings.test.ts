@@ -141,24 +141,33 @@ describe('116a — the settings at boot', () => {
   afterEach(() => resetLocales());
 
   const PLANTED = { 'unit.name': 'planted' };
+  const setPalette = (): void => {};
 
   it('a stored locale the build ships is the one a catalog resolves through', () => {
     registerLocale('xx', 'fixture', PLANTED);
-    applyAtBoot({ locale: 'xx' }, { shippedLocales: ['en', 'xx'], setLocale: setActiveLocale });
+    applyAtBoot({ locale: 'xx', palette: 'default' }, { shippedLocales: ['en', 'xx'], setLocale: setActiveLocale, setPalette });
     expect(resolveProse('fixture', 'unit.name', 'inline')).toBe('planted');
   });
 
   it("a stored locale the build doesn't ship is left alone, and the page keeps the default", () => {
     registerLocale('xx', 'fixture', PLANTED);
-    applyAtBoot({ locale: 'zz' }, { shippedLocales: ['en', 'xx'], setLocale: setActiveLocale });
+    applyAtBoot({ locale: 'zz', palette: 'default' }, { shippedLocales: ['en', 'xx'], setLocale: setActiveLocale, setPalette });
     expect(resolveProse('fixture', 'unit.name', 'inline')).toBe('inline');
     // The same holds for a locale that is registered and not shipped.
-    applyAtBoot({ locale: 'xx' }, { shippedLocales: ['en'], setLocale: setActiveLocale });
+    applyAtBoot({ locale: 'xx', palette: 'default' }, { shippedLocales: ['en'], setLocale: setActiveLocale, setPalette });
     expect(resolveProse('fixture', 'unit.name', 'inline')).toBe('inline');
   });
 
   it('with no boot call the planted locale is not consulted (the control)', () => {
     registerLocale('xx', 'fixture', PLANTED);
     expect(resolveProse('fixture', 'unit.name', 'inline')).toBe('inline');
+  });
+
+  it('116f — the stored palette is handed to the chooser by name, whatever the locale did', () => {
+    const chosen: string[] = [];
+    const seams = { shippedLocales: ['en'], setLocale: setActiveLocale, setPalette: (name: string) => chosen.push(name) };
+    applyAtBoot({ locale: 'en', palette: 'colourblind' }, seams);
+    applyAtBoot({ locale: 'zz', palette: 'default' }, seams);
+    expect(chosen).toEqual(['colourblind', 'default']);
   });
 });

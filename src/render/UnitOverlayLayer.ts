@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { Team } from '../sim/Unit';
 import type { StatusReadout } from '../sim/statusReadout';
 import { displayLevel } from '../sim/xp';
+import { COLORS } from './palette';
 import { statusColor } from './statusDisplay';
 import { isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
 import { t } from '../i18n/ui';
@@ -471,13 +472,15 @@ function pipBrightness(r: StatusReadout): number {
  * HP gradient: green at full → amber at half → red at zero. Mirrors the
  * B3 BarRenderer pick — same color for both teams so HP state reads
  * independent of which side the unit is on. Returns a CSS rgb() string.
+ * 116f — the three stops are the palette's, read when this module loads.
  */
-const _gradHigh = new THREE.Color(0x33ff00); // TERMINAL_GREEN
-const _gradMid = new THREE.Color(0xffb000); // TERMINAL_AMBER
-const _gradLow = new THREE.Color(0xff3131); // NEON_RED
+const _gradHigh = new THREE.Color(COLORS.TERMINAL_GREEN);
+const _gradMid = new THREE.Color(COLORS.TERMINAL_AMBER);
+const _gradLow = new THREE.Color(COLORS.NEON_RED);
 const _gradOut = new THREE.Color();
 
-function hpFillColor(pct: number): string {
+/** Exported for its pin (UnitOverlayLayer.test.ts). */
+export function hpFillColor(pct: number): string {
   const p = Math.max(0, Math.min(1, pct));
   if (p >= 0.5) {
     const t = (p - 0.5) * 2;

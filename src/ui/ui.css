@@ -15,11 +15,15 @@
      20px + this + a gutter. A third pool digit needs this widened. */
   --chip-w: 200px;
 
-  /* 96a — THE COLOR TOKENS. The palette thirteen mirror COLORS in
-     src/render/palette.ts — kebab of the key — and tests/ui-tokens.test.ts
-     pins them byte-equal (palette.ts stays the source of truth; the sheet
-     stays standalone). A Round 8 palette swap sets these at runtime over
-     the defaults. Alpha tints go through relative color syntax
+  /* 96a — THE COLOR TOKENS. The palette's names mirror COLORS in
+     src/render/palette.ts — kebab of the key — at the default palette's
+     hexes, and tests/ui-tokens.test.ts pins them byte-equal (palette.ts
+     stays the source of truth; the sheet stays standalone). 116f — another
+     palette's tokens are set over these at boot (src/settings/boot.ts), and
+     the palette holds the hue shades (amber-hover … boss-red) and the
+     status hues too, so that palette can re-pick them; the status hues are
+     drawn from JS and are here for the mirror. The neutral tokens after
+     them belong to no palette. Alpha tints go through relative color syntax
      (`rgb(from var(--color-x) r g b / a)`) so ONE token serves every
      tint — the pin forbids a raw hex or a palette-triplet rgba() below.
      Black / white plate alphas are not palette and stay literal. */
@@ -36,8 +40,6 @@
   --color-neon-purple: #9d00ff;
   --color-terminal-stone: #7a7066;
   --color-cracked-stone: #b5843c;
-  --color-black: #000;
-  --color-white: #fff;
   --color-amber-hover: #ffd060;
   --color-amber-dim: #997700;
   --color-amber-faint: #332300;
@@ -45,6 +47,18 @@
   --color-blue-dim: #0a6a66;
   --color-blue-rule: #0e4f4c;
   --color-boss-red: #ff3030;
+  --color-ember-orange: #ff6a00;
+  --color-blood-crimson: #d41e3a;
+  --color-toxic-green: #8fc31f;
+  --color-regen-green: #2be57a;
+  --color-buff-gold: #ffd700;
+  --color-march-green: #b4ff6e;
+  --color-aegis-lavender: #c9d1ff;
+  --color-party-pink: #ff7ad9;
+  --color-shield-steel: #6fa8ff;
+  --color-volt-yellow: #f4ff3d;
+  --color-black: #000;
+  --color-white: #fff;
   --color-miss-white: #eaf2ff;
   --color-status-name: #d8d2c4;
   --color-status-meta: #9a9286;

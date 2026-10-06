@@ -260,11 +260,17 @@ READ, and the read is named here so it is the same read every time:
 | Sound (104) | `src/audio/eventSounds.test.ts` (every bus event is cued or silent WITH A REASON) · `src/audio/AudioPlayer.test.ts` (every key has its file) | **the ear:** no test hears a cue — is it the right sound, at the right loudness, for the moment? a `candidate` row is an open question, not a decision |
 
 **Tokens (96a/96b).** Every color in `ui.css` is a `--color-*` token from
-the `:root` block; the palette thirteen mirror `COLORS` (`src/render/palette.ts`,
-the source of truth — a test pins them equal), the rest are role names
-(`--color-amber-hover`, the grays by level). An alpha tint is
+the `:root` block; the palette's names mirror `COLORS` (`src/render/palette.ts`,
+the source of truth — a test pins them equal) at the default palette's
+hexes, and the rest are neutral role names (the grays by level, the miss
+whites). The palette holds every hue with a name: the thirteen of 96a, the
+shades the sheet once kept as its own (`--color-amber-hover`), and the
+status and empower hues (§116). An alpha tint is
 `rgb(from var(--color-x) r g b / a)`, never a literal triplet, so one
-token serves every tint and a Round 8 palette swap is one table. Every
+token serves every tint and a second palette is one table: it is chosen by
+name at boot, before any module reads `COLORS`, and the tokens it changes
+are set on the root element over the sheet's, so the Palette setting
+applies on reload. Every
 `font-size` is a `--text-<px>` token authored in rem against the browser's
 16px; a Round 8 text-scale setting sets the html font-size and the ladder
 follows. The pins: zero raw hexes and zero literal font-sizes below

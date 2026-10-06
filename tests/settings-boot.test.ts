@@ -20,7 +20,7 @@ describe('116a — the settings boot second', () => {
     expect(specifiers.slice(0, 2)).toEqual(['./store', './settings/boot']);
   });
 
-  it('reaches the store, its own folder and the locale runtime, and nothing else', () => {
+  it('reaches the store, its own folder, the locale runtime and the palette, and nothing else', () => {
     const graph = runtimeGraph(BOOT, repoRead);
     // The exact set, so the graph can't grow unnoticed.
     expect(graph.files).toEqual([
@@ -29,6 +29,7 @@ describe('116a — the settings boot second', () => {
       'src/i18n/locale.ts',
       'src/i18n/prose.ts',
       'src/i18n/provenance.ts',
+      'src/render/palette.ts',
       'src/settings/atBoot.ts',
       'src/settings/boot.ts',
       'src/settings/index.ts',
@@ -43,6 +44,15 @@ describe('116a — the settings boot second', () => {
     ]);
     expect(graph.files.filter((f) => f.startsWith('src/config/') || f.startsWith('locales/'))).toEqual([]);
     expect(graph.packages).toEqual(['zod']);
+  });
+
+  // 116f — the boot chooses the palette, so it reaches palette.ts. Every
+  // other module that reads `COLORS` must load after the choice, so none of
+  // them may be in the boot's graph, and palette.ts itself imports nothing.
+  it('reaches the palette and no module that reads it', () => {
+    const graph = runtimeGraph(BOOT, repoRead);
+    expect(graph.files.filter((f) => f.startsWith('src/render/'))).toEqual(['src/render/palette.ts']);
+    expect(runtimeGraph('src/render/palette.ts', repoRead).files).toEqual(['src/render/palette.ts']);
   });
 
   it('the walker catches a catalog planted behind the settings, and lets a type-only import through', () => {

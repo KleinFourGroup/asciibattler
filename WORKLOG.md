@@ -5787,3 +5787,124 @@ battles.
 stylesheet 60.99 kB (59.95), both steps of this session together. `npm
 test`: 233 files, 3384 tests (+9). Typecheck clean. The reading before
 this commit: **320,719** at 11:55; the step cost about 138k.
+
+### 116f — the palette's mechanism (2026-10-06) — read `none` ✅
+
+The reading at the step's start: **337,160** at 11:58, on 116e's commit
+(`d7cabc8`).
+
+**Step zero.**
+- **Six modules bake a colour as they load** (a search for `COLORS.` at
+  module scope): `statusDisplay.ts` and `fxRegistry.ts` (tables),
+  `TerrainRenderer.ts` (the theme table), `BattleRenderer.ts` (two
+  constants), `PostProcess.ts` (one), and the HP gradient in
+  `UnitOverlayLayer.ts`. So a palette can only be chosen before they are
+  evaluated, which is what the cut's "at boot" and 116g's "applies on
+  reload" already said.
+- **`COLORS` had one type use** (`PaletteName`), and nothing read a
+  value's literal type, so it could become a table chosen at run time.
+- **The sheet's shades keep their token names.** The seven role tokens
+  that are a palette hue lighter or dimmer (`--color-amber-hover`,
+  `-amber-dim`, `-amber-faint`, `-green-dim`, `-blue-dim`, `-blue-rule`,
+  `-boss-red`) are the kebab of the names they get on the palette, so the
+  sheet's body does not change by a byte. The other fifteen role tokens
+  are neutral (black, white, the greys, the two status-text greys) or a
+  hue of their own that no identity rides on (the miss white and its
+  glow), and stay off the palette.
+- **The status hues are drawn from JS only,** so their ten new tokens in
+  the sheet have no reader there. The token pin's first rule is that every
+  palette name has its token, and its header already exempts palette
+  tokens from the referenced rule ("used or not"), so they are added for
+  the mirror.
+- **`new THREE.Color(0x33ff00)` and `new THREE.Color('#33FF00')` are the
+  same colour:** the base table's two spellings of the three gradient
+  stops are equal to the last digit.
+
+**Built.**
+- `src/render/palette.ts`: the default palette, thirty names (the 96a
+  thirteen, the seven shades with the sheet's hexes, the ten status and
+  empower hues with `statusDisplay.ts`'s); `COLORS` as a live binding;
+  `choosePalette(name)`, which re-points it and gives the default for a
+  name this build has no palette for; `paletteToken`; `tokenOverrides`,
+  the tokens whose hex is not the default's. The module imports nothing.
+- `statusDisplay.ts`'s ten hexes and the gradient's three numbers are
+  palette names. The magenta fallback stays a literal: it is a defect's
+  colour, the same in every palette.
+- The boot: `applyAtBoot` hands the stored `palette` to a `setPalette`
+  seam, and `boot.ts`'s seam chooses it and sets the overrides on the root
+  element. For the default palette there are none, so the root element
+  gets no inline style and the sheet's values stand.
+- The sheet: ten tokens added in `:root`, black and white moved below the
+  palette's block, the comment rewritten. Nothing below `:root` changed.
+- `hpFillColor` is exported for its pin.
+
+**The oracle** (`process/oracles.md`): a reader and a comparison, in the
+session's scratch directory. The reader imports a checkout's own
+`palette.ts`, `statusDisplay.ts` and `fxRegistry.ts` under `tsx` and
+parses its `ui.css`, and writes one table: every `COLORS` entry; each
+status's and each buff's colour, read from the table and through its
+function; the fallback three ways; every plain value `fxRegistry` exports
+(8 hexes among them); the gradient's stops as `THREE.Color` channels from
+the numbers and from the palette; every `--color-*` token; a hash of the
+sheet below `:root`. The base was read from `d7cabc8` in a detached
+worktree with a `node_modules` junction, before any edit.
+- *Self-check:* the base against the live tree at the same commit, PASS.
+- *The result:* PASS. 13 colours kept and 17 added; 35 tokens kept and 10
+  added; the status, empower and fx tables, the gradient and the sheet's
+  body equal. Each added palette name agrees with its token, and each of
+  the seven moved shades with the token the base had.
+- *The failing controls,* nine, each planted in the working tree, read,
+  and restored by one script that hashes the files before and after: a
+  status hue off by one; an identity hue off by one; a moved shade off by
+  one; a status on the wrong name; a buff on the wrong name; a sheet token
+  off by one; a declaration changed below `:root`; two gradient stops
+  swapped; a gradient stop on a neighbouring name. The first seven fail
+  the comparison, each on the line that names the plant.
+- **The gradient is outside the reader,** which can't call a function the
+  module doesn't export, so it has a pin of its own
+  (`UnitOverlayLayer.test.ts`): the expected fills are worked from the
+  base's three numbers with the sRGB transfer function written out in the
+  test, not through the palette or three.js. Its first form missed the
+  ninth plant: `#ff3030` for `#FF3131` prints the same fill at the
+  fractions it tried, since 0x30 and 0x31 both round to 8 in working
+  space. It now holds every thousandth of the range, and catches both
+  gradient plants. 9 of 9, the files restored.
+
+**Standing tests,** +14 (two new files): `palette.test.ts` 8 (the default
+with no choice and for an unknown name; a planted palette read through the
+binding by this module and by `spriteColor`; a module loaded after the
+choice builds its table from it, and one loaded before keeps what it read,
+which is the reason for the boot's order; the token of a name; no override
+for the default; exactly the changed tokens for another palette);
+`UnitOverlayLayer.test.ts` 4; `settings.test.ts` +1 (the stored name
+reaches the seam); `tests/settings-boot.test.ts` +1 (the boot's graph
+reaches `palette.ts`, no other render module, and `palette.ts` imports
+nothing; the exact set gains the one file).
+
+**In the pane** (Chromium; the dev server, `d7cabc8-dirty-dev`). The menu
+boots with no `style` attribute on the root element, the tokens as the
+sheet spells them and the title `rgb(51, 255, 0)`. One override pair made
+by `tokenOverrides` for a palette with a blue `TERMINAL_GREEN`, set on the
+root element the way the boot sets one, turned the title `rgb(0, 0,
+255)`; removed, it was green again. With `colourblind` stored, which this
+build has no palette for, a reload booted the menu with the default
+colours and no inline style. The check's stored settings were removed.
+
+**A run is left alone.** The seed-7 drive under Electron: exit 0, `logHash
+a59ee48f`, 12 battles.
+
+**Not verified.**
+- A second palette through the real boot. There is none until 116g, so
+  the boot's own call has only ever chosen the default; the choice, the
+  load order and the overrides are each held by a test with a planted
+  palette, and the cascade by the pane's one pair.
+- The production bundle with a palette chosen. The mechanism rests on
+  modules being evaluated in import order there, as the locale's does
+  (116a's Electron check).
+- The terrain's 21 theme and tile hexes are not on the palette, as the cut
+  has it. The oracle did not read them; their file is unchanged.
+
+**Cost.** The production bundle is 627.68 kB raw (626.88 at 116e), the
+stylesheet 61.27 kB (60.99). `npm test`: 235 files, 3398 tests (+14).
+Typecheck clean. The reading before this commit: **424,179** at 12:12;
+the step cost about 87k.

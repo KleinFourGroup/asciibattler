@@ -5,9 +5,10 @@
  *
  * `connectSettings` gives every consumer its stored value at once (the boot)
  * and its new value on every change (live). Three fields have no consumer
- * here: the locale is set before the catalogs load (atBoot.ts), and the
- * palette and the text scale get theirs with their own steps. The music
- * level is stored and nothing plays music yet.
+ * here: the locale and the palette are applied before the game's modules
+ * load (atBoot.ts), so a change to either takes a reload, and the text scale
+ * gets its consumer with its own step. The music level is stored and nothing
+ * plays music yet.
  *
  * Never imported by boot.ts or index.ts: the consumers' modules are the
  * game's, and the settings' boot graph stays clear of them

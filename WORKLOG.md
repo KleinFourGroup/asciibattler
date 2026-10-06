@@ -5908,3 +5908,163 @@ a59ee48f`, 12 battles.
 stylesheet 61.27 kB (60.99). `npm test`: 235 files, 3398 tests (+14).
 Typecheck clean. The reading before this commit: **424,179** at 12:12;
 the step cost about 87k.
+
+### 116g — the colourblind palette: the instrument and the candidate (2026-10-06) — the first `stop` is open
+
+The reading at the step's start: **438,226** at 12:15, on 116f's commit
+(`48fc44b`).
+
+**Built: the instrument** (`tests/colourVision.ts`, test support; nothing
+in `src` imports it). A dichromat's view of a colour is a 3×3 matrix on
+its linear sRGB, clamped to the screen's range. Two published models are
+held, so a verdict doesn't rest on one: Machado, Oliveira and Fernandes
+2009 at severity 1.0 for protan, deutan and tritan, and Viénot, Brettel
+and Mollon 1999 for protan and deutan. The distance between two colours is
+the Euclidean distance in Oklab, where about 0.02 is a just-noticeable
+difference between patches side by side. The matrices and Oklab's
+coefficients were written from memory, which is why the known answers
+below come first.
+
+**Its known answers** (`tests/colourVision.test.ts`, 10 tests, on every
+`npm test`): Oklab's published values for the three primaries and white;
+a hex through linear and back; every matrix's rows sum to one, so a grey
+stays that grey; a Viénot result has equal red and green; the two models
+agree on each of the default's ten pairs to within 0.04 (the widest
+measured gap is 0.033); the pairs a red-green deficiency merges come out
+merged, and the same pairs are far apart to normal vision; pure green and
+pure yellow nearly vanish for a protanope; Okabe and Ito's blue with their
+orange and their yellow stay apart in every view. Five plants, each run
+and restored by one script: a digit wrong in a matrix, two views swapped,
+the simulation applied to encoded values, an Oklab coefficient wrong, no
+simulation at all. Each failed by name.
+
+**Step zero changed a premise.** The cut's known answer for a failing case
+was "the default green and red must fail under protan and deutan". They
+don't. The green is much the lighter of the two and lightness survives:
+the pair is 0.41 apart to a protanope and 0.21 to a deuteranope, on both
+models. What the default palette does lose is three other pairs, each
+differing by its red-to-green balance and little else:
+
+| pair | normal | protan | deutan | tritan |
+|---|---|---|---|---|
+| yours / enemy | 0.497 | 0.412 | 0.212 | 0.473 |
+| yours / camp | 0.273 | 0.152 | **0.050** | 0.287 |
+| yours / stone | 0.428 | 0.410 | 0.354 | 0.368 |
+| yours / cracked | 0.348 | 0.311 | 0.227 | 0.335 |
+| enemy / camp | 0.245 | 0.260 | 0.163 | 0.208 |
+| enemy / stone | 0.243 | **0.069** | 0.157 | 0.247 |
+| enemy / cracked | 0.183 | 0.101 | **0.024** | 0.159 |
+| camp / stone | 0.302 | 0.264 | 0.308 | 0.258 |
+| camp / cracked | 0.176 | 0.159 | 0.178 | 0.140 |
+| stone / cracked | 0.130 | 0.111 | 0.135 | 0.126 |
+| **closest** | 0.130 | 0.069 | 0.024 | 0.126 |
+
+(The five identity hues of call 5: yours `#33FF00`, the enemy's `#FF3131`,
+a camp's `#FFB000`, stone `#7A7066`, cracked stone `#B5843C`. A protan or
+deutan cell is the lower of the two models.) So the instrument's failing
+cases are those three pairs, and the green-and-red pin holds what was
+measured. This is inside the cut's intent (an instrument that rejects a
+known bad case and passes a known good one) and is put to the user at the
+stop.
+
+**The bar proposed: 0.130.** It is the default palette's own closest
+identity pair to normal vision (stone against cracked stone), so the gate
+reads: under each simulation no two identity hues are closer than the two
+closest already are for a player with normal vision. It needs no number
+from outside the game. For scale, Okabe and Ito's eight have a closest
+pair of 0.076 to 0.096 under the simulations on this measure, so 0.130 is
+stricter than a published eight-colour palette manages; five colours have
+more room.
+
+**The search** (a scratch script; per identity the default plus sweeps in
+OKLCH around it; 12.2 million combinations reached the inner loop at this
+bar). At 0.130 over protan and deutan, both models:
+- moving one or two names: nothing passes;
+- moving three: 3,920 pass, counted by which names move. Every one moves
+  yours and the enemy; the third is stone in 3,704 and cracked stone in
+  216. The camp's amber, which is the UI's chrome colour, stays in all;
+- at a bar of 0.10 two names are enough: 1,562 pass, 1,274 of them moving
+  yours and the enemy alone and 288 the enemy and the camp. The third
+  move at 0.130 is forced by one pair, stone against cracked stone, which
+  is 0.111 for a protanope as the default has it;
+- at 0.16 nothing passes with three names and it takes four.
+
+**The candidate** (the least total move among the three-name palettes
+that also hold tritan to 0.130; a finer sweep, 49,443 passing):
+
+| name | default | candidate | what it is |
+|---|---|---|---|
+| `TERMINAL_GREEN` (yours) | `#33FF00` | `#46FBAE` | a mint: the same lightness (0.88 for 0.87), chroma 0.18 for 0.29, the hue 18° toward cyan |
+| `NEON_RED` (the enemy) | `#FF3131` | `#F942B2` | a hot pink: a little lighter (0.68 for 0.65), the same chroma, the hue 39° toward magenta |
+| `TERMINAL_STONE` | `#7A7066` | `#71675D` | the same grey, a step darker (0.52 for 0.55) |
+| `TERMINAL_AMBER` (a camp) | `#FFB000` | unchanged | |
+| `CRACKED_STONE` | `#B5843C` | unchanged | |
+
+| pair | normal | protan | deutan | tritan |
+|---|---|---|---|---|
+| yours / enemy | 0.464 | 0.389 | 0.208 | 0.446 |
+| yours / camp | 0.244 | 0.179 | 0.131 | 0.290 |
+| yours / stone | 0.404 | 0.420 | 0.359 | 0.405 |
+| yours / cracked | 0.308 | 0.312 | 0.231 | 0.343 |
+| enemy / camp | 0.319 | 0.314 | 0.242 | 0.172 |
+| enemy / stone | 0.286 | 0.133 | 0.173 | 0.255 |
+| enemy / cracked | 0.258 | 0.202 | 0.139 | 0.139 |
+| camp / stone | 0.329 | 0.290 | 0.335 | 0.287 |
+| camp / cracked | 0.176 | 0.159 | 0.178 | 0.140 |
+| stone / cracked | 0.155 | 0.134 | 0.160 | 0.152 |
+| **closest** | 0.155 | 0.133 | 0.131 | 0.139 |
+
+It passes all three deficiencies, so tritan can be gated with the other
+two at no cost (call 5's condition). Its margin over the bar is thin
+(0.001 to 0.009), because the least move sits on the boundary; the widest
+three-name palette found reaches 0.140, with a darker magenta and a darker
+stone.
+
+**What the moved hues come near** (not gated; call 5 has the status and
+empower hues re-picked and reported):
+- the mint against `FLOURESCENT_BLUE` (`#15f4ee`: the map's frontier, the
+  frozen tint, the heal sparkle): 0.094 to normal vision and **0.015**
+  under the closest simulation. A frozen unit's tint would read as the
+  player's own hue, where the ground mark's shape is the tell;
+- the mint against `REGEN_GREEN` 0.079 and `MARCH_GREEN` 0.100 (the
+  default green is 0.112 and 0.117 from them);
+- the pink against `PARTY_PINK` (hyped) 0.100, against `BLOOD_CRIMSON`
+  0.177, against `NEON_PURPLE` 0.240.
+- The ten status hues as they are today have fourteen pairs under 0.10 in
+  some view, the worst poison against panic at 0.003 for a protanope.
+
+**A page of swatches** for the eye: `scratch/116g-palette-candidate.html`
+(untracked), the default and the candidate, each hue as it is and as the
+three simulations make it, written from the instrument by a scratch
+script. It shows hue and lightness on black, not the game's bloom.
+
+**Not built, by the cut:** the candidate is not in `PALETTES`, and there
+is no gate test for it, no pip symbol and no Palette row. They follow the
+user's read of this table.
+
+**For the stop, the calls.**
+1. The premise: green and red don't fail; the three merging pairs do.
+2. The bar: 0.130, the default's own closest pair.
+3. Tritan gated with protan and deutan, since the candidate passes it.
+4. The candidate's three hues, or the direction to search instead (a
+   wider margin, a greener green, another hue for the enemy).
+5. For the stretch after: `FLOURESCENT_BLUE` re-picked away from the mint
+   in this palette, with the status and empower hues, reported and not
+   gated; the dark and dim shades of the moved hues follow them
+   (`DARK_TERMINAL_GREEN`, `GREEN_DIM`, `DARK_NEON_RED`, `BOSS_RED`).
+
+**Not verified.**
+- Nothing here was seen by an eye, colour-deficient or not. The numbers
+  are two models of a full dichromat and one distance measure.
+- Machado's tritan matrix is the weaker part of that model; no second
+  tritan model is held.
+- An anomalous trichromat sees between normal and the simulation. No
+  severity between was measured.
+- The search's sweeps are grids (2° of hue, 0.02 of lightness and chroma
+  in the finer one), so a palette between grid points was not tried.
+
+**Cost.** `npm test`: 236 files, 3408 tests (+10). Typecheck clean. The
+reading before this commit: **487,299** at 12:25 (the meter, before the
+write-up). The stretch this stop opens (the candidate wired, its gate,
+the re-picks, the pip symbols, the Palette row, the pane) does not look
+likely to fit under the 550k line from here.

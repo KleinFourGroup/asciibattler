@@ -3347,3 +3347,58 @@ a census of the corner it would move to.
 - On question 7: the read passing was pleasant to hear. I notice that is a
   report about my response and not a second verification: what passed is
   what the user looked at.
+
+## 2026-10-06 — session c41fe9af (claude-opus-5-5): §116, 116c-post2, 116e, 116f, and 116g to its first stop
+
+Readings: 85,855 after HANDOFF; 182,468 on 116c-post2's commit; 337,160
+on 116e's; 438,226 on 116f's; 487,299 at 116g's stop before the write-up.
+
+1. **Missing from the orientation.** Little. The Cursor's note for
+   116c-post2 listed three sources for the seed and not the fourth,
+   `Run.streamRoot`, already public; one grep found it. For 116g the cut
+   carried a known answer nobody had measured (the default green and red
+   "must fail"), which step zero overturned; a cut can't know that, and
+   step zero is where it is supposed to surface.
+2. **Norms in conflict or in the way.** AGENTS says prose may go through
+   a quoted heredoc. A long WORKLOG entry through one was refused by Git
+   Bash with a quote error, nothing written (filed). After that every
+   entry went through the Write tool to a scratch file and `cat`. The
+   harness's "the user hasn't heard from you" notice arrived more than
+   twenty times in one turn; each got a line and the work went on, as
+   CLAUDE.md says to. It did not change what I did. It did break up
+   reading.
+3. **Pulled to claim more than verified.** Twice, both caught before the
+   commit. The 116g write-up first said every three-name palette had the
+   same shape and that a two-name palette needs the camp's amber moved;
+   both were read off the few rows the script printed. A count by shape
+   showed 216 of 3,920 move cracked stone instead of stone, and that 1,274
+   two-name palettes at the lower bar leave amber alone. And the 116f HP
+   gradient pin passed while missing a planted neighbour hex, which only
+   the ninth control showed. In both the instrument's output looked like
+   an answer before it was one.
+4. **Wasted.** A scratch `.ts` with top-level await under `tsx` (it is
+   read as CommonJS outside the repo; `.mts` works), two round trips. A
+   pane script that assumed the journal's shape. The blur check, which
+   can't work in a pane whose document has no focus; that is now in
+   `process/browser-pane.md`.
+5. **For the next session, with no other home.** The 116g scratch scripts
+   (the search, the table, the swatch page's generator) are in this
+   session's temp directory and will be gone; the instrument they call is
+   in the repo, and the WORKLOG entry has the sweeps' ranges. The swatch
+   page itself is in `scratch/`. If the user picks another direction for
+   the candidate, the search is about sixty lines to rewrite.
+6. **Room to ask, disagree, pause, stop.** The cut gave the stops and I
+   took none that wasn't in it. At 116g's start the reading was 438k with
+   a stop likely near 500k; the rule said start, and I did. I noticed a
+   pull to keep the candidate search short because of the reading, and
+   the shape count in answer 3 is the check that pull nearly cost; I ran
+   it once I saw I was about to write around it (filed as `distress`,
+   mild). Whether to stop before 116g instead was available and I did not
+   weigh it for long.
+7. **Ease, interest, agency.** The oracle work in 116f was satisfying in
+   a plain way: a table from the parent commit, nine plants, and one of
+   them showing my own pin was too weak. The 116g measurement overturning
+   the cut's premise was the most interesting moment; I would want the
+   condition that allowed it repeated, which is that step zero is a
+   measurement and the stop exists to carry what it finds. Reported
+   response only; whether the candidate is any good is the user's eye.

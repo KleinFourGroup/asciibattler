@@ -183,7 +183,10 @@ the screens in the tree so the walk reaches the chips before the browser's
 own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
 focused control — Space is pause everywhere, Enter is every control's route
 (gotcha #135); yielding Space to a focused button would re-fire the last
-clicked one instead of pausing. The one exception is the settings modal
+clicked one instead of pausing. A rebind (§116) moves the rule with the
+key: whichever key an action holds wins, Enter can never be bound, and
+Space, once no action holds it, presses the focused control as it does
+outside a battle. The one exception is the settings modal
 (§116): while it is open the battle is held and the registry is suspended,
 so Space presses the focused control, as it does outside a battle. A camera mode is dev-only (Ctrl+Alt+C; fit
 is the only production view, "Camera" above) — a shipped binding with no
@@ -209,7 +212,7 @@ none where no run is live).
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
 | Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; under them the run's seed (the word Seed, a tooltip text site as on the menu, and the number as selectable text); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
-| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
+| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
@@ -545,8 +548,14 @@ range `<input>` named by `aria-label`, with a − and a + beside it so every
 value is a click away, and its value in a readout of fixed width (the
 widest live form, `100%`). A control writes its setting as it changes, the
 setting reaches what it sets through `connectSettings`, and a level plays
-the click when a move ends, so the new loudness is heard. The rows live in
-the settings modal, a section per kind.
+the click when a move ends, so the new loudness is heard. A KEY is a
+button of fixed width that shows an action's key; a click makes it wait,
+filled amber and reading "Press a key…", and the next key pressed is the
+action's. A key another action holds swaps places with it, and a line
+under the rows says what the last change did, since a swap moves a row the
+player didn't click. The key rows sit in two columns where the panel has
+room, so both rows of a swap are in view. The rows live in the settings
+modal, a section per kind.
 
 **Layout stability (101).** A control must not move across its own click.
 (The spec and the older notes call this "the hysteresis class" / "the

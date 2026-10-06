@@ -5633,3 +5633,157 @@ fifteen characters wide.
 **Cost.** `npm test`: 233 files, 3375 tests (+2). Typecheck clean. The
 reading before this commit: **176,663** at 11:37; the step cost about 91k
 with orientation.
+
+### 116e — the key rows (2026-10-06) — ◐ built, unread (`batch`, at 116g's stop)
+
+The reading at the step's start: **182,468** at 11:39, on 116c-post2's
+commit (`0b66611`).
+
+**Step zero.**
+- **What `pressable`'s deferred Space does once pause is on another key**
+  (the Cursor's unread item): it presses the card. Read from
+  `pressable.ts`: Space activates after the dispatch unless a hotkey
+  prevented it, and with no action on Space nothing does. A native button
+  does the same on its own. So the Space rule moves with the key, and
+  DESIGN now says so. Enter stays every control's route, since it can't be
+  bound.
+- **A modifier on its own could be bound, and three of the four would be
+  dead.** The registry's modifier rule returns on a keydown with Ctrl, Alt
+  or Meta held, and each of those keys carries its own flag on its own
+  keydown, so an action bound to `ControlLeft` could never fire. Shift
+  passes the rule, so `ShiftLeft` would fire on every Shift+Tab and every
+  `?`. Neither was reachable before a surface existed.
+- **Escape has two listeners above a waiting row,** both on `window`: the
+  tooltip's, in the capture phase, which takes Escape only while a tooltip
+  is open, and the modal shell's, in the bubble phase, which closes the
+  modal. A row that waits takes its keydown in the capture phase and stops
+  it there, so Escape ends the wait and the modal stays.
+- **The key that ends a wait is still down.** Whether Space presses a
+  focused button on its release after its keydown was prevented differs
+  by engine as far as this session recalls, and the pane can't show
+  Firefox. The row guards three ways: the keydown is prevented, the same
+  key's keyup is prevented, and a click with no click count
+  (`detail === 0`, a key's) is ignored until that keyup.
+- **The settings modal at 1280 by 720** holds 535 px of body. Eleven key
+  rows in one column are about 430 px with their gaps, so the first and
+  the last could not both be in view, and a swap could move a row the
+  player can't see.
+- **A code's name can be long:** `NumpadMultiply`. The HUD and the
+  tooltips show `keyLabel(code)`, which passed such a code through whole.
+
+**Built.**
+- `Keybindings.ts`: `isBindable` (the reserved keys, a modifier or a lock
+  on its own, an empty or `Unidentified` code), which `withRebind` now
+  asks, so a stored modifier is left out too; `captureVerdict(keydown)`,
+  the waiting row's rule, with five answers (`pass` a chord, `walk` Tab,
+  `cancel` Enter and Escape, `swallow` a repeat or a key no action takes,
+  `bind`); `overridesWith(action, code)`, what a rebind would store, with
+  the registry unchanged; `keyLabel` puts a space between a long code's
+  words (`Arrow Up`, `Numpad 1`).
+- `SettingsOverlay.keySection`: a fourth section, Keys, last before Quit.
+  A line of instruction; eleven rows, a name and a key button each, in two
+  CSS columns that become one where the panel is narrow (Pause, the four
+  speeds and the sector map down the first, the four orders and the
+  tooltip key down the second, which is also the Tab order); a line that
+  says what the last change did; and a row, All keys, with Reset to
+  defaults. A bind stores the overrides as the `keys` setting and the rows
+  repaint when the registry takes them back, the route a stored set takes
+  at boot.
+- The key button is 10rem wide whatever it shows, so no row moves. While
+  it waits it is filled amber and reads "Press a key…".
+- Eleven strings (`settings.section.keys` and ten under `settings.key.`).
+  The rows' names reuse the HUD's and the map chip's words.
+- DESIGN: the Space rule's sentence on a rebind, the settings modal's
+  checklist row, and the KEY control in "Fields". ARCHITECTURE and
+  `process/browser-pane.md` follow.
+
+**Calls made here, for the read.**
+1. **Two columns,** where every other settings row is one. The reason is
+   the swap: both of its rows in view. The cost is a second row shape in
+   the modal.
+2. **The line that says what changed** ("Focus is on P now, and Pause
+   moved to F."), under the rows so that a long line that wraps moves
+   nothing just clicked. It is new; the signed call says only that the two
+   swap. It is `aria-live`, so a screen reader hears the swap too.
+3. **More keys are refused than the signed three:** a modifier or a lock
+   on its own (step zero), beside Enter, Tab and Escape. A waiting row
+   ignores them and goes on waiting, so Shift+/ still binds `/`.
+4. **Enter cancels a wait, as Escape does,** and Tab cancels and walks on.
+   A reserved key pressed at a waiting row could also have been ignored;
+   cancelling means the keyboard is never held in a row.
+5. **Function keys can be bound.** F5 bound to an action stops reloading
+   the page during a battle, which is the player's choice to make and one
+   click on Reset to undo.
+6. **The names:** Keys; Pause (the row doesn't say it is also Fight now;
+   the button carries its key); Speed 0.5× to 3×; Sector map; Engage,
+   Focus, Hold, Stop; Show tooltip; All keys, Reset to defaults.
+7. **Reset has no confirm** and resets the keys only.
+8. **A long code shows as spaced words,** not as its face: `[` is
+   "Bracket Left". `/` keeps its face from 97b.
+
+**Headless** (`Keybindings.test.ts`, +9, expected values written by hand
+from the rules' words): what can't be bound; a stored modifier left out;
+the five verdicts; that a waiting row binds exactly the keys the swap
+rule takes; what `overridesWith` returns for the read's two moves (Pause
+to P stores `{togglePause: KeyP}`; then Focus to P stores Focus on P and
+Pause on F) and that it changes nothing; the spaced names. Four plants,
+each run and then restored by one script: a chord that binds, a bindable
+modifier, a repeat that ends the wait, an `overridesWith` that mutates.
+Each failed by name (1, 4, 1 and 1 tests).
+
+**In the pane** (Chromium; the dev server, `0b66611-dirty-dev`). Every
+bind below is a synthetic `keydown` carrying a `code`, dispatched on the
+focused key button.
+- *From the menu.* The section draws in two columns (313 and 646 px), six
+  rows and five, each 31 px; the whole section is in view once scrolled
+  to. At a 386 px panel it is one column of eleven with no sideways
+  scroll.
+- *The read's moves.* Pause, then P: the row reads P, the line "Pause is
+  on P now.", the stored keys `{togglePause: KeyP}`. Focus, then P: Focus
+  reads P and Pause F, the line "Focus is on P now, and Pause moved to
+  F.", both stored.
+- *A waiting row.* It reads "Press a key…" with `aria-label` "Pause:
+  Press a key…". Ctrl+F was not prevented and the row went on waiting;
+  Shift alone, a repeat and an empty code were swallowed. Escape ended the
+  wait and the modal stayed open; a second Escape closed it. Enter ended
+  the wait, and a keyboard click sent while Enter was still down started
+  none. Tab ended it and was not prevented. A second click ended it. A
+  `blur` event ended it.
+- *Space.* Bound to Engage: a keyboard click before the keyup started no
+  wait; one after it did.
+- *Nothing moves.* Every key and the reset button kept its rectangle
+  through a wait, a swap, a bind to `NumpadMultiply` and Reset. "Numpad
+  Multiply" fits at 10rem; at the first 9rem it was cut with an ellipsis.
+- *Reset:* the stored keys `{}`, every row at its default, the line
+  "Every key is back to its default."
+- *In a battle,* through the chip. Before: "▶ Fight now (Space)", the
+  pause tooltip `[Space]`, the map chip's `[M]`, and Space toggled the
+  pause. Pause to P and Sector map to N in the modal: Fight now read (P)
+  while the modal was still open. After closing: the tooltips `[P]` and
+  `[N]`; Space was not prevented and changed nothing; P was prevented and
+  toggled the pause; Ctrl+P and Ctrl+F were not prevented; M opened no
+  map; N opened it, with the hint "[ map view — N / Esc closes ]". That
+  hint and the chip's tooltip were 116b's unverified item.
+- *After a reload* the registry held `KeyP` and `KeyN` and the rows showed
+  them. The check's stored settings and saved run were removed afterwards.
+
+**A run is left alone.** The seed-7 drive: exit 0, `logHash a59ee48f`, 12
+battles.
+
+**Not verified.**
+- A real key press. The pane's key tool sends an empty `code`, which a
+  waiting row swallows, so no bind here came from a keyboard.
+- Firefox, all of it: the two columns (CSS `columns` with `break-inside`),
+  the Tab walk through twelve new stops, the amber fill, and what Space
+  does on its release after it has been bound.
+- A lost focus. The pane's document has no focus, so `focus()` on another
+  element fired no `blur`; the event was dispatched by hand.
+- A keyboard that isn't QWERTY. A `code` names the physical key by its US
+  label, so on AZERTY the key marked A shows as Q, here and on the HUD
+  (TODO "§116 riders").
+- The production build and Electron were not opened with the rows.
+
+**Cost.** The production bundle is 626.88 kB raw (622.76 at 116d), the
+stylesheet 60.99 kB (59.95), both steps of this session together. `npm
+test`: 233 files, 3384 tests (+9). Typecheck clean. The reading before
+this commit: **320,719** at 11:55; the step cost about 138k.

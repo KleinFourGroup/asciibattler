@@ -536,3 +536,12 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   five screens, each checked with the box oracle (DESIGN "Layout
   stability"), and DESIGN's Chips paragraph and the corner comments in the
   stylesheet change with it. Home: §117.5, the UI sweep (signed 2026-10-04), as its first item.
+
+- [ ] **A key's name is its US label** (116e). The registry binds a
+  `KeyboardEvent.code`, the physical key, and `keyLabel` shows that code's
+  name, so on AZERTY the key marked A reads as Q in the settings' key rows,
+  on the HUD's buttons and in the tooltips. It has been so since the HUD
+  showed keys; the rebind rows make it visible. A fix would keep the
+  pressed key's `key` beside its `code` at a rebind (the defaults have no
+  press to read), or ask `navigator.keyboard.getLayoutMap()`, which
+  Firefox doesn't have.

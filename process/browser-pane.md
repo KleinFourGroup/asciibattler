@@ -133,7 +133,12 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `__probe.frame(dt)` before, during and after (the countdown's
   `remaining`, `world.currentTick`). A row is driven by its control's own
   click, or for a slider by setting `value` and dispatching `input` then
-  `change`.
+  `change`. A key row (`.settings-keys .settings-key`): click it, then
+  dispatch a `keydown` that carries `code` on it, and a `keyup` after.
+  The pane's own key tool sends an empty `code`, which a waiting row
+  swallows. `document.hasFocus()` is false in a hidden pane, so `focus()`
+  on another element fires no `blur`: dispatch a `FocusEvent('blur')` to
+  check that a lost focus ends a wait.
 - **The settings** (`src/settings/`): `__game.settings` is the page's
   model. `set(key, value)` stores the value and applies it at once, and
   `get()` reads them all. What a consumer holds is read from the consumer:

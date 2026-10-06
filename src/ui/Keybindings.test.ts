@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   Keybindings,
   RESERVED_CODES,
+  captureVerdict,
+  isBindable,
   isTextEntry,
   keyLabel,
   overridesOf,
@@ -336,9 +338,123 @@ describe('116b — the key rules', () => {
     expect(after.preventDefault).toHaveBeenCalledTimes(1);
   });
 
-  it("the shipped defaults give every action its own key, none of them reserved", () => {
+  it("the shipped defaults give every action its own key, each one a key an action can take", () => {
     const shipped = new Keybindings().bindings();
     expect(unique(shipped)).toBe(true);
-    for (const code of codes(shipped)) expect(RESERVED_CODES).not.toContain(code);
+    for (const code of codes(shipped)) {
+      expect(RESERVED_CODES).not.toContain(code);
+      expect(isBindable(code), code).toBe(true);
+    }
+  });
+});
+
+// 116e — the rules the rebind rows add. The expected values are written out
+// by hand from the rules' words.
+describe('116e — the rebind rows', () => {
+  const key = (code: string, flags: Partial<KeyLike> = {}): KeyLike => ({
+    code,
+    repeat: false,
+    preventDefault: () => {},
+    ...flags,
+  });
+
+  it('no action takes a reserved key, a modifier or a lock on its own, or a key with no name', () => {
+    const refused = [
+      'Enter',
+      'NumpadEnter',
+      'Tab',
+      'Escape',
+      'ShiftLeft',
+      'ShiftRight',
+      'ControlLeft',
+      'ControlRight',
+      'AltLeft',
+      'AltRight',
+      'MetaLeft',
+      'MetaRight',
+      'OSLeft',
+      'OSRight',
+      'CapsLock',
+      'NumLock',
+      'ScrollLock',
+      'Unidentified',
+      '',
+    ];
+    for (const code of refused) {
+      expect(isBindable(code), code).toBe(false);
+      expect(withRebind(DEFAULTS, 'togglePause', code), code).toBeNull();
+    }
+    for (const code of ['KeyP', 'Space', 'Digit7', 'ArrowUp', 'F5', 'Numpad1', 'Backquote', 'Slash']) {
+      expect(isBindable(code), code).toBe(true);
+    }
+  });
+
+  it('a stored modifier is left out, so no action sits on a key that could never fire', () => {
+    expect(resolveBindings(DEFAULTS, { togglePause: 'ControlLeft', focusObjective: 'ShiftLeft' })).toEqual(DEFAULTS);
+  });
+
+  it('a waiting row binds a plain key', () => {
+    expect(captureVerdict(key('KeyP'))).toBe('bind');
+    expect(captureVerdict(key('Space'))).toBe('bind');
+    expect(captureVerdict(key('ArrowLeft'))).toBe('bind');
+  });
+
+  it('Enter and Escape call the wait off, Tab calls it off and walks on', () => {
+    expect(captureVerdict(key('Escape'))).toBe('cancel');
+    expect(captureVerdict(key('Enter'))).toBe('cancel');
+    expect(captureVerdict(key('NumpadEnter'))).toBe('cancel');
+    expect(captureVerdict(key('Tab'))).toBe('walk');
+    expect(captureVerdict(key('Tab', { repeat: true }))).toBe('walk');
+  });
+
+  it('a chord is left to the browser, a modifier pressed on its own included', () => {
+    expect(captureVerdict(key('KeyF', { ctrlKey: true }))).toBe('pass');
+    expect(captureVerdict(key('KeyR', { metaKey: true }))).toBe('pass');
+    expect(captureVerdict(key('Tab', { altKey: true }))).toBe('pass');
+    expect(captureVerdict(key('ControlLeft', { ctrlKey: true }))).toBe('pass');
+    expect(captureVerdict(key('AltRight', { altKey: true }))).toBe('pass');
+  });
+
+  it('an auto-repeat or a key no action takes changes nothing, and the row goes on waiting', () => {
+    expect(captureVerdict(key('KeyP', { repeat: true }))).toBe('swallow');
+    // A held Enter is the press that started the wait, still down.
+    expect(captureVerdict(key('Enter', { repeat: true }))).toBe('swallow');
+    expect(captureVerdict(key('ShiftLeft'))).toBe('swallow');
+    expect(captureVerdict(key('CapsLock'))).toBe('swallow');
+    expect(captureVerdict(key(''))).toBe('swallow');
+  });
+
+  it('every key a waiting row binds is a key the swap rule takes', () => {
+    for (const code of ['KeyP', 'Space', 'F5', 'Enter', 'Tab', 'ShiftLeft', 'CapsLock', '', 'Numpad0']) {
+      const binds = captureVerdict(key(code)) === 'bind';
+      expect(withRebind(DEFAULTS, 'holdObjective', code) !== null, code).toBe(binds);
+    }
+  });
+
+  it('the registry says what a rebind would store, and stays as it is', () => {
+    const kb = new Keybindings(DEFAULTS);
+    expect(kb.overridesWith('togglePause', 'KeyP')).toEqual({ togglePause: 'KeyP' });
+    // Focus onto Pause's key: the two swap, and both are off their defaults.
+    expect(kb.overridesWith('focusObjective', 'Space')).toEqual({ focusObjective: 'Space', togglePause: 'KeyF' });
+    expect(kb.overridesWith('togglePause', 'Space')).toEqual({});
+    expect(kb.overridesWith('togglePause', 'Escape')).toBeNull();
+    expect(kb.overridesWith('togglePause', 'ShiftLeft')).toBeNull();
+    expect(kb.bindings()).toEqual(DEFAULTS);
+
+    // The read's two moves: Pause to P, then Focus to P.
+    kb.setOverrides({ togglePause: 'KeyP' });
+    expect(kb.overridesWith('focusObjective', 'KeyP')).toEqual({ focusObjective: 'KeyP', togglePause: 'KeyF' });
+    // And back: Pause onto its default key stores nothing.
+    expect(kb.overridesWith('togglePause', 'Space')).toEqual({});
+    expect(kb.codeFor('togglePause')).toBe('KeyP');
+  });
+
+  it('a key with a long name shows it as words', () => {
+    expect(keyLabel('ArrowUp')).toBe('Arrow Up');
+    expect(keyLabel('Numpad1')).toBe('Numpad 1');
+    expect(keyLabel('PageDown')).toBe('Page Down');
+    expect(keyLabel('BracketLeft')).toBe('Bracket Left');
+    expect(keyLabel('Backquote')).toBe('Backquote');
+    expect(keyLabel('F11')).toBe('F11');
   });
 });

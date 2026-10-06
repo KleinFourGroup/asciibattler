@@ -4150,9 +4150,12 @@ body {
   gap: 6px;
 }
 
-/* A toggle of a choice, and the − / + of a level: one plate. */
+/* A toggle of a choice, the − / + of a level, a key (116e) and a row's one
+   action: one plate. */
 .settings-choice,
-.settings-step {
+.settings-step,
+.settings-key,
+.settings-action {
   font-family: var(--font-mono);
   font-size: var(--text-13);
   letter-spacing: 0.06em;
@@ -4170,7 +4173,11 @@ body {
 .settings-choice:hover,
 .settings-choice:focus-visible,
 .settings-step:hover,
-.settings-step:focus-visible {
+.settings-step:focus-visible,
+.settings-key:hover,
+.settings-key:focus-visible,
+.settings-action:hover,
+.settings-action:focus-visible {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
 }
@@ -4211,6 +4218,51 @@ body {
   min-width: 4ch;
   text-align: right;
   font-size: var(--text-13);
+  color: var(--color-terminal-green);
+}
+
+/* 116e — THE KEY ROWS. Two columns where the panel is wide enough for two
+   rows side by side and one where it isn't; the rows run down the first
+   column and then the second, which is also their Tab order. A key has a
+   fixed width, so no row moves when its key's name changes length or while
+   it waits for a press. */
+.settings-keys {
+  columns: 2 17rem;
+  column-gap: 28px;
+}
+
+.settings-keys > .settings-row {
+  break-inside: avoid;
+  margin-bottom: 8px;
+}
+
+/* The longest names a key has ("Numpad Multiply") fit; the ellipsis is for
+   one that does not. */
+.settings-key {
+  width: 10rem;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A key that waits for a press is FILLED amber and says so in words; the
+   chosen toggle's fill is green, so the two states never read as one. */
+.settings-key.is-waiting,
+.settings-key.is-waiting:hover,
+.settings-key.is-waiting:focus-visible {
+  border-color: var(--color-terminal-amber);
+  background: var(--color-terminal-amber);
+  color: var(--color-black);
+}
+
+/* What the last change to the keys did. Under the rows, so a long line that
+   wraps moves nothing a player has just clicked, and one line is kept while
+   it is empty. */
+.settings-keys__notice {
+  min-height: 1.5em;
+  font-size: var(--text-11);
+  line-height: 1.5;
   color: var(--color-terminal-green);
 }
 

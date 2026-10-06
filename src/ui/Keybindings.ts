@@ -20,6 +20,9 @@
  *    and no key fires two (`withRebind`).
  *  - Enter, Tab and Escape can't be bound (`RESERVED_CODES`): they are every
  *    control's own keys (activate, walk, close; DESIGN §Input accessibility).
+ *    Neither can a modifier or a lock key on its own (`isBindable`, 116e):
+ *    Ctrl, Alt or Meta would never fire under the modifier rule below, and
+ *    Shift is half of Shift+Tab and of `?`.
  *  - What is stored is the difference from the defaults (`overridesOf`), and
  *    stored overrides resolve through the swap rule in the registry's action
  *    order (`resolveBindings`), so a stored set that names one key twice, an
@@ -32,6 +35,9 @@
  *  - While the registry is suspended (`suspend`, 116d) no key fires a hotkey:
  *    the settings modal holds the battle behind it, so a key pressed there
  *    must not pause, speed up or order that battle.
+ *  - A rebind row waiting for its key reads each keydown through
+ *    `captureVerdict` (116e), which keeps the rules above: a chord is still
+ *    the browser's, and a key no action can take is never bound.
  *
  * Lifetimes split cleanly: the registry (codes + the window listener) is
  * page-lifetime; the `on(...)` HANDLERS are battle-scoped (the HUD subscribes on
@@ -59,8 +65,55 @@ type Handler = () => void;
 /** Every action's key. */
 export type Bindings = Readonly<Record<KeybindAction, string>>;
 
-/** The keys no action can take. */
+/** Every control's own keys, which no action can take. */
 export const RESERVED_CODES: readonly string[] = ['Enter', 'NumpadEnter', 'Tab', 'Escape'];
+
+/** The keys that are held with another key, or that switch a lock. */
+const MODIFIER_CODES: readonly string[] = [
+  'ShiftLeft',
+  'ShiftRight',
+  'ControlLeft',
+  'ControlRight',
+  'AltLeft',
+  'AltRight',
+  'MetaLeft',
+  'MetaRight',
+  'OSLeft',
+  'OSRight',
+  'CapsLock',
+  'NumLock',
+  'ScrollLock',
+];
+
+/** Whether an action can take this key: not a reserved key, not a modifier
+ *  or a lock on its own, and a key the browser could name. */
+export function isBindable(code: string): boolean {
+  if (code.length === 0 || code === 'Unidentified') return false; // i18n-ok: a KeyboardEvent.code value
+  return !RESERVED_CODES.includes(code) && !MODIFIER_CODES.includes(code);
+}
+
+/**
+ * What a keydown is to a rebind row that is waiting for its key (116e):
+ *  - `pass`: a chord (Ctrl, Alt or Meta held, which is also how each of
+ *    those reads on its own keydown). It is the browser's, as it is for a
+ *    hotkey, and the row goes on waiting.
+ *  - `walk`: Tab. The wait is called off and focus moves on, so the keyboard
+ *    is never held in a row.
+ *  - `cancel`: Enter or Escape. The wait is called off and the key does
+ *    nothing else: it neither presses the row again nor closes the modal.
+ *  - `swallow`: an auto-repeat, or a key no action can take (Shift alone).
+ *    Nothing happens and the row goes on waiting.
+ *  - `bind`: the row's action takes the key.
+ */
+export type CaptureVerdict = 'pass' | 'walk' | 'cancel' | 'swallow' | 'bind';
+
+export function captureVerdict(e: KeyLike): CaptureVerdict {
+  if (e.ctrlKey === true || e.altKey === true || e.metaKey === true) return 'pass';
+  if (e.code === 'Tab') return 'walk';
+  if (e.repeat) return 'swallow';
+  if (RESERVED_CODES.includes(e.code)) return 'cancel';
+  return isBindable(e.code) ? 'bind' : 'swallow';
+}
 
 /** The `<input>` types that take no typed text; every other type does. */
 const NON_TEXT_INPUT_TYPES: readonly string[] = [
@@ -91,10 +144,10 @@ export function isTextEntry(target: unknown): boolean {
 
 /**
  * `bindings` with `action` on `code`. If another action held `code`, it takes
- * `action`'s old key. Null when `code` is empty or reserved.
+ * `action`'s old key. Null when no action can take `code` (`isBindable`).
  */
 export function withRebind(bindings: Bindings, action: KeybindAction, code: string): Bindings | null {
-  if (code.length === 0 || RESERVED_CODES.includes(code)) return null;
+  if (!isBindable(code)) return null;
   const next: Record<KeybindAction, string> = { ...bindings };
   const holder = KEYBIND_ACTIONS.find((other) => other !== action && bindings[other] === code);
   if (holder !== undefined) next[holder] = bindings[action];
@@ -165,6 +218,14 @@ export class Keybindings {
   /** What to store for the bindings as they are now (`overridesOf`). */
   overrides(): Record<string, string> {
     return overridesOf(this.defaults, this.bindings());
+  }
+
+  /** What to store once `action` is on `code`, by the swap rule; null for a
+   *  key no action can take. It changes nothing here: the rebind surface
+   *  stores this, and the registry takes it back through `setOverrides`. */
+  overridesWith(action: KeybindAction, code: string): Record<string, string> | null {
+    const next = withRebind(this.bindings(), action, code);
+    return next === null ? null : overridesOf(this.defaults, next);
   }
 
   /**
@@ -250,11 +311,12 @@ export class Keybindings {
 }
 
 /** `KeyboardEvent.code` → a compact display label: `"KeyF"` → `"F"`,
- *  `"Digit2"` → `"2"`; anything else (e.g. `"Space"`, `"Escape"`) passes
- *  through verbatim. */
+ *  `"Digit2"` → `"2"`; any other code is its own name with its words apart
+ *  (`"Space"`, `"ArrowUp"` → `"Arrow Up"`, `"Numpad1"` → `"Numpad 1"`), since
+ *  a rebind (116e) can show any key. */
 export function keyLabel(code: string): string {
   if (code.startsWith('Key')) return code.slice(3); // i18n-ok: a KeyboardEvent.code prefix
   if (code.startsWith('Digit')) return code.slice(5); // i18n-ok: a KeyboardEvent.code prefix
   if (code === 'Slash') return '/'; // 97b — the tooltip key's default: the `?` key reads as its face
-  return code;
+  return code.replace(/([a-z])([A-Z0-9])/g, '$1 $2');
 }

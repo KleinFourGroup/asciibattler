@@ -23,14 +23,19 @@
  * (src/settings/apply.ts): nothing here touches the audio player's levels,
  * the motion gate or the renderer.
  *
+ * A KEY (116e) is a button that shows an action's key. A click on it waits
+ * for a key, and the next one pressed is the action's; `keySection` has the
+ * rest.
+ *
  * The body is built once per open, from the settings as they are then, and
  * each control repaints itself. Nothing in it comes or goes while it is up.
  *
- * Landing notes: the key rows arrive at 116e, the Palette row at 116g, the
- * data rows at 116h and the text scale at 116k, each as a section here.
+ * Landing notes: the Palette row arrives at 116g, the data rows at 116h and
+ * the text scale at 116k, each as a section here.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
+import type { KeybindAction } from '../config/keybindings';
 import { t } from '../i18n/ui';
 import type { SettingsModel } from '../settings/model';
 import {
@@ -42,7 +47,7 @@ import {
   type ShakeChoice,
 } from '../settings/settings';
 import { button } from './button';
-import type { Keybindings } from './Keybindings';
+import { captureVerdict, type Keybindings } from './Keybindings';
 import { openModal, type ModalHandle } from './modal';
 import type { PlaybackSpeed } from './PlaybackSpeed';
 
@@ -76,6 +81,25 @@ const SHAKE_LABEL: Readonly<Record<ShakeChoice, string>> = {
   none: t('settings.shake.none'),
 };
 
+// The key rows' names, in the order they are drawn: the time controls and the
+// map down the first column, the orders and the tooltip key down the second.
+// One literal key per action, so a new action fails to compile until it has
+// its row. The names are the words the HUD and the map chip use.
+const KEY_NAME: Readonly<Record<KeybindAction, string>> = {
+  togglePause: t('hud.pause.pause'),
+  speedHalf: t('settings.key.speed', { speed: 0.5 }),
+  speed1: t('settings.key.speed', { speed: 1 }),
+  speed2: t('settings.key.speed', { speed: 2 }),
+  speed3: t('settings.key.speed', { speed: 3 }),
+  toggleSectorMap: t('sectormap.chipTooltip'),
+  engageObjective: t('hud.objective.engage'),
+  focusObjective: t('hud.objective.focus'),
+  holdObjective: t('hud.objective.hold'),
+  stopObjective: t('hud.objective.stop'),
+  showTooltip: t('settings.key.tooltip'),
+};
+const KEY_ROWS = Object.keys(KEY_NAME) as KeybindAction[];
+
 interface Choice<T> {
   readonly value: T;
   readonly label: string;
@@ -84,6 +108,8 @@ interface Choice<T> {
 export class SettingsOverlay {
   private readonly chip: HTMLButtonElement;
   private modal: ModalHandle | null = null;
+  /** What the open body has to give back when the modal closes. */
+  private readonly closers: Array<() => void> = [];
 
   constructor(
     /** The page mount: the MODAL's host (it must not sit inside the chrome
@@ -130,6 +156,7 @@ export class SettingsOverlay {
       panelClass: 'settings-modal',
       onCloseClick: () => this.audio.play('click'),
       onClose: () => {
+        for (const undo of this.closers.splice(0)) undo();
         releaseHold();
         releaseKeys();
         this.modal = null;
@@ -180,9 +207,159 @@ export class SettingsOverlay {
         now.shake,
         (value) => this.settings.set('shake', value),
       ),
+      section(t('settings.section.keys')),
+      ...this.keySection(),
     );
     if (this.deps.runLive()) body.appendChild(this.quitRow());
     return body;
+  }
+
+  /**
+   * 116e — THE KEY ROWS: each action's name and a button that shows its key,
+   * in two columns where the modal is wide enough, so a swap shows both of
+   * its rows at once.
+   *
+   * A click on a key waits for the next keydown, read through
+   * `captureVerdict` (src/ui/Keybindings.ts): a plain key becomes the
+   * action's, by the swap rule; Enter, Escape or Tab calls the wait off, and
+   * so does a second click, a click elsewhere or a lost focus. While a row
+   * waits, the keydown is this section's alone: it is taken in the capture
+   * phase and goes no further, so Escape ends the wait and leaves the modal
+   * open. The registry is suspended for as long as the modal is up, so no
+   * hotkey can fire on the key being chosen.
+   *
+   * A rebind is stored as the overrides (`keys`), and the rows repaint when
+   * the registry takes them back, which is the route a stored set takes at
+   * boot. The line under the rows says what the last change did, since a
+   * swap moves a second row the player didn't click.
+   */
+  private keySection(): HTMLElement[] {
+    const hint = document.createElement('div');
+    hint.className = 'settings-row__hint';
+    hint.textContent = t('settings.key.hint');
+
+    // One line, kept while it has no words, so nothing moves when it gets some.
+    const notice = document.createElement('div');
+    notice.className = 'settings-keys__notice';
+    notice.setAttribute('aria-live', 'polite');
+
+    const rows = document.createElement('div');
+    rows.className = 'settings-keys';
+
+    const keys = new Map<KeybindAction, HTMLButtonElement>();
+    let waiting: KeybindAction | null = null;
+    // The key that ended a wait, until it is released: on its way up it can
+    // press the focused button (Space does), and that click is not a new wait.
+    let stillDown: string | null = null;
+
+    const paint = (): void => {
+      for (const [action, el] of keys) {
+        const shown = action === waiting ? t('settings.key.press') : this.keybindings.labelFor(action);
+        el.textContent = shown;
+        el.classList.toggle('is-waiting', action === waiting);
+        el.setAttribute('aria-label', t('settings.key.aria', { name: KEY_NAME[action], key: shown }));
+      }
+    };
+
+    const onKeyUp = (e: KeyboardEvent): void => {
+      if (e.code !== stillDown) return;
+      e.preventDefault();
+      window.removeEventListener('keyup', onKeyUp, true);
+      // Cleared after the click the release would send, if it sends one.
+      window.setTimeout(() => {
+        stillDown = null;
+      }, 0);
+    };
+    const onKeyDown = (e: KeyboardEvent): void => {
+      const action = waiting;
+      if (action === null) return;
+      const verdict = captureVerdict(e);
+      if (verdict === 'pass') return;
+      if (verdict === 'walk') {
+        stop();
+        return;
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      if (verdict === 'swallow') return;
+      stillDown = e.code;
+      window.addEventListener('keyup', onKeyUp, true);
+      stop();
+      if (verdict === 'bind') this.rebind(action, e.code, notice);
+    };
+    const stop = (): void => {
+      if (waiting === null) return;
+      waiting = null;
+      window.removeEventListener('keydown', onKeyDown, true);
+      paint();
+    };
+    const start = (action: KeybindAction): void => {
+      stop();
+      waiting = action;
+      window.addEventListener('keydown', onKeyDown, true);
+      paint();
+    };
+
+    for (const action of KEY_ROWS) {
+      const key = button('', {
+        className: 'settings-key',
+        onClick: (ev) => {
+          // A click a key made has no click count; a pointer's has.
+          if (stillDown !== null && ev.detail === 0) return;
+          this.audio.play('click');
+          if (waiting === action) {
+            stop();
+            return;
+          }
+          // Not every browser focuses a button it clicks, and the wait ends
+          // when focus leaves.
+          key.focus();
+          start(action);
+        },
+      });
+      key.addEventListener('blur', () => {
+        if (waiting === action) stop();
+      });
+      keys.set(action, key);
+      rows.appendChild(row(KEY_NAME[action], null, key));
+    }
+    paint();
+
+    const reset = button(t('settings.key.reset'), {
+      className: 'settings-action',
+      onClick: () => {
+        stop();
+        this.settings.set('keys', {});
+        this.audio.play('click');
+        notice.textContent = t('settings.key.resetDone');
+      },
+    });
+
+    this.closers.push(this.keybindings.onChange(paint), stop, () => {
+      window.removeEventListener('keyup', onKeyUp, true);
+    });
+    return [hint, rows, notice, row(t('settings.key.all'), null, reset)];
+  }
+
+  /** Put `action` on `code` and say what that did. */
+  private rebind(action: KeybindAction, code: string, notice: HTMLElement): void {
+    const holder = this.keybindings.actionFor(code);
+    if (holder === action) return;
+    const overrides = this.keybindings.overridesWith(action, code);
+    if (overrides === null) return;
+    this.settings.set('keys', overrides);
+    this.audio.play('click');
+    const name = KEY_NAME[action];
+    const key = this.keybindings.labelFor(action);
+    notice.textContent =
+      holder === null
+        ? t('settings.key.moved', { name, key })
+        : t('settings.key.swapped', {
+            name,
+            key,
+            other: KEY_NAME[holder],
+            otherKey: this.keybindings.labelFor(holder),
+          });
   }
 
   /** A choice: one toggle per value, the chosen one filled. */

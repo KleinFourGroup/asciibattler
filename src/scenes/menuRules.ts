@@ -1,5 +1,5 @@
 /**
- * 116c — the menu's two rules, pure, so they are pinned without a page.
+ * 116c — the menu's rules, pure, so they are pinned without a page.
  *
  * WHEN THE MENU BOOTS (Round 8 spec D6): on a plain URL. A run dial that
  * parses (`seed=`, `character=`, …) or a board-explorer bookmark (`bp=`) is a
@@ -12,6 +12,9 @@
  * THE SEED FIELD holds digits only. Its text is cleaned as it is typed, so
  * the field has no refused state to show, and it is read through the URL
  * dial's own parser, so the field and `?seed=` accept the same seeds.
+ *
+ * THE SEED A RUN SHOWS (116c-post2, on its end screen) is what the field
+ * takes back: `seedShown`, below.
  */
 
 import { parseRunConfig, RUN_CONFIG_PARAMS } from '../run/RunConfig';
@@ -43,4 +46,13 @@ export function seedFromText(text: string): number | undefined {
   const clean = cleanSeedText(text);
   if (clean === '') return undefined;
   return parseRunConfig(new URLSearchParams({ [RUN_CONFIG_PARAMS.seed]: clean })).seed;
+}
+
+/** The seed a run shows the player: its stream root (`Run.streamRoot`), as
+ *  digits. A run reads its seed only as `seed >>> 0`, so the root names the
+ *  same run as the seed it was created with, in ten digits at most where a
+ *  seed drawn from the clock is thirteen. A loaded run has its root too,
+ *  where the seed as given is only in a journal's start. */
+export function seedShown(streamRoot: number): string {
+  return String(streamRoot);
 }

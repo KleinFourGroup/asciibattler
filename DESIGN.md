@@ -207,7 +207,7 @@ none where no run is live).
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |
 | Battle HUD | speed / pause, the four objectives, Fight now, the enemy cards (pressable; an armed pick honoured) | ✓ | ✓ 100c2 (Space = pause) | ✓ (a tap acts; arm Focus then tap) | none | gauges (live) |
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
-| Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
+| Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; under them the run's seed (the word Seed, a tooltip text site as on the menu, and the number as selectable text); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
 | The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
@@ -534,6 +534,8 @@ under it to say so (the seed field keeps digits; `cleanSeedText`). The ring
 covers it, the hover twin is its border, and a key typed in it fires no
 hotkey (`isTextEntry`, with the key rules in `Keybindings.ts`). Enter in a
 field is the action the field feeds. The first is the menu's seed field.
+What a field takes is shown elsewhere in the form the field takes it: a
+run's end screen shows its seed under the same word, as text to select.
 **A settings row** is a name on the left, with one line under it where the
 name alone doesn't say what the row does, and its control on the right. A
 CHOICE is a group of toggles (`role="group"`, named for its row), the

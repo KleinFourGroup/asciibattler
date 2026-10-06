@@ -4,7 +4,8 @@
  *   - 'complete' — player won the terminal battle.
  *
  * Same structure for both: heading, subtext, the run-end stats body (102d),
- * and the two actions side by side: the way out and "Export run".
+ * the two actions side by side (the way out and "Export run"), and the run's
+ * seed (116c-post2).
  * Variant only changes the copy and accent color, so reusing one component
  * keeps the reset/button flow uniform. The first button dispatches a
  * `resetRun` command, and Game decides where that leads (116c): the menu on
@@ -39,6 +40,7 @@ import { Screen } from './Screen';
 import { button } from './button';
 import { downloadText } from './download';
 import { archetypeGlyphRun, archetypeLines, fallenSide } from './fallenSide';
+import { attachTooltip } from './tooltip';
 
 export type GameOverVariant = 'defeat' | 'complete';
 
@@ -71,12 +73,14 @@ export class GameOverScreen extends Screen {
     super(mount);
   }
 
-  show(variant: GameOverVariant = 'defeat', ledger: readonly FallenRecord[] = []): void {
+  /** `seed` is the run's seed as the menu's field takes it (`seedShown`);
+   *  null draws no seed line. */
+  show(variant: GameOverVariant = 'defeat', ledger: readonly FallenRecord[] = [], seed: string | null = null): void {
     this.hide();
-    this.present(this.render(variant, ledger));
+    this.present(this.render(variant, ledger, seed));
   }
 
-  private render(variant: GameOverVariant, ledger: readonly FallenRecord[]): HTMLDivElement {
+  private render(variant: GameOverVariant, ledger: readonly FallenRecord[], seed: string | null): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = `gameover-screen gameover-screen--${variant}`;
 
@@ -125,8 +129,29 @@ export class GameOverScreen extends Screen {
     }
     panel.appendChild(actions);
 
+    if (seed !== null) panel.appendChild(renderSeed(seed));
+
     return panel;
   }
+}
+
+/** 116c-post2 — the run's seed, last and quiet: what a player types into the
+ *  menu's field to get this map again. The word is the text site the menu's
+ *  is, its tooltip saying what the number is for; the number is plain text,
+ *  selectable, so it can be copied as well as read. */
+function renderSeed(seed: string): HTMLDivElement {
+  const line = document.createElement('div');
+  line.className = 'gameover-seed';
+  const name = document.createElement('span');
+  name.className = 'gameover-seed__name';
+  name.textContent = t('menu.seed.label');
+  name.tabIndex = 0;
+  attachTooltip(name, t('gameover.seedTip'));
+  const value = document.createElement('span');
+  value.className = 'gameover-seed__value';
+  value.textContent = seed;
+  line.append(name, value);
+  return line;
 }
 
 function renderStats(stats: RunFallenStats): HTMLDivElement {

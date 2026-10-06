@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { EventBus } from '../core/EventBus';
+import type { GameEvents } from '../core/events';
 import { BOARD_PANEL_PARAM } from '../dev/boardPanel/state';
+import { Run } from '../run/Run';
 import { parseRunConfigFromURL, RUN_CONFIG_PARAMS } from '../run/RunConfig';
-import { BOOKMARK_PARAM, SEED_MAX_DIGITS, bootsToMenu, cleanSeedText, seedFromText } from './menuRules';
+import {
+  BOOKMARK_PARAM,
+  SEED_MAX_DIGITS,
+  bootsToMenu,
+  cleanSeedText,
+  seedFromText,
+  seedShown,
+} from './menuRules';
 
 /** One value per run dial that the URL parser accepts, written by hand. A new
  *  dial fails the census below until it has its row here. */
@@ -86,5 +96,26 @@ describe('116c — the seed field', () => {
     for (const digits of ['7', '42', '1759590000000']) {
       expect(seedFromText(digits)).toBe(parseRunConfigFromURL(`?seed=${digits}`).seed);
     }
+  });
+});
+
+describe('116c-post2 — the seed a run shows', () => {
+  const snapshotOf = (seed: number) => new Run(seed, new EventBus<GameEvents>()).toJSON();
+
+  it('typed back into the field, names the same run', () => {
+    // Small seeds, the two sides of 2^32, a seed from the clock, the field's longest.
+    for (const seed of [0, 7, 4_294_967_295, 4_294_967_296, 1759590000000, 999_999_999_999_999]) {
+      const original = snapshotOf(seed);
+      const shown = seedShown(original.streamRoot);
+      expect(shown.length).toBeLessThanOrEqual(10);
+      expect(cleanSeedText(shown)).toBe(shown);
+      const typed = seedFromText(shown);
+      expect(typed).toBeDefined();
+      expect(snapshotOf(typed!)).toEqual(original);
+    }
+  });
+
+  it('the control: a neighbouring seed is another run', () => {
+    expect(snapshotOf(8)).not.toEqual(snapshotOf(7));
   });
 });

@@ -1742,6 +1742,30 @@ body {
   white-space: nowrap;
 }
 
+/* 116c-post2 — the run's seed, under the actions and as quiet as the menu's
+   seed row: the word in its grey, the number in the colour and size the
+   menu's field gives a typed seed. The number is selectable, since it is
+   there to be copied. The word's underline is `.menu-seed__name`'s rule. */
+.gameover-seed {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: var(--text-12);
+  letter-spacing: 0.1em;
+  color: var(--color-gray-88);
+}
+
+.gameover-seed__name {
+  text-transform: uppercase;
+}
+
+.gameover-seed__value {
+  font-size: var(--text-14);
+  letter-spacing: 0.08em;
+  color: var(--color-terminal-amber);
+  user-select: text;
+}
+
 /* 67b — the sector-cleared screen: the gameover-screen chrome vocabulary
    (opaque black, mono, amber button), but its own accent story — an amber
    heading (a milestone, not the run's end: green stays reserved for Run
@@ -1968,7 +1992,8 @@ body {
   border-color: var(--color-flourescent-blue);
 }
 
-.menu-seed__name {
+.menu-seed__name,
+.gameover-seed__name {
   cursor: help;
   text-decoration: underline dotted;
   text-underline-offset: 4px;

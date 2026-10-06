@@ -5557,3 +5557,79 @@ The session hands off here, under the line and without starting
 116c-post2: its step zero has a question in it (where the seed comes
 from), and a fresh session reads that with room. The reading before this
 commit: **534,891** at 13:22.
+
+### 116c-post2 — the end screen shows the run's seed (2026-10-06) — ◐ built, unread (`batch`, at 116g's stop)
+
+A fresh session (c41fe9af, `claude-opus-5-5`); 85,855 after HANDOFF.
+
+**Step zero: where the seed comes from.** The entry above listed three
+sources and left one unread. A fourth settles it: `Run.streamRoot` is a
+public field already (`readonly`, `Run.ts:789`), so the end screen reads
+it from `ctx.run` with no change under `src/run`. The constructor uses its
+`seed` argument twice, for `streamRoot = seed >>> 0` and for
+`run:started`'s payload, and every stream derives from the root, so the
+root names the run. It is in the snapshot, so a continued run and a run
+loaded from a dev snapshot have it, where the seed as given is only in a
+journal's seed start. That makes the unread question (what a continued
+run's journal gives after several loads) one the screen never asks.
+
+**The number shown is the root, not the seed as given.** For a seed from
+the clock they differ: this session's pane run was created with
+1791300883386, and its screen shows 299520954. Both name the same run. The
+root is ten digits at most, and it is the one number every run has. What
+this costs: the journal's start (and `npm run replay`'s first line) keeps
+the seed as given, so a bug report that quotes the screen and a journal
+file from the same run show two numbers. Not built: seeding a clock run
+with `Date.now() >>> 0`, which would make them equal for every run whose
+seed wasn't typed longer than ten digits; it changes what `createRun`
+records, and nothing needs it yet.
+
+**Built.** `seedShown(streamRoot)` in `src/scenes/menuRules.ts`, beside
+the field's two rules; `GameOverScene` passes it to the screen. The line
+is last on the screen, under the two buttons, in both variants: the word
+Seed in the menu's grey with the menu's dotted underline, a tooltip text
+site with its own tab stop (after Export run), and the number in the
+colour and size the menu's field gives a typed seed, as selectable text.
+The word is the menu's string (`menu.seed.label`). One new string, the
+tooltip (`gameover.seedTip`): "This run's seed. Type it on the main menu
+and pick the same character to get the same map and offers." No line when
+the page holds no run.
+
+**Calls made here, for the read.** (1) The root over the seed as given,
+above. (2) The line's place: under the buttons, as the menu's seed row is
+under its rows; the corner was the other candidate, where the menu keeps
+the build's ID. (3) The number is plain selectable text (a double-click
+takes it), not a copy button: a button is a new control and a clipboard
+write, and the menu's build ID set the precedent. (4) The tooltip's
+wording, and that it names the character: the same seed with another
+character is another run.
+
+**Headless** (`menuRules.test.ts`, +2): for six seeds (0, 7, both sides of
+2^32, a clock seed, the field's longest), a Run built from
+`seedFromText(seedShown(root))` has a snapshot equal to the original's,
+and the text is ten digits or fewer and survives `cleanSeedText`
+unchanged. The control: seeds 7 and 8 give unequal snapshots, so the
+comparison can fail.
+
+**In the pane** (Chromium, the dev server, `6b84d82-dirty-dev`), from the
+menu: New run, The Priest, then `__probe.drive({ seed: 3 })` to a defeat.
+The line read `Seed 299520954`; the journal's seed start, a surface the
+screen doesn't read, held 1791300883386, whose `>>> 0` is 299520954. A
+real double-click on the number selected exactly its nine digits. A
+`pointerenter` on the word opened the tooltip with the string above, and
+`pointerleave` closed it. Then Main menu, the number set into the field,
+New run, The Priest: the new run's first snapshot was string-equal to the
+first run's (5,781 characters), and its journal's start held
+`seed=299520954&character=priest`. After a reload and Continue the run's
+root was still 299520954. The check's saved run was removed from the
+pane's storage afterwards.
+
+**Not verified.** Firefox: the line's look under the buttons, the
+underline, the focus ring on the word, the double-click. The victory
+variant was not opened (one component draws both, and the line doesn't
+branch on the variant). No narrow viewport was measured; the line is some
+fifteen characters wide.
+
+**Cost.** `npm test`: 233 files, 3375 tests (+2). Typecheck clean. The
+reading before this commit: **176,663** at 11:37; the step cost about 91k
+with orientation.

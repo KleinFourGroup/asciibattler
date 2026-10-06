@@ -6068,3 +6068,44 @@ reading before this commit: **487,299** at 12:25 (the meter, before the
 write-up). The stretch this stop opens (the candidate wired, its gate,
 the re-picks, the pip symbols, the Palette row, the pane) does not look
 likely to fit under the 550k line from here.
+
+### The first stop's answers (2026-10-06, the user's) — 116g's five calls SIGNED; 116c-post2 and 116e READ ✅
+
+The reply to the stop. The message's own time was not read; the meter
+read **521,520** at 13:02, after it. The reading on the stop's commit
+(`067222d`): **517,742** at 12:31.
+
+- **The five calls of 116g's first stop: all signed** ("Signing all of the
+  calls!"). As they were put:
+  1. the instrument's failing cases are the three pairs that merge (yours
+     with the camp, the enemy with cracked stone, the enemy with stone),
+     not green against red;
+  2. the bar is 0.130, the default palette's own closest identity pair to
+     normal vision;
+  3. tritan is gated with protan and deutan;
+  4. the candidate's three hues: `TERMINAL_GREEN` `#46FBAE`, `NEON_RED`
+     `#F942B2`, `TERMINAL_STONE` `#71675D`, with amber and cracked stone
+     as they are;
+  5. the re-picks are the next stretch's, reported and not gated:
+     `FLOURESCENT_BLUE` away from the mint, the status and empower hues,
+     and the moved hues' dark and dim shades.
+- **What the user saw in the swatches:** "Our original palette was
+  aggressively colorblind-hostile! Player and camp look almost
+  identical!" That is the default's yours-with-camp pair, 0.050 for a
+  deuteranope, read by eye from the simulated column of
+  `scratch/116g-palette-candidate.html`. It is the first eye on any of
+  these numbers, and it agrees with the one it looked at. It is a reading
+  of the simulated column, which is not the same evidence as a
+  colour-deficient player's report; none has been asked.
+- **Both `batch` reads confirmed** ("confirming both reads"): 116c-post2
+  (the seed on the end screen) and 116e (the key rows). The user did not
+  say what they tried; the scripts given were the ROADMAP's. The session
+  takes both as read and ticks them. 116e's read is the first time a key
+  row met a real keyboard, if the script was followed; the pane's binds
+  were all synthetic.
+
+The session hands off here, under the line. The next stretch starts in a
+fresh session from the Cursor: the palette wired as `colourblind`, its
+gate on every `npm test` at 0.130 over all five views, the re-picks, a
+symbol per status on the camp unit's pip, the Palette row, and the second
+stop.

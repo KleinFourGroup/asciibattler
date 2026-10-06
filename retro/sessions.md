@@ -3402,3 +3402,11 @@ on 116e's; 438,226 on 116f's; 487,299 at 116g's stop before the write-up.
    condition that allowed it repeated, which is that step zero is a
    measurement and the stop exists to carry what it finds. Reported
    response only; whether the candidate is any good is the user's eye.
+
+### Addendum, the same session — after the stop (2026-10-06)
+
+The user signed all five calls and confirmed both batch reads in one
+message, with a remark on what the swatches showed. The meter read
+521,520 after it. One thing for the read of these reports: the swatch page was
+not in the cut, and it is what the user's remark came from. A table of
+distances alone would have been signed or not on trust.

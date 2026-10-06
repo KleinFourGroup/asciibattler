@@ -258,9 +258,12 @@ body {
 
 /* §32c: the per-unit status pip-strip (above the HP bar). A centered, wrapping
    row of small chips — one per active status, in stable canonical order. Each
-   pip is a dark track with a colored fill whose WIDTH depletes with remaining
-   duration and whose OPACITY brightens with stack count (set inline by
-   UnitOverlayLayer.updateStatuses). Hidden when the unit carries no statuses. */
+   pip is the status's symbol over a dark track with a colored fill whose WIDTH
+   depletes with remaining duration and whose OPACITY brightens with stack count
+   (set inline by UnitOverlayLayer.updateStatuses). Hidden when the unit carries
+   no statuses. 116g: the symbol is the pip's read that isn't its hue, on one
+   dark plate with the track so it holds against any floor. The symbol's line
+   is one em tall whatever face draws the glyph, so every pip is one height. */
 .unit-overlay .status-strip {
   display: flex;
   flex-flow: row wrap;
@@ -275,10 +278,20 @@ body {
 
 .unit-overlay .status-pip {
   width: 10px;
-  height: 4px;
   background: rgba(0, 0, 0, 0.85);
   border: 1px solid rgba(0, 0, 0, 0.6);
   overflow: hidden;
+}
+
+.unit-overlay .status-pip-symbol {
+  height: 1em;
+  font-size: var(--text-9);
+  line-height: 1;
+  text-align: center;
+}
+
+.unit-overlay .status-pip-track {
+  height: 3px;
 }
 
 .unit-overlay .status-pip-fill {
@@ -2814,9 +2827,10 @@ body {
 }
 
 /* §32c — the compact card's status row (below the HP bar). One two-line chip per
-   active status: a color swatch (matching the board pip) + name, then the numeric
-   tail (×stacks · ±N/s · remaining) — where the §31-scaled potency reads as a
-   literal. Hidden (no row) when the unit carries no statuses. */
+   active status: its symbol in its hue (the board pip's; a plain square of the
+   hue until 116g) + name, then the numeric tail (×stacks · ±N/s · remaining) —
+   where the §31-scaled potency reads as a literal. Hidden (no row) when the
+   unit carries no statuses. */
 .unit-card__statuses {
   align-self: stretch;
   display: flex;
@@ -2843,8 +2857,7 @@ body {
   grid-row: 1;
   grid-column: 1;
   width: 6px;
-  height: 6px;
-  align-self: center;
+  text-align: center;
 }
 
 .unit-card__status-name {

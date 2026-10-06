@@ -15,10 +15,13 @@ import { STATUS_DEFS } from '../config/statuses';
 import { DAEMONS } from '../config/daemons';
 import { PACKETS } from '../config/packets';
 import { daemonEmpowerHook } from '../run/daemon';
+import { HITSPLAT_PREFIX, hitsplatText, isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
 import {
   STATUS_DISPLAY,
   STATUS_DISPLAY_FALLBACK,
+  STATUS_SYMBOL_FALLBACK,
   statusColor,
+  statusSymbol,
   EMPOWER_DISPLAY,
   empowerColor,
   empowerLabel,
@@ -39,6 +42,43 @@ describe('STATUS_DISPLAY coverage', () => {
   it('carries no orphan entries for retired statuses', () => {
     const orphans = Object.keys(STATUS_DISPLAY).filter((id) => !(id in STATUS_DEFS));
     expect(orphans).toEqual([]);
+  });
+});
+
+/** 116g — the symbol pin. A status's symbol is its read where its hue fails
+ *  (a camp unit's pip has no card beside it), so a status that shares one, or
+ *  ships without one, is the hue-only pip again. Derived from the catalog
+ *  like the colour pin: a new status fails here until it picks a symbol no
+ *  other holds. */
+describe('the status symbols', () => {
+  const ids = Object.keys(STATUS_DEFS);
+
+  it('every shipped status has one character of its own: no fallback, no two alike', () => {
+    const symbols = ids.map(statusSymbol);
+    for (const [i, symbol] of symbols.entries()) {
+      expect([...symbol].length, ids[i]).toBe(1);
+      expect(symbol.trim(), ids[i]).toBe(symbol);
+      expect(symbol, ids[i]).not.toBe(STATUS_SYMBOL_FALLBACK);
+    }
+    expect(new Set(symbols).size, symbols.join(' ')).toBe(ids.length);
+  });
+
+  it('a status outside the table wears the fallback', () => {
+    expect(statusSymbol('no-such-status')).toBe(STATUS_SYMBOL_FALLBACK);
+  });
+
+  it("a DoT's number wears its status's symbol, and the four a number already wore are the ones it wore", () => {
+    const dotKinds = (Object.keys(HITSPLAT_PREFIX) as HitsplatKind[]).filter(isDotHitsplatKind);
+    expect(dotKinds.length).toBe(3);
+    for (const kind of dotKinds) expect(HITSPLAT_PREFIX[kind], kind).toBe(STATUS_DISPLAY[kind]!.symbol);
+    // Rejuvenate's number is a heal number, so its pip wears the heal's sign.
+    expect(STATUS_DISPLAY.rejuvenate!.symbol).toBe(HITSPLAT_PREFIX.heal);
+    // The glyphs themselves, as literals: reading them from the table must not
+    // have changed what a number shows.
+    expect(hitsplatText('burn', 7)).toBe('~7');
+    expect(hitsplatText('bleed', 7)).toBe('‡7');
+    expect(hitsplatText('poison', 7)).toBe('☠7');
+    expect(hitsplatText('heal', 7)).toBe('+7');
   });
 });
 

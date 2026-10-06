@@ -21,42 +21,58 @@
  * 116f — every hue here is a palette name (src/render/palette.ts), so a second
  * palette re-picks them with the rest. The tables are built when this module
  * loads, from the palette the boot chose.
+ *
+ * 116g — A STATUS ALSO HAS A SYMBOL, one character, the shape beside its hue
+ * ("never color alone", DESIGN §UI idioms). It is drawn wherever the hue is:
+ * over the board pip, in the card's status row, and before a DoT's number
+ * (`HITSPLAT_PREFIX` in fxRegistry.ts reads the three DoT symbols from this
+ * table). A camp unit has no card, so on its pip the symbol is the status's
+ * only read besides the hue. The four that a number already wore keep their
+ * glyph (`~` burn, `‡` bleed, `☠` poison, and `+`, the heal number's, for
+ * rejuvenate). The other six are picked to stay apart at 9px, the pip's size:
+ * `*` frost, `!` alarm, `⊘` no sight, `?`, `↑` a stat raised, `»` haste.
+ * statusDisplay.test.ts holds every shipped status to one symbol of its own.
  */
 
 import { COLORS } from './palette';
 import { t } from '../i18n/ui';
 
 export interface StatusDisplay {
-  /** CSS color for the board pip + the card row swatch. */
+  /** CSS color for the board pip, the card row's symbol and a DoT's number. */
   color: string;
+  /** One character: the status's shape, drawn in `color`. DOM text, never
+   *  the glyph atlas. */
+  symbol: string;
 }
 
-/** 95f — an empower-buff row also carries the player-facing LABEL (a buff has
- *  no `name` in config; its key is an identifier, and the label lives in the
- *  UI string table under `buff.<key>`). */
-export interface EmpowerDisplay extends StatusDisplay {
+/** 95f — an empower-buff row carries its hue and the player-facing LABEL (a
+ *  buff has no `name` in config; its key is an identifier, and the label
+ *  lives in the UI string table under `buff.<key>`). No symbol: every buff
+ *  wears the one `▲` marker, and its label is its second channel. */
+export interface EmpowerDisplay {
+  color: string;
   label: string;
 }
 
 export const STATUS_DISPLAY: Record<string, StatusDisplay> = {
   // DoT / HoT — distinct hues.
-  burn: { color: COLORS.EMBER_ORANGE }, // ember-orange (hotter than amber)
-  bleed: { color: COLORS.BLOOD_CRIMSON }, // blood-crimson (deeper than NEON_RED)
-  poison: { color: COLORS.TOXIC_GREEN }, // toxic yellow-green
-  rejuvenate: { color: COLORS.REGEN_GREEN }, // regen / life-green
+  burn: { color: COLORS.EMBER_ORANGE, symbol: '~' }, // ember-orange (hotter than amber)
+  bleed: { color: COLORS.BLOOD_CRIMSON, symbol: '‡' }, // blood-crimson (deeper than NEON_RED)
+  poison: { color: COLORS.TOXIC_GREEN, symbol: '☠' }, // toxic yellow-green
+  rejuvenate: { color: COLORS.REGEN_GREEN, symbol: '+' }, // regen / life-green
   // Behavior — reuse the 28c held-tint palette for pip↔tint consistency.
-  frozen: { color: COLORS.FLOURESCENT_BLUE }, // ice-cyan
-  panic: { color: COLORS.TERMINAL_AMBER }, // fear-amber
-  blind: { color: COLORS.TERMINAL_STONE }, // blinded-grey
-  confusion: { color: COLORS.NEON_PURPLE }, // chaos-purple
+  frozen: { color: COLORS.FLOURESCENT_BLUE, symbol: '*' }, // ice-cyan
+  panic: { color: COLORS.TERMINAL_AMBER, symbol: '!' }, // fear-amber
+  blind: { color: COLORS.TERMINAL_STONE, symbol: '⊘' }, // blinded-grey
+  confusion: { color: COLORS.NEON_PURPLE, symbol: '?' }, // chaos-purple
   // Stat buffs — §76b (the 47f `emboldened` shipped WITHOUT an entry and fell
   // to the magenta fallback; statusDisplay.test.ts now pins coverage). Buff-gold
   // vs panic's fear-amber is a buff-vs-behavior split (the burn/panic
   // precedent) — retune on eyeball if it reads ambiguously.
-  emboldened: { color: COLORS.BUFF_GOLD }, // buff-gold
+  emboldened: { color: COLORS.BUFF_GOLD, symbol: '↑' }, // buff-gold
   // §76f — the Officer's Inspire aura (+mobility): a pale spring-green, brighter
   // and lighter than poison's toxic olive (a buff-vs-DoT split; eyeball-tunable).
-  inspired: { color: COLORS.MARCH_GREEN }, // march-green
+  inspired: { color: COLORS.MARCH_GREEN, symbol: '»' }, // march-green
 };
 
 /** Fallback color for a status with no display entry (shouldn't happen for a
@@ -67,6 +83,15 @@ export const STATUS_DISPLAY_FALLBACK = '#FF00FF';
 /** Resolve a status id to its display color, or the fallback. */
 export function statusColor(statusId: string): string {
   return STATUS_DISPLAY[statusId]?.color ?? STATUS_DISPLAY_FALLBACK;
+}
+
+/** The symbol of a status with no display entry: no shipped status wears it,
+ *  so with the magenta it marks a missing mapping. */
+export const STATUS_SYMBOL_FALLBACK = '¤';
+
+/** Resolve a status id to its symbol, or the fallback. */
+export function statusSymbol(statusId: string): string {
+  return STATUS_DISPLAY[statusId]?.symbol ?? STATUS_SYMBOL_FALLBACK;
 }
 
 /**

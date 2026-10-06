@@ -3,7 +3,7 @@ import type { Team } from '../sim/Unit';
 import type { StatusReadout } from '../sim/statusReadout';
 import { displayLevel } from '../sim/xp';
 import { COLORS } from './palette';
-import { statusColor } from './statusDisplay';
+import { statusColor, statusSymbol } from './statusDisplay';
 import { isDotHitsplatKind, type HitsplatKind } from './fxRegistry';
 import { t } from '../i18n/ui';
 
@@ -348,9 +348,11 @@ export class UnitOverlayLayer {
   /**
    * §32c — reconcile the board pip-strip against a unit's active status
    * readouts (one pip per status, in the readout's stable canonical order). Each
-   * pip is a depleting bar: its fill WIDTH = `durationFraction`, its fill OPACITY
-   * brightens with stack count (an `add` status escalates), its color is the
-   * status's display hue. Hidden when there are no statuses (no empty row).
+   * pip is the status's SYMBOL over a depleting bar: the bar's fill WIDTH =
+   * `durationFraction`, its fill OPACITY brightens with stack count (an `add`
+   * status escalates), and symbol and bar wear the status's display hue. The
+   * symbol is the read that isn't the hue (116g): a camp unit has no card, so
+   * its pip is all a player has. Hidden when there are no statuses (no empty row).
    *
    * Cheap by construction: BattleRenderer gates the call on the sim tick
    * advancing (the readout is identical between ticks), and per-pip writes are
@@ -372,15 +374,19 @@ export class UnitOverlayLayer {
     for (let i = 0; i < readouts.length; i++) {
       const r = readouts[i]!;
       const pip = strip.children[i] as HTMLDivElement;
-      const fill = pip.firstElementChild as HTMLDivElement;
+      const symbol = pip.firstElementChild as HTMLDivElement;
+      const fill = pip.lastElementChild!.firstElementChild as HTMLDivElement;
       // Recolor only when this slot's status identity changes (the common
       // per-tick path keeps the same status here and skips the write). 97e —
       // no title and no tooltip: the overlay host is `pointer-events: none`,
       // so the old hover name was never reachable, and the compact card's
-      // status row (swatch + name + meta) is the read for this pip.
+      // status row (symbol + name + meta) is the read for this pip.
       if (pip.dataset.sid !== r.statusId) {
         pip.dataset.sid = r.statusId;
-        fill.style.background = statusColor(r.statusId);
+        const color = statusColor(r.statusId);
+        symbol.textContent = statusSymbol(r.statusId);
+        symbol.style.color = color;
+        fill.style.background = color;
       }
       const opacity = pipBrightness(r).toFixed(2);
       if (fill.dataset.op !== opacity) {
@@ -447,13 +453,19 @@ export class UnitOverlayLayer {
  *  same unit so clustered hits read as a stack rather than overlapping. */
 const HITSPLAT_STACK_PX = 14;
 
-/** §32c — build one empty pip (a dark track + a colored depleting fill). */
+/** §32c — build one empty pip: the symbol's line, then a dark track with a
+ *  colored depleting fill. `updateStatuses` reads the two by position. */
 function makePip(): HTMLDivElement {
   const pip = document.createElement('div');
   pip.className = 'status-pip';
+  const symbol = document.createElement('div');
+  symbol.className = 'status-pip-symbol';
+  const track = document.createElement('div');
+  track.className = 'status-pip-track';
   const fill = document.createElement('div');
   fill.className = 'status-pip-fill';
-  pip.appendChild(fill);
+  track.appendChild(fill);
+  pip.append(symbol, track);
   return pip;
 }
 

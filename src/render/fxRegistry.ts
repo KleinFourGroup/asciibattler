@@ -28,6 +28,7 @@ import type { SoundKey } from '../audio/AudioPlayer';
 import type { AbilityDef } from '../sim/effects/schema';
 import type { StatusDef } from '../sim/effects/statusSchema';
 import { COLORS } from './palette';
+import { statusSymbol } from './statusDisplay';
 
 /** A projectile cosmetic, launched on the action's `release` boundary. */
 export interface FxProjectile {
@@ -111,15 +112,17 @@ export type HitsplatKind = 'normal' | 'crit' | 'miss' | FxHitsplat['kind'];
  *  a HoT keeps its `+`, a strike number is bare (its size / italic carry crit
  *  and miss already). DOM text — never the glyph atlas. Exhaustive by type:
  *  a new kind fails tsc until it picks a prefix (possibly the empty one). The
- *  glyphs are the kickoff's starting set (call D), the user's eye at 98d. */
+ *  glyphs are the kickoff's starting set (call D), the user's eye at 98d.
+ *  116g — a DoT kind IS its status id, so its prefix is that status's symbol
+ *  (statusDisplay.ts): the number, the pip and the card row show one shape. */
 export const HITSPLAT_PREFIX: Record<HitsplatKind, string> = {
   normal: '',
   crit: '',
   miss: '',
   heal: '+',
-  burn: '~',
-  bleed: '‡',
-  poison: '☠',
+  burn: statusSymbol('burn'),
+  bleed: statusSymbol('bleed'),
+  poison: statusSymbol('poison'),
 };
 
 /** 98d — the number as drawn: the kind's prefix + the amount. Pure. */

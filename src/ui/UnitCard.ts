@@ -33,7 +33,7 @@ import { abilityDef } from '../config/abilities';
 import { abilityDetailParts } from './abilityDetail';
 import { ticksToSeconds } from '../config';
 import { xpProgress, displayLevel } from '../sim/xp';
-import { statusColor, empowerColor, empowerLabel } from '../render/statusDisplay';
+import { statusColor, statusSymbol, empowerColor, empowerLabel } from '../render/statusDisplay';
 import { STAT_LABELS } from './statLabels';
 import { HEALTH } from '../config/health';
 import { powerTooltip } from './chipLabels';
@@ -359,7 +359,9 @@ export function updateCardStatusRow(
   }
 }
 
-/** Build one empty status chip: `[swatch] name  meta`. */
+/** Build one empty status chip: `[symbol] name  meta`. The first span keeps
+ *  its `swatch` class from when it was a plain square of the status's hue;
+ *  since 116g it is the status's symbol in that hue, the board pip's. */
 function makeStatusChip(): HTMLDivElement {
   const chip = document.createElement('div');
   chip.className = 'unit-card__status';
@@ -378,7 +380,8 @@ function applyStatusChip(chip: HTMLDivElement, r: StatusReadout): void {
   const [swatch, name, meta] = chip.children as unknown as HTMLSpanElement[];
   if (chip.dataset.sid !== r.statusId) {
     chip.dataset.sid = r.statusId;
-    swatch!.style.background = statusColor(r.statusId);
+    swatch!.textContent = statusSymbol(r.statusId);
+    swatch!.style.color = statusColor(r.statusId);
     name!.textContent = r.name;
   }
   const metaText = statusChipMeta(r);

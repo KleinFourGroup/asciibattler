@@ -38,7 +38,7 @@ everything else from the base.
 | plain damage | a normal hit | `.hitsplat` (the **base** — there is no `--normal` rule) |
 | crit | a critical hit | `.hitsplat--crit` |
 | heal | an ability heal (`+N`) | `.hitsplat--heal` |
-| burn / bleed / poison | a DoT tick (`~5` / `‡5` / `☠5`) | `.hitsplat--burn`, `--bleed`, `--poison` — **the colour is NOT here**: the overlay sets it inline from the status table (`statusColor` in `src/render/statusDisplay.ts`, the same hue as the unit's status pip); the prefix glyph is `HITSPLAT_PREFIX` in `src/render/fxRegistry.ts`. The CSS rule is a shared fallback + shape tweak only. (98d) |
+| burn / bleed / poison | a DoT tick (`~5` / `‡5` / `☠5`) | `.hitsplat--burn`, `--bleed`, `--poison` — **the colour is NOT here**: the overlay sets it inline from the status table (`statusColor` in `src/render/statusDisplay.ts`, the same hue as the unit's status pip); the prefix glyph is `HITSPLAT_PREFIX` in `src/render/fxRegistry.ts`, which reads a DoT's from the same table (its status's symbol, the one over its pip). The CSS rule is a shared fallback + shape tweak only. (98d) |
 | **miss** | a dodged strike ("Miss") | `.hitsplat--miss` |
 
 Two gotchas worth knowing up front:

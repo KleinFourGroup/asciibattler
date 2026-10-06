@@ -6109,3 +6109,107 @@ fresh session from the Cursor: the palette wired as `colourblind`, its
 gate on every `npm test` at 0.130 over all five views, the re-picks, a
 symbol per status on the camp unit's pip, the Palette row, and the second
 stop.
+
+### 116g — the second stretch: step zero, and the status symbols (2026-10-06, session 86c3ac73) — built, the second `stop` not yet reached
+
+A fresh session. Readings: **90,978** at 13:57, after HANDOFF and the
+tool's load; **391,076** at 14:47, before this entry's commit.
+
+**Step zero.**
+- **The signed candidate's table, re-counted** from the instrument by a
+  new scratch script (the first stretch's is gone with its directory): the
+  ten pairs give the same closest values, 0.133 protan, 0.131 deutan and
+  0.139 tritan, and 0.155 to normal vision.
+- **The canvas does not draw a low-saturation hex as written.** The main
+  composer's first pass (`palette-sat-clamped.frag.glsl`, `uSatMin` 0.4)
+  raises any fragment's HSV saturation to 0.4, on linear values. Of the
+  five identity hues only stone is under it: `#7A7066` is drawn `#7a6d60`,
+  and the candidate's `#71675D` would be drawn `#716559`. Checked two
+  ways: a model of the clamp in a scratch script, and the pixels. In the
+  pane (Chromium, the quarry fixture, the terrain hidden so a crop holds
+  only a glyph and the clear colour, the bloom mesh hidden) the commonest
+  ink colour was `#7a6d60` for rubble, and `#b5843c`, `#ffb000`, `#33ff00`
+  and `#ff3131` for a breakable wall, a camp unit, yours and the enemy's:
+  the model's prediction for stone and the hex for the other four. With
+  the bloom on, the cores read `#7b6d60`, `#ffbd00` to `#ffbf00`,
+  `#37ff00` and `#ff3636`, so the halo moves a core by a few steps.
+- **The candidate passes as drawn too:** with stone clamped, the closest
+  pair over the five simulated views is 0.1312 (yours with the camp, for a
+  deuteranope, a pair the clamp does not touch); the stone's own pairs
+  rise a little (0.137 to 0.140 where the hexes give 0.133 to 0.135). So
+  the signed hexes stand, and the gate measures both forms.
+- **One terrain hex is a copy of a palette hue:** the healing tile's high
+  colour is `#15f4ee`, the cyan, written as a literal, so a palette that
+  moves the cyan would leave it behind. It becomes the palette's name in
+  the palette's commit. The other twenty terrain hexes are their own.
+- **The pip is 10 by 4 pixels,** too small to hold a glyph, and a status
+  is drawn on every unit's pip, not a camp unit's alone. So the symbol is
+  a new line over the bar, on every pip (below).
+- **Every candidate symbol is already shipped:** the subset is cut by
+  range, and each glyph tried is in a range and in a face's table
+  (`tools/font/ttfCmap`, read by a scratch script with a known answer on
+  each side). No font regeneration.
+
+**Built: a symbol per status.**
+- `statusDisplay.ts`: each status's row gains `symbol`, one character:
+  `~` burn, `‡` bleed, `☠` poison, `+` rejuvenate, `*` frozen, `!` panic,
+  `⊘` blind, `?` confusion, `↑` emboldened, `»` inspired. The first four
+  are the glyphs a number already wore (98d). `statusSymbol(id)`, and `¤`
+  for a status with no row. `EmpowerDisplay` no longer extends the status
+  row's type, since a buff has no symbol: it wears the one `▲` and its
+  label.
+- `fxRegistry.ts`: a DoT number's prefix is read from that table, so the
+  number, the pip and the card show one shape. The heal number's `+` stays
+  its own literal: a healer's heal wears it too.
+- The board pip (`UnitOverlayLayer.ts`, `ui.css`): the symbol's line in
+  the status's hue, then the depleting bar, on one dark plate. 12 by 14
+  pixels where it was 12 by 6, four to a row as before.
+- The card's status row (`UnitCard.ts`): the first cell is the symbol in
+  the status's hue where it was a plain square of it.
+
+**The calls in it, for the stop.**
+1. *Every pip, not a camp unit's alone.* The cut says the camp unit's
+   pip. A symbol only there would never be seen beside its name, so it
+   could not be learned; on every pip, a player meets it on a carded unit
+   first. The other shape is one CSS rule (hide the symbol's line unless
+   the overlay is a neutral's).
+2. *The card's square became the symbol.* It is where a symbol sits next
+   to its name. The cost: a glyph's strokes carry less of the hue than a
+   6 by 6 square did.
+3. *The six new glyphs,* chosen from a rendering of the candidates at 9
+   and 10 pixels: `❄` is a blob at that size and `*` is not; `×`, `+`, `*`
+   and `‡` are four crosses, so blind is `⊘`.
+
+**Verified.**
+- `statusDisplay.test.ts` +3: every shipped status has one character of
+  its own, not the fallback and no two alike; a status outside the table
+  wears the fallback; a DoT's prefix is its status's symbol, and the four
+  numbers read `~7`, `‡7`, `☠7` and `+7` as literals. Two plants, each run
+  and restored (the file's hash equal before and after): frozen given
+  rejuvenate's `+` failed the first by name, and burn given `^` failed the
+  third.
+- The font inventory pin (`tests/font-coverage.test.ts`) passes with the
+  three new non-ASCII glyphs in the tree.
+- In the pane (Chromium, `786aa9e-dirty-dev`): ten statuses planted on a
+  camp unit's strip gave ten pips with the ten symbols, each in its hue; a
+  pip measured 12 by 14, its symbol's box 10 by 9, its track 10 by 3, and
+  ten pips made three rows over the HP bar. In a driven fight with a
+  roster of status appliers (seed 7, the quarry), by tick 157 the pips
+  read `»`, `‡`, `?` and `~` for inspired, bleed, confusion and burn, and
+  the cards' rows showed the symbol, the name and the numbers; a row was
+  64 by 22.1 pixels with the square and with the symbol.
+
+**Not verified.**
+- No eye has seen a pip at its real size. The pane's screenshot is scaled
+  down, and the magnified view I read was text drawn again at seven times
+  the size, not the pip's pixels.
+- Nothing in Firefox.
+- A frozen, panicked or blinded unit in a real fight; the fight reached
+  four statuses of the ten. The other six were seen only planted.
+- Whether ten pips over one unit crowd its neighbours: three rows are 46
+  pixels tall.
+
+**A dev-server trap.** After two edits to `ui.css` in quick succession the
+server went on serving the sheet as it was between them, across a
+navigation; a `touch` of the file fixed it. The page's rules, read from
+`document.styleSheets`, are what showed it.

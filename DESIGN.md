@@ -374,7 +374,8 @@ screen, the run-end table); in a battle the CARDS are the tab stops
 (100c2) and the text inside one stays a hover and key read — the
 alternative is ~30 stops per fight, and the compact card's persistent
 hint shows the numbers; the tooltip only explains them. The board status pip has NO tooltip — the overlay takes no pointer
-events, and the compact card's status row is its read. Zero native
+events, and the compact card's status row is its read; on a unit with no
+card (a camp's), the pip's own symbol is (Color redundancy, below). Zero native
 `title=` in `src/ui` + `src/render` (a tripwire test).
 
 **Color redundancy (98).** "Never color alone": anything the player must
@@ -395,17 +396,23 @@ board's own selectors (the key cannot drift from the board); the legend
 rides the read-only overlay too. **A DoT number carries its kind** — a
 prefix glyph (`~` burn · `‡` bleed · `☠` poison · `+` heal, bare strikes)
 and the hue from the status table, so pip, card swatch and floating
-number draw from one source. **Deep water is a surface pattern** — one
+number draw from one source. **A status is a symbol** — one character per
+status, kept in the status table beside its hue and drawn in that hue over
+the board pip, in the card's row and before a DoT's number (`~` burn ·
+`‡` bleed · `☠` poison · `+` rejuvenate · `*` frozen · `!` panic ·
+`⊘` blind · `?` confusion · `↑` emboldened · `»` inspired), so a pip
+reads in grey and without a card; a new status picks a symbol no other
+holds (`statusDisplay.test.ts`). **Deep water is a surface pattern** — one
 static diagonal band per tile in world space across the board and the
 apron (the plane stays coplanar with shallow water, §37b); the bands are the
-tell, and whether they drift is §99's (below). Many-category cases (the ten status
-hues, the five empower hues) satisfy the rule through their TEXT channel
-(the card's labelled row, the `▲` chip's name), not a per-pip shape. Team
+tell, and whether they drift is §99's (below). The five empower hues
+satisfy the rule through their TEXT channel (the `▲` chip's name), not a
+shape of their own. Team
 identity on the board is the ground mark's since §108 (the next paragraph,
 as built). Of its two residuals, the panic / blind held tints on the camp /
 neutral team colours are answered by the mark's shape (clause 3), and a
-card-less camp unit's hue-only status pip moved to Round 8, with the
-colourblind palette that re-picks those hues (TODO).
+card-less camp unit's status pip, hue-only until 116g, by the status's
+symbol.
 
 **Team identity on the board — the requirement Round 7.5 must satisfy
 (103).** The one place "never color alone" does not hold yet. Both sides
@@ -429,8 +436,8 @@ says what it must do:
    hue and is nothing a tint can wash out.
 4. *Card-less units carry it.* A camp unit has no HUD card (§75h); the
    board is its only surface, so the channel lives on the sprite. (Its
-   hue-only status pip is the same residual, moved to Round 8 at the §108
-   kickoff: TODO.)
+   status pip was the same residual, hue-only until every status got a
+   symbol at 116g.)
 5. *It does not spend the atlas per team.* The glyph atlas is budgeted
    (`ATLAS_CELL_BUDGET` = 48, 47 cells used at this writing); a per-team
    copy of each glyph is not the route.

@@ -4209,6 +4209,23 @@ body {
   color: var(--color-amber-hover);
 }
 
+/* A row's action that has nothing to do (116g: Reload now, while the page is
+   drawn in the palette chosen) is dimmed, and its hover changes nothing. */
+.settings-action:disabled,
+.settings-action:disabled:hover,
+.settings-action:disabled:focus-visible {
+  opacity: 0.3;
+  cursor: default;
+  border-color: var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
+}
+
+/* The line under Apply palette says whether a reload is waited on. Two
+   lines are kept, its longest form, so the rows below never move. */
+.settings-palette__state {
+  min-height: 3em;
+}
+
 /* The chosen toggle is FILLED: a fill is a shape of light, so the choice
    survives the grey read, where a green border beside amber ones would not. */
 .settings-choice.is-active,

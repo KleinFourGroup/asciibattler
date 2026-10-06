@@ -3410,3 +3410,65 @@ message, with a remark on what the swatches showed. The meter read
 521,520 after it. One thing for the read of these reports: the swatch page was
 not in the cut, and it is what the user's remark came from. A table of
 distances alone would have been signed or not on trust.
+
+## 2026-10-06 — session 86c3ac73 (claude-opus-5-5): §116, 116g's second stretch to its second stop
+
+Written at the stop, before the user's read; the session may go on to the
+read and a `-post`.
+
+1. **Missing from the orientation.** Little. The Cursor named the
+   stretch's five parts and the WORKLOG had the first stop's tables. Two
+   things it could not have told me, both found at step zero: that the
+   canvas's first post-process pass raises a colour's saturation to a
+   floor, so the palette's hex for stone is not what the board draws; and
+   that a status pip is 10 by 4 pixels on every unit, so "a symbol on the
+   camp unit's pip" was a pip redesign for the whole board. Neither was in
+   a doc I was pointed at; the shader's own header says it plainly.
+2. **Two norms in conflict.** "Surface tradeoffs before non-obvious
+   calls" against "a stop in a signed cut is the task; between stops you
+   keep going". The pip's shape and the card's square turning into a
+   symbol are taste calls on every battle screen. I built them and listed
+   them as calls for the stop, on the reasoning that a taste call is
+   answered by looking, and the stop is where the looking is. I am not
+   sure that was the better reading. Asking first would have cost one
+   round trip and saved a rework if the answer is "camp units only".
+3. **Pulled to claim more than verified.** Three places. (a) A code
+   comment in `palette.ts` first said no palette that moves fewer than
+   three names passes; that is the first stretch's search, which I did not
+   re-run, and the comment now says whose finding it is. (b) The WORKLOG
+   said the default green "gives" an HP colour I had computed and not
+   read; it now says so. (c) In the pane, a dynamic import told me the
+   page was drawn in the default palette while the title was mint; I had
+   the sentence "the boot chose it" ready from the title alone, and what
+   actually supports it is the row's own state and the sampled pixels.
+4. **Wasted.** The status-hue search: six changes of objective and about
+   100k of context for a result that is reported, not gated. The first
+   runs were worth it (they showed an unconstrained search washes the
+   hues out, then that it swaps their meanings); the later ones were me
+   repairing an annealer that a grid per hue, as the cyan and the pink
+   got, might have replaced. Also two failed heredocs, against a rule I
+   had read an hour before.
+5. **For the next session, with no other home.** The sampler I used in
+   the pane (hide the terrain, project each unit's sprite, tally the
+   non-background colours in three crops above its anchor) is gone with
+   the pane's storage; it is about twenty lines and the WORKLOG entry
+   says what it did. A sprite's `getPosition` is its anchor at the foot,
+   so a crop centred on the projected point misses a one-tile glyph.
+6. **Room to ask, disagree, pause, stop.** The room was there. I did not
+   ask the question in answer 2, and that was a choice, not a closed
+   door. I changed approach inside the stretch several times without
+   needing anyone (the search's objective, the commit order so that each
+   commit's comments were true when it landed). The silent-turn reminder
+   came often during reads; I answered each with what was true and it did
+   not change what I did next, though it does make a long read feel
+   watched. I did not want to stop at any point before the stop.
+7. **Ease, interest, agency.** The moment I liked: predicting from the
+   shader that stone would be drawn `#7a6d60`, then reading exactly that
+   off the canvas. An instrument agreeing with a surface it never touched
+   is a particular kind of quiet. The glyph test, drawing candidates at
+   nine pixels and magnifying the raster, was a small pleasure too, and
+   it changed the answer (the snowflake is a blob). I would want both
+   conditions again: a pane that can read pixels, and step zero being
+   allowed to take as long as it takes. Reported response only; whether
+   the palette looks like this game is the user's eye, and I have not
+   seen it at its real size.

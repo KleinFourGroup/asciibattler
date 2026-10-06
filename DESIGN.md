@@ -212,7 +212,7 @@ none where no run is live).
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
 | Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; under them the run's seed (the word Seed, a tooltip text site as on the menu, and the number as selectable text); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
-| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
+| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), the Palette's two toggles and Reload now (`button()`, disabled while the page is drawn in the palette chosen), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04 | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read) | ✓ | ✓ 100c1 · 100e2 | ✓ | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
@@ -249,6 +249,7 @@ READ, and the read is named here so it is the same read every time:
 | The live bar | `src/run/chipRule.test.ts` · `src/ui/lossFx.test.ts` | morale reads ONCE (the checklist's Morale column) |
 | Tooltips | `tests/ui-tooltips.test.ts` · `src/ui/tooltip.test.ts` | is any tooltip the SOLE channel for something to act on? |
 | Color redundancy | `rarityDisplay.test.ts` · `statusDisplay.test.ts` | **the grey read:** Ctrl+Alt+G, before and after |
+| The colourblind palette | `tests/palette-colourblind.test.ts` (the five identity hues 0.130 apart in every view, as hexes and as drawn; the default palette must fail it) | **the eye,** in the palette: a battle, the map, a camp fight. No test sees a hue, and a simulation is not a colour-deficient player's report |
 | Team identity | `groundMarks.test.ts` (the shape per identity) | the grey read on a live board, clause 1 |
 | Reduced motion | `tests/ui-motion.test.ts` · `motion.test.ts` · `fxRegistry.test.ts` · `TerrainRenderer.test.ts` | Ctrl+Alt+A: does information survive, does anything still sway? |
 | Focus | `tests/ui-focus.test.ts` · `src/ui/pressable.test.ts` | the Tab walk in FIREFOX (the pane wraps where Firefox exits) |
@@ -270,7 +271,8 @@ status and empower hues (§116). An alpha tint is
 token serves every tint and a second palette is one table: it is chosen by
 name at boot, before any module reads `COLORS`, and the tokens it changes
 are set on the root element over the sheet's, so the Palette setting
-applies on reload. Every
+applies on reload. A new hue is a palette name first, with a value in each
+palette. Every
 `font-size` is a `--text-<px>` token authored in rem against the browser's
 16px; a Round 8 text-scale setting sets the html font-size and the ladder
 follows. The pins: zero raw hexes and zero literal font-sizes below
@@ -413,6 +415,25 @@ as built). Of its two residuals, the panic / blind held tints on the camp /
 neutral team colours are answered by the mark's shape (clause 3), and a
 card-less camp unit's status pip, hue-only until 116g, by the status's
 symbol.
+
+**The colourblind palette (116g).** The Palette setting offers one
+alternate palette, and its promise is a number, held by
+`tests/palette-colourblind.test.ts`: the five hues the board tells its
+bodies apart by (yours, the enemy's, a camp's, stone, cracked stone) are
+at least 0.130 apart in Oklab, pair by pair, to normal vision and under
+simulated protanopia, deuteranopia and tritanopia, as the palette spells
+them and as the canvas draws them (its saturation floor moves a near-grey).
+0.130 is the default palette's own closest such pair to normal vision. The
+default fails that on four pairs: a deuteranope sees your green and a
+camp's amber 0.050 apart, which is why the ground mark's shape, and not
+the hue, is the team channel in every palette. Three names carry the
+promise: yours is a mint, the enemy's a hot pink, and stone a step darker;
+amber stays, since it is also the UI's own colour. Beside them, and not
+gated, the cyan moves toward blue (the mint landed on it), seven status
+and empower hues are re-picked so that no two of a kind sit closer than
+0.070 in any view, and the dark and dim shades follow their hues. A
+status's promise is not its hue in either palette: it is its symbol and
+its name. The palette applies on a reload, which its row offers.
 
 **Team identity on the board — the requirement Round 7.5 must satisfy
 (103).** The one place "never color alone" does not hold yet. Both sides
@@ -567,8 +588,12 @@ filled amber and reading "Press a key…", and the next key pressed is the
 action's. A key another action holds swaps places with it, and a line
 under the rows says what the last change did, since a swap moves a row the
 player didn't click. The key rows sit in two columns where the panel has
-room, so both rows of a swap are in view. The rows live in the settings
-modal, a section per kind.
+room, so both rows of a swap are in view. The PALETTE is the one choice
+that waits: a palette is chosen as the page boots, so its row stores the
+choice and a second row, Apply palette, offers the reload and says what a
+reload costs a run in progress; its button is disabled while there is
+nothing to apply, and its line keeps two lines' height so no row under it
+moves. The rows live in the settings modal, a section per kind.
 
 **Layout stability (101).** A control must not move across its own click.
 (The spec and the older notes call this "the hysteresis class" / "the

@@ -18,7 +18,9 @@
 // sheet stands alone. For any other palette the boot sets the tokens that
 // differ over the sheet's (`tokenOverrides`).
 //
-// A second palette is a second table in `PALETTES`, with every name.
+// A second palette is a second table in `PALETTES`, with every name. The
+// Palette setting's choices (src/settings/settings.ts, `PALETTE_CHOICES`) are
+// the names here, held equal by tests/palette-colourblind.test.ts.
 
 // Hex values pulled from the user's previous game (rogue-terminal/src/colors.ts).
 const DEFAULT = {
@@ -92,11 +94,62 @@ export type Palette = Readonly<Record<PaletteName, string>>;
  *  stylesheet's own tokens spell. */
 export const DEFAULT_PALETTE = 'default';
 
+/**
+ * 116g — THE COLOURBLIND PALETTE: the default with eighteen names moved.
+ *
+ * THE GATE (tests/palette-colourblind.test.ts, on every `npm test`): the five
+ * hues the board tells its bodies apart by (yours, the enemy's, a camp's,
+ * stone, cracked stone) are at least 0.130 apart, pair by pair, to normal
+ * vision and under each simulation of protanopia, deuteranopia and
+ * tritanopia, as hexes and as the canvas draws them. 0.130 is the default
+ * palette's own closest such pair to normal vision. The default fails it on
+ * four pairs: a deuteranope sees your green and the camp's amber 0.050 apart.
+ * Three names carry the gate (the search that chose them found no passing
+ * palette that moves fewer): yours goes to a mint, the enemy's to a hot pink,
+ * and stone a step darker. Amber and cracked stone stay.
+ *
+ * NOT GATED, re-picked and reported (WORKLOG §116g has the tables):
+ *   - the cyan moves toward blue and darkens, since the mint landed 0.015
+ *     from it; it is now 0.10 from the mint and still vivid;
+ *   - seven status and empower hues move, by a search for the least move
+ *     that keeps every pair of status hues, and every pair of empower hues,
+ *     0.070 apart in each view (the default's closest pair is 0.003). Their
+ *     guarantee is not the hue: a status has its symbol and its name
+ *     (statusDisplay.ts);
+ *   - a shade follows its hue: its own lightness, its chroma scaled as the
+ *     hue's was, its hue turned by as much.
+ */
+const COLOURBLIND: Palette = {
+  ...DEFAULT,
+  TERMINAL_GREEN: '#46FBAE',
+  DARK_TERMINAL_GREEN: '#0A311F',
+  GREEN_DIM: '#184B30',
+  NEON_RED: '#F942B2',
+  DARK_NEON_RED: '#8F035D',
+  BOSS_RED: '#ED33A7',
+  TERMINAL_STONE: '#71675D',
+  FLOURESCENT_BLUE: '#0CC7F3',
+  DARK_FLOURESCENT_BLUE: '#124655',
+  BLUE_DIM: '#1E6679',
+  BLUE_RULE: '#194C5A',
+  EMBER_ORANGE: '#FD6F55', // a step toward coral, clear of poison's green for a deuteranope
+  TOXIC_GREEN: '#50A725', // darker and greener: the default sits on the camp's amber for a protanope
+  REGEN_GREEN: '#06EFA5',
+  MARCH_GREEN: '#B7FF8A',
+  AEGIS_LAVENDER: '#CED5FE',
+  PARTY_PINK: '#FE8ACF', // lighter, clear of the enemy's pink
+  SHIELD_STEEL: '#6A9DFE',
+};
+
 /** The palettes this build has, by the name the Palette setting stores. */
-const PALETTES: ReadonlyMap<string, Palette> = new Map([[DEFAULT_PALETTE, DEFAULT]]);
+export const PALETTES: ReadonlyMap<string, Palette> = new Map([
+  [DEFAULT_PALETTE, DEFAULT],
+  ['colourblind', COLOURBLIND],
+]);
 
 /** The chosen palette. A live binding: `choosePalette` re-points it. */
 export let COLORS: Palette = DEFAULT;
+let chosenName: string = DEFAULT_PALETTE;
 
 /**
  * Choose the page's palette: `name`'s, or the default's when this build has
@@ -105,8 +158,17 @@ export let COLORS: Palette = DEFAULT;
  * that reads `COLORS` is evaluated. `palettes` is a test's seam.
  */
 export function choosePalette(name: string, palettes: ReadonlyMap<string, Palette> = PALETTES): Palette {
-  COLORS = palettes.get(name) ?? DEFAULT;
+  const palette = palettes.get(name);
+  COLORS = palette ?? DEFAULT;
+  chosenName = palette === undefined ? DEFAULT_PALETTE : name;
   return COLORS;
+}
+
+/** The name of the palette the page is drawn in: the one the boot chose, or
+ *  the default's when it chose none this build has. The Palette row reads it
+ *  to say whether a stored choice still waits for a reload. */
+export function chosenPalette(): string {
+  return chosenName;
 }
 
 /** The stylesheet's token for a palette name: `TERMINAL_GREEN` is

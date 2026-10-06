@@ -28,6 +28,19 @@ describe('116f — the palette, chosen by name', () => {
     expect(unchosen.TERMINAL_GREEN).toBe('#33FF00');
     expect(palette.choosePalette(palette.DEFAULT_PALETTE)).toBe(unchosen);
     expect(palette.COLORS).toBe(unchosen);
+    expect(palette.chosenPalette()).toBe('default');
+  });
+
+  it('116g — the page knows the name it is drawn in: the chosen one, or the default for a name it has no palette for', async () => {
+    const palette = await freshPalette();
+    expect(palette.chosenPalette()).toBe('default');
+    palette.choosePalette('planted', planted(palette.COLORS));
+    expect(palette.chosenPalette()).toBe('planted');
+    palette.choosePalette('colourblind-of-another-build');
+    expect(palette.chosenPalette()).toBe('default');
+    palette.choosePalette('colourblind');
+    expect(palette.chosenPalette()).toBe('colourblind');
+    expect(palette.COLORS.TERMINAL_GREEN).toBe('#46FBAE');
   });
 
   it("a name this build has no palette for gives the default's colours", async () => {

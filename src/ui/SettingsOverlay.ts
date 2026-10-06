@@ -30,20 +30,26 @@
  * The body is built once per open, from the settings as they are then, and
  * each control repaints itself. Nothing in it comes or goes while it is up.
  *
- * Landing notes: the Palette row arrives at 116g, the data rows at 116h and
- * the text scale at 116k, each as a section here.
+ * THE PALETTE (116g) is the one choice that does not apply as it is made:
+ * `paletteRows` has why, and the reload it offers.
+ *
+ * Landing notes: the data rows arrive at 116h and the text scale at 116k,
+ * each as a section here.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { KeybindAction } from '../config/keybindings';
 import { t } from '../i18n/ui';
+import { chosenPalette } from '../render/palette';
 import type { SettingsModel } from '../settings/model';
 import {
   AURA_CHOICES,
   MOTION_CHOICES,
+  PALETTE_CHOICES,
   SHAKE_CHOICES,
   type AuraChoice,
   type MotionChoice,
+  type PaletteChoice,
   type ShakeChoice,
 } from '../settings/settings';
 import { button } from './button';
@@ -73,6 +79,10 @@ const MOTION_LABEL: Readonly<Record<MotionChoice, string>> = {
   system: t('settings.motion.system'),
   reduced: t('settings.motion.reduced'),
   full: t('settings.motion.full'),
+};
+const PALETTE_LABEL: Readonly<Record<PaletteChoice, string>> = {
+  default: t('settings.palette.default'),
+  colourblind: t('settings.palette.colourblind'),
 };
 const SHAKE_LABEL: Readonly<Record<ShakeChoice, string>> = {
   player: t('settings.shake.player'),
@@ -207,6 +217,7 @@ export class SettingsOverlay {
         now.shake,
         (value) => this.settings.set('shake', value),
       ),
+      ...this.paletteRows(now.palette),
       section(t('settings.section.keys')),
       ...this.keySection(),
     );
@@ -360,6 +371,52 @@ export class SettingsOverlay {
             other: KEY_NAME[holder],
             otherKey: this.keybindings.labelFor(holder),
           });
+  }
+
+  /**
+   * 116g — THE PALETTE. A palette is chosen once, as the page boots, since
+   * the render modules read their colours as they load
+   * (src/render/palette.ts). So the first row stores the choice, and the
+   * second offers the reload that draws it and says what a reload costs a
+   * run in progress. Its button is live only while the stored choice is not
+   * the palette the page is drawn in, and its line keeps two lines' height,
+   * so nothing under it moves as the choice does.
+   */
+  private paletteRows(current: PaletteChoice): HTMLElement[] {
+    const reload = button(t('settings.palette.reload'), {
+      className: 'settings-action',
+      onClick: () => {
+        this.audio.play('click');
+        window.location.reload();
+      },
+    });
+    const apply = row(t('settings.palette.apply'), '', reload);
+    const state = apply.querySelector<HTMLElement>('.settings-row__hint')!;
+    state.classList.add('settings-palette__state');
+    state.setAttribute('aria-live', 'polite');
+    const paint = (choice: PaletteChoice): void => {
+      const waits = choice !== chosenPalette();
+      reload.disabled = !waits;
+      state.textContent = !waits
+        ? t('settings.palette.current')
+        : !this.deps.runLive()
+          ? t('settings.palette.waits')
+          : this.deps.runSaved()
+            ? t('settings.palette.waits.saved')
+            : t('settings.palette.waits.unsaved');
+    };
+    const choice = this.choiceRow(
+      t('settings.palette'),
+      t('settings.palette.hint'),
+      PALETTE_CHOICES.map((value) => ({ value, label: PALETTE_LABEL[value] })),
+      current,
+      (value) => {
+        this.settings.set('palette', value);
+        paint(value);
+      },
+    );
+    paint(current);
+    return [choice, apply];
   }
 
   /** A choice: one toggle per value, the chosen one filled. */

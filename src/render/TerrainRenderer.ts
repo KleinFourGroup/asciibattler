@@ -788,7 +788,9 @@ const _fireHigh = new THREE.Color('#ffaa00');
  *  layer (camera layer 0 only), so the bright cyan doesn't trigger the
  *  sprite bloom shader. */
 const _healLow = new THREE.Color('#0d4d4a');
-const _healHigh = new THREE.Color('#15f4ee');
+// 116g — the high end IS the palette's cyan, so it is read from the palette:
+// a palette that moves the cyan away from its ally hue moves this with it.
+const _healHigh = new THREE.Color(COLORS.FLOURESCENT_BLUE);
 /** §37b — deep water: a darker, colder navy than shallow water (`#1F5B7A`).
  *  98e — the comment here credited a `DEEP_WATER_TOP_Y` recess for the
  *  "impassable, don't wade" read; no such constant exists — §37b made deep

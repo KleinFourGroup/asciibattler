@@ -6213,3 +6213,180 @@ tool's load; **391,076** at 14:47, before this entry's commit.
 server went on serving the sheet as it was between them, across a
 navigation; a `touch` of the file fixed it. The page's rules, read from
 `document.styleSheets`, are what showed it.
+
+### 116g — the second stretch: the palette wired, its gate, the re-picks, the Palette row (2026-10-06, session 86c3ac73) — ◐ built, the second `stop` is open
+
+The reading on the symbols' commit (`d24c6f5`): **394,390** at 14:49.
+Before this commit: **450,772** at 14:57.
+
+**Built.**
+- `palette.ts`: `PALETTES` holds `colourblind`, the default with eighteen
+  names moved, and is exported for the gate. `chosenPalette()` is the name
+  the page is drawn in.
+- `tests/palette-colourblind.test.ts`, 11 tests on every `npm test`: the
+  gate, its control, and the pins below.
+- `TerrainRenderer.ts`: the healing tile's high colour reads the palette's
+  cyan (step zero's finding; the default's value is the same hex).
+- `SettingsOverlay.ts`: Settings › Comfort gains Palette (Default,
+  Colorblind) and Apply palette (Reload now, and a line that says whether
+  a reload is waited on and what it costs a run in progress).
+
+**The gate, as built.** The five hexes are read through
+`spriteColorForUnit` with the palette chosen, for a unit of each kind, so
+the gate follows the sprite's rule and not a list of names. Every pair,
+in normal vision and the five simulated views, must be 0.130 apart, as a
+hex and as drawn (`asDrawn`: the saturation floor, its value read from
+`PostProcess.ts`). Normal vision is gated too, which the signed call did
+not ask for; the palette gives 0.155 there. The closest pairs:
+
+| | normal | protan | deutan | tritan |
+|---|---|---|---|---|
+| as hexes | 0.155 | 0.133 | 0.131 | 0.139 |
+| as drawn (the model) | 0.157 | 0.137 | 0.131 | 0.139 |
+| sampled in the pane, bloom off | 0.157 | 0.137 | 0.131 | 0.139 |
+| sampled in the pane, bloom on | 0.156 | 0.137 | 0.140 | 0.133 |
+| the default palette, sampled, bloom on | 0.132 | 0.053 | 0.023 | 0.127 |
+
+(A protan or deutan cell is the lower of the two models.)
+- *The control, in the test:* the default palette through the same check
+  fails on exactly four pairs (the enemy with cracked stone, the enemy
+  with stone, stone with cracked stone, yours with the camp) and on none
+  to normal vision; its worst are 0.024 and 0.050. The first stop named
+  three merging pairs; the fourth, stone with cracked stone at 0.111 for a
+  protanope, is the one it gave as the reason the third name had to move.
+- *Five plants,* each made, run and restored by one script that compares
+  the file's hash before and after: the mint put back to the default
+  green (fails, yours with the camp 0.050); the stone put back (fails,
+  five cells); the pink moved one hex digit, `#E942B2` (fails, 0.126 for
+  a tritanope, so the margin is one digit wide); the canvas floor set to
+  0.9 (the floor's own pin fails; the drawn gate still passes); the
+  sprite rule giving a camp the enemy's hue (fails, five tests).
+- *Pins beside it:* the bar is the default's closest pair to normal
+  vision, within 0.001; the setting's choices are the palettes' names;
+  every palette spells all thirty names as hexes; the colourblind palette
+  moves eighteen and leaves amber and cracked stone.
+
+**The re-picks** (signed as reported, not gated). The distance of a pair
+below is its least over normal vision and the five simulated views.
+- *The cyan,* by a grid (hue 185° to 262°, lightness 0.60 to 0.93, chroma
+  0.14 to 0.20: 30,888 points, 2,744 on the screen) for the least move
+  that stays a given distance from the mint, amber, the pink, the blue,
+  the purple and the two stones: `#0CC7F3` at 0.10 (lightness 0.77 for
+  0.875, hue 222° for 192°), 0.101 from the mint. 0.12 is out of reach
+  with the chroma held: the widest point is 0.118, against the pink for a
+  deuteranope. Without the chroma floor the least move at the same bar
+  was a duller teal, `#60d1c3`, which I did not take: it separates by
+  being dimmer, and the cyan is the UI's second colour (69 uses in the
+  sheet).
+- *The status and empower hues,* by a search: each hue kept within 15° of
+  hue and 0.12 of lightness of its default, at 85% of its chroma or more
+  and no darker than 0.5; every pair of status hues and every pair of
+  empower hues 0.070 apart in each simulated view; and in normal vision
+  each pair keeps the lesser of its default distance and 0.12, so a
+  dichromat's separation is not bought with a trichromat's. Annealing from
+  ten seeds, 50,000 steps each, then each hue pulled back toward its
+  default for as long as no pair fell under its bar. One seed of the ten
+  cleared the bar, so this is the least move the search found, not a
+  proven least. Three hues ended where they began (bleed, emboldened,
+  overclocked). A bar of 0.08 found no palette inside these windows in
+  the eight seeds tried.
+- *The hyped pink* by its own grid afterwards: the search held it from the
+  other empower hues but left it 0.040 from the enemy's pink; `#FE8ACF` is
+  0.096 from that and 0.073 from the empower hues.
+- *The shades* by rule: a shade keeps its lightness, its chroma is scaled
+  as its hue's was, and its hue turns by as much as its hue's did.
+
+| name | default | colourblind |
+|---|---|---|
+| `TERMINAL_GREEN`, `NEON_RED`, `TERMINAL_STONE` | `#33FF00` `#FF3131` `#7A7066` | `#46FBAE` `#F942B2` `#71675D` (signed) |
+| `DARK_TERMINAL_GREEN`, `GREEN_DIM` | `#0A3300` `#1a4d00` | `#0A311F` `#184B30` |
+| `DARK_NEON_RED`, `BOSS_RED` | `#990000` `#ff3030` | `#8F035D` `#ED33A7` |
+| `FLOURESCENT_BLUE` | `#15f4ee` | `#0CC7F3` |
+| `DARK_FLOURESCENT_BLUE`, `BLUE_DIM`, `BLUE_RULE` | `#034947` `#0a6a66` `#0e4f4c` | `#124655` `#1E6679` `#194C5A` |
+| `EMBER_ORANGE` (burn) | `#FF6A00` | `#FD6F55` |
+| `TOXIC_GREEN` (poison) | `#8FC31F` | `#50A725` |
+| `REGEN_GREEN` (rejuvenate) | `#2BE57A` | `#06EFA5` |
+| `MARCH_GREEN` (inspired) | `#B4FF6E` | `#B7FF8A` |
+| `AEGIS_LAVENDER` (warded) | `#C9D1FF` | `#CED5FE` |
+| `PARTY_PINK` (hyped) | `#FF7AD9` | `#FE8ACF` |
+| `SHIELD_STEEL` (shielded) | `#6FA8FF` | `#6A9DFE` |
+
+| set | pairs | closest, default | closest, colourblind | under 0.10, default | under 0.10, colourblind |
+|---|---|---|---|---|---|
+| the ten status hues | 45 | 0.003 | 0.070 | 14 | 9 |
+| the five empower hues | 10 | 0.024 | 0.070 | 3 | 6 |
+| the cyan against the UI's five role hues | 5 | 0.034 | 0.101 | 1 | 0 |
+
+- **The empower row got wider at its worst and narrower in the middle:**
+  its closest pair is up from 0.024 to 0.070, and six of its pairs are
+  now under 0.10 where three were, since the cyan moved in among the
+  blues (it is 0.084 from the steel).
+- **Not held apart, and close:** rejuvenate's green is 0.032 from yours
+  (0.058 in the default), inspired's 0.054 from yours, burn's 0.042 from
+  the enemy's pink for a tritanope. A pip and a number are not a body, so
+  I left them.
+- To normal vision the status hues' closest pair is 0.095 in both
+  palettes, and the empower hues' is 0.122 for 0.157.
+
+**A page of swatches** for the eye: `scratch/116g-palette-colourblind.html`
+(untracked), every hue of both palettes as it is and as each simulation
+shows it, in five groups.
+
+**Verified.**
+- `npm test`: 237 files, 3423 tests (+12: the gate file's 11 and one in
+  `palette.test.ts` for the chosen name). Typecheck clean.
+- **The row, in the pane** (Chromium, the dev server, `d24c6f5-dirty-dev`).
+  On the menu: Default pressed, Reload now disabled at 0.3 opacity, "The
+  game is drawn in this palette."; a click on Colorblind stores
+  `palette: 'colourblind'`, enables the button and changes the line; back
+  and forth, the two rows and the row under them do not move (the line
+  keeps 33 pixels). The button's own click reloads the page.
+- **The palette through the real boot,** which 116f could not check: after
+  that reload the root element carries 18 token overrides, the menu's
+  title is `rgb(70, 251, 174)`, the row reads Colorblind pressed and
+  nothing to apply. In the quarry fixture the commonest ink colours with
+  the bloom off are `#46fbae`, `#f942b2`, `#ffb000`, `#716559` and
+  `#b5843c`: the four hexes, and the stone the model predicted. The
+  table's two sampled rows are the instrument on those colours. In a run,
+  choosing the other palette gives the saved-run sentence, which fits the
+  two lines kept for it.
+- **The production bundle with a palette chosen,** 116f's other open
+  item: `vite build`, the settings planted in `localStorage`, a run URL.
+  18 overrides on the root, and in a battle every HP bar's full colour is
+  `rgb(16, 246, 108)`, the mint's linear channels as the gradient writes
+  them (by the same arithmetic the default green would give `rgb(8, 255,
+  0)`; not read on this build), so the bundle chose the palette before
+  the overlay module read it.
+- **A run is left alone.** The seed-7 drive under Electron: exit 0,
+  `logHash a59ee48f`, 12 battles.
+
+**Not verified.**
+- No eye, colour-deficient or not, has seen the palette in the game. I
+  looked at one scaled screenshot of the quarry and one of the modal.
+- Firefox, Electron with the palette chosen, itch's frame, and whether a
+  reload behaves in each as it does in the pane.
+- The map, the reward, port and event screens in the palette: their
+  colours follow the tokens, which I read, and I did not look at them.
+- A body against the floor under it. The gate is hue against hue; the
+  floors' own colours did not move, and the mint on tundra's ice or the
+  pink on desert sand was not measured.
+- An anomalous trichromat, who sees between normal and a simulation.
+- The drawn form of the gate has never failed where the hex form passed:
+  no plant I tried separates them, the 0.9 floor included.
+- The bloom's halo at other intensities than the fixture's (a charge-up,
+  a low-HP fade).
+
+**The calls in it, for the stop.**
+1. The palette's look, on a battle, the map and a camp fight: the mint,
+   the pink, the darker stone, the bluer cyan.
+2. The symbols: the three calls in the entry above.
+3. The cyan at 0.10 from the mint, vivid, or the duller teal that moves
+   less, or left as it was.
+4. The re-picked status hues, or the default's.
+5. Normal vision in the gate (stricter than signed).
+6. The row: two rows and a Reload now button; the label "Colorblind", in
+   the user's spelling, where the stored name is `colourblind`.
+
+**Cost.** The production bundle is 630.25 kB raw (627.68 at 116f), the
+stylesheet 61.64 kB (61.27). The stretch to here: about 360k, of which
+the re-pick searches and the pane were the larger parts.

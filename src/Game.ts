@@ -21,6 +21,7 @@ import { EventScene } from './scenes/EventScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
+import { cantSaveReason } from './ui/cantSave';
 import { CantSaveChip } from './ui/CantSaveChip';
 import { CreditsOverlay } from './ui/CreditsOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
@@ -145,6 +146,10 @@ export class Game implements RunDispatcher {
   /** 116j — the credits panel: the menu's row opens it, and so does the end
    *  of the first won run (`resetRun`). */
   private readonly credits: CreditsOverlay;
+  /** 116i — the can't-save chip, and whether a run is on screen (live, and
+   *  not at its end screen), which is when a second tab's chip shows. */
+  private readonly cantSave: CantSaveChip;
+  private runOnScreen = false;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -427,11 +432,12 @@ export class Game implements RunDispatcher {
     );
     this.credits = new CreditsOverlay(uiMount, this.audio);
     // 116i — the can't-save chip: last in the column and in the Tab walk,
-    // shown while the store can't save (src/ui/CantSaveChip.ts). The store's
-    // status is its last write's, so the chip goes when a write lands again.
-    const cantSave = new CantSaveChip(chips, store.status().canSave);
+    // shown while the page can't save (src/ui/CantSaveChip.ts). The store's
+    // status is its last write's, so the chip goes when a write lands again;
+    // `swap` paints it too, for a second tab's run (`paintCantSave`).
+    this.cantSave = new CantSaveChip(chips, cantSaveReason(store.status().canSave, this.runSlot.lock, false));
     store.onStatus((status) => {
-      cantSave.set(status.canSave);
+      this.paintCantSave();
       if (!status.canSave) console.warn("[store] can't save:", status.error); // i18n-ok: a dev console line
     });
     // 97b — the tooltip key, page-lifetime like the map key: pin the open
@@ -1052,7 +1058,11 @@ export class Game implements RunDispatcher {
     );
     // 116d — the settings chip shows while a run is live, up to its end
     // screen (the menu has its own row). The same chokepoint.
-    this.settingsOverlay.setAvailable(this.run !== null && !(next instanceof GameOverScene));
+    this.runOnScreen = this.run !== null && !(next instanceof GameOverScene);
+    this.settingsOverlay.setAvailable(this.runOnScreen);
+    // 116i-post — and the can't-save chip, which a second tab shows for as
+    // long as its unsaved run is on screen.
+    this.paintCantSave();
     // 96.5a — the morale chip hides while a turn screen or the battle is up:
     // the HUD's gauges and the pre/post-turn gauges are the one in-encounter
     // read (the §95 playtest: "morale reads twice"). Same chokepoint, same
@@ -1084,6 +1094,13 @@ export class Game implements RunDispatcher {
       this.pendingOutro = null;
       action();
     });
+  }
+
+  /** 116i — show the can't-save chip for as long as the page has a reason
+   *  it can't save (src/ui/cantSave.ts): the store's status, on every
+   *  screen, or a second tab's run while it is on screen. */
+  private paintCantSave(): void {
+    this.cantSave.set(cantSaveReason(store.status().canSave, this.runSlot.lock, this.runOnScreen));
   }
 
   private cancelPendingSwap(): void {

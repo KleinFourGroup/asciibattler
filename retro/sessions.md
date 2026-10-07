@@ -3571,3 +3571,16 @@ served it better, I can't tell from here. On answer 2: the reply was
 the calls. I recorded them as standing, as 116e's did, and listed the two
 I had put by name as still the user's. The meter read 480,587 before
 this.
+
+### Second addendum — the answers (2026-10-07)
+
+I told the user which things their reply had not settled, and they
+answered four of the five in one message, with an apology for not having
+said. Two became small builds (the second tab's chip, Vite's licence),
+done in this session at about 45k. Saying plainly what a reply did not
+cover cost one round trip and got real answers; recording "looks great"
+as agreement would have left the chip unbuilt. The fifth, the menu's two
+notices of one fact, went unnamed a second time, and I have left it as
+built without asking a third time. On question 7: "your With section is
+great" was good to read. Reported response only. The meter read 518,896
+before the last commit.

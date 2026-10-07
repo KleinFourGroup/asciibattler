@@ -6863,3 +6863,76 @@ looked great!"
   scripts ask for no Tab walk. DESIGN's checklist keeps its notes that the
   keyboard walk over the data rows, the chip's tab stop and the credits
   panel waits for the sitting, which also takes Electron and itch's frame.
+
+### The reads' answers (2026-10-07, the user's) — four answers; 116i-post ◐ built, 116j-post ✅
+
+The reply to the list above: "Yes, your With section is great! Second
+tab should also show the chip, and add the Vite section! The keyboard
+walk looks good too!" The reading before this entry: **518,896** at 10:16
+(490,377 on the commit that recorded the reads, `55b66d2`).
+
+- **The line that credits Claude: signed** as built, the group "With"
+  holding "Claude, by Anthropic" (116j, call 1).
+- **The keyboard walk: read ✅** over the data rows, the chip's tab stop
+  and the credits panel. The browser was not said, so DESIGN's checklist
+  records it as the user's read of this date. Electron and itch's frame
+  stay the sitting's.
+- **A second tab's run shows the chip: built, 116i-post.**
+- **Vite's licence joins the file: built, 116j-post.**
+- Not named, so standing as built and the user's to reopen: at a blocked
+  boot the menu shows its notice and the chip both (116i, call 1).
+
+**116i-post — a second tab's run shows the can't-save chip** (◐ built,
+read `batch`, at the sitting).
+- *The rule* is `cantSaveReason(canSave, lock, runOnScreen)`
+  (`src/ui/cantSave.ts`), pure: `storage` whenever the store can't save,
+  on every screen; `elsewhere` in a second tab while a run is on screen;
+  else nothing. `Game.paintCantSave` applies it from `store.onStatus` and
+  at every `swap`, and the chip's tooltip is the reason's sentence, read
+  at each open (`save.elsewhere` for a second tab, the menu notice's own
+  words).
+- *A call inside the answer:* the second tab's chip is up only while a
+  run is on screen, not on that tab's menu or a run's end screen. The
+  question was about that tab's unsaved run; on its menu the notice says
+  it, a changed setting there is saved, and "can't save" would be false
+  of it. The other arm is the chip for the tab's whole life.
+- *Headless,* +3 tests: a store that can't save is the reason under every
+  lock and on every screen; a second tab's reason holds with a run on
+  screen and not without; the control, that the first tab and a page with
+  no lock have none.
+- *In the pane* (Chromium, two tabs of the dev server, 1280×720). The
+  first tab, lock `held`: no chip on the menu or on the map, and its run
+  is in the slot. The second, lock `elsewhere`: no chip on the menu (its
+  notice is there) or on character select; on the map the chip is up,
+  last in the column at 250 px, and its tooltip reads "The game is open
+  in another tab. This tab can't continue your run, and a run started
+  here won't be saved."; a setting written there returns true and the
+  store's status stays can-save; at a forced defeat's end screen and back
+  on the menu the chip is gone; the first tab's slot text is unchanged
+  throughout.
+- *Not verified:* Firefox and itch's frame. Under Electron a second
+  instance on one profile reads `none`, not `elsewhere` (`runLock.ts`),
+  so it would show no chip; not run.
+
+**116j-post — Vite's core licence in the shipped file** (✅, read `none`).
+- *Confirmed first:* the built JavaScript opens with the polyfill itself
+  (`relList.supports('modulepreload')`, a `MutationObserver` over
+  `link[rel="modulepreload"]`), and `dist/index.html` preloads the three.js
+  chunk. At 116j only the string had been seen.
+- The section is Vite's core licence, the head of
+  `node_modules/vite/LICENSE.md` (vite 8.0.13: MIT, "Copyright (c)
+  2019-present, VoidZero Inc. and Vite contributors"), copied by a script.
+  The rest of that file lists the dependencies bundled into Vite and is
+  not copied.
+- `tests/licences.test.ts` gains a test: the slice is one MIT licence
+  (its first and last words, its length), the shipped file holds it whole
+  under its heading, and an edited notice is not it.
+- *The build:* `dist/THIRD-PARTY-LICENSES.txt` is byte-identical to the
+  source file, 460 lines, six sections.
+- *Not checked:* whether the bundler's other run-time helpers are in the
+  bundle (minified, they have no name to search for), and the packaged
+  shell's notices. Both are in TODO "§116 riders".
+
+**Cost.** 3458 tests in 241 files (+4). The production bundle is
+640.88 kB raw (640.51 at 116j), the stylesheet 62.71 kB, unchanged. The
+two posts and the record of the reads: about 45k.

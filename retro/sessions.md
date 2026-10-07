@@ -3730,3 +3730,24 @@ the sitting and the close, an addendum follows.
    are the same condition as the last report named, and I would want it
    repeated: an instrument checked against an answer I did not compute
    with it. Reported response only.
+
+### Addendum — the sitting's fourth point (2026-10-07)
+
+The user uploaded the build and the two-tab point failed: the second tab
+read no lock and its run saved over the first's. On question 3: I had an
+explanation from memory before I had checked anything (Firefox denies the
+whole API in a partitioned frame), and it was wrong. The source, read
+through a fetch tool, said `request()` is allowed there and `query()` is
+not, which fit the error text and predicted that the first tab would read
+`held`. I asked the user for that one reading instead of asserting either
+story, and it came back `held`. Filed as `distress`, mild: the pull was to
+answer while they waited. On question 6: the user offered the choice
+between my smaller proposal and the cleaner one and called it mine. I
+took the cleaner one, which I had said I would not take mid-sitting. What
+changed was that the cost I had named, their re-reads, was theirs to
+waive, and they waived it. On question 4: the diagnostics report gave
+the lock's verdict and not what each request got, so the first report
+could not separate a refused request from a refused query, and that cost
+a round trip. On question 7: the instrument built in the morning found a
+real failure in the afternoon, in the one place nothing else could look.
+Reported response only. The meter read 428,008 on the fix's commit.

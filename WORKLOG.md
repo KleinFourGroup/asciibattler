@@ -7378,3 +7378,123 @@ the zip to the draft first (HTML, played in the browser, 1280×720 as at
 What comes back to the session: the saved reports (their paths, or the
 Copy's text), what each shell did with a download, and anything that
 looked wrong.
+
+### The sitting, step 4 (2026-10-07, the user's) — the lock fails in itch's frame; 116l-post ◐ built, unread
+
+The user took the script to the draft and reported its fourth point
+first: "Failure on step 4, Claude. Second itch tab did not have the tab
+lockout, and the second tab's run overwrote the first." The second tab's
+report:
+
+```
+"lock": { "atBoot": "none", "api": true,
+  "heldNow": "SecurityError: LockManager.query: query() is not allowed in this context",
+  "otherLocks": null, "queryMs": 0 }
+```
+
+Asked what the first tab read: "It's held". Readings: **372,046** at
+17:33, at the session's reply to the report; **428,008** at 17:52, on the
+fix's commit (`9d298b1`). The other points' results are not yet in.
+
+**The diagnosis.** The lock works in itch's frame: the first tab took it,
+and the second tab's request was refused as it should be. What failed is
+the confirmation 115f added after a refusal (its call 2): `locks.query()`,
+asked who holds the name, with a failed query read as no lock. Firefox
+refuses that call in the frame, and the tab read `none` and saved as if
+alone, which is `none`'s rule.
+- *Firefox's side, second-hand:* its `dom/locks/LockManager.cpp`, read
+  through a fetch tool's summary of the page, lets `Request` through when
+  the context's storage is partitioned and throws from `Query` whenever
+  storage access is at or under deny, with no exception for a partitioned
+  one. The error text in the user's report is that `Query` branch's. The
+  session's first explanation, from memory, was that the frame is denied
+  the whole API; the source and the first tab's `held` both say
+  otherwise.
+- *The reach, if that reading holds:* every Firefox player on itch, not
+  this browser's settings. No public build carries saves yet.
+- *Not known:* Chrome in the frame (the round-close smoke's).
+
+**The decision** (the user's, the same hour). The session proposed the
+smallest change, a control request only where the query is refused, and
+named the cleaner one, the control everywhere and no query at all, as the
+one it would not take in the middle of a sitting because it rewrites a
+path read in three shells. The user: "I'm good with your proposal, but
+I'm also happy to just redo the other steps for the cleaner version!
+Totally your call!" The session took the cleaner one. With `query()`
+shown to be the fragile call, the verdict now rests on `request()` alone,
+which the lock needs anyway, and there is one way to confirm a refusal
+instead of two.
+
+**Step zero: does the control tell a broken manager from a working one?**
+Two instances of the shell on one profile, the second started while the
+first held its page open, each asked by a scratch script for a lock under
+a fresh name and for the run lock's name (the code before the change):
+
+| | boot's verdict | a fresh name | the run lock's name | `query()` |
+|---|---|---|---|---|
+| first instance | `held` (once `none`, below) | granted | refused | lists it |
+| second instance, 2 of 2 | `none` | refused | refused | lists nothing |
+| one instance alone | `held` | granted | refused | lists it |
+
+So the manager that refuses everything refuses the control, and a working
+one grants it. *One launch of the first instance read `none` at boot while
+`query()` listed its lock as held:* the 1 s wait fired on a cold start
+and the grant came after it. That is the case the wait was written for,
+seen once in the seven launches on fresh profiles whose verdict was read
+today, and 115f had left unmeasured which path gave an Electron `none`.
+
+**Reproduced on the old code, headless,** before the change: over a
+manager that grants and refuses as a browser does and rejects `query()`
+with a `SecurityError`, the first tab read `held` and the second `none`.
+
+**Built** (`9d298b1`).
+- `acquireRunLock`: a tab refused the run lock asks for a control lock
+  under a name of its own (`controlName()`: the prefix
+  `asciibattler:run:control:`, the time and a random part) and lets it go
+  at once. Granted, it asks for the run lock once more, since the holder
+  may have closed in between, and a second refusal is `elsewhere`.
+  Refused, it is `none`. `LockManagerLike` has no `query`.
+- `runLock.test.ts`: 13 tests (10 before). Every stand-in page has a
+  `query()` that rejects as Firefox's does and counts its asks, which stay
+  at none. New: the itch case; a control that throws or rejects; a control
+  under a taken name, the plant that shows why the name is its own.
+  *Five planted defects, each failing by name:* a bare refusal taken as
+  `elsewhere` (5 tests fail), the control's answer ignored (2), no second
+  ask (2), the hold returned at once (7), the deadline never firing (2).
+- The diagnostics report's `lock` gains `control` and `runLock`: the two
+  requests the lock makes, made when the report is read and let go at
+  once, each with its answer and its time.
+
+**Checked.**
+- *Electron, two instances on the new code:* the first `held`, the second
+  `none` with its control refused, as before the change. The seed-7 drive
+  reads `held` and logs `a59ee48f`.
+- *The pane, two tabs of the diagnostics build* (Chromium, `vite preview`,
+  port 5193). The first: `held`, control granted in 1.1 ms, the run lock's
+  name refused. With a run started there, the second: `elsewhere`, control
+  granted in 0.3 ms; its menu has no Continue and the other-tab notice; a
+  run started there and taken one node on shows `⚠ can't save`, and the
+  slot's text is the first tab's throughout (5,015 characters, the same
+  hash before and after), with no write of the slot in the second tab's
+  tally and the store still can-save.
+- `npm test`: 3485 in 243 files.
+
+**Not verified.** Firefox on the new rule, in a tab of its own or in
+itch's frame: both are the read. Chrome anywhere. A second tab's verdict
+is now three answers one after another where it was two, under the same
+1 s wait. The pane answered each of the report's own requests in 0.2 to
+7.9 ms; the boot's three were not timed, and a frame's are unread.
+
+**The zip:** `output/itch/asciibattler-0.0.0_9d298b1-diag.zip` (34
+entries, 1,246,036 bytes, the build `68db1b68…`), checked by the script;
+`dist/` is the plain build at `0.0.0+9d298b1` (641.83 kB of script, 641.72
+before).
+
+**The read** (`stop`, the user's). Upload the new zip. Two tabs of the
+draft: the second's menu says the game is open in another tab and has no
+Continue, a run started there shows `⚠ can't save`, its `diag` reads
+`lock.atBoot: "elsewhere"` with `control.got: "granted"`, and the first
+tab's Continue, after a reload, returns the first tab's own run. Then two
+tabs of the local build (`npm run preview -- --outDir output/itch/current
+--port 5193`), the same. Wrong is `none` in a second tab, or a first tab
+that reads anything but `held`.

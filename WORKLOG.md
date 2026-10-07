@@ -7582,3 +7582,100 @@ four finished journals, all played by hand:
 tab of its own, which is 116l-post's read. The frame's limit. A write's
 cost by size, in either place. Copy and the import in the frame.
 Electron. Which persistence checks were made.
+
+### The sitting's read (2026-10-07, the user's) — 116l ✅ and 116l-post ✅ READ; the journals budget SIGNED
+
+The user's reply to the six things the files did not say, with two more
+readings pasted from `diag`. The reading before this entry: **468,672**
+at 18:37 (463,240 on the commit that recorded the files, `bc3a0d3`).
+
+- **116l-post ✅ READ.** The second tabs, on the draft and on the local
+  build: "It worked!"
+- **The budget: SIGNED** at 1,000,000 characters ("Signing that limit").
+  `JOURNALS_BUDGET`'s comment now carries the two measurements in place of
+  "soft".
+- **Copy and the import in the frame:** "Yes!"
+- **Electron:** the settings and the run survived a restart ("They did"),
+  and Export everything and Import a backup "opened a regular save/open
+  dialogue". So under the shell a download is the system's Save dialog and
+  a picked file the system's Open dialog. *Not said:* whether the import's
+  reload brought the old value back there (TODO "§116 riders").
+- **Persistence,** a reload, a closed tab and a restart, on the local
+  build and the draft: "I believe I tried all combinations!"
+
+**The two pasted readings.** They came numbered 2 and 3 against the
+session's list, where 2 was the frame and 3 the local tab. Each names its
+own page by its `inUse`: the first holds 391,710, the local tab's census
+to the character, and the second 6,853, the frame's 6,691 and 162. They
+are recorded by those numbers, the other way round from their labels, and
+the user was told so.
+
+- *The frame's limit:* with 6,853 characters in use the fill key took
+  5,235,712 and was refused 5,236,736, both fills alike, 26 attempts each,
+  the key removed. With the key's 22 the limit lies from 5,242,587 up to
+  but not including 5,243,611, and 5,242,880 is inside. **So the
+  partitioned area in itch's frame has Firefox's own cap,** which was a
+  prediction until now, and this browser has 5.24 M characters of room
+  there today.
+- *A write's cost by size, Firefox 157,* by a clock whose step is 1 ms, so
+  each total is good to a millisecond and the mean is the total over the
+  writes:
+
+  | characters | writes | the local tab, total | the frame, total |
+  |---|---|---|---|
+  | 4,096 | 50 | 0 ms | 0 ms |
+  | 16,384 | 50 | 1 | 1 |
+  | 65,536 | 50 | 0 | 0 |
+  | 262,144 | 20 | 2 | 1 |
+  | 1,048,576 | 10 | 5 (one write read 2) | 5 (none over 1) |
+
+  A slot of 64 Ki characters is stored in under a fiftieth of a
+  millisecond, and the journals at their budget in about half of one, in
+  the frame as out of it. The slot at its largest by today's parts is
+  about 124,000 characters. Chromium's pane took 1.94 ms for the 1 Mi
+  write. This is `setItem` as the page pays for it; the browser's own
+  write to disk comes later and off the page's thread. TODO's rider on a
+  write's cost is closed on these and the Electron run.
+- *Not taken:* a tally over a whole run played in the frame. The frame's
+  five real writes, the timing by size and the journals' sizes stand in
+  for it.
+
+### §116 closed (2026-10-07, session 592aa296)
+
+**The exit, against ROADMAP's.**
+- *Settings persist across reloads in all three shells:* the user's
+  sitting, in Firefox on the local build, under Electron and on the itch
+  draft, with a reload, a closed tab and a restart; under Electron also
+  116b's probe on one profile launched twice; in the frame the report's
+  `previousBuild` and its stored settings.
+- *The menu boots first and the dev entry points skip it:* 116c, read at
+  the first sitting. Every runner launch of this session booted past it on
+  its dials, and the user's three shells booted it on a plain URL.
+- *The palette passes its numeric check and the user's eye:* 116g, both
+  stops, with the gate on every `npm test`.
+
+**What the phase carried in, and where each landed.** From §113, the itch
+leg of the store's round trip: read. From §114: the menu's copy of the
+export (116h); a download in itch's frame (works, Firefox); Firefox's
+limit (5,242,880 characters) and a played run's file (10 to 38 KB, 81 with
+a snapshot start), on which the budget is signed. From §115: Continue and
+the notices on the menu (116c); the write-failure indicator (116i); a
+rejected save's journal kept (116h); `navigator.locks` in itch's frame,
+which found the phase's one failure in the field and 116l-post.
+
+**Left open, each with its home.** Chrome's read of the draft and the
+days-later re-open (the round-close smoke, as since §110). The layout
+riders for §117.5 (TODO "§116 riders"). Under Electron: a write sends the
+whole store, one instance per profile is not enforced, and the import's
+result was not said (TODO). A "Copy diagnostics" row for players, a
+question for §118 (TODO). The credits after a real first win, which the
+user let go on the forced-win check. The itch draft holds the diagnostics
+build until §118 uploads the plain one, and this browser's partition
+there keeps two small keys the game doesn't read (`asciibattler:diag`,
+and §110's `asciibattler.spike110`).
+
+**Counts.** 3485 tests in 243 files (3322 in 229 at the kickoff), green
+on every commit's hook; the fuzz smoke fired at no step, as predicted.
+No Run or World bump, no RNG stream, no bus event. The production script
+is 641.83 kB raw (609.72 at 115g). Seven sessions, 2026-10-04 to 10-07.
+`drive-run --seed=7` logs `a59ee48f`, as at the kickoff.

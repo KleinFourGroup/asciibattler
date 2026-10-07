@@ -12,8 +12,8 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §115 ✅ CLOSED 2026-10-03** (save/load and mid-run resume).
-**§116, the menu and settings, is IN BUILD** (cut 2026-10-04, twelve steps).
+**Status: §116 ✅ CLOSED 2026-10-07** (the menu and settings).
+**§117, Escalation and the unlock mechanism, is next:** its kickoff cuts it.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -167,29 +167,30 @@ WORKLOG §115.
 - [x] **115f** — the two-tab lock: a second tab can't continue and writes nothing to the slot; a tab is `elsewhere` only when the lock manager names a holder; a reload took the lock 30 times of 30 in the pane and under Electron. Read `none`. ✅ (WORKLOG §115f).
 - [x] **115g** — Continue and three messages on character select; a continued run shows its chips. Read `stop`, the sitting in Firefox. ✅ READ 2026-10-03, one finding → TODO "§115 riders" (WORKLOG §115g, "The sitting").
 
-## Phase 116 — the menu and settings
+## Phase 116 — the menu and settings ✅ CLOSED 2026-10-07
 
-Charter: the title menu as the boot screen (spec D6) and the settings
-(D7): the volume levels, the rebind UI, the default speed, the colourblind
-palette on reload, the aura-FX mode, the locale, reduced motion, shake,
-the text scale, and the store's export and import. **Why here:** Continue
-needs save/load, and the pane work needs the kit. **Risk:** medium (wide
-UI, checked against DESIGN §UI idioms and §Input accessibility).
-**Decision points:** ✅ DECIDED 2026-10-04: one alternate palette, gated
-on protan and deutan over the identity hues, tritan measured and reported
-(WORKLOG §116, call 5).
-**Exit:** settings persist across reloads in all three shells; the menu
-boots first and the dev entry points skip it; the palette passes its
-numeric check and the user's eye. **Scope guards:** no music slider, no
-achievements row, no camera row.
-
-**Carried from §113** (WORKLOG §113, call 5): the itch leg of the store's round trip is taken at this phase's sitting, where a setting is there to watch persist.
-
-**Carried from §114** (WORKLOG §114e): the menu's copy of the export (spec D5). At the itch sitting: what a download does in itch's frame, and the two numbers the journals budget (1 MB, soft) waits on, Firefox's `localStorage` limit and the file of a run played at the shipped length.
-
-**Carried from §115** (WORKLOG §115, calls 7, 9 and 11): Continue and the boot screen's three messages move from character select to the menu; a write that fails in mid-run gets its indicator here, a new idiom for DESIGN §UI idioms that the settings' own writes share; `navigator.locks` in itch's frame is measured at the itch sitting. And from the 115g stop (the user's, 2026-10-03): a new run's first save replaces a rejected save, its journal included, where spec D2 keeps that journal exportable; what a new run does with a rejected save is decided here, with the menu's export.
-
-**Decided at the shape-lock** (2026-10-04; the reasons are WORKLOG §116's): ✅ the settings are a modal, opened from the menu and from a chip during a run · ✅ a run dial or a `?bp=` bookmark in the URL skips the menu · ✅ a run's end goes to the menu, the first won run by way of the credits (the user's amendment) · ✅ the `seeded` flag waits for §117, so no Run bump here · ✅ no locale row while `en` is the only locale · ✅ aura: `track` and `fill`, `fixed` deleted; shake: its four policies · ✅ binding a taken key swaps the two · ✅ the data rows sit in the settings, and a new run keeps a rejected save's journal · ✅ credits: Matthew Kilgore as developer, Claude, the fonts, the libraries, the tools, the two sound tools, the playtesters unnamed.
+**Outcome:** the game boots to a menu and has its settings. A plain URL
+opens the menu (Continue, New run, the seed field, Settings, Credits, the
+three notices, the build's ID) and a run dial or a `?bp=` bookmark skips
+it; both end screens return to it, the first won run by way of the
+credits. The settings are a lenient store section handed to each consumer
+at boot and on change, shown in a modal opened from the menu and from a
+chip in a run: the two volumes, the starting speed, motion, shake, the
+aura, a key per action with swap and reset, the colourblind palette (one
+alternate, gated on the five identity hues in every simulated view, with a
+symbol for every status), the text size (four sizes, the boxes that hold
+text in rem), and the data rows (the whole store exported and imported,
+the last run's journal). A chip says when the page can't save. The
+sitting read all three shells with a diagnostics build: Firefox's
+`localStorage` takes 5,242,880 characters an origin, in itch's frame too;
+downloads, the clipboard and the import work in the frame; the journals
+budget is signed at 1,000,000. One failure in the field: Firefox refuses
+`locks.query()` in the frame, so a second tab on itch saved over the
+first's run, and the lock now confirms a refusal with a control request
+(gotcha #140). No snapshot bump. Left open, each with its home: Chrome's
+read of the draft (the round-close smoke), the layout riders (§117.5),
+the shell's whole-store write and a "Copy diagnostics" row for players
+(TODO). The record: WORKLOG §116.
 
 - [x] **116a** — the settings, headless: the lenient section, its model, and `main.ts`'s second import, which sets the locale before the catalogs load. Read `none`. ✅ (WORKLOG §116a).
 - [x] **116b** — the consumers, no surface yet: the two volume axes, the keys (the swap, the modifier rule, the labels live), the starting speed, the motion override, the shake, the aura mode. Read `none`. ✅ (WORKLOG §116b; three launches on one Electron profile, the dev server and the production build).
@@ -207,8 +208,8 @@ achievements row, no camera row.
 - [x] **116i-post** ✅ READ 2026-10-07 (the user, the same morning; WORKLOG "The reads' answers") — inserted at the reads, the user's answer: a second tab's run shows the can't-save chip too. Read `batch` (at the sitting): with the game open in one tab, open it in a second, start a run there, and `⚠ can't save` is up from the map on, its tooltip saying the game is open in another tab; wrong is the chip on that tab's menu or end screen, or in the first tab. (WORKLOG "The reads' answers".)
 - [x] **116j-post** ✅ 2026-10-07 — inserted at the reads, the user's answer: Vite's core licence joins the shipped licence file, for the preload polyfill the build adds. Read `none`: a test holds the file to the head of Vite's own LICENSE.md, with its control, and the built file is byte-identical to the source's. (WORKLOG "The reads' answers".)
 - [x] **116k** ✅ READ 2026-10-07 (the user, the same day: it works as built; one flag for later → TODO "§116 riders"; WORKLOG "116k's read") — the text scale: a Text size row (100, 110, 125, 150 %) that sets the root element's font-size when the settings close; step zero found the limit is the window, not the count of boxes (24 lines moved to rem, every box at 100 % where it was). Read `stop`, at the sitting, in Firefox: Settings › Comfort › Text size, pick 125 %, close, and the text and its boxes are larger on every screen of a run, a battle's numbers and badges too; then 150 % on a full-screen window. Wrong is text out of its box, a toggle that moves under its click, a size not kept across a reload, or a screen that can't be used at a size the window should hold. (WORKLOG §116k, with eight calls.)
-- [ ] **116l** — THE SITTING: Firefox, Electron and the itch draft; the `batch` reads; the exit. Read `stop`.
-- [ ] **116l-post** ◐ built, unread — inserted at the sitting, whose fourth point failed (a second tab of the itch draft read no lock and its run saved over the first's): the two-tab lock confirms a refusal with a control request and never asks `locks.query()`, which Firefox refuses in itch's frame. Read `stop`: on the new zip, two tabs of the draft, then two of the local build in Firefox; the second tab's menu says the game is open in another tab and has no Continue, a run there shows `⚠ can't save`, and the first tab still continues its own run. Wrong is `none` in a second tab. (WORKLOG "The sitting, step 4".)
+- [x] **116l** ✅ READ 2026-10-07 (the user; WORKLOG "116l — step zero, and the sitting prepared", "The sitting's reports", "The sitting's read") — THE SITTING: Firefox, Electron and the itch draft, with a diagnostics build made for it (`VITE_DIAG=1`, `scripts/itch-zip.mjs`). Settings, a run and the store kept across a reload, a closed tab and a restart in each shell; in the frame a download, the clipboard and the import work; Firefox's limit is 5,242,880 characters there and in a tab of its own; the journals budget signed at 1,000,000 on four hand-played journals. One failure, the two-tab lock in the frame → 116l-post. Read `stop`.
+- [x] **116l-post** ✅ READ 2026-10-07 (the user: "It worked!"; WORKLOG "The sitting, step 4", "The sitting's read") — inserted at the sitting, whose fourth point failed (a second tab of the itch draft read no lock and its run saved over the first's): the two-tab lock confirms a refusal with a control request and never asks `locks.query()`, which Firefox refuses in itch's frame. Read `stop`: two tabs of the draft, then two of the local build in Firefox.
 
 ## Phase 117 — Escalation and the unlock mechanism
 

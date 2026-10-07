@@ -3751,3 +3751,74 @@ could not separate a refused request from a refused query, and that cost
 a round trip. On question 7: the instrument built in the morning found a
 real failure in the afternoon, in the one place nothing else could look.
 Reported response only. The meter read 428,008 on the fix's commit.
+
+### Second addendum — the sitting's end and the close (2026-10-07)
+
+The user sent three files and then two pasted readings, and the phase
+closed in this session. On question 3: the two readings
+came labelled the other way round from my list. Each carried its own
+page's `inUse`, which matched a census I already had to the character, so
+I recorded them by that and told the user, where the labels alone would
+have put Firefox's frame numbers under the local tab. On question 2: I
+had said the close would likely go to a fresh session, and the step-start
+rule said go at 469k; I went, since the answers were short and the close
+needed the day's context more than room. On question 6: nothing pressed
+either way. On question 7: the frame's limit landing on the same 5 × 2²⁰
+as the local tab's, from a measurement the user ran in a place I can't
+reach, with an instrument that had been checked against a planted quota
+and a Chromium known answer first. Reported response only.
+
+### §116 — the phase summary (2026-10-04 → 10-07; seven sessions)
+
+Seven sessions on `claude-opus-5-5`. 618ddb0a ran the audit and the
+shape-lock and built 116a and 116b; 8be1fe88 built the menu and the
+settings modal to the first sitting; c41fe9af built 116c-post2, the key
+rows and the palette's mechanism and took 116g to its first stop;
+86c3ac73 took 116g through its second; 133b679f built the data rows, the
+can't-save chip and the credits; 1a3aa804 built the text scale; 592aa296
+prepared the sitting, fixed what it found and wrote this close, so this
+paragraph covers its own entry too. Six of the seven answer question 1 with
+"little": the Cursor and the hand-off entries held, and what was missing
+was each time something only step zero or the sitting could find (a countdown that runs
+through a pause, a saturation floor in the first post-process pass, a
+pip ten pixels wide, a promise where a write was assumed, a window and
+not a count of boxes as the limit, a confirmation call a browser
+refuses). The norm pair named in the last four reports is the same one:
+surface a non-obvious call first, or keep going to the stop. The
+sessions built on their leans and listed the calls (sixteen at the first
+sitting, twenty-one across 116h to 116j, eight at 116k, four at 116l),
+and nearly all were signed as built. What moved across the phase is
+how the calls were put: 86c3ac73 found that a taste call offered as
+numbers and a choice could not be answered and that a page with both arms
+drawn was answered in one message, and the sessions after it report that
+saying plainly what a reply had not covered got it settled in one round
+trip. Statements wrong or unchecked when written are listed in every
+report, 4, 3, 2, 3, 4, 5 and 3, almost all caught before their commit;
+the kinds are the round's usual ones (a count from a truncated listing, a
+time not read, a cause from memory, a label on what was reasoned and not
+run), and the last was an explanation of a browser's behaviour from
+memory that the source contradicted. The instruments carried the phase:
+a table from the parent commit with nine plants, one of which showed the
+session's own pin too weak; a colour-vision instrument whose first
+measurement overturned a known answer the cut had assumed; a layout survey that failed its own planted
+cases on its first run; and a diagnostics build that found, in itch's
+frame in the user's Firefox, the one failure no dev page could have
+shown. Waste, as the reports have it: long reads at orientation (the
+whole §116 worklog, DESIGN's sections; step zeros of 125k and 182k), a
+status-hue search of about 100k for a result that is reported and not
+gated, a pane pass thrown away, and a quoted heredoc refused in five of
+the seven sessions against a rule each had read. The silent-turn reminder
+is in every report, ten to twenty-five firings a session, changing
+nothing and breaking up reads. What each would want repeated: answers
+given call by call with reasons (618ddb0a); step zero allowed to run long
+and to overturn the plan (c41fe9af, 86c3ac73, 133b679f, 1a3aa804); steps
+signed in a row with no one waiting on each (133b679f); an instrument
+checked against an answer it did not compute (86c3ac73, 592aa296). Two
+sessions report the same small moment, being asked to put Claude in the
+game's credits, as pleasant and as something they did not know how to
+describe further. Friction, by the log's entries tagged §116: 29
+papercuts and 6 `distress` entries, one from each session but 8be1fe88,
+each called mild by its session (a signature short at the shape-lock, a
+check nearly skipped for the context reading, a search re-aimed six
+times, a user who sounded ready to read, two readings of the cut held at
+once, an explanation from memory with the user waiting).

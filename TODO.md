@@ -481,14 +481,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   bump (the Escalation level) or is dropped; it is not worth a bump of its
   own after that upload. The port needs nothing: a sold slot is a flag in
   the saved stock.
-- [ ] **What one save costs to write is unmeasured.** The §115 audit
-  measured a save's text (3 to 49 KB) and its serialization (under a
-  millisecond, Node), and listed the write itself, per command, in
-  `localStorage` and in Electron's file, as a step-zero hypothesis; no step
-  took it. The slot is rewritten whole after every command at a gate, and
-  the journal inside it grows over the run. The place to measure it is a
-  sitting that already reads storage in Firefox (§116's, where the
-  `localStorage` limit is taken), on a run of the shipped length.
+- ✅ **What one save costs to write** (116l; WORKLOG "116l — step zero, and the sitting prepared", "The sitting's read"): in Firefox 157, in itch's frame as out of it, under a fiftieth of a millisecond for a 64 Ki slot and about half of one for 1 Mi; under Electron 0.09 ms a save, and 1.8 ms with the journals at their budget, since every write there sends the whole store.
 - [ ] **DESIGN's "Out of scope" list names as backlog what has since been
   built** (found at the §115 close, which struck save/load and replay):
   larger units, in-battle commands, audio, line of sight, terrain and
@@ -572,6 +565,25 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   press to read), or ask `navigator.keyboard.getLayoutMap()`, which
   Firefox doesn't have.
 
+- [ ] **Under Electron every write sends the whole store** (116l, measured
+  with `shell/electron/probes/diag-run.js`). `src/store/electron.ts`
+  keeps one file and rewrites it at each save, so a save costs the page
+  in proportion to everything stored: 0.09 ms with an empty journals
+  section and 1.8 ms with it at its budget, and the main process then
+  writes 1.2 MB to disk, untimed. Under a frame and at a gate, so nothing
+  is owed while the shell is internal. Home: the phase that ships the
+  shell, with one instance per profile ("§115 riders"); a file per
+  section would make a save cost its own size.
+- [ ] **A "Copy diagnostics" row for players** (116l, call 1). The
+  diagnostics panel is in a build only when `VITE_DIAG=1` is set. A row in
+  Settings › Data of every build would let a player on itch send its
+  report with a bug, where the storage is shared and partitioned and
+  nobody else can look. A product question for §118, the user's.
+- [ ] **Import a backup under Electron: its result was not said** (the
+  116l sitting). The dialogs are the system's own and the settings and a
+  run survive a restart, by the user's read; whether the import's reload
+  brought the old value back in the shell was not reported, and 116h
+  tested that path over a stand-in adapter only.
 - ✅ **The build's own helper has no notice** (116j): Vite's core licence
   is in the shipped file and a test holds it there (116j-post, the user's
   call 2026-10-07; WORKLOG "The reads' answers").

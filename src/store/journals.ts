@@ -22,9 +22,13 @@
 import type { RunJournal } from '../journal/journal';
 import type { Store, StrictSection } from './store';
 
-/** About 1 MB of text: some sixty runs at the 15 KB a run of the shipped
- *  length was measured at. The number is soft until a played run's size and
- *  Firefox's storage limit are measured. */
+/** About 1 MB of text, signed 2026-10-07 on its two measurements. Runs
+ *  played by hand at the shipped length came to 10,283 characters (18
+ *  battles) and 38,276 (40 battles), and a save continued on a later build
+ *  starts its next segment from a whole snapshot, some 43,000 more; so the
+ *  budget holds 26 runs of 40 battles, or 12 of the largest journal seen.
+ *  Firefox's `localStorage` takes 5,242,880 characters an origin, in a tab
+ *  of its own and in itch's frame alike, so the budget is a fifth of it. */
 export const JOURNALS_BUDGET = 1_000_000;
 
 export function isJournal(value: unknown): value is RunJournal {

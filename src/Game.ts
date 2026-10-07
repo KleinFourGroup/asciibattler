@@ -48,9 +48,10 @@ import { connectSettings } from './settings/apply';
 import { setReducedMotionOverride } from './render/motion';
 import { setAuraFxMode } from './render/auraFx';
 import { setShakePolicy } from './ui/lossFx';
+import { backupOf } from './store/backup';
 import { keepJournal } from './store/journals';
 import type { RunLock } from './store/runLock';
-import { openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
+import { lastRunJournal, openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
 
 /** M3 — the after-turn outro (ms): how long the resolved battle board
  *  lingers (death fades, hitsplats drain) before the post-turn outcome
@@ -404,6 +405,18 @@ export class Game implements RunDispatcher {
         runLive: () => this.run !== null,
         runSaved: () => this.runSlot.peek() === 'saved',
         quitToMenu: () => this.quitToMenu(),
+        // 116h — the data rows: the whole store out and in (src/store/backup.ts),
+        // and the journal of the last run that ended (src/store/runSlot.ts).
+        data: {
+          backup: () => {
+            const dump = store.dump();
+            return dump === null ? null : backupOf(dump, BUILD_ID, Date.now());
+          },
+          importBlocked: () =>
+            this.runSlot.lock === 'elsewhere' ? 'elsewhere' : store.status().canSave ? null : 'unavailable',
+          restore: (backup) => store.restore(backup.sections),
+          lastRun: () => lastRunJournal(store, this.runSlot),
+        },
       },
     );
     // 97b — the tooltip key, page-lifetime like the map key: pin the open

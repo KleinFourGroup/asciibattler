@@ -139,6 +139,17 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   swallows. `document.hasFocus()` is false in a hidden pane, so `focus()`
   on another element fires no `blur`: dispatch a `FocusEvent('blur')` to
   check that a lost focus ends a wait.
+- **The data rows** (Settings › Data): check an export without saving a
+  file by putting a spy in the download's place before the click: wrap
+  `URL.createObjectURL` to keep each blob by its URL, and replace
+  `HTMLAnchorElement.prototype.click` with a function that records
+  `this.download` and the blob for `this.href`. Compare the blob's text
+  with `localStorage` read directly. To pick a file, build a `File`, put
+  it on the row's hidden `input[type=file]` through a `DataTransfer`
+  (`input.files = dt.files`), dispatch `change`, and wait some 200 ms for
+  the file's text. Import and reload ends the script with a reload, so
+  keep what the next call compares in `sessionStorage`. A rejected save
+  is the slot's own text with its `v` lowered by one.
 - **The settings** (`src/settings/`): `__game.settings` is the page's
   model. `set(key, value)` stores the value and applies it at once, and
   `get()` reads them all. What a consumer holds is read from the consumer:

@@ -33,13 +33,15 @@
  * THE PALETTE (116g) is the one choice that does not apply as it is made:
  * `paletteRows` has why, and the reload it offers.
  *
- * Landing notes: the data rows arrive at 116h and the text scale at 116k,
- * each as a section here.
+ * THE DATA ROWS (116h) are actions, not settings: `dataSection` has them.
+ *
+ * Landing note: the text scale arrives at 116k, as a section here.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { KeybindAction } from '../config/keybindings';
 import { t } from '../i18n/ui';
+import { journalFileName, type RunJournal } from '../journal/journal';
 import { chosenPalette } from '../render/palette';
 import type { SettingsModel } from '../settings/model';
 import {
@@ -52,7 +54,10 @@ import {
   type PaletteChoice,
   type ShakeChoice,
 } from '../settings/settings';
+import { BACKUP_MAX_BYTES, backupFileName, readBackup, type Backup } from '../store/backup';
+import type { RestoreResult } from '../store/store';
 import { button } from './button';
+import { downloadText } from './download';
 import { captureVerdict, type Keybindings } from './Keybindings';
 import { openModal, type ModalHandle } from './modal';
 import type { PlaybackSpeed } from './PlaybackSpeed';
@@ -64,6 +69,21 @@ export interface SettingsOverlayDeps {
   runSaved(): boolean;
   /** Leave the live run for the menu (`Game.quitToMenu`). */
   quitToMenu(): void;
+  /** 116h — what the data rows read and write; `Game` holds the store. */
+  data: SettingsData;
+}
+
+export interface SettingsData {
+  /** The whole store as a backup, as of now; null when it can't be read. */
+  backup(): Backup | null;
+  /** Why this page can't import: the saved run is another tab's
+   *  (`elsewhere`), or the store can't save. Null when it can. */
+  importBlocked(): 'elsewhere' | 'unavailable' | null;
+  /** Put `backup` in the store's place (`Store.restore`). */
+  restore(backup: Backup): Promise<RestoreResult>;
+  /** The journal Export run hands over (`lastRunJournal`); null when no run
+   *  has ended here. */
+  lastRun(): RunJournal | null;
 }
 
 /** One click of a level's − or +, and one step of its slider, in percent. */
@@ -220,9 +240,169 @@ export class SettingsOverlay {
       ...this.paletteRows(now.palette),
       section(t('settings.section.keys')),
       ...this.keySection(),
+      section(t('settings.section.data')),
+      ...this.dataSection(),
     );
     if (this.deps.runLive()) body.appendChild(this.quitRow());
     return body;
+  }
+
+  /**
+   * 116h — THE DATA ROWS (Round 8 spec D1, D5): four rows, each an action.
+   *
+   * BACKUP hands the player the whole store as a file. IMPORT A BACKUP puts
+   * such a file in the store's place, in two steps, as the palette is
+   * applied in two: the first row picks the file, and the second, Chosen
+   * file, says what was picked and what importing it costs, and holds the
+   * button that does it. That button is live only while a file that reads
+   * as a backup is chosen. A file that doesn't is refused in the row's line,
+   * with nothing written. The line keeps its longest form's height, so no
+   * row under it moves as it changes.
+   *
+   * An import replaces everything, the saved run included, and the page was
+   * built from what was there before. So the store seals itself as it
+   * restores (src/store/store.ts) and the page reloads at once. A second
+   * tab can't import: the saved run is the first tab's (runSlot.ts).
+   *
+   * LAST RUN downloads the journal the end screen's Export run did, for a
+   * player who has left that screen; it is the menu's copy of that export.
+   */
+  private dataSection(): HTMLElement[] {
+    const data = this.deps.data;
+    let open = true;
+    this.closers.push(() => {
+      open = false;
+    });
+
+    const exportAll = button(t('settings.data.backup.export'), {
+      className: 'settings-action',
+      onClick: () => {
+        const backup = data.backup();
+        if (backup === null) return;
+        this.audio.play('click');
+        downloadText(backupFileName(backup), JSON.stringify(backup));
+      },
+    });
+    const readable = data.backup() !== null;
+    exportAll.disabled = !readable;
+    const backupRow = row(
+      t('settings.data.backup'),
+      readable ? t('settings.data.backup.hint') : t('settings.data.backup.none'),
+      exportAll,
+    );
+
+    // The file dialog is the browser's, opened by a file input that is never
+    // shown: the button beside it is the control, on the Tab walk and in the
+    // modal's style.
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = '.json,application/json';
+    picker.hidden = true;
+    const blocked = data.importBlocked();
+    const choose = button(t('settings.data.import.choose'), {
+      className: 'settings-action',
+      onClick: () => {
+        this.audio.play('click');
+        // Emptied first, so picking the same file again is a change.
+        picker.value = '';
+        picker.click();
+      },
+    });
+    choose.disabled = blocked !== null;
+    const chooser = document.createElement('div');
+    chooser.append(choose, picker);
+    const importRow = row(t('settings.data.import'), t('settings.data.import.hint'), chooser);
+
+    let chosen: Backup | null = null;
+    const apply = button(t('settings.data.chosen.apply'), {
+      className: 'settings-action',
+      onClick: () => {
+        const backup = chosen;
+        if (backup === null) return;
+        this.audio.play('click');
+        chosen = null;
+        apply.disabled = true;
+        choose.disabled = true;
+        void data.restore(backup).then((result) => {
+          // The store now holds the backup and this page does not: reload,
+          // whether or not the modal is still up.
+          if (result.ok) {
+            window.location.reload();
+            return;
+          }
+          console.warn('[settings] the import was not stored:', result.error); // i18n-ok: a dev console line
+          if (!open) return;
+          choose.disabled = false;
+          state.textContent = result.putBack ? t('settings.data.chosen.failed') : t('settings.data.chosen.mixed');
+        });
+      },
+    });
+    apply.disabled = true;
+    const chosenRow = row(t('settings.data.chosen'), '', apply);
+    const state = chosenRow.querySelector<HTMLElement>('.settings-row__hint')!;
+    state.classList.add('settings-data__state');
+    state.setAttribute('aria-live', 'polite');
+    state.textContent =
+      blocked === 'elsewhere'
+        ? t('settings.data.chosen.elsewhere')
+        : blocked === 'unavailable'
+          ? t('settings.data.chosen.unavailable')
+          : t('settings.data.chosen.none');
+
+    const refuse = (reason: 'not-a-backup' | 'other-version'): void => {
+      chosen = null;
+      apply.disabled = true;
+      state.textContent =
+        reason === 'other-version' ? t('settings.data.chosen.otherVersion') : t('settings.data.chosen.notBackup');
+    };
+    picker.addEventListener('change', () => {
+      const file = picker.files?.[0];
+      // A dialog closed with nothing picked leaves the row as it was.
+      if (file === undefined) return;
+      if (file.size > BACKUP_MAX_BYTES) {
+        refuse('not-a-backup');
+        return;
+      }
+      void file.text().then(
+        (text) => {
+          // Only the file picked last counts, and only while the modal is up.
+          if (!open || picker.files?.[0] !== file) return;
+          const read = readBackup(text);
+          if (!read.ok) {
+            refuse(read.reason);
+            return;
+          }
+          chosen = read.backup;
+          apply.disabled = false;
+          state.textContent = t('settings.data.chosen.ready', {
+            when: stamp(read.backup.exportedAt),
+            build: read.backup.build,
+          });
+        },
+        () => {
+          if (open) refuse('not-a-backup');
+        },
+      );
+    });
+
+    const exportRun = button(t('gameover.export'), {
+      className: 'settings-action',
+      onClick: () => {
+        const journal = data.lastRun();
+        if (journal === null) return;
+        this.audio.play('click');
+        downloadText(journalFileName(journal), JSON.stringify(journal));
+      },
+    });
+    const ended = data.lastRun() !== null;
+    exportRun.disabled = !ended;
+    const lastRunRow = row(
+      t('settings.data.lastRun'),
+      ended ? t('settings.data.lastRun.hint') : t('settings.data.lastRun.none'),
+      exportRun,
+    );
+
+    return [backupRow, importRow, chosenRow, lastRunRow];
   }
 
   /**
@@ -519,6 +699,14 @@ export class SettingsOverlay {
     wrap.appendChild(hint);
     return wrap;
   }
+}
+
+/** A time as `2026-10-07 08:30`, on the player's clock: plain digits in one
+ *  order, so it needs no locale and no glyph outside the font's subset. */
+function stamp(epochMs: number): string {
+  const d = new Date(epochMs);
+  const two = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`;
 }
 
 function section(title: string): HTMLDivElement {

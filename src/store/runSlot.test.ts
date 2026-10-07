@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
+import type { RunJournal } from '../journal/journal';
 import { RUN_SCHEMA_VERSION, Run } from '../run/Run';
 import { memoryAdapter, type StorageAdapter } from './adapter';
 import type { RunLock } from './runLock';
-import { openRunSlot, runRejectedMessage, runSlotSection, type RunSlotWire } from './runSlot';
+import { lastRunJournal, openRunSlot, runRejectedMessage, runSlotSection, type RunSlotWire } from './runSlot';
 import { createStore, type LenientSection } from './store';
 
 // 113e — the save-rejection rule, on a real snapshot. The slot has no writer
@@ -209,5 +210,158 @@ describe('115f — the run slot through the two-tab lock', () => {
     const adapter = counting(memoryAdapter({ [RUN_KEY]: stale }));
     expect(openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'elsewhere').peek()).toBe('elsewhere');
     expect(adapter.slotReads()).toBe(0);
+  });
+});
+
+// 116h — a rejected save's journal is kept when the slot is reused. What the
+// finished journals hold is read from the adapter's map.
+describe("116h — a rejected save's journal", () => {
+  const JOURNALS_KEY = 'asciibattler:journals';
+  /** A journal as a save keeps it: its open segment ended `saved`. */
+  const journalOf = (seed: number): RunJournal => ({
+    format: 2,
+    segments: [
+      {
+        build: '0.0.0+aaaaaaa',
+        configHash: 'deadbeef',
+        openedAt: seed,
+        start: { kind: 'seed', seed, dials: '' },
+        entries: [],
+        end: { reason: 'saved', ms: 1, hash: '00000000' },
+      },
+    ],
+  });
+  const keptIn = (adapter: { entries: Map<string, string> }): unknown =>
+    (JSON.parse(adapter.entries.get(JOURNALS_KEY) ?? 'null') as { data: unknown } | null)?.data ?? null;
+  const journalsText = (journals: RunJournal[]): string => JSON.stringify({ v: 1, build: 'b', data: journals });
+  const wireOf = (seed: number): RunSlotWire => ({ snapshot: snapshotOf(seed), dials: '', journal: journalOf(seed) });
+
+  const stale = (journal: RunJournal | null): string =>
+    slotText(RUN_SCHEMA_VERSION - 1, { snapshot: { schemaVersion: RUN_SCHEMA_VERSION - 1 }, dials: '', journal });
+  const unreadable = (journal: RunJournal | null): string =>
+    slotText(RUN_SCHEMA_VERSION, { snapshot: { ...snapshotOf(7), characterId: 'retired-character' }, dials: '', journal });
+
+  it('is what Export last run hands over while the save sits in the slot, ahead of an older finished run', () => {
+    for (const text of [stale(journalOf(7)), unreadable(journalOf(7))]) {
+      const adapter = memoryAdapter({ [RUN_KEY]: text, [JOURNALS_KEY]: journalsText([journalOf(1)]) });
+      const store = createStore({ adapter, build: 'b' });
+      const slot = openRunSlot(store, bus(), 'held');
+      expect(slot.rejectedJournal()).toEqual(journalOf(7));
+      expect(lastRunJournal(store, slot)).toEqual(journalOf(7));
+      // Asking moves nothing.
+      expect(adapter.entries.get(RUN_KEY)).toBe(text);
+      expect(keptIn(adapter)).toEqual([journalOf(1)]);
+    }
+  });
+
+  it("joins the finished journals, newest, before a new run's first save replaces the slot", () => {
+    for (const text of [stale(journalOf(7)), unreadable(journalOf(7))]) {
+      const adapter = memoryAdapter({ [RUN_KEY]: text, [JOURNALS_KEY]: journalsText([journalOf(1)]) });
+      const store = createStore({ adapter, build: 'b' });
+      const slot = openRunSlot(store, bus(), 'held');
+      expect(slot.write(wireOf(8))).toBe(true);
+      expect(keptIn(adapter)).toEqual([journalOf(1), journalOf(7)]);
+      expect(JSON.parse(adapter.entries.get(RUN_KEY)!).data).toEqual(wireOf(8));
+      // The same answer as before the new run took the slot.
+      expect(slot.rejectedJournal()).toBeNull();
+      expect(lastRunJournal(store, slot)).toEqual(journalOf(7));
+      // The new run's later saves keep nothing more.
+      expect(slot.write(wireOf(8))).toBe(true);
+      expect(keptIn(adapter)).toEqual([journalOf(1), journalOf(7)]);
+    }
+  });
+
+  it('is kept when the slot is emptied, too', () => {
+    const adapter = memoryAdapter({ [RUN_KEY]: stale(journalOf(7)) });
+    const slot = openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'held');
+    expect(slot.clear()).toBe(true);
+    expect(adapter.entries.has(RUN_KEY)).toBe(false);
+    expect(keptIn(adapter)).toEqual([journalOf(7)]);
+  });
+
+  it('keeps nothing from a rejected slot that holds no journal', () => {
+    const texts = [stale(null), unreadable(null), 'not a store envelope', slotText(RUN_SCHEMA_VERSION - 1, 'not a save'), slotText(RUN_SCHEMA_VERSION - 1, { journal: { format: 'x' } })];
+    for (const text of texts) {
+      const adapter = memoryAdapter({ [RUN_KEY]: text });
+      const store = createStore({ adapter, build: 'b' });
+      const slot = openRunSlot(store, bus(), 'held');
+      expect(slot.peek(), text).toBe('rejected');
+      expect(slot.rejectedJournal(), text).toBeNull();
+      expect(lastRunJournal(store, slot), text).toBeNull();
+      expect(slot.write(wireOf(8)), text).toBe(true);
+      expect(adapter.entries.has(JOURNALS_KEY), text).toBe(false);
+    }
+  });
+
+  it('the control: a save that loads is a run abandoned, and its journal is not kept', () => {
+    const adapter = memoryAdapter();
+    openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'held').write(wireOf(7));
+    expect(JSON.parse(adapter.entries.get(RUN_KEY)!).data.journal).toEqual(journalOf(7));
+
+    const store = createStore({ adapter, build: 'b' });
+    const slot = openRunSlot(store, bus(), 'held');
+    expect(slot.peek()).toBe('saved');
+    expect(slot.rejectedJournal()).toBeNull();
+    expect(slot.write(wireOf(8))).toBe(true);
+    expect(slot.clear()).toBe(true);
+    expect(adapter.entries.has(JOURNALS_KEY)).toBe(false);
+    expect(lastRunJournal(store, slot)).toBeNull();
+  });
+
+  it('is kept once when the new run could not be saved over it', () => {
+    const inner = memoryAdapter({ [RUN_KEY]: stale(journalOf(7)) });
+    const refusing = { slot: true };
+    const adapter: StorageAdapter = {
+      kind: 'memory',
+      read: (key) => inner.read(key),
+      write: (key, text) => {
+        if (refusing.slot && key === RUN_KEY) throw new Error('planted: the slot is refused');
+        inner.write(key, text);
+      },
+      remove: (key) => inner.remove(key),
+    };
+    // Two gates on one page, then the next page.
+    const first = openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'held');
+    expect(first.write(wireOf(8))).toBe(false);
+    expect(first.write(wireOf(8))).toBe(false);
+    expect(inner.entries.get(RUN_KEY)).toBe(stale(journalOf(7)));
+    expect(keptIn(inner)).toEqual([journalOf(7)]);
+
+    refusing.slot = false;
+    const second = openRunSlot(createStore({ adapter, build: 'b' }), bus(), 'held');
+    expect(second.write(wireOf(9))).toBe(true);
+    expect(keptIn(inner)).toEqual([journalOf(7)]);
+  });
+
+  it("a second tab keeps nothing and never reads the slot; a page that loaded its run doesn't read it again", () => {
+    let reads = 0;
+    const counted = (inner: StorageAdapter): StorageAdapter => ({
+      kind: inner.kind,
+      read: (key) => {
+        if (key === RUN_KEY) reads++;
+        return inner.read(key);
+      },
+      write: (key, text) => inner.write(key, text),
+      remove: (key) => inner.remove(key),
+    });
+    const shared = memoryAdapter({ [RUN_KEY]: stale(journalOf(7)) });
+    const store = createStore({ adapter: counted(shared), build: 'b' });
+    const second = openRunSlot(store, bus(), 'elsewhere');
+    expect(second.rejectedJournal()).toBeNull();
+    expect(lastRunJournal(store, second)).toBeNull();
+    expect(second.write(wireOf(8))).toBe(false);
+    expect(second.clear()).toBe(false);
+    expect(reads).toBe(0);
+    expect(shared.entries.has(JOURNALS_KEY)).toBe(false);
+
+    const own = memoryAdapter();
+    openRunSlot(createStore({ adapter: own, build: 'b' }), bus(), 'held').write(wireOf(7));
+    reads = 0;
+    const slot = openRunSlot(createStore({ adapter: counted(own), build: 'b' }), bus(), 'held');
+    expect(slot.read().status).toBe('ok');
+    expect(reads).toBe(1);
+    expect(slot.write(wireOf(7))).toBe(true);
+    expect(slot.clear()).toBe(true);
+    expect(reads).toBe(1);
   });
 });

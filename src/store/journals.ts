@@ -1,6 +1,8 @@
 /**
  * FINISHED JOURNALS: the store's section for the journals of runs that have
- * ended (Round 8 spec D3, D4), oldest first.
+ * ended (Round 8 spec D3, D4), oldest first. A run whose save was rejected
+ * ended there, and its journal joins these when the slot is reused
+ * (runSlot.ts, 116h).
  *
  * KEPT BY SIZE, not by count, since runs differ severalfold in length: the
  * newest journals whose JSON text together fits `JOURNALS_BUDGET` are kept,
@@ -25,7 +27,7 @@ import type { Store, StrictSection } from './store';
  *  Firefox's storage limit are measured. */
 export const JOURNALS_BUDGET = 1_000_000;
 
-function isJournal(value: unknown): value is RunJournal {
+export function isJournal(value: unknown): value is RunJournal {
   return (
     typeof value === 'object' &&
     value !== null &&

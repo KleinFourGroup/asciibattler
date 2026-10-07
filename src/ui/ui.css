@@ -4313,6 +4313,13 @@ body {
   color: var(--color-terminal-green);
 }
 
+/* 116h — the line under Chosen file says what was picked and what importing
+   it costs. Three lines are kept, its longest form, so the row under it and
+   the button beside it never move as it changes. */
+.settings-data__state {
+  min-height: 4.5em;
+}
+
 .settings-quit {
   display: flex;
   flex-direction: column;

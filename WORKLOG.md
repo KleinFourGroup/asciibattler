@@ -6477,3 +6477,159 @@ With the first part, all eight of the stop's calls are answered, and
 have done: the first report asked for three taste calls with no picture
 of the alternatives. The page took about 25k to build and check, and
 every open call was answered from it in one message.
+
+### 116h — the data rows (2026-10-07, session 133b679f) — ◐ built, unread (`batch`, at the sitting)
+
+A fresh session, from 08:18. Pre-flight: typecheck exit 0; `npm test` 237
+files, 3423 tests. Readings: **94,177** at 08:19, after HANDOFF, ROADMAP
+§116 and the tool's load; **218,976** at 08:24, after step zero's reading
+(the §116 audit, the store, the slot, the journals, the settings modal,
+`Game`, DESIGN's Fields and Saving); **320,425** at 08:41, before this
+entry. ✔ = read by this session at file:line, or measured.
+
+**Step zero: the cut's premises hold.**
+- ✔ The store hands out no section's raw text (`Store`, `store.ts`), so
+  the export and the import are new surface on it, as the audit said.
+- ✔ A rejected slot's text stays until the first write goes over it:
+  `openRunSlot`'s `write` was `store.writeStrict` and nothing else, and
+  the first write of a new run is `confirmCharacter`'s autosave (or the
+  constructor's, on a page booted by a run dial).
+- ✔ The settings modal's header held a landing note for the data rows.
+- Three facts the cut didn't state, all inside its intent:
+  1. **A save's copy of a journal ends `saved`** (`JournalRecorder.saved`),
+     so a rejected save's journal in the finished list has a last segment
+     that says where the run stopped, and replay already reads that end.
+  2. **Electron's writes are asynchronous** (`electron.ts`: every write
+     returns the flush's promise), so an import can't write and reload in
+     one breath there.
+  3. **The page that imports is stale from the first write.** Its lenient
+     cache, its settings' consumers and its live run were built from what
+     the store held before, and its next autosave or settings change would
+     put that over what was imported.
+
+**What was built.**
+- `store.dump()` and `store.restore(dump)` (`src/store/store.ts`): every
+  section's stored text by name, and its replacement. A restore writes
+  only the sections that differ, one at a time, removes a section the dump
+  has no text for, and puts back what was there if a write fails. From
+  its first write the store is sealed: every other write returns false and
+  stores nothing, and the status is left alone, so no can't-save notice
+  flashes on a page about to reload.
+- `src/store/backup.ts`: the file (`backupOf`, `backupFileName`,
+  `readBackup`). Each section is the text exactly as stored.
+- `openRunSlot` (`src/store/runSlot.ts`): before its first `write` or
+  `clear` on a page that hasn't loaded the slot, a rejected save's journal
+  joins the finished journals, once. `rejectedJournal()` reads it where it
+  sits; `lastRunJournal(store, slot)` is what the row exports.
+- Settings › Data (`SettingsOverlay.dataSection`): Backup, Import a backup,
+  Chosen file, Last run. `Game` wires `deps.data` to the store.
+
+**Calls made while building, for the read** (each inside call 9; none
+changes the cut):
+1. **An import replaces everything; it is not a merge.** A section the
+   file doesn't hold is removed. The signed read ("the old value is back")
+   is a restore, and a merge has no answer for the run slot.
+2. **The file holds each section's raw text,** not its parsed data: an
+   import writes back the bytes that were exported, a section that isn't
+   valid JSON still round-trips, and the test compares text with text.
+   The cost: JSON inside JSON, so the file reads badly by eye.
+3. **Two steps,** as the palette is applied in two: Choose file, then a
+   row that says what was picked and what importing costs, with the
+   button. A destructive action gets its second click that way, and no
+   confirm dialog is added to the idioms.
+4. **A second tab can't import,** and neither can a page whose store can't
+   save. The second tab's row says to close the other tab and reload.
+5. **The rejected save's run is "the last run"** while the save sits in
+   the slot, ahead of an older finished run, so spec D2's "stays
+   exportable" holds from the rejection on and the row's answer is the
+   same either side of the new run. A save that loads and is replaced by a
+   new run is abandoned, as before, and its journal is not kept.
+6. **The backup carries `meta`** like any section, so after an import the
+   store's `previousBuild` names the build whose data it now holds.
+7. **A backup must carry its mark, format, store layout, build and time;**
+   inside it, a section this build doesn't know is dropped and one the
+   file doesn't name is empty. A file over 16 MB is not read.
+8. **The time in the row is `2026-10-07 08:36`,** the player's clock in
+   one fixed order, built by hand: no locale table and no glyph outside
+   the subset.
+9. **The words:** Backup / Export everything; Import a backup / Choose
+   file…; Chosen file / Import and reload; Last run / Export run (the end
+   screen's label). All in `locales/en/ui.json` under `settings.data.*`.
+10. **The Chosen file line keeps three lines by `min-height: 4.5em`,**
+    the palette row's mechanism at one line more. DESIGN's "Layout
+    stability" says never a measured `min-height`; the palette's row was
+    signed with one, and this follows the nearer precedent. It holds at
+    1280 wide (below). At a width where the line wraps to four, the row
+    grows when a file is chosen; that width is unmeasured.
+
+**Evidence.**
+- *Headless,* +21 tests (3444 in 238 files): the store's dump and restore
+  (9: every section reads back equal in a second store, an absent section
+  removed, only what differs written, the seal with its control, a failed
+  write put back with two sections shown to have landed first, can't-save
+  when the put-back fails, an asynchronous adapter with the page's own
+  write refused in between, a store that can't read); the backup file (5:
+  export to import across two stores, fifteen files refused, the
+  version's own reason, the lenient section set); the rejected save's
+  journal (7: exported from the slot ahead of an older run, kept before a
+  write and before a clear for both kinds of rejection, nothing kept from
+  five slots with no journal, the control that a loading save is not kept,
+  kept once when the new run's save fails, a second tab reads nothing).
+- *The pins fail when their rule is removed:* 15 planted changes to the
+  new code (the seal, the put-back, the differing-only write, the removal,
+  the locked dump, keep-before-write, keep-before-clear, kept-once,
+  only-a-rejected-save, the loaded run's own text, the rejected save
+  first, the mark, the build and time, the other version, a section is
+  text), each caught by 1 to 4 tests; the clean tree, 0 failures. The
+  script is the session's scratch.
+- *In the pane* (Chromium, `00123b2-dirty-dev`, 1280×720, the menu):
+  - Export everything: the file is named
+    `asciibattler-backup-2026-10-07T12-36-58-221Z.json`, and its sections
+    equal `localStorage` read directly, key for key.
+  - A setting changed after the export (`volumeMaster` 0.25, stored and
+    in the audio player). Three files refused, each with `localStorage`
+    unchanged and the button disabled: the save's own journal, plain
+    text, and the backup with its store layout changed (its own line).
+  - The backup chosen: the line reads "A backup from 2026-10-07 08:36,
+    made by version 0.0.0+00123b2-dirty-dev. Importing replaces…", the
+    button is live, and nothing is written yet. Across the four states of
+    the line, the line (49.5 px, three lines of 16.5), the button and the
+    row under it kept their boxes.
+  - Import and reload: the page reloaded, `localStorage` equals the
+    backup's sections (the settings key, absent from the backup, is
+    gone), and the volume is 0.5 in the settings and the audio player.
+  - A rejected save (the slot's text with `v` 46): the menu shows the
+    notice and no Continue; Last run is live and its file is the slot's
+    journal, with the slot and the journals key untouched. New run and a
+    character: the journals key holds that journal, the slot holds the
+    new run at v47, and Last run, opened from the chip, is still that
+    journal.
+  - A second tab (`lock: 'elsewhere'`): Choose file and Import and reload
+    are disabled and the line says why; Backup and Last run still export.
+  - `?store=deny`: all four buttons disabled, each line saying why.
+- `npm run probe -- shell/electron/probes/drive-run.js --seed=7`: ok,
+  12 battles, log hash `a59ee48f`, the pinned one.
+
+**Not verified.**
+- **No real file was saved or picked.** The pane check put a spy in the
+  download's place and set the file input's `files` by script. The
+  browser's download and file dialog, in Firefox, under Electron and in
+  itch's frame, are the sitting's.
+- **Electron's adapter with a real restore.** The asynchronous path is
+  tested over a gated memory adapter, not over the preload's file.
+- A real quota failure in the middle of an import; a width at which the
+  Chosen file line wraps past three lines; the Tab walk over the new rows
+  in Firefox.
+- The pane's console held 11 `Failed to load resource: net::ERR_CACHE_…`
+  lines and no script error. What they name was not looked into;
+  `ready()` passed on every load.
+
+**Cost.** The production bundle is 636.80 kB raw (630.25 at 116g), the
+stylesheet 61.68 kB (61.64). The step: about 226k, of which step zero's
+reading was 125k.
+
+**The read** (`batch`, at the sitting, ROADMAP's script): Settings › Data,
+Export everything; change a setting; Import a backup, choose the file,
+Import and reload; the old value is back. Wrong is a file that isn't
+offered, a setting that stays changed, or a row that moves when a file is
+chosen.

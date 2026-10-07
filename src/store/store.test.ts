@@ -313,3 +313,221 @@ describe('113b — a store that fails', () => {
     expect(seen).toHaveLength(1);
   });
 });
+
+// 116h — the whole store as text. Two stores over two adapters stand for two
+// browsers; what a restore wrote is read from the adapter's map.
+describe('116h — the whole store as text', () => {
+  const JOURNALS_KEY = 'asciibattler:journals';
+  const PROGRESS_KEY = 'asciibattler:progress';
+  const KEYS = SECTION_NAMES.map(storageKey);
+  const planted = (): Record<string, string> => ({
+    [SETTINGS_KEY]: envelope(3, { volume: 0.25, speed: 2, locale: 'fr' }),
+    [RUN_KEY]: envelope(46, { seed: 7 }),
+    [JOURNALS_KEY]: 'not an envelope, and kept as it is',
+  });
+  const textsOf = (adapter: { entries: Map<string, string> }): (string | null)[] =>
+    KEYS.map((key) => adapter.entries.get(key) ?? null);
+
+  /** A memory adapter whose writes and removes wait to be let through. */
+  function gated(initial: Record<string, string> = {}) {
+    const inner = memoryAdapter(initial);
+    const waiting: (() => void)[] = [];
+    const later = (act: () => void): Promise<void> =>
+      new Promise((resolve) => {
+        waiting.push(() => {
+          act();
+          resolve();
+        });
+      });
+    const adapter: StorageAdapter = {
+      kind: 'electron',
+      read: (key) => inner.read(key),
+      write: (key, text) => later(() => inner.write(key, text)),
+      remove: (key) => later(() => inner.remove(key)),
+    };
+    return { adapter, inner, waiting };
+  }
+  const tick = async (): Promise<void> => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  };
+
+  it('dumps every section by name: the stored text, and null where nothing is stored', () => {
+    const adapter = memoryAdapter(planted());
+    const dump = createStore({ adapter, build: 'b' }).dump();
+    expect(dump).toEqual({
+      meta: adapter.entries.get(META_KEY),
+      settings: planted()[SETTINGS_KEY],
+      progress: null,
+      run: planted()[RUN_KEY],
+      journals: planted()[JOURNALS_KEY],
+    });
+    expect(Object.keys(dump!)).toEqual([...SECTION_NAMES]);
+  });
+
+  it('restored into an empty store, every section reads back equal', async () => {
+    const from = memoryAdapter(planted());
+    const dump = createStore({ adapter: from, build: '0.1.0+abc1234' }).dump()!;
+
+    const to = memoryAdapter();
+    expect(await createStore({ adapter: to, build: '0.1.0+abc1234' }).restore(dump)).toEqual({ ok: true });
+    expect(textsOf(to)).toEqual(textsOf(from));
+    expect(to.entries.has(PROGRESS_KEY)).toBe(false);
+
+    // The next boot reads it as its own, each section by its policy.
+    const next = createStore({ adapter: to, build: '0.1.0+abc1234' });
+    expect(next.read(PREFS)).toEqual({ volume: 0.25, speed: 2, locale: 'fr' });
+    expect(next.readStrict(SLOT)).toEqual({ status: 'ok', value: { seed: 7, loaded: true }, build: '0.0.0+aaaaaaa' });
+    expect(next.previousBuild).toBe('0.1.0+abc1234');
+  });
+
+  it('removes a section the dump holds no text for', async () => {
+    const adapter = memoryAdapter(planted());
+    const store = createStore({ adapter, build: 'b' });
+    const dump = { ...store.dump()!, run: null, journals: null };
+    expect(await store.restore(dump)).toEqual({ ok: true });
+    expect(adapter.entries.has(RUN_KEY)).toBe(false);
+    expect(adapter.entries.has(JOURNALS_KEY)).toBe(false);
+    expect(adapter.entries.get(SETTINGS_KEY)).toBe(planted()[SETTINGS_KEY]);
+  });
+
+  it('writes only the sections that differ', async () => {
+    const inner = memoryAdapter(planted());
+    createStore({ adapter: inner, build: 'b' });
+    const adapter = failing(inner, {});
+    const store = createStore({ adapter, build: 'b' });
+    expect(await store.restore(store.dump()!)).toEqual({ ok: true });
+    expect(adapter.writes).toBe(0);
+  });
+
+  it('after a restore the page saves nothing more, and is not told it cannot save', async () => {
+    const inner = memoryAdapter(planted());
+    createStore({ adapter: inner, build: 'b' });
+    const adapter = failing(inner, {});
+    const store = createStore({ adapter, build: 'b' });
+    const seen: StoreStatus[] = [];
+    store.onStatus((s) => seen.push(s));
+    const dump = { ...store.dump()!, settings: envelope(3, { volume: 0.75, speed: 3, locale: 'de' }) };
+    expect(await store.restore(dump)).toEqual({ ok: true });
+    const after = textsOf(inner);
+    const writes = adapter.writes;
+    expect(writes).toBe(1);
+
+    // The page as it was: its autosave, a settings change, a run's end.
+    expect(store.writeStrict(SLOT, { seed: 99 })).toBe(false);
+    expect(store.patch(PREFS, { volume: 0.1 })).toBe(false);
+    expect(store.clear(SLOT)).toBe(false);
+    expect((await store.restore(dump)).ok).toBe(false);
+    expect(textsOf(inner)).toEqual(after);
+    expect(adapter.writes).toBe(writes);
+    expect(store.status()).toEqual({ adapter: 'memory', canSave: true, error: null });
+    expect(seen).toEqual([]);
+    // The control: the same call on a store that restored nothing does write.
+    const control = createStore({ adapter: inner, build: 'b' });
+    expect(control.writeStrict(SLOT, { seed: 99 })).toBe(true);
+    expect(textsOf(inner)).not.toEqual(after);
+  });
+
+  it('a write that fails puts back what was there, and the store saves again', async () => {
+    const inner = memoryAdapter(planted());
+    createStore({ adapter: inner, build: 'b' });
+    const before = textsOf(inner);
+    // The third section written is refused; two have landed by then.
+    let writes = 0;
+    let refusing = true;
+    let most = 0;
+    const differing = (): number => textsOf(inner).filter((text, i) => text !== before[i]).length;
+    const adapter: StorageAdapter = {
+      kind: 'memory',
+      read: (key) => inner.read(key),
+      write: (key, text) => {
+        if (refusing && ++writes === 3) throw quota();
+        inner.write(key, text);
+        most = Math.max(most, differing());
+      },
+      remove: (key) => inner.remove(key),
+    };
+    const store = createStore({ adapter, build: 'b' });
+    const dump = {
+      meta: before[0]!,
+      settings: envelope(3, { volume: 0.75, speed: 3, locale: 'de' }),
+      progress: envelope(1, { seen: true }),
+      run: envelope(46, { seed: 8 }),
+      journals: envelope(1, []),
+    };
+    expect(await store.restore(dump)).toEqual({ ok: false, error: 'QuotaExceededError: the quota has been exceeded', putBack: true });
+    // The control: two sections had been replaced when the third was refused.
+    expect(most).toBe(2);
+    expect(textsOf(inner)).toEqual(before);
+    expect(inner.entries.has(PROGRESS_KEY)).toBe(false);
+    expect(store.status()).toEqual({ adapter: 'memory', canSave: true, error: null });
+
+    refusing = false;
+    expect(store.patch(PREFS, { volume: 0.5 })).toBe(true);
+    expect(await store.restore(dump)).toEqual({ ok: true });
+    expect(textsOf(inner)).toEqual([dump.meta, dump.settings, dump.progress, dump.run, dump.journals]);
+  });
+
+  it('says it cannot save when what was there could not be put back', async () => {
+    const inner = memoryAdapter(planted());
+    createStore({ adapter: inner, build: 'b' });
+    // The first write lands, and every one after it is refused.
+    let writes = 0;
+    const adapter: StorageAdapter = {
+      kind: 'memory',
+      read: (key) => inner.read(key),
+      write: (key, text) => {
+        if (++writes >= 2) throw quota();
+        inner.write(key, text);
+      },
+      remove: (key) => inner.remove(key),
+    };
+    const store = createStore({ adapter, build: 'b' });
+    const dump = { ...store.dump()!, settings: envelope(3, { volume: 0.75 }), run: envelope(46, { seed: 8 }) };
+    expect(await store.restore(dump)).toEqual({ ok: false, error: 'QuotaExceededError: the quota has been exceeded', putBack: false });
+    expect(store.status()).toEqual({ adapter: 'memory', canSave: false, error: 'QuotaExceededError: the quota has been exceeded' });
+  });
+
+  it('over an asynchronous adapter, writes one section at a time and lets nothing in between', async () => {
+    const { adapter, inner, waiting } = gated(planted());
+    const store = createStore({ adapter, build: 'b' });
+    waiting.splice(0).forEach((go) => go()); // the stamp
+    await tick();
+    const dump = {
+      ...store.dump()!,
+      settings: envelope(3, { volume: 0.75, speed: 3, locale: 'de' }),
+      run: envelope(46, { seed: 8 }),
+    };
+    let result: unknown = null;
+    void store.restore(dump).then((r) => {
+      result = r;
+    });
+    await tick();
+    expect(waiting).toHaveLength(1);
+    // The page's own autosave, between the restore's first write and its second.
+    expect(store.writeStrict(SLOT, { seed: 99 })).toBe(false);
+    expect(waiting).toHaveLength(1);
+    waiting.shift()!();
+    await tick();
+    expect(inner.entries.get(SETTINGS_KEY)).toBe(dump.settings);
+    expect(result).toBeNull();
+    expect(waiting).toHaveLength(1);
+    waiting.shift()!();
+    await tick();
+    expect(result).toEqual({ ok: true });
+    expect(inner.entries.get(RUN_KEY)).toBe(dump.run);
+  });
+
+  it('a store that cannot read has no dump and restores nothing', async () => {
+    const inner = memoryAdapter(planted());
+    const adapter = failing(inner, {});
+    const store = createStore({ adapter, build: 'b', unsaved: 'SecurityError: planted' });
+    expect(store.dump()).toBeNull();
+    const dump = { meta: null, settings: null, progress: null, run: null, journals: null };
+    expect(await store.restore(dump)).toEqual({ ok: false, error: 'SecurityError: planted', putBack: true });
+    expect(adapter.writes).toBe(0);
+    expect(inner.entries.get(SETTINGS_KEY)).toBe(planted()[SETTINGS_KEY]);
+
+    const throwing = createStore({ adapter: failing(memoryAdapter(planted()), { read: denied() }), build: 'b' });
+    expect(throwing.dump()).toBeNull();
+  });
+});

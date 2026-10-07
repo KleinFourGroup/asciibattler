@@ -34,6 +34,13 @@
  * "can't save", for the UI to tell the player; the value still holds in
  * memory for the page's life.
  *
+ * THE WHOLE STORE AS TEXT (`dump` / `restore`; the backup file is backup.ts).
+ * A restore replaces every section and removes the ones it holds no text
+ * for, all or nothing. The page that restored was built from what the store
+ * held before, so from the restore's first write this store saves nothing
+ * more: a later autosave or settings change would put the old page's state
+ * over what was restored. The caller reloads.
+ *
  * Game-layer only. The simulation, the run model, the bots and the fuzz
  * harness never import this module, so a headless run can't write a store.
  * This file imports no config and no run code: it is evaluated before the
@@ -101,6 +108,14 @@ export type StrictRead<Loaded> =
       readonly raw: string;
     };
 
+/** Every section's stored text by name, null where nothing is stored. */
+export type StoreDump = { readonly [K in SectionName]: string | null };
+
+export type RestoreResult =
+  | { readonly ok: true }
+  /** `putBack`: whether the store holds what it held before the restore. */
+  | { readonly ok: false; readonly error: string; readonly putBack: boolean };
+
 export interface StoreStatus {
   readonly adapter: AdapterKind;
   /** False once a read or the last write failed. */
@@ -127,6 +142,18 @@ export interface Store {
   writeStrict<Wire, Loaded>(section: StrictSection<Wire, Loaded>, wire: Wire): boolean;
   /** Remove a section's key. False when it couldn't be removed. */
   clear(section: { readonly name: SectionName }): boolean;
+  /** Every section's text as it is stored now. Null when the store can't
+   *  read its storage, since a dump of nothing would restore as an empty
+   *  store. */
+  dump(): StoreDump | null;
+  /**
+   * Replace every section with `dump`'s text and remove each section it has
+   * none for. If a write fails, what was there is put back and the result
+   * says why. Once it has begun, and for good once it has succeeded, every
+   * other write on this store returns false and stores nothing (the header
+   * says why); the caller reloads the page.
+   */
+  restore(dump: StoreDump): Promise<RestoreResult>;
 }
 
 function describe(err: unknown): string {
@@ -162,6 +189,9 @@ export function createStore(options: {
   /** Set by `unsaved` or by a failed read: the store then reads and writes
    *  nothing for the page's life. */
   let locked = unsaved !== null;
+  /** Set while a restore runs and left set once it has succeeded: the store
+   *  then holds another page's state, and this page writes nothing over it. */
+  let sealed = false;
   const listeners = new Set<(status: StoreStatus) => void>();
   const lenientCache = new Map<SectionName, Record<string, unknown>>();
 
@@ -186,7 +216,7 @@ export function createStore(options: {
   /** Run one adapter write. A write that fails later (Electron's are
    *  asynchronous) has already returned true, and reports through the status. */
   const attempt = (write: () => void | Promise<void>): boolean => {
-    if (locked) return false;
+    if (locked || sealed) return false;
     try {
       const pending = write();
       if (pending instanceof Promise) {
@@ -237,6 +267,13 @@ export function createStore(options: {
     }
     lenientCache.set(section.name, value);
     return value;
+  };
+
+  const dumpTexts = (): StoreDump | null => {
+    const texts = {} as Record<SectionName, string | null>;
+    for (const name of SECTION_NAMES) texts[name] = readText(name);
+    // A read that failed just now locked the store, and left a hole.
+    return locked ? null : texts;
   };
 
   return {
@@ -292,6 +329,38 @@ export function createStore(options: {
     clear(section) {
       lenientCache.delete(section.name);
       return attempt(() => adapter.remove(storageKey(section.name)));
+    },
+    dump: dumpTexts,
+    async restore(dump) {
+      if (sealed) return { ok: false, error: 'this page has already restored its store', putBack: true };
+      const before = dumpTexts();
+      if (before === null) return { ok: false, error: status.error ?? 'the store cannot be read', putBack: true };
+      // Sealed before the first write: an asynchronous adapter lets the page
+      // run between two of them, and its autosave must not land in between.
+      sealed = true;
+      const put = async (name: SectionName, text: string | null): Promise<void> => {
+        if (text === null) await adapter.remove(storageKey(name));
+        else await adapter.write(storageKey(name), text);
+      };
+      const changed = SECTION_NAMES.filter((name) => dump[name] !== before[name]);
+      try {
+        for (const name of changed) await put(name, dump[name]);
+      } catch (err) {
+        let putBack = true;
+        for (const name of changed) {
+          try {
+            await put(name, before[name]);
+          } catch {
+            putBack = false;
+          }
+        }
+        sealed = false;
+        // The store is as it was, and saves as it did. If it is not, what it
+        // holds is part old and part new, and the player is told it can't save.
+        if (!putBack) setStatus(false, describe(err));
+        return { ok: false, error: describe(err), putBack };
+      }
+      return { ok: true };
     },
   };
 }

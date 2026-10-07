@@ -7498,3 +7498,87 @@ tab's Continue, after a reload, returns the first tab's own run. Then two
 tabs of the local build (`npm run preview -- --outDir output/itch/current
 --port 5193`), the same. Wrong is `none` in a second tab, or a first tab
 that reads anything but `held`.
+
+### The sitting's reports (2026-10-07, the user's files) — the limit, the frame, the journals' sizes
+
+Three files the user saved to their Downloads folder between 18:16 and
+18:21, read by the session: two diagnostics reports from the `9d298b1`
+build (`asciibattler-diag-2026-10-07T22-15-46-658Z.json`, a tab of its
+own at `http://localhost:5173`; `…T22-19-57-795Z.json`, the itch draft's
+frame) and a backup exported from the user's dev-server page on the same
+local origin (`asciibattler-backup-2026-10-07T22-21-00-133Z.json`,
+138,105 bytes, build `1587405-dev`). Firefox 157. The reading before this
+entry: **440,142** at 17:55, on the commit before it.
+
+**Firefox's `localStorage` limit: 5,242,880 characters an origin.** The
+local tab's measurement: with 391,710 characters in use, the fill key
+took 4,850,688 and was refused 4,851,712, the same for the one-byte fill
+and the two-byte one, 26 attempts each, the key removed. With the key's
+22 that puts the limit from 5,242,420 up to but not including 5,243,444,
+and 5 × 2²⁰ = 5,242,880 is inside. So Firefox counts characters, keys and
+values both, which is what `JOURNALS_BUDGET` is written in. *Not measured
+in the frame:* that report's `limit` is null, so that the partitioned
+area has the same cap is a prediction.
+
+**The frame** (`https://html-classic.itch.zone/html/<id>/index.html`,
+`embedded: true`, the ancestor `https://kleinfourgroup.itch.io`).
+- *A download works from inside it:* that report is itself a file the
+  frame saved, through `downloadText`, the path the game's exports take.
+  This is §114e's carried question, answered for Firefox.
+- *The lock, the first tab, on the new rule:* `held`, the control
+  granted, the run lock's name refused, and `query()` still refused with
+  the same `SecurityError`. The tab of its own reads `held` too, and its
+  `query()` answers.
+- *The store survives loads and an upload there:* a `9d298b1` page read
+  `previousBuild: 0.0.0+0bffd94`, the first upload's stamp, with the
+  settings and a run stored and seven loads in the tally since 17:19.
+  Which of a reload, a closed tab and a restart those loads were is the
+  user's to say.
+- *The origin is shared, seen directly:* two keys outside the game's
+  namespace are visible from the frame, 162 characters together. One is
+  another itch game's (its name is in the user's report and left out of
+  this public file); the other is `asciibattler.spike110`, the boot
+  counter §110's spike left in this browser. The browser's estimate for
+  the origin is 6,483,093 bytes in use (6.4 MB at 110e) of 10 GB.
+  `hasStorageAccess` false and `persisted` false, as at 110e.
+- *A write's cost there:* five writes of the slot, up to 5,789
+  characters, four under 1 ms and one read as 1 ms by a clock whose step
+  is 1 ms. No write of a larger slot and no timing by size: `bench` is
+  null in both reports.
+
+**The journals' sizes: the budget's second number.** The backup holds
+four finished journals, all played by hand:
+
+| dials | battles | end | minutes | segments | characters | without the segments' starts |
+|---|---|---|---|---|---|---|
+| `hops=2` | 5 | victory | 6 | 1 | 3,789 | 3,718 |
+| `seed=42` | 13 | defeat | 11 | 3 | 10,371 | 10,168 |
+| none (the shipped length) | 18 | defeat | 15 | 1 | 10,283 | 10,219 |
+| none (the shipped length) | 40 | defeat | 36 | 3 | 80,954 | 38,276 |
+
+- *The first row is a known answer for the report:* 3,789 is the byte
+  count of the file the user exported on 2026-10-02 (§114e).
+- *A run costs 570 to 960 characters a battle,* by the two rows of the
+  shipped length (the longer one holds 101 battle orders and 7 recruits
+  at some 260 characters each). The kickoff's estimate, 15 KB for a
+  30-battle run, was built on 2.4 orders a battle and is low by up to
+  half for this player.
+- *A save continued on another build costs a whole snapshot.* The 40
+  battle run's third segment starts from one, 42,551 characters at its
+  26th battle, because the page had moved to a later commit; its second
+  segment, continued on the same build, starts from 63. A dev server
+  changes build at every commit. A player meets it once for each upload
+  that lands in the middle of a run.
+- *Against the budget:* 1,000,000 characters is 26 runs of 40 battles on
+  one build, 12 of the largest journal seen, and about 100 of the two
+  10 KB ones. It is 19 % of Firefox's limit. With the slot at its
+  largest by these parts (a snapshot of 42,551 and a journal of 80,954)
+  the game's keys come to about 1.12 M characters, 21 % of the limit on
+  an origin of its own; on itch the rest is shared with other games.
+- *The slot in the backup:* 9,738 characters, a snapshot of 8,364 and a
+  journal of 1,278.
+
+**Not in the files.** A second tab on the new rule, in the frame or in a
+tab of its own, which is 116l-post's read. The frame's limit. A write's
+cost by size, in either place. Copy and the import in the frame.
+Electron. Which persistence checks were made.

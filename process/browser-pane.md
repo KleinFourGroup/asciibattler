@@ -118,6 +118,13 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   (port 5192, `vite preview` over `dist/`). Wait for `#ui` to hold three
   children before reading; `<html data-build>` says which build it is. It
   is another origin, so its `localStorage` is not the dev server's.
+- **The itch build** (`node scripts/itch-zip.mjs [--diag]`) is served to
+  the pane by the `itch-preview` config (port 5193, `vite preview` over
+  `output/itch/current/`), a third origin with its own `localStorage`.
+  With `--diag` the page has `window.__diag` (`report()`,
+  `measureLimit()`, `bench()`) and no `__probe`. The pane's quota is
+  52,428,800 characters, which `measureLimit()` must find there: its
+  known answer on a real browser.
 - **The store** (`src/store/`) is the page's first module. On the dev
   server, `(await import('/src/store/index.ts')).store` is the page's own
   instance. `?store=deny` (DEV only) boots the game with its storage

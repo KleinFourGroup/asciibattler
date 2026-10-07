@@ -54,6 +54,28 @@ options); the probe kit it calls is `window.__probe`
 screen of a driven run out at each text size and reports the boxes that
 stop holding their text (its header has the options).
 
+## The itch build and the diagnostics build
+
+`node scripts/itch-zip.mjs` builds the game and zips it for an itch.io HTML
+upload, into `output/itch/`, named by the build's ID. It checks the zip
+before it prints: every entry name free of backslashes, `index.html` at the
+root, and the extracted tree byte-identical to the build. The upload
+itself is done by hand.
+
+`node scripts/itch-zip.mjs --diag` makes the same build with the
+diagnostics panel in it (`VITE_DIAG=1`; `src/dev/diag/`). A `diag` tab on
+the right edge opens a report of what the storage is like where the page
+runs: the origin and whether the page is framed, whether the store can
+save, the two-tab lock, what `localStorage` holds (the game's keys and
+everyone else's on a shared origin), and what each of the game's own
+writes has cost so far. Two buttons measure the storage's limit and a
+write's cost by size; Copy and Save as file take the report out. A build
+made without the flag carries none of it. To look at either build
+locally: `npm run preview -- --outDir output/itch/current --port 5193`.
+Under the Electron shell, `VITE_DIAG=1 npm run probe --
+shell/electron/probes/diag-run.js --seed=7` reports the writes of a whole
+driven run.
+
 ## Replaying a run
 
 Every run is journaled as it is played: the seed, each choice, each battle

@@ -18,6 +18,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "5192", "--strictPort"],
       "port": 5192
+    },
+    {
+      "name": "itch-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--outDir", "output/itch/current", "--port", "5193", "--strictPort"],
+      "port": 5193
     }
   ]
 }

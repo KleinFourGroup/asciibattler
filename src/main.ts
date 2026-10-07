@@ -70,6 +70,14 @@ const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
 // parses the run dials in its constructor — so its run pairs are written into
 // the URL first (src/dev/boardPanel/boot.ts).
 if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
+// 116l — the diagnostics panel, behind a constant only a build made with
+// `VITE_DIAG=1` sets (src/dev/diag/index.ts). It goes in before the Game, the
+// store's writer, so it times the first write too. A block, not a
+// `const … ? … : null` with a call after it: the minifier folds that form's
+// test and still leaves `null?.installDiag(…)` in every other build.
+if (import.meta.env.VITE_DIAG === '1') {
+  (await import('./dev/diag')).installDiag({ runLock });
+}
 
 const game = new Game(canvas, fontAtlas, uiMount, runLock);
 game.start();

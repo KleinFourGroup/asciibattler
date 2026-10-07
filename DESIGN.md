@@ -206,7 +206,7 @@ none where no run is live).
 
 | Surface | Controls | Click | Keys | Touch | Hover-only | Morale |
 |---|---|---|---|---|---|---|
-| Menu (§116) | Continue, New run, Settings, Credits (`button()`; Credits is §116j's and unread until the §116 sitting), the seed field (an `<input>` named by the word Seed; Enter in it is New run), the word Seed (a tooltip text site) | ✓ | ✓ the user's Firefox read 2026-10-04 (the word's tab stop came after it, 116c-post) | ✓ (the word's tooltip: a tap) | none | none (no run) |
+| Menu (§116) | Continue, New run, Settings, Credits (`button()`; Credits is §116j's, read by the user 2026-10-07), the seed field (an `<input>` named by the word Seed; Enter in it is New run), the word Seed (a tooltip text site) | ✓ | ✓ the user's Firefox read 2026-10-04 (the word's tab stop came after it, 116c-post) | ✓ (the word's tooltip: a tap) | none | none (no run) |
 | Character select | the three cards (`button`), Back (`button()`, §116) | ✓ | ✓ | ✓ | none | none (no run) |
 | Map | frontier nodes (`button`; inert nodes `aria-disabled`), the roster button | ✓ | ✓ 100c1 | ✓ (the boss node's long-press, 97f) | none | chip |
 | Pre-turn | the pile + roster buttons, the hand cards (pressable, a toggle), the grant chips, Pass, Fight, the five text sites | ✓ | ✓ 100c2 | ✓ | none | gauges |

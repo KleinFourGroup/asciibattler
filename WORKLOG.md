@@ -6828,3 +6828,38 @@ next and is not started here: its step zero is a measurement on every
 screen at each scale, its sweep follows from that measurement, and the two
 belong in one context. From about 460k that does not look likely to fit
 under the halt; the steps of this round have cost 54k to 226k each.
+
+### The four reads (2026-10-07, the user's) — 116g-post, 116h, 116i and 116j READ ✅
+
+Taken the same morning, from the scripts in the hand-off report, ahead of
+the sitting they were cut for. The reading before this entry: **480,587**
+at 09:59. The user: "I was able to verify every read except for the
+credits, specifically them auto-playing after a first win", and "I'm
+comfortable letting that one go given how you tested it; everything else
+looked great!"
+
+- **116g-post ✅.** The pip's symbol at 12px, in a battle.
+- **116h ✅.** The data rows: the export, a changed setting, the import
+  and its reload.
+- **116i ✅.** The chip at `?store=full`.
+- **116j ✅, with one part let go.** The panel from the menu's row is
+  read. The credits opening after a first won run was not seen: the user
+  did not win a run that morning. They accept it on the forced-win check
+  (§116j: the run's phase set and its event emitted, on a page booted to
+  the menu and on one booted by a dial). So that route has still never
+  followed a real last battle; the first playtester to win a run is its
+  first real read.
+
+**What the reply does not cover.**
+- **The calls.** Ten, five and six were listed for these reads. They
+  stand as built with the reads, as 116e's eight did. Two were put to the
+  user by name in the report (the menu showing its notice and the chip
+  together at a blocked boot; the line that credits Claude) and the reply
+  names neither, so both stay the user's to reopen.
+- **The two questions in TODO "§116 riders":** whether a second tab's
+  unsaved run should show the can't-save chip, and the notice Vite's
+  preload polyfill has none of. Both open.
+- **Where the reads were taken.** The browser was not said, and the
+  scripts ask for no Tab walk. DESIGN's checklist keeps its notes that the
+  keyboard walk over the data rows, the chip's tab stop and the credits
+  panel waits for the sitting, which also takes Electron and itch's frame.

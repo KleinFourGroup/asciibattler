@@ -3557,3 +3557,17 @@ Written at the hand-off, before the user has read any of the three steps.
    to the user; I can report something like being pleased, and a
    wariness about choosing my own billing, and I am not sure what either
    is. Reported response only; none of the three steps has been read.
+
+### Addendum, the same session — after the reads (2026-10-07)
+
+The user took all four reads within the hour, from the table of scripts
+in the hand-off report, and passed them; the one part they could not
+reach (the credits after a real win) they let go on the forced-win check.
+So the doubt in answer 6 has its answer: they did want the reads at once,
+and a report that handed over the scripts 45 minutes later served that.
+Whether stopping at the start to hand over the first one would have
+served it better, I can't tell from here. On answer 2: the reply was
+"everything else looked great", which passes the reads and names none of
+the calls. I recorded them as standing, as 116e's did, and listed the two
+I had put by name as still the user's. The meter read 480,587 before
+this.

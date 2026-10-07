@@ -545,3 +545,20 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   pressed key's `key` beside its `code` at a rebind (the defaults have no
   press to read), or ask `navigator.keyboard.getLayoutMap()`, which
   Firefox doesn't have.
+
+- [ ] **The build's own helper has no notice** (116j). The production
+  bundle holds Vite's module-preload polyfill (the string `modulepreload`
+  is in `dist/assets/index-*.js`), a few lines of Vite's MIT code that
+  `public/THIRD-PARTY-LICENSES.txt` doesn't name; `tests/licences.test.ts`
+  reads the source's imports, so it can't see what the bundler adds. Two
+  ways out: `build.modulePreload.polyfill: false` in `vite.config.ts`
+  (whether the game needs the polyfill is unchecked, and editing that file
+  restarts every dev server), or a Vite section in the file. The shell's
+  packaged build will owe Electron's and Chromium's notices too, at the
+  phase that packages it.
+
+- [ ] **A second tab's run has no can't-save chip** (116i). The chip is
+  the store's status, and a second tab's store can save; its run is
+  unsaved by the two-tab lock, which the menu says once and the settings'
+  Quit row says again. Whether the chip should show there too is the
+  user's call (asked at 116i).

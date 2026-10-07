@@ -301,7 +301,13 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
 - To force a defeat or victory, temporarily add
   `(window as unknown as { __bus: typeof this.bus }).__bus = this.bus;` to
   the `Game` constructor, then emit `battle:ended` with `{ winner: 'enemy' }`
-  or `run:victory`. Remove the hook before committing.
+  or `run:victory`. Remove the hook before committing. `__game.bus` is
+  that same bus (a private field, readable at run time), so the hook isn't
+  needed for an end screen: set `__game.run.phase` to `'complete'` or
+  `'defeat'`, then `__game.bus.emit('run:victory', {})` or
+  `'run:defeated'`. The end screen mounts and its way out reads the phase
+  (the credits' route, 116j). It is the screen forced, not a run that
+  ended: nothing a real last battle does has happened.
 - Default views can mislead: a visualizer once opened on seed 1, the worst
   case in a 500-seed corpus. When an impression contradicts an instrument,
   check what the default view happened to show.

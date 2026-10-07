@@ -4344,6 +4344,71 @@ body {
   border-top: 1px solid var(--color-gray-22);
 }
 
+/* ── 116j — THE CREDITS (src/ui/CreditsOverlay.ts) ──────────────────────────
+   The 96f panel with a static list in it: a group per kind of credit, its
+   label in the settings sections' small caps, and under it a row per name,
+   with what is said of the name (a licence) at the row's far edge. The body
+   scrolls inside the panel on a window too short for the list, and it is a
+   tab stop so the keyboard can scroll it; its ring sits inside the box, where
+   the panel doesn't clip it. */
+.credits-modal {
+  width: min(92vw, 36rem);
+}
+
+.credits-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px; /* clear of the scroll bar */
+  font-family: var(--font-mono);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+
+.credits-body:focus-visible {
+  outline-offset: -2px;
+}
+
+.credits-group__label {
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-gray-22);
+  font-size: var(--text-11);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gray-88);
+}
+
+.credits-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 20px;
+  padding: 2px 0;
+}
+
+.credits-row__name {
+  font-size: var(--text-14);
+  letter-spacing: 0.06em;
+  color: var(--color-terminal-amber);
+}
+
+.credits-row__note {
+  font-size: var(--text-11);
+  color: var(--color-gray-88);
+}
+
+.credits-licences {
+  padding-top: 12px;
+  border-top: 1px solid var(--color-gray-22);
+  font-size: var(--text-11);
+  line-height: 1.5;
+  color: var(--color-gray-88);
+}
+
 /* ── §100 — THE FOCUS RING (100b) ─────────────────────────────────────────
    The keyboard's hover. Two rules, one idiom (DESIGN §UI idioms "Focus"):
    1. every `X:hover` rule above carries `X:focus-visible` in its selector

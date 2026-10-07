@@ -10,6 +10,7 @@ import {
   SEED_MAX_DIGITS,
   bootsToMenu,
   cleanSeedText,
+  creditsOnTheWay,
   seedFromText,
   seedShown,
 } from './menuRules';
@@ -117,5 +118,15 @@ describe('116c-post2 — the seed a run shows', () => {
 
   it('the control: a neighbouring seed is another run', () => {
     expect(snapshotOf(8)).not.toEqual(snapshotOf(7));
+  });
+});
+
+describe('116j — the credits on the way to the menu', () => {
+  it('open after the first won run on a page that goes to the menu, and at no other end', () => {
+    expect(creditsOnTheWay(true, true, false)).toBe(true);
+    // Seen before, a defeat, and a page booted by a run dial.
+    expect(creditsOnTheWay(true, true, true)).toBe(false);
+    expect(creditsOnTheWay(false, true, false)).toBe(false);
+    expect(creditsOnTheWay(true, false, false)).toBe(false);
   });
 });

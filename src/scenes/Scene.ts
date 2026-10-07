@@ -112,6 +112,9 @@ export interface MenuContext {
   /** 116d — the menu's Settings row: open the settings modal, the one the
    *  chip opens during a run (src/ui/SettingsOverlay.ts). */
   openSettings(): void;
+  /** 116j — the menu's Credits row: open the credits panel
+   *  (src/ui/CreditsOverlay.ts). */
+  openCredits(): void;
 }
 
 export interface Scene {

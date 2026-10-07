@@ -23,9 +23,9 @@
  * what an empty field does, so the tooltip is never the only place that is
  * said.
  *
- * The Settings row (116d) opens the settings modal; focus comes back to the
- * row when it closes. Landing note: the Credits row arrives with the credits
- * (116j), between Settings and the seed field (spec D6's order).
+ * The Settings row (116d) opens the settings modal and the Credits row
+ * (116j) the credits panel; focus comes back to the row when either closes.
+ * Credits sits between Settings and the seed field (spec D6's order).
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -113,6 +113,15 @@ export class MenuScreen extends Screen {
         onClick: () => {
           this.audio.play('click');
           this.menu.openSettings();
+        },
+      }),
+    );
+    rows.appendChild(
+      button(t('menu.credits'), {
+        className: 'btn--primary',
+        onClick: () => {
+          this.audio.play('click');
+          this.menu.openCredits();
         },
       }),
     );

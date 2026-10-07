@@ -15,6 +15,9 @@
  *
  * THE SEED A RUN SHOWS (116c-post2, on its end screen) is what the field
  * takes back: `seedShown`, below.
+ *
+ * THE CREDITS ON THE WAY (116j): a won run's end screen leads to the menu,
+ * and the first time by way of the credits. `creditsOnTheWay` is the rule.
  */
 
 import { parseRunConfig, RUN_CONFIG_PARAMS } from '../run/RunConfig';
@@ -55,4 +58,15 @@ export function seedFromText(text: string): number | undefined {
  *  where the seed as given is only in a journal's start. */
 export function seedShown(streamRoot: number): string {
   return String(streamRoot);
+}
+
+/**
+ * Whether leaving a run's end screen opens the credits over the menu: the
+ * run was won, the page goes to the menu from a run's end (it booted to the
+ * menu; a page booted by a run dial starts the next run instead), and the
+ * credits have not been shown this way before. A defeat never shows them,
+ * and the menu's own Credits row is always there.
+ */
+export function creditsOnTheWay(won: boolean, toMenu: boolean, creditsSeen: boolean): boolean {
+  return won && toMenu && !creditsSeen;
 }

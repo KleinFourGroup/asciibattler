@@ -22,6 +22,7 @@ import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
 import { CantSaveChip } from './ui/CantSaveChip';
+import { CreditsOverlay } from './ui/CreditsOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { SettingsOverlay } from './ui/SettingsOverlay';
 import { createChromeColumn } from './ui/chip';
@@ -30,7 +31,7 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
 import { CharacterSelectScene } from './scenes/CharacterSelectScene';
 import { MenuScene } from './scenes/MenuScene';
-import { bootsToMenu, seedFromText } from './scenes/menuRules';
+import { bootsToMenu, creditsOnTheWay, seedFromText } from './scenes/menuRules';
 import { characterById, type CharacterConfig } from './config/characters';
 import { PreTurnScene } from './scenes/PreTurnScene';
 import type { DeckCue } from './ui/PreTurnScreen';
@@ -51,6 +52,7 @@ import { setAuraFxMode } from './render/auraFx';
 import { setShakePolicy } from './ui/lossFx';
 import { backupOf } from './store/backup';
 import { keepJournal } from './store/journals';
+import { PROGRESS_SECTION } from './store/progress';
 import type { RunLock } from './store/runLock';
 import { lastRunJournal, openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
 
@@ -140,6 +142,9 @@ export class Game implements RunDispatcher {
   /** 116d — the settings chip and modal (the chip is third in the chrome
    *  column). The menu opens the same modal through the scene context. */
   private readonly settingsOverlay: SettingsOverlay;
+  /** 116j — the credits panel: the menu's row opens it, and so does the end
+   *  of the first won run (`resetRun`). */
+  private readonly credits: CreditsOverlay;
   private readonly terrain: TerrainRenderer;
   /** M4 — the backdrop apron ring. Dev consoles reach it as `__game.apron`
    *  (TS `private` is runtime-accessible) for the dither A/B flip. */
@@ -420,6 +425,7 @@ export class Game implements RunDispatcher {
         },
       },
     );
+    this.credits = new CreditsOverlay(uiMount, this.audio);
     // 116i — the can't-save chip: last in the column and in the Tab walk,
     // shown while the store can't save (src/ui/CantSaveChip.ts). The store's
     // status is its last write's, so the chip goes when a write lands again.
@@ -913,6 +919,7 @@ export class Game implements RunDispatcher {
     // finished journal belongs to the run being replaced.
     this.journaling((recorder) => recorder.abandon());
     this.finishedJournal = null;
+    const won = this.run?.phase === 'complete';
     this.run?.dispose();
     // 115e — the replaced run is gone, so its save goes with it; a pinned
     // character's new run saves over the slot below.
@@ -940,10 +947,15 @@ export class Game implements RunDispatcher {
       this.poolOverlay.refresh();
       this.cacheOverlay.refresh();
       // 116c — a run's end goes to the menu on a page that booted to it, the
-      // defeat and the win alike (the §116 shape-lock, call 3). Landing note
-      // for 116j: the first won run goes to the menu by way of the credits,
-      // from here.
+      // defeat and the win alike (the §116 shape-lock, call 3).
       this.swap(this.menuBoot ? new MenuScene() : new CharacterSelectScene());
+      // 116j — the first won run goes there by way of the credits: the panel
+      // opens over the menu, once. The flag is stored as the panel is shown,
+      // so a tab closed on the credits doesn't bring them back.
+      if (creditsOnTheWay(won, this.menuBoot, store.read(PROGRESS_SECTION).creditsSeen)) {
+        store.patch(PROGRESS_SECTION, { creditsSeen: true });
+        this.credits.open();
+      }
     }
   }
 
@@ -1113,6 +1125,7 @@ export class Game implements RunDispatcher {
         newRun: (seedText) => this.openCharacterSelect(seedText),
         back: () => this.backToMenu(),
         openSettings: () => this.settingsOverlay.open(),
+        openCredits: () => this.credits.open(),
       },
       audio: this.audio,
       playback: this.playback,

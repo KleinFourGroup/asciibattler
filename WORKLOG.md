@@ -6727,3 +6727,104 @@ stylesheet 61.78 kB (61.68). The step: about 54k.
 at `?store=full`, New run, a character; the chip appears as the map comes
 up and nothing else moves. Then `?store=deny` for the menu's two notices
 of one fact, call 1.
+
+### 116j — the credits (2026-10-07, session 133b679f) — ◐ built, unread (`batch`, at the sitting)
+
+Readings: **388,269** at 08:52 on 116i's commit (`6c0f9da`), the step's
+start; **454,307** at 09:01, before this entry.
+
+**Step zero: the premises hold, and one finding.**
+- ✔ `public/THIRD-PARTY-LICENSES.txt` held the two fonts and nothing else
+  (321 lines), and no script writes it (`build-font.mjs` only names it in a
+  comment), so it is edited as a file.
+- ✔ The three bundled libraries are MIT (three 0.184.0, simplex-noise
+  4.0.3, zod 4.4.3; each `node_modules/<name>/LICENSE`, 21 lines). Their
+  permission texts are one text; their copyright lines differ.
+- ✔ No `progress` section was defined, `localeCredits()` gives nothing for
+  `en`, and `resetRun` held the landing note for the credits.
+- **Finding: the bundle holds Vite's module-preload polyfill** (the string
+  `modulepreload` is in `dist/assets/index-*.js`), Vite's own MIT code,
+  which no notice in the shipped file covers. Not resolved here: the way
+  out is a build option or one more section, and the first edits
+  `vite.config.ts`. Filed in TODO "§116 riders".
+
+**What was built.**
+- `CreditsOverlay` (`src/ui/CreditsOverlay.ts`): the 96f panel with seven
+  groups and a last line naming the licence file. Every line is a locale
+  value (`credits.*`), the names too. The body is a scroll box with a tab
+  stop.
+- The menu's Credits row, between Settings and the seed field
+  (`MenuContext.openCredits`).
+- `PROGRESS_SECTION` (`src/store/progress.ts`), the lenient `progress`
+  section, with `creditsSeen`. `creditsOnTheWay(won, toMenu, creditsSeen)`
+  in `menuRules.ts` is the rule, and `Game.resetRun` opens the panel over
+  the menu and stores the flag as it does.
+- The licence file gains three sections, each library's LICENSE file
+  copied whole by a script from `node_modules` (the session's scratch),
+  with a line on what the game uses it for.
+- `tests/licences.test.ts`: the libraries the game bundles are read from
+  the source's run-time import graph, held to an exact set, and each one's
+  LICENSE file must be in the shipped file whole.
+
+**Calls made while building, for the read.**
+1. **The line that credits Claude** is a group named "With" holding
+   "Claude, by Anthropic". Other arms: "Built with", or a role beside the
+   developer's. The wording is the user's.
+2. **The tools:** TypeScript, Vite, Vitest, ESLint, Prettier, Electron,
+   from `devDependencies`. Left out: tsx, subset-font, globals,
+   typescript-eslint and the two `@types` packages.
+3. **"Sound tools: ChipTone, sfxr.me"** is its own group, a courtesy as
+   signed. ChipTone's terms are still unread (the shape-lock's note).
+4. **No licence text in the panel and no link to the file;** the last
+   line names the file. A link's behaviour under Electron and in itch's
+   frame is unknown, and the panel was cut as static.
+5. **The flag is stored when the panel is shown,** so a tab closed on the
+   credits doesn't bring them back, and the menu's own row never sets it,
+   so a player who opened Credits before a first win still gets them
+   after it.
+6. **The credits open over the menu,** as a panel, not as a screen
+   between the end screen and the menu: one shell, and Esc, the backdrop
+   and ✕ all lead to the menu behind it.
+
+**Evidence.**
+- *Headless,* +9 tests (3454 in 240 files): the licence file (4: the
+  exact set of bundled libraries, each LICENSE whole, the control that a
+  file without a notice or with an edited one names the library, the two
+  fonts), the progress section (4), the route's rule (1).
+- *In the pane* (Chromium, `6c0f9da-dirty-dev`, 1280×720):
+  - The menu's rows are New run, Settings, Credits and the seed. Credits
+    opens the panel with the seven groups as written; ✕ closes it and
+    focus is back on the row.
+  - At 720 px tall the first build's list was 34 px taller than its box.
+    With the gaps tightened and DejaVu's licence shortened to one row,
+    the list is 511 px in a 511 px box and the panel 595 px tall.
+  - The route, on a page booted to the menu, each end forced by setting
+    the run's phase and emitting its event: a defeat leads to the menu
+    with no credits and no progress key; the first win opens the credits
+    over the menu and `asciibattler:progress` reads `creditsSeen: true`;
+    a second win and a later defeat open none. Closing the credits leaves
+    focus on the menu screen.
+  - On a page booted by `?character=soldier&seed=7` a forced win leads to
+    a new run on the map, with no credits and no progress key.
+- *The build:* `dist/THIRD-PARTY-LICENSES.txt` is byte-identical to the
+  source file, 424 lines, with sections for JetBrains Mono, DejaVu Sans
+  Mono, three.js, simplex-noise and zod.
+
+**Not verified.** A real won run (both wins were forced); the panel in
+Firefox, under Electron and in itch's frame; the keyboard scrolling the
+list on a short window; the names and words, which are the user's read.
+
+**Cost.** The production bundle is 640.51 kB raw (637.35 at 116i), the
+stylesheet 62.71 kB (61.78). The step: about 66k.
+
+**The read** (`batch`, at the sitting, ROADMAP's script): the menu's
+Credits row; the names and the words. Call 1 first.
+
+### The stretch's hand-off (2026-10-07, session 133b679f)
+
+Three steps built and committed, each read `batch`: 116h, 116i, 116j.
+With 116g-post, four are open ◐ for the sitting. 116k, the text scale, is
+next and is not started here: its step zero is a measurement on every
+screen at each scale, its sweep follows from that measurement, and the two
+belong in one context. From about 460k that does not look likely to fit
+under the halt; the steps of this round have cost 54k to 226k each.

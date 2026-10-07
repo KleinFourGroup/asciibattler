@@ -50,6 +50,9 @@ checks pass, 1 when one fails or the page throws, and 2 on the time limit.
 It is a development tool (`shell/electron/probe-cli.mjs` lists its
 options); the probe kit it calls is `window.__probe`
 ([process/browser-pane.md](process/browser-pane.md)).
+`shell/electron/probes/text-scale.js` is the layout survey: it lays every
+screen of a driven run out at each text size and reports the boxes that
+stop holding their text (its header has the options).
 
 ## Replaying a run
 

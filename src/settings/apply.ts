@@ -6,9 +6,8 @@
  * `connectSettings` gives every consumer its stored value at once (the boot)
  * and its new value on every change (live). Three fields have no consumer
  * here: the locale and the palette are applied before the game's modules
- * load (atBoot.ts), so a change to either takes a reload, and the text scale
- * gets its consumer with its own step. The music level is stored and nothing
- * plays music yet.
+ * load (atBoot.ts), so a change to either takes a reload, and the music
+ * level is stored while nothing plays music yet.
  *
  * Never imported by boot.ts or index.ts: the consumers' modules are the
  * game's, and the settings' boot graph stays clear of them
@@ -30,6 +29,9 @@ export interface SettingsConsumers {
   setMotion(override: boolean | null): void;
   setShake(policy: ShakeChoice): void;
   setAura(mode: AuraChoice): void;
+  /** The stored multiplier on the UI's text; which sizes are drawn is the
+   *  consumer's to say. */
+  setTextScale(scale: number): void;
 }
 
 const MOTION_OVERRIDE: Readonly<Record<MotionChoice, boolean | null>> = {
@@ -60,9 +62,11 @@ export function applySetting(key: SettingKey, settings: Settings, to: SettingsCo
     case 'aura':
       to.setAura(settings.aura);
       break;
+    case 'textScale':
+      to.setTextScale(settings.textScale);
+      break;
     case 'volumeMusic':
     case 'palette':
-    case 'textScale':
     case 'locale':
       // No consumer here (the header).
       break;

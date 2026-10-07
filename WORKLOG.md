@@ -6944,3 +6944,195 @@ only while that tab's run is on screen, stands with the read. `main`
 was pushed at 10:33, through `0958a93` (the remote branch's reflog; not
 by this session). §116 has no open read; 116k
 and the sitting remain. The session's last reading: **527,292** at 10:33.
+
+### 116k — the text scale (2026-10-07, session 1a3aa804) — ◐ built, the read is the sitting's
+
+A fresh session. Readings: **106,087** at 10:40, after HANDOFF, ROADMAP,
+the audit, `process/planning.md`, `process/oracles.md` and the pane doc;
+**288,497** at 11:03, at step zero's end; **421,199** at 11:26, built,
+before this entry. No pre-flight run: the tree was clean at `b132869`,
+which the last session's hook had passed, and the full suite ran at the
+end of the build.
+
+**Step zero: the instrument.** A page script that lays a screen out at each
+size in turn (the root element's font-size) and reports what is new against
+the same page at 1, by kind: text that no longer fits its own box (*spill*
+where it paints outside, *cut* where it is hidden, *scroll* where a
+scrollbar takes it), a box that leaves the page (*off*), and two lines of
+text that now overlap (*overlap*). It reads boxes and the rectangles of the
+text itself, a surface the stylesheet's units don't decide.
+- *Its known answers.* Before any scan it plants one case of each kind,
+  sized from the font's own metrics (nine letters are 86.4px at 1 and 108px
+  at 1.25), a control sized in rem and one at opacity 0, and fails unless
+  it classes them so. The plants caught a flaw on the first run: a line
+  scrolled out of view inside a scroll box was counted as overlapping the
+  text under the box. A line is now clipped to its clipping ancestors.
+- *Where it runs.* The first pass was in the pane and was thrown away for
+  the battle and pre-turn screens: a hidden pane holds every fade at its
+  first frame, so the screen that had just left and the spent countdown
+  read as live. The survey moved to the Electron runner in offscreen mode,
+  where frames are real, and became `shell/electron/probes/text-scale.js`.
+  The two instruments agreed where the pane could be trusted (the menu, the
+  settings, the credits: clean at every size in both).
+- *What it covers.* A seeded run (`--seed=7`, the driver's seed 1) played a
+  command at a time to its defeat: 26 scans, of the map twice, two events,
+  the pre-turn screen twice with its three pile modals, a battle at four
+  points, the turn's outcome, promotion, reward and recruit twice each, the
+  port, the end screen and a forced won one, and the modals the chips open
+  (cache, settings, the sector map). The menu mode adds the menu, the
+  settings, the credits and character select.
+- *Not covered:* a tooltip, a unit's full card on hover, the cache modal
+  with packets in it (it was empty), the sector-cleared screen (the driven
+  run loses before a boss), and any screen in a state this run did not
+  reach.
+
+**Step zero: what it found**, on the sheet as it was at `b132869`.
+- *The boxes.* At 1.5 on a 1280×720 window, 46 rules with the hitsplats
+  left out, from about ten causes: the chrome column's 200px plate (on every screen of a run: the
+  pool chip's head spilled 69px), the two gauges' widths (the label cut by
+  97px), the compact card's 64px (its top line spilled 6px), the map
+  legend's 20px swatch, and panels and cards whose px width made text wrap
+  where it had not.
+- *The window.* The same sheet on a 1920×1080 window put nothing off the
+  page at any size up to 2. On 1280×720 the promotion screen was 39px too
+  tall at 1.5 and the recruit screen 81px at 2. So the count of boxes was
+  small and the limit was the window, which the cut's line had not
+  foreseen ("if the count is large, the range comes back to the user").
+- *Two stand-ins for a swept sheet,* the page at 1 in a smaller window:
+  1024×576 (1.25 on a 720p window) put nothing off the page; 853×480 (1.5)
+  put the promotion screen 45px off it and the chrome column over the
+  centred text of the event, recruit and port screens.
+- *The pre-turn screen scrolls at 1 on a 720p window* (956px of content in
+  720, by design, with 96px of padding for the pinned buttons), and its
+  hand sits under those buttons until scrolled. The survey reads that as
+  overlaps at every size, so they are set aside below, and counted.
+- *A resize event changes nothing:* the survey with a synthetic `resize`
+  after each size differed from the one without by two battle transients.
+  No consumer needs a kick; the countdown's `ResizeObserver` follows.
+
+**The sweep: 24 lines of `ui.css`, px to rem,** each the old length over
+16 (the script that wrote them checked the arithmetic and every line's
+text before writing any): `--chip-w`, the legend swatch (two), the
+recruit, promotion and roster cards' widths, `--hand-card-w` and its
+fallback, the character card, the
+two gauges, the compact card, the pause button's `min-width`, the tooltip,
+the reward description, the daemon line, the reward, port, event and
+end-screen bodies, the character row, the cache modal and its row's basis,
+and the roster modal.
+- *Two arms, measured as a stylesheet laid over the page before the sheet
+  was touched:* the boxes with the cards' widths in rem, and with the
+  cards left in px. By the survey's counts they differ little. Rem cards
+  keep their line breaks, so they are shorter: at 1.5 the promotion screen
+  is 17px over a 720p window where px cards put it 39px over, and the
+  pre-turn screen scrolls 111px on 1080p where px cards scroll 157px. They
+  are wider, which on a 720p window at 1.5 puts the first recruit card
+  under the chrome column; that size is past that window in either arm.
+  Rem was built.
+- *Identity at 1.* Every box's rectangle on every scanned screen, held
+  against the sheet before: 1280×720, 21 screens, 3,354 boxes, 0 differ;
+  1920×1080, 21 screens, 3,354 boxes, the one difference a state class in
+  a box's name (`--pulse` for `--reshuffle`) with the same rectangle; the
+  battle HUD's still boxes at a battle's start, 148 at each size, 0 differ;
+  the menu's four screens, 217 boxes, 0 differ. *The controls:* two runs
+  of the unchanged sheet agree on those 21 screens (0 of 3,354; the five
+  battle and outcome scans are left out, since they move with the fight,
+  and the comparison runs under reduced motion, since a card caught
+  entering differs between two runs); a planted `--chip-w: 12.4rem` is
+  caught (145 boxes, the column 200 → 198.4px).
+- *Not reached by the identity check,* so resting on the arithmetic: the
+  tooltip's `max-width` and the cache modal's two lines.
+
+**As built.**
+- `src/ui/textScale.ts`: the four sizes (1, 1.1, 1.25, 1.5), the nearest
+  one to a stored value, the root's font-size as a percentage (nothing at
+  1, so the page is then the page without the setting), the consumer and
+  the hold. `applySetting` routes `textScale`; `Game` hands the consumer
+  over.
+- The row, Text size, first under Comfort: a choice of four toggles. The
+  settings modal takes the hold as it opens and releases it last as it
+  closes.
+- The hitsplats' stack pitch is 0.875rem (14px at 1), in the transform's
+  own `calc`.
+- `tests/ui-tokens.test.ts` gains the pin: a width or height of 16px or
+  more in px is on a list of five, each with why it holds no text. Its
+  scanner reads a planted sheet first, and on the real sheet it failed on
+  two px widths put back by hand, naming both.
+
+**After the sweep, measured** (the committed probe on the built tree).
+What is new against 1, with four kinds set aside and counted under the
+table:
+
+| window | 110 % | 125 % | 150 % |
+|---|---|---|---|
+| 1280×720 | nothing | four overlaps: the hop chip over the battle banner 19px, the pool chip's value over the event's text 11px, the settings chip over the port's heading 6px, the pool value over a recruit card's label 2px | the promotion screen's heading and button 17px off the page; the chrome column over the event's heading by 35px and over the recruit and port cards; the hop chip over the banner 23px |
+| 1920×1080 | nothing | nothing (the pre-turn screen scrolls 5px) | nothing (the pre-turn screen scrolls 111px) |
+
+The menu, the settings, the credits and character select: nothing at any
+size on either window; the credits' list scrolls on 720p from 110 %.
+- *Set aside,* as rule pairs at 110 / 125 / 150 %. On 720p: the pre-turn
+  hand under its pinned buttons 9 / 9 / 15 (there at 1 too, four pairs);
+  the board's overlays 27 / 24 / 17 (hitsplats and badges against each
+  other and the HUD, which move with the fight: the page at 1 has such
+  pairs too, and two scans of one battle don't agree); a card's glyph
+  1 / 3 / 4 (its line box is taller than its box at every size, 7px on a
+  pre-turn card at 1, and more of it crosses the 1.5px tolerance as it
+  grows); the sector map's hint over a node that
+  scrolls under it 0 / 3 / 3. On 1080p: 0 / 0 / 2, 10 / 10 / 4, 1 / 3 / 3
+  and 0 / 1 / 1.
+- `drive-run --seed=7` logs `a59ee48f`, as before the step.
+
+**In the pane** (Chromium, the dev server, 1280×720): the row's four
+toggles, 100 % pressed; a click on 125 % stores 1.25 (the model and
+`localStorage` read directly), the clicked button's rectangle is the same
+after the click, and the root's font-size is unset while the modal is up
+and `125%` once it closes; a reload with 1.5 stored boots at `150%`; a
+battle at 150 % has 24px hitsplats whose anchors carry the rem pitch
+(`calc(342.1px - 0.875rem)`), and 13.5px level badges. Screenshots of the
+battle at 100, 125 and 150 % on that window were looked at: at 150 % the
+HUD's card rows cover much of the board and the hop chip covers the
+banner's left end; at 125 % the board is clear and the hop chip touches
+the banner.
+
+**Calls made while building,** each the user's to reopen at the read.
+1. **The sizes are 100, 110, 125 and 150 %.** Nothing under 100: no one
+   asked for smaller text. Nothing over 150: 2 was surveyed before the
+   sweep only, and a 1080p window at 2 has the room of a 960×540 page.
+2. **A size is drawn when the settings close.** Drawn at once, the modal
+   would re-lay under the pointer: its panel is centred and 704px wide at
+   1 and 880px at 1.25 (measured), so the clicked toggle would move. That
+   is read from the panel's widths; the row was never built the other way.
+   The other arm: draw at once and accept that this one row moves.
+3. **No cap by the window.** 150 % on a 720p window is offered and is
+   cramped; the row's line says larger sizes need a larger window, and the
+   settings modal is clean at every size, so the way back is always there.
+   The other arm: draw `min(chosen, what the window holds)`, which needs a
+   measured floor kept true as layouts change.
+4. **The board's overlays grow with the text** (hitsplats, level badges,
+   the status symbols), since they are the smallest text in the game, and
+   the hitsplat pitch follows. The board under them does not grow. The
+   other arm: hold them at their px sizes.
+5. **The cards' widths are in rem** (the arms above).
+6. **What stays in px:** gaps, borders and paddings, the bars, the map's
+   node grid (`HOP_PX`, `LANE_PX`, the 40px node, whose glyph spills 2px
+   only at 2), and the canvas.
+7. **A stored value draws the nearest offered size,** so the row always
+   shows the size on screen.
+8. **The pin's line is 16px,** one line of text at the default size.
+
+**Not verified.** Firefox, Electron's own window and itch's frame: every
+measurement here is Chromium (the runner's Electron in offscreen mode, and
+the pane). The look at any size, which is the user's read. A tooltip, a
+full unit card and the sector-cleared screen at any size. A browser whose
+own default font size is not 16px: the percentage multiplies it, by
+construction, and none was tried.
+
+**Riders, in TODO "§116 riders":** the four overlaps at 125 % on a 720p
+window and the promotion screen at 150 % there, for §117.5; the screens
+the survey didn't reach.
+
+**Cost.** 3465 tests in 242 files (+7: five for the text scale's rule and
+its hold, two for the pin). The production bundle is 641.72 kB raw (640.88
+at 116j-post), the stylesheet 62.74 kB (62.71). The fuzz smoke does not
+fire (nothing under `src/sim|run|core|config|bot`). About 315k to here, of
+which step zero was 182k: the pane pass that was thrown away, then seven
+runner passes read as text.

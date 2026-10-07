@@ -33,6 +33,7 @@ function recording(): { calls: Call[]; consumers: SettingsConsumers } {
       setMotion: (override) => calls.push(['setMotion', override]),
       setShake: (policy) => calls.push(['setShake', policy]),
       setAura: (mode) => calls.push(['setAura', mode]),
+      setTextScale: (scale) => calls.push(['setTextScale', scale]),
     },
   };
 }
@@ -50,6 +51,7 @@ function realConsumers(keys: Keybindings, playback: PlaybackSpeed, volume: numbe
     setMotion: setReducedMotionOverride,
     setShake: setShakePolicy,
     setAura: setAuraFxMode,
+    setTextScale: () => {},
   };
 }
 
@@ -61,6 +63,7 @@ const STORED: Partial<Settings> = {
   motion: 'reduced',
   shake: 'none',
   aura: 'fill',
+  textScale: 1.5,
 };
 
 afterEach(() => {
@@ -95,6 +98,7 @@ describe('116b — the settings reach their consumers', () => {
     expect(last('setMotion')).toEqual([true]);
     expect(last('setShake')).toEqual(['none']);
     expect(last('setAura')).toEqual(['fill']);
+    expect(last('setTextScale')).toEqual([1.5]);
   });
 
   it('a change makes its one call with the new value: live', () => {
@@ -110,6 +114,7 @@ describe('116b — the settings reach their consumers', () => {
     model.set('motion', 'system');
     model.set('shake', 'both');
     model.set('aura', 'fill');
+    model.set('textScale', 1.25);
     expect(calls).toEqual([
       ['setVolume', 0.5, 0.4],
       ['setVolume', 0.9, 0.4],
@@ -119,22 +124,22 @@ describe('116b — the settings reach their consumers', () => {
       ['setMotion', null],
       ['setShake', 'both'],
       ['setAura', 'fill'],
+      ['setTextScale', 1.25],
     ]);
   });
 
-  it('the four fields with no consumer here make no call', () => {
+  it('the three fields with no consumer here make no call', () => {
     const model = createSettings(createStore({ adapter: memoryAdapter(), build: BUILD }));
     const { calls, consumers } = recording();
     connectSettings(model, consumers);
     calls.length = 0;
     model.set('volumeMusic', 0.3);
     model.set('palette', 'colourblind');
-    model.set('textScale', 1.25);
     model.set('locale', 'xx');
     expect(calls).toEqual([]);
-    // Every field is either routed or one of those four.
-    const routed: SettingKey[] = ['volumeMaster', 'volumeSfx', 'keys', 'speed', 'motion', 'shake', 'aura'];
-    const unrouted: SettingKey[] = ['volumeMusic', 'palette', 'textScale', 'locale'];
+    // Every field is either routed or one of those three.
+    const routed: SettingKey[] = ['volumeMaster', 'volumeSfx', 'keys', 'speed', 'motion', 'shake', 'aura', 'textScale'];
+    const unrouted: SettingKey[] = ['volumeMusic', 'palette', 'locale'];
     expect([...routed, ...unrouted].sort()).toEqual(Object.keys(SETTINGS_SECTION.fields).sort());
     for (const key of routed) {
       const one = recording();

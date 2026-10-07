@@ -99,8 +99,8 @@ describe('96a — the CSS color tokens', () => {
 
 /**
  * 96b — the text tokens: every `font-size` below `:root` is a `--text-*`
- * token, every token is authored in rem (a Round 8 text-scale setting sets
- * the html font-size and the ladder follows), and every token is referenced.
+ * token, every token is authored in rem (the Text size setting sets the root
+ * element's font-size and the ladder follows), and every token is referenced.
  */
 describe('96b — the CSS text tokens', () => {
   const textTokens = new Map<string, string>();
@@ -127,5 +127,87 @@ describe('96b — the CSS text tokens', () => {
   it('references every text token at least once', () => {
     const orphans = [...textTokens.keys()].filter((name) => !body.includes(`var(${name})`));
     expect(orphans, `unreferenced text tokens in ${SHEET} :root: ${orphans.join(' ')}`).toEqual([]);
+  });
+});
+
+/**
+ * 116k — the boxes that hold text. The Text size setting grows every
+ * `--text-*` token, so a box that holds text has to grow with it: its width
+ * and height are in rem (or follow their content). A box sized in px keeps
+ * its size while the text in it grows, and the text spills or is cut; the
+ * survey that found the twenty-four such boxes swept at 116k is
+ * shell/electron/probes/text-scale.js.
+ *
+ * The pin: a `width`, `height` (with their `min-` and `max-` forms), a
+ * `flex` basis or a custom property that is 16px or more is on the list
+ * below, with why it holds no text. Under 16px, one line at the default
+ * size, a box can't hold text (a bar, a rule, a tick). A new box that holds
+ * text is sized in rem; a new one that doesn't joins the list.
+ */
+const FIXED_BOXES: ReadonlyArray<readonly [rule: string, why: string]> = [
+  ['.unit-overlay-stack { width: calc(56px * var(--fp-scale, 1)) }', "a unit's bars, as wide as its footprint on the board"],
+  ['.map-node { width: 40px }', "the map's grid: a node keeps its place at every text size"],
+  ['.map-node { height: 40px }', "the map's grid"],
+  ['.hud-player-pane { max-width: min(94vw, 1800px) }', 'a ceiling for a very wide window, not a size'],
+  ['.hud-enemy-pane { max-width: min(94vw, 1800px) }', 'a ceiling for a very wide window, not a size'],
+];
+
+/** Every size declaration of `minPx` or more in px, as `selector { prop: value }`. */
+function fixedBoxes(sheet: string, minPx = 16): string[] {
+  const sized = /^(--[a-z0-9-]+|(min-|max-)?(width|height)|flex(-basis)?)$/;
+  const found: string[] = [];
+  const open: string[] = [];
+  let chunk = '';
+  for (const ch of sheet) {
+    if (ch === '{') {
+      open.push(chunk.replace(/\s+/g, ' ').trim());
+      chunk = '';
+    } else if (ch === '}') {
+      open.pop();
+      chunk = '';
+    } else if (ch === ';') {
+      const colon = chunk.indexOf(':');
+      const prop = chunk.slice(0, colon).trim();
+      const value = chunk.slice(colon + 1).replace(/\s+/g, ' ').trim();
+      chunk = '';
+      if (colon < 0 || !sized.test(prop)) continue;
+      const px = [...value.matchAll(/(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
+      if (px.some((n) => n >= minPx)) found.push(`${open.at(-1) ?? ''} { ${prop}: ${value} }`);
+    } else {
+      chunk += ch;
+    }
+  }
+  return found;
+}
+
+describe('116k — the boxes that hold text are sized in rem', () => {
+  it('reads a planted sheet: a px box is found, a bar and a rem box are not', () => {
+    const planted = `
+      .card { width: 184px; }
+      .bar { height: 6px; width: 100%; }
+      .panel { max-width: min(35rem, 90vw); }
+      .row,
+      .row--wide { flex: 1 1 320px; }
+      :root { --plate-w: 200px; --gap: 12px; }
+      @media (min-width: 900px) { .tall { min-height: 48px; } }
+    `;
+    expect(fixedBoxes(planted)).toEqual([
+      '.card { width: 184px }',
+      '.row, .row--wide { flex: 1 1 320px }',
+      ':root { --plate-w: 200px }',
+      '.tall { min-height: 48px }',
+    ]);
+  });
+
+  it('sizes no box of 16px or more in px, but for the listed ones', () => {
+    const found = fixedBoxes(css);
+    const listed = FIXED_BOXES.map(([rule]) => rule);
+    const unlisted = found.filter((rule) => !listed.includes(rule));
+    expect(
+      unlisted,
+      `${SHEET} sizes a box in px. If it holds text, size it in rem; if not, add it to FIXED_BOXES with why:\n${unlisted.join('\n')}`,
+    ).toEqual([]);
+    const gone = listed.filter((rule) => !found.includes(rule));
+    expect(gone, `FIXED_BOXES lists a rule the sheet no longer has:\n${gone.join('\n')}`).toEqual([]);
   });
 });

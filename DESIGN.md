@@ -214,7 +214,7 @@ none where no run is live).
 | Promotion · Recruit · Reward · Port · Event · Sector cleared | `button()` controls, the recruit cards (pressable), the two swap `<select>`s (`aria-label`) | ✓ | ✓ 100c2 / 100d | ✓ | none | chip (the Event screen too — the spec's §9 question, answered by 96.5) |
 | Game over (both variants) | the way out (`button()`: Main menu, or New Run on a page booted by a run dial), Export run; under them the run's seed (the word Seed, a tooltip text site as on the menu, and the number as selectable text); "The fallen": each glyph run with a breakdown is a focusable text site, the table a scroll box | ✓ | ✓ 100d (New Run) · ✓ the table walk, the user's Firefox read 2026-09-18 (every row holds a tab stop, so focus scrolls it) | ✓ (a tap toggles; the table scrolls natively) | none | none (the chip leaves at run end) |
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
-| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), the Palette's two toggles and Reload now (`button()`, disabled while the page is drawn in the palette chosen), the four data buttons (§116h; `button()`: Export everything, Choose file… which opens the browser's file dialog through a file `<input>` that is never shown, Import and reload, Export run; each disabled while it has nothing to do, its row's line saying why), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04; the data rows, the user's read 2026-10-07 | ✓ (no hover read; a slider drags natively) | none | the host's |
+| The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), the Palette's two toggles and Reload now (`button()`, disabled while the page is drawn in the palette chosen), the four data buttons (§116h; `button()`: Export everything, Choose file… which opens the browser's file dialog through a file `<input>` that is never shown, Import and reload, Export run; each disabled while it has nothing to do, its row's line saying why), Text size's four toggles (§116k; `button()`, the same choice idiom), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04; the data rows, the user's read 2026-10-07; the Text size row waits for the sitting | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The credits panel (§116j) | the 96f shell (✕, Esc, backdrop, the trap + restore); the list is a scroll box with one tab stop, so the keyboard scrolls it on a short window | ✓ | ✓ the user's read 2026-10-07 | ✓ (no hover read; the list scrolls natively) | none | none (no run) |
 | The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read), the can't-save chip (§116i; a read with a tooltip, a text site with its own tab stop, shown only while the page can't save: its store fails, or it is a second tab with a run on screen) | ✓ | ✓ 100c1 · 100e2; the can't-save chip's tab stop, the user's read 2026-10-07 | ✓ (the can't-save chip's tooltip: a tap) | none | is the chip |
 
@@ -256,7 +256,7 @@ READ, and the read is named here so it is the same read every time:
 | Team identity | `groundMarks.test.ts` (the shape per identity) | the grey read on a live board, clause 1 |
 | Reduced motion | `tests/ui-motion.test.ts` · `motion.test.ts` · `fxRegistry.test.ts` · `TerrainRenderer.test.ts` | Ctrl+Alt+A: does information survive, does anything still sway? |
 | Focus | `tests/ui-focus.test.ts` · `src/ui/pressable.test.ts` | the Tab walk in FIREFOX (the pane wraps where Firefox exits) |
-| Layout stability | `tests/font-coverage.test.ts` | the same-run toggle + the box oracle; step zero is a measurement |
+| Layout stability | `tests/font-coverage.test.ts` · `tests/ui-tokens.test.ts` (a box that holds text is in rem) | the same-run toggle + the box oracle; step zero is a measurement; `shell/electron/probes/text-scale.js` surveys every screen of a driven run at each text size |
 | A cast FLIES | `fxRegistry.test.ts` | how the flight looks |
 | The fallen GROUP | `fallenSide.test.ts` · `src/run/fallenStats.test.ts` | size the form on a REAL run |
 | Strings | `tests/i18n-literal-pin.test.ts` · `tests/i18n-ui-keys.test.ts` | — |
@@ -277,9 +277,15 @@ are set on the root element over the sheet's, so the Palette setting
 applies on reload. A new hue is a palette name first, with a value in each
 palette. Every
 `font-size` is a `--text-<px>` token authored in rem against the browser's
-16px; a Round 8 text-scale setting sets the html font-size and the ladder
-follows. The pins: zero raw hexes and zero literal font-sizes below
-`:root`.
+16px, and a box that holds text is sized in rem too (the chrome column's
+plate, the cards, the gauges, the panels' widths), so the Text size setting
+(§116k), which sets the root element's font-size as a percentage, grows
+the text and its boxes together. What is not text stays in px: gaps,
+borders, paddings, the bars, the map's node grid, and the canvas is
+untouched. So a larger size needs a larger window, and the setting's row
+says so. The pins: zero raw hexes and zero literal font-sizes below
+`:root`, and no width or height of 16px or more in px outside a short list
+of boxes that hold no text.
 
 **Screens (96c).** A full-viewport DOM screen extends `Screen`: it keeps
 its own `show(...)` signature, opens with an explicit `this.hide()`,
@@ -612,7 +618,12 @@ that waits: a palette is chosen as the page boots, so its row stores the
 choice and a second row, Apply palette, offers the reload and says what a
 reload costs a run in progress; its button is disabled while there is
 nothing to apply, and its line keeps two lines' height so no row under it
-moves. A DATA row (116h) is an action, not a setting: its control is one
+moves. TEXT SIZE (116k) waits too, for the modal to close: the choice is
+stored as it is made and drawn when settings close, since drawn at once it
+would re-lay the modal under the pointer that chose it (Layout stability,
+below); its line says so. Its four sizes (100, 110, 125 and 150 %) are
+the ones the survey measured on every screen. A DATA row (116h) is an
+action, not a setting: its control is one
 button, and its line says what the button hands over or, while the button
 is disabled, why (nothing stored to export, no run ended yet). IMPORT is
 the second thing that waits, and it follows the palette: a first row picks

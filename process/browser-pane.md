@@ -144,6 +144,16 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   swallows. `document.hasFocus()` is false in a hidden pane, so `focus()`
   on another element fires no `blur`: dispatch a `FocusEvent('blur')` to
   check that a lost focus ends a wait.
+- **The text size** (`src/ui/textScale.ts`): the consumer is the root
+  element's inline `font-size` (`''` at 100 %, else a percentage). A size
+  chosen in the modal is stored at once and drawn when the modal closes;
+  `__game.settings.set('textScale', 1.25)` with the modal shut draws at
+  once. For a layout question across sizes or screens, run
+  `shell/electron/probes/text-scale.js` under the runner instead of
+  reading the pane: a hidden pane holds every fade at its first frame, so a
+  pane that has faded out and one whose fade-in never ran look the same
+  there (both `screen-fade` without `is-visible`, both at opacity 0), and
+  a survey counts screens nobody would see.
 - **The data rows** (Settings › Data): check an export without saving a
   file by putting a spy in the download's place before the click: wrap
   `URL.createObjectURL` to keep each blob by its URL, and replace

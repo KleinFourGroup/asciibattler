@@ -537,6 +537,20 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   stability"), and DESIGN's Chips paragraph and the corner comments in the
   stylesheet change with it. Home: §117.5, the UI sweep (signed 2026-10-04), as its first item.
 
+- [ ] **Where a larger text size runs out of room on a 720p window**
+  (116k; WORKLOG §116k's table). At 125 %: the battle's hop chip sits over
+  the banner's left end by 19px (it is placed at the column's width plus a
+  gutter, and the column grows), the pool chip's value over the event's
+  text by 11px, the settings chip over the port's heading by 6px. At
+  150 %: the promotion screen's heading and button are 17px off the page,
+  and the chrome column covers the left of the event, recruit and port
+  screens. A 1080p window has none of these. Home: §117.5, with the
+  chip's home above, since the same column is the cause; re-run
+  `shell/electron/probes/text-scale.js` after any move.
+- [ ] **What the text-size survey did not reach** (116k): a tooltip, a
+  unit's full card on hover, the cache modal with packets in it, and the
+  sector-cleared screen (the driven run loses before a boss). Each is in
+  rem by the sweep's arithmetic and unread at any size above 100 %.
 - [ ] **A key's name is its US label** (116e). The registry binds a
   `KeyboardEvent.code`, the physical key, and `keyLabel` shows that code's
   name, so on AZERTY the key marked A reads as Q in the settings' key rows,

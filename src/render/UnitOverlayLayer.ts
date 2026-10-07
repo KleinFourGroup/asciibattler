@@ -283,8 +283,8 @@ export class UnitOverlayLayer {
 
     const anchor = document.createElement('div');
     anchor.className = 'hitsplat-anchor';
-    const y = top.y - stack * HITSPLAT_STACK_PX;
-    anchor.style.transform = `translate3d(${top.x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    const lift = stack * HITSPLAT_STACK_REM;
+    anchor.style.transform = `translate3d(${top.x.toFixed(1)}px, calc(${top.y.toFixed(1)}px - ${lift}rem), 0)`;
 
     const el = document.createElement('div');
     el.className = `hitsplat hitsplat--${kind}`;
@@ -449,9 +449,11 @@ export class UnitOverlayLayer {
    scale with footprint; §79d's does (`GLYPH_HALF_HEIGHT * footprint`), which
    made it a double-count. See `applyFootprintScale`. */
 
-/** E6.C — vertical stagger (CSS px) between concurrent hitsplats on the
- *  same unit so clustered hits read as a stack rather than overlapping. */
-const HITSPLAT_STACK_PX = 14;
+/** E6.C — vertical stagger between concurrent hitsplats on the same unit so
+ *  clustered hits read as a stack rather than overlapping. In rem (14px at
+ *  the default size), since the numbers are text and grow with the text
+ *  scale: a pitch in px would let a larger number cover the one under it. */
+const HITSPLAT_STACK_REM = 0.875;
 
 /** §32c — build one empty pip: the symbol's line, then a dark track with a
  *  colored depleting fill. `updateStatuses` reads the two by position. */

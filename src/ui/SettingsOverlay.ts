@@ -35,7 +35,8 @@
  *
  * THE DATA ROWS (116h) are actions, not settings: `dataSection` has them.
  *
- * Landing note: the text scale arrives at 116k, as a section here.
+ * THE TEXT SIZE (116k) is stored as it is chosen and drawn when the modal
+ * closes: `open` takes a hold on it, and src/ui/textScale.ts has why.
  */
 
 import type { AudioPlayer } from '../audio/AudioPlayer';
@@ -61,6 +62,7 @@ import { downloadText } from './download';
 import { captureVerdict, type Keybindings } from './Keybindings';
 import { openModal, type ModalHandle } from './modal';
 import type { PlaybackSpeed } from './PlaybackSpeed';
+import { TEXT_SCALE_CHOICES, holdTextScale, nearestTextScale } from './textScale';
 
 export interface SettingsOverlayDeps {
   /** Whether a run is live, which is when the modal offers Quit to menu. */
@@ -181,6 +183,7 @@ export class SettingsOverlay {
     if (this.modal !== null) return;
     const releaseHold = this.playback.hold();
     const releaseKeys = this.keybindings.suspend();
+    const releaseTextScale = holdTextScale();
     this.modal = openModal(this.mount, {
       title: t('settings.title'),
       panelClass: 'settings-modal',
@@ -190,6 +193,8 @@ export class SettingsOverlay {
         releaseHold();
         releaseKeys();
         this.modal = null;
+        // Last, with the modal gone: the page under it takes the new size.
+        releaseTextScale();
       },
     });
     this.modal.replaceBody(this.body());
@@ -223,6 +228,13 @@ export class SettingsOverlay {
         (value) => this.settings.set('aura', value),
       ),
       section(t('settings.section.comfort')),
+      this.choiceRow(
+        t('settings.textScale'),
+        t('settings.textScale.hint'),
+        TEXT_SCALE_CHOICES.map((value) => ({ value, label: `${Math.round(value * 100)}%` })),
+        nearestTextScale(now.textScale),
+        (value) => this.settings.set('textScale', value),
+      ),
       this.choiceRow(
         t('settings.motion'),
         t('settings.motion.hint'),

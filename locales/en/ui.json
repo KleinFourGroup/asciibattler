@@ -243,6 +243,8 @@
   "settings.aura.hint": "How an aura shows its reach: waves from its carrier, or motes over the area.",
   "settings.aura.track": "Waves",
   "settings.aura.fill": "Motes",
+  "settings.textScale": "Text size",
+  "settings.textScale.hint": "Takes effect when you close settings. Larger sizes need a larger window.",
   "settings.motion": "Motion",
   "settings.motion.hint": "Reduced stops the shake, the flying orbs and the scenery's drift. System follows your device.",
   "settings.motion.system": "System",

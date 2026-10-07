@@ -51,6 +51,7 @@ import { connectSettings } from './settings/apply';
 import { setReducedMotionOverride } from './render/motion';
 import { setAuraFxMode } from './render/auraFx';
 import { setShakePolicy } from './ui/lossFx';
+import { setTextScale } from './ui/textScale';
 import { backupOf } from './store/backup';
 import { keepJournal } from './store/journals';
 import { PROGRESS_SECTION } from './store/progress';
@@ -257,6 +258,7 @@ export class Game implements RunDispatcher {
       setMotion: setReducedMotionOverride,
       setShake: setShakePolicy,
       setAura: setAuraFxMode,
+      setTextScale,
     });
 
     // G1 — one URL parser builds the RunConfig (seed / floors / roster /

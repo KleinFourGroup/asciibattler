@@ -12,8 +12,10 @@
      widest live one-line form measured at 18px: the pool chip's `MORALE 40 /
      40` = 196px (cache at `10/10` 182 · bits at five digits 147). The column
      owns it, the chips stretch to it, and the battle HUD's hop chip sits at
-     20px + this + a gutter. A third pool digit needs this widened. */
-  --chip-w: 200px;
+     20px + this + a gutter. A third pool digit needs this widened. 116k —
+     in rem (200px at the default size), so the plate grows with the text
+     in it, as every box that holds text does (tests/ui-tokens.test.ts). */
+  --chip-w: 12.5rem;
 
   /* 96a — THE COLOR TOKENS. The palette's names mirror COLORS in
      src/render/palette.ts — kebab of the key — at the default palette's
@@ -76,9 +78,10 @@
   /* 96b — THE TEXT TOKENS, in rem against the browser default 16px. Exact
      1:1 with the px sizes the sheet had (decision B — collapsing the ladder
      is a visual sweep, not this step); the name is the default-scale px so
-     the mapping is legible. A Round 8 text-scale setting sets the html
-     font-size and every token follows. tests/ui-tokens.test.ts pins: every
-     font-size below :root is a token, every token is rem and referenced. */
+     the mapping is legible. The Text size setting sets the root element's
+     font-size (src/ui/textScale.ts) and every token follows.
+     tests/ui-tokens.test.ts pins: every font-size below :root is a token,
+     every token is rem and referenced. */
   --text-8-5: 0.53125rem; /* 8.5px */
   --text-9: 0.5625rem; /* 9px */
   --text-10: 0.625rem; /* 10px */
@@ -741,8 +744,8 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 1.25rem;
+  height: 1.25rem;
   border: 2px solid var(--color-dark-terminal-amber);
   border-radius: 50%;
   background: var(--color-black);
@@ -1041,7 +1044,7 @@ body {
 
 /* --- Recruit skin (was .recruit-card*): amber, clickable, two-col stats. --- */
 .unit-card--recruit {
-  width: 184px; /* GP3: two-col stat grid + ability rows need more room than 160 */
+  width: 11.5rem; /* GP3: two-col stat grid + ability rows need more room than 160px */
   border: 1px solid var(--color-dark-terminal-amber);
   color: var(--color-terminal-amber);
   transition:
@@ -1101,7 +1104,7 @@ body {
    green; the level value flips with a pop. Timing lives in
    PromotionScreen.ts, driving the card via UnitCard's exposed handles. --- */
 .unit-card--promotion {
-  width: 180px;
+  width: 11.25rem;
   border: 1px solid var(--color-blue-dim); /* dim FLOURESCENT_BLUE */
   color: var(--color-flourescent-blue);
   /* M2 — cards start hidden; .is-landed pops them in. The back-out cubic
@@ -1240,7 +1243,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  width: min(560px, 90vw);
+  width: min(35rem, 90vw);
 }
 
 .reward-portion {
@@ -1266,7 +1269,7 @@ body {
   font-family: var(--font-mono);
   font-size: var(--text-12);
   margin-top: 4px;
-  max-width: 320px;
+  max-width: 20rem;
 }
 
 .reward-portion__actions {
@@ -1360,7 +1363,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(720px, 92vw);
+  width: min(45rem, 92vw);
 }
 
 .port-section-heading {
@@ -1516,7 +1519,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  width: min(640px, 92vw);
+  width: min(40rem, 92vw);
 }
 
 .event-heading {
@@ -1708,7 +1711,7 @@ body {
   align-items: center;
   gap: 10px;
   min-height: 0; /* lets the table shrink inside the centered column */
-  max-width: min(920px, 92vw);
+  max-width: min(57.5rem, 92vw);
   font-size: var(--text-12);
   letter-spacing: 0.06em;
   color: var(--color-gray-aa);
@@ -1874,14 +1877,14 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
-  max-width: 1100px;
+  max-width: 68.75rem;
 }
 
 .charselect-card {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 300px;
+  width: 18.75rem;
   padding: 20px;
   background: transparent;
   border: 1px solid var(--color-terminal-amber);
@@ -2488,7 +2491,7 @@ body {
    FULL (capped) panel's top sits — (100 − 86) / 2 vh — less the overlay's
    32px padding, so a full cache opens exactly where it always did. */
 .cache-modal {
-  max-width: 720px;
+  max-width: 45rem;
   align-self: flex-start;
   margin-top: calc(7vh - 32px);
 }
@@ -2530,7 +2533,7 @@ body {
 }
 
 .cache-row-text {
-  flex: 1 1 320px;
+  flex: 1 1 20rem;
   min-width: 0;
 }
 
@@ -2679,7 +2682,7 @@ body {
    row. */
 .hud-speed--pause {
   margin-right: 4px;
-  min-width: 32px;
+  min-width: 2rem;
   text-align: center;
 }
 
@@ -2773,7 +2776,7 @@ body {
    death (.is-dead). Q5 reuses it for the enemy team (overriding the team
    colors), so the glyph/HP greens here are the player defaults. */
 .unit-card--compact {
-  width: 64px;
+  width: 4rem;
   padding: 5px 6px 7px;
   gap: 5px;
   border: 1px solid var(--color-dark-terminal-amber); /* DARK_TERMINAL_AMBER chrome */
@@ -3161,7 +3164,7 @@ body {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--color-flourescent-blue);
-  max-width: 520px;
+  max-width: 32.5rem;
 }
 
 /* L1 — a chance gate that denied this turn (Mercury's cold coin): an inert
@@ -3192,7 +3195,7 @@ body {
 .preturn-hand-cards {
   /* 73c — the card metrics as vars: refreshHand computes the balanced-wrap
      max-width from these for an over-drawn hand (> handSize cards). */
-  --hand-card-w: 184px;
+  --hand-card-w: 11.5rem;
   --hand-gap: 12px;
   display: flex;
   gap: var(--hand-gap);
@@ -3206,7 +3209,7 @@ body {
    base two-col stats; position: relative anchors the empower-badge overlay. --- */
 .unit-card--preturn {
   position: relative;
-  width: var(--hand-card-w, 184px); /* 73c — sourced from .preturn-hand-cards */
+  width: var(--hand-card-w, 11.5rem); /* 73c — sourced from .preturn-hand-cards */
   /* 73c — border-box so the var IS the outer width: content-box + the 1px
      borders made each card 186px, overflowing the computed balanced-wrap
      max-width by 2px/card and wrapping one card early (4+4+2, not 5+5). */
@@ -3527,7 +3530,7 @@ body {
 /* Shared pool gauge (the pre-turn screen + the HUD): a labeled value over a
    proportional bar. */
 .pool-gauge {
-  width: 220px;
+  width: 13.75rem;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -3539,7 +3542,7 @@ body {
    gauge's height varied per encounter and moved the card row with it. */
 .hud-player-pool .pool-gauge,
 .hud-enemy-pool .pool-gauge {
-  width: 320px; /* the longest catalog name (23 glyphs) fits beside the reserved value */
+  width: 20rem; /* the longest catalog name (23 glyphs) fits beside the reserved value */
 }
 
 /* 96.5b2-pre — the head can never wrap: the live readout widens per loss
@@ -3873,7 +3876,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: min(92vw, 1100px);
+  max-width: min(92vw, 68.75rem);
   max-height: 86vh;
   min-height: 0; /* lets the grid below scroll within the capped modal */
   padding: 20px 24px;
@@ -3960,7 +3963,7 @@ body {
    51c: in the modal's PICKER mode the cards go clickable/selectable — the
    pre-turn hand's affordance vocabulary (amber hover, blue selected). --- */
 .unit-card--roster {
-  width: 184px;
+  width: 11.5rem;
   border: 1px solid var(--color-dark-terminal-amber);
   color: var(--color-terminal-amber);
 }
@@ -4038,7 +4041,7 @@ body {
 .tooltip {
   position: fixed;
   z-index: 50;
-  max-width: 280px;
+  max-width: 17.5rem;
   padding: 6px 10px;
   font-family: var(--font-mono);
   font-size: var(--text-13);

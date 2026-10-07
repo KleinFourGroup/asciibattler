@@ -7184,3 +7184,197 @@ them: a size is drawn when the settings close, and no cap by the window.
 116l, the sitting, goes to a fresh session, the user's call on the
 session's recommendation. The session's last reading: **466,065** at
 11:57, on the commit that recorded the read (`a11fb6a`).
+
+### 116l — step zero, and the sitting prepared (2026-10-07, session 592aa296) — the `stop` is open
+
+A fresh session. Readings: **97,943** at 13:40, after HANDOFF,
+`process/planning.md` and the context tool's load; **215,296** at 13:44,
+after the cut, the reads since 116h, the store, the lock, the journals'
+budget, `process/oracles.md` and the pane doc; **325,116** at 14:04, on
+the commit (`0bffd94`); **334,563** at 14:07, before this entry. No
+pre-flight run: the tree was clean at `60612fd`, which the last session's
+hook had passed, and the hook ran the suite on this commit.
+
+**Step zero: what the sitting still holds.** The cut gave it the `batch`
+reads of 116h to 116j and 116k's `stop`; the user took all five early,
+with 116g-post and 116i-post. What is left is what no dev page reaches:
+- a setting kept across a reload, a closed tab and a restart, in each of
+  the three shells;
+- in itch's frame: a download, a file picked for the import, the two-tab
+  lock, the `localStorage` limit, a write's cost;
+- under Electron's own window: a download and an import with real
+  dialogs (116h's "not verified");
+- the budget's second number, the file of a run played at the shipped
+  length;
+- then the exit and the close.
+
+**Three premises, checked.**
+- *"A build with a diagnostics flag"* did not exist. Built, below.
+- *The credits hold no link* (116j, call 4: the last line names the
+  file), so there is none to try under Electron or in the frame.
+- *The budget's second number may already be stored.* Every run ended
+  since 114d kept its journal, up to 1 MB of them, in the store of the
+  page it was played on, and 116h's backup holds that section whole. So
+  the user's own dev-server page can hand over the sizes of the runs they
+  have really played, by Export everything, with no run played for the
+  number. Whether that store holds a run of the shipped length is the
+  user's to say; this session has not seen it. A run played on the draft
+  stays the other arm, and is the only one that times a real run's
+  writes in the frame.
+
+**The instrument: the diagnostics build** (`src/dev/diag/`; ARCHITECTURE
+has its parts). A build made with `VITE_DIAG=1` gets a `diag` tab on the
+right edge. Its panel reports where the page is and whether it is framed,
+the store's status and each section's size, the finished journals one by
+one (characters, entries, battles, dials, how each ended), the lock as the
+boot read it and as the manager lists it now, the browser's storage
+estimate, a census of `localStorage` (the game's keys, and the count and
+size of everyone else's), and a tally of the game's own writes: each call
+of the store's three writing methods timed (serialization and adapter
+together) and counted by section, kept across loads. Two buttons measure
+the storage limit (a fill key doubled, then bisected; ASCII, then a
+two-byte letter) and a write's cost at 4 Ki to 1 Mi characters. The
+report leaves by Copy, by its text box, or by Save as file, which goes
+through `downloadText`, the game's own download.
+
+**Calls made while building,** the user's to reopen.
+1. **The flag is a build-time constant, not a row or a key in the
+   shipped game.** The cut's words were "a build with a diagnostics
+   flag". The other arm, a "Copy diagnostics" row in Settings › Data of
+   every build, would let a player on itch send this report with a bug;
+   it is a product decision for §118, not this step's.
+2. **The itch upload is the diagnostics build alone.** It is the
+   production source with one more chunk, so the three shells' checks and
+   the four readings come from one upload.
+3. **The limit is measured only on a button that says the page will
+   stand still.** While it runs, the origin's storage is nearly full, and
+   on itch that origin is shared with every other itch game open in the
+   browser. It takes a few seconds, removes its key whatever happens, and
+   a fill key left by a tab killed in the middle is removed at the next
+   load and reported.
+4. **The zip is a script** (`scripts/itch-zip.mjs`), since §118 uploads
+   one too and 110b found two tools here that write a file itch can't
+   use.
+
+**The oracle: a build without the flag is unchanged.** At a pinned ID
+(`ASCIIBATTLER_BUILD_ID=pinned-116l`), `60612fd` built to `2a8ba77c…`
+over 32 files, 2,554,869 bytes, and the tree with the diagnostics builds
+to the same total, with `VITE_DIAG` unset and with it set to 0. *The
+failing control was the first form of the gate:* `const m = flag ? await
+import(…) : null; m?.installDiag(…)` built 32 bytes larger, the test
+folded and `null?.installDiag({runLock:…}),` left in the bundle. It is now
+a call inside an `if`. *The other control:* with `VITE_DIAG=1` the build
+is 34 files and 12,183 bytes larger. Its chunks are cut differently (the
+store and the download move into a shared chunk, and the three.js file
+takes another name), so the diagnostics build is the production source
+and not the production bytes.
+
+**Known answers.**
+- *Headless,* 17 tests (`measure.test.ts`): a storage with a planted
+  quota, bracketed within the step at three quotas with the other keys
+  untouched; a storage that takes everything read as the ceiling, not a
+  limit; one with no room; a fill key left behind; the census with keys
+  that aren't ours; a write refused in mid-bench; a clock with a planted
+  step; the tally's buckets and its text across a load.
+- *On a real browser,* the pane's Chromium (`vite preview` over the
+  diagnostics build, port 5193). The limit: `lastOk` 52,427,776 and
+  `firstFail` 52,428,800 with 141 characters in use, the same for both
+  fills, 32 attempts each, 5.4 s for the two, the fill key gone. §114's
+  console snippet had read 52,428,478 there, within its step of
+  50 × 2²⁰ = 52,428,800.
+- *The tally against the stored text* (the pane): after a run's creation
+  and after its first node the tally's `lastChars` was 5,117 and 5,256,
+  and `localStorage`'s `asciibattler:run` held 5,163 and 5,302, the
+  envelope's 46 characters more each time.
+- *The tally against the journal* (Electron, the driven run below): 46
+  writes of the slot and 1 clear. The journal holds 58 run commands, 12
+  of them the `advanceTurn` that opens a battle, which is never saved;
+  with the save at the run's creation that is 1 + 58 − 12 = 47, the last
+  of which ended the run and emptied the slot.
+- *Across a load* (the pane): the tally's sections carried, `loads` 2, a
+  planted 5,000-character fill key removed and `leftoverFillRemoved`
+  true, Continue on the menu, the root at 125 % from the setting written
+  through the modal's own toggle.
+- *The panel:* Save as file handed the spy a file whose text is the text
+  box's; a Space keydown dispatched on a panel button did not reach the
+  window, where the game's key registry listens; Copy in the hidden pane
+  was refused by the clipboard ("Document is not focused") and by the old
+  command, and the note said to press Ctrl+C on the selected text.
+
+**Measured ahead of the sitting,** in Chromium and under Electron only.
+- *A write's cost by size, the pane* (the clock's step 0.1 ms; the text
+  is a save's own, repeated): 4 Ki characters 0.010 ms a write (50
+  writes), 16 Ki 0.014, 64 Ki 0.048, 256 Ki 0.155 (20), 1 Mi 1.94 (10).
+- *A whole run under Electron* (`diag-run.js`, the runner's hidden
+  window, `app://game`, seed 7, 12 battles, a defeat, log hash
+  `a59ee48f`). On a fresh profile: 46 writes of the slot, 0.087 ms each
+  on average, 0.2 at most, the data up to 26,449 characters. On a profile
+  whose `store.json` was planted with 201 journals (986,346 characters,
+  just under the 1,000,000 budget; the file 1.19 MB after the run): the
+  same 46 writes at 1.80 ms on average and 2.2 at most, 41 of them
+  between 1 and 2 ms and 5 between 2 and 4; the journals' own write at the
+  run's end 2.8 ms. **So under Electron a write costs the page in
+  proportion to the whole store, not the slot,** because every write
+  sends the whole file (`src/store/electron.ts`); at the budget that is
+  about a ninth of a frame, at a gate and never in a fight. The main
+  process's write of the file is off the page's thread and was not
+  timed.
+- *The lock under `app://`:* held, the manager present (as at 115f).
+- `drive-run --seed=7` without the flag: `a59ee48f`, 12 battles.
+
+**The zip.** `output/itch/asciibattler-0.0.0_0bffd94-diag.zip`: 34
+entries, 1,245,873 bytes, the build 2,567,054 bytes (`0010dc74…`), from
+the clean tree at `0bffd94`. The check's three planted failures, each by
+its own reason: a zip from Windows PowerShell 5.1 (32 entry names with a
+backslash), Git Bash's `tar -a` (no End of Central Directory record), and
+the good zip held against a build with one byte added (the hashes
+differ). `dist/` is the plain build at `0.0.0+0bffd94`, 641.72 kB of
+script as at 116k, for `npm run shell`. Both builds booted once in the
+shell's hidden window (`app://game`, three children under `#ui`, the
+fonts loaded).
+
+**Not verified.** Anything in Firefox. Anything in itch's frame. A real
+download or a real file picked, in any shell: the pane's check put a spy
+in the download's place. The clipboard where the page has focus. The
+panel's look, beyond one screenshot at 1280×720. The Electron window
+shown. The main process's file write. The tally under a run played by
+hand. One commit attempt failed its hook, on `tests/font-coverage.test.ts`
+naming the Cyrillic fill letter as a glyph no shipped font holds; the
+letter is now made from its code.
+
+**The sitting,** in Firefox unless it says otherwise. The user uploads
+the zip to the draft first (HTML, played in the browser, 1280×720 as at
+110e).
+1. **Firefox, this machine.** `npm run preview -- --outDir
+   output/itch/current --port 5193`, then `http://localhost:5193`.
+   Settings › Comfort › Text size, 125 %, close the settings. Reload;
+   close the tab and open it again; quit Firefox and open it again. Wrong
+   is a boot at 100 %. Then the `diag` tab on the right edge: Storage
+   limit, Time writes, Save as file.
+2. **Electron.** `npm run shell`. Text size 125 %; Settings › Comfort ›
+   Palette, Colorblind, Apply palette. Close the window and run it again:
+   both kept. Settings › Data: Export everything (what the window does
+   with a download is not known), then Import a backup with that file.
+   New run, a character, close the window at the map, run it again:
+   Continue is first and returns to the map.
+3. **The itch draft.** Run game. Text size 125 %, then the same three: a
+   reload, a closed tab, Firefox quit and opened. New run, a character,
+   one node; reload; Continue returns there.
+4. **Two tabs on the draft.** With the game running in one tab, open the
+   draft in a second and run it. Its menu says the game is open in
+   another tab and offers no Continue; a run started there shows
+   `⚠ can't save`; its `diag` reads `lock.atBoot: "elsewhere"`. Wrong is
+   `held` or `none` there. Close the second tab.
+5. **The frame's readings,** in the first tab: `diag`, Storage limit,
+   Time writes, then Save as file (is a file offered from inside the
+   frame?) and Copy (does the clipboard take it?). Settings › Data:
+   Export everything, then Import a backup with that file.
+6. **The budget's number,** one of two. On the page where the user has
+   played full runs (their dev server), Settings › Data › Export
+   everything, and the file's path to this session. Or a run played to
+   its end on the draft, Export run on its end screen, then `diag` and
+   Save as file: that tally is a real run's writes in the frame.
+
+What comes back to the session: the saved reports (their paths, or the
+Copy's text), what each shell did with a download, and anything that
+looked wrong.

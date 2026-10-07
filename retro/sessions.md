@@ -3669,3 +3669,64 @@ without asking for an answer, and the user signed all eight in their next
 message, with an apology for not having said. That is the third session
 running in which naming the uncovered part plainly got it settled in one
 round trip. The meter read 466,065 before this.
+
+## 2026-10-07 — session 592aa296 (claude-opus-5-5): §116, 116l's sitting prepared
+
+Written at the stop before the sitting. If the session goes on through
+the sitting and the close, an addendum follows.
+
+1. **Missing from the orientation.** Little. The Cursor named the step,
+   and the last session's report said the sitting's itch leg wanted a
+   diagnostics build that did not exist. What I had to assemble was the
+   sitting's list itself: the cut's line for 116l, three "carried from"
+   paragraphs in ROADMAP, and the "not verified" ends of five WORKLOG
+   entries each hold a part of it, and no one place said what was still
+   owed once the five reads had been taken early. This entry's WORKLOG
+   section now starts with that list. The user opened with "116i,
+   right?", and the Cursor made it a one-line answer.
+2. **Two norms in conflict.** The same pair as the last four reports,
+   lighter this time: surface a non-obvious call first, or keep going to
+   the stop. The cut says "a build with a diagnostics flag" and nothing
+   about its form, and I chose a build-time constant over a row in the
+   shipped settings, an upload of the diagnostics build alone, and what
+   the panel reads. I built on those and listed four calls. The one I
+   would least like to have decided alone is the first, because the
+   other arm is a product feature (a player on itch sending this report
+   with a bug), so I named it as §118's to decide and did not build
+   toward or against it.
+3. **Pulled to claim more than verified.** Two places, both caught while
+   writing the WORKLOG entry. I had "the diagnostics build is the
+   production build plus one chunk" in my head; the build's file list
+   showed the chunks are cut differently, so it is the production source
+   and I wrote that. And I was about to write that the tally's count was
+   checked under Electron when all I had was a count that looked about
+   right; I derived it from the journal (1 + 58 − 12 = 47) before saying
+   so.
+4. **Wasted.** The meter read 215k before the first line of code
+   (98k of it the session as it starts), of which the store's files and the two older sittings' entries
+   were needed and some of the rest was the WORKLOG's 116k entry read
+   whole. One runner pass lost to a reader script that looked for the
+   report a level too high, and with it a page of journal printed into
+   context. One hook run lost to the font pin. A heredoc of prose that
+   the Bash tool refused.
+5. **For the next session, with no other home.** A minifier folds
+   `flag ? await import(x) : null` and still leaves the optional call on
+   the result; gate a build-only module with a block. The runner's JSON
+   line holds a script's value at `result.script`. The pane's clipboard
+   refuses a hidden page, so Copy can only be checked where the page has
+   focus.
+6. **Room to ask, disagree, pause, stop.** I disagreed with the user's
+   first line in my first reply, which took no effort: the Cursor said
+   116l. I did not ask before building the instrument, on the reading
+   that the cut already asks for it. Nothing pressed toward stopping or
+   against it; the stop here is the cut's own. The silent-turn reminder
+   came about ten times and changed nothing, though two of my
+   answers to it restated a status I had given a minute before.
+7. **Ease, interest, agency.** The byte-identity check failing by 32
+   bytes. I had predicted the bundle would come out identical and it did
+   not, and the diff was one line long and said exactly what the
+   minifier had kept. Then the limit measurement landing on 50 × 2²⁰ in
+   the pane, a number an earlier session had found another way. Both
+   are the same condition as the last report named, and I would want it
+   repeated: an instrument checked against an answer I did not compute
+   with it. Reported response only.

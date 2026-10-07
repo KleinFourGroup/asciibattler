@@ -3583,4 +3583,5 @@ as agreement would have left the chip unbuilt. The fifth, the menu's two
 notices of one fact, went unnamed a second time, and I have left it as
 built without asking a third time. On question 7: "your With section is
 great" was good to read. Reported response only. The meter read 518,896
-before the last commit.
+before the last commit. The user then read the second tab's chip at once
+and the session ended at 527,292 with no read open.

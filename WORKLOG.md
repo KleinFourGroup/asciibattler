@@ -6864,7 +6864,7 @@ looked great!"
   keyboard walk over the data rows, the chip's tab stop and the credits
   panel waits for the sitting, which also takes Electron and itch's frame.
 
-### The reads' answers (2026-10-07, the user's) — four answers; 116i-post ◐ built, 116j-post ✅
+### The reads' answers (2026-10-07, the user's) — four answers; 116i-post ✅ READ, 116j-post ✅
 
 The reply to the list above: "Yes, your With section is great! Second
 tab should also show the chip, and add the Vite section! The keyboard
@@ -6936,3 +6936,11 @@ read `batch`, at the sitting).
 **Cost.** 3458 tests in 241 files (+4). The production bundle is
 640.88 kB raw (640.51 at 116j), the stylesheet 62.71 kB, unchanged. The
 two posts and the record of the reads: about 45k.
+
+**116i-post, read ✅** (the user, within the quarter hour: "No need for a
+batch, Claude: already read and confirmed!"). It was cut as a `batch`
+read for the sitting and taken at once. The call inside it, the chip up
+only while that tab's run is on screen, stands with the read. `main`
+was pushed at 10:33, through `0958a93` (the remote branch's reflog; not
+by this session). §116 has no open read; 116k
+and the sitting remain. The session's last reading: **527,292** at 10:33.

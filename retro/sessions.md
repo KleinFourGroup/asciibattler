@@ -3661,3 +3661,11 @@ calls. I recorded them as standing and said in my reply which two taste
 calls it did not touch, once, without asking for an answer. On question
 7: "I love this" was good to read. Reported response only. The meter read
 455,173 before this.
+
+### Second addendum — the calls (2026-10-07)
+
+One line in my reply said which two taste calls the read had not touched,
+without asking for an answer, and the user signed all eight in their next
+message, with an apology for not having said. That is the third session
+running in which naming the uncovered part plainly got it settled in one
+round trip. The meter read 466,065 before this.

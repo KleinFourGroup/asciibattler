@@ -7176,3 +7176,11 @@ love this, Claude!" and "It's working perfectly out of the box."
   did a second job here. It let the user see three surfaces at sizes the
   defaults don't have, on their own screen, without a build. A later
   pass on the defaults can start the same way.
+
+**The calls, SIGNED** (the user, 2026-10-07, in reply to the list of what
+the read had not named: "yes, signing your calls!"). All eight of 116k's
+are decided as built, the two taste calls that had gone unnamed among
+them: a size is drawn when the settings close, and no cap by the window.
+116l, the sitting, goes to a fresh session, the user's call on the
+session's recommendation. The session's last reading: **466,065** at
+11:57, on the commit that recorded the read (`a11fb6a`).

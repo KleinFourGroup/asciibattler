@@ -146,3 +146,14 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   whether a session that never answered the hot-reload question runs the
   mod. The rule this enables, and the rest of the record, are in WORKLOG
   §115 "The context rule, replaced".
+- **2026-10-07, 116h: new pins that pass on their first run, checked by
+  planting.** Twenty-one tests for new store code passed the first time
+  they ran, which says little about whether they can fail. A scratch
+  script took a list of `{ file, from, to, test }`, and for each one
+  replaced the text (refusing an anchor found zero or two times), ran that
+  test file with Vitest's JSON reporter, listed the tests that failed, and
+  put the file back in a `finally`; the clean tree ran last as the control.
+  Fifteen changes, each removing one rule, were each caught, one by a test
+  not aimed at it. About ten minutes and one file. It is the same idea as
+  an oracle's failing control (`process/oracles.md`), applied to a batch
+  of ordinary unit tests; whether it belongs there is for the sweep.

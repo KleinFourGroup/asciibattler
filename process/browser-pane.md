@@ -122,7 +122,12 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   server, `(await import('/src/store/index.ts')).store` is the page's own
   instance. `?store=deny` (DEV only) boots the game with its storage
   refused, the way a browser with site data blocked does: the store reads
-  can't-save and touches nothing. To check what is stored, read
+  can't-save and touches nothing. `?store=full` (DEV only) boots on the
+  page's own storage, able to save, and refuses every write from then on,
+  the way a full quota does: the first failure is the game's own write (a
+  run's first autosave at the character pick, or a setting), which is when
+  `.cant-save-chip` shows. Neither plant is a run dial, so both boot the
+  menu, and the full plant never recovers. To check what is stored, read
   `localStorage` (or Electron's `store.json`) itself, not the store. The
   pane's `localStorage` takes about 50 Mi characters, some ten times a
   stock browser's, so a quota is never measured here.

@@ -21,6 +21,7 @@ import { EventScene } from './scenes/EventScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
+import { CantSaveChip } from './ui/CantSaveChip';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { SettingsOverlay } from './ui/SettingsOverlay';
 import { createChromeColumn } from './ui/chip';
@@ -419,6 +420,14 @@ export class Game implements RunDispatcher {
         },
       },
     );
+    // 116i — the can't-save chip: last in the column and in the Tab walk,
+    // shown while the store can't save (src/ui/CantSaveChip.ts). The store's
+    // status is its last write's, so the chip goes when a write lands again.
+    const cantSave = new CantSaveChip(chips, store.status().canSave);
+    store.onStatus((status) => {
+      cantSave.set(status.canSave);
+      if (!status.canSave) console.warn("[store] can't save:", status.error); // i18n-ok: a dev console line
+    });
     // 97b — the tooltip key, page-lifetime like the map key: pin the open
     // tooltip / close a pinned one / open pinned for the focused or hovered
     // trigger (src/ui/tooltip.ts).
@@ -784,9 +793,10 @@ export class Game implements RunDispatcher {
    * 115e — THE AUTOSAVE (Round 8 spec D3). After every command the run
    * waits at a gate (every phase but `battle` and `turn-outcome`), the run
    * slot gets the snapshot, the dials, and the journal as the save keeps it;
-   * a run's end empties the slot. A write the store refuses is silent here
-   * (the indicator is §116's): the run plays on, unsaved. In a second tab
-   * the slot refuses every write and clear (115f).
+   * a run's end empties the slot. A write the store refuses is silent here:
+   * the run plays on, unsaved, and the can't-save chip says so from the
+   * store's status (116i). In a second tab the slot refuses every write and
+   * clear (115f).
    */
   private autosave(run: Run): void {
     if (run.phase === 'defeat' || run.phase === 'complete') {

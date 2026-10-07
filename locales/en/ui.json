@@ -197,6 +197,7 @@
   "save.continue": "Continue",
   "save.elsewhere": "The game is open in another tab. This tab can't continue your run, and a run started here won't be saved.",
   "save.unavailable": "The game can't save here: its storage is blocked or full. A run won't survive closing the tab.",
+  "save.chip": "can't save",
   "menu.title": "ASCIIbattler",
   "menu.newRun": "New run",
   "menu.seed.label": "Seed",

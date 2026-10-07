@@ -6633,3 +6633,97 @@ Export everything; change a setting; Import a backup, choose the file,
 Import and reload; the old value is back. Wrong is a file that isn't
 offered, a setting that stays changed, or a row that moves when a file is
 chosen.
+
+### 116i — the can't-save chip (2026-10-07, session 133b679f) — ◐ built, unread (`batch`, at the sitting)
+
+Readings: **329,951** at 08:44 on 116h's commit (`2c523eb`), the step's
+start; **384,259** at 08:50, before this entry.
+
+**Step zero: the premises hold.**
+- ✔ `store.onStatus` had no listener outside tests (a search of `src`,
+  `tests`, `shell` and `scripts`).
+- ✔ The chrome column's order is CSS `order` per chip class, the pool chip
+  last at 5 (`ui.css`), and a hidden chip collapses, so a chip at 6 is
+  under everything and its coming and going moves nothing.
+- ✔ A query that is no run dial boots the menu (`bootsToMenu` parses the
+  run dials and looks for `bp`), so a second store plant needs no rule.
+- ✔ The one existing plant, `?store=deny`, refuses the store from boot, so
+  it can't show a failure that arrives in mid-run: the cut's "a DEV plant
+  fails writes after boot" is a new plant.
+
+**What was built.**
+- `CantSaveChip` (`src/ui/CantSaveChip.ts`): `⚠ can't save`, `order: 6`,
+  in the destructive red, a text site whose tooltip is `save.unavailable`.
+  `Game` makes it after the other chips and feeds it from
+  `store.onStatus`; a failure also writes one console line with the
+  store's error.
+- `?store=full` (`fullChoice` in `src/store/choose.ts`, armed in
+  `index.ts` after `createStore`): the page's own storage, with every
+  write and remove throwing a `QuotaExceededError` from then on.
+- DESIGN: the chip's paragraph under Chips, the column's order, its row in
+  the checklist, and the sentence in Saving.
+
+**Calls made while building, for the read.**
+1. **The chip shows on every screen while the store can't save,** the menu
+   included. So at a boot with storage blocked the menu shows two things:
+   its notice, a sentence above the rows, and the chip in the corner. The
+   other arm is to hide the chip while the menu's own notice is up. The
+   built arm has one rule and no state; the cost is the same fact twice on
+   one screen in the rare case. The menu's notice is drawn once, so a
+   setting that fails to save while the menu is up is told by the chip
+   alone, in either arm.
+2. **The words are `can't save`,** the store's own, and the tooltip is the
+   menu notice's sentence. Twelve characters with the glyph, which fit
+   the plate at the chip's size (measured: no overflow, a scroll width of
+   198 in a 198 px box).
+3. **Red,** the destructive hue the cache chip's over-capacity flag uses,
+   with the glyph and the words as the other channels.
+4. **A second tab's unsaved run gets no chip.** The chip is the store's
+   status, as the cut says, and a second tab's store can save; its run is
+   unsaved by the lock, which the menu says once and the settings' Quit
+   row says again. Whether the chip should cover that too is a question
+   for the user, not built.
+5. **The plant is `?store=full`** and never recovers. A store that
+   recovers is pinned headless (`store.test.ts`, 113b); the chip hiding
+   again on a write that lands was not seen in the pane.
+
+**Evidence.**
+- *Headless,* +1 test (3445 in 238 files): the full plant boots able to
+  save with its stamp landed, a write before it is armed lands (the
+  control), and after it every write and clear fails with the status at
+  can't-save, one notification, nothing changed in the storage, and what
+  is stored still read.
+- *In the pane* (Chromium, `2c523eb-dirty-dev`, 1280×720):
+  - `?store=full`: the menu boots with the store able to save, the chip
+    hidden and no notice. New run, then a character: on the map the chip
+    is shown, the store's error is `QuotaExceededError: planted by
+    ?store=full`, and the slot holds nothing. The column reads bits 20,
+    cache 75, settings 130, pool 185, can't-save 250 (tops, px), each
+    200 wide.
+  - The box oracle, a same-page toggle of the chip's `is-hidden` on the
+    map: of 159 visible elements under `#ui`, one changed, the column's
+    own box (275 px tall with the chip, 220 without). No chip, button or
+    map node moved.
+  - The tooltip opens on hover with the sentence, and the chip carries
+    `aria-describedby` while it is open; its touch route is a tap.
+  - `?store=full` on the menu: a setting written through the model
+    returns false, the chip appears, and the menu's title and rows keep
+    their boxes.
+  - `?store=deny`: the chip is at the column's top (20, 20) with the
+    menu's notice in the middle of the screen.
+- *The production bundle* holds neither plant: `store=full`, `store=deny`,
+  `planted by` and `QuotaExceededError` are in no line of it, and two
+  strings that must be (`cant-save-chip`, `asciibattler-backup`) are.
+
+**Not verified.** The chip in Firefox, under Electron and in itch's frame;
+its tab stop in a real Tab walk; a real quota failure (the pane's storage
+takes some ten times a stock browser's, `process/browser-pane.md`); the
+chip hiding on recovery.
+
+**Cost.** The production bundle is 637.35 kB raw (636.80 at 116h), the
+stylesheet 61.78 kB (61.68). The step: about 54k.
+
+**The read** (`batch`, at the sitting, ROADMAP's script): the dev server
+at `?store=full`, New run, a character; the chip appears as the map comes
+up and nothing else moves. Then `?store=deny` for the menu's two notices
+of one fact, call 1.

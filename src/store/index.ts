@@ -10,13 +10,20 @@
  */
 
 import { BUILD_ID } from '../buildId';
-import { DENY_QUERY, chooseAdapter, deniedChoice } from './choose';
+import { DENY_QUERY, FULL_QUERY, chooseAdapter, deniedChoice, fullChoice } from './choose';
 import { createStore, type Store } from './store';
 
 const host: unknown = typeof window === 'undefined' ? undefined : window;
-// The plant is a DEV page's only; a production build drops the branch, and
-// with it the query and the planted reason.
+// The two plants are a DEV page's only; a production build drops their
+// branches, and with them the queries and the planted reasons.
 const DEV = typeof import.meta.env !== 'undefined' && import.meta.env.DEV === true;
 const denied = DEV && typeof location !== 'undefined' && location.search.slice(1).split('&').includes(DENY_QUERY);
+const full =
+  DEV && typeof location !== 'undefined' && location.search.slice(1).split('&').includes(FULL_QUERY)
+    ? fullChoice(chooseAdapter(host))
+    : null;
+const choice = denied ? deniedChoice() : (full ?? chooseAdapter(host));
 
-export const store: Store = createStore({ ...(denied ? deniedChoice() : chooseAdapter(host)), build: BUILD_ID });
+export const store: Store = createStore({ adapter: choice.adapter, unsaved: choice.unsaved, build: BUILD_ID });
+// Armed once the store has stamped itself: the writes that fail are the game's.
+full?.arm();

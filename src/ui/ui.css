@@ -2175,7 +2175,8 @@ body {
    chrome. The column takes NO pointer events (its gaps and its width past
    a narrow chip must not swallow a map click); the chips do. The order is
    fixed by `order` on each chip class (bits · cache · settings · map ·
-   pool; the settings chip is 116d's), and a hidden chip COLLAPSES — the
+   pool · can't-save; the settings chip is 116d's, the can't-save chip
+   116i's), and a hidden chip COLLAPSES — the
    ones below move up (the §96 decision D; the map chip hides on MapScene).
    The .hud-hop battle chip still sits to the bits chip's right (HUD-owned). */
 .chrome-column {
@@ -2381,6 +2382,19 @@ body {
 .settings-chip:focus-visible {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
+}
+
+/* 116i — the can't-save chip (src/ui/CantSaveChip.ts): the LAST chip of the
+   column, on every screen, shown only while the store can't save. Last, so
+   its coming and going moves no chip; a read with a tooltip, so its own move
+   when a chip above hides shifts no click target. The red is the destructive
+   hue (a run that won't survive the tab); the glyph and the words carry it
+   without the hue. */
+.cant-save-chip {
+  order: 6;
+  border-color: var(--color-neon-red);
+  color: var(--color-neon-red);
+  cursor: help;
 }
 
 /* 78e — the sector-map chip: the fourth chrome-column chip (bits → cache →

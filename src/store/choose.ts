@@ -29,6 +29,43 @@ export function deniedChoice(): AdapterChoice {
   return fallback(`SecurityError: planted by ?${DENY_QUERY}`);
 }
 
+/** The second plant: `?store=full` on a DEV page gives the page's own
+ *  storage with every write refused once the store has booted, the way a
+ *  browser whose quota is used up refuses one. What is stored still reads. */
+export const FULL_QUERY = 'store=full';
+
+/**
+ * `choice` with its adapter's writes and removes refused from `arm()` on.
+ * index.ts arms it after the store is made, so the boot's own stamp lands
+ * and the store starts at can-save: the failure arrives in mid-game, which
+ * is the case the plant is for. Reached only under DEV, as `deniedChoice` is.
+ */
+export function fullChoice(choice: AdapterChoice): AdapterChoice & { arm(): void } {
+  const inner = choice.adapter;
+  let armed = false;
+  const refuse = (): void => {
+    if (armed) throw Object.assign(new Error(`planted by ?${FULL_QUERY}`), { name: 'QuotaExceededError' });
+  };
+  return {
+    unsaved: choice.unsaved,
+    adapter: {
+      kind: inner.kind,
+      read: (key) => inner.read(key),
+      write: (key, text) => {
+        refuse();
+        return inner.write(key, text);
+      },
+      remove: (key) => {
+        refuse();
+        return inner.remove(key);
+      },
+    },
+    arm: () => {
+      armed = true;
+    },
+  };
+}
+
 /**
  * `host` is the page's `window`, or undefined where there is none (Node).
  * Never throws.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DENY_QUERY, chooseAdapter, deniedChoice } from './choose';
+import { memoryAdapter } from './adapter';
+import { DENY_QUERY, FULL_QUERY, chooseAdapter, deniedChoice, fullChoice } from './choose';
 import { electronAdapter, type ShellStore } from './electron';
 import { createStore } from './store';
 import { WEB_PROBE_KEY, readableStorage, webAdapter } from './web';
@@ -210,5 +211,32 @@ describe('113c — the choice', () => {
     expect(store.status()).toEqual({ adapter: 'memory', canSave: false, error: 'SecurityError: planted by ?store=deny' });
     expect(store.writeStrict({ policy: 'strict', name: 'run', version: 1, load: (w: unknown) => w }, { seed: 1 })).toBe(false);
     expect(store.readStrict({ policy: 'strict', name: 'run', version: 1, load: (w: unknown) => w })).toEqual({ status: 'empty' });
+  });
+
+  // 116i — the second plant: the page's own storage, full from mid-game on.
+  it('plants a full store on ?store=full: it boots able to save, and every write after it is armed fails', () => {
+    expect(FULL_QUERY).toBe('store=full');
+    const slot = { policy: 'strict' as const, name: 'run' as const, version: 1, load: (w: unknown) => w };
+    const inner = memoryAdapter({ 'asciibattler:run': JSON.stringify({ v: 1, build: 'a', data: { seed: 7 } }) });
+    const planted = fullChoice({ adapter: inner, unsaved: null });
+    const store = createStore({ adapter: planted.adapter, unsaved: planted.unsaved, build: 'b' });
+    // The boot's own stamp landed, and what was stored reads.
+    expect(store.status()).toEqual({ adapter: 'memory', canSave: true, error: null });
+    expect(inner.entries.has('asciibattler:meta')).toBe(true);
+    expect(store.readStrict(slot)).toEqual({ status: 'ok', value: { seed: 7 }, build: 'a' });
+    // The control: before it is armed a write lands.
+    expect(store.writeStrict(slot, { seed: 8 })).toBe(true);
+
+    planted.arm();
+    const seen: boolean[] = [];
+    store.onStatus((s) => seen.push(s.canSave));
+    const before = [...inner.entries];
+    expect(store.writeStrict(slot, { seed: 9 })).toBe(false);
+    expect(store.clear(slot)).toBe(false);
+    expect(store.status()).toEqual({ adapter: 'memory', canSave: false, error: 'QuotaExceededError: planted by ?store=full' });
+    expect(seen).toEqual([false]);
+    expect([...inner.entries]).toEqual(before);
+    // It still reads what it holds.
+    expect(store.readStrict(slot)).toEqual({ status: 'ok', value: { seed: 8 }, build: 'b' });
   });
 });

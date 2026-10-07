@@ -7679,3 +7679,6 @@ on every commit's hook; the fuzz smoke fired at no step, as predicted.
 No Run or World bump, no RNG stream, no bus event. The production script
 is 641.83 kB raw (609.72 at 115g). Seven sessions, 2026-10-04 to 10-07.
 `drive-run --seed=7` logs `a59ee48f`, as at the kickoff.
+
+The session's last reading: **515,444** at 18:43, on the closing commit
+(`95b8905`); the close cost about 47k.

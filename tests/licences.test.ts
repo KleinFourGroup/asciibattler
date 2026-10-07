@@ -50,6 +50,29 @@ describe('116j — the shipped licence file', () => {
     expect(missing(packages, '')).toEqual(packages);
   });
 
+  // 116j-post — what the bundler itself adds is outside the import graph. The
+  // built JavaScript opens with Vite's module-preload polyfill, which is
+  // Vite's code, so the file holds Vite's core licence: the head of its
+  // LICENSE.md, up to the list of the dependencies bundled into Vite.
+  it("holds Vite's core licence, for the preload polyfill the build adds", () => {
+    const upstream = text('node_modules/vite/LICENSE.md');
+    const core = upstream
+      .slice(upstream.indexOf('MIT License'), upstream.indexOf('# Licenses of bundled dependencies'))
+      .trim();
+    // The known answer for the slice: one MIT licence, not the whole file and not nothing.
+    expect(core.startsWith('MIT License')).toBe(true);
+    expect(core.endsWith('SOFTWARE.')).toBe(true);
+    expect(core).toContain('Vite contributors');
+    expect(core.length).toBeGreaterThan(900);
+    expect(core.length).toBeLessThan(1300);
+
+    const file = text(FILE);
+    expect(file).toContain('Vite (build tool)');
+    expect(file).toContain(core);
+    // The control: an older notice is not the licence.
+    expect(file.replace('Vite contributors', 'Vite contributor')).not.toContain(core);
+  });
+
   it('still holds the two fonts, each with its licence', () => {
     const file = text(FILE);
     expect(file).toContain('JetBrains Mono (font)');

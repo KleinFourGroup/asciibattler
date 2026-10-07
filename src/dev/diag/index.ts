@@ -31,7 +31,7 @@
 import { BUILD_ID } from '../../buildId';
 import { store } from '../../store';
 import { NAMESPACE, SECTION_NAMES, storageKey, type LenientSection, type StrictSection } from '../../store/store';
-import { RUN_LOCK_NAME, type RunLock } from '../../store/runLock';
+import { RUN_LOCK_NAME, controlName, type RunLock } from '../../store/runLock';
 import { downloadText } from '../../ui/download';
 import {
   WriteTally,
@@ -100,7 +100,15 @@ export interface DiagReport {
     /** What the page was told at boot (src/store/runLock.ts). */
     readonly atBoot: RunLock;
     readonly api: boolean;
-    /** Whether the manager lists the run lock as held now, by any tab. */
+    /** Two requests made now, as the lock makes them, each let go at once.
+     *  `control`: a name nobody holds, which a working manager grants.
+     *  `runLock`: the run lock's own name, refused while any tab holds it,
+     *  this one included; granted means no tab does. */
+    readonly control: LockProbe | null;
+    readonly runLock: LockProbe | null;
+    /** Whether the manager lists the run lock as held now, by any tab. The
+     *  lock itself never asks this: Firefox refuses it in a partitioned
+     *  frame. */
     readonly heldNow: boolean | string;
     readonly otherLocks: number | null;
     readonly queryMs: number | null;
@@ -116,6 +124,12 @@ export interface DiagReport {
   readonly leftoverFillRemoved: boolean;
   readonly limit: { readonly ascii: LimitResult | string; readonly twoByte: LimitResult | string } | null;
   readonly bench: readonly BenchRow[] | string | null;
+}
+
+interface LockProbe {
+  /** `granted`, `refused`, or the error. */
+  readonly got: string;
+  readonly ms: number;
 }
 
 interface JournalsSummary {
@@ -297,17 +311,36 @@ export function installDiag(options: { readonly runLock: RunLock }): DiagHandle 
   let bench: DiagReport['bench'] = null;
 
   const lockNow = async (): Promise<DiagReport['lock']> => {
-    const locks = (navigator as { locks?: { query?: () => Promise<{ held?: { name?: string }[] }> } }).locks;
-    const api = locks !== undefined && typeof locks.query === 'function';
-    if (!api) return { atBoot: options.runLock, api, heldNow: 'no lock manager', otherLocks: null, queryMs: null };
+    const locks = (
+      navigator as {
+        locks?: {
+          query?: () => Promise<{ held?: { name?: string }[] }>;
+          request?: (name: string, options: { ifAvailable: true }, callback: (lock: unknown) => unknown) => Promise<unknown>;
+        };
+      }
+    ).locks;
+    const api = locks !== undefined && typeof locks.request === 'function';
+    const atBoot = options.runLock;
+    if (!api) {
+      return { atBoot, api, control: null, runLock: null, heldNow: 'no lock manager', otherLocks: null, queryMs: null };
+    }
+    const probe = async (name: string): Promise<LockProbe> => {
+      const began = now();
+      const got = await answer(() => locks.request!(name, { ifAvailable: true }, (lock) => (lock === null ? 'refused' : 'granted')));
+      return { got: String(got), ms: now() - began };
+    };
+    const control = await probe(controlName());
+    const runLock = await probe(RUN_LOCK_NAME);
     const t0 = now();
-    const state = await answer(() => locks.query!());
+    const state = await answer(() => locks.query?.());
     const queryMs = now() - t0;
-    if (typeof state === 'string') return { atBoot: options.runLock, api, heldNow: state, otherLocks: null, queryMs };
+    if (typeof state === 'string') return { atBoot, api, control, runLock, heldNow: state, otherLocks: null, queryMs };
     const held = state.held ?? [];
     return {
-      atBoot: options.runLock,
+      atBoot,
       api,
+      control,
+      runLock,
       heldNow: held.some((l) => l.name === RUN_LOCK_NAME),
       otherLocks: held.filter((l) => l.name !== RUN_LOCK_NAME).length,
       queryMs,

@@ -9,18 +9,29 @@
  * stays the second tab for its life, even once the first has closed, since by
  * then it may be in a run of its own that the slot never held.
  *
- * NO LOCK IS NOT A SECOND TAB. A tab is the second tab only when the lock
- * manager refuses it the lock AND names a holder. Everything else is no lock,
- * and the tab saves as if it were alone:
+ * NO LOCK IS NOT A SECOND TAB. A refusal alone proves nothing: a lock manager
+ * that can't reach its storage refuses every request, a free name included (a
+ * second instance of the Electron shell on one profile does). So a tab that
+ * is refused the run lock asks the same manager for a CONTROL lock, under a
+ * name no other tab can hold, and lets it go at once. A manager that grants
+ * the control works, so its refusal of the run lock was a real one: the tab
+ * asks for the run lock once more (the holder's tab may have closed in
+ * between), and if it is refused again it is the second tab. Everything else
+ * is no lock, and the tab saves as if it were alone:
  *  - the API is missing (a page that isn't a secure context);
- *  - the request throws or rejects (a frame refused its storage);
- *  - the refusal names no holder. A lock manager that can't reach its storage
- *    refuses every request, a free name included, and lists nothing held (a
- *    second instance of the Electron shell on one profile does);
+ *  - a request throws or rejects (a frame refused its storage);
+ *  - the control is refused too (the manager refuses everything);
  *  - no answer comes within `ANSWER_WAIT_MS`, since a boot never hangs on the
  *    lock.
  * A lone player left unable to save by a broken lock would be worse off than
  * two tabs writing over each other.
+ *
+ * THE LOCK NEVER ASKS `locks.query()` (gotcha #140). It used to confirm a
+ * refusal by asking the manager who held the name. Firefox refuses that
+ * question in a partitioned third-party frame, which is what itch's iframe
+ * is, while it grants and refuses requests there as it should; so a second
+ * tab on itch read as no lock and saved over the first tab's run. The control
+ * asks only for what the lock itself needs, a request answered.
  *
  * The lock covers the run slot only: the lenient sections and the finished
  * journals are written from any tab. It is the browser's, so it holds between
@@ -47,6 +58,9 @@ export type RunLock = 'held' | 'elsewhere' | 'none';
  *  name. */
 export const RUN_LOCK_NAME = storageKey('run');
 
+/** What every control lock's name begins with. */
+export const CONTROL_PREFIX = `${RUN_LOCK_NAME}:control:`;
+
 /** How long a boot waits for the lock manager before going on with no lock.
  *  An answer takes a few milliseconds where the API works. */
 export const ANSWER_WAIT_MS = 1000;
@@ -58,8 +72,14 @@ export interface LockManagerLike {
     options: { readonly ifAvailable: true },
     callback: (lock: unknown) => unknown,
   ): Promise<unknown>;
-  /** The origin's locks, whichever tab holds them. */
-  query(): Promise<{ readonly held?: readonly { readonly name?: string }[] }>;
+}
+
+/** A name for a control lock that no other tab is holding: the time and a
+ *  random part, so two tabs that boot in the same millisecond still differ.
+ *  A control that met a taken name would read as a manager that refuses
+ *  everything, and the tab would save as if alone. */
+export function controlName(): string {
+  return `${CONTROL_PREFIX}${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
 /**
@@ -67,10 +87,12 @@ export interface LockManagerLike {
  * this page's, or it is another tab's. `locks` is the page's
  * `navigator.locks`, undefined where there is none. Never rejects.
  */
-export function acquireRunLock(locks: LockManagerLike | undefined, waitMs: number = ANSWER_WAIT_MS): Promise<RunLock> {
-  if (locks === undefined || typeof locks.request !== 'function' || typeof locks.query !== 'function') {
-    return Promise.resolve('none');
-  }
+export function acquireRunLock(
+  locks: LockManagerLike | undefined,
+  waitMs: number = ANSWER_WAIT_MS,
+  control: () => string = controlName,
+): Promise<RunLock> {
+  if (locks === undefined || typeof locks.request !== 'function') return Promise.resolve('none');
   return new Promise((resolve) => {
     // Past the wait the boot goes on with no lock. A grant that comes later
     // is still held, which keeps later tabs out; a refusal that comes later
@@ -81,32 +103,36 @@ export function acquireRunLock(locks: LockManagerLike | undefined, waitMs: numbe
       resolve(lock);
     };
 
-    const ask = (again: boolean): void => {
+    /** Ask for the run lock; `refused` runs when the manager says no. */
+    const ask = (refused: () => void): void => {
       locks
         .request(RUN_LOCK_NAME, { ifAvailable: true }, (lock) => {
-          if (lock !== null) {
-            settle('held');
-            // The lock is held until this promise settles, and it never does:
-            // the page's end is what releases it.
-            return new Promise<never>(() => {});
+          if (lock === null) {
+            refused();
+            return undefined;
           }
-          // Refused. Another tab holds the lock only if the manager says so.
-          locks
-            .query()
-            .then((state) => {
-              if (state.held?.some((l) => l.name === RUN_LOCK_NAME) === true) settle('elsewhere');
-              // No holder: it went between the two answers (its tab closed),
-              // so the lock is free to take, or the manager refuses everything.
-              else if (again) ask(false);
-              else settle('none');
-            })
-            .catch(() => settle('none'));
+          settle('held');
+          // The lock is held until this promise settles, and it never does:
+          // the page's end is what releases it.
+          return new Promise<never>(() => {});
+        })
+        .catch(() => settle('none'));
+    };
+
+    /** The control: `works` runs when the manager grants a name nobody
+     *  holds. Its callback returns at once, which lets the control go. */
+    const prove = (works: () => void): void => {
+      locks
+        .request(control(), { ifAvailable: true }, (lock) => {
+          if (lock === null) settle('none');
+          else works();
           return undefined;
         })
         .catch(() => settle('none'));
     };
+
     try {
-      ask(true);
+      ask(() => prove(() => ask(() => settle('elsewhere'))));
     } catch {
       settle('none');
     }

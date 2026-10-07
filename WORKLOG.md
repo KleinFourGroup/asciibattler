@@ -7147,3 +7147,32 @@ here and recommends a fresh one for it: the preparation, the sitting's
 findings and the phase close did not look likely to fit under the halt
 from 441k. 116k's read is cut for the sitting; its script is ROADMAP's
 line, and the user can take it early, as they did the four `batch` reads.
+
+### 116k's read (2026-10-07, the user's) — READ ✅, one flag for later
+
+Taken within the half hour of the stop, ahead of the sitting it was cut
+for. The reading before this entry: **455,173** at 11:54. The user: "I
+love this, Claude!" and "It's working perfectly out of the box."
+
+- **116k ✅.** The row, the sizes and the sweep, as built. The browser was
+  not said, and neither was a keyboard walk over the row; DESIGN's
+  checklist records the read with that. Electron and itch's frame stay
+  the sitting's.
+- **The flag, for later:** "I think we're going to have to do this again
+  in the future, though, because some things definitely just look better
+  on the larger sizes (events, the command chips in the HUD, and
+  hitsplats being the three standouts)." So some of the default sizes may
+  be too small. Nothing is resized now, by the user's call: "this really
+  feels like something that will need player feedback to inform--none of
+  my play testers have flagged UI size, ever". It is in TODO "§116
+  riders".
+- **The calls.** Eight were listed for the read and the reply names none,
+  so they stand as built, as the earlier steps' did. It speaks to one:
+  the hitsplats were seen at the larger sizes and liked there, which is
+  call 4's arm (the board's overlays grow). Two taste calls go unnamed
+  and stay the user's to reopen: a size is drawn when the settings close
+  (call 2), and no cap by the window (call 3).
+- *A reading of the flag, the session's and not the user's:* the setting
+  did a second job here. It let the user see three surfaces at sizes the
+  defaults don't have, on their own screen, without a build. A later
+  pass on the defaults can start the same way.

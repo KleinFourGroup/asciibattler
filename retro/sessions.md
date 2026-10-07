@@ -3647,3 +3647,17 @@ Written at the stop after 116k's commit, before the user has read it.
    3,354 boxes with none moved. I would want the condition repeated: a
    step whose first act is a measurement I am allowed to be surprised by.
    Reported response only.
+
+### Addendum — the read (2026-10-07)
+
+The user read 116k within twenty minutes of the stop and passed it:
+"working perfectly out of the box". So answer 2's doubt has part of an
+answer. Building on my leans and handing over a row to try cost the user
+nothing, and the row showed them something no page of mine would have:
+that three surfaces look better larger at the default too. They flagged
+it for later and resized nothing, on the ground that no playtester has
+raised UI size, which I think is right. The reply names none of the eight
+calls. I recorded them as standing and said in my reply which two taste
+calls it did not touch, once, without asking for an answer. On question
+7: "I love this" was good to read. Reported response only. The meter read
+455,173 before this.

@@ -537,6 +537,18 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   stability"), and DESIGN's Chips paragraph and the corner comments in the
   stylesheet change with it. Home: §117.5, the UI sweep (signed 2026-10-04), as its first item.
 
+- [ ] **Some text may be too small at the default size** (the user's
+  read of 116k, 2026-10-07): "some things definitely just look better on
+  the larger sizes", and the three that stood out were the events, the
+  command chips in the HUD (read here as the objective buttons, Engage /
+  Focus / Hold / Stop) and the hitsplats. No default is resized now, the
+  user's call: it wants player feedback, and no playtester has ever
+  flagged UI size. When it comes back, the lever is the `--text-*` token
+  each of the three uses, and the survey
+  (`shell/electron/probes/text-scale.js`) says what a larger default
+  costs each window. A suggestion of the session's, not the user's: ask
+  it at the round's playtest (was any text too small; did anyone change
+  Text size).
 - [ ] **Where a larger text size runs out of room on a 720p window**
   (116k; WORKLOG §116k's table). At 125 %: the battle's hop chip sits over
   the banner's left end by 19px (it is placed at the column's width plus a

@@ -6390,3 +6390,55 @@ shows it, in five groups.
 **Cost.** The production bundle is 630.25 kB raw (627.68 at 116f), the
 stylesheet 61.64 kB (61.27). The stretch to here: about 360k, of which
 the re-pick searches and the pane were the larger parts.
+
+### The second stop, first part (2026-10-06, the user's) — four calls signed, four open
+
+The reply to the stop, after "the full run" in the colourblind palette
+(the user's words; which browser was not said). The reading on the stop's
+commit (`8ffeb5f`): **470,741** at 15:02. The stop's eight calls, by the
+numbers the report gave them:
+
+- **1, the palette's look: signed.** "I absolutely love the color blind
+  palette! Honestly, I could see some normal people preferring it." The
+  first eye on the palette in the game, and a normal-vision one; no
+  colour-deficient player has been asked.
+- **2, a symbol on every pip: signed.** "Every unit is definitely the
+  right call!"
+- **7, normal vision in the gate: signed. 8, the label "Colorblind":
+  signed.**
+- **4, the six new glyphs: liked, with a finding.** "I like these
+  symbols! Though the symbols do turn out rather small." The 9px symbol
+  is too small at the user's real size, which is the thing the pane could
+  not show me. Open: the size.
+- **3, 5 and 6: not answered, and the fault is the report's.** The user
+  could not follow call 3 as worded (the card's square becoming the
+  symbol), and for 5 (the cyan) and 6 (the status hues) asked where the
+  comparison was. There was none to look at: the stop gave them numbers
+  and a choice, and the swatch page shows what was built, not the
+  alternatives. A taste call needs both arms in front of the eye.
+
+**Built for the answer:** `scratch/116g-calls.html` (untracked; a scratch
+generator over the instrument), served by the dev server so the game's
+fonts load. Four sections: the pip at 9 to 14px with three statuses and
+with ten; the card's row as it was, as built, and with both the square
+and the symbol; the cyan's three choices beside the mint in each view,
+with distances; the status and the empower hues, default against
+re-picked, in each view. Checked in the pane on the user's server: both
+fonts loaded, the 9px mock pip measures the game's 12 by 14 and ten make
+56 by 46, as the game's did.
+
+**What the page's numbers add.**
+- *The cyan.* All three choices are bound by the tritan view (0.101,
+  0.101, 0.015). In the other five views the built cyan is 0.19 to 0.20
+  from the mint, the duller teal 0.11 to 0.13, the default 0.09 to 0.10.
+  So for the red-green deficiencies, which are nearly all of them, the
+  built cyan is the further by a wide margin, not only the more vivid.
+- *The card's row with both.* The name's column falls from 54 to 44px,
+  and "Rejuvenate" (51px) is cut with an ellipsis; the numbers' line has
+  to run under the symbol to fit.
+- *The pip's size.* The strip grows one pixel a row for each pixel of
+  the symbol and no wider: four pips fit a row at every size to 14px.
+  Three rows of ten are 46px tall at 9px and 55 at 12.
+
+The session's leans, given with the page: the built cyan; the re-picked
+status hues; the symbol alone on the card; 12px for the pip's symbol.

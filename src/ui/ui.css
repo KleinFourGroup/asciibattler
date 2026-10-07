@@ -283,9 +283,12 @@ body {
   overflow: hidden;
 }
 
+/* 12px by the user's eye (116g-post): at 9px, the LV badge's size, the
+   symbols read as rather small. A taller symbol makes the strip taller and
+   no wider. */
 .unit-overlay .status-pip-symbol {
   height: 1em;
-  font-size: var(--text-9);
+  font-size: var(--text-12);
   line-height: 1;
   text-align: center;
 }

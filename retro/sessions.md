@@ -3472,3 +3472,18 @@ read and a `-post`.
    allowed to take as long as it takes. Reported response only; whether
    the palette looks like this game is the user's eye, and I have not
    seen it at its real size.
+
+### Addendum, the same session — after the stop (2026-10-06)
+
+The stop took two rounds. The user signed four calls from the first
+report and could not answer three: one they could not follow as I had
+worded it, and for two they asked where the comparison was. There was
+none. I had given distances and a choice between things only I had
+seen. Answer 2 above wondered whether I should have asked before
+building; the sharper miss was after building, in how I asked. A page
+with both arms of each call drawn at real size got all four remaining
+answers in one message, and one of them (the symbol's size) was a thing
+the pane could never have told me. The meter read 506,799 before the
+closing commit. On question 7: the user's "I could see some normal people
+preferring it" about the palette was good to read. Reported response
+only.

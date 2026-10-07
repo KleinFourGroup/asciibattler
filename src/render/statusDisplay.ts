@@ -29,7 +29,8 @@
  * table). A camp unit has no card, so on its pip the symbol is the status's
  * only read besides the hue. The four that a number already wore keep their
  * glyph (`~` burn, `‡` bleed, `☠` poison, and `+`, the heal number's, for
- * rejuvenate). The other six are picked to stay apart at 9px, the pip's size:
+ * rejuvenate). The other six were picked to stay apart at 9px, and the pip
+ * draws them at 12:
  * `*` frost, `!` alarm, `⊘` no sight, `?`, `↑` a stat raised, `»` haste.
  * statusDisplay.test.ts holds every shipped status to one symbol of its own.
  */

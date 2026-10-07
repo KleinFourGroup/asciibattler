@@ -6442,3 +6442,38 @@ fonts loaded, the 9px mock pip measures the game's 12 by 14 and ten make
 
 The session's leans, given with the page: the built cyan; the re-picked
 status hues; the symbol alone on the card; 12px for the pip's symbol.
+
+### The second stop, second part, and 116g-post (2026-10-06, the user's) — 116g READ ✅; the pip's symbol is 12px, ◐ built, unread in the game
+
+The reply after the page (`scratch/116g-calls.html`): "I see now!" The
+reading on the first part's commit (`480f2cf`): **495,397** at 20:54.
+
+- **3, the card's row: the symbol alone,** as built. "Yes, definitely
+  symbol alone!"
+- **4, the symbol's size: 12px.** "Agreed; 12 looks best!" Chosen from
+  the page's row of sizes, which draws the pip with the game's rules and
+  fonts at real size.
+- **5, the cyan: as built** (`#0CC7F3`). "Agreed!"
+- **6, the status hues: the re-picks, all of them.** "Signing all of the
+  re-picks!"
+
+With the first part, all eight of the stop's calls are answered, and
+**116g is read.** One thing changes, so it is a `-post`.
+
+**116g-post — the pip's symbol at 12px.** One declaration in `ui.css`
+(`.status-pip-symbol`, `--text-12` for `--text-9`), and the comment in
+`statusDisplay.ts` that named the old size.
+- *In the pane* (Chromium, `480f2cf-dirty-dev`, the quarry, ten statuses
+  planted on a camp unit): the page's rule reads `--text-12`; a pip is 12
+  by 17, its symbol's box 10 by 12 and its track 10 by 3; ten pips are
+  three rows, 56 by 55, four to a row; each of the ten glyphs is 7.2px
+  wide in its 10px box. These are the numbers the page's mock gave.
+- *Not verified:* the user has seen 12px on the page, not in the game.
+  The read is `batch`, at the sitting: a unit with a status, in a battle;
+  wrong is a symbol cut by its plate, or a strip that covers the unit
+  above it.
+
+**What the stop cost and what it showed.** Two rounds where one would
+have done: the first report asked for three taste calls with no picture
+of the alternatives. The page took about 25k to build and check, and
+every open call was answered from it in one message.

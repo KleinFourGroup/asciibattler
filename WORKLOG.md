@@ -7690,3 +7690,181 @@ worked under electron!" So a backup picked through the system's dialog
 restores in the shell and its reload brings the old values back, which
 116h had tested over a stand-in adapter only. TODO's rider is closed.
 The reading before this entry: **517,239** at 18:45.
+
+## Phase 117 — Escalation and the unlock mechanism
+
+### The §117 audit and cut (2026-10-07) — the shape-lock is open
+
+Session 515397d2, fresh, from about 19:47. Pre-flight: typecheck clean;
+`npm test` 243 files, 3485 tests, 45.8 s. Readings: **92,474** at 19:49,
+after HANDOFF and `process/planning.md`; **222,276** at 19:55, at the
+audit's end. ✔ = read by this session at file:line, or measured.
+
+**What is there.**
+- **Three per-run multipliers, set by nothing a player reaches.**
+  `DifficultyMultipliers` is `waveSize`, `levelBudget`, `bits` (✔
+  `src/config/difficulty.ts:132-136`), each a `RunConfig` override over a
+  `difficulty.json` default of 1 (✔ `:147-157`), resolved once in
+  `resolveRunInputs` (✔ `Run.ts:4752-4756`). None has a URL form (✔
+  `RunConfig.ts:374-403`, `:420-461`). The count is scaled before its
+  rounding and the budget before its own (✔ `wave.ts:203-206`,
+  `:241-250`); the bits lever is inside `effectiveBits`, which every earn
+  goes through (✔ `Run.ts:2459-2474`), and a sold packet is not an earn (✔
+  `:2035`, `addBits`).
+- **The enemy's pool has no multiplier and three reads.**
+  `selectedEncounter.healthPool` is read where the encounter starts (✔
+  `Run.ts:2113`), as the pool's maximum for every gauge and payload (✔
+  `:2268`), and as the denominator of the stage condition (✔ `:2885`). A
+  multiplier on one of them alone would flip a boss's stage at the wrong
+  fraction, so the three go through one accessor.
+- **A reload keeps the multipliers now, and a rollout clone does not.**
+  D8's reason for the snapshot field was that `Run.fromJSON` resets the
+  multipliers. Since 115a `fromJSON` takes the run's config (✔
+  `Run.ts:4413`, `:4451-4463`) and the slot keeps the dials, so that
+  reason is gone for a reload. It stands for the bot: `cloneRunForRollout`
+  loads the wire image with no config (✔ `src/bot/runRollout.ts:65`), which
+  is why the harness refuses `--arbitrate` with a probe dial (✔
+  `tests/fuzz/commands/args.ts:601-627`). A level that rides only the
+  config would have the arbitrated arm judge its choices against
+  Escalation-off futures, and §118's board could not be run arbitrated.
+  So the level goes in the snapshot, as signed, for the clone's sake.
+- **The journal's seed start replays from the dials** (✔
+  `Game.ts:1023-1029`, `replayJournal.ts:75`), so a level picked on a
+  screen has to be spelled in them too: a `RunConfig` field with a URL
+  form. `runConfigToQueryString` writes only the fields it knows (✔).
+- **Character select confirms on a card's click** (✔
+  `CharacterSelectScreen.ts:85-94`): there is no selected state between
+  the click and the run, so a level is chosen before the card is clicked
+  or on it. `chooseCharacter` carries the character's id alone (✔
+  `Command.ts:211`) and is not journaled (✔ `journal.ts:63`).
+- **A run's end is seen in two places.** `run:victory` swaps to the end
+  screen (✔ `Game.ts:475`) and the autosave empties the slot at the same
+  command (✔ `:815-819`); the credits' flag is written later, at the end
+  screen's button (✔ `:963-964`). A win recorded at the button is lost by
+  a tab closed on the end screen, with the slot already empty.
+  `Run.resume()` re-emits `run:victory` for a loaded end state (✔
+  `Run.ts:4284-4287`), so whatever listens must be idempotent.
+- **`progress` has one field** (✔ `src/store/progress.ts:19-32`), and a
+  lenient field its schema refuses falls back whole (✔ `store.ts:266`): a
+  record of levels with one bad entry would lose every character's.
+- **A dialed run is told from a clean one by its dials only.** They hold
+  `seed=` when the menu's field or the URL set one (✔ `Game.ts:1009-1028`),
+  and every other dial the URL carried (`bits=`, `roster=`, `daemon=`,
+  `hops=`, `encounter=`). A run started at `?bits=9999&character=soldier`
+  saves over the slot, and Continue on a plain page then plays it.
+- **Guards the phase will trip, by design:** `RUN_SCHEMA_VERSION` is 47 (✔
+  `Run.ts:506`) with its fingerprint; `configHash`'s registry and its
+  drift guard for a new config file (✔ `configHash.ts:65-99`);
+  resume-gates' list of the inputs a loaded run reads (✔
+  `tests/integration/resume-gates.test.ts:250-263`).
+
+**The rounding, re-counted** (a scratch script over the raw
+`config/encounters.json`, not through `wave.ts`; its known answers, a
+fixed 10 at ×1.1 and a hand factor of 1.5 at 6, came back 11 and 9 → 10).
+19 encounters, 34 wave specs: 32 counts by the hand and 2 fixed, all 34
+budgets `mean`, 5 with a `levelCap`.
+
+| hand | wave ×1.1: waves gaining 0 / 1 | wave ×1.2: gaining 0 / 1 / 2 |
+|---|---|---|
+| 6 | 6 / 28 | 2 / 17 / 15 |
+| 5 | 18 / 16 | 3 / 26 / 5 |
+| 4 | 14 / 20 | 3 / 28 / 3 |
+
+These are §110f's numbers, so that count holds. The pools, by
+`Math.round`: every one of the 19 grows at ×1.1 and again at ×1.2 (the
+smallest, 13 → 14 → 16; the largest, 44 → 48 → 53; the bosses 36 → 40 →
+43, 39 → 43 → 47). A pool under 5 would not grow at ×1.1; none is authored.
+
+**Hypotheses for step zero** (unmeasured).
+- That a level-0 run is the parent commit's run: the fuzz arms'
+  `summary.csv` and `drive-run --seed=7`'s log are expected unchanged, and
+  the snapshot to differ by `schemaVersion` and the new field only.
+- That every bits number a screen shows goes through `effectiveBits`, so
+  the bits lever needs no display work.
+- What the five capped waves do under the budget lever, and which
+  encounters hold them.
+- How long a paired local sample of six levels takes, and with which arm.
+- That the lenient reader takes a record field as it takes a scalar.
+- Whether a stepper under each card fits character select at 150 % text
+  on a 720p window (§116k's survey is the instrument).
+- No measurement of the wave lever under the casualty rule exists
+  (§110f's search); 117c's sample would be the first.
+
+**The draft cut.**
+- **117a — the fourth multiplier, enemy morale.** `enemyMorale` beside
+  the three (the `RunConfig` override, the `difficulty.json` default of
+  1); the pool's three reads through one accessor, `round(healthPool ×
+  m)`. Exit: at 1, byte-identical (the determinism test, the smoke, the
+  drive log); at 1.1 and 1.2 the 19 pools equal a table written by hand in
+  the test; a staged encounter flips at the same fraction of the scaled
+  pool. No bump; the config hash moves; the smoke fires. Read `none`.
+- **117b — the level, its table and the save.** `config/escalation.json`
+  (five rows of cumulative lever values) and its module; `RunConfig`'s
+  `escalation` with the URL dial; `RunSnapshot`'s field; the constructor
+  and `fromJSON` multiply the level's factors onto the resolved four,
+  `fromJSON` from the snapshot. Exit: the level-0 oracle against a
+  worktree of the parent commit, with a level-1 run as its failing
+  control; each level's four factors equal the spec's table written by
+  hand (at 5: 1.2, 1.44, 1.2, 0.75); the continuation check holds a
+  level-3 run; a rollout clone reads the live run's level. Run v47 → v48,
+  re-pinned; the smoke fires. Read `none`.
+- **117c — the harness's `--escalation`, and a paired sample.** The flag
+  in run mode, legal with `--arbitrate`; then the same seeds at levels
+  0–5, small and local, into BALANCE as a smoke and named one. Exit: the
+  level counted from each run's output, not from the flag; the table.
+  The smoke fires. Read `none`, raised to a stop if a level comes out
+  easier than the one under it beyond the sample's noise, since that
+  reopens the spec's table.
+- **117d — progress and the unlock rule.** One `progress` field (the
+  highest level won per character; the ceiling derived from it), three
+  pure rules (the ceiling, whether a run counts, the record after a win),
+  `Game` writing at `run:victory` and clamping the picked level at
+  `createRun`, `chooseCharacter` carrying the level. Exit: the rules
+  pinned headless, each refusal by name; under the Electron probe a
+  forced win writes the store and a forced win on a seeded run writes
+  nothing. No bump; the smoke fires (`src/run/Command.ts`). Read `none`.
+- **117e — the picker, and the level on the end screen.** A stepper row
+  under each card, its box always reserved; the levels in words; the end
+  screen names the level and, after a win that counts, what it unlocked;
+  DESIGN's idiom. No smoke. Read `stop`, in Firefox.
+- Then the close.
+
+**Calls for the shape-lock, with the session's lean.**
+1. **The level is in the snapshot and in the dials.** The snapshot for
+   the rollout clone, the dial (`escalation=N`) for the journal's replay;
+   on a load the snapshot's wins, as the character's does.
+2. **`seeded` is not a snapshot field; the rule reads the dials, and it
+   is wider than seeds** (the lean). A run counts toward progress when
+   its dials hold nothing but `character` and `escalation` and its level
+   is within that character's ceiling. That refuses a typed seed, a
+   `?bits=` run continued on a plain page, and a level reached by URL
+   without the wins under it. The other shape: a `seeded` boolean in v48,
+   which leaves the other dials open.
+3. **A reward's taken rows: dropped** (the lean). Keeping them puts the
+   screen's display order and a settled amount into the Run and the save
+   for good, to serve a reload in the middle of a reward. Nothing the run
+   needs is lost today. The other shape: a `RunSnapshot` field in v48 and
+   a step of its own, headless core then the screen.
+4. **The pool rounds to the nearest whole**, as the count and the budget
+   do; the table above is what that gives.
+5. **What is stored is the fact, the highest level won, and the ceiling
+   is derived** (the lean), so Round 10's content mapping is another
+   reading of the same record and no stored meaning changes. The field's
+   name is permanent: `bestWin` (the lean). The other shape: store the
+   ceiling.
+6. **The picker opens at the highest unlocked level and remembers
+   nothing; the level is shown on character select and the end screen
+   only** (the lean). A chip in a run waits for §117.5, which is moving a
+   chip out of that column.
+7. **The win is written at `run:victory`**, not at the end screen's
+   button.
+8. **117c's sample is in the phase** (the lean): small, local, a smoke.
+   An inversion found here costs a table edit; found at §118's board it
+   costs the round's last phase.
+
+**What the stretch holds.** 117a to 117e's stop is one stretch with no
+stop inside it. Estimated from §116's steps, about 430k, on 222k now: it
+does not fit under the line in this session. The lean: this session
+builds 117a–117c, the sim half, where the audit is the context, and
+hands off at the 117c/117d boundary or at the line, whichever comes
+first.

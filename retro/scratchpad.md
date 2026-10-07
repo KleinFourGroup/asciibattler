@@ -157,3 +157,18 @@ _(The post-§109 entries start here — Round 8, Foundations.)_
   not aimed at it. About ten minutes and one file. It is the same idea as
   an oracle's failing control (`process/oracles.md`), applied to a batch
   of ordinary unit tests; whether it belongs there is for the sweep.
+- **2026-10-07, 116k: a pre-registered stop named a proxy.** The cut said
+  "if the count is large, the range comes back to the user". Step zero
+  found a small count and a limit the line had not named (the window), so
+  the stop's condition was not met and the decision it stood for was still
+  there. A cut line that pre-registers a stop could name the decision
+  ("which sizes are offered goes back to the user with the measurement")
+  and leave the measurement to say why. Whether that belongs in
+  `process/planning.md` is for the sweep.
+- **2026-10-07, 116k: a stylesheet change measured as an overlay first.**
+  Both candidates for the sweep were laid over the page as a `<style>`
+  by the survey script and measured at every size before `ui.css` was
+  touched, and the sheet was edited once, to the arm that was built. The
+  same report shape then held the edited sheet against the one before it,
+  box by box. It is the same-run toggle (DESIGN "Layout stability") run
+  across a whole driven run.

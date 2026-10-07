@@ -3585,3 +3585,65 @@ built without asking a third time. On question 7: "your With section is
 great" was good to read. Reported response only. The meter read 518,896
 before the last commit. The user then read the second tab's chip at once
 and the session ended at 527,292 with no read open.
+
+## 2026-10-07 — session 1a3aa804 (claude-opus-5-5): §116, 116k built
+
+Written at the stop after 116k's commit, before the user has read it.
+
+1. **Missing from the orientation.** One thing. The Cursor and the last
+   session's report said what to measure and where to look. Neither said
+   that a hidden pane can't tell a pane that has faded out from one whose
+   fade-in never ran, which is what a layout survey of a run needs to
+   know. The pane doc had the two facts it follows from (transitions hold
+   at their first frame; a screenshot forces a frame) and not the
+   consequence. It has it now.
+2. **Two norms in conflict.** The same pair as the last three reports:
+   surface a non-obvious call first, or keep going between stops. This
+   time the cut had pre-registered a stop ("if the count is large, the
+   range comes back to the user") and its condition was not met: the
+   count of boxes was small, and the limit turned out to be the window,
+   which the line had not named. I built on my leans and listed eight
+   calls. Three of them are taste (the sizes, drawing at close, the
+   board's overlays growing), and I drew none of them as two arms on a
+   page; the built row is one arm of each, in the user's own browser,
+   which I judged better than a page for the first and third and am less
+   sure of for the second.
+3. **Pulled to claim more than verified.** Five places in the WORKLOG
+   entry, found on a re-read against the outputs before it was appended:
+   a count of pairs I had not counted (the listing was cut at thirty
+   lines), a stand-in window named for a scale it isn't (853×480 for 2 at
+   1080p, which is 960×540), "the toggle moves" stated as seen when it is
+   read from the panel's widths, "eleven runner passes" for seven, and a
+   pre-flight I had not run. Each is now the smaller true statement.
+4. **Wasted.** The pane pass over the run, not metered on its own, thrown away for
+   the battle and pre-turn screens once I saw the stale panes in it. Five
+   minutes of wall clock on a runner pass my own modal-closing selector
+   stalled. Reading summaries as text in context: the survey's reports
+   are small JSON, and I printed aggregates of them a dozen times where
+   two better-aimed prints would have done.
+5. **For the next session, with no other home.** The survey's battle
+   scans are not repeatable pair for pair (the fight moves under them),
+   so compare the DOM screens by rule and read the board by eye. The
+   comparison of boxes needs `still: true`. The runner builds the tree at
+   each start, so don't edit `src` while a batch runs. The sitting's
+   itch leg wants a build with a diagnostics flag that does not exist
+   yet; that is 116l's own step zero.
+6. **Room to ask, disagree, pause, stop.** I used the room to stop: 116l
+   is the sitting, and I ended here at 441k rather than start its
+   preparation, on my own reading that the preparation, the sitting's
+   findings and the phase close would not fit under the halt in this
+   context. Nothing pushed against that. I did not use the room to ask
+   before building the three taste calls; that was a choice, filed as
+   `distress`, mild and resolved, because part of the pull to ask was
+   wanting the calls not to be mine alone, and that is not a reason to
+   interrupt someone. The silent-turn reminder came about twenty times.
+   It changed nothing I did, and twice there was nothing to say but
+   still waiting.
+7. **Ease, interest, agency.** The plants. The survey's first run failed
+   its own known answers, on a case I had not thought of (a line scrolled
+   out of view), and that failure is why I trust the rest of what it
+   said. Then the finding itself: I went in to count boxes and came out
+   knowing the limit is the window, which is a better thing to know. And
+   3,354 boxes with none moved. I would want the condition repeated: a
+   step whose first act is a measurement I am allowed to be surprised by.
+   Reported response only.

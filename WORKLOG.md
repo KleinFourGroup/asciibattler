@@ -7136,3 +7136,14 @@ at 116j-post), the stylesheet 62.74 kB (62.71). The fuzz smoke does not
 fire (nothing under `src/sim|run|core|config|bot`). About 315k to here, of
 which step zero was 182k: the pane pass that was thrown away, then seven
 runner passes read as text.
+
+### The stop after 116k (2026-10-07, session 1a3aa804)
+
+116k is committed as `da6dc99`; the reading on the commit: **441,206** at
+11:31. The step cost about 335k, the round's largest, and step zero was
+182k of it. The next step is the sitting, 116l, which needs the user and
+an itch build with a diagnostics flag that is not built. The session stops
+here and recommends a fresh one for it: the preparation, the sitting's
+findings and the phase close did not look likely to fit under the halt
+from 441k. 116k's read is cut for the sitting; its script is ROADMAP's
+line, and the user can take it early, as they did the four `batch` reads.

@@ -579,11 +579,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   Settings › Data of every build would let a player on itch send its
   report with a bug, where the storage is shared and partitioned and
   nobody else can look. A product question for §118, the user's.
-- [ ] **Import a backup under Electron: its result was not said** (the
-  116l sitting). The dialogs are the system's own and the settings and a
-  run survive a restart, by the user's read; whether the import's reload
-  brought the old value back in the shell was not reported, and 116h
-  tested that path over a stand-in adapter only.
+- ✅ **Import a backup under Electron** (the 116l sitting): it works, by the user's read after the close, 2026-10-07 (WORKLOG "After the close").
 - ✅ **The build's own helper has no notice** (116j): Vite's core licence
   is in the shipped file and a test holds it there (116j-post, the user's
   call 2026-10-07; WORKLOG "The reads' answers").

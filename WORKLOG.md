@@ -7682,3 +7682,11 @@ is 641.83 kB raw (609.72 at 115g). Seven sessions, 2026-10-04 to 10-07.
 
 The session's last reading: **515,444** at 18:43, on the closing commit
 (`95b8905`); the close cost about 47k.
+
+### After the close (2026-10-07, the user's) — the import under Electron works
+
+The one answer the close left open, given the same evening: "Yes, import
+worked under electron!" So a backup picked through the system's dialog
+restores in the shell and its reload brings the old values back, which
+116h had tested over a stand-in adapter only. TODO's rider is closed.
+The reading before this entry: **517,239** at 18:45.

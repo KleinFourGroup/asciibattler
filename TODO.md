@@ -587,10 +587,6 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §117 riders
 
-- [ ] **Two tabs can lose a recorded win** (117d, found at step zero).
-  `store.patch` writes a lenient section as the page first read it, plus
-  the change. With two tabs open and a run won in each, the second win's
-  write puts `progress` back without the first. The fix sized at 117d: a
-  store method that reads the section's text again before changing it,
-  used by `Game.recordWin` and the `creditsSeen` write. The user's call,
-  asked at 117e's stop (WORKLOG §117d "Open").
+- ✅ **Two tabs can lose a recorded win** (117d): the two progress writes
+  go through `store.update`, which reads the section again before it
+  changes it (117d-post, the user's call 2026-10-08; WORKLOG §117d-post).

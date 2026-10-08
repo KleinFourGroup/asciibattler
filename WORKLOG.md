@@ -8424,3 +8424,96 @@ launch, so 117e cost about 125k; **458,354** at 11:35, at the stop.
 91k and its close 47k, so a small post and the close look likely to fit
 under the line from 458k, and a larger post does not leave room for the
 close.
+
+### 117e — THE READ (2026-10-08, the user's) ✅
+
+Read in Firefox the same day. The user: "I finally tested everything,
+and I'm on board with everything you asked me to judge! Everything looks
+awesome!" So 117e is read as built, and the calls the report put to the
+user's judgement are signed: the words, one line under the stepper with
+the rest in the tooltip, "Escalation 0" and no level line at 0, no
+reason shown where a win opens nothing, and from 117d that a run loaded
+from a file doesn't count, that the pick replaces a level in the URL
+beside no character, and that a second tab's win counts. The other
+calls of the two lists stand unchallenged.
+
+The two questions:
+1. **The two-tab race: "Yes, let's fix that race!"** → 117d-post, below.
+2. **Character select scrolling at 150 % on a 720p window: "Agreed!"**
+   Call 6 stays as built.
+
+### 117d-post — the two progress writes build on what is stored now (2026-10-08, session 610d7303)
+
+Inserted at the stop, the user's answer. Read `none`, the session's
+choice for an inserted step: nothing a player sees changes, and the
+proof is an oracle with its control. The reading at its start:
+**464,942** at 17:29.
+
+**Step zero: the premise, measured on `8a4113b`.** In the pane (the web
+adapter), one page stands for the stale tab and a write to
+`localStorage` for the other tab's win. The page draws character select,
+which reads `progress`. Then `{ creditsSeen: true, bestWin: { soldier:
+0 } }` is stored under it, as a second tab would. Then the page's
+Gambler wins. Stored afterwards: `{ creditsSeen: false, bestWin: {
+gambler: 0 } }`. The Soldier's win is gone and the credits flag is back
+to false, and leaving the end screen opened the credits again.
+
+**Built.**
+- `store.update(section, change)`: reads the section's text again, hands
+  `change` what is stored now, and stores what it returns over that. A
+  change that names no field stores nothing, and the page's copy still
+  catches up.
+- It builds on the page's copy, as `patch` does, in the three cases
+  where the storage can't be the newer: a store that can't read, one
+  sealed by a restore, and a section whose last write failed (a new set,
+  `ahead`, cleared by that section's next good write). Without the
+  last, a value held only in memory after a failed write would be lost
+  to the re-read. A read that fails at the change locks the store, as
+  any failed read does, and its null is not taken for an empty section.
+- `Game.recordWin` runs its three rules inside `update`, and
+  `resetRun`'s credits flag is asked and written the same way.
+- `patch` is unchanged, so the settings write as they did.
+
+**Calls made while building** (the user's to overturn).
+1. **`patch` keeps its behaviour.** Two tabs changing two settings still
+   overwrite each other. Making `patch` re-read would fix that too, but
+   a setting is drawn from the page's own model, so the stored value and
+   what the page shows would part. Out of this step's intent.
+2. **`ahead` is per section, not the store's can't-save status.** The
+   status clears on any section's good write, and a progress value that
+   failed to store would then be dropped by the next re-read.
+3. **A pin holds `Game` to `update` for this section** by reading
+   `Game.ts`'s text (two `store.update(PROGRESS_SECTION`, no `patch`).
+   It is the guard on the path where the mistake would be made again.
+4. **Character select's read of the ceiling is still the page's copy**,
+   and so is the clamp's. A tab opened before another tab's win shows
+   the picker as it was until it writes or reloads. That errs low, never
+   high.
+
+**Evidence.**
+- *Headless,* +14 tests (3569 in 245 files): nine for `update` on a
+  fixture section, two stores over one adapter standing for two tabs,
+  and five on the real section (both wins kept with the other tab's
+  flag; a second tab's win at the level the first opened counts; a
+  lower win doesn't lower the record; the pin). Each group has its
+  control: the same sequence through `patch` loses the first write.
+- *The cuts,* six to `store.ts`, one at a time, each failing a named
+  test: `update` on the page's copy (8 tests), a failed write forgotten,
+  a failed write never forgiven, a failed read taken for an empty
+  section, a sealed store reading what was restored, a change of no
+  field written anyway. The first run of the cuts left the sealed one
+  passing: the assertion written for it never had the page read the
+  section before the restore. It was replaced by a test that does.
+- *In the pane, the same steps on the new code:* stored after the
+  Gambler's win, `{ creditsSeen: true, bestWin: { soldier: 0, gambler:
+  0 } }`; the end screen says "The Gambler: Escalation 1 unlocked.";
+  leaving it opens no credits.
+- *Under Electron,* 117d's eight launches on one profile again, all
+  exit 0, and `store.json` holds the same record as before the change.
+
+**Not verified.** Two real tabs: the other tab was a write to
+`localStorage`, which the page under test can't tell from one. A write
+that fails in a real browser (the quota path is the memory adapter's).
+
+**Predictions against what happened.** No bump, no smoke: `src/store`
+and `src/Game.ts` are outside the hook's sim paths.

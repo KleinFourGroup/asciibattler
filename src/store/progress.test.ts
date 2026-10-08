@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CHARACTERS } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
@@ -88,6 +89,69 @@ describe('117d — the record of wins, as stored', () => {
       'some-later-character': 1,
       soldier: ESCALATION_MAX + 4,
     });
+  });
+});
+
+describe('117d-post — two tabs, a run won in each', () => {
+  /** A won run's write as `Game.recordWin` makes it: the rules, inside
+   *  `store.update`. */
+  const win = (store: ReturnType<typeof createStore>, id: string, level: number): void => {
+    store.update(PROGRESS_SECTION, ({ bestWin }) => {
+      if (!runCounts(`character=${id}${level > 0 ? `&escalation=${level}` : ''}`, level, escalationCeiling(bestWin, id))) return {};
+      const after = bestWinAfter(bestWin, id, level);
+      return after === bestWin ? {} : { bestWin: after };
+    });
+  };
+  const tabs = () => {
+    const adapter = memoryAdapter();
+    const a = createStore({ adapter, build: 'b' });
+    const b = createStore({ adapter, build: 'b' });
+    // Each tab has drawn character select, so each has read the section.
+    a.read(PROGRESS_SECTION);
+    b.read(PROGRESS_SECTION);
+    const storedNow = () => JSON.parse(adapter.entries.get(KEY)!).data as unknown;
+    return { a, b, storedNow };
+  };
+
+  it('keeps both wins, and the flag the other tab stored', () => {
+    const { a, b, storedNow } = tabs();
+    win(a, 'soldier', 0);
+    a.update(PROGRESS_SECTION, () => ({ creditsSeen: true }));
+    win(b, 'gambler', 0);
+    expect(storedNow()).toEqual({ creditsSeen: true, bestWin: { soldier: 0, gambler: 0 } });
+  });
+
+  it('a second tab’s win at the level the first tab opened counts, and climbs from the first’s', () => {
+    const { a, b, storedNow } = tabs();
+    win(a, 'soldier', 0);
+    // The second tab's own copy says the Soldier has won nothing, so its
+    // ceiling there is 0; the record as stored says 1.
+    win(b, 'soldier', 1);
+    expect(storedNow()).toEqual({ creditsSeen: false, bestWin: { soldier: 1 } });
+  });
+
+  it('a second tab’s lower win does not lower the first’s', () => {
+    const { a, b, storedNow } = tabs();
+    win(a, 'soldier', 0);
+    win(a, 'soldier', 1);
+    win(b, 'soldier', 0);
+    expect(storedNow()).toEqual({ creditsSeen: false, bestWin: { soldier: 1 } });
+  });
+
+  it('the control: written from the tab’s own copy, the second win loses the first', () => {
+    const { a, b, storedNow } = tabs();
+    win(a, 'soldier', 0);
+    b.patch(PROGRESS_SECTION, { bestWin: bestWinAfter(b.read(PROGRESS_SECTION).bestWin, 'gambler', 0) });
+    expect(storedNow()).toEqual({ creditsSeen: false, bestWin: { gambler: 0 } });
+  });
+
+  it('`Game` writes the progress section through `update` alone', () => {
+    // The guard on the path: a `patch` of this section in Game is the
+    // write the control above shows losing a win.
+    const game = readFileSync('src/Game.ts', 'utf8');
+    expect(game).toContain('store.update(PROGRESS_SECTION');
+    expect(game.match(/store\.update\(PROGRESS_SECTION/g)).toHaveLength(2);
+    expect(game).not.toMatch(/store\.patch\(\s*PROGRESS_SECTION/);
   });
 });
 

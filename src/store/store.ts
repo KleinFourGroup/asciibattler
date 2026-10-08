@@ -20,6 +20,11 @@
  *    key takes its fallback, and a value its schema refuses takes its fallback
  *    alone, so no upload wipes a player's settings or unlocks. The version is
  *    written and never judged; a field whose meaning changes gets a new name.
+ *    A page reads a section once and keeps its copy, and `patch` stores that
+ *    copy with the change. With the game open in two tabs that puts one
+ *    tab's copy back over what the other stored since, so a change that must
+ *    not lose the other tab's goes through `store.update`, which reads the
+ *    section again first (the record of wins, src/store/progress.ts).
  *  - Strict (`store.readStrict` / `store.writeStrict`): the stored version
  *    must equal the section's, and the section's own `load` must accept the
  *    data. Otherwise the read is `rejected`, and the stored text is left in
@@ -137,6 +142,15 @@ export interface Store {
   read<T extends object>(section: LenientSection<T>): T;
   /** Change some of a lenient section's fields. False when it couldn't be saved. */
   patch<T extends object>(section: LenientSection<T>, changes: Partial<T>): boolean;
+  /**
+   * Change a lenient section from what is stored NOW: the section is read
+   * again, `change` is handed it and returns the fields to change, and the
+   * result is stored (nothing is, when it returns none). For a value another
+   * tab may have written since this page read it, such as a record that only
+   * grows: built on the page's own copy, a write would put that copy back
+   * over the other tab's. False when it couldn't be saved.
+   */
+  update<T extends object>(section: LenientSection<T>, change: (stored: T) => Partial<NoInfer<T>>): boolean;
   readStrict<Wire, Loaded>(section: StrictSection<Wire, Loaded>): StrictRead<Loaded>;
   /** Replace a strict section. False when it couldn't be saved. */
   writeStrict<Wire, Loaded>(section: StrictSection<Wire, Loaded>, wire: Wire): boolean;
@@ -252,11 +266,16 @@ export function createStore(options: {
     attempt(prove);
   }
 
-  /** The section's live value: the store's own copy, never handed out. */
-  const readLenient = <T extends object>(section: LenientSection<T>): Record<string, unknown> => {
-    const cached = lenientCache.get(section.name);
-    if (cached !== undefined) return cached;
-    const text = readText(section.name);
+  /** The lenient sections whose copy here holds what the storage does not,
+   *  because the last write of it failed. Until a write succeeds, the page's
+   *  copy is the newer of the two. (An adapter whose writes are asynchronous
+   *  keeps its own text in memory, as Electron's does, so its reads already
+   *  hold this page's writes.) */
+  const ahead = new Set<SectionName>();
+
+  /** A lenient section as `text` holds it: every declared field, from its
+   *  schema or its fallback. */
+  const parseLenient = <T extends object>(section: LenientSection<T>, text: string | null): Record<string, unknown> => {
     const envelope = text === null ? null : parseEnvelope(text);
     const stored = envelope !== null && isRecord(envelope.data) ? envelope.data : {};
     const value: Record<string, unknown> = {};
@@ -265,8 +284,38 @@ export function createStore(options: {
       const parsed = key in stored ? field.schema.safeParse(stored[key]) : null;
       value[key] = parsed !== null && parsed.success ? parsed.data : field.fallback;
     }
+    return value;
+  };
+
+  /** The section's live value: the store's own copy, never handed out. */
+  const readLenient = <T extends object>(section: LenientSection<T>): Record<string, unknown> => {
+    const cached = lenientCache.get(section.name);
+    if (cached !== undefined) return cached;
+    const value = parseLenient(section, readText(section.name));
     lenientCache.set(section.name, value);
     return value;
+  };
+
+  /** The section as the storage holds it NOW, which another tab may have
+   *  written since this page read it. Where the storage can't be the newer
+   *  (this store reads nothing, writes nothing more, or holds a value its
+   *  last write failed to store) it is the page's copy. */
+  const storedNow = <T extends object>(section: LenientSection<T>): Record<string, unknown> => {
+    if (locked || sealed || ahead.has(section.name)) return readLenient(section);
+    const text = readText(section.name);
+    // A read that failed just now locked the store, and its null is not an
+    // empty section: the page's copy is all there is.
+    if (locked) return readLenient(section);
+    return parseLenient(section, text);
+  };
+
+  /** Keep `next` as the page's copy and store it. */
+  const writeLenient = <T extends object>(section: LenientSection<T>, next: Record<string, unknown>): boolean => {
+    lenientCache.set(section.name, next);
+    const saved = writeEnvelope(section.name, section.version, next);
+    if (saved) ahead.delete(section.name);
+    else ahead.add(section.name);
+    return saved;
   };
 
   const dumpTexts = (): StoreDump | null => {
@@ -296,8 +345,23 @@ export function createStore(options: {
       for (const key of Object.keys(section.fields) as (keyof T & string)[]) {
         if (key in changes && changes[key] !== undefined) next[key] = changes[key];
       }
+      return writeLenient(section, next);
+    },
+    update<T extends object>(section: LenientSection<T>, change: (stored: T) => Partial<NoInfer<T>>): boolean {
+      const stored = storedNow(section);
+      const changes = change({ ...stored } as T);
+      const next = { ...stored };
+      let changed = false;
+      for (const key of Object.keys(section.fields) as (keyof T & string)[]) {
+        if (key in changes && changes[key] !== undefined) {
+          next[key] = changes[key];
+          changed = true;
+        }
+      }
+      if (changed) return writeLenient(section, next);
+      // Nothing to store. The page's copy still catches up with the storage.
       lenientCache.set(section.name, next);
-      return writeEnvelope(section.name, section.version, next);
+      return true;
     },
     readStrict<Wire, Loaded>(section: StrictSection<Wire, Loaded>): StrictRead<Loaded> {
       const text = readText(section.name);
@@ -328,6 +392,7 @@ export function createStore(options: {
     },
     clear(section) {
       lenientCache.delete(section.name);
+      ahead.delete(section.name);
       return attempt(() => adapter.remove(storageKey(section.name)));
     },
     dump: dumpTexts,

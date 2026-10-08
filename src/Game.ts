@@ -661,15 +661,22 @@ export class Game implements RunDispatcher {
   private recordWin(): void {
     const run = this.run;
     if (run === null) return;
-    const { bestWin } = store.read(PROGRESS_SECTION);
     const id = run.character.id;
-    const ceiling = escalationCeiling(bestWin, id);
-    if (!runCounts(this.runDials, run.escalation, ceiling)) return;
-    const after = bestWinAfter(bestWin, id, run.escalation);
-    if (after === bestWin) return;
-    store.patch(PROGRESS_SECTION, { bestWin: after });
-    const opened = escalationCeiling(after, id);
-    if (opened > ceiling) this.unlocked = opened;
+    const win: { opened: number | null } = { opened: null };
+    // Built on the record as it is stored now (`store.update`), not on this
+    // page's copy: a second tab may have recorded a win since this page read
+    // the section, and a write of the copy would put the record back
+    // without it.
+    store.update(PROGRESS_SECTION, ({ bestWin }) => {
+      const ceiling = escalationCeiling(bestWin, id);
+      if (!runCounts(this.runDials, run.escalation, ceiling)) return {};
+      const after = bestWinAfter(bestWin, id, run.escalation);
+      if (after === bestWin) return {};
+      const opened = escalationCeiling(after, id);
+      if (opened > ceiling) win.opened = opened;
+      return { bestWin: after };
+    });
+    if (win.opened !== null) this.unlocked = win.opened;
   }
 
   /**
@@ -1007,10 +1014,17 @@ export class Game implements RunDispatcher {
       // 116j — the first won run goes there by way of the credits: the panel
       // opens over the menu, once. The flag is stored as the panel is shown,
       // so a tab closed on the credits doesn't bring them back.
-      if (creditsOnTheWay(won, this.menuBoot, store.read(PROGRESS_SECTION).creditsSeen)) {
-        store.patch(PROGRESS_SECTION, { creditsSeen: true });
-        this.credits.open();
-      }
+      // 117d-post — asked of the flag as it is stored now, and written the
+      // same way (`store.update`): another tab may have shown them since
+      // this page read the section, and the write must not put this page's
+      // copy of the record of wins back over that tab's.
+      const credits = { show: false };
+      store.update(PROGRESS_SECTION, ({ creditsSeen }) => {
+        if (!creditsOnTheWay(won, this.menuBoot, creditsSeen)) return {};
+        credits.show = true;
+        return { creditsSeen: true };
+      });
+      if (credits.show) this.credits.open();
     }
   }
 

@@ -314,6 +314,129 @@ describe('113b — a store that fails', () => {
   });
 });
 
+// 117d-post — `update`: a change built on what is stored now. Two stores over
+// ONE adapter stand for two tabs of one browser.
+describe('117d-post — a change built on what is stored now', () => {
+  const twoTabs = () => {
+    const adapter = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.5, speed: 1, locale: 'en' }) });
+    const a = createStore({ adapter, build: 'b' });
+    const b = createStore({ adapter, build: 'b' });
+    // Each tab has read the section, so each holds its own copy.
+    expect(a.read(PREFS)).toEqual(b.read(PREFS));
+    return { adapter, a, b };
+  };
+
+  it('keeps what another tab stored since this one read the section', () => {
+    const { adapter, a, b } = twoTabs();
+    expect(a.update(PREFS, () => ({ volume: 0.9 }))).toBe(true);
+    expect(b.update(PREFS, (): Partial<Prefs> => ({ speed: 3 }))).toBe(true);
+    expect(stored(adapter, SETTINGS_KEY)).toEqual({ v: 3, build: 'b', data: { volume: 0.9, speed: 3, locale: 'en' } });
+    // And the second tab's own copy has caught up.
+    expect(b.read(PREFS)).toEqual({ volume: 0.9, speed: 3, locale: 'en' });
+  });
+
+  it('the control: the same two changes through `patch` put the second tab’s copy back over the first’s', () => {
+    const { adapter, a, b } = twoTabs();
+    a.patch(PREFS, { volume: 0.9 });
+    b.patch(PREFS, { speed: 3 });
+    expect(stored(adapter, SETTINGS_KEY)).toEqual({ v: 3, build: 'b', data: { volume: 0.5, speed: 3, locale: 'en' } });
+  });
+
+  it('hands the change what is stored now, so a value that only grows grows from the other tab’s', () => {
+    const { adapter, a, b } = twoTabs();
+    a.update(PREFS, ({ volume }) => ({ volume: volume + 0.25 }));
+    const seen: number[] = [];
+    b.update(PREFS, ({ volume }) => {
+      seen.push(volume);
+      return { volume: Math.min(1, volume + 0.25) };
+    });
+    expect(seen).toEqual([0.75]);
+    expect((stored(adapter, SETTINGS_KEY) as { data: Prefs }).data.volume).toBe(1);
+  });
+
+  it('stores nothing when the change names no field, and the page’s copy still catches up', () => {
+    const inner = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.5, speed: 1, locale: 'en' }) });
+    createStore({ adapter: inner, build: 'b' }); // the stamp
+    const counting = failing(inner, {});
+    const b = createStore({ adapter: counting, build: 'b' });
+    b.read(PREFS);
+    inner.entries.set(SETTINGS_KEY, envelope(3, { volume: 0.2, speed: 2, locale: 'en' })); // another tab
+    const before = counting.writes;
+    expect(b.update(PREFS, () => ({}))).toBe(true);
+    expect(counting.writes).toBe(before);
+    expect(b.read(PREFS)).toEqual({ volume: 0.2, speed: 2, locale: 'en' });
+  });
+
+  it('stores declared fields only, and a refused stored value at its fallback', () => {
+    const adapter = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 7, speed: 2, locale: 'fr', stray: true }) });
+    const store = createStore({ adapter, build: 'b' });
+    store.update(PREFS, (prefs) => {
+      expect(prefs).toEqual({ volume: 1, speed: 2, locale: 'fr' });
+      return { speed: 3, stray: 1 } as Partial<Prefs>;
+    });
+    expect(stored(adapter, SETTINGS_KEY)).toEqual({ v: 3, build: 'b', data: { volume: 1, speed: 3, locale: 'fr' } });
+  });
+
+  it('builds on the page’s copy while that copy holds a value its last write failed to store', () => {
+    const inner = memoryAdapter();
+    createStore({ adapter: inner, build: 'b' }); // the stamp
+    const faults: { write?: Error } = { write: quota() };
+    const store = createStore({ adapter: failing(inner, faults), build: 'b' });
+    expect(store.patch(PREFS, { volume: 0.5 })).toBe(false);
+    delete faults.write;
+    // The storage holds no volume; read again, the change would lose it.
+    expect(store.update(PREFS, (): Partial<Prefs> => ({ speed: 2 }))).toBe(true);
+    expect(stored(inner, SETTINGS_KEY)).toEqual({ v: 3, build: 'b', data: { volume: 0.5, speed: 2, locale: 'en' } });
+    // Once that write has landed the storage is read again.
+    inner.entries.set(SETTINGS_KEY, envelope(3, { volume: 0.1, speed: 2, locale: 'en' })); // another tab
+    store.update(PREFS, () => ({ locale: 'fr' }));
+    expect(stored(inner, SETTINGS_KEY)).toEqual({ v: 3, build: 'b', data: { volume: 0.1, speed: 2, locale: 'fr' } });
+  });
+
+  it('keeps the page’s copy when the read fails at the change, and writes nothing', () => {
+    const inner = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.25, speed: 2, locale: 'fr' }) });
+    createStore({ adapter: inner, build: 'b' }); // the stamp
+    const faults: { read?: Error } = {};
+    const adapter = failing(inner, faults);
+    const store = createStore({ adapter, build: 'b' });
+    expect(store.read(PREFS).volume).toBe(0.25);
+    faults.read = denied();
+    const writes = adapter.writes;
+    expect(store.update(PREFS, ({ volume }) => ({ volume: volume + 0.5 }))).toBe(false);
+    expect(store.status().canSave).toBe(false);
+    // Built on the copy (0.25), not on the fallbacks a failed read would give.
+    expect(store.read(PREFS)).toEqual({ volume: 0.75, speed: 2, locale: 'fr' });
+    expect(adapter.writes).toBe(writes);
+    expect(inner.entries.get(SETTINGS_KEY)).toBe(envelope(3, { volume: 0.25, speed: 2, locale: 'fr' }));
+  });
+
+  it('on a store sealed by a restore, builds on the page’s own copy and stores nothing', async () => {
+    const inner = memoryAdapter({ [SETTINGS_KEY]: envelope(3, { volume: 0.25, speed: 2, locale: 'fr' }) });
+    createStore({ adapter: inner, build: 'b' }); // the stamp
+    const adapter = failing(inner, {});
+    const store = createStore({ adapter, build: 'b' });
+    // The page has read the section, so it holds a copy from before the restore.
+    expect(store.read(PREFS).volume).toBe(0.25);
+    const restored = envelope(3, { volume: 0.75, speed: 3, locale: 'de' });
+    expect(await store.restore({ ...store.dump()!, settings: restored })).toEqual({ ok: true });
+    const writes = adapter.writes;
+    expect(store.update(PREFS, ({ volume }) => ({ volume: volume + 0.125 }))).toBe(false);
+    // 0.25 + 0.125, the page's; read again it would be 0.75 + 0.125.
+    expect(store.read(PREFS).volume).toBe(0.375);
+    expect(adapter.writes).toBe(writes);
+    expect(inner.entries.get(SETTINGS_KEY)).toBe(restored);
+  });
+
+  it('on a store that cannot read, changes the page’s copy and stores nothing', () => {
+    const adapter = failing(memoryAdapter(), { read: denied() });
+    const store = createStore({ adapter, build: 'b' });
+    expect(store.patch(PREFS, { volume: 0.9 })).toBe(false);
+    expect(store.update(PREFS, ({ volume }) => ({ volume: volume - 0.5 }))).toBe(false);
+    expect(store.read(PREFS).volume).toBeCloseTo(0.4);
+    expect(adapter.writes).toBe(0);
+  });
+});
+
 // 116h — the whole store as text. Two stores over two adapters stand for two
 // browsers; what a restore wrote is read from the adapter's map.
 describe('116h — the whole store as text', () => {

@@ -231,6 +231,10 @@ export class Game implements RunDispatcher {
    *  seed start holds, and what the run slot keeps beside the snapshot, so
    *  a load reads the inputs the run was created with. */
   private runDials = '';
+  /** 117e — the Escalation level the live run's won end opened for its
+   *  character, for the end screen to say; null until a win opens one, and
+   *  again when another run takes its place. */
+  private unlocked: number | null = null;
   /** M3 — a scheduled deferred swap (the after-turn outro). Any direct
    *  swap() cancels it, so a scheduled scene can never replace one that
    *  arrived after it. */
@@ -650,16 +654,22 @@ export class Game implements RunDispatcher {
    * (src/store/progress.ts): its dials hold its character, at most a level,
    * and nothing else, and its level is within that character's ceiling. The
    * record is the highest level won, so a win told twice (`Run.resume()`
-   * re-emits a loaded end state's event) is written once.
+   * re-emits a loaded end state's event) is written once. A win that raises
+   * the character's ceiling is kept in `unlocked` for the end screen; a win
+   * told again raises nothing and leaves it as it is.
    */
   private recordWin(): void {
     const run = this.run;
     if (run === null) return;
     const { bestWin } = store.read(PROGRESS_SECTION);
     const id = run.character.id;
-    if (!runCounts(this.runDials, run.escalation, escalationCeiling(bestWin, id))) return;
+    const ceiling = escalationCeiling(bestWin, id);
+    if (!runCounts(this.runDials, run.escalation, ceiling)) return;
     const after = bestWinAfter(bestWin, id, run.escalation);
-    if (after !== bestWin) store.patch(PROGRESS_SECTION, { bestWin: after });
+    if (after === bestWin) return;
+    store.patch(PROGRESS_SECTION, { bestWin: after });
+    const opened = escalationCeiling(after, id);
+    if (opened > ceiling) this.unlocked = opened;
   }
 
   /**
@@ -897,6 +907,7 @@ export class Game implements RunDispatcher {
     this.run?.dispose();
     this.run = restored;
     this.runDials = dials;
+    this.unlocked = null;
     // The replaced run's deal cues belong to no screen of this one.
     this.deckCues.length = 0;
     // 48d/49f — re-paint the page-lifetime chips AFTER the reassignment so
@@ -964,6 +975,7 @@ export class Game implements RunDispatcher {
     this.finishedJournal = null;
     const won = this.run?.phase === 'complete';
     this.run?.dispose();
+    this.unlocked = null;
     // 115e — the replaced run is gone, so its save goes with it; a pinned
     // character's new run saves over the slot below.
     this.runSlot.clear();
@@ -1063,6 +1075,7 @@ export class Game implements RunDispatcher {
     // so that text reconstructs it (src/journal/replayJournal.ts); the run
     // slot keeps the same text (115e).
     this.runDials = runConfigToQueryString(config);
+    this.unlocked = null;
     const dials = this.runDials;
     this.journaling((recorder) => recorder.open({ kind: 'seed', seed, dials }, () => run.toJSON()));
     this.finishedJournal = null;
@@ -1183,6 +1196,10 @@ export class Game implements RunDispatcher {
         back: () => this.backToMenu(),
         openSettings: () => this.settingsOverlay.open(),
         openCredits: () => this.credits.open(),
+      },
+      escalation: {
+        ceiling: (characterId) => escalationCeiling(store.read(PROGRESS_SECTION).bestWin, characterId),
+        unlocked: this.unlocked,
       },
       audio: this.audio,
       playback: this.playback,

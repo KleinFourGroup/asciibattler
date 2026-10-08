@@ -315,6 +315,15 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
 - A whole screen can be fixtured in one eval on the same run through the
   run's private fields and the bus: set `run.pendingRewards` or call
   `run.rollPortStock(n)`, then emit `reward:offered` or `port:entered`.
+- **The Escalation unlocks** are the store's `progress` section. To plant a
+  win, write the key and reload:
+  `localStorage.setItem('asciibattler:progress', JSON.stringify({ v: 1, build: 'plant', data: { creditsSeen: true, bestWin: { soldier: 1 } } }))`.
+  Character select then shows a picker under that character, up to the
+  level above its best win. Remove the key when you're done. A card's
+  click saves a new run over the pane's run slot, so keep the slot's text
+  first if a later check needs it. Under the runner,
+  `shell/electron/probes/escalation-picker.js` does the same from a
+  planted `store.json`.
 - To force a defeat or victory, temporarily add
   `(window as unknown as { __bus: typeof this.bus }).__bus = this.bus;` to
   the `Game` constructor, then emit `battle:ended` with `{ winner: 'enemy' }`

@@ -1689,6 +1689,21 @@ body {
   filter: brightness(2);
 }
 
+/* 117e — the level the run was played at, in the picker's own words and
+   look (its tooltip lists the levels in effect), and under it the level a
+   win opened: green, the end screen's hue for what was won. */
+.gameover-escalation {
+  font-size: var(--text-13);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-terminal-amber);
+}
+
+.gameover-unlocked {
+  font-size: var(--text-14);
+  color: var(--color-terminal-green);
+}
+
 /* The game-over buttons are `.btn--primary.btn--exit` (96d). 114e — two of
    them, side by side: a new run, and the run's journal as a file. They wrap
    onto two rows where the screen is too narrow for both. */
@@ -1859,10 +1874,29 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 32px;
   background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
   font-family: var(--font-mono);
+  /* 117e — the column is centred by the auto margins below, not by
+     `justify-content`: where it is taller than the window (the cards wrap to
+     two rows at the largest text size on a 720p window, each with its picker
+     under it) a centred column would put its heading and Back off both ends
+     of the page, out of reach. Auto margins never go negative, so the
+     column then starts at the top and the screen scrolls. Where it fits,
+     the two centre it as before. The padding keeps a scrolled column off
+     the window's edges, and moves nothing that is centred. */
+  padding: 16px 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+
+.charselect-screen > :first-child {
+  margin-top: auto;
+}
+
+.charselect-screen > :last-child {
+  margin-bottom: auto;
 }
 
 .charselect-heading {
@@ -1880,7 +1914,19 @@ body {
   max-width: 68.75rem;
 }
 
+/* 117e — a character's column: the card, and under it the Escalation picker
+   (`.charselect-level`). The card takes the height the column has left, so
+   the cards of a row stay as tall as each other and the pickers line up
+   under them. */
+.charselect-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 18.75rem;
+}
+
 .charselect-card {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1927,6 +1973,60 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-neon-purple);
+}
+
+/* 117e — the Escalation picker under a card: − · the level's name · +, and
+   under them what the level adds. The slot is under every card, reserved
+   (`.is-reserved`) until the character has a level to pick, so a card is
+   where it was before the picker showed. Nothing here moves across a click:
+   every level's name is as wide (one digit, one face), and every level's
+   line lies in ONE grid cell (the event pages' idiom), the lines that are
+   not the level's reserved, so the tallest sizes the cell. The steps' look
+   is `.settings-step`'s rule, below with the settings. */
+.charselect-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+}
+
+.charselect-level__stepper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.charselect-level__name {
+  font-size: var(--text-13);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-terminal-amber);
+}
+
+.charselect-level__adds {
+  display: grid;
+  justify-items: center;
+  font-size: var(--text-12);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--color-gray-d0);
+}
+
+.charselect-level__adds > * {
+  grid-area: 1 / 1;
+}
+
+/* A step with nowhere to go (0, or the character's ceiling): dimmed, and its
+   hover changes nothing. */
+.charselect-level__step.is-inert,
+.charselect-level__step.is-inert:hover,
+.charselect-level__step.is-inert:focus-visible {
+  opacity: 0.3;
+  cursor: default;
+  border-color: var(--color-dark-terminal-amber);
+  color: var(--color-terminal-amber);
 }
 
 /* The menu (116c), the boot screen: the game's name, what the boot has to
@@ -2026,7 +2126,9 @@ body {
 }
 
 .menu-seed__name,
-.gameover-seed__name {
+.gameover-seed__name,
+.charselect-level__name,
+.gameover-escalation {
   cursor: help;
   text-decoration: underline dotted;
   text-underline-offset: 4px;
@@ -4201,6 +4303,7 @@ body {
    action: one plate. */
 .settings-choice,
 .settings-step,
+.charselect-level__step,
 .settings-key,
 .settings-action {
   font-family: var(--font-mono);
@@ -4221,6 +4324,8 @@ body {
 .settings-choice:focus-visible,
 .settings-step:hover,
 .settings-step:focus-visible,
+.charselect-level__step:hover,
+.charselect-level__step:focus-visible,
 .settings-key:hover,
 .settings-key:focus-visible,
 .settings-action:hover,
@@ -4262,7 +4367,8 @@ body {
   gap: 8px;
 }
 
-.settings-step {
+.settings-step,
+.charselect-level__step {
   min-width: 2.25rem;
   text-align: center;
 }

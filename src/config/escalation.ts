@@ -85,6 +85,38 @@ export function isEscalationLevel(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= ESCALATION_MAX;
 }
 
+/** A lever's name, in the order a level's words list them. */
+export type EscalationLever = keyof EscalationLevers;
+const LEVERS: readonly EscalationLever[] = ['levelBudget', 'wave', 'bits'];
+
+/** One lever a level moves, and how many levels under it moved the same
+ *  lever before (0 the first time). */
+export interface LeverStep {
+  readonly lever: EscalationLever;
+  readonly earlier: number;
+}
+
+/**
+ * What `level` adds to the level under it: each lever it moves, in the
+ * levers' order. This is what the player is told of a level, in words and
+ * with no number (src/ui/escalationText.ts), so the words follow the file.
+ * Level 0, and a level that moves nothing, add nothing.
+ */
+export function escalationSteps(level: number, ladder: readonly EscalationLevers[] = ESCALATION_LEVELS): readonly LeverStep[] {
+  const off: EscalationLevers = { levelBudget: 1, wave: 1, bits: 1 };
+  const at = (n: number): EscalationLevers => (n <= 0 ? off : (ladder[n - 1] ?? off));
+  if (!Number.isInteger(level) || level < 1 || level > ladder.length) return [];
+  const moved = (n: number, lever: EscalationLever): boolean => at(n)[lever] !== at(n - 1)[lever];
+  const steps: LeverStep[] = [];
+  for (const lever of LEVERS) {
+    if (!moved(level, lever)) continue;
+    let earlier = 0;
+    for (let n = 1; n < level; n++) if (moved(n, lever)) earlier++;
+    steps.push({ lever, earlier });
+  }
+  return steps;
+}
+
 /**
  * What one level's levers do to the four per-run multipliers. The wave lever
  * goes to the count, the budget and the enemy's pool alike; the budget lever

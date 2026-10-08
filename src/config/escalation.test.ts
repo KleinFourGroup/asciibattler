@@ -3,7 +3,9 @@ import type { DifficultyMultipliers } from './difficulty';
 import {
   ESCALATION_LEVELS,
   ESCALATION_MAX,
+  escalationSteps,
   isEscalationLevel,
+  type EscalationLevers,
   leverFactors,
   parseEscalation,
   withEscalation,
@@ -129,5 +131,45 @@ describe('parseEscalation (no level is easier than the one under it)', () => {
 
   it('the shipped ladder parses, which the import above already proved', () => {
     expect(ESCALATION_LEVELS).toHaveLength(ESCALATION_MAX);
+  });
+});
+
+describe('escalationSteps (what a level adds to the one under it)', () => {
+  const ladder = (...levels: Array<[number, number, number]>): readonly EscalationLevers[] =>
+    levels.map(([levelBudget, wave, bits]) => ({ levelBudget, wave, bits }));
+
+  it('the shipped ladder adds the signed table, a lever at a time', () => {
+    // By hand from the table above: budget, wave, bits, budget again, wave again.
+    const added = [1, 2, 3, 4, 5].map((level) => escalationSteps(level));
+    expect(added).toEqual([
+      [{ lever: 'levelBudget', earlier: 0 }],
+      [{ lever: 'wave', earlier: 0 }],
+      [{ lever: 'bits', earlier: 0 }],
+      [{ lever: 'levelBudget', earlier: 1 }],
+      [{ lever: 'wave', earlier: 1 }],
+    ]);
+  });
+
+  it('level 0 and a value off the ladder add nothing', () => {
+    for (const level of [0, -1, 6, 1.5, Number.NaN]) expect(escalationSteps(level), String(level)).toEqual([]);
+  });
+
+  it('a level that moves two levers lists both, in the levers’ order', () => {
+    const two = ladder([1, 1.1, 0.9], [1.2, 1.1, 0.8]);
+    expect(escalationSteps(1, two)).toEqual([
+      { lever: 'wave', earlier: 0 },
+      { lever: 'bits', earlier: 0 },
+    ]);
+    expect(escalationSteps(2, two)).toEqual([
+      { lever: 'levelBudget', earlier: 0 },
+      { lever: 'bits', earlier: 1 },
+    ]);
+  });
+
+  it('a level that changes nothing adds nothing, and is not counted as an earlier move', () => {
+    const flat = ladder([1.1, 1, 1], [1.1, 1, 1], [1.2, 1, 1], [1.3, 1, 1]);
+    expect(escalationSteps(2, flat)).toEqual([]);
+    expect(escalationSteps(3, flat)).toEqual([{ lever: 'levelBudget', earlier: 1 }]);
+    expect(escalationSteps(4, flat)).toEqual([{ lever: 'levelBudget', earlier: 2 }]);
   });
 });

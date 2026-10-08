@@ -8263,3 +8263,153 @@ are on the memory adapter). Two tabs.
 **Predictions against what happened.** No bump: none, and the
 fingerprint's test passed. The smoke fires: expected on this commit's
 hook, for `src/run/Command.ts`.
+
+**The commit** is `f36bbfb`; its hook counted 3545 main tests in 244
+files and the smoke's 586 in 63. The reading at its launch: **275,457**
+at 11:06, so 117d cost about 77k.
+
+### 117e — the picker, the levels in words, the end screen (2026-10-08, session 610d7303) — read `stop`: ◐ built, the read is open
+
+Readings: **311,960** at 11:09, at the step's start (about 36k of its
+step zero was read while 117d's hook ran); **428,605** at 11:29, before
+this entry.
+
+**Step zero: the audit's two checks.**
+- ✔ **Every bits number a screen shows goes through `effectiveBits`.**
+  Bits are earned in one place (`Run.gainBits`, three callers: the reward
+  settle, an event's `gainBits` op, a daemon's instant op). Two strings
+  in the UI print an amount of bits: the reward row, through
+  `run.effectiveBits` (`RewardScreen.ts:160`), and the port's price, a
+  spend, which the lever doesn't touch. No UI code prints an op's
+  amount. Config prose names an amount twice: an offering's cost (a
+  spend) and the Idol of Dis Pater's "Each kill tithes 2 bits", an earn
+  of 2. By arithmetic, not by a run: at level 3 that is 2 × 0.75 = 1.5,
+  which `Math.round` takes to 2, so the sentence holds on the shipped
+  ladder by its rounding, and a bits lever under 0.75 would make it
+  false. So level 3 needs no display work, and that one sentence is a
+  watch.
+- ✘ **A stepper under each card does not fit at 150 % on a 720p window.**
+  Before the picker the survey found nothing off the page there (the
+  cards wrap to two rows of 262 and 258, which by the boxes' arithmetic
+  left about 9px). With a picker under each card the column measured
+  877px in a 720px window, and centred it put the heading and Back off
+  both ends by 78.5px. 100, 110 and 125 % fit, and 1080p fits at every
+  size. See call 6.
+
+**Built.**
+- `escalationSteps(level)` in `config/escalation.ts`: each lever a level
+  moves against the one under it, and how many levels under it moved the
+  same lever.
+- `src/ui/escalationText.ts`: the level's name, what it adds (a sentence
+  per lever moved, with a "still" form the second time), and the
+  picker's tooltip (every level in effect, then how the next is opened
+  and that a typed seed opens nothing). The words follow the ladder's
+  file.
+- Character select: a column per character, the card and under it the
+  picker (− · the level's name · +, and the level's line). 0 to the
+  ceiling, opening at the ceiling. The slot is under every card and
+  reserved while the ceiling is 0. A card's click sends its own picker's
+  level.
+- The end screen: under the subtext, the level's name when the run was
+  above 0, and the level a win opened.
+- `SceneContext.escalation` (`ceiling(id)`, `unlocked`), so no screen
+  reads the store. `Game.recordWin` keeps the level a win opened.
+- `shell/electron/probes/escalation-picker.js`.
+- DESIGN: "Escalation", and the idiom "A picker under a card".
+
+**Calls made while building** (the read's, and the user's to overturn).
+1. **The words.** Level 0 is "The standard run."; then "Enemies are a
+   higher level.", "Enemy waves are larger.", "You earn fewer bits.",
+   and "… still." for a lever's second time. The wave lever's sentence
+   says nothing of the enemy's morale rising with it.
+2. **One line under the stepper says what that level adds; the tooltip
+   on the name says the rest**: that a level keeps the ones under it,
+   the list so far, how the next is opened, and the seed rule. The line
+   alone doesn't say the levels stack. Other shapes: every level in
+   effect listed under the card (up to five lines under each of three
+   cards), or one compact line for the whole stack.
+3. **The picker reads "Escalation 0" at the bottom**, and the end screen
+   names no level for a run at 0.
+4. **The unlock line is "The Soldier: Escalation 3 unlocked."**, the
+   name first, because every character's name starts with "The".
+5. **A win at the top of the ladder, a win under the ceiling and a
+   seeded win show no unlock line and no reason.** The tooltip is where
+   the seed rule is said.
+6. **Character select scrolls where the window is too short**, the
+   answer to step zero's second check. The column is centred by auto
+   margins in place of `justify-content`, with 16px of padding, so at
+   150 % on 720p it starts at the top and scrolls 189px, both ends
+   reachable. Where it fits, every box is where the centred layout had
+   it. This is a change to how a screen behaves at a size, made here
+   because the picker is what broke that size; the other 720p findings
+   stay with §117.5 (TODO "§116 riders").
+7. **The steps wear the settings' step look**, by joining
+   `.settings-step`'s selector lists.
+8. **A level that moves no lever has an empty line.** The parse allows
+   such a level and the shipped ladder has none.
+
+**Evidence.**
+- *Headless,* +10 tests (3555 in 245 files): `escalationSteps` on the
+  shipped ladder against the signed table and on three explicit
+  ladders; the six sentences by hand; no percentage and no digit in any
+  sentence; the tooltip's lines.
+- *Under Electron, a window with real frames, 1280×720,* eight launches,
+  each on its own profile with a planted record, all exit 0:
+  - No win: no picker shows. Soldier at 1: its picker alone. Soldier and
+    gambler: those two.
+  - The walk, a click at a time: from Escalation 2 down to 0 and back,
+    and from 5 down to 0 and back, each name with its line, the step at
+    each end inert, and a click on an inert step changing nothing. No
+    watched box moved across any click (both steps, the name, the
+    picker, all three cards, Back).
+  - **A card is where it was:** the page with a picker showing against
+    the page with none, 0 of 80 boxes differ across the four sizes, for
+    one picker and for two.
+  - Stepped to 1 and started: played at 1, dials
+    `character=soldier&escalation=1`, the end screen says "Escalation 1"
+    and no unlock. At the ceiling, 2: "The Soldier: Escalation 3
+    unlocked." A first win at 0: no level line, "Escalation 1 unlocked."
+    A typed seed at the ceiling: the level named, nothing unlocked. At
+    5: nothing unlocked.
+  - The end screen is inside the window at every size.
+- *At 1920×1080,* four of the launches: all pass, and nothing scrolls at
+  any size.
+- *Call 6, measured:* at 100, 110 and 125 % on 720p, 0 of 20 boxes
+  differ between `justify-content: center` and the auto margins. At
+  150 % the screen scrolls, with the heading 16px inside the window at
+  the scroll's top and Back 16px inside at its end.
+- *The controls,* one cut at a time by a script that restores the files:
+  the slot not reserved (`shown`), a step not held to the ceiling
+  (`aboveCeiling`), the card sending 0 (`level`, `dials`, `endLevel`),
+  an inert step leaving the row (`moved`, which names the boxes), the
+  opened level not kept (`endUnlocked`), the end screen not told the
+  level (`endLevel`). The uncut run passes.
+- *The text-size survey,* menu mode at 720p, against a baseline taken on
+  `f36bbfb`: settings 152 boxes and credits 45, none differ; the menu's
+  one difference is the build's ID, which reads `-dirty` on this tree;
+  character select gains one finding, the scroll at 150 %.
+- *In the pane* (Chromium, the web adapter, `f36bbfb-dirty-dev`, a
+  planted record): the pickers under two cards and none under the
+  third, the tooltip's three parts, and the end screen's two lines, by
+  screenshot. The win wrote `localStorage`, which 117d had left
+  unverified. The pane's own saved run was kept aside and put back.
+
+**Not verified.** Firefox, which is the read. The keyboard: the Tab
+walk through three pickers, a held Enter on a step, the focus ring on an
+inert step. A touch. The hover and the tooltip's place by eye at 150 %.
+A real won run. Level 3's sentence against a played run's bits. The
+picker under Electron's shown window (the probe's is offscreen).
+
+**The read** (ROADMAP's script, in Firefox, on the user's dev server).
+To plant a win, in the console on the menu:
+`localStorage.setItem('asciibattler:progress', JSON.stringify({ v: 1, build: 'plant', data: { creditsSeen: true, bestWin: { soldier: 1 } } }))`,
+then reload. New run: the Soldier's card has the picker at Escalation 2
+and the others have none. Step it, start, and lose or force the end; the
+end screen names the level. Wrong is a card that moves when a stepper
+appears, a level above the ceiling on offer, or a percentage in the
+words.
+
+**Predictions against what happened.** The cut said no smoke. It fires:
+the level's words are built from the ladder by a function in
+`src/config/escalation.ts`, and the hook runs the smoke for that folder.
+No bump: none.

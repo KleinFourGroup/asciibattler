@@ -69,6 +69,9 @@ export interface SceneContext {
   readonly save: SaveContext;
   /** 116c — the menu's routes: where a run's end goes, New run and Back. */
   readonly menu: MenuContext;
+  /** 117e — the Escalation unlocks, as character select and the end screen
+   *  ask after them. */
+  readonly escalation: EscalationContext;
   readonly audio: AudioPlayer;
   /** I3 — the page-lifetime fast-forward speed. BattleScene reads `current`
    *  live each tick to scale `dt`; the HUD button + hotkey cycle it. Persists
@@ -115,6 +118,20 @@ export interface MenuContext {
   /** 116j — the menu's Credits row: open the credits panel
    *  (src/ui/CreditsOverlay.ts). */
   openCredits(): void;
+}
+
+/**
+ * 117e — what a screen may know of the Escalation unlocks (the store's
+ * progress, src/store/progress.ts). The screens never read the store.
+ */
+export interface EscalationContext {
+  /** The highest level `characterId` may start a run at, as the store has
+   *  it now. A function, read when the screen is drawn. */
+  ceiling(characterId: string): number;
+  /** The level the live run's won end opened for its character; null when
+   *  the run has not ended, was lost, or its win opened nothing (a win under
+   *  the ceiling or at the ladder's top, or a run that doesn't count). */
+  readonly unlocked: number | null;
 }
 
 export interface Scene {

@@ -39,10 +39,20 @@ import { journalFileName, type RunJournal } from '../journal/journal';
 import { Screen } from './Screen';
 import { button } from './button';
 import { downloadText } from './download';
+import { escalationName, escalationTooltip } from './escalationText';
 import { archetypeGlyphRun, archetypeLines, fallenSide } from './fallenSide';
 import { attachTooltip } from './tooltip';
 
 export type GameOverVariant = 'defeat' | 'complete';
+
+/** 117e — what the end screen says of Escalation: the level the run was
+ *  played at, the level its win opened for its character (null when it
+ *  opened none), and the character's name for that line. */
+export interface RunEscalation {
+  readonly level: number;
+  readonly unlocked: number | null;
+  readonly character: string;
+}
 
 interface VariantCopy {
   heading: string;
@@ -74,13 +84,24 @@ export class GameOverScreen extends Screen {
   }
 
   /** `seed` is the run's seed as the menu's field takes it (`seedShown`);
-   *  null draws no seed line. */
-  show(variant: GameOverVariant = 'defeat', ledger: readonly FallenRecord[] = [], seed: string | null = null): void {
+   *  null draws no seed line. `escalation` is the run's level and what its
+   *  end opened; null draws neither line. */
+  show(
+    variant: GameOverVariant = 'defeat',
+    ledger: readonly FallenRecord[] = [],
+    seed: string | null = null,
+    escalation: RunEscalation | null = null,
+  ): void {
     this.hide();
-    this.present(this.render(variant, ledger, seed));
+    this.present(this.render(variant, ledger, seed, escalation));
   }
 
-  private render(variant: GameOverVariant, ledger: readonly FallenRecord[], seed: string | null): HTMLDivElement {
+  private render(
+    variant: GameOverVariant,
+    ledger: readonly FallenRecord[],
+    seed: string | null,
+    escalation: RunEscalation | null,
+  ): HTMLDivElement {
     const panel = document.createElement('div');
     panel.className = `gameover-screen gameover-screen--${variant}`;
 
@@ -95,6 +116,24 @@ export class GameOverScreen extends Screen {
     subtext.className = 'gameover-subtext';
     subtext.textContent = copy.subtext;
     panel.appendChild(subtext);
+
+    // 117e — the level the run was played at, when it was above 0, and the
+    // level its win opened. Drawn with the screen and never after, so
+    // neither moves a button.
+    if (escalation !== null && escalation.level > 0) {
+      const level = document.createElement('div');
+      level.className = 'gameover-escalation';
+      level.textContent = escalationName(escalation.level);
+      attachTooltip(level, escalationTooltip(escalation.level));
+      level.tabIndex = 0;
+      panel.appendChild(level);
+    }
+    if (escalation !== null && escalation.unlocked !== null) {
+      const unlocked = document.createElement('div');
+      unlocked.className = 'gameover-unlocked';
+      unlocked.textContent = t('gameover.unlocked', { level: escalation.unlocked, character: escalation.character });
+      panel.appendChild(unlocked);
+    }
 
     panel.appendChild(renderStats(summarizeFallen(ledger)));
 

@@ -113,6 +113,8 @@ For MVP, *every node was a battle node*. Since then: **rest** nodes (G3, a non-c
 
 **Credits (§116; spec D6):** a static panel, opened from the menu's Credits row: the developer, Claude, the two fonts and the three bundled libraries each with its licence's name, the tools, the two sound tools, and the playtesters thanked without names. Nothing in it moves, so it has no reduced-motion form. The licences' full texts ship beside the build in `THIRD-PARTY-LICENSES.txt`, and the panel's last line says so. A run's end goes to the menu, a defeat and a win alike; the first won run goes there by way of the credits, which open over the menu once (the `progress` section's `creditsSeen`), since a first win is the moment the genre rolls them. A page booted by a run dial ends a run as it did before the menu and shows none.
 
+**Escalation (§117; Round 8 spec D8):** the difficulty ladder. A run is played at a level, 0 (off) to 5, and each level keeps every level under it. The levels are number levers only: enemies of a higher level; larger enemy waves (more bodies, with their level budget and the enemy's morale raised alongside, so each body is as strong and the fight as long); fewer bits earned; then the first two again. Progress is per character, and a level means the same for every character. A character that has won no run plays at 0. Winning a run at the highest level a character has opens the next one for that character, so the ladder is climbed a win at a time and no level is skipped. Only a run started clean counts: one begun from a typed seed opens nothing, and neither does one begun by any URL dial but the character and its level, since a map known in advance is another test. The level is picked on character select, under the character's card, where a picker shows once that character has a level above 0 to pick; it opens at the highest level and remembers nothing between visits. A level is told in words and never in percentages: the ladder adds a lever that comes again and multiplies different levers, and a percentage would be read as a sum that comes out wrong. The end screen names the level a run was played at, when it was above 0, and after a win that opened a level, that level. The ladder's numbers are placeholders until the round's board has read them. Upward only: an easier setting is an accessibility question for a later round.
+
 ## Aesthetic
 
 **World identity (locked at the §67 kickoff, 2026-07-26): dark fantasy on a
@@ -634,6 +636,24 @@ button that does it, live only for a file that reads as a backup. A file
 that doesn't is refused in that line, with nothing changed; the line keeps
 three lines' height. The rows live in the settings modal, a section per
 kind.
+
+**A picker under a card (117e).** A choice that belongs to one card of
+several sits under that card, since the card is a button and holds no
+control of its own: a stepper (− · the value's name · +, the steps in the
+settings' step look) and one line under it saying what the value means.
+The picker's slot is under every card from the first visit, reserved
+while that card has nothing to pick, and it holds a line for every value
+in one grid cell. So no card moves when a picker appears, and nothing
+moves as a value is stepped (Layout stability, below). A step with
+nowhere to go is inert (`aria-disabled`, dimmed, out of the Tab order)
+and keeps its box. The name is a §97 text site, and its tooltip carries
+the finer grain. A click on the card acts at its own picker's value. The
+first is character select's Escalation picker, whose tooltip lists the
+levels in effect and says how the next is opened. Character select is
+also the first screen whose column SCROLLS where the window is too short
+for it (two rows of cards at the largest text size on a 720p window): the
+column is centred by auto margins, so it then starts at the top, where
+`justify-content: center` would put both of its ends off the page.
 
 **Layout stability (101).** A control must not move across its own click.
 (The spec and the older notes call this "the hysteresis class" / "the

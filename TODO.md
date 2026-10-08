@@ -540,7 +540,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   and the chrome column covers the left of the event, recruit and port
   screens. A 1080p window has none of these. Home: §117.5, with the
   chip's home above, since the same column is the cause; re-run
-  `shell/electron/probes/text-scale.js` after any move.
+  `shell/electron/probes/text-scale.js` after any move. 117e adds one:
+  at 150 % character select's cards wrap to two rows, each with its
+  Escalation picker, and the column is 189px taller than the window. It
+  scrolls from the top there, with nothing off the page, where it fit
+  before the picker.
 - [ ] **What the text-size survey did not reach** (116k): a tooltip, a
   unit's full card on hover, the cache modal with packets in it, and the
   sector-cleared screen (the driven run loses before a boss). Each is in

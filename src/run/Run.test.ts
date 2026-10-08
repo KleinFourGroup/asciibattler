@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { Run, type FallenRecord } from './Run';
+import { Run, type FallenRecord, type RunSnapshot } from './Run';
 import { PRE_ROOT_NODE_ID } from './NodeMap';
 import { fatigueEffect, FATIGUE_KEY } from './fatigue';
 import { rulesForTurn } from './chipRule';
@@ -15,7 +15,8 @@ import { scaleStats } from '../sim/leveling';
 import { deriveStats } from '../sim/stats';
 import { xpToNext } from '../sim/xp';
 import { LEVELING } from '../config/leveling';
-import { DIFFICULTY } from '../config/difficulty';
+import { DIFFICULTY, scaledEnemyPool, type DifficultyMultipliers } from '../config/difficulty';
+import { ESCALATION_LEVELS, ESCALATION_MAX, leverFactors, withEscalation } from '../config/escalation';
 import { RECRUITMENT } from '../config/recruitment';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
@@ -385,6 +386,103 @@ describe('Run', () => {
       chipTurn(bus, { player: pool - left, enemy: 0 });
       expect(run.enemyHealth).toBe(left);
       expect(fielded(run).every((a) => fieldedBy(0).includes(a))).toBe(true);
+    });
+  });
+
+  describe('the Escalation level (a run input, saved in the snapshot)', () => {
+    // The four multipliers are private; what they do is public (the wave, the
+    // pool, an earn), and both are read here. Expected values come from the
+    // ladder's module, so retuning `config/escalation.json` moves them.
+    const multipliersOf = (run: Run): DifficultyMultipliers =>
+      (run as unknown as { difficultyMultipliers: DifficultyMultipliers }).difficultyMultipliers;
+    const OFF = multipliersOf(new Run(1, new EventBus<GameEvents>(), NO_EVENTS));
+    const TOP = leverFactors(ESCALATION_LEVELS[ESCALATION_MAX - 1]!);
+    const wire = (run: Run): RunSnapshot => JSON.parse(JSON.stringify(run.toJSON())) as RunSnapshot;
+
+    it('unset is level 0, and level 0 is the run it was: the same multipliers, the same object the config resolved', () => {
+      const { run } = freshRunWithBus(1);
+      expect(run.escalation).toBe(0);
+      expect(run.toJSON().escalation).toBe(0);
+      expect(multipliersOf(run)).toEqual(OFF);
+      expect(multipliersOf(freshRunWithBus(1, { escalation: 0 }).run)).toEqual(OFF);
+    });
+
+    it('every level of the ladder gives the run that level and its multipliers', () => {
+      for (let level = 1; level <= ESCALATION_MAX; level++) {
+        const { run } = freshRunWithBus(1, { escalation: level });
+        expect(run.escalation).toBe(level);
+        expect(run.toJSON().escalation).toBe(level);
+        expect(multipliersOf(run)).toEqual(withEscalation(OFF, level));
+      }
+    });
+
+    it('at the top level the first fight shows it: the pool, the wave and an earn', () => {
+      const first = (config?: RunConfig): Run => {
+        const { run } = freshRunWithBus(7, { daemon: null, forcedEncounterId: 'brigands', ...config });
+        run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
+        return run;
+      };
+      const off = first();
+      const top = first({ escalation: ESCALATION_MAX });
+      const brigands = getEncounter('brigands')!;
+      expect(top.currentEncounterName).toBe(brigands.name);
+      expect(top.enemyHealthPoolMax).toBe(scaledEnemyPool(brigands.healthPool, TOP.enemyMorale));
+      expect(top.enemyHealth).toBe(top.enemyHealthPoolMax);
+      expect(top.effectiveBits(1000)).toBe(Math.round(off.effectiveBits(1000) * TOP.bits));
+      // The count and the budget both rise with the wave lever, so the wave
+      // is at least as many bodies holding more levels in all.
+      const levels = (r: Run): number => r.currentEncounter!.enemyTeam.reduce((a, u) => a + u.level, 0);
+      expect(top.currentEncounter!.enemyTeam.length).toBeGreaterThanOrEqual(off.currentEncounter!.enemyTeam.length);
+      expect(levels(top)).toBeGreaterThan(levels(off));
+    });
+
+    it("a level multiplies onto the run's own overrides", () => {
+      const { run } = freshRunWithBus(1, { escalation: ESCALATION_MAX, bitsMultiplier: 2, enemyMoraleMultiplier: 3 });
+      expect(multipliersOf(run).bits).toBeCloseTo(2 * TOP.bits, 12);
+      expect(multipliersOf(run).enemyMorale).toBeCloseTo(3 * TOP.enemyMorale, 12);
+    });
+
+    it('a level off the ladder throws at construction', () => {
+      for (const escalation of [-1, ESCALATION_MAX + 1, 1.5, Number.NaN]) {
+        expect(() => new Run(1, new EventBus<GameEvents>(), { escalation }), String(escalation)).toThrow(
+          /is not a level/,
+        );
+      }
+    });
+
+    it('a load reads the level from the snapshot, with no config and against a config that names another', () => {
+      const live = freshRunWithBus(5, { escalation: ESCALATION_MAX }).run;
+      const snap = wire(live);
+      const bare = Run.fromJSON(snap, new EventBus<GameEvents>());
+      expect(bare.escalation).toBe(ESCALATION_MAX);
+      expect(multipliersOf(bare)).toEqual(multipliersOf(live));
+      const other = Run.fromJSON(wire(live), new EventBus<GameEvents>(), { escalation: 1 });
+      expect(other.escalation).toBe(ESCALATION_MAX);
+      expect(multipliersOf(other)).toEqual(multipliersOf(live));
+      expect(JSON.stringify(bare.toJSON())).toBe(JSON.stringify(live.toJSON()));
+    });
+
+    it('a load keeps the overrides of the config it is given, under the snapshot level', () => {
+      const config: RunConfig = { ...NO_EVENTS, escalation: 2, waveSizeMultiplier: 1.5 };
+      const live = new Run(5, new EventBus<GameEvents>(), config);
+      const loaded = Run.fromJSON(wire(live), new EventBus<GameEvents>(), config);
+      expect(multipliersOf(loaded)).toEqual(multipliersOf(live));
+      expect(multipliersOf(loaded).waveSize).toBeCloseTo(1.5 * leverFactors(ESCALATION_LEVELS[1]!).waveSize, 12);
+    });
+
+    it('a snapshot whose level is off the ladder, or missing, is a hard reject', () => {
+      const good = wire(freshRunWithBus(5, { escalation: 1 }).run);
+      const bad = (value: unknown): RunSnapshot => ({ ...good, escalation: value } as unknown as RunSnapshot);
+      for (const value of [ESCALATION_MAX + 1, -1, 2.5, '2', null]) {
+        expect(() => Run.fromJSON(bad(value), new EventBus<GameEvents>()), String(value)).toThrow(
+          /is not on the ladder/,
+        );
+      }
+      const missing = { ...good } as Record<string, unknown>;
+      delete missing['escalation'];
+      expect(() => Run.fromJSON(missing as unknown as RunSnapshot, new EventBus<GameEvents>())).toThrow(
+        /is not on the ladder/,
+      );
     });
   });
 
@@ -3074,7 +3172,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
+      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3264,7 +3362,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
+      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3588,7 +3686,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
+      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -5818,7 +5916,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
+    expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6580,7 +6678,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
     bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
-    expect(wire.schemaVersion).toBe(47); // 115a — the two gate facts (95f: the honed key)
+    expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
     expect(wire.fallenLedger).toHaveLength(2);
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.fallenLedger).toEqual(run.fallenLedger);

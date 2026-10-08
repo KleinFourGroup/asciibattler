@@ -115,6 +115,7 @@ export const RUN_DIAL_KEYS = [
   'daemon',
   'character',
   'bits',
+  'escalation',
 ] as const;
 
 /**

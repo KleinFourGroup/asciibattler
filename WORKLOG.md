@@ -7967,3 +7967,86 @@ stamps the root an elite and asserts the encounter's name.
 **Predictions against what happened.** No bump: none. The config hash
 moves: `difficulty.json` gained a key. The smoke fires: expected on this
 commit's hook, and the next entry says what it did.
+
+### 117b — the level, its table and the save (2026-10-08)
+
+Read `none`. 117a's commit is `edba3d0`; its hook ran the smoke (582
+passed) and 3493 main tests. The reading at 117b's start: **344,660** at
+09:25, so 117a cost about 79k.
+
+**Built.**
+- `config/escalation.json` and `src/config/escalation.ts`. The file holds
+  five rows, level 1 up, each saying where the three levers (`levelBudget`,
+  `wave`, `bits`) stand at that level. So "a lever that comes again adds"
+  is authored (1.1, later 1.2) and no code adds; "different levers
+  multiply" is `leverFactors`, which sends the wave lever to the count,
+  the budget and the enemy pool and multiplies the budget lever with it.
+  `withEscalation(base, level)` gives a run's four multipliers and at
+  level 0 returns `base` itself.
+- `RunConfig.escalation`, with the URL dial `escalation=1..5`. Level 0 is
+  spelled by no dial: `escalation=0` parses to nothing and
+  `runConfigToQueryString` writes nothing for it, so a run with Escalation
+  off has the dials, and the journal start, it had before.
+- `Run.escalation`, saved as `RunSnapshot.escalation`. The constructor
+  takes it from the config and `fromJSON` from the snapshot, whatever the
+  config says; both then derive the multipliers over the config's
+  overrides. **Run v47 → v48**, re-pinned.
+
+**Step zero.** Baselines on `edba3d0`, captured in the foreground before
+the first edit: the 24 default runs (117a's after-run, the same tree), 4
+searcher runs (`--count=2 --searcher --audition`, 69 s, so about 17 s a
+run on one job), and a dump of a seed-7 run's snapshot at `map` and in its
+first battle, one line a key (88 lines, version 47). The cut said "a
+worktree of the parent commit"; a foreground capture before any edit
+gives the same proof, and nothing ran in the background against the tree.
+
+**The oracle, with its controls.**
+- Level 0: `summary.csv` and `rosters.csv` byte-identical on both shapes
+  (the searcher's exercises the rollout clone); the snapshot dump differs
+  in four lines, `schemaVersion` 47 → 48 and `escalation 0`, at each of
+  the two phases; `drive-run --seed=7` logs `a59ee48f`.
+- The control: the default level forced to 1 in the constructor, and 24
+  of 24 default rows and 4 of 4 searcher rows differ. Restored.
+- In the page: `drive-run --seed=7 --dials=escalation=5` logs `c995c1aa`
+  and ends after 10 battles, where level 0 ends after 12. A first try
+  with `--url=` was ignored by the runner and repeated level 0's hash,
+  which said nothing; `--dials=` is its flag.
+- In the suite: the continuation check gained a run on the ladder
+  (`escalation=3&character=gambler`) that also reloads with no config and
+  plays the same, and a control whose level is set to 0 in the text at
+  one gate and diverges at the next though its config still names 3. A
+  rollout clone holds the live run's multipliers, against a control run
+  with Escalation off.
+
+**Guards that fired, as they should.** Three tests failed until the new
+key and dial were registered: the fingerprint's count of top-level keys
+(44 → 45), the menu's list of run dials, and the board panel's restated
+dial keys. `configHash`'s drift guard was satisfied in the same edit. The
+fingerprint's shape guard was not seen failing first, since the version
+moved in the same pass as the field; its own tests hold that path.
+
+**Calls made while building** (the user's to overturn).
+1. **The parse refuses a ladder where a lever eases**, level 0 standing
+   as 1: the spec's guard, "nothing easier than today", made a rule of
+   the file.
+2. **A level off the ladder in a snapshot is a hard reject**, as an
+   unknown daemon or character id is. The slot then reads as unreadable
+   and the menu shows the rejected-save notice. A clamp to 0 would hand
+   back an easier run than the one saved.
+3. **A level multiplies with the run's own multiplier overrides**; it
+   does not replace them. The harness's sweeps keep meaning what they
+   meant, on top of a level.
+4. **The ladder's test holds the shipped file to the signed table by
+   hand**, unlike 117a's pools: the table is five rows the user signed,
+   so a retune is a change to the spec's table and is made in both
+   places together. The rule behind 117a's choice
+   (`process/measurement.md`) is for numbers tuned freely.
+
+**Tests** (+28: 3493 → 3521, in 244 files).
+
+**Left for 117e's step zero** (unchanged from the audit): whether every
+bits number a screen shows goes through `effectiveBits`. Nothing a player
+reaches sets a level until the picker exists.
+
+**Predictions against what happened.** Run v47 → v48: yes. The config
+hash moves: a new file. The smoke fires: expected on this commit's hook.

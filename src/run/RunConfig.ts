@@ -4,8 +4,11 @@
  * paths (the fuzz harness + the tools/run-config CLI).
  *
  * A RunConfig is a run *input* — fully reconstructable from the seed — so it
- * is deliberately NOT persisted in the Run snapshot (that's a save/load
- * concern, deferred; see ROADMAP §G1). `config/nodemap.json` and
+ * is deliberately NOT persisted in the Run snapshot: a save keeps the run's
+ * dials as text beside the snapshot, and a load hands them back
+ * (`Run.fromJSON`'s `config`). Two inputs are in the snapshot as well,
+ * because a load without a config has to read them: the character's id and
+ * the Escalation level. `config/nodemap.json` and
  * `config/recruitment.json` stay the defaults; a RunConfig overrides per-run.
  *
  * Determinism contract: the default path (no config / empty config) must
@@ -22,6 +25,7 @@ import { LEVELING } from '../config/leveling';
 import { daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, type CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { ESCALATION_MAX } from '../config/escalation';
 import type { SectorMap } from '../config/sectorMap';
 import type { EventDef } from '../config/events';
 
@@ -208,6 +212,19 @@ export interface RunConfig {
    */
   readonly enemyMoraleMultiplier?: number;
   /**
+   * The run's Escalation level (config/escalation.ts): 1 to
+   * `ESCALATION_MAX`. Unset is 0, Escalation off. The level's factors
+   * multiply onto the four difficulty multipliers above. Unlike them the
+   * level IS saved: the Run keeps it in its snapshot, and on a load the
+   * snapshot's level is the one read, so a rollout clone, which loads with
+   * no config, plays at the live run's level. URL form: `escalation=3` (a
+   * value outside 1 to the maximum is dropped, the `layout=` discipline);
+   * a journal's seed start spells the level this way for its replay.
+   * Programmatic callers may pass 0; anything else off the ladder throws at
+   * construction.
+   */
+  readonly escalation?: number;
+  /**
    * 47e — override the run's starting bits balance (the spec §Bits testing
    * override, for dev / fuzz / playtest runs). Unset → the
    * `config/economy.json#startingBits` default. Pure of RNG, clamped at the
@@ -293,6 +310,7 @@ export const RUN_CONFIG_PARAMS = {
   daemon: 'daemon',
   character: 'character',
   bits: 'bits',
+  escalation: 'escalation',
 } as const;
 
 type MutableRunConfig = { -readonly [K in keyof RunConfig]: RunConfig[K] };
@@ -408,6 +426,10 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   // the config default ever moves above zero).
   const startingBits = parseIntStrict(params.get(RUN_CONFIG_PARAMS.bits));
   if (startingBits !== undefined && startingBits >= 0) config.startingBits = startingBits;
+  // A level of the ladder, 1 up. `escalation=0` says what no dial says, so it
+  // parses to nothing and a page carrying it alone is a plain boot.
+  const escalation = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.escalation));
+  if (escalation !== undefined && escalation <= ESCALATION_MAX) config.escalation = escalation;
   return config;
 }
 
@@ -465,6 +487,11 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.startingBits !== undefined) {
     params.set(RUN_CONFIG_PARAMS.bits, String(config.startingBits));
+  }
+  // Level 0 is spelled by no dial, so a run with Escalation off has the
+  // dials it had before the ladder.
+  if (config.escalation !== undefined && config.escalation > 0) {
+    params.set(RUN_CONFIG_PARAMS.escalation, String(config.escalation));
   }
   return params.toString();
 }

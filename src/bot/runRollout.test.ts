@@ -29,6 +29,7 @@ import { describe, expect, it } from 'vitest';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { Run, type RunSnapshot } from '../run/Run';
+import { ESCALATION_MAX } from '../config/escalation';
 import { cloneRunForRollout } from './runRollout';
 
 /** A live run one hop in: mid-encounter, deck dealt, counters advanced. */
@@ -106,6 +107,22 @@ describe('cloneRunForRollout (69a — the clairvoyance guard, one layer up)', ()
     a.bus.emit('battle:ended', DRAW_CHIP);
     b.bus.emit('battle:ended', DRAW_CHIP);
     expect(JSON.stringify(a.run.toJSON())).not.toBe(JSON.stringify(b.run.toJSON()));
+  });
+
+  it("a clone plays at the live run's Escalation level, which rides the wire and not a config", () => {
+    // The clone is loaded with no config, so anything a config alone carries
+    // is lost to it. The level is in the snapshot, and the multipliers it
+    // gives are derived again on the load.
+    const multipliersOf = (run: Run): unknown =>
+      (run as unknown as { difficultyMultipliers: unknown }).difficultyMultipliers;
+    const live = new Run(31337, new EventBus<GameEvents>(), { escalation: ESCALATION_MAX });
+    live.dispatch({ kind: 'enterNode', nodeId: live.nodeMap.rootId });
+    const clone = cloneRunForRollout(live, 555).run;
+    expect(clone.escalation).toBe(ESCALATION_MAX);
+    expect(multipliersOf(clone)).toEqual(multipliersOf(live));
+    // The control: a run with Escalation off holds other multipliers, so
+    // the equality above is not two defaults agreeing.
+    expect(multipliersOf(live)).not.toEqual(multipliersOf(liveRun(31337)));
   });
 
   it('clone events never reach the live bus', () => {

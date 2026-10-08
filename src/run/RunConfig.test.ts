@@ -11,6 +11,7 @@ import { ALL_ARCHETYPES } from '../sim/archetypes';
 import { characterById } from '../config/characters';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { ESCALATION_MAX } from '../config/escalation';
 import { LEVELING } from '../config/leveling';
 
 // Mechanic-level tests: the parser logic is config-free, so explicit inputs
@@ -154,6 +155,26 @@ describe('RunConfig parsing', () => {
   it('round-trips the bits override through the query string (47e)', () => {
     const original = cfg('bits=42&seed=7');
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
+
+  it('parses `escalation=` as a level of the ladder, 1 up', () => {
+    expect(cfg('escalation=1').escalation).toBe(1);
+    expect(cfg(`escalation=${ESCALATION_MAX}`).escalation).toBe(ESCALATION_MAX);
+  });
+
+  it('drops a level off the ladder, and 0, which no dial says', () => {
+    for (const raw of ['0', '-1', '2.5', 'abc', String(ESCALATION_MAX + 1), '']) {
+      expect(cfg(`escalation=${raw}`).escalation, raw).toBeUndefined();
+    }
+    // So a page whose only dial is `escalation=0` carries no run dial at all.
+    expect(cfg('escalation=0')).toEqual({});
+  });
+
+  it('round-trips the level through the query string, and spells level 0 with no dial', () => {
+    const original = cfg('escalation=3&seed=7');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+    expect(runConfigToQueryString({ escalation: 0 })).toBe('');
+    expect(runConfigToQueryString({})).toBe('');
   });
 
   it('parses `encounter=` against the live catalog (53d)', () => {

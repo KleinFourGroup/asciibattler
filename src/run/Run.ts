@@ -99,6 +99,7 @@ import {
   scaledEnemyPool,
   type DifficultyMultipliers,
 } from '../config/difficulty';
+import { ESCALATION_MAX, isEscalationLevel, withEscalation } from '../config/escalation';
 import { getEncounter, type Encounter, type EncounterKind } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
@@ -506,8 +507,12 @@ export interface BattleEncounter {
  *  facts, which were locals of `advanceSector`) and `lastTurn` (the last
  *  resolved turn's winner and reason, for the pre-turn screen's strip), so
  *  `resume()` can rebuild those two gates' payloads from a save. No v46
- *  save exists outside a test: the run slot had no writer before §115. */
-export const RUN_SCHEMA_VERSION = 47;
+ *  save exists outside a test: the run slot had no writer before §115.
+ *  117b: bumped 47→48. `escalation`, the run's Escalation level. The four
+ *  difficulty multipliers are derived from it on a load and are not saved.
+ *  A v47 save has no level and rejects; none is in a player's hands, since
+ *  no build that saves has been uploaded. */
+export const RUN_SCHEMA_VERSION = 48;
 
 /**
  * 94d — one row of the fallen ledger: a combatant that fell, where and when.
@@ -664,6 +669,12 @@ export interface RunSnapshot {
    *  unknown id hard-rejects, the daemonIds discipline). Blacklists/weights
    *  are derived from the def at read time, never serialized. */
   characterId: string;
+  /** 117b (v48): the run's Escalation level, 0 (off) to `ESCALATION_MAX`
+   *  (config/escalation.ts). A value off the ladder hard-rejects on load.
+   *  The difficulty multipliers are derived from it, never serialized. It
+   *  is here, and not only in the run's dials, because a rollout clone
+   *  loads the snapshot with no config. */
+  escalation: number;
   /** L1→49d: the current turn's grant QUEUE (`resolveTurnGrants` output +
    *  per-entry `used`/`passed` engine state). Persisted so a save at the
    *  gate restores the same chance flips AND the same cursor position. */
@@ -839,6 +850,10 @@ export class Run {
    *  offer/port-stock roll — both DERIVED from this def at call time, never
    *  serialized themselves. */
   readonly character: CharacterConfig;
+  /** The run's Escalation level, 0 (off) to `ESCALATION_MAX`
+   *  (config/escalation.ts). Fixed for the run's whole life and saved in
+   *  the snapshot (v48). `difficultyMultipliers` carries what it does. */
+  readonly escalation: number;
   /** L1→49d: the current turn's grant QUEUE — re-resolved at every turn
    *  start (`startNextTurn`, where a chance hook flips its coin): one entry
    *  per granted hook in walk order, each carrying its own `used`/`passed`
@@ -1081,12 +1096,14 @@ export class Run {
   private readonly forcedEncounterId: string | null;
 
   /**
-   * X1 — the per-run difficulty multipliers (the future difficulty-system seam),
-   * resolved ONCE at construction from the `RunConfig` overrides falling back to
-   * the global `difficulty.json` defaults (1.0 = no scaling). Applied to every
-   * authored-encounter wave at resolve time via `WaveContext` (`beginTurn`). Not
-   * persisted (a RunConfig input, reconstructable); a rehydrated run re-resolves
-   * to the shipped defaults.
+   * X1 — the per-run difficulty multipliers, resolved ONCE, at construction
+   * and again on a load: the `RunConfig` overrides falling back to the global
+   * `difficulty.json` defaults (1.0 = no scaling), times the factors of the
+   * run's Escalation level (`withEscalation`; level 0 changes nothing). The
+   * wave pair is applied to every authored-encounter wave at resolve time via
+   * `WaveContext` (`beginTurn`), `bits` in `effectiveBits`, `enemyMorale` in
+   * `enemyPoolOf`. Not persisted: a load takes the overrides from the config
+   * it is given (none: the shipped defaults) and the level from the snapshot.
    */
   private readonly difficultyMultipliers: DifficultyMultipliers;
 
@@ -1148,7 +1165,16 @@ export class Run {
     this.rootStampedByDial = inputs.rootStampedByDial;
     this.passIsFinal = inputs.passIsFinal;
     this.drawAmountAdd = inputs.drawAmountAdd;
-    this.difficultyMultipliers = inputs.difficultyMultipliers;
+    // The Escalation level: unset is 0, off. A level off the ladder is a
+    // caller's mistake and throws; the URL parser drops one before it gets
+    // here. Pure of RNG, and at level 0 the multipliers are the resolved ones
+    // themselves, so a run with Escalation off is the run it was before.
+    const escalation = config?.escalation ?? 0;
+    if (!isEscalationLevel(escalation)) {
+      throw new Error(`Run: escalation=${String(escalation)} is not a level (0 to ${ESCALATION_MAX})`);
+    }
+    this.escalation = escalation;
+    this.difficultyMultipliers = withEscalation(inputs.difficultyMultipliers, escalation);
     // 77d2 — the three sector-scoped streams, one per consumer (the T2-era
     // shared `sectorRng` retired): the DAG pick, the node-map generation,
     // and the 66a boss pre-roll each own a derived stream, so a draw-count
@@ -4364,6 +4390,8 @@ export class Run {
       daemonIds: this.daemons.map((d) => d.id),
       // 63c — the character serializes BY ID (def-resolved on load).
       characterId: this.character.id,
+      // 117b — the level; the multipliers it gives are derived on load.
+      escalation: this.escalation,
       turnGrants: this.turnGrants.map((g) => ({ ...g })),
       currentSectorId: this.currentSectorId,
       currentSectorNodeId: this.currentSectorNodeId,
@@ -4428,8 +4456,8 @@ export class Run {
    * save of a dialed run reloads with its dials. Absent, those inputs are
    * the shipped defaults, as before (what a rollout clone wants). Only the
    * inputs read after construction apply (`resolveRunInputs`); the ones
-   * that shaped construction (roster, daemon, bits, character, grants) are
-   * in the snapshot already, which wins.
+   * that shaped construction (roster, daemon, bits, character, the
+   * Escalation level, grants) are in the snapshot already, which wins.
    */
   static fromJSON(snap: RunSnapshot, bus: EventBus<GameEvents>, config?: RunConfig): Run {
     if (snap.schemaVersion !== RUN_SCHEMA_VERSION) {
@@ -4481,7 +4509,18 @@ export class Run {
     m.rootStampedByDial = inputs.rootStampedByDial;
     m.passIsFinal = inputs.passIsFinal;
     m.drawAmountAdd = inputs.drawAmountAdd;
-    m.difficultyMultipliers = inputs.difficultyMultipliers;
+    // 117b — the level is the SNAPSHOT's, whatever the config says (a
+    // rollout clone loads with none), and the multipliers are derived from
+    // it over the config's overrides. A level off the ladder is a hard
+    // reject, the daemonIds discipline: a silent fall to 0 would hand back
+    // an easier run than the one saved.
+    if (!isEscalationLevel(snap.escalation)) {
+      throw new Error(
+        `Run.fromJSON: escalation level ${String(snap.escalation)} is not on the ladder (0 to ${ESCALATION_MAX})`,
+      );
+    }
+    m.escalation = snap.escalation;
+    m.difficultyMultipliers = withEscalation(inputs.difficultyMultipliers, snap.escalation);
     // 77d2 (v42) — the root + counters restore; streams re-derive at their
     // occurrence sites (nothing else to restore — occurrences are atomic).
     m.streamRoot = snap.streamRoot;

@@ -129,7 +129,12 @@ const RUNS: ReadonlyArray<readonly [number, string]> = [
   [1, 'sectorHops=2&character=soldier'],
   [1, 'character=soldier'],
   [7, 'hops=3&layout=procedural&character=priest'],
+  // 117b — a run on the ladder. Its only dials are the level and the
+  // character, and both are in the snapshot, so it also reloads with no
+  // config at all (below).
+  [5, 'escalation=3&character=gambler'],
 ];
+const ESCALATED = RUNS.length - 1;
 
 describe('115b — the continuation check: a run saved and loaded at every gate plays as the run played straight through', () => {
   const played = RUNS.map(([seed, dials]) => {
@@ -155,6 +160,26 @@ describe('115b — the continuation check: a run saved and loaded at every gate 
     const run = played[0]!; // sectorHops=2: the next sector's map is two hops only with the dial
     const result = continued(run.seed, run.config, run.path, undefined);
     expect(result.divergence?.phase).toBe('sectorCleared');
+  });
+
+  it('the Escalation level rides the snapshot: the run on the ladder reloads with no config and plays the same', () => {
+    const run = played[ESCALATED]!;
+    expect(run.config.escalation).toBe(3);
+    const result = continued(run.seed, run.config, run.path, undefined);
+    expect(result.divergence).toBeNull();
+    expect(result.reloads).toBe(run.path.gates.length);
+    expect(result.end).toBe(run.path.end);
+  });
+
+  it('control: the level set to 0 in the text fails at the next gate, though the config still names 3', () => {
+    const run = played[ESCALATED]!;
+    // Changed at the first gate only, so the text compared at the next gate
+    // is one the changed run wrote. A load that took the level from its
+    // config would write 3 there and pass.
+    const result = continued(run.seed, run.config, run.path, run.config, (gate, snap) => {
+      if (gate === 0) snap.escalation = 0;
+    });
+    expect(result.divergence?.gate).toBe(1);
   });
 
   it('control: a field blanked in the text fails at the next gate', () => {

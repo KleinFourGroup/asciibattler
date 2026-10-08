@@ -1,0 +1,9 @@
+{
+  "levels": [
+    { "levelBudget": 1.1, "wave": 1, "bits": 1 },
+    { "levelBudget": 1.1, "wave": 1.1, "bits": 1 },
+    { "levelBudget": 1.1, "wave": 1.1, "bits": 0.75 },
+    { "levelBudget": 1.2, "wave": 1.1, "bits": 0.75 },
+    { "levelBudget": 1.2, "wave": 1.2, "bits": 0.75 }
+  ]
+}

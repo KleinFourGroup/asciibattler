@@ -2,7 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
-RUN_SCHEMA_VERSION 47
+RUN_SCHEMA_VERSION 48
 
 RunSnapshot = {
   activeEvent: null | { eventId: string; pageId: string }
@@ -25,6 +25,7 @@ RunSnapshot = {
   encounterEffects: Array<Array<StatusEffect>>
   encounterMap: EncounterMap | null
   enemyHealth: number
+  escalation: number
   eventFlags: { [string]: EventFlagValue }
   eventStep: number
   fallenLedger: Array<FallenRecord>

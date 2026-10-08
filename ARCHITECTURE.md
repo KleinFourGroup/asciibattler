@@ -82,6 +82,7 @@ src/
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext); 117a: enemyMoraleMultiplier, the fourth, on the encounter's enemy pool (`scaledEnemyPool`: to the nearest whole, never under 1; `Run.enemyPoolOf` is the Run's one read of `healthPool`)
+    escalation.ts            #   117b: the Escalation ladder (Round 8 spec D8). `ESCALATION_LEVELS` holds where the three levers (levelBudget, wave, bits) stand at each level, 1 up; the parse refuses a ladder where a lever eases. `leverFactors` is how they combine (the wave lever goes to the count, the budget and the enemy pool; the budget lever multiplies with it on the budget); `withEscalation(base, level)` gives a run's four multipliers, and at level 0 returns `base` itself. escalation.test.ts holds the shipped ladder to the signed table by hand
     recruitment.ts           #   offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights (63c: roster composition moved to characters.json)
     characters.ts            #   §63a: loads config/characters.json — starting characters (roster/daemon/blacklist additions/weight overrides); characterById + DEFAULT_CHARACTER_ID ('soldier') + assertDefaultCharacter boot check
     leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
@@ -224,6 +225,11 @@ src/
                              #      doesn't carry (`resolveRunInputs`, shared with the constructor);
                              #      resume() re-emits the gate event of the saved phase (no event at
                              #      `map`; `battle`/`turn-outcome` throw) — tests/integration/resume-gates
+                             # 117b: `escalation`, the run's level (0 = off), fixed for its life and
+                             #      saved (v48). The four difficulty multipliers are the config's
+                             #      overrides times the level's factors (`withEscalation`), derived at
+                             #      construction and on a load; a load reads the SNAPSHOT's level, so
+                             #      a rollout clone, which loads with no config, plays at it
                              # 74b: the event phase — {eventId,pageId} cursor + eventRng (the NINTH
                              #      construction fork) + the run-lifetime eventFlags store (chains);
                              #      74e: entry combat-resolves at a fold-routed chance, else the
@@ -282,7 +288,7 @@ src/
     fatigue.ts               # H6c→K1→91c: fatigueEffect — the Fatigued status debuff on CONSTITUTION (starting HP; stacks clamped at health.fatigueMaxStacks; null/inert at the default rate 0)
     chipRule.ts              # §91a2: THE CHIP RULE's arithmetic, pure + injectable — rulesForTurn(reason) (the set {chipMode} ∪ {capPenalty on 'cap'}) · turnCharges (survivors: each pool pays the OPPOSING standing power; casualties: its OWN fallen; uncapped × chipMultiplier) · 91d playerExposure (the pre-turn risk bound) · 96.5c2 enemyExposure (its mirror — the two partition the fielded power under either rule; the live bar's notch on each gauge, via Run.previewPoolsAtRisk); 96.5b1: THE LOSS-EVENT MODEL the live bar consumes — lossEventsForDeath (casualties: one immediate event at the death, the dead unit's side pays, cause = the unit) · lossEventsAtEnd (survivors: one 'end' event per standing unit to the OPPOSING pool; the cap surcharge's casualties rule over a survivors mode as team-cause events off the fallen totals) · bookedImmediateLoss (the mid-battle restore's opening ghost) · sumLossEvents; pinned: Σ stream = turnCharges under every rule pair × reason (chipLabels.ts owns the words)
     fallenStats.ts           # 102c: the run-end stats fold — summarizeFallen(ledger), PURE over FallenRecord[] (no Run, no bus, no config): the run totals, then one entry per encounter INSTANCE (sector + node, fought order), each per side / per archetype (first-death order) / per turn (ascending); every `rows` is a filtered view in death order (the GameOverScreen's glyph runs read it). The ledger is DEATHS only: a bloodless fight or turn left no row and has no entry
-    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 117a: enemyMoraleMultiplier (programmatic-only, the fourth); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
+    RunConfig.ts             # G1: RunConfig + parseRunConfigFromURL (shared by browser/CLI/GUI); L1: daemon override (?daemon=<id|none>); 47e: starting-bits override (?bits=N); 48f: bitsMultiplier (programmatic-only, the X1 siblings' third axis); 117a: enemyMoraleMultiplier (programmatic-only, the fourth); 117b: `escalation` (?escalation=1..5; level 0 is spelled by no dial; the one difficulty input that is also in the snapshot); 68e/74b: ?firstNode=elite|event (the root stamp dial); 74b: forcedEventId + eventCatalog (programmatic-only — a bespoke catalog is in-memory, saves hard-reject); 74e: eventChance (the scatter dial, #121 slice)
     enemyBudget.ts           # G4 SEAM playerTeamLevel — H5 swapped it to avgLevel × min(roster, handSize)
                              # + affine budget + swarm count (K2: count basis ALSO min(roster, handSize))
     encounters/
@@ -466,6 +472,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   abilities.json             # The AbilityDef catalog — one entry per combat verb (targeting / timeline / effect-ops / damage-heal profile). Y5e consolidated this (was abilityDefs.json) atop the retired legacy AbilityConfig json
   statuses.json              # 27a: the StatusDef catalog (burn/bleed/poison/rejuvenate) — empty until 27c authors content
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
+  escalation.json            # 117b: the Escalation ladder, five levels: each level's standing on the three levers (levelBudget, wave, bits)
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
   health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier

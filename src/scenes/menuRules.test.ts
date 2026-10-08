@@ -29,6 +29,7 @@ const A_VALUE_PER_DIAL: Record<string, string> = {
   daemon: 'none',
   character: 'soldier',
   bits: '0',
+  escalation: '1',
 };
 
 describe('116c — when the menu boots', () => {
@@ -62,6 +63,7 @@ describe('116c — when the menu boots', () => {
     expect(bootsToMenu('?character=nobody')).toBe(true);
     expect(bootsToMenu('?seed=abc')).toBe(true);
     expect(bootsToMenu('?seed=')).toBe(true);
+    expect(bootsToMenu('?escalation=0')).toBe(true);
   });
 });
 

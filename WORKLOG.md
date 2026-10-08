@@ -8103,3 +8103,31 @@ The smoke read the first act's opening fights only.
 **Hand-off.** The session stops here, at the 117c/117d boundary, as
 signed: 117d and 117e are estimated at about 170k and the reading is
 497k. 117d starts in a fresh session.
+
+### The six calls from the build, signed (2026-10-08, the user's)
+
+"All six calls signed". They are the ones the hand-off report listed as
+the user's to overturn, so none is open:
+
+1. 117a's rounding is pinned on explicit pool values, not on the 19
+   authored pools.
+2. 117b's ladder test holds the shipped file to the signed table by
+   hand. With 1, this is where the line falls between numbers tuned
+   freely and content the user signed.
+3. The config refuses a ladder where a lever eases.
+4. A saved level off the ladder rejects the save.
+5. A level multiplies with a run's own multiplier overrides.
+6. A batch's level is counted from each run, with no new `summary.csv`
+   column.
+
+The user's question with the signature, whether this is roughly on the
+right track, and the session's answer: yes for the mechanism (level 0 is
+the old game byte for byte, with controls) and for the direction of the
+four steps the smoke could read; open for the size of the steps, for
+level 3, and for everything past the first act, which are §118's
+board's. The top of the ladder is the part to watch: at level 5 the
+budget is ×1.44 on a wave ×1.2 with a pool ×1.2, and the six-seed
+fragment of the board's arm reached act 2 in 0 of 6 there against 5 of 6
+at level 0. That is a fragment and the numbers are placeholders.
+
+The reading on the hand-off's commit (`19598c6`): **511,504** at 10:18.

@@ -8517,3 +8517,55 @@ that fails in a real browser (the quota path is the memory adapter's).
 
 **Predictions against what happened.** No bump, no smoke: `src/store`
 and `src/Game.ts` are outside the hook's sim paths.
+
+**The commit** is `35ef626`; its hook counted 3569 main tests in 245
+files and skipped the smoke. The reading at its end: **517,213** at
+17:43, so the post cost about 52k.
+
+### §117 closed (2026-10-08, session 610d7303)
+
+**The exit, against ROADMAP's.**
+- *Escalation off byte-identical:* 117a (the fuzz summary at the
+  default, with 21 of 24 rows different at 1.2 as its control), 117b
+  (two shapes, the searcher's included, and the snapshot differing by
+  the version and the new field alone), 117c (`--escalation=0` against
+  no flag). The determinism test and the smoke ran green on every hook
+  that fired them. `drive-run --seed=7` logs `a59ee48f` on the closing
+  tree, 12 battles, as at the kickoff.
+- *Each level's multipliers pinned headless:* 117b's test holds the
+  shipped ladder to the signed table by hand, level by level.
+- *The board read:* at the round close, as the exit says. Not done here.
+
+**What the phase carried in, and where each landed.** From §115, whether
+a reward's taken rows are saved: they are not (the user, at the
+kickoff). From the spec, D8's two decision points: the stacking reading
+(110f) and the pool's rounding (the nearest whole). From the audit, two
+checks owed at 117e's step zero: every bits number on screen goes
+through `effectiveBits` (it does, with one sentence on watch), and a
+stepper under each card at 150 % on a 720p window (it does not fit, so
+the screen scrolls there, signed at the read).
+
+**Left open, each with its home.** For §118's board (HANDOFF's NEXT
+line, BALANCE 2026-10-08): level 3 is unread on bots that don't spend,
+six levels on the board's arm are a box cohort, and the ladder's numbers
+are placeholders; the top of the ladder is the part to watch. TODO
+"§117 riders": the Idol of Dis Pater's sentence, and two tabs changing
+two settings. Unread by any instrument: the keyboard's walk through the
+pickers, a touch, and a record written by a run that was really won
+(every end in the probes was forced; whether the user's test included a
+won run was not said). An easier setting than 0 is Round 11's question,
+and what the record unlocks beyond levels is Round 10's.
+
+**Counts.** 3569 tests in 245 files (3485 in 243 at the kickoff), green
+on every commit's hook; the smoke 586 in 63 (582 in 62). It fired at
+117a, 117b, 117c and 117d as predicted, and at 117e against the cut's
+prediction, for a function in `src/config/`. Run v47 → v48; no World
+bump, no RNG stream, no bus event; one new config file and one new
+store field. The production script is 649.21 kB raw (641.83 at §116's
+close) and the stylesheet 64.12 kB. Two sessions, 2026-10-07 to 10-08;
+six steps, one of them inserted at the stop; one stop, read the day it
+opened, with no finding against what was built.
+
+The reading before the closing commit: **536,715** at 17:47, under the
+line; the close cost about 20k to there. §117.5's kickoff goes to a
+fresh session.

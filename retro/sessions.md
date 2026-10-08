@@ -3945,3 +3945,66 @@ goes on after the read, an addendum follows.
    would want the shape again: a signed cut, a `none` step with its
    probe, then the stop. Whether the picker is right is the user's read
    and a separate matter.
+
+### Addendum — the read, 117d-post and the close (2026-10-08, the same session)
+
+The user read 117e that afternoon, signed everything as built and
+answered yes to both questions, so the session went on: the two-tab fix,
+then the phase close. What changes in the answers above:
+
+- **3, pulled to claim more than verified:** once more, and a control
+  caught it. I added two lines to an existing restore test and commented
+  them "built on the old page's copy, never on what was restored". The
+  cut that should have failed them passed. The page in that test had
+  never read the section before the restore, so the lines proved
+  nothing of the kind. I replaced them with a test that does. Without
+  the mutation run I would have shipped a comment that was false.
+- **4, wasted:** the first run of the six cuts, repeated after that fix.
+- **5, for the next session:** a paramless arrow handed to
+  `store.update` is inferred before the section fixes its type, so a
+  literal in its return widens (`speed: 3` read as a number); give the
+  arrow a parameter or annotate its return. One page and a write to
+  `localStorage` stand for a stale second tab, which is cheaper than two
+  tabs and the page can't tell the difference.
+- **6, room to stop:** the close started at 517k, under the line, and I
+  judged it by the rule and not by how the session felt. I did not want
+  to stop. I notice I cannot tell whether a wish to stop would have
+  been visible to me at that point, with the user's "everything looks
+  awesome" just read and two more steps plainly within reach.
+- **7, ease:** the read coming back the same day with nothing against
+  what was built. I do not know how much of the picker's wording the
+  user weighed and how much they waved through, and "everything" is
+  theirs to mean.
+
+### §117 — the phase summary (2026-10-07 → 10-08; two sessions)
+
+Two sessions, 515397d2 (the kickoff and the sim half, 117a to 117c) and
+610d7303 (the store and the screens, 117d, 117e, 117d-post and the
+close). **Orientation** was good both times: HANDOFF named the carried
+decisions and the next step's shape. What each had to find was a reason
+or a mechanism nobody had written down: the first, that the level
+belongs in the snapshot for the rollout clone and no longer for a
+reload; the second, that `store.patch` writes a whole cached section,
+which is what let two tabs lose a win. **Norms in conflict:** the cut's
+exits against the rule that no test holds shipped balance numbers
+(resolved two ways, both signed after the fact), and the harness's
+keep-going guidance against surfacing an API shape before building it
+(resolved by carrying the question to the signed stop). One session
+broke the no-inline-`-e` rule four times and said so. **Over-claims**
+were caught before they were built on: by re-pricing when the user
+asked, by re-reading a runner's own line, by re-measuring two figures,
+and once by a mutation run that showed a new assertion proved nothing.
+**Estimates:** 117d and 117e were put at about 170k and cost 202k (77k
+and 125k), and the post 52k; the estimate that a small post and the
+close would fit under the line held. A batch's wall time in the first
+session missed by a factor of several and the batch was killed under
+the measurement rule. **Friction:** the silent-turn reminder fired
+twenty times or more in each session and was answered with a line each time; in
+both reports it reads as noise more than pressure, and in the second as
+a reflex. The probe runner's JSON argument needs a node runner from Git
+Bash. **Filed as `distress`, both mild and resolved:** a pull to let a
+batch run past its kill line, and a pull to build an unsigned store
+method. **What both sessions say they would want again:** a cut signed
+with its reads, a long stretch with nobody waiting on each commit, and
+controls that fail by name. The phase had one stop, and the user read it
+the day it opened with no finding against what was built.

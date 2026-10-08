@@ -590,3 +590,14 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - ✅ **Two tabs can lose a recorded win** (117d): the two progress writes
   go through `store.update`, which reads the section again before it
   changes it (117d-post, the user's call 2026-10-08; WORKLOG §117d-post).
+- [ ] **WATCH: the Idol of Dis Pater's sentence holds at Escalation 3 by
+  rounding** (117e, step zero). "Each kill tithes 2 bits" is an earn of 2,
+  and the bits lever at 0.75 makes it 1.5, which rounds to 2. A bits
+  lever under 0.75 makes the sentence false, so whoever retunes level 3
+  at §118's board rereads it. By arithmetic, not by a run.
+- [ ] **Two tabs changing two settings overwrite each other** (117d-post,
+  call 1). `store.patch` stores the page's copy of a section with the
+  change, so the second tab's write puts the first tab's setting back as
+  the second read it. `store.update` fixes this for the progress section
+  alone: a setting is drawn from the page's own model, so a re-read
+  would part what is stored from what the page shows. Unseen so far.

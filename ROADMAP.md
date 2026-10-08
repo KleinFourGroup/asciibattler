@@ -12,8 +12,8 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §116 ✅ CLOSED 2026-10-07** (the menu and settings).
-**§117, Escalation and the unlock mechanism, is in progress:** cut and signed 2026-10-08.
+**Status: §117 ✅ CLOSED 2026-10-08** (Escalation and the unlock mechanism).
+**§117.5, the UI sweep, is next:** its kickoff picks its list from TODO.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -211,23 +211,27 @@ the shell's whole-store write and a "Copy diagnostics" row for players
 - [x] **116l** ✅ READ 2026-10-07 (the user; WORKLOG "116l — step zero, and the sitting prepared", "The sitting's reports", "The sitting's read") — THE SITTING: Firefox, Electron and the itch draft, with a diagnostics build made for it (`VITE_DIAG=1`, `scripts/itch-zip.mjs`). Settings, a run and the store kept across a reload, a closed tab and a restart in each shell; in the frame a download, the clipboard and the import work; Firefox's limit is 5,242,880 characters there and in a tab of its own; the journals budget signed at 1,000,000 on four hand-played journals. One failure, the two-tab lock in the frame → 116l-post. Read `stop`.
 - [x] **116l-post** ✅ READ 2026-10-07 (the user: "It worked!"; WORKLOG "The sitting, step 4", "The sitting's read") — inserted at the sitting, whose fourth point failed (a second tab of the itch draft read no lock and its run saved over the first's): the two-tab lock confirms a refusal with a control request and never asks `locks.query()`, which Firefox refuses in itch's frame. Read `stop`: two tabs of the draft, then two of the local build in Firefox.
 
-## Phase 117 — Escalation and the unlock mechanism
+## Phase 117 — Escalation and the unlock mechanism ✅ CLOSED 2026-10-08
 
-Charter: the five-level ladder (spec D8): per-character progress, the
-picker on character select, the enemy-morale multiplier beside the three
-that exist, the level saved in the RunSnapshot; and the cross-run unlock
-mechanism, resolved at run creation only. **Why here:** the unlocks need
-the store and the saved level needs save/load. **Risk:** medium (a balance
-surface). **Decision points:** the stacking reading ✅ DECIDED (signed at
-110f: a repeated lever adds, different levers multiply); the enemy pool's
-rounding ✅ DECIDED (to the nearest whole; WORKLOG §117 "The shape-lock's
-answers"). **Exit:** Escalation off byte-identical
-(the determinism test and the fuzz smoke); each level's multipliers pinned
-headless; the board read at the round close. **Scope guards:** number
-levers only; no unlock content mapping (Round 10); a seeded run unlocks
-nothing.
+**Outcome:** the game has its difficulty ladder and the way up it. A run
+is played at an Escalation level, 0 to 5, from `config/escalation.json`:
+three number levers (the enemy level budget, the enemy wave with its
+budget and its pool, the bits earned), each level keeping every level
+under it. The level is a run input with a URL dial and is saved in the
+RunSnapshot (Run v48); it gives a run its four multipliers, the fourth
+being enemy morale on the encounter's pool, and at level 0 the game is
+the one before the ladder, byte for byte. The store's progress holds the
+highest level each character has won at, and the level above it is what
+that character may pick, under its card on character select. A won run
+counts when its dials hold nothing but its character and its level. The
+end screen names the level and what a win opened. The ladder's numbers
+are placeholders: a local smoke found no level easier than the one under
+it and could not read level 3, and the round close's board reads them
+(BALANCE 2026-10-08). WORKLOG §117.
 
-**Carried from §115** (TODO "§115 riders"): whether a reward's taken rows are saved ✅ DECIDED at the kickoff: they are not (the user, 2026-10-08; WORKLOG §117 "The shape-lock's answers").
+**Decision points:** the stacking reading ✅ DECIDED (110f); the enemy
+pool's rounding ✅ DECIDED (the nearest whole). **Carried from §115:** a
+reward's taken rows ✅ DECIDED, not saved (the user, 2026-10-08).
 
 The cut, signed 2026-10-08 (WORKLOG "The §117 audit and cut", "The shape-lock's answers"):
 

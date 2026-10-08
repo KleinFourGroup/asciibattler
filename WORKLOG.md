@@ -8413,3 +8413,14 @@ words.
 the level's words are built from the ladder by a function in
 `src/config/escalation.ts`, and the hook runs the smoke for that folder.
 No bump: none.
+
+**The commit** is `4201c86`; its hook counted 3555 main tests in 245
+files and the smoke's 586 in 63. Readings: **437,133** at 11:32 at its
+launch, so 117e cost about 125k; **458,354** at 11:35, at the stop.
+
+**The stop.** Two questions ride it with the read: the two-tab fix
+(§117d "Open"), and call 6 above. What the stop opens is the read's
+`-post`, if it has one, and the phase close. §116's posts cost 36k to
+91k and its close 47k, so a small post and the close look likely to fit
+under the line from 458k, and a larger post does not leave room for the
+close.

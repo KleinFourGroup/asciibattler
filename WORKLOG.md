@@ -8050,3 +8050,56 @@ reaches sets a level until the picker exists.
 
 **Predictions against what happened.** Run v47 → v48: yes. The config
 hash moves: a new file. The smoke fires: expected on this commit's hook.
+
+### 117c — the harness's `--escalation`, and the paired smoke (2026-10-08)
+
+Read `none`; the smoke did not raise it. 117b's commit is `c765710`; its
+hook ran the smoke (582) and 3521 main tests. Readings: **428,090** at
+09:45, at 117c's start, so 117b cost about 83k; **465,445** at 09:52 on
+the flag's commit (`467cd9f`); **496,917** at 10:14, the smoke read.
+
+**Built** (`467cd9f`). `--escalation=<0..5>` in run mode sets the run's
+level; 0 sets nothing, so `--escalation=0` is the run no flag gives. It is
+not among the probe dials `--arbitrate` refuses, since the level is in the
+snapshot. `RunResult` gained `escalation`, read from the Run at its end,
+and run mode counts the level from the results: a batch whose runs are not
+all at the asked level stops before its summary is written, and a batch
+above level 0 prints the count. `summary.csv` has no new column, so every
+byte-identity surface and the board's parsers are as they were. Other
+modes ignore the flag, as they ignore the run-mode dials beside it.
+
+**Checked, with its controls.** `--escalation=0` over 12 seeds: the
+summary byte-identical to no flag. Level 3: 8 of 8 rows differ from level
+0's, the count line printed, and `--jobs=2` identical to serial. `9` and
+`2.5` exit 1 by name. The planted case: with the flag's wiring cut, the
+batch stopped with "2 of 2 runs were not at level 3 (seed 1 was at 0)".
+The board's arm, `--arbitrate` and all, ran a seed at level 5. Eleven
+`RunResult` fixture literals took `escalation: 0` through a script that
+checked every file's anchor count before writing any. The hook: 3521 main,
+and the smoke 586 in 63 files (+4 tests, +1 file).
+
+**The smoke.** The numbers and their limits are BALANCE's entry of this
+date. In short: on the two default strategies at 39 seeds, no level came
+out easier than the one under it; levels 1, 2, 4 and 5 each lean harder
+on the paired count, the wave lever most firmly; level 3, bits, changed
+no outcome because those bots hardly spend, so it is unread, not soft. The
+cut's rule raises a stop for a level that comes out clearly easier, and
+none did.
+
+**An estimate that missed.** The board's arm was launched beside the
+default arms at 24 seeds a level on an estimate of 15 minutes, taken from
+one run that died at hop 6 in 39 seconds. Its real runs go two acts. At
+14.5 minutes level 0 had a quarter of its chunks, so it was stopped under
+`process/measurement.md`'s rule and not re-run: the box is the user's
+call, and the levels' read on this arm is §118's board. `TaskStop` left
+36 node processes alive; 35 carried this session's scratch path and were
+killed by PID, and a second listing found none. The six seeds every level
+had finished are in BALANCE as a fragment.
+
+**For §118's board.** Level 3 needs an arm that shops. Six levels at the
+board's n are a box cohort: about an hour on 18 local cores for 24 seeds.
+The smoke read the first act's opening fights only.
+
+**Hand-off.** The session stops here, at the 117c/117d boundary, as
+signed: 117d and 117e are estimated at about 170k and the reading is
+497k. 117d starts in a fresh session.

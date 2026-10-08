@@ -421,6 +421,15 @@ for the future difficulty system. They live on the **run**, not the encounter:
 These are the two independent axes the resolver already separates (the K2 lesson:
 count and strength are different levers, and **count hits the early game hardest**).
 
+**Since §117 there are four multipliers and a difficulty system over them.** `bits`
+(48f) scales every earn and `enemyMorale` (117a) the encounter's enemy pool; neither
+rides `WaveContext`. The run's **Escalation level** (`RunConfig.escalation`, the
+harness's `--escalation=<0..5>`, [config/escalation.json](config/escalation.json))
+is the system this seam was left for: a level's factors multiply onto the four, and
+the level, unlike the overrides, is saved in the run's snapshot, so `--escalation`
+is legal with `--arbitrate`. The ladder's first read is the 2026-10-08 smoke in the
+run log.
+
 **`levelBudget` × `levelCap` saturates.** A capped wave can't spend extra budget
 (it clamps to `n·cap`), so a `levelBudget` sweep **plateaus** on a capped encounter.
 To make the strength axis bite on a spike encounter, **uncap it** (the X groundwork's
@@ -4718,3 +4727,66 @@ deltas. The pre-X H7c→O log lives at
   0.267; the tripwire green) · roster table **v3** (21,221 rows off the
   eight ARM rows, 4.6 MB — the compaction rider stands). Detail: WORKLOG
   §94h · ROADMAP 94h.
+
+- **2026-10-08 §117c — THE ESCALATION SMOKE: six levels paired on the
+  seed. A smoke, not the board.** The first measurement of the Escalation
+  ladder (Round 8 spec D8; `config/escalation.json`), and of the wave
+  lever under the casualty rule. One HEAD (`467cd9f`), a clean tree,
+  local. **What ran:** `npm run fuzz -- --count=39 --escalation=<n>` for
+  n = 0 to 5, so the two default strategies on seeds 1 to 39 at each
+  level, 78 runs a level; every batch above level 0 printed its level as
+  read from its runs. **What it can show:** a lever that does nothing or
+  goes clearly backwards. **What it cannot:** rank two levels 10% apart,
+  say anything about act 2 or a boss, or read a win rate. These two bots
+  win 0 of 39 at every level, and 3 of 39 reach act 2 at level 0, so this
+  is a read of the first act's opening fights by weak play.
+
+  | level | adds | pure-random: battles · enemy deaths · bits at the end | greedy: the same |
+  |---|---|---|---|
+  | 0 | | 15.9 · 114.1 · 49.1 | 15.8 · 110.6 · 56.1 |
+  | 1 | level budget +10% | 15.2 · 105.8 · 44.3 | 14.9 · 103.4 · 51.8 |
+  | 2 | wave +10% | 14.0 · 103.8 · 41.0 | 13.7 · 99.8 · 41.8 |
+  | 3 | bits −25% | 14.0 · 103.7 · 31.3 | 13.8 · 99.9 · 32.2 |
+  | 4 | level budget +20% in all | 12.6 · 87.0 · 24.0 | 12.3 · 84.7 · 24.4 |
+  | 5 | wave +20% in all | 11.2 · 75.7 · 21.1 | 11.1 · 75.6 · 20.6 |
+
+  Paired on the seed, each level against the one under it, by where the
+  run ended (won, then sectors cleared, then hop): ended less deep / the
+  same / deeper, with a two-sided sign test on the discordant pairs.
+
+  | step | pure-random | greedy |
+  |---|---|---|
+  | 1 over 0 | 12 / 21 / 6, p 0.238 | 16 / 17 / 6, p 0.052 |
+  | 2 over 1 | 14 / 24 / 1, p 0.001 | 17 / 18 / 4, p 0.007 |
+  | 3 over 2 | 0 / 39 / 0 | 0 / 38 / 1 |
+  | 4 over 3 | 16 / 19 / 4, p 0.012 | 15 / 21 / 3, p 0.008 |
+  | 5 over 4 | 14 / 20 / 5, p 0.064 | 13 / 22 / 4, p 0.049 |
+  | 5 over 0 | 33 / 5 / 1 | 33 / 5 / 1 |
+
+  **The read.** No level came out easier than the one under it. Every
+  step that changes a fight (1, 2, 4, 5) leans harder on both bots, and
+  against level 0 the harder count climbs 12, 18, 18, 26, 33 and 16, 22,
+  21, 27, 33. **The wave lever is not inverted:** raised with its budget
+  and its pool it is the firmest step here (2 over 1), so the worry that
+  a bigger wave pays out more enemy morale than it costs does not show
+  on these bots. **Level 3 is unread.** The bits lever reached the runs
+  (the bits held at the end fall by about a quarter, 41.0 → 31.3 and
+  41.8 → 32.2) and changed no outcome, because these two strategies
+  hardly spend. A flat row from bots that do not use the lever is not
+  evidence that the lever is soft; it needs an arm that shops.
+  **Not run to its end: the board's arm.** The arbitrated arm
+  (`--strategy=tests/fuzz/fixtures/92c2-winner.json --searcher --audition
+  --redraw=level:2 --empower=level:hi --arbitrate --prior-lambda=0.5`,
+  24 seeds a level, `--jobs=3`) was estimated at 15 minutes from one
+  39-second run that died at hop 6. At 14.5 minutes level 0 had 3 of its
+  12 chunks, so it was killed under the twice-the-estimate rule: its
+  runs go two acts deep and cost several minutes each. The six seeds
+  every level had finished (1 to 6) are a fragment, not a sample:
+  reached act 2 at levels 0 to 5 in 5, 5, 3, 4, 3, 0 of 6, and won in 0,
+  1, 0, 0, 0, 0. At that pace six levels of 24 seeds are about an hour
+  on 18 local cores, so the levels' read on this arm is the box's, with
+  §118's board. **Artifacts** (ignored, this machine):
+  `tests/fuzz/output/117c-smoke/` holds each level's `summary.csv` and
+  `manifest.json`, the fragment's rows, and the script that made the
+  tables (`analyze-smoke.mjs`, with its known answers). Detail: WORKLOG
+  §117c.

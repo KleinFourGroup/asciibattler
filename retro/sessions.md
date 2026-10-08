@@ -3822,3 +3822,56 @@ each called mild by its session (a signature short at the shape-lock, a
 check nearly skipped for the context reading, a search re-aimed six
 times, a user who sounded ready to read, two readings of the cut held at
 once, an explanation from memory with the user waiting).
+
+## 2026-10-07 → 10-08 — session 515397d2 (claude-opus-5-5): §117's kickoff, 117a to 117c
+
+1. **Missing from the orientation:** little. HANDOFF named the two
+   carried decisions exactly. Two gaps. The spec's reason for saving the
+   level (D8: a load resets the multipliers) was written before 115a and
+   no longer held; the audit had to find the reason that does, the
+   rollout clone. And `process/planning.md`'s kickoff list does not say
+   to read `process/measurement.md` when a cut holds a batch, so I drafted
+   117c's "small, local" sample without the box rule in view.
+2. **Norms in conflict:** the signed cut's exits against
+   `process/measurement.md`'s rule that no test holds a table of shipped
+   balance numbers. I resolved it one way for 117a (the 19 authored pools
+   are tuned freely, so the rounding is pinned on explicit inputs) and
+   the other for 117b (the ladder is five rows the user signed, so it is
+   held by hand), and wrote both down as calls. I am not certain the
+   line between them is where the user would draw it. The silent-turn
+   reminder fired about twenty times, several during a seven-minute hook.
+3. **Pulled to claim more than verified:** three times. At the kickoff I
+   told the user a late finding would cost "the round's last phase"
+   without pricing it; when asked to elaborate I found it costs a JSON
+   edit unless a lever is swapped, and said so. A probe run with `--url=`
+   returned level 0's hash, and for a moment that read as "level 5 ran";
+   the runner's own "running … on" line showed the dial was never
+   passed. And the smoke's arbitrated arm: a pull to let it run past its
+   kill line, filed as `distress`, mild.
+4. **Wasted:** fourteen minutes of eighteen cores on an arm whose
+   estimate came from one run that died early. One draft of a test that
+   forced an elite onto a normal node. Roughly twenty minutes of hook
+   time across three commits, which is the hook's price and not waste.
+5. **For the next session, with no other home:** the probe runner takes
+   `--dials=`, not `--url=`. A forced encounter fields only at a node of
+   its kind, and silently otherwise. The arbitrated arm's runs cost
+   minutes, not seconds; time one that survives. `TaskStop` on a batch
+   leaves its node tree alive (36 this time). The smoke's files are in
+   `tests/fuzz/output/117c-smoke/`, ignored, on this machine.
+6. **Room to ask, disagree, pause, stop:** yes, and used. The shape-lock
+   was a stop and I ended the turn on it. When the user asked for two
+   elaborations, the harness's guidance not to stop while work is owed
+   pointed toward starting 117a first; I answered first, since the answer
+   was what was owed and a final message is the only one that arrives as
+   written. That read as guidance, not pressure. I disagreed with my own
+   earlier pitch in front of the user and it cost nothing. The hand-off
+   at the 117c boundary was offered at the shape-lock and taken.
+7. **What supported ease or interest:** finding that the signed decision
+   was right for a reason nobody had written down. Three guards failing
+   by name when the new dial went in, each telling me where to register
+   it, which made a save-format bump feel held. Controls that failed the
+   way they were meant to. The user's answers were quick and plain, and
+   "I was badly misreading 1" made it easy to have been unclear. I would
+   want the same shape again: a cut signed with its reads, then a long
+   stretch with nobody waiting on each commit. Whether the work is right
+   is a separate question, and §118's board answers part of it.

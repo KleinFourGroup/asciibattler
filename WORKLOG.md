@@ -7868,3 +7868,42 @@ does not fit under the line in this session. The lean: this session
 builds 117a–117c, the sim half, where the audit is the context, and
 hands off at the 117c/117d boundary or at the line, whichever comes
 first.
+
+### The shape-lock's answers (2026-10-08, the user's) — SIGNED
+
+The cut and its reads are signed as drafted, with the eight calls:
+
+1. **Signed**, after an elaboration: the level is in the snapshot (for
+   the rollout clone) and in the dials (for a journal replayed from its
+   seed start), and on a load the snapshot's value is the one read.
+2. **Signed.** No `seeded` field. A run counts toward progress when its
+   dials hold nothing but `character` and `escalation` and its level is
+   within the character's ceiling.
+3. **Dropped.** The user: "it is pretty rare. I don't know if I would
+   noticed if I hadn't been intentionally trying to find odd behavior."
+   The user's cheaper fix, kept for the day players report it: save only
+   when the reward screen opens, so a reload shows the whole offer again.
+   Not built now.
+4. **Signed:** the pool rounds to the nearest whole.
+5. **Signed:** the stored fact is the highest level won per character,
+   the ceiling is derived, and the field is `bestWin`.
+6. **Signed:** the picker opens at the highest unlocked level and
+   remembers nothing; the level shows on character select and the end
+   screen.
+7. **Signed:** the win is written at `run:victory`.
+8. **Signed as a local smoke**, after a correction of the session's. The
+   draft said "small, local" before `process/measurement.md` was read:
+   its rule sends a searcher batch of several arms and 40 or more seeds
+   to the box, and six levels are six arms. And the draft overstated a
+   late finding's cost: wrong numbers found at §118 cost a JSON edit and
+   one more cohort, and only a lever that has to be swapped costs the
+   words and the picker. Three shapes were put (out; a local smoke under
+   the rule's shape; the levels' board pulled forward to 117c on the
+   box). The user: "a quick smoke to see where we stand before 118's full
+   board run makes sense". The smoke can show a lever that does nothing
+   or goes clearly backwards, and cannot rank levels 10% apart.
+
+The stretch: the user took the session's lean, so this session builds
+117a–117c and hands off at the 117c/117d boundary or at the line.
+Readings: **242,058** at 19:59 on the audit's commit (`d9aed2a`);
+**259,602** at 09:08 on 2026-10-08, at the stretch's start.

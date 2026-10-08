@@ -13,7 +13,7 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §116 ✅ CLOSED 2026-10-07** (the menu and settings).
-**§117, Escalation and the unlock mechanism, is next:** its kickoff cuts it.
+**§117, Escalation and the unlock mechanism, is in progress:** cut and signed 2026-10-08.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -218,14 +218,24 @@ picker on character select, the enemy-morale multiplier beside the three
 that exist, the level saved in the RunSnapshot; and the cross-run unlock
 mechanism, resolved at run creation only. **Why here:** the unlocks need
 the store and the saved level needs save/load. **Risk:** medium (a balance
-surface). **Decision points:** the stacking reading (proposed in the
-spec); the enemy pool's rounding. **Exit:** Escalation off byte-identical
+surface). **Decision points:** the stacking reading ✅ DECIDED (signed at
+110f: a repeated lever adds, different levers multiply); the enemy pool's
+rounding ✅ DECIDED (to the nearest whole; WORKLOG §117 "The shape-lock's
+answers"). **Exit:** Escalation off byte-identical
 (the determinism test and the fuzz smoke); each level's multipliers pinned
 headless; the board read at the round close. **Scope guards:** number
 levers only; no unlock content mapping (Round 10); a seeded run unlocks
 nothing.
 
-**Carried from §115** (TODO "§115 riders"): whether a reward's taken rows are saved is decided at this kickoff. It needs a Run bump, this phase makes one anyway, and after §118's upload a bump costs players their runs.
+**Carried from §115** (TODO "§115 riders"): whether a reward's taken rows are saved ✅ DECIDED at the kickoff: they are not (the user, 2026-10-08; WORKLOG §117 "The shape-lock's answers").
+
+The cut, signed 2026-10-08 (WORKLOG "The §117 audit and cut", "The shape-lock's answers"):
+
+- [ ] **117a** — the fourth multiplier, enemy morale, beside the three; the pool's three reads in `Run.ts` through one accessor. Exit: byte-identical at 1; the 19 authored pools pinned at ×1.1 and ×1.2; a staged encounter flips at the same fraction of the scaled pool. No bump; the smoke fires. Read `none`.
+- [ ] **117b** — the level: `config/escalation.json`, the `escalation=` dial, `RunSnapshot`'s field, the four factors derived at construction and on a load. Exit: level 0 against a worktree of the parent commit, a level-1 run its failing control; each level's factors against the spec's table by hand; a rollout clone keeps the level. Run v47 → v48; the smoke fires. Read `none`.
+- [ ] **117c** — the harness's `--escalation`, legal with `--arbitrate`, and a local paired smoke of levels 0–5 inside the box rule's shape, into BALANCE and named a smoke. The smoke fires. Read `none`, raised to a stop if a level comes out clearly easier than the one under it.
+- [ ] **117d** — progress and the unlock rule: `bestWin`, three pure rules (the ceiling, whether a run counts, the record after a win), the write at `run:victory`, the clamp at run creation, `chooseCharacter` carrying the level. No bump; the smoke fires. Read `none`.
+- [ ] **117e** — the picker (a stepper row under each card, opening at the highest unlocked level), the levels in words, the level and the unlock on the end screen. Read `stop`, in Firefox: with a win planted for one character, its card shows the stepper and the others don't; step it, start, and the end screen names the level. Wrong is a card that moves when a stepper appears, a level above the ceiling on offer, or a percentage in the words.
 
 ## Phase 117.5 — the UI sweep
 

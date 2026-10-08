@@ -54,7 +54,7 @@ import { setShakePolicy } from './ui/lossFx';
 import { setTextScale } from './ui/textScale';
 import { backupOf } from './store/backup';
 import { keepJournal } from './store/journals';
-import { PROGRESS_SECTION } from './store/progress';
+import { PROGRESS_SECTION, bestWinAfter, escalationCeiling, levelWithinCeiling, runCounts } from './store/progress';
 import type { RunLock } from './store/runLock';
 import { lastRunJournal, openRunSlot, type RunSlot, type RunSlotRead } from './store/runSlot';
 
@@ -74,7 +74,8 @@ const TURN_OUTRO_MS = 900;
  *
  *   - battle:started → BattleScene
  *   - recruit:offered → RecruitScene
- *   - run:victory → GameOverScene('complete')
+ *   - run:victory → the win recorded in the store's progress, if the run
+ *     counts (`recordWin`), then GameOverScene('complete')
  *   - run:defeated → GameOverScene('defeat')
  *   - chooseRecruit returning to phase=='map' → MapScene (driven from
  *     dispatch, since no bus event fires for that transition)
@@ -82,7 +83,8 @@ const TURN_OUTRO_MS = 900;
  *     MenuScene on a page that booted to it (116c), or the
  *     CharacterSelectScene on a page booted by a run dial (63e — the choice
  *     is per-run)
- *   - chooseCharacter (63e, select-scene confirm) → construct the Run →
+ *   - chooseCharacter (63e, select-scene confirm) → construct the Run, at
+ *     the picked Escalation level held to the character's ceiling →
  *     MapScene
  *   - the menu's New run → CharacterSelectScene, and its Back → MenuScene
  *     (116c; neither is a command, since no run exists on either side)
@@ -472,7 +474,13 @@ export class Game implements RunDispatcher {
     // a scene now.
     this.bus.on('event:entered', () => this.swap(new EventScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
-    this.bus.on('run:victory', () => this.swap(new GameOverScene('complete')));
+    // The win is recorded here and not at the end screen's button: the
+    // autosave empties the slot at this same command, so a tab closed on the
+    // end screen would otherwise lose the win with the run already gone.
+    this.bus.on('run:victory', () => {
+      this.recordWin();
+      this.swap(new GameOverScene('complete'));
+    });
     // 67b — the between-sector beat (the 67a gate's screen). Titles ride the
     // payload: the cleared sector is gone from Run by emit time, so no getter
     // can name it (the GameOverScene fixed-at-construction shape).
@@ -609,8 +617,17 @@ export class Game implements RunDispatcher {
    * (their subscriptions are live by now — unlike the pinned-boot path);
    * the refresh() pair after the assignment is the 48d/49f re-paint
    * ordering. A confirm while a Run already exists is a misroute — ignore.
+   *
+   * THE UNLOCKS ARE READ HERE, and nowhere else in a run's life (Round 8
+   * spec D8): the picked level is held to the character's ceiling as the
+   * store's progress has it now. The screen offers no level above the
+   * ceiling, so the clamp only bites on a command that didn't come from it.
+   * The picked level is the run's: a level in the URL beside no character is
+   * replaced by it, where one beside `character=` never comes through here
+   * and is played as written, unclamped (a driver's run, or a journal
+   * replayed in the page on a store that never won).
    */
-  private confirmCharacter(characterId: string): void {
+  private confirmCharacter(characterId: string, picked: number): void {
     if (this.run !== null) {
       console.warn(`[Game] chooseCharacter '${characterId}' ignored — a run is already live`);
       return;
@@ -619,12 +636,30 @@ export class Game implements RunDispatcher {
     if (character === undefined) {
       throw new Error(`Game.confirmCharacter: unknown character id '${characterId}'`);
     }
-    this.run = this.createRun(character);
+    const ceiling = escalationCeiling(store.read(PROGRESS_SECTION).bestWin, character.id);
+    this.run = this.createRun(character, levelWithinCeiling(picked, ceiling));
     this.autosave(this.run);
     this.bitsOverlay.refresh();
     this.poolOverlay.refresh();
     this.cacheOverlay.refresh();
     this.swap(new MapScene());
+  }
+
+  /**
+   * 117d — a won run, written into the store's progress if it counts
+   * (src/store/progress.ts): its dials hold its character, at most a level,
+   * and nothing else, and its level is within that character's ceiling. The
+   * record is the highest level won, so a win told twice (`Run.resume()`
+   * re-emits a loaded end state's event) is written once.
+   */
+  private recordWin(): void {
+    const run = this.run;
+    if (run === null) return;
+    const { bestWin } = store.read(PROGRESS_SECTION);
+    const id = run.character.id;
+    if (!runCounts(this.runDials, run.escalation, escalationCeiling(bestWin, id))) return;
+    const after = bestWinAfter(bestWin, id, run.escalation);
+    if (after !== bestWin) store.patch(PROGRESS_SECTION, { bestWin: after });
   }
 
   /**
@@ -642,7 +677,7 @@ export class Game implements RunDispatcher {
     // a run-level command arriving pre-select is a scene sequencing bug,
     // so warn loud and drop rather than silently no-op it.
     if (command.kind === 'chooseCharacter') {
-      this.confirmCharacter(command.characterId);
+      this.confirmCharacter(command.characterId, command.escalation);
       return;
     }
     if (command.kind === 'resetRun') {
@@ -1005,13 +1040,16 @@ export class Game implements RunDispatcher {
    * menu's seed field is layered the same way, for this run alone: its seed
    * goes into the run's dials, which is how a seeded run is told from one
    * seeded by the clock (the slot and the journal's start keep the dials).
+   * 117d — and so is the Escalation level picked with the character, which
+   * the dials spell for the journal's replay (level 0 by no dial).
    */
-  private createRun(character?: CharacterConfig): Run {
+  private createRun(character?: CharacterConfig, escalation?: number): Run {
     const typedSeed = seedFromText(this.seedText);
     this.seedText = '';
     const config: RunConfig = {
       ...this.runConfig,
       ...(character !== undefined ? { character } : {}),
+      ...(escalation !== undefined ? { escalation } : {}),
       ...(typedSeed !== undefined ? { seed: typedSeed } : {}),
     };
     const seed = config.seed ?? Date.now();

@@ -89,7 +89,8 @@ export class CharacterSelectScreen extends Screen {
       className: 'charselect-card',
       onClick: () => {
         this.audio.play('click');
-        this.dispatcher.dispatch({ kind: 'chooseCharacter', characterId: character.id });
+        // Level 0 until the picker stands under each card.
+        this.dispatcher.dispatch({ kind: 'chooseCharacter', characterId: character.id, escalation: 0 });
       },
     });
 

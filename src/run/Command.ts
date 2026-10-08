@@ -207,8 +207,11 @@ export type RunCommand =
    * exist before Run construction — the §63 seam), so Run itself only ever
    * sees it as a misrouted no-op. `characterId` is a characters.json id;
    * Game validates it loud (the scene only offers catalog entries).
+   * `escalation` is the Escalation level picked with the character (0 is
+   * off); Game holds it to the character's ceiling before the run is made
+   * (src/store/progress.ts), so a level that isn't unlocked starts no run.
    */
-  | { readonly kind: 'chooseCharacter'; readonly characterId: string };
+  | { readonly kind: 'chooseCharacter'; readonly characterId: string; readonly escalation: number };
 
 export interface RunDispatcher {
   dispatch(command: RunCommand): void;

@@ -8131,3 +8131,135 @@ fragment of the board's arm reached act 2 in 0 of 6 there against 5 of 6
 at level 0. That is a fragment and the numbers are placeholders.
 
 The reading on the hand-off's commit (`19598c6`): **511,504** at 10:18.
+
+### 117d — progress and the unlock rule (2026-10-08, session 610d7303)
+
+Read `none`. A fresh session, from 10:47. Pre-flight: typecheck clean;
+`npm test` 244 files, 3521 tests. Readings: **103,208** at 10:48, after
+HANDOFF, `process/planning.md` and this phase's entries; **198,362** at
+10:53, at step zero's end, which is the step's start.
+
+**Step zero** (✔ = read at file:line by this session).
+- ✔ The lenient reader gives a refused field its fallback whole
+  (`store.ts:265-266`), as the audit said. So a record under one field
+  needs a schema that takes each entry on its own.
+- ✔ Every run `Game` creates names its character in its dials: the three
+  callers of `createRun` are the constructor and `resetRun`, both only
+  with `character=` in the URL, and `confirmCharacter`, which passes one.
+  A run loaded from a file has no dials at all (`devLoadRun`).
+- ✔ At `run:victory`, `this.run` and `this.runDials` are the emitting
+  run's, a continued run's included: `adopt` sets both before
+  `resume()`.
+- ✔ A level in the URL beside `character=` is created in the constructor
+  or `resetRun` and never passes `confirmCharacter`. That is where a
+  driver's run and a journal replayed in the page come from, and neither
+  may be clamped by the local store.
+- **Found, not built: `store.patch` writes the page's whole cached
+  section** (`store.ts:293-300`), read once per page. With one field in
+  `progress` that lost nothing; with two it can. See "Open" below.
+
+**Built.**
+- `bestWin` in `PROGRESS_SECTION`: the highest level won, by character
+  id, fallback `{}`. Its schema refuses what is not a record and drops
+  the entries that are not a whole number from 0 up; an id the catalog
+  doesn't hold and a level above the ladder are kept.
+- Four pure rules beside it in `src/store/progress.ts`:
+  `escalationCeiling` (0 with no win, else the best win plus one, up to
+  the ladder's top), `levelWithinCeiling` (the clamp), `runCounts` (the
+  dials hold `character`, at most `escalation` beside it and nothing
+  else, and the level is within the ceiling) and `bestWinAfter` (the
+  same object back when nothing changed).
+- `chooseCharacter` carries `escalation`. Character select sends 0 until
+  117e's picker.
+- `Game.confirmCharacter` reads the progress, holds the picked level to
+  the ceiling and hands it to `createRun`, which layers it into the
+  run's config, so the dials and the journal's start spell it.
+  `Game.recordWin` runs at `run:victory`, before the end screen mounts.
+- `shell/electron/probes/progress-win.js`: a pick and a forced win per
+  launch on one profile, each launch checking the record the ones before
+  it left, read from the store file's text.
+
+**Calls made while building** (the user's to overturn).
+1. **The rules live beside the field**, in `src/store/progress.ts`, not
+   in `menuRules.ts` with `creditsOnTheWay`: they say what the stored
+   fact means and when it is written. The module now imports the run's
+   config, as `runSlot.ts` does.
+2. **A run's dials must name a character.** "Nothing but `character` and
+   `escalation`" is also true of no dials, which is a run loaded from a
+   file by the dev key. Such a run doesn't count. No production run has
+   empty dials.
+3. **The picked level is the run's.** On a page whose URL holds
+   `escalation=` and no `character=`, the pick replaces the URL's level,
+   so what character select shows is what is played. Before this step
+   that hand-typed URL gave its level to whichever card was clicked. No
+   driver uses it: each pins `character=`.
+4. **A level in the URL beside `character=` is played as written,
+   unclamped**, and is only refused its record when it is above the
+   ceiling. 117b's `--dials=escalation=5` and a replayed journal depend
+   on it.
+5. **The stored level is not held to this build's ladder**, and an id
+   the catalog doesn't know is kept, so a later build's entries survive
+   a write by an older one. The ceiling stops at the ladder's top.
+6. **The clamp is a rule of its own**, `levelWithinCeiling`, so it is
+   pinned headless with the three the cut named.
+7. **A second tab's won run counts.** The two-tab lock is the run
+   slot's; the signed rule names dials and the ceiling only.
+8. **DESIGN's paragraph waits for 117e.** Nothing a player reaches sets
+   a level yet, and the picker is what the paragraph describes. Landing
+   note: 117e writes "Escalation" into DESIGN with the unlock rule
+   (a win at the ceiling opens the next level for that character; a
+   seeded run opens nothing).
+
+**Open, the user's: two tabs and the record.** `patch` writes the
+section as this page first read it, plus the change. Two tabs open, a
+run won in each, the second win in a tab that read `progress` before the
+first: the second write puts back the record as it was, without the
+first win. The same write also carries a stale `creditsSeen`. It takes
+two won runs in two tabs open together, and it costs an unlock, which is
+what the section exists not to lose. The fix this session would build:
+one store method that reads the section's text again before a change to
+it, used by the two progress writes, falling back to the page's copy
+when the store can't save. About fifteen lines in `store.ts` and its
+tests. Not built: it is a new method on the store's core and nothing
+ships before 117e's stop. TODO "§117 riders" holds it.
+
+**Evidence.**
+- *Headless,* +24 tests (3545 in 244 files; `progress.test.ts` 4 → 28).
+  The ceiling against a table written by hand for a ladder of five; the
+  census of run dials, each refused by name through the game's own
+  spelling of a run with that dial; the ladder climbed from an empty
+  record to the top.
+- *The rules' controls:* thirteen cuts to `progress.ts`, one at a time
+  by a script that restores the file and compares it. Each fails a test
+  that names the rule (no top to the ceiling, no win read as 1, any
+  property of the record, no character needed, a seed allowed, every
+  dial allowed, any level, an equal win rewriting, the last win kept
+  for the best, the pick unclamped, a non-level passing, one bad entry
+  refusing the record, a level above the ladder dropped). The script's
+  uncut run passes 28 of 28.
+- *Under Electron,* eight launches on one fresh profile, all exit 0:
+  soldier picked at 0 and won, and the next launch reads `{soldier: 0}`;
+  picked at 3 with the ceiling at 1, played at 1 with dials
+  `character=soldier&escalation=1`, the win told twice, and the record
+  is `{soldier: 1}`; gambler picked at 2 with no win, played at 0; a
+  seeded run won, nothing written; `escalation=5` by URL with the
+  ceiling at 2, played at 5, nothing written; `escalation=2` by URL,
+  written; `escalation=4` beside no character, the pick's 0 played; a
+  last launch reads `{soldier: 2, gambler: 0, priest: 0}`, which is
+  `store.json`'s text.
+- *The wiring's controls,* four cuts to `Game.ts`, each failing the
+  second launch by name: the win not recorded (`stored`, `level`,
+  `dials`), the pick not clamped (`level` 3), the level not layered
+  into the config (`level` 0), the rule asked with no dials (`stored`).
+  A planted wrong expectation fails the probe on `stored`.
+- *Level 0 left alone:* `drive-run --seed=7` logs `a59ee48f`, 12
+  battles, as before; a picked run at 0 has the dials `character=soldier`.
+
+**Not verified.** A real won run: every end here was forced, so the
+listener and the store are what was held, not a last battle. The web
+adapter in a browser (the probe is Electron's; the section's own tests
+are on the memory adapter). Two tabs.
+
+**Predictions against what happened.** No bump: none, and the
+fingerprint's test passed. The smoke fires: expected on this commit's
+hook, for `src/run/Command.ts`.

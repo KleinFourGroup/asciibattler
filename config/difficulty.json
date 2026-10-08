@@ -8,5 +8,6 @@
   "enemyArcherRatio": 0.3,
   "waveSizeMultiplier": 1,
   "levelBudgetMultiplier": 1,
-  "bitsMultiplier": 1
+  "bitsMultiplier": 1,
+  "enemyMoraleMultiplier": 1
 }

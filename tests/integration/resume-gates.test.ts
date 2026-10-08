@@ -290,6 +290,7 @@ describe('115a — Run.fromJSON(snapshot, bus, config?): the config inputs', () 
     waveSizeMultiplier: 1.5,
     levelBudgetMultiplier: 0.5,
     bitsMultiplier: 2,
+    enemyMoraleMultiplier: 1.25,
     drawAmountAdd: 1,
     passIsFinal: !DECK.grantQueue.passIsFinal,
   };

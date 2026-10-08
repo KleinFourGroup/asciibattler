@@ -199,6 +199,15 @@ export interface RunConfig {
    */
   readonly bitsMultiplier?: number;
   /**
+   * The per-run enemy-morale multiplier, the fourth axis: scales every
+   * encounter's enemy pool where the Run reads it, to the nearest whole
+   * (`scaledEnemyPool`, config/difficulty.ts). Applies at the run layer,
+   * never `WaveContext`. Programmatic-only; unset → the
+   * `config/difficulty.json` default (1.0 = the authored pool); NOT
+   * persisted (the X1 discipline above).
+   */
+  readonly enemyMoraleMultiplier?: number;
+  /**
    * 47e — override the run's starting bits balance (the spec §Bits testing
    * override, for dev / fuzz / playtest runs). Unset → the
    * `config/economy.json#startingBits` default. Pure of RNG, clamped at the

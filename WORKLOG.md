@@ -7907,3 +7907,63 @@ The stretch: the user took the session's lean, so this session builds
 117a–117c and hands off at the 117c/117d boundary or at the line.
 Readings: **242,058** at 19:59 on the audit's commit (`d9aed2a`);
 **259,602** at 09:08 on 2026-10-08, at the stretch's start.
+
+### 117a — the fourth multiplier, enemy morale (2026-10-08)
+
+Read `none`. The reading at its start: **265,767** at 09:10, on the
+commit that recorded the shape-lock (`161e7cf`).
+
+**Built.** `enemyMorale` is the fourth field of `DifficultyMultipliers`,
+with a `RunConfig` override (`enemyMoraleMultiplier`, programmatic-only)
+over a `difficulty.json` default of 1. `scaledEnemyPool(pool, m)` in
+`src/config/difficulty.ts` is the rule: the nearest whole, never under 1.
+`Run.enemyPoolOf(encounter)` is now the Run's one read of `healthPool`,
+and the three sites the audit named call it: the pool an encounter starts
+with, `enemyHealthPoolMax`, and the stage condition's denominator. No
+snapshot change: the pool's current value was saved already and its
+maximum is derived on a load from the encounter and the run's config.
+
+**Step zero.** The baseline was captured before any edit, in the
+foreground on the live tree: `npm run fuzz -- --count=12` (two default
+strategies, 24 runs, 39 s) and `drive-run --seed=7`, whose log hash was
+`a59ee48f` (re-measured, not taken from the §116 close).
+
+**The oracle, with its controls.**
+- At the default, the same 12 seeds give a `summary.csv` and a
+  `rosters.csv` byte-identical to the baseline, and the drive log hashes
+  `a59ee48f` again. (The drive's frame count was 3946 before and 3945
+  after: frames follow the clock and are not in the hash.)
+- The control: `enemyMoraleMultiplier` set to 1.2 in `difficulty.json`,
+  the same seeds, 21 of the 24 rows differ. The file was restored from
+  its saved copy and compared equal.
+- Each of the three reads put back to the authored pool, one at a time,
+  fails the new tests by name: the stage condition alone fails "a stage
+  ends at its fraction of the scaled pool"; the starting pool fails
+  three of the four; the maximum fails three of the four.
+
+**Tests** (+8: 4 in `difficulty.test.ts`, 4 in `Run.test.ts`). The stage
+test forces the one elite that opens on a pool-gated stage
+(`plagueSpreaders`), reads its pool, its threshold and each stage's
+archetypes from the catalog, leaves exactly the threshold of the doubled
+pool, and expects the second stage's archetypes; the same remainder
+against the authored pool is still above the threshold, which is what
+the control shows. `resume-gates`' config now sets the fourth
+multiplier, so a loaded run is held to it.
+
+**Changed inside the cut's intent.** The cut's exit said "the 19 authored
+pools pinned at ×1.1 and ×1.2". `process/measurement.md` asks that a
+primitive test use explicit inputs and that no test hold a table of
+shipped balance numbers, so that retuning a pool is a one-file edit. The
+rounding is therefore pinned on explicit pools (13, 17, 44, a pool of 4
+that does not grow at ×1.1, a half that goes up, the floor of 1), and
+the 19 authored pools' table stays in the audit above.
+
+**Found on the way.** A forced encounter fields only at a node of its
+own kind and otherwise falls through to the normal selection without a
+word (`selection.ts:183`), so the first draft of the stage test, forcing
+an elite onto a normal root, read another encounter's pool. The test
+stamps the root an elite and asserts the encounter's name.
+
+**Predictions against what happened.** No bump: none. The config hash
+moves: `difficulty.json` gained a key. The smoke fires: expected on this
+commit's hook, and the next entry says what it did.

@@ -61,6 +61,15 @@
  *                            the dial reads clean at §52 tuning time). Unlike
  *                            its two X1 siblings it does NOT ride `WaveContext`
  *                            — bits earn at the run layer, not wave resolution.
+ * - `enemyMoraleMultiplier`— the fourth lever: scales the encounter's enemy
+ *                            pool (`Encounter.healthPool`) where the Run reads
+ *                            it, rounded to the nearest whole
+ *                            (`scaledEnemyPool`). Like `bitsMultiplier` it
+ *                            applies at the run layer and never rides
+ *                            `WaveContext`. Escalation's wave lever raises it
+ *                            with the count and the budget, so that a bigger
+ *                            wave under the casualty rule is as long a fight
+ *                            (Round 8 spec D8).
  *
  * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
  * The budget is conserved, so there's a hard tradeoff: spreading it wide
@@ -116,6 +125,9 @@ const DifficultySchema = z.object({
   levelBudgetMultiplier: z.number().positive(),
   // 48f — the economy lever (default 1.0). Positive so it never zeros an earn.
   bitsMultiplier: z.number().positive(),
+  // The enemy-pool lever (default 1.0). Positive; `scaledEnemyPool` floors the
+  // result at 1, so no multiplier empties a pool.
+  enemyMoraleMultiplier: z.number().positive(),
 });
 
 export type DifficultyConfig = z.infer<typeof DifficultySchema>;
@@ -126,13 +138,16 @@ export const DIFFICULTY: DifficultyConfig = DifficultySchema.parse(difficultyJso
  * The per-run difficulty multipliers. `waveSize` / `levelBudget` (X1) apply to
  * every authored-encounter wave at resolve time (the K2 count-vs-strength
  * split), threaded through `WaveContext`; `bits` (48f) applies at the
- * `Run.gainBits` settle — the run layer, never `WaveContext`. Absent overrides
- * → 1 (no scaling, byte-identical to pre-X1/pre-48f).
+ * `Run.gainBits` settle — the run layer, never `WaveContext`. `enemyMorale`
+ * applies to the encounter's enemy pool where the Run reads it
+ * (`scaledEnemyPool`). Absent overrides → 1 (no scaling, byte-identical to
+ * pre-X1/pre-48f).
  */
 export interface DifficultyMultipliers {
   readonly waveSize: number;
   readonly levelBudget: number;
   readonly bits: number;
+  readonly enemyMorale: number;
 }
 
 /**
@@ -148,10 +163,25 @@ export function resolveDifficultyMultipliers(overrides?: {
   readonly waveSize?: number | undefined;
   readonly levelBudget?: number | undefined;
   readonly bits?: number | undefined;
+  readonly enemyMorale?: number | undefined;
 }): DifficultyMultipliers {
   return {
     waveSize: overrides?.waveSize ?? DIFFICULTY.waveSizeMultiplier,
     levelBudget: overrides?.levelBudget ?? DIFFICULTY.levelBudgetMultiplier,
     bits: overrides?.bits ?? DIFFICULTY.bitsMultiplier,
+    enemyMorale: overrides?.enemyMorale ?? DIFFICULTY.enemyMoraleMultiplier,
   };
+}
+
+/**
+ * An encounter's enemy pool under the enemy-morale multiplier: the authored
+ * pool times the multiplier, to the nearest whole, never under 1. The count
+ * and the level budget round the same way (`resolveTotalCount`,
+ * `resolveLevelBudget`). At a multiplier of 1 it is the authored pool exactly,
+ * since pools are whole numbers. Every read of an encounter's pool in `Run`
+ * goes through this, so the pool a fight starts with, the maximum its gauges
+ * show and the fraction a stage condition reads are one number.
+ */
+export function scaledEnemyPool(healthPool: number, multiplier: number): number {
+  return Math.max(1, Math.round(healthPool * multiplier));
 }

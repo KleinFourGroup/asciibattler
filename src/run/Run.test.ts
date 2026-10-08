@@ -313,6 +313,81 @@ describe('Run', () => {
     });
   });
 
+  describe('the enemy-morale multiplier (the encounter pool, at its three reads)', () => {
+    // An authored encounter whose first stage ends on a fraction of the enemy
+    // pool, forced onto the root fight (an elite, so the root is stamped one:
+    // a forced encounter fields only at a node of its kind). Its pool, its
+    // threshold and what each stage fields are read from the catalog, so
+    // re-authoring it moves the test with it; an encounter that no longer
+    // opens on stages fails by name.
+    const STAGED_ID = 'plagueSpreaders';
+    const staged = getEncounter(STAGED_ID)!;
+    const stages = (() => {
+      const top = staged.waves[0]!;
+      if (top.kind !== 'stages') throw new Error(`${STAGED_ID} no longer opens on a stages entry`);
+      return top.stages;
+    })();
+    const fieldedBy = (stage: number): string[] => {
+      const entry = stages[stage]!.body[0]!;
+      if (entry.kind !== 'wave') throw new Error(`${STAGED_ID} stage ${stage} is not a single wave`);
+      return entry.spec.units.map((u) => u.archetype);
+    };
+    const fraction = stages[0]!.until!.fraction;
+    const start = (config?: RunConfig): RunHandle => {
+      const handle = freshRunWithBus(3, {
+        daemon: null,
+        firstNodeKind: 'elite',
+        forcedEncounterId: STAGED_ID,
+        ...config,
+      });
+      handle.run.dispatch({ kind: 'enterNode', nodeId: frontierOf(handle.run) });
+      expect(handle.run.currentEncounterName).toBe(staged.name);
+      return handle;
+    };
+    const fielded = (run: Run): string[] => [
+      ...new Set(run.currentEncounter!.enemyTeam.map((u) => u.archetype)),
+    ];
+
+    it('unset, and at an explicit 1, the pool is the authored pool', () => {
+      for (const config of [undefined, { enemyMoraleMultiplier: 1 }]) {
+        const { run } = start(config);
+        expect(run.enemyHealth).toBe(staged.healthPool);
+        expect(run.enemyHealthPoolMax).toBe(staged.healthPool);
+      }
+    });
+
+    it('the pool a fight starts with, and its maximum, are the authored pool times the multiplier', () => {
+      const { run } = start({ enemyMoraleMultiplier: 2 });
+      expect(run.enemyHealth).toBe(staged.healthPool * 2);
+      expect(run.enemyHealthPoolMax).toBe(staged.healthPool * 2);
+    });
+
+    it('a stage ends at its fraction of the scaled pool, not of the authored one', () => {
+      const { run, bus } = start({ enemyMoraleMultiplier: 2 });
+      const pool = run.enemyHealthPoolMax;
+      // Leave exactly the threshold of the scaled pool. Read against the
+      // authored pool, the same remainder is still above the threshold, so a
+      // condition that kept the authored denominator would hold stage 1.
+      const left = Math.floor(pool * fraction);
+      expect(left / staged.healthPool).toBeGreaterThan(fraction);
+      expect(fielded(run).every((a) => fieldedBy(0).includes(a))).toBe(true);
+      chipTurn(bus, { player: pool - left, enemy: 0 });
+      expect(run.phase).toBe('battle');
+      expect(run.enemyHealth).toBe(left);
+      expect(fielded(run).every((a) => fieldedBy(1).includes(a))).toBe(true);
+      expect(fielded(run).some((a) => fieldedBy(0).includes(a))).toBe(false);
+    });
+
+    it('and holds one point above it', () => {
+      const { run, bus } = start({ enemyMoraleMultiplier: 2 });
+      const pool = run.enemyHealthPoolMax;
+      const left = Math.floor(pool * fraction) + 1;
+      chipTurn(bus, { player: pool - left, enemy: 0 });
+      expect(run.enemyHealth).toBe(left);
+      expect(fielded(run).every((a) => fieldedBy(0).includes(a))).toBe(true);
+    });
+  });
+
   describe('enterNode command', () => {
     it('transitions to battle phase on a frontier hop', () => {
       const { run } = freshRunWithBus(1);

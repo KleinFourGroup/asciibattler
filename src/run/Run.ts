@@ -94,7 +94,11 @@ import { RECRUITMENT } from '../config/recruitment';
 import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
-import { resolveDifficultyMultipliers, type DifficultyMultipliers } from '../config/difficulty';
+import {
+  resolveDifficultyMultipliers,
+  scaledEnemyPool,
+  type DifficultyMultipliers,
+} from '../config/difficulty';
 import { getEncounter, type Encounter, type EncounterKind } from '../config/encounters';
 import { resolveWave, type WaveContext } from './encounters/wave';
 import { waveForTurn, type WaveCursor, type EncounterState } from './encounters/sequencer';
@@ -976,7 +980,8 @@ export class Run {
   /**
    * U3 — the active encounter (the authored fight selected onto this node).
    * Held for the whole encounter: `beginTurn` resolves each turn's wave from its
-   * `waves` grammar, and the pool max comes from its `healthPool`. Null outside
+   * `waves` grammar, and the pool max comes from its `healthPool`
+   * (`enemyPoolOf`). Null outside
    * an encounter (cleared in `finishEncounter`). NOT serialized directly — the
    * snapshot persists `selectedEncounterId` and `fromJSON` re-resolves it from
    * the authored catalog (`config/encounters.json`).
@@ -2110,7 +2115,7 @@ export class Run {
     // grammar; the cursor starts fresh (both branches above set the
     // encounter + map, so the non-null assertion is structural).
     this.waveCursor = null;
-    this.enemyHealth = this.selectedEncounter!.healthPool;
+    this.enemyHealth = this.enemyPoolOf(this.selectedEncounter!);
     this.turnIndex = 0;
     this.lastTurn = null;
     // H5 — rebuild + shuffle the draw deck from the CURRENT roster (so a
@@ -2260,12 +2265,27 @@ export class Run {
 
   /**
    * U3 — the active encounter's enemy health-pool MAXIMUM. Per-encounter now
-   * (`encounter.healthPool`), replacing the global `HEALTH.enemyHealthMax`; falls
-   * back to the global outside an encounter (defensive — readers only consult it
-   * mid-battle). The basis for the pool-fraction gauge + the stage conditions.
+   * (`enemyPoolOf` the selected encounter), replacing the global
+   * `HEALTH.enemyHealthMax`; falls back to the global outside an encounter
+   * (defensive — readers only consult it mid-battle). The basis for the
+   * pool-fraction gauge + the stage conditions.
    */
   get enemyHealthPoolMax(): number {
-    return this.selectedEncounter?.healthPool ?? HEALTH.enemyHealthMax;
+    return this.selectedEncounter === null
+      ? HEALTH.enemyHealthMax
+      : this.enemyPoolOf(this.selectedEncounter);
+  }
+
+  /**
+   * An encounter's enemy pool in this run: its authored `healthPool` under
+   * the run's enemy-morale multiplier. The ONE read of `healthPool` in the
+   * Run. The pool a fight starts with, the maximum the gauges and payloads
+   * carry and the stage condition's denominator all come from here; a
+   * multiplier on one of them alone would flip a staged encounter at the
+   * wrong fraction of its pool.
+   */
+  private enemyPoolOf(encounter: Encounter): number {
+    return scaledEnemyPool(encounter.healthPool, this.difficultyMultipliers.enemyMorale);
   }
 
   /**
@@ -2881,8 +2901,9 @@ export class Run {
     if (encounter === null) {
       throw new Error('Run.rollTurnWave: no selected encounter — outside an encounter');
     }
+    const enemyPool = this.enemyPoolOf(encounter);
     const encounterState: EncounterState = {
-      poolFraction: encounter.healthPool > 0 ? this.enemyHealth / encounter.healthPool : 0,
+      poolFraction: enemyPool > 0 ? this.enemyHealth / enemyPool : 0,
       turn: this.turnIndex + 1,
     };
     const { spec, cursor } = waveForTurn(encounter.waves, this.waveCursor, encounterState, battleRng);
@@ -4753,6 +4774,7 @@ function resolveRunInputs(config: RunConfig | undefined): RunInputs {
       waveSize: config?.waveSizeMultiplier,
       levelBudget: config?.levelBudgetMultiplier,
       bits: config?.bitsMultiplier,
+      enemyMorale: config?.enemyMoraleMultiplier,
     }),
   };
   if (config?.hopCount !== undefined && config.sectorHops !== undefined) {

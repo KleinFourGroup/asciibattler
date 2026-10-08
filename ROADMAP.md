@@ -231,7 +231,7 @@ nothing.
 
 The cut, signed 2026-10-08 (WORKLOG "The §117 audit and cut", "The shape-lock's answers"):
 
-- [ ] **117a** — the fourth multiplier, enemy morale, beside the three; the pool's three reads in `Run.ts` through one accessor. Exit: byte-identical at 1; the 19 authored pools pinned at ×1.1 and ×1.2; a staged encounter flips at the same fraction of the scaled pool. No bump; the smoke fires. Read `none`.
+- [x] **117a** — the fourth multiplier, enemy morale, beside the three; the pool's three reads in `Run.ts` through one accessor. Read `none`. ✅ 2026-10-08: the fuzz summary byte-identical at 1 and 21 of 24 rows different at 1.2; each read's control fails by name; the rounding pinned on explicit inputs, not on the authored pools (WORKLOG §117a).
 - [ ] **117b** — the level: `config/escalation.json`, the `escalation=` dial, `RunSnapshot`'s field, the four factors derived at construction and on a load. Exit: level 0 against a worktree of the parent commit, a level-1 run its failing control; each level's factors against the spec's table by hand; a rollout clone keeps the level. Run v47 → v48; the smoke fires. Read `none`.
 - [ ] **117c** — the harness's `--escalation`, legal with `--arbitrate`, and a local paired smoke of levels 0–5 inside the box rule's shape, into BALANCE and named a smoke. The smoke fires. Read `none`, raised to a stop if a level comes out clearly easier than the one under it.
 - [ ] **117d** — progress and the unlock rule: `bestWin`, three pure rules (the ceiling, whether a run counts, the record after a win), the write at `run:victory`, the clamp at run creation, `chooseCharacter` carrying the level. No bump; the smoke fires. Read `none`.

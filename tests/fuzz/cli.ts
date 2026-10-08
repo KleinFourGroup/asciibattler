@@ -35,6 +35,11 @@
  *   # byte-identical, so a grant-dead item reads ~zero rather than noise.
  *   npm run fuzz -- --count=80 --searcher --audition --grant=portunus
  *   npm run fuzz -- --count=80 --searcher --audition --grant=surge,discard-one
+ *   # 117c — --escalation=<0..5> plays every run at that Escalation level (run
+ *   # mode only; 0 = off, the run no flag gives). Legal with --arbitrate, since
+ *   # the level is in the run's snapshot and a rollout clone plays at it. The
+ *   # paired read is the same seeds at two levels:
+ *   npm run fuzz -- --count=20 --escalation=2
  *   npm run fuzz -- --layout=junctionAmbush --per-hop   # force ONE layout (clean full sample)
  *   npm run fuzz -- --layout=procedural --per-hop       # force PROCEDURAL maps every battle (M6 isolate)
  *

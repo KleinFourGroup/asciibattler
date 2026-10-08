@@ -14,6 +14,7 @@ import type { FuzzStrategy } from '../Strategy';
 import type { RunResult, HarnessOptions } from '../harness';
 import type { InnerTier } from '../rollout/walker';
 import { parseRunConfig, type RosterEntry } from '../../../src/run/RunConfig';
+import { ESCALATION_MAX, isEscalationLevel } from '../../../src/config/escalation';
 import {
   makeStrategy,
   makeDefaultStrategies,
@@ -108,6 +109,7 @@ export type RunModeArgs = Pick<
   | 'kTelemetry'
   | 'bitsMultiplier'
   | 'drawAdd'
+  | 'escalation'
   | 'eliteChance'
   | 'portChance'
   | 'eventChance'
@@ -217,6 +219,7 @@ export function runRunCli(args: RunModeArgs): void {
     firstNodeKind?: 'elite' | 'event';
     bitsMultiplier?: number;
     drawAmountAdd?: number;
+    escalation?: number;
     eliteChance?: number;
     portChance?: number;
     eventChance?: number;
@@ -256,6 +259,16 @@ export function runRunCli(args: RunModeArgs): void {
       bail(`--draw-add must be a nonzero integer (got ${args.drawAdd})`);
     }
     runConfig.drawAmountAdd = args.drawAdd;
+  }
+  // 117c — `--escalation=<n>` rides the RunConfig level (a level of the
+  // ladder; anything else is a flag typo worth failing loudly on). 0 is
+  // Escalation off and sets nothing, so `--escalation=0` is the run no flag
+  // gives, byte for byte: a paired batch can spell its base arm either way.
+  if (args.escalation !== undefined) {
+    if (!isEscalationLevel(args.escalation)) {
+      bail(`--escalation must be a level, 0 to ${ESCALATION_MAX} (got ${args.escalation})`);
+    }
+    if (args.escalation > 0) runConfig.escalation = args.escalation;
   }
   // 72e — the node-scatter probe dials ride the RunConfig overrides (a
   // probability; anything outside [0, 1] is a flag typo worth failing
@@ -450,6 +463,25 @@ export function runRunCli(args: RunModeArgs): void {
         `  [${done}/${totalRuns}] seed ${r.seed}: ${r.outcome} (hop ${r.finalHopReached}) · ${Math.round((Date.now() - startedAt) / 1000)}s\n`,
       );
     }
+  }
+
+  // 117c — the level, counted from the runs: a forcing flag is a request, and
+  // what was run is what each Run says of itself at its end. A batch whose
+  // runs are not all at the asked level stops here, before its summary is
+  // written. Under --jobs every shard is a run-mode process and makes this
+  // check on its own seeds. The line is printed only for a level above 0,
+  // so a batch with Escalation off prints what it printed before.
+  const askedLevel = args.escalation ?? 0;
+  const offLevel = allResults.filter((r) => r.escalation !== askedLevel);
+  if (offLevel.length > 0) {
+    bail(
+      `--escalation: ${offLevel.length} of ${allResults.length} runs were not at level ${askedLevel} ` +
+        `(seed ${offLevel[0]!.seed} was at ${offLevel[0]!.escalation})`,
+    );
+  }
+  if (askedLevel > 0) {
+    const runs = allResults.length === 1 ? 'the 1 run' : `all ${allResults.length} runs`;
+    process.stdout.write(`\nEscalation: level ${askedLevel} on ${runs}, read from each run at its end.\n`);
   }
 
   writeFileSync(join(args.outDir, 'summary.csv'), renderSummaryCsv(allResults));

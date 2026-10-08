@@ -42,6 +42,7 @@ function run(
     seed,
     strategyName: 'syn',
     daemonId: null,
+    escalation: 0,
     outcome,
     finalHopReached: 1,
     sectorsCleared: poolAtSectorClears.length,

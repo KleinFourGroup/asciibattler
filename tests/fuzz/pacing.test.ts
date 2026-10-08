@@ -58,6 +58,7 @@ function run(seed: number, chips: readonly PoolChip[] | undefined): RunResult {
     seed,
     strategyName: 'syn',
     daemonId: null,
+    escalation: 0,
     outcome: 'defeat',
     finalHopReached: 1,
     sectorsCleared: 0,

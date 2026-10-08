@@ -135,6 +135,10 @@ export interface RunResult {
    *  construction (48f): reward tables grant daemons mid-run, so end-state
    *  ownership no longer identifies the arm. */
   daemonId: string | null;
+  /** 117c — the run's Escalation level (0 = off), read from the Run at its
+   *  end: what was played, not what a flag asked for. Not a `summary.csv`
+   *  column; run mode checks it against `--escalation` and says so. */
+  escalation: number;
   outcome: RunOutcome;
   /** `run.currentHop` at run end — PER-SECTOR (resets at every sector
    *  transition). Read it together with `sectorsCleared`: the walk position at
@@ -1253,6 +1257,7 @@ function finalize(
     seed,
     strategyName,
     daemonId: startingDaemonId,
+    escalation: run.escalation,
     outcome,
     finalHopReached: run.currentHop,
     sectorsCleared,

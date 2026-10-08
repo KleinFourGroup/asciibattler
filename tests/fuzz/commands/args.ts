@@ -163,6 +163,14 @@ export interface CliArgs {
   // mode's runConfig wiring consumes it; other modes ignore it per the
   // flags-are-global grammar note above.
   drawAdd?: number;
+  // 117c — the Escalation level (`--escalation=<0..5>`): exposes the
+  // RunConfig `escalation` level to RUN MODE ONLY; 0 is Escalation off, the
+  // same run as no flag. Unlike the probe dials around it, it is legal with
+  // --arbitrate: the level is saved in the run's snapshot, so a rollout
+  // clone plays at it (Run.fromJSON reads the snapshot's level). Run mode's
+  // runConfig wiring consumes and range-checks it; other modes ignore it per
+  // the flags-are-global grammar note above.
+  escalation?: number;
   // 72e — the node-scatter probe dials (`--elite-chance=<0..1>` /
   // `--port-chance=<0..1>`): expose the RunConfig eliteChance/portChance
   // overrides to RUN MODE ONLY (the forced-shape decision-grade reads —
@@ -346,6 +354,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
         break;
       case '--draw-add':
         if (v !== undefined) args.drawAdd = Number(v);
+        break;
+      case '--escalation':
+        if (v !== undefined) args.escalation = Number(v);
         break;
       case '--elite-chance':
         if (v !== undefined) args.eliteChance = Number(v);
@@ -608,7 +619,8 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   // shape. The scatter chances bite only at a sector TRANSITION (the
   // start map rides the clone's wire; only next-sector generation
   // re-rolls), so they refuse only on multi-sector shapes — the act-1
-  // (--hops) probe combos stay legal.
+  // (--hops) probe combos stay legal. 117c — `--escalation` is NOT in this
+  // list: the level is in the snapshot, so a clone plays at it.
   if (args.arbitrate) {
     const dials: Array<[string, unknown]> = [
       ['--encounter', args.encounter],

@@ -5,11 +5,19 @@
 //   npm run probe -- shell/electron/probes/text-scale.js --seed=7 --window=offscreen --timeout=400 > run.json
 //   npm run probe -- shell/electron/probes/text-scale.js --window=offscreen --arg={"mode":"menu"} > menu.json
 //
+//   npm run probe -- shell/electron/probes/text-scale.js --seed=7 --window=offscreen --timeout=400 --arg={"mode":"extras"} > extras.json
+//
 // The run mode plays a seeded run a command at a time and scans each phase's
 // screen the first two times it comes up, a battle at four points, and the
 // modals the chrome column's chips and the pre-turn pile buttons open. The
 // menu mode scans the menu, the settings modal, the credits and character
-// select. `--size=<w>x<h>` sets the window, and the answer depends on it: a
+// select. The extras mode (117.5a) scans what a driven run never puts up: one
+// tooltip of every kind on each phase's first screen, opened afresh at each
+// size, with a plate planted wider than the page as its known answer; the
+// cache modal full of packets and one over; and the sector-cleared screen,
+// by its event, with the chips up. It changes the run it plays (the packets),
+// so its screens are not the run mode's. `--size=<w>x<h>` sets the window,
+// and the answer depends on it: a
 // size that holds on a tall window can run out of room on a short one.
 //
 // Each scan lays the page out at every size in turn (the root element's
@@ -334,6 +342,172 @@ export default async function survey(arg = {}) {
       await click(start);
       await scan('character-select');
     } else notes.push('no New run row');
+  } else if (mode === 'extras') {
+    // THE EXTRAS (117.5a): what a driven run never puts up. Every kind of
+    // tooltip on each phase's first screen, the cache modal full of packets
+    // and one over, and the sector-cleared screen with the chips up.
+    const tipRoots = () => scopesNow();
+    const tipTriggers = () =>
+      tipRoots().flatMap((root) => [...root.querySelectorAll('[data-tooltip-touch], .hud-card-targetable')]).filter(shown);
+    const hover = async (el, on) => {
+      el.dispatchEvent(new PointerEvent(on ? 'pointerenter' : 'pointerleave', { pointerType: 'mouse' }));
+      await sleep(on ? 240 : 60); // the hover delay is 150 ms
+      await frames(2);
+    };
+    // One tooltip, read while it is up. The plate is the scope, and the scan
+    // walks a scope's descendants, so the plate's own box is read here.
+    const tipAt = async (el) => {
+      await hover(el, true);
+      const host = document.querySelector('.tooltip');
+      let found = null;
+      if (host !== null && !host.hidden && el.hasAttribute('aria-describedby')) {
+        found = collect([host]);
+        const over = overBy(host.getBoundingClientRect());
+        if (over > TOL) found.off.set('plate', { sig: 'div.tooltip', by: Math.round(over) });
+      }
+      await hover(el, false);
+      return found;
+    };
+    // The tooltip scan's known answers: a real tooltip reads clean, and the
+    // same one planted wider than the page reads as off it.
+    const tipSelfCheck = async () => {
+      const el = tipTriggers()[0];
+      const clean = await tipAt(el);
+      if (clean === null) return [`the first trigger's tooltip did not open (${sig(el)})`];
+      const bad = [];
+      if (clean.off.size > 0) bad.push(`an unplanted tooltip reads as off the page (${sig(el)})`);
+      const plant = document.createElement('style');
+      plant.textContent = '.tooltip{min-width:200vw !important}';
+      document.head.appendChild(plant);
+      try {
+        const planted = await tipAt(el);
+        if (planted === null || planted.off.size === 0) bad.push('a tooltip planted wider than the page was not read as off it');
+      } finally {
+        plant.remove();
+      }
+      return bad;
+    };
+    // A plate is placed when it opens, so each trigger is opened afresh at
+    // each size. One trigger per signature: sites of one kind share the rules.
+    const scanTooltips = async (label) => {
+      const bySig = new Map();
+      for (const el of tipTriggers()) if (!bySig.has(sig(el))) bySig.set(sig(el), el);
+      const res = { triggers: bySig.size, unopened: [], at1: [], scales: {} };
+      const at = {};
+      try {
+        for (const s of SCALES) {
+          await setScale(s);
+          at[s] = new Map();
+          for (const [id, el] of bySig) {
+            if (!el.isConnected || !shown(el)) continue;
+            const found = await tipAt(el);
+            if (found !== null) at[s].set(id, found);
+            else if (s === 1) res.unopened.push(id);
+          }
+        }
+      } finally {
+        await setScale(1);
+      }
+      const flat = (id, found, base) =>
+        KINDS.flatMap((k) => grouped(found[k], base ? base[k] : null).map((g) => ({ trigger: id, kind: k, sig: g.sig, by: g.by })));
+      for (const [id, found] of at[1]) res.at1.push(...flat(id, found, null));
+      for (const s of SCALES) {
+        if (s === 1) continue;
+        res.scales[s] = [];
+        for (const [id, found] of at[s]) res.scales[s].push(...flat(id, found, at[1].get(id) ?? null));
+      }
+      screens[label] = res;
+      order.push(label);
+    };
+
+    // On the first map, while the run is live and every chip is up. It says
+    // whether the walk can go on (a modal left up would become every later
+    // scan's scope).
+    const mapExtras = async () => {
+      const run = game.run;
+      const ids = arg.packets ?? ['overclock', 'venom', 'hype', 'surge', 'shield', 'discard-one'];
+      const cap = run.effectiveCacheSize;
+      const cacheChip = () =>
+        [...document.querySelectorAll('#ui .chrome-column button.chip')].filter(shown).find((b) => /cache/.test(b.className));
+      const openCache = async () => {
+        if (overlaysUp().length > 0) return true;
+        const chip = cacheChip();
+        if (chip) await click(chip);
+        return overlaysUp().length > 0;
+      };
+      for (let i = 0; run.cache.length < cap && i < 40; i++) run.addPacket(ids[i % ids.length]);
+      await settle();
+      if (!(await openCache())) notes.push('cache: no modal came up');
+      else {
+        await scan(`cache(full:${run.cache.length}/${cap})`);
+        await scanTooltips('tips:cache');
+        if (!(await closeModal())) {
+          notes.push('cache: the full modal did not close');
+          return false;
+        }
+      }
+
+      // The sector-cleared screen, by its event, with the titles the shipped
+      // sectors carry and a pool the seam lifted.
+      game.bus.emit('sector:cleared', { clearedSectorTitle: 'The Start', nextSectorTitle: 'The Deep End', poolBefore: 7, poolAfter: 16 });
+      await settle();
+      await scan('sector-cleared(forced)');
+      await scanTooltips('tips:sector-cleared');
+      const go = [...document.querySelectorAll('#ui button')].filter(shown).find((b) => !b.closest('.chrome-column'));
+      if (go) await click(go);
+      if (!document.querySelector('#ui .map-screen')) notes.push('sector-cleared: its button did not bring the map back');
+
+      // One packet over the cache's size: the state that demands a discard.
+      try {
+        run.addPacket(ids[0]);
+        await settle();
+        if (!(await openCache())) notes.push('cache: no modal came up one over');
+        else await scan(`cache(over:${run.cache.length}/${cap})`);
+        while (run.cache.length > cap) run.handleDiscardPacket(run.cache.length - 1);
+        await settle();
+      } catch (e) {
+        notes.push(`cache one over: ${e instanceof Error ? e.message : String(e)}`);
+      }
+      if (overlaysUp().length > 0 && !(await closeModal())) {
+        notes.push('cache: the modal one over did not close');
+        return false;
+      }
+      return true;
+    };
+
+    const seen = new Set();
+    let checked = false;
+    let mapDone = false;
+    let slice = 0;
+    let done = false;
+    const until = Date.now() + (arg.ms ?? 300_000);
+    while (!done && Date.now() < until) {
+      const phase = game.run?.phase ?? 'none';
+      slice = phase === 'battle' ? slice + 1 : 0;
+      if (!seen.has(phase) && (phase !== 'battle' || slice === 2)) {
+        await settle();
+        const resume = phase === 'battle' || phase === 'turn-outcome' ? park() : () => {};
+        try {
+          if (!checked && tipTriggers().length > 0) {
+            const tipBad = await tipSelfCheck();
+            if (tipBad.length > 0) return { ok: false, selfCheck: tipBad };
+            checked = true;
+          }
+          await scanTooltips(`tips:${phase}`);
+        } finally {
+          resume();
+        }
+        seen.add(phase);
+        if (phase === 'map' && !mapDone) {
+          mapDone = true;
+          if (!(await mapExtras())) break;
+        }
+      }
+      const r = await probe.drive({ maxMs: 0, seed: arg.seed ?? 1 });
+      if (r.done) done = true;
+    }
+    if (!checked) return { ok: false, selfCheck: ['no screen had a tooltip trigger, so the tooltip scan was never checked'] };
+    if (!mapDone) notes.push('the run never showed a map, so the cache and the sector-cleared screen were not scanned');
   } else {
     const perPhase = arg.perPhase ?? 2;
     const seen = {};

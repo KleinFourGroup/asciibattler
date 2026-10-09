@@ -545,10 +545,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   Escalation picker, and the column is 189px taller than the window. It
   scrolls from the top there, with nothing off the page, where it fit
   before the picker.
-- [ ] **What the text-size survey did not reach** (116k): a tooltip, a
-  unit's full card on hover, the cache modal with packets in it, and the
-  sector-cleared screen (the driven run loses before a boss). Each is in
-  rem by the sweep's arithmetic and unread at any size above 100 %.
+- ✅ **What the text-size survey did not reach** (116k): read at 117.5a by
+  the survey's `extras` mode, clean at every size on four windows; no full
+  card opens on hover anywhere, and the menu's own tooltips rest on the
+  shared plate (WORKLOG §117.5a).
 - [ ] **A key's name is its US label** (116e). The registry binds a
   `KeyboardEvent.code`, the physical key, and `keyLabel` shows that code's
   name, so on AZERTY the key marked A reads as Q in the settings' key rows,

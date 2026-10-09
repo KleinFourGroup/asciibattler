@@ -8721,3 +8721,84 @@ rewrite with §117.75.
 **What the stretch holds.** 117.5a to 117.5c's stop, estimated at 150k to
 180k on 293k: the stop near 470k, under the line. The build stretch,
 117.5d to 117.5j, goes to a fresh session.
+
+### 117.5a — the survey's reach, and the baselines (2026-10-08)
+
+The stretch started at **328,557** at 21:46, on the kickoff's commit
+(`79d893e`): the kickoff's docs cost about 35k, more than its estimate
+allowed for.
+
+**Step zero: one of the four surfaces does not exist.** TODO listed "a
+unit's full card on hover" as unread. ✔ A full card is built in five
+places (`mode: 'full'` in `CardListModal`, `PortScreen`, `PreTurnScreen`,
+`PromotionScreen`, `RecruitScreen`), each a screen or a modal the run mode
+already scans; ✔ `BattleScene` has no hover or pointer-move handler; ✔ the
+enemy's compact card opens a line of text (`HUD.ts:849`). Nothing opens a
+full card on hover, so there are three surfaces: a tooltip, the cache
+modal with packets in it, and the sector-cleared screen.
+
+**The instrument: an `extras` mode** in
+`shell/electron/probes/text-scale.js`, beside `run` and `menu`. It walks a
+seeded run as the run mode does and, on each phase's first screen, opens
+one tooltip of every kind (a trigger's signature) at each size in turn,
+since a plate is placed when it opens. On the first map, with the chips
+up, it fills the cache by the Run's own `addPacket`, scans the modal,
+sends `sector:cleared` with the shipped sectors' titles and scans that
+screen, then puts one packet over the cache's size and scans the modal
+that demands a discard.
+- *Its known answers.* The survey's own plants run before any mode. The
+  tooltip scan adds one: the first real tooltip must read clean, and the
+  same one with the plate planted at twice the page's width must read as
+  off the page, or the run fails. The plate's own box is read apart, since
+  a scan walks a scope's descendants and the plate is the scope.
+- *Where a tooltip is looked for:* an element that carries
+  `data-tooltip-touch` (every `attachTooltip` site but the ones with no
+  touch route) and the enemy's compact card, which has none.
+- It worked as written on its first run: four windows, exit 0, no note.
+
+**The baselines, on `79d893e`** (the runner, offscreen; the run mode on
+`--seed=7`, 26 scans, the same 26 labels as 116k's; the menu mode, 4).
+New against 100 %, with 116k's four kinds set aside:
+
+| window | 110 % | 125 % | 150 % |
+|---|---|---|---|
+| 1280×720 | nothing | the hop chip over the banner 19px; the pool chip's value over the event's text 11px; the settings chip over the port's heading 6px; the pool value over a recruit card's label 2px | the promotion screen's heading and button 17px off the page; the settings chip over the event's heading 35px; the pool value over the event's text 30px, a recruit card's labels 20px and a port card's head 12px; the hop chip over the banner 23px; the settings chip over the port's heading 9px |
+| 1920×1080 | nothing | nothing | nothing |
+
+That is 116k's table, pair for pair at 125 %: §117 moved none of it. The
+menu's four screens: on 720p the credits scroll from 110 % and character
+select scrolls 189px at 150 % (117e's); on 1080p nothing.
+
+The page at 100 % in a smaller window, against 720p at 100 %:
+
+| window | off the page | text over text |
+|---|---|---|
+| 1024×576 | nothing | the hop chip over the banner 14px; the pool value over a recruit card's label 11px; the countdown's Fight button over the compact cards' numbers 6px; the settings chip over the port's heading 2px |
+| 960×540 | the promotion screen's heading and button, 15px | the hop chip over the banner 14px; the pool value over a recruit label 11px; the countdown's number over the compact cards 7px; the settings chip over the event's text 4px and the cache chip over its heading 3px; the settings chip over the port's heading 2px |
+
+In both, what already scrolls on 720p scrolls further (the pre-turn
+screen 198px on 720p, 792px and 828px here; the map 358px, then 502px and
+538px), and the menu's four screens gain nothing but that. So at 100 % a
+1024×576 window has the faults of a 720p window at 125 %, and 960×540
+adds the promotion screen, the fault of 720p at 150 %. Both lists are
+117.5e's.
+
+**The three surfaces, read.** At 720p and 1080p at all four sizes, and at
+1024×576 and 960×540 at 100 %:
+- *Tooltips:* 3 kinds on the map, 3 on an event, 9 on the pre-turn
+  screen, 8 in a battle, 8 at a turn's outcome, 4 on a reward, 5 each on
+  promotion, recruit and port, 4 on the defeat screen, 3 on the
+  sector-cleared screen. Nothing off the page, cut, spilled or over other
+  text at any size in any window. One never opened, the speed button's at
+  the turn's outcome, in every window; it opens in the battle.
+- *The cache modal,* 6 of 6 and 7 of 6: clean; its list scrolls (7px at
+  150 % full, 32px at 100 % one over, on 720p), as a list may.
+- *The sector-cleared screen,* with the chips up: clean at every size.
+
+**Not covered.** The tooltips of the menu, the settings, the credits and
+character select (the extras mode walks a run; they share the one plate
+and its placing). A tooltip opened by touch or by the keyboard. Firefox:
+every number here is Chromium's.
+
+**Predictions against what happened.** No bump and no smoke, as cut: the
+step touches `shell/` and the docs.

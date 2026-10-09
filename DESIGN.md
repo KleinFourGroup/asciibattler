@@ -262,6 +262,7 @@ READ, and the read is named here so it is the same read every time:
 | Layout stability | `tests/font-coverage.test.ts` · `tests/ui-tokens.test.ts` (a box that holds text is in rem) | the same-run toggle + the box oracle; step zero is a measurement; `shell/electron/probes/text-scale.js` surveys every screen of a driven run at each text size |
 | A cast FLIES | `fxRegistry.test.ts` | how the flight looks |
 | The fallen GROUP | `fallenSide.test.ts` · `src/run/fallenStats.test.ts` | size the form on a REAL run |
+| The failure plate | `src/failure/rules.test.ts` (what counts, the first failure only, the wait on a lost context) · `tests/failure-boot.test.ts` (the watch listens before the game loads and reaches nothing that can fail it) | the plate over a battle (`?fail=frame`): does anything under it still move, or answer a key? |
 | Strings | `tests/i18n-literal-pin.test.ts` · `tests/i18n-ui-keys.test.ts` | — |
 | Input accessibility | the four pins under its checklist | a new surface adds its ROW; a clickable `<div>` is the forbidden shape |
 | Sound (104) | `src/audio/eventSounds.test.ts` (every bus event is cued or silent WITH A REASON) · `src/audio/AudioPlayer.test.ts` (every key has its file) | **the ear:** no test hears a cue — is it the right sound, at the right loudness, for the moment? a `candidate` row is an open question, not a decision |
@@ -744,7 +745,34 @@ paint: `Loading…`, static text in `index.html`, centred in the chrome's
 amber, stands through the script's download and the atlas's build and
 comes down in the task that mounts the first screen, so no frame shows
 both. It has no background of its own. Where no script runs, a second
-line says that the game needs JavaScript.
+line says that the game needs JavaScript. A boot that fails takes the
+line down as the failure plate goes up.
+
+**The failure plate (§117.5).** A page that has failed says so, once, and
+stops. The plate is the modal shell, not dismissable, over every other
+surface: a title and a sentence for the kind of failure, the error's own
+text, the build's ID, and Reload, which holds focus and is the one
+control. The error's text and the ID can be selected, for a report.
+Three things bring it. *A boot that throws:* no WebGL context, a font
+file that didn't load, a module that throws as it loads; where the page
+can make no WebGL 2 context at all, the sentence says that and what may
+fix it. *Anything thrown once the game runs:* an uncaught error, or a
+rejected promise whose reason is an Error and not a `DOMException` (the
+browser refusing something at the page's edge, which the game outlives).
+*A WebGL context that is lost and stays lost* for four seconds with the
+page in view; a context that comes back sooner is restored by three.js
+and nothing is said. Over a running game the plate is never a plate over
+play: before it goes up the loop stops with its last frame on the canvas,
+no key reaches anything under it, and no command is applied or saved
+again, because a failure can leave a run half-changed and the next
+autosave would write that over the last good save. Only the first
+failure speaks. Two reports are not failures and bring nothing: an
+`error` event with no thrown value (how a browser reports a
+ResizeObserver that could not finish in a frame, and the HUD has an
+observer) and one from a file of another origin (an extension's script). A script that never ran at all
+(a failed download, a browser too old to parse it) is not heard, and the
+loading line stays. The rules are `src/failure/rules.ts`; on a DEV page
+`?fail=webgl`, `font`, `frame` or `context` plants each.
 
 **A cast that lands at range FLIES (102).** An effect that appears on a
 cell away from its caster says whose it is by travelling there: a

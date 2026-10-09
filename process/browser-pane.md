@@ -34,6 +34,9 @@ app can stop the server between turns). Then:
     Reset to `desktop` when you're done; after a reset the hidden pane
     can be 0×0 again.
   - a canvas box that isn't the page: the layout is off.
+  - a page whose failure plate is up (below), with the plate's text. A
+    boot that failed has no kit, so read its DOM directly; a page that
+    failed while running is halted: `location.reload()`.
   - a URL that isn't the one `go()` asked for (below).
   A stale drawing buffer is fixed by one `resize` event, and the report
   says `resized: true`.
@@ -138,6 +141,21 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `localStorage` (or Electron's `store.json`) itself, not the store. The
   pane's `localStorage` takes about 50 Mi characters, some ten times a
   stock browser's, so a quota is never measured here.
+- **The failure plate** (`src/failure/`, `src/ui/FailurePlate.ts`): any
+  uncaught error on the page halts the game under `.failure-plate`
+  (`.failure-plate__error` is the error's text, and `__game.halted` is
+  true behind it). That includes a probe's own: a timer or a listener a
+  probe leaves behind that throws stops the game, where an error thrown
+  inside a tool call is the tool's and never reaches the window. The
+  plants are DEV only and are not run dials: `?fail=webgl` and
+  `?fail=font` fail the boot; `?fail=frame` (every frame throws) and
+  `?fail=context` (the WebGL context is lost and never restored) fail two
+  seconds into the first battle. Those two need real frames, which a
+  hidden pane doesn't run: use the runner with `--window=offscreen`, or
+  fail a live page by hand with `setTimeout(() => { throw new Error('x') }, 0)`.
+  A context plate comes four seconds after the loss. On the production
+  build there is no plant: take the two font files out of `dist/assets/`
+  for a real failed boot, and put them back.
 - **The settings modal** (`src/ui/SettingsOverlay.ts`): the menu's
   Settings row or, in a run, `.settings-chip` opens `.settings-modal`.
   While it is open `__game.playback.isHeld` is true and

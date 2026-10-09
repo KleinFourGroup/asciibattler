@@ -9483,3 +9483,170 @@ no smoke, as cut; `npm test` gains one file and five tests. The reading
 before this entry: **550,669** at 11:45, at the line, so the step cost
 about 18k to there and the session hands off: 117.5i starts in a fresh
 session.
+
+### 117.5i — a failure says something (2026-10-09, session 8c160a6b) — ◐ built, unread (`batch`, at the sitting)
+
+A fresh session, from about 11:54; the tree clean at `a1731bc`. Pre-flight:
+typecheck exit 0; `npm test` 246 files, 3574 tests, 51.9 s. The reading:
+**109,259** at 11:55, after HANDOFF, `process/planning.md`, ROADMAP
+§117.5, this phase's kickoff, 117.5b, both parts of 117.5c's read and
+117.5h, and `src/main.ts`.
+
+**Step zero: what the page does with a failure as it stood**
+(`scratch/117.5i-plate/baseline.js`, the runner, offscreen, `--seed=7`;
+Chromium).
+- *A font file that is missing fails the boot.* `document.fonts.load`
+  rejects with `NetworkError: A network error occurred.`, a DOMException.
+  The known answer, a family nothing declares, resolves empty, which is
+  the case `FontAtlas.create`'s comment ("it never throws") was about.
+- *A rejected top-level await reaches the window as an `error` event*
+  that carries the thrown value, and so does a module that throws as it
+  loads. Neither is an `unhandledrejection`.
+- *A ResizeObserver loop is an `error` event too,* with no thrown value
+  and the page's own URL as its file. The HUD has a ResizeObserver, so a
+  plate on every `error` event would be a plate on a working game.
+- *A frame that throws does so every frame.* `Renderer.start` books the
+  next frame before it runs this one's body: 61 throws and 61 `error`
+  events in a second, the loop still booked.
+- *A context forced lost and not restored:* `isContextLost()` true, the
+  default prevented, the loop still booked, no restore in 2.5 s. (Its
+  ticks read 0 before and after, inside the pre-battle countdown, so that
+  read says nothing on whether the sim runs on; the plant below does.)
+- three.js r184 throws `Error creating WebGL context.` from the
+  renderer's constructor when the canvas gives no context
+  (`WebGLRenderer.js:401`, and seen when planted).
+
+**The calls the build makes.** Each is inside the cut's words, and each
+is the user's to overrule at the sitting.
+1. *A failure once the game runs halts it.* The cut's "wrong is a plate
+   over a game that still plays" asks for that, and there is a second
+   reason: a throw in the middle of a command can leave the run
+   half-changed, and the next command's autosave would write that over
+   the last good save. So `Game.halt()` stops the loop with its last
+   frame on the canvas and suspends the key registry, `dispatch` applies
+   nothing afterwards, and the plate's own capture listener stops every
+   key before anything under it hears one. There is no way back but
+   Reload. The price: an error that used to pass unseen (a throw in one
+   handler, with the game going on) now ends the page, and a saved run
+   comes back at its last gate.
+2. *What counts.* An `error` event counts when it carries a thrown value
+   and its file is the page's origin or unnamed; an unhandled rejection
+   counts when its reason is an Error and not a DOMException. So the
+   ResizeObserver report, a script the browser won't describe, an
+   extension's script and a refused `play()` bring nothing. Missed by the
+   same rule: a `throw null`.
+3. *Only the first failure speaks.*
+4. *Four seconds for a lost context,* counted with the page in view, and
+   coming back into view starts the wait over. The number is a
+   judgement: a forced restore took 134 ms at 117.5b, and no real loss
+   has been timed.
+5. *Four plates in words.* The boot's has a sentence of its own for a
+   page that can make no WebGL 2 context at all, asked of a scratch
+   canvas, a surface three.js's error does not come from. The eight
+   strings are `failure.*` in `locales/en/ui.json`, the session's words.
+6. *The font's error is thrown on with a name:* "FontAtlas: the game's
+   font files failed to load", the NetworkError as its cause, and the
+   plate shows both.
+7. *The watch is `main.ts`'s third import,* so a module that throws as
+   it loads gets the plate (a catalog that fails its schema after a hand
+   edit of `config/*.json` now says so on the page). The boot is one
+   `boot()` whose catch tells the watch, so the boot's plate does not
+   rest on how a browser reports a rejected top-level await.
+8. *The kit knows the plate.* `__probe.ready()` fails by name with the
+   plate's text; for a failed boot the stand-in does, at once, where it
+   used to wait 30 s and ask whether the dev server was still starting.
+   Not in the cut: it is the kit's own rule that a broken page is named.
+   Each of its two edits of `bootstrap.ts` restarts every running dev
+   server (seen once in the pane server's log).
+
+**As built.** `src/failure/rules.ts` (pure: the two filters, the text,
+the watch, the wait) and `src/failure/index.ts` (the page's listeners,
+`failure.boot`, `failure.started`); `src/ui/FailurePlate.ts` (the 96f
+shell, not dismissable, `role=alertdialog`, `.failure-overlay` at z-index
+100, Reload holding focus; it takes `#boot-line` down, which closes
+117.5h's landing note); `Game.halt()` and `Renderer.halt()`;
+`src/dev/failPlant.ts` (`?fail=webgl`, `font`, `frame`, `context`,
+reached through DEV-gated dynamic imports). DESIGN "The failure plate"
+and its row in the checking table; ARCHITECTURE; TESTING;
+`process/browser-pane.md`.
+
+**Measured.**
+- *On every `npm test`:* `src/failure/rules.test.ts` (25 tests) and
+  `tests/failure-boot.test.ts` (6: the third import, the watch's import
+  graph as an exact list of thirteen files with zod its only package, a
+  planted reach into the palette and three.js reported, five planted
+  boots each failing by name, the plate's removal of the line), and one
+  more in the kit's `page.test.ts` for the stand-in.
+- *Under the runner* (`scratch/117.5i-plate/verify-run.js`, offscreen,
+  real frames, `seed=7&character=soldier`; ten launches, `run-all.sh`):
+
+  | case | plate | read |
+  |---|---|---|
+  | no plant (the control) | none | ticks 40 to 60 in a second, the loop booked; the instrument's known answers: a window listener hears 5 of 5 keys, a sent command is journaled, a reset changes the phase |
+  | `?fail=frame` | "The game hit an error", `Error: planted by ?fail=frame` | one `error` event where step zero had 61 a second; ticks 40 to 40 over 1.5 s; the loop not booked; a sent `advanceTurn` and `resetRun` change neither the journal nor the phase; 0 of 5 keys heard, and a capture listener added later hears none; Tab leaves focus on Reload; 165 of 165 grid points of the page are the overlay's; the plate 640 by 250 at 320, 235 |
+  | `?fail=context` | "The picture was lost" | 4010 to 4014 ms after the loss (three launches); lost at tick 40, halted at tick 120, so the battle played on unseen through the wait (TODO) |
+  | a throw in a click handler; a rejected `RangeError` | the run plate | halted, as above |
+  | a rejected DOMException; a ResizeObserver loop (3 `error` events) | none | the game plays on (ticks 82 to 102, 89 to 109) |
+  | 150 % and 125 % text, a 3000-character error swapped in | the run plate, and the context plate at 150 % | nothing off the page; at 150 % the plate is 960 by 619 at 160, 50, the error scrolls inside it and is no wider than its box, Reload at 949, 600 |
+
+- *In the pane, on the dev server* (the DOM read directly; a failed boot
+  has no kit): `?fail=webgl` gives "ASCIIbattler couldn't start", the
+  WebGL sentence, `Error: Error creating WebGL context.`, the build's ID
+  equal to `<html data-build>`, no `#boot-line`, focus on Reload, and the
+  uncaught error still in the console. `?fail=font` gives the plain boot
+  sentence and `Error: FontAtlas: the game's font files failed to load
+  (NetworkError: planted by ?fail=font)`. A `throw` put at the top of
+  `src/scenes/menuRules.ts`, then reverted, gives the boot plate with
+  that text: a module that throws as it loads is heard. At the pane's own
+  480 by 270 the plate's foot stood below the plate, so the plate itself
+  scrolls now and Reload comes into reach.
+- *A mistake of the session's, found by the plate.* A second `const` of
+  one name in the kit's `index.ts` made the dev server answer 500 for
+  that module. The page said "ASCIIbattler couldn't start" with "Failed
+  to fetch dynamically imported module", and `ready()` gave the same
+  text at once. Typecheck would have said it first; it was run after.
+- *The production build* (`npx vite build`, the pane's `dist-preview`):
+  `planted by`, `failPlant` and `fail=` occur nowhere in `dist/`, on a
+  scan that finds `failure-plate` six times in the script. With the two
+  font files moved out of `dist/assets/`, a real failure and no plant:
+  the boot plate, `…failed to load (NetworkError: A network error
+  occurred.)`, the build `0.0.0+a1731bc-dirty`. Put back: the menu and
+  no plate; a ResizeObserver-shaped `error` event and a rejected
+  DOMException bring nothing; a `TypeError` thrown from a timer brings
+  the run plate.
+- `drive-run --seed=7` logs `a59ee48f`, before and after the kit's edit.
+  `npm test`: 248 files, 3606 tests. Typecheck clean. The index script is
+  654.74 kB.
+
+**Not verified.** Firefox, all of it: how it reports a rejected
+top-level await (the boot's own catch is there so that it need not
+matter), a forced context loss, the plate's look. The two running plants
+on the dev server itself: a hidden pane runs no frames, and the runner's
+build is the same source in Vite's development mode. A real lost
+context, as against a forced one; a machine with no WebGL. Whether an
+extension's script reaches the page's `error` event under a foreign file
+name: that filter is written from the shape, not from an extension. The
+plate's sentences as a player reads them.
+
+**Left out, each in TODO** ("§117.5 kickoff riders"): a script that
+never ran, which leaves `Loading…` up (the watch is in that script); a
+shader that fails to compile; holding the playback while a lost context
+is waited for; a keyboard's way to scroll a long error.
+
+**For the sitting** (the cut's script: on the dev server, the planted
+boot failure and the planted frame error; wrong is a black page, a plate
+over a game that still plays, or text off the page at 150 %). The dials:
+`?fail=webgl` and `?fail=font` for the boot; `?fail=frame`, then a run
+played to its first fight, where the plate comes two seconds in (or
+`?fail=frame&seed=7&character=soldier`). Added: `?fail=context` the same
+way, the plate four seconds after the picture goes; the eight sentences;
+call 1, whether a halt on any error is the wanted trade; Text size 150 %
+before a `?fail=frame`.
+
+**Predictions against what happened.** No bump, no stream, no bus event,
+no smoke, as cut; `npm test` gains two files and 32 tests. The reading
+before this entry: **397,170** at 12:29 (364,692 at 12:25, before the
+docs), so the step cost about 288k to there: sixteen times 117.5h and
+twice 117.5d's build. Where it went: orientation and step zero to the
+first written file; four planted cases, each read on the runner, the dev
+server and the production build; and the docs.

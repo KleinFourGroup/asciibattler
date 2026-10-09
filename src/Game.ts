@@ -242,6 +242,8 @@ export class Game implements RunDispatcher {
    *  swap() cancels it, so a scheduled scene can never replace one that
    *  arrived after it. */
   private pendingSwapTimer: number | null = null;
+  /** 117.5i — set once the page has failed (`halt`), for its life. */
+  private halted = false;
 
   constructor(canvas: HTMLCanvasElement, fontAtlas: FontAtlas, uiMount: HTMLElement, runLock: RunLock) {
     this.fontAtlas = fontAtlas;
@@ -696,6 +698,9 @@ export class Game implements RunDispatcher {
    *     exception is recruit → map, which is silent, so we swap explicitly.
    */
   dispatch(command: RunCommand): void {
+    // 117.5i — a halted game applies nothing (`halt`). What still arrives is
+    // a timer set before the failure, an outro's advance for one.
+    if (this.halted) return;
     // 63e — the two GAME-level commands work without a live Run:
     // chooseCharacter CONSTRUCTS it (the select-precedes-Run seam);
     // resetRun tears down whatever exists. Everything else needs a Run —
@@ -970,6 +975,19 @@ export class Game implements RunDispatcher {
 
   start(): void {
     this.renderer.start();
+  }
+
+  /**
+   * 117.5i — the page has failed and is about to say so (the failure plate,
+   * src/failure). The loop stops with its last frame on the canvas, no
+   * hotkey fires, and no command is applied from here on: a failure can
+   * leave a run half-changed, and a command applied after it would save
+   * that over the last good save. There is no way back but a reload.
+   */
+  halt(): void {
+    this.halted = true;
+    this.renderer.halt();
+    this.keybindings.suspend();
   }
 
   /**

@@ -143,6 +143,31 @@ describe('the bootstrap stand-in (the exact text the dev server injects)', () =>
     expect(seen[0]!.timeoutMs).toBeLessThanOrEqual(5000);
   });
 
+  it('rejects at once with the failure plate’s text when the boot failed, and waits where there is no plate', async () => {
+    const plate = { textContent: 'Error: Error creating WebGL context.' };
+    const asked: string[] = [];
+    const win: { __probe?: unknown; document?: unknown } = {
+      document: {
+        querySelector: (selector: string) => {
+          asked.push(selector);
+          return selector === '.failure-plate__error' ? plate : null;
+        },
+      },
+    };
+    load(win);
+    const since = Date.now();
+    await expect((win.__probe as Stub).ready({ timeoutMs: 5000 })).rejects.toThrow(
+      /__probe\.ready: the page failed to boot, and its failure plate says: Error: Error creating WebGL context\./,
+    );
+    expect(Date.now() - since).toBeLessThan(1000);
+    expect(asked).toContain('.failure-plate__error');
+
+    // The control: a document with no plate waits out its time, as before.
+    const clean: { __probe?: unknown; document?: unknown } = { document: { querySelector: () => null } };
+    load(clean);
+    await expect((clean.__probe as Stub).ready({ timeoutMs: 250 })).rejects.toThrow(/not live after 0 s/);
+  });
+
   it('rejects by name when the modules never arrive', async () => {
     const win: { __probe?: unknown } = {};
     load(win);

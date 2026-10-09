@@ -596,14 +596,13 @@ The older riders the sweep took: the settings chip's home (117.5d), the
 a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 (117.5g), hitsplats under pause (117.5b), the dev-code guard (117.5j).
 
-- [ ] **A failure says nothing.** `main.ts` has no catch around the boot
-  and `src` has no `error` or `unhandledrejection` listener outside the
-  diagnostics build, so a page with no WebGL, a font that fails or a throw
-  in a frame leaves a black or frozen frame. Home: 117.5i.
+- ✅ **A failure says nothing** (117.5i, 2026-10-09): the failure plate,
+  on a failed boot, on anything thrown once the game runs, and on a lost
+  context (DESIGN "The failure plate"; WORKLOG §117.5i).
 - ✅ **No loading line** (117.5h, 2026-10-09): `Loading…` is in
   `index.html` and comes down as the first screen mounts, with a
   `<noscript>` line (DESIGN "The loading line"; WORKLOG §117.5h). A boot
-  that fails leaves it up until 117.5i's plate takes it down.
+  that fails takes it down with the failure plate (117.5i).
 - [ ] **The itch embed is 1280×720, the smallest supported window**
   (decided at 117.5c's read, 2026-10-09, with itch's fullscreen button for
   a 768-row laptop; DESIGN names the window since 117.5e). Home: §118, for
@@ -621,11 +620,9 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   it (a card over the canvas is neither text over text nor a box off the
   page), so an instrument for it is the first step: the board's tiles a
   card covers, per window and size. A later round's.
-- [ ] **A lost WebGL context that is not restored says nothing.** A loss
-  that is restored comes back by itself, the canvas to the same hash
-  (117.5b, a forced loss in Chromium; three.js's own listeners). A loss
-  the browser restores late or never leaves a black canvas over a working
-  page. Home: 117.5i (signed at 117.5c's read, 2026-10-09).
+- ✅ **A lost WebGL context that is not restored says nothing** (117.5i,
+  2026-10-09): the plate, four seconds after the loss with the page in
+  view (WORKLOG §117.5i).
 - [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
   composers and the bloom render at full device pixels, and fullscreen on
   a 4K laptop with integrated graphics is the bad case. Left for data, the
@@ -655,6 +652,28 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   names no opacity, so the chip appears and goes at once while the HUD's
   other panes fade over 180 ms. `.control-chip` names the opacity for this
   reason; the hop chip needs the same line.
+- [ ] **A script that never ran says nothing** (117.5i). The failure watch
+  is in the script, so a download that failed, or a browser too old to
+  parse the bundle, leaves `Loading…` up for ever. What would hear it: a
+  few lines of classic script in `index.html`, ahead of the module, that
+  listen for `error` in the capture phase while `#boot-line` stands and
+  change the line's words. Not built: it is a second mechanism in a second
+  language, with its own strings. The user's call, for §118's build.
+- [ ] **A shader that fails to compile throws nothing** (117.5i, from
+  memory of three.js, not run here): it logs to the console and draws
+  nothing, so a driver that rejects a shader would give a black board
+  under a working HUD and no plate. Hearing it means asking the program's
+  link status after the first frame.
+- [ ] **The battle plays on unseen while a lost context is waited for**
+  (117.5i, measured under the runner: lost at tick 40, halted at tick
+  120). The wait is four seconds; a loss that is restored inside it has
+  cost that much of the fight's picture, and the sound still plays.
+  Holding the playback for the wait (`PlaybackSpeed.hold`, as the
+  settings modal does) would stop that.
+- [ ] **A long error in the failure plate can't be scrolled by keyboard**
+  (117.5i): Tab stops on Reload alone, and the box that scrolls is not a
+  tab stop. Making
+  the `<pre>` a tab stop would do, as the credits' body is one.
 - [ ] **A rest node conveys nothing and is not a gate.** Home: §117.75.
 - [ ] **The first three events' prose predates the adopted style**
   (`corrupted-shrine`, `whispering-terminal`,

@@ -171,12 +171,20 @@ export class FontAtlas {
     // BEFORE rasterizing, so
     // the atlas never bakes the serif fallback. `load` matches the same
     // size/family string `fillText` uses below; it resolves with the loaded
-    // FontFace(s), or an empty array if the family is undeclared (it never
-    // throws), so a missing font degrades to the old fallback rather than
-    // crashing startup. `await fonts.ready` then settles any stragglers.
+    // FontFace(s), or an empty array if the family is undeclared, which
+    // degrades to the old fallback rather than failing the boot.
+    // `await fonts.ready` then settles any stragglers.
     // `load` with the whole stack fetches EVERY listed face (101a: the
     // fallback too, so a fallback-supplied glyph never bakes serif either).
-    await document.fonts.load(`${FONT_PX}px ${FONT_STACK}`);
+    // A declared face whose FILE fails to load is the other case: `load`
+    // rejects with a NetworkError that names nothing, so it is thrown on
+    // under a message that says what failed, for the failure plate
+    // (src/failure) to show.
+    try {
+      await document.fonts.load(`${FONT_PX}px ${FONT_STACK}`);
+    } catch (cause) {
+      throw new Error("FontAtlas: the game's font files failed to load", { cause });
+    }
     await document.fonts.ready;
 
     const canvas = document.createElement('canvas');

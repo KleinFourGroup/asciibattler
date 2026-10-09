@@ -8,6 +8,11 @@ import './store';
 // the catalogs load (src/settings/boot.ts); tests/settings-boot.test.ts holds
 // this line second and holds its graph clear of every catalog too.
 import './settings/boot';
+// 117.5i — THE FAILURE WATCH IS THE THIRD. It listens from here on, so a
+// module below that throws as it loads gets the plate too (src/failure);
+// tests/failure-boot.test.ts holds this line third and holds its graph clear
+// of the catalogs, three.js and the game.
+import { failure } from './failure';
 
 // Bundled FOSS monospace font. Loaded first so canvas2d rasterization in the
 // FontAtlas finds it registered when document.fonts.ready resolves.
@@ -42,51 +47,79 @@ document.documentElement.dataset.build = BUILD_ID;
 // `reducedMotion()`); it follows the OS live and Round 8's setting overrides it.
 installMotionGate();
 
-const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
-if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
+/**
+ * The boot: everything from the page's two mounts to the running loop. One
+ * function, so that one catch (below) hears whatever it throws: no WebGL
+ * context, a font file that didn't load, a Game that failed to build.
+ */
+async function boot() {
+  const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
+  if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
 
-const uiMount = document.querySelector<HTMLDivElement>('#ui');
-if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
+  const uiMount = document.querySelector<HTMLDivElement>('#ui');
+  if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
 
-// Top-level await: Vite + ESM + modern browsers handle it; the module just
-// pauses until the font has parsed and the atlas is rasterized.
-// 115f — the two-tab lock is asked for beside it, since its answer has to be
-// in hand before the Game, the run slot's writer, exists. `navigator.locks`
-// is missing on a page that isn't a secure context.
-const [fontAtlas, runLock] = await Promise.all([
-  FontAtlas.create(),
-  acquireRunLock((navigator as { locks?: LockManagerLike }).locks),
-]);
+  // 117.5i — the planted boot failures (`?fail=webgl`, `?fail=font`;
+  // src/dev/failPlant.ts), ahead of what they make fail. DEV-gated blocks,
+  // for the reason the diagnostics panel's is one (below).
+  if (import.meta.env.DEV) {
+    (await import('./dev/failPlant')).plantBootFailure(location.search);
+  }
 
-// 105c — the board explorer loads by a DEV-gated DYNAMIC import: `DEV` is a
-// build-time constant, so in a production build this branch — and with it the
-// whole src/dev/boardPanel module graph — is gone. (A static import relied on
-// the tree-shaker proving the module's top level pure; 105c's fixture table,
-// template literals and spreads, left ~200 bytes of it in `dist/`.)
-const boardPanelModule = import.meta.env.DEV ? await import('./dev/boardPanel') : null;
-// 112a — the pane probe kit, the same way (process/browser-pane.md).
-const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
-// A fixture bookmark (`?bp=board-…`) stands for a set of run dials, and Game
-// parses the run dials in its constructor — so its run pairs are written into
-// the URL first (src/dev/boardPanel/boot.ts).
-if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
-// 116l — the diagnostics panel, behind a constant only a build made with
-// `VITE_DIAG=1` sets (src/dev/diag/index.ts). It goes in before the Game, the
-// store's writer, so it times the first write too. A block, not a
-// `const … ? … : null` with a call after it: the minifier folds that form's
-// test and still leaves `null?.installDiag(…)` in every other build.
-if (import.meta.env.VITE_DIAG === '1') {
-  (await import('./dev/diag')).installDiag({ runLock });
+  // The module pauses here until the font has parsed and the atlas is
+  // rasterized.
+  // 115f — the two-tab lock is asked for beside it, since its answer has to be
+  // in hand before the Game, the run slot's writer, exists. `navigator.locks`
+  // is missing on a page that isn't a secure context.
+  const [fontAtlas, runLock] = await Promise.all([
+    FontAtlas.create(),
+    acquireRunLock((navigator as { locks?: LockManagerLike }).locks),
+  ]);
+
+  // 105c — the board explorer loads by a DEV-gated DYNAMIC import: `DEV` is a
+  // build-time constant, so in a production build this branch — and with it the
+  // whole src/dev/boardPanel module graph — is gone. (A static import relied on
+  // the tree-shaker proving the module's top level pure; 105c's fixture table,
+  // template literals and spreads, left ~200 bytes of it in `dist/`.)
+  const boardPanelModule = import.meta.env.DEV ? await import('./dev/boardPanel') : null;
+  // 112a — the pane probe kit, the same way (process/browser-pane.md).
+  const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
+  // A fixture bookmark (`?bp=board-…`) stands for a set of run dials, and Game
+  // parses the run dials in its constructor — so its run pairs are written into
+  // the URL first (src/dev/boardPanel/boot.ts).
+  if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
+  // 116l — the diagnostics panel, behind a constant only a build made with
+  // `VITE_DIAG=1` sets (src/dev/diag/index.ts). It goes in before the Game, the
+  // store's writer, so it times the first write too. A block, not a
+  // `const … ? … : null` with a call after it: the minifier folds that form's
+  // test and still leaves `null?.installDiag(…)` in every other build.
+  if (import.meta.env.VITE_DIAG === '1') {
+    (await import('./dev/diag')).installDiag({ runLock });
+  }
+
+  const game = new Game(canvas, fontAtlas, uiMount, runLock);
+  // Game's constructor has mounted the first screen, so the loading line that
+  // index.html stood up comes down here, in the same task: no frame shows the
+  // two together. A boot that throws above this line leaves the line standing,
+  // and the failure plate takes it down as it speaks (src/ui/FailurePlate.ts).
+  document.getElementById('boot-line')?.remove();
+  game.start();
+  // 117.5i — the boot is over: from here a failure is the running game's,
+  // and the plate halts it before it speaks.
+  failure.started(() => game.halt(), canvas);
+  if (import.meta.env.DEV) {
+    (await import('./dev/failPlant')).plantRunFailure(location.search, game);
+  }
+  return { game, boardPanelModule, probeModule };
 }
 
-const game = new Game(canvas, fontAtlas, uiMount, runLock);
-// Game's constructor has mounted the first screen, so the loading line that
-// index.html stood up comes down here, in the same task: no frame shows the
-// two together. A boot that throws above this line leaves the line standing,
-// a page that says Loading for ever. Nothing reports a failed boot yet;
-// whatever comes to do so must take the line down as it speaks.
-document.getElementById('boot-line')?.remove();
-game.start();
+// Top-level await: Vite + ESM + modern browsers handle it. A boot that
+// throws is told to the player, then thrown on, so the console has it as the
+// uncaught error it is.
+const { game, boardPanelModule, probeModule } = await boot().catch((err: unknown) => {
+  failure.boot(err);
+  throw err;
+});
 
 // Dev-only debug handle. Exposes the live Game so the browser console
 // (and the preview MCP) can poke at world state for verification work

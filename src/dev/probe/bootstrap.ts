@@ -11,7 +11,8 @@
  * first call, `await __probe.ready()`, waits for the real kit instead of
  * throwing a ReferenceError or measuring an unloaded page. The real kit
  * replaces `window.__probe` when it installs (./index.ts), and the stand-in
- * hands the wait over to it. Every other kit call refuses by name until then
+ * hands the wait over to it. A boot that failed never installs the kit: the
+ * stand-in then fails by name with what the failure plate says, at once. Every other kit call refuses by name until then
  * (the names are the kit's, ./index.ts; page.test.ts checks the two lists
  * match).
  *
@@ -30,6 +31,13 @@ export const PROBE_BOOTSTRAP = `(function () {
           if (window.__probe !== stub) {
             var rest = Math.max(1000, until - Date.now());
             resolve(window.__probe.ready(Object.assign({}, opts, { timeoutMs: rest })));
+            return;
+          }
+          var doc = window.document;
+          var failed = doc && doc.querySelector ? doc.querySelector('.failure-plate__error') : null;
+          if (failed) {
+            reject(new Error('__probe.ready: the page failed to boot, and its failure plate says: ' +
+              failed.textContent + ' (no kit is installed on a page that never booted: read its DOM directly)'));
             return;
           }
           if (Date.now() >= until) {

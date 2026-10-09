@@ -4646,6 +4646,64 @@ body {
   color: var(--color-gray-88);
 }
 
+/* 117.5i — the failure plate (src/ui/FailurePlate.ts): the modal shell,
+   over every surface the game has (the tooltip is 50) and under the
+   scanlines (1000), since nothing else on the page may be reached once it
+   is up. The error's text is whatever was thrown: it wraps anywhere, and
+   scrolls inside the plate when it is long, so the plate keeps to the page
+   at any text size. On a page too short even for that, the plate itself
+   scrolls, so Reload is never out of reach. */
+.failure-overlay {
+  z-index: 100;
+}
+
+.failure-plate {
+  width: min(92vw, 40rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+
+.failure-plate__body {
+  margin: 0;
+  font-size: var(--text-14);
+  line-height: 1.5;
+  color: var(--color-gray-d0);
+}
+
+.failure-plate__error {
+  flex: 0 1 auto;
+  min-height: 2.5em;
+  margin: 0;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border: 1px solid var(--color-gray-40);
+  font-family: var(--font-mono);
+  font-size: var(--text-12);
+  line-height: 1.5;
+  color: var(--color-gray-b0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-40) var(--color-black);
+}
+
+.failure-plate__foot {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.failure-plate__build {
+  font-size: var(--text-11);
+  letter-spacing: 0.04em;
+  color: var(--color-gray-88);
+  user-select: text;
+}
+
 /* ── §100 — THE FOCUS RING (100b) ─────────────────────────────────────────
    The keyboard's hover. Two rules, one idiom (DESIGN §UI idioms "Focus"):
    1. every `X:hover` rule above carries `X:focus-visible` in its selector

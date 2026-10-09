@@ -432,9 +432,20 @@ export class Renderer {
     this.mainComposer.render();
   }
 
-  stop(): void {
+  /**
+   * Draw no more frames, and leave everything else as it stands: the last
+   * frame stays on the canvas. The halt of a page that has failed
+   * (`Game.halt`); `stop` is the teardown. The loop books its next frame
+   * before it runs this one's body, so a call made after a frame threw
+   * cancels the frame that would have thrown again.
+   */
+  halt(): void {
     if (this.rafId !== null) cancelAnimationFrame(this.rafId);
     this.rafId = null;
+  }
+
+  stop(): void {
+    this.halt();
     window.removeEventListener('resize', this.handleResize);
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);

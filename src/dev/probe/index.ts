@@ -379,6 +379,15 @@ export function installProbe(game: Game): Probe {
 
   /** Failures that waiting can't fix, checked once the page is live. */
   const brokenOnLoad = (): void => {
+    // A page that has failed is halted under its plate (src/failure): no
+    // frame runs and no command applies, so a read would be of a stopped game.
+    const plate = document.querySelector('.failure-plate__error');
+    if (plate !== null) {
+      throw new Error(
+        `__probe.ready: the page has failed and is halted; its failure plate says: ${plate.textContent} ` +
+          '(location.reload(), then await __probe.ready())',
+      );
+    }
     // A same-origin stylesheet that failed to load stays in the list with
     // rules nobody can read (a dev server restarted mid-request did this).
     const failed = [...document.styleSheets]

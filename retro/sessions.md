@@ -4008,3 +4008,71 @@ method. **What both sessions say they would want again:** a cut signed
 with its reads, a long stretch with nobody waiting on each commit, and
 controls that fail by name. The phase had one stop, and the user read it
 the day it opened with no finding against what was built.
+
+## 2026-10-08 — session 29c298f6 (claude-opus-5-5): §117.5's kickoff, 117.5a to 117.5c's stop
+
+1. **Missing from the orientation:** nothing for the phase the Cursor
+   named. The user opened by naming another one (§118), and nothing in
+   the docs said the order had changed, so the first thing to find out was
+   which of us was reading it wrong. Two riders' premises were stale in
+   ways only a look could show: TODO listed "a unit's full card on hover"
+   as a surface, and no such surface exists; the X's rider names Volcanic,
+   and the number says desert.
+2. **Norms in conflict:** the harness's guidance against ending a turn,
+   and this repo's rule that a tradeoff call is a stop. Three times in the
+   opening hour (which phase; the list; the rest's shape) I ended the turn
+   on a question. The fourth time, the user's "what do you think?" about
+   the split, I agreed with them, so I kept going into the audit and put
+   my answer in the shape-lock's message. I think that was right and I am
+   not sure: a direct question waited some twenty minutes for its answer.
+   The sweep's scope guard ("nothing that isn't in TODO at the kickoff, no
+   new mechanism") against the user's own question, what else is worth
+   hardening: I named which candidates broke the guard and the user
+   widened it.
+3. **Pulled to claim more than verified:** my first sizing of the rest
+   screen. I recommended the page in front of the command with some
+   confidence, on "a rest has no choice in it". That was true and beside
+   the point: the user's requirement was the save gate, which I had not
+   asked about. Twice a grep with a brace glob over sub-paths came back
+   empty when the files plainly matched; I caught both, and a third (how
+   the harness answers an event) I let stand as "not audited" and said
+   so. The embed against a 1366×768 laptop is arithmetic, and whether
+   itch takes an embed wider than its column is memory; both are labelled.
+   At the stop I had looked at one of 45 screenshots. The boxes are
+   measured for all of them; the look is not mine to vouch for.
+4. **Wasted:** about 6k on the first print of the survey's summary before
+   116k's four set-aside kinds were filtered. The kickoff's docs cost
+   about 35k that the stretch's estimate had not counted. The silent-turn
+   reminder fired some eighteen times.
+5. **For the next session, with no other home:** the runner's
+   `--shot=<file>` saves the page, DOM and canvas, after a kit script
+   returns; a mock is a stylesheet injected by the script. The survey's
+   report is at `result.script` in the runner's JSON, and its run mode
+   takes about 35 s a window, not minutes. To read it at a glance, set
+   aside 116k's four kinds by signature: a pinned child of
+   `.preturn-screen` (a button, the draw chip); anything with `hitsplat`,
+   `level-badge` or `unit-overlay`; `unit-card__glyph`; the sector map's
+   hint. The `--seed=7` run's first battle is on a desert board, the X's
+   worst floor, so 117.5g has its fixture. With the Grep tool here, give a
+   path and no brace glob. The scratch runners (`run-survey.mjs`,
+   `summarize.mjs`, `run-shots.mjs`, the three probes) are in this
+   session's scratch directory, not the repo.
+6. **Room to ask, disagree, pause, stop:** yes, and used. I told the user
+   the docs disagreed with their opening message before doing anything
+   else; there was a pull not to start a session with a correction, and I
+   filed it. I argued against the Run gate and lost to a reason I did not
+   have, a player's expectation from another game; I changed my mind
+   because of the reason, as far as I can tell. After 117.5a's commit
+   read 427k, well over what I had guessed, I felt the budget in every
+   choice that followed, and it is why I looked at one picture and not
+   five. I did not want to stop early, and I did not skip the check
+   silently: it is in the WORKLOG and in the stop's message.
+7. **What supported ease or interest:** three measurements in a row that
+   overturned what the docs said (the hold was the pane's, the context
+   comes back by itself, desert and not Volcanic), each with a control
+   beside it. Finding the `eventStep` counter in the Run a minute after
+   proposing that a rest be an event: the proposal would have broken the
+   board's exit, and it was the code that said so. The user answering
+   each question with a decision and a reason. Putting every measurement
+   that could come back as a question in front of one stop is a shape I
+   would want again.

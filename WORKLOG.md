@@ -8869,3 +8869,62 @@ at Volcanic's hue would leave the worst floor as it is, and the fix that
 covers all six is one that doesn't depend on the floor: a dark edge or
 plate behind the X. A palette-level number: the canvas adds shading and
 bloom, and 117.5g's step zero reads the rendered pixels on each theme.
+
+The commit is `60d302a`. The reading on it: **444,134** at 22:02, so the
+step cost about 17k.
+
+### 117.5c — the ribbon's placements, and the stop (2026-10-08) — ◐ the stop is open
+
+**The instrument: the probe runner takes `--shot=<file>`.** The kit's
+`pixels()` reads the canvas alone, and a placement is DOM over canvas, so
+`shell/electron/main.mjs`'s kit probe now saves `capturePage()` as a PNG
+once the page script has returned, as its boot probe already did, and
+`probe-cli.mjs` passes the flag on. One launch, one picture.
+
+**The mocks** are a stylesheet laid over the running game by a scratch
+probe, at 1280×720 and 100 %, on five screens of the `--seed=7` run (a
+battle, the map, the pre-turn screen, a port, an event), with every box
+measured as the picture was taken. The chip, out of the column, is 164 by
+45px. Today it is third in the column at 20, 130; the corner holds the
+roster button (189 by 49 at top 16), the speed pane (236 by 27 at top 20)
+or the port's Leave (139 by 34 at top 16), and nothing on an event.
+- **A,** the chip in the corner and the screen's control to its left
+  (176px over). No box meets another at 1280×720. At 1024×576 the speed
+  pane starts at 592 and the battle's banner ends at 659: 67px of
+  overlap, measured.
+- **B,** the chip in the corner and the screen's control under it (59px
+  down, to top 75). No box meets another at either size.
+- **C,** the screen's control where it is and the chip under it, at top
+  75 on every screen. Nothing else moves. No box meets another at either
+  size, and on the five screens the chip sits over no text.
+
+In all three the chip is at one place on every screen and the column
+holds game state only. The session's lean is C: nothing a player already
+reaches for moves, the corner stays with the controls used every battle,
+and the chip that is used least takes the second line. A is out on the
+1024×576 number unless the embed is 1280 wide. What C costs is a gap
+above the chip on the screens with an empty corner, which is the user's
+eye to judge. Not looked at: the sector map's ✕, which sits at the
+corner over everything and so over the chip in A and B; any size above
+100 %.
+
+**The page** is `scratch/117.5c-ribbon/index.html` (ignored by git): the
+corner at its true size, four ways on five screens; the left column
+before and after; and the five screens at 1280×720, 1024×576 and 960×540
+as they are today, for the embed's size. The session looked at one of
+its 45 pictures (the battle, B); the rest are held by their measured
+boxes, not by eye.
+
+**The stop's questions.**
+1. The chip's placement: A, B or C.
+2. The itch embed's size. The numbers are 117.5a's: at 100 %, 1024×576
+   has four small overlaps and nothing off the page; 960×540 also puts
+   the promotion screen 15px off it. The lean: 1024×576 with itch's
+   fullscreen button on, since 720 rows don't fit a browser on a 768-row
+   laptop. Whether itch's page takes an embed wider than its column is
+   from memory and unchecked.
+3. Whether the failure plate also speaks when a WebGL context has stayed
+   lost for a few seconds (117.5b). The lean: yes.
+4. The X: a dark edge or plate behind it, on every theme, instead of a
+   change of colour for Volcanic (117.5b). The lean: yes.
+Nothing is asked about the hitsplats: they don't hold.

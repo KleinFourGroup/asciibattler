@@ -16,6 +16,8 @@
 //   --size=<w>x<h>     the page's size (default 1280x720)
 //   --timeout=<s>      the run's time limit (default 120)
 //   --arg=<json>       the script's argument
+//   --shot=<file>      save a PNG of the page as the script left it, the DOM
+//                      and the canvas together (use --window=offscreen)
 //   --profile=<dir>    the shell's userData, kept after the run; without it
 //                      each run gets a fresh one and discards it. Two runs on
 //                      one profile are two launches of the shell on one store
@@ -72,6 +74,7 @@ async function main(work) {
   const seconds = Number(flag('timeout') ?? 120);
   const query = queryOf();
   const profile = flag('profile');
+  const shot = flag('shot');
   const arg = flag('arg');
   if (arg !== undefined) {
     try {
@@ -99,6 +102,7 @@ async function main(work) {
     `--profile=${profile !== undefined ? resolve(profile) : join(work, 'profile')}`,
     '--muted',
     ...(arg !== undefined ? [`--arg=${arg}`] : []),
+    ...(shot !== undefined ? [`--shot=${resolve(shot)}`] : []),
   ];
   const child = spawn(electronPath, args, { cwd: repo, stdio: ['ignore', 'pipe', 'pipe'] });
   let stdout = '';

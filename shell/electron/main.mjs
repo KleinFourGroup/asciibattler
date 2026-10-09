@@ -50,7 +50,8 @@
 //   --tail-seconds=<n>    record: the fallback, if no next screen cuts the
 //                     clip: stop this long after the battle ends (5)
 //   --out=<file>      also write the probe's JSON here
-//   --shot=<file>     boot: save a PNG of the page
+//   --shot=<file>     boot, kit: save a PNG of the page (kit: as the script
+//                     left it)
 //
 // Probes print one JSON line to stdout and exit 0 on success, 1 on a failed
 // check, 2 on a timeout, so a Node script can run one and read its answer.
@@ -282,6 +283,10 @@ const probes = {
     const source = readFileSync(resolve(file), 'utf8').replace(/^export default /m, '');
     const ran = await win.webContents.executeJavaScript(caught(`(${source})(${flag('arg') ?? '{}'})`));
     if (ran.error !== undefined) return { ok: false, result: { ready: ready.value, error: ran.error } };
+    // The page as the script left it, DOM and canvas together (the kit's
+    // `pixels()` reads the canvas alone).
+    const shot = flag('shot');
+    if (shot !== undefined) writeFileSync(shot, (await win.webContents.capturePage()).toPNG());
     return { ok: ran.value?.ok !== false, result: { ready: ready.value, script: ran.value } };
   },
 

@@ -13,7 +13,8 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §117 ✅ CLOSED 2026-10-08** (Escalation and the unlock mechanism).
-**§117.5, the UI sweep, is next:** its kickoff picks its list from TODO.
+**§117.5, the UI sweep, is cut and signed (2026-10-08) and in progress;**
+§117.75, the rest gate, was inserted at its kickoff, before §118.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -251,10 +252,50 @@ TODO riders the user picks at the kickoff. The first is the settings
 chip's home, a second ribbon in the top right (TODO "§116 riders"). **Why
 here:** before §118, so the build that goes to the public web channel is
 the swept one. **Risk:** low-medium (wide layout; each move is checked
-with the box oracle). **Decision points:** the list, picked by the user at
-the kickoff from TODO. **Exit:** every picked item built, and read at one
-sitting. **Scope guards:** layout and polish only; nothing that isn't in
-TODO at the kickoff; no new mechanism and no sim change.
+with the box oracle). **Decision points:** the list ✅ DECIDED (the
+kickoff, 2026-10-08: the three §116 riders, four older ones, and four
+hardening items for the public build); the ribbon's placement and the
+itch embed size, at 117.5c's stop. **Exit:** every picked item built, and
+read at one sitting. **Scope guards:** layout and polish only; nothing
+that isn't in TODO at the kickoff; no new mechanism and no sim change.
+Widened at the kickoff (the user, 2026-10-08), for the build strangers
+get: two small new mechanisms, the loading line and the failure plate,
+and the dev-code guard. Still no sim change.
+
+The cut, signed 2026-10-08 (WORKLOG "The §117.5 kickoff"). Predicted: no
+snapshot bump, no random stream, no bus event, and the fuzz smoke on no
+step; `drive-run --seed=7` logs `a59ee48f` after each.
+
+- [ ] **117.5a** — the text-size survey reaches a tooltip, a unit's full card, the cache modal with packets and the sector-cleared screen, each with its planted case; baselines on the tree as it is, at 720p and 1080p at every size and at three candidate embed sizes at 100 %. Read `none`.
+- [ ] **117.5b** — three measurements under the runner, each with its control: hitsplats under pause, a forced WebGL context loss and restore in a battle, the objective X's contrast on each theme in both palettes. Read `none`; a finding that needs a build goes to 117.5c's stop.
+- [ ] **117.5c** — the ribbon's placements on the occupied top-right corners (the battle's speed pane, the roster button, the port's Leave, the overlay's ✕), as a page of screenshots. Read `stop`: the user picks the placement and the embed size, and rules on what 117.5b raised.
+- [ ] **117.5d** — the settings chip in its ribbon, top right; DESIGN's Chips paragraph and the stylesheet's corner comments with it. Read `batch` (at the sitting): play a run to a battle, a port and a recruit, and the settings chip is in the top right at one place on every screen, the left column holding game state only. Wrong is a chip that moves between screens, a control it covers, or a control moved that the stop didn't pick.
+- [ ] **117.5e** — room on a small window: nothing off the page and no chip over text at the picked embed size at 100 % and on 720p at 125 %; nothing out of reach on 720p at 150 %; every box at 100 % on 720p and 1080p where it was, but the ones meant to move; DESIGN names the smallest window. Read `batch`: Text size 125 % on a 720p window, then an event, a port, a recruit and a battle; then 150 % and a promotion. Wrong is a chip over a heading, a button off the page, or anything moved on the usual window at 100 %.
+- [ ] **117.5f** — two wordings: the armed objective's prompt is "Pick a target…", and an ability's reach reads `reach`, not `rng`. Read `batch`: arm Focus in a battle and read the prompt; read an ability row on a recruit card. Wrong is a row that wraps or a card that changed size.
+- [ ] **117.5g** — the objective X reads on Volcanic, and on every theme in both palettes by 117.5b's number. Read `batch`: a battle on a Volcanic board with a tile objective set (the URL in the step's report). Wrong is an X that is lost in the floor, or one that now shouts on the other themes.
+- [ ] **117.5h** — the loading line: static in `index.html`, gone when the first screen mounts, with a `<noscript>` line. Read `batch`: Firefox's network throttle on, reload, and the line stands until the menu and never after. Wrong is a flash of it over the menu, or the line left up.
+- [ ] **117.5i** — a failure says something: a plate when the boot fails (no WebGL, no font) and once when anything throws later, with the build's ID, the error's text and Reload; 117.5b's context-loss answer lands here if it needs one. Read `batch`: on the dev server, the planted boot failure and the planted frame error (the dials in the step's report). Wrong is a black page, a plate over a game that still plays, or text off the page at 150 %.
+- [ ] **117.5j** — the dev-code guard: `src/dev` reached only through DEV-gated dynamic imports, pinned on every `npm test`, and a scan of the build for dev-only markers with a planted leak as its control. Read `none`.
+- [ ] **117.5k** — THE SITTING, in Firefox: the six `batch` reads. Read `stop`.
+
+## Phase 117.75 — the rest gate
+
+Charter (inserted 2026-10-08 at §117.5's kickoff, user-signed): a rest
+node stops on a page (its text, one option) and is a saved gate, so a
+closed tab comes back to it; built as the seam rest choices will use.
+**Why here:** after the sweep, whose event layout it stands on; before
+§118, so the board measures what ships. **Risk:** medium (a Run bump,
+every phase walker, the eve of the board). **Decision points:** a rest as
+an event with its own entry, or a phase and command of its own (WORKLOG
+"The §117.5 kickoff", the catch on `eventStep`). **Exit:** a run closed on
+the page continues there; the fuzz summary is byte-identical before and
+after; the user reads the page. **Scope guards:** one option, today's
+effect and numbers; no choices, no balance change.
+
+**Rides with it** (the user, 2026-10-08): the first three events' prose,
+rewritten by the user in the adopted style with their outcomes unchanged,
+and the rest's own text; the session's part is a words-only check with a
+planted outcome change as its control.
 
 ## Phase 118 — the public web channel, then the round close
 
@@ -270,3 +311,4 @@ paired same-seed runs. **Scope guards:** Safari untested; the Electron
 build stays internal.
 
 **Carried from §114** (WORKLOG §114e): what a download does in Electron's window, at the smoke.
+**Carried from §117.5's kickoff** (WORKLOG "The §117.5 kickoff"): the itch page embeds at the size 117.5c picks; two reads for the smoke on the draft, keyboard focus inside itch's frame and Esc in itch's fullscreen; the "Copy diagnostics" row, the user's product question, which would also bring back the window, pixel ratio and GPU of real players (TODO, the uncapped pixel ratio).

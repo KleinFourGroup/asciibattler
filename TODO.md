@@ -601,3 +601,39 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   the second read it. `store.update` fixes this for the progress section
   alone: a setting is drawn from the page's own model, so a re-read
   would part what is stored from what the page shows. Unseen so far.
+
+## §117.5 kickoff riders (2026-10-08)
+
+Filed at the kickoff, each with its home (WORKLOG "The §117.5 kickoff").
+The older riders the sweep took: the settings chip's home (117.5d), the
+720p room and the survey's reach ("§116 riders"; 117.5e, 117.5a), "Click
+a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
+(117.5g), hitsplats under pause (117.5b), the dev-code guard (117.5j).
+
+- [ ] **A failure says nothing.** `main.ts` has no catch around the boot
+  and `src` has no `error` or `unhandledrejection` listener outside the
+  diagnostics build, so a page with no WebGL, a font that fails or a throw
+  in a frame leaves a black or frozen frame. Home: 117.5i.
+- [ ] **No loading line.** `index.html` holds the canvas and the UI mount,
+  and the frame is black until about 1.2 MB of script has loaded and the
+  atlas is built. Home: 117.5h.
+- [ ] **No smallest supported window is named, and the itch embed's size
+  is undecided.** A 1280×720 embed is taller than a browser's page on a
+  1366×768 laptop (arithmetic, unmeasured). Home: 117.5e for the layout
+  and DESIGN's line, 117.5c's stop for the pick, §118 for the page's
+  setting.
+- [ ] **A lost WebGL context is untested.** No handler in `src`; three.js
+  restores its own state by memory of its source, unprobed here. Home:
+  117.5b measures, and 117.5i builds if it must.
+- [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
+  composers and the bloom render at full device pixels, and fullscreen on
+  a 4K laptop with integrated graphics is the bad case. Left for data, the
+  user's call at the kickoff: the user's GPU can't show it, and a cap
+  changes the glyphs' look. Players' reports (window, ratio, GPU) would
+  come by the "Copy diagnostics" row ("§116 riders").
+- [ ] **A rest node conveys nothing and is not a gate.** Home: §117.75.
+- [ ] **The first three events' prose predates the adopted style**
+  (`corrupted-shrine`, `whispering-terminal`,
+  `whispering-terminal-collects`: a cost in a label's brackets, the effect
+  on the first click with no page that tells it). The user rewrites them,
+  outcomes unchanged; home §117.75, with the session's words-only check.

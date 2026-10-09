@@ -8569,3 +8569,155 @@ opened, with no finding against what was built.
 The reading before the closing commit: **536,715** at 17:47, under the
 line; the close cost about 20k to there. §117.5's kickoff goes to a
 fresh session.
+
+## Phase 117.5 — the UI sweep
+
+### The §117.5 kickoff: the list, the audit and the cut (2026-10-08) — SIGNED
+
+Session 29c298f6, fresh, from about 19:55. Pre-flight: the tree clean at
+`bb049f0`; typecheck exit 0; `npm test` 245 files, 3569 tests, 50.6 s.
+Readings: **125,224** at 19:59, after HANDOFF, `process/planning.md`,
+ROADMAP and half of TODO; **172,298** at 20:03, at the first question to
+the user; **210,665** at 20:37, after the hardening checks; **250,610** at
+21:11, after the rest's sizing; **293,035** at 21:36, at the shape-lock.
+✔ = read by this session at file:line, or measured.
+
+**Which phase.** The user opened with "kick off phase 118". The Cursor and
+ROADMAP had §117.5 next, so the session read what both phases hold and put
+the order to the user before auditing either. The user: "I meant 117.5".
+
+**The list.** The user took every rider the session named ("all of those
+riders definitely should be tackled too"): the three in TODO "§116 riders"
+that the charter names (the settings chip's home; room at a larger text
+size on a 720p window, with character select's scroll at 150 %; what the
+survey did not reach) and four older ones the session picked as in scope
+("Click a target…", `RNG` against `rng`, the X on Volcanic, hitsplats
+under pause). Left out, with the session's reasons: the default text size
+waits for players (the user's call at 116k), a key's US label and the
+stalled-battle prompt are mechanisms, and the map legend on a phone is
+past this build.
+
+**What else is worth hardening before strangers play** (the user's
+question). Six candidates, each checked against the code first:
+1. *A failure says nothing.* ✔ `src/main.ts:56-83`: the boot awaits the
+   atlas and the lock and builds the Game with no catch. ✔ a search of
+   `src` for `unhandledrejection`, `window.onerror` and an `error`
+   listener finds only the diagnostics build's `visibilitychange`
+   (`src/dev/diag/index.ts:276`). That three.js throws from the renderer's
+   constructor when no context can be made is from memory of its source,
+   not run here.
+2. *The itch embed's size, and no smallest window.* ✔ DESIGN names 720p
+   only for the card rows at the largest text size (`:654`). A 1280×720
+   embed against a 1366×768 laptop is arithmetic, unmeasured.
+3. *No loading line.* ✔ `index.html` holds the canvas, `#ui` and
+   `#scanlines`. ✔ `dist/` as built at 17:45: 32 files, 2.6 MB, the two
+   scripts 649,217 and 525,294 bytes.
+4. *The dev-code guard* (TODO, the 7.5 close). ✔ `src/main.ts:26-28`
+   still imports `TraceRecorder`, `traceStore` and `devKeys` statically.
+5. *A lost WebGL context.* ✔ no `webglcontextlost` in `src`. Unprobed.
+6. *The uncapped pixel ratio.* ✔ `src/render/Renderer.ts:168`.
+
+The user: "On board with your recommendations": 1 to 4 are built, 5 is
+measured first, 6 is left for data (TODO). 1 and 3 are new mechanisms, so
+ROADMAP's guard is widened by a line.
+- *Checked and found fine:* the sim clock caps its catch-up after a stall
+  (✔ `src/core/Clock.ts:34-37`); Quit to menu exists (✔ `Game.ts:594`);
+  no `wheel` listener in `src`; Esc is the modal's close and the tooltip's
+  and nothing else (✔ `modal.ts:131`, `tooltip.ts:460`), so itch's
+  fullscreen taking Esc is a read for §118's smoke, with keyboard focus
+  inside the frame.
+- *Left as signed:* New run over a saved run asks no confirmation (§116's
+  kickoff, call 3).
+
+**The user's two thoughts.**
+- *The first three events* (`corrupted-shrine`, `whispering-terminal`,
+  `whispering-terminal-collects`) were the session's placeholders and
+  predate the style the user's own events use, where the page tells what
+  happened and the effect rides the closing line (✔ `config/events.json`:
+  in `silent-mage`, "Ouch" carries `damagePool: 2` and "Well, that was
+  peaceful" `healPool: 1`). The user rewrites them, outcomes unchanged.
+  ✔ Nothing in `src`, `tests`, `tools` or `shell` reads a choice's id but
+  the schema's duplicate check (`src/config/events.ts:258-267`) and the
+  editor's formatter (`tools/event-editor/format.ts:235`, which appears to
+  keep an id that is already there). Not checked: whether the prose
+  loader keys on it.
+- *A rest conveys nothing.* ✔ `Run.ts:1518-1521`, `:3913-3940`: a rest
+  resolves inside `enterNode`. The pool heals `restHealFraction` (0.25) of
+  its max, every unit banks `restXp` (200), and the phase goes to
+  `promotion` or back to `map`, with no screen of its own. The user's
+  proposal: an event-like page, "You and your men find a quiet place to
+  rest and train," with one option, "Best we take a break".
+
+**The rest: two shapes, and the split.** The session sized two.
+- *A page in front of the command.* The map's click (✔
+  `MapScreen.ts:375`) opens a page and its option sends the same
+  `enterNode`, so the Run, the snapshot, the harness and the board are
+  untouched: one step in the sweep. It is not a saved gate.
+- *A gate in the Run.* A saved phase or an event, which every walker of
+  the Run's phases has to learn (✔ the promotion phase is handled in
+  `tests/fuzz/harness.ts`, `tests/fuzz/rollout/walker.ts`,
+  `tests/chaos/chaos.ts`, `src/dev/probe/drive.ts` and `Game.ts`), with a
+  Run bump: two or three steps, about 117a and 117b together.
+
+The session recommended the page, since a rest has no choice in it. The
+user: "I know from my own experience playing Slay the Spire that I expect
+rest nodes to be a proper save gate. I also have toyed with the idea of
+adding choices to rests in the next content round anyway", with an
+inclination to split "in our tradition of building seams first". The
+session agreed: the save gate is a requirement the page can't meet,
+whatever comes of the choices. **§117.75, the rest gate, is inserted and
+signed** (ROADMAP), and the page in front of the command is rejected.
+- *Its decision point, and a catch.* The session's lean is a rest that
+  opens an event (the user's text, in `events.json`, in the editor):
+  rest choices will want what events have, and the event phase already
+  has the gate, its resume, the screen, the chaos driver's coverage and
+  the journal. ✔ But a choice takes its stream from the counter every
+  event entry takes its own from: `streamRng('event', this.eventStep++)`
+  at `Run.ts:1586` and again at `:1678`. A rest sent through the stock
+  path advances it, every later event in the run draws differently, and
+  §118's "Escalation off reproduces the signed sheet exactly" fails by
+  construction. So a rest needs an entry and a resolution that leave
+  `eventStep` alone, an effect for the XP that can lead into promotions
+  (✔ `handleDismissPromotion` routes on the node's kind, `:3958`), and to
+  stay out of the pool's bookkeeping (the `visited:` flag, `:1600`). Not
+  audited: how the bots and the arbitration treat a one-option event;
+  whether the catalog's boot checks take an event that is in no sector's
+  pool. The fallback is a phase and a command of its own, the port's
+  shape.
+- *The events rewrite rides with §117.75* (the session's suggestion,
+  signed): the same file, and one smoke.
+
+**The audit, for the sweep's own steps.**
+- *The top-right corner is as TODO has it.* ✔ `ui.css`: `.hud-speed-pane`
+  top 20 right 20 (`:2744`); `.port-leave` fixed, top 16 right 16
+  (`:1355`); `.card-list-button--roster` (`:3848`); the overlay's ✕ top 20
+  right 20 at z-index 42 (`:2540`). The column is fixed at top 20 left 20
+  and `--chip-w` wide (12.5rem; `:18`, `:2287`), and the battle's hop chip
+  is placed at the column's width plus 14px (`:2266`), which is why it
+  meets the banner when the text grows.
+- *The small-window baseline is 116k's table* ("After the sweep,
+  measured"). Its only figures for a smaller window at 100 % are from the
+  sheet before that sweep: 1024×576 put nothing off the page, and 853×480
+  put the promotion screen 45px off it. So the embed's size is picked on
+  117.5a's numbers, at 117.5c's stop, and not at this shape-lock.
+- *The hitsplats-under-pause report came from the pane* (TODO "§99
+  riders"), and 116k found that a hidden pane holds every animation at
+  its first frame. It may be the pane's artifact; 117.5b reads it under
+  the runner, where frames are real.
+- *Not audited here, each its step's step zero:* the ribbon's CSS on the
+  five screens, the strings' sites, the X's colour against each floor
+  palette, where the boot can fail, and what marks dev code in a build.
+
+**The cut** is in ROADMAP, eleven steps. Its shape: every measurement
+that can come back with a decision runs before the first stop (the
+survey's baselines, the three probes, the ribbon's screenshots), so the
+user makes the picks once, at 117.5c; then one build stretch to the
+sitting. **Signed with it** ("Fully signing the charter, the cut, and all
+of your recommendations"): the reads; "Pick a target…"; an ability's
+reach reads `reach` while the shared `RNG` label stays; the guard widened
+for the loading line and the failure plate; §117.75's charter; the
+rewrite with §117.75.
+
+**What the stretch holds.** 117.5a to 117.5c's stop, estimated at 150k to
+180k on 293k: the stop near 470k, under the line. The build stretch,
+117.5d to 117.5j, goes to a fresh session.

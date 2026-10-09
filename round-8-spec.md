@@ -367,5 +367,7 @@ own kickoff against the code as it is then, with its reads.
 - **§117** Escalation and the unlock mechanism (D8)
 - **§117.5** the UI sweep (inserted 2026-10-04 at §116's first sitting,
   user-signed; no decision of this file is behind it)
+- **§117.75** the rest gate (inserted 2026-10-08 at §117.5's kickoff,
+  user-signed; no decision of this file is behind it)
 - **§118** the public web channel, then the round close (the board
   re-run, the browser smoke)

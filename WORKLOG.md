@@ -8802,3 +8802,70 @@ every number here is Chromium's.
 
 **Predictions against what happened.** No bump and no smoke, as cut: the
 step touches `shell/` and the docs.
+
+The commit is `0601729`; its hook counted 3569 tests in 245 files. The
+reading on it: **426,921** at 21:58, so the step cost about 98k, against
+an estimate of 150k to 180k for the whole stretch.
+
+### 117.5b — three measurements (2026-10-08)
+
+Each ran under the runner, offscreen, on `--seed=7`, from a probe in the
+session's scratch directory (none is kept in the repo: each answered its
+question once).
+
+**1. Hitsplats do not hold under a pause.** The rider (TODO "§99 riders")
+came from a pane read in which nine anchors outlived their 0.6 s while
+the game was paused. With real frames: a MutationObserver timed every
+`.hitsplat-anchor` from its arrival to its removal.
+- *The control, the fight running:* 12 hitsplats lived 612 to 635 ms.
+- *Paused* (`playback.pause()`, `isPaused` true, the world's tick the
+  same 300 ms apart): the 3 up at the pause lived 632 to 633 ms in all
+  and were gone; none was up 2.5 s later; none was new.
+- *Under reduced motion:* the control 628 to 648 ms; the 3 up at the
+  pause 629 to 649 ms; none up 2.5 s later.
+So the hold was the hidden pane's, which stops CSS animations, and
+nothing is built. What a pause does do: a number finishes its rise and
+goes while the board stands still. Chromium; Firefox unread.
+
+**2. A lost WebGL context comes back by itself.** In a battle, paused,
+with the scene's clocks and shader time stopped:
+- *The control, no loss:* four reads of the whole canvas over 2 s share
+  one hash, so the view is still and two reads can be compared.
+- *The loss:* `forceContextLoss()`; `isContextLost()` true; the canvas
+  reads one colour, black; `webglcontextlost` arrives with its default
+  prevented (three.js's own listener). `forceContextRestore()`: the
+  context is back in 134 ms, `webglcontextrestored` arrives, and both
+  reads after it have the hash of the reads before. No error, nothing on
+  the console.
+So three.js's restore is enough for a loss that is restored, and nothing
+is built for that. Not shown: a loss the browser does not restore, or
+restores late, where the canvas stays black over a page that still
+works; Firefox. The session's proposal for the stop: the failure plate
+(117.5i) also speaks when a context has stayed lost for a few seconds.
+
+**3. The X is closest to its floor on desert, not on Volcanic.** The
+distance in OKLab from the X's colour to the nearest point of each
+theme's floor (its two ends parsed from `TerrainRenderer.ts`'s text, ten
+steps between them), to normal vision and under five simulations
+(`tests/colourVision.ts`), in both palettes. Its known answers: a colour
+0 from itself, black over 0.9 from white.
+
+| theme | floor, low to high | normal | the lowest of the five simulations |
+|---|---|---|---|
+| desert | `#6b5836` to `#d8c188` | 0.095 | 0.071 (tritan) |
+| tundra | `#2c3a47` to `#c4d4e0` | 0.194 | 0.148 (tritan) |
+| barren | `#3a342f` to stone | 0.302 | 0.258 (0.329 and 0.287 in the colourblind palette) |
+| swamp | `#28301d` to `#5e6b39` | 0.334 | 0.274 |
+| grassland | dark green to `#664600` | 0.402 | 0.371 |
+| volcanic | `#3a0a04` to `#664600` | 0.402 | 0.371 |
+
+The X is `COLORS.TERMINAL_AMBER`, `#FFB000` in both palettes. Volcanic
+and grassland share their high end, so their nearest point is the same;
+what differs is that Volcanic's whole floor is in the X's own hue family,
+which a nearest-point distance doesn't see, and a theme's own tiles (a
+lava tile) aren't in these two ends. Desert is under the 0.130 the
+palette's gate holds its identity hues to, in every view. So a fix aimed
+at Volcanic's hue would leave the worst floor as it is, and the fix that
+covers all six is one that doesn't depend on the floor: a dark edge or
+plate behind the X. A palette-level number: the canvas adds shading and
+bloom, and 117.5g's step zero reads the rendered pixels on each theme.

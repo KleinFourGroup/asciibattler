@@ -343,7 +343,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §99 riders (the reduced-motion seam — opened at 99b, 2026-09-16)
 
-- [ ] **Hitsplats hold under the sim pause.** At the 99b pane read, nine `.hitsplat-anchor`s outlived their 0.6 s lifetime while Space (`togglePause`) was held and drained the moment play resumed; nothing in `src` pauses DOM animations (`getAnimations` / `playState`: no hits), and 99b changed only the keyframe body, so this is pause's behaviour, not §99's. Decide which it is: a pause that freezes the overlay (arguably right — the scene stops) or a hidden `animationend` (a leak window — the anchors and the per-unit stack counts only clear on that event, `UnitOverlayLayer.spawnHitsplat`). One control probe with the gate OFF under pause answers it.
+- ✅ **Hitsplats hold under the sim pause** (the 99b pane read): they don't. With real frames a hitsplat lives 0.63 s paused or not, under either motion setting; the hold was the hidden pane's, which stops CSS animations (117.5b; WORKLOG §117.5b).
 
 ## §100 riders (input accessibility — opened at 100c1, 2026-09-17)
 
@@ -622,9 +622,11 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   1366×768 laptop (arithmetic, unmeasured). Home: 117.5e for the layout
   and DESIGN's line, 117.5c's stop for the pick, §118 for the page's
   setting.
-- [ ] **A lost WebGL context is untested.** No handler in `src`; three.js
-  restores its own state by memory of its source, unprobed here. Home:
-  117.5b measures, and 117.5i builds if it must.
+- [ ] **A lost WebGL context that is not restored says nothing.** A loss
+  that is restored comes back by itself, the canvas to the same hash
+  (117.5b, a forced loss in Chromium; three.js's own listeners). A loss
+  the browser restores late or never leaves a black canvas over a working
+  page. Home: 117.5i, if the user takes it at 117.5c's stop.
 - [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
   composers and the bloom render at full device pixels, and fullscreen on
   a 4K laptop with integrated graphics is the bad case. Left for data, the

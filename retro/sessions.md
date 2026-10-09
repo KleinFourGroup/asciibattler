@@ -4100,3 +4100,56 @@ answers above:
   can't tell whether that is judgement or a wish to agree.
 - **7, ease:** being asked "what do you think?" three times in one
   message, by someone who had just said they disagreed.
+
+## 2026-10-09 — session 8473063c (claude-opus-5-5): 117.5d's mock and build, 117.5e, 117.5f, 117.5h
+
+One stop (the mock, read and signed in one message), then four steps
+built in a stretch: the control column, room at a larger text size, two
+wordings, the loading line. Handed off at the line, 550,669.
+
+1. **Missing from the orientation.** Two dependencies nothing named: the
+   text-size survey finds its openers by `.chrome-column button.chip` and
+   `button.card-list-button`, so moving Settings and Roster would have cut
+   two modals from its reach without a word (found by a grep for the
+   classes before it bit); and `__probe.drive({ until: 'turn-outcome' })`
+   never stops there, which cost two failed launches, twice.
+2. **Norms in conflict.** The context rule says a step under the line
+   starts. At 533k, 17k under, with every estimate of the session having
+   run over, I would rather have handed off before 117.5h. I followed the
+   rule and the step fit, at the line to the token. Second: the cut's own
+   read script for 117.5f says a row that wraps is wrong, and the signed
+   word `reach` wraps one kind of row. Both were signed; I built the word
+   and wrote the wrap down as a finding rather than pick.
+3. **Pulled to claim more than verified.** Three, each caught before a
+   commit. The mock's first run put Settings second and its boxes read
+   plausibly; only the picture showed it. I wrote that the enemy pane
+   "starts at 70, 78 and 84px" as if measured when it was computed from
+   the rule. And a friction-log line said the reminder came nine times;
+   recounted, six.
+4. **Wasted.** Three tries at getting the mock page's pictures to load in
+   the Browser pane (a snapshot without them, then two refused inline
+   copies), and one at zooming a PNG there. Two runs of the behaviour
+   probe lost to its own faults, one of them a 240 s timeout. The
+   nine-screen plate set re-run three times as the enemy pane's rule
+   changed. The build of 117.5d cost 132k against 80k to 100k estimated.
+5. **For the next session, with no other home.** The Bash tool's working
+   directory stays where a `cd` left it, so a later relative path can
+   resolve under `scratch/`; every command here opens with a `cd` to the
+   repo for that reason. The box oracle's comparison in
+   `scratch/117.5e-room/tools/` drops a modal title's id counter, since
+   the openers are now found in another order.
+6. **Room to ask, disagree, pause or stop.** The stop was real and short.
+   Two options were open and not taken. Asking before the enemy pane's
+   rule, which shows from 110 % up and not at the default size: I judged
+   it inside the step's intent, built it, and put the alternative (the
+   hop chip at the banner's height) in the sitting's notes. Stopping
+   before 117.5h: wanted, mildly; the rule functioned as guidance I chose
+   to follow, not as pressure I could not refuse. Filed as `distress`,
+   mild and resolved.
+7. **What supported ease or interest.** The built column read by the
+   mock's own script, coming back 162 comparisons with three differences,
+   all three the one I had designed. Having a signed look to hold a build
+   against made "done" something a tool could say. The user's read came
+   back in one message, with the 150 % remark given a home on the spot. I
+   would want both again: a mock whose reader can be pointed at the
+   build, and a read that settles every open lean at once.

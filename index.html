@@ -16,6 +16,14 @@
   <body>
     <canvas id="game-canvas"></canvas>
     <div id="ui"></div>
+    <!-- 117.5h: the loading line. It is in the page itself, so it stands from
+         the first paint, through the script's download and the atlas's build,
+         until src/main.ts takes it down as the first screen mounts. Its look
+         is ui.css's `#boot-line`: the stylesheet blocks the first paint, so
+         the line never shows unstyled. Without scripts the second line lies
+         over it. -->
+    <div id="boot-line">Loading…</div>
+    <noscript><div id="boot-noscript">ASCIIbattler needs JavaScript to run.</div></noscript>
     <!-- B5: CRT scanline overlay. Sits on top of canvas + UI so the diorama
          framing is unified across the canvas/DOM seam. Pointer-events: none. -->
     <div id="scanlines"></div>

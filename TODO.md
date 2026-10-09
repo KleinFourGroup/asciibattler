@@ -600,9 +600,10 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   and `src` has no `error` or `unhandledrejection` listener outside the
   diagnostics build, so a page with no WebGL, a font that fails or a throw
   in a frame leaves a black or frozen frame. Home: 117.5i.
-- [ ] **No loading line.** `index.html` holds the canvas and the UI mount,
-  and the frame is black until about 1.2 MB of script has loaded and the
-  atlas is built. Home: 117.5h.
+- ✅ **No loading line** (117.5h, 2026-10-09): `Loading…` is in
+  `index.html` and comes down as the first screen mounts, with a
+  `<noscript>` line (DESIGN "The loading line"; WORKLOG §117.5h). A boot
+  that fails leaves it up until 117.5i's plate takes it down.
 - [ ] **The itch embed is 1280×720, the smallest supported window**
   (decided at 117.5c's read, 2026-10-09, with itch's fullscreen button for
   a 768-row laptop; DESIGN names the window since 117.5e). Home: §118, for

@@ -9422,3 +9422,64 @@ is 12px), each a `-post`.
 **Predictions against what happened.** No bump, no stream, no bus event,
 no smoke, as cut. The reading before this entry: **526,661** at 11:39,
 so the step cost about 25k to there.
+
+### 117.5h — the loading line (2026-10-09, session 8473063c) — ◐ built, unread (`batch`, at the sitting)
+
+117.5f's commit is `7f4ff61`, reading **533,014** at 11:41, under the
+line by 17k, so the step started; the session ends with it.
+
+**Step zero: two things the kickoff's note did not have.**
+- *The stylesheet blocks the first paint.* `index.html` links `ui.css` in
+  its head, so nothing is painted before the sheet is in. The line can
+  therefore take its look from the sheet and its tokens; it needs no
+  inline style and no raw hex.
+- *The first screen is mounted by Game's constructor,* not by
+  `game.start()`, which only starts the renderer's loop. So the line
+  comes down right after `new Game(…)`, in the same task: no frame shows
+  the line and the screen together.
+
+**As built.** `index.html` holds `<div id="boot-line">Loading…</div>`
+after the UI mount, and a `<noscript>` with a second line,
+"ASCIIbattler needs JavaScript to run." `ui.css` centres both on the
+page in the amber of the chrome at `--text-14`, under the scanlines. The
+line has no background, so one that was ever left up would be a word
+over the game and not a black page; the no-script line is opaque, and
+lies over the first where no script runs. `src/main.ts` removes the line
+once the Game is built. `tests/boot-line.test.ts` pins both ends on
+every `npm test`: the page holds the line, with text, before the module
+script, and a `<noscript>` that says something; the boot removes the
+line after `new Game(`. Each reader is first run on planted cases it
+must reject (a missing line, an empty one, a late one, a silent
+`<noscript>`; no removal, a removal ahead of the Game).
+
+**Landing note, for the failure plate (117.5i).** A boot that throws
+before the Game is built leaves the line standing: a page that says
+Loading for ever, which is better than black and still wrong. Whatever
+reports a failed boot takes `#boot-line` down as it speaks. The same
+note is at the seam in `src/main.ts`.
+
+**Measured** (`scratch/117.5f-words/tools/boot-line.js`, the runner,
+offscreen, a menu boot and a `--seed=7` boot): the page as served holds
+the line and the `<noscript>`; the live page has no `#boot-line`, shows
+no no-script line, and has a screen up. A copy of the line put back for
+the reading is fixed over the whole page, `rgb(255, 176, 0)` on no
+background, 14px, takes no pointer events, and its text is centred (84
+by 18px at 598, 351 of 1280 by 720). `drive-run --seed=7` logs
+`a59ee48f`. Typecheck clean.
+
+**Not verified:** the line as a player sees it, which needs a slow load
+(the runner's page is local and instant); the no-script line with
+scripts off; the production build's page (the runner's build goes
+through the same Vite page pipeline and its served page holds the
+line); Firefox.
+
+**For the sitting** (the cut's script: Firefox's network throttle on,
+reload, and the line stands until the menu and never after; wrong is a
+flash of it over the menu, or the line left up). Added: with scripts
+off, the page reads its one sentence.
+
+**Predictions against what happened.** No bump, no stream, no bus event,
+no smoke, as cut; `npm test` gains one file and five tests. The reading
+before this entry: **550,669** at 11:45, at the line, so the step cost
+about 18k to there and the session hands off: 117.5i starts in a fresh
+session.

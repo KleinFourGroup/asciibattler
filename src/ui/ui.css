@@ -141,6 +141,31 @@ body {
   pointer-events: none;
 }
 
+/* 117.5h — the loading line and its no-script twin: static text in
+   index.html, centred on the black page under the scanlines, from the first
+   paint until main.ts removes the line as the first screen mounts. The line
+   has no background of its own, so one that was ever left up would be a
+   word over the game and not a black page. The twin is opaque: it exists
+   only where no script runs, and covers the line it sits on. */
+#boot-line,
+#boot-noscript {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--color-terminal-amber);
+  font-family: var(--font-mono);
+  font-size: var(--text-14);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+#boot-noscript {
+  background: var(--color-black);
+}
+
 #ui > * {
   pointer-events: auto;
 }

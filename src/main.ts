@@ -80,6 +80,12 @@ if (import.meta.env.VITE_DIAG === '1') {
 }
 
 const game = new Game(canvas, fontAtlas, uiMount, runLock);
+// Game's constructor has mounted the first screen, so the loading line that
+// index.html stood up comes down here, in the same task: no frame shows the
+// two together. A boot that throws above this line leaves the line standing,
+// a page that says Loading for ever. Nothing reports a failed boot yet;
+// whatever comes to do so must take the line down as it speaks.
+document.getElementById('boot-line')?.remove();
 game.start();
 
 // Dev-only debug handle. Exposes the live Game so the browser console

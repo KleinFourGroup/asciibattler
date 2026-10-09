@@ -739,6 +739,13 @@ with `overflow-y: auto`): the pre-turn screen, character select and the
 promotion screen do. A plainly centred column puts both its ends off the
 page, out of reach.
 
+**The loading line (§117.5).** The page says something from its first
+paint: `Loading…`, static text in `index.html`, centred in the chrome's
+amber, stands through the script's download and the atlas's build and
+comes down in the task that mounts the first screen, so no frame shows
+both. It has no background of its own. Where no script runs, a second
+line says that the game needs JavaScript.
+
 **A cast that lands at range FLIES (102).** An effect that appears on a
 cell away from its caster says whose it is by travelling there: a
 projectile on the ability's `release` boundary, its flight the `travel`

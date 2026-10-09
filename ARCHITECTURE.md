@@ -581,7 +581,7 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
 
 archive/                     # superseded roadmaps + feedback + phase worklogs
 
-index.html                   # Mounts <canvas> + <div id="ui">
+index.html                   # Mounts <canvas> + <div id="ui">; §117.5: the loading line (`#boot-line`, static text that `src/main.ts` removes once Game has mounted the first screen) and a `<noscript>` line, both pinned by `tests/boot-line.test.ts`
 vite.config.ts               # 113a: `define` bakes `__BUILD_ID__` (scripts/build-id.mjs; live under `serve`); the dev-only plugins (the editors' save endpoint, the probe kit's stand-in, the build ID stamped into each page served); the watcher skips the output folders
 tsconfig.json
 eslint.config.js             # Flat config; bans Math.random() in src/sim, src/run and src/bot; 113d: bans importing src/store from those, src/journal and tests/fuzz (the editor's hint; the guard is tests/store-guard.test.ts, since the hook doesn't run lint)

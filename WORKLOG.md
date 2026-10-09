@@ -10077,3 +10077,67 @@ option.
 **Predictions against what happened.** Run v48 → v49: yes. No new
 stream: none. The smoke fires: on this commit's hook. The drive's hash
 moves: no, for seed 7 (above).
+
+### 117.75b — the page where a player meets it (2026-10-09, session e72429d8) — ◐ built, unread (`batch`, at the sitting)
+
+117.75a's commit is `28b9d2b`; its hook ran 3622 main tests and the
+smoke (586 in 63 files). Readings: **448,327** at 15:07 on that commit,
+so 117.75a cost about 184k against an estimate of 150k, the rollout
+walker's reach being most of the difference; **469,627** at 15:15 with
+this step's probes read, so the step about 21k to its docs.
+
+**Nothing in `src/` changed.** The page was built whole in 117.75a, and
+this step found nothing to fix in it. What it adds is the instrument and
+its readings.
+
+**The instrument:** `shell/electron/probes/rest-gate.js`, under the
+runner in an offscreen window at 1280×720. `enter` wounds the pool,
+clicks the map's one frontier node (the dial's rest) and reads the page;
+`continue` is a later launch on the same `--profile`, at the menu, which
+clicks Continue, reads the page again, then clicks the option. The
+numbers the page must show are passed in by the caller from the raw
+config (`config/health.json`: 0.25 × 40 = 10; `config/leveling.json`:
+200), and the words are literals in the script, so neither comes from
+the code that draws them.
+
+**Read, five launches on one profile.**
+1. `enter` at a pool of 20: the node clicked reads `Z`; `RestScene`,
+   phase `rest`; "Z Rest", the user's text, "▸ Best we take a break",
+   and under it "Morale +10 · every unit +200 XP"; the heading and the
+   option's border `rgb(51, 255, 0)`, the rest node's green; the screen
+   holds focus and the option is the first tab stop; the body at 320 to
+   960 across and 265 to 435 down, nothing scrolling, its right edge 100
+   px short of the control column (1060).
+2. A new launch, Continue, with the script told to expect a pool of 21:
+   it fails, "the pool is 20, not 21". The known-bad case the reader has
+   to reject.
+3. Again expecting 20: the menu, Continue, the rest page, the Morale
+   chip "20 / 40", the same effect line. Passes, and the screenshot shows
+   the chip at half.
+4. Again, and the option clicked: `MapScene`, phase `map`, the pool 30,
+   the team's XP changed, the rest page gone.
+5. Once more: Continue lands on the map with the chip at "30 / 40", so
+   the save moved on with the option and a reload can't rest twice.
+
+**The other cases,** each a fresh launch: a full pool reads "Morale is
+full · every unit +200 XP"; a pool of 33.7 reads "Morale +6.3"; the
+script told to expect a heal of 11 fails by naming the two lines.
+
+**The text sizes.** The survey as it stands, on `--seed=1
+--dials=firstNode=rest` at 1280×720: it scanned the rest page twice
+(`rest#1`, the dial's, and `rest#2`, one the run met later) and found
+nothing at 1 and nothing new at 1.1, 1.25 or 1.5 in any of its five
+kinds, as on the two event pages beside it. The survey classes its own
+planted cases before it scans.
+
+**Found on the way.** Setting `run.playerHealth` directly repaints no
+chip, since only `setPlayerHealth` emits; the first screenshot showed
+"40 / 40" beside "Morale +10". The script now calls
+`poolOverlay.refresh()` after its write, and `process/browser-pane.md`
+says so. In play the pool only moves through the emitting path.
+
+**Not verified, the user's at the sitting:** Tab and Enter on the
+option (a page script's key events move no focus and fire no default
+action); the look, the effect line's size and grey among it; where the
+heal shows, which is the Morale chip on the screen after the click and
+not on the page; Firefox.

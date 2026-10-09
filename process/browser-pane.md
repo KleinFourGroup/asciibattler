@@ -325,7 +325,12 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   battle at node 1. `roster=` fields any archetype. `encounter=` forces
   only nodes of a matching kind, so `firstNode=elite` is the real elite
   fixture. `firstNode=rest` makes node 0 a rest, so the rest page is one
-  click in. `bp=board-<id>` opens a board-explorer fixture straight into its
+  click in; a new run's pool is full, so its option reads "Morale is
+  full" until the pool is wounded (`__game.run.playerHealth = 20`, then
+  `__game.poolOverlay.refresh()`, since a direct write repaints no chip).
+  Under the runner, `shell/electron/probes/rest-gate.js` reads the page
+  and, as two launches on one `--profile`, a run closed on it and
+  continued. `bp=board-<id>` opens a board-explorer fixture straight into its
   battle (`src/dev/boardPanel/fixtures.ts`). An unseeded reload starts a
   different run, so never compare before and after across one.
 - A battle by hand: `__probe.drive({ until: 'battle' })`, or

@@ -165,7 +165,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 - [x] **`power` distinct visual treatment on the cards.** Done at the Phase P close (2026-06-17): `POW` sits in its own accented meta row on the shared `UnitCard`. Detail in git.
 - [x] **Archetype display-label layer.** ✅ Done §61g (2026-07-22): required `name` on `UnitDef` (config-owned, the `AbilityDef.name` precedent) + `nameForArchetype` (falls back to the raw id); UnitCard headers + CacheOverlay read it. Detail in git + WORKLOG §61g.
 - [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
-- [ ] **Objective `X` marker is low-contrast on the Volcanic theme.** The J3 objective marker is `TERMINAL_AMBER` ([OBJECTIVE_MARKER_COLOR in src/render/BattleRenderer.ts](src/render/BattleRenderer.ts)), which reads clearly on the default green-amber and rock themes but blends into the orange Volcanic terrain (`FLOOR_PALETTE.volcanic` climbs into `DARK_TERMINAL_AMBER`). Options: a brighter/whiter marker color, a dark outline/halo (a second slightly-larger marker sprite behind it, or a glyph-outline shader tweak), or a theme-aware marker color. Cosmetic; surfaced during J3 playtest. **NB atlas capacity** — this note said "32/32 FULL"; §29 grew the grid to 8×6 = 48 and the count is **47/48** as of §79f, so exactly ONE cell is free: an outline needing a new glyph still forces a grid resize, which is a ~5-line bump of `COLS`/`ROWS` ([FontAtlas.ts](src/render/FontAtlas.ts)) + `ATLAS_CELL_BUDGET` ([glyphs.ts](src/render/glyphs.ts)), triple-guarded by the boot throw, the budget test and the editor Save block.
+- [x] **Objective `X` marker is low-contrast on the Volcanic theme.** ✅ RETIRED 2026-10-09 at 117.5c's read: measured, Volcanic reads as grassland does and desert is the X's nearest floor, where the user's eye found it fine; the requirement rides the terrain-mark rider ("§109 riders"; WORKLOG §117.5b). *Original note:* The J3 objective marker is `TERMINAL_AMBER` ([OBJECTIVE_MARKER_COLOR in src/render/BattleRenderer.ts](src/render/BattleRenderer.ts)), which reads clearly on the default green-amber and rock themes but blends into the orange Volcanic terrain (`FLOOR_PALETTE.volcanic` climbs into `DARK_TERMINAL_AMBER`). Options: a brighter/whiter marker color, a dark outline/halo (a second slightly-larger marker sprite behind it, or a glyph-outline shader tweak), or a theme-aware marker color. Cosmetic; surfaced during J3 playtest. **NB atlas capacity** — this note said "32/32 FULL"; §29 grew the grid to 8×6 = 48 and the count is **47/48** as of §79f, so exactly ONE cell is free: an outline needing a new glyph still forces a grid resize, which is a ~5-line bump of `COLS`/`ROWS` ([FontAtlas.ts](src/render/FontAtlas.ts)) + `ATLAS_CELL_BUDGET` ([glyphs.ts](src/render/glyphs.ts)), triple-guarded by the boot throw, the budget test and the editor Save block.
 - [ ] **Status-tick sparkle placement / height (27e experiment).** The 27e periodic-status pulse (`spawnSparkle` in [BattleRenderer.ts](src/render/BattleRenderer.ts)) anchors at the sprite's vertical CENTER (`SPARKLE_Y_OFFSET = 0.0`), motes rising `SPARKLE_RISE = 0.35` — so the burn/poison/heal puff hugs the unit's torso, peaking around the shoulders (the `+N` number floats higher at `HITSPLAT_Y_OFFSET = 0.5`, the top edge). User wants to leave it there for now but **experiment with the height/spread later** (raise toward the head ~+0.5, or float a halo over the unit ~+0.7). Pure render consts — eyeball-tune freely. **Related:** the **apply-flash was dropped** in the 27d/27e playtest follow-up (`status:applied` fired at move-START — `MoveAction` snaps the logical position onto the tile while the sprite is still lerping in — so the puff popped mid-lerp, "burning before arrival"). If a settle-on-arrival apply cue is ever wanted, the clean hook is to delay the `status:applied`-driven sparkle by the unit's remaining move lerp (the `applied` fx slot is still in the StatusDef schema + `driveStatusFx`). Surfaced at the 27e playtest (2026-06-24).
 - [x] **Rename the `draw-two` packet id (it's Surge, and it draws THREE).** ✅ Done §74d (2026-08-06), inside the v41 bump window as planned: `packets.json` + the two boot-asserted refs (`rewards.json`, `prices.json`) + the test/doc sites; outputs untouched. Detail in git.
 - [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by [DashAction](src/sim/actions/DashAction.ts), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
@@ -419,7 +419,12 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   quad bottom, and dropping the term floats it 0.43 world units). Drawn by
   the terrain as a mark shape (the §108 table, a new shape id) it lies on
   its tile with no ink read at all, and R10 is deleted. A new look, so a
-  read; the enemy mark rides above a glyph and stays a sprite.
+  read; the enemy mark rides above a glyph and stays a sprite. Its
+  requirement, measured at 117.5b: read on all six floors. In OKLab the
+  amber X is 0.095 from desert's sand, 0.194 from tundra's ice and 0.30 or
+  more from the other four. The user's eye found it fine on desert
+  (2026-10-09), so nothing is built before the mark (WORKLOG §117.5b and
+  "117.5c — the read").
 
 ## Round 7.5 close riders (the sweep, 2026-09-26)
 
@@ -617,16 +622,28 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 - [ ] **No loading line.** `index.html` holds the canvas and the UI mount,
   and the frame is black until about 1.2 MB of script has loaded and the
   atlas is built. Home: 117.5h.
-- [ ] **No smallest supported window is named, and the itch embed's size
-  is undecided.** A 1280×720 embed is taller than a browser's page on a
-  1366×768 laptop (arithmetic, unmeasured). Home: 117.5e for the layout
-  and DESIGN's line, 117.5c's stop for the pick, §118 for the page's
-  setting.
+- [ ] **The smallest supported window is 1280×720, and DESIGN doesn't say
+  so yet** (decided at 117.5c's read, 2026-10-09; the itch embed is that
+  size, with itch's fullscreen button for a 768-row laptop). Home: 117.5e
+  for DESIGN's line, §118 for the page's setting.
+- [ ] **A smaller window than 1280×720** (1024×576 first): a future goal,
+  the user's call at 117.5c's read, and "closer to a full round" than a
+  step. What stands in the way is the item below and the left column over
+  an event's text. 117.5a has the text-over-text numbers at 1024×576 and
+  960×540; they do not see a card over the board.
+- [ ] **The battle HUD's unit cards cover the board** (the user,
+  2026-10-09). On a 2.5k screen they cut the top and bottom tiles; at
+  1280×720 more; at 1024×576 the enemy's cards cover half the board, and
+  with a full roster a tile may not be clickable. The same ratio of card
+  to board is a 720p window at 125 % text. The text-size survey can't see
+  it (a card over the canvas is neither text over text nor a box off the
+  page), so an instrument for it is the first step: the board's tiles a
+  card covers, per window and size. A later round's.
 - [ ] **A lost WebGL context that is not restored says nothing.** A loss
   that is restored comes back by itself, the canvas to the same hash
   (117.5b, a forced loss in Chromium; three.js's own listeners). A loss
   the browser restores late or never leaves a black canvas over a working
-  page. Home: 117.5i, if the user takes it at 117.5c's stop.
+  page. Home: 117.5i (signed at 117.5c's read, 2026-10-09).
 - [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
   composers and the bloom render at full device pixels, and fullscreen on
   a 4K laptop with integrated graphics is the bad case. Left for data, the

@@ -4076,3 +4076,27 @@ the day it opened with no finding against what was built.
    each question with a decision and a reason. Putting every measurement
    that could come back as a question in front of one stop is a shape I
    would want again.
+
+### Addendum — 117.5c's read (2026-10-09, the same session)
+
+The user read the stop the next morning, disagreed with two of my four
+leans and questioned a third, each with a reason. What changes in the
+answers above:
+
+- **3, pulled to claim more than verified:** the embed. I recommended
+  1024×576 on the survey's numbers. The survey reads text over text and
+  boxes off the page; a card over the board is neither, and the user saw
+  in the picture that the enemy's cards cover half the board there. I had
+  made that picture and not looked at it. The stop report did say I had
+  looked at one of 45, and that sentence was true and did not stop the
+  recommendation from sounding measured. A number from an instrument that
+  cannot see the fault is the over-claim, and it sat in a lean, not in a
+  label.
+- **6, room to disagree:** used in both directions. The user's reason on
+  the chip's placement (which group a control reads as part of) was one
+  my boxes could not weigh, and I said so and built on their lean. On the
+  X they asked for my subjective opinion and I gave one against my own
+  proposal of the day before. I notice that reversing came easily, and I
+  can't tell whether that is judgement or a wish to agree.
+- **7, ease:** being asked "what do you think?" three times in one
+  message, by someone who had just said they disagreed.

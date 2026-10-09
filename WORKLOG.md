@@ -8928,3 +8928,101 @@ boxes, not by eye.
 4. The X: a dark edge or plate behind it, on every theme, instead of a
    change of colour for Volcanic (117.5b). The lean: yes.
 Nothing is asked about the hitsplats: they don't hold.
+
+The commit is `7e687fc`. The reading on it: **491,061** at 22:12, so the
+step cost about 47k.
+
+### 117.5c — the read, first part (2026-10-09, the user's)
+
+The same session, the next morning; **495,571** at 09:42. One answer is
+signed and three came back as questions, each against the session's lean.
+
+1. **The placement: none of the three as drawn.** C was the user's least
+   favourite: "it reads as a button higher-friction, out of immediate
+   gameplay button inserted in the middle of 'in-game' buttons", the
+   fault the chip has in the left column today. A reads as one long
+   ribbon of unequal parts (the chip is 45 tall at top 20, the roster
+   button 49 at top 16: the "few pixels lower" the user saw is 4). B is
+   the best of them and is ragged: the speed pane is 72px wider than the
+   chip over it, the roster button 25px wider, and Leave is 139 by 34
+   under a chip of 164 by 45. The user's lean: fold the roster button and
+   Leave into the new ribbon at one width and alignment, and the speed
+   controls too if five buttons can be made to fit.
+   *The session's answer:* a right-hand column that mirrors the left
+   one: the same top and inset, the same width (`--chip-w`), the same
+   plate. Settings is its first row on every screen; the screen's own
+   control is its second, as a chip of that width (Roster, Leave port),
+   and in a battle the speed controls as one row cut into five equal
+   cells with shared borders, which fit 200px where five buttons with
+   gaps (236px) do not. The left column's Map chip already carries the
+   empty space a 200px Settings chip would. The session's lean was C, on
+   the corner going to the controls used most; the user's reason is
+   about which group a control is read as part of, which the boxes don't
+   measure. It needs a mock before it is built, so 117.5d's read moves
+   up to a `stop` on that mock.
+2. **The embed: 1024×576 is not acceptable as it is.** In a battle there
+   the enemy's HUD cards cover half the board, and with a full roster the
+   user doubts a tile could be clicked; the column covers the edge of the
+   event's text. The cards cut the board's top and bottom tiles on the
+   user's own 2.5k screen too, and more at 1280×720, "something we'll
+   have to fix", but playable. Supporting 1024×576 is "closer to a full
+   round" and the user's inclination is to put it out of this release.
+   *The session's answer:* agreed, and the lean was wrong for a reason
+   worth keeping: the survey reads text over text and boxes off the
+   page, and a card over the board is neither, so its numbers could not
+   see this; the picture could, and the session had not looked at it
+   (one of 45, as the stop said). The same ratio of card to board is what
+   a 720p window has at 125 %, so the text-size row's own caution covers
+   it and 117.5e stays the cheap fixes on 720p. Proposed: the smallest
+   supported window is 1280×720, the embed is 1280×720 with itch's
+   fullscreen button, and the cards over the board at every size is one
+   TODO item for a later round.
+3. **The failure plate speaks for a context that stays lost: signed.**
+4. **The X:** the user asks whether a dark edge is worth building if the
+   command symbols are to become marks on the ground anyway (TODO "§109
+   riders").
+   *The session's answer:* no. The X marks a tile the player has just
+   chosen, nobody outside the two of us has raised it, and the terrain
+   mark is the fix that lasts. Proposed: 117.5g is dropped, the six
+   floors' numbers go into the terrain-mark rider as its requirement,
+   and the user looks once at the worst floor
+   (`?layout=desertFortress&seed=7&character=soldier`); if it reads
+   badly there, the stopgap is a colour per theme, a table of six, and
+   not the edge.
+
+### 117.5c — the read, second part (2026-10-09, the user's) — READ ✅
+
+"Signing everything here! And looking at the check, the X honestly looks
+fine to me". So:
+
+1. **The right-hand column, as the session put it,** with a mock first.
+   117.5d is re-scoped in ROADMAP and its first read is a `stop` on the
+   mock.
+2. **The smallest supported window is 1280×720,** and the itch embed is
+   that size with itch's fullscreen button. A smaller window is a future
+   goal, and the HUD's cards over the board are a TODO item for a later
+   round, with an instrument as its first step. 117.5e keeps the cheap
+   fixes on 720p at a larger text size.
+3. **The plate speaks for a context that stays lost** (117.5i).
+4. **The X stays as it is.** The user looked at it on the desert board
+   and it reads fine. 117.5g is dropped, the Volcanic rider is retired,
+   and the six floors' numbers are in the terrain-mark rider.
+
+**For 117.5d's mock, what this session leaves.** The mocks here were a
+stylesheet injected by a page script and a picture by `--shot`, one
+launch a screen. `run-shots.mjs` and `ribbon-shot.js`, with the survey's
+runner and its summarizer and 117.5b's three probes, are copied to
+`scratch/117.5c-ribbon/tools/`, which git ignores, so they are on this
+machine only. The measured boxes at 1280×720 and
+100 % are in §117.5c above. The arithmetic the proposal rests on, to be
+held against the mock: the column is `--chip-w`, 12.5rem, 200px at
+100 %; five cells with shared borders are 40px each; "0.5×" at
+`--text-13` in a 0.6em face is about 31px. Not looked at: the sector
+map's ✕, which sits at the corner over everything and so over the new
+column's first row; the pre-turn screen's other two pile buttons, which
+are card-list buttons like Roster and stay where they are; the recruit
+screen, which has the roster button and was not among the five.
+
+The reading before this entry's commit: **519,480** at 09:56, so the
+stop's two rounds and their record cost about 28k. The session hands off
+here, under the line: 117.5d starts in a fresh session.

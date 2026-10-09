@@ -509,20 +509,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## §116 riders (the first sitting, 2026-10-04)
 
-- [ ] **The settings chip's home.** Third in the left column it sits
-  between the game-state chips (the user's read: "it interrupts several
-  game play state chips"); last, it would move whenever the map or morale
-  chip hides; first, it draws the eye. The user's proposal: a second ribbon
-  in the top right, probably for it alone. The top-right corner as of
-  `f466dbc` holds a control on five of a run's screens: the battle's speed
-  pane (`.hud-speed-pane`, top 20 right 20), the roster button on the map,
-  the pre-turn screen and the recruit screen (`.card-list-button--roster`,
-  top 16 right 16), and the port's Leave (`.port-leave`). The reward,
-  promotion, event and sector-cleared screens are free, and the sector-map
-  overlay's ✕ sits there over everything. So the move is a layout step on
-  five screens, each checked with the box oracle (DESIGN "Layout
-  stability"), and DESIGN's Chips paragraph and the corner comments in the
-  stylesheet change with it. Home: §117.5, the UI sweep (signed 2026-10-04), as its first item.
+- ✅ **The settings chip's home** (117.5d, 2026-10-09): the first row of a
+  control column, top right, with the screen's own control under it
+  (DESIGN "The control column"; WORKLOG "117.5d — built"). Its read is the
+  sitting's.
 
 - [ ] **Some text may be too small at the default size** (the user's
   read of 116k, 2026-10-07): "some things definitely just look better on
@@ -650,6 +640,25 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   user's call at the kickoff: the user's GPU can't show it, and a cap
   changes the glyphs' look. Players' reports (window, ratio, GPU) would
   come by the "Copy diagnostics" row ("§116 riders").
+- [ ] **At 150 % text a 720p window breaks down, and the layout wants a
+  rework** (the user, reading 117.5d's mock, 2026-10-09: "things really
+  start to break down by 150%; at some point, we'll need to rework
+  things"). Measured on the mock, which the build matches: the two columns
+  are 300px each of a 1280px page and sit over the outer cards of a
+  recruit and a port (plates over a card's glyph by 24 and 25px), the Map
+  chip is over an event's heading by 46px, and the hop chip's box is 207px
+  into the banner's. 117.5e holds 150 % to "nothing out of reach" and
+  125 % to "no chip over text", and no more. The cause is a column's
+  width against a screen's centred body, on both sides since 117.5d, so a
+  rework is the screens' bodies making room for the columns (or the
+  columns giving way), not a fix per chip. A later round's; the
+  instrument is `shell/electron/probes/text-scale.js`.
+- [ ] **The battle's hop chip does not fade** (seen in the stylesheet at
+  117.5d, not measured): it is `chip hud-hop screen-fade`, and the chip
+  plate's `transition` comes later in the sheet than `.screen-fade`'s and
+  names no opacity, so the chip appears and goes at once while the HUD's
+  other panes fade over 180 ms. `.control-chip` names the opacity for this
+  reason; the hop chip needs the same line.
 - [ ] **A rest node conveys nothing and is not a gate.** Home: §117.75.
 - [ ] **The first three events' prose predates the adopted style**
   (`corrupted-shrine`, `whispering-terminal`,

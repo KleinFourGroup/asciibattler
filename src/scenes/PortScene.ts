@@ -15,7 +15,7 @@ export class PortScene implements Scene {
   private screen: PortScreen | null = null;
 
   mount(ctx: SceneContext): void {
-    this.screen = new PortScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, requireRun(ctx), ctx.bus);
+    this.screen = new PortScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, requireRun(ctx), ctx.bus, ctx.controlSlot);
     this.screen.show();
   }
 

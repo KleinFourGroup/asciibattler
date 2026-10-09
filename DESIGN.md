@@ -182,9 +182,9 @@ when it carries interactive children (the cards), a `pressable()` (`role=
 keyboard run ONE code path); an inert control leaves the Tab order by
 `aria-disabled`, never `disabled` (a disabled element swallows the hover its
 tooltip needs); every `<select>` has an accessible name; every screen takes
-focus on present so Tab enters it first, and the chrome column sits AFTER
-the screens in the tree so the walk reaches the chips before the browser's
-own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
+focus on present so Tab enters it first, and the two columns sit AFTER
+the screens in the tree (the control column, then the chrome column) so
+the walk reaches the chips before the browser's own UI. **The Space rule:** in a battle the registry's hotkeys WIN over a
 focused control — Space is pause everywhere, Enter is every control's route
 (gotcha #135); yielding Space to a focused button would re-fire the last
 clicked one instead of pausing. A rebind (§116) moves the rule with the
@@ -218,7 +218,8 @@ none where no run is live).
 | The cache modal · the roster / picker modal · the sector-map overlay | the 96f shell (✕, Esc, backdrop, the trap + restore), the picker cards (pressable, a toggle) | ✓ | ✓ | ✓ | none | the host's |
 | The settings modal (§116) | the 96f shell; a choice's toggles (`button()`, `aria-pressed`), a level's − and + (`button()`) and its slider (a range `<input>` named by `aria-label`), a key per action and Reset to defaults (`button()`; a key waits for a press, and Esc, Enter, Tab or a click calls the wait off), the Palette's two toggles and Reload now (`button()`, disabled while the page is drawn in the palette chosen), the four data buttons (§116h; `button()`: Export everything, Choose file… which opens the browser's file dialog through a file `<input>` that is never shown, Import and reload, Export run; each disabled while it has nothing to do, its row's line saying why), Text size's four toggles (§116k; `button()`, the same choice idiom), Quit to menu during a run | ✓ | ✓ the user's Firefox read 2026-10-04; the data rows, the user's read 2026-10-07; the Text size row, the user's read the same day, a keyboard walk over it not said | ✓ (no hover read; a slider drags natively) | none | the host's |
 | The credits panel (§116j) | the 96f shell (✕, Esc, backdrop, the trap + restore); the list is a scroll box with one tab stop, so the keyboard scrolls it on a short window | ✓ | ✓ the user's read 2026-10-07 | ✓ (no hover read; the list scrolls natively) | none | none (no run) |
-| The chrome column | bits (a read), cache chip (`button`), settings chip (`button()`, §116), map chip (`button`), the pool bar (a read), the can't-save chip (§116i; a read with a tooltip, a text site with its own tab stop, shown only while the page can't save: its store fails, or it is a second tab with a run on screen) | ✓ | ✓ 100c1 · 100e2; the can't-save chip's tab stop, the user's read 2026-10-07 | ✓ (the can't-save chip's tooltip: a tap) | none | is the chip |
+| The control column (§117.5) | the settings chip (`button()`, §116); under it the screen's own control: the roster button, Leave port (`button()`), or the battle's speed and pause cells (counted in their screens' rows above) | ✓ | built 2026-10-09, the Tab walk unread | ✓ (the speed cells' tooltips: a long-press) | none | none |
+| The chrome column | bits (a read), cache chip (`button`), map chip (`button`), the pool bar (a read), the can't-save chip (§116i; a read with a tooltip, a text site with its own tab stop, shown only while the page can't save: its store fails, or it is a second tab with a run on screen) | ✓ | ✓ 100c1 · 100e2; the can't-save chip's tab stop, the user's read 2026-10-07 | ✓ (the can't-save chip's tooltip: a tap) | none | is the chip |
 
 The pins that hold the rows: `tests/ui-tooltips.test.ts` (zero native
 `title=`), `tests/ui-focus.test.ts` (every hover twin + the ring),
@@ -298,13 +299,12 @@ screen with its own teardown overrides `hide()` and ends in
 **Buttons (96d).** `button(label, {className, onClick, tooltip?})` mints
 every `<button>` (type · class · label · click; `tooltip` attaches the §97
 tooltip with the control's long-press route — never a native `title`); the
-audio cue stays in the handler. `.btn--primary` is the walk-on action's look; its three
+audio cue stays in the handler. `.btn--primary` is the walk-on action's look; its two
 modifiers name a deliberate delta (`btn--dim` a pass, `btn--exit` the
 controls of an end screen, where nothing else can be acted on — the hover
 fills it; sector cleared has one, game over two side by side since §114:
 the way out (the menu since §116; a new run on a page booted by a run
-dial), and the run's journal as a file — `btn--corner` a
-viewport-pinned corner control). The menu's rows are bare `.btn--primary`
+dial), and the run's journal as a file). The menu's rows are bare `.btn--primary`
 in one column of one width, and character select's Back is a pass
 (`btn--dim`). A site's POSITION stays on its own class.
 Secondary buttons keep their own classes until an idiom for them earns
@@ -313,12 +313,31 @@ its place.
 **Chips (96e).** A page-lifetime chip is `.chip` (the plate) + its own
 class, pulses through `chipPulse`, and mounts into the chrome column
 (`createChromeColumn`), whose order is CSS `order` (bits · cache ·
-settings · map · pool · can't-save). **A hidden chip collapses** — the ones below move
-up; bits never moves, cache never hides, the settings chip (§116) is third
-and shows whenever a run is live, the map chip is always fourth when
+map · pool · can't-save). **A hidden chip collapses** — the ones below move
+up; bits never moves, cache never hides, the map chip is always third when
 present, the pool chip is display-only, so no click target ever shifts. A chip's modal
 or overlay mounts on the page, never in the column. The column passes
-clicks through its gaps; the chips take them.
+clicks through its gaps; the chips take them. The chrome column, top
+left, holds the run's state and the map.
+
+**The control column (§117.5).** Controls that are not the run's state
+stand in a second column, top right, the chrome column's mirror: the same
+top, inset, width and plate. **Its first row is the settings chip**, at
+one place on every screen of a run. **Its second row is the one control
+the screen that is up owns**, at the column's width: Roster (the map,
+before a turn, a recruit), Leave port, and in a battle the speed strip,
+five equal cells that share their borders (pause, then the speeds). A
+screen with no such control leaves the row empty. The two rows are one
+height, taken from the layout and not from a measured chip, and the
+sector map's ✕ lies over the first row while the overlay covers both
+columns. A button in the second row wears the chip's plate and the
+settings chip's hover (`chip control-chip`), whatever it does: Leave port
+is the port's way forward and reads as the column's row all the same (the
+user's call, 2026-10-09). The pre-turn screen's two pile buttons stay
+corner buttons at the bottom, since their words don't fit the column. In
+the tree the control column comes after the screens and before the chrome
+column, so Tab leaves a screen for Settings, then the screen's control,
+then the chips.
 
 **The can't-save chip (116i).** A fact about the page that the player has
 to be told and that can arrive at any moment, on any screen, is a chip:

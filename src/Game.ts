@@ -26,7 +26,7 @@ import { CantSaveChip } from './ui/CantSaveChip';
 import { CreditsOverlay } from './ui/CreditsOverlay';
 import { SectorMapOverlay } from './ui/SectorMapOverlay';
 import { SettingsOverlay } from './ui/SettingsOverlay';
-import { createChromeColumn } from './ui/chip';
+import { createChromeColumn, createControlColumn } from './ui/chip';
 import { installTooltipHost, toggleTooltipKey } from './ui/tooltip';
 import { GameOverScene } from './scenes/GameOverScene';
 import { SectorClearedScene } from './scenes/SectorClearedScene';
@@ -143,9 +143,12 @@ export class Game implements RunDispatcher {
   /** 78e — the sector-map chip + read-only overlay (a chrome-column
    *  chip). Scene-derived availability is pushed from `swap`. */
   private readonly sectorMapOverlay: SectorMapOverlay;
-  /** 116d — the settings chip and modal (the chip is third in the chrome
-   *  column). The menu opens the same modal through the scene context. */
+  /** 116d — the settings chip and modal (the chip is the control column's
+   *  first row). The menu opens the same modal through the scene context. */
   private readonly settingsOverlay: SettingsOverlay;
+  /** The control column's second row (src/ui/chip.ts): the screen that is up
+   *  mounts its own top-right control here, through the scene context. */
+  private readonly controlSlot: HTMLDivElement;
   /** 116j — the credits panel: the menu's row opens it, and so does the end
    *  of the first won run (`resetRun`). */
   private readonly credits: CreditsOverlay;
@@ -345,6 +348,11 @@ export class Game implements RunDispatcher {
     // 96e — the chips mount into ONE chrome column (src/ui/chip.ts);
     // their order is CSS `order`, not construction order, so the
     // construction (and subscription) order below is untouched.
+    // The control column goes into the tree first: Tab leaves a screen for
+    // Settings and the screen's own control, then walks the chips, and the
+    // can't-save chip stays the walk's last stop.
+    const controls = createControlColumn(uiMount);
+    this.controlSlot = controls.slot;
     const chips = createChromeColumn(uiMount);
     // 97a — the ONE tooltip host (src/ui/tooltip.ts): page-lifetime chrome
     // like the column; every `attachTooltip` site renders into it.
@@ -386,7 +394,7 @@ export class Game implements RunDispatcher {
     );
 
     // 78e: the sector-map chip + read-only overlay — a chrome-column chip
-    // (bits → cache → settings → map). One view getter closing over `this.run`
+    // (bits → cache → map). One view getter closing over `this.run`
     // (the dispatcher pattern — a reset's Run swap is invisible); the
     // `toggleSectorMap` keybind subscribes at THIS layer, the first
     // page-lifetime keybind consumer, so `M` works on every screen the chip
@@ -415,7 +423,7 @@ export class Game implements RunDispatcher {
     // suspends the key registry while it is up (src/ui/SettingsOverlay.ts).
     this.settingsOverlay = new SettingsOverlay(
       uiMount,
-      chips,
+      controls.column,
       this.audio,
       this.settings,
       this.playback,
@@ -1195,6 +1203,7 @@ export class Game implements RunDispatcher {
       // 100e2 — the scenes mount into the screen host (before the chrome
       // column in DOM order); the page-lifetime chrome keeps #ui itself.
       uiMount: this.screenHost,
+      controlSlot: this.controlSlot,
       dispatcher: this,
       run: this.run,
       journal: () => this.currentJournal(),

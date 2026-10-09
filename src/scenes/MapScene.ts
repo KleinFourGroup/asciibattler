@@ -17,7 +17,7 @@ export class MapScene implements Scene {
 
   mount(ctx: SceneContext): void {
     const run = requireRun(ctx);
-    this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
+    this.screen = new MapScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, { controlSlot: ctx.controlSlot });
     this.screen.show(
       run.nodeMap,
       run.currentNodeId,

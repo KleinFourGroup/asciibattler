@@ -18,16 +18,19 @@ import { button } from './button';
 import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { pressable } from './pressable';
 import { CardListButton } from './CardListModal';
+import { mountControl } from './chip';
 
 export class RecruitScreen extends Screen {
-  // R1 — the shared "view roster" affordance (top-right). Disposed on hide so
-  // a dismissed screen can't leave an open overlay or a live Esc handler.
+  // R1 — the shared "view roster" affordance (the control column's second
+  // row). Disposed on hide so a dismissed screen can't leave an open overlay
+  // or a live Esc handler.
   private rosterButton: CardListButton | null = null;
 
   constructor(
     mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
+    private readonly controlSlot: HTMLElement,
   ) {
     super(mount);
   }
@@ -58,7 +61,7 @@ export class RecruitScreen extends Screen {
       getUnits: () => roster,
       emptyText: t('roster.empty'),
     });
-    panel.appendChild(this.rosterButton.el);
+    mountControl(this.controlSlot, this.rosterButton.el);
 
     const heading = document.createElement('div');
     heading.className = 'recruit-heading';

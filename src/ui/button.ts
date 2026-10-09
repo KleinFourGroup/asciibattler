@@ -10,13 +10,13 @@
  * the caller's handler (most play `click`, a few `pickup`, the sector-map
  * close plays nothing — the factory must not decide). Chrome comes from
  * the CLASS: `btn--primary` is THE primary-action idiom (ui.css), with the
- * three look modifiers that name a deliberate per-site delta —
- * `btn--dim` (a pass, 0.7 until hovered), `btn--exit` (the end screens'
+ * two look modifiers that name a deliberate per-site delta —
+ * `btn--dim` (a pass, 0.7 until hovered) and `btn--exit` (the end screens'
  * controls, game over and sector cleared: amber fill on hover, with
- * nothing else on screen to act on), `btn--corner` (the
- * pinned port leave, sized for a corner). A site's POSITION stays on its
- * own class (`.preturn-continue` pins bottom-center, `.port-leave` top-
- * right) — layout is the screen's, look is the idiom's.
+ * nothing else on screen to act on). A site's POSITION stays on its
+ * own class (`.preturn-continue` pins bottom-center) — layout is the
+ * screen's, look is the idiom's. A control in the control column (Roster,
+ * Leave port) wears the chip's plate instead: `chip control-chip`.
  *
  * `label` may be '' for a button that carries children (the character
  * select card); `tooltip` (97d) attaches the §97 tooltip — a control, so a

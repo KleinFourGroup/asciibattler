@@ -20,6 +20,7 @@ import type { AudioPlayer } from '../audio/AudioPlayer';
 import type { UnitTemplate } from '../sim/Unit';
 import { Screen } from './Screen';
 import { CardListButton } from './CardListModal';
+import { mountControl } from './chip';
 import { attachTooltip } from './tooltip';
 
 /**
@@ -163,19 +164,23 @@ export class MapScreen extends Screen {
    *  surface; nesting a second modal under it would fight the overlay's own
    *  chrome). The sector-map overlay's mode; MapScene uses the default. */
   private readonly readOnly: boolean;
-  // R1 — the shared "view roster" affordance (top-right), disposed on hide.
+  // R1 — the shared "view roster" affordance: the control column's second
+  // row (src/ui/chip.ts), disposed on hide.
   private rosterButton: CardListButton | null = null;
+  /** Where the roster button mounts; the read-only view has neither. */
+  private readonly controlSlot: HTMLElement | null;
 
   constructor(
     mount: HTMLElement,
     dispatcher: RunDispatcher,
     audio: AudioPlayer,
-    opts: { readOnly?: boolean } = {},
+    opts: { readOnly?: boolean; controlSlot?: HTMLElement } = {},
   ) {
     super(mount);
     this.dispatcher = dispatcher;
     this.audio = audio;
     this.readOnly = opts.readOnly ?? false;
+    this.controlSlot = opts.controlSlot ?? null;
   }
 
   show(
@@ -248,11 +253,11 @@ export class MapScreen extends Screen {
     container.className = 'map-screen';
     if (this.readOnly) container.classList.add('map-screen--readonly');
 
-    // R1 — the roster view (top-right, position: fixed so it ignores the
-    // board's vertical scroll). Inside the faded container so it cleans up with
-    // the screen; dispose() also closes the overlay if it's still open.
+    // R1 — the roster view, in the control column (so it ignores the board's
+    // vertical scroll); hide() disposes it, which also closes the overlay if
+    // it's still open.
     // 78e — skipped in readOnly (see the field doc).
-    if (!this.readOnly) {
+    if (!this.readOnly && this.controlSlot !== null) {
       this.rosterButton = new CardListButton(this.mount, this.audio, {
         text: t('roster.button'),
         title: t('roster.title'),
@@ -263,7 +268,7 @@ export class MapScreen extends Screen {
         getCount: () => roster.length,
         emptyText: t('roster.empty'),
       });
-      container.appendChild(this.rosterButton.el);
+      mountControl(this.controlSlot, this.rosterButton.el);
     }
 
     // T2 — the sector-name banner (top-center, position: fixed so it ignores the

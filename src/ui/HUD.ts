@@ -222,6 +222,9 @@ export class HUD {
     keybindings: Keybindings,
     objective: ObjectiveControls,
     audio: AudioPlayer,
+    /** The control column's second row (src/ui/chip.ts): the speed strip's
+     *  place, under the settings chip. */
+    controlSlot: HTMLElement,
   ) {
     this.playback = playback;
     this.keybindings = keybindings;
@@ -236,17 +239,17 @@ export class HUD {
     mount.appendChild(this.banner);
 
     // Q6 — the hop/turn chip, the one survivor of the dismantled side panel,
-    // now a standalone top-left element (mirroring the top-right speed pane),
-    // with the banner centered between them. Its own screen-fade lifecycle.
+    // now a standalone top-left element, with the banner centered between it
+    // and the control column. Its own screen-fade lifecycle.
     this.hopLabel = document.createElement('div');
     // 101b — it wears the shared `.chip` plate; `.hud-hop` keeps only its
     // position, derived from the chrome column's width (ui.css).
     this.hopLabel.className = 'chip hud-hop screen-fade';
     mount.appendChild(this.hopLabel);
 
-    // Q1 — speed-command pane (top-right): one button per ENABLED speed
-    // (ascending) + a pause/play toggle. Lives outside the side-panel root (like
-    // the banner) so it can sit top-right; same screen-fade lifecycle. Each
+    // Q1 — the speed strip: one cell per ENABLED speed (ascending) + a
+    // pause/play toggle, the control column's second row in a battle (top
+    // right, under the settings chip); same screen-fade lifecycle. Each
     // button is the in-battle affordance; the hotkeys (J3 rebindable registry:
     // `speedHalf`/`speed1`/`speed2`/`speed3`, `togglePause`) mirror them. All
     // route through the shared `playback`, which holds the speed + paused state
@@ -307,7 +310,7 @@ export class HUD {
         { touch: 'press' },
       );
     }
-    mount.appendChild(this.speedPane);
+    controlSlot.appendChild(this.speedPane);
     this.renderSpeedPane();
 
     // Q2 — the pre-battle countdown readout (centered, under the banner). Shown

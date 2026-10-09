@@ -9027,7 +9027,7 @@ The reading before this entry's commit: **519,480** at 09:56, so the
 stop's two rounds and their record cost about 28k. The session hands off
 here, under the line: 117.5d starts in a fresh session.
 
-### 117.5d — step zero, and the mock (2026-10-09, session 8473063c) — ◐ the stop is open
+### 117.5d — step zero, and the mock (2026-10-09, session 8473063c) — the stop READ ✅ (the next entry)
 
 A fresh session, from 10:05; the tree clean at `739dc16`. Readings:
 **99,925** at 10:07, after HANDOFF, `process/planning.md`,
@@ -9126,3 +9126,123 @@ chip's plate and its hover; the speed cells keep their own states.
 5. ✕ Close stays as it is. The lean: yes.
 
 The page is `scratch/117.5d-column/index.html`.
+
+### 117.5d — the mock's read, and built (2026-10-09, session 8473063c) — ◐ built, unread (`batch`, at the sitting)
+
+**The read** (the user's, the same morning): "I've looked over
+everything, and I'm signing all of your leans!" So the column is built as
+mocked, the strip is 45px, Leave port wears the chip's plate, the pile
+buttons and ✕ Close stay as they are, and the build is a second
+Game-owned column. One remark with it: "it is clear that things really
+start to break down by 150%; at some point, we'll need to rework
+things... That can be to-do'd for now". It is in TODO ("§117.5 kickoff
+riders") with the mock's numbers; 117.5e's bar at 150 % is unchanged.
+
+The mock's commit is `579ac79`, reading **269,089** at 10:25.
+
+**Step zero of the build: four things the mock could not show.**
+- *Two controls would stack for 180 ms.* A screen fades out while the
+  next fades in, and each owns its control. In a plain column the two
+  would be rows two and three until the old one left. So the slot is one
+  grid cell that everything in it shares, and they cross in place, as
+  they did when each was pinned to the corner.
+- *A chip's height can't be computed.* The plate has no height; it is a
+  line of `--text-18` at `line-height: normal` plus padding, and Chromium
+  rounds that line to 23, 30 and 36px at the three sizes, which no one
+  factor gives. A strip sized by arithmetic would match in one browser at
+  one size, the measured offset 96e took out of the left column. So the
+  column is a grid of `1fr` rows with no set height: both rows are as
+  tall as the taller one's content, which is the chip.
+- *The plate's `transition` drops a fade.* `.chip` comes later in the
+  sheet than `.screen-fade` and names no opacity, so a chip that fades
+  with its screen appears at once. `.control-chip` names the opacity.
+  The battle's hop chip, `chip hud-hop screen-fade`, has the same shape
+  by the same reading of the sheet (unmeasured; TODO).
+- *The text-size survey would have lost two modals without a word.* It
+  finds its openers by `.chrome-column button.chip` and
+  `button.card-list-button`; Settings and Roster are neither now. Its
+  selectors are changed in this commit.
+
+**As built.** `src/ui/chip.ts` has `createControlColumn(mount)`, which
+returns the column and its slot, and `mountControl(slot, el)`, which
+puts a control in and fades it in. Game makes the column before the
+chrome column and hands the slot to the scenes as
+`SceneContext.controlSlot`. The settings chip is the column's first
+child. The roster button (`CardListButton`, position `roster`) is now
+`chip control-chip` and is mounted by the map, pre-turn and recruit
+screens; the port's Leave is the same class and fades out beside its
+screen; the HUD appends its speed pane to the slot. Three rules left the
+sheet with their users: `.port-leave`, `.card-list-button--roster` and
+the `btn--corner` modifier. DESIGN has a paragraph, "The control column",
+and a row in the per-surface table; ARCHITECTURE's `chip.ts` and
+`button.ts` lines follow.
+
+**What changes that the mock did not show** (for the sitting):
+- *The Tab walk.* The control column is after the screens in the tree
+  and before the chrome column. Roster was the map's first stop and is
+  now after the map's nodes and Settings; the speed cells come after the
+  HUD's other controls. Measured on the map: the screen's last stop,
+  then Settings, then Roster, then Cache.
+- *Hover.* Roster's was fluorescent blue with a wash and Leave's an
+  amber wash; both now brighten border and text, as the settings chip
+  does.
+- *The pause cell* is no longer set 4px apart from the speeds.
+- *An event's column keeps its empty second row,* which draws nothing: a
+  click on it, and on the gap above it, reaches the event screen
+  (measured).
+
+**Verified, by instrument.**
+1. *The built column against the mock* (`column-shot.js`, `variant:
+   built`, and `compare-built.mjs`): six screens at 100 %, 125 % and
+   150 %, nine readings each (the column, its rows, each row's fit, each
+   speed cell, the left column's rows, the hop chip and banner, and the
+   three over-text lists). 162 comparisons, 3 differences, all three the
+   event's column box, 100px tall where the mock's was 45: the empty
+   row. Its control: one built row moved 1px is reported.
+2. *The box oracle* (the survey with `boxes` and `still` at size 1;
+   `run-boxes.mjs` once with the change stashed and once with it in;
+   `compare-boxes.mjs`). A box is its rule signature and rectangle. At
+   1280×720 and at 1920×1080, 26 screens each: nothing left or arrived
+   but the meant boxes, 346 a window (the settings chip; the Map chip,
+   the Morale chip and its parts, and the chrome column's own box, each
+   a row up or shorter; Roster on six screens and Leave on one; the
+   speed pane and its cells on five; the new column and slot). Bits and
+   Cache are not among them. The menu's four screens: nothing. Set
+   aside, with reasons: a fight's overlays on the battle and outcome
+   screens, which differ between two runs of an unchanged page (230 and
+   177 boxes); the menu's build ID, which reads `-dirty` after and not
+   before; a modal title's id, whose counter follows the order the
+   openers are found in. Its control: an event heading moved 3px in
+   `after` is reported.
+3. *Behaviour* (`column-behaviour.js`, the runner, offscreen): the tree
+   is screen host, control column, chrome column, tooltip; a click at
+   each row's centre lands on that row; Roster opens and closes its
+   modal and Settings its own; five cells, each hit; a click on 2×
+   selects it and the pause cell toggles the pause; the strip is the
+   chip's height; Leave port leaves, and afterwards the slot holds the
+   map's Roster and nothing of the port's. Its first two runs failed by
+   the probe's own faults (it clicked a closed modal's ✕, then parked a
+   clock it needed).
+4. `drive-run --seed=7` logs `a59ee48f`, as the cut holds every step to.
+5. Typecheck clean; the sheet's pins and the docs' caps pass (79 tests
+   in 11 files, run by hand before the hook).
+
+**Looked at by the session:** two of the 19 built pictures (the battle
+and the port at 100 %), which are the mock's to the eye; the rest are
+held by item 1. **Not verified:** Firefox, where `1fr` rows and the
+focus ring over a neighbouring cell are unrun; the hover and focus looks
+by eye; the keyboard walk by hand; the cross-fade by eye.
+
+**For the sitting** (the cut's script, and what this entry adds): play a
+run to a battle, a port and a recruit; the right column stands at one
+place with Settings on top and the left column holds game state only.
+Wrong is a row that changes width between screens, a speed cell that
+cuts its label, or a control moved that the mock didn't show. Added: Tab
+from a screen goes to Settings, the screen's control, then the chips;
+hover over Roster and Leave; a screen change in a slow moment, for two
+controls drawn at once.
+
+**Predictions against what happened.** No bump, no stream, no bus event
+and no smoke, as cut. The reading before this commit: **401,214** at
+11:06, so the build cost about 132k against an estimate of 80k to 100k;
+the two oracles and their tools were most of the difference.

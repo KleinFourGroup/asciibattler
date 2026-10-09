@@ -196,8 +196,10 @@ export class CardListModal {
   }
 }
 
-/** Where a `CardListButton` anchors → its CSS position modifier. Roster sits
- *  top-right (R1); the piles sit in the bottom corners (R2). */
+/** Where a `CardListButton` goes. The piles are corner buttons, pinned by
+ *  `.card-list-button--{position}` (R2). Roster is a row of the control
+ *  column (src/ui/chip.ts): it wears the chip's plate, and its screen puts
+ *  it there with `mountControl`. */
 export type CardListButtonPosition = 'roster' | 'draw' | 'discard';
 
 export interface CardListButtonOptions {
@@ -205,7 +207,7 @@ export interface CardListButtonOptions {
   readonly text: string;
   /** The modal heading prefix (e.g. "Your Roster", "Draw Pile"). */
   readonly title: string;
-  /** Corner anchor → `.card-list-button--{position}`. */
+  /** A pile's corner, or the control column's row (see the type). */
   readonly position: CardListButtonPosition;
   /** Read the units to show, AT CLICK TIME — a thunk so a pile reflects the
    *  latest contents after a redraw (the host refreshes its stored copy). */
@@ -219,9 +221,10 @@ export interface CardListButtonOptions {
 }
 
 /**
- * The reusable corner button wired to a `CardListModal`. The caller appends
- * `.el` into its panel and calls `dispose()` on screen `hide()` (which also
- * closes the overlay if it's open).
+ * The reusable button wired to a `CardListModal`. The caller appends a
+ * pile's `.el` into its panel, or mounts Roster's into the control column,
+ * and calls `dispose()` on screen `hide()` (which also closes the overlay
+ * if it's open).
  */
 export class CardListButton {
   readonly el: HTMLButtonElement;
@@ -233,7 +236,8 @@ export class CardListButton {
     this.modal = new CardListModal(mount, audio);
     this.el = document.createElement('button');
     this.el.type = 'button';
-    this.el.className = `card-list-button card-list-button--${opts.position}`;
+    this.el.className =
+      opts.position === 'roster' ? 'chip control-chip' : `card-list-button card-list-button--${opts.position}`;
     this.refresh();
     this.el.addEventListener('click', () => {
       audio.play('click');

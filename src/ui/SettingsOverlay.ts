@@ -1,9 +1,9 @@
 /**
  * 116d — THE SETTINGS (Round 8 spec D7): one modal, the 96f shell
  * (src/ui/modal.ts), with two openers. On the menu it is the Settings row.
- * During a run it is a chip in the chrome column, third, between the cache
- * and the map chips, so it never moves: the two above it never hide while a
- * run is live. Opened from a run, the modal also holds Quit to menu.
+ * During a run it is a chip, the first row of the control column in the
+ * top-right corner (src/ui/chip.ts), at one place on every screen. Opened
+ * from a run, the modal also holds Quit to menu.
  *
  * WHILE IT IS OPEN the battle behind it stands still and no hotkey fires:
  * the modal takes a hold on the playback (`PlaybackSpeed.hold`, which stops
@@ -147,8 +147,8 @@ export class SettingsOverlay {
     /** The page mount: the MODAL's host (it must not sit inside the chrome
      *  column's stacking context). */
     private readonly mount: HTMLElement,
-    /** The chrome column the CHIP mounts into (src/ui/chip.ts). */
-    chips: HTMLElement,
+    /** The control column the CHIP mounts into (src/ui/chip.ts). */
+    column: HTMLElement,
     private readonly audio: AudioPlayer,
     private readonly settings: SettingsModel,
     private readonly playback: PlaybackSpeed,
@@ -164,7 +164,9 @@ export class SettingsOverlay {
         this.open();
       },
     });
-    chips.appendChild(this.chip);
+    // First in the column and in the tree, ahead of the slot the screens
+    // mount their control into, so what is drawn first is reached first.
+    column.prepend(this.chip);
   }
 
   /** Game.swap pushes whether the chip shows: while a run is live and its

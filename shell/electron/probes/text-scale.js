@@ -9,7 +9,7 @@
 //
 // The run mode plays a seeded run a command at a time and scans each phase's
 // screen the first two times it comes up, a battle at four points, and the
-// modals the chrome column's chips and the pre-turn pile buttons open. The
+// modals the two columns' chips, Roster and the pre-turn pile buttons open. The
 // menu mode scans the menu, the settings modal, the credits and character
 // select. The extras mode (117.5a) scans what a driven run never puts up: one
 // tooltip of every kind on each phase's first screen, opened afresh at each
@@ -453,7 +453,7 @@ export default async function survey(arg = {}) {
       await settle();
       await scan('sector-cleared(forced)');
       await scanTooltips('tips:sector-cleared');
-      const go = [...document.querySelectorAll('#ui button')].filter(shown).find((b) => !b.closest('.chrome-column'));
+      const go = [...document.querySelectorAll('#ui button')].filter(shown).find((b) => !b.closest('.chrome-column, .control-column'));
       if (go) await click(go);
       if (!document.querySelector('#ui .map-screen')) notes.push('sector-cleared: its button did not bring the map back');
 
@@ -536,8 +536,11 @@ export default async function survey(arg = {}) {
           resume();
         }
         seen[phase] = n + 1;
-        if ((phase === 'map' && n === 0) || (phase === 'battle' && battles === 0 && slice === 1)) await scanOpeners(phase, '#ui .chrome-column button.chip');
-        if (phase === 'turn-intro' && n === 0) await scanOpeners('turn-intro', '#ui button.card-list-button');
+        // The chips that open a modal: cache and map in the chrome column,
+        // Settings in the control column. Roster is the control column's too
+        // (in its slot) and is opened with the piles, before a turn.
+        if ((phase === 'map' && n === 0) || (phase === 'battle' && battles === 0 && slice === 1)) await scanOpeners(phase, '#ui .chrome-column button.chip, #ui .control-column > button.chip');
+        if (phase === 'turn-intro' && n === 0) await scanOpeners('turn-intro', '#ui button.card-list-button, #ui .control-slot button.control-chip');
       }
       const r = await probe.drive({ maxMs: 0, seed: arg.seed ?? 1 });
       if (r.done) done = true;

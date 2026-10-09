@@ -89,6 +89,7 @@ import { renderPoolGauge } from './poolGauge';
 import { buildUnitCard, unitCardFromTemplate, buffChipTooltip, buffModsSummary } from './UnitCard';
 import { empowerColor, empowerLabel } from '../render/statusDisplay';
 import { CardListButton } from './CardListModal';
+import { mountControl } from './chip';
 
 /**
  * 65f — one deck-transaction cue (the `deck:*` event stream): buffered by
@@ -189,6 +190,8 @@ export class PreTurnScreen extends Screen {
     mount: HTMLElement,
     private readonly dispatcher: RunDispatcher,
     private readonly audio: AudioPlayer,
+    /** The control column's second row: where the roster button mounts. */
+    private readonly controlSlot: HTMLElement,
   ) {
     super(mount);
   }
@@ -575,19 +578,19 @@ export class PreTurnScreen extends Screen {
       getCount: () => this.displayedDiscard ?? this.discardPile.length,
       emptyText: t('preturn.discardPileEmpty'),
     });
-    this.cardListButtons = [
-      new CardListButton(this.mount, this.audio, {
-        text: t('roster.button'),
-        title: t('roster.title'),
-        position: 'roster',
-        getUnits: () => this.roster,
-        getCount: () => this.roster.length,
-        emptyText: t('roster.empty'),
-      }),
-      this.drawPileButton,
-      this.discardPileButton,
-    ];
-    for (const button of this.cardListButtons) panel.appendChild(button.el);
+    const rosterButton = new CardListButton(this.mount, this.audio, {
+      text: t('roster.button'),
+      title: t('roster.title'),
+      position: 'roster',
+      getUnits: () => this.roster,
+      getCount: () => this.roster.length,
+      emptyText: t('roster.empty'),
+    });
+    this.cardListButtons = [rosterButton, this.drawPileButton, this.discardPileButton];
+    // Roster is a row of the control column; the piles stay corner buttons
+    // of this screen (their words are too long for the column's plate).
+    mountControl(this.controlSlot, rosterButton.el);
+    panel.append(this.drawPileButton.el, this.discardPileButton.el);
 
     // 65e — the "Draw: N" chip (the §65 transparency surface): the folded
     // per-turn draw amount, anchored above the Draw Pile button — where the

@@ -137,6 +137,7 @@ export class BattleScene implements Scene {
       ctx.keybindings,
       this.objective,
       ctx.audio,
+      ctx.controlSlot,
     );
     this.objective.onArmedChange = (mode) => this.hud?.setObjectiveArmed(mode);
 

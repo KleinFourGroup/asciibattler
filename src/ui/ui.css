@@ -1350,14 +1350,8 @@ body {
   font-size: var(--text-12);
 }
 
-/* Viewport-pinned so Leave never scrolls away (the roster-button idiom).
-   96d: the look is `.btn--primary.btn--corner`; this class is its POSITION. */
-.port-leave {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 5;
-}
+/* Leave port never scrolls away: it is the control column's second row on
+   this screen (`.chip.control-chip`, mounted by PortScreen). */
 
 .port-body {
   display: flex;
@@ -2252,8 +2246,8 @@ body {
 /* Q6 — the in-battle hop/turn chip. The monolithic left HUD side panel was
    dismantled in Q6 (rosters + per-unit stat lines → the Q4/Q5 card panes; the
    inline You/Foe pools → the panes' gauges); this label is the one survivor,
-   relocated to a standalone top-left chip that mirrors the top-right speed pane,
-   with the location banner centered between them. Amber terminal chrome.
+   relocated to a standalone top-left chip, with the location banner centered
+   between it and the control column. Amber terminal chrome.
    48d — the persistent bits chip now OWNS the top-left corner (the shape-lock
    call: persistent chrome outranks scene chrome), so this chip sits to its
    RIGHT. The fixed offset clears a 4-digit balance; if the two ever crowd,
@@ -2279,10 +2273,11 @@ body {
    buttons (20) / modals (30), under the #scanlines rake (1000) like all
    chrome. The column takes NO pointer events (its gaps and its width past
    a narrow chip must not swallow a map click); the chips do. The order is
-   fixed by `order` on each chip class (bits · cache · settings · map ·
-   pool · can't-save; the settings chip is 116d's, the can't-save chip
-   116i's), and a hidden chip COLLAPSES — the
-   ones below move up (the §96 decision D; the map chip hides on MapScene).
+   fixed by `order` on each chip class (bits · cache · map · pool ·
+   can't-save; the can't-save chip is 116i's), and a hidden chip COLLAPSES —
+   the ones below move up (the §96 decision D; the map chip hides on
+   MapScene). The column holds the run's state and the map; the controls are
+   the control column's, below.
    The .hud-hop battle chip still sits to the bits chip's right (HUD-owned). */
 .chrome-column {
   position: fixed;
@@ -2315,6 +2310,50 @@ body {
 
 .chrome-column > .is-hidden {
   display: none;
+}
+
+/* THE CONTROL COLUMN (src/ui/chip.ts): the chrome column mirrored in the
+   top-right corner, with the same top, inset, width, gap, plate and
+   z-index. Row one is the settings chip, at one place on every screen of a
+   run. Row two is `.control-slot`, which holds the one control the screen
+   that is up owns: Roster, Leave port, or the battle's speed strip. The rows
+   are grid rows of `1fr` in a column of no set height, so both are as tall
+   as the taller one's content, which is the chip: the strip is a chip's
+   height at every text size without either being measured. An empty slot
+   keeps its row, which draws nothing and takes no click. Everything in the
+   slot lies in one cell, so two screens' controls cross in place while one
+   screen fades out and the next fades in. */
+.control-column {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 15;
+  display: grid;
+  grid-auto-rows: 1fr;
+  row-gap: 10px;
+  width: var(--chip-w);
+}
+
+/* As the chrome column: the box passes clicks, what it holds takes them (a
+   control in the slot once it has faded in, by `.screen-fade.is-visible`). */
+#ui > .control-column {
+  pointer-events: none;
+}
+
+.control-column > .chip {
+  pointer-events: auto;
+}
+
+.control-column > .is-hidden {
+  display: none;
+}
+
+.control-slot {
+  display: grid;
+}
+
+.control-slot > * {
+  grid-area: 1 / 1;
 }
 
 /* The plate every chip shares: the 51e card-list-button scale (the R1 1.5×
@@ -2470,11 +2509,9 @@ body {
   color: var(--color-neon-red);
 }
 
-/* 116d — the settings chip: third in the column (bits → cache → settings),
-   above the two chips that hide, so it never moves while a run is live. It
-   opens the settings modal on any screen of a run. */
+/* 116d — the settings chip: the control column's first row, at one place on
+   every screen of a run. It opens the settings modal. */
 .settings-chip {
-  order: 3;
   text-align: left;
   cursor: pointer;
   transition:
@@ -2485,6 +2522,26 @@ body {
 
 .settings-chip:hover,
 .settings-chip:focus-visible {
+  border-color: var(--color-amber-hover);
+  color: var(--color-amber-hover);
+}
+
+/* A screen's control that is one button (Roster, Leave port), in the
+   control column's slot: the chip's plate at the column's width, with the
+   settings chip's hover. It fades with its screen, and the plate's own
+   `transition` would drop the fade's, so the opacity is named here. */
+.control-chip {
+  text-align: left;
+  cursor: pointer;
+  transition:
+    opacity 180ms ease,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    color 0.15s;
+}
+
+.control-chip:hover,
+.control-chip:focus-visible {
   border-color: var(--color-amber-hover);
   color: var(--color-amber-hover);
 }
@@ -2502,8 +2559,8 @@ body {
   cursor: help;
 }
 
-/* 78e — the sector-map chip: the fourth chrome-column chip (bits → cache →
-   settings → map), same terminal plate as its siblings. Clicking it (or
+/* 78e — the sector-map chip: the third chrome-column chip (bits → cache →
+   map), same terminal plate as its siblings. Clicking it (or
    `M`) opens the read-only sector-map overlay from any screen it's shown
    on; Game hides it on MapScene (redundant), pre-run, and game-over — and
    the pool chip below moves up into its slot (96e). */
@@ -2735,30 +2792,35 @@ body {
   background: rgb(from var(--color-flourescent-blue) r g b / 0.08);
 }
 
-/* Q1 — speed-command pane (top-right): one button per enabled speed (ascending,
-   0.5×/1×/2×/3×) + a pause/play toggle. Lives outside the left side-panel so it
-   anchors top-right; same screen-fade lifecycle as the banner. Amber terminal
-   chrome; the SELECTED running speed (or the pause toggle while paused)
-   brightens to TERMINAL_GREEN with a glow via .is-active so the live pacing
-   reads at a glance. */
+/* Q1 — the speed strip: a pause/play toggle, then one cell per enabled speed
+   (ascending, 0.5×/1×/2×/3×). It is the control column's second row in a
+   battle (HUD.ts mounts it into `.control-slot`), so its width is the
+   column's and its height the row's, a chip's; same screen-fade lifecycle as
+   the banner. The cells are equal and share their borders: each after the
+   first is drawn 1px over the one before, and the cell that is hovered,
+   focused or active comes to the front so its own border is whole. At the
+   column's 12.5rem a cell has 39px inside for the widest label, 0.5×, which
+   is 31.2px, so the labels carry no letter-spacing. Amber terminal chrome;
+   the SELECTED running speed (or the pause toggle while paused) brightens to
+   TERMINAL_GREEN with a glow via .is-active so the live pacing reads at a
+   glance. */
 .hud-speed-pane {
-  position: absolute;
-  top: 20px;
-  right: 20px;
   display: flex;
-  gap: 6px;
   align-items: stretch;
 }
 
 .hud-speed {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0 0 0 -1px;
   font-family: var(--font-mono);
   font-size: var(--text-13);
-  letter-spacing: 0.08em;
   font-variant-numeric: tabular-nums;
+  text-align: center;
   color: var(--color-terminal-amber);
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--color-terminal-amber);
-  padding: 4px 10px;
+  padding: 4px 0;
   cursor: pointer;
   transition:
     color 0.12s ease,
@@ -2778,14 +2840,23 @@ body {
   box-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.5);
 }
 
-/* The pause toggle leads the pane (slowest = leftmost) and reads as its own
-   control — nudged apart from the speed run to its right, with a fixed width so
-   the pause / play glyph swap (a bar pair vs one triangle) doesn't reflow the
-   row. */
-.hud-speed--pause {
-  margin-right: 4px;
-  min-width: 2rem;
-  text-align: center;
+/* The pause toggle leads the strip (slowest = leftmost). Its cell is as wide
+   as the others, so the pause / play glyph swap (a bar pair vs one triangle)
+   doesn't reflow the row. */
+.hud-speed:first-child {
+  margin-left: 0;
+}
+
+.hud-speed:hover,
+.hud-speed:focus-visible,
+.hud-speed.is-active {
+  position: relative;
+  z-index: 1;
+}
+
+/* The focus ring lies outside the cell, over its neighbours. */
+.hud-speed:focus-visible {
+  z-index: 2;
 }
 
 /* Q3 — objective-command pane (bottom-right): Engage / Focus / Hold / Stop on
@@ -3531,13 +3602,14 @@ body {
 /* 96d — THE PRIMARY-ACTION BUTTON: the button factory's idiom
    (src/ui/button.ts). ONE look for the walk-on buttons that carried nine
    near-identical rules before (51b's continue trio · the promotion
-   Continue · the recruit pass · the port Leave · game over · sector
-   cleared; the character-select card is a card and keeps its own chrome).
-   Three modifiers name a DELIBERATE per-site delta; every computed value
-   a site had is preserved (the 96d cascade oracle) — the incidental ones
-   (a 13px here, a 24px pad there) are listed in WORKLOG §96d for a later
-   collapse. A site's POSITION stays on its own class (.preturn-continue
-   below, .port-leave) — layout is the screen's, look is the idiom's. */
+   Continue · the recruit pass · game over · sector cleared; the
+   character-select card is a card and keeps its own chrome, and the port
+   Leave left for the control column's plate). Two modifiers name a
+   DELIBERATE per-site delta; every computed value a site had is preserved
+   (the 96d cascade oracle) — the incidental ones (a 13px here, a 24px pad
+   there) are listed in WORKLOG §96d for a later collapse. A site's POSITION
+   stays on its own class (.preturn-continue below) — layout is the
+   screen's, look is the idiom's. */
 .btn--primary {
   font-family: var(--font-mono);
   font-size: var(--text-14);
@@ -3599,27 +3671,11 @@ body {
   color: var(--color-black);
 }
 
-/* btn--corner — a viewport-pinned corner control (the port Leave):
-   smaller, a full amber frame, an amber wash on hover. */
-.btn--primary.btn--corner {
-  font-size: var(--text-12);
-  padding: 8px 18px;
-  border-color: var(--color-terminal-amber);
-  transition: background 0.1s;
-}
-
-.btn--primary.btn--corner:hover,
-.btn--primary.btn--corner:focus-visible {
-  border-color: var(--color-terminal-amber);
-  background: rgb(from var(--color-terminal-amber) r g b / 0.12);
-  color: var(--color-terminal-amber);
-}
-
-/* 73c — the pre-turn Fight ▸ button is viewport-pinned (the PortScreen
-   .port-leave precedent): at maxHandSize 10 the two-row hand pushed it (and
-   the fire strip / packet row) below the fold, hiding the turn's primary
-   action behind a scroll. Bottom-CENTER because all three corners are taken
-   by the fixed CardListButtons (roster TR, draw BR, discard BL). The
+/* 73c — the pre-turn Fight ▸ button is viewport-pinned: at maxHandSize 10
+   the two-row hand pushed it (and the fire strip / packet row) below the
+   fold, hiding the turn's primary action behind a scroll. Bottom-CENTER
+   because the top-right is the control column's (Settings, Roster) and the
+   bottom corners are the pile buttons' (draw BR, discard BL). The
    .preturn-screen bottom padding keeps in-flow controls scrollable clear. */
 .preturn-continue {
   position: fixed;
@@ -3815,9 +3871,10 @@ body {
    The corner buttons (position: fixed so they ignore the host screens' own
    vertical scroll) open a modal that overlays everything with a dimmed backdrop
    and a bordered, scrollable grid of full cards. Amber terminal chrome,
-   fluorescent-blue hover — matching the recruit/pre-turn screens they sit on.
-   R1: the roster button (top-right, on Map / Recruit / pre-turn). R2: the
-   draw-pile (bottom-right) + discard-pile (bottom-left) buttons on pre-turn. */
+   fluorescent-blue hover — matching the pre-turn screen they sit on.
+   R2: the draw-pile (bottom-right) + discard-pile (bottom-left) buttons on
+   pre-turn. R1's roster button (Map / Recruit / pre-turn) opens the same
+   modal from the control column, in the chip's plate (`.control-chip`). */
 .card-list-button {
   position: fixed;
   z-index: 20;
@@ -3843,12 +3900,8 @@ body {
   color: var(--color-flourescent-blue);
 }
 
-/* Corner anchors — roster top-right (R1); the piles in the bottom corners (R2),
-   matching the brief's draw-right / discard-left layout. */
-.card-list-button--roster {
-  top: 16px;
-  right: 16px;
-}
+/* Corner anchors — the piles in the bottom corners (R2), matching the
+   brief's draw-right / discard-left layout. */
 .card-list-button--draw {
   bottom: 16px;
   right: 16px;

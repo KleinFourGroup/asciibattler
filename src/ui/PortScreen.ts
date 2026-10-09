@@ -34,10 +34,14 @@ import { buildUnitCard, unitCardFromTemplate } from './UnitCard';
 import { CardListModal } from './CardListModal';
 import { Screen } from './Screen';
 import { button } from './button';
+import { mountControl } from './chip';
+import { fadeOutAndRemove } from './fade';
 
 export class PortScreen extends Screen {
   private bodyEl: HTMLDivElement | null = null;
   private unsubscribes: Array<() => void> = [];
+  /** Leave port, while the screen is up (a row of the control column). */
+  private leaveEl: HTMLButtonElement | null = null;
   // 51d — the crew-removal picker (the 51c selectable roster view). One
   // instance per screen, disposed on hide (closes a lingering overlay).
   private readonly removalPicker: CardListModal;
@@ -48,6 +52,8 @@ export class PortScreen extends Screen {
     private readonly audio: AudioPlayer,
     private readonly run: Run,
     private readonly bus: EventBus<GameEvents>,
+    /** The control column's second row: where Leave port mounts. */
+    private readonly controlSlot: HTMLElement,
   ) {
     super(mount);
     this.removalPicker = new CardListModal(mount, audio);
@@ -68,16 +74,16 @@ export class PortScreen extends Screen {
     subtitle.textContent = t('port.subtitle');
     panel.appendChild(subtitle);
 
-    // Fixed (viewport-pinned) so it survives the scroll — leaving must never
-    // require finding the bottom of a long stock list.
-    const leave = button(`${t('port.leave')} ▸`, {
-      className: 'btn--primary btn--corner port-leave',
+    // In the control column (src/ui/chip.ts), so it survives the scroll —
+    // leaving must never require finding the bottom of a long stock list.
+    this.leaveEl = button(`${t('port.leave')} ▸`, {
+      className: 'chip control-chip',
       onClick: () => {
         this.audio.play('click');
         this.dispatcher.dispatch({ kind: 'leavePort' });
       },
     });
-    panel.appendChild(leave);
+    mountControl(this.controlSlot, this.leaveEl);
 
     this.bodyEl = document.createElement('div');
     this.bodyEl.className = 'port-body';
@@ -99,6 +105,11 @@ export class PortScreen extends Screen {
     this.removalPicker.dispose();
     for (const off of this.unsubscribes) off();
     this.unsubscribes = [];
+    // Leave is outside the panel, so it fades out beside it.
+    if (this.leaveEl !== null) {
+      fadeOutAndRemove(this.leaveEl);
+      this.leaveEl = null;
+    }
     super.hide();
     this.bodyEl = null;
   }

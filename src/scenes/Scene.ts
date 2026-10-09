@@ -53,6 +53,10 @@ export interface SceneContext {
   readonly backdrop: BackdropRenderer;
   readonly fontAtlas: FontAtlas;
   readonly uiMount: HTMLElement;
+  /** The control column's second row (src/ui/chip.ts): a scene whose screen
+   *  owns a top-right control (Roster, Leave port, the speed strip) hands it
+   *  this to mount the control into. */
+  readonly controlSlot: HTMLElement;
   readonly dispatcher: RunDispatcher;
   /** 63e — NULL exactly when no Run exists yet (the menu and the
    *  CharacterSelectScene mount before Run construction). Every other

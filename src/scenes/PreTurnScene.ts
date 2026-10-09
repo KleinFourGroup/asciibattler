@@ -31,7 +31,7 @@ export class PreTurnScene implements Scene {
   ) {}
 
   mount(ctx: SceneContext): void {
-    this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio);
+    this.screen = new PreTurnScreen(ctx.uiMount, ctx.dispatcher, ctx.audio, ctx.controlSlot);
     // 49f — the cache thunk feeds the at-will packet row (read live at
     // render time, the CardListButton getUnits pattern).
     const run = requireRun(ctx);

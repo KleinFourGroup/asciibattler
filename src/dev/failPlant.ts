@@ -1,9 +1,9 @@
 /**
- * 117.5i — THE PLANTED FAILURES (DEV only: main.ts reaches this module
- * through DEV-gated dynamic imports, so a production build carries neither
- * it nor the query). `?fail=<what>` makes the page fail the way a player's
- * might, so the failure plate (src/failure, src/ui/FailurePlate.ts) can be
- * read:
+ * 117.5i — THE PLANTED FAILURES (DEV only: the dev entry, ./devEntry.ts, calls
+ * it, and main.ts reaches that through a DEV-gated dynamic import, so a
+ * production build carries neither this module nor the query).
+ * `?fail=<what>` makes the page fail the way a player's might, so the
+ * failure plate (src/failure, src/ui/FailurePlate.ts) can be read:
  *
  *   ?fail=webgl     no canvas gives a WebGL context: the boot fails in
  *                   three.js, as it does where WebGL is off or missing
@@ -28,7 +28,9 @@ export const FAIL_PARAM = 'fail';
  *  is moving when the page fails. */
 const INTO_BATTLE_TICKS = secondsToTicks(2);
 
-const planted = (what: string): string => `planted by ?${FAIL_PARAM}=${what}`;
+// A literal, the query spelled out: scripts/dev-scan.mjs looks for it in a
+// build, where this module must not be.
+const planted = (what: string): string => `planted by ?fail=${what}`;
 
 const asked = (search: string): string | null => new URLSearchParams(search).get(FAIL_PARAM);
 

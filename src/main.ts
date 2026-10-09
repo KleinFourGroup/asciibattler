@@ -25,16 +25,7 @@ import './fonts.css';
 
 import { Game } from './Game';
 import { FontAtlas } from './render/FontAtlas';
-import { statusDef } from './config/statuses';
-import type { World } from './sim/World';
-import type { Team } from './sim/Unit';
-import { TraceRecorder, type BattleTrace } from './dev/TraceRecorder';
-import { pushTrace, loadTraces, clearTraces } from './dev/traceStore';
-import { attachDevKeys } from './dev/devKeys';
-import type { BoardPanel } from './dev/boardPanel';
 import { installMotionGate } from './render/motion';
-import type { EventBus } from './core/EventBus';
-import type { GameEvents } from './core/events';
 import { BUILD_ID } from './buildId';
 import { acquireRunLock, type LockManagerLike } from './store/runLock';
 
@@ -52,19 +43,29 @@ installMotionGate();
  * function, so that one catch (below) hears whatever it throws: no WebGL
  * context, a font file that didn't load, a Game that failed to build.
  */
-async function boot() {
+async function boot(): Promise<void> {
   const canvas = document.querySelector<HTMLCanvasElement>('#game-canvas');
   if (!canvas) throw new Error('Missing <canvas id="game-canvas"> in index.html');
 
   const uiMount = document.querySelector<HTMLDivElement>('#ui');
   if (!uiMount) throw new Error('Missing <div id="ui"> in index.html');
 
-  // 117.5i — the planted boot failures (`?fail=webgl`, `?fail=font`;
-  // src/dev/failPlant.ts), ahead of what they make fail. DEV-gated blocks,
-  // for the reason the diagnostics panel's is one (below).
-  if (import.meta.env.DEV) {
-    (await import('./dev/failPlant')).plantBootFailure(location.search);
-  }
+  // 117.5j — EVERYTHING UNDER src/dev COMES IN HERE, by a DEV-gated DYNAMIC
+  // import of its one entry (src/dev/devEntry.ts): the dev handle, the trace
+  // ring, the dev keys, the board explorer, the probe kit, the planted
+  // failures. `DEV` is a build-time constant, so a production build drops
+  // the import and with it the whole folder's module graph. A static import
+  // would rest on the tree-shaker proving each module's top level pure, and
+  // one such import once left some 200 bytes of a fixture table in `dist/`.
+  // tests/dev-guard.test.ts holds every reach into src/dev to this shape, and
+  // scripts/dev-scan.mjs reads a build for what would have leaked.
+  // Loaded before the Game is built, so what it installs afterwards is in the
+  // task that starts the loop.
+  const dev = import.meta.env.DEV ? await import('./dev/devEntry') : null;
+  // The planted boot failures and a board fixture's URL, ahead of what reads
+  // them. An `if`, not `dev?.…`: the minifier folds this form's test away and
+  // leaves `null?.beforeBoot(…)` of the other in every build.
+  if (dev) dev.beforeBoot(location.search);
 
   // The module pauses here until the font has parsed and the atlas is
   // rasterized.
@@ -76,23 +77,9 @@ async function boot() {
     acquireRunLock((navigator as { locks?: LockManagerLike }).locks),
   ]);
 
-  // 105c — the board explorer loads by a DEV-gated DYNAMIC import: `DEV` is a
-  // build-time constant, so in a production build this branch — and with it the
-  // whole src/dev/boardPanel module graph — is gone. (A static import relied on
-  // the tree-shaker proving the module's top level pure; 105c's fixture table,
-  // template literals and spreads, left ~200 bytes of it in `dist/`.)
-  const boardPanelModule = import.meta.env.DEV ? await import('./dev/boardPanel') : null;
-  // 112a — the pane probe kit, the same way (process/browser-pane.md).
-  const probeModule = import.meta.env.DEV ? await import('./dev/probe') : null;
-  // A fixture bookmark (`?bp=board-…`) stands for a set of run dials, and Game
-  // parses the run dials in its constructor — so its run pairs are written into
-  // the URL first (src/dev/boardPanel/boot.ts).
-  if (boardPanelModule) boardPanelModule.applyBoardFixtureUrl();
   // 116l — the diagnostics panel, behind a constant only a build made with
   // `VITE_DIAG=1` sets (src/dev/diag/index.ts). It goes in before the Game, the
-  // store's writer, so it times the first write too. A block, not a
-  // `const … ? … : null` with a call after it: the minifier folds that form's
-  // test and still leaves `null?.installDiag(…)` in every other build.
+  // store's writer, so it times the first write too.
   if (import.meta.env.VITE_DIAG === '1') {
     (await import('./dev/diag')).installDiag({ runLock });
   }
@@ -107,97 +94,14 @@ async function boot() {
   // 117.5i — the boot is over: from here a failure is the running game's,
   // and the plate halts it before it speaks.
   failure.started(() => game.halt(), canvas);
-  if (import.meta.env.DEV) {
-    (await import('./dev/failPlant')).plantRunFailure(location.search, game);
-  }
-  return { game, boardPanelModule, probeModule };
+  // `window.__game`, `window.__probe` and the rest of the dev handle.
+  if (dev) dev.installDevHandle(game);
 }
 
 // Top-level await: Vite + ESM + modern browsers handle it. A boot that
 // throws is told to the player, then thrown on, so the console has it as the
 // uncaught error it is.
-const { game, boardPanelModule, probeModule } = await boot().catch((err: unknown) => {
+await boot().catch((err: unknown) => {
   failure.boot(err);
   throw err;
 });
-
-// Dev-only debug handle. Exposes the live Game so the browser console
-// (and the preview MCP) can poke at world state for verification work
-// — D5.C overflow scenarios, animator fade probing, etc. Excluded from
-// the production bundle by `import.meta.env.DEV`.
-if (import.meta.env.DEV) {
-  const handle = window as unknown as {
-    __game: typeof game & {
-      applyStatus?: (id: string, target?: number | Team) => void;
-      traceRecorder?: TraceRecorder;
-      dumpTraces?: () => BattleTrace[];
-      clearTraces?: () => void;
-      boardPanel?: BoardPanel;
-    };
-  };
-  handle.__game = game;
-  // 53b — the passive battle-trace recorder (DEV-only, page-lifetime). Every
-  // battle auto-records into the localStorage ring (last 80); from the console:
-  //   __game.dumpTraces()   → the ring, newest last (copy(...) to clipboard)
-  //   __game.clearTraces()  → empty the ring
-  // Bulk download: Ctrl+Alt+D (devKeys.ts, 53f).
-  // Game keeps `bus` TS-private; the dev convention (devApplyStatus's
-  // activeScene reach-in below) is a cast — private is runtime-accessible.
-  const bus = (game as unknown as { bus: EventBus<GameEvents> }).bus;
-  handle.__game.traceRecorder = new TraceRecorder(bus, pushTrace);
-  handle.__game.dumpTraces = () => {
-    const traces = loadTraces();
-    console.info(`[traces] ${traces.length} trace(s) in the ring`);
-    return traces;
-  };
-  handle.__game.clearTraces = clearTraces;
-  // 53f — the dev keys (Ctrl+Alt+S export the run / Ctrl+Alt+L load one,
-  // map-phase saves only / Ctrl+Alt+D dump the trace ring). A separate window
-  // listener, NOT the Keybindings registry (its zod schema ships every
-  // action — worklog §53).
-  // 105b — the board explorer (Ctrl+Alt+P; Round 7.5's projection spike). Its
-  // seams install HERE, at boot, so a `?bp=` bookmark is live before the first
-  // battle stamps a sprite. From the console: __game.boardPanel.set('cue', 'outline').
-  if (boardPanelModule) {
-    handle.__game.boardPanel = boardPanelModule.attachBoardPanel(game);
-    attachDevKeys(game, handle.__game.boardPanel);
-  }
-  // 28 dev hook — apply a status to units in the ACTIVE battle so the behavior
-  // statuses (blind/panic/frozen/confusion) are observable BEFORE §29's
-  // status-on-hit applier ships. From the browser console:
-  //   __game.applyStatus('confusion')            → every living enemy (default)
-  //   __game.applyStatus('frozen', 'player')     → every living player unit
-  //   __game.applyStatus('blind', 7)             → just unit id 7
-  handle.__game.applyStatus = (statusId, target = 'enemy') =>
-    devApplyStatus(game, statusId, target);
-  // 112a — `window.__probe`, installed last so a `ready()` that returns sees
-  // the whole dev handle (and a board fixture's battle) in place. A pane
-  // session starts with `await __probe.ready()`.
-  probeModule?.installProbe(game);
-}
-
-/** 28 — the `__game.applyStatus` body (DEV-only; tree-shaken from prod builds). */
-function devApplyStatus(g: Game, statusId: string, target: number | Team): void {
-  const world = (g as unknown as { activeScene: { world?: World | null } | null }).activeScene?.world;
-  if (!world) {
-    console.warn('[applyStatus] no active battle — enter a fight first');
-    return;
-  }
-  let def;
-  try {
-    def = statusDef(statusId);
-  } catch {
-    console.warn(`[applyStatus] unknown status id '${statusId}'`);
-    return;
-  }
-  const targets =
-    typeof target === 'number'
-      ? world.units.filter((u) => u.id === target && u.currentHp > 0)
-      : world.units.filter(
-          // §75e — 'neutral' as a team filter reaches ACTIVE neutrals (camp
-          // members) only; inert scenery stays out of the dev status sprayer.
-          (u) => u.team === target && (u.team !== 'neutral' || u.campId !== null) && u.currentHp > 0,
-        );
-  for (const u of targets) world.applyStatusEffect(u, def, null);
-  console.info(`[applyStatus] applied '${statusId}' to ${targets.length} unit(s)`);
-}

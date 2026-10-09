@@ -60,9 +60,11 @@ export function build(tree, dist, log = console.log) {
     { cwd: tree.root, env: { ...process.env, NODE_ENV: 'development' }, encoding: 'utf8' },
   );
   if (built.status !== 0) stop(`the build of ${tree.stamp} failed:\n${built.stderr || built.stdout}`);
-  // Only a development-mode build carries the board explorer (and __game), so
-  // its chunk is the proof that NODE_ENV reached Vite.
-  if (!readdirSync(join(dist, 'assets')).some((f) => f.startsWith('boardPanel-'))) {
-    stop(`the build of ${tree.stamp} has no boardPanel chunk: DEV was off, and the dev handles are missing`);
+  // Only a development-mode build carries the dev code (the board explorer,
+  // __game, the probe kit), so its chunk is the proof that NODE_ENV reached
+  // Vite. The chunk is the dev entry's (src/dev/devEntry.ts) since 117.5j; a
+  // tree from before that has the board explorer's own.
+  if (!readdirSync(join(dist, 'assets')).some((f) => f.startsWith('devEntry-') || f.startsWith('boardPanel-'))) {
+    stop(`the build of ${tree.stamp} has no dev chunk (devEntry-* or boardPanel-*): DEV was off, and the dev handles are missing`);
   }
 }

@@ -11,7 +11,8 @@
 // It writes <out>/<name>/ (the build) and <out>/<name>.zip, where <name> is
 // `asciibattler-<build id>` with `-diag` for the diagnostics build, and
 // prints one JSON line: the zip's path, its entry count, its bytes and the
-// build's hash. It exits 1 with the reason when the build or the check fails.
+// build's hash. It exits 1 with the reason when the build or the check fails,
+// or when the build carries dev code (scripts/dev-scan.mjs).
 // The build is also copied to <out>/current/, a path that doesn't change with
 // the ID, for a local look: `npm run preview -- --outDir output/itch/current`
 // (the `itch-preview` launch config serves it to the Browser pane on 5193).
@@ -30,6 +31,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildId } from './build-id.mjs';
+import { devLeaks } from './dev-scan.mjs';
 import { distHash } from './dist-hash.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -124,6 +126,13 @@ const built = spawnSync(
   { cwd: repo, env, encoding: 'utf8' },
 );
 if (built.status !== 0) fail(`the build failed:\n${built.stderr}${built.stdout}`);
+
+// 117.5j: no dev code in a build that goes to players (scripts/dev-scan.mjs).
+// The diagnostics build carries its panel and nothing else from src/dev.
+const leaks = devLeaks(dist, { diag });
+if (leaks.length > 0) {
+  fail(`the build carries dev code:\n${leaks.map((l) => `  ${l.file}: "${l.marker}" (${l.source})`).join('\n')}`);
+}
 
 rmSync(zip, { force: true });
 pwsh("Compress-Archive -Path (Join-Path $env:ITCH_SRC '*') -DestinationPath $env:ITCH_ZIP", {

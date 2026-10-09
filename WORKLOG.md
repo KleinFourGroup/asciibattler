@@ -9650,3 +9650,104 @@ docs), so the step cost about 288k to there: sixteen times 117.5h and
 twice 117.5d's build. Where it went: orientation and step zero to the
 first written file; four planted cases, each read on the runner, the dev
 server and the production build; and the docs.
+
+### 117.5j — the dev-code guard (2026-10-09, session 8c160a6b) — read `none` ✅
+
+117.5i's commit is `23e0403`, reading **429,191** at 12:34, under the
+line, so the step started.
+
+**Step zero: what a build carried.** `src/main.ts` imported three dev
+modules statically (`TraceRecorder`, `traceStore`, `devKeys`) and used
+them inside its DEV block. A scan of the production build for eighteen
+strings found dev code under none of them, so the tree-shaker was
+dropping all three; nothing held that. Two of the strings did occur:
+`applyStatus`, which is also the sim's own method name, and `boardPanel`,
+twice, in two inert names, `boardPanelModule:null` and (unsearched)
+`probeModule:null`, which 117.5i's `boot()` returned to the DEV block. Outside `src/dev`, `main.ts` was the
+only source file that imported from it (one test does, and is not
+shipped).
+
+**As built.**
+- *One dev entry.* `src/dev/devEntry.ts` holds what `main.ts`'s DEV block
+  did (`window.__game`, the trace ring, the dev keys, the board explorer,
+  `applyStatus`, `window.__probe`) and what ran before the Game (the
+  planted boot failures, a board fixture's URL). `main.ts` loads it by
+  `import.meta.env.DEV ? await import('./dev/devEntry') : null`, before
+  the Game is built, and calls it twice behind `if (dev)`. It is loaded
+  early so that the handle is installed in the task that starts the loop,
+  as it was: the board explorer's seams have to be in before a fixture's
+  first battle stamps a sprite.
+- *The pin* (`tests/dev-guard.test.ts`, on every `npm test`): every
+  shipped source file's reaches into `src/dev`, read with the TypeScript
+  parser. A static import or a re-export is a fault; a dynamic import
+  must stand under `import.meta.env.DEV`, in an `if`'s then-branch or a
+  conditional's first arm, or under the `VITE_DIAG` gate for the
+  diagnostics panel alone. Nine planted faults and six planted passes;
+  the known answer on the real `main.ts` is its two reaches, each under
+  its gate, so a reader that saw nothing would not pass.
+- *The scan* (`scripts/dev-scan.mjs`): reads a build's text files for
+  markers, the strings dev code carries through the minifier (a console
+  tag, a storage key, a class name, a property name), a row per entry of
+  `src/dev` and one for the store's two plants, which are a DEV branch in
+  a shipped module. `npm run build` ends with it and the itch zip calls
+  it on what it built; `--diag` passes the diagnostics panel's markers and
+  no others. The test holds the list to the folder: every entry of
+  `src/dev` has a row, and every marker is in its source.
+
+**Measured.**
+- *The clean build:* `npm run build` exits 0, "dist carries no dev
+  marker"; the script is 654.64 kB (654.74 before: the two inert names
+  are gone), and `beforeBoot`, `installDevHandle` and `null?.` occur
+  nowhere in it. The itch zip, plain and `--diag`, exits 0 (32 and 34
+  entries, into a scratch folder). The diagnostics build scanned as a
+  plain one exits 1 and names the panel's two markers.
+- *The planted leak:* with the gate taken off `main.ts`'s import, the
+  production build ships a 40.54 kB `entry` chunk; the scan exits 1 and
+  names ten markers (the entry's two, the recorder, the ring, the dev
+  keys, the planted failures, the board explorer's two, the probe kit,
+  the store's plant); and the pin fails on `src/main.ts` by name. Put
+  back, both pass.
+- *A marker of the session's that was wrong,* `asciibattler:diag-`, is in
+  the panel's test and a comment and not in its code; the list's own
+  check ("every marker is in its source") failed it on the first run.
+- *The runner refused to launch.* `shell/electron/tree.mjs` took a chunk
+  named `boardPanel-*` as its proof that a development-mode build had DEV
+  on, and the dev code is one chunk now. The entry was renamed
+  `devEntry.ts` so that its chunk says what it is, and the check takes
+  `devEntry-*` or, for a tree from before this commit, `boardPanel-*`.
+- *The dev server, in the pane:* `ready()` passes on a seeded run with
+  the whole handle (`applyStatus`, a `TraceRecorder`, `boardPanel.set`);
+  `?bp=board-quarry` boots its battle; `?fail=font` gives the boot plate.
+  With the pane at a true 1280 by 720 this time, the boot plate was
+  measured, which 117.5i could not do: 640 by 235 at 320, 243, and at
+  150 % 960 by 281 at 160, 220, nothing off the page at either.
+- *Under the runner:* `drive-run --seed=7` logs `a59ee48f`;
+  `?fail=frame`, `?fail=context` and the control pass as at 117.5i, the
+  planted error now thrown from `devEntry-*.js`.
+- `npm test`: 249 files, 3616 tests. Typecheck clean.
+
+**Not verified.** The recorder (`npm run record`), which builds through
+the same `tree.mjs`. A real leak of the 105c kind, part of a module left
+by the tree-shaker: the scan sees it only if the part carries one of
+that module's markers. The dev keys and the board panel by hand.
+
+**Predictions against what happened.** No bump, no stream, no bus event,
+no smoke, as cut; `npm test` gains one file and 10 tests. Not predicted:
+the runner's chunk check. The reading before this entry: **495,310** at
+12:48, so the step cost about 66k to there.
+
+### The sitting, prepared (2026-10-09, session 8c160a6b) — the `stop` is open
+
+Every build step of the cut is in. 117.5k is the user's read, in
+Firefox, of the five `batch` steps; each entry above has its script
+under "For the sitting", with what the build added to it:
+
+| step | the read | known before the read |
+|---|---|---|
+| 117.5d, the control column | a run to a battle, a port and a recruit: the right column at one place, Settings on top | the five leans signed with the mock |
+| 117.5e, room at a larger text size | 125 % on a 720p window through an event, a port, a recruit and a battle; 150 % and a promotion | at 150 % the columns sit over a recruit's outer cards and the banner is cut (TODO) |
+| 117.5f, two wordings | arm Focus and read the prompt; an ability row on a recruit card | one kind of row now wraps, the cut's own "wrong": the read rules on it |
+| 117.5h, the loading line | the network throttled, a reload; scripts off | not seen on a slow load by the session |
+| 117.5i, the failure plate | `?fail=webgl`, `?fail=font`, `?fail=frame`, `?fail=context`; 150 % | eight calls of the session's, the halt on any error first; nothing of it read in Firefox |
+
+The session stops here at about 500k, under the line.

@@ -428,16 +428,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 ## Round 7.5 close riders (the sweep, 2026-09-26)
 
-- [ ] **A guard that dev code doesn't ship** (papercut #42, 105c). The 105c
-  nothing-ships check was a dist grep run from memory, and a static DEV
-  import once shipped ~200 B of a fixture table: the tree-shaker can't
-  prove template literals and spreads pure. `src/main.ts` still imports
-  three dev modules statically (`TraceRecorder`, `traceStore`, `devKeys`)
-  and relies on the shaker. Two shapes: a dist check on the deploy path
-  (build, then grep `dist/` for dev-only markers, with a planted leak as
-  its control), or a pin that `src/dev` is reached only through the
-  DEV-gated dynamic import. Round 8's pane probe kit is dev code and rides
-  it.
+- ✅ **A guard that dev code doesn't ship** (117.5j, 2026-10-09): both
+  shapes. `src/dev` is reached through one DEV-gated dynamic import, pinned
+  (`tests/dev-guard.test.ts`), and `npm run build` and the itch zip scan
+  what they built (`scripts/dev-scan.mjs`; WORKLOG §117.5j).
 
 ## §112 riders (the pane probe kit, 2026-09-30)
 

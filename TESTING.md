@@ -12,6 +12,8 @@ How we keep the simulation honest. Companion to `DESIGN.md`, `ARCHITECTURE.md`, 
 
 - **`src/failure`** — what counts as a failure (`rules.test.ts`): which `error` events and rejections do, the first failure only, a game halted before its plate, and the wait on a lost WebGL context on a clock moved by hand. The filters' shapes were read off a real page first (a ResizeObserver loop report carries no thrown value; a missing font file rejects with a `NetworkError`). `tests/failure-boot.test.ts` holds the watch third in `main.ts` and its import graph clear of everything that can fail it. The plate itself, the halt in `Game` and the planted failures (`?fail=`) are the browser's: a pane or runner check, and the user's read in Firefox.
 
+- **The dev-code guard** (`tests/dev-guard.test.ts`) — no shipped source file reaches `src/dev` but by a DEV-gated dynamic import, read from the source text with planted faults; and the build scan's marker list covers every entry of `src/dev`. The scan of a real build is not in `npm test`: `npm run build` and `scripts/itch-zip.mjs` run it on what they build.
+
 ## What does NOT get tested here
 
 - **`src/render`** — three.js, shaders, DOM. Visual verification by eyeball. Trying to unit-test render code with jsdom is a tax we choose not to pay for an MVP.

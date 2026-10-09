@@ -12,9 +12,10 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §117.5 ✅ CLOSED 2026-10-09** (the UI sweep; §117 closed
-2026-10-08). **§117.75, the rest gate, is in progress:** inserted at
-§117.5's kickoff, before §118, and cut 2026-10-09.
+**Status: §117.75 ✅ CLOSED 2026-10-09** (the rest gate; §117.5, the UI
+sweep, closed the same day). **§118, the public web channel and the round
+close, is next** and not yet cut; it opens on the events' rewrite and its
+order against the board's reproduction.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -264,32 +265,21 @@ bus event and no fuzz smoke on any step, and `drive-run --seed=7` logs
 - [x] **117.5j** — the dev-code guard. Read `none`.
 - [x] **117.5k** — THE SITTING. Read `stop` ✅ 2026-10-09.
 
-## Phase 117.75 — the rest gate
+## Phase 117.75 — the rest gate ✅ CLOSED 2026-10-09
 
-Charter (inserted 2026-10-08 at §117.5's kickoff, user-signed): a rest
-node stops on a page (its text, one option) and is a saved gate, so a
-closed tab comes back to it; built as the seam rest choices will use.
-**Why here:** after the sweep, whose event layout it stands on; before
-§118, so the board measures what ships. **Risk:** medium (a Run bump,
-every phase walker, the eve of the board). **Decision points:** a rest as
-an event with its own entry, or a phase and command of its own:
-✅ DECIDED 2026-10-09, a phase and a command of its own (the bots draw on
-a one-option event page, so an event shifts their streams too; WORKLOG
-"The §117.75 kickoff"). **Exit:** a run closed on
-the page continues there; the fuzz summary is byte-identical before and
-after; the user reads the page. **Scope guards:** one option, today's
-effect and numbers; no choices, no balance change.
+**Outcome:** a rest node stops on a page of its own and is a saved gate: a
+`rest` phase left by a `chooseRestOption` command, with the effect on the
+option's click, so a run closed on the page continues there unhealed (Run
+v49). It is a phase and not an event, decided at the kickoff: an event
+takes `eventStep`, and the bots draw on a one-option page (gotcha #141).
+The fuzz summaries are byte-identical before and after on the default,
+searcher and arbitrated shapes. The user tested the page and signed it
+and the session's calls, with no finding. The first three events' rewrite
+left for §118 at the kickoff. WORKLOG §117.75.
 
-**Rides with it:** the rest's own text. The first three events' rewrite
-left for §118 at the kickoff (the user, 2026-10-09): an outcome page moves
-`eventStep` for the rest of a run, and this phase's oracle is
-byte-identity.
-
-The cut, signed 2026-10-09 (WORKLOG "The §117.75 kickoff"):
-
-- [x] **117.75a** — the gate: the `rest` phase, `rest:entered`, `chooseRestOption`, `resume()`, every walker, `firstNode=rest`, and a page on the event layout. Read `none`. ✅ 2026-10-09, Run v49, no new stream: `summary.csv` and `rosters.csv` byte-identical on the default, searcher and arbitrated shapes (the last on four seeds from a pinned worktree, `decisions.csv` too), and four drive journals through the page; an `eventStep` bump, a bot's draw and a heal on entry each change rows, and the compiler names all six walkers with their cases removed (WORKLOG §117.75a).
-- [ ] **117.75b** ◐ built 2026-10-09, unread (under the runner, a run closed on the page continues there with the pool as it was and the option then heals; the survey finds nothing on it at any size on 1280×720; WORKLOG §117.75b) — the page where a player meets it: 1280×720, 150 % text, keyboard focus, the control column, the effect line, and a save closed on the page. Read `batch`: `?firstNode=rest` opens a run on the page and the option leads to the promotions, then the map; in a normal run, close the tab on a rest page and Continue from the menu. Wrong is the map with the node spent, a pool healed before the click, or the page running off 1280×720 at 150 %.
-- [ ] **117.75c** — THE SITTING, then the phase close. Read `stop`.
+- [x] **117.75a** — the gate: the `rest` phase, `rest:entered`, `chooseRestOption`, `resume()`, every walker, `firstNode=rest`, and the page on the event layout. Read `none`. ✅ `28b9d2b`: byte-identical on three shapes and four drive journals, with planted controls failing and the compiler naming all six walkers.
+- [x] **117.75b** — the page where a player meets it, under the runner: a run closed on it continues there with the pool as it was; nothing found at any text size on 1280×720. Read `batch` ✅. `339e1d3`.
+- [x] **117.75c** — THE SITTING. Read `stop` ✅ 2026-10-09.
 
 ## Phase 118 — the public web channel, then the round close
 

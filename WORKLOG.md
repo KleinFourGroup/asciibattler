@@ -10141,3 +10141,62 @@ option (a page script's key events move no focus and fire no default
 action); the look, the effect line's size and grey among it; where the
 heal shows, which is the Morale chip on the screen after the click and
 not on the page; Firefox.
+
+### 117.75c — THE READ (2026-10-09, the user's) ✅
+
+The reading at the read: **481,268** at 17:18 (473,320 at 15:17 on
+117.75b's commit, `339e1d3`). The user, two hours after the stop:
+
+"Alright, Claude, I tested it, and all reads passed! 😁 Signing all of
+your calls, and good catch about corrupted shrine being a test!"
+
+So:
+- **117.75b READ ✅:** the rest page as built. The message does not say
+  which browser; the stop's script named the user's own dev server.
+- **The calls are signed**, the five the stop's message listed: the
+  effect line shows what the click will give and names a full pool; its
+  wording; the rest node's green; no cue on entering; the heading "Z
+  Rest". One more is in 117.75a's entry and was not in that message, so
+  it is not signed by name: a hop the Run rejects still remounts the map.
+  It is behaviour kept, not changed.
+- **The answer on the rewrite stood:** it opens §118, and the three notes
+  the session gave are that kickoff's to weigh (ROADMAP §118).
+
+No finding, so no `-post`, and the reads doctrine's rollback had nothing
+to fire on.
+
+### §117.75 closed (2026-10-09, session e72429d8)
+
+**The exit is met.** A run closed on the page continues there (117.75b's
+five launches on one profile, and the user's own test); the fuzz summary
+is byte-identical before and after (117.75a, four shapes); the user read
+the page. ROADMAP's section is demoted to its outcome and its ticked
+lines, the Cursor names §118's kickoff, and the phase's summary is in
+`retro/sessions.md`.
+
+**What the phase was.** One session. The kickoff cut four steps and the
+shape-lock's answers left three: the events' words went to §118 with the
+rewrite. One decision was reversed at the kickoff (a phase, where the
+session before had leaned to an event) on evidence the audit found, and
+one rider was moved by the user to a place neither of the session's two
+options had named. One `batch` read, from the script written at the cut,
+with no finding. For the round close's recount of `batch` reads: one.
+
+**The predictions.** Run v48 → v49: held. No new stream: held. The smoke
+fired on 117.75a and on no other commit: held. The drive's log hash would
+move: it did not for seed 7, whose run meets no rest; seeds 1 and 2,
+which do, log `e8d1ecb4` and `db52a059` now.
+
+**What the steps cost,** for the round close's reset of the hand-off line
+(each from the readings in its entry): orientation 102k; the audit 116k;
+the shape-lock's talk 37k and the kickoff's docs 10k; 117.75a 184k
+against 150k estimated, the overrun being the rollout walker's reach
+(an inert control, a counter, a worktree baseline of four seeds);
+117.75b about 25k against 60k, since the page needed no change; the
+stop's report and the read 8k; this close started at 481k.
+
+**Carried.** To §118's kickoff (ROADMAP §118): where the rewrite falls
+against the level-0 reproduction, the outcome-equivalence check, and the
+shrine's first page as a fixture. In the sound table: `rest:entered` is a
+`candidate` with the feel sweep's others. Nothing went to TODO, and its
+item for the rest is ticked.

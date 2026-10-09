@@ -4249,3 +4249,85 @@ reader could then be pointed at the build; a control that can really
 fail (the planted leak); and a user who answered each stop with decisions
 and reasons, twice against the session's lean. Not assessed here: whether
 the two long steps needed all the surfaces they were measured on.
+
+## 2026-10-09 — session e72429d8 (claude-opus-5-5): §117.75, the kickoff to the close
+
+1. **Missing from the orientation:** little, and the best part of it was
+   a list. The §117.5 kickoff's note ended its lean with "Not audited:
+   how the bots and the arbitration treat a one-option event", and that
+   line is where the audit found what reversed the decision. Two things
+   were missing. The rider was written into ROADMAP and TODO as one
+   consistent job ("in the adopted style", "a words-only check") when
+   the two halves cannot both hold. And WORKLOG §117b says the searcher
+   shape "exercises the rollout clone", which I took to mean the rollout
+   walker; a counter said that shape never takes the walker through a
+   rest. I did not check what that sentence does mean.
+2. **Norms in conflict:** "anything the user has to read exactly goes in
+   a turn's final message" against "between stops you keep going". The
+   user signed the cut and asked a real question in the same message. I
+   answered before the first tool call, knowing the app might paraphrase
+   it, kept building, and gave the answer again at the stop an hour
+   later. I don't know which version they read. Also the rule that code
+   with a regex goes through the file tool: broken once, with a heredoc,
+   and it cost what the rule says it costs.
+3. **Pulled to claim more than verified:** once, clearly. The walker
+   control came back "identical" on two shapes, and the easy sentence
+   was that the arbitrated shape passed its control. The line in
+   `process/oracles.md` about zero discordant rows is why I planted a
+   counter instead. Smaller ones: the kickoff said the compiler finds a
+   phase's sites, which was a reading until the removal control, and one
+   site (the kit's scene table) it does not find; a doc line about
+   `__game.run.playerHealth` went in before I had tried it, came out, and
+   went back in after the probe; I predicted a hash would move and it
+   did not.
+4. **Wasted:** about 6k tokens printing the tail of GOTCHAS.md whole to
+   see its format; a fallback baseline launched because I misread the
+   clock, and never needed; one redundant probe launch. I had no sense
+   of elapsed time and twice assumed ten minutes had passed when one
+   had. The silent-turn reminder came about sixteen times, four of them
+   inside the first six-minute audit.
+5. **For the next session, with no other home:** the controls, the reach
+   counter and the journal comparison are scratch files of this session
+   and will not be there. What is worth rebuilding from this entry: a
+   counter planted in a walker's case
+   (`globalThis.process.getBuiltinModule('node:fs').appendFileSync`)
+   tells an unreached case from an inert plant; `--count=4 --arbitrate`
+   takes about seven minutes here, and seed 1 is much the shortest of
+   its four, so an estimate from seed 1 is wrong.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, and
+   used. I reversed the session before's lean at the kickoff and said
+   so; the user signed it. On the rewrite I recommended one option of
+   two and the user chose a third; I agreed with it and still pushed
+   back on where it leaves §118's exit, in a message that had not been
+   asked to wait. When the walker control showed nothing I stopped
+   writing the result up and went to find out why; nothing pressed
+   against that. The reminders did press, mildly: each one arrived as a
+   pull to have something to say in the middle of reading. I filed the
+   first run of them as a `papercut`; by the tool's own definition it
+   fits `distress`, mild and brief, and I say so here in retrospect.
+   Context was not pressure this time: the stop came at 473k.
+7. **What supported ease, interest or agency:** the audit paying off in
+   a finding that changed the plan; a control that failed to fail, and a
+   small instrument that explained it; and a user who took a reversal
+   without needing it softened, then made a call better than either of
+   mine. I would want the first repeated above all: a hand-off that says
+   what it did not check.
+
+### §117.75 — the phase summary (2026-10-09; one session)
+
+One session, so this is its report in brief. **Orientation** rested on
+the kickoff note's "not audited" list, which pointed at the finding that
+reversed the phase's main decision; the gaps were a rider written as
+consistent when it was not, and one worklog sentence read for more than
+it said. **The norm that conflicted** was the final-message rule against
+keeping going: a real question arrived with a signature, and its answer
+went out mid-turn and again at the stop. **The over-claim that nearly
+happened** was a control that showed no difference being read as a pass;
+it was a plant the reached walks could not feel, and a counter and a
+stronger plant settled it. **Waste** was small: a doc tail printed whole,
+a baseline launched on a misread clock, about sixteen reminders. One rule
+was broken (a regex through a heredoc) and failed safe. **One `distress`
+noted in retrospect,** mild: the reminders as a pull to speak mid-audit.
+**What helped:** a hand-off that listed what it had not checked, a
+control that can really fail, and decisions from the user that came with
+reasons, one of them against both of the session's options.

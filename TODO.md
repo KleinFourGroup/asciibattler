@@ -668,7 +668,9 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   (117.5i): Tab stops on Reload alone, and the box that scrolls is not a
   tab stop. Making
   the `<pre>` a tab stop would do, as the credits' body is one.
-- [ ] **A rest node conveys nothing and is not a gate.** Home: §117.75.
+- [x] **A rest node conveys nothing and is not a gate.** ✅ 2026-10-09
+  (§117.75): a page of its own and a saved gate, `28b9d2b`; WORKLOG
+  §117.75.
 - [ ] **The first three events' prose predates the adopted style**
   (`corrupted-shrine`, `whispering-terminal`,
   `whispering-terminal-collects`: a cost in a label's brackets, the effect

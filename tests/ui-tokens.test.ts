@@ -150,6 +150,7 @@ const FIXED_BOXES: ReadonlyArray<readonly [rule: string, why: string]> = [
   ['.map-node { height: 40px }', "the map's grid"],
   ['.hud-player-pane { max-width: min(94vw, 1800px) }', 'a ceiling for a very wide window, not a size'],
   ['.hud-enemy-pane { max-width: min(94vw, 1800px) }', 'a ceiling for a very wide window, not a size'],
+  [':root { --column-side: calc(20px + var(--chip-w) + 14px) }', "a column's inset and its gutter, which are gaps; the width in it is the rem term"],
 ];
 
 /** Every size declaration of `minPx` or more in px, as `selector { prop: value }`. */

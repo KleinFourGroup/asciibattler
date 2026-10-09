@@ -526,20 +526,11 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   costs each window. A suggestion of the session's, not the user's: ask
   it at the round's playtest (was any text too small; did anyone change
   Text size).
-- [ ] **Where a larger text size runs out of room on a 720p window**
-  (116k; WORKLOG §116k's table). At 125 %: the battle's hop chip sits over
-  the banner's left end by 19px (it is placed at the column's width plus a
-  gutter, and the column grows), the pool chip's value over the event's
-  text by 11px, the settings chip over the port's heading by 6px. At
-  150 %: the promotion screen's heading and button are 17px off the page,
-  and the chrome column covers the left of the event, recruit and port
-  screens. A 1080p window has none of these. Home: §117.5, with the
-  chip's home above, since the same column is the cause; re-run
-  `shell/electron/probes/text-scale.js` after any move. 117e adds one:
-  at 150 % character select's cards wrap to two rows, each with its
-  Escalation picker, and the column is 189px taller than the window. It
-  scrolls from the top there, with nothing off the page, where it fit
-  before the picker.
+- ✅ **Where a larger text size runs out of room on a 720p window**
+  (117.5e, 2026-10-09): at 125 % the survey finds nothing new and no chip
+  is over text; at 150 % nothing is out of reach (DESIGN "The smallest
+  window, and room for the columns"; WORKLOG §117.5e). What 150 % still
+  shows is in "§117.5 kickoff riders".
 - ✅ **What the text-size survey did not reach** (116k): read at 117.5a by
   the survey's `extras` mode, clean at every size on four windows; no full
   card opens on hover anywhere, and the menu's own tooltips rest on the
@@ -612,10 +603,10 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 - [ ] **No loading line.** `index.html` holds the canvas and the UI mount,
   and the frame is black until about 1.2 MB of script has loaded and the
   atlas is built. Home: 117.5h.
-- [ ] **The smallest supported window is 1280×720, and DESIGN doesn't say
-  so yet** (decided at 117.5c's read, 2026-10-09; the itch embed is that
-  size, with itch's fullscreen button for a 768-row laptop). Home: 117.5e
-  for DESIGN's line, §118 for the page's setting.
+- [ ] **The itch embed is 1280×720, the smallest supported window**
+  (decided at 117.5c's read, 2026-10-09, with itch's fullscreen button for
+  a 768-row laptop; DESIGN names the window since 117.5e). Home: §118, for
+  the page's setting.
 - [ ] **A smaller window than 1280×720** (1024×576 first): a future goal,
   the user's call at 117.5c's read, and "closer to a full round" than a
   step. What stands in the way is the item below and the left column over
@@ -643,16 +634,20 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 - [ ] **At 150 % text a 720p window breaks down, and the layout wants a
   rework** (the user, reading 117.5d's mock, 2026-10-09: "things really
   start to break down by 150%; at some point, we'll need to rework
-  things"). Measured on the mock, which the build matches: the two columns
-  are 300px each of a 1280px page and sit over the outer cards of a
-  recruit and a port (plates over a card's glyph by 24 and 25px), the Map
-  chip is over an event's heading by 46px, and the hop chip's box is 207px
-  into the banner's. 117.5e holds 150 % to "nothing out of reach" and
-  125 % to "no chip over text", and no more. The cause is a column's
-  width against a screen's centred body, on both sides since 117.5d, so a
-  rework is the screens' bodies making room for the columns (or the
-  columns giving way), not a fix per chip. A later round's; the
-  instrument is `shell/electron/probes/text-scale.js`.
+  things"). The two columns are 300px each of a 1280px page there. What
+  150 % shows after 117.5e, which held it to "nothing out of reach" and
+  no more: the columns over the outer cards of a recruit (plates over a
+  card's glyph by 24px); the battle's banner cut by 139px of its name; the
+  countdown's Fight button over the enemy's compact cards by 14px, since
+  the enemy pane now drops 22px to stay under the hop chip; the promotion
+  screen scrolling 66px. The event and the port are clear, their bodies
+  narrowed to the room between the columns, which at 150 % is 612px. So a
+  rework is about what a screen does with that little room (the card
+  rows, the battle's top), not a fix per chip. Five screens are still a
+  plainly centred column with no scroll (recruit, reward, game over,
+  sector cleared, the menu): they fit today, and a taller body would put
+  their ends off the page as the promotion screen's were. A later
+  round's; the instrument is `shell/electron/probes/text-scale.js`.
 - [ ] **The battle's hop chip does not fade** (seen in the stylesheet at
   117.5d, not measured): it is `chip hud-hop screen-fade`, and the chip
   plate's `transition` comes later in the sheet than `.screen-fade`'s and

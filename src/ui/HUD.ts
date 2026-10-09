@@ -116,6 +116,8 @@ interface EncounterPools {
 
 export class HUD {
   private readonly banner: HTMLElement;
+  /** The hop chip's and the banner's row (ui.css `.hud-top`). */
+  private readonly topRow: HTMLElement;
   private readonly hopLabel: HTMLElement;
   /** Q1 — the speed-command pane (top-right): one button per enabled speed
    *  (ascending) + a pause/play toggle. Repainted on each speed change; the
@@ -236,7 +238,11 @@ export class HUD {
     // procedural). Centered at the top; same screen-fade lifecycle as the panes.
     this.banner = document.createElement('div');
     this.banner.className = 'battle-banner screen-fade';
-    mount.appendChild(this.banner);
+    // The top row holds the hop chip and the banner between the two columns
+    // (ui.css `.hud-top`): one grid, so neither can sit over the other.
+    this.topRow = document.createElement('div');
+    this.topRow.className = 'hud-top';
+    mount.appendChild(this.topRow);
 
     // Q6 — the hop/turn chip, the one survivor of the dismantled side panel,
     // now a standalone top-left element, with the banner centered between it
@@ -245,7 +251,7 @@ export class HUD {
     // 101b — it wears the shared `.chip` plate; `.hud-hop` keeps only its
     // position, derived from the chrome column's width (ui.css).
     this.hopLabel.className = 'chip hud-hop screen-fade';
-    mount.appendChild(this.hopLabel);
+    this.topRow.append(this.hopLabel, this.banner);
 
     // Q1 — the speed strip: one cell per ENABLED speed (ascending) + a
     // pause/play toggle, the control column's second row in a battle (top
@@ -622,6 +628,8 @@ export class HUD {
     this.unwatchCountdownAnchor();
     fadeOutAndRemove(this.hopLabel);
     fadeOutAndRemove(this.banner);
+    // The row has no fade of its own; it goes with the two it holds.
+    fadeOutAndRemove(this.topRow);
     fadeOutAndRemove(this.speedPane);
     fadeOutAndRemove(this.objectivePane);
     fadeOutAndRemove(this.playerCardPane);

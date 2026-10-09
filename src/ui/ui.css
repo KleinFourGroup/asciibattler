@@ -16,6 +16,12 @@
      in rem (200px at the default size), so the plate grows with the text
      in it, as every box that holds text does (tests/ui-tokens.test.ts). */
   --chip-w: 12.5rem;
+  /* What a column takes of its side of the page: its inset, its width and a
+     gutter. The page less twice this is the room between the chrome column
+     and the control column, which a screen's centred body and the battle's
+     top row keep to, so neither column sits over them as the text (and the
+     columns with it) grows. */
+  --column-side: calc(20px + var(--chip-w) + 14px);
 
   /* 96a — THE COLOR TOKENS. The palette's names mirror COLORS in
      src/render/palette.ts — kebab of the key — at the default palette's
@@ -1072,14 +1078,21 @@ body {
    chrome (backdrop, heading, card row, continue button). The reveal states +
    timing live with the unit card + PromotionScreen.ts. */
 
+/* `safe center` and the scroll (the pre-turn screen's idiom): at the largest
+   text size on the smallest window the column is taller than the page, and
+   a plainly centred one put its heading and its Continue off both ends, out
+   of reach. Where it fits, it is centred as before; the padding keeps a
+   scrolled column off the page's edges and moves nothing that is centred. */
 .promotion-screen {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 24px;
+  padding: 16px 0;
+  overflow-y: auto;
   background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
@@ -1353,11 +1366,14 @@ body {
 /* Leave port never scrolls away: it is the control column's second row on
    this screen (`.chip.control-chip`, mounted by PortScreen). */
 
+/* The body is never wider than the room between the two columns (the third
+   term), so no chip sits over its headings or cards at a larger text size.
+   At the default size on the smallest window the first term is the least. */
 .port-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(45rem, 92vw);
+  width: min(45rem, 92vw, calc(100vw - 2 * var(--column-side)));
 }
 
 .port-section-heading {
@@ -1509,11 +1525,12 @@ body {
   background: var(--color-black); /* opaque — DOM scenes fully mask the battle canvas (G2) */
 }
 
+/* As the port's body: never wider than the room between the two columns. */
 .event-body {
   display: flex;
   flex-direction: column;
   gap: 22px;
-  width: min(40rem, 92vw);
+  width: min(40rem, 92vw, calc(100vw - 2 * var(--column-side)));
 }
 
 .event-heading {
@@ -2141,16 +2158,39 @@ body {
   user-select: text;
 }
 
-/* Battle banner (C1d follow-up). Top-center label naming the encounter's
-   hand-authored layout ("Corridor" / "Diamond" / etc.) or "Uncharted Ground"
-   for procedural battles. Shares the HUD's amber chrome and screen-fade
-   lifecycle so it appears with the panel and fades out together. */
-
-.battle-banner {
+/* THE BATTLE'S TOP ROW (HUD.ts): the hop chip and the banner, in the room
+   between the two columns. Three grid columns: the hop chip's, the banner's
+   and a spacer. While the hop chip fits its half of what the banner leaves,
+   the outer two are equal and the banner is centred on the page. When it
+   doesn't (a longer map name, larger text), the hop chip keeps its whole
+   width, the spacer gives way and the banner stands to the right of centre;
+   past that the banner's name is cut with an ellipsis. So the two never
+   overlap, where a banner pinned to the page's centre and a chip pinned
+   beside the column met as soon as the text grew. The row lies over the
+   board and takes no pointer events itself. */
+.hud-top {
   position: absolute;
   top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: var(--column-side);
+  right: var(--column-side);
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, max-content) 1fr;
+  column-gap: 14px;
+  align-items: start;
+  pointer-events: none;
+}
+
+/* Battle banner (C1d follow-up). The top row's middle: a label naming the
+   encounter's hand-authored layout ("Corridor" / "Diamond" / etc.) or
+   "Uncharted Ground" for procedural battles. Shares the HUD's amber chrome
+   and screen-fade lifecycle so it appears with the panel and fades out
+   together. */
+
+.battle-banner {
+  grid-column: 2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 6px 20px;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid var(--color-terminal-amber);
@@ -2253,14 +2293,13 @@ body {
    RIGHT. The fixed offset clears a 4-digit balance; if the two ever crowd,
    §51's cohesion review owns the refinement (the user's noted expectation). */
 /* 101b — the hop chip wears the `.chip` plate (HUD.ts adds the class; the
-   duplicated plate block that sat here is gone) and its `left` is DERIVED:
-   the chrome column's left (20px) + the column's one width + a 14px gutter
-   (the clearance the old measured `left: 200px` gave a 166px bits chip). A
-   wider column can no longer slide under it. */
+   duplicated plate block that sat here is gone). It is the first cell of
+   the battle's top row (`.hud-top`, above), which starts a gutter past the
+   chrome column, so a wider column can't slide under it and the banner
+   can't either. */
 .hud-hop {
-  position: absolute;
-  top: 20px;
-  left: calc(20px + var(--chip-w) + 14px);
+  grid-column: 1;
+  justify-self: start;
 }
 
 /* 96e — THE CHROME COLUMN + THE CHIP PLATE (src/ui/chip.ts). The four
@@ -3114,7 +3153,18 @@ body {
    max-height + scroll is the vertical fallback for a pathologically huge swarm. */
 .hud-enemy-pane {
   position: absolute;
-  top: 62px; /* clears the 20px-top banner */
+  /* 62px at the default text size, which clears the 20px-top banner; lower
+     as the text grows. From 110 % the hop chip in the row above is wide
+     enough to reach over the gauge's label, and with the pane held at 62px
+     its plate covered the label's top (6px at 110 %, 10px at 125 %). So
+     the pane keeps under that chip: the second term is the chip's bottom
+     and a 6px gap (20px of top, a line of --text-18 at about 1.32, 22px of
+     padding and border), and the first is a line through 62px at the
+     default size, where the chip is not yet in the way, that meets the
+     second just past 110 %. In Chromium at 110, 125 and 150 % the chip
+     ends at 68, 72 and 78px (measured), and this comes to 70, 78 and
+     84px. */
+  top: min(calc(5.0625rem - 19px), calc(1.485rem + 48px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;

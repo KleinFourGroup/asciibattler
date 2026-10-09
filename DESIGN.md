@@ -718,6 +718,27 @@ gesture). The two swap `<select>`s keep `aria-label`: a visible `<label>`
 would wrap the row. The proof shape is the same-run toggle + the box
 oracle, and step zero is a MEASUREMENT — three of five steps shrank at it.
 
+**The smallest window, and room for the columns (§117.5).** The smallest
+window the game supports is 1280×720, and the itch embed is that size.
+The bar there: at the default text size and at 125 %, nothing off the
+page and no chip over a line of text; at 150 %, nothing out of reach (the
+two columns do sit over the outer cards of a recruit there, and the
+battle's banner is cut short; a rework is in TODO). Three rules hold it,
+and none of them moves a box at the default size. *A screen's centred
+body keeps to the room between the two columns:* its width has
+`calc(100vw - 2 * var(--column-side))` as a ceiling (the event's and the
+port's bodies), `--column-side` being what a column takes of its side:
+its inset, its width and a gutter. *The battle's top row is one grid*
+(`.hud-top`: the hop chip, the banner, a spacer): the banner is centred on
+the page while the hop chip fits beside it, stands right of centre when
+it doesn't, and is cut with an ellipsis after that, so the two never
+overlap; the enemy pane under them drops as the text grows, to stay below
+the hop chip. *A screen that is one centred column scrolls when it is
+taller than the page* (`justify-content: safe center`, or auto margins,
+with `overflow-y: auto`): the pre-turn screen, character select and the
+promotion screen do. A plainly centred column puts both its ends off the
+page, out of reach.
+
 **A cast that lands at range FLIES (102).** An effect that appears on a
 cell away from its caster says whose it is by travelling there: a
 projectile on the ability's `release` boundary, its flight the `travel`

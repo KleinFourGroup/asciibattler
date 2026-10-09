@@ -9246,3 +9246,122 @@ controls drawn at once.
 and no smoke, as cut. The reading before this commit: **401,214** at
 11:06, so the build cost about 132k against an estimate of 80k to 100k;
 the two oracles and their tools were most of the difference.
+
+### 117.5e — room at a larger text size on 1280×720 (2026-10-09, session 8473063c) — ◐ built, unread (`batch`, at the sitting)
+
+117.5d's commit is `e2fe661`, reading **410,413** at 11:09, under the
+line, so the step started. Tools: `scratch/117.5e-room/tools/` (the
+survey's runner and summarizer, and the box oracle fitted to this step)
+and `scratch/117.5d-column/tools/column-shot.js`, which reads the built
+tree's plates.
+
+**Step zero: the list on the tree as 117.5d left it** (the survey, run
+mode, 1280×720; new against 100 %, 116k's four kinds set aside).
+- *110 %:* nothing.
+- *125 %:* two, both text over text: the hop chip over the banner, 19px;
+  the Morale chip's value over an event's text, 8px. By the stricter
+  reading (a plate over a line of text; 117.5d's table) also the Map chip
+  over the event's heading 22px and the port's section heading 17px, and
+  Morale over the event's text 25px.
+- *150 %:* nine, of which one puts anything out of reach: the promotion
+  screen's heading and its Continue, 17px off the page at each end.
+- *1920×1080:* the pre-turn screen scrolls 5px at 125 % and 111px at
+  150 %, as it may; nothing else.
+
+**One the survey can't see, found by looking at the picture.** At 125 %
+the hop chip's plate lay over the top 10px of the enemy gauge's label
+(its line is 62 to 82px, the plate ends at 72); 6px at 110 %, 16px at
+150 %. The chip's own text ends above the label, so text over text read
+nothing. It was so before this phase: the enemy pane's top was a fixed
+62px while the chip above it grows with the text, and from 110 % the chip
+is wide enough to reach over the label. The step's exit says no chip over
+text at 125 %, so it is fixed here, and `column-shot.js` now reads the
+hop chip's and the banner's plates against every other line.
+
+**As built: three rules and one pane.** None moves a box at 100 %.
+- *A centred body keeps to the room between the columns.* A new token,
+  `--column-side`, is what a column takes of its side (inset, width,
+  gutter); the event's and the port's bodies take
+  `calc(100vw - 2 * var(--column-side))` as a third term of their width.
+  At 100 % on 1280px that is 812px, more than either body, so nothing
+  changes; at 125 % it is 712px and at 150 % 612px.
+- *The battle's top row is one grid* (`.hud-top`, a wrapper the HUD makes
+  for the hop chip and the banner, spanning the room between the
+  columns): `minmax(max-content, 1fr) minmax(0, max-content) 1fr`. While
+  the chip fits its half of what the banner leaves, the outer columns are
+  equal and the banner is centred on the page; when it doesn't, the chip
+  keeps its width and the banner stands right of centre (20px at 110 %,
+  95px at 125 %); past that the banner is cut with an ellipsis (at 150 %
+  it has 281px of its 420px). A long map name does the same at 100 %,
+  where it used to run under the chip.
+- *The promotion screen scrolls,* by the pre-turn screen's idiom
+  (`justify-content: safe center`, `overflow-y: auto`) and 16px of
+  padding, which a scrolled column needs and a centred one doesn't feel.
+- *The enemy pane keeps under the hop chip:*
+  `top: min(calc(5.0625rem - 19px), calc(1.485rem + 48px))`. The second
+  term is the chip's bottom and a 6px gap; the first is a line through
+  62px at 100 %, where the chip is not in the way and the pane stands
+  above its bottom edge. In Chromium the chip ends at 68, 72 and 78px at
+  110, 125 and 150 % (measured), and the rule puts the pane at 70, 78 and
+  84px (computed; what is measured is that the chip's plate is over no
+  line at any of the four sizes). It is the
+  one rule here that follows a measured growth and not the layout: the
+  pane is centred on the page and can't share a grid with the chip. Its
+  first form, the steep line alone, put the pane 40px lower at 150 % and
+  the enemy's cards into the countdown.
+- `tests/ui-tokens.test.ts` lists the new token among the boxes that hold
+  no text (its px are an inset and a gutter); DESIGN has "The smallest
+  window, and room for the columns".
+
+**After, by instrument.**
+1. *The survey, run mode, 1280×720:* 110 % nothing; **125 % nothing**;
+   150 % eight groups, none off the page: the draw pile's list scrolls
+   (as before); the banner cut 139px; the promotion screen scrolls 66px;
+   the countdown's Fight button over the enemy's compact cards, four
+   groups to 14px, which is new and comes from the pane's 22px drop;
+   Morale's value over a recruit card's stars 5px (as before). Gone at
+   150 %: the hop chip over the banner and over the gauge's label, the
+   Morale value over the event's text, the Map chip over the port's
+   heading, the promotion screen off the page. Menu mode: the credits and
+   character select scroll, as before. *1920×1080:* as before.
+2. *Plates over text* (`column-shot.js`, the built tree): at 125 %
+   nothing on eight screens (a battle, the map, the pre-turn screen, a
+   recruit, a port, an event, a reward, a promotion), and the hop chip
+   and the banner over nothing at 100, 110, 125 and 150 %. At 150 %
+   nothing on seven of them; on the recruit the two columns are over the
+   outer cards, as at 117.5d.
+3. *The extras mode, 1280×720* (run before the pane's rule): every
+   tooltip, the cache modal and the sector-cleared screen clean at all
+   four sizes. One trigger did not open at the turn's outcome, a compact
+   card's power; at 117.5a it was the speed button's there. It opens in
+   the battle. An inference: whichever is tried first on that screen
+   fails, which is the instrument's timing and not a tooltip's.
+4. *The box oracle at 100 %:* before is 117.5d's tree; at 1280×720 and
+   1920×1080, 26 screens each, and the menu's four: nothing left or
+   arrived but the five `.hud-top` wrappers. The hop chip and the banner
+   are compared with their old parent written back, so their rectangles
+   are the old ones; the enemy pane's is too. Its control: an event
+   heading moved 3px is reported.
+5. `drive-run --seed=7` logs `a59ee48f`. Typecheck clean; the sheet's
+   four pins pass (22 tests).
+
+**Looked at by the session:** the battle, an event and a port at 125 %,
+the battle again after the pane's rule, the promotion at 150 %. **Not
+verified:** Firefox, where `normal` line height may round the chip a
+pixel taller (the pane's rule has 2px to spare at 110 %); the turn's
+outcome by plates (the driver does not stop there; the survey's
+text-over-text reads it); the banner right of centre by eye.
+
+**For the sitting** (the cut's script: Text size 125 % on a 720p window,
+then an event, a port, a recruit and a battle; then 150 % and a
+promotion; wrong is a chip over a heading, a button off the page, or
+anything moved on the usual window at 100 %). Added by this entry, two
+things only the eye can rule on. At 110 % and up the battle's banner is
+no longer centred over the enemy's gauge. And an alternative the session
+did not build, since it shows at 100 %: the hop chip at the banner's
+height (32px, `--text-14`), which would never reach the gauge, so the
+pane's rule could go; it would stop matching the Bits chip beside it.
+
+**Predictions against what happened.** No bump, no stream, no bus event,
+no smoke, as cut. The reading before the step's docs: **489,109** at
+11:30, so the step cost about 80k to there.

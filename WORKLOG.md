@@ -9823,3 +9823,130 @@ fails to compile; the battle playing on through a lost context's wait;
 a long error and the keyboard; the hop chip's fade. For §118: the embed's
 size, and the two reads on the draft (focus inside itch's frame, Esc in
 its fullscreen).
+
+## Phase 117.75 — the rest gate
+
+### The §117.75 kickoff: the audit, the shape and the cut (2026-10-09, session e72429d8) — SIGNED
+
+Readings: **102,386** at 13:28 after HANDOFF, `process/planning.md` and
+the phase's entries; **218,206** at 13:34 at the audit's end, the
+shape-lock's message; **254,902** at 14:14 with the user's answers in,
+before these docs. ✔ marks what was read in the code this session.
+
+**The audit: a rest as it is.** ✔ `Run.ts:1518` sends a rest node to
+`resolveRest` (`:3913`) inside `enterNode`: the pool heals
+`restHealFraction` of its max, every unit banks `restXp` through
+`bankXpAwards`, and the phase goes to `promotion` or back to `map`. The
+levelling stream is keyed by sector, node and turn (`:3989`), so when the
+effect lands does not move it. `handleDismissPromotion` routes a rest's
+promotions to the map by the node's kind (`:3958`). Nothing is saved
+between the click and the effect, so a rest is no gate.
+
+**The decision point: an event, or a phase of its own.** The §117.5
+kickoff leaned to an event and named one catch, `eventStep`. The audit
+found the catch wider.
+- ✔ *The bots draw on a one-option page.* `RNG.int(0, 0)` draws
+  (`RNG.ts:67`). The harness's stock event policy (`harness.ts:839`), the
+  rollout walker's (`walker.ts:386`), the pinned pick inside a rollout
+  (`arbitratedStrategy.ts:906`) and the pane driver's row (`drive.ts:52`)
+  each call it with one choice enabled. Only the arbitrated arm's own
+  pick returns without a draw (`arbitratedStrategy.ts:945`). A rest sent
+  through the event phase would move each bot's stream for the rest of
+  the run, beside the Run's counter.
+- ✔ *The harness would count it an event visit* (`eventsVisited`,
+  `harness.ts:829`). Not checked: whether that count reaches
+  `summary.csv` or stays in the run's result.
+- ✔ *Its choice would need a stream that is not the counter's*
+  (`Run.ts:1678` takes one per choice resolution): a new permanent key in
+  the registry, or a rule that a rest draws nothing.
+- ✔ *The event vocabulary cannot say today's effect*
+  (`src/config/events.ts:98-109`): `healPool` is an absolute amount, and
+  no op grants XP or leads into promotions.
+- ✔ *The entry would need its own path too*: `enterEventNode` draws the
+  combat flip and the pool pick from the counter and writes the
+  `visited:` flag (`Run.ts:1586-1600`).
+
+So an event in name needs "unless it is the rest" in about nine places,
+none of which the compiler finds, and a missed one shifts streams with no
+error. A phase is found by the compiler: the harness's and the rollout
+walker's switches end in `satisfies never`, `Game.dispatch`'s does for a
+new command, `PHASE_ROWS` is a `Record<RunPhase, Row>` (chaos, the resume
+test and the journal drive walk by it), and chaos's `LEGAL_IN` is a
+`Record` over the command kinds. The bots' row for the phase sends one
+command and draws nothing.
+
+What the event shape buys is authoring (conditions, pages, the editor).
+The special cases exist only so the signed sheet reproduces exactly; the
+content round that adds rest choices re-anchors the sheet, and a rest can
+move onto the event machinery then with none of them. **DECIDED (the
+user, on the session's recommendation, which reversed the kickoff's
+lean): a phase and a command of its own.** The page uses the event
+screen's layout and classes.
+
+**The rider's catch, and where the rewrite went.** ✔ DESIGN's adopted
+style is the outcome page: a terminal page narrates, and its one
+acknowledging choice carries the effects. Giving the three old events
+that page adds a choice resolution per visit, so `eventStep` and the
+bot's stream each advance one further and every later event in the run
+draws differently. ✔ All three are in both sectors' pools
+(`config/sectors.json:41-43`, `:98-100`). "In the adopted style" and
+"words-only" cannot both hold. The session recommended words only now
+and the pages in the content round. **The user: neither; the events stay
+as they are for this phase, so its oracle lands byte-identical, and the
+rewrite, outcome pages and all, opens §118** ("the events system is
+mature enough, combined with the small number and simplicity of these
+changes, that this is acceptable risk"). The session agreed, with three
+notes, recorded for §118's kickoff (ROADMAP §118):
+- The catch moves with the rewrite. §118's exit, "Escalation off
+  reproduces the signed sheet exactly", is out of reach on any commit
+  after it. The reproduction has to run on the commit that closes
+  §117.75, the last one where "exactly" can be had. The session's lean:
+  the reproduction, then the rewrite, then the ladder's cohort with its
+  own level 0 on the commit that ships (one more arm).
+- The check that fits an outcome-page rewrite is outcome-equivalence, not
+  words-only: collapse every page with one unconditioned choice of one
+  outcome, then compare each event's decision tree, its effects in order
+  and its odds, with a planted change as the control.
+- ✔ `corrupted-shrine`'s `start` page is a test fixture
+  (`tests/fuzz/rollout/arbitratedStrategy.test.ts:780-837`: three
+  choices, the offering second and gated on 10 bits; `Run.test.ts:5920`,
+  the page's id). A rewrite that keeps those leaves the tests green.
+
+**Other findings.**
+- ✔ The resume test's gate table is partial (`resume-gates.test.ts:39`,
+  `satisfies Partial<Record<RunPhase, …>>`), and `arrivals` skips a phase
+  that has no row. A new gate with no row would be skipped without a
+  failure, and `Run.resume()`'s switch has no default to say so either.
+  117.75a makes the table total.
+- ✔ `Run.fromJSON` copies `snap.phase` without checking it (`:4610`); the
+  version is what keeps an unknown phase out, so the phase union's
+  widening takes the bump, as it did at 67a and 74b.
+- ✔ A new command needs no journal format change: `JournaledCommand` is
+  every `RunCommand` but the game's two (`journal.ts:63`), and a journal
+  replays only on the build that recorded it.
+- ✔ The oracle is §117's: `npm run fuzz -- --count=12` for `summary.csv`
+  and `rosters.csv`, the searcher shape for the rollout clone, and
+  `drive-run --seed=7`. The drive's log hash will move, since each rest
+  adds a command line; the logs are compared with those lines removed.
+- Not audited, 117.75b's step zero: how the pool bar shows the heal
+  across the swap to the map or the promotions; how the text-size survey
+  lists its screens.
+
+**Signed with the cut** ("I'm signing all of your recommendations except
+for words only"): the phase; an effect line under the option, the pool's
+recovery and the XP read from config; the reads; and five calls. The
+effect lands on the option and not on entry, so a tab closed on the page
+comes back unhealed. The command carries an index
+(`chooseRestOption { optionIndex }`) of which only 0 is legal, and that
+is the whole seam for rest choices. `firstNode=rest` joins the dial. The
+heading is the map's own glyph and word for a rest node. The resume
+test's table becomes total.
+
+**The cut** is in ROADMAP: the gate (117.75a, read `none`), the page
+where a player meets it (117.75b, `batch`), the sitting (117.75c,
+`stop`). The shape-lock's 117.75c, the events' words, left with the
+rewrite, and the sitting took its letter.
+
+**What the stretch holds.** 117.75a and 117.75b to the sitting, estimated
+at the shape-lock at 245k on 218k without the dropped step. The talk
+since cost 37k, so the sitting falls near 500k, under the line.

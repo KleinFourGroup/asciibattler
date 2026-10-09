@@ -13,8 +13,8 @@ with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
 **Status: §117.5 ✅ CLOSED 2026-10-09** (the UI sweep; §117 closed
-2026-10-08). **§117.75, the rest gate, is next:** inserted at §117.5's
-kickoff, before §118, and not yet cut.
+2026-10-08). **§117.75, the rest gate, is in progress:** inserted at
+§117.5's kickoff, before §118, and cut 2026-10-09.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -272,16 +272,24 @@ closed tab comes back to it; built as the seam rest choices will use.
 **Why here:** after the sweep, whose event layout it stands on; before
 §118, so the board measures what ships. **Risk:** medium (a Run bump,
 every phase walker, the eve of the board). **Decision points:** a rest as
-an event with its own entry, or a phase and command of its own (WORKLOG
-"The §117.5 kickoff", the catch on `eventStep`). **Exit:** a run closed on
+an event with its own entry, or a phase and command of its own:
+✅ DECIDED 2026-10-09, a phase and a command of its own (the bots draw on
+a one-option event page, so an event shifts their streams too; WORKLOG
+"The §117.75 kickoff"). **Exit:** a run closed on
 the page continues there; the fuzz summary is byte-identical before and
 after; the user reads the page. **Scope guards:** one option, today's
 effect and numbers; no choices, no balance change.
 
-**Rides with it** (the user, 2026-10-08): the first three events' prose,
-rewritten by the user in the adopted style with their outcomes unchanged,
-and the rest's own text; the session's part is a words-only check with a
-planted outcome change as its control.
+**Rides with it:** the rest's own text. The first three events' rewrite
+left for §118 at the kickoff (the user, 2026-10-09): an outcome page moves
+`eventStep` for the rest of a run, and this phase's oracle is
+byte-identity.
+
+The cut, signed 2026-10-09 (WORKLOG "The §117.75 kickoff"):
+
+- [ ] **117.75a** — the gate: the `rest` phase, `rest:entered`, `chooseRestOption`, `resume()`, every walker, `firstNode=rest`, and a page on the event layout. Run v48 → v49, no new stream; the smoke fires. Exit: `summary.csv` and `rosters.csv` byte-identical to a baseline taken before the first edit, on the default and the searcher shapes and an arbitrated seed; a bot draw planted at the rest and an `eventStep` bump planted in the Run each change rows; the resume test (its gate table made total), the continuation check and chaos meet the gate. Read `none`.
+- [ ] **117.75b** — the page where a player meets it: 1280×720, 150 % text, keyboard focus, the control column, the effect line, and a save closed on the page. Exit: under the runner, Continue returns to the page with the pool as it was and the option then heals; the text-size survey has the screen. Read `batch`: `?firstNode=rest` opens a run on the page and the option leads to the promotions, then the map; in a normal run, close the tab on a rest page and Continue from the menu. Wrong is the map with the node spent, a pool healed before the click, or the page running off 1280×720 at 150 %.
+- [ ] **117.75c** — THE SITTING, then the phase close. Read `stop`.
 
 ## Phase 118 — the public web channel, then the round close
 
@@ -290,11 +298,13 @@ tutorial; the `0.1.0` upload after the browser smoke (Firefox; Chrome with
 its itch read and the days-later re-open of the draft; the keys visible
 from our iframe that aren't ours); then the round close. **Why last:** a
 stranger needs the menu, a volume control, save/load, a build ID and the
-export first. **Risk:** low-medium. **Decision points:** none known.
+export first. **Risk:** low-medium. **Decision points:** where the events'
+rewrite falls against the level-0 reproduction (below).
 **Exit:** the channel open; the board re-run: Escalation off reproduces
 the signed sheet exactly, and each level is harder than the one before on
 paired same-seed runs. **Scope guards:** Safari untested; the Electron
 build stays internal.
 
+**Carried from §117.75's kickoff** (WORKLOG "The §117.75 kickoff"): the first three events' rewrite in the adopted style, outcome pages and all, opens this phase (the user, 2026-10-09). Once it lands, "reproduces the signed sheet exactly" is out of reach, so the session's lean is the reproduction on the commit that closes §117.75, then the rewrite, then the ladder's cohort with its own level 0; the rewrite's check is outcome-equivalence with a planted change; `corrupted-shrine`'s `start` page is a test fixture. The order is the kickoff's to sign.
 **Carried from §114** (WORKLOG §114e): what a download does in Electron's window, at the smoke.
 **Carried from §117.5's kickoff** (WORKLOG "The §117.5 kickoff"): the itch page embeds at 1280×720 with itch's fullscreen button on (117.5c's read; that itch offers one is from memory, to check on the draft); two reads for the smoke on the draft, keyboard focus inside itch's frame and Esc in itch's fullscreen; the "Copy diagnostics" row, the user's product question, which would also bring back the window, pixel ratio and GPU of real players (TODO, the uncapped pixel ratio).

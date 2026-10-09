@@ -9026,3 +9026,103 @@ screen, which has the roster button and was not among the five.
 The reading before this entry's commit: **519,480** at 09:56, so the
 stop's two rounds and their record cost about 28k. The session hands off
 here, under the line: 117.5d starts in a fresh session.
+
+### 117.5d — step zero, and the mock (2026-10-09, session 8473063c) — ◐ the stop is open
+
+A fresh session, from 10:05; the tree clean at `739dc16`. Readings:
+**99,925** at 10:07, after HANDOFF, `process/planning.md`,
+`process/browser-pane.md`, ROADMAP §117.5 and this phase's entries;
+**249,546** at 10:22, the mock made and its page written, so the mock
+cost about 150k, most of it pictures and their measurements read back.
+✔ = measured under the runner at 1280×720.
+
+**Step zero: the arithmetic the proposal rests on holds.**
+- ✔ The column is 200px and a chip is 200 by 45 at 100 %; 250 by 52 at
+  125 %; 300 by 58 at 150 %.
+- ✔ Five cells that share their borders are 40.8px each with 39px inside.
+  "0.5×" at `--text-13` is 35.4px with the 0.08em spacing the buttons
+  have today and 31.2px without it (the hand-off's "about 31px" was the
+  letters alone). The mock drops the spacing in the cells.
+- ✔ Today's controls: Roster 188.6 by 49 at top 16 on the map and the
+  pre-turn screen, 125.6 by 49 on the recruit screen, which shows no
+  count; Leave 138.8 by 34 at top 16; the speed pane 236.4 by 27 at top
+  20.
+- ✔ No row's text is wider than its plate at any of the three sizes
+  ("ROSTER · 10", "LEAVE PORT ▸").
+
+**The mock** is a page script, one launch a picture with `--shot`
+(`scratch/117.5d-column/tools/`: `column-shot.js`, `run-shots.mjs`,
+`summarize.mjs`, `fill-page.mjs`; ignored by git, on this machine only).
+Where 117.5c's mocks placed boxes with a stylesheet, this one builds the
+column: a second flex column at top 20 right 20, `--chip-w` wide with the
+left column's 10px gap, into which it moves the settings chip and then
+the screen's own control, re-classed to the chip plate (Roster, Leave) or
+laid out as the strip (the speed pane). The rows flow as a built
+column's would, so the same script reads the larger text sizes.
+- *A mistake the first picture showed:* Settings came out second. The
+  chip carries `order: 3` for the left column and the control beside it
+  had no order. The built column sets its own.
+- *Six screens* of the `--seed=7` run: a battle, the map, the pre-turn
+  screen, a recruit, a port, an event (the recruit is new against
+  117.5c's five). On each, Settings is at 1060, 20 and the control at
+  1060, 75, both 200 by 45; the event has no second row. At 100 % no row
+  of either column sits over a line of the screen's text.
+- *The strip two ways:* 45px tall, the chip's height, and 27px, today's.
+- *The sector map,* opened over the mocked event: it covers both
+  columns, and its ✕ Close is 126.2 by 45 at 1133.8, 20, the right-hand
+  end of where Settings is. The mock leaves it.
+- *The two pile buttons* on the pre-turn screen can't take the plate at
+  the column's width: "DISCARD PILE · 0" is sixteen letters, 201.6px at
+  `--text-18` with its spacing, and the plate has 162px inside. That is
+  arithmetic from the face's 0.6em advance, not a picture. So on that
+  screen Roster wears the plate at 20px from the edge and the piles keep
+  the card-list look at 16px.
+
+**Larger text on the 720p window, today against the mock.** A plate over
+a line of the screen's text, the largest overlap in px; the left column
+is read in both, since Map and Morale move up a row when Settings
+leaves. The battle's figure is the hop chip's box over the banner's box.
+
+| screen | 125 % today | 125 % mocked | 150 % today | 150 % mocked |
+|---|---|---|---|---|
+| battle | hop over banner 81 | the same | 207 | the same |
+| map | nothing | nothing | nothing | nothing |
+| pre-turn | nothing | nothing | Map over the daemon's line 23 | nothing |
+| recruit | Morale over the first card's rows 21 | nothing | Settings, Morale, Cache and Map over the first card, to 26 | Morale, Cache and Map over it, to 24; Roster over the third card's glyph 24 |
+| port | Settings over the section heading 17; Morale over a card 13 | Map over the heading 17; Morale 2 | Settings 20, Map 25, Morale 23 | Map 20, Morale 25 |
+| event | Settings over the heading 22; Map 19 and Morale 25 over the text | Map over the heading 22; Morale 25 | Settings 46; Map 30; Morale 30 | Map 46; Morale 30 |
+
+On the left, Map takes Settings' row and its overlaps with it. The right
+column adds nothing at 125 % and one at 150 %, where the bar is reach
+and the card can still be reached. So the move neither pays for 117.5e
+nor adds to it at 125 %, and 117.5e stands as cut; its cause, a
+column's width against a screen's centred body, is now on both sides.
+
+**What the session looked at:** 10 of the 39 pictures (the six mocks at
+100 %, the short strip, the sector map, the battle at 125 %, the recruit
+at 150 %); the rest are held by their measured boxes. **Not checked:**
+the page's own layout with its pictures in it (the pane shows a local
+page as a snapshot without them; its tables fill, seven rows each); what
+hover and focus look like on a control that changes plate; the Tab
+order; the fade when a screen leaves; Firefox. One thing for the eye: on
+a screen that scrolls, Chromium's scrollbar is 15px, so the right column
+ends 5px from it where the left column is 20px from its edge.
+
+**The build, as the session means to make it:** a second Game-owned flex
+column that the screens and the HUD mount their control into, with its
+own order, and not positions measured from a chip's height, which is
+the shape 96e took out of the left column. Roster and Leave take the
+chip's plate and its hover; the speed cells keep their own states.
+
+**The stop's questions.**
+1. The column as mocked: build it?
+2. The strip's height: 45px or 27px. The lean: 45, so the column's rows
+   are one height and the controls used every battle are larger targets.
+3. Leave port in the chip's plate reads as equal to Settings, and it is
+   the screen's way forward. The lean: as mocked; it is larger than
+   today (`--text-18` against `--text-12`) and still top right.
+4. The pre-turn screen's three buttons no longer match. The lean: leave
+   the piles.
+5. ✕ Close stays as it is. The lean: yes.
+
+The page is `scratch/117.5d-column/index.html`.

@@ -110,7 +110,7 @@ describe('abilityDetailPartsForDef (§76b — the aura branch, ahead of shipped 
   it('a pure aura reads as its radiated status + the AURA radius, never "dash"', () => {
     const text = abilityDetailPartsForDef(PURE_AURA, 'mercenary', stats).join(' · ');
     expect(text).toContain('aura emboldened');
-    expect(text).toContain('rng 3'); // aura.radius, NOT the def's inert rangeCells (0)
+    expect(text).toContain('reach 3'); // aura.radius, NOT the def's inert rangeCells (0)
     expect(text).not.toContain('dash'); // the §29d mislabel class, closed for auras
   });
 

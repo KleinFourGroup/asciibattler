@@ -655,8 +655,8 @@ function buildXpBar(data: UnitCardData): HTMLDivElement {
 }
 
 /**
- * One ability row: name, then the weapon profile (`N dmg · rng R · H% hit · C%
- * crit`, or `N heal · rng R`) with an AoE tag, then the cadence in seconds.
+ * One ability row: name, then the weapon profile (`N dmg · reach R · H% hit · C%
+ * crit`, or `N heal · reach R`) with an AoE tag, then the cadence in seconds.
  * The damage/heal amount reuses the sim's single-source-of-truth helpers (the
  * op's `might` + the scaling stat) so the card can't disagree with battle.
  * Range / cadence / AoE / the I6 profile come from `config/abilities.json`

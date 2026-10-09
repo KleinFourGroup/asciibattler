@@ -181,7 +181,7 @@
   "common.hop": "Hop {hop}",
   "hud.hopTurn": "Hop {hop} · Turn {turn}",
   "hud.countdown.label": "Battle begins in",
-  "hud.objective.pickTarget": "Click a target…",
+  "hud.objective.pickTarget": "Pick a target…",
   "hud.pool.you": "You",
   "hud.pool.foe": "Foe",
   "recruit.heading": "Victory — choose a new unit",

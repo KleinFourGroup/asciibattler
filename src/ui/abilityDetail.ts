@@ -46,9 +46,9 @@ export function abilityDetailPartsForDef(
   const statusOp = opOf(def, 'applyStatus');
 
   if (healOp) {
-    parts.push(`${healOp.might + stats.magic} heal`, `rng ${def.rangeCells}`);
+    parts.push(`${healOp.might + stats.magic} heal`, `reach ${def.rangeCells}`);
   } else if (damageOp) {
-    parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `rng ${def.rangeCells}`);
+    parts.push(`${damageOp.might + damageStatFor(archetype, stats)} dmg`, `reach ${def.rangeCells}`);
     // I6→51f — the per-weapon profile, DERIVED like the damage number is
     // (base + the unit's stat, the §51 sweep call): hit runs the real
     // `hitChanceFor` with this unit's precision against a neutral 0-evasion
@@ -67,23 +67,23 @@ export function abilityDetailPartsForDef(
       // it identically (flag-gated, so an unmissable bolt adds nothing).
       pushHitCrit(parts, inner, stats);
     }
-    parts.push(`chains ${chainOp.maxJumps}`, `rng ${def.rangeCells}`);
+    parts.push(`chains ${chainOp.maxJumps}`, `reach ${def.rangeCells}`);
   } else if (summonOp) {
     // 29d — a summoner (Shaman `raise_dead`): show what it raises. This also
     // corrects the old `self`-target branch, which mislabelled the self-anchored
     // summon as a "dash".
     const { count, archetype: minion } = summonOp.summon;
-    parts.push(count > 1 ? `summons ${count}×${minion}` : `summons ${minion}`, `rng ${def.rangeCells}`);
+    parts.push(count > 1 ? `summons ${count}×${minion}` : `summons ${minion}`, `reach ${def.rangeCells}`);
   } else if (statusOp) {
     // 29a-b — a PURE afflicter (Warlock `hex`, Banshee `wail`): no damage, just
     // the status it lays. (Damage afflicters fall through to the rider below.)
-    parts.push(`applies ${statusOp.statusId}`, `rng ${def.rangeCells}`);
+    parts.push(`applies ${statusOp.statusId}`, `reach ${def.rangeCells}`);
   } else if (def.aura) {
     // §76a — a PURE aura (no ops; targets self by schema law): the radiated
     // status + the aura's own radius (NOT `rangeCells` — a pure aura's range
     // field is inert). Must sit before the `self`/dash branch, which would
     // otherwise mislabel it (the §29d summon-branch bug class).
-    parts.push(`aura ${def.aura.statusId}`, `rng ${def.aura.radius}`);
+    parts.push(`aura ${def.aura.statusId}`, `reach ${def.aura.radius}`);
   } else if (def.target.kind === 'self') {
     // N1 — a pure-reposition leap (the dash): no damage/heal profile, just the
     // leap distance (its recharge shows in the cadence column below).

@@ -14,7 +14,7 @@
  * Per-ability rows reuse `abilityDetailParts` verbatim and diff the part
  * arrays positionally (the parts' STRUCTURE depends only on the def, never
  * on stats, so old/new arrays always align). Stat-independent parts
- * (`rng N`, riders, aura lines) compare equal and drop out for free, and
+ * (`reach N`, riders, aura lines) compare equal and drop out for free, and
  * any future op kind the detail builder learns is covered here with no new
  * code. The speed-scaled cadence (abilityRow's separate column) is diffed
  * alongside.

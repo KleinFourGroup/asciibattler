@@ -9365,3 +9365,60 @@ pane's rule could go; it would stop matching the Bits chip beside it.
 **Predictions against what happened.** No bump, no stream, no bus event,
 no smoke, as cut. The reading before the step's docs: **489,109** at
 11:30, so the step cost about 80k to there.
+
+### 117.5f — two wordings (2026-10-09, session 8473063c) — ◐ built, unread (`batch`, at the sitting)
+
+117.5e's commit is `6827075`, reading **503,274** at 11:35, under the
+line.
+
+**Step zero: where the two strings are.** The armed prompt is one key,
+`hud.objective.pickTarget` in `locales/en/ui.json`, read by `HUD.ts`.
+An ability's reach is not in the string table: `abilityDetailPartsForDef`
+(`src/ui/abilityDetail.ts`) builds `rng N` in six branches (heal, damage,
+chain, summon, a pure status, an aura), and every card that lists
+abilities goes through it. TODO had named `RecruitScreen.ts`
+`abilityRow`, which no longer exists.
+
+**As built.** "Click a target…" is "Pick a target…". The six branches
+push `reach N`; the one test that pinned the old word and two comments
+follow. The shared `RNG` stat label is untouched, as signed. Left alone:
+the archetype editor's own preview line (`tools/archetype-editor`), a dev
+tool, still prints `rng`.
+
+**Measured.**
+- *The box oracle at 100 %* (before is 117.5e's tree; 26 screens at
+  1280×720 and at 1920×1080, the menu's four): two screens differ, both
+  recruit offers. On one, an AoE tag stands 14.4px further right on its
+  line, the two letters' width. On the other, **one ability row goes
+  from one line to two**: its detail box is 32px tall where it was 16,
+  the abilities block 83 where it was 67, and the cadence under it 16px
+  lower. No card changed size (the cards are not among the boxes that
+  differ) and nothing else on any screen moved.
+- *Why that row:* a card has 184px for a row, 25 letters of `--text-12`.
+  A row of two-digit damage, a reach and a hit chance, with no crit, was
+  24 letters and is 26. A row that also shows a crit chance was two lines
+  already and stays two. So the rows that newly wrap are the ones with
+  two-digit damage, a hit chance and no crit part, which is a strike
+  that can miss and can't crit (`pushHitCrit`: the crit part is there
+  whenever the strike is `critable`). This is the cut's own "wrong is a
+  row that wraps", so it goes to the sitting as a finding and not as a
+  pass.
+- *On the page* (`scratch/117.5f-words/tools/words.js`, the runner): an
+  armed Focus reads "! Pick a target…" and is not cut; the objective
+  pane is 164.6px wide and 208.1px with a button armed, widening on the
+  arm as it did with the longer prompt (the old width is not measured).
+  A recruit offer's three rows all read `reach` and none `rng`; each is
+  two lines; the cards are 210 by 366.
+- `drive-run --seed=7` logs `a59ee48f`. The eight test files the change
+  touches pass (65 tests); the hook runs the rest.
+
+**For the sitting** (the cut's script: arm Focus in a battle and read the
+prompt; read an ability row on a recruit card; wrong is a row that wraps
+or a card that changed size). Known before the read: some rows wrap that
+did not, as above. If that is unwelcome, the cheap ways out are a
+shorter word or giving the row its two letters (the card's side padding
+is 12px), each a `-post`.
+
+**Predictions against what happened.** No bump, no stream, no bus event,
+no smoke, as cut. The reading before this entry: **526,661** at 11:39,
+so the step cost about 25k to there.

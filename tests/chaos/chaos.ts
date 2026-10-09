@@ -66,6 +66,7 @@ const LEGAL_IN: Record<Kind, readonly RunPhase[] | 'any'> = {
   discardPacket: 'any',
   usePacket: ['map', 'turn-intro'],
   chooseEventOption: ['event'],
+  chooseRestOption: ['rest'],
 };
 export const KINDS = Object.keys(LEGAL_IN) as Kind[];
 
@@ -356,6 +357,8 @@ function shaped(kind: Kind, run: Run, rng: RNG): JournaledCommand {
         : { kind, cacheIndex: indexIn(run.cache.length, rng), rosterIndex: indexIn(run.team.length, rng) };
     case 'chooseEventOption':
       return { kind, choiceIndex: rng.int(0, 3) };
+    case 'chooseRestOption':
+      return { kind, optionIndex: 0 };
   }
 }
 
@@ -397,6 +400,8 @@ function outOfRange(kind: Kind, run: Run, rng: RNG): JournaledCommand | null {
       return { kind, cacheIndex: badIndex(run.cache.length, rng) };
     case 'chooseEventOption':
       return { kind, choiceIndex: [-1, 99, 0.5][rng.int(0, 2)]! };
+    case 'chooseRestOption':
+      return { kind, optionIndex: [-1, 1, 0.5][rng.int(0, 2)]! };
     default:
       return null;
   }

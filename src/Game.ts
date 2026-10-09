@@ -18,6 +18,7 @@ import { PromotionScene } from './scenes/PromotionScene';
 import { RewardScene } from './scenes/RewardScene';
 import { PortScene } from './scenes/PortScene';
 import { EventScene } from './scenes/EventScene';
+import { RestScene } from './scenes/RestScene';
 import { BitsOverlay } from './ui/BitsOverlay';
 import { PoolOverlay } from './ui/PoolOverlay';
 import { CacheOverlay } from './ui/CacheOverlay';
@@ -487,6 +488,9 @@ export class Game implements RunDispatcher {
     // pattern). This closes the 74e interim hazard — the event phase has
     // a scene now.
     this.bus.on('event:entered', () => this.swap(new EventScene()));
+    // A rest node opened its gate (and a loaded run resumed at it). No
+    // payload: the screen reads what the rest would do off ctx.run.
+    this.bus.on('rest:entered', () => this.swap(new RestScene()));
     this.bus.on('run:defeated', () => this.swap(new GameOverScene('defeat')));
     // The win is recorded here and not at the end screen's button: the
     // autosave empties the slot at this same command, so a tab closed on the
@@ -732,10 +736,19 @@ export class Game implements RunDispatcher {
         run.dispatch(command);
         // 50e — docking emits `port:entered`, whose bus subscription swaps
         // the PortScene (the reward:offered pattern) — nothing to do here.
-        // G3 — a rest node resolves inline. If it banked XP without a
-        // level-up, phase falls to 'map' with no event (like chooseRecruit
-        // below), so refresh the map explicitly. A battle (battle:started) or
-        // a rest-with-promotion (promotion:pending) fires its own swap.
+        // A rest node (`rest:entered`), an event page (`event:entered`) and a
+        // battle (`battle:started`) each fire their own swap too. The phase
+        // is still 'map' only when the hop was rejected, and the map is
+        // remounted then as it always was.
+        if (run.phase === 'map') {
+          this.swap(new MapScene());
+        }
+        break;
+      case 'chooseRestOption':
+        // The rest gate's option. A rest that levelled someone emits
+        // `promotion:pending`, which swaps itself; otherwise the run lands
+        // on 'map' with no event (the leavePort pattern), so swap here.
+        run.dispatch(command);
         if (run.phase === 'map') {
           this.swap(new MapScene());
         }

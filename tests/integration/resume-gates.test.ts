@@ -24,11 +24,14 @@ import { spawnEncounter } from '../../src/sim/battleSetup';
 // them.
 
 /** Each gate phase and the event the live run emits on arriving there; the
- *  map has none (Game routes it by the phase). */
+ *  map has none (Game routes it by the phase). Total over the phases a run
+ *  is saved at, so a new gate fails typecheck here until it has a row: with
+ *  no row, `arrivals` would pass over it and nothing would say so. */
 const GATE_EVENT = {
   map: null,
   port: 'port:entered',
   event: 'event:entered',
+  rest: 'rest:entered',
   'turn-intro': 'turn:starting',
   reward: 'reward:offered',
   promotion: 'promotion:pending',
@@ -36,7 +39,7 @@ const GATE_EVENT = {
   sectorCleared: 'sector:cleared',
   defeat: 'run:defeated',
   complete: 'run:victory',
-} as const satisfies Partial<Record<RunPhase, keyof GameEvents | null>>;
+} as const satisfies Record<Exclude<RunPhase, 'battle' | 'turn-outcome'>, keyof GameEvents | null>;
 type GatePhase = keyof typeof GATE_EVENT;
 const GATE_EVENTS = Object.values(GATE_EVENT).filter((e) => e !== null);
 

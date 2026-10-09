@@ -9950,3 +9950,130 @@ rewrite, and the sitting took its letter.
 **What the stretch holds.** 117.75a and 117.75b to the sitting, estimated
 at the shape-lock at 245k on 218k without the dropped step. The talk
 since cost 37k, so the sitting falls near 500k, under the line.
+
+### 117.75a — the gate (2026-10-09, session e72429d8) — read `none`
+
+Readings: **264,575** at 14:17 on the kickoff's commit (`b4ae52a`), so
+the kickoff's docs cost about 10k; **402,747** at 14:51 with the build
+done and its last oracle running; the commit's reading is in 117.75b's
+entry.
+
+**Built.**
+- *The Run.* `RunPhase` gains `rest`. `enterNode` on a rest node sets the
+  phase and emits `rest:entered`; nothing is healed or banked there.
+  `chooseRestOption { optionIndex }` applies the rest at index 0 in that
+  phase (`resolveRest`, unchanged but for the pool arithmetic moving into
+  `restedPool`) and is a silent no-op anywhere else and at any other
+  index. `resume()` re-emits `rest:entered`. `restPreview()` gives the
+  page what the option would do. **Run v48 → v49**, re-pinned; the pin
+  file's diff is the version and the `RunPhase` line, so the fingerprint
+  holds the phase union.
+- *The walkers.* One `rest` case each in the harness and the rollout
+  walker, a row in `PHASE_ROWS` (which chaos, the resume test and the
+  journal drive walk by), chaos's legality row with an in-range and an
+  out-of-range shape, and `Game.dispatch`'s case. Each sends the command
+  and draws nothing.
+- *The page.* `RestScene` and `RestScreen`, on the event screen's layout
+  and classes under `.event-screen--rest`: the heading is the map's own
+  glyph and word (`Z Rest`, `KIND_GLYPH` and `KIND_LABEL` exported from
+  the map screen), the text and the option are the user's two strings,
+  and the line under the option is `restEffectLine`: "Morale +N · every
+  unit +200 XP", or "Morale is full · …" at a full pool. The hue is the
+  Z-node's green, as the event page answers the ?-node's blue. Built
+  whole here, since a 90-line screen has no useful half; 117.75b reads it
+  where a player meets it.
+- *The dial.* `firstNode=rest`, a type and a parse line: the root stamp
+  was kind-generic already.
+
+**Step zero.** Baselines on `b4ae52a`, in the foreground before the first
+edit: 24 default runs (`--count=12`, 39 s), 4 searcher runs (`--count=2
+--searcher --audition`, 68 s), 2 arbitrated runs (`--count=1
+--arbitrate`, 68 s), and four drive journals (seeds 7, 1, 2, 3).
+`summary.csv` has 22 columns and none is the event count, so
+`eventsVisited` stays in the run's result (the kickoff's open check).
+
+**The oracle.**
+- `summary.csv` and `rosters.csv` byte-identical on all three shapes,
+  and `decisions.csv` (295 lines) on the arbitrated one.
+- The page's path, under the runner: the four drive journals compared
+  entry by entry (every command, order and battle checkpoint, the
+  wall-clock dropped) with the after-run's `chooseRestOption` entries
+  removed. Identical on all four. Seeds 1 and 2 each meet one rest (11
+  and 28 battles); seeds 7 and 3 meet none, so `drive-run --seed=7` still
+  logs `a59ee48f`. The cut predicted that hash would move; it does not,
+  because seed 7's run has no rest in it.
+- The arbitrated arm again on four seeds (8 runs), against a baseline
+  from a worktree pinned at `b4ae52a`: `summary.csv`, `rosters.csv` and
+  `decisions.csv` (1,687 decision rows) byte-identical. A counter planted
+  in the walker's `rest` case says those eight runs take it 26 times,
+  and the run with the counter in was identical too. The instrument's own
+  check: the worktree's seed-1 rows equal the live tree's first baseline,
+  and a second worktree run agrees with the first on the four rows they
+  share. The batch took about 7 minutes beside two other runs, against a
+  4.5-minute estimate made from seed 1, the shortest of the four.
+
+**The controls** (a script that plants, runs and restores, with every
+anchor checked before any file is written; the tree's `git diff --stat`
+was the same after as before).
+- *`eventStep++` at the rest's entry:* the unit pin fails by name
+  ("expected 2 to be 1") and 6 of the 24 default rows differ.
+- *A draw off the policy stream in the harness's case:* 8 of 24 rows
+  differ.
+- *The heal on entry as well as on the option:* the gate's pin fails
+  ("expected 30 to be 20") and 2 of 24 rows differ.
+- *A draw in the rollout walker's case:* **nothing differed** on the
+  searcher or the arbitrated shape, which by `process/oracles.md` means
+  the plant may never have run. A counter planted in the case said why:
+  the searcher shape never takes the walker through a rest (0 times; its
+  rollouts are not this walker's phase walk), and the arbitrated seed
+  takes it there twice, in walks that draw nothing afterwards. A plant no
+  reached walk can hide, the clone's pool set to 1 in the case, changes
+  both summary rows and 254 of 294 decision rows. So the walker's case is
+  reached, and the first control was inert, not the code. Two arrivals
+  were thin for the board's own arm, which is why the four-seed run above
+  was added, with its 26.
+- *Every walker's case removed at once:* typecheck names all six files
+  (the harness, the rollout walker, `drive.ts`, `chaos.ts`, `Game.ts`,
+  and the resume test's table). The kickoff's claim that the compiler
+  finds a phase's sites was a reading until this.
+- *`resume()` with no emit for the phase:* the resume test fails by name
+  ("character=soldier at rest: expected [] …"), and so does the gate's
+  own save test.
+
+**For 117.75b's step zero, read here:** the text-size survey scans each
+phase's screen as a driven run comes to it, so it needs no change, only a
+run with a rest in it (`--dials=firstNode=rest`; seed 7 has none). The
+runner's `--profile` makes two launches on one store, which is a real
+Continue.
+
+**Found on the way.**
+- The kit's scene-name table (`src/dev/probe/scenes.ts`) is one site the
+  compiler does not find; its own test did ("names every scene class").
+- The continuation check met the gate with no new run: its expected list
+  of gates failed until `rest` joined it. The resume test meets it only
+  in the full-length run of its three.
+- A mistake of the session's: a probe script holding a regex went
+  through a shell heredoc, against AGENTS' rule, and lost a backslash. It
+  failed to parse before touching the tree. Filed in the friction log.
+
+**Tests** (+6: 3616 → 3622, in 249 files): the gate holds; only index 0
+in the phase applies; a rest moves `currentNodeId`, `playerHealth`,
+`team` and `visitedNodes` in the save and no other key, `eventStep`
+named; a save at the gate loads, re-emits and rests as the live run;
+`restPreview`; the dial. Five rest tests and `dockAtPort` now send the
+option.
+
+**Calls made while building** (the user's to overturn).
+1. The effect line shows what the click will give, not the nominal
+   quarter: a pool two short of full reads "Morale +2", and a full pool
+   says so.
+2. The words of the effect line are the session's drafts ("Morale +{heal}
+   · every unit +{xp} XP"), in the game's own words for the pool and for
+   experience.
+3. No cue on `rest:entered`: silent as `event:entered` and
+   `port:entered` are, a `candidate` for the Round 11 feel sweep.
+4. A hop the Run rejects still remounts the map, as it did before.
+
+**Predictions against what happened.** Run v48 → v49: yes. No new
+stream: none. The smoke fires: on this commit's hook. The drive's hash
+moves: no, for seed 7 (above).

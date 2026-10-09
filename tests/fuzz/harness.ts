@@ -840,6 +840,13 @@ function runOneInner(
         run.dispatch({ kind: 'chooseEventOption', choiceIndex: pick });
         break;
       }
+      case 'rest': {
+        // The rest gate: one option, taken. No strategy call and no draw off
+        // the policy stream, so a run plays as it did when a rest resolved
+        // inside `enterNode`.
+        run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
+        break;
+      }
       case 'turn-intro': {
         // 85d — the campRaid battle plan, decided BEFORE the fire loop
         // (the plan concerns the upcoming battle; fires concern the

@@ -148,14 +148,18 @@ import type { Archetype } from '../sim/archetypes';
 // re-shows the screen (the defeat/complete precedent — every full-screen
 // beat is phase-backed). Left via `dismissSectorCleared` back to 'map'.
 // 74b adds `event` — entered from the map when the player lands on an event
-// node that didn't combat-resolve (`handleEnterNode`; the port model — the
-// rest-style inline branch, holding the serialized {eventId,pageId} cursor).
+// node that didn't combat-resolve (`handleEnterNode`; the port model — a
+// branch on the node's kind, holding the serialized {eventId,pageId} cursor).
 // Left via a terminal outcome: return-to-map (the leavePort silent
 // transition) or start-encounter (into 'battle').
+// `rest` is the gate a rest node opens (`handleEnterNode`): the run holds
+// there, saved, until `chooseRestOption` applies the rest and moves on to
+// 'promotion' or back to 'map'.
 export type RunPhase =
   | 'map'
   | 'port'
   | 'event'
+  | 'rest'
   | 'turn-intro'
   | 'battle'
   | 'turn-outcome'
@@ -511,8 +515,12 @@ export interface BattleEncounter {
  *  117b: bumped 47→48. `escalation`, the run's Escalation level. The four
  *  difficulty multipliers are derived from it on a load and are not saved.
  *  A v47 save has no level and rejects; none is in a player's hands, since
- *  no build that saves has been uploaded. */
-export const RUN_SCHEMA_VERSION = 48;
+ *  no build that saves has been uploaded.
+ *  117.75a: bumped 48→49. `RunPhase` gains `rest`, the gate a rest node
+ *  opens; no field is new. `fromJSON` takes the phase as written, so the
+ *  version is what keeps a phase this build doesn't know out of it (the
+ *  67a rule for a widened phase union). */
+export const RUN_SCHEMA_VERSION = 49;
 
 /**
  * 94d — one row of the fallen ledger: a combatant that fell, where and when.
@@ -1481,6 +1489,9 @@ export class Run {
       case 'usePacket':
         this.handleUsePacket(command.cacheIndex, command.handIndex, command.rosterIndex);
         break;
+      case 'chooseRestOption':
+        this.handleChooseRestOption(command.optionIndex);
+        break;
       case 'resetRun':
       case 'chooseCharacter':
         // No-ops at this layer — Game handles both (reset disposes this Run;
@@ -1508,7 +1519,9 @@ export class Run {
     }
     this.currentNodeId = nodeId;
 
-    // G3 — dispatch on node kind. A rest resolves inline (no battle); a port
+    // G3 — dispatch on node kind. A rest opens its gate (no battle): the run
+    // holds in the serialized `rest` phase until `chooseRestOption`, which
+    // applies the rest. A port
     // (50c) docks — the run holds in the serialized `port` phase until the
     // player dispatches `leavePort` (§50d rolls stock here on entry); battle,
     // boss, and elite all build an encounter (boss is a regular fight, just
@@ -1516,7 +1529,11 @@ export class Run {
     // already handles it). The frontier check above gates entry the same for
     // all.
     if (this.kindOf(nodeId) === 'rest') {
-      this.resolveRest();
+      // Nothing is drawn and no counter moves here or in the option's
+      // handler: a rest takes no stream of its own, so the gate leaves every
+      // other draw of the run where it was.
+      this.phase = 'rest';
+      this.bus.emit('rest:entered', { nodeId });
       return;
     }
     if (this.kindOf(nodeId) === 'port') {
@@ -3902,7 +3919,36 @@ export class Run {
   }
 
   /**
-   * G3 — resolve a rest node inline (no battle). Synthesize a flat
+   * Take one option at the rest gate. A rest has one option today, index 0,
+   * which is the rest itself (`resolveRest`); the index is the seam for the
+   * options a later round adds. Outside the `rest` phase, or with any other
+   * index, a silent no-op.
+   */
+  private handleChooseRestOption(optionIndex: number): void {
+    if (this.phase !== 'rest') return;
+    if (optionIndex !== 0) return;
+    this.resolveRest();
+  }
+
+  /** The pool after a rest: healed by `restHealFraction` of its max, capped
+   *  at the max. `resolveRest` sets it and `restPreview` reports it. */
+  private restedPool(): number {
+    return Math.min(
+      HEALTH.playerHealthMax,
+      this.playerHealth + HEALTH.restHealFraction * HEALTH.playerHealthMax,
+    );
+  }
+
+  /** What taking the rest would do now, for the rest page's effect line:
+   *  how far the pool would rise (0 at a full pool) and the XP each unit
+   *  banks. Null outside the `rest` phase. */
+  restPreview(): { readonly heal: number; readonly xp: number } | null {
+    if (this.phase !== 'rest') return null;
+    return { heal: this.restedPool() - this.playerHealth, xp: LEVELING.restXp };
+  }
+
+  /**
+   * G3 — apply a rest (the rest gate's option; no battle). Synthesize a flat
    * `LEVELING.restXp` award per roster slot and feed the SAME `bankXpAwards`
    * pipeline a battle win uses (it reads only `rosterIndex` + `xpGained`), so
    * a rest can legitimately level units and pop PromotionScene — no parallel
@@ -3916,13 +3962,7 @@ export class Run {
     // levels a unit still heals. §90 — a FRACTION of max (0.25 × 20 = the
     // old absolute 5), so the heal tracks a pool-max move; packet heals stay
     // absolute (`healPool` ops).
-    this.setPlayerHealth(
-      Math.min(
-        HEALTH.playerHealthMax,
-        this.playerHealth + HEALTH.restHealFraction * HEALTH.playerHealthMax,
-      ),
-      'rest',
-    );
+    this.setPlayerHealth(this.restedPool(), 'rest');
     const awards = this.team.map((_, i) => ({
       unitId: i,
       rosterIndex: i,
@@ -4306,6 +4346,9 @@ export class Run {
           nodeId: this.currentNodeId,
           eventId: gateState(this.activeEvent, 'event', 'activeEvent').eventId,
         });
+        return;
+      case 'rest':
+        this.bus.emit('rest:entered', { nodeId: this.currentNodeId });
         return;
       case 'turn-intro':
         this.bus.emit('turn:starting', this.turnStartingPayload());

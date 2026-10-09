@@ -103,8 +103,10 @@ export interface RunConfig {
    * 74b widens the value set with `'event'` — the event-phase dev/isolation
    * shape (`?hops=2&firstNode=event`, optionally + `forcedEventId`): the
    * stamp itself was always kind-generic, only this type gated it.
+   * 117.75a adds `'rest'`: the run opens on the rest gate
+   * (`?firstNode=rest`), so its page is one URL away.
    */
-  readonly firstNodeKind?: 'elite' | 'event';
+  readonly firstNodeKind?: 'elite' | 'event' | 'rest';
   /**
    * 74b — force every event-node entry to open THIS event (a
    * config/events.json id), skipping the eligibility-filtered pick — the
@@ -412,10 +414,12 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (forcedLayoutId !== undefined) config.forcedLayoutId = forcedLayoutId;
   const forcedEncounterId = parseEncounter(params.get(RUN_CONFIG_PARAMS.encounter));
   if (forcedEncounterId !== undefined) config.forcedEncounterId = forcedEncounterId;
-  // 68e→74b — the supported stamps are 'elite' and 'event'; other values
-  // dropped (the `layout=` unknown-token discipline).
+  // 68e→74b — the supported stamps are 'elite', 'event' and 'rest'; other
+  // values dropped (the `layout=` unknown-token discipline).
   const firstNode = params.get(RUN_CONFIG_PARAMS.firstNode);
-  if (firstNode === 'elite' || firstNode === 'event') config.firstNodeKind = firstNode;
+  if (firstNode === 'elite' || firstNode === 'event' || firstNode === 'rest') {
+    config.firstNodeKind = firstNode;
+  }
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));

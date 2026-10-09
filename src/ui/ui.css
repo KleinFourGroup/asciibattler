@@ -1638,6 +1638,24 @@ body {
   color: var(--color-terminal-amber); /* the unmet cost, not an error red */
 }
 
+/* The rest page (RestScreen.ts): the event layout in TERMINAL_GREEN, the
+   Z-node's map accent, as the event page answers the ?-node's blue. The
+   line under its option is the option's effect, in the requirement line's
+   style. */
+.event-screen--rest .event-heading {
+  color: var(--color-terminal-green);
+  text-shadow: 0 0 6px rgb(from var(--color-terminal-green) r g b / 0.55);
+}
+
+.event-screen--rest .event-choice {
+  border-color: var(--color-terminal-green);
+}
+
+.event-screen--rest .event-choice:hover:not(:disabled),
+.event-screen--rest .event-choice:focus-visible:not(:disabled) {
+  background: rgb(from var(--color-terminal-green) r g b / 0.12);
+}
+
 .port-swap {
   display: flex;
   align-items: center;

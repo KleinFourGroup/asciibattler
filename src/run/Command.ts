@@ -200,6 +200,15 @@ export type RunCommand =
    * bad index / failing condition — the usual silent no-op.
    */
   | { readonly kind: 'chooseEventOption'; readonly choiceIndex: number }
+  /**
+   * Take an option at the rest gate: the run holds in the serialized `rest`
+   * phase from `enterNode` on a rest node until this lands. Option 0, the
+   * only one today, is the rest itself: the pool heals, every unit banks the
+   * rest's XP, and the run goes to 'promotion' if anyone levelled, else back
+   * to 'map'. The index is the seam for further options. Wrong phase or any
+   * other index is a silent no-op. Draws nothing.
+   */
+  | { readonly kind: 'chooseRestOption'; readonly optionIndex: number }
   | { readonly kind: 'resetRun' }
   /**
    * 63e — confirm the starting character on the CharacterSelectScene. GAME-

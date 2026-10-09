@@ -16,6 +16,7 @@ import { PortScene } from '../../scenes/PortScene';
 import { PreTurnScene } from '../../scenes/PreTurnScene';
 import { PromotionScene } from '../../scenes/PromotionScene';
 import { RecruitScene } from '../../scenes/RecruitScene';
+import { RestScene } from '../../scenes/RestScene';
 import { RewardScene } from '../../scenes/RewardScene';
 import { SectorClearedScene } from '../../scenes/SectorClearedScene';
 
@@ -30,6 +31,7 @@ export const SCENE_CLASSES = {
   PreTurnScene,
   PromotionScene,
   RecruitScene,
+  RestScene,
   RewardScene,
   SectorClearedScene,
 } as const;

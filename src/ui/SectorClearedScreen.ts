@@ -16,8 +16,9 @@ import { button } from './button';
 import { t } from '../i18n/ui';
 
 /** The pool carries fractional chips (power × 1.1/level); print integers bare
- *  and anything else to one decimal — the between-acts beat isn't a ledger. */
-function fmtPool(n: number): string {
+ *  and anything else to one decimal — the between-acts beat isn't a ledger.
+ *  Exported for the rest page's effect line (RestScreen.ts). */
+export function fmtPool(n: number): string {
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 

@@ -28,8 +28,10 @@ import { attachTooltip } from './tooltip';
  * replaces the old numeric label. DOM text only (no FontAtlas). Root is
  * rendered as `@` separately (the run's origin marker), so it's not keyed
  * here. `Record<NodeKind, …>` keeps this exhaustive if the union grows.
+ * Exported with KIND_LABEL for the rest page's heading (RestScreen.ts),
+ * which names its node as the map does.
  */
-const KIND_GLYPH: Record<NodeKind, string> = {
+export const KIND_GLYPH: Record<NodeKind, string> = {
   battle: 'X',
   rest: 'Z',
   boss: '!',
@@ -44,7 +46,7 @@ const KIND_GLYPH: Record<NodeKind, string> = {
  * KIND_GLYPH: a new kind fails tsc here until it is named. The order is the
  * route-planning read (the common node first, the destination last).
  */
-const KIND_LABEL: Record<NodeKind, string> = {
+export const KIND_LABEL: Record<NodeKind, string> = {
   battle: t('map.legend.kind.battle'),
   rest: t('map.legend.kind.rest'),
   boss: t('map.legend.kind.boss'),

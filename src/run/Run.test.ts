@@ -3172,7 +3172,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       run.dispatch({ kind: 'usePacket', cacheIndex: 0 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
+      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       // 51f — the stores carry provenance now ({rule, sourceId}).
       expect(restored.injectedEncounterRules).toEqual([
@@ -3362,7 +3362,7 @@ describe('Run', () => {
       const { run, bus } = freshRunWithBus(1, { daemon: null });
       dockAtPort(run, bus);
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
+      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
       expect(wire.phase).toBe('port');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.phase).toBe('port');
@@ -3686,7 +3686,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) });
       chipTurn(bus, { player: 0, enemy: 0 }, [], { bits: 9 });
       const wire = JSON.parse(JSON.stringify(run.toJSON()));
-      expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
+      expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
       expect(wire.phase).toBe('reward');
       const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
       expect(restored.pendingRewards).toEqual([
@@ -4314,7 +4314,7 @@ describe('Run', () => {
       let battleStarts = 0;
       bus.on('battle:started', () => battleStarts++);
 
-      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      takeRest(run, restId);
 
       expect(battleStarts).toBe(0);
       expect(run.currentEncounter).toBeNull();
@@ -4340,7 +4340,7 @@ describe('Run', () => {
       );
       bus.on('recruit:offered', () => recruitOffers++);
 
-      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      takeRest(run, restId);
       expect(run.phase).toBe('promotion');
       expect(promotions).toHaveLength(1);
       // The 5 level-1 starters all promote on restXp (≥ xpToNext(1)). The
@@ -4378,7 +4378,7 @@ describe('Run', () => {
       bus.on('promotion:pending', () => promotionPending++);
       bus.on('recruit:offered', () => recruitOffers++);
 
-      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      takeRest(run, restId);
 
       expect(run.phase).toBe('map');
       expect(promotionPending).toBe(0);
@@ -4430,7 +4430,7 @@ describe('Run', () => {
       const before = Math.max(1, HEALTH.playerHealthMax - heal - 1);
       run.playerHealth = before;
 
-      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      takeRest(run, restId);
 
       // Balance-proof: expected derives from the knob + the cap, never hardcoded.
       expect(run.playerHealth).toBe(Math.min(HEALTH.playerHealthMax, before + heal));
@@ -4444,7 +4444,7 @@ describe('Run', () => {
         HEALTH.playerHealthMax = originalMax * 2;
         const { run, restId } = driveToRestFrontier({ hopCount: 5 }, 2);
         run.playerHealth = 1;
-        run.dispatch({ kind: 'enterNode', nodeId: restId });
+        takeRest(run, restId);
         expect(run.playerHealth).toBe(
           Math.min(HEALTH.playerHealthMax, 1 + HEALTH.restHealFraction * originalMax * 2),
         );
@@ -4458,9 +4458,123 @@ describe('Run', () => {
       // Already full: the heal must clamp, never overfill (robust for any knob).
       run.playerHealth = HEALTH.playerHealthMax;
 
-      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      takeRest(run, restId);
 
       expect(run.playerHealth).toBe(HEALTH.playerHealthMax);
+    });
+  });
+
+  describe('the rest gate (117.75a)', () => {
+    /** A run one hop short of a hop-2 rest, wounded so a heal would show. */
+    function atRestFrontier(config: RunConfig = {}) {
+      const handle = driveToRestFrontier({ hopCount: 5, ...config }, 2);
+      handle.run.playerHealth = Math.max(1, HEALTH.playerHealthMax / 2);
+      return handle;
+    }
+    const wire = (run: Run): string => JSON.stringify(run.toJSON());
+
+    it('entering a rest node holds at the gate: rest:entered, nothing healed, nothing banked', () => {
+      const { run, bus, restId } = atRestFrontier();
+      const entered: number[] = [];
+      let promotionPending = 0;
+      bus.on('rest:entered', ({ nodeId }) => entered.push(nodeId));
+      bus.on('promotion:pending', () => promotionPending++);
+      const pool = run.playerHealth;
+      const team = JSON.stringify(run.team);
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+
+      expect(run.phase).toBe('rest');
+      expect(entered).toEqual([restId]);
+      expect(run.currentNodeId).toBe(restId);
+      expect(run.playerHealth).toBe(pool);
+      expect(JSON.stringify(run.team)).toBe(team);
+      expect(promotionPending).toBe(0);
+    });
+
+    it('the option applies the rest, and only index 0 in the rest phase does', () => {
+      const { run, restId } = atRestFrontier();
+      const onMap = wire(run);
+      run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 }); // not at the gate yet
+      expect(wire(run)).toBe(onMap);
+
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      const atGate = wire(run);
+      for (const optionIndex of [1, -1, 0.5, Number.NaN]) {
+        run.dispatch({ kind: 'chooseRestOption', optionIndex });
+        expect(wire(run), `index ${optionIndex}`).toBe(atGate);
+      }
+
+      const pool = run.playerHealth;
+      run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
+      expect(run.phase).not.toBe('rest');
+      expect(run.playerHealth).toBe(
+        Math.min(HEALTH.playerHealthMax, pool + HEALTH.restHealFraction * HEALTH.playerHealthMax),
+      );
+      const rested = wire(run);
+      run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 }); // a second click does nothing
+      expect(wire(run)).toBe(rested);
+    });
+
+    it('takes no stream: eventStep and every other saved counter are where the map left them', () => {
+      // A rest that advanced `eventStep` would move every later event's draw
+      // in the run. The gate may change the node, the phase, the pool and
+      // the team, and nothing else in the save.
+      const { run, restId } = atRestFrontier();
+      const before = run.toJSON() as unknown as Record<string, unknown>;
+      takeRest(run, restId);
+      if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
+      expect(run.phase).toBe('map');
+      const after = run.toJSON() as unknown as Record<string, unknown>;
+      expect(after['eventStep']).toBe(before['eventStep']);
+      const changed = Object.keys(after).filter(
+        (k) => JSON.stringify(after[k]) !== JSON.stringify(before[k]),
+      );
+      expect(changed.sort()).toEqual(['currentNodeId', 'playerHealth', 'team', 'visitedNodes']);
+    });
+
+    it('a save at the gate loads at the gate, re-emits rest:entered, and rests as the live run does', () => {
+      const { run, restId } = atRestFrontier();
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      const saved = run.toJSON();
+      expect(saved.phase).toBe('rest');
+
+      const bus = new EventBus<GameEvents>();
+      const entered: number[] = [];
+      bus.on('rest:entered', ({ nodeId }) => entered.push(nodeId));
+      const loaded = Run.fromJSON(JSON.parse(JSON.stringify(saved)), bus, { ...NO_EVENTS, hopCount: 5 });
+      expect(wire(loaded)).toBe(JSON.stringify(saved));
+      loaded.resume();
+      expect(entered).toEqual([restId]);
+
+      run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
+      loaded.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
+      expect(wire(loaded)).toBe(wire(run));
+    });
+
+    it('restPreview is what the option then does, names a full pool as 0, and is null off the gate', () => {
+      const { run, restId } = atRestFrontier();
+      expect(run.restPreview()).toBeNull();
+      run.dispatch({ kind: 'enterNode', nodeId: restId });
+      const pool = run.playerHealth;
+      const preview = run.restPreview()!;
+      expect(preview.xp).toBe(LEVELING.restXp);
+      expect(preview.heal).toBeGreaterThan(0);
+
+      run.playerHealth = HEALTH.playerHealthMax;
+      expect(run.restPreview()!.heal).toBe(0);
+      run.playerHealth = pool;
+
+      run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
+      expect(run.playerHealth - pool).toBe(preview.heal);
+      expect(run.restPreview()).toBeNull();
+    });
+
+    it('firstNodeKind: rest opens the run on the gate', () => {
+      const bus = new EventBus<GameEvents>();
+      const run = new Run(1, bus, { ...NO_EVENTS, firstNodeKind: 'rest' });
+      run.dispatch({ kind: 'enterNode', nodeId: run.nodeMap.rootId });
+      expect(run.phase).toBe('rest');
     });
   });
 });
@@ -5542,6 +5656,7 @@ function dockAtPort(run: Run, bus: EventBus<GameEvents>): void {
       winEncounter(bus);
       declineAllRewards(run);
     }
+    if (run.phase === 'rest') run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
     if (run.phase === 'promotion') run.dispatch({ kind: 'dismissPromotion' });
     if (run.phase === 'recruit') run.dispatch({ kind: 'passRecruit' });
   }
@@ -5686,6 +5801,14 @@ function driveToRestFrontier(
     run.dispatch({ kind: 'chooseRecruit', unitTemplate: run.currentOffer![0]! });
   }
   return { run, bus, restId };
+}
+
+/** Enter a rest node and take its one option: the two commands a rest is
+ *  since it became a gate (117.75a). */
+function takeRest(run: Run, restId: number): void {
+  run.dispatch({ kind: 'enterNode', nodeId: restId });
+  expect(run.phase).toBe('rest');
+  run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
 }
 
 // ── 74b — the event phase ────────────────────────────────────────────────────
@@ -5916,7 +6039,7 @@ describe('74b — the event phase', () => {
     const run = openEventAtSeedScan({ forcedEventId: 'corrupted-shrine' });
     expect(run.phase).toBe('event');
     const wire = run.toJSON();
-    expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
+    expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
     expect(wire.activeEvent).toEqual({ eventId: 'corrupted-shrine', pageId: 'start' });
     const restored = Run.fromJSON(JSON.parse(JSON.stringify(wire)), new EventBus<GameEvents>());
     expect(restored.phase).toBe('event');
@@ -6678,7 +6801,7 @@ describe('94d — the fallen ledger (Run-owned, snapshot v45)', () => {
     bus.emit('unit:died', death({ unitId: 1, team: 'player', archetype: 'archer', power: 2 }));
     bus.emit('unit:died', death({ unitId: 2, team: 'enemy', archetype: 'bandit', power: 1 }));
     const wire = JSON.parse(JSON.stringify(run.toJSON()));
-    expect(wire.schemaVersion).toBe(48); // 117b — the Escalation level (115a: the two gate facts)
+    expect(wire.schemaVersion).toBe(49); // 117.75a — the rest phase (117b: the Escalation level)
     expect(wire.fallenLedger).toHaveLength(2);
     const restored = Run.fromJSON(wire, new EventBus<GameEvents>());
     expect(restored.fallenLedger).toEqual(run.fallenLedger);

@@ -324,7 +324,8 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `layout=isthmus&seed=7&character=soldier` gives an event at node 0 and a
   battle at node 1. `roster=` fields any archetype. `encounter=` forces
   only nodes of a matching kind, so `firstNode=elite` is the real elite
-  fixture. `bp=board-<id>` opens a board-explorer fixture straight into its
+  fixture. `firstNode=rest` makes node 0 a rest, so the rest page is one
+  click in. `bp=board-<id>` opens a board-explorer fixture straight into its
   battle (`src/dev/boardPanel/fixtures.ts`). An unseeded reload starts a
   different run, so never compare before and after across one.
 - A battle by hand: `__probe.drive({ until: 'battle' })`, or

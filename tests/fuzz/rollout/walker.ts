@@ -19,7 +19,7 @@
  *   the clone; score it, then discard it.
  * - The clone must be taken at a DECISION phase (map / turn-intro /
  *   turn-outcome / port / reward / recruit / promotion / sectorCleared /
- *   event — 74g: an eventChoice clone starts ON the open page). Every
+ *   rest / event — 74g: an eventChoice clone starts ON the open page). Every
  *   decision site sits outside battle, so a mid-'battle' clone never
  *   arises in arbitration; the walker throws loud on one (a serialized
  *   'battle' phase has no World to resume).
@@ -385,6 +385,11 @@ export function walkToHorizon(clone: RunRolloutClone, options: WalkOptions): Wal
           ? strategy.pickEventChoice(run, strategyRng)
           : enabled[strategyRng.int(0, enabled.length - 1)]!;
         run.dispatch({ kind: 'chooseEventOption', choiceIndex });
+        break;
+      }
+      case 'rest': {
+        // The rest gate, as the harness takes it: one option, no draw.
+        run.dispatch({ kind: 'chooseRestOption', optionIndex: 0 });
         break;
       }
       case 'promotion': {

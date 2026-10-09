@@ -152,7 +152,7 @@ describe('115b — the continuation check: a run saved and loaded at every gate 
   it('crosses every gate kind', () => {
     const met = new Set(played.flatMap((p) => p.path.gates.map((g) => g.phase)));
     expect([...met].sort()).toEqual(
-      ['complete', 'defeat', 'event', 'map', 'port', 'promotion', 'recruit', 'reward', 'sectorCleared', 'turn-intro'],
+      ['complete', 'defeat', 'event', 'map', 'port', 'promotion', 'recruit', 'rest', 'reward', 'sectorCleared', 'turn-intro'],
     );
   });
 

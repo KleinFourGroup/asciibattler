@@ -2,7 +2,7 @@
 # tests/save-fingerprint.test.ts holds this file against the types: a change of
 # shape fails until RUN_SCHEMA_VERSION is bumped and this file is re-pinned with
 #   npm run save:fingerprint
-RUN_SCHEMA_VERSION 48
+RUN_SCHEMA_VERSION 49
 
 RunSnapshot = {
   activeEvent: null | { eventId: string; pageId: string }
@@ -198,7 +198,7 @@ RewardTrigger = {
   chance: number
 }
 
-RunPhase = "battle" | "complete" | "defeat" | "event" | "map" | "port" | "promotion" | "recruit" | "reward" | "sectorCleared" | "turn-intro" | "turn-outcome"
+RunPhase = "battle" | "complete" | "defeat" | "event" | "map" | "port" | "promotion" | "recruit" | "rest" | "reward" | "sectorCleared" | "turn-intro" | "turn-outcome"
 
 StatMod = {
   add?: number | undefined

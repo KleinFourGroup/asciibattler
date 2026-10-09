@@ -136,6 +136,7 @@ export const SILENT_EVENTS: Readonly<
   'port:entered': 'candidate',
   'event:entered': 'candidate',
   'event:pageChanged': 'bookkeeping',
+  'rest:entered': 'candidate',
   'reward:offered': 'candidate',
   // PromotionScreen's reveal timeline plays its own per-beat ticks.
   'promotion:pending': 'uiChannel',

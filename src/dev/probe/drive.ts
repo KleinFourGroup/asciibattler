@@ -51,6 +51,9 @@ export const PHASE_ROWS: Record<RunPhase, Row> = {
     if (enabled.length === 0) throw new Error('__probe.drive: an event page with no enabled choice');
     return { command: { kind: 'chooseEventOption', choiceIndex: enabled[pick(enabled.length)]! } };
   },
+  // The rest gate's one option. No pick: the chooser's stream is the run's
+  // other choices', and a rest must not move it.
+  rest: () => ({ command: { kind: 'chooseRestOption', optionIndex: 0 } }),
   // The pre-turn gate's Fight; the grants go unspent.
   'turn-intro': () => ({ command: { kind: 'advanceTurn' } }),
   battle: () => 'fight',
@@ -82,6 +85,8 @@ export function describeCommand(command: RunCommand): string {
       return `enterNode ${command.nodeId}`;
     case 'chooseEventOption':
       return `chooseEventOption ${command.choiceIndex}`;
+    case 'chooseRestOption':
+      return `chooseRestOption ${command.optionIndex}`;
     case 'chooseRecruit':
       return `chooseRecruit ${command.unitTemplate.archetype}`;
     case 'acceptReward':

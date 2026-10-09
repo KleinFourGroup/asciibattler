@@ -567,6 +567,15 @@ export interface GameEvents extends Record<string, unknown> {
    */
   'event:pageChanged': { eventId: string; pageId: string };
 
+  /**
+   * The player landed on a rest node: `enterNode` consumed the hop and the
+   * run entered the serialized `rest` phase, where it holds until a
+   * `chooseRestOption` command. Nothing has been healed or banked yet.
+   * Game swaps the RestScene off this, and `Run.resume()` emits it again for
+   * a run loaded at the gate. `nodeId` is the rest node.
+   */
+  'rest:entered': { nodeId: number };
+
   'recruit:offered': { units: UnitTemplate[] };
 
   /**

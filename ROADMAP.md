@@ -12,9 +12,9 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §117 ✅ CLOSED 2026-10-08** (Escalation and the unlock mechanism).
-**§117.5, the UI sweep, is cut and signed (2026-10-08) and in progress;**
-§117.75, the rest gate, was inserted at its kickoff, before §118.
+**Status: §117.5 ✅ CLOSED 2026-10-09** (the UI sweep; §117 closed
+2026-10-08). **§117.75, the rest gate, is next:** inserted at §117.5's
+kickoff, before §118, and not yet cut.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -243,41 +243,26 @@ The cut, signed 2026-10-08 (WORKLOG "The §117 audit and cut", "The shape-lock's
 - [x] **117e** ✅ READ 2026-10-08 (the user, in Firefox: the picker, the words, the end screen and the calls signed as built; WORKLOG §117e, "117e — THE READ") — the picker (a stepper row under each card, opening at the highest unlocked level), the levels in words, the level and the unlock on the end screen. Read `stop`, in Firefox: with a win planted for one character, its card shows the stepper and the others don't; step it, start, and the end screen names the level. Wrong is a card that moves when a stepper appears, a level above the ceiling on offer, or a percentage in the words.
 - [x] **117d-post** ✅ 2026-10-08 — inserted at 117e's stop, the user's answer: the two progress writes read the section again before they change it (`store.update`), so a run won in a second tab can't write away the first tab's. Read `none`: two stores over one adapter with the old write as the control, six cuts failing by name, and the pane's stale-page steps before and after (WORKLOG §117d-post).
 
-## Phase 117.5 — the UI sweep
+## Phase 117.5 — the UI sweep ✅ CLOSED 2026-10-09
 
-Charter (inserted 2026-10-04 at §116's first sitting, user-signed): the
-layout and polish riders that this round's sittings file against its own
-surfaces (the menu, the settings, the chrome column), and whichever older
-TODO riders the user picks at the kickoff. The first is the settings
-chip's home, a second ribbon in the top right (TODO "§116 riders"). **Why
-here:** before §118, so the build that goes to the public web channel is
-the swept one. **Risk:** low-medium (wide layout; each move is checked
-with the box oracle). **Decision points:** the list ✅ DECIDED (the
-kickoff, 2026-10-08: the three §116 riders, four older ones, and four
-hardening items for the public build); the ribbon's placement and the
-itch embed's size ✅ DECIDED at 117.5c's read (a right-hand column that
-mirrors the left; 1280×720). **Exit:** every picked item built, and
-read at one sitting. **Scope guards:** layout and polish only; nothing
-that isn't in TODO at the kickoff; no new mechanism and no sim change.
-Widened at the kickoff (the user, 2026-10-08), for the build strangers
-get: two small new mechanisms, the loading line and the failure plate,
-and the dev-code guard. Still no sim change.
+The layout and polish riders of this round's sittings, four older riders
+and four hardening items for the build strangers get, each built and all
+read at one sitting (the user, in Firefox, 2026-10-09: every `batch` read
+signed, no finding). As predicted: no snapshot bump, no random stream, no
+bus event and no fuzz smoke on any step, and `drive-run --seed=7` logs
+`a59ee48f` at the phase's end. WORKLOG §117.5.
 
-The cut, signed 2026-10-08 (WORKLOG "The §117.5 kickoff"). Predicted: no
-snapshot bump, no random stream, no bus event, and the fuzz smoke on no
-step; `drive-run --seed=7` logs `a59ee48f` after each.
-
-- [x] **117.5a** — the text-size survey reaches a tooltip, a unit's full card, the cache modal with packets and the sector-cleared screen, each with its planted case; baselines on the tree as it is, at 720p and 1080p at every size and at three candidate embed sizes at 100 %. Read `none`. ✅ 2026-10-08: an `extras` mode; the three surfaces that exist read clean at every size on four windows (no full card opens on hover anywhere); the baselines reproduce 116k's table, and at 100 % 1024×576 puts nothing off the page where 960×540 puts the promotion screen 15px off it (WORKLOG §117.5a).
-- [x] **117.5b** — three measurements under the runner, each with its control: hitsplats under pause, a forced WebGL context loss and restore in a battle, the objective X's contrast on each theme in both palettes. Read `none`; a finding that needs a build goes to 117.5c's stop. ✅ 2026-10-08: hitsplats live 0.63 s paused or not, so the hold was the hidden pane's; a forced loss and restore brings the canvas back to the same hash; the X is nearest its floor on desert (0.095 in OKLab), then tundra, and Volcanic reads as grassland does (WORKLOG §117.5b).
-- [x] **117.5c** — the ribbon's placements on the occupied top-right corners (the battle's speed pane, the roster button, the port's Leave, the overlay's ✕), as a page of screenshots. Read `stop`: the user picks the placement and the embed size, and rules on what 117.5b raised. ✅ READ 2026-10-09 (the user): none of the three placements as drawn, a right-hand column that mirrors the left instead (117.5d); the smallest window and the embed are 1280×720; the plate speaks for a context that stays lost; the X stays as it is (117.5g dropped). The page is `scratch/117.5c-ribbon/index.html`, made with the runner's `--shot` (WORKLOG §117.5c and its read).
-- [ ] **117.5d** ◐ BUILT 2026-10-09, unread (`batch`, at the sitting): the mock read and signed the same day with its five leans (the strip 45px tall, Leave in the chip's plate, the piles and ✕ as they are); built as a control column the screens mount their control into; on six screens at three text sizes every box is the mock's, and the box oracle moves nothing but the meant boxes at 720p and 1080p (WORKLOG "117.5d — the mock's read, and built"). — the right-hand column (re-scoped at 117.5c's read, the user's lean and the session's shape): a mirror of the left one in top, inset, width and plate, Settings its first row on every screen and the screen's own control its second at the same width (Roster; Leave port; in a battle the speed controls as one strip of five equal cells); DESIGN's Chips paragraph and the stylesheet's corner comments with it. First a mock on the five screens, by stylesheet and `--shot`: read `stop` (moved up from `batch`, since the look is new). Then built, read `batch` (at the sitting): play a run to a battle, a port and a recruit, and the right column stands at one place with Settings on top, the left column holding game state only. Wrong is a row that changes width between screens, a speed cell that cuts its label, or a control moved that the mock didn't show.
-- [ ] **117.5e** ◐ BUILT 2026-10-09, unread (`batch`, at the sitting): three rules (a centred body keeps to the room between the columns; the battle's top row is one grid; the promotion screen scrolls) and the enemy pane dropping under the hop chip as the text grows; at 125 % on 720p the survey finds nothing new and no plate is over text on eight screens, at 150 % nothing is out of reach, and at the default size the box oracle moves nothing at 720p or 1080p (WORKLOG §117.5e). — room at a larger text size on the smallest window, 1280×720 (re-scoped at 117.5c's read: no smaller window in this release, and the HUD's cards over the board are a later round's, TODO): nothing off the page and no chip over text at 125 %; nothing out of reach at 150 %; every box at 100 % on 720p and 1080p where it was, but the ones meant to move; DESIGN names the smallest window. Read `batch`: Text size 125 % on a 720p window, then an event, a port, a recruit and a battle; then 150 % and a promotion. Wrong is a chip over a heading, a button off the page, or anything moved on the usual window at 100 %.
-- [ ] **117.5f** ◐ BUILT 2026-10-09, unread (`batch`, at the sitting): both words are in; the box oracle finds one kind of ability row that now wraps (two-digit damage, a hit chance, no crit: 26 letters on a 25-letter line), with no card changing size, which the read rules on (WORKLOG §117.5f). — two wordings: the armed objective's prompt is "Pick a target…", and an ability's reach reads `reach`, not `rng`. Read `batch`: arm Focus in a battle and read the prompt; read an ability row on a recruit card. Wrong is a row that wraps or a card that changed size.
-- [x] **117.5g** — DROPPED 2026-10-09 at 117.5c's read: the X read fine to the user on desert, its nearest floor, and the terrain mark (TODO "§109 riders") is the fix that lasts and now carries the six floors' numbers.
-- [ ] **117.5h** ◐ BUILT 2026-10-09, unread (`batch`, at the sitting): the line and a `<noscript>` line are in the page, styled by the sheet, and the boot removes the line in the task that mounts the first screen; both ends pinned on every `npm test`; a failed boot leaves it up, which 117.5i's plate must take down (WORKLOG §117.5h, the landing note). — the loading line: static in `index.html`, gone when the first screen mounts, with a `<noscript>` line. Read `batch`: Firefox's network throttle on, reload, and the line stands until the menu and never after. Wrong is a flash of it over the menu, or the line left up.
-- [ ] **117.5i** ◐ BUILT 2026-10-09, unread (`batch`, at the sitting): the plate on a failed boot (with a sentence of its own where the page can make no WebGL context), on anything thrown once the game runs, which halts it first, and four seconds after a context is lost; a ResizeObserver report and a refused promise bring nothing; planted by `?fail=webgl`, `font`, `frame`, `context`; eight calls of the session's for the read to rule on, the halt on any error first among them (WORKLOG §117.5i). — a failure says something: a plate when the boot fails (no WebGL, no font) and once when anything throws later, with the build's ID, the error's text and Reload; and when a WebGL context has stayed lost for a few seconds (signed at 117.5c's read). Read `batch`: on the dev server, the planted boot failure and the planted frame error (the dials in the step's report). Wrong is a black page, a plate over a game that still plays, or text off the page at 150 %.
-- [x] **117.5j** ✅ 2026-10-09: everything under `src/dev` comes in by one DEV-gated dynamic import of a dev entry, pinned with nine planted faults; `scripts/dev-scan.mjs` reads a build for dev markers, and `npm run build` and the itch zip run it; a planted ungated import ships a 40 kB chunk that the scan names by ten markers and the pin by its file; the clean build carries none (WORKLOG §117.5j). — the dev-code guard: `src/dev` reached only through DEV-gated dynamic imports, pinned on every `npm test`, and a scan of the build for dev-only markers with a planted leak as its control. Read `none`.
-- [ ] **117.5k** — THE SITTING, in Firefox: the `batch` reads (117.5d as built, e, f, h, i). Read `stop`.
+- [x] **117.5a** — the text-size survey's reach, and its baselines at 720p, 1080p and three embed sizes. Read `none`.
+- [x] **117.5b** — three measurements: hitsplats under a pause (the hold was the hidden pane's), a forced context loss (restored by itself), the X's contrast on each floor (desert is its nearest). Read `none`.
+- [x] **117.5c** — the ribbon's placements, as a page. Read `stop` ✅: a right-hand column in their place; the smallest window and the itch embed 1280×720; the plate speaks for a lost context; the X stays.
+- [x] **117.5d** — the control column: a mock (read `stop` ✅), then built (read `batch` ✅).
+- [x] **117.5e** — room at a larger text size on 1280×720. Read `batch` ✅: as good as 150 % gets before the layout's rework (TODO).
+- [x] **117.5f** — two wordings, "Pick a target…" and `reach`. Read `batch` ✅: the one kind of row that wraps stays as it is.
+- [x] **117.5g** — DROPPED at 117.5c's read.
+- [x] **117.5h** — the loading line. Read `batch` ✅.
+- [x] **117.5i** — the failure plate. Read `batch` ✅: the session's calls signed, the halt on any error first among them.
+- [x] **117.5j** — the dev-code guard. Read `none`.
+- [x] **117.5k** — THE SITTING. Read `stop` ✅ 2026-10-09.
 
 ## Phase 117.75 — the rest gate
 

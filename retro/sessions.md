@@ -4207,3 +4207,45 @@ wordings, the loading line. Handed off at the line, 550,669.
    the pin failing by name. I would want that shape of step again: a
    small mechanism with a control that can really fail. Whether the eight
    calls were good ones is the user's to say and I do not know yet.
+
+### Addendum — the sitting's read and the close (2026-10-09, the same session, 8c160a6b)
+
+The user read all five `batch` steps and signed them in one message, the
+calls included. What changes in the answers above: **6**, the eight
+calls I carried unasked to the sitting were answered in a clause, so the
+cost I named for a `batch` read (eight decisions handed over at once)
+did not show this time; I can't tell from one read whether that is the
+shape working or the calls being easy ones. **4**, the close was written from 513k, to fit under the line, and the
+phase summary below rests on two session reports read once.
+
+### §117.5 — the phase summary (2026-10-08 → 10-09; three sessions)
+
+Sessions 29c298f6 (the kickoff, 117.5a to 117.5c's stop and its read),
+8473063c (the mock, 117.5d to 117.5h) and 8c160a6b (117.5i, 117.5j, the
+sitting's read, the close). **Orientation** was accurate each time for
+what the Cursor named; what was missing was always a dependency nothing
+wrote down, found by running into it: the survey finds its openers by
+class names that a layout move changes, `drive({ until: 'turn-outcome' })`
+never stops there, the runner proves DEV by a chunk's name, the pane can
+report a viewport it does not have. **The norm that conflicted** was the
+same one in three forms: a tradeoff is a stop, and between stops you keep
+going. The kickoff session ended its turn on a question three times in
+an hour and once did not; the build sessions each carried calls to the
+sitting unasked (the enemy pane's rule, eight calls in the failure
+plate), and each filed one mild `distress`: the first over starting a step 17k
+under the line, the second over exactly this. The context rule's "a step under the line starts" was followed
+against a wish to hand off at 533k, and held to the token. **Over-claims**
+were caught before commit in every session and had one shape twice: a
+number from an instrument that could not see the fault (the embed's size
+recommended on a survey that does not read a card over the board), and a
+value computed from a rule written as if measured. **Waste:** every
+estimate ran over (117.5d's build 132k against 80 to 100k; 117.5i 288k
+beside neighbours of 18k and 25k), and the silent-turn reminder came
+some eighteen times in the first session, six in twenty minutes of the
+second, and about sixteen in the third. **What the sessions said helped:**
+a measurement that overturned what a doc said, with its control beside it
+(three in 117.5b, the ResizeObserver report at 117.5i); a mock whose
+reader could then be pointed at the build; a control that can really
+fail (the planted leak); and a user who answered each stop with decisions
+and reasons, twice against the session's lean. Not assessed here: whether
+the two long steps needed all the surfaces they were measured on.

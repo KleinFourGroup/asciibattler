@@ -9751,3 +9751,75 @@ under "For the sitting", with what the build added to it:
 | 117.5i, the failure plate | `?fail=webgl`, `?fail=font`, `?fail=frame`, `?fail=context`; 150 % | eight calls of the session's, the halt on any error first; nothing of it read in Firefox |
 
 The session stops here at about 500k, under the line.
+
+### 117.5k — THE READ (2026-10-09, the user's) ✅
+
+The reading at the read: **513,453** at 13:20 (508,668 at 12:51 on
+117.5j's commit, `ca76a8b`). The user, in Firefox:
+
+"I've played around with it, Claude, and right now, everything looks
+great! 😁 Control column is good; 125% and 150% are good (or at least as
+good as they'll get pending the rework), the wrap is fine, the loading
+line is good, the error plates seem good, all the calls that you listed
+seem reasonable.  I'm signing everything! 😁"
+
+So, step by step:
+- **117.5d READ ✅:** the control column as built.
+- **117.5e READ ✅:** 125 % and 150 %, as good as they get before the
+  layout's rework, which stays in TODO.
+- **117.5f READ ✅:** the two words. The one kind of ability row that now
+  wraps, the cut's own "wrong", is ruled fine and stays.
+- **117.5h READ ✅:** the loading line.
+- **117.5i READ ✅:** the plates, and the calls. The stop's message listed
+  five as the user's to overrule (a halt on any uncaught error; what does
+  not count; four seconds; the eight sentences; the kit's guard, which
+  was not in the cut) and all five are signed. The other three of the
+  entry's eight (only the first failure speaks; the font's error under a
+  name; the watch as the third import with the boot's own catch) were in
+  the message as what was built, under "signing everything".
+
+No finding, so no `-post`, and the reads doctrine's rollback (a `batch`
+finding that reopens two later commits) had nothing to fire on. Not put
+to the user as a question and still open: whether a script that never
+ran should be heard by a few lines in `index.html` (TODO), for §118's
+kickoff.
+
+### §117.5 closed (2026-10-09, session 8c160a6b)
+
+**The exit is met:** every picked item built, and read at one sitting.
+ROADMAP's section is demoted to its outcome and its ticked lines, the
+Cursor names §117.75's kickoff, and the phase's summary is in
+`retro/sessions.md`.
+
+**What the phase was.** Eleven steps cut: nine built, one dropped
+(117.5g, at 117.5c's read) and the sitting, over three sessions in two
+days. Two stops
+before the sitting (the ribbon's placements, which the user answered
+with a shape none of the three drawn had; the mock of that shape) and
+five `batch` reads at it, none with a finding. For the round close's
+recount of `batch` reads: five, each read from the script written at
+the cut plus what the build added, and one of them (117.5f) went to the
+sitting with a known "wrong" that the user ruled on in a clause.
+
+**The predictions held:** no snapshot bump, no random stream, no bus
+event, no fuzz smoke on any step; `drive-run --seed=7` logs `a59ee48f`
+at the phase's end, as its entries have it after 117.5f, 117.5h, 117.5i
+and 117.5j (the others' entries were not re-read for it). `npm test` went from 3569 tests in 245 files to
+3616 in 249.
+
+**What the steps cost,** for the round close's reset of the hand-off
+line (each from the readings in its entry): the kickoff about 170k with
+its talk; 117.5a 98k, 117.5b 17k, 117.5c 47k and its read 28k; the mock
+150k, 117.5d's build 132k, 117.5e 80k, 117.5f 25k,
+117.5h 18k; 117.5i 288k, 117.5j 66k (each after its session's orientation, about
+100k); this close started at 513k and is not yet read. The two largest were both a new surface measured on several
+instruments, and both ran well past what the session before would have
+guessed from the cut's one line.
+
+**Carried,** all in TODO "§117.5 kickoff riders": the layout's rework at
+150 %; the HUD's cards over the board, with an instrument first; a
+window smaller than 1280×720; a script that never ran; a shader that
+fails to compile; the battle playing on through a lost context's wait;
+a long error and the keyboard; the hop chip's fade. For §118: the embed's
+size, and the two reads on the draft (focus inside itch's frame, Esc in
+its fullscreen).

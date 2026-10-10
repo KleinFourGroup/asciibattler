@@ -10297,3 +10297,85 @@ stays on the first click, so the new pages' own choices carry none.
 and 118g's draft while it runs; then the comparison and 118d when the
 last launch has fired. 118e's launch and 118f are a fresh session's
 unless the readings say otherwise.
+
+### 118c — the outcome test for the three events (2026-10-09, session 14b2f59d) — read `none` ✅
+
+Built ahead of the cohort, so the rewrite could be checked before it was
+put aside. The reading on the kickoff's commit, `a0009e5`: **324,977** at
+20:29.
+
+**What it is.** `tests/eventOutcomes.ts` is a form of an event with its
+wording taken away: each deciding page's choices in order, each choice's
+condition, each outcome's share of the roll, its effects in order and
+where it leads, with the event's eligibility and whether it repeats. A
+page that decides nothing (one choice, no condition, one outcome) is
+folded into the choice that led to it, its effects after that choice's
+own. `tests/event-outcomes-frozen.json` is the three events as `545df7a`
+held them, and `tests/event-outcomes.test.ts` compares each with the
+catalog's own through the form.
+
+**Why it can be trusted.** Both sides of the comparison go through the
+one form, so a form that folded too much would pass anything. The test
+therefore makes fifteen edits to a frozen copy, one for each way an
+outcome can change (an amount, the odds, where a roll leads, two effects'
+order, an effect dropped, a condition dropped or changed, two choices
+changing places, another encounter, a pinned reward dropped, a flag not
+set, the eligibility dropped, repeatable set, a telling page whose choice
+adds an effect, a telling page given a second choice), and the form sees
+every one. Seven edits a rewrite is free to make (every word and choice
+id, a telling page added, the effects moved onto it whole or in part, a
+page's id, the same odds in other numbers, a default spelled out) it sees
+none of. A page that leads back to itself throws. 27 tests; main is 3649
+in 250 files by the kickoff commit's hook.
+
+**What it cannot say:** which click an effect lands on. A run closed on a
+telling page has the effects of the choice before it and not the page's
+own, and the form reads both placements as one. That is an authoring
+choice, and 118d's read is where it is looked at.
+
+**Before the rewrite the three comparisons pass by construction** (the
+catalog's three are the frozen three); they bite at 118d. On the user's
+file they hold already (`scratch/118d-events/check.ts`, the kickoff's
+entry).
+
+**The predictions:** no smoke (tests only), no bump, no stream. Held.
+
+### 118a — the harness takes `--prior-table` (2026-10-09, session 14b2f59d) — read `none` ✅
+
+**What changed.** `tests/fuzz/commands/args.ts`: the field, its parse,
+two guards, and `loadPriorTable(args.priorTable)` at the one place the
+fold's table is read. The flag is refused without `--arbitrate` and a
+non-zero `--prior-lambda`, since a table named with no fold would label a
+batch with a table it never used, and under `--search`, because a
+search's shards rebuild their flags (`evalShard.ts:75`) and would read
+the committed table under the flag's label. ✔ A `--jobs` parent passes
+its argv through to its children less the partition flags
+(`parallel.ts:131`), so the workers get it.
+`tests/fuzz/fixtures/prior-table-v4.json` is the blob at `4d3fa22`, byte
+for byte (git hash `2ab956e`), measured at `7dc07a3`.
+
+**The oracle,** three seeds of `arb-deploy` (`--count=3 --hops=11`, the
+board's arm, `--jobs=3`), `summary.csv`, `rosters.csv` and
+`decisions.csv`:
+
+| Run | Against | Result |
+|---|---|---|
+| after the change, no flag | the same run at `545df7a` | identical, all three files |
+| after the change, the flag naming v4 | a worktree at `545df7a` with v4 swapped in | identical, all three files |
+| the same | the 94h archive's rows for seeds 1–3 | identical |
+| the flag against no flag | | different, as it must be |
+
+The manifest of the flagged run carries the flag. Four tests
+(`priorTableArg.test.ts`): the parse, the guards, that a path that does
+not exist throws from the resolver (the committed table exists, so only a
+read of the named path can), and that the fixture is the table measured
+at `7dc07a3` and not the committed one.
+
+**Also corrected:** BALANCE's derived-artifact row for the prior table
+still said v4; it names v5, the fixture and the flag now, and two
+sentences beside the Escalation dial name the flag and say why `--report`
+is not its reader. A fuller paragraph put the header layer at 704 lines
+against its cap of 700 and failed 118c's first commit attempt; it is 698
+now.
+
+**The predictions:** the smoke fires; no bump; no stream.

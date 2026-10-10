@@ -1,0 +1,667 @@
+{
+  "provenance": {
+    "measurementHead": "7dc07a3",
+    "buildHead": "7dc07a3",
+    "builtAt": "2026-09-05T06:57:01.753Z",
+    "sources": [
+      "output/box-batches/20260905-044439-7dc07a3/decisions.csv"
+    ],
+    "note": "v4 (92g, 2026-09-05): the casualty rebalance's table — measured under the RE-SEARCHED deploy vector 92c2-winner (the 85h deployed-semantics rule; the regen twin wins 4% under casualties), the 92d config (pool max 40, the twelve pools, the boss overrides), DP_TAIL_SCALE 10; TRAIN 1001-1120 n=120, --shadow-horizon=run; supersedes v3 @251514d (survivors era)"
+  },
+  "floor": 80,
+  "decisions": 2402,
+  "items": {
+    "daemon:cornucopia": {
+      "valuePerHop": 1.2455240115076172,
+      "meanDelta": 6.92857142857143,
+      "n": 63,
+      "signable": false,
+      "sites": {
+        "portBuy": {
+          "n": 43,
+          "nPerHop": 43,
+          "valuePerHop": -2.1535714285714294,
+          "meanDelta": -8.511627906976743
+        },
+        "rewardDaemon": {
+          "n": 20,
+          "nPerHop": 18,
+          "valuePerHop": 9.365585340585339,
+          "meanDelta": 40.125
+        }
+      }
+    },
+    "daemon:dis-pater": {
+      "valuePerHop": -0.801357808990469,
+      "meanDelta": -11.041666666666666,
+      "n": 72,
+      "signable": false,
+      "sites": {
+        "portBuy": {
+          "n": 46,
+          "nPerHop": 46,
+          "valuePerHop": 0.548209718670077,
+          "meanDelta": 8.902173913043478
+        },
+        "rewardDaemon": {
+          "n": 26,
+          "nPerHop": 22,
+          "valuePerHop": -3.623180821371611,
+          "meanDelta": -46.32692307692308
+        }
+      }
+    },
+    "daemon:fortuna": {
+      "valuePerHop": 0.7912426528497954,
+      "meanDelta": -0.4393939393939394,
+      "n": 66,
+      "signable": false,
+      "sites": {
+        "portBuy": {
+          "n": 44,
+          "nPerHop": 44,
+          "valuePerHop": 3.580134969197469,
+          "meanDelta": 27.045454545454547
+        },
+        "rewardDaemon": {
+          "n": 22,
+          "nPerHop": 19,
+          "valuePerHop": -5.667244816586923,
+          "meanDelta": -55.40909090909091
+        }
+      }
+    },
+    "daemon:janus": {
+      "valuePerHop": 19.05656764599779,
+      "meanDelta": 106.14814814814815,
+      "n": 54,
+      "signable": false,
+      "sites": {
+        "portBuy": {
+          "n": 37,
+          "nPerHop": 37,
+          "valuePerHop": 25.33724685820274,
+          "meanDelta": 154.35135135135135
+        },
+        "rewardDaemon": {
+          "n": 17,
+          "nPerHop": 15,
+          "valuePerHop": 3.56422558922559,
+          "meanDelta": 1.2352941176470589
+        }
+      }
+    },
+    "daemon:laverna": {
+      "valuePerHop": 0.6981825326652913,
+      "meanDelta": 4.405555555555556,
+      "n": 90,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 63,
+          "nPerHop": 63,
+          "valuePerHop": 1.3235042735042735,
+          "meanDelta": 12.761904761904763
+        },
+        "rewardDaemon": {
+          "n": 27,
+          "nPerHop": 24,
+          "valuePerHop": -0.9432870370370371,
+          "meanDelta": -15.092592592592593
+        }
+      }
+    },
+    "daemon:mercury": {
+      "valuePerHop": 1.8865291646128988,
+      "meanDelta": 15.966019417475728,
+      "n": 103,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 72,
+          "nPerHop": 72,
+          "valuePerHop": 5.037809477423449,
+          "meanDelta": 33.72222222222222
+        },
+        "rewardDaemon": {
+          "n": 31,
+          "nPerHop": 26,
+          "valuePerHop": -6.840093240093243,
+          "meanDelta": -25.274193548387096
+        }
+      }
+    },
+    "daemon:minerva": {
+      "valuePerHop": 3.979617794486215,
+      "meanDelta": 83.27272727272727,
+      "n": 44,
+      "signable": false,
+      "sites": {
+        "portBuy": {
+          "n": 20,
+          "nPerHop": 20,
+          "valuePerHop": -1.1060714285714304,
+          "meanDelta": 81.85
+        },
+        "rewardDaemon": {
+          "n": 24,
+          "nPerHop": 20,
+          "valuePerHop": 9.06530701754386,
+          "meanDelta": 84.45833333333333
+        }
+      }
+    },
+    "daemon:moneta": {
+      "valuePerHop": 1.4149460593754075,
+      "meanDelta": 12.371134020618557,
+      "n": 97,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 72,
+          "nPerHop": 72,
+          "valuePerHop": 1.3232734279609282,
+          "meanDelta": 11.222222222222221
+        },
+        "rewardDaemon": {
+          "n": 25,
+          "nPerHop": 20,
+          "valuePerHop": 1.7449675324675327,
+          "meanDelta": 15.68
+        }
+      }
+    },
+    "daemon:patricians-seal": {
+      "valuePerHop": 3.1037568436465497,
+      "meanDelta": -4.8882352941176475,
+      "n": 85,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 59,
+          "nPerHop": 59,
+          "valuePerHop": 7.4812066775862895,
+          "meanDelta": 26.915254237288135
+        },
+        "rewardDaemon": {
+          "n": 26,
+          "nPerHop": 19,
+          "valuePerHop": -10.489376851218957,
+          "meanDelta": -77.0576923076923
+        }
+      }
+    },
+    "daemon:portunus": {
+      "valuePerHop": 0.2240966804845481,
+      "meanDelta": 4.4361702127659575,
+      "n": 94,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 76,
+          "nPerHop": 76,
+          "valuePerHop": 0.13542423295229022,
+          "meanDelta": 0.3355263157894737
+        },
+        "rewardDaemon": {
+          "n": 18,
+          "nPerHop": 12,
+          "valuePerHop": 0.7856888481888479,
+          "meanDelta": 21.75
+        }
+      }
+    },
+    "packet:discard-one": {
+      "valuePerHop": 7.246987549816045,
+      "meanDelta": 44.331372549019605,
+      "n": 255,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 255,
+          "nPerHop": 255,
+          "valuePerHop": 7.246987549816045,
+          "meanDelta": 44.331372549019605
+        }
+      }
+    },
+    "packet:hype": {
+      "valuePerHop": 2.4137188446587574,
+      "meanDelta": 9.943037974683545,
+      "n": 237,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 237,
+          "nPerHop": 237,
+          "valuePerHop": 2.4137188446587574,
+          "meanDelta": 9.943037974683545
+        }
+      }
+    },
+    "packet:overclock": {
+      "valuePerHop": 3.6612247178988913,
+      "meanDelta": 33.23031496062992,
+      "n": 254,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 254,
+          "nPerHop": 254,
+          "valuePerHop": 3.6612247178988913,
+          "meanDelta": 33.23031496062992
+        }
+      }
+    },
+    "packet:patch": {
+      "valuePerHop": 7.177230603779974,
+      "meanDelta": 41.43928571428572,
+      "n": 140,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 140,
+          "nPerHop": 140,
+          "valuePerHop": 7.177230603779974,
+          "meanDelta": 41.43928571428572
+        }
+      }
+    },
+    "packet:reroute": {
+      "valuePerHop": 5.783983692376752,
+      "meanDelta": 25.556053811659194,
+      "n": 223,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 223,
+          "nPerHop": 223,
+          "valuePerHop": 5.783983692376752,
+          "meanDelta": 25.556053811659194
+        }
+      }
+    },
+    "packet:shield": {
+      "valuePerHop": 2.006118164438399,
+      "meanDelta": 15.12457337883959,
+      "n": 293,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 293,
+          "nPerHop": 293,
+          "valuePerHop": 2.006118164438399,
+          "meanDelta": 15.12457337883959
+        }
+      }
+    },
+    "packet:surge": {
+      "valuePerHop": 2.33006506381772,
+      "meanDelta": 2.817269076305221,
+      "n": 249,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 249,
+          "nPerHop": 249,
+          "valuePerHop": 2.33006506381772,
+          "meanDelta": 2.817269076305221
+        }
+      }
+    },
+    "packet:venom": {
+      "valuePerHop": 7.057315005564819,
+      "meanDelta": 30.478991596638654,
+      "n": 238,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 238,
+          "nPerHop": 238,
+          "valuePerHop": 7.057315005564819,
+          "meanDelta": 30.478991596638654
+        }
+      }
+    },
+    "unit:adventurer": {
+      "valuePerHop": -6.253517649769027,
+      "meanDelta": -24.04943502824859,
+      "n": 354,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 69,
+          "nPerHop": 69,
+          "valuePerHop": 7.77546068594662,
+          "meanDelta": 28.862318840579714
+        },
+        "recruit": {
+          "n": 285,
+          "nPerHop": 285,
+          "valuePerHop": -9.650007141573866,
+          "meanDelta": -36.85964912280702
+        }
+      }
+    },
+    "unit:archer": {
+      "valuePerHop": 0.08265661512878604,
+      "meanDelta": -4.444852941176471,
+      "n": 272,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 74,
+          "nPerHop": 74,
+          "valuePerHop": 6.077638407233996,
+          "meanDelta": 32.0945945945946
+        },
+        "recruit": {
+          "n": 198,
+          "nPerHop": 198,
+          "valuePerHop": -2.1578921354559895,
+          "meanDelta": -18.1010101010101
+        }
+      }
+    },
+    "unit:bandit": {
+      "valuePerHop": -0.6077014756791649,
+      "meanDelta": -24.363636363636363,
+      "n": 253,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 82,
+          "nPerHop": 82,
+          "valuePerHop": -3.9761399423746977,
+          "meanDelta": -25.195121951219512
+        },
+        "recruit": {
+          "n": 171,
+          "nPerHop": 171,
+          "valuePerHop": 1.0075731106894532,
+          "meanDelta": -23.964912280701753
+        }
+      }
+    },
+    "unit:catapult": {
+      "valuePerHop": -3.303926591759746,
+      "meanDelta": -26.543478260869563,
+      "n": 138,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 40,
+          "nPerHop": 40,
+          "valuePerHop": -1.7891964285714281,
+          "meanDelta": 9.525
+        },
+        "recruit": {
+          "n": 98,
+          "nPerHop": 98,
+          "valuePerHop": -3.922183801224365,
+          "meanDelta": -41.265306122448976
+        }
+      }
+    },
+    "unit:corrupter": {
+      "valuePerHop": 0.43083418668372736,
+      "meanDelta": 5.286231884057972,
+      "n": 138,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 41,
+          "nPerHop": 41,
+          "valuePerHop": 7.006141114982578,
+          "meanDelta": 38.329268292682926
+        },
+        "recruit": {
+          "n": 97,
+          "nPerHop": 97,
+          "valuePerHop": -2.3484192572364053,
+          "meanDelta": -8.68041237113402
+        }
+      }
+    },
+    "unit:gunslinger": {
+      "valuePerHop": 4.469971357589778,
+      "meanDelta": 27.663636363636364,
+      "n": 275,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 104,
+          "nPerHop": 104,
+          "valuePerHop": 5.316103788038883,
+          "meanDelta": 26.552884615384617
+        },
+        "recruit": {
+          "n": 171,
+          "nPerHop": 171,
+          "valuePerHop": 3.9553644993049426,
+          "meanDelta": 28.339181286549707
+        }
+      }
+    },
+    "unit:halberdier": {
+      "valuePerHop": -6.55352728411939,
+      "meanDelta": -18.727272727272727,
+      "n": 110,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 8,
+          "nPerHop": 8,
+          "valuePerHop": -8.677083333333334,
+          "meanDelta": -51.9375
+        },
+        "recruit": {
+          "n": 102,
+          "nPerHop": 102,
+          "valuePerHop": -6.386973868494767,
+          "meanDelta": -16.122549019607842
+        }
+      }
+    },
+    "unit:healer": {
+      "valuePerHop": 0.6634951477501569,
+      "meanDelta": 14.097701149425287,
+      "n": 261,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 94,
+          "nPerHop": 94,
+          "valuePerHop": 1.2285122457329913,
+          "meanDelta": 4.398936170212764
+        },
+        "recruit": {
+          "n": 167,
+          "nPerHop": 167,
+          "valuePerHop": 0.34546157164005853,
+          "meanDelta": 19.55688622754491
+        }
+      }
+    },
+    "unit:mage": {
+      "valuePerHop": -2.2993428247413057,
+      "meanDelta": -7.749322493224932,
+      "n": 369,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 112,
+          "nPerHop": 112,
+          "valuePerHop": -1.7652290603741503,
+          "meanDelta": -3.9642857142857144
+        },
+        "recruit": {
+          "n": 257,
+          "nPerHop": 257,
+          "valuePerHop": -2.532108356294307,
+          "meanDelta": -9.398832684824903
+        }
+      }
+    },
+    "unit:mercenary": {
+      "valuePerHop": 2.987681516870179,
+      "meanDelta": -13.223107569721115,
+      "n": 251,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 88,
+          "nPerHop": 88,
+          "valuePerHop": 0.007728989760240168,
+          "meanDelta": -10.357954545454545
+        },
+        "recruit": {
+          "n": 163,
+          "nPerHop": 163,
+          "valuePerHop": 4.596490243162662,
+          "meanDelta": -14.769938650306749
+        }
+      }
+    },
+    "unit:officer": {
+      "valuePerHop": -8.048854674078358,
+      "meanDelta": -40.406666666666666,
+      "n": 150,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 34,
+          "nPerHop": 34,
+          "valuePerHop": -5.595868347338937,
+          "meanDelta": -36.11764705882353
+        },
+        "recruit": {
+          "n": 116,
+          "nPerHop": 116,
+          "valuePerHop": -8.767833425019223,
+          "meanDelta": -41.66379310344828
+        }
+      }
+    },
+    "unit:reaver": {
+      "valuePerHop": 4.271871618437656,
+      "meanDelta": 23.39051094890511,
+      "n": 137,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 30,
+          "nPerHop": 30,
+          "valuePerHop": 19.329841269841268,
+          "meanDelta": 107.16666666666667
+        },
+        "recruit": {
+          "n": 107,
+          "nPerHop": 107,
+          "valuePerHop": 0.05001096851141012,
+          "meanDelta": -0.09813084112149532
+        }
+      }
+    },
+    "unit:rioter": {
+      "valuePerHop": 1.5332973853240037,
+      "meanDelta": 9.132183908045976,
+      "n": 261,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 71,
+          "nPerHop": 71,
+          "valuePerHop": 5.909628604963113,
+          "meanDelta": 21.866197183098585
+        },
+        "recruit": {
+          "n": 190,
+          "nPerHop": 190,
+          "valuePerHop": -0.10206849148850568,
+          "meanDelta": 4.373684210526315
+        }
+      }
+    },
+    "unit:rogue": {
+      "valuePerHop": -2.303491367277771,
+      "meanDelta": -13.865671641791044,
+      "n": 268,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 87,
+          "nPerHop": 87,
+          "valuePerHop": 4.587448423224285,
+          "meanDelta": 18.103448275862068
+        },
+        "recruit": {
+          "n": 181,
+          "nPerHop": 181,
+          "valuePerHop": -5.615711045585389,
+          "meanDelta": -29.23204419889503
+        }
+      }
+    },
+    "unit:ronin": {
+      "valuePerHop": -1.0965689770614104,
+      "meanDelta": -15.667673716012084,
+      "n": 331,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 81,
+          "nPerHop": 81,
+          "valuePerHop": -3.1777777777777776,
+          "meanDelta": -0.48765432098765504
+        },
+        "recruit": {
+          "n": 250,
+          "nPerHop": 250,
+          "valuePerHop": -0.4222573256293076,
+          "meanDelta": -20.586
+        }
+      }
+    },
+    "unit:shaman": {
+      "valuePerHop": 3.746813737881552,
+      "meanDelta": 8.031468531468532,
+      "n": 143,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 12,
+          "nPerHop": 12,
+          "valuePerHop": -0.7049603174603178,
+          "meanDelta": 0.5833333333333334
+        },
+        "recruit": {
+          "n": 131,
+          "nPerHop": 131,
+          "valuePerHop": 4.15460983455409,
+          "meanDelta": 8.713740458015268
+        }
+      }
+    },
+    "unit:stormcaller": {
+      "valuePerHop": -9.535035464722968,
+      "meanDelta": -2.6182432432432434,
+      "n": 148,
+      "signable": true,
+      "sites": {
+        "portBuy": {
+          "n": 9,
+          "nPerHop": 9,
+          "valuePerHop": -1.5849206349206346,
+          "meanDelta": -0.4444444444444444
+        },
+        "recruit": {
+          "n": 139,
+          "nPerHop": 139,
+          "valuePerHop": -10.04979110118499,
+          "meanDelta": -2.758992805755396
+        }
+      }
+    }
+  }
+}

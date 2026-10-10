@@ -220,6 +220,15 @@ export interface CliArgs {
   // control). Requires --arbitrate; the committed prior table loads at
   // launch when ≠ 0 (missing table = loud throw).
   priorLambda?: number;
+  // `--prior-table=<path>`: the prior table the fold reads, in place of the
+  // committed one. The committed table is re-derived at each signing from
+  // that board's own shadow leg, so a board's arbitrated rows were measured
+  // under the table before it; this is how a later tree runs them again
+  // under that table (tests/fuzz/fixtures/prior-table-v4.json is the one the
+  // sheet's signing board of 2026-09-08 ran under; BALANCE has the entry).
+  // Requires --arbitrate and a non-zero --prior-lambda; run mode
+  // only, since a search's shards rebuild their flags and would not carry it.
+  priorTable?: string;
   // 85g6a — the campRaid causal-arm dial (`--camp-raid=off|on`, default on):
   // off OMITS the site from the arbitrated strategy (ABSENT = never raid,
   // the pre-85d Strategy.ts contract), so an enabled-vs-disabled pair reads
@@ -452,6 +461,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
       case '--prior-lambda':
         if (v !== undefined) args.priorLambda = Number(v);
         break;
+      case '--prior-table':
+        if (v !== undefined) args.priorTable = v;
+        break;
       case '--camp-raid':
         if (v !== undefined) args.campRaid = v;
         break;
@@ -548,6 +560,9 @@ export function parseArgs(argv: readonly string[]): CliArgs {
   if (args.search && args.campRaid !== undefined) {
     throw new Error('--camp-raid is a run-mode ablation dial (not supported with --search)');
   }
+  if (args.search && args.priorTable !== undefined) {
+    throw new Error('--prior-table is a run-mode dial (not supported with --search)');
+  }
   if (args.arbitrateTier !== undefined) {
     if (!args.arbitrate) {
       throw new Error('--arbitrate-tier requires --arbitrate (it dials the rollout inner tier)');
@@ -595,6 +610,16 @@ export function parseArgs(argv: readonly string[]): CliArgs {
     }
     if (!Number.isFinite(args.priorLambda) || args.priorLambda < 0) {
       throw new Error(`--prior-lambda must be a finite number ≥ 0 (got '${args.priorLambda}')`);
+    }
+  }
+  // A table named with no fold to read it would label a batch with a table
+  // it never used.
+  if (args.priorTable !== undefined) {
+    if (!args.arbitrate || args.priorLambda === undefined || args.priorLambda === 0) {
+      throw new Error('--prior-table requires --arbitrate and a non-zero --prior-lambda (the fold is what reads the table)');
+    }
+    if (args.priorTable === '') {
+      throw new Error('--prior-table needs a path');
     }
   }
   // 85g6a — the campRaid dial rides the arbitrated arm only (the site
@@ -892,7 +917,15 @@ export function normalizeArbRolloutSearch(
 export function arbitratedWrapFromArgs(
   args: Pick<
     CliArgs,
-    'arbitrate' | 'arbitrateTier' | 'priorLambda' | 'searcher' | 'searcherSpec' | 'audition' | 'k' | 'kTelemetry'
+    | 'arbitrate'
+    | 'arbitrateTier'
+    | 'priorLambda'
+    | 'priorTable'
+    | 'searcher'
+    | 'searcherSpec'
+    | 'audition'
+    | 'k'
+    | 'kTelemetry'
   >,
   extras: Partial<ArbitratedConfig> = {},
 ): ((seed: number, base: FuzzStrategy) => FuzzStrategy) | undefined {
@@ -900,7 +933,9 @@ export function arbitratedWrapFromArgs(
   const innerTier = args.arbitrateTier as InnerTier | undefined;
   const arbRolloutSearch = normalizeArbRolloutSearch(searcherFromArgs(args));
   const priorTable =
-    args.priorLambda !== undefined && args.priorLambda !== 0 ? loadPriorTable() : undefined;
+    args.priorLambda !== undefined && args.priorLambda !== 0
+      ? loadPriorTable(args.priorTable)
+      : undefined;
   const priorFold =
     priorTable !== undefined
       ? {

@@ -4826,3 +4826,68 @@ deltas. The pre-X H7c→O log lives at
   `118b-reproduction.queue` beside them, and `scratch/118b-reproduction/`
   (the queue's maker, `compare.mjs`, `result.txt`). Detail: WORKLOG "The
   §118 kickoff", §118b.
+
+- **2026-10-10 §118e — THE ESCALATION LADDER ON THE BOARD'S ARM: four
+  steps read harder and are told apart; level 3, the bits cut, is not.**
+  The first board-arm read of the ladder (`config/escalation.json`, its
+  numbers placeholders), and at level 0 the first read of the arm as it
+  ships: the committed prior table (v5) and the three events rewritten.
+  **What ran:** levels 0 to 5 on `arb-deploy` (act 1, `--hops=11`) and
+  `arb-walk-deploy` (two acts), soldier, seeds 1 to 120, each a batch of
+  40 and one of 80; 24 batches, one box (`cpx42`, `--jobs=8`), one HEAD
+  (`987b0cb`), a clean tree, 5 h 57 min. Level 0 names no level. Pooled by
+  each batch's own manifest (12 cells of 120 seeds), then read by the
+  smoke's script, which first reproduced its 2026-10-08 table from its
+  own data.
+
+  | level | adds | act 1: won · bought · bits at the end | two acts: won · reached act 2 · bought · bits at the end |
+  |---|---|---|---|
+  | 0 | | 83 · 1.67 · 69.8 | 26 · 83 · 3.52 · 129.4 |
+  | 1 | level budget +10% | 72 · 1.67 · 63.3 | 19 · 72 · 3.30 · 102.6 |
+  | 2 | wave +10% | 51 · 1.64 · 54.8 | 13 · 51 · 2.76 · 77.4 |
+  | 3 | bits −25% | 55 · 1.34 · 42.6 | 12 · 55 · 2.49 · 64.1 |
+  | 4 | level budget +20% in all | 32 · 1.29 · 34.3 | 2 · 32 · 1.84 · 39.9 |
+  | 5 | wave +20% in all | 17 · 1.14 · 31.5 | 2 · 17 · 1.46 · 37.4 |
+
+  Won is of 120; bought is port purchases a run. The two rows' counts
+  agree where they must: at every level as many seeds reach act 2 as win
+  the act-1 row (the counts were compared, not the seeds one by one).
+  Paired on the seed, each level against the one under it, by where the
+  run ended (won, then sectors cleared, then hop): ended less deep / the
+  same / deeper, two-sided sign test on the discordant pairs.
+
+  | step | act 1 | two acts |
+  |---|---|---|
+  | 1 over 0 | 22 / 89 / 9, p 0.029 | 45 / 52 / 23, p 0.010 |
+  | 2 over 1 | 44 / 65 / 11, p < 0.001 | 60 / 41 / 19, p < 0.001 |
+  | 3 over 2 | 5 / 106 / 9, p 0.424 | 10 / 95 / 15, p 0.424 |
+  | 4 over 3 | 40 / 65 / 15, p 0.001 | 51 / 53 / 16, p < 0.001 |
+  | 5 over 4 | 43 / 63 / 14, p < 0.001 | 45 / 61 / 14, p < 0.001 |
+  | 5 over 0 | 83 / 36 / 1 | 96 / 23 / 1 |
+
+  **The read, by the criterion signed at the §118 kickoff.** Steps 1, 2,
+  4 and 5 read harder on both rows and each is told apart on both; the
+  spec's worry that a 10% step would drown at this size did not come
+  true. **Step 3 is a finding:** more seeds end deeper than less deep on
+  both rows, and neither is told apart from no change. The lever reached
+  the arm, so this is not the smoke's unread row: purchases fall (1.64 →
+  1.34 and 2.76 → 2.49 a run) and so does the bank, and the outcomes do
+  not follow. On this arm a quarter fewer bits buys fewer things and
+  costs no depth. Whether that is the arm (a port buy worth little to it
+  at the margin) or the game is not something these rows can say.
+  **Level 0 against the sheet** (`balance:board --report
+  --only=arb-deploy,arb-walk-deploy`, a partial board and never a
+  signing; integrity PASS): act 1's four references in band (win 0.692,
+  bank 69.8, transactions 0.867, fires 2.95); the walk's seam 17.4, the
+  three pacing targets and terminal reach 0.483 in band; **two WARN**,
+  the boss wall 0.552 against 30–35 (0.459 at the signing, a named
+  watch) and the walk's win 0.217 against 26–35 (0.275 at the signing).
+  Both moved about one standard error of a difference at this size, and
+  the tree differs from the signing's by the table and the events'
+  stream; a re-pin is the user's call and needs a full board.
+  **Artifacts** (ignored, this machine):
+  `output/box-batches/20261010-*-987b0cb/`, `118e-drive.log` and
+  `118e-ladder.queue` beside them, `output/board-runs/118e-L0/`, and
+  `scratch/118e-ladder/` (the queue's maker, `pool.mjs`, `spend.mjs`,
+  the twelve pooled cells, `result.txt`, `level0-report.txt`). Detail:
+  WORKLOG §118e.

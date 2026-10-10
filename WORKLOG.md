@@ -10493,3 +10493,36 @@ raised the stop "so you can keep working all night").
    a re-pin is the user's.
 5. If level 3 is retuned, TODO "§117 riders" has a daemon's sentence that
    holds at 0.75 by rounding.
+
+### 118e — cohort 2, the ladder: read by the session, the `stop` is open (2026-10-10, session 14b2f59d)
+
+**The run.** Launched at 01:20 from `987b0cb`; the last of its 24
+launches fired at 06:58 and it drained at 07:17, 5 h 57 min against 7.25
+at most. 24 of 24 verified, the box destroyed, ✔ none listed. The
+reading at the drain: **498,582** at 07:18, under the night's 600k, so
+the session did the read's steps 1 to 4 and did not leave them.
+
+**The result** is BALANCE 2026-10-10 §118e, with both tables. By the
+signed criterion: steps 1, 2, 4 and 5 read harder on both rows and are
+told apart on both. **Step 3, bits −25%, is a finding:** 5 / 106 / 9 on
+act 1 and 10 / 95 / 15 on two acts, more seeds ending deeper than less
+deep, p 0.424 on each. The lever was consumed, purchases and the bank
+both fall, and no depth is lost. **Level 0 against the sheet** is a
+partial board with two WARN (the boss wall 0.552, the walk's win 0.217),
+each about one standard error from its value at the signing.
+
+**The instruments.** ✔ The smoke's script reproduced its own published
+table before it read a new row. ✔ `pool.mjs` takes each batch's level,
+row and stage from its manifest and fails unless every cell is one batch
+of 40 and one of 80 at one clean HEAD holding seeds 1 to 120 once. The
+two rows' counts agree at every level (reached act 2 on the walk equals
+won on act 1); that was compared as counts, not seed by seed. Not done:
+a fresh `--search` derive, which a signing board would want, and any row
+but the soldier's.
+
+**What is the user's at the stop:** what level 3 should be. The spec's
+table is placeholders and its scope guard is "number levers only", so
+the choices the session can see are a deeper bits cut, another lever in
+level 3's place, or keeping it as a level that changes what a player can
+afford and not how deep a bot gets. And whether the two WARN at level 0
+want a full board before `0.1.0`.

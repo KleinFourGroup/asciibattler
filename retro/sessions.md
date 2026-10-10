@@ -4386,3 +4386,13 @@ fire. The session still owns that driver.
    itself before it speaks; the result coming back whole; and a user
    whose simpler plan I could just agree with. I would want the archive
    repeated above all: keep what a signed number was measured from.
+
+### Addendum — cohort 2's read (2026-10-10, 07:40, the same session)
+
+The driver woke the session at 07:17 with 498k read, under the night's
+600k, so it did the ladder's read and did not leave it. To question 3:
+I wrote that a seed reaches act 2 exactly when it wins the act-1 row,
+having compared only the counts, and changed the sentence to say so
+before it was committed. To question 6: reading the result was within
+the night's go, and the verdict on level 3 is left where the cut put
+it, at the user's stop. Nothing to add to the others.

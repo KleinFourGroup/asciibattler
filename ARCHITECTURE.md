@@ -594,7 +594,7 @@ process/                     # agent procedures read on a trigger (AGENTS.md "Be
 
 archive/                     # superseded roadmaps + feedback + phase worklogs
 
-index.html                   # Mounts <canvas> + <div id="ui">; §117.5: the loading line (`#boot-line`, static text that `src/main.ts` removes once Game has mounted the first screen) and a `<noscript>` line, both pinned by `tests/boot-line.test.ts`; a boot that fails takes the line down with the failure plate (src/ui/FailurePlate.ts)
+index.html                   # Mounts <canvas> + <div id="ui">; §117.5: the loading line (`#boot-line`, static text that `src/main.ts` removes once Game has mounted the first screen) and a `<noscript>` line, both pinned by `tests/boot-line.test.ts`; a boot that fails takes the line down with the failure plate (src/ui/FailurePlate.ts); 118f: THE WATCH FOR A BUNDLE THAT NEVER RAN, a classic script first in the head, in syntax an old browser parses, which changes the line's words when the bundle's file fails to load, when an uncaught error comes that `errorEventCounts` would count, or in a browser with no module scripts (the same test runs its text against planted events and holds its verdicts to `errorEventCounts`)
 vite.config.ts               # 113a: `define` bakes `__BUILD_ID__` (scripts/build-id.mjs; live under `serve`); the dev-only plugins (the editors' save endpoint, the probe kit's stand-in, the build ID stamped into each page served); the watcher skips the output folders
 tsconfig.json
 eslint.config.js             # Flat config; bans Math.random() in src/sim, src/run and src/bot; 113d: bans importing src/store from those, src/journal and tests/fuzz (the editor's hint; the guard is tests/store-guard.test.ts, since the hook doesn't run lint)

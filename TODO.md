@@ -657,13 +657,9 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   names no opacity, so the chip appears and goes at once while the HUD's
   other panes fade over 180 ms. `.control-chip` names the opacity for this
   reason; the hop chip needs the same line.
-- [ ] **A script that never ran says nothing** (117.5i). The failure watch
-  is in the script, so a download that failed, or a browser too old to
-  parse the bundle, leaves `Loading…` up for ever. What would hear it: a
-  few lines of classic script in `index.html`, ahead of the module, that
-  listen for `error` in the capture phase while `#boot-line` stands and
-  change the line's words. Not built: it is a second mechanism in a second
-  language, with its own strings. The user's call, for §118's build.
+- ✅ **A script that never ran says nothing** (117.5i): a classic script
+  in `index.html`'s head changes the loading line's words (118f; WORKLOG
+  §118f). Still unheard: a download that stalls and never fails.
 - [ ] **A shader that fails to compile throws nothing** (117.5i, from
   memory of three.js, not run here): it logs to the console and draws
   nothing, so a driver that rejects a shader would give a black board

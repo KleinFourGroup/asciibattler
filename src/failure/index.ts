@@ -16,9 +16,12 @@
  *   - the WebGL context was lost and stayed lost (`rules.ts`,
  *     `CONTEXT_LOST_GRACE_MS`). Also halted.
  *
- * Not heard: a script that never ran at all (a download that failed, a
+ * Not heard here: a script that never ran at all (a download that failed, a
  * browser too old to parse it), since this module is in that script. The
- * loading line stays up then.
+ * classic script in index.html's head hears that, and changes the loading
+ * line's words. It hears an uncaught error by `errorEventCounts`'s rule
+ * too, so while the line stands both may act on one report: it changes the
+ * words, and the plate then takes the line down.
  */
 
 import { showFailurePlate } from '../ui/FailurePlate';

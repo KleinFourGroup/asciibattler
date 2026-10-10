@@ -770,8 +770,13 @@ failure speaks. Two reports are not failures and bring nothing: an
 `error` event with no thrown value (how a browser reports a
 ResizeObserver that could not finish in a frame, and the HUD has an
 observer) and one from a file of another origin (an extension's script). A script that never ran at all
-(a failed download, a browser too old to parse it) is not heard, and the
-loading line stays. The rules are `src/failure/rules.ts`; on a DEV page
+(a failed download, a browser too old to parse it) can put up no plate,
+since the plate is in that script. The loading line says it instead: a
+few lines of classic script in the head of `index.html`, in syntax an old
+browser parses, hear the script's file fail, an uncaught error by the
+plate's own two exceptions, and a browser with no module scripts, and
+change the line's words to "ASCIIbattler couldn't load. Reloading the
+page may fix it; otherwise try another browser." The rules are `src/failure/rules.ts`; on a DEV page
 `?fail=webgl`, `font`, `frame` or `context` plants each.
 
 **A cast that lands at range FLIES (102).** An effect that appears on a

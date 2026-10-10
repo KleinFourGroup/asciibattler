@@ -154,6 +154,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* A sentence can stand here (index.html's watch for a bundle that never
+     ran), and in a narrow window it wraps. */
+  padding: 0 24px;
+  text-align: center;
   pointer-events: none;
   color: var(--color-terminal-amber);
   font-family: var(--font-mono);

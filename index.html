@@ -4,6 +4,62 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ASCIIbattler</title>
+    <!-- 118f: THE WATCH FOR A BUNDLE THAT NEVER RAN. The game's own failure
+         watch (src/failure) is inside the bundle, so a bundle that failed to
+         download, or that this browser can't parse, was heard by nobody and
+         the loading line stood for ever. This is a classic script in plain
+         old JavaScript, so it runs where the bundle can't, and it is ahead of
+         every other script in the page, so it listens before the bundle is
+         asked for. It hears three things and changes the line's words: a
+         script file of this page's that didn't load; an uncaught error the
+         bundle's watch would count too (the same two exceptions as
+         `errorEventCounts`, src/failure/rules.ts: no thrown value, and a
+         file of another origin); and a browser with no module scripts. Once
+         the game has taken the line down there is nothing left for it to
+         change. tests/boot-line.test.ts runs this text against planted
+         events and holds its verdicts to `errorEventCounts`. -->
+    <script>
+      (function () {
+        var WORDS = "ASCIIbattler couldn't load. Reloading the page may fix it; otherwise try another browser.";
+        var failed = false;
+        function say() {
+          var line = document.getElementById('boot-line');
+          if (line) line.textContent = WORDS;
+        }
+        function fail() {
+          failed = true;
+          say();
+        }
+        // Whether a URL is this page's own. An anchor resolves it, since the
+        // browsers this script is for have no URL constructor.
+        function ours(url) {
+          if (!url) return true;
+          var link = document.createElement('a');
+          link.href = url;
+          return link.protocol === location.protocol && link.host === location.host;
+        }
+        window.addEventListener(
+          'error',
+          function (event) {
+            var target = event.target;
+            // A file that didn't load reports at its own element, which only
+            // a capturing listener on the window hears.
+            if (target && target !== window) {
+              if (target.tagName === 'SCRIPT' && target.src && ours(target.src)) fail();
+              return;
+            }
+            if (event.error === null || event.error === undefined) return;
+            if (ours(event.filename)) fail();
+          },
+          true
+        );
+        // The line is parsed by now. A failure heard before it was is said
+        // here, and so is a browser that skipped the module script.
+        document.addEventListener('DOMContentLoaded', function () {
+          if (failed || !('noModule' in document.createElement('script'))) say();
+        });
+      })();
+    </script>
     <!-- R3: inline-SVG favicon (the roguelike "@" origin marker in terminal
          green on black) — stops the per-load /favicon.ico 404, no extra request. -->
     <link
@@ -21,7 +77,8 @@
          until src/main.ts takes it down as the first screen mounts. Its look
          is ui.css's `#boot-line`: the stylesheet blocks the first paint, so
          the line never shows unstyled. Without scripts the second line lies
-         over it. -->
+         over it. If the bundle never runs, the classic script in the head
+         changes its words (118f). -->
     <div id="boot-line">Loading…</div>
     <noscript><div id="boot-noscript">ASCIIbattler needs JavaScript to run.</div></noscript>
     <!-- B5: CRT scanline overlay. Sits on top of canvas + UI so the diorama

@@ -155,7 +155,16 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   fail a live page by hand with `setTimeout(() => { throw new Error('x') }, 0)`.
   A context plate comes four seconds after the loss. On the production
   build there is no plant: take the two font files out of `dist/assets/`
-  for a real failed boot, and put them back.
+  for a real failed boot, and put them back. Then close the tab and open
+  a new one: the old tab keeps the failed font in memory and shows the
+  plate again on every reload, with the files back and served.
+- **A bundle that never ran** (the classic script in `index.html`'s
+  head): on the production build, keep a copy of `dist/assets/index-*.js`
+  and cut the file short (`head -c 300000`) for a script that can't be
+  parsed, or remove it, or remove the `three-*.js` chunk it imports. Each
+  leaves `#boot-line` reading the watch's sentence, `<html data-build>`
+  unset and no `.failure-plate`. Put the files back and compare them with
+  the copies (`cmp`).
 - **The settings modal** (`src/ui/SettingsOverlay.ts`): the menu's
   Settings row or, in a run, `.settings-chip` opens `.settings-modal`.
   While it is open `__game.playback.isHeld` is true and

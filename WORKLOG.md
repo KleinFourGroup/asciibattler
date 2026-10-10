@@ -10579,3 +10579,132 @@ TODO and not before the itch release.
 
 **Level 0's two WARN:** no full board before `0.1.0` (the session's
 lean, signed with the rest).
+
+### 118f — the two hardening items (2026-10-10, session f677c6ff) — ◐ built, unread (`batch`, at the smoke)
+
+Readings: **94,924** at 12:39 after HANDOFF and the two page drafts;
+**299,117** at 13:01 on the first commit, `451bcd0`; **307,422** at 13:03
+on the second, `d5dfd96`. So 118f took about 210k with the session's
+orientation, `process/planning.md`, `process/browser-pane.md` and the
+check of the user's page draft in it. ✔ marks what was read or run this
+session.
+
+**Step zero.** ✔ The panel's report builder is under `src/dev`, which a
+production build may not reach (`tests/dev-guard.test.ts`), and it wraps
+the store's writers, so the row could not borrow it: the short report is
+a module of its own. ✔ The built page carries its module script in the
+head (`dist/index.html`), where the source page has it at the body's end,
+so a watch at the body's end would be parsed after the bundle was asked
+for: the watch is first in the head.
+
+**The loading line** (`451bcd0`). A classic script in `index.html`'s
+head, in syntax an old browser parses, changes `#boot-line`'s words to
+"ASCIIbattler couldn't load. Reloading the page may fix it; otherwise try
+another browser." on three things: a script file of the page's own that
+did not load; an uncaught error `errorEventCounts` would count; a browser
+with no module scripts. ✔ In the pane (Chromium) on the production build:
+a bundle cut short reports a `SyntaxError` at the window with the error
+and the bundle's URL, and a missing one reports at the `<script>` with
+nothing thrown; the entry cut short, the entry removed and the three
+chunk removed each left the sentence, no `data-build` and no plate; with
+the font files out the plate went up alone; restored, a fresh tab booted
+the menu. ✔ `tests/boot-line.test.ts` runs the script's text on a page of
+plain objects: fourteen planted reports, the nine uncaught ones also
+asked of `errorEventCounts`, and a deaf watch and an over-eager one told
+apart from it.
+
+**Copy diagnostics** (`d5dfd96`). Settings › Data has a fifth row. Its
+report (`src/diagnostics/report.ts`) is the build, the page (origin,
+framed or not, user agent, language, window and pixel ratio, screen), the
+graphics card, the settings, the store (adapter, can-save, error, the
+build before, the lock, each section's size) and the run (live or not,
+the slot's state). ✔ In the pane on both builds: the copy by the
+clipboard API, by the old command and by the file, each with a stand-in
+answering; the row and its line at 100, 125 and 150 % text, three lines
+kept at each; 1,100 characters of text.
+
+**Calls made while building,** the user's to overturn.
+1. *What "slim" holds.* No write tally and no measurement, since both
+   belong to the panel and one holds the page. No address past the
+   origin. A stored section by its size and never its text, held by a
+   test with a planted secret, so no save, journal or seed leaves by this
+   row. The settings whole, since text size and palette are the likeliest
+   companions of a layout report.
+2. *A refused copy becomes a file.* Chromium refuses the clipboard API to
+   a framed page that was not granted it, and whether itch's frame grants
+   it is from memory (it does not). The old copy command is tried next,
+   then the report is saved by the game's own download, and the row's
+   line says which happened.
+3. *The slot's state, not a saved flag.* The pane's own slot held a save
+   the build rejects, which a flag read as nothing saved.
+4. *The graphics card by RENDERER first,* and the debug extension only
+   behind Chromium's stand-in (✔ `WebKit WebGL` in the pane). Firefox is
+   from memory: it answers RENDERER with the card and warns in the
+   console at a page that asks for the extension.
+5. *The line's rule for an uncaught error is the bundle's rule, written a
+   second time* in a second language. While the line stands both may act
+   on one report; the plate takes the line down as it goes up.
+6. *The words,* of the line and of the row. The session's, for the read.
+
+**Not read:** Firefox, for any of it (how it reports a module that fails
+to parse, what RENDERER answers, the clipboard in a frame); itch's frame;
+Electron; the real clipboard, which a hidden pane is never granted; a
+browser with no module scripts; a download that stalls and never fails,
+which nothing hears (TODO).
+
+**The read, at the smoke.** On the draft: Settings › Data › Copy
+diagnostics, then paste somewhere. Wrong is nothing pasted and no file
+offered, or a line that says copied when nothing was. Worth writing down:
+which line showed in Firefox and in Edge, and what `graphics.renderer`
+reads in Firefox. Then block the `index-*.js` request in the browser's
+Network panel and reload: wrong is `Loading…` left standing.
+
+**A finding for the page.** ✔ Settings › Data › Last run, and the end
+screen's Export run, hand over the newest run that *ended*
+(`lastRunJournal`, `src/store/runSlot.ts`). A run in progress leaves only
+inside Export everything, which carries the saved run and its journal.
+
+**The pane.** After the font files were put back, the old tab showed the
+plate on five more reloads with the files served: it kept the failed font
+in memory, and the reloads made no font request. A new tab booted clean.
+Now a line in `process/browser-pane.md`.
+
+### 118g — the stop: the user's draft, checked (2026-10-10, session f677c6ff) — open
+
+The reading at the stop: **327,672** at 13:07.
+
+The user's draft is `page.md` at the repo root, untracked, adapted from
+the subagent's draft in `scratch/118g-itch/`. The session checked it
+against the game's strings and code, and a background agent swept the
+repo's record for who wrote each kind of in-game content (its report was
+spot-checked on eight of its cited lines, which hold). What went to the
+user:
+
+1. **The AI line.** "All in-game content was human-authored" is not what
+   the record says. ✔ The failure plate's strings, the settings rows'
+   names and lines, the Escalation sentences and this step's own strings
+   are the session's words, read and signed by the user (each step's own
+   entry above says so). ✔ 11 of the 25 sounds are recipes in
+   `scripts/gen-sfx.mjs`, counted again here. By the agent's reading, not checked
+   here: the colourblind palette and the six status symbols were the
+   session's candidates, and three event titles and seven first-page
+   choice labels stand as the placeholders had them. The record is silent
+   on who wrote the daemon, packet and character descriptions. The repo
+   the page links to is public and holds all of this.
+2. **Export run.** The page sends a bug's reporter to "EXPORT RUN under
+   settings", which hands over the last run that ended, so after a bug in
+   the middle of a run it is the run before (the finding above).
+3. **How an order is given** is not on the page: Engage is a left-click
+   on the board and Focus a right-click (`hud.tooltip.engage`, `.focus`).
+4. **Smaller:** "tested in Firefox and Edge" is true once 118i is run; a
+   refused save keeps settings and unlocks (`save.rejected`); a run from a
+   typed seed opens no Escalation level (`escalation.tip.unlock`); the
+   small-laptop case, where the 1280×720 embed does not fit a browser
+   window and itch's fullscreen button is the way; a handful of typos.
+5. **The cut's other half,** the page's settings, is not in the draft.
+   itch's own page on HTML5 embeds refused the session's fetch (403), so
+   the form's options are unread.
+
+Open with the user: the AI line's wording and the form's answer; whether
+Last run should export a run in progress, or the page should send that
+case to Export everything; where the file lives in the repo.

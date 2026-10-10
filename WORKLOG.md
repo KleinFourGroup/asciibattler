@@ -10230,10 +10230,15 @@ the 94h board ran at `4d3fa22` under prior table v4 (measured at
 that board's own shadow leg, and the fold reads the committed file
 (`args.ts`, `loadPriorTable()` with no path). So the game, the run layer
 and the arm's code still play the 94h game on these seeds, and the exit's
-"reproduces the signed sheet exactly" was out of reach on the ten
+"reproduces the signed sheet exactly" was out of reach on the eight
 arbitrated rows at every commit since the signing, the events' rewrite
-aside. Not checked: the other fourteen rows, and any seed past 3 on a
-searcher row; cohort 1 is that check. The round's own oracles could not
+aside. Not checked: the other thirteen rows, and any seed past 3 on a
+searcher row; cohort 1 is that check. (The shape-lock's message and this
+entry's first commit said ten arbitrated rows and fourteen unchecked. The
+ten was the sheet's own header, "10 arb primaries", quoted without a
+recount: the queue has eight arbitrated rows, 16 of its 25 batches, since
+the two wall rows force an encounter, which `--arbitrate` refuses. Four of
+the seventeen rows were run in whole or in part, so thirteen were not.) The round's own oracles could not
 see it, since each compared a step's before with its after.
 
 **The decision point: the order.** Signed as the last session leaned,

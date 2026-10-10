@@ -10436,3 +10436,60 @@ page on 21 of seeds 1 to 24 for each of the three; 10, 11 and 19 give
 the fight the node's roll still allows). `drive-run`'s hashes, which
 move on any seed that meets one of the three. How the pages read is the
 user's, with the kickoff's three notes.
+
+### 118b — cohort 1, the reproduction (2026-10-09 → 10, session 14b2f59d) — read `none` ✅ REPRODUCED
+
+**The run.** Launched at 20:40 from `841e7a3`, pushed, on `cpx42`; the
+last of its 25 launches fired at 00:50 and it drained at 01:15, 4 h 34
+min against five estimated. 25 of 25 verified, the box destroyed by the
+driver, and ✔ `box-launch.sh list` shows none.
+
+**The comparison.** ✔ 25 pairs of 25, all identical, 855 files, the new
+manifests clean at one HEAD with the old table named on the 16
+arbitrated batches and on no other; the script's own check (the archive
+against itself, a changed byte, a missing file) passed before and after.
+✔ The two anchors, run locally at `841e7a3`, are the archive's on
+`summary.csv` and `rosters.csv`, with a control that differs. BALANCE
+2026-10-10 has the entry and what it does not show: the sheet's numbers
+under the table that ships. So the exit's "reproduces the signed sheet
+exactly" is met in the sense the kickoff signed.
+
+**The window.** Nothing landed on `main` from 20:40 to 00:50. 118d was
+built in a detached worktree and fast-forwarded at 00:51, and the
+friction log's one line of that stretch was filed from the worktree.
+
+**The night's line.** The user, about 21:15, leaving for the night: "let's
+raise the token stop point to 600k, so you can keep working all night".
+Read as this session's night only; the Cursor's 550k stands.
+
+Readings: **458,542** at 21:05 before the events' commit; **465,373** at
+21:08; **476,627** at 01:15 at the drain.
+
+### 118e — cohort 2, the ladder: launched (2026-10-10, session 14b2f59d) — the `stop` is at its read
+
+**The queue** is `output/box-batches/118e-ladder.queue`, made by
+`scratch/118e-ladder/make-queue.ts`, which puts each line through the
+harness's own parser: 24 batches, levels 0 to 5 on `arb-deploy`
+(`--hops=11`) and `arb-walk-deploy` (two acts, `--per-encounter`), each a
+batch of 40 seeds and one of 80, the committed prior table. Level 0 names
+no level, so its argv is the board's own arm. Level 0's four batches took
+72.5 min at the signing, so six levels are 7.25 h at most; harder levels
+end sooner. It launches from the commit that carries this entry, with the
+user's go for the night's plan (stated to them at 20:52; their good-night
+raised the stop "so you can keep working all night").
+
+**For whoever reads the result** (a `stop`, the user's):
+1. Pool each level's two stages for each row (`--merge-stages`).
+2. Pair on the seed, each level against the one under it, by where the
+   run ended (won, then sectors cleared, then hop), with the two-sided
+   sign test on the discordant pairs. The smoke's script did this and
+   carries its known answers
+   (`tests/fuzz/output/117c-smoke/analyze-smoke.mjs`, ignored, this
+   machine); check it against them before it reads new rows.
+3. The criterion is in ROADMAP §118's decision points.
+4. Level 0 against the sheet: `balance:board --report
+   --only=arb-deploy,arb-walk-deploy` on the pooled level-0 folders. A
+   partial board and a drift read, never a signing; whether it warrants
+   a re-pin is the user's.
+5. If level 3 is retuned, TODO "§117 riders" has a daemon's sentence that
+   holds at 0.75 by rounding.

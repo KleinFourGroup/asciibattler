@@ -4792,3 +4792,37 @@ deltas. The pre-X H7c→O log lives at
   `manifest.json`, the fragment's rows, and the script that made the
   tables (`analyze-smoke.mjs`, with its known answers). Detail: WORKLOG
   §117c.
+
+- **2026-10-10 §118b — THE SIGNING BOARD RUN AGAIN: byte-identical to the
+  94h archive, the arbitrated rows under the table they were measured
+  under.** Round 8's exit asks that Escalation off reproduce the signed
+  sheet exactly. **What ran:** the 25 board batches of the 94h cohort's
+  own queue (15 rows at n=40, the ten checked rows extended to n=120;
+  1,400 runs), on one box (`cpx42`, 8 cores, `--jobs=8`), one HEAD
+  (`841e7a3`), a clean tree, 4 h 34 min; the 16 arbitrated batches with
+  `--prior-table=tests/fuzz/fixtures/prior-table-v4.json`; and the two
+  anchors locally at the same HEAD (80 runs). **The result:** every batch
+  is its archive twin's, byte for byte: 25 pairs, 855 files
+  (`summary.csv`, `rosters.csv`, and where a row writes them
+  `decisions.csv`, `pacing.csv`, `per-encounter.csv`, `alpha-strike.csv`
+  and every failure trace), and both anchors' `summary.csv` and
+  `rosters.csv`. The comparison leaves out the four files that record a
+  run and not its result (`manifest.json`, `timings.csv`, `batch.log`,
+  `args`); it checks the new manifests (clean, one HEAD, the table named
+  on the arbitrated batches and on no other); and it passes its own check
+  first: the archive against itself, one changed byte seen, one missing
+  file seen. **What it shows:** the game, the run layer, the arm and the
+  harness at `841e7a3` are those of `4d3fa22` on these runs. **What it
+  does not:** the sheet's numbers under the table that ships. The
+  committed table (v5) was built from the 94h board's own shadow leg and
+  landed with the signing, so the sheet's eight arbitrated rows have
+  never been measured under it; three seeds of `arb-deploy` under v5
+  differ from the archive in port purchases, bits and ticks (the §118
+  kickoff's audit). The first board read of the arm as it ships is the
+  ladder cohort's level 0 (118e). `--report` was not run on these
+  batches: it holds a batch's argv to its instrument's arm and refuses
+  the flag. **Artifacts** (ignored, this machine):
+  `output/box-batches/20261010-*-841e7a3/`, `118b-drive.log` and
+  `118b-reproduction.queue` beside them, and `scratch/118b-reproduction/`
+  (the queue's maker, `compare.mjs`, `result.txt`). Detail: WORKLOG "The
+  §118 kickoff", §118b.

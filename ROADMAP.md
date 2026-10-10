@@ -12,10 +12,10 @@ planning stack"), never here, and each cut step declares its read (`none`
 with its worklog and spec beside it; before it
 [archive/post-94-roadmap.md](archive/post-94-roadmap.md) (Round 7).
 
-**Status: §117.75 ✅ CLOSED 2026-10-09** (the rest gate; §117.5, the UI
-sweep, closed the same day). **§118, the public web channel and the round
-close, is next** and not yet cut; it opens on the events' rewrite and its
-order against the board's reproduction.
+**Status: §118, the public web channel and the round close, is cut and in
+progress** (the kickoff, 2026-10-09: the order signed, and one finding, that
+the sheet's arbitrated rows were measured under the prior table before the
+committed one). §117.75, the rest gate, closed the same day.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -288,13 +288,28 @@ tutorial; the `0.1.0` upload after the browser smoke (Firefox; Chrome with
 its itch read and the days-later re-open of the draft; the keys visible
 from our iframe that aren't ours); then the round close. **Why last:** a
 stranger needs the menu, a volume control, save/load, a build ID and the
-export first. **Risk:** low-medium. **Decision points:** where the events'
-rewrite falls against the level-0 reproduction (below).
+export first. **Risk:** low-medium.
 **Exit:** the channel open; the board re-run: Escalation off reproduces
 the signed sheet exactly, and each level is harder than the one before on
 paired same-seed runs. **Scope guards:** Safari untested; the Electron
 build stays internal.
 
-**Carried from §117.75's kickoff** (WORKLOG "The §117.75 kickoff"): the first three events' rewrite in the adopted style, outcome pages and all, opens this phase (the user, 2026-10-09). Once it lands, "reproduces the signed sheet exactly" is out of reach, so the session's lean is the reproduction on the commit that closes §117.75, then the rewrite, then the ladder's cohort with its own level 0; the rewrite's check is outcome-equivalence with a planted change; `corrupted-shrine`'s `start` page is a test fixture. The order is the kickoff's to sign.
-**Carried from §114** (WORKLOG §114e): what a download does in Electron's window, at the smoke.
-**Carried from §117.5's kickoff** (WORKLOG "The §117.5 kickoff"): the itch page embeds at 1280×720 with itch's fullscreen button on (117.5c's read; that itch offers one is from memory, to check on the draft); two reads for the smoke on the draft, keyboard focus inside itch's frame and Esc in itch's fullscreen; the "Copy diagnostics" row, the user's product question, which would also bring back the window, pixel ratio and GPU of real players (TODO, the uncapped pixel ratio).
+**Decision points** (WORKLOG "The §118 kickoff"):
+- Where the events' rewrite falls ✅ DECIDED (the user, 2026-10-09): the reproduction on the code before the rewrite, then the rewrite, then the ladder on the rewrite's commit with its own level 0.
+- What "exactly" means ✅ DECIDED: every batch byte-identical to the 94h archive, the arbitrated ones run under the prior table that board ran under (v4). The committed table (v5) was derived from that board, so no tree since the signing reproduces those rows as it stands.
+- The ladder's rows and criterion ✅ DECIDED: `arb-deploy` on act 1 and `arb-walk-deploy` on two acts, soldier, seeds 1–120. A step reads harder when the seeds ending less deep outnumber those ending deeper on both rows, and is told apart at a sign test under 0.05 on one. Leaning harder but not told apart goes back to the user as the step-size question; leaning easier on either row is a finding.
+- A "Copy diagnostics" row in every build ✅ DECIDED yes, slim. A classic script for a bundle that never ran ✅ DECIDED yes.
+- The Chromium read ✅ DECIDED: Edge (Chrome is not installed). A smoke finding ships as `0.1.1`.
+
+The cut, signed 2026-10-09. The usual box (`cpx42`, 8 cores) for both cohorts.
+
+- [ ] **118a** — the harness takes `--prior-table=<file>`, and the table the signing board ran under is a fixture. Read `none`: the default path byte-identical with a failing control; under the flag, three seeds of `arb-deploy` equal the archive. The smoke fires; no bump, no stream.
+- [ ] **118b** — COHORT 1, the reproduction: the signing board's 25 batches again, the arbitrated ones under the old table, and the two anchors locally; each compared byte for byte with the 94h archive by a script that counts what it compared and fails on a planted difference; into BALANCE. Read `none`; any difference is a stop.
+- [ ] **118c** — the outcome test for the three events: the three frozen as they stood, a form that folds the pages that decide nothing, and planted changes it must see. Read `none`. Moved ahead of the cohort at the kickoff, so the rewrite could be checked before it was put aside.
+- [ ] **118d** — the rewrite lands (the user's, written at the kickoff and held in `scratch/118d-events/`): `config/events.json` and the locale extract. Predicted: no bump, no new stream, the smoke fires, and the fuzz summaries change. Read `batch`: play each branch of the three (how each is reached by name is its step zero); wrong is an effect that lands before the page that tells it, or a page with no way on.
+- [ ] **118e** — COHORT 2, the ladder, on the rewrite's commit: levels 0–5 on the two rows, paired on the seed; its level 0 also read against the sheet as drift, the first board read of the arm as it ships; into BALANCE. Read `stop`.
+- [ ] **118f** — the two hardening items: "Copy diagnostics" in Settings › Data, and the loading line's words when the bundle never ran. Read `batch`, at the smoke.
+- [ ] **118g** — the itch page: a how-to-play and the page's settings (the embed at 1280×720, itch's fullscreen button), as a file in the repo. Read `stop`.
+- [ ] **118h** — `0.1.0` by `npm version`, the plain zip, the user's upload to the draft. Read `none`.
+- [ ] **118i** — THE SMOKE, the user's, on the draft: Firefox; Edge; the days-later re-open; the keys that aren't ours; keyboard focus and Esc in itch's frame; a download in Electron's window (carried from §114); the `batch` reads. Then the user opens the page. Read `stop`.
+- [ ] **118j** — the round close, in a session of its own. Read `stop`.

@@ -10200,3 +10200,100 @@ against the level-0 reproduction, the outcome-equivalence check, and the
 shrine's first page as a fixture. In the sound table: `rest:entered` is a
 `candidate` with the feel sweep's others. Nothing went to TODO, and its
 item for the rest is ticked.
+
+## Phase 118 — the public web channel, then the round close
+
+### The §118 kickoff: the audit, the finding and the cut (2026-10-09, session 14b2f59d) — SIGNED
+
+Readings: **94,917** at 17:33 after HANDOFF and `process/planning.md`;
+**228,990** at 17:48 at the shape-lock's message, so the audit about
+134k; **318,168** at 20:26 with the answers in, the user's events put
+aside, and 118c and 118a built, before these docs. ✔ marks what was read
+or run this session.
+
+**The finding: the tree does not reproduce the sheet's arbitrated rows,
+and has not since the signing.** ✔ Board rows run at `545df7a` and
+compared byte for byte with the 94h archive (`output/board-runs/94h/`,
+this machine):
+
+| Row | Seeds | Against the archive |
+|---|---|---|
+| `anchor-random`, `anchor-greedy` | 1–40 each | `summary.csv` and `rosters.csv` identical |
+| `deploy` (searcher, not arbitrated) | 1–3 | identical |
+| `arb-deploy` | 1–3 | different on all three (port purchases, bits, ticks) |
+| `arb-deploy`, the old prior table swapped in (a worktree) | 1–3 | identical |
+
+Each comparison's control fails as it must (random against greedy; the
+arbitrated rows against the archive's non-arbitrated ones). ✔ The cause:
+the 94h board ran at `4d3fa22` under prior table v4 (measured at
+`7dc07a3`); the signing commit `962c161` then committed v5, built from
+that board's own shadow leg, and the fold reads the committed file
+(`args.ts`, `loadPriorTable()` with no path). So the game, the run layer
+and the arm's code still play the 94h game on these seeds, and the exit's
+"reproduces the signed sheet exactly" was out of reach on the ten
+arbitrated rows at every commit since the signing, the events' rewrite
+aside. Not checked: the other fourteen rows, and any seed past 3 on a
+searcher row; cohort 1 is that check. The round's own oracles could not
+see it, since each compared a step's before with its after.
+
+**The decision point: the order.** Signed as the last session leaned,
+amended by the finding: the reproduction on the code before the rewrite,
+its arbitrated batches under v4 through a new flag (118a); the rewrite;
+the ladder on the rewrite's commit under v5, with its own level 0, which
+is also the first board read of the arm as it ships. The session weighed
+folding the ladder into the first cohort, so its read would come while
+the prose was written: the same box time once level 0 cannot be shared
+between the two tables, and the ladder measured one commit before what
+ships. Not taken.
+
+**The rest of the audit.**
+- ✔ The three events are in both sectors' pools, and each choice
+  resolution takes `streamRng('event', this.eventStep++)`
+  (`Run.ts:1695`), so a page added to one moves every later event of the
+  run. ✔ The shrine's `start` page is a fixture of
+  `arbitratedStrategy.test.ts:784` and `:908` and of `Run.test.ts:6039`;
+  the other tests name the three by id only.
+- ✔ The signing board's queue is on disk
+  (`output/box-batches/94h-board.queue`, ignored): 25 board batches and
+  the shadow leg, the board's from 18:35 to 23:33 on 8 cores, about five
+  hours. The two anchors ran locally then.
+- ✔ The board's `--report` holds each batch's argv to its instrument's
+  arm (`board.ts:923`), so a batch run under `--prior-table` fails its
+  provenance check. The reproduction's oracle is the byte comparison;
+  `--report` is not run on it. The shape-lock's table named `--report`
+  for 118b; this drops it, inside what was signed.
+- ✔ The event editor's Save posts to `/__save-config`, which writes the
+  tree's file, and the driver refuses a dirty tree before each launch
+  (`box-drive.sh:135`).
+- ✔ `package.json` is `0.0.0`; the itch draft holds
+  `0.0.0_9d298b1-diag`; Chrome is not at its three usual paths.
+- Not audited: how each of the three events is reached by name from a
+  URL (118d's step zero); the diagnostics panel's report builder (118f);
+  the close's instruments (118j).
+
+**Signed** ("Signing all of your recommendations"): the finding and the
+order; a slim "Copy diagnostics" row; the classic script for a bundle
+that never ran; the ladder's two rows and its criterion; a smoke finding
+ships as `0.1.1`. The user's own: no skeleton for the prose ("I'd rather
+get some more practice with the editor"); the usual box, `cpx42`; Edge as
+the Chromium read. The cut and the resolved decision points are in
+ROADMAP §118.
+
+**The prose came first.** The plan the session offered was a worktree
+for the user to write in during the cohort; the user's was simpler, to
+write before anything started, and they had done it by the time the
+mechanics were agreed. ✔ The rewritten `config/events.json` is at
+`scratch/118d-events/events.json` (sha256 `1348236c…`, the copy checked
+by hash before the tree's file was restored), with its diff and
+`check.ts`, which holds it to the frozen outcomes (118c), the catalog's
+four boot checks, the other ten events untouched, and the shrine's
+fixture facts. All hold, and the script's planted change is seen. Three
+things in it for 118d's read, each the user's to keep or change: the
+shrine's winning scoop still returns to the map with no page; the
+offering's label still carries its cost in brackets; and every effect
+stays on the first click, so the new pages' own choices carry none.
+
+**What the stretch holds.** 118a and 118c committed, cohort 1 launched,
+and 118g's draft while it runs; then the comparison and 118d when the
+last launch has fired. 118e's launch and 118f are a fresh session's
+unless the readings say otherwise.

@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { CHARACTERS } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { EVENT_IDS } from '../config/events';
 import { ESCALATION_MAX } from '../config/escalation';
 import { RUN_CONFIG_PARAMS, parseRunConfig, runConfigToQueryString } from '../run/RunConfig';
 import { memoryAdapter } from './adapter';
@@ -227,6 +228,7 @@ describe('117d — whether a won run is recorded', () => {
     layout: 'procedural',
     encounter: ENCOUNTER_IDS[0]!,
     firstNode: 'elite',
+    event: EVENT_IDS[0]!,
     width: '3',
     daemon: 'none',
     character: 'soldier',
@@ -243,7 +245,7 @@ describe('117d — whether a won run is recorded', () => {
       expect(dials, dial).toContain(`${dial}=`);
       if (!runCounts(dials, dial === 'escalation' ? 1 : 0, 5)) refused.push(dial);
     }
-    expect(refused).toEqual(['seed', 'hops', 'sectorHops', 'roster', 'layout', 'encounter', 'firstNode', 'width', 'daemon', 'bits']);
+    expect(refused).toEqual(['seed', 'hops', 'sectorHops', 'roster', 'layout', 'encounter', 'firstNode', 'event', 'width', 'daemon', 'bits']);
   });
 
   it('refuses a parameter that is no run dial', () => {

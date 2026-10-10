@@ -27,7 +27,7 @@ import { characterById, type CharacterConfig } from '../config/characters';
 import { ENCOUNTER_IDS } from '../config/encounters';
 import { ESCALATION_MAX } from '../config/escalation';
 import type { SectorMap } from '../config/sectorMap';
-import type { EventDef } from '../config/events';
+import { EVENT_IDS, type EventDef } from '../config/events';
 
 /** One starting-roster slot: an archetype at a chosen level (>= 1, capped). */
 export interface RosterEntry {
@@ -113,7 +113,10 @@ export interface RunConfig {
    * `forcedEncounterId` shape for events (validated loud at construction).
    * The combat-resolve roll still happens first (suppress it via a
    * `eventCombatChance` modifier rule, or the §74e isolation dial once it
-   * lands). Programmatic-only; NOT persisted.
+   * lands), so on some seeds the node is a fight and no page opens.
+   * URL form: `event=<id>`, which with `firstNode=event` opens a run on a
+   * named event; an unknown id is dropped. It is a run dial like the others:
+   * it rides the saved dials, so a reload keeps it.
    */
   readonly forcedEventId?: string;
   /**
@@ -308,6 +311,7 @@ export const RUN_CONFIG_PARAMS = {
   layout: 'layout',
   encounter: 'encounter',
   firstNode: 'firstNode',
+  event: 'event',
   width: 'width',
   daemon: 'daemon',
   character: 'character',
@@ -376,6 +380,15 @@ function parseEncounter(raw: string | null): string | undefined {
   return ENCOUNTER_IDS.includes(token) ? token : undefined;
 }
 
+/** A known event id, as written in the catalog. Unknown or absent is
+ *  undefined (the node's own pick), as `parseEncounter` drops and does not
+ *  throw. */
+function parseEvent(raw: string | null): string | undefined {
+  if (!raw) return undefined;
+  const token = raw.trim();
+  return EVENT_IDS.includes(token) ? token : undefined;
+}
+
 /** L1 — `none` → null (daemon-less), a catalog id → that daemon, anything
  *  else (absent / unknown id) → undefined (63d: no override → the
  *  character's daemon; the run-start roll retired at 63c). */
@@ -420,6 +433,8 @@ export function parseRunConfig(params: URLSearchParams): RunConfig {
   if (firstNode === 'elite' || firstNode === 'event' || firstNode === 'rest') {
     config.firstNodeKind = firstNode;
   }
+  const forcedEventId = parseEvent(params.get(RUN_CONFIG_PARAMS.event));
+  if (forcedEventId !== undefined) config.forcedEventId = forcedEventId;
   const mapMaxWidth = parsePositiveInt(params.get(RUN_CONFIG_PARAMS.width));
   if (mapMaxWidth !== undefined) config.mapMaxWidth = mapMaxWidth;
   const daemon = parseDaemon(params.get(RUN_CONFIG_PARAMS.daemon));
@@ -477,6 +492,9 @@ export function runConfigToQueryString(config: RunConfig): string {
   }
   if (config.firstNodeKind !== undefined) {
     params.set(RUN_CONFIG_PARAMS.firstNode, config.firstNodeKind);
+  }
+  if (config.forcedEventId !== undefined) {
+    params.set(RUN_CONFIG_PARAMS.event, config.forcedEventId);
   }
   if (config.mapMaxWidth !== undefined) {
     params.set(RUN_CONFIG_PARAMS.width, String(config.mapMaxWidth));

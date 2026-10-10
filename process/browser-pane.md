@@ -324,7 +324,9 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   `layout=isthmus&seed=7&character=soldier` gives an event at node 0 and a
   battle at node 1. `roster=` fields any archetype. `encounter=` forces
   only nodes of a matching kind, so `firstNode=elite` is the real elite
-  fixture. `firstNode=rest` makes node 0 a rest, so the rest page is one
+  fixture. `firstNode=event&event=<id>` opens a run on a named event; the
+  node's fight-or-page roll still comes first, so on about one seed in
+  four it is a fight (try the next seed). `firstNode=rest` makes node 0 a rest, so the rest page is one
   click in; a new run's pool is full, so its option reads "Morale is
   full" until the pool is wounded (`__game.run.playerHealth = 20`, then
   `__game.poolOverlay.refresh()`, since a direct write repaints no chip).

@@ -11,6 +11,7 @@ import { ALL_ARCHETYPES } from '../sim/archetypes';
 import { characterById } from '../config/characters';
 import { LAYOUT_IDS } from '../sim/layouts';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { EVENT_IDS } from '../config/events';
 import { ESCALATION_MAX } from '../config/escalation';
 import { LEVELING } from '../config/leveling';
 
@@ -137,6 +138,20 @@ describe('RunConfig parsing', () => {
 
   it('68e: round-trips firstNode through the query string', () => {
     const original = cfg('firstNode=elite&hops=2');
+    expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
+  });
+
+  it('parses `event=` as a catalog id and drops anything else', () => {
+    const id = EVENT_IDS[0]!;
+    expect(cfg(`event=${id}`).forcedEventId).toBe(id);
+    expect(cfg('event=no-such-event').forcedEventId).toBeUndefined();
+    expect(cfg(`event=${id.toUpperCase()}`).forcedEventId).toBeUndefined();
+    expect(cfg('').forcedEventId).toBeUndefined();
+  });
+
+  it('round-trips `event=` through the query string', () => {
+    const original = cfg(`firstNode=event&event=${EVENT_IDS[0]!}&hops=2`);
+    expect(original.forcedEventId).toBe(EVENT_IDS[0]);
     expect(parseRunConfig(new URLSearchParams(runConfigToQueryString(original)))).toEqual(original);
   });
 

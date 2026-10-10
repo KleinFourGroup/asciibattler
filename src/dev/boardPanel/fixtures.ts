@@ -111,6 +111,7 @@ export const RUN_DIAL_KEYS = [
   'layout',
   'encounter',
   'firstNode',
+  'event',
   'width',
   'daemon',
   'character',

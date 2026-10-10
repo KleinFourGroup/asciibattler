@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENCOUNTER_IDS } from '../config/encounters';
+import { EVENT_IDS } from '../config/events';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { BOARD_PANEL_PARAM } from '../dev/boardPanel/state';
@@ -25,6 +26,7 @@ const A_VALUE_PER_DIAL: Record<string, string> = {
   layout: 'procedural',
   encounter: ENCOUNTER_IDS[0]!,
   firstNode: 'elite',
+  event: EVENT_IDS[0]!,
   width: '3',
   daemon: 'none',
   character: 'soldier',

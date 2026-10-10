@@ -10708,3 +10708,39 @@ user:
 Open with the user: the AI line's wording and the form's answer; whether
 Last run should export a run in progress, or the page should send that
 case to Export everything; where the file lives in the repo.
+
+### 118f — THE READ (2026-10-10, the user's) ✅
+
+"I believe I read those two reads for f, and they were good." Where and
+in which browser was not said. The script named the itch draft, which
+holds an older build until 118h, so the read was of some other page. Left
+on 118i's list for the draft itself: the copy from inside itch's frame,
+which line the row shows there, and what `graphics.renderer` reads in
+Firefox.
+
+### 118g — the first answers (2026-10-10, the user's)
+
+**The typos** are fixed in `page.md` by the session, with the user's
+leave: "a roguelite", "broadly fight", "a turn costs", "Battles are won",
+the save bullet's full stop, "or from the in-game settings button", "a
+description of the bug", and the planned-features list indented to nest.
+Nothing else in the file was touched; the other edits wait.
+
+**The AI line, the user's position:** itch's Text & Dialog means prose
+descriptions and spoken or character dialog, "not error messages and
+mechanics tooltips / interface text"; the synth recipes are code
+assistance; the rule of thumb is "would this have traditionally been
+handled by an artist or writer". They do not remember who wrote the
+daemon and packet descriptions and think they wrote the characters'.
+
+**What the session checked for it.** ✔ By a diff against the commit that
+first held the three events (`1d6b042`, 74a, whose entry calls them the
+session's placeholders): their three names and six choice labels stand
+today as that commit had them ("The Corrupted Shrine", "Scoop the bowl",
+"Pass by", "Stand and fight", "Scatter and run", "The Whispering
+Terminal", "Type your name", "Unplug it", "The Terminal Collects"). The
+background agent counted seven labels and the diff finds six; the
+offering's label changed at 118d-post, which may be its seventh. ✔ The daemon and packet descriptions are
+rule sentences with a phrase of colour in a few ("tithes 2 bits from
+below", "Lace every blade"). Not read: itch's own guidelines, whose page
+stands behind a bot check the session did not go past.

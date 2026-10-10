@@ -5,7 +5,7 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "A wayside shrine flickers in the gloom, its idol half-eaten by static. Loose bits glitter in the offering bowl.",
+        "text": "You come across a small, rundown shrine on the side of the road.  A shimmering pile of bits lies in the shrine's offering bowl, though the nearest hop is at least a day away.",
         "choices": [
           {
             "id": "scoop-the-bowl",
@@ -29,19 +29,19 @@
                   { "op": "spendBits", "amount": 10 },
                   { "op": "healPool", "amount": 5 }
                 ],
-                "next": { "kind": "return-to-map" }
+                "next": "heal"
               }
             ]
           },
           {
             "id": "pass-by",
             "label": "Pass by",
-            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+            "outcomes": [{ "next": "nope" }]
           }
         ]
       },
       "guardians": {
-        "text": "The static coheres. Deserters in rusted mail step out of the shrine's shadow, blades already drawn.",
+        "text": "A band of deserters pop into existence in a burst of static.  They look mightily confused, as if the shrine's idol hadn't warned them.  Unfortunately for you, their blades are already drawn.",
         "choices": [
           {
             "id": "stand-and-fight",
@@ -62,9 +62,29 @@
             "outcomes": [
               {
                 "effects": [{ "op": "damagePool", "amount": 3 }],
-                "next": { "kind": "return-to-map" }
+                "next": "nope"
               }
             ]
+          }
+        ]
+      },
+      "heal": {
+        "text": "The static noise gently descends upon you and your men, and it feels... Soothing.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "What a pleasant turn of events!",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "nope": {
+        "text": "You and your men calmly yet quickly march away from the shrine.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Let's skedaddle!",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
         ]
       }
@@ -76,7 +96,7 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "A dead terminal hums back to life as you pass. ONE FAVOR, it prints, FOR ONE FRIEND. The cursor blinks, patient as a grave.",
+        "text": "While exploring an abandoned building, you and your men find an abandoned computer lab.  Suddenly, one of the screens lights up.\n\nA GIFT, it prints, FOR A FAVOR?",
         "choices": [
           {
             "id": "type-your-name",
@@ -87,13 +107,33 @@
                   { "op": "setFlag", "flag": "whispering-terminal:answered" },
                   { "op": "addPacket", "packetId": "shield" }
                 ],
-                "next": { "kind": "return-to-map" }
+                "next": "favor"
               }
             ]
           },
           {
             "id": "unplug-it",
             "label": "Unplug it",
+            "outcomes": [{ "next": "flee" }]
+          }
+        ]
+      },
+      "favor": {
+        "text": "A packet coheres into existence in a burst of static.  You take it.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "What could it want in return?",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "flee": {
+        "text": "The monitor stays lit, unfazed by the loss of power.  This is too much for your men, who stampede out of the room.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "It's not a retreat!  We're advancing backwards.",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
         ]
@@ -107,21 +147,41 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "Another dead screen lights as you approach. It knows your name. A FRIEND REPAYS, it prints, and the tray fills with bits.",
+        "text": "You awaken to the sound of your men screaming!  A terminal has popped into existence right in the middle of your camp!\n\nOUR FAVOR IS DUE, it types out, and a pile of golden bits falls to the ground.",
         "choices": [
           {
             "id": "accept",
-            "label": "Accept",
+            "label": "Take the bits.",
             "outcomes": [
               {
                 "effects": [{ "op": "gainBits", "amount": 20 }],
-                "next": { "kind": "return-to-map" }
+                "next": "bits"
               }
             ]
           },
           {
             "id": "refuse-the-debt",
-            "label": "Refuse the debt",
+            "label": "Surely it must be a trap!",
+            "outcomes": [{ "next": "flee" }]
+          }
+        ]
+      },
+      "bits": {
+        "text": "It must not understand what a favor actually is.  Weren't you supposed to pay *it* back?",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Dumb, haunted machine",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
+      },
+      "flee": {
+        "text": "Neither you nor your men are foolish enough to take the bits.  Instead, you take the safer option and run.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "Discretion is the better part of valor, isn't it?",
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
         ]

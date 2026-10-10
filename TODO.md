@@ -671,10 +671,6 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 - [x] **A rest node conveys nothing and is not a gate.** ✅ 2026-10-09
   (§117.75): a page of its own and a saved gate, `28b9d2b`; WORKLOG
   §117.75.
-- [ ] **The first three events' prose predates the adopted style**
-  (`corrupted-shrine`, `whispering-terminal`,
-  `whispering-terminal-collects`: a cost in a label's brackets, the effect
-  on the first click with no page that tells it). The user rewrites them,
-  outcomes unchanged; home §118's opening (moved from §117.75 at its
-  kickoff: an outcome page moves `eventStep`), with an outcome-equivalence
-  check. ROADMAP §118 has the order against the board's reproduction.
+- [x] **The first three events' prose predates the adopted style.** ✅
+  2026-10-09 (118d): rewritten by the user, the outcomes held by
+  `tests/event-outcomes.test.ts`; `event=<id>` opens one (WORKLOG §118d).

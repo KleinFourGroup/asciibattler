@@ -8,10 +8,14 @@ import { ChaosFailure, KINDS, chaosRun, type ChaosOptions, type ChaosResult } fr
 // 115c — the chaos driver's every-commit seeds (chaos.ts says what it sends
 // and checks). `npm run chaos -- --seeds=N` sweeps more. The seeds were
 // picked from a sweep for being short (WORKLOG §115c); the Gambler's daemon
-// grants a redraw every turn, and her bits buy at ports.
+// grants a redraw every turn, and her bits buy at ports. A change that moves
+// a run's streams makes each seed another walk, and a long one times out
+// under the whole suite: the slot with no dials was seed 2 until three events
+// gained pages and its walk went from 0.7 s to 4 s, and seed 31 is the
+// shortest of 40 that keeps the census below whole (WORKLOG §118d).
 const EVERY_COMMIT: ReadonlyArray<readonly [number, string]> = [
   [3, 'hops=3&layout=procedural'],
-  [2, ''],
+  [31, ''],
   [6, 'sectorHops=2'],
   [4, 'character=gambler&bits=300'],
 ];

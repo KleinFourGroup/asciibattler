@@ -10383,4 +10383,56 @@ is not its reader. A fuller paragraph put the header layer at 704 lines
 against its cap of 700 and failed 118c's first commit attempt; it is 698
 now.
 
-**The predictions:** the smoke fires; no bump; no stream.
+**The predictions:** the smoke fires; no bump; no stream. Held: the smoke
+is 590 in 64 files by the hook on `4463ea0`.
+
+### 118d — the three events in the outcome-page style, and the `event=` dial (2026-10-09, session 14b2f59d) — ◐ built, unread (`batch`, at the smoke)
+
+Built in a detached worktree while cohort 1's launches fired, and brought
+onto `main` after the last. Readings: **383,086** at 20:40 on the commit
+the cohort launched from, `841e7a3`; **420,078** at 20:51 before the
+dial's commit.
+
+**Step zero: no event could be opened by name.** ✔
+`RunConfig.forcedEventId` had no URL form, and
+`whispering-terminal-collects` is eligible only once a flag is set
+earlier in the same run, so the read's "play each branch of the three"
+had no way in. `event=<id>` (`3e77c6f`) parses to `forcedEventId` against
+the catalog's ids, drops anything else, and is written back with the
+other dials, so it rides the saved dials across a reload. It is a run
+dial like the rest: three tables that hold a row per dial (the menu's
+skip, the unlock rule's refusal, the board panel's restated keys) each
+failed until they had it. Absent, it changes nothing: a 12-seed fuzz of
+the two default strategies is byte-identical to `841e7a3`. Its first
+commit attempt failed on `tests/store-guard.test.ts` timing out at 5 s
+while a scan ran beside the hook; the test takes 1.5 s alone.
+
+**The events.** The user's file from `scratch/118d-events/` (sha256
+`1348236c…`) and the locale extract. 118c's three comparisons bite now
+and hold; the fixtures on the shrine's first page hold.
+
+**The chaos test's seed.** With the events in, the whole suite failed
+twice on `chaos.test.ts`, seed 2 with no dials, timing out at 5 s. ✔ Its
+walk alone takes 4.3 s against 0.65 s before: 17 battles and 90 round
+trips, another and longer run on the same seed, since each new page
+moves the event stream. The every-commit seeds were picked at §115 from
+a sweep for being short, so the slot was picked again the same way: of
+seeds 1 to 40 with no dials, 31 is the shortest that leaves the four
+seeds' census whole (0.55 s, 11 battles, 58 round trips; six seeds leave
+`sellPacket` or `payToRemoveUnit` unsent). The four now take 0.37, 0.37,
+0.30 and 0.66 s. The session's call, made with the user away: a seed
+re-picked by the test's own rule, not a timeout raised.
+
+**The predictions.** No bump and no new stream: held (the save's
+fingerprint test is green). The smoke fired on both commits. The fuzz
+summaries change: held, 7 of 24 rows differ in their first five columns
+on the 12-seed default, and `rosters.csv` differs.
+
+**Not run.** The pane, since the preview serves the main tree and that
+could not change while the launches fired: the read's URLs are from a
+headless scan through the URL's own parser
+(`character=soldier&hops=2&firstNode=event&event=<id>&seed=<n>` opens the
+page on 21 of seeds 1 to 24 for each of the three; 10, 11 and 19 give
+the fight the node's roll still allows). `drive-run`'s hashes, which
+move on any seed that meets one of the three. How the pages read is the
+user's, with the kickoff's three notes.

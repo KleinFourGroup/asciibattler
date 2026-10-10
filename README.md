@@ -62,6 +62,11 @@ before it prints: every entry name free of backslashes, `index.html` at the
 root, and the extracted tree byte-identical to the build. The upload
 itself is done by hand.
 
+Every build carries a short report for players: Settings › Data › Copy
+diagnostics (`src/diagnostics/`) copies the build's ID, the browser and its
+window, the graphics card, the settings and the state of the store, each
+stored section told by its size alone.
+
 `node scripts/itch-zip.mjs --diag` makes the same build with the
 diagnostics panel in it (`VITE_DIAG=1`; `src/dev/diag/`). A `diag` tab on
 the right edge opens a report of what the storage is like where the page

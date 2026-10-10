@@ -547,11 +547,9 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   is owed while the shell is internal. Home: the phase that ships the
   shell, with one instance per profile ("§115 riders"); a file per
   section would make a save cost its own size.
-- [ ] **A "Copy diagnostics" row for players** (116l, call 1). The
-  diagnostics panel is in a build only when `VITE_DIAG=1` is set. A row in
-  Settings › Data of every build would let a player on itch send its
-  report with a bug, where the storage is shared and partitioned and
-  nobody else can look. A product question for §118, the user's.
+- ✅ **A "Copy diagnostics" row for players** (116l, call 1): in Settings ›
+  Data of every build, the short form of the panel's report (118f; WORKLOG
+  §118f).
 - ✅ **Import a backup under Electron** (the 116l sitting): it works, by the user's read after the close, 2026-10-07 (WORKLOG "After the close").
 - ✅ **The build's own helper has no notice** (116j): Vite's core licence
   is in the shipped file and a test holds it there (116j-post, the user's

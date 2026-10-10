@@ -325,6 +325,11 @@
   "settings.data.lastRun": "Last run",
   "settings.data.lastRun.hint": "The journal of the last run that ended: its seed and every choice you made, enough to replay it. Send it along with a bug report or feedback.",
   "settings.data.lastRun.none": "No run has ended here yet.",
+  "settings.data.diagnostics": "Diagnostics",
+  "settings.data.diagnostics.hint": "A short report to paste into a bug report: the game's version, your browser and window, your graphics card, your settings, and how much the game has stored. Nothing from your runs is in it.",
+  "settings.data.diagnostics.copy": "Copy diagnostics",
+  "settings.data.diagnostics.copied": "Copied. Paste it into your bug report.",
+  "settings.data.diagnostics.saved": "The browser wouldn't let the game copy, so the report was saved as a file instead.",
   "settings.quit": "Quit to menu",
   "settings.quit.saved": "Your run is saved, and Continue returns to it. A fight in progress starts again from its turn.",
   "settings.quit.unsaved": "This run can't be saved here, so quitting ends it."

@@ -58,6 +58,7 @@ import {
 import { BACKUP_MAX_BYTES, backupFileName, readBackup, type Backup } from '../store/backup';
 import type { RestoreResult } from '../store/store';
 import { button } from './button';
+import { copyText } from './copyText';
 import { downloadText } from './download';
 import { captureVerdict, type Keybindings } from './Keybindings';
 import { openModal, type ModalHandle } from './modal';
@@ -86,6 +87,10 @@ export interface SettingsData {
   /** The journal Export run hands over (`lastRunJournal`); null when no run
    *  has ended here. */
   lastRun(): RunJournal | null;
+  /** 118f — the player's diagnostics as of now (src/diagnostics/report.ts):
+   *  the text to copy, and the name of the file it is saved as where the
+   *  browser refuses the clipboard. */
+  diagnostics(): { readonly text: string; readonly fileName: string };
 }
 
 /** One click of a level's − or +, and one step of its slider, in percent. */
@@ -262,7 +267,7 @@ export class SettingsOverlay {
   }
 
   /**
-   * 116h — THE DATA ROWS (Round 8 spec D1, D5): four rows, each an action.
+   * 116h — THE DATA ROWS (Round 8 spec D1, D5): five rows, each an action.
    *
    * BACKUP hands the player the whole store as a file. IMPORT A BACKUP puts
    * such a file in the store's place, in two steps, as the palette is
@@ -280,6 +285,13 @@ export class SettingsOverlay {
    *
    * LAST RUN downloads the journal the end screen's Export run did, for a
    * player who has left that screen; it is the menu's copy of that export.
+   *
+   * DIAGNOSTICS (118f) copies a short report to paste beside a bug report
+   * (src/diagnostics/report.ts has what is in it, and what is not). The
+   * line under its name says what the report holds, then what became of
+   * the copy: where the browser refuses the clipboard both ways
+   * (src/ui/copyText.ts), the report is saved as a file, so the click
+   * always hands something over.
    */
   private dataSection(): HTMLElement[] {
     const data = this.deps.data;
@@ -416,7 +428,28 @@ export class SettingsOverlay {
       exportRun,
     );
 
-    return [backupRow, importRow, chosenRow, lastRunRow];
+    const copyDiagnostics = button(t('settings.data.diagnostics.copy'), {
+      className: 'settings-action',
+      onClick: () => {
+        this.audio.play('click');
+        // Built and copied in the click's own task: a browser grants the
+        // clipboard to a click, not to what comes after one.
+        const report = data.diagnostics();
+        void copyText(report.text, diagnosticsRow).then((copied) => {
+          if (!copied) downloadText(report.fileName, report.text);
+          if (!open) return;
+          diagnosticsState.textContent = copied
+            ? t('settings.data.diagnostics.copied')
+            : t('settings.data.diagnostics.saved');
+        });
+      },
+    });
+    const diagnosticsRow = row(t('settings.data.diagnostics'), t('settings.data.diagnostics.hint'), copyDiagnostics);
+    const diagnosticsState = diagnosticsRow.querySelector<HTMLElement>('.settings-row__hint')!;
+    diagnosticsState.classList.add('settings-data__state');
+    diagnosticsState.setAttribute('aria-live', 'polite');
+
+    return [backupRow, importRow, chosenRow, lastRunRow, diagnosticsRow];
   }
 
   /**

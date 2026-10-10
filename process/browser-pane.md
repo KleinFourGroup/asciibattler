@@ -199,6 +199,13 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   the file's text. Import and reload ends the script with a reload, so
   keep what the next call compares in `sessionStorage`. A rejected save
   is the slot's own text with its `v` lowered by one.
+- **The Diagnostics row** copies by `navigator.clipboard.writeText`, then
+  by `document.execCommand('copy')`, then saves a file. To choose which
+  one answers, put a stand-in for the first with
+  `Object.defineProperty(navigator, 'clipboard', …)` and replace
+  `document.execCommand`, with the download spy above for the third, and
+  read the row's `.settings-row__hint` after some 50 ms. A hidden pane has
+  no focus, so the real clipboard's answer is never read here.
 - **The settings** (`src/settings/`): `__game.settings` is the page's
   model. `set(key, value)` stores the value and applies it at once, and
   `get()` reads them all. What a consumer holds is read from the consumer:

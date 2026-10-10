@@ -54,6 +54,9 @@ import { setAuraFxMode } from './render/auraFx';
 import { setShakePolicy } from './ui/lossFx';
 import { setTextScale } from './ui/textScale';
 import { backupOf } from './store/backup';
+import { SECTION_NAMES } from './store/store';
+import { pageReading } from './diagnostics/page';
+import { diagnosticsFileName, diagnosticsReport, diagnosticsText, graphicsOf, sectionSizes } from './diagnostics/report';
 import { keepJournal } from './store/journals';
 import { PROGRESS_SECTION, bestWinAfter, escalationCeiling, levelWithinCeiling, runCounts } from './store/progress';
 import type { RunLock } from './store/runLock';
@@ -446,6 +449,27 @@ export class Game implements RunDispatcher {
             this.runSlot.lock === 'elsewhere' ? 'elsewhere' : store.status().canSave ? null : 'unavailable',
           restore: (backup) => store.restore(backup.sections),
           lastRun: () => lastRunJournal(store, this.runSlot),
+          // 118f — the player's diagnostics (src/diagnostics/report.ts): each
+          // reading is taken when the row is clicked, and a section of the
+          // store is told by its size alone.
+          diagnostics: () => {
+            const at = new Date().toISOString();
+            const report = diagnosticsReport({
+              at,
+              build: BUILD_ID,
+              page: pageReading,
+              graphics: () => graphicsOf(this.renderer.webgl.getContext()),
+              settings: () => this.settings.get(),
+              store: () => ({
+                ...store.status(),
+                previousBuild: store.previousBuild,
+                lock: this.runSlot.lock,
+                sections: sectionSizes(store.dump(), SECTION_NAMES),
+              }),
+              run: () => ({ live: this.run !== null, slot: this.runSlot.peek() }),
+            });
+            return { text: diagnosticsText(report), fileName: diagnosticsFileName(at) };
+          },
         },
       },
     );

@@ -10547,7 +10547,9 @@ another run from there on. The ladder was measured at `987b0cb`, one
 telling page before what ships. The outcome test says the two trees
 decide the same things at the same odds, and the ladder's read is of
 levels against each other on one tree, so the session's lean is that it
-stands without a rerun; said to the user with the hand-off.
+stands without a rerun; said to the user with the hand-off. **SIGNED**
+(the user, 2026-10-10: "Fully signing the no rerun"). The user is also
+rewriting the itch page's draft themselves, in `scratch/118g-itch/`.
 
 ### 118e — THE READ (2026-10-10, the user's) ✅
 

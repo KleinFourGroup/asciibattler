@@ -10526,3 +10526,25 @@ the choices the session can see are a deeper bits cut, another lever in
 level 3's place, or keeping it as a level that changes what a player can
 afford and not how deep a bot gets. And whether the two WARN at level 0
 want a full board before `0.1.0`.
+
+### 118d — THE READ (2026-10-10, the user's) ✅, and 118d-post
+
+The user played the three events by the dial's URLs and took two of the
+kickoff's three notes: "I did the URL event reads, and made the suggested
+changes to the corrupted shrine, as well as small wording changes to the
+whispering terminal series." Which browser was not said.
+
+**118d-post lands those edits,** made in the editor on the main tree:
+the shrine's winning scoop leads to a page that tells it (`loot`), the
+offering's label lost its bracketed cost, and three texts in the terminal
+pair changed a word or two. Effects stay on the first click, the third
+note, left as it is. ✔ The outcome test holds on all three, the extract
+is rebuilt (136 addresses), and the chaos seeds stay short.
+
+**What it means for cohort 2.** The new page is one more choice
+resolution on one branch, so a run that wins the shrine's scoop is
+another run from there on. The ladder was measured at `987b0cb`, one
+telling page before what ships. The outcome test says the two trees
+decide the same things at the same odds, and the ladder's read is of
+levels against each other on one tree, so the session's lean is that it
+stands without a rerun; said to the user with the hand-off.

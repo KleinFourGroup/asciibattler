@@ -14,14 +14,14 @@
               {
                 "weight": 3,
                 "effects": [{ "op": "gainBits", "amount": 12 }],
-                "next": { "kind": "return-to-map" }
+                "next": "loot"
               },
               { "weight": 1, "next": "guardians" }
             ]
           },
           {
             "id": "make-an-offering-10-bits",
-            "label": "Make an offering (10 bits)",
+            "label": "Make an offering",
             "condition": { "kind": "bitsAtLeast", "amount": 10 },
             "outcomes": [
               {
@@ -87,6 +87,16 @@
             "outcomes": [{ "next": { "kind": "return-to-map" } }]
           }
         ]
+      },
+      "loot": {
+        "text": "You brace for retaliation from the shrine, but none comes.",
+        "choices": [
+          {
+            "id": "leave",
+            "label": "We were being paranoid.",
+            "outcomes": [{ "next": { "kind": "return-to-map" } }]
+          }
+        ]
       }
     }
   },
@@ -96,7 +106,7 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "While exploring an abandoned building, you and your men find an abandoned computer lab.  Suddenly, one of the screens lights up.\n\nA GIFT, it prints, FOR A FAVOR?",
+        "text": "While exploring an abandoned building, you and your men find a decaying computer lab.  Suddenly, one of the screens lights up.\n\nA GIFT, it prints, FOR A FAVOR?",
         "choices": [
           {
             "id": "type-your-name",
@@ -147,7 +157,7 @@
     "entry": "start",
     "pages": {
       "start": {
-        "text": "You awaken to the sound of your men screaming!  A terminal has popped into existence right in the middle of your camp!\n\nOUR FAVOR IS DUE, it types out, and a pile of golden bits falls to the ground.",
+        "text": "You awaken to the sound of your men screaming!  A terminal has popped into existence right in the middle of your camp!\n\nOUR FAVOR IS DUE, it types out, as a pile of golden bits falls to the ground.",
         "choices": [
           {
             "id": "accept",
@@ -167,7 +177,7 @@
         ]
       },
       "bits": {
-        "text": "It must not understand what a favor actually is.  Weren't you supposed to pay *it* back?",
+        "text": "It must not understand what a favor actually is.  Weren't *you* supposed to pay *it* back?",
         "choices": [
           {
             "id": "leave",

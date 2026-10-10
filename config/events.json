@@ -1,7 +1,7 @@
 [
   {
     "id": "corrupted-shrine",
-    "name": "The Corrupted Shrine",
+    "name": "Suspicious Shrine",
     "entry": "start",
     "pages": {
       "start": {
@@ -9,7 +9,7 @@
         "choices": [
           {
             "id": "scoop-the-bowl",
-            "label": "Scoop the bowl",
+            "label": "Take the bits.",
             "outcomes": [
               {
                 "weight": 3,
@@ -21,7 +21,7 @@
           },
           {
             "id": "make-an-offering-10-bits",
-            "label": "Make an offering",
+            "label": "Make your own offering.",
             "condition": { "kind": "bitsAtLeast", "amount": 10 },
             "outcomes": [
               {
@@ -35,7 +35,7 @@
           },
           {
             "id": "pass-by",
-            "label": "Pass by",
+            "label": "Keep walking.",
             "outcomes": [{ "next": "nope" }]
           }
         ]
@@ -45,7 +45,7 @@
         "choices": [
           {
             "id": "stand-and-fight",
-            "label": "Stand and fight",
+            "label": "We can take them!",
             "outcomes": [
               {
                 "next": {
@@ -58,7 +58,7 @@
           },
           {
             "id": "scatter-and-run",
-            "label": "Scatter and run",
+            "label": "This is bad news.",
             "outcomes": [
               {
                 "effects": [{ "op": "damagePool", "amount": 3 }],
@@ -102,7 +102,7 @@
   },
   {
     "id": "whispering-terminal",
-    "name": "The Whispering Terminal",
+    "name": "The Haunted Terminal",
     "entry": "start",
     "pages": {
       "start": {
@@ -110,7 +110,7 @@
         "choices": [
           {
             "id": "type-your-name",
-            "label": "Type your name",
+            "label": "Try to input your name.",
             "outcomes": [
               {
                 "effects": [
@@ -123,7 +123,7 @@
           },
           {
             "id": "unplug-it",
-            "label": "Unplug it",
+            "label": "Shut it down.",
             "outcomes": [{ "next": "flee" }]
           }
         ]
@@ -152,7 +152,7 @@
   },
   {
     "id": "whispering-terminal-collects",
-    "name": "The Terminal Collects",
+    "name": "The Haunted Terminal, Part Two",
     "eligibility": [{ "kind": "flagSet", "flag": "whispering-terminal:answered" }],
     "entry": "start",
     "pages": {

@@ -10744,3 +10744,16 @@ offering's label changed at 118d-post, which may be its seventh. ✔ The daemon 
 rule sentences with a phrase of colour in a few ("tithes 2 bits from
 below", "Lace every blade"). Not read: itch's own guidelines, whose page
 stands behind a bot check the session did not go past.
+
+**The nine strings, rewritten** (the user, in the editor, the same day):
+the three names and seven choice labels, the offering's among them, ten
+strings in all ("Suspicious Shrine", "Take the bits.", "The Haunted
+Terminal", …). ✔ The diff against
+`1d6b042` now finds no player-facing string of the three unchanged. ✔ The
+choice ids stand, no page was added, so no stream moves; the outcome test
+holds and the extract is rebuilt (10 lines of `locales/en/events.json`).
+The frozen form the outcome test reads (`tests/event-outcomes-frozen.json`)
+keeps the old text, as a test's reference and nothing a player sees.
+
+**The AI line, agreed** (the user: "I'm good with it"), with one word
+still open: a more exact name for "interface text".

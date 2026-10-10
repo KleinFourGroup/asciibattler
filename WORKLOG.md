@@ -10548,3 +10548,32 @@ telling page before what ships. The outcome test says the two trees
 decide the same things at the same odds, and the ladder's read is of
 levels against each other on one tree, so the session's lean is that it
 stands without a rerun; said to the user with the hand-off.
+
+### 118e — THE READ (2026-10-10, the user's) ✅
+
+The reading at the read: **540,336** at 09:12 on 118d-post's commit,
+`ff1d811`.
+
+**Level 3 stays.** The user: "So bits basically had minimal effect. I
+guess I shouldn't be too surprised. Anecdotally, either I get Dis Pater,
+and I can afford literally anything, or I don't, and I can't afford much
+beyond a packet or two... I lean towards not changing anything, because I
+think that that's an appropriate place for an economy dial, and this is
+another area where we're sorely lacking data in how real people play it."
+The session agreed: the arm's port buys are worth little to it at the
+margin, so its flat row says more about the bot's shopping than a
+player's; a cut deep enough to move this arm would land on the run that
+is already poor; and the table is placeholders. It asked for two things
+on paper, and both are signed ("Signing both of those"): the exit
+amended and not called met (`round-8-spec.md` "Exit"; ROADMAP §118), and
+a watch in TODO with what reopens it.
+
+**The anecdote's mechanism.** ✔ Each earn is rounded on its own
+(`Run.test.ts` pins `Math.round` per gain), and by the §117 rider's
+arithmetic a 2-bit tithe at 0.75 is 1.5, which rounds back to 2. So the
+bits lever leaves Dis Pater's tithe whole and levels 3 to 5 skip the
+richest economy. The user: round the final award and not each kill, as a
+TODO and not before the itch release.
+
+**Level 0's two WARN:** no full board before `0.1.0` (the session's
+lean, signed with the rest).

@@ -325,6 +325,11 @@ that touch `src/run`, `src/config` or `tests/fuzz`.
 - The menu is the boot screen, and the dev entry points skip it.
 - Escalation 1–5: each level harder than the one before on paired
   same-seed board runs; Escalation off reproduces the signed sheet exactly.
+  *(Amended 2026-10-10, user-signed at §118's reads. Levels 1, 2, 4 and 5
+  meet "harder" on both board rows; level 3, bits −25%, read no harder on
+  the board's arm and is kept as an economy step until there is data on
+  how players spend. "Exactly" is met with the prior table the sheet was
+  measured under handed back to the arm. BALANCE 2026-10-10.)*
 - A player can download a run's journal, and it replays on its build.
 - The recorder writes clips of scenes, seeds, before/after pairs and full
   runs; its exit re-runs §110's instruments (the frame-rate probe, the

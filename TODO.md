@@ -575,6 +575,17 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   and the bits lever at 0.75 makes it 1.5, which rounds to 2. A bits
   lever under 0.75 makes the sentence false, so whoever retunes level 3
   at §118's board rereads it. By arithmetic, not by a run.
+- [ ] **Round a tithe's bits on the award, not on each kill** (the user,
+  2026-10-10, at 118e's read; after the itch release). Each earn is
+  rounded on its own, so the bits lever at 0.75 leaves a 2-bit tithe at 2
+  and Escalation 3 to 5 skip the richest economy. Rounding the total a
+  turn or a battle awards would let the lever reach it. A sim change: it
+  moves the board, and the daemon's sentence wants a look with it.
+- [ ] **WATCH: Escalation 3 (bits −25%) reads no harder on the board's
+  arm** (118e; BALANCE 2026-10-10). Kept by the user as an economy step:
+  the arm bought less and lost no depth, and how real players spend is
+  unknown. Reopen with exported journals (purchases a run, by level) and
+  with the item above.
 - [ ] **Two tabs changing two settings overwrite each other** (117d-post,
   call 1). `store.patch` stores the page's copy of a section with the
   change, so the second tab's write puts the first tab's setting back as

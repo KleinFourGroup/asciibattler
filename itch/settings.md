@@ -35,11 +35,16 @@ among them (mobile, scrollbars, the start, the status).
   keyboard, which the hotkeys need.
 - **Release status:** in development.
 
+## The cover
+
+[cover.png](cover.png), 630 × 500: the centre of a screenshot of a first
+turn on the isthmus, cut at its own pixels. A stand-in until there is a
+drawn one (the user, 2026-10-10).
+
 ## The user's to make
 
-The short description, the genre and tags, the cover image, the
-screenshots or a clip (`npm run record`, README "Recording clips"), the
-price.
+The short description, the genre and tags, the screenshots or a clip
+(`npm run record`, README "Recording clips"), the price.
 
 ## At each upload
 

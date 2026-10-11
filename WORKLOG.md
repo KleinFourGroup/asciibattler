@@ -10854,3 +10854,30 @@ re-open. So the order the session gave the user:
    page is opened.
 
 A finding ships as `0.1.1` (the kickoff's decision).
+
+### 118i — THE READ (2026-10-10, the user's) ✅, the push, and the cover
+
+"Smokes look to be passing, Claude! I've pushed as well. There's only
+one thing left: the cover image." Not said, and asked of the user for
+this entry: which browsers, whether the two reports were saved from the
+draft before the upload, which line the diagnostics row showed in each,
+what `graphics.renderer` reads in Firefox, and Electron's download.
+
+✔ The push, read from the remote (`git ls-remote`, `git status -sb`):
+`origin/main` is level with `main`, and `v0.1.0` is there, on
+`d6a834e`.
+
+**The cover** (`itch/cover.png`, 630 × 500, itch's cover size): the
+centre of the user's latest screenshot, as asked ("Eventually we'll make
+something more traditional, but until then, I'll let the game speak for
+itself"). The screenshot is 2316 × 1351, a starting battle on the
+isthmus, and the crop is cut at its own pixels from (843, 425) by
+ffmpeg's `crop=630:500`: the two sides' glyphs meeting at the middle of
+the land bridge, with their bars and level badges. The session also showed the user a second cut, the
+whole board scaled to the same size, and leaned to the first: at a
+thumbnail's size the scaled glyphs are specks.
+
+**What is left of the phase:** the user puts the cover on the page and
+opens it. Then 118j, the close, in a session of its own.
+
+The reading: **440,842** at 20:54 on 118h's docs commit, `25300d9`.

@@ -10881,3 +10881,31 @@ thumbnail's size the scaled glyphs are specks.
 opens it. Then 118j, the close, in a session of its own.
 
 The reading: **440,842** at 20:54 on 118h's docs commit, `25300d9`.
+
+### 118i — the smoke's answers, and the page OPEN (2026-10-10, the user's)
+
+"And with that, the game is live!" The page is open at `0.1.0`.
+
+The user's answers to what the read had not said:
+- **Browsers:** Firefox and Edge, both.
+- **The diagnostics row:** "Copied!" in both. So a copy leaves itch's
+  frame in both browsers. By which of the two ways is not known, since
+  the row says the same for the clipboard API and for the old command;
+  the session's note that Chromium would refuse the API there stays from
+  memory.
+- **`graphics.renderer` in Firefox:** "ANGLE (NVIDIA, NVIDIA GeForce GTX
+  980 Direct3D11 vs_5_0 ps_5_0), or similar". The machine's card is an RTX
+  4080 SUPER by Chromium's answer in the pane, so Firefox names a class
+  of card and not the card. The comment in `src/diagnostics/report.ts`
+  now says so, and the TODO rider that wanted players' cards from this
+  row has the limit.
+- **Electron's download:** worked.
+- **The two reports from the old draft, before the upload:** not saved.
+  So two of the smoke's lines were not read: the storage keys on itch's
+  shared origin that aren't ours, in Edge and a second time in Firefox,
+  and the days-later re-open of the draft left on 10-07. The diagnostics
+  build is no longer on the page, and the plain build lists no key but
+  its own. Carried for the close in TODO "§118 riders", with what would
+  read each.
+
+The reading: **453,667** at 21:25 on the cover's commit, `0d176de`.

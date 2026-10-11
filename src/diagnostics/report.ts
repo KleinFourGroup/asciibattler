@@ -162,9 +162,12 @@ const textOrNull = (value: unknown): string | null => (typeof value === 'string'
  * The graphics card, as the game's own context names it. RENDERER is asked
  * first, and the `WEBGL_debug_renderer_info` extension only where RENDERER
  * is Chromium's stand-in (read in the Browser pane, which is Chromium).
- * Firefox is from memory and not read here: it answers RENDERER with the
- * card, and logs a deprecation warning at a page that asks for the
- * extension, which is why the extension is not asked first.
+ * Firefox answers RENDERER itself, with a class of card and not the card:
+ * on a machine whose card is an RTX 4080 SUPER it read "ANGLE (NVIDIA,
+ * NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0), or similar" (the
+ * user, on itch, at 0.1.0). That Firefox logs a deprecation warning at a
+ * page that asks for the extension is from memory, and is why the
+ * extension is not asked first.
  */
 export function graphicsOf(gl: GlLike): GraphicsReading {
   const renderer = textOrNull(gl.getParameter(gl.RENDERER));

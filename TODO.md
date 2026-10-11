@@ -631,7 +631,10 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   a 4K laptop with integrated graphics is the bad case. Left for data, the
   user's call at the kickoff: the user's GPU can't show it, and a cap
   changes the glyphs' look. Players' reports (window, ratio, GPU) would
-  come by the "Copy diagnostics" row ("§116 riders").
+  come by the "Copy diagnostics" row ("§116 riders"). In Firefox that
+  row names a class of card and not the card (118i: a GTX 980 "or
+  similar" on a 4080 SUPER), so it tells an integrated chip from a
+  discrete card at best.
 - [ ] **At 150 % text a 720p window breaks down, and the layout wants a
   rework** (the user, reading 117.5d's mock, 2026-10-09: "things really
   start to break down by 150%; at some point, we'll need to rework
@@ -689,3 +692,11 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   and its journal among everything else. The itch page says so. A row
   that exports the run in progress would be the smaller file; unchecked:
   whether `npm run replay` takes a journal whose last segment is open.
+- [ ] **Two lines of the smoke were not read** (118i): the storage keys
+  visible from our frame on itch's shared origin that aren't ours (read
+  once, in Firefox, at 116l; never in Edge), and the days-later re-open.
+  The diagnostics build that listed the keys left the page at the
+  `0.1.0` upload. What would read them: the browser's own storage
+  inspector on the frame, or a diagnostics zip on a second draft; and for
+  the re-open, the live page itself after some days, where Copy
+  diagnostics shows the store's sections still there.

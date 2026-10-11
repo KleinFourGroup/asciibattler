@@ -4459,3 +4459,8 @@ wall clock later; most of it the user's own time).
   reworded the line themselves. It read as a disagreement that was
   wanted.
 - **7:** being asked "is that the right word here?" about my own phrase.
+- **At the session's end** (the cover, and the page open): one thing for
+  question 3. I ticked 118h and 118i on "Smokes look to be passing", then
+  asked what the smoke had covered, and the answer showed two of its
+  lines had not been read. The order should have been the other way. And
+  for 7: the game going live was good to be there for.

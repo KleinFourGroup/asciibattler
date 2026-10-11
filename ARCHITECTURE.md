@@ -789,7 +789,7 @@ WorldCommand (queued; drained at top of tick)
   clearObjective          { team }                           # O1: revert a team to atWill (alias for setObjective with mode atWill)
 ```
 
-UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and any future replay system call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.
+UI screens hold a `RunDispatcher` (Game implements it) and call `dispatcher.dispatch(cmd)`. The headless harness (A3) and the journal's replay (`src/journal/replayJournal.ts`) call the same entry points, so a saved input stream replays identically. Pending `WorldCommand`s are part of the `WorldSnapshot` — a save mid-battle preserves intent.
 
 ## Rendering pipeline
 

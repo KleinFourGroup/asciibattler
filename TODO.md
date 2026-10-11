@@ -320,7 +320,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 - [ ] **The survivors end sequence, unexercised live.** The shipped rule is casualties, so the one-orb-per-standing-enemy sequence (`HUD.runEndSequence`, the 120 ms stagger) has only its model pins (`chipRule.test` Σ = `turnCharges`) and the shared `deliver` path; a browser read needs `health.chipMode: survivors` (a config flip + a battle). Do it before any survivors-rule playtest.
 - [x] **The reduced-motion path, unverified.** ✅ §99 (2026-09-16): the read found the shake NOT gated (the reduced branch still ran `shakeView` — fixed at 99a, the gate now on the effect itself); the whole surface is read in the user's Firefox through the Ctrl+Alt+A override (no orb flight, no shake, no notch breathing, the 99b/99c/99d forms). The one leg not exercised live is the OS query itself (`matchMedia` at boot + its `change` listener, `motion.ts`) — a one-minute check with Windows' "Animation effects" off, whenever convenient; the resolution rule is pinned either way.
-- [ ] **A settings toggle for the shake policy** (`lossFx.ts` SHAKE POLICY: `player` ships, `enemy` the user's A/B hypothesis; Ctrl+Alt+K cycles it dev-only) — Round 8's settings surface, with the fraction-vs-absolute question if flat ever feels dull.
+- [x] **A settings toggle for the shake policy** ✅ §116 (116b, 116d; 2026-10-04): the Shake row in Settings (`lossFx.ts`, `SettingsOverlay.ts`). Still open if flat ever feels dull: the fraction-vs-absolute question.
 - [x] **The encounter's LAST turn's fallen rows** have no screen since 96.5d (the pre-turn strip shows the previous turn; a won encounter goes to the reward flow) — §102's run-end stats is the home; if the wait bites in a playtest, a one-line strip on the reward screen is the cheap interim. ✅ 2026-09-18 — §102d: the per-encounter rows + per-turn tooltips carry every turn, the last included. WORKLOG §102d.
 - [x] **The strip's two `title=` hovers** (the glyph run's names, the loss's rule wording) — ✅ 97d (2026-09-14): both are `attachTooltip` text sites, one fallen per line, Tab-reachable (WORKLOG §97d).
 
@@ -606,10 +606,9 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   `index.html` and comes down as the first screen mounts, with a
   `<noscript>` line (DESIGN "The loading line"; WORKLOG §117.5h). A boot
   that fails takes it down with the failure plate (117.5i).
-- [ ] **The itch embed is 1280×720, the smallest supported window**
-  (decided at 117.5c's read, 2026-10-09, with itch's fullscreen button for
-  a 768-row laptop; DESIGN names the window since 117.5e). Home: §118, for
-  the page's setting.
+- [x] **The itch embed is 1280×720, the smallest supported window** ✅
+  118g (2026-10-10): `itch/settings.md` sets the embed and turns itch's
+  fullscreen button on (decided at 117.5c's read).
 - [ ] **A smaller window than 1280×720** (1024×576 first): a future goal,
   the user's call at 117.5c's read, and "closer to a full round" than a
   step. What stands in the way is the item below and the left column over

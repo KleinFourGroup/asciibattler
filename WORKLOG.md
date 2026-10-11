@@ -10909,3 +10909,222 @@ The user's answers to what the read had not said:
   read each.
 
 The reading: **453,667** at 21:25 on the cover's commit, `0d176de`.
+
+### 118j — the round close (2026-10-11, session 43a4908d)
+
+**The close's cut,** signed by the user at the session's start ("fully
+signed, with the two items carried"): C0 the pre-flight and the exits; C2
+the efficacy read; C3 the welfare read, its packet built before C1 so the
+user reads it while the sweeps run; C1 the macro re-audit; C4 the trials
+and the standing decisions; C5 the scratchpad sweep and the papercut
+triage; C6 the archive and the Cursor. C3 to C6 are stops. The two unread
+lines of the smoke stay carried (TODO "§118 riders").
+
+**The channel's first numbers** (the user's, about eleven hours after the
+page opened): 362 impressions, 6 plays.
+
+Readings: **103,272** at 08:23 after HANDOFF, the cut and
+`process/planning.md`; **138,625** at 08:24 at the shape-lock; **310,315**
+at 08:43 with the packet built and read; **394,800** at 08:58 with the
+three sweeps back and their main claims re-read.
+
+#### C0 — the pre-flight and the exits
+
+Pre-flight at `631e24d`: typecheck clean, `npm test` 3678 of 3678 in 252
+files. The two oracles the round's exit names, run on their own
+(`tests/chaos`, `tests/integration/continuation.test.ts`): 19 of 19. The
+whole-run probe (`npm run probe -- shell/electron/probes/drive-run.js
+--seed=7`) ends on log hash `a59ee48f`, the Cursor's, so 118d's rewrite
+did not move that seed.
+
+**§118's exit.** The channel is open, by the user's word on 2026-10-10.
+Escalation off reproduces the signed sheet: 25 batches and 855 files
+byte-identical under the v4 prior table (118b). Each level harder than the
+one before, as amended on 2026-10-10: met by levels 1, 2, 4 and 5, with
+level 3 kept as an economy step (118e).
+
+**Round 8's exit** (META-ROADMAP), clause by clause. The item-by-item
+check of the charter's scope was a read-only sweep (C1's third); every
+line here that names a file was re-read by this session.
+
+- *A run saved at any gate reloads byte-faithfully.*
+  `tests/integration/resume-gates.test.ts` holds a table that is total
+  over the eleven phases a run is saved at, and asserts each was compared
+  at least once; the continuation check and the chaos driver are green.
+  The chaos driver's every-commit seeds do not reach every gate: on the
+  four seeds at HEAD, `dismissSectorCleared` is sent 5 times and changes
+  the run 0 times, and eight of the 21 command kinds never change it (the
+  five port trades, `usePacket`, `redrawCards`, `dismissSectorCleared`).
+  The test pins kinds sent, and §115c recorded that as "the instrument's
+  known weak spot"; it is restated here because Round 8.5's charter leans
+  on the driver (C1).
+- *Settings persist across reloads:* `src/settings/settings.test.ts`, and
+  the user's reads at 116d and 116l.
+- *The menu is the boot screen:* `src/scenes/menuRules.ts`, read at 116c.
+- *The public web channel is open:* above. The page's address is kept out
+  of the repo.
+
+**The scope, against the charter.** Built as chartered or with a recorded
+change, with these to carry into META-ROADMAP at C6:
+
+- Per-speed enable and the focus-tile switch were struck by the spec (D8)
+  and are still in the charter's text.
+- The locale is a stored field and a boot seam with no row in Settings;
+  the row comes with a second locale (the §116 audit's call 6). ROADMAP's
+  outcome did not say so.
+- The menu's achievements row went to Round 11 with its content (the
+  spec).
+- Edge stood in for Chrome, Safari is Round 12's, and two lines of the
+  smoke are carried.
+- The spec's D4 says the continuation check uses the journal's seam. It
+  does not (the §115 audit's call 5); the journal's own check across a
+  load is `tests/integration/journal-across-loads.test.ts`.
+- Achievements and seen-flags, two of the store's four consumers, are a
+  comment in `store.ts` and one field, `creditsSeen`: a seam, with no
+  design beyond it.
+- The scope guards held: no achievement or tutorial content, no unlock
+  mapping, no music (`volumeMusic` is stored with no control).
+- Outside the charter, each signed by the user as it came: §117.5,
+  §117.75 (Run v49), the three events' rewrite (118d), the credits (116j).
+
+**Doc lines the round had made false,** fixed with this entry:
+ARCHITECTURE's "any future replay system" (the journal's replay is that
+system); TODO's open boxes for the shake toggle (116b, 116d) and the itch
+embed (118g); DESIGN's "placeholders until the round's board has read
+them" (118e read them). META-ROADMAP's lines that still give the credits
+to Round 11 wait for C6.
+
+#### C2 — the efficacy read (the third; Round 8, 2026-09-27 → 10-10)
+
+**The instruments.** `npm run friction-scan -- --since=2026-09-27
+--exclude=43a4908d`; `npm run phase-stats -- --since=110`; commit types
+counted from `git log 35f28e3..HEAD`. Known answer: the scan found 32
+sessions, 31 of them the entries in `retro/sessions.md` from fd8a07e9 on;
+the 32nd, 673e62cc, is the context meter's diagnostics session (2 turns, 28
+tool calls, no report). The first two, fd8a07e9 and d125aee5, are the 7.5
+close's and are left out of the table. `phase-stats` is not quotable for
+this round: under `--since` it keeps whole-number phases only, so §117.5's
+14 commits are missing and §117.75's 4 are folded into §117, and §115 and
+§116 read 4 and 19 because most of their subjects carry a scope word
+(`save`, `settings`, `menu`) where the step would be. Its table shows 135
+commits and git has 196 (a papercut, and a TODO).
+
+| | Round 8 | Round 7.5 |
+|---|---|---|
+| phases · commits | 11 (§110–§118, with §117.5 and §117.75) · 196 (`c79d542` → `631e24d`) | 5 and the tone audit · 71 |
+| commits by type | 105 docs · 72 feat · 9 fix · 5 test · 2 chore · 2 balance · 1 refactor | not counted then |
+| `fix(` commits | 9: six `-post`s (113f-post from a `batch` read; 116c-post, 116g-post and 116l-post from stops; 116j-post and 117d-post from the user's answers at a read), two from the session's own step zero or analyzer (`6e3c4e4`, `2168bf2`), one from the user's question about the dev server's cold start (`b105787`) | 5 |
+| sessions · the user's turns · tool calls | 30 · 155 · 7,422 | 12 · 71 · 2,452 |
+| flagged tool errors · denials | 81 (1.1 %, a floor) · 2 | 18 (0.7 %) · 0 |
+| silent-turn reminders | 434, one wording (the default) | 95 |
+| output tokens | ≈ 6.26 M | ≈ 2.05 M |
+| tests | 3105 → 3678 | 3006 → 3105 |
+
+A session of this round made 247 tool calls over 5.2 turns of the user's
+and met 14.5 reminders; a session of 7.5 made 204 over 5.9 and met 7.9. So
+the stretches between the user's turns are longer, 48 calls a turn against
+35, and the reminders follow the stretches.
+
+**The `batch` reads, recounted** (asked for at the 7.5 close, C4). From
+ROADMAP's cut lines, by a script: 44 `none`, 19 `batch`, 22 `stop` (118j
+among them, open), and four inserted steps with no read named (114g-post,
+116c-post, 118d-post, and 117.5g, dropped). Round 7.5 had 7 `batch` and 11
+stops. Four `-post`s came from `batch` reads: 113f-post (the build ID's
+label on a long-running dev server, one commit), 116i-post and 116j-post
+(two answers of the user's at the four reads, one commit each) and
+118d-post (the user's edits to the three events). None reopened a later
+commit. 118d-post is the nearest: it added a page after cohort 2 had been
+measured, so the ladder was measured one telling page before what ships,
+and the user signed no rerun. The rollback (a `batch` finding that reopens
+two or more later commits) did not fire; the §117.5 and §117.75 closes say
+the same of their phases. Most `batch` reads were taken ahead of the stop
+they were cut for: 116g-post, 116h, 116i and 116j the morning after they
+were built, 116i-post "within the quarter hour", §117.5's five at one
+sitting.
+
+**The pane probe kit's three criteria** (META-ROADMAP §Round 8,
+pre-registered 2026-09-26), over the 25 sessions that start after
+ab584af9, the one that built the kit. The verdict is C4's.
+
+1. *Papercuts from a covered trap: at most 1.* Two, both at the kit's
+   edge. #161: the pane said 1280×720 and the page read 480×270, then 0×0;
+   the kit's check saw it and nothing cured it. #121: the pane's zoom
+   returns the whole screenshot, and the thing to read was a 9px glyph in
+   the DOM, which `pixels()` does not crop. A third is adjacent: #130, a
+   hidden pane holding a fade at its first frame, which is a stale view of
+   the DOM and not of the canvas `frame()` renders. Read strictly, the
+   line is passed by one. Round 7.5 filed 5 in 12 sessions.
+2. *Adoption: every session that drives the pane calls the kit.* 16
+   sessions drove the pane and 14 called the kit (519 pane calls, 171 of
+   them the kit's). The two that did not: 592aa296 (27 pane calls, on the
+   production and diagnostics builds, where the kit does not exist) and
+   8473063c (8, on a local mock page and a picture). That is from their
+   reports; their transcripts were not opened.
+3. *Question 4 naming a covered trap: at most 1.* One: fc750343, "The
+   kit's 0×0 trap fired once on a pane reload and cost one call, as
+   designed." 1a3aa804's answer 4 names the stale faded panes, #130's
+   trap.
+
+Beside the criteria: 19 of the 25 sessions used the Electron runner (91
+launches), and the measurements a hidden pane cannot make moved to it
+inside the round (116k's survey, §117.5's plates). The pane's papercuts
+after the kit are eleven in 25 sessions (#84, #85, #108, #114, #119, #121,
+#122, #130, #157, #161, #173); nine are traps the kit never claimed (a
+second tab taking the run lock, a module's second instance, a tab keeping
+a failed font, the pane's own storage quota, no route from the page to a
+file).
+
+**The context numbers** (for C4's reset of the hand-off line; the figures
+are the Cursor's, as earlier sessions recorded them, and were not
+recounted here). The fourteen sessions whose last reading the Cursor
+holds ended between 453,667 and 561,587. None reached the halt, and one
+passed the line: 8473063c, which started 117.5h at 533k and reached the
+line at 550,669. Thirty-one steps or stretches have a cost there, from
+17k (117.5b) to about 380k (116g's second stretch): nine under 60k, eleven
+from 60k to 130k, eleven over, the middle one about 77k. So there is no
+one step's cost to take from the halt, which is what the user predicted on
+2026-10-02 (WORKLOG "The context rule, replaced").
+
+**What the reports say about the pipeline** (the session's reading of
+answers 1, 4 and 5 of the 29 reports and of the 95 papercuts; the entries
+are the evidence).
+
+- **Orientation holds.** 20 of the 29 reports open answer 1 with "little"
+  or "nothing", and the other nine name a code fact or one gap. The gap
+  that recurs is a tool, not a doc: something built in one session's
+  scratch directory and gone for the next (the `dist/` hash script,
+  written three times before `npm run dist:hash`; §111's display harness;
+  the patch helpers; the probe runners). From §117.5 on the phases' probes
+  went to `scratch/<step>/` in the repo, ignored by git, which outlives
+  the session.
+- **Step zero and the kickoff audit moved the plan in every build phase:**
+  the AAC priming frame (§111), three holes in the kit's core (§112), the
+  Node 25 `typeof` rule (§113), a battle's place among its ticks as part
+  of a run's state (§114), `fromJSON` resetting four dials under a green
+  round trip (§115), 116g's "must fail" answer overturned (§116), the
+  spec's reason for saving the level no longer holding (§117), three
+  measurements against what the docs said (§117.5), a rest being no event
+  (§117.75, gotcha #141), and the sheet's rows measured under the prior
+  table before the committed one (§118).
+- **The over-claim shape is the one Rounds 7 and 7.5 found:** labels,
+  counts and absences in drafts, most caught on a re-read before the
+  commit. Some reached the user (call 10's "a wider bump" at the §115
+  shape-lock, the desk report at 114f, and in this session the packet's
+  length). The user asking for a call to be elaborated changed what was
+  signed at the §115, §116 and §117 shape-locks.
+- **Where the friction is, by entries filed.** The silent-turn reminder:
+  21 papercuts and one `distress` entry, and three of them say a status
+  line before a read-only sweep did not head it off (#109, #168, #175),
+  which is what CLAUDE.md says it does. The shell rule: 14 entries from 14
+  sessions. Ten are code or a patch script sent through a heredoc or an
+  inline `-e` against the rule, each time "out of habit" or "for speed" by
+  the entry's own account, and four are long prose entries through a
+  quoted heredoc, which the rule allows and Git Bash refused each time
+  with an unmatched quote, cause not found (#81, #105, #115, #141). The
+  probe runner's edges: six (one function to a script, the report's shape,
+  JSON on the command line, a build at each launch, `until:
+  'turn-outcome'` never stopping, the proof of DEV by a chunk's name).
+- **Reading costs more than building.** Fourteen reports' answer 4 names
+  a file read whole or a result printed whole, and the dearest steps were
+  mostly reading and measuring by their own accounts (116c 251k, 116k's
+  step zero 182k, 117.5i 288k).

@@ -15,7 +15,7 @@ with its worklog and spec beside it; before it
 **Status: ROUND 8 (FOUNDATIONS) ✅ CLOSED 2026-10-11**, eleven phases
 (§110–§118, with §117.5 and §117.75 inserted), each closed on the user's
 read; this file is archived as `archive/post-109-roadmap.md`. The close's
-last step, C6, is that archive, and its read is the user's (◐ below).
+last step, C6, is that archive, read and signed by the user the same day.
 The round was spike-first,
 then spec, as 7.5 was: [round-8-spec.md](round-8-spec.md) is written over
 the spike's answers and signed, and §111–§118 below are its build phases,
@@ -323,4 +323,4 @@ The cut, signed 2026-10-09. The usual box (`cpx42`, 8 cores) for both cohorts.
 - [x] **C0, C2** — the pre-flight and the exits, clause by clause; the efficacy read. ✅ 2026-10-11, `21e55cb`: the exits met, with what the charter says and the round did not build listed for META-ROADMAP.
 - [x] **C1** — the macro re-audit: Round 8.5's charter against the code, and what Round 8 hands to Rounds 9 to 12. Read `stop`. ✅ READ 2026-10-11, five calls answered: 8.5 is next and opens with an oracle map, the save format may bump, a TODO pass, the Pages site retired (`571da61`, `cb0cb3f`).
 - [x] **C3–C5** — the welfare read (the user's) · the trials and the standing decisions · the scratchpad sweep and the papercut triage. Read `stop`. ✅ READ 2026-10-11, every call signed: the reads doctrine and the probe kit kept, the context numbers kept, the standing decisions revised, the Shell rule retired to a list of facts (`f0e3f15`).
-- [ ] **C6** ◐ built 2026-10-11, the read is the user's — the archive (`post-109-*` and the spec), Round 8.5 opened at §119 with its charter only, the Cursor. Read `stop`. WORKLOG "118j — the round close", C6.
+- [x] **C6** ✅ READ 2026-10-11 (the user: "Signing everything"; built at `7c207bf`) — the archive (`post-109-*` and the spec), Round 8.5 opened at §119 with its charter only, the Cursor. Read `stop`. WORKLOG "118j — the round close", C6.

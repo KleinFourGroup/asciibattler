@@ -4583,6 +4583,13 @@ session goes on.
    round that begins by asking what would prove it wrong is one I would
    like to see run.
 
+**Addendum, at C6's read** (the same session, half an hour later). The
+user signed the report whole. To question 3: the stop's report listed five
+calls and the worklog entry seven; one of the two it left out was told in
+its first line, and the other, two facts added to the Cursor's "In
+flight" line, was in the commit only. I found that writing the read's
+entry and told the user with it. Nothing to add to the others.
+
 ### §118 and the Round 8 close — the phase summary (2026-10-09 → 10-11; four sessions)
 
 Sessions 14b2f59d (the kickoff, 118a to 118e with both cohorts and their

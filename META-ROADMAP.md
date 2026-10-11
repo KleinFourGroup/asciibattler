@@ -403,7 +403,7 @@ so the next `.5` is a line written at a close, not a surprise at a kickoff.
 
 ---
 
-## Round 8 — Foundations ✅ CLOSED 2026-10-11
+## Round 8 — Foundations ✅ CLOSED 2026-10-11 (every phase user-signed)
 
 _(Re-audited 2026-09-26 at the Round 7.5 close's macro re-audit,
 user-signed: the camera row struck, the run journal added, three storage
@@ -563,9 +563,8 @@ boot screen; the public web channel is open.
 consumer seams only); no unlock content mapping; no music.
 
 **CLOSED 2026-10-11** — eleven phases (§110–§118, with §117.5 the UI
-sweep and §117.75 the rest gate inserted), each closed on the user's read;
-the close's last step, the archive, awaits its read as this is written.
-The exit met, clause by clause (the close's C0): a run saved at any gate
+sweep and §117.75 the rest gate inserted), each closed on the user's read,
+the close's last step included. The exit met, clause by clause (the close's C0): a run saved at any gate
 reloads byte-faithfully (`tests/integration/resume-gates.test.ts`, total
 over the eleven phases a run is saved at; the continuation check and the
 chaos driver green on every `npm test`); settings persist across reloads

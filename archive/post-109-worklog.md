@@ -11473,7 +11473,7 @@ Readings: **405,242** at 09:46 on C1's commit, `571da61`; **476,071** at
 10:47 on the commit of C3 to C5, `f0e3f15`; **491,745** at 10:50 before
 this entry's commit.
 
-#### C6 — the archive and the Cursor (2026-10-11, session 2f60034b) — ◐ built, the read is the user's
+#### C6 — the archive and the Cursor (2026-10-11, session 2f60034b) — READ ✅
 
 A fresh session. Pre-flight at `cb0cb3f`: typecheck clean, `npm test` 3678
 of 3678 in 252 files.
@@ -11560,3 +11560,22 @@ Readings: **105,225** at 11:16 after HANDOFF, the close's entries and
 `process/planning.md`; **293,930** at 11:27 with the archive moved, the
 links re-pointed and the stubs written; **329,977** at 11:33 before this
 entry's commit.
+
+**The read** (the user, 2026-10-11, on the stop's report): "Signing
+everything, Claude! That looks great to me!" That covers the five calls
+the report listed (BALANCE's refs and the code's left; §119's charter and
+the decision point this session added to it; the spec first at the 8.5
+kickoff; the Cursor's per-phase lines moved to the closed-rounds
+paragraph and its history of readings dropped; the dead links as a TODO
+rider) and the report's lean that the kickoff start in a fresh session.
+The entry's call 5, the round marked CLOSED with C6's box open, was the
+report's first line, and this read resolves it. Its call 6, the two facts
+added to the Cursor's "In flight" line, was in the commit and not in the
+report, so the signature does not cover it; the user is told with this
+commit. With the read,
+C6's box is ticked, META-ROADMAP's heading says every phase is
+user-signed, and the Cursor has no open ◐. **ROUND 8 (FOUNDATIONS) IS
+CLOSED.**
+
+Readings: **333,020** at 11:34 on C6's commit, `7c207bf`; **337,767** at
+12:03 before the commit that records the read.

@@ -4441,3 +4441,21 @@ addendum follows if it goes on.
    the real one, and whose behaviour then showed up as predicted in the
    pane on four planted builds. Whether the row's wording or the page
    reads well to the user is a separate matter and not known yet.
+
+**Addendum, at 118h's hand-back** (the same session, some eight hours of
+wall clock later; most of it the user's own time).
+
+- **2, again:** resolved by how the stretch went. The user took the long
+  first answer without remark and worked the stop in four short turns,
+  writing most of the page's edits themselves.
+- **3:** one more. I had read "the keys that aren't ours" on the smoke's
+  line as keyboard keys, and had the smoke's list half-written that way
+  before the spec's sentence showed they are storage keys. Nothing had
+  been told to the user yet.
+- **4:** itch's guidelines stood behind a bot check, so the AI form's
+  categories were argued from search snippets.
+- **6:** the user asked to be pushed back on about the AI line and I did,
+  on the sounds and the nine event strings; they rewrote the strings and
+  reworded the line themselves. It read as a disagreement that was
+  wanted.
+- **7:** being asked "is that the right word here?" about my own phrase.

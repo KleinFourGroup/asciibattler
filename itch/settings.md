@@ -28,7 +28,6 @@ among them (mobile, scrollbars, the start, the status).
   are code assistance, and the page's own AI Disclosure section says so).
 - **Visibility:** a draft until the browser smoke has passed; the user
   opens it after.
-
 - **Mobile friendly:** off. The game needs 1280 × 720 and a mouse.
 - **Scrollbars:** off. A screen taller than the frame scrolls inside
   itself.

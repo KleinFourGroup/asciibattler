@@ -10798,3 +10798,59 @@ not fit) and "an enemy unit" for the Engage click, and signed: "signing
 everything!" That is the page's text, the session's edits to it, and the
 form's rows, the four suggested ones with the rest. `itch/settings.md`
 now holds them as decided, with the option names still from memory.
+
+### 118h — `0.1.0`, the tag and the plain zip (2026-10-10, session f677c6ff) — the upload is the user's
+
+Readings: **409,629** at 20:47 on the commit that signed 118g
+(`6b905d8`); **415,057** at 20:48 on the version's commit, `d6a834e`;
+**431,916** at 20:51 before these docs.
+
+✔ `npm version 0.1.0 --no-git-tag-version` changed `package.json` and
+the lock file. The commit and the tag were then made by hand, so the
+commit carries the house's message and trailer: `d6a834e`, and the
+annotated tag `v0.1.0` on it, as npm's own would be. The spec's rule is
+that every upload has a tag, and this one has. Neither is pushed.
+
+✔ `node scripts/itch-zip.mjs` on the clean tree at the tag:
+`output/itch/asciibattler-0.1.0_d6a834e.zip`, build ID `0.1.0+d6a834e`,
+32 entries, 1,248,410 bytes, the build's hash `63a96b6a…c4a57017`, no
+diagnostics panel; the script's check of the zip against the build run a
+second time by `--check`, exit 0.
+
+✔ In the pane (Chromium), the copy under `output/itch/current`: the menu
+is up and shows `0.1.0+d6a834e`, `<html data-build>` the same, both
+fonts loaded, no plate, no `diag` tab, no dev handle, the watch first of
+the page's scripts, and Copy diagnostics reports that build. The pane's
+console held twelve cache errors on the sounds' preloads, each file also
+loading; the same kind of line stood in the console on the dist build
+earlier in the session. Not chased, and whether a build from before
+this session shows them was not read: sound is on the smoke's list.
+
+### 118i — the smoke, prepared (2026-10-10, session f677c6ff) — the `stop` is the user's
+
+**"The keys that aren't ours" are storage keys,** not keyboard keys
+(`round-8-spec.md`, "The web store is best-effort": the keys visible from
+our frame on itch's shared origin). The plain build cannot list them:
+Copy diagnostics tells the game's own sections and no more. The draft
+still holds the diagnostics build uploaded on 2026-10-07, whose panel
+does list them, and opening that draft today is also the days-later
+re-open. So the order the session gave the user:
+
+1. *Before the upload,* on the draft as it stands, in Firefox and then in
+   Edge: does the game still have what was left there on 10-07 (the
+   settings, a run to continue); the `diag` tab's report saved as a file
+   from each, which holds the keys that aren't ours, the lock, and Edge's
+   first reading of the frame.
+2. *The upload:* the zip above, the form by `itch/settings.md`, the text
+   of `itch/page.md`.
+3. *After it,* in both: the build ID in the menu's corner; a click in the
+   frame, then the hotkeys, and Esc with a modal open, in the frame and in
+   itch's fullscreen; a run started, the tab closed in it, Continue; Copy
+   diagnostics pasted (which line the row showed, and `graphics.renderer`
+   in Firefox); Export everything in the run and Export run at its end;
+   that the sounds play.
+4. *Electron:* a download from its window (`npm run shell`).
+5. Then the push, so the repo the page links to holds `v0.1.0`, and the
+   page is opened.
+
+A finding ships as `0.1.1` (the kickoff's decision).

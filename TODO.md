@@ -382,7 +382,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   (Housekeeping)**, per file in the deletion pass's touch (META-ROADMAP
   §Round 8.5, signed 2026-09-27). The first timing, after 106e and before
   the first build phase, lapsed when §107–§109 edited the render files.
-  `archive/post-104-worklog.md` "The new-model tone audit".
+  `archive/post-104-worklog.md` "The new-model tone audit". The aim is
+  wider since the 8.5 kickoff (2026-10-11, user-signed): the comments'
+  length, with the codes as the part that can be counted
+  (`round-8.5-spec.md`, D4).
 
 ## §108 riders (stop 2, 2026-09-25)
 

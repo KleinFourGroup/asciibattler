@@ -1,12 +1,14 @@
 # Round 8.5 Spec — Housekeeping
 
-**Status: DRAFT, opened 2026-10-11 at the kickoff. Unsigned.** The intent
-and the candidates below are the user's, verbatim. The process, the bar a
-kept change has to clear and an amendment to the charter were proposed by
-the session the same day and are with the user
-([WORKLOG.md](WORKLOG.md) "Kickoff — Round 8.5"); this file gains them as
-they are answered. The charter is [META-ROADMAP.md](META-ROADMAP.md)
-§"Round 8.5 — Housekeeping"; the plan is [ROADMAP.md](ROADMAP.md).
+**Status: the intent and the kickoff's four calls SIGNED 2026-10-11**
+("Yes to all four calls, Claude! Fully signed!"). The intent and the
+candidates are the user's, verbatim. D1 to D4 are the session's wording of
+what was signed, and the user reads this file as a whole at §119's
+shape-lock. Open: the cold-read probe, and §119's own decisions (below).
+The charter is [META-ROADMAP.md](META-ROADMAP.md) §"Round 8.5 —
+Housekeeping", amended the same day; the record is
+[WORKLOG.md](WORKLOG.md) "Kickoff — Round 8.5"; the plan is
+[ROADMAP.md](ROADMAP.md).
 
 ## Intent (the user's words, 2026-10-11)
 
@@ -62,13 +64,70 @@ a board protocol, a test that varies it, a dev workflow the user uses);
 "might be useful someday" does not count; each dial's fate still goes to
 the user at the census.
 
-## Marked uncertainty
+## Signed at the kickoff (2026-10-11)
 
-- "I don't know what a more concrete list of criteria and a better process
-  might look like here, and would love your thoughts." The session's
-  answer is a proposal, not yet signed (WORKLOG "Kickoff — Round 8.5").
-- The candidate list is not exhaustive.
-- The round's size is known only after the census (META-ROADMAP).
+The user asked what better criteria and a better process would look like
+("I don't know what a more concrete list of criteria and a better process
+might look like here, and would love your thoughts"). The session proposed
+these four and the user signed them.
+
+**D1. Two tracks.** What divides them is whether a search can answer "is
+this dead?" before the code is touched.
+
+- *Track A, what a search can prove:* comments, dials with no consumer,
+  unused exports, tests of removed code, exact duplicates. The census
+  lists each with its evidence, the user signs the list, and it is deleted
+  in batches under byte identity.
+- *Track B, what has to be tried:* unifying, merging, splitting. Whether
+  one of these is simpler can be judged only from the result, so it runs
+  as the user's loop, with three changes. A profile replaces the skim: the
+  files are ranked by size, churn, fix commits, gotcha references and
+  special-case sites, and read from the top, with the candidates written
+  down, because a session does not keep a skim. The bar (D2) is written
+  before the trial, because the session judges its own work. The loop is
+  bounded: after a subsystem's phase, one re-skim of that subsystem for
+  what the changes exposed, ending when a pass finds nothing over the bar
+  or at a budget the user sets once the census has sizes.
+- Within a subsystem, deletion goes before reshaping, since a deletion can
+  remove one half of a pair that would have been unified.
+- Fragile code that can be fixed only by changing behaviour is listed and
+  goes to TODO or a later round.
+
+**D2. The bar for a kept trial.** All four:
+
+1. the same behaviour, by a named oracle;
+2. source lines do not grow;
+3. no parameter that exists only to tell the former halves apart (if it
+   needs one, they were not duplicates);
+4. at least one thing a reader had to know is gone: a special case (its
+   sites counted before and after), a type, a file, a config key, a
+   gotcha, a doc paragraph, or a file from the set one edits to add a
+   unit, a status, a command or a knob.
+
+A trial under the bar is reverted and recorded as a no-op.
+
+**D3. The charter, amended.** Reshaping is let in, by trial only. No
+behaviour change, no new abstraction, no balance number moved, and the
+permanent gates never relaxed: all four stay. "Byte-identical" gains a
+second form, for a change that renames what is stored: identical after a
+declared mapping back to the old names. §119 builds two more proofs: that
+mapping, and parsed-config equality for a config move.
+
+**D4. The comment pass aims at length.** The step codes are the part of it
+that can be counted. The oracle is the one the charter names: a
+comment-stripped before/after diff with a failing control.
+
+## Open
+
+- **The cold-read probe.** None of D2's counts measures "approachable"
+  directly. The session's idea: a fresh agent given the same few
+  find-and-extend tasks on the code before and after. The user asked to
+  talk it through (2026-10-11); nothing is signed.
+- **§119's decisions:** the tool-only replay flag, which reverses §114's
+  choice; whether the journal corpus is tracked or re-recorded from its
+  seeds; the chaos census's other eight command kinds.
+- The candidate list is not exhaustive, and the round's size is known only
+  after the census.
 
 ## Settled before the kickoff
 
@@ -77,14 +136,3 @@ more than once; the oracle map comes first; a TODO pass; the Pages site
 retired): [archive/post-109-worklog.md](archive/post-109-worklog.md) "118j
 — the round close", C1. Nothing has come from the itch page (the user,
 2026-10-11).
-
-## Pending the user's answer
-
-- The process: what is signed as a list before it is deleted, and what is
-  tried and then judged.
-- The bar a tried change has to clear to be kept.
-- Whether the charter's "a deletion round, not a refactor" is amended to
-  let re-shaping in (unifying, merging, splitting), and what "the same
-  behaviour" means for a change that renames what is stored.
-- Whether the comment pass aims at the step codes or at the comments'
-  length.

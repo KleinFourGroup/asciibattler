@@ -11,7 +11,10 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: AWAITING THE ROUND 8.5 KICKOFF.** The round opens with the
+**Status: THE KICKOFF IS IN PROGRESS** (2026-10-11). The spec holds the
+user's intent and four signed decisions
+([round-8.5-spec.md](round-8.5-spec.md)); §119's audit and cut are next.
+The round opens with the
 oracle map, ahead of the census, as the user signed at the Round 8 close
 (C1's third answer). The kickoff writes the round's spec first
 (`round-8.5-spec.md` at the repo root; `process/planning.md` "The
@@ -58,3 +61,8 @@ break; each of the five instruments is built or dropped with a reason.
 behaviour change; the replay flag stays a tool's, and the shipped game
 replays nothing past a config mismatch; the permanent gates are never
 relaxed. The kickoff hardens this entry against the code.
+
+- Re-scoped 2026-10-11 (the kickoff, user-signed): two more proofs, a
+  declared mapping back to the old names for a change that renames what is
+  stored, and parsed-config equality for a config move, because the round
+  now lets reshaping in by trial (the spec's D3; WORKLOG "Kickoff").

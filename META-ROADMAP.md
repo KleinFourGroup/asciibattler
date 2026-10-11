@@ -605,11 +605,21 @@ rewrite resized, and a shell-quoting audit at the round's close. The sweeps
 and the calls: `archive/post-109-worklog.md` "118j — the round close", C1
 and C5.)_
 
+_(Amended 2026-10-11 at the kickoff, user-signed: reshaping is let in by
+trial beside the deletions, a second form of byte identity covers a change
+that renames what is stored, the oracle map gains two proofs, and the
+comment pass aims at length. The user's intent, verbatim, and the four
+signed decisions: `round-8.5-spec.md`.)_
+
 **Charter:** less code with the same behaviour, before Round 9 builds its
-seams on the core. The engine has grown by accretion for months with
-little deletion: dials that no longer move, duplicate implementations,
-workarounds that could be smoothed, tests that pin removed code. A
-deletion round, not a refactor: no new abstractions (AGENTS), and a
+seams on the core, and a code base "in a more approachable format than
+when we began" (the user, 2026-10-11). The engine has grown by accretion
+for months with little deletion: dials that no longer move, duplicate
+implementations, workarounds that could be smoothed, tests that pin
+removed code. Deletion first, and reshaping only by trial: what a search
+can prove dead is listed, signed and deleted; a unification, a merge or a
+split is tried, held against a bar written before it, and reverted if it
+falls under (the spec's D1 and D2). No new abstractions (AGENTS), and a
 documented no-op is an acceptable outcome.
 
 **In scope**
@@ -628,8 +638,13 @@ documented no-op is an acceptable outcome.
   earlier journal; the kickoff's shape-lock confirms the flag); a
   field-by-field diff of the end snapshot, for a deletion that slims the
   save; and a count of step codes in `src` comments that may only fall.
+  Two more since the kickoff: a declared mapping back to the old names,
+  for a change that renames what is stored, and parsed-config equality,
+  for a config move.
 - **The census (headless):** the candidates, each with its
-  evidence. Every config knob, `RunConfig` field and URL dial, with
+  evidence, in two lists since the kickoff: what a search proves dead,
+  and the trials, each with what it expects to remove and the proof that
+  covers it. Every config knob, `RunConfig` field and URL dial, with
   whether any value but its default is used anywhere (config, tests, the
   balance arms, scripts); duplicate implementations; tests that pin
   removed code or duplicate another's coverage; unused exports. Each
@@ -637,7 +652,8 @@ documented no-op is an acceptable outcome.
   signs the list before anything is deleted.
 - **The deletions, one subsystem per phase** (sim · run · render and UI ·
   the bot and fuzz instruments · tests), each followed by that
-  subsystem's comment pass.
+  subsystem's comment pass. Within a subsystem the signed deletions come
+  first, then its trials, then one re-skim for what the changes exposed.
 - **The source-comment rewrite** (the tone audit's TODO, 2026-09-23): the
   phase codes rewritten out of `src/` comments under AGENTS "Voice",
   about 2,000 `§` marks across 269 files at the 7.5 close (a raw count
@@ -648,7 +664,9 @@ documented no-op is an acceptable outcome.
   touch, because resolving a code means reading what it justifies, which
   is the census's question; committed apart from the deletions, because
   the two have different oracles (a comment-stripped before/after diff
-  with a failing control, against byte-identical runs).
+  with a failing control, against byte-identical runs). Since the kickoff
+  the pass aims at the comments' length, and the codes are the part of it
+  that can be counted.
 - **The TODO pass:** every open rider is done, dropped or given a round.
   None of TODO's Round 8 sections ("§114 riders" to "§118 riders", "§117.5
   kickoff riders", "Round 8 close riders") is assigned to one.
@@ -670,11 +688,12 @@ first.
 medium: wide, and in the core, but every deletion is gated on an oracle.
 **Decision points:** each dial's fate, per dial (unchanged for months is
 not enough: the balance instruments Rounds 10 and 12 lean on may need it);
-whether a test is redundant; the round's size, known only after the
-census. Resolved 2026-10-11: the save format may bump, more than once
+whether a test is redundant; each trial's verdict against the bar; the
+round's size, known only after the census. Resolved 2026-10-11: the save format may bump, more than once
 (the itch build is updated at the round's close only, so a player meets
 one rejected save a round). **Exit:** the signed census dispositioned (deleted, kept with a
-reason, or moved to TODO); every deletion in sim, run and config
+reason, or moved to TODO); each trial kept over the bar or reverted and
+recorded; every deletion in sim, run and config
 byte-identical under the determinism test, the fuzz smoke and a journal
 replay; the comment pass done under its oracle; the TODO pass done; and
 the shell-quoting audit run (pre-registered with the Shell rule's
@@ -684,7 +703,9 @@ in the file, with a planted case the audit must find; a wrong result
 found in a commit brings the rule back with a hook). **Scope guards:** no
 behaviour change (a deletion that is not byte-identical is a change, and
 goes to the user with a board re-run; a save-format bump for a slimmed
-snapshot is not one); no new abstractions; no gotcha
+snapshot is not one, and neither is a change that renames what is stored
+when it is byte-identical after its declared mapping back to the old
+names); no new abstractions; no gotcha
 undone without its entry read; the permanent gates never relaxed; no
 balance numbers move.
 

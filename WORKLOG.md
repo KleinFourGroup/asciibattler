@@ -111,4 +111,71 @@ and `events.ts`; no site was classified).
 
 Readings: **90,772** at 13:08 after HANDOFF and `process/planning.md`;
 **129,349** at 13:12 with the charter, C1 and the pre-flight read;
-**154,841** at 13:47 with the candidates measured.
+**154,841** at 13:47 with the candidates measured; **174,337** at 13:50
+on the opening's commit, `97468f0`.
+
+### The four calls signed, and the cold-read probe piloted (2026-10-11, session e1342511)
+
+**The four calls, answered** (the user): "Yes to all four calls, Claude!
+Fully signed!" They are D1 to D4 in the spec. With them: META-ROADMAP
+§Round 8.5 is amended (a dated note, the charter's last sentences, the
+oracle map's two more proofs, the census's two lists, the order within a
+subsystem, the comment pass's aim, one decision point, the exit, one scope
+guard); ROADMAP §119 is re-scoped by one line; TODO's tone-audit rider
+carries the wider aim; the Cursor's constraints line is reworded. The spec
+as rewritten has not been read by the user, which is for §119's
+shape-lock.
+
+**The cold-read probe.** The session's reply had ended on an idea it
+called unsure: none of the bar's counts measures "approachable", and a
+fresh agent given the same tasks on the code before and after would. The
+user: "I'm very intrigued by that approachable idea at the end; let's
+talk about that more!" Step zero for that talk was a pilot of the
+instrument itself: what a run reads out, what it costs, and how far two
+identical runs differ. The prompt, the key and the readouts are in
+`scratch/119-kickoff/cold-read-pilot.md`.
+
+The task was one question in three parts about the neutral team (what
+tells a camp member from scenery, which exported functions encode it, one
+place in `src/sim` that makes the distinction without them), given to two
+`Explore` agents with the same prompt, plus a zero task (no tool, reply
+with one word) for the cost of starting an agent.
+
+| run | tokens | above the zero task | tool uses | seconds | answer |
+|---|---|---|---|---|---|
+| zero task | 34,138 | 0 | 1 (the hand-back) | 5.1 | n/a |
+| A | 52,332 | 18,194 | 5 | 46.8 | right on all three |
+| B | 45,481 | 11,343 | 8 | 56.5 | right on all three |
+
+- *The readout exists,* and only for a background agent: tokens, tool
+  uses and milliseconds come with its completion notice. A first zero task
+  launched in the foreground returned no figures and was run again. What
+  the harness counts in the token figure (the last context, or a sum over
+  calls) is not known here.
+- *Two thirds to three quarters of a run is the cost of starting.* Without
+  the zero task the two runs look 14 % apart; above it they are 1.6 times
+  apart in tokens, and 1.75 times apart in their own tool calls (4 and 7)
+  in the other direction. Two runs give no spread worth computing; they do
+  say it is not small, and that tokens and calls are different measures.
+- *Both answers were right,* and both cited `Targeting.ts:684`, checked
+  here against the file. B added `audibleDeath` in
+  `src/audio/eventSounds.ts:53`, which re-encodes the test and is also
+  right. An easy task cannot tell two trees apart by correctness.
+- *Cost:* about 50k tokens and a minute for an easy locate task, so a set
+  of six tasks at five runs on two trees is about 3M tokens, 2M of it
+  starting cost. The pilot spent 131,951 over the three runs with a
+  readout, and one more zero task without.
+
+**The session's read, put to the user (open).** The probe is worth
+keeping in the form where it is a proof and not a benchmark. Its strongest
+use is the comment pass, the one deletion whose harm byte identity cannot
+see: questions whose answer is a reason the comments hold, asked before
+and after, where the rate of right answers must not fall. As a round-level
+reading of cost it needs many runs to see less than a large change. Both
+trees can be read at the close, side by side from git, so nothing has to
+be spent now except fixing the tasks, and half of them should be written
+by another agent and kept from the session that does the cleanup. It is
+not a gate on single trials. For the user as a reader the instrument is
+their own read of a sample at each subsystem's comment pass.
+
+Readings: **219,036** at 18:25 before this entry's commit.

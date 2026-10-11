@@ -55,8 +55,8 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  §89–94 casualty ┤  ✅ CLOSED 2026-09-08 — the seam floor · the casualty rule KEPT · the rebalance · the sheet re-anchored + signed (the interstitial before 7)
  7. Idioms ───────┤  ✅ CLOSED 2026-09-20 — i18n · the shells · the live bar · tooltips · color / motion / input / layout · the idiom reference SIGNED · the sound registry (§95–§104 + §96.5)
  7.5 The Board ───┤  ✅ CLOSED 2026-09-27 — the projection spike · ortho · pitch 45 · yaw 45 · the ground mark as the team channel · the elevation clauses · the anchor rules 17 → 14 (§105–§109)
- 8. Foundations ──┤  the store keystone → the run journal → save/load → menu/settings → ascension → the public web channel
- 8.5 Housekeeping ┤  the census → deletions per subsystem, byte-identical → the source-comment rewrite  (inserted 2026-09-27)
+ 8. Foundations ──┤  ✅ CLOSED 2026-10-11 — the shells · the recorder · the probe kit · the store + the build ID · the run journal · save/load · the menu + settings · Escalation + the unlocks · the itch page OPEN at 0.1.0 (§110–§118 + §117.5, §117.75)
+ 8.5 Housekeeping ┤  NEXT — the oracle map → the census → deletions per subsystem, byte-identical → the source-comment rewrite · the TODO pass  (inserted 2026-09-27)
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
 11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary
@@ -403,7 +403,7 @@ so the next `.5` is a line written at a close, not a surprise at a kickoff.
 
 ---
 
-## Round 8 — Foundations
+## Round 8 — Foundations ✅ CLOSED 2026-10-11
 
 _(Re-audited 2026-09-26 at the Round 7.5 close's macro re-audit,
 user-signed: the camera row struck, the run journal added, three storage
@@ -502,7 +502,9 @@ round's spec writes the first two).
   code against the load code, so a field both sides drop passes it; the X1
   multipliers are one today.
 - **Title / main menu** — the UI hub the consumers hang off (new run ·
-  continue · settings · achievements · credits · a seed field).
+  continue · settings · achievements · credits · a seed field). _(As
+  built: no achievements row; the spec left it hidden until Round 11 has
+  its content.)_
 - **Settings** — **the volume-axis split FIRST** (SFX / music, ± master —
   decided before any slider is coded, `plans/music.md`; today one master
   axis, with no control wired to it), then the in-game rebind UI (labels
@@ -512,9 +514,12 @@ round's spec writes the first two).
   from §108: TODO), the aura-FX mode graduated from its console switch, and
   the four seams the code already names as Round 8 settings: the locale,
   the reduced-motion override, the shake policy (TODO) and the text scale
-  (DESIGN "Tokens").
-- **Difficulty / ascension** (groundwork: per-speed enable, the focus-tile
-  switch, the X1 multipliers) + **the unlock MECHANISM** (cross-run unlocks
+  (DESIGN "Tokens"). _(As built: the locale is a stored field and a boot
+  seam with no row in Settings; the row comes with a second locale, the
+  §116 audit's call 6.)_
+- **Difficulty / ascension** (groundwork: ~~per-speed enable, the
+  focus-tile switch,~~ the X1 multipliers; the first two STRUCK by the
+  spec, D8) + **the unlock MECHANISM** (cross-run unlocks
   resolve at run creation only; the content MAPPING waits for Round 10).
   The level is saved in the RunSnapshot (a Run bump): today `Run.fromJSON`
   re-resolves the X1 multipliers to their defaults, and the focus-tile
@@ -557,6 +562,36 @@ boot screen; the public web channel is open.
 **Scope guards:** no achievements/tutorial CONTENT (Round 11 — the store's
 consumer seams only); no unlock content mapping; no music.
 
+**CLOSED 2026-10-11** — eleven phases (§110–§118, with §117.5 the UI
+sweep and §117.75 the rest gate inserted), each closed on the user's read;
+the close's last step, the archive, awaits its read as this is written.
+The exit met, clause by clause (the close's C0): a run saved at any gate
+reloads byte-faithfully (`tests/integration/resume-gates.test.ts`, total
+over the eleven phases a run is saved at; the continuation check and the
+chaos driver green on every `npm test`); settings persist across reloads
+(`src/settings/settings.test.ts` and the user's reads); the menu is the
+boot screen (`src/scenes/menuRules.ts`); the public web channel is open
+(the user, 2026-10-10, at `0.1.0`). The board re-run: Escalation off
+reproduces the signed sheet byte for byte under the prior table it was
+measured under, and the ladder's steps read harder at levels 1, 2, 4 and
+5, with level 3 kept as an economy step (the exit as amended, 118e).
+**Against the charter:** per-speed enable and the focus-tile switch were
+struck by the spec; the locale has no row in Settings; the achievements
+row went to Round 11; achievements and seen-flags, two of the store's four
+consumers, are a comment and one field (`creditsSeen`), a seam with no
+design past it; the continuation check does not use the journal's seam
+(the journal's own check across a load is
+`tests/integration/journal-across-loads.test.ts`); Edge stood in for
+Chrome, and two lines of the smoke are carried (TODO "§118 riders"). The
+chaos driver's every-commit seeds send every command kind and change the
+run with thirteen of 21, which is why Round 8.5 opens with an oracle map.
+The scope guards held. Outside the charter, each signed as it came: the
+UI sweep, the rest gate (Run v49), the first three events' rewrite, the
+credits. The close retired the Pages site, set the release policy above,
+re-audited Round 8.5 and wrote the notes under Rounds 9 to 12. Archives:
+`archive/post-109-roadmap.md` + `-worklog.md` + `round-8-spec.md` +
+`retro-scratchpad-round-8.md`.
+
 ---
 
 ## Round 8.5 — Housekeeping
@@ -568,7 +603,8 @@ rewrite folds into it. The `.5` convention, applied.)_
 _(Re-audited 2026-10-11 at the Round 8 close, user-signed: an oracle map
 ahead of the census, save-format bumps allowed, a TODO pass, the comment
 rewrite resized, and a shell-quoting audit at the round's close. The sweeps
-and the calls: the Round 8 worklog, "118j — the round close", C1 and C5.)_
+and the calls: `archive/post-109-worklog.md` "118j — the round close", C1
+and C5.)_
 
 **Charter:** less code with the same behaviour, before Round 9 builds its
 seams on the core. The engine has grown by accretion for months with

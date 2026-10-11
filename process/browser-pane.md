@@ -88,8 +88,10 @@ app can stop the server between turns). Then:
   line and an exit code (README "Probing in a hidden window";
   `shell/electron/probes/drive-run.js` plays a whole run).
 
-The kit's use is counted for Round 8's close (`npm run friction-scan`, the
-`pane` / `kit` / `runner` columns; META-ROADMAP §Round 8).
+The kit's use was counted at Round 8's close (`npm run friction-scan`, the
+`pane` / `kit` / `runner` columns) and the kit was kept, with its three
+criteria retired (`archive/post-109-worklog.md` "118j — the round close",
+C2 and C4).
 
 ## The page and the server
 

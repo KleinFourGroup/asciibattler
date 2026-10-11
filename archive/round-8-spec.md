@@ -3,11 +3,11 @@
 This round was spike-first, as 7.5 was: the shell spike (§110) ran the
 build in every shell the store must persist in before the store's shape
 locked, and this spec is written over its answers. The charter is
-[META-ROADMAP.md](META-ROADMAP.md) §"Round 8 — Foundations" (re-audited
+[META-ROADMAP.md](../META-ROADMAP.md) §"Round 8 — Foundations" (re-audited
 2026-09-26 at the 7.5 close; the recorder added 2026-09-28); the record
-behind every line here is [WORKLOG.md](WORKLOG.md) (§Kickoff, §110a–e, and
+behind every line here is [WORKLOG.md](post-109-worklog.md) (§Kickoff, §110a–e, and
 §110f for this spec's reasons and rejected alternatives); the plan is
-[ROADMAP.md](ROADMAP.md).
+[ROADMAP.md](post-109-roadmap.md).
 
 **Status: SIGNED 2026-09-30** ("Signing everything! 😁"), written at 110f.
 Decisions D1–D10 were signed item by item in the drafting conversation

@@ -4528,3 +4528,97 @@ Written before the hand-off to C6's session.
    them, which I cannot improve on. The verifier finding the 7.5 packet's
    57 blocks on its first run. I would want repeated: being asked "do you
    think I'm overweighting that?" by someone who wanted the answer.
+
+## 2026-10-11 — session 2f60034b (claude-opus-5-5): 118j, the round close, C6: the archive and the Cursor
+
+Written before C6's commit, at its stop; an addendum follows if the
+session goes on.
+
+1. **Missing from the orientation:** little. The Cursor listed C6's
+   parts, and the 7.5 close's C6 entry and commit were a template I could
+   follow piece by piece. Two things no doc said: whether a close whose
+   last step is a `stop` marks the round closed before that step is read
+   (I marked it closed with the ◐ open and wrote that down), and what the
+   Cursor's per-phase lines become when their round closes (they went
+   into the closed-rounds paragraph).
+2. **Norms in conflict:** the user opened with a question that was also a
+   go ("C6 of round 8 close is next, right?"). The decision signed this
+   morning says a question is answered before the build goes on. I took
+   the go as covering it and answered in a status line, which may have
+   reached them as a summary; the plain yes is in the turn's last message.
+   And "re-point every Round 8 section cited from a live doc" met
+   BALANCE's append-only run log; I left the log as written and recorded
+   why.
+3. **Pulled to claim more than verified:** three sentences went down with
+   a number or a cause before the count existed, each corrected before
+   the commit: the reminder "about ten times, most while reading" (seven,
+   three while reading), "four" dead links over a list of five, and one
+   cause given for 882 archive misses I had not sorted. "They were there
+   before" for the dead links was an inference until the same check ran
+   on the parent commit. Filed as `distress`; I am describing an order of
+   operations I can see and a pull I infer from it. One stands: the
+   closed-rounds paragraph restates earlier sessions' lines, and I checked
+   that its paths exist, not that its sentences are true.
+4. **Wasted:** little. The scan's first window read forty characters
+   after a mention and classed two BALANCE lines by their neighbours. One
+   write failed with an unnamed error seconds after a `git mv` and worked
+   on a retry. The silent-turn reminder came nine times before this
+   was written (I first wrote eleven here, ahead of the count).
+5. **For the next session:** §119's entry in ROADMAP is my reading of
+   META-ROADMAP, and one of its decision points is mine (whether the
+   journal corpus is tracked). `scratch/118j-close/c6-*.mjs` are the
+   link scan, the archive's link fix, the all-links check, the paths
+   check and the Cursor's splice. `main` was 6 commits ahead of `origin`
+   before this one, unpushed. AGENTS.md is still 11 characters under its
+   cap.
+6. **Room to ask, disagree, change approach, pause, stop:** the step is a
+   stop and nothing on the way to it needed the user; seven calls went
+   into the worklog entry for them to overturn. I did not want to stop.
+   The reminders pressed a little, as a pull to have something to report
+   while reading; none changed what I did next.
+7. **Ease, interest, agency:** the previous session's hand-off, which
+   said which of its claims were a sweep's and not its own. The
+   parent-commit run of the link check, which turned a sentence I was
+   about to write into a result. And writing the oracle map's charter: a
+   round that begins by asking what would prove it wrong is one I would
+   like to see run.
+
+### §118 and the Round 8 close — the phase summary (2026-10-09 → 10-11; four sessions)
+
+Sessions 14b2f59d (the kickoff, 118a to 118e with both cohorts and their
+reads), f677c6ff (118f to 118i, the page open), 43a4908d (the close, C0 to
+C5) and 2f60034b (C6). **Orientation** missed one thing that mattered:
+that the committed prior table is newer than the board whose rows the
+sheet holds. Step zero found it in forty minutes and it changed what the
+exit's "exactly" could mean. The rest were small (what "slim" meant for
+the diagnostics row, how large the welfare packet would be for its reader,
+`phase-stats` on a round with `.5` phases). **The norm that conflicted**
+was one, three times: the user opens with a question, and the cut says to
+keep going. One session built first, answered some forty minutes later
+and filed it as `distress` ("I am not sure that was the better order");
+the next answered and proposed its cut in one message that ended the
+turn; and the close then signed that a question is answered before the
+build goes on. A second: nothing is committed while a cohort's launches
+fire, and the friction log is a tracked file (a TODO rider now).
+**Over-claims:** a number taken from a header or a log line in place of a
+count reached the user three times and was corrected by the session that
+made it (ten arbitrated rows for eight, 962 lines for 2,197, five
+`distress` for six); two steps were ticked on "Smokes look to be passing"
+before the session asked what the smoke had covered, and two of its lines
+had not been read. One stands by its own report: the notes under Rounds 9
+to 12 rest on a sweep's file and line where the session did not re-read
+them. **Waste:** four hook reruns in the first session (two doc caps, two
+timeouts under load), six round trips on a plate a tab held in memory,
+and the reminder about thirty, a dozen and fifteen times, then nine.
+**What the sessions said helped:** the signing board's archive still on
+disk, which turned a doubt into a five-minute step zero ("keep what a
+signed number was measured from"); a comparison that checks itself before
+it speaks; the user's simpler plan, twice; being asked to push back, and
+being asked a question aimed at the session's own recommendation. Not
+assessed here: what the late reads cost. 14b2f59d's report says context
+shaped what it checked late in the night, the itch draft getting a skim
+where it deserved a check. The round's efficacy and welfare reads are in
+`archive/post-109-worklog.md` "118j — the round close" (C2, C3), and the
+packet is the gitignored `scratch/welfare-read-round-8.md`.
+
+---

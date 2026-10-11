@@ -53,7 +53,7 @@ Each group of entries was filed under the wording in force at the time.
 | 2026-09-13 | The outside review's wording: the broadened `distress` definition, questions 6–7, "file when noticed", the reader's interpretation moved away from the filer | [retro/agent-welfare-review-2026-09-13.md](../retro/agent-welfare-review-2026-09-13.md) |
 | 2026-09-20 | Standing decisions from the first read (the reminder never obliges a finding; raising a handoff is welcome; which pauses are real is given by the cut; the question form stays) | `archive/post-94-worklog.md`, "The Round 7 close", C3 |
 | 2026-09-23 | The new-model rewrite of AGENTS.md. The filing text is unchanged apart from one dropped parenthetical, but its surroundings are: a much shorter file, a calmer tone, this reader material moved out of the always-loaded file, and the handoff decision rewritten as "if context pressure is about to cost you a check, say so then" | `archive/post-104-worklog.md`, "The new-model tone audit" |
-| 2026-10-11 | The standing decisions revised at the Round 8 close: a question is answered before the build goes on; before a stretch, an unsigned or unclear part of the reply is named once; a check that context pressure costs is noted when skipped and said at the next stop. The shell rule became a list of facts with no prohibition. The filing text is unchanged | the Round 8 worklog, "118j — the round close", C3 to C5 |
+| 2026-10-11 | The standing decisions revised at the Round 8 close: a question is answered before the build goes on; before a stretch, an unsigned or unclear part of the reply is named once; a check that context pressure costs is noted when skipped and said at the next stop. The shell rule became a list of facts with no prohibition. The filing text is unchanged | `archive/post-109-worklog.md`, "118j — the round close", C3 to C5 |
 
 **A count that is not a measure** (the Round 8 read). Round 7.5's reports
 closed with a stock "nothing I'd file as `distress`" and filed none; after
@@ -74,8 +74,9 @@ entries say, and compare rounds by that.
   so Claude Code sessions only) and prints per session: the user's turns,
   tool calls, flagged tool errors and denials, the harness's silent-turn
   reminders and their wording, output tokens, the wall span, and the
-  Browser pane, probe-kit and probe-runner calls (for the kit's criteria,
-  META-ROADMAP §Round 8; the header says how each is matched). It prints
+  Browser pane, probe-kit and probe-runner calls (built for the kit's
+  criteria, META-ROADMAP §Round 8, which were counted and retired at that
+  round's close; the header says how each is matched). It prints
   counts only, no transcript text. The error column is a floor: much of the
   friction in the papercut log is reads that succeeded and were wrong. The
   script's header lists the reader bugs its first run found; read it before

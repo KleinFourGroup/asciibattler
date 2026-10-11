@@ -30,7 +30,7 @@ Each Battle consists of one or more turns, rounds of autobattler combat against 
 - Hold: hold position and engage only those hostiles immediately in range.
 - Stop: belay the current order and engage at will.
 
-Left-click a unit or location to Engage, and right-click to Focus.  (All four orders also may be issued via UI buttons and keyboard shortcuts.)  Combat can be paused, sped up, and slowed down via UI buttons and keyboard shortcuts.
+Left-click an enemy unit or location to Engage, and right-click to Focus.  (All four orders also may be issued via UI buttons and keyboard shortcuts.)  Combat can be paused, sped up, and slowed down via UI buttons and keyboard shortcuts.
 
 Every unit of yours that falls during a turn costs you morale, and every enemy that falls likewise costs the enemy morale.
 
@@ -58,9 +58,9 @@ Feedback is both welcomed and encouraged!  While we've done our best, ASCIIbattl
 ## Requirements and Limitations
 
 - ASCIIbattler has been tested in Firefox and Edge on desktop.  Chrome *should* work, as we have a functional Electron-based internal build.  Safari has not been tested and is not formally supported.
-- ASCIIbattler's minimum supported resolution is 1280×720.  Larger text sizes are only recommended on larger screens.
+- ASCIIbattler's minimum supported resolution is 1280×720.  If that doesn’t fit your screen, use the fullscreen button in the frame’s corner.  Larger text sizes are only recommended on larger screens.
 - Progress is saved locally in your browser's storage.  There is no cloud storage.
-- Expect save compatibility to break as the game is updated.  The main menu will warn you of an incompatible save.
+- Expect save compatibility to break as the game is updated.  The main menu will warn you of an incompatible save.  Only run progress will be lost; settings and unlocks should persist.
 - ASCIIbattler is neither feature nor content complete!  Among other things, we intend to add the following:
   - A third sector per run.
   - Variant versions of each sector.

@@ -11,6 +11,9 @@ and may differ from what it shows.
 
 ## Decided
 
+Signed by the user, 2026-10-10, the four rows the session suggested
+among them (mobile, scrollbars, the start, the status).
+
 - **Kind of project:** HTML, played in the browser.
 - **The upload:** the plain zip that `node scripts/itch-zip.mjs` makes,
   not the `--diag` one, marked as the file played in the browser.
@@ -25,8 +28,6 @@ and may differ from what it shows.
   are code assistance, and the page's own AI Disclosure section says so).
 - **Visibility:** a draft until the browser smoke has passed; the user
   opens it after.
-
-## Suggested, not decided
 
 - **Mobile friendly:** off. The game needs 1280 × 720 and a mouse.
 - **Scrollbars:** off. A screen taller than the frame scrolls inside

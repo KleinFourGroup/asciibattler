@@ -10789,3 +10789,12 @@ that a refused save keeps settings and unlocks; that the frame is exactly
 the smallest window, so a small screen needs the fullscreen button.
 
 **A rider:** Last run exports a finished run only (TODO "§118 riders").
+
+### 118g — SIGNED (2026-10-10, the user's) ✅
+
+The user added the two points they had missed (a refused save costs the
+run in progress alone; the fullscreen button for a screen the frame does
+not fit) and "an enemy unit" for the Engage click, and signed: "signing
+everything!" That is the page's text, the session's edits to it, and the
+form's rows, the four suggested ones with the rest. `itch/settings.md`
+now holds them as decided, with the option names still from memory.

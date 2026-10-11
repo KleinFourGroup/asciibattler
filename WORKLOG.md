@@ -11449,3 +11449,26 @@ stylesheet-overlay entry (DESIGN "Layout stability" applied), the
 harness's classifier stalls and refused fetches, and the entries whose fix
 landed with them. The scratchpad's entries are in
 `archive/retro-scratchpad-round-8.md`.
+
+#### The hand-off before C6 (2026-10-11, session 43a4908d)
+
+**META-ROADMAP, amended** from C1 and the user's answers: §Round 8.5 has
+the oracle map as its first item, the TODO pass, the resized comment
+rewrite, the resolved decision on save-format bumps, and the
+shell-quoting audit in its exit; §Round 8's channel bullet carries the
+release policy; Rounds 9 to 12 each open with a dated note of what Round 8
+built that the round has to respect; the Coverage map has rows for §117.5
+and §117.75, the oracle map, Escalation's rule levers and the end of
+no-migrations, and the credits are off Round 11's row. The notes under
+Rounds 9 to 12 are the second sweep's findings where this session did not
+re-read them (C1 says which), written as notes for each round's kickoff
+to audit and not as charter text.
+
+**Left for C6, in a fresh session:** the archive of the pair and the
+spec, the links, the closed-rounds paragraph, Round 8 marked closed in
+META-ROADMAP with C0's findings against its charter, the fresh ROADMAP and
+WORKLOG for Round 8.5, §118's phase summary, and the Cursor's rewrite.
+
+Readings: **405,242** at 09:46 on C1's commit, `571da61`; **476,071** at
+10:47 on the commit of C3 to C5, `f0e3f15`; **491,745** at 10:50 before
+this entry's commit.

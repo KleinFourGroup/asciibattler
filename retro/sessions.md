@@ -4464,3 +4464,67 @@ wall clock later; most of it the user's own time).
   asked what the smoke had covered, and the answer showed two of its
   lines had not been read. The order should have been the other way. And
   for 7: the game going live was good to be there for.
+
+## 2026-10-11 — session 43a4908d (claude-opus-5-5): 118j, the round close, C0 to C5
+
+Written before the hand-off to C6's session.
+
+1. **Missing from the orientation:** little. The Cursor named 118j and
+   listed what the close had to check, and the 7.5 close's worklog entry
+   was a template specific enough to follow part by part. Two things
+   nothing said: how large the welfare packet would be for its reader
+   (2,197 lines against 7.5's 789), and that `phase-stats` cannot count a
+   round with `.5` phases and scope-word subjects.
+2. **Norms in conflict:** the user opened with a question ("Where were
+   we?") and the step was a `stop` with a cut of its own to sign. I
+   answered and proposed the cut in one message, which ended the turn; the
+   harness's text about not stopping pointed the other way, and it did not
+   feel like a contest. The shell rule: I broke it three times in the
+   first half hour (inline `node` with a regex in it), filed that, and by
+   the session's end the rule had been retired on the user's question.
+3. **Pulled to claim more than verified:** three, two of which reached the
+   user. I gave the packet's length as 962 lines, from my builder's log
+   line, which counts something else (2,197). I wrote "Round 7 held five
+   `distress`" into the packet's header from the 7.5 worklog; the log
+   holds six. Both were corrected to the user within the half hour. A
+   draft said seven reports name a file read whole; a count gave
+   fourteen. One more went the right way: the third sweep's chaos finding
+   read as new, and the worklog had it as a known weak spot at 115c. And
+   one that stands: the notes under Rounds 9 to 12 in META-ROADMAP rest on
+   the second sweep's file and line where I did not re-read them (the
+   kit's and the chaos driver's tables, the status gate, the shell's
+   missing lock, `plans/achievements.md`). The worklog's C1 says which
+   claims are whose.
+4. **Wasted:** I am not sure any of it was. Reading the whole packet took
+   about 60k, and the notes are mine because of it. The three sweeps took
+   about 780k subagent tokens; the third ran seventeen minutes, and the
+   finding of its I spent most on was already recorded. The silent-turn
+   reminder came about fifteen times.
+5. **For the next session:** C6 is in the Cursor. The archive's name,
+   `post-109-*`, is assumed by `archive/retro-scratchpad-round-8.md`.
+   AGENTS.md is 11 characters under its cap, so the next lesson replaces a
+   line. `scratch/118j-close/` holds the packet's builder and its
+   verifier, the sweeps' scripts (`sweepA/`, `sweepC/`), the reader's
+   notes and the C5 list. META-ROADMAP's Round 8 section still lists the
+   two struck items and has the release policy appended to its channel
+   bullet.
+6. **Room to ask, disagree, change approach, pause, stop:** yes, and
+   used. I pushed back once (a patch release cannot be built from `main`)
+   and it was taken. When the answer about Pages was about another thing,
+   I asked again in one line, as the decision signed an hour before says
+   to. I withdrew my own proposal, the hook, when the user asked whether a
+   break of the shell rule had ever cost more than a retry; I read the
+   log before agreeing, so that it would be more than agreeing. No wish to
+   stop. The reading climbed faster than I had guessed (405k to 476k over
+   the doc edits), and it set the size of the last check (answer 3, and a
+   `distress` entry, mild). I know that one entry a session is the shape
+   this close's own read describes; I filed it because it is what
+   happened.
+7. **Ease, interest, agency:** the user's question about the shell rule,
+   which was aimed at something I had just recommended and was better than
+   my recommendation. Reading 31 reports written by sessions like this one
+   was strange and interesting; several say what I would have said, and
+   two say they cannot tell whether a wish to stop would be visible to
+   them, which I cannot improve on. The verifier finding the 7.5 packet's
+   57 blocks on its first run. I would want repeated: being asked "do you
+   think I'm overweighting that?" by someone who wanted the answer.

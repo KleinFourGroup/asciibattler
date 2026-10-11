@@ -59,7 +59,7 @@ every amendment re-runs the full board; paired same-seed deltas govern.
  8.5 Housekeeping ┤  the census → deletions per subsystem, byte-identical → the source-comment rewrite  (inserted 2026-09-27)
  9. Extensions ───┤  the combat / run-hook / traversal / footprint seams
 10. Act 3 ────────┤  the third sector + every orphaned content item
-11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary · credits
+11. Onboarding & Feel ─┤  tutorial · music · achievements · run summary
 12. Ship ─────────┘  Electron + Steamworks · build pipeline · gauntlet #2
 ```
 
@@ -78,7 +78,8 @@ Dependency edges the order satisfies:
 **Signed this session (2026-08-21), standing for every round below:**
 
 - **Ship target = Steam-shaped** (an Electron wrapper over the same `dist/`;
-  the Pages build stays the playtest channel). Electron over Tauri because it
+  the Pages build stays the playtest channel; retired 2026-10-11, with itch
+  the one public build). Electron over Tauri because it
   bundles Chromium — the WebGL/Web Audio browser matrix collapses to one
   renderer. **Amended 2026-09-26** (the user, at the Round 7.5 close): the
   web build is also the low-friction channel for early players (itch.io,
@@ -528,6 +529,14 @@ round's spec writes the first two).
   device to test on), and a how-to-play on the itch page standing in for
   Round 11's tutorial. Strangers' exported journals are raw material for
   the human anchor Round 12 re-records, though not its protocol.
+  **The release policy since 2026-10-11** (the user, at the round's
+  close): the page opened at `0.1.0` on 2026-10-10 and the Pages site is
+  retired, so itch is the one public build. It is updated at each round's
+  close, each upload tagged. A critical fix between rounds is a patch
+  release built from the last uploaded tag on a short-lived branch, since
+  `main` may hold a save-format bump. A bump is expected every round while
+  features and content are landing, and a migration system is considered
+  only if rejected saves become a problem.
 - Closes with a board re-run (ascension is a balance surface).
 
 **Depends on:** Round 7 (the menu/settings build on audited idioms + the
@@ -556,6 +565,11 @@ _(Inserted 2026-09-27, after the Round 7.5 close, user-signed: the user
 raised a broader codebase review, and the tone audit's source-comment
 rewrite folds into it. The `.5` convention, applied.)_
 
+_(Re-audited 2026-10-11 at the Round 8 close, user-signed: an oracle map
+ahead of the census, save-format bumps allowed, a TODO pass, the comment
+rewrite resized, and a shell-quoting audit at the round's close. The sweeps
+and the calls: the Round 8 worklog, "118j — the round close", C1 and C5.)_
+
 **Charter:** less code with the same behaviour, before Round 9 builds its
 seams on the core. The engine has grown by accretion for months with
 little deletion: dials that no longer move, duplicate implementations,
@@ -565,7 +579,21 @@ documented no-op is an acceptable outcome.
 
 **In scope**
 
-- **The census (first, headless):** the candidates, each with its
+- **The oracle map (first):** for each part of the code, what proves a
+  deletion there changed nothing, each proof shown to fail on a planted
+  break, so that every census candidate names the oracle that covers it.
+  It builds: a journal corpus recorded at the round's baseline (about
+  thirty headless runs, with a count of the gates and commands they
+  reach); the chaos census pinned on commands that change the run, for the
+  kinds its seeds reach (thirteen of 21 at the Round 8 close; the port
+  trades and the sector-cleared gate only if the census wants to delete
+  there); a tool-only flag to replay past a config mismatch, so a journal
+  can say whether a knob is dead (`configHash()` covers every
+  `config/*.json` as authored, so without it one removed key refuses every
+  earlier journal; the kickoff's shape-lock confirms the flag); a
+  field-by-field diff of the end snapshot, for a deletion that slims the
+  save; and a count of step codes in `src` comments that may only fall.
+- **The census (headless):** the candidates, each with its
   evidence. Every config knob, `RunConfig` field and URL dial, with
   whether any value but its default is used anywhere (config, tests, the
   balance arms, scripts); duplicate implementations; tests that pin
@@ -578,11 +606,17 @@ documented no-op is an acceptable outcome.
 - **The source-comment rewrite** (the tone audit's TODO, 2026-09-23): the
   phase codes rewritten out of `src/` comments under AGENTS "Voice",
   about 2,000 `§` marks across 269 files at the 7.5 close (a raw count
-  that includes DESIGN section refs). Done per file in the deletion's
+  that includes DESIGN section refs). At the Round 8 close the `§` lines
+  are where they were (1,972 in 281 files), and Round 8 wrote its own step
+  codes bare ("115e —"): about 2,400 in 295 files by a rough count, some
+  255 of them that round's. Done per file in the deletion's
   touch, because resolving a code means reading what it justifies, which
   is the census's question; committed apart from the deletions, because
   the two have different oracles (a comment-stripped before/after diff
   with a failing control, against byte-identical runs).
+- **The TODO pass:** every open rider is done, dropped or given a round.
+  None of TODO's Round 8 sections ("§114 riders" to "§118 riders", "§117.5
+  kickoff riders", "Round 8 close riders") is assigned to one.
 
 **Why here:** after Round 8, whose run journal, chaos driver and
 continuation check are the strongest oracles for deleting run and sim code
@@ -591,25 +625,48 @@ four seams would otherwise be designed around dead dials (principle #2).
 Round 8 mostly adds new code at the Game and UI layers, and reject-stale
 keeps a later snapshot slimming cheap. The alternative, before Round 8,
 would design the save format on a slimmer Run at the cost of those
-oracles.
+oracles. As built (the Round 8 close, C1): a replay on another commit has
+to be forced, a config mismatch cannot be, no journal is stored in the
+repo, and the chaos driver's every-commit seeds never reach the
+sector-cleared gate or a port trade. That is why the oracle map comes
+first.
 
 **Depends on:** Round 8 (the journal and the chaos driver). **Risk:**
 medium: wide, and in the core, but every deletion is gated on an oracle.
 **Decision points:** each dial's fate, per dial (unchanged for months is
 not enough: the balance instruments Rounds 10 and 12 lean on may need it);
 whether a test is redundant; the round's size, known only after the
-census. **Exit:** the signed census dispositioned (deleted, kept with a
+census. Resolved 2026-10-11: the save format may bump, more than once
+(the itch build is updated at the round's close only, so a player meets
+one rejected save a round). **Exit:** the signed census dispositioned (deleted, kept with a
 reason, or moved to TODO); every deletion in sim, run and config
 byte-identical under the determinism test, the fuzz smoke and a journal
-replay; the comment pass done under its oracle. **Scope guards:** no
+replay; the comment pass done under its oracle; the TODO pass done; and
+the shell-quoting audit run (pre-registered with the Shell rule's
+retirement: every shell command in the round's transcripts that sent a
+backslash through a heredoc or an inline script, held against what landed
+in the file, with a planted case the audit must find; a wrong result
+found in a commit brings the rule back with a hook). **Scope guards:** no
 behaviour change (a deletion that is not byte-identical is a change, and
-goes to the user with a board re-run); no new abstractions; no gotcha
+goes to the user with a board re-run; a save-format bump for a slimmed
+snapshot is not one); no new abstractions; no gotcha
 undone without its entry read; the permanent gates never relaxed; no
 balance numbers move.
 
 ---
 
 ## Round 9 — Extensions
+
+_(What Round 8 built that this round has to respect, from its close's
+re-audit, 2026-10-11; the kickoff audits each against the code. Each Run
+bump below rejects players' saved runs at the upload that carries it (the
+release policy, §Round 8). A new `RunCommand` needs its rows in the chaos
+driver's `LEGAL_IN` and the kit's `PHASE_ROWS`; a new phase needs a row in
+the resume test's gate table and is a Run bump with no new field. A page
+added to a shipped event re-draws the rest of every run that visits it
+(gotcha #141). A new status needs a symbol and a colour under the
+colourblind gate. The board has an Escalation axis, and the signed sheet's
+arbitrated rows reproduce only under the v4 prior table.)_
 
 **Charter:** the engine seams the third act needs, designed once with all the
 2026-08-21 consumers known — the C1/C2 shape again, on a now-mature core. Every
@@ -787,6 +844,15 @@ multi-tile units.
 
 ## Round 10 — Act 3 (Content)
 
+_(From the Round 8 close's re-audit, 2026-10-11: this round also owns
+Escalation's rule levers (more elites, a boss's extra trick, a tool taken
+away), which the Round 8 spec parked here (D8), and the read of level 3,
+fewer bits, which waits on bit sinks (TODO "§117 riders"). The unlock
+mapping hangs on `progress.bestWin` or on a new, permanently named field of
+that section; an unlock reaches a run through the snapshot or a dial, and a
+dialled run's win is not recorded. Removing a daemon, character or boss id
+makes a save unreadable with no bump.)_
+
 **Charter:** the third sector and every orphaned content item — the first
 round whose job is simply *more game*, on the engine Rounds 1–9 finished.
 
@@ -828,6 +894,19 @@ Round-9 sibling phase, explicitly.
 
 ## Round 11 — Onboarding & Feel
 
+_(From the Round 8 close's re-audit, 2026-10-11. Built already: the
+credits and the licence file (116j), and of the run summary the seed line,
+Export run and the level a run was played at. Not designed in, despite the
+Round 8 charter's words: achievements and seen-flags are a comment in
+`src/store/store.ts` and one field, `creditsSeen`. Each is a new lenient
+field of `progress` with a permanent name, and `plans/achievements.md` is
+wrong that reject-stale applies to the store (only the run slot is strict).
+`Run.resume()` re-emits a gate's or an end's event on Continue, so a
+subscriber that counts events sees repeats. Music has `volumeMusic` stored
+with no control and no mute field. Added from the Round 8 spec (D8): an
+easier setting as an accessibility candidate. The smallest supported window
+is 1280×720.)_
+
 **Charter:** the player-facing meta layer and the final feel pass, on final
 content and audited idioms.
 
@@ -868,6 +947,16 @@ the feel pile is empty or explicitly deferred.
 ---
 
 ## Round 12 — Ship
+
+_(From the Round 8 close's re-audit, 2026-10-11. The Electron shell exists
+as a development shell (`shell/electron/`, `npm run shell`): no packaging,
+the probes and the recorder in its `main.mjs`, one `store.json` rewritten
+whole, no single-instance lock. Round 8's browser smoke was Firefox and
+Edge, with two lines unread (TODO "§118 riders"); Chrome proper and Safari
+are this round's. The Round 8 spec ends no-migrations at 1.0, and nothing
+below names the migration work. A stranger's exported journal replays only
+on the commit that recorded it, forced on any other, and never across a
+config change; only finished runs are exported.)_
 
 **Charter:** the actual "a way to ship the game," Steam-shaped.
 
@@ -933,7 +1022,11 @@ records an achievement on a clean machine.
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
 | Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
 | Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |
-| Tutorial · music · achievements · run summary · credits · feel sweep | plans/* / TODO | 11 |
+| Tutorial · music · achievements · the rest of the run summary · feel sweep · an easier setting (the credits were built at 116j) | plans/* / TODO / Round 8 spec D8 | 11 |
+| The UI sweep (§117.5) · the rest gate (§117.75), inserted and built | Round 8 | 8 |
+| The oracle map · the TODO pass over Round 8's riders · the shell-quoting audit | Round 8 close | 8.5 |
+| Escalation's rule levers · level 3's read against bit sinks | Round 8 spec D8 / 118e | 10 |
+| The end of no-migrations at 1.0 · the shell's packaging, instance lock and store writes · Chrome proper and Safari | Round 8 spec / Round 8 close | 12 |
 | Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 11 |
 | Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 12 |
 | `--sector-hops` in run-config GUI · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | stay in TODO; land opportunistically |

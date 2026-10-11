@@ -178,4 +178,37 @@ by another agent and kept from the session that does the cleanup. It is
 not a gate on single trials. For the user as a reader the instrument is
 their own read of a sample at each subsystem's comment pass.
 
-Readings: **219,036** at 18:25 before this entry's commit.
+Readings: **219,036** at 18:25 before this entry's commit; **219,689**
+at 18:26 on it, `1410520`.
+
+**The user's turn on the probe** (2026-10-11; their words are in the
+spec, "Open"). They asked which model the pilot's agents were, and
+proposed a less powerful agent with no context as a rough measure for a
+human reader and for agents at once, used sparingly and with no formal
+cap.
+
+*The model.* All four runs were `claude-opus-5-5`: no model was set, and
+the `Explore` agent took the session's. The session's notes had said so
+before anything showed it. The check is each agent's transcript in the
+session store (`agent-<id>.jsonl` under `~/.claude/projects/`), where the
+`"model"` field names only that id (8, 12, 2 and 2 times). The Agent tool
+takes a model for each run, so a smaller reader can be chosen. Those
+transcripts also make it checkable what a reader ran.
+
+*The session's read, put to the user (open).* The weaker reader is the
+better form, for the reason the pilot showed: two Opus readers got an
+easy question right twice, and a reader that cannot fail leaves only the
+token count, which was noisy. It stands in for a human reader on whether
+the code's behaviour can be worked out (it holds few special cases at
+once, leans on names and comments, is misled by a stale comment) and not
+on whether the code is pleasant to read (finding costs it nothing and
+length does not tire it). So the questions become predictions of
+behaviour, "what happens when", with the key taken from running the code;
+and since the round changes no behaviour, one question and one key hold
+on both trees. Sparing use as three named occasions: a calibration in
+§119 (which small model lands in the middle, and a planted case), the
+round's close with both trees read together, and the neutral-team trial
+if the user wants its claim tested. Two traps of this form: the reader
+must not run the code, and questions picked by their baseline score must
+be measured afresh on both trees, or the comparison regresses toward the
+mean and reads as an improvement.

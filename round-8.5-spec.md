@@ -120,9 +120,20 @@ comment-stripped before/after diff with a failing control.
 ## Open
 
 - **The cold-read probe.** None of D2's counts measures "approachable"
-  directly. The session's idea: a fresh agent given the same few
-  find-and-extend tasks on the code before and after. The user asked to
-  talk it through (2026-10-11); nothing is signed.
+  directly. The session's idea: a fresh agent given the same few tasks on
+  the code before and after. The user's turn on it (2026-10-11):
+
+  > - When I think of code simplicity, that's really a proxy for how easy
+  >   a code base is to reason about.
+  > - Primarily I'm thinking of this from a human reader perspective,
+  > - Agents of your capability can handle the repo already. Though at the
+  >   same time, we don't want to make it harder for you.
+  > - The thought occurred to me that having a less powerful agent with no
+  >   context might serve as a rough way to measure both.
+  > - And yeah, I don't know if we'd want a formal cap, but we'd want to
+  >   use this sparingly.
+
+  Nothing about it is signed; its form is for §119's cut.
 - **§119's decisions:** the tool-only replay flag, which reverses §114's
   choice; whether the journal corpus is tracked or re-recorded from its
   seeds; the chaos census's other eight command kinds.

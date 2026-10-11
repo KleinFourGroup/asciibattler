@@ -586,6 +586,8 @@ tests/
   fuzz/                      # A3: headless balance harness (opt-in CLI)
   pathing/                   # §42b/c: movement-metrics harness (MovementMetricsCollector + fixture maps + runner + shipped-layout capture; `npm run pathing` → the PATHING.md tables; baseline.test.ts pins the fixture numbers) — the Pathfinding-Audit instrument; runs in the main suite
 
+itch/                        # §118: the itch.io page as files — `page.md` (the page's text, as pasted into itch) and `settings.md` (the project form: what is decided, what is suggested, the steps of an upload). The page's address is in neither
+
 retro/
   scratchpad.md              # rolling process notes
   post-mvp-review.md         # CHECKPOINT 7 retrospective

@@ -679,3 +679,13 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
 - [x] **The first three events' prose predates the adopted style.** ✅
   2026-10-09 (118d): rewritten by the user, the outcomes held by
   `tests/event-outcomes.test.ts`; `event=<id>` opens one (WORKLOG §118d).
+
+## §118 riders (2026-10-10)
+
+- [ ] **Last run exports a finished run only** (118f's audit). The end
+  screen's Export run and Settings › Data › Last run hand over the newest
+  run that ended (`lastRunJournal`), so a player reporting a bug in the
+  middle of a run has only Export everything, which carries the saved run
+  and its journal among everything else. The itch page says so. A row
+  that exports the run in progress would be the smaller file; unchecked:
+  whether `npm run replay` takes a journal whose last segment is open.

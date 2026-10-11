@@ -60,7 +60,8 @@ stop holding their text (its header has the options).
 upload, into `output/itch/`, named by the build's ID. It checks the zip
 before it prints: every entry name free of backslashes, `index.html` at the
 root, and the extracted tree byte-identical to the build. The upload
-itself is done by hand.
+itself is done by hand. The page's text and the form's settings are in
+[itch/](itch/).
 
 Every build carries a short report for players: Settings › Data › Copy
 diagnostics (`src/diagnostics/`) copies the build's ID, the browser and its

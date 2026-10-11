@@ -10757,3 +10757,35 @@ keeps the old text, as a test's reference and nothing a player sees.
 
 **The AI line, agreed** (the user: "I'm good with it"), with one word
 still open: a more exact name for "interface text".
+
+### 118g — the page in the repo (2026-10-10, session f677c6ff) — the stop open on the user's last look
+
+The reading: **372,210** at 14:26 on the events' commit, `5e4dcd5`.
+
+**The user wrote the other edits themselves** (how an order is given,
+without the keys, "since those are rebindable"; the bug report's two
+exports and the diagnostics; the AI Disclosure section in their own
+words), left the optional lines out, and said yes to a mention of GitHub
+issues and to `itch/` as the home.
+
+**What the session did to the text,** each shown to the user: a doubled
+"via", a full stop moved inside its bracket, "on GitHub" for "in the
+GitHub"; the diagnostics button by its name in the game (the draft had
+"DIAGNOSTIC DATA"; the control is Copy diagnostics, and it copies where
+the draft said the data "can be found"); and one sentence sending a
+reporter to the repo's issues, where the file attaches. ✔ The repo is
+public with issues on (`gh repo view`), and GitHub's own page lists
+`.json` among an issue's attachments, to 25 MB; ✔ both exports are
+`.json` files (`backupFileName`, `journalFileName`).
+
+**The files:** `itch/page.md`, the text as pasted, and
+`itch/settings.md`, the form: what is decided, what the session
+suggests, what is the user's to make, and the steps of an upload. The
+form's option names are from memory, since itch's page on embeds would
+not load. No address of the page is in either.
+
+**Not taken from the session's list, and said to the user once more:**
+that a refused save keeps settings and unlocks; that the frame is exactly
+the smallest window, so a small screen needs the fullscreen button.
+
+**A rider:** Last run exports a finished run only (TODO "§118 riders").

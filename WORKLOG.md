@@ -212,3 +212,138 @@ if the user wants its claim tested. Two traps of this form: the reader
 must not run the code, and questions picked by their baseline score must
 be measured afresh on both trees, or the comparison regresses toward the
 mean and reads as an improvement.
+
+**The user's answer** (2026-10-11): "You read me right, Claude! I think
+that this will be a very interesting trial." With one caveat and one
+question, both in the spec's Open section: if calibration finds Haiku
+still saturates correctness, revisit and see whether the token budget
+differentiates; and whether a question is run once or averaged over N,
+"based on how expensive calibration is". The session's answers are in
+119f's line below.
+
+### The §119 audit, and the cut put to the user (2026-10-11, session e1342511)
+
+✔ = read by this session at the file and line. Nothing here was built.
+
+**What the audit found.**
+
+- **The determinism test compares a tree with itself.** ✔
+  `tests/integration/determinism.test.ts:33-48`: two runs of one seed on
+  the same code, held equal, with no hash-shaped literal in the file.
+  Snapshot assertions are used nowhere: `toMatchSnapshot` and
+  `toMatchInlineSnapshot` appear in no file under `src` or `tests`, and no
+  `__snapshots__` file is tracked. Whether some other test pins a
+  battle's bytes from an earlier commit was not searched. So the
+  charter's "byte-identical under the determinism test" names no proof
+  across commits. The proofs that cross a commit are the
+  worktree-baseline fuzz diff (`process/oracles.md`), a stored journal
+  replayed on the new tree, and the build's hash.
+- **What a journal checks.** ✔ `src/journal/replayJournal.ts:199-209`,
+  `:222-231`, `journal.ts:118-120`: each battle's winner and tick count,
+  and at the end one 32-bit hash of the Run's snapshot text. It holds no
+  snapshot and no events. So a deletion that slims the snapshot changes
+  the end hash with the behaviour unchanged, and the hash cannot say which
+  field moved; and nothing in a replay looks at the events a battle
+  emitted.
+- **The config refusal** ✔ `replayJournal.ts:118-126`, and the build
+  refusals with their `--force` ✔ `replayTool.ts:46-61`, `:103-120`. A
+  journal recorded headless carries a build ID that names no commit
+  (`0.0.0+test`, `0.0.0+chaos`), so the tool refuses it unforced; a test
+  that calls `replayJournal` itself meets only the config check.
+- **The shipped game replays nothing.** ✔ The one file under `src` outside
+  tests that imports `replayJournal` is `src/journal/replayTool.ts`, and
+  that is imported by `scripts/replay.ts` and tests. `Game.ts` imports the
+  recorder only (`:47`, `:113`). A flag on the replay is a tool's by
+  construction, and a pin can keep it so.
+- **A headless recorder exists.** ✔ `tests/journalDrive.ts:83-174`
+  (`driveRun`: the pane kit's rows as the player, a recorder on the bus)
+  and the chaos driver, which replays its own journal at the end
+  (`tests/chaos/chaos.ts:1-20`).
+- **A sample of six journals** (a throwaway test over `driveRun`, seeds 1
+  to 6, no dials, `replayPlants`; deleted after the run):
+
+  | seed | end | battles | entries | journal bytes | end snapshot bytes | kinds sent | replay ms |
+  |---|---|---|---|---|---|---|---|
+  | 1 | defeat | 30 | 309 | 23,412 | 45,603 | 11 | 3,617 |
+  | 2 | defeat | 12 | 117 | 8,594 | 21,177 | 8 | 494 |
+  | 3 | defeat | 16 | 157 | 11,722 | 27,389 | 9 | 889 |
+  | 4 | defeat | 9 | 76 | 5,818 | 15,940 | 6 | 1,418 |
+  | 5 | defeat | 19 | 186 | 14,409 | 35,224 | 9 | 3,595 |
+  | 6 | defeat | 12 | 122 | 9,582 | 23,530 | 7 | 3,277 |
+
+  Every replay reached its journal's hash. Six journals are 73,537 bytes
+  and replay in 13.3 s, so thirty would be near 0.4 MB and a minute: small
+  enough to track, too slow for every `npm test`. All six runs were lost,
+  none sent a port trade, `usePacket`, `redrawCards`, `empowerUnit`,
+  `passGrant` or `declineReward`, and only seed 1 sent
+  `dismissSectorCleared`.
+- **The chaos census** already counts `applied` beside `sent` ✔
+  `chaos.ts:113-114`; the test pins `sent` only ✔ `chaos.test.ts:50-66`.
+- **The build's hash is a ready proof for code with no tests.** ✔
+  `scripts/dist-hash.mjs:1-14`: one hash over `dist/`, with the build ID
+  pinned for a compare across commits. A bundler should leave out code
+  the production entry never reaches, and comments with it; that is an
+  expectation here, and 119g's planted break is where it is shown.
+- **No coverage tool is installed** (`package.json`: vitest, no
+  `@vitest/coverage-v8`). Which lines a proof reaches can be shown today
+  only by planting a break at a site.
+- **The suite's config swallows `console.log`.** The first run of the
+  sample printed nothing and was run again with a failing `expect`, as
+  AGENTS says to.
+
+**The cut, as put to the user** (unsigned as this is written; ROADMAP
+gets it once it is signed).
+
+- *119a, the replay tool reaches further.* A tool-only option past a
+  config mismatch (`--force-config`), each battle's event digest with an
+  optional mapping applied before hashing, the end snapshot handed back,
+  and a pin that keeps non-test `src` outside `src/journal/` from
+  importing the replay. Exit: a journal stamped with another config hash
+  refuses without the flag and replays to its hash with it; the mapping
+  catches a planted rename. No bump, no smoke. Read: `none`.
+- *119b, the journal corpus.* About thirty journals from a table of seeds
+  and dials (the seeded player and the chaos driver), tracked under
+  `tests/fuzz/corpus/` with their digests and a census of what they reach;
+  all replayed in the smoke tier, three on every `npm test`. Exit: all
+  reach their hashes; a planted sim edit diverges, reported journal by
+  journal. The smoke fires. Read: `none`, with a stop if no run ends in
+  victory: the decision is to put a recorder on the fuzz bot or to leave
+  the late game to the fuzz diff.
+- *119c, the chaos census pinned on what changes the run.* The test names
+  the kinds that change the run on the every-commit seeds and the kinds
+  only sent, and fails when either list moves. A kind counts when
+  `applied > 0` on any seed; 13 of 21 at the Round 8 close, re-measured
+  at step zero. Read: `none`.
+- *119d, parsed-config equality and the snapshot field diff.* Two tools
+  with tests: every loader's exported values as one digest per export, for
+  a compare across a config move; two end snapshots compared path by
+  path. Each is empty HEAD against HEAD and catches its plant. Read:
+  `none`.
+- *119e, the comment instruments.* The count of step codes in `src`
+  comments with its rule written down, pinned as a ceiling that may only
+  fall; the comment-stripped compare against a ref (TypeScript's scanner),
+  with a planted code edit as its failing control; a reading of comment
+  length by directory. Read: `none`.
+- *119f, the cold-read probe, calibrated.* Questions drawn from existing
+  tests, whose setup and asserted outcome give a key the code produced;
+  the reader barred from test files and from running anything, checked in
+  its transcript; a zero task and three runs a question on Haiku; a
+  planted case; half the questions drawn and written by another agent
+  into a folder this session does not open. At most 30 small-model runs
+  and one authoring agent. The user's caveat as its branches: if Haiku is
+  right every time, harder questions inside the same ceiling, and if it
+  still is, the token measure with its spread. N for the close is set
+  from the calibration's spread and price. Read: `batch`, at 119g's stop.
+- *119g, the oracle map and the phase's close.* By part of the code, the
+  proofs, each with its planted break recorded site by site; into
+  TESTING.md; the charter's determinism clause corrected. Read: `stop`.
+
+**The decisions put with it:** the replay flag confirmed (it reverses
+§114's choice); the corpus tracked; the chaos census's other eight kinds
+left until the census wants them; a coverage tool as a new dev
+dependency; a second model's review of the instruments
+(`process/oracles.md` asks that the user be asked); where the stretch
+runs.
+
+Readings: **236,616** at 19:18 on the probe turn's commit, `815fdcb`;
+**288,576** at 19:46 with the audit read and the sample run.

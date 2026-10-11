@@ -133,7 +133,19 @@ comment-stripped before/after diff with a failing control.
   > - And yeah, I don't know if we'd want a formal cap, but we'd want to
   >   use this sparingly.
 
-  Nothing about it is signed; its form is for §119's cut.
+  The session read that as: the reader is mainly the user, with agents
+  not made worse off; the measure is of reasoning; no cap. The user: "You
+  read me right, Claude! I think that this will be a very interesting
+  trial." And a caveat with a question:
+
+  > I think we have one final caveat: if calibration finds that Haiku
+  > still saturates correctness, then we revisit and see if total token
+  > budget differentiates? And do we just one-shot these, or is it
+  > averaged over N tries? We'll probably have to make that call based on
+  > how expensive calibration is...
+
+  Its form (the small reader, questions that predict behaviour, sparing
+  use) is agreed; its step, 119f, is signed with §119's cut.
 - **§119's decisions:** the tool-only replay flag, which reverses §114's
   choice; whether the journal corpus is tracked or re-recorded from its
   seeds; the chaos census's other eight command kinds.

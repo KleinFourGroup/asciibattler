@@ -11128,3 +11128,95 @@ are the evidence).
   a file read whole or a result printed whole, and the dearest steps were
   mostly reading and measuring by their own accounts (116c 251k, 116k's
   step zero 182k, 117.5i 288k).
+
+#### C1 — the macro re-audit
+
+**The instrument.** Three read-only sweeps at `631e24d`, ten to nineteen
+minutes each and about 780k subagent tokens together: Round 8.5's charter
+against the code; what Round 8 hands to Rounds 9 to 12; Round 8's own scope
+against what was built (its findings are C0's). Every claim below that
+names a file was re-read by this session or recounted with git; a count
+that is the sweep's alone is marked.
+
+**Round 8.5's premises.**
+
+- *Holds: "Round 8 mostly adds new code at the Game and UI layers."*
+  `git diff --shortstat 35f28e3 HEAD`: no line of `src/sim`; `src/run` 5
+  files, +879 −171; the tree 269 files, +47,059 −4,509.
+- *Moved: the journal as the deletion oracle.* `npm run replay` refuses
+  another commit unless forced, and a config mismatch is
+  `replayJournal`'s own refusal, which nothing forces
+  (`src/journal/replayTool.ts`, header; `replayJournal.ts:118-126`).
+  `configHash()` is over every `config/*.json` as authored
+  (`src/config/configHash.ts`), so removing one key from any config file
+  refuses every journal recorded before it. A forced replay can prove a
+  code deletion; a config deletion goes back to the worktree-baseline fuzz
+  diff (`process/oracles.md`). No journal is tracked in the repo (the
+  sweep's listing), so the round has no corpus until it records one at its
+  baseline. The config has not changed since `v0.1.0`, so a stranger's
+  exported journal replays under force today.
+- *Moved: the chaos driver's reach* (C0): thin at the port trades and the
+  sector-cleared gate, which is where a deletion in the run would want it.
+- *Moved: "reject-stale keeps a later snapshot slimming cheap."* With the
+  channel open, a `RUN_SCHEMA_VERSION` bump tells every player with a run
+  in progress, at the upload that carries it, that the run "was saved by
+  an older version of the game and can't be continued" (`save.rejected`,
+  `locales/en/ui.json`); settings, unlocks and journals are kept
+  (`src/store/runSlot.ts`, header). An id the new build lacks (a daemon, a
+  character, a boss) makes a save unreadable with no bump. A build with no
+  bump is not checked at all: the loader holds a save against neither the
+  build nor the config, so a saved run goes on under the new code
+  (`runSlot.ts:62-72`).
+- *The comment rewrite is larger than the charter's figure.* `§` in `src`
+  is where it was: 1,972 lines in 281 files by `git grep`, 1,953 in 270 at
+  the 7.5 close (the sweep counts 2,051 occurrences now and 2,031 then).
+  But Round 8 wrote its step codes without the sign ("115e —"). The
+  sweep's rough count of bare codes in comment lines is 2,442 in 295 files
+  against 2,187 in 243; it was not recounted here, and its overlap with
+  the `§` count is not known. So AGENTS "Voice" did not hold in the
+  round's own code.
+- *The census's size* (the sweep's counts): `RunConfig` has 25 fields, 13
+  of them URL dials; `config/` is 34 files with about 2,000 distinct key
+  paths. All 13 dials parse in a production build (`Game.ts:282`,
+  re-read), where a `character=` dial starts a run and saves over the slot
+  (`Game.ts:292-295`).
+- *Candidates Round 8 itself left* (the sweep's searches): the DEV battle
+  traces (`src/dev/TraceRecorder.ts`, `replayTrace.ts`, `traceStore.ts`)
+  beside the shipped journal; `Game.devExportRun` and `devLoadRun` beside
+  the store's backup; 37 exported names in the round's new files that no
+  other file names, 34 of them types.
+
+**Rounds 9 to 12** (the second sweep; `store.ts`, `runSlot.ts` and the
+replay tool re-read, the rest the sweep's, each with its file and line in
+its report).
+
+- *Round 9:* each of its three Run bumps rejects strangers' saved runs at
+  its upload; a new command needs its rows in the chaos driver's and the
+  kit's tables, and a new phase a row in the resume test's; gotcha #141
+  covers a page added to a shipped event; the board has an Escalation
+  axis, and the sheet's arbitrated rows reproduce only under the v4 prior
+  table.
+- *Round 10:* its charter never mentions Escalation, and the spec parked
+  the rule levers there (D8); level 3's read depends on bit sinks; an
+  unlock hangs on `bestWin` or on a new, permanently named field of
+  `progress`.
+- *Round 11:* the credits are built (116j); achievements and seen-flags
+  are a comment and `creditsSeen`; `plans/achievements.md` says
+  reject-stale applies to the store, and only the run slot is strict;
+  `Run.resume()` re-emits a gate's or an end's event on Continue, which a
+  subscriber counting events would see twice; the spec's "an easier
+  setting is a Round 11 accessibility candidate" is not in META.
+- *Round 12:* the shell is a development shell (no packaging, the probes
+  and the recorder in `main.mjs`, one `store.json` rewritten whole, no
+  single-instance lock); the smoke was Firefox and Edge; the spec ends
+  no-migrations at 1.0 and the round names no migration work.
+- *The Coverage map:* all eleven Round 8 rows landed. §117.5, §117.75, the
+  rule levers, the easier setting and the end of no-migrations have no
+  row, and none of TODO's "§114 riders" to "§118 riders" is assigned to a
+  round.
+- *Pages:* META calls it "the playtest channel", and the repo's last word
+  is the 7.5 build, deployed 2026-09-26, from before the store.
+
+**Put to the user** (2026-10-11, open as this is written): whether 8.5 is
+still next; whether it may bump the Run schema; whether it opens with an
+oracle step; whether it takes a TODO pass; what Pages is for now.

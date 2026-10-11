@@ -15,6 +15,9 @@ quality.
 - A local batch that runs past twice its estimate gets killed and re-run on
   the box. Determinism makes the restart free, and killing mid-batch leaves
   nothing half-written.
+- Take an arm's estimate from a run that survives, or from several seeds.
+  The first run to return is the shortest: one that dies at hop 6 says
+  nothing about runs that go two acts.
 
 ## The measurement box
 

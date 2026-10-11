@@ -699,3 +699,34 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   inspector on the frame, or a diagnostics zip on a second draft; and for
   the re-open, the live page itself after some days, where Copy
   diagnostics shows the store's sections still there.
+
+## Round 8 close riders (2026-10-11)
+
+From the close's papercut triage (the Round 8 worklog, "118j — the round
+close", C5).
+
+- [ ] **The probe runner's edges** (`shell/electron/probe-cli.mjs`). Its
+  JSON argument read from a file, since Git Bash does not carry JSON on
+  the command line safely (two scratch runners were written for that at
+  117d). One build for a batch of launches, so the tree is free while the
+  batch runs (116k waited three times). The report's shape in the header:
+  a script's value is at `result.script`. And
+  `__probe.drive({ until: 'turn-outcome' })` never stops there (117.5e
+  lost six launches to it).
+- [ ] **`phase-stats` under `--since`** drops a `.5` phase and folds a
+  `.75` one into its whole number, and a subject with a scope word
+  (`save`, `settings`) in place of the step is counted under the word.
+  Round 8 read 135 commits there against git's 196.
+- [ ] **Three tests time out at 5 s when anything runs beside the suite:**
+  `tests/store-guard.test.ts`, and the chaos test's seeds whenever a
+  stream moves their walk (118d). Neither failure names load. A longer
+  timeout on the three, or a line in the failure.
+- [ ] **The friction log is a tracked file,** so filing during a cohort's
+  launch window or a recording dirties the tree: the box holds on a dirty
+  tree, and a clip is stamped `-dirty` (111f-post, 118b). An untracked
+  spool that the tool drains at the next clean moment would keep "file
+  when noticed".
+- [ ] **`forcedEncounterId` fields only at a node of its own kind** and
+  otherwise falls through to normal selection with no warning (117a: a
+  test read another pool, 19 for 22). A line in the `RunConfig` comment,
+  or a warning on a DEV page.

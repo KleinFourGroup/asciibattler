@@ -226,6 +226,14 @@ The kit's use is counted for Round 8's close (`npm run friction-scan`, the
   A `.ts` edit reloads every tab on the dev server at once, and the lock
   goes to whichever boots first; a tab opened on run dials then saves its
   own new run over the slot (seen at 115g).
+- **A dynamic `import()` of a module edited during the server's session**
+  gives a second instance, not the page's own: `/src/render/palette.ts`
+  imported that way read the default palette on a page drawn in the
+  colourblind one. Read the consumer (the DOM, the canvas, `__game`).
+- **A local `.html` file opens as a snapshot without its relative
+  pictures,** and the pane has refused a single-file copy with them
+  inlined (at 7 MB and at 760 KB). A mock page that needs its pictures
+  goes to the user with its layout unread by the session, and says so.
 - **A continue check reloads in the middle of a gate too.** A screen can
   hold state the Run doesn't save (the reward screen's taken rows), and a
   reload on arriving at a gate never shows that. Make a first choice

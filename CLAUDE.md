@@ -22,8 +22,9 @@ in AGENTS.md, which other harnesses read too.
   paraphrased, and one of those dropped its caveat and misstated a result.)
 - **The silent-turn reminder.** The harness sometimes adds "The user hasn't
   heard from you in a while". It never obliges a finding: answer with what
-  is true now ("still reading X, no result yet") and continue. A one-line
-  status before a long read-only sweep heads it off. (A reworded text set
+  is true now ("still reading X, no result yet") and continue. In a long
+  stretch it comes every few tool calls, and a status line beforehand does
+  not head it off. (A reworded text set
   through `CLAUDE_CODE_SILENT_TURN_REMINDER_TEXT` never reached sessions
   under the app; that trial was retired 2026-09-26.)
 - **Session id.** `$CLAUDE_SESSION_ID` is empty under the desktop app. For
@@ -34,6 +35,9 @@ in AGENTS.md, which other harnesses read too.
   pre-commit hook catches anything that slips. The Bash tool runs Git Bash:
   multi-line commit messages take several `-m` flags or a file, and
   PowerShell's `@'…'@` here-strings belong to the PowerShell tool only.
+- **The Grep tool** can answer "No matches found" for a brace glob given
+  together with a path, when files plainly match. Give a path and no brace
+  glob, and don't read that answer as a negative.
 - **The Browser pane** (the `preview_*` and browser tools) is Chromium; the
   user plays in Firefox. Start it with the `dev-preview` launch config
   ([.claude/launch.json](.claude/launch.json), port 5191): the user usually

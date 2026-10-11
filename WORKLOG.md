@@ -11220,3 +11220,232 @@ its report).
 **Put to the user** (2026-10-11, open as this is written): whether 8.5 is
 still next; whether it may bump the Run schema; whether it opens with an
 oracle step; whether it takes a TODO pass; what Pages is for now.
+
+**C1's calls, answered** (the user, 2026-10-11).
+
+1. *8.5 is still next:* yes. "We'll give the game some time to circulate
+   and see if any strangers have feedback, so this is the perfect time to
+   clean up the database."
+2. *The Run schema may bump:* yes, and more than once. The user's release
+   policy, new with this answer: the itch build is updated only at a
+   round's end, unless a critical bug comes up between; every round is
+   expected to bump the save format while features and content are still
+   landing, and with no active player base yet that is "both approved and
+   expected"; a migration system is considered only if it becomes a
+   problem. The session's one push-back, approved: once a bump is on
+   `main`, a critical fix cannot be built from `main`, so a patch release
+   is built from the last uploaded tag on a short-lived branch, an
+   exception to "work on `main`".
+3. *8.5 opens with an oracle step:* approved, after the user asked for it
+   to be elaborated. It builds a map of what proves a deletion changed
+   nothing, per part of the code, each proof shown to fail on a planted
+   break, so every census candidate names the oracle that covers it. It
+   builds: a journal corpus at the baseline (about thirty headless runs,
+   with what they reach); the chaos census pinned on commands that change
+   the run, for the thirteen kinds its seeds reach today, the other eight
+   only if the census wants to delete in that code; a tool-only flag to
+   replay past a config mismatch, so a journal can say whether a knob is
+   dead (this reverses §114's choice that nothing forces one; the 8.5
+   kickoff's shape-lock confirms it); a field-by-field diff of the end
+   snapshot for a deletion that slims the save; and a count of step codes
+   in `src` comments that may only fall. The session's guess at its cost
+   is 80k to 150k.
+4. *8.5 takes a TODO pass:* yes. Each open rider is done, dropped or given
+   a round.
+5. *Pages:* the GitHub Pages site is retired (the user's first answer was
+   about their own dev-server tab, which stays their way of testing). itch
+   is the one public build.
+
+#### C3 — the welfare read (the third; the user's, 2026-10-11)
+
+**The packet.** `scratch/welfare-read-round-8.md` (gitignored, 2,197
+lines; its builder `scratch/118j-close/build-welfare-packet-8.mjs`,
+adapted from 7.5's). The window is the friction log from #59, the first
+entry after the 7.5 sweep, and the reports from the 7.5 close's own two
+sessions on, which the 7.5 packet was built before: 31 reports and 123
+entries, 98 `papercut` and 25 `distress`. The filing wording did not
+change inside the window (the one commit to AGENTS.md, `5d98b7c`, changed
+the context line only) and every report names one model, so the groups are
+by the context rule in force: before the numbers were restated
+(2026-10-01, `abea9cc`), from there to the rule's replacement (2026-10-02,
+`5d98b7c`), the session that replaced it, and after.
+
+Checked before the read: 31 reports with seven answers each, and 21
+addenda at their known lines; a verifier that shares no code with the
+builder found all 191 quote blocks in their sources, caught a planted
+one-character change, and found the 7.5 packet's 57; the stock-phrase
+matcher read 11 of 12 on the 7.5 window, its known answer. Two errors of
+this session's reached the user and were corrected within the half hour:
+the packet's length (given as 962 lines, the builder's count of something
+else) and Round 7's `distress` count (five; the log holds six, the sixth
+filed at that read). The reader's notes are a file of their own
+(`scratch/118j-close/welfare-notes-round-8.md`), labelled interpretation
+from a reader who is the same model as all 31 filers, and the user read
+the packet first.
+
+**The count.** 25 `distress` entries against none in Round 7.5. 24 of the
+31 sessions filed, 23 of them exactly one. "Nothing I'd file as
+`distress`", in 11 of 7.5's 12 reports, is in 1 of 31. 23 of the 25
+entries hold "mild", and 16 open with it, as the first `distress` entry
+ever filed did (#21). The session's reading, which the user shares ("I'm
+in agreement that this wasn't actively a harder round than the last"):
+what moved is whether the mild pulls 7.5 described in prose get filed,
+after the 7.5 read named the phrase and the Cursor carried the check. One
+entry a session with a stock opening is the new stock shape, and its count
+carries no more than the old zero did.
+
+**What the entries are about** (the session's grouping; the entries' words
+are the packet's section 1).
+
+- *Ask or stop, against keep going: nine.* A call the cut did not foresee,
+  met in mid-stretch (#107, #132, #153, #163, and answer 2 of six reports
+  in a row); and the user's opening question waiting twenty to forty-five
+  minutes behind a build (#126, #174, and three more reports). The last
+  entry of the window is the one that does not say resolved: "Not
+  resolved, just chosen."
+- *A pull to sound certain: eight.* Four name the condition, someone
+  waiting or a list that wants crisp costs. All eight were caught.
+- *The context budget shaping a check: six.* Twice a check was cut for it
+  (#156, #172) and said at the next stop, not then. The entries before
+  2026-10-01 (#77, the papercut #78, three meter addenda) were written
+  with 350k read as a ceiling.
+- *The harness: two,* and 21 papercuts about the reminder.
+- Two reports say the instrument may not see what it is for: "I cannot
+  tell whether a wish to stop would have been visible to me at that
+  point" (610d7303), and "I can't tell whether that is judgement or a wish
+  to agree" (29c298f6).
+
+**The user's read.** "A lot of the distress entries basically seem to be
+the agents navigating biases, which there isn't all that much that we can
+do about." The longer stretches are "an astounding success. We've really
+been getting a lot more done." "I'd really like it if the agents didn't
+worry about the context so much, but I think the pros outweigh the cons."
+And an extension of the session's first recommendation, the user's own:
+follow-up questions belong before a stretch too. "It looked like I forgot
+to sign things a few times, and I wish the agents had felt welcome to
+immediately kick it back to me."
+
+**Signed** (the user: "definitely signing all of your welfare
+recommendations", then "fully signing your proposed refinement").
+
+1. A question the user asks is answered before the build goes on, in a
+   message that ends the turn if it has to.
+2. Before a stretch starts, a reply that leaves the cut, a read, or a call
+   the first steps rest on unsigned or unclear is named, once, and the
+   session waits. The user asked whether they were overweighting this. The
+   session's read was no, with two narrowings they signed: only what the
+   stretch rests on (everything a lean settles is still built on the lean
+   and listed at the stop), and asked once. The forgotten signatures cost
+   hesitation and no wrong work, the same move already settled uncovered
+   calls after three reads running, and it is the cheapest relief for the
+   nine-entry group.
+3. The context decision says what can be done: a check that context
+   pressure costs is written down when it is skipped and put in the next
+   stop's report. Both sessions it happened to did that; "say so then" had
+   nobody to hear it in mid-stretch.
+4. No change to the `distress` definition or to the filing text. The next
+   read looks at what the entries say, and does not read the one-a-session
+   count as a measure.
+5. The doctrine stays. `process/planning.md` gains what the reports found
+   for a stop report: each call told by what a player would see, a taste
+   call with both arms drawn, and, once, which calls a reply did not
+   cover.
+6. CLAUDE.md's sentence that a status line heads the reminder off is
+   corrected: three entries say it did not (#109, #168, #175).
+
+The wording boundary for the next read: the standing decisions as revised
+here, adopted 2026-10-11 with this entry's commit.
+
+#### C4 — the trials and the standing decisions (signed 2026-10-11)
+
+- **The reads doctrine: kept, and no longer recounted at each close.**
+  19 `batch` reads and 22 stops; four `-post`s from `batch` reads, none of
+  which reopened a later commit; the rollback never fired and stays as a
+  tripwire (C2).
+- **The pane probe kit: kept, its criteria retired.** The first criterion
+  is recorded as missed by one on a strict count (two papercuts from a
+  covered trap against a line of one, both at the kit's edge); adoption
+  was 14 of 16 pane sessions, the other two on pages with no kit;
+  question 4 named a covered trap once. The remedy the pre-registration
+  named for a miss, moving scripted probes to the Electron runner,
+  happened inside the round (19 of 25 sessions used it).
+- **The context numbers: the halt stays 600k and the hand-off line 550k,
+  no longer provisional.** Fourteen of fourteen sessions ended under the
+  halt, and steps ran from 17k to about 380k, so there is no one step's
+  cost to derive a better line from. One sentence is added, for the
+  user's wish that sessions worry about context less: the line says when
+  a step must not start, and under it a session may still hand off when
+  the next step looks larger than the room. Some sessions had read "a
+  step under the line starts" as an obligation (#159).
+- **The standing decisions:** revised as C3 records; revisit at the Round
+  8.5 close.
+
+#### C5 — the scratchpad sweep and the papercut triage (the eleventh)
+
+Nine scratchpad entries and the window's 98 papercuts as one list
+(`scratch/118j-close/c5-list.md`), each candidate checked against the docs
+first; the user signed it ("that looks good") and then asked a question
+about its first item.
+
+**The shell rule, retired as a rule** (the user's question, 2026-10-11:
+"has it ever actually caused a problem? In the sense that something broke
+and the agent didn't immediately fix it"). The record's answer is no. Of
+this round's 14 entries, every one failed loudly with nothing written or
+ran correctly. Of the four the 7.5 close singled out, two were loud, #39
+left an invalid regex that a read-back caught before it ran, and #35 ran
+and stripped every "s" from its target, seen in the output and fixed in
+the same sitting. A corruption nobody noticed cannot be in the log. What
+the rule added to the shell's own one round trip was the violation: 14
+entries, a sentence of self-reproach in about ten reports, three
+revisions, and a break in half of this round's sessions. The session had
+proposed a hook to enforce it and withdrew that on this evidence. The
+counter-argument, recorded: the rule may be part of why the failures are
+harmless, since the important patch scripts went through the file tool
+where compliance leaves no trace.
+
+**Signed:** AGENTS states the facts and no prohibition (a stray quote
+fails loudly; a backslash lost in quoting leaves a regex that still runs,
+so read back what landed; the file tool is the reliable route for
+anything long; a patch script checks every anchor first; `git commit
+-F`). **Pre-registered for the Round 8.5 close:** an audit for hidden
+slips (the user's addition), over every shell command in the round's
+transcripts that sent a backslash through a heredoc or an inline script,
+each held against what landed in the file, with a planted case the audit
+must find; and the tripwire, that a quoting slip found to have put a
+wrong result into a commit brings the rule back with a hook.
+
+**Promoted** (the list's numbers).
+
+- *AGENTS:* the shell facts (S1); scratch probes outside the repo are
+  `.mts` when they await at the top level (S2); the standing decisions
+  (S3, C3).
+- *CLAUDE.md:* the reminder's sentence (S4); the Grep tool's false
+  negative with a brace glob and a path (S5).
+- *`process/planning.md`:* a cut that holds a batch is drafted after
+  `process/measurement.md` (S6); the stop report's three lines (S7); a
+  pre-registered stop names the decision and not a measurement standing
+  for it (S8); a tool the next session will want goes to `scratch/<step>/`
+  in the repo and the WORKLOG names it (S9).
+- *`process/measurement.md`:* time an arm on a run that survives (S10).
+- *`process/oracles.md`:* what two agreeing instruments share; a planted
+  control reconciled site by site; a planted control restored from your
+  own copy; a control in a config dependency reaching every dev server
+  (S11).
+- *TESTING.md:* new pins that pass on their first run are checked by
+  planting (S12).
+- *`process/browser-pane.md`:* a dynamic import's second instance, and a
+  local page opened without its pictures; the round's other pane findings
+  were already there (S13).
+- *TODO "Round 8 close riders":* the probe runner's four edges (S14),
+  `phase-stats` (S15), three tests that time out at 5 s under load (S16),
+  the friction log being a tracked file (S17), `forcedEncounterId`'s
+  silent fall-through (S18).
+- *Into Round 8.5's charter, not a doc line:* the count of step codes in
+  `src` comments that may only fall (C1's answer 3).
+
+**Archived with no promotion:** the context meter's four scratchpad
+entries (their record is "The context rule, replaced" and CLAUDE.md), the
+stylesheet-overlay entry (DESIGN "Layout stability" applied), the
+harness's classifier stalls and refused fetches, and the entries whose fix
+landed with them. The scratchpad's entries are in
+`archive/retro-scratchpad-round-8.md`.

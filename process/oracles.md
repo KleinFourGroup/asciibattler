@@ -24,6 +24,16 @@ with the "before" pinned in a worktree.
 - A control that swaps a file in (HEAD's copy, say) saves and restores it
   through one path variable, never silences the restore, and prints
   `git diff --stat` afterwards, so a swapped copy left in place shows.
+- Put a planted control back from your own copy of the file, taken just
+  before the plant. `git checkout` on it also takes any uncommitted fix
+  the file holds.
+- A control planted in a config dependency (`vite.config.ts`, a module the
+  dev server's own code loads) reaches every running dev server, the
+  user's included. After the revert, touch the file and read each server's
+  page.
+- Reconcile a planted control site by site, not by totals. Two totals
+  that disagree invite a story for the difference; a row per site
+  accounts for every case and shows where the reader is blind.
 
 ## Presentation refactors
 
@@ -51,6 +61,10 @@ test or layout change, such as a new wrapper element (gotcha #137).
   pooled".
 - **Recompute a headline metric** independently from the raw rows. It is
   the strongest check an instrument can get.
+- **When two instruments agree, list what they share** before counting
+  the agreement as a second reading. Two detectors that convert a time to
+  a sample index the same way agree with each other and not with the
+  file.
 - **A paired read with zero discordant seeds and byte-identical artifacts**
   usually means the thing you varied never reached the code, not that it
   has no effect.

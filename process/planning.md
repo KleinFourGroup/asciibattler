@@ -71,7 +71,13 @@ Cut sub-steps when the phase starts, not when the roadmap is written.
    - each step predicts whether the pre-commit fuzz smoke fires. `config/`
      is sim input, so "no sim touch" is wrong for a config change;
    - a count the exit will re-record (a rule count, a census) is written
-     with its derivation: which rows count, and why.
+     with its derivation: which rows count, and why;
+   - a step that launches a batch is drafted after reading
+     [measurement.md](measurement.md), whose rules decide where the batch
+     runs and how large it is;
+   - a step that pre-registers a stop names the decision that goes back to
+     the user, not a measurement standing for it (a small count can leave
+     the decision standing).
    When a risky change has a separable UI, cut it headless core first and
    render second, so the eyeball-only part is only what's actually visual.
 3. **Shape-lock with the user.** This is a stop: the user signs the cut and
@@ -94,6 +100,11 @@ building. A change inside that intent (an approved fix turns out to need two
 more rules to do what it was approved for) can be built and flagged
 prominently in the report.
 
+**Tools that outlive the session.** A probe or helper the next session
+will want goes to `scratch/<step>/` in the repo (ignored by git), not to
+the session's own scratch directory, and the step's worklog entry names
+it.
+
 **Deferrals.** When a step deliberately leaves work for a later step, write
 a landing note (what was left, where it lands, and what invariant the
 landing must preserve) in the step's worklog entry and in a code comment at
@@ -107,14 +118,21 @@ through Round 7.5 and kept at its close (2026-09-26): 11 stops and 7 `batch`
 reads, four `-post`s all from stops, and the rollback never fired. It
 replaced "pause after every commit", because most real findings came from
 the user's playtests, not from reviewing commits, and every session had to
-decide on its own which pauses were real. The `batch` half was thin in an
-eyeball-heavy round, so the Round 8 close counts `batch` reads again.
+decide on its own which pauses were real. Round 8 had 19 `batch` reads and
+22 stops, four `-post`s from `batch` reads and no rollback, and the count
+is no longer taken at each close.
 
 - Reads only move up. A session may upgrade a read the moment step zero
   shows a dependency, and the user can upgrade one with a word; a downgrade
   needs the user.
 - The stop report lists, per step, what was verified by which instrument
-  and what was not.
+  and what was not. It tells each call by what a player would see, and
+  brings a taste call with both arms drawn. When a reply covers the reads
+  and not the calls, say once which calls it did not cover.
+- Before a stretch starts the user is present, so that is where questions
+  are cheap: a reply that leaves the cut, a read, or a call the first
+  steps rest on unsigned or unclear is named, once, and the session waits.
+  What a lean can settle is built on the lean and listed at the stop.
 - Pre-registered rollback: if a `batch` finding reopens two or more later
   commits, the rest of that phase's `batch` reads become `stop`.
 - Proportion by round: an eyeball-heavy round is stop-heavy; a
@@ -136,10 +154,12 @@ HANDOFF Cursor), and neither is a hard limit.
 
 - **The halt** (600k) is where the user wants the work in a fresh session,
   whatever is in flight. Passing it by a little is not a failure.
-- **The hand-off line** (550k) is the halt less one step's cost, so that a
-  step started under it ends near the halt. At the start of each step, read
-  the context; the reading on the previous step's commit counts. Past the
-  line, commit what is done and hand off.
+- **The hand-off line** (550k) sits under the halt so that a step started
+  under it ends near the halt. At the start of each step, read the
+  context; the reading on the previous step's commit counts. Past the
+  line, commit what is done and hand off. The line says when a step must
+  not start: under it, a session may still hand off when the next step
+  looks larger than the room.
 - **At a stop or a shape-lock**, the report gives the session's reading
   and says whether the stretch it opens looks likely to fit under the line.
   The user decides whether the stretch starts here or in a fresh session,
@@ -150,9 +170,10 @@ HANDOFF Cursor), and neither is a hard limit.
   passed, pause at the next step boundary and ask again.
 
 Write the readings into the WORKLOG with their times: each step's commit
-reading, and the readings at a stretch's start and end. The hand-off line
-is provisional: the round close measures what steps cost from those
-readings and resets it.
+reading, and the readings at a stretch's start and end. The Round 8 close
+kept both numbers on those readings: fourteen of fourteen sessions ended
+under the halt, and steps cost from 17k to about 380k, so no one step's
+cost gives a better line.
 
 ## HANDOFF upkeep
 

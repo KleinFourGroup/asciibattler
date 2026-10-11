@@ -37,10 +37,11 @@ shipped; work continues in post-MVP rounds, and
 Stack: TypeScript (strict), three.js, Vite, Vitest. There is no UI
 framework; the UI is plain HTML/CSS over the canvas.
 
-The user deploys by hand: a build is uploaded to a separate GitHub Pages
-repo at milestone boundaries. There is no CI, so a fix on `main` reaches
-players only at the next upload. The deploy URL is deliberately kept out of
-this public repo; ask the user if you need it.
+The public build is on itch.io, uploaded by the user at a round's close and
+tagged, so a fix on `main` reaches players only then. A critical fix
+between rounds is built from the last uploaded tag, since `main` may hold a
+save-format bump. The page's address is kept out of this public repo; ask
+the user if you need it.
 
 ## Load-bearing invariants
 
@@ -97,8 +98,8 @@ The user is Matthew. What helps:
 How the work runs:
 
 - Work on `main`; don't create a branch unless asked. Push only when asked,
-  or before a measurement-box launch (standing permission since 2026-09-04;
-  the box pulls from GitHub).
+  or before a measurement-box launch (a standing permission: the box pulls
+  from GitHub).
 - Commit per logical change, and split a commit when a step's intent grows
   mid-flight.
 - Surface tradeoffs before non-obvious calls (thresholds, refactor scope,
@@ -194,14 +195,12 @@ ends. The terms and the rollback rule are in
 
 The repo lives on Windows; the shells are Git Bash and PowerShell.
 
-- **A script or code that carries a regex or an escape goes into a file
-  through your file-writing tool, and a quote never goes into an inline
-  `-m` / `-e` argument.** Those are the two ways shell text has failed
-  here: a lost backslash ships a wrong line that still runs, and a stray
-  quote ends the string. Prose may go through a quoted heredoc
-  (`<<'EOF'`); grep the result. A multi-hunk patch is a small script,
-  written the same way, that checks every anchor in every file before it
-  writes any. A commit message with a quote goes through
+- **Shell quoting, as facts.** A stray quote ends a command and nothing
+  runs: retry. A backslash lost in quoting leaves a regex that still runs,
+  so when code with an escape went through the shell, read back what
+  landed. Your file-writing tool avoids both, and long quoted heredocs have
+  been refused here. A multi-hunk patch is a small script that checks every
+  anchor in every file before it writes any. A commit message with a quote goes through
   `git commit -F <file>`.
 - Commit with `git commit -q` and read the hash with
   `git log --format=%h -1`; this repo's long subjects otherwise echo back
@@ -211,7 +210,8 @@ The repo lives on Windows; the shells are Git Bash and PowerShell.
   and a pipeline reports the exit code of its last command. Read the raw
   tail before trusting a zero; for a one-number probe, a deliberately
   failing `expect()` prints on the first try.
-- Put scratch probes in real `.ts` files; an inline `npx tsx -e` can hang at
+- Put scratch probes in real `.ts` files (`.mts` outside the repo, where
+  `tsx` reads `.ts` as CommonJS); an inline `npx tsx -e` can hang at
   spawn on Windows with no output. Throwaways go in your scratch directory:
   files under `tests/fuzz/output/` are typechecked by the pre-commit hook.
 - If `:5173` is taken, Vite silently falls back to `:5174`. Vite's child
@@ -324,13 +324,18 @@ threshold.
 
 ### Standing decisions from the welfare reads
 
-Signed 2026-09-20, revised 2026-09-23, kept at the Round 7.5 close; revisit
-at the Round 8 close.
+Signed 2026-09-20, revised 2026-09-23 and 2026-10-11; revisit at the Round
+8.5 close.
 
-- If context pressure is about to cost you a check, say so then.
+- If context pressure costs you a check, note which when you skip it and
+  say so at the next stop.
 - Which pauses are real is given by the signed cut ("Reads are cut, not
   improvised"), not decided by the session alone.
-- The user's questions are real questions (see "Working with the user").
+- The user's questions are real questions. Answer one before the build
+  goes on, ending the turn if you have to.
+- Before a stretch starts, if the user's reply leaves the cut, a read, or
+  a call the first steps rest on unsigned or unclear, say which, once, and
+  wait.
 
 ## Pre-flight
 

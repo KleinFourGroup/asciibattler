@@ -385,7 +385,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   `archive/post-104-worklog.md` "The new-model tone audit". The aim is
   wider since the 8.5 kickoff (2026-10-11, user-signed): the comments'
   length, with the codes as the part that can be counted
-  (`round-8.5-spec.md`, D4).
+  (`round-8.5-spec.md`, D4). Measured 2026-10-12 by a written rule: the
+  live count is `npm run oracle -- comment-codes`, held by
+  `tests/comment-codes.test.ts`, and the proof is `npm run oracle --
+  comment-strip <ref>` (WORKLOG §119, 119e).
 
 ## §108 riders (stop 2, 2026-09-25)
 

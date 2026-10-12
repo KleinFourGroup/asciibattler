@@ -1,0 +1,112 @@
+/**
+ * Two trees compared with their comments out: the proof for a change that is
+ * meant to touch comments and nothing else.
+ *
+ * Each file is split into comments and code pieces (comments.ts), and the
+ * pieces are held equal, in order. A file whose text changed and whose
+ * pieces did not has changed in its comments only. The first piece that
+ * differs is reported with its line on each side.
+ *
+ * The usual run holds the working tree against a ref, before the commit:
+ * `npm run oracle -- comment-strip HEAD`. A file of a kind comments.ts does
+ * not read (Markdown, JSON) is held byte for byte, and a file added or
+ * removed is a difference.
+ */
+
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { splitSource, type CodePiece } from './comments';
+import { REPO_ROOT } from './stepCodes';
+
+/** path (repo-relative, forward slashes) → the file's text. */
+export type Tree = ReadonlyMap<string, string>;
+
+const MAX_BUFFER = 1 << 30;
+const git = (args: string[], repoRoot: string, input?: string): Buffer =>
+  execFileSync('git', args, { cwd: repoRoot, maxBuffer: MAX_BUFFER, ...(input === undefined ? {} : { input }) });
+const names = (listing: Buffer): string[] => listing.toString('utf8').split('\0').filter((name) => name !== '');
+
+/** The files under `roots` as a commit holds them. One `git cat-file` reads them all. */
+export function readRef(ref: string, roots: readonly string[], repoRoot: string = REPO_ROOT): Tree {
+  const paths = names(git(['ls-tree', '-r', '-z', '--name-only', ref, '--', ...roots], repoRoot));
+  const out = git(['cat-file', '--batch'], repoRoot, paths.map((path) => `${ref}:${path}\n`).join(''));
+  const tree = new Map<string, string>();
+  let at = 0;
+  for (const path of paths) {
+    const headerEnd = out.indexOf(0x0a, at);
+    const header = out.subarray(at, headerEnd).toString('utf8');
+    const size = Number(/^[0-9a-f]+ blob (\d+)$/.exec(header)?.[1] ?? NaN);
+    if (Number.isNaN(size)) throw new Error(`readRef: ${ref}:${path} is not a file in git (${header})`);
+    tree.set(path, out.subarray(headerEnd + 1, headerEnd + 1 + size).toString('utf8'));
+    at = headerEnd + 1 + size + 1;
+  }
+  return tree;
+}
+
+/** The files under `roots` as they stand on disk: what git tracks, and what is new and not ignored. */
+export function readWorkingTree(roots: readonly string[], repoRoot: string = REPO_ROOT): Tree {
+  const paths = names(git(['ls-files', '-z', '--cached', '--others', '--exclude-standard', '--', ...roots], repoRoot));
+  const tree = new Map<string, string>();
+  for (const path of [...new Set(paths)].sort()) {
+    if (existsSync(join(repoRoot, path))) tree.set(path, readFileSync(join(repoRoot, path), 'utf8'));
+  }
+  return tree;
+}
+
+export interface StrippedDifference {
+  readonly file: string;
+  /** `code`: a piece differs. `unread`: a kind comments.ts does not read, and its bytes differ. */
+  readonly what: 'added' | 'removed' | 'code' | 'unread';
+  readonly detail: string;
+}
+
+export interface StrippedCompare {
+  readonly compared: number;
+  /** Files whose text differs at all, comments included. */
+  readonly changed: string[];
+  readonly differences: StrippedDifference[];
+}
+
+const show = (piece: CodePiece): string => `line ${piece.line} ${JSON.stringify(piece.text.length > 60 ? `${piece.text.slice(0, 57)}...` : piece.text)}`;
+
+/** The first place two files' code parts, or `null` when the pieces are the same. */
+export function firstCodeDifference(before: readonly CodePiece[], after: readonly CodePiece[]): string | null {
+  const shared = Math.min(before.length, after.length);
+  for (let i = 0; i < shared; i++) {
+    const [a, b] = [before[i]!, after[i]!];
+    if (a.text !== b.text) return `${show(a)} → ${show(b)}`;
+    if (a.newline !== b.newline) return `a line break before ${show(b)} ${b.newline ? 'came' : 'went'}`;
+  }
+  if (before.length > after.length) return `${before.length - shared} pieces gone from the end, the first at ${show(before[shared]!)}`;
+  if (after.length > before.length) return `${after.length - shared} pieces more at the end, the first at ${show(after[shared]!)}`;
+  return null;
+}
+
+// A checkout may hold CRLF where the commit holds LF. TypeScript reads both as one line break, in a template too.
+const sameBreaks = (text: string): string => text.replace(/\r\n/g, '\n');
+
+export function compareStripped(before: Tree, after: Tree): StrippedCompare {
+  const changed: string[] = [];
+  const differences: StrippedDifference[] = [];
+  const files = [...new Set([...before.keys(), ...after.keys()])].sort();
+  for (const file of files) {
+    const [a, b] = [before.get(file), after.get(file)];
+    if (a === undefined || b === undefined) {
+      changed.push(file);
+      differences.push({ file, what: a === undefined ? 'added' : 'removed', detail: 'the file' });
+      continue;
+    }
+    const [textA, textB] = [sameBreaks(a), sameBreaks(b)];
+    if (textA === textB) continue;
+    changed.push(file);
+    const [splitA, splitB] = [splitSource(file, textA), splitSource(file, textB)];
+    if (splitA === null || splitB === null) {
+      differences.push({ file, what: 'unread', detail: 'not TypeScript, GLSL or CSS, so held byte for byte, and its bytes differ' });
+      continue;
+    }
+    const detail = firstCodeDifference(splitA.code, splitB.code);
+    if (detail !== null) differences.push({ file, what: 'code', detail });
+  }
+  return { compared: files.length, changed, differences };
+}

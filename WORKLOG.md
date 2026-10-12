@@ -629,3 +629,189 @@ reads the tree. `src/config/configHash.ts`'s header is short and holds two
 bare step codes ("53b" and "95e"). The Round 8 close's rough counts (1,972
 lines with `§` in 281 files; about 2,400 bare codes in 295) are the scale
 to expect and not a target, since their overlap was never measured.
+
+### 119e — the comment instruments (2026-10-12, session a2b4ebd8)
+
+**Step zero.**
+
+- *What `src` holds.* 477 tracked files: 460 TypeScript (181 of them
+  tests), 14 GLSL, two CSS and one Markdown. Comments with `§` stand on 41
+  lines of the GLSL and CSS, so the reader splits three kinds of file.
+- *The scanner alone cannot split TypeScript.* It does not know a regular
+  expression or a template's tail from a division or a closing brace, and
+  the parser does. So the reader walks the compiler's parse and takes each
+  token with the text before it. Two checks are built in and throw: every
+  character between two tokens is whitespace or comment, and the tokens
+  cover the file end to end. Neither tripped on the 721 TypeScript files
+  under `src`, `tests` and `tools`.
+- *Comments a tool reads:* `i18n-ok` 31 times and one `istanbul ignore
+  next`. No `@ts-expect-error` and no `eslint-disable` in `src`, `tests`
+  or `tools`.
+- *The shapes a step code takes,* from a survey of the 13,479 comments
+  (33,485 comment lines): `§` and a number; a bare number and a letter
+  ("74b", "96.5b2-post"); the lettered phases' steps from before the
+  phases were numbered ("K1", "GP5.2", "D5.C"), which neither of the Round
+  8 close's rough counts names; "Phase" and a phase. And what only looks
+  like one: "40px", "30s", "0x70a1", "FNV-1a", "rules 3a/3b".
+- *The known answer.* `src/config/configHash.ts` was read whole by hand
+  before the rule ran: "53b" on line 2 and "95e" on line 104. The rule
+  returns those two.
+
+**Built.** In `tests/oracle/`: `comments.ts` (`splitTypeScript`,
+`splitCStyle` for GLSL and CSS, `TOOL_READ`, `measure`),
+`strippedCompare.ts` (`readRef` through one `git cat-file`,
+`readWorkingTree`, `compareStripped`), `stepCodes.ts` (the rule, written
+out in its header; the per-file ceiling), three commands on `npm run
+oracle` (`comment-strip <ref>`, `comment-codes [--record|--list]`,
+`comment-length`), `comments.test.ts`. At `tests/`:
+`comment-codes.test.ts` and `comment-codes-baseline.json`. ARCHITECTURE's
+tree and TESTING.md have them. Nothing under `src` or `config` changed.
+
+**The readings** (`src` as at `d8a6e8a`).
+
+- *Step codes in comments:* **6,376 in 434 of the 476 files.** 1,767 with
+  `§`, 2,515 bare numbered, 2,016 lettered, 78 with "Phase"; 936 of them
+  in test files. The largest folders: `src/sim` 1,825, `src/run` 1,349,
+  `src/ui` 948, `src/render` 664, `src/config` 658.
+- *Left out by the rule:* 104 rounds and clusters named ("Round 8"), 64
+  `§` before a document's section, 696 codes inside strings (a test's
+  title, mostly), and 52 in other code (identifiers such as `A0` and
+  `D2_BUDGET_FRACTION`).
+- *Outside `src`, by the same rule:* 2,129 in 206 files under `tests` and
+  368 in 45 under `tools`. The rule's look-alikes were sampled in `src`
+  only.
+- *Length, the files under `src` that are not tests:* 37,601 lines of
+  code, 26,922 lines of comment alone and 234,621 comment words. That is
+  42 % of the lines that are not blank, and 6.24 words of comment to a
+  line of code. The tests: 37,666, 4,926 and 51,617 (1.37 words a line).
+  `src/run/Run.ts` has more comment lines than code lines (2,393 and
+  2,336; 20,301 words), as does `src/sim/World.ts` (1,572 and 1,383);
+  `src/core/events.ts` has 19.75 words a line.
+
+**Verified, and by what.**
+
+- Typecheck clean. `tests/oracle` and the pin, 35 of 35 in three files (22
+  of them new in `comments.test.ts`, three in the pin).
+- *The splitter against a second parser* (`scratch/119e/crosscheck.ts`).
+  esbuild has its own lexer and drops comments. For 721 of 721 TypeScript
+  files, the code pieces joined back into a program compile to the same
+  JavaScript as the file. Its controls: with one piece lost from the
+  middle, 671 of 716 files are caught (the other 45 were not examined;
+  esbuild erases types, which is the likely reason); with every line cut
+  at its first `//`, 12 of the 40 files the selector picked. A first run
+  without `minifyWhitespace` had 202 files differ, because esbuild keeps a
+  comment that stands inside an expression.
+- *The line-break flag is not covered by that cross-check.* With every
+  line break dropped from the pieces, 0 of 715 files differ: the tree ends
+  every statement with a semicolon, so nothing esbuild reads depends on a
+  break. The flag rests on its unit test (a block comment that spans
+  lines between `return` and its value).
+- *The GLSL and CSS reader against a second stripper*
+  (`crosscheck-cstyle.ts`): 16 of 16 files leave the same text. For CSS
+  the second stripper is the repo's own, `stripCssComments` in
+  `tests/cssBlocks.ts`.
+- *The count against the raw text* (`reconcile.ts`). The rule run over
+  each file's whole text, with no splitting, finds 7,124 matches, and in
+  every file they are the comments' 6,376, the strings' 696 and the other
+  code's 52. `§` occurs 2,048 times in the files read; `git grep -o` finds
+  2,051 under `src`, and the Markdown file holds the other three. The
+  Round 8 close's 1,972 lines in 281 files and 2,051 occurrences are
+  today's `git grep` numbers as well.
+- *Comment lines against grep,* on two files: `events.ts` 595 and 595,
+  `movement.ts` 464 and 464.
+- *The compare, on the real tree against HEAD* (`plants.ts`; every anchor
+  checked before any file is written, each file put back from a copy):
+
+  | plant | files changed | differ in code |
+  |---|---|---|
+  | none (the control) | 0 | 0 |
+  | comments only, five edits in four files (reworded, deleted, re-wrapped, added; TypeScript, GLSL, CSS) | 4 | 0 |
+  | a string in code (`configHash.ts`) | 1 | 1, named at line 124 |
+  | a string that holds `//` (`MapScreen.ts:319`) | 1 | 1, named |
+  | a comment a tool reads, dropped (`Game.ts:484`, `i18n-ok`) | 1 | 1, named |
+  | a number in a shader | 1 | 1, named |
+  | a number in the stylesheet | 1 | 1, named |
+  | the Markdown file under `src` | 1 | 1, as a kind it does not read |
+  | a new file | 1 | 1, as added |
+  | the comment edits and one code edit together | 5 | 1, the code edit |
+
+  From the command line, `comment-strip HEAD` exits 0 on the comment
+  edits ("comments only") and 1 on the code edit.
+- *The ceiling:* the pin passes with nothing planted, with look-alikes
+  added to a comment, and with a code added inside a string. It fails,
+  naming the file and its codes, on a code added to a comment in
+  `main.ts` (13 against 12), on one rewritten out (11 against 12), and on
+  a new file with one (1 against 0). `--record` with a code added exits 1,
+  prints "NOT written", and leaves the baseline's bytes as they were.
+- *The unit tests against a broken reader:* seven edits to the readers,
+  one at a time, and `comments.test.ts` fails on each (no comment held as
+  tool-read, 2 tests; the line-break flag not compared, 1; a CSS string
+  not kept whole, 3; CSS reading `//` as a comment, 1; any letter as a
+  step, 1; a document's section counted, 3; a code in a string counted,
+  1).
+- After the plants: the SHA-1 of the three readers and of the baseline is
+  what it was, and `git diff --stat` and `git status --short` over `src`
+  print nothing.
+
+**What the readings say.**
+
+- **The comment pass is larger than either rough count.** The Round 8
+  close had about 2,000 `§` lines and about 2,400 bare codes, overlap
+  unknown. By a written rule it is 6,376. The 2,016 lettered codes are
+  the likely difference; that was not shown.
+- **Length is the larger matter, as D4 took it to be.** Two fifths of
+  the source's lines that are not blank are comment. A step code is one
+  token; the comment around it is the length.
+
+**Not verified.**
+
+- Whether a rewritten comment is still true. The compare proves the code
+  is untouched and does not read a comment. The cold-read probe (119f) is
+  the nearest instrument, and the user's read of a sample.
+- The 6,376 for look-alikes. Two are known and written into the rule's
+  header and its test ("40k" for a quantity, "L9" for a level). The
+  lettered class was sampled, 22 tokens with up to three lines each, and
+  not read whole.
+- `.mjs` files (under `scripts` and `shell`) and JSX are not read. There
+  is no JSX in the tree.
+
+**Calls made here, for the stop.**
+
+1. **The ceiling is by file and exact,** in the form of the literal pin: a
+   file over its count fails, and a file under it fails until the
+   baseline is lowered in the same commit. `--record` refuses a rising
+   total and prints any file that rose. That is stricter than the cut's
+   words and the same intent. Its cost: every commit that takes a coded
+   comment out of `src` runs `--record`, in the deletion phases too.
+2. **The parser, where the cut said the scanner** (step zero's second
+   item).
+3. **GLSL and CSS are read too.** That puts a second CSS comment stripper
+   beside `stripCssComments` (`tests/cssBlocks.ts`), which returns no
+   comments and does not know a string. One for the census's list of
+   duplicates.
+4. **What the rule leaves out:** rounds and clusters by name, and codes
+   inside strings. A test's title is code to the compare, so rewriting
+   one needs another proof. Whether the pass takes them is the user's.
+5. **The count covers `src`,** the charter's word. `tests` and `tools`
+   hold 2,497 more by the same rule.
+6. **A comment a tool reads is held as code,** by a list (`TOOL_READ`).
+   `src/render/fontSubset.ts` has `i18n-ok-file` in its header, so that
+   whole header is held, and rewording it will show as a difference to be
+   read.
+7. **The pin is not in the Cursor's permanent gates.** It is a ratchet
+   for this round; whether it stays once the pass is done is the user's.
+8. META-ROADMAP's figures for the rewrite (about 2,000 and about 2,400)
+   are left as written, with this entry as the measured count.
+
+**For the comment pass** (a landing note). Per commit: edit comments
+only, run `npm run oracle -- comment-strip HEAD` and read "comments
+only", run `npm run oracle -- comment-codes --record`, commit. A commit
+that mixes a comment edit with a code edit shows the code edit as a
+difference, which is why the pass is committed apart from the deletions.
+
+**Tools kept:** `scratch/119e/` (`survey.ts` and `rule-check.ts`, the
+shapes and what the rule leaves; `crosscheck.ts`, `crosscheck-one.ts`,
+`crosscheck-cstyle.ts`; `reconcile.ts`; `plants.ts`; `outside-src.ts`).
+
+Readings: **86,058** at 08:28 with the orientation read; **288,831** at
+08:56 with 119e built and this entry started.

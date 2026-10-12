@@ -73,6 +73,23 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   config-dump <out>` on each tree, then the diff, where `CONFIG_SOURCES`
   (the raw files, keyed by file name) is expected to differ and no parsed
   export's value may.
+- **A comment-only change:** `npm run oracle -- comment-strip HEAD`, before
+  the commit, holds the working tree against the ref with every comment
+  taken out (`tests/oracle/comments.ts`, `strippedCompare.ts`) and exits 1
+  when any file's code differs, naming the first piece that does.
+  TypeScript is split by the compiler's parser, GLSL and CSS by a small
+  scanner, and a file of any other kind is held byte for byte. A comment a
+  tool reads (`i18n-ok`, `@ts-expect-error`, an `eslint-disable`, a
+  coverage hint) counts as code. It proves the program's tokens are the
+  same; it does not read the comments, so whether a rewritten comment is
+  still true is a reader's question.
+- **The step-code ceiling:** `tests/comment-codes.test.ts` holds the count
+  of step codes in the comments under `src` to
+  `tests/comment-codes-baseline.json`, file by file, so it can only fall.
+  The rule for what counts is the header of `tests/oracle/stepCodes.ts`.
+  `npm run oracle -- comment-codes` prints the count by folder and
+  `--record` lowers the ceiling; `npm run oracle -- comment-length` prints
+  how much of each folder is comment, in lines and in words.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

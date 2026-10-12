@@ -95,9 +95,11 @@ relaxed. The kickoff hardens this entry against the code.
   (`none`). Each is empty HEAD against HEAD and catches its plant. Built
   as one path-by-path JSON diff with two uses, `npm run oracle` (WORKLOG
   §119, 119d).
-- ☐ **119e — the comment instruments** (`none`). The step-code count with
+- ☑ **119e — the comment instruments** (`none`). The step-code count with
   its rule, as a ceiling that may only fall; the comment-stripped compare
   with a planted code edit as its failing control; a length reading.
+  Built on the compiler's parser; 6,376 codes in 434 files, held by file;
+  ten plants on the real tree (WORKLOG §119, 119e).
 - ☐ **119f — the cold-read probe, calibrated** (`batch`, read at 119g:
   the table of right answers out of three per question; wrong is every
   cell 3/3 or 0/3, or the planted tree scoring the same). Questions drawn

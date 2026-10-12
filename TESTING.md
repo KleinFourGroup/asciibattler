@@ -90,6 +90,27 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   `npm run oracle -- comment-codes` prints the count by folder and
   `--record` lowers the ceiling; `npm run oracle -- comment-length` prints
   how much of each folder is comment, in lines and in words.
+- **The build against a ref:** `npm run oracle -- build-hash [ref]` builds
+  the working tree and the tree at the ref (default HEAD) with the build's
+  ID pinned, hashes every built file and names the ones that differ
+  (`tests/oracle/buildHash.ts`; about 20 s). Equal hashes mean the two trees
+  ship the same game, byte for byte: the proof for a deletion of code the
+  game never runs, and the one proof that reaches the renderer, the UI and
+  the scenes. `--dev` compares the development-mode builds, the only ones
+  that hold `src/dev`. It cannot see code the entry never reaches (the bot,
+  the journal's replay, the tools, the tests), and a shader's comment moves
+  it, because the `.glsl` files ship as text.
+- **What a proof reaches:** `npm run oracle -- reach-record [proof…]` runs
+  the behaviour proofs under the coverage tool (`@vitest/coverage-v8`, held
+  at Vitest's exact version) and writes each one's reading to
+  `output/reach/`; `npm run oracle -- reach [folder…]` prints the share of
+  each folder's lines each proof ran, and `reach --at=<file>[:<a>[-<b>]]`
+  answers for one file or range, with the functions there and their calls
+  (`tests/oracle/reach.ts`). A reading is of the tree it was recorded on:
+  record again after the code moves (about seven minutes for all six).
+  Reached is not proven, and unreached is a finding: "The oracle map"
+  below. `reach-diff <before> <after>` lists what the first reading runs
+  and the second does not, which is the check for a deleted test.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 
@@ -114,7 +135,7 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
 
 ## The determinism contract
 
-This is the single most load-bearing invariant in the project, called out in `DESIGN.md` and pinned by `ARCHITECTURE.md` principle #2. The replay test in `tests/integration/determinism.test.ts` is the runtime backstop for it.
+This is the single most load-bearing invariant in the project, called out in `DESIGN.md` and pinned by `ARCHITECTURE.md` principle #2. The replay test in `tests/integration/determinism.test.ts` is the runtime backstop for it. It runs one seed twice on the same code, so it shows that a tree agrees with itself; what shows that a change left behaviour alone across a commit is in "The oracle map" below.
 
 Concretely, the contract says:
 
@@ -123,6 +144,152 @@ Concretely, the contract says:
 3. **No hidden randomness.** No `Math.random()`, no `Date.now()` as entropy, no iteration-order-as-randomness. ESLint catches direct `Math.random()` in `src/sim` and `src/run`; the replay test catches everything else.
 
 The snapshot-roundtrip test extends the contract across serialization: a `World` deserialized from `toJSON()` must produce an identical event trace from that point forward. The continuation check extends it across a save: a `Run` loaded from its text at any gate, with the run's own config, must play the same commands to the same bytes as the run never saved. A round trip alone (text, load, text) compares the save code with the load code, so it cannot see state both leave out; a continuation can, because the left-out state changes what happens next.
+
+## The oracle map
+
+Which proof to name for a change that claims to leave behaviour alone (a
+deletion, a comment pass, a reshaping on trial), by part of the code: what
+each proof runs there, what it was shown to fail on, and what it missed or
+cannot see. Measured at `a45a7af` on 2026-10-12. The planted breaks are
+recorded site by site in the Round 8.5 worklog ("119g"), and the shares
+move as the code does: `npm run oracle -- reach` prints today's.
+
+**A proof across a commit keeps something from before the change.** The
+journal corpus keeps stored runs and what each reached. The fuzz diff
+keeps a worktree at a ref. The build compare and the comment-stripped
+compare read a ref. The config dump and the snapshot diff are taken on the
+tree before. The determinism test, the continuation check and the chaos
+driver's own replay hold a tree against itself, and a tree agrees with
+itself after most changes of behaviour, so those are gates and prove
+nothing about sameness. The suite's expectations are stored too, and they
+cover what someone thought to assert.
+
+**Name a proof only where it reaches.** `npm run oracle -- reach
+--at=<file>:<lines>` says which proofs run a candidate's lines; a line no
+proof runs has no proof, whatever its folder's share. Reached is still not
+proven, since a proof can run a line and never look at what it computes: a
+saved run that came back without its journal passed every test of
+`src/store`, whose lines the suite runs to the last one. A planted break at
+the site settles it.
+
+**By part.** "Corpus" is `npm run corpus` (30 journals; all of them in the
+smoke tier, three on every `npm test`); "fuzz diff" is
+`bash scripts/perf-oracle.sh [ref]`; "build compare" is
+`npm run oracle -- build-hash [ref]`.
+
+- **`src/sim`.** Proof: the corpus, then the fuzz diff. They run 87 % and
+  86 % of its lines, 90 % between them; the suite runs 99 %. Shown to fail
+  on: every hit dealing one more (30 of 30 journals, both fuzz shapes, 13
+  test files); a wandering camp member's mirrored step (18 of 30, one of
+  them by its events alone); a heal restoring one more (10 of 30); the
+  path search's estimate changed (8 of 30). Missed: the path-search change
+  by the fuzz diff, by the three quick rows and by every unit test; the
+  mirrored step and the heal by every unit test. So a sim change is proven
+  by the whole corpus, which the pre-commit hook runs when sim paths are
+  staged.
+- **`src/run`.** Proof: the corpus, then the fuzz diff: 69 % and 65 %, 73 %
+  between them; the suite 97 %. Shown to fail on: a declined reward made a
+  no-op (8 of 30, one fuzz shape, the chaos census); the map splitting a
+  lane three ways half as often (4 of 30, and one test file,
+  `journal-replay-full.test.ts`). Missed: a
+  unit bought at a port and never added to the roster, by both proofs,
+  because no stored run completes that trade; `src/run/Run.test.ts` alone
+  caught it. Under the declined-reward break `npm test` did not fail: a
+  test loop never ended (TODO "§119 riders").
+- **`config/*.json` and `src/config`.** Proof: the corpus and the fuzz
+  diff for behaviour, and `npm run oracle -- config-dump` with `json-diff`
+  for a move between files. The corpus runs 84 % of the loaders' lines.
+  Shown to fail on: a rest healing half the pool (3 of 30, and the dump
+  names the key); a loader handing out the wrong multiplier (30 of 30,
+  both fuzz shapes). Missed: the changed number, by every run that never
+  rests, the fuzz diff's two shapes among them. A match after a config
+  change says the number moved nothing on those runs and never that it is
+  dead; the evidence for a dead knob is the search for its reader.
+- **`src/core`.** Proof: the corpus and the fuzz diff, 79 % between them.
+  Shown to fail on: another constant in the keyed streams' derivation (30
+  of 30, both fuzz shapes, 8 test files). The hash the corpus's own
+  digests are made with (`fnv1a.ts`) moves all 30 journals and leaves the
+  fuzz diff alone, which is right: no run changed.
+- **`src/bot`.** Proof: the fuzz diff alone, 86 %; the suite runs 99 %.
+  Shown to fail on: a won rollout scored as a draw (the arbitrated shape
+  and `evaluator.test.ts`). The corpus and the build compare cannot see
+  the bot: no stored run and no shipped page loads it.
+- **`tests/fuzz`, the instruments.** Proof: the fuzz diff for what its two
+  shapes run (27 %), the smoke's own tests for more (65 %; 69 % between
+  everything). Shown to fail on: the scored strategy counting a recruit's
+  level twice (the scored shape alone: the smoke's own tests passed under
+  it, `scored.test.ts` among them). `npm test` does not load this folder,
+  so it saw nothing. Three lines in ten are run by no
+  proof the coverage tool can read: 16 files hold most of them, chiefly
+  the command-line entries (the search, the sweep, the arena, the
+  parallel runner, the board), which run as command lines and under no
+  test.
+- **`src/journal`.** The recorder's proof is the suite and the build
+  compare: an order recorded one tick late failed 8 test files and moved
+  the build's hash, and neither the corpus nor the fuzz diff noticed,
+  since neither records. The replay is a tool the game never loads (the
+  build compare cannot see it); the corpus runs through it on every
+  journal.
+- **`src/render`, `src/ui`, `src/scenes`, `Game.ts`, `main.ts`.** No
+  headless proof loads them, and the suite runs 41 %, 10 % and 9 % of the
+  first three. Proof that the game is the same bytes: the build compare,
+  shown to fail on a render constant, a shader's number, a UI constant, a
+  stylesheet declaration and a constant in `Game.ts`, none of which any
+  test noticed (a rule in `src/scenes/menuRules.ts` moved the hash and
+  failed its own test as well). Proof that the page still plays a run: the page drive
+  (`npm run probe -- shell/electron/probes/drive-run.js --seed=<n>`, about
+  18 s; the same seed gives the same log hash and state hash), shown to
+  fail on a turn that is never advanced and on a sim change. The drive
+  missed a scene that never mounts and a change that is only drawn. A
+  change to code the game runs always moves the build's hash, so the build
+  compare proves a deletion of dead code or a comment pass and cannot tell
+  a careful reshaping from a break; for a reshaping here the proof is the
+  eye, with the pane's pixel and box procedures
+  ([process/browser-pane.md](process/browser-pane.md)).
+- **`src/audio`, `src/store`, `src/settings`, `src/failure`,
+  `src/diagnostics`, `src/i18n`.** Proof: the build compare, which caught
+  each of four plants, and their own tests, which the suite runs 70 % to
+  100 % of and which caught one of the four: a sound's rule, and not the
+  saved run without its journal, the failure wait or a diagnostics text.
+  `src/settings` and `src/i18n` had no plant.
+- **`src/dev`.** Proof: `build-hash --dev`. A production build drops the
+  folder, so the plain compare read a changed dev key as the same bytes
+  and the development-mode compare did not.
+- **`tools/`, `scripts/`, `shell/`.** No proof across a commit. An edit to
+  the run-config tool's flag parser failed nothing. `tests/tools` runs 4 %
+  to 20 % of each editor's lines and none of the run-config tool's, the
+  five `.ts` scripts run as command lines under no test, and the coverage
+  tool does not read the `.mjs` files.
+- **A deleted test.** `npm run oracle -- reach-record npm-test` on the tree
+  before and on the tree after, each into a `--dir` of its own, then
+  `reach-diff`: nothing the suite ran may be lost. Two readings of one
+  tree lose nothing to each other. With `src/store/backup.test.ts`
+  deleted the diff names 20 lines, 4 functions and 23 branch arms of
+  `backup.ts`; with `src/run/enemyBudget.test.ts` deleted, no line and two
+  branch arms, because other tests run the rest. It shows the suite still
+  runs what it ran, and not that it still asserts on it: a test that
+  passes the diff may hold the only expectation on some value, which is
+  settled by planting the break the test was written for.
+- **An export nothing imports.** Delete it, then the type check and the
+  build compare. With a used export removed the check fails by naming its
+  importers; an unused export added leaves the build's bytes alone. The
+  check does not look for unused exports: it proves a deletion left
+  nothing dangling, and finding the candidates is a search.
+- **A comment.** `npm run oracle -- comment-strip <ref>` for every `.ts`,
+  `.glsl` and `.css` file under `src`, and the build compare beside it for
+  TypeScript and the stylesheet (a comment there leaves the hash alone; a
+  shader's comment ships in the bundle and moves it).
+- **The save's shape.** `npm run corpus -- --snapshots=<dir>` on both
+  trees and `json-diff`, where the dropped field must be the only shape
+  listed; `tests/save-fingerprint.test.ts` holds the version bump.
+
+**What has no proof today:** a reshaping of code that only draws; which
+scene a phase mounts; the four port trades no stored run completes
+(buying a unit, buying a daemon, selling a packet, paying to remove a
+unit); the tools' pages and the build scripts; the lines neither the
+corpus nor the fuzz diff runs, a tenth of `src/sim` and a quarter of
+`src/run`. A candidate that lands in one of these names the suite, or
+waits for a proof to be built.
 
 ## Adding a test
 

@@ -49,6 +49,7 @@
   "devDependencies": {
     "@types/node": "^25.9.2",
     "@types/three": "^0.184.1",
+    "@vitest/coverage-v8": "4.1.6",
     "electron": "44.4.5",
     "eslint": "^10.4.0",
     "globals": "^17.6.0",

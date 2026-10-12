@@ -13,4 +13,6 @@ it('a run at the shipped length (seed 5, character=soldier) replays to the same 
   // And it crossed battles whose setup enqueues an order of its own, which
   // the journal records and the replay's setup then enqueues a second time.
   expect(setupOrders).toBeGreaterThan(0);
-}, 30_000);
+  // About 10 s alone and 30 s under the coverage tool
+  // (`npm run oracle -- reach-record`), where a 30 s limit failed every run.
+}, 120_000);

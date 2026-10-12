@@ -7,6 +7,11 @@
  *   npm run oracle -- comment-strip <ref> [root…] the working tree against a ref with the comments out (strippedCompare.ts)
  *   npm run oracle -- comment-codes [--record|--list]  the step codes in comments, by folder (stepCodes.ts)
  *   npm run oracle -- comment-length [root…]      how much of the code is comment, by folder (comments.ts)
+ *   npm run oracle -- reach-record [proof…]       run the behaviour proofs under the coverage tool (reach.ts)
+ *   npm run oracle -- reach [folder…]             the lines each proof reaches, by folder
+ *   npm run oracle -- reach --at=<file>[:<a>[-<b>]]  one file or a range of its lines, proof by proof
+ *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not
+ *   npm run oracle -- build-hash [ref] [--dev]    the working tree's build against the ref's, file by file (buildHash.ts)
  *
  * `json-diff` prints the differences counted by kind and path shape, then the
  * first of them in full, and exits 1 when there is any. For a change that is
@@ -20,10 +25,22 @@
  * `comment-codes --record` writes the ceiling the count is held to
  * (tests/comment-codes-baseline.json). It refuses when the total would rise.
  * `--list` prints every code with its file and line.
+ *
+ * `reach-record` takes `--tree=<dir>` (a worktree to run in; default this
+ * one) and `--dir=<dir>` (where the readings go; default output/reach), and
+ * with no proof named it records them all. `reach` and `reach-diff` read
+ * what it wrote; `reach --proofs=<id,id>` reads only those, and its last
+ * column, `any`, is then what those reach between them. `reach-diff` exits
+ * 1 when anything is lost.
+ *
+ * `build-hash` exits 1 when the two builds differ, and names the built files
+ * that do. The ref defaults to HEAD. `--dev` compares the development-mode
+ * builds, the only ones that hold the code under `src/dev`.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { compareBuildWith } from './buildHash';
 import { isHeldComment, measure, splitSource, type Lengths } from './comments';
 import { dumpConfig } from './configDump';
 import { describeDifference, jsonDiff, summarize, type JsonDifference } from './jsonDiff';
@@ -41,11 +58,13 @@ import {
   total,
   writeCeiling,
 } from './stepCodes';
+import { PROOFS, READING_DIR, countAt, countBy, functionsAt, loadReading, loadReadings, lost, parseAt, readingPath, record, union } from './reach';
 import { compareStripped, readRef, readWorkingTree } from './strippedCompare';
 
 const [command, ...rest] = process.argv.slice(2);
 const flags = new Set(rest.filter((arg) => arg.startsWith('--')));
 const [a, b] = rest.filter((arg) => !arg.startsWith('--'));
+const option = (name: string): string | undefined => rest.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
 const read = (path: string): unknown => JSON.parse(readFileSync(path, 'utf8').replace(/^﻿/, ''));
 
 /** `src/sim/actions/x.ts` → `src/sim`; a file directly under its root → the root. */
@@ -175,6 +194,141 @@ function commentLength(roots: string[]): number {
   return 0;
 }
 
+const percent = (part: number, whole: number): string => (whole === 0 ? '-' : `${((100 * part) / whole).toFixed(1)}%`);
+
+function reachRecord(ids: string[]): number {
+  const proofs = ids.length === 0 ? PROOFS : PROOFS.filter((proof) => ids.includes(proof.id));
+  const unknown = ids.filter((id) => !PROOFS.some((proof) => proof.id === id));
+  if (unknown.length > 0) {
+    console.error(`oracle: no proof named ${unknown.join(', ')}. The proofs: ${PROOFS.map((proof) => proof.id).join(', ')}`);
+    return 2;
+  }
+  const dir = option('dir') ?? READING_DIR;
+  let failed = 0;
+  for (const proof of proofs) {
+    const start = Date.now();
+    const code = record(proof, option('tree') ?? '.', dir);
+    if (code !== 0) failed++;
+    const how = code === 0 ? 'passed' : `FAILED (exit ${code})`;
+    console.log(`oracle: ${proof.id} ${how} in ${Math.round((Date.now() - start) / 1000)} s → ${readingPath(proof.id, dir)}`);
+  }
+  return failed === 0 ? 0 : 1;
+}
+
+function reach(folders: string[]): number {
+  const only = option('proofs')?.split(',');
+  const readings = new Map([...loadReadings(option('dir') ?? READING_DIR)].filter(([id]) => only === undefined || only.includes(id)));
+  if (readings.size === 0) {
+    console.error('oracle: no reading on disk. Take them with: npm run oracle -- reach-record');
+    return 2;
+  }
+  const columns = [...readings, ['any', union([...readings.values()])] as const];
+
+  const at = option('at');
+  if (at !== undefined) {
+    const { file, from, to } = parseAt(at);
+    const range = to === Infinity ? (from === 1 ? '' : ` from line ${from}`) : from === to ? ` line ${from}` : ` lines ${from} to ${to}`;
+    if (columns.every(([, reading]) => reading[file] === undefined)) {
+      console.error(`oracle: no reading holds ${file}. A reading holds the TypeScript under src, tests, tools and scripts, less the tests.`);
+      return 2;
+    }
+    console.log(`oracle: ${file}${range}, the lines that start a statement and how many each proof ran:`);
+    table(
+      ['proof', 'lines', 'reached', ''],
+      columns.map(([id, reading]) => {
+        const count = countAt(reading, file, from, to) ?? { lines: 0, reached: 0 };
+        return [id, count.lines, count.reached, percent(count.reached, count.lines)];
+      }),
+    );
+    const functions = functionsAt(columns.at(-1)![1], file, from, to);
+    console.log(`oracle: ${functions.length} functions overlap it; calls by proof${functions.length > 30 ? ' (the first 30)' : ''}:`);
+    table(
+      ['function', 'lines', ...readings.keys()],
+      functions.slice(0, 30).map((fn, i) => [
+        fn.name,
+        `${fn.from}-${fn.to}`,
+        ...[...readings.values()].map((reading) => functionsAt(reading, file, from, to)[i]?.calls ?? '-'),
+      ]),
+    );
+    return 0;
+  }
+
+  const wanted = (file: string): string | null => {
+    const folder = folderOf(file);
+    return folders.length === 0 || folders.some((f) => folder === f || file.startsWith(`${f}/`)) ? folder : null;
+  };
+  const totals = countBy(columns.at(-1)![1], wanted);
+  const perProof = columns.map(([, reading]) => countBy(reading, wanted));
+  console.log('oracle: the share of each folder’s lines (those that start a statement) that each proof ran:');
+  const row = (name: string, files: number, lines: number, reached: number[]): (string | number)[] => [
+    name,
+    files,
+    lines,
+    ...reached.map((n) => percent(n, lines)),
+  ];
+  const sum = (counts: Iterable<{ lines: number; reached: number; files: number }>, pick: 'lines' | 'reached' | 'files'): number =>
+    [...counts].reduce((n, c) => n + c[pick], 0);
+  table(
+    ['folder', 'files', 'lines', ...columns.map(([id]) => id)],
+    [
+      ...[...totals.keys()].sort().map((folder) =>
+        row(
+          folder,
+          totals.get(folder)!.files,
+          totals.get(folder)!.lines,
+          perProof.map((by) => by.get(folder)?.reached ?? 0),
+        ),
+      ),
+      row(
+        'all',
+        sum(totals.values(), 'files'),
+        sum(totals.values(), 'lines'),
+        perProof.map((by) => sum(by.values(), 'reached')),
+      ),
+    ],
+  );
+  return 0;
+}
+
+function reachDiff(before: string, after: string): number {
+  const found = lost(loadReading(before), loadReading(after));
+  if (found.length === 0) {
+    console.log('oracle: nothing lost. The second reading runs every line, function and branch arm the first ran.');
+    return 0;
+  }
+  const sum = (pick: (l: (typeof found)[number]) => number): number => found.reduce((n, l) => n + pick(l), 0);
+  console.log(
+    `oracle: the second reading no longer reaches ${sum((l) => l.lines.length)} lines, ${sum((l) => l.functions.length)} functions and ${sum((l) => l.arms.length)} branch arms in ${found.length} files:`,
+  );
+  const some = (items: readonly (string | number)[], most: number): string =>
+    items.slice(0, most).join(', ') + (items.length > most ? `, … (${items.length})` : '');
+  for (const l of found.slice(0, 40)) {
+    const parts = [
+      l.lines.length > 0 ? `lines ${some(l.lines, 12)}` : '',
+      l.functions.length > 0 ? `functions ${some(l.functions, 6)}` : '',
+      l.arms.length > 0 ? `branch arms (line/arm) ${some(l.arms, 6)}` : '',
+    ].filter((part) => part !== '');
+    console.log(`  ${l.file}: ${parts.join('; ')}`);
+  }
+  if (found.length > 40) console.log(`  … and ${found.length - 40} more files`);
+  return 1;
+}
+
+function buildHash(ref: string): number {
+  const dev = flags.has('--dev');
+  const result = compareBuildWith(ref, dev);
+  console.log(`oracle: the working tree's ${dev ? 'development-mode ' : ''}build against ${ref}'s, ${result.files} files, the build's ID pinned`);
+  console.log(`  ${ref}: ${result.before}`);
+  console.log(`  here: ${result.after}`);
+  if (result.changed.length === 0) {
+    console.log(`oracle: the same bytes. ${dev ? 'The two development-mode builds are one build.' : 'The two trees ship the same game.'}`);
+    return 0;
+  }
+  console.log(`oracle: ${result.changed.length} built files differ:`);
+  for (const name of result.changed) console.log(`  ${name}`);
+  return 1;
+}
+
 async function main(): Promise<number> {
   if (command === 'config-dump' && a !== undefined) {
     const dump = await dumpConfig();
@@ -213,8 +367,12 @@ async function main(): Promise<number> {
   if (command === 'comment-strip' && a !== undefined) return commentStrip(a, roots.length > 1 ? roots.slice(1) : ['src']);
   if (command === 'comment-codes') return commentCodes();
   if (command === 'comment-length') return commentLength(roots.length > 0 ? roots : ['src']);
+  if (command === 'build-hash') return buildHash(a ?? 'HEAD');
+  if (command === 'reach-record') return reachRecord(roots);
+  if (command === 'reach') return reach(roots);
+  if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev]',
   );
   return 2;
 }

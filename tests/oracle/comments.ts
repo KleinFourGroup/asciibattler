@@ -84,8 +84,8 @@ export function splitTypeScript(fileName: string, text: string): SplitSource {
         }
         const comment = { line: lineOf(i), text: text.slice(i, end) };
         comments.push(comment);
+        if (TOOL_READ.test(comment.text)) code.push({ ...comment, newline: newline && code.length > 0 });
         if (LINE_BREAK.test(comment.text)) newline = true;
-        if (TOOL_READ.test(comment.text)) code.push({ ...comment, newline });
         i = end;
         continue;
       }
@@ -112,7 +112,8 @@ export function splitTypeScript(fileName: string, text: string): SplitSource {
     }
     const start = node.getStart(source);
     const newline = trivia(node.pos, start);
-    if (!end) code.push({ line: lineOf(start), text: text.slice(start, node.end), newline });
+    // The first piece has none before it, so a header may come or go above it.
+    if (!end) code.push({ line: lineOf(start), text: text.slice(start, node.end), newline: newline && code.length > 0 });
     covered = node.end;
   };
   visit(source);

@@ -814,4 +814,19 @@ shapes and what the rule leaves; `crosscheck.ts`, `crosscheck-one.ts`,
 `crosscheck-cstyle.ts`; `reconcile.ts`; `plants.ts`; `outside-src.ts`).
 
 Readings: **86,058** at 08:28 with the orientation read; **288,831** at
-08:56 with 119e built and this entry started.
+08:56 with 119e built and this entry started; **305,924** at 09:00 on its
+commit, `10dd26c` (the hook: 3734 of 3734 in 258 files; the smoke did not
+fire). The step cost about 220k.
+
+**A fix the next step found** (2026-10-12, the same session). 119f
+stripped every comment from a copy of `src` and held the result against
+the compare. It failed on the first file: a header comment deleted whole
+took the line break before the first token with it, and the compare
+called that a difference. The first piece has no piece before it, so the
+flag there carries nothing; it is now always unset, with a test that
+failed before the change (a header deleted whole, and a tool-read comment
+as the first piece). A tool-read comment that spans lines also no longer
+counts its own inner break as one before it. With that, all 295 stripped
+files have the code pieces of their originals and no comment left
+(`scratch/119f/build-trees.ts`). The ten plants of the table above were
+not run again; none deleted a header.

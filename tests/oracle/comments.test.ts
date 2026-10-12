@@ -83,6 +83,11 @@ describe('the compare with the comments out', () => {
     expect(differs(TRICKY, rewritten)).toBeNull();
   });
 
+  it('passes a header deleted whole: no break is counted before the first piece, which has no piece before it', () => {
+    expect(differs('/** The header. */\n\nexport const a = 1;\n', 'export const a = 1;\n')).toBeNull();
+    expect(differs("// i18n-ok-file\nlabel('x');", "\n\n// i18n-ok-file\nlabel('x');")).toBeNull();
+  });
+
   it('names a changed number, and a changed type, which no compiled output would show', () => {
     expect(differs('const heal = 0.25; // a quarter', 'const heal = 0.5; // a quarter')).toBe('line 1 "0.25" → line 1 "0.5"');
     expect(differs('const heal: number = rest();', 'const heal: unknown = rest();')).toBe('line 1 "number" → line 1 "unknown"');

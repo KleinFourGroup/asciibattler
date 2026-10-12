@@ -91,8 +91,10 @@ relaxed. The kickoff hardens this entry against the code.
   the Round 8 close, re-measured at step zero); the test names both lists
   and fails when either moves. 13 and 8 at step zero, as at the close; a
   planted no-op fails it by its one kind (WORKLOG §119, 119c).
-- ☐ **119d — parsed-config equality and the snapshot field diff**
-  (`none`). Each is empty HEAD against HEAD and catches its plant.
+- ☑ **119d — parsed-config equality and the snapshot field diff**
+  (`none`). Each is empty HEAD against HEAD and catches its plant. Built
+  as one path-by-path JSON diff with two uses, `npm run oracle` (WORKLOG
+  §119, 119d).
 - ☐ **119e — the comment instruments** (`none`). The step-code count with
   its rule, as a ceiling that may only fall; the comment-stripped compare
   with a planted code edit as its failing control; a length reading.

@@ -62,6 +62,17 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   reach has limits: four port trades never change a run in it, and a
   changed number shows only on the runs that meet it (a rest healing half
   instead of a quarter diverged 3 of the 30).
+- **The path-by-path proofs:** `npm run oracle -- json-diff <before>
+  <after>` compares two JSON files, or two folders of them, and lists every
+  difference by kind and path shape (`tests/oracle/`). A hash says two
+  values differ; this says where, which is the proof when a change is meant
+  to differ in one place only. Two uses. For a change that slims the save:
+  `npm run corpus -- --snapshots=<dir>` on the tree before and the tree
+  after, then the diff, where the dropped field must be the only shape
+  listed. For a change that moves config between files: `npm run oracle --
+  config-dump <out>` on each tree, then the diff, where `CONFIG_SOURCES`
+  (the raw files, keyed by file name) is expected to differ and no parsed
+  export's value may.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

@@ -35,6 +35,7 @@
     "replay": "tsx scripts/replay.ts",
     "chaos": "tsx tests/chaos/cli.ts",
     "corpus": "tsx tests/fuzz/corpus/cli.ts",
+    "oracle": "tsx tests/oracle/cli.ts",
     "dist:hash": "node scripts/dist-hash.mjs",
     "papercut": "node scripts/papercut.mjs",
     "phase-stats": "node scripts/phase-stats.mjs",

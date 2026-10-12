@@ -550,3 +550,53 @@ Nothing stored reaches `buyPortUnit`, `buyPortDaemon`, `sellPacket` or
 `payToRemoveUnit`: the chaos driver sent them 244 times over the 32-run
 sweep and none changed a run. That is for the census, if it wants to
 delete in the port's code (the shape-lock's third decision).
+
+Readings: **455,725** at 20:53 on 119c's commit, `3bc72a4` (3699 of 3699
+in 255 files). The step cost about 13k. Under the line, with 119d looking
+smaller than the room, the session went on to it.
+
+### 119d — parsed-config equality and the snapshot field diff (2026-10-11, session e1342511)
+
+**Step zero.** Both proofs are the same act: two JSON values compared
+path by path. So the step is one differ with two uses, and not two tools.
+What a config loader hands the game is its module's exports (`HEALTH`,
+`SIM`, `CAMPS`), and the end snapshots come from the corpus
+(`npm run corpus -- --snapshots=<dir>`, 119b).
+
+**Built.** `tests/oracle/`: `jsonDiff.ts` (removed, added, changed, and
+the same keys in another order, since code that walks an object's keys
+behaves by their order; `summarize` counts differences by kind and by path
+with the array indices dropped), `configDump.ts` (every export of every
+module under `src/config/` that is neither a function nor a zod schema,
+keyed by export name with its module beside it; the modules are found by
+listing the folder), `cli.ts` (`npm run oracle -- config-dump <out>` and
+`json-diff <before> <after>` over two files or two folders).
+
+**Verified, and by what.** Typecheck clean; `tests/oracle` 10 of 10. From
+the command line (`scratch/119d/plants.sh`; config edits put back from a
+copy, nothing under `config` or `src` left changed):
+
+| compared | result |
+|---|---|
+| two config dumps of this tree (81 exports) | no difference |
+| a dump with a rest healing half | 2 differences: `HEALTH.value.restHealFraction` and the same key in `CONFIG_SOURCES`, 0.25 → 0.5 |
+| a dump with two keys of `health.json` in another order | 1 difference: `reordered CONFIG_SOURCES.value.health.json` |
+| the corpus's 30 end snapshots, taken twice | 30 files compared, none differ |
+| the second set with one field dropped from every file and one number raised in one | `removed lastTurn ×30` and `changed schemaVersion ×1` |
+
+**What the plants say.** The reordered keys show in `CONFIG_SOURCES`, the
+raw files as `configHash()` reads them, and not in `HEALTH`: zod writes a
+parsed object's keys in the schema's order, whatever the file's. So for a
+config move the raw registry is expected to differ and the proof is that
+no parsed export's value does. That holds for object schemas; a record
+keyed by id keeps the file's order, and there the reorder would show in
+the parsed export too. That last sentence is from how zod works and was
+not planted here.
+
+**Not verified.** A real move of a key between two config files, and a
+real field dropped from `RunSnapshot`: both are a trial's or a deletion's
+own step, and these plants stand in for them.
+
+**A call made here, for the stop.** The tools live under `tests/oracle/`
+and run as `npm run oracle`. `scripts/` is outside the type checker, and
+`tools/` holds the editors.

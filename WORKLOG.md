@@ -1791,6 +1791,37 @@ suite phase running; **378,897** at 16:31 on the finder's commit,
 pass and its control read. From the signed cut, 120a and 120b together
 cost about 200k.
 
+**Read and signed** (the user, 2026-10-12, on the hand-off's report, which
+held the rate table, the four classes with their counts and five of the
+six calls above): "Signing all of those calls, Claude! 😁" The second
+call, S3's three sites a folder, was not in that report; the session said
+so in its reply. The session takes the signature as 120a's `batch` read,
+made early; each site is in this entry should the user want them at
+120c's stop.
+
+**Memory, measured after the user's report.** The user came back about
+forty minutes before the hand-off to RAM at 97 %, with Firefox holding
+more than usual, and asked whether a dial of the batch's was part of it.
+Measured afterwards on the quiet machine (31.7 GB, 32 threads; node's
+working set sampled twice a second): one `npm test` peaks at 7.4 GB
+across 34 node processes, one smoke at 8.2 GB across 38, one corpus check
+at 0.5 GB. The last pass ran on two worktrees, so from 16:32 to 17:12 two
+smokes ran at once, about 16 GB at their peaks. By the times that is the
+likeliest window for what the user saw; their return was not timed.
+Earlier, the hook's suite and one whole-suite
+run of the session's own each sat on top of a batch suite run for about a
+minute. The dial is how many test runs go at once; `batch.ts`'s default
+is one, and the session passed `--trees=2` for the last pass to halve its
+wall-clock without measuring what a run holds. `plantProofs.ts`'s header
+now carries the three figures. It is the second time a batch's cost to
+the user's machine was learned after the launch (119g: the dev server's
+reloads). Today's other launches: the corpus on four worktrees (0.5 GB
+each) and the suite pass on one. Nothing of the session's was left
+running (the process list, read: the user's dev server alone).
+Seen in the same reading and not the batch's: `dwm.exe` holds 49.7 GB of
+private memory against a working set of 0.8 GB, and the machine's commit
+charge stands at 91 of 106 GB.
+
 ### 120b — who reads this (2026-10-12, session 79f18990)
 
 Built while 120a's batch ran, and committed after it, since the hook's

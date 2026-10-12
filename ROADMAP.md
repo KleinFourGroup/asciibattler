@@ -69,13 +69,14 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   proofs run with one mechanical edit at each, held against the corpus and
   then the suite. It turns "reached" into a measured rate by folder, and
   its survivors are leads. WORKLOG "The close of §119".
-- ◐ **120a — the drawn sample** (`batch`, read at 120c: the rate table
+- ☑ **120a — the drawn sample** (`batch`, read at 120c: the rate table
   and the survivors; wrong is a folder whose named proof misses most of
   what it runs). 200 sites, one mechanical edit at each: 140 on lines the
   corpus runs, 30 on sim and run lines only tests run, 30 on shipped code
-  no headless proof loads. `npm run oracle -- plant` is kept. Run,
-  unread: the corpus noticed 109 of its 140 and the suite 12 more; 27 of
-  200 went unnoticed, 7 of them a change no proof looks at (WORKLOG §120).
+  no headless proof loads. `npm run oracle -- plant` is kept. The
+  corpus noticed 109 of its 140 and the suite 12 more; 27 of 200 went
+  unnoticed, 7 of them a change no proof looks at. Read early and its
+  calls signed at the hand-off, 2026-10-12 (WORKLOG §120).
 - ☑ **120b — who reads this** (`none`). A type-aware reference finder
   for every export, config key and `RunConfig` field, by kind of reader;
   kept as `npm run oracle -- refs`. 15 of 15 of its rules planted; a

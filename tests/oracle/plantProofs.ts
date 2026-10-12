@@ -23,6 +23,13 @@
  * named: `tests/licences.test.ts` reads `node_modules` beside it, which a
  * worktree does not have. The fuzz diff's clean run is what a plant's run is
  * held against.
+ *
+ * ONE TEST RUN AT A TIME. The suite and the smoke each start a worker for
+ * every hardware thread. On the 32-thread, 32 GB machine this was written
+ * on, one suite run peaked at 7.4 GB across 34 node processes and one smoke
+ * at 8.2 GB across 38; a corpus check peaked at 0.5 GB (2026-10-12). A
+ * driver that plants in several worktrees can run the corpus in all of them
+ * at once and should run the other two in one.
  */
 
 import { execFileSync, spawn, spawnSync } from 'node:child_process';

@@ -617,6 +617,13 @@ under 119a, 119b and 119d; the session's reading that "Signing all of
 your leans" covered the cut and its reads; the spec file as rewritten
 after D1 to D4, unread by the user.
 
+**Two of those settled the same evening** (the user, on the hand-off's
+report): "Yes, my signature covered the cut and its reads!", and on the
+spec, "I never actually read the final spec. I have now, and it's
+(retroactively) signed!" The spec's status says so, and its Open section
+now marks §119's three decisions as resolved at the shape-lock. What is
+left for the stop at 119g is the calls under 119a, 119b and 119d.
+
 **For 119e's step zero.** The count's rule needs a known answer before it
 reads the tree. `src/config/configHash.ts`'s header is short and holds two
 bare step codes ("53b" and "95e"). The Round 8 close's rough counts (1,972

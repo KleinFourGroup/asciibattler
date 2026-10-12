@@ -1,10 +1,11 @@
 # Round 8.5 Spec — Housekeeping
 
-**Status: the intent and the kickoff's four calls SIGNED 2026-10-11**
-("Yes to all four calls, Claude! Fully signed!"). The intent and the
-candidates are the user's, verbatim. D1 to D4 are the session's wording of
-what was signed, and the user reads this file as a whole at §119's
-shape-lock. Open: the cold-read probe, and §119's own decisions (below).
+**Status: SIGNED 2026-10-11.** The intent and the kickoff's four calls
+that day ("Yes to all four calls, Claude! Fully signed!"), and the file as
+a whole that evening, once the user had read it ("I have now, and it's
+(retroactively) signed!"). The intent and the candidates are the user's,
+verbatim; D1 to D4 are the session's wording of what was signed. What the
+Open section lists was settled at §119's shape-lock, as each item says.
 The charter is [META-ROADMAP.md](META-ROADMAP.md) §"Round 8.5 —
 Housekeeping", amended the same day; the record is
 [WORKLOG.md](WORKLOG.md) "Kickoff — Round 8.5"; the plan is
@@ -148,7 +149,9 @@ comment-stripped before/after diff with a failing control.
   use) is agreed; its step, 119f, is signed with §119's cut.
 - **§119's decisions:** the tool-only replay flag, which reverses §114's
   choice; whether the journal corpus is tracked or re-recorded from its
-  seeds; the chaos census's other eight command kinds.
+  seeds; the chaos census's other eight command kinds. Resolved at the
+  shape-lock (2026-10-11): the flag confirmed, the corpus tracked, the
+  eight left until the census wants them ([ROADMAP.md](ROADMAP.md) §119).
 - The candidate list is not exhaustive, and the round's size is known only
   after the census.
 

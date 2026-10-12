@@ -2097,3 +2097,45 @@ the walk built and first run; **340,153** at 18:50 with the lists read;
 **412,746** at 19:04 with the census written. The step cost about 330k
 to this point, more than the hand-off's guess allowed for; most of it is
 the walk's lists printed into the session and the sites read.
+
+**The read, begun** (the user, 2026-10-12, on the stop's report): "Before
+I say anything else, A13 can definitely go. Half cover was a mechanic
+from the MVP era, IIRC, and it wasn't particularly fun 😅 I think we're
+going to have to go through most of these in more detail, though, about
+what the candidates actually do. Signing calls 1-4 otherwise." So: the
+row format, the other command lines' flags left unlisted, the table of
+616 left untracked, and the authoring vocabulary kept as a class (which
+is A-16's fate) are signed, and A-13 is signed for deletion. The other 18
+fates are open and 120c stays ◐.
+
+- *What A-13's signature covers, as the session takes it:* the damage
+  rule, which is the key, the multiply and the per-strike walk. 148
+  half-cover pieces stand on five of the eleven boards
+  (`config/layouts.json`, counted), where they occupy cells and ranged
+  attacks see through them (`src/sim/environment.ts:96-99`). Taking the
+  pieces off changes boards a player sees, so it is outside the row and
+  was put back to the user as its own question.
+- *What the user asked for:* what each candidate does. The census's rows
+  were written from the code's side (who reads a key), which says little
+  to someone deciding whether a mechanic should exist. Each row now opens
+  with an "In play" line: what it does in the game today and what a
+  player would notice if it went. The format gained that field after its
+  signature, at the user's ask.
+- *Read for those lines:* the health loader's header (the chip rule's
+  modes, the seam floor, fatigue), `focusTile.ts`'s three resolvers, the
+  two selection strategies, the self-move proposal, the parser's notes on
+  the ten flags, and which daemons grant what.
+- *What the reading changed.* A-05: the dash's reach is the ability's own
+  `rangeCells` (`propose.ts:185`), so `move.cells` is a second copy of
+  a number that is already authored and used, and the lean is a plain
+  delete. A-09: no encounter sets `layouts` (0 of 19), so the two
+  selection strategies make the same two picks in the other order.
+  A-20: five of the ten flags tune a flag that is live (`--refine`,
+  `--k-telemetry`, `--shadow-horizon`) and are proposed kept with it;
+  the other five are each one investigation's instrument.
+- Still not read: `chipRule.ts` whole, the code behind the five
+  investigation flags, what positioning does with cover.
+
+Readings: **434,480** at 19:09 on 120c's commit, `f55932e` (the hook:
+3764 of 3764 in 261 files); **470,916** at 19:41 with the rows re-read
+and the "In play" lines written.

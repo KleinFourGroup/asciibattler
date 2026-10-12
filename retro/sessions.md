@@ -4858,3 +4858,57 @@ packet is the gitignored `scratch/welfare-read-round-8.md`.
    could run beside the work that used it.
 
 ---
+
+### Addendum — the read, the `-post` and the close (2026-10-12, the same session)
+
+The user signed every call in one message and asked two questions of
+their own (what else I would build, and when to update the dependencies).
+I answered those and ended the turn before building anything, on the
+standing decision that a question is answered first. It cost one round
+trip, and their reply settled where the next instrument goes, which would
+otherwise have been my guess written into a roadmap. For the dependency
+answer I ran `npm outdated` and `npm audit` first; the advisories are
+named in the worklog by package and marked unread, which they are. The
+`-post` ran in a worktree under `output/`, inside the repo, which needs
+no junction and is outside the dev server's watch: the arrangement I
+should have used from the first plant of the day. One first draft of the
+roadmap's outcome line counted "two from the shape-lock" from memory and
+was reworded before it was committed.
+
+### §119 — the phase summary (2026-10-11 → 10-12; three sessions)
+
+Sessions e1342511 (the round's kickoff, the cut, 119a to 119d), a2b4ebd8
+(119e, 119f) and bb91da2f (119g, its `-post`, the close). **Orientation**
+was called sufficient each time, and each session still met something
+only the code showed: the charter's "byte-identical under the determinism
+test" naming a test that compares a tree with itself; a scanner that
+cannot tell a regular expression from a division; a proof that runs as a
+command line the coverage tool cannot read, and a peer dependency that
+moves the test runner. **The norm that conflicted** was the same one as
+in §118, the harness's keep-going text against "a question is answered
+before the build goes on": the first session met it four times and ended
+the turn at three, the third ended the turn at the close and the reply
+changed the plan. The silent-turn reminder came about twenty times in
+each of the last two sessions, mostly during waits. **Over-claims:**
+thirteen across the three reports, every one in a label, an absence or a
+number from memory, and every one caught before it stood: by a control
+that came back empty (a cross-check that could not see what it claimed to
+verify, a transcript check that had read empty files), by two hashes
+being equal that should not have been, or by a recount. Two rough figures
+reached the user under-labelled in the first session. **Waste:** shell
+quoting in all three sessions, against a doc each had just read; the
+hook's load timeout three times; one install that moved Vitest; and in
+the last session six planted edits in the live tree under the user's dev
+server. **Sizes:** steps cost from 13k to about 390k. The two largest
+were 119e (about 220k) and 119g (about 390k, twice its hand-off's guess),
+and in both the cost was checking the instrument against a second reading
+of itself. **What the
+sessions said helped:** the user's own words early in the kickoff, and
+their turn on the probe (a weaker reader, because a strong one cannot
+fail); every instrument being used by the very next step; and results
+nobody had put in: the one journal in thirty that differed by its events
+alone, five of six small readers correcting the question, a path-search
+change that only the whole corpus saw, a suite that hung where a red test
+was expected.
+
+---

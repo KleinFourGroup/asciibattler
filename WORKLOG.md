@@ -1298,3 +1298,83 @@ The step cost about 390k, where
 the hand-off guessed two or three times 67k: most of it is the plants'
 and the readings' output read back, and four rounds of re-checking a
 claim against a tool.
+
+**Read and signed** (the user, 2026-10-12, on the stop's report). On the
+report's three questions: "1. Yes, let's definitely fix that! 2.
+Definitely! 3. I agree; it's not needed now." And: "This was an absolutely
+massive step, much larger than I predicted, but I'd say that those
+coverage numbers work out to being worth it! Signing all of those calls,
+too!" So, signed by their leans:
+
+- every call listed under 119a, 119b, 119d, 119e and 119g above;
+- 119f's fifth: no second model's read of the hidden half for now;
+- `reach` and `build-hash` as kept commands, built inside this step;
+- 119b's fifth is decided at the round's close, with today's evidence
+  leaning to the corpus staying in the smoke tier;
+- the pixel proof, the port trades' corpus rows and the page drive's
+  scene check wait for the census to list candidates where they apply;
+- the test loop is fixed now (below).
+
+### 119g-post — the reward loops bounded (2026-10-12, session bb91da2f)
+
+**Built.** `src/run/Run.test.ts`: `acceptAllRewards` and
+`declineAllRewards` go through one `settleRewards`, a loop of at most 64
+tries with an `expect` on the count, and the one test that drained
+`pendingRewards` inline is bounded the same way. No other file.
+
+**Verified** (`scratch/119g/post-plants.sh`, in a worktree under
+`output/`, which needs no `node_modules` link and which the dev server
+does not watch). Nothing planted: 380 of 380 in the file. A declined
+reward made a no-op: the file returns in 4 s with 29 tests failed by the
+bound's own message, where it never returned before; the whole suite
+returns in 55 s with 34 failed in 4 files. An accepted reward made a
+no-op, which was not tried at 119g: 55 failed in 4 s.
+
+**Not done.** The other 52 `while (` lines in test files, unread. TODO
+"§119 riders" keeps them for the tests phase.
+
+### The close of §119 (2026-10-12, session bb91da2f)
+
+**The exit, held against the cut.** Every part of the code the census
+will list candidates in has a named proof in TESTING.md "The oracle map",
+each shown to fail on a planted break, with five exceptions the map names
+as having none: a reshaping of code that only draws, which scene a phase
+mounts, the four port trades no stored run completes, the tools and build
+scripts, and the lines neither byte proof runs. The charter's five
+instruments are built (119a to 119e), as are the kickoff's two (119a's
+mapping, 119d's config equality), the probe (119f) and the coverage tool
+(119g). Nothing was deleted, and nothing under `src` changed but one test
+file's loops.
+
+**Two decisions the user made at the close,** from two questions of
+theirs ("Is there anything else that you would like to build for even
+greater coverage that's not in the plan?" and "Do you think that we
+should update our dependencies at some point soon? Probably a bonus phase
+at round end?"). The session's answers, and "I like this plan, Claude!
+Signing your recommendations!":
+
+- **A drawn sample of planted breaks is the census's first step.** The 31
+  sites were chosen. A sampler draws about 200 lines the proofs run, makes
+  one mechanical edit at each, and runs the corpus, then the suite for
+  what the corpus misses. It gives a rate by folder, and each survivor is
+  dead code, a hole or an edit that changes nothing. It also bears on the
+  user's question of which tests are necessary. In ROADMAP §120.
+- **A dependency phase at the round's end, after the Round 8.5 build is
+  tagged,** so that the cleanup's upload stays the same game and the new
+  versions get a round of play before they reach anyone. As of today 15
+  packages are behind; three touch what ships (`three` 0.184 to 0.186,
+  `vite` 8.0 to 8.3, `zod` 4.4 to 4.6); TypeScript 7 and Vitest 5 are
+  majors and each its own step, with the release notes read first (the
+  comment and import-graph instruments walk TypeScript's parser); `npm
+  audit` lists nine advisories, all in build and test tooling by package
+  name, none read. Vitest and its coverage tool to 4.1.11 is the natural
+  first item. In META-ROADMAP §Round 8.5.
+
+Not built by the user's choice and the session's lean: more corpus rows
+for the share's own sake, and a pixel proof before a reshaping needs one.
+
+Readings: **482,960** at 12:07 on the record's commit, `e3f88b1`;
+**517,769** at 13:05 with the close written; **522,024** at 13:10 on the
+`-post`'s commit, `1798249` (the hook: 3752 of 3752 in 259 files, and the
+smoke 624 of 624 in 65). The answers, the `-post` and the close cost about
+40k.

@@ -649,7 +649,9 @@ documented no-op is an acceptable outcome.
   balance arms, scripts); duplicate implementations; tests that pin
   removed code or duplicate another's coverage; unused exports. Each
   candidate is checked against GOTCHAS before it is listed, and the user
-  signs the list before anything is deleted.
+  signs the list before anything is deleted. Its first step is a drawn
+  sample of planted breaks, so that what the proofs notice is measured
+  and not assumed (signed 2026-10-12; ROADMAP §120).
 - **The deletions, one subsystem per phase** (sim · run · render and UI ·
   the bot and fuzz instruments · tests), each followed by that
   subsystem's comment pass. Within a subsystem the signed deletions come
@@ -667,6 +669,14 @@ documented no-op is an acceptable outcome.
   with a failing control, against byte-identical runs). Since the kickoff
   the pass aims at the comments' length, and the codes are the part of it
   that can be counted.
+- **A dependency phase, after the round's build is tagged** (added
+  2026-10-12 at the §119 close, user-signed): the packages brought up to
+  date once the cleanup's upload is cut, so that upload stays the same
+  game and the new versions get a round of play before they reach anyone.
+  Vitest with its coverage tool first; what ships (`three`, `vite`, `zod`)
+  with the user's eye and a frame-rate check; each major (TypeScript 7,
+  Vitest 5) as its own step with the release notes read first. The state
+  on that day: WORKLOG "The close of §119".
 - **The TODO pass:** every open rider is done, dropped or given a round.
   None of TODO's Round 8 sections ("§114 riders" to "§118 riders", "§117.5
   kickoff riders", "Round 8 close riders") is assigned to one.

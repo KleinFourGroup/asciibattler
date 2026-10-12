@@ -11,102 +11,59 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §119 IS IN PROGRESS** (cut signed 2026-10-11). The spec holds
-the user's intent and four signed decisions
-([round-8.5-spec.md](round-8.5-spec.md)). The round opens with the
-oracle map, ahead of the census, as the user signed at the Round 8 close
-(C1's third answer). The kickoff writes the round's spec first
-(`round-8.5-spec.md` at the repo root; `process/planning.md` "The
-artifacts") and hardens §119's entry against the code. No phase entries
-beyond §119's charter exist until then: the census follows the map, the
-deletions go one subsystem to a phase, and the round's size is known only
-after the census (META-ROADMAP). The charter, the decision points, the
-exit and the scope guards are in META-ROADMAP §"Round 8.5 — Housekeeping";
-the re-audit behind its 2026-10-11 amendment is
-[archive/post-109-worklog.md](archive/post-109-worklog.md) "118j — the
-round close", C1.
+**Status: §119 ✅ CLOSED 2026-10-12; §120, the census, is NEXT** (its
+kickoff cuts it). The spec holds the user's intent and four signed
+decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
+the oracle map, ahead of the census, as the user signed at the Round 8
+close. After the census the deletions go one subsystem to a phase, and the
+round's size is known only once the census has sizes (META-ROADMAP). The
+charter, the decision points, the exit and the scope guards are in
+META-ROADMAP §"Round 8.5 — Housekeeping".
 
-## Phase 119 — the oracle map
+## Phase 119 — the oracle map ✅ (closed 2026-10-12)
 
-Charter: for each part of the code, name what proves a deletion there
-changed nothing, and show each proof failing on a planted break, so that
-every candidate the census lists can name the oracle that covers it. Five
-instruments, from META-ROADMAP's first item: a journal corpus recorded at
-the round's baseline (about thirty headless runs, with a count of the
-gates and commands they reach); the chaos census pinned on commands that
-change the run, for the kinds its seeds reach (thirteen of 21 at the Round
-8 close); a tool-only flag to replay past a config mismatch, so a journal
-can say whether a knob is dead; a field-by-field diff of the end snapshot,
-for a deletion that slims the save; and a count of step codes in `src`
-comments that may only fall.
-
-**Why first:** the round's charter leaned on Round 8's journal, chaos
-driver and continuation check as its deletion oracles, and the close's
-re-audit found each short of that as built: a replay on another commit
-has to be forced, a config mismatch cannot be, no journal is stored in the
-repo, and the chaos driver's every-commit seeds never reach the
-sector-cleared gate or a port trade. **Depends on:** Round 8 (✅).
-**Risk:** low-medium: instruments and tests, no deletion; the close's
-guess at its cost was 80k to 150k of context. **Decision points:** the
-replay flag reverses §114's choice that nothing forces a replay past a
-config mismatch, and the kickoff's shape-lock confirms it; whether the
-corpus is tracked in the repo or re-recorded from its seeds; the chaos
-census's other eight command kinds (the five port trades, `usePacket`,
-`redrawCards`, `dismissSectorCleared`), taken only if the census wants to
-delete in that code. **Exit:** every part of the code the census will
-list candidates in has a named proof, each shown to fail on a planted
-break; each of the five instruments is built or dropped with a reason.
-**Scope guards:** nothing is deleted before the census is signed; no
-behaviour change; the replay flag stays a tool's, and the shipped game
-replays nothing past a config mismatch; the permanent gates are never
-relaxed. The kickoff hardens this entry against the code.
-
-- Re-scoped 2026-10-11 (the kickoff, user-signed): two more proofs, a
-  declared mapping back to the old names for a change that renames what is
-  stored, and parsed-config equality for a config move, because the round
-  now lets reshaping in by trial (the spec's D3; WORKLOG "Kickoff").
-- ✅ DECIDED 2026-10-11 (the shape-lock): the replay flag is confirmed, a
-  tool's only; the corpus is tracked in the repo; the chaos census's other
-  eight kinds wait for the census; a coverage tool comes in as a dev
-  dependency at 119g; no second model's review for now. WORKLOG "The §119
-  audit, and the cut put to the user".
-
-**The cut** (signed 2026-10-11: five `none`, one `batch`, one `stop`).
+For each part of the code, what proves a change there changed nothing,
+each proof shown to fail on a planted break: TESTING.md "The oracle map".
+The charter's five instruments, the kickoff's two more proofs, the
+cold-read probe and a coverage tool, all built; each step's record, and
+every call the user signed at the close, is in WORKLOG §119.
 
 - ☑ **119a — the replay tool reaches further** (`none`). A tool-only
-  option past a config mismatch (`--force-config`), each battle's event
-  digest with an optional mapping applied before hashing, the end snapshot
-  handed back when its hash differs, and a pin that the game's entry never
-  reaches the replay. No bump; the smoke does not fire. Built as cut, each
-  held against its plant (WORKLOG §119, 119a).
-- ☑ **119b — the journal corpus** (`none`, with a stop if no run ends in
-  victory: a recorder on the fuzz bot, or the late game left to the fuzz
-  diff). About thirty journals from a table of seeds and dials, tracked
-  under `tests/fuzz/corpus/` with their digests and a census of what they
-  reach; all replayed in the smoke tier, three on every `npm test`. The
-  smoke fires. 30 journals, 10 won, so the stop did not fire; four plants
-  caught (WORKLOG §119, 119b).
+  option past a config mismatch, each battle's event digest with an
+  optional mapping, the end snapshot handed back when its hash differs,
+  and a pin that the game's entry never reaches the replay.
+- ☑ **119b — the journal corpus** (`none`). 30 journals under
+  `tests/fuzz/corpus/` with their digests and a census of what they
+  reach; all in the smoke tier, three on every `npm test`.
 - ☑ **119c — the chaos census pinned on what changes the run** (`none`).
-  A kind counts when `applied > 0` on any every-commit seed (13 of 21 at
-  the Round 8 close, re-measured at step zero); the test names both lists
-  and fails when either moves. 13 and 8 at step zero, as at the close; a
-  planted no-op fails it by its one kind (WORKLOG §119, 119c).
+  13 kinds change the run on the every-commit seeds and 8 are only sent;
+  the test names both lists.
 - ☑ **119d — parsed-config equality and the snapshot field diff**
-  (`none`). Each is empty HEAD against HEAD and catches its plant. Built
-  as one path-by-path JSON diff with two uses, `npm run oracle` (WORKLOG
-  §119, 119d).
-- ☑ **119e — the comment instruments** (`none`). The step-code count with
-  its rule, as a ceiling that may only fall; the comment-stripped compare
-  with a planted code edit as its failing control; a length reading. On
-  the parser; 6,376 codes, held by file (WORKLOG §119, 119e).
-- ☑ **119f — the cold-read probe, calibrated** (`batch`, read at 119g:
-  the table of right answers out of three per question; wrong is every
-  cell 3/3 or 0/3, or the planted tree scoring the same). Questions drawn
-  from existing tests, half by another agent into a folder the session
-  does not open; at most 30 small-model runs and one authoring agent;
-  harder questions if Haiku saturates, then the token measure. 27 of 27
-  runs right on both trees. Read early and ✅ DECIDED 2026-10-12: kept as
-  a token measure with a floor; 66 runs at the close (WORKLOG §119, 119f).
-- ◐ **119g — the oracle map and the phase's close** (`stop`). By part of
-  the code, the proofs, each with its planted break; into TESTING.md; the
-  charter's clause corrected. Built, unread (WORKLOG §119, 119g).
+  (`none`). One path-by-path JSON diff with two uses, `npm run oracle`.
+- ☑ **119e — the comment instruments** (`none`). The compare with the
+  comments out, the step-code ceiling (6,376 codes, by file and exact), a
+  length reading.
+- ☑ **119f — the cold-read probe, calibrated** (`batch`). 27 of 27 Haiku
+  runs right on both trees; kept as a token measure with a floor, 66 runs
+  at the round's close.
+- ☑ **119g — the oracle map and the phase's close** (`stop`). 31 planted
+  sites; what each proof reaches as `npm run oracle -- reach`; the build
+  compare as `build-hash`; the charter's clause corrected. `-post`: three
+  test loops bounded, so a reward command that stops taking effect fails
+  `npm test` where it hung it.
+
+## Phase 120 — the census
+
+Charter: every candidate with its evidence, in two lists (the spec's D1):
+what a search proves dead, and the trials, each with what it expects to
+remove and the proof that covers it. Every candidate names its proof from
+the oracle map, and the user signs the list before anything is deleted.
+The kickoff audits the code as it is and hardens this entry
+(`process/planning.md` "Phase kickoff"); META-ROADMAP's census item holds
+what the lists cover.
+
+- ✅ DECIDED 2026-10-12 (at §119's close, ahead of the cut): the census's
+  first step is a drawn sample of planted breaks, about 200 lines the
+  proofs run with one mechanical edit at each, held against the corpus and
+  then the suite. It turns "reached" into a measured rate by folder, and
+  its survivors are leads. WORKLOG "The close of §119".

@@ -583,7 +583,7 @@ tests/
   chaos/                     # 115c: THE CHAOS DRIVER — chaos.ts (random legal + illegal commands at every
                              # gate, random battle orders; checks: illegal = no-op, round trip per phase change,
                              # occupancy per tick, its journal replays to the same bytes; a failure names its seed
-                             # + writes its journal) · chaos.test.ts (four seeds every npm test, the census, a
+                             # + writes its journal) · chaos.test.ts (four seeds every npm test, the census of kinds sent and of kinds that change the run, a
                              # plant per check) · cli.ts (`npm run chaos -- --seeds=N`, journals to output/chaos/)
   fuzz/                      # A3: headless balance harness (opt-in CLI)
     corpus/                  # THE JOURNAL CORPUS — stored runs a later tree must replay event for event: corpus.ts (the table of seeds and dials for two drivers, the seeded player and the chaos driver; `replayReach`: a journal's per-battle event digests, end hash, which commands changed the run and in which phases; when the baseline may be retaken) · journals/ (30 recorded journals, inputs only) · baseline.json (what each reached when recorded, one run to a line) · corpus.test.ts (the smoke tier: every journal against its baseline, and the plants) · cli.ts (`npm run corpus`: check, `--record`, `--rebaseline`, `--snapshots=<dir>`, `--survey=<n>`)

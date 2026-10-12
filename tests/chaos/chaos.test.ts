@@ -65,6 +65,45 @@ describe('115c — the chaos driver', () => {
     ]);
   });
 
+  it('the census: which kinds change the run on those seeds, and which are only ever sent', () => {
+    // Sending a kind shows the driver can form it. Only a command that
+    // changes the run reaches the code that applies it, so that is what a
+    // change to that code can lean on. A kind counts here when one command of
+    // it changed the run's text on any seed above (`applied`, chaos.ts). Both
+    // lists are pinned, so the test fails when a kind stops changing the run
+    // and when one starts to: either way the driver's reach has moved and
+    // whoever moved it should know.
+    const changesTheRun = (kind: string): boolean => results.some((r) => (r.census[kind]?.applied ?? 0) > 0);
+    expect(KINDS.filter(changesTheRun).sort()).toEqual([
+      'acceptReward',
+      'advanceTurn',
+      'chooseEventOption',
+      'chooseRecruit',
+      'chooseRestOption',
+      'declineReward',
+      'discardPacket',
+      'dismissPromotion',
+      'empowerUnit',
+      'enterNode',
+      'leavePort',
+      'passGrant',
+      'passRecruit',
+    ]);
+    // The driver's blind side on these four seeds. The journal corpus
+    // (tests/fuzz/corpus) reaches `buyPortPacket`, `dismissSectorCleared`,
+    // `redrawCards` and `usePacket`; nothing stored reaches the other four.
+    expect(KINDS.filter((kind) => !changesTheRun(kind)).sort()).toEqual([
+      'buyPortDaemon',
+      'buyPortPacket',
+      'buyPortUnit',
+      'dismissSectorCleared',
+      'payToRemoveUnit',
+      'redrawCards',
+      'sellPacket',
+      'usePacket',
+    ]);
+  });
+
   describe('each check fails on its plant, naming the seed and writing the journal', () => {
     const [seed, dials] = EVERY_COMMIT[0]!;
 

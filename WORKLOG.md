@@ -520,3 +520,33 @@ sites.
    demand, or goes.
 
 Tools kept: `scratch/119b/` (the two plant scripts and the tsx probe).
+
+Readings: **437,770** at 20:45 with 119b built and its commit started;
+**442,333** at 20:50 on it, `b176886` (the hook: 3698 of 3698 in 255
+files, and the smoke tier 624 of 624 in 65). The step cost about 78k.
+
+### 119c — the chaos census pinned on what changes the run (2026-10-11, session e1342511)
+
+**Step zero.** The pin was written from the Round 8 close's count and
+passed on its first run, so that count holds at `b176886`: on the four
+every-commit seeds, 13 kinds change the run and 8 are only ever sent (the
+five port trades, `usePacket`, `redrawCards`, `dismissSectorCleared`). A
+kind counts when one command of it changed the run's text on any of the
+seeds, which is the driver's own `applied`.
+
+**Built.** One test in `tests/chaos/chaos.test.ts` that names both lists.
+It fails when a kind stops changing the run and when one starts to.
+
+**Verified, and by what.** `tests/chaos` 10 of 10. A pin that passes on
+its first run is checked by planting (TESTING.md): with a declined reward
+made a no-op in `src/run/Run.ts` (`scratch/119c/plant.sh`), the test fails
+on the first list, 12 kinds against 13, the missing one `declineReward`,
+and the other nine tests pass; the file was put back from a copy and
+`git diff --stat` on it is empty.
+
+**Where the eight stand now.** The journal corpus reaches four of them
+(`buyPortPacket`, `dismissSectorCleared`, `redrawCards`, `usePacket`).
+Nothing stored reaches `buyPortUnit`, `buyPortDaemon`, `sellPacket` or
+`payToRemoveUnit`: the chaos driver sent them 244 times over the 32-run
+sweep and none changed a run. That is for the census, if it wants to
+delete in the port's code (the shape-lock's third decision).

@@ -1378,3 +1378,210 @@ Readings: **482,960** at 12:07 on the record's commit, `e3f88b1`;
 `-post`'s commit, `1798249` (the hook: 3752 of 3752 in 259 files, and the
 smoke 624 of 624 in 65). The answers, the `-post` and the close cost about
 40k.
+
+## Phase 120 — the census
+
+### The kickoff: the audit, and the cut put to the user (2026-10-12, session 79f18990)
+
+Pre-flight at `0b41e97`: the tree clean but for one friction-log line of
+session bb91da2f's, committed with this entry. `git diff --stat a45a7af
+HEAD -- src config` names one file, `src/run/Run.test.ts`, so the reach
+readings under `output/reach/` still describe every source line. The
+user's dev server is listening on 5173, so each plant of this phase goes
+in a worktree under `output/`. Nothing was built. ✔ marks a number this
+session counted, by `scratch/120-kickoff/audit.mjs` over tracked files
+(each section prints its rule) unless another source is named. No source
+file was read whole, and no candidate was classified.
+
+**What the census has to cover, counted** ✔.
+
+- *Source.* 279 `.ts` files under `src` that are not tests, 63,458 lines:
+  sim 15,086 in 56 files, ui 10,241 in 49, run 9,544 in 19, render 7,668
+  in 23, config 5,785 in 34, dev 4,582 in 22, bot 2,121 in 11, and ten
+  smaller folders under 1,500 each. Two stylesheets hold 4,875 lines and 14
+  shaders 732. Half of the `.ts` lines are in the 39 longest files:
+  `Run.ts` 4,888, `World.ts` 3,093, `BattleRenderer.ts` 2,122, `Game.ts`
+  1,287, `PreTurnScreen.ts` 1,120.
+- *Exports.* 1,521 lines open an export declaration in those files (sim
+  311, config 249, ui 188, render 146, run 144, dev 125), by a pattern and
+  not a parse.
+- *Tests.* 324 test files, 70,436 lines: 181 beside the source (46,980)
+  and 143 under `tests/` (23,456, of which the smoke's 65 files hold
+  11,559). 4,071 `it(` or `test(` call sites by a pattern.
+  `src/run/Run.test.ts` is 6,894 lines with 380 of them; the next longest
+  is `World.test.ts` at 1,578. Thirty files have at most two sites.
+  Another 84 files under `tests/` are not tests, 22,950 lines, 17,286 of
+  them the fuzz instruments.
+- *Tools, scripts and the shell.* 105 files and 29,709 lines, 23,221 of
+  them in `tools/` (17 folders; each one's name appears in
+  `tools/index.html`, and thirteen were last committed to before
+  September).
+  The oracle map lists no proof across a commit for any of it.
+- *Config.* 34 files, 6,381 lines, 6,873 values (the scalars of each
+  file's parsed JSON). Five content tables hold 5,895 of them (layouts
+  3,377, encounters 843, units 675, abilities 590, events 410); the other
+  29 files hold 978. So a count of dials is a count of schema keys, with a
+  table's entries collapsed, and it is the reference finder's to give.
+- *Run dials.* `RUN_CONFIG_PARAMS` names 13 URL parameters
+  (`src/run/RunConfig.ts:306-320`, read). Others are read under `src/dev`
+  (the board panel's `bp`, the failure plant's) and by `bootsToMenu`; the
+  fuzz command line's flags were not counted.
+- *What is already listed elsewhere.* TODO holds 91 open items. The
+  step-code ceiling stands at 6,376 (119e).
+
+**What the audit found.**
+
+- **Nothing in the repo answers "who reads this?" with types.** The
+  import graph (`tests/importGraph.ts`) follows run-time imports by file,
+  and the coverage readings say which lines ran. A dial with no reader, an
+  export nothing imports and an export only its own test imports are all
+  questions about a name's references, which today is `git grep` and a
+  read of each hit. Every config loader has one shape (a zod schema, then
+  `export const X = Schema.parse(json)`; `src/config/economy.ts` read), so
+  one finder over TypeScript's language service can serve the dials and
+  the exports both, if it follows a key through zod's inferred type.
+  Whether it does is 120b's step zero.
+- **The type check does not include `scripts/`** (`tsconfig.json`'s
+  `include` is `src`, `tools`, `tests` and two config files, read). Its
+  five `.ts` files are checked only if something included imports them,
+  which was not looked into. A reference finder has to add them or it
+  will miss their reads.
+- **The entry reaches 263 of 295 source files at run time**
+  (`scratch/119g/shipped.ts --list`). The 32 it does not reach include the
+  bot's eleven, the journal replay's three and five of `src/i18n`, which
+  tools and tests load; files that by their names hold only types, which
+  the graph does not follow; `ui.css`, which the page loads and no import
+  does; and `src/run/mapMetrics.ts`, `src/sim/layoutConnectivity.ts`,
+  `src/core/rngStreams.ts`, `src/dev/replayTrace.ts`. Leads, each unread.
+- **No tool finds duplicates.** None is installed, and the comment
+  instruments already walk TypeScript's scanner, which is what a
+  token-run finder needs.
+- **The suite's reach is known as a whole and not by test file.** "Which
+  tests are truly necessary" (the user's candidate) needs each file's own
+  reach, and `reach-diff` costs a whole recording per deleted file. Each
+  file run alone under the coverage tool gives the lines only it runs.
+- **Track B's reading has a size.** The spec's profile is read "from the
+  top". The five longest files are 12,510 lines, and reading the 39 that
+  hold half the code is about 31,700 lines, more than one session holds
+  beside its work.
+- **The sampler's population** (from 119g's table, at the same source):
+  the corpus runs about 2,490 statement lines of `src/sim`, 1,520 of
+  `src/run`, 700 of `src/config` and 59 of `src/core`; some test runs
+  another 253 in sim and 531 in run that neither byte proof does. A corpus
+  check takes 17 to 21 s (119b) and the suite 55 s.
+
+**The cut, as put to the user** (unsigned as this is written; ROADMAP
+gets it once it is signed). No step changes anything under `src` or
+`config`, so none predicts a snapshot bump, a new stream or the fuzz
+smoke; a step that has to touch `tests/fuzz/` fires the smoke once.
+
+- *120a, the drawn sample* (signed ahead of the cut). 200 sites drawn by
+  a seeded draw from lines a proof runs, one mechanical edit at each
+  through TypeScript's parser (a condition negated, a comparison's
+  boundary moved, `+` and `-` swapped, a number raised by one, a call
+  statement removed). 140 from lines the corpus runs (sim 60, run 50,
+  config 20, core 10): the corpus, then the suite for what it misses,
+  then the fuzz diff and the smoke for what both miss. 30 from the sim
+  and run lines only tests run, and 30 from shipped code no headless
+  proof loads (store, journal, audio, settings, failure, diagnostics,
+  i18n, scenes, render, ui): the suite. The bot is left out. Before the
+  draw the runner must reproduce three known answers: the damage line (30
+  of 30), the port purchase (no journal; `Run.test.ts`), and an added
+  comment (nothing). Exit: a row a site; the rate by folder, by proof and
+  by operator; each survivor read and classed as dead code, a hole or an
+  edit that changes nothing; the tree as it was. In the background, on
+  worktrees under `output/`, about two to three hours, killed at twice
+  that. Read: `batch`, at 120c's stop (the rate table and the survivors;
+  wrong is a folder whose named proof misses most of what it runs). It
+  becomes a stop of its own if its reading changes which proof the map
+  can name for a folder.
+- *120b, who reads this.* A reference finder over TypeScript's language
+  service: for each export under `src`, each key of each config schema
+  and each `RunConfig` field, its readers by kind (shipped code, the bot
+  and fuzz instruments, tests, tools, scripts). Exit: it lists a planted
+  export nothing imports, a planted one only a test imports and a planted
+  config key nothing reads; it does not list `ECONOMY.startingBits`; and
+  it counts the string-keyed reads it cannot follow. Read: `none`.
+- *120c, the dials.* Every config key by schema path, `RunConfig` field,
+  URL parameter and fuzz flag: its readers, whether any value but its
+  default is set anywhere (config, tests, the balance arms, scripts), its
+  GOTCHAS check, a proposed fate and the proof that covers it. Content
+  nothing refers to (an ability no unit has) is listed apart. The census
+  file and its row format start here. Read: `stop`: each dial's fate is
+  the user's, and every later list is written in this format.
+- *120d, exports, files and exact duplicates.* From 120b: exports nothing
+  reads, exports only tests read, files no entry loads (the game, the
+  tools' pages, the scripts and the tests each as entries), with `tools/`,
+  `scripts/` and `shell/` listed for deletion only. A token-run finder
+  for identical runs in two places, with a planted copy it must find; the
+  same runs with names and literals normalised are leads for 120f. Read:
+  `batch`, at 120e's stop (each class's count and ten drawn rows of it;
+  wrong is a row whose reader the user knows of).
+- *120e, the tests.* By test file: its sites, lines and seconds, the
+  lines only it runs (each file alone under the coverage tool, about half
+  an hour by a guess), and the sampled breaks it caught. The bottom of
+  that list read and classed (pins a config value, repeats another file,
+  states a basic fact, holds a rule). File by file; the 380 tests of
+  `Run.test.ts` one by one are the tests phase's. Read: `stop`: whether a
+  test is redundant is the user's call.
+- *120f, the trials.* The profile for all 279 files (lines, commits, fix
+  commits, gotcha references, special-case sites); the near-duplicate
+  clusters; the special cases grouped by what they test; the user's two
+  named trials sized (the neutral team, the config files); `Run.ts` and
+  `World.ts` read whole. Each trial with what it expects to remove,
+  counted, and its proof from the map or "none today". Fragile code that
+  only a behaviour change fixes is listed for TODO. Read: `batch`, at
+  120h (wrong is a trial the user would not want tried).
+- *120g, the TODO pass's list.* The 91 open items, each proposed as
+  done, dropped or given a round. Read: `batch`, at 120h (wrong is a
+  rider dropped that the user still wants).
+- *120h, the census signed and the round sized.* The lists signed, Track
+  B's budget set, the phases after this one written into ROADMAP, the
+  phase closed. Read: `stop`.
+
+**The calls put with it,** each with the session's lean.
+
+1. *The census is a tracked file of its own,* `round-8.5-census.md`
+   beside the spec and archived with it. A class a search settles (an
+   export with no reference anywhere) is signed as a class, with ten
+   drawn rows to check; a judgement (a dial, a test, a trial) is signed
+   row by row.
+2. *The sample's strata and operators,* as in 120a.
+3. *Two tools are kept with tests,* `npm run oracle -- plant` and `refs`,
+   because each deletion batch needs its failing control and a deletion
+   exposes more dead exports. The duplicate finder, the profile and the
+   per-file reach stay in `scratch/` until something runs them twice.
+4. *The dials' scope takes in the fuzz flags and unreferenced content,*
+   and `tools/`, `scripts/` and `shell/` are in the census for deletion
+   only, since nothing proves a reshaping there.
+5. *Tests are censused by file.* The session's doubt, said plainly: a
+   search is weak evidence that a test is redundant, so this list is the
+   likeliest to come back as classes with examples and not as rows ready
+   to delete.
+6. *Track B reads two files whole in the census* and leaves the rest of
+   the profile's top to each subsystem's kickoff and to D1's re-skim. The
+   other arm is small readers fanned out over the 39 longest files, about
+   2M tokens by the pilot's starting cost, with every lead second-hand
+   until checked.
+7. *The TODO pass's list is a census step,* and doing what it marks
+   "done" belongs to the phases.
+8. *No second model's review of the two instruments,* as at §119: each
+   carries planted known answers.
+9. *Where the stretch runs.* From 192k the stretch to 120c's stop
+   probably does not fit under the line. The lean is to start here with
+   120a and 120b, the batch running while the finder is built, and to
+   hand off before 120c.
+
+Readings: **91,402** at 13:50 after HANDOFF and `process/planning.md`;
+**125,002** at 13:51 by the tool's clock, with the spec, §119's record and
+the oracle map read; **192,344** at 14:02 with the audit run and the cut
+drafted; **210,866** at 14:08 on the fix's commit below, `0f61148`.
+
+**Outside the cut, done here.** This entry's commit failed its hook twice
+running on `tests/store-guard.test.ts` passing the default 5 s, with no
+node process beside the suite but the user's dev server (the process
+list, read after the second failure). The file takes 2 s alone and took
+9 s inside the suite. Its two whole-repo walks now carry a 30 s limit
+(`0f61148`; the hook then ran 3752 of 3752 in 259 files), which is the fix
+TODO's Round 8 close rider names, for one of its three tests. One green
+run does not show the limit is enough; the next failure there would.

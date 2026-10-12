@@ -111,6 +111,18 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   Reached is not proven, and unreached is a finding: "The oracle map"
   below. `reach-diff <before> <after>` lists what the first reading runs
   and the second does not, which is the check for a deleted test.
+- **A planted break:** `npm run oracle -- plant --at=<file>:<line>` makes
+  one mechanical edit at the line (a condition negated, a comparison's
+  boundary moved, `+` and `-` traded, a number raised by one, or a call
+  removed; `--list` prints the ones the line admits) in a worktree under
+  `output/plant/`, runs the proofs named by `--proofs` (corpus, suite,
+  smoke, fuzz-diff; the first two by default), each on the clean worktree
+  first, and puts the file back (`tests/oracle/plant.ts`,
+  `plantProofs.ts`). It exits 0 when every proof caught the edit, so it is
+  the failing control for a proof that passed on a change at that place,
+  and the way to settle "reached, but proven?" for one line. An edit no
+  proof notices is a question about the line and not yet a hole: dead code,
+  a blind spot, or an edit of no effect.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

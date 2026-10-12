@@ -12,6 +12,7 @@
  *   npm run oracle -- reach --at=<file>[:<a>[-<b>]]  one file or a range of its lines, proof by proof
  *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not
  *   npm run oracle -- build-hash [ref] [--dev]    the working tree's build against the ref's, file by file (buildHash.ts)
+ *   npm run oracle -- plant --at=<file>:<line>    one mechanical edit at a line, and the proofs run against it (plant.ts)
  *
  * `json-diff` prints the differences counted by kind and path shape, then the
  * first of them in full, and exits 1 when there is any. For a change that is
@@ -36,6 +37,15 @@
  * `build-hash` exits 1 when the two builds differ, and names the built files
  * that do. The ref defaults to HEAD. `--dev` compares the development-mode
  * builds, the only ones that hold the code under `src/dev`.
+ *
+ * `plant` makes one edit at the line (plant.ts lists the kinds) in a worktree
+ * of `--ref=<ref>` (default HEAD) under output/plant/, runs the proofs named
+ * by `--proofs=<id,id>` (corpus, suite, smoke, fuzz-diff; default
+ * corpus,suite), puts the file back and removes the worktree. Each proof runs
+ * on the clean worktree first. It exits 0 when every proof caught the edit
+ * and 1 when one did not, so a proof's failing control is one command. `--list` prints the edits the line admits and
+ * plants nothing; `--op=<kind>` and `--nth=<n>` choose among them (default
+ * the first).
  */
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -44,6 +54,8 @@ import { compareBuildWith } from './buildHash';
 import { isHeldComment, measure, splitSource, type Lengths } from './comments';
 import { dumpConfig } from './configDump';
 import { describeDifference, jsonDiff, summarize, type JsonDifference } from './jsonDiff';
+import { applyEdit, describeEdit, editsOn, type Edit } from './plant';
+import { PLANT_PROOFS, dropTree, makeTree, recordClean, treeStatus, withPlant, type PlantProof } from './plantProofs';
 import {
   CEILING_PATH,
   COUNTED_ROOTS,
@@ -329,6 +341,60 @@ function buildHash(ref: string): number {
   return 1;
 }
 
+async function plant(): Promise<number> {
+  const at = option('at');
+  if (at === undefined || !/:\d+$/.test(at)) {
+    console.error('oracle: plant needs --at=<file>:<line>');
+    return 2;
+  }
+  const { file, from: line } = parseAt(at);
+  const kind = option('op');
+  const choose = (source: string): Edit[] => editsOn(file, source, line).filter((edit) => kind === undefined || edit.operator === kind);
+  if (flags.has('--list')) {
+    const found = choose(readFileSync(file, 'utf8'));
+    console.log(`oracle: ${file}:${line} admits ${found.length} edits${kind === undefined ? '' : ` of kind ${kind}`}`);
+    found.forEach((edit, i) => console.log(`  ${i}  ${describeEdit(edit)}`));
+    return found.length > 0 ? 0 : 1;
+  }
+  const proofs = (option('proofs') ?? 'corpus,suite').split(',') as PlantProof[];
+  const unknown = proofs.filter((proof) => !PLANT_PROOFS.includes(proof));
+  if (unknown.length > 0) {
+    console.error(`oracle: no proof named ${unknown.join(', ')}. A plant's proofs: ${PLANT_PROOFS.join(', ')}`);
+    return 2;
+  }
+  const ref = option('ref') ?? 'HEAD';
+  const tree = makeTree('tree', ref);
+  try {
+    const before = treeStatus(tree);
+    const source = readFileSync(join(tree, file), 'utf8');
+    const edit = choose(source)[Number(option('nth') ?? 0)];
+    if (edit === undefined) {
+      console.error(`oracle: ${file}:${line} at ${ref} admits no such edit (--list prints them)`);
+      return 2;
+    }
+    for (const clean of await recordClean(tree, proofs)) console.log(`oracle: nothing planted, ${clean}`);
+    console.log(`oracle: planted in a worktree of ${ref}: ${file}:${line}  ${describeEdit(edit)}`);
+    const verdicts = await withPlant(tree, file, applyEdit(source, edit), proofs);
+    let missed = 0;
+    for (const proof of proofs) {
+      const verdict = verdicts[proof]!;
+      if (!verdict.caught) missed++;
+      console.log(`  ${proof.padEnd(9)}  ${verdict.caught ? 'CAUGHT    ' : 'not caught'}  ${verdict.detail} (${verdict.seconds} s)`);
+      for (const name of verdict.failed.slice(0, 8)) console.log(`             ${name}`);
+      if (verdict.failed.length > 8) console.log(`             … and ${verdict.failed.length - 8} more`);
+    }
+    if (treeStatus(tree) !== before) throw new Error('plant: the worktree was not left as it was');
+    console.log(
+      missed === 0
+        ? 'oracle: every proof named caught the edit.'
+        : `oracle: ${missed} of ${proofs.length} proofs did not notice the edit. Read the line: dead code, a hole in the proof, or an edit of no effect.`,
+    );
+    return missed === 0 ? 0 : 1;
+  } finally {
+    dropTree('tree');
+  }
+}
+
 async function main(): Promise<number> {
   if (command === 'config-dump' && a !== undefined) {
     const dump = await dumpConfig();
@@ -368,11 +434,12 @@ async function main(): Promise<number> {
   if (command === 'comment-codes') return commentCodes();
   if (command === 'comment-length') return commentLength(roots.length > 0 ? roots : ['src']);
   if (command === 'build-hash') return buildHash(a ?? 'HEAD');
+  if (command === 'plant') return plant();
   if (command === 'reach-record') return reachRecord(roots);
   if (command === 'reach') return reach(roots);
   if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list]',
   );
   return 2;
 }

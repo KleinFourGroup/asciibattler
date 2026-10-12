@@ -1797,7 +1797,9 @@ six calls above): "Signing all of those calls, Claude! 😁" The second
 call, S3's three sites a folder, was not in that report; the session said
 so in its reply. The session takes the signature as 120a's `batch` read,
 made early; each site is in this entry should the user want them at
-120c's stop.
+120c's stop. Both points went back to the user and were signed in their
+next reply: "Signing those last two points also, Claude! 😁" So all six
+calls are signed and the read is made.
 
 **Memory, measured after the user's report.** The user came back about
 forty minutes before the hand-off to RAM at 97 %, with Firefox holding

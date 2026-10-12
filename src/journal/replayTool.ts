@@ -16,7 +16,10 @@
  *  - `-dev` is accepted: a dev server stamps each page with the commit and
  *    the tree's state as of that page's load.
  * `force` replays past these. Another config hash is `replayJournal`'s own
- * refusal, and nothing forces it. A tree with uncommitted changes of its own
+ * refusal, and `force` does not reach it. `forceConfig` does: it is for asking
+ * whether a config change moved a recorded run (a replay that still reaches
+ * the journal's battles and end says it did not, on that run), and only this
+ * tool has it. A tree with uncommitted changes of its own
  * is not the build either; that is a warning, since the tool can't tell a
  * changed comment from changed code and the replay itself says if it
  * diverged.
@@ -27,6 +30,7 @@
  */
 
 import { UNBAKED_BUILD_ID } from '../buildId';
+import { configHash } from '../config/configHash';
 import { JOURNAL_FORMAT, type JournalSegment, type RunJournal } from './journal';
 import { JournalDivergence, JournalRefused, replayJournal } from './replayJournal';
 
@@ -77,7 +81,11 @@ function isJournal(value: unknown): value is RunJournal {
   );
 }
 
-export function replayText(text: string, tree: string, options: { force?: boolean } = {}): ToolResult {
+export function replayText(
+  text: string,
+  tree: string,
+  options: { force?: boolean; forceConfig?: boolean } = {},
+): ToolResult {
   const lines: string[] = [];
   let parsed: unknown;
   try {
@@ -121,10 +129,18 @@ export function replayText(text: string, tree: string, options: { force?: boolea
   if (tree.endsWith(DIRTY)) {
     lines.push(`warning: this tree has uncommitted changes (${tree}), so it is not exactly the build that recorded the journal`);
   }
+  if (options.forceConfig) {
+    const live = configHash();
+    journal.segments.forEach((segment, i) => {
+      if (segment.configHash !== live) {
+        lines.push(`segment ${i}: forced past: it was recorded under config ${segment.configHash}, and the loaded config is ${live}`);
+      }
+    });
+  }
 
   let replay;
   try {
-    replay = replayJournal(journal);
+    replay = replayJournal(journal, { ignoreConfig: options.forceConfig === true });
   } catch (err) {
     if (err instanceof JournalRefused) return { code: 2, lines: [...lines, `refused: ${err.message}`] };
     if (err instanceof JournalDivergence) return { code: 1, lines: [...lines, `DIVERGED: ${err.message}`] };

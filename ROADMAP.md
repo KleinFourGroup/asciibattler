@@ -11,10 +11,9 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: THE KICKOFF IS IN PROGRESS** (2026-10-11). The spec holds the
-user's intent and four signed decisions
-([round-8.5-spec.md](round-8.5-spec.md)); §119's audit and cut are next.
-The round opens with the
+**Status: §119 IS IN PROGRESS** (cut signed 2026-10-11). The spec holds
+the user's intent and four signed decisions
+([round-8.5-spec.md](round-8.5-spec.md)). The round opens with the
 oracle map, ahead of the census, as the user signed at the Round 8 close
 (C1's third answer). The kickoff writes the round's spec first
 (`round-8.5-spec.md` at the repo root; `process/planning.md` "The
@@ -66,3 +65,41 @@ relaxed. The kickoff hardens this entry against the code.
   declared mapping back to the old names for a change that renames what is
   stored, and parsed-config equality for a config move, because the round
   now lets reshaping in by trial (the spec's D3; WORKLOG "Kickoff").
+- ✅ DECIDED 2026-10-11 (the shape-lock): the replay flag is confirmed, a
+  tool's only; the corpus is tracked in the repo; the chaos census's other
+  eight kinds wait for the census; a coverage tool comes in as a dev
+  dependency at 119g; no second model's review for now. WORKLOG "The §119
+  audit, and the cut put to the user".
+
+**The cut** (signed 2026-10-11: five `none`, one `batch`, one `stop`).
+
+- ☑ **119a — the replay tool reaches further** (`none`). A tool-only
+  option past a config mismatch (`--force-config`), each battle's event
+  digest with an optional mapping applied before hashing, the end snapshot
+  handed back when its hash differs, and a pin that the game's entry never
+  reaches the replay. No bump; the smoke does not fire. Built as cut, each
+  held against its plant (WORKLOG §119, 119a).
+- ☐ **119b — the journal corpus** (`none`, with a stop if no run ends in
+  victory: a recorder on the fuzz bot, or the late game left to the fuzz
+  diff). About thirty journals from a table of seeds and dials, tracked
+  under `tests/fuzz/corpus/` with their digests and a census of what they
+  reach; all replayed in the smoke tier, three on every `npm test`. The
+  smoke fires.
+- ☐ **119c — the chaos census pinned on what changes the run** (`none`).
+  A kind counts when `applied > 0` on any every-commit seed (13 of 21 at
+  the Round 8 close, re-measured at step zero); the test names both lists
+  and fails when either moves.
+- ☐ **119d — parsed-config equality and the snapshot field diff**
+  (`none`). Each is empty HEAD against HEAD and catches its plant.
+- ☐ **119e — the comment instruments** (`none`). The step-code count with
+  its rule, as a ceiling that may only fall; the comment-stripped compare
+  with a planted code edit as its failing control; a length reading.
+- ☐ **119f — the cold-read probe, calibrated** (`batch`, read at 119g:
+  the table of right answers out of three per question; wrong is every
+  cell 3/3 or 0/3, or the planted tree scoring the same). Questions drawn
+  from existing tests, half by another agent into a folder the session
+  does not open; at most 30 small-model runs and one authoring agent;
+  harder questions if Haiku saturates, then the token measure.
+- ☐ **119g — the oracle map and the phase's close** (`stop`). By part of
+  the code, the proofs, each with its planted break; into TESTING.md; the
+  charter's determinism clause corrected.

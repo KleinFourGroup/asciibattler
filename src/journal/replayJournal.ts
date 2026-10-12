@@ -28,6 +28,11 @@
  * matching, and the message names the segment, the battle and the entry
  * where it did. Which builds a journal is accepted from is the caller's rule,
  * since this module doesn't know the build it runs on.
+ *
+ * `ReplayOptions` are for tools that hold two trees against each other: a
+ * replay past the config refusal, a replay that hands back an end whose hash
+ * differs, and a tap on every event. The game replays nothing, and
+ * tests/replay-guard.test.ts keeps its entry from reaching this module.
  */
 
 import { secondsToTicks } from '../config';
@@ -59,10 +64,42 @@ export interface SegmentReplay {
   readonly battles: number;
   /** True when the segment had no end to compare against. */
   readonly open: boolean;
+  /** False only under `endHash: 'report'`, when `hash` is not the journal's. */
+  readonly endMatches: boolean;
 }
 
 export interface JournalReplay {
   readonly segments: readonly SegmentReplay[];
+}
+
+export interface ReplayOptions {
+  /** Replay a segment recorded under another config hash. A replay that
+   *  still reaches the journal's battles and end says the config change
+   *  moved nothing on that run; one that diverges says where it did. */
+  readonly ignoreConfig?: boolean;
+  /** `report` returns a segment whose end hash differs, with `endMatches`
+   *  false, where `check` (the default) throws. A change that slims the
+   *  snapshot moves the hash with the behaviour unchanged, and then the
+   *  snapshot itself is what gets compared (`SegmentReplay.run`). The
+   *  battles' checkpoints and the end's phase are held either way. */
+  readonly endHash?: 'check' | 'report';
+  /** Every event the replay emits, in order, before its subscribers run. */
+  readonly onEvent?: (segment: number, name: keyof GameEvents, payload: GameEvents[keyof GameEvents]) => void;
+}
+
+/** A bus that shows each event to `tap` before it dispatches it. */
+class TappedBus extends EventBus<GameEvents> {
+  private readonly tap: (name: keyof GameEvents, payload: GameEvents[keyof GameEvents]) => void;
+
+  constructor(tap: (name: keyof GameEvents, payload: GameEvents[keyof GameEvents]) => void) {
+    super();
+    this.tap = tap;
+  }
+
+  override emit<K extends keyof GameEvents>(event: K, payload: GameEvents[K]): void {
+    this.tap(event, payload);
+    super.emit(event, payload);
+  }
 }
 
 /** The Run a segment's start describes, constructed as `Game` constructs
@@ -109,7 +146,7 @@ function resumeRefusal(segments: readonly JournalSegment[], i: number): string |
  * Replay every segment of `journal`. Throws `JournalRefused` before
  * replaying anything, or `JournalDivergence` from the segment that diverged.
  */
-export function replayJournal(journal: RunJournal): JournalReplay {
+export function replayJournal(journal: RunJournal, options: ReplayOptions = {}): JournalReplay {
   if (journal.format !== JOURNAL_FORMAT) {
     throw new JournalRefused(
       `replayJournal: the journal's format is ${String(journal.format)}; this build reads format ${JOURNAL_FORMAT}`,
@@ -117,7 +154,7 @@ export function replayJournal(journal: RunJournal): JournalReplay {
   }
   const liveHash = configHash();
   journal.segments.forEach((segment, i) => {
-    if (segment.configHash !== liveHash) {
+    if (segment.configHash !== liveHash && !options.ignoreConfig) {
       throw new JournalRefused(
         `replayJournal: segment ${i} was recorded under config ${segment.configHash} (build ${segment.build}), ` +
           `and the loaded config is ${liveHash}: a replay against other balance numbers would diverge. ` +
@@ -128,12 +165,21 @@ export function replayJournal(journal: RunJournal): JournalReplay {
     if (refusal !== null) throw new JournalRefused(`replayJournal: segment ${i}: ${refusal}`);
   });
   const segments: SegmentReplay[] = [];
-  journal.segments.forEach((segment, i) => segments.push(replaySegment(segment, i, segments[i - 1]?.run)));
+  journal.segments.forEach((segment, i) => segments.push(replaySegment(segment, i, segments[i - 1]?.run, options)));
   return { segments };
 }
 
-function replaySegment(segment: JournalSegment, index: number, before: Run | undefined): SegmentReplay {
-  const bus = new EventBus<GameEvents>();
+function replaySegment(
+  segment: JournalSegment,
+  index: number,
+  before: Run | undefined,
+  options: ReplayOptions,
+): SegmentReplay {
+  const { onEvent } = options;
+  const bus =
+    onEvent === undefined
+      ? new EventBus<GameEvents>()
+      : new TappedBus((name, payload) => onEvent(index, name, payload));
   let world: World | null = null;
   let winner: GameEvents['battle:ended']['winner'] | null = null;
   bus.on('battle:started', ({ worldSeed, encounter }) => {
@@ -226,9 +272,9 @@ function replaySegment(segment: JournalSegment, index: number, before: Run | und
     if (phase !== null && run.phase !== phase) {
       throw diverged(`the journal ends in ${end.reason}, and the replayed run is in phase ${run.phase}`);
     }
-    if (hash !== end.hash) {
+    if (hash !== end.hash && options.endHash !== 'report') {
       throw diverged(`the journal's final snapshot hash is ${end.hash}, and the replay's is ${hash}`);
     }
   }
-  return { run, hash, battles, open: end === null };
+  return { run, hash, battles, open: end === null, endMatches: end === null || hash === end.hash };
 }

@@ -96,6 +96,17 @@ describe('replayText: the tool over a recorded journal', () => {
     }
   });
 
+  it('--force-config replays past another config hash and says so', () => {
+    const { code, lines } = replayText(text(journal({ configHash: 'ffffffff' })), TREE, { forceConfig: true });
+    expect(code).toBe(0);
+    expect(lines[1]).toBe(
+      `segment 0: forced past: it was recorded under config ffffffff, and the loaded config is ${base.segments[0]!.configHash}`,
+    );
+    expect(lines.at(-1)).toContain(`hash ${hash} matches the journal's`);
+    // A journal under the loaded config gets no such line.
+    expect(replayText(text(journal()), TREE, { forceConfig: true }).lines).toHaveLength(2);
+  });
+
   it('refuses another format with exit 2', () => {
     expect(replayText(text({ ...journal(), format: 1 }), TREE).code).toBe(2);
   });

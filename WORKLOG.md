@@ -346,4 +346,72 @@ dependency; a second model's review of the instruments
 runs.
 
 Readings: **236,616** at 19:18 on the probe turn's commit, `815fdcb`;
-**288,576** at 19:46 with the audit read and the sample run.
+**288,576** at 19:46 with the audit read and the sample run; **310,087**
+at 19:49 on the audit's commit, `8fa37c2`.
+
+**Signed** (the user, 2026-10-11): "Signing all of your leans, Claude!"
+The six decisions are signed by their leans: the replay flag confirmed;
+the corpus tracked; the other eight command kinds left to the census; a
+coverage tool as a dev dependency; no second model's review for now; the
+stretch starts in this session with 119a to 119c and hands off at the
+line. The session takes the signature to cover the cut and its reads as
+well, which were the same message's proposal and which the sixth lean
+presupposes; it says so at the next stop. Not covered: the spec file as
+rewritten after D1 to D4, which the shape-lock's message did not put to
+the user again. The cut is in ROADMAP §119.
+
+## Phase 119 — the oracle map
+
+### 119a — the replay tool reaches further (2026-10-11, session e1342511)
+
+**Step zero.** A replay that reaches its journal's hash already hands
+back the Run (`SegmentReplay.run`). What was missing is the case the field
+diff exists for: an end whose hash differs threw before anything was
+returned. So the cut's "the end snapshot handed back" is `endHash:
+'report'`. The bus has `on` and `emit` and no way to hear every event, so
+the tap is a subclass inside the replay module that overrides `emit`;
+`EventBus` is unchanged.
+
+**Built.** `ReplayOptions` on `replayJournal` (`ignoreConfig`, `endHash`,
+`onEvent`) and `SegmentReplay.endMatches`; `src/journal/replayDigest.ts`
+(`digestReplay`: one chained hash per battle and one for the events
+outside battles, the end's hash, whether it is the journal's, and the
+snapshot; `mapValues` for writing a mapping); `forceConfig` on
+`replayText` and `--force-config` on `npm run replay`;
+`tests/replay-guard.test.ts`. The headers that said nothing forces a
+config mismatch are rewritten, and ARCHITECTURE's tree has the new file
+and the new test.
+
+**Verified, and by what.**
+
+- Typecheck clean; the three test files 31 of 31
+  (`journal-replay-options`, `replay-guard`, `journal-tool`).
+- Each option against its plant, on a recorded run (seed 7,
+  `hops=3&character=soldier`): another config stamp refuses and replays to
+  the journal's hash under `ignoreConfig`; an end hash planted wrong throws
+  under `check` and comes back with `endMatches` false and the recorded
+  Run's bytes under `report`; a battle's tick count planted wrong still
+  throws under `report`; the tap sees one `battle:started` and one
+  `battle:ended` per battle and leaves the end hash where it was.
+- The digest: the same on a second replay; one event changed in the second
+  battle changes that battle's digest and no other; a rename of `neutral`
+  in every payload shows in the plain digests, a mapping back restores all
+  of them, and a mapping to another name does not.
+- The pin on the real tree: one import of `./journal/replayTool` appended
+  to `src/Game.ts` fails it with the chain `src/main.ts → src/Game.ts →
+  src/journal/replayTool.ts`; the file was put back from a copy taken
+  before the plant, and `git diff --stat` on it is empty.
+
+**Not verified here, and where it lands.** `npm run replay --
+--force-config` from the command line, and a replay under a config whose
+numbers really differ: the tests change the journal's stamp, not the
+config, and no journal file exists on disk yet. Both are 119b's, on a
+corpus journal; the invariant is that a real changed number diverges and
+a moved key does not. The rename test stands a mapping in for a renamed
+tree; a real one is the trial's.
+
+**Two calls made here, for the stop.** The pin walks from `src/main.ts`,
+so it covers DEV code the entry reaches as well as shipped code. And
+`tests/replay-guard.test.ts` is listed with the permanent gates in the
+Cursor, as the structural form of the scope guard "the shipped game
+replays nothing past a config mismatch".

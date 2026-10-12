@@ -1923,3 +1923,177 @@ the kickoff's pattern count (1,521) to two.
 **Not verified.** An assignment that unpacks, `({ key } = config)`, is
 taken for a write. Spread and whole-object reads are invisible, and their
 number was not counted. The 156 computed reads were counted and not read.
+
+### 120c — the dials (2026-10-12, session 3b697370)
+
+Pre-flight at `6e167c8`: the tree clean, the type check clean, the suite
+3764 of 3764 in 261 files. The result is
+[round-8.5-census.md](round-8.5-census.md), section 1. Nothing under
+`src` or `config` changed.
+
+**Step zero.** The hand-off's premise was two kinds of loader, "schema
+keys followed" and "ask the interface". The stored scan, by file
+(`scratch/120c/scanByFile.mjs`), shows three. Twelve loaders hand out the
+parsed value typed by `z.infer`, and every key there has a reader. Four
+cast their schema to a hand-written interface (`camps`, `encounters`,
+`events`, `rewards`), with `terrain` doing so for one sub-schema. And
+eight parse into a local named `parsed` and hand the value out reshaped
+(`sim`, `packets`, `daemons`, `empower`, `characters`, `rewards`,
+`objective`, `spawn`; `escalation` does the same inside a function), so
+their keys read as "own-only" though the game uses them. A probe
+(`scratch/120c/probe.ts`) then showed one thing covers all three: from the
+TYPE of a parsed config, each property leads back to where it is declared,
+the schema's key for `health.ts` and `sim.ts` and the interface's member
+for `events.ts`. So the sort did not have to be made by hand.
+
+**Built**, in `scratch/120c/` (not tracked; this machine only):
+
+- `dials.ts`, the walk. For each `<Schema>.parse(<json>)` in a loader it
+  walks the JSON beside the parsed value's type. At every object it
+  matches the data's keys to the type's properties, narrowing a union by
+  its literal-typed properties and by keys an arm lacks, and counts for
+  each declaration how many entries could hold the key, how many do, and
+  each distinct value. It then lists every declaration the type can hold
+  that no entry reached (the keys of an unused union arm), the enum
+  values no entry holds, and any JSON key the type does not declare.
+  Readers come from `tests/oracle/refs.ts`. A key read only in its own
+  file is followed one hop, to the property or the variable its read
+  initialises. Output: `dials.json`, 28 s.
+- `report.mjs` (the lists by section), `classify.mjs` (every row in
+  exactly one class, by rules written in its header; a row with no class
+  throws; `--draw=<class>:<n>` is a seeded draw, `--tsv` the whole table),
+  `sites.ts` (the lines that read a key, with their text), `members.ts`
+  (an interface's members with reads and writes by kind of code),
+  `flags.mjs` (each fuzz flag and the kinds of file that write its name),
+  `content.mjs` and `contentBy.mjs` (each catalog entry and which files
+  name it), `rulePlants.mjs`.
+- In the kept tool, `tests/oracle/refs.ts` gained two exports, `named` and
+  `schemaKeyNodes`, so that a caller holding a declaration's node can ask
+  for its references; `schemaKeys` is now a map over the second. Its six
+  tests pass and its 15 planted rules are still each caught
+  (`scratch/120b/rulePlants.mjs`).
+
+**Checked.** The walk carries a self-check on a planted loader and
+planted data that are not on disk: 15 known answers (a key read through
+an export, an optional key no entry sets, a defaulted one, a union arm in
+use beside its twin by keys that no entry uses, an arm ruled out only by
+a key it lacks, a key behind an interface, a record's entries, a key
+reshaped into a property that is read and one that is not, a key copied
+into a property of its own name, a stray JSON key, an enum value no entry
+holds, and which schema keys the type does not hold). Each of 12 rules
+taken out of the walk fails it (`rulePlants.mjs`). `flags.mjs` and
+`content.mjs` each check two known answers before they print.
+
+**What the checks caught in the instrument.**
+
+- *Two rules no planted case held.* The first self-check passed with
+  either union rule removed, because each covered for the other on the
+  planted data. Two cases were added that need one rule each.
+- *Keys told apart by line.* Two keys on one line shared an id, and an
+  unvisited arm's key was counted as visited. Ids are now by offset. The
+  self-check's own expectation was wrong there until then.
+- *A hop that missed the commonest shape.* `name: raw.name` was not
+  followed, because the hop took the first identifier on the line with
+  the key's name, which is the property being built. This was found by
+  reading sites for the census (`CharacterSchema.name` had no hop), not
+  by the self-check, whose reshaped keys all had new names. A case was
+  added, and the residue of own-only keys fell from 57 to 35.
+- *A clause nothing held.* After that fix, one plant passed: the clause
+  it removed had become redundant, and it was taken out.
+- *A backslash lost in a heredoc,* in the plant script, seen as its
+  refusal on the first run. In the friction log.
+
+**The limits the census leans on being stated.**
+
+- **The hop stops at a union.** `normalizeRule` in `src/config/daemons.ts`
+  returns `{ kind: 'modifier', stat: raw.stat, … }` typed as a union of
+  two rule types, and the language service does not tie that literal's
+  `stat` to `ModifierRule.stat`, which `src/run/runStats.ts:113` reads.
+  So 44 keys end at "their loader reads them". Those reads were looked at
+  for six loaders by their lines (`sites.ts`) and are the loaders'
+  normalising steps; they were not each followed to a game line.
+- **A value handed on whole is not followed.** A layout's wall coords go
+  into the terrain's own coord type as arrays, and `coord.hp` is read at
+  `src/sim/battleSetup.ts:350` under that other declaration. Found by a
+  word search after the type search said only tools read `hp`.
+- **"Own" means two things.** In a loader an own read is the loader's. In
+  `src/run/encounters/wave.ts` and `sequencer.ts`, which declare the
+  encounter types and resolve them, it is the game's. The classes
+  "loader" and "module" keep them apart.
+- **Zero unmatched JSON keys, zero ambiguous objects, zero that fit no
+  arm,** across 32 files. The planted stray key is found, so the zero is
+  a reading and not a blind walk.
+
+**The numbers** are in the census, 1.1 and 1.2: 616 declarations (464
+schema keys, 152 interface members), in classes of 464, 43, 45, 44, 7 and
+13; 36 keys in arms no entry uses, 28 optional keys never set, 23 enums
+with an unused value; 25 `RunConfig` fields; 17 URL parameters; 65 fuzz
+flags, 13 of them written by nothing but the instruments; 145 content
+entries, none unnamed. 150 schema keys are not held by any parsed type,
+all in the interface-typed loaders; for four of those loaders the 148
+keys pair with an interface member by name, with none left over on
+either side.
+
+**What the walk found, for the lists.**
+
+- **Three dials are dead by their loaders' own accounts** and the search
+  agrees: `deck.redraw`, `config/empower.json` and the two tile rates.
+  Each header says the mechanism moved to the daemons or the statuses
+  and the config "stays as" a type anchor or a fixture source.
+- **`move.cells` is authored and unread.** The gambit's 1 and the dash's
+  2 decide nothing; the distances are in the code. Either fate is the
+  user's: a deletion changes no run, and wiring it is a behaviour change.
+- **Vocabulary that was declared and never built:** `knockback`, `pull`
+  and `re-home`, each marked reserved in its own comment, and the two
+  flight keys on a unit, which META-ROADMAP's `traversal` profile
+  supersedes.
+- **Four switches with a position nothing selects,** each with code for
+  it: the selection strategy, the focus-tile resolution, and the chip
+  rule's two modes, where gotcha #129 says the survivors' numbers stay
+  needed either way.
+- **Fatigue is off at its shipped rate,** with a paired read on record
+  that put it there.
+- **Half cover changes no damage.** Its multiplier ships at 1, under a
+  comment that says it halves, and each proposed strike still walks a
+  line of sight over the half covers to find out whether to apply it.
+- **Most of what content does not use is the authoring language,** and
+  Round 10 is content: ten of twelve event conditions, three of eleven
+  event effects, three level-budget and level kinds, and the unused
+  values of 23 enums.
+- **A count that read as a finding and was not:** 24 keys "nothing
+  reads" were 23 keys of tables read by a computed key and one of a dead
+  block. The class "table" is a list by name, each family checked
+  against the line that reads it.
+
+**Calls made here, for the stop** (the census's 1.9 has the five the
+user is asked for).
+
+1. *Six classes, with "dead" and "table" as lists by name.* A row lands
+   in "dead" only after its site was read, and a name the walk does not
+   hold throws.
+2. *A tool's read does not make a key used.* Seven keys are read by
+   editors alone and are rows of their own.
+3. *A mention in BALANCE.md does not make a flag live,* since the file
+   is a log. The 52 "live" flags include 49 it writes, and the census
+   says so.
+4. *The mode switches go in list A with a fate of "ask" or "trial",* not
+   in list B, where a search plus one read can size them. The chip rule
+   is the exception: it is entangled by gotcha #129 and was not read
+   whole.
+5. *Leans were given on every "ask".*
+
+**Not verified.** No candidate's code was deleted or planted, so no proof
+named in the census has been run against its row. `chipRule.ts`,
+`fatigue.ts`'s callers, `focusTile.ts`'s resolvers and the selection
+strategy were sized by their lines and not read. Whether the game reaches a camp's or
+an encounter's description through the locale layer was not settled. The
+ten fuzz flags nothing live writes were not read. The other command
+lines' flags were counted by file and not listed. A spread or a
+whole-object use of a config value is still invisible, and its count is
+still not taken.
+
+Readings: **86,759** at 18:16 after HANDOFF; **292,132** at 18:38 with
+the walk built and first run; **340,153** at 18:50 with the lists read;
+**412,746** at 19:04 with the census written. The step cost about 330k
+to this point, more than the hand-off's guess allowed for; most of it is
+the walk's lists printed into the session and the sites read.

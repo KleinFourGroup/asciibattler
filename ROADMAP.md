@@ -81,10 +81,12 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   for every export, config key and `RunConfig` field, by kind of reader;
   kept as `npm run oracle -- refs`. 15 of 15 of its rules planted; a
   schema typed by a hand-written interface is asked by its members.
-- ☐ **120c — the dials** (`stop`). Every config key by schema path,
+- ◐ **120c — the dials** (`stop`). Every config key by schema path,
   `RunConfig` field, URL parameter and fuzz flag, with its readers, any
   value set but its default, a proposed fate and its proof; content
-  nothing refers to, apart. The census file's format starts here.
+  nothing refers to, apart. The census file's format starts here. Built
+  2026-10-12 and waiting for its read: 616 config keys in six classes and
+  20 rows, `round-8.5-census.md` section 1 (WORKLOG §120, 120c).
 - ☐ **120d — exports, files and exact duplicates** (`batch`, read at
   120e: each class's count and ten drawn rows; wrong is a row whose reader
   the user knows of). `tools/`, `scripts/` and `shell/` for deletion only.

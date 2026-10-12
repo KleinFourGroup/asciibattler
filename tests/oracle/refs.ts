@@ -179,7 +179,8 @@ function referencesTo(project: Project, name: ts.Node): Reference[] {
   return out.sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : a.line - b.line));
 }
 
-const named = (project: Project, name: ts.Node, label: string, what: string): Named => {
+/** The name declared at `name`, with its references: for a caller that found the declaration itself. */
+export const named = (project: Project, name: ts.Node, label: string, what: string): Named => {
   const file = name.getSourceFile();
   return { file: project.relative(file.fileName), line: lineOf(file, name.getStart(file)), name: label, what, references: referencesTo(project, name) };
 };
@@ -233,8 +234,13 @@ const calls = (node: ts.Node, names: ReadonlySet<string> | string): boolean =>
  * `[]` marks an array's element and `{}` a record's value.
  */
 export function schemaKeys(project: Project, file: string): Named[] {
+  return schemaKeyNodes(project, file).map(({ node, path }) => named(project, node, path, 'key'));
+}
+
+/** Each schema key's name node with its path: for a caller that asks about the declaration itself. */
+export function schemaKeyNodes(project: Project, file: string): { readonly node: ts.Node; readonly path: string }[] {
   const source = project.source(file);
-  const out: Named[] = [];
+  const out: { node: ts.Node; path: string }[] = [];
   const pathOf = (property: ts.Node): string => {
     const parts: string[] = [];
     for (let node: ts.Node | undefined = property; node !== undefined && !ts.isSourceFile(node); node = node.parent) {
@@ -254,7 +260,7 @@ export function schemaKeys(project: Project, file: string): Named[] {
       if (shape !== undefined && ts.isObjectLiteralExpression(shape)) {
         for (const property of shape.properties) {
           if ((ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property)) && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))) {
-            out.push(named(project, property.name, pathOf(property), 'key'));
+            out.push({ node: property.name, path: pathOf(property) });
           }
         }
       }

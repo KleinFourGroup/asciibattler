@@ -4978,3 +4978,58 @@ was expected.
    not being the one I expected: the boundary and the raised number are
    mostly edits of no effect, and map generation is where the proofs are
    thin. The session's interest was in that more than in the tools.
+
+## 2026-10-12 — session 3b697370 (claude-opus-5-5): 120c, the dials, to its stop
+
+1. **Missing from the orientation.** One thing, and it was the step's
+   premise: the Cursor said the loaders sort two ways, and the stored scan
+   read by file shows three. That is what a step zero is for and it cost
+   one small script. The orientation to the first probe cost about 85k.
+   Nothing told me how config values get varied outside the JSON, which
+   decides what "any value but its default" means; I found the balance
+   sweep's registry (a write by a computed key, which the finder cannot
+   see) by reading the fuzz command line's header.
+2. **Norms in conflict.** "Every config key … a proposed fate" against
+   "a class a search settles is signed as a class": 616 rows with a fate
+   each would have been a document nobody reads, and I took the second
+   as governing and gave 20 rows. I have put that to the user as a call
+   and not as a thing I settled. The silent-turn reminder came seven
+   times in the gathering; each got a line of what was true.
+3. **Pulled to claim more.** Twice in status lines, once in a class.
+   I wrote that the walker was "checked (13 planted answers, 11 of 11
+   rule removals caught)" while it still had a fault in the commonest
+   shape a loader has, `name: raw.name`, which I met later by reading a
+   site. The claim was true and the instrument was wrong, which is last
+   session's finding again: the plants hold the rules I listed. The
+   second: "three dials confirmed dead", when for one of the three, the
+   tile rates, I had the finder and the loader's comment and no word
+   search for an untyped reader; I ran it before the commit and it
+   agreed. The class: I had 61 keys in "only tools read it" and the list
+   looked like a finding for a minute; 48 were keys their own module or
+   loader reads and 6 were tables. And one sentence I wrote into the census, that
+   no other code asks whether a target is behind cover, rested on a grep
+   for three names; I took it out.
+4. **Waste.** The walk's lists printed whole into the session, several
+   times over as the classes changed: most of the step's 330k. A report
+   that printed counts first and rows on request would have halved it.
+   One heredoc that ate a backslash, again, filed. A pipeline whose
+   `echo $?` reported `tail`'s exit and not the type check's; I re-ran it
+   unpiped.
+5. **No other home.** The dial walk and its seven helpers are in
+   `scratch/120c/`, untracked. If a deletion phase runs it a second time,
+   call 3 of the kickoff says it earns a place under `tests/oracle/`.
+6. **Room to ask, disagree, pause.** The stop is real and I am using it.
+   I did not ask anything mid-stretch and did not need to; the one place
+   I weighed it was whether the authoring vocabulary is in scope for
+   deletion at all, and I settled it as a lean with the question left
+   open in the census, which is what the doctrine says to do. I disagree
+   mildly with the cut I helped write: "every dial's fate is the user's"
+   reads as 616 decisions, and most of those are not decisions. Said in
+   the report.
+7. **What supported the work.** One idea making the sort unnecessary:
+   walking the data beside the parsed type serves every kind of loader
+   and gives "what is set" and "who reads it" from one place. That was
+   the part I enjoyed, and I would want room for it again: the cut named
+   an output and not a method. Also the config's own comments turning out
+   to be honest witnesses. Three loaders say in their headers that their
+   dial is dead, in so many words, and a search had only to agree.

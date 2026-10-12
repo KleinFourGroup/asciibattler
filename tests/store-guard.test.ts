@@ -35,14 +35,19 @@ function storeReaches(entries: readonly string[], read: Read): string[] {
   return graph.files.filter(isStore).map((f) => chainTo(f, graph).join(' → '));
 }
 
+// The whole-repo walk parses every file the headless roots reach. Alone it
+// takes about 2 s; beside the rest of the suite it has passed the default 5 s
+// with nothing wrong, so the two tests that make it carry their own limit.
+const WALK_TIMEOUT_MS = 30_000;
+
 describe('113d — headless never reaches the store', () => {
   const entries = HEADLESS_ROOTS.flatMap(sourcesUnder);
 
-  it('no file under src/sim, src/run, src/bot, src/journal or tests/fuzz reaches src/store at run time', () => {
+  it('no file under src/sim, src/run, src/bot, src/journal or tests/fuzz reaches src/store at run time', { timeout: WALK_TIMEOUT_MS }, () => {
     expect(storeReaches(entries, repoRead)).toEqual([]);
   });
 
-  it('the walk covers the folders it guards', () => {
+  it('the walk covers the folders it guards', { timeout: WALK_TIMEOUT_MS }, () => {
     // Known answers for the instrument: an empty or shallow walk would pass.
     for (const root of HEADLESS_ROOTS) expect(entries.some((e) => e.startsWith(`${root}/`)), root).toBe(true);
     expect(entries).toContain('src/sim/World.ts');

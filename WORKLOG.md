@@ -600,3 +600,25 @@ own step, and these plants stand in for them.
 **A call made here, for the stop.** The tools live under `tests/oracle/`
 and run as `npm run oracle`. `scripts/` is outside the type checker, and
 `tools/` holds the editors.
+
+Readings: **482,785** at 21:00 on 119d's commit, `d39db14` (3709 of 3709
+in 256 files). The step cost about 27k.
+
+### The hand-off before 119e (2026-10-11, session e1342511)
+
+119e would start at 482,785, which is 67k under the line. The session
+hands off there: 119e builds three instruments on the TypeScript scanner
+and looks larger than that room, with the session's report still to
+write. Eight commits, `97468f0` to `d39db14`, none pushed. The session's
+report is in `retro/sessions.md`.
+
+**Carried to the stop at 119g** (also in the Cursor): the calls listed
+under 119a, 119b and 119d; the session's reading that "Signing all of
+your leans" covered the cut and its reads; the spec file as rewritten
+after D1 to D4, unread by the user.
+
+**For 119e's step zero.** The count's rule needs a known answer before it
+reads the tree. `src/config/configHash.ts`'s header is short and holds two
+bare step codes ("53b" and "95e"). The Round 8 close's rough counts (1,972
+lines with `§` in 281 files; about 2,400 bare codes in 295) are the scale
+to expect and not a target, since their overlap was never measured.

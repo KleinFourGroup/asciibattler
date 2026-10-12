@@ -1585,3 +1585,10 @@ list, read after the second failure). The file takes 2 s alone and took
 (`0f61148`; the hook then ran 3752 of 3752 in 259 files), which is the fix
 TODO's Round 8 close rider names, for one of its three tests. One green
 run does not show the limit is enough; the next failure there would.
+
+**Signed** (the user, 2026-10-12): "Signing the cut, all nine leans, and
+the commit hook change, Claude! 😁 This looks great to me!" So: the cut
+and its reads, the nine calls by their leans, and `0f61148`. The cut is in
+ROADMAP §120. The stretch starts in this session with 120a and 120b and
+hands off before 120c (the ninth call). Reading: **213,308** at 14:09 on
+the kickoff's commit, `770439c`.

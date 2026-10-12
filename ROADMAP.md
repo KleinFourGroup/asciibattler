@@ -11,8 +11,8 @@ plan: [archive/post-109-roadmap.md](archive/post-109-roadmap.md) (Round 8)
 with its worklog and spec beside it; before it
 [archive/post-104-roadmap.md](archive/post-104-roadmap.md) (Round 7.5).
 
-**Status: §119 ✅ CLOSED 2026-10-12; §120, the census, is NEXT** (its
-kickoff cuts it). The spec holds the user's intent and four signed
+**Status: §119 ✅ CLOSED 2026-10-12; §120, the census, is under way** (cut
+and signed that day). The spec holds the user's intent and four signed
 decisions ([round-8.5-spec.md](round-8.5-spec.md)). The round opened with
 the oracle map, ahead of the census, as the user signed at the Round 8
 close. After the census the deletions go one subsystem to a phase, and the
@@ -58,12 +58,40 @@ Charter: every candidate with its evidence, in two lists (the spec's D1):
 what a search proves dead, and the trials, each with what it expects to
 remove and the proof that covers it. Every candidate names its proof from
 the oracle map, and the user signs the list before anything is deleted.
-The kickoff audits the code as it is and hardens this entry
-(`process/planning.md` "Phase kickoff"); META-ROADMAP's census item holds
-what the lists cover.
+META-ROADMAP's census item holds what the lists cover. The cut and nine
+calls were signed 2026-10-12 (WORKLOG §120, the kickoff). The census is a
+file of its own, `round-8.5-census.md`: a class a search settles is signed
+as a class with ten drawn rows, a judgement row by row. Nothing under
+`src` or `config` changes in this phase.
 
 - ✅ DECIDED 2026-10-12 (at §119's close, ahead of the cut): the census's
   first step is a drawn sample of planted breaks, about 200 lines the
   proofs run with one mechanical edit at each, held against the corpus and
   then the suite. It turns "reached" into a measured rate by folder, and
   its survivors are leads. WORKLOG "The close of §119".
+- ☐ **120a — the drawn sample** (`batch`, read at 120c: the rate table
+  and the survivors; wrong is a folder whose named proof misses most of
+  what it runs). 200 sites, one mechanical edit at each: 140 on lines the
+  corpus runs, 30 on sim and run lines only tests run, 30 on shipped code
+  no headless proof loads. `npm run oracle -- plant` is kept.
+- ☐ **120b — who reads this** (`none`). A type-aware reference finder
+  for every export, config key and `RunConfig` field, by kind of reader;
+  kept as `npm run oracle -- refs`.
+- ☐ **120c — the dials** (`stop`). Every config key by schema path,
+  `RunConfig` field, URL parameter and fuzz flag, with its readers, any
+  value set but its default, a proposed fate and its proof; content
+  nothing refers to, apart. The census file's format starts here.
+- ☐ **120d — exports, files and exact duplicates** (`batch`, read at
+  120e: each class's count and ten drawn rows; wrong is a row whose reader
+  the user knows of). `tools/`, `scripts/` and `shell/` for deletion only.
+- ☐ **120e — the tests, by file** (`stop`). The lines only that file
+  runs, the sampled breaks it caught, the bottom of the list classed.
+- ☐ **120f — the trials** (`batch`, read at 120h: wrong is a trial the
+  user would not want tried). The profile, the near-duplicate and
+  special-case clusters, the two named trials sized, `Run.ts` and
+  `World.ts` read whole.
+- ☐ **120g — the TODO pass's list** (`batch`, read at 120h: wrong is a
+  rider dropped that the user still wants). 91 open items, each proposed
+  as done, dropped or given a round.
+- ☐ **120h — the census signed and the round sized** (`stop`). The lists
+  signed, the trials' budget set, the later phases written here.

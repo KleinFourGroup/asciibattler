@@ -4649,7 +4649,8 @@ describe('48b — the reward phase', () => {
     const { run } = winWithRewards();
     // §82 — the offer can carry a packets-small portion behind the bits;
     // decline them all (each decline compacts the list, so index 0 drains it).
-    while (run.pendingRewards !== null) {
+    for (let step = 0; run.pendingRewards !== null; step++) {
+      expect(step, 'declineReward stopped draining the offer').toBeLessThan(MAX_REWARD_STEPS);
       run.dispatch({ kind: 'declineReward', index: 0 });
     }
     expect(run.bits).toBe(0);
@@ -5565,14 +5566,27 @@ function driveToRecruitPhase(run: Run, bus: EventBus<GameEvents>): void {
 /** 48b — resolve a pending reward offer by accepting every portion (the
  *  harness policy). A no-op when the win rolled no rewards. */
 function acceptAllRewards(run: Run): void {
-  while (run.phase === 'reward') run.dispatch({ kind: 'acceptReward', index: 0 });
+  settleRewards(run, 'acceptReward');
 }
 
 /** 48f — resolve a pending reward offer by DECLINING every portion, for tests
  *  that assert an exact bits balance a rolled reward would pollute. A no-op
  *  when the win rolled no rewards. */
 function declineAllRewards(run: Run): void {
-  while (run.phase === 'reward') run.dispatch({ kind: 'declineReward', index: 0 });
+  settleRewards(run, 'declineReward');
+}
+
+/** Far more tries than any offer has portions. */
+const MAX_REWARD_STEPS = 64;
+
+/** Send `kind` until the run leaves the reward phase. Bounded, so that a
+ *  reward command which stops taking effect fails the test that waits on it;
+ *  an unbounded loop here spins forever and `npm test` never returns. */
+function settleRewards(run: Run, kind: 'acceptReward' | 'declineReward'): void {
+  for (let step = 0; run.phase === 'reward'; step++) {
+    expect(step, `${kind} left the run in the reward phase`).toBeLessThan(MAX_REWARD_STEPS);
+    run.dispatch({ kind, index: 0 });
+  }
 }
 
 interface RunHandle {

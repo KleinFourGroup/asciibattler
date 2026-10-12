@@ -753,8 +753,11 @@ round close", C5).
 
 From 119g's planted breaks (WORKLOG §119, 119g).
 
+- ✅ The three reward loops in `src/run/Run.test.ts` are bounded
+  (119g-post): a reward command that stops taking effect now fails `npm
+  test` in 55 s where it hung it.
 - [ ] **A test that loops until a command takes effect never returns once
-  the command stops taking effect.** With a declined reward made a no-op in
+  the command stops taking effect: the loops not yet read.** With a declined reward made a no-op in
   `Run.ts`, `npm test` did not fail: one worker spun (391 CPU-seconds
   before it was stopped by hand) and 253 tests of `src/run/Run.test.ts`
   never ran, so the pre-commit hook would hang where it should go red. The
@@ -762,9 +765,10 @@ From 119g's planted breaks (WORKLOG §119, 119g).
   'declineReward', index: 0 })` at `Run.test.ts:5575`, with the same shape
   one line up for `acceptReward` and at 4652. TESTING.md already has the
   rule ("Bounded steps, never poll `currentTick`"), from a `World` loop; this
-  is its second bite, on a `Run` loop. There are 55 `while (` lines in 24
-  test files (16 in `Run.test.ts`, 8 in `World.test.ts`), not each read:
-  bound the ones that wait on state a command or a tick is meant to change.
+  is its second bite, on a `Run` loop. There were 55 `while (` lines in 24
+  test files (16 in `Run.test.ts`, 8 in `World.test.ts`); three are fixed
+  and the other 52 are unread. For the tests phase: bound the ones that
+  wait on state a command or a tick is meant to change.
 - [ ] **The page drive does not notice a phase whose scene never mounts.**
   With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
   shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`

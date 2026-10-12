@@ -123,6 +123,19 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   and the way to settle "reached, but proven?" for one line. An edit no
   proof notices is a question about the line and not yet a hole: dead code,
   a blind spot, or an edit of no effect.
+- **Who reads a name:** `npm run oracle -- refs <file>[:<name>]` prints each
+  export a file declares with its reads by kind of reader (the game, the
+  dev build, the bot and fuzz instruments, tools, scripts, tests, its own
+  file) and where it stands: unread, own-only, test-only or used. `--keys`
+  asks the same of a config loader's zod schema keys, `--members=<Type>` of
+  an interface's fields, and `--list` prints every reference
+  (`tests/oracle/refs.ts`). It asks TypeScript's language service, so it
+  tells `startingBits` the config key from `startingBits` the `RunConfig`
+  field, which a grep cannot. `refs --all=<out.json>` scans every source
+  file under `src` (about a minute). It does not see a read by a computed
+  key, a spread, or anything outside the type check (the `.mjs` scripts,
+  the shell), and it reports a schema typed by a hand-written interface as
+  wholly unread: no reference is a candidate, and the site is still read.
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

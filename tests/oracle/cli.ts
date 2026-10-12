@@ -13,6 +13,8 @@
  *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not
  *   npm run oracle -- build-hash [ref] [--dev]    the working tree's build against the ref's, file by file (buildHash.ts)
  *   npm run oracle -- plant --at=<file>:<line>    one mechanical edit at a line, and the proofs run against it (plant.ts)
+ *   npm run oracle -- refs <file>[:<name>]        who reads each export of a file, by kind of reader (refs.ts)
+ *   npm run oracle -- refs --all=<out.json> [folder…]  every export and schema key under src, with where each stands
  *
  * `json-diff` prints the differences counted by kind and path shape, then the
  * first of them in full, and exits 1 when there is any. For a change that is
@@ -46,6 +48,14 @@
  * and 1 when one did not, so a proof's failing control is one command. `--list` prints the edits the line admits and
  * plants nothing; `--op=<kind>` and `--nth=<n>` choose among them (default
  * the first).
+ *
+ * `refs <file>` prints each export the file declares with its reads by kind
+ * of reader and where it stands (unread, own-only, test-only, used); `--keys`
+ * asks the same of the file's zod schema keys and `--members=<Type>` of an
+ * interface's members. `:<name>` keeps the names that end with it, and
+ * `--list` prints every reference. `--all=<out.json>` writes every export and
+ * schema key of the source files under the folders (default src) with their
+ * references, and prints the counts by folder; it exits 0 whatever it finds.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -71,6 +81,7 @@ import {
   writeCeiling,
 } from './stepCodes';
 import { PROOFS, READING_DIR, countAt, countBy, functionsAt, loadReading, loadReadings, lost, parseAt, readingPath, record, union } from './reach';
+import { READER_KINDS, computedReads, count, exportsOf, membersOf, openProject, schemaKeys, standing, type Named } from './refs';
 import { compareStripped, readRef, readWorkingTree } from './strippedCompare';
 
 const [command, ...rest] = process.argv.slice(2);
@@ -395,6 +406,59 @@ async function plant(): Promise<number> {
   }
 }
 
+const STANDINGS = ['unread', 'own-only', 'test-only', 'used'] as const;
+
+function refs(): number {
+  const started = Date.now();
+  const all = option('all');
+  if (all !== undefined) {
+    const roots = rest.filter((arg) => !arg.startsWith('--'));
+    const files = listSources(REPO_ROOT, roots.length > 0 ? roots : ['src']).filter((file) => file.endsWith('.ts') && !file.endsWith('.d.ts') && !isTest(file));
+    const project = openProject();
+    const rows: (Named & { standing: string })[] = [];
+    for (const file of files) for (const item of [...exportsOf(project, file), ...schemaKeys(project, file)]) rows.push({ ...item, standing: standing(item) });
+    const computed = computedReads(project, files);
+    writeFileSync(all, `${JSON.stringify({ names: rows, computedReads: computed }, null, 1)}\n`);
+    for (const [title, pick] of [['exports', (r: Named) => r.what !== 'key'], ['schema keys', (r: Named) => r.what === 'key']] as const) {
+      const of = rows.filter(pick);
+      console.log(`oracle: ${of.length} ${title} in ${new Set(of.map((r) => r.file)).size} files, by where each stands:`);
+      const folders = [...new Set(of.map((r) => folderOf(r.file)))].sort();
+      const line = (name: string, list: typeof of): (string | number)[] => [name, list.length, ...STANDINGS.map((s) => list.filter((r) => r.standing === s).length)];
+      table(['folder', 'names', ...STANDINGS], [...folders.map((folder) => line(folder, of.filter((r) => folderOf(r.file) === folder))), line('all', of)]);
+    }
+    console.log(`oracle: ${computed.length} reads by a computed key in ${new Set(computed.map((c) => c.file)).size} files, which no name above is credited with`);
+    console.log(`oracle: ${files.length} files in ${Math.round((Date.now() - started) / 1000)} s → ${all}`);
+    return 0;
+  }
+  if (a === undefined) {
+    console.error('oracle: refs needs a file, or --all=<out.json>');
+    return 2;
+  }
+  const cut = a.lastIndexOf(':');
+  const [file, wanted] = cut > 0 ? [a.slice(0, cut), a.slice(cut + 1)] : [a, undefined];
+  const project = openProject();
+  const members = option('members');
+  const found = (members !== undefined ? membersOf(project, file, members) : flags.has('--keys') ? schemaKeys(project, file) : exportsOf(project, file)).filter(
+    (item) => wanted === undefined || item.name === wanted || item.name.endsWith(`.${wanted}`),
+  );
+  if (found.length === 0) {
+    console.error(`oracle: ${file} declares no such name${wanted === undefined ? '' : ` ending in ${wanted}`}`);
+    return 2;
+  }
+  console.log(`oracle: ${found.length} names in ${file}, their reads by kind of reader:`);
+  table(
+    ['name', 'line', 'stands', ...READER_KINDS, 'writes', 'passes'],
+    found.map((item) => [item.name, item.line, standing(item), ...READER_KINDS.map((kind) => count(item, kind, 'read')), count(item, 'any', 'write'), count(item, 'any', 'pass')]),
+  );
+  if (flags.has('--list')) {
+    for (const item of found) {
+      console.log(`oracle: ${item.name} (${item.file}:${item.line}), ${item.references.length} references:`);
+      for (const ref of item.references) console.log(`  ${ref.file}:${ref.line}  ${ref.kind} ${ref.use}`);
+    }
+  }
+  return 0;
+}
+
 async function main(): Promise<number> {
   if (command === 'config-dump' && a !== undefined) {
     const dump = await dumpConfig();
@@ -435,11 +499,12 @@ async function main(): Promise<number> {
   if (command === 'comment-length') return commentLength(roots.length > 0 ? roots : ['src']);
   if (command === 'build-hash') return buildHash(a ?? 'HEAD');
   if (command === 'plant') return plant();
+  if (command === 'refs') return refs();
   if (command === 'reach-record') return reachRecord(roots);
   if (command === 'reach') return reach(roots);
   if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
   );
   return 2;
 }

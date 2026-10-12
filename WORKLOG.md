@@ -1025,3 +1025,276 @@ probe as calibrated. Which lines each reaches is what the coverage tool
 is for. The charter's "byte-identical under the determinism test" still
 names a test that compares a tree with itself (the audit's first
 finding).
+
+### 119g — the oracle map (2026-10-12, session bb91da2f)
+
+**Step zero.**
+
+- *The coverage tool's version.* `npm install --save-dev
+  @vitest/coverage-v8` at a caret range took 4.1.11 and moved Vitest from
+  4.1.6 to 4.1.11 in the lockfile, because the package's peer is an exact
+  Vitest version. Both files were put back from git and the exact 4.1.6
+  installed; the lockfile now only gains lines. So the dependency is held
+  exact, and it moves when Vitest does.
+- *What the tool costs a run.* The chaos tests take 13 s under it. The
+  whole suite takes 98 s against 55 s (its tests summed, 382 s against
+  149 s). On the first whole run 16 tests passed their default 5 s limit
+  and one its own 30 s limit, and Vitest wrote no coverage because a test
+  had failed. So the recorder raises the default limit and asks for a
+  reading on failure. `tests/integration/journal-replay-full.test.ts` has a
+  limit of its own, which no flag raises: at 30 s it passed one whole run
+  under the tool and timed out in six, four of them alone on the machine
+  ("A deleted test", below, where it is raised).
+- *The fuzz diff is a command line under tsx,* which leaves nothing the
+  tool reads. Its shapes go through the same entry inside Vitest
+  (`runRunCli(parseArgs(flags))`), with the flags read out of
+  `scripts/perf-oracle.sh` so that they keep one home.
+- *Where the heavy runs go.* Two detached worktrees of `a45a7af` in the
+  session's scratch directory, each with a `node_modules` junction, so
+  that a plant never edits the live tree under a running proof. Not every
+  plant went there: "A mistake", below.
+
+**Built.** `tests/oracle/reach.ts` (`PROOFS`: the corpus, its quick rows,
+the chaos seeds, the fuzz diff, `npm test`, the smoke; `record` runs one
+under the tool and writes `output/reach/<proof>.json` with the run's log
+beside it; a reading is lines, functions and branch arms by file;
+`countAt`, `functionsAt`, `countBy`, `union`, `lost`),
+`tests/oracle/proofs/fuzzDiff.proof.ts` with `proofs.vitest.config.ts`,
+`tests/oracle/buildHash.ts` (`compareBuildWith`), four commands on `npm
+run oracle` (`reach-record`, `reach`, `reach-diff`, `build-hash [ref]
+[--dev]`) and `reach.test.ts`. TESTING.md has "The oracle map" and the two
+tools; ARCHITECTURE's tree has the files; META-ROADMAP's exit names the
+corpus and the fuzz diff where it named the determinism test. Nothing
+under `src` or `config` changed.
+
+**The readings** (the share of a folder's lines that start a statement
+which each proof ran, at `a45a7af`; "the two" is the corpus and the fuzz
+diff between them):
+
+| folder | lines | corpus | fuzz diff | the two | chaos | `npm test` | smoke |
+|---|---|---|---|---|---|---|---|
+| `src/sim` | 2,877 | 86.7 | 85.5 | 90.1 | 75.2 | 98.6 | 92.6 |
+| `src/run` | 2,211 | 68.9 | 64.8 | 73.3 | 67.1 | 97.2 | 78.7 |
+| `src/config` | 838 | 83.8 | 81.0 | 83.8 | 83.2 | 96.4 | 83.8 |
+| `src/core` | 80 | 73.8 | 71.3 | 78.8 | 73.8 | 96.3 | 78.8 |
+| `src/bot` | 648 | 0 | 86.0 | 86.0 | 0 | 99.4 | 86.1 |
+| `src/journal` | 263 | 40.7 | 0 | 40.7 | 46.0 | 97.3 | 40.7 |
+| `src/render` | 2,131 | 0 | 0 | 0 | 0 | 40.9 | 0 |
+| `src/ui` | 3,672 | 0 | 0 | 0 | 0 | 10.0 | 0 |
+| `src/scenes` | 205 | 0 | 0 | 0 | 0 | 8.8 | 0 |
+| `src/store` | 337 | 0 | 0 | 0 | 0 | 100.0 | 0 |
+| `src/dev` | 1,443 | 0.1 | 0 | 0.1 | 1.9 | 33.1 | 0.1 |
+| `tests/fuzz` | 4,433 | 0.9 | 27.3 | 28.2 | 0 | 5.3 | 65.2 |
+
+Under `npm test` alone: `src/audio` 96.2, `src/i18n` 97.8, `src/diagnostics`
+91.3, `src/settings` 89.1, `src/failure` 70.5, and `Game.ts`, `main.ts` and
+the two files beside them 3.6. All 398 files the tool read hold 28,862
+such lines, and the six proofs between them run 49.7 %. Recording takes 93,
+16, 18, 80, 103 and 209 s.
+
+**The reading held against its proof.** The reader's unit tests use a
+coverage file written by hand, and each of 22 rules taken out of the
+reader fails them (`scratch/119g/readerPlants.ts`; the clean file passes).
+The tool itself was checked from the other side
+(`reachPlants.ts`): from 2,348 sites in `src/sim` and `src/run` where a
+statement starts on a keyword inside a function, ten the corpus's reading
+calls reached and ten it calls unreached were drawn by a seeded draw, a
+`throw` was planted in front of each, and the corpus was run. All ten
+reached sites failed it with the plant's own message, and all ten
+unreached sites left 30 of 30 journals matching. Two known answers from
+119b and 119c read the same: the damage line in `World.ts` is reached, and
+`handleBuyPortUnit` is called 18 times by the corpus with three of its six
+lines run, the guards and not the purchase.
+
+**The planted breaks** (`scratch/119g/plants.ts` over `plantTable.ts`:
+every anchor found once before any edit, each proof run on the clean tree
+first and the two that compare against it run twice, the file put back
+from the text read before the edit, `git status` equal at the end).
+"Suite" is every file of `npm test`; a blank is a proof not run for that
+plant.
+
+| the break | corpus (of 30; quick rows of 3) | fuzz diff | suite | build |
+|---|---|---|---|---|
+| `src/sim/World.ts`: every hit deals one more | 30; 3 | both shapes | 13 files | |
+| `src/sim/behaviors/CampWanderBehavior.ts`: the mirrored step | 18; 2 | both | the quick rows only | |
+| `src/sim/effects/interpreter.ts`: a heal restores one more | 10; 1 | scored only | the quick rows only | |
+| `src/sim/Pathfinding.ts`: the search estimates by the sum, not the larger | 8; 0 | **no** | **no** | |
+| `src/run/Run.ts`: a declined reward does nothing | 8; 1 | arm only | **never returned** | |
+| `src/run/Run.ts`: a unit bought at a port never joins | **0** | **no** | `Run.test.ts` | |
+| `src/run/NodeMap.ts`: a three-way split half as often | 4; 0 | **no** | `journal-replay-full.test.ts`, by an assertion | |
+| `config/health.json`: a rest heals half | 3; 0 | **no** | `tests/oracle/oracle.test.ts` | another hash |
+| `src/config/difficulty.ts`: the wrong multiplier handed out | 30; 3 | both | 4 files | |
+| `src/core/RNG.ts`: the keyed streams' derivation takes another constant | 30; 3 | both | 8 files | |
+| `src/core/fnv1a.ts`: the digests' own hash | 30; 3 | no (right: no run changed) | `configHash.test.ts`, the quick rows | another hash |
+| `src/bot/evaluator.ts`: a won rollout scores as a draw | 0 | arm only | `evaluator.test.ts` | the same hash |
+| `tests/fuzz/strategies/scored.ts`: a level counted twice | 0 | scored only | no; the smoke: **no** | |
+| `src/journal/JournalRecorder.ts`: each order a tick late | 0 | no | 8 files | another hash |
+| `src/render/BattleRenderer.ts`: a shove a hundredth further | 0 | | **no** | another hash |
+| `src/render/shaders/terrain.frag.glsl`: a floor on the diffuse light | | | **no** | another hash |
+| `src/ui/MapScreen.ts`: hops a pixel further apart | | | **no** | another hash |
+| `src/ui/ui.css`: a rule gains a declaration | | | **no** | another hash |
+| `src/scenes/menuRules.ts`: the seed field keeps a digit more | | | `menuRules.test.ts` | another hash |
+| `src/Game.ts`: the turn's outro a millisecond longer | | | **no** | another hash |
+| `src/audio/eventSounds.ts`: a sound plays at zero | | | `eventSounds.test.ts` | another hash |
+| `src/store/runSlot.ts`: a saved run comes back without its journal | | | **no** | another hash |
+| `src/failure/rules.ts`: the context wait a millisecond longer | | | **no** | another hash |
+| `src/diagnostics/report.ts`: a text reworded | | | **no** | another hash |
+| `src/dev/devKeys.ts`: a dev key logs another word | | | no | the same hash |
+| `tools/run-config/cli.ts`: a flag's value keeps its equals sign | | | **no** | the same hash |
+| a comment added to `World.ts` | | | | the same hash |
+| a comment added to a shader | | | | **another hash** |
+| a comment added to `ui.css` | | | | the same hash |
+| an exported function nothing calls, added to `fnv1a.ts` | | | | the same hash |
+| `src/journal/replayJournal.ts`: the config refusal switched off | | | | the same hash |
+
+**What the plants say.**
+
+- **A sim or run change is proven by the whole corpus and by nothing
+  smaller.** The path-search change moved 8 journals of 30 and nothing
+  else: not the three quick rows, not the fuzz diff's two shapes, not one
+  unit test. Of the four sim plants `npm test` saw one in its unit tests,
+  two through the quick rows alone and one not at all. The fuzz diff
+  missed four of the nine sim, run and config plants. Its reading says
+  why for two: it never buys a unit at a port and never takes a three-way
+  split (it runs that test and not its body). It does run the path
+  search's line, and its CSVs came out the same, which is the fuzz diff's
+  own case of reached and not proven. The rest was not looked into.
+- **The corpus has a hole where no stored run goes,** and the reading
+  names it before the plant does. A unit bought at a port and never added
+  to the roster passes both byte proofs; one unit-test file holds it. The
+  same is expected of the other three trades the corpus never completes
+  (119c), and was not planted.
+- **`npm test` can hang where it should fail.** Under the declined-reward
+  break one worker spun for 391 CPU-seconds before it was stopped by
+  hand. The loop is `while (run.phase === 'reward') run.dispatch({ kind:
+  'declineReward', index: 0 })` at `src/run/Run.test.ts:5575`: with the
+  plant in a second worktree and the suite stopped after 120 s, 253 of
+  that file's tests had printed nothing and every other file had
+  (`hangHunt.ts`). 119c ran `tests/chaos` alone under this plant, so it
+  did not show then. TODO has it, with the count of `while (` lines in
+  test files (55 in 24).
+- **Reached is not proven, on a real case.** The suite runs every line of
+  `src/store`, and a saved run that comes back without its journal fails
+  no test. Eight of the ten plants in shipped code with no headless
+  driver were seen by the build's hash alone.
+- **The build's hash does what the audit expected of it, with one
+  exception to know.** A comment in TypeScript or in the stylesheet, an
+  export nothing imports, the bot, the replay tool, `src/dev` and the
+  tools all leave it alone, and every edit to code the game runs moves
+  it. A shader's comment moves it too: the `.glsl` files ship as text. So
+  a comment pass over the shaders is proven by the comment-stripped
+  compare and shows as a difference here.
+
+**The build compare.** `build-hash` builds the ref's tree in a worktree
+under `output/build-hash/`, inside the repo, so packages resolve from the
+repo's own `node_modules` and there is no junction to make or to remove.
+The working tree against HEAD is the same bytes (32 files, about 20 s for
+the two builds), which also shows the build does not depend on the path it
+is made at. On the live tree (`build-hash-plants.sh`): a render constant
+differs with exit 1 and three built files named; a comment is the same
+bytes with exit 0; a dev key's text is the same bytes in the production
+build and differs under `--dev`. The first `--dev` came back with the
+production build's own hash: `--mode development` alone leaves DEV off,
+since Vite reads it from `NODE_ENV`, as the Electron runner's build
+already knew. The command now sets it and checks each build for its dev
+chunk, in both directions.
+
+**The page drive, as a proof for the wiring** (`drivePlants.ts`, in a
+worktree). `npm run probe -- shell/electron/probes/drive-run.js --seed=7
+--dials=hops=3` takes 18 s and gives the same log hash and state hash on a
+second run, on a second shape (`--seed=6 --dials=hops=2&firstNode=rest`),
+and in a worktree as in the live tree. A turn that is never advanced fails
+it (exit 1), and a sim change moves both hashes. It did not notice
+`Game.dispatch` no longer mounting the map after a rest, nor a change that
+is only drawn. So it proves the page still plays the run through `Game`,
+and not that each phase shows its screen. TODO has the scene check.
+
+**The type check** (`typecheck-plants.sh`): a used export removed fails
+with 7 errors naming its importers; an unused local fails; an unused
+export added passes. It proves a deletion left nothing dangling and does
+not find dead exports.
+
+**A deleted test** (`reach-diff-plants.sh`, in a worktree). The suite's
+reading was taken five times. Two clean readings lose nothing to each
+other, in either direction. With `src/store/backup.test.ts` deleted the
+reading loses 20 lines, 4 functions and 23 branch arms, all in
+`src/store/backup.ts`. With `src/run/enemyBudget.test.ts` deleted it loses
+no line and no function, and two branch arms of `enemyBudget.ts`: every
+line that file's own tests run, another test runs too. That is what the
+check can and cannot say. The second deletion keeps the suite's reach and
+may still drop the only assertion on some value.
+
+Two things the recordings showed on the way. `journal-replay-full.test.ts`
+failed its own 30 s limit in all four recordings, alone on the machine,
+so the suite's reading always came from a run with one failure. Its limit
+is now 120 s; a fifth recording passes 3,735 of 3,735, and its reading
+loses nothing to the timed-out ones, nor they to it, so the table above
+stands (re-printed from the passing run: the same shares). And with any
+file under `src` deleted, the step-code ceiling fails until `comment-codes
+--record` runs, since it is by file and exact: every deletion commit
+under `src` will meet that.
+
+**What the readings already show the census** (leads, each unread): of the
+lines neither byte proof runs, `src/sim` has 285 and all but 32 are run by
+some test; `src/run` has 591 and all but 60. Whole files the byte
+proofs never load: `src/run/mapMetrics.ts` (115 lines), `src/sim/layoutConnectivity.ts`
+(35), `src/run/fallenStats.ts` (27), `src/core/Clock.ts` (11), and 35 of
+`src/run/enemyBudget.ts`'s 37 (`scratch/119g/unreached.ts`). Some of
+these have their consumer in the UI, which no headless proof loads; the
+build compare is what tells those from code nothing ships.
+
+**Not verified.**
+
+- That a proof which runs a line notices a change to it, beyond these
+  sites. The plants are 31 sites, chosen and not drawn.
+- The page drive's own reach: the tool does not read an Electron page.
+- `build-hash` has no unit test (two builds take 20 s); its checks are
+  the plants above.
+- `src/settings` and `src/i18n` had no plant, and the smoke met one.
+- The shares on any tree but `a45a7af`.
+
+**Calls made here, for the stop.**
+
+1. **The coverage tool is held at Vitest's exact version,** where the
+   other dev dependencies carry a caret.
+2. **`reach` is a kept tool with a test,** where the cut's words were
+   "the proofs, each with its planted break". The census asks "which
+   proof runs this line?" once per candidate, and a table in a document
+   cannot answer it.
+3. **`build-hash` is a kept command.** The audit called the build's hash
+   a ready proof; as a recipe it was a worktree, a pinned ID, two builds
+   and a compare by hand.
+4. **The readings are not tracked** (`output/reach/`, about 4 MB); seven
+   minutes re-derives them.
+5. **The fuzz diff's flags are parsed out of its shell script** for the
+   in-process run, so they have one home.
+6. **The charter's clause** now names the corpus and the fuzz diff, and
+   says why the determinism test and the smoke's other tests are gates.
+7. **Two findings went to TODO and were not fixed here:** the test loop
+   that hangs, and the page drive's blind spot for scenes.
+8. **Not built:** a pixel proof for a reshaping of code that only draws,
+   and corpus rows that complete the four port trades. Both are the
+   user's, with the census's candidates in hand.
+
+**A mistake.** The build compare's own six plants edited source files in
+the live tree, each put back within 20 s, before the session looked at
+port 5173, where the user's dev server was listening. Any tab open on it
+will have reloaded up to twelve times. `process/oracles.md` warns of this
+for a config dependency; a source file does the same to an open page. The
+next live-tree batch (the page drive's) was stopped before its first edit
+and moved to a worktree.
+
+**Tools kept:** `scratch/119g/` (`plants.ts` with `plantTable.ts`,
+`reachPlants.ts`, `readerPlants.ts`, `drivePlants.ts`, `hangHunt.ts`,
+`build-hash-plants.sh`, `typecheck-plants.sh`, `reach-diff-plants.sh`,
+`unreached.ts`, `unreachedAny.ts`, `shipped.ts`, `cov.sh`, and each run's
+log and JSON).
+
+Readings: **87,684** at 10:23 with the orientation under way; **396,634**
+at 11:16 with the first batch of plants running; **468,992** at 12:01 with
+this entry written; **476,705** at 12:04 on the instruments’ commit,
+`ef06f65` (the hook: 3752 of 3752 in 259 files; the smoke did not fire).
+The step cost about 390k, where
+the hand-off guessed two or three times 67k: most of it is the plants'
+and the readings' output read back, and four rounds of re-checking a
+claim against a tool.

@@ -748,3 +748,27 @@ round close", C5).
   `archive/`, not sorted further: the files archived before the 7.5 close
   were moved verbatim, with links written from the repo root. Fix the
   five; the archives' are a decision.
+
+## §119 riders (the oracle map, 2026-10-12)
+
+From 119g's planted breaks (WORKLOG §119, 119g).
+
+- [ ] **A test that loops until a command takes effect never returns once
+  the command stops taking effect.** With a declined reward made a no-op in
+  `Run.ts`, `npm test` did not fail: one worker spun (391 CPU-seconds
+  before it was stopped by hand) and 253 tests of `src/run/Run.test.ts`
+  never ran, so the pre-commit hook would hang where it should go red. The
+  loop is `while (run.phase === 'reward') run.dispatch({ kind:
+  'declineReward', index: 0 })` at `Run.test.ts:5575`, with the same shape
+  one line up for `acceptReward` and at 4652. TESTING.md already has the
+  rule ("Bounded steps, never poll `currentTick`"), from a `World` loop; this
+  is its second bite, on a `Run` loop. There are 55 `while (` lines in 24
+  test files (16 in `Run.test.ts`, 8 in `World.test.ts`), not each read:
+  bound the ones that wait on state a command or a tick is meant to change.
+- [ ] **The page drive does not notice a phase whose scene never mounts.**
+  With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
+  shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`
+  ends with the same log hash and state hash as the clean tree: the driver
+  sends each phase's command to `Game` whatever screen is up. A check in
+  `__probe.drive` that the mounted scene is the phase's would make the
+  drive a proof for the scene wiring, which today has none but the eye.

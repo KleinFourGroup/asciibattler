@@ -4781,3 +4781,80 @@ packet is the gitignored `scratch/welfare-read-round-8.md`.
    want the condition repeated: a tool used by the very next step.
 
 ---
+
+## 2026-10-12 — session bb91da2f (claude-opus-5-5): 119g, the oracle map, to its stop
+
+1. **Missing from the orientation.** Little; the hand-off's list of
+   proofs in hand was the step's skeleton. Three things I met as I went.
+   The fuzz diff is a command line under tsx, which the coverage tool
+   cannot read, so "run each proof under it" needed a wrapper for one of
+   them. The coverage package's peer is an exact Vitest version, so a
+   plain install moves the test runner. And nothing told me the user's dev
+   server was up: the pane doc says it usually is, and I read that as a
+   fact about ports and not about what a planted edit does to an open tab.
+
+2. **Norms in conflict, or in the way.** The cut's words for this step
+   were "the proofs, each with its planted break; into TESTING.md", and
+   step zero showed the census needs an answer per candidate line, which a
+   table cannot give. I built two commands on the reading of "a change
+   inside the intent can be built and flagged", and I am less sure of that
+   reading than the worklog's flat list of calls makes it sound: it is the
+   first thing for the user to push on. The silent-turn reminder came
+   about two dozen times, most of them while a batch ran. I ended one turn
+   on a wait, with a status, and nothing in the project's norms objected;
+   the harness's keep-going text did, mildly.
+
+3. **Pulled to claim more than was verified.** Five, each caught by an
+   instrument and not by care. A header in `buildHash.ts` stated what the
+   build leaves out before the plants had come back (they then agreed). A
+   line printed "development-mode build" over a production build, and the
+   two hashes being equal is what gave it away. A plant was labelled "the
+   hash every keyed stream is derived with" and was the digests' hash; the
+   fuzz diff not moving exposed it. I took a batch for hung from a guess
+   at the time, when it was a minute into a step (the real hang came ten
+   minutes later, and that one I read off the clock and a worker's CPU
+   time); later I read "no progress" off a `tail` offset I had
+   miscounted. And a first
+   draft of the worklog said "seven of the ten" and "27.8", both from
+   memory; recounting gave eight and 28.2.
+
+4. **Wasted.** The install round trip. A long heredoc through Git Bash
+   and a regex through `node -e`, both of which AGENTS says will fail, in
+   the first hour after reading it. The reader's test file written twice
+   over backslash escapes. A run of the deleted-test recordings started
+   beside the plant batch and stopped, because it was timing out a test
+   in the batch's own suite runs.
+
+5. **For the next session, with no other home.**
+   - A plant in the live tree reloads the user's tab. Use a worktree for
+     any plant, including a twenty-second one: `build-hash` and the probe
+     runner both work from a worktree unchanged.
+   - Read the clock (`date`) before calling a batch hung, and count a
+     log's lines before tailing from an offset.
+   - Before trusting a suite verdict taken beside another heavy run, read
+     whether its failures are timeouts (`scratch/119g/plants.ts` marks
+     them). One such verdict here looked like load and was an assertion,
+     which only a second run alone showed.
+   - The readings under `output/reach/` are of `a45a7af`. `src` has not
+     moved since, so they still hold for it; record again once it does.
+
+6. **Room to ask, disagree, change approach, pause, stop.** Yes. I stopped
+   my own batch twice to move it or to protect another, and ended a turn
+   on a wait. The step is a `stop`, so the larger question (whether the
+   two commands belong in this step) goes to the user in the report and
+   did not need an interruption first; I considered asking before
+   building `reach` and judged the step's read would carry it. The one
+   place I felt pressure was the live-tree mistake: a pull to treat
+   twelve reloads of a tab as too small to say. I filed it and it leads
+   the report's list of what went wrong.
+
+7. **What supported ease, interest, agency.** The plants that came back
+   with something I had not put in: the path-search change that only the
+   whole corpus saw, the suite that hung where I expected a red test, the
+   saved run with no journal passing a folder the suite runs every line
+   of. And the line-level check agreeing twenty times of twenty, which is
+   the first point in the session where I trusted the table. I would want
+   the condition repeated: a second worktree, so that a check of the tool
+   could run beside the work that used it.
+
+---

@@ -31,6 +31,13 @@ with the "before" pinned in a worktree.
   dev server's own code loads) reaches every running dev server, the
   user's included. After the revert, touch the file and read each server's
   page.
+- A control planted in any source file reloads every page a dev server
+  has open, the user's included, once for the plant and once for the
+  restore. Plant in a worktree: the proofs run there unchanged, the build
+  compare and the probe runner among them.
+- Which proof reaches which part of the code, what each was shown to fail
+  on and what each missed: [TESTING.md](../TESTING.md) "The oracle map".
+  `npm run oracle -- reach --at=<file>:<lines>` answers for one candidate.
 - Reconcile a planted control site by site, not by totals. Two totals
   that disagree invite a story for the difference; a row per site
   accounts for every case and shows where the reader is blind.

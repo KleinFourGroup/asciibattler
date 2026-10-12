@@ -107,6 +107,6 @@ relaxed. The kickoff hardens this entry against the code.
   harder questions if Haiku saturates, then the token measure. 27 of 27
   runs right on both trees. Read early and ✅ DECIDED 2026-10-12: kept as
   a token measure with a floor; 66 runs at the close (WORKLOG §119, 119f).
-- ☐ **119g — the oracle map and the phase's close** (`stop`). By part of
+- ◐ **119g — the oracle map and the phase's close** (`stop`). By part of
   the code, the proofs, each with its planted break; into TESTING.md; the
-  charter's determinism clause corrected.
+  charter's clause corrected. Built, unread (WORKLOG §119, 119g).

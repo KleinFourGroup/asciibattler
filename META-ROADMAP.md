@@ -694,8 +694,12 @@ round's size, known only after the census. Resolved 2026-10-11: the save format 
 one rejected save a round). **Exit:** the signed census dispositioned (deleted, kept with a
 reason, or moved to TODO); each trial kept over the bar or reverted and
 recorded; every deletion in sim, run and config
-byte-identical under the determinism test, the fuzz smoke and a journal
-replay; the comment pass done under its oracle; the TODO pass done; and
+byte-identical under the journal corpus and the fuzz diff, the two proofs
+that hold the new tree against something kept from before the change
+(corrected at §119: the determinism test and the fuzz smoke's other tests
+compare a tree with itself, so they stay green as gates and prove nothing
+across a commit; TESTING.md "The oracle map" says which proof reaches which
+code); the comment pass done under its oracle; the TODO pass done; and
 the shell-quoting audit run (pre-registered with the Shell rule's
 retirement: every shell command in the round's transcripts that sent a
 backslash through a heredoc or an inline script, held against what landed

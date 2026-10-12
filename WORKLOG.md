@@ -1592,3 +1592,301 @@ and its reads, the nine calls by their leans, and `0f61148`. The cut is in
 ROADMAP §120. The stretch starts in this session with 120a and 120b and
 hands off before 120c (the ninth call). Reading: **213,308** at 14:09 on
 the kickoff's commit, `770439c`.
+
+### 120a — the drawn sample (2026-10-12, session 79f18990)
+
+**Step zero.** The corpus check takes 21 s (26 s through npm). The reach
+readings still describe the source: `git diff --name-only a45a7af -- src`
+names one test file, and the sampler refuses to run otherwise.
+
+**Built.** Kept: `tests/oracle/plant.ts` (`edits`, `editsOn`, `applyEdit`:
+five kinds of edit through TypeScript's parser), `plantProofs.ts` (a
+worktree under `output/plant/`; the corpus's, the suite's, the smoke's
+and the fuzz diff's verdict on it; a run past its limit stopped with its
+whole process tree), `npm run oracle -- plant --at=<file>:<line>`, and
+`plant.test.ts`. Each of 12 rules taken out of the edit maker fails that
+file (`scratch/120a/rulePlants.mjs`). In `scratch/120a/`: `sample.ts` (the
+draw, seed 120, to `sites.json`), `batch.ts` (`known`, `check`, `corpus`,
+`suite`, `last`, `report`; `results.json` is written after each verdict),
+`survivors.ts` (each unnoticed site with the lines around it), and the
+three logs.
+
+**What the runner's own checks caught before any verdict was taken.**
+
+- *A test that fails in every worktree.* The known answers came back with
+  `tests/licences.test.ts` failing under an added comment: it reads
+  `node_modules/<package>/LICENSE` beside it, and a worktree has no
+  `node_modules`. So every proof now runs on the clean worktree first,
+  and a test file that fails there is set aside and named. With that, all
+  five known answers reproduce: every hit dealing one more moves 30 of 30
+  journals; a port purchase that never joins moves none and fails
+  `Run.test.ts` alone; an added comment fails nothing.
+- *Line endings.* The first launch stopped at its first site, by
+  `applyEdit`'s refusal, with nothing planted. 29 files under `src` are
+  checked out with CRLF in the live tree (`git ls-files --eol`: `w/crlf`
+  against `i/lf`; `.gitattributes` asks for LF) and a fresh worktree has
+  LF, so an edit's offsets do not carry over. The batch now finds each
+  edit again by its line and text; 200 of 200 are found. The command was
+  not affected, since it lists its edits from the worktree's own text.
+- *A backslash lost on the way to a file,* twice, in patch scripts written
+  through a shell heredoc: once as a regex that still parsed and matched
+  nothing (the command refused every `--at`; seen on its first run), once
+  as an anchor that no longer matched, where the patch refused to write.
+  Both are in the friction log for the round's shell-quoting audit.
+
+**The population.** A site is a line that starts a statement, that a
+proof ran, and that admits an edit. About half of the lines do:
+
+| stratum | folder | lines | admit an edit | drawn |
+|---|---|---|---|---|
+| S1, lines the corpus runs | `src/sim` | 2,493 | 1,263 | 60 |
+| | `src/run` | 1,524 | 769 | 50 |
+| | `src/config` | 702 | 253 | 20 |
+| | `src/core` | 59 | 38 | 10 |
+| S2, lines only tests run | `src/sim` | 245 | 117 | 10 |
+| | `src/run` | 531 | 270 | 20 |
+| S3, shipped code no headless proof loads, lines the suite runs | ten folders | 2,047 | 1,040 | 3 each |
+
+200 sites in 65 files: 69 conditions negated, 51 calls removed, 43
+numbers raised by one, 21 signs traded, 16 boundaries moved. Lines are
+drawn uniformly inside a folder, so a folder's rate weighs its lines
+alike.
+
+**The verdicts** (the corpus on four worktrees in under ten minutes; the
+suite 91 times in 89 minutes; no site faulted, no run was stopped at its limit,
+every worktree was left as it was):
+
+| | sites | the corpus | then the suite | neither |
+|---|---|---|---|---|
+| S1 `src/sim` | 60 | 52 | 1 | 7 |
+| S1 `src/run` | 50 | 39 | 3 | 8 |
+| S1 `src/config` | 20 | 8 | 8 | 4 |
+| S1 `src/core` | 10 | 10 | 0 | 0 |
+| S1, all | 140 | 109 | 12 | 19 |
+| S2 `src/sim` | 10 | | 9 | 1 |
+| S2 `src/run` | 20 | | 18 | 2 |
+| S3, ten folders | 30 | | 25 | 5 |
+
+By kind of edit, over all 200: a condition negated was noticed 68 times
+of 69, a call removed 49 of 51, a sign traded 18 of 21, a number raised
+32 of 43, a boundary moved 6 of 16.
+
+**The 27 sites nothing noticed, each read** (five lines either side;
+four looked at further). The site and its edit are in `batch.ts report`.
+
+- *No effect by construction, 5.* A random draw compared at its exact
+  boundary (`CampWanderBehavior.ts:83`, `effects/interpreter.ts:217`,
+  `NodeMap.ts:391`); a value set to what it already was
+  (`render/glyphs.ts:162`); a multiplier the heal ignores, as its comment
+  says (`effects/propose.ts:155`).
+- *An input no run reaches, 9.* A fallback, a default, a bound or a guard
+  whose case never comes up: an empty middle band
+  (`proceduralMap.ts:746`), a share sum equal to its ceiling and the arm
+  for no candidate fitting (`NodeMap.ts:784`, `:785`), the arrangement
+  search running out of its 24 attempts (`NodeMap.ts:146`), every weight
+  zero (`sequencer.ts:277`), rubble with no size (`layouts.ts:417`), a
+  camp of nine (`camps.ts:49`), a range whose ends are equal
+  (`terrain.ts:50`), a volume above one (`AudioPlayer.ts:277`).
+- *A change no proof looks at, 7.* A tile effect listed twice in one
+  layout is no longer refused (`layouts.ts:320`); the map's text
+  description labels the wrong nodes elite (`NodeMap.ts:937`); the median
+  of a roster's levels is taken unsorted (`wave.ts:259`); the count of
+  carved cells starts at one (`proceduralMap.ts:656`); a sound starts a
+  second in (`AudioPlayer.ts:267`); the diagnostics text is indented by
+  two (`report.ts:125`); a sprite's size update is dropped
+  (`SpriteRenderer.ts:267`).
+- *Not settled by the read, 6.* `movement.ts:300` (a leap along a path of
+  exactly two cells), `blockedAlly.ts:127` (every distance doubled, which
+  changes nothing if distances are only compared with each other),
+  `Pathfinding.ts:163`, `NodeMap.ts:199`, `Run.ts:2229` (the boss's hop
+  passed two higher), `NodeMap.ts:847` (a spacing rule looking three hops
+  where it looked two).
+
+**What the sample says to the census.**
+
+- **Where the corpus reaches sim and core, it notices.** 62 of 70 edits,
+  and of the seven sim sites it and the suite both missed, the read found
+  no plain hole: three of no effect, one unreached input, three unsettled.
+- **Map generation is where the proofs are thinnest.** Six of the eight
+  run sites nothing noticed are in `NodeMap.ts`. Thirty stored maps and a
+  distribution test at n=500 do not pin a boundary, a bound or an arm that
+  seldom fires. A deletion there names the corpus and plants its own
+  control.
+- **A config loader is mostly validation, which valid config never
+  trips.** The corpus noticed 8 of 20 there and the suite 8 more. For a
+  deletion in `src/config` the suite is the proof that matters, and four
+  guards' numbers are pinned by nothing.
+- **The suite notices nine in ten where it runs the line** (27 of 30 in
+  S2, 25 of 30 in S3). That is of lines it runs: it runs 41 % of
+  `src/render` and 10 % of `src/ui`, and 119g's chosen plants in those
+  folders mostly sat on lines it does not.
+- **The rate depends on the kind of edit.** A negated condition, a
+  removed call or a traded sign went unnoticed 6 times in 141; a moved
+  boundary or a raised number 21 times in 59, and most of those change
+  nothing a run can see. So "14 % of edits on lines the corpus runs go
+  unnoticed" overstates the holes; by the read, the sites where behaviour
+  changed and nothing looked are 7 of 200, with 6 more unsettled.
+
+**Leads for the lists** (each unread past the lines quoted):
+
+- The `median` kind of an encounter's level budget is used by no
+  encounter (`config/encounters.json` holds no `"median"`), and its sort
+  is pinned by nothing. For 120c.
+- `NodeMap.ts:199`'s second condition and `Run.ts:2229`'s hop may be a
+  test that is always redundant and an argument its callee ignores; the
+  heal's `damageMultiplier` is one by its own comment. For 120d and 120f.
+- Who reads the map generator's `carved` count. For 120d.
+- 29 source files with CRLF in this machine's checkout. A re-checkout
+  fixes it and changes no commit.
+- Which test files failed on which plants is in `results.json`: of 260
+  files, 177 failed on at least one of the 91 plants run against the
+  suite, led by `Run.test.ts` (8) and `mapMetrics.test.ts` (5). For 120e,
+  as thin evidence: 91 plants cannot show a file is unneeded.
+
+**Calls made here, for 120c's stop.**
+
+1. *The draw is uniform by line inside a folder,* where 119g's check
+   drew one site a file first.
+2. *S3 is three sites in each of ten folders,* so its 25 of 30 is a
+   reading across those folders and not of any one.
+3. *The command runs every proof on the clean worktree first,* which
+   costs a suite run (55 s) on each use and is what set the licences test
+   aside.
+4. *The last pass leaves out four sites* whose edit has no effect by the
+   read (three exact boundaries of a random draw, the heal's multiplier),
+   since nothing can notice those; it runs the other 18 sim and run sites.
+5. *The six unsettled sites were not read further,* to keep the session
+   under the line. The fuzz diff and the smoke speak to them below.
+6. *The read used four classes where the cut named three* (dead code, a
+   hole, an edit that changes nothing). None of the 27 is dead code by
+   the read, and "an input no run reaches" is neither a proof failing to
+   look nor an edit of no effect: the line runs, and its case does not.
+
+**The last pass** (two worktrees, 16:32 to 17:12). The 18 sim and run
+sites that the corpus and the suite both missed, less the four of no
+effect, against the fuzz diff's two shapes and the smoke's 65 files:
+neither noticed any of them, in 36 verdicts. On both clean worktrees the
+fuzz diff gave the same CSVs twice and no smoke file failed. Its failing
+control, through the same runner (`batch.ts known-last`): with every hit
+dealing one more, the fuzz diff differs on both shapes and the smoke
+fails.
+
+- **A site the corpus and the suite miss, the whole pre-commit hook
+  misses.** On this sample the fuzz diff and the smoke added nothing to
+  those two. The sample does not say what they would notice of the 109
+  edits the corpus caught, which were not run against them.
+- **The smoke notices a sim change through the corpus it holds.** Under
+  the control one file of 65 failed, `tests/fuzz/corpus/corpus.test.ts`.
+  The other 64 passed with every hit in the game dealing one more, which
+  is 119g's finding again, that those tests hold a tree against itself,
+  seen from the other side.
+- The six unsettled sites stay unsettled: two more proofs passing over
+  them does not tell an edit of no effect from a hole.
+
+Readings: **224,460** at 14:27 on the signed cut's commit, `18e001c`;
+**302,552** at 14:48 on the plant tool's commit, `ee382a9` (the hook: 3758
+of 3758 in 260 files); **355,936** at 15:06 with the finder built and the
+suite phase running; **378,897** at 16:31 on the finder's commit,
+`4dbfd60` (3764 of 3764 in 261 files); **423,708** at 17:20 with the last
+pass and its control read. From the signed cut, 120a and 120b together
+cost about 200k.
+
+### 120b — who reads this (2026-10-12, session 79f18990)
+
+Built while 120a's batch ran, and committed after it, since the hook's
+suite times out beside the batch's.
+
+**Step zero.** TypeScript's language service follows a config key from
+the zod schema that declares it to the reads of the parsed value
+(`scratch/120b/probe.ts`). Asked at `startingBits` in
+`src/config/economy.ts` it returns `src/run/Run.ts` and
+`src/run/Run.test.ts`, and not `src/run/RunConfig.ts`, where `git grep -w`
+counts six lines for a field of the same name. The same held for a flat
+key of `config/health.json` and a nested one of `config/prices.json`. The
+repo opens as one program in 1.6 s (738 files named, 1,596 with the
+libraries).
+
+**Built.** `tests/oracle/refs.ts`: `openProject` (what `tsconfig.json`
+includes and the `.ts` files under `scripts/`, which it leaves out),
+`exportsOf` a file, the `schemaKeys` of its zod schemas by path
+(`PricesSchema.units.rarityMultiplier.common`, with `[]` for an array's
+element and `{}` for a record's value), the `membersOf` an interface. A
+reference is sorted by the file that makes it (own, game, dev,
+instrument, tool, script, test) and told apart as read, write or pass;
+`standing` says unread, own-only, test-only or used; `computedReads`
+lists each `x[key]` over a type with declared properties. `npm run oracle
+-- refs <file>[:<name>] [--keys|--members=<Type>] [--list]` and `refs
+--all=<out.json> [folder…]`. `refs.test.ts`, TESTING.md "Tools",
+ARCHITECTURE's tree.
+
+**Checked.** The cut's exit, item by item, in `refs.test.ts` on a program
+of five files that are not on disk: an export nothing imports stands
+unread (its one reference is a re-export, a pass); one only a test
+imports stands test-only; a schema key nothing reads stands unread; a
+field tests set and nothing reads stands unread with its one write. On
+the repo, `EconomySchema.startingBits` has one game reference, a read in
+`src/run/Run.ts`, and none in `RunConfig.ts`. Each of 15 rules taken out
+of the finder fails that file (`scratch/120b/rulePlants.mjs`; the clean
+file passes).
+
+**A fault the planting found.** The tests passed on their first run, so
+each rule was planted, and the case added for `const { key } = config`
+failed on the finder as built: the language service marks an unpacked
+name as a write, since it declares a local, and a key read only that way
+stood unread. An unpacking is now a read. On the repo the fix moved seven
+schema keys to used.
+
+**The first scan** (`refs --all`, the source as of `ee382a9`, 61 to 74 s;
+`output/refs/src.json`, not tracked):
+
+| | names | unread | own-only | test-only | used |
+|---|---|---|---|---|---|
+| exports, 275 files | 1,523 | 23 | 261 | 225 | 1,014 |
+| schema keys, 32 files | 614 | 165 | 95 | 23 | 331 |
+
+and 156 reads by a computed key in 55 files. The export count agrees with
+the kickoff's pattern count (1,521) to two.
+
+**What the scan says, and what it does not.**
+
+- **165 unread schema keys are not 165 dead keys.** 115 of them are in
+  `src/config/events.ts` (62 of its 64) and `encounters.ts` (53 of 53),
+  whose schemas are typed by hand-written interfaces (`z.ZodType<EventDef>`,
+  read at `events.ts:79` and after, `encounters.ts:84` and after), so
+  every read there is of an interface's member. The finder's header says
+  so and points at `membersOf`. `rewards.ts` (15), `keybindings.ts` (11)
+  and `camps.ts` (9) hold most of the rest and were not looked into; a
+  read by a computed key is the likely cause for a table of bindings.
+  120c's step zero sorts each file into "keys followed" or "ask the
+  interface" before any key is listed.
+- **23 exports have no reference at all.** Eight are values:
+  `healAmountFor`, `magicBoltDamage` and `catapultShotDamage` in
+  `src/sim/stats.ts`, `firstOpOf` (`src/config/abilities.ts`),
+  `proseFamily` (`src/i18n/families.ts`), `WORLD_COMMAND_KINDS`
+  (`src/sim/Command.ts`), `closeTooltip` and `openTooltipTrigger`
+  (`src/ui/tooltip.ts`). Fifteen are types. Leads for 120d, each unread.
+- **261 exports are read only in their own file,** where the `export` is
+  the removable part, and **225 only by tests,** which is either a seam a
+  test needs or code its test keeps alive. Telling those apart is 120d's
+  and 120e's reading.
+- **A health dial reads as live that may not move:**
+  `HealthSchema.fatiguePerStack` has one game read and its value in
+  `config/health.json` is 0. Whether any run sets it is 120c's question,
+  and the finder's `writes` column is where that starts.
+
+**Calls made here.**
+
+1. *A reader's kind comes from its path,* not from the import graph:
+   "game" is `src` outside `src/dev` and `src/bot`, whether or not the
+   entry reaches the file. Which files no entry loads is 120d's question.
+2. *A write is not a read.* A `RunConfig` field that tests set and
+   nothing reads stands unread.
+3. *The pin on the real config stays in the suite* at about 2.3 s, so
+   that a zod upgrade which stops the key-following fails `npm test`.
+4. *Not followed:* a default export (`src` has none, by `git grep
+   "^export default"`), and `export *` (eight lines in `src`), which the
+   language service follows and no test here plants.
+
+**Not verified.** An assignment that unpacks, `({ key } = config)`, is
+taken for a write. Spread and whole-object reads are invisible, and their
+number was not counted. The 156 computed reads were counted and not read.

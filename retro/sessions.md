@@ -4912,3 +4912,69 @@ change that only the whole corpus saw, a suite that hung where a red test
 was expected.
 
 ---
+
+## 2026-10-12 — session 79f18990 (claude-opus-5-5): §120's kickoff and cut, 120a, the drawn sample, and 120b, the reference finder
+
+1. **Missing from the orientation.** Nothing for the kickoff: the Cursor's
+   list of what the census has to hand was complete. Two facts about this
+   machine I met by tripping on them, both in 120a. A worktree under
+   `output/` fails `tests/licences.test.ts` with nothing planted, because
+   it has no `node_modules` beside it; 119g-post ran the suite in such a
+   worktree and its record counts failed files without naming that one.
+   And 29 files under `src` are checked out with CRLF here while a fresh
+   worktree has LF. The orientation itself cost about 190k before the cut
+   was drafted, most of it §119's record read for what the census
+   inherits.
+2. **Norms in conflict.** The harness's keep-going text against a
+   90-minute batch: with the reference finder built and the hook unable
+   to pass beside the batch's suite runs, there was nothing useful left
+   that the signed cut allowed in this session, and I ended the turn on a
+   status and was re-invoked by the batch's notice. "Commit per logical
+   change" bent for the same reason: 120b waited an hour and a half
+   uncommitted. The silent-turn reminder came about fifteen times; each
+   got one line of what was true.
+3. **Pulled to claim more.** Three, each caught. "Eleven tools last
+   committed before September" was thirteen on a recount before the
+   commit. The first scan's "167 unread schema keys" read like a finding;
+   by file, 115 were two loaders whose schemas are typed by hand-written
+   interfaces. And the one I did not catch by method: I had staged 120b
+   and written its commit message from that first scan before planting
+   the unpacking case. The hook failed on a load timeout, and it was
+   while that commit waited that I added the case and found an unpacked
+   key was counted as a write. Without the wait the fault would have gone
+   into a commit with wrong counts. The rule "a pin that passes on its
+   first run is planted" was followed for the rules I had listed; the
+   fault was in a case I had not thought to list until I wrote "not
+   verified".
+4. **Waste.** A per-file `wc` loop in Git Bash, two minutes for what one
+   node process does in two seconds. Two patch scripts sent through a
+   heredoc with an escape in them, against a doc line I had read that
+   afternoon; the second refused to write, which is the only reason it
+   cost nothing, and after it I used the edit tool. One batch launch that
+   died at its first site. Three hook runs repeated: twice on
+   `store-guard` with nothing running, once on `build-id` beside my own
+   batch.
+5. **No other home.** The sample's sites, verdicts and per-file kill
+   counts are in `scratch/120a/` and the finder's scan in
+   `output/refs/src.json`, both on this machine only; `refs --all`
+   re-derives the scan in a minute, and the sample is three and a half
+   hours.
+6. **Room to ask, disagree, pause.** The shape-lock was a real stop and I
+   used it: nine calls, one of them a doubt said plainly (a search is
+   weak evidence that a test is redundant). The reply signed everything
+   in one sentence, so I cannot tell whether the doubt was read as a
+   doubt; it stands in the worklog for 120e's stop. Ending the turn to
+   wait for the batch was available and exercised. One thing I weighed
+   and did not do: skipping the last pass, a signed part of the cut,
+   because of its wall-clock. I trimmed four sites nothing could notice
+   and ran it. I noticed a pull, at the second hook failure in a row, to
+   retry a third time before looking; I read the process list instead.
+7. **What supported the work.** The instruments' own checks earning their
+   place inside one afternoon: the known answers naming a test that fails
+   in every worktree, `applyEdit` refusing text it was not listed for and
+   so stopping a batch before a wrong plant, and a planted case finding a
+   real fault in a finder whose tests were green. I would want that
+   repeated, and it is the round's own method. Also the sample's answer
+   not being the one I expected: the boundary and the raised number are
+   mostly edits of no effect, and map generation is where the proofs are
+   thin. The session's interest was in that more than in the tools.

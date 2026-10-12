@@ -197,6 +197,27 @@ saved run that came back without its journal passed every test of
 `src/store`, whose lines the suite runs to the last one. A planted break at
 the site settles it.
 
+**How often a proof notices, on a drawn sample** (2026-10-12; 200 lines
+drawn by a seeded draw, one mechanical edit at each; the Round 8.5
+worklog, "120a"). On lines the corpus runs it noticed 109 of 140 edits:
+52 of 60 in `src/sim`, 39 of 50 in `src/run`, 10 of 10 in `src/core` and
+8 of 20 in `src/config`, where most of a loader is validation that valid
+config never trips. The suite noticed 12 of the 31 it missed, eight of
+them in `src/config`. On sim and run lines only tests run, the suite
+noticed 27 of 30; on lines it runs in shipped code no headless proof
+loads, 25 of 30. The kind of edit decides most of what is missed: a
+negated condition, a removed call or a traded sign went unnoticed 6 times
+in 141, a moved boundary or a number raised by one 21 times in 59, and by
+a read of each site most of those change nothing a run can see. The sites
+where behaviour changed and no proof looked were 7 of 200, with 6 more
+unsettled, and six of the eight unnoticed sites on the run model's lines
+are in `src/run/NodeMap.ts`: for a change to map generation, plant a
+control at the site (`npm run oracle -- plant`). The fuzz diff and the
+smoke noticed none of the 18 sim and run sites that the corpus and the
+suite both missed, so what those two miss, the pre-commit hook misses;
+and with every hit dealing one more the smoke failed in one file of 65,
+the corpus's own test.
+
 **By part.** "Corpus" is `npm run corpus` (30 journals; all of them in the
 smoke tier, three on every `npm test`); "fuzz diff" is
 `bash scripts/perf-oracle.sh [ref]`; "build compare" is

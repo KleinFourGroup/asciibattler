@@ -978,6 +978,24 @@ on the fix's commit, with the first nine runs back; **465,848** at 09:34
 with all 28 back. A reader run costs this session about 3k of context in
 launch results and notices.
 
+**Read and signed** (the user, 2026-10-12, on the hand-off's report,
+which carried the table): "Hah! I need to update my priors on Haiku's
+capabilities! Or maybe I just overestimated how complex this code base
+was. Probably both. Signing all of your leans, Claude!" So 119f's read is
+done ahead of 119g's stop, and two calls are signed by their leans:
+
+- **The probe stays,** as the token measure with a floor on right
+  answers. **N for the close** is all eleven questions, three runs, two
+  trees: 66 runs.
+- **The step-code ceiling is by file and exact** (119e's first call).
+
+The report's third item, what the comment pass covers, stated what is
+built and no lean. The session takes the signature to leave it as built
+(the comments under `src`; codes inside strings, rounds and clusters by
+name, and `tests` and `tools` left out) and has said so to the user once.
+The other calls under 119a, 119b, 119d and 119e are still for 119g's
+stop.
+
 ### The hand-off before 119g (2026-10-12, session a2b4ebd8)
 
 119g would start at 482,842 (09:37), 67k under the line. It installs the
@@ -985,7 +1003,8 @@ coverage tool, runs each proof under it, writes the map into TESTING.md
 and closes the phase at a stop that carries the calls of five steps; that
 looks two or three times the room. So the session hands off here. Three
 commits, `10dd26c` (119e), `632c513` (its fix) and this one, none pushed.
-119f is ◐: built, and read at 119g's stop. The session's report is in
+119f was ◐ at the hand-off, and the user read and signed it the same
+morning (above), in a fourth commit. The session's report is in
 `retro/sessions.md`.
 
 **For 119g's step zero.** The map's rows are parts of the code, and the

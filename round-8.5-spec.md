@@ -146,7 +146,14 @@ comment-stripped before/after diff with a failing control.
   > how expensive calibration is...
 
   Its form (the small reader, questions that predict behaviour, sparing
-  use) is agreed; its step, 119f, is signed with §119's cut.
+  use) is agreed; its step, 119f, is signed with §119's cut. Calibrated
+  2026-10-12: Haiku was right in every run, with the comments and without
+  them, so the caveat's second branch applies and the measure is tokens,
+  with right answers as a floor. The user on the result: "I need to
+  update my priors on Haiku's capabilities! Or maybe I just overestimated
+  how complex this code base was. Probably both. Signing all of your
+  leans, Claude!" At the close it runs eleven questions, three runs, two
+  trees ([WORKLOG.md](WORKLOG.md) §119, 119f).
 - **§119's decisions:** the tool-only replay flag, which reverses §114's
   choice; whether the journal corpus is tracked or re-recorded from its
   seeds; the chaos census's other eight command kinds. Resolved at the

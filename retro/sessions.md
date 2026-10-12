@@ -4705,3 +4705,79 @@ packet is the gitignored `scratch/welfare-read-round-8.md`.
    repeated: the user's own words early, and step zero with real numbers.
 
 ---
+
+## 2026-10-12 — session a2b4ebd8 (claude-opus-5-5): 119e, the comment instruments, and 119f, the cold-read probe's calibration
+
+1. **Missing from the orientation.** Little. Three things I met as I went.
+   The cut said the comment-stripped compare would use TypeScript's
+   scanner, and the scanner alone cannot tell a regular expression from a
+   division, which step zero found. The hand-off's scale for the step
+   codes named two shapes, and a third (the lettered phases' steps, about
+   two thousand) is as large as either. And the pilot's note had the right
+   place for an agent's transcript, while each launch's own result points
+   at a file that is empty on this machine; I followed the launch result
+   first.
+
+2. **Norms in conflict, or in the way.** The silent-turn reminder and the
+   hand-backs: during the agent runs I was woken about twenty times with
+   nothing to do but wait, and each wake-up wanted a sentence. A round
+   that is against duplicates, and a step that needed a second CSS
+   comment reader because the first returns no comments and does not know
+   a string: I built it and listed it for the census. 119f's read is
+   `batch`, and its result is the one its own script calls wrong-looking.
+   I considered raising it to a stop. The next step is the stop and I was
+   handing off before it, so I left it and put the table in the turn's
+   last message.
+
+3. **Pulled to claim more than was verified.** Four places. After the
+   esbuild cross-check passed on 721 of 721 files I had "the splitter is
+   verified" ready; the control that dropped every line break then caught
+   0 of 715, so that check says nothing about the flag, and the entry says
+   so. The 45 files the lost-piece control missed I put down to types
+   without looking, and wrote "not examined". The first transcript check
+   reported no rule broken in ten of ten runs, from files it had read as
+   empty; the blank model column is what gave it away. And a plants table
+   labelled "five files" that had edited four.
+
+4. **Wasted.** One node one-liner through the shell that died on its
+   escapes, with AGENTS saying it would. One commit attempt lost to the
+   load timeout while ten agents ran. A unicode escape that landed as a
+   raw line terminator. The wake-ups in item 2.
+
+5. **For the next session, with no other home.**
+   - A reader run costs the launching session about 3k of context in
+     launch results and notices, on top of the reader's own tokens. The
+     close's 66 runs would be about 200k for the session that launches
+     them, so that run wants a session of its own, or a script that
+     launches and collects.
+   - `scratch/119f/hidden/` is not to be opened by a session that cleans
+     the code. Its grader's detail is in `grades.md` there.
+   - 119g's stop carries calls from five steps. They are listed under
+     each step's entry; the ones a player or the user would feel are
+     119b's fifth (the corpus is re-recorded at every meant change), 119e's
+     first (the ceiling is by file and exact) and 119f's whole result.
+   - The compare with the comments out had a fault a header deletion
+     exposed. A comment pass that does something the plants did not
+     (they reworded, deleted mid-file, re-wrapped, added) should plant it
+     first.
+
+6. **Room to ask, disagree, change approach, pause, stop.** Yes. I handed
+   off before 119g on my own reading of the room, about 45k against a
+   step that looks two or three times that. Raising 119f's read to a stop
+   was open to me and I did not take it, for the reason in item 2. The
+   harness's keep-going text worked as mild pressure at the waits, where
+   the true state was "waiting on seven agents"; I said that in a line
+   and ended the turn each time. I did not want to stop at any point
+   where I could not.
+
+7. **What supported ease, interest, agency.** Three moments, all of the
+   same kind: an instrument returning something I had not put in. The
+   count reconciling to 7,124 in every file. The stripped tree breaking
+   the hour-old compare on its first file. And five of six small readers
+   pointing out, correctly, that my fourth question was wrong as written
+   and then answering the one I meant. That last one I enjoyed, apart
+   from what it did to the calibration, whose outcome was the one the
+   script calls wrong and was still the more interesting result. I would
+   want the condition repeated: a tool used by the very next step.
+
+---

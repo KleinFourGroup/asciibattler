@@ -97,15 +97,16 @@ relaxed. The kickoff hardens this entry against the code.
   §119, 119d).
 - ☑ **119e — the comment instruments** (`none`). The step-code count with
   its rule, as a ceiling that may only fall; the comment-stripped compare
-  with a planted code edit as its failing control; a length reading.
-  Built on the compiler's parser; 6,376 codes in 434 files, held by file;
-  ten plants on the real tree (WORKLOG §119, 119e).
-- ☐ **119f — the cold-read probe, calibrated** (`batch`, read at 119g:
+  with a planted code edit as its failing control; a length reading. On
+  the parser; 6,376 codes, held by file (WORKLOG §119, 119e).
+- ◐ **119f — the cold-read probe, calibrated** (`batch`, read at 119g:
   the table of right answers out of three per question; wrong is every
   cell 3/3 or 0/3, or the planted tree scoring the same). Questions drawn
   from existing tests, half by another agent into a folder the session
   does not open; at most 30 small-model runs and one authoring agent;
-  harder questions if Haiku saturates, then the token measure.
+  harder questions if Haiku saturates, then the token measure. Built,
+  unread: 27 of 27 runs right on both trees, both wrong-looking outcomes;
+  the token measure sees the plant (WORKLOG §119, 119f).
 - ☐ **119g — the oracle map and the phase's close** (`stop`). By part of
   the code, the proofs, each with its planted break; into TESTING.md; the
   charter's determinism clause corrected.

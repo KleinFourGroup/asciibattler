@@ -829,4 +829,171 @@ as the first piece). A tool-read comment that spans lines also no longer
 counts its own inner break as one before it. With that, all 295 stripped
 files have the code pieces of their originals and no comment left
 (`scratch/119f/build-trees.ts`). The ten plants of the table above were
-not run again; none deleted a header.
+not run again; none deleted a header. Its commit is `632c513` (the hook:
+3735 of 3735 in 258 files, on its second run; the first failed on
+`tests/store-guard.test.ts` with ten agents running beside the suite,
+which is the load timeout TODO lists).
+
+### 119f — the cold-read probe, calibrated (2026-10-12, session a2b4ebd8)
+
+**Step zero.**
+
+- *A reader that writes its answer to a file* is a `general-purpose`
+  agent; the pilot's `Explore` cannot write. Its zero task on Haiku is
+  58,145 tokens, one tool use (the hand-back) and 6.3 s. The pilot's
+  `Explore` on Opus was 34,138.
+- *The bar on test files is made structural.* A reader is pointed at a
+  copy: `scratch/119f/trees/a` is `src` without `*.test.ts` and without
+  `.md`, plus `config` (295 source files, 3,003,081 characters).
+  `trees/b` is the same files with every comment out (1,318,862
+  characters, 43.9 % of `a`): the planted case. Each stripped file is held
+  against 119e's compare, which is how the fault above was found.
+- *The transcripts* are in the session store
+  (`~/.claude/projects/…/<session>/subagents/agent-<id>.jsonl`). The
+  `.output` file each launch names is empty on this machine.
+- *What the token figure counts.* The authoring agent reported 276,394 on
+  its first return and 283,604 after a second turn that read six small
+  files, so the figure is the size its context reached and not a sum over
+  calls. The pilot left that open.
+
+**The questions.** Each is a behaviour prediction in two or three parts
+whose key is an outcome a test asserts; a run is right when every part
+is.
+
+- *Visible, five.* V1 the pool charge (`chipRule.test.ts`), V2 the shove
+  (`shove.test.ts`), V3 fatigue (`fatigue.test.ts`); then, after those
+  came back right in all nine runs, the harder pair: V4 a periodic status
+  across merges and expiry (`statusPeriodic.test.ts`) and V5 the deferred
+  flip of a move (`moveDeferred.test.ts`). Each key was written before its
+  readers ran (`scratch/119f/visible/keys.md`).
+- *Hidden, six,* H1 to H6 in rising difficulty by their author's ranking.
+  An Opus agent wrote them into `scratch/119f/hidden/`, which this
+  session has not opened. It reports each key's test passing when run
+  alone, and each key's value printed by the code. Readers were handed a
+  path, wrote their answers into the same folder, and the authoring agent
+  graded them and reported counts only. H5 and H6 were run.
+
+**The runs.** 28 of the 30 allowed: the zero task, 15 on the visible
+questions on tree `a`, six on V4 and V5 on tree `b`, six on H5 and H6 on
+tree `a`. One authoring agent, resumed once to grade. Every reader's
+transcript names `claude-haiku-5-5` and no other model.
+
+**The table** (right out of three; tokens are each run's figure less the
+zero task's, averaged; the spread is the standard deviation as a share
+of that mean):
+
+| question | tree `a` | tree `b`, comments out | tokens, `a` | spread | tokens, `b` | spread | `b` as a share of `a` |
+|---|---|---|---|---|---|---|---|
+| V1 the pool charge | 3/3 | | 14,365 | 3 % | | | |
+| V2 the shove | 3/3 | | 48,285 | 10 % | | | |
+| V3 fatigue | 3/3 | | 21,458 | 9 % | | | |
+| V4 a periodic status | 3/3 | 3/3 | 55,632 | 18 % | 43,008 | 6 % | 77 % |
+| V5 the deferred move | 3/3 | 3/3 | 65,703 | 7 % | 43,405 | 22 % | 66 % |
+| H5 (hidden) | 3/3 | | 69,704 | 11 % | | | |
+| H6 (hidden) | 3/3 | | 70,777 | 20 % | | | |
+
+Every run, its three figures and its agent are in
+`scratch/119f/runs.json`; `stats.ts` prints the table.
+
+**What it says.**
+
+- **Both outcomes the read's script calls wrong happened.** Every cell is
+  3 of 3, and the planted tree scores the same. 27 reader runs, 27 right,
+  the hidden half's two hardest among them, on every part. Haiku 5.5 does
+  not fail at predicting this code's behaviour from its source, with the
+  comments or without them. By the cut's branches (harder questions, then
+  the token measure) the measure left is the token one.
+- **The token measure sees the plant.** With every comment out, V5 costs
+  66 % of what it costs with them and V4 77 %. V5's three runs on `b`
+  (91,363 to 110,319 whole) all lie under its three on `a` (120,942 to
+  129,092); V4's overlap by one run (99,383 to 104,070 against 102,448 to
+  121,541). Tool uses and seconds are the same on both trees (V4: 20 to
+  21 calls against 19 to 24; V5: 18 to 22 against 20 to 22), so the saving
+  is the comment text in what was read and not less looking.
+- **The spread.** The standard deviation of a cell is 3 % to 22 % of its
+  mean above the zero task, 13 % pooled over the nine cells. That is
+  tighter than the pilot's two Opus runs (1.6 times apart).
+- **The price.** The 28 runs sum to 2,925,070 by the token figure, 55 %
+  of it the cost of starting; a reader run averages 106,182 and 199 s.
+  The authoring agent's context reached 283,604.
+- **What N the close needs,** from that spread. With Q questions and n
+  runs a tree, the mean ratio's standard error is about 13 % × √(2 / nQ).
+  All eleven questions at three runs on each of two trees is 66 runs,
+  about 7 million by the token figure, and resolves a change of about 7 %
+  in reading cost. Seven questions is 42 runs and about 8 %. The lean is
+  the first; the call is the user's at the stop.
+
+**What the probe does and does not measure, as calibrated.**
+
+- It measures what a reader has to take in to work out a behaviour, and
+  it holds a floor: an answer that was right must stay right. It has not
+  shown that it can see comprehension get worse, since nothing here made
+  a reader fail.
+- It will read any shortening of comments as an improvement, because
+  comment text is what it counts. Whether a deleted comment held a reason
+  that the code does not is a question none of these eleven asks: they
+  predict behaviour, which is what the code decides.
+- The reader is an agent. Length does not tire it.
+
+**Not verified.**
+
+- The hidden half's questions and keys, by this session. Their author
+  and their grader are one agent. Its notes on H6: two runs reached part
+  (c)'s value without showing the step that part was meant to test, and
+  one answer lists its files without the tree's prefix. The transcripts
+  show all six hidden runs reading inside tree `a`.
+- H1 to H4, which were not run.
+
+**Rules kept and broken, from the transcripts**
+(`scratch/119f/transcripts.ts`). No reader ran anything, read outside
+its tree, or wrote any file but its answer. One of the 27 (V2's third
+run) called two tools outside the four allowed: it made a background-task
+chip by mistake and withdrew it.
+
+**A fault in a question, found by its readers.** V4 as first put gave a
+status definition without saying it was registered, and the periodic
+pass reads its op from the registry by the effect's key, so read to the
+letter the answer was no events. Five of the six readers said so and
+gave the meant answer beside it; they are graded right. The sentence was
+added after the six runs.
+
+**Calls made here, for the stop.**
+
+1. **A copy of the tree, not a rule, keeps a reader from the tests.**
+2. **`general-purpose` readers that write their answers to files,** so
+   that the hidden half's answers stay out of this session's sight.
+3. **H5 and H6 were chosen for the run** by their author's ranking, once
+   the visible half had saturated. That choice used no hidden score.
+4. **Two runs were left unspent.** Both branches of the user's caveat
+   were already taken.
+5. **The grader is the authoring agent.** A second model's read of the
+   hidden half would be the stronger check, and is the user's to ask for.
+
+**Tools kept:** `scratch/119f/` (`README.md` with the prompts and how a
+run is launched; `build-trees.ts`; `runs.json`, `stats.ts`,
+`transcripts.ts`; `visible/`; `hidden/`, unopened).
+
+Readings: **305,924** at 09:00 at the step's start; **377,514** at 09:14
+on the fix's commit, with the first nine runs back; **465,848** at 09:34
+with all 28 back. A reader run costs this session about 3k of context in
+launch results and notices.
+
+### The hand-off before 119g (2026-10-12, session a2b4ebd8)
+
+119g would start at 482,842 (09:37), 67k under the line. It installs the
+coverage tool, runs each proof under it, writes the map into TESTING.md
+and closes the phase at a stop that carries the calls of five steps; that
+looks two or three times the room. So the session hands off here. Three
+commits, `10dd26c` (119e), `632c513` (its fix) and this one, none pushed.
+119f is ◐: built, and read at 119g's stop. The session's report is in
+`retro/sessions.md`.
+
+**For 119g's step zero.** The map's rows are parts of the code, and the
+proofs now in hand are: the journal corpus with its event digests; the
+chaos census; the worktree-baseline fuzz diff; the build's hash; parsed
+config equality and the snapshot field diff; and for comments, the
+compare with the comments out, the step-code ceiling and the cold-read
+probe as calibrated. Which lines each reaches is what the coverage tool
+is for. The charter's "byte-identical under the determinism test" still
+names a test that compares a tree with itself (the audit's first
+finding).

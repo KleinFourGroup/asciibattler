@@ -26,7 +26,7 @@
 import { fnv1a } from '../core/fnv1a';
 import type { RunSnapshot } from '../run/Run';
 import type { RunJournal } from './journal';
-import { replayJournal } from './replayJournal';
+import { replayJournal, type ReplayOptions } from './replayJournal';
 
 /** Given an event's name and payload, the value to hash in the payload's place. */
 export type EventMapping = (name: string, payload: unknown) => unknown;
@@ -38,6 +38,8 @@ export interface SegmentDigest {
   readonly outside: string;
   /** Events hashed, in and outside battles. */
   readonly events: number;
+  /** How many of them each event name accounts for. */
+  readonly byName: Readonly<Record<string, number>>;
   /** `snapshotHash` of the Run as the replay left it. */
   readonly endHash: string;
   /** Whether that is the hash the journal recorded (true for an open segment). */
@@ -49,6 +51,8 @@ export interface DigestOptions {
   /** `ReplayOptions.ignoreConfig`: replay past another config hash. */
   readonly ignoreConfig?: boolean;
   readonly map?: EventMapping;
+  /** `ReplayOptions.onCommand`, passed through. */
+  readonly onCommand?: ReplayOptions['onCommand'];
 }
 
 /**
@@ -73,15 +77,18 @@ export function digestReplay(journal: RunJournal, options: DigestOptions = {}): 
     outside: '',
     battle: null as string | null,
     events: 0,
+    byName: {} as Record<string, number>,
   }));
   const replay = replayJournal(journal, {
     endHash: 'report',
     ...(options.ignoreConfig === undefined ? {} : { ignoreConfig: options.ignoreConfig }),
+    ...(options.onCommand === undefined ? {} : { onCommand: options.onCommand }),
     onEvent: (segment, event, payload) => {
       const at = open[segment]!;
       const name = String(event);
       const text = `${name} ${JSON.stringify(map === undefined ? payload : map(name, payload))}`;
       at.events++;
+      at.byName[name] = (at.byName[name] ?? 0) + 1;
       if (name === 'battle:started') at.battle = '';
       if (at.battle === null) {
         at.outside = fnv1a(`${at.outside}\n${text}`);
@@ -101,6 +108,7 @@ export function digestReplay(journal: RunJournal, options: DigestOptions = {}): 
       battles: at.battle === null ? at.battles : [...at.battles, at.battle],
       outside: at.outside,
       events: at.events,
+      byName: at.byName,
       endHash: segment.hash,
       endMatches: segment.endMatches,
       snapshot: segment.run.toJSON(),

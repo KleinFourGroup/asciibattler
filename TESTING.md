@@ -47,6 +47,21 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
   same bytes. A failure names its seed and writes its journal under
   `output/chaos/`. Four seeds run on every `npm test` (`chaos.test.ts`). It is
   a crash and invariant instrument, never a balance input.
+- **The journal corpus:** `npm run corpus` replays 30 stored run journals
+  (`tests/fuzz/corpus/`) and holds each against what it reached when it was
+  recorded: a digest of every event of every battle, the end's hash, and
+  which commands changed the run in which phases. It is the proof that a
+  change left behaviour alone across commits, which a test that runs one
+  seed twice on the same code cannot give. A journal's own replay checks
+  each battle's winner and tick count and the end's hash only; a planted
+  change to a wandering camp member's step left all of those unmoved on one
+  of the 30 runs, and the event digests caught it. All 30 run in the smoke
+  tier (`corpus.test.ts`) and three on every `npm test`
+  (`tests/corpus-quick.test.ts`). `corpus.ts` says when the baseline may be
+  retaken (`--rebaseline`, `--record`) and what has to be shown first. Its
+  reach has limits: four port trades never change a run in it, and a
+  changed number shows only on the runs that meet it (a rest healing half
+  instead of a quarter diverged 3 of the 30).
 - **Fuzz CLI:** `npm run fuzz -- --count=N` runs N seeds × all strategies,
   emits CSV + per-failure markdown traces under `tests/fuzz/output/`.
 

@@ -79,12 +79,13 @@ relaxed. The kickoff hardens this entry against the code.
   handed back when its hash differs, and a pin that the game's entry never
   reaches the replay. No bump; the smoke does not fire. Built as cut, each
   held against its plant (WORKLOG §119, 119a).
-- ☐ **119b — the journal corpus** (`none`, with a stop if no run ends in
+- ☑ **119b — the journal corpus** (`none`, with a stop if no run ends in
   victory: a recorder on the fuzz bot, or the late game left to the fuzz
   diff). About thirty journals from a table of seeds and dials, tracked
   under `tests/fuzz/corpus/` with their digests and a census of what they
   reach; all replayed in the smoke tier, three on every `npm test`. The
-  smoke fires.
+  smoke fires. 30 journals, 10 won, so the stop did not fire; four plants
+  caught (WORKLOG §119, 119b).
 - ☐ **119c — the chaos census pinned on what changes the run** (`none`).
   A kind counts when `applied > 0` on any every-commit seed (13 of 21 at
   the Round 8 close, re-measured at step zero); the test names both lists

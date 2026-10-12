@@ -114,6 +114,8 @@ export interface ChaosResult {
   readonly census: Record<string, { sent: number; applied: number }>;
   /** Battle orders sent, by what they ask. */
   readonly orders: Record<string, number>;
+  /** The run's closed journal, as an exported file would hold it. */
+  readonly journal: RunJournal;
 }
 
 export class ChaosFailure extends Error {
@@ -259,7 +261,15 @@ export function chaosRun(options: ChaosOptions): ChaosResult {
       path,
     );
   }
-  return { end: run.phase, battles, ticks, roundTrips, census, orders };
+  return {
+    end: run.phase,
+    battles,
+    ticks,
+    roundTrips,
+    census,
+    orders,
+    journal: JSON.parse(JSON.stringify(journal)) as RunJournal,
+  };
 }
 
 function writeJournal(options: ChaosOptions, journal: RunJournal | null): string | null {

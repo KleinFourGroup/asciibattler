@@ -415,3 +415,108 @@ so it covers DEV code the entry reaches as well as shipped code. And
 `tests/replay-guard.test.ts` is listed with the permanent gates in the
 Cursor, as the structural form of the scope guard "the shipped game
 replays nothing past a config mismatch".
+
+Readings: **364,280** at 20:29 on 119a's commit, `f3bc831` (the step cost
+about 54k from the shape-lock's 310k).
+
+### 119b — the journal corpus (2026-10-11, session e1342511)
+
+**Step zero.**
+
+- The seeded player's driver loads and runs under tsx although its file
+  imports `expect` from vitest (`scratch/119b/probe-import.ts`), so one
+  command line drives both drivers.
+- A chaos sweep, `npm run chaos -- --seeds=8`: 32 runs, 53.8 s, no
+  failure, and 17 of the 21 command kinds change a run somewhere in it.
+  The four that never do are `buyPortUnit`, `buyPortDaemon`, `sellPacket`
+  and `payToRemoveUnit`. The four every-commit seeds reach 13 (the Round 8
+  close's C0).
+- Short runs are won: the seeded player wins `hops=3` runs, which the
+  six-run sample at the audit (no dials, all lost) did not show.
+
+**Built.** `tests/fuzz/corpus/`: `corpus.ts` (the table, `recordRow`,
+`replayReach`, the baseline's reader and writer, `reachDifferences`),
+`cli.ts` (`npm run corpus`: the check, `--record`, `--rebaseline`,
+`--snapshots=<dir>`, `--survey=<n>`), `journals/` and `baseline.json`,
+`corpus.test.ts` in the smoke tier; `tests/corpus-quick.test.ts` on every
+`npm test`. Beside them: `onCommand` on `ReplayOptions` (each run command
+with its phase and whether it changed the Run's saved state, which is how
+the chaos driver counts `applied`), `byName` on a digest, and the chaos
+driver hands back its journal.
+
+**The corpus as recorded** (this step's tree over `f3bc831`, config
+`35e1ee92`): 30 journals, 506,822 bytes, with a baseline of 36,812. 17 are
+the seeded player's and 13 the chaos driver's. 20 runs lost and 10 won;
+347 battles; 907,453 events under 48 event names; a command changed a run
+in 11 phases; 17 of the 21 command kinds change a run, the same four
+missing as in the sweep. The nine chaos rows beyond the every-commit four
+were chosen from `--survey=8` for a packet bought at a port, a redraw and
+a packet used, and for breadth, the shorter run where two reach the same.
+The check takes 17 to 21 s from the command line and 23.9 s as the
+smoke-tier test.
+
+**Verified, and by what.**
+
+- Typecheck clean. `corpus.test.ts` 34 of 34 under the fuzz config; the
+  quick rows, the store guard, the chaos tests and 119a's options 27 of 27
+  in four files.
+- A second `--record` writes the same bytes (`git diff --stat` empty
+  against the staged first one).
+- The plants (`scratch/119b/plants.sh` and `plants-2.sh`; each edit made
+  at one exact anchor, the corpus checked, the file put back from a copy,
+  and no file under `src/sim` or `config` left changed):
+
+  | plant | still ok | differ |
+  |---|---|---|
+  | none (the control) | 30 | 0 |
+  | sim, broad: every hit deals one more (`World.ts`) | 0 | 30 |
+  | sim, narrow: a wandering camp member takes the mirrored step (`CampWanderBehavior.ts`) | 12 | 18 |
+  | config, a changed number: a rest heals half, not a quarter | 27 | 3 (`player-1`, `chaos-31`, `chaos-1`) |
+  | config, two keys of `health.json` in another order | 30 | 0 |
+
+- 119a's two command-line checks, on corpus journals. Under the changed
+  number `npm run replay -- … --force` is refused with both config hashes
+  named, and `--force --force-config` prints the forced-past line and then
+  DIVERGED with exit 1 on `player-1` ("the journal ends in defeat, and the
+  replayed run is in phase promotion"). Under the reordered keys the stamp
+  moves (`c906b73e`), `--force` is refused, and `--force --force-config`
+  replays to the journal's hash.
+
+**What the plants say about the instrument.**
+
+- **The event digest is needed, and the journal's own check is weaker than
+  the charter took it for.** Under the narrow plant, 17 of the 18 runs
+  diverged at a battle's checkpoint. The eighteenth,
+  `player-13-hops-3-escalation-3`, kept every battle's winner and tick
+  count and its end hash, and differed only in the events of battles 5 to
+  10 (34,745 events against 34,743). `npm run replay` would have reported
+  that journal as replayed to its end with a matching hash.
+- **A changed number shows only on the runs that meet it.** 27 of 30 runs
+  cannot tell a rest that heals a quarter from one that heals half,
+  `player-6-hops-2-firstNode-rest` among them, which rests at its first
+  node and still replays to its hash. So a replay past a config change
+  that still matches says the knob moved nothing on that run, and never
+  that the knob is dead. The census's evidence for a dead knob stays the
+  search for a reader.
+
+**Not verified.** How much of the sim's and the run's code the corpus
+executes: there is no coverage tool until 119g, and three plants are three
+sites.
+
+**Calls made here, for the stop.**
+
+1. `onCommand` on the replay, beyond 119a's three options, so that what a
+   journal reaches is counted from the stored journal on any tree.
+2. The corpus always replays past the config stamp: a moved key changes
+   the stamp and nothing else, and a changed number diverges.
+3. End snapshots are not stored. `--snapshots=<dir>` writes them from
+   whichever tree it runs on, for 119d's path-by-path compare.
+4. The table's rows and the three quick rows.
+5. **A consequence for later rounds.** A tracked corpus fails on every
+   change that is meant to alter behaviour, and then has to be recorded
+   again, about half a megabyte of journals rewritten each time. That
+   suits this round, which changes no behaviour. At the round's close the
+   question is whether it stays in the smoke tier, becomes a tool run on
+   demand, or goes.
+
+Tools kept: `scratch/119b/` (the two plant scripts and the tsx probe).

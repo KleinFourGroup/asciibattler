@@ -41,11 +41,18 @@ import { HEALTH } from '../config/health';
 import { EventBus } from '../core/EventBus';
 import type { GameEvents } from '../core/events';
 import { RNG } from '../core/RNG';
-import { Run, type RunSnapshot } from '../run/Run';
+import { Run, type RunPhase, type RunSnapshot } from '../run/Run';
 import { parseRunConfig } from '../run/RunConfig';
 import { World } from '../sim/World';
 import { spawnEncounter } from '../sim/battleSetup';
-import { JOURNAL_FORMAT, snapshotHash, type JournalSegment, type JournalStart, type RunJournal } from './journal';
+import {
+  JOURNAL_FORMAT,
+  snapshotHash,
+  type JournalSegment,
+  type JournalStart,
+  type JournaledCommand,
+  type RunJournal,
+} from './journal';
 
 export class JournalRefused extends Error {
   override readonly name = 'JournalRefused';
@@ -85,6 +92,10 @@ export interface ReplayOptions {
   readonly endHash?: 'check' | 'report';
   /** Every event the replay emits, in order, before its subscribers run. */
   readonly onEvent?: (segment: number, name: keyof GameEvents, payload: GameEvents[keyof GameEvents]) => void;
+  /** Every run command once it is dispatched: the phase it was sent in, and
+   *  whether it changed the Run's saved state (an illegal command is a
+   *  no-op and changes nothing). What a journal reaches is counted from it. */
+  readonly onCommand?: (segment: number, command: JournaledCommand, phase: RunPhase, changed: boolean) => void;
 }
 
 /** A bus that shows each event to `tap` before it dispatches it. */
@@ -235,7 +246,14 @@ function replaySegment(
         const wanted = `${entry.command.kind} after tick ${entry.tick}`;
         runTo(openBattle(wanted), entry.tick, wanted);
       }
-      run.dispatch(entry.command);
+      if (options.onCommand === undefined) {
+        run.dispatch(entry.command);
+      } else {
+        const phase = run.phase;
+        const before = JSON.stringify(run.toJSON());
+        run.dispatch(entry.command);
+        options.onCommand(index, entry.command, phase, JSON.stringify(run.toJSON()) !== before);
+      }
     } else if (entry.t === 'order') {
       const wanted = `an order for tick ${entry.tick}`;
       const w = openBattle(wanted);

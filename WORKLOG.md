@@ -996,6 +996,15 @@ name, and `tests` and `tools` left out) and has said so to the user once.
 The other calls under 119a, 119b, 119d and 119e are still for 119g's
 stop.
 
+**Confirmed** (the user, the same day): "Yes, I meant that src/ alone is
+fine! I could see an argument for including tests and tools, but I think
+that can wait until we see the outcome of this pass on src." The session
+agrees: the rule's look-alikes were sampled in `src` only, and `tests`
+holds the shapes most likely to miscount (a quartile, a hypothesis, a
+percentile). The one cost is that nothing holds a new step code out of a
+test's or a tool's comments meanwhile. TODO's tone-audit rider carries the
+revisit.
+
 ### The hand-off before 119g (2026-10-12, session a2b4ebd8)
 
 119g would start at 482,842 (09:37), 67k under the line. It installs the

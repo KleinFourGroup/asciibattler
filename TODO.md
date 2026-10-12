@@ -388,7 +388,10 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   (`round-8.5-spec.md`, D4). Measured 2026-10-12 by a written rule: the
   live count is `npm run oracle -- comment-codes`, held by
   `tests/comment-codes.test.ts`, and the proof is `npm run oracle --
-  comment-strip <ref>` (WORKLOG §119, 119e).
+  comment-strip <ref>` (WORKLOG §119, 119e). `tests` and `tools` hold
+  2,497 more by the same rule and are outside the ceiling; whether the
+  pass takes them is decided once its outcome on `src` is seen (the user,
+  2026-10-12).
 
 ## §108 riders (stop 2, 2026-09-25)
 

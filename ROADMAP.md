@@ -104,8 +104,10 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   `World.ts` read whole. Built 2026-10-13 and unread: sixteen rows of
   list B, three more of list A, two fragile sites for TODO
   (`round-8.5-census.md` section 4; WORKLOG §120, 120f).
-- ☐ **120g — the TODO pass's list** (`batch`, read at 120h: wrong is a
-  rider dropped that the user still wants). 91 open items, each proposed
-  as done, dropped or given a round.
+- ◐ **120g — the TODO pass's list** (`batch`, read at 120h: wrong is a
+  rider dropped that the user still wants). Built 2026-10-13 and unread:
+  97 open items in 82 rows, 5 already done, 16 for this round, 66 given
+  to Rounds 9 to 12 and 10 dropped, as proposed
+  (`round-8.5-census.md` section 5; WORKLOG §120, 120g).
 - ☐ **120h — the census signed and the round sized** (`stop`). The lists
   signed, the trials' budget set, the later phases written here.

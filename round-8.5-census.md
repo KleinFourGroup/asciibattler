@@ -2,8 +2,9 @@
 
 **Status: being built; section 1 is read and signed, sections 2 and 3
 (120d and 120e, written 2026-10-13) were read at 120e's stop and are
-signed, row by row, and section 4 (120f, the trials, written
-2026-10-13) is unsigned and read at 120h.** Signed (the
+signed, row by row, and sections 4 and 5 (120f, the trials, and 120g,
+the TODO pass's list, both written 2026-10-13) are unsigned and read at
+120h.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -2005,3 +2006,685 @@ Both are in TODO under "§120 riders".
 10. **A-38, A-39, A-40.**
 11. **F-1 and F-2** in TODO; whether F-2's test is written in this
     round.
+
+## 5. The TODO pass's list (120g)
+
+Written 2026-10-13, unsigned, read at 120h. Every open item of
+[TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
+this step: the kickoff's seventh call left the doing to the phases. A
+row is **T-nn**, numbered in the file's order, with its line in TODO as
+the file stood at `cdd5c81`. How the list was counted and what was
+checked is in [WORKLOG.md](WORKLOG.md) §120, 120g.
+
+A row's **fate** is one of:
+
+- **done**: already built or answered, with the check that showed it;
+  the item is ticked when the list is signed.
+- **8.5**: done in this round, with the phase named.
+- **Round N**: given to that round. *Named* means META-ROADMAP already
+  lists it there; *added* means signing writes it in.
+- **drop**: taken out of TODO, with where the fact still lives, if
+  anywhere.
+
+"Held against" says what the row was checked against: the code, the
+plans (META-ROADMAP's round sections, coverage map and deferred list),
+the census, BALANCE. Where a row says a search found nothing, the search
+is named.
+
+### 5.1 What was counted
+
+`scratch/120g/items.mjs` reads TODO by a written rule: an item is a
+top-level bullet, closed if its first line holds `[x]` or a tick, open
+otherwise. It gives **184 items, 97 open** (95 with an empty box and 2
+with none: F-1 and F-2 were written without one) **and 87 closed.** At
+the kickoff's commit the same rule gives 91 open of 178, the kickoff's
+number. The six since are the four the census's reads added (T-92 to
+T-95) and 120f's two (T-96, T-97).
+
+By proposed fate (`scratch/120g/tally.mjs`, which reads this section):
+
+| fate | rows | of them, a plan already names it |
+|---|---|---|
+| done | 5 | |
+| 8.5 | 16 | 4 |
+| Round 9 | 16 | 1 |
+| Round 10 | 8 | 3 |
+| Round 11 | 25 | 13 |
+| Round 12 | 17 | 5 |
+| drop | 10 | 2 |
+| | **97** | **28** |
+
+So 28 rows only confirm what a plan says, 5 are already done, and 64 are
+proposals: 56 for a round and 8 to drop.
+
+### 5.2 Already built or answered (5)
+
+Signed as a class: each was settled by a check, named in its row.
+
+**T-13 · Card rarity-accent CSS** (L161)
+- In play: a unit card's background is washed by its rarity (green,
+  blue, purple, and amber with an inner glow for a legendary).
+- Held against: `src/ui/ui.css:873-905` holds the four
+  `.unit-card--rarity-*` rules and the corner label's follow at 939. The
+  item was filed when only `common` existed.
+- Fate: **done**.
+
+**T-21 · Save/load interstitial round** (L199)
+- In play: Continue on the menu loads a saved run.
+- Held against: `src/Game.ts:1118` calls `Run.fromJSON`; built at §113
+  and §115 (HANDOFF, Closed rounds). The item says nothing outside the
+  tests calls it.
+- Fate: **done**.
+
+**T-22 · Layout-by-hop weighting** (L210)
+- In play: which board a fight is on. Any of a sector's 12 layouts can
+  be rolled at any hop, so an open board can meet the weakest roster.
+- Held against: the lever the item asks for is built. A sector's layout
+  entry takes `minHop` and `weight` (`layoutPoolAtHop`,
+  `src/config/sectors.ts:282`; `rollLayoutFor`,
+  `src/run/encounters/selection.ts:111`). `config/sectors.json` sets
+  `minHop` on no layout and `weight` on one a sector.
+- Fate: **done** as a mechanism. Whether any layout gets a `minHop` is
+  a content and balance call; the lean is that Round 10's extended sheet
+  asks it, as one line added there.
+
+**T-23 · Turn-limit / tick-cap resolution, a deeper system** (L225)
+- In play: a turn that runs out the clock costs each pool its own fallen
+  and the other side's units still standing.
+- Held against: that rule is the casualty experiment's, signed at §93
+  (`health.capPenalty: survivors`, `config/health.json:8`), and it is
+  the deeper look the item asked for. A mutual wipe charges both pools
+  by their fallen (`src/run/chipRule.ts:189-195`, its comment; not run).
+  The player's side of a stall is T-09.
+- Fate: **done**.
+
+**T-42 · The disconnected-trigger poll has no live read** (L331)
+- In play: a tooltip whose trigger leaves the page.
+- Held against: read live on 2026-10-13 under the probe runner
+  (WORKLOG §120, "The question, measured"): the poll closes the tooltip
+  a frame after its trigger has left. What the read found is T-95.
+- Fate: **done**.
+
+### 5.3 A plan already names the fate (28)
+
+Signed as a class: the row's fate is the plan's, quoted. What a player
+would notice is in the second column; "nothing" means a developer's
+item.
+
+| id | TODO | the item, and what a player would notice | where a plan names it | fate |
+|---|---|---|---|---|
+| T-55 | L378 | The phase codes rewritten out of `src` comments; nothing | META-ROADMAP §Round 8.5, "The source-comment rewrite" | **8.5**, each subsystem's comment pass |
+| T-26 | L246 | The `npm audit` debt; nothing shipped. Nine advisories at §119's close, all build and test tooling by package name (WORKLOG "The close of §119") | §Round 8.5, "A dependency phase"; Round 12, "The toolchain bump (the Vite major + the `npm audit` debt)" | **8.5**, the dependency phase, which counts it again; what only a major clears stays Round 12's |
+| T-90 | L762 | The test loops not yet read for the hang; a hook that hangs where it should fail | the item ("For the tests phase"); census 3.5 | **8.5**, the tests phase. A search gives 51 to 53 `while (` lines by pattern, against the item's 52 |
+| T-97 | L820 | A loaded run can miss a field the class defaults (F-2); nothing today | census 4.10, call 11 | **8.5**, the run phase, if call 11 is yes. Lean yes: the test, and the one assignment that turns it green, under the sim proof |
+| T-57 | L411 | Flyers float; a flyer bobs | Round 9, "The flyer's presentation … the float (TODO)" | **Round 9** |
+| T-70 | L580 | WATCH: Dis Pater's sentence holds at Escalation 3 by rounding; a daemon's text that could go false | Round 10's note, "the read of level 3, fewer bits, which waits on bit sinks (TODO "§117 riders")" | **Round 10** |
+| T-71 | L585 | Round a tithe's bits on the award; Escalation 3 to 5 would reach the richest economy | the same note; T-72 names it | **Round 10** |
+| T-72 | L591 | WATCH: Escalation 3 reads no harder on the board's arm | the same note; the coverage map's "level 3's read against bit sinks" | **Round 10** |
+| T-04 | L62 | A sound for the catapult's held fire | Round 11, "The final global feel/SFX sweep" | **Round 11** |
+| T-08 | L107 | A tell that a fleeing enemy cannot reach you | the same sweep | **Round 11** |
+| T-09 | L116 | An offer of a draw when a battle has stalled | the same sweep | **Round 11** |
+| T-12 | L148 | A stance that shows a unit is queueing, not stuck | the same sweep | **Round 11** |
+| T-14 | L163 | A sound at the catapult's launch | the same sweep | **Round 11** |
+| T-16 | L169 | Where a status tick's sparkle sits | the same sweep | **Round 11** |
+| T-17 | L171 | A trail on the rogue's dash | the same sweep | **Round 11** |
+| T-37 | L313 | More sounds, from the registry's candidate rows (not counted again here) | the same sweep, its sound half | **Round 11** |
+| T-56 | L398 | Ground moves' vertical motion smoothed, then the hop reopened once | the same sweep | **Round 11** |
+| T-58 | L422 | The rally X drawn as a terrain mark | the same sweep | **Round 11** |
+| T-53 | L367 | Glyph scale as a player setting | Round 11, "The board's accessibility dials" | **Round 11** |
+| T-54 | L368 | Yaw as a player setting, decided with a reason | the same | **Round 11** |
+| T-40 | L317 | Run-end stats beyond the fallen | Round 11, "Run-summary / post-run screen (… stats …)" | **Round 11** |
+| T-01 | L31 | The human gauntlet's cells open the starting event first; nothing. No `noevents` dial exists (a search of `src`, `tools`, `tests`) | Round 12, "Human gauntlet #2 … (closes the starting-event-vs-cell TODO)" | **Round 12** |
+| T-19 | L178 | Object pooling; smoother frames if a measurement says so | Round 12, "object pooling if frame-time measurement says so" | **Round 12** |
+| T-61 | L467 | One instance of the Electron shell per profile; two instances overwrite one store | the coverage map, "the shell's packaging, instance lock and store writes" | **Round 12** |
+| T-68 | L550 | Under Electron every write sends the whole store | the same row | **Round 12** |
+| T-69 | L566 | The packaged shell's notices | Round 12, "Electron packaging" | **Round 12** |
+| T-20 | L190 | A learned value model in place of the prior table; nothing | "Explicitly deferred": "The ML balancer rung — CLOSED unless the tabular prior drifts" | **drop**: the deferred list holds it |
+| T-45 | L338 | The map legend on a phone-width screen | "Explicitly deferred": "Mobile (… the phone-width map legend) — out until it can be playtested" | **drop**: the deferred list holds it |
+
+### 5.4 Proposed for Round 8.5, where no plan names it (12)
+
+Signed row by row. None changes what a player sees, and each names
+where in the round it goes.
+
+**T-24 · Unify the duplicated `chebyshev` helpers** (L237)
+- In play: nothing. The same three-line distance function is written
+  out in four sim files.
+- Held against: four identical bodies (`Pathfinding.ts:217`,
+  `Targeting.ts:801`, `focusTile.ts:37`, `targetingStrategies.ts:43`),
+  16 occurrences of `chebyshev(` between them with the four definitions
+  counted, beside `movement.ts:866`'s
+  `chebyshev = distanceBetween`. The census does not name it (a search
+  of this file before this section). The coverage map leaves it "in
+  TODO; land opportunistically".
+- Fate: **8.5**, the sim phase, as a seventeenth row of list B: four
+  functions out for one import, about twelve lines. Proof: sim. It is
+  the kind of duplicate the round is for.
+- Signed:
+
+**T-49 · Pin ARCHITECTURE's event catalog against `events.ts`** (L361)
+- In play: nothing. ARCHITECTURE's event table is prose that nothing
+  checks, and it sat one event short from §29c to §104.
+- Held against: `tests/docs.test.ts` names no event table (a search).
+- Fate: **8.5**, the tests phase: a key-set diff on every `npm test`.
+- Signed:
+
+**T-50 · Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (L362)
+- In play: nothing while the two agree. The stylesheet's font chain is a
+  hand copy of the one the font gate checks; if they part, the gate
+  checks a chain the page does not use.
+- Held against: no test names `--font-mono` or `FONT_STACK` (a search
+  of `tests`).
+- Fate: **8.5**, the tests phase.
+- Signed:
+
+**T-51, T-85 · `phase-stats`: a fix column by commit type, and its
+count under `--since`** (L364, L725)
+- In play: nothing. It is the instrument the round-close efficacy read
+  uses.
+- Held against: `process/welfare-and-efficacy.md:68-70` carries the
+  warning about the word-matched ratio. Round 8 read 135 commits there
+  against git's 196 (the item's numbers, not run again).
+- Fate: **8.5**, before the close's efficacy read, with Round 8's 196
+  as the known answer.
+- Signed:
+
+**T-62 · DESIGN's "Out of scope" list names as backlog what is built**
+(L482)
+- In play: nothing.
+- Held against: `DESIGN.md:822`, read 2026-10-13. Four lines are
+  struck; still plain are larger units, in-battle commands, audio, line
+  of sight, terrain and status effects, as the item says, and "Shop and
+  economy", which the item does not list and the ports built (§50).
+- Fate: **8.5**, at the close's docs pass, each line struck with its
+  phase after a check against ARCHITECTURE.
+- Signed:
+
+**T-83 · Two lines of the smoke were not read** (L703)
+- In play: whether a stranger's store on itch still holds its sections
+  days later, and whether other games' keys show from our frame in Edge.
+- Held against: HANDOFF's Cursor carries both. The upload was three
+  days ago, so the days-later line can be read now.
+- Fate: **8.5**, and the user's hands: the live page's Copy diagnostics,
+  and Edge's storage inspector on the frame. Nothing for a session to
+  build.
+- Signed:
+
+**T-84 · The probe runner's edges** (L717)
+- In play: nothing. Four frictions of `shell/electron/probe-cli.mjs`
+  and `__probe.drive`.
+- Held against: `shell/` has no proof across a commit (the oracle map),
+  so each fix is shown by a run.
+- Fate: **8.5**, with T-91, before the render and UI phase leans on the
+  runner.
+- Signed:
+
+**T-86 · Three tests time out at 5 s when anything runs beside the
+suite** (L729)
+- In play: nothing. A commit fails on a limit, and the failure does not
+  name load.
+- Held against: `store-guard`'s two walks have had a 30 s limit since
+  `0f61148`; the chaos test's seeds are as they were (the item).
+- Fate: **8.5**, the tests phase.
+- Signed:
+
+**T-87 · The friction log is a tracked file** (L736)
+- In play: nothing. Filing a line dirties the tree, which holds a box
+  and stamps a clip `-dirty`.
+- Held against: no plan names it. The next launch it would get in the
+  way of is Round 9's closing board.
+- Fate: **8.5**, at the close's welfare read, with the standing
+  decisions. Lean: build the untracked spool then.
+- Signed:
+
+**T-89 · Dead links in the docs** (L745)
+- In play: nothing.
+- Held against: run again today
+  (`scratch/118j-close/c6-all-links.mjs`): the five are still dead
+  (GOTCHAS to `AttackAction.ts`, PATHING to `trace-flips.ts`, TODO to
+  `DashAction.ts`, two in the 2026-09-13 welfare review). Of 888 misses
+  in all, six are in files outside `archive/`: the five, and one false
+  hit in ARCHITECTURE.
+- Fate: **8.5**, the close's docs pass: fix the five. Lean: leave the
+  archives, which were moved verbatim.
+- Signed:
+
+**T-91 · The page drive does not notice a phase whose scene never
+mounts** (L775)
+- In play: nothing today. It is the missing proof for which screen a
+  phase shows.
+- Held against: the oracle map lists "which scene a phase mounts" among
+  what has no proof (TESTING.md "The oracle map"; HANDOFF).
+- Fate: **8.5**, the first step of the render and UI phase: that phase
+  deletes in `Game.ts` and the scenes, and this gives it a proof it
+  lacks. It adds dev code to the probe kit, as §119's instruments did.
+- Signed:
+
+### 5.5 A round proposed, where no plan names one (44)
+
+Signed row by row. "Added" on every row here: signing writes the line
+into META-ROADMAP.
+
+#### Round 9 (15)
+
+**T-03, T-28 · A coverage guard for `roster-table.json`, and the table
+compacted** (L53, L300)
+- In play: nothing. A `--roster=sampled` read draws from a table of
+  21,519 rows and 4.7 MB (the item's numbers), whose membership can
+  drift with no test failing.
+- Held against: `tests/fuzz/roster/rosterTable.test.ts`'s 14 tests pin
+  the parser, the builder and the sampler; none holds the table's
+  archetypes against the draftable set (its test names, read). No plan
+  names either item.
+- Fate: **Round 9**, before its closing board. The round adds
+  archetypes, which is when membership drifts, and that board is the
+  next sampled read. One step, as T-28 says.
+- Signed:
+
+**T-11 · Renderer position-reconciliation sweep** (L128)
+- In play: a sprite left standing off its tile until its next move.
+  Seen once (56e) and fixed at its cause.
+- Held against: no plan names it. Round 9's flyer presentation reworks
+  what the animator writes ("The animator also writes whole positions
+  on every move", META-ROADMAP).
+- Fate: **Round 9**, at that phase's audit: the full tier is the same
+  change, and the cheap tier, a DEV warning, is small there.
+- Signed:
+
+**T-29 · `box-drive.sh`: one artifact kind per cohort** (L301)
+- In play: nothing. A mixed queue held its box (92g).
+- Fate: **Round 9**, before its closing board, the next cohort.
+- Signed:
+
+**T-31, T-32, T-35, T-36, T-39 · The sheet's watches and the kits: the
+priest parity breach, the wall watch, power diversity by rarity, the
+AoE-status enemies' retune, the kit watches** (L304, L305, L308, L310,
+L315)
+- In play: the priest out-earns the soldier by 14 on the deploy shape;
+  the boss wall reads 0.459 against a signed 30 to 35; the banshee's
+  kind is "really annoying"; five archetypes price negative when given
+  free (the items' numbers, from BALANCE §94).
+- Held against: TODO's own words give each to Round 9 ("carried to
+  Round 9 with the kit watches"; "Round 9, after the §94 signing"), and
+  HANDOFF's Cursor lists the watches as riding the signed sheet.
+  META-ROADMAP's Round 9 names none of them (a search for "kit",
+  "priest" and "diversity" finds no line); it closes with a board
+  re-run.
+- Fate: **Round 9**, as one line: the kit and parity watches,
+  dispositioned at the closing board. T-35 moves every burn per turn,
+  so it lands before that board.
+- Signed:
+
+**T-34 · A won-turn reward shape** (L307)
+- In play: a decisive win still books your own dead.
+- Held against: no plan names it. Round 9 holds the casualty rule's
+  other feel items (Retreat, Optional deploy, Injuries).
+- Fate: **Round 9**, read with them.
+- Signed:
+
+**T-38 · `FX_REGISTRY`'s own coverage gap** (L314)
+- In play: an ability with no effect drawn, or a status tick with no
+  sound, ships with nothing failing.
+- Held against: no plan names it. Not run against today's content, so
+  its first run may list gaps that are sound calls.
+- Fate: **Round 9**, its first phase: the round authors a vampire's and
+  a special's abilities, and the guard should be on the path before
+  them. The other arm is 8.5's tests phase.
+- Signed:
+
+**T-47 · Pin the Reward ledger's index mapping headless** (L355)
+- In play: accepting rewards out of order takes the row that was
+  clicked. Proven by one pane walk.
+- Held against: `RewardScreen.resolve` still maps by hand
+  (`src/ui/RewardScreen.ts:235, 268`). Lifting it adds a function and a
+  test, so D2's "source lines do not grow" keeps it out of 8.5's trials.
+- Fate: **Round 9**, with XP rewards, which add an entry kind to the
+  same screen (inferred from META-ROADMAP's "`REWARD_ENTRY_KINDS` has
+  no XP").
+- Signed:
+
+**T-63 · A `reward:resolved` bus event** (L490)
+- In play: the reward screen asks the run every frame, and a replayed
+  clip has no pickup sound.
+- Fate: **Round 9**, with XP rewards: the same flow, and a new event is
+  a change of behaviour.
+- Signed:
+
+**T-92 · Power's level-up draw and its growth key** (L789)
+- In play: nothing. A recruit's level-up draws an eleventh time for a
+  stat that never grows.
+- Held against: the user gave it to "a later cleanup round" (A-14's
+  keep), one "that accepts the stream moving and re-runs the board".
+  Round 9 is one: it adds RNG sites and closes with a board re-run.
+- Fate: **Round 9**, in its bump window. Call 2 below.
+- Signed:
+
+**T-96 · A battle's snapshot drops a queued unit's seeded effects**
+(L816)
+- In play: nothing, since the game saves the run and not the battle.
+  The bot's look-ahead would fight a queued, buffed unit without its
+  buff (census F-1).
+- Held against: Round 9's ability-grant channel adds a field to the same
+  spawn template (`UnitTemplate.abilities?`, "the four sites union it").
+- Fate: **Round 9**, with it; a World bump.
+- Signed:
+
+#### Round 10 (5)
+
+**T-02 · The Dis Pater `--grant` read at n=80** (L42)
+- In play: whether holding the Idol of Dis Pater costs the player.
+- Held against: BALANCE's last read is −11.0 at n=72, "negative again,
+  thin again" (its 2026-09-05 entry, §92g); no `--grant` arm at the
+  floor is on record (a search of BALANCE). T-71 changes the tithe.
+- Fate: **Round 10**, after T-71: a read before it would be of an arm
+  about to change (principle 5).
+- Signed:
+
+**T-05 · Mapgen tool: empty-camp-pool hint** (L70)
+- In play: nothing. Volcanic's camp pool is still empty
+  (`config/terrain.json:55`), and the tool is kept (A-32).
+- Fate: **Round 10**, with "the volcanic camp resident", which fills the
+  one empty pool; dropped there if no theme is left without one.
+- Signed:
+
+**T-15 · Ability description text** (L167)
+- In play: an ability's row would carry a line of flavour.
+- Held against: `config/abilities.json` holds no `description` (a
+  search). Round 11's guard is "no new content".
+- Fate: **Round 10**: prose authored with the act's new abilities,
+  keyed for the string layer.
+- Signed:
+
+**T-33 · The three deep-end cost residuals** (L306)
+- In play: three deep-end fights cost 10.2 to 10.6 pool an instance
+  against a 9.3 line (the item's numbers).
+- Held against: "whenever those rows are next touched".
+- Fate: **Round 10**, whose extended sheet touches them.
+- Signed:
+
+**T-52 · Rounded plates for organic scenery** (L365)
+- In play: a tree would stand on a round ground plate.
+- Held against: it waits on organic scenery existing, and needs a field
+  per mark, which Round 10's guard sends back to a Round 9 sibling
+  phase.
+- Fate: **Round 10**, with fauna and scenery; dropped there if none is
+  authored.
+- Signed:
+
+#### Round 11 (12)
+
+**T-41 · The survivors end sequence, unexercised live** (L321)
+- In play: on a turn that runs out the clock, one orb flies for each
+  unit still standing.
+- Held against: the item says a read needs `chipMode: survivors`. The
+  code says otherwise: the shipped `capPenalty: survivors` pays that
+  rule on every capped turn, and `src/ui/HUD.ts:463-472` runs the
+  sequence then (`lossEventsAtEnd`, `src/run/chipRule.ts:196`). So it
+  ships today, and no browser read of it is on record. The
+  survivors-rule playtest it waited for is ruled out (A-11, the user).
+- Fate: **Round 11**, with T-09: one capped turn read in the user's
+  Firefox. Reworded, not dropped.
+- Signed:
+
+**T-44 · A hitsplat gallery dev key** (L337)
+- In play: nothing; a dev chord that shows one of every hitsplat kind.
+- Held against: `src/dev` has none (a search).
+- Fate: **Round 11**, built first as the feel sweep's instrument.
+- Signed:
+
+**T-46 · The deep water's band constants by eye** (L340)
+- In play: how strongly deep water's bands read.
+- Fate: **Round 11**, the feel sweep.
+- Signed:
+
+**T-59 · The overlays trail a camera move by one frame** (L447)
+- In play: nothing while the fitted view is the only one; bars would
+  lag the board under a moving camera.
+- Fate: **Round 11**, with the yaw decision (T-54), its first consumer.
+- Signed:
+
+**T-66 · Some text may be too small at the default size** (L520)
+- In play: the events, the objective buttons and the hitsplats, by the
+  user's read.
+- Held against: the user wants player feedback first, and no stranger's
+  finding is on record (HANDOFF).
+- Fate: **Round 11**, and asked at each round's playtest until then.
+- Signed:
+
+**T-67 · A key's name is its US label** (L541)
+- In play: on AZERTY the key marked A reads as Q.
+- Fate: **Round 11**, with the tutorial's "registry-derived key labels".
+- Signed:
+
+**T-74, T-75, T-77 · A smaller window than 1280×720; the battle's unit
+cards cover the board; at 150 % text a 720p window breaks down** (L621,
+L626, L646)
+- In play: at 1024×576 the enemy's cards cover half the board; at 150 %
+  text a 720p window cuts a banner's name and scrolls a screen (the
+  items' measurements).
+- Held against: the user: "closer to a full round"; "at some point,
+  we'll need to rework things". No plan names it.
+- Fate: **Round 11**, the nearest charter (UI only, the accessibility
+  dials), sized at its kickoff, with T-75's instrument first. Call 5
+  below: it may want a round of its own.
+- Signed:
+
+**T-78 · The battle's hop chip does not fade** (L663)
+- In play: one chip appears and goes at once while the panes beside it
+  fade.
+- Held against: `src/ui/HUD.ts:253` still gives it
+  `chip hud-hop screen-fade`. A player would see the fix, so it is not
+  8.5's.
+- Fate: **Round 11**, the feel sweep.
+- Signed:
+
+**T-82 · Last run exports a finished run only** (L696)
+- In play: a player reporting a bug mid-run has only Export everything.
+- Fate: **Round 11**, with the run summary's export surfaces.
+- Signed:
+
+**T-95 · A tooltip leaves with its screen** (L804)
+- In play: a tooltip stays whole for about 190 ms over a screen that is
+  fading out.
+- Held against: census A-22 keeps `closeTooltip` and
+  `openTooltipTrigger` for it.
+- Fate: **Round 11**, with a read in Firefox.
+- Signed:
+
+#### Round 12 (12)
+
+**T-93, T-07, T-48, T-88 · The URL parameters, reviewed and simplified;
+`--sector-hops` in the run-config tool; a forced encounter id that
+matches no node says nothing (filed twice)** (L794, L100, L360, L741)
+- In play: nothing a player meets. 17 URL parameters (census 1.5).
+- Held against: the user gave T-93 to "a later cleanup round" (A-19's
+  keep). Of T-07, the sweep page's half closes with its signed deletion
+  (A-32), and the run-config tool still speaks `--hops` alone
+  (`tools/run-config/cli.ts:79`). T-48 and T-88 are one fact filed at
+  §102 and again at §117.
+- Fate: **Round 12**, as one item: which dials a shipped build answers
+  is a ship question, since the desktop build has no address bar. Call 2
+  below.
+- Signed:
+
+**T-60, T-64, T-65 · The recorder: a clip of a continued run, a cue of
+which choice was made, and its open items at the §114 close** (L460,
+L497, L504)
+- In play: nothing. A dev tool, with no consumer today.
+- Fate: **Round 12**, with "Store-page assets", the recorder's next
+  use. The other arm is to drop all three.
+- Signed:
+
+**T-76 · The device pixel ratio is uncapped** (L637)
+- In play: fullscreen on a 4K laptop with integrated graphics would
+  draw at full device pixels.
+- Held against: `src/render/Renderer.ts:168`, as the item says. Left
+  for data at the user's call; none is on record.
+- Fate: **Round 12**, with the browser matrix and other hardware;
+  sooner if a stranger reports it.
+- Signed:
+
+**T-79, T-80, T-81 · The failure plate's three: a shader that fails to
+compile throws nothing; the battle plays on unseen while a lost context
+is waited for; a long error can't be scrolled by keyboard** (L672,
+L677, L683)
+- In play: a black board under a working HUD; four seconds of a fight
+  unseen; an error a keyboard player cannot read to its end.
+- Held against: none measured on a second machine (the items).
+- Fate: **Round 12**, with the browser matrix, where a driver that
+  rejects a shader would be met. T-81 is one line and could go to
+  Round 11's accessibility work.
+- Signed:
+
+**T-94 · A second language** (L797)
+- In play: the game ships English alone.
+- Held against: META-ROADMAP's deferred list says "Translations beyond
+  English — the layer ships; content does not"; the user asked for an
+  explicit to-do (A-24).
+- Fate: **Round 12**, as a decision point (which languages at the Steam
+  release), after Round 10's content and Round 11's tutorial text are
+  final.
+- Signed:
+
+### 5.6 Proposed dropped (8)
+
+Signed row by row. The read's test is here: wrong is a rider dropped
+that the user still wants.
+
+**T-06 · Hoist the display colour tables into config** (L81)
+- In play: nothing. The status and empower colours would move from a
+  source file to a JSON, for hot reload while tuning.
+- Held against: the item's premise is hand-authored hex tables. Since
+  116f every hue there is a palette name, picked again by the
+  colourblind palette, and the tables are built when the module loads
+  (`src/render/statusDisplay.ts:21-23`). A config file would hold names
+  that only the palette module can resolve. The coverage map gave the
+  item to Round 7, which closed without it.
+- Fate: **drop**. A lean: it was the user's own ask, at 78d.
+- Signed:
+
+**T-10 · Mercury coin-flip watch** (L126)
+- In play: the Idol of Mercury's coin flip, reported once as granting
+  the full redraw on every turn of a run.
+- Held against: closed not-reproducible on 2026-07-11, and nothing
+  since is on record. The probe's recipe is in
+  `archive/post-46-worklog.md` §51. The coverage map says "stay in
+  TODO".
+- Fate: **drop**; the archive keeps the recipe.
+- Signed:
+
+**T-18 · WATCH: quantized overlay-bar lift** (L177)
+- In play: HP bars would snap to two or three shared heights.
+- Held against: "Don't build it speculatively" (the item). No feedback
+  on a ragged row is on record since 2026-08-15.
+- Fate: **drop**; `archive/post-72-worklog.md` §79e keeps the numbers.
+- Signed:
+
+**T-25 · `Run.pauseAtTurnGates` two-path loop, a divergence watch**
+(L238)
+- In play: nothing. The game runs with the turn's gates on; a plain
+  fuzz run goes straight through.
+- Held against: the two paths are still two, and they part at two
+  lines of `Run.ts` (2407, 3254). The game, the journal replay, the
+  chaos driver and the rollout walker turn the gates on; the fuzz
+  harness does when its strategy acts at a gate
+  (`tests/fuzz/harness.ts:736`); a plain harness run and a bot's cloned
+  run leave them off (a search for the assignment). 120f read `Run.ts`
+  whole and proposed nothing on the loop.
+- Fate: **drop**: that read was the look the watch asked for, and the
+  split is two lines.
+- Signed:
+
+**T-27 · `runOne` / rollout-walker deliberate duplication, a divergence
+watch** (L268)
+- In play: nothing. The fuzz harness and the rollout walker each walk a
+  run with a copy of the same wiring, about a hundred lines.
+- Held against: census B-14 lists this pair as a lead for a trial
+  (three shared runs of 163 to 190 tokens, 2.6). The item records the
+  duplication as deliberate, by a verdict with two triggers to reopen
+  it, and neither is on record as fired.
+- Fate: **drop** from TODO into GOTCHAS, the home for a thing that must
+  not be re-litigated, and B-14's first clause is struck. Call 4 below.
+- Signed:
+
+**T-30 · A DP-tail redesign in one currency** (L303)
+- In play: nothing directly; how the bot prices the road ahead.
+- Held against: no plan names it. Its baseline is in BALANCE (§94g-3)
+  and its lesson in gotcha #132. No board has asked for it.
+- Fate: **drop**. A lean.
+- Signed:
+
+**T-43 · The pane's key tool sends no `KeyboardEvent.code`** (L333)
+- In play: nothing. A limit of a session's browser tool.
+- Held against: `process/browser-pane.md:323` states it.
+- Fate: **drop**: the fact has its home.
+- Signed:
+
+**T-73 · Two tabs changing two settings overwrite each other** (L596)
+- In play: with the game open in two tabs, a setting changed in one can
+  be put back by a change in the other.
+- Held against: "Unseen so far" (the item). The user dropped its twin,
+  a reward's taken rows across a reload, as rare and costing nothing.
+- Fate: **drop**. A lean.
+- Signed:
+
+### 5.7 Left inside ticked items
+
+The count sees an item's first line. Six closed items carry a condition
+or a leftover in their text; each is listed so that none is lost by the
+rule.
+
+- **The OS's reduced-motion query, never exercised live** (L322): "a
+  one-minute check with Windows' "Animation effects" off". The user's
+  hands; lean, at 120h's read or the round's close.
+- **The JetBrains Mono `⊞` / `⊠` swap** (L356): `PRIMARY_EXCLUDES`
+  stays until a release that closes the upstream issue is vendored.
+  Lean: the dependency phase looks at upstream once.
+- **The archetype editor still prints `rng`** (L159): a dev tool's
+  preview line. Lean: leave it.
+- **The shake policy's fraction against an absolute** (L323), **a
+  download that stalls and never fails** (L669), **a reward's taken
+  rows across a reload** (L477): each is a condition written in its
+  line ("if flat ever feels dull", "still unheard", "if players report
+  it"). Lean: they stay where they are.
+
+### 5.8 What this section's list cannot see
+
+- **Only TODO.** HANDOFF's Cursor carries items that are not in TODO
+  (the 7.5 close's two watches, the round-close list). The scratchpad,
+  the friction log and the session reports are the close's sweep.
+- **Most rows were not run.** A row's numbers are the item's unless it
+  says "read", "run" or "a search". The checks made are in WORKLOG §120,
+  120g, with what each showed.
+- **A search is not a negative** for the rows that say no plan names
+  an item: the search was of META-ROADMAP, by the words given.
+- **No row was held against the archived road maps or specs,** which
+  120c's read asked of a census row. A TODO item's fate is a schedule,
+  and its sources are the plans that are live.
+- **Whether a named round's line means this item.** For the feel
+  sweep's rows the match is by the sweep's own list of names; T-37 and
+  T-40 are matched by their subject.
+
+### 5.9 Calls for the user at 120h
+
+1. **The two classes** (5.2 and 5.3): five ticked, 28 confirmed as the
+   plans have them.
+2. **"A later cleanup round."** Two of the user's riders name one and
+   META-ROADMAP has none. Lean: no new round. T-92 goes to Round 9,
+   which moves the streams and re-runs the board anyway, and T-93 with
+   its three riders to Round 12.
+3. **A watch is none of the three fates.** Lean: T-10, T-18 and T-25
+   dropped, T-27 to GOTCHAS, and the sheet's watches (T-32, T-70, T-72)
+   stay with their boards.
+4. **B-14 against T-27.** The census proposes as a trial what a signed
+   verdict calls deliberate. Lean: strike B-14's first clause.
+5. **The layout rework** (T-74, T-75, T-77): in Round 11, or a round of
+   its own.
+6. **T-41 reworded,** as a read of one capped turn.
+7. **T-24 as a row of list B.**
+8. **The drops** (5.6), row by row.
+9. **What signing writes.** Lean: TODO rewritten in one docs commit,
+   one section a round, the ticked lines gone (git keeps them), and
+   META-ROADMAP's Rounds 9 to 12 each gaining a line per added group.
+10. **5.7's first two,** the user's one-minute check and the font's
+    upstream.

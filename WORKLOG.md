@@ -3121,3 +3121,106 @@ than that, so the session hands off under the line
 is the session's own call, said in its report to the user and not put
 as a question. 120g and then 120h's stop start in a fresh session, from
 the Cursor. Nothing of the session's is running.
+
+### 120g — the TODO pass's list (2026-10-13, session 462d21b3)
+
+Started at `cdd5c81` with the tree clean. The suite and the type check
+were not run at the start; the hook ran both at the step's commit. The
+result is [round-8.5-census.md](round-8.5-census.md), section 5: rows
+T-01 to T-97. Nothing under `src`, `config` or `tests` changed, and
+TODO itself is as it was: the kickoff's seventh call leaves the doing
+to the phases, and what signing writes is 5.9's ninth call. The read is
+`batch`, at 120h, so the step is ◐.
+
+**Step zero.** The cut says 91 open items. Counted by a written rule
+(an item is a top-level bullet, closed if its first line holds `[x]` or
+a tick): **97 open of 184.** The same rule at the kickoff's commit
+gives 91 of 178. The six since are the four the census's reads added
+and 120f's two, which were written with no checkbox and which a search
+for `- [ ]` does not see. The premise held: the Cursor had said the
+reads and 120f added to the list.
+
+**Built**, in `scratch/120g/` (not tracked; this machine only).
+
+- `items.mjs`: TODO's items by that rule, with each open item's id,
+  line and title. It refuses to print unless a planted file of six
+  bullets parses to its known answer (an indented box, a tick on a
+  later line, a bullet with no box, a title that wraps), and unless its
+  count agrees with a plain search of the file. `--at=<ref>` reads
+  another commit's TODO.
+- `tally.mjs`: reads section 5 as written and fails unless every open
+  item is a row exactly once, each row's line is the item's line in
+  TODO, each fate is one of the seven, each sub-section's count is its
+  ids, and 5.1's table is the tally. It refuses to print unless a
+  planted section with a wrong line, a repeated id, a missing id, a bad
+  fate and a wrong count reports all five. The section's numbers are
+  its output: 82 rows, 97 items.
+- `section5.md` and `append.mjs`: the section as drafted, and the
+  script that appended it after checking its anchors.
+
+**How each row was weighed.** The item read in TODO; META-ROADMAP's
+Rounds 8.5 to 12, its coverage map and its deferred list read whole,
+and searched by word for the items no line seemed to name; the census
+searched by twenty of the items' subjects; the code or the config
+read or searched where an item states something about it today. 33
+rows were settled that way (5.2 and 5.3) and 64 are proposals.
+
+**What the checks caught.**
+
+- *Five items are already built or answered.* The card's rarity
+  accents (four rules in `ui.css`), live save and load, the tooltip
+  poll's live read (taken at 120e's read), the cap's rule (the casualty
+  experiment), and hop-gating as a mechanism: a sector's layout entry
+  takes `minHop` and `weight`, and the config uses the first on no
+  layout.
+- *T-41's premise is wrong against the code.* The item says a browser
+  read of the survivors end sequence needs `chipMode: survivors`. The
+  shipped `capPenalty: survivors` pays that rule on every capped turn,
+  and the HUD runs the sequence then, so it ships and is unread. The
+  row is reworded, not dropped as 120c's read had it for this list.
+- *B-14 against T-27.* The census lists the harness and the rollout
+  walker as a lead for a trial; TODO records that duplication as
+  deliberate, with two triggers to reopen it. 120f's seventh call said
+  its rows past B-03 were not held against the plans.
+- *TODO gives five items to Round 9 and META-ROADMAP's Round 9 names
+  none of them* (the kit watches, the priest, the wall, power
+  diversity, the AoE retune).
+- *The `chebyshev` duplicate is not in the census:* four identical
+  bodies in `src/sim`.
+- *T-06's premise changed at 116f:* the colour tables hold palette
+  names now, not hex.
+- *Two claims in the draft were wrong and were corrected before the
+  section was appended.* That the harness leaves the turn gates off
+  came from a search of `src` alone; `tests/fuzz/harness.ts:736` turns
+  them on when a strategy acts at a gate. And "16 calls" of `chebyshev`
+  was 16 occurrences with the four definitions among them. A third was
+  unsupported: that every dead link but the five is under `archive/`
+  (a filter on the word hid links into it); counted by the file that
+  holds the link, six are outside.
+
+**Calls made here, for the read at 120h.**
+
+1. *Four fates, not three:* done already, done in 8.5, given a round,
+   dropped; and for a round, whether a plan names it or signing adds
+   it.
+2. *Rows merged where items are one subject* (the sheet's five
+   watches, the layout's three, the failure plate's three, the
+   recorder's three, the dials' four, two pairs): 82 rows for 97 items.
+3. *5.2 and 5.3 are put as classes;* the rest row by row.
+4. *What is left inside six ticked items is listed* (5.7), since the
+   rule counts by an item's first line.
+5. *No row was held against the archived road maps or specs:* a TODO
+   item's fate is a schedule, and the live plans are its sources.
+
+**Not verified.** Most rows' numbers are the items' own and were not
+run again. No `--grant` read, no board and no probe was run. Whether
+today's content passes the guard T-38 asks for was not tried. Whether
+`phase-stats` still reads 135 for Round 8 was not run. The two smoke
+lines (T-83) and the OS's reduced-motion query (5.7) are the user's to
+read. "No plan names it" is a search of META-ROADMAP by the words each
+row gives, not a reading of every line against every item.
+
+Readings, by the tool's clock: **88,385** at 20:51 after HANDOFF;
+**214,545** at 20:58 with the cut, `process/planning.md`, TODO read
+whole, META-ROADMAP's Rounds 8.5 to 12, the spec and the first checks;
+**288,064** at 21:08 with the section appended and tallied.

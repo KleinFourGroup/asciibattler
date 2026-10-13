@@ -215,7 +215,8 @@ header says the same thing the search found.
 - Evidence: no unit sets either; `src/config/units.test.ts` reads them at
   four lines to show the schema parses them. The schema's comment: "Flight
   (deferred build) … Inert until flight builds." META-ROADMAP's flight is
-  a per-unit `traversal` profile shared with the marine (line 102); the history is below.
+  a per-unit `traversal` profile shared with the marine; the history is
+  below.
 - Gotchas: none.
 - The history, asked for at the read. Two calls, each signed by the
   user. **2026-06-28**, the Cluster 2 kickoff
@@ -231,7 +232,8 @@ header says the same thing the search found.
   META-ROADMAP v2: flight and the marine share a `traversal` profile,
   co-location for flyers and the anti-air matrix are "out until a
   consumer names them", and the lock "is re-audited at that phase's step
-  zero" (lines 102, 843, 1108).
+  zero" (its signed decisions, Round 9's Traversal entry, and
+  "Explicitly deferred / out").
 - So `ignoresTerrain` is what a traversal profile replaces. `layer` is
   not: Round 9 ships `targetsLayer`, and the road map does not say what
   it reads. The census first said the plan replaces both keys, which
@@ -272,7 +274,7 @@ header says the same thing the search found.
 - Evidence: none of the 51 pages sets it; only the event editor reads it.
 - Gotchas: none.
 - Fate: **keep.** META-ROADMAP Round 10 names "the event `art?`/fx
-  seam's first consumers" (line 945).
+  seam's first consumers".
 - Signed:
 
 **Declared and never built.**
@@ -348,7 +350,7 @@ unselected position ships and is run by tests only.
   capped turn, so the survivors' numbers stay needed whatever happens to
   the switch.
 - The road map: Round 9's Retreat is "coherent ONLY under the casualty
-  chip rule" (META-ROADMAP line 786), so a planned mechanic already
+  chip rule" (META-ROADMAP Round 9, Retreat), so a planned mechanic already
   assumes the shipped position.
 - Fate: **trial**, in the run phase: one rule in place of two switches.
   `chipRule.ts` was not read whole, so what it would remove is not
@@ -364,7 +366,7 @@ unselected position ships and is run by tests only.
   run log holds a paired read of 0.1 against 0 that ends "fatigue back
   to 0".
 - Gotchas: none.
-- The road map names it. META-ROADMAP Round 9 (line 776): "Fatigue — the
+- The road map names it. META-ROADMAP Round 9: "Fatigue — the
   design round (`fatiguePerStack` is 0 …) Free-form; exit = a playtest
   verdict; no pre-commitment … this round inherits whatever that
   decided." The census first leaned "delete" here without having looked

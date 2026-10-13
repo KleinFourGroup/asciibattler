@@ -3111,3 +3111,13 @@ Readings, by the tool's clock: **89,388** at 18:03 after HANDOFF;
 **193,484** at 18:12 with the cut, the spec, the census, the oracle map
 and both instruments run; **277,673** at 18:15 with `World.ts` read;
 **420,974** at 18:19 with `Run.ts` read and the counts taken.
+Reading **487,353** at 18:33 on 120f's
+commit, `e9932fe` (the hook: 3765 of 3765 in 261 files, the smoke not
+run). The step cost about 390k, some 210k of it the two files read
+whole. **The hand-off before 120g:** about 60k is left under the line,
+and 120g weighs each open TODO item against the plans, which is larger
+than that, so the session hands off under the line
+(`process/planning.md`, "Context: the halt and the hand-off line"). It
+is the session's own call, said in its report to the user and not put
+as a question. 120g and then 120h's stop start in a fresh session, from
+the Cursor. Nothing of the session's is running.

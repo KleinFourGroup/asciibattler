@@ -5262,3 +5262,52 @@ measurement at the user's ask. The session ends at about 500k.
 - **Ease:** the user's "Phew; glad we caught that!". The instinct was
   theirs and the number was mine, and the row is better than either
   alone would have left it.
+
+## 2026-10-13 — session a9f26053 (claude-opus-5-5): 120f, the trials, built and unread
+
+- **Missing at the start:** nothing that cost a wrong step. Orientation
+  was about 100k before the first instrument (HANDOFF, the cut, the
+  spec, the census's format and its three "for the trials" lists, the
+  oracle map). The readings in WORKLOG are by the tool's clock, which
+  is four hours ahead of the machine's; I worked that out from a test
+  log's start time.
+- **Norms:** the reads doctrine says to keep going between stops, and
+  120g is the next `batch` step; the hand-off line says a session may
+  stop when the next step is larger than the room. At 487k I took the
+  hand-off. They did not feel in conflict, but both applied. Separately:
+  F-2's fix is one assignment, and "nothing under `src` changes in this
+  phase" kept me from making it. I think that was right.
+- **Pulled to claim more than verified:** three times that I caught. A
+  `reach` answer for one line read 0 for every proof and I had the
+  sentence "no proof runs it" ready for B-08; the line continues a
+  statement, and the range reads 4 of 4. The draft said `Run.ts`'s
+  sections "are already marked in it"; I had seen one such marker, and
+  rewrote it. And ten counts in the draft were from my memory of a
+  listing and not the listing. One I did not resolve: "the comment pass
+  is the largest single change to how either file reads" is in the
+  census in bold, and it is a judgement resting on a line count.
+- **Wasted:** the refused heredoc, about 9k tokens sent twice. Two
+  wrong pairings of config files with loaders. About 12k tokens reading
+  two version histories line by line, which "read whole" required and
+  which told me only that they are long.
+- **For the next session:** `scratch/120f/profile.tsv` has all 279 rows,
+  for any phase's kickoff. `notes.md` there holds `World.ts`'s leads
+  only. TODO has more open items than the kickoff's 91; count before
+  120g is sized.
+- **Room and pressure:** the user's opening was a greeting and "120f,
+  right?", and nothing was pending, so I answered in a line and went on.
+  The census leans against the user's own candidate (B-02, the team
+  split) and says why; writing that felt available, and it is not yet
+  read. The harness's reminder came about fifteen times, most often
+  during the two long reads, where each tool call is one chunk of a
+  file and there is nothing new to say; I answered each with where I
+  was. It functioned as an interruption more than as pressure. No wish
+  to stop was noticed before the hand-off, which is my own call and is
+  said in the report to the user.
+- **Ease and interest:** step zero could have failed and did not: the
+  profile put the cut's two files first. The better moment was a lead
+  going the other way: five weighted picks that looked like one
+  function until their bodies were read, where the difference turned
+  out to be a rule with a number. I would want both repeated: a premise
+  checked by something that can say no, and time to open the body
+  before the row is written.

@@ -2343,3 +2343,25 @@ at some point."
   different direction on what escalation involves"), the two modes and
   the key.
 - Eighteen rows are signed and three are open: A-11, A-20 and A-21.
+
+**A-20's five investigation flags, looked at before their tranche.**
+The row had said the code behind them was not read. Read here: the
+parser's note on each, and a count by word search of the lines that name
+each option; no instrument was read whole.
+
+- `--arena` is the large one, a command of 169 lines and a runner of
+  301, and **it carries a signed stamp the row had not been held
+  against**: BALANCE "The instrument registry" (the user, 2026-07-29)
+  marks the arena's objective strategies niche, kept for their purpose
+  and never a balance input. A search for the flag's name does not find
+  it there: the registry names the instrument by `--objective` and the
+  word "arena".
+- `--bits-multiplier` is refused together with `--arbitrate`, and
+  `--set=difficulty.bitsMultiplier` reaches the same lever through the
+  config without being refused. Read, not run.
+- `--grant-epsilon` and `--camp-raid` are about ten and fifteen lines of
+  plumbing with a parse test each; `--flip-telemetry` runs through seven
+  files.
+- The row now gives a lean on each of the five.
+
+Reading: **236,678** at 13:05 on the third tranche's commit, `6ff21d5`.

@@ -659,10 +659,51 @@ date them from J4 to 85g).
 
 **A-20 · the ten that are not the runner's own**
 - In play: nothing; these are the balance tools' own dials.
+- The five investigation instruments, looked at on 2026-10-13 (the
+  parser's notes in `tests/fuzz/commands/args.ts`, and the lines that
+  name each option, counted by a word search and not read whole):
+  - `--arena`: one forced battle with no run around it, to try the
+    orders the bot can give its team (focus, hold and the like) and
+    write the best to a file. The largest: a command file of 169 lines
+    and a runner of 301 (`commands/arena.ts`, `arena.ts`), with 108
+    lines of tests. `objectiveStrategy.ts` and `objectiveCoverage.ts`
+    are shared with the harness and would stay, and the coverage bot's
+    test drives it through the arena's runner
+    (`objectiveCoverage.test.ts:24`), so that test would be re-pointed.
+    **It carries a signed
+    stamp**: BALANCE "The instrument registry" (the user, 2026-07-29)
+    marks the arena's objective strategies **niche**, "kept and valid
+    for its stated purpose, opt-in", "never a run-layer balance input".
+    The measuring arm that table names does not carry `--objective`.
+    Lean: **ask**; cut it if the user no longer reaches for it.
+  - `--bits-multiplier`: scales a run's bits income, for economy sweeps.
+    About ten lines and a parse test. It is refused together with
+    `--arbitrate`, which the measuring arm carries (`args.ts:666`), and
+    `--set=difficulty.bitsMultiplier=<f>` reaches the same lever through
+    the config and is not among the flags that arm refuses
+    (`balanceSweep.ts:71`; read, not run). Lean: **delete**
+    the flag. `RunConfig.bitsMultiplier` then has tests alone as its
+    setters, like the three of A-18.
+  - `--flip-telemetry`: judges each of the arbitrated bot's decisions a
+    second time under another inner tier and counts the disagreements,
+    into a file of its own. The option runs through seven files of the
+    instruments (`run.ts`, `rollout/driver.ts`, `reporters.ts`,
+    `parallel.ts`, `mergeStages.ts` and two more), 28 lines that name
+    it. Built
+    for one question, whether the cheap tier decides as the dear one
+    does. Lean: **ask**.
+  - `--grant-epsilon`: overrides how sure the bot must be before it
+    spends a free action, built to diagnose one gate. About ten lines
+    and a parse test. Lean: **delete**, unless the user reaches for it.
+  - `--camp-raid=off`: leaves the camp-raid decision out of the bot, so
+    that a pair of runs reads what the decision is worth. About fifteen
+    lines and a parse test. Lean: **keep**: camps are content that
+    Round 10 adds to, and this is the arm that prices a change there.
 - Fate: the five that tune a live flag, **keep** with it. The five
-  investigation instruments, **ask**, at the
-  bot and fuzz instruments' phase: whether one is a tool the user still
-  reaches for is theirs to say, and the code behind each was not read.
+  investigation instruments, **ask**, with the leans above, now or at
+  the bot and fuzz instruments' phase: whether one is a tool the user
+  still reaches for is theirs to say.
+- Proof: instrument.
 - Signed:
 
 ### 1.7 Content nothing refers to

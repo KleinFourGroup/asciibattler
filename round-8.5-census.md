@@ -1,7 +1,8 @@
 # Round 8.5 census
 
 **Status: being built; section 1 is read and signed, and sections 2 and 3
-(120d and 120e, written 2026-10-13) wait for their read at 120e's stop.** Signed (the
+(120d and 120e, written 2026-10-13) are being read at 120e's stop: of
+section 3, A-33, A-34, A-36 and A-37 are signed.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -1226,8 +1227,9 @@ So the duplicates go to list B, as leads (2.6).
 
 ## 3. The tests, by file (120e)
 
-Written 2026-10-13 and **not yet read**. Rows A-33 to A-37 are open. What
-the user is asked is in 3.7.
+Written 2026-10-13. **Read in part:** A-33, A-34, A-36 and A-37 are signed,
+with where the tests phase starts (the user, 2026-10-13). A-35 and the
+kept classes (3.7, calls 3 and 6) are open.
 
 A fifth proof recurs in this section:
 
@@ -1337,7 +1339,7 @@ healer never healed".
 - Fate: **ask**, item by item.
 - Proof: test. For the first three there is no behaviour to plant a
   break in.
-- Signed:
+- Signed: **delete** `tests/smoke.test.ts`, the fixture's test (the fixture stays) and `levelCapMigration.test.ts`; `selection.test.ts` goes with A-09 (the user, 2026-10-13: "I'm on-board with all of those leans in this tranche; signed!").
 
 **A-34 · two test files that drive the same code** (`src/sim/actions/multiTick.test.ts`, 204 lines; `phaseTimeline.test.ts`, 210 lines)
 - In play: nothing a player meets. Both build a made-up charge attack and
@@ -1352,7 +1354,7 @@ healer never healed".
 - Fate: **ask**. Lean: move the cooldown test into `phaseTimeline` and
   delete the rest of `multiTick`, in the sim's phase.
 - Proof: test.
-- Signed:
+- Signed: the cooldown test moves into `phaseTimeline` and the rest of `multiTick` is **deleted**, in the sim's phase (the user, 2026-10-13, in the same words). `phaseTimeline`'s bodies are read there first.
 
 **A-35 · ten read-backs on a class that only tests call**
 - In play: nothing. Each hands a test a value the game keeps to itself.
@@ -1394,7 +1396,7 @@ healer never healed".
   no run, which is the row's evidence and not its proof. For the other
   three deletions: the type check, the suite and the page drive, since a
   method ships whether or not it is called.
-- Signed:
+- Signed: **delete** the registry, `rebind()`, `label` and `TraceRecorder.dispose()`, each with its tests as the table says; **keep** `World.shove()` for Round 9 (the user, 2026-10-13, in the same words).
 
 ### 3.4 The smoke tier
 
@@ -1423,7 +1425,7 @@ not a finding.
   written to cost.
 - Proof: none is needed to move a test between tiers; the test is its
   own.
-- Signed:
+- Signed: the rule **stays**, and the test comes off every sim commit by a change to the hook, at the instruments' phase (the user, 2026-10-13, in the same words).
 
 Behind it the smoke's long files are `rollout/arbitratedStrategy.test.ts`
 (58 s, 45 tests), `mergeStages.test.ts` (56 s), `harnessDaemonStats`
@@ -1439,7 +1441,8 @@ each). None was read.
   read out after every test through Node's inspector, which is this
   step's runs again and a new reader, with this section's list as its
   known answer; or the same in one run of the suite. The second is
-  the session's lean, as the tests phase's first step. By the words in
+  the session's lean, as the tests phase's first step, and **signed**
+  (the user, 2026-10-13). By the words in
   their names, and no more than that: 476 tests name a no-op, a zero or
   an empty case, 400 a shipped or default value, 339 a rejection, 190 a
   round trip, 161 determinism or byte identity (a name can be in two),
@@ -1474,12 +1477,12 @@ each). None was read.
 
 ### 3.7 Calls for the user at this stop
 
-1. **A-33,** four test files, item by item.
-2. **A-34,** the pair that drives the same code.
+1. **A-33,** four test files, item by item. *Signed.*
+2. **A-34,** the pair that drives the same code. *Signed.*
 3. **A-35,** the ten read-backs: kept as a class.
-4. **A-36,** five things only tests drive, item by item.
-5. **A-37,** the test that sets the smoke's length.
+4. **A-36,** five things only tests drive, item by item. *Signed.*
+5. **A-37,** the test that sets the smoke's length. *Signed.*
 6. **The 60 at the bottom that hold a rule, and the 197 above them:**
    kept as files.
 7. **Where the tests phase starts** (3.5): a list by test, and by which
-   of the three ways.
+   of the three ways. *Signed: a list by test, the second way.*

@@ -2807,3 +2807,26 @@ Readings, by the tool's clock: **87,742** at 15:23 after HANDOFF;
 15:59 with the census's section, this entry and the Cursor written;
 **372,730** at 16:01 on 120e's commit, `8b37ac3` (the hook: 3765 of 3765
 in 261 files). The step cost about 280k.
+
+**The read, the first tranche** (the user, 2026-10-13, on the stop's
+report, which held eleven items of section 3 and one question, each with
+the session's lean): "Alright, Claude! 😁 Great work! I'm on-board with
+all of those leans in this tranche; signed!" So:
+
+- **Signed for deletion:** `tests/smoke.test.ts`,
+  `tests/gauntlet/humanFixture.test.ts` (the fixture stays) and
+  `src/run/encounters/levelCapMigration.test.ts`, with
+  `src/config/selection.test.ts` going with A-09 (A-33); `multiTick.test.ts`
+  but for its cooldown test, which moves into `phaseTimeline` (A-34);
+  the run's trigger registry, `Keybindings.rebind()`,
+  `PlaybackSpeed.label` and `TraceRecorder.dispose()`, each with its tests
+  (A-36).
+- **Signed kept:** `World.shove()`, for Round 9 (A-36).
+- **A-37:** the `--jobs` parity rule stays and its test comes off every
+  sim commit, by a change to the hook at the instruments' phase.
+- **The tests phase starts with a list by test,** made by reading the
+  coverage out after each test inside a file's run, with 120e's list by
+  file as its known answer.
+- *Not in that tranche, by the session's own order:* A-35 (the ten
+  read-backs), the classes kept as files, and all of section 2. 120d
+  and 120e stay ◐.

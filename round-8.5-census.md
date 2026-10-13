@@ -1,8 +1,9 @@
 # Round 8.5 census
 
-**Status: being built; section 1 is read and signed, and sections 2 and 3
+**Status: being built; section 1 is read and signed, sections 2 and 3
 (120d and 120e, written 2026-10-13) were read at 120e's stop and are
-signed, row by row.** Signed (the
+signed, row by row, and section 4 (120f, the trials, written
+2026-10-13) is unsigned and read at 120h.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -21,8 +22,8 @@ How each number was counted, and what was checked and what was not, is in
 ## The format
 
 A candidate is one row with an id. **A-nn** is list A, what a search can
-settle before the code is touched. **B-nn** will be list B, the trials
-(120f). A row holds:
+settle before the code is touched. **B-nn** is list B, the trials
+(section 4). A row holds:
 
 - **what** it is and where it is declared;
 - **in play**: what it does in the game today, and what a player would
@@ -1503,3 +1504,504 @@ each). None was read.
    kept as files. *Signed.*
 7. **Where the tests phase starts** (3.5): a list by test, and by which
    of the three ways. *Signed: a list by test, the second way.*
+
+## 4. The trials (120f)
+
+List B: what has to be tried before anyone can say it is simpler (the
+spec's D1, Track B), each with what it expects to remove, counted, and the
+proof that covers it. **Unsigned; read at 120h.** Nothing was tried: a
+row's "expects to remove" is a count of sites, not a diff. Built from the
+profile of all 279 source files, a reader for special cases, the
+near-duplicate clusters of 2.5, and `World.ts` and `Run.ts` read whole.
+The bar a kept trial has to pass is the spec's D2: the same behaviour by a
+named proof, source lines that do not grow, no parameter that only tells
+the former halves apart, and one thing fewer a reader has to know.
+
+### 4.1 What was counted
+
+| | count | how |
+|---|---|---|
+| source files profiled | 279, 63,458 lines | every non-test `.ts` under `src`; the kickoff's two totals reproduced |
+| of those lines, comments | 25,659 (40 %) | a line that opens or continues a comment; 4,270 more are blank, 33,529 hold code |
+| comparisons against a string literal | 619, and 243 `case` labels | by the type checker's tree; 108 `typeof` tests left out |
+| absence tested on a property | 261 | `x.y === null` or `undefined`, a local left out |
+| near-duplicate clusters inside `src` | 99 | 2.5's finder with names, strings and numbers read as one word each, 80 tokens or more, every copy in a non-test file |
+| files read whole | 2 of 279, 7,981 lines | `Run.ts` 4,888 and `World.ts` 3,093, an eighth of the lines |
+
+### 4.2 The profile
+
+Each file by lines, commits (renames followed), fix commits (a subject
+that opens `fix` or names a `-post` step), GOTCHAS entries that cite it or
+that it cites, and special-case sites (4.3). The order is the sum of the
+five ranks. It is a reading order for each later phase's kickoff and not
+a measure: the five move together, and nothing in it says a file is bad.
+
+| # | file | lines | commits | fixes | gotchas | special |
+|---|---|---|---|---|---|---|
+| 1 | `sim/World.ts` | 3,093 | 96 | 3 | 18 | 27 |
+| 2 | `run/Run.ts` | 4,888 | 129 | 2 | 18 | 68 |
+| 3 | `render/BattleRenderer.ts` | 2,122 | 78 | 12 | 6 | 13 |
+| 4 | `Game.ts` | 1,287 | 107 | 2 | 6 | 22 |
+| 5 | `sim/Targeting.ts` | 803 | 23 | 4 | 6 | 23 |
+| 6 | `ui/HUD.ts` | 993 | 51 | 5 | 1 | 15 |
+| 7 | `render/TerrainRenderer.ts` | 872 | 16 | 2 | 3 | 14 |
+| 8 | `sim/behaviors/MovementBehavior.ts` | 336 | 39 | 6 | 2 | 8 |
+| 9 | `run/NodeMap.ts` | 959 | 21 | 2 | 1 | 13 |
+| 10 | `render/Renderer.ts` | 608 | 26 | 2 | 5 | 4 |
+| 11 | `sim/movement.ts` | 866 | 17 | 3 | 2 | 3 |
+| 12 | `scenes/BattleScene.ts` | 364 | 61 | 8 | 5 | 1 |
+
+- The cut's two files are the profile's first two, so the whole reads
+  went where the ranking points.
+- **Fixes gather in drawing and movement, not in the two long files.**
+  `BattleRenderer` has 12 fix commits, `BattleScene` 8, `MovementBehavior`
+  6, `HUD`, `SupportMovementBehavior` and `FontAtlas` 5 each; `Run.ts` has
+  2 in 129 commits and `World.ts` 3 in 96. By folder: `src/sim` 35 and
+  `src/render` 33, `src/run` 5 (a commit counted once for each file it touched).
+- 213 of the 279 files have no fix commit, 224 no gotcha, and 163 no
+  special-case site. Half the lines are in the 39 longest files.
+- **Half of each long file is comment.** `Run.ts` is 2,393 comment lines
+  and 2,335 of code; `World.ts` 1,572 and 1,382. The comment pass (D4) is
+  the largest single change to how either reads, ahead of any trial here.
+
+### 4.3 The special cases, by what they test
+
+A special case is counted as a place where code asks "is this the one
+called X": a comparison against a string literal outside a `switch`. Each
+is filed under what is asked about and which one.
+
+| asked about | which | sites | files |
+|---|---|---|---|
+| a unit's team | `'neutral'` | 30 | 12 |
+| a unit's team | `'enemy'` | 10 | 7 |
+| a unit's team | `'player'` | 11 | 5 |
+| the team objective's mode | `'engage'`, `'atWill'` | 5, 9 | 5, 4 |
+| the run's phase | `'map'` | 13 | 3 |
+| the run's phase | `'battle'`, `'turn-intro'` | 6, 8 | 3, 2 |
+| a tile's kind | `'fire'` | 4 | 3 |
+
+- **The neutral team is the most spread special case in the code,** and
+  the absence test that goes with it leads its own list: `unit.campId`
+  is tested for null at 14 sites in 7 files, the next property at 5 in 3.
+  The user's candidate is where the counts point.
+- By vocabulary: the team at 51 sites in 15 files, the run's phase at 52
+  in 6 (and 13 `case` labels), tile kinds at 15 in 3.
+- **Source code almost never names a piece of content.** Of 619 compared
+  literals, three are ids in a config catalog, all on one line
+  (`render/fxRegistry.ts:137`: `burn`, `bleed`, `poison` as kinds of
+  hitsplat). No unit, ability, daemon, encounter or event is singled out
+  by a comparison.
+- 53 sites compare a `.kind` whose union has no name the reader can
+  print, in 26 files; they are dispatches on effect, reward and target
+  shapes, and were not read.
+
+### 4.4 The two files, read whole
+
+**`World.ts`.** 531 lines before the class, 224 of them one comment (the
+snapshot's version history); then the tick, damage, statuses, spawns,
+camps, objectives, the battle's end, and the snapshot. What the read
+found is rows B-01, B-02, B-07 to B-09, B-11, A-38, F-1 and the comment
+items of 4.7.
+
+**`Run.ts`.** 803 lines before the class, 240 of them the snapshot's
+version history; the class holds the map, ports, events, the encounter
+and turn loop, rewards, the deck, packets, the roster, and the snapshot.
+Every stored field is described twice, once on the snapshot's type and
+once on the class. Rows B-06, B-10, B-11, B-15, B-16, A-39, A-40, F-2.
+
+Both are long and neither read as tangled: each mutation goes through a
+named single site (`dealDamage`, `reapUnit`, `setPlayerHealth`, `addBits`,
+`appendRosterUnit`, `removeRosterUnit`, `seatActiveAction`), which fits
+the low fix counts. What is hard about reading them is length, most of
+it comment.
+
+### 4.5 List B
+
+**The user's two candidates.**
+
+**B-01 · The neutral team, step one: its two questions asked by name**
+- In play: A wall and a camp bandit are both on the neutral team. Code that needs to tell them apart asks whether the unit has a camp. Nothing a player sees changes in this row.
+- Evidence: `isInertNeutral` (scenery) is called at 16 sites in 11
+  files. Its twin `isActiveNeutral` (a camp member) is called nowhere
+  (A-25 kept it for this). Twelve places write one or the other out by
+  hand, a team test beside a `campId` test on the same or the next line
+  (`Targeting.ts` at six, `World.ts:2174`, `effects/targeting.ts:96`,
+  `spriteColor.ts:56`, `BattleRenderer.ts:742`, `ObjectiveController.ts:188`,
+  `devEntry.ts:114`); each was read by its line and not its function.
+- Gotchas: #32 (every team comparison has to handle the third team).
+- Expects to remove: the twelve hand-written pairs, each a call instead;
+  no file, type or key. What a reader stops having to know: nothing yet.
+  What they gain is that every site says which question it asks, scenery,
+  camp member or any neutral, which is what B-02 has to be judged on.
+- Proof: sim. No stored byte changes, so no mapping.
+- Fate: **trial**, in the sim phase, ahead of B-02.
+- Signed:
+
+**B-02 · The neutral team split in two** (the user's candidate)
+- In play: Camp members would be a fourth team of their own, and walls and cover would keep the neutral one. A player would see no difference if the trial holds; if it does not, a camp's units would start treating walls and rubble as strangers and not as their own side.
+- Evidence: 31 tests of a team against `'neutral'` in 13 files, 18
+  null tests of a `campId`, the 16 predicate calls. They ask three
+  different things: is it scenery, is it a camp member, is it neither
+  side. A split shortens the first two and lengthens the third, which
+  today is one comparison at about 17 sites and would become two.
+- **The risk the counts did not show at the kickoff: 18 lines compare
+  one unit's team with another's** (`Targeting.ts` at six,
+  `MovementBehavior`, `SupportMovementBehavior`, `blockedAlly`,
+  `movement.ts:625`, `World.ts:1029`), and `affectsMatch` decides allies
+  and enemies the same way. At each, a camp member and a wall are the
+  same team today. Split, they are not, and each site either changes
+  what camp units do or grows a clause to keep them as they were, which
+  is the parameter D2 rules out. `World.ts`'s own note on auras names the
+  case: "a camp-carried `allies` aura would reach EVERY neutral".
+- What changes on the wire: `team` is in every unit of a World snapshot
+  and on `unit:died`, so the event log of any battle with a camp changes
+  with the behaviour unchanged. No field of the run's snapshot type was
+  seen to hold a team.
+- Gotchas: #32, and #71, #105 for the lists of walls.
+- Expects to remove, if it holds: the two predicates and their 28 call
+  and hand-written sites become plain team tests, and `campId` stops
+  meaning "is alive and fights" and means only "which camp". One thing a
+  reader has to know goes. Lines: about even. Tests: 177 lines in 39
+  test files name `'neutral'`; keeping that name for scenery leaves most
+  of them alone.
+- Proof: the corpus with a declared mapping of the new team back to
+  `neutral` (the spec's D3, built at 119a), 18 of whose 30 journals
+  noticed a camp member's step at 119g; then the fuzz diff. A changed
+  digest after the mapping means behaviour changed, and the row goes
+  back to the user.
+- Fate: **ask.** Lean: decide after B-01, with its list of which site
+  asks what. Today's read is that the split trades one hidden rule for
+  18 places that need a second look, and that B-01 alone gets most of
+  the plainness.
+- Signed:
+
+**B-03 · The config files** (the user's candidate)
+- In play: Nothing. Which file a number is in changes nothing in the game. It changes where a person looks for it, the address a balance sweep names it by, and the stamp a recorded run carries.
+- Evidence: 34 files. Five content tables hold 5,214 of the 6,381
+  lines (the opening's count). Sixteen files of plain numbers hold 174
+  lines of JSON behind 1,428 lines of loader. The signed rows already
+  take three files (`empower`, `selection`, `tiles`: A-02, A-09, A-03
+  with A-21), leaving 31. Three of those would hold one key each:
+  `economy` (3 lines of JSON, a loader of 21, one reader), `spawn` (3,
+  32, two readers) and `objective` (4, 47, two readers, one key after
+  A-10).
+- What a move costs: the config stamp hashes each file's name with its
+  content, so every stored journal's stamp changes (the corpus replays
+  past it); a sweep names a knob as `file.key`, and BALANCE's run log
+  cites such names (`objective.` on one line, `escalation.` on three,
+  none for `economy` or `spawn`).
+- Expects to remove: three files of JSON, three loaders (100 lines),
+  three names from the stamp's registry, three from "where do I look".
+- Proof: config, with the moved paths as the only difference in the
+  dump.
+- Fate: **trial**, in the config phase, for the three one-key files
+  folded into the file their readers already load. **Lean against a
+  wider merge:** the other thirteen are a screen each, a sweep's
+  addresses and BALANCE's record would go stale together, and
+  `npm run oracle -- refs --keys` already answers "where is this knob".
+- Signed:
+
+**Signed as trials at the read, sized here.**
+
+**B-04 · One chip rule in place of two switches** (A-11)
+- In play: As A-11: the pool is charged by the casualty rule, with the survivors' numbers as the surcharge on a turn that runs out the clock. The other positions of the two switches are never met in play.
+- Evidence, the game's side: 18 lines in four files (`chipRule.ts` 13,
+  `health.ts` 2, and three tooltips that pick their words by the mode).
+  The tests' and instruments' side: 77 lines in 12 files name a switch,
+  among them one test file named for it
+  (`tests/fuzz/harnessChipMode.test.ts`) and the sweep's list of legal
+  values (`tests/fuzz/commands/run.ts:171`).
+- Gotchas: #129 (the survivors' arithmetic stays, as the cap's charge).
+- Expects to remove: two config keys, the either-or in `chipRule.ts`
+  (about 20 of its 251 lines, A-11's count), the unshipped half of the
+  tooltips' words, and the tests of the three unshipped pairs.
+- Proof: sim and config; the sweep's `--set health.chipMode` stops being
+  accepted, which is the intent.
+- Fate: **trial** (signed 2026-10-13), in the run phase.
+
+**B-05 · The editors' stylesheets** (2.6)
+- In play: Nothing in the game. The twelve editor pages under `tools/` would look as they do.
+- Evidence: twelve `editor.css` files, 5,815 lines, from 356 to 1,082
+  each; 3,463 of the lines lie in a second or later copy.
+- Expects to remove: about 3,400 lines, into one shared sheet that
+  each page loads before its own.
+- Proof: **none today as a tool.** The procedure is the
+  declaration-by-declaration compare of `process/oracles.md`, page by
+  page; `tests/cssBlocks.ts` parses a sheet into blocks and is the only
+  piece of it found in the tree. The compare has to be built and shown
+  to fail on a planted declaration first, and the pages looked at.
+- Fate: **trial** (signed 2026-10-13), run late.
+
+**From the two whole reads.**
+
+**B-06 · One shuffle**
+- In play: Nothing. The same cards, tiles, waves and maps come out in the same order.
+- Evidence: five copies of the same loop: `shuffleInPlace`
+  (`run/Run.ts:4761`), `shuffleTilesInPlace` (`sim/battleSetup.ts:122`),
+  `shuffle` (`run/NodeMap.ts:898`, on a copy), `fisherYates`
+  (`run/encounters/wave.ts:384`) and one written inline
+  (`sim/proceduralMap.ts:559`). Each walks down from the end and draws
+  `rng.int(0, i)`. The first one's comment says it is "kept local" until
+  a third caller appears; there are five. Two more draw a partial
+  shuffle and are not the same loop (`Run.ts:215`, `enemyBudget.ts:190`).
+- Gotchas: #125 (the streams): no key or draw moves.
+- Expects to remove: four loops, about 24 lines, and the "kept local"
+  note; one function in `src/core/sampling.ts`.
+- Proof: sim. The corpus runs all five lines; the fuzz diff four.
+- Fate: **trial**, in the run phase (it crosses into sim).
+- Signed:
+
+**B-07 · The wiring of a spawned unit, in four bodies**
+- In play: Nothing. Every unit that takes the field gets its movement, its abilities and its fade-in as now.
+- Evidence: `spawnFromQueue` (`World.ts:2072`), `spawnCampUnit`
+  (`:2039`), `spawnSummon` (`:2617`) and the first deployment
+  (`battleSetup.ts:112`) each derive the stats, add the unit, push a
+  movement behaviour and `AbilityBehavior`, push the archetype's
+  abilities, and seat the spawn lockout unless the spawn is instant. Two
+  of the four carry a comment saying they mirror the first.
+- Expects to remove: about 15 lines and the two "mirrors" notes. The
+  movement behaviour differs for a camp member, which is a real
+  difference passed in and not a flag between halves.
+- Proof: sim. The corpus runs all three of `World`'s.
+- Fate: **trial**, in the sim phase.
+- Signed:
+
+**B-08 · A rule kept in step by hand**
+- In play: An order to attack a camp or a piece of rubble stays in force while the target stands. If the two copies of the rule drift, the order is dropped on the tick it is given, which a browser read caught once.
+- Evidence: `World.clearResolvedObjectives` (`World.ts:2171`) restates
+  `validNeutralObjectiveTarget` (`Targeting.ts:451`), and its comment
+  says it "must mirror" it. The function is private to `Targeting.ts`.
+- Expects to remove: six lines for one call, and the instruction to
+  keep two places the same.
+- Proof: sim. The corpus runs both copies.
+- Fate: **trial**, in the sim phase.
+- Signed:
+
+**B-09 · Two places a unit dies**
+- In play: Nothing.
+- Evidence: the tick's first step (`World.ts:1310`) and `reapDead`
+  (`:1839`) each fire the `death` trigger and then call `reapUnit`,
+  whose comment calls it "the ONE death-event emit for both death
+  sites".
+- Expects to remove: the trigger from two callers into the one
+  function, four lines.
+- Proof: sim.
+- Fate: **trial**, in the sim phase, with B-07.
+- Signed:
+
+**B-10 · `Run.ts`'s small repeats**
+- In play: Nothing.
+- Evidence: the weighted draw of an event and of an event's outcome
+  are the same eight lines (`Run.ts:1665`, `:1706`); "heal the pool, up
+  to its cap" is written twice (`:1740`, `:2894`); the check of a swap
+  slot before a packet is taken is the same six lines in the port and
+  in the reward (`:2037`, `:3679`), and a number from a command is
+  checked by hand on 11 lines.
+- Not the same thing, and left alone: five weighted picks exist
+  (`sectorWalk.pickWeighted`, `Recruitment.pickWeighted`,
+  `NodeMap.weightedPick`, `core/sampling.weightedPick` and the two
+  above). They differ on whether a list of one draws at all, which is
+  gotcha #111's rule, and on the comparison at the boundary. One
+  function for all would need a switch between them.
+- Expects to remove: about 25 lines.
+- Proof: sim for the event draws (the corpus runs both). The two swap
+  checks are run by tests alone, the oracle map's port trades.
+- Fate: **trial**, in the run phase, after B-04.
+- Signed:
+
+**B-11 · What the game's types give up for a test's convenience**
+- In play: Nothing.
+- Evidence: `World.findUnit` falls back to a scan of every unit "for
+  test fixtures that push directly onto `units`" (77 such pushes in 25
+  test and fixture files). The corpus runs the scan's line, which by
+  the code is every lookup of a unit that has left the board: it misses
+  the index, walks the list and finds nothing. `battle:ended`'s
+  `reason`, `fallenPower` and `survivorPower` are optional so that test
+  fakes can omit them, and `handleTurnEnded` fills in what
+  a fake left out (`Run.ts:3161`). `BattleEncounter.battleRules` and
+  `.kind` are optional "so hand-built test fixtures stay untouched".
+  `World`'s constructor forks a combat stream when a test passes none.
+- Expects to remove: the scan, the three optional marks and their
+  defaults, two more optional marks. The fixtures change with them,
+  which is 3.5's shared set-up.
+- Proof: the suite; sim for the scan.
+- Fate: **trial**, in the tests phase, after its list by test.
+- Signed:
+
+**Leads left to each phase's kickoff, unread.** Near-duplicate runs the
+finder lists, by subsystem; none was opened beyond its first line.
+
+- **B-12 · Config loaders.** `layouts.ts` repeats one validation block
+  three times (220 and 207 tokens); the tails of `camps`, `encounters`,
+  `layouts`, `sectors` and `events` share runs of 80 to 198 tokens;
+  `abilities` and `statuses` share 150; and four loaders type their
+  schema by a hand-written interface whose 148 members each repeat a
+  schema key (1.8).
+- **B-13 · Drawing.** The apron and the terrain renderer share six runs
+  of 80 to 167 tokens (2.6); `BattleRenderer` repeats 122 tokens of its
+  own set-up; the status strip is in `UnitOverlayLayer` and `UnitCard`
+  (101). Nothing headless proves a reshaping there (the oracle map), so
+  each would be read by eye.
+- **B-14 · The instruments and the bot.** The harness and the rollout
+  walker's decision loop (2.6); two bot scripts' rally search (202 and
+  87 tokens); `sensors.ts`'s two grid scans.
+- **Screens.** The swap control in `PortScreen` and `RewardScreen`
+  (115), the opening of `CharacterSelectScreen` and `MenuScreen` (112),
+  of `EventScreen` and `PortScreen` (94), two blocks of
+  `SettingsOverlay` (119, 82), two arms of `Game.ts`'s command switch
+  (106).
+- **Sim and run.** `actingPosition.ts`'s two searches (150),
+  `RunConfig.ts`'s parse written two or three times (128), the stat
+  fold in `runStats` and `statusEffects` (100), `terrainGen` (104).
+- **Look-alikes that are not copies:** tables of keys (`AudioPlayer`
+  and `palette`, 100 tokens of `name: value`), lists of schema fields,
+  and the weighted picks of B-10.
+
+**Considered, and not proposed.**
+
+**B-15 · `Run.ts` split by phase**
+- In play: Nothing.
+- Evidence: 4,888 lines, the longest file by 1,800. Its work falls in
+  runs of methods (ports, events, the turn loop, rewards, the deck,
+  packets, the snapshot).
+- Why not now: 2,393 of the lines are comment, so the file the comment
+  pass leaves is about half as long. And a split takes nothing away
+  that a reader had to know, so by D2's fourth clause it cannot be kept
+  whatever it looks like; the methods also share the class's private
+  state, so a split means wider access or a second object.
+- Fate: **ask.** Lean: not a trial. Re-read the file at the run
+  phase's re-skim, after the comment pass, and bring a split back only
+  with a measure that could pass it (the cold-read probe's tokens).
+- Signed:
+
+**B-16 · The roster's four parallel arrays as one list of slots**
+- In play: Nothing.
+- Evidence: `team`, `deploymentCounts`, `encounterEffects` and
+  `pendingEncounterEffects` are kept the same length by hand, and three
+  deck piles hold indices into them. Two functions do all of it
+  (`appendRosterUnit`, `removeRosterUnit`). The three arrays are named
+  on 33 lines of code in `src` and 89 lines of tests.
+- Why not: the two functions already hold the rule in one place each,
+  and a slot record changes the save's shape for no behaviour.
+- Fate: **keep** as it is.
+- Signed:
+
+Also considered: the camp registry as a file of its own (a move takes
+nothing away), and a fire or healing tile's status read from the tile's
+definition as its enter effect is (it adds a config key to remove two
+constants).
+
+### 4.6 For list A, found by reading
+
+**A-38 · `spawnEnvironment`'s `team` option** (`src/sim/World.ts:2688`)
+- In play: Nothing. A wall is always placed on the neutral team.
+- Evidence: the option lets a caller put scenery on another team. Of
+  the eight call sites in `src`, `tests` and `tools`, none passes it. The
+  reference finder does not see a member of an inline options type.
+- Fate: **delete** the option; the default becomes the value.
+- Proof: sim; the type check names any caller.
+- Signed:
+
+**A-39 · Two lines the game prints to the browser's console**
+- In play: With the developer console open, each battle prints its board's name and size, and a camera-mode change prints the mode. A player who never opens the console sees nothing.
+- Evidence: `console.log('[layout]', …)` in `Run.beginEncounter`
+  (`src/run/Run.ts:2177`), whose comment calls it a diagnostic to
+  "confirm the layout picker hits the full library"; and
+  `console.log('[camera] mode: …')` (`src/render/Renderer.ts:391`). Both
+  are gated on a window existing, so headless runs are quiet. The other
+  ten console lines outside `src/dev` are warnings and errors.
+  `Renderer.ts` was read at those lines only.
+- Fate: **ask.** Lean: delete both.
+- Proof: the build compare moves, as it must; the corpus for the first.
+- Signed:
+
+**A-40 · A branch its own comment calls unreachable** (`src/run/Run.ts:3995-4002`)
+- In play: Nothing, if the comment is right: closing a level-up screen after a battle always returns to the fight's own next step.
+- Evidence: `handleDismissPromotion` ends in "the `advancePastBattle`
+  leg is unreachable post-M1 …, kept as the defensive default". No
+  stored run, chaos run or fuzz shape reaches line 4001; the suite
+  does, by a test that was not looked for.
+- Fate: **ask.** Lean: in the run phase, find the test that reaches
+  it; if that test builds a state the game cannot, delete the leg with
+  it and let a wrong state throw.
+- Proof: sim, and `reach-diff` for the test.
+- Signed:
+
+### 4.7 For the comment pass (D4), measured
+
+Leads for that phase's kickoff, not rows.
+
+- Comments are 40 % of the lines under `src`, and half of the two
+  longest files (4.2).
+- Two version histories, 224 lines in `World.ts` and 240 in `Run.ts`,
+  each entry of a version that is refused on load; `World.ts`'s last
+  five are out of order.
+- Every stored field of the run is described twice (4.4).
+- 14 doc comments in 9 files sit directly on top of another doc
+  comment, which in the six read (two in `World.ts`, four in `Run.ts`)
+  is a comment whose code has moved out from under it.
+- Comments name classes that are gone on 40 lines (`AttackAction` on 17
+  in 8 files, `AttackBehavior` 7, `HealAction` 6, `GambitStrikeAction` 4,
+  `DeathBehavior` 3, `CatapultShotAction` 2, `MagicBoltAction` 1).
+  GOTCHAS #8 links to `src/sim/actions/AttackAction.ts`, which does not
+  exist.
+- "Inert today" or "the instant move model" is said of the cell-claim
+  system on 18 lines, 13 of them in `World.ts`; GOTCHAS #113 was not
+  re-read to date the change.
+
+### 4.8 Fragile, and only a change of behaviour fixes it (for TODO)
+
+**F-1 · A battle's snapshot drops a queued unit's seeded effects.**
+`World.toJSON` copies five fields of each template waiting in the spawn
+queue, and `effects` is not one of them; `spawnFromQueue` reads it, and
+its comment says the template "round-trips them". Shown by
+`scratch/120f/queue-effects.ts`. In play: nothing, since the game saves
+the run and not the battle. It reaches the bot's look-ahead, which
+copies the battle through a snapshot: a queued unit carrying a buff
+would fight in the look-ahead without it (by the code; no look-ahead
+was run).
+
+**F-2 · A loaded run is built field by field, past the constructor.**
+`Run.fromJSON` names 23 private fields in a type of its own and assigns
+each one. A field given a default on the class and not assigned there
+is `undefined` on a loaded run. One is today: `pauseAtTurnGates`, which
+reads as off either way (`scratch/120f/fromjson-keys.ts`: 60 properties
+constructed, 59 loaded). The guard that would catch the next one is a
+test that the two have the same properties.
+
+Both are in TODO under "§120 riders".
+
+### 4.9 What this section's instruments cannot see
+
+- **A special case that is not a string comparison:** a flag, a lookup
+  in a table, a predicate's call, a `switch`'s default. The neutral
+  team's own sites were listed by hand for B-01 and B-02.
+- **A fix inside a feature commit.** 31 `feat` subjects contain the
+  word; they are not counted as fixes. Commits follow a rename, and a
+  file rewritten as it moved is lost to that.
+- **Gotchas are a floor:** an entry that describes code without naming
+  its file or class is not counted.
+- **Whether a near-duplicate is one.** 99 clusters were listed and the
+  bodies of about ten opened (the shuffles and the weighted picks). The
+  50 and 80 tokens were chosen and not tuned.
+- **The reads cover an eighth of the lines.** `BattleRenderer.ts`, third
+  in the profile and first by fixes, was not read, nor `Game.ts` or
+  `Targeting.ts`.
+- **Reached is not noticed.** The `reach` answers above say a proof ran
+  a line. A planted break at the site, before each trial, says whether
+  it would notice.
+
+### 4.10 Calls for the user at 120h
+
+1. **B-01,** the two predicates by name, as the first trial.
+2. **B-02,** the split: decided after B-01, or now.
+3. **B-03,** fold the three one-key config files; no wider merge.
+4. **B-04 and B-05,** as sized.
+5. **B-06 to B-10,** five small unifications, each in its phase.
+6. **B-11,** in the tests phase.
+7. **B-12 to B-14 and the leads under them,** left to each kickoff.
+8. **B-15,** no split of `Run.ts` before the comment pass.
+9. **B-16,** the roster's arrays kept.
+10. **A-38, A-39, A-40.**
+11. **F-1 and F-2** in TODO; whether F-2's test is written in this
+    round.

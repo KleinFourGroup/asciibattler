@@ -2985,3 +2985,129 @@ the halt and the hand-off line"). It said so in its last two reports
 and the user did not object; it was not put as a question of its own.
 The user's dev server has been up since 12:38 by the machine's clock
 (two node processes, theirs); nothing of the session's is running.
+
+### 120f — the trials (2026-10-13, session a9f26053)
+
+Pre-flight at `580ead7`: the tree clean, the type check clean, the suite
+3765 of 3765 in 261 files. The result is
+[round-8.5-census.md](round-8.5-census.md), section 4: rows B-01 to B-16,
+A-38 to A-40, F-1 and F-2. Nothing under `src`, `config` or `tests`
+changed. The read is `batch`, at 120h, so the step is ◐.
+
+**Step zero.** Two premises. That the source had not moved since the
+scans: `git diff --stat a45a7af HEAD -- src config` names one test file,
+and 279 files hold 63,458 lines, as the kickoff counted. That `Run.ts`
+and `World.ts` are what a profile would say to read: they are its first
+two files. Both held.
+
+**Built**, in `scratch/120f/` (not tracked; this machine only).
+
+- `special.ts`: every comparison against a string literal in the
+  non-test source, by the type checker's tree, filed under the declared
+  type of what is compared and the literal; `case` labels, `typeof`
+  tests and null tests on a property counted apart. Nine known answers
+  on a planted file, three of them lines that must give nothing.
+  `reconcile.mjs` holds its sites for one literal against a search of
+  the lines, site by site: `'neutral'` 34 of 34, `'enemy'` 21 of 21,
+  `'map'` 15 of 15.
+- `profile.mjs`: the five columns and the rank. It refuses to print
+  unless a planted rank and six planted subjects come back as worked by
+  hand, the files are 279 and their lines 63,458, and `World.ts`'s
+  commits by `git rev-list` are not more than its own (96 and 96).
+- `counts.mjs`: the patterns behind the reads' leads (the shuffles, the
+  stacked doc comments, the comment lines, the console lines, the
+  roster's arrays).
+- `queue-effects.ts` and `fromjson-keys.ts`: the two probes of 4.8, each
+  with its known answer first.
+- `notes.md`: what the read of `World.ts` found, written when that file
+  was finished; `Run.ts`'s went straight into the census.
+
+**What the checks caught, in the instruments and in the draft.**
+
+- *The profile's gotcha column was a third of itself.* It first counted
+  an entry that names a file by path, and gave `World.ts` 5. A search
+  showed GOTCHAS says `World.tick` far more often than `World.ts`; with
+  `Class.member` counted the column gives 18, and a separate count of
+  the entries gives 17 with the one the file cites.
+- *A line that continues a statement reads as unreached.* `reach
+  --at=World.ts:2172` said no proof runs it, and a row was about to say
+  the hand-mirrored rule of B-08 has no proof. Asked as a range
+  (2162-2177) every proof runs all four statements. A `reach` answer for
+  one line is asked again as its function's range before it is quoted.
+- *The first compare of the finder against a search was the compare's
+  fault,* a column cut wrong in a shell pipe; it was rewritten as a
+  script that reads the finder's own output file.
+- *Config files were paired with the wrong loaders twice,* by "the
+  first file that names the JSON" (the stamp's registry names them all,
+  and a comment names two). Paired by name, and the three one-key files
+  counted that way.
+- *Five weighted picks looked like one.* Read, they differ on whether a
+  list of one draws (gotcha #111) and on the boundary's comparison, so
+  the census lists them as not copies. The five shuffles were read the
+  same way and are the same loop.
+- *A comment that says "test-only" about a line the corpus runs*
+  (`findUnit`'s scan).
+- *Ten claims in the section's draft were wrong against their source*
+  and were corrected before it was appended: where each class starts,
+  13 files and not 12, 23 fields and not 22, a field that is optional
+  for a reason other than tests, and six more of that size.
+- *A quoted heredoc of the whole section was refused by the shell;*
+  nothing landed, and it went through the file tool. In the friction
+  log.
+
+**What the step says.**
+
+- **The round's size is the comment pass and the tests, as 120d said,
+  and the trials are small.** Comments are 25,659 of the 63,458 source
+  lines, and half of each of the two longest files. The trials that came
+  out of 7,981 lines read whole expect to remove about a hundred lines
+  between them (B-06 to B-10), apart from the editors' stylesheets.
+- **The two long files are long, not tangled.** Each has two or three
+  fix commits; the fixes are in drawing and movement
+  (`BattleRenderer` 12, `BattleScene` 8, `MovementBehavior` 6), which
+  the census did not read.
+- **The neutral team is the most spread special case there is,** and a
+  split is not the free rename the kickoff sized: 18 lines compare two
+  units' teams, where a wall and a camp member are one team today.
+- **Source code names content on one line of 619.**
+- **Two things are wrong today and harmless today** (F-1, F-2).
+
+**Calls made here, for the read at 120h.**
+
+1. *A special case is a comparison against a string literal outside a
+   `switch`.* The cut names "special-case sites" and no rule; a flag or
+   a predicate's call is not seen (4.9).
+2. *A fix commit is a subject that opens `fix` or names a `-post`
+   step,* and the rank is the plain sum of five ranks.
+3. *Three rows of list A's kind (A-38 to A-40) sit in section 4,* where
+   they were found, and not in the signed sections.
+4. *F-1 and F-2 were written into TODO now,* under "§120 riders"; the
+   cut says "listed for TODO" and 120g is the pass that weighs them.
+5. *The near-duplicate leads were not opened,* beyond the shuffles and
+   the weighted picks: they are left to each phase's kickoff, as the
+   kickoff's sixth call left the rest of the profile's top.
+6. *B-02's lean is "after B-01".* The user named the split; the census
+   proposes the cheaper step first and says why.
+7. *The plan search.* B-02 was held against META-ROADMAP, DESIGN, TODO
+   and `plans/` by "neutral team", "faction" and "third team" (DESIGN's
+   camps section calls a camp "a THIRD, neutral faction"; no plan names
+   a team split) and against GOTCHAS by `neutral` and `campId` (#32,
+   #71 and #105, each read at its opening). B-03 against BALANCE by the
+   knob names. The other rows were not held against the archived road
+   maps or specs.
+
+**Not verified.** No trial was tried and no plant was made: every proof
+named is a `reach` answer or the map's word for the folder. The twelve
+hand-written pairs of B-01 and the 17 "any neutral" sites of B-02 were
+classed by their line, not their function. `Renderer.ts`, `Targeting.ts`
+and every near-duplicate but ten bodies were not read. The editors'
+stylesheets were sized by 120d's count and not re-counted. The rest of
+the profile below its first twelve rows was printed and not looked at.
+The 14 stacked doc comments were found by a pattern and six of them
+seen. Whether a bot look-ahead ever copies a queue holding a buffed
+template (F-1) was not run.
+
+Readings, by the tool's clock: **89,388** at 18:03 after HANDOFF;
+**193,484** at 18:12 with the cut, the spec, the census, the oracle map
+and both instruments run; **277,673** at 18:15 with `World.ts` read;
+**420,974** at 18:19 with `Run.ts` read and the counts taken.

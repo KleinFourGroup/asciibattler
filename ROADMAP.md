@@ -98,10 +98,12 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   three class members for deletion; the tests phase starts with a list
   by test; one smoke test comes off every sim commit
   (`round-8.5-census.md` section 3; WORKLOG §120, 120e).
-- ☐ **120f — the trials** (`batch`, read at 120h: wrong is a trial the
+- ◐ **120f — the trials** (`batch`, read at 120h: wrong is a trial the
   user would not want tried). The profile, the near-duplicate and
   special-case clusters, the two named trials sized, `Run.ts` and
-  `World.ts` read whole.
+  `World.ts` read whole. Built 2026-10-13 and unread: sixteen rows of
+  list B, three more of list A, two fragile sites for TODO
+  (`round-8.5-census.md` section 4; WORKLOG §120, 120f).
 - ☐ **120g — the TODO pass's list** (`batch`, read at 120h: wrong is a
   rider dropped that the user still wants). 91 open items, each proposed
   as done, dropped or given a round.

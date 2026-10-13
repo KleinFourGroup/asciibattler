@@ -813,3 +813,12 @@ fourth with A-22.
   overlay opens. Census A-22 keeps both functions for it. It changes
   behaviour, so it is not Round 8.5's, and a read in Firefox goes with
   it.
+- **A battle's snapshot drops a queued unit's seeded effects.**
+  `World.toJSON` leaves `effects` out of each queued spawn template and
+  `spawnFromQueue` reads it; only the bot's look-ahead copies a battle
+  that way. Census F-1; `scratch/120f/queue-effects.ts` shows it.
+- **A loaded run can miss a field the class defaults.** `Run.fromJSON`
+  assigns each field by name past the constructor, and
+  `pauseAtTurnGates` is `undefined` on a loaded run today (harmless).
+  A test that a loaded run has a constructed run's properties would
+  catch the next. Census F-2.

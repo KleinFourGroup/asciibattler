@@ -2,7 +2,8 @@
 
 **Status: being built; section 1 is under its read.** Signed so far
 (the user, 2026-10-12): the format, the two scope calls, the authoring
-vocabulary kept as a class (A-16), and A-13. The other 18 fates are open. §120's list of what the
+vocabulary kept as a class (A-16), and A-01, A-02, A-03 and A-13 for
+deletion. The other 15 fates are open. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -170,7 +171,8 @@ header says the same thing the search found.
 - Fate: **delete** the four keys; the tests that read `DECK.redraw.*` for
   a fixture take the numbers as literals.
 - Proof: config.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12: "Those definitely can go, then;
+  they should be purely owned by the daemon / packet vocabulary now").
 
 **A-02 · `config/empower.json`, the whole file** (3 top-level keys; `src/config/empower.ts:73-75`, the `EMPOWER` export)
 - In play: An empower lets the player buff one drawn card for the rest of the encounter. Two daemons grant it (Mars and Minerva), each carrying its own buff. This file is the global version from before daemons owned it. It is off, and removing it changes nothing in play.
@@ -185,7 +187,7 @@ header says the same thing the search found.
   buff as a fixture. Config files go from 34 to 33, and the config
   stamp's registry drops the name in the same commit.
 - Proof: config.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12, in the same words as A-01).
 
 **A-03 · `tiles.fire.damagePerSec`, `tiles.healing.amountPerSec`** (4 keys with their two parents; `src/config/tiles.ts:27-33`)
 - In play: A fire tile burns and a healing tile mends through the `burn` and `rejuvenate` statuses, whose rates are in `config/statuses.json`. These two numbers are a second copy the game does not read; one test checks that the copies agree. Removing them changes nothing in play.
@@ -195,11 +197,17 @@ header says the same thing the search found.
   `fire.damagePerSec`". The damage a fire tile does is the `burn`
   status's, in `config/statuses.json`.
 - Gotchas: none.
+- Asked at the read: would a rule that water puts out a burn touch this?
+  No. That rule exists: a unit entering shallow or deep water loses
+  `burn` (`src/sim/TileGrid.ts:119`, `:139`; `src/sim/World.ts:1643`),
+  always on, and it is written on the tile, not in these two rates.
 - Fate: **delete** the two rates and the test's two assertions, which
   hold one config number against another. `tiles.json` keeps
   `applyStatusOnEnter`.
 - Proof: config.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12: "looks safe to purge", asking
+  first about water and burn; signed on the answer above, which the user
+  may still overturn).
 
 **A-04 · `units.layer`, `units.ignoresTerrain`** (`src/config/units.ts:190`, `:193`)
 - In play: Nothing. They were placeholders for flying units, which do not exist: no unit sets them and no code acts on them.
@@ -209,6 +217,13 @@ header says the same thing the search found.
   a per-unit `traversal` profile shared with the marine (line 102), which
   is not these two keys.
 - Gotchas: none.
+- Asked at the read: is flight not planned? It is, for Round 9, and the
+  plan names these keys as what it replaces. META-ROADMAP, Traversal
+  (line 843): "the flight seam is three inert fields
+  (`layer`/`ignoresTerrain`/the one-member plane union) … 'air' is not a
+  second occupancy plane — flight is a traversal profile … A `traversal`
+  field on `UnitDef`". Round 9's step zero re-audits that lock, so the
+  plan could still move.
 - Fate: **delete**.
 - Proof: config.
 - Signed:
@@ -224,8 +239,16 @@ header says the same thing the search found.
   `retreatCell`. By type only tools read the field, at four places. So
   the two authored distances do not decide how far either move goes.
 - Gotchas: none.
-- Fate: **ask** (lean: delete). The dash's reach is already authored
-  once, as the ability's `rangeCells`, and that copy is the one in use.
+- Asked at the read: would a teleport be harder to build without it? No.
+  The move already puts the caster on a landing chosen at cast
+  (`executeMove`), and the dash's reach is the ability's `rangeCells`; a
+  teleport is another way of choosing the landing, with the same range.
+  What WOULD read `cells` is a knockback or a pull (A-07), whose push is
+  not the ability's range.
+- Fate: **ask, with A-07.** If knockback and pull stay reserved, this is
+  the field they would read and it stays with them. If they go until
+  they are built, this goes too (lean: both go, and the plan is written
+  down; A-07 says why).
 - Proof: config.
 - Signed:
 
@@ -245,7 +268,18 @@ header says the same thing the search found.
   throw on them ("reserved — deferred to Cluster 2's occupancy core").
   Cluster 2 closed without them, and META-ROADMAP, TODO and DESIGN do not
   name a knockback.
-- Fate: **delete** the two values and the two throws.
+- At the read (the user, 2026-10-12): "Attacks with a knock back or pull
+  effect are also planned, but I admittedly may never have mentioned
+  that." META-ROADMAP, TODO and DESIGN do not hold it yet. A push's
+  distance is what `move.cells` (A-05) would carry, so the two rows go
+  together.
+- Fate: **ask.** Keeping costs two values that stop a battle if
+  authored, and a `cells` field in the ability editor that does nothing
+  today. Deleting costs a few lines to write back when the first
+  knockback is built. Lean: delete, with the plan written into
+  META-ROADMAP so it is not lost. The reservation was made against
+  Cluster 2's occupancy core, which shipped without it, and Round 9's own
+  rule is that a seam ships with its consumer (META-ROADMAP line 907).
 - Proof: sim.
 - Signed:
 
@@ -253,6 +287,12 @@ header says the same thing the search found.
 - In play: Nothing: it would send a shot after a new target when its first one dies in flight. No ability asks for it and no code does it.
 - Evidence: no ability uses it; `Action.ts:51` says "DECLARED ONLY in F2 —
   no action uses" it.
+- What it is: an ability says what happens when its target dies while
+  the shot is in the air. The catapult's shot fizzles, the mage's blast
+  hits the cell whoever stands there, a strike lands on the target it
+  was aimed at. `re-home` would have the shot pick a new target in
+  flight. `src/sim/Action.ts:51`: "no action uses it (it reads as
+  unfair)".
 - Fate: **delete** the value.
 - Proof: sim.
 - Signed:
@@ -293,6 +333,9 @@ unselected position ships and is run by tests only.
 - Gotchas: **#129**: the shipped pair reads both vocabularies on every
   capped turn, so the survivors' numbers stay needed whatever happens to
   the switch.
+- The road map: Round 9's Retreat is "coherent ONLY under the casualty
+  chip rule" (META-ROADMAP line 786), so a planned mechanic already
+  assumes the shipped position.
 - Fate: **trial**, in the run phase: one rule in place of two switches.
   `chipRule.ts` was not read whole, so what it would remove is not
   counted yet (120f sizes it).
@@ -307,10 +350,13 @@ unselected position ships and is run by tests only.
   run log holds a paired read of 0.1 against 0 that ends "fatigue back
   to 0".
 - Gotchas: none.
-- Fate: **ask.** If fatigue is not coming back in Round 10 or 12, the
-  file, the two keys and the seeding go (lean: delete; it was measured
-  and turned down). It is in the sweep's registry, so a sweep can still
-  move it today.
+- The road map names it. META-ROADMAP Round 9 (line 776): "Fatigue — the
+  design round (`fatiguePerStack` is 0 …) Free-form; exit = a playtest
+  verdict; no pre-commitment … this round inherits whatever that
+  decided." The census first leaned "delete" here without having looked
+  there.
+- Fate: **keep.** Round 9 is its named consumer, and what it inherits is
+  this seam at rate 0.
 - Proof: sim and config.
 - Signed:
 
@@ -328,9 +374,10 @@ unselected position ships and is run by tests only.
 - Proof: sim and config.
 - Signed: **delete** (the user, 2026-10-12: "A13 can definitely go. Half
   cover was a mechanic from the MVP era, IIRC, and it wasn't particularly
-  fun"). The session takes this as the damage rule. The 148 pieces are
-  not in the row: taking them off the boards changes five boards a
-  player sees, which is a behaviour change and a call of its own.
+  fun"). The multiplier only, confirmed the same day: "Static units that
+  do not block line of sight are a pretty important part of the game.
+  Having attacks that go through them only deal fractional damage made
+  the fights slow and kinda boring". The 148 pieces stay.
 
 **A-14 · `growthRates.power` = 0 on all 23 units** (`src/config/units.ts:118`; `src/sim/leveling.ts:104`)
 - In play: `power` is what a unit costs its own pool when it falls: 1 for twenty units, 2 for three, and an encounter can set it for an enemy. This key would make it rise with level. Every unit has 0, so a level-10 unit costs what a level-1 unit costs. Removing the key keeps it that way.
@@ -498,6 +545,9 @@ an id from the same word used for something else.
   `tiles` with one key, and remove a second file.
 - Two config files only the fuzz instruments read are in the game's
   config stamp, by a stated choice (`src/config/configHash.ts`, header).
+- META-ROADMAP's third inert field of the old flight seam, "the
+  one-member plane union", is not a config key: a plane argument with one
+  value, passed through the occupancy calls. A lead, unread.
 - Four loaders type their schema by a hand-written interface (`camps`,
   `encounters`, `events`, `rewards`): their 148 schema keys each repeat
   an interface member by name.
@@ -515,5 +565,7 @@ an id from the same word used for something else.
    *Signed 2026-10-12.*
 4. **The authoring vocabulary is kept as a class** (A-16) and not pruned.
    *Signed 2026-10-12.*
-5. **The fates,** row by row: A-01 to A-20. A-13 and A-16 are signed;
-   the user is reading the rest with the "in play" lines.
+5. **The fates,** row by row: A-01 to A-20. Signed: A-01, A-02, A-03,
+   A-13, A-16. With the user after the first tranche: A-04, A-05 with
+   A-07, A-08. Not yet read together: A-06, A-09 to A-12, A-14, A-15,
+   A-17 to A-20.

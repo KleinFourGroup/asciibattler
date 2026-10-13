@@ -2139,3 +2139,66 @@ fates are open and 120c stays ◐.
 Readings: **434,480** at 19:09 on 120c's commit, `f55932e` (the hook:
 3764 of 3764 in 261 files); **470,916** at 19:41 with the rows re-read
 and the "In play" lines written.
+
+**The read, the first tranche** (the user, 2026-10-12). On A-13: "I only
+meant the multiplier, Claude. 👍 Static units that do not block line of
+sight are a pretty important part of the game. Having attacks that go
+through them only deal fractional damage made the fights slow and kinda
+boring". So the pieces stay and the row is as the session took it.
+
+- **Signed for deletion: A-01 and A-02** ("Those definitely can go, then;
+  they should be purely owned by the daemon / packet vocabulary now").
+- **A-03, signed on an answer.** The user: "looks safe to purge, but a
+  future idea I had was to have water extinguish burn effects. Would
+  that interact with this?" It does not, and the rule exists already: a
+  unit entering shallow or deep water loses `burn`
+  (`src/sim/TileGrid.ts:119`, `:139`; `src/sim/World.ts:1643`), with
+  no switch on it. The session recorded the row as signed and said so,
+  since the approval was given before the answer.
+- **A-05, not signed.** The user asked whether a teleport would be harder
+  without `move.cells`. It would not: a teleport is another way of
+  choosing the landing the move already goes to, at the ability's own
+  range. But the user also said knockback and pull are planned, and a
+  push's distance is exactly what `cells` would carry. The session had
+  leaned "delete" on A-05 without that, and now puts the two rows
+  together.
+- **A-04, back with the user.** "Flying units are definitely planned."
+  They are, in Round 9, and META-ROADMAP's Traversal entry (line 843)
+  names `layer` and `ignoresTerrain` as two of "three inert fields" of
+  the old seam, which a `traversal` field replaces because air "is not
+  a second occupancy plane". The census had cited line 102 for this; the
+  entry at 843 is the one that names the keys. The third field, a plane
+  union with one member, is a lead for 120f.
+- **A-07, back with the user.** "Attacks with a knock back or pull effect
+  are also planned, but I admittedly may never have mentioned that." No
+  plan document holds it (the "pull" in DESIGN and META-ROADMAP is the
+  camp pull). The session's lean stays "delete, and write the plan
+  down", with the cost of each side given in the row.
+- **A-08, explained.** The user did not remember what `re-home` was
+  for. `src/sim/Action.ts:40-55` says: the fourth answer to "the target
+  died while the shot was in the air", never used because "it reads as
+  unfair".
+- **Unrecorded plans the user named:** a teleport ability, and attacks
+  that knock back or pull. Proposed to the user as a line for
+  META-ROADMAP; not written there without their word.
+
+Reading: **473,247** at 19:43 on the read's first commit, `b6e3f3d`.
+
+**A check the rows had not had, made here.** Looking for knockback in
+META-ROADMAP's Round 9, the session met "Fatigue — the design round"
+(line 776), which inherits the fatigue seam at rate 0. The census's A-12
+had leaned "delete" and named Rounds 10 and 12, without that file having
+been searched for the word. The charter asks that a candidate be checked
+against GOTCHAS, and the decision point says a dial's fate must weigh
+what later rounds lean on; the rows had the first check and only three
+of them (flight, event art, knockback) the second. So every row's terms
+were searched in META-ROADMAP from Round 8.5 on, 22 groups of words. Two
+things came back. A-12 is now "keep": Round 9 names it. A-11 gains a
+fact: Round 9's Retreat is "coherent ONLY under the casualty chip rule",
+so a planned mechanic assumes the shipped position of that switch. The
+other twenty groups found nothing that names a candidate (the selection
+strategy, the focus-tile modes, power's growth, the three probe dials,
+the ten flags, the level-budget kinds and the event conditions are not
+in it; `redraw` and `empower` there are the daemons' vocabulary). A
+word search of one file does not show that no plan exists, as the user's
+knockback shows.

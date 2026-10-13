@@ -2896,3 +2896,61 @@ your CSS proposal too! 😁" So:
   `.stop(` there is the recorder's and the one `.hide(` is the probe
   kit's; no other name of A-28, and none of A-36's four deletions, is in
   a script, a probe, a page or a pane procedure.
+
+Reading: **427,326** at 16:47 on the second tranche's commit, `1282a16`.
+
+**The read, the third tranche** (the user, 2026-10-13, on the classes
+that need a look): "Sorry, yes; sweep GUI can go 😂 I don't think I've
+ever used it XD Signing all of your leans except for close tooltip.
+Let's investigate if tooltips persist across a scene change, because
+they definitely shouldn't. That might be a case of its not being called
+being a bug. Mute just being volume zero is good. Sound reasonable?" So:
+
+- **Signed for deletion:** 24 of A-22's 25 exports; A-28's 21 class
+  members, each after its site is read in its phase, the mute among
+  them; A-29's two files; the word `export` on A-26's 257, phase by
+  phase. `sweep-gui` is confirmed.
+- **Signed kept:** A-23's fourteen, A-27's 188, A-35's ten read-backs,
+  the fifteen other tools, and the test files not signed for deletion.
+- **Open: `closeTooltip`,** on the user's question.
+
+**The question, measured.** The module answers it in its header: while a
+tooltip is open a per-frame check closes it when its trigger has left
+the document or lost its box (`follow()`, `src/ui/tooltip.ts:422`). A
+screen leaves by `fadeOutAndRemove`, which takes it out 180 ms after its
+fade starts, and a chip of the two page-lifetime columns hides by
+`display: none`. A hidden pane runs no frames, so the read was made
+under the probe runner in an offscreen window
+(`scratch/120e/tooltip-swap.js`; the page there is a built one, so the
+probe opens the tooltip through its key and reads it from the DOM, and
+it fails by name if the tooltip is not open and pinned before each
+case).
+
+- *A scene swap.* A tooltip pinned on the pre-turn screen's draw chip,
+  then the turn advanced. From the command, in two runs: the screen's
+  fade starts at 15 and 10 ms, the chip leaves the document at 188 and
+  186 ms, the tooltip loses `is-visible` at 194 and 197 ms, and the host
+  is hidden at 344 and 331 ms. The run is in its battle and nothing is
+  open. **A tooltip does not outlive the swap.** It does stay whole for
+  about 190 ms over a screen that is fading out, and then takes its own
+  fade.
+- *An overlay.* Pinned on the sector-map chip, then the chip clicked:
+  112 elements appear (the map), and 0.6 s later the tooltip is still
+  up on the chip. The first Esc closes it. The stylesheet puts the
+  tooltip above that overlay on purpose (z-index 50 over 40). **A pinned
+  tooltip stays over an overlay opened from its own trigger.**
+- *What that makes of the function.* The check in `follow()` does what
+  `closeTooltip`'s comment says it is for at a scene swap, one fade
+  late. A call where a screen's fade starts would close the tooltip with
+  its screen, and that call needs to know whether the open trigger is
+  inside the leaving screen, which is `openTooltipTrigger()`, the other
+  dead export of that file. So the two read as wiring that was written
+  and never connected, as the user guessed, and what is missing is 190 ms
+  and the overlay case, not a tooltip left on the wrong scene.
+- *Not seen:* Firefox. A hover-opened tooltip under a real pointer,
+  where the browser decides when the pointer has left a covered control.
+  The probe's finder did not name the overlay's root element; the 112 is
+  a count of what appeared outside the tooltip.
+- The probe's first form imported the tooltip module by URL and failed
+  on the built page; its second took the tooltip's own content for the
+  overlay. Both showed in the first report read.

@@ -1,9 +1,8 @@
 # Round 8.5 census
 
 **Status: being built; section 1 is read and signed, and sections 2 and 3
-(120d and 120e, written 2026-10-13) are being read at 120e's stop: A-24,
-A-25, A-30 to A-34, A-36 and A-37 are signed, and the classes that need
-a look are open.** Signed (the
+(120d and 120e, written 2026-10-13) were read at 120e's stop and are
+signed but for one item of A-22 (`closeTooltip`).** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -800,10 +799,9 @@ an id from the same word used for something else.
 
 ## 2. Exports, files and exact duplicates (120d)
 
-Written 2026-10-13. **Read in part** at 120e's stop: A-24, A-25, A-30,
-A-31 and A-32 are signed, with the stylesheet trial (the user,
-2026-10-13). A-22, A-23 and A-26 to A-29 are open. What the user is
-asked is in 2.8.
+Written 2026-10-13 and **read** at 120e's stop (the user, 2026-10-13):
+every row is signed but for one item of A-22, `closeTooltip`, which
+waits on the user's word after a measurement. The calls were 2.8.
 
 A fourth proof recurs in this section:
 
@@ -871,15 +869,24 @@ stamps its ID. The 99 were not read one by one, and none is a row.
   probes, the pages), which found none. ARCHITECTURE.md names `Vec2`,
   `FxKey` and `PeriodicOp`, and `plans/sound-registry.md` names `FxKey`;
   each deletion's commit fixes the sentence.
-- Not settled: `closeTooltip`'s comment gives two occasions, "a scene
-  swap, a modal opening", and neither calls it. Whether a tooltip can
-  outlive a scene swap was not tried in the page. It is a question for
-  the render and UI phase's kickoff, and deleting the function does not
-  change the answer.
+- `closeTooltip`, measured (2026-10-13, at the user's ask; `scratch/120e/tooltip-swap.js`
+  under the probe runner, an offscreen window with real frames, twice).
+  Its comment gives two occasions, "a scene swap, a modal opening", and
+  neither calls it. **A tooltip does not outlive a scene swap:** while one
+  is open the module checks every frame whether its trigger has left the
+  document or lost its box (`follow()`, `src/ui/tooltip.ts:422`). With a
+  tooltip pinned on a pre-turn control and the turn advanced, the screen's
+  fade began at 10 and 15 ms, the control left the document at 186 and
+  188 ms, the tooltip began to close at 197 and 194 ms and was gone at 331
+  and 344 ms. So it stays whole for about 190 ms over a screen that is
+  fading out, which a call at the fade's start would end. **Over an
+  overlay it does stay:** pinned on the sector-map chip, it was still up
+  0.6 s after the chip's click had opened the map, until Esc. Not seen:
+  Firefox, and a hover-opened tooltip under a real pointer.
 - Gotchas: none names any of the 25.
 - Fate: **delete**, each in its subsystem's phase.
 - Proof: export.
-- Signed:
+- Signed: **delete** 24 of the 25 (the user, 2026-10-13: "Signing all of your leans except for close tooltip"). `closeTooltip` is **open**: the user asked whether a tooltip outlives a scene swap, and what was measured is above. `openTooltipTrigger` is among the 24 and is raised again with it, since the wiring that would call the one reads the other.
 
 **A-23 · seventeen that only tests reach, each with a reason to stay**
 - In play: nothing a player meets. Each is how a test, a gate or a
@@ -899,7 +906,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
 
 - Fate: **keep** the fourteen. Whether a test earns the seam it uses is
   120e's question.
-- Signed:
+- Signed: **keep** the fourteen (the user, 2026-10-13, in the same words).
 
 **A-24 · the locale layer's way in, ten exports** (`src/i18n/locale.ts`, `ui.ts`, `provenance.ts`, `credits.ts`)
 - In play: nothing today. The game ships one language. These register a
@@ -972,7 +979,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
   a later deletion that orphans one of these fails the hook. What it
   costs is a one-word edit at 257 places in 132 files.
 - Proof: export. The build's bytes do not move.
-- Signed:
+- Signed: **delete the word**, phase by phase (the user, 2026-10-13, in the same words).
 
 **A-27 · 188 exported for a test**
 - In play: each is used by the game inside its own file, and a test
@@ -987,7 +994,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
   `SHAKE_MAX_PX` (`ui/lossFx.ts:42`).
 - Fate: **keep**. The export is the test's way in, and which of those
   tests are needed is 120e's list.
-- Signed:
+- Signed: **keep** (the user, 2026-10-13, in the same words).
 
 ### 2.3 Members nothing reads
 
@@ -1036,7 +1043,7 @@ and tests also read are left out of the four columns.)
   read there. Only `dispose()`'s was read here.
 - Proof: the type check, the suite and the page drive. The build's bytes
   move, because a method ships whether or not it is called.
-- Signed:
+- Signed: **delete**, each after its site is read in its phase (the user, 2026-10-13, in the same words); of the mute, "Mute just being volume zero is good".
 
 **Leads, not rows.** Fifteen class methods that only tests call (66
 lines): on `World`, `shove()`, `bitsTallied()`, `queueLength()`,
@@ -1081,7 +1088,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
 - In play: nothing.
 - Fate: **delete** both.
 - Proof: export.
-- Signed:
+- Signed: **delete** both (the user, 2026-10-13, in the same words).
 
 **A-30 · six instrument files a person ran once** (834 lines, `tests/fuzz`)
 - In play: nothing; no command, test or doc starts them.
@@ -1135,7 +1142,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
 - Fate: **ask**, for the last two.
 - Proof: none across a commit (the oracle map); the type check and the
   suite, which loads the editors' logic for 4 % to 20 % of their lines.
-- Signed, for the two asked about: `sweep-gui`, **delete** (the user, 2026-10-13, in the same words); the lean was "if you no longer open it", the reply spoke of the other tool only, and the session took the signature as the answer and said so. `mapgen-prototype`, **keep** (the user: "while I don't use this often, I anticipate that it'll be very helpful as we add more tile types and need to overhaul the procedural map generation, so I think it can stay"). The fifteen kept by a search are still to be looked at.
+- Signed, for the two asked about: `sweep-gui`, **delete** (the user, 2026-10-13, in the same words); the lean was "if you no longer open it", the reply spoke of the other tool only, and the session took the signature as the answer and said so. Confirmed in the next reply: "Sorry, yes; sweep GUI can go 😂 I don't think I've ever used it". `mapgen-prototype`, **keep** (the user: "while I don't use this often, I anticipate that it'll be very helpful as we add more tile types and need to overhaul the procedural map generation, so I think it can stay"). The fifteen kept by a search: **keep** (the user, 2026-10-13, with the last tranche).
 
 ### 2.5 The same run of tokens in two places
 
@@ -1222,15 +1229,15 @@ So the duplicates go to list B, as leads (2.6).
 
 ### 2.8 Calls for the user at the read (120e's stop)
 
-1. **A-22,** the 25 dead exports: delete.
-2. **A-23,** the fourteen kept.
+1. **A-22,** the 25 dead exports: delete. *Signed for 24; `closeTooltip` open.*
+2. **A-23,** the fourteen kept. *Signed.*
 3. **A-24,** the locale layer's ten: keep, or cut the way in. *Signed: keep.*
 4. **A-25,** the twelve only their tests call, item by item. *Signed.*
 5. **A-26,** the word `export` on 257 declarations: dropped phase by
-   phase, or left.
-6. **A-27,** the 188 exported for a test: kept as a class.
-7. **A-28,** the 21 unread class members: delete.
-8. **A-29,** the two files nothing imports: delete.
+   phase, or left. *Signed: dropped.*
+6. **A-27,** the 188 exported for a test: kept as a class. *Signed.*
+7. **A-28,** the 21 unread class members: delete. *Signed.*
+8. **A-29,** the two files nothing imports: delete. *Signed.*
 9. **A-30 and A-31,** the six by-hand instrument files and the fifteen
    vectors. *Signed.*
 10. **A-32,** the two tools asked about. *Signed: one goes, one stays.*
@@ -1239,9 +1246,8 @@ So the duplicates go to list B, as leads (2.6).
 
 ## 3. The tests, by file (120e)
 
-Written 2026-10-13. **Read in part:** A-33, A-34, A-36 and A-37 are signed,
-with where the tests phase starts (the user, 2026-10-13). A-35 and the
-kept classes (3.7, calls 3 and 6) are open.
+Written 2026-10-13 and **read** at its stop: every row and call is
+signed (the user, 2026-10-13).
 
 A fifth proof recurs in this section:
 
@@ -1384,7 +1390,7 @@ healer never healed".
 
 - Fate: **keep, as a class**: each is a test's way in, as A-27's exports
   are.
-- Signed:
+- Signed: **keep, as a class** (the user, 2026-10-13, in the same words).
 
 **A-36 · five things on a class that only tests drive**
 - In play: nothing; the game never calls any of them. These are the
@@ -1491,10 +1497,10 @@ each). None was read.
 
 1. **A-33,** four test files, item by item. *Signed.*
 2. **A-34,** the pair that drives the same code. *Signed.*
-3. **A-35,** the ten read-backs: kept as a class.
+3. **A-35,** the ten read-backs: kept as a class. *Signed.*
 4. **A-36,** five things only tests drive, item by item. *Signed.*
 5. **A-37,** the test that sets the smoke's length. *Signed.*
 6. **The 60 at the bottom that hold a rule, and the 197 above them:**
-   kept as files.
+   kept as files. *Signed.*
 7. **Where the tests phase starts** (3.5): a list by test, and by which
    of the three ways. *Signed: a list by test, the second way.*

@@ -2675,3 +2675,15 @@ sessions. The session's lean is that 120e starts in a fresh session
 (`process/planning.md`, "Context: the halt and the hand-off line": under
 the line a session may hand off when the next step looks larger than
 the room), and the user can say otherwise.
+
+**The hand-off** (the user, 2026-10-13, on 120d's report): "Just looking
+ahead, that's already a lot to work through 😅 We'll sign these after e,
+right? If so, I'm good for the handoff!" Yes: 120d's read is at 120e's
+stop, as the cut has it, and nothing of section 2 is signed before then.
+So 120e starts in a fresh session, from the Cursor and the step zero
+above. The session's suggestion for that stop, from the user's first
+sentence: bring the two sections in tranches, as 120c's read went, with
+the rows that need a word from the user ahead of the classes that need
+only a look. Readings: **421,787** at 14:55 on 120d's commit, `ca0170f`
+(the hook: 3765 of 3765 in 261 files); **425,444** at 15:15 at the
+hand-off. The session ends under the line.

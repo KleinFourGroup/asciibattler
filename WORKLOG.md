@@ -2804,5 +2804,6 @@ with that test taken out.
 Readings, by the tool's clock: **87,742** at 15:23 after HANDOFF;
 **277,517** at 15:42 with the main suite read and its bottom printed;
 **340,761** at 15:55 with both tiers read and classed; **370,066** at
-15:59 with the census's section, this entry and the Cursor written. The
-step cost about 280k.
+15:59 with the census's section, this entry and the Cursor written;
+**372,730** at 16:01 on 120e's commit, `8b37ac3` (the hook: 3765 of 3765
+in 261 files). The step cost about 280k.

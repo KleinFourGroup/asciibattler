@@ -2830,3 +2830,35 @@ all of those leans in this tranche; signed!" So:
 - *Not in that tranche, by the session's own order:* A-35 (the ten
   read-backs), the classes kept as files, and all of section 2. 120d
   and 120e stay ◐.
+
+Reading: **393,482** at 16:21 on the first tranche's commit, `20ccf82`.
+
+**Section 2's asks, held against their sources before their tranche**
+(the same session). 120d had left four things unlooked at, and each row
+the user is asked about was opened first.
+
+- *A-25, the twelve.* Each declaration read with its comment. All are as
+  the table says: a one-line wrapper over what the game calls
+  (`rarityStars`, `orderRoster`, `hazardCells`), a predicate or formula
+  the game does not call (`basicAttackDamage`, `footprintFits`, the two
+  `…Availability`, `isActiveNeutral`), a text print "for eyeball
+  verification" (`dump`), three copied glyphs. No lean moved.
+- *A-30, one lean moved.* `readEpsilonAA.ts` was "ask". Its header and a
+  search say it is the only derivation of the arbitrated bot's noise
+  floors, which are constants in `rollout/arbitratedStrategy.ts`
+  (`PORT_BUY_EPSILON` and five more), so a new decision site needs it
+  run again. Now "keep", with its two files. `verifyArbitratedRuns.ts`
+  is one phase's exit check over a list of sites that its own comment
+  calls deliberately partial: still "delete".
+- *A-31, the vectors.* BALANCE.md was searched for each of the fifteen
+  files' stems and names none. Its rows for those arms (the ladder, the
+  stack, the boss flip) give a result and no command, and a row measured
+  on an older engine reproduces only on its commit's tree, which holds
+  the file. The lean stays "delete".
+- *A-32, the two tools.* Their READMEs read. `sweep-gui` builds an
+  `npm run fuzz` command to paste and runs nothing; its last change of
+  substance was in June. `mapgen-prototype` draws the battle map the
+  production generator makes for a seed and was last touched in August
+  with the generator. Whether either is still opened is the user's to
+  say.
+- Not looked at: the bodies of A-30's two bench files; A-24's tests.

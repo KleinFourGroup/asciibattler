@@ -1083,7 +1083,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
   |---|---|---|---|
   | `benchRollout.ts` | 81 | times a world's copy and its ticks, to price the bot's search dials; "re-run whenever the dials are re-derived" | keep: its header names when it runs again |
   | `rollout/benchRunRollout.ts` | 151 | the same one layer up, for the arbitrated bot's cost | keep, likewise |
-  | `rollout/readEpsilonAA.ts`, `epsilonAA.ts`, `epsilonAA.test.ts` | 312, 136, 62 | derives the noise floor the arbitrated bot's decisions are judged against; last run for Round 6's re-read | ask |
+  | `rollout/readEpsilonAA.ts`, `epsilonAA.ts`, `epsilonAA.test.ts` | 312, 136, 62 | derives the noise floor the arbitrated bot's decisions are judged against; last run for Round 6's re-read | keep (was "ask", changed 2026-10-13 on a read of its header): the floors are constants in `rollout/arbitratedStrategy.ts` (`PORT_BUY_EPSILON` and five more), this is their only derivation, and a new decision site needs it again |
   | `rollout/verifyArbitratedRuns.ts` | 92 | one phase's exit check: full arbitrated runs, counting decisions per site | delete |
 
 - Evidence: `scratch/120d/files.ts`; no tracked file outside `archive/`
@@ -1101,8 +1101,11 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
   finalists of another (`92c2-…`). The vectors the board deploys are
   other files, named by `tests/fuzz/board/board.ts`, and stay.
 - Evidence: no code, test or live doc holds any of the fifteen names;
-  an archived worklog names three. Whether a past row of BALANCE.md
-  needs one to be reproduced was not looked into.
+  an archived worklog names three. BALANCE.md names none of them
+  (searched by each file's stem, 2026-10-13): its rows for those arms
+  give a result and no command. A row measured on an older engine
+  reproduces only on the tree of its commit, and that tree holds the
+  file.
 - Fate: **ask**. Lean: **delete**; git keeps them.
 - Proof: instrument.
 - Signed:

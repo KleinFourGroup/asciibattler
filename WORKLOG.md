@@ -2478,3 +2478,200 @@ me, Claude!" So 120d starts in a fresh session, from the Cursor and the
 step zero above. Readings: **348,715** at 13:56 on the step zero's
 commit, `9dbda3c`; **350,396** at 14:00 at the hand-off. The session
 ends under the line.
+
+### 120d — exports, files and exact duplicates (2026-10-13, session 3ecdd7bf)
+
+Pre-flight at `3daf4f2`: the tree clean, the type check clean, the suite
+3764 of 3764 in 261 files. The result is
+[round-8.5-census.md](round-8.5-census.md), section 2, rows A-22 to A-32.
+Nothing under `src` or `config` changed. `tests/oracle/refs.ts` and its
+test did, in a commit of their own (`c2bdeb9`).
+
+**Step zero.** The premise was that the stored scan's three counts are
+the step's first list. `src` had not moved since the scan
+(`git diff --stat ee382a9 HEAD` over `src`, `config`, `tools`, `scripts`,
+`shell` and `tests` names four files, all under `tests/oracle`). The
+counts held and the list did not: the scan answers one step out, so it
+calls an export used when its one reader is read by nothing. The step
+was built on a walk that follows the reads to the end, which is inside
+the cut's intent.
+
+**Built**, in `scratch/120d/` (not tracked; this machine only). Each
+runs a self-check on planted input first and refuses to print if a known
+answer is wrong.
+
+- `files.ts`: which entry loads each tracked file. An entry is the
+  game's page, a tool's page, a file a `package.json` command names, the
+  hook, a test, a build config, or a file a doc tells a person to run.
+  Three strengths of edge: an import the build keeps or a string that
+  names a tracked file; an import the build erases; a string that names
+  a folder. 20 known answers on a planted tree. `--candidates` prints,
+  for each file no import or path reaches, every tracked file that holds
+  its base name. Output `files.json`.
+- `graph.ts`: every top-level declaration of every `.ts` file that is
+  not a test (4,658 in 403 files, about a minute), an edge for each read
+  of one inside another (the reads are `refs.ts`'s), and each
+  declaration live, test-kept or dead by what reaches it from the
+  module-level code of files `files.json` says an entry runs. 19 known
+  answers, among them an export "used" only by a dead function in
+  another file, a pair that keep each other alive, and a file no entry
+  loads. It holds its count of `src` exports by direct standing against
+  the stored scan's. Output `graph.json`.
+- `members.ts`: each member of each class and interface under `src`,
+  stood as `refs.ts` stands a name. 12 known answers.
+- `dupes.ts`: identical runs of tokens, by the parser's tokens for
+  TypeScript and a small scanner for CSS and GLSL, with the imports left
+  out; `--mode=norm` reads every name, string and number as one word
+  each. Its known answers: a copy laid out otherwise is found by both
+  modes, a renamed copy by the second alone, three shared imports and a
+  short run by neither.
+- `report.mjs` (the lists and the seeded draws) and `words.mjs` (each
+  dead or test-kept name searched in the files outside the type check
+  and in the docs).
+
+**What the checks caught in the instruments.**
+
+- *The kept finder missed two kinds of read.* The walk's first list
+  called nine locals unread, seven of them under `src` (the three
+  focus-tile resolvers, the two selection orders, `hasWebgl` and
+  `titleSeq`) and two under `tools`. A local nothing reads
+  cannot be there, since the type check refuses one (`noUnusedLocals`)
+  and passes. The language service marks `{ name }` and `++seq` as
+  writes, and `refs.ts` took its word. Fixed in the kept tool: `{ name }`
+  is a read of the variable (and still a write of the property, when the
+  property is what was asked), and a step or compound assignment whose
+  result is used is a read. Two planted cases and two for their limits
+  in `refs.test.ts`; each of the finder's 19 rules taken out in turn
+  fails that file. On the stored scan one name of 2,137 moved
+  (`setTextScale`, test-only to used), no schema key moved, and 120c's
+  walk gives its six classes at the same counts (464, 43, 45, 44, 7,
+  13). `graph.ts` now prints how many locals stand unread, which is the
+  known answer on the repo itself: 0.
+- *A class's member counts the interface's signature as a reader.* The
+  member scan's first self-check failed on two members that implement an
+  interface and that nothing calls: they stood "own-only". Another
+  declaration of the same member is now left out. `refs --members` takes
+  interfaces and type literals only, so the kept tool is not affected.
+- *Probes that are not in the repo were counted.* The type check's
+  program holds the `.ts` files under `tests/fuzz/output/` on this
+  machine. The walk now takes tracked files only (the tests' dead count
+  fell from 126 to 64).
+- *A plant that did not remove its rule.* One of the two new rule
+  plants read `false && A || B`, which leaves B standing. Seen on a
+  re-read before the run, and replaced.
+- *A backslash lost in a heredoc,* in the script that patched the test:
+  a template literal inside a template lost its escapes. Seen by reading
+  back what landed, as AGENTS says to. In the friction log.
+- *Census numbers that were guesses.* Re-counted before the commit: the
+  tools' stylesheet lines (written as 4,300, counted 6,828, of which the
+  twelve `editor.css` files are 5,815), five cells of the members
+  table, the entries by kind, and the test-kept exports' lines.
+
+**What the walk says.**
+
+- **What a search proves dead among the exports is small.** 25 exports
+  nothing reaches (54 lines), 39 only tests reach (243 lines, and 14 of
+  those have a reason to stay), 21 class members nothing reads (81
+  lines), two files nothing imports (35 lines). Under 500 lines of the
+  63,458 under `src`. The round's size is not in this list.
+- **Where the lines are instead:** 22,996 lines of tools, of which the
+  editors' stylesheets repeat 3,463; 2,798 repeated lines of set-up in
+  the test files under `src`; 834 lines of instruments nothing starts.
+- **257 exports are read only by their own file.** With the word gone
+  the type check guards each of them, which is the finder's job done on
+  every commit.
+- **No exact duplicate read was a plain deletion.** Each of three
+  whole-function copies has a comment that says why it is a copy, or a
+  permanent gate that forbids the import. They are leads for list B.
+- **The locale layer has no second language,** so ten of its exports
+  and one file are reached by tests alone.
+- **Five `dispose()` methods never run,** and nothing leaks by it:
+  `Game` builds each renderer once for the life of the page.
+
+**Calls made here, for the read at 120e's stop.**
+
+1. *The walk's classes stand in for the scan's.* The census gives dead,
+   test-kept, "the export is unneeded" and "exported for a test".
+2. *Members were scanned,* beyond the cut's letter. Class members
+   nothing reads are a row; the fifteen only tests call and the
+   interface members are leads.
+3. *Duplicates got no row in list A,* against the spec's D1, which
+   lists exact duplicates under what a search can settle.
+4. *The finder's fix was made in the step and committed apart,* since
+   the lists rest on it.
+5. *Fifteen tools carry a "keep" on what a search can show* (a catalog
+   Round 10 writes, a command, a gate); two are asked about.
+6. *The editors' stylesheets are raised as a possible trial,* against
+   the signed "deletion only" for `tools/`: a call the census puts to
+   the user and does not make.
+7. *The plan search for this section* covered META-ROADMAP, `plans/`,
+   DESIGN, TODO, BALANCE, PATHING and the archived specs and road maps,
+   by each candidate's name. It changed one row's note (the mute, which
+   two plans name) and no lean.
+
+**Leads the census does not hold.** In the instruments: two exports
+nothing reaches (`presetHarnessOptions` in `tests/fuzz/search.ts`,
+`TierName` in `sweepCommand.ts`) and seven only tests reach
+(`storedIds`, `serializeEmpowerPolicy`, `serializeRedrawPolicy`,
+`isDecisionSite` and `epsilonAA.ts`'s three), for the instruments'
+phase.
+
+**Not verified.** No candidate was deleted or planted, so no proof named
+in section 2 has been run against its row. Of A-22, the ten functions
+and constants were read with their comments and the fifteen types were
+not. A-25's tests were looked at by their first three lines each. A-28:
+only `dispose()`'s callers were read. A-30: the headers. A-31 and A-32:
+not opened. The 257, the 188 and the 99 were drawn or counted and not
+read. No rule of `files.ts`, `graph.ts`, `members.ts` or `dupes.ts` was
+taken out in turn, as `refs.ts`'s were, so each known answer shows its
+rule works on the planted case and not that the rule is needed.
+`files.ts` follows `tests/importGraph.ts` in counting a plain import
+used only as a type as a run-time import, so its "types only" column is
+a floor. The duplicate finder's 50 and 80 tokens were chosen and not
+tuned. Whether a tooltip can outlive a scene swap (`closeTooltip`) was
+not tried in the page. Whether a past row of BALANCE.md needs one of
+A-31's vectors was not looked into.
+
+Readings: **87,341** at 14:05 after HANDOFF; **197,924** at 14:11 with
+the cut, 120b's and 120c's record, the spec and the oracle map read;
+**312,860** at 14:30 with the four instruments built and the finder
+fixed; **348,138** at 14:38 with the lists gathered; **386,560** at
+14:46 on the fix's commit, `c2bdeb9` (the hook: 3765 of 3765 in 261
+files); **415,792** at 14:53 with the census, this entry and the
+session's report written. The step cost about 330k, as 120c's build
+did.
+
+### 120e — step zero, counted before the step is started (2026-10-13, session 3ecdd7bf)
+
+Counted at 120d's end so that the call on where 120e runs has numbers.
+Nothing of 120e was built.
+
+- One run of `npm test` with Vitest's JSON reporter
+  (`scratch/120e/suite.json`; `stepzero.mjs` prints this): 261 files and
+  3,765 tests, whose own time sums to 154 s. Twelve files hold at most
+  two tests and six hold one. The slowest ten files hold 56 % of the
+  test time, and in 182 files the tests take under 50 ms together. The
+  smoke tier's 65 files were not run.
+- One file alone under the coverage tool, with the flags
+  `tests/oracle/reach.ts` uses: 6 s for `src/core/RNG.test.ts` and 7 s
+  for `src/sim/occupancy.test.ts`, each leaving a reading of 3.9 MB. So
+  the main suite file by file is about half an hour in sequence, as the
+  kickoff guessed, and 1 GB of readings unless each is cut down to its
+  lines as it is made.
+- Two known answers for that instrument are already in TESTING.md's
+  oracle map: what the suite loses with `src/store/backup.test.ts`
+  deleted (20 lines, 4 functions and 23 branch arms of `backup.ts`), and
+  with `src/run/enemyBudget.test.ts` deleted (no line, two arms).
+- 120d left three things 120e's list by file can carry: the twelve
+  exports only their own tests call (A-25), the fifteen class methods
+  only tests call, and 2,798 repeated lines of set-up in the test files
+  under `src`.
+
+**The call on where 120e runs.** From 416k the room under the line is
+about 135k. 120e is a batch of half an hour, a list of 326 files to
+class at its bottom, a section of the census, and a stop that reads two
+sections with the user; 120c's read alone cost about 340k over two
+sessions. The session's lean is that 120e starts in a fresh session
+(`process/planning.md`, "Context: the halt and the hand-off line": under
+the line a session may hand off when the next step looks larger than
+the room), and the user can say otherwise.

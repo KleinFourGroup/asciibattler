@@ -1,6 +1,7 @@
 # Round 8.5 census
 
-**Status: being built; section 1 is read and signed.** Signed (the
+**Status: being built; section 1 is read and signed, and section 2
+(120d, written 2026-10-13) waits for its read at 120e's stop.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -794,3 +795,431 @@ an id from the same word used for something else.
    `--camp-raid` and the five tuning flags keep) and A-21 (two switches
    delete, `passIsFinal` and the playback flags keep). None is open:
    the read of section 1 closed on 2026-10-13.
+
+## 2. Exports, files and exact duplicates (120d)
+
+Written 2026-10-13 and **not yet read**: the read is at 120e's stop.
+Rows A-22 to A-33 are open. What the user is asked is in 2.8.
+
+A fourth proof recurs in this section:
+
+- **export**: for an export or a file that nothing reaches. Delete it,
+  then the type check, which names any reader left behind;
+  `npm run oracle -- build-hash` equal to the ref (`--dev` for `src/dev`),
+  since the bundler already drops an export nothing imports; the suite;
+  and `reach-diff` when a test goes with the code. In `src/sim`,
+  `src/run` and `src/config` the corpus and the fuzz diff as well. A
+  class's method is not dropped by the bundler, so deleting one moves the
+  build's bytes: there the proof is the type check, the suite and the
+  page drive.
+
+### 2.1 What was counted
+
+| | count | how |
+|---|---|---|
+| exported names under `src` | 1,523, in 275 files | `npm run oracle -- refs --all`, after the fix in 2.7. Five hand on a name another file declares and are counted there, so 1,518 declarations |
+| top-level declarations | 4,658, in 403 files | every one in a `.ts` file that is not a test, under `src`, `tests`, `tools` and `scripts`, exported or not |
+| members under `src` | 2,055, in 279 files | each method, accessor and field of a class that is not `private`, and each member of an interface |
+| tracked files that are not docs | 974, with 394 entries | an entry is what a person or a tool starts: the game's page, 17 tool pages, the 28 files that `package.json`'s commands start, the hook, 329 test files and test configs, seven build and editor configs, and 11 files a doc tells a person to run |
+| token runs | 762 files | every `.ts`, `.css` and `.glsl` file under `src`, `tests`, `tools` and `scripts` |
+
+### 2.2 The exports, by class
+
+`refs` says who reads a name one step out. This section's walk follows the
+reads to the end: a declaration is **live** when the module-level code of
+a file some entry runs reaches it through any chain of reads, **test-kept**
+when only a test does, and **dead** when nothing does. So an export whose
+one reader is itself read by nothing is dead here, where `refs` calls it
+used.
+
+| class | exports | lines | rule | fate |
+|---|---|---|---|---|
+| **dead** | 25 | 54 | nothing that runs reaches it, and no test | A-22 |
+| **test-kept** | 39 | 243 | only tests reach it | A-23, A-24, A-25 |
+| **the `export` is unneeded** | 257 | | live, and nothing outside its file reads it | A-26 |
+| **exported for a test** | 188 | | live, and outside its file only tests read it | A-27 |
+| **used** | 1,009 | | live, and another file that runs reads it | keep |
+
+Of the live exports, 99 in 35 files are reached by a tool, an
+instrument, a script or a build config and not by the game's page (938
+lines; `src/config` 12 files, `src/sim` 7, `src/i18n` 7). The two files
+looked at are how the editors read the ability catalog and how the build
+stamps its ID. The 99 were not read one by one, and none is a row.
+
+**A-22 · the 25 exports nothing reaches**
+- In play: nothing. No code that runs and no test calls any of them.
+- What they are: seven functions, three constants and fifteen types.
+
+  | name | declared | what it was |
+  |---|---|---|
+  | `healAmountFor`, `magicBoltDamage`, `catapultShotDamage` | `sim/stats.ts:155`, `:164`, `:173` | the heal and damage formulas of three abilities from before abilities were data; each is `might` plus one stat |
+  | `firstOpOf` | `config/abilities.ts:84` | the first effect of a kind on an ability; its comment says the unit card and the editor read through it, and neither does |
+  | `proseFamily` | `i18n/families.ts:47` | a lookup of one prose family by name |
+  | `closeTooltip`, `openTooltipTrigger` | `ui/tooltip.ts:347`, `:352` | close whatever tooltip is open; the open tooltip's element "for probes and tests" |
+  | `WORLD_COMMAND_KINDS` | `sim/Command.ts:23` | a list of the three battle command kinds |
+  | `EFFECT_DURATIONS`, `EffectDuration` | `config/packets.ts:86`, `:87` | the four duration words, read only by the type beside them |
+  | `RangeSchema`, `Range` | `config/schemas.ts:11`, `:17` | a low-and-high pair; the file is A-29 |
+  | `Vec2` | `core/types.ts:13` | a 2D vector type |
+  | 12 one-line types | `SectorMapNode`, `SectorEncounterPools`, `ProceduralCampsConfig`, `FxKey`, `RedrawConfig`, `ScalingStat`, `ScalarOrScaled`, `PeriodicOp`, `MoveOp`, `ApplyStatusOp`, `StatusPeriodic`, `StatusBehavior` | names for types nothing names |
+
+- Evidence: the walk, and for each name a word search of every tracked
+  file outside the type check (the `.mjs` and `.js` scripts, the shell's
+  probes, the pages), which found none. ARCHITECTURE.md names `Vec2`,
+  `FxKey` and `PeriodicOp`, and `plans/sound-registry.md` names `FxKey`;
+  each deletion's commit fixes the sentence.
+- Not settled: `closeTooltip`'s comment gives two occasions, "a scene
+  swap, a modal opening", and neither calls it. Whether a tooltip can
+  outlive a scene swap was not tried in the page. It is a question for
+  the render and UI phase's kickoff, and deleting the function does not
+  change the answer.
+- Gotchas: none names any of the 25.
+- Fate: **delete**, each in its subsystem's phase.
+- Proof: export.
+- Signed:
+
+**A-23 · seventeen that only tests reach, each with a reason to stay**
+- In play: nothing a player meets. Each is how a test, a gate or a
+  build script reaches code that ships.
+
+  | names | why it stays |
+  |---|---|
+  | `EMPOWER` · `getSelectionStrategy` · `getFocusTileResolution` | they do not stay: each is the code of a row already signed for deletion (A-02, A-09, A-10) |
+  | `SUBSET_RANGES`, `SubsetRange`, `PRIMARY_EXCLUDES` (`render/fontSubset.ts`) | `scripts/build-font.mjs` imports them, outside the type check, so the walk cannot see their reader. Found by the word search |
+  | `subsetCovers` · `SILENT_EVENTS`, `SilentReason` | read by two permanent gates: the font coverage and "every bus event has a sound or a silent reason" |
+  | `scanReservedSwapPartners` (`sim/actions/SwapAction.ts:222`) | a test-side recount of the swap index from scratch, kept on purpose so the check does not consult the cache it checks |
+  | `mapValues` (`journal/replayDigest.ts:63`) | what a declared mapping is written with, for the second form of byte identity (the spec's D3) |
+  | `sumLossEvents` (`run/chipRule.ts:243`) | one side of the chip rule's pin |
+  | `parseAbilityDef`, `parseStatusDef` | how 41 and 24 test sites build a fixture through the real schema |
+  | `isClaimed` (`sim/occupancy.ts:379`) | how four test files ask whether a cell is claimed, at 17 places |
+  | `getReducedMotionOverride`, `getShakePolicy` | how the settings tests read back what a setting set |
+
+- Fate: **keep** the fourteen. Whether a test earns the seam it uses is
+  120e's question.
+- Signed:
+
+**A-24 · the locale layer's way in, ten exports** (`src/i18n/locale.ts`, `ui.ts`, `provenance.ts`, `credits.ts`)
+- In play: nothing today. The game ships one language. These register a
+  second one (`registerLocale`, `registerUiLocale`), reset the registry
+  between tests, mark and list translations that have gone stale
+  (`setFuzzyMarker`, `fuzzyEntries`, `isAuditClean`), and list a
+  language's translators for the credits (`localeCredits`, with
+  `registeredLocaleFiles` and `registeredUiTables`). No screen shows
+  those credits: `src/i18n/credits.ts` is a file only a test loads.
+- Evidence: the walk. 25 test reads, and no reader that runs.
+- Plans: META-ROADMAP's Round 7 put the layer in with "no translation
+  work", and its Round 8 notes say the locale has "no row in Settings;
+  the row comes with a second locale". A search of that file for
+  "locale" and "translat" found no round that schedules one.
+- Fate: **ask**. Lean: **keep**. The fallback and stale-marker code
+  paths are the layer's point, they run only when a second language is
+  registered, and these ten are how the tests register one. Cutting them
+  leaves the layer untested.
+- Signed:
+
+**A-25 · twelve that only their own tests call**
+- In play: nothing. Each has a test that calls it and checks its answer,
+  and nothing else reads it, so the test holds up code the game does not
+  run.
+
+  | name | declared | what it is | lean |
+  |---|---|---|---|
+  | `basicAttackDamage` | `sim/stats.ts:146` | the fourth of A-22's old formulas; 5 test reads | delete |
+  | `WALL_GLYPH`, `HALF_COVER_GLYPH`, `RUBBLE_GLYPH` | `sim/environment.ts:27`, `:35`, `:130` | each a copy of a glyph that the unit catalog holds; 9 test lines check the two copies agree | delete, as A-03 |
+  | `rarityStars` | `ui/rarityDisplay.ts:53` | the star run as one string; the game calls `rarityStarParts` | delete; its 4 tests call the other |
+  | `orderRoster` | `ui/rosterOrder.ts:55` | the roster in display order; the game calls `orderRosterWithIndices` | delete; its 12 tests call the other |
+  | `dump` | `run/NodeMap.ts:928` | a text print of a node map, 32 lines; 3 test reads | delete |
+  | `hazardCells` | `bot/sensors.ts:224` | the set form of `hazardCellList`; 1 test read | delete |
+  | `footprintFits` | `sim/occupancy.ts:168` | whether every cell of a footprint is free; 7 reads, all in its own test | delete |
+  | `empowerAvailability`, `redrawAvailability` | `run/empower.ts:48`, `run/redraw.ts:43` | how many empowers and redraws a grant has left; the game asks `empowerRejection` and `redrawRejection` | delete |
+  | `isActiveNeutral` | `sim/Unit.ts:73` | whether a neutral unit is a camp member and not scenery. Its comment calls it "THE active-neutral predicate"; the game does not call it | **keep for the neutral-team trial** (120f), which sizes how the game makes that test today |
+
+- Gotchas: #94 names `basicAttackDamage` as what reads a unit's
+  archetype tag. The reader today is `damageStatFor`, and the deletion's
+  commit corrects the sentence.
+- Fate: **ask**, item by item, with the leans above: whether a test is
+  redundant is the user's call.
+- Proof: export, with `reach-diff` for each test that goes.
+- Signed:
+
+**A-26 · the word `export` on 257 declarations**
+- In play: nothing. Each is used, inside the file that declares it.
+- What they are: 134 interfaces, 61 types, 46 constants and 16
+  functions, most in `src/ui` (48), `src/sim` (40), `src/config` (31),
+  `src/dev` (29) and `src/run` (29).
+- Ten drawn by a seeded draw (seed 120), for the user to check against
+  what they know:
+
+  | name | declared | kind | read by |
+  |---|---|---|---|
+  | `ModalOptions` | `ui/modal.ts:41` | interface | its file, 1 |
+  | `ROLLOUTS_PER_CANDIDATE` | `bot/RolloutSearchDriver.ts:48` | const | its file, 1 |
+  | `ShippedFace` | `render/fontSubset.ts:81` | interface | its file, 1 |
+  | `StatsConfig` | `config/stats.ts:82` | type | its file, 1 |
+  | `PoolSide` | `ui/poolGauge.ts:21` | type | its file, 2 |
+  | `EmpowerDisplay` | `render/statusDisplay.ts:53` | interface | its file, 1 |
+  | `assertProceduralCampRefs` | `config/camps.ts:174` | function | its file, 1 |
+  | `JournalStamp` | `journal/JournalRecorder.ts:43` | interface | its file, 1 |
+  | `RunEscalation` | `ui/GameOverScreen.ts:51` | interface | its file, 2 |
+  | `CopySteps` | `ui/copyText.ts:13` | interface | its file, 1 |
+
+- Fate: **delete the word**, in each subsystem's phase and not as one
+  sweep. What it buys is a guard: the type check refuses a local that
+  nothing reads and says nothing of an export, so once the word is gone
+  a later deletion that orphans one of these fails the hook. What it
+  costs is a one-word edit at 257 places in 132 files.
+- Proof: export. The build's bytes do not move.
+- Signed:
+
+**A-27 · 188 exported for a test**
+- In play: each is used by the game inside its own file, and a test
+  reads it from outside: 87 constants (a tuning number a test pins), 69
+  functions, 31 types and one class.
+- Ten drawn (seed 120): `STAR_FILLED` and `STAR_HOLLOW`
+  (`ui/rarityDisplay.ts`), `SOUND_SOURCES` (`audio/AudioPlayer.ts:50`),
+  `stripMotion` (`render/fxRegistry.ts:305`), `parseEscalation`
+  (`config/escalation.ts:73`), `Palette` (`render/palette.ts:91`),
+  `CHOKE_MAX_CUT` (`bot/scripts/chokeHold.ts:35`), `ANIM_HEALING`
+  (`render/TerrainRenderer.ts:141`), `WEB_PROBE_KEY` (`store/web.ts:10`),
+  `SHAKE_MAX_PX` (`ui/lossFx.ts:42`).
+- Fate: **keep**. The export is the test's way in, and which of those
+  tests are needed is 120e's list.
+- Signed:
+
+### 2.3 Members nothing reads
+
+Beyond the cut's letter, and built because a class is one node to the
+walk: `Run.ts` and `World.ts` hold about a third of the sim and run code
+in two classes.
+
+| | nothing reads | only its own file | only tests, and not its file | used |
+|---|---|---|---|---|
+| class methods and accessors, 402 | 17 | 12 | 15 | 336 |
+| class fields, 111 | 4 | 5 | 0 | 93 |
+| interface members, 1,542 | 136 | 593 | 57 | 643 |
+
+(31 class members and 113 interface members that their own file reads
+and tests also read are left out of the four columns.)
+
+**A-28 · 21 class members nothing reads** (81 lines)
+- In play: nothing; no code and no test calls them.
+
+  | members | where | note |
+  |---|---|---|
+  | `dispose()` on five renderers, and `Renderer.stop()` | `ApronRenderer`, `BackdropRenderer`, `SpriteRenderer`, `TerrainRenderer`, `UnitOverlayLayer`, `Renderer.ts:447` | teardown that never runs. `Game.ts:313-344` builds each renderer once, for the life of the page, so nothing leaks by its absence |
+  | `getCameraView()`, `getCameraMode()` | `render/Renderer.ts:279`, `:395` | |
+  | `count()`, `updateLevel()` | `render/UnitOverlayLayer.ts:218`, `:342` | |
+  | `setDither()` | `render/ApronRenderer.ts:274` | |
+  | `cellSizePx`, `atlasWidthPx`, `atlasHeightPx` | `render/FontAtlas.ts:139-141` | three fields |
+  | `setMuted()`, `isMuted` | `audio/AudioPlayer.ts:287`, `:291` | `plans/sound-registry.md` said the options menu "will finally call" the mute; by that plan's own later note the settings call `setVolume(master, sfx)`, and nothing sets the mute |
+  | `isOpen()` on three overlays | `CardListModal`, `CreditsOverlay`, `SettingsOverlay` | |
+  | `HUD.hide()` | `ui/HUD.ts:600` | 11 lines |
+  | `EffectAction.orphanPolicy` | `sim/effects/EffectAction.ts:76` | a field set at one place and read nowhere; the ability's own key of that name is read at four places |
+
+- Plans: the names of this row, of A-22 and of A-25 were searched in
+  META-ROADMAP, `plans/`, DESIGN, TODO, BALANCE, PATHING and the
+  archived specs and road maps. Apart from the mute, every hit is the
+  archived road map of the phase that built the name.
+- Evidence: `scratch/120d/members.ts`, and a search for `.name` in the
+  60 scripts, probes, pages and pane procedures, which reach the game by
+  name through `window.__game`. It found three words too common to
+  settle: `.stop` and `.hide` here, and `.label` among the leads below.
+  Those sites were not read.
+- Fate: **delete**, each in its subsystem's phase, after its site is
+  read there. Only `dispose()`'s was read here.
+- Proof: the type check, the suite and the page drive. The build's bytes
+  move, because a method ships whether or not it is called.
+- Signed:
+
+**Leads, not rows.** Fifteen class methods that only tests call (66
+lines): on `World`, `shove()`, `bitsTallied()`, `queueLength()`,
+`damageDealtBy()`, `utilityDoneBy()` and `swapReservedPartnerIndex()`;
+on `Run`, `eventFlag()` and `registerTrigger()`; `Keybindings.rebind()`
+and `overrides()`; and five more. None was read. `World.shove()` is a push, and
+Round 9 plans forced movement, so it is not to be cut before that
+kickoff reads it. They become rows at 120e, where the tests that call
+them are classed. Of the 136 interface members nothing reads, 126 are
+written somewhere and 92 are in the probe kit and the diagnostics report
+(`src/dev/probe`, `src/dev/diag`, `src/diagnostics`), whose objects are
+read as JSON by scripts outside the type check; the rest are leads for
+each subsystem's kickoff.
+
+### 2.4 The files, by what runs them
+
+| | files | an entry that is not a test runs it | only tests load it | reached as types only | no import or path reaches it |
+|---|---|---|---|---|---|
+| `src`, code | 279 | 270 (the game's page 248; a tool, an instrument or a script 22) | 3 | 4 | 2 |
+| `tests`, code that is not a test | 86 | 74 | 7 | 1 | 4 |
+| `tools` | 66 | 65 | 1 | | |
+| `scripts` | 21 | 19 | | 2 | |
+| `shell` | 23 | 14 | 1 | 1 | 7 |
+| `config`, `public`, `locales`, `assets` | 79 | 63 | | | 16 (loaded by folder: ten locale files, six fonts) |
+
+The seven `src` files reached as types only or by a test alone hold the
+event catalog, the command types and the stream keys, and are used. The
+tests' own helpers account for six of the seven under `tests`. Every
+script is started by a command, the hook or a doc. Of the seven shell
+files no path reaches, two are started by the shell's own code through
+a path built from pieces (`analyze-recording.mjs`, `frame-rate.js`; the
+name search found them), and five by hand from the command in their
+header: two probes of Round 8's and the three files of the display
+test. ARCHITECTURE's tree lists all seven, and they are kept.
+
+**A-29 · two source files nothing imports**
+- `src/config/schemas.ts` (17 lines): `RangeSchema`, a low-and-high pair
+  "kept here rather than inlined per loader" as "one import surface for
+  future extensions". No loader imports it; last committed 2026-05-18.
+- `src/sim/effects/index.ts` (18 lines): eight `export * from` lines, a
+  single door to the effects folder that every importer walks past.
+- In play: nothing.
+- Fate: **delete** both.
+- Proof: export.
+- Signed:
+
+**A-30 · six instrument files a person ran once** (834 lines, `tests/fuzz`)
+- In play: nothing; no command, test or doc starts them.
+
+  | file | lines | what its header says | lean |
+  |---|---|---|---|
+  | `benchRollout.ts` | 81 | times a world's copy and its ticks, to price the bot's search dials; "re-run whenever the dials are re-derived" | keep: its header names when it runs again |
+  | `rollout/benchRunRollout.ts` | 151 | the same one layer up, for the arbitrated bot's cost | keep, likewise |
+  | `rollout/readEpsilonAA.ts`, `epsilonAA.ts`, `epsilonAA.test.ts` | 312, 136, 62 | derives the noise floor the arbitrated bot's decisions are judged against; last run for Round 6's re-read | ask |
+  | `rollout/verifyArbitratedRuns.ts` | 92 | one phase's exit check: full arbitrated runs, counting decisions per site | delete |
+
+- Evidence: `scratch/120d/files.ts`; no tracked file outside `archive/`
+  gives a command for any of them. GOTCHAS names the last as a past
+  example of a stale private list. Their headers were read and their
+  bodies were not.
+- Fate: **ask**, at the instruments' phase.
+- Proof: instrument.
+- Signed:
+
+**A-31 · fifteen stored weight vectors nothing names** (39 KB, `tests/fuzz/fixtures`)
+- In play: nothing. Each is a bot's weight vector saved from a search:
+  nine from the micro round's ladder, stack and fire arms (`60-…`), two
+  finalists and the winner of one later search (`85g5-…`), three
+  finalists of another (`92c2-…`). The vectors the board deploys are
+  other files, named by `tests/fuzz/board/board.ts`, and stay.
+- Evidence: no code, test or live doc holds any of the fifteen names;
+  an archived worklog names three. Whether a past row of BALANCE.md
+  needs one to be reproduced was not looked into.
+- Fate: **ask**. Lean: **delete**; git keeps them.
+- Proof: instrument.
+- Signed:
+
+**A-32 · the seventeen tools** (22,996 lines, `tools/`; deletion only)
+
+| tool | lines | last commit | what it does | lean |
+|---|---|---|---|---|
+| the eleven catalog editors (archetype, attack, camp, character, encounter, event, layout, packet, price, reward, sector) | 19,240 | 07-22 to 09-17 | each authors one `config/*.json` and saves it through the dev server | keep: Round 10 is content |
+| `blacklist-editor` | 817 | 07-24 | toggles which units the draft pool holds | keep, likewise |
+| `run-config` | 716 | 10-09 | launches a run at a given seed, board, roster or daemon | keep: HANDOFF and TODO name it |
+| `nodemap-viz` | 734 | 08-13 | draws the node map a seed makes; `npm run nodemap:metrics` is its report | keep: a command runs it |
+| `font` | 139 | 09-18 | reads a font file's tables | keep: the font-coverage gate imports it |
+| `sweep-gui` | 635 | 07-21 | a page in front of the fuzz harness's sweeps | ask; TODO carries an item to teach it the sector walk, which a deletion would close |
+| `mapgen-prototype` | 715 | 08-17 | a sandbox that draws the terrain a seed generates | ask; lean delete if it is no longer opened |
+
+- In play: nothing a player meets. Every page is linked from
+  `tools/index.html`, so the walk calls every tool's files reached;
+  whether a tool is still opened is the user's to say.
+- Fate: **ask**, for the last two.
+- Proof: none across a commit (the oracle map); the type check and the
+  suite, which loads the editors' logic for 4 % to 20 % of their lines.
+- Signed:
+
+### 2.5 The same run of tokens in two places
+
+Runs of 50 tokens or more that are identical once comments and layout
+are taken out, grown as far as they stay identical. "Repeated lines" is
+the count of distinct lines that lie in a second or later copy: what
+would go if every cluster kept one copy.
+
+| where the copies are | clusters | repeated lines |
+|---|---|---|
+| the tools' stylesheets | 69 | 3,463 |
+| test files under `src` | 394 | 2,798 |
+| the tools' code | 100 | 1,473 |
+| test files under `tests` | 73 | 770 |
+| `src`, code | 43 | 471 |
+| the instruments | 29 | 345 |
+| across two of those | 40 | 362 |
+| the shaders and the game's stylesheet | 6 | 59 |
+| all | 754 | 9,651 (a line can lie in two rows) |
+
+No two tracked files hold the same bytes. With every name, string and
+number read as one word each (runs of 80 or more), the count is 955
+clusters and 13,242 lines, 1,109 of them in `src`.
+
+**No row.** The spec's D1 lists exact duplicates under what a search can
+settle. Read, each copy has a reason written beside it or a gate behind
+it, and removing one means a new import, which is a reshaping:
+
+- `shuffleInPlace` (`run/Run.ts:4761`) and `shuffleTilesInPlace`
+  (`sim/battleSetup.ts:122`) are the same six lines, and the first one's
+  comment says it is "kept local rather than shared" until a third
+  caller appears. None has.
+- `isJournal` is in `store/journals.ts:34` and again in
+  `journal/replayTool.ts:75`. A permanent gate keeps headless code from
+  reaching `src/store`, so the tool cannot import the store's copy.
+- `isNavigable` (`sim/blockedAlly.ts:154`) repeats `passable`
+  (`sim/positioning.ts:306`), which its own comment calls "THE shared
+  copy of the leaf passability test".
+
+So the duplicates go to list B, as leads (2.6).
+
+### 2.6 For the trials (120f)
+
+- **The editors' stylesheets.** Twelve `editor.css` files (5,815 lines)
+  repeat one another: 3,463 of the tools' stylesheet lines lie in a
+  second or later copy, with one run of 1,276 tokens in three files and
+  another of 363 in seven. One shared sheet is the
+  largest single removal this section found. The census holds `tools/`
+  to deletion only, because nothing proves a reshaping there; a
+  stylesheet merge does have a proof, the declaration-by-declaration
+  compare of `process/oracles.md`. It is the user's call whether that
+  opens a trial.
+- **The apron and the terrain renderer** share five runs (112, 107, 82,
+  75 and 69 tokens): the vertex writer and the colour buffers.
+- **The harness and the rollout walker** (`tests/fuzz/harness.ts`,
+  `rollout/walker.ts`) share three runs of 163 to 190 tokens in one
+  decision loop, its redraw and empower arms among them.
+- **Smaller, in `src`:** the three whole functions of 2.5; the stat fold
+  in `run/runStats.ts:120` and `sim/statusEffects.ts:129`; two bot
+  scripts' rally-point search; `bot/sensors.ts`'s two grid scans; the
+  swap select in `PortScreen` and `RewardScreen`; `effects/propose.ts`'s
+  three target preambles.
+- **Test set-up.** 2,798 repeated lines in the test files under `src` is
+  120e's to weigh.
+- **`isActiveNeutral`** (A-25), for the neutral-team trial.
+
+### 2.7 What this section's instruments cannot see
+
+- A read by a computed key, a spread, or from outside the type check.
+  The word search covers the last for a name's own word, and found one
+  such reader in 66 names (`scripts/build-font.mjs`).
+- A path built from pieces. "No import or path reaches it" is followed
+  by a search for the file's base name, and the six files of A-30 and
+  the fifteen of A-31 are what that search also came back empty for.
+- **A fault in the reference finder, found and fixed here.** It took
+  `{ name }` for a write of the variable `name`, and `id = ++seq` for a
+  write alone. Nine live locals read as dead, which the type check says
+  cannot be: it refuses a local nothing reads, and it passes. With both
+  fixed, one export of the 1,523 moved (`setTextScale`, to used), no
+  config key moved, and section 1's six classes come back at the same
+  counts. The walk now carries that check: no local may stand unread.
+
+### 2.8 Calls for the user at the read (120e's stop)
+
+1. **A-22,** the 25 dead exports: delete.
+2. **A-23,** the fourteen kept.
+3. **A-24,** the locale layer's ten: keep, or cut the way in.
+4. **A-25,** the twelve only their tests call, item by item.
+5. **A-26,** the word `export` on 257 declarations: dropped phase by
+   phase, or left.
+6. **A-27,** the 188 exported for a test: kept as a class.
+7. **A-28,** the 21 unread class members: delete.
+8. **A-29,** the two files nothing imports: delete.
+9. **A-30 and A-31,** the six by-hand instrument files and the fifteen
+   vectors.
+10. **A-32,** the two tools asked about.
+11. **Whether the editors' stylesheets open a trial** (2.6), against the
+    signed "deletion only" for `tools/`.

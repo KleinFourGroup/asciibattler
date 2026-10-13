@@ -88,9 +88,13 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   config keys in six classes and 21 rows, read and signed 2026-10-13:
   nine rows and seven items for deletion, one trial
   (`round-8.5-census.md` section 1; WORKLOG §120, 120c).
-- ☐ **120d — exports, files and exact duplicates** (`batch`, read at
+- ◐ **120d — exports, files and exact duplicates** (`batch`, read at
   120e: each class's count and ten drawn rows; wrong is a row whose reader
   the user knows of). `tools/`, `scripts/` and `shell/` for deletion only.
+  Built 2026-10-13 and unread: 25 exports and 21 class members nothing
+  reaches, 39 exports only tests reach, two files nothing imports, and no
+  duplicate that is a plain deletion (`round-8.5-census.md` section 2,
+  rows A-22 to A-32; WORKLOG §120, 120d).
 - ☐ **120e — the tests, by file** (`stop`). The lines only that file
   runs, the sampled breaks it caught, the bottom of the list classed.
 - ☐ **120f — the trials** (`batch`, read at 120h: wrong is a trial the

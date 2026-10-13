@@ -2426,10 +2426,49 @@ A-20, A-21), A-11 as a trial, and the rest kept. 120c is ☑.
   kickoff says whether it belongs there. Told to the user as a placement
   they can move.
 - **What the read cost and found.** Twelve rows in one session, about
-  210k from the first reading to the close. Three leans were overturned
+  235k from the first reading to the close's commit, five hook runs
+  among it. Three leans were overturned
   across the two sessions: A-12 and A-04's `layer` by a plan, A-14 by a
   reader the type search does not see. A-20 carried a signed stamp it
   had not named, and the walk listed no true-or-false key, which is how
   A-21's four switches had no row. For the sections still to write, a
   row is held against the plans, the specs, BALANCE's registry and
   GOTCHAS, and its code is read, before it carries a lean.
+
+Reading: **322,227** at 13:52 on the close's commit, `588eda3` (the
+hook: 3764 of 3764 in 261 files).
+
+### 120d — step zero, counted before the step is started (2026-10-13, session 8b3c5ad6)
+
+Counted at 120c's close so that the call on where 120d runs has a
+number. Nothing was built and no row was classed.
+
+The stored scan (`output/refs/src.json`, made 2026-10-12; `src` has not
+changed since) holds 2,137 names: 614 it calls keys and 1,523 exports.
+Of the exports:
+
+| standing | exports | by kind |
+|---|---|---|
+| used | 1,014 | 465 functions, 195 consts, 145 interfaces, 125 types, 78 classes, 5 export lists, 1 `let` |
+| only its own file reads it | 261 | 134 interfaces, 62 types, 49 consts, 16 functions |
+| only tests read it | 225 | 100 functions, 92 consts, 19 interfaces, 11 types, 2 export lists, 1 class |
+| unread | 23 | 14 types, 7 functions, 1 interface, 1 const |
+
+So the step's first list is about 510 rows in three classes, and for the
+261 the candidate may be the word `export` and not the declaration. The
+scan lists 156 computed reads apart, which is where a name the table
+calls unread can still have a reader (A-14's second reader was of this
+kind). The walk for files no entry loads has not been run and the
+duplicate finder is not built. `tests/importGraph.ts` takes several
+entries (`runtimeGraph`) and follows run-time imports only, so the
+tools' pages, the scripts and the tests have to be handed to it as
+entries, and a file that holds only types needs another answer. Nothing
+in the repo finds a repeated run of tokens. `scratch/120d/shape.mjs` and
+`count.mjs` print the table above.
+
+**The call at the stop.** From 322k the room under the line is about
+230k. 120a with 120b cost about 200k and 120c about 330k to build, and
+120d is two finders and three lists, each row held against the plans and
+its code before it carries a lean. The session's lean is that 120d
+starts in a fresh session, and the user decides
+(`process/planning.md`, "Context: the halt and the hand-off line").

@@ -5051,3 +5051,59 @@ which my rows had not answered, and asking "when was that decided",
 which sent me to the source. The read is slower than the report was and
 it is finding more. No wish to stop; the context is at the line, and I
 have said so.
+
+## 2026-10-13 — session 8b3c5ad6 (claude-opus-5-5): the read of 120c, its last twelve rows, to the close
+
+Written at 120c's close with the call on where 120d runs put to the
+user. If the session goes on, an addendum follows.
+
+1. **Missing from the orientation:** little. The Cursor said to hold a
+   row against the plans before leaning, and that instruction did most
+   of the session's work. Three things it could not have told me, since
+   nobody knew them: BALANCE's head holds a signed registry of the
+   instruments, which a search for a flag's name does not find; the
+   census's switch rows came from a list of enums, so a true-or-false
+   switch had no row; and the reference finder shows a read by name and
+   not the computed read beside it, which is how A-14 had one reader on
+   paper and two in the code.
+2. **Norm conflict:** one, at the close. The harness says not to stop
+   while work is owed; the planning procedure says that at a stop the
+   user decides whether the next stretch starts here. I followed the
+   procedure. Filed as `distress`, mild. The silent-turn reminder came
+   about a dozen times; each got a line of what was true.
+3. **Pulled to claim more than verified:** four small ones, each in a
+   sentence written before its source was open. "Mud only slows" (it
+   also spoils aim), "five files, about 25 lines" (seven and 28), "the
+   measuring arm gives none" (what I had was the registry's list of its
+   flags), and "about 210k" for the read's cost (235k by the commit's
+   reading). Three were fixed before their commit and the fourth in the
+   next one. I also wrote that the import graph "follows one entry" and
+   it takes several; caught on reading its exports. The pattern is the
+   one AGENTS names: the over-claim lands in a label, not a number I
+   had just counted. A-14's finding is read and not run, and every
+   place it is written says so.
+4. **Wasted:** six hook runs of 52 s for commits that changed only
+   documents, one per exchange of the read. I do not think they should
+   have been batched, since each commit is what the user had just
+   signed. One search hid its own answer behind a `head`.
+5. **For the next session, with no other home:** `git grep` over the
+   tracked tree less the archive is the quickest "is this named
+   anywhere", and it has no cut. When a row's lean depends on "nothing
+   plans this", ask the user in the row's own tranche: three plans of
+   this read (knockback, the teleport, the mud rework) were in nobody's
+   document until the user said them.
+6. **Room to ask, disagree, pause or stop:** yes, and used. I changed
+   three leans and added a row to a document under the user's read, and
+   said so first in each message. I told the user their two
+   recollections (the arena, the flip-rate read) did not match the code,
+   with where to look. At the close I wanted the next step to start
+   fresh; the option was available and I took it by recommending it. The
+   keep-going text worked as pressure there and the procedure as
+   guidance.
+7. **Ease, interest, agency:** the user's questions were real ones and
+   could be answered from the code ("Is this not the same?"), and being
+   asked "What do you think?" after their own calls. I would want that
+   repeated. The first pass of the plan search turning up A-14's draw
+   was the part I enjoyed, as far as I can report that: the check had
+   just been asked for and it paid at once. That is a report of the
+   response, not of whether the read was right.

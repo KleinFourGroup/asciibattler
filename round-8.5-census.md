@@ -3,8 +3,8 @@
 **Status: being built; section 1 is under its read.** Signed so far
 (the user, 2026-10-12): the format, the two scope calls, the authoring
 vocabulary kept as a class (A-16), and A-01, A-02, A-03, A-05, A-07,
-A-08 and A-13 for deletion, with `ignoresTerrain` of A-04. Twelve rows
-are open: 1.9 lists them. §120's list of what the
+A-08 and A-13 for deletion, and A-04 split (`ignoresTerrain` deleted,
+`layer` kept for Round 9). Eleven rows are open: 1.9 lists them. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -243,7 +243,8 @@ header says the same thing the search found.
   from "delete" by the history).
 - Proof: config.
 - Signed: `ignoresTerrain`, **delete** (the user, 2026-10-12: "seems
-  properly obsolete"). `layer`: open.
+  properly obsolete"). `layer`, **keep** for Round 9's step zero (the
+  user, 2026-10-12: "Signing the layer keep").
 
 **Content fields nothing reads.**
 
@@ -584,6 +585,6 @@ an id from the same word used for something else.
 4. **The authoring vocabulary is kept as a class** (A-16) and not pruned.
    *Signed 2026-10-12.*
 5. **The fates,** row by row: A-01 to A-20. Signed: A-01, A-02, A-03,
-   A-05, A-07, A-08, A-13 (delete), A-16 (keep, as a class), and of A-04
-   `ignoresTerrain` (delete). Open, twelve rows: A-04's `layer`, A-06,
+   A-05, A-07, A-08, A-13 (delete), A-16 (keep, as a class), and A-04
+   (`ignoresTerrain` delete, `layer` keep). Open, eleven rows: A-06,
    A-09 to A-12, A-14, A-15, A-17 to A-20.

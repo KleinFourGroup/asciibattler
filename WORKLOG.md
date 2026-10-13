@@ -2250,3 +2250,20 @@ seems properly obsolete, though 👍"
   it carries that name was not found.
 
 Readings: **503,443** at 20:19 on the first tranche's commit, `1629a35`.
+
+**The hand-off, in the read** (the user, 2026-10-12): "Signing the layer
+keep, and that placement works! 😁 … I'll see you in the fresh session!"
+So A-04 is whole: `ignoresTerrain` goes and `layer` stays for Round
+9's step zero. The Round 9 placement of "Forced movement and a teleport"
+is signed. Nine rows are signed and eleven are open: A-06, A-09 to A-12,
+A-14, A-15, A-17 to A-20. The next session takes them in tranches as the
+user reads, and before a lean searches the plans as well as GOTCHAS.
+
+The read cost about 105k for nine rows, most of it in the two
+corrections' source reading and five hook runs. The rows still open
+include the four the session read least (the chip rule, the two
+switches, the investigation flags).
+
+Readings: **527,699** at 21:00 on the second tranche's commit,
+`304d615`; **539,285** at 21:02 on `c9f5b08`. The session ends under
+the 550k line.

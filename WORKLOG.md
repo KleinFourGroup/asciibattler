@@ -2687,3 +2687,122 @@ the rows that need a word from the user ahead of the classes that need
 only a look. Readings: **421,787** at 14:55 on 120d's commit, `ca0170f`
 (the hook: 3765 of 3765 in 261 files); **425,444** at 15:15 at the
 hand-off. The session ends under the line.
+
+### 120e — the tests, by file (2026-10-13, session 4052fd6f)
+
+Pre-flight at `fde08ba`: the tree clean, the type check clean, the suite
+3765 of 3765 in 261 files (51 s). The result is
+[round-8.5-census.md](round-8.5-census.md), section 3, rows A-33 to A-37.
+Nothing under `src`, `config` or `tests` changed; the step's instruments
+are in `scratch/120e/`.
+
+**Step zero.** The premise, that each file alone under the coverage tool
+gives the lines only it runs, held, and the instrument gives back both
+of the oracle map's known answers. Two of the counted figures moved. A
+file alone takes 3 to 5 s and not 6 to 7, once the include globs are
+left out (below). And the suite runs with `isolate: false`, so a file
+run alone might have needed a workermate's state: none of the 326 does.
+
+**Built**, in `scratch/120e/` (not tracked; this machine only).
+
+- `perfile.ts`: one Vitest run a test file, with `reach.ts`'s flags, a
+  reading cut down to the source files it reached, and a row in a
+  `.jsonl` (exit code, tests, seconds). `--tier=main|smoke`, `--jobs=N`;
+  it skips a file already read. The readings are `readings/<tier>/`.
+- `byfile.ts`: who reaches each line, function and branch arm, and for
+  each test file what it runs, what only it runs and where, the other
+  file that holds the most of its functions and arms, and the planted
+  breaks it failed on (120a's 91, 119g's 30). It refuses to print unless
+  `backup.test.ts` alone runs 20 lines, 4 functions and 23 arms, all in
+  `backup.ts`, and `enemyBudget.test.ts` no line and two arms. Output
+  `byfile-<tier>.json`.
+- `unionCheck.mjs`: the union of the per-file readings against the whole
+  suite's stored reading. 9,338 lines under `src` in each, and none in
+  one alone.
+- `bottom.mjs` (each bottom file's numbers, header and tests' names),
+  `classes.mjs` (the class given to each of the 64, and the sums),
+  `pairs.mjs` (pairs of files by shared functions and arms),
+  `summary.mjs` (the tables), `wall.mjs` (a run's length and the files
+  that end last), `cmp.mjs` (two readings of one file).
+
+**What the checks caught in the instruments.**
+
+- *The faster form reports more files.* Without the coverage tool's
+  include globs a run takes 2.7 s where it took 4.5, because the tool no
+  longer reads the 400 files the test never loaded. It then also reports
+  the `config/*.json` a run imports (nine more files and 123 more lines
+  for `enemyBudget.test.ts`). The reader keeps to `.ts` under `src`,
+  `tests`, `tools` and `scripts`, and on three files the two forms then
+  give the same lines, functions and arms. The union check is the same
+  comparison over all 261.
+- *A backslash lost on the way to a file, twice in ten minutes:* in a
+  `node -e` string, then in a script written through a quoted heredoc,
+  where one of two backslashes went. Each was a syntax error on its
+  first run, so nothing was read from a wrong pattern. The single
+  backslashes in four other heredoc scripts survived, by their output.
+  Both are in the friction log; the second file was rewritten with the
+  file tool.
+
+**The batch.** Memory was measured before the launch this time: the
+largest file alone (`Run.test.ts`) peaked at 0.7 GB of node working set
+across five processes, with no other node process on the machine. The
+main suite ran four files at a time in the live tree (613 s) and the
+smoke three at a time (539 s, peak 1.9 GB across twelve processes). No
+file failed and none was stopped at its limit. Then one plain run of the
+smoke with the JSON reporter for the files' own times (185 s; the main
+suite's was step zero's).
+
+**What the list says.** The census's 3.2 to 3.4 hold the numbers.
+
+- **By file, four files and a pair.** 64 of the main suite's 261 files
+  alone run nothing. Read, 18 are gates over text and assets, 32 hold
+  one mechanic's rule, ten are whole battles or runs, and four are for
+  the user. That is what the kickoff's fifth call expected: classes with
+  examples and not rows ready to delete.
+- **Reach is not what a test is for.** 44 of the 64 planted breaks the
+  suite caught were caught by one file alone, and one of those files
+  alone runs nothing.
+- **The suite's time is loading, and the smoke's is one test.** In
+  `npm test` the modules take 215 s summed over the workers against the
+  tests' 154 s. In the smoke, one test that starts the fuzz command line
+  ends 81 s after every other file.
+- **Of the fifteen class methods only tests call,** ten are read-backs
+  and five are code. One of the five is the run's trigger registry,
+  which nothing has ever registered on.
+
+**Calls made here, for the read at this stop.**
+
+1. *The smoke tier's 65 files were read as well.* The cut says "by test
+   file" and step zero had left them unrun.
+2. *The faster form of the flags,* checked as above.
+3. *"Alone" is against a file's own tier,* which is what `reach-diff`
+   would name and what the known answers check. Both tiers together are
+   one line in 3.2.
+4. *The bottom was classed from each file's header and its tests'
+   names.* Five files were read whole.
+5. *The four per-archetype battles got a paragraph and no row,* with the
+   lean to keep them.
+6. *The run's trigger registry is a row,* though it is more than the
+   method the lead named: the method is the registry's only way in.
+7. *A-37 is not a deletion.* A test that sets the hook's length is put
+   to the user as a call and left for the instruments' phase.
+8. *No list by test was built.* The cut puts the tests one by one in the
+   tests phase. 3.5 gives three ways to make that list and the session's
+   lean.
+
+**Not verified.** No test was deleted and no break planted, so no proof
+named in section 3 has been run against its row. `phaseTimeline.test.ts`
+was read by its tests' names and not its bodies. The classing of 59 of
+the 64, and of the smoke's eight, rests on headers and names. The smoke's
+long files were timed and not read. Whether a pane probe or a script
+outside the type check reads one of the ten read-backs was searched for
+three of the names (`binOf`, `remainingSeconds`, `count`) and not the
+other seven. `parallelRunDecisions`'s 135 s alone was under the coverage
+tool with two other files running. The hook's own length was not timed
+with that test taken out.
+
+Readings, by the tool's clock: **87,742** at 15:23 after HANDOFF;
+**277,517** at 15:42 with the main suite read and its bottom printed;
+**340,761** at 15:55 with both tiers read and classed; **370,066** at
+15:59 with the census's section, this entry and the Cursor written. The
+step cost about 280k.

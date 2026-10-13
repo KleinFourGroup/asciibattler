@@ -95,8 +95,12 @@ as a class with ten drawn rows, a judgement row by row. Nothing under
   reaches, 39 exports only tests reach, two files nothing imports, and no
   duplicate that is a plain deletion (`round-8.5-census.md` section 2,
   rows A-22 to A-32; WORKLOG §120, 120d).
-- ☐ **120e — the tests, by file** (`stop`). The lines only that file
+- ◐ **120e — the tests, by file** (`stop`). The lines only that file
   runs, the sampled breaks it caught, the bottom of the list classed.
+  Built 2026-10-13 and at its stop: 64 of 261 files alone run nothing,
+  and read, four of them and one pair are for the user; one smoke test
+  sets the hook's length (`round-8.5-census.md` section 3, rows A-33 to
+  A-37; WORKLOG §120, 120e).
 - ☐ **120f — the trials** (`batch`, read at 120h: wrong is a trial the
   user would not want tried). The profile, the near-duplicate and
   special-case clusters, the two named trials sized, `Run.ts` and

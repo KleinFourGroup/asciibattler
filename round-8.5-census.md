@@ -1,7 +1,7 @@
 # Round 8.5 census
 
-**Status: being built; section 1 is read and signed, and section 2
-(120d, written 2026-10-13) waits for its read at 120e's stop.** Signed (the
+**Status: being built; section 1 is read and signed, and sections 2 and 3
+(120d and 120e, written 2026-10-13) wait for their read at 120e's stop.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -799,7 +799,7 @@ an id from the same word used for something else.
 ## 2. Exports, files and exact duplicates (120d)
 
 Written 2026-10-13 and **not yet read**: the read is at 120e's stop.
-Rows A-22 to A-33 are open. What the user is asked is in 2.8.
+Rows A-22 to A-32 are open. What the user is asked is in 2.8.
 
 A fourth proof recurs in this section:
 
@@ -1223,3 +1223,263 @@ So the duplicates go to list B, as leads (2.6).
 10. **A-32,** the two tools asked about.
 11. **Whether the editors' stylesheets open a trial** (2.6), against the
     signed "deletion only" for `tools/`.
+
+## 3. The tests, by file (120e)
+
+Written 2026-10-13 and **not yet read**. Rows A-33 to A-37 are open. What
+the user is asked is in 3.7.
+
+A fifth proof recurs in this section:
+
+- **test**: for a test file, or a test, deleted with nothing else.
+  `reach-diff` on the suite's reading before and after, where what is lost
+  is nothing or is named in the row. A reading shows what runs and not
+  what is asserted, so the second half is a break planted at the thing
+  the test was written for (`npm run oracle -- plant`), which another
+  test or the corpus must catch. Where nothing else catches it, the test
+  held the only expectation and stays.
+
+### 3.1 What was counted
+
+| | count | how |
+|---|---|---|
+| test files | 326: 261 in `npm test`, 65 in the smoke | every tracked `*.test.ts` |
+| tests | 4,389: 3,765 and 624 | as run, from Vitest's reporter |
+| lines of test | 70,675: 59,116 and 11,559 | |
+| the tests' own time | 154 s and 794 s, summed over files | one run of each tier with the JSON reporter. The runs themselves took 51 s and 185 s |
+| each file alone under the coverage tool | 326 runs | `scratch/120e/perfile.ts`, with the flags `tests/oracle/reach.ts` records a proof with; 613 s for the main suite four at a time, 539 s for the smoke three at a time |
+| lines some test file runs | 11,758 in the main suite's readings, 9,338 of them under `src` | a line is one that starts a statement |
+
+"Alone runs" below means against the other test files of the same tier:
+what `reach-diff` would name if the file were deleted. The instrument
+gives back the oracle map's two known answers for a deleted test
+(`backup.test.ts`: 20 lines, 4 functions, 23 arms; `enemyBudget.test.ts`:
+no line, two arms) and refuses to print otherwise. The union of the 261
+readings is the whole suite's stored reading, line for line (9,338 lines
+under `src`, none on either side alone). Every one of the 326 files
+passes when run alone.
+
+### 3.2 The list, by what a file alone runs
+
+| class | files | tests | lines of test | seconds | fate |
+|---|---|---|---|---|---|
+| **alone runs a line** | 173 | 2,886 | 43,381 | 86 | keep, as files |
+| **alone takes a branch arm or calls a function, and no line** | 24 | 361 | 5,814 | 36 | keep, as files |
+| **alone runs nothing** | 64 | 518 | 9,921 | 32 | read and classed in 3.3 |
+| the smoke tier, the same three | 51 · 6 · 8 | 582 · 22 · 20 | 10,543 · 347 · 669 | 489 · 44 · 261 | 3.4 |
+
+With both tiers held together, 89 of the 326 alone run nothing.
+
+What the list says before any file is read:
+
+- **A third of what the suite runs, one file runs.** 4,131 of the 11,758
+  lines are run by exactly one test file, 1,313 by two and 730 by three.
+  Under `src` it is 2,394 of 9,338: `src/render` 565, `src/dev` 417,
+  `src/run` 319, `src/ui` 227, `src/store` 187, `src/sim` 161,
+  `src/journal` 101, and under 100 in each other folder.
+- **The sim is run many times over, and cheaply.** `src/sim` has 64 test
+  files, 1,239 tests and 18,991 lines of test. Their tests take 2.4 s
+  together, and 161 lines of the sim are run by one file alone.
+- **The suite's time is not in its tests.** One run's 51 s held 215 s of
+  module loading summed over the workers against 154 s of tests, and 76
+  of those 154 are the 24 files of `tests/integration`. Deleting unit
+  tests would not shorten `npm test` by a second anyone would notice.
+- **The sampled breaks agree that reach is not the measure.** Of the 64
+  planted breaks the suite caught among 120a's 91, 44 were caught by one
+  file alone, 31 files between them, and one of those files is
+  `tests/nodemap-metrics.test.ts`, which alone runs nothing.
+
+### 3.3 The bottom, read
+
+The 64 files of the main suite that alone run nothing, classed by each
+one's header and the names of its tests. Four were read whole (A-33) and
+one of a pair (A-34).
+
+| class | files | tests | lines | seconds | what it is | fate |
+|---|---|---|---|---|---|---|
+| **a gate over text, an asset, a table or the import graph** | 18 | 125 | 2,612 | 8.3 | it reads files and by design runs none of the game: the doc caps, the stylesheet's twins, the boot order, the licences, the font's glyphs, the signed map sheet. Seven are permanent gates | keep |
+| **one mechanic's rule** | 32 | 332 | 5,696 | 0.4 | a focused test of one behaviour (a wait resolves inside its tick, an aura does not stack, a move aborts onto a taken cell). A broad driver also runs its lines and asserts nothing about them | keep, as files |
+| **a whole battle or a whole run** | 10 | 54 | 1,417 | 22.6 | the save-and-continue check, the page's replay driver, the encounter loop, the corridor and board-size regressions, four per-archetype battles | keep |
+| **for the user's call** | 4 | 7 | 196 | 0.2 | | A-33 |
+
+Against the four classes the cut named:
+
+- *Pins a config value:* one whole file (in A-33). Otherwise it is single
+  tests inside files that stay.
+- *Repeats another file:* one pair (A-34), found by holding every file's
+  functions and arms against every other's.
+- *States a basic fact:* one whole file (in A-33).
+- *Holds a rule:* the other 60.
+
+So by file the answer to "which are truly necessary" is four files and a
+pair. The question is one of tests, and 3.5 says how the tests phase
+could ask it.
+
+The four per-archetype battles (rogue, healer, mage, catapult; 432 lines,
+half a second) are the likeliest of the kept files to be called
+redundant: each plays one battle and checks that the archetype's ability
+fired, and the corpus now replays 30 whole runs. The lean is still keep.
+The corpus says "18 of 30 journals differ" where one of these says "the
+healer never healed".
+
+**A-33 · four test files**
+- In play: nothing. None of the four runs a line that another test file
+  does not.
+
+  | file | what it holds | lean |
+  |---|---|---|
+  | `tests/smoke.test.ts` (13 lines, 2 tests) | that `1 + 1` is `2`, and that one palette hex can be imported from `src`. It is the suite's first file: it came with the commit that set Vitest up, 18 minutes before the first test of the game's code (2026-05-16) | delete |
+  | `src/config/selection.test.ts` (16 lines, 2 tests) | that the shipped selection strategy is a valid key, and is `encounterFirst` | it goes with A-09, already signed |
+  | `tests/gauntlet/humanFixture.test.ts` (33 lines, 1 test) | the shape of the stored human traces: one config era, an outcome on every trace. Its replay test was retired in July, and nothing writes the file | delete the test and keep the fixture, which BALANCE cites and `traceMine.ts` reads |
+  | `src/run/encounters/levelCapMigration.test.ts` (134 lines, 2 tests) | that nine encounters from before the level cap moved onto the wave resolve as they did under the old global cap, and that each cap stamped then still binds. Its header calls it "a historical completeness check, not a forward cap-discipline rule" | delete; it would fail on the first of the nine a content round re-authors |
+
+- Gotchas: none names any of the four.
+- Fate: **ask**, item by item.
+- Proof: test. For the first three there is no behaviour to plant a
+  break in.
+- Signed:
+
+**A-34 · two test files that drive the same code** (`src/sim/actions/multiTick.test.ts`, 204 lines; `phaseTimeline.test.ts`, 210 lines)
+- In play: nothing a player meets. Both build a made-up charge attack and
+  tick a world through it. Of the 591 functions and branch arms the two
+  take, both take all but three, the closest pair of the 261 files.
+- What each asserts: `multiTick` (the older) that the effect lands at its
+  offset, that the unit is busy for the whole duration, and that a
+  cooldown longer than the duration still holds. `phaseTimeline` asserts
+  the first two again by its tests' names, with the phase events and the
+  zero-length phases besides. The third is `multiTick`'s alone.
+- Not read: `phaseTimeline`'s bodies.
+- Fate: **ask**. Lean: move the cooldown test into `phaseTimeline` and
+  delete the rest of `multiTick`, in the sim's phase.
+- Proof: test.
+- Signed:
+
+**A-35 · ten read-backs on a class that only tests call**
+- In play: nothing. Each hands a test a value the game keeps to itself.
+  These are ten of the fifteen leads of 2.3.
+
+  | member | what a test reads through it |
+  |---|---|
+  | `World.bitsTallied()`, `damageDealtBy()`, `utilityDoneBy()`, `queueLength()` | the bits tally, the two contribution ledgers, a team's spawn queue |
+  | `World.swapReservedPartnerIndex` | the swap index, for the recount that A-23's `scanReservedSwapPartners` is the other half of |
+  | `Run.eventFlag()` | one flag of an event chain |
+  | `PreBattleCountdown.remainingSeconds` | the countdown's seconds left |
+  | `MarkTable.binOf()` | which ground marks lie in a tile's bin |
+  | `SpriteRenderer.count` | how many sprites are live |
+  | `Keybindings.overrides()` | what would be stored for the bindings as they are |
+
+- Fate: **keep, as a class**: each is a test's way in, as A-27's exports
+  are.
+- Signed:
+
+**A-36 · five things on a class that only tests drive**
+- In play: nothing; the game never calls any of them. These are the
+  other five of 2.3's leads, and each is code and not a read-back.
+
+  | member | what it is | lean |
+  |---|---|---|
+  | **the run's trigger registry**: `Run.registerTrigger()`, with the registry, its three fire sites (an encounter's start, a turn's start, a deploy), the save's guard and `RunTriggerContextMap` (`src/run/Run.ts:783-795`, `:4244-4263`, `:4388-4396`) | built as the seam daemons would hang on; daemons were then built as rules, and nothing has ever registered. Its own comments say "zero callers" twice, and the save throws if one appears, because handlers are not saved | delete, with its two tests in `Run.test.ts` |
+  | `Keybindings.rebind()` (`src/ui/Keybindings.ts:236`) | rebinds a key in place. The settings screen stores what `overridesWith()` returns and loads it back through `setOverrides()` | delete; its three tests move onto the path the screen takes |
+  | `PlaybackSpeed.label` (`src/ui/PlaybackSpeed.ts:156`) | the speed as text, "2×" or "Paused". The HUD writes its own | delete, with four assertions |
+  | `TraceRecorder.dispose()` (`src/dev/TraceRecorder.ts:98`) | unsubscribes the dev trace recorder, which is built once for the life of the page | delete, with A-28's `dispose()` methods |
+  | `World.shove()` (`src/sim/World.ts:1949`), and the `unit:shoved` event only it emits | moves a unit to the nearest free cell: "inert today", built for a knockback | **keep** for Round 9's kickoff, which plans forced movement on it |
+
+- Plans: every `.md` in the repo was searched for the fifteen names. The
+  registry's only history is Round 6's audit, which listed "zero callers"
+  as a trap for the first caller; `unit:shoved` is in ARCHITECTURE's
+  event table and Round 9's forced-movement item.
+- Gotchas: none names any of the five.
+- Fate: **ask**, item by item.
+- Proof: for the registry, sim. A break planted at a fire site changes
+  no run, which is the row's evidence and not its proof. For the other
+  three deletions: the type check, the suite and the page drive, since a
+  method ships whether or not it is called.
+- Signed:
+
+### 3.4 The smoke tier
+
+65 files, 624 tests, 11,559 lines. The eight that alone run nothing each
+hold a rule of the harness (a policy that must be byte-identical when
+off, the fallen-power cross-check, the board's fail-closed exit). Two of
+them start the fuzz command line as a child process, where the coverage
+tool cannot follow, so "runs nothing" is the tool's limit for those and
+not a finding.
+
+**A-37 · one test sets the smoke's length** (`tests/fuzz/parallelRunDecisions.test.ts`, 75 lines, 1 test)
+- In play: nothing a player meets. It runs four short arbitrated runs
+  through the fuzz command line, once in sequence and once with
+  `--jobs=2`, and holds the three CSVs byte for byte. It is the pin that
+  makes `--jobs` safe for a measurement batch.
+- Evidence: in one run of the smoke on a quiet machine, 185 s by the
+  reporter, every other file had ended by 69 s after the first test
+  began and this one ended at 150 s. Run by itself under the coverage
+  tool it took 135 s. Its own comment sized it at "~19s serial".
+- What it costs: about 80 s of every commit that stages a sim, run,
+  core, config or bot path, where the hook runs the smoke.
+- Fate: **ask**, at the instruments' phase. The rule stays. The lean is
+  to run it where its mistake is made (an edit to the parallel runner or
+  its merge, or before a batch launch), which is a change to the hook
+  and not a deletion; the other arm is to re-size it to what it was
+  written to cost.
+- Proof: none is needed to move a test between tiers; the test is its
+  own.
+- Signed:
+
+Behind it the smoke's long files are `rollout/arbitratedStrategy.test.ts`
+(58 s, 45 tests), `mergeStages.test.ts` (56 s), `harnessDaemonStats`
+(41 s, one test), the corpus (36 s) and the two occupancy sweeps (30 s
+each). None was read.
+
+### 3.5 For the tests phase and the trials
+
+- **The list by test.** The user's question is about tests, and there
+  are 3,765 in the main suite. A list by test needs each test's own
+  reach. Three ways: each test run alone (about two and a half hours of
+  machine at this step's rate); or each file run once with the coverage
+  read out after every test through Node's inspector, which is this
+  step's runs again and a new reader, with this section's list as its
+  known answer; or the same in one run of the suite. The second is
+  the session's lean, as the tests phase's first step. By the words in
+  their names, and no more than that: 476 tests name a no-op, a zero or
+  an empty case, 400 a shipped or default value, 339 a rejection, 190 a
+  round trip, 161 determinism or byte identity (a name can be in two),
+  and 2,351 none of these.
+- **Tests named for code that is gone.** `effects/timeline.test.ts`
+  "reproduces the migrated verbs byte-for-byte", `WaitAction.test.ts` has
+  an "exit test" against "the old abstaining unit", `environment.test.ts`
+  matches "the old spawnEnvironment shape". Each still pins what the code
+  does today against a formula, so the test stays and its name is the
+  comment pass's.
+- **Set-up.** By later copies, 5,001 lines of the test files repeat a
+  run of 50 tokens or more, and 3,225 of those repeat inside one file
+  (`Run.test.ts` 375, `World.test.ts` 317, `Targeting.test.ts` 203). Across
+  files the copies are small: a base stat block in seven sim test files,
+  `makeWorld` in eight, `setup` in five. A shared fixture module would be
+  a trial, and the larger share is each file's own.
+- **The loops.** 52 `while (` lines in the tests are unread for the hang
+  119g found (TODO "§119 riders").
+
+### 3.6 What this section's instruments cannot see
+
+- **What a test asserts.** A reading is what ran. `nodemap-metrics` runs
+  nothing of its own and was the only file to catch one planted break.
+- **A child process.** A test that starts the command line reads as
+  running nothing.
+- **A module's top-level lines** run for every file that imports the
+  module, so they are never one file's alone.
+- **The sample is thin.** 91 plants reached the suite; 177 files failed
+  on at least one, and no plant was aimed at a file's own subject.
+- **The classing of 59 of the 64 rests on a header and the tests' names.**
+  The smoke's eight likewise.
+
+### 3.7 Calls for the user at this stop
+
+1. **A-33,** four test files, item by item.
+2. **A-34,** the pair that drives the same code.
+3. **A-35,** the ten read-backs: kept as a class.
+4. **A-36,** five things only tests drive, item by item.
+5. **A-37,** the test that sets the smoke's length.
+6. **The 60 at the bottom that hold a rule, and the 197 above them:**
+   kept as files.
+7. **Where the tests phase starts** (3.5): a list by test, and by which
+   of the three ways.

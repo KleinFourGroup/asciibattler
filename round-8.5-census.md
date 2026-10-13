@@ -2,8 +2,9 @@
 
 **Status: being built; section 1 is under its read.** Signed so far
 (the user, 2026-10-12): the format, the two scope calls, the authoring
-vocabulary kept as a class (A-16), and A-01, A-02, A-03 and A-13 for
-deletion. The other 15 fates are open. §120's list of what the
+vocabulary kept as a class (A-16), and A-01, A-02, A-03, A-05, A-07,
+A-08 and A-13 for deletion, with `ignoresTerrain` of A-04. Twelve rows
+are open: 1.9 lists them. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -206,27 +207,41 @@ header says the same thing the search found.
   `applyStatusOnEnter`.
 - Proof: config.
 - Signed: **delete** (the user, 2026-10-12: "looks safe to purge", asking
-  first about water and burn; signed on the answer above, which the user
-  may still overturn).
+  first about water and burn; confirmed after the answer above: "03, 05,
+  and 08 are cleared for deletion").
 
 **A-04 · `units.layer`, `units.ignoresTerrain`** (`src/config/units.ts:190`, `:193`)
 - In play: Nothing. They were placeholders for flying units, which do not exist: no unit sets them and no code acts on them.
 - Evidence: no unit sets either; `src/config/units.test.ts` reads them at
   four lines to show the schema parses them. The schema's comment: "Flight
   (deferred build) … Inert until flight builds." META-ROADMAP's flight is
-  a per-unit `traversal` profile shared with the marine (line 102), which
-  is not these two keys.
+  a per-unit `traversal` profile shared with the marine (line 102); the history is below.
 - Gotchas: none.
-- Asked at the read: is flight not planned? It is, for Round 9, and the
-  plan names these keys as what it replaces. META-ROADMAP, Traversal
-  (line 843): "the flight seam is three inert fields
-  (`layer`/`ignoresTerrain`/the one-member plane union) … 'air' is not a
-  second occupancy plane — flight is a traversal profile … A `traversal`
-  field on `UnitDef`". Round 9's step zero re-audits that lock, so the
-  plan could still move.
-- Fate: **delete**.
+- The history, asked for at the read. Two calls, each signed by the
+  user. **2026-06-28**, the Cluster 2 kickoff
+  (`archive/post-34-roadmap.md:1331`, commit `6759956`): flight's design
+  locked with its build deferred. "Share a tile with ground → NO …
+  Flight changes pathing … + targeting …, never co-location", so that
+  flight does not break one unit to a cell, and because a four-way
+  ground and air matrix is "a trap in a no-direct-control autobattler".
+  The same lock KEPT `layer`: "the cross-layer interactions (melee
+  hitting a flyer, AoE across layers) live in targeting, not occupancy,
+  handled by `targetsLayer` + the unit `layer` field", with overlap
+  left as "a future fill". **2026-08-21**, the planning session behind
+  META-ROADMAP v2: flight and the marine share a `traversal` profile,
+  co-location for flyers and the anti-air matrix are "out until a
+  consumer names them", and the lock "is re-audited at that phase's step
+  zero" (lines 102, 843, 1108).
+- So `ignoresTerrain` is what a traversal profile replaces. `layer` is
+  not: Round 9 ships `targetsLayer`, and the road map does not say what
+  it reads. The census first said the plan replaces both keys, which
+  went past what the entry says.
+- Fate: `ignoresTerrain`, **delete**. `layer`, **keep** for Round 9's
+  step zero, where the lock is re-audited (the session's lean, changed
+  from "delete" by the history).
 - Proof: config.
-- Signed:
+- Signed: `ignoresTerrain`, **delete** (the user, 2026-10-12: "seems
+  properly obsolete"). `layer`: open.
 
 **Content fields nothing reads.**
 
@@ -245,12 +260,12 @@ header says the same thing the search found.
   teleport is another way of choosing the landing, with the same range.
   What WOULD read `cells` is a knockback or a pull (A-07), whose push is
   not the ability's range.
-- Fate: **ask, with A-07.** If knockback and pull stay reserved, this is
-  the field they would read and it stays with them. If they go until
-  they are built, this goes too (lean: both go, and the plan is written
-  down; A-07 says why).
+- Fate: **delete**, with A-07. A push's distance is designed with the
+  first knockback (META-ROADMAP Round 9, "Forced movement and a
+  teleport").
 - Proof: config.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12: "03, 05, and 08 are cleared for
+  deletion").
 
 **A-06 · `EventPage.art`** (`src/config/events.ts:175`)
 - In play: Nothing yet: a slot for a picture on an event page, which no page fills.
@@ -273,15 +288,14 @@ header says the same thing the search found.
   that." META-ROADMAP, TODO and DESIGN do not hold it yet. A push's
   distance is what `move.cells` (A-05) would carry, so the two rows go
   together.
-- Fate: **ask.** Keeping costs two values that stop a battle if
-  authored, and a `cells` field in the ability editor that does nothing
-  today. Deleting costs a few lines to write back when the first
-  knockback is built. Lean: delete, with the plan written into
-  META-ROADMAP so it is not lost. The reservation was made against
-  Cluster 2's occupancy core, which shipped without it, and Round 9's own
-  rule is that a seam ships with its consumer (META-ROADMAP line 907).
+- Fate: **delete** the two values and the two throws, with the plan
+  written into META-ROADMAP. The reservation was made against Cluster
+  2's occupancy core, which shipped without it, and Round 9's own rule is
+  that a seam ships with its consumer.
 - Proof: sim.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12: "07, also cleared, but yes, let's
+  get those into the plan"). The plan is META-ROADMAP Round 9, "Forced
+  movement and a teleport".
 
 **A-08 · `orphanPolicy`: `re-home`** (`src/sim/effects/schema.ts:69`; `src/sim/Action.ts:59`)
 - In play: Nothing: it would send a shot after a new target when its first one dies in flight. No ability asks for it and no code does it.
@@ -295,7 +309,7 @@ header says the same thing the search found.
   unfair)".
 - Fate: **delete** the value.
 - Proof: sim.
-- Signed:
+- Signed: **delete** (the user, 2026-10-12).
 
 **A switch whose other position nothing selects.** The code for the
 unselected position ships and is run by tests only.
@@ -545,9 +559,11 @@ an id from the same word used for something else.
   `tiles` with one key, and remove a second file.
 - Two config files only the fuzz instruments read are in the game's
   config stamp, by a stated choice (`src/config/configHash.ts`, header).
-- META-ROADMAP's third inert field of the old flight seam, "the
-  one-member plane union", is not a config key: a plane argument with one
-  value, passed through the occupancy calls. A lead, unread.
+- META-ROADMAP's third inert field of the flight seam, "the one-member
+  plane union", is not a config key: a plane argument with one value,
+  passed through the occupancy calls. It was signed as a seam on
+  2026-06-28 and Round 9's step zero re-audits it (A-04). Lean: leave it
+  for that step.
 - Four loaders type their schema by a hand-written interface (`camps`,
   `encounters`, `events`, `rewards`): their 148 schema keys each repeat
   an interface member by name.
@@ -566,6 +582,6 @@ an id from the same word used for something else.
 4. **The authoring vocabulary is kept as a class** (A-16) and not pruned.
    *Signed 2026-10-12.*
 5. **The fates,** row by row: A-01 to A-20. Signed: A-01, A-02, A-03,
-   A-13, A-16. With the user after the first tranche: A-04, A-05 with
-   A-07, A-08. Not yet read together: A-06, A-09 to A-12, A-14, A-15,
-   A-17 to A-20.
+   A-05, A-07, A-08, A-13 (delete), A-16 (keep, as a class), and of A-04
+   `ignoresTerrain` (delete). Open, twelve rows: A-04's `layer`, A-06,
+   A-09 to A-12, A-14, A-15, A-17 to A-20.

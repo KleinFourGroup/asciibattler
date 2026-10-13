@@ -2202,3 +2202,51 @@ the ten flags, the level-budget kinds and the event conditions are not
 in it; `redraw` and `empower` there are the daemons' vocabulary). A
 word search of one file does not show that no plan exists, as the user's
 knockback shows.
+
+**The read, the second tranche** (the user, 2026-10-12): "03, 05, and 08
+are cleared for deletion, then! 😁 07, also cleared, but yes, let's get
+those into the plan. 04... Alright, I'm a little bit confused 😅 I had it
+in my head that the layer model for flight was still in contention. Can
+you find out when and why the call otherwise was made? ignoresTerrain
+seems properly obsolete, though 👍"
+
+- **Signed for deletion: A-03, A-05, A-07, A-08,** and of A-04
+  `ignoresTerrain`. Eight rows are signed and twelve are open (the
+  census's 1.9).
+- **The plan, written.** META-ROADMAP Round 9 gains "Forced movement and
+  a teleport" under combat and effects, dated, marked user-signed and
+  "not audited or sized", with a row in the coverage map. The user had
+  not said which round. The session put it in Round 9 because a push
+  through the occupancy core is an engine seam and that round's exit
+  ships each seam with a consumer, and wrote that the kickoff decides
+  whether each ships there or waits for Round 10. Listed for the user as
+  a placement they can move.
+- **A-04's history.** Two calls, each signed by the user. On 2026-06-28
+  the Cluster 2 kickoff locked flight's design and deferred its build
+  (`archive/post-34-roadmap.md:1331-1364`; the section first appears in
+  commit `6759956`): always fly, no sharing a cell with a ground unit,
+  pass over all obstacles, mobility only. The reasons given there: with
+  no direct control there is no actor to decide when a unit lands;
+  flight must not break one unit to a cell; and a four-way ground and
+  air attack matrix is "a trap in a no-direct-control autobattler". That
+  lock kept `layer` as the field a future `targetsLayer` reads, and
+  kept a `plane` argument on occupancy "so air-with-overlap is a future
+  fill, not a retrofit". On 2026-08-21 the planning session behind
+  META-ROADMAP v2 restated it: flight and the marine share a
+  `traversal` profile, co-location for flyers and the anti-air matrix
+  are "out until a consumer names them", and the lock is re-audited at
+  Round 9's step zero.
+- **What that corrects.** The user's memory, that the layer model was
+  still in contention, matches the first lock: overlap was turned down
+  for the build and left open as a later fill, and `layer` was kept on
+  purpose. The census had said the road map's `traversal` field
+  "replaces" both keys. That holds for `ignoresTerrain`. For `layer`
+  the entry lists it as inert and does not say what `targetsLayer` will
+  read, so the session's "delete" went past its source, and the lean is
+  now "keep, for Round 9's step zero". This is the second lean of the
+  read that a plan document overturned (A-12 was the first), and both
+  times the document was one the row had cited or could have.
+- The road map calls the 2026-06-28 call "the Phase-M flight lock"; why
+  it carries that name was not found.
+
+Readings: **503,443** at 20:19 on the first tranche's commit, `1629a35`.

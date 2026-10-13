@@ -773,6 +773,18 @@ triple-guarded. Do it once.
 - **Cavalier** (blitz + hit on arrival): `proposeSelfMove` hardcodes
   `targetId:-1`, so a `damage` op after a move has no target — a post-move
   target re-resolve. Everything else is a dash clone + mobility.
+- **Forced movement and a teleport** (added 2026-10-12 at the Round 8.5
+  census, user-signed; not audited or sized). Attacks that knock their
+  target back or pull it in, and an ability that teleports its caster.
+  The `move` op's `knockback` and `pull` modes and its `cells` field
+  were declared for the first two in Cluster 1 and deleted unbuilt in
+  Round 8.5 (census A-05, A-07), so the seam is designed here with its
+  consumer. A push is a directional shove (§35c's backstop is the
+  relocation it wraps, `archive/post-34-roadmap.md:411`), and its
+  distance is a number of its own, not the ability's range. A teleport is
+  the dash's move with another rule for choosing the landing. The kickoff
+  audits both against the occupancy core and says whether each ships in
+  this round or waits for a Round 10 consumer.
 - **Fatigue — the design round** (`fatiguePerStack` is 0; H7's power-scale was
   a placeholder). Asymmetric by construction and that's fine — the player's
   hand is a deck, the enemy's "deck" is the wave grammar. The question is only
@@ -1089,6 +1101,7 @@ records an achievement on a clean machine.
 | The codebase review (the census · deletions per subsystem) · the source-comment rewrite | 2026-09-27 (the user) / the tone audit (TODO) | 8.5 |
 | Atlas resize (the pre-step, moved from 10) | #13 / 7.5 close | 9 |
 | Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
+| Forced movement (knockback, pull) · a teleport | the Round 8.5 census, 2026-10-12 (the user) | 9 |
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
 | Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
 | Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |

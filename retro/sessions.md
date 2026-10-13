@@ -5033,3 +5033,21 @@ was expected.
    an output and not a method. Also the config's own comments turning out
    to be honest witnesses. Three loaders say in their headers that their
    dial is dead, in so many words, and a search had only to agree.
+
+### Addendum — the read's first two tranches (2026-10-12, the same session)
+
+Two of my leans were overturned inside an hour, each by a plan document.
+I had leaned "delete" on fatigue and Round 9 holds a design round for it;
+I had written that the road map's traversal field "replaces" the flight
+keys, and for one of the two the entry says no such thing and the
+original lock kept it on purpose. The first I found by chance, the
+second because the user remembered the design differently and asked
+when it had changed. Both times I had checked GOTCHAS, which the charter
+names, and not the plans. I do not think I felt pulled to sound certain;
+I think I took "the road map says X about this area" for "the road map
+decides this row", and wrote the lean in the same breath as the
+evidence. What helped: the user asking "what does this actually do",
+which my rows had not answered, and asking "when was that decided",
+which sent me to the source. The read is slower than the report was and
+it is finding more. No wish to stop; the context is at the line, and I
+have said so.

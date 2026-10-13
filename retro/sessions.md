@@ -5234,3 +5234,31 @@ the read is ahead and may add to this.
    fell out of a timing table nobody was asking about, and I enjoyed
    that. This reports the response and not the result: sections 2 and 3
    are unread.
+
+### Addendum — the read, three tranches, to its close (2026-10-13, the same session)
+
+Sections 2 and 3 were read and signed here, 36 items, with one
+measurement at the user's ask. The session ends at about 500k.
+
+- **Claimed more than was said:** the lean on one tool was "delete if
+  you no longer open it" and the reply answered for the other tool. I
+  recorded the deletion and told the user I had read it in; they
+  confirmed. Asking would have cost one line and I chose the faster
+  path.
+- **A lean the user caught.** The census had put off whether a tooltip
+  outlives a scene swap and leaned "delete" on the function written for
+  that. The user would not sign it and asked. Measured, the tooltip does
+  not outlive the swap, and the function with one other dead export is
+  wiring nobody connected. I had read "nothing calls it" as the finding
+  and not as the question.
+- **Wasted:** the probe's first two forms, one importing a module the
+  built page cannot serve and one that mistook the tooltip for the
+  overlay. Each cost a twenty-second run.
+- **Room and pressure:** before the measurement I checked that it fit
+  under the line and it did, with about 50k left at the end. I noticed
+  the reading more often in the last hour than the work needed. The
+  hand-off is taken on the session's own call under the line, stated
+  twice and not put as a question.
+- **Ease:** the user's "Phew; glad we caught that!". The instinct was
+  theirs and the number was mine, and the row is better than either
+  alone would have left it.

@@ -2,7 +2,7 @@
 
 **Status: being built; section 1 is read and signed, and sections 2 and 3
 (120d and 120e, written 2026-10-13) were read at 120e's stop and are
-signed but for one item of A-22 (`closeTooltip`).** Signed (the
+signed, row by row.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -800,8 +800,7 @@ an id from the same word used for something else.
 ## 2. Exports, files and exact duplicates (120d)
 
 Written 2026-10-13 and **read** at 120e's stop (the user, 2026-10-13):
-every row is signed but for one item of A-22, `closeTooltip`, which
-waits on the user's word after a measurement. The calls were 2.8.
+every row is signed. The calls were 2.8.
 
 A fourth proof recurs in this section:
 
@@ -886,7 +885,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
 - Gotchas: none names any of the 25.
 - Fate: **delete**, each in its subsystem's phase.
 - Proof: export.
-- Signed: **delete** 24 of the 25 (the user, 2026-10-13: "Signing all of your leans except for close tooltip"). `closeTooltip` is **open**: the user asked whether a tooltip outlives a scene swap, and what was measured is above. `openTooltipTrigger` is among the 24 and is raised again with it, since the wiring that would call the one reads the other.
+- Signed: **delete** 23 of the 25 (the user, 2026-10-13: "Signing all of your leans except for close tooltip"). **Keep** `closeTooltip` and `openTooltipTrigger`, with a TODO to wire them so that a tooltip leaves with its screen (the user, 2026-10-13, on the measurement above and its three options: "Signing option 1, then! 😁 Phew; glad we caught that!"). `openTooltipTrigger` was among the 24 signed first and comes back out with it: the wiring that calls the one reads the other.
 
 **A-23 · seventeen that only tests reach, each with a reason to stay**
 - In play: nothing a player meets. Each is how a test, a gate or a
@@ -1229,7 +1228,7 @@ So the duplicates go to list B, as leads (2.6).
 
 ### 2.8 Calls for the user at the read (120e's stop)
 
-1. **A-22,** the 25 dead exports: delete. *Signed for 24; `closeTooltip` open.*
+1. **A-22,** the 25 dead exports: delete. *Signed: 23 go, and the two tooltip exports stay for a TODO.*
 2. **A-23,** the fourteen kept. *Signed.*
 3. **A-24,** the locale layer's ten: keep, or cut the way in. *Signed: keep.*
 4. **A-25,** the twelve only their tests call, item by item. *Signed.*

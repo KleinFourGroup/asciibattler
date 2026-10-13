@@ -2954,3 +2954,34 @@ case).
 - The probe's first form imported the tooltip module by URL and failed
   on the built page; its second took the tooltip's own content for the
   overlay. Both showed in the first report read.
+
+Reading: **494,406** at 17:44 on the third tranche's commit, `99b2179`.
+
+**The read closed** (the user, 2026-10-13, on the measurement and three
+options: keep the two functions with a TODO, wire them now, or delete
+both): "Signing option 1, then! 😁 Phew; glad we caught that!" So
+`closeTooltip` and `openTooltipTrigger` are kept, A-22's deletions are
+23, and TODO holds the wiring ("§120 riders": a tooltip leaves with its
+screen). Every row of sections 2 and 3 is signed, and 120d and 120e are
+☑ in ROADMAP.
+
+- *What the row had wrong.* A-22 said of `closeTooltip` that "deleting
+  the function does not change the answer", and put the question off to
+  a later kickoff. The function's comment names the two places it should
+  be called from. A function nothing calls whose comment names its call
+  sites is a question about those sites, and it is asked before the lean
+  is given; the Cursor now says so.
+- *The read's cost:* about 130k for three tranches, 36 signed items and
+  one measurement, against 120c's 340k for 21 rows. What differed: the
+  rows carried their "In play" lines from the start, each tranche's
+  leans were checked against their sources before it went out, and the
+  user signed by lean.
+
+**The hand-off before 120f.** Reading **499,574** at 17:47, about 50k
+under the line. 120f reads `Run.ts` and `World.ts` whole (about 8,000
+lines) beside a profile of 279 files, which is larger than the room, so
+the session hands off under the line (`process/planning.md`, "Context:
+the halt and the hand-off line"). It said so in its last two reports
+and the user did not object; it was not put as a question of its own.
+The user's dev server has been up since 12:38 by the machine's clock
+(two node processes, theirs); nothing of the session's is running.

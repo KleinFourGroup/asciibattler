@@ -783,7 +783,8 @@ From 119g's planted breaks (WORKLOG §119, 119g).
 ## §120 riders (the census's read, 2026-10-13)
 
 The user's, given at the census's read: the first two with the keeps of
-rows A-14 and A-19, for a later cleanup round; the third with A-24.
+rows A-14 and A-19, for a later cleanup round; the third with A-24; the
+fourth with A-22.
 
 - [ ] **Power's level-up draw and its growth key.** `growthRates.power`
   is 0 on every unit and is meant to stay 0, and a recruit's level-up
@@ -800,3 +801,15 @@ rows A-14 and A-19, for a later cleanup round; the third with A-24.
   do". Census A-24 keeps the layer's way in for it (`registerLocale`, the
   stale-translation marks, the translators' credits), which only tests
   call today.
+- [ ] **A tooltip leaves with its screen.** An open tooltip closes a
+  frame after its trigger has left the document, so through a scene swap
+  it stays whole for about 190 ms over a screen that is fading out, and
+  a pinned one stays over an overlay opened from its own trigger (the
+  sector map) until Esc. Measured 2026-10-13 in an offscreen window
+  (WORKLOG §120, "The question, measured"; `scratch/120e/tooltip-swap.js`
+  under the probe runner). The wiring: `closeTooltip()` where a screen's
+  fade starts (`fadeOutAndRemove`, `src/ui/fade.ts`) when
+  `openTooltipTrigger()` is inside the leaving element, and where an
+  overlay opens. Census A-22 keeps both functions for it. It changes
+  behaviour, so it is not Round 8.5's, and a read in Firefox goes with
+  it.

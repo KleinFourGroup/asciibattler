@@ -4,10 +4,10 @@
 (the user, 2026-10-12 and 2026-10-13): the format, the two scope calls,
 the authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
-(A-06, A-12, A-14, A-15, A-17, A-18, A-19), and A-04 split
-(`ignoresTerrain` deleted, `layer` kept for Round 9). Three rows are
-open, A-11, A-20 and A-21, the last added at the read on 2026-10-13:
-1.9 lists them. §120's list of what the
+(A-06, A-12, A-14, A-15, A-17, A-18, A-19), A-11 as a trial, and A-04
+split (`ignoresTerrain` deleted, `layer` kept for Round 9). A-20 and
+A-21, the second added at the read on 2026-10-13, are signed in part,
+with four items open between them: 1.9 lists them. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -399,7 +399,9 @@ unselected position ships and is run by tests only.
   sweep's registry (`tests/fuzz/commands/run.ts:171`), not counted.
 - Fate: **trial**, in the run phase: one rule in place of two switches
   (120f sizes the tests and the fuzz side).
-- Signed:
+- Signed: **trial** (the user, 2026-10-13: "survivors is no longer in
+  consideration. Casualties is the basis going forward, and any
+  experiments will be based off of it").
 
 **A mechanism the shipped value turns off.**
 
@@ -580,7 +582,16 @@ not read.
   lever the spec leaves to Round 10.
 - Gotchas: none names any of the four.
 - Proof: sim and config for the first three.
-- Signed:
+- Signed, three of the four (the user, 2026-10-13). `passIsFinal`,
+  **keep** ("until we get some feedback"). `blockCampTurnEnd`,
+  **delete** the switch, the shipped behaviour staying ("if combat with
+  anything is ongoing, the battle continues"). `applyStatusOnEnter`,
+  **delete** the switch ("mud tiles are more generally going to get
+  reworked in the future. The trial is over, so I think we might as well
+  delete this"); the session takes this as the switch going and mud
+  poisoning as shipped until that rework, and said so. With A-03 this
+  empties `config/tiles.json`, so the file and its loader go: config
+  files 34 to 31 with A-02 and A-09. Open: the playback flags' keep.
 
 ### 1.4 The `RunConfig` fields
 
@@ -699,12 +710,37 @@ date them from J4 to 85g).
     that a pair of runs reads what the decision is worth. About fifteen
     lines and a parse test. Lean: **keep**: camps are content that
     Round 10 adds to, and this is the arm that prices a change there.
+- Asked at the read (the user, 2026-10-13): is the arena the isolation
+  testing against specific encounters, most often elites? No. That is
+  `--encounter=<id>` on a run (BALANCE "Forced isolation"; for an elite,
+  `--hops=2 --first-node=elite --encounter=<id>`), and no row touches
+  it. The arena never fields an authored encounter: it rolls a wave at
+  the roster's budget (`tests/fuzz/arena.ts`, `buildEnemyTeam`) and
+  takes no `--encounter`. What it tunes is which orders the bot gives
+  its team, and the measuring arm, as BALANCE's registry lists it, does
+  not carry `--objective`. Apart from its own tests its runner has one
+  use, in the smoke tier: the coverage bot's test drives it at three
+  places (`objectiveCoverage.test.ts`).
+- Asked at the read: is the flip-rate read from teaching the bot micro,
+  and is it in the balance protocol? It is from the round after, the
+  rollout-arbitration round (2026-07-31): the same idea as the micro
+  round's K-flip read, applied to the bot's run-layer decisions (port
+  buys, daemon picks, packet fires, redraws, node choice, events). Its
+  verdict was signed 2026-08-01. The flag is named nowhere in the
+  tracked tree outside the instrument and its tests (a search of all of
+  it but the archive), so no protocol runs it.
 - Fate: the five that tune a live flag, **keep** with it. The five
   investigation instruments, **ask**, with the leans above, now or at
   the bot and fuzz instruments' phase: whether one is a tool the user
-  still reaches for is theirs to say.
+  still reaches for is theirs to say. After the two answers above the
+  lean on `--arena` and on `--flip-telemetry` is **delete**, each sized
+  at the instruments' phase, with the coverage bot's test kept.
 - Proof: instrument.
-- Signed:
+- Signed, three of the five (the user, 2026-10-13): `--bits-multiplier`
+  **delete** ("looks like it's been obsoleted"), `--grant-epsilon`
+  **delete**, `--camp-raid` **keep**. Open: `--arena` and
+  `--flip-telemetry`, each on a question answered above, and the five
+  tuning flags' keep.
 
 ### 1.7 Content nothing refers to
 
@@ -722,7 +758,8 @@ an id from the same word used for something else.
 - The config files by keys reached: `economy`, `selection` and `spawn`
   hold one each, `objective` two, `escalation` four, `playback` and
   `tiles` five. Rows A-02, A-03 and A-09 would remove one file, leave
-  `tiles` with one key, and remove a second file.
+  `tiles` with one key, and remove a second file; A-21, as signed,
+  takes that last key and so a third file.
 - Two config files only the fuzz instruments read are in the game's
   config stamp, by a stated choice (`src/config/configHash.ts`, header).
 - META-ROADMAP's third inert field of the flight seam, "the one-member
@@ -751,5 +788,8 @@ an id from the same word used for something else.
    2026-10-13). Signed for deletion: A-01, A-02, A-03, A-05, A-07, A-08,
    A-09, A-10, A-13. Signed kept: A-06, A-12, A-14, A-15, A-17, A-18
    (five of its six fields) and A-19, and A-16 as a class. Split: A-04
-   (`ignoresTerrain` delete, `layer` keep). Open, three rows: A-11, A-20
-   and A-21.
+   (`ignoresTerrain` delete, `layer` keep). Signed as a trial: A-11.
+   Signed in part: A-20 (two flags delete, one keep) and A-21 (two
+   switches delete, one keep). Open, four items in those two rows:
+   `--arena`, `--flip-telemetry` and the five tuning flags' keep in
+   A-20, and the playback flags' keep in A-21.

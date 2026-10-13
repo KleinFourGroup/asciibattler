@@ -2364,4 +2364,43 @@ each option; no instrument was read whole.
   files.
 - The row now gives a lean on each of the five.
 
-Reading: **236,678** at 13:05 on the third tranche's commit, `6ff21d5`.
+Reading: **236,678** at 13:05 on the third tranche's commit, `6ff21d5`;
+**267,674** at 13:10 on `7702bd2`.
+
+**The read, the fourth tranche** (the user, 2026-10-13), on A-11, A-20
+and A-21.
+
+- **A-11, signed as a trial:** "survivors is no longer in consideration.
+  Casualties is the basis going forward, and any experiments will be
+  based off of it." For 120g's list: TODO's "The survivors end sequence,
+  unexercised live" is conditioned on a survivors-rule playtest, which
+  this rules out; the model still emits that sequence's events on a
+  capped turn (`lossEventsAtEnd`), and the HUD's side was not read.
+- **A-20, three of the five signed:** `--bits-multiplier` delete ("looks
+  like it's been obsoleted"), `--grant-epsilon` delete, `--camp-raid`
+  keep.
+- **A-20, two questions asked, and answered from the code.** The user
+  took the arena for the protocol's isolation testing against specific
+  encounters, "most frequently elites". It is not: that is
+  `--encounter=<id>` on a run, which BALANCE's protocol names throughout
+  and no row touches. The arena rolls a wave at the roster's budget, has
+  no `--encounter`, and exists to tune the orders the bot gives its
+  team. The user took the flip-rate read for the micro round's; it is
+  the rollout-arbitration round's (71c), the micro round's K-flip idea
+  applied to run-layer decisions, its verdict signed 2026-08-01. Neither
+  flag is named anywhere in the tracked tree outside `tests/fuzz`
+  (`git grep`, all but the archive). After the answers the lean on both
+  is "delete", sized at the instruments' phase; the coverage bot's test
+  uses the arena's runner at three places and is kept.
+- **A-21, three of the four signed:** `passIsFinal` keep "until we get
+  some feedback"; `blockCampTurnEnd` delete, the shipped behaviour
+  staying ("if combat with anything is ongoing, the battle continues");
+  `applyStatusOnEnter` delete ("mud tiles are more generally going to
+  get reworked in the future. The trial is over"). The session takes the
+  last as the switch going with mud poisoning as shipped, since the
+  round changes no behaviour, and said so to the user. With A-03 it
+  empties `config/tiles.json`: three config files go in all.
+- **An unrecorded plan the user named:** a rework of mud tiles. Offered
+  to the user as a line for TODO; not written without their word.
+- Open: `--arena`, `--flip-telemetry`, the keep of A-20's five tuning
+  flags and of A-21's playback flags, none of which the reply named.

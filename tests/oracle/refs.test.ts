@@ -26,9 +26,11 @@ export const CONFIG = Schema.parse({ speed: 1, dead: 2, nested: { deep: 3 }, lis
 const listed = 6;
 const alsoListed = 7;
 export { listed, alsoListed as renamed };
+export const handed = 8;
+export interface Counter { steps: number; idle: number }
 `;
 const GAME = `
-import { CONFIG, inner, used, type Options } from './lib';
+import { CONFIG, handed, inner, used, type Counter, type Options } from './lib';
 export const total = used + inner() + CONFIG.speed + CONFIG.nested.deep + CONFIG.list.length;
 export function start(options: Options): number { return options.seed; }
 declare const key: 'speed' | 'dead';
@@ -37,11 +39,16 @@ declare const i: number;
 export const nth = CONFIG.list[i];
 const { unpacked } = CONFIG;
 export const got = unpacked;
+export const bag = { handed };
+declare const counter: Counter;
+export const label = \`n\${++counter.steps}\`;
+counter.idle++;
 `;
 const TEST = `
 import { CONFIG, tested, type Options } from './lib';
 export const sum = tested + CONFIG.speed;
-export const options: Options = { seed: 1, unused: 2 };
+const unused = 2;
+export const options: Options = { seed: 1, unused };
 `;
 const BARREL = `export { lonely } from './lib';\n`;
 const TOOL = `import { CONFIG, forTools, listed } from '../../src/zzrefs/lib';\nexport const shown = [CONFIG.nested, forTools, listed];\n`;
@@ -63,7 +70,7 @@ const standings = (list: readonly Named[]): Record<string, string> => Object.fro
 describe('the reference finder, on a planted program', () => {
   it('says where each export stands', () => {
     const found = exportsOf(project, 'src/zzrefs/lib.ts');
-    expect(standings(found)).toEqual({ used: 'used', lonely: 'unread', tested: 'test-only', forTools: 'used', inner: 'used', helper: 'own-only', Options: 'used', CONFIG: 'used', listed: 'used', renamed: 'unread' });
+    expect(standings(found)).toEqual({ used: 'used', lonely: 'unread', tested: 'test-only', forTools: 'used', inner: 'used', helper: 'own-only', Options: 'used', CONFIG: 'used', listed: 'used', renamed: 'unread', handed: 'used', Counter: 'used' });
     // A re-export hands the name on and reads nothing.
     expect(byName(found).lonely!.references).toEqual([{ file: 'src/zzrefs/barrel.ts', line: 1, kind: 'game', use: 'pass' }]);
     expect(count(byName(found).CONFIG!, 'tool', 'read')).toBe(1);
@@ -91,8 +98,20 @@ describe('the reference finder, on a planted program', () => {
     const found = byName(membersOf(project, 'src/zzrefs/lib.ts', 'Options'));
     expect(standing(found['Options.seed']!)).toBe('used');
     expect(standing(found['Options.unused']!)).toBe('unread');
-    expect(found['Options.unused']!.references).toEqual([{ file: 'src/zzrefs/lib.test.ts', line: 4, kind: 'test', use: 'write' }]);
+    // `{ seed: 1, unused }` builds the member from a variable of its name: a write of the member.
+    expect(found['Options.unused']!.references).toEqual([{ file: 'src/zzrefs/lib.test.ts', line: 5, kind: 'test', use: 'write' }]);
     expect(() => membersOf(project, 'src/zzrefs/lib.ts', 'Missing')).toThrow(/no interface or type literal named Missing/);
+  });
+
+  it('takes `{ name }` for a read of the variable, and a step whose result is used for a read', () => {
+    // `handed` is read nowhere but in `{ handed }`.
+    const handed = byName(exportsOf(project, 'src/zzrefs/lib.ts')).handed!;
+    expect(handed.references.map((r) => `${r.kind} ${r.use}`).sort()).toEqual(['game pass', 'game read']);
+    const counter = byName(membersOf(project, 'src/zzrefs/lib.ts', 'Counter'));
+    // `n${++counter.steps}` uses what it writes; `counter.idle++` on a line of its own does not.
+    expect(standing(counter['Counter.steps']!)).toBe('used');
+    expect(standing(counter['Counter.idle']!)).toBe('unread');
+    expect(counter['Counter.idle']!.references.map((r) => r.use)).toEqual(['write']);
   });
 
   it('lists the read by a computed key that it cannot follow', () => {

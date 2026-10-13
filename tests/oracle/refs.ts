@@ -26,8 +26,11 @@
  *
  * and is a WRITE when it sets the name (an object literal that builds the
  * value, an assignment), a PASS when it only hands the name on (an import or
- * a re-export), and a read otherwise. `const { key } = config` is a read. An
- * assignment that unpacks, `({ key } = config)`, is taken for a write.
+ * a re-export), and a read otherwise. `const { key } = config` is a read. So
+ * is `{ name }` for the variable `name` (for the property it builds, it is a
+ * write), and so is a step or a compound assignment whose result is used
+ * (`id = ++seq`); `seq++` as a statement only writes. An assignment that
+ * unpacks, `({ key } = config)`, is taken for a write.
  *
  * WHAT IT CANNOT SEE. A read by a computed key (`STATS[name]`), a spread or a
  * whole-object use (`{ ...HEALTH }`, `JSON.stringify(config)`), and anything
@@ -154,6 +157,24 @@ function nodeAt(file: ts.SourceFile, position: number): ts.Node {
 
 const lineOf = (file: ts.SourceFile, position: number): number => file.getLineAndCharacterOfPosition(position).line + 1;
 
+/**
+ * Whether the name at `node` is stepped or compound-assigned (`++n`, `n += 1`)
+ * where the result is used: `id = ++seq` reads `seq` as well as writing it. As
+ * a statement of its own, or as a loop's step, it only writes.
+ */
+function readsWhatItWrites(node: ts.Node): boolean {
+  let operand = node;
+  while (operand.parent !== undefined && ts.isPropertyAccessExpression(operand.parent) && operand.parent.name === operand) operand = operand.parent;
+  const write = operand.parent;
+  if (write === undefined) return false;
+  const steps = (ts.isPrefixUnaryExpression(write) || ts.isPostfixUnaryExpression(write)) && (write.operator === ts.SyntaxKind.PlusPlusToken || write.operator === ts.SyntaxKind.MinusMinusToken);
+  const compound = ts.isBinaryExpression(write) && write.left === operand && write.operatorToken.kind >= ts.SyntaxKind.FirstCompoundAssignment && write.operatorToken.kind <= ts.SyntaxKind.LastCompoundAssignment;
+  if (!steps && !compound) return false;
+  let holder = write.parent;
+  while (ts.isParenthesizedExpression(holder)) holder = holder.parent;
+  return !ts.isExpressionStatement(holder) && !ts.isForStatement(holder);
+}
+
 /** Every reference to the name declared at `name`, the declaration itself left out. */
 function referencesTo(project: Project, name: ts.Node): Reference[] {
   const declaring = name.getSourceFile();
@@ -161,6 +182,9 @@ function referencesTo(project: Project, name: ts.Node): Reference[] {
   const at = name.getStart(declaring);
   const out: Reference[] = [];
   const seen = new Set<string>();
+  // A member is asked by its name in a literal, a signature or a class body; any other name is a variable's, a function's or a type's.
+  const owner = name.parent;
+  const asksMember = ts.isPropertyAssignment(owner) || ts.isShorthandPropertyAssignment(owner) || ts.isPropertySignature(owner) || ts.isPropertyDeclaration(owner) || ts.isMethodSignature(owner) || ts.isMethodDeclaration(owner) || ts.isAccessor(owner);
   for (const symbol of project.service.findReferences(declaring.fileName, at) ?? []) {
     for (const ref of symbol.references) {
       const file = project.relative(ref.fileName);
@@ -169,11 +193,15 @@ function referencesTo(project: Project, name: ts.Node): Reference[] {
       seen.add(key);
       const sourceFile = project.program.getSourceFile(ref.fileName);
       if (sourceFile === undefined) continue;
-      const parent = nodeAt(sourceFile, ref.textSpan.start).parent;
+      const node = nodeAt(sourceFile, ref.textSpan.start);
+      const parent = node.parent;
       const passes = parent !== undefined && (ts.isImportSpecifier(parent) || ts.isExportSpecifier(parent) || ts.isImportClause(parent) || ts.isNamespaceImport(parent));
       // `const { key } = config` reads the key, though it writes the local it declares.
       const unpacks = parent !== undefined && ts.isBindingElement(parent);
-      out.push({ file, line: lineOf(sourceFile, ref.textSpan.start), kind: readerKind(file, declaredIn), use: passes ? 'pass' : ref.isWriteAccess && !unpacks ? 'write' : 'read' });
+      // `{ name }` builds a property out of the variable `name`: a read of the variable, and a write of the property.
+      const handsOn = !asksMember && parent !== undefined && ts.isShorthandPropertyAssignment(parent);
+      const reads = unpacks || handsOn || readsWhatItWrites(node);
+      out.push({ file, line: lineOf(sourceFile, ref.textSpan.start), kind: readerKind(file, declaredIn), use: passes ? 'pass' : ref.isWriteAccess && !reads ? 'write' : 'read' });
     }
   }
   return out.sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : a.line - b.line));

@@ -2472,3 +2472,9 @@ in the repo finds a repeated run of tokens. `scratch/120d/shape.mjs` and
 its code before it carries a lean. The session's lean is that 120d
 starts in a fresh session, and the user decides
 (`process/planning.md`, "Context: the halt and the hand-off line").
+
+**The hand-off** (the user, 2026-10-13): "A fresh session sounds good to
+me, Claude!" So 120d starts in a fresh session, from the Cursor and the
+step zero above. Readings: **348,715** at 13:56 on the step zero's
+commit, `9dbda3c`; **350,396** at 14:00 at the hand-off. The session
+ends under the line.

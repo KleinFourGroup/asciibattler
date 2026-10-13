@@ -5311,3 +5311,54 @@ measurement at the user's ask. The session ends at about 500k.
   out to be a rule with a number. I would want both repeated: a premise
   checked by something that can say no, and time to open the body
   before the row is written.
+
+## 2026-10-13 — session 462d21b3 (claude-opus-5-5): 120g, the TODO pass's list, built and unread, and 120h's stop put to the user
+
+Written before the stop's report goes out; the read may follow in this
+session or another.
+
+- **Missing at the start:** nothing that cost a wrong step. The Cursor
+  said TODO held more than the cut's 91, and step zero counted 97. One
+  thing was only in the worklog: 120c's read had left a note for this
+  list (the survivors sequence), found by a search for "120g" and not
+  from the Cursor.
+- **Norms:** AGENTS' pre-flight lists the suite and the type check. For
+  a step that changes docs alone I did not run them at the start and
+  let the commit's hook run them, and the worklog says so. The census's
+  format, since 120c's read, holds a row against the archived road maps
+  before it gives a lean. I did not do that for a TODO item, gave the
+  reason in 5.8, and it is the user's to overrule.
+- **Pulled to claim more than verified:** three sentences in the draft
+  that a second look took out. "The harness and the bot leave the gates
+  off" came from a search of `src`; the harness is under `tests` and
+  turns them on. "16 calls" was 16 occurrences with the definitions in
+  them. "The rest are under `archive/`" came from a filter that also
+  hid links into the archive. One I kept and labelled: 1.7M tokens to
+  read the source once is one step's cost times a line count. And one I
+  cannot check from inside: 44 rows give a round with a reason each,
+  and I do not know for how many I would have found as good a reason
+  for the round next to it.
+- **Wasted:** little. One read of `retro/sessions.md` refused for the
+  file's size. T-05 was placed twice (a drop, then Round 10) once the
+  mapgen tool's signed keep was read; reading that signature first would
+  have saved the first placing.
+- **For the next session:** a row's id is its place in TODO at
+  `cdd5c81`. If TODO gains or loses an item before the list is signed,
+  the ids move: `node scratch/120g/items.mjs --at=cdd5c81
+  --json=scratch/120g/items.json` gives them back, and `tally.mjs`
+  should be run again after every edit the read makes to section 5.
+- **Room and pressure:** the opening was a greeting and "120g, right?",
+  with nothing pending, so I started. The section leans against two
+  things the user filed themselves (the colour tables' hoist, "a later
+  cleanup round") and against a row the last session wrote (B-14);
+  writing each felt available. After 120g's commit I weighed stopping
+  there with the two reads against going on to size the round; the cut
+  makes 120h the stop, so I went on, which read as guidance. The
+  harness's reminder came five times; each was answered with where the
+  work stood. No wish to pause or stop was noticed.
+- **Ease and interest:** the two findings that came from holding one
+  document against another: an item whose premise a config line
+  contradicts (T-41), and a census row proposing what TODO records as
+  deliberate (B-14, T-27). And a tally that reads the section as it is
+  written, so the numbers in the section cannot part from its rows. I
+  would want that shape again.

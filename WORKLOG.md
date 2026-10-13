@@ -3224,3 +3224,126 @@ Readings, by the tool's clock: **88,385** at 20:51 after HANDOFF;
 **214,545** at 20:58 with the cut, `process/planning.md`, TODO read
 whole, META-ROADMAP's Rounds 8.5 to 12, the spec and the first checks;
 **288,064** at 21:08 with the section appended and tallied.
+
+Reading: **294,606** at 21:10 on 120g's commit, `97f4b45` (the hook:
+the type check clean, 3765 of 3765 in 261 files, the smoke not run).
+
+### 120h — the stop: two reads handed over and the round sized, as put to the user (2026-10-13, session 462d21b3)
+
+120h is the phase's last step and a `stop`. This entry is what the
+session put to the user, unsigned as it is written; ROADMAP gets the
+later phases once they are signed, and TODO is rewritten once section 5
+is. Nothing under `src`, `config` or `tests` changed.
+
+**What the stop holds.** Two reads and two calls of size.
+
+- *Section 4, the trials* (120f): 4.10's eleven calls.
+- *Section 5, the TODO pass's list* (120g): 5.9's ten calls.
+- *The trials' budget,* which the spec's D1 leaves to the user "once
+  the census has sizes".
+- *The phases after this one.*
+
+**Step zero for the size.** `scratch/120h/size.mjs` counts the source by
+folder under 120f's rule for a comment line, and refuses to print unless
+its totals are 120f's (279 files, 63,458 lines, 25,659 comment lines).
+They are.
+
+| folder | files | lines | comment lines | step codes |
+|---|---|---|---|---|
+| `sim` | 56 | 15,086 | 7,396 | 1,825 |
+| `ui` | 49 | 10,241 | 3,064 | 948 |
+| `run` | 19 | 9,544 | 4,337 | 1,349 |
+| `render` | 23 | 7,668 | 3,003 | 664 |
+| `config` | 34 | 5,785 | 2,502 | 658 |
+| `dev` | 22 | 4,582 | 1,019 | 133 |
+| `bot` | 11 | 2,121 | 878 | 217 |
+| the other ten | 65 | 8,431 | 3,460 | 582 |
+| all | 279 | 63,458 | 25,659 | 6,376 |
+
+The step codes are `npm run oracle -- comment-codes`' own table, run
+today; its files are 434, since it counts the test files under `src`
+with the source.
+
+**The size, said plainly.** What is signed for deletion and what list B
+proposes are small against the tree: 120f's trials expect about a
+hundred lines between B-06 and B-10, and the dials are a few keys with
+their readers. The comment pass is the round. It has to read every file
+it rewrites. 120f read 7,981 lines whole for about 210k tokens, 26 a
+line, so reading the 63,458 once is about 1.7M tokens before a comment
+is written: several sessions at the hand-off line, by arithmetic from
+one measurement and not a forecast. The tests phase is the other large
+piece, and its size waits on its own first step, the list by test.
+
+**The phases, as put.** The charter's order (sim, run, render and UI,
+the bot and the instruments, tests), with a phase for the dials ahead of
+it, one for the tools after it, and the two the charter already names at
+the end. Each subsystem's phase runs its signed deletions, then its
+trials, then one re-skim, then its comment pass, as META-ROADMAP has it.
+
+- **§121, the dials.** Every signed config key with its schema entry
+  and its readers wherever they sit (A-01 to A-05, A-07 to A-10, A-13,
+  the signed items of A-21), B-03's three one-key files, and
+  `src/config`'s comment pass (34 files, 5,785 lines). First because a
+  dial's readers are in sim and run, so those phases then read code
+  without them. Proof: config, and sim for a reader. That comment pass
+  is also the measurement the later ones are sized by.
+- **§122, sim** (with `core`: 64 files, 16,389 lines). Its signed rows;
+  B-01, B-07, B-08, B-09, and T-24 if it is signed; B-02 decided on
+  B-01's list of which site asks what; the re-skim; the comment pass.
+- **§123, run** (19 files, 9,544 lines). Its signed rows; B-04, B-06,
+  B-10; F-2's test if it is signed; the comment pass, then `Run.ts`
+  re-read for B-15.
+- **§124, render and UI** (151 files, 29,619 lines: `render`, `scenes`,
+  `ui`, `Game.ts` and the page's layers, `dev`). First T-91 and T-84 if
+  they are signed, since the phase has no proof for which scene a phase
+  mounts; then its signed rows; B-13's leads by eye; the comment pass.
+  It is the largest phase by lines, and its kickoff may cut it in two.
+- **§125, the bot and the fuzz instruments** (`src/bot`, 11 files, and
+  `tests/fuzz`'s instruments). A-20, A-30, A-31; B-14's leads, less its
+  first clause if 5.9's fourth call is signed; and the user's 2026-10-12
+  call on whether the comment pass takes `tests` and `tools`.
+- **§126, tests.** The list by test first, with 120e's list by file as
+  its known answer; A-33 and A-25's tests; B-11; T-90 and T-86; T-49 and
+  T-50 if they are signed.
+- **§127, tools.** The sweep page deleted; B-05, with its compare built
+  first and shown to fail on a planted declaration.
+- **§128, the close.** The docs pass (T-62, T-89), `phase-stats`' fixes
+  before the efficacy read (T-51, T-85), the cold-read probe in a
+  session of its own, the shell-quoting audit, the welfare read with
+  T-87 and the standing decisions, the corpus's tier, the build tagged
+  and uploaded.
+- **§129, the dependency phase,** after the tag (T-26).
+
+**Calls put with the phases,** each with the session's lean.
+
+1. *A phase for the dials, first.* META-ROADMAP's list has no config
+   phase; B-03's row assumed one.
+2. *A-37's hook change moves to §121's first step.* It was signed for
+   the instruments' phase. Every sim and run commit before then runs the
+   smoke with the 81 s test in it, and §121 to §123 are where those
+   commits are.
+3. *The trials' budget:* the signed rows of list B, and from each
+   phase's leads and its one re-skim at most three more trials. A fourth
+   is written into the census for a later round. A trial under D2's bar
+   is reverted and not tried a second way.
+4. *Whether the comment pass fans out to smaller readers* is not asked
+   now. §121's comment pass is run in the session and its cost a line is
+   recorded; the call is put at §122's kickoff with that number. The
+   proof (`comment-strip`) shows the code is unchanged whoever writes;
+   nothing proves a comment true, which is the case against handing sim
+   and run to a reader that did not make the deletions.
+5. *§124 may be cut in two at its kickoff.*
+
+**Not verified.** No phase's contents were re-counted from the census's
+rows by subsystem: which signed row lands in which phase is by the
+row's file, read from the rows' headers. The 26 tokens a line is one
+step's cost, for two files read whole with nothing rewritten. No trial
+was tried. The reads of sections 4 and 5 are the user's and have not
+begun.
+
+Readings, by the tool's clock: **337,668** at 21:15 with section 4 read,
+the size counted and this entry written. The stretch the stop opens is
+the user's read of sections 4 and 5, then ROADMAP's phases and TODO's
+rewrite. About 210k is left under the line: enough if the read is mostly
+signatures, and not if several rows come back wanting new measurements,
+in which case the session hands off between tranches.

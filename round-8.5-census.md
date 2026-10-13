@@ -1,11 +1,13 @@
 # Round 8.5 census
 
 **Status: being built; section 1 is under its read.** Signed so far
-(the user, 2026-10-12): the format, the two scope calls, the authoring
-vocabulary kept as a class (A-16), and A-01, A-02, A-03, A-05, A-07,
-A-08 and A-13 for deletion, and A-04 split (`ignoresTerrain` deleted,
-`layer` kept for Round 9). Twelve rows are open, A-21 among them, added
-at the read on 2026-10-13: 1.9 lists them. §120's list of what the
+(the user, 2026-10-12 and 2026-10-13): the format, the two scope calls,
+the authoring vocabulary kept as a class (A-16), nine rows for deletion
+(A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
+(A-06, A-12, A-14, A-15, A-17, A-18, A-19), and A-04 split
+(`ignoresTerrain` deleted, `layer` kept for Round 9). Three rows are
+open, A-11, A-20 and A-21, the last added at the read on 2026-10-13:
+1.9 lists them. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -277,7 +279,8 @@ header says the same thing the search found.
 - Gotchas: none.
 - Fate: **keep.** META-ROADMAP Round 10 names "the event `art?`/fx
   seam's first consumers".
-- Signed:
+- Signed: **keep** (the user, 2026-10-13, with the six other keeps of
+  the read's third tranche: "Signing all of those keeps").
 
 **Declared and never built.**
 
@@ -336,7 +339,9 @@ unselected position ships and is run by tests only.
   encounters that fit many boards.
 - Fate: **ask** (lean: delete all of it; config files 33 to 32).
 - Proof: sim, and config for the file.
-- Signed:
+- Signed: **delete** all of it (the user, 2026-10-13: "I don't think
+  that comparison was ever run, but I'm comfortable dropping it. Enemy
+  first is working, and I see no reason to change that").
 
 **A-10 · `objective.focusTileResolution`: `disallow`, `clearOnArrival`** (`config/objective.json`; `src/sim/focusTile.ts:52-82`)
 - In play: The player can order the team to focus on a tile. Shipped (`leashAtNearest`): units run to the tile, then fight what comes near it and hold there. `disallow` would refuse the order outright. `clearOnArrival` would send units to the tile past every enemy and drop the order once one of them stands on it; on a tile nobody can reach, they would run at it for the rest of the battle. The header says the three were kept switchable "so playtest can A/B". Removing the two changes nothing in play.
@@ -358,7 +363,9 @@ unselected position ships and is run by tests only.
   four lines.
 - Fate: **ask** (lean: delete the two and the key).
 - Proof: sim.
-- Signed:
+- Signed: **delete** the two and the key (the user, 2026-10-13: "Nah, we
+  can cut both. We've gone in a different direction on what escalation
+  involves").
 
 **A-11 · `health.chipMode`: `survivors`; `health.capPenalty`: `casualties`** (`config/health.json`; `src/run/chipRule.ts`, 251 lines)
 - In play: After each turn both health pools are charged. Shipped: each pool loses the power of its own fallen, and a turn that runs out the clock also costs it the power of the other side's units still standing, so stalling is never cheaper than fighting. The unselected positions are the rule from before the casualty experiment (each side's survivors chip the other's pool) and a capped turn with no surcharge. A player never meets either; the balance sweep's `--set` still can.
@@ -411,7 +418,7 @@ unselected position ships and is run by tests only.
 - Fate: **keep.** Round 9 is its named consumer, and what it inherits is
   this seam at rate 0.
 - Proof: sim and config.
-- Signed:
+- Signed: **keep** (the user, 2026-10-13).
 
 **A-13 · `leveling.halfCoverDamageMult` = 1** (`src/sim/effects/propose.ts:114`)
 - In play: 148 half-cover pieces stand on five of the eleven boards (labyrinth, endlessCorridors, junctionAmbush, strafingFunnel, desertFortress). They occupy their cells, and ranged attacks see through them. The rule under this row is that a shot crossing one does less damage; at the shipped 1 it does the same damage. Removing the rule changes nothing in play, and the pieces stay where they are.
@@ -458,7 +465,9 @@ unselected position ships and is run by tests only.
   for another reason, the eleventh draw can go with it (a TODO line, if
   the user wants one).
 - Proof: none needed for a keep.
-- Signed:
+- Signed: **keep** for this round (the user, 2026-10-13), with a TODO
+  for a later cleanup round: "A14 definitely should be dropped at some
+  point". TODO "§120 riders".
 
 **A-15 · three more at a neutral value, proposed kept**
 - In play: `campsStartHostile` at 1 would make every neutral camp attack the player from the first tick, a probe for measuring forced camp fights. `budgetOffset` would add a flat amount to every enemy level budget. `chipMultiplier` scales every charge to the health pools. Each sits at the value that does nothing.
@@ -473,7 +482,7 @@ unselected position ships and is run by tests only.
   `health.seamHealFloor` = 1 is "heal to full at a seam"; the four
   `difficulty.*Multiplier` keys at 1 are what Escalation's levels
   multiply onto.
-- Signed:
+- Signed: **keep**, the three (the user, 2026-10-13).
 
 **Vocabulary no content uses yet.**
 
@@ -524,7 +533,7 @@ unselected position ships and is run by tests only.
   loaders each say the same of `description` beside their prose line).
 - Fate: **keep**: an author's notes on the content, with no code behind
   them.
-- Signed:
+- Signed: **keep** (the user, 2026-10-13).
 
 **On-off switches whose other position nothing selects** (added at the
 read, 2026-10-13). The walk lists an enum with a value no entry holds. A
@@ -600,7 +609,8 @@ alone means no script, tool, instrument or page sets the field.
   sector map is how the event and sector code is tested without the
   shipped content. The sixth, `passIsFinal`, selects a rule that does
   not ship, and is taken with its config key in A-21.
-- Signed:
+- Signed: **keep**, the five (the user, 2026-10-13). `passIsFinal` is
+  open in A-21.
 
 ### 1.5 The URL parameters
 
@@ -617,7 +627,10 @@ The 13 run dials (`seed`, `hops`, `sectorHops`, `roster`, `layout`,
   to lose its storage.
 - Fate: **keep**: each is a dev workflow or a probe's address
   (`process/browser-pane.md`).
-- Signed:
+- Signed: **keep** for this round (the user, 2026-10-13), with a TODO
+  for a later cleanup round: "A19 should eventually be reviewed; I feel
+  like the many URL parameters need to be simplified at some point".
+  TODO "§120 riders".
 
 ### 1.6 The fuzz flags
 
@@ -693,8 +706,9 @@ an id from the same word used for something else.
    *Signed 2026-10-12.*
 4. **The authoring vocabulary is kept as a class** (A-16) and not pruned.
    *Signed 2026-10-12.*
-5. **The fates,** row by row: A-01 to A-20. Signed: A-01, A-02, A-03,
-   A-05, A-07, A-08, A-13 (delete), A-16 (keep, as a class), and A-04
-   (`ignoresTerrain` delete, `layer` keep). Open, twelve rows: A-06,
-   A-09 to A-12, A-14, A-15, A-17 to A-21 (A-21 added at the read,
-   2026-10-13).
+5. **The fates,** row by row: A-01 to A-21 (A-21 added at the read,
+   2026-10-13). Signed for deletion: A-01, A-02, A-03, A-05, A-07, A-08,
+   A-09, A-10, A-13. Signed kept: A-06, A-12, A-14, A-15, A-17, A-18
+   (five of its six fields) and A-19, and A-16 as a class. Split: A-04
+   (`ignoresTerrain` delete, `layer` keep). Open, three rows: A-11, A-20
+   and A-21.

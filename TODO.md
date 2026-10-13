@@ -779,3 +779,17 @@ From 119g's planted breaks (WORKLOG §119, 119g).
   sends each phase's command to `Game` whatever screen is up. A check in
   `__probe.drive` that the mounted scene is the phase's would make the
   drive a proof for the scene wiring, which today has none but the eye.
+
+## §120 riders (the census's read, 2026-10-13)
+
+The user's two, given with the keeps of census rows A-14 and A-19, for a
+later cleanup round.
+
+- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
+  is 0 on every unit and is meant to stay 0, and a recruit's level-up
+  still draws for it (`src/sim/leveling.ts:66`). Taking the key out
+  re-draws every recruit's level-ups, so it goes, with the eleventh
+  draw, in a round that accepts the stream moving and re-runs the board.
+- [ ] **The URL parameters, reviewed and simplified.** 17 today: 13 run
+  dials and 4 others (census 1.5). The user: "the many URL parameters
+  need to be simplified at some point".

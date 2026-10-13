@@ -2324,4 +2324,22 @@ are still unread. A word search of the documents does not show that no
 plan exists.
 
 Readings: **87,623** at 12:24 after HANDOFF; **217,317** at 12:32 with
-the rows checked and the census updated.
+the rows checked and the census updated; **220,235** at 12:34 on that
+commit, `31b2baf` (the hook: 3764 of 3764 in 261 files).
+
+**The read, the third tranche** (the user, 2026-10-13): "Signing all of
+those keeps, Claude, with two to-dos for some future cleanup round: 1.
+A14 definitely should be dropped at some point. 2. A19 should eventually
+be reviewed; I feel like the many URL parameters need to be simplified
+at some point."
+
+- **Signed kept: A-06, A-12, A-14, A-15, A-17, A-18 and A-19.** A-18's
+  signature covers five of its six fields; `passIsFinal` is open in
+  A-21. The two to-dos are in TODO "§120 riders".
+- **Signed for deletion: A-09** ("I don't think that comparison was ever
+  run, but I'm comfortable dropping it. Enemy first is working, and I
+  see no reason to change that"), the unused order, the key and the
+  one-key file, **and A-10** ("Nah, we can cut both. We've gone in a
+  different direction on what escalation involves"), the two modes and
+  the key.
+- Eighteen rows are signed and three are open: A-11, A-20 and A-21.

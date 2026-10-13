@@ -2862,3 +2862,37 @@ the user is asked about was opened first.
   with the generator. Whether either is still opened is the user's to
   say.
 - Not looked at: the bodies of A-30's two bench files; A-24's tests.
+
+Reading: **411,299** at 16:25 on that commit, `e42495d`.
+
+**The read, the second tranche** (the user, 2026-10-13, on thirteen
+items of section 2 and the stylesheet call): "Alright, Claude, I'm
+signing off on your leans for the first twelve of those. (N.B.
+Supporting a second language should probably be an explicit to do 😂)
+For the mapgen prototype, while I don't use this often, I anticipate
+that it'll be very helpful as we add more tile types and need to
+overhaul the procedural map generation, so I think it can stay. Signing
+your CSS proposal too! 😁" So:
+
+- **Signed kept:** the locale layer's ten exports (A-24);
+  `isActiveNeutral`, for the neutral-team trial (A-25); the two bench
+  scripts and the three noise-floor files (A-30); `tools/mapgen-prototype`
+  (A-32), for the tile types and the generator overhaul to come.
+- **Signed for deletion:** eleven of A-25's twelve, their tests going or
+  moving as its table says; `verifyArbitratedRuns.ts` (A-30); the fifteen
+  stored vectors (A-31); `tools/sweep-gui` (A-32).
+- **The editors' stylesheets are a trial.** "Deletion only" for `tools/`
+  is lifted for that one case; 120f sizes it and it runs late.
+- **A second language is now a TODO item** ("§120 riders"), at the
+  user's word. META-ROADMAP's line was read for it (518: the locale has
+  "no row in Settings; the row comes with a second locale").
+- *One signature the session read into.* The lean on `sweep-gui` was
+  "delete if you no longer open it", and the reply answered that
+  question for the other tool only. The session took the signature of
+  the first twelve as "it is no longer opened", recorded it so in the
+  row, and said so in its next message for the user to correct.
+- *Checked after the tranche, for the next one:* A-28's row had left
+  `.stop` and `.hide` unread in the files outside the type check. Every
+  `.stop(` there is the recorder's and the one `.hide(` is the probe
+  kit's; no other name of A-28, and none of A-36's four deletions, is in
+  a script, a probe, a page or a pane procedure.

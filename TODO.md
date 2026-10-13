@@ -782,8 +782,8 @@ From 119g's planted breaks (WORKLOG §119, 119g).
 
 ## §120 riders (the census's read, 2026-10-13)
 
-The user's two, given with the keeps of census rows A-14 and A-19, for a
-later cleanup round.
+The user's, given at the census's read: the first two with the keeps of
+rows A-14 and A-19, for a later cleanup round; the third with A-24.
 
 - [ ] **Power's level-up draw and its growth key.** `growthRates.power`
   is 0 on every unit and is meant to stay 0, and a recruit's level-up
@@ -793,3 +793,10 @@ later cleanup round.
 - [ ] **The URL parameters, reviewed and simplified.** 17 today: 13 run
   dials and 4 others (census 1.5). The user: "the many URL parameters
   need to be simplified at some point".
+- [ ] **A second language.** The game ships English alone. Round 7 built
+  the string layer for more, the locale gets its row in Settings "with a
+  second locale" (META-ROADMAP, Round 8), and no round schedules one. The
+  user: "Supporting a second language should probably be an explicit to
+  do". Census A-24 keeps the layer's way in for it (`registerLocale`, the
+  stale-translation marks, the translators' credits), which only tests
+  call today.

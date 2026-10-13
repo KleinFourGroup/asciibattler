@@ -1,8 +1,9 @@
 # Round 8.5 census
 
 **Status: being built; section 1 is read and signed, and sections 2 and 3
-(120d and 120e, written 2026-10-13) are being read at 120e's stop: of
-section 3, A-33, A-34, A-36 and A-37 are signed.** Signed (the
+(120d and 120e, written 2026-10-13) are being read at 120e's stop: A-24,
+A-25, A-30 to A-34, A-36 and A-37 are signed, and the classes that need
+a look are open.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -799,8 +800,10 @@ an id from the same word used for something else.
 
 ## 2. Exports, files and exact duplicates (120d)
 
-Written 2026-10-13 and **not yet read**: the read is at 120e's stop.
-Rows A-22 to A-32 are open. What the user is asked is in 2.8.
+Written 2026-10-13. **Read in part** at 120e's stop: A-24, A-25, A-30,
+A-31 and A-32 are signed, with the stylesheet trial (the user,
+2026-10-13). A-22, A-23 and A-26 to A-29 are open. What the user is
+asked is in 2.8.
 
 A fourth proof recurs in this section:
 
@@ -915,7 +918,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
   paths are the layer's point, they run only when a second language is
   registered, and these ten are how the tests register one. Cutting them
   leaves the layer untested.
-- Signed:
+- Signed: **keep** (the user, 2026-10-13: "I'm signing off on your leans for the first twelve of those"), with a TODO for the second language at the user's word ("§120 riders").
 
 **A-25 · twelve that only their own tests call**
 - In play: nothing. Each has a test that calls it and checks its answer,
@@ -940,7 +943,7 @@ stamps its ID. The 99 were not read one by one, and none is a row.
 - Fate: **ask**, item by item, with the leans above: whether a test is
   redundant is the user's call.
 - Proof: export, with `reach-diff` for each test that goes.
-- Signed:
+- Signed: **delete** eleven, their tests going or moving as the table says; **keep** `isActiveNeutral` for the neutral-team trial (the user, 2026-10-13, in the same words).
 
 **A-26 · the word `export` on 257 declarations**
 - In play: nothing. Each is used, inside the file that declares it.
@@ -1024,7 +1027,11 @@ and tests also read are left out of the four columns.)
   60 scripts, probes, pages and pane procedures, which reach the game by
   name through `window.__game`. It found three words too common to
   settle: `.stop` and `.hide` here, and `.label` among the leads below.
-  Those sites were not read.
+  Read on 2026-10-13: every `.stop(` there is the recorder's
+  (`shell/electron/main.mjs:375-376`, `probes/record-page.js:368`), the
+  one `.hide(` is the probe kit's (`process/browser-pane.md:60`), and no
+  file outside the type check holds any other name of this row, or
+  `playback.label`.
 - Fate: **delete**, each in its subsystem's phase, after its site is
   read there. Only `dispose()`'s was read here.
 - Proof: the type check, the suite and the page drive. The build's bytes
@@ -1092,7 +1099,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
   bodies were not.
 - Fate: **ask**, at the instruments' phase.
 - Proof: instrument.
-- Signed:
+- Signed: **keep** the two benches and the three noise-floor files; **delete** `verifyArbitratedRuns.ts` (the user, 2026-10-13, in the same words).
 
 **A-31 · fifteen stored weight vectors nothing names** (39 KB, `tests/fuzz/fixtures`)
 - In play: nothing. Each is a bot's weight vector saved from a search:
@@ -1108,7 +1115,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
   file.
 - Fate: **ask**. Lean: **delete**; git keeps them.
 - Proof: instrument.
-- Signed:
+- Signed: **delete** the fifteen (the user, 2026-10-13, in the same words).
 
 **A-32 · the seventeen tools** (22,996 lines, `tools/`; deletion only)
 
@@ -1128,7 +1135,7 @@ test. ARCHITECTURE's tree lists all seven, and they are kept.
 - Fate: **ask**, for the last two.
 - Proof: none across a commit (the oracle map); the type check and the
   suite, which loads the editors' logic for 4 % to 20 % of their lines.
-- Signed:
+- Signed, for the two asked about: `sweep-gui`, **delete** (the user, 2026-10-13, in the same words); the lean was "if you no longer open it", the reply spoke of the other tool only, and the session took the signature as the answer and said so. `mapgen-prototype`, **keep** (the user: "while I don't use this often, I anticipate that it'll be very helpful as we add more tile types and need to overhaul the procedural map generation, so I think it can stay"). The fifteen kept by a search are still to be looked at.
 
 ### 2.5 The same run of tokens in two places
 
@@ -1179,8 +1186,10 @@ So the duplicates go to list B, as leads (2.6).
   largest single removal this section found. The census holds `tools/`
   to deletion only, because nothing proves a reshaping there; a
   stylesheet merge does have a proof, the declaration-by-declaration
-  compare of `process/oracles.md`. It is the user's call whether that
-  opens a trial.
+  compare of `process/oracles.md`. **Signed as a trial** (the user,
+  2026-10-13: "Signing your CSS proposal too!"): "deletion only" for
+  `tools/` is lifted for this one case, and the trial is sized at 120f
+  and run late.
 - **The apron and the terrain renderer** share five runs (112, 107, 82,
   75 and 69 tokens): the vertex writer and the colour buffers.
 - **The harness and the rollout walker** (`tests/fuzz/harness.ts`,
@@ -1215,18 +1224,18 @@ So the duplicates go to list B, as leads (2.6).
 
 1. **A-22,** the 25 dead exports: delete.
 2. **A-23,** the fourteen kept.
-3. **A-24,** the locale layer's ten: keep, or cut the way in.
-4. **A-25,** the twelve only their tests call, item by item.
+3. **A-24,** the locale layer's ten: keep, or cut the way in. *Signed: keep.*
+4. **A-25,** the twelve only their tests call, item by item. *Signed.*
 5. **A-26,** the word `export` on 257 declarations: dropped phase by
    phase, or left.
 6. **A-27,** the 188 exported for a test: kept as a class.
 7. **A-28,** the 21 unread class members: delete.
 8. **A-29,** the two files nothing imports: delete.
 9. **A-30 and A-31,** the six by-hand instrument files and the fifteen
-   vectors.
-10. **A-32,** the two tools asked about.
+   vectors. *Signed.*
+10. **A-32,** the two tools asked about. *Signed: one goes, one stays.*
 11. **Whether the editors' stylesheets open a trial** (2.6), against the
-    signed "deletion only" for `tools/`.
+    signed "deletion only" for `tools/`. *Signed: a trial.*
 
 ## 3. The tests, by file (120e)
 

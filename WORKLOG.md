@@ -2404,3 +2404,32 @@ and A-21.
   to the user as a line for TODO; not written without their word.
 - Open: `--arena`, `--flip-telemetry`, the keep of A-20's five tuning
   flags and of A-21's playback flags, none of which the reply named.
+
+Reading: **294,236** at 13:38 on the fourth tranche's commit, `da64433`.
+
+**The read closed, and 120c with it** (the user, 2026-10-13): "Delete
+both, sign the two keeps." So `--arena` and `--flip-telemetry` go, the
+coverage bot's test kept, and A-20's five tuning flags and A-21's
+playback flags stay. On the switches: "delete the switches but keep the
+shipped behavior was what I meant". All 21 rows of section 1 are signed:
+nine rows for deletion whole, seven items inside three split rows (A-04,
+A-20, A-21), A-11 as a trial, and the rest kept. 120c is ☑.
+
+- **The mud rework, written down.** The user: "it's not in the plan
+  document yet because I haven't actually mentioned it before! Mud isn't
+  fun to play with, but I haven't taken the time to really figure out
+  why. We can note in the plan that something is coming, but I still
+  don't know what yet." META-ROADMAP Round 9 gains "Mud, a rework of
+  unknown shape" under the spatial work, beside the ice costs, with a
+  row in the coverage map. The session chose the place, because
+  traversal changes which units cross mud at all, and wrote that the
+  kickoff says whether it belongs there. Told to the user as a placement
+  they can move.
+- **What the read cost and found.** Twelve rows in one session, about
+  210k from the first reading to the close. Three leans were overturned
+  across the two sessions: A-12 and A-04's `layer` by a plan, A-14 by a
+  reader the type search does not see. A-20 carried a signed stamp it
+  had not named, and the walk listed no true-or-false key, which is how
+  A-21's four switches had no row. For the sections still to write, a
+  row is held against the plans, the specs, BALANCE's registry and
+  GOTCHAS, and its code is read, before it carries a lean.

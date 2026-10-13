@@ -892,6 +892,17 @@ triple-guarded. Do it once.
 - **Ice <1 costs** (signed above): `minCost × Chebyshev` with `minCost`
   computed per grid at build (1 on any board without ice ⇒ zero change
   elsewhere), `stepDurationTicks` follows. Same phase, same `CostFn` site.
+- **Mud, a rework of unknown shape** (added 2026-10-13 at the Round 8.5
+  census, at the user's word; not designed, audited or sized). The user:
+  "Mud isn't fun to play with, but I haven't taken the time to really
+  figure out why." Today mud is the costliest passable tile (4), takes 12
+  off the accuracy of a unit standing in it and poisons on entry
+  (`TILE_DEFS`, `TileGrid.ts`); the switch on the poison was deleted in
+  Round 8.5 with the behaviour kept (census A-21). Nothing is committed
+  here but that a change is coming, and its first step is finding out by
+  play what is not fun. It sits with the tile-cost work because traversal
+  changes which units cross mud at all; the kickoff says whether it
+  belongs in this round.
 - **Moving N×N footprints** (non-draftable, encounter-only, layout-legal):
   A* is footprint-correct and the renderer already lerps a footprint walk.
   The 1×1-blind parts: `destinationBlocked` (one cell), `claimCell` (corner
@@ -1102,6 +1113,7 @@ records an achievement on a clean machine.
 | Atlas resize (the pre-step, moved from 10) | #13 / 7.5 close | 9 |
 | Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
 | Forced movement (knockback, pull) · a teleport | the Round 8.5 census, 2026-10-12 (the user) | 9 |
+| Mud, a rework of unknown shape | the Round 8.5 census, 2026-10-13 (the user) | 9 |
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
 | Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
 | Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |

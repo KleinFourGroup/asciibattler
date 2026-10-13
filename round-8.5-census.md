@@ -1,18 +1,18 @@
 # Round 8.5 census
 
-**Status: being built; section 1 is under its read.** Signed so far
-(the user, 2026-10-12 and 2026-10-13): the format, the two scope calls,
-the authoring vocabulary kept as a class (A-16), nine rows for deletion
+**Status: being built; section 1 is read and signed.** Signed (the
+user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
+authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
-(A-06, A-12, A-14, A-15, A-17, A-18, A-19), A-11 as a trial, and A-04
-split (`ignoresTerrain` deleted, `layer` kept for Round 9). A-20 and
-A-21, the second added at the read on 2026-10-13, are signed in part,
-with four items open between them: 1.9 lists them. §120's list of what the
+(A-06, A-12, A-14, A-15, A-17, A-18, A-19), A-11 as a trial, A-04 split
+(`ignoresTerrain` deleted, `layer` kept for Round 9), and A-20 and A-21
+item by item (A-21 was added at the read). §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
-deleted. Section 1, the dials, was written at 120c on 2026-10-12 and is
-waiting for its read. The later steps add their sections in this format.
+deleted. Section 1, the dials, was written at 120c on 2026-10-12 and its
+read closed on 2026-10-13. The later steps add their sections in this
+format.
 How each number was counted, and what was checked and what was not, is in
 [WORKLOG.md](WORKLOG.md) §120.
 
@@ -582,16 +582,16 @@ not read.
   lever the spec leaves to Round 10.
 - Gotchas: none names any of the four.
 - Proof: sim and config for the first three.
-- Signed, three of the four (the user, 2026-10-13). `passIsFinal`,
-  **keep** ("until we get some feedback"). `blockCampTurnEnd`,
-  **delete** the switch, the shipped behaviour staying ("if combat with
-  anything is ongoing, the battle continues"). `applyStatusOnEnter`,
+- Signed (the user, 2026-10-13). `passIsFinal`, **keep** ("until we get
+  some feedback"). `blockCampTurnEnd`, **delete** the switch ("if combat
+  with anything is ongoing, the battle continues"). `applyStatusOnEnter`,
   **delete** the switch ("mud tiles are more generally going to get
   reworked in the future. The trial is over, so I think we might as well
-  delete this"); the session takes this as the switch going and mud
-  poisoning as shipped until that rework, and said so. With A-03 this
-  empties `config/tiles.json`, so the file and its loader go: config
-  files 34 to 31 with A-02 and A-09. Open: the playback flags' keep.
+  delete this"). For both, the shipped behaviour stays, confirmed: "delete
+  the switches but keep the shipped behavior was what I meant". With
+  A-03 the second empties `config/tiles.json`, so the file and its
+  loader go: config files 34 to 31 with A-02 and A-09. The playback
+  flags, **keep**. The mud rework is noted in META-ROADMAP Round 9.
 
 ### 1.4 The `RunConfig` fields
 
@@ -736,11 +736,12 @@ date them from J4 to 85g).
   lean on `--arena` and on `--flip-telemetry` is **delete**, each sized
   at the instruments' phase, with the coverage bot's test kept.
 - Proof: instrument.
-- Signed, three of the five (the user, 2026-10-13): `--bits-multiplier`
-  **delete** ("looks like it's been obsoleted"), `--grant-epsilon`
-  **delete**, `--camp-raid` **keep**. Open: `--arena` and
-  `--flip-telemetry`, each on a question answered above, and the five
-  tuning flags' keep.
+- Signed (the user, 2026-10-13). Of the five investigation
+  instruments: `--bits-multiplier` **delete** ("looks like it's been
+  obsoleted"), `--grant-epsilon` **delete**, `--camp-raid` **keep**,
+  and, after the two answers above, `--arena` and `--flip-telemetry`
+  **delete** ("Delete both"), with the coverage bot's test kept. The
+  five tuning flags, **keep**.
 
 ### 1.7 Content nothing refers to
 
@@ -789,7 +790,7 @@ an id from the same word used for something else.
    A-09, A-10, A-13. Signed kept: A-06, A-12, A-14, A-15, A-17, A-18
    (five of its six fields) and A-19, and A-16 as a class. Split: A-04
    (`ignoresTerrain` delete, `layer` keep). Signed as a trial: A-11.
-   Signed in part: A-20 (two flags delete, one keep) and A-21 (two
-   switches delete, one keep). Open, four items in those two rows:
-   `--arena`, `--flip-telemetry` and the five tuning flags' keep in
-   A-20, and the playback flags' keep in A-21.
+   Signed item by item: A-20 (four of the investigation flags delete,
+   `--camp-raid` and the five tuning flags keep) and A-21 (two switches
+   delete, `passIsFinal` and the playback flags keep). None is open:
+   the read of section 1 closed on 2026-10-13.

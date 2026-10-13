@@ -2267,3 +2267,61 @@ switches, the investigation flags).
 Readings: **527,699** at 21:00 on the second tranche's commit,
 `304d615`; **539,285** at 21:02 on `c9f5b08`. The session ends under
 the 550k line.
+
+**The read goes on: the open rows held against the plans first**
+(2026-10-13, session 8b3c5ad6). At `52ba3bc`, the tree clean. Before a
+tranche went to the user, each of the eleven open rows had its words
+searched in every `.md` of the repo, so the archived road maps, specs and
+worklogs as well as META-ROADMAP, GOTCHAS, TODO and DESIGN, and the
+passages that came back were read. The code the last session sized and
+did not read was read: `selection.ts`, `focusTile.ts`, `chipRule.ts`
+whole and `leveling.ts`. Nothing under `src` or `config` changed.
+
+- **A-14, overturned by the code.** The row leaned "delete" and named
+  one reader, `leveling.ts:104`, the enemy side's closed form. The
+  player side reads the rate by a computed key on line 67, inside a loop
+  that draws once for each of eleven stats, power last. Without the key
+  a level draws ten, and every recruit's rolls after the first level
+  land on other numbers. So the deletion is a behaviour change, and the
+  lean is now "keep". This was read and not run. The intent the row
+  asked about was already signed: the casualty spec fixes power per
+  archetype with a growth of 0. It is the read's third overturned lean,
+  and the first by code: the reference finder sees a read by name and
+  not one by `growth[key]`, and the census's "table" class lists the
+  base stats for that line and not the growth rates beside them.
+- **A-11 gains a signed call.** The casualty spec: "Both rules stay
+  alive behind `health.chipMode`", as the experiment's paired
+  instrument. The experiment closed on KEEP, and DESIGN still describes
+  both rules as live and the rule as an experiment. `chipRule.ts` read
+  whole: one rule in place of the two switches takes out about 20 of its
+  251 lines, and the survivors arithmetic stays for the capped turn. The
+  fate stays "trial".
+- **A-10 gains a plan.** The Round 8 charter listed the focus-tile
+  switch as groundwork for difficulty levels and the Round 8 spec struck
+  it (D8), leaving rule levers such as "a tool taken away" to Round 10.
+  `disallow` is the position that would have served it. The lean stays
+  "delete": a level that takes tile focus away is a per-run rule, and
+  this key is one value for the page.
+- **A-09 gains its history.** The order was built switchable at the
+  user's call, to compare by a config flip. No document records the
+  comparison, and with no encounter restricting its boards the two
+  orders draw at the same odds.
+- **A-17's open question is settled.** The locale layer carries only
+  fields a schema marks as prose, and its registry says the five are
+  editor metadata that is never rendered.
+- **A gap in the walk, and a row for it.** The walk lists an enum with a
+  value no entry holds, and a true-or-false key is not an enum. Listing
+  every boolean in the single-object loaders found four switches of the
+  shape of A-09 to A-11: the grant queue's `passIsFinal` (which sat
+  inside A-18's "keep" as a test seam), `sim.blockCampTurnEnd`,
+  `tiles.applyStatusOnEnter`, and the playback pane's enable flags. They
+  are row A-21, each with a lean, and twelve rows are open.
+
+Not verified: no plant was run for A-14. The tests' and the fuzz side's
+share of the chip switch, the tests behind A-21's four and the playback
+pane's code were not sized or read. The five investigation flags of A-20
+are still unread. A word search of the documents does not show that no
+plan exists.
+
+Readings: **87,623** at 12:24 after HANDOFF; **217,317** at 12:32 with
+the rows checked and the census updated.

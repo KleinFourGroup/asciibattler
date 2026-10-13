@@ -4,7 +4,8 @@
 (the user, 2026-10-12): the format, the two scope calls, the authoring
 vocabulary kept as a class (A-16), and A-01, A-02, A-03, A-05, A-07,
 A-08 and A-13 for deletion, and A-04 split (`ignoresTerrain` deleted,
-`layer` kept for Round 9). Eleven rows are open: 1.9 lists them. §120's list of what the
+`layer` kept for Round 9). Twelve rows are open, A-21 among them, added
+at the read on 2026-10-13: 1.9 lists them. §120's list of what the
 round may delete or try, each candidate with its evidence and the proof
 that covers it ([round-8.5-spec.md](round-8.5-spec.md) D1;
 [ROADMAP.md](ROADMAP.md) §120). The user signs it before anything is
@@ -324,6 +325,15 @@ unselected position ships and is run by tests only.
   test. With it gone the key has one legal value, so the key, its loader
   and the one-key file can go too.
 - Gotchas: none.
+- The history (`archive/post-r-roadmap.md`, V1): the order was built as
+  a switch at the user's call, "we don't yet know which feels better,
+  and it should A/B with a config flip", with `encounterFirst` the
+  default, "user-locked". No document records that the comparison was
+  run. With no encounter restricting its boards, both orders draw each
+  encounter and each board at the same odds, so today a comparison has
+  nothing to show. If content later sets `layouts`, the kept order still
+  honours it (`compatibleLayouts`); `layoutFirst` would then favour the
+  encounters that fit many boards.
 - Fate: **ask** (lean: delete all of it; config files 33 to 32).
 - Proof: sim, and config for the file.
 - Signed:
@@ -335,6 +345,17 @@ unselected position ships and is run by tests only.
   its test; `src/sim/World.ts` and `src/sim/objective.ts` name them in
   comments only. With them gone the key has one legal value.
 - Gotchas: none. TODO names `focusTile.ts` only for a shared helper.
+- The plans. `archive/post-n-roadmap.md`, O3 (2026-06-16): the default
+  is `leashAtNearest`, "user-confirmed", and "all three still ship
+  switchable so playtest can A/B". No document records that comparison.
+  META-ROADMAP's Round 8 charter then listed "the focus-tile switch" as
+  groundwork for difficulty levels, and the Round 8 spec struck it (D8),
+  leaving rule levers such as "a tool taken away" to Round 10's content.
+  So `disallow` is the one position a plan once had a use for. A level
+  that takes tile focus away would be a per-run rule that stops the
+  order being given; this key is one value for the whole page
+  (META-ROADMAP, Round 8, "page-global, not per run"), and `disallow` is
+  four lines.
 - Fate: **ask** (lean: delete the two and the key).
 - Proof: sim.
 - Signed:
@@ -353,9 +374,24 @@ unselected position ships and is run by tests only.
 - The road map: Round 9's Retreat is "coherent ONLY under the casualty
   chip rule" (META-ROADMAP Round 9, Retreat), so a planned mechanic already
   assumes the shipped position.
-- Fate: **trial**, in the run phase: one rule in place of two switches.
-  `chipRule.ts` was not read whole, so what it would remove is not
-  counted yet (120f sizes it).
+- A signed call the row had not been held against
+  (`archive/encounter-feel-spec.md`, the casualty chip rule): "Both
+  rules stay alive behind `health.chipMode`", because "the paired
+  same-seed A/B of the rule flip at any config is the experiment's
+  instrument all round". The experiment closed on KEEP (§93). DESIGN
+  "The encounter loop" still says "both stay live behind config" and
+  calls the rule an experiment that §93 keeps or rolls back, so a trial
+  here rewrites that paragraph too. BALANCE names the switch in one
+  entry, the experiment's flip read (2026-09-04, §91f).
+- `chipRule.ts`, read whole on 2026-10-13. The survivors arithmetic
+  stays whatever is decided, since a capped turn pays it. One rule in
+  place of the two switches takes out about 20 of the file's 251 lines:
+  the two exposure bounds' either-or, two guards on the mode, and the
+  end-of-turn block that only (survivors, casualties) reaches. The rest
+  of what it removes is in the tests' matrix of four pairs and the
+  sweep's registry (`tests/fuzz/commands/run.ts:171`), not counted.
+- Fate: **trial**, in the run phase: one rule in place of two switches
+  (120f sizes the tests and the fuzz side).
 - Signed:
 
 **A mechanism the shipped value turns off.**
@@ -401,9 +437,27 @@ unselected position ships and is run by tests only.
 - Evidence: every unit sets 0, and `src/config/units.test.ts:361` asserts
   it is 0, so the key cannot move without that test changing.
 - Gotchas: #96 names `growthRates` for another reason.
-- Fate: **ask** (lean: delete the key from the 23 units, the schema and
-  the one line, if power is meant not to grow with level).
-- Proof: config.
+- The intent is settled: the casualty spec signs power as a headcount
+  weight, "fixed per archetype", with `growthRates.power = 0`
+  (`archive/encounter-feel-spec.md`; DESIGN "The encounter loop": "no
+  growth").
+- A second reader the row had missed, found 2026-10-13. A player
+  recruit's level-up rolls once for each of eleven stats, in a fixed
+  order with power last, and reads the rate by a computed key
+  (`src/sim/leveling.ts:66-67`; the file's header: "Consumes 11 RNG
+  draws per level"). At a rate of 0 the roll never succeeds, and it is
+  still drawn. Taking the key out takes power out of that list, so each
+  level draws ten, and every roll after a recruit's first level lands on
+  another number: recruits level up differently on every seed. Read from
+  the code and not run. The row had named line 104 alone, the enemy
+  side, which draws nothing.
+- Fate: **keep** (changed from "ask, lean delete"). The deletion is a
+  behaviour change. Keeping the roll and dropping the key would leave a
+  draw for a stat that cannot grow, which explains itself worse than a
+  rate of 0 pinned by a test. If the level-up stream is ever re-drawn
+  for another reason, the eleventh draw can go with it (a TODO line, if
+  the user wants one).
+- Proof: none needed for a keep.
 - Signed:
 
 **A-15 · three more at a neutral value, proposed kept**
@@ -462,10 +516,61 @@ unselected position ships and is run by tests only.
 - In play: The names and descriptions of camps, encounters, boards and sectors as an editor shows them to an author. By type the game shows none of them to a player.
 - `CampDef.name`, `CampDef.description`, `Encounter.description`,
   `LayoutSchema.description`, `SectorSchema.description`: by type only
-  `tools/` reads them. Whether the game reaches any through the locale
-  layer by a computed key was not settled.
+  `tools/` reads them. The locale layer does not reach them (settled
+  2026-10-13): it carries only fields a schema marks as prose, and its
+  registry's header says of these five that they are "editor metadata,
+  never rendered" and "all plain strings" (`src/i18n/families.ts:11`;
+  camps have no prose family, and the encounter, sector and layout
+  loaders each say the same of `description` beside their prose line).
 - Fate: **keep**: an author's notes on the content, with no code behind
   them.
+- Signed:
+
+**On-off switches whose other position nothing selects** (added at the
+read, 2026-10-13). The walk lists an enum with a value no entry holds. A
+true-or-false key is not an enum, so these were classed "used" and had
+no row. Found by listing every boolean in the loaders of the
+single-object configs. None was sized, and the tests behind each were
+not read.
+
+**A-21 · four on-off dials**
+- `deck.grantQueue.passIsFinal` = true, with `RunConfig.passIsFinal`
+  (`src/run/Run.ts:3448`, `:3522`). In play: before a turn the player
+  uses or passes each granted action (a redraw, an empower) in the order
+  it was earned. Off, any pending grant could be used in any order and
+  Pass would do nothing. The loader's header calls off "the loosened
+  mode the shape-lock reserved for 'not fun' feedback". One block of
+  tests runs under off so that it can empower without passing a redraw
+  first (`src/run/Run.test.ts:1750`, nine uses). Lean: **keep**. The
+  feedback it was reserved for can still arrive while the public build
+  circulates, and taking it out rewrites that block for two conditions.
+- `sim.blockCampTurnEnd` = true (`src/sim/World.ts:2264`). In play: a
+  battle does not end while the side that won still has a camp fight
+  open. Off, the last enemy's death ends it with the camp half fought.
+  On by the user's feel verdict of 2026-08-09 (the loader's header;
+  DESIGN "Win condition"). Two test files set it off, one test to pin
+  the off behaviour and one so that its fixture's win is not held. Lean:
+  **ask**: the question is closed, so the key could go, at the price of
+  the tests that lean on off.
+- `tiles.applyStatusOnEnter` = true (`src/sim/World.ts:1646`;
+  `src/bot/sensors.ts:177`). In play: a unit that steps into mud is
+  poisoned. Off, mud still slows a unit and spoils its aim, and does not
+  poison. The loader's header: "the mud→poison
+  trial (USER-LOCKED default ON, easy to flip if a playtest dislikes
+  it)". Lean: **ask**, whether that trial is over. If it is, the key
+  goes, and after A-03 it is the last key of `config/tiles.json`, so the
+  file and its loader go with it.
+- `playback.speeds[].enabled` and `playback.pauseEnabled`, all true
+  (`src/ui/PlaybackSpeed.ts:56`; `src/ui/HUD.ts:275`;
+  `src/scenes/BattleScene.ts:271`). In play: each speed button and the
+  pause button is shown. Off, that button is not offered. The loader's
+  header calls them "difficulty-system groundwork"; the Round 8 spec
+  struck "per-speed enable" (D8) and Escalation shipped without it. Lean:
+  **keep**: the code is in the UI, where no proof reaches a reshaping
+  (TESTING.md "The oracle map"), and "a tool taken away" is a kind of
+  lever the spec leaves to Round 10.
+- Gotchas: none names any of the four.
+- Proof: sim and config for the first three.
 - Signed:
 
 ### 1.4 The `RunConfig` fields
@@ -487,10 +592,14 @@ alone means no script, tool, instrument or page sets the field.
 - In play: nothing a player can reach. They are how a test sets up a
   run: a difficulty multiplier, the test's own event list or sector
   graph, the looser rule for the grant queue.
-- Fate: **keep.** Each is the
-seam its tests use to reach a mechanism that ships (Escalation multiplies
-onto the three multipliers; a test catalog or sector map is how the event
-and sector code is tested without the shipped content).
+- Fate: **keep**, for five of the six. Each is the seam its tests use to
+  reach a mechanism that ships: the three multipliers are a per-run
+  override of the `difficulty.json` keys (`resolveDifficultyMultipliers`),
+  and Escalation's levels multiply onto whichever value results
+  (`withEscalation`); a test catalog or
+  sector map is how the event and sector code is tested without the
+  shipped content. The sixth, `passIsFinal`, selects a rule that does
+  not ship, and is taken with its config key in A-21.
 - Signed:
 
 ### 1.5 The URL parameters
@@ -586,5 +695,6 @@ an id from the same word used for something else.
    *Signed 2026-10-12.*
 5. **The fates,** row by row: A-01 to A-20. Signed: A-01, A-02, A-03,
    A-05, A-07, A-08, A-13 (delete), A-16 (keep, as a class), and A-04
-   (`ignoresTerrain` delete, `layer` keep). Open, eleven rows: A-06,
-   A-09 to A-12, A-14, A-15, A-17 to A-20.
+   (`ignoresTerrain` delete, `layer` keep). Open, twelve rows: A-06,
+   A-09 to A-12, A-14, A-15, A-17 to A-21 (A-21 added at the read,
+   2026-10-13).

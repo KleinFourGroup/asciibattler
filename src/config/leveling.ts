@@ -43,12 +43,6 @@
  * in the 30s-40s at growth ~0.6 (matches archetype config) hitting the
  * intended range without exceeding it.
  *
- * `halfCoverDamageMult` is the D6 plumbing finally getting its combat
- * effect — basic strikes through a half-cover (`╥`) on the LOS line
- * deal `damage × halfCoverDamageMult` (post-crit). E2 explicitly
- * deferred the value here so it could be tuned alongside the rest of
- * the E-stat curve.
- *
  * `restXp` (G3) is the flat XP a rest node grants to *every* roster slot.
  * It feeds the same `bankXpAwards` pipeline a battle win uses (synthesized
  * as one award per slot), so a rest can legitimately trigger level-ups +
@@ -82,7 +76,6 @@ const LevelingSchema = z.object({
   xpPerDamage: z.number().nonnegative(),
   xpPerHealing: z.number().nonnegative(),
   summonDamageXpShare: z.number().min(0).max(1),
-  halfCoverDamageMult: z.number().min(0).max(1),
   restXp: z.number().nonnegative(),
 });
 

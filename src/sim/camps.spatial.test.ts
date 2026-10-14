@@ -15,12 +15,12 @@ import { World } from './World';
 import type { Unit, UnitStats, Team } from './Unit';
 import type { GridCoord } from '../core/types';
 import { spawnCamps } from './battleSetup';
-import { spawnWall, spawnHalfCover } from './environment';
+import { spawnWall } from './environment';
 import { buildMovementContext } from './movement';
 import { cellIndex } from './occupancy';
 import { neutralCells } from './blockedAlly';
 import { nearestActingCell } from './actingPosition';
-import { collectLosBlockers, collectHalfCoverPositions } from './positioning';
+import { collectLosBlockers } from './positioning';
 import { chokeCells, armyMinCut } from '../bot/sensors';
 import { MoveAction } from './actions/MoveAction';
 import { EventBus } from '../core/EventBus';
@@ -184,19 +184,6 @@ describe('§75d — the static-topology sets exclude active neutrals', () => {
 });
 
 describe('§75d — cover & LOS', () => {
-  it('an active neutral never grants half-cover, even with blocksLineOfSight false', () => {
-    const world = freshWorld();
-    const camp = campMemberAt(world, { x: 4, y: 4 });
-    // No shipped camp def is a non-LOS-blocker — force the flag (readonly in
-    // prod, hence the cast) to pin the explicit gate: a future non-LOS camp
-    // def must not become mobile cover.
-    (camp as { blocksLineOfSight: boolean }).blocksLineOfSight = false;
-    const cover = spawnHalfCover(world, { x: 6, y: 6 });
-    const positions = collectHalfCoverPositions(world);
-    expect(positions).toContainEqual(cover.position);
-    expect(positions).not.toContainEqual(camp.position);
-  });
-
   it('an active neutral IS an LOS occluder (the deliberate census call)', () => {
     const world = freshWorld();
     const camp = campMemberAt(world, { x: 4, y: 4 });

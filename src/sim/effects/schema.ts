@@ -126,7 +126,7 @@ export const ScalarOrScaledSchema = z.union([z.number(), ScaledValueSchema]);
 
 /**
  * `damage` — routes through `World.applyDamage` (the single chokepoint). The
- * interpreter computes `round(base × critFactor × damageMultiplier)` where
+ * interpreter computes `round(base × critFactor)` where
  * `base = might + scalingStat`, draws the crit off `combatRng`, then hands the
  * to-hit roll to `applyDamage` (when `evadable`). `accuracy` / `critBase` are
  * read only when `evadable` / `critable`. `bypassDefense` skips mitigation

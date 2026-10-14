@@ -5,7 +5,6 @@ import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import { deriveStats, inertDerived } from '../stats';
 import { chebyshev } from '../movement';
-import { LEVELING } from '../../config/leveling';
 import { abilityDef } from '../../config/abilities';
 import { rangeForArchetype, minRangeForArchetype, engagementReach } from '../archetypes';
 import { MovementBehavior } from '../behaviors/MovementBehavior';
@@ -131,19 +130,10 @@ describe('proposeEffectAbility — enemyInRange + minRange + LOS + half-cover (b
     expect(ability('bow').propose(u, world([u, enemy, wall({ x: 2, y: 0 })]))).toBeNull();
   });
 
-  it('fires through half-cover and captures the 0.5 damage multiplier on the op', () => {
+  it('fires through half-cover', () => {
     const u = caster('bow', { x: 0, y: 0 });
     const enemy = makeUnit('enemy', { x: 3, y: 0 });
-    const p = ability('bow').propose(u, world([u, enemy, halfCover({ x: 2, y: 0 })]));
-    expect(p).not.toBeNull();
-    expect(dataOf(p!.action).ops[0]!.damageMultiplier).toBe(LEVELING.halfCoverDamageMult);
-  });
-
-  it('no half-cover → multiplier 1', () => {
-    const u = caster('bow', { x: 0, y: 0 });
-    const enemy = makeUnit('enemy', { x: 3, y: 0 });
-    const p = ability('bow').propose(u, world([u, enemy]));
-    expect(dataOf(p!.action).ops[0]!.damageMultiplier).toBe(1);
+    expect(ability('bow').propose(u, world([u, enemy, halfCover({ x: 2, y: 0 })]))).not.toBeNull();
   });
 });
 

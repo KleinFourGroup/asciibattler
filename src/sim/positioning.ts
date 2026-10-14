@@ -117,25 +117,6 @@ export function collectLosBlockers(world: World): GridCoord[] {
 }
 
 /**
- * E4 — half-cover positions: INERT neutral units whose `blocksLineOfSight` is
- * `false`. Symmetric to `collectLosBlockers` but for the OTHER half of the
- * neutral-team population. A shot that crosses one lands at
- * `LEVELING.halfCoverDamageMult`. §75d — active neutrals are gated out
- * EXPLICITLY: every shipped camp archetype is a combatant
- * (`blocksLineOfSight: true`) so the flag test alone excludes them today, but
- * a future non-LOS-blocking camp def must not become mobile cover.
- * 43-pre-b — full footprints, same class as `collectLosBlockers` (pure
- * future-proofing: no shipped multi-tile def has `blocksLineOfSight: false`).
- */
-export function collectHalfCoverPositions(world: World): GridCoord[] {
-  const out: GridCoord[] = [];
-  for (const u of world.units) {
-    if (isInertNeutral(u) && !u.blocksLineOfSight) out.push(...cellsOccupiedBy(u));
-  }
-  return out;
-}
-
-/**
  * 44-pre-c — THE shared firing-band + LOS gate, footprint-aware: the first cell
  * of `target`'s body (anchored at `anchor` — its logical position, or its §36b
  * claimed destination for the movement hold's arriving-target case) that sits in

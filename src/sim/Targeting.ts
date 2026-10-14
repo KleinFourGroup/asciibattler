@@ -787,7 +787,7 @@ export function lowestWoundedAlly(unit: Unit, world: World, range: number): Unit
   return best;
 }
 
-/* §44a — `collectLosBlockers` / `collectHalfCoverPositions` / `firingBandCell`
+/* §44a — `collectLosBlockers` / `firingBandCell`
    moved to [positioning.ts](positioning.ts), the WHERE-knowledge home (the
    re-target LOS check above imports the pool back from there). */
 

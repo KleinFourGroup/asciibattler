@@ -7,6 +7,5 @@
   "xpPerDamage": 3,
   "xpPerHealing": 3,
   "summonDamageXpShare": 0.75,
-  "halfCoverDamageMult": 1.0,
   "restXp": 200
 }

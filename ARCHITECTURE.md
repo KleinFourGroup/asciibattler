@@ -97,7 +97,7 @@ src/
     escalation.ts            #   117e: `escalationSteps(level)` = each lever a level moves against the one under it, with how many levels under it moved the same lever (what the level's words are built from). 117b: the Escalation ladder (Round 8 spec D8). `ESCALATION_LEVELS` holds where the three levers (levelBudget, wave, bits) stand at each level, 1 up; the parse refuses a ladder where a lever eases. `leverFactors` is how they combine (the wave lever goes to the count, the budget and the enemy pool; the budget lever multiplies with it on the budget); `withEscalation(base, level)` gives a run's four multipliers, and at level 0 returns `base` itself. escalation.test.ts holds the shipped ladder to the signed table by hand
     recruitment.ts           #   offer size + startingLevel + recruitBonusChance (G4); §61c rarityWeights (63c: roster composition moved to characters.json)
     characters.ts            #   §63a: loads config/characters.json — starting characters (roster/daemon/blacklist additions/weight overrides); characterById + DEFAULT_CHARACTER_ID ('soldier') + assertDefaultCharacter boot check
-    leveling.ts              #   E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+    leveling.ts              #   E4: xp curve + restXp (G3) + xpPerHealing (F6)
     nodemap.ts               #   hop count + width bands + degree cap + restChance/restMinSpacing (G2/G3)
     terrain.ts               #   C1a: wall + water density
     layouts.ts               #   C1d.A: hand-authored layout array (incl. spawns, halfCovers, chasms, fires, healings, §40d rubble, theme)
@@ -489,7 +489,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   difficulty.json            # G4: enemy level-budget knobs + A/B/C presets
   escalation.json            # 117b: the Escalation ladder, five levels: each level's standing on the three levers (levelBudget, wave, bits)
   recruitment.json           # starting team + offer size + startingLevel + recruitBonusChance
-  leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
+  leveling.json              # E4: xp curve + restXp (G3) + xpPerHealing (F6)
   health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier
   deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
                              # 49d/f: grantQueue { passIsFinal } — the strict acquisition-order dial (ships TRUE, the locked default; RunConfig.passIsFinal overrides for tests/fuzz)

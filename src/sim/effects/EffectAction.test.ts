@@ -179,7 +179,7 @@ describe('EffectAction serialization', () => {
     const w = world();
     const original = new EffectAction(gambitDef, {
       targetId: 7, targetCell: { x: 4, y: 5 },
-      ops: [{ baseDamage: 11, critChance: 0.2, damageMultiplier: 1 }, { moveDest: { x: 4, y: 5 } }],
+      ops: [{ baseDamage: 11, critChance: 0.2 }, { moveDest: { x: 4, y: 5 } }],
     });
     const data = JSON.parse(JSON.stringify(original.toData()));
     const restored = EffectAction.fromData(data, w, gambitDef);
@@ -190,7 +190,7 @@ describe('EffectAction serialization', () => {
     const w = world();
     const original = new EffectAction(chainDef, {
       targetId: 7,
-      ops: [{ chainOps: [{ baseDamage: 14, critChance: 0.1, damageMultiplier: 1 }] }],
+      ops: [{ chainOps: [{ baseDamage: 14, critChance: 0.1 }] }],
     });
     const data = JSON.parse(JSON.stringify(original.toData()));
     const restored = EffectAction.fromData(data, w, chainDef);

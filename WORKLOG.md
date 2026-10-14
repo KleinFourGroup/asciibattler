@@ -4087,3 +4087,50 @@ Proof (sim and config):
   CAUGHT by a run that threw.
 
 The suite: 3,752 (3,753 less the off pin).
+
+### 121f — A-13, half cover's multiplier (2026-10-14, session f8bbd64e)
+
+As signed, and as the kickoff's third call widened it: the key
+`leveling.halfCoverDamageMult`, the per-strike walk in
+`proposeSingleTargetStrike` that gathered the half covers and tested the
+line through them, and the `damageMultiplier` field the number rode to
+the damage roll on (`OpResolution`, `resolveOp`'s context and its six
+callers, five of which passed a literal 1, and the interpreter's
+multiply). `collectHalfCoverPositions` had the walk as its one reader in
+`src`, so it went too, with `camps.spatial.test.ts`'s test that a camp
+member never counts as half cover. The 148 pieces stand where they were:
+they still occupy their cells, and `collectLosBlockers` still leaves them
+out, so shots pass through them, now at full damage, as before at a
+multiplier of 1. `x × 1` is exact in floating point, so the damage roll
+is the same number.
+
+The World snapshot: an action in flight carries its ops' resolutions, so
+a battle snapshotted mid-strike no longer writes `damageMultiplier: 1`
+(`EffectAction.test.ts`'s two round-trip literals lost it). No version
+bump, as signed: nothing stores a battle across builds, and a reader of
+an older snapshot that holds the field ignores it.
+
+Tests: `propose.test.ts`'s two multiplier tests are one, "fires through
+half-cover"; `interpreter.test.ts`'s crit-then-multiply test is
+crit-then-round; `AbilityBehavior.test.ts`'s half-cover strike expects
+full damage. ARCHITECTURE's two lines for `leveling` lost "half-cover
+mult"; the loader's header lost its paragraph; `positioning.ts`'s and
+`Targeting.ts`'s comments lost the function's name.
+
+Proof (sim and config):
+
+- config dump at `def07ff` and after: 2 differences, both removals
+  (`LEVELING.halfCoverDamageMult` and its copy in `CONFIG_SOURCES`);
+- typecheck clean; the ceiling lowered 6,325 → 6,320 (three files);
+- `npm run corpus`: 0 of 30 differ, so no journal's end state moved with
+  the snapshot's field (no field diff was needed); the fuzz diff
+  (baseline `def07ff`): PASS on both shapes; `reach-diff --from=def07ff`:
+  nothing lost across 15 changed files;
+- a plant on `def07ff`'s damage roll (`interpreter.ts:216`, the crit
+  negated): corpus CAUGHT (30 of 30 differ) and fuzz diff CAUGHT, both by
+  behaviour.
+
+Not measured: what the walk cost per strike. It gathered every unit for
+the half covers and walked a Bresenham line over them on each proposed
+single-target strike; its removal is a saving the fuzz diff's timing
+does not compare.

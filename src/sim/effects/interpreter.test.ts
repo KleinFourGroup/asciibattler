@@ -73,13 +73,13 @@ describe('executeOp — damage (single-target)', () => {
     expect(events.map((e) => e.name)).toEqual(['unit:attacked']);
   });
 
-  it('applies critMult before the damageMultiplier + round', () => {
+  it('applies critMult, then rounds', () => {
     const { world } = setup();
     const caster = makeUnit('player', { x: 0, y: 0 });
     const target = makeUnit('enemy', { x: 1, y: 0 });
     world.units.push(caster, target);
-    executeOp(dmgOp(), ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1, damageMultiplier: 0.5 } }));
-    expect(target.currentHp).toBe(target.derived.maxHp - Math.round(10 * STATS.critMult * 0.5));
+    executeOp(dmgOp(), ctx({ caster, world, target, resolution: { baseDamage: 10, critChance: 1 } }));
+    expect(target.currentHp).toBe(target.derived.maxHp - Math.round(10 * STATS.critMult));
   });
 
   it('commit-at-cast: a dead target is skipped (no event, no draw)', () => {

@@ -24,15 +24,9 @@ import type { World } from '../World';
 import type { ActionProposal } from '../Action';
 import { currentTarget, lowestWoundedAlly } from '../Targeting';
 import { resolveAreaVictims } from './targeting';
-import {
-  collectLosBlockers,
-  collectHalfCoverPositions,
-  firingBandCell,
-} from '../positioning';
-import { hasLineOfSight } from '../LineOfSight';
+import { collectLosBlockers, firingBandCell } from '../positioning';
 import { unitDistance } from '../occupancy';
 import { leapLanding } from '../movement';
-import { LEVELING } from '../../config/leveling';
 import type { GridCoord } from '../../core/types';
 import type { AbilityDef, EffectOp, SummonOp } from './schema';
 import { EffectAction } from './EffectAction';
@@ -102,23 +96,10 @@ function proposeSingleTargetAttack(
   );
   if (aim === undefined) return null;
 
-  // E4 half-cover: a neutral non-LOS-blocker on the Bresenham line halves the
-  // damage (the same invert-the-LOS-check trick `proposeBasicStrike` uses). A
-  // `fizzle` artillery shot ignores the multiplier in the interpreter, so it's
-  // inert there — harmless to compute (and 0 in the open field anyway).
-  // 44-pre-c — measured to the AIM cell (the gate's body cell), which for a 1×1
-  // target is exactly `target.position`.
-  const halfCovers = collectHalfCoverPositions(world);
-  const behindCover =
-    halfCovers.length > 0 && !hasLineOfSight(unit.position, aim, halfCovers);
-  const damageMultiplier = behindCover ? LEVELING.halfCoverDamageMult : 1;
-
   const speed = unit.effectiveStats.speed;
   // `retreatAnchor` = the struck cell, for a gambit's `move`-retreat op (the
   // strike effects ignore it). A copy is taken inside `resolveOp`.
-  const ops = def.effects.map((e) =>
-    resolveOp(e.op, { unit, damageMultiplier, retreatAnchor: target.position }),
-  );
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit, retreatAnchor: target.position }));
 
   // Fizzle (the catapult): capture the cast cell as the dud-VFX impact fallback
   // (mirrors `CatapultShotAction.castPosition`) — the interpreter's fizzle branch
@@ -152,7 +133,7 @@ function proposeHeal(
 
   const speed = unit.effectiveStats.speed;
   // A heal has no half-cover multiplier; pass 1 (the heal op ignores it anyway).
-  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
 
   return {
     action: new EffectAction(def, { targetId: target.id, targetCell: undefined, ops }),
@@ -190,7 +171,7 @@ function proposeSelfMove(def: AbilityDef, unit: Unit, world: World): ActionPropo
   // No single-target unit (the leap subjects the caster); the enemy was only a
   // landing reference, so targetId is -1 and phaseTarget surfaces nothing.
   const ops = def.effects.map((e) =>
-    resolveOp(e.op, { unit, damageMultiplier: 1, advanceLanding: landing }),
+    resolveOp(e.op, { unit, advanceLanding: landing }),
   );
 
   return {
@@ -242,7 +223,7 @@ function proposeSummon(
   }
 
   const speed = unit.effectiveStats.speed;
-  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
   return {
     action: new EffectAction(def, { targetId, targetCell, ops }),
     score: def.priority,
@@ -291,10 +272,9 @@ function proposeAreaBlast(def: AbilityDef, unit: Unit, world: World): ActionProp
   if (aim === undefined) return null;
 
   const speed = unit.effectiveStats.speed;
-  // No single-target unit + no half-cover: an area detonation is dodged by
-  // leaving the blast, not by a per-cell roll (the interpreter's aoe branch
-  // ignores `damageMultiplier`). The blast centre is captured at cast time.
-  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  // No single-target unit: an area detonation is dodged by leaving the blast,
+  // not by a per-cell roll. The blast centre is captured at cast time.
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
 
   return {
     action: new EffectAction(def, { targetId: -1, targetCell: { ...aim }, ops }),
@@ -336,7 +316,7 @@ function proposeCasterAnchoredBlast(
   if (victims.length === 0) return null;
 
   const speed = unit.effectiveStats.speed;
-  const ops = def.effects.map((e) => resolveOp(e.op, { unit, damageMultiplier: 1 }));
+  const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
   return {
     action: new EffectAction(def, { targetId: -1, targetCell: undefined, ops }),
     score: def.priority,
@@ -349,8 +329,6 @@ function proposeCasterAnchoredBlast(
 /** Per-op cast-time inputs an `EffectOp` may need, assembled by the caller. */
 interface OpResolveContext {
   unit: Unit;
-  /** single-target half-cover damage multiplier (default 1). */
-  damageMultiplier: number;
   /** `move` retreat (the gambit): the cell to dart AWAY from (the struck target's
    *  position at cast — `struckFrom`). */
   retreatAnchor?: GridCoord;
@@ -367,10 +345,9 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
     case 'damage': {
       // §30c — the cast-time damage scalars (`might + scalingStat`, the crit
       // probability) come from the shared `resolveScalars` kernel the attack
-      // editor's preview also consumes; only the half-cover multiplier is
-      // context (single-target LOS).
+      // editor's preview also consumes.
       const { baseDamage, critChance } = resolveDamageScalars(op, c.unit.effectiveStats);
-      return { baseDamage, critChance, damageMultiplier: c.damageMultiplier };
+      return { baseDamage, critChance };
     }
     case 'heal': {
       // I6 — heal amount is `might + magic` (mirrors `healAmountFor`); via the

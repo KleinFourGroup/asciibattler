@@ -6,7 +6,7 @@
  * each legacy action's mutations, `combatRng` draw order, and emitted events so
  * the Y3/Y4 determinism oracle reads byte-identical.
  *
- * Cast-time-resolved scalars (baseDamage, critChance, damageMultiplier, the heal
+ * Cast-time-resolved scalars (baseDamage, critChance, the heal
  * amount, the move destination) ride in on the `OpResolution` — captured at
  * propose time (Y3's ability builder), exactly as the legacy actions captured
  * them, so a charged spell's damage uses the caster's CAST-time stats, not its
@@ -56,8 +56,6 @@ export interface OpResolution {
   baseDamage?: number;
   /** damage: `critable ? critChanceFor(critBase, luck) : 0` at cast. */
   critChance?: number;
-  /** damage (single-target): the half-cover LOS multiplier (default 1). */
-  damageMultiplier?: number;
   /** heal: `might + magic` at cast. */
   healAmount?: number;
   /** move: the `advance` landing cell, or the `retreat` anchor (struckFrom). */
@@ -212,8 +210,7 @@ function executeDamage(
   // --- Single-target, commit-at-cast (Attack/Gambit): skip if dead, no draw. ---
   if (!target || target.currentHp <= 0) return;
   const crit = world.combatRng.next() < critChance;
-  const damageMultiplier = ctx.resolution.damageMultiplier ?? 1;
-  const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1) * damageMultiplier);
+  const damage = Math.round(baseDamage * (crit ? STATS.critMult : 1));
   const landed = world.applyDamage(caster.id, target, damage, {
     crit,
     evadable: op.evadable,

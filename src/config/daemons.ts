@@ -1,7 +1,6 @@
 /**
- * L1→47c — the daemon catalog. Source of truth at `config/daemons.json`.
- * Mirrors the `config/empower.json` pattern (parse at module load, throw on
- * malformed JSON).
+ * L1→47c — the daemon catalog. Source of truth at `config/daemons.json`,
+ * parsed at module load (malformed JSON throws).
  *
  * A daemon is a run-scoped relic carrying `rules: Rule[]` — the shared
  * daemon/packet effect vocabulary (cluster-3-spec §"The rule vocabulary"):

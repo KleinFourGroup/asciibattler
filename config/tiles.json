@@ -1,5 +1,3 @@
 {
-  "fire": { "damagePerSec": 2 },
-  "healing": { "amountPerSec": 1 },
   "applyStatusOnEnter": true
 }

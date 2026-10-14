@@ -15,13 +15,6 @@
  * thin caller.
  */
 
-import type { DeckConfig } from '../config/deck';
-
-/** The deck-config anchor (the daemon-less baseline + the authored
- *  `grantRedraws` op shape). Grants resolve OUT of this shape into queue
- *  entries at `resolveTurnGrants`. */
-export type RedrawConfig = DeckConfig['redraw'];
-
 /** 49d — one redraw grant's live state, as the validator reads it (a
  *  `TurnGrant` with `effect.kind === 'redraw'`, flattened). */
 export interface RedrawGrantState {

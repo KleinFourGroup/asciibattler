@@ -188,9 +188,6 @@ export const CombatantUnitDefSchema = z.object({
   // Flight (deferred build) — the occupancy plane the unit lives on. `ground`
   // today; `air` is the flight fill. Inert until flight builds.
   layer: z.enum(['ground', 'air']).default('ground'),
-  // Flight (deferred build) — a flyer skips the §37 tile cost/effect pass. Inert
-  // until flight builds.
-  ignoresTerrain: z.boolean().default(false),
   // §38d — the status allow-filter the `applyStatus` op will consult: the status
   // ids this unit can receive. Absent ⇒ susceptible to ALL (the behavior-
   // identical default for every combatant); a wall/rubble opts into the few it

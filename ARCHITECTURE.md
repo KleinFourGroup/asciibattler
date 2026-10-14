@@ -90,7 +90,7 @@ src/
     RolloutSearchDriver.ts   #   57f: the portfolio greedy searcher — nominate (evaluate()/nominate?) → CRN-evaluate → commit only past the null arm + ε; cadence + death/contact re-search; dials as ctor options (§57c v2 defaults — the 57g sensitivity seam)
 
   config/                    # A4: zod-validated wrappers around config/*.json
-    units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/ignoresTerrain/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
+    units.ts                 #   §38 UnitDef catalog (was archetypes.ts): glyph + baseStats + growthRates + abilities/targeting (E1/E3) + inert §38 fields (footprint/layer/susceptibility); attackRange moved to abilities (E5); 29d: assertSummonRefsResolve boot-checks every summon op's archetype id
     abilities.ts             #   Loads config/abilities.json into the AbilityDef catalog (src/sim/effects schema); abilityDef(id) + the damageOpOf/healOpOf op accessors. Y5e consolidated this (was abilityDefs.ts) atop the retired legacy AbilityConfig
     statuses.ts              #   27a: loads config/statuses.json into the StatusDef catalog; statusDef(id) + assertStatusRefsResolve (boot-checks every applyStatus statusId, wired into abilities/registry.ts)
     difficulty.ts            #   G4: enemy level-budget knobs (budgetFactor/offset, swarm, K2 enemyArcherRatio) + A/B/C presets; X1: per-run waveSize/levelBudget multipliers; 48f: bitsMultiplier (the economy lever — applies in Run.effectiveBits, never WaveContext); 117a: enemyMoraleMultiplier, the fourth, on the encounter's enemy pool (`scaledEnemyPool`: to the nearest whole, never under 1; `Run.enemyPoolOf` is the Run's one read of `healthPool`)
@@ -112,7 +112,7 @@ src/
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     camps.ts                 #   75a: the camp catalog (CampDef: id/name/description + leashRadius + units[{archetype,count,level}] + rewards[EncounterRewardRef]) + CampsSchema (exported for the 75i editor's byte-faithful formatter) + the TWO boot asserts: assertCampRewardRefs (reward-table refs resolve — the assertEncounterRewardRefs sibling) + assertLayoutCampRefs (layout camp placements name real camps) — config/camps.json. 75j: the ⭐ CONTINUOUS-VALUE reward rule (always-on camps pay bits/packets ONLY — never a run-defining reward; spec §Camps)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
-    tiles.ts                 #   D7.B: fire/healing chip rates → tick cadences
+    tiles.ts                 #   37d: applyStatusOnEnter (the mud→poison switch)
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
                              #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
@@ -494,11 +494,7 @@ config/                      # A4: balance JSON source of truth (paired with src
   leveling.json              # E4: xp curve + half-cover mult + restXp (G3) + xpPerHealing (F6)
   health.json                # H4: player/enemy health pools + maxTurns/maxTurnSeconds + chipMultiplier
   deck.json                  # H5: handSize (card-drawn hand; also the 2nd half of the playerTeamLevel seam)
-                             # K3: redraw { enabled, redrawsPerTurn, maxCardsPerTurn } — the pre-turn redraw budget
-                             # (L1: enabled ships FALSE — daemons own availability; the block stays as the type anchor)
                              # 49d/f: grantQueue { passIsFinal } — the strict acquisition-order dial (ships TRUE, the locked default; RunConfig.passIsFinal overrides for tests/fuzz)
-  empower.json               # K4: empower { enabled, empowersPerTurn, buff } — the pre-turn unit buff (encounter-lived, via the K1 store)
-                             # (L1: enabled ships FALSE — daemons carry their own buffs; the buff stays the K4-default shape)
   daemons.json               # L1→47c: the idol catalog, authored in the rule vocabulary — `rules: Rule[]`
                              # (modifier | hook; the shared daemon/packet effect pool; trigger×op×filter
                              # matrix parse-enforced). Mars/Minerva empower hooks; Mercury coin-flip full

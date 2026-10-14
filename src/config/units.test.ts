@@ -25,13 +25,13 @@ const NEUTRAL_ENTRIES = Object.entries(NEUTRAL_DEFS);
 /**
  * §38b — the UnitDef catalog scaffold guards. The keystone renamed
  * `archetypes.json` → `units.json` and planted the §38 optional fields
- * (footprint / layer / ignoresTerrain / statusSusceptibility) + the three 38a
+ * (footprint / layer / statusSusceptibility) + the three 38a
  * branch-killers (damageStat / movementBehavior / retargetOnLosLoss) on the
  * schema. 38b wired NONE of them — every existing entry omitted them, so each
  * resolved to a behavior-identical default. §38c then wired the three
  * branch-killers field-by-field (damageStat / movementBehavior /
  * retargetOnLosLoss); the spatial/flight block (footprint / layer /
- * ignoresTerrain / statusSusceptibility) stays inert until §39/§38d/flight. These
+ * statusSusceptibility) stays inert until §39/§38d/flight. These
  * tests pin that — a default drift on the still-inert fields fails loudly.
  *
  * Mechanic tests — explicit literals (not derived from config), since the point
@@ -49,7 +49,6 @@ describe('§38b — UnitDef catalog scaffold', () => {
     for (const [id, def] of COMBATANT_ENTRIES) {
       expect(def.footprint, `${id}.footprint`).toBe(1); // single-cell
       expect(def.layer, `${id}.layer`).toBe('ground');
-      expect(def.ignoresTerrain, `${id}.ignoresTerrain`).toBe(false);
       // Absent in JSON ⇒ undefined ⇒ "susceptible to all" (38d reads it).
       expect(def.statusSusceptibility, `${id}.statusSusceptibility`).toBeUndefined();
     }
@@ -90,7 +89,6 @@ describe('§38b — UnitDef catalog scaffold', () => {
       ...seed,
       footprint: 3,
       layer: 'air' as const,
-      ignoresTerrain: true,
       statusSusceptibility: ['burn', 'frozen'],
       damageStat: 'strength' as const,
       movementBehavior: 'support' as const,
@@ -99,7 +97,6 @@ describe('§38b — UnitDef catalog scaffold', () => {
     const parsed = CombatantUnitDefSchema.parse(populated);
     expect(parsed.footprint).toBe(3);
     expect(parsed.layer).toBe('air');
-    expect(parsed.ignoresTerrain).toBe(true);
     expect(parsed.statusSusceptibility).toEqual(['burn', 'frozen']);
     expect(parsed.damageStat).toBe('strength');
     expect(parsed.movementBehavior).toBe('support');

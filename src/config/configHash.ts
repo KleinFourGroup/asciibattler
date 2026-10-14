@@ -30,7 +30,6 @@ import daemons from '../../config/daemons.json';
 import deck from '../../config/deck.json';
 import difficulty from '../../config/difficulty.json';
 import economy from '../../config/economy.json';
-import empower from '../../config/empower.json';
 import encounters from '../../config/encounters.json';
 import escalation from '../../config/escalation.json';
 import events from '../../config/events.json';
@@ -71,7 +70,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'deck.json': deck,
   'difficulty.json': difficulty,
   'economy.json': economy,
-  'empower.json': empower,
   'encounters.json': encounters,
   'escalation.json': escalation,
   'events.json': events,

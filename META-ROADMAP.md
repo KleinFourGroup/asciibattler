@@ -869,8 +869,9 @@ board at a chosen hop.
 
 - **Traversal** (ONE mechanism: the marine AND flight). Passability is global
   (`TILE_DEFS` hardcoded in `TileGrid.ts`); deep water is commented as the
-  declared-inert marine seam; the flight seam is three inert fields
-  (`layer`/`ignoresTerrain`/the one-member plane union) with `planeOf`
+  declared-inert marine seam; the flight seam is two inert fields
+  (`layer` and the one-member plane union; `ignoresTerrain` was deleted
+  at §121, census A-04) with `planeOf`
   ignoring the unit and `blocksFlight`/`targetsLayer` nonexistent. Because the
   Phase-M lock signed NO co-location, "air" is not a second occupancy plane —
   **flight is a traversal profile** (everything cost 1 except `blocksFlight`),

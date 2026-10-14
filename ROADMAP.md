@@ -104,7 +104,7 @@ kickoff):
 - ☑ **121a — A-37: the `--jobs` parity test off the smoke** (`none`).
   Its own script; run by the hook when `tests/fuzz/` is staged, by the
   box launcher, and before a local `--jobs` batch.
-- ☐ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the
+- ☑ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the
   JSON; the buff module stays), A-03, A-04's `ignoresTerrain`. Proof:
   config.
 - ☐ **121c — the values never built** (`none`). A-05 with A-07, A-08;

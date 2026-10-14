@@ -19,25 +19,8 @@
  * enemy budget tracks the *expected hand* level, not the whole roster — and
  * raising `handSize` (5→6) is what moved the band, not the roster bump.
  *
- * K3 — `redraw`: the pre-turn redraw knobs. On the pre-turn screen the player
- * selects drawn cards, sends them to the discard, and draws that many fresh
- * (`Run.handleRedrawCards`). Two dials, BOTH enforced per turn, so Phase L's
- * daemons can express either gating mode without new plumbing:
- *
- * - `redrawsPerTurn`   — redraw ACTIONS allowed per turn. The shipped default
- *                        (1) is the "one batch per turn" mode.
- * - `maxCardsPerTurn`  — total CARDS redrawn per turn across actions. The
- *                        shipped default (6 = `handSize`, i.e. the whole hand)
- *                        makes the batch's selection arbitrary; lowering it
- *                        (with `redrawsPerTurn` raised) is the "N cards per
- *                        turn" mode.
- * - `enabled`          — master switch. L1 flipped this OFF for good: daemons
- *                        own redraw availability now (`Run.turnGrants`, resolved
- *                        per turn from the owned daemons' `grantRedraws` hooks —
- *                        47c re-authored the gates into rules), so this config
- *                        is the daemon-LESS baseline = disabled. The `redraw`
- *                        block stays as the `RedrawConfig` type anchor the
- *                        daemon grants resolve into.
+ * Redraws are granted by daemons (`grantRedraws`), each grant carrying its own
+ * numbers; nothing here gates them.
  *
  * 49d — `grantQueue`: the pre-turn grant-queue rules (the §49 fire-UX
  * shape-lock). `passIsFinal` = the finality toggle: ON, grants resolve in
@@ -69,11 +52,6 @@ const DeckSchema = z.object({
    *  the `drawCards` packet op at the read site. A cap below `handSize` is
    *  schema-legal and simply clamps the base deal (odd but coherent). */
   maxHandSize: z.number().int().positive(),
-  redraw: z.object({
-    enabled: z.boolean(),
-    redrawsPerTurn: z.number().int().nonnegative(),
-    maxCardsPerTurn: z.number().int().nonnegative(),
-  }),
   grantQueue: z.object({
     passIsFinal: z.boolean(),
   }),

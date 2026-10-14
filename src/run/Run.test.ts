@@ -20,7 +20,7 @@ import { ESCALATION_LEVELS, ESCALATION_MAX, leverFactors, withEscalation } from 
 import { RECRUITMENT } from '../config/recruitment';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
-import { EMPOWER } from '../config/empower';
+import type { EmpowerConfig } from '../config/empower';
 import { DAEMONS, daemonById, type DaemonConfig } from '../config/daemons';
 import { characterById, DEFAULT_CHARACTER_ID } from '../config/characters';
 import { PACKETS, packetById } from '../config/packets';
@@ -36,14 +36,20 @@ import { RNG } from '../core/RNG';
 import { rollUnit } from '../sim/archetypes';
 
 /**
- * L1→47c — the K3/K4 static defaults reborn as a guaranteed fixture daemon.
- * Daemon-only gates retired the `DECK.redraw.enabled` / `EMPOWER.enabled`
- * statics (both now ship false), so the pre-existing K3/K4 gate-mechanic tests
- * run under this daemon instead: its knobs ARE the config dials (derived, not
- * hardcoded), which keeps every `DECK.redraw.*` / `EMPOWER.*`-derived
- * expectation in those blocks literally true. 47c: authored as `rules`
- * (redraw hook FIRST — the fixed draw-order discipline).
+ * The redraw and empower numbers from before daemons owned those gates, kept
+ * as this file's fixture, and a daemon that grants them: the gate-mechanic
+ * tests run under it, and their expectations are written in these numbers.
+ * Authored as `rules`, the redraw hook first (the fixed draw order).
  */
+const K_REDRAW = { redrawsPerTurn: 1, maxCardsPerTurn: 6 };
+const K_EMPOWER: { empowersPerTurn: number; buff: EmpowerConfig['buff'] } = {
+  empowersPerTurn: 1,
+  buff: {
+    key: 'honed',
+    mods: { strength: { add: 8 }, ranged: { add: 8 }, magic: { add: 8 } },
+    merge: 'add',
+  },
+};
 /**
  * 74i-c — the event-free control fixture. The Start authors a starting
  * event now (`sector-1-start` — every shipped run OPENS on it), so any
@@ -66,8 +72,8 @@ const K_DEFAULT_DAEMON: DaemonConfig = {
       on: 'turnStart',
       effect: {
         op: 'grantRedraws',
-        redrawsPerTurn: DECK.redraw.redrawsPerTurn,
-        maxCardsPerTurn: DECK.redraw.maxCardsPerTurn,
+        redrawsPerTurn: K_REDRAW.redrawsPerTurn,
+        maxCardsPerTurn: K_REDRAW.maxCardsPerTurn,
       },
     },
     {
@@ -75,8 +81,8 @@ const K_DEFAULT_DAEMON: DaemonConfig = {
       on: 'turnStart',
       effect: {
         op: 'grantEmpowers',
-        empowersPerTurn: EMPOWER.empowersPerTurn,
-        buff: EMPOWER.buff,
+        empowersPerTurn: K_EMPOWER.empowersPerTurn,
+        buff: K_EMPOWER.buff,
       },
     },
   ],
@@ -1571,7 +1577,7 @@ describe('Run', () => {
       const { run } = gatedToFirstTurnIntro(2);
       // Burn the redraw grant's action budget (derived from the config dial
       // the fixture daemon authors from).
-      const budget = DECK.redraw.redrawsPerTurn;
+      const budget = K_REDRAW.redrawsPerTurn;
       for (let i = 0; i < budget; i++) {
         run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       }
@@ -1595,7 +1601,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 1 });
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 99 });
       expect(run.hand).toEqual(hand);
-      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
+      expect(run.grantViews()[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn);
       expect(emits).toBe(0);
     });
 
@@ -1608,18 +1614,18 @@ describe('Run', () => {
       const hand = run.hand.slice();
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(run.hand).toEqual(hand);
-      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
+      expect(run.grantViews()[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn);
     });
 
     it('the budget resets at the next turn (a fresh queue per resolution)', () => {
       const { run, bus } = gatedToFirstTurnIntro(5);
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
-      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn - 1);
+      expect(run.grantViews()[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn - 1);
       run.dispatch({ kind: 'advanceTurn' }); // → battle
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.grantViews()[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn);
+      expect(run.grantViews()[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn);
     });
 
     it('turn:starting carries the fresh queue; turn:handRedrawn the new hand + decrement', () => {
@@ -1637,10 +1643,10 @@ describe('Run', () => {
         grantIndex: 0,
         effect: {
           kind: 'redraw',
-          budget: DECK.redraw.redrawsPerTurn,
-          maxCards: DECK.redraw.maxCardsPerTurn,
+          budget: K_REDRAW.redrawsPerTurn,
+          maxCards: K_REDRAW.maxCardsPerTurn,
         },
-        remaining: DECK.redraw.redrawsPerTurn,
+        remaining: K_REDRAW.redrawsPerTurn,
         passed: false,
         active: true,
       });
@@ -1648,7 +1654,7 @@ describe('Run', () => {
       expect(redrawns).toHaveLength(1);
       expect(redrawns[0]!.hand).toEqual(run.hand.map((idx) => run.team[idx]!));
       expect(redrawns[0]!.grants).toEqual(run.grantViews());
-      expect(redrawns[0]!.grants[0]!.remaining).toBe(DECK.redraw.redrawsPerTurn - 1);
+      expect(redrawns[0]!.grants[0]!.remaining).toBe(K_REDRAW.redrawsPerTurn - 1);
     });
 
     it('turn:starting + turn:handRedrawn carry the draw/discard piles in recruitment order (R2)', () => {
@@ -1702,7 +1708,7 @@ describe('Run', () => {
       const { run } = gatedToFirstTurnIntro(8);
       const sel = run.hand
         .map((_, i) => i)
-        .slice(0, Math.min(run.hand.length, DECK.redraw.maxCardsPerTurn));
+        .slice(0, Math.min(run.hand.length, K_REDRAW.maxCardsPerTurn));
       expect(sel.length).toBeGreaterThan(run.drawPile.length); // forces the reshuffle
       run.dispatch({ kind: 'redrawCards', handIndices: sel, grantIndex: 0 });
       expect(run.hand).toHaveLength(Math.min(DECK.handSize, run.team.length));
@@ -1757,20 +1763,20 @@ describe('Run', () => {
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       expect(stored[0]).toEqual({
-        key: EMPOWER.buff.key,
+        key: K_EMPOWER.buff.key,
         magnitude: 1,
-        mods: EMPOWER.buff.mods,
+        mods: K_EMPOWER.buff.mods,
         lifetime: { kind: 'endOfTurn' },
-        merge: EMPOWER.buff.merge,
+        merge: K_EMPOWER.buff.merge,
       });
       run.dispatch({ kind: 'advanceTurn' }); // → battle, beginTurn seeds the buff
       const fielded = run.currentEncounter!.playerTeam.find((t) => t.rosterIndex === slot)!;
-      const seeded = fielded.effects!.find((e) => e.key === EMPOWER.buff.key)!;
-      expect(seeded.mods).toEqual(EMPOWER.buff.mods);
+      const seeded = fielded.effects!.find((e) => e.key === K_EMPOWER.buff.key)!;
+      expect(seeded.mods).toEqual(K_EMPOWER.buff.mods);
       // End-to-end: the fold yields the config buff on every modified stat
       // (expectation derived from the config mods, not hardcoded numbers).
       const folded = foldEffects(fielded.stats, fielded.effects!);
-      for (const [stat, mod] of Object.entries(EMPOWER.buff.mods)) {
+      for (const [stat, mod] of Object.entries(K_EMPOWER.buff.mods)) {
         const key = stat as keyof typeof fielded.stats;
         const expected = Math.round((fielded.stats[key] + (mod.add ?? 0)) * (mod.mul ?? 1));
         expect(folded[key]).toBe(expected);
@@ -1782,15 +1788,15 @@ describe('Run', () => {
       let emits = 0;
       bus.on('turn:unitEmpowered', () => emits++);
       // Burn the budget, bound derived from config.
-      for (let i = 0; i < EMPOWER.empowersPerTurn; i++) {
+      for (let i = 0; i < K_EMPOWER.empowersPerTurn; i++) {
         run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
       }
       expect(run.grantViews()[1]!.remaining).toBe(0);
-      expect(emits).toBe(EMPOWER.empowersPerTurn);
+      expect(emits).toBe(K_EMPOWER.empowersPerTurn);
       const stored = run.encounterEffects[run.hand[0]!]!.map((e) => ({ ...e }));
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
       expect(run.grantViews()[1]!.remaining).toBe(0);
-      expect(emits).toBe(EMPOWER.empowersPerTurn);
+      expect(emits).toBe(K_EMPOWER.empowersPerTurn);
       expect(run.encounterEffects[run.hand[0]!]).toMatchObject(stored);
     });
 
@@ -1805,7 +1811,7 @@ describe('Run', () => {
       // grant) and an out-of-range queue index.
       run.dispatch({ kind: 'empowerUnit', grantIndex: 0, handIndex: 0 });
       run.dispatch({ kind: 'empowerUnit', grantIndex: 99, handIndex: 0 });
-      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn);
+      expect(run.grantViews()[1]!.remaining).toBe(K_EMPOWER.empowersPerTurn);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
       expect(emits).toBe(0);
     });
@@ -1817,7 +1823,7 @@ describe('Run', () => {
       run.dispatch({ kind: 'enterNode', nodeId: frontierOf(run) }); // gates off → battle
       expect(run.phase).toBe('battle');
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: 0 });
-      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn);
+      expect(run.grantViews()[1]!.remaining).toBe(K_EMPOWER.empowersPerTurn);
       expect(run.encounterEffects.every((slot) => slot.length === 0)).toBe(true);
     });
 
@@ -1835,19 +1841,19 @@ describe('Run', () => {
       chipTurn(bus, { player: 1, enemy: 1 }); // sub-lethal → ongoing
       run.dispatch({ kind: 'advanceTurn' }); // → next turn's gate
       expect(run.phase).toBe('turn-intro');
-      expect(run.grantViews()[1]!.remaining).toBe(EMPOWER.empowersPerTurn); // fresh queue
+      expect(run.grantViews()[1]!.remaining).toBe(K_EMPOWER.empowersPerTurn); // fresh queue
       // The turn-2 pre-turn payload already badges the carried buff (the
       // "empowered on an earlier turn, drawn back" pin).
       const pos2 = run.hand.indexOf(slot);
       expect(pos2).toBeGreaterThanOrEqual(0); // short roster: always in hand
       expect(startings[1]!.empowerStacks[pos2]).toMatchObject([
-        { key: EMPOWER.buff.key, magnitude: 1 },
+        { key: K_EMPOWER.buff.key, magnitude: 1 },
       ]);
       run.dispatch({ kind: 'empowerUnit', grantIndex: 1, handIndex: pos2 });
       const stored = run.encounterEffects[slot]!;
       expect(stored).toHaveLength(1);
       // Expectation derived from the config merge policy (K1 magnitude math).
-      expect(stored[0]!.magnitude).toBe(combineMagnitude(EMPOWER.buff.merge, 1, 1));
+      expect(stored[0]!.magnitude).toBe(combineMagnitude(K_EMPOWER.buff.merge, 1, 1));
     });
 
     it('the buff lives on the SLOT: it survives the card being redrawn away', () => {
@@ -1860,11 +1866,11 @@ describe('Run', () => {
       run.dispatch({ kind: 'redrawCards', handIndices: [0], grantIndex: 0 });
       expect(run.hand[0]).not.toBe(benched);
       // The store keeps the buff; the badge column re-derived for the NEW hand.
-      expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
+      expect(run.encounterEffects[benched]!.some((e) => e.key === K_EMPOWER.buff.key)).toBe(true);
       expect(redrawns[0]!.empowerStacks[0]).toEqual([]);
       run.dispatch({ kind: 'advanceTurn' }); // beginTurn fields the FINAL hand
       expect(run.currentEncounter!.playerTeam.some((t) => t.rosterIndex === benched)).toBe(false);
-      expect(run.encounterEffects[benched]!.some((e) => e.key === EMPOWER.buff.key)).toBe(true);
+      expect(run.encounterEffects[benched]!.some((e) => e.key === K_EMPOWER.buff.key)).toBe(true);
     });
 
     it('turn:starting carries the fresh queue; turn:unitEmpowered the decrement + badge column', () => {
@@ -1878,8 +1884,8 @@ describe('Run', () => {
       // Fresh queue straight off the fixture daemon's dial (= the config dial).
       expect(startings[0]!.grants[1]).toMatchObject({
         grantIndex: 1,
-        effect: { kind: 'empower', budget: EMPOWER.empowersPerTurn },
-        remaining: EMPOWER.empowersPerTurn,
+        effect: { kind: 'empower', budget: K_EMPOWER.empowersPerTurn },
+        remaining: K_EMPOWER.empowersPerTurn,
         active: false, // the redraw grant at index 0 holds the cursor
       });
       expect(startings[0]!.empowerStacks).toEqual(run.hand.map(() => []));
@@ -1887,7 +1893,7 @@ describe('Run', () => {
       expect(empowereds).toHaveLength(1);
       expect(empowereds[0]!.handIndex).toBe(1);
       expect(empowereds[0]!.grants).toEqual(run.grantViews());
-      expect(empowereds[0]!.grants[1]!.remaining).toBe(EMPOWER.empowersPerTurn - 1);
+      expect(empowereds[0]!.grants[1]!.remaining).toBe(K_EMPOWER.empowersPerTurn - 1);
       // 78c — per-key: the buffed position carries one entry (the idol's
       // key, mods straight from the authored buff — config-derived, never
       // hardcoded); every other position is empty.
@@ -1895,8 +1901,8 @@ describe('Run', () => {
         run.hand.map((_, i) => (i === 1 ? 1 : 0)),
       );
       const stack = empowereds[0]!.empowerStacks[1]![0]!;
-      expect(stack).toMatchObject({ key: EMPOWER.buff.key, magnitude: 1 });
-      expect(stack.mods).toEqual(EMPOWER.buff.mods);
+      expect(stack).toMatchObject({ key: K_EMPOWER.buff.key, magnitude: 1 });
+      expect(stack.mods).toEqual(K_EMPOWER.buff.mods);
       // The payload is a COPY — a retained payload must not alias the live
       // store (it merges in place).
       expect(stack.mods).not.toBe(run.encounterEffects[run.hand[1]!]![0]!.mods);
@@ -2998,7 +3004,7 @@ describe('Run', () => {
         {
           kind: 'hook',
           on: 'turnStart',
-          effect: { op: 'grantEmpowers', empowersPerTurn: 1, buff: EMPOWER.buff },
+          effect: { op: 'grantEmpowers', empowersPerTurn: 1, buff: K_EMPOWER.buff },
         },
       ],
     };

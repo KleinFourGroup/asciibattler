@@ -3847,3 +3847,44 @@ npm run fuzz:smoke". Both now pass the same `--exclude`, named once as
 scripts and the `smoke` proof to that name. No other runner of
 `vitest.fuzz.config.ts` was found (a search of `tests`, `scripts`,
 `shell` and `tools`).
+
+### 121b — the config keys nothing reads (2026-10-14, session f8bbd64e)
+
+A-01, A-02, A-03 and A-04's `ignoresTerrain`, as signed. Inside the
+rows' intent, two more went:
+
+- `RedrawConfig` (`src/run/redraw.ts`), the "type anchor" `deck.ts`'s
+  header said the redraw block was kept for: exported and imported by
+  nothing.
+- `EmpowerConfig`'s `enabled` and `empowersPerTurn`. With `EMPOWER` gone
+  the interface is read only as `EmpowerConfig['buff']` (nine places),
+  so it keeps that one member. A `Buff` type in its place is a lead for
+  121h, not done here.
+
+`src/config/empower.ts` stays as the buff vocabulary the daemon and
+packet loaders share, its header rewritten to say so; `deck.ts`'s,
+`tiles.ts`'s and `daemons.ts`'s headers lost the sentences about what
+went. `Run.test.ts`'s fixture daemon took its numbers from the deleted
+config; they are its own literals now (`K_REDRAW`, `K_EMPOWER`), 36
+reads replaced. The 27c pair in `statuses.test.ts`, which held a status's
+rate against the tile's copy of it, is deleted. ARCHITECTURE's tree and
+META-ROADMAP's flight seam say so. Config files 34 → 33.
+
+Proof (config):
+
+- `npm run oracle -- config-dump` before and after, `json-diff`: 77
+  differences, every one a removal of a signed path (`ignoresTerrain` on
+  23 units in `UNIT_DEFS`, `ALL_UNIT_DEFS` and `UNITS_PROSE`; `DECK.redraw`;
+  `EMPOWER`; `TILES_CONFIG.fire` and `.healing`; and the same three in
+  `CONFIG_SOURCES`);
+- `npm run corpus`: 0 of 30 journals differ;
+- typecheck clean; the suite 3,763 (3,765 less the two deleted), its one
+  failure the step-code ceiling, lowered by `--record` (6,376 → 6,354:
+  six files, codes in the deleted comments);
+- `reach-diff --from=f5a0b68` (121b-pre) on the suite's readings: nothing
+  lost across the 20 changed files.
+
+The hook on a staged config path (the first commit of 121b-pre, which
+swept in the staged deletion of `config/empower.json` and was redone
+without it): the smoke ran, 64 files and 623 tests, and the parity test
+did not. That is 121a's first live check.

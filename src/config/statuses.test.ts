@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { STATUS_DEFS, statusDef, assertStatusRefsResolve } from './statuses';
-import { TILES_CONFIG } from './tiles';
 import { parseAbilityDef, type AbilityDef } from '../sim/effects/schema';
 import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
 
@@ -118,24 +117,6 @@ describe('28 — behavior-status content shape', () => {
       affects: 'all',
       acquisitionRange: 5,
     });
-  });
-});
-
-describe('27c — balance-proof: tile-unification rates derive from tiles.json', () => {
-  // The §27d tile pass applies these at the default magnitude (1), so the
-  // per-second rate a standing unit feels is `op.might / everySeconds`. Deriving
-  // from TILES_CONFIG keeps the proof honest: change either number in config and
-  // this fails until they agree (never a hardcoded constant on either side).
-  it('burn matches the fire tile damage rate', () => {
-    const { everySeconds, op } = periodicDamageOf('burn');
-    expect(op.might / everySeconds).toBe(TILES_CONFIG.fire.damagePerSec);
-  });
-
-  it('rejuvenate matches the healing tile heal rate', () => {
-    const periodic = statusDef('rejuvenate').periodic!;
-    expect(periodic.op.kind).toBe('heal');
-    if (periodic.op.kind !== 'heal') throw new Error('unreachable');
-    expect(periodic.op.might / periodic.everySeconds).toBe(TILES_CONFIG.healing.amountPerSec);
   });
 });
 

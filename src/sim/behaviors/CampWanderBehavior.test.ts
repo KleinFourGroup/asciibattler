@@ -23,7 +23,7 @@ import { spawnCamps } from '../battleSetup';
 import { createBehavior } from './registry';
 import { CampWanderBehavior } from './CampWanderBehavior';
 import { getCamp } from '../../config/camps';
-import { SPAWN } from '../../config/spawn';
+import { SIM } from '../../config/sim';
 import { EventBus } from '../../core/EventBus';
 import { RNG } from '../../core/RNG';
 import type { GameEvents } from '../../core/events';
@@ -75,7 +75,7 @@ describe('§75f — EXIT INVARIANT: spawn vacated ≤N ticks (the drip keeps flo
     // whose logical flip frees the anchor, then the next drip tick — with a
     // step of slack for the scan ordering.
     const moveTicks = first.derived.moveCooldownTicks;
-    const bound = SPAWN.durationTicks + 2 * moveTicks + 4;
+    const bound = SIM.spawnDurationTicks + 2 * moveTicks + 4;
     let materializedAt: number | null = null;
     for (let t = 0; t < bound && materializedAt === null; t++) {
       world.tick();

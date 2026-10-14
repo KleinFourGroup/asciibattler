@@ -37,7 +37,7 @@ import { SPAWN_ACTION_ID } from '../sim/actions/SpawnAction';
 import { footprintOf } from '../sim/occupancy';
 import { isDestructibleNeutral } from '../config/units';
 import { readUnitStatuses } from '../sim/statusReadout';
-import { SPAWN } from '../config/spawn';
+import { SIM } from '../config/sim';
 import { statusColor } from './statusDisplay';
 import { auraFxMode } from './auraFx';
 import { footprintCentre, slabAnchor, slabGroundOf, slabViewOf } from './slabAnchor';
@@ -899,10 +899,10 @@ export class BattleRenderer {
     if (instant) {
       this.sprites.updateSprite(handle, { alpha: 1 });
     } else {
-      this.animator.startFadeIn(handle, SPAWN.durationSeconds);
+      this.animator.startFadeIn(handle, SIM.spawnDurationSeconds);
       this.overlayFadeIns.set(unit.id, {
         elapsed: 0,
-        duration: SPAWN.durationSeconds,
+        duration: SIM.spawnDurationSeconds,
         handle: overlay,
       });
     }
@@ -1748,7 +1748,7 @@ export class BattleRenderer {
    *    `performance.now()` filled at 1× regardless / kept running while paused).
    *    The progress bar is hidden (null) when no action is in flight.
    * 3. Overlay fade on death / spawn: lerp opacity 0↔1 over FADE_SECONDS
-   *    or SPAWN.durationSeconds, then remove the overlay on death.
+   *    or SIM.spawnDurationSeconds, then remove the overlay on death.
    */
   private updateOverlays(dt: number): void {
     // Q1 — the progress bar's clock is the scaled-dt render accumulator, not

@@ -3,7 +3,7 @@ import { focusTileDirective } from './focusTile';
 import { Unit, type Team } from './Unit';
 import { deriveStats } from './stats';
 import { ARCHETYPE_CONFIG } from './archetypes';
-import { OBJECTIVE } from '../config/objective';
+import { SIM } from '../config/sim';
 
 /**
  * O3 — a unit's directive under a TILE focus (mechanic tests, explicit
@@ -27,7 +27,7 @@ function mkUnit(id: number, team: Team, x: number, y: number): Unit {
 }
 
 describe('focusTile directive', () => {
-  const leash = OBJECTIVE.rangedLeashCells;
+  const leash = SIM.rangedLeashCells;
 
   it('is pursue while farther than the leash from the tile', () => {
     const far = mkUnit(1, 'player', TILE.x - (leash + 1), TILE.y); // chebyshev leash+1

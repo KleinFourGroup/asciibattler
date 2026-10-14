@@ -116,9 +116,10 @@ kickoff):
 - ☑ **121f — A-13, half cover's multiplier** (`none`), with the
   `damageMultiplier` field and `collectHalfCoverPositions`; no World
   bump. Proof: sim and config.
-- ☐ **121g — B-03's trial** (`none`): `sim.spawnDurationSeconds`,
+- ☑ **121g — B-03's trial** (`none`): `sim.spawnDurationSeconds`,
   `sim.rangedLeashCells`, `difficulty.startingBits`, under the bar
-  written at the kickoff.
+  written at the kickoff. Kept; config files 31 → 28. One call open, the
+  lockout's two forms in `SIM` (WORKLOG §121, 121g).
 - ☐ **121h — the re-skim** of the phase's diff; a new deletion waits for
   121i's stop.
 - ☐ **121i — the comment pass's pilot** (`stop`): `health.ts`,

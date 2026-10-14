@@ -11,7 +11,7 @@ import { isActiveNeutral } from './Unit';
 import { spawnCamps } from './battleSetup';
 import { spawnWall } from './environment';
 import { getCamp } from '../config/camps';
-import { SPAWN } from '../config/spawn';
+import { SIM } from '../config/sim';
 import { EventBus } from '../core/EventBus';
 import { RNG } from '../core/RNG';
 import type { GameEvents } from '../core/events';
@@ -176,7 +176,7 @@ describe('§75c — the portal-drip drain', () => {
     const second = world.units.find((u) => u.campId !== null && u.id !== first.id)!;
     expect(second.position).toEqual({ x: 5, y: 5 });
     expect(second.activeAction?.action.id).toBe('spawn');
-    expect(second.activeAction?.finishTick).toBe(world.currentTick + SPAWN.durationTicks);
+    expect(second.activeAction?.finishTick).toBe(world.currentTick + SIM.spawnDurationTicks);
     expect(world.campById(1)!.pending.length).toBe(0);
   });
 

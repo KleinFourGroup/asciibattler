@@ -9,5 +9,6 @@
   "waveSizeMultiplier": 1,
   "levelBudgetMultiplier": 1,
   "bitsMultiplier": 1,
-  "enemyMoraleMultiplier": 1
+  "enemyMoraleMultiplier": 1,
+  "startingBits": 0
 }

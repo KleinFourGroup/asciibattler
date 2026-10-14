@@ -15,5 +15,7 @@
   "moveFlipFraction": 0.5,
   "campWanderChancePerSecond": 0.64,
   "enemyPullChance": 0.25,
-  "campsStartHostile": 0
+  "campsStartHostile": 0,
+  "spawnDurationSeconds": 0.5,
+  "rangedLeashCells": 3
 }

@@ -29,7 +29,6 @@ import characters from '../../config/characters.json';
 import daemons from '../../config/daemons.json';
 import deck from '../../config/deck.json';
 import difficulty from '../../config/difficulty.json';
-import economy from '../../config/economy.json';
 import encounters from '../../config/encounters.json';
 import escalation from '../../config/escalation.json';
 import events from '../../config/events.json';
@@ -39,7 +38,6 @@ import keybindings from '../../config/keybindings.json';
 import layouts from '../../config/layouts.json';
 import leveling from '../../config/leveling.json';
 import nodemap from '../../config/nodemap.json';
-import objective from '../../config/objective.json';
 import packets from '../../config/packets.json';
 import playback from '../../config/playback.json';
 import prices from '../../config/prices.json';
@@ -49,7 +47,6 @@ import rewards from '../../config/rewards.json';
 import sectorMap from '../../config/sector-map.json';
 import sectors from '../../config/sectors.json';
 import sim from '../../config/sim.json';
-import spawn from '../../config/spawn.json';
 import stats from '../../config/stats.json';
 import statuses from '../../config/statuses.json';
 import terrain from '../../config/terrain.json';
@@ -67,7 +64,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'daemons.json': daemons,
   'deck.json': deck,
   'difficulty.json': difficulty,
-  'economy.json': economy,
   'encounters.json': encounters,
   'escalation.json': escalation,
   'events.json': events,
@@ -77,7 +73,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'layouts.json': layouts,
   'leveling.json': leveling,
   'nodemap.json': nodemap,
-  'objective.json': objective,
   'packets.json': packets,
   'playback.json': playback,
   'prices.json': prices,
@@ -87,7 +82,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'sector-map.json': sectorMap,
   'sectors.json': sectors,
   'sim.json': sim,
-  'spawn.json': spawn,
   'stats.json': stats,
   'statuses.json': statuses,
   'terrain.json': terrain,

@@ -161,6 +161,23 @@
  *     boundary), NOT a new serialized field. A ratio in [0,1]: 0 = instant
  *     (today's pre-§36b model), 1 = flip only on arrival. `floor` keeps a
  *     1-tick move (the lowest move cooldown) instant + byte-identical.
+ *   spawnDurationSeconds — the lockout of a unit that joins a battle under
+ *     way (a reinforcement from the overflow queue, a camp's drip): its first
+ *     action is a `SpawnAction` this long, and the renderer fades its sprite
+ *     and bar in over the same window, so the lockout and the fade line up.
+ *     Units placed at the battle's start appear at once with no lockout; the
+ *     pre-battle countdown (`config/playback.json`) is their reaction window.
+ *     Converted to `spawnDurationTicks`.
+ *   rangedLeashCells — the leash (Chebyshev) within which a player unit
+ *     pursuing the team objective breaks off to engage an enemy. A unit's
+ *     engage radius is `min(attackRange, rangedLeashCells)`, so it caps a
+ *     long-range unit well below its reach (an archer does not leave the
+ *     objective to plink every distant enemy) and leaves melee untouched.
+ *     Beyond the leash only retaliation (an enemy attacking the unit, within
+ *     its own attackRange) pulls it off the objective. Under a tile focus a
+ *     unit switches from beelining to the tile to engaging around it within
+ *     this radius (`src/sim/focusTile.ts`). A distance, passed through
+ *     verbatim.
  */
 
 import { z } from 'zod';
@@ -185,6 +202,8 @@ const SimSchema = z.object({
   campWanderChancePerSecond: z.number().min(0).max(1),
   enemyPullChance: z.number().min(0).max(1),
   campsStartHostile: z.number().min(0).max(1),
+  spawnDurationSeconds: z.number().positive(),
+  rangedLeashCells: z.number().int().positive(),
 });
 
 const parsed = SimSchema.parse(simJson);
@@ -209,4 +228,7 @@ export const SIM = {
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
   enemyPullChance: parsed.enemyPullChance,
   campsStartHostile: parsed.campsStartHostile,
+  spawnDurationSeconds: parsed.spawnDurationSeconds,
+  spawnDurationTicks: secondsToTicks(parsed.spawnDurationSeconds),
+  rangedLeashCells: parsed.rangedLeashCells,
 };

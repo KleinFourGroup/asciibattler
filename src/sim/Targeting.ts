@@ -5,7 +5,6 @@ import type { ObjectiveTarget } from './objective';
 import { hasLineOfSight } from './LineOfSight';
 import { SIM } from '../config/sim';
 import { UNIT_DEFS, isDestructibleNeutral, isAutoTargetNeutral } from '../config/units';
-import { OBJECTIVE } from '../config/objective';
 import { getTargetingStrategy } from './targetingStrategies';
 import { focusTileDirective } from './focusTile';
 import { behaviorFlags } from './statusBehavior';
@@ -702,7 +701,7 @@ function updateConfusedTarget(unit: Unit, world: World, radius: number | null): 
  */
 function objectiveEngages(unit: Unit, enemy: Unit): boolean {
   const d = chebyshev(unit.position, enemy.position);
-  const leash = Math.min(unit.derived.attackRange, OBJECTIVE.rangedLeashCells);
+  const leash = Math.min(unit.derived.attackRange, SIM.rangedLeashCells);
   if (d <= leash) return true;
   // Retaliation: only past the leash, and only against a real attacker.
   return (

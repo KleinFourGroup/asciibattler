@@ -88,7 +88,7 @@ function printHelp(): void {
       '  --daemon=ID      force the run daemon (a catalog id, or `none` = daemon-less;',
       '                   default = the character daemon — 63c retired the roll)',
       '  --character=ID   the starting character (a characters.json id; default soldier)',
-      '  --bits=N         starting bits balance (nonnegative; default config/economy.json)',
+      '  --bits=N         starting bits balance (nonnegative; default config/difficulty.json)',
       '  --strategy=NAME  headless drive strategy from the G5 menu (default: pure-random);',
       '                   e.g. greedy | recruit:mage | stat:constitution | path:rest',
       '  --no-run         print the launch URL only; skip the headless run',

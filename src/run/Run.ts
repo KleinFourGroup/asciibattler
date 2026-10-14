@@ -86,7 +86,6 @@ import {
 } from './daemon';
 import type { BattleRule } from '../sim/battleRules';
 import { foldRunStats, RUN_STAT_BASES, type RunStatKey, type RunStatModifier } from './runStats';
-import { ECONOMY } from '../config/economy';
 import { cloneEffect, mergeEffectInto, type StatusEffect } from '../sim/statusEffects';
 import { TriggerDispatcher } from '../sim/triggers';
 import type { RunCommand } from './Command';
@@ -95,6 +94,7 @@ import { TERRAIN } from '../config/terrain';
 import { HEALTH } from '../config/health';
 import { DECK } from '../config/deck';
 import {
+  DIFFICULTY,
   resolveDifficultyMultipliers,
   scaledEnemyPool,
   type DifficultyMultipliers,
@@ -944,7 +944,7 @@ export class Run {
    * (which clamps + emits `run:bitsChanged`). Earns go through `gainBits`,
    * which applies the folded `bitsGain` run-stat multiplier at the grant
    * site; spend surfaces arrive with §50 ports. Init: `RunConfig.startingBits`
-   * override ?? `config/economy.json`. Round-trips in the Run save (v27).
+   * override ?? `config/difficulty.json`. Round-trips in the Run save (v27).
    */
   bits: number;
   /**
@@ -1223,10 +1223,10 @@ export class Run {
     this.drawPile = [];
     this.discardPile = [];
     this.hand = [];
-    // 47e — starting bits: override ?? config/economy.json. Pure of RNG
+    // 47e — starting bits: override ?? config/difficulty.json. Pure of RNG
     // (no draw), so it doesn't perturb the fork alignment; clamped so a
     // programmatic override can't start a run below the zero floor.
-    this.bits = Math.max(0, config?.startingBits ?? ECONOMY.startingBits);
+    this.bits = Math.max(0, config?.startingBits ?? DIFFICULTY.startingBits);
     // 49b — the cache starts empty (packets arrive via rewards/ports only;
     // no starting-packet config until content demands one).
     this.cache = [];

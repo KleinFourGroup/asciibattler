@@ -64,7 +64,6 @@ import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { CampWanderBehavior } from './behaviors/CampWanderBehavior';
 import { SpawnAction } from './actions/SpawnAction';
 import { isReservedSwapPartner, preFlipSwap } from './actions/SwapAction';
-import { SPAWN } from '../config/spawn';
 /**
  * 27d — the tile→status map. A unit standing on a `fire` tile sustains `burn`;
  * a `healing` tile sustains `rejuvenate`. Resolved ONCE at module load via
@@ -1850,7 +1849,7 @@ export class World {
    * cell). Each spawn fires `unit:spawned` with `instant: false` so
    * the renderer fades the sprite in, and seats the unit with a
    * `SpawnAction` activeAction so the selector keeps it busy for
-   * `SPAWN.durationTicks` ticks.
+   * `SIM.spawnDurationTicks` ticks.
    *
    * Determinism: team order is `QUEUE_TEAMS`, queue order is FIFO,
    * tile order is the region's stored tile array.
@@ -2061,7 +2060,7 @@ export class World {
       unit.abilities.push(createAbility(id));
     }
     if (!instant) {
-      this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
+      this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
     }
     return unit;
   }
@@ -2101,7 +2100,7 @@ export class World {
     // F2 — a single lockout phase spanning the spawn window; SpawnAction
     // has no `applyEffect`, so `impact` here only times the busy window
     // (matches the pre-F2 `effectTicks:[]` + `duration` lockout exactly).
-    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
+    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
     return unit;
   }
 
@@ -2637,7 +2636,7 @@ export class World {
     for (const id of abilityIdsForArchetype(archetype)) {
       unit.abilities.push(createAbility(id));
     }
-    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SPAWN.durationTicks }]);
+    this.seatAction(unit, new SpawnAction(), [{ phase: 'impact', ticks: SIM.spawnDurationTicks }]);
     return unit;
   }
 

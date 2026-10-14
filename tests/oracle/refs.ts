@@ -3,7 +3,7 @@
  * kind of code that makes them.
  *
  * `git grep` finds a word; this finds a symbol. `startingBits` is a key of
- * config/economy.json and a field of `RunConfig`, and a grep cannot tell the
+ * config/difficulty.json and a field of `RunConfig`, and a grep cannot tell the
  * two apart. The finder asks TypeScript's language service, which follows a
  * key from the zod schema that declares it, through the inferred type, to
  * each place the parsed config is read. A dial with no reader, an export

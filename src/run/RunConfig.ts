@@ -232,7 +232,7 @@ export interface RunConfig {
   /**
    * 47e — override the run's starting bits balance (the spec §Bits testing
    * override, for dev / fuzz / playtest runs). Unset → the
-   * `config/economy.json#startingBits` default. Pure of RNG, clamped at the
+   * `config/difficulty.json#startingBits` default. Pure of RNG, clamped at the
    * zero floor by the Run constructor. URL form: `bits=100`.
    */
   readonly startingBits?: number;

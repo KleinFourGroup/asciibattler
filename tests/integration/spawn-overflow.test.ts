@@ -25,7 +25,7 @@ import { rollUnit } from '../../src/sim/archetypes';
 import { buildEnemyTeam } from '../../src/run/enemyBudget';
 import { DIFFICULTY } from '../../src/config/difficulty';
 import { DECK } from '../../src/config/deck';
-import { SPAWN } from '../../src/config/spawn';
+import { SIM } from '../../src/config/sim';
 import { SPAWN_ACTION_ID } from '../../src/sim/actions/SpawnAction';
 import type { GameEvents } from '../../src/core/events';
 import type { SpawnRegion } from '../../src/sim/layouts';
@@ -75,7 +75,7 @@ describe('D5.C spawn overflow queue', () => {
     expect(fresh!.activeAction).not.toBeNull();
     expect(fresh!.activeAction!.action.id).toBe(SPAWN_ACTION_ID);
     expect(fresh!.activeAction!.finishTick - fresh!.activeAction!.startTick).toBe(
-      SPAWN.durationTicks,
+      SIM.spawnDurationTicks,
     );
   });
 

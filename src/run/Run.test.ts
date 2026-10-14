@@ -27,7 +27,6 @@ import { PACKETS, packetById } from '../config/packets';
 import { rewardTableById } from '../config/rewards';
 import { daemonRedrawHook, daemonEmpowerHook } from './daemon';
 import { RUN_STAT_BASES } from './runStats';
-import { ECONOMY } from '../config/economy';
 import { PRICES, unitPrice, packetPrice, daemonPrice, sellPrice } from '../config/prices';
 import { avgTeamLevel } from './enemyBudget';
 import { FORCE_PROCEDURAL, type RunConfig } from './RunConfig';
@@ -2624,7 +2623,7 @@ describe('Run', () => {
     };
 
     it('starts at the config default; a RunConfig override wins; negatives clamp to the floor', () => {
-      expect(freshRunWithBus(1).run.bits).toBe(ECONOMY.startingBits);
+      expect(freshRunWithBus(1).run.bits).toBe(DIFFICULTY.startingBits);
       expect(freshRunWithBus(1, { startingBits: 25 }).run.bits).toBe(25);
       expect(freshRunWithBus(1, { startingBits: -10 }).run.bits).toBe(0);
     });

@@ -129,9 +129,9 @@ describe('the reference finder, on a planted program', () => {
 });
 
 describe('the reference finder, on the repo', () => {
-  it('finds the run model reading config/economy.json’s one key, and not RunConfig’s field of the same name', { timeout: 120_000 }, () => {
+  it('finds the run model reading config/difficulty.json’s startingBits, and not RunConfig’s field of the same name', { timeout: 120_000 }, () => {
     const repo = openProject();
-    const key = schemaKeys(repo, 'src/config/economy.ts').find((k) => k.name === 'EconomySchema.startingBits')!;
+    const key = schemaKeys(repo, 'src/config/difficulty.ts').find((k) => k.name === 'DifficultySchema.startingBits')!;
     expect(key.references.filter((r) => r.kind === 'game').map((r) => `${r.file} ${r.use}`)).toEqual(['src/run/Run.ts read']);
     // `git grep -w startingBits` also finds src/run/RunConfig.ts, which declares another name.
     expect(key.references.some((r) => r.file === 'src/run/RunConfig.ts')).toBe(false);

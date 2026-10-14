@@ -4147,3 +4147,87 @@ on the audit's commit `a0fdbc7`; 259,713 at 14:27 on 121a (`f5a0b68`);
 A-10 (`fd7d0c1`); 490,175 at 15:58 on A-21 (`def07ff`); 527,094 at 16:10
 on 121f (`91b9401`); 530,791 at 16:11 at the hand-off. The steps cost
 from about 30k (121d) to about 85k (121b with its tool work).
+
+### 121g — B-03, the three one-key files folded (2026-10-14, session 07d94d5c)
+
+**The bar,** as the kickoff put it in its final message and the user
+signed with the cut. The kickoff's entry did not copy it, so it is copied
+here from that session's transcript: "the config dump is identical after
+mapping the three moved paths, the corpus digests and the fuzz diff don't
+move, source lines don't grow, no new parameter, and three files are
+gone."
+
+Step zero at `a2572f6`: the three files and their readers as the kickoff
+listed them, plus three tests that read the lockout's ticks
+(`camps.test.ts`, `CampWanderBehavior.test.ts`,
+`spawn-overflow.test.ts`), the leash test, the run-config tool's help
+line, and `refs.test.ts`, whose known answer was
+`EconomySchema.startingBits`.
+
+What moved: `economy.startingBits` to `difficulty.startingBits`, which
+`Run` reads as `DIFFICULTY.startingBits`; `spawn.durationSeconds` to
+`sim.spawnDurationSeconds`, with `SIM.spawnDurationSeconds` for the
+renderer's fade and `SIM.spawnDurationTicks` for World's three lockouts,
+the two forms `SPAWN` held; `objective.rangedLeashCells` to
+`sim.rangedLeashCells`. The three JSON files, their loaders and their
+entries in the stamp's registry are deleted (config files 31 → 28). The
+loaders' docstrings moved into `sim.ts`'s key list and `difficulty.ts`'s
+knob list without their step history. `refs.test.ts` asks its question of
+`DifficultySchema.startingBits` and still tells it from
+`RunConfig.startingBits`. ARCHITECTURE's tree says so. Each moved key is
+now addressable by `--set`, since `sim` and `difficulty` are sweep
+groups; none was before.
+
+Against the bar:
+
+1. *Behaviour.* The config dump at `a2572f6` (in a worktree) and after:
+   13 differences, all of them the moved paths. With the declared mapping
+   applied to the before dump (a scratch script: four parsed paths, three
+   raw ones, and a check that each deleted object held nothing else), no
+   difference; the control, the same mapping with `SPAWN.durationTicks`
+   left out, names that one path. `npm run corpus`: 0 of 30 differ (the
+   journals' config stamp changed, as at 121b, and the replay goes past
+   it). The fuzz diff (baseline `a2572f6`): PASS on both shapes.
+   `reach-diff --from=a2572f6`: nothing lost across 27 changed files.
+   Typecheck clean; the suite 3,750, unchanged, since no test was deleted;
+   the step-code ceiling lowered 6,320 → 6,310 (the three loaders).
+2. *Lines.* The diff adds 65 and removes 146. Source lines (`src`,
+   `config`, `tests`, `tools`) fall by 76: `src` 67, `config` 6, `tests`
+   3, `tools` 0; ARCHITECTURE by 5.
+3. *No new parameter.*
+4. *Three files gone,* with their loaders and three names in the stamp's
+   registry.
+
+Kept.
+
+The controls. The plant tool admits no edit at the lockout's three sites,
+so each moved value was changed in turn in a worktree of `a2572f6` with
+the fold applied, whose corpus read 0 of 30 first, and restored from a
+saved copy:
+
+| Value changed | Corpus | Fuzz diff |
+|---|---|---|
+| `spawnDurationSeconds` 0.5 → 0.55 | 24 of 30 differ | FAIL, both shapes |
+| `rangedLeashCells` 3 → 2 | 15 of 30 differ | FAIL, the arm shape only |
+| `startingBits` 0 → 5 | 26 of 30 differ | FAIL, both shapes' summary |
+
+So both proofs read each moved key. 121e's leash plant, at the tile
+focus's comparison, went past the fuzz diff; this one reaches it through
+`Targeting`'s engage radius, on the arm shape.
+
+**A call for the user, not built.** `SIM` holds the lockout twice, as
+`SPAWN` did: seconds for the renderer, ticks for the sim. Now that `sim`
+is a sweep group, `--set sim.spawnDurationSeconds=…` is accepted and moves
+only the renderer's fade, so a headless sweep of it would silently change
+nothing; before the fold the same knob was refused, as there was no
+`spawn` group. The alternative is for `SIM` to hold only
+`spawnDurationTicks`, as it does for `rangedRetargetLosTicks`, and for the
+renderer to fade over `ticksToSeconds(SIM.spawnDurationTicks)`. That is
+0.5 exactly at the shipped value (`10 * (1/20) === 0.5` in node), and it
+ties the fade to the lockout by construction. The dump would then lose
+`SPAWN.durationSeconds` with no parsed counterpart, which is outside the
+bar's first clause as written, so it waits for the user.
+
+Also found: `plant --list` read the working tree's copy of the file while
+a plant edits the ref's, so with the tree ahead of the ref it listed
+another line's edits (121g-post).

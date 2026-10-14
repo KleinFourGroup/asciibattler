@@ -70,6 +70,9 @@
  *                            with the count and the budget, so that a bigger
  *                            wave under the casualty rule is as long a fight
  *                            (Round 8 spec D8).
+ * - `startingBits`         — a fresh run's bits balance, read by `Run` at
+ *                            construction. A `RunConfig.startingBits`
+ *                            override wins (dev, fuzz and playtest runs).
  *
  * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
  * The budget is conserved, so there's a hard tradeoff: spreading it wide
@@ -128,6 +131,7 @@ const DifficultySchema = z.object({
   // The enemy-pool lever (default 1.0). Positive; `scaledEnemyPool` floors the
   // result at 1, so no multiplier empties a pool.
   enemyMoraleMultiplier: z.number().positive(),
+  startingBits: z.number().int().nonnegative(),
 });
 
 export type DifficultyConfig = z.infer<typeof DifficultySchema>;

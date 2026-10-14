@@ -98,6 +98,35 @@ low-medium. Decision point: the comment pass's cost a line, recorded
 here, decides at §122's kickoff whether the later passes fan out to
 smaller readers.
 
+The cut, signed 2026-10-14 with its six calls (WORKLOG §121, the
+kickoff):
+
+- ☐ **121a — A-37: the `--jobs` parity test off the smoke** (`none`).
+  Its own script; run by the hook when `tests/fuzz/` is staged, by the
+  box launcher, and before a local `--jobs` batch.
+- ☐ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the
+  JSON; the buff module stays), A-03, A-04's `ignoresTerrain`. Proof:
+  config.
+- ☐ **121c — the values never built** (`none`). A-05 with A-07, A-08;
+  the attack editor's Cells field goes. Proof: sim.
+- ☐ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
+  file. Proof: sim and config.
+- ☐ **121e — A-10 and A-21's two switches** (`none`); `tiles.json` and
+  its loader go. Proof: sim and config.
+- ☐ **121f — A-13, half cover's multiplier** (`none`), with the
+  `damageMultiplier` field and `collectHalfCoverPositions`; no World
+  bump. Proof: sim and config.
+- ☐ **121g — B-03's trial** (`none`): `sim.spawnDurationSeconds`,
+  `sim.rangedLeashCells`, `difficulty.startingBits`, under the bar
+  written at the kickoff.
+- ☐ **121h — the re-skim** of the phase's diff; a new deletion waits for
+  121i's stop.
+- ☐ **121i — the comment pass's pilot** (`stop`): `health.ts`,
+  `daemons.ts`, `sim.ts`.
+- ☐ **121j — the comment pass, the rest of the loaders** (`batch`: two
+  loaders' diffs read against the pilot's style), with the cost a line.
+  The co-located tests wait for §126.
+
 ## Phase 122 — sim
 
 `src/sim` and `src/core`, 64 files: the signed rows (A-34, A-38, and the

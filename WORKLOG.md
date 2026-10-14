@@ -3768,3 +3768,15 @@ in the folder, 95 of them in the tests. The ceiling test asks for
 
 **The cut, as put.** In the session's final message of this turn, with
 six calls; the user's answer and the cut as signed follow here.
+
+**Signed** (the user, 2026-10-14): "Signing the cut and all six leans,
+Claude! 😁" So: the cut and its reads as put; A-37's test runs in the
+hook on any staged `tests/fuzz/` path, in the box launcher, and before a
+local `--jobs` batch by a line in `process/measurement.md`; A-13 takes the
+`damageMultiplier` field and `collectHalfCoverPositions` with the key,
+with no World snapshot bump; B-03's homes are `sim.spawnDurationSeconds`,
+`sim.rangedLeashCells` and `difficulty.startingBits`; the comment pass
+takes the loaders only, the co-located tests waiting for §126, with a
+pilot stop on `health.ts`, `daemons.ts` and `sim.ts`; a re-skim's new
+trial runs within the budget with its bar written first, and a new
+deletion waits for the pilot's stop. The cut is in ROADMAP §121.

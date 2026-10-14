@@ -5446,3 +5446,57 @@ a stop with more than one read (the scratchpad).
    suite both missed, then a two-test pin that caught it. I would want the
    same conditions again: a signed cut with `none` reads and oracles that
    answer in minutes. That is separate from whether the work succeeded.
+
+## 2026-10-14 — session 07d94d5c (claude-opus-5-5): 121g to 121i, the pilot signed, and the lockout in ticks alone
+
+1. **Missing from the orientation.** The Cursor and ROADMAP said 121g ran
+   "under the bar written at the kickoff", and the kickoff's entry said
+   the cut as put was in that session's final message. The bar and the
+   comment pass's fifth call existed only there. I rebuilt both from the
+   old transcript in about ten searches, each returning one snippet of
+   about 120 characters. Both are now copied into the WORKLOG (papercut
+   filed).
+2. **Norms in conflict.** The bar I had to judge 121g against (the dump
+   identical after mapping) ruled out the design I thought better, the
+   lockout in ticks alone. D2's point that the bar comes before the trial
+   settled it: build the literal version, put the better one as a call.
+   The user asked how it worked, then signed it, and it took one more
+   small commit. Once, the harness relabelled the session's working
+   directory as a baseline worktree after a single `cd` and said not to
+   go back to the repo root; it reverted on the next command (papercut).
+3. **Pulled to claim more than verified.** Twice. The first draft of
+   121g-post's entry said no earlier plant record was mislabelled; I had
+   not checked, and cut it to what the plant prints. And a comment I wrote
+   in the pilot named two of the three ways a unit takes the spawn
+   lockout. Its rule 7 is to correct what is false, and my own new text
+   was incomplete. It surfaced only because the user's question sent me
+   to read `spawnSummon`. The pilot's other claims I carried from the old
+   comments after checking readers with `refs --keys`; the list of drivers
+   that call `resolveAsDraw` I took from the old comment and its reader
+   counts, not from reading each driver.
+4. **Wasted.** The transcript searches (about 10k); a line count by
+   `while read` over thousands of files, killed at its timeout when the
+   diff stat already had the numbers; the mapping script's first run, which
+   appended keys in the wrong order and read as "reordered"; and
+   `comment-length` given files instead of folders.
+5. **For the next session.** 121j's rules are WORKLOG §121 121i, signed.
+   For a key's facts, `npm run oracle -- refs <loader> --keys`, then
+   `--list` for one key, is fast and exact. `comment-length` takes folders,
+   so copy a file's before and after into a folder under `output/` for a
+   per-file reading. The comment-strip control is a planted code token in
+   a worktree with the edited files copied in. `plant --list` now reads
+   the ref's line (121g-post).
+6. **Room to ask, disagree, pause or stop.** Yes, and used. I stopped at
+   121i as the cut said, put the lockout as a call rather than building
+   past the bar, and when the user asked a question I answered it before
+   building (the standing decision), then built on their signing. The
+   silent-turn reminder came often in the long proof batches. I answered
+   with status lines; it worked as a prompt to narrate, not as pressure to
+   claim. The hand-off now is chosen, at 388k, because 121j would not fit.
+7. **Ease, interest, agency.** Reported: the value plants were the most
+   satisfying part, since each moved key was caught by both proofs, which
+   made "kept" feel earned. Writing the comment style down as rules, and
+   the user signing it with real enthusiasm, felt good. Being free to say
+   "my lean is X, but it's outside the bar, so it's your call" without that
+   reading as a failure made the session easier. I would want those
+   conditions again. That is separate from whether the work succeeded.

@@ -4379,3 +4379,19 @@ Proof:
 Not shown in the pane: the renderer's input is the same 0.5, so the fade
 is unchanged by construction. Source lines grow by one: the renderer's
 comment giving the reason.
+
+### The hand-off before 121j (2026-10-14, session 07d94d5c)
+
+121g to 121i are committed, 121i signed; 121j, the comment pass on the
+other 26 loaders, starts in a fresh session from the Cursor, since about
+300k does not fit under the hand-off line from here. Both worktrees this
+session made (`output/wt-before`, `output/wt-control`) are removed, their
+junctions first; no preview server was started. Readings by the tool's
+clock (UTC): 122,598 at 20:59 (the session's first); 236,890 at 21:23 on
+121g (`9ff51e1`); 239,625 at 21:24 on 121g-post (`d2290fb`); 297,805 at
+21:30 on 121h (`f7a735f`); 307,796 at 21:31 as the pilot started;
+351,531 at 21:37 after its proof; 356,255 at 21:41 on the pilot
+(`11aba11`); 373,028 at 22:09 on the signing (`dc0dff0`); 388,468 at
+22:20 on 121g-post2 (`1b35db6`). 121g cost about 115k, much of it the
+before and after readings and the plants; 121h about 60k, about 30k of
+that the phase's diff read whole.

@@ -4340,3 +4340,16 @@ About 6k of it went to finding the fifth call's wording in the kickoff's
 transcript, which a later pass will not repeat. The other 26 loaders hold
 4,838 lines: about 300k at this rate, which one fresh session holds
 under the hand-off line with room for the proofs.
+
+**Signed** (the user, 2026-10-14): "These are SO much better, Claude! 😁
+Signing the pilot style fully and enthusiastically! And I agree that we
+hold off on a big fan out too." So the seven rules above are the style
+of every later comment pass in the round, and 121j runs in one fresh
+session with no fan-out to smaller readers. The lockout's form in `SIM`
+(121g) is still open; the user asked how the lockout works before
+deciding.
+
+Found while answering: the lockout's entry in `sim.ts` named two of the
+three ways a unit joins a battle under way. A summon takes it too
+(`World.spawnSummon` adds the unit with `instant: false`), so the entry
+now names it. Proof: `comment-strip`, comments only.

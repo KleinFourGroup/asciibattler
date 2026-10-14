@@ -99,9 +99,10 @@
  *   draws nothing.
  *
  * - `spawnDurationSeconds` — the lockout of a unit that joins a battle under
- *   way (a reinforcement from the overflow queue, a camp's drip): its first
- *   action is a `SpawnAction` this long, and the renderer fades its sprite
- *   and bar in over the same window, so the lockout and the fade line up.
+ *   way (a reinforcement from the overflow queue, a camp's drip, a
+ *   summon): its first action is a `SpawnAction` this long, and the
+ *   renderer fades its sprite and bar in over the same window, so the
+ *   lockout and the fade line up.
  *   Units placed at the battle's start appear at once with no lockout; the
  *   pre-battle countdown (`config/playback.json`) is their reaction window.
  *   Converted to `spawnDurationTicks`.

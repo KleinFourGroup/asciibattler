@@ -2032,7 +2032,8 @@ Both are in TODO under "§120 riders".
 ## 5. The TODO pass's list (120g)
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche)**, 5.4 and 5.6**; 5.5 is unsigned. Every
+5.3** (T-97 held for list B's tranche)**, 5.4, 5.6 and 5.5's Round 9**;
+5.5's Rounds 10 to 12 are unsigned. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2318,7 +2319,8 @@ compacted** (L53, L300)
 - Fate: **Round 9**, before its closing board. The round adds
   archetypes, which is when membership drifts, and that board is the
   next sampled read. One step, as T-28 says.
-- Signed:
+- Signed: **Round 9**, before its closing board (the user, 2026-10-13: "Signing all
+  ten, Claude! 😁").
 
 **T-11 · Renderer position-reconciliation sweep** (L128)
 - In play: a sprite left standing off its tile until its next move.
@@ -2328,12 +2330,12 @@ compacted** (L53, L300)
   on every move", META-ROADMAP).
 - Fate: **Round 9**, at that phase's audit: the full tier is the same
   change, and the cheap tier, a DEV warning, is small there.
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words).
 
 **T-29 · `box-drive.sh`: one artifact kind per cohort** (L301)
 - In play: nothing. A mixed queue held its box (92g).
 - Fate: **Round 9**, before its closing board, the next cohort.
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words).
 
 **T-31, T-32, T-35, T-36, T-39 · The sheet's watches and the kits: the
 priest parity breach, the wall watch, power diversity by rarity, the
@@ -2352,14 +2354,18 @@ L315)
 - Fate: **Round 9**, as one line: the kit and parity watches,
   dispositioned at the closing board. T-35 moves every burn per turn,
   so it lands before that board.
-- Signed:
+- Signed: **Round 9**, as one line, and not Round 10's sheet: the session had
+  singled this row out as the largest addition, with the reason that
+  Round 10's content should be authored against the corrected numbers
+  (the user, 2026-10-13: "I'm in full agreement on the more weighty ones
+  you singled out").
 
 **T-34 · A won-turn reward shape** (L307)
 - In play: a decisive win still books your own dead.
 - Held against: no plan names it. Round 9 holds the casualty rule's
   other feel items (Retreat, Optional deploy, Injuries).
 - Fate: **Round 9**, read with them.
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words as T-03).
 
 **T-38 · `FX_REGISTRY`'s own coverage gap** (L314)
 - In play: an ability with no effect drawn, or a status tick with no
@@ -2369,7 +2375,9 @@ L315)
 - Fate: **Round 9**, its first phase: the round authors a vampire's and
   a special's abilities, and the guard should be on the path before
   them. The other arm is 8.5's tests phase.
-- Signed:
+- Signed: **Round 9**, its first phase, and not this round's tests phase: its
+  first run may list gaps that are sound calls (the user, 2026-10-13,
+  in the same words as T-31).
 
 **T-47 · Pin the Reward ledger's index mapping headless** (L355)
 - In play: accepting rewards out of order takes the row that was
@@ -2380,14 +2388,14 @@ L315)
 - Fate: **Round 9**, with XP rewards, which add an entry kind to the
   same screen (inferred from META-ROADMAP's "`REWARD_ENTRY_KINDS` has
   no XP").
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words as T-03).
 
 **T-63 · A `reward:resolved` bus event** (L490)
 - In play: the reward screen asks the run every frame, and a replayed
   clip has no pickup sound.
 - Fate: **Round 9**, with XP rewards: the same flow, and a new event is
   a change of behaviour.
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words as T-03).
 
 **T-92 · Power's level-up draw and its growth key** (L789)
 - In play: nothing. A recruit's level-up draws an eleventh time for a
@@ -2396,7 +2404,8 @@ L315)
   keep), one "that accepts the stream moving and re-runs the board".
   Round 9 is one: it adds RNG sites and closes with a board re-run.
 - Fate: **Round 9**, in its bump window. Call 2 below.
-- Signed:
+- Signed: **Round 9**, in its bump window, and no new cleanup round for it
+  (the user, 2026-10-13, in the same words as T-31).
 
 **T-96 · A battle's snapshot drops a queued unit's seeded effects**
 (L816)
@@ -2406,7 +2415,7 @@ L315)
 - Held against: Round 9's ability-grant channel adds a field to the same
   spawn template (`UnitTemplate.abilities?`, "the four sites union it").
 - Fate: **Round 9**, with it; a World bump.
-- Signed:
+- Signed: **Round 9** (the user, 2026-10-13, in the same words as T-03).
 
 #### Round 10 (5)
 

@@ -3415,3 +3415,25 @@ Claude! 😁 Definitely agree that the two that add code are worth it! 👍"
   UI phase opens with T-91 and T-84; the tests phase takes T-49, T-50
   and T-86; the close takes T-62, T-89, T-51 with T-85, and T-87's
   decision; T-83 is the user's to read.
+
+Reading: **368,895** at 00:36 on the third tranche's commit, `65ce099`.
+
+**The read, the fourth tranche** (the user, 2026-10-13): "Signing all
+ten, Claude! 😁 I'm in full agreement on the more weighty ones you
+singled out"
+
+- **5.5's Round 9, all ten rows signed** (fifteen items): T-03 with
+  T-28, T-11, T-29, the sheet's five (T-31, T-32, T-35, T-36, T-39),
+  T-34, T-38, T-47, T-63, T-92, T-96. META-ROADMAP's Round 9 gains them
+  when signing is written.
+- **The three the session singled out, each signed with its reason:**
+  the sheet's watches and the kits go to Round 9 and not Round 10's
+  sheet, so that Round 10's content is authored against the corrected
+  numbers; the effects' coverage guard (T-38) goes to Round 9's first
+  phase and not this round's tests phase, since its first run may list
+  gaps that are sound calls; and power's growth key (T-92) goes to Round
+  9's bump window, with no new cleanup round for it. That is the first
+  half of 5.9's second call; T-93 is the other half, in the next
+  tranche.
+- The fifth tranche as planned held twenty rows, twice any before it,
+  so it is put as two: Rounds 10 and 12, then Round 11.

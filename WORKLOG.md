@@ -3673,3 +3673,98 @@ census, META-ROADMAP's coverage map, ROADMAP §125 and the Cursor say so.
 What it taught: a row's evidence that a trigger "is not on record as
 fired" was a statement about the record; the trigger was a statement
 about the code, and the code was the thing to search.
+
+## Phase 121 — the dials
+
+### The kickoff: the audit, and the cut put to the user (2026-10-14, session f8bbd64e)
+
+Pre-flight at `972a866`, the tree clean. `git diff --stat a45a7af HEAD --
+src config tests/fuzz` names one file, `src/run/Run.test.ts`, so the
+reach readings under `output/reach/` still describe every source line.
+Nothing was built. Each finding below is from a search or a read of the
+named lines; no file was read whole.
+
+**A-37, the hook.** `.githooks/pre-commit` runs `npm run fuzz:smoke`
+when a staged path matches `src/(sim|run|core|config|bot)/`, `config/` or
+`tests/fuzz/`; the smoke is `vitest.fuzz.config.ts`, which includes every
+`tests/fuzz/**/*.test.ts`. A Vitest `exclude` cannot be undone by naming
+the file on the command line, so taking the test out of the smoke needs
+its own entry point (a script, or a config of its own). The test runs
+the fuzz command line with `--flip-telemetry=traffic`, a flag A-20
+deletes at §125, so §125's deletion re-points this test. Its sibling
+`parallelRun.test.ts` (two tests) ended inside the smoke's first 69 s at
+120e and stays. The box scripts are `box-launch.sh`, `box-drive.sh`,
+`box-batch.sh` and `box-setup.sh`; which one a pre-launch check belongs
+in was not read.
+
+**The deletions, by reader** (a word search over `src`, `tools`, `tests`,
+`config`, `scripts` and `shell`, corpus and output files left out).
+
+- A-01 `deck.redraw`: 14 lines of `src/run/Run.test.ts`, nothing else.
+- A-02 `config/empower.json`: imported by its loader and by
+  `configHash.ts`; `EMPOWER` is read by `Run.test.ts` alone (26 uses).
+  `BuffSchema`, `normalizeBuff` and `EmpowerConfig` are imported by the
+  daemon and packet loaders, `run/daemon.ts` and `run/empower.ts`, so
+  `src/config/empower.ts` stays as their module, without the JSON.
+- A-03 the two tile rates: `config/tiles.json`, its loader, two lines of
+  `statuses.test.ts`.
+- A-04 `ignoresTerrain`: the units schema (which is `.strict()`) and five
+  lines of `units.test.ts`; no unit sets it.
+- A-05 and A-07: `move.cells` is required by the schema and written by
+  two abilities and by tests; `tools/attack-editor/editor.ts` writes it
+  (line 106) and shows it as a field (line 549). `knockback` and `pull`
+  are named by the schema, the interpreter's throw and four test lines.
+- A-08 `re-home`: `schema.ts`, `Action.ts`, and the attack editor.
+- A-09 `layoutFirst`: `selection.ts` (one function of 19 lines and the
+  two-entry `STRATEGIES` record), its loader, `config/selection.json`,
+  and tests. With it gone `selectEncounter` calls `encounterFirst`
+  directly, and the strategy type and the record go.
+- A-10 `focusTileResolution`: `focusTile.ts`, its test, comments in
+  `Targeting.ts` and `objective.ts`, and
+  `tests/fuzz/objectiveCoverage.test.ts:119-140`, which runs the coverage
+  arena once under each resolution; with one left it is one test.
+  `vitest.fuzz.config.ts`'s header names that knob as the smoke's one
+  module-state mutation, and goes stale with it.
+- A-21 `blockCampTurnEnd`: read once (`World.ts:2264`). Tests set it at
+  22 lines in three files: `camps.combat.test.ts:197` pins the off
+  behaviour and goes; `camps.economy.test.ts:88` sets it off so that its
+  fixture's win is not held, and needs a fixture the rule does not hold;
+  two more tests there set it on, which becomes the only rule. That
+  file's header still says the default is off.
+- A-21 `applyStatusOnEnter`: `World.ts:1646`, `bot/sensors.ts:177`, and
+  tests in `tileEnterStatus.test.ts` and `sensors.test.ts`. With A-03 it
+  is the last key of `config/tiles.json`.
+- A-13 `halfCoverDamageMult`: wider than the row. The key is read once
+  (`propose.ts:114`), but the number rides to the damage roll as
+  `damageMultiplier`, a field of `OpResolution` set by `resolveOp` at six
+  call sites (five pass a literal 1) and read at `interpreter.ts:218`.
+  With the key gone the field is 1 everywhere, so it goes too, which is
+  the row's "the multiply". `collectHalfCoverPositions`
+  (`positioning.ts:130`) has `propose.ts` as its one reader in `src` and
+  a test reader in `camps.spatial.test.ts`. `OpResolution` is serialized
+  in the world snapshot (an in-flight action's resolution, a chain hop's),
+  so a snapshot taken mid-strike loses a field that was always 1. What
+  `positioning.ts` does with cover was not read.
+
+**B-03, the three one-key files.** `economy.startingBits` is read by
+`Run.ts` alone, which loads 19 config files. `spawn.durationSeconds` is
+read by `World.ts`, which loads `sim`, and `BattleRenderer.ts`, which
+does not. `objective.rangedLeashCells` (its one key after A-10) is read
+by `focusTile.ts`, `Targeting.ts` and `World.ts`; the last two load
+`sim`. The sweep's `--set` addresses four groups, `difficulty`,
+`health`, `leveling` and `sim` (`balanceSweep.ts:70`), so a fold into
+`sim` or `difficulty` makes the moved number addressable there. The
+"`objective.` on one line" of BALANCE that the row counted is the
+`--objective` strategies' line of the instrument registry, not a knob,
+so no run-log line goes stale. No fuzz output carries the config stamp
+(a search of the reporters, the harness, the manifest and
+`perf-oracle.sh`), so a key removed from config leaves the fuzz diff
+able to read byte-identical.
+
+**The comment pass.** `src/config` has 34 loaders of 5,785 lines (and 13
+co-located tests); `npm run oracle -- comment-codes` counts 658 step codes
+in the folder, 95 of them in the tests. The ceiling test asks for
+`--record` in the same commit as any fall.
+
+**The cut, as put.** In the session's final message of this turn, with
+six calls; the user's answer and the cut as signed follow here.

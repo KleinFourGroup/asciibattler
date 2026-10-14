@@ -1510,7 +1510,8 @@ each). None was read.
 
 List B: what has to be tried before anyone can say it is simpler (the
 spec's D1, Track B), each with what it expects to remove, counted, and the
-proof that covers it. **Unsigned; read at 120h.** Nothing was tried: a
+proof that covers it. **Read at 120h: every row is signed but B-01 to
+B-03, the read's eighth tranche.** Nothing was tried: a
 row's "expects to remove" is a count of sites, not a diff. Built from the
 profile of all 279 source files, a reader for special cases, the
 near-duplicate clusters of 2.5, and `World.ts` and `Run.ts` read whole.
@@ -1719,6 +1720,7 @@ it comment.
 - Proof: sim and config; the sweep's `--set health.chipMode` stops being
   accepted, which is the intent.
 - Fate: **trial** (signed 2026-10-13), in the run phase.
+- Signed: **trial, as sized** (the user, 2026-10-14: "Signing all of those!").
 
 **B-05 · The editors' stylesheets** (2.6)
 - In play: Nothing in the game. The twelve editor pages under `tools/` would look as they do.
@@ -1732,6 +1734,7 @@ it comment.
   piece of it found in the tree. The compare has to be built and shown
   to fail on a planted declaration first, and the pages looked at.
 - Fate: **trial** (signed 2026-10-13), run late.
+- Signed: **trial, as sized** (the user, 2026-10-14, in the same words).
 
 **From the two whole reads.**
 
@@ -1750,7 +1753,7 @@ it comment.
   note; one function in `src/core/sampling.ts`.
 - Proof: sim. The corpus runs all five lines; the fuzz diff four.
 - Fate: **trial**, in the run phase (it crosses into sim).
-- Signed:
+- Signed: **trial**, in the run phase (the user, 2026-10-14: "Signing all of those!").
 
 **B-07 · The wiring of a spawned unit, in four bodies**
 - In play: Nothing. Every unit that takes the field gets its movement, its abilities and its fade-in as now.
@@ -1765,7 +1768,7 @@ it comment.
   difference passed in and not a flag between halves.
 - Proof: sim. The corpus runs all three of `World`'s.
 - Fate: **trial**, in the sim phase.
-- Signed:
+- Signed: **trial**, in the sim phase (the user, 2026-10-14, in the same words).
 
 **B-08 · A rule kept in step by hand**
 - In play: An order to attack a camp or a piece of rubble stays in force while the target stands. If the two copies of the rule drift, the order is dropped on the tick it is given, which a browser read caught once.
@@ -1776,7 +1779,7 @@ it comment.
   keep two places the same.
 - Proof: sim. The corpus runs both copies.
 - Fate: **trial**, in the sim phase.
-- Signed:
+- Signed: **trial**, in the sim phase (the user, 2026-10-14, in the same words).
 
 **B-09 · Two places a unit dies**
 - In play: Nothing.
@@ -1788,7 +1791,7 @@ it comment.
   function, four lines.
 - Proof: sim.
 - Fate: **trial**, in the sim phase, with B-07.
-- Signed:
+- Signed: **trial**, in the sim phase, with B-07 (the user, 2026-10-14, in the same words).
 
 **B-10 · `Run.ts`'s small repeats**
 - In play: Nothing.
@@ -1808,7 +1811,7 @@ it comment.
 - Proof: sim for the event draws (the corpus runs both). The two swap
   checks are run by tests alone, the oracle map's port trades.
 - Fate: **trial**, in the run phase, after B-04.
-- Signed:
+- Signed: **trial**, in the run phase, after B-04 (the user, 2026-10-14, in the same words).
 
 **B-11 · What the game's types give up for a test's convenience**
 - In play: Nothing.
@@ -1827,7 +1830,7 @@ it comment.
   which is 3.5's shared set-up.
 - Proof: the suite; sim for the scan.
 - Fate: **trial**, in the tests phase, after its list by test.
-- Signed:
+- Signed: **trial**, in the tests phase, after its list by test (the user, 2026-10-14, in the same words).
 
 **B-17 · One `chebyshev`** (from the TODO pass, T-24; added at the read)
 - In play: Nothing. The distance between two cells is worked out the same way wherever it is asked.
@@ -1880,6 +1883,9 @@ finder lists, by subsystem; none was opened beyond its first line.
   and `palette`, 100 tokens of `name: value`), lists of schema fields,
   and the weighted picks of B-10.
 
+Signed for B-12 to B-14 and the leads under them: **left to each
+phase's kickoff**, within the trials' budget (the user, 2026-10-14, in the same words).
+
 **Considered, and not proposed.**
 
 **B-15 · `Run.ts` split by phase**
@@ -1895,7 +1901,8 @@ finder lists, by subsystem; none was opened beyond its first line.
 - Fate: **ask.** Lean: not a trial. Re-read the file at the run
   phase's re-skim, after the comment pass, and bring a split back only
   with a measure that could pass it (the cold-read probe's tokens).
-- Signed:
+- Signed: **not a trial**; `Run.ts` is re-read after the run phase's comment
+  pass (the user, 2026-10-14, in the same words).
 
 **B-16 · The roster's four parallel arrays as one list of slots**
 - In play: Nothing.
@@ -1907,7 +1914,7 @@ finder lists, by subsystem; none was opened beyond its first line.
 - Why not: the two functions already hold the rule in one place each,
   and a slot record changes the save's shape for no behaviour.
 - Fate: **keep** as it is.
-- Signed:
+- Signed: **keep** (the user, 2026-10-14, in the same words).
 
 Also considered: the camp registry as a file of its own (a move takes
 nothing away), and a fire or healing tile's status read from the tile's
@@ -1923,7 +1930,7 @@ constants).
   reference finder does not see a member of an inline options type.
 - Fate: **delete** the option; the default becomes the value.
 - Proof: sim; the type check names any caller.
-- Signed:
+- Signed: **delete** (the user, 2026-10-14, in the same words).
 
 **A-39 · Two lines the game prints to the browser's console**
 - In play: With the developer console open, each battle prints its board's name and size, and a camera-mode change prints the mode. A player who never opens the console sees nothing.
@@ -1936,7 +1943,9 @@ constants).
   `Renderer.ts` was read at those lines only.
 - Fate: **ask.** Lean: delete both.
 - Proof: the build compare moves, as it must; the corpus for the first.
-- Signed:
+- Signed: **delete** both (the user, 2026-10-14, in the same words). The session had asked whether the board's
+  line is used in a playtest; the reply signed the lean without a word on
+  it.
 
 **A-40 · A branch its own comment calls unreachable** (`src/run/Run.ts:3995-4002`)
 - In play: Nothing, if the comment is right: closing a level-up screen after a battle always returns to the fight's own next step.
@@ -1948,7 +1957,9 @@ constants).
   it; if that test builds a state the game cannot, delete the leg with
   it and let a wrong state throw.
 - Proof: sim, and `reach-diff` for the test.
-- Signed:
+- Signed: as leaned: in the run phase the test that reaches the leg is found
+  first, and if it builds a state the game cannot, the leg goes with it
+  (the user, 2026-10-14, in the same words).
 
 ### 4.7 For the comment pass (D4), measured
 
@@ -2016,6 +2027,9 @@ Both are in TODO under "§120 riders".
 
 ### 4.10 Calls for the user at 120h
 
+Calls 4 to 11 were answered at the read's seventh tranche (the user,
+2026-10-14, as leaned); calls 1 to 3 go with the eighth.
+
 1. **B-01,** the two predicates by name, as the first trial.
 2. **B-02,** the split: decided after B-01, or now.
 3. **B-03,** fold the three one-key config files; no wider merge.
@@ -2032,8 +2046,8 @@ Both are in TODO under "§120 riders".
 ## 5. The TODO pass's list (120g)
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche)**, 5.4, 5.5 and 5.6: every row
-but T-97.** 5.7's leftovers and 5.9's ninth and tenth calls are still to
+5.3** (T-97 held for list B's tranche)**, 5.4, 5.5 and 5.6: every row,
+T-97 at list B's tranche.** 5.7's leftovers and 5.9's ninth and tenth calls are still to
 read. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
@@ -2147,14 +2161,15 @@ item.
 **Signed, as a class, for 27 of the 28** (the user, 2026-10-13, in the
 same words as 5.2). T-97 was held out of the tranche: whether F-2's
 test is written in this round is 4.10's eleventh call, and it is read
-with list B.
+with list B. It was signed there, at the seventh tranche (the user,
+2026-10-14).
 
 | id | TODO | the item, and what a player would notice | where a plan names it | fate |
 |---|---|---|---|---|
 | T-55 | L378 | The phase codes rewritten out of `src` comments; nothing | META-ROADMAP §Round 8.5, "The source-comment rewrite" | **8.5**, each subsystem's comment pass |
 | T-26 | L246 | The `npm audit` debt; nothing shipped. Nine advisories at §119's close, all build and test tooling by package name (WORKLOG "The close of §119") | §Round 8.5, "A dependency phase"; Round 12, "The toolchain bump (the Vite major + the `npm audit` debt)" | **8.5**, the dependency phase, which counts it again; what only a major clears stays Round 12's |
 | T-90 | L762 | The test loops not yet read for the hang; a hook that hangs where it should fail | the item ("For the tests phase"); census 3.5 | **8.5**, the tests phase. A search gives 51 to 53 `while (` lines by pattern, against the item's 52 |
-| T-97 | L820 | A loaded run can miss a field the class defaults (F-2); nothing today | census 4.10, call 11 | **8.5**, the run phase, if call 11 is yes. Lean yes: the test, and the one assignment that turns it green, under the sim proof |
+| T-97 | L820 | A loaded run can miss a field the class defaults (F-2); nothing today | census 4.10, call 11 | **8.5**, the run phase: the test, and the one assignment that turns it green, under the sim proof. Signed at the seventh tranche (the user, 2026-10-14) |
 | T-57 | L411 | Flyers float; a flyer bobs | Round 9, "The flyer's presentation … the float (TODO)" | **Round 9** |
 | T-70 | L580 | WATCH: Dis Pater's sentence holds at Escalation 3 by rounding; a daemon's text that could go false | Round 10's note, "the read of level 3, fewer bits, which waits on bit sinks (TODO "§117 riders")" | **Round 10** |
 | T-71 | L585 | Round a tithe's bits on the award; Escalation 3 to 5 would reach the richest economy | the same note; T-72 names it | **Round 10** |

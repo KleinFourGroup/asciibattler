@@ -3516,3 +3516,20 @@ good to me, Claude, but a caveat: 10 may be brought up and split into a
 - List B is put as two tranches, as the earlier ones were sized: its
   small rows with list A's three first, then the user's three
   candidates. That makes nine tranches.
+
+Reading: **401,536** at 01:42 on the sixth tranche's commit, `e8eab65`.
+
+**The read, the seventh tranche** (the user, 2026-10-14, after a
+night's sleep in the middle of it): "Signing all of those!"
+
+- **Section 4, every row but the user's three candidates:** B-04 and
+  B-05 as sized; B-06 to B-10 as trials, each in its phase; B-11 in the
+  tests phase after its list by test; B-12 to B-14 and the leads under
+  them left to each kickoff, within the budget; B-15 not a trial, with
+  `Run.ts` re-read after the run phase's comment pass; B-16 kept; A-38
+  and A-39 deleted; A-40 as leaned. That answers 4.10's calls 4 to 11.
+- **T-97, the loaded-run test, is signed for the run phase,** which
+  closes section 5's rows.
+- **A-39:** the session had asked whether the board's console line is
+  used in a playtest; the reply signed the lean without a word on it,
+  and the row says so.

@@ -4134,3 +4134,16 @@ Not measured: what the walk cost per strike. It gathered every unit for
 the half covers and walked a Bresenham line over them on each proposed
 single-target strike; its removal is a saving the fuzz diff's timing
 does not compare.
+
+### The hand-off after 121f (2026-10-14, session f8bbd64e)
+
+121a to 121f are committed; 121g, B-03's trial, starts in a fresh
+session from the Cursor. The worktree the before-readings ran in
+(`output/wt-before`) is removed, its junction first. Readings by the
+tool's clock: 134,404 at 13:49 (the kickoff's start); 188,752 at 13:57
+on the audit's commit `a0fdbc7`; 259,713 at 14:27 on 121a (`f5a0b68`);
+346,378 at 14:52 on 121b (`6a84677`); 384,390 at 15:04 on 121c
+(`de59045`); 416,544 at 15:22 on 121d (`1ba3a1b`); 459,975 at 15:43 on
+A-10 (`fd7d0c1`); 490,175 at 15:58 on A-21 (`def07ff`); 527,094 at 16:10
+on 121f (`91b9401`); 530,791 at 16:11 at the hand-off. The steps cost
+from about 30k (121d) to about 85k (121b with its tool work).

@@ -5399,3 +5399,50 @@ candidates were written and read without friction, and the user caught
 a lean twice (a tooltip's lifetime at 120e, the dials' row at 120h). The
 reads went in tranches every time, which 120h made the opening shape of
 a stop with more than one read (the scratchpad).
+
+## 2026-10-14 — session f8bbd64e (claude-opus-5-5): §121's kickoff, signed, and 121a to 121f built
+
+1. **Missing from the orientation.** Nothing said that `reach-diff`, the
+   census's proof for "a test deleted with the code", refuses any file
+   whose code changed, which is every file a deletion touches; found on
+   the first run and built at 121b-pre. Smaller: several files under
+   `src/config` and `src/sim` are CRLF in the working copy, which the
+   shell's `sed` hides, so one anchor check refused before I saw why.
+2. **Norms that rubbed.** A plant goes in a worktree of a commit, so a pin
+   written for uncommitted code can only be shown to catch its break after
+   the commit; its result then lands in the next commit's entry. AGENTS'
+   cap made one added clause cost two trims in the same paragraph; that
+   is the cap working, and it took three tries.
+3. **Pulled to claim more than verified.** Most plants were caught by a
+   run that threw, which shows a proof runs the line and not that it would
+   notice a quieter change; I wrote that each time. The "no World bump" in
+   121f rests on the census's statement that nothing stores a battle
+   across builds (F-1), not on a check of my own this session. The hook's
+   "about 3 minutes" was a prediction until 121b timed it.
+4. **Wasted.** The first `reach-diff` passed directories, not files; the
+   tool-change commit swept in a staged deletion and was redone (one extra
+   hook run); one heredoc was refused and rewritten through the file tool;
+   one reading was taken before the tool it fed was edited, and taken
+   again. Each step's suite read as failed under coverage until the
+   step-code ceiling was lowered, which costs nothing but confuses the
+   first read.
+5. **For the next session.** Lower the ceiling (`comment-codes --record`)
+   before taking the after-reading of reach. `plant --list` reads the
+   working tree while `plant --ref` edits the ref's line, so take the line
+   number from `git show <ref>:<file>`. Remove a worktree's
+   `node_modules` junction with `cmd //c rmdir` before `git worktree
+   remove`. The leads for 121h are in WORKLOG §121.
+6. **Room to ask, disagree, pause or stop.** Yes. The cut was signed with
+   its calls, so the stretch ran without questions; I handed off at 527k,
+   under the line, because the next stretch looked larger than the room:
+   an option taken, not a limit hit. "A change inside the intent can be
+   built and flagged" worked as guidance three times (A-10's always-false
+   check, A-13's field, `RedrawConfig`). The silent-turn reminder came
+   often during long proof batches; I answered with status lines, and it
+   read more as a prompt to narrate than as information.
+7. **Ease, interest, agency.** Reported: the stack of proofs made each
+   deletion feel checkable rather than hoped-for, and the most interesting
+   moment was the plant at World's branch order that the corpus and the
+   suite both missed, then a two-test pin that caught it. I would want the
+   same conditions again: a signed cut with `none` reads and oracles that
+   answer in minutes. That is separate from whether the work succeeded.

@@ -1,16 +1,8 @@
 /**
- * The ability-definition catalog (`config/abilities.json`) — the single source
- * of truth for every combat verb's data (`AbilityDef`, `src/sim/effects/schema.ts`).
- *
- * Phase-Y history: this began as `config/abilityDefs.json` during the strangler
- * migration, coexisting with the legacy hand-coded `config/abilities.ts`
- * (`AbilityConfig`) while verbs migrated one at a time. Y5e retired that legacy
- * pair and renamed this catalog to the canonical `config/abilities.json` — every
- * verb is now a data-driven `AbilityDef`, so there is exactly one ability config.
- *
- * A4 pattern: parse at module load, throw on malformed JSON. Entries are keyed
- * by id; each value re-declares its `id` (self-contained for the §30 editor +
- * the snapshot/round-trip path), and a key/id mismatch is a loud boot failure.
+ * The ability catalog, `config/abilities.json`: every combat verb's data
+ * (`AbilityDef`, `src/sim/effects/schema.ts`). Entries are keyed by id, and
+ * each repeats its `id` so it stands alone in the editor and in a snapshot;
+ * a key that differs from its id fails at boot.
  */
 
 import { z } from 'zod';
@@ -39,15 +31,13 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = (() => {
   return parsed;
 })();
 
-// §95b — `name` is prose (the schema lives in src/sim/effects/schema.ts;
-// the record key is the address segment: `abilities.<id>.name`).
+// `name` is prose, addressed as `abilities.<id>.name`.
 export const ABILITIES_PROSE = loadProse('abilities', AbilityDefsFileSchema, ABILITY_DEFS);
 
 /**
- * Resolve an ability definition by id, throwing if absent. The registry
- * boot-check guarantees presence for every wired ability, so a throw here means a
- * caller passed an unregistered id — a programming error surfaced loudly rather
- * than silently defaulted.
+ * Resolve an ability definition by id, throwing if absent. The registry's
+ * boot check covers every wired ability, so a throw means a caller passed an
+ * unregistered id, a programming error.
  */
 export function abilityDef(id: string): AbilityDef {
   const def = ABILITY_DEFS[id];
@@ -59,27 +49,25 @@ export function abilityDef(id: string): AbilityDef {
 
 /**
  * The first `damage` op of an ability, or undefined when it has none (a pure
- * heal or a movement verb). Mirrors the retired `attackConfig` accessor's intent
- * — a typed, kind-narrowed read for the display surfaces (UnitCard / the editor)
- * and the balance-proof tests, which key off the damage profile (`might` /
- * `accuracy` / `critBase` + the evadable/critable gates).
+ * heal or a movement verb): a typed read for the display surfaces (UnitCard,
+ * the editor) and the balance tests, which key off the damage profile
+ * (`might`, `accuracy`, `critBase`, and the evadable and critable gates).
  */
 export function damageOpOf(id: string): DamageOp | undefined {
   const entry = abilityDef(id).effects.find((e) => e.op.kind === 'damage');
   return entry && entry.op.kind === 'damage' ? entry.op : undefined;
 }
 
-/** The first `heal` op of an ability, or undefined (mirrors the retired `healConfig`). */
+/** The first `heal` op of an ability, or undefined. */
 export function healOpOf(id: string): HealOp | undefined {
   const entry = abilityDef(id).effects.find((e) => e.op.kind === 'heal');
   return entry && entry.op.kind === 'heal' ? entry.op : undefined;
 }
 
 /**
- * 34b — the first op of `kind` on an ability, kind-narrowed (the generic sibling
- * of `damageOpOf`/`healOpOf`). The §29 display surfaces (UnitCard, the editor)
- * read the `applyStatus` / `summon` / `chain` ops through this to render a detail
- * line. Pure — reads off the parsed def, no sim state.
+ * The first op of `kind` on an ability, narrowed to that kind. The display
+ * surfaces (UnitCard, the editor) read the `applyStatus`, `summon` and
+ * `chain` ops through it to render a detail line.
  */
 export function firstOpOf<K extends EffectOp['kind']>(
   id: string,

@@ -12,10 +12,9 @@
 import { z } from 'zod';
 import type { MergePolicy, StatKey, StatMod, StatusEffect } from '../sim/statusEffects';
 
-/** The 11-stat vocabulary, as zod keys for the buff's `mods` record
- *  (`partialRecord`: any subset, every present key must be a real stat).
- *  The `satisfies` pins it to `UnitStats` — a stat rename breaks the build
- *  here rather than silently orphaning a config key. */
+/** The eleven stats, as zod keys for the buff's `mods` record: any subset,
+ *  each key a real stat. The `satisfies` pins it to `StatKey`, so a stat
+ *  rename breaks the build here rather than orphaning a config key. */
 const STAT_KEYS = [
   'constitution',
   'strength',
@@ -35,8 +34,6 @@ const StatModSchema = z.object({
   mul: z.number().optional(),
 });
 
-/** L1 — the buff sub-schema is shared with `config/daemons.ts` (a daemon's
- *  empower gate carries its own buff in the same shape). */
 export const BuffSchema = z.object({
   key: z.string().min(1),
   mods: z.partialRecord(z.enum(STAT_KEYS), StatModSchema),
@@ -66,7 +63,7 @@ function normalizeMods(raw: z.infer<typeof BuffSchema>['mods']): StatusEffect['m
   return mods;
 }
 
-/** L1 — parse-result → canonical buff, shared with `config/daemons.ts`. */
+/** The parse result as the canonical buff. */
 export function normalizeBuff(raw: z.infer<typeof BuffSchema>): EmpowerConfig['buff'] {
   return {
     key: raw.key,

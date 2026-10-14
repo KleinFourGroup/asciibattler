@@ -1,67 +1,35 @@
 /**
- * E4 — XP + leveling tunables. Source of truth at `config/leveling.json`.
+ * Experience and levels. Source of truth at `config/leveling.json`; the
+ * formulas are in `src/sim/xp.ts`.
  *
- * Curve:
- *   xpToNext(L) = round(baseXp * L^exponent)
+ * - `baseXp`, `exponent` — the XP from level L to the next is
+ *   `round(baseXp × L^exponent)`. At 1 each level costs linearly more; at 2,
+ *   quadratically.
+ * - `levelCap` — the highest level, which bounds how far stats grow on a
+ *   long run.
  *
- * Defaults to a classic quadratic per-level curve (`exponent = 2`). D&D
- * 3.5e / Pathfinder use a linear-per-level / quadratic-cumulative curve,
- * which is `exponent = 1`; flip the knob to match. The whole formula
- * lives in one place ([src/sim/xp.ts](src/sim/xp.ts)) so swapping the
- * shape entirely (e.g. table-driven, or a different exponent regime) is
- * a one-file edit.
+ * A unit's XP from a battle is a flat share for taking part, plus shares for
+ * the damage and healing it did. The flat share keeps tanks, healers and
+ * specialists from falling behind; the damage share rewards carries.
+ * - `xpFlatPerSurvivor` — the flat share of a unit alive at the end.
+ * - `xpFlatPerFallen` — the flat share of a unit that fell. It still earns
+ *   its damage and healing shares, so trading a unit for damage is not
+ *   punished.
+ * - `xpPerDamage` — XP per point of damage dealt to enemies.
+ * - `xpPerHealing` — XP per point healed by an ability, from World's
+ *   `utilityDone` ledger; at parity with `xpPerDamage` a healer keeps pace
+ *   with a carry. A regen tile's heal is the tile's and earns nothing, and
+ *   overheal counts 0, since the ledger sees the clamped change.
+ * - `summonDamageXpShare` — the share of a summon's damage credited to its
+ *   summoner (`World.recordDamage`), 0 to 1. A summon has no roster slot,
+ *   so without it a summon-only caster such as the Shaman earns only the
+ *   flat share. Shipped 0.75; at 0.5 a summon-only Shaman levelled too
+ *   slowly.
  *
- * Hybrid XP source per ROADMAP E4:
- *   per-unit XP = (xpFlatPerSurvivor if alive else xpFlatPerFallen)
- *               + xpPerDamage × HP-of-damage-dealt-to-enemies
- *
- * The flat slice keeps tanks / healers / specialists from falling behind;
- * the damage slice rewards carries. Tuned against floor-1 baselines where
- * a contributing unit should earn ~half a level per battle and a level-5
- * unit should clear a level every ~5 battles.
- *
- * `xpPerHealing` (F6) is the utility-contribution analogue of
- * `xpPerDamage`: per-unit XP also gains `xpPerHealing × effective-HP-
- * healed-by-ability-casts` (the World `utilityDone` ledger). Defaults to
- * parity with `xpPerDamage` (1 HP healed ≈ 1 damage dealt) so a pure
- * healer keeps pace with a carry instead of being starved by the
- * damage-only model. Only ability heals feed the ledger — the per-tick
- * regen-tile chip-heal is the *tile's* output, not a unit's contribution,
- * so it earns nothing (and overheal counts 0, since the ledger only sees
- * the clamped delta). A future buff/shield axis can ride the same ledger
- * without a snapshot bump.
- *
- * `xpFlatPerFallen` is the participation reward for player units that
- * died during the battle. Defaults to 0 — fallen units still earn their
- * damage share so suicide-DPS trades aren't *punished*, but they don't
- * get the survivor participation bonus by default. Bump it (or set it
- * equal to `xpFlatPerSurvivor`) if death-to-stay-on-curve feels too
- * harsh in playtest.
- *
- * `levelCap` enforces the asymptote — without it stats drift past the
- * user's "~50 unlikely ceiling" on long runs. Cap of 20 lands most stats
- * in the 30s-40s at growth ~0.6 (matches archetype config) hitting the
- * intended range without exceeding it.
- *
- * `restXp` (G3) is the flat XP a rest node grants to *every* roster slot.
- * It feeds the same `bankXpAwards` pipeline a battle win uses (synthesized
- * as one award per slot), so a rest can legitimately trigger level-ups +
- * PromotionScene. Lives here with the XP knobs (not in nodemap.json, which
- * owns rest *placement*) since it's a leveling reward. Lower it if rests
- * out-pace battle XP.
- *
- * `summonDamageXpShare` (§33) is the fraction of a SUMMONED unit's damage that
- * credits its SUMMONER's XP ledger (`World.recordDamage` redirects summon damage
- * to `summonedBy × share`). A summon has no roster slot, so without this its
- * damage banks to nobody — a summon-only caster (the Shaman, which never strikes
- * directly) would earn only the flat participation slice and barely level. The
- * share scales the summoner's progression with how well its minions perform: 0
- * disables the credit entirely (summons give the summoner nothing), 1 gives the
- * summoner full credit for every minion's hit. Defaults to 0.75 (the summoner
- * shares in most of its minions' work; playtested up from 0.5 — a summon-only
- * Shaman now levels at a satisfying pace) — a §33 playtest dial.
- *
- * A4 pattern: parse at module load, throw on malformed JSON.
+ * - `restXp` — the XP a rest node gives every roster slot, through the same
+ *   `bankXpAwards` path a battle uses, so a rest can level a unit up. It is
+ *   here and not in `nodemap.json`, which places rests, because it is a
+ *   levelling reward.
  */
 
 import { z } from 'zod';

@@ -1,62 +1,46 @@
 /**
- * E1: stat-system tunables. Source of truth at `config/stats.json`.
+ * The stat system's dials. Source of truth at `config/stats.json`; the
+ * formulas are in `src/sim/stats.ts`.
  *
- * - `hpPerConstitution` — maxHp scales linearly with constitution.
- *   `maxHp = round(hpPerConstitution * constitution)` with a floor of 1.
- * - `baseMoveCooldownSeconds` — the universal base move cooldown a unit
- *   with mobility=0 would have. The derived cooldown is
- *   `secondsToTicks(base * cooldownScale(mobility, mobilityCdPerStat, mobilityMinCdScale))`,
- *   where `cooldownScale(s, perStat, minScale) = max(minScale, 1 - s * perStat)`.
- *   GP1 dropped the per-archetype override: slow units now come from
- *   low/negative `mobility` (the floor caps only the fast side, so the
- *   slow side is unbounded). The analogous *attack* cadence base moved out
- *   of this file in E5 pre-work — it's now per-ability in
- *   `config/abilities.json`, scaled by `speed` via the same curve. No
- *   silent global fallback: every ability must author its own
- *   `cooldownSeconds`.
- * - `critPerLuck` / `critCap` — `critChance = min(critCap, luck * critPerLuck)`.
- *   At the user's design range (0-50 base stats), a luck=50 unit lands
- *   at 50% crit and never touches the 60% cap. The cap is a defensive
- *   guard for future stat-stacking or status effects.
- * - `critMult` — damage multiplier on a successful crit roll. Damage is
- *   rounded after the multiply (`round(baseDamage * critMult)`).
- * - `minDamage` — GP2 floor for the subtractive `defense` mitigation. A
- *   confirmed combat hit lands `max(minDamage, rawDamage − defense)`, so a
- *   high-defense target never fully negates an attack (chip/AoE always pokes
- *   through). Applied in `World.applyDamage`; environmental fire/chasm damage
- *   is UNMITIGATED and never sees this floor.
- * - `hitChancePerPrecision` / `dodgeChancePerEvasion` / `hitChanceFloor` /
- *   `hitChanceCap` — I2 dodge to-hit. The single-target strike roll
- *   (`hitChanceFor`, `src/sim/stats.ts`) is Fire-Emblem subtractive:
- *   `clamp(accuracy + precision·hitChancePerPrecision −
- *   evasion·dodgeChancePerEvasion, hitChanceFloor, hitChanceCap)`. Rolled
- *   against `combatRng` at the `World.applyDamage` chokepoint, but ONLY when a
- *   caller opts in via `evadable` — melee/ranged basic strikes + the rogue
- *   gambit do; the mage AoE blast, the catapult shot, and environmental
- *   fire/chasm damage are all UNMISSABLE (area-denial / artillery / hazards
- *   are dodged positionally or not at all). I6 moved the base hit chance OFF
- *   this file (it was the global `hitChanceBase`) ONTO each ability as its
- *   per-weapon `accuracy` (`config/abilities.json`), so a precise bow and a
- *   wild club land differently before stats. The floor keeps a low-precision
- *   unit from being fully shut out by a high-evasion target (the `minDamage`
- *   analogue for whiffs).
- *   (§37c RETIRED the M6 `waterPrecisionPenalty` knob from here: every tile
- *   combat mod now lives in the `TileDef` table — `shallow_water.accuracyMod`
- *   carries the −10 bog-down penalty, read by `World.applyDamage`'s to-hit fold
- *   alongside ice/mud accuracy + hills/sand evasion. See `src/sim/TileGrid.ts`.)
- * - `mobilityCdPerStat` / `speedCdPerStat` — per-axis cooldown slope.
- *   GP1 split the single `cdPerStat` so the two cadence stats can diverge
- *   (I1 reverted the attack-axis name `agility → speed`, knobs included):
- *   `mobility` swings wide (incl. negative) so it wants a steeper rate
- *   (0.15 → a heavy unit lands around mobility −7), while `speed` stays
- *   the gentler dial (0.05) on the already-authored ability cadences.
- * - `mobilityMinCdScale` / `speedMinCdScale` — per-axis fast-side floor.
- *   Caps how short the cooldown can get at high stat; does NOT bound the
- *   slow side (negative mobility → scale > 1). GP1 split the single
- *   `minCdScale` alongside the rates so a shared fast-side cap isn't an
- *   odd half-measure once the slopes are independent.
+ * - `hpPerConstitution` — max HP is `round(hpPerConstitution ×
+ *   constitution)`, at least 1.
+ * - `baseMoveCooldownSeconds` — the move cooldown of a unit at mobility 0;
+ *   a unit's own is `secondsToTicks(base × cooldownScale(mobility))`. An
+ *   attack's base cadence is its ability's own `cooldownSeconds`
+ *   (`config/abilities.json`), scaled by speed on the same curve, with no
+ *   global fallback.
  *
- * A4 pattern: parse at module load, throw on malformed JSON.
+ * Cadence, per axis (mobility for moves, speed for attacks), is scaled by
+ * `cooldownScale(s) = max(minScale, 1 − s × perStat)`. The floor bounds the
+ * fast side only: a negative stat gives a scale above 1, so slow units come
+ * from low or negative mobility.
+ * - `mobilityCdPerStat`, `speedCdPerStat` — the slopes. Mobility swings
+ *   wider, negative included, and takes the steeper one.
+ * - `mobilityMinCdScale`, `speedMinCdScale` — the fast-side floors.
+ *
+ * Crits:
+ * - `critPerLuck`, `critCap` — `critChance = min(critCap, luck ×
+ *   critPerLuck)`. A luck of 50, the top of the base stat range, gives 50%
+ *   at the shipped 0.01, so the 0.6 cap binds only when buffs carry luck
+ *   past 60.
+ * - `critMult` — a crit's damage multiplier, rounded after
+ *   (`round(baseDamage × critMult)`).
+ *
+ * Mitigation and to-hit:
+ * - `minDamage` — the floor under defense: a confirmed hit lands
+ *   `max(minDamage, rawDamage − defense)` (`World.applyDamage`), so high
+ *   defense never fully negates an attack. Environmental damage (fire,
+ *   chasm) is not mitigated and never sees it.
+ * - `hitChancePerPrecision`, `dodgeChancePerEvasion`, `hitChanceFloor`,
+ *   `hitChanceCap` — a strike's hit chance (`hitChanceFor`) is
+ *   `clamp(accuracy + precision × hitChancePerPrecision − evasion ×
+ *   dodgeChancePerEvasion, floor, cap)`, where `accuracy` is the ability's
+ *   own, so a precise bow and a wild club differ before stats. It is rolled
+ *   against `combatRng` in `World.applyDamage`, and only for a damage op
+ *   authored `evadable`; area and environmental damage cannot miss. The
+ *   floor keeps a low-precision unit from being shut out by a high-evasion
+ *   target. A tile's accuracy and evasion mods fold into the same roll
+ *   (`TileDef`, `src/sim/TileGrid.ts`).
  */
 
 import { z } from 'zod';

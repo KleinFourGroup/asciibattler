@@ -1,25 +1,21 @@
 /**
- * 53b — the config fingerprint for battle traces and run journals.
+ * The config's fingerprint, carried by battle traces and run journals.
  *
- * A recorded trace is only replayable against the exact balance config it was
- * recorded under (a price/stat/layout edit changes sim outcomes without
- * touching the seed), so every `BattleTrace` carries `configHash()` and the
- * replay path refuses a mismatch. A run journal (src/journal/) carries it for
- * the same reason, and shipped builds stamp it, which is why this lives in
- * `src/config/` and not with the DEV tooling. It hashes every file under
- * `config/`, including the two nothing else under `src/` imports
- * (`fuzz-strategies.json`, `redraw-level-fisher.json`), so the stamp changes
- * with any of them. There is deliberately NO aggregate config
- * object in the codebase (each `src/config/*.ts` zod-parses its own file), so
- * this module keeps its own registry of the RAW `config/*.json` sources — the
- * config as authored, not the post-parse shape.
+ * A trace replays only against the config it was recorded under, since a
+ * change to a price, a stat or a layout changes outcomes without touching
+ * the seed; so every `BattleTrace` carries `configHash()` and the replay
+ * refuses a mismatch. A run journal (src/journal/) carries it for the same
+ * reason, and shipped builds stamp it, which is why it lives here and not
+ * with the dev tools. It hashes every file under `config/` as authored,
+ * before parsing, including the two nothing else under `src/` imports
+ * (`fuzz-strategies.json`, `redraw-level-fisher.json`). There is no
+ * aggregate config object (each loader parses its own file), so the module
+ * keeps its own registry of the raw sources.
  *
- * Plain JSON imports on purpose: they work identically under Vite (the
- * browser bundle), vitest, and tsx (the fuzz/gauntlet CLIs) — Vite-only
- * mechanisms like `import.meta.glob` do NOT exist under tsx. The cost is a
- * hand-maintained registry; the co-located drift-guard test walks the real
- * `config/` directory and fails the moment a file is added or removed
- * without updating this list.
+ * The imports are plain JSON because they work alike under Vite, Vitest and
+ * tsx, where `import.meta.glob` does not exist. The registry is kept by
+ * hand, and the co-located test, which walks `config/`, fails when a file is
+ * added or removed without it.
  */
 
 import { fnv1a } from '../core/fnv1a';
@@ -53,9 +49,8 @@ import terrain from '../../config/terrain.json';
 import units from '../../config/units.json';
 
 /**
- * Every `config/*.json`, keyed by filename. The drift-guard test asserts this
- * stays 1:1 with the directory listing — add the import AND the entry when a
- * new config file lands (the test tells you which name is missing).
+ * Every `config/*.json`, keyed by filename. A new file needs its import and
+ * its entry; the test names a missing one.
  */
 export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'abilities.json': abilities,
@@ -89,11 +84,10 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
 };
 
 /**
- * 32-bit FNV-1a as 8 hex chars — lives in src/core/fnv1a.ts since 95e (the
- * i18n provenance hash shares it, and the locale runtime must not pull every
- * config JSON above into its import graph). Re-exported: the test vectors and
- * the trace callers read it from here. A stray collision costs one confusing
- * replay, not an exploit.
+ * 32-bit FNV-1a as 8 hex characters. It lives in src/core/fnv1a.ts because
+ * the i18n provenance hash shares it, and the locale runtime must not import
+ * every config file above; the test vectors and the trace callers read it
+ * from here. A collision costs one confusing replay, not an exploit.
  */
 export { fnv1a };
 

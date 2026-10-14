@@ -1,34 +1,15 @@
 /**
- * NodeMap generation parameters. Hop count, per-hop width bands,
- * total-node target, and out-degree cap drive the DAG shape produced by
- * `src/run/NodeMap.ts`. Source of truth at `config/nodemap.json`.
+ * The node map's shape and where its node kinds go. Source of truth at
+ * `config/nodemap.json`; the generator and the rules these keys feed are in
+ * `src/run/NodeMap.ts`, and the signed sheet they answer to is
+ * `tests/nodemap-metrics.test.ts`.
  *
- * G3 — node-kind scatter: `restChance` is the per-eligible-hop probability
- * of hosting a rest node; `restMinSpacing` is the minimum hop gap between
- * two rests (>= 2 = never on adjacent hops). Eligible hops are the middle
- * band only (never the first battle hop or the boss). The terminal is always
- * the boss; these knobs only govern rest placement.
- *
- * W2 — elite scatter: `eliteChance` / `eliteMinSpacing` mirror the rest knobs
- * for the (optional, harder) elite node. Elites scatter over the same middle
- * band, in a pass AFTER the rest scatter (so rest placement is unchanged), and
- * never overwrite a rest. Middle hops are always >= 2 wide, so an elite always
- * leaves a non-elite sibling — taking the elite is a route choice.
- *
- * 50c — port scatter: `portChance` / `portMinSpacing` mirror the elite knobs
- * for the port (shop) node. A third pass AFTER elites (rest + elite placement
- * unchanged); never overwrites either; and unlike elites, ≥1 port per map is
- * GUARANTEED via a fallback placement when the scatter rolls none (maps with
- * no eligible middle hop — dev hopCount overrides ≤ 3 — are exempt).
- *
- * 74e — event scatter: `eventChance` / `eventMinSpacing` mirror the pattern
- * for the event node, a FOURTH pass after ports. Deliberately dense
- * (chance 0.5, spacing 1 = back-to-back hops legal): events are a major
- * run component, ~half as frequent as battles on a path (user feel call,
- * §74e) — not an elite-style rare detour. LAUNCH-ROUGH: §81 re-reads the
- * density with the rest of the event-era balance; §77's constructive
- * generator replaces this scatter with a real events-to-combat ratio pass
- * (the one-node-per-hop ceiling is this interim pass's known limit).
+ * - `hopCount` — the hops in a map, when neither a sector's length nor the
+ *   dev `?hops=` gives one.
+ * - `middleWidthMin`, `middleWidthMax` — the band of a middle hop's width.
+ * - `targetTotalMax` — the node budget the widths are drawn under.
+ * - `maxOutDegree` — the most edges out of a node, and the most lanes one
+ *   split or merge groups.
  */
 
 import { z } from 'zod';
@@ -41,54 +22,47 @@ const NodeMapSchema = z
     middleWidthMax: z.number().int().positive(),
     targetTotalMax: z.number().int().positive(),
     maxOutDegree: z.number().int().positive(),
-    /** 77e2 — the *MinSpacing knobs are PATH-WINDOW cooldowns since the
-     *  quota placement rework (worklog §77e): two same-kind nodes may not
-     *  sit within `minSpacing` hops of each other ALONG ANY ROUTE (the old
-     *  semantics were per-hop map-global). Values carried unchanged:
-     *  rest/elite 2 (never adjacent on a route — "back-to-back elites
-     *  discouraged", signed), port 3, event 1 (back-to-back events LEGAL —
-     *  the 74e feel call, re-signed at the 77e design round). */
+    /** The `*MinSpacing` keys are cooldowns along a route: two nodes of a
+     *  kind sit fewer than that many hops apart on no route. At 2, rests and
+     *  elites are never adjacent; at 1, events may follow each other. */
     restMinSpacing: z.number().int().positive(),
-    /** 77e2 — eliteChance/portChance/eventChance are the RunConfig PROBE
-     *  DIALS' anchor values (72e/74e semantics preserved through the quota
-     *  rework): an override `d` scales the kind's route target by
-     *  `d / anchor`, so 0 still kills the kind (the isolation arms) and 1
-     *  still floods it. Absent override = scale 1 (authored density).
-     *  `restChance` had no dial and is retired. */
+    /** `eliteChance`, `portChance` and `eventChance` are the anchors of the
+     *  `RunConfig` probe dials: an override `d` scales the kind's route
+     *  target by `d / anchor`, so 0 removes the kind and 1 floods it. With
+     *  no override the scale is 1. */
     eliteChance: z.number().min(0).max(1),
     eliteMinSpacing: z.number().int().positive(),
     portChance: z.number().min(0).max(1),
     portMinSpacing: z.number().int().positive(),
     eventChance: z.number().min(0).max(1),
     eventMinSpacing: z.number().int().positive(),
-    /** 74b — the chance an entered event node resolves straight into a
-     *  combat encounter (spec §Events; base of the `eventCombatChance` run
-     *  stat — folded, not read raw, so daemons can bend it). NOT a scatter
-     *  knob — placement is `eventChance`/`eventMinSpacing` above. */
+    /** The chance an entered event node turns into a combat encounter, the
+     *  base of the `eventCombatChance` run stat, so daemons can bend it. It
+     *  places nothing. */
     eventCombatChance: z.number().min(0).max(1),
-    /** 77e1 — the braid structure dials (worklog §77e). `churnChance`:
-     *  per-draw chance of adding a Δ-neutral split+merge pair to a
-     *  transition (the braid's branch-texture source; geometric, capacity
-     *  bounded). `split3Chance`/`merge3Chance`: per-transition chance of
-     *  fusing two 2-ops into one rare 3-op. `d2RejoinChance`: chance a
-     *  transition may deliberately close an age-1 seam (an instant-d2
-     *  diamond), always subject to the ≤25%-of-pairs map budget. */
+    /** The braid's texture, per hop transition:
+     *  - `churnChance` — per draw, the chance of adding a split and merge
+     *    pair that leaves the width alone, the source of branching texture.
+     *  - `split3Chance`, `merge3Chance` — the chance of fusing two 2-way ops
+     *    into one 3-way op.
+     *  - `d2RejoinChance` — the chance a merge may close a seam opened on the
+     *    hop before (a diamond of depth 2), always under the map's cap of 25%
+     *    of sibling pairs. */
     churnChance: z.number().min(0).max(1),
     split3Chance: z.number().min(0).max(1),
     merge3Chance: z.number().min(0).max(1),
     d2RejoinChance: z.number().min(0).max(1),
-    /** 77e2 — the kind-layer quotas (worklog §77e; thresholds = the signed
-     *  77c sheet). `*RouteTarget`: expected per-route count for the kind
-     *  (exact route-share accounting, uniform-route model — the fuzz
-     *  walker measures the steered reality). `eventsPerRoute`: the signed
-     *  ratio band center (≈3, band ±`eventsBandHalfWidth`). Placement is
-     *  quota-driven with a per-hop battle floor (≥1 battle per middle
-     *  hop), constructive port-cone coverage (every first choice keeps
-     *  shop access by h5), and bounded rejection (`kindMaxAttempts`,
-     *  hard-throw — the §77 scope guard). The weight knobs are the signed
-     *  pacing rules: `preEliteRestWeight` (rests before elites),
-     *  `preBossRestWeight` (rests before the boss, stronger); the first
-     *  rest/elite ride a HARD early window (hops ≤5), not a weight. */
+    /** The kind quotas. The placement order, the battle floor and the port
+     *  guarantee are in `NodeMap.ts`.
+     *  - `restRouteTarget`, `eliteRouteTarget`, `portRouteTarget` — the
+     *    expected count of the kind on a route, summed over route shares on
+     *    a model where every route is equally likely; the fuzz walker
+     *    measures the routes a player steers.
+     *  - `eventsPerRoute`, `eventsBandHalfWidth` — the centre and half-width
+     *    of the band of events a route holds.
+     *  - `kindMaxAttempts` — the kinds pass's retries before it throws.
+     *  - `preEliteRestWeight`, `preBossRestWeight` — how strongly a rest is
+     *    favoured on the hops before an elite and before the boss. */
     restRouteTarget: z.number().min(0),
     eliteRouteTarget: z.number().min(0),
     portRouteTarget: z.number().min(0),

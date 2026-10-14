@@ -1,23 +1,19 @@
 /**
- * Recruitment knobs. The offer size determines how many recruit cards appear
- * post-victory. (63c: the starting-team COMPOSITION moved to
- * `config/characters.json` — a character's roster list; only the shared
- * `startingLevel` stays here.)
+ * The recruit offer after a win, and the level a run's units start at.
+ * Source of truth at `config/recruitment.json`; a character's starting
+ * roster is in `config/characters.json`.
  *
- * G4: `recruitBonusChance` is the geometric "promotion" coin for recruit
- * levels. A recruit arrives at `round(avgTeamLevel) + bonus`, where the bonus
- * is the number of consecutive successes at probability `recruitBonusChance`
- * (0.5 → 50% +0, 25% +1, 12.5% +2, …). Lower it for flatter recruits, raise it
- * for the occasional over-leveled draw.
- *
- * `startingLevel` is the level every unit in a character's starting roster
- * begins at (default 1). Raising it lifts the whole level scale of a run so
- * that a proportionally-weaker enemy swarm is meaningfully weaker in ABSOLUTE
- * terms (at level 1–4 a 30% handicap is a rounding error; at level 8–12 it's a
- * real gap). The `?roster=` dev override carries its own explicit per-unit
- * levels and is unaffected.
- *
- * Source of truth at `config/recruitment.json`.
+ * - `startingLevel` — the level of every unit in a starting roster. A higher
+ *   scale makes a proportional handicap on the enemy matter: 30% of a
+ *   level-2 unit is a rounding error, 30% of a level-10 unit is a real gap.
+ *   The `?roster=` dev override gives its own levels.
+ * - `defaultOfferSize` — how many recruit cards a win offers, the base of
+ *   the `recruitOfferSize` run stat.
+ * - `recruitBonusChance` — a recruit arrives at `round(avgTeamLevel) +
+ *   bonus`, the bonus being the count of consecutive successes at this
+ *   chance (at 0.5: +0 half the time, +1 a quarter, +2 an eighth). Lower
+ *   flattens recruits; higher makes an over-levelled one likelier.
+ * - `rarityWeights` — the tier weights, below.
  */
 
 import { z } from 'zod';
@@ -25,13 +21,12 @@ import recruitmentJson from '../../config/recruitment.json';
 import type { UnitRarity } from './units';
 
 /**
- * §61c — the global rarity tier weights (the kickoff's 6/3/2/1 seed values;
- * TUNED only at the §68 balance pass). The tier roll renormalizes these over
- * the NON-EMPTY tiers of the draftable pool, so an unpopulated tier costs no
- * probability mass. Zero is legal per tier ("tier off" — and the §64
- * no-commons daemon's likely fold shape); all-zero over the non-empty tiers is
- * a config error the sampler throws on. Weights are within-RUN global — the
- * §63 character overrides are WITHIN-tier archetype weights, never these.
+ * The rarity tiers' weights for the recruit roll, the bases of the
+ * `rarityWeight*` run stats. The roll renormalizes them over the tiers the
+ * draftable pool populates, so an empty tier costs no probability. A tier
+ * may weigh 0 (off); all zero over the populated tiers is a config error the
+ * sampler throws on. A character's weights are archetype weights within a
+ * tier, never these.
  */
 const RarityWeightsSchema = z.object({
   common: z.number().nonnegative(),

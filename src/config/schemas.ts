@@ -1,9 +1,6 @@
 /**
- * Shared zod helpers for config validation. Kept here rather than
- * inlined per loader because (a) `RangeSchema` is the common shape for
- * every "low/high stat band" and pulling it into one place keeps the
- * refinement (low <= high) consistent, and (b) one import surface for
- * future extensions (Tuple3, optional range, etc).
+ * Zod helpers the loaders share. `RangeSchema` is the one shape for a
+ * low/high band, so its check (low ≤ high) is written once.
  */
 
 import { z } from 'zod';

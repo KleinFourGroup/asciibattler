@@ -318,7 +318,13 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   branch arms, because other tests run the rest. It shows the suite still
   runs what it ran, and not that it still asserts on it: a test that
   passes the diff may hold the only expectation on some value, which is
-  settled by planting the break the test was written for.
+  settled by planting the break the test was written for. For a test
+  deleted with its code, take the first reading on the ref before and the
+  second on the working tree, and pass `--from=<ref>`: each file changed
+  since the ref is compared through its `git diff -U0`, a line the change
+  removed counts as deleted, and a lost line is named by its line now.
+  Without the flag a changed file is refused, since its lines would not
+  line up.
 - **An export nothing imports.** Delete it, then the type check and the
   build compare. With a used export removed the check fails by naming its
   importers; an unused export added leaves the build's bytes alone. The

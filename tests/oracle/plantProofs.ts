@@ -37,7 +37,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { fuzzDiffShapes } from './reach';
+import { JOBS_PARITY, fuzzDiffShapes } from './reach';
 
 export const PLANT_PROOFS = ['corpus', 'suite', 'smoke', 'fuzz-diff'] as const;
 export type PlantProof = (typeof PLANT_PROOFS)[number];
@@ -125,7 +125,7 @@ async function tests(proof: 'suite' | 'smoke', tree: string, repo: string, clean
         'run',
         // The smoke's config carries its own limit. The suite's default five
         // seconds is raised, so that load beside the run is not read as a catch.
-        ...(proof === 'smoke' ? ['--config', 'vitest.fuzz.config.ts'] : ['--testTimeout=60000']),
+        ...(proof === 'smoke' ? ['--config', 'vitest.fuzz.config.ts', '--exclude', JOBS_PARITY] : ['--testTimeout=60000']),
         '--reporter=json',
         `--outputFile=${report}`,
       ],

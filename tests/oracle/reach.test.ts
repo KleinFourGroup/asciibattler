@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lost, parseAt, union, type Reading } from './reach';
+import { JOBS_PARITY, PROOFS, countAt, countBy, fromIstanbul, functionsAt, fuzzDiffShapes, lineMap, lost, parseAt, union, type Reading } from './reach';
 
 // The reader of the coverage tool's output (reach.ts), held against a
 // coverage file written by hand, so the known answer does not come from the
@@ -122,6 +122,46 @@ describe('what one reading reaches and another does not', () => {
   });
 });
 
+describe('a file changed between the readings, compared through its diff', () => {
+  it('maps a line past each hunk, and a line inside one to null', () => {
+    // Old lines 3 and 4 removed; one line inserted after old 8; old 12 rewritten as two.
+    const map = lineMap('@@ -3,2 +2,0 @@\n-x\n-y\n@@ -8,0 +7 @@\n+z\n@@ -12 +11,2 @@\n-a\n+b\n+c\n');
+    expect([1, 2, 3, 4, 5, 8, 9, 11, 12, 13].map(map)).toEqual([1, 2, null, null, 3, 6, 8, 10, null, 13]);
+    expect(lineMap('')(7)).toBe(7);
+  });
+
+  // `a.ts` with its old lines 3 and 4 removed: line 7 is now 5 and 9 is now 7,
+  // `second` starts on 4, and the branch is on 5.
+  const removed34 = lineMap('@@ -3,2 +2,0 @@\n');
+  const after = (hits: { s: number[]; f: number[]; b: number[] }): Reading =>
+    fromIstanbul(
+      {
+        [under('src/sim/a.ts')]: {
+          statementMap: { 0: at(1), 1: at(5), 2: at(7) },
+          s: Object.fromEntries(hits.s.map((n, i) => [i, n])),
+          fnMap: { 0: { name: 'first', loc: span(2, 2) }, 1: { name: 'second', loc: span(4, 8) } },
+          f: Object.fromEntries(hits.f.map((n, i) => [i, n])),
+          branchMap: { 0: { loc: at(5) } },
+          b: { 0: hits.b },
+        },
+      },
+      ROOT,
+    );
+  const maps = new Map([['src/sim/a.ts', removed34]]);
+
+  it('counts the removed lines as deleted, and loses nothing the second reading still runs', () => {
+    // Line 3 ran four times before and is gone: deleted, not lost.
+    expect(lost(reading(ALL), after({ s: [1, 2, 0], f: [1, 1], b: [1, 0] }), maps)).toEqual([]);
+  });
+
+  it('names what stopped running by its line in the second reading', () => {
+    // Old line 7 (now 5), its arm, and `second` around it are no longer run.
+    expect(lost(reading(ALL), after({ s: [1, 0, 0], f: [1, 0], b: [0, 0] }), maps)).toEqual([
+      { file: 'src/sim/a.ts', lines: [5], functions: ['second:4'], arms: ['5/0'] },
+    ]);
+  });
+});
+
 describe('the file or range a reading is asked about', () => {
   it('reads a file, a line and a range', () => {
     expect(parseAt('src/run/Run.ts')).toEqual({ file: 'src/run/Run.ts', from: 1, to: Infinity });
@@ -149,5 +189,12 @@ describe('the proofs a reading can be taken of', () => {
   it('names each proof once, and the fuzz diff by the config that holds its file', () => {
     expect(new Set(PROOFS.map((proof) => proof.id)).size).toBe(PROOFS.length);
     expect(PROOFS.find((proof) => proof.id === 'fuzz-diff')!.vitest).toContain('tests/oracle/proofs.vitest.config.ts');
+  });
+
+  it('leaves out of the smoke the test that npm run fuzz:smoke leaves out', () => {
+    const scripts = (JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> }).scripts;
+    expect(scripts['fuzz:smoke']).toContain(`--exclude ${JOBS_PARITY}`);
+    expect(scripts['fuzz:jobs-parity']).toContain(JOBS_PARITY);
+    expect(PROOFS.find((proof) => proof.id === 'smoke')!.vitest).toEqual(['--config', 'vitest.fuzz.config.ts', '--exclude', JOBS_PARITY]);
   });
 });

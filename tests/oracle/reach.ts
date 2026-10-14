@@ -42,13 +42,16 @@ export interface Proof {
 }
 
 /** The behaviour proofs a reading can be taken of, each as the Vitest run that executes it. */
+/** The test `npm run fuzz:smoke` leaves out (package.json): `fuzz:jobs-parity` runs it. */
+export const JOBS_PARITY = 'tests/fuzz/parallelRunDecisions.test.ts';
+
 export const PROOFS: readonly Proof[] = [
   { id: 'corpus', what: 'the journal corpus, all 30 journals (the smoke tier)', vitest: ['--config', 'vitest.fuzz.config.ts', 'tests/fuzz/corpus'] },
   { id: 'corpus-quick', what: 'the corpus’s three quick rows (every npm test)', vitest: ['tests/corpus-quick.test.ts'] },
   { id: 'chaos', what: 'the chaos driver’s four every-commit seeds', vitest: ['tests/chaos'] },
   { id: 'fuzz-diff', what: 'the fuzz diff’s two shapes (scripts/perf-oracle.sh)', vitest: ['--config', 'tests/oracle/proofs.vitest.config.ts'] },
   { id: 'npm-test', what: 'every test of npm test', vitest: [] },
-  { id: 'smoke', what: 'every test of npm run fuzz:smoke', vitest: ['--config', 'vitest.fuzz.config.ts'] },
+  { id: 'smoke', what: 'every test of npm run fuzz:smoke', vitest: ['--config', 'vitest.fuzz.config.ts', '--exclude', JOBS_PARITY] },
 ];
 
 /** What the coverage tool is asked to read: the TypeScript the type checker covers, less the tests themselves. */
@@ -183,12 +186,47 @@ export interface Lost {
   readonly arms: readonly string[];
 }
 
+/** A changed file's lines, before → after: `null` for a line its diff removed or rewrote. */
+export type LineMap = (line: number) => number | null;
+
 /**
- * What `before` reached and `after` does not, file by file. Both readings
- * are of the same source: a file whose statements differ between them is an
- * error, since its lines would not line up.
+ * The line map of one file's `git diff -U0` (hunks with no context lines). A
+ * line in a hunk's old range is `null`; any other line moves by what the
+ * hunks above it added and removed. A hunk that removes nothing inserts after
+ * the old line it names.
  */
-export function lost(before: Reading, after: Reading): Lost[] {
+export function lineMap(diff: string): LineMap {
+  const hunks = [...diff.matchAll(/^@@ -(\d+)(?:,(\d+))? \+\d+(?:,(\d+))? @@/gm)].map((m) => {
+    const removed = m[2] === undefined ? 1 : Number(m[2]);
+    return { first: Number(m[1]) + (removed === 0 ? 1 : 0), removed, added: m[3] === undefined ? 1 : Number(m[3]) };
+  });
+  return (line) => {
+    let shift = 0;
+    for (const hunk of hunks) {
+      if (line < hunk.first) break;
+      if (line < hunk.first + hunk.removed) return null;
+      shift += hunk.added - hunk.removed;
+    }
+    return line + shift;
+  };
+}
+
+/** Items in order, grouped by a line: the k-th on a line pairs with the k-th on its mapped line. */
+function byLine<T>(items: readonly T[], lineOf: (item: T) => number): Map<number, T[]> {
+  const out = new Map<number, T[]>();
+  for (const item of items) out.set(lineOf(item), [...(out.get(lineOf(item)) ?? []), item]);
+  return out;
+}
+
+/**
+ * What `before` reached and `after` does not, file by file. A file named in
+ * `maps` changed between the readings: its lines are compared through its
+ * map, a line the change removed counts as deleted rather than lost, and
+ * what is lost is named by its line in `after`. Any other file is the same
+ * source in both readings, and a file whose statements differ is an error,
+ * since its lines would not line up.
+ */
+export function lost(before: Reading, after: Reading, maps: ReadonlyMap<string, LineMap> = new Map()): Lost[] {
   const out: Lost[] = [];
   for (const [file, was] of Object.entries(before)) {
     const now = after[file];
@@ -196,18 +234,37 @@ export function lost(before: Reading, after: Reading): Lost[] {
       if (countAt(before, file)!.reached > 0) out.push({ file, lines: [], functions: ['(the file is not in the second reading)'], arms: [] });
       continue;
     }
-    const sameShape =
-      Object.keys(was.lines).join() === Object.keys(now.lines).join() &&
-      was.functions.length === now.functions.length &&
-      was.branches.length === now.branches.length;
-    if (!sameShape) throw new Error(`reach: ${file} differs between the two readings, so their lines cannot be compared`);
-    const lines = Object.entries(was.lines)
-      .filter(([line, hits]) => hits > 0 && (now.lines[Number(line)] ?? 0) === 0)
-      .map(([line]) => Number(line));
-    const functions = was.functions.filter((fn, i) => fn.calls > 0 && now.functions[i]!.calls === 0).map((fn) => `${fn.name}:${fn.from}`);
-    const arms = was.branches.flatMap(([line, hits], i) =>
-      hits.flatMap((n, arm) => (n > 0 && (now.branches[i]![1][arm] ?? 0) === 0 ? [`${line}/${arm}`] : [])),
-    );
+    const map = maps.get(file);
+    if (map === undefined) {
+      const sameShape =
+        Object.keys(was.lines).join() === Object.keys(now.lines).join() &&
+        was.functions.length === now.functions.length &&
+        was.branches.length === now.branches.length;
+      if (!sameShape) throw new Error(`reach: ${file} differs between the two readings, so their lines cannot be compared`);
+    }
+    const to: LineMap = map ?? ((line) => line);
+    const lines = Object.entries(was.lines).flatMap(([line, hits]) => {
+      const moved = hits > 0 ? to(Number(line)) : null;
+      return moved !== null && (now.lines[moved] ?? 0) === 0 ? [moved] : [];
+    });
+    // Functions and branch points pair by their line and their order on it,
+    // since the coverage tool numbers anonymous functions by position.
+    const fnsNow = byLine(now.functions, (fn) => fn.from);
+    const fnsWas = byLine(was.functions, (fn) => fn.from);
+    const functions = [...fnsWas].flatMap(([line, fns]) => {
+      const moved = to(line);
+      if (moved === null) return [];
+      return fns.flatMap((fn, k) => (fn.calls > 0 && (fnsNow.get(moved)?.[k]?.calls ?? 0) === 0 ? [`${fn.name}:${moved}`] : []));
+    });
+    const branchesNow = byLine(now.branches, ([line]) => line);
+    const arms = [...byLine(was.branches, ([line]) => line)].flatMap(([line, points]) => {
+      const moved = to(line);
+      if (moved === null) return [];
+      return points.flatMap(([, hits], k) => {
+        const armsNow = branchesNow.get(moved)?.[k]?.[1] ?? [];
+        return hits.flatMap((n, arm) => (n > 0 && (armsNow[arm] ?? 0) === 0 ? [`${moved}/${arm}`] : []));
+      });
+    });
     if (lines.length + functions.length + arms.length > 0) out.push({ file, lines, functions, arms });
   }
   return out;

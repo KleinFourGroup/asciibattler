@@ -11,6 +11,7 @@
  *   npm run oracle -- reach [folder…]             the lines each proof reaches, by folder
  *   npm run oracle -- reach --at=<file>[:<a>[-<b>]]  one file or a range of its lines, proof by proof
  *   npm run oracle -- reach-diff <before> <after>  what the first reading reaches and the second does not
+ *                                  [--from=<ref>]  (the first of ref, the second of the working tree)
  *   npm run oracle -- build-hash [ref] [--dev]    the working tree's build against the ref's, file by file (buildHash.ts)
  *   npm run oracle -- plant --at=<file>:<line>    one mechanical edit at a line, and the proofs run against it (plant.ts)
  *   npm run oracle -- refs <file>[:<name>]        who reads each export of a file, by kind of reader (refs.ts)
@@ -58,6 +59,7 @@
  * references, and prints the counts by folder; it exits 0 whatever it finds.
  */
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { compareBuildWith } from './buildHash';
@@ -80,7 +82,7 @@ import {
   total,
   writeCeiling,
 } from './stepCodes';
-import { PROOFS, READING_DIR, countAt, countBy, functionsAt, loadReading, loadReadings, lost, parseAt, readingPath, record, union } from './reach';
+import { PROOFS, READING_DIR, countAt, countBy, functionsAt, lineMap, loadReading, loadReadings, lost, parseAt, readingPath, record, union, type LineMap } from './reach';
 import { READER_KINDS, computedReads, count, exportsOf, membersOf, openProject, schemaKeys, standing, type Named } from './refs';
 import { compareStripped, readRef, readWorkingTree } from './strippedCompare';
 
@@ -313,8 +315,27 @@ function reach(folders: string[]): number {
   return 0;
 }
 
+/** Each file the working tree changed since `ref`, with its line map (one `git diff -U0`). */
+function lineMapsSince(ref: string): Map<string, LineMap> {
+  const diff = execFileSync('git', ['diff', '-U0', '--no-renames', '--no-color', '--no-ext-diff', ref, '--'], {
+    encoding: 'utf8',
+    maxBuffer: 1 << 30,
+  });
+  const maps = new Map<string, LineMap>();
+  for (const part of diff.split(/^diff --git /m).slice(1)) {
+    const file = /^\+\+\+ b\/(.+)$/m.exec(part)?.[1];
+    if (file !== undefined) maps.set(file, lineMap(part));
+  }
+  return maps;
+}
+
 function reachDiff(before: string, after: string): number {
-  const found = lost(loadReading(before), loadReading(after));
+  // `--from=<ref>`: the first reading is of `ref` and the second of the working
+  // tree, so a file changed between them is compared through its diff.
+  const from = option('from');
+  const maps = from === undefined ? new Map<string, LineMap>() : lineMapsSince(from);
+  if (from !== undefined) console.log(`oracle: ${maps.size} files changed since ${from}, compared through their diffs`);
+  const found = lost(loadReading(before), loadReading(after), maps);
   if (found.length === 0) {
     console.log('oracle: nothing lost. The second reading runs every line, function and branch arm the first ran.');
     return 0;
@@ -504,7 +525,7 @@ async function main(): Promise<number> {
   if (command === 'reach') return reach(roots);
   if (command === 'reach-diff' && a !== undefined && b !== undefined) return reachDiff(a, b);
   console.error(
-    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
+    'usage: npm run oracle -- config-dump <out.json> | json-diff <before> <after> | comment-strip <ref> [root…] | comment-codes [--record|--list] | comment-length [root…] | reach-record [proof…] | reach [folder…] [--at=<file>[:<a>[-<b>]]] | reach-diff <before> <after> [--from=<ref>] | build-hash [ref] [--dev] | plant --at=<file>:<line> [--op=<kind>] [--nth=<n>] [--proofs=<id,id>] [--ref=<ref>] [--list] | refs <file>[:<name>] [--keys|--members=<Type>] [--list] | refs --all=<out.json> [folder…]',
   );
   return 2;
 }

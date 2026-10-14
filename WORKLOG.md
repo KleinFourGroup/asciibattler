@@ -3814,3 +3814,36 @@ shown yet: the hook itself on a staged sim path and on a staged
 entries record what the hook printed. The hook's "about 3 minutes with
 the smoke" (AGENTS) is a prediction from the parts until 121b's commit
 times it. `box-batch.sh` was not run against a box.
+
+### 121b-pre — `reach-diff` across a deletion, and the parity test out of the oracle's smoke (2026-10-14, session f8bbd64e)
+
+Found taking 121b's proof. `reach-diff` compares two readings line by
+line and refuses any file whose statements differ between them, so it
+could not compare across a deletion that touches code: the first run
+stopped at `src/config/configHash.ts`. The census names it as the proof
+for "a test deleted with the code" in every phase from §121 to §126, and
+a file the deletion edits is where a deleted test is likeliest to have
+been the only one running a surviving line. Now `reach-diff <before>
+<after> --from=<ref>` reads one `git diff -U0 <ref>` and maps each
+changed file's lines through it (`lineMap` in `tests/oracle/reach.ts`):
+a line inside a hunk's old range counts as deleted, any other line is
+compared at its new place, and functions and branch points pair by line
+and by their order on it, since the coverage tool numbers anonymous
+functions by position. Without the flag a changed file is still refused.
+The second reading must be of the working tree: the first mapped run
+named 21 lines of `reach.ts` as lost, because that file had been edited
+after the reading was taken, and they went once the reading was taken
+again. Known answers in `reach.test.ts`: a map over three hunks (a
+removal, an insertion, a rewrite), a changed file that loses nothing,
+and the planted case, a changed file whose surviving line, function and
+branch arm stop running, which it must name by their new lines. TESTING
+"A deleted test" says how.
+
+The same pass found two more places that ran the smoke by its config
+and so still ran the parity test 121a took out of it: the plant tool's
+`smoke` proof and `reach`'s `smoke` proof, whose label is "every test of
+npm run fuzz:smoke". Both now pass the same `--exclude`, named once as
+`JOBS_PARITY` in `reach.ts`, and a test holds `package.json`'s two
+scripts and the `smoke` proof to that name. No other runner of
+`vitest.fuzz.config.ts` was found (a search of `tests`, `scripts`,
+`shell` and `tools`).

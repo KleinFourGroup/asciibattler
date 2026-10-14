@@ -1843,9 +1843,11 @@ finder lists, by subsystem; none was opened beyond its first line.
   own set-up; the status strip is in `UnitOverlayLayer` and `UnitCard`
   (101). Nothing headless proves a reshaping there (the oracle map), so
   each would be read by eye.
-- **B-14 · The instruments and the bot.** The harness and the rollout
-  walker's decision loop (2.6); two bot scripts' rally search (202 and
-  87 tokens); `sensors.ts`'s two grid scans.
+- **B-14 · The instruments and the bot.** Two bot scripts' rally
+  search (202 and 87 tokens); `sensors.ts`'s two grid scans. *Struck at
+  the read, 2026-10-13 (the user, with T-27):* the harness and the
+  rollout walker's decision loop (2.6), a duplication that is deliberate
+  by a recorded verdict and goes to GOTCHAS.
 - **Screens.** The swap control in `PortScreen` and `RewardScreen`
   (115), the opening of `CharacterSelectScreen` and `MenuScreen` (112),
   of `EventScreen` and `PortScreen` (94), two blocks of
@@ -2009,8 +2011,8 @@ Both are in TODO under "§120 riders".
 
 ## 5. The TODO pass's list (120g)
 
-Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2
-and 5.3** (T-97 held for list B's tranche); the rest is unsigned. Every
+Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
+5.3** (T-97 held for list B's tranche) **and 5.6**; the rest is unsigned. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2573,7 +2575,9 @@ that the user still wants.
   that only the palette module can resolve. The coverage map gave the
   item to Round 7, which closed without it.
 - Fate: **drop**. A lean: it was the user's own ask, at 78d.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13: "I'm comfortable dropping all of those, Claude! 👍"; and of this one, "Yes, I did
+  ask for 1, but I'd totally forgotten about it, and it's not been a
+  problem").
 
 **T-10 · Mercury coin-flip watch** (L126)
 - In play: the Idol of Mercury's coin flip, reported once as granting
@@ -2583,14 +2587,14 @@ that the user still wants.
   `archive/post-46-worklog.md` §51. The coverage map says "stay in
   TODO".
 - Fate: **drop**; the archive keeps the recipe.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13: "I'm comfortable dropping all of those, Claude! 👍").
 
 **T-18 · WATCH: quantized overlay-bar lift** (L177)
 - In play: HP bars would snap to two or three shared heights.
 - Held against: "Don't build it speculatively" (the item). No feedback
   on a ragged row is on record since 2026-08-15.
 - Fate: **drop**; `archive/post-72-worklog.md` §79e keeps the numbers.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13, in the same words).
 
 **T-25 · `Run.pauseAtTurnGates` two-path loop, a divergence watch**
 (L238)
@@ -2605,7 +2609,7 @@ that the user still wants.
   whole and proposed nothing on the loop.
 - Fate: **drop**: that read was the look the watch asked for, and the
   split is two lines.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13, in the same words).
 
 **T-27 · `runOne` / rollout-walker deliberate duplication, a divergence
 watch** (L268)
@@ -2617,20 +2621,26 @@ watch** (L268)
   it, and neither is on record as fired.
 - Fate: **drop** from TODO into GOTCHAS, the home for a thing that must
   not be re-litigated, and B-14's first clause is struck. Call 4 below.
-- Signed:
+- Signed: **drop** into GOTCHAS, with B-14's first clause struck (the
+  user, 2026-10-13, in the same words). The entry is written when TODO is
+  rewritten, so the verdict is never in two places.
 
 **T-30 · A DP-tail redesign in one currency** (L303)
 - In play: nothing directly; how the bot prices the road ahead.
 - Held against: no plan names it. Its baseline is in BALANCE (§94g-3)
   and its lesson in gotcha #132. No board has asked for it.
 - Fate: **drop**. A lean.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13: "until we have more data, we
+  don't need to speculate on potential fixes"), with a later round in
+  view: "At some point, probably after the content rounds, we'll
+  probably want to add another bot round to see if it's still working as
+  intended". Where that round is written is put with 5.9's ninth call.
 
 **T-43 · The pane's key tool sends no `KeyboardEvent.code`** (L333)
 - In play: nothing. A limit of a session's browser tool.
 - Held against: `process/browser-pane.md:323` states it.
 - Fate: **drop**: the fact has its home.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13, in the same words).
 
 **T-73 · Two tabs changing two settings overwrite each other** (L596)
 - In play: with the game open in two tabs, a setting changed in one can
@@ -2638,7 +2648,7 @@ watch** (L268)
 - Held against: "Unseen so far" (the item). The user dropped its twin,
   a reward's taken rows across a reload, as rare and costing nothing.
 - Fate: **drop**. A lean.
-- Signed:
+- Signed: **drop** (the user, 2026-10-13, in the same words).
 
 ### 5.7 Left inside ticked items
 

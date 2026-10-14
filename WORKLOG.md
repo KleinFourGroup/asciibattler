@@ -3369,3 +3369,28 @@ signing all of those, Claude! 😁"
   eleventh call, and goes with list B.
 - Nothing in TODO or META-ROADMAP is written yet: what signing writes
   is 5.9's ninth call, unsigned.
+
+Reading: **353,642** at 00:19 on 2026-10-14 by the tool's clock, on the
+first tranche's commit, `650653a`.
+
+**The read, the second tranche** (the user, 2026-10-13): "I'm
+comfortable dropping all of those, Claude! 👍"
+
+- **5.6, all eight signed for the drop:** T-06, T-10, T-18, T-25, T-27,
+  T-30, T-43, T-73. That answers 5.9's eighth call, and its third and
+  fourth for these rows: the three watches go, and T-27's verdict goes
+  to GOTCHAS with **B-14's first clause struck** in section 4. The
+  GOTCHAS entry is written with TODO's rewrite, so the verdict is never
+  in two places.
+- **T-06,** the session's first doubt, since the hoist was the user's
+  own ask: "Yes, I did ask for 1, but I'd totally forgotten about it,
+  and it's not been a problem."
+- **T-30, and a round the plans do not hold.** "At some point, probably
+  after the content rounds, we'll probably want to add another bot round
+  to see if it's still working as intended, but until we have more data,
+  we don't need to speculate on potential fixes." So the redesign is
+  dropped as a fix proposed ahead of its evidence, and what stands in
+  its place is a check of the bot after Round 10. META-ROADMAP has no
+  such round; Round 12's human gauntlet #2 is its nearest line. Where
+  the user's words are written is put with 5.9's ninth call, in the
+  last tranche, and not decided here.

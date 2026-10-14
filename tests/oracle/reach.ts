@@ -231,7 +231,10 @@ export function lost(before: Reading, after: Reading, maps: ReadonlyMap<string, 
   for (const [file, was] of Object.entries(before)) {
     const now = after[file];
     if (now === undefined) {
-      if (countAt(before, file)!.reached > 0) out.push({ file, lines: [], functions: ['(the file is not in the second reading)'], arms: [] });
+      // A changed file the second reading does not hold was deleted with its code.
+      if (!maps.has(file) && countAt(before, file)!.reached > 0) {
+        out.push({ file, lines: [], functions: ['(the file is not in the second reading)'], arms: [] });
+      }
       continue;
     }
     const map = maps.get(file);

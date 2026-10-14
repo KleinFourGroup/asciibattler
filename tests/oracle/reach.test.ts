@@ -154,6 +154,14 @@ describe('a file changed between the readings, compared through its diff', () =>
     expect(lost(reading(ALL), after({ s: [1, 2, 0], f: [1, 1], b: [1, 0] }), maps)).toEqual([]);
   });
 
+  it('counts a changed file the second reading does not hold as deleted', () => {
+    const before = reading(ALL, { [under('src/sim/b.ts')]: A(ALL) });
+    const gone = new Map([['src/sim/b.ts', lineMap('@@ -1,10 +0,0 @@\n')]]);
+    expect(lost(before, reading(ALL), gone)).toEqual([]);
+    // Unmapped, the same absence is a loss.
+    expect(lost(before, reading(ALL)).map((l) => l.file)).toEqual(['src/sim/b.ts']);
+  });
+
   it('names what stopped running by its line in the second reading', () => {
     // Old line 7 (now 5), its arm, and `second` around it are no longer run.
     expect(lost(reading(ALL), after({ s: [1, 0, 0], f: [1, 0], b: [0, 0] }), maps)).toEqual([

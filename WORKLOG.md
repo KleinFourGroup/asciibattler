@@ -3967,3 +3967,12 @@ Proof (sim and config):
   the plant went one call down, in `rollLayoutFor`, which the draw calls:
   the procedural-board check negated (`selection.ts:119` at `de59045`).
   Corpus CAUGHT and fuzz diff CAUGHT, each by a run that threw, as at 121c.
+
+### 121d-post — `reach-diff` counts a file the diff deleted as deleted (2026-10-14, session f8bbd64e)
+
+A deleted file's diff names it only on its old side (`--- a/…`, with `+++
+/dev/null`), so `--from` did not map it, and `lost` named it "not in the
+second reading". Now the map takes the old side's name when there is no
+new one, and `lost` counts a mapped file the second reading lacks as
+deleted. Known answer in `reach.test.ts`: the same absent file is nothing
+lost when mapped and a loss when not.

@@ -323,7 +323,8 @@ function lineMapsSince(ref: string): Map<string, LineMap> {
   });
   const maps = new Map<string, LineMap>();
   for (const part of diff.split(/^diff --git /m).slice(1)) {
-    const file = /^\+\+\+ b\/(.+)$/m.exec(part)?.[1];
+    // A deleted file's new side is /dev/null, so its name is on the old side.
+    const file = /^\+\+\+ b\/(.+)$/m.exec(part)?.[1] ?? /^--- a\/(.+)$/m.exec(part)?.[1];
     if (file !== undefined) maps.set(file, lineMap(part));
   }
   return maps;

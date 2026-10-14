@@ -52,6 +52,11 @@ Boxes are created on demand and destroyed after use.
   pulls to local HEAD at every launch, and the parity gate refuses a batch
   after a local HEAD change. Pushing for a box run is pre-authorized
   (AGENTS "Working with the user").
+- Before a local batch with `--jobs`, run `npm run fuzz:jobs-parity` once
+  at its HEAD. The test that holds a `--jobs` batch byte-identical to a
+  serial one is off the per-commit smoke; the hook runs it only when
+  `tests/fuzz/` is staged, and `scripts/box-batch.sh` runs it before a box
+  batch.
 - From the first launch until the last one has fired: no commits and no doc
   edits in the tree. `box-drive.sh` refuses a dirty tree or a moved HEAD
   before each launch.

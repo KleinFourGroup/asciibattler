@@ -3780,3 +3780,37 @@ takes the loaders only, the co-located tests waiting for §126, with a
 pilot stop on `health.ts`, `daemons.ts` and `sim.ts`; a re-skim's new
 trial runs within the budget with its bar written first, and a new
 deletion waits for the pilot's stop. The cut is in ROADMAP §121.
+
+### 121a — A-37: the `--jobs` parity test off the smoke (2026-10-14, session f8bbd64e)
+
+`npm run fuzz:smoke` now passes `--exclude
+tests/fuzz/parallelRunDecisions.test.ts`, and `npm run fuzz:jobs-parity`
+runs that file alone, with the same config; Vitest's CLI `--exclude` adds
+to the config's, so no second config file was needed. The hook runs the
+parity script when a `tests/fuzz/` path is staged; `scripts/box-batch.sh
+launch` runs it before a batch whose arguments hold `--jobs=`, once per
+HEAD, recording the pass under `output/jobs-parity/<HEAD>` (git ignores
+`output/`, so the dirty-tree guard still holds); `process/measurement.md`
+says to run it before a local `--jobs` batch. AGENTS "Pre-commit",
+TESTING's smoke line, the smoke config's header and the Cursor say so.
+AGENTS was 37 characters over its cap with the clause, and is under it
+by shortening the same paragraph's two other sentences.
+
+Measured on this machine, one at a time:
+
+- the smoke before: 65 files, 624 tests, 185.5 s by the reporter (3 m 10
+  s by the clock);
+- the smoke after: 64 files, 623 tests, 102.5 s (1 m 46 s), so 83 s off
+  every commit that stages a sim, run, core, config or bot path;
+- the parity test alone: 1 test, 144.0 s (2 m 28 s), passing.
+
+Shown: `bash -n` on the hook and on `box-batch.sh`; the hook's path test
+by its own `grep -qE '^tests/fuzz/'` over five paths (two under
+`tests/fuzz/` select it; `src/sim`, `config/` and `tests/integration`
+do not); `box-batch.sh`'s `case` over four argument lists (`--jobs=8`
+and `--jobs=2` run it; no `--jobs`, and `--jobs-x=3`, do not). Not
+shown yet: the hook itself on a staged sim path and on a staged
+`tests/fuzz/` path. 121b stages the first and 121e the second, and their
+entries record what the hook printed. The hook's "about 3 minutes with
+the smoke" (AGENTS) is a prediction from the parts until 121b's commit
+times it. `box-batch.sh` was not run against a box.

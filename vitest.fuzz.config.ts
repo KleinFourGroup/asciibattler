@@ -11,6 +11,11 @@ import { defineConfig } from 'vite';
  * artifacts; this config just asserts the harness still constructs and
  * runs without throwing.
  *
+ * `npm run fuzz:smoke` leaves out `parallelRunDecisions.test.ts` by its
+ * `--exclude`, and `npm run fuzz:jobs-parity` runs that file alone: it holds a
+ * `--jobs` batch byte-identical to a serial one, and runs where that can break
+ * (`.githooks/pre-commit`, `scripts/box-batch.sh`).
+ *
  * `testTimeout` is raised well above the 5s default: these cases each drive
  * SEVERAL full multi-hop runs, and under the full-suite's parallel CPU
  * contention (20 files at once) a real-battle case can exceed 5s — especially

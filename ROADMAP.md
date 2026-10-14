@@ -101,7 +101,7 @@ smaller readers.
 The cut, signed 2026-10-14 with its six calls (WORKLOG §121, the
 kickoff):
 
-- ☐ **121a — A-37: the `--jobs` parity test off the smoke** (`none`).
+- ☑ **121a — A-37: the `--jobs` parity test off the smoke** (`none`).
   Its own script; run by the hook when `tests/fuzz/` is staged, by the
   box launcher, and before a local `--jobs` batch.
 - ☐ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the

@@ -74,6 +74,23 @@ launch() {
   local_head=$(git rev-parse HEAD)
   id=$(date -u +%Y%m%d-%H%M%S)-$(git rev-parse --short HEAD)
 
+  # The --jobs parity test, before a batch that splits its seeds across
+  # processes. It is off the per-commit smoke, so it runs here, once per HEAD:
+  # a cohort launches many times at one HEAD. The pass is recorded under
+  # output/, which git ignores, so the tree stays clean for the guard above.
+  case " $FUZZ_ARGS " in
+    *" --jobs="*)
+      local pass="output/jobs-parity/$local_head"
+      if [ ! -f "$pass" ]; then
+        npm run fuzz:jobs-parity || {
+          echo "PARITY FAIL: the --jobs parity test failed at ${local_head:0:7}" >&2
+          exit 1
+        }
+        mkdir -p output/jobs-parity && touch "$pass"
+      fi
+      ;;
+  esac
+
   box "$REPO_DIR" "$local_head" "$id" "$FUZZ_ARGS" <<'REMOTE'
 set -euo pipefail
 repo=$1 local_head=$2 id=$3 fuzz_args=$4

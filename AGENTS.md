@@ -352,10 +352,10 @@ npm run dev                            # http://localhost:5173
 The versioned hook [.githooks/pre-commit](.githooks/pre-commit) runs
 `npm run typecheck` and `npm test` before every commit, plus
 `npm run fuzz:smoke` when staged paths touch `src/sim|run|core|config|bot/`,
-`config/` or `tests/fuzz/`. It takes about 45 s for docs and UI and about
-7 minutes when the smoke runs. Never bypass it with `--no-verify`; a failing
-hook means the tree needs fixing. It doesn't run lint or prettier, and
-formatting drift in files you didn't touch is known, so leave it.
+`config/` or `tests/fuzz/`, and the `--jobs` parity test for `tests/fuzz/`.
+It takes about 45 s, or about 3 minutes with the smoke. Never bypass it
+with `--no-verify`; a failing hook means the tree needs fixing. It doesn't
+run lint or prettier; leave formatting drift in files you didn't touch.
 
 Vitest's esbuild transform accepts some code that strict `tsc` rejects
 (readonly mutation, `exactOptionalPropertyTypes` mismatches), which is why

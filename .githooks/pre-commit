@@ -32,4 +32,14 @@ else
   echo "[pre-commit] no staged sim/run/core/config changes -> fuzz:smoke skipped."
 fi
 
+# The --jobs parity test (tests/fuzz/parallelRunDecisions.test.ts, 2.5 minutes)
+# is out of the smoke, so a sim or run commit doesn't pay for it. It runs here
+# when the instruments change, since the parallel runner, its merge and what
+# the child processes write all live under tests/fuzz/; scripts/box-batch.sh
+# runs it before a --jobs batch, once per HEAD (process/measurement.md).
+if git diff --cached --name-only | grep -qE '^tests/fuzz/'; then
+  echo "[pre-commit] staged tests/fuzz/ changes -> npm run fuzz:jobs-parity ..."
+  npm run fuzz:jobs-parity
+fi
+
 echo "[pre-commit] green — proceeding with commit."

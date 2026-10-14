@@ -39,6 +39,9 @@ If the renderer ever grows pure-logic helpers (e.g. atlas UV computation), those
 - **Fuzz smoke:** `npm run fuzz:smoke` — opt-in vitest run on the headless
   balance harness (A3). Uses [vitest.fuzz.config.ts](vitest.fuzz.config.ts);
   the default `npm test` excludes `tests/fuzz/**` to keep pre-commit fast.
+  The smoke leaves out the `--jobs` parity test, which
+  `npm run fuzz:jobs-parity` runs: the hook when `tests/fuzz/` is staged,
+  and before a `--jobs` batch (`process/measurement.md`).
 - **Chaos sweep:** `npm run chaos -- --seeds=N [--dials=<query>]` plays the
   chaos driver (`tests/chaos/chaos.ts`, 115c) over seeds 1..N: random commands
   of every kind at every gate, legal and illegal, and random battle orders,

@@ -1182,7 +1182,7 @@ records an achievement on a clean machine.
 | The end of no-migrations at 1.0 · the shell's packaging, instance lock and store writes · Chrome proper and Safari | Round 8 spec / Round 8 close | 12 |
 | Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 11 |
 | Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 12 |
-| `--sector-hops` in the run-config tool · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | placed at the Round 8.5 TODO pass: 9 (the scripted run) · 8.5 (census B-17) · dropped · dropped · held (WORKLOG §120, the close of §120) · superseded 2026-08-26 · 10 |
+| `--sector-hops` in the run-config tool · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | placed at the Round 8.5 TODO pass: 9 (the scripted run) · 8.5 (census B-17) · dropped · dropped · 8.5, a lead for §125 (census B-14) · superseded 2026-08-26 · 10 |
 | A scripted run for content work | the Round 8.5 TODO pass, 2026-10-13 (the user) | 9 |
 | A check of the bot after the content rounds | the Round 8.5 TODO pass, 2026-10-13 (the user: "probably after the content rounds") | placed at Round 10's close |
 | Every other open TODO item | the Round 8.5 TODO pass (`round-8.5-census.md` section 5) | 8.5 → 12, by TODO's sections |

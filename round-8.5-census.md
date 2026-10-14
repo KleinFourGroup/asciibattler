@@ -2,9 +2,8 @@
 
 **Status: signed, every row, 2026-10-14.** Sections 1 to 3 were read at
 120c's and 120e's stops, sections 4 and 5 at 120h's, in nine tranches;
-the phases that do what it lists are ROADMAP §121 to §129. One signed
-row is not yet written, T-27, for a reason in WORKLOG §120, "The close
-of §120". Signed (the
+the phases that do what it lists are ROADMAP §121 to §129. T-27 was
+signed again at the close (WORKLOG §120, "The close of §120"). Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -1882,11 +1881,17 @@ finder lists, by subsystem; none was opened beyond its first line.
   own set-up; the status strip is in `UnitOverlayLayer` and `UnitCard`
   (101). Nothing headless proves a reshaping there (the oracle map), so
   each would be read by eye.
-- **B-14 · The instruments and the bot.** Two bot scripts' rally
-  search (202 and 87 tokens); `sensors.ts`'s two grid scans. *Struck at
-  the read, 2026-10-13 (the user, with T-27):* the harness and the
-  rollout walker's decision loop (2.6), a duplication that is deliberate
-  by a recorded verdict and goes to GOTCHAS.
+- **B-14 · The instruments and the bot.** The run walkers' battle
+  wiring: the fuzz harness, the rollout walker, the chaos driver, the
+  journal drive and the journal replay each build a battle and tick it
+  (the harness and the walker share three runs of 163 to 190 tokens,
+  2.6; the other three were not measured). Two bot scripts' rally search
+  (202 and 87 tokens); `sensors.ts`'s two grid scans. *Restored and
+  widened at §120's close* (the user, 2026-10-14, with T-27): the
+  verdict that kept the harness and the walker apart named a third
+  consumer as its trigger to reopen, and there are five; its reason, the
+  fuzz baselines' pinned draws, is what the fuzz diff and the corpus
+  prove.
 - **Screens.** The swap control in `PortScreen` and `RewardScreen`
   (115), the opening of `CharacterSelectScreen` and `MenuScreen` (112),
   of `EventScreen` and `PortScreen` (94), two blocks of
@@ -2723,7 +2728,10 @@ watch** (L268)
   not be re-litigated, and B-14's first clause is struck. Call 4 below.
 - Signed: **drop** into GOTCHAS, with B-14's first clause struck (the
   user, 2026-10-13, in the same words). The entry is written when TODO is
-  rewritten, so the verdict is never in two places.
+  rewritten, so the verdict is never in two places. Re-signed at §120's
+  close (the user, 2026-10-14: "Signing your lean on T-27, Claude! 😁"): the first trigger reads as fired,
+  five run walkers each building a battle, so no entry is written and
+  B-14's clause is restored, widened to the five, for §125's kickoff.
 
 **T-30 · A DP-tail redesign in one currency** (L303)
 - In play: nothing directly; how the bot prices the road ahead.

@@ -129,11 +129,11 @@ cuts it in two.
 ## Phase 125 — the bot and the fuzz instruments
 
 `src/bot` and `tests/fuzz`'s instruments: A-20's flags, A-30, A-31;
-B-14's leads; `src/bot`'s comment pass. Proof: instrument. Decision
-points: whether the comment pass takes `tests` and `tools` (the user's
-call of 2026-10-12, once its outcome on `src` is seen); the run walkers'
-shared wiring, held for the user's word (WORKLOG §120, "The close of
-§120").
+B-14's leads, the five run walkers' battle wiring among them (restored
+at §120's close, the user's call); `src/bot`'s comment pass. Proof:
+instrument, and the corpus for the walkers. Decision point: whether the
+comment pass takes `tests` and `tools` (the user's call of 2026-10-12,
+once its outcome on `src` is seen).
 
 ## Phase 126 — tests
 

@@ -3662,3 +3662,14 @@ written and before the commit. §121's kickoff is a phase kickoff, with an
 audit of the code it touches and a cut to shape-lock; from here that
 would cross the hand-off line, so it starts in a fresh session from the
 Cursor.
+
+Reading: **477,454** at 13:22 on the close's commit, `496f240`.
+
+**T-27, signed again** (the user, 2026-10-14): "Signing your lean on T-27, Claude! 😁" So no GOTCHAS
+entry is written, T-27 stays out of TODO, and B-14's first clause is
+restored, widened to the five run walkers, as a lead for §125's kickoff
+within the trials' budget, proven by the fuzz diff and the corpus. The
+census, META-ROADMAP's coverage map, ROADMAP §125 and the Cursor say so.
+What it taught: a row's evidence that a trigger "is not on record as
+fired" was a statement about the record; the trigger was a statement
+about the code, and the code was the thing to search.

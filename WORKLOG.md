@@ -3491,4 +3491,28 @@ except for 6, Claude."
   row was sized from the title. Asking what "simplified" was for, at
   A-19's read, would have found this a day sooner.
 
-Reading: **386,819** at 01:13 on the fifth tranche's commit, `2818e4b`.
+Reading: **386,819** at 01:13 on the fifth tranche's commit, `2818e4b`,
+and **395,219** at 01:32 on the dials' row's, `3ab580d`.
+
+**The read, the sixth tranche** (the user, 2026-10-13): "That all looks
+good to me, Claude, but a caveat: 10 may be brought up and split into a
+.5 round pending player feedback. Otherwise, signed! 😁"
+
+- **5.5's Round 11, all ten rows signed** (twelve items): T-41, T-44,
+  T-46, T-59, T-66, T-67, the layout's three (T-74, T-75, T-77), T-78,
+  T-82, T-95.
+- **T-41 is signed as reworded:** a read of one capped turn in the
+  user's Firefox, with the stalled battle's draw prompt, and not a
+  dropped item (5.9's sixth call).
+- **The layout rework's place carries the user's caveat** (5.9's fifth
+  call). It is Round 11's first phases, ahead of the tutorial, since the
+  tutorial's callouts point at the screens. No round is inserted now.
+  Players' reports may bring it forward as a `.5` round, and that is the
+  user's to call when they come.
+- **Section 5 now has no row unsigned but T-97,** which waits on 4.10's
+  eleventh call. Of 5.9's ten calls, the first eight are answered; the
+  ninth (what signing writes) and the tenth (5.7's two leftovers) go
+  with the last tranche.
+- List B is put as two tranches, as the earlier ones were sized: its
+  small rows with list A's three first, then the user's three
+  candidates. That makes nine tranches.

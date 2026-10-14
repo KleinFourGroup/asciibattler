@@ -2032,8 +2032,9 @@ Both are in TODO under "§120 riders".
 ## 5. The TODO pass's list (120g)
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche)**, 5.4, 5.6, and 5.5's Rounds 9,
-10 and 12**; 5.5's Round 11 is unsigned. Every
+5.3** (T-97 held for list B's tranche)**, 5.4, 5.5 and 5.6: every row
+but T-97.** 5.7's leftovers and 5.9's ninth and tenth calls are still to
+read. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2510,24 +2511,25 @@ L741)
   survivors-rule playtest it waited for is ruled out (A-11, the user).
 - Fate: **Round 11**, with T-09: one capped turn read in the user's
   Firefox. Reworded, not dropped.
-- Signed:
+- Signed: **Round 11**, reworded as a read of one capped turn (the user,
+  2026-10-13: "That all looks good to me, Claude").
 
 **T-44 · A hitsplat gallery dev key** (L337)
 - In play: nothing; a dev chord that shows one of every hitsplat kind.
 - Held against: `src/dev` has none (a search).
 - Fate: **Round 11**, built first as the feel sweep's instrument.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-46 · The deep water's band constants by eye** (L340)
 - In play: how strongly deep water's bands read.
 - Fate: **Round 11**, the feel sweep.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-59 · The overlays trail a camera move by one frame** (L447)
 - In play: nothing while the fitted view is the only one; bars would
   lag the board under a moving camera.
 - Fate: **Round 11**, with the yaw decision (T-54), its first consumer.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-66 · Some text may be too small at the default size** (L520)
 - In play: the events, the objective buttons and the hitsplats, by the
@@ -2535,12 +2537,13 @@ L741)
 - Held against: the user wants player feedback first, and no stranger's
   finding is on record (HANDOFF).
 - Fate: **Round 11**, and asked at each round's playtest until then.
-- Signed:
+- Signed: **Round 11**, and asked at each round's playtest until then (the
+  user, 2026-10-13, in the same words).
 
 **T-67 · A key's name is its US label** (L541)
 - In play: on AZERTY the key marked A reads as Q.
 - Fate: **Round 11**, with the tutorial's "registry-derived key labels".
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-74, T-75, T-77 · A smaller window than 1280×720; the battle's unit
 cards cover the board; at 150 % text a 720p window breaks down** (L621,
@@ -2553,7 +2556,11 @@ L626, L646)
 - Fate: **Round 11**, the nearest charter (UI only, the accessibility
   dials), sized at its kickoff, with T-75's instrument first. Call 5
   below: it may want a round of its own.
-- Signed:
+- Signed: **Round 11**, as its first phases and ahead of the tutorial, with
+  a caveat that is the user's: "10 may be brought up and split into a .5
+  round pending player feedback. Otherwise, signed! 😁" (2026-10-13). So
+  its place is Round 11 unless players' reports bring it forward, and
+  no round is inserted now.
 
 **T-78 · The battle's hop chip does not fade** (L663)
 - In play: one chip appears and goes at once while the panes beside it
@@ -2562,12 +2569,12 @@ L626, L646)
   `chip hud-hop screen-fade`. A player would see the fix, so it is not
   8.5's.
 - Fate: **Round 11**, the feel sweep.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-82 · Last run exports a finished run only** (L696)
 - In play: a player reporting a bug mid-run has only Export everything.
 - Fate: **Round 11**, with the run summary's export surfaces.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 **T-95 · A tooltip leaves with its screen** (L804)
 - In play: a tooltip stays whole for about 190 ms over a screen that is
@@ -2575,7 +2582,7 @@ L626, L646)
 - Held against: census A-22 keeps `closeTooltip` and
   `openTooltipTrigger` for it.
 - Fate: **Round 11**, with a read in Firefox.
-- Signed:
+- Signed: **Round 11** (the user, 2026-10-13, in the same words).
 
 #### Round 12 (8)
 

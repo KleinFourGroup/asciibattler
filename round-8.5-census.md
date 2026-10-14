@@ -2033,9 +2033,7 @@ Both are in TODO under "§120 riders".
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
 5.3** (T-97 held for list B's tranche)**, 5.4, 5.6, and 5.5's Rounds 9,
-10 and 12 but for the dials' row** (T-93 with T-07, T-48 and T-88, which
-the user reads as a different item: WORKLOG §120, 120h, the fifth
-tranche); 5.5's Round 11 is unsigned. Every
+10 and 12**; 5.5's Round 11 is unsigned. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2074,15 +2072,17 @@ By proposed fate (`scratch/120g/tally.mjs`, which reads this section):
 |---|---|---|
 | done | 5 | |
 | 8.5 | 16 | 4 |
-| Round 9 | 16 | 1 |
+| Round 9 | 20 | 1 |
 | Round 10 | 8 | 3 |
 | Round 11 | 25 | 13 |
-| Round 12 | 17 | 5 |
+| Round 12 | 13 | 5 |
 | drop | 10 | 2 |
 | | **97** | **28** |
 
 So 28 rows only confirm what a plan says, 5 are already done, and 64 are
-proposals: 56 for a round and 8 to drop.
+proposals: 56 for a round and 8 to drop. The table is as signed so far:
+the dials' row, four items, was proposed for Round 12 and moved to Round
+9 at the read (as proposed, Round 9 held 16 and Round 12 held 17).
 
 ### 5.2 Already built or answered (5)
 
@@ -2307,7 +2307,7 @@ mounts** (L775)
 Signed row by row. "Added" on every row here: signing writes the line
 into META-ROADMAP.
 
-#### Round 9 (15)
+#### Round 9 (19)
 
 **T-03, T-28 · A coverage guard for `roster-table.json`, and the table
 compacted** (L53, L300)
@@ -2418,6 +2418,41 @@ L315)
   spawn template (`UnitTemplate.abilities?`, "the four sites union it").
 - Fate: **Round 9**, with it; a World bump.
 - Signed: **Round 9** (the user, 2026-10-13, in the same words as T-03).
+
+**T-93, T-07, T-48, T-88 · A scripted run for content work: the URL
+parameters, `--sector-hops` in the run-config tool, and a forced
+encounter id that matches no node (filed twice)** (L794, L100, L360,
+L741)
+- In play: nothing a player meets. It is how the user, the tools and
+  the probes open a run on chosen content.
+- Held against: 17 URL parameters (census 1.5), kept for this round
+  (A-19). `src/run/RunConfig.ts`, read 2026-10-13: each forcing dial
+  takes one value for the whole run (`layout` one board, `encounter` one
+  id at every node of its kind, `event` one event, `firstNode` the first
+  node's kind). None takes a list, nothing sets a port's stock, and a
+  forced id is not persisted, so a run loaded from its save goes back to
+  normal selection. Of T-07, the sweep page's half closes with its
+  signed deletion (A-32), and the run-config tool still speaks `--hops`
+  alone (`tools/run-config/cli.ts:79`). T-48 and T-88 are one fact filed
+  at §102 and again at §117.
+- Fate: **Round 9**, early, as a new line of its scope. The row was
+  first put to Round 12 as a trim of the URL's names, on the reading
+  that which dials a shipped build answers is a ship question. The
+  user's reading, at the fifth tranche, is finer control of what a run
+  loads as content ramps up: "an event chain from end to end in one
+  run", "a specific chain of encounters or layouts", "to override a
+  shop's inventory". Round 10's guard sends a mechanism back to Round 9,
+  and Round 9's own consumers and its "Event → battle → resume" are the
+  first use. Fewer URL names is the consequence and not the aim: a shape
+  for that kickoff is one list of per-node entries on `RunConfig`, of
+  which today's four single-valued dials are cases. T-07, T-48 and T-88
+  fold in. Round 12 keeps one clause, which dials a shipped build
+  answers. Not sized: how a script meets the braid map, what the journal
+  and the chaos driver need of it, and whether it outlives a save.
+- Signed: **Round 9** (the user, 2026-10-13: "I said simplified, but I
+  was probably thinking that in the sense of "simplified into a general
+  system," maybe? Or maybe my mind just spaced out and I wrote the wrong
+  word. 😂 Fully signed! 😁").
 
 #### Round 10 (5)
 
@@ -2542,21 +2577,7 @@ L626, L646)
 - Fate: **Round 11**, with a read in Firefox.
 - Signed:
 
-#### Round 12 (12)
-
-**T-93, T-07, T-48, T-88 · The URL parameters, reviewed and simplified;
-`--sector-hops` in the run-config tool; a forced encounter id that
-matches no node says nothing (filed twice)** (L794, L100, L360, L741)
-- In play: nothing a player meets. 17 URL parameters (census 1.5).
-- Held against: the user gave T-93 to "a later cleanup round" (A-19's
-  keep). Of T-07, the sweep page's half closes with its signed deletion
-  (A-32), and the run-config tool still speaks `--hops` alone
-  (`tools/run-config/cli.ts:79`). T-48 and T-88 are one fact filed at
-  §102 and again at §117.
-- Fate: **Round 12**, as one item: which dials a shipped build answers
-  is a ship question, since the desktop build has no address bar. Call 2
-  below.
-- Signed:
+#### Round 12 (8)
 
 **T-60, T-64, T-65 · The recorder: a clip of a continued run, a cue of
 which choice was made, and its open items at the §114 close** (L460,

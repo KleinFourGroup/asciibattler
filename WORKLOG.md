@@ -3477,3 +3477,18 @@ except for 6, Claude."
   list of per-node entries on `RunConfig`, of which today's four
   single-valued dials are cases, so control goes up as the count of
   dials goes down. T-07, T-48 and T-88 fold into it.
+- **Signed** (the user, 2026-10-13): "I said simplified, but I was
+  probably thinking that in the sense of "simplified into a general
+  system," maybe? Or maybe my mind just spaced out and I wrote the wrong
+  word. 😂 Fully signed! 😁" So the row is **Round 9, early, a scripted
+  run for content work**, with Round 12 keeping one clause (which dials
+  a shipped build answers). In the census the row moved from 5.5's
+  Round 12 to its Round 9, rewritten as signed, and the counts moved
+  with it: Round 9 holds 20 items and Round 12 holds 13. That closes
+  5.9's second call: neither of the user's two "later cleanup round"
+  riders gets a new round. What the session took from it: the item's
+  title in TODO was the session's paraphrase of one sentence, and the
+  row was sized from the title. Asking what "simplified" was for, at
+  A-19's read, would have found this a day sooner.
+
+Reading: **386,819** at 01:13 on the fifth tranche's commit, `2818e4b`.

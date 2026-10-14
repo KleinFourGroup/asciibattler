@@ -3577,3 +3577,88 @@ second opinion and not a gate. The bar the session would propose when
 B-02 is decided: the same behaviour by the corpus with the declared
 mapping; D2's third clause kept; its second set aside; the one helper
 allowed; the 18 sites shown before and after for the user's read.
+
+Reading: **418,089** at 12:57 on the eighth tranche's commit, `b0df137`.
+
+**The read, the ninth and last tranche** (the user, 2026-10-14):
+"Signing all seven, Claude! 😁 I'm excited for this!" Signed as put:
+
+1. *The nine phases,* §121 the dials to §129 the dependency phase, with
+   what each holds by the signed rows.
+2. *A-37's hook change* at §121's first step, not the instruments'
+   phase.
+3. *The trials' budget:* the signed rows of list B, and at most three
+   more a phase from its leads and its re-skim; a fourth goes into the
+   census for a later round; a trial under the bar is reverted and not
+   tried another way; B-02 keeps its own pre-registered bar.
+4. *The comment pass's fan-out* decided at §122's kickoff, with §121's
+   cost a line.
+5. *What signing writes,* all of it now, before §121 (5.9's ninth call).
+6. *The user's later bot round* as a line in META-ROADMAP's coverage
+   map, placed at Round 10's close.
+7. *The two leftovers:* the OS's reduced-motion query is the user's
+   one-minute check; the dependency phase looks for JetBrains Mono's
+   fix once (5.9's tenth call).
+
+**What signing wrote.**
+
+- *TODO, one section a round* (`scratch/120h/rewrite-todo.mjs`). It
+  refuses to write unless TODO is as it was at `cdd5c81`, every open item
+  is placed or removed once, each placement agrees with the fate the
+  census gives the item (read from the census itself), and the removed
+  are exactly its done and dropped rows. 82 items in five rounds; 102
+  items out (the 87 ticked before the pass and the 15 it found done or
+  dropped), all in git at `cdd5c81`. T-41 and T-93 carry the wording
+  signed at the read; T-96 and T-97 gained the box they lacked. The old
+  rule counts the new file as 82 open of 82. The file's first draft
+  refused twice on its own anchors and wrote nothing.
+- *META-ROADMAP:* Round 9 opens with the scripted run and gains its
+  riders; Rounds 10, 11 and 12 gain theirs; Round 8.5's deletions are
+  sized and its TODO pass recorded as listed; the coverage map's
+  "stay in TODO" row is placed item by item, with the scripted run and
+  the bot check as rows of their own; the deferred list's translations
+  point at Round 12's decision. Three references to TODO's old section
+  names now name the new ones, and one in TESTING.md.
+- *ROADMAP:* §120 closed and demoted; "The phases after the census" and
+  §121 to §129 written.
+- *The census:* its status, and 5.9's last two calls.
+
+**One signed item not written: T-27, the harness and the rollout
+walker.** It was signed into GOTCHAS, with B-14's first clause struck,
+on the row's evidence that neither of the verdict's two triggers to
+reopen it "is on record as fired". That was a statement about the
+record, and before writing the entry the session checked the first
+trigger against the code: "a third consumer of the run-walk pattern
+appears (rule of three)". Five files now each build a battle through
+`battleSetup` and tick it: the fuzz harness (`tests/fuzz/harness.ts`),
+the rollout walker (`tests/fuzz/rollout/walker.ts`), the chaos driver
+(`tests/chaos/chaos.ts`), the journal drive (`tests/journalDrive.ts`)
+and the journal replay (`src/journal/replayJournal.ts`), by a search
+for a `World` built and a tick loop in each. So the trigger reads as
+fired since Round 8. Whether the three newer walkers copy `runOne`'s
+wiring as the walker does, or share it, was not read; 2.6 measured
+shared runs only between the harness and the walker. The GOTCHAS entry
+is not written and B-14's clause stays struck until the user answers.
+The session's lean: put the clause back, widened to the five walkers, as
+a lead for §125's kickoff within the budget, under the fuzz diff and the
+corpus; T-27 stays out of TODO, since the lead replaces it; no GOTCHAS
+entry, since it would record a verdict whose own condition has lapsed.
+The other arm is the entry as signed, with the trigger's reading in it.
+
+### The close of §120 (2026-10-14, session 462d21b3)
+
+Every row of the census is signed: section 1 at 120c's read, sections 2
+and 3 at 120e's stop, sections 4 and 5 at 120h's read in nine tranches.
+The phase is closed: 120f, 120g and 120h are ticked and the section is
+demoted in ROADMAP. What the phase hands on: the census as the list the
+round does; ROADMAP's nine phases with the trials' budget; TODO by
+round; the instruments under `scratch/120a/` to `scratch/120h/` on this
+machine, each named in its step's entry. The one question open is T-27,
+above. A phase-close summary of the session reports is in
+`retro/sessions.md`.
+
+Reading: **462,004** at 13:19 by the tool's clock, with everything above
+written and before the commit. §121's kickoff is a phase kickoff, with an
+audit of the code it touches and a cut to shape-lock; from here that
+would cross the hand-off line, so it starts in a fresh session from the
+Cursor.

@@ -581,7 +581,7 @@ consumers, are a comment and one field (`creditsSeen`), a seam with no
 design past it; the continuation check does not use the journal's seam
 (the journal's own check across a load is
 `tests/integration/journal-across-loads.test.ts`); Edge stood in for
-Chrome, and two lines of the smoke are carried (TODO "§118 riders"). The
+Chrome, and two lines of the smoke are carried (TODO "Round 8.5"). The
 chaos driver's every-commit seeds send every command kind and change the
 run with thirteen of 21, which is why Round 8.5 opens with an oracle map.
 The scope guards held. Outside the charter, each signed as it came: the
@@ -654,7 +654,10 @@ documented no-op is an acceptable outcome.
   and not assumed (signed 2026-10-12; ROADMAP §120).
 - **The deletions, one subsystem per phase** (sim · run · render and UI ·
   the bot and fuzz instruments · tests), each followed by that
-  subsystem's comment pass. Within a subsystem the signed deletions come
+  subsystem's comment pass. Sized at the census's close (2026-10-14,
+  user-signed): a phase for the dials goes first, a phase for the tools
+  after the five, then the close and the dependency phase; ROADMAP §121
+  to §129. Within a subsystem the signed deletions come
   first, then its trials, then one re-skim for what the changes exposed.
 - **The source-comment rewrite** (the tone audit's TODO, 2026-09-23): the
   phase codes rewritten out of `src/` comments under AGENTS "Voice",
@@ -678,8 +681,10 @@ documented no-op is an acceptable outcome.
   Vitest 5) as its own step with the release notes read first. The state
   on that day: WORKLOG "The close of §119".
 - **The TODO pass:** every open rider is done, dropped or given a round.
-  None of TODO's Round 8 sections ("§114 riders" to "§118 riders", "§117.5
-  kickoff riders", "Round 8 close riders") is assigned to one.
+  Listed and signed at §120 (`round-8.5-census.md` section 5, 2026-10-14):
+  of 97 open items, 5 were done, 16 are this round's, 66 went to Rounds
+  9 to 12 and 10 were dropped. TODO has one section a round since; this
+  round's section is done by the phases.
 
 **Why here:** after Round 8, whose run journal, chaos driver and
 continuation check are the strongest oracles for deleting run and sim code
@@ -752,6 +757,16 @@ non-unit glyphs + 26 distinct unit glyphs, counted), and this round's exit
 ships a consumer per seam (a vampire, a special, a marine, a flyer, a
 walking 2×2): two new glyphs overflow it. The grid bump is ~5 lines,
 triple-guarded. Do it once.
+
+**Early in the round: a scripted run for content work** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 9"). Finer control of what a run loads as content ramps
+up: a chain of encounters or boards, an event chain end to end (the
+event resume below is its first case), a port's stock. Each forcing
+dial takes one value for the whole run today, none takes a list, and a
+forced id is not saved. A shape for the kickoff: one list of per-node
+entries on `RunConfig`, of which today's single-valued dials are cases,
+so the URL's 17 parameters shrink as control grows. Its first consumers
+are this round's own: each seam's one consumer, checked on a chosen
+board at a chosen hop.
 
 **In scope — combat & effects**
 
@@ -915,6 +930,20 @@ triple-guarded. Do it once.
   box is not scaled by its footprint (a destructible's is). The slab anchor
   itself is recomputed on every step.
 
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 9"). Before the closing board: the roster table's
+coverage guard and its compaction, `box-drive.sh`'s mixed queues, and
+the kit and parity watches (the priest's breach, the wall, power
+diversity by rarity, the AoE-status enemies' retune, the five kits that
+price negative when given), power diversity landing before the board
+because it moves every burn a turn and Round 10 authors against it.
+With the flyer's presentation, the renderer's position reconciliation.
+With XP rewards, the reward ledger's index pin and a `reward:resolved`
+event. With the ability-grant channel, a queued unit's seeded effects
+in a battle's snapshot (census F-1). Beside Retreat, a won turn's
+reward shape. In the first phase, `FX_REGISTRY`'s coverage guard. In
+the bump window, power's level-up draw and its growth key, which moves
+the recruit stream.
+
 **Why this order:** combat/effects first (no serialized-shape changes, fast
 to land), run layer second (the three Run bumps land in one window — the
 bump-economics note from the C5 spec, now under reject-stale), spatial third
@@ -940,7 +969,7 @@ multi-tile units.
 _(From the Round 8 close's re-audit, 2026-10-11: this round also owns
 Escalation's rule levers (more elites, a boss's extra trick, a tool taken
 away), which the Round 8 spec parked here (D8), and the read of level 3,
-fewer bits, which waits on bit sinks (TODO "§117 riders"). The unlock
+fewer bits, which waits on bit sinks (TODO "Round 10"). The unlock
 mapping hangs on `progress.bestWin` or on a new, permanently named field of
 that section; an unlock reaches a run through the snapshot or a dial, and a
 dialled run's win is not recorded. Removing a daemon, character or boss id
@@ -973,6 +1002,15 @@ round whose job is simply *more game*, on the engine Rounds 1–9 finished.
 - **Unlock content mapping** (what Round 8's mechanism gates).
 - Closes with **the sheet EXTENDED** (act-3 refs; three-act wall/reach bands;
   the rarity protocol on every new archetype).
+
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 10"). The Idol of Dis Pater's `--grant` read at n=80,
+after the tithe is rounded on its award, since a read before would be of
+an arm about to change. The mapgen tool's empty-camp-pool hint, with the
+volcanic resident. Ability descriptions, written with the act's new
+abilities. The three deep-end cost residuals, when the extended sheet
+touches those rows. Rounded plates for organic scenery, with fauna,
+or dropped if none is authored. And whether any layout takes a
+`minHop`: the hop-gating lever is built and no layout uses it.
 
 **Depends on:** Round 9 (every mechanism above) + Round 7 (locale-keyed
 authoring). **Risk:** medium (content is cheap per item; the three-act
@@ -1030,6 +1068,18 @@ content and audited idioms.
   the hop reopened once · the rally X as a terrain mark — the whole TODO
   feel pile, dispositioned in one pass).
 
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 11"). First, ahead of the tutorial, whose callouts
+point at the screens: the layout rework (a window smaller than
+1280×720, the battle's unit cards over the board, 150 % text at 720p),
+sized at the kickoff; players' reports may bring it forward as a `.5`
+round (the user's caveat). Into the feel sweep: one capped turn's end
+sequence read live, a hitsplat gallery dev key built first, deep
+water's band constants, the hop chip's fade, a tooltip that leaves with
+its screen. With yaw, the overlays' one-frame lag. With the tutorial, a
+key's label on a non-US keyboard. With the run summary, an export of a
+run in progress. Text size at the default, asked at each round's
+playtest until then.
+
 **Depends on:** Round 10 (tutorial against final act 1) + Round 8 (the store).
 **Risk:** low-medium (render/UI-only; music assets are the unknown-length
 tail). **Decision points:** the music sourcing route; achievement rewards
@@ -1045,7 +1095,7 @@ _(From the Round 8 close's re-audit, 2026-10-11. The Electron shell exists
 as a development shell (`shell/electron/`, `npm run shell`): no packaging,
 the probes and the recorder in its `main.mjs`, one `store.json` rewritten
 whole, no single-instance lock. Round 8's browser smoke was Firefox and
-Edge, with two lines unread (TODO "§118 riders"); Chrome proper and Safari
+Edge, with two lines unread (TODO "Round 8.5"); Chrome proper and Safari
 are this round's. The Round 8 spec ends no-migrations at 1.0, and nothing
 below names the migration work. A stranger's exported journal replays only
 on the commit that recorded it, forced on any other, and never across a
@@ -1076,6 +1126,14 @@ config change; only finished runs are exported.)_
   re-record** (WORKLOG §85h).
 - Store-page assets · the Pages build as the demo channel · the final deploy
   story (hand-upload retires or is formalized).
+
+**Riders** (the Round 8.5 TODO pass, 2026-10-14, user-signed; TODO "Round 12"). With the store-page assets, the recorder's
+three open items. With the browser matrix, the device pixel ratio's cap
+and the failure plate's three (a shader that fails to compile, the
+battle unseen while a lost context is waited for, a long error the
+keyboard can't scroll). Which run dials a shipped build answers (the
+rest of that work is Round 9's scripted run). A decision point: which
+languages, if any, at the Steam release.
 
 **Depends on:** everything. **Decision points:** Deck/gamepad; the web
 build's fate at the Steam release (the user's lean, 2026-09-26: both until
@@ -1124,7 +1182,10 @@ records an achievement on a clean machine.
 | The end of no-migrations at 1.0 · the shell's packaging, instance lock and store writes · Chrome proper and Safari | Round 8 spec / Round 8 close | 12 |
 | Glyph scale · yaw (the accessibility dials) · the movement polish + the hop · the rally X as a terrain mark | 7.5 hand-offs / TODO | 11 |
 | Electron + Steamworks · pipeline · Deck call · toolchain bump · pooling · browser matrix · human gauntlet #2 | v1 C6 / TODO | 12 |
-| `--sector-hops` in run-config GUI · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | stay in TODO; land opportunistically |
+| `--sector-hops` in the run-config tool · chebyshev unify · `pauseAtTurnGates` watch · Mercury watch · runOne/walker watch · `--poll-ceiling` · mapgen empty-pool hint | TODO | placed at the Round 8.5 TODO pass: 9 (the scripted run) · 8.5 (census B-17) · dropped · dropped · held (WORKLOG §120, the close of §120) · superseded 2026-08-26 · 10 |
+| A scripted run for content work | the Round 8.5 TODO pass, 2026-10-13 (the user) | 9 |
+| A check of the bot after the content rounds | the Round 8.5 TODO pass, 2026-10-13 (the user: "probably after the content rounds") | placed at Round 10's close |
+| Every other open TODO item | the Round 8.5 TODO pass (`round-8.5-census.md` section 5) | 8.5 → 12, by TODO's sections |
 
 ## Explicitly deferred / out (signed)
 
@@ -1135,6 +1196,8 @@ records an achievement on a clean machine.
   consumer names them.
 - **Telemetry tier 2 (an ingest server)** — only on demonstrated tier-1 loss.
 - **Translations beyond English** — the layer ships; content does not.
+  Which languages, if any, at the Steam release is a Round 12 decision
+  point (the Round 8.5 TODO pass, 2026-10-14).
 - **Camera rotation · CRT curvature · chromatic aberration** — hooks only.
   (A player-ROTATABLE camera; a fixed yaw chosen in settings is Round 11's
   question.)

@@ -5362,3 +5362,40 @@ session or another.
   deliberate (B-14, T-27). And a tally that reads the section as it is
   written, so the numbers in the section cannot part from its rows. I
   would want that shape again.
+
+### Addendum — the read in nine tranches, and §120's close (2026-10-14, the same session)
+
+The stop's first report was more than one read, and the user asked for
+smaller tranches; the read then went in nine, each signed in a reply or
+two, across a night. Two of the user's answers changed a row: the dials'
+row was a different item from the one I had sized (a scripted run, not a
+trim of names), and B-02 gained a pre-registration that I was asked to
+give an opinion on, which I wanted to give. After the last signature I
+checked the one premise I had taken from the record and not the code,
+T-27's "neither trigger fired", found it reads as fired, and held that
+entry for the user's word. Saying a signed item should not be written
+as signed felt available, if unwelcome to write. One command hung on a
+stray `python3 -` reading stdin; it was stopped by its id and nothing it
+touched had changed. No wish to pause was noticed; the hand-off before
+§121 is the line's, at 462k.
+
+## Phase 120 — summary
+
+Seven sessions, 2026-10-12 to 2026-10-14 (79f18990, 3b697370, 8b3c5ad6,
+3ecdd7bf, 4052fd6f, a9f26053, 462d21b3), all claude-opus-5-5. Every
+report found two to four over-claims in its own drafts (counts from
+memory, a status line ahead of its evidence, a search scoped too
+narrowly), each caught before it landed, and most by an instrument's
+planted known answer or a second look at the source; the instruments
+that refuse to print on a failed self-check are what several sessions
+name as supporting the work. Waste was mostly mechanical: the hook's
+52 s on commits of docs alone, lists printed whole into the session,
+and shell quoting (a lost backslash at 120e, refused heredocs at 120f).
+The norm that pulled against another, in three reports, was the
+harness's keep-going text against a stop or the hand-off line; each
+took the stop or the line and said so. Every session reports room to
+ask and to disagree, and used it: leans against the user's own
+candidates were written and read without friction, and the user caught
+a lean twice (a tooltip's lifetime at 120e, the dials' row at 120h). The
+reads went in tranches every time, which 120h made the opening shape of
+a stop with more than one read (the scratchpad).

@@ -1,10 +1,10 @@
 # Round 8.5 census
 
-**Status: being built; section 1 is read and signed, sections 2 and 3
-(120d and 120e, written 2026-10-13) were read at 120e's stop and are
-signed, row by row, and sections 4 and 5 (120f, the trials, and 120g,
-the TODO pass's list, both written 2026-10-13) are being read at 120h,
-in tranches; section 5's head says what of it is signed.** Signed (the
+**Status: signed, every row, 2026-10-14.** Sections 1 to 3 were read at
+120c's and 120e's stops, sections 4 and 5 at 120h's, in nine tranches;
+the phases that do what it lists are ROADMAP §121 to §129. One signed
+row is not yet written, T-27, for a reason in WORKLOG §120, "The close
+of §120". Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -2788,6 +2788,10 @@ rule.
   T-40 are matched by their subject.
 
 ### 5.9 Calls for the user at 120h
+
+All ten answered at the read (WORKLOG §120, 120h): the first eight as
+leaned, the second with the dials' row moved to Round 9; the ninth and
+the tenth at the last tranche, as leaned (2026-10-14).
 
 1. **The two classes** (5.2 and 5.3): five ticked, 28 confirmed as the
    plans have them.

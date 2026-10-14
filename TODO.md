@@ -4,98 +4,166 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
 
 **Completion convention (2026-07-06):** a completed item collapses to a single ✅ line + a pointer (commit hash, doc §, or "git history") *in the commit that lands it* — the full diagnosis lives in git history and the run-logs, not here.
 
-## Phase Qb — deferred bug investigations ✅ (both fixed 2026-06-18, user-confirmed)
+**One section a round (the Round 8.5 TODO pass, signed 2026-10-14).** Each
+open item sits under the round it was given, with the groups META-ROADMAP
+names; which round and why is the item's row in
+[round-8.5-census.md](round-8.5-census.md) section 5 (T-nn). A new item goes
+under the round it is filed for, or under "Not yet placed" until the next
+pass. The items ticked before the pass, and the fifteen it found done or
+dropped, are in git at `cdd5c81`.
 
-- [x] **#2 — Billboard sprite depth sorting.** Draw order = spawn slot, so a farther sprite could paint over a nearer one; fixed via per-frame `SpriteRenderer.sortByDepth(camera)` (`0d9413e`). Full diagnosis in git.
-- [x] **#3 — Kiting archer pathed onto an enemy in a corridor.** A blocked kiter inside `minRange` fell through to the soft-excluded target-cell fallback; fix omits that fallback when kiting (`b6da01f`). Full diagnosis in git.
+## Round 8.5 — Housekeeping (this round)
 
-## Phase T — deferred bug (T3 layout-editor toggle) ✅
+By phase, as ROADMAP §121 to §129 has them. The census rows that are not
+TODO items (list A's deletions, list B's trials) are in
+[round-8.5-census.md](round-8.5-census.md), not here.
 
-- [x] **"Add to sector" button did nothing.** Un-imported `LAYOUT_IDS` → runtime `ReferenceError` swallowed by a `void` handler; fixed 2026-06-19 (+ the confirmation now survives Vite's full-reload). Full diagnosis in git.
-- [x] **Typecheck coverage extended to `tools/` + `tests/`.** Root tsconfig `include` widened; 49 pre-existing errors fixed type-only (2026-06-19). Detail in git.
+### Every phase: the comment pass
 
-## Micro round (53→57) — watch items
+- [ ] **Rewrite the phase codes out of `src/` code comments** under the
+  AGENTS "Voice" rule: 1,991 `§`-codes across 262 files (the 48
+  `gotcha #N` refs stay). Comments only, proven by a comment-stripped
+  before/after diff with a failing control. Timing: **Round 8.5
+  (Housekeeping)**, per file in the deletion pass's touch (META-ROADMAP
+  §Round 8.5, signed 2026-09-27). The first timing, after 106e and before
+  the first build phase, lapsed when §107–§109 edited the render files.
+  `archive/post-104-worklog.md` "The new-model tone audit". The aim is
+  wider since the 8.5 kickoff (2026-10-11, user-signed): the comments'
+  length, with the codes as the part that can be counted
+  (`round-8.5-spec.md`, D4). Measured 2026-10-12 by a written rule: the
+  live count is `npm run oracle -- comment-codes`, held by
+  `tests/comment-codes.test.ts`, and the proof is `npm run oracle --
+  comment-strip <ref>` (WORKLOG §119, 119e). `tests` and `tools` hold
+  2,497 more by the same rule and are outside the ceiling; whether the
+  pass takes them is decided once its outcome on `src` is seen (the user,
+  2026-10-12).
 
-- [x] **Gauntlet spiral cells: spawn geometry is seed-rolled, not cell-pinned.** ✅ RETIRED 2026-07-19 at the §58 no-op verdict — the item was conditioned on a geometry-keyed trigger or a re-measure needing geometry control; §54 closed without either and §58 built no sensor; paired reads share the roll by construction (the note's own carve-out). Full original note: git history + worklog §58b pointer. Surfaced 2026-07-13.
+### §122 sim
 
-## §74i riders (the event content round) — user notes at the 74f eyeball (2026-08-06)
+- [ ] **Unify the duplicated `chebyshev` helpers.** Still defined independently in five places ([Pathfinding.ts](src/sim/Pathfinding.ts), [Targeting.ts](src/sim/Targeting.ts), [targetingStrategies.ts](src/sim/targetingStrategies.ts), [focusTile.ts](src/sim/focusTile.ts), + [movement.ts](src/sim/movement.ts)'s `chebyshev = distanceBetween` alias) — rule-of-three was passed long ago (first flagged in the MVP-era scratchpad). Extract one shared geometry helper next time any of these files is open. Mechanical; zero behavior change. Promoted at the 2026-07-06 scratchpad sweep.
 
-- [x] **Event outcome beat.** ✅ RESOLVED 2026-08-07 at the §74i design
-  round (user-signed): the AUTHORED outcome-page convention — no engine
-  toast (a §83 feel-read revisit if prose proves insufficient). Now a
-  DESIGN.md convention ("Events"); worklog §74i.
-- [x] **Per-run event repeats.** ✅ BUILT 2026-08-07 (74i-a,
-  user-signed): default no-repeat via the engine-written `visited:<id>`
-  flag + the pool-roll filter; `repeatable: true` opts out (cheese-tax
-  ships it). Worklog §74i.
-- [ ] **Human-gauntlet cells vs the starting event.** The §53 cell
-  protocol pins its forced fight at the ROOT, which The Start now
-  stamps as the starting event (74i-c) — the headless drive suppresses
-  the catalog (cells.test), but a BROWSER cell run (`cellUrl`) opens
-  the boon event before the fight, perturbing trace comparability
-  with the 53g baseline. Revisit before the next human gauntlet
-  (eventCatalog is programmatic-only, so the URL side needs its own
-  answer — a `noevents` query dial or a protocol note).
+### §123 run
 
-## Round 6 (84→88) — carried follow-ups (2026-09-02)
+- [ ] **A loaded run can miss a field the class defaults.** `Run.fromJSON`
+  assigns each field by name past the constructor, and
+  `pauseAtTurnGates` is `undefined` on a loaded run today (harmless).
+  A test that a loaded run has a constructed run's properties would
+  catch the next. Census F-2.
 
-- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
-      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
-      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
-      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
-      yet the user picks him every run. The standing rarity protocol's
-      tool for a thin row is the paired same-seed `--grant` arm at the
-      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
-      read that answers "is holding him net-negative" without the
-      site-causal confound. Candidate mechanism if it holds: the tithe
-      funds MORE bot shopping, and port purchases price negative on
-      average (88b). Rides the §89 amendment cohort or its own line.
-- [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
-      registry's named next guard (BALANCE §"The derived-artifact
-      registry"): the prior-table tripwire's twin, config-derived over
-      the draftable set × the recorded (character, sector, hop) cells;
-      the builder loud-throws on unknown archetypes but membership drift
-      is silent until the next `--roster=sampled` read.
+### §124 render and UI, its first steps
 
-## Polish / pre-launch
+- [ ] **The page drive does not notice a phase whose scene never mounts.**
+  With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
+  shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`
+  ends with the same log hash and state hash as the clean tree: the driver
+  sends each phase's command to `Game` whatever screen is up. A check in
+  `__probe.drive` that the mounted scene is the phase's would make the
+  drive a proof for the scene wiring, which today has none but the eye.
 
-- [ ] **Audio tell for the catapult hold-fire (82e rider,
-  2026-08-17).** The release gate ships SILENT visually-speaking
-  beyond the amber drain bar (user call at the 82e shape-lock) — a
-  short "held fire" sound (creak/ratchet) on `unit:actionHeld` would
-  carry the tell for eyes-elsewhere moments. The event already
-  exists; this is an AudioPlayer subscription + an asset pick, feel
-  round material.
+- [ ] **The probe runner's edges** (`shell/electron/probe-cli.mjs`). Its
+  JSON argument read from a file, since Git Bash does not carry JSON on
+  the command line safely (two scratch runners were written for that at
+  117d). One build for a batch of launches, so the tree is free while the
+  batch runs (116k waited three times). The report's shape in the header:
+  a script's value is at `result.script`. And
+  `__probe.drive({ until: 'turn-outcome' })` never stops there (117.5e
+  lost six launches to it).
 
-- [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
-  (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
-  hunting for camps — the one theme whose pool ships empty. One line
-  of UI (grey the Camps stat or badge the theme select "no camps")
-  saves the next person the hunt. Dev-tool-only, trivial.
+### §126 tests
 
-- [x] **"Empower" naming collision (mechanic vs Mars's buff key).** ✅ 95f
-  (2026-09-10): the Mars buff KEY renamed `empowered` → `honed` (the user's
-  pick), Run v45 → v46 reject-stale; the buff labels + the empower strings
-  through the string table. WORKLOG §95f.
+- [ ] **A test that loops until a command takes effect never returns once
+  the command stops taking effect: the loops not yet read.** With a declined reward made a no-op in
+  `Run.ts`, `npm test` did not fail: one worker spun (391 CPU-seconds
+  before it was stopped by hand) and 253 tests of `src/run/Run.test.ts`
+  never ran, so the pre-commit hook would hang where it should go red. The
+  loop is `while (run.phase === 'reward') run.dispatch({ kind:
+  'declineReward', index: 0 })` at `Run.test.ts:5575`, with the same shape
+  one line up for `acceptReward` and at 4652. TESTING.md already has the
+  rule ("Bounded steps, never poll `currentTick`"), from a `World` loop; this
+  is its second bite, on a `Run` loop. There were 55 `while (` lines in 24
+  test files (16 in `Run.test.ts`, 8 in `World.test.ts`); three are fixed
+  and the other 52 are unread. For the tests phase: bound the ones that
+  wait on state a command or a tick is meant to change.
 
-- [ ] **Hoist the display color tables into config.** User call at the
-  78d eyeball (2026-08-14): `STATUS_DISPLAY` + `EMPOWER_DISPLAY`
-  (src/render/statusDisplay.ts) are hand-authored hex tables in code;
-  they should live in `config/*.json` like every other tunable (zod
-  loader + the existing coverage pins retarget to the loaded tables;
-  the JSON gets Vite hot-reload for eyeball-tuning, which is the
-  actual payoff). Cheap, but do it deliberately — the §76b/78d pin
-  tests and the fallback-magenta discipline move with it.
+- [ ] **Three tests time out at 5 s when anything runs beside the suite:**
+  `tests/store-guard.test.ts`, and the chaos test's seeds whenever a
+  stream moves their walk (118d). Neither failure names load. A longer
+  timeout on the three, or a line in the failure. `store-guard`'s two
+  whole-repo walks have a 30 s limit since 2026-10-12, when the hook
+  failed on that file twice running with nothing beside the suite (the
+  file takes 2 s alone); the chaos test's seeds are as they were.
 
-- [x] ✅ **Aura-FX mode: the wider feel jury + possible graphics setting** —
-  116b (2026-10-04): promoted. `track` and `fill` are the `aura` setting
-  (`src/render/auraFx.ts`); `fixed` and the `__auraFx` console switch are
-  deleted. Its row lands with 116d. `archive/post-109-worklog.md` §116, call 7 and §116b.
+- [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
 
-- [x] **Layout-stability sweep (the "Y-coordinate hysteresis" class).** ✅ §101
-  (2026-09-18; ticked at the 103 kickoff audit): three mechanisms + the
-  reservation idiom; the Reward ledger fixes the 76g catch. DESIGN "Layout
-  stability (101)" · WORKLOG §101.
+- [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.
+
+### §128 the close
+
+- [ ] **DESIGN's "Out of scope" list names as backlog what has since been
+  built** (found at the §115 close, which struck save/load and replay):
+  larger units, in-battle commands, audio, line of sight, terrain and
+  status effects are still listed plain. Strike each with its phase, after
+  checking it against ARCHITECTURE.
+
+- [ ] **Dead links in the docs** (the close's C6, a file-existence check
+  of every relative markdown link; `scratch/118j-close/c6-all-links.mjs`).
+  Five in four live docs: GOTCHAS to `src/sim/actions/AttackAction.ts`,
+  PATHING to `tests/pathing/trace-flips.ts`, this file to
+  `src/sim/actions/DashAction.ts`, and two root-relative links in
+  `retro/agent-welfare-review-2026-09-13.md`. And 882 misses inside
+  `archive/`, not sorted further: the files archived before the 7.5 close
+  were moved verbatim, with links written from the repo root. Fix the
+  five; the archives' are a decision.
+
+- [ ] **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — the subject match reads 40 % for §101 off six hits, one of them a `fix(` commit (AGENTS carries the warning until this lands).
+
+- [ ] **`phase-stats` under `--since`** drops a `.5` phase and folds a
+  `.75` one into its whole number, and a subject with a scope word
+  (`save`, `settings`) in place of the step is counted under the word.
+  Round 8 read 135 commits there against git's 196.
+
+- [ ] **The friction log is a tracked file,** so filing during a cohort's
+  launch window or a recording dirties the tree: the box holds on a dirty
+  tree, and a clip is stamped `-dirty` (111f-post, 118b). An untracked
+  spool that the tool drains at the next clean moment would keep "file
+  when noticed".
+
+- [ ] **Two lines of the smoke were not read** (118i): the storage keys
+  visible from our frame on itch's shared origin that aren't ours (read
+  once, in Firefox, at 116l; never in Edge), and the days-later re-open.
+  The diagnostics build that listed the keys left the page at the
+  `0.1.0` upload. What would read them: the browser's own storage
+  inspector on the frame, or a diagnostics zip on a second draft; and for
+  the re-open, the live page itself after some days, where Copy
+  diagnostics shows the store's sections still there.
+
+### §129 the dependency phase
+
+- [ ] **Dev-toolchain `npm audit` debt (5 vulns, 4 high — §79g flag, filed
+  §79-post).** As measured 2026-08-16: all five in the dev toolchain
+  (vite/esbuild/postcss/nanoid/brace-expansion), none shipped in `dist/`;
+  `subset-font@2.5.0` has zero deps and introduced none. Clear at a
+  deliberate toolchain-bump round (a Vite major is a build-pipeline change
+  with its own verify pass), not in passing. Detail: WORKLOG §79g/§79-post.
+
+## Round 9 — Extensions
+
+META-ROADMAP §"Round 9 — Extensions" names each group.
+
+### Early: a scripted run for content work
+
+- [ ] **A scripted run for content work** (the user, 2026-10-13, at the
+  Round 8.5 TODO pass; census T-93). Finer control of what a run loads as
+  content ramps up: "an event chain from end to end in one run", "a
+  specific chain of encounters or layouts", "to override a shop's
+  inventory". Each forcing dial takes one value for the whole run
+  (`layout`, `encounter`, `event`, `firstNode`; `src/run/RunConfig.ts`),
+  none takes a list, nothing sets a port's stock, and a forced id is not
+  saved, so a loaded run goes back to normal selection. A shape for the
+  kickoff: one list of per-node entries on `RunConfig`, of which those four
+  dials are cases, so the 17 URL parameters (census 1.5) shrink as control
+  grows. The three items below fold into it. Round 12 keeps one clause:
+  which dials a shipped build answers.
 
 - [ ] **`--sector-hops` in the run-config tool + sweep GUI.** 68b plumbed
   the two-act dial through the fuzz CLI's run/search/sweep (+ shard
@@ -104,26 +172,37 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   either tool is next touched; the fuzz CLI covers all measurement
   needs meanwhile. Noted 2026-07-27.
 
-- [ ] **Fleeing-enemy threat tell (UI).** Parked at the §58 close
-  (2026-07-19, user call): a player-facing "that unit can't reach/harm
-  you" read — the derived reachability math (§58's unbuilt sensor)
-  surfaced as UI instead of bot input. The bot side proved unnecessary
-  (searcher-ate-it, BALANCE §58); the player value is readability on the
-  fleer/deserter situation the experienced eye reads natively. Needs a
-  snapshot-computable reachability read + a render/ui surface
-  (eyeball-verify); candidate slot: a later UI/polish round.
+- [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
 
-- [ ] **Stalled-battle draw prompt (live-game UX).** The only stall guard is
-  the per-turn tick cap (`resolveAsDraw`, driver-owned) — a player who hits a
-  genuine stall IRL is stuck watching until the cap expires, with no engine
-  heuristic to offer "this looks stalled; accept a draw?" earlier. Idea
-  (user): a cheap no-progress read (e.g. no damage/pool movement for N
-  seconds) that surfaces an accept-a-draw prompt in the UI. Sim read +
-  UI-only surface; no effect on headless (harness keeps the hard cap).
-  Originally floated around the draw/timeout-counter unification but never
-  noted; captured 2026-07-15.
+- [ ] **`forcedEncounterId` fields only at a node of its own kind** and
+  otherwise falls through to normal selection with no warning (117a: a
+  test read another pool, 19 for 22). A line in the `RunConfig` comment,
+  or a warning on a DEV page.
 
-- [ ] **Mercury coin-flip watch.** The §51 kickoff report ("always got the full redraw for a whole run") closed NOT-REPRODUCIBLE: the engine is proven on the exact live path (a kickoff probe drove 100 ROLLED-mercury runs — 826 gated turns, 44.9% granted, one ≥8-turn all-heads seed), and the user's very next native run behaved. If a future run shows the same streak, grab its seed (`?seed=`) and re-probe on the rolled path before touching the engine — the "Idol of Mercury is silent" denial line (PreTurnScreen) is the tell to watch for. Detail: WORKLOG.md §51 kickoff (2026-07-11).
+### Before the closing board
+
+- [ ] **A coverage guard for `roster-table.json`** — the derived-artifact
+      registry's named next guard (BALANCE §"The derived-artifact
+      registry"): the prior-table tripwire's twin, config-derived over
+      the draftable set × the recorded (character, sector, hop) cells;
+      the builder loud-throws on unknown archetypes but membership drift
+      is silent until the next `--roster=sampled` read.
+
+- [ ] **Compact `roster-table.json`** — v2 (92h) is 4.7 MB / 21,519 raw rows against v1's 1.1 MB; the `--roster=sampled` reader needs per-(character, sector, hop) distributions, not rows — store those (a builder change + a format bump), and the coverage twin of the prior tripwire (the Round 6 rider above) lands with it.
+
+- [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
+
+- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6.
+
+- [ ] **The wall watch at the §94 config** (94h, user-signed HOLD): the deploy walk's boss wall 0.459 vs the signed 30–35 and the isolated bosses −11 pt (King 0.483 · Queen 0.458) with the bosses UNCHANGED since 92d — the roster arrives weaker under casualties. A roster-strength lever (power diversity by rarity, the kit watches) before any band move; re-read on the next full board.
+
+- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 9, after the §94 signing.
+
+- [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 9** with the kit watches (Round 7's no-board guard).
+
+- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 9 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
+
+### With a seam the round builds
 
 - [ ] **Renderer position-reconciliation sweep (self-heal + REPORT sprite/sim
   desyncs).** The 56e labyrinth desync (a sprite resting tiles from its
@@ -145,269 +224,6 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   size it only if the warn ever fires after 56e-pre2. Filed 2026-07-15
   (user question at the 56e-pre2 diagnosis).
 
-- [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
-
-- [x] **§40a rubble glyph — a true HALF-height look.** Done 2026-07-02, user-confirmed native: the glyph is now `▄` (U+2584 LOWER HALF BLOCK), replacing the `%` stopgap. Detail in git.
-
-- [x] **Run-mode progress output for long serial batches.** Done 2026-07-18, same session it was filed: one stderr line per run in fuzz run mode + per cell-run in the gauntlet CLI (index, outcome, elapsed); remote batches now tail live progress via `box-batch.sh status`. Detail in git.
-
-- [x] **hcloud create/destroy automation for measurement boxes.** Done §62 (2026-07-23): [scripts/box-launch.sh](scripts/box-launch.sh) `create`/`destroy`/`list` — location auto-fallback, type fails loud; user ran the full cycle. Detail worklog §62 + git `6cfe73a`.
-
-- [x] **Auto-generate glyph ink-boxes at atlas build (retire the hand-maintained `GLYPH_INK` table).** ✅ Done at **§79a** (2026-08-14), user-confirmed at the §79h exit eyeball: `inkRectFromRgba` measures every rasterized cell's alpha bbox at atlas build, exposed as `FontAtlas.getGlyphInk`; the hand-measured table is gone and every glyph is tight for free. §79d2 later split raw vs padded (anchoring reads RAW; the `INK_PAD_PX` click feel — tuned to 5px at §79e — applies at pick-candidate build only), and the same per-cell alpha data went on to carry the whole §79 anchor convention (baseline stand line, ink-top lifts). Detail: WORKLOG §79a/§79d2 + git. *Original note:* The §40e clickbox fix ([glyphs.ts](src/render/glyphs.ts) `GLYPH_INK` / `glyphInk` / `FULL_GLYPH_INK`, consumed by [pick.ts](src/render/pick.ts) `pickInstanceAtNdc`) added a per-glyph normalized ink-rect so a click hit-box hugs the visible glyph instead of the full quad — but the table is **hand-maintained with a single MEASURED entry** (`▄`, from a one-off browser rasterization); every other glyph falls back to `FULL_GLYPH_INK` (the whole cell), so only rubble is tight. **The clean replacement:** [FontAtlas.create](src/render/FontAtlas.ts) already rasterizes EVERY glyph to a 2D canvas, so after the `fillText` pass, read the alpha channel per cell, compute each glyph's ink bounding box, normalize to the cell (+ the same canvas→GL y-up flip `getGlyphUV` does), and expose it (e.g. `FontAtlas.getGlyphInk(glyph)`, a sibling of `getGlyphUV`). The billboard builders ([BattleRenderer](src/render/BattleRenderer.ts) `enemyBillboards`/`destructibleBillboards`) then stamp `fontAtlas.getGlyphInk(glyph)` instead of the static `glyphInk(glyph)`, and `GLYPH_INK` + its one measured constant are deleted. This yields a TIGHT box for EVERY glyph for free (small sprites' corner slop too, not just `▄`) and removes the measure-and-hardcode chore whenever a glyph is authored. **Wrinkle:** `glyphInk` is currently a pure, synchronous, THREE-free function (headless-usable); the atlas builds ASYNC in the browser, so the dynamic ink lives at render time — fine, since only the render/pick path needs ink and it always has a built `FontAtlas`; keep `FULL_GLYPH_INK` as the fallback for any glyph the atlas hasn't measured. Pick an alpha threshold (the one-off used `>16`) + maybe a hair of padding for click feel. **Independent of** the heavier future pixel-perfect **alpha-mask** direction (for an irregular glyph where a rectangle over-selects the corners — e.g. a giant `G`); this is just the near-term "stop hand-computing boxes" cleanup, and the same per-glyph atlas data is where a coverage mask would later live. Surfaced 2026-07-03 (user call, at the §40e clickbox follow-up).
-- [x] **Isthmus pathing/clumping probe.** Resolved by the Pathfinding Audit round: §45a vacancy costs + §45b's ETA-gated wait convert the mouth pile-up into deliberate queues (isthmus oscillation 0.000 on all six team-seeds), and §46a gated flow fields OUT on the measured residue; the 2-wide crossing stays brutal BY DESIGN (user call). See [PATHING.md](PATHING.md) §45d/§46a; original deep-water diagnosis in git history.
-- [x] **Check sprite-on-tile alignment for tiles toward the far left/right edges of the camera.** ✅ Done across **§79b–§79d** (2026-08-14), user-confirmed at the §79h exit eyeball. Cause **(c)** was right — the world-Y `SPRITE_CENTER_OFFSET` lift, measured at **±9.1px** of edge skew at 720p, with a camera-up alternative measuring exactly 0. Fixed structurally rather than locally: §79d flipped the whole anchor convention (ground anchors + base-anchored quads + `aboveAnchor` as the ONE camera-up stacking primitive), taking **drift 9.1px → 0.0000px at every cell** and retiring the I2 and J3 hand-rolled workarounds this note predicted were the same family. Detail: WORKLOG §79b/§79d + git. *Original note:* Surfaced by the user during the Z3 playtest (2026-06-24). **NOT a Z3 regression** — Z3 only re-homed the cue FX onto `action:phase` fx keys; it touched **no** billboarding/positioning code (the sprite vertex shader [billboard.vert.glsl](src/render/shaders/billboard.vert.glsl), [SpriteRenderer](src/render/SpriteRenderer.ts), and `gridToWorld`/`tileWorldPos` in [BattleRenderer](src/render/BattleRenderer.ts) are all unchanged). So whatever's visible at the screen edges is pre-existing. **What to look at:** the billboard quad is offset in **view space** about the projection of its world anchor (a unit sits at `tileWorldPos` = the tile center lifted by `SPRITE_CENTER_OFFSET`), so under the pitched perspective camera a sprite far from screen center can appear shifted relative to the flat tile beneath it. This is the same off-axis-projection family that already bit two markers and was fixed by switching a world-Y lift onto the **camera-up** axis: the **J3 objective marker** (`OBJECTIVE_MARKER_ENEMY_LIFT` / `updateObjectiveMarker` in BattleRenderer — the enemy `X` skewed sideways for off-center units until the lift moved to camera-up) and the **I2 hitsplat** (`UnitOverlayLayer.spawnHitsplat`). **Diagnose:** pick a unit on a far-edge tile, compare its rendered screen position against the tile's projected center (sample via `getImageData` / the `__game` handle, the screenshot tool smears sub-pixel detail per the HANDOFF browser-verify tips); decide whether it's (a) inherent billboard view-space offset under perspective (cosmetic, may be acceptable), (b) a camera fit/scroll centering issue ([Renderer.ts](src/render/Renderer.ts) `fit`/scroll), or (c) the `SPRITE_CENTER_OFFSET` vs per-tile-top-Y interplay (`tileWorldPos`). Cosmetic-to-correctness depending on the cause.
-- ✅ **`RNG` stat label vs `rng` reach** (117.5f, 2026-10-09): an ability row reads `reach R`; the `RNG` stat label is as it was (`archive/post-109-worklog.md` §117.5f). The archetype editor, a dev tool, still prints `rng` on its own preview line.
-- [x] **Favicon.** Shipped in R3: an inline-SVG roguelike `@` in terminal green ([index.html](index.html)) — no more per-load 404. *(Found already-done during the 2026-07-06 TODO demotion pass; R3 landed it without checking this off.)*
-- [ ] **Card rarity-accent CSS (the rarity system).** Card accents are a **rarity** dimension, NOT per-archetype (user call at P1). P1 added the seam: every card stamps `unit-card--rarity-{rarity}` ([src/ui/UnitCard.ts](src/ui/UnitCard.ts)), but only the default `common` exists today and ships **unstyled** — every card looks as it always has. When the rarity system lands (a `rarity` field on the unit + the tier catalog), add `.unit-card--rarity-{uncommon|rare|…}` accent rules (border / glyph tint) to [ui.css](src/ui/ui.css); no structural change to the component or the screens. (Supersedes the old "per-archetype `recruit-card--{rogue|healer|…}` accent" note — that was a misframing; the `--{archetype}` classes were dead/unstyled and were dropped in P1.) Cosmetic.
-- [x] **Dedicated catapult IMPACT SFX.** Done §32b (2026-06-26): the user's hand-made `thud.wav` crash on `catapult_burst`, replacing the borrowed `shoot`.
-- [ ] **Catapult LAUNCH creak (the F3 launch/impact split — optional tail).** F3 moved the projectile *launch* to the `release` phase (~12 ticks before impact), so the loose is silent and only the impact crash sounds. The seam is now trivial: the `catapult_launch` fx key already exists (projectile-only) — just author a launch "creak/thunk/FWOMP" sound (a `scripts/gen-sfx.mjs` recipe would do it) + add it to that key + register the `SoundKey`. Lower priority — the impact crash carries the weight. *(Same optional opportunity for the mage bolt's `release` "fwoosh," but `magicboom` at impact already reads right.)*
-- [x] **In-battle HUD stat line is getting crowded.** ✅ RETIRED at the Round 7 kickoff (2026-09-09) — `formatStats` was deleted at `5a52962` (Q6); compact cards carry no stat block and POW has its own row on the full card. `archive/post-94-worklog.md` §Kickoff H.7.
-- [x] **`power` distinct visual treatment on the cards.** Done at the Phase P close (2026-06-17): `POW` sits in its own accented meta row on the shared `UnitCard`. Detail in git.
-- [x] **Archetype display-label layer.** ✅ Done §61g (2026-07-22): required `name` on `UnitDef` (config-owned, the `AbilityDef.name` precedent) + `nameForArchetype` (falls back to the raw id); UnitCard headers + CacheOverlay read it. Detail in git + WORKLOG §61g.
-- [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
-- [x] **Objective `X` marker is low-contrast on the Volcanic theme.** ✅ RETIRED 2026-10-09 at 117.5c's read: measured, Volcanic reads as grassland does and desert is the X's nearest floor, where the user's eye found it fine; the requirement rides the terrain-mark rider ("§109 riders"; `archive/post-109-worklog.md` §117.5b). *Original note:* The J3 objective marker is `TERMINAL_AMBER` ([OBJECTIVE_MARKER_COLOR in src/render/BattleRenderer.ts](src/render/BattleRenderer.ts)), which reads clearly on the default green-amber and rock themes but blends into the orange Volcanic terrain (`FLOOR_PALETTE.volcanic` climbs into `DARK_TERMINAL_AMBER`). Options: a brighter/whiter marker color, a dark outline/halo (a second slightly-larger marker sprite behind it, or a glyph-outline shader tweak), or a theme-aware marker color. Cosmetic; surfaced during J3 playtest. **NB atlas capacity** — this note said "32/32 FULL"; §29 grew the grid to 8×6 = 48 and the count is **47/48** as of §79f, so exactly ONE cell is free: an outline needing a new glyph still forces a grid resize, which is a ~5-line bump of `COLS`/`ROWS` ([FontAtlas.ts](src/render/FontAtlas.ts)) + `ATLAS_CELL_BUDGET` ([glyphs.ts](src/render/glyphs.ts)), triple-guarded by the boot throw, the budget test and the editor Save block.
-- [ ] **Status-tick sparkle placement / height (27e experiment).** The 27e periodic-status pulse (`spawnSparkle` in [BattleRenderer.ts](src/render/BattleRenderer.ts)) anchors at the sprite's vertical CENTER (`SPARKLE_Y_OFFSET = 0.0`), motes rising `SPARKLE_RISE = 0.35` — so the burn/poison/heal puff hugs the unit's torso, peaking around the shoulders (the `+N` number floats higher at `HITSPLAT_Y_OFFSET = 0.5`, the top edge). User wants to leave it there for now but **experiment with the height/spread later** (raise toward the head ~+0.5, or float a halo over the unit ~+0.7). Pure render consts — eyeball-tune freely. **Related:** the **apply-flash was dropped** in the 27d/27e playtest follow-up (`status:applied` fired at move-START — `MoveAction` snaps the logical position onto the tile while the sprite is still lerping in — so the puff popped mid-lerp, "burning before arrival"). If a settle-on-arrival apply cue is ever wanted, the clean hook is to delay the `status:applied`-driven sparkle by the unit's remaining move lerp (the `applied` fx slot is still in the StatusDef schema + `driveStatusFx`). Surfaced at the 27e playtest (2026-06-24).
-- [x] **Rename the `draw-two` packet id (it's Surge, and it draws THREE).** ✅ Done §74d (2026-08-06), inside the v41 bump window as planned: `packets.json` + the two boot-asserted refs (`rewards.json`, `prices.json`) + the test/doc sites; outputs untouched. Detail in git.
-- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by [DashAction](src/sim/actions/DashAction.ts), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
-
-## Post-MVP polish
-
-- [x] **ROBUSTNESS (§79f finding, 2026-08-15) — PROMOTED 2026-08-16 to ROADMAP §79g** (user call: it invalidates §79's own alignment rules, so it doesn't belong in a general audit). Carries the OFL clause-2 compliance gap found with it. Detail: WORKLOG §79f + §79g-scoping.
-- [x] **`╥` and `▄` rendered from the OS fallback font, not JetBrains Mono.** ✅ FIXED at **§79g** (2026-08-16) — promoted straight into §79 rather than waiting for the robustness audit, since it invalidated §79's own measured-ink rules. We now self-host a JetBrains Mono subset built from the official v2.304 release (`npm run gen:font`): **47/47 glyphs come from JBM**, all 47 pixel-identical to upstream, with a build-time catalog check and a DEV boot assert so the class can't return. Absorbed the OFL clause-2 breach found with it (the shipped build carried the font with zero licence text — `dist/THIRD-PARTY-LICENSES.txt` now closes it). Detail: WORKLOG §79f/§79g + [assets/fonts/jetbrains-mono/README.md](assets/fonts/jetbrains-mono/README.md). *Original finding:* Measured in-browser (serif-vs-sans-backed render diff): 45 of 47 atlas glyphs come from JBM; U+2565 and U+2584 do not, and NO `@fontsource/jetbrains-mono` subset covers box-drawing/block-elements (latin/latin-ext/greek/cyrillic/cyrillic-ext/vietnamese only) — the upstream TTF does, so the fix is a self-subset font file, not another import. **Why it bites:** those two glyphs are every wall, half-cover and rubble entity, and §79d2's stand-line rule branches on an exact `ink.y0 === 0` ([glyphs.ts:213](src/render/glyphs.ts:213)). Both measure exactly 0 here (flush, correct); a fallback with one transparent pixel row at the cell bottom flips them to the baseline branch — a visible anchor regression reproducible only on another machine. Detail: WORKLOG §79f.
-- [ ] **WATCH (§79e, 2026-08-15): quantized overlay-bar lift, if mixed rows read ragged.** 79e anchored the HP/progress stack on each glyph's visible INK TOP (`BattleRenderer.inkTopLiftFor`), giving an exact 10px gap at every depth and letterform — but deliberately reversing §79d2's "one uniform line" rule, so bars now sit ~5px apart for an `a` vs an `M` at equal depth. **User-signed with that cost stated**, and it looked right at the native eyeball. If later feedback says a mixed row reads ragged, the middle position is to QUANTIZE the lift — snap it to two or three buckets (baseline-cluster / tall-cap / floor-block) so bars land on a few shared lines instead of a continuum, recovering most of the scannability without a glyph-blind anchor. **Don't build it speculatively** — rationale + the measured numbers in WORKLOG §79e.
-- [ ] **Object pooling for the hot per-tick allocators (GC-pause reduction, not memory).** The 2026-06-15 fuzz heap probe found each sim run allocates a firehose of short-lived objects — V8 grows ~155 MB of heap *headroom* to absorb the churn though the live set is only ~16 MB (no leak; `heapUsed` flat across 600 runs). The churn costs no *memory*, but pooling the hot allocators — pathfinding scratch arrays, event objects, transient grid vectors — would cut **GC pauses**, which matter more for **rendered-game frame-time smoothness** than for fuzz throughput. **Caveat: this is a *deterministic* sim — a pooled object reused with a stale field is a determinism bug that's brutal to trace, so reset discipline must be airtight (the determinism tests are the guard).** Surfaced at the N2 dwm-leak investigation ([archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)).
-- [x] **Pathfinding directional bias.** Folded into E5.B; ultimately fully fixed by the Pathfinding Audit's §43 bias fixes (see [PATHING.md](PATHING.md) 43a–43c).
-- [x] **Terrain generator: water placement biased toward unit paths.** Solved by the M6 procedural-map rework (fordable crossbar gaps + low-ground pools, [proceduralMap.ts](src/sim/proceduralMap.ts)).
-- [x] **Renderer capacity audit.** Landed in D1: `SpriteRenderer` 256→1024, `BarRenderer` 256→2048; auto-grow stays deferred.
-- [x] **Bake grid lines into the terrain shader.** Folded into C1 (C1c) — the grid IS the tile boundaries.
-- [x] **Tighten vertical layout.** Folded into C1 (C1c), tuned with the final terrain height profile.
-- [x] **Root node reads as selectable.** Landed in B7: the roguelike `@` glyph + `.root` class in [MapScreen.ts](src/ui/MapScreen.ts).
-- [x] **Floating per-unit HP bars.** Landed in B3: instanced `BarRenderer` (HP + action progress, movement excluded).
-- [x] **Replace behavior-order priority with a proper action selector.** Landed in A1: scored `ActionProposal`s + the `World.tick()` selector (gotcha #8).
-
-## Design explorations (post-Phase-G)
-
-- [ ] **Clean-sheet corpus/value-model idea — parked (85h,
-      2026-08-25).** The tiger-team review floated learning a value
-      model from a run corpus to replace the hand-built prior table;
-      its own caution (data hunger, drift with every balance change,
-      opacity at sign-time) is the reason it stays parked — adopted as
-      the disposition at §85h. Revisit only if the prior-table lineage
-      (v1 → the 85g shrinkage v2) proves insufficient at §88 / Round 9
-      content scale. WORKLOG §85h.
-
-- [ ] **Save/load interstitial round (live persistence).** Everything
-      *serializes* (Run/World snapshots, reject-stale, round-trip tests) but no
-      LIVE save/load exists — `Run.fromJSON` is called only from tests, and
-      nothing maps a restored `run.phase` back to a scene. The §48 kickoff
-      audit confirmed the gap while pinning "mid-reward save/reload" as the
-      round-trip *contract*; the user is mulling a post-Cluster-3 interstitial
-      round to build the real thing (a scene-for-phase resolver + a storage
-      trigger + a load entry point). Surfaced at the §48 shape-lock
-      (2026-07-08).
-
-- [x] **Movement abilities (dash / gap-closer) — the real rogue fix.** Done N1 (2026-06-14): the rogue dash shipped (range 2 / 0.25s / 10s cd, `unit:dashed` event). The motivating disproof (`weakest` targeting halved a dash-less rogue's damage) + the full data live in [BALANCE.md](BALANCE.md) + git history.
-- [ ] **Post-Phase-H map / difficulty gating (incl. layout-by-hop weighting).** The planned
-      post-H map rework should gate content by depth — and per-layout telemetry (H7c, `npm run fuzz
-      -- --per-layout`) gives it a concrete first target: layout difficulty is **pure geometry**.
-      Chokepoint layouts (corridors / funnel / labyrinth) sit at ~85% player wave-win; open / multi-
-      approach layouts (`junctionAmbush`, `river`, procedural-open) at ~45% — ~2× the loss rate,
-      because a 5-unit hand can funnel a ~9-swarm in a corridor but gets surrounded in the open
-      (enemy size is swarm-cap-bound ~9.5 regardless of layout). Today `rollLayoutId` picks
-      uniformly (~75% library / ~25% procedural) at every hop, so the hardest open layouts can hit
-      the weakest hop-1 roster with no warning. Lever: **hop-gate / depth-weight the layout
-      roll** (don't roll the hard open layouts early; ramp them in) — and/or soften specific spawn
-      geometries in the layout editor. Deferred here by the user (2026-06-07) as part of the post-H
-      rework rather than a one-off junctionAmbush patch. Data: [BALANCE.md](BALANCE.md) "Layout-difficulty telemetry".
-      **STATUS (M6, 2026-06-13):** still OPEN/deferred — M6 shipped the procedural rework + water mechanic but
-      DEFERRED hop-gating behind the coming **encounter-system spec** (which will reshape the per-hop
-      difficulty targets, so depth-weighting `rollLayoutId` now would just be redone). Revisit after the spec.
-- [ ] **Turn-limit / tick-cap resolution — a deeper system.** In the G5
-      multi-turn battle model, a *turn* whose tactical battle hits the
-      tick-cap resolves as a **draw**: both sides' surviving units chip the
-      opposing health pool by their Σpower (the placeholder rule). Worth a
-      deeper dive — e.g. scaling the chip by how decisively the cap was
-      approached, a sudden-death escalation, or a smarter "who was winning"
-      heuristic than raw survivor count. Must also handle the
-      mutual-total-wipe edge (0 survivors on both sides → 0 damage → relies
-      on the encounter max-turns safety cap so it can't loop forever). Out
-      of scope for Phase G; revisit once the multi-turn loop has playtest
-      data. (Flagged by the user during the Phase-G roadmap sync.)
-
-- [ ] **Unify the duplicated `chebyshev` helpers.** Still defined independently in five places ([Pathfinding.ts](src/sim/Pathfinding.ts), [Targeting.ts](src/sim/Targeting.ts), [targetingStrategies.ts](src/sim/targetingStrategies.ts), [focusTile.ts](src/sim/focusTile.ts), + [movement.ts](src/sim/movement.ts)'s `chebyshev = distanceBetween` alias) — rule-of-three was passed long ago (first flagged in the MVP-era scratchpad). Extract one shared geometry helper next time any of these files is open. Mechanical; zero behavior change. Promoted at the 2026-07-06 scratchpad sweep.
-- [ ] **`Run.pauseAtTurnGates` two-path loop — divergence watch.** H4b's flag keeps two paths through the encounter loop (headless straight-through vs gated screens), sharing the core (`resolveTurn`/`turnResult`/`continueAfterTurn`/`beginTurn`). Stable since Phase H, but if the loop grows hairier, the cleaner end-state is "always gated + tests/fuzz dispatch `advanceTurn`" (one path, more test churn). Promoted at the 2026-07-06 scratchpad sweep.
-
-## Bundle / perf
-
-- [x] **Production JS chunk >500KB warning.** Resolved in R3: three.js split into its own vendor chunk + `chunkSizeWarningLimit` 1000 ([vite.config.ts](vite.config.ts)). *(Found already-done during the 2026-07-06 TODO demotion pass.)*
-
-## Docs / tooling
-
-- [ ] **Dev-toolchain `npm audit` debt (5 vulns, 4 high — §79g flag, filed
-  §79-post).** As measured 2026-08-16: all five in the dev toolchain
-  (vite/esbuild/postcss/nanoid/brace-expansion), none shipped in `dist/`;
-  `subset-font@2.5.0` has zero deps and introduced none. Clear at a
-  deliberate toolchain-bump round (a Vite major is a build-pipeline change
-  with its own verify pass), not in passing. Detail: WORKLOG §79g/§79-post.
-
-- [x] **run-config GUI: a character dropdown.** ✅ Done in the §63f landing
-  commit — a `CHARACTERS`-driven dropdown (blank = the select scene) +
-  `setIf` + a summary line in
-  [tools/run-config/launcher.ts](tools/run-config/launcher.ts).
-
-- [x] **Revisit the 53g human-fixture test's purpose.** ✅ Resolved 68h
-  (2026-07-29, user-signed): the replay test retired — shape test + fixture
-  kept, §53g citations stand; the next human gauntlet re-opens it. Detail:
-  BALANCE §"The instrument registry" + git.
-
-- [x] **A true chaos fuzz driver (random legal `RunCommand` dispatch).** ✅ Built
-  at 115c (2026-10-02): `tests/chaos/`, `npm run chaos`; the survey for it
-  found that `chooseRecruit` accepted any template (now a no-op off the
-  offer). `archive/post-109-worklog.md` §115c; the 2026-07-30 §69b evidence is in git.
-
-- [ ] **`runOne` / rollout-walker deliberate duplication — divergence
-  watch.** Filed at the §69 kickoff (2026-07-30, user question). The
-  run-layer rollout walker (§69b, `tests/fuzz/rollout/`) re-implements
-  `runOne`'s battle wiring + phase walk (~100 lines) rather than sharing
-  code — DELIBERATE: `runOne`'s draw sequences are byte-pinned by the
-  fuzz baselines / frozen-anchor doctrine, so coupling would make every
-  walker tweak a baseline threat; and walker fidelity needn't be exact
-  (CRN shares bias across candidates). NOT urgent — verdict + full
-  rationale in WORKLOG §69. **Re-open triggers (pre-registered):** (1) a
-  third consumer of the run-walk pattern appears (rule of three), or
-  (2) §71 decision telemetry shows systematic walker-vs-realized
-  divergence biasing candidates *differentially*. If either fires, the
-  refactor is a behavior-equivalence surgery — worktree-pinned diff
-  oracle required (the 47e protocol).
-
-- [x] **box-batch.sh `--poll-ceiling` arg.** ✅ SUPERSEDED 2026-08-26 by
-  `scripts/box-drive.sh` (unbounded poll; `run` stays for short
-  in-session batches). Original note: git history (filed at 72f).
-
-- [x] **`--seed-offset` for a true config-overfit holdout.** Shipped in X2 (`--seed-offset=N` across run/sweep/search, `tests/fuzz/`) — the overnight verify can run on never-tuned seeds. *(Found already-done during the 2026-07-06 TODO demotion pass; X2 landed it without checking this off.)*
-- [x] **Catch doc-tree drift automatically.** Done 2026-06-07: ARCHITECTURE.md holds the single canonical tree; [tests/docs.test.ts](tests/docs.test.ts) parses it on every `npm test` (+ caps HANDOFF line counts).
-
-- [x] **Promote the 84d stand-down watcher into `scripts/`.** ✅ SUPERSEDED
-  2026-08-26: the promoted driver IS the stand-down (artifact-verified,
-  in-line) — no separate watcher needed. See the next item.
-- [x] **Promote the §85f driver-v2 queue shape.** ✅ DONE 2026-08-26 as
-  [scripts/box-drive.sh](scripts/box-drive.sh) + the AGENTS ops norm
-  (one-head-per-cohort + artifact-verified stand-down mechanized).
-  Detail in git.
-
-## §92 riders (2026-09-05)
-
-- [ ] **Compact `roster-table.json`** — v2 (92h) is 4.7 MB / 21,519 raw rows against v1's 1.1 MB; the `--roster=sampled` reader needs per-(character, sector, hop) distributions, not rows — store those (a builder change + a format bump), and the coverage twin of the prior tripwire (the Round 6 rider above) lands with it.
-- [ ] **`box-drive.sh`: one artifact KIND per cohort** — a mixed queue (a shadow batch + a search) HELD its box on the second fetch because `--artifact` is cohort-wide (92g). Either refuse mixed queues up front or accept a per-line `# artifact=<file>` override.
-- [x] **The evaluator exchange rate as a dial** — ✅ 94g-1 (2026-09-06) → **SUPERSEDED at 94g-3 (2026-09-07): the dial, `DP_TAIL_SCALE` and the whole DP tail were DELETED** — the tail priced 0 on every CLI arm since 70e (gotcha #131) and, wired, cost −0.100 on the walk (gotcha #132; WORKLOG §94g-2 / §94g-3).
-- [ ] **A DP-tail REDESIGN in one currency** (94g-3, Round 7 candidate): the 70e composition priced the road ahead in DP units and the entered node in pool HP (gotcha #132). Candidates: `dpTailScale × bestScore(entered node)` with the rollout outcome as the same term's realization (no onward-only split), or a two-battle rollout horizon with no DP term. The baseline it must beat: the 94g-3 paired read (walk 0.275 tail-off, n=120 at `d9675b6`) and the 5 % node-override rate; read the override count BY KIND at the site, not just the win rate. Not a §94 blocker (user-signed 2026-09-07).
-- [ ] **The PRIEST parity breach** (the 94h signing, 2026-09-08 — BALANCE §94h): +14.2 over the soldier on the deploy shape, +10.0 on regen (92h +5.0 / +5.9; the ±5 principle). Healing pays more when fights last three turns and the dead are booked (the casualty rule + the 94b openers). A kit/price question for Round 7 (the §94 charter excluded archetype changes); the gambler reads +6.7 / −1.6.
-- [ ] **The wall watch at the §94 config** (94h, user-signed HOLD): the deploy walk's boss wall 0.459 vs the signed 30–35 and the isolated bosses −11 pt (King 0.483 · Queen 0.458) with the bosses UNCHANGED since 92d — the roster arrives weaker under casualties. A roster-strength lever (power diversity by rarity, the kit watches) before any band move; re-read on the next full board.
-- [ ] **The three deep-end cost residuals** (the 94c re-read, 2026-09-07 — BALANCE §94c re-read): infernalColumn 10.6 · miscreants 10.2 · ronin-vs-mages 10.6 cost/instance against the 1.5 × normal-mean line (9.3), in band on TURNS. A bite property (cost/turn 3.2–3.3 vs 2.1) that predates 94b and the pool cannot close; the lever is the COUNT factor on those three waves (column hand×1.2 · miscreants hand×1.5 · mages hand×1.3 — fewer bodies at the same kill throughput = the same burn, less bite; level is already ×1.0 / ×1.25). One config commit + a six-arm re-read (~3.4 h) whenever those rows are next touched; not a §94 blocker (the config froze over it, user-signed).
-- [ ] **A won-turn reward shape** (the user's §93 verdict item 3): under casualties a decisive win still books your own dead — candidates: a partial refund on a decisive win, or the enemy paying survivors on a loss (the surcharge machinery mixes rules per turn already). After the post-turn ledger screen lands (§94), re-read the feel before building.
-- [ ] **Power diversity by rarity** (verdict item 4): 1/1/1/2 → 1/1/2/3 or 1/2/3/4 — a pool re-anchor rides behind it (every burn/turn moves); Round 9, after the §94 signing.
-- [x] **The AoE-status enemies (banshee et al.) — the PRESENTATION half** (verdict 7a, split at the Round 7 spec 2026-09-09): `wail` / `hex` are impact-only fx with no release / travel phase — no projectile exists anywhere in `abilities.json` (`archive/post-94-worklog.md` §Kickoff H.9). A `release` phase + a projectile fx key → **§102**. ✅ 2026-09-18 — §102a/b: release + travel carved at constant sum (byte-identical, a control that fails) + hex_launch / wail_launch; the user’s Firefox read passed first go. WORKLOG §102a–b. The retune half stays Round 9.
-- [ ] **The AoE-status enemies — the RETUNE half** (range / cooldown / duration; "really annoying"): board work, carried to **Round 9** with the kit watches (Round 7's no-board guard).
-- [x] **Show the pool everywhere** (verdict 7b) — ✅ 94e (2026-09-06): the persistent PoolOverlay (Game-owned, every screen) off the new `run:poolChanged` chokepoint event.
-- [x] **Rename pool health → morale?** (verdict 7c) — ✅ 94f (2026-09-06, user-signed YES): a words-only rename (DESIGN §The encounter loop); config keys + snapshot fields unchanged.
-- [ ] **SFX diversity** (verdict 7d) — a content item. The worklist now lives in code: the 14 `candidate` rows of `SILENT_EVENTS` ([eventSounds.ts](src/audio/eventSounds.ts), §104) — promoting one = move it to `EVENT_SOUNDS` + a `gen:sfx` recipe.
-- [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
-- [ ] **Kit watches from the 94f price-book re-read on prior v4** (BALANCE §"The rarity verification protocol" step 3: a negative recruit row at FREE acquisition is a KIT question, not a price one — WORKLOG §94f): **officer** (−42 recruit / −36 port-buy, the worst row in the book) · **bandit** (−24 / −25, the weakest common) · **mercenary** (−15 / −10, the soldier's starter body) · **halberdier** (−16 recruit; port n=8 unreadable) · **stormcaller** (−2.8 — a legendary that does not pay at free acquisition under casualties). Round 7 idiom / Round 9 candidates; the §94 charter's "NOT doing: archetype changes" held. The dispositions taken at 94f: gunslinger common → uncommon (+28 / +27 at the cheapest price) · healer base 30 → 32 · everything else HOLD.
-- [x] **A run-end stats screen** (the 94d ledger's purpose beyond the post-turn rows — the user's "lots of good stats once a run ends" for the roguelike audience): `Run.fallenLedger` (v45) is the source — per encounter / per side / per archetype; the GameOverScreen and the victory screen are the surfaces. A Round 7 polish item. ✅ 2026-09-18 — §102c/d: summarizeFallen + “The fallen” body on both GameOverScreen variants; the user’s playtest passed. WORKLOG §102c–d. What the ledger cannot say is its own item (“The run-end stats beyond the fallen”).
-- [ ] **The run-end stats beyond the fallen** (the 102 kickoff, call D): the ledger records DEATHS only, so the 102d body cannot say fights fought / won, turns taken, damage dealt, bits earned, the daemons and packets a run ended with — each needs a second source (`turn:resolved`, the battle tallies, the Run state at the end). A content item for the polish round; the body's layout (totals + a table) has room for a second block.
-
-## §96.5 riders (the live pool bar — the close, 2026-09-13)
-
-- [ ] **The survivors end sequence, unexercised live.** The shipped rule is casualties, so the one-orb-per-standing-enemy sequence (`HUD.runEndSequence`, the 120 ms stagger) has only its model pins (`chipRule.test` Σ = `turnCharges`) and the shared `deliver` path; a browser read needs `health.chipMode: survivors` (a config flip + a battle). Do it before any survivors-rule playtest.
-- [x] **The reduced-motion path, unverified.** ✅ §99 (2026-09-16): the read found the shake NOT gated (the reduced branch still ran `shakeView` — fixed at 99a, the gate now on the effect itself); the whole surface is read in the user's Firefox through the Ctrl+Alt+A override (no orb flight, no shake, no notch breathing, the 99b/99c/99d forms). The one leg not exercised live is the OS query itself (`matchMedia` at boot + its `change` listener, `motion.ts`) — a one-minute check with Windows' "Animation effects" off, whenever convenient; the resolution rule is pinned either way.
-- [x] **A settings toggle for the shake policy** ✅ §116 (116b, 116d; 2026-10-04): the Shake row in Settings (`lossFx.ts`, `SettingsOverlay.ts`). Still open if flat ever feels dull: the fraction-vs-absolute question.
-- [x] **The encounter's LAST turn's fallen rows** have no screen since 96.5d (the pre-turn strip shows the previous turn; a won encounter goes to the reward flow) — §102's run-end stats is the home; if the wait bites in a playtest, a one-line strip on the reward screen is the cheap interim. ✅ 2026-09-18 — §102d: the per-encounter rows + per-turn tooltips carry every turn, the last included. WORKLOG §102d.
-- [x] **The strip's two `title=` hovers** (the glyph run's names, the loss's rule wording) — ✅ 97d (2026-09-14): both are `attachTooltip` text sites, one fallen per line, Tab-reachable (WORKLOG §97d).
-
-## §97 riders (the tooltip system — the close, 2026-09-15)
-
-- [x] **The enemy compact card’s focus route + its long-press.** ✅ 100c2 (2026-09-17): the card is a pressable (role=button, Enter), and its click honours an armed pick — arm Focus, then Enter or tap the card; no long-press needed (WORKLOG §100c2). *Original note:* The card is a clickable `<div>` with `contextmenu` = the focus objective, so §97 gave it `touch: 'none'` and no tab stop (HUD.ts, the 97c comment). §100 (input accessibility) makes it focusable — the tooltip's focus route lands then — and owns the touch-vs-contextmenu collision (a touch player has no right-click today).
-- [x] **Tab stops for the battle cards’ text sites** ✅ 100c2 (2026-09-17): the cards themselves are the stops; the inner wraps stay hover + key reads by design (WORKLOG §100c2). *Original note:* (the compact `LV` / `POW` wraps, the `▲` chips) — hover + key reads until §100 sweeps focus order (the kickoff's call D: ~30 stops in a battle was too many to add blind).
-- [ ] **The disconnected-trigger poll has no live read.** `tooltip.ts`'s rAF `follow()` closes on a trigger that left the document or lost its box; the pane could not exercise it (rAF stalls hidden; a dead card grays in place). A scene swap under an open tooltip is the natural read — watch for a stranded plate in a playtest.
-- [x] ✅ 100b (2026-09-17): the ring rule covers `[tabindex='0']` (WORKLOG §100b). *Original note:* **A focus ring for the `tabindex=0` text sites.** They ride the UA default outline today; §100's focus-visible styling should cover them with the buttons.
-- [ ] **The pane's key tool sends no `KeyboardEvent.code`** (papercut 2026-09-14): a registry-bound key can only be walked with a synthetic window keydown; the user's keyboard is the live read for every hotkey.
-
-## §98 riders (color redundancy — opened at 98e, 2026-09-16)
-
-- [ ] **A hitsplat gallery dev key.** The 98d split was "very hard to test" (the user, 2026-09-16): a DoT number lives 0.6 s and needs a DoT-applying enemy on the board (the shortcut used: `?layout=isthmus&encounter=plagueDoctors`, then a DOM `MutationObserver` on `.hitsplat`). A Ctrl+Alt chord that spawns one sample of EVERY `HitsplatKind` on the first player unit (`~7` / `‡7` / `☠7` / `+7` / `12` / a crit / Miss) would make any number tweak a two-second eyeball check. `src/dev/devKeys.ts` is the home; the overlay's `spawnHitsplat` is private to BattleRenderer today — needs a dev hook through Game or BattleScene.
-- [ ] **The map legend on a phone-width viewport** (98c) — fixed bottom-left at 296 × 232 px; a narrow board may want it collapsed to a toggle (§101 / §102's surface riders). A tall board's bottom nodes scroll under it, as they do under the banner.
-- [x] **Deep water's drift** (98e) — ✅ 99d (2026-09-16): `DEEP_DRIFT` 0.6 rad/s in both shaders (the user's retune from a 0.4 probe), pinned equal by `TerrainRenderer.test.ts`; under reduced motion `BattleScene.advanceShaderTime` holds `uTime`, so the bands stand still with no shader branch. WORKLOG §99d.
-- [ ] **The band constants by eye** (98e) — amplitude 0.22 and one band per tile (98e-post: two read as a hazard stripe; the diagonal now runs in world space in both shaders); one constant each in terrain.frag (`DEEP_BAND_AMPLITUDE` / `DEEP_BANDS_PER_TILE`) and the literal pair in apron.frag.
-- [x] ✅ **Round 7.5 rider — the two team-identity residuals** (the §98 kickoff's call F) — closed at the Round 7.5 close (2026-09-26): the held tints are answered by the ground mark's shape (§108's grey read); the camp pip is the Round 8 item below. `archive/post-104-worklog.md` §109 Kickoff, finding 9.
-- [x] ✅ **Round 8: a camp unit's board status pip is hue-only** — built at 116g: every status has a symbol, drawn over its pip, in the card's row and before a DoT's number (`statusDisplay.ts`); the user's read is 116g's second stop. `archive/post-109-worklog.md` §116g "The second stretch".
-
-## §99 riders (the reduced-motion seam — opened at 99b, 2026-09-16)
-
-- ✅ **Hitsplats hold under the sim pause** (the 99b pane read): they don't. With real frames a hitsplat lives 0.63 s paused or not, under either motion setting; the hold was the hidden pane's, which stops CSS animations (117.5b; `archive/post-109-worklog.md` §117.5b).
-
-## §100 riders (input accessibility — opened at 100c1, 2026-09-17)
-
-- [x] **The chrome column's place in the Tab order.** ✅ 100e2 (2026-09-17): a `.screen-host` div created before the column is the scenes' mount — screens first, chips last, no detour (WORKLOG §100e2). *Original note:* The user's Firefox read at 100c1: Tab runs roster button → map node → the whole browser UI (Back, the URL bar, add-on icons) → the cache chip. Diagnosis: the chrome column (`bits · cache · map` chips) mounts BEFORE the screen mount in the DOM, and after a screen swap the browser resumes sequential focus from where the removed (clicked) control sat, so the walk runs off the document's end, through the browser chrome, and wraps to the chips. Chromium in the pane has no chrome to enter, so it read roster → node → chip. 100e's `Screen.present` container focus fixes the START point (Tab enters the screen; Shift+Tab from there reaches the chips in one press); the remaining call is whether the column should mount AFTER the screen in DOM order (chips last, no browser detour) — a stacking-context move (the column overlays the screen), so not a one-liner. Decide at the §100 close or Round 8.
-- ✅ **"Click a target…" now that Enter picks** (117.5f, 2026-10-09): the armed prompt is "Pick a target…" (`hud.objective.pickTarget`; `archive/post-109-worklog.md` §117.5f).
-
-## §101 riders (layout stability — opened at 101a-post, 2026-09-18)
-
-- [ ] **Pin the Reward ledger's index mapping headless** (101e) — `RewardScreen.resolve` maps a ledger row onto its engine index (the un-taken rows before it) and is proven by ONE pane walk (four out-of-order accepts incl. a swap; WORKLOG §101e). Lift the mapping + the identity sync into a pure function beside the screen and pin it the `pressable.test.ts` way: out-of-order accepts, a no-op accept (full cache, no swap slot) leaves the row pending, a mismatched live offer rebuilds.
-- [x] **Triage + report the JetBrains Mono `⊞` / `⊠` swap upstream** — ✅ 2026-09-18, triaged, NOTHING TO FILE: the raw vendored TTF has it (our pipeline ruled out); a DRAWING error (cmap + `post` names right, the outlines swapped); v2.304 is still the latest release; already reported upstream as JetBrains/JetBrainsMono#676 (OPEN since 2024-04; a fix PR exists — #702, open since 2024-10, mergeable, unreviewed; a maintainer said 2026-09-09 an upgrade is ready on a fork but blocked on an unrelated Greek regression, #699; #697 its duplicate — watch for the release that lands #702). `PRIMARY_EXCLUDES` stays until a release closing #676 is vendored — then re-run the swap search. Upstream `master` CHECKED too (the user's go-ahead; `1937130`, the 2024-08-08 rebuild, a different file — gids 1374 / 1375): the identical swap. Gotcha #136 · WORKLOG §101-triage.
-
-## Round 7 close riders (the sweep + the macro re-audit, 2026-09-20)
-
-- [ ] **The encounter dial warns when a forced id matches ZERO nodes** (papercut #25, §102) — `--encounter` / `?encounter=` forces only nodes of a matching KIND and says nothing when that is none; ~8 pane round-trips and one mislabelled oracle shape. One warning line in the CLI + a console warn in the URL path.
-- [ ] **Pin ARCHITECTURE's event catalog against `events.ts`** (§104f) — the coverage pin guards the code's event set; nothing guards the prose table, which sat one short (`unit:chained`) from §29c to §104. A key-set diff off the source text, the `eventSounds.test.ts` parser re-used.
-- [ ] **Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (the C1 sweep) — `src/ui/ui.css:9` hand-mirrors `fontSubset.ts`'s chain under a "mirror this" comment and no test.
-- [x] ✅ **Three doc drifts from the C1 sweep** — 109a/109c (2026-09-26): the barrier comment went with the rule (109a); gotcha #33 re-pointed at `glyphs.ts` and the catalog-derived unit glyphs (109c); the font sentinel was no drift (32 the 101a count, ≥24 a floor under it; a §101 gate, unchanged). `archive/post-104-worklog.md` §109 Kickoff, finding 4.
-- [ ] **`phase-stats`: a commit-TYPE fix column beside the word-match ratio** — the subject match reads 40 % for §101 off six hits, one of them a `fix(` commit (AGENTS carries the warning until this lands).
-- [ ] **Rounded plates for organic scenery** (the user at §108's stop 1, 2026-09-25: future trees, where rounding "might thematically fit for 'organic' scenery"). The rounding exists: `MarkStyle.plateCorner` and the shader's rounded square (`terrainMarks.glsl` `plateShape`), with the explorer's `plateCorner` dial kept through 108f to try it. Today it is one global uniform; trees beside square-plated walls need it per mark (a spare field in the mark's texels). Square stays the default: the dashes did the walls' job, and rubble read as a tie. A large radius drifts toward the player's circle (the spec's caveat).
-- [x] ✅ **§40c's `CRACKED_STONE` destructible-wall tell gets a second channel** — a dashed plate frame (108b), read clear at stop 1, 2026-09-25. `archive/post-104-worklog.md` §108 Kickoff (decision 2) and §108b.
-- [ ] **Round 11: the glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
-- [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). `archive/post-104-worklog.md` §"THE VERDICT".
-- [x] ✅ **§106: a ground indicator for STATIC MULTI-TILE bodies (rubble)** — the footprint PLATE (106c, `filled` by the user's read), cut per tile onto the tile tops and extendable to all scenery (106c-post); the slab stands centred on it (106b). `archive/post-104-worklog.md` §106c / §106c-post.
-
-## §106 riders (the 106d played read, 2026-09-23)
-
-- [x] ✅ **Hills ignore the layout theme** — fixed 2026-09-23 (`batch` read clear): hills take the theme's floor palette and each mound brightens its own tile; pinned in `TerrainRenderer.test.ts`. `archive/post-104-worklog.md` §"The 106d riders".
-- [x] ✅ **Several empower kinds overflow a compact card's chip row** — fixed 2026-09-23 (`batch` read clear): the row wraps, a chip wider than the card wraps its label under its triangles, and the compact label dropped its letter-spacing so OVERCLOCKED fits. `archive/post-104-worklog.md` §"The 106d riders".
-
-## Tone audit riders (2026-09-23)
-
-- [ ] **Rewrite the phase codes out of `src/` code comments** under the
-  AGENTS "Voice" rule: 1,991 `§`-codes across 262 files (the 48
-  `gotcha #N` refs stay). Comments only, proven by a comment-stripped
-  before/after diff with a failing control. Timing: **Round 8.5
-  (Housekeeping)**, per file in the deletion pass's touch (META-ROADMAP
-  §Round 8.5, signed 2026-09-27). The first timing, after 106e and before
-  the first build phase, lapsed when §107–§109 edited the render files.
-  `archive/post-104-worklog.md` "The new-model tone audit". The aim is
-  wider since the 8.5 kickoff (2026-10-11, user-signed): the comments'
-  length, with the codes as the part that can be counted
-  (`round-8.5-spec.md`, D4). Measured 2026-10-12 by a written rule: the
-  live count is `npm run oracle -- comment-codes`, held by
-  `tests/comment-codes.test.ts`, and the proof is `npm run oracle --
-  comment-strip <ref>` (WORKLOG §119, 119e). `tests` and `tools` hold
-  2,497 more by the same rule and are outside the ceiling; whether the
-  pass takes them is decided once its outcome on `src` is seen (the user,
-  2026-10-12).
-
-## §108 riders (stop 2, 2026-09-25)
-
-- [ ] **Movement polish: smooth the vertical motion of ground moves, then
-  reopen the hop one final time** (the user at §108's stop 2). §81c2's
-  profile does a step's whole height change in half the step, in a
-  straight line, and stops dead at the midpoint. Floor heights are
-  continuous noise, so nearly every step has one; at the 0.3 s mobility
-  floor it lasts 0.15 s (0.05 s at 3×), and the user read the sharp corner
-  as jitter on fast units. A candidate: smoothstep over the half-step. It
-  still reaches the new height by the midpoint, which is what keeps the
-  anchor at or above the surface it is over; check it with
-  `tests/board/clip.ts`. Then the hop question reopens once, as the user
-  asked: the measurements are in `archive/post-104-worklog.md` §108c, the
-  dial's code at `d045497`, and `?bp=board-wade` is the fixture. Reduced motion drops any
-  hop (DESIGN §Reduced motion).
 - [ ] **Round 9: flyers float** (the user at §108's stop 2: "some sort of
   floating animation (maybe just a simple sine wave?)"). What DESIGN's
   "Elevation on the board" already asks of it: the bob's highest point
@@ -417,75 +233,7 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   bob in unison; under reduced motion the lift stays and the bob goes; and
   a read on whether the bar and hitsplats bob with the glyph.
 
-## §109 riders (the kickoff, 2026-09-26)
-
-- [ ] **A polish round: the rally X as a terrain mark** (the user at the
-  §109 kickoff: "at some point, we should probably investigate turning the
-  rally glyph into a terrain marker"). The tile objective marker is a glyph
-  sprite that stands its ink, not its quad, a small gap above its cell, so
-  it reads the X's ink bottom from the atlas (R10, re-grounded at 109a:
-  under the quad-bottom anchor the X's ink sits 17/64 of a cell above its
-  quad bottom, and dropping the term floats it 0.43 world units). Drawn by
-  the terrain as a mark shape (the §108 table, a new shape id) it lies on
-  its tile with no ink read at all, and R10 is deleted. A new look, so a
-  read; the enemy mark rides above a glyph and stays a sprite. Its
-  requirement, measured at 117.5b: read on all six floors. In OKLab the
-  amber X is 0.095 from desert's sand, 0.194 from tundra's ice and 0.30 or
-  more from the other four. The user's eye found it fine on desert
-  (2026-10-09), so nothing is built before the mark (`archive/post-109-worklog.md` §117.5b and
-  "117.5c — the read").
-
-## Round 7.5 close riders (the sweep, 2026-09-26)
-
-- ✅ **A guard that dev code doesn't ship** (117.5j, 2026-10-09): both
-  shapes. `src/dev` is reached through one DEV-gated dynamic import, pinned
-  (`tests/dev-guard.test.ts`), and `npm run build` and the itch zip scan
-  what they built (`scripts/dev-scan.mjs`; `archive/post-109-worklog.md` §117.5j).
-
-## §112 riders (the pane probe kit, 2026-09-30)
-
-- [ ] **The overlays trail a camera move by one frame** (found at 112b's
-  step zero). The loop moves the bars and badges inside `onFrame`, and
-  three.js updates the camera's world matrix only inside the render, so
-  the first frame after a camera change projects them with the old camera:
-  in the pane, a yaw change put a bar at x = 0, then at its place a frame
-  later. Invisible at 60 fps while fit is the only shipped view; it would
-  show as bars lagging the board under a moving camera (scroll-mode
-  panning today, a player-facing yaw in Round 11). The likely fix is
-  `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
-  `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
-
-## §115 riders
-
-- [ ] **A clip of a continued run.** `npm run record -- --journal=<file>`
-  replays a journal of one segment started from a seed and refuses more
-  (`shell/electron/record-cli.mjs`, `openJournal`). Since 115d a run loaded
-  from its save is a journal of several segments, so a clip of one needs the
-  replay driver (`shell/electron/probes/replay-page.js`) to load each resume
-  as the page did and go on. Filed at 115d (`archive/post-109-worklog.md` §115, "For the build
-  stretch").
-- [ ] **One instance of the Electron shell per profile.** The two-tab lock
-  is the browser's own, so a second instance of the shell on the same
-  `userData` is not kept out: measured at 115f, it reads the lock as absent
-  (`none`), saves as if alone, and its writes replace the whole
-  `store.json`. The shell stays internal through Round 8; before it ships to
-  players, `shell/electron/main.mjs` takes `app.requestSingleInstanceLock()`
-  (the second instance quits and the first takes focus), with the probe and
-  record runners, which pass their own `--profile`, still able to run beside
-  a playing instance (unchecked: whether Electron's lock is per `userData`).
-  The landing note is in `main.mjs` at the store file.
-- ✅ **A reward's taken rows across a reload** (the user's 115g read):
-  dropped at the §117 kickoff, the user's call 2026-10-08, as rare and
-  costing the run nothing. If players report it, the cheaper fix is to save
-  only when the reward screen opens (`archive/post-109-worklog.md` §117 "The shape-lock's answers").
-- ✅ **What one save costs to write** (116l; `archive/post-109-worklog.md` "116l — step zero, and the sitting prepared", "The sitting's read"): in Firefox 157, in itch's frame as out of it, under a fiftieth of a millisecond for a 64 Ki slot and about half of one for 1 Mi; under Electron 0.09 ms a save, and 1.8 ms with the journals at their budget, since every write there sends the whole store.
-- [ ] **DESIGN's "Out of scope" list names as backlog what has since been
-  built** (found at the §115 close, which struck save/load and replay):
-  larger units, in-battle commands, audio, line of sight, terrain and
-  status effects are still listed plain. Strike each with its phase, after
-  checking it against ARCHITECTURE.
-
-## §114 riders (the 114g read, 2026-10-02)
+- [ ] **Pin the Reward ledger's index mapping headless** (101e) — `RewardScreen.resolve` maps a ledger row onto its engine index (the un-taken rows before it) and is proven by ONE pane walk (four out-of-order accepts incl. a swap; WORKLOG §101e). Lift the mapping + the identity sync into a pure function beside the screen and pin it the `pressable.test.ts` way: out-of-order accepts, a no-op accept (full cache, no swap slot) leaves the row pending, a mismatched live offer rebuilds.
 
 - [ ] **A `reward:resolved` bus event.** The Run emits nothing when a
   reward portion resolves, so the reward screen follows the live offer by
@@ -494,135 +242,87 @@ Small follow-ups that aren't roadmap steps. Add things here when they're worth f
   `src/core/events.ts`, ARCHITECTURE's table and the sound registry) would
   let this screen do the same, and could carry the pickup sound, so a clip
   replayed from a journal would have it.
-- [ ] **A replayed clip gives no cue of which choice was made** (the user's
-  114g read). A command sent at `Game.dispatch` presses no button, so an
-  event option, a map node or a recruit card is chosen with no flash and no
-  click sound. Perfect highlighting isn't needed; a brief flash on the
-  chosen control would do. The replay driver
-  (`shell/electron/probes/replay-page.js`) knows each command before it
-  sends it, so the cue can come from there or from the screens.
-- [ ] **The recorder's open items at the §114 close** (`archive/post-109-worklog.md` §114f,
-  §114g; a dev tool, so none blocks the round). At `--speed=3` a cue can go
-  unheard (517 of 518 and 111 of 113 in two clips, none missing at 1×), not
-  diagnosed, and it fails the clip when it happens. A run recorded across
-  a real switch of the display, and a clean clip (not a check twin) across
-  one, are unmeasured. The stamp's wipe copies the row's next 64 pixels
-  over the stamp, which is a flat field in a battle and can be an edge on a
-  run's screen.
 
-## §116 riders (the first sitting, 2026-10-04)
+- [ ] **A battle's snapshot drops a queued unit's seeded effects.**
+  `World.toJSON` leaves `effects` out of each queued spawn template and
+  `spawnFromQueue` reads it; only the bot's look-ahead copies a battle
+  that way. Census F-1; `scratch/120f/queue-effects.ts` shows it.
 
-- ✅ **The settings chip's home** (117.5d, 2026-10-09): the first row of a
-  control column, top right, with the screen's own control under it
-  (DESIGN "The control column"; `archive/post-109-worklog.md` "117.5d — built"). Its read is the
-  sitting's.
+- [ ] **A won-turn reward shape** (the user's §93 verdict item 3): under casualties a decisive win still books your own dead — candidates: a partial refund on a decisive win, or the enemy paying survivors on a loss (the surcharge machinery mixes rules per turn already). After the post-turn ledger screen lands (§94), re-read the feel before building.
 
-- [ ] **Some text may be too small at the default size** (the user's
-  read of 116k, 2026-10-07): "some things definitely just look better on
-  the larger sizes", and the three that stood out were the events, the
-  command chips in the HUD (read here as the objective buttons, Engage /
-  Focus / Hold / Stop) and the hitsplats. No default is resized now, the
-  user's call: it wants player feedback, and no playtester has ever
-  flagged UI size. When it comes back, the lever is the `--text-*` token
-  each of the three uses, and the survey
-  (`shell/electron/probes/text-scale.js`) says what a larger default
-  costs each window. A suggestion of the session's, not the user's: ask
-  it at the round's playtest (was any text too small; did anyone change
-  Text size).
-- ✅ **Where a larger text size runs out of room on a 720p window**
-  (117.5e, 2026-10-09): at 125 % the survey finds nothing new and no chip
-  is over text; at 150 % nothing is out of reach (DESIGN "The smallest
-  window, and room for the columns"; `archive/post-109-worklog.md` §117.5e). What 150 % still
-  shows is in "§117.5 kickoff riders".
-- ✅ **What the text-size survey did not reach** (116k): read at 117.5a by
-  the survey's `extras` mode, clean at every size on four windows; no full
-  card opens on hover anywhere, and the menu's own tooltips rest on the
-  shared plate (`archive/post-109-worklog.md` §117.5a).
-- [ ] **A key's name is its US label** (116e). The registry binds a
-  `KeyboardEvent.code`, the physical key, and `keyLabel` shows that code's
-  name, so on AZERTY the key marked A reads as Q in the settings' key rows,
-  on the HUD's buttons and in the tooltips. It has been so since the HUD
-  showed keys; the rebind rows make it visible. A fix would keep the
-  pressed key's `key` beside its `code` at a rebind (the defaults have no
-  press to read), or ask `navigator.keyboard.getLayoutMap()`, which
-  Firefox doesn't have.
+### The first phase, and the bump window
 
-- [ ] **Under Electron every write sends the whole store** (116l, measured
-  with `shell/electron/probes/diag-run.js`). `src/store/electron.ts`
-  keeps one file and rewrites it at each save, so a save costs the page
-  in proportion to everything stored: 0.09 ms with an empty journals
-  section and 1.8 ms with it at its budget, and the main process then
-  writes 1.2 MB to disk, untimed. Under a frame and at a gate, so nothing
-  is owed while the shell is internal. Home: the phase that ships the
-  shell, with one instance per profile ("§115 riders"); a file per
-  section would make a save cost its own size.
-- ✅ **A "Copy diagnostics" row for players** (116l, call 1): in Settings ›
-  Data of every build, the short form of the panel's report (118f; `archive/post-109-worklog.md`
-  §118f).
-- ✅ **Import a backup under Electron** (the 116l sitting): it works, by the user's read after the close, 2026-10-07 (`archive/post-109-worklog.md` "After the close").
-- ✅ **The build's own helper has no notice** (116j): Vite's core licence
-  is in the shipped file and a test holds it there (116j-post, the user's
-  call 2026-10-07; `archive/post-109-worklog.md` "The reads' answers").
-- [ ] **The packaged shell's notices.** The desktop build will owe
-  Electron's and Chromium's notices, at the phase that packages it; the
-  shipped licence file covers the web build only. Unchecked too: whether
-  the bundler's own run-time helpers, beyond the preload polyfill, are in
-  the bundle (minified, they have no name to search for).
-- ✅ **A second tab's run has no can't-save chip** (116i): it shows it
-  now, while a run is on screen there (116i-post, the user's call
-  2026-10-07; `archive/post-109-worklog.md` "The reads' answers").
+- [ ] **FX_REGISTRY's own coverage gap** (§104 call 5, out of that phase's scope guard): its boot asserts check authored keys RESOLVE, not coverage — an ability with no `fx`, or a `*_tick` status key with no `sound`, passes silently. The §104 shape fits: every tick key carries a `sound` or sits on an explicit visual-only list, pinned in `fxRegistry.test.ts`.
 
-## §117 riders
+- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
+  is 0 on every unit and is meant to stay 0, and a recruit's level-up
+  still draws for it (`src/sim/leveling.ts:66`). Taking the key out
+  re-draws every recruit's level-ups, so it goes, with the eleventh
+  draw, in a round that accepts the stream moving and re-runs the board.
 
-- ✅ **Two tabs can lose a recorded win** (117d): the two progress writes
-  go through `store.update`, which reads the section again before it
-  changes it (117d-post, the user's call 2026-10-08; `archive/post-109-worklog.md` §117d-post).
+## Round 10 — Act 3
+
+META-ROADMAP §"Round 10 — Act 3" names each group.
+
+### Escalation 3, the tithe and Dis Pater
+
 - [ ] **WATCH: the Idol of Dis Pater's sentence holds at Escalation 3 by
   rounding** (117e, step zero). "Each kill tithes 2 bits" is an earn of 2,
   and the bits lever at 0.75 makes it 1.5, which rounds to 2. A bits
   lever under 0.75 makes the sentence false, so whoever retunes level 3
   at §118's board rereads it. By arithmetic, not by a run.
+
 - [ ] **Round a tithe's bits on the award, not on each kill** (the user,
   2026-10-10, at 118e's read; after the itch release). Each earn is
   rounded on its own, so the bits lever at 0.75 leaves a 2-bit tithe at 2
   and Escalation 3 to 5 skip the richest economy. Rounding the total a
   turn or a battle awards would let the lever reach it. A sim change: it
   moves the board, and the daemon's sentence wants a look with it.
+
 - [ ] **WATCH: Escalation 3 (bits −25%) reads no harder on the board's
   arm** (118e; BALANCE 2026-10-10). Kept by the user as an economy step:
   the arm bought less and lost no depth, and how real players spend is
   unknown. Reopen with exported journals (purchases a run, by level) and
   with the item above.
-- [ ] **Two tabs changing two settings overwrite each other** (117d-post,
-  call 1). `store.patch` stores the page's copy of a section with the
-  change, so the second tab's write puts the first tab's setting back as
-  the second read it. `store.update` fixes this for the progress section
-  alone: a setting is drawn from the page's own model, so a re-read
-  would part what is stored from what the page shows. Unseen so far.
 
-## §117.5 kickoff riders (2026-10-08)
+- [ ] **The Dis Pater `--grant` read at n=80.** Both reads on the
+      daemonized miner are thin site-causal pairs (the v3 shadow −11.25
+      at n=55; the 88d3 live decline margin +4.3 at n≈18) — exactly the
+      stream-perturbation-dominated shape WORKLOG §85g6c warned about —
+      yet the user picks him every run. The standing rarity protocol's
+      tool for a thin row is the paired same-seed `--grant` arm at the
+      n=80 floor (the 88b cohort shape, ~40 min box): a FREE endowment
+      read that answers "is holding him net-negative" without the
+      site-causal confound. Candidate mechanism if it holds: the tithe
+      funds MORE bot shopping, and port purchases price negative on
+      average (88b). Rides the §89 amendment cohort or its own line.
 
-Filed at the kickoff, each with its home (`archive/post-109-worklog.md` "The §117.5 kickoff").
-The older riders the sweep took: the settings chip's home (117.5d), the
-720p room and the survey's reach ("§116 riders"; 117.5e, 117.5a), "Click
-a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
-(117.5g), hitsplats under pause (117.5b), the dev-code guard (117.5j).
+### With the act's content and its sheet
 
-- ✅ **A failure says nothing** (117.5i, 2026-10-09): the failure plate,
-  on a failed boot, on anything thrown once the game runs, and on a lost
-  context (DESIGN "The failure plate"; `archive/post-109-worklog.md` §117.5i).
-- ✅ **No loading line** (117.5h, 2026-10-09): `Loading…` is in
-  `index.html` and comes down as the first screen mounts, with a
-  `<noscript>` line (DESIGN "The loading line"; `archive/post-109-worklog.md` §117.5h). A boot
-  that fails takes it down with the failure plate (117.5i).
-- [x] **The itch embed is 1280×720, the smallest supported window** ✅
-  118g (2026-10-10): `itch/settings.md` sets the embed and turns itch's
-  fullscreen button on (decided at 117.5c's read).
+- [ ] **Mapgen tool: empty-camp-pool hint.** §81c field report
+  (2026-08-17): the user spent five minutes rerolling VOLCANIC maps
+  hunting for camps — the one theme whose pool ships empty. One line
+  of UI (grey the Camps stat or badge the theme select "no camps")
+  saves the next person the hunt. Dev-tool-only, trivial.
+
+- [ ] **Ability DESCRIPTION text (the name half is done).** Ability display *names* shipped at Yb (`AbilityDef.name`, required — the §61g audit found this already live); what remains is descriptive flavor text: a `description` on the ability config surfaced on the card ability rows ("Whip — long reach, rarely misses"). Cosmetic; surfaced at I6.
+
+- [ ] **The three deep-end cost residuals** (the 94c re-read, 2026-09-07 — BALANCE §94c re-read): infernalColumn 10.6 · miscreants 10.2 · ronin-vs-mages 10.6 cost/instance against the 1.5 × normal-mean line (9.3), in band on TURNS. A bite property (cost/turn 3.2–3.3 vs 2.1) that predates 94b and the pool cannot close; the lever is the COUNT factor on those three waves (column hand×1.2 · miscreants hand×1.5 · mages hand×1.3 — fewer bodies at the same kill throughput = the same burn, less bite; level is already ×1.0 / ×1.25). One config commit + a six-arm re-read (~3.4 h) whenever those rows are next touched; not a §94 blocker (the config froze over it, user-signed).
+
+- [ ] **Rounded plates for organic scenery** (the user at §108's stop 1, 2026-09-25: future trees, where rounding "might thematically fit for 'organic' scenery"). The rounding exists: `MarkStyle.plateCorner` and the shader's rounded square (`terrainMarks.glsl` `plateShape`), with the explorer's `plateCorner` dial kept through 108f to try it. Today it is one global uniform; trees beside square-plated walls need it per mark (a spare field in the mark's texels). Square stays the default: the dashes did the walls' job, and rubble read as a tie. A large radius drifts toward the player's circle (the spec's caveat).
+
+## Round 11 — Onboarding & Feel
+
+META-ROADMAP §"Round 11 — Onboarding & Feel" names each group.
+
+### First: the layout rework (players' reports may bring it forward as a `.5` round)
+
 - [ ] **A smaller window than 1280×720** (1024×576 first): a future goal,
   the user's call at 117.5c's read, and "closer to a full round" than a
   step. What stands in the way is the item below and the left column over
   an event's text. 117.5a has the text-over-text numbers at 1024×576 and
   960×540; they do not see a card over the board.
+
 - [ ] **The battle HUD's unit cards cover the board** (the user,
   2026-10-09). On a 2.5k screen they cut the top and bottom tiles; at
   1280×720 more; at 1024×576 the enemy's cards cover half the board, and
@@ -631,18 +331,7 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   it (a card over the canvas is neither text over text nor a box off the
   page), so an instrument for it is the first step: the board's tiles a
   card covers, per window and size. A later round's.
-- ✅ **A lost WebGL context that is not restored says nothing** (117.5i,
-  2026-10-09): the plate, four seconds after the loss with the page in
-  view (`archive/post-109-worklog.md` §117.5i).
-- [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
-  composers and the bloom render at full device pixels, and fullscreen on
-  a 4K laptop with integrated graphics is the bad case. Left for data, the
-  user's call at the kickoff: the user's GPU can't show it, and a cap
-  changes the glyphs' look. Players' reports (window, ratio, GPU) would
-  come by the "Copy diagnostics" row ("§116 riders"). In Firefox that
-  row names a class of card and not the card (118i: a GTX 980 "or
-  similar" on a 4080 SUPER), so it tells an integrated chip from a
-  discrete card at best.
+
 - [ ] **At 150 % text a 720p window breaks down, and the layout wants a
   rework** (the user, reading 117.5d's mock, 2026-10-09: "things really
   start to break down by 150%; at some point, we'll need to rework
@@ -660,147 +349,96 @@ a target…" (117.5f), `RNG` against `rng` (117.5f), the X on Volcanic
   sector cleared, the menu): they fit today, and a taller body would put
   their ends off the page as the promotion screen's were. A later
   round's; the instrument is `shell/electron/probes/text-scale.js`.
+
+### The feel sweep
+
+- [ ] **Audio tell for the catapult hold-fire (82e rider,
+  2026-08-17).** The release gate ships SILENT visually-speaking
+  beyond the amber drain bar (user call at the 82e shape-lock) — a
+  short "held fire" sound (creak/ratchet) on `unit:actionHeld` would
+  carry the tell for eyes-elsewhere moments. The event already
+  exists; this is an AudioPlayer subscription + an asset pick, feel
+  round material.
+
+- [ ] **Catapult LAUNCH creak (the F3 launch/impact split — optional tail).** F3 moved the projectile *launch* to the `release` phase (~12 ticks before impact), so the loose is silent and only the impact crash sounds. The seam is now trivial: the `catapult_launch` fx key already exists (projectile-only) — just author a launch "creak/thunk/FWOMP" sound (a `scripts/gen-sfx.mjs` recipe would do it) + add it to that key + register the `SoundKey`. Lower priority — the impact crash carries the weight. *(Same optional opportunity for the mage bolt's `release` "fwoosh," but `magicboom` at impact already reads right.)*
+
+- [ ] **Dash VFX (afterimage / trail / blink-flash).** N1's rogue dash currently reads as a fast slide (the `unit:moved` lerp over the ~5-tick motion window) + the `dash.wav` whoosh — no dedicated visual. The first-class **`unit:dashed`** event ([events.ts](src/core/events.ts), emitted by [DashAction](src/sim/actions/DashAction.ts), carries `from`/`to`/`durationTicks`) is the ready hook: a BattleScene/BattleRenderer subscriber can draw a motion trail / afterimage / blink-flash on the leap. Folds into the deferred L/M status-VFX presentation pass. Surfaced at N1.
+
+- [ ] **Renderer "queued/waiting" stance — the §44/§46 ship-feel deferral.** Units now WAIT on purpose (§44b's first-class `WaitAction`; §45b queues) and the seam for showing it was planted deliberately: the `unit:waited` event (event-only, [WaitAction.ts](src/sim/actions/WaitAction.ts)) fires once per deliberate hold. A subtle render tell (dim pulse, stance glyph tint, whatever reads at a glance) would let a player SEE "this unit is queueing, not stuck" — the §46 decision point deferred it as pure ship-feel polish. Render-only; no sim/snapshot impact. Natural home: any Cluster-3+ polish rider or the pre-launch pass. Filed at the §46c close-out (2026-07-06).
+
+- [ ] **Fleeing-enemy threat tell (UI).** Parked at the §58 close
+  (2026-07-19, user call): a player-facing "that unit can't reach/harm
+  you" read — the derived reachability math (§58's unbuilt sensor)
+  surfaced as UI instead of bot input. The bot side proved unnecessary
+  (searcher-ate-it, BALANCE §58); the player value is readability on the
+  fleer/deserter situation the experienced eye reads natively. Needs a
+  snapshot-computable reachability read + a render/ui surface
+  (eyeball-verify); candidate slot: a later UI/polish round.
+
+- [ ] **Stalled-battle draw prompt (live-game UX).** The only stall guard is
+  the per-turn tick cap (`resolveAsDraw`, driver-owned) — a player who hits a
+  genuine stall IRL is stuck watching until the cap expires, with no engine
+  heuristic to offer "this looks stalled; accept a draw?" earlier. Idea
+  (user): a cheap no-progress read (e.g. no damage/pool movement for N
+  seconds) that surfaces an accept-a-draw prompt in the UI. Sim read +
+  UI-only surface; no effect on headless (harness keeps the hard cap).
+  Originally floated around the draw/timeout-counter unification but never
+  noted; captured 2026-07-15.
+
+- [ ] **The capped turn's end sequence, read once in a browser.** A turn
+  that runs out the clock pays the survivors' rule as the cap's surcharge
+  (`health.capPenalty: survivors`), so the HUD flies one orb for each unit
+  still standing (`src/ui/HUD.ts`, `lossEventsAtEnd`). It ships, and no
+  browser read of it is on record. One capped turn in the user's Firefox,
+  with the stalled battle's draw prompt above. Reworded at the Round 8.5
+  TODO pass (census T-41) from "the survivors end sequence, unexercised
+  live", whose trigger, a survivors-rule playtest, is ruled out.
+
+- [ ] **Status-tick sparkle placement / height (27e experiment).** The 27e periodic-status pulse (`spawnSparkle` in [BattleRenderer.ts](src/render/BattleRenderer.ts)) anchors at the sprite's vertical CENTER (`SPARKLE_Y_OFFSET = 0.0`), motes rising `SPARKLE_RISE = 0.35` — so the burn/poison/heal puff hugs the unit's torso, peaking around the shoulders (the `+N` number floats higher at `HITSPLAT_Y_OFFSET = 0.5`, the top edge). User wants to leave it there for now but **experiment with the height/spread later** (raise toward the head ~+0.5, or float a halo over the unit ~+0.7). Pure render consts — eyeball-tune freely. **Related:** the **apply-flash was dropped** in the 27d/27e playtest follow-up (`status:applied` fired at move-START — `MoveAction` snaps the logical position onto the tile while the sprite is still lerping in — so the puff popped mid-lerp, "burning before arrival"). If a settle-on-arrival apply cue is ever wanted, the clean hook is to delay the `status:applied`-driven sparkle by the unit's remaining move lerp (the `applied` fx slot is still in the StatusDef schema + `driveStatusFx`). Surfaced at the 27e playtest (2026-06-24).
+
+- [ ] **Movement polish: smooth the vertical motion of ground moves, then
+  reopen the hop one final time** (the user at §108's stop 2). §81c2's
+  profile does a step's whole height change in half the step, in a
+  straight line, and stops dead at the midpoint. Floor heights are
+  continuous noise, so nearly every step has one; at the 0.3 s mobility
+  floor it lasts 0.15 s (0.05 s at 3×), and the user read the sharp corner
+  as jitter on fast units. A candidate: smoothstep over the half-step. It
+  still reaches the new height by the midpoint, which is what keeps the
+  anchor at or above the surface it is over; check it with
+  `tests/board/clip.ts`. Then the hop question reopens once, as the user
+  asked: the measurements are in `archive/post-104-worklog.md` §108c, the
+  dial's code at `d045497`, and `?bp=board-wade` is the fixture. Reduced motion drops any
+  hop (DESIGN §Reduced motion).
+
+- [ ] **A polish round: the rally X as a terrain mark** (the user at the
+  §109 kickoff: "at some point, we should probably investigate turning the
+  rally glyph into a terrain marker"). The tile objective marker is a glyph
+  sprite that stands its ink, not its quad, a small gap above its cell, so
+  it reads the X's ink bottom from the atlas (R10, re-grounded at 109a:
+  under the quad-bottom anchor the X's ink sits 17/64 of a cell above its
+  quad bottom, and dropping the term floats it 0.43 world units). Drawn by
+  the terrain as a mark shape (the §108 table, a new shape id) it lies on
+  its tile with no ink read at all, and R10 is deleted. A new look, so a
+  read; the enemy mark rides above a glyph and stays a sprite. Its
+  requirement, measured at 117.5b: read on all six floors. In OKLab the
+  amber X is 0.095 from desert's sand, 0.194 from tundra's ice and 0.30 or
+  more from the other four. The user's eye found it fine on desert
+  (2026-10-09), so nothing is built before the mark (`archive/post-109-worklog.md` §117.5b and
+  "117.5c — the read").
+
+- [ ] **SFX diversity** (verdict 7d) — a content item. The worklist now lives in code: the 14 `candidate` rows of `SILENT_EVENTS` ([eventSounds.ts](src/audio/eventSounds.ts), §104) — promoting one = move it to `EVENT_SOUNDS` + a `gen:sfx` recipe.
+
+- [ ] **A hitsplat gallery dev key.** The 98d split was "very hard to test" (the user, 2026-09-16): a DoT number lives 0.6 s and needs a DoT-applying enemy on the board (the shortcut used: `?layout=isthmus&encounter=plagueDoctors`, then a DOM `MutationObserver` on `.hitsplat`). A Ctrl+Alt chord that spawns one sample of EVERY `HitsplatKind` on the first player unit (`~7` / `‡7` / `☠7` / `+7` / `12` / a crit / Miss) would make any number tweak a two-second eyeball check. `src/dev/devKeys.ts` is the home; the overlay's `spawnHitsplat` is private to BattleRenderer today — needs a dev hook through Game or BattleScene.
+
+- [ ] **The band constants by eye** (98e) — amplitude 0.22 and one band per tile (98e-post: two read as a hazard stripe; the diagonal now runs in world space in both shaders); one constant each in terrain.frag (`DEEP_BAND_AMPLITUDE` / `DEEP_BANDS_PER_TILE`) and the literal pair in apron.frag.
+
 - [ ] **The battle's hop chip does not fade** (seen in the stylesheet at
   117.5d, not measured): it is `chip hud-hop screen-fade`, and the chip
   plate's `transition` comes later in the sheet than `.screen-fade`'s and
   names no opacity, so the chip appears and goes at once while the HUD's
   other panes fade over 180 ms. `.control-chip` names the opacity for this
   reason; the hop chip needs the same line.
-- ✅ **A script that never ran says nothing** (117.5i): a classic script
-  in `index.html`'s head changes the loading line's words (118f; `archive/post-109-worklog.md`
-  §118f). Still unheard: a download that stalls and never fails.
-- [ ] **A shader that fails to compile throws nothing** (117.5i, from
-  memory of three.js, not run here): it logs to the console and draws
-  nothing, so a driver that rejects a shader would give a black board
-  under a working HUD and no plate. Hearing it means asking the program's
-  link status after the first frame.
-- [ ] **The battle plays on unseen while a lost context is waited for**
-  (117.5i, measured under the runner: lost at tick 40, halted at tick
-  120). The wait is four seconds; a loss that is restored inside it has
-  cost that much of the fight's picture, and the sound still plays.
-  Holding the playback for the wait (`PlaybackSpeed.hold`, as the
-  settings modal does) would stop that.
-- [ ] **A long error in the failure plate can't be scrolled by keyboard**
-  (117.5i): Tab stops on Reload alone, and the box that scrolls is not a
-  tab stop. Making
-  the `<pre>` a tab stop would do, as the credits' body is one.
-- [x] **A rest node conveys nothing and is not a gate.** ✅ 2026-10-09
-  (§117.75): a page of its own and a saved gate, `28b9d2b`; `archive/post-109-worklog.md`
-  §117.75.
-- [x] **The first three events' prose predates the adopted style.** ✅
-  2026-10-09 (118d): rewritten by the user, the outcomes held by
-  `tests/event-outcomes.test.ts`; `event=<id>` opens one (`archive/post-109-worklog.md` §118d).
 
-## §118 riders (2026-10-10)
-
-- [ ] **Last run exports a finished run only** (118f's audit). The end
-  screen's Export run and Settings › Data › Last run hand over the newest
-  run that ended (`lastRunJournal`), so a player reporting a bug in the
-  middle of a run has only Export everything, which carries the saved run
-  and its journal among everything else. The itch page says so. A row
-  that exports the run in progress would be the smaller file; unchecked:
-  whether `npm run replay` takes a journal whose last segment is open.
-- [ ] **Two lines of the smoke were not read** (118i): the storage keys
-  visible from our frame on itch's shared origin that aren't ours (read
-  once, in Firefox, at 116l; never in Edge), and the days-later re-open.
-  The diagnostics build that listed the keys left the page at the
-  `0.1.0` upload. What would read them: the browser's own storage
-  inspector on the frame, or a diagnostics zip on a second draft; and for
-  the re-open, the live page itself after some days, where Copy
-  diagnostics shows the store's sections still there.
-
-## Round 8 close riders (2026-10-11)
-
-From the close's papercut triage (`archive/post-109-worklog.md` "118j — the
-round close", C5).
-
-- [ ] **The probe runner's edges** (`shell/electron/probe-cli.mjs`). Its
-  JSON argument read from a file, since Git Bash does not carry JSON on
-  the command line safely (two scratch runners were written for that at
-  117d). One build for a batch of launches, so the tree is free while the
-  batch runs (116k waited three times). The report's shape in the header:
-  a script's value is at `result.script`. And
-  `__probe.drive({ until: 'turn-outcome' })` never stops there (117.5e
-  lost six launches to it).
-- [ ] **`phase-stats` under `--since`** drops a `.5` phase and folds a
-  `.75` one into its whole number, and a subject with a scope word
-  (`save`, `settings`) in place of the step is counted under the word.
-  Round 8 read 135 commits there against git's 196.
-- [ ] **Three tests time out at 5 s when anything runs beside the suite:**
-  `tests/store-guard.test.ts`, and the chaos test's seeds whenever a
-  stream moves their walk (118d). Neither failure names load. A longer
-  timeout on the three, or a line in the failure. `store-guard`'s two
-  whole-repo walks have a 30 s limit since 2026-10-12, when the hook
-  failed on that file twice running with nothing beside the suite (the
-  file takes 2 s alone); the chaos test's seeds are as they were.
-- [ ] **The friction log is a tracked file,** so filing during a cohort's
-  launch window or a recording dirties the tree: the box holds on a dirty
-  tree, and a clip is stamped `-dirty` (111f-post, 118b). An untracked
-  spool that the tool drains at the next clean moment would keep "file
-  when noticed".
-- [ ] **`forcedEncounterId` fields only at a node of its own kind** and
-  otherwise falls through to normal selection with no warning (117a: a
-  test read another pool, 19 for 22). A line in the `RunConfig` comment,
-  or a warning on a DEV page.
-- [ ] **Dead links in the docs** (the close's C6, a file-existence check
-  of every relative markdown link; `scratch/118j-close/c6-all-links.mjs`).
-  Five in four live docs: GOTCHAS to `src/sim/actions/AttackAction.ts`,
-  PATHING to `tests/pathing/trace-flips.ts`, this file to
-  `src/sim/actions/DashAction.ts`, and two root-relative links in
-  `retro/agent-welfare-review-2026-09-13.md`. And 882 misses inside
-  `archive/`, not sorted further: the files archived before the 7.5 close
-  were moved verbatim, with links written from the repo root. Fix the
-  five; the archives' are a decision.
-
-## §119 riders (the oracle map, 2026-10-12)
-
-From 119g's planted breaks (WORKLOG §119, 119g).
-
-- ✅ The three reward loops in `src/run/Run.test.ts` are bounded
-  (119g-post): a reward command that stops taking effect now fails `npm
-  test` in 55 s where it hung it.
-- [ ] **A test that loops until a command takes effect never returns once
-  the command stops taking effect: the loops not yet read.** With a declined reward made a no-op in
-  `Run.ts`, `npm test` did not fail: one worker spun (391 CPU-seconds
-  before it was stopped by hand) and 253 tests of `src/run/Run.test.ts`
-  never ran, so the pre-commit hook would hang where it should go red. The
-  loop is `while (run.phase === 'reward') run.dispatch({ kind:
-  'declineReward', index: 0 })` at `Run.test.ts:5575`, with the same shape
-  one line up for `acceptReward` and at 4652. TESTING.md already has the
-  rule ("Bounded steps, never poll `currentTick`"), from a `World` loop; this
-  is its second bite, on a `Run` loop. There were 55 `while (` lines in 24
-  test files (16 in `Run.test.ts`, 8 in `World.test.ts`); three are fixed
-  and the other 52 are unread. For the tests phase: bound the ones that
-  wait on state a command or a tick is meant to change.
-- [ ] **The page drive does not notice a phase whose scene never mounts.**
-  With `Game.dispatch`'s map swap after a rest removed, `npm run probe --
-  shell/electron/probes/drive-run.js --seed=6 --dials=hops=2&firstNode=rest`
-  ends with the same log hash and state hash as the clean tree: the driver
-  sends each phase's command to `Game` whatever screen is up. A check in
-  `__probe.drive` that the mounted scene is the phase's would make the
-  drive a proof for the scene wiring, which today has none but the eye.
-
-## §120 riders (the census's read, 2026-10-13)
-
-The user's, given at the census's read: the first two with the keeps of
-rows A-14 and A-19, for a later cleanup round; the third with A-24; the
-fourth with A-22.
-
-- [ ] **Power's level-up draw and its growth key.** `growthRates.power`
-  is 0 on every unit and is meant to stay 0, and a recruit's level-up
-  still draws for it (`src/sim/leveling.ts:66`). Taking the key out
-  re-draws every recruit's level-ups, so it goes, with the eleventh
-  draw, in a round that accepts the stream moving and re-runs the board.
-- [ ] **The URL parameters, reviewed and simplified.** 17 today: 13 run
-  dials and 4 others (census 1.5). The user: "the many URL parameters
-  need to be simplified at some point".
-- [ ] **A second language.** The game ships English alone. Round 7 built
-  the string layer for more, the locale gets its row in Settings "with a
-  second locale" (META-ROADMAP, Round 8), and no round schedules one. The
-  user: "Supporting a second language should probably be an explicit to
-  do". Census A-24 keeps the layer's way in for it (`registerLocale`, the
-  stale-translation marks, the translators' credits), which only tests
-  call today.
 - [ ] **A tooltip leaves with its screen.** An open tooltip closes a
   frame after its trigger has left the document, so through a scene swap
   it stays whole for about 190 ms over a screen that is fading out, and
@@ -813,12 +451,171 @@ fourth with A-22.
   overlay opens. Census A-22 keeps both functions for it. It changes
   behaviour, so it is not Round 8.5's, and a read in Firefox goes with
   it.
-- **A battle's snapshot drops a queued unit's seeded effects.**
-  `World.toJSON` leaves `effects` out of each queued spawn template and
-  `spawnFromQueue` reads it; only the bot's look-ahead copies a battle
-  that way. Census F-1; `scratch/120f/queue-effects.ts` shows it.
-- **A loaded run can miss a field the class defaults.** `Run.fromJSON`
-  assigns each field by name past the constructor, and
-  `pauseAtTurnGates` is `undefined` on a loaded run today (harmless).
-  A test that a loaded run has a constructed run's properties would
-  catch the next. Census F-2.
+
+### The board's accessibility dials
+
+- [ ] **Round 11: the glyph scale as an ACCESSIBILITY dial** (the §105 verdict, 2026-09-22) — the user read 105e's `scale` dial as a tie ("all pretty legible") and asked whether it becomes a player setting. 105e already threads a scale through the mirror pick and the two unit lifts from `src/dev` (units only, walls stay one tile); a shipped version is that threading moved into production + a settings row. Pose it with Round 11's accessibility list, not before.
+
+- [ ] **Round 11: yaw as a PLAYER setting — decide WITH a reason** (the §105 verdict, 2026-09-22) — structurally safe under ortho (world-up projects to screen-up at any yaw; the fit, picks, sort and post are camera-generic; the N×N anchor must be yaw-parametric anyway), but every eyeball read would be multiplied by the range's ends. §106 art-directs at ONE value; expose only if a real need appears (a MIRRORED yaw for reading direction is free — [−45, −30]). `archive/post-104-worklog.md` §"THE VERDICT".
+
+- [ ] **The overlays trail a camera move by one frame** (found at 112b's
+  step zero). The loop moves the bars and badges inside `onFrame`, and
+  three.js updates the camera's world matrix only inside the render, so
+  the first frame after a camera change projects them with the old camera:
+  in the pane, a yaw change put a bar at x = 0, then at its place a frame
+  later. Invisible at 60 fps while fit is the only shipped view; it would
+  show as bars lagging the board under a moving camera (scroll-mode
+  panning today, a player-facing yaw in Round 11). The likely fix is
+  `camera.updateMatrixWorld()` in `Renderer.start`'s loop before
+  `onFrame`, as the probe kit's `frame()` does (`src/dev/probe/index.ts`).
+
+### The tutorial, the run summary, text size
+
+- [ ] **A key's name is its US label** (116e). The registry binds a
+  `KeyboardEvent.code`, the physical key, and `keyLabel` shows that code's
+  name, so on AZERTY the key marked A reads as Q in the settings' key rows,
+  on the HUD's buttons and in the tooltips. It has been so since the HUD
+  showed keys; the rebind rows make it visible. A fix would keep the
+  pressed key's `key` beside its `code` at a rebind (the defaults have no
+  press to read), or ask `navigator.keyboard.getLayoutMap()`, which
+  Firefox doesn't have.
+
+- [ ] **The run-end stats beyond the fallen** (the 102 kickoff, call D): the ledger records DEATHS only, so the 102d body cannot say fights fought / won, turns taken, damage dealt, bits earned, the daemons and packets a run ended with — each needs a second source (`turn:resolved`, the battle tallies, the Run state at the end). A content item for the polish round; the body's layout (totals + a table) has room for a second block.
+
+- [ ] **Last run exports a finished run only** (118f's audit). The end
+  screen's Export run and Settings › Data › Last run hand over the newest
+  run that ended (`lastRunJournal`), so a player reporting a bug in the
+  middle of a run has only Export everything, which carries the saved run
+  and its journal among everything else. The itch page says so. A row
+  that exports the run in progress would be the smaller file; unchecked:
+  whether `npm run replay` takes a journal whose last segment is open.
+
+- [ ] **Some text may be too small at the default size** (the user's
+  read of 116k, 2026-10-07): "some things definitely just look better on
+  the larger sizes", and the three that stood out were the events, the
+  command chips in the HUD (read here as the objective buttons, Engage /
+  Focus / Hold / Stop) and the hitsplats. No default is resized now, the
+  user's call: it wants player feedback, and no playtester has ever
+  flagged UI size. When it comes back, the lever is the `--text-*` token
+  each of the three uses, and the survey
+  (`shell/electron/probes/text-scale.js`) says what a larger default
+  costs each window. A suggestion of the session's, not the user's: ask
+  it at the round's playtest (was any text too small; did anyone change
+  Text size).
+
+## Round 12 — Ship
+
+META-ROADMAP §"Round 12 — Ship" names each group.
+
+### The shell, packaged
+
+- [ ] **One instance of the Electron shell per profile.** The two-tab lock
+  is the browser's own, so a second instance of the shell on the same
+  `userData` is not kept out: measured at 115f, it reads the lock as absent
+  (`none`), saves as if alone, and its writes replace the whole
+  `store.json`. The shell stays internal through Round 8; before it ships to
+  players, `shell/electron/main.mjs` takes `app.requestSingleInstanceLock()`
+  (the second instance quits and the first takes focus), with the probe and
+  record runners, which pass their own `--profile`, still able to run beside
+  a playing instance (unchecked: whether Electron's lock is per `userData`).
+  The landing note is in `main.mjs` at the store file.
+
+- [ ] **Under Electron every write sends the whole store** (116l, measured
+  with `shell/electron/probes/diag-run.js`). `src/store/electron.ts`
+  keeps one file and rewrites it at each save, so a save costs the page
+  in proportion to everything stored: 0.09 ms with an empty journals
+  section and 1.8 ms with it at its budget, and the main process then
+  writes 1.2 MB to disk, untimed. Under a frame and at a gate, so nothing
+  is owed while the shell is internal. Home: the phase that ships the
+  shell, with one instance per profile ("§115 riders"); a file per
+  section would make a save cost its own size.
+
+- [ ] **The packaged shell's notices.** The desktop build will owe
+  Electron's and Chromium's notices, at the phase that packages it; the
+  shipped licence file covers the web build only. Unchecked too: whether
+  the bundler's own run-time helpers, beyond the preload polyfill, are in
+  the bundle (minified, they have no name to search for).
+
+### The browser matrix and other hardware
+
+- [ ] **The device pixel ratio is uncapped** (`Renderer.ts:168`): both
+  composers and the bloom render at full device pixels, and fullscreen on
+  a 4K laptop with integrated graphics is the bad case. Left for data, the
+  user's call at the kickoff: the user's GPU can't show it, and a cap
+  changes the glyphs' look. Players' reports (window, ratio, GPU) would
+  come by the "Copy diagnostics" row ("§116 riders"). In Firefox that
+  row names a class of card and not the card (118i: a GTX 980 "or
+  similar" on a 4080 SUPER), so it tells an integrated chip from a
+  discrete card at best.
+
+- [ ] **A shader that fails to compile throws nothing** (117.5i, from
+  memory of three.js, not run here): it logs to the console and draws
+  nothing, so a driver that rejects a shader would give a black board
+  under a working HUD and no plate. Hearing it means asking the program's
+  link status after the first frame.
+
+- [ ] **The battle plays on unseen while a lost context is waited for**
+  (117.5i, measured under the runner: lost at tick 40, halted at tick
+  120). The wait is four seconds; a loss that is restored inside it has
+  cost that much of the fight's picture, and the sound still plays.
+  Holding the playback for the wait (`PlaybackSpeed.hold`, as the
+  settings modal does) would stop that.
+
+- [ ] **A long error in the failure plate can't be scrolled by keyboard**
+  (117.5i): Tab stops on Reload alone, and the box that scrolls is not a
+  tab stop. Making
+  the `<pre>` a tab stop would do, as the credits' body is one.
+
+- [ ] **Object pooling for the hot per-tick allocators (GC-pause reduction, not memory).** The 2026-06-15 fuzz heap probe found each sim run allocates a firehose of short-lived objects — V8 grows ~155 MB of heap *headroom* to absorb the churn though the live set is only ~16 MB (no leak; `heapUsed` flat across 600 runs). The churn costs no *memory*, but pooling the hot allocators — pathfinding scratch arrays, event objects, transient grid vectors — would cut **GC pauses**, which matter more for **rendered-game frame-time smoothness** than for fuzz throughput. **Caveat: this is a *deterministic* sim — a pooled object reused with a stale field is a determinism bug that's brutal to trace, so reset discipline must be airtight (the determinism tests are the guard).** Surfaced at the N2 dwm-leak investigation ([archive/dwm-leak-diagnosis.md](archive/dwm-leak-diagnosis.md)).
+
+### Store-page assets: the recorder
+
+- [ ] **A clip of a continued run.** `npm run record -- --journal=<file>`
+  replays a journal of one segment started from a seed and refuses more
+  (`shell/electron/record-cli.mjs`, `openJournal`). Since 115d a run loaded
+  from its save is a journal of several segments, so a clip of one needs the
+  replay driver (`shell/electron/probes/replay-page.js`) to load each resume
+  as the page did and go on. Filed at 115d (`archive/post-109-worklog.md` §115, "For the build
+  stretch").
+
+- [ ] **A replayed clip gives no cue of which choice was made** (the user's
+  114g read). A command sent at `Game.dispatch` presses no button, so an
+  event option, a map node or a recruit card is chosen with no flash and no
+  click sound. Perfect highlighting isn't needed; a brief flash on the
+  chosen control would do. The replay driver
+  (`shell/electron/probes/replay-page.js`) knows each command before it
+  sends it, so the cue can come from there or from the screens.
+
+- [ ] **The recorder's open items at the §114 close** (`archive/post-109-worklog.md` §114f,
+  §114g; a dev tool, so none blocks the round). At `--speed=3` a cue can go
+  unheard (517 of 518 and 111 of 113 in two clips, none missing at 1×), not
+  diagnosed, and it fails the clip when it happens. A run recorded across
+  a real switch of the display, and a clean clip (not a check twin) across
+  one, are unmeasured. The stamp's wipe copies the row's next 64 pixels
+  over the stamp, which is a flat field in a battle and can be an edge on a
+  run's screen.
+
+### Human gauntlet #2
+
+- [ ] **Human-gauntlet cells vs the starting event.** The §53 cell
+  protocol pins its forced fight at the ROOT, which The Start now
+  stamps as the starting event (74i-c) — the headless drive suppresses
+  the catalog (cells.test), but a BROWSER cell run (`cellUrl`) opens
+  the boon event before the fight, perturbing trace comparability
+  with the 53g baseline. Revisit before the next human gauntlet
+  (eventCatalog is programmatic-only, so the URL side needs its own
+  answer — a `noevents` query dial or a protocol note).
+
+### A decision point: a second language
+
+- [ ] **A second language.** The game ships English alone. Round 7 built
+  the string layer for more, the locale gets its row in Settings "with a
+  second locale" (META-ROADMAP, Round 8), and no round schedules one. The
+  user: "Supporting a second language should probably be an explicit to
+  do". Census A-24 keeps the layer's way in for it (`registerLocale`, the
+  stale-translation marks, the translators' credits), which only tests
+  call today.
+
+## Not yet placed
+
+Nothing, as of the pass.

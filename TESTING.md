@@ -241,7 +241,7 @@ smoke tier, three on every `npm test`); "fuzz diff" is
   unit bought at a port and never added to the roster, by both proofs,
   because no stored run completes that trade; `src/run/Run.test.ts` alone
   caught it. Under the declined-reward break `npm test` did not fail: a
-  test loop never ended (TODO "§119 riders").
+  test loop never ended (TODO "Round 8.5").
 - **`config/*.json` and `src/config`.** Proof: the corpus and the fuzz
   diff for behaviour, and `npm run oracle -- config-dump` with `json-diff`
   for a move between files. The corpus runs 84 % of the loaders' lines.

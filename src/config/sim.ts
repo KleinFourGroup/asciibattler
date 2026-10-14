@@ -1,183 +1,119 @@
 /**
- * E5 — per-subsystem sim tunables (target stickiness, and room for more
- * pathfinding/behavior knobs as Phase E/F grows). Source of truth at
- * `config/sim.json`. Timings are authored in seconds (gotcha #6) and converted to
- * integer ticks at module load, so a TICK_RATE change re-derives the
- * cadence automatically.
+ * The battle sim's tunables: targeting, pathing, healers, camps and the
+ * mid-battle spawn. Source of truth at `config/sim.json`, parsed at module
+ * load (malformed JSON throws). Timings are authored in seconds and
+ * converted to ticks here, so a change to `TICK_RATE` re-derives them
+ * (gotcha #6); distances and step counts pass through as written.
  *
- * A4 pattern: parse at module load, throw on malformed JSON.
+ * - `retargetCloserRatio` — a unit keeps its current enemy until another is
+ *   at least this many times closer. At least 1; at 1 it switches to any
+ *   closer enemy.
+ * - `rangedRetargetLosSeconds` — a ranged unit that cannot see its target
+ *   for this long drops it and picks again. Converted to
+ *   `rangedRetargetLosTicks`, at least 1.
  *
- *   retargetCloserRatio — target stickiness keeps a unit locked onto its
- *     current enemy until another enemy is at least this many times
- *     closer (1.5 = "switch only when a rival is 1.5x nearer"). >= 1 so
- *     "switch on any closer enemy" degenerates cleanly at 1.0.
- *   rangedRetargetLosSeconds — a ranged unit that can't see its sticky
- *     target for this long drops it and re-picks. Converted to
- *     `rangedRetargetLosTicks`.
- *   occupiedCellPenalty — extra A* cost (on top of tile cost) for routing
- *     MovementBehavior's path through a cell occupied by another unit
- *     (ally / non-target enemy). The soft-block dial: high → flank around
- *     allies (the old hardcoded 100 was steep enough to favour long
- *     backward flanks off the spawn band); low → go straight and
- *     queue/sidestep when blocked. Must stay >= 0 (keeps total cost >= 1,
- *     Chebyshev admissible) and finite (no deadlock). Does NOT affect
- *     walls/half-cover — those are hard blockers, not penalised cells.
- *     §45a splits this into three tiers — this dial now covers only the
- *     STATIC occupant (a body with no in-flight move); the two below cover
- *     the temporal cases. All three are route-SELECTION dials only: the
- *     step-commit collision check and the §35b execution gate stay hard,
- *     so same-cell convergence stays impossible whatever these are set to.
- *   vacatingCellPenalty — §45a: the discounted penalty for a cell whose
- *     occupant's in-flight move will vacate it within the pather's own
- *     arrival window (Chebyshev distance × own step ticks, plus
- *     `vacancyWindowOwnSteps` steps of slack). Near-zero → a corridor
- *     column stops reading as a wall and followers route straight through
- *     the vacating lane. Kept >= 0 (admissibility, as above); keep it
- *     below `occupiedCellPenalty` or the split is meaningless. The vacancy
- *     ETA is DERIVED from the mover's active action (occupancy.vacancyEtaOf)
- *     — never serialized, no snapshot shape.
- *   inboundClaimPenalty — §45a: the penalty for a cell CLAIMED as an
- *     in-flight move's destination (a body is guaranteed to materialise
- *     there at the flip — worse than a static body, which might move).
- *     Replaces the flat `occupiedCellPenalty` those cells paid pre-§45a;
- *     keep it above `occupiedCellPenalty` per the §45 charter. >= 0.
- *   vacancyWindowOwnSteps — §45a: the vacancy window k, in multiples of the
- *     pather's OWN step duration (the ROADMAP §45 leaning). A cell counts
- *     as "vacating in time" when its ETA <= (Chebyshev distance to it + k)
- *     × own step ticks. 0 = only cells already free by strict arrival
- *     estimate; higher → more optimism about lanes clearing. A step-count,
- *     not a timing — scales with the unit's speed automatically.
- *   waitForVacancyOwnSteps — §45b: the wait-vs-sidestep gate. When the
- *     IMMEDIATE forward cell (the committed A* step) is occupied by a body
- *     whose vacancy ETA <= this many of the pather's OWN steps, the unit
- *     proposes a first-class WAIT (§44b) — queue in lane — instead of the
- *     E5.B sidestep. Beyond the gate (or no derivable ETA: a static body, a
- *     claim) the sidestep/queue behavior is exactly pre-§45b. 0 = wait only
- *     for a same-tick flip; higher → deeper patience before crabbing.
- *     Distinct from `vacancyWindowOwnSteps` (route pricing) so queueing
- *     patience and route optimism tune independently. A step-count, not a
- *     timing.
- *   routeSwitchMargin — §45c: the anti-flicker hysteresis, in A* COST units.
- *     When transient traffic (claims / soon-vacating bodies) steers the live
- *     route's first step OFF the stable-world route (the same route with
- *     those transients stripped — the derivable incumbent; §45c-pre's
- *     counterfactual, promoted to the decision rule), the unit follows the
- *     live detour only if its advantage under live pricing EXCEEDS this
- *     margin; otherwise it holds the stable lane and lets the §45b step
- *     machinery (wait / progress-guarded sidestep / queue) handle the
- *     traffic. One pulsing claim/body (+4..+8) stays under an 8-margin —
- *     the §45c-pre flicker class dies; a real crossing column (+12 and up)
- *     still yields by detour. 0 = live always wins (pre-§45c behavior).
- *     Derived per poll from serialized state only — nothing cached, so a
- *     resumed snapshot chooses identically (the §45c determinism decision).
- *   stableRouteHorizonOwnSteps — §45c: what counts as "transient" when
- *     building the stable incumbent, in multiples of the pather's OWN step
- *     duration. A vacating body / derivable claim whose flip ETA is within
- *     this horizon is stripped from the stable context (it will resolve
- *     around one of my steps — routing noise); beyond it, the body/claim is
- *     as good as furniture and stays a stable cost (a glacially-vacating
- *     blocker must still be detoured, not queued behind). A step-count, not
- *     a timing.
- *   healerPanicRangeCells — E7.B: when a healer (`SupportMovementBehavior`)
- *     has no wounded ally in heal range, it panic-retreats from the nearest
- *     enemy that is within this many cells (Chebyshev). A distance, not a
- *     timing — passed through verbatim like `occupiedCellPenalty`, not
- *     `secondsToTicks`-converted. Higher → flightier healer; 0 disables
- *     the retreat (healer only ever heals/follows).
- *   healerFollowGapCells — E7.B: when nothing is healable and no enemy is
- *     near, the healer trails the CENTROID of its living allies, stepping
- *     whenever it's more than this many cells (Chebyshev) from that point.
- *     The deadzone that turns the old static-then-lurch follow into a smooth
- *     trail: small (1) → hugs the pack centre continuously; larger → hangs
- *     back loosely. A distance, not a timing.
- *   actingCellSearchSlack — GP4: when a unit approaches a target to act on it
- *     (archers/mage shooting, the catapult lobbing, the healer healing), it
- *     paths to the nearest cell from which it can ACT (in range, + LOS where
- *     the action needs it) rather than to the target's own cell. That cell is
- *     found by a bounded BFS outward from the unit, capped at `range + this`
- *     Chebyshev steps so a far/hopeless target doesn't scan the board — beyond
- *     the cap the unit falls back to charging the target's cell (the
- *     anti-freeze guarantee) and snaps to the acting cell once it closes in.
- *     The "small slack" past pure range that lets it find a LOS-clearing cell
- *     or take a one-cell sidestep. A distance, not a timing — passed through
- *     verbatim like `occupiedCellPenalty`. 0 = only cells already in range
- *     qualify; higher → searches wider (more work) for a standoff cell.
- *   shoveSearchRadiusCells — §35c: the BFS depth the de-overlap SHOVE searches
- *     for the nearest free cell when relocating a co-located unit (the
- *     occupancy backstop / the future-knockback primitive). Co-location is
- *     local — a free cell is almost always adjacent — so a small radius keeps
- *     the shove minimal-disruption + bounded; if nothing is free within it the
- *     shove no-ops (returns false) rather than teleporting across the board. A
- *     distance, not a timing — passed through verbatim.
- *   campWanderChancePerSecond — §75f (re-authored per-second at the 75j
- *     verdicts): the chance PER SECOND that a PASSIVE camp member takes one
- *     wander step inside its leash. The behavior polls once per tick while
- *     the unit is eligible (free, move off cooldown), so the loader derives
- *     `campWanderChancePerTick = 1 − (1 − perSecond)^(1/TICK_RATE)` — the
- *     gotcha-#6 discipline applied to a probability: a TICK_RATE change
- *     re-derives the threshold instead of re-tuning idle fidget rate (the
- *     original per-tick 0.05 @ 20Hz ≡ 0.64/s, so the shipped value
- *     preserves the 75h feel exactly). Rolls on the presence-gated
- *     `campRng` — the user-signed exception to the no-RNG-in-movement
- *     doctrine (camp idle wander is scenery flavor, not faction pathing).
- *     [0,1]: 0 = camps stand still (vacating the drip anchor stays
- *     unconditional); 1 = a step every eligible poll.
- *   enemyPullChance — §75g/§75j2: per turn, on a camp-bearing layout, the
- *     chance the enemy team opens with a DELIBERATE camp pull — the enemy
- *     TEAM objective is pointed at one camp's PRIMED member
- *     (engage{neutral}; the first consumer of the enemy objective system,
- *     the user's design intent), detouring the whole team. The camp is NOT
- *     pre-marked hostile — damage stays hostility's single source, so a
- *     pulled camp reads passive until the enemy actually strikes it. Rolls
- *     per TURN on `deriveRng(terrainSeed, 'enemyPull', worldSeed)` (77d3 —
- *     the worldSeed index is what makes it per-turn), derived lazily only
- *     when the knob is >0 AND the layout has camps — the dormant path
- *     derives nothing (the shape-lock's no-append clause; a terrainSeed-only
- *     stream replayed identically every turn of an encounter — the
- *     fetidPond-caught defect). A probability in [0,1].
- *     **Shipped 0.25 — the 75j verdicts: 0.15 read "works, but too rare".**
- *   campsStartHostile — §83e: the forced-engagement PROBE dial. When > 0,
- *     every installed camp is pre-marked hostile to the PLAYER faction at
- *     install time (idempotent — `hostileTo` is a Set and serialized, so the
- *     `fromJSON`/rollout-clone path re-applies harmlessly). A deliberate,
- *     measurement-only override of the §75g "damage stays hostility's single
- *     source" doctrine: the realistic bot has no camp-seeking (the §75h scope
- *     guard), so reading camp-engagement economics needs engagement FORCED
- *     through the ordinary targeting machinery (`hostileCandidate` admits
- *     both directions symmetrically; the hold on an uncleared hostile camp
- *     then runs the camp fight to completion, realizing rewards). Player-side only — enemy camp
- *     kills pay nothing, so enemy hostility would add only noise. Stored
- *     NUMERIC (0/1 switch, no RNG draw — no stream perturbation) so the
- *     `--set` knob registry can address it (`sim.campsStartHostile=1`, the
- *     enemyPullChance pattern). Shipped 0 — byte-identical passive camps;
- *     never ship > 0.
- *   moveFlipFraction — §36b: the fraction of a single-step move's busy window
- *     at which the unit's LOGICAL position flips from `from` to `to` (and the
- *     destination claim releases). Locked at 0.5 — the unit logically occupies
- *     `from` for the first half of the slide and `to` for the second, so a slow
- *     unit attacked at melee range reads as still mostly on its prior tile. The
- *     flip tick is `startTick + floor(durationTicks * this)`, carried by the
- *     move proposal's phase timeline (`travel` then a 0-length `impact`
- *     boundary), NOT a new serialized field. A ratio in [0,1]: 0 = instant
- *     (today's pre-§36b model), 1 = flip only on arrival. `floor` keeps a
- *     1-tick move (the lowest move cooldown) instant + byte-identical.
- *   spawnDurationSeconds — the lockout of a unit that joins a battle under
- *     way (a reinforcement from the overflow queue, a camp's drip): its first
- *     action is a `SpawnAction` this long, and the renderer fades its sprite
- *     and bar in over the same window, so the lockout and the fade line up.
- *     Units placed at the battle's start appear at once with no lockout; the
- *     pre-battle countdown (`config/playback.json`) is their reaction window.
- *     Converted to `spawnDurationTicks`.
- *   rangedLeashCells — the leash (Chebyshev) within which a player unit
- *     pursuing the team objective breaks off to engage an enemy. A unit's
- *     engage radius is `min(attackRange, rangedLeashCells)`, so it caps a
- *     long-range unit well below its reach (an archer does not leave the
- *     objective to plink every distant enemy) and leaves melee untouched.
- *     Beyond the leash only retaliation (an enemy attacking the unit, within
- *     its own attackRange) pulls it off the objective. Under a tile focus a
- *     unit switches from beelining to the tile to engaging around it within
- *     this radius (`src/sim/focusTile.ts`). A distance, passed through
- *     verbatim.
+ * The pather prices a cell's occupant in three tiers. They choose a route
+ * only: the step-commit collision check and the execution gate stay hard,
+ * so two units never end in one cell whatever these are. Each must stay at
+ * or above 0, which keeps every step's cost at least 1 and the Chebyshev
+ * heuristic admissible, and finite, so nothing deadlocks. Walls and half
+ * cover are hard blockers, not priced cells.
+ * - `occupiedCellPenalty` — a cell held by a unit with no move in flight.
+ *   High: units flank around allies. Low: they go straight, and queue or
+ *   sidestep when blocked.
+ * - `vacatingCellPenalty` — a cell whose occupant's move will leave it
+ *   within the pather's arrival window. Near 0, a column moving down a
+ *   corridor stops reading as a wall. Keep it below `occupiedCellPenalty`.
+ *   When the cell frees is derived from the mover's action
+ *   (`occupancy.vacancyEtaOf`), never stored.
+ * - `inboundClaimPenalty` — a cell claimed as an in-flight move's
+ *   destination. Keep it above `occupiedCellPenalty`: a standing unit may
+ *   move away, and a claimed cell will be filled.
+ *
+ * Counts below are in the pather's own steps, so they scale with its speed.
+ * - `vacancyWindowOwnSteps` — the slack in the arrival window: a cell frees
+ *   in time when it frees within (its Chebyshev distance + this) steps. 0:
+ *   only cells free by the strict estimate.
+ * - `waitForVacancyOwnSteps` — when the next cell on the route holds a unit
+ *   that will leave within this many steps, the pather waits in lane;
+ *   otherwise, or when no leaving time can be derived (a standing unit, a
+ *   claim), it sidesteps or queues. 0: it waits only for a same-tick flip.
+ *   Kept apart from `vacancyWindowOwnSteps` so patience in a queue and
+ *   optimism in a route tune separately.
+ * - `routeSwitchMargin` — hysteresis, in A* cost. When passing traffic
+ *   (claims, units about to move) turns the live route's first step off the
+ *   stable route (the same route without that traffic), the pather takes
+ *   the detour only if it is cheaper by more than this; otherwise it holds
+ *   its lane and waits, sidesteps or queues. One pulsing claim or unit (+4
+ *   to +8) stays under 8; a real crossing column (+12 and up) still turns
+ *   it. 0: the live route always wins. Derived on each poll from stored
+ *   state, so a resumed snapshot chooses the same.
+ * - `stableRouteHorizonOwnSteps` — what counts as passing traffic: a
+ *   leaving unit or a claim that resolves within this many steps is left out
+ *   of the stable route. Past it, it stays a cost, so a blocker that leaves
+ *   slowly is routed around rather than queued behind.
+ *
+ * - `healerPanicRangeCells` — a healer with no wounded ally in range backs
+ *   away from the nearest enemy within this many cells. 0: it never does.
+ * - `healerFollowGapCells` — with nothing to heal and no enemy near, a healer
+ *   trails the centre of its living allies, stepping when it is farther than
+ *   this from it. 1 hugs the pack; more hangs back.
+ * - `actingCellSearchSlack` — a unit closing on a target to act on it paths
+ *   to the nearest cell it can act from (in range, with line of sight where
+ *   the action needs it), searched out to its range plus this many steps.
+ *   Past that it heads for the target's own cell, so it never stands still,
+ *   and finds the acting cell once closer. 0: only cells already in range.
+ * - `shoveSearchRadiusCells` — how far the shove that parts two units in one
+ *   cell looks for a free cell. One is almost always adjacent, so a small
+ *   radius keeps the shove local; with none in reach the shove does nothing
+ *   rather than carry a unit across the board.
+ * - `moveFlipFraction` — the point in a one-cell move's busy window at which
+ *   the unit's logical position flips from `from` to `to` and its claim on
+ *   the destination is released: tick `startTick + floor(durationTicks ×
+ *   this)`, carried by the move's phase timeline, not a stored field. At 0.5
+ *   a slow unit struck mid-step still stands on its old cell. 0: instant; 1:
+ *   on arrival. `floor` keeps a one-tick move instant.
+ *
+ * - `campWanderChancePerSecond` — the chance per second that an idle camp
+ *   member takes one wander step inside its leash. The behaviour polls every
+ *   tick, so the loader derives `campWanderChancePerTick`
+ *   (`1 − (1 − perSecond)^(1/TICK_RATE)`), which keeps the rate when
+ *   `TICK_RATE` changes. It rolls on `campRng`: the one exception, signed by
+ *   the user, to movement without randomness, since a camp's wander is
+ *   scenery and not pathing. 0: camps stand still (a member dripped onto the
+ *   anchor still steps off it); 1: a step on every eligible poll.
+ * - `enemyPullChance` — per turn on a layout with camps, the chance that the
+ *   enemy team opens by pulling a camp: its objective is set to engage one
+ *   camp's primed member. The camp is not marked hostile, since only damage
+ *   makes a camp hostile, so it reads passive until the enemy strikes it.
+ *   Rolls on `deriveRng(terrainSeed, 'enemyPull', worldSeed)`, the world seed
+ *   making it per turn, and the stream is derived only when this is above 0
+ *   and the layout has camps. Shipped 0.25; 0.15 played as too rare.
+ * - `campsStartHostile` — a measurement switch, shipped 0 and never shipped
+ *   above it. Above 0, every camp starts hostile to the player, so the bot,
+ *   which does not seek camps, fights them, and the hold on an uncleared
+ *   hostile camp runs each fight to its end and pays its rewards. Player
+ *   side only, since an enemy's camp kills pay nothing. Marking is
+ *   idempotent (`hostileTo` is a stored set), so a snapshot load re-applies
+ *   it harmlessly. A number and not a boolean, so `--set` can address it; it
+ *   draws nothing.
+ *
+ * - `spawnDurationSeconds` — the lockout of a unit that joins a battle under
+ *   way (a reinforcement from the overflow queue, a camp's drip): its first
+ *   action is a `SpawnAction` this long, and the renderer fades its sprite
+ *   and bar in over the same window, so the lockout and the fade line up.
+ *   Units placed at the battle's start appear at once with no lockout; the
+ *   pre-battle countdown (`config/playback.json`) is their reaction window.
+ *   Converted to `spawnDurationTicks`.
+ * - `rangedLeashCells` — the leash (Chebyshev) within which a player unit
+ *   pursuing the team objective breaks off to engage an enemy. Its engage
+ *   radius is `min(attackRange, rangedLeashCells)`, so this caps a
+ *   long-range unit well below its reach (an archer does not leave the
+ *   objective to shoot every distant enemy) and leaves melee untouched.
+ *   Beyond the leash only retaliation, an enemy attacking the unit within
+ *   its own attack range, pulls it off the objective. Under a tile focus a
+ *   unit stops heading for the tile and engages around it once within this
+ *   radius (`src/sim/focusTile.ts`).
  */
 
 import { z } from 'zod';
@@ -223,8 +159,7 @@ export const SIM = {
   actingCellSearchSlack: parsed.actingCellSearchSlack,
   shoveSearchRadiusCells: parsed.shoveSearchRadiusCells,
   moveFlipFraction: parsed.moveFlipFraction,
-  // §75j — the per-tick threshold DERIVED from the per-second author value
-  // (see the docstring). `1` short-circuits exactly (1 − 0^(1/rate) = 1).
+  // Derived from the per-second value (see above); at 1 it is exactly 1.
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
   enemyPullChance: parsed.enemyPullChance,
   campsStartHostile: parsed.campsStartHostile,

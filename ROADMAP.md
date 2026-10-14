@@ -123,8 +123,9 @@ kickoff):
 - ☑ **121h — the re-skim** of the phase's diff; a new deletion waits for
   121i's stop. No trial reached the bar; two stale mentions fixed; leads
   for §122 and §123 (WORKLOG §121, 121h).
-- ☐ **121i — the comment pass's pilot** (`stop`): `health.ts`,
-  `daemons.ts`, `sim.ts`.
+- ◐ **121i — the comment pass's pilot** (`stop`): `health.ts`,
+  `daemons.ts`, `sim.ts`. Built; its style and the cost a line wait for
+  the user's read (WORKLOG §121, 121i).
 - ☐ **121j — the comment pass, the rest of the loaders** (`batch`: two
   loaders' diffs read against the pilot's style), with the cost a line.
   The co-located tests wait for §126.

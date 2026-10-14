@@ -4280,3 +4280,63 @@ Held against D2 (the budget allows three more trials this phase):
   function's name goes.
 
 No new deletion was found, so 121i's stop carries none.
+
+### 121i — the comment pass's pilot (2026-10-14, session 07d94d5c)
+
+The kickoff's fifth call, as the user signed it (its wording copied from
+the kickoff's transcript, as 121g's bar was): the pass takes the loaders
+only, since commenting tests that §126 may delete is wasted work, with a
+pilot stop on `health.ts`, `daemons.ts` and `sim.ts` first, because every
+later pass in the round copies the style signed here. The pilot's proof:
+`comment-strip` exits 0, with a failing control, and the step-code
+ceiling is lowered.
+
+**The style, as rules for the passes after it:**
+
+1. A key's entry says what the key does, its unit or range, what its ends
+   do, and what a change must respect. A shipped value is given where the
+   comment gives its reason ("Shipped 0.25; 0.15 played as too rare").
+2. No step codes and no `§` marks. Where a code stood for a reason, the
+   reason is written instead. Gotcha numbers stay.
+3. No history: what a key replaced, when it moved, what was retired, the
+   behaviour before a phase. The WORKLOG and git hold it.
+4. One home per fact. A rule several keys share is said once above them
+   (the three occupancy penalties' bounds; "in the pather's own steps");
+   a field documented on its interface loses the inline copy on its
+   schema.
+5. No capitals for emphasis, no plans ("the future economy editor"), no
+   examples that restate the code.
+6. One list format: ``- `key` — text``, continuation lines indented two
+   spaces, no column alignment.
+7. A statement found false is corrected, not carried. Here: `daemons.ts`
+   said the catalog was four idols (it is eleven daemons) and that its
+   status check was vacuous until a daemon applied a status (Fortuna
+   does); `health.ts` said the casualty rule was the default until §93
+   kept or rolled it back (§93 kept it), and now says how a capped
+   encounter's tie goes (a loss, `Run.turnResult`).
+
+**Measured** (`comment-length` on copies of the three files at
+`f7a735f` and after):
+
+| File | Comment lines | Comment words | Code lines |
+|---|---|---|---|
+| `sim.ts` | 183 → 118 | 1,736 → 1,182 | 47, unchanged |
+| `health.ts` | 88 → 48 | 631 → 381 | 17, unchanged |
+| `daemons.ts` | 69 → 54 | 579 → 478 | 257, unchanged |
+| the three | 340 → 220 | 2,946 → 2,041 | 321 |
+
+`src/config` as a whole: 2,363 comment lines to 2,243. The step-code
+ceiling: 6,310 → 6,224, the 86 codes the three files held.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0. The control, in a
+worktree of `f7a735f` with the three files copied in: unplanted, exit 0;
+with `daemons.ts`'s `ChanceSchema` bound changed from 1 to 2, exit 1,
+naming that line.
+
+**The cost a line** (the decision point for §122's kickoff): 307,796 at
+21:31 by the tool's clock as the pilot started, 351,531 at 21:37 after its
+proof, so about 44k for 703 lines read whole, about 62 tokens a line.
+About 6k of it went to finding the fifth call's wording in the kickoff's
+transcript, which a later pass will not repeat. The other 26 loaders hold
+4,838 lines: about 300k at this rate, which one fresh session holds
+under the hand-off line with room for the proofs.

@@ -1,29 +1,17 @@
 /**
- * L1→47c — the daemon catalog. Source of truth at `config/daemons.json`,
- * parsed at module load (malformed JSON throws).
+ * The daemon catalog. Source of truth at `config/daemons.json`, parsed at
+ * module load (malformed JSON throws).
  *
- * A daemon is a run-scoped relic carrying `rules: Rule[]` — the shared
- * daemon/packet effect vocabulary (cluster-3-spec §"The rule vocabulary"):
- * `modifier` (a passive fold onto a run stat, `src/run/runStats.ts`) or
- * `hook` (an EffectOp fired on a trigger, with an optional `chance` +
- * `filter`). Triggers split by DOMAIN: run-lifecycle triggers resolve on the
- * Run (`turnStart` grant hooks → `resolveTurnGrants`, src/run/daemon.ts);
- * battle triggers compile into the World as `battleRules[]` (47f). The legal
- * (trigger × op × filter) matrix is enforced at parse time.
+ * A daemon is a relic held for the run. Its `rules` are written in the
+ * vocabulary daemons and packets share: a `modifier` folds into a run stat
+ * (`src/run/runStats.ts`); a `hook` fires an effect op on a trigger, with an
+ * optional `chance` and `filter`. Run triggers resolve on the Run (a
+ * `turnStart` grant through `resolveTurnGrants`, `src/run/daemon.ts`);
+ * battle triggers compile into the World as `battleRules`. Which trigger
+ * may carry which op and filter is checked at parse time.
  *
- * The daemon-only-gates model (user-locked, Phase L) survives the 47c
- * re-authoring: without a daemon whose `turnStart` hook grants it, pre-turn
- * redraw/empower simply isn't available. A hook's `chance` is the
- * generalized "X% per turn" condition — absent/`1` = fires every time (no
- * RNG draw), `0 < chance < 1` = a per-firing flip off `Run.daemonRng`.
- *
- * The first catalog (the Phase-L design round, 2026-06-12) is four idols —
- * Roman-statue flavor in the terminal frame, the synthwave blend:
- * - Mars    — empower, the K4 universal-offense +4 STR/RNG/MAG, 1/turn.
- * - Minerva — empower, +2 DEF, 1/turn (flat mitigation — the tank identity).
- * - Mercury — 50%/turn coin flip for the FULL standard redraw.
- * - Janus   — guaranteed redraw every turn, capped at 2 cards (the
- *             reliable-but-small face opposite Mercury's all-or-nothing).
+ * Redraw and empower exist only through daemons: with no daemon whose
+ * `turnStart` hook grants one, the pre-turn screen offers neither.
  */
 
 import { z } from 'zod';
@@ -37,20 +25,20 @@ import type { StatusDef } from '../sim/effects/statusSchema';
 
 const ChanceSchema = z.number().min(0).max(1);
 
-// ── 47b: the rule vocabulary ────────────────────────────────────────────────
+// ── The rule vocabulary ─────────────────────────────────────────────────────
 
-/** Run-lifecycle triggers — resolved on the Run (47c). */
+/** Triggers resolved on the Run. */
 export const RUN_TRIGGER_KEYS = ['turnStart', 'encounterStart', 'encounterEnd'] as const;
-/** Battle-sim triggers — compiled into the World as `battleRules[]` (47f);
- *  these ride the existing sim TriggerDispatcher payloads. */
+/** Triggers compiled into the World as `battleRules`, on the payloads of the
+ *  sim's `TriggerDispatcher`. */
 export const BATTLE_TRIGGER_KEYS = ['dealHit', 'kill'] as const;
 
 export type RunTriggerKey = (typeof RUN_TRIGGER_KEYS)[number];
 export type BattleTriggerKey = (typeof BATTLE_TRIGGER_KEYS)[number];
 export type TriggerKey = RunTriggerKey | BattleTriggerKey;
 
-/** Which domain a trigger fires in (drives the op-compatibility matrix and,
- *  at 47f, which hooks compile into the World). */
+/** Where a trigger fires. It decides which ops a hook on it may carry, and
+ *  which hooks compile into the World. */
 export const TRIGGER_DOMAIN = {
   turnStart: 'run',
   encounterStart: 'run',
@@ -59,9 +47,9 @@ export const TRIGGER_DOMAIN = {
   kill: 'battle',
 } as const satisfies Record<TriggerKey, 'run' | 'battle'>;
 
-/** Where each op's effect lands. `gainBits` is 'both': on a run trigger it
- *  grants directly; on a battle trigger it accumulates in the World's
- *  serialized tally and settles at battle end (the XP pattern, 47f). */
+/** Where each op's effect lands. `gainBits` is `'both'`: on a run trigger
+ *  it grants at once; on a battle trigger it adds to a tally the World
+ *  stores and settles at the battle's end, as XP does. */
 const OP_DOMAIN = {
   grantRedraws: 'run',
   grantEmpowers: 'run',
@@ -70,10 +58,9 @@ const OP_DOMAIN = {
   applyStatus: 'battle',
 } as const;
 
-/** The op sub-schemas are EXPORTED where §49 packets reuse them — daemons
- *  and packets share ONE effect-op pool (the spec's rule-vocabulary lock),
- *  so an op's shape is defined once, here, and imported by packets.ts
- *  (import direction: packets → daemons, never back). */
+/** Daemons and packets share one pool of effect ops, so each op's schema is
+ *  defined here once and exported where `packets.ts` reuses it. Imports go
+ *  from packets to daemons, never back. */
 export const GrantRedrawsOpSchema = z.object({
   op: z.literal('grantRedraws'),
   redrawsPerTurn: z.number().int().nonnegative(),
@@ -101,10 +88,9 @@ export const ApplyStatusOpSchema = z.object({
   statusId: z.string().min(1),
   magnitude: z.number().positive().optional(),
   durationSeconds: z.number().positive().optional(),
-  /** 49e — where the status lands. Absent = `'actor'` (the striker/killer,
-   *  the 47f shape); `'target'` = the struck unit (venom's axis), legal on
-   *  `dealHit` only — a `kill`'s victim is already dead (matrix-enforced
-   *  here and in packets.ts). */
+  /** Where the status lands: absent or `'actor'`, on the striker or killer;
+   *  `'target'`, on the struck unit, legal on `dealHit` only, since a
+   *  `kill`'s victim is dead (checked here and in `packets.ts`). */
   applyTo: z.enum(['actor', 'target']).optional(),
 });
 
@@ -132,14 +118,14 @@ const ModifierRuleSchema = z.object({
 const HookRuleObjectSchema = z.object({
   kind: z.literal('hook'),
   on: z.enum([...RUN_TRIGGER_KEYS, ...BATTLE_TRIGGER_KEYS]),
-  chance: ChanceSchema.optional(), // absent = 1 (fires every trigger, no draw)
+  chance: ChanceSchema.optional(),
   filter: RuleFilterSchema.optional(),
   effect: EffectOpSchema,
 });
 
-/** The (trigger × op × filter) legality matrix — parse-time authoring guard.
- *  (Lives on the union, not the hook object: zod discriminatedUnion members
- *  must be plain ZodObjects.) */
+/** Which trigger may carry which op and filter, checked at parse time. It
+ *  sits on the union and not the hook object because a member of a zod
+ *  `discriminatedUnion` must be a plain object schema. */
 const RuleSchema = z
   .discriminatedUnion('kind', [ModifierRuleSchema, HookRuleObjectSchema])
   .superRefine((rule, ctx) => {
@@ -197,10 +183,10 @@ const DaemonSchema = z.object({
   id: z.string().min(1),
   name: prose(),
   description: prose(),
-  rules: z.array(RuleSchema).optional(), // absent = an inert daemon (legal, rule-less)
+  rules: z.array(RuleSchema).optional(),
 });
 
-/** Exported for schema tests (the `EncountersSchema` precedent). */
+/** Exported for the schema tests. */
 export const DaemonsSchema = z
   .object({ daemons: z.array(DaemonSchema).min(1) })
   .refine(
@@ -208,16 +194,16 @@ export const DaemonsSchema = z
     { message: 'daemon ids must be unique' },
   );
 
-/** A hook's optional predicate — every key legality-checked against the
- *  trigger at parse time (the matrix in `RuleSchema`). */
+/** A hook's optional condition; each key is checked against the trigger at
+ *  parse time (`RuleSchema`). */
 export interface RuleFilter {
   archetype?: string;
   crit?: boolean;
   won?: boolean;
 }
 
-/** The shared effect-op pool (daemons deliver these passively; §49 packets
- *  deliver the same ops actively at a target). Launch set — content-driven. */
+/** The effect ops daemons and packets share: a daemon delivers them on its
+ *  triggers, a packet when the player uses it on a target. */
 export type EffectOp =
   | { op: 'grantRedraws'; redrawsPerTurn: number; maxCardsPerTurn: number }
   | { op: 'grantEmpowers'; empowersPerTurn: number; buff: EmpowerConfig['buff'] }
@@ -231,7 +217,7 @@ export type EffectOp =
       applyTo?: 'actor' | 'target';
     };
 
-/** A passive fold onto a run stat (`foldRunStats` consumes these, 47c). */
+/** A passive change to a run stat, folded by `foldRunStats`. */
 export interface ModifierRule {
   kind: 'modifier';
   stat: RunStatKey;
@@ -239,8 +225,8 @@ export interface ModifierRule {
   value: number;
 }
 
-/** An EffectOp fired on a trigger. `chance` absent = 1 (no RNG draw — the
- *  gate-`chance` discipline); `0 < chance < 1` draws once per firing. */
+/** An effect op fired on a trigger. Without `chance`, or at 1, it fires
+ *  every time and draws nothing; below 1 it draws once per firing. */
 export interface HookRule {
   kind: 'hook';
   on: TriggerKey;
@@ -255,13 +241,13 @@ export interface DaemonConfig {
   id: string;
   name: string;
   description: string;
-  /** The rule vocabulary (47b/47c). Absent = an inert daemon. */
+  /** Absent: a daemon with no effect. */
   rules?: readonly Rule[];
 }
 
 const parsed = DaemonsSchema.parse(daemonsJson);
-// §95b — `name` + `description` are prose; resolved on the raw parsed list
-// BEFORE normalizeDaemon copies the fields (addresses `daemons.<id>.…`).
+// `name` and `description` are prose, resolved on the raw list before
+// `normalizeDaemon` copies the fields (addresses `daemons.<id>.…`).
 export const DAEMONS_PROSE = loadProse('daemons', z.array(DaemonSchema), parsed.daemons);
 
 type RawDaemon = (typeof parsed.daemons)[number];
@@ -311,8 +297,8 @@ function normalizeRule(raw: RawRule): Rule {
   return hook;
 }
 
-/** Build exact-optional objects (no explicit-`undefined` keys) from the parse.
- *  Exported for schema tests + the future economy editor. */
+/** Builds exact-optional objects (no key set to `undefined`) from the parse.
+ *  Exported for the schema tests. */
 export function normalizeDaemon(raw: RawDaemon): DaemonConfig {
   const daemon: DaemonConfig = {
     id: raw.id,
@@ -328,12 +314,11 @@ export function normalizeDaemon(raw: RawDaemon): DaemonConfig {
 export const DAEMONS: readonly DaemonConfig[] = parsed.daemons.map(normalizeDaemon);
 
 /**
- * Boot check (the `assertStatusRefsResolve` sibling): every `applyStatus` op
- * in a daemon's rules must name a status in the registry — a typo'd
- * `statusId` fails at startup, not silently at 47f compile time. Args-injected
- * for synthetic tests; self-wired below with the real catalogs (cycle-free:
- * `statuses.ts` never imports this module). Vacuous until content authors an
- * `applyStatus` rule.
+ * A boot check: every `applyStatus` op in a daemon's rules names a status in
+ * the registry, so a mistyped `statusId` fails at startup and not when the
+ * battle rules compile. The catalogs are arguments so tests can pass their
+ * own; it runs below on the real ones (`statuses.ts` never imports this
+ * module, so there is no cycle).
  */
 export function assertDaemonStatusRefs(
   daemons: readonly DaemonConfig[],

@@ -118,8 +118,8 @@ kickoff):
   bump. Proof: sim and config.
 - ☑ **121g — B-03's trial** (`none`): `sim.spawnDurationSeconds`,
   `sim.rangedLeashCells`, `difficulty.startingBits`, under the bar
-  written at the kickoff. Kept; config files 31 → 28. One call open, the
-  lockout's two forms in `SIM` (WORKLOG §121, 121g).
+  written at the kickoff. Kept; config files 31 → 28. The lockout kept in
+  ticks alone at the user's call (WORKLOG §121, 121g and 121g-post2).
 - ☑ **121h — the re-skim** of the phase's diff; a new deletion waits for
   121i's stop. No trial reached the bar; two stale mentions fixed; leads
   for §122 and §123 (WORKLOG §121, 121h).

@@ -899,10 +899,12 @@ export class BattleRenderer {
     if (instant) {
       this.sprites.updateSprite(handle, { alpha: 1 });
     } else {
-      this.animator.startFadeIn(handle, SIM.spawnDurationSeconds);
+      // The fade spans the spawn lockout's ticks, so the two end together.
+      const fadeSeconds = ticksToSeconds(SIM.spawnDurationTicks);
+      this.animator.startFadeIn(handle, fadeSeconds);
       this.overlayFadeIns.set(unit.id, {
         elapsed: 0,
-        duration: SIM.spawnDurationSeconds,
+        duration: fadeSeconds,
         handle: overlay,
       });
     }
@@ -1748,7 +1750,7 @@ export class BattleRenderer {
    *    `performance.now()` filled at 1× regardless / kept running while paused).
    *    The progress bar is hidden (null) when no action is in flight.
    * 3. Overlay fade on death / spawn: lerp opacity 0↔1 over FADE_SECONDS
-   *    or SIM.spawnDurationSeconds, then remove the overlay on death.
+   *    or the spawn lockout, then remove the overlay on death.
    */
   private updateOverlays(dt: number): void {
     // Q1 — the progress bar's clock is the scaled-dt render accumulator, not

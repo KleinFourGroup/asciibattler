@@ -4353,3 +4353,29 @@ Found while answering: the lockout's entry in `sim.ts` named two of the
 three ways a unit joins a battle under way. A summon takes it too
 (`World.spawnSummon` adds the unit with `instant: false`), so the entry
 now names it. Proof: `comment-strip`, comments only.
+
+### 121g-post2 — the spawn lockout in ticks alone (2026-10-14, session 07d94d5c)
+
+The user signed the lean put at 121g, after asking how the lockout
+works: "That makes sense to me, Claude; signing your lean!" `SIM` keeps
+the lockout as `spawnDurationTicks` only, as it keeps
+`rangedRetargetLosTicks`, and the renderer fades a joining unit's glyph
+and bar over `ticksToSeconds(SIM.spawnDurationTicks)`. The fade cannot
+drift from the lockout now, and `--set sim.spawnDurationSeconds`, which
+was accepted and moved nothing in a headless battle, is refused.
+`sim.ts`'s entry and the renderer's comments say so.
+
+Proof:
+
+- the config dump at `dc0dff0` and after: 1 difference,
+  `SIM.spawnDurationSeconds` removed, the change signed;
+- a probe re-deriving the fade from the raw `config/sim.json`, not the
+  loader: 0.5 there, 10 ticks, a fade of 0.5, equal, so the renderer's
+  number is what it was; the sweep accepts `sim.spawnDurationTicks` and
+  refuses `sim.spawnDurationSeconds` (unknown knob);
+- typecheck clean; `npm run corpus`: 0 of 30 differ (the sim reads the
+  same ticks). The suite and the smoke by the hook.
+
+Not shown in the pane: the renderer's input is the same 0.5, so the fade
+is unchanged by construction. Source lines grow by one: the renderer's
+comment giving the reason.

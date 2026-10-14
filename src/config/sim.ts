@@ -101,11 +101,11 @@
  * - `spawnDurationSeconds` — the lockout of a unit that joins a battle under
  *   way (a reinforcement from the overflow queue, a camp's drip, a
  *   summon): its first action is a `SpawnAction` this long, and the
- *   renderer fades its sprite and bar in over the same window, so the
- *   lockout and the fade line up.
- *   Units placed at the battle's start appear at once with no lockout; the
- *   pre-battle countdown (`config/playback.json`) is their reaction window.
- *   Converted to `spawnDurationTicks`.
+ *   renderer fades its sprite and bar in over the same time. Converted to
+ *   `spawnDurationTicks`, the one form both read, so the fade cannot drift
+ *   from the lockout. Units placed at the battle's start appear at once
+ *   with no lockout; the pre-battle countdown (`config/playback.json`) is
+ *   their reaction window.
  * - `rangedLeashCells` — the leash (Chebyshev) within which a player unit
  *   pursuing the team objective breaks off to engage an enemy. Its engage
  *   radius is `min(attackRange, rangedLeashCells)`, so this caps a
@@ -164,7 +164,6 @@ export const SIM = {
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
   enemyPullChance: parsed.enemyPullChance,
   campsStartHostile: parsed.campsStartHostile,
-  spawnDurationSeconds: parsed.spawnDurationSeconds,
   spawnDurationTicks: secondsToTicks(parsed.spawnDurationSeconds),
   rangedLeashCells: parsed.rangedLeashCells,
 };

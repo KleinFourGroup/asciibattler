@@ -1510,8 +1510,8 @@ each). None was read.
 
 List B: what has to be tried before anyone can say it is simpler (the
 spec's D1, Track B), each with what it expects to remove, counted, and the
-proof that covers it. **Read at 120h: every row is signed but B-01 to
-B-03, the read's eighth tranche.** Nothing was tried: a
+proof that covers it. **Read at 120h, in tranches, and every row is
+signed** (the user, 2026-10-13 and 2026-10-14). Nothing was tried: a
 row's "expects to remove" is a count of sites, not a diff. Built from the
 profile of all 279 source files, a reader for special cases, the
 near-duplicate clusters of 2.5, and `World.ts` and `Run.ts` read whole.
@@ -1637,7 +1637,8 @@ it comment.
   camp member or any neutral, which is what B-02 has to be judged on.
 - Proof: sim. No stored byte changes, so no mapping.
 - Fate: **trial**, in the sim phase, ahead of B-02.
-- Signed:
+- Signed: **trial**, the first of the sim phase (the user, 2026-10-14: "Signing
+  all three as leaned, Claude! 😁").
 
 **B-02 · The neutral team split in two** (the user's candidate)
 - In play: Camp members would be a fourth team of their own, and walls and cover would keep the neutral one. A player would see no difference if the trial holds; if it does not, a camp's units would start treating walls and rubble as strangers and not as their own side.
@@ -1675,7 +1676,21 @@ it comment.
   asks what. Today's read is that the split trades one hidden rule for
   18 places that need a second look, and that B-01 alone gets most of
   the plainness.
-- Signed:
+- Signed: **decided after B-01**, as leaned (the user, 2026-10-14, in the same
+  words), with a pre-registration that is the user's:
+  "so what I'm hearing is that fully splitting might technically cause
+  the line count to go up. I'm pre-registering that I'll be inclined to
+  run the trial anyway, and I it is very possible that, even if it
+  technically ups the line count, I might sign it as preferable anyway
+  on the grounds that it might be more readable (in the fuzzy, hard to
+  define sense). That's not certain, I'll want your opinion along the
+  way (and here!), and we'll definitely want to dig into it, but I am
+  just noting the possibility."
+  So when B-02 is decided, the trial may run whatever B-01 shows, and
+  D2's second clause (lines do not grow) may be set aside for it on the
+  user's read of readability. The bar is written before the trial, as
+  D2 asks, at that point. The session's opinion, given at the read:
+  WORKLOG §120, 120h, the eighth tranche.
 
 **B-03 · The config files** (the user's candidate)
 - In play: Nothing. Which file a number is in changes nothing in the game. It changes where a person looks for it, the address a balance sweep names it by, and the stamp a recorded run carries.
@@ -1701,7 +1716,8 @@ it comment.
   wider merge:** the other thirteen are a screen each, a sweep's
   addresses and BALANCE's record would go stale together, and
   `npm run oracle -- refs --keys` already answers "where is this knob".
-- Signed:
+- Signed: **trial**, in the dials phase, for the three one-key files; no wider
+  merge (the user, 2026-10-14, in the same words as B-01).
 
 **Signed as trials at the read, sized here.**
 
@@ -2027,8 +2043,9 @@ Both are in TODO under "§120 riders".
 
 ### 4.10 Calls for the user at 120h
 
-Calls 4 to 11 were answered at the read's seventh tranche (the user,
-2026-10-14, as leaned); calls 1 to 3 go with the eighth.
+Calls 4 to 11 were answered at the read's seventh tranche and calls 1 to
+3 at its eighth (the user, 2026-10-14, as leaned; B-02 with the user's
+pre-registration in its row).
 
 1. **B-01,** the two predicates by name, as the first trial.
 2. **B-02,** the split: decided after B-01, or now.

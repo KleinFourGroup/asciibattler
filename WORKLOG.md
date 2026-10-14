@@ -3533,3 +3533,47 @@ night's sleep in the middle of it): "Signing all of those!"
 - **A-39:** the session had asked whether the board's console line is
   used in a playtest; the reply signed the lean without a word on it,
   and the row says so.
+
+Reading: **410,390** at 12:44 on 2026-10-14 by the tool's clock, on the
+seventh tranche's commit, `452a39b`.
+
+**The read, the eighth tranche** (the user, 2026-10-14): "Signing all
+three as leaned, Claude! 😁" B-01 is the sim phase's first trial; B-02
+is decided after B-01; B-03 folds the three one-key files in the dials
+phase, with no wider merge. Every row of the census is now signed.
+
+**B-02, the user's pre-registration** (verbatim in the row): the user is
+inclined to run the split whatever B-01 shows, and may sign it as
+preferable even if it adds lines, "on the grounds that it might be more
+readable (in the fuzzy, hard to define sense)", and asked for the
+session's opinion now and along the way.
+
+**The session's opinion, as given.** Agreed that lines are a proxy and
+readability the aim (the spec's own word is "approachable"), and that
+writing this down before the trial is the right order. Where the trial
+is decided is not its line count but the 18 lines that compare two
+units' teams. Nothing funnels them today: each compares the two teams
+in place, and `affectsMatch` compares teams too (`effects/targeting.ts:70`,
+read for this answer). Split, a camp member and a wall stop being one
+team at each, and the trial can go three ways:
+
+- *One small helper* that says in one place that a camp and the scenery
+  stand together, called at the 18. The session expects this to read
+  better than today even with more lines. It is a new function, which
+  the round's "no new abstraction" guard would need the user to allow,
+  small as it is.
+- *A clause at each site:* the hidden rule spread into 18 places. The
+  session would argue against it whatever the count, and D2's third
+  clause already rules it out.
+- *A clean form that needs camp units to treat walls differently:* a
+  change of behaviour, so not this round's. Its home would be Round 9,
+  beside "Camp-aware aura `affects`", which already reworks how camps
+  and teams meet.
+
+For the fuzzy part, the cold-read probe (119f) is the instrument the
+round has for a reader with no context: a few questions about camps
+and walls on both trees would put a number beside the user's eye, as a
+second opinion and not a gate. The bar the session would propose when
+B-02 is decided: the same behaviour by the corpus with the declared
+mapping; D2's third clause kept; its second set aside; the one helper
+allowed; the 18 sites shown before and after for the user's read.

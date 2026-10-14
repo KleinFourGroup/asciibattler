@@ -1,36 +1,27 @@
 /**
- * 48a — the reward-table registry. Source of truth at `config/rewards.json`
- * (the `config/daemons.json` pattern: parse at module load, throw on malformed
- * JSON; boot referential asserts self-wired below).
+ * The reward tables. Source of truth at `config/rewards.json`.
  *
- * A reward table is a WEIGHTED list of entries — `bits {min,max}` | `packet` |
- * `daemon` — sampled one-entry-proportional-to-weight (cluster-3-spec
- * §"Reward Tables"). Encounters reference tables BY NAME via their `rewards`
- * list of `{table, trigger}` refs (the seam typed here, consumed by
- * encounters.ts — import direction: encounters → rewards, never back, the
- * sectors.ts cycle-avoidance shape). The sampling engine itself is 48b
- * (`pickWeighted` off the dedicated reward streams, owned-daemon exclusion
- * upstream of the draw); this module is pure config.
+ * A reward table is a weighted list of entries, sampled one entry in
+ * proportion to weight. Encounters and camps name tables through their
+ * `rewards` refs, `{table, trigger}`, typed here; encounters.ts imports this
+ * module, never the reverse. The sampling is in `src/run/rewards.ts`, which
+ * draws with `pickWeighted` on the reward streams and drops owned daemons
+ * before the draw; this module is config only.
  *
- * Entry semantics:
- * - `bits {min,max}` — rolled uniformly (integer, inclusive) on the dedicated
- *   bits stream at 48b; the rolled BASE settles through `Run.gainBits`, so
- *   the `bitsGain` fold + `bitsMultiplier` apply at the settle (the shape-lock
- *   rider: the DISPLAY derives from the same math — worklog §48).
- * - `daemon` — grants the named idol; daemons the run already owns filter out
- *   BEFORE sampling (48b), so authored tables may carry owned entries freely.
- *   Referential integrity boot-asserted here against the daemon catalog.
- * - `packet` — grants the named packet into the cache. Referential integrity
- *   boot-asserted against the 49a packet catalog (`assertRewardPacketRefs`
- *   below); ENGINE-dormant until 49c (rollRewards still excludes packet
- *   entries wholesale — the guard 49c removes).
- * - `unit` / `poolHealth` — 74c (the events-round widening): a roster grant
- *   (template pre-rolled at offer time) and a flat pool heal. See the
- *   interface comments below.
+ * - `bits` — `{min, max}`, rolled uniformly as an inclusive integer on the
+ *   bits stream. The roll settles through `Run.gainBits`, so the `bitsGain`
+ *   fold and `bitsMultiplier` apply there, and the display uses the same
+ *   math.
+ * - `daemon` — grants the named daemon. Daemons the run owns are dropped
+ *   before sampling, so a table may list owned ones freely.
+ * - `packet` — grants the named packet into the cache.
+ * - `unit` — a roster grant (its interface, below).
+ * - `poolHealth` — a flat heal to the player's pool (its interface, below).
  *
- * Trigger vocabulary at launch: `chance` only — each ref independently tested
- * on encounter win. `trigger` is an OBJECT (not a bare number) so predicates
- * can join later without a migration (spec lock).
+ * The only trigger is `chance`, each ref tested on its own. `trigger` is an
+ * object, not a bare number, so a predicate can join it without a migration.
+ *
+ * Boot checks, below: every daemon, packet and unit entry names a real one.
  */
 
 import { z } from 'zod';
@@ -50,25 +41,24 @@ export interface BitsRewardEntry {
   readonly max: number;
 }
 
-/** A packet grant — the §49 seam, dormant at launch (see the header). */
+/** A packet grant. */
 export interface PacketRewardEntry {
   readonly kind: 'packet';
   readonly weight: number;
   readonly packet: string;
 }
 
-/** A daemon grant — owned ids are excluded upstream of sampling (48b). */
+/** A daemon grant; owned ids are dropped before sampling. */
 export interface DaemonRewardEntry {
   readonly kind: 'daemon';
   readonly weight: number;
   readonly daemon: string;
 }
 
-/** 74c — a roster grant: the archetype's template rolls at OFFER time on the
- *  reward-bits stream (the port-stock precedent — the portion carries the
- *  rolled `UnitTemplate`), `level` absent = 1. Duplicates legal; no
- *  exclusion (unlike daemons). Referential integrity boot-asserted against
- *  the unit catalog (`assertRewardUnitRefs`). */
+/** A roster grant. The archetype's template rolls when the reward is
+ *  offered, on the reward-bits stream, as a port's stock does, and the
+ *  portion carries the rolled `UnitTemplate`. `level` absent is 1.
+ *  Duplicates are legal: nothing is excluded, as owned daemons are. */
 export interface UnitRewardEntry {
   readonly kind: 'unit';
   readonly weight: number;
@@ -76,8 +66,8 @@ export interface UnitRewardEntry {
   readonly level?: number;
 }
 
-/** 74c — a flat player-pool heal (clamped at max by the instant-op executor
- *  at settle time — the rest-node discipline). No RNG. */
+/** A flat heal to the player's pool, capped at the maximum when the
+ *  instant-op executor settles it, as a rest's heal is. It draws nothing. */
 export interface PoolHealthRewardEntry {
   readonly kind: 'poolHealth';
   readonly weight: number;
@@ -96,14 +86,12 @@ export interface RewardTable {
   readonly entries: readonly RewardEntry[];
 }
 
-/** The launch trigger vocabulary: `chance` only (spec lock — an object so
- *  predicates can extend it later). */
+/** The trigger (see the header). */
 export interface RewardTrigger {
   readonly chance: number;
 }
 
-/** One `{table, trigger}` reference on an encounter (the 48a typed seam,
- *  replacing the reserved `rewards?: unknown`). */
+/** One `{table, trigger}` ref on an encounter or a camp. */
 export interface EncounterRewardRef {
   readonly table: string;
   readonly trigger: RewardTrigger;
@@ -134,7 +122,7 @@ const UnitEntrySchema = z.object({
   kind: z.literal('unit'),
   weight: WeightSchema,
   archetype: z.string().min(1),
-  level: z.number().int().positive().optional(), // absent = 1
+  level: z.number().int().positive().optional(),
 });
 
 const PoolHealthEntrySchema = z.object({
@@ -143,9 +131,8 @@ const PoolHealthEntrySchema = z.object({
   amount: z.number().int().positive(),
 });
 
-/** The min≤max check lives on the union, not the object: zod
- *  discriminatedUnion members must be plain ZodObjects (the RuleSchema
- *  precedent, daemons.ts). */
+/** The min ≤ max check is on the union, not the object, because a zod
+ *  discriminatedUnion's members must be plain ZodObjects. */
 const RewardEntrySchema = z
   .discriminatedUnion('kind', [
     BitsEntrySchema,
@@ -168,17 +155,17 @@ const RewardTableSchema = z.object({
   entries: z.array(RewardEntrySchema).min(1),
 }) as z.ZodType<RewardTable>;
 
-/** The whole-file schema (exported for schema tests + the 48e editor
- *  round-trip — the `EncountersSchema`/`DaemonsSchema` precedent). */
+/** The whole-file schema, exported for the schema tests and the reward
+ *  editor's round trip. */
 export const RewardTablesSchema = z
   .object({ tables: z.array(RewardTableSchema).min(1) })
   .refine((cfg) => new Set(cfg.tables.map((t) => t.id)).size === cfg.tables.length, {
     message: 'reward table ids must be unique',
   });
 
-/** The encounter-side ref schema (consumed by EncounterSchema). Key order
- *  (table, trigger) is load-bearing for the formatter's byte-faithful
- *  round-trip — zod parse emits keys in shape order. */
+/** The ref schema encounters and camps use. Its key order (table, trigger)
+ *  matters: zod emits keys in shape order, and the editors' formatter
+ *  round-trips byte for byte. */
 export const EncounterRewardRefSchema = z.object({
   table: z.string().min(1),
   trigger: z.object({ chance: z.number().min(0).max(1) }),
@@ -190,10 +177,10 @@ export const REWARD_TABLES: readonly RewardTable[] = parsed.tables;
 export const REWARD_TABLE_IDS: readonly string[] = REWARD_TABLES.map((t) => t.id);
 
 /**
- * Boot check (the `assertDaemonStatusRefs` sibling): every daemon entry must
- * name an idol in the catalog — a typo'd id fails at startup, not silently at
- * 48b sample time. Args-injected for synthetic tests; self-wired below
- * (cycle-free: daemons.ts never imports this module).
+ * Boot check: every daemon entry names a daemon in the catalog, so a typo
+ * fails at startup and not when sampled. Its arguments let a test pass
+ * synthetic catalogs, as do the two below; daemons.ts never imports this
+ * module.
  */
 export function assertRewardDaemonRefs(
   tables: readonly RewardTable[],
@@ -214,9 +201,8 @@ export function assertRewardDaemonRefs(
 assertRewardDaemonRefs(REWARD_TABLES, DAEMONS);
 
 /**
- * 49a — the promised sibling: every packet entry must name a packet in the
- * catalog (import direction: rewards → packets, never back — the daemons
- * shape). Args-injected for synthetic tests; self-wired below.
+ * Boot check: every packet entry names a packet in the catalog; packets.ts
+ * never imports this module.
  */
 export function assertRewardPacketRefs(
   tables: readonly RewardTable[],
@@ -237,11 +223,9 @@ export function assertRewardPacketRefs(
 assertRewardPacketRefs(REWARD_TABLES, PACKETS);
 
 /**
- * 74c — the unit sibling: every unit entry must name an archetype in the
- * combatant catalog (import direction: rewards → units, never back — and
- * the SAME key space `Run.grantUnit`'s rollUnit resolves against, since
- * sim/archetypes' CONFIGS === UNIT_DEFS). Args-injected for synthetic
- * tests; self-wired below.
+ * Boot check: every unit entry names a combatant archetype, the keys
+ * `Run.grantUnit` resolves against (sim/archetypes' `CONFIGS` is
+ * `UNIT_DEFS`); units.ts never imports this module.
  */
 export function assertRewardUnitRefs(
   tables: readonly RewardTable[],
@@ -261,8 +245,8 @@ export function assertRewardUnitRefs(
 
 assertRewardUnitRefs(REWARD_TABLES, Object.keys(UNIT_DEFS));
 
-/** Registry lookup by id (`undefined` on a miss — callers decide throw vs
- *  skip; the boot asserts make a miss unreachable for authored refs). */
+/** Lookup by id, `undefined` on a miss; the caller decides whether to throw
+ *  or skip, and the boot checks make a miss unreachable for authored refs. */
 export function rewardTableById(id: string): RewardTable | undefined {
   return REWARD_TABLES.find((t) => t.id === id);
 }

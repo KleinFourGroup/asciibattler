@@ -1,27 +1,18 @@
 /**
- * Terrain knobs (C1a + D3 + M6 + §81a). The per-encounter generator
- * (`src/sim/terrainGen.ts`) uses these to drive the procedural map build
- * and to bound the procedural side-length roll. Source of truth at
- * `config/terrain.json`. (The C1a legacy uniform-scatter knobs
- * `wallDensity` / `shallowWaterDensity` / `ensureConnectivity` were
- * removed at §81a — the M6 generator owns its own obstacle budget +
- * connectivity guard.)
+ * The envelope of the procedural map generator (`src/sim/terrainGen.ts`).
+ * Source of truth at `config/terrain.json`.
  *
- * **M6 — the `procedural` block** is the sampling surface for the
- * reworked generator (crossbar + divider + noise blend). Rather than
- * fixed values, each knob declares a RANGE (`{min,max}`, optionally
- * biased toward a `center` by an `intensity`) or a WEIGHTED choice over
- * discrete values; the generator samples one concrete value per knob per
- * encounter (`sampleProceduralParams`, `src/sim/proceduralMap.ts`), so
- * maps vary seed-to-seed within the designer-set envelope. See
- * `src/core/sampling.ts` for the `sampleRange` / `weightedPick` math.
- * §81a adds the per-theme `themeTiles` envelope (the §37 tile parity).
- *
- * **D3 — variable map sizes.** Procedural encounters roll a side length
- * uniformly in `[proceduralMinSize, proceduralMaxSize]` (square; the
- * range is bounded by the editor / TileGrid clamps in
- * `src/config/layouts.ts`). Hand-authored layouts declare their own
- * `gridW` × `gridH` on each layout.
+ * - `proceduralMinSize`, `proceduralMaxSize` — a procedural board is
+ *   square, its side rolled uniformly in this range, inside the layout side
+ *   bounds (`src/config/layouts.ts`). A hand-authored layout gives its own
+ *   `gridW` and `gridH`.
+ * - `procedural` — the generator's knobs (crossbars, dividers and a noise
+ *   blend). Each declares a range (`{min, max}`, optionally biased toward a
+ *   `center` by an `intensity`) or a weighted choice over discrete values,
+ *   and the generator samples one value per knob per encounter
+ *   (`sampleProceduralParams`, `src/sim/proceduralMap.ts`), so maps vary
+ *   from seed to seed within the envelope. The sampling is in
+ *   `src/core/sampling.ts`.
  */
 
 import { z } from 'zod';
@@ -83,26 +74,19 @@ const SymmetryWeightsSchema = z
   });
 
 /**
- * The M6 procedural-map sampling surface. Each knob is sampled once per
- * encounter from its range/weights, so maps vary within the envelope.
- * `wallCapFraction` is a fixed guard rail (a hard ceiling on obstacle
- * cells, not sampled). Resolved into a concrete param set by
- * `sampleProceduralParams` (`src/sim/proceduralMap.ts`).
- */
-/**
- * §81a — one theme's tile envelope for the procedural generator. Every knob is
- * an OPTIONAL range: absent = the feature is off for this theme AND consumes no
- * RNG draw (so a theme's draw count is fixed by which keys it declares — see
- * `sampleProceduralParams`'s fixed sampling order). Knob semantics:
- *   - `poolDensity` — per-theme OVERRIDE of the global `poolDensity` band
- *     (deserts keep sparse oases instead of grassland-grade pools);
- *   - `deepWaterFraction` — the fraction of the pool band that deepens to
- *     impassable `deep_water` (deepest-noise-first, so deep centres stay
- *     wrapped in shallow); fords/carves are never deepened;
- *   - `hills` / `ice` / `sand` / `mud` — ground-patch densities, each drawn on
- *     its own value-noise field (board fraction claimed, floor cells only);
- *   - `fire` — per-floor-cell sparse scatter chance (volcanic's signed revert;
- *     never on chokepoints, so the crossing stays free).
+ * One theme's tiles on a procedural board. Every knob is an optional range:
+ * absent, the feature is off for the theme and draws nothing, so a theme's
+ * draw count is fixed by the keys it declares (`sampleProceduralParams`
+ * samples in a fixed order).
+ * - `poolDensity` — the theme's own pool band, in place of the global one
+ *   (a desert keeps sparse oases).
+ * - `deepWaterFraction` — the share of the pool band that deepens to
+ *   impassable `deep_water`, deepest noise first, so deep centres stay
+ *   ringed by shallows; fords and carves never deepen.
+ * - `hills`, `ice`, `sand`, `mud` — ground-patch densities, each on its own
+ *   noise field: the share of floor cells claimed.
+ * - `fire` — a sparse scatter chance per floor cell, never on a chokepoint,
+ *   so the crossing stays free.
  */
 const ThemeTilesSchema = z.object({
   poolDensity: RangeSchema.optional(),
@@ -115,10 +99,8 @@ const ThemeTilesSchema = z.object({
 });
 
 /**
- * §81a — the per-theme tile table, exhaustive over the `Theme` union (the
- * sectors.ts `Record<EncounterKind, …>` pattern): a new theme is forced to
- * declare its tile envelope (possibly `{}` = plain boards) before the config
- * parses.
+ * The per-theme tile table, exhaustive over `Theme`: a new theme must declare
+ * its envelope (`{}` for plain boards) before the config parses.
  */
 const ThemeTilesTableSchema = z.object(
   Object.fromEntries(THEMES.map((t) => [t, ThemeTilesSchema])) as Record<
@@ -127,20 +109,19 @@ const ThemeTilesTableSchema = z.object(
   >,
 );
 
-/** §81b — one pool entry: a camp the theme's procedural boards may roll, the
- *  layouts.ts `CampRef` shape (weight omitted = 1, the sector-pool
- *  convention). Referential validation lives in camps.ts
- *  (`assertProceduralCampRefs` — import direction camps → terrain,
- *  cycle-free), mirroring the layout-side check. */
+/** One pool entry: a camp the theme's procedural boards may roll, in the
+ *  layouts' `CampRef` shape (weight omitted is 1). camps.ts checks the refs
+ *  (`assertProceduralCampRefs`), as it does the layouts'. */
 const CampPoolEntrySchema = z.object({
   campId: z.string().min(1),
   weight: z.number().positive().optional(),
 }) as z.ZodType<CampRef>;
 
-/** §81b — placement-mode weights for the camp-site roll (the shape-lock's
- *  user call): `pair` = two sites at symmetry-partner cells · `midBand` =
- *  the neutral middle third of rows · `free` = anywhere hostable (the RARE
- *  asymmetric spice). All three keys required; at least one positive. */
+/** The weights of the camp-site placement modes. All three keys are
+ *  required, at least one positive.
+ *  - `pair` — two sites at symmetry-partner cells.
+ *  - `midBand` — the neutral middle third of rows.
+ *  - `free` — anywhere a camp fits, the rare asymmetric case. */
 const CampPlacementWeightsSchema = z
   .object({
     pair: z.number().nonnegative(),
@@ -152,17 +133,17 @@ const CampPlacementWeightsSchema = z
   });
 
 /**
- * §81b — procedural camp support ("Uncharted Ground"): procedural boards
- * carry no authored `campSpawns`, so the generator rolls camp SITES from
- * this envelope and the theme's pool. `density` is the site count per board
- * (weighted ints, the dividers convention); `placement` picks the mode;
- * `spawnStandoff` is the minimum Chebyshev distance from every spawn-region
- * tile (camps must be a detour, not a doorstep); `pools` maps each theme to
- * the camps its boards may roll (exhaustive over `Theme`; an EMPTY pool
- * disables camps for that theme — the density draw still burns, so the
- * stream is pool-independent). Which camp each site actually becomes stays
- * a `spawnCamps` roll on the `campSetup` stream — this block only supplies
- * the sites + the pool, exactly like a layout's `campSpawns`/`camps` pair.
+ * Camps on procedural boards. These carry no authored `campSpawns`, so the
+ * generator rolls camp sites from this block and the theme's pool, which
+ * supply what a layout's `campSpawns` and `camps` pair does. Which camp a
+ * site becomes is a `spawnCamps` roll on the `campSetup` stream.
+ * - `density` — the sites per board, a weighted choice.
+ * - `placement` — the modes' weights, above.
+ * - `spawnStandoff` — the least Chebyshev distance from every spawn-region
+ *   tile, so a camp is a detour, not a doorstep.
+ * - `pools` — the camps each theme's boards may roll, exhaustive over
+ *   `Theme`. An empty pool turns camps off for the theme, but the density
+ *   draw is still made, so the stream does not depend on the pool.
  */
 const ProceduralCampsSchema = z.object({
   density: WeightedIntsSchema,
@@ -176,6 +157,10 @@ const ProceduralCampsSchema = z.object({
   ),
 });
 
+/**
+ * The procedural knobs, each sampled once per encounter.
+ * `wallCapFraction` is fixed, not sampled: a hard ceiling on obstacle cells.
+ */
 const ProceduralSchema = z.object({
   symmetry: SymmetryWeightsSchema,
   crossbars: WeightedIntsSchema,
@@ -189,12 +174,9 @@ const ProceduralSchema = z.object({
   poolDensity: RangeSchema,
   noiseScale: RangeSchema,
   wallCapFraction: z.number().min(0).max(1),
-  /** §81a — the per-theme tile envelope (procedural parity with the §37
-   *  hand-authored tiles). Not a per-knob draw like the rest of this block —
-   *  the active sector's THEME picks one entry at generation time. */
+  /** Not a per-knob draw like the rest: the sector's theme picks one entry
+   *  at generation time. */
   themeTiles: ThemeTilesTableSchema,
-  /** §81b — procedural camp support (per-theme pools + density + the
-   *  placement-mode roll). */
   camps: ProceduralCampsSchema,
 });
 
@@ -212,7 +194,7 @@ export type TerrainConfig = z.infer<typeof TerrainSchema>;
 export type ProceduralTerrainConfig = z.infer<typeof ProceduralSchema>;
 export type ThemeTilesConfig = z.infer<typeof ThemeTilesSchema>;
 export type ProceduralCampsConfig = z.infer<typeof ProceduralCampsSchema>;
-/** §81b — the three camp-site placement modes (see the placement schema doc). */
+/** The three camp-site placement modes. */
 export type CampPlacementMode = 'pair' | 'midBand' | 'free';
 export type RangeSpec = z.infer<typeof RangeSchema>;
 

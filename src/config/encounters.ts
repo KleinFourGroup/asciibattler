@@ -1,48 +1,25 @@
 /**
- * U3/V1 (Post-R "Encounter System" round): the **Encounter** schema — an authored
- * fight definition that REPLACES the random `rollEnemyWave`. An encounter is
- * *content + intrinsic eligibility* selected onto a battle node: it owns its name,
- * its enemy health pool, its `kind` + optional layout fit-filter, and a **wave
- * list** (the U2 grammar) describing the enemy team turn-by-turn.
+ * The encounter catalog: the authored fights. Source of truth at
+ * `config/encounters.json`. An encounter is a fight's content and its own
+ * eligibility: its name, its enemy pool, its `kind`, an optional layout
+ * fit-filter, and a wave list describing the enemy team turn by turn. `Run`
+ * selects among the catalog through `src/run/encounters/selection.ts`.
  *
- * Source of truth at `config/encounters.json` — the **authored catalog**. V1
- * populates the launch set: **Brigands** (the faithful anchor that re-creates the
- * pre-V swarm — see [../run/encounters/brigands.test.ts](../run/encounters/brigands.test.ts)
- * for the balance-proof) plus the variants **Highwaymen** (pure bandit) and
- * **Deserters** (bandit + a healer). (U3 built Brigands in code reading live
- * config; V1 hoisted it to JSON with literal constants — the code reproduction was
- * retired. Per-encounter knobs are the tuning surface at Phase X.) V2 commit C
- * adds the grammar-demo encounters — **Artillery Company** (a looped 2-wave
- * sequence), **The Ronin and the Mages** (a per-turn weighted `pick`), and
- * **Guarded Adventurer** (a flat sequence: a finite `loop` of guards then a lone
- * boss wave) — exercising the U2 grammar's sequence / pick / finite-loop forms
- * (a `stages` boss demo waits for W). `Run` selects among the catalog via
- * [../run/encounters/selection.ts](../run/encounters/selection.ts).
+ * The `waves` grammar (`WaveList`) is validated here recursively (`z.lazy`):
+ * a tree of wave, pick, loop and stages entries, nesting to any depth. The
+ * pure resolvers (`src/run/encounters/wave.ts` and `sequencer.ts`) own the
+ * types; this module imports them as types only and mirrors them in zod, so
+ * the config parses into exactly what the sequencer consumes, with no
+ * runtime edge from config to run.
  *
- * The `waves` grammar (`WaveList`) is the U2 type, validated here recursively
- * (`z.lazy`): a tree of wave / pick / loop / stages entries, nesting to any
- * depth. The pure resolvers ([wave.ts](../run/encounters/wave.ts) +
- * [sequencer.ts](../run/encounters/sequencer.ts)) own those types; this module
- * type-only-imports them and mirrors their shape as zod (so config validates
- * into exactly the type the sequencer consumes — no runtime config→run edge).
- *
- * Eligibility split (the pre-V data-model decision — sector-owns-both): the
- * **sector** owns *placement* — which encounters appear in it, with the per-entry
- * hop gate + roll weight — via its `encounters` POOL (mirroring its `layouts`
- * pool; see sectors.ts). An encounter owns only its *intrinsic* eligibility:
- * `kind` (which node kind it fits) and an optional `layouts?` FIT-FILTER (which
- * battlefields the fight makes sense on, intersected against the sector's layout
- * pool at selection — V). There is deliberately **no `sectors` or `minHop` field
- * on the encounter**: placement/pacing is a region concern, not a fight concern,
- * so it lives on the sector pool entry. (This reverses the config dependency —
- * `sectors.ts` now imports `ENCOUNTER_IDS`; `encounters.ts` no longer imports
- * `sectors.ts`, so there's no cycle.) Selection among many encounters is V.
- * `rewards?` (typed at 48a, formerly the reserved `unknown` seam) is the
- * encounter's list of `{table, trigger}` reward refs — tables live in their
- * own registry (rewards.ts; import direction encounters → rewards, cycle-free)
- * and each ref's `chance` is independently tested on encounter win (48b).
- * `kind` is an ENUM (not an `isBoss` bool) reserving `'elite'` for future elite
- * map-nodes.
+ * Eligibility is split. The sector owns placement: which encounters appear in
+ * it, each with a hop gate and a roll weight, through its `encounters` pool
+ * (sectors.ts). An encounter owns only what is intrinsic: its `kind` (the node
+ * kind it fits) and an optional `layouts` fit-filter. It has no `sectors` or
+ * `minHop` field, since placement is the region's concern, and so sectors.ts
+ * imports this module and not the reverse. `rewards` lists `{table, trigger}`
+ * refs to the reward tables (rewards.ts), each ref's chance tested on its own
+ * when the encounter is won.
  */
 
 import { z } from 'zod';
@@ -79,7 +56,7 @@ const ArchetypeSchema = z.custom<Archetype>(
   { message: 'unknown archetype' },
 );
 
-// --- wave spec (U1) --------------------------------------------------------
+// --- the wave spec ---------------------------------------------------------
 
 const LevelBudgetSchema: z.ZodType<LevelBudgetSpec> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('fixed'), value: z.number().nonnegative() }),
@@ -92,9 +69,9 @@ const CountSchema: z.ZodType<CountSpec> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('hand'), factor: z.number().nonnegative() }),
 ]);
 
-// Optional per-wave level ceiling (absent = uncapped — the honest default; what
-// you author is what you field). `roster` = highestRosterLevel + delta (the
-// retired global cap, now opt-in); `fixed` = an absolute ceiling.
+// An optional level ceiling per wave; absent, the wave is uncapped, so what is
+// authored is what is fielded. `roster` is the highest roster level plus
+// `delta`; `fixed` is an absolute ceiling.
 const LevelCapSchema: z.ZodType<LevelCapSpec> = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('roster'), delta: z.number().int().nonnegative() }),
   z.object({ kind: z.literal('fixed'), value: z.number().int().positive() }),
@@ -110,9 +87,9 @@ const UnitLevelSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('weight'), weight: z.number().nonnegative() }),
 ]);
 
-// 92e — `power?` is the per-entry headcount-weight override (the casualty
-// rule's per-encounter lever); absent = the archetype's table power. Cast at
-// the zod boundary like `levelCap` (`.optional()` vs exact-optional).
+// `power` overrides the entry's headcount weight under the casualty rule, a
+// lever per encounter; absent, the archetype's table power. Cast at the zod
+// boundary, as `levelCap` is.
 const WaveUnitSchema = z.object({
   archetype: ArchetypeSchema,
   count: UnitCountSchema,
@@ -120,9 +97,7 @@ const WaveUnitSchema = z.object({
   power: z.number().nonnegative().optional(),
 }) as z.ZodType<WaveUnitSpec>;
 
-// Cast at the zod boundary (see StageSchema below): `.optional()` emits `T |
-// undefined`, which `exactOptionalPropertyTypes` won't accept against the
-// exact-optional `levelCap?` field. Runtime validation is identical.
+// Cast at the zod boundary for the exact-optional `levelCap` (see StageSchema).
 const WaveSpecSchema = z.object({
   levelBudget: LevelBudgetSchema,
   count: CountSchema,
@@ -130,7 +105,7 @@ const WaveSpecSchema = z.object({
   units: z.array(WaveUnitSchema).min(1),
 }) as z.ZodType<WaveSpec>;
 
-// --- wave-list grammar (U2), recursive via z.lazy --------------------------
+// --- the wave-list grammar, recursive through z.lazy -----------------------
 
 const ConditionSchema: z.ZodType<Condition> = z.object({
   kind: z.literal('enemyPoolAtOrBelow'),
@@ -168,30 +143,24 @@ const WaveListSchema: z.ZodType<WaveList> = z.array(z.lazy(() => WaveEntrySchema
 
 // --- the encounter ---------------------------------------------------------
 
-/** Encounter `kind` — an ENUM, not an `isBoss` bool: reserves `'elite'` for the
- *  future elite map-node without a one-way-door migration. `boss` is the W kind. */
+/** An encounter's kind: the node kind it fits (`encounterKindFor`). */
 export const ENCOUNTER_KINDS = ['normal', 'elite', 'boss'] as const;
 export type EncounterKind = (typeof ENCOUNTER_KINDS)[number];
 
-/**
- * An authored fight. `waves` is the U2 grammar; every catalog encounter produces
- * this shape.
- */
+/** An authored fight. */
 export interface Encounter {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  /** The encounter's enemy health pool (replaces the global HEALTH.enemyHealthMax
-   *  for this fight). Fixed, not player-relative (pools aren't a roster scaling). */
+  /** The enemy pool, in place of `HEALTH.enemyHealthMax` for this fight.
+   *  Fixed, not scaled to the player. */
   readonly healthPool: number;
-  /** Intrinsic fit-filter: which battlefields this fight makes sense on,
-   *  intersected against the current sector's layout pool at selection (V).
-   *  Omitted = no constraint (the common case). Placement (which sectors, hop
-   *  gate, weight) lives on the sector's encounter pool, not here. */
+  /** The fit-filter: the battlefields this fight makes sense on, intersected
+   *  with the sector's layout pool at selection. Omitted, no constraint. */
   readonly layouts?: readonly string[];
   readonly kind: EncounterKind;
-  /** Reward refs (48a): each `{table, trigger}` is independently chance-tested
-   *  on encounter win and its table sampled (48b). Omitted = no rewards. */
+  /** Reward refs: each `{table, trigger}` is chance-tested on its own when
+   *  the encounter is won, and its table sampled. Omitted, no rewards. */
   readonly rewards?: readonly EncounterRewardRef[];
   readonly waves: WaveList;
 }
@@ -205,14 +174,14 @@ const EncounterSchema = z.object({
   kind: z.enum(ENCOUNTER_KINDS).default('normal'),
   rewards: z.array(EncounterRewardRefSchema).optional(),
   waves: WaveListSchema,
-  // Cast at the zod boundary (see StageSchema) — `.optional()` vs exact-optional.
+  // Cast at the zod boundary (see StageSchema).
 }) as z.ZodType<Encounter>;
 
-/** The whole-file array schema (exported for the V2 editor's formatter round-trip). */
+/** The whole-file schema, exported for the encounter editor's round trip. */
 export const EncountersSchema = z.array(EncounterSchema);
 
 const ENCOUNTERS_LIST: readonly Encounter[] = EncountersSchema.parse(encountersJson);
-// §95b — `name` is prose (`description` is editor metadata, never rendered — plain).
+// `name` is prose; `description` is editor metadata, never shown, and stays plain.
 export const ENCOUNTERS_PROSE = loadProse('encounters', EncountersSchema, ENCOUNTERS_LIST);
 
 const seenIds = new Set<string>();
@@ -221,10 +190,8 @@ for (const encounter of ENCOUNTERS_LIST) {
     throw new Error(`encounters.json: duplicate encounter id "${encounter.id}"`);
   }
   seenIds.add(encounter.id);
-  // The optional layout fit-filter must reference real layouts. (Placement refs —
-  // which sectors this encounter is pooled in — are validated on the SECTOR side
-  // now; see sectors.ts.) The catalog ships empty this round, so this binds once
-  // V authors content.
+  // The fit-filter must name real layouts. Placement refs are checked on the
+  // sector side (sectors.ts).
   for (const layoutId of encounter.layouts ?? []) {
     if (!LAYOUT_IDS.includes(layoutId)) {
       throw new Error(`encounters.json: encounter "${encounter.id}" references unknown layout "${layoutId}"`);
@@ -233,10 +200,8 @@ for (const encounter of ENCOUNTERS_LIST) {
 }
 
 /**
- * Boot check (48a, the `assertRewardDaemonRefs` sibling): every reward ref
- * must name a table in the registry — the fxRegistry-style referential
- * integrity the spec locks for by-name references. Args-injected for
- * synthetic tests; self-wired below with the real catalogs.
+ * Boot check: every reward ref names a table in the registry. Its arguments
+ * let a test pass synthetic catalogs; it runs below on the real ones.
  */
 export function assertEncounterRewardRefs(
   encounters: readonly Encounter[],

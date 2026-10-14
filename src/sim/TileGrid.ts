@@ -115,7 +115,7 @@ export const TILE_DEFS: Record<TileKind, TileDef> = {
   // read by `World.applyDamage`'s to-hit fold. -10 precision × 0.02 = -20% to
   // hit while wading — byte-identical to the retired `STATS.waterPrecisionPenalty`.
   // §37d — `statusRemovedOnEnter: 'burn'`: wading douses fire (the inverse of the
-  // fire→burn sustain). Always on (not gated by `applyStatusOnEnter`).
+  // fire→burn sustain).
   shallow_water: { cost: 2, passable: true, accuracyMod: -10, statusRemovedOnEnter: 'burn' },
   chasm: { cost: Infinity, passable: false },
   fire: { cost: 1, passable: true },
@@ -133,9 +133,9 @@ export const TILE_DEFS: Record<TileKind, TileDef> = {
   //     (-12 → -24% to hit: slick footing).
   //   - sand — slow + evasion PENALTY (-6 → -12% easier to hit: exposed footing).
   //   - mud — the worst passable mobility (deep_water on foot) + a severe accuracy
-  //     penalty (-12) + mud→poison on enter (37d, gated by `applyStatusOnEnter`).
+  //     penalty (-12) + mud→poison on enter (37d).
   // §37d status hooks: deep_water douses burn like shallow water (`statusRemovedOnEnter`,
-  // always on); mud applies poison on enter (`statusOnEnter`, the flag-gated trial).
+  // always on); mud applies poison on enter (`statusOnEnter`).
   deep_water: { cost: Infinity, passable: false, statusRemovedOnEnter: 'burn' },
   hills: { cost: 3, passable: true, evasionMod: 8 },
   ice: { cost: 1, passable: true, accuracyMod: -12 },

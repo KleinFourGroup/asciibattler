@@ -111,7 +111,6 @@ src/
     prices.ts                #   50a/f: the port price book — PricesSchema + assertPriceRefs (draftable coverage + packet/daemon key refs) + the PURE *For price cores (unitPriceFor/packetPriceFor/daemonPriceFor/sellPriceFor; PRICES-bound wrappers delegate — one formula for the game AND the 50f editor preview) — config/prices.json
     camps.ts                 #   75a: the camp catalog (CampDef: id/name/description + leashRadius + units[{archetype,count,level}] + rewards[EncounterRewardRef]) + CampsSchema (exported for the 75i editor's byte-faithful formatter) + the TWO boot asserts: assertCampRewardRefs (reward-table refs resolve — the assertEncounterRewardRefs sibling) + assertLayoutCampRefs (layout camp placements name real camps) — config/camps.json. 75j: the ⭐ CONTINUOUS-VALUE reward rule (always-on camps pay bits/packets ONLY — never a run-defining reward; spec §Camps)
     spawn.ts                 #   D5.C: SpawnAction lockout duration
-    tiles.ts                 #   37d: applyStatusOnEnter (the mud→poison switch)
     stats.ts                 #   E1: hpPerConstitution, crit cap + mult, base move cooldown;
                              #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*)
@@ -146,7 +145,7 @@ src/
                              #      + tallies {bits} (battle-earned run resources → the battle:ended payload, settled by Run.gainBits)
                              # 75b: the CAMP REGISTRY (v34→v35) — camps Map<id, CampInstance {defId, anchor, hostileTo per-faction, pending drip queue, killedBy}> + the presence-gated campRng (null on camp-free worlds — byte-identity is the exit gate; cloneForRollout carries it conditionally); installCamps (once per battle) / campById / campsList / markCampHostile / campHostileTo
                              # 91a1: the FALLEN LEDGER (v35→v36) — fallenPower {player, enemy} booked by recordFallen at BOTH reap sites (the step-1 death check + reapDead) before the splice, neutrals excluded, effectiveStats.power (the survivorPower stat); rides battle:ended with `reason` ('decisive' | 'mutualWipe' | 'cap' — resolveAsDraw is the only 'cap'); serialized (the dead are gone from `units`, so a v35 save is rejected)
-                             # 75e: aggro + kill credit ride dealDamage (damage is hostility's SINGLE source — the whole camp marks hostile to the striking faction; the drip-aware killedBy stamp waits for pending+living empty); 75g: hasUnclearedHostileCamp gates checkBattleEnd's decisive path behind SIM.blockCampTurnEnd (shipped TRUE, the 75j verdict); runCampDripScan (75c: per-tick portal drip onto the anchor) + primeCampSpawns (75h2: the setup-time first-member prime)
+                             # 75e: aggro + kill credit ride dealDamage (damage is hostility's SINGLE source — the whole camp marks hostile to the striking faction; the drip-aware killedBy stamp waits for pending+living empty); 75g: hasUnclearedHostileCamp holds checkBattleEnd's decisive path (the 75j verdict); runCampDripScan (75c: per-tick portal drip onto the anchor) + primeCampSpawns (75h2: the setup-time first-member prime)
                              # 76a: applyAuraStatuses — the aura pass (every live carrier with Ability.aura sustains its status on live units within Chebyshev radius, footprint-aware, via the 27d sustainStatus chokepoint — linger = the status's own lifetime; overlap tops up to one expiry; NO bump — aura state is refresh-lifetime statuses)
     battleRules.ts           # 47f: the battle-domain daemon/packet seam — BattleRule (plain compiled data) + registerBattleRules
                              # (evaluation at the K1 triggers: player-team acting only; filter-before-chance; chance off
@@ -512,7 +511,6 @@ config/                      # A4: balance JSON source of truth (paired with src
   events.json                # 74a→i: the event catalog — the 3 smoke events + the user-authored ten (§74i: the cadre flag-chain three-parter, the prodigy grant, hostage-trio + its rewardOverride, the sector-1-start boon; cheese-tax ships repeatable: true)
   camps.json                 # 75a→j: the camp catalog — the signed 5 (bandit-squatters / ghoul-nest / toll-post / …; bits/packet rewards only, the ⭐ continuous-value rule); placements live in layouts.json campSpawns + camps weighted lists (75j: labyrinth ×2 · fetidPond · icebergs · rubbleQuarry)
   spawn.json                 # D5.C: overflow (mid-battle reinforcement) spawn-in lockout/fade seconds (Q2 retired M3 turnIntroSeconds)
-  tiles.json
   stats.json                 # E1: hpPerConstitution, crit cap/mult, base move cooldown;
                              #     GP1/I1: mobilityCdPerStat/speedCdPerStat + mobilityMinCdScale/speedMinCdScale;
                              #     GP2: minDamage (subtractive-defense floor)

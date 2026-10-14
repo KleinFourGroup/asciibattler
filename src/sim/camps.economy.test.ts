@@ -1,8 +1,8 @@
 /**
  * §75g — the sim half of the run economy: the `campKills` payload on
- * `battle:ended` (omitted when empty — camp-free byte-identity), the
- * `blockCampTurnEnd` knob (default OFF, pinned at §75e; here the ON
- * behavior), and the dormant `enemyPullChance` seam (hostility pre-mark +
+ * `battle:ended` (omitted when empty — camp-free byte-identity), the hold on a
+ * decisive end while the winner has an uncleared hostile camp, and the
+ * dormant `enemyPullChance` seam (hostility pre-mark +
  * the enemy engage{tile} order + the anchor-tile objective auto-revert).
  *
  * SIM knobs are module-level config; the ON-paths mutate the parsed object
@@ -87,27 +87,22 @@ describe('§75g — the campKills payload', () => {
   });
 
   it('an un-wiped camp (members alive or pending) contributes nothing', () => {
-    // Killing m1 aggros the camp; with the 75j-shipped blockCampTurnEnd the
-    // win would be HELD — inject OFF so this stays the no-stamp pin.
-    const mutable = SIM as { blockCampTurnEnd: boolean };
-    const original = SIM.blockCampTurnEnd;
-    mutable.blockCampTurnEnd = false;
-    try {
-      const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
-      const [m1] = dripBoth(world);
-      const player = spawnAt(world, 'player', { x: 1, y: 1 });
-      const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
-      const payloads: Ended[] = [];
-      bus.on('battle:ended', (e) => payloads.push(e));
-      kill(world, player, m1); // m2 still alive → no stamp
-      kill(world, player, enemy);
-      world.tick();
-      expect(payloads).toHaveLength(1);
-      expect('campKills' in payloads[0]!).toBe(false);
-    } finally {
-      mutable.blockCampTurnEnd = original;
-    }
+    // Killing m1 aggros the camp, so the win is HELD while m2 lives; the turn
+    // cap then ends the battle with the camp un-wiped.
+    const { world, bus } = freshWorld();
+    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+    const [m1] = dripBoth(world);
+    const player = spawnAt(world, 'player', { x: 1, y: 1 });
+    const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
+    const payloads: Ended[] = [];
+    bus.on('battle:ended', (e) => payloads.push(e));
+    kill(world, player, m1); // m2 still alive → no stamp
+    kill(world, player, enemy);
+    world.tick();
+    expect(payloads).toHaveLength(0);
+    world.resolveAsDraw();
+    expect(payloads).toHaveLength(1);
+    expect('campKills' in payloads[0]!).toBe(false);
   });
 });
 
@@ -140,56 +135,42 @@ describe('a tile order parked on a camp anchor, once the camp is cleared', () =>
   });
 });
 
-describe('§75g — blockCampTurnEnd (the ON behavior; OFF is the §75e pin)', () => {
+describe('§75g — the hold on an uncleared hostile camp', () => {
   it('a decisive win is HELD while an uncleared hostile camp remains, and lands once cleared', () => {
-    const mutable = SIM as { blockCampTurnEnd: boolean };
-    const original = SIM.blockCampTurnEnd;
-    mutable.blockCampTurnEnd = true;
-    try {
-      const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
-      const [m1, m2] = dripBoth(world);
-      const player = spawnAt(world, 'player', { x: 1, y: 1 });
-      const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
-      world.markCampHostile(1, 'player');
-      const payloads: Ended[] = [];
-      bus.on('battle:ended', (e) => payloads.push(e));
-      kill(world, player, enemy);
-      for (let t = 0; t < 3; t++) world.tick();
-      expect(payloads).toHaveLength(0); // held open — the camp fight is unfinished
-      kill(world, player, m1);
-      kill(world, player, m2);
-      world.tick();
-      expect(payloads).toHaveLength(1);
-      expect(payloads[0]!.winner).toBe('player');
-      expect(payloads[0]!.campKills).toEqual([
-        { defId: 'bandit-squatters', killedBy: 'player' },
-      ]);
-    } finally {
-      mutable.blockCampTurnEnd = original;
-    }
+    const { world, bus } = freshWorld();
+    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+    const [m1, m2] = dripBoth(world);
+    const player = spawnAt(world, 'player', { x: 1, y: 1 });
+    const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
+    world.markCampHostile(1, 'player');
+    const payloads: Ended[] = [];
+    bus.on('battle:ended', (e) => payloads.push(e));
+    kill(world, player, enemy);
+    for (let t = 0; t < 3; t++) world.tick();
+    expect(payloads).toHaveLength(0); // held open — the camp fight is unfinished
+    kill(world, player, m1);
+    kill(world, player, m2);
+    world.tick();
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0]!.winner).toBe('player');
+    expect(payloads[0]!.campKills).toEqual([
+      { defId: 'bandit-squatters', killedBy: 'player' },
+    ]);
   });
 
   it('a camp hostile to the LOSER never holds the winner hostage', () => {
-    const mutable = SIM as { blockCampTurnEnd: boolean };
-    const original = SIM.blockCampTurnEnd;
-    mutable.blockCampTurnEnd = true;
-    try {
-      const { world, bus } = freshWorld();
-      spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
-      dripBoth(world);
-      const player = spawnAt(world, 'player', { x: 1, y: 1 });
-      const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
-      world.markCampHostile(1, 'enemy'); // hostile to the side about to lose
-      const payloads: Ended[] = [];
-      bus.on('battle:ended', (e) => payloads.push(e));
-      kill(world, player, enemy);
-      world.tick();
-      expect(payloads).toHaveLength(1); // the player owes this camp nothing
-      expect(payloads[0]!.winner).toBe('player');
-    } finally {
-      mutable.blockCampTurnEnd = original;
-    }
+    const { world, bus } = freshWorld();
+    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+    dripBoth(world);
+    const player = spawnAt(world, 'player', { x: 1, y: 1 });
+    const enemy = spawnAt(world, 'enemy', { x: 10, y: 10 });
+    world.markCampHostile(1, 'enemy'); // hostile to the side about to lose
+    const payloads: Ended[] = [];
+    bus.on('battle:ended', (e) => payloads.push(e));
+    kill(world, player, enemy);
+    world.tick();
+    expect(payloads).toHaveLength(1); // the player owes this camp nothing
+    expect(payloads[0]!.winner).toBe('player');
   });
 });
 

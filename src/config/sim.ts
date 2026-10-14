@@ -1,8 +1,7 @@
 /**
  * E5 — per-subsystem sim tunables (target stickiness, and room for more
  * pathfinding/behavior knobs as Phase E/F grows). Source of truth at
- * `config/sim.json`. Mirrors the `config/spawn.json` + `config/tiles.json`
- * pattern: timings are authored in seconds (gotcha #6) and converted to
+ * `config/sim.json`. Timings are authored in seconds (gotcha #6) and converted to
  * integer ticks at module load, so a TICK_RATE change re-derives the
  * cadence automatically.
  *
@@ -123,14 +122,6 @@
  *     doctrine (camp idle wander is scenery flavor, not faction pathing).
  *     [0,1]: 0 = camps stand still (vacating the drip anchor stays
  *     unconditional); 1 = a step every eligible poll.
- *   blockCampTurnEnd — §75g: when on, a decisive win/loss does NOT land
- *     while the would-be winner still has an UNCLEARED camp hostile to it —
- *     the battle runs on until the camp fight is finished (the turn cap
- *     still resolves a stalemate as a draw, so battles stay bounded).
- *     **Shipped ON — the 75j feel verdict (user-signed 2026-08-09):** there
- *     isn't fine-grained enough control to disengage a half-fought camp, so
- *     the last enemy dying mid-camp-fight felt bad, not merciful. Off =
- *     camps never extend a battle (the §75e-pinned behavior, test-injected).
  *   enemyPullChance — §75g/§75j2: per turn, on a camp-bearing layout, the
  *     chance the enemy team opens with a DELIBERATE camp pull — the enemy
  *     TEAM objective is pointed at one camp's PRIMED member
@@ -153,8 +144,8 @@
  *     source" doctrine: the realistic bot has no camp-seeking (the §75h scope
  *     guard), so reading camp-engagement economics needs engagement FORCED
  *     through the ordinary targeting machinery (`hostileCandidate` admits
- *     both directions symmetrically; `blockCampTurnEnd` then runs the camp
- *     fight to completion, realizing rewards). Player-side only — enemy camp
+ *     both directions symmetrically; the hold on an uncleared hostile camp
+ *     then runs the camp fight to completion, realizing rewards). Player-side only — enemy camp
  *     kills pay nothing, so enemy hostility would add only noise. Stored
  *     NUMERIC (0/1 switch, no RNG draw — no stream perturbation) so the
  *     `--set` knob registry can address it (`sim.campsStartHostile=1`, the
@@ -192,7 +183,6 @@ const SimSchema = z.object({
   shoveSearchRadiusCells: z.number().int().positive(),
   moveFlipFraction: z.number().min(0).max(1),
   campWanderChancePerSecond: z.number().min(0).max(1),
-  blockCampTurnEnd: z.boolean(),
   enemyPullChance: z.number().min(0).max(1),
   campsStartHostile: z.number().min(0).max(1),
 });
@@ -217,7 +207,6 @@ export const SIM = {
   // §75j — the per-tick threshold DERIVED from the per-second author value
   // (see the docstring). `1` short-circuits exactly (1 − 0^(1/rate) = 1).
   campWanderChancePerTick: 1 - (1 - parsed.campWanderChancePerSecond) ** (1 / TICK_RATE),
-  blockCampTurnEnd: parsed.blockCampTurnEnd,
   enemyPullChance: parsed.enemyPullChance,
   campsStartHostile: parsed.campsStartHostile,
 };

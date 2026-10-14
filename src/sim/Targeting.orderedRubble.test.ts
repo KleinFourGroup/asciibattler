@@ -96,7 +96,7 @@ function orderEngage(world: World, team: 'player' | 'enemy', unitId: number): vo
 
 /** Keep the battle genuinely open (both factions on the board, like every
  *  real encounter — one faction alone ends decisively at tick 1, the camp
- *  still being PASSIVE so blockCampTurnEnd doesn't hold it). The dummy is
+ *  still being PASSIVE so the camp hold doesn't hold it). The dummy is
  *  parked far away under a `hold` objective so it never interferes. */
 function parkOpposingDummy(world: World, team: 'player' | 'enemy'): void {
   spawnAt(world, team, { x: 0, y: 11 });

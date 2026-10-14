@@ -17,7 +17,6 @@ import type { GridCoord } from '../core/types';
 import type { Team } from '../sim/Unit';
 import { spawnWall } from '../sim/environment';
 import { cellKey } from '../sim/occupancy';
-import { TILES_CONFIG } from '../config/tiles';
 import {
   jamRead,
   isHazardKind,
@@ -107,9 +106,7 @@ describe('hazard sensors', () => {
     expect(isHazardKind('floor')).toBe(false);
     expect(isHazardKind('chasm')).toBe(false); // impassable — priced as a wall
     expect(isHazardKind('deep_water')).toBe(false);
-    // mud→poison is gated by the config flag — the expectation DERIVES from
-    // the flag (flag off would legitimately make mud safe).
-    expect(isHazardKind('mud')).toBe(TILES_CONFIG.applyStatusOnEnter);
+    expect(isHazardKind('mud')).toBe(true); // poison on enter
   });
 
   it('55a: the barrier split — sustained per-tick damage only (mud is a toll booth, not a wall)', () => {
@@ -125,7 +122,7 @@ describe('hazard sensors', () => {
     spawn(world, 'player', { x: 2, y: 5 });
     spawn(world, 'enemy', { x: 8, y: 5 });
     // Premise: mud IS a hazard kind (rally-spot avoidance keeps it)…
-    expect(isHazardKind('mud')).toBe(TILES_CONFIG.applyStatusOnEnter);
+    expect(isHazardKind('mud')).toBe(true);
     // …but it is not a barrier, so the edge-hold trigger read stays empty.
     expect(unitsApproachingHazard(world, 'player', 3)).toEqual([]);
   });

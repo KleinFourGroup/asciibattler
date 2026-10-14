@@ -111,7 +111,7 @@ kickoff):
   the attack editor's Cells field goes. Proof: sim.
 - ☑ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
   file. Proof: sim and config.
-- ☐ **121e — A-10 and A-21's two switches** (`none`); `tiles.json` and
+- ☑ **121e — A-10 and A-21's two switches** (`none`); `tiles.json` and
   its loader go. Proof: sim and config.
 - ☐ **121f — A-13, half cover's multiplier** (`none`), with the
   `damageMultiplier` field and `collectHalfCoverPositions`; no World

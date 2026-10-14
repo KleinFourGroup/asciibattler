@@ -6,9 +6,7 @@ import { parseStatusDef, type StatusDef } from '../sim/effects/statusSchema';
 /**
  * Phase 27c — the four periodic statuses (burn / bleed / poison / rejuvenate)
  * authored in `config/statuses.json`. These tests read the SHIPPED catalog (the
- * content is now real) and balance-proof the tile-unification rates from the
- * `tiles.json` config module (never hardcode the authored numbers — gotcha-class
- * balance-proof discipline). The `assertStatusRefsResolve` boot-check tests below
+ * content is now real). The `assertStatusRefsResolve` boot-check tests below
  * still build literal fixtures (they probe the check, not the catalog).
  */
 

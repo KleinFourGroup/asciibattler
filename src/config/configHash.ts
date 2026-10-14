@@ -53,7 +53,6 @@ import spawn from '../../config/spawn.json';
 import stats from '../../config/stats.json';
 import statuses from '../../config/statuses.json';
 import terrain from '../../config/terrain.json';
-import tiles from '../../config/tiles.json';
 import units from '../../config/units.json';
 
 /**
@@ -92,7 +91,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'stats.json': stats,
   'statuses.json': statuses,
   'terrain.json': terrain,
-  'tiles.json': tiles,
   'units.json': units,
 };
 

@@ -4041,3 +4041,49 @@ Proof (sim and config):
   shipped default (leashAtNearest …)" from its title.
 
 The suite: 3,753 (3,760 less nine deleted, plus the pin's two); the smoke, 621 (its three resolutions are one test).
+
+The pin, checked on the commit (`fd7d0c1`): the same negation planted on
+the new condition (`World.ts:2175`, `obj.mode === 'engage' &&
+this.camps.size > 0` negated). Suite CAUGHT, in
+`camps.economy.test.ts`; corpus not caught. The hook on that commit, with
+`tests/fuzz/` staged, ran the smoke (621) and then the parity test (1):
+121a's second live check.
+
+**A-21, the two switches.** `sim.blockCampTurnEnd` and
+`tiles.applyStatusOnEnter` are gone and the shipped behaviour of each is
+the code: `World.checkBattleEnd` holds a decisive end while the winner has
+an uncleared hostile camp, and a step onto mud poisons, in
+`World.applyTileEnterEffects` and in the bot's `isHazardKind`. With A-03,
+`config/tiles.json` held only the second, so it and `src/config/tiles.ts`
+are deleted (config files 32 → 31). The hold's rationale, the user's 75j
+verdict, moved from the config docstring to the check in `World.ts`;
+DESIGN's win condition, GOTCHAS #123's wording (a fix-up of what it
+names, not of the gotcha), ARCHITECTURE's tree and `World` line, and the
+comments in `TileGrid.ts`, `sensors.ts` and the camp tests say so.
+`statuses.test.ts`'s header still described the tile-rate test 121b
+deleted; fixed here.
+
+Tests: `camps.combat.test.ts`'s pin of the off behaviour ("camps never
+extend a battle") is deleted. `camps.economy.test.ts`'s "an un-wiped camp
+contributes nothing" set the switch off so that its win was not held; it
+now lets the hold happen, asserts that it does, and ends the battle by the
+turn cap (`resolveAsDraw`), whose payload carries `campKills` by the same
+rule, so the test still shows an un-wiped camp adds nothing. Its two tests
+of the hold lost their set-and-restore. `tileEnterStatus.test.ts` and
+`sensors.test.ts` expect mud to poison outright.
+
+Proof (sim and config):
+
+- config dump at `fd7d0c1` and after: 4 differences, all removals
+  (`SIM.blockCampTurnEnd`, `TILES_CONFIG`, and their copies in
+  `CONFIG_SOURCES`);
+- typecheck clean; the ceiling lowered 6,336 → 6,325 (five files);
+- `npm run corpus`: 0 of 30 differ; the fuzz diff (baseline `fd7d0c1`):
+  PASS on both shapes; `reach-diff --from=fd7d0c1`: nothing lost across
+  19 changed files;
+- two plants on `fd7d0c1`'s copies of the gates, each negated whole: the
+  hold (`World.ts:2255`), corpus CAUGHT by behaviour (30 of 30 differ) and
+  fuzz diff CAUGHT by behaviour; mud's poison (`World.ts:1645`), both
+  CAUGHT by a run that threw.
+
+The suite: 3,752 (3,753 less the off pin).

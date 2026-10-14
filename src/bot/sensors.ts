@@ -39,7 +39,6 @@ import {
 import { tileDef, type TileKind } from '../sim/TileGrid';
 import type { StatusDef } from '../sim/effects/statusSchema';
 import { statusDef, STATUS_DEFS } from '../config/statuses';
-import { TILES_CONFIG } from '../config/tiles';
 import { secondsToTicks } from '../config';
 
 /** The opposing combat team (neutrals have no objective and no opponent). */
@@ -165,8 +164,7 @@ function statusHarms(def: StatusDef): boolean {
  *   - `World.applyTileStatuses`: `fire` sustains `burn` per-tick, HARDCODED by
  *     kind and NOT config-gated (`healing` sustains rejuvenate — beneficial,
  *     not a hazard).
- *   - `World.applyTileEnterEffects`: `TileDef.statusOnEnter` (mud → poison),
- *     gated by `TILES_CONFIG.applyStatusOnEnter` — gate off = no hazard.
+ *   - `World.applyTileEnterEffects`: `TileDef.statusOnEnter` (mud → poison).
  * Impassable tiles (chasm, deep_water) are not hazards: nothing can stand
  * there, and pathing already prices them as walls.
  */
@@ -174,7 +172,7 @@ export function isHazardKind(kind: TileKind): boolean {
   if (kind === 'fire') return true;
   const def = tileDef(kind);
   if (!def.passable) return false;
-  if (def.statusOnEnter && TILES_CONFIG.applyStatusOnEnter) {
+  if (def.statusOnEnter) {
     return statusHarms(statusDef(def.statusOnEnter));
   }
   return false;

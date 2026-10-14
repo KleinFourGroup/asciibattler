@@ -14,7 +14,6 @@
   "shoveSearchRadiusCells": 3,
   "moveFlipFraction": 0.5,
   "campWanderChancePerSecond": 0.64,
-  "blockCampTurnEnd": true,
   "enemyPullChance": 0.25,
   "campsStartHostile": 0
 }

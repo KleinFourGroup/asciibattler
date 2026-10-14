@@ -9,13 +9,12 @@ import type { ActionProposal } from './Action';
 import { moveProposal } from './movement';
 import { tileDef } from './TileGrid';
 import { statusDef } from '../config/statuses';
-import { TILES_CONFIG } from '../config/tiles';
 import { SIM } from '../config/sim';
 
 /**
  * §37d — the tile→status ENTER hook (`World.applyTileEnterEffects`), fired by
  * `MoveAction`'s 50% logical flip. A tile may APPLY a status on enter (mud →
- * poison, gated by the `applyStatusOnEnter` trial flag) and/or REMOVE one (water
+ * poison) and/or REMOVE one (water
  * / deep_water → strip `burn`, the always-on inverse of the fire→burn sustain).
  *
  * Balance-proof: the expected status ids are pulled from the `TileDef` table
@@ -47,8 +46,7 @@ const carries = (u: { effects: { key: string }[] }, id: string) =>
   u.effects.some((e) => e.key === id);
 
 describe('§37d — applyTileEnterEffects (the hook in isolation)', () => {
-  it('mud applies its status on enter (the flag is shipped ON)', () => {
-    expect(TILES_CONFIG.applyStatusOnEnter).toBe(true); // the trial default
+  it('mud applies its status on enter', () => {
     expect(MUD_STATUS).toBe('poison'); // table sanity
     const { world, bus } = setup();
     const pos = { x: 3, y: 3 };

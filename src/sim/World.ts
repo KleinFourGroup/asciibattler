@@ -35,7 +35,6 @@ import type { ObjectiveTeam, TeamObjective } from './objective';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
 import { STATUS_DEFS, statusDef } from '../config/statuses';
-import { TILES_CONFIG } from '../config/tiles';
 import type { StatusDef } from './effects/statusSchema';
 import { buildStatusEffect } from './effects/statusRuntime';
 import { TriggerDispatcher } from './triggers';
@@ -1628,8 +1627,7 @@ export class World {
    * §36b 50% logical flip (the moment the unit commits to `to`). Reads the
    * destination tile's `TileDef` and, in one pass, REMOVES a status (water /
    * deep_water → strip `burn`, the inverse of the fire→burn sustain — always on)
-   * and APPLIES one (mud → `poison`, environmental so `sourceUnitId` is `null`,
-   * gated by the `applyStatusOnEnter` trial flag).
+   * and APPLIES one (mud → `poison`, environmental so `sourceUnitId` is `null`).
    *
    * Distinct from the per-tick `applyTileStatuses` standing-on sustain: this
    * fires ONCE per cell entry, so poison is a one-shot affliction per step onto
@@ -1642,7 +1640,7 @@ export class World {
     if (def.statusRemovedOnEnter) {
       this.removeStatusEffect(unit, def.statusRemovedOnEnter);
     }
-    if (def.statusOnEnter && TILES_CONFIG.applyStatusOnEnter) {
+    if (def.statusOnEnter) {
       this.applyStatusEffect(unit, statusDef(def.statusOnEnter), null);
     }
   }
@@ -2243,16 +2241,16 @@ export class World {
       if (this._combatBegan) this.emitBattleEnded('draw', 'mutualWipe');
       return;
     }
-    // §75g — the block-turn-end knob (default OFF — camps never extend a
-    // battle, the pinned §75e invariant; flipping it is a §75j feel
-    // verdict): a decisive end does NOT land while the WINNER still has an
+    // §75g — a decisive end does NOT land while the WINNER still has an
     // uncleared camp fight open — the battle runs on until the camp is
-    // cleared. Checked here (not accumulated in the loop above — its
+    // cleared (the 75j feel verdict, user-signed 2026-08-09: with no way to
+    // disengage a half-fought camp, the last enemy dying mid-camp-fight felt
+    // bad, not merciful). Checked here (not accumulated in the loop above — its
     // early-return would truncate a mid-loop scan), and only on the
     // decisive path: a mutual wipe has nobody left to fight the camp, and
     // the driver's turn cap still resolves a stalemate as a draw, so
     // battles stay bounded.
-    if (SIM.blockCampTurnEnd && this.hasUnclearedHostileCamp(playerAlive ? 'player' : 'enemy')) {
+    if (this.hasUnclearedHostileCamp(playerAlive ? 'player' : 'enemy')) {
       return;
     }
     this.emitBattleEnded(playerAlive ? 'player' : 'enemy', 'decisive');

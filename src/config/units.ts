@@ -1,60 +1,28 @@
 /**
- * Validated unit-def catalog accessor (the §38 keystone's `UnitDef` catalog;
- * renamed from `archetypes.json`/`archetypes.ts` in 38b). The JSON source of
- * truth lives at `config/units.json`; this module imports it via Vite's native
- * JSON support, validates it through zod, and re-exports the parsed
- * value with the strict TS types the rest of the codebase expects.
+ * The unit catalog: every kind of unit, combatant or neutral. Source of truth
+ * at `config/units.json`, validated at load, so a malformed entry fails
+ * before any gameplay runs rather than falling back to defaults.
  *
- * Validation runs at module load (effectively boot). A malformed config
- * throws a zod error before any gameplay code runs, which is exactly
- * the failure mode we want — broken balance JSON should be loud, not
- * silently fall back to defaults.
+ * A combatant gives its display name, glyph, abilities (ids checked against
+ * `knownAbilityIds()`), base stats, growth rates and targeting.
+ * - `baseStats` — the eleven stats in canonical order: the direct-combat
+ *   stats (constitution, strength, ranged, magic, luck, defense), then
+ *   precision and evasion, the cadence stats speed and mobility, and power.
+ *   `STAT_CAP` catches typos and is not a design limit.
+ * - `growthRates` — per stat, 0 to 1: the chance the stat rises by 1 on one
+ *   simulated level-up of a player's recruit (`simulateLevelUps`), and the
+ *   per-level increment of an enemy (`scaleStats`). At 0 the stat never
+ *   grows, as a melee unit's ranged stays 0.
  *
- * E1: schema flipped from the MVP `{hp, attackDamage, attackCooldown,
- * moveCooldown}` ranges to a `baseStats` block in the new stat
- * vocabulary (constitution / strength / ranged / magic / luck / defense /
- * precision / evasion / speed / mobility / power — the I1 canonical order).
- * The `STAT_CAP = 99` cap is a typo guard, not a design knob — the practical
- * range never touches it. GP1 renamed the two cadence stats
- * (`speed → agility`, `endurance → mobility`) and made `mobility` signed;
- * I1 reverted `agility → speed` (it read as "dodge chance" once the real
- * dodge stats `precision`/`evasion` arrived) and reordered to group the
- * direct-combat stats (incl. `defense`) ahead of dodge/cadence/meta.
+ * A unit's move cooldown is the one `STATS.baseMoveCooldownSeconds` scaled
+ * by its mobility, so a slow unit is one with low or negative mobility. Its
+ * attack cadence and range come from its abilities, its range being the
+ * largest of theirs (`rangeForArchetype`, `src/sim/archetypes.ts`).
  *
- * E2: each archetype declares an `abilities: string[]` list of registry
- * ids resolved at module load against `knownAbilityIds()`. Unknown ids
- * fail the parse loudly (A4 pattern) — keeping the JSON tunable while
- * the ability behavior itself stays type-checked in TS.
- *
- * E3: each archetype declares a `growthRates` block parallel to
- * `baseStats`. Each rate is in `[0, 1]` — the probability that the stat
- * increments by 1 on a single simulated level-up (player recruits, via
- * `simulateLevelUps`), and also the per-level deterministic increment
- * for enemies (via `scaleStats`). A rate of 0 means the stat never grows
- * (useful for archetype-orthogonal stats: a melee unit's ranged stat
- * stays 0 forever).
- *
- * GP1: the per-archetype `baseMoveCooldownSeconds` override is gone.
- * There's one universal `STATS.baseMoveCooldownSeconds`; a slow walking
- * pace now comes from low/negative `mobility` (heavy units around −7),
- * which the move-CD curve turns into a scale > 1. Attack-cooldown bases
- * live on ability definitions (a unit can carry several abilities with
- * different timings), scaled per unit by `speed`.
- *
- * E5: `attackRange` left the archetype schema for the same reason —
- * range is now a per-ability tunable in `config/abilities.json`. A
- * unit's effective engagement range is the MAX over its abilities (see
- * `rangeForArchetype` in `src/sim/archetypes.ts`).
- *
- * Adding a new archetype (§38c — now pure DATA, no code edit):
- *   1. Add its key + abilities + baseStats + growthRates (+ any capability
- *      fields: damageStat / movementBehavior / retargetOnLosLoss) to
- *      `config/units.json` (use low/negative `mobility` for a slow walking
- *      pace — there's no per-archetype move-CD override).
- *   2. That's it — the open `z.record` catalog validates it structurally and
- *      the string `Archetype` id resolves everywhere. (Only add a boot-assert to
- *      `REQUIRED_UNIT_IDS` if run/enemy-comp code references the new id by
- *      literal; §38e's editor authors all of this without touching code.)
+ * A new archetype is data only: add its entry to the JSON, or author it in
+ * the archetype editor, and the open record validates it and its id resolves
+ * everywhere. Add it to `REQUIRED_UNIT_IDS` only if game code names it by
+ * literal.
  */
 
 import { z } from 'zod';
@@ -69,12 +37,11 @@ import { ABILITY_DEFS } from './abilities';
 const STAT_CAP = 99;
 
 /**
- * §61b — the rarity tier vocabulary, in ascending-rarity order (the order is
- * load-bearing: 61c's `rarityWeights` config validates exhaustive over it and
- * the tier-roll iterates it). Tier 4 is `legendary` (the kickoff lock — "elite"
- * collides with elite encounters). Rarity is DEF-RESOLVED by archetype id
- * (the `targetingForArchetype` convention): no serialized per-unit copy, so
- * offers/rosters/snapshots carry only the archetype string — no snapshot bump.
+ * The rarity tiers in ascending order, which matters: `rarityWeights` is
+ * checked exhaustive over it and the tier roll walks it. The top tier is
+ * `legendary`, since `elite` names an encounter kind. A unit's rarity is
+ * looked up from its archetype id, so offers, rosters and snapshots carry
+ * only the id.
  */
 export const RARITY_TIERS = ['common', 'uncommon', 'rare', 'legendary'] as const;
 export const RaritySchema = z.enum(RARITY_TIERS);
@@ -86,21 +53,20 @@ const BaseStatsSchema = z.object({
   ranged: z.number().int().nonnegative().max(STAT_CAP),
   magic: z.number().int().nonnegative().max(STAT_CAP),
   luck: z.number().int().nonnegative().max(STAT_CAP),
-  // GP2: flat subtractive damage mitigation. Nonnegative like the offensive
-  // stats (0 = no armor). I1 reordered it up next to `luck` (combat stats group).
+  // Flat subtractive mitigation; 0 is no armour.
   defense: z.number().int().nonnegative().max(STAT_CAP),
-  // I1: dodge stats — `precision` (attacker) vs `evasion` (defender) feed the
-  // hit/miss roll in `World.applyDamage`. Nonnegative; behavior-neutral until I2.
+  // The attacker's precision against the defender's evasion feeds the hit
+  // roll in `World.applyDamage`.
   precision: z.number().int().nonnegative().max(STAT_CAP),
   evasion: z.number().int().nonnegative().max(STAT_CAP),
-  // I1: `speed` (attack cadence; reverts GP1's `agility` name). Nonnegative.
+  // Attack cadence.
   speed: z.number().int().nonnegative().max(STAT_CAP),
-  // GP1: `mobility` is SIGNED — 0 is the universal move-CD baseline, positive
-  // is faster, negative is slower (heavy units land around −7). The other
-  // stats stay nonnegative; mobility's lower bound is the typo guard mirrored.
+  // Signed, unlike the rest: 0 is the base move cooldown, positive is
+  // faster, negative slower (the slowest shipped units sit at −14). The lower
+  // bound mirrors the typo cap.
   mobility: z.number().int().min(-STAT_CAP).max(STAT_CAP),
-  // H1: Phase-H pool-chip stat — a turn's survivors chip the opposing health
-  // pool by their Σ`power`. Nonnegative; behavior-neutral until H4 consumes it.
+  // The unit's weight in the chip rule (`config/health.json`): under the
+  // shipped casualty rule, what its fall costs its side's pool.
   power: z.number().int().nonnegative().max(STAT_CAP),
 });
 
@@ -123,88 +89,64 @@ const AbilityIdSchema = z.string().refine((id) => ABILITY_IDS.includes(id), {
   message: `unknown ability id; known: [${ABILITY_IDS.join(', ')}]`,
 });
 
-// Per-archetype target-selection policy, validated against the strategy
-// registry (`src/sim/targetingStrategies.ts`) at load — same A4 pattern as
-// AbilityIdSchema. A typo'd or unregistered id fails the parse loudly.
+// The archetype's targeting policy, checked against the strategy registry
+// (`src/sim/targetingStrategies.ts`) at load, as ability ids are.
 const TARGETING_IDS = knownTargetingIds();
 const TargetingIdSchema = z.string().refine((id) => TARGETING_IDS.includes(id), {
   message: `unknown targeting id; known: [${TARGETING_IDS.join(', ')}]`,
 });
 
-// Exported for the dev-only archetype editor (tools/archetype-editor/), which
-// validates an edited config against the SAME schema the game boots on — so the
-// editor's "is this valid?" can never drift from the game's load-time parse.
-// Dev-tool consumption only; no sim/snapshot/fuzz behavior reads these exports.
+// Exported for the archetype editor (tools/archetype-editor/), which checks an
+// edited config against the schema the game boots on, so the two cannot
+// disagree; no sim, snapshot or fuzz code reads these exports.
 //
-// §38d — the per-entry schema became a UNION of two shapes: a COMBATANT (this
-// full ability-bearing archetype, unchanged from 38c) and a NEUTRAL (a wall /
-// half-cover / future §40 rubble — no abilities, a flat HP pool). They
-// discriminate STRUCTURALLY on required fields (a combatant has `abilities` +
-// `baseStats`; a neutral has `hp`), so no discriminant key had to be stamped
-// onto the 18 existing entries — they stay byte-identical. `isNeutralUnitDef`
-// (below) is the runtime narrow the fold's spawn path + the §38d-3 status filter
-// read; the `Combatant`-typed catalog view lives in `archetypes.ts` (`CONFIGS`),
-// which is why the combatant-side readers/tests never see the union.
+// An entry is a combatant (this schema: abilities and a stat block) or a
+// neutral (`NeutralUnitDefSchema`: a wall, half-cover or rubble, with no
+// abilities). The two are told apart by their required fields, with no
+// discriminant key. `isNeutralUnitDef` (below) is the runtime narrow; the
+// combatant-typed view is `CONFIGS` in `archetypes.ts`, so combatant readers
+// never see the union.
 export const CombatantUnitDefSchema = z.object({
-  // §61g — the player-facing display name (the `AbilityDef.name` precedent:
-  // required, config-owned — no hardcoded UI label map, no humanized raw id).
-  // The internal key stays the load-bearing id everywhere (serialization,
-  // URL params, error messages); UI surfaces read `nameForArchetype`.
+  // The display name. The key stays the id everywhere (serialization, URL
+  // params, errors); the UI reads `nameForArchetype`.
   name: prose(),
   glyph: z.string().length(1),
   abilities: z.array(AbilityIdSchema).min(1),
   baseStats: BaseStatsSchema,
   growthRates: GrowthRatesSchema,
-  // Required — every archetype declares its targeting policy explicitly
-  // (default `nearest`); a future archetype that omits it fails at load.
+  // Required, so every archetype names its targeting policy.
   targeting: TargetingIdSchema,
-  // §29-close — whether this archetype appears in the player's post-victory
-  // recruit offer (`rollOffer` samples `DRAFTABLE_UNIT_DEFS`, the draftable
-  // subset of `ALL_UNIT_DEFS`). Defaults TRUE so a newly-added archetype joins
-  // the draft pool automatically (the F1 intent); the §29 enemy disruptors
-  // (frozen/confusion/blind/panic afflicters) + the summon-only Ghoul set it
-  // FALSE — they exist on the board (cast by enemies / summoned) but are never
-  // the player's to draft. Optional in the JSON (absent ⇒ draftable); the editor
-  // formatter emits the line only when false, keeping the file diff to the
-  // exclusions.
+  // Whether the archetype appears in recruit offers (`rollOffer` samples
+  // `DRAFTABLE_UNIT_DEFS`). True by default, so a new archetype joins the
+  // draft; units the player meets but never drafts, such as the enemy casters
+  // and the summoned ghoul, set it false. The editor's formatter writes the
+  // key only when false.
   draftable: z.boolean().default(true),
-  // §61b — the draft-pool rarity tier. Default `common`; absent in the JSON ⇒
-  // common (the `draftable` emit-only-when-non-default convention — the editor
-  // formatter mirrors it). 61d's design round assigns the non-default tiers;
-  // 61c's weighted sampler + the card accent CSS consume it. Combatant-only —
-  // neutrals (walls/rubble) are never drafted and their strict schema rejects it.
+  // The draft tier, `common` when absent; the editor's formatter writes it
+  // only when not common. The weighted sampler and the card's accent read it.
+  // Combatants only: a neutral is never drafted, and its strict schema refuses
+  // the key.
   rarity: RaritySchema.default('common'),
 
-  // ── §38 fields (planted INERT by 38b) ──────────────────────────────────────
-  // All def-resolved by id at spawn (like glyph/targeting), so no WorldSnapshot
-  // bump. 38b adds them to the SCHEMA only — every existing entry omits them
-  // (the formatter doesn't emit them, so the file stays byte-identical) and the
-  // consuming code still runs its old archetype switches. 38c+ populate + wire.
+  // The fields below are looked up from the def by id at spawn, as glyph and
+  // targeting are, so none is in a snapshot.
   //
-  // §39 footprint — an axis-aligned N×N body (N ∈ 1..4); `position` stays the
-  // canonical corner. Default 1 (single-cell). Inert until §39 fills
-  // `cellsOccupiedBy`.
+  // An axis-aligned N×N body, N from 1 to 4; `position` is its corner.
   footprint: z.number().int().min(1).max(4).default(1),
-  // Flight (deferred build) — the occupancy plane the unit lives on. `ground`
-  // today; `air` is the flight fill. Inert until flight builds.
+  // The occupancy plane (`src/sim/occupancy.ts`). Every shipped unit is on
+  // `ground`.
   layer: z.enum(['ground', 'air']).default('ground'),
-  // §38d — the status allow-filter the `applyStatus` op will consult: the status
-  // ids this unit can receive. Absent ⇒ susceptible to ALL (the behavior-
-  // identical default for every combatant); a wall/rubble opts into the few it
-  // allows (burn/frozen, not poison/bleed). Inert until 38d wires `applyStatus`.
+  // The statuses this unit can receive; absent, all of them.
   statusSusceptibility: z.array(z.string()).optional(),
-  // §83b — the status BLOCK-filter, susceptibility's complement: ids this unit
-  // can NEVER receive (`applyStatusEffect` consults both gates). A blocklist —
-  // not an allowlist — so future statuses default-apply to everyone and an
-  // immunity is a per-status opt-out. First consumer: the healer's panic
-  // immunity (the wail-panic × sustain-hand parity repair).
+  // The statuses it can never receive (`applyStatusEffect` checks both
+  // lists). A blocklist, so a new status applies to everyone and an immunity
+  // is an opt-out per status, such as the healer's to panic.
   statusImmunities: z.array(z.string()).optional(),
-  // 38a branch-killers — planted optional (absent today; the old switches still
-  // run), populated + consumed in 38c. `damageStat`: the stat a basic strike /
-  // the display "ATK" reads (absent ⇒ non-striker/0; → `stats.ts` damageStatFor).
-  // `movementBehavior`: the movement-behavior selector (absent ⇒ standard;
-  // `support` = the healer; → `behaviors/registry.ts`). `retargetOnLosLoss`: drop
-  // a too-long-unseen target (the ranged special-case; absent ⇒ false; →
+  // `damageStat`: the stat a basic strike and the card's ATK read (absent,
+  // the unit does not strike; `damageStatFor`, `stats.ts`).
+  // `movementBehavior`: the movement selector (absent, `standard`; `support`
+  // is the healer's; `behaviors/registry.ts`). `retargetOnLosLoss`: drop a
+  // target unseen too long, as ranged units do (absent, false;
   // `Targeting.ts`).
   damageStat: z.enum(['strength', 'ranged', 'magic']).optional(),
   movementBehavior: z.enum(['standard', 'support']).optional(),
@@ -212,68 +154,53 @@ export const CombatantUnitDefSchema = z.object({
 });
 
 /**
- * §38d — a NEUTRAL catalog entry: a wall / half-cover / (future §40) rubble.
- * No abilities, no growth, no stat block — just a glyph + a flat `hp` pool. This
- * folds `spawnEnvironment`'s hardcoded `ZERO_STATS` / `inertDerived(maxHp)` path
- * into the one unified catalog (the keystone's whole point). `blocksLineOfSight`
- * is intrinsic to the KIND (wall opaque, half-cover transparent — the D6 LOS
- * contract), so it moved off the spawn call onto the def; `footprint` rides along
- * for §40's multi-tile rubble; `statusSusceptibility` is the burnable-not-
- * poisonable allow-filter (38d-3 consults it in `applyStatusEffect`).
+ * A neutral entry: a wall, half-cover or rubble. No abilities, growth or stat
+ * block: a glyph, and an `hp` pool if it can be destroyed.
+ * `blocksLineOfSight` belongs to the kind (a wall is opaque, half-cover is
+ * not), so it is on the def and not the spawn call.
  */
 export const NeutralUnitDefSchema = z
   .object({
     glyph: z.string().length(1),
-    // §40b — HP-PRESENCE = DESTRUCTIBILITY (the locked decision). OPTIONAL: a
-    // neutral WITH an `hp` pool is destructible / combat-targetable (rubble); one
-    // WITHOUT is indestructible (wall / half-cover — no HP means nothing to
-    // destroy, retiring the awkward nominal `hp:1`). `isCombatTargetable` keys off
-    // this presence; `spawnEnvironment` supplies a nominal maxHp for the hp-less
-    // case (cosmetic — never targeted). The cap is a typo guard, not a design knob.
+    // Its presence is destructibility: a neutral with `hp` can be destroyed
+    // and targeted in combat (rubble, a destructible wall); one without
+    // cannot (a wall). `isCombatTargetable` keys off it, and
+    // `spawnEnvironment` gives an hp-less neutral a nominal max HP that
+    // nothing targets. The cap catches typos.
     hp: z.number().int().positive().max(999).optional(),
-    // D6 LOS contract: walls block ranged sight (default true), half-cover doesn't.
+    // Walls block ranged sight (the default); half-cover does not.
     blocksLineOfSight: z.boolean().default(true),
-    // §39 seam — an axis-aligned N×N body; inert (single-cell) until §40's rubble.
+    // An axis-aligned N×N body, as on a combatant.
     footprint: z.number().int().min(1).max(4).default(1),
-    // §40b — AUTO-TARGET eligibility (the second targeting axis, orthogonal to
-    // HP-presence). A destructible neutral with `autoTarget:true` (rubble) is
-    // auto-fired-at BELOW all reachable hostiles — the "chip the blocking debris"
-    // loop. Default FALSE: walls / half-cover — and a future destructible wall
-    // (§40c, `hp` but no `autoTarget`) — stay manual/AoE-only. DATA-DRIVEN (a new
-    // editor-authored debris kind opts in with one line, no code edit — upholding
-    // the §38 keystone), replacing the brittle hardcoded rubble-id set.
+    // Whether units fire at it unprompted, below every reachable hostile, so
+    // blocking rubble gets chipped away. A second axis beside `hp`: walls,
+    // half-cover and a destructible wall leave it false and are hit only when
+    // ordered or caught in an area. A new debris kind opts in with one line.
     autoTarget: z.boolean().default(false),
-    // §38d-3 — the status allow-filter (`applyStatusEffect` consults it). Absent ⇒
-    // susceptible to all; a wall opts into burn/frozen, out of poison/bleed.
+    // As on a combatant: absent, all statuses; a wall takes burn and frozen,
+    // not poison or bleed.
     statusSusceptibility: z.array(z.string()).optional(),
-    // §83b — the block-filter mirror (see the combatant arm). Redundant with the
-    // allowlist for neutrals in practice; present so the union's shared
-    // `statusImmunities` access typechecks without a per-arm guard.
+    // As on a combatant. Redundant beside the allowlist for a neutral, but
+    // present so the union's shared `statusImmunities` typechecks without a
+    // guard per arm.
     statusImmunities: z.array(z.string()).optional(),
   })
-  // §40b — STRICT now that `hp` is optional: without it, a combatant (with its
-  // extra `abilities`/`baseStats` keys stripped) would spuriously satisfy this
-  // arm. Strict makes the union's structural discriminant real (combatant fields
-  // are rejected here), not merely dependent on the arm-try order.
+  // Strict, because `hp` is optional: without it a combatant, its extra keys
+  // stripped, would satisfy this arm. Strict makes the structural discriminant
+  // real rather than a matter of which arm is tried first.
   .strict();
 
-// The per-entry schema the record validates + the editor checks against: a
-// COMBATANT or a NEUTRAL. `z.union` tries the combatant arm first; a neutral
-// entry (no `abilities`/`baseStats`) fails it and falls through to the neutral
-// arm — a clean structural discriminant, no discriminant key needed.
+// The per-entry schema: a combatant or a neutral. `z.union` tries the
+// combatant arm first; a neutral entry, with no `abilities` or `baseStats`,
+// fails it and falls to the neutral arm.
 export const UnitDefSchema = z.union([CombatantUnitDefSchema, NeutralUnitDefSchema]);
 
-// §38c — the KEYSTONE relax: an OPEN `string → UnitDef` record, not a fixed
-// 18-key object. The closed `Archetype` union is gone (`src/sim/Unit.ts`), so
-// the catalog is now the single source of which unit kinds exist — validated
-// STRUCTURALLY (every entry is a well-formed `UnitDef`) rather than by an
-// enumerated key list. This is what lets §38e's editor author a brand-new unit
-// kind as pure data. The ids the game constructs by LITERAL (start team /
-// default enemy comp / summon targets) lost their compile-time guarantee with
-// the union, so `assertRequiredUnitsPresent` + `assertSummonRefsResolve` (below)
-// boot-assert they resolve — a rename/removal fails at load, not at spawn.
-// `z.record` preserves JSON key order, so the archetype-editor formatter still
-// round-trips (it emits in parsed-shape order).
+// An open `string → UnitDef` record: the catalog is the one source of which
+// unit kinds exist, checked entry by entry, so the editor can author a new
+// kind as data. The ids the game builds by literal have no compile-time
+// guarantee, so `assertRequiredUnitsPresent` and `assertSummonRefsResolve`
+// (below) check them at load. `z.record` keeps the JSON's key order, so the
+// archetype editor's formatter round-trips.
 export const UnitDefsSchema = z.record(z.string(), UnitDefSchema);
 
 export type CombatantUnitDef = z.infer<typeof CombatantUnitDefSchema>;
@@ -283,41 +210,31 @@ export type UnitDefsConfig = Record<string, UnitDef>;
 export type GrowthRates = z.infer<typeof GrowthRatesSchema>;
 
 /**
- * §38d — the runtime narrow the union needs. Splits the parsed catalog into
- * `UNIT_DEFS` / `NEUTRAL_DEFS` (below) and is re-exported for the spawn path + the
- * status-susceptibility filter.
- *
- * §40b — discriminate on `baseStats` (a combatant-only key), NOT `hp`: `hp` became
- * OPTIONAL on the neutral arm (HP-presence = destructibility), so an hp-less wall
- * would mis-narrow under the old `'hp' in def` test. Every combatant carries a
- * `baseStats` block and no neutral ever does, so its presence is the sound
- * discriminant.
+ * The union's runtime narrow: it splits the catalog into `UNIT_DEFS` and
+ * `NEUTRAL_DEFS` (below) and serves the spawn path and the status filter. It
+ * tests `baseStats`, which every combatant carries and no neutral does, and
+ * not `hp`, which an indestructible neutral lacks.
  */
 export function isNeutralUnitDef(def: UnitDef): def is NeutralUnitDef {
   return !('baseStats' in def);
 }
 
 /**
- * The FULL parsed catalog — combatants + neutrals, in `config/units.json` key
- * order — validated once at load. The byte-faithful mirror of the file, iterated
- * by the archetype-editor formatter + the whole-catalog round-trip tests.
+ * The full catalog, combatants and neutrals in `config/units.json` key order:
+ * the file's faithful mirror, walked by the archetype editor's formatter and
+ * the round-trip tests.
  */
 export const ALL_UNIT_DEFS: UnitDefsConfig = UnitDefsSchema.parse(unitsJson);
-// §95b — combatant `name` is prose (neutral props have none by schema); the
-// record key is the address segment (`units.<archetype>.name`). UNIT_DEFS /
-// NEUTRAL_DEFS below are views over these same objects, so the in-place
-// resolution reaches every consumer.
+// A combatant's `name` is prose (a neutral has none), addressed as
+// `units.<archetype>.name`. UNIT_DEFS and NEUTRAL_DEFS are views over the same
+// objects, so resolving in place reaches every reader.
 export const UNITS_PROSE = loadProse('units', UnitDefsSchema, ALL_UNIT_DEFS);
 
 /**
- * §38d — the catalog is SPLIT by kind at runtime. Every pre-38d consumer reads
- * the COMBATANT archetypes (baseStats / abilities / growthRates), and walls were
- * the `environment` sentinel — NEVER in this record — so `UNIT_DEFS` stays the
- * combatant catalog and every existing call site keeps its exact pre-38d types +
- * behavior (no union to narrow). NEUTRAL entries (walls / half-cover / future
- * rubble) live in `NEUTRAL_DEFS`, read by the fold's spawn path + the §38d-3
- * status filter. Both are views over the one `ALL_UNIT_DEFS` parse of the one
- * `units.json` — the unification is the file + schema, not a second record.
+ * The catalog split by kind. `UNIT_DEFS` is the combatant catalog most readers
+ * want (stats, abilities, growth), with no union to narrow; `NEUTRAL_DEFS`
+ * holds the walls, half-cover and rubble, read by the spawn path and the
+ * status filter. Both are views over the one parse.
  */
 export const UNIT_DEFS: Record<string, CombatantUnitDef> = Object.fromEntries(
   Object.entries(ALL_UNIT_DEFS).filter(
@@ -329,42 +246,31 @@ export const NEUTRAL_DEFS: Record<string, NeutralUnitDef> = Object.fromEntries(
 );
 
 /**
- * §40b — destructibility = HP-PRESENCE (the locked decision). A neutral is a valid
- * combat-damage target iff its def carries an `hp` pool (present ⇒ destructible,
- * absent ⇒ indestructible — no HP means nothing to destroy). Combatants are never
- * neutral, so `isCombatTargetable` gates on `team === 'neutral'` before consulting
- * this. Keyed off the archetype id (which IS serialized), so targetability
- * re-derives on snapshot rehydrate with NO new serialized state — the same
- * resolve-from-archetype convention as `targetingForArchetype`. An unknown id (e.g.
- * the retired `'environment'` sentinel a legacy fixture might pass) has no def ⇒ no
- * hp ⇒ indestructible.
+ * Whether a neutral can take combat damage: whether its def has an `hp` pool.
+ * Combatants are never neutral, so `isCombatTargetable` checks `team ===
+ * 'neutral'` first. It is keyed by the archetype id, which is serialized, so it
+ * re-derives on a snapshot load with no state of its own. An unknown id has no
+ * def and no hp, so it is indestructible.
  */
 export function isDestructibleNeutral(archetype: string): boolean {
   return NEUTRAL_DEFS[archetype]?.hp !== undefined;
 }
 
 /**
- * §40b — AUTO-TARGET eligibility (orthogonal to `isDestructibleNeutral`). A neutral
- * whose def carries `autoTarget:true` (rubble) is auto-fired-at below all reachable
- * hostiles — the "chip the blocking debris" loop. Walls / half-cover — and a future
- * destructible wall (`hp` without `autoTarget`) — return false, so they're never
- * auto-targeted (manual / AoE only). Keyed off the archetype id (serialized), so it
- * needs no snapshot state — the same resolve-from-archetype convention as
- * `targetingForArchetype`. DATA-DRIVEN: a new debris kind opts in with one JSON line
- * (no hardcoded id set), upholding the §38 keystone.
+ * Whether units fire at this neutral unprompted (its def's `autoTarget`), a
+ * question apart from `isDestructibleNeutral`. Keyed by the archetype id, so it
+ * needs no snapshot state.
  */
 export function isAutoTargetNeutral(archetype: string): boolean {
   return NEUTRAL_DEFS[archetype]?.autoTarget === true;
 }
 
 /**
- * §38c boot-assert — the ids the game hard-references by string LITERAL must
- * exist in the catalog. The closed `Archetype` union used to guarantee this at
- * compile time; with the union relaxed to an open string id, a typo/rename/removal
- * would otherwise surface only at spawn. Keep this list in sync with the literal
- * constructions the 38a audit found: `Run.ts` start team (`mercenary`) +
- * `enemyBudget.ts` default enemy comp (`bandit`/`archer`). Summon targets get
- * their own resolve check in `assertSummonRefsResolve`.
+ * Boot check: the ids code names by literal exist, since with an open string
+ * id a typo, rename or removal would otherwise surface only at spawn. `bandit`
+ * and `archer` make up the random enemy wave (`enemyBudget.ts`); `mercenary`
+ * is named now only by the dev board's fixtures. Summon targets have their own
+ * check below.
  */
 const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'archer'] as const;
 (function assertRequiredUnitsPresent(): void {
@@ -378,16 +284,12 @@ const REQUIRED_UNIT_IDS = ['mercenary', 'bandit', 'archer'] as const;
 })();
 
 /**
- * §29d boot check (the `assertStatusRefsResolve` sibling): every `summon` op
- * referenced in the ability catalog must name an archetype that EXISTS in this
- * catalog — a typo'd / dangling `summon.archetype` fails at startup, not silently
- * at cast. Lives HERE (the archetype catalog owns the valid-id set) rather than in
- * the ability registry's boot IIFE, which runs before this module's `UNIT_DEFS`
- * is built (and importing `UNIT_DEFS` there would cycle through `knownAbilityIds`).
- * Walks `ABILITY_DEFS` directly — config/abilities is already loaded (the
- * `knownAbilityIds` import above pulled it in) and never imports back here, so the
- * dependency stays one-way. `summon` is a top-level op only (never a chain-inner /
- * periodic op), so no recursion is needed.
+ * Boot check: every `summon` op in the ability catalog names an archetype in
+ * this catalog, so a typo fails at startup and not at cast. It lives here,
+ * where the valid ids are, because the ability registry's own boot check runs
+ * before `UNIT_DEFS` exists, and importing it there would cycle through
+ * `knownAbilityIds`. config/abilities is already loaded and never imports this
+ * module. `summon` is a top-level op only, so there is no recursion.
  */
 (function assertSummonRefsResolve(): void {
   const archetypeIds = new Set(Object.keys(UNIT_DEFS));

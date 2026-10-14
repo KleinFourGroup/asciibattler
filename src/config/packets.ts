@@ -1,58 +1,40 @@
 /**
- * 49a — the packet catalog. Source of truth at `config/packets.json` (the
- * `config/daemons.json` pattern: parse at module load, throw on malformed
- * JSON; boot referential asserts self-wired below).
+ * The packet catalog. Source of truth at `config/packets.json`.
  *
- * A packet is a one-shot consumable delivering ONE effect op at a target
- * (cluster-3-spec §Packets): daemons and packets share one effect-op pool —
- * a daemon delivers ops passively on triggers, a packet delivers them
- * actively when the player fires it. Fires consume immediately and
- * irrevocably (the §49 kickoff lock — order of consumption IS order of
- * effect; no batching, no undo). The cache (§49b) holds packet IDS; defs
- * resolve at read time (the daemons-by-id / def-resolved-status pattern).
+ * A packet is a one-shot consumable that delivers one effect op at a target.
+ * Daemons and packets share one pool of effect ops: a daemon delivers them
+ * passively on triggers, a packet actively when the player fires it. A fire
+ * consumes the packet at once and for good, so the order of firing is the
+ * order of effect, with no batching and no undo. The cache holds packet ids,
+ * and the defs are looked up when read.
  *
- * The launch op pool (content-driven, grown when content demands):
- * - `applyBuff`     — the empower generalization: a buff (the shared
- *                     `BuffSchema` shape) lands on the TARGET unit's roster
- *                     slot via the K1 encounter-effect store. Pre-turn the
- *                     target is a hand card; out-of-battle a roster unit
- *                     (the buff then rides the NEXT encounter — 49e owns
- *                     the reset-ordering detail, worklog §49).
- * - `grantRedraws`  — pushes a redraw grant into THIS turn's grant queue
- *                     (§49d); the normal redraw flow handles card selection,
- *                     so the packet's own target is 'none'.
- * - `injectRule`    — the battle-scoped rule injection: the rule (the sim's
- *                     `BattleRule` shape exactly — that's the compile
- *                     target) joins the World's `battleRules[]` for the
- *                     authored duration. THE battle-wide delivery: launch
- *                     battle-wide packets are rule-shaped (no `battleStart`
- *                     trigger exists — kickoff audit finding #1).
- * - `healPool`      — instant run-domain heal (the daemon op, fired
- *                     actively).
- * - `drawCards`     — 65c: draw `count` extra cards into THIS turn's hand,
- *                     immediately (preTurn only — there is no hand at the
- *                     map). TRANSIENT by design: the cards join `Run.hand`
- *                     directly and the `drawAmount` fold is untouched, so
- *                     the enemy-budget basis never sees a packet draw (the
- *                     Option-B split, worklog §65-shape-lock). Stops early
- *                     on a fully dealt deck (the H5 exhaustion contract).
- * - `discardCards`  — 65c: send the TARGETED hand card to the discard; the
- *                     hand shrinks (no refill — that's what distinguishes
- *                     it from a redraw). One card per fire (the authored
- *                     packet is "discard one"); a count axis waits for
- *                     content that demands it.
+ * - `applyBuff` — a buff (the shared `BuffSchema` shape) lands on the target
+ *   unit's roster slot through the encounter-effect store. Before a turn the
+ *   target is a hand card; out of battle it is a roster unit, and the buff
+ *   rides the next encounter.
+ * - `grantRedraws` — pushes a redraw grant into this turn's grant queue; the
+ *   usual redraw flow picks the cards, so the packet's own target is `none`.
+ * - `injectRule` — the rule, in the sim's `BattleRule` shape exactly, joins
+ *   World's `battleRules[]` for the authored duration. It is how a packet
+ *   acts across a battle, since no battle-start trigger exists.
+ * - `healPool` — an instant heal to the run's pool, the daemon op fired
+ *   actively.
+ * - `drawCards` — draws `count` more cards into this turn's hand at once. The
+ *   cards join `Run.hand` directly and the `drawAmount` fold is untouched, so
+ *   the enemy budget's basis never sees a packet's draw. It stops early on a
+ *   fully dealt deck.
+ * - `discardCards` — sends the targeted hand card to the discard, and the
+ *   hand shrinks; with no refill, it is not a redraw. One card per fire.
  *
- * The (op × target × context) legality matrix is enforced at parse time
- * (the 47b `RuleSchema` discipline) and EXPORTED (`PACKET_OP_TARGET` /
- * `PACKET_OP_CONTEXTS`) so the §49e engine validation and the §49g editor
- * read the same source. Dormant seams, deliberate: the `midBattle` context
- * and `tile` target are first-class vocabulary values that NO op admits yet
- * — parse-illegal everywhere until mid-battle casting lands (the seam
- * ships, the feature doesn't — the cluster scope guard). The duration axis
- * likewise restricts per op to what the engine supports: `applyBuff` =
- * `encounter` (a `run` buff needs a run-duration unit-effect store nothing
- * ships yet); `injectRule` = `encounter | run`. Instant ops (`grantRedraws`,
- * `healPool`) carry no duration — nothing persists to expire.
+ * Which target and which contexts each op allows is enforced at parse and
+ * exported (`PACKET_OP_TARGET`, `PACKET_OP_CONTEXTS`), so the engine's checks
+ * and the packet editor read the same tables. The `midBattle` context and
+ * the `tile` target are in the vocabulary, and no op admits either. Each op
+ * also allows only the durations the engine supports: `applyBuff` takes
+ * `encounter`, since no store keeps a unit's effect for a run; `injectRule`
+ * takes `encounter` or `run`, though no shipped packet injects a `run` rule
+ * (`packets.test.ts` holds that line and says why). Instant ops carry no
+ * duration.
  */
 
 import { z } from 'zod';
@@ -71,22 +53,21 @@ import { STATUS_DEFS } from './statuses';
 import type { StatusDef } from '../sim/effects/statusSchema';
 import type { BattleRule } from '../sim/battleRules';
 
-/** The use contexts (`usableIn`). `midBattle` is the deferred seam — in the
- *  vocabulary from day one, admitted by no op yet. */
+/** The use contexts (`usableIn`). No op admits `midBattle`. */
 export const USE_CONTEXTS = ['preTurn', 'outOfBattle', 'midBattle'] as const;
 export type UseContext = (typeof USE_CONTEXTS)[number];
 
-/** The target vocabulary. `tile` waits for mid-battle casting (no
- *  battlefield exists in either launch context). */
+/** The target vocabulary. No op admits `tile`: neither context a packet
+ *  fires in has a battlefield. */
 export const PACKET_TARGET_KINDS = ['none', 'unit', 'tile'] as const;
 export type PacketTargetKind = (typeof PACKET_TARGET_KINDS)[number];
 
-/** The full duration axis (spec vocabulary); each op's schema restricts to
- *  its engine-supported subset — see the module header. */
+/** The duration vocabulary; each op's schema allows a subset (see the
+ *  header). */
 export const EFFECT_DURATIONS = ['battle', 'encounter', 'run', 'permanent'] as const;
 export type EffectDuration = (typeof EFFECT_DURATIONS)[number];
 
-// ── the packet-op schemas (the shared-pool extensions) ──────────────────────
+// ── the packet-only ops ─────────────────────────────────────────────────────
 
 const ApplyBuffOpSchema = z.object({
   op: z.literal('applyBuff'),
@@ -94,8 +75,8 @@ const ApplyBuffOpSchema = z.object({
   duration: z.literal('encounter'),
 });
 
-/** The injected rule mirrors the sim's `BattleRule` exactly (on / chance? /
- *  filter? / effect) — battle triggers only, battle-legal filters only. */
+/** The injected rule mirrors the sim's `BattleRule` exactly (on, chance?,
+ *  filter?, effect), with battle triggers and battle filters only. */
 const InjectedRuleSchema = z.object({
   on: z.enum(BATTLE_TRIGGER_KEYS),
   chance: z.number().min(0).max(1).optional(),
@@ -114,9 +95,8 @@ const InjectRuleOpSchema = z.object({
   duration: z.enum(['encounter', 'run']),
 });
 
-// 65c — the hand ops (packet-only pool extensions, the ApplyBuff/InjectRule
-// precedent). Instant (no duration axis — a draw/discard persists as hand
-// state, nothing expires).
+// The hand ops are instant: a draw or a discard persists as hand state, and
+// nothing expires.
 const DrawCardsOpSchema = z.object({
   op: z.literal('drawCards'),
   count: z.number().int().positive(),
@@ -137,8 +117,8 @@ const PacketEffectSchema = z.discriminatedUnion('op', [
 
 type PacketOpKey = z.infer<typeof PacketEffectSchema>['op'];
 
-/** The op → required-target matrix (parse guard + the 49e engine + the 49g
- *  editor all read this one source). */
+/** The target each op requires; the parse, the engine and the editor read
+ *  it. */
 export const PACKET_OP_TARGET = {
   applyBuff: 'unit',
   grantRedraws: 'none',
@@ -148,15 +128,14 @@ export const PACKET_OP_TARGET = {
   discardCards: 'unit',
 } as const satisfies Record<PacketOpKey, PacketTargetKind>;
 
-/** The op → legal-contexts matrix (same one-source rule). Content-driven:
- *  49e grew `healPool` to `preTurn` when patch demanded the between-turns
- *  heal (the 49e shape-lock — the growth this comment used to predict). */
+/** The contexts each op may be used in, read as the target table is. A
+ *  context is added when content needs it. */
 export const PACKET_OP_CONTEXTS = {
   applyBuff: ['preTurn', 'outOfBattle'],
   grantRedraws: ['preTurn'],
   injectRule: ['preTurn'],
   healPool: ['preTurn', 'outOfBattle'],
-  // 65c — hand ops are preTurn-ONLY: there is no hand at the map.
+  // The hand ops are pre-turn only: there is no hand at the map.
   drawCards: ['preTurn'],
   discardCards: ['preTurn'],
 } as const satisfies Record<PacketOpKey, readonly UseContext[]>;
@@ -213,8 +192,8 @@ const PacketSchema = z
     }
   });
 
-/** The whole-file schema (exported for schema tests + the 49g editor
- *  round-trip — the `DaemonsSchema`/`RewardTablesSchema` precedent). */
+/** The whole-file schema, exported for the schema tests and the packet
+ *  editor's round trip. */
 export const PacketsSchema = z
   .object({ packets: z.array(PacketSchema).min(1) })
   .refine((cfg) => new Set(cfg.packets.map((p) => p.id)).size === cfg.packets.length, {
@@ -223,8 +202,8 @@ export const PacketsSchema = z
 
 // ── the canonical (exact-optional) types ────────────────────────────────────
 
-/** One effect op, packet flavor. `applyBuff`/`injectRule` are the §49 pool
- *  extensions; `grantRedraws`/`healPool` are the daemon ops fired actively. */
+/** One effect op, as a packet carries it. `grantRedraws` and `healPool` are
+ *  the daemon ops, fired actively; the rest are the packet's own. */
 export type PacketEffect =
   | { op: 'applyBuff'; buff: EmpowerConfig['buff']; duration: 'encounter' }
   | { op: 'grantRedraws'; redrawsPerTurn: number; maxCardsPerTurn: number }
@@ -243,14 +222,14 @@ export interface PacketConfig {
 }
 
 const parsed = PacketsSchema.parse(packetsJson);
-// §95b — `name` + `description` are prose; resolved on the raw parsed list
-// BEFORE normalizePacket copies the fields (addresses `packets.<id>.…`).
+// `name` and `description` are prose, resolved on the parsed list before
+// `normalizePacket` copies the fields, and addressed as `packets.<id>.…`.
 export const PACKETS_PROSE = loadProse('packets', z.array(PacketSchema), parsed.packets);
 
 type RawPacket = (typeof parsed.packets)[number];
 
-/** Build exact-optional objects (no explicit-`undefined` keys) from the
- *  parse — the daemons.ts `normalizeRule` discipline. */
+/** Build exact-optional objects, with no explicit-`undefined` keys, from the
+ *  parse. */
 function normalizeEffect(raw: RawPacket['effect']): PacketEffect {
   switch (raw.op) {
     case 'applyBuff':
@@ -291,8 +270,7 @@ function normalizeRuleEffect(
   return effect;
 }
 
-/** Exported for schema tests + the 49g editor (the `normalizeDaemon`
- *  precedent). */
+/** Exported for the schema tests and the packet editor. */
 export function normalizePacket(raw: RawPacket): PacketConfig {
   return {
     id: raw.id,
@@ -308,11 +286,10 @@ export const PACKETS: readonly PacketConfig[] = parsed.packets.map(normalizePack
 export const PACKET_IDS: readonly string[] = PACKETS.map((p) => p.id);
 
 /**
- * Boot check (the `assertDaemonStatusRefs` sibling): every `applyStatus`
- * inside an injected rule must name a status in the registry — a typo'd
- * `statusId` fails at startup, not at 49e injection time. Args-injected for
- * synthetic tests; self-wired below (cycle-free: statuses.ts never imports
- * this module).
+ * Boot check: every `applyStatus` inside an injected rule names a status in
+ * the registry, so a typo fails at startup and not at injection. Its
+ * arguments let a test pass synthetic catalogs; statuses.ts never imports
+ * this module.
  */
 export function assertPacketStatusRefs(
   packets: readonly PacketConfig[],
@@ -332,8 +309,8 @@ export function assertPacketStatusRefs(
 
 assertPacketStatusRefs(PACKETS, STATUS_DEFS);
 
-/** Catalog lookup by id (`undefined` on a miss — callers decide throw vs
- *  skip; the §49 asserts make a miss unreachable for authored refs). */
+/** Lookup by id, `undefined` on a miss; the caller decides whether to throw
+ *  or skip, and the boot checks make a miss unreachable for authored refs. */
 export function packetById(id: string): PacketConfig | undefined {
   return PACKETS.find((p) => p.id === id);
 }

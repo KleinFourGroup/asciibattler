@@ -3347,3 +3347,25 @@ the user's read of sections 4 and 5, then ROADMAP's phases and TODO's
 rewrite. About 210k is left under the line: enough if the read is mostly
 signatures, and not if several rows come back wanting new measurements,
 in which case the session hands off between tranches.
+
+**The stop's report was too much for one read** (the user, 2026-10-13:
+"Can we walk through everything that I need to sign in smaller
+tranches"). It had put both sections' findings, eight drops, three of
+5.9's calls, nine phases and five calls of size in one message. The
+read was cut into seven tranches, smallest decisions first: what needs
+no decision; the drops; this round's proposals; Round 9's additions;
+Rounds 10 to 12's; list B; the phases and the budget. Each is recorded
+here as it is signed.
+
+**The read, the first tranche** (the user, 2026-10-13): "Definitely
+signing all of those, Claude! 😁"
+
+- **5.2, signed as a class:** the five already built or answered
+  (T-13, T-21, T-22, T-23, T-42), and T-22's remainder as one line for
+  Round 10.
+- **5.3, signed as a class, for 27 of its 28:** the fates META-ROADMAP
+  already names, the two drops its deferred list holds among them (T-20,
+  T-45). T-97 was held out by the session, since it rests on 4.10's
+  eleventh call, and goes with list B.
+- Nothing in TODO or META-ROADMAP is written yet: what signing writes
+  is 5.9's ninth call, unsigned.

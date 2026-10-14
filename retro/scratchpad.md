@@ -59,3 +59,12 @@ the MVP-era entries had earlier fed [post-mvp-review.md](post-mvp-review.md).
 ---
 
 _(The post-§118 entries start here — Round 8.5, Housekeeping.)_
+
+- **A stop that hands over more than one read opens with the tranches,
+  not the whole** (2026-10-13, 120h, session 462d21b3). The stop's
+  report put two census sections' findings, eight drops, nine phases
+  and eight calls in one message, and the user's reply was to ask for
+  smaller tranches. The earlier reads of this phase (120c, 120d, 120e)
+  had each gone in tranches too, after the fact. A stop with more than
+  one section to sign could say what was built in a few lines, list the
+  tranches, and put only the first.

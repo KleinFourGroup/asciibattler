@@ -3,8 +3,8 @@
 **Status: being built; section 1 is read and signed, sections 2 and 3
 (120d and 120e, written 2026-10-13) were read at 120e's stop and are
 signed, row by row, and sections 4 and 5 (120f, the trials, and 120g,
-the TODO pass's list, both written 2026-10-13) are unsigned and read at
-120h.** Signed (the
+the TODO pass's list, both written 2026-10-13) are being read at 120h,
+in tranches; section 5's head says what of it is signed.** Signed (the
 user, 2026-10-12 and 2026-10-13): the format, the two scope calls, the
 authoring vocabulary kept as a class (A-16), nine rows for deletion
 (A-01, A-02, A-03, A-05, A-07, A-08, A-09, A-10, A-13), seven kept
@@ -2009,7 +2009,9 @@ Both are in TODO under "§120 riders".
 
 ## 5. The TODO pass's list (120g)
 
-Written 2026-10-13, unsigned, read at 120h. Every open item of
+Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2
+and 5.3** (T-97 held for list B's tranche); the rest is unsigned. Every
+open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
 row is **T-nn**, numbered in the file's order, with its line in TODO as
@@ -2061,6 +2063,11 @@ proposals: 56 for a round and 8 to drop.
 
 Signed as a class: each was settled by a check, named in its row.
 
+**Signed, as a class** (the user, 2026-10-13: "Definitely signing all of
+those, Claude! 😁"). The five are ticked when TODO is rewritten, and
+T-22's remainder, whether any layout gets a `minHop`, is one line for
+Round 10.
+
 **T-13 · Card rarity-accent CSS** (L161)
 - In play: a unit card's background is washed by its rarity (green,
   blue, purple, and amber with an inner glow for a legendary).
@@ -2110,6 +2117,11 @@ Signed as a class: each was settled by a check, named in its row.
 Signed as a class: the row's fate is the plan's, quoted. What a player
 would notice is in the second column; "nothing" means a developer's
 item.
+
+**Signed, as a class, for 27 of the 28** (the user, 2026-10-13, in the
+same words as 5.2). T-97 was held out of the tranche: whether F-2's
+test is written in this round is 4.10's eleventh call, and it is read
+with list B.
 
 | id | TODO | the item, and what a player would notice | where a plan names it | fate |
 |---|---|---|---|---|

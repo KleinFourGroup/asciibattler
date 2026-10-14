@@ -1829,6 +1829,26 @@ it comment.
 - Fate: **trial**, in the tests phase, after its list by test.
 - Signed:
 
+**B-17 · One `chebyshev`** (from the TODO pass, T-24; added at the read)
+- In play: Nothing. The distance between two cells is worked out the same way wherever it is asked.
+- Evidence: four private functions with the same body
+  (`Pathfinding.ts:217`, `Targeting.ts:801`, `focusTile.ts:37`,
+  `targetingStrategies.ts:43`), each `Math.max` of the two axis
+  differences. The occupancy core has had the one definition since §35
+  (`distanceBetween`, `src/sim/occupancy.ts:264`, the same body), and
+  `movement.ts:866` exports it under the name `chebyshev`.
+  `targetingStrategies.ts`'s copy takes any pair of `x` and `y`, which
+  a `GridCoord` is (by its signature; not tried). Sections 1 to 4 did
+  not name them (a search of this file before section 5 was written).
+- Gotchas: #34 names the heuristic in `Pathfinding.ts`. The trial
+  changes where the function is defined and not what it returns.
+- Expects to remove: four functions, about twelve lines, for an import
+  in each file. One thing a reader stops having to know: which of five
+  names is the real one.
+- Proof: sim.
+- Fate: **trial**, in the sim phase.
+- Signed: **trial** (the user, 2026-10-13: "Signing all, Claude! 😁").
+
 **Leads left to each phase's kickoff, unread.** Near-duplicate runs the
 finder lists, by subsystem; none was opened beyond its first line.
 
@@ -2012,7 +2032,7 @@ Both are in TODO under "§120 riders".
 ## 5. The TODO pass's list (120g)
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche) **and 5.6**; the rest is unsigned. Every
+5.3** (T-97 held for list B's tranche)**, 5.4 and 5.6**; 5.5 is unsigned. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2174,14 +2194,14 @@ where in the round it goes.
 - Fate: **8.5**, the sim phase, as a seventeenth row of list B: four
   functions out for one import, about twelve lines. Proof: sim. It is
   the kind of duplicate the round is for.
-- Signed:
+- Signed: **8.5**, as row B-17 of list B (the user, 2026-10-13: "Signing all, Claude! 😁").
 
 **T-49 · Pin ARCHITECTURE's event catalog against `events.ts`** (L361)
 - In play: nothing. ARCHITECTURE's event table is prose that nothing
   checks, and it sat one event short from §29c to §104.
 - Held against: `tests/docs.test.ts` names no event table (a search).
 - Fate: **8.5**, the tests phase: a key-set diff on every `npm test`.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words).
 
 **T-50 · Pin `ui.css`'s `--font-mono` against `FONT_STACK`** (L362)
 - In play: nothing while the two agree. The stylesheet's font chain is a
@@ -2190,7 +2210,7 @@ where in the round it goes.
 - Held against: no test names `--font-mono` or `FONT_STACK` (a search
   of `tests`).
 - Fate: **8.5**, the tests phase.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words).
 
 **T-51, T-85 · `phase-stats`: a fix column by commit type, and its
 count under `--since`** (L364, L725)
@@ -2201,7 +2221,7 @@ count under `--since`** (L364, L725)
   against git's 196 (the item's numbers, not run again).
 - Fate: **8.5**, before the close's efficacy read, with Round 8's 196
   as the known answer.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words).
 
 **T-62 · DESIGN's "Out of scope" list names as backlog what is built**
 (L482)
@@ -2212,7 +2232,7 @@ count under `--since`** (L364, L725)
   economy", which the item does not list and the ports built (§50).
 - Fate: **8.5**, at the close's docs pass, each line struck with its
   phase after a check against ARCHITECTURE.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words).
 
 **T-83 · Two lines of the smoke were not read** (L703)
 - In play: whether a stranger's store on itch still holds its sections
@@ -2222,7 +2242,8 @@ count under `--since`** (L364, L725)
 - Fate: **8.5**, and the user's hands: the live page's Copy diagnostics,
   and Edge's storage inspector on the frame. Nothing for a session to
   build.
-- Signed:
+- Signed: **8.5**, the user's to read (the user, 2026-10-13, in the same
+  words).
 
 **T-84 · The probe runner's edges** (L717)
 - In play: nothing. Four frictions of `shell/electron/probe-cli.mjs`
@@ -2231,7 +2252,9 @@ count under `--since`** (L364, L725)
   so each fix is shown by a run.
 - Fate: **8.5**, with T-91, before the render and UI phase leans on the
   runner.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words, and of this
+  row and T-91: "Definitely agree that the two that add code are worth
+  it! 👍").
 
 **T-86 · Three tests time out at 5 s when anything runs beside the
 suite** (L729)
@@ -2240,7 +2263,7 @@ suite** (L729)
 - Held against: `store-guard`'s two walks have had a 30 s limit since
   `0f61148`; the chaos test's seeds are as they were (the item).
 - Fate: **8.5**, the tests phase.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words).
 
 **T-87 · The friction log is a tracked file** (L736)
 - In play: nothing. Filing a line dirties the tree, which holds a box
@@ -2249,7 +2272,8 @@ suite** (L729)
   way of is Round 9's closing board.
 - Fate: **8.5**, at the close's welfare read, with the standing
   decisions. Lean: build the untracked spool then.
-- Signed:
+- Signed: **8.5**, decided at the close's welfare read (the user,
+  2026-10-13, in the same words).
 
 **T-89 · Dead links in the docs** (L745)
 - In play: nothing.
@@ -2261,7 +2285,8 @@ suite** (L729)
   hit in ARCHITECTURE.
 - Fate: **8.5**, the close's docs pass: fix the five. Lean: leave the
   archives, which were moved verbatim.
-- Signed:
+- Signed: **8.5**, the five fixed and the archives left (the user,
+  2026-10-13, in the same words).
 
 **T-91 · The page drive does not notice a phase whose scene never
 mounts** (L775)
@@ -2272,7 +2297,7 @@ mounts** (L775)
 - Fate: **8.5**, the first step of the render and UI phase: that phase
   deletes in `Game.ts` and the scenes, and this gives it a proof it
   lacks. It adds dev code to the probe kit, as §119's instruments did.
-- Signed:
+- Signed: **8.5** (the user, 2026-10-13, in the same words; see T-84).
 
 ### 5.5 A round proposed, where no plan names one (44)
 

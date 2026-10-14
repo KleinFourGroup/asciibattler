@@ -3394,3 +3394,24 @@ comfortable dropping all of those, Claude! 👍"
   such round; Round 12's human gauntlet #2 is its nearest line. Where
   the user's words are written is put with 5.9's ninth call, in the
   last tranche, and not decided here.
+
+Reading: **360,401** at 00:28 on the second tranche's commit, `c698219`.
+
+**The read, the third tranche** (the user, 2026-10-13): "Signing all,
+Claude! 😁 Definitely agree that the two that add code are worth it! 👍"
+
+- **5.4, all eleven rows signed for this round** (twelve items): T-24,
+  T-49, T-50, T-51 with T-85, T-62, T-83, T-84, T-86, T-87, T-89, T-91.
+- **T-24 is row B-17 of list B,** written into section 4 after B-11,
+  which answers 5.9's seventh call. The one definition it folds into
+  has been in the occupancy core since §35 (`distanceBetween`, the same
+  body, read), and `movement.ts` already exports it as `chebyshev`.
+  Gotcha #34 names the heuristic that uses one of the four copies; the
+  trial moves a definition and not a value.
+- **T-91 and T-84 add dev code in a round of deletions,** which the
+  session named as the tranche's one real call. The user agreed in so
+  many words.
+- By phase, for 120h's draft: the sim phase gains B-17; the render and
+  UI phase opens with T-91 and T-84; the tests phase takes T-49, T-50
+  and T-86; the close takes T-62, T-89, T-51 with T-85, and T-87's
+  decision; T-83 is the user's to read.

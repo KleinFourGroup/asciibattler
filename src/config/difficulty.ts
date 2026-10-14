@@ -1,114 +1,49 @@
 /**
- * Difficulty knobs — G4 enemy **level-budget** model.
+ * The enemy's strength, and the per-run difficulty multipliers. Source of
+ * truth at `config/difficulty.json`.
  *
- * The old linear `enemyLevelForFloor` ramp (`enemySizeDelta` + per-floor level
- * increment) assumed the player levels linearly. They don't, so deep floors
- * became unwinnable (post-G2 the fuzz bots won 0% of full runs). G4 replaces it
- * with a budget derived from the player's roster: the enemy total level tracks
- * the team, spread across MORE, weaker units (up to `swarmMaxMultiplier ×
- * playerSize`) so late battles are "outnumbered but individually stronger"
- * rather than "outclassed." See `src/run/enemyBudget.ts` for the algorithm and
- * the `playerTeamLevel` seam.
+ * The first seven keys size the random enemy wave (`rollEnemyWave`,
+ * `src/run/enemyBudget.ts`) that the fuzz arena and the spawn-overflow test
+ * fight; an authored encounter sizes its own waves. The enemy's total level
+ * is a budget drawn from the player's team and spread over more, weaker
+ * units, so a late battle is outnumbered rather than outclassed. The budget
+ * is affine in the player's team level, since a flat subtraction is swamped
+ * as the team's summed level grows, while a factor holds the ratio at every
+ * depth.
+ * - `budgetFactor`, `budgetOffset` — the budget is `budgetOffset +
+ *   budgetFactor × playerTeamLevel`. Below 1 the player's edge grows with
+ *   progression, above 1 the enemy's. The offset may be negative.
+ * - `unitLevelDelta` — one enemy's level cap is the player's highest unit
+ *   level plus this.
+ * - `minBudget` — the floor under the budget.
+ * - `swarmBias` — 0 to 1, how far the enemy count skews toward its
+ *   maximum: 0 uniform, 1 always the maximum.
+ * - `swarmMaxMultiplier` — the enemy count is at most this times the
+ *   player's fielded count; units past the spawn region stream in through
+ *   the spawn queue.
+ * - `enemyArcherRatio` — 0 to 1, the share of a wave that fields archers,
+ *   the rest melee bandits. Shipped 0.3, a feel call: archers still read as
+ *   the threat, less densely than at 0.4.
  *
- * Knobs (enemy budget is now an AFFINE transform of the player team level —
- * a flat delta couldn't scale: a constant subtraction is swamped by the
- * player's growing summed level, so late battles stayed even. A proportional
- * `factor` holds the handicap's *ratio* at every depth):
- * - `budgetFactor`     — enemy budget = `budgetOffset + budgetFactor ×
- *                        playerTeamLevel`. `< 1` = a player edge that scales
- *                        with progression; `1` reproduces the old flat model.
- * - `budgetOffset`     — additive term (may be negative). Shifts the whole
- *                        curve up/down independent of the player's level.
- * - `unitLevelDelta`   — per-enemy cap = `highestPlayerUnitLevel + this`.
- * - `minBudget`        — safety floor so the budget can't go ≤ 0 (mostly
- *                        vestigial now the affine + `startingLevel` keep early
- *                        budgets healthy).
- * - `swarmBias`        — [0,1] count skew toward the max (0 = uniform, 1 =
- *                        always max). Higher = more reliably a swarm.
- * - `swarmMaxMultiplier`— upper bound on enemy count = `this × playerSize`.
- *                        Overflow past the spawn region streams in via the D5
- *                        spawn queue.
- * - `enemyArcherRatio`  — [0,1] fraction of each wave that fields the ranged
- *                        archer (the rest field `bandit` melee). Hoisted from a
- *                        hardcoded 0.4 (the old 60/40 split) when the K2 hand-6
- *                        diagnostics flagged archer density as a massacre driver.
- *                        Set to 0.3 (a player-feel call — archers still read as
- *                        the threat unit, just less dense than 0.4). Re-swept
- *                        properly in N2 once the K mechanics (redraw/empower) land.
+ * The per-run multipliers, each 1 as shipped, are the fallback for
+ * `RunConfig`'s own (`resolveDifficultyMultipliers`), and Escalation
+ * multiplies them by its level's factors (`withEscalation`). The first two
+ * reach the wave resolver through `WaveContext`; the last two apply at the
+ * run layer.
+ * - `waveSizeMultiplier` — scales every authored wave's resolved count
+ *   (`resolveTotalCount`), the action-economy axis.
+ * - `levelBudgetMultiplier` — scales every authored wave's resolved level
+ *   budget (`resolveLevelBudget`), the strength axis. It saturates against a
+ *   wave's `levelCap` (a capped wave clamps to `n × cap`), so it bites only
+ *   uncapped waves.
+ * - `bitsMultiplier` — scales every bits earned, at the `Run.gainBits`
+ *   settle, multiplied with the `bitsGain` run stat, so reward rolls, daemon
+ *   tallies and daemon hooks all scale alike.
+ * - `enemyMoraleMultiplier` — scales the encounter's enemy pool where `Run`
+ *   reads it (`scaledEnemyPool`).
  *
- * The above feed the RANDOM `rollEnemyWave` lineage (the fuzz arena +
- * spawn-overflow). The two below are the X1 lever for the AUTHORED encounter
- * resolver — the per-run difficulty multipliers, default 1.0 (a no-op). They are
- * the *placeholder source* the per-run seam (`RunConfig.waveSizeMultiplier` /
- * `levelBudgetMultiplier`) falls back to; a future difficulty system (a chosen
- * difficulty level, hop-ramp, or ascension) sets the per-run override instead:
- * - `waveSizeMultiplier`   — scales every wave's resolved COUNT `C`
- *                            (`resolveTotalCount`) — the action-economy axis.
- * - `levelBudgetMultiplier`— scales every wave's resolved level BUDGET `L`
- *                            (`resolveLevelBudget`) — the individual-strength
- *                            axis. SATURATES against a wave's optional `levelCap`
- *                            (a capped wave clamps to `n·cap`), so the strength
- *                            axis only bites uncapped waves. The balance sweep
- *                            (X2) drives these in isolation to find an in-band
- *                            value, then the result is BAKED into the encounter's
- *                            authored wave-spec budget (the multiplier is a lever,
- *                            not persisted content). See BALANCE.md.
- * - `bitsMultiplier`       — 48f, the ECONOMY axis: scales every bits EARN at
- *                            the `Run.gainBits` settle, multiplicative with the
- *                            folded `bitsGain` run-stat (the shape-lock's Option
- *                            B — inside `gainBits`, so reward rolls, Laverna
- *                            tallies, and daemon hooks all scale uniformly and
- *                            the dial reads clean at §52 tuning time). Unlike
- *                            its two X1 siblings it does NOT ride `WaveContext`
- *                            — bits earn at the run layer, not wave resolution.
- * - `enemyMoraleMultiplier`— the fourth lever: scales the encounter's enemy
- *                            pool (`Encounter.healthPool`) where the Run reads
- *                            it, rounded to the nearest whole
- *                            (`scaledEnemyPool`). Like `bitsMultiplier` it
- *                            applies at the run layer and never rides
- *                            `WaveContext`. Escalation's wave lever raises it
- *                            with the count and the budget, so that a bigger
- *                            wave under the casualty rule is as long a fight
- *                            (Round 8 spec D8).
- * - `startingBits`         — a fresh run's bits balance, read by `Run` at
- *                            construction. A `RunConfig.startingBits`
- *                            override wins (dev, fuzz and playtest runs).
- *
- * ── Calibration presets (G4, all at `recruitment.startingLevel = 5`) ─────────
- * The budget is conserved, so there's a hard tradeoff: spreading it wide
- * (swarm) makes each enemy weak fodder; concentrating it (even counts) makes
- * each a half-level threat. A "half-level swarm" = equal total army = an
- * unwinnable action-economy fight, so you can't have both. Three points on
- * that spectrum (swap by editing the JSON; greedy/random win over 100 seeds):
- *   A "elite even"   factor 0.50, swarmMax 1.2 — ~even counts, enemies ≈ ½ your
- *                    level (every enemy a real threat). Gentle, tuning-robust.
- *                    Win 23% / 15%.
- *   B "swarm fodder" factor 0.25, swarmMax 2.0 — SHIPPED (playtested). Out-
- *                    numbered by waves of lv-1 fodder you mow down (gap grows to
- *                    5). Win 21% / 22%. Sits near a cliff (factor 0.30 → 0%) —
- *                    tune gently.
- *   C "mild middle"  factor 0.35, swarmMax 1.5 — playtested + rejected (too many
- *                    floor-1 deaths: numerous enough to overwhelm, not weak
- *                    enough to free-kill — the valley between A and B). Win 5% /
- *                    4%.
- * Rebalance is expected once G5 adds smarter strategies and Phase H changes the
- * model — these are starting points, not final answers. Revisit A/C then.
- *
- * ── K2 re-sweep (roster 10 / hand 6 / enemyArcherRatio 0.3) ──────────────────
- * K2's hand-6 change exposed a latent H5 wave-size BUG: `rollEnemyWave` sized the
- * swarm-COUNT off the whole roster (`playerTeam.length`) instead of the fielded
- * `min(roster, handSize)` — so a 10-unit roster faced `swarmMax × 10` enemies
- * against a 6-card hand (~18 at swarmMax 1.75, budget-capped). THAT was the
- * "massacre," not the budget. Fixed in `enemyBudget.ts` (count basis = the hand).
- * With the bug gone, fewer-but-stronger waves are much EASIER (action economy
- * dominates), so the band climbs: a `budgetFactor × swarmMax` sweep at 11 floors
- * (archerRatio 0.3) put the cliff at `swarmMax 2.0→2.25` (best-achievable
- * 63%→0%), with `budgetFactor` the fine lever at `swarmMax 2.0` (0.5/0.625/0.75 →
- * weak bots 62%/37%/0%). Landed `factor 0.75 × swarmMax 2.0` — best-achievable
- * ~63% (the BALANCE.md 2/3 target), weak bots ~0–10% over 20 seeds. COARSE +
- * provisional — re-swept properly in N2 once the K mechanics (redraw/empower) land.
- *
- * Source of truth at `config/difficulty.json`.
+ * - `startingBits` — a fresh run's bits, read by `Run` at construction; a
+ *   `RunConfig.startingBits` override wins.
  */
 
 import { z } from 'zod';
@@ -122,14 +57,11 @@ const DifficultySchema = z.object({
   swarmBias: z.number().min(0).max(1),
   swarmMaxMultiplier: z.number().positive(),
   enemyArcherRatio: z.number().min(0).max(1),
-  // X1 — the authored-encounter difficulty lever (default 1.0). Positive so a
-  // multiplier never zeros a wave; the sweep mutates this in-memory in isolation.
+  // The multipliers are positive, so none zeroes a wave or an earn;
+  // `scaledEnemyPool` also floors a pool at 1.
   waveSizeMultiplier: z.number().positive(),
   levelBudgetMultiplier: z.number().positive(),
-  // 48f — the economy lever (default 1.0). Positive so it never zeros an earn.
   bitsMultiplier: z.number().positive(),
-  // The enemy-pool lever (default 1.0). Positive; `scaledEnemyPool` floors the
-  // result at 1, so no multiplier empties a pool.
   enemyMoraleMultiplier: z.number().positive(),
   startingBits: z.number().int().nonnegative(),
 });
@@ -139,13 +71,8 @@ export type DifficultyConfig = z.infer<typeof DifficultySchema>;
 export const DIFFICULTY: DifficultyConfig = DifficultySchema.parse(difficultyJson);
 
 /**
- * The per-run difficulty multipliers. `waveSize` / `levelBudget` (X1) apply to
- * every authored-encounter wave at resolve time (the K2 count-vs-strength
- * split), threaded through `WaveContext`; `bits` (48f) applies at the
- * `Run.gainBits` settle — the run layer, never `WaveContext`. `enemyMorale`
- * applies to the encounter's enemy pool where the Run reads it
- * (`scaledEnemyPool`). Absent overrides → 1 (no scaling, byte-identical to
- * pre-X1/pre-48f).
+ * The per-run difficulty multipliers, one for each `*Multiplier` key above;
+ * at 1 a multiplier scales nothing.
  */
 export interface DifficultyMultipliers {
   readonly waveSize: number;
@@ -155,13 +82,10 @@ export interface DifficultyMultipliers {
 }
 
 /**
- * Resolve the effective per-run difficulty multipliers: the optional per-run
- * overrides (the future difficulty-system seam — `RunConfig`) falling back to the
- * global `difficulty.json` defaults. The APPLICATION point (the wave resolver,
- * via `WaveContext`) is fixed; this is where the SOURCE plugs in. X1 ships the
- * static config source; a dynamic difficulty system (chosen difficulty level /
- * hop-ramp / ascension) replaces the override values without touching the
- * resolver. Pure (reads only the parsed config) so it's headless-testable.
+ * A run's difficulty multipliers before Escalation: each `RunConfig`
+ * override, else the `difficulty.json` value. The points that apply them are
+ * fixed; this is where their source plugs in. It reads only the parsed
+ * config.
  */
 export function resolveDifficultyMultipliers(overrides?: {
   readonly waveSize?: number | undefined;

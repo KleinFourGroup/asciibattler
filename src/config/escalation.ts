@@ -1,38 +1,36 @@
 /**
- * ESCALATION — the difficulty ladder (Round 8 spec D8).
+ * Escalation, the ladder of difficulty levels. Source of truth at
+ * `config/escalation.json`.
  *
  * A run is played at a level, 0 (off) to `ESCALATION_MAX`. A level keeps
  * every lever of the levels under it, so the file holds, per level from 1 up,
- * where each of the three levers stands AT that level:
+ * where each of the three levers stands at that level:
  *
  * - `levelBudget` — the enemy level budget.
- * - `wave`        — the enemy wave. It raises three things by the same factor:
- *                   the wave's head count, its level budget and the enemy's
- *                   pool. Under the casualty rule each enemy body is worth a
- *                   point of enemy morale, so a bigger wave on the same budget
- *                   and pool spreads the same levels over more bodies and
- *                   could come out easier; scaled together, each body is as
- *                   strong and the fight as long.
- * - `bits`        — the bits a run earns.
+ * - `wave` — the enemy wave. It raises three things by the same factor: the
+ *   wave's head count, its level budget and the enemy's pool. Under the
+ *   casualty rule each enemy body is worth a point of enemy morale, so a
+ *   bigger wave on the same budget and pool spreads the same levels over
+ *   more bodies and could come out easier; scaled together, each body is as
+ *   strong and the fight as long.
+ * - `bits` — the bits a run earns.
  *
- * HOW THEY COMBINE. A lever that comes again ADDS, and that is authored: the
- * file says 1.1 and, two levels on, 1.2, and no code adds anything. Different
- * levers MULTIPLY (`leverFactors`): the level budget is its own lever times
- * the wave lever, so the wave lever never changes how strong one body is and
- * the budget lever is exactly its own percentage.
+ * A lever that comes again adds, and that is authored: the file says 1.1
+ * and, two levels on, 1.2, and no code adds anything. Different levers
+ * multiply (`leverFactors`): the level budget is its own lever times the
+ * wave lever, so the wave lever never changes how strong one body is and the
+ * budget lever is exactly its own percentage.
  *
  * No level is easier than the one under it: the parse refuses a ladder where
  * a lever eases, level 0 standing as 1 for all three.
  *
  * Level 0 is not in the file. It is the identity by construction
- * (`withEscalation` hands back the multipliers it was given), which keeps a
- * run with Escalation off byte-identical to a run from before the ladder.
+ * (`withEscalation` hands back the multipliers it was given), so a run with
+ * Escalation off plays exactly the game the ladder is built on.
  *
  * The level is a run input (`RunConfig.escalation`) and is saved in the run's
  * snapshot. The multipliers are derived from the level and this table when a
  * run is constructed and every time one is loaded, never stored.
- *
- * Source of truth at `config/escalation.json`.
  */
 
 import { z } from 'zod';

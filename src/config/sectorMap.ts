@@ -1,31 +1,23 @@
 /**
- * T2 (Post-R "Encounter System" round): the **sector-selection meta-DAG** — the
- * graph a run walks to choose its *sequence of sectors*. Source of truth at
- * `config/sector-map.json` (hand-edited JSON; no editor this round, per the
- * brief). Each DAG node holds a LIST of candidate sectors (the run picks one on
- * arrival); edges connect nodes; `sources` are the possible run starts and
- * `sinks` are the run-complete terminals.
+ * The sector map: the graph a run walks to choose its sequence of sectors.
+ * Source of truth at `config/sector-map.json`, edited by hand. Each node
+ * holds a list of candidate sectors, of which the run picks one on arrival;
+ * `sources` are the possible starts and `sinks` the ends of a run.
  *
- * A run: pick a random `source` node → a random sector from its list → walk the
- * sector's node-map → on clearing the sector's terminal, pick a random successor
- * node → its sector → a fresh node-map → … → **complete** at a `sink`. (The
- * RNG-driven walk itself lives in `src/run/sectorWalk.ts`; this module is the
- * validated data + the structural guards that keep the walk total.)
+ * A run starts at a random source and plays a random sector of its list; on
+ * clearing that sector's boss it moves to a random successor and one of its
+ * sectors, and so on until it clears a sink. The walk is in
+ * `src/run/sectorWalk.ts`; this module holds the data and the checks that
+ * keep the walk total. The shipped map is two nodes, `start` then
+ * `deep-end`, one sector each.
  *
- * Initial content ships a **one-node DAG** (`source == sink == "start"`, holding
- * the single sector "The Start"), so a run is exactly one sector — today's
- * structure, now expressed through the general system. Multi-node DAGs are
- * *built + validated + headless-tested* but not populated (only "The Start"
- * ships).
- *
- * Validation runs at module load (the A4 loud-failure mode). Beyond zod's
- * structural checks, four custom guards keep the walk well-formed + terminating:
- *   1. node ids are unique;
- *   2. every `node.sectors` entry is a real `SECTOR_ID`;
- *   3. every edge endpoint + every source/sink is a real node id;
- *   4. every NON-sink node has ≥1 outgoing edge, and the graph is ACYCLIC — so
- *      the random walk can never dead-end at a non-sink nor loop forever; every
- *      maximal path terminates at a sink.
+ * Beyond zod's structural checks, the parse refuses:
+ * 1. a repeated node id;
+ * 2. a candidate that is not a `SECTOR_ID`;
+ * 3. an edge, source or sink that names no node;
+ * 4. a non-sink node with no outgoing edge, and any cycle, so the walk can
+ *    neither stop short of a sink nor loop: every maximal path ends at a
+ *    sink.
  */
 
 import { z } from 'zod';
@@ -98,9 +90,7 @@ const SectorMapSchema = z
       }
     });
 
-    // Guard 4 — the walk stays total: every non-sink has an outgoing edge, and
-    // the graph is acyclic (so a path can neither dead-end at a non-sink nor
-    // loop). Together these guarantee every maximal path ends at a sink.
+    // Guard 4 — every non-sink has an outgoing edge, and there is no cycle.
     const sinkSet = new Set<string>(map.sinks);
     const out = new Map<string, string[]>();
     for (const node of map.nodes) out.set(node.id, []);
@@ -138,8 +128,8 @@ const SectorMapSchema = z
 export type SectorMap = z.infer<typeof SectorMapSchema>;
 export type SectorMapNode = z.infer<typeof SectorMapNodeSchema>;
 
-/** Exported so `src/run/RunConfig.ts` can type a fixture/override + the test can
- *  round-trip hand-built DAGs through the real loader schema. */
+/** Exported for the tests, which pass hand-built maps through the real
+ *  schema. */
 export { SectorMapSchema };
 
 export const SECTOR_MAP: SectorMap = SectorMapSchema.parse(sectorMapJson);

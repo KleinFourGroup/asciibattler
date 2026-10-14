@@ -1,29 +1,16 @@
 /**
- * §63a — the starting-character catalog. Source of truth at
- * `config/characters.json` (the `config/daemons.json` pattern: parse at
- * module load, throw on malformed JSON).
+ * The starting characters. Source of truth at `config/characters.json`.
  *
- * A character is a run's starting configuration (cluster-4-spec §Starting
- * Characters): the roster it opens with, the daemon it carries (replacing
- * the run-start daemon roll — §63c), the archetypes it ADDS to the global
- * draft blacklist (the `draftable` flag stays the global mechanism), and
- * its within-tier weight overrides (default weight 1; the rarity-tier
- * frequencies themselves stay global — `RECRUITMENT.rarityWeights`).
+ * A character is a run's starting configuration: the roster it opens with,
+ * the daemon it starts with, the archetypes it adds to the draft's
+ * exclusions (the `draftable` flag stays the global one), and its weights
+ * within a rarity tier (the tiers' own weights are
+ * `RECRUITMENT.rarityWeights`). The fields are documented on
+ * `CharacterConfig`.
  *
- * Shape decisions (kickoff shape-lock, worklog §63):
- * - `roster` is a flat archetype-id list and its LENGTH is the roster size
- *   (non-empty is the only structural bound); every unit starts at the
- *   global `RECRUITMENT.startingLevel`.
- * - `daemon` is a single id — the round scope guard keeps the field single
- *   until a character needs more.
- * - A blacklisted archetype may NOT also carry a weight override: the spec
- *   notes blacklisting ≡ weight 0, so overrides are strictly positive and
- *   the overlap is a parse-time contradiction.
- * - Reference legality (roster/blacklist/override ids exist in the
- *   combatant catalog; the daemon id resolves) is enforced in the schema's
- *   superRefine; the shipped-catalog invariant that `DEFAULT_CHARACTER_ID`
- *   exists is an args-injected boot assert (the `assertDaemonStatusRefs`
- *   precedent), self-wired below.
+ * The schema checks that every id names a real combatant archetype or
+ * daemon, and that no archetype is both excluded and weighted; a boot check
+ * below requires `DEFAULT_CHARACTER_ID` to exist.
  */
 
 import { z } from 'zod';
@@ -47,15 +34,11 @@ const CharacterSchema = z.object({
   description: prose(),
   roster: z.array(z.string().min(1)).min(1),
   daemon: z.string().min(1),
-  /** Additions on top of the global `draftable:false` set — never a
-   *  replacement of it. Absent = no additions. */
   blacklist: z.array(z.string().min(1)).optional(),
-  /** Within-tier weight per archetype (default 1 for everything unlisted).
-   *  Strictly positive — weight 0 is spelled `blacklist`. */
   weightOverrides: z.record(z.string(), z.number().positive()).optional(),
 });
 
-/** Exported for schema tests (the `DaemonsSchema` precedent). */
+/** Exported for the schema tests. */
 export const CharactersSchema = z
   .object({ characters: z.array(CharacterSchema).min(1) })
   .superRefine((cfg, ctx) => {
@@ -110,27 +93,26 @@ export interface CharacterConfig {
   id: string;
   name: string;
   description: string;
-  /** Starting roster, in deployment order; length = roster size. Every
-   *  entry validated against the combatant catalog at parse. */
+  /** The starting roster in deployment order; its length is the roster
+   *  size, and every unit starts at `RECRUITMENT.startingLevel`. */
   roster: readonly Archetype[];
-  /** The daemon this character starts with (a `config/daemons.json` id). */
+  /** The daemon the character starts with, a `config/daemons.json` id. */
   daemon: string;
-  /** Draft-pool exclusions ADDED to the global `draftable:false` set.
-   *  Always present post-normalize (empty = no additions). */
+  /** Archetypes added to the global `draftable: false` exclusions, never
+   *  replacing them; empty for none. */
   blacklist: readonly Archetype[];
-  /** Within-tier draft weights (absent archetype = 1). Always present
-   *  post-normalize; disjoint from `blacklist` by parse-time guard. */
+  /** Draft weights within a tier, 1 for an unlisted archetype. Positive,
+   *  since weight 0 is spelled `blacklist`, and disjoint from it. */
   weightOverrides: Readonly<Partial<Record<Archetype, number>>>;
 }
 
 const parsed = CharactersSchema.parse(charactersJson);
-// §95b — `name` + `description` are prose; resolved on the raw parsed list
-// BEFORE normalizeCharacter copies the fields (addresses `characters.<id>.…`).
+// `name` and `description` are prose, resolved on the parsed list before
+// `normalizeCharacter` copies the fields, and addressed as `characters.<id>.…`.
 export const CHARACTERS_PROSE = loadProse('characters', z.array(CharacterSchema), parsed.characters);
 
-/** Build always-present-collection configs from the parse (the
- *  `normalizeDaemon` exact-optional discipline). Exported for schema tests
- *  + the §63f character editor. */
+/** The parse with its optional collections made present. Exported for the
+ *  schema tests and the character editor. */
 export function normalizeCharacter(
   raw: (typeof parsed.characters)[number],
 ): CharacterConfig {
@@ -147,15 +129,13 @@ export function normalizeCharacter(
 
 export const CHARACTERS: readonly CharacterConfig[] = parsed.characters.map(normalizeCharacter);
 
-/** Catalog id list, in file order (harness flag error messages — the
- *  `--daemon` choices-string pattern). */
+/** The catalog's ids in file order, for the harness's flag errors. */
 export const CHARACTER_IDS: readonly string[] = CHARACTERS.map((c) => c.id);
 
 /**
- * Boot check: the shipped catalog must carry `DEFAULT_CHARACTER_ID` — every
- * unconfigured entry point resolves to it, so its absence is a startup
- * error, not a mid-run surprise. Args-injected for synthetic tests (the
- * `assertDaemonStatusRefs` precedent); self-wired below.
+ * Boot check: the catalog carries `DEFAULT_CHARACTER_ID`, which every
+ * unconfigured entry point resolves to, so its absence fails at startup and
+ * not mid-run. Its argument lets a test pass a synthetic catalog.
  */
 export function assertDefaultCharacter(characters: readonly CharacterConfig[]): void {
   if (!characters.some((c) => c.id === DEFAULT_CHARACTER_ID)) {
@@ -167,8 +147,8 @@ export function assertDefaultCharacter(characters: readonly CharacterConfig[]): 
 
 assertDefaultCharacter(CHARACTERS);
 
-/** Catalog lookup by id (`undefined` on a miss — callers decide throw vs
- *  skip, the `daemonById` contract). */
+/** Lookup by id, `undefined` on a miss; the caller decides whether to throw
+ *  or skip, as with `daemonById`. */
 export function characterById(id: string): CharacterConfig | undefined {
   return CHARACTERS.find((c) => c.id === id);
 }

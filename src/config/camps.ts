@@ -1,26 +1,19 @@
 /**
- * §75a — the **Camp** schema: a pre-defined neutral camp (the cluster-5-spec
- * "Camps — LOCKED" shapes). A camp is a fixed GROUP of combatant units that
- * spawns onto `team: 'neutral'` at a layout's camp-spawn tile, wanders within
- * `leashRadius` of it while passive, and turns hostile (camp-wide, per
- * attacking faction) when struck. Killing the whole camp rolls its reward
- * refs — granted at turn completion win-or-lose (the 51a portion rule).
+ * The neutral camps. Source of truth at `config/camps.json`, a flat array.
  *
- * Source of truth at `config/camps.json` — a flat array (the encounters.json
- * form; the 75i camp editor copies the encounter-editor shape). The two
- * shipped defs are SMOKE content for tests/editors: no shipped layout lists a
- * camp until the §75j demo-catalog design round deliberately places them
- * (presence-gating — the byte-identity exit gate).
+ * A camp is a fixed group of combatant units that spawns on team `neutral`
+ * at a camp-spawn tile, wanders within `leashRadius` of it while passive,
+ * and when struck turns hostile, the whole camp at once, toward the faction
+ * that struck it. Killing the whole camp pays its `rewards`.
  *
- * Placement lives on the LAYOUT (`campSpawns` tiles + a weighted `camps`
- * list — see layouts.ts), mirroring the sector-owns-both eligibility split:
- * a camp def owns only its intrinsic content (roster, leash, rewards).
+ * Where a camp goes belongs to the placing side: a layout's `campSpawns`
+ * tiles and weighted `camps` list (layouts.ts), or a theme's procedural
+ * pool (`terrain.json#procedural.camps.pools`). A camp def holds only its
+ * own content: roster, leash and rewards.
  *
- * `units` entries reference COMBATANT archetypes (validated against
- * `UNIT_DEFS`, the combatant-only view — a camp unit is a combatant def
- * spawned onto team 'neutral', per the §75 kickoff audit; the strict
- * `NeutralUnitDefSchema` arm stays untouched). `count` (default 1) and
- * `level` (default 1) are typo-guard-capped, not design-capped.
+ * `units` entries name combatant archetypes (`UNIT_DEFS`, the combatant-only
+ * view): a camp unit is a combatant def spawned onto team `neutral`. The caps
+ * on `count` and `leashRadius` catch typos; they are not design limits.
  */
 
 import { z } from 'zod';
@@ -35,17 +28,16 @@ import {
 } from './rewards';
 import type { Archetype } from '../sim/Unit';
 
-// Combatant-archetype validation (the encounters.ts pattern): `UNIT_DEFS` is
-// the combatant-only catalog view, so neutral defs (wall / rubble / …) are
-// rejected for free.
+// `UNIT_DEFS` is the combatant-only view, so a neutral def (a wall, rubble)
+// is refused with no check of its own.
 const ARCHETYPE_IDS = new Set(Object.keys(UNIT_DEFS));
 const ArchetypeSchema = z.custom<Archetype>(
   (v) => typeof v === 'string' && ARCHETYPE_IDS.has(v),
   { message: 'unknown combatant archetype' },
 );
 
-/** Typo guard on a single entry's `count` — a camp drips through ONE tile, so
- *  double-digit stacks are almost certainly a slip, not a design. */
+/** Typo guard on one entry's `count`: a camp spawns through one tile, so a
+ *  double-digit stack is almost surely a slip. */
 export const CAMP_UNIT_MAX_COUNT = 8;
 
 /** Typo guard on `leashRadius` — half the max layout side (32); a leash that
@@ -64,21 +56,21 @@ export interface CampDef {
   readonly id: string;
   readonly name: string;
   readonly description?: string;
-  /** Chebyshev radius around the camp's spawn tile that PASSIVE members
-   *  wander within (the 75f behavior filters candidate steps to it). A
-   *  hostile member pursuing may leave it — the leash bounds idling, not
+  /** The Chebyshev radius around the camp's spawn tile that passive members
+   *  wander within; the passive behaviour keeps its steps inside it. A
+   *  hostile member in pursuit may leave it: the leash bounds idling, not
    *  retaliation. */
   readonly leashRadius: number;
   readonly units: readonly CampUnit[];
-  /** Reward refs (the encounter `rewards` shape): rolled when the camp is
-   *  killed BY THE PLAYER, granted at turn completion regardless of the
-   *  turn's outcome (75g). Omitted = the camp pays nothing. */
+  /** Reward refs, in the encounter's `rewards` shape: rolled when the
+   *  player kills the camp, and granted when the turn completes, whatever
+   *  its outcome. Omitted, the camp pays nothing. */
   readonly rewards?: readonly EncounterRewardRef[];
 }
 
-// Cast at the zod boundary (the encounters.ts StageSchema note): `.optional()`
-// emits `T | undefined`, which `exactOptionalPropertyTypes` rejects against
-// exact-optional fields. Runtime validation is identical.
+// Cast at the zod boundary: `.optional()` emits `T | undefined`, which
+// `exactOptionalPropertyTypes` refuses against exact-optional fields. The
+// runtime check is the same.
 const CampUnitSchema = z.object({
   archetype: ArchetypeSchema,
   count: z.number().int().positive().max(CAMP_UNIT_MAX_COUNT).optional(),
@@ -94,8 +86,8 @@ const CampDefSchema = z.object({
   rewards: z.array(EncounterRewardRefSchema).optional(),
 }) as z.ZodType<CampDef>;
 
-/** The whole-file array schema (exported for the 75i editor's formatter
- *  round-trip). An EMPTY catalog is legal — a camp-free game is coherent. */
+/** The whole-file schema, exported for the camp editor's round trip. An
+ *  empty catalog is legal: a game without camps is coherent. */
 export const CampsSchema = z.array(CampDefSchema);
 
 const CAMPS_LIST: readonly CampDef[] = CampsSchema.parse(campsJson);
@@ -109,9 +101,8 @@ for (const camp of CAMPS_LIST) {
 }
 
 /**
- * Boot check (the `assertEncounterRewardRefs` sibling): every camp reward ref
- * must name a real reward table. Args-injected for synthetic tests;
- * self-wired below with the live catalogs.
+ * Boot check: every camp reward ref names a real reward table. Its arguments
+ * let a test pass synthetic catalogs; it runs below on the live ones.
  */
 export function assertCampRewardRefs(
   camps: readonly CampDef[],
@@ -130,10 +121,10 @@ export function assertCampRewardRefs(
 }
 
 /**
- * Boot check for the LAYOUT side of the seam: every layout `camps[].campId`
- * must resolve in this catalog. Lives here (import direction camps → layouts,
- * cycle-free — layouts.ts never imports camps.ts) so the referential check
- * runs the moment either file loads through this module.
+ * Boot check for the layout side: every layout's `camps[].campId` resolves
+ * in this catalog. It lives here because camps.ts imports layouts.ts and
+ * never the reverse, so the check runs as soon as either loads through this
+ * module.
  */
 export function assertLayoutCampRefs(
   layouts: readonly LayoutDef[],
@@ -166,10 +157,9 @@ export function getCamp(id: string): CampDef | undefined {
 assertLayoutCampRefs(LAYOUTS, CAMP_IDS);
 
 /**
- * §81b — boot check for the PROCEDURAL side of the seam (the
- * `assertLayoutCampRefs` sibling): every `terrain.json#procedural.camps.pools`
- * entry must resolve in this catalog. Import direction camps → terrain,
- * cycle-free (terrain.ts never imports camps.ts).
+ * Boot check for the procedural side: every camp in
+ * `terrain.json#procedural.camps.pools` resolves in this catalog. camps.ts
+ * imports terrain.ts, never the reverse.
  */
 export function assertProceduralCampRefs(
   pools: Readonly<Record<string, readonly CampRef[]>>,

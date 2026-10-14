@@ -14,6 +14,7 @@ import { describe, it, expect } from 'vitest';
 import { World } from './World';
 import type { Unit, UnitStats, Team } from './Unit';
 import type { GridCoord } from '../core/types';
+import type { TeamObjective } from './objective';
 import { spawnCamps } from './battleSetup';
 import { SIM } from '../config/sim';
 import { EventBus } from '../core/EventBus';
@@ -107,6 +108,35 @@ describe('§75g — the campKills payload', () => {
     } finally {
       mutable.blockCampTurnEnd = original;
     }
+  });
+});
+
+describe('a tile order parked on a camp anchor, once the camp is cleared', () => {
+  // `clearResolvedObjectives` reverts an ENGAGE tile on a cleared camp's anchor;
+  // a FOCUS tile there persists, as every tile focus does.
+  function clearedAnchor(objective: TeamObjective): World {
+    const { world } = freshWorld();
+    spawnCamps(world, [ANCHOR], [{ campId: 'bandit-squatters' }], 42, 1);
+    const [m1, m2] = dripBoth(world);
+    const player = spawnAt(world, 'player', { x: 1, y: 1 });
+    spawnAt(world, 'enemy', { x: 10, y: 10 });
+    world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
+    world.tick();
+    expect(world.objectiveFor('player')).toEqual(objective);
+    kill(world, player, m1);
+    kill(world, player, m2);
+    world.tick();
+    return world;
+  }
+
+  it('reverts an engage tile', () => {
+    const world = clearedAnchor({ mode: 'engage', target: { kind: 'tile', cell: ANCHOR } });
+    expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
+  });
+
+  it('keeps a focus tile', () => {
+    const objective: TeamObjective = { mode: 'focus', target: { kind: 'tile', cell: ANCHOR } };
+    expect(clearedAnchor(objective).objectiveFor('player')).toEqual(objective);
   });
 });
 

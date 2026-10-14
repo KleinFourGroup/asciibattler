@@ -3976,3 +3976,68 @@ second reading". Now the map takes the old side's name when there is no
 new one, and `lost` counts a mapped file the second reading lacks as
 deleted. Known answer in `reach.test.ts`: the same absent file is nothing
 lost when mapped and a loss when not.
+
+### 121e — A-10 and A-21's two switches (2026-10-14, session f8bbd64e)
+
+Two commits, one a row.
+
+**A-10, the focus-tile resolutions.** `disallow`, `clearOnArrival`, the
+key, `FOCUS_TILE_RESOLUTIONS` and the keyed resolver are gone;
+`config/objective.json` holds `rangedLeashCells` alone. `focusTile.ts` is
+the one directive, `pursue` beyond the leash and `engageLocal` within it,
+and takes no `world` now. Two more went inside the row's intent, both dead
+once only `leashAtNearest` is left:
+
+- `focusTileResolvedByArrival`, which `leashAtNearest` answered `false`
+  for every call, and with it the branch of
+  `World.clearResolvedObjectives` that reverted a resolved focus tile. That
+  branch also kept a focus tile out of the next one, the camp-anchor
+  revert, which does not test the order's mode. So the next branch's
+  condition is now `obj.mode === 'engage' && this.camps.size > 0`: a focus
+  tile still persists, and an engage tile still reaches the camp check.
+- the `atWill` directive, which only `disallow` returned, and its arm in
+  `Targeting.updateFocusTarget`'s switch.
+
+`updateTargetDefault` in `Targeting.ts` now has one caller; whether to
+inline it is a lead for §122, not done here. The tests: `focusTile.test.ts`
+keeps its two leash tests, calling the directive; the tests of `disallow`
+(2), `clearOnArrival` (5), the leash's `resolvedByArrival` (1) and the
+config wiring (1) are deleted. In the smoke tier,
+`objectiveCoverage.test.ts` ran the coverage arena once under each
+resolution by setting the live key; it is one test now, with the same two
+seeds. The smoke config's header named that key as the fuzz suite's one
+module-state mutation; it now states the contract alone, since the rest of
+that audit was not re-checked. Comments in `objective.ts` (config and
+sim), `Targeting.ts`, `World.ts` and `objectiveCoverage.ts`, and
+ARCHITECTURE's line for `focusTile.ts`, say so.
+
+Proof (sim and config):
+
+- config dump at `422be14` and after: 3 differences, all removals
+  (`OBJECTIVE.focusTileResolution`, its copy in `CONFIG_SOURCES`,
+  `FOCUS_TILE_RESOLUTIONS`);
+- typecheck clean; the ceiling lowered 6,344 → 6,336 (four files);
+- `npm run corpus`: 0 of 30 differ; the fuzz diff (baseline `422be14`):
+  PASS on both shapes; `reach-diff --from=422be14`: nothing lost across
+  13 changed files (the suite passed under coverage, 96 s);
+- a plant at the surviving leash comparison (`focusTile.ts:85` at
+  `422be14`, negated): corpus CAUGHT by behaviour, 13 of 30 journals
+  differ; the fuzz diff did not notice, since the bot's fuzz runs never
+  give a tile-focus order. For a focus tile the corpus is the proof that
+  reaches it, through the chaos driver's random orders;
+- a plant at the branch the rewrite had to keep in order (`World.ts:2178`
+  at `422be14`, `obj.mode === 'focus'` negated, which sends a focus tile
+  into the camp-anchor check and an engage tile past it): corpus not
+  caught (0 of 30), suite not caught (no file of 260 fails). No proof
+  held that order. So a pin was added, `camps.economy.test.ts`, "a tile
+  order parked on a camp anchor, once the camp is cleared": an engage
+  tile there reverts and a focus tile persists. It passes on the new
+  code; whether it catches the same plant on the new code is the first
+  thing A-21's entry records. The camp-anchor branch itself is a lead for
+  §122: its one producer, the enemy pull's tile order, was retired at
+  §75j2 (the pull now orders an engage on a member), so only a player's
+  manual engage on an anchor cell reaches it.
+- `World.test.ts`'s "a focus tile objective persists" lost "under the
+  shipped default (leashAtNearest …)" from its title.
+
+The suite: 3,753 (3,760 less nine deleted, plus the pin's two); the smoke, 621 (its three resolutions are one test).

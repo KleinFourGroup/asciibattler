@@ -15,7 +15,6 @@ import { scaledUnit } from '../../src/sim/archetypes';
 import type { GameEvents } from '../../src/core/events';
 import type { WorldCommand } from '../../src/sim/Command';
 import type { ObjectiveTeam } from '../../src/sim/objective';
-import { OBJECTIVE, FOCUS_TILE_RESOLUTIONS } from '../../src/config/objective';
 import {
   CoverageObjectiveDriver,
   COVERAGE_MAX_TICKS,
@@ -117,26 +116,15 @@ describe('coverage arena run — termination', () => {
   });
 });
 
-describe('coverage terminates under every focus-tile resolution', () => {
-  // The risky one is `clearOnArrival` (a tile focus on an unreachable/walled cell
-  // is a permanent beeline) — the random expiry must churn the board back out of
-  // it. Each strategy is forced via the live config knob (restored after).
-  for (const key of FOCUS_TILE_RESOLUTIONS) {
-    it(`resolution=${key}`, () => {
-      const original = OBJECTIVE.focusTileResolution;
-      try {
-        OBJECTIVE.focusTileResolution = key;
-        for (const seed of [1, 2]) {
-          // Bounded cap keeps the smoke suite quick; termination holds at any cap.
-          const r = runArena(seed, { coverage: true, maxTicks: 4000 });
-          expect(['player', 'enemy', 'draw']).toContain(r.winner);
-          expect(r.ticks).toBeGreaterThan(0);
-        }
-      } finally {
-        OBJECTIVE.focusTileResolution = original;
-      }
-    });
-  }
+describe('coverage terminates under tile focus', () => {
+  it('ends every arena on seeds 1 and 2', () => {
+    for (const seed of [1, 2]) {
+      // Bounded cap keeps the smoke suite quick; termination holds at any cap.
+      const r = runArena(seed, { coverage: true, maxTicks: 4000 });
+      expect(['player', 'enemy', 'draw']).toContain(r.winner);
+      expect(r.ticks).toBeGreaterThan(0);
+    }
+  });
 });
 
 describe('coverage through the full run harness', () => {

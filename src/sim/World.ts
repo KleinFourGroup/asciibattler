@@ -32,7 +32,6 @@ import {
 import type { WorldCommand } from './Command';
 import { AT_WILL } from './objective';
 import type { ObjectiveTeam, TeamObjective } from './objective';
-import { focusTileResolvedByArrival } from './focusTile';
 import type { StatusEffect } from './statusEffects';
 import { cloneEffect } from './statusEffects';
 import { STATUS_DEFS, statusDef } from '../config/statuses';
@@ -2136,10 +2135,8 @@ export class World {
    * living enemy (it died, was removed, or the objective was set on an invalid
    * id) back to `atWill`. §40e — a `neutral` target (a manually-ordered rubble /
    * destructible wall) reverts the same way once it's destroyed/reaped. An
-   * `engage` `tile` target never auto-reverts
-   * (persist-until-cleared); a `focus` `tile` target reverts per its switchable
-   * resolution strategy (O3 — `disallow` reverts at once, `clearOnArrival` on
-   * first arrival, `leashAtNearest` never). Both teams are scanned (the enemy
+   * `engage` or `focus` `tile` target never auto-reverts
+   * (persist-until-cleared). Both teams are scanned (the enemy
    * team is inert today but the storage is structural). Idempotent via
    * `setObjectiveAtWill`'s guard. The "alive enemy" test is team-relative (the
    * target must be an enemy OF the objective owner), so it generalizes to a
@@ -2175,13 +2172,7 @@ export class World {
           target.currentHp > 0 &&
           (isDestructibleNeutral(target.archetype) || target.campId !== null);
         if (!alive) this.setObjectiveAtWill(team);
-      } else if (obj.mode === 'focus') {
-        // O3 — a focus TILE reverts when its strategy says it's resolved. (An
-        // engage TILE falls through here untouched — it persists, the J1 rule.)
-        if (focusTileResolvedByArrival(team, obj.target.cell, this)) {
-          this.setObjectiveAtWill(team);
-        }
-      } else if (this.camps.size > 0) {
+      } else if (obj.mode === 'engage' && this.camps.size > 0) {
         // §75g — the ONE exception to the J1 engage-tile persist rule: an
         // engage TILE parked on a camp ANCHOR (the enemy-pull order) reverts
         // once that camp is cleared, so the pulled team doesn't guard a

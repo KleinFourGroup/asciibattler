@@ -35,10 +35,9 @@ import type { GridCoord } from '../core/types';
  *    PREEMPTS targeting + pathing — a unit ABANDONS its current fight (and eats
  *    hits from non-focused enemies; no retaliation break-off) to converge on
  *    the focus. An ENEMY focus = beeline to that unit, ignore everything else
- *    (`Targeting.updateFocusTarget`). A TILE focus is steered by the switchable
- *    `focusTileResolution` strategy (`src/sim/focusTile.ts`): disallow /
- *    clearOnArrival / leashAtNearest. A dead focus enemy reverts to `atWill`
- *    (mirrors engage); a tile focus reverts per its strategy.
+ *    (`Targeting.updateFocusTarget`). A TILE focus beelines to the tile and then
+ *    engages around it (`src/sim/focusTile.ts`). A dead focus enemy reverts to
+ *    `atWill` (mirrors engage); a tile focus persists.
  *
  * Stored per-team on `World` (`objectiveFor(team)`); the ENEMY team is fixed at
  * `atWill` for now (J1's "enemy AI never sets it"), but the storage is real and

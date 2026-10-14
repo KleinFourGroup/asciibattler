@@ -1184,12 +1184,12 @@ describe('World per-team objective (J1 → O1)', () => {
     expect(world.objectiveFor('player')).toEqual({ mode: 'atWill' });
   });
 
-  it('a focus tile objective persists under the shipped default (leashAtNearest never resolves by arrival)', () => {
+  it('a focus tile objective persists', () => {
     const { world } = setup();
     const objective = { mode: 'focus', target: { kind: 'tile', cell: { x: 3, y: 3 } } } as const;
     world.enqueueCommand({ kind: 'setObjective', team: 'player', objective });
     for (let i = 0; i < 11; i++) world.tick();
-    // leashAtNearest = the unit garrisons the tile; the focus is not auto-cleared.
+    // The unit garrisons the tile; the focus is not auto-cleared.
     expect(world.objectiveFor('player')).toEqual(objective);
   });
 });

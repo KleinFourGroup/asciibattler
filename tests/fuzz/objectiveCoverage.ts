@@ -28,9 +28,8 @@
  *
  * Tile targets are uniformly-random cells, INCLUDING unreachable / occupied /
  * walled ones — for coverage we WANT the pathological cases the brief worried
- * about (the boid-around-an-occupied-tile pathology, the `clearOnArrival`
- * permanent-beeline on a wall), since the random expiry guarantees the board
- * churns back out of them within ≤20s regardless.
+ * about (the boid-around-an-occupied-tile pathology), since the random expiry
+ * guarantees the board churns back out of them within ≤20s regardless.
  *
  * Dev-only fuzz tooling — never imported by `src/`.
  */

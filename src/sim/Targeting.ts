@@ -155,8 +155,7 @@ export function updateTarget(unit: Unit, world: World): void {
 
 /**
  * The default ("at-will") target update: the E5 STICKY hostile pick, then the
- * §40b rubble auto-target OVERLAY. Factored out of `updateTarget` so the
- * `focus`/`disallow` fallback (O3) reuses the exact same logic.
+ * §40b rubble auto-target OVERLAY.
  */
 function updateTargetDefault(unit: Unit, world: World): void {
   updateStickyTarget(unit, world);
@@ -473,12 +472,9 @@ function validNeutralObjectiveTarget(world: World, unitId: number): number | nul
  *     which by design OVERRIDES the reachable-hostile priority (that's what focus
  *     is for). Same beeline shape as an enemy focus; reverted World-side to
  *     `atWill` when the neutral is destroyed/reaped.
- *   - TILE focus → defer to the switchable `focusTileResolution` strategy
- *     (`focusTile.ts`): `pursue` (targetId null → MovementBehavior beelines to
- *     the rally cell), `engageLocal` (the unit has arrived near the tile → act
- *     exactly like `engage{tile}`), or `atWill` (the `disallow` fallback —
- *     default targeting; the team reverts to atWill at the World boundary the
- *     same tick regardless).
+ *   - TILE focus → `focusTile.ts`'s directive: `pursue` (targetId null →
+ *     MovementBehavior beelines to the rally cell) or `engageLocal` (the unit
+ *     has arrived near the tile → act exactly like `engage{tile}`).
  */
 function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): void {
   if (target.kind === 'enemy') {
@@ -508,13 +504,10 @@ function updateFocusTarget(unit: Unit, world: World, target: ObjectiveTarget): v
     applyOrderedRubbleFallback(unit, world);
     return;
   }
-  switch (focusTileDirective(unit, world, target.cell)) {
+  switch (focusTileDirective(unit, target.cell)) {
     case 'engageLocal':
       // Arrived near the tile — engage locally, exactly like `engage{tile}`.
       updateObjectiveTarget(unit, world, target);
-      return;
-    case 'atWill':
-      updateTargetDefault(unit, world);
       return;
     case 'pursue':
     default:

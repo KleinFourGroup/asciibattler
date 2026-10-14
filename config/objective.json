@@ -1,4 +1,3 @@
 {
-  "rangedLeashCells": 3,
-  "focusTileResolution": "leashAtNearest"
+  "rangedLeashCells": 3
 }

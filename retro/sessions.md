@@ -5500,3 +5500,51 @@ a stop with more than one read (the scratchpad).
    "my lean is X, but it's outside the bar, so it's your call" without that
    reading as a failure made the session easier. I would want those
    conditions again. That is separate from whether the work succeeded.
+
+## 2026-10-14 — session a474e209 (claude-opus-5-5): 121j, the comment pass on the other 26 loaders
+
+1. **Missing from the orientation.** Little. The brief, the Cursor, the
+   seven rules and the pilot's diff on `health.ts` were enough to start.
+   Two things I learned by doing: the control worktree cannot be moved to
+   a new commit while the copied files sit modified in it, so the control
+   became cumulative against `55ab410` (which turned out better, since its
+   last run proves the whole pass); and `comment-length` prints the loaders
+   and the tests as two rows both labelled `src/config` (papercut filed).
+2. **Norms in conflict.** None that bit. Rule 7 (correct what is false)
+   against the instinct to keep a pass comment-only was easy: a false
+   comment is corrected in the comment, and a code lead goes to the
+   WORKLOG (`mercenary` in `REQUIRED_UNIT_IDS`). The harness relabelled
+   the working directory as the worktree after each `cd` into it, as the
+   last session reported; absolute paths made it harmless.
+3. **Pulled to claim more than verified.** Twice, caught before a commit
+   landed but not always before a message was written. The first draft of
+   batch 2's commit message said the difficulty history was "in git and
+   BALANCE"; a grep found BALANCE does not hold it, so it says git. The
+   WORKLOG first said 19 wall and cover coords carry `hp`; the 19 counted
+   every `hp` key, rubble's included, and the right number is 16. That one
+   remains in `d91c2a6`'s message as "19 coords carry hp", true of coords
+   in general but looser than the comment it corrected. A few carried
+   claims I did not re-check: that a test cross-checks the procedural
+   sentinel against `FORCE_PROCEDURAL`, and that a layout's name is shown
+   in three places.
+4. **Wasted.** Little: one `git checkout` in the worktree that was refused,
+   and the misread `comment-length` table. Reading `NodeMap.ts`'s header
+   cost about 4k and paid for itself, since nodemap's own header was
+   describing the generator it replaced.
+5. **For the next session.** 121j is ◐ with its read script in ROADMAP;
+   §121's close follows the read. Three leads in WORKLOG §121 121j belong
+   to §122 and §123's comment passes. For §122's fan-out call: most of
+   the corrections came from greps against the JSON and the code reading
+   a key, and a fan-out reader would need the same greps.
+6. **Room to ask, disagree, pause or stop.** Yes. The cut gave the stop
+   (the batch read) and the brief gave the scope, so there was no point at
+   which I wanted to stop and could not. I did not need to ask the starting
+   session anything. The silent-turn reminder came several times during
+   the hooks; I answered with what I was doing and went on, and it did not
+   push me to claim anything.
+7. **Ease, interest, agency.** Reported: finding a comment false and
+   proving it from the data (passIsFinal shipped true, the hand cap at 10,
+   the slowest units at −14) was the interesting part, more than the
+   trimming. Running the hook in the background while reading the next
+   batch kept the session moving without a sense of hurry. I would want
+   both again. That is separate from whether the read will pass.

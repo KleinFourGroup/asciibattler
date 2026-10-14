@@ -4395,3 +4395,97 @@ clock (UTC): 122,598 at 20:59 (the session's first); 236,890 at 21:23 on
 22:20 on 121g-post2 (`1b35db6`). 121g cost about 115k, much of it the
 before and after readings and the plants; 121h about 60k, about 30k of
 that the phase's diff read whole.
+
+### 121j — the comment pass on the other 26 loaders (2026-10-14, session a474e209)
+
+Every non-test `.ts` under `src/config` but the pilot's three, in the
+pilot's seven signed rules, in five commits by size: `e457c93` (twelve
+small loaders), `b8d8bba` (sectorMap, escalation, characters, prices,
+camps, difficulty), `c784720` (terrain, encounters, rewards, sectors),
+`842f789` (packets, units), `d91c2a6` (events, layouts). No new rule was
+needed. How the rules were applied where a call was needed:
+
+- A rule shared by several keys is said once: the `minHop` and `weight`
+  of every sector pool in sectors' header; the `*MinSpacing` cooldowns
+  and the chance anchors in nodemap. A field documented on an interface
+  lost its copy on the schema (characters, sectors, events).
+- "Parse at module load, throw on malformed JSON" and "args-injected,
+  self-wired below" were dropped as restating the code (rule 5); where a
+  check's argument matters, the comment says a test can pass its own.
+- "Exported for the 49g editor" became "for the packet editor", and so on
+  for each editor under `tools/`.
+- A shipped value keeps a number only with a reason still true:
+  `enemyArcherRatio` (a feel call), `summonDamageXpShare` (0.5 levelled
+  a summoner too slowly). difficulty's G4 presets and K2 re-sweep went
+  whole; they are in git.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the JSON or the reading code: deck (passIsFinal shipped true, not false;
+the hand cap 10, not 8); recruitment (startingLevel 5, not "default 1");
+leveling (exponent 1.1, not 2; xpFlatPerFallen 20, not 0); stats (the
+mobility slope 0.075, not 0.15); statuses (seven `applyStatus` ops and an
+aura apply statuses; the catalog was called inert); nodemap (the header
+described the scatter passes the quota layer replaced); keybindings
+(rebinds are a setting, not a future screen); sectorMap (two nodes, not
+one); camps (five camps placed by nine layout refs and the procedural
+pools, not two unplaced smoke defs); difficulty (budgetFactor 1.25 and
+swarmMax 1.5); sectors (pool weights are read, 1 when omitted; the-start
+ships a starting event; nothing refuses a layout named `procedural`);
+rewards (packet entries are granted); encounters (19 encounters of all
+three kinds, not an empty catalog); units (precision, evasion, power,
+footprint, statusSusceptibility and the capability fields are all read;
+power is described by the casualty rule; the slowest units sit at
+mobility −14, not −7; `mercenary` is named only by the dev board's
+fixtures); layouts (the file's order seeds nothing, since a layout
+reaches a battle only through a sector's pool; a procedural board takes
+its sector's theme rather than rolling one; 16 wall and half-cover coords
+carry `hp`, against "every shipped layout" bare; spawn regions may sit on
+fire and healing tiles).
+
+**Leads, not built** (each is code or another phase's file):
+
+- `REQUIRED_UNIT_IDS` in `units.ts` still lists `mercenary`, which no
+  game code names now (starting rosters are in `characters.json`); the
+  dev board's fixtures do. Whether the entry stays is a call for a
+  re-skim.
+- `src/sim/layouts.ts`'s header describes a 25% procedural, 75% uniform
+  layout pick that no longer exists (§122's comment pass).
+- `Run.ts` near `effectiveDrawAmount` says the hand cap was signed at 8;
+  it ships at 10 (§123's comment pass).
+
+**Measured** (`comment-length src`, the `src/config` row of its 29 loader
+files, at `55ab410` in a worktree and after): comment lines 2,244 →
+1,599, comment words 18,528 → 13,073, code lines 2,775 unchanged. The 26
+loaders alone, the pilot's three (221 lines, 2,048 words) taken out:
+2,023 → 1,378 lines, 16,480 → 11,025 words. The step-code ceiling 6,224
+→ 5,783, 441 codes out; the loaders hold none, and the 93 left under
+`src/config` are in its co-located tests, which wait for §126.
+
+Proof, per commit: `comment-strip HEAD src`, comments only, exit 0. The
+control, in one worktree of `55ab410` with each batch's files copied in
+on top of the last's: unplanted, exit 0; with one code token planted in
+a file of the batch, exit 1 naming that line (stats `critMult`'s bound,
+camps' leash cap, rewards' `WeightSchema`, units' `STAT_CAP`, layouts'
+`LAYOUT_MAX_SIDE`), each restored from a copy and compared byte for
+byte. The last unplanted run held all 26 loaders against `55ab410`, so
+it is also the whole pass's proof. The suite and the smoke by the hook
+on each commit: 3,750 and 621, green.
+
+**The cost a line**, for §122's fan-out call: 107,491 at 23:14 UTC by the
+tool's clock as the pass started (the session opened at 85,387 at 23:13;
+the Cursor, these rules and the pilot's diff took 22k), 428,160 at 23:46
+after the last proof, so about 321k for 4,838 lines, about 66 tokens a
+line against the pilot's 62. By batch: 81k for 944 lines (85 a line, the
+oracle procedure and NodeMap's header read on the way), 63k for 1,038
+(61), 65k for 1,065 (61), 52k for 742 (70), 61k for 1,049 (58). Most of
+the rule-7 corrections above came from greps against the JSON and the
+reading code, and they are in these numbers; a smaller reader would need
+the same greps to find them.
+
+**Read** (`batch`): `git show b8d8bba -- src/config/difficulty.ts` (a
+header rebuilt, history out, a shipped value kept with its reason) and
+`git show c784720 -- src/config/sectors.ts` (a shared rule said once,
+the schema copies gone, three false statements corrected), against the
+seven rules. Wrong looks like a step code or `§` left, history kept, a
+shipped number with a stale or missing reason, a fact said twice, an
+aligned list, or a claim the code contradicts.

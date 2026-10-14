@@ -36,8 +36,6 @@
  "src/config/encounters.test.ts": 14,
  "src/config/escalation.test.ts": 1,
  "src/config/events.test.ts": 1,
- "src/config/events.ts": 26,
- "src/config/layouts.ts": 54,
  "src/config/packets.test.ts": 2,
  "src/config/prices.test.ts": 2,
  "src/config/sectorMap.test.ts": 1,

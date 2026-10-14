@@ -1,28 +1,15 @@
 /**
- * C1d.A: hand-authored encounter layouts as validated config.
- * D3: each layout now declares its own `gridW` × `gridH` (8-32).
- * D5: each layout now declares explicit `spawns: SpawnRegion[]` (each
- *     region is exactly 8 tiles + an availability flag).
+ * The hand-authored battlefields. Source of truth at `config/layouts.json`, a
+ * flat array; a layout reaches a battle only through a sector's pool
+ * (sectors.ts). Each pins a tactical situation onto a rectangular arena: its
+ * own grid size, walls, optional water and tiles, spawn regions, and a `name`
+ * and `description` for the UI and the editor.
  *
- * Source of truth at `config/layouts.json` — a flat array preserving
- * order (the order seeds `rng.pick` in `Run.handleEnterNode`, so
- * reordering changes determinism for past seeds — append only).
- *
- * Each layout pins a tactical situation onto a rectangular arena: its
- * own grid size, a wall topology, an optional water topology, plus a
- * `name` + `description` for the editor UI and future picker hooks.
- *
- * Validation runs at module load. Malformed JSON throws a zod trace at
- * boot — the loud-failure mode A4 settled on for balance configs.
- *
- * Adding a layout:
- *   1. Append an entry to `config/layouts.json` (use the editor at
- *      `tools/layout-editor/` to paint and export).
- *   2. The `id` must be unique. `name`, `description`, `gridW`, `gridH`,
- *      and `spawns` are required.
- *   3. Validate by running `npm test` — the layouts test suite checks
- *      grid bounds, region invariants, duplicate coords, and
- *      connectivity.
+ * To add one, paint and export it in `tools/layout-editor/`, or append it to
+ * the JSON. Its `id` must be unique, and `name`, `description`, `gridW`,
+ * `gridH`, `spawns` and `theme` are required. The parse checks bounds,
+ * overlaps and the spawn regions; the tests in `src/sim/layouts.test.ts` and
+ * `layoutConnectivity.test.ts` also check connectivity.
  */
 
 import { z } from 'zod';
@@ -36,33 +23,28 @@ const CoordSchema = z.object({
 });
 
 /**
- * §40c — a wall / half-cover coord that may carry an optional per-instance `hp`,
- * making THAT placement destructible (spawned as the `wall_destructible` /
- * `half_cover_destructible` neutral def, whose HP-presence is the §40b signal that
- * makes it combat-targetable). Absent `hp` ⇒ the indestructible `wall` / `half_cover`
- * def — the locked "wall-destructibility OFF by default" rule. Backward-compatible:
- * a bare `{x,y}` coord (every shipped layout today) parses unchanged. The cap mirrors
- * the neutral-def `hp` cap (a typo guard, not a design knob); §41 tunes the pools.
+ * A wall or half-cover coord, with an optional `hp` for that placement. With
+ * it, the cell spawns the `wall_destructible` or `half_cover_destructible`
+ * def, whose `hp` makes it targetable in combat; without it, the
+ * indestructible `wall` or `half_cover`, so a wall is indestructible unless
+ * authored otherwise. The cap matches the neutral def's and catches typos.
  */
 const NeutralCoordSchema = CoordSchema.extend({
   hp: z.number().int().positive().max(999).optional(),
 });
 
-/** §40d — the rubble footprint side range (mirrors §39's 1..3 footprint range +
- *  the three `rubble_1x1/2x2/3x3` catalog defs). A typo guard, not a design knob. */
+/** The rubble footprint's side range, matching the `rubble_1x1`, `2x2` and
+ *  `3x3` defs. */
 export const RUBBLE_MIN_SIZE = 1;
 export const RUBBLE_MAX_SIZE = 3;
 
 /**
- * §40d — a destructible rubble placement: its canonical footprint CORNER `{x,y}`
- * (the min corner, block extending +x/+y per §39) plus an optional `size` (1..3,
- * default 1 — picks the `rubble_1x1/2x2/3x3` catalog def) and an optional
- * per-instance `hp` OVERRIDE. Unlike a wall (where `hp`-PRESENCE is what makes it
- * destructible — see `NeutralCoordSchema`), rubble is ALWAYS destructible (its def
- * carries an `hp` pool), so `hp` here only TUNES that pool; absent ⇒ the catalog
- * default for the size (25/60/110, UNTUNED §41). `hp` shares `NeutralCoordSchema`'s
- * cap. Footprint-aware validation (the whole N×N block in-bounds + non-overlapping)
- * lives in `LayoutSchema.superRefine`.
+ * A rubble placement: its footprint's min corner `{x, y}`, the block extending
+ * toward +x and +y, an optional `size` (default 1, which picks the def) and an
+ * optional `hp` for that placement. Rubble is always destructible, since its
+ * def has an `hp` pool, so `hp` here only tunes the pool; absent, the def's
+ * own. The whole block's bounds and overlaps are checked in
+ * `LayoutSchema.superRefine`.
  */
 const RubbleCoordSchema = CoordSchema.extend({
   size: z.number().int().min(RUBBLE_MIN_SIZE).max(RUBBLE_MAX_SIZE).optional(),
@@ -74,12 +56,10 @@ export const LAYOUT_MIN_SIDE = 8;
 export const LAYOUT_MAX_SIDE = 32;
 
 /**
- * §75a — a weighted camp reference on a layout: which pre-defined camps
- * (camps.ts catalog) this layout's camp-spawn tiles may roll, with the
- * sector-pool weight convention (omitted = 1). Each camp-spawn tile draws
- * one camp from this list at battle setup (75c). The campId's referential
- * check lives in camps.ts (`assertLayoutCampRefs` — import direction
- * camps → layouts, cycle-free).
+ * A weighted camp reference on a layout: a camp (camps.ts) the layout's
+ * camp-spawn tiles may roll, weight omitted being 1. Each camp-spawn tile
+ * draws one camp from the list at battle setup. camps.ts checks the `campId`
+ * (`assertLayoutCampRefs`); it imports this module, never the reverse.
  */
 const CampRefSchema = z.object({
   campId: z.string().min(1),
@@ -96,14 +76,12 @@ export type CampRef = z.infer<typeof CampRefSchema>;
 export const SPAWN_REGION_TILE_COUNT = 8;
 
 /**
- * Inclusive tile-count range for a hand-authored spawn region. Relaxed
- * (H2) from a hard 8 — the "8" was a relic of the old 8-card hand plan,
- * and the sim is tile-count-agnostic (`spawnTeam` places
- * `min(team, tiles)` on a random subset and overflows the rest to the
- * D5.C queue; every other consumer reads `region.tiles.length`). A
- * region smaller than the team trickle-spawns the remainder as tiles
- * vacate; a region larger than the team picks a random subset (the H2
- * positional-variance lever).
+ * The tile-count range of a hand-authored spawn region. The sim does not
+ * depend on the count: `spawnTeam` places `min(team, tiles)` units on a
+ * random subset and queues the rest, and every other reader takes
+ * `region.tiles.length`. A region smaller than the team trickles the rest in
+ * as tiles empty; a larger one places the team on a random subset, which
+ * varies positions.
  */
 export const SPAWN_REGION_MIN_TILES = 1;
 export const SPAWN_REGION_MAX_TILES = 10;
@@ -114,25 +92,22 @@ const SpawnAvailabilitySchema = z.enum(['player', 'enemy', 'both']);
 export type SpawnAvailability = z.infer<typeof SpawnAvailabilitySchema>;
 
 /**
- * D8 — visual theme for the layout's tile palette. Cosmetic only; no sim
- * effects. Closed union so the procedural-side roll in `Run.handleEnterNode`
- * and the editor dropdown can't drift onto a name that has no palette.
+ * The theme: a tile palette. On a hand-authored layout it is cosmetic, with
+ * no sim effect; on a procedural board the sector's theme also picks the
+ * tiles and camps (`terrain.json`). A closed set, so nothing can name a theme
+ * that has no palette.
  *
- * - `grassland`: the canonical DARK_TERMINAL_GREEN → DARK_TERMINAL_AMBER lerp.
- * - `barren`: gray tones (variants of TERMINAL_STONE).
- * - `volcanic`: dark red base with amber accents; pairs naturally with
- *   D7 fire tiles.
- * - `tundra`: blue-white snow. · `desert`: warm sand. · `swamp`: murky
- *   brown-greens. (§37e — fixed identity palettes in `TerrainRenderer`.)
+ * - `grassland` — the DARK_TERMINAL_GREEN to DARK_TERMINAL_AMBER lerp.
+ * - `barren` — greys, variants of TERMINAL_STONE.
+ * - `volcanic` — a dark red base with amber accents, which suits fire tiles.
+ * - `tundra` — blue-white snow.
+ * - `desert` — warm sand.
+ * - `swamp` — murky brown-greens.
  *
- * §37e renamed `default → grassland` and `rock → barren` (the latter so the
- * palette name doesn't collide with the §37b Hills tile that renders
- * mini-mountains). `theme` is serialized in the RunSnapshot, so the rename
- * forced a RunSnapshot v23→v24 reject-stale bump (see `Run.ts`).
- *
- * Adding a theme: extend `ThemeSchema` and add a palette entry in
- * `TerrainRenderer.topColorFor`. The editor + procedural picker both
- * read from this enum, so a new theme automatically appears in both.
+ * `theme` is serialized in the RunSnapshot, so renaming one needs a snapshot
+ * bump. To add one, extend `ThemeSchema` and `THEMES`, give it a palette in
+ * `TerrainRenderer.topColorFor`, and give it a `themeTiles` entry in
+ * `terrain.json`, which the parse requires.
  */
 export const ThemeSchema = z.enum([
   'grassland',
@@ -143,7 +118,8 @@ export const ThemeSchema = z.enum([
   'swamp',
 ]);
 export type Theme = z.infer<typeof ThemeSchema>;
-/** Picker pool for the procedural roll + the editor dropdown. */
+/** The themes as a list, for the editors and terrain.json's per-theme
+ *  tables; kept in step with `ThemeSchema`. */
 export const THEMES: readonly Theme[] = [
   'grassland',
   'barren',
@@ -182,79 +158,63 @@ const LayoutSchema = z
     description: z.string().min(1),
     gridW: SideSchema,
     gridH: SideSchema,
-    /** §40c: each wall coord may carry an optional `hp` (→ destructible; see
-     *  `NeutralCoordSchema`). A bare `{x,y}` (the default) is an indestructible wall. */
+    /** Each coord may carry an `hp`, making that wall destructible
+     *  (`NeutralCoordSchema`); a bare `{x, y}` is an indestructible wall. */
     walls: z.array(NeutralCoordSchema),
     water: z.array(CoordSchema).optional(),
-    /** D6: optional neutral-team half-cover entities. Pathfinding blocks
-     *  through them like walls; ranged LOS shoots OVER them. Validation
-     *  rejects overlap with walls, water, spawn regions, or self.
-     *  §40c: an optional per-coord `hp` makes that cover destructible. */
+    /** Neutral half-cover: pathing is blocked at it as at a wall, and ranged
+     *  sight passes over it. An `hp` on a coord makes that cover
+     *  destructible. */
     halfCovers: z.array(NeutralCoordSchema).optional(),
-    /** §40d: optional destructible rubble obstacles (neutral `UnitDef`s, §40a).
-     *  Each carries a footprint `size` (1..3, default 1) anchored at `{x,y}` as
-     *  its min corner + an optional per-instance `hp` override. Footprint-aware
-     *  overlap/bounds validation in `superRefine` (the whole N×N block must fit +
-     *  not collide); the block's cells also block spawns (a unit can't stand on
-     *  rubble). Spawned via `spawnRubble` in `battleSetup.applyTerrain`. */
+    /** Destructible rubble (`RubbleCoordSchema`), spawned by `spawnRubble` in
+     *  `battleSetup.applyTerrain`. Its whole block refuses spawns, since a
+     *  unit cannot stand on rubble. */
     rubble: z.array(RubbleCoordSchema).optional(),
-    /** §75a: optional single-tile camp-spawn points. Each tile drip-spawns a
-     *  camp rolled from the layout's `camps` list at battle setup (75c); camp
-     *  units materialize overlapping the tile and wander off within the leash
-     *  (the portal-drip model, worklog §75 shape-lock #4). A spawn tile must
-     *  be a cell a unit can physically occupy (same rule as spawn regions). */
+    /** Single-tile camp spawn points. Each spawns a camp rolled from `camps`
+     *  at battle setup; its units appear on the tile and wander off within
+     *  the leash. A spawn tile must be a cell a unit can occupy, as in a
+     *  spawn region. */
     campSpawns: z.array(CoordSchema).optional(),
-    /** §75a: the weighted list of camps this layout's spawn tiles roll from
-     *  (omitted weight = 1, the sector-pool convention). Required non-empty
-     *  when `campSpawns` is present. */
+    /** The weighted camps the spawn tiles roll from (weight omitted is 1);
+     *  required non-empty when `campSpawns` is present. */
     camps: z.array(CampRefSchema).optional(),
-    /** D7.A: optional impassable tile (Infinity pathfinding cost, LOS-
-     *  transparent — LOS never inspects tiles). Hand-authored-only in
-     *  D7 like half-cover (no procedural density knob). Validation
-     *  rejects overlap with walls, water, half-covers, spawn regions,
-     *  or self. */
+    /** Impassable tiles (infinite path cost) that sight passes over, since
+     *  sight never reads tiles. Procedural boards have none. */
     chasms: z.array(CoordSchema).optional(),
-    /** D7.B: optional fire tile (normal pathing cost, per-tick chip
-     *  damage to standing combatants). Hand-authored-only. Validation
-     *  rejects overlap with any other reservation (including healing
-     *  — tile-kind is mutex per cell). */
+    /** Fire tiles: normal path cost, and damage each tick to a combatant
+     *  standing in one. */
     fires: z.array(CoordSchema).optional(),
-    /** D7.B: optional healing tile (normal pathing cost, per-tick heal
-     *  to standing combatants, clamped at maxHp). Hand-authored-only.
-     *  Same overlap rules as fires. */
+    /** Healing tiles: normal path cost, and a heal each tick to a combatant
+     *  standing in one, capped at its max HP. */
     healings: z.array(CoordSchema).optional(),
-    /** §37f — the five §37b terrain tiles, each an optional hand-authored
-     *  coord array (tile-kind is mutex per cell, validated by `checkTileEffect`
-     *  like fire/healing). `deepWater` is impassable like chasm (Infinity cost);
-     *  `hills`/`ice`/`sand`/`mud` are passable cost/combat-mod tiles. Applied to
-     *  the TileGrid by `terrainGen` → `setKind`. */
+    /** The terrain tiles, each an optional coord list applied to the TileGrid
+     *  by `terrainGen` (`setKind`). `deepWater` is impassable like a chasm;
+     *  `hills`, `ice`, `sand` and `mud` are passable, with their own costs and
+     *  combat mods. */
     deepWater: z.array(CoordSchema).optional(),
     hills: z.array(CoordSchema).optional(),
     ice: z.array(CoordSchema).optional(),
     sand: z.array(CoordSchema).optional(),
     mud: z.array(CoordSchema).optional(),
     spawns: z.array(SpawnRegionSchema).min(2),
-    /** D8 — visual theme. Required: every layout (including retrofitted
-     *  ones) declares its palette explicitly so the loader never has to
-     *  guess. Procedural encounters roll this off `battleRng` instead. */
+    /** Required, so every layout names its palette. A procedural board takes
+     *  its sector's theme. */
     theme: ThemeSchema,
   })
   .superRefine((layout, ctx) => {
-    // §40g — LAYERED overlap. A terrain tile and a neutral obstacle (wall /
-    // half-cover / rubble) MAY share a cell: a destructible wall on sand reveals
-    // the sand when it breaks. The game already supports this — `terrainGen` sets
-    // the TileGrid kind and `battleSetup` spawns the wall/rubble as a neutral UNIT
-    // that stands on that tile — so this only lifts the AUTHORING guard. Overlap
-    // is therefore checked WITHIN each layer, not across: `terrainBlocked` keeps
-    // terrain kinds mutex (one tile per cell), `neutralBlocked` keeps obstacles
-    // mutex (one wall/half-cover/rubble per cell), but the two never cross-check.
-    const terrainBlocked = new Set<string>(); // water / chasm / fire / healing / §37 tiles
+    // Overlap is checked within each layer, not across: a terrain tile and a
+    // neutral obstacle (wall, half-cover, rubble) may share a cell, so a
+    // destructible wall on sand leaves sand when it breaks. `terrainGen` sets
+    // the tile kind and `battleSetup` spawns the obstacle as a neutral unit
+    // standing on it. `terrainBlocked` keeps terrain kinds one to a cell, and
+    // `neutralBlocked` obstacles.
+    const terrainBlocked = new Set<string>(); // water, chasm, fire, healing, the terrain tiles
     const neutralBlocked = new Set<string>(); // walls / half-covers / rubble
     for (const w of layout.walls) neutralBlocked.add(`${w.x},${w.y}`);
     for (const w of layout.water ?? []) terrainBlocked.add(`${w.x},${w.y}`);
 
-    // D7.A — chasm is impassable TERRAIN; mutex with other terrain tiles (it may
-    // now sit under a neutral). Also reserves its cells against spawn regions below.
+    // Chasm is impassable terrain, one terrain kind to a cell; it may sit under
+    // a neutral.
     const seenChasms = new Set<string>();
     (layout.chasms ?? []).forEach((ch, idx) => {
       const k = `${ch.x},${ch.y}`;
@@ -283,10 +243,8 @@ const LayoutSchema = z
       terrainBlocked.add(k);
     });
 
-    // D7.B — fire + healing overlap checks. Tile-kind is mutex per cell,
-    // so each fire/healing tile must be unique and not overlap any prior
-    // reservation. They reserve their cells against subsequent spawn-
-    // region overlap too.
+    // The tile kinds: one to a cell, each coord unique and clear of every
+    // earlier terrain tile.
     const checkTileEffect = (
       coords: ReadonlyArray<{ x: number; y: number }> | undefined,
       pathKey: 'fires' | 'healings' | 'deepWater' | 'hills' | 'ice' | 'sand' | 'mud',
@@ -323,16 +281,14 @@ const LayoutSchema = z
     };
     checkTileEffect(layout.fires, 'fires', 'fire');
     checkTileEffect(layout.healings, 'healings', 'healing');
-    // §37f — the five new terrain tiles, same mutex-per-cell overlap rule.
+    // The terrain tiles, under the same rule.
     checkTileEffect(layout.deepWater, 'deepWater', 'deep water');
     checkTileEffect(layout.hills, 'hills', 'hills');
     checkTileEffect(layout.ice, 'ice', 'ice');
     checkTileEffect(layout.sand, 'sand', 'sand');
     checkTileEffect(layout.mud, 'mud', 'mud');
 
-    // D6 — half-cover is a NEUTRAL obstacle: mutex with walls + other half-covers
-    // (the cell would be doubly-claimed by two obstacles), but §40g lets it sit on
-    // any terrain tile. It reserves its cell against spawn regions below.
+    // Half-cover is a neutral obstacle: one obstacle to a cell, on any terrain.
     const seenHalfCovers = new Set<string>();
     (layout.halfCovers ?? []).forEach((hc, idx) => {
       const k = `${hc.x},${hc.y}`;
@@ -361,13 +317,9 @@ const LayoutSchema = z
       neutralBlocked.add(k);
     });
 
-    // §40d — rubble footprints. Each rubble is an N×N block (size 1..3, default 1)
-    // anchored at {x,y} as its MIN corner, cells extending toward +x/+y (the §39
-    // footprint convention). Unlike a wall, rubble is always destructible (the
-    // neutral def carries `hp`); its optional `hp` only tunes the pool. The WHOLE
-    // block must be in-bounds and clear of every other NEUTRAL (walls / half-cover
-    // / other rubble); §40g lets it sit on terrain. Each reserved cell then blocks
-    // spawns below (a unit can't stand on rubble).
+    // Rubble footprints, each an N×N block from its min corner toward +x and
+    // +y. The whole block must be in bounds and clear of every other neutral
+    // (walls, half-cover, other rubble); it may sit on terrain.
     (layout.rubble ?? []).forEach((r, idx) => {
       const size = r.size ?? 1;
       if (
@@ -400,19 +352,18 @@ const LayoutSchema = z
       }
     });
 
-    // §37g — a spawn region may sit on any PASSABLE tile (water / fire / healing
-    // / hills / ice / sand / mud): a unit can stand and fight there, and its
-    // terrain combat mods + wading cost apply live (read off `defAt(position)`),
-    // so authors can deliberately seat a team on tactically-flavored ground.
-    // Reject only cells a unit can't physically occupy — impassable tiles
-    // (chasm, deep water) and neutral-unit cells (wall, half-cover, rubble). This
-    // is the SAME impassable/occupied set the connectivity guard treats as blockers.
+    // A spawn region may sit on any passable tile (water, fire, healing, hills,
+    // ice, sand, mud): a unit can stand and fight there, with the tile's combat
+    // mods and wading cost applied live (`defAt(position)`), so an author can
+    // seat a team on chosen ground. Only cells a unit cannot occupy are refused:
+    // impassable tiles (chasm, deep water) and neutral cells (wall, half-cover,
+    // rubble), the set the connectivity check treats as blockers.
     const spawnBlocked = new Set<string>();
     for (const w of layout.walls) spawnBlocked.add(`${w.x},${w.y}`);
     for (const hc of layout.halfCovers ?? []) spawnBlocked.add(`${hc.x},${hc.y}`);
     for (const ch of layout.chasms ?? []) spawnBlocked.add(`${ch.x},${ch.y}`);
     for (const dw of layout.deepWater ?? []) spawnBlocked.add(`${dw.x},${dw.y}`);
-    // §40d — a rubble block occupies its whole N×N footprint; spawns can't sit on it.
+    // A rubble block occupies its whole footprint.
     for (const r of layout.rubble ?? []) {
       const size = r.size ?? 1;
       for (let dy = 0; dy < size; dy++) {
@@ -420,12 +371,10 @@ const LayoutSchema = z
       }
     }
 
-    // §75a — camp-spawn tiles obey the SAME physically-occupiable rule as
-    // spawn-region tiles (a camp unit must be able to materialize there), plus
-    // uniqueness. A campSpawns list with no camps to roll is an authoring
-    // error, not a degenerate case — reject it loudly here rather than letting
-    // 75c invent a fallback. Duplicate campIds in the weighted list are
-    // meaningless (weights on the same id) and rejected too.
+    // Camp-spawn tiles follow the spawn regions' rule (a camp unit must be able
+    // to appear there) and are unique. Spawn tiles with no camps to roll are an
+    // authoring error, refused here rather than given a fallback, and a camp
+    // listed twice is refused, since two weights on one id mean nothing.
     const seenCampSpawns = new Set<string>();
     (layout.campSpawns ?? []).forEach((t, idx) => {
       const k = `${t.x},${t.y}`;
@@ -513,15 +462,15 @@ const LayoutSchema = z
     }
   });
 
-/** The whole-file array schema. Exported so the layout editor's formatter
- *  test (M5) can round-trip its emitted JSON through the real loader schema. */
+/** The whole-file schema, exported for the layout editor's formatter test,
+ *  which round-trips its output through it. */
 export const LayoutsSchema = z.array(LayoutSchema).min(1);
 
 export type LayoutDef = z.infer<typeof LayoutSchema>;
 
 const LAYOUTS_LIST: readonly LayoutDef[] = LayoutsSchema.parse(layoutsJson);
-// §95b — `name` is prose (three render sites incl. the boss forewarning);
-// `description` is editor metadata, never rendered — plain.
+// `name` is prose, shown in three places, the boss forewarning among them;
+// `description` is editor metadata, never shown, and stays plain.
 export const LAYOUTS_PROSE = loadProse('layouts', LayoutsSchema, LAYOUTS_LIST);
 
 const seenIds = new Set<string>();

@@ -1,38 +1,28 @@
 /**
- * §74a — the event catalog. Source of truth at `config/events.json`.
- * Mirrors the `encounters.ts` pattern (parse at module load, throw on
- * malformed config; explicit interfaces + zod-boundary casts for
- * `exactOptionalPropertyTypes`).
+ * The event catalog. Source of truth at `config/events.json`.
  *
- * The flat page-map grammar (cluster-5-spec §"Events — LOCKED"): an event is
- * `{ id, name, eligibility?, entry, pages }`; a page is
- * `{ text, art?, choices }`; a choice is `{ label, condition?, outcomes }`
- * where `outcomes` is a weighted list of `{ weight?, effects?, next }` and
- * `next` is a page id or a terminal (`return-to-map` | `start-encounter`).
- * The schema is deliberately NON-recursive (the FTL lineage) — pages rejoin
- * and chains cross-reference by id. Cycles are still expressible through id
- * refs, so `assertEventPagesTerminate` (boot) proves every page can reach a
- * terminal; the fuzz harness must never be able to author-trap in a page.
+ * An event is `{ id, name, eligibility?, entry, pages }`; a page is `{ text,
+ * art?, choices }`; a choice is `{ label, condition?, outcomes }`, where
+ * `outcomes` is a weighted list of `{ weight?, effects?, next }` and `next` is
+ * a page id or a terminal (`return-to-map`, `start-encounter`). The schema is
+ * not recursive: pages rejoin, and chains refer to each other, by id. Cycles
+ * can still be written through ids, so a boot check
+ * (`assertEventPagesTerminate`) proves every page can reach a terminal, and
+ * neither the player nor the fuzz harness can be trapped in one.
  *
- * Randomness lives ONLY in the weighted outcome list on a choice — the
- * deterministic case is the single-entry list; `weight` absent = 1 (the
- * sector-pool convention). Execution draws ride `Run.eventRng` (74b).
+ * Randomness is only in a choice's weighted outcome list: a single-entry list
+ * is deterministic, and `weight` omitted is 1. The draws ride `Run.eventRng`.
  *
- * `eligibility` gates the sector pool roll (74e), read against the
- * run-lifetime flag store — the flag store IS the chain state. Flags are
- * namespaced `chainId:key` by convention (documented, not regex-enforced).
- * Conditions are the closed v1 primitive union plus exactly one combinator,
- * `not` (74c-pre — the negation-class closer; see the union comment).
+ * `eligibility` gates the sector's pool roll and reads the run's flag store,
+ * which is the chain state. Flags are named `chainId:key` by convention, not
+ * enforced. The conditions are a closed set of primitives and one
+ * combinator, `not`.
  *
- * The effect-op union here is EVENTS-SIDE — its own vocabulary sharing
- * sub-schemas with daemons.ts (the packets.ts precedent; import direction
- * events → daemons, never back). The daemon authoring surface does NOT
- * widen: none of the new ops join the daemon/packet rule matrix
- * (user-signed at the §74 shape-lock). Parse-side is complete from 74a;
- * execution lands staged (74b instants, 74c the rest).
+ * The effect ops are the events' own vocabulary, sharing sub-schemas with
+ * daemons.ts, which never imports this module. None of them joins the
+ * daemon or packet rules.
  *
- * `art` is a registry-resolved seam only this cluster (zero implementation —
- * spec scope guard).
+ * `art` parses, and nothing reads it.
  */
 
 import { z } from 'zod';
@@ -50,7 +40,7 @@ import { PACKET_IDS } from './packets';
 import { CHARACTER_IDS } from './characters';
 import { UNIT_DEFS } from './units';
 
-// ── conditions (the closed v1 union — cluster-5-spec) ───────────────────────
+// ── conditions ──────────────────────────────────────────────────────────────
 
 export type EventFlagValue = string | number | boolean;
 
@@ -66,12 +56,11 @@ export type EventCondition =
   | { kind: 'characterIs'; characterId: string }
   | { kind: 'flagSet'; flag: string }
   | { kind: 'flagIs'; flag: string; value: EventFlagValue }
-  // 74c-pre (user-signed): the one combinator. Closes the negation class
-  // (`not hasDaemon` gates a grant on NOT owning; `not flagSet` gates a
-  // chain on not-yet-done) without doubling the primitive vocabulary.
-  // Deliberately the ONLY combinator — no allOf/anyOf until content
-  // demands it (eligibility arrays already AND). The termination fixpoint
-  // is untouched: it walks UNCONDITIONED choices only.
+  // The one combinator. It closes the negation class (`not hasDaemon` gates
+  // a grant on not owning; `not flagSet` gates a chain on not yet done)
+  // without doubling the primitives. There is no allOf or anyOf: an
+  // eligibility list is already a conjunction. The termination check is
+  // untouched, since it walks unconditioned choices only.
   | { kind: 'not'; condition: EventCondition };
 
 const FlagValueSchema = z.union([z.string(), z.number(), z.boolean()]);
@@ -93,7 +82,7 @@ export const EventConditionSchema: z.ZodType<EventCondition> = z.discriminatedUn
   z.object({ kind: z.literal('not'), condition: z.lazy(() => EventConditionSchema) }),
 ]) as z.ZodType<EventCondition>;
 
-// ── effect ops (events-side union; gainBits/healPool shared from daemons) ───
+// ── effect ops (gainBits and healPool shared with daemons) ──────────────────
 
 export type EventEffectOp =
   | { op: 'gainBits'; amount: number }
@@ -135,12 +124,10 @@ export const EventEffectOpSchema = z.discriminatedUnion('op', [
 
 // ── the page map ────────────────────────────────────────────────────────────
 
-/** `rewardOverride` = the spec's "encounter with a predetermined reward":
- *  reward refs replacing the encounter's own `rewards` list wholesale.
- *  82c widened the single table-id string to a full `{table, trigger}`
- *  ref list (non-empty — "no rewards" is expressed by OMITTING the key,
- *  never an empty list), so an event-pinned fight can carry the same
- *  multi-table chance mix a catalog encounter does. */
+/** `rewardOverride` gives an event's fight set rewards: reward refs that
+ *  replace the encounter's own `rewards` list whole, so the fight can carry
+ *  the same mix of tables and chances a catalog encounter does. Non-empty;
+ *  no rewards is said by omitting the key. */
 export type EventTerminal =
   | { kind: 'return-to-map' }
   | {
@@ -159,11 +146,11 @@ export interface EventOutcome {
 }
 
 export interface EventChoice {
-  /** §95a — the choice's stable address segment for the locale layer
-   *  (`events.<event>.pages.<page>.choices.<id>.label`); unique within its
-   *  page. Stamped by the editor at export (`stampChoiceIds`, a slug of the
-   *  label); absent only on hand-authored drafts, where the walker falls
-   *  back to the index — a positional joint a page edit can shift. */
+  /** The choice's address in the locale layer
+   *  (`events.<event>.pages.<page>.choices.<id>.label`), unique within its
+   *  page. The editor stamps it at export (`stampChoiceIds`, a slug of the
+   *  label); it is absent only on a hand-written draft, where the walker
+   *  falls back to the index, which a page edit can shift. */
   id?: string;
   label: string;
   condition?: EventCondition;
@@ -179,9 +166,8 @@ export interface EventPage {
 export interface EventDef {
   id: string;
   name: string;
-  /** 74i — opt OUT of the default per-run no-repeat rule (user-signed at
-   *  the §74i design round): absent/false = the pool roll skips this def
-   *  once its `visited:` flag is set; true = repeatable flavor content. */
+  /** Opts out of the per-run no-repeat rule. Absent or false, the pool roll
+   *  skips the event once its `visited:` flag is set; true, it can recur. */
   repeatable?: boolean;
   eligibility?: readonly EventCondition[];
   entry: string;
@@ -189,14 +175,13 @@ export interface EventDef {
 }
 
 /**
- * 74i — the reserved visited-flag namespace. The ENGINE writes
- * `visited:<eventId>` into the run's flag store when an event page opens
- * (combat-resolved entries never mark — the player never saw the page);
- * the pool roll reads it to suppress per-run repeats (unless the def is
- * `repeatable`). Authored content may READ these flags freely —
- * `{ "kind": "flagSet", "flag": "visited:corrupted-shrine" }` is a legal
- * cross-event eligibility gate — but must never WRITE one (`setFlag` into
- * the namespace is boot-asserted below): one writer keeps "visited" honest.
+ * The reserved visited-flag namespace. The engine writes `visited:<eventId>`
+ * into the run's flags when an event's page opens (an entry that turns into
+ * combat never marks it, since the player saw no page), and the pool roll
+ * reads it to skip repeats unless the event is `repeatable`. Content may read
+ * these flags (`{ "kind": "flagSet", "flag": "visited:corrupted-shrine" }` is
+ * a legal gate) but never write one (`assertEventReservedFlags`), so the
+ * engine is the one writer.
  */
 export const VISITED_FLAG_PREFIX = 'visited:';
 
@@ -234,14 +219,14 @@ const EventPageSchema = z.object({
   choices: z.array(EventChoiceSchema).min(1),
 }) as z.ZodType<EventPage>;
 
-/** Intra-def structural guards live here (the sectors.ts superRefine
- *  precedent): the entry page must exist, and every page-id `next` must
- *  resolve. Cross-catalog refs + termination are the boot asserts below. */
+/** The checks within one event: the entry page exists, and every page-id
+ *  `next` resolves. Refs into other catalogs, and termination, are the boot
+ *  checks below. */
 const EventSchema = z
   .object({
     id: z.string().min(1),
     name: prose(),
-    repeatable: z.boolean().optional(), // absent = false (74i no-repeat default)
+    repeatable: z.boolean().optional(),
     eligibility: z.array(EventConditionSchema).optional(),
     entry: z.string().min(1),
     pages: z.record(z.string().min(1), EventPageSchema),
@@ -254,7 +239,7 @@ const EventSchema = z
       });
     }
     for (const [pageId, page] of Object.entries(event.pages)) {
-      // §95a — choice ids are locale addresses: unique within the page.
+      // Choice ids are locale addresses, unique within the page.
       const choiceIds = new Set<string>();
       for (const choice of page.choices) {
         if (choice.id === undefined) continue;
@@ -279,15 +264,14 @@ const EventSchema = z
     }
   }) as z.ZodType<EventDef>;
 
-/** Exported for schema tests + the §74h editor round-trip (the
- *  `EncountersSchema` precedent). */
+/** Exported for the schema tests and the event editor's round trip. */
 export const EventsSchema = z.array(EventSchema);
 
 const EVENTS_LIST: readonly EventDef[] = EventsSchema.parse(eventsJson);
 
-// §95a — the prose fields (name · pages.*.text · pages.*.choices.*.label)
-// resolve through the active locale IN PLACE, once, here. Under `en` the
-// values are the inline ones above; the walk still runs its guards at boot.
+// The prose fields (name, pages.*.text, pages.*.choices.*.label) resolve
+// through the active locale in place, once, here. Under `en` the values are
+// the inline ones; the walk still runs its checks at boot.
 export const EVENTS_PROSE = loadProse('events', EventsSchema, EVENTS_LIST);
 
 const seenEventIds = new Set<string>();
@@ -301,17 +285,16 @@ for (const event of EVENTS_LIST) {
 // ── boot asserts ────────────────────────────────────────────────────────────
 
 /**
- * Every page must be able to reach a terminal THROUGH UNCONDITIONED choices —
- * "no recursion" in the grammar does NOT preclude id-ref cycles (A→B→A), and
- * a page whose every continuation loops forever would trap the player AND
- * the fuzz harness (the §74 kickoff hazard: a spinning phase neither run
- * guard bounds). Restricting the walk to condition-free choices (74b) makes
- * the guarantee airtight: conditions evaluate against MUTABLE run state
- * (bits an earlier effect just spent, flags), so a conditioned exit can
- * vanish mid-event — an unconditioned exit can't. Reverse fixpoint: a page
- * terminates iff some UNCONDITIONED choice has some outcome whose `next` is
- * a terminal or a terminating page. Args-injected for synthetic tests;
- * self-wired below.
+ * Every page can reach a terminal through unconditioned choices. A grammar
+ * without recursion still allows id cycles (A → B → A), and a page whose
+ * every continuation loops would trap the player and the fuzz harness in a
+ * phase no run guard bounds. The walk takes condition-free choices only,
+ * because conditions read mutable run state (bits an earlier effect just
+ * spent, flags), so a conditioned exit can vanish mid-event and an
+ * unconditioned one cannot. A reverse fixpoint: a page terminates if some
+ * unconditioned choice has an outcome whose `next` is a terminal or a page
+ * that terminates. Its argument, like the two checks' below, lets a test pass
+ * synthetic events.
  */
 export function assertEventPagesTerminate(events: readonly EventDef[]): void {
   for (const event of events) {
@@ -344,13 +327,11 @@ export function assertEventPagesTerminate(events: readonly EventDef[]): void {
 }
 
 /**
- * 74i — every page must be REACHABLE from the entry page (BFS over string
- * `next` refs). The termination assert proves pages can exit; this proves
- * they can be entered — without it, a mis-wired `next` (a choice pointing
- * at return-to-map where a page id was meant) silently orphans whole
- * branches, which no other validator sees. Found live at the §74i content
- * review: two authored events shipped their reward halves unreachable.
- * Args-injected for synthetic tests; self-wired below.
+ * Every page is reachable from the entry page (a search over string `next`
+ * refs). The termination check proves a page can be left; this proves it can
+ * be entered. Without it a mis-wired `next` (a choice pointing at
+ * return-to-map where a page id was meant) orphans a whole branch, which no
+ * other check sees.
  */
 export function assertEventPagesReachable(events: readonly EventDef[]): void {
   for (const event of events) {
@@ -377,11 +358,7 @@ export function assertEventPagesReachable(events: readonly EventDef[]): void {
   }
 }
 
-/**
- * 74i — the visited-namespace write guard: no authored `setFlag` may target
- * `visited:*` (see VISITED_FLAG_PREFIX — the engine is the one writer;
- * authored content reads freely). Args-injected; self-wired below.
- */
+/** No authored `setFlag` writes into `visited:` (see `VISITED_FLAG_PREFIX`). */
 export function assertEventReservedFlags(events: readonly EventDef[]): void {
   for (const event of events) {
     for (const [pageId, page] of Object.entries(event.pages)) {
@@ -400,8 +377,8 @@ export function assertEventReservedFlags(events: readonly EventDef[]): void {
   }
 }
 
-/** The id catalogs an event def can reference (args-injected — the
- *  `assertPriceRefs` bundle precedent). */
+/** The id catalogs an event can name, passed in so a test can supply its
+ *  own. */
 export interface EventRefCatalogs {
   encounterIds: readonly string[];
   rewardTableIds: readonly string[];
@@ -412,10 +389,9 @@ export interface EventRefCatalogs {
 }
 
 /**
- * Cross-catalog referential integrity: every id an event names —
- * encounters/reward tables in terminals, packets/daemons/characters in
- * conditions and ops, archetypes in `grantUnit` — must resolve at boot,
- * not silently at execution time.
+ * Every id an event names resolves at boot rather than failing at execution:
+ * encounters and reward tables in terminals, packets, daemons and characters
+ * in conditions and ops, archetypes in `grantUnit`.
  */
 export function assertEventRefs(
   events: readonly EventDef[],
@@ -496,11 +472,12 @@ const EVENTS_BY_ID: Record<string, EventDef> = Object.fromEntries(
   EVENTS_LIST.map((e) => [e.id, e]),
 );
 
-/** Catalog lookup by id (`undefined` on a miss — callers decide throw vs skip). */
+/** Lookup by id, `undefined` on a miss; the caller decides whether to throw
+ *  or skip. */
 export function getEvent(id: string): EventDef | undefined {
   return EVENTS_BY_ID[id];
 }
 
-// 74f's `describeEventCondition` (the requirement phrases) lives in
-// src/ui/eventConditionText.ts since 100e — UI copy through `t()`, so this
-// config module carries no player-facing prose (the §95 division).
+// The conditions' requirement phrases (`describeEventCondition`) are in
+// src/ui/eventConditionText.ts, as UI copy through `t()`, so this module
+// carries no player-facing prose.

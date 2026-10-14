@@ -4231,3 +4231,16 @@ bar's first clause as written, so it waits for the user.
 Also found: `plant --list` read the working tree's copy of the file while
 a plant edits the ref's, so with the tree ahead of the ref it listed
 another line's edits (121g-post).
+
+### 121g-post — `plant --list` lists the ref's line (2026-10-14, session 07d94d5c)
+
+`--list` now reads `git show <ref>:<file>`, the copy a plant edits, and
+names the ref in its line. The known answer, run with the fold's edits in
+the working tree and `--ref=a2572f6`: before the fix, `focusTile.ts:28`
+listed a negation of `SIM.rangedLeashCells` (the working tree's line) and
+`Targeting.ts:705` two edits of the line below it, since the tree had lost
+an import line; after, the first lists `OBJECTIVE.rangedLeashCells` and
+the second admits 0 edits, as `a2572f6`'s lines do. The plant itself
+always read the ref's copy and prints the edit it made, so a plant's own
+output names what it planted; whether an earlier record quoted a listing
+instead was not checked.

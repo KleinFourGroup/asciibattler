@@ -46,8 +46,8 @@
  * by `--proofs=<id,id>` (corpus, suite, smoke, fuzz-diff; default
  * corpus,suite), puts the file back and removes the worktree. Each proof runs
  * on the clean worktree first. It exits 0 when every proof caught the edit
- * and 1 when one did not, so a proof's failing control is one command. `--list` prints the edits the line admits and
- * plants nothing; `--op=<kind>` and `--nth=<n>` choose among them (default
+ * and 1 when one did not, so a proof's failing control is one command. `--list` prints the edits the line admits at
+ * the ref and plants nothing; `--op=<kind>` and `--nth=<n>` choose among them (default
  * the first).
  *
  * `refs <file>` prints each export the file declares with its reads by kind
@@ -383,9 +383,11 @@ async function plant(): Promise<number> {
   const { file, from: line } = parseAt(at);
   const kind = option('op');
   const choose = (source: string): Edit[] => editsOn(file, source, line).filter((edit) => kind === undefined || edit.operator === kind);
+  const ref = option('ref') ?? 'HEAD';
   if (flags.has('--list')) {
-    const found = choose(readFileSync(file, 'utf8'));
-    console.log(`oracle: ${file}:${line} admits ${found.length} edits${kind === undefined ? '' : ` of kind ${kind}`}`);
+    // The ref's copy, which is what a plant edits; the working tree's lines may differ.
+    const found = choose(execFileSync('git', ['show', `${ref}:${file}`], { cwd: REPO_ROOT, encoding: 'utf8' }));
+    console.log(`oracle: ${file}:${line} at ${ref} admits ${found.length} edits${kind === undefined ? '' : ` of kind ${kind}`}`);
     found.forEach((edit, i) => console.log(`  ${i}  ${describeEdit(edit)}`));
     return found.length > 0 ? 0 : 1;
   }
@@ -395,7 +397,6 @@ async function plant(): Promise<number> {
     console.error(`oracle: no proof named ${unknown.join(', ')}. A plant's proofs: ${PLANT_PROOFS.join(', ')}`);
     return 2;
   }
-  const ref = option('ref') ?? 'HEAD';
   const tree = makeTree('tree', ref);
   try {
     const before = treeStatus(tree);

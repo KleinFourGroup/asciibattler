@@ -135,7 +135,7 @@ function fmtOp(op: EffectOp, indent: string): string {
     case 'heal':
       return `{ "kind": "heal", "scaling": ${s(op.scaling)}, "might": ${n(op.might)} }`;
     case 'move':
-      return `{ "kind": "move", "mode": ${s(op.mode)}, "cells": ${n(op.cells)} }`;
+      return `{ "kind": "move", "mode": ${s(op.mode)} }`;
     case 'applyStatus': {
       const pairs = [`"kind": "applyStatus"`, `"statusId": ${s(op.statusId)}`];
       if (op.magnitude !== undefined) pairs.push(`"magnitude": ${fmtScalarOrScaled(op.magnitude)}`);

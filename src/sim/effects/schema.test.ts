@@ -98,10 +98,7 @@ describe('AbilityDef schema — valid shapes', () => {
     });
   });
 
-  it('accepts the reserved move modes + applyStatus op (declared seams)', () => {
-    // Schema-valid even though the Y2 interpreter rejects them until their phase.
-    expect(() => EffectOpSchema.parse({ kind: 'move', mode: 'knockback', cells: 2 })).not.toThrow();
-    expect(() => EffectOpSchema.parse({ kind: 'move', mode: 'pull', cells: 1 })).not.toThrow();
+  it('accepts an applyStatus op', () => {
     expect(() =>
       EffectOpSchema.parse({ kind: 'applyStatus', statusId: 'burn', magnitude: 3 }),
     ).not.toThrow();
@@ -179,10 +176,6 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
     const bad = validStrikeDef() as { effects: { op: Record<string, unknown> }[] };
     bad.effects[0].op.scaling = 'charisma';
     expect(() => parseAbilityDef(bad)).toThrow();
-  });
-
-  it('rejects a non-positive move distance', () => {
-    expect(() => EffectOpSchema.parse({ kind: 'move', mode: 'advance', cells: 0 })).toThrow();
   });
 
   it('rejects more than one fill phase', () => {
@@ -279,7 +272,7 @@ describe('AbilityDef schema — rejects malformed shapes', () => {
         maxJumps: 2,
         rangeCells: 3,
         falloff: 0.5,
-        ops: [{ kind: 'move', mode: 'advance', cells: 1 }],
+        ops: [{ kind: 'move', mode: 'advance' }],
       }),
     ).toThrow();
   });

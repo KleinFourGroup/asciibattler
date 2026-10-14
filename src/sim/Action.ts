@@ -48,15 +48,12 @@ export interface ActionPhase {
  *    silent.
  *  - `ground-target` — hit the cell, whoever is standing there (mage AoE).
  *    The target ref is irrelevant at impact.
- *  - `re-home` — retarget mid-flight. DECLARED ONLY in F2 — no action uses
- *    it (it reads as unfair); a future consumer wires it behind an
- *    `assertNever` that forces the switch arm to exist.
  *
  * F2 is behavior-preserving: the death-guard still lives in each action's
  * effect site (`start` / `applyEffect`). This field is the *declared
  * contract* the F3 travel-orphan resolver will switch on.
  */
-export type OrphanPolicy = 'commit-at-cast' | 'fizzle' | 'ground-target' | 're-home';
+export type OrphanPolicy = 'commit-at-cast' | 'fizzle' | 'ground-target';
 
 /**
  * An action is the "verb" a unit performs on a tick: move one cell, swing

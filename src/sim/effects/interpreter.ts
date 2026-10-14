@@ -12,9 +12,6 @@
  * them, so a charged spell's damage uses the caster's CAST-time stats, not its
  * impact-time stats. The def supplies the structural params (evadable, accuracy,
  * the aoe shape/affects/ring, the move mode) — read live, the source of truth.
- *
- * The reserved arms (`applyStatus`, `move` knockback/pull) throw — declared in
- * the closed union, no consumer until §29 / Cluster 2 (the F2 `re-home` pattern).
  */
 
 import type { GridCoord } from '../../core/types';
@@ -238,11 +235,6 @@ function executeHeal(_op: Extract<EffectOp, { kind: 'heal' }>, ctx: OpFireContex
 }
 
 function executeMove(op: Extract<EffectOp, { kind: 'move' }>, ctx: OpFireContext): void {
-  if (op.mode === 'knockback' || op.mode === 'pull') {
-    throw new Error(
-      `move mode '${op.mode}' (target-moving) is reserved — deferred to Cluster 2's occupancy core`,
-    );
-  }
   const { world, caster } = ctx;
   const ref = ctx.resolution.moveDest;
   if (ref === undefined) return;

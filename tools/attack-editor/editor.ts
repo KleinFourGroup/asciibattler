@@ -53,15 +53,13 @@ import { formatAbilitiesJson } from './format';
 // arrays). A drift from the schema is caught by the live validation below —
 // these only populate the <select> choices.
 const PHASE_NAMES = ['windup', 'release', 'travel', 'impact', 'recovery'] as const;
-const ORPHAN_POLICIES = ['commit-at-cast', 'fizzle', 'ground-target', 're-home'] as const;
+const ORPHAN_POLICIES = ['commit-at-cast', 'fizzle', 'ground-target'] as const;
 const TARGET_KINDS = ['self', 'enemyInRange', 'aoe', 'lowestHpAlly'] as const;
 const AOE_SHAPES = ['square', 'line', 'cross'] as const;
 const AOE_ANCHORS = ['caster', 'targetCell'] as const;
 const AFFECTS = ['enemies', 'allies', 'all'] as const;
 const DAMAGE_SCALING = ['strength', 'ranged', 'magic', 'none'] as const;
 const HEAL_SCALING = ['magic', 'none'] as const;
-// Only the shipped caster-reposition modes — knockback / pull are a reserved
-// Cluster-2 seam (boot-rejected if authored), so the editor doesn't offer them.
 const MOVE_MODES = ['advance', 'retreat'] as const;
 const TOP_OP_KINDS = ['damage', 'heal', 'move', 'applyStatus', 'chain', 'summon'] as const;
 const INNER_OP_KINDS = ['damage', 'applyStatus'] as const; // a chain's per-hop payload
@@ -103,7 +101,7 @@ function defaultOp(kind: OpKind): EffectOp {
     case 'heal':
       return { kind: 'heal', scaling: 'magic', might: 0 };
     case 'move':
-      return { kind: 'move', mode: 'advance', cells: 1 };
+      return { kind: 'move', mode: 'advance' };
     case 'applyStatus':
       return { kind: 'applyStatus', statusId: STATUS_IDS[0] ?? 'bleed' };
     case 'chain':
@@ -546,8 +544,6 @@ function renderOp(host: HTMLElement, op: EffectOp, ctx: OpCtx): void {
       break;
     case 'move':
       selectField(body, 'Mode', MOVE_MODES, op.mode, (v) => (op.mode = v as typeof op.mode));
-      numberField(body, 'Cells', op.cells, 1, (v) => (op.cells = v));
-      box.appendChild(el('p', 'hint', 'Caster-reposition only — knockback / pull are a reserved Cluster-2 seam.'));
       break;
     case 'applyStatus':
       selectField(body, 'Status', STATUS_IDS, op.statusId, (v) => (op.statusId = v));
@@ -709,7 +705,7 @@ function outlineOp(op: EffectOp, source: ScalingSource): string {
     case 'heal':
       return `heal ${resolveHealAmount(op, stats)} (${op.might}+${op.scaling})`;
     case 'move':
-      return `move ${op.mode} ${op.cells} cell${op.cells === 1 ? '' : 's'}`;
+      return `move ${op.mode}`;
     case 'applyStatus':
       return outlineApplyStatus(op, source);
     case 'chain':

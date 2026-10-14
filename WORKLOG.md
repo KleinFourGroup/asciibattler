@@ -3888,3 +3888,51 @@ The hook on a staged config path (the first commit of 121b-pre, which
 swept in the staged deletion of `config/empower.json` and was redone
 without it): the smoke ran, 64 files and 623 tests, and the parity test
 did not. That is 121a's first live check.
+
+### 121c — the values never built (2026-10-14, session f8bbd64e)
+
+A-05 with A-07, and A-08, as signed. The `move` op is `{ kind, mode }`
+with `mode` `advance` or `retreat`; `knockback`, `pull` and `cells` are
+out of the schema, the interpreter's throw, the proposer's throw and the
+two abilities in `config/abilities.json`. With two modes left, the
+proposer's move arm returns the dash's landing as its last line, where it
+threw before. `re-home` is out of `OrphanPolicy` and the schema's list.
+Comments that described the reserved modes as declared went with them
+(`schema.ts`'s header, `interpreter.ts`'s, `reposition.ts`'s, the
+attack editor's); the ones that name a knockback as a future breach
+source for the shove primitive describe the plan, not the schema, and
+stay for §122's comment pass. ARCHITECTURE's event notes and DESIGN's
+timing paragraph list three orphan policies. META-ROADMAP's "Forced
+movement and a teleport" already said the fields were deleted.
+
+The attack editor (`tools/attack-editor/`) lost its Cells field, its
+`re-home` option, and `cells` from its JSON writer and its outline line
+("move advance 2 cells" is now "move advance"). The type check found the
+writer and the outline; its two `as const` lists (`ORPHAN_POLICIES`,
+the move hint) are not tied to the schema's types, so those were found by
+a search for the words. Nothing headless runs the editor; it was not
+opened.
+
+Tests: the interpreter's test of the two reserved throws and the
+schema's test that `cells` must be positive are deleted; the schema's
+"accepts the reserved move modes + applyStatus" keeps its `applyStatus`
+half under a new title; ten move literals in five test files lost
+`cells`.
+
+Proof (sim):
+
+- `npm run corpus`: 0 of 30 journals differ;
+- `bash scripts/perf-oracle.sh` (baseline `6a84677`): PASS, every
+  compared CSV byte-identical on both shapes, 56 s;
+- typecheck clean; the suite 3,765 (3,767 less the two deleted); the
+  step-code ceiling lowered, 6,354 → 6,349 (four files);
+- `reach-diff --from=6a84677`: nothing lost across 15 changed files.
+- a plant at the site (`npm run oracle -- plant`), on `6a84677`'s copy of
+  the move executor, which 121c leaves as it was: the only edit the tool
+  admits there, the gambit's `dest === null` negated
+  (`interpreter.ts:261`). Corpus CAUGHT, fuzz diff CAUGHT, each by a run
+  that threw, since the negation hands `null` on to the step. So both
+  proofs run the retreat; whether either notices a quieter change there
+  is not shown. The dash's lines admit no edit.
+
+The hook's smoke on this commit and the next stays as 121a set it.

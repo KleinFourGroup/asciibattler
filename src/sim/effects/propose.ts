@@ -386,11 +386,7 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       if (op.mode === 'retreat') {
         return c.retreatAnchor ? { moveDest: { ...c.retreatAnchor } } : {};
       }
-      if (op.mode === 'advance') {
-        return c.advanceLanding ? { moveDest: { ...c.advanceLanding } } : {};
-      }
-      // knockback / pull are the reserved Cluster-2 seam (never authored here).
-      throw new Error(`EffectAbility: move mode '${op.mode}' is reserved`);
+      return c.advanceLanding ? { moveDest: { ...c.advanceLanding } } : {};
     }
     case 'applyStatus': {
       // §31 — capture the (optionally scaled) magnitude + duration NOW, off the

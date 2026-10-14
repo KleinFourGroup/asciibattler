@@ -86,7 +86,7 @@ describe('StatusDef schema — valid shapes', () => {
 describe('StatusDef schema — periodic op is restricted to damage|heal', () => {
   it('rejects a periodic move op', () => {
     const bad = validBurnDef() as { periodic: { op: unknown } };
-    bad.periodic.op = { kind: 'move', mode: 'advance', cells: 1 };
+    bad.periodic.op = { kind: 'move', mode: 'advance' };
     expect(() => parseStatusDef(bad)).toThrow();
   });
 

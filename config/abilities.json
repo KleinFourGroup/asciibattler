@@ -193,7 +193,7 @@
       },
       {
         "phase": "impact",
-        "op": { "kind": "move", "mode": "retreat", "cells": 1 }
+        "op": { "kind": "move", "mode": "retreat" }
       }
     ],
     "fx": { "windup": "melee_swing" }
@@ -213,7 +213,7 @@
     "effects": [
       {
         "phase": "impact",
-        "op": { "kind": "move", "mode": "advance", "cells": 2 }
+        "op": { "kind": "move", "mode": "advance" }
       }
     ]
   },

@@ -107,7 +107,7 @@ kickoff):
 - ☑ **121b — the config keys nothing reads** (`none`). A-01, A-02 (the
   JSON; the buff module stays), A-03, A-04's `ignoresTerrain`. Proof:
   config.
-- ☐ **121c — the values never built** (`none`). A-05 with A-07, A-08;
+- ☑ **121c — the values never built** (`none`). A-05 with A-07, A-08;
   the attack editor's Cells field goes. Proof: sim.
 - ☐ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
   file. Proof: sim and config.

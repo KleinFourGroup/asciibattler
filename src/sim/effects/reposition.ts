@@ -10,9 +10,6 @@
  * candidate with the most free neighbors), then by fixed `NEIGHBORS` order for
  * determinism. Returns null when nothing qualifies (boxed in / corner / 1-wide
  * corridor) — the caller then holds position. Pure given the world snapshot.
- *
- * Cluster 2's `move` knockback/pull (target-moving) will live alongside this in
- * the hardened occupancy core; this round ships only caster-reposition.
  */
 
 import type { GridCoord } from '../../core/types';

@@ -56,7 +56,7 @@ const gambitDef: AbilityDef = parseAbilityDef({
   id: 'gambit_strike', name: 'Gambit', cooldownSeconds: 1.2, rangeCells: 1, target: { kind: 'enemyInRange' },
   timeline: [{ phase: 'windup', seconds: 0.25 }, { phase: 'impact', seconds: 0 }, { phase: 'recovery', seconds: 'fill' }],
   orphanPolicy: 'commit-at-cast', priority: 10,
-  effects: [{ phase: 'windup', op: DMG }, { phase: 'impact', op: { kind: 'move', mode: 'retreat', cells: 1 } }],
+  effects: [{ phase: 'windup', op: DMG }, { phase: 'impact', op: { kind: 'move', mode: 'retreat' } }],
 });
 
 const catapultDef: AbilityDef = parseAbilityDef({
@@ -82,7 +82,7 @@ const dashDef: AbilityDef = parseAbilityDef({
   id: 'dash', name: 'Dash', cooldownSeconds: 10, speedScaled: false, rangeCells: 2, target: { kind: 'self' },
   timeline: [{ phase: 'impact', seconds: 0.25 }],
   orphanPolicy: 'commit-at-cast', priority: 5,
-  effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],
+  effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance' } }],
 });
 
 const afflictDef: AbilityDef = parseAbilityDef({

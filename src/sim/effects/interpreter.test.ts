@@ -260,7 +260,7 @@ describe('executeOp — move', () => {
     const caster = makeUnit('player', { x: 0, y: 0 });
     world.units.push(caster);
     executeOp(
-      { kind: 'move', mode: 'advance', cells: 2 },
+      { kind: 'move', mode: 'advance' },
       ctx({ caster, world, resolution: { moveDest: { x: 2, y: 0 } }, phaseTicks: 5 }),
     );
     expect(caster.position).toEqual({ x: 2, y: 0 });
@@ -276,7 +276,7 @@ describe('executeOp — move', () => {
     const anchor = { x: 4, y: 5 }; // caster retreats away from (4,5) → toward +x
     world.units.push(caster);
     executeOp(
-      { kind: 'move', mode: 'retreat', cells: 1 },
+      { kind: 'move', mode: 'retreat' },
       ctx({ caster, world, resolution: { moveDest: anchor }, remainingTicks: 4 }),
     );
     expect(caster.position.x).toBeGreaterThan(5); // moved away from the anchor
@@ -294,20 +294,11 @@ describe('executeOp — move', () => {
     const blockers = [{ x: 1, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
     for (const b of blockers) world.units.push(makeUnit('enemy', b));
     executeOp(
-      { kind: 'move', mode: 'retreat', cells: 1 },
+      { kind: 'move', mode: 'retreat' },
       ctx({ caster, world, resolution: { moveDest: { x: 0, y: 0 } }, remainingTicks: 4 }),
     );
     expect(caster.position).toEqual({ x: 0, y: 0 }); // held
     expect(events).toHaveLength(0);
-  });
-});
-
-describe('executeOp — move reserved modes throw', () => {
-  it('move knockback/pull throw (reserved until Cluster 2)', () => {
-    const { world } = setup();
-    const caster = makeUnit('player', { x: 0, y: 0 });
-    expect(() => executeOp({ kind: 'move', mode: 'knockback', cells: 1 }, ctx({ caster, world, resolution: { moveDest: { x: 1, y: 1 } } }))).toThrow(/reserved/);
-    expect(() => executeOp({ kind: 'move', mode: 'pull', cells: 1 }, ctx({ caster, world, resolution: { moveDest: { x: 1, y: 1 } } }))).toThrow(/reserved/);
   });
 });
 

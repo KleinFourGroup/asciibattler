@@ -21,8 +21,6 @@
  * SCOPE (Y1): the `damage` / `heal` / `move` ops + the `self` / `enemyInRange` /
  * `aoe` / `lowestHpAlly` selectors are enough to express the existing verbs. The
  * union also DECLARES the reserved seams that later phases build:
- *   - `move` modes `knockback` / `pull` — target-moving, deferred to Cluster 2's
- *     hardened occupancy core (this round ships only caster-reposition).
  *   - the `applyStatus` op — status-on-hit, wired to the §27 status registry in
  *     §29 (its `statusId` is a plain string ref here, boot-validated then).
  * `summon` / `chain` are ADDITIVE variants the closed union grows into in §29 —
@@ -66,7 +64,6 @@ const ORPHAN_POLICIES = [
   'commit-at-cast',
   'fizzle',
   'ground-target',
-  're-home',
 ] as const satisfies readonly OrphanPolicy[];
 
 export const PhaseSchema = z.enum(PHASE_NAMES);
@@ -158,18 +155,14 @@ const HealOpSchema = z.object({
 });
 
 /**
- * `move` — repositioning. This round ships only the CASTER-reposition modes:
- *   - `advance` — leap toward the action's target (the rogue dash, N1).
- *   - `retreat` — step away from the action's target (the rogue gambit, F4).
- * `knockback` / `pull` move the TARGET; they are a RESERVED seam — declared so
- * the union is closed + future-complete, but boot-/interpreter-rejected until
- * Cluster 2 hardens the occupancy core (the same "declared, no consumer"
- * pattern as F2's `re-home` OrphanPolicy). `cells` = max cells to move.
+ * `move` — the caster repositions:
+ *   - `advance` — leap to the landing captured at cast (the rogue dash, N1);
+ *     how far is the ability's `rangeCells`.
+ *   - `retreat` — one step away from the struck cell (the rogue gambit, F4).
  */
 const MoveOpSchema = z.object({
   kind: z.literal('move'),
-  mode: z.enum(['advance', 'retreat', 'knockback', 'pull']),
-  cells: z.number().int().positive(),
+  mode: z.enum(['advance', 'retreat']),
 });
 
 /**

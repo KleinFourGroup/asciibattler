@@ -95,7 +95,7 @@ describe('resolvePhases — reproduces the migrated verbs byte-for-byte', () => 
     priority: 10,
     effects: [
       { phase: 'impact', op: damageOp('strength') },
-      { phase: 'recovery', op: { kind: 'move', mode: 'retreat', cells: 1 } },
+      { phase: 'recovery', op: { kind: 'move', mode: 'retreat' } },
     ],
   });
 
@@ -140,7 +140,7 @@ describe('resolvePhases — reproduces the migrated verbs byte-for-byte', () => 
       timeline: [{ phase: 'impact', seconds: 0.25 }],
       orphanPolicy: 'commit-at-cast',
       priority: 5,
-      effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],
+      effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance' } }],
     });
     // Busy window = the fixed 0.25 s motion, decoupled from the 10 s cooldown.
     for (const speed of SPEEDS) {
@@ -224,7 +224,7 @@ describe('resolvePhases — Yb: a speed-scaled fixed phase', () => {
       timeline: [{ phase: 'impact', seconds: 0.25 }],
       orphanPolicy: 'commit-at-cast',
       priority: 5,
-      effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance', cells: 2 } }],
+      effects: [{ phase: 'impact', op: { kind: 'move', mode: 'advance' } }],
     });
     for (const speed of SPEEDS) {
       expect(resolvePhases(dash, speed)).toEqual([{ phase: 'impact', ticks: secondsToTicks(0.25) }]);

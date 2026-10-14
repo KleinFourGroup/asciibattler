@@ -132,7 +132,6 @@ function proposeHeal(
   if (target === null) return null;
 
   const speed = unit.effectiveStats.speed;
-  // A heal has no half-cover multiplier; pass 1 (the heal op ignores it anyway).
   const ops = def.effects.map((e) => resolveOp(e.op, { unit }));
 
   return {

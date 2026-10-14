@@ -4244,3 +4244,39 @@ the second admits 0 edits, as `a2572f6`'s lines do. The plant itself
 always read the ref's copy and prints the edit it made, so a plant's own
 output names what it planted; whether an earlier record quoted a listing
 instead was not checked.
+
+### 121h — the re-skim (2026-10-14, session 07d94d5c)
+
+Read: the phase's diff of `src` and `tools` without the tests,
+`972a866..9ff51e1` (1,566 lines of `git diff -U4`), and a search of
+`src`, `tools`, `tests`, `scripts`, `shell` and the live docs for every
+name the phase deleted.
+
+Fixed, as fix-ups of what 121f left: `proposeHeal`'s comment that a heal
+"passes 1" for the half-cover multiplier, a field 121f deleted, and
+ARCHITECTURE's `positioning.ts` line, which still named
+`collectHalfCoverPositions`. PATHING names it three times, in dated
+entries of its run log, which stay as history. Proof: `comment-strip
+HEAD src`, comments only.
+
+Held against D2 (the budget allows three more trials this phase):
+
+- *In the config layer, nothing reaches the bar.* `EmpowerConfig` keeps
+  one member and is read only as `EmpowerConfig['buff']` (five places in
+  `src`), and `src/config/empower.ts` holds no empower config now, only
+  the buff vocabulary the daemon and packet loaders share. A `Buff` type
+  in its place, or the file renamed, is a rename: no special case, type,
+  file, key or paragraph goes, so clause 4 cannot be met, and no trial
+  was run.
+- *The lockout's two forms in `SIM`:* the user's call (121g).
+- *Leads for §122's kickoff (sim).* `focusTile.ts` is now 29 lines for
+  one comparison and a two-value type, read by one switch in
+  `Targeting.updateFocusTarget` whose `default` arm shares `pursue`'s
+  body. Folded into that function, a file and a type go, and its two
+  tests would test `updateFocusTarget`. With 121e's two:
+  `updateTargetDefault`'s one caller, and World's camp-anchor revert.
+- *A lead for §123's kickoff (run).* `encounterFirst` is a private
+  function with one caller, `selectEncounter`, since 121d; inlined, a
+  function's name goes.
+
+No new deletion was found, so 121i's stop carries none.

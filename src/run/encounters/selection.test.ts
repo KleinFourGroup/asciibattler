@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { RNG } from '../../core/RNG';
 import {
-  getSelectionStrategy,
   selectEncounter,
   encounterKindFor,
   assertSelectionCoverage,
@@ -82,7 +81,7 @@ describe('encounterKindFor', () => {
 });
 
 describe('selectEncounter — boss nodes (W1)', () => {
-  const pick = getSelectionStrategy('encounterFirst');
+  const pick = selectEncounter;
   const bossNode = { hop: 4, nodeKind: 'boss' as const };
 
   it('selects only a boss-kind encounter at a boss node (normal encounters filtered out)', () => {
@@ -99,7 +98,7 @@ describe('selectEncounter — boss nodes (W1)', () => {
 });
 
 describe('selectEncounter — elite nodes (W2)', () => {
-  const pick = getSelectionStrategy('encounterFirst');
+  const pick = selectEncounter;
   const eliteNode = { hop: 4, nodeKind: 'elite' as const };
 
   it('selects only an elite-kind encounter at an elite node (normal + boss filtered out)', () => {
@@ -119,7 +118,7 @@ describe('selectEncounter — elite nodes (W2)', () => {
 });
 
 describe('selectEncounter — encounterFirst', () => {
-  const pick = getSelectionStrategy('encounterFirst');
+  const pick = selectEncounter;
 
   it('selects a kind-matching encounter and a compatible layout', () => {
     const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }]);
@@ -181,37 +180,6 @@ describe('selectEncounter — encounterFirst', () => {
   it('skips pool entries that do not resolve (a retired catalog id)', () => {
     const s = sector([{ layoutId: 'river' }], [{ encounterId: 'ghost' }, { encounterId: 'a' }]);
     expect(pick(s, battle, new RNG(1), resolve).encounter.id).toBe('a');
-  });
-});
-
-describe('selectEncounter — layoutFirst', () => {
-  const pick = getSelectionStrategy('layoutFirst');
-
-  it('rolls a layout, then a kind-matching encounter that fits it', () => {
-    const s = sector([{ layoutId: 'river' }], [{ encounterId: 'a' }, { encounterId: 'b' }]);
-    const result = pick(s, battle, new RNG(3), resolve);
-    expect(result.layoutId).toBe('river');
-    expect(['a', 'b']).toContain(result.encounter.id);
-  });
-
-  it('excludes an encounter whose fit-filter rejects the rolled layout', () => {
-    // Only labyrinth in the pool; 'b' fits only river → only 'a' remains.
-    const s = sector([{ layoutId: 'labyrinth' }], [{ encounterId: 'a' }, { encounterId: 'b' }]);
-    for (let seed = 0; seed < 25; seed++) {
-      const result = pick(s, battle, new RNG(seed), resolve);
-      expect(result.layoutId).toBe('labyrinth');
-      expect(result.encounter.id).toBe('a');
-    }
-  });
-
-  it('throws when no encounter fits the rolled layout', () => {
-    const s = sector([{ layoutId: 'labyrinth' }], [{ encounterId: 'b' }]);
-    expect(() => pick(s, battle, new RNG(1), resolve)).toThrow(/fits layout/);
-  });
-
-  it('is deterministic per seed', () => {
-    const s = sector([{ layoutId: 'river' }, { layoutId: 'labyrinth' }], [{ encounterId: 'a' }]);
-    expect(pick(s, battle, new RNG(9), resolve)).toEqual(pick(s, battle, new RNG(9), resolve));
   });
 });
 

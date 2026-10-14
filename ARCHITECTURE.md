@@ -105,7 +105,6 @@ src/
     sectorMap.ts             #   T2: the sector-selection meta-DAG schema (nodes hold sector lists; sources/sinks; acyclic, non-sink-has-outgoing guards)
     events.ts                #   74a: the event grammar — flat page map (pages → choices → weighted outcomes → effect ops + next: page-id | return-to-map | start-encounter{rewardOverride?}); the closed condition union + the ONE combinator `not` (74c-pre); the EVENTS-SIDE op union (shares gainBits/healPool sub-schemas with daemons.ts — the daemon surface never widened); FOUR boot asserts: terminate (74a, unconditioned-exit fixpoint) / reachable (74i, BFS from entry) / reserved-flags (74i — `visited:*` is engine-written, author-readable) / cross-catalog refs; repeatable? (74i, the no-repeat opt-out) + visitedFlagFor; (74f's describeEventCondition — the requirement phrases — lives in src/ui/eventConditionText.ts since 100e: no player-facing prose in a config module); §95a: name / pages.*.text / choices.*.label are prose() (→ src/i18n, addresses in locales/en/events.json) + choice `id?` = the locale address segment (unique per page; the editor stamps it at export) — config/events.json
     encounters.ts            #   U3: the Encounter schema (id/name/healthPool/layouts? fit-filter/kind enum/rewards?/waves) + the recursive U2 waves grammar (zod); V0: placement moved to the sector pool; V1: catalog ships Brigands/Highwaymen/Deserters
-    selection.ts             #   V1: the SELECTION policy (strategy: encounterFirst|layoutFirst) — config/selection.json
     economy.ts               #   47e: the economy substrate (startingBits) — config/economy.json; grows with Cluster 3
     rewards.ts               #   48a: the reward-table registry (weighted bits{min,max}|packet|daemon|unit|poolHealth entries — unit/poolHealth 74c, first authored 74i: hostage-rescue) + the {table,trigger} encounter-ref schema + the daemon/packet/unit-ref boot asserts (49a activated the packet sibling; 74c the unit one) — config/rewards.json
     packets.ts               #   49a: the packet catalog (one effect op per packet: applyBuff|grantRedraws|injectRule|healPool) — the EXPORTED (op×target×context) matrix (PACKET_OP_TARGET/PACKET_OP_CONTEXTS: parse guard + the 49e engine + the 49g editor read ONE source; midBattle/tile = dormant vocabulary no op admits) + per-op duration restrictions + assertPacketStatusRefs — config/packets.json
@@ -310,8 +309,8 @@ src/
       sequencer.ts           # U2: pure waveForTurn(list, cursor, state, rng) — the wave-list GRAMMAR
                              # (wave | pick | loop{N|forever} | stages{until: enemyPoolAtOrBelow}) + a
                              # recursive plain-JSON cursor (resumable); terminal policy = last-wave-repeats
-      selection.ts           # V1: selectEncounter(sector, ctx, rng, resolve) — the keyed (encounterFirst|
-                             # layoutFirst) resolver picking an (encounter, layout) from the sector pools +
+      selection.ts           # V1: selectEncounter(sector, ctx, rng, resolve) — the encounter, then a layout
+                             # that fits it, from the sector pools +
                              # assertSelectionCoverage boot guard (Brigands now authored in encounters.json)
     Command.ts               # RunCommand union + RunDispatcher interface (A2)
     NodeMap.ts               # the BRAID generator (77e — lanes as the primitive; replaced the G2 staircase): widths → split/merge ops (churn + rare 3-ops; seam rule holds instant-d2 rejoins ≤25%/map) → the quota kind layer (route-share targets; port cones = every first choice keeps shop access by h5; battle floor ≥1/hop; path-window spacing) — three keyed sub-streams + bounded attempt re-rolls; gates: tests/nodemap-metrics.test.ts (n=500, the signed 77c sheet). T2: per-sector length override; 74e: stampRootKind (pure post-gen transform, boss-wins on hopCount 1)
@@ -501,7 +500,6 @@ config/                      # A4: balance JSON source of truth (paired with src
                              # redraw; Janus guaranteed 2-card redraw — all `turnStart` grant hooks;
                              # Dis Pater on-kill bits tithe (88c — the daemonized miner)
   encounters.json            # U3a: the authored-fight catalog (name/healthPool/kind/fit-filter/waves grammar + 48a rewards refs) — ALL 13 encounters reference a reward table (48g)
-  selection.json             # V1: the encounter-selection policy (strategy: encounterFirst|layoutFirst)
   economy.json               # 47e: startingBits — the economy substrate; grows with Cluster 3
   rewards.json               # 48a: the weighted reward tables (bits{min,max}|packet|daemon|unit|poolHealth entries — the last two 74c, first authored in 74i's hostage-rescue table); 49g: packet entries LIVE — every launch packet reachable
   packets.json               # 49a→g: the packet catalog (patch/hype/shield/reroute/venom/overclock/surge/discard-one), one effect op each; miner daemonized to dis-pater at 88c — no run-duration packets ship (fire-site horizon blindness; packets.test.ts guards)

@@ -3936,3 +3936,34 @@ Proof (sim):
   is not shown. The dash's lines admit no edit.
 
 The hook's smoke on this commit and the next stays as 121a set it.
+
+### 121d — A-09, `layoutFirst` (2026-10-14, session f8bbd64e)
+
+As signed: `layoutFirst`, the strategy record and type, `getSelectionStrategy`,
+the key, `src/config/selection.ts` with its test, and
+`config/selection.json` (config files 33 → 32). `encounterFirst` is a plain
+function `selectEncounter` calls; the forced-encounter path is untouched.
+The tests that fetched `encounterFirst` through `getSelectionStrategy` call
+`selectEncounter`, which is that function when no encounter is forced;
+`layoutFirst`'s four tests and the loader's two are deleted. The headers of
+`selection.ts` and its coverage guard lost their sentences about two
+strategies; ARCHITECTURE's tree lost the loader and the file.
+
+Proof (sim and config):
+
+- config dump at `de59045` (taken in the worktree) and after: 3
+  differences, all removals (`SELECTION`, `SELECTION_STRATEGIES`,
+  `CONFIG_SOURCES.selection.json`);
+- `npm run corpus`: 0 of 30 differ;
+- the fuzz diff (baseline `de59045`): PASS on both shapes;
+- the suite 3,759 (3,765 less the six deleted), the ceiling lowered 6,349
+  → 6,344 (three files);
+- `reach-diff --from=de59045`: the one loss named is the deleted loader's
+  own function ("the file is not in the second reading"), since a file the
+  diff deletes is not mapped. Nothing else lost. Fixed for the next steps
+  in 121d-post.
+- a plant: the only edit the tool admits on the draw itself is the default
+  weight 1 → 2, which no draw can see (no sector entry sets a weight), so
+  the plant went one call down, in `rollLayoutFor`, which the draw calls:
+  the procedural-board check negated (`selection.ts:119` at `de59045`).
+  Corpus CAUGHT and fuzz diff CAUGHT, each by a run that threw, as at 121c.

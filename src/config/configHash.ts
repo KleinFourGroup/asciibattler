@@ -48,7 +48,6 @@ import redrawLevelFisher from '../../config/redraw-level-fisher.json';
 import rewards from '../../config/rewards.json';
 import sectorMap from '../../config/sector-map.json';
 import sectors from '../../config/sectors.json';
-import selection from '../../config/selection.json';
 import sim from '../../config/sim.json';
 import spawn from '../../config/spawn.json';
 import stats from '../../config/stats.json';
@@ -88,7 +87,6 @@ export const CONFIG_SOURCES: Readonly<Record<string, unknown>> = {
   'rewards.json': rewards,
   'sector-map.json': sectorMap,
   'sectors.json': sectors,
-  'selection.json': selection,
   'sim.json': sim,
   'spawn.json': spawn,
   'stats.json': stats,

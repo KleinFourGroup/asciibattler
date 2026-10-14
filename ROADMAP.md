@@ -109,7 +109,7 @@ kickoff):
   config.
 - ☑ **121c — the values never built** (`none`). A-05 with A-07, A-08;
   the attack editor's Cells field goes. Proof: sim.
-- ☐ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
+- ☑ **121d — A-09, `layoutFirst`** (`none`), with its key, loader and
   file. Proof: sim and config.
 - ☐ **121e — A-10 and A-21's two switches** (`none`); `tiles.json` and
   its loader go. Proof: sim and config.

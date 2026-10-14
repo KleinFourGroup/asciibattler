@@ -3437,3 +3437,43 @@ singled out"
   tranche.
 - The fifth tranche as planned held twenty rows, twice any before it,
   so it is put as two: Rounds 10 and 12, then Round 11.
+
+Reading: **376,010** at 00:43 on the fourth tranche's commit, `3c34ddf`.
+
+**The read, the fifth tranche** (the user, 2026-10-13): "Signing all
+except for 6, Claude."
+
+- **Round 10's five rows signed:** T-02, T-05, T-15, T-33, T-52.
+- **Four of Round 12's five signed:** the recorder's three, kept and not
+  dropped (T-60, T-64, T-65); the device pixel ratio (T-76); the failure
+  plate's three together (T-79, T-80, T-81); a second language as a
+  decision point (T-94).
+- **The dials' row is not signed, and the user reads it as another
+  item** (T-93 with T-07, T-48, T-88). The session had put it to Round
+  12 as a question of which dials a shipped build answers. The user:
+  "So I was actually viewing that as something that would happen in
+  Round 9 or 10. My thought there was that, as we massively ramp up
+  content, we're probably going to need more fine-grained control of
+  what types of battles and encounters load, For example, I don't think
+  there's a way to test, say, an event chain from end to end in one run.
+  Or to force a specific chain of encounters or layouts. Or to override
+  a shop's inventory. That was more what I was thinking. Does that
+  track? What's your thought?"
+- **Held against the code before the answer** (`src/run/RunConfig.ts`,
+  its fields and their comments, read). The user's three examples are
+  right. Each forcing dial takes one value for the whole run: `layout`
+  one board, `encounter` one id at every node of its kind, `event` one
+  event, `firstNode` the first node's kind. None takes a list, nothing
+  sets a port's stock, and a forced id is "NOT persisted": a run loaded
+  from its save goes back to normal selection.
+- **The session's answer, put to the user and unsigned:** it tracks, and
+  it is a different item from the one the row sized: a way to script a
+  run for content work, of which fewer URL names is a consequence and
+  not the aim. Lean: Round 9 and not 10, early. Round 10's own guard
+  sends a new mechanism back to Round 9; Round 9's exit is one consumer
+  a seam, each of which wants "this encounter on this board at this
+  hop" to be checked; and "Event → battle → resume" is the event chain
+  the user names. The shape, for that kickoff and not decided here: one
+  list of per-node entries on `RunConfig`, of which today's four
+  single-valued dials are cases, so control goes up as the count of
+  dials goes down. T-07, T-48 and T-88 fold into it.

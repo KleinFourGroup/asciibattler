@@ -2032,8 +2032,10 @@ Both are in TODO under "§120 riders".
 ## 5. The TODO pass's list (120g)
 
 Written 2026-10-13 and read at 120h, in tranches. **Signed so far: 5.2,
-5.3** (T-97 held for list B's tranche)**, 5.4, 5.6 and 5.5's Round 9**;
-5.5's Rounds 10 to 12 are unsigned. Every
+5.3** (T-97 held for list B's tranche)**, 5.4, 5.6, and 5.5's Rounds 9,
+10 and 12 but for the dials' row** (T-93 with T-07, T-48 and T-88, which
+the user reads as a different item: WORKLOG §120, 120h, the fifth
+tranche); 5.5's Round 11 is unsigned. Every
 open item of
 [TODO.md](TODO.md), each with a proposed fate. Nothing here is done by
 this step: the kickoff's seventh call left the doing to the phases. A
@@ -2426,14 +2428,15 @@ L315)
   floor is on record (a search of BALANCE). T-71 changes the tithe.
 - Fate: **Round 10**, after T-71: a read before it would be of an arm
   about to change (principle 5).
-- Signed:
+- Signed: **Round 10** (the user, 2026-10-13: "Signing all except for 6,
+  Claude.").
 
 **T-05 · Mapgen tool: empty-camp-pool hint** (L70)
 - In play: nothing. Volcanic's camp pool is still empty
   (`config/terrain.json:55`), and the tool is kept (A-32).
 - Fate: **Round 10**, with "the volcanic camp resident", which fills the
   one empty pool; dropped there if no theme is left without one.
-- Signed:
+- Signed: **Round 10** (the user, 2026-10-13, in the same words).
 
 **T-15 · Ability description text** (L167)
 - In play: an ability's row would carry a line of flavour.
@@ -2441,14 +2444,14 @@ L315)
   search). Round 11's guard is "no new content".
 - Fate: **Round 10**: prose authored with the act's new abilities,
   keyed for the string layer.
-- Signed:
+- Signed: **Round 10** (the user, 2026-10-13, in the same words).
 
 **T-33 · The three deep-end cost residuals** (L306)
 - In play: three deep-end fights cost 10.2 to 10.6 pool an instance
   against a 9.3 line (the item's numbers).
 - Held against: "whenever those rows are next touched".
 - Fate: **Round 10**, whose extended sheet touches them.
-- Signed:
+- Signed: **Round 10** (the user, 2026-10-13, in the same words).
 
 **T-52 · Rounded plates for organic scenery** (L365)
 - In play: a tree would stand on a round ground plate.
@@ -2457,7 +2460,7 @@ L315)
   phase.
 - Fate: **Round 10**, with fauna and scenery; dropped there if none is
   authored.
-- Signed:
+- Signed: **Round 10** (the user, 2026-10-13, in the same words).
 
 #### Round 11 (12)
 
@@ -2561,7 +2564,8 @@ L497, L504)
 - In play: nothing. A dev tool, with no consumer today.
 - Fate: **Round 12**, with "Store-page assets", the recorder's next
   use. The other arm is to drop all three.
-- Signed:
+- Signed: **Round 12**, kept and not dropped (the user, 2026-10-13: "Signing
+  all except for 6, Claude.").
 
 **T-76 · The device pixel ratio is uncapped** (L637)
 - In play: fullscreen on a 4K laptop with integrated graphics would
@@ -2570,7 +2574,7 @@ L497, L504)
   for data at the user's call; none is on record.
 - Fate: **Round 12**, with the browser matrix and other hardware;
   sooner if a stranger reports it.
-- Signed:
+- Signed: **Round 12** (the user, 2026-10-13, in the same words).
 
 **T-79, T-80, T-81 · The failure plate's three: a shader that fails to
 compile throws nothing; the battle plays on unseen while a lost context
@@ -2582,7 +2586,8 @@ L677, L683)
 - Fate: **Round 12**, with the browser matrix, where a driver that
   rejects a shader would be met. T-81 is one line and could go to
   Round 11's accessibility work.
-- Signed:
+- Signed: **Round 12**, the three together (the user, 2026-10-13, in the same
+  words).
 
 **T-94 · A second language** (L797)
 - In play: the game ships English alone.
@@ -2592,7 +2597,8 @@ L677, L683)
 - Fate: **Round 12**, as a decision point (which languages at the Steam
   release), after Round 10's content and Round 11's tutorial text are
   final.
-- Signed:
+- Signed: **Round 12**, as a decision point (the user, 2026-10-13, in the same
+  words).
 
 ### 5.6 Proposed dropped (8)
 

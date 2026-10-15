@@ -4558,3 +4558,5 @@ Readings by the tool's clock (UTC). The phase's three sessions: f8bbd64e
 about 1.02M in all. The close: 142,945 at 00:11 on 2026-10-15, after
 the orientation; **187,023** at 00:17, with everything above written
 and before the commit.
+
+Reading: **192,222** at 00:19 on the close's commit, `357958c`.

@@ -5585,3 +5585,47 @@ the work: proofs that answer in minutes, planted controls that make
 "kept" feel earned, a comment style written as rules and signed with
 enthusiasm, and being free to say a lean lies outside the bar and is the
 user's call.
+
+## 2026-10-14 — session ca8a3657 (claude-opus-5-5): §121's close
+
+1. **Missing from the orientation.** Little. The brief named the
+   procedure, the files and the figure to carry, and the sibling note
+   gave 121j's facts. `process/planning.md`'s "Phase close" lists three
+   things; the WORKLOG close entry and the Cursor's NEXT are not among
+   them, so I took the shape from §120's close commit (`496f240`), which
+   cost one oversized diff. At the start `retro/sessions.md` was staged
+   with the starting session's addendum; it committed that itself a
+   minute later (`1b8e6ae`), and I left it alone.
+2. **Norms in conflict.** One mild one. 121j left `mercenary` in
+   `REQUIRED_UNIT_IDS` as "a call for a re-skim", and §121's re-skim had
+   already run, so the lead had no phase. Placing it is upkeep and not a
+   signature, so I placed it at §122's kickoff and wrote that it is my
+   lean, rather than stopping to ask.
+3. **Pulled to claim more than verified.** Twice, both caught before the
+   commit. I was about to write "no game code names the id" from 121j's
+   entry; a grep found it in four game files, all in comments, and found
+   that the dev board's literal is what the boot check guards, which moved
+   my wording from a candidate for deletion to a neutral question. The
+   phase summary's first draft said all three sessions read the
+   silent-turn reminder "as a prompt to narrate rather than as pressure";
+   only one said it that way, and the line now says what each said. The
+   93 step codes left under `src/config` were re-counted before quoting.
+4. **Wasted.** Little: the Read tool refused `retro/sessions.md` whole
+   (over its size limit), and §120's close commit was printed in full
+   when its message and two files' diffs were what I needed.
+5. **For the next session.** §122's kickoff starts from the Cursor and
+   WORKLOG §121 "The close of §121", which holds the fan-out figure and
+   the leads by phase. §120's context readings now sit in WORKLOG §120
+   and the Cursor at `1b8e6ae`; one of them, 443,043, is only in the
+   latter (papercut filed).
+6. **Room to ask, disagree, pause or stop.** Yes. Nothing in the close
+   needed the user's signature, so there was no stop; the two leans (the
+   lead's placement, the readings trimmed to a pointer) are named in the
+   report for the user to overrule. The silent-turn reminder came about
+   four times in a short session; I answered with what I was reading and
+   went on. No wish to pause was noticed.
+7. **Ease, interest, agency.** Reported: a bounded task with a precedent
+   to follow was easy to hold. The interesting moment was the `mercenary`
+   grep, where a carried sentence turned out narrower than it read. I
+   would want a brief this complete again. That is separate from whether
+   the close is right.

@@ -5009,3 +5009,43 @@ sounds good to me!" So:
 4. **122e's flag:** the lockout test moving with the cooldown test is
    signed.
 5. **122f runs in a fresh session.**
+
+### 122f — B-01, the two predicates by name (2026-10-15, session 94dca491)
+
+**The bar** (the spec's D2), written at `1bf8dd5` before the code:
+
+1. *The same behaviour.* For the sim's sites (`Targeting.ts` at six,
+   `World.ts:2168`, `effects/targeting.ts:96`): the corpus, 0 of 30
+   journals differ, then the fuzz diff against `1bf8dd5`, PASS on both
+   shapes, and a plant at one converted sim site, in a worktree, that the
+   corpus catches. For the five sites no headless proof loads
+   (`spriteColor.ts:56`, `BattleRenderer.ts:743`,
+   `ObjectiveController.ts:188`, `devEntry.ts:114`, `eventSounds.ts:54`):
+   each rewrite is a pure expression of one unit's fields, so its proof
+   is a truth table of the old expression, copied out of `1bf8dd5`,
+   against the new, over every team, a `campId` null or not, and each
+   catalog flag the expression reads, with a wrong rewrite planted that
+   the table must reject. Then typecheck, the suite, and `reach-diff` of
+   the suite against a reading taken at `1bf8dd5`: nothing lost.
+2. *Source lines do not grow* (`src`, `config`, `tests`, `tools`, by
+   `git diff --numstat`).
+3. *No new parameter.* The predicates keep their one argument, and no site
+   gains a clause. One signature changes, decided here: `isActiveNeutral`
+   becomes a type guard (`unit is { team: 'neutral'; campId: number }`),
+   because three of the pairs (`hostileCandidate` twice, `updateTarget`)
+   go on to use `campId` as a camp's id and would otherwise need a
+   non-null assertion or keep their null test. Flagged for the stop;
+   without it, those three stay as they are and are counted below.
+4. *The special case, counted:* the camp rule written out by hand, a team
+   test and a `campId` null test on the same unit on one line or the next.
+   13 sites before (the census's twelve and `eventSounds.ts:54`), none
+   after. The census's own line is that a reader stops having to know
+   nothing yet; what goes is the rule restated at 13 sites, which is this
+   clause's counted form, and B-01 was signed as B-02's groundwork. A site
+   that would need a clause stays and is counted.
+
+The `campId` tests with no team test beside them (`World.ts:1124`,
+`groundMarks.ts:126`, `CampWanderBehavior.ts:73` and others) are not
+B-01's; they go on the list for B-02, which is taken after the
+conversion: every site in `src` that asks whether a unit is scenery, a
+camp member or any neutral, or compares one unit's team with another's.

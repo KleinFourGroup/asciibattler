@@ -5548,3 +5548,7 @@ a stop with more than one read (the scratchpad).
    trimming. Running the hook in the background while reading the next
    batch kept the session moving without a sense of hurry. I would want
    both again. That is separate from whether the read will pass.
+
+   *Addendum, same session:* the user read 121j with no finding
+   (`09c2b82`) and asked for §121's close to run in a fresh session,
+   which was started from here at 460k.

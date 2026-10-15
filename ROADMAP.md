@@ -132,16 +132,17 @@ share of list A's export rows joins the sim's.
   files; the build's bytes unchanged.
 - ☑ **122e — A-34, the test pair** (`none`). The lockout test moved
   with the cooldown test (flagged); `reach-diff`: nothing lost.
-- ◐ **122f — B-01, the two predicates by name** (`stop`: B-02's
-  decision on B-01's list). Proven the same, under the bar on lines (+7),
-  so reverted and the patch kept; the user's call (WORKLOG §122, 122f).
+- ☑ **122f — B-01, the two predicates by name** (read by the user). A
+  no-op: proven the same, under the bar on lines (+7), reverted. B-02 goes
+  to Round 9 (WORKLOG §122, 122f).
 - ☐ **122g — B-07, a spawned unit's wiring once** (`none`).
 - ☐ **122h — B-08, the objective rule called, not restated** (`none`).
 - ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).
 - ☐ **122j — B-17, one `chebyshev`** (`none`).
 - ☐ **122k — the focus-tile directive folded into `updateFocusTarget`**
   (`none`; a lead).
-- ☐ **122l — B-02, the split, if signed at 122f** (`stop`).
+- ~~**122l — B-02, the split, if signed at 122f**~~ — a trial in Round 9,
+  signed at 122f (META-ROADMAP §Round 9).
 - ☐ **122m — the re-skim** (`none`).
 - ☑ **122n — the fan-out pilot** (read by the user). Decided: (a), fresh
   sessions on this model; the Opus arm's eight files landed as the

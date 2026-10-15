@@ -785,6 +785,21 @@ board at a chosen hop.
 - **Camp-aware aura `affects`** (`'enemies'` exists and is test-pinned but is
   pure team-inequality — a player debuff aura reaches passive camps): the
   documented ~10-line widening.
+- **The neutral team split in two, as a trial** (census B-02, the user's
+  candidate; moved here at Round 8.5's 122f, 2026-10-15, user-signed).
+  Camp members on a team of their own, walls and cover keeping `neutral`.
+  Round 8.5 listed which question each site asks (WORKLOG §122, 122f): 26
+  ask whether a unit is scenery, 10 whether it is a camp member, 18
+  whether it is any neutral, and 17 lines plus `affectsMatch` compare two
+  units' teams. At seven of those a camp member meets a wall or rubble and
+  treats it as its own side today (`MovementBehavior`'s yield probe and
+  panic-flee swap, `blockedAlly`, `movement.ts`'s role-order pass, the
+  nearest-victim scan and `affectsMatch`, `lowestWoundedAlly`); a clean
+  split changes them, which this round may do and Round 8.5 could not.
+  Step zero: whether a run reaches each of the seven. Decided beside
+  camp-aware `affects`. Its bar is written before the trial; the user's
+  pre-registration carries (lines may grow if it reads better; census
+  B-02). `team` is in every unit of a World snapshot and on `unit:died`.
 - **Cavalier** (blitz + hit on arrival): `proposeSelfMove` hardcodes
   `targetId:-1`, so a `damage` op after a move has no target — a post-move
   target re-resolve. Everything else is a dash clone + mobility.
@@ -1173,6 +1188,7 @@ records an achievement on a clean machine.
 | Lifesteal · specials · camp-aware auras · cavalier · fatigue design | #1 #4 #3 #14 #9 | 9 |
 | Forced movement (knockback, pull) · a teleport | the Round 8.5 census, 2026-10-12 (the user) | 9 |
 | Mud, a rework of unknown shape | the Round 8.5 census, 2026-10-13 (the user) | 9 |
+| The neutral team split in two, as a trial | the Round 8.5 census, B-02 (the user); placed at 122f, 2026-10-15 | 9 |
 | Deck-event daemons · ability-grant channel · XP rewards · event resume · `extends` | #2 #6 #19 #7 #10 | 9 |
 | Traversal (marine + flight + `targetsLayer`) · the flyer's presentation · ice <1 · moving N×N (+ its render side) | #11 #12 #15 #5 / 7.5 hand-offs | 9 |
 | Finale design · sector 3 · the orphans · bit sinks · fauna · unlock mapping | C5 deferrals | 10 |

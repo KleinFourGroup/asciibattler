@@ -5156,3 +5156,19 @@ patch went back in (papercut filed).
 
 Readings: 94,666 at 16:00 after the orientation; 164,004 at 16:06 on the
 bar's commit, `ae59097`; 219,498 at 16:24 before this write-up.
+
+**Signed** (the user, 2026-10-15): "I've looked over it and agree. B-01
+is a no-op. I still believe that the B-02 trial should happen, but it
+belongs in Round 9, not here! Signed 😁 Let's add it to the charter for
+that round and then keep going here!" So B-01 is recorded as a no-op;
+B-02 is a trial in Round 9, written into META-ROADMAP §Round 9 with this
+list's counts and the seven sites, and 122l leaves this phase.
+
+**Held, against the session's own lean:** the stop's message said that
+`isActiveNeutral`, now read by its own test alone, should go as A-25's
+rows did. It stays for now. The cold-read probe's pilot names it
+(`scratch/119-kickoff/cold-read-pilot.md:44`), §128 runs the probe, and a
+session cleaning the code does not open the probe's hidden answers, so
+whether the deletion touches a probe question cannot be checked here;
+Round 9's B-02 decides the predicate's fate in any case. Put to the user
+at the next stop.

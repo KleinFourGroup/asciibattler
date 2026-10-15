@@ -1,5 +1,5 @@
 /**
- * E1 — coverage for `deriveStats`, `basicAttackDamage`, `inertDerived`,
+ * E1 — coverage for `deriveStats`, `inertDerived`,
  * and the `world.combatRng` crit-roll determinism contract.
  *
  * Formula-level tests are table-driven against the JSON-authored
@@ -23,8 +23,6 @@ import { Unit, type UnitStats } from './Unit';
 import { AbilityBehavior } from './behaviors/AbilityBehavior';
 import { createAbility } from './abilities/registry';
 import {
-  ZERO_STATS,
-  basicAttackDamage,
   critChanceFor,
   deriveStats,
   hitChanceFor,
@@ -270,37 +268,6 @@ describe('inertDerived', () => {
     expect(d.maxHp).toBe(5);
     expect(d.moveCooldownTicks).toBe(0);
     expect(d.attackRange).toBe(0);
-  });
-});
-
-describe('basicAttackDamage', () => {
-  function makeUnit(arch: 'mercenary' | 'archer' | 'environment', stats: UnitStats): Unit {
-    return new Unit({
-      id: 1,
-      team: arch === 'environment' ? 'neutral' : 'player',
-      archetype: arch,
-      glyph: arch === 'mercenary' ? 'M' : arch === 'archer' ? 'a' : '#',
-      stats,
-      derived: arch === 'environment' ? inertDerived(1) : deriveStats(stats, 1),
-      position: { x: 0, y: 0 },
-    });
-  }
-
-  it('melee → might + strength', () => {
-    const u = makeUnit('mercenary', { ...TEMPLATE, strength: 13 });
-    expect(basicAttackDamage(u, 0)).toBe(13); // no might → bare stat
-    expect(basicAttackDamage(u, 5)).toBe(18); // I6: weapon might adds on top
-  });
-
-  it('ranged → might + ranged stat', () => {
-    const u = makeUnit('archer', { ...TEMPLATE, ranged: 7 });
-    expect(basicAttackDamage(u, 0)).toBe(7);
-    expect(basicAttackDamage(u, 2)).toBe(9);
-  });
-
-  it('environment → might only (walls never strike, 0 scaling stat)', () => {
-    const u = makeUnit('environment', ZERO_STATS);
-    expect(basicAttackDamage(u, 0)).toBe(0);
   });
 });
 

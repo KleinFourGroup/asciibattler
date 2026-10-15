@@ -16,7 +16,6 @@ import {
   distanceBetween,
   findOverlappingCells,
   footprintCells,
-  footprintFits,
   footprintOf,
   isClaimed,
   isFree,
@@ -141,22 +140,6 @@ describe('occupiedCells — the shared set builder', () => {
     const me = spawnAt(world, 'player', { x: 2, y: 2 });
     spawnAt(world, 'enemy', { x: 5, y: 5 });
     expect(occupiedCells(world, GROUND, { excludeId: me.id })).toEqual(new Set(['5,5']));
-  });
-});
-
-describe('footprintFits — the occupancy half of the fit check', () => {
-  it('is true when every cell is free, false when any is taken', () => {
-    const world = setup();
-    spawnAt(world, 'player', { x: 4, y: 4 });
-    expect(footprintFits(world, [{ x: 5, y: 4 }, { x: 6, y: 4 }])).toBe(true);
-    expect(footprintFits(world, [{ x: 4, y: 4 }, { x: 5, y: 4 }])).toBe(false); // overlaps the unit
-  });
-
-  it('single-cell footprintFits equals isFree', () => {
-    const world = setup();
-    spawnAt(world, 'player', { x: 4, y: 4 });
-    expect(footprintFits(world, [{ x: 4, y: 4 }])).toBe(isFree(world, { x: 4, y: 4 }));
-    expect(footprintFits(world, [{ x: 7, y: 7 }])).toBe(isFree(world, { x: 7, y: 7 }));
   });
 });
 
@@ -306,21 +289,6 @@ describe('§39a — the footprint geometry seams', () => {
       const cells = cellsOccupiedBy(merc);
       expect(cells).toEqual([{ x: 3, y: 6 }]);
       expect(cells[0]).toBe(merc.position); // same object — byte-identical to pre-§39
-    });
-  });
-
-  describe('footprintFits — rejects a block overlapping any occupant', () => {
-    it('rejects a block overlapping a combatant', () => {
-      const world = setup();
-      spawnAt(world, 'player', { x: 4, y: 4 });
-      expect(footprintFits(world, footprintCells({ x: 3, y: 3 }, 2))).toBe(false); // covers (4,4)
-      expect(footprintFits(world, footprintCells({ x: 6, y: 6 }, 2))).toBe(true); // clear
-    });
-
-    it('rejects a block overlapping a neutral wall', () => {
-      const world = setup();
-      wallAt(world, { x: 5, y: 5 });
-      expect(footprintFits(world, footprintCells({ x: 4, y: 4 }, 2))).toBe(false); // covers (5,5)
     });
   });
 

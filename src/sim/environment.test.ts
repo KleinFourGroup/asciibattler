@@ -5,9 +5,6 @@ import { RNG } from '../core/RNG';
 import { findTarget } from './Targeting';
 import { Unit } from './Unit';
 import {
-  WALL_GLYPH,
-  HALF_COVER_GLYPH,
-  RUBBLE_GLYPH,
   RUBBLE_ARCHETYPE_BY_SIZE,
   WALL_ARCHETYPE,
   HALF_COVER_ARCHETYPE,
@@ -36,7 +33,7 @@ describe('environment / spawnWall', () => {
     // §38d — walls now carry the `wall` catalog id, not the retired `environment`
     // sentinel; the fold resolves glyph / flat HP / LOS-blocking from NEUTRAL_DEFS.
     expect(wall.archetype).toBe('wall');
-    expect(wall.glyph).toBe(WALL_GLYPH);
+    expect(wall.glyph).toBe(NEUTRAL_DEFS.wall!.glyph);
     expect(wall.blocksLineOfSight).toBe(true);
     expect(wall.position).toEqual({ x: 5, y: 5 });
     expect(wall.behaviors).toEqual([]);
@@ -49,7 +46,7 @@ describe('environment / spawnWall', () => {
 
     const wall = spawnWall(w, { x: 1, y: 1 });
     expect(wall.archetype).toBe('wall');
-    expect(wall.glyph).toBe(WALL_GLYPH);
+    expect(wall.glyph).toBe(NEUTRAL_DEFS.wall!.glyph);
     expect(wall.blocksLineOfSight).toBe(true); // wall semantics (default)
     // §40b — a wall is hp-LESS (indestructible); `spawnEnvironment` falls back to
     // the nominal filler maxHp (1, `NOMINAL_NEUTRAL_MAXHP` — byte-identical to the
@@ -59,13 +56,9 @@ describe('environment / spawnWall', () => {
 
     const cover = spawnHalfCover(w, { x: 2, y: 2 });
     expect(cover.archetype).toBe('half_cover');
-    expect(cover.glyph).toBe(HALF_COVER_GLYPH);
+    expect(cover.glyph).toBe(NEUTRAL_DEFS.half_cover!.glyph);
     expect(cover.blocksLineOfSight).toBe(false); // the D6 LOS contract, on the def
     expect(cover.behaviors).toEqual([]);
-
-    // The glyph constants must not drift from the catalog entries the fold reads.
-    expect(NEUTRAL_DEFS.wall!.glyph).toBe(WALL_GLYPH);
-    expect(NEUTRAL_DEFS.half_cover!.glyph).toBe(HALF_COVER_GLYPH);
   });
 
   it('emits unit:spawned just like a combatant', () => {
@@ -121,7 +114,7 @@ describe('environment / spawnWall', () => {
     expect(restored.units).toHaveLength(2);
     expect(restored.units[0]!.team).toBe('neutral');
     expect(restored.units[0]!.archetype).toBe('wall');
-    expect(restored.units[0]!.glyph).toBe(WALL_GLYPH);
+    expect(restored.units[0]!.glyph).toBe(NEUTRAL_DEFS.wall!.glyph);
     expect(restored.units[0]!.position).toEqual({ x: 2, y: 3 });
     expect(restored.units[1]!.position).toEqual({ x: 4, y: 5 });
   });
@@ -172,7 +165,7 @@ describe('§40c — destructible walls / cover', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const wall = spawnWall(w, { x: 2, y: 2 }, 40);
     expect(wall.archetype).toBe(WALL_DESTRUCTIBLE_ARCHETYPE);
-    expect(wall.glyph).toBe(WALL_GLYPH); // reads as a wall until it crumbles (shared glyph)
+    expect(wall.glyph).toBe(NEUTRAL_DEFS.wall!.glyph); // reads as a wall until it crumbles (shared glyph)
     expect(wall.blocksLineOfSight).toBe(true); // the LOS contract is unchanged
     expect(wall.derived.maxHp).toBe(40); // the per-instance layout HP became maxHp
     expect(wall.currentHp).toBe(40);
@@ -190,7 +183,7 @@ describe('§40c — destructible walls / cover', () => {
     const w = new World(new EventBus<GameEvents>(), new RNG(1));
     const destructible = spawnHalfCover(w, { x: 1, y: 1 }, 25);
     expect(destructible.archetype).toBe(HALF_COVER_DESTRUCTIBLE_ARCHETYPE);
-    expect(destructible.glyph).toBe(HALF_COVER_GLYPH);
+    expect(destructible.glyph).toBe(NEUTRAL_DEFS.half_cover!.glyph);
     expect(destructible.blocksLineOfSight).toBe(false); // the D6 LOS contract holds
     expect(destructible.derived.maxHp).toBe(25);
     expect(isCombatTargetable(destructible)).toBe(true);
@@ -337,8 +330,7 @@ describe('§40a — rubble (the first real multi-tile neutral)', () => {
 
     expect(rubble.team).toBe('neutral');
     expect(rubble.archetype).toBe(RUBBLE_ARCHETYPE_BY_SIZE[2]);
-    expect(rubble.glyph).toBe(RUBBLE_GLYPH);
-    expect(rubble.glyph).toBe(def.glyph); // the constant mustn't drift from the catalog
+    expect(rubble.glyph).toBe(def.glyph);
     expect(rubble.blocksLineOfSight).toBe(true); // §40 decision — rubble blocks LOS
     expect(rubble.derived.maxHp).toBe(def.hp); // flat HP from the def
     expect(rubble.behaviors).toEqual([]); // inert — no abilities

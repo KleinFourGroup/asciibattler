@@ -4762,3 +4762,32 @@ editors that use `mercenary` by literal (the kickoff's call 2).
 Proof (export): typecheck clean; `build-hash HEAD`, the same bytes, 32
 files; the suite and the smoke by the hook. The step-code ceiling 5,783
 → 5,773.
+
+Reading: 319,703 at 13:30 on the commit, `2f822d7`.
+
+### 122b — A-25's five, with their tests (2026-10-15, session 6677fa11)
+
+Gone: `basicAttackDamage` (`stats.ts`), `WALL_GLYPH`, `HALF_COVER_GLYPH`
+and `RUBBLE_GLYPH` (`environment.ts`), `footprintFits` (`occupancy.ts`).
+`damageStatFor`, which `basicAttackDamage` wrapped, stays: the ability
+detail line reads it (`ui/abilityDetail.ts`), and `archetypes.test.ts`
+tests it on its own. `stats.ts`'s header paragraph on the deleted
+function goes, and `damageStatFor`'s doc names its reader. GOTCHAS #94's
+two sentences that named the function now name `damageStatFor` and the
+catalog's `damageStat` field (a fix-up of what it names).
+
+Tests: `stats.test.ts`'s three of `basicAttackDamage` and
+`occupancy.test.ts`'s four of `footprintFits` are deleted, 3,750 →
+3,743. `environment.test.ts` loses the two checks that the constants
+matched the catalog, and its other glyph assertions read the catalog
+entry (`NEUTRAL_DEFS.wall!.glyph` and so on), which is what the spawned
+unit is built from. The type check named two imports the deletion
+orphaned (`Unit` in `stats.ts`, `ZERO_STATS` in its test), which is the
+guard A-26 is for.
+
+Proof (export): typecheck clean; `build-hash HEAD`, the same bytes;
+`reach-diff` of the suite recorded at `2f822d7` and after, through the
+8 changed files' diffs: nothing lost. (The first after-recording ran
+before the ceiling was lowered, so `comment-codes.test.ts` failed in it;
+the recording quoted is the second, green.) The step-code ceiling 5,773
+→ 5,766.

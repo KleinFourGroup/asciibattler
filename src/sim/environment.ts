@@ -22,18 +22,6 @@ import type { GridCoord } from '../core/types';
 import type { Unit } from './Unit';
 import type { World } from './World';
 
-/** Glyph rendered for impassable wall obstacles. Roguelike convention. Mirrors
- *  the `wall` catalog entry's glyph (asserted in environment.test). */
-export const WALL_GLYPH = '#';
-
-/**
- * D6 — half-cover glyph. Box-drawing `╥` (U+2565): a horizontal rail
- * with two short vertical posts, reading as a low fence. JetBrains Mono
- * supports it (verified at FontAtlas build). Mirrors the `half_cover` catalog
- * entry's glyph.
- */
-export const HALF_COVER_GLYPH = '╥';
-
 /**
  * §38d — the NEUTRAL catalog ids walls / half-cover spawn as. `spawnEnvironment`
  * resolves the glyph / flat HP / LOS-blocking from `NEUTRAL_DEFS[archetype]`, so
@@ -114,20 +102,6 @@ export function spawnHalfCover(world: World, position: GridCoord, hp?: number): 
     ...(hp !== undefined ? { maxHp: hp } : {}),
   });
 }
-
-/**
- * §40b — the rubble neutral glyph. `▄` (U+2584 LOWER HALF BLOCK) — a true HALF-
- * height slab that sits FLUSH on the ground, reading as low rubble/debris rather
- * than a wall-height obstacle. This replaces the `%` STOPGAP (itself a fallback from
- * the first-pass `▓` U+2593 DARK SHADE, a FULL-EM block that towered over the wall
- * `#` + occluded sprites). Catalog-derived into the atlas (all three rubble sizes
- * share it — one cell); mirrors the rubble catalog entries' glyph (asserted in
- * environment.test). NATIVE-browser CONFIRMED (user, 2026-07-02) — JetBrains Mono
- * renders the lower-half block cleanly (short + ground-flush, well below the wall
- * `#`, no occlusion), NOT tofu; remote render-verify remained unreliable, so the
- * native eye was the authority.
- */
-export const RUBBLE_GLYPH = '▄';
 
 /**
  * §40a — the rubble neutral `UnitDef` ids, keyed by footprint side (1..3, the

@@ -161,19 +161,6 @@ export function occupiedCells(
 }
 
 /**
- * Whether EVERY cell in `cells` is free on `plane` — the occupancy half of the
- * footprint-fit check. §39 pairs this with in-bounds + passability for spawn
- * anchoring; single-cell today, `footprintFits(world, [cell])` === `isFree`.
- */
-export function footprintFits(
-  world: World,
-  cells: readonly GridCoord[],
-  plane: OccupancyPlane = GROUND,
-): boolean {
-  return cells.every((c) => isFree(world, c, plane));
-}
-
-/**
  * §39c — the spawn ANCHORING policy. `corner` is the deterministic default;
  * `random-intersect` (§75c — the camp drip's organic scatter) picks uniformly
  * among EVERY fitting placement whose footprint overlaps the spawn tile.

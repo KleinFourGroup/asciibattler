@@ -42,17 +42,12 @@
  * `inertDerived` is the environment-entity path (walls / half-cover) —
  * non-combatants need a maxHp anchor for HP display and the future
  * destructibility plumbing, but no cooldowns / crit / range.
- *
- * `basicAttackDamage` answers "which stat drives this unit's basic
- * strike?" — melee → strength, ranged → ranged. Lives here (not inside
- * AttackBehavior) so E2's Ability system can generalize the lookup to
- * a per-ability stat tag without duplicating the per-archetype switch.
  */
 
 import { secondsToTicks } from '../config';
 import { STATS } from '../config/stats';
 import { UNIT_DEFS } from '../config/units';
-import type { Unit, UnitArchetype, UnitDerived, UnitStats } from './Unit';
+import type { UnitArchetype, UnitDerived, UnitStats } from './Unit';
 
 export function deriveStats(stats: UnitStats, attackRange: number): UnitDerived {
   return {
@@ -117,8 +112,7 @@ export function inertDerived(maxHp: number): UnitDerived {
 /**
  * E1 — which base stat drives a unit's basic strike, given its archetype +
  * stat block. The SINGLE source of truth for the archetype→damage-stat
- * mapping, shared by the sim (`basicAttackDamage`) and the display surfaces
- * (HUD + RecruitScreen "ATK" rows) so they can never disagree.
+ * mapping, read by the ability detail line (`ui/abilityDetail.ts`).
  *
  * §38c — the archetype→stat mapping moved OUT of an 18-case `switch` into the
  * `UnitDef.damageStat` catalog field (`config/units.json`), read straight off
@@ -135,16 +129,6 @@ export function inertDerived(maxHp: number): UnitDerived {
 export function damageStatFor(archetype: UnitArchetype, stats: UnitStats): number {
   const key = UNIT_DEFS[archetype]?.damageStat;
   return key ? stats[key] : 0;
-}
-
-/**
- * E1 — basic-strike damage for a live unit. I6: `might` (the firing weapon's
- * flat base, from `config/abilities.json`) ADDED to the archetype's scaling
- * stat (`damageStatFor`), so a club (+2) and a sword (+5) hit differently on
- * the same strength. Pre-crit, pre-defense.
- */
-export function basicAttackDamage(unit: Unit, might: number): number {
-  return might + damageStatFor(unit.archetype, unit.effectiveStats);
 }
 
 /**

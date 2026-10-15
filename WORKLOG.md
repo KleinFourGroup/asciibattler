@@ -5820,6 +5820,8 @@ the code or the config:
   `spawnFromQueue` reads, so a restored world seats a queued unit without
   the statuses `Run` stamped on it. Read from the code, not shown by a
   test; a behaviour change, put in TODO "§122 sim" for the user to place.
+  (It is census F-1, already in TODO "Round 9" as T-96; the §122 line was
+  a duplicate and is removed. See "122o, batches 1 to 3 read" below.)
 - `World.shove` and `unit:shoved` (batch 1's lead): the comment now says
   only tests call it. Whether it stays is a census call. The in-flight
   move abort and the queue scan's claim check guard against causes (a
@@ -5985,3 +5987,19 @@ first, after the orientation and the reads question; 321,089 at 21:44
 after batch 4's proof; 333,782 at 21:47 on batch 4's commit
 (`acfa4bff`); 455,338 at 22:05 after batch 5's proof; 463,988 at 22:07
 on its commit (`b6437e3d`); 478,285 at 22:10 on this hand-off.
+
+### 122o, batches 1 to 3 read (2026-10-15, session 989537c5)
+
+**Read** (the user, 2026-10-15), on the three read scripts: "You can go
+ahead and sign the reads for batches 1-3 also; I can't find anything
+wrong!" No finding, so batches 1 to 3 are read. Batches 4 and 5 stay
+unread.
+
+**A correction to batch 4's lead.** The queued template that loses its
+`effects` in `World.toJSON` is census F-1 (found at 120f, shown by
+`scratch/120f/queue-effects.ts`), already in TODO "Round 9" as T-96 and
+signed for Round 9 with the ability-grant channel and a World bump. Batch
+4 found it again from the code and filed it under "§122 sim" without
+searching TODO first; that line is removed. Its wording was wrong too: it
+named a resume as affected, and the game saves the run, not the battle,
+so only the bot's look-ahead copies a battle that way.

@@ -5808,3 +5808,10 @@ user's call.
    draws a level). I'd want that again. The miss in 3 is the part I'd
    rather not repeat: a statement that sounds like a fact about the
    code gets the grep, even when the old comment said it.
+
+   *Addendum, after the hand-off commit.* The lead I filed in TODO from
+   batch 4 was census F-1, already in TODO "Round 9". I filed it without
+   searching TODO or the census first, and said a resume was affected when
+   the game saves no battle. The user asked whether it was in the
+   META-ROADMAP; it was, and the duplicate is removed. Before filing a
+   lead, search the census and TODO for it.

@@ -5815,3 +5815,47 @@ user's call.
    the game saves no battle. The user asked whether it was in the
    META-ROADMAP; it was, and the duplicate is removed. Before filing a
    lead, search the census and TODO for it.
+
+## 2026-10-15 — session 6ea507e4 (claude-opus-5-5): 122o's batches 6 and 7
+
+Started from session 989537c5's brief, as a side session, to run batches 6
+to 8; batches 6 and 7 are committed, and batch 8 is handed off.
+
+1. *Missing from the orientation.* Little. The brief, the Cursor and the
+   batch entries were enough to start; the 121i rules and batch 5's
+   `objective.ts` diff gave the style in about 10k. The brief's "three
+   batches in one session" rested on 66 a line, which batch 6 didn't hold.
+2. *Norms in conflict.* The brief's done line (three batches) and 122o's
+   own rule (take a batch only while the projection stays under 550k)
+   disagreed at batch 8 by about 5k. I followed the rule, filed it as
+   `distress` (mild, resolved), and say so here and in the WORKLOG. The
+   app's note to stay in the worktree after a `cd` into it conflicted with
+   working on `main` in the root again; absolute paths settled it.
+3. *Pulled to claim more.* Once, caught before the commit: I first wrote
+   that `occupiedCells` and `claimedCells` serve "the acting-cell
+   searches", from the file name `actingPosition.ts`, when the call there
+   is the placement search; the list was checked and fixed. And in
+   `movement.ts` I first wrote that movement draws no RNG, carrying the
+   old comment's ban, until `moveDecision.ts`' wander kind sent me to the
+   `combatRng` draw. The blindness lead went the other way: read from the
+   code, it was a claim I could have filed as is, and a probe in the
+   worktree confirmed it before it went in TODO. I searched TODO and the
+   census first this time.
+4. *Wasted.* A few thousand: a `comment-length` call given files instead
+   of a folder, a measure copied before a later fix and copied again, two
+   wordings I wrote and then corrected in the same file.
+5. *For the next session.* Batch 8 is the map, 1,151 lines; from a fresh
+   session near 110k it fits with room for §122's close. A probe as a
+   real test file in the control worktree, run with `npx vitest run
+   <file>` and a deliberately failing `expect`, printed its answer on the
+   first try; delete it before the worktree comes down.
+6. *Room.* Yes. The hand-off at batch 8 was the rule's call, and I would
+   have liked to finish the three; that wish is real, and stopping was
+   available and taken rather than forced. No question to the user was
+   needed: the rule answered it.
+7. *What helped.* Checking each claim against the code again turned up
+   facts the comments had wrong in ways that matter to a reader (the
+   claims called inert in a third file, functions that no longer exist,
+   the rogue's strategy), and one that may matter to a player (the blind
+   archer). I'd want the probe-in-the-worktree pattern again: it turned a
+   suspicion into a filed fact for about 10k.

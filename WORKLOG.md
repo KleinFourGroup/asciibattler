@@ -6207,3 +6207,25 @@ the footprint as one cell, a function named that doesn't exist), or a
 rule cut that a change must respect: claims excluded from every
 placement (gotcha #113), the packed index on one grid only, the yield
 only where the healer would abstain.
+
+Batch 7 committed as `7efcc2ba`; the suite 3,741 and the smoke 621,
+green, by the hook. Its read script's commit is `7efcc2ba`.
+
+### The hand-off after batch 7 (2026-10-15, session 6ea507e4)
+
+Batches 1 to 7 are committed; 4 to 7 unread. Batch 8, the map (1,151
+lines), is handed off by 122o's rule: 473,489 after batch 7's commit plus
+1,151 lines at the 71 a line measured over seven is about 555k, over the
+550k line. The brief from session 989537c5's plan expected all three
+batches in this session; batch 6 ran at 99 a line (the blindness probe
+and the objective branches' facts), which took the margin. §122's close
+follows batch 8. The control worktree `output/wt-122o` is removed, its
+junction first, and the measure copies under `output/` with it. No
+preview server was started, and `scratch/119f/hidden/` was not opened;
+searches kept to `src`, `tools`, `tests` and `config`.
+
+Readings by the tool's clock (UTC): 83,839 at 22:33, the session's first,
+before the orientation; 121,140 at 22:34 as batch 6 began; 308,189 at
+22:51 after its proof; 312,791 at 22:55 on its commit (`7556420f`);
+466,569 at 23:09 after batch 7's proof; 473,489 at 23:12 on its commit
+(`7efcc2ba`).

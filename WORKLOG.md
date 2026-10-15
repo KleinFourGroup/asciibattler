@@ -4736,3 +4736,29 @@ we stick with a." What the session added, and the user signed:
 
 Reading: 271,913 at 13:06 after the price lookup, which loaded a whole
 skill (about 40k).
+
+### 122a — list A's dead exports (2026-10-15, session 6677fa11)
+
+Gone: A-22's twelve sim and core names (`healAmountFor`,
+`magicBoltDamage`, `catapultShotDamage`, `WORLD_COMMAND_KINDS`, `Vec2`,
+`ScalingStat`, `ScalarOrScaled`, `PeriodicOp`, `MoveOp`,
+`ApplyStatusOp`, `StatusPeriodic`, `StatusBehavior`) and its config
+names (`firstOpOf`, `EFFECT_DURATIONS`, `EffectDuration`,
+`SectorMapNode`, `SectorEncounterPools`, `ProceduralCampsConfig`); A-29's
+two files, `src/config/schemas.ts` (`RangeSchema`, `Range`) and
+`src/sim/effects/index.ts`. Step zero: a word search of `src`, `tests`,
+`tools`, `scripts`, `shell` and `probes` found no code that reads any of
+them; `terrain.ts` has its own `RangeSchema` and `tests/fuzz/search.ts`
+its own `Range`. The schemas behind the deleted type names stay, each
+read inside its file.
+
+Comments that named a deleted function now say the rule alone
+(`propose.ts`, `resolveScalars.ts`, `schema.ts`, which also named the
+gone `HealAction`). ARCHITECTURE's `types.ts` line loses `Vec2`, its
+`schemas.ts` line goes, and its `schema.ts` line names
+`PeriodicOpSchema`. `units.ts`: the boot check's comment names the two
+editors that use `mercenary` by literal (the kickoff's call 2).
+
+Proof (export): typecheck clean; `build-hash HEAD`, the same bytes, 32
+files; the suite and the smoke by the hook. The step-code ceiling 5,783
+→ 5,773.

@@ -12,7 +12,6 @@ import {
   type AbilityDef,
   type DamageOp,
   type HealOp,
-  type EffectOp,
 } from '../sim/effects/schema';
 
 import { loadProse } from '../i18n/locale';
@@ -62,17 +61,4 @@ export function damageOpOf(id: string): DamageOp | undefined {
 export function healOpOf(id: string): HealOp | undefined {
   const entry = abilityDef(id).effects.find((e) => e.op.kind === 'heal');
   return entry && entry.op.kind === 'heal' ? entry.op : undefined;
-}
-
-/**
- * The first op of `kind` on an ability, narrowed to that kind. The display
- * surfaces (UnitCard, the editor) read the `applyStatus`, `summon` and
- * `chain` ops through it to render a detail line.
- */
-export function firstOpOf<K extends EffectOp['kind']>(
-  id: string,
-  kind: K,
-): Extract<EffectOp, { kind: K }> | undefined {
-  const entry = abilityDef(id).effects.find((e) => e.op.kind === kind);
-  return entry ? (entry.op as Extract<EffectOp, { kind: K }>) : undefined;
 }

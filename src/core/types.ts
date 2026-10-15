@@ -8,9 +8,3 @@ export interface GridCoord {
   readonly x: number;
   readonly y: number;
 }
-
-/** Continuous 2D vector. For visual interpolation and any non-grid math. */
-export interface Vec2 {
-  readonly x: number;
-  readonly y: number;
-}

@@ -349,7 +349,7 @@ function resolveOp(op: EffectOp, c: OpResolveContext): OpResolution {
       return { baseDamage, critChance };
     }
     case 'heal': {
-      // I6 — heal amount is `might + magic` (mirrors `healAmountFor`); via the
+      // I6 — heal amount is `might + magic`, via the
       // shared kernel. `none` scaling = flat `might`; never rolls to-hit or crit.
       const healAmount = resolveHealAmount(op, c.unit.effectiveStats);
       return { healAmount };

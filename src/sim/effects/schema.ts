@@ -145,8 +145,7 @@ const DamageOpSchema = z.object({
 
 /**
  * `heal` — adds HP to a resolved ally, clamped at maxHp. `might` flat + the
- * `scaling` stat (`magic` | `none`). Never rolls to-hit or crit (mirrors
- * `HealAction` / `healAmountFor`).
+ * `scaling` stat (`magic` | `none`). Never rolls to-hit or crit.
  */
 const HealOpSchema = z.object({
   kind: z.literal('heal'),
@@ -520,16 +519,11 @@ export const AbilityDefSchema = z
 /* -------------------------------------------------------------------------- */
 
 export type DamageScaling = z.infer<typeof DamageScalingSchema>;
-export type ScalingStat = z.infer<typeof ScalingStatSchema>;
 export type ScaledValue = z.infer<typeof ScaledValueSchema>;
-export type ScalarOrScaled = z.infer<typeof ScalarOrScaledSchema>;
 export type Affects = z.infer<typeof AffectsSchema>;
 export type EffectOp = z.infer<typeof EffectOpSchema>;
-export type PeriodicOp = z.infer<typeof PeriodicOpSchema>;
 export type DamageOp = z.infer<typeof DamageOpSchema>;
 export type HealOp = z.infer<typeof HealOpSchema>;
-export type MoveOp = z.infer<typeof MoveOpSchema>;
-export type ApplyStatusOp = z.infer<typeof ApplyStatusOpSchema>;
 export type ChainOp = z.infer<typeof ChainOpSchema>;
 export type ChainInnerOp = z.infer<typeof ChainInnerOpSchema>;
 export type SummonOp = z.infer<typeof SummonOpSchema>;

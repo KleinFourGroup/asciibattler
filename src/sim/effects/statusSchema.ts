@@ -157,8 +157,6 @@ export const StatusDefSchema = z.object({
 });
 
 export type StatusMerge = z.infer<typeof StatusMergeSchema>;
-export type StatusPeriodic = z.infer<typeof PeriodicSchema>;
-export type StatusBehavior = z.infer<typeof BehaviorSchema>;
 export type StatusDef = z.infer<typeof StatusDefSchema>;
 
 /** Parse one status definition, throwing on a malformed shape (the A4 pattern). */

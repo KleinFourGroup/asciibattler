@@ -109,8 +109,6 @@ const SectorEncounterPoolsSchema = z
   )
   .default(() => emptyEncounterPools());
 
-export type SectorEncounterPools = z.infer<typeof SectorEncounterPoolsSchema>;
-
 const SectorSchema = z
   .object({
     id: z.string().min(1),

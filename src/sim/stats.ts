@@ -148,33 +148,6 @@ export function basicAttackDamage(unit: Unit, might: number): number {
 }
 
 /**
- * E7.B — HP restored by a healer's `heal_ally` cast. Scales on `magic` (raw),
- * mirroring how `basicAttackDamage` reads `strength`/`ranged` for strikes. I6:
- * `might` (the ability's flat heal base) adds on top — `might + magic`.
- */
-export function healAmountFor(unit: Unit, might: number): number {
-  return might + unit.effectiveStats.magic;
-}
-
-/**
- * E7.C — base damage of a mage's `magic_bolt` (the center-cell hit, before
- * the crit factor and the per-cell AoE ring multiplier). Scales on `magic`
- * (raw), mirroring `basicAttackDamage`. I6: `might + magic`.
- */
-export function magicBoltDamage(unit: Unit, might: number): number {
-  return might + unit.effectiveStats.magic;
-}
-
-/**
- * E7.D — base damage of a catapult's `catapult_shot` (before the crit
- * factor). Scales on `ranged` (raw), mirroring `magicBoltDamage`. I6:
- * `might + ranged`.
- */
-export function catapultShotDamage(unit: Unit, might: number): number {
-  return might + unit.effectiveStats.ranged;
-}
-
-/**
  * I2 — to-hit probability for a single-target strike (melee/ranged basic + the
  * rogue gambit). Fire-Emblem subtractive: the attacker's `precision` raises it,
  * the target's `evasion` lowers it, clamped to the configured floor/cap. Pure

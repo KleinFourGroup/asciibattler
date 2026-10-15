@@ -122,8 +122,8 @@ fan-out.
 The cut, signed 2026-10-15 (WORKLOG §122, the kickoff). `src/config`'s
 share of list A's export rows joins the sim's.
 
-- ☐ **122a — list A's dead exports** (`none`). A-22's sim, core and
-  config names, A-29's two files; `build-hash` unchanged.
+- ☑ **122a — list A's dead exports** (`none`). A-22's eighteen sim,
+  core and config names, A-29's two files; the build's bytes unchanged.
 - ☐ **122b — A-25's five, with their tests** (`none`).
 - ☐ **122c — A-28's field and A-38's option** (`none`). Proof: sim.
 - ☐ **122d — A-26, the word `export`** (`none`). Sim, core and config,

@@ -19,9 +19,3 @@ export type WorldCommand =
   | { readonly kind: 'noop' }
   | { readonly kind: 'setObjective'; readonly team: ObjectiveTeam; readonly objective: TeamObjective }
   | { readonly kind: 'clearObjective'; readonly team: ObjectiveTeam };
-
-export const WORLD_COMMAND_KINDS: readonly WorldCommand['kind'][] = [
-  'noop',
-  'setObjective',
-  'clearObjective',
-] as const;

@@ -62,11 +62,6 @@ export type UseContext = (typeof USE_CONTEXTS)[number];
 export const PACKET_TARGET_KINDS = ['none', 'unit', 'tile'] as const;
 export type PacketTargetKind = (typeof PACKET_TARGET_KINDS)[number];
 
-/** The duration vocabulary; each op's schema allows a subset (see the
- *  header). */
-export const EFFECT_DURATIONS = ['battle', 'encounter', 'run', 'permanent'] as const;
-export type EffectDuration = (typeof EFFECT_DURATIONS)[number];
-
 // ── the packet-only ops ─────────────────────────────────────────────────────
 
 const ApplyBuffOpSchema = z.object({

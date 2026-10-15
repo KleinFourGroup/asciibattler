@@ -193,7 +193,6 @@ const TerrainSchema = z
 export type TerrainConfig = z.infer<typeof TerrainSchema>;
 export type ProceduralTerrainConfig = z.infer<typeof ProceduralSchema>;
 export type ThemeTilesConfig = z.infer<typeof ThemeTilesSchema>;
-export type ProceduralCampsConfig = z.infer<typeof ProceduralCampsSchema>;
 /** The three camp-site placement modes. */
 export type CampPlacementMode = 'pair' | 'midBand' | 'free';
 export type RangeSpec = z.infer<typeof RangeSchema>;

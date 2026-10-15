@@ -53,7 +53,7 @@ src/
     sampling.ts              # M6: deterministic RNG samplers — weightedPick + sampleRange (triangular bias)
     Clock.ts                 # Fixed-timestep tick loop separated from render loop
     events.ts                # GameEvents catalog (typed event payloads)
-    types.ts                 # Shared primitives: Vec2, GridCoord
+    types.ts                 # Shared primitives: GridCoord
 
   dev/                       # 53b: DEV-only surfaces; 117.5j: main.ts's DEV-gated dynamic import of devEntry.ts is the sole app entry, held by tests/dev-guard.test.ts, and scripts/dev-scan.mjs reads a build for what would have leaked (the gauntlet harness may import headless)
     devEntry.ts              #   117.5j: THE DEV ENTRY — `beforeBoot(search)` (the planted boot failures, a board fixture's URL) and `installDevHandle(game)`: `window.__game` with the trace recorder and its ring, the dev keys, the board explorer, 28's `__game.applyStatus(id, team|unitId)`, the planted running failures, and last `window.__probe`. Everything a page uses from this folder is imported here, statically; its chunk in a development-mode build (`devEntry-*.js`) is what the probe runner takes as proof that DEV was on (shell/electron/tree.mjs)
@@ -113,7 +113,6 @@ src/
                              #   GP1: per-axis mobility/speed CdPerStat + MinCdScale (I1: agility→speed); GP2: minDamage floor
     sim.ts                   #   E5: targeting + pathfinding knobs (retarget, occupiedCellPenalty, healer*); the mid-battle spawn lockout (spawnDurationSeconds); the objective leash (rangedLeashCells)
     playback.ts              #   I3/Q1: speed steps {value,enabled}[] (0.5/1/2/3) + pauseEnabled; render-only (pause = speed 0)
-    schemas.ts               #   shared zod helpers
     configHash.ts            #   53b (in src/dev until §114): fnv1a fingerprint over the RAW config/*.json registry, all of it (plain JSON imports — tsx-compatible, NOT import.meta.glob); the stamp a battle trace and a run journal are refused on; drift-guard test walks config/
 
   i18n/                      # §95 (Round 7): the locale layer — CONFIG prose via the SIDECAR (English inline in config/*.json; other locales derived), UI literals via an explicit-key table (95c)
@@ -209,7 +208,7 @@ src/
       CampWanderBehavior.ts  # 75f: the camp member's behavior slot 0 (spawnCampUnit swap) — PASSIVE = the leash-filtered anchor wander on campRng (campWanderChancePerSecond authored per-SECOND, loader-derived per-tick — the 75j verdict's tick-rate decoupling; anchor tile skips the chance gate so the drip portal vacates); HOSTILE (currentTarget resolves a mark) = wholesale delegate to MovementBehavior's engagement protocol
       registry.ts            # createMovementBehavior + behavior factories keyed by kind (A2)
     effects/                 # Y1–Y3: data-driven attack/effect model (Cluster 1 keystone) — replacing the hand-coded ability/action classes
-      schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOp (damage|heal subset for status ticks)
+      schema.ts              #   Y1: EffectOp/TargetSelector/AbilityDef vocabulary (zod, closed discriminated unions) + inferred types; 27a: PeriodicOpSchema (damage|heal subset for status ticks)
       statusSchema.ts        #   27a: StatusDef vocabulary (zod) — durationSeconds/merge/periodic{everySeconds,op}/fx; 28: behavior{preventsAttack/preventsMove/movement/targeting/acquisitionRange/affects} (the AI decision-hook axis); 47f: statMods (the deferred stat-mod axis, first consumer = emboldened)
       statusRuntime.ts       #   27b: StatusDef → runtime StatusEffect bridge (buildStatusEffect + statusMergeToPolicy: brief merge vocab → K1 MergePolicy)
       timeline.ts            #   Y1: seconds→ticks phase conversion: speed-scaled cadence + the single 'fill' elastic phase

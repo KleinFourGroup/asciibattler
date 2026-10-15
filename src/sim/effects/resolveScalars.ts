@@ -50,8 +50,7 @@ export function resolveDamageScalars(
   return { baseDamage, critChance };
 }
 
-/** A `heal` op's cast-time amount (`might + magic`; never rolls to-hit or crit —
- *  mirrors `healAmountFor`). */
+/** A `heal` op's cast-time amount (`might + magic`; never rolls to-hit or crit). */
 export function resolveHealAmount(op: HealOp, stats: UnitStats): number {
   return op.might + scalingStatValue(op.scaling, stats);
 }

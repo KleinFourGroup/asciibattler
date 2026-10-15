@@ -126,7 +126,6 @@ const SectorMapSchema = z
   });
 
 export type SectorMap = z.infer<typeof SectorMapSchema>;
-export type SectorMapNode = z.infer<typeof SectorMapNodeSchema>;
 
 /** Exported for the tests, which pass hand-built maps through the real
  *  schema. */

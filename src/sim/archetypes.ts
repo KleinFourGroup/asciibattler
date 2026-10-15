@@ -5,25 +5,17 @@ import { UNIT_DEFS, type CombatantUnitDef, type UnitRarity } from '../config/uni
 import { abilityDef } from '../config/abilities';
 import { scaleStats, simulateLevelUps } from './leveling';
 
-// E7.A — `Archetype` is defined once in `./Unit` and re-exported here so the many
-// `import { Archetype } from './archetypes'` sites keep working. §38c relaxed it
-// from a closed union to an OPEN catalog id (`= string`, validated structurally
-// against `config/units.json` at load), so adding an archetype is a JSON entry —
-// no code edit (the §38e editor authors it as pure data).
+// `Archetype` is defined in `./Unit`; re-exported for the sites that import
+// it from here.
 export type { Archetype };
 
 /**
- * Per-archetype config, sourced from `config/units.json` and
- * validated by [src/config/units.ts](src/config/units.ts).
- * Re-exported as `ARCHETYPE_CONFIG` for tests that want to assert
- * baseStats / glyph without re-importing from config.
- *
- * §38d — the §38d neutral fold added `NEUTRAL_DEFS` (walls / half-cover / future
- * rubble) as a SIBLING record; `UNIT_DEFS` stays the COMBATANT catalog (its
- * de-facto pre-38d meaning), so every accessor here + the draft/telemetry/roster
- * consumers of `ALL_ARCHETYPES` keep their exact combatant types with no union to
- * narrow. Neutral defs are fetched off `NEUTRAL_DEFS` by the spawn + status-
- * filter paths (`World` / `environment.ts`).
+ * The combatant catalog, from `config/units.json` as
+ * [src/config/units.ts](src/config/units.ts) validates it, exported as
+ * `ARCHETYPE_CONFIG` for tests. The neutral defs are `NEUTRAL_DEFS`, read by
+ * the spawn and status-gate paths (`World`, `environment.ts`), so every
+ * accessor here and every reader of `ALL_ARCHETYPES` keeps its combatant
+ * type with no union to narrow.
  */
 const CONFIGS: Record<Archetype, CombatantUnitDef> = UNIT_DEFS;
 
@@ -32,27 +24,18 @@ export function glyphForArchetype(archetype: Archetype): string {
 }
 
 /**
- * E5 — a unit's effective engagement range: the MAX attack range over
- * the archetype's abilities. Range moved off the archetype (E1's
- * `attackRange` primitive) onto each ability in `config/abilities.json`,
- * so this is now derived rather than read directly. Fed into
- * `deriveStats` as `derived.attackRange` — the value MovementBehavior's
- * in-range abstain and the HUD/audio readers consult. Per-ability gates
- * (whether a *specific* strike can reach) read the ability's own range
- * in `proposeBasicStrike`, not this max.
- */
-/**
- * §76c — one ability's contribution to `derived.attackRange`, or `null` when it
- * has none (a non-engaging verb). The three exclusions/overrides:
- *  - `self` target → null (N1: a leap/summon range is not engagement reach).
- *  - caster-anchored aoe with `affects:'allies'` → null (a buff shout is
- *    support, not engagement — the aura-adjacent case).
- *  - caster-anchored aoe hitting enemies (a nova) → the selector's RADIUS (its
- *    true reach; the def's `rangeCells` is inert for an un-aimed blast, so
- *    reading it would let a stale authoring convention strand the unit —
- *    the same hazard class as N1).
- * Everything else engages at its authored `rangeCells` (byte-identical for the
- * whole shipped catalog — no shipped def authors `anchor:'caster'`).
+ * One ability's share of `derived.attackRange`, or null when it engages
+ * nothing:
+ *
+ * - a `self` target is null: a leap's or a summon's range is not reach;
+ * - an aoe anchored on the caster that affects `allies` is null: a buff
+ *   shout is support;
+ * - an aoe anchored on the caster that hits enemies (a nova) is its
+ *   radius, its true reach: `rangeCells` means nothing for a blast with no
+ *   aim, and reading it would strand the unit at a stale authored range.
+ *
+ * Anything else engages at its `rangeCells`. No shipped def anchors an aoe
+ * on the caster.
  */
 export function engagementReach(def: AbilityDef): number | null {
   if (def.target.kind === 'self') return null;
@@ -62,12 +45,15 @@ export function engagementReach(def: AbilityDef): number | null {
   return def.rangeCells;
 }
 
+/**
+ * The engagement range: the largest reach among the archetype's engaging
+ * abilities (`engagementReach`), passed to `deriveStats` as
+ * `derived.attackRange`, which `MovementBehavior`'s in-range abstain and
+ * the HUD and audio read. Whether one ability can reach is its own range,
+ * checked as it proposes. With no engaging ability, the largest
+ * `rangeCells` of all, since a support unit needs some distance to hold.
+ */
 export function rangeForArchetype(archetype: Archetype): number {
-  // N1/§76c — non-engaging verbs (self leaps, ally-buff blasts) are excluded
-  // from `derived.attackRange` (the in-range-abstain threshold MovementBehavior
-  // reads); see `engagementReach`. Falls back to max `rangeCells` over ALL
-  // abilities if a unit carries only non-engaging verbs (a pure support unit
-  // needs SOME hold distance; the pre-76c fallback, unchanged).
   const ids = CONFIGS[archetype].abilities;
   const reaches = ids
     .map((id) => engagementReach(abilityDef(id)))
@@ -77,32 +63,17 @@ export function rangeForArchetype(archetype: Archetype): number {
 }
 
 /**
- * O4 — a unit's engagement FLOOR: the `minRangeCells` of the archetype's
- * longest-range engaging (non-`self`-target) ability — the same ability whose
- * `rangeCells` defines `derived.attackRange`, so `[minRange, attackRange]` is the
- * firing band `MovementBehavior` kites within. Config-READ (parallels
- * `rangeForArchetype`), deliberately NOT plumbed into `UnitDerived` — there's no
- * serialized per-unit copy, so `minRange` needs no WorldSnapshot bump (it's looked
- * up live wherever `attackRange` is, exactly like `rangeCells`/the damage profile).
- * Every archetype today carries a single attack ability, so "longest-range
- * engaging" is unambiguous; the max-by-range tie-break generalizes it to a future
- * multi-weapon unit.
- * `minRange 0` for every weapon today → byte-identical (no kiting) until the O4
- * value commit sets bow/mage/catapult floors.
- *
- * §38d — a NEUTRAL unit (walls / half-cover) never seeks a firing position and is
- * absent from the COMBATANT catalog, so the optional chain maps it to 0 (the value
- * the removed `=== 'environment'` guard produced); `MovementBehavior` needn't
- * pre-narrow `unit.archetype` (a wall has no behaviors and never reaches the band
- * logic anyway).
+ * The engagement floor: the `minRangeCells` of the ability that sets the
+ * reach (by the same `engagementReach`, the first of equals winning), so
+ * `[minRange, attackRange]` is the firing band `MovementBehavior` kites in.
+ * Read from the config where it is needed, like `rangeCells`, not stored on
+ * `UnitDerived`, so it has no serialized copy. A unit with no engaging
+ * ability has a floor of 0, as has an id the combatant catalog lacks
+ * (scenery), so a caller needn't narrow `unit.archetype` first.
  */
 export function minRangeForArchetype(archetype: UnitArchetype): number {
   const ids = CONFIGS[archetype]?.abilities;
   if (!ids) return 0;
-  // §76c — the band floor belongs to the ability that DEFINES the reach, so the
-  // pick runs on the same `engagementReach` as `rangeForArchetype` (first-wins
-  // tie-break, as before; byte-identical for the shipped catalog). A unit with
-  // only non-engaging verbs has no firing band → floor 0.
   let best: string | undefined;
   let bestReach = -Infinity;
   for (const id of ids) {
@@ -116,52 +87,44 @@ export function minRangeForArchetype(archetype: UnitArchetype): number {
 }
 
 /**
- * Per-archetype target-selection strategy id (resolved against the registry
- * in `src/sim/targetingStrategies.ts`). Resolved at spawn and stashed on
- * `Unit.targeting` so the leaf `Targeting.ts` needn't import the config layer.
- * §38d — a NEUTRAL unit (walls / half-cover) never seeks a target and is absent
- * from the COMBATANT catalog, so the optional chain gives it the harmless
- * `nearest` default (the value the removed `=== 'environment'` guard produced);
- * callers needn't branch on team/neutral first.
+ * The archetype's target-selection strategy id, against the registry in
+ * `targetingStrategies.ts`. Resolved at spawn and kept on `Unit.targeting`,
+ * so `Targeting.ts` needn't import the config. An id the combatant catalog
+ * lacks (scenery) gets `nearest`, so a caller needn't branch on the team
+ * first.
  */
 export function targetingForArchetype(archetype: UnitArchetype): string {
   return CONFIGS[archetype]?.targeting ?? 'nearest';
 }
 
-/**
- * E3 — per-archetype `growthRates` block, used by `simulateLevelUps`
- * (player recruits) and `scaleStats` (enemies).
- */
+/** The archetype's `growthRates`, for `simulateLevelUps` (a player's unit)
+ *  and `scaleStats` (an enemy's). */
 export function growthRatesForArchetype(archetype: Archetype) {
   return CONFIGS[archetype].growthRates;
 }
 
-/**
- * E3 — per-archetype `baseStats` block, used as the starting point for
- * level-up math. Returned by reference (frozen-by-zod-parse JSON), so
- * callers MUST spread before mutating.
- */
+/** The archetype's `baseStats`, where the level-up math starts. Returned
+ *  by reference, the parsed config's own object, so a caller spreads it
+ *  before changing it. */
 export function baseStatsForArchetype(archetype: Archetype) {
   return CONFIGS[archetype].baseStats;
 }
 
 /**
- * E2 — registry ids of the abilities an archetype unit spawns with.
- * Order is significant: `AbilityBehavior` walks the list in stored
- * order and ties go to the first proposer. Spawn-site callers pass each
- * id through `createAbility` to instantiate a fresh stateless ability
- * per unit.
+ * The registry ids of the abilities the archetype spawns with. The order
+ * matters: `AbilityBehavior` walks them in it, and a tie goes to the first.
+ * A spawn passes each id through `createAbility`, a fresh ability for each
+ * unit.
  */
 export function abilityIdsForArchetype(archetype: Archetype): readonly string[] {
   return CONFIGS[archetype].abilities;
 }
 
 /**
- * E3 — produce a player-side template at the given level via simulated
- * level-ups. Level 1 returns baseStats verbatim (no RNG draws); higher
- * levels consume `9 × (level - 1)` RNG draws against the archetype's
- * growthRates (one per stat; H1 made it 9). Used by `rollTeam` (level 1)
- * and `rollOffer` (recruits at currentFloor — see ROADMAP E3 decision point).
+ * A player's template at `level`, by simulated level-ups. Level 1 is the
+ * base stats, with no draw; a higher level draws once a stat a level,
+ * `11 × (level − 1)`, against the archetype's growth rates. The starting
+ * roster, the recruit offer and a reward's unit come through here.
  */
 export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): UnitTemplate {
   const cfg = CONFIGS[archetype];
@@ -177,10 +140,10 @@ export function rollUnit(archetype: Archetype, rng: RNG, level: number = 1): Uni
 }
 
 /**
- * E3 — produce an enemy-side template at the given level via the
- * deterministic `scaleStats` path. No RNG draws; same `(archetype,
- * level)` pair always produces the same stats. Used by G4's
- * `buildEnemyTeam` to materialize each budget-allocated enemy level.
+ * An enemy's template at `level`, by the deterministic `scaleStats`: no
+ * draw, so an `(archetype, level)` pair always gives the same stats.
+ * `buildEnemyTeam`, a wave's units, a camp's members and a summon come
+ * through here.
  */
 export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
   const cfg = CONFIGS[archetype];
@@ -200,68 +163,58 @@ export function scaledUnit(archetype: Archetype, level: number): UnitTemplate {
 export const ARCHETYPE_CONFIG: Record<Archetype, CombatantUnitDef> = CONFIGS;
 
 /**
- * F1 — the draft / recruit pool: every defined archetype, in
- * `config/units.json` key order (melee, ranged, rogue, healer,
- * mage, catapult). Derived from the config so a newly-added archetype
- * joins the pool automatically; the stable key order keeps the byte
- * stream deterministic for whoever samples from it. `rollOffer` draws
- * DISTINCT archetypes from this at uniform weight (F1, recruit-only) —
- * rarity tiers + floor-depth weighting + enemy-side diversification
- * layer on top in Phase G (recruitment refactor).
+ * Every combatant archetype, in `config/units.json`'s key order: derived
+ * from the catalog, so a new one joins at once, and in a fixed order, so
+ * whoever samples from it stays deterministic. The full list, for the
+ * roster's order, the prices, telemetry and the fuzz; the recruit offer
+ * draws from the draftable ones (`DRAFTABLE_BY_TIER`).
  */
 export const ALL_ARCHETYPES: readonly Archetype[] = Object.keys(CONFIGS) as Archetype[];
 
 /**
- * §29-close — the player DRAFT pool: the subset of `ALL_ARCHETYPES` whose config
- * `draftable` flag is true. `rollOffer` samples post-victory recruit offers from
- * THIS list, not the full catalog, so the §29 enemy disruptors
- * (frozen/confusion/blind/panic afflicters) and the summon-only Ghoul — which
- * exist on the board (cast by enemies / summoned) but are never the player's to
- * draft — stay out of the offer. Derived from the per-archetype flag (default
- * true), so a new *player* archetype joins automatically and a new enemy/minion
- * archetype is excluded with one `"draftable": false` line. `ALL_ARCHETYPES`
- * remains the canonical full list everywhere else (telemetry / fuzz / roster
- * ordering — every defined archetype, draftable or not).
+ * The archetypes the player can draft: those whose `draftable` flag is true,
+ * the default. The enemies' disruptors (the frozen, confusion, blind and
+ * panic casters) and the summon-only ghoul are on the board but never the
+ * player's to draft, so each is out by one `"draftable": false`, and a new
+ * player archetype joins at once. The recruit offer samples them by tier
+ * (`DRAFTABLE_BY_TIER`).
  */
 export const DRAFTABLE_ARCHETYPES: readonly Archetype[] = ALL_ARCHETYPES.filter(
   (a) => CONFIGS[a].draftable,
 );
 
 /**
- * §61b — per-archetype rarity tier, def-resolved by id (the
- * `targetingForArchetype` convention — no serialized per-unit copy). The
- * optional chain maps a neutral/unknown id to `common` (harmless: neutrals are
- * never drafted or carded; a legacy fixture id shouldn't throw here).
+ * The archetype's rarity tier, read from its def by id, with no copy on the
+ * unit. An id the combatant catalog lacks gets `common`: scenery is never
+ * drafted or carded, and an old fixture's id shouldn't throw.
  */
 export function rarityForArchetype(archetype: UnitArchetype): UnitRarity {
   return CONFIGS[archetype]?.rarity ?? 'common';
 }
 
 /**
- * §61g — the player-facing display name (`UnitDef.name`, the AbilityDef
- * precedent), def-resolved by id. Falls back to the RAW ID for a neutral /
- * unknown archetype — graceful-degradation naming: a missing def shows the
- * id, never throws in a display path. The id stays the load-bearing key
- * everywhere else (serialization, URLs, error messages).
+ * The archetype's display name (`UnitDef.name`), read from its def by id.
+ * An id without a combatant def shows as itself, so a display path never
+ * throws; the id stays the key everywhere else (serialization, URLs, error
+ * messages).
  */
 export function nameForArchetype(archetype: UnitArchetype): string {
   return CONFIGS[archetype]?.name ?? archetype;
 }
 
 /**
- * §61b — the draft pool PARTITIONED by rarity tier (every tier key present,
- * possibly empty), in `config/units.json` key order within each tier. 61c's
- * sampler rolls a tier over the NON-EMPTY entries (renormalizing the config
- * weights), then uniform within the tier. Derived from the same flags as
- * `DRAFTABLE_ARCHETYPES`, so the union over tiers IS that list — a new
- * archetype joins its tier automatically.
+ * The draftable archetypes of one tier, in the catalog's order. Every tier
+ * has a key, empty or not; the recruit sampler (`Recruitment.ts`) rolls a
+ * tier over the ones that aren't, its weights renormalized, then picks
+ * uniformly within it. Built from the flags `DRAFTABLE_ARCHETYPES` reads, so
+ * the tiers together are that list.
  */
 function draftableOfTier(tier: UnitRarity): readonly Archetype[] {
   return DRAFTABLE_ARCHETYPES.filter((a) => CONFIGS[a].rarity === tier);
 }
-// Explicit keys (not Object.fromEntries, which erases the key union): the
-// exhaustive Record type makes a future RARITY_TIERS addition a compile error
-// here instead of a silently-missing bucket.
+// Explicit keys, not `Object.fromEntries`, which loses the key union: the
+// exhaustive `Record` makes a new tier in `RARITY_TIERS` a compile error
+// here, not a missing bucket.
 export const DRAFTABLE_BY_TIER: Readonly<Record<UnitRarity, readonly Archetype[]>> = {
   common: draftableOfTier('common'),
   uncommon: draftableOfTier('uncommon'),

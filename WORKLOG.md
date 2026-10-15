@@ -5857,3 +5857,113 @@ Also: a repo-wide `grep -rln` for `setInitialObjective` ran over
 `scratch/`, `scratch/119f/` included, and printed paths only, none under
 `hidden/`; nothing there was opened. Later searches kept to `src`,
 `tools` and `tests`.
+
+Batch 4 committed as `acfa4bff`; the suite 3,741 and the smoke 621,
+green, by the hook. Its read script's commit is `acfa4bff`.
+
+### 122o, batch 5 — the unit and the battle (2026-10-15, session 989537c5)
+
+`Unit.ts`, `battleSetup.ts`, `battleRules.ts`, `objective.ts`,
+`environment.ts`, `archetypes.ts`. Every step code is out (209), and the
+history with them: the archetype union's story, the I5 family, the
+migration of each stat, the mixSeeds note, the "launch" semantics.
+`UnitInit` gives the defaults once and points at `Unit`'s fields, which
+hold each field's fact. Two docs that sat on the wrong declaration
+(`rangeForArchetype`'s above `engagementReach`) are on their own. The
+signed calls stay, said as rules: camp identity per encounter by a key
+with no turn index, the pull per turn, the filters before the chance.
+
+**A fix-up of batch 4:** `World.ts`'s `objectives` field said nothing in
+the game sets the enemy's objective; the camp pull does
+(`battleSetup.spawnCamps`). Found here, corrected in this commit.
+
+**Statements found false and corrected (rule 7)**, each checked against
+the code or the config:
+
+- *`Unit.ts`.* `isActiveNeutral` was "the one gate the ~40-site widening
+  hangs off", and `campId`'s doc said the widening reads it; only its test
+  calls it (122m kept it for Round 9's B-02). `rosterIndex` was stamped by
+  `Run.handleEnterNode`; `Run.beginTurn` stamps it (`battleSetup.ts` said
+  the same, corrected too). `defense` was applied "in `applyDamage`",
+  "post-cover", and environmental fire and chasm damage "unmitigated":
+  `dealDamage` applies it, cover's multiplier is gone (121f), a periodic
+  status is mitigated unless its op bypasses, and nothing deals chasm
+  damage. `precision` and `evasion` were behaviour-neutral "until I2",
+  `power` "until H4", read by no path "yet", and a survivors' chip; the
+  chip is `health.chipMode`'s. The slowest mobility was "around −7"; it
+  ships at −14. `UnitStats` and `UnitDerived` counted crit among the
+  derived numbers (it is per ability), and `attackRange` named
+  `proposeBasicStrike`, which no longer exists. `derived` said no status
+  changes it; Fatigued lowers constitution at spawn and the officer's
+  `inspired` raises mobility mid-battle. `abilities` came from
+  `ARCHETYPE_CONFIG` (`abilityIdsForArchetype`, in `wireSpawned`);
+  `actionCooldowns` was keyed by `Action.id` (by a proposal's
+  `cooldownKey`, else the action's). `Team` pointed at HANDOFF notes that
+  don't exist. `Behavior` said Game makes one per unit (`wireSpawned`).
+- *`battleSetup.ts`.* `spawnCamps` said no shipped layout lists a camp and
+  only unit tests run it; layouts place five camps by nine refs (121j's
+  count). The header named two code paths and `spawnCamps` four
+  construction sites; BattleScene, both replays and the fuzz harness set
+  up here. `spawnEncounter` gave the order as pick, shuffle, pick,
+  shuffle; both regions are picked first. The wall coord's comment said
+  every shipped layout is bare; sixteen coords carry `hp` (121j).
+  `spawnTeam` named E2's `melee_strike` and `ranged_shot`, and
+  `setupRngFor` AttackAction's crit.
+- *`battleRules.ts`.* The rules rode into "both construction sites"
+  (every setup path). "Launch content is chance-less" holds: the one
+  `chance` in `config/daemons.json` is Mercury's `turnStart` hook, not a
+  battle rule.
+- *`objective.ts`.* The enemy's objective was "fixed at `atWill`, enemy AI
+  never sets it" (the camp pull does), and a `neutral` target was a
+  destructible set by the player's click alone; a camp member is one too
+  (`validNeutralObjectiveTarget`), and the pull sets it. `atWill`'s revert
+  named only a dead enemy target.
+- *`environment.ts`.* Destructibility and the tile combat modifiers were
+  future; both ship. `spawnWall` said every shipped layout's walls are
+  bare, that the tick's death check takes a dead wall "the next tick"
+  (the reap takes it that tick), and that BattleScene's audio skips
+  neutrals (`audibleDeath` in `eventSounds.ts` skips scenery; a camp
+  member's death sounds). `spawnHalfCover` named `AttackBehavior`'s wall
+  pool (`collectLosBlockers`) and a cover bonus "still unbuilt" (built and
+  removed at 121f). `spawnRubble` said nothing damages rubble until a
+  later step lifts the guard; rubble carries `autoTarget`. The rubble map
+  said the layout editor resolves sizes through it; only `spawnRubble`
+  does.
+- *`archetypes.ts`.* `minRangeForArchetype` said every archetype carries
+  one attack ability and every floor is 0 "until the O4 value commit";
+  ten abilities ship a floor (nine of 2, one of 4). `rollUnit` drew
+  "9 × (level − 1)", one a stat; there are eleven stats. It named
+  `rollTeam` as a caller, which is retired; the callers are the starting
+  roster, the recruit offer (`rollOffer`) and a reward. `ALL_ARCHETYPES` listed
+  six archetypes and fed the offer at uniform weight; the offer draws from
+  `DRAFTABLE_BY_TIER` by tier. `baseStatsForArchetype` called the config
+  frozen by zod; nothing freezes it (the rule to spread stays).
+  `scaledUnit` named `buildEnemyTeam` alone; waves, camps and summons use
+  it too.
+
+No new lead. The two this batch touched are filed: the queued template's
+`effects` (TODO "§122 sim", batch 4) and `ObjectiveController`'s copy of
+the neutral-target rule (TODO "§124").
+
+Measured (`comment-length` on copies at `acfa4bff` and after, under the
+ignored `output/122o-b5/`): comment lines 970 → 686, words 7,300 →
+5,065, code lines 577 unchanged. The step-code ceiling 4,854 → 4,645.
+
+Proof: `comment-strip HEAD src`, comments only, exit 0, after each file.
+The control in `output/wt-122o` (of `f58cdabe`), the seven files copied
+in on top of batch 4's `World.ts`: unplanted exit 0; with
+`battleRules.ts`' player-only gate planted as `'enemy'`, exit 1 naming
+that line (138 → 129); restored from a copy, byte-identical to the live
+file. Typecheck clean.
+
+Cost: 333,782 at 21:47 UTC as the batch's reading began (batch 4's hook
+running), 455,338 at 22:05 after the proof: 122k for 1,621 lines, 75 a
+line, the facts behind `Unit.ts`' field docs and the pull's comment taking
+most of it. The five batches: 648k for 9,744 lines, 66 a line.
+
+**Read** (`batch`): `git show <batch 5's commit> -- src/sim/Unit.ts
+src/sim/battleSetup.ts`. Wrong looks like a step code or history left, a
+field's fact said on both `UnitInit` and `Unit`, a claim the code
+contradicts (the enemy's objective, the stamps, the stats' readers), or a
+signed call cut: the camp key with no turn index, the pull's per-turn
+key, the filters before the chance.

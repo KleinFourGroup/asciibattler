@@ -1,21 +1,12 @@
 /**
- * Environment entity factories. Walls, future healing shrines, hazards,
- * any "thing on the grid that isn't a combatant" gets a constructor here.
+ * The scenery factories: walls, half-cover, rubble, anything on the grid
+ * that isn't a combatant. Each is a neutral-team `Unit` spawned through
+ * `world.spawnEnvironment`, not from a rolled template, so it is in
+ * `world.units` and therefore in every pathing blocker list, with no
+ * separate blocker grid, and it snapshots and rehydrates as any unit does.
  *
- * Environment entities are spawned as **neutral-team Units** via
- * `world.spawnEnvironment` rather than via the rolled-stat UnitTemplate
- * path. Reusing the Unit infrastructure means:
- *
- * - They appear in `world.units` and therefore in the blocker list
- *   MovementBehavior builds for pathfinding — no separate "blocker grid"
- *   concept.
- * - They snapshot + rehydrate through the existing UnitSnapshot path for
- *   free.
- * - Future destructibility is a matter of bumping `maxHp` and adding a
- *   "walls can be attacked" hook to Targeting.
- *
- * Tile properties (movement cost, eventually combat modifiers / LOS) live
- * on TileGrid, not here — see `src/sim/TileGrid.ts`.
+ * A tile's properties (its cost, its to-hit modifiers, its statuses) are on
+ * `TileGrid`, not here.
  */
 
 import type { GridCoord } from '../core/types';
@@ -23,53 +14,39 @@ import type { Unit } from './Unit';
 import type { World } from './World';
 
 /**
- * §38d — the NEUTRAL catalog ids walls / half-cover spawn as. `spawnEnvironment`
- * resolves the glyph / flat HP / LOS-blocking from `NEUTRAL_DEFS[archetype]`, so
- * these are the single source binding a spawn wrapper to its catalog entry.
+ * The neutral catalog ids walls and half-cover spawn as. `spawnEnvironment`
+ * takes the glyph, the HP and the line-of-sight blocking from
+ * `NEUTRAL_DEFS`, so these bind each wrapper to its entry.
  */
 export const WALL_ARCHETYPE = 'wall';
 export const HALF_COVER_ARCHETYPE = 'half_cover';
 
 /**
- * §40c — the DESTRUCTIBLE wall / half-cover catalog ids. Under §40b's HP-presence
- * rule, destructibility IS `hp`-presence on the def, so a destructible wall is a
- * SEPARATE neutral `UnitDef` carrying an `hp` pool (present ⇒ `isCombatTargetable`)
- * but no `autoTarget` (⇒ never auto-chipped like rubble — manual / AoE / focused
- * fire only). They share the indestructible siblings' glyph (`#` / `╥`) so a
- * destructible wall reads identically until it crumbles (a visual "tell" is a
- * deferred polish call, not part of the mechanic). `spawnWall` / `spawnHalfCover`
- * route here when handed a per-instance `hp` (the §40c layout-schema knob); the
- * def's own `hp` is the default pool a hp-less-override spawn (or the §40d editor's
- * default fill) gets. UNTUNED — §41 balances the pools.
+ * The destructible wall and half-cover ids. A def is destructible when it
+ * has an `hp` (`isCombatTargetable`), so a destructible wall is its own
+ * neutral def, with an `hp` and no `autoTarget`: it is hit by an order, a
+ * blast or focused fire, never chipped at on its own as rubble is. Each
+ * shares the indestructible one's glyph (`#`, `╥`), so it reads the same
+ * until it falls. `spawnWall` and `spawnHalfCover` take one when given an
+ * `hp`, which overrides the def's.
  */
 export const WALL_DESTRUCTIBLE_ARCHETYPE = 'wall_destructible';
 export const HALF_COVER_DESTRUCTIBLE_ARCHETYPE = 'half_cover_destructible';
 
 /**
- * Spawn a wall at the given cell.
+ * Spawns a wall. Given an `hp`, it is destructible: the `wall_destructible`
+ * def, with `hp` as its maxHp. Without one, it is the plain `wall`, whose
+ * def has no `hp`, so it is indestructible: never targeted, skipped by
+ * blasts, damaged by nothing. So a wall breaks only when its layout coord
+ * carries an `hp`, and walls are unbreakable by default.
  *
- * §40c — passing an `hp` makes the wall DESTRUCTIBLE: it spawns as the
- * `wall_destructible` neutral def (whose def-level `hp` presence is the §40b
- * signal `isCombatTargetable` keys off) with `hp` as the per-instance maxHp
- * override — the layout-schema "give a wall an HP pool" knob. With no `hp`
- * (the default + every shipped layout today) it spawns as the plain `wall`
- * def, which is hp-LESS ⇒ indestructible (Targeting never picks it; AoE
- * skips it; nothing damages it). So a wall is breakable iff its layout entry
- * carries an `hp` — the locked "wall-destructibility OFF by default" rule.
+ * A destructible wall that dies is reaped as any unit is (`World.reapUnit`):
+ * `unit:died` with `team: 'neutral'`, which the renderer fades out, and no
+ * death sound for scenery (`audibleDeath`, `eventSounds.ts`).
  *
- * Lifecycle when a destructible wall takes fatal damage: `World.tick`'s death
- * short-circuit picks it up the next tick, splices it from `world.units`,
- * emits `unit:died` with `team: 'neutral'`. BattleRenderer fades the
- * sprite; BattleScene's audio handler skips neutrals so the standard
- * combat death sound doesn't play for crumbling masonry. (Same path §40a's
- * rubble crumble already exercises end-to-end.)
- *
- * Default `blocksLineOfSight: true` — ranged units can't shoot through
- * walls (the C1b LOS contract). Both wall defs share it.
+ * Both wall defs block line of sight.
  */
 export function spawnWall(world: World, position: GridCoord, hp?: number): Unit {
-  // §38d — glyph + LOS-blocking come from the catalog entry. §40c — `hp` present
-  // routes to the destructible def (targetable) with `hp` as the maxHp override.
   return world.spawnEnvironment({
     archetype: hp !== undefined ? WALL_DESTRUCTIBLE_ARCHETYPE : WALL_ARCHETYPE,
     position,
@@ -78,24 +55,14 @@ export function spawnWall(world: World, position: GridCoord, hp?: number): Unit 
 }
 
 /**
- * D6 — spawn half-cover at the given cell. Pathfinding still blocks
- * through it (the half-cover is a Unit, every Unit appears in the
- * MovementBehavior blocker list), so units route around exactly like
- * walls. Ranged attacks see THROUGH it: `blocksLineOfSight: false`
- * removes it from the wall pool `AttackBehavior` builds for the
- * Bresenham LOS check.
- *
- * §40c — destructibility mirrors walls: passing an `hp` spawns the
- * `half_cover_destructible` def (targetable, `hp` = per-instance maxHp);
- * with no `hp` it's the hp-less `half_cover` def = indestructible. Neither
- * is ever auto-targeted (no `autoTarget` on either def) — manual / AoE /
- * focused fire only. The combat-modifier hook ("ranged defense bonus for
- * shooting from behind half-cover") is still C2-era and stays unbuilt.
+ * Spawns half-cover. Pathing blocks on it, since it is a unit like any
+ * other, so units route around it as around a wall; a shot sees through
+ * it, since its defs don't block line of sight, which keeps it out of
+ * `collectLosBlockers`. Given an `hp`, it is the destructible def, as a
+ * wall is. Neither def has `autoTarget`, so neither is chipped at on its
+ * own.
  */
 export function spawnHalfCover(world: World, position: GridCoord, hp?: number): Unit {
-  // §38d — glyph + `blocksLineOfSight: false` (the D6 LOS contract) live on the
-  // catalog entry. §40c — `hp` present routes to the destructible def (targetable)
-  // with `hp` as the maxHp override.
   return world.spawnEnvironment({
     archetype: hp !== undefined ? HALF_COVER_DESTRUCTIBLE_ARCHETYPE : HALF_COVER_ARCHETYPE,
     position,
@@ -104,11 +71,9 @@ export function spawnHalfCover(world: World, position: GridCoord, hp?: number): 
 }
 
 /**
- * §40a — the rubble neutral `UnitDef` ids, keyed by footprint side (1..3, the
- * §39-LOCKED range). Rubble is the FIRST real multi-tile entity — footprint is
- * def-resolved (`footprintOf` reads the catalog by archetype), so there's one id
- * per size. `spawnRubble` + the §40d layout editor's size picker resolve through
- * here (the single binding of a size to its catalog id).
+ * The rubble defs by footprint side, 1 to 3. A footprint is the def's
+ * (`footprintOf` reads it by archetype), so each size has its own id, and
+ * `spawnRubble` binds a size to its id here.
  */
 export const RUBBLE_ARCHETYPE_BY_SIZE: Readonly<Record<1 | 2 | 3, string>> = {
   1: 'rubble_1x1',
@@ -117,14 +82,12 @@ export const RUBBLE_ARCHETYPE_BY_SIZE: Readonly<Record<1 | 2 | 3, string>> = {
 };
 
 /**
- * §40a — spawn a rubble obstacle (a destructible neutral) at `position` (its
- * canonical footprint CORNER, per §39). `size` picks the N×N footprint (1..3);
- * `maxHp` overrides the catalog default (the §40d layout schema's per-placement
- * "configurable HP" — mirrors `spawnWall`'s override). Rubble is burnable/
- * freezable but not poisonable (the `statusSusceptibility` allow-list on the
- * def) and blocks LOS by default. The 0-HP reap → `unit:died{neutral}` lifecycle
- * already runs end-to-end (see `spawnWall`). ⚠️ Nothing DAMAGES rubble until §40b
- * lifts the `isCombatTargetable` neutral guard (AoE) + adds the auto-target hook.
+ * Spawns rubble, a destructible neutral, at `position`, its footprint's
+ * minimum corner. `size` picks the N×N footprint; `maxHp` overrides the
+ * def's, as a layout coord's `hp` does. Its defs let it burn and freeze but
+ * not be poisoned (`statusSusceptibility`), block line of sight, and carry
+ * `autoTarget`, so units chip at it on their own. It dies as a wall does
+ * (`spawnWall`).
  */
 export function spawnRubble(
   world: World,

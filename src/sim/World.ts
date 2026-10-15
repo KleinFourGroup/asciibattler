@@ -398,10 +398,10 @@ export class World {
    * through the command channel (`applyCommand`), so a change lands at the
    * drain at the tick's top; read through `objectiveFor(team)` by
    * `updateTarget` and `MovementBehavior`, each steering by the acting
-   * unit's team. Nothing in the game sets the enemy's, which stays
-   * `atWill`. An objective whose target unit dies reverts to `atWill`
-   * (`clearResolvedObjectives`); a `tile` holds until replaced. The record
-   * is fixed and only its slots are reassigned, so it is `readonly`.
+   * unit's team. In the game only the camp pull sets the enemy's
+   * (`battleSetup.ts`). An objective whose target is gone reverts to
+   * `atWill` (`clearResolvedObjectives`); a `tile` holds until replaced. The
+   * record is fixed and only its slots are reassigned, so it is `readonly`.
    */
   private readonly objectives: { player: TeamObjective; enemy: TeamObjective } = {
     player: AT_WILL,

@@ -1,65 +1,57 @@
 import type { GridCoord } from '../core/types';
 
 /**
- * The in-battle objective model. O1 (Phase O) refactored J1's single nullable
- * player objective into a per-team, ALWAYS-PRESENT typed objective, separating
- * the MODE (what the team is doing) from the TARGET (where / who).
+ * The objectives: each team has one, always, which separates the mode (what
+ * the team is doing) from the target (where, or whom).
  *
- * `ObjectiveTarget` — the inner where/who (the old J1 `BattleObjective`):
- *  - `enemy`: a specific enemy unit to converge on + kill.
- *  - `neutral` (§40e): a specific DESTRUCTIBLE neutral (rubble / a destructible
- *    wall or cover) to converge on + demolish. Kept DISTINCT from `enemy` so the
- *    targeting resolvers stay honest — "attack a hostile" vs "demolish an
- *    obstacle" (a neutral is never an `enemy`, and every targeting scan already
- *    branches on `team === 'neutral'`). Manual only: the player clicks it; §40b's
- *    AUTO-target sets `targetId` directly, never through an objective.
- *  - `tile`:  a rally cell the team paths toward (an attractor — "as close as
- *    they can").
+ * `ObjectiveTarget`:
  *
- * `TeamObjective` — the always-present per-team wrapper. O1 shipped `atWill` +
- * `engage`; O2 adds `hold`; O3 adds `focus` (each extends this union + its
- * behavior branch):
- *  - `atWill` (the default): no target — default nearest-enemy targeting +
- *    normal pathing. BEHAVIORALLY IDENTICAL to J1's `objective === null`. A team
- *    reverts here when an `engage`/`focus` enemy target dies (J1's auto-clear,
- *    now "revert to at-will" rather than "set null").
- *  - `engage`: target = enemy or tile. The RTS attack-move — BEHAVIORALLY
- *    IDENTICAL to J1's set objective (leash-capped engage radius + retaliation;
- *    see `Targeting.updateObjectiveTarget`).
- *  - `hold` (O2): no target. Units STOP MOVING (`MovementBehavior` proposes no
- *    intent — no pursuit, no dash) but ACT IN PLACE: they target + attack any
- *    enemy ALREADY within their attack range (`Targeting.updateTarget`'s hold
- *    branch picks an in-range enemy or none). A held ranged unit fires at
- *    anything in reach; a held melee unit only strikes adjacent.
- *  - `focus` (O3): target = enemy or tile. Like `engage` but COMPLETELY
- *    PREEMPTS targeting + pathing — a unit ABANDONS its current fight (and eats
- *    hits from non-focused enemies; no retaliation break-off) to converge on
- *    the focus. An ENEMY focus = beeline to that unit, ignore everything else
- *    (`Targeting.updateFocusTarget`). A TILE focus beelines to the tile and then
- *    engages around it (`Targeting.updateFocusTarget`). A dead focus enemy reverts to
- *    `atWill` (mirrors engage); a tile focus persists.
+ * - `enemy` — an enemy unit to converge on and kill.
+ * - `neutral` — a neutral to converge on and break or fight: a destructible
+ *   (rubble, a destructible wall or cover) or a camp member
+ *   (`validNeutralObjectiveTarget`). Apart from `enemy`, so the targeting
+ *   keeps "attack a hostile" and "break an obstacle" distinct: a neutral is
+ *   never an `enemy`. Set by a player's click or the enemy's camp pull
+ *   (`battleSetup.ts`); auto-targeting a destructible sets `targetId`
+ *   directly, never through an objective.
+ * - `tile` — a rally cell the team paths toward, as close as it can.
  *
- * Stored per-team on `World` (`objectiveFor(team)`); the ENEMY team is fixed at
- * `atWill` for now (J1's "enemy AI never sets it"), but the storage is real and
- * the behaviors read the ACTING unit's team objective, so a future enemy
- * strategy is a data change, not a refactor. Set/cleared via the `setObjective`
- * / `clearObjective` `WorldCommand`s (the deterministic top-of-tick drain);
- * snapshotted (part of the WorldSnapshot).
+ * `TeamObjective`, the modes:
+ *
+ * - `atWill` — the default, with no target: nearest-enemy targeting and
+ *   ordinary pathing. A team reverts here when the target of its `engage`
+ *   or `focus` is gone (`World.clearResolvedObjectives`).
+ * - `engage` — the attack-move: converge on the target, within a leashed
+ *   engage radius, and fight back when struck
+ *   (`Targeting.updateObjectiveTarget`).
+ * - `hold` — no target. Units stop moving (`MovementBehavior` proposes no
+ *   move, no pursuit, no dash) but act in place, on any enemy already in
+ *   attack range (`Targeting.updateTarget`'s hold branch): a held ranged
+ *   unit fires at anything in reach, a held melee unit strikes only what is
+ *   adjacent.
+ * - `focus` — like `engage`, but it preempts targeting and pathing whole: a
+ *   unit leaves its fight, and takes hits from the rest without breaking
+ *   off, to converge on the focus. A unit focus goes straight for that unit
+ *   and ignores everything else; a tile focus goes straight for the tile,
+ *   then engages around it (`Targeting.updateFocusTarget`). A gone target
+ *   reverts as `engage`'s does; a tile holds.
+ *
+ * Stored per team on `World` (`objectiveFor(team)`), and the behaviours
+ * read the acting unit's team's, so the enemy's is real: the camp pull sets
+ * it, and nothing else in the game does. Changed only through the `setObjective` and
+ * `clearObjective` commands, at the drain at the tick's top, and
+ * serialized.
  */
 export type ObjectiveTarget =
   | { readonly kind: 'enemy'; readonly unitId: number }
   | { readonly kind: 'neutral'; readonly unitId: number }
   | { readonly kind: 'tile'; readonly cell: GridCoord };
 
-/** The teams that carry an objective. Neutrals (walls / environment entities)
- *  never do — `World.objectiveFor` maps them to `atWill` defensively. */
+/** The teams that carry an objective. A neutral never does, and
+ *  `World.objectiveFor` answers `atWill` for one. */
 export type ObjectiveTeam = 'player' | 'enemy';
 
-/**
- * A team's always-present steering objective. O1 = `atWill` | `engage`; O2 adds
- * `hold` (no target, act-in-place), O3 adds `focus` (target, fully preempts
- * targeting + pathing).
- */
+/** A team's objective, always present; the modes are described above. */
 export type TeamObjective =
   | { readonly mode: 'atWill' }
   | { readonly mode: 'engage'; readonly target: ObjectiveTarget }
@@ -67,42 +59,41 @@ export type TeamObjective =
   | { readonly mode: 'focus'; readonly target: ObjectiveTarget };
 
 /**
- * The shared `atWill` default — both teams start here and every revert lands
- * here. Frozen + shared (the value is immutable, so a single instance is safe
- * across both teams' state) so a revert is a reference swap, never an alloc.
+ * The shared `atWill`: both teams start here and every revert lands here.
+ * Frozen, so one instance serves both teams, and a revert swaps a
+ * reference rather than allocating.
  */
 export const AT_WILL: TeamObjective = Object.freeze({ mode: 'atWill' } as const);
 
-/** A living enemy's id + cell — the minimal slice `objectiveAtCell` needs. The
- *  caller (J3's objective-input controller) builds these from the World's living
- *  enemy units, so this stays free of a render→sim or sim→render import. */
+/** A living enemy's id and cell, all `objectiveAtCell` needs. The
+ *  objective-input controller builds these from the World's living enemies,
+ *  so this file imports nothing from render or UI. */
 export interface EnemyAtCell {
   readonly id: number;
   readonly cell: GridCoord;
 }
 
-/** §40e — a living DESTRUCTIBLE neutral's id + its footprint cells. A multi-tile
- *  rubble (2×2/3×3) occupies several cells, so a click on ANY of them targets it;
- *  hence the cell LIST (vs `EnemyAtCell`'s single cell — the shipped combatants
- *  are all 1×1). Built by the objective-input controller from the World's
- *  destructible neutrals, so this too stays import-free (mirrors `EnemyAtCell`). */
+/** A living targetable neutral's id and its footprint's cells. A 2×2 or 3×3
+ *  rubble covers several cells and a click on any of them targets it, so
+ *  this carries a list, where `EnemyAtCell` has one cell (every shipped
+ *  combatant is 1×1). Built by the objective-input controller, as
+ *  `EnemyAtCell` is. */
 export interface NeutralAtCell {
   readonly id: number;
   readonly cells: readonly GridCoord[];
 }
 
 /**
- * J3 — resolve a clicked grid cell into an `ObjectiveTarget`, in priority order:
- * a living `enemy` occupying the cell → a `neutral` DESTRUCTIBLE body whose
- * footprint covers the cell (§40e) → else a `tile` rally target. A hostile
- * standing in front of rubble still wins (enemy-first); clicking empty ground, a
- * friendly, or an INDESTRUCTIBLE wall (absent from `neutrals`) all rally the team
- * to that cell (the tile attractor). The caller wraps the result in a
- * `TeamObjective` mode (78a: unarmed left-click → `engage`, right-click →
- * `focus`, the armed pick → its mode).
+ * Resolves a clicked cell into an `ObjectiveTarget`, first match wins: a
+ * living enemy on the cell, then a neutral in `neutrals` whose footprint
+ * covers it, then the cell itself as a `tile`. So an enemy in front of
+ * rubble wins, and a click on empty ground, a friend or an indestructible
+ * wall (absent from `neutrals`) rallies the team to the cell. The caller
+ * wraps the result in a mode (an unarmed left-click `engage`, a right-click
+ * `focus`, an armed pick its own).
  *
- * Pure (plain data in, no `World`) so it's node-testable and every input path —
- * the two unarmed fast paths and the armed left-click — routes through the one
+ * Plain data in, no `World`, so it tests headless and every input path, the
+ * two unarmed clicks and the armed left-click, goes through this one
  * resolver.
  */
 export function objectiveAtCell(

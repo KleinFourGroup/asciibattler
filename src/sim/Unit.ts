@@ -3,98 +3,65 @@ import type { GridCoord } from '../core/types';
 import type { World } from './World';
 import type { ActionProposal, ActiveAction } from './Action';
 import type { Ability } from './abilities/Ability';
-// Value imports: `stats.ts` / `statusEffects.ts` only TYPE-import Unit, so this
-// is a type-only cycle at runtime (these are pure functions called lazily from
-// methods, never at module init) — no initialization-order hazard.
+// Value imports: `stats.ts` and `statusEffects.ts` only type-import Unit, so
+// the cycle is type-only at runtime (pure functions, called from methods,
+// never at module init): no initialization-order hazard.
 import { deriveStats } from './stats';
 import { foldEffects, cloneEffect, mergeEffectInto } from './statusEffects';
 import type { StatusEffect } from './statusEffects';
 
-/** Shared empty return for `expireEffects` when nothing expired (27) — keeps the
- *  no-effect common path zero-allocation. */
+/** The shared empty return for `expireEffects` when nothing expired, so the
+ *  common path allocates nothing. */
 const NO_EFFECTS: readonly StatusEffect[] = [];
 
 /**
- * Combatant alignment. `'neutral'` is for environment entities (walls,
- * future healing shrines, hazards) — Targeting ignores neutrals when
- * picking enemies, HUD doesn't list them in either roster, and
- * `World.checkBattleEnd` doesn't count them toward either side's
- * "alive?" check. See HANDOFF `src/sim/Unit.ts` notes on C1a.
+ * A unit's side. `neutral` is what belongs to neither team: scenery (walls,
+ * half-cover, rubble) and camp members (`campId`). `World.checkBattleEnd`
+ * counts no neutral toward either side.
  */
 export type Team = 'player' | 'enemy' | 'neutral';
 
 /**
- * E1 — the archetype tag the UnitTemplate + archetype config carry. §38d folded
- * neutrals (walls / half-cover) into the same catalog, so a neutral unit carries
- * its own catalog id (`'wall'` / `'half_cover'`) here rather than a shared
- * sentinel — a single `unit.archetype` lookup still answers config questions for
- * every unit, combatant or neutral.
- *
- * I5 — the single `'melee'` archetype (renamed `'mercenary'`) split into a
- * family of melee subclasses (`mercenary` = the old melee baseline, `adventurer` =
- * dodge bruiser, `ronin` = crit duelist, `bandit` = low-growth enemy
- * fodder), now that the I1/I2 dodge stats can differentiate them. All
- * four carry `melee_strike`; they diverge only in stats. `bandit` is the
- * default melee *enemy* (the player/enemy-symmetry break the brief wanted).
+ * An archetype id: any id in the unit catalog (`config/units.json`),
+ * combatant or neutral (a wall's is `'wall'`), so `unit.archetype` answers
+ * config questions for every unit. A string, not a union: the catalog is
+ * validated at load (`src/config/units.ts`, which also asserts the ids the
+ * game names), so a new unit kind is a JSON entry with no code edit
+ * (`tools/archetype-editor/`).
  */
-// §38c — the KEYSTONE relax: the closed 18-member literal union became a
-// catalog-validated string id. An `Archetype` is now any id present in the
-// `UnitDef` catalog (`config/units.json`), validated at load by the open
-// `z.record` schema + boot-asserts on the ids the game hard-references (see
-// `src/config/units.ts`). This is what lets §38e's editor author a brand-new
-// unit kind as pure DATA — no code edit, no union member to add. The 18 literal
-// branches that used to switch on this union were all killed in 38c-1/2/3
-// (damageStat / movementBehavior / retargetOnLosLoss → catalog fields), so the
-// type no longer needs to be closed to stay exhaustive.
-//
-// The shipped roster (for reference — no longer enforced by the type):
-//   melee family:  mercenary · adventurer · ronin · bandit
-//   ranged/rogue:  ranged · rogue · catapult
-//   caster/support: healer · mage
-//   §29 demo roster: reaver · corrupter · ice_mage · warlock · luminant ·
-//                    banshee · stormcaller · shaman · ghoul
 export type Archetype = string;
-// §38d — the `'environment'` sentinel is RETIRED. Walls / half-cover are now
-// NEUTRAL `UnitDef` entries in the catalog (`config/units.json` → `NEUTRAL_DEFS`),
-// so a wall's `unit.archetype` is its catalog id (`'wall'` / `'half_cover'`) like
-// any other unit — no special string. `UnitArchetype` remains as the name for
-// "the archetype tag stored on a Unit / UnitSnapshot" (an alias for `Archetype`);
-// the archetype accessors treat any id absent from the COMBATANT catalog as a
-// non-combatant, returning the neutral default (targeting `nearest`, 0 damage).
+/** The archetype tag a `Unit` and its snapshot store, an alias of
+ *  `Archetype`. The accessors in `archetypes.ts` answer an id the combatant
+ *  catalog lacks with the neutral default (targeting `nearest`, a minimum
+ *  range of 0, rarity `common`, the id as its name). */
 export type UnitArchetype = Archetype;
 
 /**
- * §75b — THE active-neutral predicate (the one gate the ~40-site widening
- * hangs off, per the §75 kickoff audit). An ACTIVE neutral — a camp member —
- * wanders, aggros, fights, and earns its killer XP; an inert neutral (wall /
- * half-cover / rubble) stays a hard blocker and scenery. Structural parameter
- * so both live `Unit`s and `UnitSnapshot`s qualify.
+ * Whether a unit is a camp member: a neutral with a `campId`, which wanders,
+ * aggroes, fights and earns its killer XP. Structural, so a `Unit` and a
+ * `UnitSnapshot` both qualify. Only its test calls it; the sim asks
+ * `isInertNeutral` or reads `campId`.
  */
 export function isActiveNeutral(unit: { team: Team; campId: number | null }): boolean {
   return unit.team === 'neutral' && unit.campId !== null;
 }
 
 /**
- * §75d — the complement: an INERT neutral (wall / half-cover / rubble) — the
- * static scenery every spatial query treats as a hard blocker. The widening
- * sites that used to test `team === 'neutral'` for "is this a wall" test this
- * instead, so a camp member's body prices as a mobile unit (soft cost), not
- * terrain.
+ * Whether a unit is scenery: a neutral without a `campId` (a wall,
+ * half-cover, rubble), which every spatial query treats as a hard blocker.
+ * A camp member is not, so its body prices as a moving unit's (a soft
+ * cost), not as terrain.
  */
 export function isInertNeutral(unit: { team: Team; campId: number | null }): boolean {
   return unit.team === 'neutral' && unit.campId === null;
 }
 
 /**
- * E1 — per-unit base stat block. Replaces the MVP `{maxHp, attackDamage,
- * attackRange, attackCooldownTicks, moveCooldownTicks}` shape. These
- * are the values that grow via level-up (E3); battle-time numbers
- * (maxHp, cooldown ticks, crit chance) live on `UnitDerived` and
- * recompute from this block via `deriveStats` in `src/sim/stats.ts`.
- *
- * Closed set of named fields, not a `Map<string, number>`: adding a
- * stat is one schema bump, and the type system surfaces every consumer
- * that needs to react.
+ * A unit's base stats, the values that grow with its level. The battle's
+ * derived numbers (maxHp, the move cooldown, the engagement range) are on
+ * `UnitDerived`, computed from these by `deriveStats` (`stats.ts`). A
+ * closed set of named fields, not a map: adding a stat is one schema bump,
+ * and the type checker finds every reader that must react.
  */
 export interface UnitStats {
   readonly constitution: number;
@@ -102,137 +69,109 @@ export interface UnitStats {
   readonly ranged: number;
   readonly magic: number;
   readonly luck: number;
-  /** GP2: flat damage mitigation. Subtractive with a floor — an incoming hit
-   *  lands `max(STATS.minDamage, rawDamage − defense)` (post-crit, post-cover),
-   *  applied in `World.applyDamage`. Consumed raw (no derived layer).
-   *  Nonnegative; environmental fire/chasm damage is UNMITIGATED. (I1 reordered
-   *  it up next to `luck` so the direct-combat stats group before dodge/cadence.) */
+  /** Flat mitigation: a hit lands `max(STATS.minDamage, rawDamage − defense)`
+   *  after the crit (`World.dealDamage`); damage with `bypassDefense` skips
+   *  it. Read raw, with no derived layer. At least 0. */
   readonly defense: number;
-  /** I1: dodge — the hit-chance numerator. A unit's `precision` raises the
-   *  chance its attacks land (weighed against the target's `evasion`), rolled in
-   *  `World.applyDamage`. Behavior-NEUTRAL until I2 wires the hit/miss roll.
-   *  Nonnegative. */
+  /** Raises the chance this unit's evadable hits land, against the target's
+   *  `evasion` (`hitChanceFor`, rolled in `World.applyDamage`). At least 0. */
   readonly precision: number;
-  /** I1: dodge — the hit-chance denominator. A unit's `evasion` lowers the
-   *  chance an incoming attack lands (weighed against the attacker's
-   *  `precision`). Behavior-NEUTRAL until I2. Nonnegative. */
+  /** Lowers the chance an evadable hit on this unit lands, against the
+   *  attacker's `precision`. At least 0. */
   readonly evasion: number;
-  /** I1: per-ability attack-cadence dial (GP1 had named it `agility`; reverted
-   *  here because `agility` read as "dodge chance" once the real dodge stats
-   *  arrived). Higher → faster swings/shots/casts, via `attackCooldownTicksFor`.
-   *  Nonnegative. */
+  /** The attack cadence: higher is faster swings, shots and casts, through
+   *  `attackCooldownTicksFor` on each ability's cooldown. At least 0. */
   readonly speed: number;
-  /** GP1: move-cadence dial (was `endurance`). SIGNED — 0 is the universal
-   *  move-CD baseline, positive is faster, negative is slower (heavy units
-   *  around −7). Drives `moveCooldownTicks` via `deriveStats`. */
+  /** The move cadence, signed: 0 is the baseline, positive faster, negative
+   *  slower (the slowest units ship at −14). Drives `moveCooldownTicks`
+   *  through `deriveStats`. */
   readonly mobility: number;
-  /** H1: Phase-H pool-chip stat. A turn's surviving units chip the *opposing*
-   *  health pool by their Σ`power` (player pool / encounter enemy pool). Levels
-   *  like any other stat (additive growth). Behavior-NEUTRAL until H4 wires the
-   *  turn/encounter loop — no `deriveStats`/damage path reads it yet. */
+  /** What the unit counts for in a turn's chip of a health pool, as a
+   *  survivor or as one of the fallen, by `health.chipMode`
+   *  (`run/chipRule.ts`). Levels like any stat; no damage path reads it. */
   readonly power: number;
 }
 
 /**
- * E1 — values derived once at construction time from `UnitStats` plus
- * archetype context (attackRange is the max over the unit's abilities'
- * ranges, not computed from any stat). Treated as a snapshot — recompute via
- * `deriveStats` when stats change (level-up, future status effects).
- *
- * I6 — `critChance` left this block: crit is now resolved PER-ABILITY at
- * attack time (`critChanceFor(ability.critBase, unit.stats.luck)`, gated on
- * `ability.critable`), so there's no single per-unit crit probability to
- * derive. Removing the field changed the serialized `UnitSnapshot.derived`
- * shape → WorldSnapshot v20→v21 (same kind of derived-field removal as E5's
- * v12 `attackCooldownTicks`).
+ * The values derived from `UnitStats` and the archetype (`deriveStats`):
+ * computed at spawn, and again by `Unit.refreshDerived` when a status
+ * changes a stat behind them. Neither crit nor the attack cadence is here:
+ * each is per ability (`critChanceFor`, `attackCooldownTicksFor`).
  */
 export interface UnitDerived {
   readonly maxHp: number;
   readonly moveCooldownTicks: number;
   /**
-   * E5 — effective engagement range: the MAX attack range over the
-   * unit's abilities (range moved off the archetype onto each ability in
-   * `config/abilities.json`). MovementBehavior's in-range abstain plus
-   * the HUD/audio readers consult this; per-ability range gates ("can
-   * THIS strike reach?") live in `proposeBasicStrike`. Computed at spawn
-   * via `rangeForArchetype` and plumbed through `deriveStats`.
+   * The engagement range: the largest reach among the unit's engaging
+   * abilities (`rangeForArchetype`), passed through `deriveStats`.
+   * `MovementBehavior`'s in-range abstain and the HUD and audio read it;
+   * whether one ability can reach is that ability's own range, checked as
+   * it proposes (`effects/propose.ts`).
    */
   readonly attackRange: number;
-  // E5 pre-work: attack cadence is no longer a per-unit derived value —
-  // it lives on each Ability (resolved via `attackCooldownTicksFor` from
-  // `config/abilities.json`) so multi-ability units can carry several
-  // independent timings.
 }
 
 /**
- * Pre-instantiation description of a unit: archetype + leveled stat
- * snapshot + level metadata. The recruitment screen surfaces these as
- * options; choosing one creates a `Unit`. Derived values are NOT
- * carried on the template — they're recomputed at spawn time via
- * `deriveStats` so future per-encounter modifiers can fold in cleanly
- * without a stale-template footgun.
+ * A unit before it is placed: archetype, levelled stats and level. The
+ * recruit screen offers these; placing one makes a `Unit`. Derived values
+ * are not carried: they are computed at spawn (`deriveStats`), so no
+ * template carries a stale one.
  *
- * E3: `stats` is the *post-level-up* block (already advanced via
- * `simulateLevelUps` for player recruits or `scaleStats` for enemies);
- * `level` is display metadata and round-trip continuity, not a runtime
- * modifier — the unit's stats already reflect its level. Level 1
- * templates carry baseStats verbatim.
+ * `stats` is the block after the level-ups (`simulateLevelUps` for a
+ * player's unit, `scaleStats` for an enemy's), so `level` is for display
+ * and the round trip, not a modifier. A level-1 template carries the base
+ * stats as they are.
  */
 export interface UnitTemplate {
   readonly archetype: Archetype;
   readonly level: number;
   readonly stats: UnitStats;
   /**
-   * E4 — banked XP toward the next level. Persists across battles on
-   * the roster side (`Run.team`); enemies always carry 0 (they never
-   * level via XP, only via `scaleStats` in `buildEnemyTeam`). New
-   * recruits + the starting team begin at 0.
+   * XP banked toward the next level, kept on the roster across battles
+   * (`Run.team`). An enemy carries 0: it levels by `scaleStats`
+   * (`buildEnemyTeam`), never by XP. A recruit and the starting team begin
+   * at 0.
    */
   readonly xp: number;
   /**
-   * E4 — opaque roster slot id for player units. `null` for enemies +
-   * fresh roster entries that haven't been linked yet. `Run.handleEnterNode`
-   * stamps each player template with its array index in `run.team`
-   * when building the encounter; spawn queues round-trip the stamp so
-   * overflow-queue spawns carry the same rosterIndex as their initial-
-   * spawn siblings. The field stays optional so existing inline
-   * `{ archetype, level, stats, xp }` callers don't have to thread a
-   * null through.
+   * A player unit's roster slot, its index in `run.team`, stamped on the
+   * turn's template copy by `Run.beginTurn`; null or absent for an enemy.
+   * The spawn queue keeps it, so a queued unit carries its slot. Optional,
+   * so an inline `{ archetype, level, stats, xp }` needn't pass a null.
    */
   readonly rosterIndex?: number | null;
   /**
-   * K1 — TRANSIENT spawn-time status effects to seed onto the unit (fatigue +
-   * encounter buffs). Stamped onto the per-turn template copy in
-   * `Run.beginTurn`, never onto the persistent `Run.team` roster, so it stays
-   * out of the RunSnapshot roster image (the roster carries no battle-side
-   * state — same posture as the rosterIndex/power stamp it replaces).
+   * The statuses the unit spawns with (fatigue, an encounter's buff),
+   * stamped on the turn's template copy by `Run.beginTurn`, never on the
+   * roster (`Run.team`), so they stay out of the RunSnapshot's roster: the
+   * roster carries no battle state.
    */
   readonly effects?: readonly StatusEffect[];
 }
 
 /**
- * Decision-making component. Each tick the selector polls every behavior
- * for an `ActionProposal`; the highest-scoring valid proposal wins. A
- * behavior returns `null` to abstain (precondition unmet, target dead,
- * etc.) — the selector treats null as "this behavior has no opinion this
- * tick," not as a vote against.
+ * A unit's decision component. Each tick the selector polls every behaviour
+ * for an `ActionProposal` and the highest score wins; `null` is an
+ * abstention (a precondition unmet, a target gone), not a vote against.
  *
- * Cooldown gating is handled by the selector via `unit.actionCooldowns`,
- * not by the behavior — behaviors don't need to read cooldown state at
- * all. Behaviors are stateless across ticks; safe to share an instance
- * across units (though Game still creates one per unit for symmetry with
- * future stateful behaviors).
+ * The selector gates cooldowns through `unit.actionCooldowns`, so a
+ * behaviour needn't read them. A behaviour holds no state across ticks, so
+ * one instance could serve every unit; each unit gets its own all the same
+ * (`World.wireSpawned`).
  *
- * `kind` is the registry key used by `World` snapshots to rehydrate a
- * unit's behaviors after JSON round-trip. New Behavior implementations
- * declare a unique string `kind` and register a factory in
- * `src/sim/behaviors/registry.ts`.
+ * `kind` is the registry key a snapshot rehydrates the unit's behaviours
+ * by: a new behaviour declares a unique `kind` and registers a factory in
+ * `behaviors/registry.ts`.
  */
 export interface Behavior {
   readonly kind: string;
   proposeAction(unit: Unit, world: World): ActionProposal | null;
 }
 
+/** What `Unit`'s constructor takes. A field named as one of `Unit`'s is that
+ *  field. The optional ones default to no effects, `blocksLineOfSight`
+ *  true, `targeting` `'nearest'`, `level` 1, `xp` 0, and null for
+ *  `rosterIndex`, `summonedBy` and `campId`. */
 interface UnitInit {
   readonly id: number;
   readonly team: Team;
@@ -241,39 +180,13 @@ interface UnitInit {
   readonly stats: UnitStats;
   readonly derived: UnitDerived;
   readonly position: GridCoord;
-  /** K1: status effects the unit spawns with (the fatigue / encounter-buff
-   *  seed channel, and the snapshot-rehydrate path). Defaults to none, so
-   *  direct-construction fixtures + the no-effect common case are unchanged. */
   readonly effects?: readonly StatusEffect[];
-  /** D6: defaults to `true` so existing combatants + walls keep their
-   *  LOS-blocking behavior. Half-cover sets this to `false`. */
   readonly blocksLineOfSight?: boolean;
-  /** Target-selection strategy id (see `src/sim/targetingStrategies.ts`).
-   *  Resolved at spawn from the archetype (`targetingForArchetype`) and
-   *  threaded in like `glyph`/`derived`. Defaults to `'nearest'` so direct-
-   *  construction test fixtures + environment entities need not pass it. */
   readonly targeting?: string;
-  /** E3: defaults to `1`. Environment entities (walls, half-cover)
-   *  ignore the field entirely — it's combatant display metadata. */
   readonly level?: number;
-  /** E4: defaults to `0`. The banked XP the unit spawned with — display
-   *  only during the battle. Run banks new XP from `xpAwards` into the
-   *  roster after `battle:ended`, not back into Unit.xp. */
   readonly xp?: number;
-  /** E4: defaults to `null`. Set for player-team units only — the index
-   *  into `run.team` that this unit was spawned from. Carried into
-   *  `xpAwards` so Run can bank XP into the right roster slot without
-   *  reverse-mapping unit ids. */
   readonly rosterIndex?: number | null;
-  /** §29d: defaults to `null`. Set for a SUMMONED unit — the id of the caster
-   *  whose `summon` op spawned it, so the caster's `maxLive` cap counts its own
-   *  live minions (re-summoning as they die). Serialized (WorldSnapshot v29). */
   readonly summonedBy?: number | null;
-  /** §75b: defaults to `null`. Set for a CAMP unit — the World camp-registry
-   *  instance id this unit belongs to. Presence is THE active-neutral signal
-   *  (`isActiveNeutral`): a neutral with a campId wanders, fights, and dies as
-   *  a combatant; a neutral without one stays inert scenery (wall / rubble).
-   *  Serialized (WorldSnapshot v35). */
   readonly campId?: number | null;
 }
 
@@ -283,141 +196,122 @@ export class Unit {
   readonly archetype: UnitArchetype;
   readonly glyph: string;
   /**
-   * E1 — the unit's BASE stat block (the leveled-but-unmodified values).
-   * Status effects are layered on top via `effectiveStats`; `stats` itself is
-   * never mutated, so it stays the canonical snapshot/display value.
+   * The base stats, levelled but unmodified. Statuses fold over them in
+   * `effectiveStats`; `stats` itself never changes, so it is the value the
+   * snapshot and the display take.
    */
   readonly stats: UnitStats;
   /**
-   * K1 — derived block is no longer strictly construction-time-final: a status
-   * effect that modifies `constitution` / `mobility` triggers `refreshDerived`,
-   * which recomputes it from `effectiveStats`. (No K1 effect does so, so in
-   * practice it's recomputed to an identical block; the seam is live for the
-   * eventual temp-maxHp / temp-move-speed consumers.)
+   * Recomputed from `effectiveStats` by `refreshDerived` when a status
+   * changes a stat behind it: Fatigued lowers constitution at spawn, and the
+   * officer's `inspired` raises mobility mid-battle.
    */
   derived: UnitDerived;
   /**
-   * E3 — combatant level. The unit's `stats` already reflect this
-   * level (post-`simulateLevelUps` / post-`scaleStats`); the field is
-   * preserved for display in the HUD + recruit card and for snapshot
-   * round-trip continuity. Environment entities carry `1` as a no-op
-   * default — they don't level.
+   * The level, which `stats` already reflects; kept for the HUD, the
+   * recruit card and the round trip. Scenery carries 1.
    */
   readonly level: number;
   /**
-   * E4 — banked XP at spawn time. Display-only during battle (HUD
-   * roster reads this); new XP from a battle's `xpAwards` is banked
-   * into the roster-side template, not back here.
+   * The XP banked when the unit spawned, for the HUD during the battle; a
+   * battle's `xpAwards` are banked on the roster's template, not here.
    */
   readonly xp: number;
   /**
-   * E4 — index into `Run.team` for player units; `null` for enemies
-   * + environment entities. Plumbed into `xpAwards` so Run can bank
-   * XP into the right roster slot at `battle:ended` without
-   * maintaining its own unitId-to-rosterIndex map.
+   * The index in `Run.team` for a player unit; null for an enemy or
+   * scenery. Carried into `xpAwards`, so Run banks into the right slot at
+   * `battle:ended` without a map of its own.
    */
   readonly rosterIndex: number | null;
   /**
-   * §29d — the id of the caster whose `summon` op spawned this unit, or `null`
-   * (the common case: every non-summoned unit). Read by `World.liveSummonCount`
-   * to enforce the summoner's per-caster `maxLive` cap. Snapshotted (v29); a dead
-   * summoner's orphaned minions just live out their lifetimes (the count query
-   * filters by living units, and a dead caster never proposes another summon).
+   * The id of the caster whose `summon` op spawned this unit, or null.
+   * `World.liveSummonCount` reads it for the caster's `maxLive`. A dead
+   * summoner's summons live out their lifetimes: the count filters by
+   * living units, and a dead caster proposes nothing.
    */
   readonly summonedBy: number | null;
   /**
-   * §75b — the camp-registry instance id this unit belongs to, or `null` (every
-   * non-camp unit). Presence is the ACTIVE-NEUTRAL signal: the ~40-site
-   * neutral-is-inert widening (75d/75e) gates on `isActiveNeutral`, which reads
-   * exactly this. Camp-level state (hostility, leash anchor, pending spawns)
-   * lives in the World camp registry keyed by this id — never on the unit.
-   * Snapshotted (v35).
+   * The camp this unit belongs to, or null. A neutral with one is a camp
+   * member, a neutral without one is scenery (`isInertNeutral`). The camp's
+   * own state (hostility, anchor, pending members) lives in the World's
+   * camps, keyed by this id, never on the unit.
    */
   readonly campId: number | null;
   position: GridCoord;
   currentHp: number;
   readonly behaviors: Behavior[] = [];
   /**
-   * E2 — per-unit ability list. `AbilityBehavior` walks this each tick
-   * to pick its proposal; array order is the tiebreaker when two
-   * abilities return the same score (first proposer wins). Populated
-   * at spawn time from `ARCHETYPE_CONFIG[archetype].abilities`,
-   * snapshotted as a `string[]` of ids and rehydrated via
-   * `src/sim/abilities/registry.ts#createAbility`.
+   * The unit's abilities, from its archetype (`abilityIdsForArchetype`) at
+   * spawn. `AbilityBehavior` walks them each tick, and on a tied score the
+   * earlier wins. Snapshotted as ids, rehydrated by `createAbility`
+   * (`abilities/registry.ts`).
    */
   readonly abilities: Ability[] = [];
   /**
-   * D6: when `false`, ranged attacks see THROUGH this unit (the
-   * half-cover archetype). Pathfinding still treats it as a blocker via
-   * the existing "every Unit blocks" rule — half-cover is shoot-over,
-   * not walk-through. Combatants + walls default `true`.
+   * When false, a shot sees through the unit (half-cover). Pathing still
+   * treats it as a blocker, since every unit blocks: half-cover is
+   * shoot-over, not walk-through. True for combatants and walls.
    */
   readonly blocksLineOfSight: boolean;
   /**
    * Target-selection strategy id, resolved at spawn from the archetype (see
    * `src/sim/targetingStrategies.ts`). `Targeting.ts` reads it to pick + stick
-   * to targets. Static per archetype, so it is NOT snapshotted — `fromJSON`
+   * to targets. Static per archetype, so it is not snapshotted: `fromJSON`
    * re-derives it from `archetype`. Defaults to `'nearest'`.
    */
   readonly targeting: string;
   /**
-   * Per-action cooldown counters keyed by `Action.id`. Decremented once per
-   * tick by World; selector filters out proposals whose remaining cooldown
-   * is > 0. Missing key = 0 (never proposed before, or fully recharged).
+   * The cooldowns, keyed by a proposal's `cooldownKey` (an ability's id) or
+   * else its action's id. World decrements them once a tick, and the
+   * selector drops a proposal whose cooldown is above 0. A missing key is 0.
    */
   readonly actionCooldowns = new Map<string, number>();
   /**
-   * Set while an action is in flight. Locks out the selector — no new
-   * proposal can fire until `currentTick >= activeAction.finishTick`. Null
-   * means the unit is free to choose its next action.
-   *
-   * 86c-L2b — read-only from the outside: every mutation routes through
-   * World's seat/clear chokepoint (`seatAction`/`seatActiveAction`/
-   * `clearActiveAction`), which maintains the derived reserved-swap-partner
-   * index in lockstep. Direct assignment is a compile error by design.
+   * The action in flight, which locks out the selector until
+   * `currentTick >= finishTick`; null when the unit is free. Read-only from
+   * outside: every write goes through World's `seatAction`,
+   * `seatActiveAction` and `clearActiveAction`, which keep the
+   * reserved-partner index in step, so a direct assignment fails to compile.
    */
   private _activeAction: ActiveAction | null = null;
   get activeAction(): ActiveAction | null {
     return this._activeAction;
   }
   /**
-   * @internal 86c-L2b — the raw write under the chokepoint. ONLY World's
-   * seat/clear helpers may call this (they keep the reserved-partner index
-   * consistent); calling it anywhere else desyncs the index — the
-   * recompute-and-compare verifier (`scanReservedSwapPartners`) will catch
-   * it in tests, but don't make it.
+   * @internal The raw write behind World's seat and clear. Only they may
+   * call it, since they keep the reserved-partner index; a call anywhere
+   * else desyncs it, which the test's rescan (`scanReservedSwapPartners`)
+   * would catch.
    */
   _setActiveAction(aa: ActiveAction | null): void {
     this._activeAction = aa;
   }
   /**
-   * E5 — target stickiness. The id of the enemy this unit is currently
-   * committed to. `updateTarget` (Targeting.ts, run once per free unit in
-   * the selector) sets it; MovementBehavior + the strike abilities read
-   * it via `currentTarget` instead of re-running nearest-enemy every
-   * tick, which was the source of the corridor target-thrash combat-
-   * feedback flagged. `null` = no commitment yet (resolves to nearest on
-   * the next update). Snapshotted (WorldSnapshot v13).
+   * The unit this one is committed to targeting, or null (it takes one at
+   * the next update). `updateTarget` sets it, once a tick per free unit;
+   * `MovementBehavior` and the abilities read it through `currentTarget`
+   * rather than finding the nearest enemy every tick, which made units
+   * thrash between targets in corridors.
    */
   targetId: number | null = null;
   /**
-   * E5 — consecutive ticks the current target has been out of line of
-   * sight. Drives the ranged re-target timeout (`updateTarget`); reset to
-   * 0 whenever LOS holds or the target changes. Only ranged units read
-   * it, but it's snapshotted uniformly for replay determinism.
+   * Consecutive ticks the target has been out of line of sight, for the
+   * ranged re-target timeout (`updateTarget`); reset when sight holds or
+   * the target changes. Only ranged units read it, but every unit's is
+   * snapshotted, for replay.
    */
   outOfLosTicks = 0;
   /**
-   * K1 — active status effects. Mutated in place by `addEffect` (merge) /
-   * `expireEffects`; folded into `effectiveStats` (cached) and snapshotted.
-   * Empty for the no-effect common case (then `effectiveStats === stats`).
+   * The active statuses, changed in place by `addEffect` (a merge),
+   * `removeEffect` and `expireEffects`, folded into `effectiveStats` and
+   * snapshotted. Empty in the common case, and then `effectiveStats` is
+   * `stats`.
    */
   readonly effects: StatusEffect[] = [];
   /**
-   * Cached fold of `stats` + `effects`. `null` means "no effects" — the getter
-   * returns the base `stats` object itself (identity-equal), keeping the
-   * no-effect path byte-identical and zero-cost. Recomputed eagerly whenever
-   * the effect set changes.
+   * The cached fold of `stats` and `effects`, recomputed whenever the
+   * effects change. Null when there are none, and the getter returns `stats`
+   * itself, so the common path costs nothing.
    */
   private _effectiveStats: UnitStats | null = null;
 
@@ -437,14 +331,11 @@ export class Unit {
     this.rosterIndex = init.rosterIndex ?? null;
     this.summonedBy = init.summonedBy ?? null;
     this.campId = init.campId ?? null;
-    // K1 — seed spawn-time effects (fatigue / encounter buffs / rehydrate).
-    // `currentHp` was just set to the BASE maxHp above; the recompute below
-    // re-derives maxHp from the folded stats, so an effect that lowers
-    // `constitution` (the §91c Fatigued retarget — the first such consumer)
-    // would otherwise leave the unit spawning OVER its max. The clamp the K1
-    // comment deferred lands here. Byte-neutral when nothing touches
-    // constitution (maxHp unchanged ⇒ the min is the identity); the snapshot
-    // rehydrate path overwrites currentHp after construction regardless.
+    // The spawn statuses, or a rehydrate's. `currentHp` was set to the base
+    // maxHp above, and the recompute derives maxHp from the folded stats, so
+    // a status that lowers constitution (Fatigued) would leave the unit
+    // spawning over its max without the clamp. A rehydrate overwrites
+    // `currentHp` after construction anyway.
     if (init.effects && init.effects.length > 0) {
       for (const effect of init.effects) this.effects.push(cloneEffect(effect));
       this.recomputeEffective();
@@ -453,16 +344,15 @@ export class Unit {
   }
 
   /**
-   * K1 — the unit's stats with active effects folded in. Identity-equal to the
-   * base `stats` when there are no effects (the byte-identical fast path).
-   * Every combat/cadence/crit read site consults this, not `stats`.
+   * The stats with the statuses folded in; `stats` itself when there are
+   * none. Every combat, cadence and crit read takes this, not `stats`.
    */
   get effectiveStats(): UnitStats {
     return this._effectiveStats ?? this.stats;
   }
 
   /**
-   * K1 — apply a status effect, honouring its merge policy. A non-`independent`
+   * Applies a status effect under its merge policy. A non-`independent`
    * effect whose `key` is already present combines magnitudes per the policy
    * (`replace` / `add` / `multiply`) and refreshes the lifetime; otherwise the
    * effect is added as a fresh instance. Recomputes `effectiveStats` after.
@@ -473,11 +363,10 @@ export class Unit {
   }
 
   /**
-   * §37d — forcibly remove the first effect matching `key`, returning it (or
-   * `undefined` if none was present). The counterpart to `addEffect` for a
-   * NON-lifetime removal — a tile cleanse (water → strip `burn`) or any future
-   * dispel. Recomputes `effectiveStats` only when something was removed. The
-   * caller (`World.removeStatusEffect`) fires the `status:expired` viz event.
+   * Removes the first effect with `key` and returns it, or undefined: a
+   * removal that isn't a lifetime's end, such as water putting out a burn.
+   * Recomputes only when something went. The caller
+   * (`World.removeStatusEffect`) emits `status:expired`.
    */
   removeEffect(key: string): StatusEffect | undefined {
     const i = this.effects.findIndex((e) => e.key === key);
@@ -488,13 +377,11 @@ export class Unit {
   }
 
   /**
-   * K1 — drop any `ticks` effect whose `expiresAtTick` has been reached.
-   * `endOfTurn` effects are never removed here (they die with the World).
-   * Recomputes `effectiveStats` only when something actually expired.
-   *
-   * 27 — returns the removed effects so the caller (`World.tick`) can fire
-   * `status:expired` for the status-def ones. The no-removal common case returns
-   * a shared empty array (no per-tick allocation).
+   * Drops every `ticks` effect whose `expiresAtTick` has come; an
+   * `endOfTurn` effect is never dropped here, since it lives as long as the
+   * World. Recomputes only when something expired. Returns what it dropped,
+   * so `World.tick` can emit `status:expired` for those with a def; when
+   * nothing expired, a shared empty array, so a tick allocates nothing.
    */
   expireEffects(currentTick: number): readonly StatusEffect[] {
     let removed: StatusEffect[] | null = null;
@@ -510,13 +397,12 @@ export class Unit {
   }
 
   /**
-   * K1 — recompute the derived block from `effectiveStats`. A no-op for every
-   * effect that leaves `constitution` / `mobility` alone (the only stats that
-   * feed `derived`). The §91c Fatigued retarget is the first constitution
-   * consumer, seeded at SPAWN only (`endOfTurn`) — the constructor clamps
-   * currentHp after seeding. A RUNTIME constitution effect (an `addEffect`
-   * mid-battle) would need the clamp here too — deferred to the first such
-   * consumer.
+   * Recomputes `derived` from `effectiveStats`. A status that leaves
+   * constitution and mobility alone, the only stats behind `derived`,
+   * changes nothing. Only Fatigued changes constitution, seeded at spawn
+   * (`endOfTurn`), and the constructor clamps `currentHp` after it; a status
+   * applied mid-battle that lowered constitution would need the clamp here
+   * too.
    */
   refreshDerived(): void {
     this.derived = deriveStats(this.effectiveStats, this.derived.attackRange);

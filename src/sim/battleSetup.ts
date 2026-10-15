@@ -1,25 +1,19 @@
 /**
- * Shared battle-setup logic. Game.ts (via `BattleScene.mount`) and the
- * headless fuzz harness both need to take a Run's `BattleEncounter`,
- * apply terrain, pick spawn regions, and place both teams into a fresh
- * `World`. Putting it here keeps the two code paths from drifting — if
- * spawn placement ever changes, both the live game and the fuzz harness
- * pick it up.
+ * Battle setup: takes a Run's `BattleEncounter`, applies its terrain, picks
+ * the spawn regions and places both teams into a fresh `World`. BattleScene,
+ * the replays and the fuzz harness all set up through here, so the game and
+ * the harness can't drift apart.
  *
- * **D5** retired the row-based / fixed-column formation in favor of
- * explicit per-encounter `SpawnRegion`s. Hand-authored layouts declare
- * their own spawns; the procedural generator emits two `'both'`-
- * availability bands on the top + bottom edges. Battle setup picks one
- * region for the player and a distinct one for the enemy, then places
- * each team into shuffled tiles within their region.
+ * A layout declares its own spawn regions; the procedural generator emits
+ * two `'both'` bands on the top and bottom edges. Setup picks one region
+ * for the player and a distinct one for the enemy, then places each team
+ * on shuffled tiles of its region.
  *
- * RNG (77d3): every battle-setup stream derives off `terrainSeed` by
- * key — 'terrain' (generation), 'spawnSetup' (region pick + per-team
- * shuffles), 'campSetup' (camp identity; per-encounter BY SIGNED
- * VERDICT), 'enemyPull' (per-turn via the worldSeed index). Keyed
- * derivation makes the streams independent by construction — changing
- * wall density can't shift spawn picks, and no burn/alignment forks are
- * needed (the pre-77d3 fresh-parent-then-fork pattern is retired).
+ * Every setup stream is derived from `terrainSeed` by key: `'terrain'`
+ * (generation), `'spawnSetup'` (the region pick and each team's shuffle),
+ * `'campSetup'` (which camps, per encounter), `'enemyPull'` (per turn, by
+ * the world seed). Keyed, the streams are independent by construction:
+ * changing the wall density can't shift a spawn pick.
  */
 
 import { RNG, deriveRng } from '../core/RNG';
@@ -41,12 +35,11 @@ interface PickedSpawnRegions {
 }
 
 /**
- * Sequential draw: player picks first from `{ availability: player |
- * both }`, then enemy picks from `{ availability: enemy | both } \
- * { player's region }`. Throws if either pool ends up empty — zod
- * validation upstream (see `src/config/layouts.ts`) is supposed to
- * make this impossible, but the runtime guard catches procedural
- * configurations or future hand-authored ones that slip through.
+ * The player picks first, from the regions open to `player` or `both`; the
+ * enemy then picks from those open to `enemy` or `both`, less the player's.
+ * Throws if either pool is empty: the layout schema
+ * (`src/config/layouts.ts`) rules that out, and the throw catches a board
+ * that slips past it.
  */
 export function pickSpawnRegions(
   spawnRegions: readonly SpawnRegion[],
@@ -72,21 +65,13 @@ export function pickSpawnRegions(
 }
 
 /**
- * Spawn a pre-rolled team into the active world, placing each unit on
- * one of the region's tiles (shuffled deterministically via `rng`).
- * Each spawned unit gets `MovementBehavior` + `AbilityBehavior`, plus
- * the archetype's configured abilities (E2: `melee → [melee_strike]`,
- * `ranged → [ranged_shot]`; future archetypes add more).
- *
- * **D5.C** — templates beyond `region.tiles.length` are pushed onto
- * `world.spawnQueues[team]`; `World.runOverflowScan` drains them as
- * tiles vacate during the battle. Also registers `region` as the
- * team's authoritative spawn region via `world.setTeamSpawnRegion` so
- * the scan knows where to look. The same registration carries the
- * tile ORDER, which is the deterministic scan order — using the
- * un-shuffled `region.tiles` here (the shuffled copy is only for the
- * initial placement) keeps overflow scans stable across reruns of the
- * same seed.
+ * Places a team, each unit on one of the region's tiles shuffled by `rng`,
+ * and wires it (`World.wireSpawned`: its catalog movement, then its
+ * abilities). The templates beyond the region's tiles are queued, and
+ * `World.runOverflowScan` seats them as tiles empty. The region is
+ * registered as the team's (`setTeamSpawnRegion`) in its stored order, not
+ * the shuffled copy, since that order is the scan's, so a rerun of the seed
+ * scans the same way.
  */
 export function spawnTeam(
   world: World,
@@ -101,10 +86,8 @@ export function spawnTeam(
   const n = Math.min(templates.length, tiles.length);
   for (let i = 0; i < n; i++) {
     const template = templates[i]!;
-    // E4: pass through the template's rosterIndex (set by
-    // `Run.handleEnterNode` for player templates; null/undefined for
-    // enemy templates). Plumbs into `xpAwards` so Run can bank XP
-    // into the right roster slot without a separate id map.
+    // The roster slot `Run.beginTurn` stamped on a player's template (none
+    // on an enemy's), carried into `xpAwards`.
     const u = world.spawnUnit(template, team, tiles[i]!, template.rosterIndex ?? null);
     world.wireSpawned(u, createMovementBehavior(template.archetype), true);
   }
@@ -121,46 +104,37 @@ function shuffleTilesInPlace<T>(arr: T[], rng: RNG): void {
 }
 
 /**
- * Apply per-encounter terrain to a fresh World. Generates the tile
- * layout + wall coords + spawn regions from the encounter's terrain
- * seed, copies tile kinds onto `world.tileGrid` in place (the World's
- * grid is kept-by-reference so existing handles stay valid), spawns
- * each wall as a neutral-team Unit, and returns the regions so the
- * caller can pick + spawn teams. The two callers (`BattleScene.mount`
- * + `spawnEncounter`) consume the returned regions immediately.
- *
- * Must run BEFORE any `spawnTeam`. spawnEncounter does this internally;
- * BattleScene mirrors the order explicitly.
+ * Applies the encounter's terrain to a fresh World: generates the tiles,
+ * the scenery and the spawn regions from its terrain seed, copies the tile
+ * kinds onto `world.tileGrid` in place (the grid is held by reference, so
+ * handles to it stay valid), spawns the scenery and the camps, and returns
+ * the regions for the caller to place the teams. Runs before any
+ * `spawnTeam`: `spawnEncounter` keeps that order, and BattleScene keeps it
+ * by hand.
  */
 export function applyTerrain(
   world: World,
   encounter: BattleEncounter,
 ): readonly SpawnRegion[] {
-  // 77d3 — the terrain stream derives off its own key (raw
-  // `new RNG(terrainSeed)` made the terrain stream IDENTICAL to the root,
-  // which is the collision class that forced spawnCamps' old burn fork).
+  // Its own key, so the terrain stream is not the root's.
   const terrain = generateTerrain(
     deriveRng(encounter.terrainSeed, 'terrain'),
     world.gridW,
     world.gridH,
     TERRAIN,
     encounter.layoutId,
-    // §81a — the sector theme picks the procedural tile envelope (ignored on
-    // the layout path; a layout's theme is cosmetic and stays its own).
+    // The sector's theme picks a procedural board's tiles; a layout keeps
+    // its own.
     encounter.theme,
   );
   for (const cell of terrain.tileGrid.cells()) {
     world.tileGrid.setKind({ x: cell.x, y: cell.y }, cell.kind);
   }
   spawnLayoutNeutrals(world, terrain);
-  // §75c — roll + register the layout's camps (a free no-op on the camp-free
-  // common case; the presence gate rides inside spawnCamps + installCamps).
-  // worldSeed (per-turn, battleRng-rolled) feeds ONLY the pull roll — camp
-  // IDENTITY stays on the per-encounter terrainSeed (the signed 75j verdict).
-  // 83d — the pull's BOSS EXEMPTION (user-signed 2026-08-20): the boss-side
-  // wave defends the pool instead of being diverted onto a camp. `kind` rides
-  // the encounter (the 47f fixture pattern); absent (hand-built fixtures) =
-  // non-boss = pull-eligible.
+  // The world seed, per turn, feeds only the pull's roll; which camps
+  // stand stays on the per-encounter terrain seed (`spawnCamps`). A boss
+  // board has no pull: the boss's wave defends the pool rather than detour
+  // onto a camp. A fixture without `kind` counts as no boss.
   spawnCamps(
     world,
     terrain.campSpawns,
@@ -173,32 +147,23 @@ export function applyTerrain(
 }
 
 /**
- * §75c — roll each camp-spawn tile's camp and register the instances + the
- * dedicated camp stream on the World. "Resolved on turn start" IS battle-setup
- * time (a fresh World per turn), and this rides `applyTerrain`, so all four
- * World construction sites (BattleScene / fuzz harness / replayTrace /
- * `spawnEncounter`) get camps with zero per-site changes.
+ * Rolls each camp-spawn tile's camp, then installs the camps and their
+ * stream on the World (`installCamps`). A World is fresh each turn and this
+ * runs inside `applyTerrain`, so every setup path gets its camps.
  *
- * Stream derivation (77d3): the camp stream is
- * `deriveRng(terrainSeed, 'campSetup')` — the §75-era burn fork (which
- * existed only to dodge a byte-collision with `setupRngFor`'s stream on
- * the same fresh parent) is gone; keyed derivation makes collision
- * impossible by construction. Selection rolls consume it here;
- * `installCamps` then hands the advanced stream to the World for
- * battle-time draws (drip placement, 75f wander). Nothing touches any
- * Run stream.
+ * The camp stream is `deriveRng(terrainSeed, 'campSetup')`. The selection
+ * rolls draw on it here, and `installCamps` hands the advanced stream to the
+ * World for the battle's draws (the drip's placement, the wander). No run
+ * stream is touched.
  *
- * ⚠ CAMP IDENTITY IS PER-ENCOUNTER BY SIGNED VERDICT (75j): the key
- * deliberately carries NO turn index — `terrainSeed` is per-encounter
- * (K3.5), so selection replays identically every turn of one encounter.
- * The 75i-post finding was punted, then the 75j feel pass SIGNED it.
- * A per-turn stream would be `deriveRng(terrainSeed, 'campSetup', turn)`
- * — build it only if that call is reopened; don't "fix" the key ad hoc.
+ * Which camps stand is per encounter, by a signed call: the key carries no
+ * turn index, and `terrainSeed` is per encounter, so the selection replays
+ * the same on every turn of one encounter. A per-turn stream would be
+ * `deriveRng(terrainSeed, 'campSetup', turn)`; build it only if that call is
+ * reopened, not as a fix.
  *
- * Args-explicit (the assert-function pattern) so tests drive synthetic
- * campSpawns/camps against a naked World — no shipped layout lists a camp
- * until the §75j design round, so until then this is exercised by unit tests
- * only (the 74e seam-only posture).
+ * Its inputs are arguments, so a test can drive made-up camp spawns and
+ * camps against a bare World.
  */
 export function spawnCamps(
   world: World,
@@ -206,9 +171,8 @@ export function spawnCamps(
   campRefs: readonly CampRef[],
   terrainSeed: number,
   worldSeed: number,
-  // 83d — false on boss boards (the pull's boss exemption; camps still spawn
-  // and aggro normally). A plain param, not an encounter import — the
-  // positioning.ts pattern keeps the assert-function test surface.
+  // False on a boss board: no pull, though the camps spawn and aggro as
+  // ever. A parameter, not the encounter, so a test can pass it.
   pullEligible = true,
 ): void {
   if (campSpawns.length === 0) return;
@@ -245,41 +209,29 @@ export function spawnCamps(
   });
   world.installCamps(instances, campRng);
 
-  // §75h2 — prime each camp's FIRST member at setup (user feedback at the
-  // native eyeball): it materializes instantly, like the initial teams, so
-  // it's visible and targetable during the pre-battle countdown instead of
-  // fading in after the first drip tick. The rest of the queue keeps the
-  // signed portal drip. Draw-order note: the prime's N×N placement draws ride
-  // campRng right after the selection rolls — exactly where the first drip
-  // tick's draws used to sit, one tick earlier.
+  // Each camp's first member is seated at once, so it is there during the
+  // countdown (`primeCampSpawns`). Its placement draws on `campRng` right
+  // after the selection rolls.
   world.primeCampSpawns();
 
-  // §75g/§75j2 — the enemy DELIBERATE PULL, re-authored to the user's design
-  // intent (2026-08-09): the FIRST CONSUMER of the enemy objective system.
-  // A pass picks one camp (uniform; singleton draw-free, #111) and points the
-  // enemy TEAM objective at that camp's PRIMED member — an ordered engage on
-  // a passive neutral, the exact rails the player's click-to-engage pinned
-  // (ordered-first-blow in `currentTarget`; dead-target auto-revert). The
-  // camp is NOT pre-marked hostile: hostility keeps its single source
-  // (damage aggro at the `dealDamage` chokepoint), so a pulled camp reads
-  // passive until the enemy actually strikes it, then aggros camp-wide and
-  // the fight cascades naturally. The command drains at tick 1; serialized,
-  // so a mid-battle save resumes the detour.
+  // The enemy's pull: at `SIM.enemyPullChance`, the enemy team's objective
+  // is pointed at one camp's seated member (the camp picked uniformly; one
+  // camp draws nothing, gotcha #111). It is an ordered engage on a passive
+  // neutral, on the rails the player's click-to-engage uses (the ordered
+  // first blow in `currentTarget`, the revert when the target dies). The
+  // camp is not marked hostile: hostility has one source, damage
+  // (`dealDamage`), so a pulled camp is passive until the enemy strikes it,
+  // then the whole camp aggroes. The command drains at tick 1, and it is
+  // serialized.
   //
-  // Stream (77d3): `deriveRng(terrainSeed, 'enemyPull', worldSeed)` — the
-  // worldSeed index makes it per-TURN, preserving the shape-lock's signed
-  // "per-turn fork" (the §75i-post replay class, caught live on fetidPond;
-  // the old local `mixSeeds` one-off folded into the frozen deriveSeed
-  // door exactly as its comment predicted). Derived lazily inside this
-  // branch — the dormant path derives nothing. Camp IDENTITY deliberately
-  // stays on the turn-free 'campSetup' key above (the signed verdict).
+  // The stream is `deriveRng(terrainSeed, 'enemyPull', worldSeed)`: the
+  // world seed makes it per turn, as signed, while which camps stand stays
+  // on the turn-free key. Derived inside the branch, so a battle with no
+  // pull derives nothing, a boss board included.
   //
-  // A pulled camp whose primed member is missing (blocked anchor at setup —
-  // the 75h2 silent-skip edge) skips the pull: there is no unit to order
-  // against, and a tile order on a passive camp would just loiter.
-  // 83d — `pullEligible` gates the whole branch: a boss board derives no
-  // pull stream (keyed derivation → no downstream shift; non-boss battles
-  // stay byte-identical).
+  // A camp whose first member could not be seated (its anchor was blocked
+  // at setup) is not pulled: there is no unit to order against, and a tile
+  // order on a passive camp would only loiter.
   if (pullEligible && SIM.enemyPullChance > 0) {
     const pullRng = deriveRng(terrainSeed, 'enemyPull', worldSeed);
     if (pullRng.next() < SIM.enemyPullChance) {
@@ -299,14 +251,11 @@ export function spawnCamps(
   }
 }
 
-// (§75j2's local `mixSeeds` one-off folded into the frozen `deriveSeed`
-// door at 77d3, as its own comment predicted.)
-
 /**
- * §75c — the weighted camp pick (absent weight = 1, the sector-pool
- * convention). Local rather than imported from `run/sectorWalk` — sim never
- * runtime-imports run — but the SEMANTICS match `pickWeighted` exactly,
- * including the #111 zero-draw singleton (a one-camp list costs no draw).
+ * The weighted camp pick, an absent weight counting 1 as in a sector's
+ * pool. Local, since sim never imports run at runtime, but it matches
+ * `run/sectorWalk`'s `pickWeighted`, a one-camp list drawing nothing
+ * included (gotcha #111).
  */
 function weightedCampRef(refs: readonly CampRef[], rng: RNG): CampRef {
   if (refs.length === 1) return refs[0]!;
@@ -321,33 +270,29 @@ function weightedCampRef(refs: readonly CampRef[], rng: RNG): CampRef {
 }
 
 /**
- * Spawn a `GeneratedTerrain`'s neutral obstacles (walls, half-cover, §40d rubble)
- * into `world`. Extracted from `applyTerrain` (§40d) so the layout→board wiring is
- * unit-testable off a `generateFromLayout` fixture without registering it in the
- * global `LAYOUTS` catalog.
- *
- * Spawn order — walls, then half-cover, then rubble — is stable so any future
- * "stack on the same cell" diagnostic sees a deterministic sequence (schema
- * validation forbids the overlap today, but a fixed order keeps failure modes
- * predictable). D6 fixed the wall→half-cover order for that reason.
+ * Spawns a `GeneratedTerrain`'s scenery (walls, half-cover, rubble) into
+ * `world`. Apart from `applyTerrain`, so a test can wire a layout to a board
+ * from a `generateFromLayout` fixture without registering it in `LAYOUTS`.
+ * Walls, then half-cover, then rubble, a fixed order, so two on one cell,
+ * which the schema forbids, would fail the same way every time.
  */
 export function spawnLayoutNeutrals(
   world: World,
   terrain: Pick<GeneratedTerrain, 'walls' | 'halfCovers' | 'rubble'>,
 ): void {
-  // A neutral coord may carry extra keys (§40c wall `hp`, §40d rubble `size`/`hp`);
-  // pass a CLEAN `{x,y}` as the position so those knobs don't leak onto `unit.position`
-  // (which flows into snapshots + every occupancy query).
+  // A coord may carry more keys (`hp`, a rubble's `size`); the position is a
+  // clean `{x, y}`, so they don't reach `unit.position`, which every
+  // snapshot and occupancy query reads.
   for (const coord of terrain.walls) {
-    // §40c — a wall coord carrying an `hp` spawns DESTRUCTIBLE; a bare coord
-    // (every shipped layout + all procedural) spawns the indestructible default.
+    // A coord with `hp` spawns destructible; a bare one, the indestructible
+    // default.
     spawnWall(world, { x: coord.x, y: coord.y }, coord.hp);
   }
   for (const coord of terrain.halfCovers) {
     spawnHalfCover(world, { x: coord.x, y: coord.y }, coord.hp);
   }
-  // §40d — rubble is the first multi-tile neutral: `size` picks the N×N footprint
-  // def (default 1×1); `hp` overrides the catalog pool. Absent `size` narrows to 1.
+  // `size` picks the N×N footprint's def, 1 when absent; `hp` overrides the
+  // catalog's.
   for (const coord of terrain.rubble) {
     const size = coord.size === 2 ? 2 : coord.size === 3 ? 3 : 1;
     spawnRubble(world, { x: coord.x, y: coord.y }, size, coord.hp);
@@ -355,14 +300,12 @@ export function spawnLayoutNeutrals(
 }
 
 /**
- * Spawn both sides of a `BattleEncounter` into a fresh world.
- * Convenience wrapper for the fuzz harness; Game spawns player and
- * enemy in two separate calls because it interleaves HUD setup
- * between them. Terrain is applied first so spawn rows are guaranteed
- * clear of obstacles, and a single `setupRng` drives both the region
- * pick and each team's intra-region shuffle so the deterministic
- * order is "pick player → shuffle player tiles → pick enemy →
- * shuffle enemy tiles".
+ * Sets up a whole `BattleEncounter` in a fresh world, for the replays and
+ * the fuzz harness; BattleScene makes the same calls itself, with the
+ * board's render setup between them. The terrain goes first, so the spawn regions are
+ * clear of scenery, and one `setupRng` drives the region pick and both
+ * shuffles, in the order: pick both regions, shuffle the player's tiles,
+ * shuffle the enemy's.
  */
 export function spawnEncounter(world: World, encounter: BattleEncounter): void {
   const spawnRegions = applyTerrain(world, encounter);
@@ -373,21 +316,10 @@ export function spawnEncounter(world: World, encounter: BattleEncounter): void {
 }
 
 /**
- * Helper used by `BattleScene` to derive the same fork the headless
- * `spawnEncounter` uses, so both paths agree on the per-battle
- * shuffles. Exported so the centroid-based scroll-camera anchor (D5.E)
- * can also peek at the picked regions via the same fork.
- *
- * E1 note: AttackAction's crit roll consumes `world.combatRng`, which
- * is forked from World's main `rng` (seeded by `encounter.worldSeed`)
- * inside the World constructor. That makes the crit stream independent
- * of `setupRngFor`'s `encounter.terrainSeed` line — adding or removing
- * an attack doesn't shift spawn picks for the same encounter.
- *
- * 77d3 — keyed: `deriveRng(terrainSeed, 'spawnSetup')` (was
- * `new RNG(terrainSeed).fork()`, whose fresh-parent-fork construction is
- * exactly what spawnCamps once had to burn a fork to avoid colliding
- * with).
+ * The setup stream, exported so BattleScene, which places the teams
+ * itself, draws what `spawnEncounter` draws. It is on the terrain seed; the
+ * battle's rolls are on `world.combatRng`, `rng`'s fork on the world seed,
+ * so a roll more or less never shifts a spawn pick.
  */
 export function setupRngFor(encounter: BattleEncounter): RNG {
   return deriveRng(encounter.terrainSeed, 'spawnSetup');

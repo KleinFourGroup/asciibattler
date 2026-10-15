@@ -5766,3 +5766,45 @@ user's call.
    something with a result (the ability line's overstated damage among
    them). I would want the same: a signed style, a strip oracle per
    commit, and room to follow a claim to its source.
+
+## 2026-10-15 — session 989537c5 (claude-opus-5-5): 122o's batches 4 and 5
+
+1. *Missing from the orientation.* Nothing that blocked. The Cursor and
+   the batch entries named the files, the leads and the proof. Two things
+   I rebuilt: the `comment-length` call that takes only a path inside the
+   repo (the last session's note said so, and I still tried the
+   scratchpad first), and where the control's plant goes.
+2. *Norms in conflict.* One, small. Running a command with `cd` into the
+   control worktree made the app report the worktree as my primary
+   directory, with a note not to `cd` back to the repository root. The
+   task is on `main` in the root (AGENTS "Work on `main`"), and the
+   worktree is only the proof's control, so I kept working in the root by
+   absolute paths. Filed as `distress`, mild and resolved at once.
+3. *Pulled to claim more.* Yes, once, and it was caught by the next file:
+   in batch 4 I wrote that nothing in the game sets the enemy's objective,
+   carrying the old comment's "enemy fixed at atWill" over without a grep
+   for `setObjective`. `battleSetup.ts`' camp pull sets it. Batch 5 fixed
+   it and the entry says so. Otherwise each claim was grepped, and two
+   searches came back empty on the first try (a pattern that couldn't
+   match, a copy that was already the new file); I re-ran each against a
+   known answer before reading it as a zero.
+4. *Wasted.* About 5k: three empty searches re-run, one wrong-path
+   measure, a sed that missed a wrapped line. `World.ts` cost 68 a line,
+   about what was planned.
+5. *For the next session.* Batches 6 to 8 are about 5,400 lines; at 66 a
+   line that is about 360k from a session that opens near 110k. A
+   fifteen-line helper in the scratchpad (every anchor checked before any
+   write, the pairs in a Python file, so nothing passes through the
+   shell's quoting) made each file one or two calls; it doesn't outlive
+   the session, so write it again. A repo-wide `grep -r` reaches
+   `scratch/119f/hidden/`; keep searches to `src`, `tools` and `tests`.
+6. *Room.* Yes. The user asked whether reads were owed and I answered
+   before building, as the standing decision has it, and the go-ahead was
+   plain. The hand-off point was the reading's call: 455k with about 360k
+   left to do. I did not want to stop earlier.
+7. *What helped.* Same as the last session: claims checked against the
+   code turned the pass into findings (the queued template that loses its
+   statuses in a snapshot, the claims "empty on the instant model", the
+   draws a level). I'd want that again. The miss in 3 is the part I'd
+   rather not repeat: a statement that sounds like a fact about the
+   code gets the grep, even when the old comment said it.

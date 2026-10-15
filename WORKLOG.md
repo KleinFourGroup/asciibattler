@@ -5967,3 +5967,21 @@ field's fact said on both `UnitInit` and `Unit`, a claim the code
 contradicts (the enemy's objective, the stamps, the stats' readers), or a
 signed call cut: the camp key with no turn index, the pull's per-turn
 key, the filters before the chance.
+
+Batch 5 committed as `b6437e3d`; the suite 3,741 and the smoke 621,
+green, by the hook. Its read script's commit is `b6437e3d`.
+
+### The hand-off after batch 5 (2026-10-15, session 989537c5)
+
+Batches 1 to 5 are committed, unread. Batches 6 to 8 (5,398 lines, about
+360k at the 66 a line measured over five) don't fit under the hand-off
+line from 478k, so they start a fresh session, and §122's close follows
+them. The control worktree `output/wt-122o` is removed, its junction
+first; the measure copies under `output/` are removed. No preview server
+was started, and `scratch/119f/hidden/` was not opened.
+
+Readings by the tool's clock (UTC): 112,527 at 21:20, the session's
+first, after the orientation and the reads question; 321,089 at 21:44
+after batch 4's proof; 333,782 at 21:47 on batch 4's commit
+(`acfa4bff`); 455,338 at 22:05 after batch 5's proof; 463,988 at 22:07
+on its commit (`b6437e3d`); 478,285 at 22:10 on this hand-off.

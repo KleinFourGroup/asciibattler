@@ -218,7 +218,7 @@
  "src/sim/Unit.test.ts": 2,
  "src/sim/Unit.ts": 70,
  "src/sim/World.test.ts": 20,
- "src/sim/World.ts": 368,
+ "src/sim/World.ts": 366,
  "src/sim/abilities/registry.ts": 18,
  "src/sim/actingPosition.test.ts": 2,
  "src/sim/actingPosition.ts": 14,

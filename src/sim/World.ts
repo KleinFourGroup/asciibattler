@@ -1306,9 +1306,6 @@ export class World {
     for (const unit of this.units.slice()) {
       // 1. Death.
       if (unit.currentHp <= 0) {
-        // K1 — `death` fires while the unit is still on the grid (before the
-        // splice), so a handler can read its position/team.
-        this.fireTrigger('death', { unit, team: unit.team });
         this.reapUnit(unit);
         continue;
       }
@@ -1836,8 +1833,6 @@ export class World {
   private reapDead(): void {
     for (const unit of this.units.slice()) {
       if (unit.currentHp <= 0) {
-        // K1 — fire `death` before the splice (mirrors the step-1 death check).
-        this.fireTrigger('death', { unit, team: unit.team });
         this.reapUnit(unit);
       }
     }
@@ -2369,13 +2364,16 @@ export class World {
   }
 
   /**
-   * 94d — the ONE death-event emit for both death sites: books the fallen
-   * power (`recordFallen`) and puts the unit's identity + the BOOKED amount
-   * on `unit:died`, since the unit is spliced out before the event fires
-   * and nothing downstream can look it up. Call BEFORE `removeUnit` (the
-   * effects are still folded, so `power` reads what the survivors read).
+   * 94d — the ONE death path for both death sites: fires the `death` trigger
+   * while the unit is still on the grid, so a handler can read its position
+   * and team; books the fallen power (`recordFallen`); and puts the unit's
+   * identity + the BOOKED amount on `unit:died`, since the unit is spliced
+   * out before the event fires and nothing downstream can look it up. Call
+   * BEFORE `removeUnit` (the effects are still folded, so `power` reads what
+   * the survivors read).
    */
   private reapUnit(unit: Unit): void {
+    this.fireTrigger('death', { unit, team: unit.team });
     const power = this.recordFallen(unit);
     this.removeUnit(unit.id);
     this.bus.emit('unit:died', {

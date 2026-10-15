@@ -5298,3 +5298,32 @@ estimated before this bar: about −3.
 3. *No new parameter.*
 4. *The special case, counted:* the trigger fired at two sites → one, and
    the note that one site mirrors the other → none.
+
+**Built.** `reapUnit` fires `death` as its first line; the two callers
+lose the call and their K1 notes, and the doc says what the trigger's
+place is for.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30. The fuzz diff
+   against `25529ca`: PASS, both shapes. The plant, in a worktree of an
+   unreferenced commit of the tree (`d7a95b9`): the trigger's call dropped
+   (`World.ts:2376`). The corpus did not notice it; the suite CAUGHT it in
+   one file, `src/sim/triggers.test.ts`, against none unplanted (the
+   step-code ceiling and licences tests set aside). Read: no production
+   code registers a `death` handler (`registerTrigger` is called for
+   `dealHit` and `kill` alone, `battleRules.ts:137`, :155), so the
+   dropped call changes nothing a run can see, and the corpus is right not
+   to notice. The suite and the smoke by the hook.
+2. *Lines: held.* `src` −2 (+8 −10); the doc grew by two lines.
+3. *No new parameter: held.*
+4. *The special case: held.* The trigger is fired at one site, and the
+   mirror note is gone.
+
+Kept.
+
+**A lead for the re-skim (122m):** five of the seven combat triggers
+(`spawn`, `takeHit`, `dealMiss`, `evade`, `death`) are fired and
+never handled in shipped code; `triggers.ts`'s header says K1 shipped the
+fire points for Phase L's daemons, and the daemons registered two. The
+census does not list them.

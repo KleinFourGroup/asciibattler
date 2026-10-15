@@ -139,7 +139,8 @@ share of list A's export rows joins the sim's.
   `World.wireSpawned`; corpus 0 of 30, fuzz diff PASS, lines −10.
 - ☑ **122h — B-08, the objective rule called, not restated** (`none`).
   Kept; corpus 0 of 30, fuzz diff PASS, lines −9.
-- ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).
+- ☑ **122i — B-09, the death trigger in `reapUnit`** (`none`). Kept;
+  corpus 0 of 30, fuzz diff PASS, lines −2.
 - ☐ **122j — B-17, one `chebyshev`** (`none`).
 - ☐ **122k — the focus-tile directive folded into `updateFocusTarget`**
   (`none`; a lead).

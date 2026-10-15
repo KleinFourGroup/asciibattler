@@ -440,13 +440,13 @@ function canApproach(unit: Unit, world: World, rubble: Unit): boolean {
  * `targetId`: the id when it's still a LIVING DESTRUCTIBLE neutral (rubble / a
  * destructible wall or cover) — or, §75e, a living ACTIVE neutral (a camp
  * member: the manual "attack this camp" order, hostile or not — the ordered
- * blow is what aggros it) — else null. Shared by the focus + engage pursue
- * branches so a manual order is admitted identically. Mirrors the
+ * blow is what aggros it) — else null. The focus + engage pursue branches
+ * admit an order by it, and `World.clearResolvedObjectives` keeps one by it. Mirrors the
  * `enemy`-target validity check, but for the neutral team + the §40b HP-presence
  * destructibility gate — an indestructible (hp-less) wall is never a valid
  * target, so a stray click on one reverts to atWill rather than pinning the team.
  */
-function validNeutralObjectiveTarget(world: World, unitId: number): number | null {
+export function validNeutralObjectiveTarget(world: World, unitId: number): number | null {
   const t = world.findUnit(unitId);
   return t !== undefined &&
     t.team === 'neutral' &&

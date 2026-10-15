@@ -5256,3 +5256,24 @@ built here; put to the user at the next stop.
    `Targeting.ts` call it.
 4. *The special case, counted:* the rule written out twice in `src/sim`
    → once, and the instruction to keep the copies in step → none.
+
+**Built.** `validNeutralObjectiveTarget` is exported, and
+`clearResolvedObjectives` reverts a neutral-kind order to atWill when it
+returns null; the restated rule, its "must mirror" note and
+`World.ts`'s import of `isDestructibleNeutral` are gone. The function's
+doc names its third caller.
+
+Against the bar:
+
+1. *Behaviour: held.* Typecheck clean. The corpus, 0 of 30. The fuzz diff
+   against `b5338bd`: PASS, both shapes. The plant, in a worktree of an
+   unreferenced commit of the tree (`009fee7`): the new call's condition
+   negated (`World.ts:2141`), the corpus CAUGHT, 15 of 30, against 0 of 30
+   unplanted. The suite and the smoke by the hook.
+2. *Lines: held.* `src` −9 (+11 −20).
+3. *No new parameter: held.*
+4. *The special case: held.* The rule is written once in `src/sim`, and
+   no comment asks for two copies to be kept in step.
+
+Kept. The step-code ceiling lowered by `comment-codes --record` before the
+commit.

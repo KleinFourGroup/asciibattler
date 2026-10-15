@@ -45,7 +45,7 @@ import { createAction } from './actions/registry';
 import { processChainHops, type PendingChainHop } from './effects/interpreter';
 import { createBehavior, createMovementBehavior } from './behaviors/registry';
 import { createAbility } from './abilities/registry';
-import { updateTarget } from './Targeting';
+import { updateTarget, validNeutralObjectiveTarget } from './Targeting';
 import {
   GROUND,
   anchorFootprint,
@@ -81,7 +81,7 @@ import { ZERO_STATS, deriveStats, hitChanceFor, inertDerived } from './stats';
 import { computeXpAwards } from './xp';
 import { STATS } from '../config/stats';
 import { LEVELING } from '../config/leveling';
-import { NEUTRAL_DEFS, ALL_UNIT_DEFS, isDestructibleNeutral } from '../config/units';
+import { NEUTRAL_DEFS, ALL_UNIT_DEFS } from '../config/units';
 import { getCamp } from '../config/camps';
 
 /**
@@ -2135,21 +2135,12 @@ export class World {
           target.currentHp > 0;
         if (!alive) this.setObjectiveAtWill(team);
       } else if (obj.target.kind === 'neutral') {
-        // §40e — a manual `focus`/`engage` on a DESTRUCTIBLE neutral (rubble / a
-        // destructible wall) reverts to atWill once that neutral is gone —
-        // destroyed (0 HP, reaped) or, defensively, no longer a destructible
-        // neutral. Symmetric to the enemy branch: the "order is done" trigger.
-        // §75h (browser-caught) — an ACTIVE neutral (camp member) is a valid
-        // living target too: this check must mirror Targeting's
-        // `validNeutralObjectiveTarget`, or a click-to-engage order on a camp
-        // reverts the same tick it lands and the first blow never happens.
-        const target = this.findUnit(obj.target.unitId);
-        const alive =
-          target !== undefined &&
-          target.team === 'neutral' &&
-          target.currentHp > 0 &&
-          (isDestructibleNeutral(target.archetype) || target.campId !== null);
-        if (!alive) this.setObjectiveAtWill(team);
+        // §40e — a manual `focus`/`engage` on a neutral reverts to atWill once
+        // Targeting stops admitting its target: destroyed (0 HP, reaped), or no
+        // longer a destructible neutral or a camp member.
+        if (validNeutralObjectiveTarget(this, obj.target.unitId) === null) {
+          this.setObjectiveAtWill(team);
+        }
       } else if (obj.mode === 'engage' && this.camps.size > 0) {
         // §75g — the ONE exception to the J1 engage-tile persist rule: an
         // engage TILE parked on a camp ANCHOR (the enemy-pull order) reverts

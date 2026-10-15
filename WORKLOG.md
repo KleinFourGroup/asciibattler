@@ -5227,3 +5227,32 @@ Against the bar:
    and no doc says a spawn path mirrors another.
 
 Kept.
+
+The step-code ceiling 5,687 → 5,683 (`World.ts`'s four), recorded on the
+second try: the hook's ceiling test failed the first. Committed as
+`5122821`.
+
+### 122h — B-08, the objective rule called, not restated (2026-10-15, session 94dca491)
+
+Step zero at `5122821`: `World.clearResolvedObjectives`'s neutral branch
+(`World.ts:2147-2152`) writes out `validNeutralObjectiveTarget`
+(`Targeting.ts:449`, private, two callers in its file), and its comment
+says the two must mirror. `World.ts` already imports `updateTarget` from
+`Targeting.ts`, so the call adds no import line, and
+`isDestructibleNeutral` leaves `World.ts`'s import with it. Lines were
+estimated before this bar: about −9. Found, outside the row: a third copy
+of the rule in `ObjectiveController.ts:185-191`, which picks the neutrals
+a click may order an attack on; the census named only `World`'s. Not
+built here; put to the user at the next stop.
+
+**The bar** (D2), written before the code:
+
+1. *The same behaviour:* the corpus, 0 of 30, then the fuzz diff against
+   the commit before the code, PASS on both shapes; a plant at the new
+   call in `World.ts`, in a worktree, caught by the corpus; typecheck and
+   the suite.
+2. *Source lines do not grow.*
+3. *No new parameter:* the function is called as its two callers in
+   `Targeting.ts` call it.
+4. *The special case, counted:* the rule written out twice in `src/sim`
+   → once, and the instruction to keep the copies in step → none.

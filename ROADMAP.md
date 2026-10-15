@@ -135,7 +135,8 @@ share of list A's export rows joins the sim's.
 - ☑ **122f — B-01, the two predicates by name** (read by the user). A
   no-op: proven the same, under the bar on lines (+7), reverted. B-02 goes
   to Round 9 (WORKLOG §122, 122f).
-- ☐ **122g — B-07, a spawned unit's wiring once** (`none`).
+- ☑ **122g — B-07, a spawned unit's wiring once** (`none`). Kept:
+  `World.wireSpawned`; corpus 0 of 30, fuzz diff PASS, lines −10.
 - ☐ **122h — B-08, the objective rule called, not restated** (`none`).
 - ☐ **122i — B-09, the death trigger in `reapUnit`** (`none`).
 - ☐ **122j — B-17, one `chebyshev`** (`none`).
